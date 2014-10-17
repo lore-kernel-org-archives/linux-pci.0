@@ -1,184 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:48205 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751469AbaJWJNN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Oct 2014 05:13:13 -0400
-Date: Thu, 23 Oct 2014 10:13:09 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>
-Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
-Message-ID: <20141023091309.GF25302@e106497-lin.cambridge.arm.com>
-References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
- <3256560.C0cZnIlnAv@wuerfel>
- <20141022155914.GB25939@e102568-lin.cambridge.arm.com>
- <2148776.X8NPqiYA6S@wuerfel>
+Received: from mout2.freenet.de ([195.4.92.92]:58039 "EHLO mout2.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751322AbaJQBLe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Oct 2014 21:11:34 -0400
+Message-ID: <54406B34.1050808@maya.org>
+Date: Fri, 17 Oct 2014 03:04:52 +0200
+From: Andreas Hartmann <andihartmann@freenet.de>
 MIME-Version: 1.0
-In-Reply-To: <2148776.X8NPqiYA6S@wuerfel>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass
+ through (vfio)
+References: <20140923210318.498dacbd@dualc.maya.org>	 <1411502866.24563.8.camel@ul30vt.home> <5437A958.3000201@maya.org>	 <CAErSpo5kkk4itqqmCMU=08-XMcDknur8VY++F3A2LajdvTptOA@mail.gmail.com>	 <5437F1F5.3010706@maya.org>	 <CAErSpo6DuWEcJb_gfS=5JnKN8b4DXXV9+u-CRa8m3db0dbzpsQ@mail.gmail.com>	 <543804BC.3080307@maya.org>	 <CAErSpo450czUtAM104o+RS=yOcmP+3MKMH7mYk=UYhVJ2+cfSQ@mail.gmail.com>	 <20141011003219.560cca97@dualc.maya.org>	 <20141010225408.GA24493@google.com> <5438CC1E.3060407@maya.org> <1413360267.4202.70.camel@ul30vt.home>
+In-Reply-To: <1413360267.4202.70.camel@ul30vt.home>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 22, 2014 at 09:52:19PM +0100, Arnd Bergmann wrote:
-> On Wednesday 22 October 2014 16:59:14 Lorenzo Pieralisi wrote:
-> > On Wed, Oct 01, 2014 at 10:38:45AM +0100, Arnd Bergmann wrote:
-> > 
-> > [...]
-> > 
-> > > The arm32 implementations of pci_domain_nr/pci_proc_domain can probably be
-> > > removed if we change the arm32 pcibios_init_hw function to call the new
-> > > interfaces that set the domain number.
-> > 
-> > I wished, but it is a bit more complicated than I thought unfortunately,
-> > mostly because some drivers, eg cns3xxx set the domain numbers
-> > statically in pci_sys_data and this sets a chain of dependency that is
-> > not easy to untangle. I think cns3xxx is the only legacy driver that "uses"
-> > the domain number (in pci_sys_data) in a way that clashes with the
-> > generic domain_nr implementation, I need to give it more thought.
-> 
-> Just had a look at that driver, shouldn't be too hard to change, see below.
+Hello Alex,
 
-I like this!
+Alex Williamson wrote:
+> Hi Andreas,
+[...]
+> Sorry for the breakage.  Is it possible to run lspci on the device in a
+> loop from the host and capture whether we're failing to restore some of
+> the VC bits to their previous state? 
 
-One thing though ...
+> Does the problem also occur if you
+> unbind from host driver,
 
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> 
-> diff --git a/arch/arm/mach-cns3xxx/pcie.c b/arch/arm/mach-cns3xxx/pcie.c
-> index 45d6bd09e6ef..aa4b9d7c52fd 100644
-> --- a/arch/arm/mach-cns3xxx/pcie.c
-> +++ b/arch/arm/mach-cns3xxx/pcie.c
-> @@ -30,18 +30,15 @@ struct cns3xxx_pcie {
->  	unsigned int irqs[2];
->  	struct resource res_io;
->  	struct resource res_mem;
-> -	struct hw_pci hw_pci;
-> -
-> +	int port;
->  	bool linked;
->  };
->  
-> -static struct cns3xxx_pcie cns3xxx_pcie[]; /* forward decl. */
-> -
->  static struct cns3xxx_pcie *sysdata_to_cnspci(void *sysdata)
->  {
->  	struct pci_sys_data *root = sysdata;
->  
-> -	return &cns3xxx_pcie[root->domain];
-> +	return root->private_data;
->  }
->  
->  static struct cns3xxx_pcie *pdev_to_cnspci(const struct pci_dev *dev)
-> @@ -192,13 +189,7 @@ static struct cns3xxx_pcie cns3xxx_pcie[] = {
->  			.flags = IORESOURCE_MEM,
->  		},
->  		.irqs = { IRQ_CNS3XXX_PCIE0_RC, IRQ_CNS3XXX_PCIE0_DEVICE, },
-> -		.hw_pci = {
-> -			.domain = 0,
-> -			.nr_controllers = 1,
-> -			.ops = &cns3xxx_pcie_ops,
-> -			.setup = cns3xxx_pci_setup,
-> -			.map_irq = cns3xxx_pcie_map_irq,
-> -		},
-> +		.port = 0,
->  	},
->  	[1] = {
->  		.host_regs = (void __iomem *)CNS3XXX_PCIE1_HOST_BASE_VIRT,
-> @@ -217,19 +208,13 @@ static struct cns3xxx_pcie cns3xxx_pcie[] = {
->  			.flags = IORESOURCE_MEM,
->  		},
->  		.irqs = { IRQ_CNS3XXX_PCIE1_RC, IRQ_CNS3XXX_PCIE1_DEVICE, },
-> -		.hw_pci = {
-> -			.domain = 1,
-> -			.nr_controllers = 1,
-> -			.ops = &cns3xxx_pcie_ops,
-> -			.setup = cns3xxx_pci_setup,
-> -			.map_irq = cns3xxx_pcie_map_irq,
-> -		},
-> +		.port = 1,
->  	},
->  };
->  
->  static void __init cns3xxx_pcie_check_link(struct cns3xxx_pcie *cnspci)
->  {
-> -	int port = cnspci->hw_pci.domain;
-> +	int port = cnspci->port;
->  	u32 reg;
->  	unsigned long time;
->  
-> @@ -260,9 +245,10 @@ static void __init cns3xxx_pcie_check_link(struct cns3xxx_pcie *cnspci)
->  
->  static void __init cns3xxx_pcie_hw_init(struct cns3xxx_pcie *cnspci)
->  {
-> -	int port = cnspci->hw_pci.domain;
-> +	int port = cnspci->port;
->  	struct pci_sys_data sd = {
->  		.domain = port,
-> +		.private_data = cnspci,
->  	};
->  	struct pci_bus bus = {
->  		.number = 0,
-> @@ -323,6 +309,14 @@ static int cns3xxx_pcie_abort_handler(unsigned long addr, unsigned int fsr,
->  void __init cns3xxx_pcie_init_late(void)
->  {
->  	int i;
-> +	void *private_data;
-> +	struct hw_pci hw_pci = {
-> +		.nr_controllers = 1,
-> +		.ops = &cns3xxx_pcie_ops,
-> +		.setup = cns3xxx_pci_setup,
-> +		.map_irq = cns3xxx_pcie_map_irq,
-> +		.private_data = &private_data,
-> +	};
->  
->  	pcibios_min_io = 0;
->  	pcibios_min_mem = 0;
-> @@ -335,7 +329,9 @@ void __init cns3xxx_pcie_init_late(void)
->  		cns3xxx_pwr_soft_rst(0x1 << PM_SOFT_RST_REG_OFFST_PCIE(i));
->  		cns3xxx_pcie_check_link(&cns3xxx_pcie[i]);
->  		cns3xxx_pcie_hw_init(&cns3xxx_pcie[i]);
-> -		pci_common_init(&cns3xxx_pcie[i].hw_pci);
-> +		hw_pci->domain = i;
-> +		private_data = &cns3xxx_pcie[i];
+The machine is booted w/ blacklisted ath9k. Then, the device is bound to
+vfio:
 
-Is this dance with pointers absolutely necessary? Does gcc though dishes at you
-for doing hw_pci->private_data = &cns3xxx_pcie[i] directly?
+echo "168c 0030" > /sys/bus/pci/drivers/vfio-pci/new_id
+echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+echo 0000:03:00.0 > /sys/bus/pci/drivers/vfio-pci/bind
 
-Best regards,
-Liviu
+afterwards the VM is started -> hang.
 
-> +		pci_common_init(&hw_pci);
->  	}
->  
->  	pci_assign_unassigned_resources();
-> 
-> 
-> 
-> 
+W/o starting th VM, I can bind it to vfio and unbind it from vfio w/o
+any problem.
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+> echo 1 > reset in pci-sysfs,
 
+echo 1 > /sys/bus/pci/devices/0000:03:00.0 works w/o any problem while
+bound to vfio. Even after unbinding from vfio and rebinding to vfio
+again ... .
+
+> and re-bind to the
+
+Do you mean loading ath9k in host system after unbinding from vfio? If
+yes: Works w/o any problem. It's even possible to reset it or do a
+ifconfig wlan0 up, ifconfig wlan0 down, rmmod ath9k, bind it to vfio
+again and reset it, ....
+
+Looks like the hang only is triggered by qemu-system_x86_64 on startup
+the VM.
+
+> host?  I'll also try to reproduce on my 990fx system, but I won't be
+> able to do that until next week due to travel.  Thanks,
+
+
+Regards,
+Andreas
