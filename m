@@ -1,65 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:52464 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753899AbaJASpB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 14:45:01 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v2 12/16] usb: dwc3: add delay phy power change quirk
+Date: Fri, 17 Oct 2014 16:53:37 +0800
+Message-ID: <1413536021-4886-13-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <20141001184304.GA6832@svl-evodev-groeck.juniper.net>
-References: <CAAVjN7dwS62EKMnuZc_P1UjkbRVk6RXqJ91GwWZ96bbY5Ct-rg@mail.gmail.com>
-	<CAAVjN7eUmBVcAGPbcn3qsJ9M9uu2nkFoKHqGhhKGekZSceGiMw@mail.gmail.com>
-	<20141001184304.GA6832@svl-evodev-groeck.juniper.net>
-Date: Wed, 1 Oct 2014 11:44:59 -0700
-Message-ID: <CAAVjN7edpkXYMHBm+wLegA_pc0hnm_YZf_z=Ni3h=EbDTmfegQ@mail.gmail.com>
-Subject: Re: Fwd: [Proposal] PM sleep children of inactive I2C bus segments
- off Masters in multi-master systems
-From: Danielle Costantino <danielle.costantino@gmail.com>
-To: Guenter Roeck <groeck@juniper.net>
-Cc: linux-i2c <linux-i2c@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiri Kosina <jkosina@suse.cz>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Rajat Jain <rajatjain@juniper.net>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Re-sending Proposal:
+AMD NL needs to delay PHY power change from P0 to P1/P2/P3 when link state
+changing from U0 to U1/U2/U3 respectively.
 
-Currently I2C mux devices that support multiple master arbitration are
-the i2c-mux-pca9541 and i2c-arb-gpio-challenge drivers. I propose to
-add the ability to configure an interrupt pin from the Master Selector
-device to indicate that bus ownership has been lost. Once the device
-loses ownership, all of its children should enter a pm sleep mode (as
-you can't talk to them at this point) until master-ship has been
-reacquired.
+Signed-off-by: Huang Rui <ray.huang@amd.com>
+---
+ drivers/usb/dwc3/core.c          | 3 +++
+ drivers/usb/dwc3/core.h          | 1 +
+ drivers/usb/dwc3/dwc3-pci.c      | 3 ++-
+ drivers/usb/dwc3/platform_data.h | 1 +
+ 4 files changed, 7 insertions(+), 1 deletion(-)
 
-This has come up as an issue when the master loses control over a bus
-the return code of all transactions to its lave devices is EIO (not
-very helpful).
-
-Any comments would be appreciated, I am just looking if there is
-interest in this.
-
-Thanks,
-
-On Wed, Oct 1, 2014 at 11:43 AM, Guenter Roeck <groeck@juniper.net> wrote:
-> On Wed, Oct 01, 2014 at 11:39:49AM -0700, Danielle Costantino wrote:
->> added proper mailing lists...I hope
->>
->
-> Hi Danielle,
->
-> I don't see the actual proposal, and I don't find anything on the web
-> either when looking for the headline :-(.
->
-> Guenter
-
-
-
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index a9f1d4c..920a8ab 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -383,6 +383,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
+ 	if (dwc->quirks & DWC3_QUIRK_DEPP1P2P3)
+ 		reg |= DWC3_GUSB3PIPECTL_DEP1P2P3(1);
+ 
++	if (dwc->quirks & DWC3_QUIRK_DEPOCHANGE)
++		reg |= DWC3_GUSB3PIPECTL_DEPOCHANGE;
++
+ 	dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
+ 
+ 	mdelay(100);
+diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+index cf70fa6..4c0200f 100644
+--- a/drivers/usb/dwc3/core.h
++++ b/drivers/usb/dwc3/core.h
+@@ -180,6 +180,7 @@
+ #define DWC3_GUSB3PIPECTL_REQP1P2P3	(1 << 24)
+ #define DWC3_GUSB3PIPECTL_DEP1P2P3_MASK	DWC3_GUSB3PIPECTL_DEP1P2P3(7)
+ #define DWC3_GUSB3PIPECTL_DEP1P2P3(n)	((n) << 19)
++#define DWC3_GUSB3PIPECTL_DEPOCHANGE	(1 << 18)
+ #define DWC3_GUSB3PIPECTL_SUSPHY	(1 << 17)
+ 
+ /* Global TX Fifo Size Register */
+diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
+index 23ae6a7..0eb8b2a 100644
+--- a/drivers/usb/dwc3/dwc3-pci.c
++++ b/drivers/usb/dwc3/dwc3-pci.c
+@@ -153,7 +153,8 @@ static int dwc3_pci_probe(struct pci_dev *pci,
+ 			| DWC3_QUIRK_U2EXIT_LFPS
+ 			| DWC3_QUIRK_U2SSINP3OK
+ 			| DWC3_QUIRK_REQP1P2P3
+-			| DWC3_QUIRK_DEPP1P2P3;
++			| DWC3_QUIRK_DEPP1P2P3
++			| DWC3_QUIRK_DEPOCHANGE;
+ 	}
+ 
+ 	ret = platform_device_add_resources(dwc3, res, ARRAY_SIZE(res));
+diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
+index e668c1f..934c5e1 100644
+--- a/drivers/usb/dwc3/platform_data.h
++++ b/drivers/usb/dwc3/platform_data.h
+@@ -34,5 +34,6 @@ struct dwc3_platform_data {
+ #define DWC3_QUIRK_U2SSINP3OK		(1 << 3)
+ #define DWC3_QUIRK_REQP1P2P3		(1 << 4)
+ #define DWC3_QUIRK_DEPP1P2P3		(1 << 5)
++#define DWC3_QUIRK_DEPOCHANGE		(1 << 6)
+ 
+ };
 -- 
-- Danielle Costantino
+1.9.1
+
