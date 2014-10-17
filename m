@@ -1,125 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2261 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751587AbaJPMcu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 16 Oct 2014 08:32:50 -0400
-Message-ID: <543FBAEF.7030905@redhat.com>
-Date: Thu, 16 Oct 2014 08:32:47 -0400
-From: Prarit Bhargava <prarit@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Paul Zimmerman <Paul.Zimmerman@synopsys.com>
+To: "balbi@ti.com" <balbi@ti.com>, Huang Rui <ray.huang@amd.com>
+CC: Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v2 16/16] usb: dwc3: enable usb suspend phy
+Date: Fri, 17 Oct 2014 18:41:04 +0000
+Message-ID: <A2CA0424C0A6F04399FB9E1CD98E0304844E3423@US01WEMBX2.internal.synopsys.com>
+References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+ <1413536021-4886-17-git-send-email-ray.huang@amd.com>
+ <20141017145942.GL26260@saruman>
+In-Reply-To: <20141017145942.GL26260@saruman>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Myron Stowe <mstowe@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] pci, add sysfs numa_node write function
-References: <1413399924-599-1-git-send-email-prarit@redhat.com> <CAErSpo6Oy1S1OECirp6=tz+pQWUtkFE6p1LTzNaYtzxoX73FWw@mail.gmail.com> <543ECF6F.2030705@redhat.com> <CAErSpo76g-EPsUsMjhBpnnbKD3QufHz1xkvYaqXd8hYtgQ5u1g@mail.gmail.com>
-In-Reply-To: <CAErSpo76g-EPsUsMjhBpnnbKD3QufHz1xkvYaqXd8hYtgQ5u1g@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 10/15/2014 05:20 PM, Bjorn Helgaas wrote:
-> On Wed, Oct 15, 2014 at 1:47 PM, Prarit Bhargava <prarit@redhat.com> wrote:
->> On 10/15/2014 03:23 PM, Bjorn Helgaas wrote:
->>> Hi Prarit,
->>>
->>> On Wed, Oct 15, 2014 at 1:05 PM, Prarit Bhargava <prarit@redhat.com> wrote:
->>>> Consider a multi-node, multiple pci root bridge system which can be
->>>> configured into one large node or one node/socket.  When configuring the
->>>> system the numa_node value for each PCI root bridge is always set
->>>> incorrectly to -1, or NUMA_NO_NODE, rather than to the node value of each
->>>> socket.  Each PCI device inherits the numa value directly from it's parent
->>>> device, so that the NUMA_NO_NODE value is passed through the entire PCI
->>>> tree.
->>>>
->>>> Some new drivers, such as the Intel QAT driver, drivers/crypto/qat,
->>>> require that a specific node be assigned to the device in order to
->>>> achieve maximum performance for the device, and will fail to load if the
->>>> device has NUMA_NO_NODE.
->>>
->>> It seems ... unfriendly for a driver to fail to load just because it
->>> can't guarantee maximum performance.  Out of curiosity, where does
->>> this actually happen?  I had a quick look for NUMA_NO_NODE and
->>> module_init() functions in drivers/crypto/qat, and I didn't see the
->>> spot.
->>
->> The whole point of the Intel QAT driver is to guarantee max performance.  If
->> that is not possible the driver should not load (according to the thread
->> mentioned below)
->>
->>>
->>>> The driver would load if the numa_node value
->>>> was equal to or greater than -1 and quickly hacking the driver results in
->>>> a functional QAT driver.
->>>>
->>>> Using lspci and numactl it is easy to determine what the numa value should
->>>> be.  The problem is that there is no way to set it.  This patch adds a
->>>> store function for the PCI device's numa_node value.
->>>
->>> I'm not familiar with numactl.  It sounds like it can show you the
->>> NUMA topology?  Where does that information come from?
->>
->> You can map at least what nodes are available (although I suppose you can get
->> the same information from dmesg).  You have to do a bit of hunting through the
->> PCI tree to determine the root PCI devices, but you can determine which root
->> device is connected to which node.
+> From: Felipe Balbi [mailto:balbi@ti.com]
+> Sent: Friday, October 17, 2014 8:00 AM
 > 
-> Is numactl reading SRAT?  SLIT?  SMBIOS tables?  Presumably the kernel
-> has access to whatever information you're getting from numactl and
-> lspci, and if so, maybe we can do the workaround automatically in the
-> kernel.
-
-I'll go figure that out ...
-
+> On Fri, Oct 17, 2014 at 04:53:41PM +0800, Huang Rui wrote:
+> > AMD NL needs to suspend usb3 ss phy, but this doesn't enable on simulation
+> > board.
+> >
+> > Signed-off-by: Huang Rui <ray.huang@amd.com>
+> > ---
+> >  drivers/usb/dwc3/core.c          | 7 ++++++-
+> >  drivers/usb/dwc3/dwc3-pci.c      | 3 ++-
+> >  drivers/usb/dwc3/platform_data.h | 1 +
+> >  3 files changed, 9 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+> > index 3ccfe41..4a98696 100644
+> > --- a/drivers/usb/dwc3/core.c
+> > +++ b/drivers/usb/dwc3/core.c
+> > @@ -395,6 +395,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
+> >  	if (dwc->quirks & DWC3_QUIRK_TX_DEEPH)
+> >  		reg |= DWC3_GUSB3PIPECTL_TX_DEEPH(1);
+> >
+> > +	if (dwc->quirks & DWC3_QUIRK_SUSPHY)
 > 
->>>> To use this, one can do
->>>>
->>>> echo 3 > /sys/devices/pci0000:ff/0000:ff:1f.3/numa_node
->>>>
->>>> to set the numa node for PCI device 0000:ff:1f.3.
->>>
->>> It definitely seems wrong that we don't set the node number correctly.
->>> pci_acpi_scan_root() sets the node number by looking for a _PXM method
->>> that applies to the host bridge.  Why does that not work in this case?
->>>  Does the BIOS not supply _PXM?
->>
->> Yeah ... unfortunately the BIOS is broken in this case.  And I know what you're
->> thinking ;) -- why not get the BIOS fixed?  I'm through relying on BIOS fixes
->> which can take six months to a year to appear in a production version... I've
->> been bitten too many times by promises of BIOS fixes that never materialize.
+> should be:
 > 
-> Yep, I understand.  The question is how we implement a workaround so
-> it doesn't become the accepted way to do things.  Obviously we don't
-> want people manually grubbing through numactl/lspci output or writing
-> shell scripts to do things that *should* happen automatically.
+> 	if (!dwc->suspend_usb3_phy_quirk)
 > 
->> We have systems that only have a support cycle of 3 years, and things like ACPI
->> _PXM updates are at the bottom of the list :/.
+> > +		reg |= DWC3_GUSB3PIPECTL_SUSPHY;
 > 
+> IIRC, databook asks us to set that bit anyway, so the quirk is disabling
+> that bit. Am I missing something ? Paul ?
 
-> 
-> Somewhere in the picture there needs to be a feedback loop that
-> encourages the vendor to fix the problem.  I don't see that happening
-> yet.  Having QAT fail because the platform didn't supply the
-> information required to make it work would be a nice loop.  I don't
-> want to completely paper over the problem without providing some other
-> kind of feedback at the same time.
+It looks to me that Huang's patch is enabling that bit, not disabling
+it.
 
-Okay -- I see what you're after here and I completely agree with it.  But
-sometimes I feel like I banging on a silent drum with some of these companies
-about this stuff :(  My frustration with these companies is starting to show I
-guess...
+Currently the driver does not set either DWC3_GUSB3PIPECTL_SUSPHY or
+DWC3_GUSB2PHYCFG_SUSPHY (unless it has been added by that big patch
+series you just posted). According to the databook, both of those
+bits should be set to 1 after the core initialization has completed.
 
-> 
-> You're probably aware of [1], which was the same problem.  Apparently
-> it was originally reported to RedHat as [2] (which is private, so I
-> can't read it).  That led to a workaround hack for some AMD systems
-> [3, 4].
+So I think the driver should be changed to enable both of those by
+default, and then maybe you want quirks to disable them if there is
+some platform out there which needs that.
 
-Yeah ... part of me was thinking that maybe I should do something like
-the above but I didn't know how you'd feel about expanding that hack.  I'll look
-into it.  I'd prefer it to be opt-in with a kernel parameter.
+-- 
+Paul
 
-P.
