@@ -1,70 +1,90 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Thierry Reding" <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 10/10] PCI/MSI: Remove useless bus->msi assignment
-Date: Mon, 27 Oct 2014 15:48:47 +0800
-Message-ID: <1414396127-30023-11-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1414396127-30023-1-git-send-email-wangyijing@huawei.com>
-References: <1414396127-30023-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from [157.56.110.114] ([157.56.110.114]:14624 "EHLO
+	na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751293AbaJQJQR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 Oct 2014 05:16:17 -0400
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v2 14/16] usb: dwc3: enable rx_detect to polling lfps quirk
+Date: Fri, 17 Oct 2014 16:53:39 +0800
+Message-ID: <1413536021-4886-15-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thierry introduced MSI chip(now renamed to MSI controller)
-framework to associate MSI chip and PCI bus in arm.
-Other platforms still use its own arch MSI functions to
-support MSI capability. Thierry introduced the bus->msi
-assignment to make child bus can inherit bus->msi from the parent.
-But in fact, drivers which used MSI chip always associate
-MSI chip and PCI bus by add .add_bus() in arm PCI host bridge
-drivers. Now we have saved MSI chip in pci_sys_data.
-We can remove this bus->msi assignment safely.
+AMD NL needs to enable RX_DETECT to Polling.LFPS control quirk.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Thierry Reding <thierry.reding@gmail.com>
-CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Signed-off-by: Huang Rui <ray.huang@amd.com>
 ---
- drivers/pci/msi.c   |    5 -----
- drivers/pci/probe.c |    1 -
- 2 files changed, 0 insertions(+), 6 deletions(-)
+ drivers/usb/dwc3/core.c          | 3 +++
+ drivers/usb/dwc3/core.h          | 1 +
+ drivers/usb/dwc3/dwc3-pci.c      | 3 ++-
+ drivers/usb/dwc3/platform_data.h | 1 +
+ 4 files changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index f085f7f..27b6a54 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -37,11 +37,6 @@ struct msi_controller * __weak pcibios_msi_controller(struct pci_bus *bus)
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index a1ee586..f3c9699 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -389,6 +389,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
+ 	if (dwc->quirks & DWC3_QUIRK_LFPSFILT)
+ 		reg |= DWC3_GUSB3PIPECTL_LFPSFILT;
  
- struct msi_controller *pci_msi_controller(struct pci_bus *bus)
- {
--	struct msi_controller *ctrl = bus->msi;
--
--	if (ctrl)
--		return ctrl;
--
- 	return pcibios_msi_controller(bus);
- }
++	if (dwc->quirks & DWC3_QUIRK_RX_DETOPOLL)
++		reg |= DWC3_GUSB3PIPECTL_RX_DETOPOLL;
++
+ 	dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
  
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 5ed9930..4b18bf2 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -682,7 +682,6 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	mdelay(100);
+diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+index 5bdd5f5..1952759 100644
+--- a/drivers/usb/dwc3/core.h
++++ b/drivers/usb/dwc3/core.h
+@@ -183,6 +183,7 @@
+ #define DWC3_GUSB3PIPECTL_DEPOCHANGE	(1 << 18)
+ #define DWC3_GUSB3PIPECTL_SUSPHY	(1 << 17)
+ #define DWC3_GUSB3PIPECTL_LFPSFILT	(1 << 9)
++#define DWC3_GUSB3PIPECTL_RX_DETOPOLL	(1 << 8)
  
- 	child->parent = parent;
- 	child->ops = parent->ops;
--	child->msi = parent->msi;
- 	child->sysdata = parent->sysdata;
- 	child->bus_flags = parent->bus_flags;
+ /* Global TX Fifo Size Register */
+ #define DWC3_GTXFIFOSIZ_TXFDEF(n)	((n) & 0xffff)
+diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
+index d1f0901..6f789fd 100644
+--- a/drivers/usb/dwc3/dwc3-pci.c
++++ b/drivers/usb/dwc3/dwc3-pci.c
+@@ -155,7 +155,8 @@ static int dwc3_pci_probe(struct pci_dev *pci,
+ 			| DWC3_QUIRK_REQP1P2P3
+ 			| DWC3_QUIRK_DEPP1P2P3
+ 			| DWC3_QUIRK_DEPOCHANGE
+-			| DWC3_QUIRK_LFPSFILT;
++			| DWC3_QUIRK_LFPSFILT
++			| DWC3_QUIRK_RX_DETOPOLL;
+ 	}
  
+ 	ret = platform_device_add_resources(dwc3, res, ARRAY_SIZE(res));
+diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
+index ac7860ab..5df3419 100644
+--- a/drivers/usb/dwc3/platform_data.h
++++ b/drivers/usb/dwc3/platform_data.h
+@@ -36,5 +36,6 @@ struct dwc3_platform_data {
+ #define DWC3_QUIRK_DEPP1P2P3		(1 << 5)
+ #define DWC3_QUIRK_DEPOCHANGE		(1 << 6)
+ #define DWC3_QUIRK_LFPSFILT		(1 << 7)
++#define DWC3_QUIRK_RX_DETOPOLL		(1 << 8)
+ 
+ };
 -- 
-1.7.1
+1.9.1
 
