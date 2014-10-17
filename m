@@ -1,142 +1,142 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from devils.ext.ti.com ([198.47.26.153]:58492 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752472AbaJQPKr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Oct 2014 11:10:47 -0400
+Date: Fri, 17 Oct 2014 10:10:26 -0500
+From: Felipe Balbi <balbi@ti.com>
+To: Huang Rui <ray.huang@amd.com>
+CC: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch Part2 v3 08/24] x86, htirq: Use new irqdomain interfaces to allocate/free IRQ
-Date: Tue, 28 Oct 2014 16:26:26 +0800
-Message-Id: <1414484803-10311-9-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 00/16] usb: dwc3: add support for AMD NL SoC
+Message-ID: <20141017151026.GN26260@saruman>
+Reply-To: <balbi@ti.com>
+References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="/TUrtqMIkCP4YtJm"
+In-Reply-To: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new irqdomain interfaces to allocate/free IRQ for HTIRQ, so we could
-kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
+--/TUrtqMIkCP4YtJm
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-This patch changes the interfaces between arch independent PCI driver
-and arch specific code. Currently HT_IRQ is only enabled on x86, so it
-shouldn't break other architectures.
+Hi,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/htirq.c |   26 +++++++++++++-------------
- drivers/pci/htirq.c          |    7 +++----
- include/linux/htirq.h        |    2 ++
- 3 files changed, 18 insertions(+), 17 deletions(-)
+On Fri, Oct 17, 2014 at 04:53:25PM +0800, Huang Rui wrote:
+> The series of patches add AMD NL SoC support for DesignWare USB3 OTG
+> IP with PCI bus glue layer. This controller supported hibernation, LPM
+> erratum and used the 2.80a IP version and amd own phy. Current
+> implementation support both simulation and SoC platform. And already
+> tested with gadget zero and msc tool.  It works well on file storage
+> gadget.
 
-diff --git a/arch/x86/kernel/apic/htirq.c b/arch/x86/kernel/apic/htirq.c
-index 816f36e979ad..b307ee7a7148 100644
---- a/arch/x86/kernel/apic/htirq.c
-+++ b/arch/x86/kernel/apic/htirq.c
-@@ -14,6 +14,7 @@
- #include <linux/device.h>
- #include <linux/pci.h>
- #include <linux/htirq.h>
-+#include <linux/irqdomain.h>
- #include <asm/hw_irq.h>
- #include <asm/apic.h>
- #include <asm/hypertransport.h>
-@@ -61,31 +62,30 @@ static struct irq_chip ht_irq_chip = {
- 	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
- 
-+int arch_alloc_ht_irq(struct pci_dev *dev)
-+{
-+	return irq_domain_alloc_irqs(NULL, 1, dev_to_node(&dev->dev), NULL);
-+}
-+
-+void arch_free_ht_irq(int irq)
-+{
-+	irq_domain_free_irqs(irq, 1);
-+}
-+
- int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
- {
- 	struct irq_cfg *cfg;
- 	struct ht_irq_msg msg;
--	unsigned dest;
--	int err;
- 
- 	if (disable_apic)
- 		return -ENXIO;
- 
- 	cfg = irq_cfg(irq);
--	err = assign_irq_vector(irq, cfg, apic->target_cpus());
--	if (err)
--		return err;
--
--	err = apic->cpu_mask_to_apicid_and(cfg->domain,
--					   apic->target_cpus(), &dest);
--	if (err)
--		return err;
--
--	msg.address_hi = HT_IRQ_HIGH_DEST_ID(dest);
-+	msg.address_hi = HT_IRQ_HIGH_DEST_ID(cfg->dest_apicid);
- 
- 	msg.address_lo =
- 		HT_IRQ_LOW_BASE |
--		HT_IRQ_LOW_DEST_ID(dest) |
-+		HT_IRQ_LOW_DEST_ID(cfg->dest_apicid) |
- 		HT_IRQ_LOW_VECTOR(cfg->vector) |
- 		((apic->irq_dest_mode == 0) ?
- 			HT_IRQ_LOW_DM_PHYSICAL :
-diff --git a/drivers/pci/htirq.c b/drivers/pci/htirq.c
-index a94dd2c4183a..ceb0ebeb7b5f 100644
---- a/drivers/pci/htirq.c
-+++ b/drivers/pci/htirq.c
-@@ -117,8 +117,8 @@ int __ht_create_irq(struct pci_dev *dev, int idx, ht_irq_update_t *update)
- 	cfg->msg.address_lo = 0xffffffff;
- 	cfg->msg.address_hi = 0xffffffff;
- 
--	irq = irq_alloc_hwirq(dev_to_node(&dev->dev));
--	if (!irq) {
-+	irq = arch_alloc_ht_irq(dev);
-+	if (irq <= 0) {
- 		kfree(cfg);
- 		return -EBUSY;
- 	}
-@@ -163,8 +163,7 @@ void ht_destroy_irq(unsigned int irq)
- 	cfg = irq_get_handler_data(irq);
- 	irq_set_chip(irq, NULL);
- 	irq_set_handler_data(irq, NULL);
--	irq_free_hwirq(irq);
--
-+	arch_free_ht_irq(irq);
- 	kfree(cfg);
- }
- EXPORT_SYMBOL(ht_destroy_irq);
-diff --git a/include/linux/htirq.h b/include/linux/htirq.h
-index 70a1dbbf2093..5caa51b7b95c 100644
---- a/include/linux/htirq.h
-+++ b/include/linux/htirq.h
-@@ -15,6 +15,8 @@ void unmask_ht_irq(struct irq_data *data);
- 
- /* The arch hook for getting things started */
- int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev);
-+int arch_alloc_ht_irq(struct pci_dev *dev);
-+void arch_free_ht_irq(int irq);
- 
- /* For drivers of buggy hardware */
- typedef void (ht_irq_update_t)(struct pci_dev *dev, int irq,
--- 
-1.7.10.4
+patches look much, much nicer there are still a few things to fix. A
+global set of issues which I see:
 
+1) Let's get confirmation that all those quirks will be needed in
+production as well, I have a feeling quite a few of them won't be.
+
+2) All quirks should become 1-bit fields insteads of single-bits on a
+32-bit variable.
+
+3) All quirks should have DeviceTree counterparts. They should all
+become boolean properties should we can:
+
+	dwc->tx_deemphasis_quirk =3D of_property_read_bool(node,
+		"snps,tx_deemphasis_quirk");
+
+> These patches are generated on balbi/testing/next
+>=20
+> Changes from v1 -> v2
+> - remove dual role function temporarily
+> - add pci quirk to avoid to bind with xhci driver
+> - distinguish between simulation board and soc
+> - break down all the special quirks
+>=20
+>=20
+> Patch 1:
+> - add PCI device id into pci bus glue
+
+this guy should be the last in the series, with all AMD quirks being
+enabled at once. This will avoid bisection points where AMD's platforms
+don't work.
+
+> Patch 2:
+
+this should become as patch one :-)
+
+> - add PCI quirk to avoid to bind with xhci
+>=20
+> Patch 3:
+> - enable hibernation
+>=20
+> Patch 4:
+> - distinguish between simulation board and soc
+>=20
+> Patch 5:
+> - add quirks flag to be compatible for kinds of soc
+>=20
+> Patch 6 - 16:
+> - as felipe's suggestion, break down all the special quirks of amd nl
+>=20
+>=20
+> Patch set already passed all the MSC testing, detailed result is below:
+>=20
+> root@hr-ub:/home/ray/felipe/usb-tools# ./msc.sh -o /dev/sdb1
+> test 0e: simple 64k read/write
+> test  0: sent      62.50 MB read      22.00 MB/s write      16.33 MB/s ..=
+=2E success
+
+Are you still running with VERBOSE_DEBUG on USB2 ? Here's what I get on
+USB2 connected to my PC with DWC3 running on a single-core cortex-a9
+board:
+
+$ ./msc -t0 -o /dev/sdh -s 65536 -c 5000
+test  0: sent     312.50 MB read      31.63 MB/s write      29.10 MB/s ... =
+success
+
+And with RAM as backend:
+
+$ ./msc -t0 -o /dev/sdh -s 65536 -c 5000
+test  0: sent     312.50 MB read      31.64 MB/s write      29.04 MB/s ... =
+success
+
+cheers
+
+--=20
+balbi
+
+--/TUrtqMIkCP4YtJm
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUQTFiAAoJEIaOsuA1yqREpxYQAKb0mo7Peg3eyQgcm+bALpcq
+/x70lR7SJQRk9eSWuHA/VIJ5cBtTDYnwILAD6e4fT+1VGTMV6Z1raqi7GPMyWzv9
+sXHktZccJalLAhaRCLWL8kjAr1JzhvDB5mQ9vkNGcX94bx9rTaXbhyoDUgWKunj2
+inIei2pxqEZ/+yVrk6kh5G6C7YmQ4R+OUuCaB4Ix5t+hNrh/6labx6heSZfETcNC
+WjNesMnr/4BUyrDZr1wo++VJYl3z46ukjASLnlEzldMAJekbaSGS6sZALfUqADuD
+1BnYRAcmy3YvKD7lfBr2ocOSF50+1byM9SJZucId1iu3jSpdV7iOlkj0cikwZWa6
+Oony54PHJlNdTzbPyfDMJ08Gj7Sdog3wecyQjGkmfbGvbMDCbWVLvHMdL1bfZn6W
+CDMtRRYEi6w/dRPm+KiyIzYSR0hPt802D8gII916w2RBUq04/15y7AjSzk4frDZy
+YDOZoHSLbvie9/hg7IasnWt5yV2Xc2RQhHWiGuw/9O7tnHCehml9noppy7BjlOux
+7YR6+2KlguskKcTpbVawqjmgvPLnqeAysJ8BCAasTRJlvg7xGXYfU8IJ6MZpG87k
+vskHydbQNG8NV0L1mWTdNwjzMiwQdAJPwsox0CA3eX9d2WT/cteEJfQFczQtI6Ae
+YZFERZINKg3Ip8+6l9eX
+=0DTv
+-----END PGP SIGNATURE-----
+
+--/TUrtqMIkCP4YtJm--
