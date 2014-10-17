@@ -1,5 +1,9 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 30 Oct 2014 22:00:10 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from comal.ext.ti.com ([198.47.26.152]:49147 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752343AbaJQO5k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 Oct 2014 10:57:40 -0400
+Date: Fri, 17 Oct 2014 09:57:08 -0500
 From: Felipe Balbi <balbi@ti.com>
 To: Huang Rui <ray.huang@amd.com>
 CC: Felipe Balbi <balbi@ti.com>,
@@ -8,102 +12,87 @@ CC: Felipe Balbi <balbi@ti.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
 	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Jason Chang <jason.chang@amd.com>,
 	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
 	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: Re: [PATCH v4 14/20] usb: dwc3: add Tx de-emphasis quirk
-Message-ID: <20141031030010.GB1080@saruman>
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 14/16] usb: dwc3: enable rx_detect to polling lfps
+ quirk
+Message-ID: <20141017145708.GJ26260@saruman>
 Reply-To: <balbi@ti.com>
-References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
- <1414663725-2195-15-git-send-email-ray.huang@amd.com>
- <20141030164210.GM10130@saruman>
- <20141031012954.GA20367@hr-slim.amd.com>
+References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+ <1413536021-4886-15-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="jq0ap7NbKX2Kqbes"
-In-Reply-To: <20141031012954.GA20367@hr-slim.amd.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	protocol="application/pgp-signature"; boundary="cN519qCC4CN1mUcX"
+In-Reply-To: <1413536021-4886-15-git-send-email-ray.huang@amd.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---jq0ap7NbKX2Kqbes
+--cN519qCC4CN1mUcX
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-Hi,
-
-On Fri, Oct 31, 2014 at 09:29:55AM +0800, Huang Rui wrote:
-> On Thu, Oct 30, 2014 at 11:42:10AM -0500, Felipe Balbi wrote:
-> > On Thu, Oct 30, 2014 at 06:08:39PM +0800, Huang Rui wrote:
-> > > This patch adds Tx de-emphasis quirk, and the Tx de-emphasis value is
-> > > configurable according to PIPE3 specification.
-> > >=20
-> > > Value		Description
-> > > 0		-6dB de-emphasis
-> > > 1		-3.5dB de-emphasis
-> > > 2		No de-emphasis
-> > > 3		Reserved
-> > >=20
-> > > It can be configured on DT or platform data.
-> > >=20
-> > > Signed-off-by: Huang Rui <ray.huang@amd.com>
-> >=20
-> > doesn't apply:
-> >=20
-> > checking file Documentation/devicetree/bindings/usb/dwc3.txt
-> > checking file drivers/usb/dwc3/core.c
-> > Hunk #2 succeeded at 718 (offset -2 lines).
-> > Hunk #3 succeeded at 777 (offset -2 lines).
-> > Hunk #4 succeeded at 807 (offset -2 lines).
-> > Hunk #5 succeeded at 829 (offset -2 lines).
-> > Hunk #6 succeeded at 840 (offset -2 lines).
-> > checking file drivers/usb/dwc3/core.h
-> > Hunk #2 FAILED at 697.
-> > 1 out of 3 hunks FAILED
-> > checking file drivers/usb/dwc3/platform_data.h
-> >=20
-> > please rebase on testing/next
-> >=20
+On Fri, Oct 17, 2014 at 04:53:39PM +0800, Huang Rui wrote:
+> AMD NL needs to enable RX_DETECT to Polling.LFPS control quirk.
 >=20
-> That's because in patch 12 and other ones you applied, I changed
-> addreviations to uppercase such as "lfps" -> "LFPS", "fpga" -> "FPGA".
-
-didn't notice that. I'll just reapply the entire series.
-
-> Previous 13 patches are already applied. Do you mean, I send the other
-> patches since "Tx de-emphasis" (patch 14) after rebased current
-> branch.
+> Signed-off-by: Huang Rui <ray.huang@amd.com>
+> ---
+>  drivers/usb/dwc3/core.c          | 3 +++
+>  drivers/usb/dwc3/core.h          | 1 +
+>  drivers/usb/dwc3/dwc3-pci.c      | 3 ++-
+>  drivers/usb/dwc3/platform_data.h | 1 +
+>  4 files changed, 7 insertions(+), 1 deletion(-)
 >=20
-> If yes, at patch 1, "Enabling this bit ... hibernation .. yet", should
-> it be updated in extra patch?
+> diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+> index a1ee586..f3c9699 100644
+> --- a/drivers/usb/dwc3/core.c
+> +++ b/drivers/usb/dwc3/core.c
+> @@ -389,6 +389,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
+>  	if (dwc->quirks & DWC3_QUIRK_LFPSFILT)
+>  		reg |=3D DWC3_GUSB3PIPECTL_LFPSFILT;
+> =20
+> +	if (dwc->quirks & DWC3_QUIRK_RX_DETOPOLL)
 
-don't worry, I'll reapply the whole series, thanks :-)
+	if (dwc->rx_detect_to_polling_quirk)
+
+> diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
+> index d1f0901..6f789fd 100644
+> --- a/drivers/usb/dwc3/dwc3-pci.c
+> +++ b/drivers/usb/dwc3/dwc3-pci.c
+> @@ -155,7 +155,8 @@ static int dwc3_pci_probe(struct pci_dev *pci,
+>  			| DWC3_QUIRK_REQP1P2P3
+>  			| DWC3_QUIRK_DEPP1P2P3
+>  			| DWC3_QUIRK_DEPOCHANGE
+> -			| DWC3_QUIRK_LFPSFILT;
+> +			| DWC3_QUIRK_LFPSFILT
+> +			| DWC3_QUIRK_RX_DETOPOLL;
+
+last patch.
 
 --=20
 balbi
 
---jq0ap7NbKX2Kqbes
+--cN519qCC4CN1mUcX
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1
 
-iQIcBAEBAgAGBQJUUvs6AAoJEIaOsuA1yqREZ5gP/0O2Awqolw+xdH0HB0yJ2Ys1
-EKNq8PEYrXazHL65nCQYeTlHm2yjqQoVk9fs6sFcBHuda5TUQqr5VS4MiDepNvge
-YD0KDRD27fwjaWvZ317R7uoPu3T8ovDZSsRTrUtmfhmgJ+J6BDTsKbgWLaIS2NYf
-NNuU5kxr2GS1hHp3egR54tK9AK5JptmsI7wNg7Nex5Pzsy1MpDCdHeoT40leg5N5
-F9Li4m+0EBapmxjZMfTRPIVFkF8JvpRhq5GeQsM/0P6vkvf3jsrhXKqQQ4+UjjMA
-0FCUuHbyXKYiZ0hBQOYPfQGJ3AJqEcnB0K/kZMTpU7WkjUQPtCtAxTl545nisT3X
-XiJviKKsVMzw1GD6FEZmuy8M4NfzDHrxpenzi3hHsi5aEaTnsCGdzmVRXfrClY3S
-X6uHT4ZROWPA1lpyvR8O5kLqQC/fSqj2UA/mTJdovdUTBwXApEQ7pC14E0Nvjvof
-uyk9H2IN9tC2vBB0/8eRJCN5Ni5E8cKxm+ZbF23VDv2pjPKNDAZVAzqTC/ms4iZF
-O07XbTam3nvh0tj/g7szQ5k6eo277CzK1ULOCQFD9x4PnUDNCcNCP4eHW9Veag4/
-WYDG/pN1JgUK7thIM2x1yJAGyUzMWpLh8oUx1WrER1PZ/+bBTy78FLha2IUZY7zb
-dMhny++MnxkXrTmTbJHz
-=U9H7
+iQIcBAEBAgAGBQJUQS5EAAoJEIaOsuA1yqREuOYP/3s0CJovqUG5aRj/0kmOWI1l
+gLSYG+G6u6GZLBW1Gk4wXoWHb6a00doW0QZXGwiLrxEnhu6HKB4Js657WddjskQf
+gFd+ieMWDQp7SgEqOql8pCstYhVzfDjU7wFEEJWp5ZdC9r3SAzTVRaob3S6ogLZk
+IEdVmF2C9PWbLImkENRqBaVODFpNWkXRr/dEPsvB/kLyw/s2+8Xm1XyfGmJdh/Ya
+hHD97E0khZ3SLA5+YPHKgkS+DGVTAOhnCLJDYxmXdVhNrIEKsNPMWjJ0y/BDUqr6
+LBjHGEH4BbWHbnB6O/Yhe3P4LoB9nzDBOBoRt8sfRAkOa+f8o30P1yFE4rxGg8/C
+dJKW4lmCECQ9UrMakLmGPQ/hxmjBES/lQZbZzTkIRP8VQQC3pyY3ciWLcZKJm0cc
+/M7hmXjReAWT0VhltYoe7yTepPoALkrm75i7teqPegGqucvDZ2a2QnhBvTyJU9K3
+GnxeFES2PsUbq3iG/+AZ50aIKjwnPZGNyhccqB2356jGrfiREcTWWQP+Dnx+dWf8
+WHPCigVpl42qzbtNoJDPHUAv1UHuRTGF1z6JrniLUqnvAG9eNy5BNxaPo81MdGui
+rjjlXA94Pmb2gmFDe+3NcYMBDRtGcSInu2HAloIi6HMhd4mrUcKfrVs4GWlg1xEB
+dHo3RO+AfkaUPMx5Y2Pm
+=I+gS
 -----END PGP SIGNATURE-----
 
---jq0ap7NbKX2Kqbes--
+--cN519qCC4CN1mUcX--
