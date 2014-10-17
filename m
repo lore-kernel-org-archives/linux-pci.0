@@ -1,57 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0136.outbound.protection.outlook.com ([65.55.169.136]:20311
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751269AbaJPIXK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 16 Oct 2014 04:23:10 -0400
-From: Richard Zhu <richard.zhu@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
-	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Richard Zhu <richard.zhu@freescale.com>
-Subject: [PATCH v6 07/13] ARM: imx6sx: Add imx6sx pcie related gpr bits definitions
-Date: Thu, 16 Oct 2014 15:52:37 +0800
-Message-ID: <1413445963-24706-8-git-send-email-richard.zhu@freescale.com>
-In-Reply-To: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
-References: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from ozlabs.org ([103.22.144.67]:43696 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750729AbaJQHXZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 Oct 2014 03:23:25 -0400
+Message-ID: <1413530600.21650.5.camel@concordia>
+Subject: Re: [PATCH v3 21/27] Powerpc/MSI: Use MSI chip framework to
+ configure MSI/MSI-X irq
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
+	Bharat.Bhushan@freescale.com, x86@kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Liviu Dudau <liviu@dudau.co.uk>
+Date: Fri, 17 Oct 2014 18:23:20 +1100
+In-Reply-To: <1413342435-7876-22-git-send-email-wangyijing@huawei.com>
+References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
+	 <1413342435-7876-22-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Richard Zhu <r65037@freescale.com>
+On Wed, 2014-10-15 at 11:07 +0800, Yijing Wang wrote:
+> Use MSI chip framework instead of arch MSI functions to configure
+> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+> Hi Michael,
+>    I dropped the Acked-by , because this version has a
+> lot changes compared to last. So, I guess you may want to check it again.
 
-Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
----
- include/linux/mfd/syscon/imx6q-iomuxc-gpr.h | 9 +++++++++
- 1 file changed, 9 insertions(+)
+OK thanks.
 
-diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-index ff44374..3273b87 100644
---- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-+++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-@@ -301,6 +301,7 @@
- #define IMX6Q_GPR12_DEVICE_TYPE			(0xf << 12)
- #define IMX6Q_GPR12_PCIE_CTL_2			BIT(10)
- #define IMX6Q_GPR12_LOS_LEVEL			(0x1f << 4)
-+#define IMX6Q_GPR12_LOS_LEVEL_9			(0x9 << 4)
- 
- #define IMX6Q_GPR13_SDMA_STOP_REQ		BIT(30)
- #define IMX6Q_GPR13_CAN2_STOP_REQ		BIT(29)
-@@ -395,4 +396,12 @@
- #define IMX6SL_GPR1_FEC_CLOCK_MUX1_SEL_MASK    (0x3 << 17)
- #define IMX6SL_GPR1_FEC_CLOCK_MUX2_SEL_MASK    (0x1 << 14)
- 
-+/* For imx6sx iomux gpr register field define */
-+#define IMX6SX_GPR5_PCIE_BTNRST			BIT(19)
-+#define IMX6SX_GPR5_PCIE_PERST			BIT(18)
-+
-+#define IMX6SX_GPR12_PCIE_PM_TURN_OFF		BIT(16)
-+#define IMX6SX_GPR12_PCIE_TEST_PD		BIT(30)
-+#define IMX6SX_GPR12_RX_EQ_MASK			(0x7 << 0)
-+#define IMX6SX_GPR12_RX_EQ_2			(0x2 << 0)
- #endif /* __LINUX_IMX6Q_IOMUXC_GPR_H */
--- 
-1.9.1
+Still looks OK and boots on one of my test systems that uses MSI.
+
+Acked-by: Michael Ellerman <mpe@ellerman.id.au> (for powerpc)
+
+
+cheers
+
 
