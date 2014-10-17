@@ -1,88 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:28069 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752468AbaJ0Mlr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Oct 2014 08:41:47 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 04/16] Irq_remapping/MSI: Use MSI controller framework to configure MSI/MSI-X irq
-Date: Mon, 27 Oct 2014 21:22:10 +0800
-Message-ID: <1414416142-31239-5-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
-References: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v2 04/16] usb: dwc3: add a flag to check if it is fpga board
+Date: Fri, 17 Oct 2014 16:53:29 +0800
+Message-ID: <1413536021-4886-5-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use MSI controller framework instead of arch MSI functions to configure
-MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+Some chip vendor is on pre-silicon phase, which needs to use the simulation
+board. It should have the same product and vendor id with the true soc, but
+might have some minor different configurations.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Below thread discussion proposes to find a method to distinguish between
+simulation board and soc.
+
+http://marc.info/?l=linux-usb&m=141194772206369&w=2
+
+In Andvanced Configuration of coreConsultant, there is the parameter of
+DWC_USB_EN_FPGA. This bit has the function we need. And it would response as 7
+bit of GHWPARAMS6 register. So it's able to check this functional bit to confirm
+if works on FPGA board.
+
+Reported-by: Felipe Balbi <balbi@ti.com>
+Signed-off-by: Huang Rui <ray.huang@amd.com>
 ---
- drivers/iommu/irq_remapping.c |   11 ++++++++---
- 1 files changed, 8 insertions(+), 3 deletions(-)
+ drivers/usb/dwc3/core.c | 6 ++++++
+ drivers/usb/dwc3/core.h | 5 +++++
+ 2 files changed, 11 insertions(+)
 
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 74a1767..6db1459 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -140,8 +140,8 @@ error:
- 	return ret;
- }
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index bf77509..ddac372 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -455,6 +455,12 @@ static int dwc3_core_init(struct dwc3 *dwc)
+ 		dev_dbg(dwc->dev, "No power optimization available\n");
+ 	}
  
--static int irq_remapping_setup_msi_irqs(struct pci_dev *dev,
--					int nvec, int type)
-+static int irq_remapping_setup_msi_irqs(struct msi_controller *ctrl,
-+		struct pci_dev *dev, int nvec, int type)
- {
- 	if (type == PCI_CAP_ID_MSI)
- 		return do_setup_msi_irqs(dev, nvec);
-@@ -149,6 +149,11 @@ static int irq_remapping_setup_msi_irqs(struct pci_dev *dev,
- 		return do_setup_msix_irqs(dev, nvec);
- }
- 
-+static struct msi_controller remap_msi_ctrl = {
-+	.setup_irqs = irq_remapping_setup_msi_irqs,
-+	.teardown_irq = native_teardown_msi_irq,
-+};
++	/* check if current dwc3 is on simulation board */
++	if (dwc->hwparams.hwparams6 & DWC3_GHWPARAMS6_EN_FPGA) {
++		dev_dbg(dwc->dev, "it is on FPGA board\n");
++		dwc->is_fpga = true;
++	}
 +
- static void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
- {
  	/*
-@@ -166,9 +171,9 @@ static void __init irq_remapping_modify_x86_ops(void)
- 	x86_io_apic_ops.set_affinity	= set_remapped_irq_affinity;
- 	x86_io_apic_ops.setup_entry	= setup_ioapic_remapped_entry;
- 	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
--	x86_msi.setup_msi_irqs		= irq_remapping_setup_msi_irqs;
- 	x86_msi.setup_hpet_msi		= setup_hpet_msi_remapped;
- 	x86_msi.compose_msi_msg		= compose_remapped_msi_msg;
-+	x86_msi_ctrl = &remap_msi_ctrl;
- }
+ 	 * WORKAROUND: DWC3 revisions <1.90a have a bug
+ 	 * where the device can fail to connect at SuperSpeed
+diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+index a715ee1..f6ee623 100644
+--- a/drivers/usb/dwc3/core.h
++++ b/drivers/usb/dwc3/core.h
+@@ -210,6 +210,9 @@
+ #define DWC3_GHWPARAMS4_HIBER_SCRATCHBUFS(n)	(((n) & (0x0f << 13)) >> 13)
+ #define DWC3_MAX_HIBER_SCRATCHBUFS		15
  
- static __init int setup_nointremap(char *str)
++/* Global HWPARAMS6 Register */
++#define DWC3_GHWPARAMS6_EN_FPGA			(1 << 7)
++
+ /* Device Configuration Register */
+ #define DWC3_DCFG_DEVADDR(addr)	((addr) << 3)
+ #define DWC3_DCFG_DEVADDR_MASK	DWC3_DCFG_DEVADDR(0x7f)
+@@ -662,6 +665,7 @@ struct dwc3_scratchpad_array {
+  * @ep0_expect_in: true when we expect a DATA IN transfer
+  * @has_hibernation: true when dwc3 was configured with Hibernation
+  * @is_selfpowered: true when we are selfpowered
++ * @is_fpga: true when we are using the FPGA board
+  * @needs_fifo_resize: not all users might want fifo resizing, flag it
+  * @pullups_connected: true when Run/Stop bit is set
+  * @resize_fifos: tells us it's ok to reconfigure our TxFIFO sizes.
+@@ -765,6 +769,7 @@ struct dwc3 {
+ 	unsigned		ep0_expect_in:1;
+ 	unsigned		has_hibernation:1;
+ 	unsigned		is_selfpowered:1;
++	unsigned		is_fpga:1;
+ 	unsigned		needs_fifo_resize:1;
+ 	unsigned		pullups_connected:1;
+ 	unsigned		resize_fifos:1;
 -- 
-1.7.1
+1.9.1
 
