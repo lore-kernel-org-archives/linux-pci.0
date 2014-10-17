@@ -1,45 +1,202 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f50.google.com ([209.85.216.50]:55449 "EHLO
-	mail-qa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750857AbaJDO4P (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 4 Oct 2014 10:56:15 -0400
-Received: by mail-qa0-f50.google.com with SMTP id w8so1962000qac.23
-        for <linux-pci@vger.kernel.org>; Sat, 04 Oct 2014 07:56:14 -0700 (PDT)
-From: Fabio Estevam <festevam@gmail.com>
-To: bhelgaas@google.com
-Cc: l.stach@pengutronix.de, Hong-Xing.Zhu@freescale.com,
-	linux-pci@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Subject: [PATCH] PCI: imx6q-pcie doc: Update the clocks descriptions to use defines
-Date: Sat,  4 Oct 2014 11:55:48 -0300
-Message-Id: <1412434548-11219-1-git-send-email-festevam@gmail.com>
+Received: from mail-bl2on0114.outbound.protection.outlook.com ([65.55.169.114]:56493
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751231AbaJQJN1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Oct 2014 05:13:27 -0400
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v2 00/16] usb: dwc3: add support for AMD NL SoC
+Date: Fri, 17 Oct 2014 16:53:25 +0800
+Message-ID: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="yes"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@freescale.com>
+Hi,
 
-Let's make the imx6q-pcie example to actually match the usage on imx6qdl.dtsi
-by providing the clock names via defines rather than hardcoded numbers.
+The series of patches add AMD NL SoC support for DesignWare USB3 OTG IP with
+PCI bus glue layer. This controller supported hibernation, LPM erratum and used
+the 2.80a IP version and amd own phy. Current implementation support both
+simulation and SoC platform. And already tested with gadget zero and msc tool.
+It works well on file storage gadget.
 
-Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
----
- Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index 6fbba53..0b28b52 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -35,6 +35,8 @@ Example:
- 		                <0 0 0 2 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
- 		                <0 0 0 3 &intc GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>,
- 		                <0 0 0 4 &intc GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
--		clocks = <&clks 144>, <&clks 206>, <&clks 189>;
-+		clocks = <&clks IMX6QDL_CLK_PCIE_AXI>,
-+			 <&clks IMX6QDL_CLK_LVDS1_GATE>,
-+			 <&clks IMX6QDL_CLK_PCIE_REF_125M>;
- 		clock-names = "pcie", "pcie_bus", "pcie_phy";
- 	};
+These patches are generated on balbi/testing/next
+
+Changes from v1 -> v2
+- remove dual role function temporarily
+- add pci quirk to avoid to bind with xhci driver
+- distinguish between simulation board and soc
+- break down all the special quirks
+
+
+Patch 1:
+- add PCI device id into pci bus glue
+
+Patch 2:
+- add PCI quirk to avoid to bind with xhci
+
+Patch 3:
+- enable hibernation
+
+Patch 4:
+- distinguish between simulation board and soc
+
+Patch 5:
+- add quirks flag to be compatible for kinds of soc
+
+Patch 6 - 16:
+- as felipe's suggestion, break down all the special quirks of amd nl
+
+
+Patch set already passed all the MSC testing, detailed result is below:
+
+root@hr-ub:/home/ray/felipe/usb-tools# ./msc.sh -o /dev/sdb1
+Starting test suite: 2014年 10月 09日 星期四 18:02:41 CST
+test 0a: simple 4k read/write
+test  0: sent       3.91 MB read       0.03 MB/s write       0.03 MB/s ... success
+test 0b: simple 8k read/write
+test  0: sent       7.81 MB read       6.15 MB/s write       5.96 MB/s ... success
+test 0c: simple 16k read/write
+test  0: sent      15.62 MB read      14.30 MB/s write      12.97 MB/s ... success
+test 0d: simple 32k read/write
+test  0: sent      31.25 MB read      18.26 MB/s write      17.10 MB/s ... success
+test 0e: simple 64k read/write
+test  0: sent      62.50 MB read      22.00 MB/s write      16.33 MB/s ... success
+test 1: simple 1-sector read/write
+test  1: sent     500.00 kB read       1.05 MB/s write       0.93 MB/s ... success
+test 2: simple 8-sectors read/write
+test  2: sent       3.91 MB read       6.52 MB/s write       6.10 MB/s ... success
+test 3: simple 32-sectors read/write
+test  3: sent      15.62 MB read      14.33 MB/s write      13.14 MB/s ... success
+test 4: simple 64-sectors read/write
+test  4: sent      31.25 MB read      17.79 MB/s write      16.38 MB/s ... success
+test 5a: scatter/gather for 2-sectors buflen 4k
+test  5: sent    1000.00 kB read       1.85 MB/s write       1.56 MB/s ... success
+test 5b: scatter/gather for 2-sectors buflen 8k
+test  5: sent    1000.00 kB read       1.91 MB/s write       1.63 MB/s ... success
+test 5c: scatter/gather for 2-sectors buflen 16k
+test  5: sent    1000.00 kB read       1.94 MB/s write       1.62 MB/s ... success
+test 5d: scatter/gather for 2-sectors buflen 32k
+test  5: sent    1000.00 kB read       1.93 MB/s write       1.64 MB/s ... success
+test 5e: scatter/gather for 2-sectors buflen 64k
+test  5: sent    1000.00 kB read       1.96 MB/s write       1.68 MB/s ... success
+test 6a: scatter/gather for 8-sectors buflen 4k
+test  6: sent       3.91 MB read       6.53 MB/s write       6.05 MB/s ... success
+test 6b: scatter/gather for 8-sectors buflen 8k
+test  6: sent       3.91 MB read       6.56 MB/s write       5.98 MB/s ... success
+test 6c: scatter/gather for 8-sectors buflen 16k
+test  6: sent       3.91 MB read       6.55 MB/s write       6.15 MB/s ... success
+test 6d: scatter/gather for 8-sectors buflen 32k
+test  6: sent       3.91 MB read       6.51 MB/s write       6.06 MB/s ... success
+test 6e: scatter/gather for 8-sectors buflen 64k
+test  6: sent       3.91 MB read       6.50 MB/s write       6.06 MB/s ... success
+test 7a: scatter/gather for 32-sectors buflen 16k
+test  7: sent      15.62 MB read      14.23 MB/s write      12.99 MB/s ... success
+test 7b: scatter/gather for 32-sectors buflen 32k
+test  7: sent      15.62 MB read      14.27 MB/s write      12.91 MB/s ... success
+test 7c: scatter/gather for 32-sectors buflen 64k
+test  7: sent      15.62 MB read      14.73 MB/s write      13.00 MB/s ... success
+test 8a: scatter/gather for 64-sectors buflen 32k
+test  8: sent      31.25 MB read      18.42 MB/s write      16.65 MB/s ... success
+test 8b: scatter/gather for 64-sectors buflen 64k
+test  8: sent      31.25 MB read      17.70 MB/s write      16.39 MB/s ... success
+test 9: scatter/gather for 128-sectors buflen 64k
+test  9: sent      62.50 MB read      21.14 MB/s write      16.07 MB/s ... success
+test 10: read over the end of the block device
+test 10: sent      62.01 MB read       0.00 MB/s write       0.00 MB/s ... success
+test 11: lseek past the end of the block device
+test 11: sent       0.00 B read       0.00 MB/s write       0.00 MB/s ... success
+test 12: write over the end of the block device
+test 12: sent       0.00 B read       0.00 MB/s write       0.00 MB/s ... success
+test 13: write 1 sg, read 8 random size sgs
+test 13: sent      62.50 MB read      21.61 MB/s write      16.21 MB/s ... success
+test 14: write 8 random size sgs, read 1 sg
+test 14: sent      62.50 MB read      22.52 MB/s write      18.61 MB/s ... success
+test 15: write and read 8 random size sgs
+test 15: sent      62.50 MB read      22.31 MB/s write      19.28 MB/s ... success
+test 16a: read with heap allocated buffer
+test 16: sent      62.50 MB read      21.69 MB/s write       0.00 MB/s ... success
+test 16b: read with stack allocated buffer
+test 16: sent      62.50 MB read      21.42 MB/s write       0.00 MB/s ... success
+test 17a: write with heap allocated buffer
+test 17: sent       0.00 B read       0.00 MB/s write      19.94 MB/s ... success
+test 17b: write with stack allocated buffer
+test 17: sent       0.00 B read       0.00 MB/s write      20.09 MB/s ... success
+test 18a: write 0x00 and read it back
+test 18: sent      62.50 MB read      21.94 MB/s write      16.96 MB/s ... success
+test 18b: write 0xff and read it back
+test 18: sent      62.50 MB read      19.89 MB/s write      15.51 MB/s ... success
+test 18c: write 0x55 and read it back
+test 18: sent      62.50 MB read      22.00 MB/s write      16.62 MB/s ... success
+test 18d: write 0xaa and read it back
+test 18: sent      62.50 MB read      21.81 MB/s write      16.53 MB/s ... success
+test 18e: write 0x11 and read it back
+test 18: sent      62.50 MB read      22.33 MB/s write      17.00 MB/s ... success
+test 18f: write 0x22 and read it back
+test 18: sent      62.50 MB read      21.66 MB/s write      16.44 MB/s ... success
+test 18g: write 0x44 and read it back
+test 18: sent      62.50 MB read      22.23 MB/s write      17.08 MB/s ... success
+test 18h: write 0x88 and read it back
+test 18: sent      62.50 MB read      21.54 MB/s write      16.17 MB/s ... success
+test 18i: write 0x33 and read it back
+test 18: sent      62.50 MB read      21.20 MB/s write      16.58 MB/s ... success
+test 18j: write 0x66 and read it back
+test 18: sent      62.50 MB read      21.82 MB/s write      16.13 MB/s ... success
+test 18k: write 0x99 and read it back
+test 18: sent      62.50 MB read      21.92 MB/s write      16.36 MB/s ... success
+test 18l: write 0xcc and read it back
+test 18: sent      62.50 MB read      22.37 MB/s write      16.74 MB/s ... success
+test 18m: write 0x77 and read it back
+test 18: sent      62.50 MB read      22.34 MB/s write      16.24 MB/s ... success
+test 18n: write 0xbb and read it back
+test 18: sent      62.50 MB read      21.82 MB/s write      16.23 MB/s ... success
+test 18o: write 0xdd and read it back
+test 18: sent      62.50 MB read      21.38 MB/s write      16.48 MB/s ... success
+test 18p: write 0xee and read it back
+test 18: sent      62.50 MB read      22.33 MB/s write      16.15 MB/s ... success
+Test suite ended: 2014年 10月 09日 星期四 18:13:36 CST
+
+
+Thanks,
+Rui
+
+Huang Rui (16):
+  usb: dwc3: add AMD NL support
+  pci: quirks: add quirk to avoid AMD NL to bind with xhci
+  usb: dwc3: enable hibernation if to be supported
+  usb: dwc3: add a flag to check if it is fpga board
+  usb: dwc3: add quirks support to be compatible for kinds of SoCs
+  usb: dwc3: add disscramble quirk
+  usb: dwc3: add lpm erratum support
+  usb: dwc3: add u2exit lfps quirk
+  usb: dwc3: add P3 in U2 SS inactive quirk
+  usb: dwc3: add request p1p2p3 quirk
+  usb: dwc3: add delay p1p2p3 quirk
+  usb: dwc3: add delay phy power change quirk
+  usb: dwc3: add lfps filter quirk
+  usb: dwc3: enable rx_detect to polling lfps quirk
+  usb: dwc3: add tx demphasis quirk
+  usb: dwc3: enable usb suspend phy
+
+ drivers/pci/quirks.c             | 20 ++++++++++++
+ drivers/usb/dwc3/core.c          | 66 +++++++++++++++++++++++++++++++++++++++-
+ drivers/usb/dwc3/core.h          | 42 +++++++++++++++++++------
+ drivers/usb/dwc3/dwc3-pci.c      | 26 ++++++++++++++++
+ drivers/usb/dwc3/gadget.c        |  7 +++++
+ drivers/usb/dwc3/platform_data.h | 16 ++++++++++
+ 6 files changed, 167 insertions(+), 10 deletions(-)
+
 -- 
 1.9.1
 
