@@ -1,69 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0143.outbound.protection.outlook.com ([65.55.169.143]:31934
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751220AbaJTFzr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Oct 2014 01:55:47 -0400
-From: Richard Zhu <richard.zhu@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
-	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
-	<m-karicheri2@ti.com>, Richard Zhu <r65037@freescale.com>,
-	Richard Zhu <richard.zhu@freescale.com>
-Subject: [PATCH v8 4/9] PCI: imx6: Wait the clocks to stabilize after ref_en
-Date: Mon, 20 Oct 2014 13:25:19 +0800
-Message-ID: <1413782724-30795-5-git-send-email-richard.zhu@freescale.com>
-In-Reply-To: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
-References: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:49219 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752987AbaJQOuT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 Oct 2014 10:50:19 -0400
+Date: Fri, 17 Oct 2014 09:50:00 -0500
+From: Felipe Balbi <balbi@ti.com>
+To: Huang Rui <ray.huang@amd.com>
+CC: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 08/16] usb: dwc3: add u2exit lfps quirk
+Message-ID: <20141017145000.GD26260@saruman>
+Reply-To: <balbi@ti.com>
+References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+ <1413536021-4886-9-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="iVCmgExH7+hIHJ1A"
+In-Reply-To: <1413536021-4886-9-git-send-email-ray.huang@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Richard Zhu <r65037@freescale.com>
+--iVCmgExH7+hIHJ1A
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-For boards without a reset gpio we skip the delay between enabling
-the pcie_ref_clk and touching the RC registers for configuration.
-System would be hangs when the clocks are not yet settled in the DW
-PCIe core. So we need to make sure that there is always an
-appropriate delay between those two actions.
+Hi,
 
-Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
-Tested-by: Tim Harvey <tharvey@gateworks.com>
----
- drivers/pci/host/pci-imx6.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+On Fri, Oct 17, 2014 at 04:53:33PM +0800, Huang Rui wrote:
+> AMD NL needs to enable u2exit lfps quirk.
+>=20
+> Signed-off-by: Huang Rui <ray.huang@amd.com>
+> ---
+>  drivers/usb/dwc3/core.c          | 4 ++++
+>  drivers/usb/dwc3/core.h          | 1 +
+>  drivers/usb/dwc3/dwc3-pci.c      | 3 ++-
+>  drivers/usb/dwc3/platform_data.h | 1 +
+>  4 files changed, 8 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+> index 25db533..7322d85 100644
+> --- a/drivers/usb/dwc3/core.c
+> +++ b/drivers/usb/dwc3/core.c
+> @@ -467,6 +467,10 @@ static int dwc3_core_init(struct dwc3 *dwc)
+>  		reg |=3D DWC3_GCTL_DISSCRAMBLE;
+>  	else
+>  		reg &=3D ~DWC3_GCTL_DISSCRAMBLE;
+> +
+> +	if (dwc->quirks & DWC3_QUIRK_U2EXIT_LFPS)
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 233fe8a..eac96fb 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -275,15 +275,22 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 		goto err_pcie;
- 	}
- 
--	/* allow the clocks to stabilize */
--	usleep_range(200, 500);
--
- 	/* power up core phy and enable ref clock */
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
-+	/*
-+	 * the async reset input need ref clock to sync internally,
-+	 * when the ref clock comes after reset, internal synced
-+	 * reset time is too short , cannot meet the requirement.
-+	 * add one ~10us delay here.
-+	 */
-+	udelay(10);
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
- 
-+	/* allow the clocks to stabilize */
-+	usleep_range(200, 500);
-+
- 	/* Some boards don't have PCIe reset GPIO. */
- 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
- 		gpio_set_value(imx6_pcie->reset_gpio, 0);
--- 
-1.9.1
+this should be:
 
+	if (dwc->u2_exit_lfps_quirk)
+
+> +		reg |=3D DWC3_GCTL_U2EXIT_LFPS;
+> +
+>  	/*
+>  	 * WORKAROUND: DWC3 revisions <1.90a have a bug
+>  	 * where the device can fail to connect at SuperSpeed
+> diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+> index d58479e..3d27f10 100644
+> --- a/drivers/usb/dwc3/core.h
+> +++ b/drivers/usb/dwc3/core.h
+> @@ -166,6 +166,7 @@
+>  #define DWC3_GCTL_SCALEDOWN(n)		((n) << 4)
+>  #define DWC3_GCTL_SCALEDOWN_MASK	DWC3_GCTL_SCALEDOWN(3)
+>  #define DWC3_GCTL_DISSCRAMBLE		(1 << 3)
+> +#define DWC3_GCTL_U2EXIT_LFPS		(1 << 2)
+>  #define DWC3_GCTL_GBLHIBERNATIONEN	(1 << 1)
+>  #define DWC3_GCTL_DSBLCLKGTNG		(1 << 0)
+> =20
+> diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
+> index bbe946c..cdb9b04 100644
+> --- a/drivers/usb/dwc3/dwc3-pci.c
+> +++ b/drivers/usb/dwc3/dwc3-pci.c
+> @@ -149,7 +149,8 @@ static int dwc3_pci_probe(struct pci_dev *pci,
+>  	if (pci->vendor =3D=3D PCI_VENDOR_ID_AMD && pci->device =3D=3D
+>  			PCI_DEVICE_ID_AMD_NL) {
+>  		dwc3_pdata.has_lpm_erratum =3D true;
+> -		dwc3_pdata.quirks |=3D DWC3_QUIRK_AMD_NL;
+> +		dwc3_pdata.quirks |=3D DWC3_QUIRK_AMD_NL
+> +			| DWC3_QUIRK_U2EXIT_LFPS;
+>  	}
+
+should be combined and the last patch in the series.
+
+--=20
+balbi
+
+--iVCmgExH7+hIHJ1A
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUQSyYAAoJEIaOsuA1yqREmN4P/0F+vpunTtvNYWSnuyUZ6i+w
+ybRtq3dH943md/4TlAZ4if+dAiJ+FQTvjTHCsbuAeTotql6Th2g9RHHhMAgAfLyi
+2+HCWphymkUpaHfR8WLcHvfvNXU1GHKG55s1pC2otjaQujEncCd/qiHLi6MTd7C2
+7KmJjK/uhNgeS6tXtNLjG8h8j54fahJ0UjNblB9Da+T4ZTL4pe0KtnoV6aA2KNRS
+Lf6yItOQXvnS8jIpuolSXEXpeHDZvTLYod8XjZABAi7pGkKU4X02jSZMl8y79USq
+owD6u8pZil71PSd7+F6QMfDXVkmKECG/Hi0WwwMmunLw3NF7UYkfUgTngqGiLiPb
+AfW7PuzqwVeswU4p6NIoV8xbsysagv+45RuRJ2/i8hOtIYXpuicepGxflzXSJZz1
+4KhWaOgpJ+Ndhakesjc+aXIJDngPedJjfg6HuhjEcs/xQGhUTjUr0jvrjeI5ftnT
+onILaOQQc/y5sX4XqblKoTgROgydbA0PfmsLy8KIB3dPPfFwy4EdXYjp/8BTxjLN
+slIZgPEDhvwGI03rTQF31tfQsY1M22GX7cw3PzeZsjBBECumaySjvbUkVsoilo4c
+gjaAktdKFssHEplEz6amrcwzpjYAUSMsT1hMtzK3XBZ1DOS9qPA85LGHCj0lelrh
+ggByirP1nn8kUrUi3lCc
+=wK/w
+-----END PGP SIGNATURE-----
+
+--iVCmgExH7+hIHJ1A--
