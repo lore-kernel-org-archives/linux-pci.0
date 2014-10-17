@@ -1,133 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f42.google.com ([209.85.192.42]:60381 "EHLO
-	mail-qg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751507AbaJBPKM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Oct 2014 11:10:12 -0400
-Received: by mail-qg0-f42.google.com with SMTP id z60so2075841qgd.1
-        for <linux-pci@vger.kernel.org>; Thu, 02 Oct 2014 08:10:11 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v2 02/16] pci: quirks: add quirk to avoid AMD NL to bind with xhci
+Date: Fri, 17 Oct 2014 16:53:27 +0800
+Message-ID: <1413536021-4886-3-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <542A4A99.4030204@hp.com>
-References: <1412057394-7186-1-git-send-email-zhen-hual@hp.com> <542A4A99.4030204@hp.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 2 Oct 2014 09:09:50 -0600
-Message-ID: <CAErSpo56yKZgP3KLbZWRH78PXc8i2nrnN2aN-12j9HR+R5bhUA@mail.gmail.com>
-Subject: Re: [PATCH 1/1] pci/quirks: fix a dmar fault for intel 82599 card
-To: "Li, ZhenHua" <zhen-hual@hp.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Carolyn Wyborny <carolyn.wyborny@intel.com>,
-	Don Skidmore <donald.c.skidmore@intel.com>,
-	Greg Rose <gregory.v.rose@intel.com>,
-	Alex Duyck <alexander.h.duyck@intel.com>,
-	John Ronciak <john.ronciak@intel.com>,
-	Mitch Williams <mitch.a.williams@intel.com>,
-	Linux NICS <linux.nics@intel.com>,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>, linda.knippers@hp.com
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 30, 2014 at 12:15 AM, Li, ZhenHua <zhen-hual@hp.com> wrote:
-> Add Joerg to CC list. For it is also related to iommu module.
->
-> Joerg,
-> There was a try for this dmar fault,
->         https://lkml.org/lkml/2014/8/18/118
->
-> This patch is trying to fix the same thing.
->
->
-> Zhenhua
->
-> On 09/30/2014 02:09 PM, Li, Zhen-Hua wrote:
->>
->> On a HP system with Intel Corporation 82599 ethernet adapter, when kernel
->> crashed and the kdump kernel boots with intel_iommu=on, there may be some
->> unexpected DMA requests on this adapter, which will cause DMA Remapping
->> faults like:
->>      dmar: DRHD: handling fault status reg 102
->>      dmar: DMAR:[DMA Read] Request device [41:00.0] fault addr fff81000
->>      DMAR:[fault reason 01] Present bit in root entry is clear
->>
->> Analysis for this bug:
->>
->> The present bit is set in this function:
->>
->> static struct context_entry * device_to_context_entry(
->>                 struct intel_iommu *iommu, u8 bus, u8 devfn)
->> {
->>      ......
->>                  set_root_present(root);
->>      ......
->> }
->>
->> Calling tree:
->> ixgbe_open
->>      ixgbe_setup_tx_resources
->>          intel_alloc_coherent
->>              __intel_map_single
->>                  domain_context_mapping
->>                      domain_context_mapping_one
->>                          device_to_context_entry
->>
->> This means, the present bit in root entry will not be set until the device
->>   driver is loaded.
->>
->> But in the kdump kernel, some hardware device does not know the OS is the
->>   second kernel and the drivers should be loaded again, this causes there
->> are
->>   some unexpected DMA requsts on this device when it has not been
->> initialized,
->>   and then the DMA Remapping errors come.
->>
->> To fix this DMAR fault, we need to reset the bus that this device on.
->> Reset
->>   the device itself does not work.
+The dwc3 controller is the PCI-E device in AMD NL platform, but the class code
+of PCI header is 0x0c0330, the same with xHC. That's because it needs to meet
+the windows enviroment. The dwc3 controller acted as only host mode to bind with
+windows xhci driver.
+But on linux, sometimes, it would auto-bind with xhci driver as well (class code
+0x0c0330) despite it uses Pid/Vid on dwc3 driver.
 
-This seems like something that could happen with *any* device, not
-just the 82599 NIC.  Or is there something in the "kernel crash ->
-kexec -> kdump kernel" path that stops DMA for most devices, but not
-for the 82599?
+Heikki suggested to use the quirk to fix this issue, and the detailed discussion
+is at below thread:
+http://marc.info/?l=linux-usb&m=141197934712824&w=2
 
->> There also was a discussion:
->> https://lkml.org/lkml/2013/5/14/9
->>
->> Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
->> ---
->>   drivers/pci/quirks.c | 11 +++++++++++
->>   1 file changed, 11 insertions(+)
->>
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index 80c2d01..5198af3 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -25,6 +25,7 @@
->>   #include <linux/sched.h>
->>   #include <linux/ktime.h>
->>   #include <asm/dma.h>  /* isa_dma_bridge_buggy */
->> +#include <linux/crash_dump.h>
->>   #include "pci.h"
->>
->>   /*
->> @@ -3832,3 +3833,13 @@ void pci_dev_specific_enable_acs(struct pci_dev
->> *dev)
->>                 }
->>         }
->>   }
->> +
->> +#ifdef CONFIG_CRASH_DUMP
->> +void quirk_reset_buggy_devices(struct pci_dev *dev)
->> +{
->> +       if (unlikely(is_kdump_kernel()))
->> +               pci_try_reset_bus(dev->bus);
->> +}
->> +DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_INTEL, 0x10f8,
->> +               PCI_CLASS_NETWORK_ETHERNET, 8, quirk_reset_buggy_devices);
->> +#endif
->>
->
+Suggested-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Huang Rui <ray.huang@amd.com>
+---
+ drivers/pci/quirks.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 90acb32..3c911b7 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -378,6 +378,26 @@ static void quirk_ati_exploding_mce(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,	PCI_DEVICE_ID_ATI_RS100,   quirk_ati_exploding_mce);
+ 
++/* FIXME should define in <linux/pci_ids.h> */
++#define PCI_DEVICE_ID_AMD_NL	0x7912
++
++/*
++ * AMD NL SoC 7912 PCI device is dwc3 controller, but the class code of PCI
++ * header is 0x0c0330, the same with xHC. That's because it need to meet the
++ * windows enviroment. The dwc3 controller acted as only host mode to bind with
++ * windows xhci driver. But on linux, sometimes, we auto-bind with xhci driver
++ * as well (class code 0x0c0330) despite we use Pid/Vid on dwc3 driver. So this
++ * quirk used a dummy class code to avoid to bind with xhci driver at booting
++ * phase.
++ */
++static void quirk_amd_nl_class(struct pci_dev *pdev)
++{
++	/* Use a dummy class value instead of PCI header provided */
++	pdev->class = 0x0c03fe;
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_NL,
++		quirk_amd_nl_class);
++
+ /*
+  * Let's make the southbridge information explicit instead
+  * of having to worry about people probing the ACPI areas,
+-- 
+1.9.1
+
