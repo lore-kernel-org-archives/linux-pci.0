@@ -1,112 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f47.google.com ([209.85.213.47]:42989 "EHLO
-	mail-yh0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753240AbaJWSLW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Oct 2014 14:11:22 -0400
-Received: by mail-yh0-f47.google.com with SMTP id c41so1833345yho.34
-        for <linux-pci@vger.kernel.org>; Thu, 23 Oct 2014 11:11:21 -0700 (PDT)
-Date: Thu, 23 Oct 2014 12:11:18 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI / PM: handle failure to enable wakeup on PCIe PME
-Message-ID: <20141023181118.GC15847@google.com>
-References: <1413981115-22045-1-git-send-email-l.stach@pengutronix.de>
- <5149964.v982KmMHFP@vostro.rjw.lan>
+Received: from comal.ext.ti.com ([198.47.26.152]:48986 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752848AbaJQOy2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 Oct 2014 10:54:28 -0400
+Date: Fri, 17 Oct 2014 09:54:12 -0500
+From: Felipe Balbi <balbi@ti.com>
+To: Huang Rui <ray.huang@amd.com>
+CC: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 11/16] usb: dwc3: add delay p1p2p3 quirk
+Message-ID: <20141017145412.GG26260@saruman>
+Reply-To: <balbi@ti.com>
+References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+ <1413536021-4886-12-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5149964.v982KmMHFP@vostro.rjw.lan>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="1giRMj6yz/+FOIRq"
+In-Reply-To: <1413536021-4886-12-git-send-email-ray.huang@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 22, 2014 at 03:34:56PM +0200, Rafael J. Wysocki wrote:
-> On Wednesday, October 22, 2014 02:31:55 PM Lucas Stach wrote:
-> > If the irqchip handling the PCIe PME interrupt is not able
-> > to enable interrupt wakeup we should properly reflect this
-> > in the PME suspend status.
-> > 
-> > This fixes a kernel warning on resume, where it would try
-> > to disable the irq wakeup that failed to be activated while
-> > suspending. The issue was introduced with 76cde7e49590
-> > (PCI / PM: Make PCIe PME interrupts wake up from suspend-to-idle).
-> > 
-> > Reported-by: Richard Zhu <richard.zhu@freescale.com>
-> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> > Tested-by: Richard Zhu <richard.zhu@freescale.com>
-> 
-> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Bjorn, do you want me to handle this or will you take it?
+--1giRMj6yz/+FOIRq
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-It fixes 76cde7e49590, which it looks like you merged for v3.18-rc1, so
-probably this should be merged as a fix before v3.18, right?  If you agree,
-you can go ahead and merge it since you merged the original.
+Hi,
 
-It would be nice to have the actual warning, e.g., just the "Unbalanced IRQ
-384 wake disable" part, in the changelog to help correlate this with the 
-place where the problem is detected.
+On Fri, Oct 17, 2014 at 04:53:36PM +0800, Huang Rui wrote:
+> AMD NL needs to delay P0 to P1/P2/P3 request when entering U1/U2/U3.
+>=20
+> Signed-off-by: Huang Rui <ray.huang@amd.com>
+> ---
+>  drivers/usb/dwc3/core.c          | 3 +++
+>  drivers/usb/dwc3/core.h          | 2 ++
+>  drivers/usb/dwc3/dwc3-pci.c      | 3 ++-
+>  drivers/usb/dwc3/platform_data.h | 1 +
+>  4 files changed, 8 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+> index ec8b667..a9f1d4c 100644
+> --- a/drivers/usb/dwc3/core.c
+> +++ b/drivers/usb/dwc3/core.c
+> @@ -380,6 +380,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
+>  	if (dwc->quirks & DWC3_QUIRK_REQP1P2P3)
+>  		reg |=3D DWC3_GUSB3PIPECTL_REQP1P2P3;
+> =20
+> +	if (dwc->quirks & DWC3_QUIRK_DEPP1P2P3)
 
-Bjorn
+	if (dwc->delay_p1p2p3_quirk)
 
-> > ---
-> > Trimmed warning on resume looks like this:
-> > [  109.292736] WARNING: CPU: 0 PID: 609 at kernel/irq/manage.c:536 irq_set_irq_wake+0xc0/0xf8()
-> > [  109.301193] Unbalanced IRQ 384 wake disable
-> > [  109.305392] Modules linked in:
-> > [  109.308502] CPU: 0 PID: 609 Comm: kworker/u2:9 Tainted: G        W      3.18.0-rc1-00009-g820df3d-dirty #268
-> > [  109.318368] Workqueue: events_unbound async_run_entry_fn
-> > [  109.323718] Backtrace:
-> > [  109.326233] [<80012460>] (dump_backtrace) from [<80012744>] (show_stack+0x18/0x1c)
-> > [  109.339616] [<8001272c>] (show_stack) from [<806d8dc8>] (dump_stack+0x8c/0xa4)
-> > [  109.346885] [<806d8d3c>] (dump_stack) from [<8002a88c>] (warn_slowpath_common+0x70/0x94)
-> > [  109.360773] [<8002a81c>] (warn_slowpath_common) from [<8002a8e8>] (warn_slowpath_fmt+0x38/0x40)
-> > [  109.376334] [<8002a8b4>] (warn_slowpath_fmt) from [<8006c2a8>] (irq_set_irq_wake+0xc0/0xf8)
-> > [  109.388351] [<8006c1e8>] (irq_set_irq_wake) from [<802f22cc>] (pcie_pme_resume+0x34/0x64)
-> > [  109.402328] [<802f2298>] (pcie_pme_resume) from [<802f1590>] (resume_iter+0x44/0x50)
-> > [  109.413742] [<802f154c>] (resume_iter) from [<803784d4>] (device_for_each_child+0x4c/0x78)
-> > [  109.422039] [<80378488>] (device_for_each_child) from [<802f196c>] (pcie_port_device_resume+0x18/0x20)
-> > [  109.436085] [<802f1954>] (pcie_port_device_resume) from [<802e6f40>] (pci_pm_resume+0x7c/0x10c)
-> > [  109.444829] [<802e6ec4>] (pci_pm_resume) from [<8038502c>] (dpm_run_callback.isra.12+0x34/0x7c)
-> > [  109.459323] [<80384ff8>] (dpm_run_callback.isra.12) from [<8038543c>] (device_resume+0xb8/0x194)
-> > [  109.474961] [<80385384>] (device_resume) from [<80385538>] (async_resume+0x20/0x4c)
-> > [  109.490523] [<80385518>] (async_resume) from [<800471a0>] (async_run_entry_fn+0x48/0x11c)
-> > [  109.502371] [<80047158>] (async_run_entry_fn) from [<8003f46c>] (process_one_work+0x1ac/0x414)
-> > [  109.515711] [<8003f2c0>] (process_one_work) from [<8003ff50>] (worker_thread+0x148/0x4e0)
-> > [  109.534446] [<8003fe08>] (worker_thread) from [<80044704>] (kthread+0xdc/0xf8)
-> > [  109.552225] [<80044628>] (kthread) from [<8000ec08>] (ret_from_fork+0x14/0x2c)
-> > ---
-> >  drivers/pci/pcie/pme.c | 6 ++++--
-> >  1 file changed, 4 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-> > index a9f9c46e5022..63fc63911295 100644
-> > --- a/drivers/pci/pcie/pme.c
-> > +++ b/drivers/pci/pcie/pme.c
-> > @@ -397,6 +397,7 @@ static int pcie_pme_suspend(struct pcie_device *srv)
-> >  	struct pcie_pme_service_data *data = get_service_data(srv);
-> >  	struct pci_dev *port = srv->port;
-> >  	bool wakeup;
-> > +	int ret;
-> >  
-> >  	if (device_may_wakeup(&port->dev)) {
-> >  		wakeup = true;
-> > @@ -407,9 +408,10 @@ static int pcie_pme_suspend(struct pcie_device *srv)
-> >  	}
-> >  	spin_lock_irq(&data->lock);
-> >  	if (wakeup) {
-> > -		enable_irq_wake(srv->irq);
-> > +		ret = enable_irq_wake(srv->irq);
-> >  		data->suspend_level = PME_SUSPEND_WAKEUP;
-> > -	} else {
-> > +	}
-> > +	if (!wakeup || ret) {
-> >  		struct pci_dev *port = srv->port;
-> >  
-> >  		pcie_pme_interrupt_enable(port, false);
-> > 
-> 
-> -- 
-> I speak only for myself.
-> Rafael J. Wysocki, Intel Open Source Technology Center.
+> diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
+> index 7154d18..23ae6a7 100644
+> --- a/drivers/usb/dwc3/dwc3-pci.c
+> +++ b/drivers/usb/dwc3/dwc3-pci.c
+> @@ -152,7 +152,8 @@ static int dwc3_pci_probe(struct pci_dev *pci,
+>  		dwc3_pdata.quirks |=3D DWC3_QUIRK_AMD_NL
+>  			| DWC3_QUIRK_U2EXIT_LFPS
+>  			| DWC3_QUIRK_U2SSINP3OK
+> -			| DWC3_QUIRK_REQP1P2P3;
+> +			| DWC3_QUIRK_REQP1P2P3
+> +			| DWC3_QUIRK_DEPP1P2P3;
+
+combined with last patch.
+
+--=20
+balbi
+
+--1giRMj6yz/+FOIRq
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIbBAEBAgAGBQJUQS2UAAoJEIaOsuA1yqREwgEP9ioMyC3ByGxNphp896PmiXz9
+ly+vBwDyUQUUXUtEehi5f93BXSdNNGNNOccH/AOSWyCTFuoAEwFymGMJl6XlF8n0
+Fg9jNPiKwsasNEEQwLUcMuNEgz/f4Zq/Ck5oJUYg0P9GETu0oxtCCkE3wIZpAjTR
+SbmfZcgq9tkRf5NlTUg/+nMIJTeZuwCO88m4y/OKkDY3RMB8eHrh0Z4zbRn9uTUW
+VmI+/1qxc7ZDn8+5QJH3lmziGCGt62oXGqYLbYTOihPsNJmexFAkHDvlk0JQvq+B
+lp/6WwyvTpyD+szPKThU2SClNB1at4VdS331HjUPNHZ0+AIoU8u0WHiq6XpuoR+H
+4ZGLQBgpy6iiQyFOF+XNv7w/TzalFCh4+YkCJEaHsMQEWdcAqS0NyVwBZNq42Pgw
+nvi5riU4kq8wfs4ay9hDPQeHcEr/aeqBEwq27h4jX5m0mO8kEAbuRG+7gB1rTJLD
+q4pd2OTgBMnhnQUafpIl8z4EKKmgGa3LsEleRZvyejdAKm5gKpAMvk/qKbqo2IaU
+VX034EJ+z91RMi+ZnSZ7QCiopokhuoKz7kTbF3qGsxEUkVI0+aLI2IlReDMC82C3
+yVWtBvf2gxTYQ9fElMyQb09ujKugMrIkUd1fITZ5WMXyPbj18+qVEVHelvsTxukW
+mCl24kxmtmtDy5nVqv4=
+=7vH0
+-----END PGP SIGNATURE-----
+
+--1giRMj6yz/+FOIRq--
