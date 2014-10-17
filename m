@@ -1,98 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout3.freenet.de ([195.4.92.93]:49318 "EHLO mout3.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755268AbaJJWie (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 10 Oct 2014 18:38:34 -0400
-Date: Sat, 11 Oct 2014 00:32:19 +0200
-From: Andreas Hartmann <andihartmann@freenet.de>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass through
- (vfio)
-Message-ID: <20141011003219.560cca97@dualc.maya.org>
-In-Reply-To: <CAErSpo450czUtAM104o+RS=yOcmP+3MKMH7mYk=UYhVJ2+cfSQ@mail.gmail.com>
-References: <20140923210318.498dacbd@dualc.maya.org> <1411502866.24563.8.camel@ul30vt.home> <5437A958.3000201@maya.org> <CAErSpo5kkk4itqqmCMU=08-XMcDknur8VY++F3A2LajdvTptOA@mail.gmail.com> <5437F1F5.3010706@maya.org> <CAErSpo6DuWEcJb_gfS=5JnKN8b4DXXV9+u-CRa8m3db0dbzpsQ@mail.gmail.com> <543804BC.3080307@maya.org> <CAErSpo450czUtAM104o+RS=yOcmP+3MKMH7mYk=UYhVJ2+cfSQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-bl2on0145.outbound.protection.outlook.com ([65.55.169.145]:61026
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752157AbaJQJO1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 Oct 2014 05:14:27 -0400
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v2 05/16] usb: dwc3: add quirks support to be compatible for kinds of SoCs
+Date: Fri, 17 Oct 2014 16:53:30 +0800
+Message-ID: <1413536021-4886-6-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas wrote:
-> On Fri, Oct 10, 2014 at 10:09 AM, Andreas Hartmann
-> <andihartmann@freenet.de> wrote:
->> Bjorn Helgaas wrote:
->>> On Fri, Oct 10, 2014 at 8:49 AM, Andreas Hartmann
->>> <andihartmann@freenet.de> wrote:
->>>> Bjorn Helgaas wrote:
->>>>> On Fri, Oct 10, 2014 at 3:39 AM, Andreas Hartmann
->>>>> <andihartmann@freenet.de> wrote:
->>>>>> shortly: I retested w/ qemu 2.1.0 and Linux 3.17.0 - no change in behaviour.
->>>>>>
->>>>>> Alex Williamson wrote:
->>>>>>> On Tue, 2014-09-23 at 21:03 +0200, Andreas Hartmann wrote:
->>>>>>>> Hello!
->>>>>>>>
->>>>>>>> Since long time now, I'm using w/o any problem PCIe pass through with a
->>>>>>>> Gigabyte GA-990XA-UD3/GA-990XA-UD3 mainboard (AMD 990X chipset) and
->>>>>>>> enabled IOMMU with vfio-pci.
->>>>>>>>
->>>>>>>> The last kernel working w/o any problem is kernel 3.13.7 (I didn't use
->>>>>>>> .8 and .9, but I do not think they would have been problematic).
->>>>>>>>
->>>>>>>> Since 3.14.19 (I didn't test any 3.14 kernel before) I'm encountering a
->>>>>>>> hard and silent lock up of the complete machine when starting the VM
->>>>>>>> with the PCIe card passed through.
->>>>>
->>>>> Since we're not really making any progress on this yet, would it be
->>>>> possible to bisect it?  We already know that 3.13.7 works and 3.14.19
->>>>> fails, and "git bisect start v3.14 v3.13" says it's about 13 steps.  I
->>>>> know that's still quite a bit of work, but at least it sounds like the
->>>>> problem is easy to reproduce.
->>>>
->>>> Which git repository should I use best?
->>>
->>> The linux-stable repository [1] contains both the v3.13.x and the
->>> v3.14.x branches, but apparently you can't bisect directly between
->>> v3.13.7 and v3.14.19:
->>
->> I know that the first version after 3.13.0 (patch-v3.13-next-20140121)
->> is already broken. Therefore, it must be between 3.13.7 and
->> patch-v3.13-next-20140121.
+This patch adds a quirks flag at dwc3 structure, and SoCs platform vendor is
+able to define this flag in platform data at bus glue layer. Then do some
+independent behaviors at dwc3 core level.
 
+Signed-off-by: Huang Rui <ray.huang@amd.com>
+---
+ drivers/usb/dwc3/core.c          | 2 ++
+ drivers/usb/dwc3/core.h          | 3 +++
+ drivers/usb/dwc3/dwc3-pci.c      | 9 +++++++++
+ drivers/usb/dwc3/platform_data.h | 2 ++
+ 4 files changed, 16 insertions(+)
 
-Ok, this is the result of git bisect:
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index ddac372..50c0eae 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -710,6 +710,8 @@ static int dwc3_probe(struct platform_device *pdev)
+ 
+ 		dwc->needs_fifo_resize = pdata->tx_fifo_resize;
+ 		dwc->dr_mode = pdata->dr_mode;
++
++		dwc->quirks = pdata->quirks;
+ 	}
+ 
+ 	/* default to superspeed if no maximum_speed passed */
+diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+index f6ee623..cfe0d57 100644
+--- a/drivers/usb/dwc3/core.h
++++ b/drivers/usb/dwc3/core.h
+@@ -636,6 +636,7 @@ struct dwc3_scratchpad_array {
+  * @u1u2: only used on revisions <1.83a for workaround
+  * @maximum_speed: maximum speed requested (mainly for testing purposes)
+  * @revision: revision register contents
++ * @quirks: represents different SOCs hardware work-arounds and quirks
+  * @dr_mode: requested mode of operation
+  * @usb2_phy: pointer to USB2 PHY
+  * @usb3_phy: pointer to USB3 PHY
+@@ -740,6 +741,8 @@ struct dwc3 {
+ #define DWC3_REVISION_270A	0x5533270a
+ #define DWC3_REVISION_280A	0x5533280a
+ 
++	u32			quirks;
++
+ 	enum dwc3_ep0_next	ep0_next_event;
+ 	enum dwc3_ep0_state	ep0state;
+ 	enum dwc3_link_state	link_state;
+diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
+index 3806547..18569a4 100644
+--- a/drivers/usb/dwc3/dwc3-pci.c
++++ b/drivers/usb/dwc3/dwc3-pci.c
+@@ -25,6 +25,8 @@
+ #include <linux/usb/otg.h>
+ #include <linux/usb/usb_phy_generic.h>
+ 
++#include "platform_data.h"
++
+ /* FIXME define these in <linux/pci_ids.h> */
+ #define PCI_VENDOR_ID_SYNOPSYS		0x16c3
+ #define PCI_DEVICE_ID_SYNOPSYS_HAPSUSB3	0xabcd
+@@ -103,6 +105,9 @@ static int dwc3_pci_probe(struct pci_dev *pci,
+ 	struct dwc3_pci		*glue;
+ 	int			ret;
+ 	struct device		*dev = &pci->dev;
++	struct dwc3_platform_data dwc3_pdata;
++
++	memset(&dwc3_pdata, 0x00, sizeof(dwc3_pdata));
+ 
+ 	glue = devm_kzalloc(dev, sizeof(*glue), GFP_KERNEL);
+ 	if (!glue)
+@@ -149,6 +154,10 @@ static int dwc3_pci_probe(struct pci_dev *pci,
+ 
+ 	pci_set_drvdata(pci, glue);
+ 
++	ret = platform_device_add_data(dwc3, &dwc3_pdata, sizeof(dwc3_pdata));
++	if (ret)
++		goto err3;
++
+ 	dma_set_coherent_mask(&dwc3->dev, dev->coherent_dma_mask);
+ 
+ 	dwc3->dev.dma_mask = dev->dma_mask;
+diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
+index 7db34f0..1d3d65f 100644
+--- a/drivers/usb/dwc3/platform_data.h
++++ b/drivers/usb/dwc3/platform_data.h
+@@ -24,4 +24,6 @@ struct dwc3_platform_data {
+ 	enum usb_device_speed maximum_speed;
+ 	enum usb_dr_mode dr_mode;
+ 	bool tx_fifo_resize;
++
++	u32     quirks;
+ };
+-- 
+1.9.1
 
-425c1b223dac456d00a61fd6b451b6d1cf00d065 is the first bad commit
-commit 425c1b223dac456d00a61fd6b451b6d1cf00d065
-Author: Alex Williamson <alex.williamson@redhat.com>
-Date:   Tue Dec 17 16:43:51 2013 -0700
-
-    PCI: Add Virtual Channel to save/restore support
-    
-    While we don't really have any infrastructure for making use of VC
-    support, the system BIOS can configure the topology to non-default
-    VC values prior to boot.  This may be due to silicon bugs, desire to
-    reserve traffic classes, or perhaps just BIOS bugs.  When we reset
-    devices, the VC configuration may return to default values, which can
-    be incompatible with devices upstream.  For instance, Nvidia GRID 
-    cards provide a PCIe switch and some number of GPUs, all supporting 
-    VC.  The power-on default for VC is to support TC0-7 across VC0,
-    however some platforms will only enable TC0/VC0 mapping across the 
-    topology.  When we do a secondary bus reset on the downstream switch 
-    port, the GPU is reset to a TC0-7/VC0 mapping while the opposite end 
-    of the link only enables TC0/VC0.  If the GPU attempts to use TC1-7, 
-    it fails. 
-
-    This patch attempts to provide complete support for VC save/restore, 
-    even beyond the minimally required use case above.  This includes 
-    save/restore and reload of the arbitration table, save/restore and 
-    reload of the port arbitration tables, and re-enabling of the 
-    channels for VC, VC9, and MFVC capabilities. 
-
-    Signed-off-by: Alex Williamson <alex.williamson@redhat.com> 
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-
-Kind regards,
-Andreas
