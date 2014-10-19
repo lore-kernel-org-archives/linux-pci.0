@@ -1,111 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:44561 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750746AbaJNGsy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Oct 2014 02:48:54 -0400
-Received: from /spool/local
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 14 Oct 2014 16:48:53 +1000
-Received: from d23relay04.au.ibm.com (d23relay04.au.ibm.com [9.190.234.120])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 202CE2CE8047
-	for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 17:48:50 +1100 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay04.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s9E6U57I43974734
-	for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 17:30:13 +1100
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s9E6mGv5031836
-	for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 17:48:17 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH 1/3] PCI: move PCI_FIND_CAP_TTL to pci.h and use it in quirks
-Date: Tue, 14 Oct 2014 14:47:30 +0800
-Message-Id: <1413269253-8990-2-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1413269253-8990-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1413269253-8990-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from numascale.com ([213.162.240.84]:33164 "EHLO numascale.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751792AbaJSBrN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 18 Oct 2014 21:47:13 -0400
+From: Daniel J Blueman <daniel@numascale.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Daniel J Blueman <daniel@numascale.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Steffen Persvold <sp@numascale.com>
+Subject: [PATCH v2 5/5] Numachip: use 2GB memory block size
+Date: Sun, 19 Oct 2014 09:45:52 +0800
+Message-Id: <1413683152-31302-5-git-send-email-daniel@numascale.com>
+In-Reply-To: <1413683152-31302-1-git-send-email-daniel@numascale.com>
+References: <1413683152-31302-1-git-send-email-daniel@numascale.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In some quirks, it tries to search a pci cap and use a ttl value to avoid
-infinite loop. While the value is hard coded to 48, which is the same as marco
-PCI_FIND_CAP_TTL.
+Use appropriate memory block size to reduce sysfs entry creation time
+by 16x.
 
-This patch moves the definition of PCI_FIND_CAP_TTL to pci.h and replace the
-hard coded value with it.
+Boot-tested with the four permutations of X86_UV and X86_NUMACHIP.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Daniel J Blueman <daniel@numascale.com>
 ---
- drivers/pci/pci.c    |    1 -
- drivers/pci/quirks.c |    8 ++++----
- include/linux/pci.h  |    2 ++
- 3 files changed, 6 insertions(+), 5 deletions(-)
+ arch/x86/mm/init_64.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 2c9ac70..76b002b1 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -137,7 +137,6 @@ void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar)
- EXPORT_SYMBOL_GPL(pci_ioremap_bar);
+diff --git a/arch/x86/mm/init_64.c b/arch/x86/mm/init_64.c
+index 5621c47..22ea6de 100644
+--- a/arch/x86/mm/init_64.c
++++ b/arch/x86/mm/init_64.c
+@@ -53,6 +53,7 @@
+ #include <asm/cacheflush.h>
+ #include <asm/init.h>
+ #include <asm/uv/uv.h>
++#include <asm/numachip/numachip.h>
+ #include <asm/setup.h>
+ 
+ #include "mm_internal.h"
+@@ -1235,9 +1236,9 @@ static unsigned long probe_memory_block_size(void)
+ 	/* start from 2g */
+ 	unsigned long bz = 1UL<<31;
+ 
+-#ifdef CONFIG_X86_UV
+-	if (is_uv_system()) {
+-		printk(KERN_INFO "UV: memory block size 2GB\n");
++#ifdef CONFIG_X86_64
++	if (is_uv_system() || is_numachip_system()) {
++		pr_info("Memory block size 2GB for large-SMP system\n");
+ 		return 2UL * 1024 * 1024 * 1024;
+ 	}
  #endif
- 
--#define PCI_FIND_CAP_TTL	48
- 
- static int __pci_find_next_cap_ttl(struct pci_bus *bus, unsigned int devfn,
- 				   u8 pos, int cap, int *ttl)
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 80c2d01..a5f46b8 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2176,7 +2176,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x9601, quirk_amd_780_apc_msi);
-  * return 1 if a HT MSI capability is found and enabled */
- static int msi_ht_cap_enabled(struct pci_dev *dev)
- {
--	int pos, ttl = 48;
-+	int pos, ttl = PCI_FIND_CAP_TTL;
- 
- 	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
- 	while (pos && ttl--) {
-@@ -2235,7 +2235,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_CK804_PCIE,
- /* Force enable MSI mapping capability on HT bridges */
- static void ht_enable_msi_mapping(struct pci_dev *dev)
- {
--	int pos, ttl = 48;
-+	int pos, ttl = PCI_FIND_CAP_TTL;
- 
- 	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
- 	while (pos && ttl--) {
-@@ -2314,7 +2314,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA,
- 
- static int ht_check_msi_mapping(struct pci_dev *dev)
- {
--	int pos, ttl = 48;
-+	int pos, ttl = PCI_FIND_CAP_TTL;
- 	int found = 0;
- 
- 	/* check if there is HT MSI cap or enabled on this device */
-@@ -2439,7 +2439,7 @@ out:
- 
- static void ht_disable_msi_mapping(struct pci_dev *dev)
- {
--	int pos, ttl = 48;
-+	int pos, ttl = PCI_FIND_CAP_TTL;
- 
- 	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
- 	while (pos && ttl--) {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 96453f9..b27b79e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -33,6 +33,8 @@
- 
- #include <linux/pci_ids.h>
- 
-+#define PCI_FIND_CAP_TTL	48
-+
- /*
-  * The PCI interface treats multi-function devices as independent
-  * devices.  The slot/function address of each device is encoded
 -- 
-1.7.9.5
+1.9.1
 
