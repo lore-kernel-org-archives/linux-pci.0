@@ -1,64 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:41902 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752027AbaJFC66 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 5 Oct 2014 22:58:58 -0400
-Message-ID: <543206CD.1040505@gmail.com>
-Date: Mon, 06 Oct 2014 11:04:45 +0800
-From: Chen Gang <gang.chen.5i5j@gmail.com>
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:48855 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751063AbaJSJXa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 19 Oct 2014 05:23:30 -0400
+Date: Sun, 19 Oct 2014 11:23:25 +0200
+From: Ingo Molnar <mingo@kernel.org>
+To: Daniel J Blueman <daniel@numascale.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Steffen Persvold <sp@numascale.com>
+Subject: Re: [PATCH v2 5/5] Numachip: use 2GB memory block size
+Message-ID: <20141019092324.GA10027@gmail.com>
+References: <1413683152-31302-1-git-send-email-daniel@numascale.com>
+ <1413683152-31302-5-git-send-email-daniel@numascale.com>
 MIME-Version: 1.0
-To: konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
-	david.vrabel@citrix.com, bhelgaas@google.com
-CC: xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH next] xen: pcifront: Process failure for pcifront_(re)scan_root()
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1413683152-31302-5-git-send-email-daniel@numascale.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When pcifront_rescan_root() or pcifront_scan_root() fails, need return
-error code, neither set XenbusStateConnected state, just like the other
-areas have done.
 
-For pcifront_rescan_root(), it will return error code ("num_roots = 0;",
-skip xenbus_switch_state return value).
+* Daniel J Blueman <daniel@numascale.com> wrote:
 
-For pcifront_scan_root(), it will return 0 ("num_roots = 0;", set 0 by
-the return value of xenbus_switch_state, which always return 0, at
-present).
+> Use appropriate memory block size to reduce sysfs entry creation time
+> by 16x.
+> 
+> Boot-tested with the four permutations of X86_UV and X86_NUMACHIP.
+> 
+> Signed-off-by: Daniel J Blueman <daniel@numascale.com>
+> ---
+>  arch/x86/mm/init_64.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/arch/x86/mm/init_64.c b/arch/x86/mm/init_64.c
+> index 5621c47..22ea6de 100644
+> --- a/arch/x86/mm/init_64.c
+> +++ b/arch/x86/mm/init_64.c
+> @@ -53,6 +53,7 @@
+>  #include <asm/cacheflush.h>
+>  #include <asm/init.h>
+>  #include <asm/uv/uv.h>
+> +#include <asm/numachip/numachip.h>
+>  #include <asm/setup.h>
+>  
+>  #include "mm_internal.h"
+> @@ -1235,9 +1236,9 @@ static unsigned long probe_memory_block_size(void)
+>  	/* start from 2g */
+>  	unsigned long bz = 1UL<<31;
+>  
+> -#ifdef CONFIG_X86_UV
+> -	if (is_uv_system()) {
+> -		printk(KERN_INFO "UV: memory block size 2GB\n");
+> +#ifdef CONFIG_X86_64
+> +	if (is_uv_system() || is_numachip_system()) {
+> +		pr_info("Memory block size 2GB for large-SMP system\n");
+>  		return 2UL * 1024 * 1024 * 1024;
 
-Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
----
- drivers/pci/xen-pcifront.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+It would be a lot cleaner and more robust to have a more 
+intelligent decision here.
 
-diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-index 53df39a..d78d884 100644
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -866,6 +866,11 @@ static int pcifront_try_connect(struct pcifront_device *pdev)
- 		xenbus_dev_error(pdev->xdev, err,
- 				 "No PCI Roots found, trying 0000:00");
- 		err = pcifront_scan_root(pdev, 0, 0);
-+		if (err) {
-+			xenbus_dev_fatal(pdev->xdev, err,
-+					 "Error scanning PCI root 0000:00");
-+			goto out;
-+		}
- 		num_roots = 0;
- 	} else if (err != 1) {
- 		if (err == 0)
-@@ -947,6 +952,11 @@ static int pcifront_attach_devices(struct pcifront_device *pdev)
- 		xenbus_dev_error(pdev->xdev, err,
- 				 "No PCI Roots found, trying 0000:00");
- 		err = pcifront_rescan_root(pdev, 0, 0);
-+		if (err) {
-+			xenbus_dev_fatal(pdev->xdev, err,
-+					 "Error scanning PCI root 0000:00");
-+			goto out;
-+		}
- 		num_roots = 0;
- 	} else if (err != 1) {
- 		if (err == 0)
--- 
-1.9.3
+Is there a reliable indicator for large 'sysfs entry creation 
+time', such as a lot of RAM present?
+
+Also, it would be nice to list the pros/cons of this change, an 
+advantage is reduced overhead - what are the disadvantages?
+
+Thanks,
+
+	Ingo
