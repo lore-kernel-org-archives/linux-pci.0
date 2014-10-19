@@ -1,88 +1,44 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 29 Oct 2014 14:53:04 +0800
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Jason Chang <jason.chang@amd.com>,
-	"Vincent Wan" <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 01/19] usb: dwc3: enable hibernation if to be supported
-Message-ID: <20141029065304.GB8935@hr-slim.amd.com>
-References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
- <1414497280-3126-2-git-send-email-ray.huang@amd.com>
- <A2CA0424C0A6F04399FB9E1CD98E0304844E68B7@US01WEMBX2.internal.synopsys.com>
- <20141028185059.GE25735@saruman>
- <A2CA0424C0A6F04399FB9E1CD98E0304844E68E4@US01WEMBX2.internal.synopsys.com>
- <20141028190122.GF25735@saruman>
- <A2CA0424C0A6F04399FB9E1CD98E0304844E691D@US01WEMBX2.internal.synopsys.com>
- <20141028191852.GJ25735@saruman>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20141028191852.GJ25735@saruman>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from numascale.com ([213.162.240.84]:39347 "EHLO numascale.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751593AbaJSBqz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 18 Oct 2014 21:46:55 -0400
+From: Daniel J Blueman <daniel@numascale.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Daniel J Blueman <daniel@numascale.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Steffen Persvold <sp@numascale.com>
+Subject: [PATCH v2 1/5] Numachip: Fix build failure with trunk GCC
+Date: Sun, 19 Oct 2014 09:45:48 +0800
+Message-Id: <1413683152-31302-1-git-send-email-daniel@numascale.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 28, 2014 at 02:18:52PM -0500, Felipe Balbi wrote:
-> On Tue, Oct 28, 2014 at 07:15:29PM +0000, Paul Zimmerman wrote:
-> > > From: Felipe Balbi [mailto:balbi@ti.com]
-> > > Sent: Tuesday, October 28, 2014 12:01 PM
-> > > 
-> > > On Tue, Oct 28, 2014 at 06:55:50PM +0000, Paul Zimmerman wrote:
-> > > > > From: Felipe Balbi [mailto:balbi@ti.com]
-> > > > > Sent: Tuesday, October 28, 2014 11:51 AM
-> > > > >
-> > > > > On Tue, Oct 28, 2014 at 06:47:08PM +0000, Paul Zimmerman wrote:
-> > > > > > > From: Huang Rui [mailto:ray.huang@amd.com]
-> > > > > > > Sent: Tuesday, October 28, 2014 4:54 AM
-> > > > > > >
-> > > > > > > It enables hibernation if the function is set in coreConsultant.
-> > > > > > >
-> > > > > > > Suggested-by: Felipe Balbi <balbi@ti.com>
-> > > > > > > Signed-off-by: Huang Rui <ray.huang@amd.com>
-> > > > > > > ---
-> > > > > > >  drivers/usb/dwc3/core.c | 1 +
-> > > > > > >  1 file changed, 1 insertion(+)
-> > > > > > >
-> > > > > > > diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-> > > > > > > index fa396fc..bf77509 100644
-> > > > > > > --- a/drivers/usb/dwc3/core.c
-> > > > > > > +++ b/drivers/usb/dwc3/core.c
-> > > > > > > @@ -449,6 +449,7 @@ static int dwc3_core_init(struct dwc3 *dwc)
-> > > > > > >  	case DWC3_GHWPARAMS1_EN_PWROPT_HIB:
-> > > > > > >  		/* enable hibernation here */
-> > > > > > >  		dwc->nr_scratch = DWC3_GHWPARAMS4_HIBER_SCRATCHBUFS(hwparams4);
-> > > > > > > +		reg |= DWC3_GCTL_GBLHIBERNATIONEN;
-> > > > > > >  		break;
-> > > > > > >  	default:
-> > > > > > >  		dev_dbg(dwc->dev, "No power optimization available\n");
-> > > > > >
-> > > > > > What effect does this have when the controller is in device mode? I
-> > > > > > expect it will start generating DWC3_DEVICE_EVENT_HIBER_REQ interrupt
-> > > > > > events when this register bit is set. So the dev_WARN_ONCE in
-> > > > > > dwc3_gadget_interrupt() will start firing, I think.
-> > > > >
-> > > > > Ok, so this *has* to wait for proper hibernation support ?
-> > > >
-> > > > Ah, never mind. Since the hibernation event is not enabled in the
-> > > > DEVTEN register, the controller shouldn't generate that event after
-> > > > all. So I think it should be OK. Sorry for the noise.
-> > > 
-> > > do you think it's still nice to have a comment here ?
-> > 
-> > Maybe something along the lines of "enabling this bit so that host-mode
-> > hibernation will work, device-mode hibernation is not implemented yet"?
-> 
-> sounds good to me. Huang, can you update your patch to add this comment
-> Paul suggested ?
-> 
+Fix APIC declaration to be consistent with definition; this addresses
+a compilation failure with the development branch of GCC, see:
+https://bugzilla.kernel.org/show_bug.cgi?id=78251
 
-OK, will update in V4.
+Signed-off-by: Daniel J Blueman <daniel@numascale.com>
+---
+ arch/x86/kernel/apic/apic_numachip.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
-Rui
+diff --git a/arch/x86/kernel/apic/apic_numachip.c b/arch/x86/kernel/apic/apic_numachip.c
+index ae91539..81d70ba 100644
+--- a/arch/x86/kernel/apic/apic_numachip.c
++++ b/arch/x86/kernel/apic/apic_numachip.c
+@@ -32,7 +32,7 @@
+ 
+ static int numachip_system __read_mostly;
+ 
+-static const struct apic apic_numachip __read_mostly;
++static const struct apic apic_numachip __refconst;
+ 
+ static unsigned int get_apic_id(unsigned long x)
+ {
+-- 
+1.9.1
+
