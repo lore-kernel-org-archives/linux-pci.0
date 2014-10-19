@@ -1,50 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0140.outbound.protection.outlook.com ([65.55.169.140]:2199
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751191AbaJPIXI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 16 Oct 2014 04:23:08 -0400
-From: Richard Zhu <richard.zhu@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
-	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Richard Zhu <richard.zhu@freescale.com>
-Subject: [PATCH v6 10/13] ARM: imx6qdl: Enable pcie on imx6qdl sabreauto
-Date: Thu, 16 Oct 2014 15:52:40 +0800
-Message-ID: <1413445963-24706-11-git-send-email-richard.zhu@freescale.com>
-In-Reply-To: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
-References: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:60185 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750947AbaJSJYx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 19 Oct 2014 05:24:53 -0400
+Date: Sun, 19 Oct 2014 11:24:48 +0200
+From: Ingo Molnar <mingo@kernel.org>
+To: Daniel J Blueman <daniel@numascale.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Steffen Persvold <sp@numascale.com>
+Subject: Re: [PATCH v2 2/5] Numachip: APIC fixes
+Message-ID: <20141019092448.GA29407@gmail.com>
+References: <1413683152-31302-1-git-send-email-daniel@numascale.com>
+ <1413683152-31302-2-git-send-email-daniel@numascale.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1413683152-31302-2-git-send-email-daniel@numascale.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Richard Zhu <r65037@freescale.com>
 
-- enable pcie on imx6qdl sabreauto boards.
+* Daniel J Blueman <daniel@numascale.com> wrote:
 
-Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
----
- arch/arm/boot/dts/imx6qdl-sabreauto.dtsi | 4 ++++
- 1 file changed, 4 insertions(+)
+> Fix 16-bit APIC ID truncation and redundant APIC ICR idle polling for IPI
+> to self (AMD64 APICs are documented in the system developer manuals to
+> queue APIC writes).
 
-diff --git a/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi b/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
-index 009abd6..d6040a5 100644
---- a/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
-+++ b/arch/arm/boot/dts/imx6qdl-sabreauto.dtsi
-@@ -410,6 +410,10 @@
- 	};
- };
- 
-+&pcie {
-+	status = "okay";
-+};
-+
- &pwm3 {
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&pinctrl_pwm3>;
--- 
-1.9.1
+That is again two fixes - there should be one fix per patch, with 
+a good description of what the effects of the bug were and what 
+the advantages of the change are - for each change separately.
 
+Thanks,
+
+	Ingo
