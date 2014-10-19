@@ -1,212 +1,90 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Daniel J Blueman <daniel@numascale.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Daniel J Blueman <daniel@numascale.com>, x86@kernel.org,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch v7 04/18] x86, PCI, ACPI: Kill private function resource_to_addr() in arch/x86/pci/acpi.c
-Date: Mon, 27 Oct 2014 13:21:34 +0800
-Message-Id: <1414387308-27148-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Steffen Persvold <sp@numascale.com>
+Subject: [PATCH v2 4/5] Numachip: APIC driver cleanups
+Date: Sun, 19 Oct 2014 09:45:51 +0800
+Message-Id: <1413683152-31302-4-git-send-email-daniel@numascale.com>
+In-Reply-To: <1413683152-31302-1-git-send-email-daniel@numascale.com>
+References: <1413683152-31302-1-git-send-email-daniel@numascale.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Private function resource_to_addr() is used to parse ACPI resources
-for PCI host bridge. There are public interfaces available for that
-purpose, so replace resource_to_addr() with public interfaces.
+Drop printing that serves no purpose, as it's printing fixed or known
+values, and mark constant structure appropriately.
 
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Daniel J Blueman <daniel@numascale.com>
 ---
- arch/x86/pci/acpi.c |  144 +++++++++++++++++++--------------------------------
- 1 file changed, 53 insertions(+), 91 deletions(-)
+ arch/x86/kernel/apic/apic_numachip.c | 22 +++-------------------
+ arch/x86/pci/numachip.c              |  2 +-
+ 2 files changed, 4 insertions(+), 20 deletions(-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index cfd1b132b8e3..3f72d934dc16 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -218,114 +218,76 @@ static void teardown_mcfg_map(struct pci_root_info *info)
+diff --git a/arch/x86/kernel/apic/apic_numachip.c b/arch/x86/kernel/apic/apic_numachip.c
+index c965b69..6374d94 100644
+--- a/arch/x86/kernel/apic/apic_numachip.c
++++ b/arch/x86/kernel/apic/apic_numachip.c
+@@ -153,20 +153,8 @@ static int __init numachip_probe(void)
+ 	return apic == &apic_numachip;
  }
- #endif
  
--static acpi_status resource_to_addr(struct acpi_resource *resource,
--				    struct acpi_resource_address64 *addr)
+-static void __init map_csrs(void)
 -{
--	acpi_status status;
--	struct acpi_resource_memory24 *memory24;
--	struct acpi_resource_memory32 *memory32;
--	struct acpi_resource_fixed_memory32 *fixed_memory32;
+-	printk(KERN_INFO "NumaChip: Mapping local CSR space (%016llx - %016llx)\n",
+-		NUMACHIP_LCSR_BASE, NUMACHIP_LCSR_BASE + NUMACHIP_LCSR_SIZE - 1);
+-	init_extra_mapping_uc(NUMACHIP_LCSR_BASE, NUMACHIP_LCSR_SIZE);
 -
--	memset(addr, 0, sizeof(*addr));
--	switch (resource->type) {
--	case ACPI_RESOURCE_TYPE_MEMORY24:
--		memory24 = &resource->data.memory24;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = memory24->minimum;
--		addr->address_length = memory24->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_MEMORY32:
--		memory32 = &resource->data.memory32;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = memory32->minimum;
--		addr->address_length = memory32->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
--		fixed_memory32 = &resource->data.fixed_memory32;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = fixed_memory32->address;
--		addr->address_length = fixed_memory32->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_ADDRESS16:
--	case ACPI_RESOURCE_TYPE_ADDRESS32:
--	case ACPI_RESOURCE_TYPE_ADDRESS64:
--		status = acpi_resource_to_address64(resource, addr);
--		if (ACPI_SUCCESS(status) &&
--		    (addr->resource_type == ACPI_MEMORY_RANGE ||
--		    addr->resource_type == ACPI_IO_RANGE) &&
--		    addr->address_length > 0) {
--			return AE_OK;
--		}
--		break;
--	}
--	return AE_ERROR;
+-	printk(KERN_INFO "NumaChip: Mapping global CSR space (%016llx - %016llx)\n",
+-		NUMACHIP_GCSR_BASE, NUMACHIP_GCSR_BASE + NUMACHIP_GCSR_SIZE - 1);
+-	init_extra_mapping_uc(NUMACHIP_GCSR_BASE, NUMACHIP_GCSR_SIZE);
 -}
 -
- static acpi_status count_resource(struct acpi_resource *acpi_res, void *data)
+ static void fixup_cpu_id(struct cpuinfo_x86 *c, int node)
  {
- 	struct pci_root_info *info = data;
--	struct acpi_resource_address64 addr;
--	acpi_status status;
-+	struct resource r = {
-+		.flags = 0
-+	};
- 
--	status = resource_to_addr(acpi_res, &addr);
--	if (ACPI_SUCCESS(status))
-+	if (!acpi_dev_resource_memory(acpi_res, &r) &&
-+	    !acpi_dev_resource_address_space(acpi_res, &r))
-+		return AE_OK;
-+
-+	if ((r.flags & (IORESOURCE_IO | IORESOURCE_MEM)) && resource_size(&r))
- 		info->res_num++;
-+
- 	return AE_OK;
- }
- 
- static acpi_status setup_resource(struct acpi_resource *acpi_res, void *data)
- {
- 	struct pci_root_info *info = data;
--	struct resource *res;
--	struct acpi_resource_address64 addr;
--	acpi_status status;
--	unsigned long flags;
--	u64 start, orig_end, end;
-+	u64 translation_offset = 0;
-+	struct resource r = {
-+		.flags = 0
-+	};
-+
-+	if (acpi_dev_resource_memory(acpi_res, &r)) {
-+		r.flags &= IORESOURCE_MEM | IORESOURCE_IO;
-+	} else if (acpi_dev_resource_address_space(acpi_res, &r)) {
-+		u64 orig_end;
-+		struct acpi_resource_address64 addr;
-+
-+		r.flags &= IORESOURCE_MEM | IORESOURCE_IO;
-+		if (r.flags == 0)
-+			return AE_OK;
- 
--	status = resource_to_addr(acpi_res, &addr);
--	if (!ACPI_SUCCESS(status))
--		return AE_OK;
-+		if (ACPI_FAILURE(acpi_resource_to_address64(acpi_res, &addr)))
-+			return AE_OK;
- 
--	if (addr.resource_type == ACPI_MEMORY_RANGE) {
--		flags = IORESOURCE_MEM;
--		if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
--			flags |= IORESOURCE_PREFETCH;
--	} else if (addr.resource_type == ACPI_IO_RANGE) {
--		flags = IORESOURCE_IO;
--	} else
--		return AE_OK;
-+		if (addr.resource_type == ACPI_MEMORY_RANGE &&
-+		    addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
-+			r.flags |= IORESOURCE_PREFETCH;
- 
--	start = addr.minimum + addr.translation_offset;
--	orig_end = end = addr.maximum + addr.translation_offset;
-+		translation_offset = addr.translation_offset;
-+		orig_end = r.end;
-+		r.start += translation_offset;
-+		r.end += translation_offset;
- 
--	/* Exclude non-addressable range or non-addressable portion of range */
--	end = min(end, (u64)iomem_resource.end);
--	if (end <= start) {
--		dev_info(&info->bridge->dev,
--			"host bridge window [%#llx-%#llx] "
--			"(ignored, not CPU addressable)\n", start, orig_end);
--		return AE_OK;
--	} else if (orig_end != end) {
--		dev_info(&info->bridge->dev,
--			"host bridge window [%#llx-%#llx] "
--			"([%#llx-%#llx] ignored, not CPU addressable)\n", 
--			start, orig_end, end + 1, orig_end);
-+		/* Exclude non-addressable range or non-addressable portion of range */
-+		r.end = min(r.end, iomem_resource.end);
-+		if (r.end <= r.start) {
-+			dev_info(&info->bridge->dev,
-+				"host bridge window [%#llx-%#llx] (ignored, not CPU addressable)\n",
-+				 r.start, orig_end);
-+			return AE_OK;
-+		} else if (orig_end != r.end) {
-+			dev_info(&info->bridge->dev,
-+				"host bridge window [%#llx-%#llx] ([%#llx-%#llx] ignored, not CPU addressable)\n",
-+				r.start, orig_end, r.end + 1, orig_end);
-+		}
- 	}
- 
--	res = &info->res[info->res_num];
--	res->name = info->name;
--	res->flags = flags;
--	res->start = start;
--	res->end = end;
--	info->res_offset[info->res_num] = addr.translation_offset;
--	info->res_num++;
 -
--	if (!pci_use_crs)
--		dev_printk(KERN_DEBUG, &info->bridge->dev,
--			   "host bridge window %pR (ignored)\n", res);
-+	if (r.flags && resource_size(&r)) {
-+		r.name = info->name;
-+		info->res[info->res_num] = r;
-+		info->res_offset[info->res_num] = translation_offset;
-+		info->res_num++;
-+		if (!pci_use_crs)
-+			dev_printk(KERN_DEBUG, &info->bridge->dev,
-+				   "host bridge window %pR (ignored)\n", &r);
-+	}
+ 	if (c->phys_proc_id != node) {
+ 		c->phys_proc_id = node;
+ 		per_cpu(cpu_llc_id, smp_processor_id()) = node;
+@@ -180,19 +168,15 @@ bool is_numachip_system(void)
  
- 	return AE_OK;
+ static int __init numachip_system_init(void)
+ {
+-	unsigned int val;
+-
+ 	if (!is_numachip_system())
+ 		return 0;
+ 
++	init_extra_mapping_uc(NUMACHIP_LCSR_BASE, NUMACHIP_LCSR_SIZE);
++	init_extra_mapping_uc(NUMACHIP_GCSR_BASE, NUMACHIP_GCSR_SIZE);
++
+ 	x86_cpuinit.fixup_cpu_id = fixup_cpu_id;
+ 	x86_init.pci.arch_init = pci_numachip_init;
+ 
+-	map_csrs();
+-
+-	val = read_lcsr(CSR_G0_NODE_IDS);
+-	printk(KERN_INFO "NumaChip: Local NodeID = %08x\n", val);
+-
+ 	return 0;
  }
+ early_initcall(numachip_system_init);
+diff --git a/arch/x86/pci/numachip.c b/arch/x86/pci/numachip.c
+index 7307d9d..2e565e6 100644
+--- a/arch/x86/pci/numachip.c
++++ b/arch/x86/pci/numachip.c
+@@ -103,7 +103,7 @@ static int pci_mmcfg_write_numachip(unsigned int seg, unsigned int bus,
+ 	return 0;
+ }
+ 
+-const struct pci_raw_ops pci_mmcfg_numachip = {
++static const struct pci_raw_ops pci_mmcfg_numachip = {
+ 	.read = pci_mmcfg_read_numachip,
+ 	.write = pci_mmcfg_write_numachip,
+ };
 -- 
-1.7.10.4
+1.9.1
 
