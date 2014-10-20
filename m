@@ -1,110 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f45.google.com ([209.85.216.45]:60370 "EHLO
-	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750855AbaJ0Qoa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Oct 2014 12:44:30 -0400
-Received: by mail-qa0-f45.google.com with SMTP id dc16so4044135qab.4
-        for <linux-pci@vger.kernel.org>; Mon, 27 Oct 2014 09:44:29 -0700 (PDT)
+Received: from avon.wwwdotorg.org ([70.85.31.133]:35310 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750716AbaJTQwa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Oct 2014 12:52:30 -0400
+Message-ID: <54453DE1.1020602@wwwdotorg.org>
+Date: Mon, 20 Oct 2014 10:52:49 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-In-Reply-To: <CADnq5_O54_rjL=hxg8-4GV57JC=6j16OeFOM-zbmoMuL5yJKqw@mail.gmail.com>
-References: <2354837.kuMZPK0Y1Q@segfault> <CAErSpo6zLY8RVAHnLe81jjOE8cxGzskjPq3HL7eZVOtC-WF6=w@mail.gmail.com>
- <2298090.n99M7dPPE3@segfault> <CAErSpo4C=zANrE6muRf93nxLtmOG-U0xhWQPV_=fb8dFaKG8yw@mail.gmail.com>
- <CADnq5_O54_rjL=hxg8-4GV57JC=6j16OeFOM-zbmoMuL5yJKqw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 27 Oct 2014 10:44:09 -0600
-Message-ID: <CAErSpo6aBAuK27LwHrdi_X1fxfZ9NN4BkqQj6h4rqHD9ssNnAA@mail.gmail.com>
-Subject: Re: [Bulk] Re: [3.16-rcX][pciehp][radeon] PCIe HotPlug conflicts with
- radeon GPU
-To: Alex Deucher <alexdeucher@gmail.com>
-Cc: Shawn Starr <shawn.starr@rogers.com>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	DRI mailing list <dri-devel@lists.freedesktop.org>,
-	=?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
-Content-Type: text/plain; charset=UTF-8
+To: Vidya Sagar <vidyas@nvidia.com>, thierry.reding@gmail.com,
+	bhelgaas@google.com
+CC: kthota@nvidia.com, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: tegra: Enable root port specific features
+References: <1413803091-10824-1-git-send-email-vidyas@nvidia.com>
+In-Reply-To: <1413803091-10824-1-git-send-email-vidyas@nvidia.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Oct 26, 2014 at 11:31 AM, Alex Deucher <alexdeucher@gmail.com> wrote:
-> On Mon, Oct 13, 2014 at 12:11 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> [+cc Alex, Christian, dri-devel]
->>
->> On Sat, Oct 11, 2014 at 1:37 PM, Shawn Starr <shawn.starr@rogers.com> wrote:
->>> On September 11, 2014 04:26:21 PM Bjorn Helgaas wrote:
->>>> [+cc linux-pci]
->>>>
->>>> On Sat, Aug 2, 2014 at 10:02 AM, Shawn Starr <shawn.starr@rogers.com> wrote:
->>>> > Hello devs,
->>>> >
->>>> > There are two issues I am encountering with the PCIe Hotplug driver on my
->>>> > Lenovo Laptop (W500). I note this goes back further than 3.15.
->>>> >
->>>> > It is noted here:
->>>> > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=
->>>> > f244d8b623dae7a7bc695b0336f67729b95a9736
->>>> > https://bugzilla.kernel.org/show_bug.cgi?id=79701
->>>> >
->>>> > And my open bug here:
->>>> > https://bugzilla.kernel.org/show_bug.cgi?id=77261
->>>> >
->>>> > 1) If I enable the device to use both the integrated and discrete GPU,
->>>> > pciehp will decide to force unload radeon because it puts itself into a
->>>> > power saving state, fails back to the Intel integrated GPU in this case
->>>> > unless I tell radeon.ko to runpm=0 (no power management, then pciehp wont
->>>> > touch it).
->>>> >
->>>> > 2) If the Radeon GPU resets and you use pci_reset=1 for kernel module
->>>> > option, pciehp decides to force unload radeon even though the GPU is
->>>> > trying to setup after failing.
->>>> >
->>>> > Kernel I am using right now: 3.16.0-0.rc7.git3.1.fc21.x86_64 (about to
->>>> > boot into snapshot kernel-core-3.16.0-0.rc7.git4.1.fc21.x86_64)
->>>> Hi Shawn,
->>>>
->>>> Thanks for the report and sorry that it got dropped.  But I see you're
->>>> cc'd on https://bugzilla.kernel.org/show_bug.cgi?id=79701, so you've
->>>> probably seen the work there.  If you can try out the patches I just
->>>> posted, that would be great.
->>>>
->>>> Bjorn
->>>
->>> Hi Bjorn,
->>>
->>> For #1) This is fixed in linux-next (tracking 3.18.0-0.rc0.git1.2.fc22.1.x86_64
->>> nondebug kernel for Fedora). PCIe HotPlug no longer unloads radeon. For this
->>> bugzilla report we can close it.
->>>
->>> #2) This still has weird results however, radeon.hard_reset=1 is experimental
->>> and while it attempts to reset GPU, PCIe HotPlug seems to interact in this.
->>>
->>> This can be tested by adding to grub command line radeon.hard_reset=1.
->>> When X has started up, trigger a reset by cat
->>> /sys/kernel/debug/dri/#/radeon_gpu_reset. It will output 0, cat it again will
->>> show 1.
->>>
->>> Attempt to drag a window. The this will trigger a GPU reset, but fail to
->>> recover, its unknown if PCIe HotPlug is preventing a proper reset or not but
->>> there is pciehp calls in the stack trace.
->>
->> A PCIe device reset usually looks like a hotplug event because the
->> PCIe link goes down and comes back up.  As far as the PCI core is
->> concerned, it can't tell the difference between (1) a simple reset
->> where the link bounces and (2) removal of one device followed by
->> addition of another.
->>
->> b440bde74f04 ("PCI: Add pci_ignore_hotplug() to ignore hotplug events
->> for a device") addressed this for some similar cases, but it looks
->> like we probably need some more calls to pci_ignore_hotplug() in the
->> radeon driver reset methods.
->>
->> Can you please open a bugzilla and attach the complete dmesg log,
->> including the GPU reset and recovery failure?
+On 10/20/2014 05:04 AM, Vidya Sagar wrote:
+> Enables root port to advertise its ASPM-L1 capability
+> resulting in possible link entry to L1 when an ASPM-L1 capable
+> device is connected
+> Enables per-controller & per-TMS clock clamping by default
+> Enabling above features result in more power saving
 >
-> Is there a way we could temporarily disable pci hotplug around a GPU reset?
+> It also avoids PM message truncation by waiting for DLLP to finish
+> before entering into L1 or L2
 
-There is pci_ignore_hotplug().  Do you mean something more?  Oh, I
-guess you mean a way to disable, then *re*-enable hotplug.  We can
-easily add that if that would help.
+The updated tegra_pcie_enable() looks better in this patch, so that part,
+Acked-by: Stephen Warren <swarren@nvidia.com>
 
-Bjorn
+I'll leave the review of the additional #defines and 
+tegra_pcie_enable_rp_features() to Thierry.
