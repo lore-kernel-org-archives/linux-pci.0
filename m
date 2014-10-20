@@ -1,107 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:57675 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751192AbaJAUca (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 16:32:30 -0400
+Received: from [157.56.110.130] ([157.56.110.130]:39828 "EHLO
+	na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752013AbaJTCvd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 19 Oct 2014 22:51:33 -0400
+From: Richard Zhu <richard.zhu@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
+	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Richard Zhu <richard.zhu@freescale.com>
+Subject: [PATCH v7 01/13] PCI: designware: Refine setup_rc and add msi data restore
+Date: Mon, 20 Oct 2014 10:19:04 +0800
+Message-ID: <1413771556-32212-2-git-send-email-richard.zhu@freescale.com>
+In-Reply-To: <1413771556-32212-1-git-send-email-richard.zhu@freescale.com>
+References: <1413771556-32212-1-git-send-email-richard.zhu@freescale.com>
 MIME-Version: 1.0
-In-Reply-To: <20141001202058.GB6948@svl-evodev-groeck.juniper.net>
-References: <CAAVjN7dwS62EKMnuZc_P1UjkbRVk6RXqJ91GwWZ96bbY5Ct-rg@mail.gmail.com>
-	<CAAVjN7eUmBVcAGPbcn3qsJ9M9uu2nkFoKHqGhhKGekZSceGiMw@mail.gmail.com>
-	<20141001184304.GA6832@svl-evodev-groeck.juniper.net>
-	<CAAVjN7edpkXYMHBm+wLegA_pc0hnm_YZf_z=Ni3h=EbDTmfegQ@mail.gmail.com>
-	<20141001194115.GA6948@svl-evodev-groeck.juniper.net>
-	<CAAVjN7fGRzyu7gxavJUay+K_Mm-0t1T_0Bysk6-sdaqu5=5k5A@mail.gmail.com>
-	<20141001202058.GB6948@svl-evodev-groeck.juniper.net>
-Date: Wed, 1 Oct 2014 13:32:28 -0700
-Message-ID: <CAAVjN7e4nO579TfAJ5zMNe__Q9yU_-6naq4-0vm1rimespSrsw@mail.gmail.com>
-Subject: Re: Fwd: [Proposal] PM sleep children of inactive I2C bus segments
- off Masters in multi-master systems
-From: Danielle Costantino <danielle.costantino@gmail.com>
-To: Guenter Roeck <groeck@juniper.net>
-Cc: linux-i2c <linux-i2c@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiri Kosina <jkosina@suse.cz>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Rajat Jain <rajatjain@juniper.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-My goal was to automatically put the devices behind the master
-selector in a (logical) state where all settings would be verified and
-if needed corrected and initialized back to how the device was
-configured prior to giving up the bus.
+From: Richard Zhu <r65037@freescale.com>
 
-The error return is the main issue, but I was hoping to automate
-multi-master bus re-initialization.
+- move "program correct class for RC" from dw_pcie_host_init()
+to dw_pcie_setup_rc(). since this is RC setup, it's
+better to contained in dw_pcie_setup_rc function.
+Then, RC can be re-setup really by dw_pcie_setup_rc().
+- add one store/re-store msi cfg functions. Because that
+pcie controller maybe powered off during system suspend,
+and the msi data configuration would be lost.
+these functions can be used to store/restore the msi data
+and msi_enable during the suspend/resume callback.
 
-On Wed, Oct 1, 2014 at 1:20 PM, Guenter Roeck <groeck@juniper.net> wrote:
-> On Wed, Oct 01, 2014 at 01:03:59PM -0700, Danielle Costantino wrote:
->> On Wed, Oct 1, 2014 at 12:41 PM, Guenter Roeck <groeck@juniper.net> wrote:
->> > On Wed, Oct 01, 2014 at 11:44:59AM -0700, Danielle Costantino wrote:
->> >> Re-sending Proposal:
->> >>
->> >> Currently I2C mux devices that support multiple master arbitration are
->> >> the i2c-mux-pca9541 and i2c-arb-gpio-challenge drivers. I propose to
->> >> add the ability to configure an interrupt pin from the Master Selector
->> >> device to indicate that bus ownership has been lost. Once the device
->> >> loses ownership, all of its children should enter a pm sleep mode (as
->> >> you can't talk to them at this point) until master-ship has been
->> >> reacquired.
->> >>
->> > Not sure I understand what you are proposing here.
->>
->> Lets say you have a active - standby based multi-master system. If the
->> other master forced arbitration (took mastership) the next transation
->> on any slaves of that bus would return EAGAIN or EBUSY.
->>
->> Another point is that once mastership has been lost, the configuration
->> of the devices on that bus are no longer known to be valid...therefor
->> a re-init of those devices may be needed.
->>
-> Unfortunately that is a generic problem in a multi-master system.
-> You never know if the other end reconfigured a device or not,
-> even if there was no error.
->
->> > A typical use case would be a power supply such as the one supported by
->> > drivers/hwmon/lineage-pem.c from both an active and standby system
->> > controller. The power supply needs to be accessible from both controllers.
->> > If one controller looses access, it can only mean that it did not follow
->> > the access protocol. Similar, one controller enforcing access means that
->> > it either does not follow the access protocol either, or that the other
->> > end did not follow the protocol (or maybe the other end died).
->> >
->> > In all cases, loss of access does not mean that the end device can or should
->> > be put in sleep mode, not even logically. All it means is that there was
->> > an access protocol error. Not sure if there is anything that can be done
->> > about that, but putting the device into sleep mode does not seem to be
->> > an appropriate response to me.
->> >
->> >> This has come up as an issue when the master loses control over a bus
->> >> the return code of all transactions to its lave devices is EIO (not
->> >> very helpful).
->> >>
->> > But, again, doesn't that mean that there was some access protocol error ?
->> > Shouldn't it try to re-acquire mastership instead, and block all accesses
->> > to slaves until it acquired it ?
->>
->> EIO is such a generic error it makes finding weather there was a
->> problem communicating or is no longer master of the bus segment.
->>
-> AFAICS the only time the pca9541 driver returns -EIO is if a transaction
-> did not complete. Only possible improvement I could imagine would be to
-> check if mastership was lost if there was an error, and return something
-> more useful if that is the case. Both -EBUSY or -EAGAIN might make sense
-> here; I don't really know what would be better or more appropriate.
->
-> Guenter
+Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
+---
+ drivers/pci/host/pcie-designware.c | 21 ++++++++++++++++++---
+ drivers/pci/host/pcie-designware.h |  3 +++
+ 2 files changed, 21 insertions(+), 3 deletions(-)
 
-
-
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 538bbf3..b1f82ff 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -194,6 +194,19 @@ void dw_pcie_msi_init(struct pcie_port *pp)
+ 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
+ }
+ 
++void dw_pcie_msi_cfg_store(struct pcie_port *pp)
++{
++	dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE, 4, &pp->msi_enable);
++}
++
++void dw_pcie_msi_cfg_restore(struct pcie_port *pp)
++{
++	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
++			virt_to_phys((void *)pp->msi_data));
++	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
++	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE, 4, pp->msi_enable);
++}
++
+ static int find_valid_pos0(struct pcie_port *pp, int msgvec, int pos, int *pos0)
+ {
+ 	int flag = 1;
+@@ -570,9 +583,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 
+ 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+ 
+-	/* program correct class for RC */
+-	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
+-
+ 	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
+ 	val |= PORT_LOGIC_SPEED_CHANGE;
+ 	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+@@ -917,6 +927,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	val = memlimit | membase;
+ 	dw_pcie_writel_rc(pp, val, PCI_MEMORY_BASE);
+ 
++	/* program correct class for RC */
++	dw_pcie_readl_rc(pp, PCI_CLASS_REVISION, &val);
++	val |= PCI_CLASS_BRIDGE_PCI << 16;
++	dw_pcie_writel_rc(pp, val, PCI_CLASS_REVISION);
++
+ 	/* setup command register */
+ 	dw_pcie_readl_rc(pp, PCI_COMMAND, &val);
+ 	val &= 0xffff0000;
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index a476e60..b0bfed0 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -56,6 +56,7 @@ struct pcie_port {
+ 	int			msi_irq;
+ 	struct irq_domain	*irq_domain;
+ 	unsigned long		msi_data;
++	unsigned int		msi_enable;
+ 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+ };
+ 
+@@ -83,6 +84,8 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+ int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+ void dw_pcie_msi_init(struct pcie_port *pp);
++void dw_pcie_msi_cfg_store(struct pcie_port *pp);
++void dw_pcie_msi_cfg_restore(struct pcie_port *pp);
+ int dw_pcie_link_up(struct pcie_port *pp);
+ void dw_pcie_setup_rc(struct pcie_port *pp);
+ int dw_pcie_host_init(struct pcie_port *pp);
 -- 
-- Danielle Costantino
+1.9.1
+
