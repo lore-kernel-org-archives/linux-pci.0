@@ -1,187 +1,445 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0140.outbound.protection.outlook.com ([207.46.100.140]:12778
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S934002AbaJ3KLt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 06:11:49 -0400
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v4 20/20] usb: dwc3: make HIRD threshold configurable
-Date: Thu, 30 Oct 2014 18:08:45 +0800
-Message-ID: <1414663725-2195-21-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
-References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+Received: from [65.55.169.138] ([65.55.169.138]:4086 "EHLO
+	na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751691AbaJTCty (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 19 Oct 2014 22:49:54 -0400
+From: Richard Zhu <richard.zhu@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
+	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Richard Zhu <richard.zhu@freescale.com>
+Subject: [PATCH v7 09/13] PCI: imx6: Add imx6sx pcie support
+Date: Mon, 20 Oct 2014 10:19:12 +0800
+Message-ID: <1413771556-32212-10-git-send-email-richard.zhu@freescale.com>
+In-Reply-To: <1413771556-32212-1-git-send-email-richard.zhu@freescale.com>
+References: <1413771556-32212-1-git-send-email-richard.zhu@freescale.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-HIRD threshold should be configurable by different platforms.
+From: Richard Zhu <r65037@freescale.com>
 
->From DesignWare databook:
-When HIRD_Threshold[4] is set to 1b1 and HIRD value is greater than or
-equal to the value in HIRD_Threshold[3:0], dwc3 asserts output signals
-utmi_l1_suspend_n to put PHY into Deep Low-Power mode in L1.
+- imx6sx pcie has its own standalone pcie power supply.
+In order to turn on the imx6sx pcie power during
+initialization. Add the pcie regulator and the gpc regmap
+into the imx6sx pcie structure.
+- imx6sx pcie has the new added reset mechanism, add the
+reset operations into the initialization.
+- register one PM call-back, enter/exit L2 state during
+system suspend/resume.
+use noirq pm_ops instead of the general pm_ops in dev_pm_ops,
+since cfg read/write may occurs after suspend and before resume.
+do msi store/re-store in suspend/resume callbacks, since
+controller maybe turned off, and these msi cfg maybe lost
+in suspend.
+- disp_axi clock is required by pcie inbound axi port actually.
+Add one more clock named pcie_inbound_axi for imx6sx pcie.
+- host init maybe failed, return negative value when
+there is a failure in the host init.
+- assert per-reset in suspend, and de-assert it in resume.
 
-When HIRD_Threshold[4] is set to 1b0 or the HIRD value is less than
-HIRD_Threshold[3:0], dwc3 asserts output signals utmi_sleep_n on L1.
-
-Signed-off-by: Huang Rui <ray.huang@amd.com>
+Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
 ---
- Documentation/devicetree/bindings/usb/dwc3.txt |  3 +++
- drivers/usb/dwc3/core.c                        | 17 +++++++++++++++++
- drivers/usb/dwc3/core.h                        |  6 ++++++
- drivers/usb/dwc3/gadget.c                      |  6 +-----
- drivers/usb/dwc3/platform_data.h               |  3 +++
- 5 files changed, 30 insertions(+), 5 deletions(-)
+ drivers/pci/host/pci-imx6.c | 265 ++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 217 insertions(+), 48 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/usb/dwc3.txt b/Documentation/devicetree/bindings/usb/dwc3.txt
-index feaf2c8..5b99755 100644
---- a/Documentation/devicetree/bindings/usb/dwc3.txt
-+++ b/Documentation/devicetree/bindings/usb/dwc3.txt
-@@ -34,6 +34,9 @@ Optional properties:
- 			LTSSM during USB3 Compliance mode.
-  - snps,dis_u3_susphy_quirk: when set core will disable USB3 suspend phy.
-  - snps,dis_u2_susphy_quirk: when set core will disable USB2 suspend phy.
-+ - snps,is-utmi-l1-suspend: true when DWC3 asserts output signal
-+			utmi_l1_suspend_n, false when asserts utmi_sleep_n
-+ - snps,hird-threshold: HIRD threshold
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index eac96fb..5d5abe1 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -22,6 +22,7 @@
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
+ #include <linux/regmap.h>
++#include <linux/regulator/consumer.h>
+ #include <linux/resource.h>
+ #include <linux/signal.h>
+ #include <linux/types.h>
+@@ -35,9 +36,12 @@ struct imx6_pcie {
+ 	int			reset_gpio;
+ 	struct clk		*pcie_bus;
+ 	struct clk		*pcie_phy;
++	struct clk		*pcie_inbound_axi;
+ 	struct clk		*pcie;
+ 	struct pcie_port	pp;
+ 	struct regmap		*iomuxc_gpr;
++	struct regmap		*gpc_ips_reg;
++	struct regulator	*pcie_phy_regulator;
+ 	void __iomem		*mem_base;
+ };
  
- This is usually a subnode to DWC3 glue to which it is connected.
+@@ -77,6 +81,18 @@ struct imx6_pcie {
+ #define PHY_RX_OVRD_IN_LO_RX_DATA_EN (1 << 5)
+ #define PHY_RX_OVRD_IN_LO_RX_PLL_EN (1 << 3)
  
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index a28ed1c..f4172ab 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -729,6 +729,7 @@ static int dwc3_probe(struct platform_device *pdev)
- 	struct dwc3		*dwc;
- 	u8			lpm_nyet_threshold;
- 	u8			tx_de_emphasis;
-+	u8			hird_threshold;
++/* GPC PCIE PHY bit definitions */
++#define GPC_CNTR			0
++#define GPC_CNTR_PCIE_PHY_PUP_REQ	BIT(7)
++
++static inline bool is_imx6sx_pcie(struct imx6_pcie *imx6_pcie)
++{
++	struct pcie_port *pp = &imx6_pcie->pp;
++	struct device_node *np = pp->dev->of_node;
++
++	return of_device_is_compatible(np, "fsl,imx6sx-pcie");
++}
++
+ static int pcie_phy_poll_ack(void __iomem *dbi_base, int exp_val)
+ {
+ 	u32 val;
+@@ -219,35 +235,46 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+ 	u32 val, gpr1, gpr12;
  
- 	int			ret;
+-	/*
+-	 * If the bootloader already enabled the link we need some special
+-	 * handling to get the core back into a state where it is safe to
+-	 * touch it for configuration.  As there is no dedicated reset signal
+-	 * wired up for MX6QDL, we need to manually force LTSSM into "detect"
+-	 * state before completely disabling LTSSM, which is a prerequisite
+-	 * for core configuration.
+-	 *
+-	 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have a strong
+-	 * indication that the bootloader activated the link.
+-	 */
+-	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
+-	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
+-
+-	if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
+-	    (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
+-		val = readl(pp->dbi_base + PCIE_PL_PFLR);
+-		val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
+-		val |= PCIE_PL_PFLR_FORCE_LINK;
+-		writel(val, pp->dbi_base + PCIE_PL_PFLR);
+-
++	if (is_imx6sx_pcie(imx6_pcie)) {
+ 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-				IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
+-	}
++				IMX6SX_GPR12_PCIE_TEST_PD,
++				IMX6SX_GPR12_PCIE_TEST_PD);
++		/* Force PCIe PHY reset */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
++				IMX6SX_GPR5_PCIE_BTNRST,
++				IMX6SX_GPR5_PCIE_BTNRST);
++	} else {
++		/*
++		 * If the bootloader already enabled the link we need some
++		 * special handling to get the core back into a state where
++		 * it is safe to touch it for configuration.  As there is no
++		 * dedicated reset signal to manually force LTSSM into "detect"
++		 * state before completely disabling LTSSM, which is a
++		 * prerequisite for core configuration.
++		 *
++		 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have
++		 * a strong indication that the bootloader activated the link.
++		 */
++		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
++		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
++
++		if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
++		    (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
++			val = readl(pp->dbi_base + PCIE_PL_PFLR);
++			val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
++			val |= PCIE_PL_PFLR_FORCE_LINK;
++			writel(val, pp->dbi_base + PCIE_PL_PFLR);
++
++			regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++					IMX6Q_GPR12_PCIE_CTL_2, 0);
++		}
  
-@@ -790,12 +791,22 @@ static int dwc3_probe(struct platform_device *pdev)
- 	/* default to -3.5dB de-emphasis */
- 	tx_de_emphasis = 1;
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++				IMX6Q_GPR1_PCIE_TEST_PD,
++				IMX6Q_GPR1_PCIE_TEST_PD);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++				IMX6Q_GPR1_PCIE_REF_CLK_EN, 0);
++	}
  
+ 	return 0;
+ }
+@@ -275,18 +302,30 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		goto err_pcie;
+ 	}
+ 
+-	/* power up core phy and enable ref clock */
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+-	/*
+-	 * the async reset input need ref clock to sync internally,
+-	 * when the ref clock comes after reset, internal synced
+-	 * reset time is too short , cannot meet the requirement.
+-	 * add one ~10us delay here.
+-	 */
+-	udelay(10);
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
++	if (is_imx6sx_pcie(imx6_pcie)) {
++		ret = clk_prepare_enable(imx6_pcie->pcie_inbound_axi);
++		if (ret) {
++			dev_err(pp->dev, "unable to enable pcie clock\n");
++			goto err_inbound_axi;
++		}
++
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				IMX6SX_GPR12_PCIE_TEST_PD, 0);
++	} else {
++		/* power up core phy and enable ref clock */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++				IMX6Q_GPR1_PCIE_TEST_PD, 0);
++		/*
++		 * the async reset input need ref clock to sync internally,
++		 * when the ref clock comes after reset, internal synced
++		 * reset time is too short , cannot meet the requirement.
++		 * add one ~10us delay here.
++		 */
++		udelay(10);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++				IMX6Q_GPR1_PCIE_REF_CLK_EN,
++				IMX6Q_GPR1_PCIE_REF_CLK_EN);
++	}
+ 
+ 	/* allow the clocks to stabilize */
+ 	usleep_range(200, 500);
+@@ -297,8 +336,19 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		msleep(100);
+ 		gpio_set_value(imx6_pcie->reset_gpio, 1);
+ 	}
++
 +	/*
-+	 * defalut to assert utmi_sleep_n and use maximum allowed HIRD
-+	 * threshold value of 0b1100
++	 * Release the PCIe PHY reset here, that we have set in
++	 * imx6_pcie_assert_core_reset() now
 +	 */
-+	hird_threshold = 12;
++	if (is_imx6sx_pcie(imx6_pcie))
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
++				IMX6SX_GPR5_PCIE_BTNRST, 0);
 +
- 	if (node) {
- 		dwc->maximum_speed = of_usb_get_maximum_speed(node);
- 		dwc->has_lpm_erratum = of_property_read_bool(node,
- 				"snps,has-lpm-erratum");
- 		of_property_read_u8(node, "snps,lpm-nyet-threshold",
- 				&lpm_nyet_threshold);
-+		dwc->is_utmi_l1_suspend = of_property_read_bool(node,
-+				"snps,is-utmi-l1-suspend");
-+		of_property_read_u8(node, "snps,hird-threshold",
-+				&hird_threshold);
+ 	return 0;
  
- 		dwc->needs_fifo_resize = of_property_read_bool(node,
- 				"tx-fifo-resize");
-@@ -831,6 +842,9 @@ static int dwc3_probe(struct platform_device *pdev)
- 		dwc->has_lpm_erratum = pdata->has_lpm_erratum;
- 		if (pdata->lpm_nyet_threshold)
- 			lpm_nyet_threshold = pdata->lpm_nyet_threshold;
-+		dwc->is_utmi_l1_suspend = pdata->is_utmi_l1_suspend;
-+		if (pdata->hird_threshold)
-+			hird_threshold = pdata->hird_threshold;
++err_inbound_axi:
++	clk_disable_unprepare(imx6_pcie->pcie);
+ err_pcie:
+ 	clk_disable_unprepare(imx6_pcie->pcie_bus);
+ err_pcie_bus:
+@@ -308,9 +358,26 @@ err_pcie_phy:
  
- 		dwc->needs_fifo_resize = pdata->tx_fifo_resize;
- 		dwc->dr_mode = pdata->dr_mode;
-@@ -858,6 +872,9 @@ static int dwc3_probe(struct platform_device *pdev)
- 	dwc->lpm_nyet_threshold = lpm_nyet_threshold;
- 	dwc->tx_de_emphasis = tx_de_emphasis;
+ }
  
-+	dwc->hird_threshold = hird_threshold
-+		| (dwc->is_utmi_l1_suspend << 4);
+-static void imx6_pcie_init_phy(struct pcie_port *pp)
++static int imx6_pcie_init_phy(struct pcie_port *pp)
+ {
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
++	int ret;
 +
- 	ret = dwc3_core_get_phy(dwc);
++	/* Power up the separate domain available on i.MX6SX */
++	if (is_imx6sx_pcie(imx6_pcie)) {
++		regmap_update_bits(imx6_pcie->gpc_ips_reg, GPC_CNTR,
++				GPC_CNTR_PCIE_PHY_PUP_REQ,
++				GPC_CNTR_PCIE_PHY_PUP_REQ);
++		regulator_set_voltage(imx6_pcie->pcie_phy_regulator,
++				1100000, 1100000);
++		ret = regulator_enable(imx6_pcie->pcie_phy_regulator);
++		if (ret) {
++			dev_err(pp->dev, "failed to enable pcie regulator.\n");
++			return ret;
++		}
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				IMX6SX_GPR12_RX_EQ_MASK, IMX6SX_GPR12_RX_EQ_2);
++	}
+ 
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
+@@ -319,7 +386,7 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 			IMX6Q_GPR12_DEVICE_TYPE, PCI_EXP_TYPE_ROOT_PORT << 12);
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-			IMX6Q_GPR12_LOS_LEVEL, 9 << 4);
++			IMX6Q_GPR12_LOS_LEVEL, IMX6Q_GPR12_LOS_LEVEL_9);
+ 
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+ 			IMX6Q_GPR8_TX_DEEMPH_GEN1, 0 << 0);
+@@ -331,6 +398,8 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
+ 			IMX6Q_GPR8_TX_SWING_FULL, 127 << 18);
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+ 			IMX6Q_GPR8_TX_SWING_LOW, 127 << 25);
++
++	return 0;
+ }
+ 
+ static int imx6_pcie_wait_for_link(struct pcie_port *pp)
+@@ -377,7 +446,8 @@ static int imx6_pcie_start_link(struct pcie_port *pp)
+ 
+ 	/* Start LTSSM. */
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-			IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
++			IMX6Q_GPR12_PCIE_CTL_2,
++			IMX6Q_GPR12_PCIE_CTL_2);
+ 
+ 	ret = imx6_pcie_wait_for_link(pp);
  	if (ret)
- 		return ret;
-diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-index 8b6c308..2c90139 100644
---- a/drivers/usb/dwc3/core.h
-+++ b/drivers/usb/dwc3/core.h
-@@ -675,12 +675,16 @@ struct dwc3_scratchpad_array {
-  * @test_mode: true when we're entering a USB test mode
-  * @test_mode_nr: test feature selector
-  * @lpm_nyet_threshold: LPM NYET response threshold
-+ * @hird_threshold: HIRD threshold
-  * @delayed_status: true when gadget driver asks for delayed status
-  * @ep0_bounced: true when we used bounce buffer
-  * @ep0_expect_in: true when we expect a DATA IN transfer
-  * @has_hibernation: true when dwc3 was configured with Hibernation
-  * @has_lpm_erratum: true when core was configured with LPM Erratum. Note that
-  *			there's now way for software to detect this in runtime.
-+ * @is_utmi_l1_suspend: the core asserts output signal
-+ * 	0	- utmi_sleep_n
-+ * 	1	- utmi_l1_suspend_n
-  * @is_selfpowered: true when we are selfpowered
-  * @is_fpga: true when we are using the FPGA board
-  * @needs_fifo_resize: not all users might want fifo resizing, flag it
-@@ -797,12 +801,14 @@ struct dwc3 {
- 	u8			test_mode;
- 	u8			test_mode_nr;
- 	u8			lpm_nyet_threshold;
-+	u8			hird_threshold;
+@@ -422,13 +492,19 @@ static int imx6_pcie_start_link(struct pcie_port *pp)
+ 	return ret;
+ }
  
- 	unsigned		delayed_status:1;
- 	unsigned		ep0_bounced:1;
- 	unsigned		ep0_expect_in:1;
- 	unsigned		has_hibernation:1;
- 	unsigned		has_lpm_erratum:1;
-+	unsigned		is_utmi_l1_suspend:1;
- 	unsigned		is_selfpowered:1;
- 	unsigned		is_fpga:1;
- 	unsigned		needs_fifo_resize:1;
-diff --git a/drivers/usb/dwc3/gadget.c b/drivers/usb/dwc3/gadget.c
-index 2c0d19a4..303bb67 100644
---- a/drivers/usb/dwc3/gadget.c
-+++ b/drivers/usb/dwc3/gadget.c
-@@ -2291,11 +2291,7 @@ static void dwc3_gadget_conndone_interrupt(struct dwc3 *dwc)
- 		reg = dwc3_readl(dwc->regs, DWC3_DCTL);
- 		reg &= ~(DWC3_DCTL_HIRD_THRES_MASK | DWC3_DCTL_L1_HIBER_EN);
- 
--		/*
--		 * TODO: This should be configurable. For now using
--		 * maximum allowed HIRD threshold value of 0b1100
--		 */
--		reg |= DWC3_DCTL_HIRD_THRES(12);
-+		reg |= DWC3_DCTL_HIRD_THRES(dwc->hird_threshold);
- 
- 		/*
- 		 * When dwc3 revisions >= 2.40a, LPM Erratum is enabled and
-diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
-index 245300b..a3a3b6d 100644
---- a/drivers/usb/dwc3/platform_data.h
-+++ b/drivers/usb/dwc3/platform_data.h
-@@ -25,6 +25,9 @@ struct dwc3_platform_data {
- 	enum usb_dr_mode dr_mode;
- 	bool tx_fifo_resize;
- 
-+	unsigned is_utmi_l1_suspend:1;
-+	u8 hird_threshold;
+-static void imx6_pcie_host_init(struct pcie_port *pp)
++static int imx6_pcie_host_init(struct pcie_port *pp)
+ {
++	int ret;
 +
- 	u8 lpm_nyet_threshold;
+ 	imx6_pcie_assert_core_reset(pp);
  
- 	unsigned disable_scramble_quirk:1;
+-	imx6_pcie_init_phy(pp);
++	ret = imx6_pcie_init_phy(pp);
++	if (ret < 0)
++		return ret;
+ 
+-	imx6_pcie_deassert_core_reset(pp);
++	ret = imx6_pcie_deassert_core_reset(pp);
++	if (ret < 0)
++		return ret;
+ 
+ 	dw_pcie_setup_rc(pp);
+ 
+@@ -436,6 +512,8 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+ 		dw_pcie_msi_init(pp);
++
++	return 0;
+ }
+ 
+ static void imx6_pcie_reset_phy(struct pcie_port *pp)
+@@ -553,6 +631,76 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_PM_SLEEP
++static int pci_imx_suspend_noirq(struct device *dev)
++{
++	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
++	struct pcie_port *pp = &imx6_pcie->pp;
++
++	if (is_imx6sx_pcie(imx6_pcie)) {
++		if (IS_ENABLED(CONFIG_PCI_MSI))
++			dw_pcie_msi_cfg_store(pp);
++
++		/* PM_TURN_OFF */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				IMX6SX_GPR12_PCIE_PM_TURN_OFF,
++				IMX6SX_GPR12_PCIE_PM_TURN_OFF);
++		udelay(10);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				IMX6SX_GPR12_PCIE_PM_TURN_OFF, 0);
++		clk_disable_unprepare(imx6_pcie->pcie);
++		clk_disable_unprepare(imx6_pcie->pcie_bus);
++		clk_disable_unprepare(imx6_pcie->pcie_phy);
++		clk_disable_unprepare(imx6_pcie->pcie_inbound_axi);
++
++		/* Assert per-reset to ep */
++		gpio_set_value(imx6_pcie->reset_gpio, 0);
++	}
++
++	return 0;
++}
++
++static int pci_imx_resume_noirq(struct device *dev)
++{
++	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
++	struct pcie_port *pp = &imx6_pcie->pp;
++
++	if (is_imx6sx_pcie(imx6_pcie)) {
++		clk_prepare_enable(imx6_pcie->pcie_inbound_axi);
++		clk_prepare_enable(imx6_pcie->pcie_bus);
++		clk_prepare_enable(imx6_pcie->pcie_phy);
++		clk_prepare_enable(imx6_pcie->pcie);
++
++		/* Reset iMX6SX PCIe */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
++				IMX6SX_GPR5_PCIE_PERST, IMX6SX_GPR5_PCIE_PERST);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
++				IMX6SX_GPR5_PCIE_PERST, 0);
++		/*
++		 * controller maybe turn off, re-configure again
++		 */
++		dw_pcie_setup_rc(pp);
++
++		if (IS_ENABLED(CONFIG_PCI_MSI))
++			dw_pcie_msi_cfg_restore(pp);
++
++		/* De-assert per-reset to ep */
++		gpio_set_value(imx6_pcie->reset_gpio, 1);
++	}
++
++	return 0;
++}
++
++static const struct dev_pm_ops pci_imx_pm_ops = {
++	.suspend_noirq = pci_imx_suspend_noirq,
++	.resume_noirq = pci_imx_resume_noirq,
++	.freeze_noirq = pci_imx_suspend_noirq,
++	.thaw_noirq = pci_imx_resume_noirq,
++	.poweroff_noirq = pci_imx_suspend_noirq,
++	.restore_noirq = pci_imx_resume_noirq,
++};
++#endif
++
+ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct imx6_pcie *imx6_pcie;
+@@ -610,9 +758,28 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(imx6_pcie->pcie);
+ 	}
+ 
+-	/* Grab GPR config register range */
+-	imx6_pcie->iomuxc_gpr =
+-		 syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
++	if (is_imx6sx_pcie(imx6_pcie)) {
++		imx6_pcie->pcie_inbound_axi = devm_clk_get(&pdev->dev,
++				"pcie_inbound_axi");
++		if (IS_ERR(imx6_pcie->pcie_inbound_axi)) {
++			dev_err(&pdev->dev,
++				"pcie clock source missing or invalid\n");
++			return PTR_ERR(imx6_pcie->pcie_inbound_axi);
++		}
++
++		imx6_pcie->pcie_phy_regulator = devm_regulator_get(pp->dev,
++				"pcie-phy");
++
++		imx6_pcie->iomuxc_gpr =
++			 syscon_regmap_lookup_by_compatible
++			 ("fsl,imx6sx-iomuxc-gpr");
++		imx6_pcie->gpc_ips_reg =
++			 syscon_regmap_lookup_by_compatible("fsl,imx6sx-gpc");
++	} else {
++		imx6_pcie->iomuxc_gpr =
++			syscon_regmap_lookup_by_compatible
++			("fsl,imx6q-iomuxc-gpr");
++	}
+ 	if (IS_ERR(imx6_pcie->iomuxc_gpr)) {
+ 		dev_err(&pdev->dev, "unable to find iomuxc registers\n");
+ 		return PTR_ERR(imx6_pcie->iomuxc_gpr);
+@@ -636,6 +803,7 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
+ 
+ static const struct of_device_id imx6_pcie_of_match[] = {
+ 	{ .compatible = "fsl,imx6q-pcie", },
++	{ .compatible = "fsl,imx6sx-pcie", },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, imx6_pcie_of_match);
+@@ -645,6 +813,7 @@ static struct platform_driver imx6_pcie_driver = {
+ 		.name	= "imx6q-pcie",
+ 		.owner	= THIS_MODULE,
+ 		.of_match_table = imx6_pcie_of_match,
++		.pm = &pci_imx_pm_ops,
+ 	},
+ 	.shutdown = imx6_pcie_shutdown,
+ };
 -- 
 1.9.1
 
