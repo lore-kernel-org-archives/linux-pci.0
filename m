@@ -1,56 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:48102 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753428AbaJAW2g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Oct 2014 18:28:36 -0400
-Message-ID: <1412201390.4285.233.camel@pasglop>
-Subject: Re: [PATCH 1/4] pci/msi: Move "force_32bit_msi" flag from powerpc
- to generic pci_dev
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex Deucher <alexdeucher@gmail.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
-Date: Thu, 02 Oct 2014 08:09:50 +1000
-In-Reply-To: <20141001203322.GE4171@google.com>
-References: <1412048401.4285.128.camel@pasglop>
-	 <CAErSpo4B6kuZJcKwreNvW1qC5sZ=1Ko71vbzNz7T8-_pjf7mww@mail.gmail.com>
-	 <CADnq5_PT+dX=KA4epGNRaoraco2z1pe5K7UgqLmTUhWMnvtWkw@mail.gmail.com>
-	 <1412108504.4285.155.camel@pasglop>
-	 <CADnq5_O_iLAZUKLL4nph8VwuP2NOkWXhBZC2XTSkFm5P42WZ+g@mail.gmail.com>
-	 <1412110946.4285.158.camel@pasglop>
-	 <CADnq5_OXBax1+TKPsR2RDYTWijQKDVw34ECfWzcwN2SibCGYTg@mail.gmail.com>
-	 <1412112324.4285.160.camel@pasglop> <1412129363.4285.190.camel@pasglop>
-	 <20141001203322.GE4171@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-by2on0116.outbound.protection.outlook.com ([207.46.100.116]:64576
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752493AbaJTFzz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Oct 2014 01:55:55 -0400
+From: Richard Zhu <richard.zhu@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
+	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
+	<m-karicheri2@ti.com>, Richard Zhu <r65037@freescale.com>,
+	Richard Zhu <richard.zhu@freescale.com>
+Subject: [PATCH v8 7/9] ARM: imx6: Update dts and binding for imx6sx pcie
+Date: Mon, 20 Oct 2014 13:25:22 +0800
+Message-ID: <1413782724-30795-8-git-send-email-richard.zhu@freescale.com>
+In-Reply-To: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
+References: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-10-01 at 14:33 -0600, Bjorn Helgaas wrote:
-> I like the idea of handling this more generically, e.g., with a bit like
-> this in struct pci_dev (I'd probably name it something like "no_64bit_msi"
-> along the lines of your driver #defines).
-> 
-> What I don't like is that we haven't done anything to help other
-> architectures, because the only code that *looks* at this bit is in
-> arch/powerpc.  The next arch that tries to use 64-bit MSI addresses for
-> these devices will trip over the same problem.
+From: Richard Zhu <r65037@freescale.com>
 
-I started looking. From my (limited) understanding of x86, it doesn't
-even look at the "size" of MSIs which makes me think it's always 32-bit,
-and I plan to look at the others next (though not for stable).
+- imx6sx pcie phy has its own power regulator. Add the
+pcie phy power suppy into im6sx pcie dts and binding.
+- in order to align with imx6qdl's pcie dts, re-format
+imx6sx pcie dts.
+- in order to align with imx6qdl pcie dts format and
+keep clean of imx6 pcie driver, keep the pcie phy clock
+in imx6sx pcie dts, although it's the parent clk of the
+pcie bus clock now, and would be enabled automatically
+when pcie bus clock is enabled. secondly, it's
+possible that the external osc maybe used as source
+of the pcie_bus clk in board design in future.
+- disp_axi clock is required by pcie inbound axi port.
+Add one more clock named pcie_inbound_axi for imx6sx pcie.
 
-> Can we check in pci_enable_msi_range() and pci_enable_msix_range() whether
-> the MSI addresses allocated by the arch are too big, and fail the call if
-> they are?
+Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
+---
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  8 +++++-
+ arch/arm/boot/dts/imx6sx.dtsi                      | 32 ++++++++++++----------
+ 2 files changed, 25 insertions(+), 15 deletions(-)
 
-Yes, good idea, I'll add something.
-
-Cheers,
-Ben.
-
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+index 9455fd0..ad81179 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+@@ -4,7 +4,7 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
+ and thus inherits all the common properties defined in designware-pcie.txt.
+ 
+ Required properties:
+-- compatible: "fsl,imx6q-pcie"
++- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie"
+ - reg: base addresse and length of the pcie controller
+ - interrupts: A list of interrupt outputs of the controller. Must contain an
+   entry for each entry in the interrupt-names property.
+@@ -13,6 +13,12 @@ Required properties:
+ - clock-names: Must include the following additional entries:
+ 	- "pcie_phy"
+ 
++Additional required properties for imx6sx-pcie:
++- clock names: Must include the following additional entries:
++	- "pcie_inbound_axi"
++- power supplies:
++	- pcie-phy-supply: regulator used to power the PCIe PHY
++
+ Example:
+ 
+ 	pcie@0x01000000 {
+diff --git a/arch/arm/boot/dts/imx6sx.dtsi b/arch/arm/boot/dts/imx6sx.dtsi
+index f4b9da6..0dfeade 100644
+--- a/arch/arm/boot/dts/imx6sx.dtsi
++++ b/arch/arm/boot/dts/imx6sx.dtsi
+@@ -599,9 +599,9 @@
+ 					anatop-max-voltage = <1450000>;
+ 				};
+ 
+-				reg_pcie: regulator-vddpcie@140 {
++				reg_pcie_phy: regulator-vddpcie-phy@140 {
+ 					compatible = "fsl,anatop-regulator";
+-					regulator-name = "vddpcie";
++					regulator-name = "vddpcie-phy";
+ 					regulator-min-microvolt = <725000>;
+ 					regulator-max-microvolt = <1450000>;
+ 					anatop-reg-offset = <0x140>;
+@@ -1184,24 +1184,28 @@
+ 
+ 		pcie: pcie@0x08000000 {
+ 			compatible = "fsl,imx6sx-pcie", "snps,dw-pcie";
+-			reg = <0x08ffc000 0x4000>; /* DBI */
++			reg = <0x08ffc000 0x4000>, <0x08f00000 0x80000>;
++			reg-names = "dbi", "config";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			device_type = "pci";
+-				  /* configuration space */
+-			ranges = <0x00000800 0 0x08f00000 0x08f00000 0 0x00080000
+-				  /* downstream I/O */
+-				  0x81000000 0 0          0x08f80000 0 0x00010000
+-				  /* non-prefetchable memory */
+-				  0x82000000 0 0x08000000 0x08000000 0 0x00f00000>;
++			ranges = <0x81000000 0 0          0x08f80000 0 0x00010000 /* downstream I/O */
++				  0x82000000 0 0x08000000 0x08000000 0 0x00f00000>; /* non-prefetchable memory */
+ 			num-lanes = <1>;
+-			interrupts = <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>;
+-			clocks = <&clks IMX6SX_CLK_PCIE_REF_125M>,
+-				 <&clks IMX6SX_CLK_PCIE_AXI>,
++			interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "msi";
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0 0 0 0x7>;
++			interrupt-map = <0 0 0 1 &intc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
++			                <0 0 0 2 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
++			                <0 0 0 3 &intc GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>,
++			                <0 0 0 4 &intc GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&clks IMX6SX_CLK_PCIE_AXI>,
+ 				 <&clks IMX6SX_CLK_LVDS1_OUT>,
++				 <&clks IMX6SX_CLK_PCIE_REF_125M>,
+ 				 <&clks IMX6SX_CLK_DISPLAY_AXI>;
+-			clock-names = "pcie_ref_125m", "pcie_axi",
+-				      "lvds_gate", "display_axi";
++			clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_inbound_axi";
++			pcie-phy-supply = <&reg_pcie_phy>;
+ 			status = "disabled";
+ 		};
+ 	};
+-- 
+1.9.1
 
