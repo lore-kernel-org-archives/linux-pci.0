@@ -1,156 +1,115 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [Patch Part1 v3 04/20] x86, irq: Convert irq_2_pin list to generic list
-Date: Mon, 27 Oct 2014 16:11:55 +0800
-Message-Id: <1414397531-28254-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1bbn0108.outbound.protection.outlook.com ([157.56.111.108]:53976
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752322AbaJTFX5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Oct 2014 01:23:57 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <richard.zhu@freescale.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shengchao Guo <Shawn.Guo@freescale.com>,
+	"festevam@gmail.com" <festevam@gmail.com>,
+	"tharvey@gateworks.com" <tharvey@gateworks.com>
+Subject: RE: [PATCH v6 01/13] PCI: designware: Refine setup_rc and add msi
+ data restore
+Date: Mon, 20 Oct 2014 05:23:52 +0000
+Message-ID: <df55ded1295f4069a8e679800aa09f8f@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
+	 <1413445963-24706-2-git-send-email-richard.zhu@freescale.com>
+ <1413455817.2165.6.camel@antimon.intern.lynxeye.de>
+In-Reply-To: <1413455817.2165.6.camel@antimon.intern.lynxeye.de>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
-
-Use generic list to replace private list implementation so we could
-use generic helper functions to operate it.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Cc: Joerg Roedel <joro@8bytes.org>
----
- arch/x86/include/asm/hw_irq.h  |    2 +-
- arch/x86/kernel/apic/io_apic.c |   28 +++++++++++-----------------
- 2 files changed, 12 insertions(+), 18 deletions(-)
-
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 64330c2e172e..28f283988c8e 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -138,7 +138,7 @@ struct irq_2_irte {
-  * Most irqs are mapped 1:1 with pins.
-  */
- struct irq_cfg {
--	struct irq_pin_list	*irq_2_pin;
-+	struct list_head	irq_2_pin;
- 	cpumask_var_t		domain;
- 	cpumask_var_t		old_domain;
- 	u8			vector;
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 117ec58fff02..00bd61fd1b5a 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -74,7 +74,7 @@
- 		for_each_pin((idx), (pin))
- 
- #define for_each_irq_pin(entry, head) \
--	for (entry = head; entry; entry = entry->next)
-+	list_for_each_entry(entry, &head, list)
- 
- /*
-  *      Is the SiS APIC rmw bug present ?
-@@ -229,8 +229,8 @@ void mp_save_irq(struct mpc_intsrc *m)
- }
- 
- struct irq_pin_list {
-+	struct list_head list;
- 	int apic, pin;
--	struct irq_pin_list *next;
- };
- 
- static struct irq_pin_list *alloc_irq_pin_list(int node)
-@@ -297,6 +297,7 @@ static struct irq_cfg *alloc_irq_cfg(unsigned int irq, int node)
- 		goto out_cfg;
- 	if (!zalloc_cpumask_var_node(&cfg->old_domain, GFP_KERNEL, node))
- 		goto out_domain;
-+	INIT_LIST_HEAD(&cfg->irq_2_pin);
- 	return cfg;
- out_domain:
- 	free_cpumask_var(cfg->domain);
-@@ -460,15 +461,12 @@ static void ioapic_mask_entry(int apic, int pin)
-  */
- static int __add_pin_to_irq_node(struct irq_cfg *cfg, int node, int apic, int pin)
- {
--	struct irq_pin_list **last, *entry;
-+	struct irq_pin_list *entry;
- 
- 	/* don't allow duplicates */
--	last = &cfg->irq_2_pin;
--	for_each_irq_pin(entry, cfg->irq_2_pin) {
-+	for_each_irq_pin(entry, cfg->irq_2_pin)
- 		if (entry->apic == apic && entry->pin == pin)
- 			return 0;
--		last = &entry->next;
--	}
- 
- 	entry = alloc_irq_pin_list(node);
- 	if (!entry) {
-@@ -479,22 +477,19 @@ static int __add_pin_to_irq_node(struct irq_cfg *cfg, int node, int apic, int pi
- 	entry->apic = apic;
- 	entry->pin = pin;
- 
--	*last = entry;
-+	list_add_tail(&entry->list, &cfg->irq_2_pin);
- 	return 0;
- }
- 
- static void __remove_pin_from_irq(struct irq_cfg *cfg, int apic, int pin)
- {
--	struct irq_pin_list **last, *entry;
-+	struct irq_pin_list *tmp, *entry;
- 
--	last = &cfg->irq_2_pin;
--	for_each_irq_pin(entry, cfg->irq_2_pin)
-+	list_for_each_entry_safe(entry, tmp, &cfg->irq_2_pin, list)
- 		if (entry->apic == apic && entry->pin == pin) {
--			*last = entry->next;
-+			list_del(&entry->list);
- 			kfree(entry);
- 			return;
--		} else {
--			last = &entry->next;
- 		}
- }
- 
-@@ -1739,8 +1734,7 @@ __apicdebuginit(void) print_IO_APICs(void)
- 		cfg = irq_cfg(irq);
- 		if (!cfg)
- 			continue;
--		entry = cfg->irq_2_pin;
--		if (!entry)
-+		if (list_empty(&cfg->irq_2_pin))
- 			continue;
- 		printk(KERN_DEBUG "IRQ%d ", irq);
- 		for_each_irq_pin(entry, cfg->irq_2_pin)
-@@ -4068,7 +4062,7 @@ void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq)
- 
- 	ioapic_mask_entry(ioapic, pin);
- 	__remove_pin_from_irq(cfg, ioapic, pin);
--	WARN_ON(cfg->irq_2_pin != NULL);
-+	WARN_ON(!list_empty(&cfg->irq_2_pin));
- 	arch_teardown_hwirq(virq);
- }
- 
--- 
-1.7.10.4
-
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEx1Y2FzIFN0YWNoIFttYWls
+dG86bC5zdGFjaEBwZW5ndXRyb25peC5kZV0NCj4gU2VudDogVGh1cnNkYXksIE9jdG9iZXIgMTYs
+IDIwMTQgNjozNyBQTQ0KPiBUbzogUmljaGFyZCBaaHUNCj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtl
+cm5lbC5vcmc7IEd1byBTaGF3bi1SNjUwNzM7IGZlc3RldmFtQGdtYWlsLmNvbTsNCj4gdGhhcnZl
+eUBnYXRld29ya3MuY29tOyBaaHUgUmljaGFyZC1SNjUwMzcNCj4gU3ViamVjdDogUmU6IFtQQVRD
+SCB2NiAwMS8xM10gUENJOiBkZXNpZ253YXJlOiBSZWZpbmUgc2V0dXBfcmMgYW5kIGFkZCBtc2kN
+Cj4gZGF0YSByZXN0b3JlDQo+IA0KPiBBbSBEb25uZXJzdGFnLCBkZW4gMTYuMTAuMjAxNCwgMTU6
+NTIgKzA4MDAgc2NocmllYiBSaWNoYXJkIFpodToNCj4gPiBGcm9tOiBSaWNoYXJkIFpodSA8cjY1
+MDM3QGZyZWVzY2FsZS5jb20+DQo+ID4NCj4gPiAtIG1vdmUgInByb2dyYW0gY29ycmVjdCBjbGFz
+cyBmb3IgUkMiIGZyb20gZHdfcGNpZV9ob3N0X2luaXQoKSB0bw0KPiA+IGR3X3BjaWVfc2V0dXBf
+cmMoKS4gc2luY2UgdGhpcyBpcyBSQyBzZXR1cCwgaXQncyBiZXR0ZXIgdG8gY29udGFpbmVkDQo+
+ID4gaW4gZHdfcGNpZV9zZXR1cF9yYyBmdW5jdGlvbi4NCj4gPiBUaGVuLCBSQyBjYW4gYmUgcmUt
+c2V0dXAgcmVhbGx5IGJ5IGR3X3BjaWVfc2V0dXBfcmMoKS4NCj4gPiAtIGFkZCBvbmUgc3RvcmUv
+cmUtc3RvcmUgbXNpIGNmZyBmdW5jdGlvbnMuIEJlY2F1c2UgdGhhdCBwY2llDQo+ID4gY29udHJv
+bGxlciBtYXliZSBwb3dlcmVkIG9mZiBkdXJpbmcgc3lzdGVtIHN1c3BlbmQsIGFuZCB0aGUgbXNp
+IGRhdGENCj4gPiBjb25maWd1cmF0aW9uIHdvdWxkIGJlIGxvc3QuDQo+ID4gdGhlc2UgZnVuY3Rp
+b25zIGNhbiBiZSB1c2VkIHRvIHN0b3JlL3Jlc3RvcmUgdGhlIG1zaSBkYXRhIGFuZA0KPiA+IG1z
+aV9lbmFibGUgZHVyaW5nIHRoZSBzdXNwZW5kL3Jlc3VtZSBjYWxsYmFjay4NCj4gPg0KPiA+IFNp
+Z25lZC1vZmYtYnk6IFJpY2hhcmQgWmh1IDxyaWNoYXJkLnpodUBmcmVlc2NhbGUuY29tPg0KPiAN
+Cj4gTkFLIGZvciB0aGUgcmVhc29ucyBiZWxvdy4NCj4gDQo+ID4gLS0tDQo+ID4gIGRyaXZlcnMv
+cGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmMgfCAyMSArKysrKysrKysrKysrKysrKystLS0NCj4g
+PiBkcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5oIHwgIDMgKysrDQo+ID4gIDIgZmls
+ZXMgY2hhbmdlZCwgMjEgaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkNCj4gPg0KPiA+IGRp
+ZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5jDQo+ID4gYi9kcml2
+ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5jDQo+ID4gaW5kZXggNTM4YmJmMy4uYjFmODJm
+ZiAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5jDQo+
+ID4gKysrIGIvZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUuYw0KPiA+IEBAIC0xOTQs
+NiArMTk0LDE5IEBAIHZvaWQgZHdfcGNpZV9tc2lfaW5pdChzdHJ1Y3QgcGNpZV9wb3J0ICpwcCkN
+Cj4gPiAgCWR3X3BjaWVfd3Jfb3duX2NvbmYocHAsIFBDSUVfTVNJX0FERFJfSEksIDQsIDApOyAg
+fQ0KPiA+DQo+ID4gK3ZvaWQgZHdfcGNpZV9tc2lfY2ZnX3N0b3JlKHN0cnVjdCBwY2llX3BvcnQg
+KnBwKSB7DQo+ID4gKwlkd19wY2llX3JkX293bl9jb25mKHBwLCBQQ0lFX01TSV9JTlRSMF9FTkFC
+TEUsIDQsICZwcC0+bXNpX2VuYWJsZSk7DQo+IA0KPiBZb3UgYXJlIG9ubHkgc2F2aW5nIGFuZCBy
+ZXN0b3JpbmcgdGhpcyBvbmUgcmVnaXN0ZXIuIFdoaWxlIHRoaXMgbWlnaHQgd29yayBmb3INCj4g
+dGhlIGN1cnJlbnQgaW1wbGVtZW50YXRpb24gdGhhdCB1c2VzIG9ubHkgYSBtYXggb2YgMzIgdmVj
+dG9ycyB0aGlzIGlzIG5vdCB0cnVlDQo+IGluIGdlbmVyYWwuIEF0IGxlYXN0IHRoZSBpbXg2IGlt
+cGxlbWVudGF0aW9uIHN1cHBvcnRzIHVwIHRvIDEyOCB2ZWN0b3JzLCBzbw0KPiBhY3R1YWxseSA0
+IHJlZ2lzdGVycyBtaWdodCBiZSB1c2VkIGhlcmUuDQo+DQpbUmljaGFyZF0gT2ssIGFsbCB0aGUg
+Zm91ciByZWdpc3RlcnMgd291bGQgYmUgc3RvcmVkL3JlLXN0b3JlZC4NCiANCj4gPiArfQ0KPiA+
+ICsNCj4gPiArdm9pZCBkd19wY2llX21zaV9jZmdfcmVzdG9yZShzdHJ1Y3QgcGNpZV9wb3J0ICpw
+cCkgew0KPiA+ICsJZHdfcGNpZV93cl9vd25fY29uZihwcCwgUENJRV9NU0lfQUREUl9MTywgNCwN
+Cj4gPiArCQkJdmlydF90b19waHlzKCh2b2lkICopcHAtPm1zaV9kYXRhKSk7DQo+ID4gKwlkd19w
+Y2llX3dyX293bl9jb25mKHBwLCBQQ0lFX01TSV9BRERSX0hJLCA0LCAwKTsNCj4gPiArCWR3X3Bj
+aWVfd3Jfb3duX2NvbmYocHAsIFBDSUVfTVNJX0lOVFIwX0VOQUJMRSwgNCwgcHAtPm1zaV9lbmFi
+bGUpOw0KPiANCj4gTXVyYWxpIGFza2VkIHlvdSB0byB0YWtlIGludG8gYWNjb3VudCB0aGUgbmV3
+bHkgYWRkZWQgcmVxdWlyZW1lbnRzIGZvciBvbGRlcg0KPiBkZXNpZ253YXJlIGNvcmVzLiBZb3Ug
+ZGlkIG5vdC4NCltSaWNoYXJkXSBTb3JyeSwgTXVyYWxpJ3MgY29tbWVudHMgaXMgbWlzc2VkIGJl
+Zm9yZSwgd291bGQgYmUgYWRkZWQgbGF0ZXIuDQo+IA0KPiA+ICt9DQo+ID4gKw0KPiA+ICBzdGF0
+aWMgaW50IGZpbmRfdmFsaWRfcG9zMChzdHJ1Y3QgcGNpZV9wb3J0ICpwcCwgaW50IG1zZ3ZlYywg
+aW50IHBvcywNCj4gPiBpbnQgKnBvczApICB7DQo+ID4gIAlpbnQgZmxhZyA9IDE7DQo+ID4gQEAg
+LTU3MCw5ICs1ODMsNiBAQCBpbnQgX19pbml0IGR3X3BjaWVfaG9zdF9pbml0KHN0cnVjdCBwY2ll
+X3BvcnQgKnBwKQ0KPiA+DQo+ID4gIAlkd19wY2llX3dyX293bl9jb25mKHBwLCBQQ0lfQkFTRV9B
+RERSRVNTXzAsIDQsIDApOw0KPiA+DQo+ID4gLQkvKiBwcm9ncmFtIGNvcnJlY3QgY2xhc3MgZm9y
+IFJDICovDQo+ID4gLQlkd19wY2llX3dyX293bl9jb25mKHBwLCBQQ0lfQ0xBU1NfREVWSUNFLCAy
+LCBQQ0lfQ0xBU1NfQlJJREdFX1BDSSk7DQo+ID4gLQ0KPiA+ICAJZHdfcGNpZV9yZF9vd25fY29u
+ZihwcCwgUENJRV9MSU5LX1dJRFRIX1NQRUVEX0NPTlRST0wsIDQsICZ2YWwpOw0KPiA+ICAJdmFs
+IHw9IFBPUlRfTE9HSUNfU1BFRURfQ0hBTkdFOw0KPiA+ICAJZHdfcGNpZV93cl9vd25fY29uZihw
+cCwgUENJRV9MSU5LX1dJRFRIX1NQRUVEX0NPTlRST0wsIDQsIHZhbCk7IEBADQo+ID4gLTkxNyw2
+ICs5MjcsMTEgQEAgdm9pZCBkd19wY2llX3NldHVwX3JjKHN0cnVjdCBwY2llX3BvcnQgKnBwKQ0K
+PiA+ICAJdmFsID0gbWVtbGltaXQgfCBtZW1iYXNlOw0KPiA+ICAJZHdfcGNpZV93cml0ZWxfcmMo
+cHAsIHZhbCwgUENJX01FTU9SWV9CQVNFKTsNCj4gPg0KPiA+ICsJLyogcHJvZ3JhbSBjb3JyZWN0
+IGNsYXNzIGZvciBSQyAqLw0KPiA+ICsJZHdfcGNpZV9yZWFkbF9yYyhwcCwgUENJX0NMQVNTX1JF
+VklTSU9OLCAmdmFsKTsNCj4gPiArCXZhbCB8PSBQQ0lfQ0xBU1NfQlJJREdFX1BDSSA8PCAxNjsN
+Cj4gPiArCWR3X3BjaWVfd3JpdGVsX3JjKHBwLCB2YWwsIFBDSV9DTEFTU19SRVZJU0lPTik7DQo+
+ID4gKw0KPiANCj4gVGhpcyBpcyBnZXR0aW5nIHJpZGljdWxvdXMuIEhvdyBtYW55IHRpbWUgZGlk
+IEkgYXNrIHlvdSB0byBjaGFuZ2UgdGhpcyBub3cuDQo+IFRoaXMgaHVuayBzaG91bGQganVzdCBy
+ZWFkOg0KPiANCj4gKwkvKiBwcm9ncmFtIGNvcnJlY3QgY2xhc3MgZm9yIFJDICovDQo+ICsJZHdf
+cGNpZV93cl9vd25fY29uZihwcCwgUENJX0NMQVNTX0RFVklDRSwgMiwgUENJX0NMQVNTX0JSSURH
+RV9QQ0kpOw0KPiArDQo+IA0KW1JpY2hhcmRdIE9rLCB3b3VsZCBiZSBrZXB0IHRoaXMgd2F5LiBU
+aGFua3MuDQoNCj4gPiAgCS8qIHNldHVwIGNvbW1hbmQgcmVnaXN0ZXIgKi8NCj4gPiAgCWR3X3Bj
+aWVfcmVhZGxfcmMocHAsIFBDSV9DT01NQU5ELCAmdmFsKTsNCj4gPiAgCXZhbCAmPSAweGZmZmYw
+MDAwOw0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5o
+DQo+ID4gYi9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5oDQo+ID4gaW5kZXggYTQ3
+NmU2MC4uYjBiZmVkMCAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVz
+aWdud2FyZS5oDQo+ID4gKysrIGIvZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUuaA0K
+PiA+IEBAIC01Niw2ICs1Niw3IEBAIHN0cnVjdCBwY2llX3BvcnQgew0KPiA+ICAJaW50CQkJbXNp
+X2lycTsNCj4gPiAgCXN0cnVjdCBpcnFfZG9tYWluCSppcnFfZG9tYWluOw0KPiA+ICAJdW5zaWdu
+ZWQgbG9uZwkJbXNpX2RhdGE7DQo+ID4gKwl1bnNpZ25lZCBpbnQJCW1zaV9lbmFibGU7DQo+ID4g
+IAlERUNMQVJFX0JJVE1BUChtc2lfaXJxX2luX3VzZSwgTUFYX01TSV9JUlFTKTsgIH07DQo+ID4N
+Cj4gPiBAQCAtODMsNiArODQsOCBAQCBpbnQgZHdfcGNpZV9jZmdfcmVhZCh2b2lkIF9faW9tZW0g
+KmFkZHIsIGludCB3aGVyZSwNCj4gPiBpbnQgc2l6ZSwgdTMyICp2YWwpOyAgaW50IGR3X3BjaWVf
+Y2ZnX3dyaXRlKHZvaWQgX19pb21lbSAqYWRkciwgaW50DQo+ID4gd2hlcmUsIGludCBzaXplLCB1
+MzIgdmFsKTsgIGlycXJldHVybl90IGR3X2hhbmRsZV9tc2lfaXJxKHN0cnVjdA0KPiA+IHBjaWVf
+cG9ydCAqcHApOyAgdm9pZCBkd19wY2llX21zaV9pbml0KHN0cnVjdCBwY2llX3BvcnQgKnBwKTsN
+Cj4gPiArdm9pZCBkd19wY2llX21zaV9jZmdfc3RvcmUoc3RydWN0IHBjaWVfcG9ydCAqcHApOyB2
+b2lkDQo+ID4gK2R3X3BjaWVfbXNpX2NmZ19yZXN0b3JlKHN0cnVjdCBwY2llX3BvcnQgKnBwKTsN
+Cj4gPiAgaW50IGR3X3BjaWVfbGlua191cChzdHJ1Y3QgcGNpZV9wb3J0ICpwcCk7ICB2b2lkDQo+
+ID4gZHdfcGNpZV9zZXR1cF9yYyhzdHJ1Y3QgcGNpZV9wb3J0ICpwcCk7ICBpbnQgZHdfcGNpZV9o
+b3N0X2luaXQoc3RydWN0DQo+ID4gcGNpZV9wb3J0ICpwcCk7DQo+IA0KDQoNCkJlc3QgUmVnYXJk
+cw0KUmljaGFyZCBaaHUNCg0K
