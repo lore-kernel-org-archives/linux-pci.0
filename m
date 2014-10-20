@@ -1,62 +1,57 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch Part2 v3 16/24] x86, irq: Directly call native_compose_msi_msg() for DMAR IRQ
-Date: Tue, 28 Oct 2014 16:26:34 +0800
-Message-Id: <1414484803-10311-17-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1bon0142.outbound.protection.outlook.com ([157.56.111.142]:21776
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752479AbaJTFzs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Oct 2014 01:55:48 -0400
+From: Richard Zhu <richard.zhu@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
+	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
+	<m-karicheri2@ti.com>, Richard Zhu <r65037@freescale.com>,
+	Richard Zhu <richard.zhu@freescale.com>
+Subject: [PATCH v8 3/9] ARM: imx6sx: Add imx6sx pcie related gpr bits definitions
+Date: Mon, 20 Oct 2014 13:25:18 +0800
+Message-ID: <1413782724-30795-4-git-send-email-richard.zhu@freescale.com>
+In-Reply-To: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
+References: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DMAR interrupt won't be remapped by interrupt remapping hardware,
-so directly call native_compose_msi_msg() for DMAR IRQ to compose MSI
-message data. This will help to simplify MSI code later.
+From: Richard Zhu <r65037@freescale.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
 ---
- arch/x86/kernel/apic/msi.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ include/linux/mfd/syscon/imx6q-iomuxc-gpr.h | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 354abd7ef2ad..6aac2ec1b3ef 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -396,12 +396,10 @@ static struct irq_chip dmar_msi_type = {
+diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+index ff44374..3273b87 100644
+--- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
++++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+@@ -301,6 +301,7 @@
+ #define IMX6Q_GPR12_DEVICE_TYPE			(0xf << 12)
+ #define IMX6Q_GPR12_PCIE_CTL_2			BIT(10)
+ #define IMX6Q_GPR12_LOS_LEVEL			(0x1f << 4)
++#define IMX6Q_GPR12_LOS_LEVEL_9			(0x9 << 4)
  
- int arch_setup_dmar_msi(unsigned int irq)
- {
--	int ret;
- 	struct msi_msg msg;
-+	struct irq_cfg *cfg = irq_cfg(irq);
+ #define IMX6Q_GPR13_SDMA_STOP_REQ		BIT(30)
+ #define IMX6Q_GPR13_CAN2_STOP_REQ		BIT(29)
+@@ -395,4 +396,12 @@
+ #define IMX6SL_GPR1_FEC_CLOCK_MUX1_SEL_MASK    (0x3 << 17)
+ #define IMX6SL_GPR1_FEC_CLOCK_MUX2_SEL_MASK    (0x1 << 14)
  
--	ret = msi_compose_msg(NULL, irq, &msg, -1);
--	if (ret < 0)
--		return ret;
-+	native_compose_msi_msg(NULL, irq, cfg->dest_apicid, &msg, -1);
- 	dmar_msi_write(irq, &msg);
- 	irq_set_chip_and_handler_name(irq, &dmar_msi_type, handle_edge_irq,
- 				      "edge");
++/* For imx6sx iomux gpr register field define */
++#define IMX6SX_GPR5_PCIE_BTNRST			BIT(19)
++#define IMX6SX_GPR5_PCIE_PERST			BIT(18)
++
++#define IMX6SX_GPR12_PCIE_PM_TURN_OFF		BIT(16)
++#define IMX6SX_GPR12_PCIE_TEST_PD		BIT(30)
++#define IMX6SX_GPR12_RX_EQ_MASK			(0x7 << 0)
++#define IMX6SX_GPR12_RX_EQ_2			(0x2 << 0)
+ #endif /* __LINUX_IMX6Q_IOMUXC_GPR_H */
 -- 
-1.7.10.4
+1.9.1
 
