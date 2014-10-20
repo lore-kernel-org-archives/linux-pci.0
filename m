@@ -1,50 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0139.outbound.protection.outlook.com ([65.55.169.139]:44032
+Received: from mail-bl2on0130.outbound.protection.outlook.com ([65.55.169.130]:18861
 	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754945AbaJ1Lzz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 28 Oct 2014 07:55:55 -0400
+	id S1752455AbaJTGnf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Oct 2014 02:43:35 -0400
+Date: Mon, 20 Oct 2014 14:43:31 +0800
 From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+To: Felipe Balbi <balbi@ti.com>
+CC: Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Paul Zimmerman" <Paul.Zimmerman@synopsys.com>,
 	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Jason Chang <jason.chang@amd.com>,
-	"Vincent Wan" <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
 	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v3 01/19] usb: dwc3: enable hibernation if to be supported
-Date: Tue, 28 Oct 2014 19:54:22 +0800
-Message-ID: <1414497280-3126-2-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
-References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 08/16] usb: dwc3: add u2exit lfps quirk
+Message-ID: <20141020064331.GC24357@hr-slim.amd.com>
+References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+ <1413536021-4886-9-git-send-email-ray.huang@amd.com>
+ <20141017145000.GD26260@saruman>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20141017145000.GD26260@saruman>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It enables hibernation if the function is set in coreConsultant.
+On Fri, Oct 17, 2014 at 09:50:00AM -0500, Felipe Balbi wrote:
+> Hi,
+> 
+> On Fri, Oct 17, 2014 at 04:53:33PM +0800, Huang Rui wrote:
+> > AMD NL needs to enable u2exit lfps quirk.
+> > 
+> > Signed-off-by: Huang Rui <ray.huang@amd.com>
+> > ---
+> >  drivers/usb/dwc3/core.c          | 4 ++++
+> >  drivers/usb/dwc3/core.h          | 1 +
+> >  drivers/usb/dwc3/dwc3-pci.c      | 3 ++-
+> >  drivers/usb/dwc3/platform_data.h | 1 +
+> >  4 files changed, 8 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+> > index 25db533..7322d85 100644
+> > --- a/drivers/usb/dwc3/core.c
+> > +++ b/drivers/usb/dwc3/core.c
+> > @@ -467,6 +467,10 @@ static int dwc3_core_init(struct dwc3 *dwc)
+> >  		reg |= DWC3_GCTL_DISSCRAMBLE;
+> >  	else
+> >  		reg &= ~DWC3_GCTL_DISSCRAMBLE;
+> > +
+> > +	if (dwc->quirks & DWC3_QUIRK_U2EXIT_LFPS)
+> 
+> this should be:
+> 
+> 	if (dwc->u2_exit_lfps_quirk)
+> 
 
-Suggested-by: Felipe Balbi <balbi@ti.com>
-Signed-off-by: Huang Rui <ray.huang@amd.com>
----
- drivers/usb/dwc3/core.c | 1 +
- 1 file changed, 1 insertion(+)
+OK, will update it in V3.
 
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index fa396fc..bf77509 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -449,6 +449,7 @@ static int dwc3_core_init(struct dwc3 *dwc)
- 	case DWC3_GHWPARAMS1_EN_PWROPT_HIB:
- 		/* enable hibernation here */
- 		dwc->nr_scratch = DWC3_GHWPARAMS4_HIBER_SCRATCHBUFS(hwparams4);
-+		reg |= DWC3_GCTL_GBLHIBERNATIONEN;
- 		break;
- 	default:
- 		dev_dbg(dwc->dev, "No power optimization available\n");
--- 
-1.9.1
+> > +		reg |= DWC3_GCTL_U2EXIT_LFPS;
+> > +
+> >  	/*
+> >  	 * WORKAROUND: DWC3 revisions <1.90a have a bug
+> >  	 * where the device can fail to connect at SuperSpeed
+> > diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+> > index d58479e..3d27f10 100644
+> > --- a/drivers/usb/dwc3/core.h
+> > +++ b/drivers/usb/dwc3/core.h
+> > @@ -166,6 +166,7 @@
+> >  #define DWC3_GCTL_SCALEDOWN(n)		((n) << 4)
+> >  #define DWC3_GCTL_SCALEDOWN_MASK	DWC3_GCTL_SCALEDOWN(3)
+> >  #define DWC3_GCTL_DISSCRAMBLE		(1 << 3)
+> > +#define DWC3_GCTL_U2EXIT_LFPS		(1 << 2)
+> >  #define DWC3_GCTL_GBLHIBERNATIONEN	(1 << 1)
+> >  #define DWC3_GCTL_DSBLCLKGTNG		(1 << 0)
+> >  
+> > diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
+> > index bbe946c..cdb9b04 100644
+> > --- a/drivers/usb/dwc3/dwc3-pci.c
+> > +++ b/drivers/usb/dwc3/dwc3-pci.c
+> > @@ -149,7 +149,8 @@ static int dwc3_pci_probe(struct pci_dev *pci,
+> >  	if (pci->vendor == PCI_VENDOR_ID_AMD && pci->device ==
+> >  			PCI_DEVICE_ID_AMD_NL) {
+> >  		dwc3_pdata.has_lpm_erratum = true;
+> > -		dwc3_pdata.quirks |= DWC3_QUIRK_AMD_NL;
+> > +		dwc3_pdata.quirks |= DWC3_QUIRK_AMD_NL
+> > +			| DWC3_QUIRK_U2EXIT_LFPS;
+> >  	}
+> 
+> should be combined and the last patch in the series.
+> 
 
+You want to make all the AMD quirks enablement info and device id at
+last patch, right?
+
+Thanks,
+Rui
