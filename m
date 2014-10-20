@@ -1,111 +1,130 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 11/16] s390/MSI: Use MSI controller framework to configure MSI/MSI-X irq
-Date: Mon, 27 Oct 2014 21:22:17 +0800
-Message-ID: <1414416142-31239-12-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
-References: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from [207.46.100.106] ([207.46.100.106]:8224 "EHLO
+	na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752008AbaJTCvd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 19 Oct 2014 22:51:33 -0400
+From: Richard Zhu <richard.zhu@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
+	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Richard Zhu <richard.zhu@freescale.com>
+Subject: [PATCH v7 11/13] ARM: imx6: Update dts and binding for imx6sx pcie
+Date: Mon, 20 Oct 2014 10:19:14 +0800
+Message-ID: <1413771556-32212-12-git-send-email-richard.zhu@freescale.com>
+In-Reply-To: <1413771556-32212-1-git-send-email-richard.zhu@freescale.com>
+References: <1413771556-32212-1-git-send-email-richard.zhu@freescale.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use MSI controller framework instead of arch MSI functions to configure
-MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+From: Richard Zhu <r65037@freescale.com>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Acked-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
+- imx6sx pcie phy has its own power regulator. Add the
+pcie phy power suppy into im6sx pcie dts and binding.
+- in order to align with imx6qdl's pcie dts, re-format
+imx6sx pcie dts.
+- in order to align with imx6qdl pcie dts format and
+keep clean of imx6 pcie driver, keep the pcie phy clock
+in imx6sx pcie dts, although it's the parent clk of the
+pcie bus clock now, and would be enabled automatically
+when pcie bus clock is enabled. secondly, it's
+possible that the external osc maybe used as source
+of the pcie_bus clk in board design in future.
+- disp_axi clock is required by pcie inbound axi port.
+Add one more clock named pcie_inbound_axi for imx6sx pcie.
+
+Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
 ---
- arch/s390/include/asm/pci.h |    1 +
- arch/s390/pci/pci.c         |   19 +++++++++++++++++--
- 2 files changed, 18 insertions(+), 2 deletions(-)
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  8 +++++-
+ arch/arm/boot/dts/imx6sx.dtsi                      | 32 ++++++++++++----------
+ 2 files changed, 25 insertions(+), 15 deletions(-)
 
-diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
-index c030900..bf14da2 100644
---- a/arch/s390/include/asm/pci.h
-+++ b/arch/s390/include/asm/pci.h
-@@ -88,6 +88,7 @@ struct zpci_dev {
- 	u32 uid;			/* user defined id */
- 	u8 util_str[CLP_UTIL_STR_LEN];	/* utility string */
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+index 9455fd0..ad81179 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+@@ -4,7 +4,7 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
+ and thus inherits all the common properties defined in designware-pcie.txt.
  
-+	struct msi_controller *msi_ctrl;
- 	/* IRQ stuff */
- 	u64		msi_addr;	/* MSI address */
- 	struct airq_iv *aibv;		/* adapter interrupt bit vector */
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index 552b990..beed5ab 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -358,7 +358,15 @@ static void zpci_irq_handler(struct airq_struct *airq)
- 	}
- }
+ Required properties:
+-- compatible: "fsl,imx6q-pcie"
++- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie"
+ - reg: base addresse and length of the pcie controller
+ - interrupts: A list of interrupt outputs of the controller. Must contain an
+   entry for each entry in the interrupt-names property.
+@@ -13,6 +13,12 @@ Required properties:
+ - clock-names: Must include the following additional entries:
+ 	- "pcie_phy"
  
--int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
-+struct msi_controller *pcibios_msi_controller(struct pci_bus *bus)
-+{
-+	struct zpci_dev *zpci = bus->sysdata;
++Additional required properties for imx6sx-pcie:
++- clock names: Must include the following additional entries:
++	- "pcie_inbound_axi"
++- power supplies:
++	- pcie-phy-supply: regulator used to power the PCIe PHY
 +
-+	return zpci->msi_ctrl;
-+}
-+
-+static int zpci_setup_msi_irqs(struct msi_controller *ctrl,
-+		struct pci_dev *pdev, int nvec, int type)
- {
- 	struct zpci_dev *zdev = get_zdev(pdev);
- 	unsigned int hwirq, msi_vecs;
-@@ -434,7 +442,8 @@ out:
- 	return rc;
- }
+ Example:
  
--void arch_teardown_msi_irqs(struct pci_dev *pdev)
-+static void zpci_teardown_msi_irqs(struct msi_controller *ctrl,
-+		struct pci_dev *pdev)
- {
- 	struct zpci_dev *zdev = get_zdev(pdev);
- 	struct msi_desc *msi;
-@@ -464,6 +473,11 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
- 	airq_iv_free_bit(zpci_aisb_iv, zdev->aisb);
- }
+ 	pcie@0x01000000 {
+diff --git a/arch/arm/boot/dts/imx6sx.dtsi b/arch/arm/boot/dts/imx6sx.dtsi
+index f4b9da6..0dfeade 100644
+--- a/arch/arm/boot/dts/imx6sx.dtsi
++++ b/arch/arm/boot/dts/imx6sx.dtsi
+@@ -599,9 +599,9 @@
+ 					anatop-max-voltage = <1450000>;
+ 				};
  
-+static struct msi_controller zpci_msi_ctrl = {
-+	.setup_irqs = zpci_setup_msi_irqs,
-+	.teardown_irqs = zpci_teardown_msi_irqs,
-+};
-+
- static void zpci_map_resources(struct zpci_dev *zdev)
- {
- 	struct pci_dev *pdev = zdev->pdev;
-@@ -749,6 +763,7 @@ static int zpci_scan_bus(struct zpci_dev *zdev)
- 	if (ret)
- 		return ret;
+-				reg_pcie: regulator-vddpcie@140 {
++				reg_pcie_phy: regulator-vddpcie-phy@140 {
+ 					compatible = "fsl,anatop-regulator";
+-					regulator-name = "vddpcie";
++					regulator-name = "vddpcie-phy";
+ 					regulator-min-microvolt = <725000>;
+ 					regulator-max-microvolt = <1450000>;
+ 					anatop-reg-offset = <0x140>;
+@@ -1184,24 +1184,28 @@
  
-+	zdev->msi_ctrl = &zpci_msi_ctrl;
- 	zdev->bus = pci_scan_root_bus(NULL, ZPCI_BUS_NR, &pci_root_ops,
- 				      zdev, &resources);
- 	if (!zdev->bus) {
+ 		pcie: pcie@0x08000000 {
+ 			compatible = "fsl,imx6sx-pcie", "snps,dw-pcie";
+-			reg = <0x08ffc000 0x4000>; /* DBI */
++			reg = <0x08ffc000 0x4000>, <0x08f00000 0x80000>;
++			reg-names = "dbi", "config";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			device_type = "pci";
+-				  /* configuration space */
+-			ranges = <0x00000800 0 0x08f00000 0x08f00000 0 0x00080000
+-				  /* downstream I/O */
+-				  0x81000000 0 0          0x08f80000 0 0x00010000
+-				  /* non-prefetchable memory */
+-				  0x82000000 0 0x08000000 0x08000000 0 0x00f00000>;
++			ranges = <0x81000000 0 0          0x08f80000 0 0x00010000 /* downstream I/O */
++				  0x82000000 0 0x08000000 0x08000000 0 0x00f00000>; /* non-prefetchable memory */
+ 			num-lanes = <1>;
+-			interrupts = <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>;
+-			clocks = <&clks IMX6SX_CLK_PCIE_REF_125M>,
+-				 <&clks IMX6SX_CLK_PCIE_AXI>,
++			interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "msi";
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0 0 0 0x7>;
++			interrupt-map = <0 0 0 1 &intc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
++			                <0 0 0 2 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
++			                <0 0 0 3 &intc GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>,
++			                <0 0 0 4 &intc GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&clks IMX6SX_CLK_PCIE_AXI>,
+ 				 <&clks IMX6SX_CLK_LVDS1_OUT>,
++				 <&clks IMX6SX_CLK_PCIE_REF_125M>,
+ 				 <&clks IMX6SX_CLK_DISPLAY_AXI>;
+-			clock-names = "pcie_ref_125m", "pcie_axi",
+-				      "lvds_gate", "display_axi";
++			clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_inbound_axi";
++			pcie-phy-supply = <&reg_pcie_phy>;
+ 			status = "disabled";
+ 		};
+ 	};
 -- 
-1.7.1
+1.9.1
 
