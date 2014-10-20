@@ -1,98 +1,133 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 09/16] MIPS/Xlr/MSI: Use MSI controller framework to configure MSI/MSI-X irq
-Date: Mon, 27 Oct 2014 21:22:15 +0800
-Message-ID: <1414416142-31239-10-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
-References: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1bn0101.outbound.protection.outlook.com ([157.56.110.101]:32864
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751544AbaJTDAE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 19 Oct 2014 23:00:04 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Murali Karicheri <m-karicheri2@ti.com>,
+	Richard Zhu <richard.zhu@freescale.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shengchao Guo <Shawn.Guo@freescale.com>,
+	"festevam@gmail.com" <festevam@gmail.com>,
+	"l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+	"tharvey@gateworks.com" <tharvey@gateworks.com>
+Subject: RE: [PATCH v5 1/9] PCI: designware: refine setup_rc and add msi data
+ restore
+Date: Mon, 20 Oct 2014 02:59:58 +0000
+Message-ID: <adc8deb7ed854e02839194d41063eb81@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com>
+ <1412919676-25344-2-git-send-email-richard.zhu@freescale.com>
+ <5437F048.2000909@ti.com>
+In-Reply-To: <5437F048.2000909@ti.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use MSI controller framework instead of arch MSI functions to configure
-MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+Hi Murali:
+Thanks for your comments.  And, sorry to miss your review comemnt before.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/mips/pci/pci-xlr.c |   17 +++++++++++++++--
- 1 files changed, 15 insertions(+), 2 deletions(-)
 
-diff --git a/arch/mips/pci/pci-xlr.c b/arch/mips/pci/pci-xlr.c
-index 0dde803..1e43c70 100644
---- a/arch/mips/pci/pci-xlr.c
-+++ b/arch/mips/pci/pci-xlr.c
-@@ -149,6 +149,8 @@ static struct resource nlm_pci_io_resource = {
- 	.flags		= IORESOURCE_IO,
- };
- 
-+static struct msi_controller xlr_msi_ctrl;
-+
- struct pci_controller nlm_pci_controller = {
- 	.index		= 0,
- 	.pci_ops	= &nlm_pci_ops,
-@@ -156,6 +158,9 @@ struct pci_controller nlm_pci_controller = {
- 	.mem_offset	= 0x00000000UL,
- 	.io_resource	= &nlm_pci_io_resource,
- 	.io_offset	= 0x00000000UL,
-+#ifdef CONFIG_PCI_MSI
-+	.msi_ctrl = &xlr_msi_ctrl,
-+#endif
- };
- 
- /*
-@@ -214,11 +219,13 @@ static int get_irq_vector(const struct pci_dev *dev)
- }
- 
- #ifdef CONFIG_PCI_MSI
--void arch_teardown_msi_irq(unsigned int irq)
-+static void xlr_teardown_msi_irq(struct msi_controller *ctrl,
-+		unsigned int irq)
- {
- }
- 
--int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
-+static int xlr_setup_msi_irq(struct msi_controller *ctrl,
-+		struct pci_dev *dev, struct msi_desc *desc)
- {
- 	struct msi_msg msg;
- 	struct pci_dev *lnk;
-@@ -263,6 +270,12 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- 	write_msi_msg(irq, &msg);
- 	return 0;
- }
-+
-+static struct msi_controller xlr_msi_ctrl = {
-+	.setup_irq = xlr_setup_msi_irq,
-+	.teardown_irq = xlr_teardown_msi_irq,
-+};
-+
- #endif
- 
- /* Extra ACK needed for XLR on chip PCI controller */
--- 
-1.7.1
+> -----Original Message-----
+> From: Murali Karicheri [mailto:m-karicheri2@ti.com]
+> Sent: Friday, October 10, 2014 10:42 PM
+> To: Richard Zhu
+> Cc: linux-pci@vger.kernel.org; Guo Shawn-R65073; festevam@gmail.com;
+> l.stach@pengutronix.de; tharvey@gateworks.com; Zhu Richard-R65037
+> Subject: Re: [PATCH v5 1/9] PCI: designware: refine setup_rc and add msi data
+> restore
+> 
+> On 10/10/2014 01:41 AM, Richard Zhu wrote:
+> > From: Richard Zhu<r65037@freescale.com>
+> >
+> > - move "program correct class for RC" from dw_pcie_host_init() to
+> > dw_pcie_setup_rc(). since this is RC setup, it's better to contained
+> > in dw_pcie_setup_rc function.
+> > Then, RC can be re-setup really by dw_pcie_setup_rc().
+> > - add one re-store msi data function. Because that pcie controller
+> > maybe powered off during system suspend, and the msi data
+> > configuration would be lost.
+> > this functions can be used to restore the msi data during the resume
+> > callback.
+> >
+> > Signed-off-by: Richard Zhu<richard.zhu@freescale.com>
+> > ---
+> >   drivers/pci/host/pcie-designware.c | 15 ++++++++++++---
+> >   drivers/pci/host/pcie-designware.h |  1 +
+> >   2 files changed, 13 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/drivers/pci/host/pcie-designware.c
+> > b/drivers/pci/host/pcie-designware.c
+> > index 538bbf3..ae1e6c5 100644
+> > --- a/drivers/pci/host/pcie-designware.c
+> > +++ b/drivers/pci/host/pcie-designware.c
+> > @@ -194,6 +194,13 @@ void dw_pcie_msi_init(struct pcie_port *pp)
+> >   	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
+> >   }
+> >
+> > +void dw_pcie_msi_cfg_restore(struct pcie_port *pp) {
+> > +	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+> > +			virt_to_phys((void *)pp->msi_data));
+> > +	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0); }
+> Richard,
+> 
+> dw_msi_setup_irq() has the following code for setting msi_addr
+> 
+> 	if (pp->ops->get_msi_addr)
+> 		msg.address_lo = pp->ops->get_msi_addr(pp);
+> 	else
+> 		msg.address_lo = virt_to_phys((void *)pp->msi_data);
+> 
+> You need to do similar thing in dw_pcie_msi_cfg_restore() so that it works
+> across old (Keystone) and newer designware h/w
+> 
+> Murali
+[Richard] Thanks a lot. Accepted.
 
+> > +
+> >   static int find_valid_pos0(struct pcie_port *pp, int msgvec, int pos, int
+> *pos0)
+> >   {
+> >   	int flag = 1;
+> > @@ -570,9 +577,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> >
+> >   	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+> >
+> > -	/* program correct class for RC */
+> > -	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
+> > -
+> >   	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4,&val);
+> >   	val |= PORT_LOGIC_SPEED_CHANGE;
+> >   	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val); @@
+> > -917,6 +921,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+> >   	val = memlimit | membase;
+> >   	dw_pcie_writel_rc(pp, val, PCI_MEMORY_BASE);
+> >
+> > +	/* program correct class for RC */
+> > +	dw_pcie_readl_rc(pp, PCI_CLASS_REVISION,&val);
+> > +	val |= PCI_CLASS_BRIDGE_PCI<<  16;
+> > +	dw_pcie_writel_rc(pp, val, PCI_CLASS_REVISION);
+> > +
+> >   	/* setup command register */
+> >   	dw_pcie_readl_rc(pp, PCI_COMMAND,&val);
+> >   	val&= 0xffff0000;
+> > diff --git a/drivers/pci/host/pcie-designware.h
+> > b/drivers/pci/host/pcie-designware.h
+> > index a476e60..bb75715 100644
+> > --- a/drivers/pci/host/pcie-designware.h
+> > +++ b/drivers/pci/host/pcie-designware.h
+> > @@ -83,6 +83,7 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int
+> size, u32 *val);
+> >   int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
+> >   irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+> >   void dw_pcie_msi_init(struct pcie_port *pp);
+> > +void dw_pcie_msi_cfg_restore(struct pcie_port *pp);
+> >   int dw_pcie_link_up(struct pcie_port *pp);
+> >   void dw_pcie_setup_rc(struct pcie_port *pp);
+> >   int dw_pcie_host_init(struct pcie_port *pp);
+> 
+> 
+> --
+> Murali Karicheri
+> Linux Kernel, Texas Instruments
