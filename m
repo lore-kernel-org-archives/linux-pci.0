@@ -1,90 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46204 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750797AbaJaRNJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 31 Oct 2014 13:13:09 -0400
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH] driver core: Fix unbalanced device reference in drivers_probe
-To: gregkh@linuxfoundation.org
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Fri, 31 Oct 2014 11:13:07 -0600
-Message-ID: <20141031171223.14088.79944.stgit@gimli.home>
+Received: from mail-by2on0118.outbound.protection.outlook.com ([207.46.100.118]:14112
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752480AbaJTFzr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Oct 2014 01:55:47 -0400
+From: Richard Zhu <richard.zhu@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
+	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
+	<m-karicheri2@ti.com>, Richard Zhu <r65037@freescale.com>,
+	Richard Zhu <richard.zhu@freescale.com>
+Subject: [PATCH v8 2/9] PCI: designware: Fix one potential assignment error of cfg start
+Date: Mon, 20 Oct 2014 13:25:17 +0800
+Message-ID: <1413782724-30795-3-git-send-email-richard.zhu@freescale.com>
+In-Reply-To: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
+References: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-bus_find_device_by_name() acquires a device reference which is never
-released.  This results in an object leak, which on older kernels
-results in failure to release all resources of PCI devices.  libvirt
-uses drivers_probe to re-attach devices to the host after assignment
-and is therefore a common trigger for this leak.
+From: Richard Zhu <r65037@freescale.com>
 
-Example:
+if va_cfg0_base/va_cfg1_base are initialized by
+designware core, the pp->cfg.start is not initialized
+properly, when IORESOURCE_MEM "config" is represented
+as cfg space resource.
+solution: assign cfg_res->start to pp->cfg.start.
 
-# cd /sys/bus/pci/
-# dmesg -C
-# echo 1 > devices/0000\:01\:00.0/sriov_numvfs
-# echo 0 > devices/0000\:01\:00.0/sriov_numvfs
-# dmesg | grep 01:10
- pci 0000:01:10.0: [8086:10ca] type 00 class 0x020000
- kobject: '0000:01:10.0' (ffff8801d79cd0a8): kobject_add_internal: parent: '0000:00:01.0', set: 'devices'
- kobject: '0000:01:10.0' (ffff8801d79cd0a8): kobject_uevent_env
- kobject: '0000:01:10.0' (ffff8801d79cd0a8): fill_kobj_path: path = '/devices/pci0000:00/0000:00:01.0/0000:01:10.0'
- kobject: '0000:01:10.0' (ffff8801d79cd0a8): kobject_uevent_env
- kobject: '0000:01:10.0' (ffff8801d79cd0a8): fill_kobj_path: path = '/devices/pci0000:00/0000:00:01.0/0000:01:10.0'
- kobject: '0000:01:10.0' (ffff8801d79cd0a8): kobject_uevent_env
- kobject: '0000:01:10.0' (ffff8801d79cd0a8): fill_kobj_path: path = '/devices/pci0000:00/0000:00:01.0/0000:01:10.0'
- kobject: '0000:01:10.0' (ffff8801d79cd0a8): kobject_cleanup, parent           (null)
- kobject: '0000:01:10.0' (ffff8801d79cd0a8): calling ktype release
- kobject: '0000:01:10.0': free name
-
-[kobject freed as expected]
-
-# dmesg -C
-# echo 1 > devices/0000\:01\:00.0/sriov_numvfs
-# echo 0000:01:10.0 > drivers_probe
-# echo 0 > devices/0000\:01\:00.0/sriov_numvfs
-# dmesg | grep 01:10
- pci 0000:01:10.0: [8086:10ca] type 00 class 0x020000
- kobject: '0000:01:10.0' (ffff8801d79ce0a8): kobject_add_internal: parent: '0000:00:01.0', set: 'devices'
- kobject: '0000:01:10.0' (ffff8801d79ce0a8): kobject_uevent_env
- kobject: '0000:01:10.0' (ffff8801d79ce0a8): fill_kobj_path: path = '/devices/pci0000:00/0000:00:01.0/0000:01:10.0'
- kobject: '0000:01:10.0' (ffff8801d79ce0a8): kobject_uevent_env
- kobject: '0000:01:10.0' (ffff8801d79ce0a8): fill_kobj_path: path = '/devices/pci0000:00/0000:00:01.0/0000:01:10.0'
- kobject: '0000:01:10.0' (ffff8801d79ce0a8): kobject_uevent_env
- kobject: '0000:01:10.0' (ffff8801d79ce0a8): fill_kobj_path: path = '/devices/pci0000:00/0000:00:01.0/0000:01:10.0'
-
-[no free]
-
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: stable@vger.kernel.org
+Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
 ---
+ drivers/pci/host/pcie-designware.c | 1 +
+ 1 file changed, 1 insertion(+)
 
- drivers/base/bus.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/base/bus.c b/drivers/base/bus.c
-index 83e910a5..876bae5 100644
---- a/drivers/base/bus.c
-+++ b/drivers/base/bus.c
-@@ -254,13 +254,15 @@ static ssize_t store_drivers_probe(struct bus_type *bus,
- 				   const char *buf, size_t count)
- {
- 	struct device *dev;
-+	int err = -EINVAL;
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 8d1c809..e3cd54a 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -472,6 +472,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	if (cfg_res) {
+ 		pp->config.cfg0_size = resource_size(cfg_res)/2;
+ 		pp->config.cfg1_size = resource_size(cfg_res)/2;
++		pp->cfg.start = cfg_res->start;
+ 		pp->cfg0_base = cfg_res->start;
+ 		pp->cfg1_base = cfg_res->start + pp->config.cfg0_size;
  
- 	dev = bus_find_device_by_name(bus, NULL, buf);
- 	if (!dev)
- 		return -ENODEV;
--	if (bus_rescan_devices_helper(dev, NULL) != 0)
--		return -EINVAL;
--	return count;
-+	if (bus_rescan_devices_helper(dev, NULL) == 0)
-+		err = count;
-+	put_device(dev);
-+	return err;
- }
- 
- static struct device *next_device(struct klist_iter *i)
+-- 
+1.9.1
 
