@@ -1,320 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:64712 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752580AbaJNRPY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Oct 2014 13:15:24 -0400
-Received: by mail-ig0-f170.google.com with SMTP id hn15so18145660igb.1
-        for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 10:15:23 -0700 (PDT)
-Date: Tue, 14 Oct 2014 11:15:19 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: matt@masarand.com
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH 01/18] Added way to register deferred PCI IRQ assignment
- handlers
-Message-ID: <20141014171519.GA10125@google.com>
-References: <1412222866-21068-1-git-send-email-matt@masarand.com>
- <1412222866-21068-2-git-send-email-matt@masarand.com>
+Received: from [157.56.111.141] ([157.56.111.141]:13026 "EHLO
+	na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751792AbaJTGC2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Oct 2014 02:02:28 -0400
+Date: Mon, 20 Oct 2014 14:02:17 +0800
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>
+CC: Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Paul Zimmerman" <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 05/16] usb: dwc3: add quirks support to be compatible
+ for kinds of SoCs
+Message-ID: <20141020060217.GA24357@hr-slim.amd.com>
+References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+ <1413536021-4886-6-git-send-email-ray.huang@amd.com>
+ <20141017144144.GA26260@saruman>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1412222866-21068-2-git-send-email-matt@masarand.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20141017144144.GA26260@saruman>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I like the overall idea here and I think this will be a major improvement.
-But we need to tweak a few procedural things to integrate it cleanly.
-
-On Thu, Oct 02, 2014 at 05:07:29AM +0100, matt@masarand.com wrote:
-> From: Matthew Minter <matt@masarand.com>
-
-Please run "git log --oneline --no-merges drivers/pci" and follow the
-style there for subject lines, i.e.,
-
-  PCI: Add ...
-
-For the patches that touch things outside drivers/pci, e.g., the
-architecture patches, run git log on those as well and try to do something
-consistent with previous patch descriptions.
-
-> These are the main infrastructure changes to allow the registration of
-> PCI IRQ assignment functions which can then be called during the device
-> enabling stage. This replaces the pre-initialisation of PCI IRQs at boot
-> time which caused limitations such as failing for devices which are
-> hot-plugged after the machine has booted and resulted in highly
-> fragmented PCI initialisation paths.
+On Fri, Oct 17, 2014 at 09:41:44AM -0500, Felipe Balbi wrote:
+> HI,
 > 
-> The pdev_assign_irq function becomes a centralised method of assigning
-> IRQs to PCI devices in a non platform specific way. The pci_host_bridge
-> structure has had some function pointers added to it where the boot code
-> can register the platform specific ways of assigning PCI IRQs to be used
-> to allow them to be used by pdev_assign_irq.
+> On Fri, Oct 17, 2014 at 04:53:30PM +0800, Huang Rui wrote:
+> > This patch adds a quirks flag at dwc3 structure, and SoCs platform vendor is
+> > able to define this flag in platform data at bus glue layer. Then do some
+> > independent behaviors at dwc3 core level.
+> > 
+> > Signed-off-by: Huang Rui <ray.huang@amd.com>
+> > ---
+> >  drivers/usb/dwc3/core.c          | 2 ++
+> >  drivers/usb/dwc3/core.h          | 3 +++
+> >  drivers/usb/dwc3/dwc3-pci.c      | 9 +++++++++
+> >  drivers/usb/dwc3/platform_data.h | 2 ++
+> >  4 files changed, 16 insertions(+)
+> > 
+
+<snip>
+
+> > diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
+> > index 7db34f0..1d3d65f 100644
+> > --- a/drivers/usb/dwc3/platform_data.h
+> > +++ b/drivers/usb/dwc3/platform_data.h
+> > @@ -24,4 +24,6 @@ struct dwc3_platform_data {
+> >  	enum usb_device_speed maximum_speed;
+> >  	enum usb_dr_mode dr_mode;
+> >  	bool tx_fifo_resize;
+> > +
+> > +	u32     quirks;
 > 
-> Some small adjustements have also been made to makefiles in order to
-> accomodate these changes.
+> I prefer to have one-bit fields like we already have for delayed_status,
+> ep0_bounced, ep0_expect_in, and so on. That makes it easier to support
+> the same quirks through devicetree as well.
 > 
-> Note this code completely obsolites the pci_fixup_irqs code path which
-> has thus been removed.
-> 
-> Signed-off-by: Matthew Minter <matt@masarand.com>
-> 
-> ---
->  drivers/of/of_pci_irq.c   |  2 +-
->  drivers/pci/Makefile      | 15 ++-------------
->  drivers/pci/host-bridge.c |  2 +-
->  drivers/pci/pci.c         |  5 ++++-
->  drivers/pci/pci.h         |  1 +
->  drivers/pci/probe.c       | 12 ------------
->  drivers/pci/setup-irq.c   | 34 ++++++++++++++++------------------
->  include/linux/pci.h       |  6 ++++--
->  8 files changed, 29 insertions(+), 48 deletions(-)
 
-There's a lot going on in this first patch.  I'd like to split it up so
-it's easier to see where the critical changes are.  For example, I think it
-is safe to build setup-irq.o for all arches, even if they don't actually
-use it, so the makefile changes could be split out.  Similarly for the
-change to make find_pci_host_bridge() non-static.
+So it should define like below:
 
-> diff --git a/drivers/of/of_pci_irq.c b/drivers/of/of_pci_irq.c
-> index 1710d9d..205eb7a 100644
-> --- a/drivers/of/of_pci_irq.c
-> +++ b/drivers/of/of_pci_irq.c
-> @@ -97,7 +97,7 @@ EXPORT_SYMBOL_GPL(of_irq_parse_pci);
->   * @pin: PCI irq pin number; passed when used as map_irq callback. Unused
->   *
->   * @slot and @pin are unused, but included in the function so that this
-> - * function can be used directly as the map_irq callback to pci_fixup_irqs().
-> + * function can be used directly as the map_irq callback to pdev_assign_irq().
->   */
->  int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
->  {
-> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-> index e04fe2d..38c4cb0 100644
-> --- a/drivers/pci/Makefile
-> +++ b/drivers/pci/Makefile
-> @@ -4,7 +4,8 @@
->  
->  obj-y		+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
->  			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
-> -			irq.o vpd.o setup-bus.o vc.o
-> +			irq.o vpd.o setup-bus.o vc.o setup-irq.o
-> +
->  obj-$(CONFIG_PROC_FS) += proc.o
->  obj-$(CONFIG_SYSFS) += slot.o
->  
-> @@ -31,18 +32,6 @@ obj-$(CONFIG_PCI_ATS) += ats.o
->  obj-$(CONFIG_PCI_IOV) += iov.o
->  
->  #
-> -# Some architectures use the generic PCI setup functions
-> -#
-> -obj-$(CONFIG_ALPHA) += setup-irq.o
-> -obj-$(CONFIG_ARM) += setup-irq.o
-> -obj-$(CONFIG_UNICORE32) += setup-irq.o
-> -obj-$(CONFIG_SUPERH) += setup-irq.o
-> -obj-$(CONFIG_MIPS) += setup-irq.o
-> -obj-$(CONFIG_TILE) += setup-irq.o
-> -obj-$(CONFIG_SPARC_LEON) += setup-irq.o
-> -obj-$(CONFIG_M68K) += setup-irq.o
-> -
-> -#
->  # ACPI Related PCI FW Functions
->  # ACPI _DSM provided firmware instance and string name
->  #
-> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> index 0e5f3c9..8ed186f 100644
-> --- a/drivers/pci/host-bridge.c
-> +++ b/drivers/pci/host-bridge.c
-> @@ -16,7 +16,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
->  	return bus;
->  }
->  
-> -static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
-> +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
->  {
->  	struct pci_bus *root_bus = find_pci_root_bus(bus);
->  
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 2c9ac70..2dd28d9 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1192,11 +1192,15 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
->  	struct pci_dev *bridge;
->  	u16 cmd;
->  	u8 pin;
-> +	struct pci_host_bridge *hbrg = find_pci_host_bridge(dev->bus);
->  
->  	err = pci_set_power_state(dev, PCI_D0);
->  	if (err < 0 && err != -EIO)
->  		return err;
->  
-> +	pdev_assign_irq(dev, hbrg->swizzle_irq, hbrg->map_irq);
+struct dwc3_platform_data {
+        ...
+        unsigned one_quirk:1;
+}
 
-We don't need the host bridge for anything else here, so why not just look
-it up inside pdev_assign_irq()?
+Then also defined it in dwc3 structure. And when dwc3 probed, put this
+value from glue layer to dwc3, right?
 
-> +	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
-> +
->  	bridge = pci_upstream_bridge(dev);
->  	if (bridge)
->  		pcie_aspm_powersave_config_link(bridge);
-> @@ -1209,7 +1213,6 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
->  	if (dev->msi_enabled || dev->msix_enabled)
->  		return 0;
->  
-> -	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
->  	if (pin) {
->  		pci_read_config_word(dev, PCI_COMMAND, &cmd);
->  		if (cmd & PCI_COMMAND_INTX_DISABLE)
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 0601890..a6cf445 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -70,6 +70,7 @@ void pci_config_pm_runtime_put(struct pci_dev *dev);
->  void pci_pm_init(struct pci_dev *dev);
->  void pci_allocate_cap_save_buffers(struct pci_dev *dev);
->  void pci_free_cap_save_buffers(struct pci_dev *dev);
-> +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus);
->  
->  static inline void pci_wakeup_event(struct pci_dev *dev)
->  {
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 4170113..314e9e3 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1719,18 +1719,6 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
->  }
->  EXPORT_SYMBOL_GPL(pci_scan_child_bus);
->  
-> -/**
-> - * pcibios_root_bridge_prepare - Platform-specific host bridge setup.
-> - * @bridge: Host bridge to set up.
-> - *
-> - * Default empty implementation.  Replace with an architecture-specific setup
-> - * routine, if necessary.
-> - */
-> -int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-> -{
-> -	return 0;
-> -}
-
-We can't just remove this, because it will cause link failures for any arch
-that doesn't supply its own implementation of
-pcibios_root_bridge_prepare().  Future patches add such implementations,
-but the tree should build and work correctly after every patch.  That is
-required for bisectability.
-
-If your intent is that every arch must supply its own
-pcibios_root_bridge_prepare(), you should 
-
-  - keep the __weak version here,
-  - add a non-weak version for every arch,
-  - then finally remove this __weak default version at the end.
-
-> -
->  void __weak pcibios_add_bus(struct pci_bus *bus)
->  {
->  }
-> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-> index 4e2d595..203bf7e 100644
-> --- a/drivers/pci/setup-irq.c
-> +++ b/drivers/pci/setup-irq.c
-> @@ -22,13 +22,19 @@ void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
->  	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
->  }
->  
-> -static void pdev_fixup_irq(struct pci_dev *dev,
-> +void pdev_assign_irq(struct pci_dev *dev,
->  			   u8 (*swizzle)(struct pci_dev *, u8 *),
-> -			   int (*map_irq)(const struct pci_dev *, u8, u8))
-> +			   int (*map_irq)(struct pci_dev *, u8, u8))
->  {
-> -	u8 pin, slot;
-> +	u8 pin;
-> +	u8 slot = -1;
->  	int irq = 0;
->  
-> +	if (!map_irq) {
-> +		dev_dbg(&dev->dev, "runtime irq mapping not provided by arch\n");
-> +		return;
-> +	}
-> +
->  	/* If this device is not on the primary bus, we need to figure out
->  	   which interrupt pin it will come in on.   We know which slot it
->  	   will come in on 'cos that slot is where the bridge is.   Each
-> @@ -40,28 +46,20 @@ static void pdev_fixup_irq(struct pci_dev *dev,
->  	if (pin > 4)
->  		pin = 1;
->  
-> -	if (pin != 0) {
-> -		/* Follow the chain of bridges, swizzling as we go.  */
-> -		slot = (*swizzle)(dev, &pin);
-> +	if (pin) {
-> +		/* Follow the chain of bridges, swizzling as we go. */
-> +		if(swizzle)
-> +			slot = (*swizzle)(dev, &pin);
->  
-> +		/* If a swizzling function is not used map_irq must ignore slot */
->  		irq = (*map_irq)(dev, slot, pin);
->  		if (irq == -1)
->  			irq = 0;
->  	}
-> -	dev->irq = irq;
-> -
-> -	dev_dbg(&dev->dev, "fixup irq: got %d\n", dev->irq);
->  
-> +	dev_dbg(&dev->dev, "assign irq: got %d\n", dev->irq);
-> +	dev->irq = irq;
->  	/* Always tell the device, so the driver knows what is
->  	   the real IRQ to use; the device does not use it. */
->  	pcibios_update_irq(dev, irq);
->  }
-> -
-> -void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
-> -		    int (*map_irq)(const struct pci_dev *, u8, u8))
-> -{
-> -	struct pci_dev *dev = NULL;
-> -
-> -	for_each_pci_dev(dev)
-> -		pdev_fixup_irq(dev, swizzle, map_irq);
-> -}
-
-This removes pci_fixup_irqs(), which is still used (at this point) by many
-architectures.  I see that you remove those uses in later patches, but that
-means the tree is broken in the interim, so it's not bisectable.
-
-I think you're going to have to build up the new assign-IRQ-at-enable-time
-path while leaving the old path intact, in such a way that the new path
-does nothing until an arch is converted to use it.  Then when you convert
-each arch to the new strategy, you can remove its use of the old path.
-After all arches are converted and there are no users of the old path, you
-can remove it completely.
-
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 96453f9..5426d11 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -403,6 +403,8 @@ struct pci_host_bridge {
->  	struct device dev;
->  	struct pci_bus *bus;		/* root bus */
->  	struct list_head windows;	/* pci_host_bridge_windows */
-> +	u8 (*swizzle_irq)(struct pci_dev *, u8 *); /* platform irq swizzler */
-> +	int (*map_irq)(struct pci_dev *, u8, u8);
->  	void (*release_fn)(struct pci_host_bridge *);
->  	void *release_data;
->  };
-> @@ -1064,8 +1066,8 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
->  void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus);
->  void pdev_enable_device(struct pci_dev *);
->  int pci_enable_resources(struct pci_dev *, int mask);
-> -void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
-> -		    int (*)(const struct pci_dev *, u8, u8));
-> +void pdev_assign_irq(struct pci_dev *dev, u8 (*swizzle)(struct pci_dev *, u8 *),
-
-For things exported via include/linux/pci.h, I think we should use names
-prefixed by "pci_", not "pdev_".
-
-> +                     int (*map_irq)(struct pci_dev *, u8, u8));
->  #define HAVE_PCI_REQ_REGIONS	2
->  int __must_check pci_request_regions(struct pci_dev *, const char *);
->  int __must_check pci_request_regions_exclusive(struct pci_dev *, const char *);
-
-Bjorn
+Thanks,
+Rui
