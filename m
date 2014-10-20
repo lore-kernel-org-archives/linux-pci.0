@@ -1,59 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from numascale.com ([213.162.240.84]:33164 "EHLO numascale.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751792AbaJSBrN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 18 Oct 2014 21:47:13 -0400
-From: Daniel J Blueman <daniel@numascale.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Daniel J Blueman <daniel@numascale.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Steffen Persvold <sp@numascale.com>
-Subject: [PATCH v2 5/5] Numachip: use 2GB memory block size
-Date: Sun, 19 Oct 2014 09:45:52 +0800
-Message-Id: <1413683152-31302-5-git-send-email-daniel@numascale.com>
-In-Reply-To: <1413683152-31302-1-git-send-email-daniel@numascale.com>
-References: <1413683152-31302-1-git-send-email-daniel@numascale.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 20 Oct 2014 16:41:54 +0800
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 16/16] usb: dwc3: enable usb suspend phy
+Message-ID: <20141020084153.GD24357@hr-slim.amd.com>
+References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+ <1413536021-4886-17-git-send-email-ray.huang@amd.com>
+ <20141017145942.GL26260@saruman>
+ <A2CA0424C0A6F04399FB9E1CD98E0304844E3423@US01WEMBX2.internal.synopsys.com>
+ <20141017184819.GX26260@saruman>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20141017184819.GX26260@saruman>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use appropriate memory block size to reduce sysfs entry creation time
-by 16x.
+On Fri, Oct 17, 2014 at 01:48:19PM -0500, Felipe Balbi wrote:
+> Hi,
+> 
+> On Fri, Oct 17, 2014 at 06:41:04PM +0000, Paul Zimmerman wrote:
+> > > From: Felipe Balbi [mailto:balbi@ti.com]
+> > > Sent: Friday, October 17, 2014 8:00 AM
+> > > 
+> > > On Fri, Oct 17, 2014 at 04:53:41PM +0800, Huang Rui wrote:
+> > > > AMD NL needs to suspend usb3 ss phy, but this doesn't enable on simulation
+> > > > board.
+> > > >
+> > > > Signed-off-by: Huang Rui <ray.huang@amd.com>
+> > > > ---
+> > > >  drivers/usb/dwc3/core.c          | 7 ++++++-
+> > > >  drivers/usb/dwc3/dwc3-pci.c      | 3 ++-
+> > > >  drivers/usb/dwc3/platform_data.h | 1 +
+> > > >  3 files changed, 9 insertions(+), 2 deletions(-)
+> > > >
+> > > > diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+> > > > index 3ccfe41..4a98696 100644
+> > > > --- a/drivers/usb/dwc3/core.c
+> > > > +++ b/drivers/usb/dwc3/core.c
+> > > > @@ -395,6 +395,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
+> > > >  	if (dwc->quirks & DWC3_QUIRK_TX_DEEPH)
+> > > >  		reg |= DWC3_GUSB3PIPECTL_TX_DEEPH(1);
+> > > >
+> > > > +	if (dwc->quirks & DWC3_QUIRK_SUSPHY)
+> > > 
+> > > should be:
+> > > 
+> > > 	if (!dwc->suspend_usb3_phy_quirk)
+> > > 
+> > > > +		reg |= DWC3_GUSB3PIPECTL_SUSPHY;
+> > > 
+> > > IIRC, databook asks us to set that bit anyway, so the quirk is disabling
+> > > that bit. Am I missing something ? Paul ?
+> > 
+> > It looks to me that Huang's patch is enabling that bit, not disabling
+> > it.
+> 
+> right, but that's what's actually quirky right ? IIRC, Databook asks us
+> to set usb2 and usb3 suspend phy bits and we're just not doing it.
+> 
+> > Currently the driver does not set either DWC3_GUSB3PIPECTL_SUSPHY or
+> > DWC3_GUSB2PHYCFG_SUSPHY (unless it has been added by that big patch
+> > series you just posted). According to the databook, both of those
+> > bits should be set to 1 after the core initialization has completed.
+> 
+> there you go. So unless that quirk bit flag is set, we're safe of
+> setting SUSPHY bit for everybody.
+> 
 
-Boot-tested with the four permutations of X86_UV and X86_NUMACHIP.
+So I can update to set these two suspend phy bits defaultly in my next
+patch set, is it OK? :)
 
-Signed-off-by: Daniel J Blueman <daniel@numascale.com>
----
- arch/x86/mm/init_64.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+Thanks,
+Rui
 
-diff --git a/arch/x86/mm/init_64.c b/arch/x86/mm/init_64.c
-index 5621c47..22ea6de 100644
---- a/arch/x86/mm/init_64.c
-+++ b/arch/x86/mm/init_64.c
-@@ -53,6 +53,7 @@
- #include <asm/cacheflush.h>
- #include <asm/init.h>
- #include <asm/uv/uv.h>
-+#include <asm/numachip/numachip.h>
- #include <asm/setup.h>
- 
- #include "mm_internal.h"
-@@ -1235,9 +1236,9 @@ static unsigned long probe_memory_block_size(void)
- 	/* start from 2g */
- 	unsigned long bz = 1UL<<31;
- 
--#ifdef CONFIG_X86_UV
--	if (is_uv_system()) {
--		printk(KERN_INFO "UV: memory block size 2GB\n");
-+#ifdef CONFIG_X86_64
-+	if (is_uv_system() || is_numachip_system()) {
-+		pr_info("Memory block size 2GB for large-SMP system\n");
- 		return 2UL * 1024 * 1024 * 1024;
- 	}
- #endif
--- 
-1.9.1
-
+> > So I think the driver should be changed to enable both of those by
+> > default, and then maybe you want quirks to disable them if there is
+> > some platform out there which needs that.
+> 
+> Yeah, that's what I thought too :-) Thanks for confirming
+> 
+> -- 
+> balbi
