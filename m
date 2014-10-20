@@ -1,46 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:59997 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751029AbaJGE6J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Oct 2014 00:58:09 -0400
-Message-ID: <1412656721.30859.124.camel@pasglop>
-Subject: [PATCH v3 6/7] powerpc/pseries: Honor the generic "no_64bit_msi"
- flag
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Alex Deucher <alexdeucher@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Dave Airlie <airlied@linux.ie>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
-Date: Tue, 07 Oct 2014 15:38:41 +1100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from [207.46.100.141] ([207.46.100.141]:26448 "EHLO
+	na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751993AbaJTCvf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 19 Oct 2014 22:51:35 -0400
+From: Richard Zhu <richard.zhu@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
+	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Richard Zhu <richard.zhu@freescale.com>
+Subject: [PATCH v7 06/13] PCI: designware: Fix one potential assignment error of cfg start
+Date: Mon, 20 Oct 2014 10:19:09 +0800
+Message-ID: <1413771556-32212-7-git-send-email-richard.zhu@freescale.com>
+In-Reply-To: <1413771556-32212-1-git-send-email-richard.zhu@freescale.com>
+References: <1413771556-32212-1-git-send-email-richard.zhu@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Instead of the arch specific quirk which we are deprecating
-and that drivers don't understand.
+From: Richard Zhu <r65037@freescale.com>
 
-Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: <stable@vger.kernel.org>
+if va_cfg0_base/va_cfg1_base are initialized by
+designware core, the pp->cfg.start is not initialized
+properly, when IORESOURCE_MEM "config" is represented
+as cfg space resource.
+solution: assign cfg_res->start to pp->cfg.start.
+
+Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
 ---
- arch/powerpc/platforms/pseries/msi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/host/pcie-designware.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
-index 18ff462..6fd96d8 100644
---- a/arch/powerpc/platforms/pseries/msi.c
-+++ b/arch/powerpc/platforms/pseries/msi.c
-@@ -429,7 +429,7 @@ static int rtas_setup_msi_irqs(struct pci_dev *pdev, int nvec_in, int type)
- 	 */
- again:
- 	if (type == PCI_CAP_ID_MSI) {
--		if (pdn->force_32bit_msi) {
-+		if (pdev->no_64bit_msi) {
- 			rc = rtas_change_msi(pdn, RTAS_CHANGE_32MSI_FN, nvec);
- 			if (rc < 0) {
- 				/*
-
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 1a2b477..3edd94d 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -450,6 +450,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	if (cfg_res) {
+ 		pp->config.cfg0_size = resource_size(cfg_res)/2;
+ 		pp->config.cfg1_size = resource_size(cfg_res)/2;
++		pp->cfg.start = cfg_res->start;
+ 		pp->cfg0_base = cfg_res->start;
+ 		pp->cfg1_base = cfg_res->start + pp->config.cfg0_size;
+ 
+-- 
+1.9.1
 
