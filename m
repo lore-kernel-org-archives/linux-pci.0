@@ -1,97 +1,111 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH 2/3] Revert "PCI/MSI: Rename __get_cached_msi_msg() to
-	get_cached_msi_msg()"
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: linux-kernel@vger.kernel.org, wangyijing@huawei.com
-Date: Wed, 01 Oct 2014 10:48:28 -0600
-Message-ID: <20141001164828.2709.67767.stgit@gimli.home>
-In-Reply-To: <20141001163814.2709.92885.stgit@gimli.home>
-References: <20141001163814.2709.92885.stgit@gimli.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1on0148.outbound.protection.outlook.com ([157.56.110.148]:32428
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752322AbaJTGic (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Oct 2014 02:38:32 -0400
+Date: Mon, 20 Oct 2014 14:38:28 +0800
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>
+CC: Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Paul Zimmerman" <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 06/16] usb: dwc3: add disscramble quirk
+Message-ID: <20141020063827.GB24357@hr-slim.amd.com>
+References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+ <1413536021-4886-7-git-send-email-ray.huang@amd.com>
+ <20141017144532.GB26260@saruman>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20141017144532.GB26260@saruman>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is another case of making the MSI msg API inconsistent, for
-seemingly no gain.  Continue to use __get_cached_msi_msg() with an
-msi_desc and leave get_cached_msi_msg() for an irq interfaces.
+On Fri, Oct 17, 2014 at 09:45:32AM -0500, Felipe Balbi wrote:
+> Hi,
+> 
+> On Fri, Oct 17, 2014 at 04:53:31PM +0800, Huang Rui wrote:
+> > AMD NL fpga needs to enable disscramble quirk. And this quirk doesn't need on
+> > the true soc.
+> > 
+> > Signed-off-by: Huang Rui <ray.huang@amd.com>
+> > ---
+> >  drivers/usb/dwc3/core.c          | 8 +++++++-
+> >  drivers/usb/dwc3/dwc3-pci.c      | 5 +++++
+> >  drivers/usb/dwc3/platform_data.h | 4 ++++
+> >  3 files changed, 16 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+> > index 50c0eae..819e501 100644
+> > --- a/drivers/usb/dwc3/core.c
+> > +++ b/drivers/usb/dwc3/core.c
+> > @@ -422,7 +422,6 @@ static int dwc3_core_init(struct dwc3 *dwc)
+> >  
+> >  	reg = dwc3_readl(dwc->regs, DWC3_GCTL);
+> >  	reg &= ~DWC3_GCTL_SCALEDOWN_MASK;
+> > -	reg &= ~DWC3_GCTL_DISSCRAMBLE;
+> >  
+> >  	switch (DWC3_GHWPARAMS1_EN_PWROPT(dwc->hwparams.hwparams1)) {
+> >  	case DWC3_GHWPARAMS1_EN_PWROPT_CLK:
+> > @@ -461,6 +460,13 @@ static int dwc3_core_init(struct dwc3 *dwc)
+> >  		dwc->is_fpga = true;
+> >  	}
+> >  
+> > +	if ((dwc->quirks & DWC3_QUIRK_AMD_NL) && dwc->is_fpga)
+> > +		dwc->quirks |= DWC3_QUIRK_DISSCRAMBLE;
+> > +
+> > +	if (dwc->quirks & DWC3_QUIRK_DISSCRAMBLE)
+> 
+> this should only be set if is_fpga, and this quirk should be a 1-bit
+> flag, so here's what you should do:
+> 
+> 	WARN_ONCE(dwc->disable_scramble_quirk && !dwc->is_fpga,
+> 		"disable_scramble cannot be used on non-FPGA builds\n");
+> 
+> 	if (dwc->disable_scramble && dwc->is_fpga)
+> 		reg |= DWC3_GCTL_DISSCRAMBLE;
+> 	else
+> 		reg &= ~DWC3_GCTL_DISSCRAMBLE;
+> 
 
-This reverts 18ef822c59f60d52c8534b295086d38e9e8e0f7d
+OK, will update it in V3.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
+> > +		reg |= DWC3_GCTL_DISSCRAMBLE;
+> > +	else
+> > +		reg &= ~DWC3_GCTL_DISSCRAMBLE;
+> 
+> add a blank line here, to aid readability.
+> 
 
- arch/ia64/kernel/msi_ia64.c    |    2 +-
- arch/ia64/sn/kernel/msi_sn.c   |    2 +-
- arch/x86/kernel/apic/io_apic.c |    2 +-
- drivers/pci/msi.c              |    2 +-
- include/linux/msi.h            |    2 +-
- 5 files changed, 5 insertions(+), 5 deletions(-)
+OK, will add it.
 
-diff --git a/arch/ia64/kernel/msi_ia64.c b/arch/ia64/kernel/msi_ia64.c
-index 4efe748..8c3730c 100644
---- a/arch/ia64/kernel/msi_ia64.c
-+++ b/arch/ia64/kernel/msi_ia64.c
-@@ -23,7 +23,7 @@ static int ia64_set_msi_irq_affinity(struct irq_data *idata,
- 	if (irq_prepare_move(irq, cpu))
- 		return -1;
- 
--	get_cached_msi_msg(idata->msi_desc, &msg);
-+	__get_cached_msi_msg(idata->msi_desc, &msg);
- 
- 	addr = msg.address_lo;
- 	addr &= MSI_ADDR_DEST_ID_MASK;
-diff --git a/arch/ia64/sn/kernel/msi_sn.c b/arch/ia64/sn/kernel/msi_sn.c
-index 8bec242..446e779 100644
---- a/arch/ia64/sn/kernel/msi_sn.c
-+++ b/arch/ia64/sn/kernel/msi_sn.c
-@@ -175,7 +175,7 @@ static int sn_set_msi_irq_affinity(struct irq_data *data,
- 	 * Release XIO resources for the old MSI PCI address
- 	 */
- 
--	get_cached_msi_msg(data->msi_desc, &msg);
-+	__get_cached_msi_msg(data->msi_desc, &msg);
- 	sn_pdev = (struct pcidev_info *)sn_irq_info->irq_pciioinfo;
- 	pdev = sn_pdev->pdi_linux_pcidev;
- 	provider = SN_PCIDEV_BUSPROVIDER(pdev);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index e877cfb..29290f5 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3145,7 +3145,7 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
- 	if (ret)
- 		return ret;
- 
--	get_cached_msi_msg(data->msi_desc, &msg);
-+	__get_cached_msi_msg(data->msi_desc, &msg);
- 
- 	msg.data &= ~MSI_DATA_VECTOR_MASK;
- 	msg.data |= MSI_DATA_VECTOR(cfg->vector);
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 12d0f29..2bd0fbe 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -279,7 +279,7 @@ void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- 	}
- }
- 
--void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
-+void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- {
- 	/* Assert that the cache is valid, assuming that
- 	 * valid messages are not all-zeroes. */
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 0bb302f..d0e0cfe 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -16,7 +16,7 @@ struct msi_desc;
- void mask_msi_irq(struct irq_data *data);
- void unmask_msi_irq(struct irq_data *data);
- void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
--void get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-+void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void write_msi_msg(unsigned int irq, struct msi_msg *msg);
- 
+> >  	/*
+> >  	 * WORKAROUND: DWC3 revisions <1.90a have a bug
+> >  	 * where the device can fail to connect at SuperSpeed
+> > diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
+> > index 18569a4..a89db6c 100644
+> > --- a/drivers/usb/dwc3/dwc3-pci.c
+> > +++ b/drivers/usb/dwc3/dwc3-pci.c
+> > @@ -146,6 +146,11 @@ static int dwc3_pci_probe(struct pci_dev *pci,
+> >  	res[1].name	= "dwc_usb3";
+> >  	res[1].flags	= IORESOURCE_IRQ;
+> >  
+> > +	if (pci->vendor == PCI_VENDOR_ID_AMD && pci->device ==
+> > +			PCI_DEVICE_ID_AMD_NL) {
+> > +		dwc3_pdata.quirks |= DWC3_QUIRK_AMD_NL;
+> > +	}
+> 
+> should be part of another patch and the quirk is
+> "disable_scramble_quirk", not AMD.
+> 
 
+Got it, you would like to keep this patch just for fpga disscramble
+quirk and do not add any 3rd platform info, right?
+
+Thanks,
+Rui
