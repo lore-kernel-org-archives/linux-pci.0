@@ -1,99 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:48378 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752680AbaJXQ20 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Oct 2014 12:28:26 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-kernel@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Martin Wilck <martin.wilck@ts.fujitsu.com>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH RFC v2 1/2] drivers: pci: fix pci_mmap_fits() implementation for procfs mmap
-Date: Fri, 24 Oct 2014 17:28:05 +0100
-Message-Id: <1414168089-8130-2-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1414168089-8130-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1414168089-8130-1-git-send-email-lorenzo.pieralisi@arm.com>
+Received: from mail-bn1bn0103.outbound.protection.outlook.com ([157.56.110.103]:39296
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752495AbaJTFzz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Oct 2014 01:55:55 -0400
+From: Richard Zhu <richard.zhu@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
+	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
+	<m-karicheri2@ti.com>, Richard Zhu <r65037@freescale.com>,
+	Richard Zhu <richard.zhu@freescale.com>
+Subject: [PATCH v8 9/9] ARM: imx6sx: Enable pcie on imx6sx sdb board
+Date: Mon, 20 Oct 2014 13:25:24 +0800
+Message-ID: <1413782724-30795-10-git-send-email-richard.zhu@freescale.com>
+In-Reply-To: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
+References: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The addresses stored in PCI device resources for memory spaces
-correspond to CPU physical addresses, which do not necessarily
-map 1:1 to PCI bus addresses as programmed in PCI devices configuration
-spaces.
+From: Richard Zhu <r65037@freescale.com>
 
-Therefore, the changes applied by commits:
-
-8c05cd08a7504b855c26526
-3b519e4ea618b6943a82931
-
-imply that the sanity checks carried out in pci_mmap_fits() to
-ensure that the user executes an mmap of a "real" pci resource are
-erroneous when executed through procfs. Some platforms (ie SPARC)
-expect the offset value to be passed in (procfs mapping) to be the
-PCI BAR configuration value as read from the PCI device configuration
-space, not the fixed-up CPU physical address that is present in PCI
-device resources.
-
-The required pgoff (offset in mmap syscall) value passed from userspace
-is supposed to represent the resource value exported through
-/proc/bus/pci/devices when the resource is mmapped though procfs (and 0
-when the mapping is carried out through sysfs resource files), which
-corresponds to the PCI resource filtered through the pci_resource_to_user()
-API.
-
-This patch converts the PCI resource to the expected "user visible"
-value through pci_resource_to_user() before carrying out sanity checks
-in pci_mmap_fits() so that the check is carried out on the resource
-values as expected from the userspace mmap API.
-
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: David S. Miller <davem@davemloft.net>
-Cc: Michal Simek <monstr@monstr.eu>
-Cc: Martin Wilck <martin.wilck@ts.fujitsu.com>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
 ---
- drivers/pci/pci-sysfs.c | 13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
+ arch/arm/boot/dts/imx6sx-sdb.dts | 32 ++++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 92b6d9a..777d8bc 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -963,17 +963,20 @@ void pci_remove_legacy_files(struct pci_bus *b)
- int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vma,
- 		  enum pci_mmap_api mmap_api)
- {
--	unsigned long nr, start, size, pci_start;
-+	unsigned long nr, start, size, pci_offset;
-+	resource_size_t pci_start, pci_end;
+diff --git a/arch/arm/boot/dts/imx6sx-sdb.dts b/arch/arm/boot/dts/imx6sx-sdb.dts
+index a3980d9..e28214a 100644
+--- a/arch/arm/boot/dts/imx6sx-sdb.dts
++++ b/arch/arm/boot/dts/imx6sx-sdb.dts
+@@ -90,6 +90,19 @@
+ 			regulator-min-microvolt = <5000000>;
+ 			regulator-max-microvolt = <5000000>;
+ 		};
++
++		reg_pcie: regulator@4 {
++			compatible = "regulator-fixed";
++			reg = <3>;
++			pinctrl-names = "default";
++			pinctrl-0 = <&pinctrl_pcie_reg>;
++			regulator-name = "MPCIE_3V3";
++			regulator-min-microvolt = <3300000>;
++			regulator-max-microvolt = <3300000>;
++			gpio = <&gpio2 1 0>;
++			regulator-always-on;
++			enable-active-high;
++		};
+ 	};
  
- 	if (pci_resource_len(pdev, resno) == 0)
- 		return 0;
- 	nr = vma_pages(vma);
- 	start = vma->vm_pgoff;
-+	pci_resource_to_user(pdev, resno, &pdev->resource[resno],
-+			     &pci_start, &pci_end);
- 	size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
--	pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
--			pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
--	if (start >= pci_start && start < pci_start + size &&
--			start + nr <= pci_start + size)
-+	pci_offset = (mmap_api == PCI_MMAP_PROCFS) ?
-+			pci_start >> PAGE_SHIFT : 0;
-+	if (start >= pci_offset && start < pci_offset + size &&
-+			start + nr <= pci_offset + size)
- 		return 1;
- 	return 0;
- }
+ 	sound {
+@@ -251,6 +264,13 @@
+ 	};
+ };
+ 
++&pcie {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_pcie>;
++	reset-gpio = <&gpio2 0 0>;
++	status = "okay";
++};
++
+ &ssi2 {
+ 	status = "okay";
+ };
+@@ -365,6 +385,18 @@
+ 			>;
+ 		};
+ 
++		pinctrl_pcie: pciegrp {
++			fsl,pins = <
++				MX6SX_PAD_ENET1_COL__GPIO2_IO_0 0x10b0
++			>;
++		};
++
++		pinctrl_pcie_reg: pciereggrp {
++			fsl,pins = <
++				MX6SX_PAD_ENET1_CRS__GPIO2_IO_1	0x10b0
++			>;
++		};
++
+ 		pinctrl_vcc_sd3: vccsd3grp {
+ 			fsl,pins = <
+ 				MX6SX_PAD_KEY_COL1__GPIO2_IO_11		0x17059
 -- 
-2.1.2
+1.9.1
 
