@@ -1,89 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:50496 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751282AbaJWGlQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Oct 2014 02:41:16 -0400
-Message-ID: <5448A2F2.7060001@huawei.com>
-Date: Thu, 23 Oct 2014 14:40:50 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-by2on0103.outbound.protection.outlook.com ([207.46.100.103]:49901
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752140AbaJTFVO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Oct 2014 01:21:14 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <richard.zhu@freescale.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shengchao Guo <Shawn.Guo@freescale.com>,
+	"festevam@gmail.com" <festevam@gmail.com>,
+	"tharvey@gateworks.com" <tharvey@gateworks.com>
+Subject: RE: [PATCH v6 02/13] PCI: designware: Set func type of host init to
+ int
+Date: Mon, 20 Oct 2014 05:21:10 +0000
+Message-ID: <6f9259b3cf5c427f8b9e11d833c26604@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
+	 <1413445963-24706-3-git-send-email-richard.zhu@freescale.com>
+ <1413455945.2165.8.camel@antimon.intern.lynxeye.de>
+In-Reply-To: <1413455945.2165.8.camel@antimon.intern.lynxeye.de>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Liviu Dudau <liviu@dudau.co.uk>
-Subject: Re: [PATCH v3 10/27] PCI/MSI: Remove useless bus->msi assignment
-References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com> <1413342435-7876-11-git-send-email-wangyijing@huawei.com> <20141023054121.GE11770@google.com>
-In-Reply-To: <20141023054121.GE11770@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/10/23 13:41, Bjorn Helgaas wrote:
-> On Wed, Oct 15, 2014 at 11:06:58AM +0800, Yijing Wang wrote:
->> Now msi chip is saved in pci_sys_data in arm,
->> we could clean the bus->msi assignment in
->> pci core.
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> CC: Thierry Reding <thierry.reding@gmail.com>
->> CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
->> ---
->>  drivers/pci/probe.c |    1 -
->>  1 files changed, 0 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index efa48dc..98bf4c3 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -682,7 +682,6 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->>  
->>  	child->parent = parent;
->>  	child->ops = parent->ops;
->> -	child->msi = parent->msi;
-> 
-> This needs an explanation of why ARM was the only arch to depend on this.
-
-OK, will add explanation in next version.
-
-> 
->>  	child->sysdata = parent->sysdata;
->>  	child->bus_flags = parent->bus_flags;
->>  
->> -- 
->> 1.7.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
-
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEx1Y2FzIFN0YWNoIFttYWls
+dG86bC5zdGFjaEBwZW5ndXRyb25peC5kZV0NCj4gU2VudDogVGh1cnNkYXksIE9jdG9iZXIgMTYs
+IDIwMTQgNjozOSBQTQ0KPiBUbzogUmljaGFyZCBaaHUNCj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtl
+cm5lbC5vcmc7IEd1byBTaGF3bi1SNjUwNzM7IGZlc3RldmFtQGdtYWlsLmNvbTsNCj4gdGhhcnZl
+eUBnYXRld29ya3MuY29tDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjYgMDIvMTNdIFBDSTogZGVz
+aWdud2FyZTogU2V0IGZ1bmMgdHlwZSBvZiBob3N0IGluaXQgdG8NCj4gaW50DQo+IA0KPiBBbSBE
+b25uZXJzdGFnLCBkZW4gMTYuMTAuMjAxNCwgMTU6NTIgKzA4MDAgc2NocmllYiBSaWNoYXJkIFpo
+dToNCj4gPiBob3N0IGluaXQgbWF5YmUgZmFpbGVkLCBjaGFuZ2UgdGhlIGZ1bmMgdHlwZSBvZiBo
+b3N0X2luaXQgZGVmaW5lZCBpbg0KPiA+IHN0cnVjdCBwY2lfaG9zdF9vcHMgZnJvbSB2b2lkIHRv
+IGludC4NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IFJpY2hhcmQgWmh1IDxyaWNoYXJkLnpodUBm
+cmVlc2NhbGUuY29tPg0KPiANCj4gTkFLLiBZb3UgYXJlIGJyZWFraW5nIGNvbXBpbGF0aW9uIHdp
+dGhpbiB0aGUgc2VyaWVzIGhlcmUuIElmIHlvdSBhcmUgZ29pbmcgdG8NCj4gY2hhbmdlIHRoZSBw
+cm90b3R5cGUgdGhlIGRlcGVuZGFudCBjaGFuZ2VzIG5lZWQgdG8gYmUgaW4gdGhlIHNhbWUgcGF0
+Y2guIFNvDQo+IHNxdWFzaCBpbiBhdCBsZWFzdCBwYXRjaCAzLTUgcGx1cyB0aGUgaW14NiBjaGFu
+Z2UuDQpbUmljaGFyZF0gU28sIHRoaXMgcGF0Y2ggc2hvdWxkIGJlIHNxdWFzaGVkIHdpdGggcGF0
+Y2gzLTUsIGFuZCB0aGUgIlBDSTogaW14NjogQWRkIGlteDZzeCBwY2llIHN1cHBvcnQiLg0KVGhh
+bmtzLg0KDQo+IA0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2Fy
+ZS5jIHwgNyArKysrKy0tDQo+ID4gZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUuaCB8
+IDIgKy0NCj4gPiAgMiBmaWxlcyBjaGFuZ2VkLCA2IGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25z
+KC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndh
+cmUuYw0KPiA+IGIvZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUuYw0KPiA+IGluZGV4
+IGIxZjgyZmYuLjFhMmI0NzcgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9wY2kvaG9zdC9wY2ll
+LWRlc2lnbndhcmUuYw0KPiA+ICsrKyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJl
+LmMNCj4gPiBAQCAtNTc4LDggKzU3OCwxMSBAQCBpbnQgX19pbml0IGR3X3BjaWVfaG9zdF9pbml0
+KHN0cnVjdCBwY2llX3BvcnQgKnBwKQ0KPiA+ICAJCX0NCj4gPiAgCX0NCj4gPg0KPiA+IC0JaWYg
+KHBwLT5vcHMtPmhvc3RfaW5pdCkNCj4gPiAtCQlwcC0+b3BzLT5ob3N0X2luaXQocHApOw0KPiA+
+ICsJaWYgKHBwLT5vcHMtPmhvc3RfaW5pdCkgew0KPiA+ICsJCXJldCA9IHBwLT5vcHMtPmhvc3Rf
+aW5pdChwcCk7DQo+ID4gKwkJaWYgKHJldCA8IDApDQo+ID4gKwkJCXJldHVybiByZXQ7DQo+ID4g
+Kwl9DQo+ID4NCj4gPiAgCWR3X3BjaWVfd3Jfb3duX2NvbmYocHAsIFBDSV9CQVNFX0FERFJFU1Nf
+MCwgNCwgMCk7DQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvaG9zdC9wY2llLWRl
+c2lnbndhcmUuaA0KPiA+IGIvZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUuaA0KPiA+
+IGluZGV4IGIwYmZlZDAuLjU3YWIxMWQgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9wY2kvaG9z
+dC9wY2llLWRlc2lnbndhcmUuaA0KPiA+ICsrKyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNp
+Z253YXJlLmgNCj4gPiBAQCAtNzIsNyArNzIsNyBAQCBzdHJ1Y3QgcGNpZV9ob3N0X29wcyB7DQo+
+ID4gIAlpbnQgKCp3cl9vdGhlcl9jb25mKShzdHJ1Y3QgcGNpZV9wb3J0ICpwcCwgc3RydWN0IHBj
+aV9idXMgKmJ1cywNCj4gPiAgCQkJdW5zaWduZWQgaW50IGRldmZuLCBpbnQgd2hlcmUsIGludCBz
+aXplLCB1MzIgdmFsKTsNCj4gPiAgCWludCAoKmxpbmtfdXApKHN0cnVjdCBwY2llX3BvcnQgKnBw
+KTsNCj4gPiAtCXZvaWQgKCpob3N0X2luaXQpKHN0cnVjdCBwY2llX3BvcnQgKnBwKTsNCj4gPiAr
+CWludCAoKmhvc3RfaW5pdCkoc3RydWN0IHBjaWVfcG9ydCAqcHApOw0KPiA+ICAJdm9pZCAoKm1z
+aV9zZXRfaXJxKShzdHJ1Y3QgcGNpZV9wb3J0ICpwcCwgaW50IGlycSk7DQo+ID4gIAl2b2lkICgq
+bXNpX2NsZWFyX2lycSkoc3RydWN0IHBjaWVfcG9ydCAqcHAsIGludCBpcnEpOw0KPiA+ICAJdTMy
+ICgqZ2V0X21zaV9kYXRhKShzdHJ1Y3QgcGNpZV9wb3J0ICpwcCk7DQo+IA0KDQoNCkJlc3QgUmVn
+YXJkcw0KUmljaGFyZCBaaHUNCg0K
