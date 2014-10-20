@@ -1,20 +1,20 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0145.outbound.protection.outlook.com ([65.55.169.145]:55040
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751001AbaJPIXI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 16 Oct 2014 04:23:08 -0400
+Received: from [207.46.100.141] ([207.46.100.141]:26448 "EHLO
+	na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752093AbaJTCve (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 19 Oct 2014 22:51:34 -0400
 From: Richard Zhu <richard.zhu@freescale.com>
 To: <linux-pci@vger.kernel.org>
 CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
 	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
 	Richard Zhu <r65037@freescale.com>,
 	Richard Zhu <richard.zhu@freescale.com>
-Subject: [PATCH v6 13/13] ARM: imx6sx: Enable pcie on imx6sx sdb board
-Date: Thu, 16 Oct 2014 15:52:43 +0800
-Message-ID: <1413445963-24706-14-git-send-email-richard.zhu@freescale.com>
-In-Reply-To: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
-References: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
+Subject: [PATCH v7 13/13] ARM: imx6sx: Enable pcie on imx6sx sdb board
+Date: Mon, 20 Oct 2014 10:19:16 +0800
+Message-ID: <1413771556-32212-14-git-send-email-richard.zhu@freescale.com>
+In-Reply-To: <1413771556-32212-1-git-send-email-richard.zhu@freescale.com>
+References: <1413771556-32212-1-git-send-email-richard.zhu@freescale.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
