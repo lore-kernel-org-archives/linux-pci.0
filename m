@@ -1,461 +1,328 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:40954 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750729AbaJQG6q convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Oct 2014 02:58:46 -0400
-Content-Type: text/plain; charset=windows-1252
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Subject: Re: [PATCH v6] PCI: Layerscape: Add Layerscape PCIe driver
-From: Kumar Gala <galak@codeaurora.org>
-In-Reply-To: <1413281889-30364-1-git-send-email-Minghuan.Lian@freescale.com>
-Date: Thu, 16 Oct 2014 16:41:27 +0200
-Cc: linux-pci@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org
-Message-Id: <6360F9F8-579C-435C-9DF1-CEE919160770@codeaurora.org>
-References: <1413281889-30364-1-git-send-email-Minghuan.Lian@freescale.com>
-To: Minghuan Lian <Minghuan.Lian@freescale.com>
+Received: from g6t1525.atlanta.hp.com ([15.193.200.68]:31523 "EHLO
+	g6t1525.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751242AbaJTCGS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 19 Oct 2014 22:06:18 -0400
+Message-ID: <54446E09.30908@hp.com>
+Date: Mon, 20 Oct 2014 10:06:01 +0800
+From: "Li, ZhenHua" <zhen-hual@hp.com>
+MIME-Version: 1.0
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+CC: "Eric W. Biederman" <ebiederm@xmission.com>,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, indou.takao@jp.fujitsu.com,
+	kexec@lists.infradead.org, linda.knippers@hp.com,
+	Randy Wright <rwright@hp.com>
+Subject: Re: [PATCH 1/1] pci: reset all pci endpoints to stop on going dma
+References: <1413537207-16514-1-git-send-email-zhen-hual@hp.com> <87siin58tw.fsf@x220.int.ebiederm.org> <20141019232008.GA20854@shangw> <54446986.3050603@hp.com>
+In-Reply-To: <54446986.3050603@hp.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 10/20/2014 09:46 AM, Li, ZhenHua wrote:
+>
+> On 10/20/2014 07:20 AM, Gavin Shan wrote:
+>> On Fri, Oct 17, 2014 at 02:44:43AM -0700, Eric W. Biederman wrote:
+>>> "Li, Zhen-Hua" <zhen-hual@hp.com> writes:
+>>>
+>>>> This is an update of the patch
+>>>>     https://lkml.org/lkml/2014/10/10/37
+>>>>
+>>>> This patch is doing the reset works before the kdump kernel boots.
+>>>
+>>> If I have said it once I have said it a thousand times.
+>>>
+>>> Nacked-by: "Eric W. Biederman" <ebiederm@xmission.com>
+>>> Nacked-by: "Eric W. Biederman" <ebiederm@xmission.com>
+>>> Nacked-by: "Eric W. Biederman" <ebiederm@xmission.com>
+>>>
+>>> It is absolutely inappropriate to do this in the kernel that has
+>>> crashed.
+>>>
+>>> Either reserve a chunk of the iommu for use by the crash dump kernel,
+>>> or figure out how to do this during boot up.
+>>>
+>>> But this is absolutely and totally inappropriate to do in crash_kexec.
+>>> The failure modes are all wrong.  It will impact the reliability of our
+>>> crash dumps.
+>>>
+>>> If an the code for a linux architecture is not structured in such a way
+>>> as to make it easy or straight forward to do this my sympathies you are
+>>> going to have do fix that linux port to be able to do things during
+>>> boot.
+>>>
+>>> But things called from crash_kexec should be absolute necessities and I
+>>> do not see this as coming anywhere close to being something that is
+>>> impossible to do in the target kernel.
+>>>
+>>
+>> Zhenhua, Intrestingly, PPC has mechanism to reset the root port for
+>> kdump case
+>> in order to drop pending DMA traffic. Maybe you can implement similar
+>> thing.
+>> However, this kind of reset would be platform/board specific and needs
+>> support
+>> from underly firmware. More details could be found from arch/powerpc/
+>> platforms/powernv/pci-ioda.c
+>>
+>>          if (is_kdump_kernel()) {
+>>                  pr_info("  Issue PHB reset ...\n");
+>>                  ioda_eeh_phb_reset(hose, EEH_RESET_FUNDAMENTAL);
+>>                  ioda_eeh_phb_reset(hose, OPAL_DEASSERT_RESET);
+>>          }
+>>
+>> Please check if it's the thing you're looking for. I didn't understand
+>> your
+>> requirements 100%
+>>
+>> Thanks,
+>> Gavin
+> Gavin,
+> I was trying to fix a DMAR fault for iommu. On X86 platform, iommu is
+> initialized after pci , while on powerpc iommu is before pci.  So I
+> tried to do the operation in the first kernel, and this can work on all
+> platforms.
+>
+Sorry I made mistake. it should be sparc, not powerpc.
 
-On Oct 14, 2014, at 12:18 PM, Minghuan Lian <Minghuan.Lian@freescale.com> wrote:
 
-> Add support for Freescale Layerscape PCIe controller. This driver
-> re-uses the designware core code.
-> 
-> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
-
-Do you support multiple controllers or just one?  I feel like the DWC PCIe core code needs changes to handle multiple controllers?
-
-> ---
-> Change log:
-> v6:
-> 1. Delete unnecessary if statement in ls_pcie_host_init()
-> 
-> v5:
-> 1. Add MAINTAINERS information
-> 2. Remove nnnecessary NULL pointer check
-> 3. Use dev_dbg instead of dev_err in ls_pcie_msi_irq_handler() 
-> 
-> v4:
-> 1. Add 'depends on OF' to Kconfig 
-> 
-> v3:
-> 1. Add prefechable mem region and adjust mem region
-> 2. Rename 'pcie-scfg' to 'fsl,pcie-scfg'
-> 3. Change MSI interrupt handler
-> 4. Use module_platform_driver_probe instead of subsys_initcall
-> 
-> v2:
-> 1. Add pcie-scfg to link scfg device node and remove "fsl, ls-pcie" compatible
-> 2. Use regmap API to access scfg.
-> 3. remove ls1021 PCI device ID.
-> 4. remove unused irq pme_irq and ls_pcie_list.
-> 5. Do not set scfg bit reverse mode
-> 
-> .../devicetree/bindings/pci/layerscape-pci.txt     |  46 ++++
-> MAINTAINERS                                        |  10 +
-> drivers/pci/host/Kconfig                           |   8 +
-> drivers/pci/host/Makefile                          |   1 +
-> drivers/pci/host/pci-layerscape.c                  | 269 +++++++++++++++++++++
-> 5 files changed, 334 insertions(+)
-> create mode 100644 Documentation/devicetree/bindings/pci/layerscape-pci.txt
-> create mode 100644 drivers/pci/host/pci-layerscape.c
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-> new file mode 100644
-> index 0000000..d7b0026
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-> @@ -0,0 +1,46 @@
-> +Freescale Layerscape PCIe controller
-> +
-> +This PCIe host controller is based on the Synopsis Designware PCIe IP
-> +and thus inherits all the common properties defined in designware-pcie.txt.
-> +
-> +Required properties:
-> +- compatible: should contain the platform identifier such as "fsl,ls1021a-pcie"
-> +- reg: base addresses and lengths of the PCIe controller
-> +- interrupts: A list of interrupt outputs of the controller. Must contain an
-> +  entry for each entry in the interrupt-names property.
-> +- interrupt-names: Must include the following entries:
-> +  "intr": The interrupt that is asserted for controller interrupts
-> +  "msi": The interrupt that is asserted when an MSI is received
-> +  "pme": The interrupt that is asserted when PME state changes
-> +- fsl,pcie-scfg: Must include two entries.
-> +  The first entry must be a link to the SCFG device node
-> +  The second entry must be '0' or '1' based on physical PCIe controller index.
-> +  used to get SCFG PEXN registers
-> +
-> +Example:
-> +
-> +	pcie@3400000 {
-> +		compatible = "fsl,ls1021a-pcie", "snps,dw-pcie";
-> +		reg = <0x00 0x03400000 0x0 0x00010000   /* controller registers */
-> +		       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
-> +		reg-names = "regs", "config";
-> +		interrupts = <GIC_SPI 177 IRQ_TYPE_LEVEL_HIGH>, /* controller interrupt */
-> +			     <GIC_SPI 179 IRQ_TYPE_LEVEL_HIGH>, /* MSI interrupt */
-> +			     <GIC_SPI 181 IRQ_TYPE_LEVEL_HIGH>; /* PME interrupt */
-> +		interrupt-names = "intr", "msi", "pme";
-> +		fsl,pcie-scfg = <&scfg 0>;
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		device_type = "pci";
-> +		num-lanes = <4>;
-> +		bus-range = <0x0 0xff>;
-> +		ranges = <0x81000000 0x0 0x00000000 0x40 0x00010000 0x0 0x00010000   /* downstream I/O */
-> +			  0xc2000000 0x0 0x20000000 0x40 0x20000000 0x0 0x20000000   /* prefetchable memory */
-> +			  0x82000000 0x0 0x40000000 0x40 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
-> +		#interrupt-cells = <1>;
-> +		interrupt-map-mask = <0 0 0 7>;
-> +		interrupt-map = <0000 0 0 1 &gic GIC_SPI 91  IRQ_TYPE_LEVEL_HIGH>,
-> +				<0000 0 0 2 &gic GIC_SPI 188 IRQ_TYPE_LEVEL_HIGH>,
-> +				<0000 0 0 3 &gic GIC_SPI 190 IRQ_TYPE_LEVEL_HIGH>,
-> +				<0000 0 0 4 &gic GIC_SPI 192 IRQ_TYPE_LEVEL_HIGH>;
-> +	};
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 1ff06de..b6237ab 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -6936,6 +6936,16 @@ L:	linux-pci@vger.kernel.org
-> S:	Maintained
-> F:	drivers/pci/host/*spear*
-> 
-> +PCIe DRIVER FOR FREESCALE LAYERSCAPE
-> +M:	Minghuan Lian <minghuan.Lian@freescale.com>
-> +M:	Mingkai Hu <mingkai.hu@freescale.com>
-> +M:	Roy Zang <tie-fei.zang@freescale.com>
-> +L:	linuxppc-dev@lists.ozlabs.org
-> +L:	linux-pci@vger.kernel.org
-> +L:	linux-arm-kernel@lists.infradead.org
-> +S:	Maintained
-> +F:	drivers/pci/host/pci-layerscape.c
-> +
-> PCMCIA SUBSYSTEM
-> P:	Linux PCMCIA Team
-> L:	linux-pcmcia@lists.infradead.org
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 8922c37..4788fb3 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -63,4 +63,12 @@ config PCIE_SPEAR13XX
-> 	help
-> 	  Say Y here if you want PCIe support on SPEAr13XX SoCs.
-> 
-> +config PCI_LAYERSCAPE
-> +	bool "Freescale Layerscape PCIe controller"
-> +	depends on OF
-> +	select PCIE_DW
-> +	select MFD_SYSCON
-> +	help
-> +	  Say Y here if you want PCIe controller support on Layerscape SoCs.
-> +
-> endmenu
-> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-> index d0e88f1..54cd9b2 100644
-> --- a/drivers/pci/host/Makefile
-> +++ b/drivers/pci/host/Makefile
-> @@ -8,3 +8,4 @@ obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
-> obj-$(CONFIG_PCI_RCAR_GEN2_PCIE) += pcie-rcar.o
-> obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
-> obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
-> +obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
-> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-> new file mode 100644
-> index 0000000..a459de2
-> --- /dev/null
-> +++ b/drivers/pci/host/pci-layerscape.c
-> @@ -0,0 +1,269 @@
-> +/*
-> + * PCIe host controller driver for Freescale Layerscape SoCs
-> + *
-> + * Copyright (C) 2014 Freescale Semiconductor.
-> + *
-> +  * Author: Minghuan Lian <Minghuan.Lian@freescale.com>
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License version 2 as
-> + * published by the Free Software Foundation.
-> + */
-> +
-> +#include <linux/kernel.h>
-> +#include <linux/delay.h>
-> +#include <linux/interrupt.h>
-> +#include <linux/module.h>
-> +#include <linux/of_pci.h>
-> +#include <linux/of_platform.h>
-> +#include <linux/of_irq.h>
-> +#include <linux/of_address.h>
-> +#include <linux/pci.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/resource.h>
-> +#include <linux/mfd/syscon.h>
-> +#include <linux/regmap.h>
-> +#include <linux/bitrev.h>
-> +
-> +#include "pcie-designware.h"
-> +
-> +/* PEX1/2 Misc Ports Status Register */
-> +#define SCFG_PEXMSCPORTSR(pex_idx)	(0x94 + (pex_idx) * 4)
-> +#define LTSSM_STATE_SHIFT	20
-> +#define LTSSM_STATE_MASK	0x3f
-> +#define LTSSM_PCIE_L0		0x11 /* L0 state */
-> +
-> +/* SCFG MSI register */
-> +#define SCFG_SPIMSICR		0x40
-> +#define SCFG_SPIMSICLRCR	0x90
-> +
-> +#define MSI_LS1021A_ADDR		0x1570040
-
-This shouldn’t be hard coded, should be coming from DT.
-
-> +#define MSI_LS1021A_DATA(pex_idx)	(0xb3 + pex_idx)
-> +
-> +/* Symbol Timer Register and Filter Mask Register 1 */
-> +#define PCIE_STRFMR1 0x71c
-> +
-> +struct ls_pcie {
-> +	struct list_head node;
-> +	struct device *dev;
-> +	struct pci_bus *bus;
-> +	void __iomem *dbi;
-> +	struct regmap *scfg;
-> +	struct pcie_port pp;
-> +	int index;
-> +	int msi_irq;
-> +};
-> +
-> +#define to_ls_pcie(x)	container_of(x, struct ls_pcie, pp)
-> +
-> +static int ls_pcie_link_up(struct pcie_port *pp)
-> +{
-> +	u32 state;
-> +	struct ls_pcie *pcie = to_ls_pcie(pp);
-> +
-> +	regmap_read(pcie->scfg, SCFG_PEXMSCPORTSR(pcie->index), &state);
-> +	state = bitrev32(state);
-> +	state = (state >> LTSSM_STATE_SHIFT) & LTSSM_STATE_MASK;
-> +
-> +	if (state < LTSSM_PCIE_L0)
-> +		return 0;
-> +
-> +	return 1;
-> +}
-> +
-> +static u32 ls_pcie_get_msi_addr(struct pcie_port *pp)
-> +{
-> +	return MSI_LS1021A_ADDR;
-> +}
-> +
-> +static u32 ls_pcie_get_msi_data(struct pcie_port *pp, int pos)
-> +{
-> +	struct ls_pcie *pcie = to_ls_pcie(pp);
-> +
-> +	return MSI_LS1021A_DATA(pcie->index);
-> +}
-> +
-> +static irqreturn_t ls_pcie_msi_irq_handler(int irq, void *data)
-> +{
-> +	struct pcie_port *pp = data;
-> +	struct ls_pcie *pcie = to_ls_pcie(pp);
-> +	unsigned int msi_irq;
-> +
-> +	/* clear the interrupt */
-> +	regmap_write(pcie->scfg, SCFG_SPIMSICLRCR,
-> +		     MSI_LS1021A_DATA(pcie->index));
-> +
-> +	msi_irq = irq_find_mapping(pp->irq_domain, 0);
-> +	if (!msi_irq) {
-> +		/*
-> +		 * that's weird who triggered this?
-> +		 * just clear it
-> +		 */
-> +		dev_dbg(pcie->dev, "unexpected MSI\n");
-> +		return IRQ_NONE;
-> +	}
-> +
-> +	generic_handle_irq(msi_irq);
-> +	return IRQ_HANDLED;
-> +}
-> +
-> +static void ls_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
-> +{
-> +}
-> +
-> +static void ls_pcie_msi_set_irq(struct pcie_port *pp, int irq)
-> +{
-> +}
-> +
-> +static void ls1021a_pcie_msi_fixup(struct pcie_port *pp)
-> +{
-> +	int i;
-> +
-> +	/*
-> +	 * LS1021A has only one MSI interrupt
-> +	 * Set all msi interrupts as used except the first one
-> +	 */
-> +	for (i = 1; i < MAX_MSI_IRQS; i++)
-> +		set_bit(i, pp->msi_irq_in_use);
-> +}
-> +
-> +static void ls_pcie_host_init(struct pcie_port *pp)
-> +{
-> +	struct ls_pcie *pcie = to_ls_pcie(pp);
-> +	int count = 0;
-> +	u32 val;
-> +
-> +	dw_pcie_setup_rc(pp);
-> +
-> +	while (!ls_pcie_link_up(pp)) {
-> +		usleep_range(100, 1000);
-> +		count++;
-> +		if (count >= 200) {
-> +			dev_err(pp->dev, "phy link never came up\n");
-> +			return;
-> +		}
-> +	}
-> +
-> +	/*
-> +	 * LS1021A Workaround for internal TKT228622
-> +	 * to fix the INTx hang issue
-> +	 */
-> +	val = ioread32(pcie->dbi + PCIE_STRFMR1);
-> +	val &= 0xffff;
-> +	iowrite32(val, pcie->dbi + PCIE_STRFMR1);
-
-Is this something that will be fixed for production silicon?  If so it should probably not exist for upstream code.
-
-> +
-> +	ls1021a_pcie_msi_fixup(pp);
-> +}
-> +
-> +static struct pcie_host_ops ls_pcie_host_ops = {
-> +	.link_up = ls_pcie_link_up,
-> +	.host_init = ls_pcie_host_init,
-> +	.msi_set_irq = ls_pcie_msi_set_irq,
-> +	.msi_clear_irq = ls_pcie_msi_clear_irq,
-> +	.get_msi_addr = ls_pcie_get_msi_addr,
-> +	.get_msi_data = ls_pcie_get_msi_data,
-> +};
-> +
-> +static int ls_add_pcie_port(struct ls_pcie *pcie)
-> +{
-> +	struct pcie_port *pp;
-> +	int ret;
-> +
-> +	pp = &pcie->pp;
-> +	pp->dev = pcie->dev;
-> +	pp->dbi_base = pcie->dbi;
-> +	pp->msi_irq = pcie->msi_irq;
-> +
-> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> +		ret = devm_request_irq(pp->dev, pp->msi_irq,
-> +					ls_pcie_msi_irq_handler,
-> +					IRQF_SHARED, "ls-pcie-msi", pp);
-> +		if (ret) {
-> +			dev_err(pp->dev, "failed to request msi irq\n");
-> +			return ret;
-> +		}
-> +	}
-> +
-> +	pp->root_bus_nr = -1;
-> +	pp->ops = &ls_pcie_host_ops;
-> +
-> +	ret = dw_pcie_host_init(pp);
-> +	if (ret) {
-> +		dev_err(pp->dev, "failed to initialize host\n");
-> +		return ret;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static int __init ls_pcie_probe(struct platform_device *pdev)
-> +{
-> +	struct ls_pcie *pcie;
-> +	struct resource *dbi_base;
-> +	u32 index[2];
-> +	int ret;
-> +
-> +	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
-> +	if (!pcie)
-> +		return -ENOMEM;
-> +
-> +	pcie->dev = &pdev->dev;
-> +
-> +	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "regs");
-> +	if (!dbi_base) {
-> +		dev_err(&pdev->dev, "missing *regs* space\n");
-> +		return -ENODEV;
-> +	}
-> +
-> +	pcie->dbi = devm_ioremap_resource(&pdev->dev, dbi_base);
-> +	if (IS_ERR(pcie->dbi))
-> +		return PTR_ERR(pcie->dbi);
-> +
-> +	pcie->scfg = syscon_regmap_lookup_by_phandle(pdev->dev.of_node,
-> +						     "fsl,pcie-scfg");
-> +	if (IS_ERR(pcie->scfg)) {
-> +		dev_err(&pdev->dev, "No syscfg phandle specified\n");
-> +		return PTR_ERR(pcie->scfg);
-> +	}
-> +
-> +	ret = of_property_read_u32_array(pdev->dev.of_node,
-> +					 "fsl,pcie-scfg", index, 2);
-> +	if (ret)
-> +		return ret;
-> +	pcie->index = index[1];
-> +
-> +	pcie->msi_irq = platform_get_irq_byname(pdev, "msi");
-> +	if (pcie->msi_irq < 0) {
-> +		dev_err(&pdev->dev,
-> +			"failed to get MSI IRQ: %d\n", pcie->msi_irq);
-> +		return pcie->msi_irq;
-> +	}
-> +
-> +	ret = ls_add_pcie_port(pcie);
-> +	if (ret < 0)
-> +		return ret;
-> +
-> +	platform_set_drvdata(pdev, pcie);
-> +
-> +	return 0;
-> +}
-> +
-> +static const struct of_device_id ls_pcie_of_match[] = {
-> +	{ .compatible = "fsl,ls1021a-pcie" },
-> +	{ },
-> +};
-> +MODULE_DEVICE_TABLE(of, ls_pcie_of_match);
-> +
-> +static struct platform_driver ls_pcie_driver = {
-> +	.driver = {
-> +		.name = "layerscape-pcie",
-> +		.owner = THIS_MODULE,
-> +		.of_match_table = ls_pcie_of_match,
-> +	},
-> +};
-> +
-> +module_platform_driver_probe(ls_pcie_driver, ls_pcie_probe);
-> +
-> +MODULE_AUTHOR("Minghuan Lian <Minghuan.Lian@freescale.com>");
-> +MODULE_DESCRIPTION("Freescale Layerscape PCIe host controller driver");
-> +MODULE_LICENSE("GPL v2");
-> -- 
-> 1.9.1
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
--- 
-Qualcomm Innovation Center, Inc.
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+> But according to Eric's mail, it is inappropriate doing this in
+> crash_kexec. So I have to figure out how to do this in the kdump kernel.
+>
+> As it is clear the powerpc has already do the resetting during booting,
+> so I only need to implement a similar mechanism on X86 system.
+>
+> Thanks
+> Zhenhua
+>>
+>>> Eric
+>>>
+>>>
+>>>> On a Linux system with iommu supported and many PCI devices on it,
+>>>> when kernel crashed and the kdump kernel boots with intel_iommu=on,
+>>>> there may be some unexpected DMA requests on this adapter, which will
+>>>> cause DMA Remapping faults like:
+>>>>      dmar: DRHD: handling fault status reg 102
+>>>>      dmar: DMAR:[DMA Read] Request device [41:00.0] fault addr fff81000
+>>>>      DMAR:[fault reason 01] Present bit in root entry is clear
+>>>>
+>>>> This bug may happen on *any* PCI device.
+>>>> Analysis for this bug:
+>>>>
+>>>> The present bit is set in this function:
+>>>>
+>>>> static struct context_entry * device_to_context_entry(
+>>>>                  struct intel_iommu *iommu, u8 bus, u8 devfn)
+>>>> {
+>>>>      ......
+>>>>                  set_root_present(root);
+>>>>      ......
+>>>> }
+>>>>
+>>>> Calling tree:
+>>>>      device driver
+>>>>          intel_alloc_coherent
+>>>>              __intel_map_single
+>>>>                  domain_context_mapping
+>>>>                      domain_context_mapping_one
+>>>>                          device_to_context_entry
+>>>>
+>>>> This means, the present bit in root entry will not be set until the
+>>>> device
+>>>> driver is loaded.
+>>>>
+>>>> But in the kdump kernel, hardware devices are not aware that control
+>>>> has
+>>>> transferred to the second kernel, and those drivers must initialize
+>>>> again.
+>>>> Consequently there may be unexpected DMA requests from devices activity
+>>>> initiated in the first kernel leading to the DMA Remapping errors in
+>>>> the
+>>>> second kernel.
+>>>>
+>>>> To fix this DMAR fault, we need to reset the bus that this device
+>>>> on. Reset
+>>>> the device itself does not work.
+>>>>
+>>>> A patch for this bug that has been sent before:
+>>>> https://lkml.org/lkml/2014/9/30/55
+>>>> As in discussion, this bug may happen on *any* device, so we need to
+>>>> reset
+>>>> all pci devices.
+>>>>
+>>>> There was an original version(Takao Indoh) that resets the pcie
+>>>> devices:
+>>>> https://lkml.org/lkml/2013/5/14/9
+>>>>
+>>>> According to the previous discussion, On sparc, the IOMMU is
+>>>> initialized
+>>>> before PCI devices are enumerated, this patch does the resetting
+>>>> works before
+>>>> the kdump kernel boots, so it can also fix the problems on sparc.
+>>>>
+>>>> Update of this new version, comparing with Takao Indoh's version:
+>>>>      Add support for legacy PCI devices.
+>>>>      Use pci_try_reset_bus instead of do_downstream_device_reset.
+>>>>      Reset all PCI/PCIe deviecs in the first kernel, before kdump
+>>>> kernel boots.
+>>>>
+>>>> Randy Wright corrects some misunderstanding in this description.
+>>>>
+>>>> Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+>>>> Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+>>>> Signed-off-by: Randy Wright <rwright@hp.com>
+>>>> ---
+>>>>   drivers/pci/pci.c   | 82
+>>>> +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>>>   include/linux/pci.h |  6 ++++
+>>>>   kernel/kexec.c      |  2 ++
+>>>>   3 files changed, 90 insertions(+)
+>>>>
+>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>>> index 625a4ac..aa9192a 100644
+>>>> --- a/drivers/pci/pci.c
+>>>> +++ b/drivers/pci/pci.c
+>>>> @@ -23,6 +23,7 @@
+>>>>   #include <linux/device.h>
+>>>>   #include <linux/pm_runtime.h>
+>>>>   #include <linux/pci_hotplug.h>
+>>>> +#include <linux/crash_dump.h>
+>>>>   #include <asm-generic/pci-bridge.h>
+>>>>   #include <asm/setup.h>
+>>>>   #include "pci.h"
+>>>> @@ -4466,6 +4467,87 @@ void __weak pci_fixup_cardbus(struct pci_bus
+>>>> *bus)
+>>>>   }
+>>>>   EXPORT_SYMBOL(pci_fixup_cardbus);
+>>>>
+>>>> +/*
+>>>> + * Return true if dev is PCI root port or downstream port whose
+>>>> child is PCI
+>>>> + * endpoint except VGA device.
+>>>> + */
+>>>> +static int __pci_dev_need_reset(struct pci_dev *dev)
+>>>> +{
+>>>> +    struct pci_bus *subordinate;
+>>>> +    struct pci_dev *child;
+>>>> +
+>>>> +    if (dev->hdr_type != PCI_HEADER_TYPE_BRIDGE)
+>>>> +        return 0;
+>>>> +
+>>>> +    if (pci_is_pcie(dev)) {
+>>>> +        if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT) &&
+>>>> +            (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM))
+>>>> +            return 0;
+>>>> +    }
+>>>> +
+>>>> +    subordinate = dev->subordinate;
+>>>> +    list_for_each_entry(child, &subordinate->devices, bus_list) {
+>>>> +        /* Don't reset switch, bridge, VGA device */
+>>>> +        if ((child->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
+>>>> +            ((child->class >> 16) == PCI_BASE_CLASS_BRIDGE) ||
+>>>> +            ((child->class >> 16) == PCI_BASE_CLASS_DISPLAY))
+>>>> +            return 0;
+>>>> +
+>>>> +        if (pci_is_pcie(child)) {
+>>>> +            if ((pci_pcie_type(child) == PCI_EXP_TYPE_UPSTREAM) ||
+>>>> +                (pci_pcie_type(child) == PCI_EXP_TYPE_PCI_BRIDGE))
+>>>> +                return 0;
+>>>> +        }
+>>>> +    }
+>>>> +
+>>>> +    return 1;
+>>>> +}
+>>>> +
+>>>> +struct pci_dev_reset_entry {
+>>>> +    struct list_head list;
+>>>> +    struct pci_dev *dev;
+>>>> +};
+>>>> +int pci_reset_endpoints(void)
+>>>> +{
+>>>> +    struct pci_dev *dev = NULL;
+>>>> +    struct pci_dev_reset_entry *pdev_entry, *tmp;
+>>>> +    struct pci_bus *subordinate = NULL;
+>>>> +    int has_it;
+>>>> +
+>>>> +    LIST_HEAD(pdev_list);
+>>>> +
+>>>> +
+>>>> +    for_each_pci_dev(dev) {
+>>>> +        subordinate = dev->subordinate;
+>>>> +        if (!subordinate || list_empty(&subordinate->devices))
+>>>> +            continue;
+>>>> +
+>>>> +        has_it = 0;
+>>>> +        list_for_each_entry(pdev_entry, &pdev_list, list) {
+>>>> +            if (dev == pdev_entry->dev) {
+>>>> +                has_it = 1;
+>>>> +                break;
+>>>> +            }
+>>>> +        }
+>>>> +        if (has_it)
+>>>> +            continue;
+>>>> +
+>>>> +        if (__pci_dev_need_reset(dev)) {
+>>>> +            pdev_entry = kmalloc(sizeof(*pdev_entry), GFP_KERNEL);
+>>>> +            pdev_entry->dev = dev;
+>>>> +            list_add(&pdev_entry->list, &pdev_list);
+>>>> +        }
+>>>> +    }
+>>>> +
+>>>> +    list_for_each_entry_safe(pdev_entry, tmp, &pdev_list, list) {
+>>>> +        pci_try_reset_bus(pdev_entry->dev->subordinate);
+>>>> +        kfree(pdev_entry);
+>>>> +    }
+>>>> +
+>>>> +    return 0;
+>>>> +}
+>>>> +EXPORT_SYMBOL_GPL(pci_reset_endpoints);
+>>>> +
+>>>>   static int __init pci_setup(char *str)
+>>>>   {
+>>>>       while (str) {
+>>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>>>> index 5be8db4..1cf7207 100644
+>>>> --- a/include/linux/pci.h
+>>>> +++ b/include/linux/pci.h
+>>>> @@ -1869,4 +1869,10 @@ static inline bool pci_is_dev_assigned(struct
+>>>> pci_dev *pdev)
+>>>>   {
+>>>>       return (pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED) ==
+>>>> PCI_DEV_FLAGS_ASSIGNED;
+>>>>   }
+>>>> +
+>>>> +/*
+>>>> + * Reset all pci devices by resetting the buses.
+>>>> + */
+>>>> +int pci_reset_endpoints(void);
+>>>> +
+>>>>   #endif /* LINUX_PCI_H */
+>>>> diff --git a/kernel/kexec.c b/kernel/kexec.c
+>>>> index 2abf9f6..986e8f7 100644
+>>>> --- a/kernel/kexec.c
+>>>> +++ b/kernel/kexec.c
+>>>> @@ -36,6 +36,7 @@
+>>>>   #include <linux/syscore_ops.h>
+>>>>   #include <linux/compiler.h>
+>>>>   #include <linux/hugetlb.h>
+>>>> +#include <linux/pci.h>
+>>>>
+>>>>   #include <asm/page.h>
+>>>>   #include <asm/uaccess.h>
+>>>> @@ -1474,6 +1475,7 @@ void crash_kexec(struct pt_regs *regs)
+>>>>           if (kexec_crash_image) {
+>>>>               struct pt_regs fixed_regs;
+>>>>
+>>>> +            pci_reset_endpoints();
+>>>>               crash_setup_regs(&fixed_regs, regs);
+>>>>               crash_save_vmcoreinfo();
+>>>>               machine_crash_shutdown(&fixed_regs);
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>
+>
 
