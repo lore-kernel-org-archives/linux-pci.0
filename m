@@ -1,108 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:45133 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755836AbaJIJE3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Oct 2014 05:04:29 -0400
-Date: Thu, 9 Oct 2014 10:04:20 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"rmk+kernel@arm.linux.org.uk" <rmk+kernel@arm.linux.org.uk>,
-	"tglx@linutronix.de" <tglx@linutronix.de>
-Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
-Message-ID: <20141009090420.GA16293@e102568-lin.cambridge.arm.com>
-References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
- <3978481.XNAIA6gzAG@wuerfel>
- <20141008101942.GA7179@e102568-lin.cambridge.arm.com>
- <2323270.n17xqW47JB@wuerfel>
-MIME-Version: 1.0
-In-Reply-To: <2323270.n17xqW47JB@wuerfel>
-Content-Type: text/plain; charset=WINDOWS-1252
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:51250 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754665AbaJUK1L (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Oct 2014 06:27:11 -0400
+Message-ID: <1413887229.2751.4.camel@pengutronix.de>
+Subject: Re: [PATCH v8 2/9] PCI: designware: Fix one potential assignment
+ error of cfg start
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Richard Zhu <richard.zhu@freescale.com>
+Cc: linux-pci@vger.kernel.org, shawn.guo@freescale.com,
+	festevam@gmail.com, tharvey@gateworks.com, m-karicheri2@ti.com,
+	Richard Zhu <r65037@freescale.com>
+Date: Tue, 21 Oct 2014 12:27:09 +0200
+In-Reply-To: <1413782724-30795-3-git-send-email-richard.zhu@freescale.com>
+References: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
+	 <1413782724-30795-3-git-send-email-richard.zhu@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 08, 2014 at 03:47:43PM +0100, Arnd Bergmann wrote:
-> On Wednesday 08 October 2014 11:19:43 Lorenzo Pieralisi wrote:
-> > 
-> > Ok. So, unless I am missing something, on platform with mem_offset != 0
-> > /proc and /sys interfaces for remapping PCI resources can't work (IIUC
-> > the proc interface expects the user to pass in the resource address as
-> > seen from /proc/bus/pci/devices - which are not BAR values. Even if the
-> > user passed the BAR value to mmap, pci_mmap_fits() in proc_bus_pci_mmap()
-> > would fail since it compares the pgoff to resource values, which are not
-> > BAR values).
+Am Montag, den 20.10.2014, 13:25 +0800 schrieb Richard Zhu:
+> From: Richard Zhu <r65037@freescale.com>
 > 
-> I think you are right for the sysfs interface, that one can't possibly
-> work because of the incorrect address computation.
+> if va_cfg0_base/va_cfg1_base are initialized by
+> designware core, the pp->cfg.start is not initialized
+> properly, when IORESOURCE_MEM "config" is represented
+> as cfg space resource.
+> solution: assign cfg_res->start to pp->cfg.start.
 > 
-> For the /procfs interface, I think it can work as long as the offsets
-> used there are coming from the config space dump in /proc/bus/pci/*
-> rather than from the /sys/bus/pci/devices/*/resource file.
+> Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
+> ---
+>  drivers/pci/host/pcie-designware.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 8d1c809..e3cd54a 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -472,6 +472,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>  	if (cfg_res) {
+>  		pp->config.cfg0_size = resource_size(cfg_res)/2;
+>  		pp->config.cfg1_size = resource_size(cfg_res)/2;
+> +		pp->cfg.start = cfg_res->start;
+>  		pp->cfg0_base = cfg_res->start;
+>  		pp->cfg1_base = cfg_res->start + pp->config.cfg0_size;
 >  
-> > As things stand I think we can safely remove the mem_offset (and
-> > pci_sys_data dependency) from pci_mmap_page_range(). I do not think
-> > we can break userspace in any way, basically because it can't work at
-> > the moment, again, happy to be corrected if I am wrong, please shout.
-> 
-> Please look at the procfs interface again. That one can be defined
-> in two ways (either like sparc and arm, or like powerpc and microblaze)
-> but either one should be able to work with user space that expects
-> that interface and break with user space that expects the other one.
 
-I agree as long as pci_mmap_page_range() is concerned, but I am
-referring to the pci_mmap_fits() implementation here:
+I think this patch should not be needed anymore. Please look at commit
+ec98e9ab6f24 (PCI: designware: Fix configuration base address when using
+'reg') in 3.18-rc1. I think it fixes the same bug, but in a different
+way. Can you confirm that this works for you?
 
-	start = vma->vm_pgoff;
-	size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
-	pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
-			pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
-	if (start >= pci_start && start < pci_start + size &&
-			start + nr <= pci_start + size)
-		return 1;
-	return 0;
-
-pci_mmap_fits(), when mapping from procfs always check the offset against
-resources, which are fixed-up addresses. If we passed the values dumped
-from the device config space (as pci_mmap_page_range() expects on arm) IMHO
-the check above would fail (always referring to platforms where
-mem_offset != 0).
-
-Last changes where introduced by commit 8c05cd08a, whose commit log adds
-to my confusion:
-
-"[...] I think what we want here is for pci_start to be 0 when mmap_api ==
-PCI_MMAP_PROCFS.[...]"
-
-But that's not what the code does.
-
-I will try to grab an integrator board to give it a go.
-
-> > Or we can add mem_offset to the host bridge (after all architectures like
-> > PowerPC and Microblaze have a pci_mem_offset variable in their host
-> > controllers), but still, this removes pci_sys_data dependency but does
-> > not solve the pci_mmap_page_range() issue.
-> 
-> The host bridge already stores the mem_offset in terms of the resource
-> list, so we could readily use that, except that it might break the
-> powerpc hack if that is still in use.
-
-Well, yes, I am not saying it can't be done by using the resources list,
-I am just trying to understand if that's really useful.
-
-Thank you !
-Lorenzo
+Regards,
+Lucas
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
