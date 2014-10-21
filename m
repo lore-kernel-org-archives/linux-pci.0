@@ -1,72 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:10256 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752314AbaJ0HIX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Oct 2014 03:08:23 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Thierry Reding" <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 04/10] PCI: tegra: Save MSI controller in pci_sys_data
-Date: Mon, 27 Oct 2014 15:48:41 +0800
-Message-ID: <1414396127-30023-5-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1414396127-30023-1-git-send-email-wangyijing@huawei.com>
-References: <1414396127-30023-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-qa0-f48.google.com ([209.85.216.48]:51481 "EHLO
+	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755358AbaJUPiL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Oct 2014 11:38:11 -0400
+Received: by mail-qa0-f48.google.com with SMTP id dc16so995616qab.7
+        for <linux-pci@vger.kernel.org>; Tue, 21 Oct 2014 08:38:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <66d89550a8de45f89b50c1862a35394f@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
+ <1413879507.2751.1.camel@pengutronix.de> <66d89550a8de45f89b50c1862a35394f@DM2PR0301MB0862.namprd03.prod.outlook.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 21 Oct 2014 09:37:45 -0600
+Message-ID: <CAErSpo5ZkyPNY6SBxu6pZBEpDSW_V5H6g3=EX3dme3W0ehbG8A@mail.gmail.com>
+Subject: Re: [PATCH v8]PCI: imx6: enable pcie on imx6sx sdb and imx6qdl sabreauto.
+To: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <richard.zhu@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shengchao Guo <Shawn.Guo@freescale.com>,
+	"festevam@gmail.com" <festevam@gmail.com>,
+	"tharvey@gateworks.com" <tharvey@gateworks.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Save MSI controller in pci_sys_data instead of
-assigning MSI controller pointer to every pci bus
-in .add_bus().
+On Tue, Oct 21, 2014 at 3:54 AM, Hong-Xing.Zhu@freescale.com
+<Hong-Xing.Zhu@freescale.com> wrote:
+> ...
+> Richard Zhu
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/host/pci-tegra.c |   13 +++----------
- 1 files changed, 3 insertions(+), 10 deletions(-)
+Can you please straighten out this Hong-Xing.Zhu vs. Richard Zhu
+thing?  It is really a hassle to deal with multiple names for one
+person.
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 7c3d354..89fb943 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -694,15 +694,6 @@ static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
- 	return irq;
- }
- 
--static void tegra_pcie_add_bus(struct pci_bus *bus)
--{
--	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--		struct tegra_pcie *pcie = sys_to_pcie(bus->sysdata);
--
--		bus->msi = &pcie->msi.ctrl;
--	}
--}
--
- static struct pci_bus *tegra_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- {
- 	struct tegra_pcie *pcie = sys_to_pcie(sys);
-@@ -1881,11 +1872,13 @@ static int tegra_pcie_enable(struct tegra_pcie *pcie)
- 
- 	memset(&hw, 0, sizeof(hw));
- 
-+#ifdef CONFIG_PCI_MSI
-+	hw.msi_ctrl = &pcie->msi.ctrl;
-+#endif
- 	hw.nr_controllers = 1;
- 	hw.private_data = (void **)&pcie;
- 	hw.setup = tegra_pcie_setup;
- 	hw.map_irq = tegra_pcie_map_irq;
--	hw.add_bus = tegra_pcie_add_bus;
- 	hw.scan = tegra_pcie_scan_bus;
- 	hw.ops = &tegra_pcie_ops;
- 
--- 
-1.7.1
-
+Bjorn
