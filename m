@@ -1,88 +1,100 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 1 Oct 2014 13:20:58 -0700
-From: Guenter Roeck <groeck@juniper.net>
-To: Danielle Costantino <danielle.costantino@gmail.com>
-CC: linux-i2c <linux-i2c@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiri Kosina <jkosina@suse.cz>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Rajat Jain <rajatjain@juniper.net>
-Subject: Re: Fwd: [Proposal] PM sleep children of inactive I2C bus segments
- off Masters in multi-master systems
-Message-ID: <20141001202058.GB6948@svl-evodev-groeck.juniper.net>
-References: <CAAVjN7dwS62EKMnuZc_P1UjkbRVk6RXqJ91GwWZ96bbY5Ct-rg@mail.gmail.com>
- <CAAVjN7eUmBVcAGPbcn3qsJ9M9uu2nkFoKHqGhhKGekZSceGiMw@mail.gmail.com>
- <20141001184304.GA6832@svl-evodev-groeck.juniper.net>
- <CAAVjN7edpkXYMHBm+wLegA_pc0hnm_YZf_z=Ni3h=EbDTmfegQ@mail.gmail.com>
- <20141001194115.GA6948@svl-evodev-groeck.juniper.net>
- <CAAVjN7fGRzyu7gxavJUay+K_Mm-0t1T_0Bysk6-sdaqu5=5k5A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CAAVjN7fGRzyu7gxavJUay+K_Mm-0t1T_0Bysk6-sdaqu5=5k5A@mail.gmail.com>
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <kexec@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	"Li, Zhen-Hua" <zhen-hual@hp.com>
+Subject: [PATCH 4/5] iommu/vt-d: Add domain-id functions
+Date: Tue, 21 Oct 2014 16:04:18 +0800
+Message-Id: <1413878659-1383-5-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1413878659-1383-1-git-send-email-zhen-hual@hp.com>
+References: <1413878659-1383-1-git-send-email-zhen-hual@hp.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 01, 2014 at 01:03:59PM -0700, Danielle Costantino wrote:
-> On Wed, Oct 1, 2014 at 12:41 PM, Guenter Roeck <groeck@juniper.net> wrote:
-> > On Wed, Oct 01, 2014 at 11:44:59AM -0700, Danielle Costantino wrote:
-> >> Re-sending Proposal:
-> >>
-> >> Currently I2C mux devices that support multiple master arbitration are
-> >> the i2c-mux-pca9541 and i2c-arb-gpio-challenge drivers. I propose to
-> >> add the ability to configure an interrupt pin from the Master Selector
-> >> device to indicate that bus ownership has been lost. Once the device
-> >> loses ownership, all of its children should enter a pm sleep mode (as
-> >> you can't talk to them at this point) until master-ship has been
-> >> reacquired.
-> >>
-> > Not sure I understand what you are proposing here.
-> 
-> Lets say you have a active - standby based multi-master system. If the
-> other master forced arbitration (took mastership) the next transation
-> on any slaves of that bus would return EAGAIN or EBUSY.
-> 
-> Another point is that once mastership has been lost, the configuration
-> of the devices on that bus are no longer known to be valid...therefor
-> a re-init of those devices may be needed.
-> 
-Unfortunately that is a generic problem in a multi-master system.
-You never know if the other end reconfigured a device or not,
-even if there was no error.
+Interfaces for when a new domain in the crashdump kernel needs some
+values from the panicked kernel's context entries.
 
-> > A typical use case would be a power supply such as the one supported by
-> > drivers/hwmon/lineage-pem.c from both an active and standby system
-> > controller. The power supply needs to be accessible from both controllers.
-> > If one controller looses access, it can only mean that it did not follow
-> > the access protocol. Similar, one controller enforcing access means that
-> > it either does not follow the access protocol either, or that the other
-> > end did not follow the protocol (or maybe the other end died).
-> >
-> > In all cases, loss of access does not mean that the end device can or should
-> > be put in sleep mode, not even logically. All it means is that there was
-> > an access protocol error. Not sure if there is anything that can be done
-> > about that, but putting the device into sleep mode does not seem to be
-> > an appropriate response to me.
-> >
-> >> This has come up as an issue when the master loses control over a bus
-> >> the return code of all transactions to its lave devices is EIO (not
-> >> very helpful).
-> >>
-> > But, again, doesn't that mean that there was some access protocol error ?
-> > Shouldn't it try to re-acquire mastership instead, and block all accesses
-> > to slaves until it acquired it ?
-> 
-> EIO is such a generic error it makes finding weather there was a
-> problem communicating or is no longer master of the bus segment.
-> 
-AFAICS the only time the pca9541 driver returns -EIO is if a transaction
-did not complete. Only possible improvement I could imagine would be to
-check if mastership was lost if there was an error, and return something
-more useful if that is the case. Both -EBUSY or -EAGAIN might make sense
-here; I don't really know what would be better or more appropriate.
+Signed-off-by: Bill Sumner 
+---
+ drivers/iommu/intel-iommu.c | 46 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
 
-Guenter
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 73afed4..bde8f22 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -348,6 +348,7 @@ static inline int first_pte_in_page(struct dma_pte *pte)
+ 
+ 
+ #ifdef CONFIG_CRASH_DUMP
++
+ /*
+  * Fix Crashdump failure caused by leftover DMA through a hardware IOMMU
+  *
+@@ -437,6 +438,16 @@ static int intel_iommu_copy_translation_tables(struct dmar_drhd_unit *drhd,
+ 		struct root_entry **root_new_virt_p,
+ 		int g_num_of_iommus);
+ 
++static struct domain_values_entry *intel_iommu_did_to_domain_values_entry(
++		int did, struct intel_iommu *iommu);
++
++static int intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu);
++
++static struct domain_values_entry *intel_iommu_did_to_domain_values_entry(
++		int did, struct intel_iommu *iommu);
++
++static int intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu);
++
+ #endif /* CONFIG_CRASH_DUMP */
+ 
+ /*
+@@ -5230,4 +5241,39 @@ static int intel_iommu_copy_translation_tables(struct dmar_drhd_unit *drhd,
+ 	return 0;
+ }
+ 
++/*
++ * Interfaces for when a new domain in the crashdump kernel needs some
++ * values from the panicked kernel's context entries
++ *
++ */
++static struct domain_values_entry *intel_iommu_did_to_domain_values_entry(
++		int did, struct intel_iommu *iommu)
++{
++	struct domain_values_entry *dve;	/* iterator */
++
++	list_for_each_entry(dve, &domain_values_list[iommu->seq_id], link)
++		if (dve->did == did)
++			return dve;
++	return NULL;
++}
++
++/* Mark domain-id's from old kernel as in-use on this iommu so that a new
++ * domain-id is allocated in the case where there is a device in the new kernel
++ * that was not in the old kernel -- and therefore a new domain-id is needed.
++ */
++static int intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu)
++{
++	struct domain_values_entry *dve;	/* iterator */
++
++	pr_info("IOMMU:%d Domain ids from panicked kernel:\n", iommu->seq_id);
++
++	list_for_each_entry(dve, &domain_values_list[iommu->seq_id], link) {
++		set_bit(dve->did, iommu->domain_ids);
++		pr_info("DID did:%d(0x%4.4x)\n", dve->did, dve->did);
++	}
++
++	pr_info("----------------------------------------\n");
++	return 0;
++}
++
+ #endif /* CONFIG_CRASH_DUMP */
+-- 
+2.0.0-rc0
+
