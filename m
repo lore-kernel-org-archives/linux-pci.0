@@ -1,119 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0142.outbound.protection.outlook.com ([157.56.110.142]:45524
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933784AbaJ3KLd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 06:11:33 -0400
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v4 16/20] usb: dwc3: add disable usb2 suspend phy quirk
-Date: Thu, 30 Oct 2014 18:08:41 +0800
-Message-ID: <1414663725-2195-17-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
-References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+Received: from mail-qc0-f179.google.com ([209.85.216.179]:41530 "EHLO
+	mail-qc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754699AbaJUPfJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Oct 2014 11:35:09 -0400
+Received: by mail-qc0-f179.google.com with SMTP id x3so1074362qcv.24
+        for <linux-pci@vger.kernel.org>; Tue, 21 Oct 2014 08:35:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20141021143709.GA19376@jtlinux>
+References: <20141021143709.GA19376@jtlinux>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 21 Oct 2014 09:34:44 -0600
+Message-ID: <CAErSpo7beR59ZjbWrnFpqVwk6OGm0wBUHYUdBr1Q1uyewZ32bA@mail.gmail.com>
+Subject: Re: Question regarding pci_request_region()
+To: Johannes Thumshirn <johannes.thumshirn@men.de>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds disable usb2 suspend phy quirk, and some special platforms
-can configure that if it is needed.
+On Tue, Oct 21, 2014 at 8:37 AM, Johannes Thumshirn
+<johannes.thumshirn@men.de> wrote:
+> Hi,
+>
+> I've some questions regarding pci_request_region(). Is there a similar function
+> that allows me to request the memory from a PCIe device, but not a whole BAR?
 
-Signed-off-by: Huang Rui <ray.huang@amd.com>
----
- Documentation/devicetree/bindings/usb/dwc3.txt | 1 +
- drivers/usb/dwc3/core.c                        | 7 +++++++
- drivers/usb/dwc3/core.h                        | 2 ++
- drivers/usb/dwc3/platform_data.h               | 1 +
- 4 files changed, 11 insertions(+)
+You can always do something like this:
 
-diff --git a/Documentation/devicetree/bindings/usb/dwc3.txt b/Documentation/devicetree/bindings/usb/dwc3.txt
-index 3720fca..feaf2c8 100644
---- a/Documentation/devicetree/bindings/usb/dwc3.txt
-+++ b/Documentation/devicetree/bindings/usb/dwc3.txt
-@@ -33,6 +33,7 @@ Optional properties:
-  - snps,tx_de_emphasis: the value driven to the PHY is controlled by the
- 			LTSSM during USB3 Compliance mode.
-  - snps,dis_u3_susphy_quirk: when set core will disable USB3 suspend phy.
-+ - snps,dis_u2_susphy_quirk: when set core will disable USB2 suspend phy.
- 
- This is usually a subnode to DWC3 glue to which it is connected.
- 
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index fdc715a..a28ed1c 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -423,6 +423,10 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
- 	if (dwc->revision > DWC3_REVISION_194A)
- 		reg |= DWC3_GUSB2PHYCFG_SUSPHY;
- 
-+	/* FIXME will move FPGA flag when AMD NL taps out */
-+	if (dwc->dis_u2_susphy_quirk && dwc->is_fpga)
-+		reg &= ~DWC3_GUSB2PHYCFG_SUSPHY;
-+
- 	dwc3_writel(dwc->regs, DWC3_GUSB2PHYCFG(0), reg);
- 
- 	mdelay(100);
-@@ -815,6 +819,8 @@ static int dwc3_probe(struct platform_device *pdev)
- 				"snps,rx_detect_poll_quirk");
- 		dwc->dis_u3_susphy_quirk = of_property_read_bool(node,
- 				"snps,dis_u3_susphy_quirk");
-+		dwc->dis_u2_susphy_quirk = of_property_read_bool(node,
-+				"snps,dis_u2_susphy_quirk");
- 
- 		dwc->tx_de_emphasis_quirk = of_property_read_bool(node,
- 				"snps,tx_de_emphasis_quirk");
-@@ -838,6 +844,7 @@ static int dwc3_probe(struct platform_device *pdev)
- 		dwc->lfps_filter_quirk = pdata->lfps_filter_quirk;
- 		dwc->rx_detect_poll_quirk = pdata->rx_detect_poll_quirk;
- 		dwc->dis_u3_susphy_quirk = pdata->dis_u3_susphy_quirk;
-+		dwc->dis_u2_susphy_quirk = pdata->dis_u2_susphy_quirk;
- 
- 		dwc->tx_de_emphasis_quirk = pdata->tx_de_emphasis_quirk;
- 		if (pdata->tx_de_emphasis)
-diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-index be793f7..8b6c308 100644
---- a/drivers/usb/dwc3/core.h
-+++ b/drivers/usb/dwc3/core.h
-@@ -698,6 +698,7 @@ struct dwc3_scratchpad_array {
-  * @lfps_filter_quirk: set if we enable LFPS filter quirk
-  * @rx_detect_poll_quirk: set if we enable rx_detect to polling LFPS quirk
-  * @dis_u3_susphy_quirk: set if we disable usb3 suspend phy
-+ * @dis_u2_susphy_quirk: set if we disable usb2 suspend phy
-  * @tx_de_emphasis_quirk: set if we enable Tx de-emphasis quirk
-  * @tx_de_emphasis: Tx de-emphasis value
-  * 	0       - -6dB de-emphasis
-@@ -820,6 +821,7 @@ struct dwc3 {
- 	unsigned		lfps_filter_quirk:1;
- 	unsigned		rx_detect_poll_quirk:1;
- 	unsigned		dis_u3_susphy_quirk:1;
-+	unsigned		dis_u2_susphy_quirk:1;
- 
- 	unsigned		tx_de_emphasis_quirk:1;
- 	unsigned		tx_de_emphasis:2;
-diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
-index 0f1d5ad..245300b 100644
---- a/drivers/usb/dwc3/platform_data.h
-+++ b/drivers/usb/dwc3/platform_data.h
-@@ -37,6 +37,7 @@ struct dwc3_platform_data {
- 	unsigned lfps_filter_quirk:1;
- 	unsigned rx_detect_poll_quirk:1;
- 	unsigned dis_u3_susphy_quirk:1;
-+	unsigned dis_u2_susphy_quirk:1;
- 
- 	unsigned tx_de_emphasis_quirk:1;
- 	unsigned tx_de_emphasis:2;
--- 
-1.9.1
+  start = pci_resource_start(dev, 0);
+  request_mem_region(start, 0x200, KBUILD_MODNAME);
+  ioremap(start, 0x200);
 
+> in drivers/mcb/mcb-pci.c I do a pci_request_region() for BAR 0. But I only need
+> the first 0x200 bytes. pci_request_region() locks the memory and thus probing of
+> mcb attached sub devices fails, as they can't do a request_mem on their part of
+> the PCI memory space until the mcb parser is done and releases BAR0.
+
+The default assumption is that the driver bound to a PCI device is the
+only user of the BARs.  For example, if there is no driver bound to a
+device, the PCI core assumes that it can reassign the BARs.
+
+You can carve up a BAR among sub-devices, but you should make sure
+that some driver remains bound to the PCI device as long as any
+sub-driver is active.  The top-level driver doesn't need to keep any
+BARs mapped itself, but it should remain bound to the device.
+
+It looks like mcb_pci_probe() disables the device before it returns.
+That doesn't seem like a good idea if you have sub-devices that are
+accessed via the device's BARs.  At a minimum, pci_disable_device()
+turns off bus mastering, and it may also disable IRQs
+
+> Generally this is no problem when you build all drivers as modules, but once I
+> do build in drivers, probing fails. Before rewriting all mcb based drivers to
+> use deferred probing I wanted to ask if there is a more clean way to do this.
+
+Deferred probing sounds like a workaround for a deeper problem.  It
+seems like you basically have a PCI device that is effectively a
+bridge to a MEN Chameleon Bus.  That means than when you enumerate
+such a device, the probe routine (mcb_pci_probe(), I think) should in
+turn enumerate any MCB devices "behind" it, i.e., the sub-devices.
+
+There should not be any ordering dependency between mcb_pci_probe()
+and the module_init functions of the drivers.  It is perfectly legal
+for a driver to register before there are any devices for it to bind
+to.  If a driver like men_z135_uart.c initializes first, it should
+register itself as an MCB driver, but its probe function won't be
+called because there's no matching device yet.  When mcb_pci_probe()
+runs later to claim the MCB "bridge", it should enumerate the MCB
+devices and add them.  When the devices are added, we should check for
+any already-registered drivers that match them and call their probe
+functions at that time.
+
+Bjorn
