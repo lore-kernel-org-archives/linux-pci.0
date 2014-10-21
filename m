@@ -1,316 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:49503 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752149AbaJBKdS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Oct 2014 06:33:18 -0400
-Date: Thu, 2 Oct 2014 11:33:15 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: "matt@masarand.com" <matt@masarand.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 01/18] Added way to register deferred PCI IRQ assignment
- handlers
-Message-ID: <20141002103315.GM841@e106497-lin.cambridge.arm.com>
-References: <1412222866-21068-1-git-send-email-matt@masarand.com>
- <1412222866-21068-2-git-send-email-matt@masarand.com>
+Received: from mail-bn1bn0105.outbound.protection.outlook.com ([157.56.110.105]:7168
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751597AbaJUJyT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 21 Oct 2014 05:54:19 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <richard.zhu@freescale.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shengchao Guo <Shawn.Guo@freescale.com>,
+	"festevam@gmail.com" <festevam@gmail.com>,
+	"tharvey@gateworks.com" <tharvey@gateworks.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>
+Subject: RE: [PATCH v8]PCI: imx6: enable pcie on imx6sx sdb and imx6qdl
+ sabreauto.
+Date: Tue, 21 Oct 2014 09:54:16 +0000
+Message-ID: <66d89550a8de45f89b50c1862a35394f@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
+ <1413879507.2751.1.camel@pengutronix.de>
+In-Reply-To: <1413879507.2751.1.camel@pengutronix.de>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1412222866-21068-2-git-send-email-matt@masarand.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 02, 2014 at 05:07:29AM +0100, matt@masarand.com wrote:
-> From: Matthew Minter <matt@masarand.com>
-> 
-
-Hi Matthew,
-
-Some comments below:
-
-> 
-> These are the main infrastructure changes to allow the registration of
-> PCI IRQ assignment functions which can then be called during the device
-> enabling stage. This replaces the pre-initialisation of PCI IRQs at boot
-> time which caused limitations such as failing for devices which are
-> hot-plugged after the machine has booted and resulted in highly
-> fragmented PCI initialisation paths.
-> 
-> The pdev_assign_irq function becomes a centralised method of assigning
-> IRQs to PCI devices in a non platform specific way. The pci_host_bridge
-> structure has had some function pointers added to it where the boot code
-> can register the platform specific ways of assigning PCI IRQs to be used
-> to allow them to be used by pdev_assign_irq.
-> 
-> Some small adjustements have also been made to makefiles in order to
-> accomodate these changes.
-> 
-> Note this code completely obsolites the pci_fixup_irqs code path which
-
-s/obsolites/obsoletes/
-
-> has thus been removed.
-> 
-> Signed-off-by: Matthew Minter <matt@masarand.com>
-> 
-> ---
->  drivers/of/of_pci_irq.c   |  2 +-
->  drivers/pci/Makefile      | 15 ++-------------
->  drivers/pci/host-bridge.c |  2 +-
->  drivers/pci/pci.c         |  5 ++++-
->  drivers/pci/pci.h         |  1 +
->  drivers/pci/probe.c       | 12 ------------
->  drivers/pci/setup-irq.c   | 34 ++++++++++++++++------------------
->  include/linux/pci.h       |  6 ++++--
->  8 files changed, 29 insertions(+), 48 deletions(-)
-> 
-> diff --git a/drivers/of/of_pci_irq.c b/drivers/of/of_pci_irq.c
-> index 1710d9d..205eb7a 100644
-> --- a/drivers/of/of_pci_irq.c
-> +++ b/drivers/of/of_pci_irq.c
-> @@ -97,7 +97,7 @@ EXPORT_SYMBOL_GPL(of_irq_parse_pci);
->   * @pin: PCI irq pin number; passed when used as map_irq callback. Unused
->   *
->   * @slot and @pin are unused, but included in the function so that this
-> - * function can be used directly as the map_irq callback to pci_fixup_irqs().
-> + * function can be used directly as the map_irq callback to pdev_assign_irq().
->   */
->  int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
->  {
-> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-> index e04fe2d..38c4cb0 100644
-> --- a/drivers/pci/Makefile
-> +++ b/drivers/pci/Makefile
-> @@ -4,7 +4,8 @@
->  
->  obj-y		+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
->  			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
-> -			irq.o vpd.o setup-bus.o vc.o
-> +			irq.o vpd.o setup-bus.o vc.o setup-irq.o
-> +
->  obj-$(CONFIG_PROC_FS) += proc.o
->  obj-$(CONFIG_SYSFS) += slot.o
->  
-> @@ -31,18 +32,6 @@ obj-$(CONFIG_PCI_ATS) += ats.o
->  obj-$(CONFIG_PCI_IOV) += iov.o
->  
->  #
-> -# Some architectures use the generic PCI setup functions
-> -#
-> -obj-$(CONFIG_ALPHA) += setup-irq.o
-> -obj-$(CONFIG_ARM) += setup-irq.o
-> -obj-$(CONFIG_UNICORE32) += setup-irq.o
-> -obj-$(CONFIG_SUPERH) += setup-irq.o
-> -obj-$(CONFIG_MIPS) += setup-irq.o
-> -obj-$(CONFIG_TILE) += setup-irq.o
-> -obj-$(CONFIG_SPARC_LEON) += setup-irq.o
-> -obj-$(CONFIG_M68K) += setup-irq.o
-> -
-> -#
->  # ACPI Related PCI FW Functions
->  # ACPI _DSM provided firmware instance and string name
->  #
-> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> index 0e5f3c9..8ed186f 100644
-> --- a/drivers/pci/host-bridge.c
-> +++ b/drivers/pci/host-bridge.c
-> @@ -16,7 +16,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
->  	return bus;
->  }
->  
-> -static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
-> +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
-
-When I did the same thing in one of the versions of my generic host bridge series,
-Bjorn has mentioned that he would like the name to be changed to pci_xxxxx to
-make clear that the function is now public.
-
->  {
->  	struct pci_bus *root_bus = find_pci_root_bus(bus);
->  
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 2c9ac70..2dd28d9 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1192,11 +1192,15 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
->  	struct pci_dev *bridge;
->  	u16 cmd;
->  	u8 pin;
-> +	struct pci_host_bridge *hbrg = find_pci_host_bridge(dev->bus);
->  
->  	err = pci_set_power_state(dev, PCI_D0);
->  	if (err < 0 && err != -EIO)
->  		return err;
->  
-> +	pdev_assign_irq(dev, hbrg->swizzle_irq, hbrg->map_irq);
-> +	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
-> +
->  	bridge = pci_upstream_bridge(dev);
->  	if (bridge)
->  		pcie_aspm_powersave_config_link(bridge);
-> @@ -1209,7 +1213,6 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
->  	if (dev->msi_enabled || dev->msix_enabled)
->  		return 0;
->  
-> -	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
->  	if (pin) {
->  		pci_read_config_word(dev, PCI_COMMAND, &cmd);
->  		if (cmd & PCI_COMMAND_INTX_DISABLE)
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 0601890..a6cf445 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -70,6 +70,7 @@ void pci_config_pm_runtime_put(struct pci_dev *dev);
->  void pci_pm_init(struct pci_dev *dev);
->  void pci_allocate_cap_save_buffers(struct pci_dev *dev);
->  void pci_free_cap_save_buffers(struct pci_dev *dev);
-> +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus);
->  
->  static inline void pci_wakeup_event(struct pci_dev *dev)
->  {
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 4170113..314e9e3 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1719,18 +1719,6 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
->  }
->  EXPORT_SYMBOL_GPL(pci_scan_child_bus);
->  
-> -/**
-> - * pcibios_root_bridge_prepare - Platform-specific host bridge setup.
-> - * @bridge: Host bridge to set up.
-> - *
-> - * Default empty implementation.  Replace with an architecture-specific setup
-> - * routine, if necessary.
-> - */
-> -int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-> -{
-> -	return 0;
-> -}
-> -
-
-Any reason for removing this? It is meant for host bridge setup, I don't see how
-it relates to your patchset.
-
->  void __weak pcibios_add_bus(struct pci_bus *bus)
->  {
->  }
-> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-> index 4e2d595..203bf7e 100644
-> --- a/drivers/pci/setup-irq.c
-> +++ b/drivers/pci/setup-irq.c
-> @@ -22,13 +22,19 @@ void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
->  	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
->  }
->  
-> -static void pdev_fixup_irq(struct pci_dev *dev,
-> +void pdev_assign_irq(struct pci_dev *dev,
->  			   u8 (*swizzle)(struct pci_dev *, u8 *),
-> -			   int (*map_irq)(const struct pci_dev *, u8, u8))
-> +			   int (*map_irq)(struct pci_dev *, u8, u8))
->  {
-> -	u8 pin, slot;
-> +	u8 pin;
-> +	u8 slot = -1;
->  	int irq = 0;
->  
-> +	if (!map_irq) {
-> +		dev_dbg(&dev->dev, "runtime irq mapping not provided by arch\n");
-> +		return;
-> +	}
-> +
->  	/* If this device is not on the primary bus, we need to figure out
->  	   which interrupt pin it will come in on.   We know which slot it
->  	   will come in on 'cos that slot is where the bridge is.   Each
-> @@ -40,28 +46,20 @@ static void pdev_fixup_irq(struct pci_dev *dev,
->  	if (pin > 4)
->  		pin = 1;
->  
-> -	if (pin != 0) {
-> -		/* Follow the chain of bridges, swizzling as we go.  */
-> -		slot = (*swizzle)(dev, &pin);
-> +	if (pin) {
-> +		/* Follow the chain of bridges, swizzling as we go. */
-
-Space adjustments in comments should be a separate patch. And if you care so much about
-spaces ....
-
-> +		if(swizzle)
-
-how about adding one here?
-
-> +			slot = (*swizzle)(dev, &pin);
->  
-> +		/* If a swizzling function is not used map_irq must ignore slot */
->  		irq = (*map_irq)(dev, slot, pin);
->  		if (irq == -1)
->  			irq = 0;
->  	}
-> -	dev->irq = irq;
-> -
-> -	dev_dbg(&dev->dev, "fixup irq: got %d\n", dev->irq);
->  
-> +	dev_dbg(&dev->dev, "assign irq: got %d\n", dev->irq);
-> +	dev->irq = irq;
->  	/* Always tell the device, so the driver knows what is
->  	   the real IRQ to use; the device does not use it. */
->  	pcibios_update_irq(dev, irq);
->  }
-> -
-> -void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
-> -		    int (*map_irq)(const struct pci_dev *, u8, u8))
-> -{
-> -	struct pci_dev *dev = NULL;
-> -
-> -	for_each_pci_dev(dev)
-> -		pdev_fixup_irq(dev, swizzle, map_irq);
-> -}
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 96453f9..5426d11 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -403,6 +403,8 @@ struct pci_host_bridge {
->  	struct device dev;
->  	struct pci_bus *bus;		/* root bus */
->  	struct list_head windows;	/* pci_host_bridge_windows */
-> +	u8 (*swizzle_irq)(struct pci_dev *, u8 *); /* platform irq swizzler */
-> +	int (*map_irq)(struct pci_dev *, u8, u8);
-
-I think you should split this patch so that you first introduce the hooks and the
-way to set them and after that you make the change from pdev_fixup_irq to pdev_assign_irq.
-
-Best regards,
-Liviu
-
->  	void (*release_fn)(struct pci_host_bridge *);
->  	void *release_data;
->  };
-> @@ -1064,8 +1066,8 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
->  void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus);
->  void pdev_enable_device(struct pci_dev *);
->  int pci_enable_resources(struct pci_dev *, int mask);
-> -void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
-> -		    int (*)(const struct pci_dev *, u8, u8));
-> +void pdev_assign_irq(struct pci_dev *dev, u8 (*swizzle)(struct pci_dev *, u8 *),
-> +                     int (*map_irq)(struct pci_dev *, u8, u8));
->  #define HAVE_PCI_REQ_REGIONS	2
->  int __must_check pci_request_regions(struct pci_dev *, const char *);
->  int __must_check pci_request_regions_exclusive(struct pci_dev *, const char *);
-> -- 
-> 2.1.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEx1Y2FzIFN0YWNoIFttYWls
+dG86bC5zdGFjaEBwZW5ndXRyb25peC5kZV0NCj4gU2VudDogVHVlc2RheSwgT2N0b2JlciAyMSwg
+MjAxNCA0OjE4IFBNDQo+IFRvOiBSaWNoYXJkIFpodQ0KPiBDYzogbGludXgtcGNpQHZnZXIua2Vy
+bmVsLm9yZzsgR3VvIFNoYXduLVI2NTA3MzsgZmVzdGV2YW1AZ21haWwuY29tOw0KPiB0aGFydmV5
+QGdhdGV3b3Jrcy5jb207IG0ta2FyaWNoZXJpMkB0aS5jb20NCj4gU3ViamVjdDogUmU6IFtQQVRD
+SCB2OF1QQ0k6IGlteDY6IGVuYWJsZSBwY2llIG9uIGlteDZzeCBzZGIgYW5kIGlteDZxZGwNCj4g
+c2FicmVhdXRvLg0KPiANCj4gQW0gTW9udGFnLCBkZW4gMjAuMTAuMjAxNCwgMTM6MjUgKzA4MDAg
+c2NocmllYiBSaWNoYXJkIFpodToNCj4gPiBNYWluIGNoYW5nZXMgc2luY2UgdGhlIHY2KHY3IGlz
+IGlnbm9yZWQpOg0KPiA+IDEuIFJlZ2FyZGluZyB0byBMdWNhcycgc3VnZ2VzdGlvbiwgYXNzZXJ0
+IHBlci1yZXNldCBpbiBzdXNwZW5kLCBhbmQNCj4gPiBkZS1hc3NlcnQgaXQgaW4gcmVzdW1lLg0K
+PiA+IDIuIFVzZSBwcC0+b3BzLT5nZXRfbXNpX2RhdGEgaW4gZHdfcGNpZV9tc2lfY2ZnX3Jlc3Rv
+cmUoKSBpZiB0aGVyZSBpcw0KPiA+IG9uZSBnZXRfbXNpX2RhdGEgcHAgb3BzIGNhbGxiYWNrLCBy
+ZWZlciB0byBNdWFsaSdzIGNvbW1lbnQuDQo+ID4gMy4gSW4gb3JkZXIgdG8gYXZvaWQgdGhlIGNv
+bXBpbGF0aW9uLCBzcXVhc2ggaW14NiBjaGFuZ2VzIHdpdGgNCj4gPiBwYXRjaDItNSBvZiB2Niwg
+c2luY2UgdGhlIHByb3RvdHlwZSBvZiB0aGUgaG9zdF9pbml0IGlzIGNoYW5nZWQuDQo+IA0KPiBO
+bywgdGhpcyBpc24ndCB3aGF0IEkgd2FudGVkLiBUaGlzIGlzIGNvbXBsZXRlbHkgc2VwYXJhdGUg
+Y2hhbmdlIGFuZCBuZWVkcyB0bw0KPiBiZSBpbiBvbmUgcGF0Y2guDQo+IA0KW1JpY2hhcmRdIERv
+IHlvdSBtZWFuIHRoZSBmb2xsb3dpbmc/DQoqIGlteDZzeCBwY2llIHN1cHBvcnQgdG8gYmUgb25l
+IHBhdGNoLg0KKiB0aGUgcHJvdG90eXBlIG9mIHRoZSBob3N0X2luaXQgY2hhbmdlcyBzaG91bGQg
+YmUgc3F1YXNoZWQgaW50byBvbmUgc3RhbmRhbG9uZSBwYXRjaC4NCg0KPiBCdXQgdG8gbW92ZSB0
+aGlzIHBhdGNoc2V0IGZvcndhcmQgd2l0aG91dCBrZWVwaW5nIHRob3NlIGVuZGxlc3MgbG9vcHMg
+YmFjayBhbmQNCj4gZm9ydGggYmV0d2VlbiB1cyBib3RoIGxldCdzIHR1cm4gdGhlIHRoaW5nIGFy
+b3VuZDogSSB3aWxsIHRha2UgbW9zdCBvZiB5b3VyDQo+IHBhdGNoZXMgKG5hbWVseSB0aGUgb25l
+cyBhZGRpbmcgaW14NnN4IHN1cHBvcnQpIGFuZCByZXdvcmsgdGhlbSBzbyB0aGV5IGxvb2sNCj4g
+Z29vZCB0byBtZS4gSSdsbCBzZW5kIHRoZW0gdG8geW91IHNvIHlvdSBjYW4gdGVzdCB0aGVtIG9u
+IHlvdXIgaGFyZHdhcmUgYW5kDQo+IGFmdGVyIHRoYXQgc2VuZCB0aGVtIHRvIHRoZSBsaXN0IGZv
+ciBpbmNsdXNpb24uDQo+IA0KPiBJJ2xsIGxlYXZlIG91dCB0aGUgcHVyZWx5IERUUyBjaGFuZ2Vz
+LCBhcyB0aG9zZSBhcmUgc2VwYXJhdGUgaGFyZHdhcmUNCj4gZW5hYmxlbWVudCBwYXRjaGVzLCB0
+aGF0IGRvbid0IHN0cmljdGx5IG5lZWQgdG8gYmUgaW4gdGhpcyBzZXJpZXMuDQo+IA0KPiBSZWdh
+cmRzLA0KPiBMdWNhcw0KPiANCj4gLS0NCj4gUGVuZ3V0cm9uaXggZS5LLiAgICAgICAgICAgICB8
+IEx1Y2FzIFN0YWNoICAgICAgICAgICAgICAgICB8DQo+IEluZHVzdHJpYWwgTGludXggU29sdXRp
+b25zICAgfCBodHRwOi8vd3d3LnBlbmd1dHJvbml4LmRlLyAgfA0KDQoNCkJlc3QgUmVnYXJkcw0K
+UmljaGFyZCBaaHUNCg0K
