@@ -1,110 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:57957 "EHLO comal.ext.ti.com"
+Received: from mx1.redhat.com ([209.132.183.28]:32617 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751950AbaJJOma (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 10 Oct 2014 10:42:30 -0400
-Message-ID: <5437F048.2000909@ti.com>
-Date: Fri, 10 Oct 2014 10:42:16 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Richard Zhu <richard.zhu@freescale.com>
-CC: <linux-pci@vger.kernel.org>, <shawn.guo@freescale.com>,
-	<festevam@gmail.com>, <l.stach@pengutronix.de>,
-	<tharvey@gateworks.com>, Richard Zhu <r65037@freescale.com>
-Subject: Re: [PATCH v5 1/9] PCI: designware: refine setup_rc and add msi data
- restore
-References: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com> <1412919676-25344-2-git-send-email-richard.zhu@freescale.com>
-In-Reply-To: <1412919676-25344-2-git-send-email-richard.zhu@freescale.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	id S933458AbaJUVci (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 21 Oct 2014 17:32:38 -0400
+Message-ID: <1413927152.4202.195.camel@ul30vt.home>
+Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass through
+ (vfio)
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Andreas Hartmann <andihartmann@freenet.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Date: Tue, 21 Oct 2014 15:32:32 -0600
+In-Reply-To: <1413925580.4202.189.camel@ul30vt.home>
+References: <20140923210318.498dacbd@dualc.maya.org>
+	 <1411502866.24563.8.camel@ul30vt.home> <5437A958.3000201@maya.org>
+	 <CAErSpo5kkk4itqqmCMU=08-XMcDknur8VY++F3A2LajdvTptOA@mail.gmail.com>
+	 <5437F1F5.3010706@maya.org>
+	 <CAErSpo6DuWEcJb_gfS=5JnKN8b4DXXV9+u-CRa8m3db0dbzpsQ@mail.gmail.com>
+	 <543804BC.3080307@maya.org>
+	 <CAErSpo450czUtAM104o+RS=yOcmP+3MKMH7mYk=UYhVJ2+cfSQ@mail.gmail.com>
+	 <20141011003219.560cca97@dualc.maya.org>
+	 <20141010225408.GA24493@google.com> <5438CC1E.3060407@maya.org>
+	 <1413360267.4202.70.camel@ul30vt.home> <54406B34.1050808@maya.org>
+	 <1413925580.4202.189.camel@ul30vt.home>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/10/2014 01:41 AM, Richard Zhu wrote:
-> From: Richard Zhu<r65037@freescale.com>
->
-> - move "program correct class for RC" from dw_pcie_host_init()
-> to dw_pcie_setup_rc(). since this is RC setup, it's
-> better to contained in dw_pcie_setup_rc function.
-> Then, RC can be re-setup really by dw_pcie_setup_rc().
-> - add one re-store msi data function. Because that
-> pcie controller maybe powered off during system suspend,
-> and the msi data configuration would be lost.
-> this functions can be used to restore the msi data
-> during the resume callback.
->
-> Signed-off-by: Richard Zhu<richard.zhu@freescale.com>
-> ---
->   drivers/pci/host/pcie-designware.c | 15 ++++++++++++---
->   drivers/pci/host/pcie-designware.h |  1 +
->   2 files changed, 13 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 538bbf3..ae1e6c5 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -194,6 +194,13 @@ void dw_pcie_msi_init(struct pcie_port *pp)
->   	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
->   }
->
-> +void dw_pcie_msi_cfg_restore(struct pcie_port *pp)
-> +{
-> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
-> +			virt_to_phys((void *)pp->msi_data));
-> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
-> +}
-Richard,
+On Tue, 2014-10-21 at 15:06 -0600, Alex Williamson wrote:
+> Hi Andreas,
+> 
+> On Fri, 2014-10-17 at 03:04 +0200, Andreas Hartmann wrote:
+> > Hello Alex,
+> > 
+> > Alex Williamson wrote:
+> > > Hi Andreas,
+> > [...]
+> > > Sorry for the breakage.  Is it possible to run lspci on the device in a
+> > > loop from the host and capture whether we're failing to restore some of
+> > > the VC bits to their previous state? 
+> > 
+> > > Does the problem also occur if you
+> > > unbind from host driver,
+> > 
+> > The machine is booted w/ blacklisted ath9k. Then, the device is bound to
+> > vfio:
+> > 
+> > echo "168c 0030" > /sys/bus/pci/drivers/vfio-pci/new_id
+> > echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+> > echo 0000:03:00.0 > /sys/bus/pci/drivers/vfio-pci/bind
+> > 
+> > afterwards the VM is started -> hang.
+> > 
+> > W/o starting th VM, I can bind it to vfio and unbind it from vfio w/o
+> > any problem.
+> > 
+> > > echo 1 > reset in pci-sysfs,
+> > 
+> > echo 1 > /sys/bus/pci/devices/0000:03:00.0 works w/o any problem while
+> > bound to vfio. Even after unbinding from vfio and rebinding to vfio
+> > again ... .
+> > 
+> > > and re-bind to the
+> > 
+> > Do you mean loading ath9k in host system after unbinding from vfio? If
+> > yes: Works w/o any problem. It's even possible to reset it or do a
+> > ifconfig wlan0 up, ifconfig wlan0 down, rmmod ath9k, bind it to vfio
+> > again and reset it, ....
+> > 
+> > Looks like the hang only is triggered by qemu-system_x86_64 on startup
+> > the VM.
 
-dw_msi_setup_irq() has the following code for setting msi_addr
+Also, this might be because QEMU since 1.7 will favor doing a bus reset
+for a device over PM reset while the sysfs reset interface will only do
+a bus reset if there are no other methods available and there are no
+other devices on the bus.  Can you reproduce the hang using the sysfs
+reset interface without QEMU if you modify the kernel like this:
 
-	if (pp->ops->get_msi_addr)
-		msg.address_lo = pp->ops->get_msi_addr(pp);
-	else
-		msg.address_lo = virt_to_phys((void *)pp->msi_data);
-
-You need to do similar thing in dw_pcie_msi_cfg_restore() so that
-it works across old (Keystone) and newer designware h/w
-
-Murali
-> +
->   static int find_valid_pos0(struct pcie_port *pp, int msgvec, int pos, int *pos0)
->   {
->   	int flag = 1;
-> @@ -570,9 +577,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->
->   	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
->
-> -	/* program correct class for RC */
-> -	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
-> -
->   	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4,&val);
->   	val |= PORT_LOGIC_SPEED_CHANGE;
->   	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
-> @@ -917,6 +921,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->   	val = memlimit | membase;
->   	dw_pcie_writel_rc(pp, val, PCI_MEMORY_BASE);
->
-> +	/* program correct class for RC */
-> +	dw_pcie_readl_rc(pp, PCI_CLASS_REVISION,&val);
-> +	val |= PCI_CLASS_BRIDGE_PCI<<  16;
-> +	dw_pcie_writel_rc(pp, val, PCI_CLASS_REVISION);
-> +
->   	/* setup command register */
->   	dw_pcie_readl_rc(pp, PCI_COMMAND,&val);
->   	val&= 0xffff0000;
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index a476e60..bb75715 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -83,6 +83,7 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
->   int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
->   irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
->   void dw_pcie_msi_init(struct pcie_port *pp);
-> +void dw_pcie_msi_cfg_restore(struct pcie_port *pp);
->   int dw_pcie_link_up(struct pcie_port *pp);
->   void dw_pcie_setup_rc(struct pcie_port *pp);
->   int dw_pcie_host_init(struct pcie_port *pp);
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3308,15 +3308,15 @@ static int __pci_dev_reset(struct pci_dev *dev, int prob
+        if (rc != -ENOTTY)
+                goto done;
+ 
+-       rc = pci_pm_reset(dev, probe);
++       rc = pci_dev_reset_slot_function(dev, probe);
+        if (rc != -ENOTTY)
+                goto done;
+ 
+-       rc = pci_dev_reset_slot_function(dev, probe);
++       rc = pci_parent_bus_reset(dev, probe);
+        if (rc != -ENOTTY)
+                goto done;
+ 
+-       rc = pci_parent_bus_reset(dev, probe);
++       rc = pci_pm_reset(dev, probe);
+ done:
+        return rc;
+ }
 
 
--- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+
+> > > host?  I'll also try to reproduce on my 990fx system, but I won't be
+> > > able to do that until next week due to travel.  Thanks,
+> 
+> Could you send me the lspci -vvvxxxx for the device and parent root
+> port?  Thanks,
+> 
+> Alex
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
