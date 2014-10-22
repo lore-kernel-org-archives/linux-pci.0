@@ -1,95 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f178.google.com ([209.85.216.178]:60892 "EHLO
-	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753916AbaJ1SNZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Oct 2014 14:13:25 -0400
-Received: by mail-qc0-f178.google.com with SMTP id b13so1106574qcw.23
-        for <linux-pci@vger.kernel.org>; Tue, 28 Oct 2014 11:13:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1414387308-27148-2-git-send-email-jiang.liu@linux.intel.com>
-References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com> <1414387308-27148-2-git-send-email-jiang.liu@linux.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 28 Oct 2014 12:13:01 -0600
-Message-ID: <CAErSpo5Dh8rx42HkS3cPoJ1=oQq2qsFAut5LK83obbghy+OsFA@mail.gmail.com>
-Subject: Re: [Patch v7 01/18] ACPI, irq: fix regression casued by 6b9fb7082409
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Received: from mail-by2on0104.outbound.protection.outlook.com ([207.46.100.104]:61381
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751082AbaJVCe2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 21 Oct 2014 22:34:28 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <richard.zhu@freescale.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"Zhang, Rui" <rui.zhang@intel.com>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Shengchao Guo <Shawn.Guo@freescale.com>,
+	"festevam@gmail.com" <festevam@gmail.com>,
+	"tharvey@gateworks.com" <tharvey@gateworks.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>
+Subject: RE: [PATCH v8]PCI: imx6: enable pcie on imx6sx sdb and imx6qdl
+ sabreauto.
+Date: Wed, 22 Oct 2014 02:34:25 +0000
+Message-ID: <470caee511cb48188d6a53c8308ce79f@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
+ <1413879507.2751.1.camel@pengutronix.de>
+ <66d89550a8de45f89b50c1862a35394f@DM2PR0301MB0862.namprd03.prod.outlook.com>
+ <CAErSpo5ZkyPNY6SBxu6pZBEpDSW_V5H6g3=EX3dme3W0ehbG8A@mail.gmail.com>
+In-Reply-To: <CAErSpo5ZkyPNY6SBxu6pZBEpDSW_V5H6g3=EX3dme3W0ehbG8A@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The subject should describe the change you're making.  "Fix regression
-caused by xxx" doesn't say anything about what the patch does.
-
-On Sun, Oct 26, 2014 at 11:21 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> When IOAPIC is disabled, acpi_gsi_to_irq() should return gsi directly
-> instead of calling mp_map_gsi_to_irq() to translate gsi to IRQ by IOAPIC.
-
-I don't know what the convention is or if there even is one, but "GSI"
-is even more of an acronym than "IRQ", so I'd capitalize it.
-
-> It fixes https://bugzilla.kernel.org/show_bug.cgi?id=84381.
-
-A line like the following may be useful to those who have to backport this.
-
-Fixes: 6b9fb7082409 ("x86, ACPI, irq: Consolidate algorithm of mapping
-(ioapic, pin) to IRQ number")
-
-> Reported-by: Thomas Richter <thor@math.tu-berlin.de>
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> Cc: rui.zhang@intel.com
-> Cc: <stable@vger.kernel.org> # 3.17
-> ---
->  arch/x86/kernel/acpi/boot.c |   13 +++++++++----
->  1 file changed, 9 insertions(+), 4 deletions(-)
->
-> diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-> index b436fc735aa4..eceba9d9e116 100644
-> --- a/arch/x86/kernel/acpi/boot.c
-> +++ b/arch/x86/kernel/acpi/boot.c
-> @@ -604,14 +604,19 @@ void __init acpi_pic_sci_set_trigger(unsigned int irq, u16 trigger)
->
->  int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
->  {
-> -       int irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
-> +       int irq;
->
-> -       if (irq >= 0) {
-> +       if (acpi_irq_model == ACPI_IRQ_MODEL_PIC) {
-> +               *irqp = gsi;
-> +       } else {
-> +               irq = mp_map_gsi_to_irq(gsi,
-> +                                       IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
-> +               if (irq < 0)
-> +                       return -1;
->                 *irqp = irq;
-> -               return 0;
->         }
->
-> -       return -1;
-> +       return 0;
->  }
->  EXPORT_SYMBOL_GPL(acpi_gsi_to_irq);
->
-> --
-> 1.7.10.4
->
+SGkgQmpvcm46DQoNClRoZSBuYW1lIEhvbmctWGluZy5aaHUgd291bGQgYmUgZGlzY2FyZGVkLiBS
+ZXF1ZXN0IGhhZCBiZWVuIGlzc3VlIHRvIElUIHRlYW0sDQogYnV0IHRpbWUgaXMgcmVxdWlyZWQg
+Zm9yIElUIHRvIG1ha2UgaXQgZWZmZWN0aXZlIGluIGFib3V0IDQ4aG91cnMgYmVoaW5kLg0KU29y
+cnkgdG8gYnJpbmcgYW55IGluY29udmVuaWVuY2VzIGJ5IHRoZSBkaWZmZXJlbnQgbmFtZXMuDQoN
+CkJlc3QgUmVnYXJkcw0KUmljaGFyZCBaaHUNCg0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0t
+LS0tDQo+IEZyb206IEJqb3JuIEhlbGdhYXMgW21haWx0bzpiaGVsZ2Fhc0Bnb29nbGUuY29tXQ0K
+PiBTZW50OiBUdWVzZGF5LCBPY3RvYmVyIDIxLCAyMDE0IDExOjM4IFBNDQo+IFRvOiBaaHUgUmlj
+aGFyZC1SNjUwMzcNCj4gQ2M6IEx1Y2FzIFN0YWNoOyBSaWNoYXJkIFpodTsgbGludXgtcGNpQHZn
+ZXIua2VybmVsLm9yZzsgR3VvIFNoYXduLVI2NTA3MzsNCj4gZmVzdGV2YW1AZ21haWwuY29tOyB0
+aGFydmV5QGdhdGV3b3Jrcy5jb207IG0ta2FyaWNoZXJpMkB0aS5jb20NCj4gU3ViamVjdDogUmU6
+IFtQQVRDSCB2OF1QQ0k6IGlteDY6IGVuYWJsZSBwY2llIG9uIGlteDZzeCBzZGIgYW5kIGlteDZx
+ZGwNCj4gc2FicmVhdXRvLg0KPiANCj4gT24gVHVlLCBPY3QgMjEsIDIwMTQgYXQgMzo1NCBBTSwg
+SG9uZy1YaW5nLlpodUBmcmVlc2NhbGUuY29tIDxIb25nLQ0KPiBYaW5nLlpodUBmcmVlc2NhbGUu
+Y29tPiB3cm90ZToNCj4gPiAuLi4NCj4gPiBSaWNoYXJkIFpodQ0KPiANCj4gQ2FuIHlvdSBwbGVh
+c2Ugc3RyYWlnaHRlbiBvdXQgdGhpcyBIb25nLVhpbmcuWmh1IHZzLiBSaWNoYXJkIFpodSB0aGlu
+Zz8gIEl0IGlzDQo+IHJlYWxseSBhIGhhc3NsZSB0byBkZWFsIHdpdGggbXVsdGlwbGUgbmFtZXMg
+Zm9yIG9uZSBwZXJzb24uDQo+IA0KPiBCam9ybg0K
