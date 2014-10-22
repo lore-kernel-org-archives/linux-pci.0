@@ -1,69 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:58430 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751549AbaJPKjH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Oct 2014 06:39:07 -0400
-Message-ID: <1413455945.2165.8.camel@antimon.intern.lynxeye.de>
-Subject: Re: [PATCH v6 02/13] PCI: designware: Set func type of host init to
- int
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Richard Zhu <richard.zhu@freescale.com>
-Cc: linux-pci@vger.kernel.org, shawn.guo@freescale.com,
-	festevam@gmail.com, tharvey@gateworks.com
-Date: Thu, 16 Oct 2014 12:39:05 +0200
-In-Reply-To: <1413445963-24706-3-git-send-email-richard.zhu@freescale.com>
-References: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
-	 <1413445963-24706-3-git-send-email-richard.zhu@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qg0-f51.google.com ([209.85.192.51]:54664 "EHLO
+	mail-qg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751031AbaJVRYr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Oct 2014 13:24:47 -0400
+Received: by mail-qg0-f51.google.com with SMTP id z107so2865862qgd.24
+        for <linux-pci@vger.kernel.org>; Wed, 22 Oct 2014 10:24:45 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <5447E12F.2030905@gmail.com>
+References: <1412925191-27970-1-git-send-email-zhen-hual@hp.com>
+ <543CEE32.50109@hp.com> <543E2CD5.60708@jp.fujitsu.com> <CAErSpo4isVMeBipp3TngVtZ2CmeQva-6RSHgS8O4C9M+p1ua=Q@mail.gmail.com>
+ <5447E12F.2030905@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 22 Oct 2014 11:24:23 -0600
+Message-ID: <CAErSpo4JhOyT=HX95uMeghAtnQC1UJQ+NkSbAoRk_2zFrh3vVA@mail.gmail.com>
+Subject: Re: [PATCH 1/1] pci: fix dmar fault for kdump kernel
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Takao Indoh <indou.takao@jp.fujitsu.com>,
+	"Li, Zhen-Hua" <zhen-hual@hp.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linda.knippers@hp.com, jerry.hoemann@hp.com, lisa.mitchell@hp.com,
+	rwright@hp.com, Joerg Roedel <joro@8bytes.org>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	Tom Vaden <tom.vaden@hp.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Donnerstag, den 16.10.2014, 15:52 +0800 schrieb Richard Zhu:
-> host init maybe failed, change the func type of host_init
-> defined in struct pci_host_ops from void to int.
-> 
-> Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
+On Wed, Oct 22, 2014 at 10:54 AM, Alexander Duyck
+<alexander.duyck@gmail.com> wrote:
+> On 10/21/2014 07:47 PM, Bjorn Helgaas wrote:
+>> [+cc Joerg, Eric, Tom, David, iommu list]
+>>
+>> On Wed, Oct 15, 2014 at 2:14 AM, Takao Indoh <indou.takao@jp.fujitsu.com> wrote:
+>>> (2014/10/14 18:34), Li, ZhenHua wrote:
+>>>> I tested on the latest stable version 3.17, it works well.
+>>>>
+>>>> On 10/10/2014 03:13 PM, Li, Zhen-Hua wrote:
 
-NAK. You are breaking compilation within the series here. If you are
-going to change the prototype the dependant changes need to be in the
-same patch. So squash in at least patch 3-5 plus the imx6 change.
+>>>>> To fix this DMAR fault, we need to reset the bus that this device on. Reset
+>>>>> the device itself does not work.
+>> You have not explained why the DMAR faults are a problem.  The fault
+>> is just an indication that the IOMMU prevented a DMA from completing.
+>> If the DMA is an artifact of the crashed kernel, we probably don't
+>> *want* it to complete, so taking a DMAR fault seems like exactly the
+>> right thing.
+>>
+>> If the problem is that we're being flooded with messages, it's easy
+>> enough to just tone down the printks.
+>
+> As I recall what we have seen in the past with the network controllers
+> is that they get stuck in a state where they can no longer perform any
+> DMA due to the fact that some of the transactions have returned errors
+> from the IOMMU being reset.  The only way out is to perform a PCIe reset
+> on the part after the IOMMU has been enabled which doesn't occur
+> automatically unless AER or EEH is enabled in the system.
 
-> ---
->  drivers/pci/host/pcie-designware.c | 7 +++++--
->  drivers/pci/host/pcie-designware.h | 2 +-
->  2 files changed, 6 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index b1f82ff..1a2b477 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -578,8 +578,11 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  		}
->  	}
->  
-> -	if (pp->ops->host_init)
-> -		pp->ops->host_init(pp);
-> +	if (pp->ops->host_init) {
-> +		ret = pp->ops->host_init(pp);
-> +		if (ret < 0)
-> +			return ret;
-> +	}
->  
->  	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
->  
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index b0bfed0..57ab11d 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -72,7 +72,7 @@ struct pcie_host_ops {
->  	int (*wr_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
->  			unsigned int devfn, int where, int size, u32 val);
->  	int (*link_up)(struct pcie_port *pp);
-> -	void (*host_init)(struct pcie_port *pp);
-> +	int (*host_init)(struct pcie_port *pp);
->  	void (*msi_set_irq)(struct pcie_port *pp, int irq);
->  	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
->  	u32 (*get_msi_data)(struct pcie_port *pp);
+OK, now we're talking about a real issue, the sort of thing that
+should be in the changelog for a change like this.
 
+I'm uneasy about the strategy of "it hurts when an IOMMU fault occurs,
+therefore we need to avoid all IOMMU faults."  Isn't the whole *point*
+of an IOMMU to generate faults?  It seems like we need to be able to
+handle faults gracefully.
 
+If having AER or EEH enabled in the kdump kernel is part of what's
+required to recover, I don't see a problem with requiring that.
+
+Don't we have to be able to recover from IOMMU faults for the device
+pass-through case anyway?  If a NIC is passed through to a malicious
+guest, I assume the guest can cause IOMMU faults.  I assume we handle
+this today by resetting the NIC when the guest exits.
+
+> One thought would be to take a look at the IOMMU reset code.  Is there
+> any way to go through and make sure that all of the PCI devices that
+> make use of the IOMMU have the bus mastering disabled prior to the IOMMU
+> being reset?  For example could we suspend all of the parts in order to
+> force them to hold off any transactions, and then resume them after the
+> IOMMU has been reset?  If we could do at least that much that would
+> prevent the errors and should allow for a graceful reset.
+>
+> Thanks,
+>
+> Alex
+>
+>
