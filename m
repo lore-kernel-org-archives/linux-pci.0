@@ -1,114 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v4 15/20] usb: dwc3: add disable usb3 suspend phy quirk
-Date: Thu, 30 Oct 2014 18:08:40 +0800
-Message-ID: <1414663725-2195-16-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
-References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:53053 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932743AbaJVXJj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Oct 2014 19:09:39 -0400
+Received: by mail-ig0-f177.google.com with SMTP id a13so403668igq.10
+        for <linux-pci@vger.kernel.org>; Wed, 22 Oct 2014 16:09:39 -0700 (PDT)
+Date: Wed, 22 Oct 2014 17:09:36 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Vidya Sagar <vidyas@nvidia.com>
+Cc: thierry.reding@gmail.com, swarren@wwwdotorg.org, kthota@nvidia.com,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4] PCI: tegra: add PM-ops support
+Message-ID: <20141022230936.GB4795@google.com>
+References: <1413193803-21718-1-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1413193803-21718-1-git-send-email-vidyas@nvidia.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds disable usb3 suspend phy quirk, and some special platforms
-can configure that if it is needed.
+On Mon, Oct 13, 2014 at 03:20:03PM +0530, Vidya Sagar wrote:
+> adds support for suspend_noirq and resume_noirq hooks
+> of PM framework. Enables powergating of PCIe partition during
+> suspend.
+> It also separates allocation part from
+> tegra_pcie_enable_msi() to make a new API tegra_pcie_alloc_msi()
+> to avoid passing extra param in the original API
 
-Signed-off-by: Huang Rui <ray.huang@amd.com>
----
- Documentation/devicetree/bindings/usb/dwc3.txt | 1 +
- drivers/usb/dwc3/core.c                        | 7 +++++++
- drivers/usb/dwc3/core.h                        | 2 ++
- drivers/usb/dwc3/platform_data.h               | 1 +
- 4 files changed, 11 insertions(+)
+This sounds like it should be two separate patches (a changelog that says
+"It also ..." is a good clue).
 
-diff --git a/Documentation/devicetree/bindings/usb/dwc3.txt b/Documentation/devicetree/bindings/usb/dwc3.txt
-index a9e54ae..3720fca 100644
---- a/Documentation/devicetree/bindings/usb/dwc3.txt
-+++ b/Documentation/devicetree/bindings/usb/dwc3.txt
-@@ -32,6 +32,7 @@ Optional properties:
-  - snps,tx_de_emphasis_quirk: when set core will set Tx de-emphasis value.
-  - snps,tx_de_emphasis: the value driven to the PHY is controlled by the
- 			LTSSM during USB3 Compliance mode.
-+ - snps,dis_u3_susphy_quirk: when set core will disable USB3 suspend phy.
- 
- This is usually a subnode to DWC3 glue to which it is connected.
- 
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index b55fa5b..fdc715a 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -404,6 +404,10 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
- 	if (dwc->tx_de_emphasis_quirk)
- 		reg |= DWC3_GUSB3PIPECTL_TX_DEEPH(dwc->tx_de_emphasis);
- 
-+	/* FIXME will move FPGA flag when AMD NL taps out */
-+	if (dwc->dis_u3_susphy_quirk && dwc->is_fpga)
-+		reg &= ~DWC3_GUSB3PIPECTL_SUSPHY;
-+
- 	dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
- 
- 	mdelay(100);
-@@ -809,6 +813,8 @@ static int dwc3_probe(struct platform_device *pdev)
- 				"snps,lfps_filter_quirk");
- 		dwc->rx_detect_poll_quirk = of_property_read_bool(node,
- 				"snps,rx_detect_poll_quirk");
-+		dwc->dis_u3_susphy_quirk = of_property_read_bool(node,
-+				"snps,dis_u3_susphy_quirk");
- 
- 		dwc->tx_de_emphasis_quirk = of_property_read_bool(node,
- 				"snps,tx_de_emphasis_quirk");
-@@ -831,6 +837,7 @@ static int dwc3_probe(struct platform_device *pdev)
- 		dwc->del_phy_power_chg_quirk = pdata->del_phy_power_chg_quirk;
- 		dwc->lfps_filter_quirk = pdata->lfps_filter_quirk;
- 		dwc->rx_detect_poll_quirk = pdata->rx_detect_poll_quirk;
-+		dwc->dis_u3_susphy_quirk = pdata->dis_u3_susphy_quirk;
- 
- 		dwc->tx_de_emphasis_quirk = pdata->tx_de_emphasis_quirk;
- 		if (pdata->tx_de_emphasis)
-diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-index 469ee13..be793f7 100644
---- a/drivers/usb/dwc3/core.h
-+++ b/drivers/usb/dwc3/core.h
-@@ -697,6 +697,7 @@ struct dwc3_scratchpad_array {
-  * @del_phy_power_chg_quirk: set if we enable delay phy power change quirk
-  * @lfps_filter_quirk: set if we enable LFPS filter quirk
-  * @rx_detect_poll_quirk: set if we enable rx_detect to polling LFPS quirk
-+ * @dis_u3_susphy_quirk: set if we disable usb3 suspend phy
-  * @tx_de_emphasis_quirk: set if we enable Tx de-emphasis quirk
-  * @tx_de_emphasis: Tx de-emphasis value
-  * 	0       - -6dB de-emphasis
-@@ -818,6 +819,7 @@ struct dwc3 {
- 	unsigned		del_phy_power_chg_quirk:1;
- 	unsigned		lfps_filter_quirk:1;
- 	unsigned		rx_detect_poll_quirk:1;
-+	unsigned		dis_u3_susphy_quirk:1;
- 
- 	unsigned		tx_de_emphasis_quirk:1;
- 	unsigned		tx_de_emphasis:2;
-diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
-index e1ab900..0f1d5ad 100644
---- a/drivers/usb/dwc3/platform_data.h
-+++ b/drivers/usb/dwc3/platform_data.h
-@@ -36,6 +36,7 @@ struct dwc3_platform_data {
- 	unsigned del_phy_power_chg_quirk:1;
- 	unsigned lfps_filter_quirk:1;
- 	unsigned rx_detect_poll_quirk:1;
-+	unsigned dis_u3_susphy_quirk:1;
- 
- 	unsigned tx_de_emphasis_quirk:1;
- 	unsigned tx_de_emphasis:2;
--- 
-1.9.1
+Maybe even three patches -- the additions in tegra_pcie_power_off() look
+like they are separable from the dev_pm_ops addition, because
+tegra_pcie_power_off() is already present and used even before you add
+dev_pm_ops.
 
+Generally, my advice is that if you *can* separate it, you should do so.
+It's very easy to squash things back together, and separating things makes
+errors more obvious and bisection more useful.
+
+> -static int tegra_pcie_enable(struct tegra_pcie *pcie)
+> +static int tegra_pcie_check_ports(struct tegra_pcie *pcie)
+
+"check_ports" is a not really a very good function name because it doesn't
+give any clues about what we're checking or what return value to expect.
+
+Bjorn
