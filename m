@@ -1,188 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:27125 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752406AbaJ0FVH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 27 Oct 2014 01:21:07 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch v7 12/18] x86, irq: Keep balance of IOAPIC pin reference count
-Date: Mon, 27 Oct 2014 13:21:42 +0800
-Message-Id: <1414387308-27148-13-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from service87.mimecast.com ([91.220.42.44]:59991 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754887AbaJVP7T convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Oct 2014 11:59:19 -0400
+Date: Wed, 22 Oct 2014 16:59:14 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>
+Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
+Message-ID: <20141022155914.GB25939@e102568-lin.cambridge.arm.com>
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <2430078.s4snyh5OoF@wuerfel>
+ <20141001084626.GZ841@e106497-lin.cambridge.arm.com>
+ <3256560.C0cZnIlnAv@wuerfel>
+MIME-Version: 1.0
+In-Reply-To: <3256560.C0cZnIlnAv@wuerfel>
+Content-Type: text/plain; charset=WINDOWS-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To keep balance of IOAPIC pin reference count, we need to protect
-pirq_enable_irq(), acpi_pci_irq_enable() and intel_mid_pci_irq_enable()
-from reentrance. There are two cases which will cause reentrance.
+On Wed, Oct 01, 2014 at 10:38:45AM +0100, Arnd Bergmann wrote:
 
-The first case is caused by suspend/hibernation. If pcibios_disable_irq
-is called during suspending/hibernating, we don't release the assigned
-IRQ number, otherwise it may break the suspend/hibernation. So late when
-pcibios_enable_irq is called during resume, we shouldn't allocate IRQ
-number again.
+[...]
 
-The second case is that function acpi_pci_irq_enable() may be called
-twice for PCI devices present at boot time as below:
-1) pci_acpi_init()
-	--> acpi_pci_irq_enable() if pci_routeirq is true
-2) pci_enable_device()
-	--> pcibios_enable_device()
-		--> acpi_pci_irq_enable()
-We can't kill kernel parameter pci_routeirq yet because it's still
-needed for debugging purpose.
+> The arm32 implementations of pci_domain_nr/pci_proc_domain can probably be
+> removed if we change the arm32 pcibios_init_hw function to call the new
+> interfaces that set the domain number.
 
-So flag irq_managed is introduced to track whether IRQ number is
-assigned by OS and to protect pirq_enable_irq(), acpi_pci_irq_enable()
-and intel_mid_pci_irq_enable() from reentrance.
+I wished, but it is a bit more complicated than I thought unfortunately,
+mostly because some drivers, eg cns3xxx set the domain numbers
+statically in pci_sys_data and this sets a chain of dependency that is
+not easy to untangle. I think cns3xxx is the only legacy driver that "uses"
+the domain number (in pci_sys_data) in a way that clashes with the
+generic domain_nr implementation, I need to give it more thought.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/pci/intel_mid_pci.c |   10 +++++++++-
- arch/x86/pci/irq.c           |    7 ++++++-
- drivers/acpi/pci_irq.c       |   11 +++++++++--
- include/linux/pci.h          |    1 +
- 4 files changed, 25 insertions(+), 4 deletions(-)
+> pci_mmap_page_range could either get generalized some more in an attempt
+> to have a __weak default implementation that works on ARM, or it could
+> be changed to lose the dependency on pci_sys_data instead. In either
+> case, the change would involve using the generic pci_host_bridge_window
+> list.
 
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index b9958c364075..44b9271580b5 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -210,6 +210,9 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- {
- 	int polarity;
- 
-+	if (dev->irq_managed && dev->irq > 0)
-+		return 0;
-+
- 	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
- 		polarity = 0; /* active high */
- 	else
-@@ -224,13 +227,18 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 	if (mp_map_gsi_to_irq(dev->irq, IOAPIC_MAP_ALLOC) < 0)
- 		return -EBUSY;
- 
-+	dev->irq_managed = 1;
-+
- 	return 0;
- }
- 
- static void intel_mid_pci_irq_disable(struct pci_dev *dev)
- {
--	if (!mp_should_keep_irq(&dev->dev) && dev->irq > 0)
-+	if (!mp_should_keep_irq(&dev->dev) && dev->irq_managed &&
-+	    dev->irq > 0) {
- 		mp_unmap_irq(dev->irq);
-+		dev->irq_managed = 0;
-+	}
- }
- 
- struct pci_ops intel_mid_pci_ops = {
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index eb500c2592ad..a47e2dea0972 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -1202,6 +1202,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 			int irq;
- 			struct io_apic_irq_attr irq_attr;
- 
-+			if (dev->irq_managed && dev->irq > 0)
-+				return 0;
-+
- 			irq = IO_APIC_get_PCI_irq_vector(dev->bus->number,
- 						PCI_SLOT(dev->devfn),
- 						pin - 1, &irq_attr);
-@@ -1228,6 +1231,7 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 			}
- 			dev = temp_dev;
- 			if (irq >= 0) {
-+				dev->irq_managed = 1;
- 				dev->irq = irq;
- 				dev_info(&dev->dev, "PCI->APIC IRQ transform: "
- 					 "INT %c -> IRQ %d\n", 'A' + pin - 1, irq);
-@@ -1257,8 +1261,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
- static void pirq_disable_irq(struct pci_dev *dev)
- {
- 	if (io_apic_assign_pci_irqs && !mp_should_keep_irq(&dev->dev) &&
--	    dev->irq) {
-+	    dev->irq_managed && dev->irq) {
- 		mp_unmap_irq(dev->irq);
- 		dev->irq = 0;
-+		dev->irq_managed = 0;
- 	}
- }
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index 6e6b80eb0bba..5f1fdca65e5f 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -413,6 +413,9 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
- 		return 0;
- 	}
- 
-+	if (dev->irq_managed && dev->irq > 0)
-+		return 0;
-+
- 	entry = acpi_pci_irq_lookup(dev, pin);
- 	if (!entry) {
- 		/*
-@@ -456,6 +459,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
- 		return rc;
- 	}
- 	dev->irq = rc;
-+	dev->irq_managed = 1;
- 
- 	if (link)
- 		snprintf(link_desc, sizeof(link_desc), " -> Link[%s]", link);
-@@ -478,7 +482,7 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	u8 pin;
- 
- 	pin = dev->pin;
--	if (!pin)
-+	if (!pin || !dev->irq_managed || dev->irq <= 0)
- 		return;
- 
- 	/* Keep IOAPIC pin configuration when suspending */
-@@ -506,6 +510,9 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	 */
- 
- 	dev_dbg(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
--	if (gsi >= 0 && dev->irq > 0)
-+	if (gsi >= 0) {
- 		acpi_unregister_gsi(gsi);
-+		dev->irq = 0;
-+		dev->irq_managed = 0;
-+	}
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5be8db45e368..2a8c4055ae9d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -348,6 +348,7 @@ struct pci_dev {
- 	unsigned int	__aer_firmware_first:1;
- 	unsigned int	broken_intx_masking:1;
- 	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
-+	unsigned int	irq_managed:1;
- 	pci_dev_flags_t dev_flags;
- 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
- 
--- 
-1.7.10.4
+I need to repost my series, but I *think* we can consider the dependency on
+pci_sys_data gone in pci_mmap_page_range().
+
+> pcibios_align_resource should probably be per host, and we could move
+> that into a pointer in pci_host_bridge, something like this:
+
+Yes, and that's likely to be true for add_bus too. I wonder what's the
+best course of action. Putting together all the bits and pieces required
+to remove PCI bios dependency from this patch can take a while, I wonder
+whether we should aim for merging this driver (rebased on top of my port to the
+new parse ranges API) with the ARM/ARM64 ifdeffery and clean it up later
+or aim for the whole thing at once, I am just worried it can take us a while.
+
+Lorenzo
+
+> 
+> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+> index b7c3a5ea1fca..d9cb6c916d54 100644
+> --- a/drivers/pci/setup-res.c
+> +++ b/drivers/pci/setup-res.c
+> @@ -200,11 +200,15 @@ static int pci_revert_fw_address(struct resource *res, struct pci_dev *dev,
+>  static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+>  		int resno, resource_size_t size, resource_size_t align)
+>  {
+> +	struct pci_host_bridge *host = find_pci_host_bridge(bus);
+> +	resource_size_t (*alignf)(void *, const struct resource *,
+> +				  resource_size_t, resource_size_t),
+>  	struct resource *res = dev->resource + resno;
+>  	resource_size_t min;
+>  	int ret;
+>  
+>  	min = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : PCIBIOS_MIN_MEM;
+> +	alignf = host->align_resource ?: pcibios_align_resource;
+>  
+>  	/*
+>  	 * First, try exact prefetching match.  Even if a 64-bit
+> @@ -215,7 +219,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+>  	 */
+>  	ret = pci_bus_alloc_resource(bus, res, size, align, min,
+>  				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
+> -				     pcibios_align_resource, dev);
+> +				     alignf, dev);
+>  	if (ret == 0)
+>  		return 0;
+>  
+> @@ -227,7 +231,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+>  	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
+>  		ret = pci_bus_alloc_resource(bus, res, size, align, min,
+>  					     IORESOURCE_PREFETCH,
+> -					     pcibios_align_resource, dev);
+> +					     alignf, dev);
+>  		if (ret == 0)
+>  			return 0;
+>  	}
+> @@ -240,7 +244,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+>  	 */
+>  	if (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))
+>  		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
+> -					     pcibios_align_resource, dev);
+> +					     alignf, dev);
+>  
+>  	return ret;
+>  }
+> 
+> 
+> If we decide constantly calling find_pci_host_bridge() is too expensive, we can
+> be more clever about it.
+> 
+> 	Arnd
+> 
+> 
 
