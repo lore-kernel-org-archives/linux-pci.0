@@ -1,162 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:45440 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751610AbaJHQoh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Oct 2014 12:44:37 -0400
-Date: Wed, 8 Oct 2014 17:44:32 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Robert Richter <robert.richter@caviumnetworks.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Robert Richter <rric@kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
+Received: from mout.kundenserver.de ([212.227.17.10]:50447 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932200AbaJVUxL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Oct 2014 16:53:11 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
 	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
 	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Sunil Goutham <sgoutham@cavium.com>
-Subject: Re: [PATCH 3/6] pci, thunder: Add PCIe host controller devicetree
- bindings
-Message-ID: <20141008164432.GC15382@e106497-lin.cambridge.arm.com>
-References: <1411573068-12952-1-git-send-email-rric@kernel.org>
- <1411573068-12952-4-git-send-email-rric@kernel.org>
- <3082935.e3X4GsVUDn@wuerfel>
- <20141007142744.GE31556@rric.localhost>
- <20141007150149.GW4652@e106497-lin.cambridge.arm.com>
- <20141008084927.GH31556@rric.localhost>
+	Will Deacon <Will.Deacon@arm.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>
+Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
+Date: Wed, 22 Oct 2014 22:52:19 +0200
+Message-ID: <2148776.X8NPqiYA6S@wuerfel>
+In-Reply-To: <20141022155914.GB25939@e102568-lin.cambridge.arm.com>
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com> <3256560.C0cZnIlnAv@wuerfel> <20141022155914.GB25939@e102568-lin.cambridge.arm.com>
 MIME-Version: 1.0
-In-Reply-To: <20141008084927.GH31556@rric.localhost>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 08, 2014 at 09:49:27AM +0100, Robert Richter wrote:
-> On 07.10.14 16:01:49, Liviu Dudau wrote:
-> > On Tue, Oct 07, 2014 at 03:27:44PM +0100, Robert Richter wrote:
-> > > On 24.09.14 18:06:04, Arnd Bergmann wrote:
-> > > > > +               compatible = "cavium,thunder-pcie";
-> > > > > +               device_type = "pci";
-> > > > > +               msi-parent = <&its>;
-> > > > > +               bus-range = <0 255>;
-> > > > > +               #size-cells = <2>;
-> > > > > +               #address-cells = <3>;
-> > > > > +               reg = <0x8480 0x00000000 0 0x10000000>;  /* Configuration space */
-> > > > > +               ranges = <0x03000000 0x8010 0x00000000 0x8010 0x00000000 0x70 0x00000000>, /* mem ranges */
-> > > > > +                       <0x03000000 0x8300 0x00000000 0x8300 0x00000000 0x80 0x00000000>,
-> > > > > +                       <0x03000000 0x87e0 0x00000000 0x87e0 0x00000000 0x01 0x00000000>;
-> > > > > +        };
-> > > > 
-> > > > If you claim the entire 0-255 bus range, I think you should also
-> > > > specify a domain, otherwise it's not predictable which domain you
-> > > > get.
-> > > 
-> > > Liviu's code assigns a unique id to the domain if missing, see
-> > > of_pci_get_domain_nr(). So I don't think we need to add a "pci-domain"
-> > > property here.
-> > 
-> > Not anymore! That function is gone in v12 onwards. What is in -next has
-> > a new function called of_get_pci_domain_nr() (slight name change) but
-> > that only gets the value set in the "linux,pci-domain" property of the
-> > device node. It is the choice of the host bridge driver to use that
-> > function or to use pci_get_new_domain_nr() which *does* generate an
-> > unique id every time it gets called.
+On Wednesday 22 October 2014 16:59:14 Lorenzo Pieralisi wrote:
+> On Wed, Oct 01, 2014 at 10:38:45AM +0100, Arnd Bergmann wrote:
 > 
-> I am quite confused a bit on which is the latest code base now. I was
-> looking into Bjorn's pci/host-generic and there is a different
-> implemetation:
+> [...]
 > 
-> ----
-> /**
->  * This function will try to obtain the host bridge domain number by
->  * using of_alias_get_id() call with "pci-domain" as a stem.  If that
->  * fails, a local allocator will be used.  The local allocator can
->  * be requested to return a new domain_nr if the information is missing
->  * from the device tree.
->  *
->  * @node: device tree node with the domain information
->  * @allocate_if_missing: if DT lacks information about the domain nr,
->  * allocate a new number.
->  *
->  * Returns the associated domain number from DT, or a new domain number
->  * if DT information is missing and @allocate_if_missing is true.  If
->  * @allocate_if_missing is false then the last allocated domain number
->  * will be returned.
->  */
-> int of_pci_get_domain_nr(struct device_node *node, bool allocate_if_missing)
-> {
->         int domain;
+> > The arm32 implementations of pci_domain_nr/pci_proc_domain can probably be
+> > removed if we change the arm32 pcibios_init_hw function to call the new
+> > interfaces that set the domain number.
 > 
->         domain = atomic_read(&of_domain_nr);
->         if (domain == -1) {
->                 /* first run, get max defined domain nr in device tree */
->                 domain = of_get_max_pci_domain_nr();
->                 /* then set the start value for allocator to be max + 1 */
->                 atomic_set(&of_domain_nr, domain + 1);
->         }
->         domain = of_alias_get_id(node, "pci-domain");
->         if (domain == -ENODEV) {
->                 domain = atomic_read(&of_domain_nr);
->                 if (allocate_if_missing)
->                         atomic_inc(&of_domain_nr);
->         }
-> 
->         return domain;
-> }
-> EXPORT_SYMBOL_GPL(of_pci_get_domain_nr);
-> ----
-> 
-> This differs also from v13. Please check.
+> I wished, but it is a bit more complicated than I thought unfortunately,
+> mostly because some drivers, eg cns3xxx set the domain numbers
+> statically in pci_sys_data and this sets a chain of dependency that is
+> not easy to untangle. I think cns3xxx is the only legacy driver that "uses"
+> the domain number (in pci_sys_data) in a way that clashes with the
+> generic domain_nr implementation, I need to give it more thought.
 
-I'm not sure what you are looking at. Commit 41e5c0f81d3e does look like
-my v13. Not sure why you are still seeing this v11 version.
+Just had a look at that driver, shouldn't be too hard to change, see below.
 
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-> 
-> It would be good to have a stable code base to work with, so I would
-> prefer incremental patches on top of Bjorn's pci/host-generic.
+diff --git a/arch/arm/mach-cns3xxx/pcie.c b/arch/arm/mach-cns3xxx/pcie.c
+index 45d6bd09e6ef..aa4b9d7c52fd 100644
+--- a/arch/arm/mach-cns3xxx/pcie.c
++++ b/arch/arm/mach-cns3xxx/pcie.c
+@@ -30,18 +30,15 @@ struct cns3xxx_pcie {
+ 	unsigned int irqs[2];
+ 	struct resource res_io;
+ 	struct resource res_mem;
+-	struct hw_pci hw_pci;
+-
++	int port;
+ 	bool linked;
+ };
+ 
+-static struct cns3xxx_pcie cns3xxx_pcie[]; /* forward decl. */
+-
+ static struct cns3xxx_pcie *sysdata_to_cnspci(void *sysdata)
+ {
+ 	struct pci_sys_data *root = sysdata;
+ 
+-	return &cns3xxx_pcie[root->domain];
++	return root->private_data;
+ }
+ 
+ static struct cns3xxx_pcie *pdev_to_cnspci(const struct pci_dev *dev)
+@@ -192,13 +189,7 @@ static struct cns3xxx_pcie cns3xxx_pcie[] = {
+ 			.flags = IORESOURCE_MEM,
+ 		},
+ 		.irqs = { IRQ_CNS3XXX_PCIE0_RC, IRQ_CNS3XXX_PCIE0_DEVICE, },
+-		.hw_pci = {
+-			.domain = 0,
+-			.nr_controllers = 1,
+-			.ops = &cns3xxx_pcie_ops,
+-			.setup = cns3xxx_pci_setup,
+-			.map_irq = cns3xxx_pcie_map_irq,
+-		},
++		.port = 0,
+ 	},
+ 	[1] = {
+ 		.host_regs = (void __iomem *)CNS3XXX_PCIE1_HOST_BASE_VIRT,
+@@ -217,19 +208,13 @@ static struct cns3xxx_pcie cns3xxx_pcie[] = {
+ 			.flags = IORESOURCE_MEM,
+ 		},
+ 		.irqs = { IRQ_CNS3XXX_PCIE1_RC, IRQ_CNS3XXX_PCIE1_DEVICE, },
+-		.hw_pci = {
+-			.domain = 1,
+-			.nr_controllers = 1,
+-			.ops = &cns3xxx_pcie_ops,
+-			.setup = cns3xxx_pci_setup,
+-			.map_irq = cns3xxx_pcie_map_irq,
+-		},
++		.port = 1,
+ 	},
+ };
+ 
+ static void __init cns3xxx_pcie_check_link(struct cns3xxx_pcie *cnspci)
+ {
+-	int port = cnspci->hw_pci.domain;
++	int port = cnspci->port;
+ 	u32 reg;
+ 	unsigned long time;
+ 
+@@ -260,9 +245,10 @@ static void __init cns3xxx_pcie_check_link(struct cns3xxx_pcie *cnspci)
+ 
+ static void __init cns3xxx_pcie_hw_init(struct cns3xxx_pcie *cnspci)
+ {
+-	int port = cnspci->hw_pci.domain;
++	int port = cnspci->port;
+ 	struct pci_sys_data sd = {
+ 		.domain = port,
++		.private_data = cnspci,
+ 	};
+ 	struct pci_bus bus = {
+ 		.number = 0,
+@@ -323,6 +309,14 @@ static int cns3xxx_pcie_abort_handler(unsigned long addr, unsigned int fsr,
+ void __init cns3xxx_pcie_init_late(void)
+ {
+ 	int i;
++	void *private_data;
++	struct hw_pci hw_pci = {
++		.nr_controllers = 1,
++		.ops = &cns3xxx_pcie_ops,
++		.setup = cns3xxx_pci_setup,
++		.map_irq = cns3xxx_pcie_map_irq,
++		.private_data = &private_data,
++	};
+ 
+ 	pcibios_min_io = 0;
+ 	pcibios_min_mem = 0;
+@@ -335,7 +329,9 @@ void __init cns3xxx_pcie_init_late(void)
+ 		cns3xxx_pwr_soft_rst(0x1 << PM_SOFT_RST_REG_OFFST_PCIE(i));
+ 		cns3xxx_pcie_check_link(&cns3xxx_pcie[i]);
+ 		cns3xxx_pcie_hw_init(&cns3xxx_pcie[i]);
+-		pci_common_init(&cns3xxx_pcie[i].hw_pci);
++		hw_pci->domain = i;
++		private_data = &cns3xxx_pcie[i];
++		pci_common_init(&hw_pci);
+ 	}
+ 
+ 	pci_assign_unassigned_resources();
 
-Agreed, but from what I can see from my side pci/host-generic and next
-have the same versions, so there should not be any confusion.
-
-Best regards,
-Liviu
-
-> 
-> > > Liviu's DT implementation that assigns a unique number differs a bit
-> > > from ACPI which states: "If _SEG [aka domain number] does not exist,
-> > > OSPM assumes that all PCI bus segments are in PCI Segment Group 0."
-> > > 
-> > > Maybe of_pci_get_domain_nr() should be similar to ACPI. If there are
-> > > multiple root bridges, the "pci-domain" property could be forced
-> > > instead.
-> > 
-> > Indeed. But the enforcing is left as an exercise to the host bridge
-> > implementor for the moment.
-> 
-> Right, can be added later.
-> 
-> Thanks,
-> 
-> -Robert
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
 
