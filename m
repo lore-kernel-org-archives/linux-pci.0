@@ -1,66 +1,163 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:60398 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753951AbaJBOwJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Oct 2014 10:52:09 -0400
-Date: Thu, 2 Oct 2014 16:52:01 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, tglx@linutronix.de,
-	hpa@zytor.com, x86@kernel.org, bp@suse.de,
-	dan.carpenter@oracle.com, dougthompson@xmission.com,
-	m.chehab@samsung.com, linux-edac@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/4] edac, amd64_edac: Add F15h M60h support
-Message-ID: <20141002145201.GF16452@pd.tnic>
-References: <1411070230-10298-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
- <20141001113235.GC18271@pd.tnic>
- <542C5995.7050803@amd.com>
+Received: from mail-qg0-f50.google.com ([209.85.192.50]:54296 "EHLO
+	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754265AbaJVS0c (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Oct 2014 14:26:32 -0400
+Received: by mail-qg0-f50.google.com with SMTP id q108so2861120qgd.37
+        for <linux-pci@vger.kernel.org>; Wed, 22 Oct 2014 11:26:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <542C5995.7050803@amd.com>
+In-Reply-To: <20141022132158.GD10074@8bytes.org>
+References: <1398386198-19304-1-git-send-email-bill.sumner@hp.com>
+ <1398854973.12733.23.camel@i7.infradead.org> <20140702133258.GN26537@8bytes.org>
+ <CAErSpo69VmK5zD-ztNVHCA=KrK8zucqubY17z0K3rcpe6ReNUA@mail.gmail.com> <20141022132158.GD10074@8bytes.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 22 Oct 2014 12:26:07 -0600
+Message-ID: <CAErSpo60ziF7hG8ek322LoNATy6O=OhFn4XFBxbP5_SDRnGg8w@mail.gmail.com>
+Subject: Re: [PATCH 0/8] iommu/vt-d: Fix crash dump failure caused by legacy DMA/IO
+To: Joerg Roedel <joro@8bytes.org>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	"Hoemann, Jerry" <jerry.hoemann@hp.com>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	Baoquan He <bhe@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	doug.hatch@hp.com,
+	"ishii.hironobu@jp.fujitsu.com" <ishii.hironobu@jp.fujitsu.com>,
+	zhenhua@hp.com, Zhen-Hua <zhen-hual@hp.com>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	"Vaden, Tom L (HP Server OS Architecture)" <tom.vaden@hp.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 01, 2014 at 02:44:21PM -0500, Aravind Gopalakrishnan wrote:
-> The more I think about this, I'm finding it's hard to do this cleanly.
-> I initially thought I'd just cache this in pvt->dram_type the first time I'm
-> doing this.
-> But, the pvt->ops->dbam_to_cs() mappers get called first before
-> determine_memory_type().
-> 
-> So, If I look for dram_type in f15_m60h_dbam_to_chip_select() it's ugly as
-> that's really the point of
-> having a determine_memory_type().
-> 
-> Also, there's just a lot of if-else statements in determine_memory_type()
-> now.
-> This could benefit from having a per-family low_ops function.
-> And, we can call this early... somewhere in read_mc_regs() so that we have
-> information ready to use in
-> f15_m60h_dbam_to_chip_select() and in init_csrows() which needs dram_type
-> too.
+On Wed, Oct 22, 2014 at 7:21 AM, Joerg Roedel <joro@8bytes.org> wrote:
+> Hi Bjorn,
+>
+> On Tue, Oct 21, 2014 at 08:16:46PM -0600, Bjorn Helgaas wrote:
+>> I was looking at Zhen-Hua's recent patches, trying to figure out if I
+>> need to do anything with them.  Resetting devices in the old kernel
+>> seems like a non-starter.  Resetting devices in the new kernel, ...,
+>> well, maybe.  It seems ugly, and it seems like the sort of problem
+>> that IOMMUs are designed to solve.
+>
+> Actually resetting the devices in the kdump kernel would be one of the
+> better solutions for this problem. When we have a generic way to stop
+> all in-flight DMA from the PCI endpoints we could safely disable and
+> then re-enable the IOMMU.
+>
+>> On Wed, Jul 2, 2014 at 7:32 AM, Joerg Roedel <joro@8bytes.org> wrote:
+>> > That is a solution to prevent the in-flight DMA failures. But what
+>> > happens when there is some in-flight DMA to a disk to write some inodes
+>> > or a new superblock. Then this scratch address-space may cause
+>> > filesystem corruption at worst.
+>>
+>> This in-flight DMA is from a device programmed by the old kernel, and
+>> it would be reading data from the old kernel's buffers.  I think
+>> you're suggesting that we might want that DMA read to complete so the
+>> device can update filesystem metadata?
+>
+> Well, it is not about updating filesystem metadata. In the kdump kernel
+> we have these options:
+>
+>         1) Disable the IOMMU. Problem here is, that DMA is now
+>            untranslated, so that any in-flight DMA might read or write
+>            from a random location in memory, corrupting the kdump or
+>            even the new kexec kernel memory. So this is a non-starter.
 
-Right, this is what I was thinking too: somewhere in read_mc_regs(),
-after having collected ->dclr0, you call determine_memory_type() and
-store it into pvt->dram_type.
+Agreed (at least if the IOMMU was enabled in the crashed kernel).
 
-> Oh, btw- We can do away with a pvt->dram_ctrl as
-> f15_m60h_dbam_to_chip_select() really just needs the dram_type.
+>         2) Re-program the IOMMU to block all DMA. This is safer as it
+>            does not corrupt any data in memory. But some devices react
+>            very poorly on a master abort from the IOMMU, so bad that the
+>            driver in the kdump kernel fails to initialize that device.
+>            In this case taking dump itself might fail (and often does,
+>            according to reports)
 
-Yes, you make the read of DRAM_CONTROL inside determine_memory_type() as
-we don't need it anywhere else.
+Sounds like an option, even though broken devices work poorly.
 
-If we do, all of a sudden, we'll move it up to read_mc_regs(). IOW, I'm
-trying to centralize all reg reads in read_mc_regs() and use locally
-cached info later so I don't have to access the hardware each time
-needlessly, if it can be helped.
+>         3) To prevent master aborts like in option (2), David suggested
+>            to map the whole DMA address space to a scratch page. This
+>            also prevents system memory corruption and the master aborts.
+>            But the problem is, that in-flight DMA will now read all
+>            zeros. This can corrupt disk and network data, at worst it
+>            nulls out the superblocks of your filesystem and you lose all
+>            data. So this is not an option too.
 
-Thanks.
+Ah, yes, I see your point now.  This allows corrupted data, e.g., all
+zeroes, to be written to disk or network after the kernel crash.  I
+agree; this doesn't sound like a good option.
 
--- 
-Regards/Gruss,
-    Boris.
+And the proposal below is a 4th option (leave IOMMU enabled, reusing
+crashed kernel's mappings until drivers make new mappings).
 
-Sent from a fat crate under my desk. Formatting is fine.
---
+> What we currently do in the VT-d driver is a mixture of (1) and (2). The
+> VT-d driver disables the IOMMU hardware (opening a race window for
+> memory data corruption), re-initializes it to reject any ongoing DMA
+> (which causes master aborts for in-flight DMA) and re-enables the IOMMU
+> hardware.
+>
+> But this strategy fails in heavy IO environments quite often and we look
+> into ways to solve the problem, or at least improve the current
+> situation as good as we can.
+>
+> I talked to David about this at LPC and we came up with basically this
+> procedure:
+>
+>         1. If the VT-d driver finds the IOMMU enabled, it reuses its
+>            root-context table. This way the IOMMU must not be disabled
+>            and re-enabled, eliminating the race we have now.
+>            Other data structures like the context-entries are copied
+>            over from the old kernel.  We basically keep all mappings
+>            from the old kernel, allowing any in-flight DMA to succeed.
+>            No memory or disk data corruption.
+
+If the crashed kernel had corrupted memory, couldn't an in-flight DMA
+read that corrupted data from memory and write it to disk?
+
+I guess you could argue that this is merely a race, and the in-flight
+DMA could just as easily have happened before the kernel crash, so
+there's always a window and the only question is whether it closes
+when the IOMMU driver starts up or when the device driver starts up.
+
+>            The issue here is, that we modify data from the old kernel
+>            which is about to be dumped. But there are ways to work
+>            around that.
+>
+>         2. When a device driver issues the first dma_map command for a
+>            device, we assign a new and empty page-table, thus removing
+>            all mappings from the old kernel for the device.
+>            Rationale is, that at this point the device driver should
+>            have reset the device to a point where all in-flight DMA is
+>            canceled.
+>
+> This approach goes into the same direction as Bill Sumners patch-set,
+> which Li took over. But it goes not as far as keeping the old mappings
+> while the kdump kernel is still working with the devices (which might
+> introduce new issues and corner cases).
+>
+>> > So with this in mind I would prefer initially taking over the
+>> > page-tables from the old kernel before the device drivers re-initialize
+>> > the devices.
+>>
+>> This makes the dump kernel more dependent on data from the old kernel,
+>> which we obviously want to avoid when possible.
+>
+> Sure, but this is not really possible here (unless we have a generic and
+> reliable way to reset all PCI endpoint devices and cancel all in-flight
+> DMA before we disable the IOMMU in the kdump kernel).
+> Otherwise we always risk data corruption somewhere, in system memory or
+> on disk.
+>
+>> I didn't find the previous discussion where pointing every virtual bus
+>> address at the same physical scratch page was proposed.  Why was that
+>> better than programming the IOMMU to reject every DMA?
+>
+> As I said, the problem is that this causes master aborts which some
+> devices can't recover from, so that the device driver in the kdump
+> kernel fails to initialize the device.
+
+Yes, thanks for making that explicit again.
+
+Bjorn
