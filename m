@@ -1,75 +1,86 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v3 01/27] MSI: Remove the redundant irq_set_chip_data()
-Date: Wed, 15 Oct 2014 11:06:49 +0800
-Message-ID: <1413342435-7876-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
-References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:62900 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932328AbaJVUhE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 22 Oct 2014 16:37:04 -0400
+Message-ID: <1414010215.4202.275.camel@ul30vt.home>
+Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass through
+ (vfio)
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Andreas Hartmann <andihartmann@freenet.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Date: Wed, 22 Oct 2014 14:36:55 -0600
+In-Reply-To: <5447D9D9.9030909@maya.org>
+References: <20140923210318.498dacbd@dualc.maya.org>
+		 <1411502866.24563.8.camel@ul30vt.home> <5437A958.3000201@maya.org>
+		 <CAErSpo5kkk4itqqmCMU=08-XMcDknur8VY++F3A2LajdvTptOA@mail.gmail.com>
+		 <5437F1F5.3010706@maya.org>
+		 <CAErSpo6DuWEcJb_gfS=5JnKN8b4DXXV9+u-CRa8m3db0dbzpsQ@mail.gmail.com>
+		 <543804BC.3080307@maya.org>
+		 <CAErSpo450czUtAM104o+RS=yOcmP+3MKMH7mYk=UYhVJ2+cfSQ@mail.gmail.com>
+		 <20141011003219.560cca97@dualc.maya.org>
+		 <20141010225408.GA24493@google.com> <5438CC1E.3060407@maya.org>
+		 <1413360267.4202.70.camel@ul30vt.home> <54406B34.1050808@maya.org>
+		 <1413925580.4202.189.camel@ul30vt.home>
+	 <1413927152.4202.195.camel@ul30vt.home> <5447D9D9.9030909@maya.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, pcie-designware, pcie-rcar and pci-tegra drivers
-use irq chip_data to save the msi_chip pointer. They
-already call irq_set_chip_data() in their own MSI irq map
-functions. And chip_data is an opaque pointer, how to use
-it is arch dependent. It should not be placed in MSI core.
+On Wed, 2014-10-22 at 18:22 +0200, Andreas Hartmann wrote:
+> Alex Williamson wrote:
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -3308,15 +3308,15 @@ static int __pci_dev_reset(struct pci_dev *dev, int prob
+> >         if (rc != -ENOTTY)
+> >                 goto done;
+> >  
+> > -       rc = pci_pm_reset(dev, probe);
+> > +       rc = pci_dev_reset_slot_function(dev, probe);
+> >         if (rc != -ENOTTY)
+> >                 goto done;
+> >  
+> > -       rc = pci_dev_reset_slot_function(dev, probe);
+> > +       rc = pci_parent_bus_reset(dev, probe);
+> >         if (rc != -ENOTTY)
+> >                 goto done;
+> >  
+> > -       rc = pci_parent_bus_reset(dev, probe);
+> > +       rc = pci_pm_reset(dev, probe);
+> >  done:
+> >         return rc;
+> >  }
+> 
+> This way it's crashing with echo 1 > reset, too.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Reviewed-by: Thierry Reding <treding@nvidia.com>
----
- drivers/pci/msi.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+Ok, so it's somehow related to doing a bus reset with virtual channel
+save/restore while PM reset with VC save/restore works ok as apparently
+does bus reset without VC save/restore.  Let's try to do a manual bus
+reset so we can look at the post reset state of the device before the
+kernel tries to restore it.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 2f7c92c..ecb92a5 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -41,14 +41,13 @@ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- 	if (err < 0)
- 		return err;
- 
--	irq_set_chip_data(desc->irq, chip);
--
- 	return 0;
- }
- 
- void __weak arch_teardown_msi_irq(unsigned int irq)
- {
--	struct msi_chip *chip = irq_get_chip_data(irq);
-+	struct msi_desc *entry = irq_get_msi_desc(irq);
-+	struct msi_chip *chip = entry->dev->bus->msi;
- 
- 	if (!chip || !chip->teardown_irq)
- 		return;
--- 
-1.7.1
+First bind the target device 03:00.0 to pci-stub or vfio-pci so that we
+know it's not being used.
+
+Next capture lspci -xxxx -s 3:00.0 so we have the starting state.
+
+Then we'll do a bus reset using setpci:
+# setpci -s 00:05.0 3e.w=40:40
+<if you script this, wait at least 2ms here>
+# setpci -s 00:05.0 3e.w=00:40
+<wait 1 second here>
+
+Now re-capture lspci -xxxx -s 3:00.0
+
+The interesting lines for your device are 140: and 150:, so if you want
+to avoid sending massive emails you can just send those for the before
+and after.  You'll need to reboot the system before you do anything else
+with this device since it's now in an uninitialized state.  Based on
+what the lspci output reports (or whether you experience a hang simply
+from this), we may want to try writing additional bits with setpci to
+mimic the VC restore behavior.  Thanks,
+
+Alex
 
