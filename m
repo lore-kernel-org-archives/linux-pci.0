@@ -1,102 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:37327 "EHLO gate.crashing.org"
+Received: from 8bytes.org ([81.169.241.247]:35881 "EHLO theia.8bytes.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752548AbaJGG5m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Oct 2014 02:57:42 -0400
-Message-ID: <1412656674.30859.120.camel@pasglop>
-Subject: [PATCH v3 2/7] pci/msi: Add device flag indicating that 64-bit MSIs
- don't work
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Alex Deucher <alexdeucher@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Dave Airlie <airlied@linux.ie>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
-Date: Tue, 07 Oct 2014 15:37:54 +1100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751360AbaJVNWB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 22 Oct 2014 09:22:01 -0400
+Date: Wed, 22 Oct 2014 15:21:58 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	"Hoemann, Jerry" <jerry.hoemann@hp.com>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	Baoquan He <bhe@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	doug.hatch@hp.com,
+	"ishii.hironobu@jp.fujitsu.com" <ishii.hironobu@jp.fujitsu.com>,
+	zhenhua@hp.com, Zhen-Hua <zhen-hual@hp.com>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	"Vaden, Tom L (HP Server OS Architecture)" <tom.vaden@hp.com>
+Subject: Re: [PATCH 0/8] iommu/vt-d: Fix crash dump failure caused by legacy
+ DMA/IO
+Message-ID: <20141022132158.GD10074@8bytes.org>
+References: <1398386198-19304-1-git-send-email-bill.sumner@hp.com>
+ <1398854973.12733.23.camel@i7.infradead.org>
+ <20140702133258.GN26537@8bytes.org>
+ <CAErSpo69VmK5zD-ztNVHCA=KrK8zucqubY17z0K3rcpe6ReNUA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo69VmK5zD-ztNVHCA=KrK8zucqubY17z0K3rcpe6ReNUA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This can be set by quirks/drivers to be used by the architecture code
-that assigns the MSI addresses.
+Hi Bjorn,
 
-We additionally add verification in the core MSI code that the values
-assigned by the architecture do satisfy the limitation in order to fail
-gracefully if they don't (ie. the arch hasn't been updated to deal with
-that quirk yet).
+On Tue, Oct 21, 2014 at 08:16:46PM -0600, Bjorn Helgaas wrote:
+> I was looking at Zhen-Hua's recent patches, trying to figure out if I
+> need to do anything with them.  Resetting devices in the old kernel
+> seems like a non-starter.  Resetting devices in the new kernel, ...,
+> well, maybe.  It seems ugly, and it seems like the sort of problem
+> that IOMMUs are designed to solve.
 
-Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: <stable@vger.kernel.org>
----
- drivers/pci/msi.c   | 26 ++++++++++++++++++++++++++
- include/linux/pci.h |  1 +
- 2 files changed, 27 insertions(+)
+Actually resetting the devices in the kdump kernel would be one of the
+better solutions for this problem. When we have a generic way to stop
+all in-flight DMA from the PCI endpoints we could safely disable and
+then re-enable the IOMMU.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 5a40516..6807edd 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -610,6 +610,20 @@ static struct msi_desc *msi_setup_entry(struct pci_dev *dev)
- 	return entry;
- }
- 
-+static int msi_verify_entries(struct pci_dev *dev)
-+{
-+	struct msi_desc *entry;
-+
-+	list_for_each_entry(entry, &dev->msi_list, list) {
-+		if (!dev->no_64bit_msi || !entry->msg.address_hi)
-+			continue;
-+		dev_err(&dev->dev, "Device has broken 64-bit MSI but arch"
-+			" tried to assign one above 4G\n");
-+		return -EIO;
-+	}
-+	return 0;
-+}
-+
- /**
-  * msi_capability_init - configure device's MSI capability structure
-  * @dev: pointer to the pci_dev data structure of MSI device function
-@@ -647,6 +661,13 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
- 		return ret;
- 	}
- 
-+	ret = msi_verify_entries(dev);
-+	if (ret) {
-+		msi_mask_irq(entry, mask, ~mask);
-+		free_msi_irqs(dev);
-+		return ret;
-+	}
-+
- 	ret = populate_msi_sysfs(dev);
- 	if (ret) {
- 		msi_mask_irq(entry, mask, ~mask);
-@@ -760,6 +781,11 @@ static int msix_capability_init(struct pci_dev *dev,
- 	if (ret)
- 		goto out_avail;
- 
-+	/* Check if all MSI entries honor device restrictions */
-+	ret = msi_verify_entries(dev);
-+	if (ret)
-+		goto out_free;
-+
- 	/*
- 	 * Some devices require MSI-X to be enabled before we can touch the
- 	 * MSI-X registers.  We need to mask all the vectors to prevent
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 96453f9..6b6da8f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -331,6 +331,7 @@ struct pci_dev {
- 	unsigned int	is_added:1;
- 	unsigned int	is_busmaster:1; /* device is busmaster */
- 	unsigned int	no_msi:1;	/* device may not use msi */
-+	unsigned int	no_64bit_msi:1; /* device may only use 32-bit MSIs */
- 	unsigned int	block_cfg_access:1;	/* config space access is blocked */
- 	unsigned int	broken_parity_status:1;	/* Device generates false positive parity */
- 	unsigned int	irq_reroute_variant:2;	/* device needs IRQ rerouting variant */
+> On Wed, Jul 2, 2014 at 7:32 AM, Joerg Roedel <joro@8bytes.org> wrote:
+> > That is a solution to prevent the in-flight DMA failures. But what
+> > happens when there is some in-flight DMA to a disk to write some inodes
+> > or a new superblock. Then this scratch address-space may cause
+> > filesystem corruption at worst.
+> 
+> This in-flight DMA is from a device programmed by the old kernel, and
+> it would be reading data from the old kernel's buffers.  I think
+> you're suggesting that we might want that DMA read to complete so the
+> device can update filesystem metadata?
 
+Well, it is not about updating filesystem metadata. In the kdump kernel
+we have these options:
+
+	1) Disable the IOMMU. Problem here is, that DMA is now
+	   untranslated, so that any in-flight DMA might read or write
+	   from a random location in memory, corrupting the kdump or
+	   even the new kexec kernel memory. So this is a non-starter.
+
+	2) Re-program the IOMMU to block all DMA. This is safer as it
+	   does not corrupt any data in memory. But some devices react
+	   very poorly on a master abort from the IOMMU, so bad that the
+	   driver in the kdump kernel fails to initialize that device.
+	   In this case taking dump itself might fail (and often does,
+	   according to reports)
+
+	3) To prevent master aborts like in option (2), David suggested
+	   to map the whole DMA address space to a scratch page. This
+	   also prevents system memory corruption and the master aborts.
+	   But the problem is, that in-flight DMA will now read all
+	   zeros. This can corrupt disk and network data, at worst it
+	   nulls out the superblocks of your filesystem and you lose all
+	   data. So this is not an option too.
+
+What we currently do in the VT-d driver is a mixture of (1) and (2). The
+VT-d driver disables the IOMMU hardware (opening a race window for
+memory data corruption), re-initializes it to reject any ongoing DMA
+(which causes master aborts for in-flight DMA) and re-enables the IOMMU
+hardware.
+
+But this strategy fails in heavy IO environments quite often and we look
+into ways to solve the problem, or at least improve the current
+situation as good as we can.
+
+I talked to David about this at LPC and we came up with basically this
+procedure:
+
+	1. If the VT-d driver finds the IOMMU enabled, it reuses its
+	   root-context table. This way the IOMMU must not be disabled
+	   and re-enabled, eliminating the race we have now.
+	   Other data structures like the context-entries are copied
+	   over from the old kernel.  We basically keep all mappings
+	   from the old kernel, allowing any in-flight DMA to succeed.
+	   No memory or disk data corruption.
+	   The issue here is, that we modify data from the old kernel
+	   which is about to be dumped. But there are ways to work
+	   around that.
+
+	2. When a device driver issues the first dma_map command for a
+	   device, we assign a new and empty page-table, thus removing
+	   all mappings from the old kernel for the device.
+	   Rationale is, that at this point the device driver should
+	   have reset the device to a point where all in-flight DMA is
+	   canceled.
+
+This approach goes into the same direction as Bill Sumners patch-set,
+which Li took over. But it goes not as far as keeping the old mappings
+while the kdump kernel is still working with the devices (which might
+introduce new issues and corner cases).
+
+> > So with this in mind I would prefer initially taking over the
+> > page-tables from the old kernel before the device drivers re-initialize
+> > the devices.
+> 
+> This makes the dump kernel more dependent on data from the old kernel,
+> which we obviously want to avoid when possible.
+
+Sure, but this is not really possible here (unless we have a generic and
+reliable way to reset all PCI endpoint devices and cancel all in-flight
+DMA before we disable the IOMMU in the kdump kernel).
+Otherwise we always risk data corruption somewhere, in system memory or
+on disk.
+
+> I didn't find the previous discussion where pointing every virtual bus
+> address at the same physical scratch page was proposed.  Why was that
+> better than programming the IOMMU to reject every DMA?
+
+As I said, the problem is that this causes master aborts which some
+devices can't recover from, so that the device driver in the kdump
+kernel fails to initialize the device.
+
+
+	Joerg
 
