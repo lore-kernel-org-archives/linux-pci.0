@@ -1,74 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0117.outbound.protection.outlook.com ([65.55.169.117]:58808
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751507AbaJXDG5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 23 Oct 2014 23:06:57 -0400
-From: Richard Zhu <richard.zhu@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
-	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
-	<m-karicheri2@ti.com>, Richard Zhu <r65037@freescale.com>,
-	Richard Zhu <richard.zhu@freescale.com>
-Subject: [PATCH V2] PCI: imx6: Wait the clocks to stabilize after ref_en
-Date: Fri, 24 Oct 2014 10:36:40 +0800
-Message-ID: <1414118200-2018-2-git-send-email-richard.zhu@freescale.com>
-In-Reply-To: <1414118200-2018-1-git-send-email-richard.zhu@freescale.com>
-References: <1414118200-2018-1-git-send-email-richard.zhu@freescale.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:55427 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S933186AbaJVNOb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Oct 2014 09:14:31 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Lucas Stach <l.stach@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI / PM: handle failure to enable wakeup on PCIe PME
+Date: Wed, 22 Oct 2014 15:34:56 +0200
+Message-ID: <5149964.v982KmMHFP@vostro.rjw.lan>
+In-Reply-To: <1413981115-22045-1-git-send-email-l.stach@pengutronix.de>
+References: <1413981115-22045-1-git-send-email-l.stach@pengutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Richard Zhu <r65037@freescale.com>
+On Wednesday, October 22, 2014 02:31:55 PM Lucas Stach wrote:
+> If the irqchip handling the PCIe PME interrupt is not able
+> to enable interrupt wakeup we should properly reflect this
+> in the PME suspend status.
+> 
+> This fixes a kernel warning on resume, where it would try
+> to disable the irq wakeup that failed to be activated while
+> suspending. The issue was introduced with 76cde7e49590
+> (PCI / PM: Make PCIe PME interrupts wake up from suspend-to-idle).
+> 
+> Reported-by: Richard Zhu <richard.zhu@freescale.com>
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> Tested-by: Richard Zhu <richard.zhu@freescale.com>
 
-For boards without a reset GPIO we skip the delay between enabling the
-pcie_ref_clk and touching the RC registers for configuration.
-This hangs the system if there isn't a proper delay to ensure the clocks
-are settled in the DW PCIe core.
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Also iMX6Q always needs an additional 10us delay to make sure the reset
-is propagated through the core, as we don't have an explicitly
-controlled reset input on this SoC.
+Bjorn, do you want me to handle this or will you take it?
 
-Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
-Tested-by: Tim Harvey <tharvey@gateworks.com>
-Tested-by: Fabio Estevam <fabio.estevam@freescale.com>
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
- drivers/pci/host/pci-imx6.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+> ---
+> Trimmed warning on resume looks like this:
+> [  109.292736] WARNING: CPU: 0 PID: 609 at kernel/irq/manage.c:536 irq_set_irq_wake+0xc0/0xf8()
+> [  109.301193] Unbalanced IRQ 384 wake disable
+> [  109.305392] Modules linked in:
+> [  109.308502] CPU: 0 PID: 609 Comm: kworker/u2:9 Tainted: G        W      3.18.0-rc1-00009-g820df3d-dirty #268
+> [  109.318368] Workqueue: events_unbound async_run_entry_fn
+> [  109.323718] Backtrace:
+> [  109.326233] [<80012460>] (dump_backtrace) from [<80012744>] (show_stack+0x18/0x1c)
+> [  109.339616] [<8001272c>] (show_stack) from [<806d8dc8>] (dump_stack+0x8c/0xa4)
+> [  109.346885] [<806d8d3c>] (dump_stack) from [<8002a88c>] (warn_slowpath_common+0x70/0x94)
+> [  109.360773] [<8002a81c>] (warn_slowpath_common) from [<8002a8e8>] (warn_slowpath_fmt+0x38/0x40)
+> [  109.376334] [<8002a8b4>] (warn_slowpath_fmt) from [<8006c2a8>] (irq_set_irq_wake+0xc0/0xf8)
+> [  109.388351] [<8006c1e8>] (irq_set_irq_wake) from [<802f22cc>] (pcie_pme_resume+0x34/0x64)
+> [  109.402328] [<802f2298>] (pcie_pme_resume) from [<802f1590>] (resume_iter+0x44/0x50)
+> [  109.413742] [<802f154c>] (resume_iter) from [<803784d4>] (device_for_each_child+0x4c/0x78)
+> [  109.422039] [<80378488>] (device_for_each_child) from [<802f196c>] (pcie_port_device_resume+0x18/0x20)
+> [  109.436085] [<802f1954>] (pcie_port_device_resume) from [<802e6f40>] (pci_pm_resume+0x7c/0x10c)
+> [  109.444829] [<802e6ec4>] (pci_pm_resume) from [<8038502c>] (dpm_run_callback.isra.12+0x34/0x7c)
+> [  109.459323] [<80384ff8>] (dpm_run_callback.isra.12) from [<8038543c>] (device_resume+0xb8/0x194)
+> [  109.474961] [<80385384>] (device_resume) from [<80385538>] (async_resume+0x20/0x4c)
+> [  109.490523] [<80385518>] (async_resume) from [<800471a0>] (async_run_entry_fn+0x48/0x11c)
+> [  109.502371] [<80047158>] (async_run_entry_fn) from [<8003f46c>] (process_one_work+0x1ac/0x414)
+> [  109.515711] [<8003f2c0>] (process_one_work) from [<8003ff50>] (worker_thread+0x148/0x4e0)
+> [  109.534446] [<8003fe08>] (worker_thread) from [<80044704>] (kthread+0xdc/0xf8)
+> [  109.552225] [<80044628>] (kthread) from [<8000ec08>] (ret_from_fork+0x14/0x2c)
+> ---
+>  drivers/pci/pcie/pme.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+> index a9f9c46e5022..63fc63911295 100644
+> --- a/drivers/pci/pcie/pme.c
+> +++ b/drivers/pci/pcie/pme.c
+> @@ -397,6 +397,7 @@ static int pcie_pme_suspend(struct pcie_device *srv)
+>  	struct pcie_pme_service_data *data = get_service_data(srv);
+>  	struct pci_dev *port = srv->port;
+>  	bool wakeup;
+> +	int ret;
+>  
+>  	if (device_may_wakeup(&port->dev)) {
+>  		wakeup = true;
+> @@ -407,9 +408,10 @@ static int pcie_pme_suspend(struct pcie_device *srv)
+>  	}
+>  	spin_lock_irq(&data->lock);
+>  	if (wakeup) {
+> -		enable_irq_wake(srv->irq);
+> +		ret = enable_irq_wake(srv->irq);
+>  		data->suspend_level = PME_SUSPEND_WAKEUP;
+> -	} else {
+> +	}
+> +	if (!wakeup || ret) {
+>  		struct pci_dev *port = srv->port;
+>  
+>  		pcie_pme_interrupt_enable(port, false);
+> 
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 233fe8a..eac96fb 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -275,15 +275,22 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 		goto err_pcie;
- 	}
- 
--	/* allow the clocks to stabilize */
--	usleep_range(200, 500);
--
- 	/* power up core phy and enable ref clock */
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
-+	/*
-+	 * the async reset input need ref clock to sync internally,
-+	 * when the ref clock comes after reset, internal synced
-+	 * reset time is too short , cannot meet the requirement.
-+	 * add one ~10us delay here.
-+	 */
-+	udelay(10);
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
- 
-+	/* allow the clocks to stabilize */
-+	usleep_range(200, 500);
-+
- 	/* Some boards don't have PCIe reset GPIO. */
- 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
- 		gpio_set_value(imx6_pcie->reset_gpio, 0);
 -- 
-1.9.1
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
