@@ -1,103 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0142.outbound.protection.outlook.com ([65.55.169.142]:21051
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754613AbaJ1L5D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 28 Oct 2014 07:57:03 -0400
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Jason Chang <jason.chang@amd.com>,
-	"Vincent Wan" <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v3 15/19] usb: dwc3: add disable usb3 suspend phy quirk
-Date: Tue, 28 Oct 2014 19:54:36 +0800
-Message-ID: <1414497280-3126-16-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
-References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
+Received: from mail-qg0-f46.google.com ([209.85.192.46]:57930 "EHLO
+	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752293AbaJVQtg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Oct 2014 12:49:36 -0400
+Received: by mail-qg0-f46.google.com with SMTP id z60so2832081qgd.5
+        for <linux-pci@vger.kernel.org>; Wed, 22 Oct 2014 09:49:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20141022155914.GB25939@e102568-lin.cambridge.arm.com>
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <2430078.s4snyh5OoF@wuerfel> <20141001084626.GZ841@e106497-lin.cambridge.arm.com>
+ <3256560.C0cZnIlnAv@wuerfel> <20141022155914.GB25939@e102568-lin.cambridge.arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 22 Oct 2014 10:49:14 -0600
+Message-ID: <CAErSpo4DPU6_TO9atpzDbu-X9iddrnBk3QQV4_BcpUCFL4JUdw@mail.gmail.com>
+Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds disable usb3 suspend phy quirk, and some special platforms
-can configure that if it is needed.
+On Wed, Oct 22, 2014 at 9:59 AM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
 
-Signed-off-by: Huang Rui <ray.huang@amd.com>
----
- drivers/usb/dwc3/core.c          | 6 ++++++
- drivers/usb/dwc3/core.h          | 2 ++
- drivers/usb/dwc3/platform_data.h | 1 +
- 3 files changed, 9 insertions(+)
+> ... I wonder what's the
+> best course of action. Putting together all the bits and pieces required
+> to remove PCI bios dependency from this patch can take a while, I wonder
+> whether we should aim for merging this driver (rebased on top of my port to the
+> new parse ranges API) with the ARM/ARM64 ifdeffery and clean it up later
+> or aim for the whole thing at once, I am just worried it can take us a while.
 
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index 7b5cd76..aec393b 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -404,6 +404,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
- 	if (dwc->tx_deemph_quirk)
- 		reg |= DWC3_GUSB3PIPECTL_TX_DEEPH(dwc->tx_deemph);
- 
-+	if (dwc->dis_u3_susphy_quirk)
-+		reg &= ~DWC3_GUSB3PIPECTL_SUSPHY;
-+
- 	dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
- 
- 	mdelay(100);
-@@ -807,6 +810,8 @@ static int dwc3_probe(struct platform_device *pdev)
- 				"snps,lfps_filter_quirk");
- 		dwc->rx_detect_poll_quirk = of_property_read_bool(node,
- 				"snps,rx_detect_poll_quirk");
-+		dwc->dis_u3_susphy_quirk = of_property_read_bool(node,
-+				"snps,dis_u3_susphy_quirk");
- 
- 		dwc->tx_deemph_quirk = of_property_read_bool(node,
- 				"snps,tx_deemph_quirk");
-@@ -829,6 +834,7 @@ static int dwc3_probe(struct platform_device *pdev)
- 		dwc->del_phy_power_chg_quirk = pdata->del_phy_power_chg_quirk;
- 		dwc->lfps_filter_quirk = pdata->lfps_filter_quirk;
- 		dwc->rx_detect_poll_quirk = pdata->rx_detect_poll_quirk;
-+		dwc->dis_u3_susphy_quirk = pdata->dis_u3_susphy_quirk;
- 
- 		dwc->tx_deemph_quirk = pdata->tx_deemph_quirk;
- 		if (pdata->tx_deemph)
-diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-index 1277dcf..686d3b9 100644
---- a/drivers/usb/dwc3/core.h
-+++ b/drivers/usb/dwc3/core.h
-@@ -697,6 +697,7 @@ struct dwc3_scratchpad_array {
-  * @del_phy_power_chg_quirk: set if we enable delay phy power change quirk
-  * @lfps_filter_quirk: set if we enable LFPS filter quirk
-  * @rx_detect_poll_quirk: set if we enable rx_detect to polling lfps quirk
-+ * @dis_u3_susphy_quirk: set if we disable usb3 suspend phy
-  * @tx_deemph_quirk: set if we enable Tx deemphasis quirk
-  * @tx_deemph: Tx deemphasis value
-  *	0	- -6dB de-emphasis
-@@ -818,6 +819,7 @@ struct dwc3 {
- 	unsigned		del_phy_power_chg_quirk:1;
- 	unsigned		lfps_filter_quirk:1;
- 	unsigned		rx_detect_poll_quirk:1;
-+	unsigned		dis_u3_susphy_quirk:1;
- 
- 	unsigned		tx_deemph_quirk:1;
- 	unsigned		tx_deemph:2;
-diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
-index ea631dc..c8115c7 100644
---- a/drivers/usb/dwc3/platform_data.h
-+++ b/drivers/usb/dwc3/platform_data.h
-@@ -35,6 +35,7 @@ struct dwc3_platform_data {
- 	unsigned del_phy_power_chg_quirk:1;
- 	unsigned lfps_filter_quirk:1;
- 	unsigned rx_detect_poll_quirk:1;
-+	unsigned dis_u3_susphy_quirk:1;
- 
- 	unsigned tx_deemph_quirk:1;
- 	unsigned tx_deemph:2;
--- 
-1.9.1
+I haven't looked at your patches, but "the whole thing at once" is
+never *my* goal.  A gradual cleanup is just fine with me.
 
+Bjorn
