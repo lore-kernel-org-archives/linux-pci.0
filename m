@@ -1,127 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [207.46.100.148] ([207.46.100.148]:22448 "EHLO
-	na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754954AbaJMCbF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 12 Oct 2014 22:31:05 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <richard.zhu@freescale.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shengchao Guo <Shawn.Guo@freescale.com>,
-	"festevam@gmail.com" <festevam@gmail.com>,
-	"tharvey@gateworks.com" <tharvey@gateworks.com>
-Subject: RE: [PATCH v5 4/9] PCI: imx6: add imx6sx pcie support
-Date: Mon, 13 Oct 2014 02:30:51 +0000
-Message-ID: <c4b4d11b4024456cb5fdc9d36424e875@DM2PR0301MB0862.namprd03.prod.outlook.com>
-References: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com>
-	 <1412919676-25344-5-git-send-email-richard.zhu@freescale.com>
- <1413124067.2459.12.camel@antimon.intern.lynxeye.de>
-In-Reply-To: <1413124067.2459.12.camel@antimon.intern.lynxeye.de>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:33554 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932650AbaJVXSh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Oct 2014 19:18:37 -0400
+Received: by mail-ig0-f180.google.com with SMTP id uq10so419678igb.7
+        for <linux-pci@vger.kernel.org>; Wed, 22 Oct 2014 16:18:37 -0700 (PDT)
+Date: Wed, 22 Oct 2014 17:18:30 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH 1/3] PCI: move PCI_FIND_CAP_TTL to pci.h and use it in
+ quirks
+Message-ID: <20141022231830.GC4795@google.com>
+References: <1413269253-8990-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1413269253-8990-2-git-send-email-weiyang@linux.vnet.ibm.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1413269253-8990-2-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgTHVjYXM6DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgt
-cGNpLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXBjaS1vd25lckB2Z2VyLmtl
-cm5lbC5vcmddDQo+IE9uIEJlaGFsZiBPZiBMdWNhcyBTdGFjaA0KPiBTZW50OiBTdW5kYXksIE9j
-dG9iZXIgMTIsIDIwMTQgMTA6MjggUE0NCj4gVG86IFJpY2hhcmQgWmh1DQo+IENjOiBsaW51eC1w
-Y2lAdmdlci5rZXJuZWwub3JnOyBHdW8gU2hhd24tUjY1MDczOyBmZXN0ZXZhbUBnbWFpbC5jb207
-DQo+IHRoYXJ2ZXlAZ2F0ZXdvcmtzLmNvbTsgWmh1IFJpY2hhcmQtUjY1MDM3DQo+IFN1YmplY3Q6
-IFJlOiBbUEFUQ0ggdjUgNC85XSBQQ0k6IGlteDY6IGFkZCBpbXg2c3ggcGNpZSBzdXBwb3J0DQo+
-IA0KPiBBbSBGcmVpdGFnLCBkZW4gMTAuMTAuMjAxNCwgMTM6NDEgKzA4MDAgc2NocmllYiBSaWNo
-YXJkIFpodToNCj4gPiBGcm9tOiBSaWNoYXJkIFpodSA8cjY1MDM3QGZyZWVzY2FsZS5jb20+DQo+
-ID4NCj4gPiAtIGlteDZzeCBwY2llIGhhcyBpdHMgb3duIHN0YW5kYWxvbmUgcGNpZSBwb3dlciBz
-dXBwbHkuDQo+ID4gSW4gb3JkZXIgdG8gdHVybiBvbiB0aGUgaW14NnN4IHBjaWUgcG93ZXIgZHVy
-aW5nIGluaXRpYWxpemF0aW9uLiBBZGQNCj4gPiB0aGUgcGNpZSByZWd1bGF0b3IgYW5kIHRoZSBn
-cGMgcmVnbWFwIGludG8gdGhlIGlteDZzeCBwY2llIHN0cnVjdHVyZS4NCj4gPiAtIGlteDZzeCBw
-Y2llIGhhcyB0aGUgbmV3IGFkZGVkIHJlc2V0IG1lY2hhbmlzbSwgYWRkIHRoZSByZXNldA0KPiA+
-IG9wZXJhdGlvbnMgaW50byB0aGUgaW5pdGlhbGl6YXRpb24uDQo+ID4gLSBSZWdpc3RlciBvbmUg
-UE0gY2FsbC1iYWNrLCBlbnRlci9leGl0IEwyIHN0YXRlIG9mIHRoZSBBU1BNIGR1cmluZw0KPiA+
-IHN5c3RlbSBzdXNwZW5kL3Jlc3VtZS4NCj4gPiAtIGRpc3BfYXhpIGNsb2NrIGlzIHJlcXVpcmVk
-IGJ5IHBjaWUgaW5ib3VuZCBheGkgcG9ydCBhY3R1YWxseS4NCj4gPiBBZGQgb25lIG1vcmUgY2xv
-Y2sgbmFtZWQgcGNpZV9pbmJvdW5kX2F4aSBmb3IgaW14NnN4IHBjaWUuDQo+IA0KPiA+IFNpZ25l
-ZC1vZmYtYnk6IFJpY2hhcmQgWmh1IDxyaWNoYXJkLnpodUBmcmVlc2NhbGUuY29tPg0KPiANCj4g
-SW4gYWRkaXRpb24gdG8gRmFiaW9zIGNvbW1lbnQgSSBoYXZlIG9uZSBhZGRpdGlvbmFsIG5pdHBp
-Y2sgYmVsb3cgYW5kIGFsc28geW91DQo+IGRpZG4ndCBpbmNsdWRlIGFsbCB0aGUgZmVlZGJhY2sg
-ZnJvbSB0aGUgbGFzdCByb3VuZC4NCj4gDQo+ID4gLS0tDQo+ID4gIGRyaXZlcnMvcGNpL2hvc3Qv
-cGNpLWlteDYuYyB8IDE2MQ0KPiA+ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKy0tLS0tDQo+ID4gIDEgZmlsZSBjaGFuZ2VkLCAxNDMgaW5zZXJ0aW9ucygrKSwgMTggZGVs
-ZXRpb25zKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvaG9zdC9wY2ktaW14
-Ni5jIGIvZHJpdmVycy9wY2kvaG9zdC9wY2ktaW14Ni5jDQo+ID4gaW5kZXggZWFjOTZmYi4uNWVj
-ZTRlMSAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9ob3N0L3BjaS1pbXg2LmMNCj4gPiAr
-KysgYi9kcml2ZXJzL3BjaS9ob3N0L3BjaS1pbXg2LmMNCj4gPiBAQCAtMjIsOCArMjIsMTAgQEAN
-Cj4gPiAgI2luY2x1ZGUgPGxpbnV4L3BjaS5oPg0KPiA+ICAjaW5jbHVkZSA8bGludXgvcGxhdGZv
-cm1fZGV2aWNlLmg+DQo+ID4gICNpbmNsdWRlIDxsaW51eC9yZWdtYXAuaD4NCj4gPiArI2luY2x1
-ZGUgPGxpbnV4L3JlZ3VsYXRvci9jb25zdW1lci5oPg0KPiA+ICAjaW5jbHVkZSA8bGludXgvcmVz
-b3VyY2UuaD4NCj4gPiAgI2luY2x1ZGUgPGxpbnV4L3NpZ25hbC5oPg0KPiA+ICsjaW5jbHVkZSA8
-bGludXgvc3lzY29yZV9vcHMuaD4NCj4gPiAgI2luY2x1ZGUgPGxpbnV4L3R5cGVzLmg+DQo+ID4g
-ICNpbmNsdWRlIDxsaW51eC9pbnRlcnJ1cHQuaD4NCj4gPg0KPiA+IEBAIC0zNSwxMSArMzcsMTUg
-QEAgc3RydWN0IGlteDZfcGNpZSB7DQo+ID4gIAlpbnQJCQlyZXNldF9ncGlvOw0KPiA+ICAJc3Ry
-dWN0IGNsawkJKnBjaWVfYnVzOw0KPiA+ICAJc3RydWN0IGNsawkJKnBjaWVfcGh5Ow0KPiA+ICsJ
-c3RydWN0IGNsawkJKnBjaWVfaW5ib3VuZF9heGk7DQo+ID4gIAlzdHJ1Y3QgY2xrCQkqcGNpZTsN
-Cj4gPiAgCXN0cnVjdCBwY2llX3BvcnQJcHA7DQo+ID4gIAlzdHJ1Y3QgcmVnbWFwCQkqaW9tdXhj
-X2dwcjsNCj4gPiArCXN0cnVjdCByZWdtYXAJCSpncGNfaXBzX3JlZzsNCj4gPiArCXN0cnVjdCBy
-ZWd1bGF0b3IJKnBjaWVfcGh5X3JlZ3VsYXRvcjsNCj4gPiAgCXZvaWQgX19pb21lbQkJKm1lbV9i
-YXNlOw0KPiA+ICB9Ow0KPiA+ICtzdGF0aWMgc3RydWN0IGlteDZfcGNpZSAqaW14Nl9wY2llOw0K
-PiANCj4gUmVtb3ZlIHRoaXMgc3RhdGljIHN0cnVjdC4gSSd2ZSBhbHJlYWR5IHNhaWQgb24gdGhl
-IGxhc3QgdmVyc2lvbiB0aGF0IHRoaXMgaXMNCj4gY29tcGxldGVseSBiYWNrd2FyZHMuDQo+IA0K
-W1JpY2hhcmRdIEkgYWRkZWQgbXkgY29tbWVudHMgaW4gdGhlIGxhc3Qgcm91bmQuDQogQ2FuJ3Qg
-dXNlIGlteDZfcGNpZSBzdHJ1Y3Qgc3lzY29yZSBzdXNwZW5kL3Jlc3VtZSwgaWYgdGhlIGlteDZf
-cGNpZSBpcyBub3QgYSBzdGF0aWMgdHlwZSBzdHJ1Y3R1cmUuDQoiDQpIaSBMdWNhczoNClJlZ2Fy
-ZGluZyB0byB0aGUgZGVmaW5pdGlvbnMocGFzdGVkIGJlbG93KSBvZiB0aGUgc3RydWN0IHN5c2Nv
-cmVfb3BzLCBib3RoIHN1c3BlbmQgYW5kIHJlc3VtZSBvZiB0aGUgc3lzY29yZV9vcHMgaXMgdm9p
-ZCB0eXBlIGZ1bmN0aW9ucy4NCklmIHRoZXJlIGlzIG5vIHRoZSBzdGF0aWMgZ2xvYmFsIHN0cnVj
-dCBpbXg2X3BjaWUsIEkgZG9uJ3Qga25vdyBob3cgaXQgY2FuIGJlIHVzZWQgaW4gc3VzcGVuZC9y
-ZXN1bWUgb2YgcGNpX2lteF9zeXNjb3JlX29wcy4NCnN0cnVjdCBzeXNjb3JlX29wcyB7DQogICAg
-ICAgIHN0cnVjdCBsaXN0X2hlYWQgbm9kZTsNCiAgICAgICAgaW50ICgqc3VzcGVuZCkodm9pZCk7
-DQogICAgICAgIHZvaWQgKCpyZXN1bWUpKHZvaWQpOw0KICAgICAgICB2b2lkICgqc2h1dGRvd24p
-KHZvaWQpOw0KfTsNCiINCg0KPiA+DQo+ID4gIC8qIFBDSWUgUm9vdCBDb21wbGV4IHJlZ2lzdGVy
-cyAobWVtb3J5LW1hcHBlZCkgKi8NCj4gPiAgI2RlZmluZSBQQ0lFX1JDX0xDUgkJCQkweDdjDQo+
-ID4gQEAgLTc3LDYgKzgzLDE4IEBAIHN0cnVjdCBpbXg2X3BjaWUgew0KPiA+ICAjZGVmaW5lIFBI
-WV9SWF9PVlJEX0lOX0xPX1JYX0RBVEFfRU4gKDEgPDwgNSkgICNkZWZpbmUNCj4gPiBQSFlfUlhf
-T1ZSRF9JTl9MT19SWF9QTExfRU4gKDEgPDwgMykNCj4gPg0KPiA+ICsvKiBHUEMgUENJRSBQSFkg
-Yml0IGRlZmluaXRpb25zICovDQo+ID4gKyNkZWZpbmUgR1BDX0NOVFIJCQkwDQo+ID4gKyNkZWZp
-bmUgR1BDX0NOVFJfUENJRV9QSFlfUFVQX1JFUQlCSVQoNykNCj4gPiArDQo+ID4gK3N0YXRpYyBp
-bmxpbmUgYm9vbCBpc19pbXg2c3hfcGNpZShzdHJ1Y3QgaW14Nl9wY2llICppbXg2X3BjaWUpIHsN
-Cj4gPiArCXN0cnVjdCBwY2llX3BvcnQgKnBwID0gJmlteDZfcGNpZS0+cHA7DQo+ID4gKwlzdHJ1
-Y3QgZGV2aWNlX25vZGUgKm5wID0gcHAtPmRldi0+b2Zfbm9kZTsNCj4gPiArDQo+ID4gKwlyZXR1
-cm4gb2ZfZGV2aWNlX2lzX2NvbXBhdGlibGUobnAsICJmc2wsaW14NnN4LXBjaWUiKTsgfQ0KPiA+
-ICsNCj4gPiAgc3RhdGljIGludCBwY2llX3BoeV9wb2xsX2Fjayh2b2lkIF9faW9tZW0gKmRiaV9i
-YXNlLCBpbnQgZXhwX3ZhbCkgIHsNCj4gPiAgCXUzMiB2YWw7DQo+ID4gQEAgLTI3NSwxOCArMjkz
-LDI5IEBAIHN0YXRpYyBpbnQgaW14Nl9wY2llX2RlYXNzZXJ0X2NvcmVfcmVzZXQoc3RydWN0DQo+
-IHBjaWVfcG9ydCAqcHApDQo+ID4gIAkJZ290byBlcnJfcGNpZTsNCj4gPiAgCX0NCj4gPg0KPiA+
-IC0JLyogcG93ZXIgdXAgY29yZSBwaHkgYW5kIGVuYWJsZSByZWYgY2xvY2sgKi8NCj4gPiAtCXJl
-Z21hcF91cGRhdGVfYml0cyhpbXg2X3BjaWUtPmlvbXV4Y19ncHIsIElPTVVYQ19HUFIxLA0KPiA+
-IC0JCQlJTVg2UV9HUFIxX1BDSUVfVEVTVF9QRCwgMCA8PCAxOCk7DQo+ID4gLQkvKg0KPiA+IC0J
-ICogdGhlIGFzeW5jIHJlc2V0IGlucHV0IG5lZWQgcmVmIGNsb2NrIHRvIHN5bmMgaW50ZXJuYWxs
-eSwNCj4gPiAtCSAqIHdoZW4gdGhlIHJlZiBjbG9jayBjb21lcyBhZnRlciByZXNldCwgaW50ZXJu
-YWwgc3luY2VkDQo+ID4gLQkgKiByZXNldCB0aW1lIGlzIHRvbyBzaG9ydCAsIGNhbm5vdCBtZWV0
-IHRoZSByZXF1aXJlbWVudC4NCj4gPiAtCSAqIGFkZCBvbmUgfjEwdXMgZGVsYXkgaGVyZS4NCj4g
-PiAtCSAqLw0KPiA+IC0JdWRlbGF5KDEwKTsNCj4gPiAtCXJlZ21hcF91cGRhdGVfYml0cyhpbXg2
-X3BjaWUtPmlvbXV4Y19ncHIsIElPTVVYQ19HUFIxLA0KPiA+IC0JCQlJTVg2UV9HUFIxX1BDSUVf
-UkVGX0NMS19FTiwgMSA8PCAxNik7DQo+ID4gKwlpZiAoaXNfaW14NnN4X3BjaWUoaW14Nl9wY2ll
-KSkgew0KPiA+ICsJCXJldCA9IGNsa19wcmVwYXJlX2VuYWJsZShpbXg2X3BjaWUtPnBjaWVfaW5i
-b3VuZF9heGkpOw0KPiA+ICsJCWlmIChyZXQpIHsNCj4gPiArCQkJZGV2X2VycihwcC0+ZGV2LCAi
-dW5hYmxlIHRvIGVuYWJsZSBwY2llIGNsb2NrXG4iKTsNCj4gPiArCQkJZ290byBlcnJfaW5ib3Vu
-ZF9heGk7DQo+ID4gKwkJfQ0KPiA+ICsNCj4gPiArCQlyZWdtYXBfdXBkYXRlX2JpdHMoaW14Nl9w
-Y2llLT5pb211eGNfZ3ByLCBJT01VWENfR1BSMTIsDQo+ID4gKwkJCQlJTVg2U1hfR1BSMTJfUENJ
-RV9URVNUX1BELCAwKTsNCj4gPiArCX0gZWxzZSB7DQo+ID4gKwkJLyogcG93ZXIgdXAgY29yZSBw
-aHkgYW5kIGVuYWJsZSByZWYgY2xvY2sgKi8NCj4gPiArCQlyZWdtYXBfdXBkYXRlX2JpdHMoaW14
-Nl9wY2llLT5pb211eGNfZ3ByLCBJT01VWENfR1BSMSwNCj4gPiArCQkJCUlNWDZRX0dQUjFfUENJ
-RV9URVNUX1BELCAwKTsNCj4gPiArCQkvKg0KPiA+ICsJCSAqIHRoZSBhc3luYyByZXNldCBpbnB1
-dCBuZWVkIHJlZiBjbG9jayB0byBzeW5jIGludGVybmFsbHksDQo+ID4gKwkJICogd2hlbiB0aGUg
-cmVmIGNsb2NrIGNvbWVzIGFmdGVyIHJlc2V0LCBpbnRlcm5hbCBzeW5jZWQNCj4gPiArCQkgKiBy
-ZXNldCB0aW1lIGlzIHRvbyBzaG9ydCAsIGNhbm5vdCBtZWV0IHRoZSByZXF1aXJlbWVudC4NCj4g
-PiArCQkgKiBhZGQgb25lIH4xMHVzIGRlbGF5IGhlcmUuDQo+ID4gKwkJICovDQo+ID4gKwkJdWRl
-bGF5KDEwKTsNCj4gPiArCQlyZWdtYXBfdXBkYXRlX2JpdHMoaW14Nl9wY2llLT5pb211eGNfZ3By
-LCBJT01VWENfR1BSMSwNCj4gPiArCQkJCUlNWDZRX0dQUjFfUENJRV9SRUZfQ0xLX0VOLCAxIDw8
-IDE2KTsNCj4gDQo+IFsuLi5dDQo+IA0KPiBQbGVhc2UgdXNlIElNWDZRX0dQUjFfUENJRV9SRUZf
-Q0xLX0VOIGluc3RlYWQgb2YgMSA8PCAxNiBoZXJlLiBJIGtub3cgdGhpcyBpcw0KPiBvbmx5IG1v
-dmVkIGNvZGUsIGJ1dCBhcyB5b3UgYXJlIHRvdWNoaW5nIGl0IGFueXdheSB0aGlzIGNsZWFudXAg
-c2hvdWxkIGJlDQo+IGZvbGRlZCBpbi4NCltSaWNoYXJkXSBPay4NCj4gDQo+IA0KPiAtLQ0KPiBU
-byB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUg
-bGludXgtcGNpIiBpbiB0aGUNCj4gYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIu
-a2VybmVsLm9yZyBNb3JlIG1ham9yZG9tbyBpbmZvIGF0DQo+IGh0dHA6Ly92Z2VyLmtlcm5lbC5v
-cmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KDQoNCkJlc3QgUmVnYXJkcw0KUmljaGFyZCBaaHUNCg==
+[+cc Yinghai]
+
+On Tue, Oct 14, 2014 at 02:47:30PM +0800, Wei Yang wrote:
+> In some quirks, it tries to search a pci cap and use a ttl value to avoid
+> infinite loop. While the value is hard coded to 48, which is the same as marco
+> PCI_FIND_CAP_TTL.
+> 
+> This patch moves the definition of PCI_FIND_CAP_TTL to pci.h and replace the
+> hard coded value with it.
+
+This seems reasonable (though I added Yinghai in case he knows of any
+reason why HT capabilities should be different from plain PCI capabilities
+in this respect).
+
+But I'd prefer to have the definition in drivers/pci/pci.h rather than in
+include/linux/pci.h, because both users already include drivers/pci/pci.h,
+and it is less visible.
+
+Bjorn
+
+> 
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> ---
+>  drivers/pci/pci.c    |    1 -
+>  drivers/pci/quirks.c |    8 ++++----
+>  include/linux/pci.h  |    2 ++
+>  3 files changed, 6 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 2c9ac70..76b002b1 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -137,7 +137,6 @@ void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar)
+>  EXPORT_SYMBOL_GPL(pci_ioremap_bar);
+>  #endif
+>  
+> -#define PCI_FIND_CAP_TTL	48
+>  
+>  static int __pci_find_next_cap_ttl(struct pci_bus *bus, unsigned int devfn,
+>  				   u8 pos, int cap, int *ttl)
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 80c2d01..a5f46b8 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -2176,7 +2176,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x9601, quirk_amd_780_apc_msi);
+>   * return 1 if a HT MSI capability is found and enabled */
+>  static int msi_ht_cap_enabled(struct pci_dev *dev)
+>  {
+> -	int pos, ttl = 48;
+> +	int pos, ttl = PCI_FIND_CAP_TTL;
+>  
+>  	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
+>  	while (pos && ttl--) {
+> @@ -2235,7 +2235,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_CK804_PCIE,
+>  /* Force enable MSI mapping capability on HT bridges */
+>  static void ht_enable_msi_mapping(struct pci_dev *dev)
+>  {
+> -	int pos, ttl = 48;
+> +	int pos, ttl = PCI_FIND_CAP_TTL;
+>  
+>  	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
+>  	while (pos && ttl--) {
+> @@ -2314,7 +2314,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA,
+>  
+>  static int ht_check_msi_mapping(struct pci_dev *dev)
+>  {
+> -	int pos, ttl = 48;
+> +	int pos, ttl = PCI_FIND_CAP_TTL;
+>  	int found = 0;
+>  
+>  	/* check if there is HT MSI cap or enabled on this device */
+> @@ -2439,7 +2439,7 @@ out:
+>  
+>  static void ht_disable_msi_mapping(struct pci_dev *dev)
+>  {
+> -	int pos, ttl = 48;
+> +	int pos, ttl = PCI_FIND_CAP_TTL;
+>  
+>  	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
+>  	while (pos && ttl--) {
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 96453f9..b27b79e 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -33,6 +33,8 @@
+>  
+>  #include <linux/pci_ids.h>
+>  
+> +#define PCI_FIND_CAP_TTL	48
+> +
+>  /*
+>   * The PCI interface treats multi-function devices as independent
+>   * devices.  The slot/function address of each device is encoded
+> -- 
+> 1.7.9.5
+> 
