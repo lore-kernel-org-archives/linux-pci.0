@@ -1,76 +1,32 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 1 Oct 2014 14:49:53 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Borislav Petkov <bp@alien8.de>
-cc: x86-ml <x86@kernel.org>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, hpa@zytor.com, bp@suse.de,
-	dan.carpenter@oracle.com, dougthompson@xmission.com,
-	m.chehab@samsung.com, linux-edac@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-Subject: Re: [PATCH 2/4] x86, amd_nb: Add device IDs to NB tables for F15h
- M60h
-In-Reply-To: <20141001113245.GD18271@pd.tnic>
-Message-ID: <alpine.DEB.2.11.1410011449400.5001@nanos>
-References: <1411070205-10217-1-git-send-email-Aravind.Gopalakrishnan@amd.com> <20141001113245.GD18271@pd.tnic>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout1.freenet.de ([195.4.92.91]:39152 "EHLO mout1.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751721AbaJWRkE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 Oct 2014 13:40:04 -0400
+Message-ID: <54493BFA.8010609@maya.org>
+Date: Thu, 23 Oct 2014 19:33:46 +0200
+From: Andreas Hartmann <andihartmann@freenet.de>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass
+ through (vfio)
+References: <20140923210318.498dacbd@dualc.maya.org>			 <1411502866.24563.8.camel@ul30vt.home> <5437A958.3000201@maya.org>			 <CAErSpo5kkk4itqqmCMU=08-XMcDknur8VY++F3A2LajdvTptOA@mail.gmail.com>			 <5437F1F5.3010706@maya.org>			 <CAErSpo6DuWEcJb_gfS=5JnKN8b4DXXV9+u-CRa8m3db0dbzpsQ@mail.gmail.com>			 <543804BC.3080307@maya.org>			 <CAErSpo450czUtAM104o+RS=yOcmP+3MKMH7mYk=UYhVJ2+cfSQ@mail.gmail.com>			 <20141011003219.560cca97@dualc.maya.org>			 <20141010225408.GA24493@google.com> <5438CC1E.3060407@maya.org>			 <1413360267.4202.70.camel@ul30vt.home> <54406B34.1050808@maya.org>			 <1413925580.4202.189.camel@ul30vt.home>		 <1413927152.4202.195.camel@ul30vt.home> <5447D9D9.9030909@maya.org>	 <1414010215.4202.275.camel@ul30vt.home> <54492606.5090308@maya.org> <1414082022.27420.39.camel@ul30vt.home>
+In-Reply-To: <1414082022.27420.39.camel@ul30vt.home>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Alex Williamson wrote:
+[...]
+> If you use Bjorn's previous patch to disable VC save/restore and my
+> patch to reorder the reset mechanisms, does echo 1 > reset for the sysfs
+> entry for the device also still cause a hang?
+
+Yes - it's hanging too (w/ vfio bound to the device - didn't test other
+possibilities).
 
 
-On Wed, 1 Oct 2014, Borislav Petkov wrote:
-
-> tip guys,
-> 
-> can I get an ACK for this one so that I can route it through the EDAC
-> tree for 3.19?
-
-Acked-by: Thomas Gleixner <tglx@linutronix.de>
-
- 
-> Thanks.
-> 
-> On Thu, Sep 18, 2014 at 02:56:45PM -0500, Aravind Gopalakrishnan wrote:
-> > Add F3 and F4 PCI device IDs to amd_nb_misc_ids[] and
-> > amd_nb_link_ids[] respectively. We need this to cache the
-> > Northbridges.
-> > 
-> > Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-> > ---
-> >  arch/x86/kernel/amd_nb.c | 2 ++
-> >  1 file changed, 2 insertions(+)
-> > 
-> > diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
-> > index f04dbb3..5caed1d 100644
-> > --- a/arch/x86/kernel/amd_nb.c
-> > +++ b/arch/x86/kernel/amd_nb.c
-> > @@ -21,6 +21,7 @@ const struct pci_device_id amd_nb_misc_ids[] = {
-> >  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F3) },
-> >  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M10H_F3) },
-> >  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F3) },
-> > +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M60H_NB_F3) },
-> >  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F3) },
-> >  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_M30H_NB_F3) },
-> >  	{}
-> > @@ -30,6 +31,7 @@ EXPORT_SYMBOL(amd_nb_misc_ids);
-> >  static const struct pci_device_id amd_nb_link_ids[] = {
-> >  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F4) },
-> >  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M30H_NB_F4) },
-> > +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M60H_NB_F4) },
-> >  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F4) },
-> >  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_M30H_NB_F4) },
-> >  	{}
-> > -- 
-> > 2.0.2
-> > 
-> > 
-> 
-> -- 
-> Regards/Gruss,
->     Boris.
-> 
-> Sent from a fat crate under my desk. Formatting is fine.
-> --
-> 
+Regards,
+Andreas
