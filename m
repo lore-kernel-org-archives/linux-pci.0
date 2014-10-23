@@ -1,54 +1,133 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-kernel@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <5448A0F8.1040004@huawei.com>
+Date: Thu, 23 Oct 2014 14:32:24 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
 	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
 	"David S. Miller" <davem@davemloft.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Martin Wilck <martin.wilck@ts.fujitsu.com>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH RFC v2 0/2] Fix procfs PCI resources mmap
-Date: Fri, 24 Oct 2014 17:28:04 +0100
-Message-Id: <1414168089-8130-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Liviu Dudau <liviu@dudau.co.uk>
+Subject: Re: [PATCH v3 04/27] arm/MSI: Save MSI chip in pci_sys_data
+References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com> <1413342435-7876-5-git-send-email-wangyijing@huawei.com> <20141023053555.GC11770@google.com>
+In-Reply-To: <20141023053555.GC11770@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The way PCI memory resources are exported to user space through procfs
-is not uniform across architectures. In particular, some architectures
-(ie SPARC) export the resource PCI bus address to user space, whereas
-others (ARM, PowerPC, Microblaze) export the resource CPU physical address.
-This convention should be followed when it comes to passing the pgoff
-values to the mmap syscall to map the resource in question.
+>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>> index 22e413c..f11108c 100644
+>> --- a/drivers/pci/msi.c
+>> +++ b/drivers/pci/msi.c
+>> @@ -35,6 +35,9 @@ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+>>  	struct msi_chip *chip = dev->bus->msi;
+>>  	int err;
+>>  
+>> +	if (!chip)
+>> +		chip = pci_msi_chip(dev->bus);
+>> +
+>>  	if (!chip || !chip->setup_irq)
+>>  		return -EINVAL;
+>>  
+>> @@ -50,6 +53,9 @@ void __weak arch_teardown_msi_irq(unsigned int irq)
+>>  	struct msi_desc *entry = irq_get_msi_desc(irq);
+>>  	struct msi_chip *chip = entry->dev->bus->msi;
+>>  
+>> +	if (!chip)
+>> +		chip = pci_msi_chip(entry->dev->bus);
+>> +
+>>  	if (!chip || !chip->teardown_irq)
+>>  		return;
+>>  
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 9cd2721..7a48b40 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1433,6 +1433,15 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+>>  
+>>  #include <asm/pci.h>
+>>  
+>> +/* Just avoid compile error, will be clean up later */
+>> +#ifdef CONFIG_PCI_MSI
+>> +
+>> +#ifndef pci_msi_chip
+>> +#define pci_msi_chip(bus)	NULL
+>> +#endif
+>> +#endif
+> 
+> I don't like the mixture of ARM changes and PCI core changes in the same
+> patch.  Can you split this into a core patch that does something like this:
+> 
+>   struct msi_chip * __weak pcibios_msi_controller(struct pci_bus *bus)
+>   {
+>     return NULL;
+>   }
+> 
+>   struct msi_chip *pci_msi_controller(struct pci_bus *bus)
+>   {
+>     msi_chip *controller = bus->msi;
+> 
+>     if (controller)
+>       return controller;
+>     return pcibios_msi_controller(bus);
+>   }
+> 
+> followed by an ARM patch that puts the msi_chip pointer in struct hw_pci
+> and implements pcibios_msi_controller()?
 
-Consequently, the checks applied to the offset passed to the mmap syscall
-(in pci_mmap_fits()) are to be interpreted differently on different
-architectures, and in particular they should match the values exported to
-user space through the pci_resource_to_user() conversion function.
+OK, I will split it in half.
 
-This patch series addresses two issues. First patch applies the
-pci_resource_to_user() filter to the PCI resource that is being
-mapped in order to carry out a proper check against the pgoff passed
-from user space. Second patch fixes the way the pgoff is handled in
-the ARM pci_mmap_page_range() implementation.
+> 
+> I know you're trying to *remove* weak functions, and this adds one, but
+> this section of the series is more about getting rid of the ARM
+> pcibios_add_bus() because all it was used for was setting the bus->msi
+> pointer.
 
-v1 posting:
+Yes, agree.
 
-http://marc.info/?l=linux-kernel&m=141337461318554&w=2
+> 
+> Eventually we might have a way to stash an MSI controller pointer in the
+> generic pci_host_bridge struct, and then the pcibios_msi_controller()
+> interface could go away.
 
-v1 => v2
-- Reworded commit log as per RMK comments
+Yep, I am doing the work to make a generic pci_host_bridge, and try to rip it out from
+pci_create_root_bus, that's also a large changes across many archs.
 
-Lorenzo Pieralisi (2):
-  drivers: pci: fix pci_mmap_fits() implementation for procfs mmap
-  arm: kernel: fix pci_mmap_page_range() offset calculation
+> 
+>> +
+>>  /* these helpers provide future and backwards compatibility
+>>   * for accessing popular PCI BAR info */
+>>  #define pci_resource_start(dev, bar)	((dev)->resource[(bar)].start)
+>> -- 
+>> 1.7.1
+>>
+> 
+> .
+> 
 
- arch/arm/kernel/bios32.c | 10 ++--------
- drivers/pci/pci-sysfs.c  | 13 ++++++++-----
- 2 files changed, 10 insertions(+), 13 deletions(-)
 
 -- 
-2.1.2
+Thanks!
+Yijing
 
