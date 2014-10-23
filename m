@@ -1,123 +1,127 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, Borislav Petkov <bp@alien8.de>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v7 00/18] Enable support of IOAPIC hotplug on x86 platforms
-Date: Mon, 27 Oct 2014 13:21:30 +0800
-Message-Id: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2on0138.outbound.protection.outlook.com ([65.55.169.138]:21007
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751525AbaJWPm4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 Oct 2014 11:42:56 -0400
+From: Stuart Yoder <stuart.yoder@freescale.com>
+To: Marcel Apfelbaum <marcel.a@redhat.com>,
+	Alex Williamson <alex.williamson@redhat.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"marcel@redhat.com" <marcel@redhat.com>,
+	"mst@redhat.com" <mst@redhat.com>,
+	Eric Auger <eric.auger@linaro.org>
+Subject: RE: [PATCH v4] PCI: add kernel parameter to override devid<->driver
+ mapping.
+Date: Thu, 23 Oct 2014 15:42:52 +0000
+Message-ID: <b1639ca1ba8f4b7d9a361784bcca6a2e@CY1PR0301MB0748.namprd03.prod.outlook.com>
+References: <1413813882-27047-1-git-send-email-marcel.a@redhat.com>
+	 <1414002755.4202.253.camel@ul30vt.home>
+	 <1414067521.2376.54.camel@localhost.localdomain>
+	 <1414069910.27420.7.camel@ul30vt.home>
+ <1414071412.2376.81.camel@localhost.localdomain>
+In-Reply-To: <1414071412.2376.81.camel@localhost.localdomain>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set enhances IOAPIC core and ACPI drivers to support IOAPIC
-hotplug on x86 platforms. It's based on v3.18-rc2 at
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
-
-You may pull it from 
-https://github.com/jiangliu/linux.git ioapic/hotplug_v7
-
-We have pick up several patches from Yinghai's original IOAPIC hotplug
-patch set and reimplemented IOAPIC driver as an ACPI driver instead of
-a PCI driver.
-
-It has been tested on a 4-socket Intel SDV with socket hot-addition
-capability. Any suggestions are welcomed!
-
-Patch 1-3 are bugfixes against v3.17 and should target v3.18. Patch 1
-has been merged into tip/x86/urgent.
-Patch 4-7 are bugfixes and enhancements to ACPI subsystem
-Patch 8 killes PCI IOAPIC driver
-Patch 9-17 enhances IOAPIC core to support IOAPIC hotplug
-Patch 18 reimplements ACPI IOAPIC driver and enables IOAPIC hotplug
-
-V6->V7:
-1) Rebase to v3.18-rc2
-2) Three bugfixes for v3.18
-V5->V6:
-1) Rebase to the latest v3.17-16
-2) Minor fixes for comments
-V4->V5:
-1) Fix a building error
-2) Don't rename processor_core.c as apic_id.c
-3) Improve comments
-4) Reorder patches to get rid of some temporary code
-V3->V4:
-1) Fix a bug in manage IOAPIC reference count
-2) Rebase to v3.17-rc2
-3) Refine commit messages
-V2->V3:
-1) Refine ACPI resource walk functions for PCI root bus and IOAPIC
-2) Improve commit messages
-3) Reorder patch order for better maintenence
-
-Jiang Liu (15):
-  ACPI, irq: fix regression casued by 6b9fb7082409
-  x86, intel-mid: Create IRQs for APB timers and RTC timers
-  ACPI, irq, x86: Return IRQ instead of GSI in mp_register_gsi()
-  x86, PCI, ACPI: Kill private function resource_to_addr() in
-    arch/x86/pci/acpi.c
-  ACPI: Correct return value of acpi_dev_resource_address_space()
-  ACPI: Fix minor syntax issues in processor_core.c
-  PCI: Remove PCI ioapic driver
-  x86, irq: Remove __init marker for functions will be used by IOAPIC
-    hotplug
-  x86, irq: Keep balance of IOAPIC pin reference count
-  x86, irq: Refine mp_register_ioapic() to prepare for IOAPIC hotplug
-  x86, irq, ACPI: Introduce a rwsem to protect IOAPIC operations from
-    hotplug
-  x86, irq, ACPI: Implement interface to support ACPI based IOAPIC
-    hot-addition
-  x86, irq, ACPI: Implement interfaces to support ACPI based IOAPIC
-    hot-removal
-  x86, irq: Introduce helper to check whether an IOAPIC has been
-    registered
-  x86, irq, ACPI: Implement ACPI driver to support IOAPIC hotplug
-
-Yinghai Lu (3):
-  ACPI: Add interfaces to parse IOAPIC ID for IOAPIC hotplug
-  x86, irq: Split out alloc_ioapic_save_registers()
-  x86, irq: Prefer assigned ID in APIC ID register for x86_64
-
- arch/x86/include/asm/io_apic.h    |    6 +-
- arch/x86/kernel/acpi/boot.c       |  102 ++++++++++++++--
- arch/x86/kernel/apb_timer.c       |    2 -
- arch/x86/kernel/apic/io_apic.c    |  234 +++++++++++++++++++++++++++++-------
- arch/x86/pci/acpi.c               |  144 +++++++++--------------
- arch/x86/pci/intel_mid_pci.c      |   10 +-
- arch/x86/pci/irq.c                |    7 +-
- arch/x86/platform/intel-mid/sfi.c |    2 +
- drivers/acpi/Kconfig              |    6 +
- drivers/acpi/Makefile             |    1 +
- drivers/acpi/internal.h           |    7 ++
- drivers/acpi/ioapic.c             |  235 +++++++++++++++++++++++++++++++++++++
- drivers/acpi/pci_irq.c            |   11 +-
- drivers/acpi/pci_root.c           |    3 +
- drivers/acpi/processor_core.c     |  131 ++++++++++++++++++---
- drivers/acpi/resource.c           |    2 +-
- drivers/pci/Kconfig               |    7 --
- drivers/pci/Makefile              |    2 -
- drivers/pci/ioapic.c              |  121 -------------------
- include/linux/acpi.h              |    5 +
- include/linux/pci.h               |    1 +
- 21 files changed, 739 insertions(+), 300 deletions(-)
- create mode 100644 drivers/acpi/ioapic.c
- delete mode 100644 drivers/pci/ioapic.c
-
--- 
-1.7.10.4
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogTWFyY2VsIEFwZmVsYmF1
+bSBbbWFpbHRvOm1hcmNlbC5hQHJlZGhhdC5jb21dDQo+IFNlbnQ6IFRodXJzZGF5LCBPY3RvYmVy
+IDIzLCAyMDE0IDg6MzcgQU0NCj4gVG86IEFsZXggV2lsbGlhbXNvbg0KPiBDYzogbGludXgtcGNp
+QHZnZXIua2VybmVsLm9yZzsgYmhlbGdhYXNAZ29vZ2xlLmNvbTsgbGludXgta2VybmVsQHZnZXIu
+a2VybmVsLm9yZzsgbWFyY2VsQHJlZGhhdC5jb207DQo+IG1zdEByZWRoYXQuY29tOyBZb2RlciBT
+dHVhcnQtQjA4MjQ4DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjRdIFBDSTogYWRkIGtlcm5lbCBw
+YXJhbWV0ZXIgdG8gb3ZlcnJpZGUgZGV2aWQ8LT5kcml2ZXIgbWFwcGluZy4NCj4gDQo+IE9uIFRo
+dSwgMjAxNC0xMC0yMyBhdCAwNzoxMSAtMDYwMCwgQWxleCBXaWxsaWFtc29uIHdyb3RlOg0KPiA+
+IE9uIFRodSwgMjAxNC0xMC0yMyBhdCAxNTozMiArMDMwMCwgTWFyY2VsIEFwZmVsYmF1bSB3cm90
+ZToNCj4gPiA+IE9uIFdlZCwgMjAxNC0xMC0yMiBhdCAxMjozMiAtMDYwMCwgQWxleCBXaWxsaWFt
+c29uIHdyb3RlOg0KPiA+ID4gPiBbY2MrIHN0dWFydF0NCj4gPiA+ID4NCj4gPiA+ID4gT24gTW9u
+LCAyMDE0LTEwLTIwIGF0IDE3OjA0ICswMzAwLCBNYXJjZWwgQXBmZWxiYXVtIHdyb3RlOg0KPiA+
+ID4gPiA+IFNjYW5uaW5nIGEgbG90IG9mIGRldmljZXMgZHVyaW5nIGJvb3QgcmVxdWlyZXMgYSBs
+b3Qgb2YgdGltZS4NCj4gPiA+ID4gPiBPbiBvdGhlciBzY2VuYXJpb3MgdGhlcmUgaXMgYSBuZWVk
+IHRvIGJpbmQgYSBkcml2ZXIgdG8gYSBzcGVjaWZpYyBzbG90Lg0KPiA+ID4gPiA+DQo+ID4gPiA+
+ID4gQmluZGluZyBkZXZpY2VzIHRvIHBjaS1zdHViIGRyaXZlciBkb2VzIG5vdCB3b3JrLA0KPiA+
+ID4gPiA+IGFzIGl0IHdpbGwgbm90IGRpZmZlcmVudGlhdGUgYmV0d2VlbiBkZXZpY2VzIG9mIHRo
+ZQ0KPiA+ID4gPiA+IHNhbWUgdHlwZS4gVXNpbmcgc29tZSBzdGFydCBzY3JpcHRzIGlzIGVycm9y
+IHByb25lLg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gVGhlIHNvbHV0aW9uIGxldmVyYWdlcyBkcml2
+ZXJfb3ZlcnJpZGUgZnVuY3Rpb25hbGl0eSBpbnRyb2R1Y2VkIGJ5DQo+ID4gPiA+ID4NCj4gPiA+
+ID4gPiAJY29tbWl0OiA3ODJhOTg1ZDdhZjI2ZGIzOWU4NjA3MGQyOGY5ODdjYWQyMTMxM2MwDQo+
+ID4gPiA+ID4gCUF1dGhvcjogQWxleCBXaWxsaWFtc29uIDxhbGV4LndpbGxpYW1zb25AcmVkaGF0
+LmNvbT4NCj4gPiA+ID4gPiAJRGF0ZTogICBUdWUgTWF5IDIwIDA4OjUzOjIxIDIwMTQgLTA2MDAN
+Cj4gPiA+ID4gPg0KPiA+ID4gPiA+ICAgICAJUENJOiBJbnRyb2R1Y2UgbmV3IGRldmljZSBiaW5k
+aW5nIHBhdGggdXNpbmcgcGNpX2Rldi5kcml2ZXJfb3ZlcnJpZGUNCj4gPiA+ID4gPg0KPiA+ID4g
+PiA+IEluIG9yZGVyIHRvIGJpbmQgUENJIHNsb3RzIHRvIHNwZWNpZmljIGRyaXZlcnMgdXNlOg0K
+PiA+ID4gPiA+IAlwY2k9ZHJpdmVyW3h4eHg6eHg6eHgueF09Zm9vLGRyaXZlclt4eHh4Onh4Onh4
+LnhdPWJhciwuLi4NCj4gPiA+ID4gPg0KPiA+ID4gPiA+IFNpZ25lZC1vZmYtYnk6IE1hcmNlbCBB
+cGZlbGJhdW0gPG1hcmNlbC5hQHJlZGhhdC5jb20+DQo+ID4gPiA+ID4gLS0tDQo+ID4gPiA+ID4g
+djMgLT4gdjQ6DQo+ID4gPiA+ID4gIC0gQWRkcmVzc2VkIEFsZXggV2lsbGlhbXNvbidzIGNvbW1l
+bnRzOg0KPiA+ID4gPiA+ICAgIC0gTW9kaWZpZWQgdGhlIHR5cGUgb2YgZHJpdmVyX292ZXJyaWRl
+X2VudHJ5J3MgZmllbGRzDQo+ID4gPiA+ID4gICAgLSBVc2VkIFBDSV9ERVZGTiB3aGVuIGFwcHJv
+cHJpYXRlZA0KPiA+ID4gPiA+ICAgIC0gUmVtb3ZlZCByZWR1bmRhbnQgY2hlY2tzDQo+ID4gPiA+
+ID4gICAgLSBSZXBsYWNlZCBCVUdfT04gd2l0aCBwcl9lcnIgbWVzc2FnZXMNCj4gPiA+ID4gPiAg
+ICAtIFNpbXBsZXIgY29tbWFuZCBsaW5lIHBhcnNpbmcNCj4gPiA+ID4gPiAgLSBBZGRyZXNzZWQg
+TWljaGFlbCBTLiBUc2lya2luIGNvbW1lbnRzDQo+ID4gPiA+ID4gICAgLSByZW1vdmVkIERSSVZF
+Ul9PVkVSUklERV9OQU1FX0xFTkdUSCBsaW1pdGF0aW9uDQo+ID4gPiA+ID4gdjIgLT4gdjM6DQo+
+ID4gPiA+ID4gIC0gQ29ycmVjdGVkIHN1YmplY3QgbGluZQ0KPiA+ID4gPiA+IHYxIC0+IHYyOg0K
+PiA+ID4gPiA+ICAtIEFkZHJlc3NlZCBNaWNoYWVsIFMuIFRzaXJraW4gY29tbWVudHMNCj4gPiA+
+ID4gPiAgICAtIFJlbW92ZWQgMzIgc2xvdHMgbGltaXRhdGlvbg0KPiA+ID4gPiA+ICAgIC0gQmV0
+dGVyIGhhbmRsaW5nIG9mIG1lbW9yeSBhbGxvY2F0aW9uIGZhaWx1cmVzDQo+ID4gPiA+ID4gICAg
+ICAocHJlZmVycmVkIEJVR19PTiBvdmVyIGVycm9yIG1lc3NhZ2VzKQ0KPiA+ID4gPiA+ICAtIEFk
+ZHJlc3NlZCBBbGV4IFdpbGxpYW1zb24ncyBjb21tZW50czoNCj4gPiA+ID4gPiAgICAtIE1vZGlm
+aWVkIGNvbW1pdCBtZXNzYWdlIHRvIHNob3cgcGFyYW1ldGVyIHVzYWdlIG1vcmUgY2xlYXIuDQo+
+ID4gPiA+ID4gIC0gSSBwcmVmZXJyZWQgdG8gcmUtdXNlIHBhcnNlX2FyZ3MgaW5zdGVhZCBvZiBt
+YW51YWxseSB1c2luZw0KPiA+ID4gPiA+ICAgIHN0cnN0ciBpbiBvcmRlciB0byBiZXR0ZXIgY29t
+cGx5IHdpdGggY29tbWFuZCBsaW5lIHBhcnNpbmcNCj4gPiA+ID4gPiAgICBydWxlcy4NCj4gPiA+
+ID4gPiAgLSBJIGRpZG4ndCB1c2UgYW55IGxvY2tpbmcgd2hlbiBwYXJzaW5nIHRoZSBjb21tYW5k
+IGxpbmUgYXJncw0KPiA+ID4gPiA+ICAgIChzZWUgcGFyc2VfZG9uZSB1c2FnZSkgYXNzdW1pbmcg
+dGhhdCBmaXJzdCBjYWxsIHdpbGwgYmUNCj4gPiA+ID4gPiAgICBlYXJseSBpbiBzeXN0ZW0gYm9v
+dCBhbmQgbm8gcmFjZSBjYW4gb2NjdXIuIFBsZWFzZSBjb3JyZWN0DQo+ID4gPiA+ID4gICAgbWUg
+aWYgSSBhbSB3cm9uZy4NCj4gPiA+ID4gPg0KPiA+ID4gPiA+IE5vdGVzOg0KPiA+ID4gPiA+ICAt
+IEkgaGF2ZSBmdXJ0aGVyIGlkZWFzIG9uIHRvcCBvZiB0aGlzIHBhdGNoIGJhc2VkIG9uIHlvdXIg
+cmV2aWV3cy4NCj4gPiA+ID4gPiAgICBJIHRob3VnaHQgb2Y6DQo+ID4gPiA+ID4gICAgLSBVc2Ug
+d2lsZGNhcmRzIHRvIHNwZWNpZnkgZW50aXJlIGJ1c2VzL2RldmljZXMsIHNvbWV0aGluZyBsaWtl
+Og0KPiA+ID4gPiA+ICAgICAgCWRyaXZlclswMDAxOjAyOiouKl09cGNpLXN0dWINCj4gPiA+ID4g
+PiAgICAtIFVzZSBjb21tYSB0byBzZXBhcmF0ZSBzZXZlcmFsIGRldmljZXM6DQo+ID4gPiA+ID4g
+ICAgICAJZHJpdmVyWzAwMDE6MDI6MDMuNCwwMDAxOjAyOjA0LjAsLi4uXT1wY2ktc3R1Yg0KPiA+
+ID4gPiA+ICAgIC0gTWFrZSBkb21haW4gb3B0aW9uYWw6DQo+ID4gPiA+ID4gICAgCWRyaXZlclsw
+MDowMy4wXT1wY2ktc3R1Yg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gQ29tbWVudHMgd2lsbCBiZSBh
+cHByZWNpYXRlZCwNCj4gPiA+ID4gPiBUaGFua3MsDQo+ID4gPiA+ID4gTWFyY2VsDQo+ID4gPiA+
+ID4gIERvY3VtZW50YXRpb24va2VybmVsLXBhcmFtZXRlcnMudHh0IHwgICA0ICsrDQo+ID4gPiA+
+ID4gIGRyaXZlcnMvcGNpL2J1cy5jICAgICAgICAgICAgICAgICAgIHwgMTExICsrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKw0KPiA+ID4gPiA+ICBkcml2ZXJzL3BjaS9wY2kuYyAg
+ICAgICAgICAgICAgICAgICB8ICAgMiArDQo+ID4gPiA+ID4gIDMgZmlsZXMgY2hhbmdlZCwgMTE3
+IGluc2VydGlvbnMoKykNCj4gPiA+ID4NCj4gPiA+ID4gVGhlIGRyaXZlcl9vdmVycmlkZSBmZWF0
+dXJlIHRoYXQgd2UncmUgbWFraW5nIHVzZSBvZiBoZXJlIGlzIGFsc28gZ29pbmcNCj4gPiA+ID4g
+dG8gYmUgc3VwcG9ydGVkIGJ5IHBsYXRmb3JtIGRldmljZXMgYW5kIHBvdGVudGlhbGx5IG1vcmUg
+YnVzdHlwZXMgaW4gdGhlDQo+ID4gPiA+IGZ1dHVyZSwgc28gSSdtIGNvbmNlcm5lZCB0aGF0IG1h
+a2luZyBhIHBjaSBzcGVjaWZpYyBrZXJuZWwgcGFyYW1ldGVyIGlzDQo+ID4gPiA+IHRvbyBzaG9y
+dHNpZ2h0ZWQuICBJbnN0ZWFkIHdlIGNvdWxkIGhvb2sgb24gdG8gQlVTX05PVElGWV9BRERfREVW
+SUNFIGZvcg0KPiA+ID4gPiBidXN0eXBlcyB0aGF0IHN1cHBvcnQgZHJpdmVyX292ZXJyaWRlIHNv
+IHdlIGNhbiBoYXZlIGEgY29tbW9uIGludGVyZmFjZS4NCj4gPiA+IFRoZSByZWFsIHF1ZXN0aW9u
+IGhlcmUgaWYgdGhvc2UgYnVzIHR5cGVzL2RldmljZXMgd291bGQgYmVuZWZpdCBmcm9tIHRoaXMN
+Cj4gPiA+IGZlYXR1cmUsIGFuZCBJIGFsc28gbXVzdCBjb25mZXNzIHRoYXQgSSBoYXZlIG5vIGtu
+b3dsZWRnZSBvZiB0aGUgb3RoZXIgYnVzZXMuDQo+ID4gPiBDYW4gYW55b25lIGNvbmZpcm0gdGhh
+dCBpdCBkb2VzIG1ha2Ugc2Vuc2UgZm9yIHRoZW0/DQo+ID4NCj4gPiBQbGF0Zm9ybSBkZXZpY2Vz
+IGFyZSBhZGRpbmcgdmZpbyBzdXBwb3J0LCBzbyBJIGV4cGVjdCB0aGUgbmV4dCBsb2dpY2FsDQo+
+ID4gcXVlc3Rpb24gd2lsbCBiZSBob3cgdG8gcmVzZXJ2ZSBkZXZpY2VzIGZvciB1c2UgYnkgdmZp
+byBhdCBib290Lg0KPiBXZWxsLCBJJ2xsIGhhdmUgdG8gbGVhcm4gbW9yZSBhYm91dCB2ZmlvIGJl
+Zm9yZSBzYXlpbmcgYW55dGhpbmcsDQo+IGJ1dCBteSBxdWVzdGlvbiBpcyBpZiBpdCBjYW4gYmUg
+ZGVmZXJyZWQgb3IgaXQgaGFzIHRvIGJlIHBhcnQgb2YNCj4gdGhpcyBwYXRjaC4gSWYgdGhlIHBs
+YXRmb3JtIGRldmljZXMgZG8gbm90IGhhdmUgYSBzbG90IGxpa2UgaHcgYWRkcmVzcywNCj4gbWF5
+YmUgaXQgY2FuIGJlIGNvbmZpZ3VyZWQgc2VwYXJhdGVseS4NCj4gDQo+IEkgc2F3IHRoaXMgcGF0
+Y2ggYXMgYSBQQ0kgcGF0Y2gsIGFuZCBub3QgImRyaXZlcl9vdmVycmlkZSIgZXhwYW5zaW9uOw0K
+PiBtZWFuaW5nIHRoYXQgSSBvbmx5IGxldmVyYWdlZCBhbiBleGlzdGluZyBmZWF0dXJlLCBub3Qg
+dHJ5aW5nIHRvDQo+IGV4dGVuZCBpdC4NCg0KSSB0aGluayBvdGhlciBidXNlcyBtYXkgd2FudCB0
+byB1c2UgdGhlIHNhbWUgbWVjaGFuaXNtIHRvIHNwZWNpZnkgZHJpdmVyDQpiaW5kaW5ncywgc28g
+SSB0aGluayB0aGUgbWFpbiB0aGluZyBpcyB0byBub3QgZGVmaW5lIGEgc3ludGF4IHRoYXQgbWFr
+ZXMNCnRoYXQgcHJvYmxlbWF0aWMuDQoNCkxvb2tpbmcgYXQgeW91ciBvcmlnaW5hbCBzeW50YXgs
+IEkgdGhpbmsgaXQgY291bGQgd29yayBmb3IgZGlmZmVyZW50DQpidXMgdHlwZXMuICBDb3VsZCBo
+YXZlIHNvbWV0aGluZyBsaWtlOg0KDQogICBwbGF0Zm9ybT1kcml2ZXJbeHh4eF09Zm9vLGRyaXZl
+clt4eHh4XT12ZmlvLXBsYXRmb3JtDQogICBwY2k9ZHJpdmVyW3h4eHg6eHg6eHgueF09Zm9vLGRy
+aXZlclt4eHh4Onh4Onh4LnhdPWJhcg0KDQpTbyBubyBzdHJvbmcgb3BpbmlvbiBvbiB0aGF0IHZz
+IEFsZXgncyBwcm9wb3NhbDoNCg0KICAgZHJpdmVyX292ZXJyaWRlPXBjaSwwMDAwOjAyOjAwLjA9
+cGNpLXN0dWI7cGxhdGZvcm0seHh4eD12ZmlvLXBsYXRmb3JtDQoNCkl0IHNlZW1zIHRvIG1lIHRo
+YXQgZWl0aGVyIGNvdWxkIHdvcmsuDQoNClRoYW5rcywNClN0dWFydA0K
