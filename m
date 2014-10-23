@@ -1,177 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:48141 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751106AbaJPKyM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Oct 2014 06:54:12 -0400
-Message-ID: <1413456849.2165.13.camel@antimon.intern.lynxeye.de>
-Subject: Re: [PATCH v6 09/13] PCI: imx6: Add imx6sx pcie support
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Richard Zhu <richard.zhu@freescale.com>
-Cc: linux-pci@vger.kernel.org, shawn.guo@freescale.com,
-	festevam@gmail.com, tharvey@gateworks.com,
-	Richard Zhu <r65037@freescale.com>
-Date: Thu, 16 Oct 2014 12:54:09 +0200
-In-Reply-To: <1413445963-24706-10-git-send-email-richard.zhu@freescale.com>
-References: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
-	 <1413445963-24706-10-git-send-email-richard.zhu@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-bl2on0142.outbound.protection.outlook.com ([65.55.169.142]:20064
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755811AbaJWOGO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 Oct 2014 10:06:14 -0400
+From: Stuart Yoder <stuart.yoder@freescale.com>
+To: Marcel Apfelbaum <marcel.a@redhat.com>,
+	Alex Williamson <alex.williamson@redhat.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"marcel@redhat.com" <marcel@redhat.com>,
+	"mst@redhat.com" <mst@redhat.com>
+Subject: RE: [PATCH v4] PCI: add kernel parameter to override devid<->driver
+ mapping.
+Date: Thu, 23 Oct 2014 13:51:06 +0000
+Message-ID: <78dc034416ad42f1a2c8343ea1401fae@CY1PR0301MB0748.namprd03.prod.outlook.com>
+References: <1413813882-27047-1-git-send-email-marcel.a@redhat.com>
+	 <1414002755.4202.253.camel@ul30vt.home>
+ <1414067521.2376.54.camel@localhost.localdomain>
+In-Reply-To: <1414067521.2376.54.camel@localhost.localdomain>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Donnerstag, den 16.10.2014, 15:52 +0800 schrieb Richard Zhu:
-> From: Richard Zhu <r65037@freescale.com>
-> 
-> - imx6sx pcie has its own standalone pcie power supply.
-> In order to turn on the imx6sx pcie power during
-> initialization. Add the pcie regulator and the gpc regmap
-> into the imx6sx pcie structure.
-> - imx6sx pcie has the new added reset mechanism, add the
-> reset operations into the initialization.
-> - register one PM call-back, enter/exit L2 state during
-> system suspend/resume.
-> use noirq pm_ops instead of the general pm_ops in dev_pm_ops,
-> since cfg read/write may occurs after suspend and before resume.
-> do msi store/re-store in suspend/resume callbacks, since
-> controller maybe turned off, and these msi cfg maybe lost
-> in suspend.
-> - disp_axi clock is required by pcie inbound axi port actually.
-> Add one more clock named pcie_inbound_axi for imx6sx pcie.
-> - host init maybe failed, return negative value when
-> there is a failure in the host init.
-> 
-> Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
-> ---
->  drivers/pci/host/pci-imx6.c | 204 +++++++++++++++++++++++++++++++++++++++-----
->  1 file changed, 183 insertions(+), 21 deletions(-)
-> 
-[...]
->  
-> +#ifdef CONFIG_PM_SLEEP
-> +static int pci_imx_suspend_noirq(struct device *dev)
-> +{
-> +	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
-> +	struct pcie_port *pp = &imx6_pcie->pp;
-> +
-> +	if (is_imx6sx_pcie(imx6_pcie)) {
-> +		if (IS_ENABLED(CONFIG_PCI_MSI))
-> +			dw_pcie_msi_cfg_store(pp);
-> +
-> +		/* PM_TURN_OFF */
-> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> +				IMX6SX_GPR12_PCIE_PM_TURN_OFF,
-> +				IMX6SX_GPR12_PCIE_PM_TURN_OFF);
-> +		udelay(10);
-> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> +				IMX6SX_GPR12_PCIE_PM_TURN_OFF, 0);
-> +		clk_disable_unprepare(imx6_pcie->pcie);
-> +		clk_disable_unprepare(imx6_pcie->pcie_bus);
-> +		clk_disable_unprepare(imx6_pcie->pcie_phy);
-> +		clk_disable_unprepare(imx6_pcie->pcie_inbound_axi);
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static int pci_imx_resume_noirq(struct device *dev)
-> +{
-> +	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
-> +	struct pcie_port *pp = &imx6_pcie->pp;
-> +
-> +	if (is_imx6sx_pcie(imx6_pcie)) {
-> +		clk_prepare_enable(imx6_pcie->pcie_inbound_axi);
-> +		clk_prepare_enable(imx6_pcie->pcie_bus);
-> +		clk_prepare_enable(imx6_pcie->pcie_phy);
-> +		clk_prepare_enable(imx6_pcie->pcie);
-> +
-> +		/* Reset iMX6SX PCIe */
-> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
-> +				IMX6SX_GPR5_PCIE_PERST, IMX6SX_GPR5_PCIE_PERST);
-> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
-> +				IMX6SX_GPR5_PCIE_PERST, 0);
-> +		/*
-> +		 * controller maybe turn off, re-configure again
-> +		 */
-> +		dw_pcie_setup_rc(pp);
-> +
-> +		if (IS_ENABLED(CONFIG_PCI_MSI))
-> +			dw_pcie_msi_cfg_restore(pp);
-> +
-> +		/* RESET EP */
-> +		gpio_set_value(imx6_pcie->reset_gpio, 0);
-> +		udelay(10);
-
-You are violating the spec here: "When PERST# is asserted it must remain
-active for a minimum of 100 us (Tperst)." Also you probably want to put
-the EP in reset at suspend and only release the reset in the resume
-path.
-
-> +		gpio_set_value(imx6_pcie->reset_gpio, 1);
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static const struct dev_pm_ops pci_imx_pm_ops = {
-> +	.suspend_noirq = pci_imx_suspend_noirq,
-> +	.resume_noirq = pci_imx_resume_noirq,
-> +	.freeze_noirq = pci_imx_suspend_noirq,
-> +	.thaw_noirq = pci_imx_resume_noirq,
-> +	.poweroff_noirq = pci_imx_suspend_noirq,
-> +	.restore_noirq = pci_imx_resume_noirq,
-> +};
-> +#endif
-> +
->  static int __init imx6_pcie_probe(struct platform_device *pdev)
->  {
->  	struct imx6_pcie *imx6_pcie;
-> @@ -610,9 +751,28 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
->  		return PTR_ERR(imx6_pcie->pcie);
->  	}
->  
-> -	/* Grab GPR config register range */
-> -	imx6_pcie->iomuxc_gpr =
-> -		 syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
-> +	if (is_imx6sx_pcie(imx6_pcie)) {
-> +		imx6_pcie->pcie_inbound_axi = devm_clk_get(&pdev->dev,
-> +				"pcie_inbound_axi");
-> +		if (IS_ERR(imx6_pcie->pcie_inbound_axi)) {
-> +			dev_err(&pdev->dev,
-> +				"pcie clock source missing or invalid\n");
-> +			return PTR_ERR(imx6_pcie->pcie_inbound_axi);
-> +		}
-> +
-> +		imx6_pcie->pcie_phy_regulator = devm_regulator_get(pp->dev,
-> +				"pcie-phy");
-> +
-> +		imx6_pcie->iomuxc_gpr =
-> +			 syscon_regmap_lookup_by_compatible
-> +			 ("fsl,imx6sx-iomuxc-gpr");
-> +		imx6_pcie->gpc_ips_reg =
-> +			 syscon_regmap_lookup_by_compatible("fsl,imx6sx-gpc");
-> +	} else {
-> +		imx6_pcie->iomuxc_gpr =
-> +			syscon_regmap_lookup_by_compatible
-> +			("fsl,imx6q-iomuxc-gpr");
-> +	}
->  	if (IS_ERR(imx6_pcie->iomuxc_gpr)) {
->  		dev_err(&pdev->dev, "unable to find iomuxc registers\n");
->  		return PTR_ERR(imx6_pcie->iomuxc_gpr);
-> @@ -636,6 +796,7 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
->  
->  static const struct of_device_id imx6_pcie_of_match[] = {
->  	{ .compatible = "fsl,imx6q-pcie", },
-> +	{ .compatible = "fsl,imx6sx-pcie", },
->  	{},
->  };
->  MODULE_DEVICE_TABLE(of, imx6_pcie_of_match);
-> @@ -645,6 +806,7 @@ static struct platform_driver imx6_pcie_driver = {
->  		.name	= "imx6q-pcie",
->  		.owner	= THIS_MODULE,
->  		.of_match_table = imx6_pcie_of_match,
-> +		.pm = &pci_imx_pm_ops,
->  	},
->  	.shutdown = imx6_pcie_shutdown,
->  };
-
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogTWFyY2VsIEFwZmVsYmF1
+bSBbbWFpbHRvOm1hcmNlbC5hQHJlZGhhdC5jb21dDQo+IFNlbnQ6IFRodXJzZGF5LCBPY3RvYmVy
+IDIzLCAyMDE0IDc6MzIgQU0NCj4gVG86IEFsZXggV2lsbGlhbXNvbg0KPiBDYzogbGludXgtcGNp
+QHZnZXIua2VybmVsLm9yZzsgYmhlbGdhYXNAZ29vZ2xlLmNvbTsgbGludXgta2VybmVsQHZnZXIu
+a2VybmVsLm9yZzsgbWFyY2VsQHJlZGhhdC5jb207DQo+IG1zdEByZWRoYXQuY29tOyBZb2RlciBT
+dHVhcnQtQjA4MjQ4DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjRdIFBDSTogYWRkIGtlcm5lbCBw
+YXJhbWV0ZXIgdG8gb3ZlcnJpZGUgZGV2aWQ8LT5kcml2ZXIgbWFwcGluZy4NCj4gDQo+IE9uIFdl
+ZCwgMjAxNC0xMC0yMiBhdCAxMjozMiAtMDYwMCwgQWxleCBXaWxsaWFtc29uIHdyb3RlOg0KPiA+
+IFtjYysgc3R1YXJ0XQ0KPiA+DQo+ID4gT24gTW9uLCAyMDE0LTEwLTIwIGF0IDE3OjA0ICswMzAw
+LCBNYXJjZWwgQXBmZWxiYXVtIHdyb3RlOg0KPiA+ID4gU2Nhbm5pbmcgYSBsb3Qgb2YgZGV2aWNl
+cyBkdXJpbmcgYm9vdCByZXF1aXJlcyBhIGxvdCBvZiB0aW1lLg0KPiA+ID4gT24gb3RoZXIgc2Nl
+bmFyaW9zIHRoZXJlIGlzIGEgbmVlZCB0byBiaW5kIGEgZHJpdmVyIHRvIGEgc3BlY2lmaWMgc2xv
+dC4NCj4gPiA+DQo+ID4gPiBCaW5kaW5nIGRldmljZXMgdG8gcGNpLXN0dWIgZHJpdmVyIGRvZXMg
+bm90IHdvcmssDQo+ID4gPiBhcyBpdCB3aWxsIG5vdCBkaWZmZXJlbnRpYXRlIGJldHdlZW4gZGV2
+aWNlcyBvZiB0aGUNCj4gPiA+IHNhbWUgdHlwZS4gVXNpbmcgc29tZSBzdGFydCBzY3JpcHRzIGlz
+IGVycm9yIHByb25lLg0KPiA+ID4NCj4gPiA+IFRoZSBzb2x1dGlvbiBsZXZlcmFnZXMgZHJpdmVy
+X292ZXJyaWRlIGZ1bmN0aW9uYWxpdHkgaW50cm9kdWNlZCBieQ0KPiA+ID4NCj4gPiA+IAljb21t
+aXQ6IDc4MmE5ODVkN2FmMjZkYjM5ZTg2MDcwZDI4Zjk4N2NhZDIxMzEzYzANCj4gPiA+IAlBdXRo
+b3I6IEFsZXggV2lsbGlhbXNvbiA8YWxleC53aWxsaWFtc29uQHJlZGhhdC5jb20+DQo+ID4gPiAJ
+RGF0ZTogICBUdWUgTWF5IDIwIDA4OjUzOjIxIDIwMTQgLTA2MDANCj4gPiA+DQo+ID4gPiAgICAg
+CVBDSTogSW50cm9kdWNlIG5ldyBkZXZpY2UgYmluZGluZyBwYXRoIHVzaW5nIHBjaV9kZXYuZHJp
+dmVyX292ZXJyaWRlDQo+ID4gPg0KPiA+ID4gSW4gb3JkZXIgdG8gYmluZCBQQ0kgc2xvdHMgdG8g
+c3BlY2lmaWMgZHJpdmVycyB1c2U6DQo+ID4gPiAJcGNpPWRyaXZlclt4eHh4Onh4Onh4LnhdPWZv
+byxkcml2ZXJbeHh4eDp4eDp4eC54XT1iYXIsLi4uDQo+ID4gPg0KPiA+ID4gU2lnbmVkLW9mZi1i
+eTogTWFyY2VsIEFwZmVsYmF1bSA8bWFyY2VsLmFAcmVkaGF0LmNvbT4NCj4gPiA+IC0tLQ0KPiA+
+ID4gdjMgLT4gdjQ6DQo+ID4gPiAgLSBBZGRyZXNzZWQgQWxleCBXaWxsaWFtc29uJ3MgY29tbWVu
+dHM6DQo+ID4gPiAgICAtIE1vZGlmaWVkIHRoZSB0eXBlIG9mIGRyaXZlcl9vdmVycmlkZV9lbnRy
+eSdzIGZpZWxkcw0KPiA+ID4gICAgLSBVc2VkIFBDSV9ERVZGTiB3aGVuIGFwcHJvcHJpYXRlZA0K
+PiA+ID4gICAgLSBSZW1vdmVkIHJlZHVuZGFudCBjaGVja3MNCj4gPiA+ICAgIC0gUmVwbGFjZWQg
+QlVHX09OIHdpdGggcHJfZXJyIG1lc3NhZ2VzDQo+ID4gPiAgICAtIFNpbXBsZXIgY29tbWFuZCBs
+aW5lIHBhcnNpbmcNCj4gPiA+ICAtIEFkZHJlc3NlZCBNaWNoYWVsIFMuIFRzaXJraW4gY29tbWVu
+dHMNCj4gPiA+ICAgIC0gcmVtb3ZlZCBEUklWRVJfT1ZFUlJJREVfTkFNRV9MRU5HVEggbGltaXRh
+dGlvbg0KPiA+ID4gdjIgLT4gdjM6DQo+ID4gPiAgLSBDb3JyZWN0ZWQgc3ViamVjdCBsaW5lDQo+
+ID4gPiB2MSAtPiB2MjoNCj4gPiA+ICAtIEFkZHJlc3NlZCBNaWNoYWVsIFMuIFRzaXJraW4gY29t
+bWVudHMNCj4gPiA+ICAgIC0gUmVtb3ZlZCAzMiBzbG90cyBsaW1pdGF0aW9uDQo+ID4gPiAgICAt
+IEJldHRlciBoYW5kbGluZyBvZiBtZW1vcnkgYWxsb2NhdGlvbiBmYWlsdXJlcw0KPiA+ID4gICAg
+ICAocHJlZmVycmVkIEJVR19PTiBvdmVyIGVycm9yIG1lc3NhZ2VzKQ0KPiA+ID4gIC0gQWRkcmVz
+c2VkIEFsZXggV2lsbGlhbXNvbidzIGNvbW1lbnRzOg0KPiA+ID4gICAgLSBNb2RpZmllZCBjb21t
+aXQgbWVzc2FnZSB0byBzaG93IHBhcmFtZXRlciB1c2FnZSBtb3JlIGNsZWFyLg0KPiA+ID4gIC0g
+SSBwcmVmZXJyZWQgdG8gcmUtdXNlIHBhcnNlX2FyZ3MgaW5zdGVhZCBvZiBtYW51YWxseSB1c2lu
+Zw0KPiA+ID4gICAgc3Ryc3RyIGluIG9yZGVyIHRvIGJldHRlciBjb21wbHkgd2l0aCBjb21tYW5k
+IGxpbmUgcGFyc2luZw0KPiA+ID4gICAgcnVsZXMuDQo+ID4gPiAgLSBJIGRpZG4ndCB1c2UgYW55
+IGxvY2tpbmcgd2hlbiBwYXJzaW5nIHRoZSBjb21tYW5kIGxpbmUgYXJncw0KPiA+ID4gICAgKHNl
+ZSBwYXJzZV9kb25lIHVzYWdlKSBhc3N1bWluZyB0aGF0IGZpcnN0IGNhbGwgd2lsbCBiZQ0KPiA+
+ID4gICAgZWFybHkgaW4gc3lzdGVtIGJvb3QgYW5kIG5vIHJhY2UgY2FuIG9jY3VyLiBQbGVhc2Ug
+Y29ycmVjdA0KPiA+ID4gICAgbWUgaWYgSSBhbSB3cm9uZy4NCj4gPiA+DQo+ID4gPiBOb3RlczoN
+Cj4gPiA+ICAtIEkgaGF2ZSBmdXJ0aGVyIGlkZWFzIG9uIHRvcCBvZiB0aGlzIHBhdGNoIGJhc2Vk
+IG9uIHlvdXIgcmV2aWV3cy4NCj4gPiA+ICAgIEkgdGhvdWdodCBvZjoNCj4gPiA+ICAgIC0gVXNl
+IHdpbGRjYXJkcyB0byBzcGVjaWZ5IGVudGlyZSBidXNlcy9kZXZpY2VzLCBzb21ldGhpbmcgbGlr
+ZToNCj4gPiA+ICAgICAgCWRyaXZlclswMDAxOjAyOiouKl09cGNpLXN0dWINCj4gPiA+ICAgIC0g
+VXNlIGNvbW1hIHRvIHNlcGFyYXRlIHNldmVyYWwgZGV2aWNlczoNCj4gPiA+ICAgICAgCWRyaXZl
+clswMDAxOjAyOjAzLjQsMDAwMTowMjowNC4wLC4uLl09cGNpLXN0dWINCj4gPiA+ICAgIC0gTWFr
+ZSBkb21haW4gb3B0aW9uYWw6DQo+ID4gPiAgICAJZHJpdmVyWzAwOjAzLjBdPXBjaS1zdHViDQo+
+ID4gPg0KPiA+ID4gQ29tbWVudHMgd2lsbCBiZSBhcHByZWNpYXRlZCwNCj4gPiA+IFRoYW5rcywN
+Cj4gPiA+IE1hcmNlbA0KPiA+ID4gIERvY3VtZW50YXRpb24va2VybmVsLXBhcmFtZXRlcnMudHh0
+IHwgICA0ICsrDQo+ID4gPiAgZHJpdmVycy9wY2kvYnVzLmMgICAgICAgICAgICAgICAgICAgfCAx
+MTEgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrDQo+ID4gPiAgZHJpdmVycy9w
+Y2kvcGNpLmMgICAgICAgICAgICAgICAgICAgfCAgIDIgKw0KPiA+ID4gIDMgZmlsZXMgY2hhbmdl
+ZCwgMTE3IGluc2VydGlvbnMoKykNCj4gPg0KPiA+IFRoZSBkcml2ZXJfb3ZlcnJpZGUgZmVhdHVy
+ZSB0aGF0IHdlJ3JlIG1ha2luZyB1c2Ugb2YgaGVyZSBpcyBhbHNvIGdvaW5nDQo+ID4gdG8gYmUg
+c3VwcG9ydGVkIGJ5IHBsYXRmb3JtIGRldmljZXMgYW5kIHBvdGVudGlhbGx5IG1vcmUgYnVzdHlw
+ZXMgaW4gdGhlDQo+ID4gZnV0dXJlLCBzbyBJJ20gY29uY2VybmVkIHRoYXQgbWFraW5nIGEgcGNp
+IHNwZWNpZmljIGtlcm5lbCBwYXJhbWV0ZXIgaXMNCj4gPiB0b28gc2hvcnRzaWdodGVkLiAgSW5z
+dGVhZCB3ZSBjb3VsZCBob29rIG9uIHRvIEJVU19OT1RJRllfQUREX0RFVklDRSBmb3INCj4gPiBi
+dXN0eXBlcyB0aGF0IHN1cHBvcnQgZHJpdmVyX292ZXJyaWRlIHNvIHdlIGNhbiBoYXZlIGEgY29t
+bW9uIGludGVyZmFjZS4NCj4gVGhlIHJlYWwgcXVlc3Rpb24gaGVyZSBpZiB0aG9zZSBidXMgdHlw
+ZXMvZGV2aWNlcyB3b3VsZCBiZW5lZml0IGZyb20gdGhpcw0KPiBmZWF0dXJlLCBhbmQgSSBhbHNv
+IG11c3QgY29uZmVzcyB0aGF0IEkgaGF2ZSBubyBrbm93bGVkZ2Ugb2YgdGhlIG90aGVyIGJ1c2Vz
+Lg0KPiBDYW4gYW55b25lIGNvbmZpcm0gdGhhdCBpdCBkb2VzIG1ha2Ugc2Vuc2UgZm9yIHRoZW0/
+DQoNCldlIGRvbid0IGhhdmUgdmZpby1wbGF0Zm9ybSBpbiB1c2UgeWV0LCBzbyBub3QgbXVjaCBh
+Y3R1YWwgcmVhbCB3b3JsZCB1c2VyDQpleHBlcmllbmNlIHlldC4gIEJ1dCwgSSB0aGluayBpdCBt
+YWtlcyBzZW5zZS4gICBFc3BlY2lhbGx5LCBnaXZlbiB0aGF0IHdlIGFyZQ0KaW52ZW50aW5nIGEg
+a2VybmVsIHBhcmFtZXRlciBJIHRoaW5rIHdlIHNob3VsZCBkZXNpZ24gdGhlIHN5bnRheCBzbyB0
+aGF0IGl0DQpjYW4gd29yayBidXNlcyBjYW4gaW1wbGVtZW50IHN1cHBvcnQgZm9yIHRoaXMuICBU
+aGUgZHJpdmVyX292ZXJyaWRlIG1lY2hhbmlzbQ0KaXMgbm90IGJ1cyBzcGVjaWZpYywgc28gbGV0
+J3Mgbm90IG1ha2UgdGhlIGtlcm5lbCBwYXJhbWV0ZXIgYnVzIHNwZWNpZmljLg0KDQo+ID4gUGVy
+aGFwczoNCj4gPg0KPiA+IGRyaXZlcl9vdmVycmlkZT1wY2ksMDAwMDowMjowMC4wPXBjaS1zdHVi
+O3BsYXRmb3JtLGZha2VuYW1lPXZmaW8tcGxhdGZvcm0NCj4gPg0KPiA+IEZpbmRpbmcgZGVsaW1p
+dGVycyB0aGF0IGRvbid0IGNvbmZsaWN0IG1heSBiZSBjaGFsbGVuZ2luZy4gIEFsc28sIGNhbiB3
+ZQ0KPiA+IGFzc3VtZSB0aGF0IGJ1cy1uYW1lOmRldi1uYW1lIGlzIHVuaXF1ZSBmb3IgZXZlcnkg
+YnVzdHlwZT8gIEl0IGlzIGZvcg0KPiA+IHBjaSwgcGxhdGZvcm0/DQo+IEZvciBQQ0ksIHN1cmUg
+dGhlIGRvbWFpbjpidXM6ZGV2LmZ1bmMgaXMgdW5pcXVlLCBmb3IgcGxhdGZvcm0gSSBoYXZlIG5v
+IGlkZWEsDQo+IGNhbiBhbnlvbmUgdGhhdCBrbm93cyAicGxhdGZvcm0iIGNvbmZpcm0gb3IgZGVu
+eT8NCg0KWWVzLCBkZXYtbmFtZSB3aWxsIGJlIHVuaXF1ZS4gIEFsbCBwbGF0Zm9ybSBkZXZpY2Vz
+IGFyZSB1bmRlciBhIHNpbmdsZQ0KcGxhdGZvcm0gYnVzLg0KDQpTdHVhcnQNCg==
