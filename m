@@ -1,50 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f54.google.com ([209.85.216.54]:56600 "EHLO
-	mail-qa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751949AbaJMUjD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Oct 2014 16:39:03 -0400
-Received: by mail-qa0-f54.google.com with SMTP id i13so4968068qae.13
-        for <linux-pci@vger.kernel.org>; Mon, 13 Oct 2014 13:39:02 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 22 Oct 2014 23:41:21 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arch@vger.kernel.org, arnab.basu@freescale.com,
+	Bharat.Bhushan@freescale.com, x86@kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	xen-devel@lists.xenproject.org, Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org, linux-mips@linux-mips.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Liviu Dudau <liviu@dudau.co.uk>
+Subject: Re: [PATCH v3 10/27] PCI/MSI: Remove useless bus->msi assignment
+Message-ID: <20141023054121.GE11770@google.com>
+References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
+ <1413342435-7876-11-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1413231118.26478.21.camel@pasglop>
-References: <1412656696.30859.122.camel@pasglop>
-	<CADnq5_NFt8neiOAg896d3-DbAn0rnrE7iXaTFmkNGSg-J9oSkA@mail.gmail.com>
-	<1412746096.30859.229.camel@pasglop>
-	<1413231118.26478.21.camel@pasglop>
-Date: Mon, 13 Oct 2014 16:39:02 -0400
-Message-ID: <CADnq5_Od-cr5u8vsMbLw3sTTsbKDGwJcbvoMNgKETAeDpUXhTw@mail.gmail.com>
-Subject: Re: [PATCH v3 4/7] sound/radeon: Add quirk for broken 64-bit MSI
-From: Alex Deucher <alexdeucher@gmail.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dave Airlie <airlied@linux.ie>, Takashi Iwai <tiwai@suse.de>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1413342435-7876-11-git-send-email-wangyijing@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 13, 2014 at 4:11 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Wed, 2014-10-08 at 16:28 +1100, Benjamin Herrenschmidt wrote:
->
->> > Further discussion with the hw teams have revealed that this is still
->> > an issue on newer asics so I think your original patch is correct
->> > after all.  Just disable 64 bit MSIs on all AMD audio PCI ids.
->>
->> Allright, I won't resend the whole series, I can just pickup my previous
->> patch. Takashi, Bjorn, Dave, this series covers your 3 areas of
->> maintainership, how do you want to proceed ? I'm happy to merge the
->> whole lot via powerpc ASAP (since it's all CC'ed stable) if you guys
->> send me the appropriate acks, otherwise, let me know.
->
-> So I got an Ack from Takashi but so far silence from Bjorn and Dave :-)
->
-> Ping ?
+On Wed, Oct 15, 2014 at 11:06:58AM +0800, Yijing Wang wrote:
+> Now msi chip is saved in pci_sys_data in arm,
+> we could clean the bus->msi assignment in
+> pci core.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> CC: Thierry Reding <thierry.reding@gmail.com>
+> CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> ---
+>  drivers/pci/probe.c |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index efa48dc..98bf4c3 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -682,7 +682,6 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>  
+>  	child->parent = parent;
+>  	child->ops = parent->ops;
+> -	child->msi = parent->msi;
 
-I'm fine with the radeon patches going through your tree rather than
-through my tree.
+This needs an explanation of why ARM was the only arch to depend on this.
 
-Alex
+>  	child->sysdata = parent->sysdata;
+>  	child->bus_flags = parent->bus_flags;
+>  
+> -- 
+> 1.7.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
