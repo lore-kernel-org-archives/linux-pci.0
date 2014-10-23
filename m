@@ -1,58 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.3]:56678 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752785AbaJ0TQW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 27 Oct 2014 15:16:22 -0400
-Message-ID: <544E99FD.5040306@web.de>
-Date: Mon, 27 Oct 2014 20:16:13 +0100
-From: Heiner Kallweit <heiner.kallweit@web.de>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <5448A2A7.9090407@huawei.com>
+Date: Thu, 23 Oct 2014 14:39:35 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Lucas Stach <l.stach@pengutronix.de>
-CC: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: Setting cpu affinity for MSI-X on i.mx6 possible?
-References: <544D37F7.2060800@web.de> <1414399977.2421.1.camel@pengutronix.de>
-In-Reply-To: <1414399977.2421.1.camel@pengutronix.de>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Liviu Dudau <liviu@dudau.co.uk>
+Subject: Re: [PATCH v3 09/27] arm/PCI: Clean unused pcibios_add_bus() and
+ pcibios_remove_bus()
+References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com> <1413342435-7876-10-git-send-email-wangyijing@huawei.com> <20141023053858.GD11770@google.com>
+In-Reply-To: <20141023053858.GD11770@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks, Lucas.
-
-It's interesting however that the igb driver claims it's using MSI-X.
-Maybe the DW PCIE drivers offers MSI-X on the bus and just internally falls back to MSI?
-
-Rgds, Heiner
-
-[    4.165850] igb: Intel(R) Gigabit Ethernet Network Driver - version 5.2.15-k
-[    4.172930] igb: Copyright (c) 2007-2014 Intel Corporation.
-[    4.178638] igb 0000:01:00.0: enabling device (0140 -> 0142)
-[    4.235789] igb 0000:01:00.0: added PHC on eth0
-[    4.235793] igb 0000:01:00.0: Intel(R) Gigabit Ethernet Network Connection
-[    4.235799] igb 0000:01:00.0: eth0: (PCIe:2.5Gb/s:Width x1) 00:01:c0:14:b1:58
-[    4.235804] igb 0000:01:00.0: eth0: PBA No: FFFFFF-0FF
-[    4.235810] igb 0000:01:00.0: Using MSI-X interrupts. 2 rx queue(s), 2 tx queue(s)
-
-
-Am 27.10.2014 um 09:52 schrieb Lucas Stach:
-> Hello Heiner,
+>>  /*
+>>   * Swizzle the device pin each time we cross a bridge.  If a platform does
+>>   * not provide a swizzle function, we perform the standard PCI swizzling.
+>> @@ -478,8 +464,6 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+>>  		sys->swizzle = hw->swizzle;
+>>  		sys->map_irq = hw->map_irq;
+>>  		sys->align_resource = hw->align_resource;
+>> -		sys->add_bus = hw->add_bus;
+>> -		sys->remove_bus = hw->remove_bus;
+>>  		INIT_LIST_HEAD(&sys->resources);
+>>  
+>>  		if (hw->private_data)
 > 
-> Am Sonntag, den 26.10.2014, 19:05 +0100 schrieb Heiner Kallweit:
->> I use a mini pc with i.mx6 dual and Intel igb based nic (I211) connected via PCIE.
->> igb driver uses MSI-X and creates two rx/tx queue pairs. However the IRQs of all queues are handled by the same CPU.
->> Changing affinity is not possible. Obvious direct reason is that irq_chip PCI-MSI doesn't implement the callback
->> for setting cpu affinity.
->> I'd appreciate a hint whether this is a general limitation of the Cortex-A9 / GICv1 / Synopsys Designware
->> architecture or whether just a proper implementation is missing yet.
+> What do the core changes below have to do with the ARM changes above?
+> They should be a separate patch unless they can't be separated.
+
+Hm, it's not the thing have to do, because the changes below is only used by arm arch, so I put it here
+together. It's ok to split the core changes out to another one.
+
+> 
+>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>> index f11108c..56e54ad 100644
+>> --- a/drivers/pci/msi.c
+>> +++ b/drivers/pci/msi.c
+>> @@ -32,12 +32,10 @@ int pci_msi_ignore_mask;
+>>  
+>>  int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+>>  {
+>> -	struct msi_chip *chip = dev->bus->msi;
+>> +	struct msi_chip *chip;
+>>  	int err;
+>>  
+>> -	if (!chip)
+>> -		chip = pci_msi_chip(dev->bus);
+>> -
+>> +	chip = pci_msi_chip(dev->bus);
+>>  	if (!chip || !chip->setup_irq)
+>>  		return -EINVAL;
+>>  
+>> @@ -51,10 +49,7 @@ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+>>  void __weak arch_teardown_msi_irq(unsigned int irq)
+>>  {
+>>  	struct msi_desc *entry = irq_get_msi_desc(irq);
+>> -	struct msi_chip *chip = entry->dev->bus->msi;
+>> -
+>> -	if (!chip)
+>> -		chip = pci_msi_chip(entry->dev->bus);
+>> +	struct msi_chip *chip = pci_msi_chip(entry->dev->bus);
+>>  
+>>  	if (!chip || !chip->teardown_irq)
+>>  		return;
+>> -- 
+>> 1.7.1
 >>
->> Rgds, Heiner
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> The MSI controller on imx6 doesn't support MSI-X so igb falls back to
-> regular MSI interrupts. Also all MSI interrupts are aggregated into a
-> single GIC interrupt line. This means the best we could do is switch all
-> PCIe MSI interrupts to some other CPU. Configuring the CPU affinity on a
-> per interrupt basis is impossible on this hardware.
+> .
 > 
-> Regards,
-> Lucas
-> 
+
+
+-- 
+Thanks!
+Yijing
 
