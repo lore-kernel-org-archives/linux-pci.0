@@ -1,54 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:42994 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755498AbaJNSxt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Oct 2014 14:53:49 -0400
-Received: by mail-ig0-f170.google.com with SMTP id hn15so18413444igb.5
-        for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 11:53:48 -0700 (PDT)
-Date: Tue, 14 Oct 2014 12:53:44 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: matt@masarand.com
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH 16/18] Disabled bus scan time PCI IRQ assignment on ia64
-Message-ID: <20141014185344.GL10125@google.com>
-References: <1412222866-21068-1-git-send-email-matt@masarand.com>
- <1412222866-21068-17-git-send-email-matt@masarand.com>
+Received: from mx1.redhat.com ([209.132.183.28]:6943 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752705AbaJWSVp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 Oct 2014 14:21:45 -0400
+Message-ID: <54494735.20505@redhat.com>
+Date: Thu, 23 Oct 2014 14:21:41 -0400
+From: Prarit Bhargava <prarit@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1412222866-21068-17-git-send-email-matt@masarand.com>
+To: Prarit Bhargava <prarit@redhat.com>
+CC: rhkernel-list@redhat.com, Myron Stowe <mstowe@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Alexander Ducyk <alexander.h.duyck@redhat.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH V2] pci, add sysfs numa_node write function
+References: <1414088454-24522-1-git-send-email-prarit@redhat.com>
+In-Reply-To: <1414088454-24522-1-git-send-email-prarit@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 02, 2014 at 05:07:44AM +0100, matt@masarand.com wrote:
-> From: Matthew Minter <matt@masarand.com>
-> 
-> Most of the architectures are switched to allocating IRQs at device_enable
-> time instead of boot time, however ia64 does not provide an easy way of
-> making that transition so the new code is disabled here on ia64.
-> 
-> Signed-off-by: Matthew Minter <matt@masarand.com>
-> 
-> ---
->  arch/ia64/pci/pci.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-> index 291a582..398d5d4 100644
-> --- a/arch/ia64/pci/pci.c
-> +++ b/arch/ia64/pci/pci.c
-> @@ -483,6 +483,9 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
->  {
->  	struct pci_controller *controller = bridge->bus->sysdata;
->  
-> +	bridge->swizzle_irq = NULL;
-> +	bridge->map_irq = NULL;
 
-Since ->swizzle_irq and ->map_irq default to NULL anyway, isn't this a
-no-op?
 
->  	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
->  	return 0;
->  }
-> -- 
-> 2.1.0
+On 10/23/2014 02:20 PM, Prarit Bhargava wrote:
+> Some new drivers, such as the Intel QAT driver, drivers/crypto/qat,
+> require that a specific node be assigned to the device in order to
+> achieve maximum performance for the device, and will fail to load if the
+> device has NUMA_NO_NODE.  Users can in some cases, with additional
+> information provided by vendor support, determine what the correct numa
+> node is supposed to be.  In the cases a quick hack of the driver results
+> in a function QAT device.
 > 
+
+Sorry everyone -- sent this to the wrong list.
+
+P.
