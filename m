@@ -1,307 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:46323 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753601AbaJNSLl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Oct 2014 14:11:41 -0400
-Received: by mail-ig0-f176.google.com with SMTP id hn15so15666301igb.9
-        for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 11:11:40 -0700 (PDT)
-Date: Tue, 14 Oct 2014 12:11:36 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: matt@masarand.com
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH 02/18] Delayed x86 setup of PCI IRQs to bus scan time
-Message-ID: <20141014181136.GB10125@google.com>
-References: <1412222866-21068-1-git-send-email-matt@masarand.com>
- <1412222866-21068-3-git-send-email-matt@masarand.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1412222866-21068-3-git-send-email-matt@masarand.com>
+Received: from mx1.redhat.com ([209.132.183.28]:49172 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753730AbaJWSWT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 Oct 2014 14:22:19 -0400
+From: Prarit Bhargava <prarit@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: Prarit Bhargava <prarit@redhat.com>,
+	Myron Stowe <mstowe@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Alexander Ducyk <alexander.h.duyck@redhat.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [PATCH V2] pci, add sysfs numa_node write function
+Date: Thu, 23 Oct 2014 14:22:12 -0400
+Message-Id: <1414088532-24605-1-git-send-email-prarit@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 02, 2014 at 05:07:30AM +0100, matt@masarand.com wrote:
-> From: Matthew Minter <matt@masarand.com>
-> 
-> The x86 architecture boot code currently traverses the PCI buses with
-> an extra pass in order to initialise the PCI device IRQs at boot, this
-> patch avoids this pass and defers the IRQ assignment untill device
-> enable time which also has the benefit that hot-plugged devices are
-> assigned IRQs without additional code.
-> 
-> Signed-off-by: Matthew Minter <matt@masarand.com>
-> 
-> ---
->  arch/x86/include/asm/pci_x86.h |  7 ++--
->  arch/x86/kernel/x86_init.c     |  1 -
->  arch/x86/pci/acpi.c            |  5 ++-
->  arch/x86/pci/common.c          |  2 -
->  arch/x86/pci/irq.c             | 94 +++++++++++++++++++++++-------------------
->  5 files changed, 59 insertions(+), 50 deletions(-)
-> 
-> diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-> index fa1195d..16fd8e9 100644
-> --- a/arch/x86/include/asm/pci_x86.h
-> +++ b/arch/x86/include/asm/pci_x86.h
-> @@ -90,6 +90,7 @@ extern unsigned int pcibios_irq_mask;
->  
->  extern raw_spinlock_t pci_config_lock;
->  
-> +extern int pci_map_irq(struct pci_dev *dev, u8 slot, u8 pin);
->  extern int (*pcibios_enable_irq)(struct pci_dev *dev);
->  extern void (*pcibios_disable_irq)(struct pci_dev *dev);
->  
-> @@ -119,7 +120,7 @@ extern int __init pci_acpi_init(void);
->  extern void __init pcibios_irq_init(void);
->  extern int __init pcibios_init(void);
->  extern int pci_legacy_init(void);
-> -extern void pcibios_fixup_irqs(void);
-> +extern int pcibios_fixup_irq(struct pci_dev *dev, u8 pin);
->  
->  /* pci-mmconfig.c */
->  
-> @@ -200,9 +201,9 @@ static inline void mmio_config_writel(void __iomem *pos, u32 val)
->  #  define x86_default_pci_init		pci_legacy_init
->  # endif
->  # define x86_default_pci_init_irq	pcibios_irq_init
-> -# define x86_default_pci_fixup_irqs	pcibios_fixup_irqs
-> +# define x86_default_pci_fixup_irq	pcibios_fixup_irq
->  #else
->  # define x86_default_pci_init		NULL
->  # define x86_default_pci_init_irq	NULL
-> -# define x86_default_pci_fixup_irqs	NULL
-> +# define x86_default_pci_fixup_irq	NULL
->  #endif
-> diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-> index e48b674..064457f 100644
-> --- a/arch/x86/kernel/x86_init.c
-> +++ b/arch/x86/kernel/x86_init.c
-> @@ -81,7 +81,6 @@ struct x86_init_ops x86_init __initdata = {
->  	.pci = {
->  		.init			= x86_default_pci_init,
->  		.init_irq		= x86_default_pci_init_irq,
-> -		.fixup_irqs		= x86_default_pci_fixup_irqs,
->  	},
->  };
->  
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index cfd1b13..2c433f4 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -311,7 +311,7 @@ static acpi_status setup_resource(struct acpi_resource *acpi_res, void *data)
->  	} else if (orig_end != end) {
->  		dev_info(&info->bridge->dev,
->  			"host bridge window [%#llx-%#llx] "
-> -			"([%#llx-%#llx] ignored, not CPU addressable)\n", 
-> +			"([%#llx-%#llx] ignored, not CPU addressable)\n",
+Some new drivers, such as the Intel QAT driver, drivers/crypto/qat,
+require that a specific node be assigned to the device in order to
+achieve maximum performance for the device, and will fail to load if the
+device has NUMA_NO_NODE.  Users can in some cases, with additional
+information provided by vendor support, determine what the correct numa
+node is supposed to be.  In the cases a quick hack of the driver results
+in a function QAT device.
 
-This and the similar whitespace fixes below are out of scope for this
-patch.  This patch series should have the minimal set of IRQ changes you
-need, and whitespace changes can be done later.  This makes the series
-easier to review and to backport.
+In theory, it should be possible to map a PCI device to a PCI root bridge
+to a specific node, however, in practice it is not possible.  Nodes may
+have multiple PCI root bridges, may share multiple PCI root bridges, or
+may not have an active root bridge assigned.  Hardware manufacturers may
+specifically have designed systems without numa node to PCI root bridge
+mappings.  Without assistance from some hardware reporting mechanism
+(SMBIOS, ACPI, etc.) there is no reliable way to determine the numa node
+for a PCI bridge or device.  Typically this numa mapping is done via the
+ACPI _PXM values in the ACPI tables, however, there are many systems out
+there that do not populate the ACPI _PXM entries and therefore do not have
+correct PCI device numa_node values.
 
->  			start, orig_end, end + 1, orig_end);
->  	}
->  
-> @@ -571,6 +571,9 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
->  	struct pci_sysdata *sd = bridge->bus->sysdata;
->  
->  	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
-> +
-> +	bridge->swizzle_irq = NULL;
-> +	bridge->map_irq = pci_map_irq;
->  	return 0;
->  }
->  
-> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-> index 059a76c..d4ed0b0 100644
-> --- a/arch/x86/pci/common.c
-> +++ b/arch/x86/pci/common.c
-> @@ -662,8 +662,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
->  	if ((err = pci_enable_resources(dev, mask)) < 0)
->  		return err;
->  
-> -	if (!pci_dev_msi_enabled(dev))
-> -		return pcibios_enable_irq(dev);
->  	return 0;
->  }
->  
-> diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-> index eb500c2..33d323d 100644
-> --- a/arch/x86/pci/irq.c
-> +++ b/arch/x86/pci/irq.c
-> @@ -594,9 +594,9 @@ static __init int intel_router_probe(struct irq_router *r, struct pci_dev *route
->  		return 1;
->  	}
->  
-> -	if ((device >= PCI_DEVICE_ID_INTEL_5_3400_SERIES_LPC_MIN && 
-> -	     device <= PCI_DEVICE_ID_INTEL_5_3400_SERIES_LPC_MAX) 
-> -	||  (device >= PCI_DEVICE_ID_INTEL_COUGARPOINT_LPC_MIN && 
-> +	if ((device >= PCI_DEVICE_ID_INTEL_5_3400_SERIES_LPC_MIN &&
-> +	     device <= PCI_DEVICE_ID_INTEL_5_3400_SERIES_LPC_MAX)
-> +	||  (device >= PCI_DEVICE_ID_INTEL_COUGARPOINT_LPC_MIN &&
->  	     device <= PCI_DEVICE_ID_INTEL_COUGARPOINT_LPC_MAX)
->  	||  (device >= PCI_DEVICE_ID_INTEL_DH89XXCC_LPC_MIN &&
->  	     device <= PCI_DEVICE_ID_INTEL_DH89XXCC_LPC_MAX)
-> @@ -875,9 +875,8 @@ static struct irq_info *pirq_get_info(struct pci_dev *dev)
->  	return NULL;
->  }
->  
-> -static int pcibios_lookup_irq(struct pci_dev *dev, int assign)
-> +static int pcibios_lookup_irq(struct pci_dev *dev, u8 pin, int assign)
->  {
-> -	u8 pin;
->  	struct irq_info *info;
->  	int i, pirq, newirq;
->  	int irq = 0;
-> @@ -887,7 +886,6 @@ static int pcibios_lookup_irq(struct pci_dev *dev, int assign)
->  	char *msg = NULL;
->  
->  	/* Find IRQ pin */
-> -	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
->  	if (!pin) {
->  		dev_dbg(&dev->dev, "no interrupt pin\n");
->  		return 0;
-> @@ -1017,50 +1015,45 @@ static int pcibios_lookup_irq(struct pci_dev *dev, int assign)
->  					 irq, pci_name(dev2));
->  		}
->  	}
-> -	return 1;
-> +	/*
-> +	 * Due to the complicated platform specific behvaiour we cannot defer
-> +	 * assigning dev->irq to the caller but will return it anyway
-> +	 */
-> +	return dev->irq;
->  }
->  
-> -void __init pcibios_fixup_irqs(void)
-> +int pcibios_fixup_irq(struct pci_dev *dev, u8 pin)
->  {
-> -	struct pci_dev *dev = NULL;
-> -	u8 pin;
-> -
-> +	int irq = dev->irq;
->  	DBG(KERN_DEBUG "PCI: IRQ fixup\n");
-> -	for_each_pci_dev(dev) {
-> -		/*
-> -		 * If the BIOS has set an out of range IRQ number, just
-> -		 * ignore it.  Also keep track of which IRQ's are
-> -		 * already in use.
-> -		 */
-> -		if (dev->irq >= 16) {
-> -			dev_dbg(&dev->dev, "ignoring bogus IRQ %d\n", dev->irq);
-> -			dev->irq = 0;
-> -		}
-> -		/*
-> -		 * If the IRQ is already assigned to a PCI device,
-> -		 * ignore its ISA use penalty
-> -		 */
-> -		if (pirq_penalty[dev->irq] >= 100 &&
-> -				pirq_penalty[dev->irq] < 100000)
-> -			pirq_penalty[dev->irq] = 0;
-> -		pirq_penalty[dev->irq]++;
-> +	/*
-> +	 * If the BIOS has set an out of range IRQ number, just
-> +	 * ignore it.  Also keep track of which IRQ's are
-> +	 * already in use.
-> +	 */
-> +	if (irq >= 16) {
-> +		dev_dbg(&dev->dev, "ignoring bogus IRQ %d\n", irq);
-> +		irq = 0;
->  	}
-> +	/*
-> +	 * If the IRQ is already assigned to a PCI device,
-> +	 * ignore its ISA use penalty
-> +	 */
-> +	if (pirq_penalty[irq] >= 100 &&
-> +			pirq_penalty[irq] < 100000)
-> +		pirq_penalty[irq] = 0;
-> +	pirq_penalty[irq]++;
->  
-> -	if (io_apic_assign_pci_irqs)
-> -		return;
-> +	if (io_apic_assign_pci_irqs || !pin)
-> +		return irq;
->  
-> -	dev = NULL;
-> -	for_each_pci_dev(dev) {
-> -		pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
-> -		if (!pin)
-> -			continue;
-> +	/*
-> +	 * Still no IRQ? Try to lookup one...
-> +	 */
-> +	if (!irq)
-> +		irq = pcibios_lookup_irq(dev, pin, 0);
->  
-> -		/*
-> -		 * Still no IRQ? Try to lookup one...
-> -		 */
-> -		if (!dev->irq)
-> -			pcibios_lookup_irq(dev, 0);
-> -	}
-> +	return irq;
->  }
->  
->  /*
-> @@ -1161,6 +1154,13 @@ void __init pcibios_irq_init(void)
->  	}
->  }
->  
-> +int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-> +{
-> +	bridge->swizzle_irq = NULL;
-> +	bridge->map_irq = pci_map_irq;
-> +	return 0;
-> +}
+Hardware vendors are accepting of reported bugs for the ACPI _PXM entries,
+but production fixes are typically seen in 6 months to a year and in
+some past cases, never.
 
-It's confusing to have two pcibios_root_bridge_prepare() definitions for
-one architecture, especially since one is weak and the other is not, and
-they contain duplicated code.  I think the only practical way to use __weak
-is to have a single default weak version in the entire kernel.  If we have
-more than one, e.g., this one and the one in drivers/pci/probe.c, we can't
-really tell which version will be used because it depends on link order.
+This patch introduces a mechanism to allow a user that knows the correct
+value of the numa node to set it via sysfs.  As suggested by Alexander
+and Bjorn, the setting of the value issues a loud FW_BUG message and
+TAINTS notify the user that the issue really is a firmware bug.
 
-I think it'd be better to just move the arch/x86/pci/acpi.c implementation
-to here so it's always compiled.  It can still use ACPI_COMPANION_SET(),
-since there's a stub for that even when CONFIG_ACPI is not set.
+To use this, one can do
 
-Moving pcibios_root_bridge_prepare() can be its own separate patch since
-it's trivial and can be done independently.  Then you can add the setting
-of ->map_irq in this patch.  Setting ->swizzle_irq is optional since it
-defaults to NULL anyway.
+echo 3 > /sys/devices/pci0000:ff/0000:03:1f.3/numa_node
 
-> +
->  static void pirq_penalize_isa_irq(int irq, int active)
->  {
->  	/*
-> @@ -1185,12 +1185,20 @@ void pcibios_penalize_isa_irq(int irq, int active)
->  		pirq_penalize_isa_irq(irq, active);
->  }
->  
-> +int pci_map_irq(struct pci_dev *dev, u8 slot, u8 pin)
-> +{
-> +	dev->irq = pcibios_fixup_irq(dev, pin);
-> +	if (pcibios_enable_irq(dev))
-> +		return -1;
-> +	return dev->irq;
-> +}
-> +
->  static int pirq_enable_irq(struct pci_dev *dev)
->  {
->  	u8 pin = 0;
->  
->  	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
-> -	if (pin && !pcibios_lookup_irq(dev, 1)) {
-> +	if (pin && !pcibios_lookup_irq(dev, pin, 1)) {
+to set the numa node for PCI device 0000:03:1f.3.
 
-This change (passing in "pin" instead of reading it again inside
-pcibios_lookup_irq()) can also be done separately in a small,
-obviously-correct patch.  Splitting it out will make the essential
-parts of *this* patch more obvious.
+Cc: Myron Stowe <mstowe@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alexander Ducyk <alexander.h.duyck@redhat.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Prarit Bhargava <prarit@redhat.com>
 
->  		char *msg = "";
->  
->  		if (!io_apic_assign_pci_irqs && dev->irq)
-> -- 
-> 2.1.0
-> 
+[v2]: add warning about broken BIOS, rework message after attempting
+to determine numa node on a wide number of broken systems, add
+Documentation.
+---
+ Documentation/ABI/testing/sysfs-bus-pci |   13 +++++++++++++
+ drivers/pci/pci-sysfs.c                 |   29 ++++++++++++++++++++++++++++-
+ 2 files changed, 41 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+index ee6c040..76007b3 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci
++++ b/Documentation/ABI/testing/sysfs-bus-pci
+@@ -281,3 +281,16 @@ Description:
+ 		opt-out of driver binding using a driver_override name such as
+ 		"none".  Only a single driver may be specified in the override,
+ 		there is no support for parsing delimiters.
++
++What:		/sys/bus/pci/devices/.../numa_node
++Date:		Oct 2014
++Contact:	Prarit Bhargava <prarit@redhat.com>
++Description:
++		This file contains the value of the NUMA node that the PCI
++		device is attached to, or -1 if the device is attached to
++		multiple nodes.  The file can be written to to override the
++		value if the user determines that the system's firmware has
++		provided an incorrect value.  If this file is written to
++		the user should report a firmware bug to the system vendor.
++		Writing to this file will result in kernel taint of
++		TAINT_FIRMWARE_WORKAROUND.
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 92b6d9a..e5a4664 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -221,12 +221,39 @@ static ssize_t enabled_show(struct device *dev, struct device_attribute *attr,
+ static DEVICE_ATTR_RW(enabled);
+ 
+ #ifdef CONFIG_NUMA
++static ssize_t numa_node_store(struct device *dev,
++			       struct device_attribute *attr,
++			       const char *buf, size_t count)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	int node, ret;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EPERM;
++
++	ret = kstrtoint(buf, 0, &node);
++	if (ret)
++		return ret;
++
++	if (!node_online(node))
++		return -EINVAL;
++
++	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
++	dev_alert(&pdev->dev,
++		  FW_BUG "Overriding NUMA node to %d.  Contact your vendor for updates.",
++		  node);
++
++	dev->numa_node = node;
++
++	return count;
++}
++
+ static ssize_t numa_node_show(struct device *dev, struct device_attribute *attr,
+ 			      char *buf)
+ {
+ 	return sprintf(buf, "%d\n", dev->numa_node);
+ }
+-static DEVICE_ATTR_RO(numa_node);
++static DEVICE_ATTR_RW(numa_node);
+ #endif
+ 
+ static ssize_t dma_mask_bits_show(struct device *dev,
+-- 
+1.7.9.3
+
