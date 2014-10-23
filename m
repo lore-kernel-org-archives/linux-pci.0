@@ -1,80 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:46751 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755758AbaJXJEP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Oct 2014 05:04:15 -0400
-Date: Fri, 24 Oct 2014 10:04:09 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Will Deacon <Will.Deacon@arm.com>
-Subject: Re: [PATCH RFC 1/2] drivers: pci: fix window allocation order wrt
- bus_range filtering
-Message-ID: <20141024090409.GR25302@e106497-lin.cambridge.arm.com>
-References: <1414077787-20633-1-git-send-email-lorenzo.pieralisi@arm.com>
- <20141023222707.GB11115@google.com>
+Received: from mout3.freenet.de ([195.4.92.93]:46620 "EHLO mout3.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751791AbaJWRO5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 Oct 2014 13:14:57 -0400
+Message-ID: <544936E4.8020706@maya.org>
+Date: Thu, 23 Oct 2014 19:12:04 +0200
+From: Andreas Hartmann <andihartmann@freenet.de>
 MIME-Version: 1.0
-In-Reply-To: <20141023222707.GB11115@google.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass
+ through (vfio)
+References: <20140923210318.498dacbd@dualc.maya.org>			 <1411502866.24563.8.camel@ul30vt.home> <5437A958.3000201@maya.org>			 <CAErSpo5kkk4itqqmCMU=08-XMcDknur8VY++F3A2LajdvTptOA@mail.gmail.com>			 <5437F1F5.3010706@maya.org>			 <CAErSpo6DuWEcJb_gfS=5JnKN8b4DXXV9+u-CRa8m3db0dbzpsQ@mail.gmail.com>			 <543804BC.3080307@maya.org>			 <CAErSpo450czUtAM104o+RS=yOcmP+3MKMH7mYk=UYhVJ2+cfSQ@mail.gmail.com>			 <20141011003219.560cca97@dualc.maya.org>			 <20141010225408.GA24493@google.com> <5438CC1E.3060407@maya.org>			 <1413360267.4202.70.camel@ul30vt.home> <54406B34.1050808@maya.org>			 <1413925580.4202.189.camel@ul30vt.home>		 <1413927152.4202.195.camel@ul30vt.home> <5447D9D9.9030909@maya.org>	 <1414010215.4202.275.camel@ul30vt.home> <54492606.5090308@maya.org> <1414082022.27420.39.camel@ul30vt.home>
+In-Reply-To: <1414082022.27420.39.camel@ul30vt.home>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 23, 2014 at 11:27:07PM +0100, Bjorn Helgaas wrote:
-> On Thu, Oct 23, 2014 at 04:23:06PM +0100, Lorenzo Pieralisi wrote:
-> > The number of windows allocated for the host bridge depends on the
-> > bus resource. Instead of first allocating the windows and then
-> > limit the bus resource, this patch reshuffles the code so that if any
-> > limitation is applied to the bus resource it is taken into account in
-> > the windows allocation.
-> > 
-> > Cc: Will Deacon <will.deacon@arm.com>
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Alex Williamson wrote:
+> On Thu, 2014-10-23 at 18:00 +0200, Andreas Hartmann wrote:
+>> Alex Williamson wrote:
+>>> On Wed, 2014-10-22 at 18:22 +0200, Andreas Hartmann wrote:
+>>>> Alex Williamson wrote:
+>>>>> --- a/drivers/pci/pci.c
+>>>>> +++ b/drivers/pci/pci.c
+>>>>> @@ -3308,15 +3308,15 @@ static int __pci_dev_reset(struct pci_dev *dev, int prob
+>>>>>         if (rc != -ENOTTY)
+>>>>>                 goto done;
+>>>>>  
+>>>>> -       rc = pci_pm_reset(dev, probe);
+>>>>> +       rc = pci_dev_reset_slot_function(dev, probe);
+>>>>>         if (rc != -ENOTTY)
+>>>>>                 goto done;
+>>>>>  
+>>>>> -       rc = pci_dev_reset_slot_function(dev, probe);
+>>>>> +       rc = pci_parent_bus_reset(dev, probe);
+>>>>>         if (rc != -ENOTTY)
+>>>>>                 goto done;
+>>>>>  
+>>>>> -       rc = pci_parent_bus_reset(dev, probe);
+>>>>> +       rc = pci_pm_reset(dev, probe);
+>>>>>  done:
+>>>>>         return rc;
+>>>>>  }
+>>>>
+>>>> This way it's crashing with echo 1 > reset, too.
+>>>
+>>> Ok, so it's somehow related to doing a bus reset with virtual channel
+>>> save/restore while PM reset with VC save/restore works ok as apparently
+>>> does bus reset without VC save/restore.  Let's try to do a manual bus
+>>> reset so we can look at the post reset state of the device before the
+>>> kernel tries to restore it.
+>>>
+>>> First bind the target device 03:00.0 to pci-stub or vfio-pci so that we
+>>> know it's not being used.
+>>>
+>>> Next capture lspci -xxxx -s 3:00.0 so we have the starting state.
+>>>
+>>> Then we'll do a bus reset using setpci:
+>>> # setpci -s 00:05.0 3e.w=40:40
+>>> <if you script this, wait at least 2ms here>
+>>> # setpci -s 00:05.0 3e.w=00:40
+>>> <wait 1 second here>
+>>>
+>>> Now re-capture lspci -xxxx -s 3:00.0
+>>
+>> The machine is booted w/ vfio bound to 3:00.0 as usual (now for testing
+>> linux 3.14)
+>>
+>> lspci -xxxx -s 3:00.0
+>> setpci -s 00:05.0 3e.w=40:40
+>> usleep 10
+>> setpci -s 00:05.0 3e.w=00:40
+>> sleep 1
+>> lspci -xxxx -s 3:00.0
+>>
+>> I didn't get the second lspci because the machine already was hanging.
+>> The first output is attached completely.
 > 
-> Hi Lorenzo,
+> Hmm, that doesn't make much sense.  You had found that if you disabled
+> the VC save/restore then QEMU works.  That should have still been using
+> secondary bus reset as we're trying to do here, so I don't understand
+> why we can't do a manual secondary bus reset now.
 > 
-> I can *read* your patches just fine, but when I save them using mutt to
-> apply them, they look like this:
-> 
->   --- a/drivers/pci/host/pci-host-generic.c
->   +++ b/drivers/pci/host/pci-host-generic.c
->   @@ -276,17 +276,17 @@ static int gen_pci_parse_map_cfg_windows(struct gen_p=
->   ci *pci)
->    =09=09return err;
->     =09}
->     =20
->     -=09pci->cfg.win =3D devm_kcalloc(dev,
->     resource_size(&pci->cfg.bus_range),
-> 
-> I can work around this by downloading them another way, but it is a
-> bit of a hassle.  I *think* this is because your email has
-> 
->   Content-Type: text/plain; charset=WINDOWS-1252
-> 
-> which apparently confuses mutt.  Any idea why this is?  Anybody know how I
-> can fix mutt to deal with this?
+> If you use Bjorn's previous patch to disable VC save/restore and my
+> patch to reorder the reset mechanisms, does echo 1 > reset for the sysfs
+> entry for the device also still cause a hang?
 
-I use decode-save (<Esc>s on my setup) to save the attachment(s). Sometimes
-it works well enough, although more often than not tabs get lost.
+I will test it.
 
-Best regards,
-Liviu
+> Can you provide a link to the specific model for this card?  Thanks,
 
-> 
-> Bjorn
-> 
+http://www.tp-link.com.de/support/download/?model=TL-WDN4800&version=V1
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
 
+Regards,
+Andreas
