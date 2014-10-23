@@ -1,352 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41724 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:57463 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751625AbaJWNhr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 23 Oct 2014 09:37:47 -0400
-Message-ID: <1414071412.2376.81.camel@localhost.localdomain>
-Subject: Re: [PATCH v4] PCI: add kernel parameter to override devid<->driver
- mapping.
-From: Marcel Apfelbaum <marcel.a@redhat.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, marcel@redhat.com, mst@redhat.com,
-	Stuart Yoder <stuart.yoder@freescale.com>
-Date: Thu, 23 Oct 2014 16:36:52 +0300
-In-Reply-To: <1414069910.27420.7.camel@ul30vt.home>
-References: <1413813882-27047-1-git-send-email-marcel.a@redhat.com>
-	 <1414002755.4202.253.camel@ul30vt.home>
-	 <1414067521.2376.54.camel@localhost.localdomain>
-	 <1414069910.27420.7.camel@ul30vt.home>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752705AbaJWSVI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 Oct 2014 14:21:08 -0400
+From: Prarit Bhargava <prarit@redhat.com>
+To: rhkernel-list@redhat.com
+Cc: Prarit Bhargava <prarit@redhat.com>,
+	Myron Stowe <mstowe@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Alexander Ducyk <alexander.h.duyck@redhat.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH V2] pci, add sysfs numa_node write function
+Date: Thu, 23 Oct 2014 14:20:54 -0400
+Message-Id: <1414088454-24522-1-git-send-email-prarit@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2014-10-23 at 07:11 -0600, Alex Williamson wrote:
-> On Thu, 2014-10-23 at 15:32 +0300, Marcel Apfelbaum wrote:
-> > On Wed, 2014-10-22 at 12:32 -0600, Alex Williamson wrote:
-> > > [cc+ stuart]
-> > > 
-> > > On Mon, 2014-10-20 at 17:04 +0300, Marcel Apfelbaum wrote:
-> > > > Scanning a lot of devices during boot requires a lot of time.
-> > > > On other scenarios there is a need to bind a driver to a specific slot.
-> > > > 
-> > > > Binding devices to pci-stub driver does not work,
-> > > > as it will not differentiate between devices of the
-> > > > same type. Using some start scripts is error prone.
-> > > > 
-> > > > The solution leverages driver_override functionality introduced by
-> > > > 
-> > > > 	commit: 782a985d7af26db39e86070d28f987cad21313c0
-> > > > 	Author: Alex Williamson <alex.williamson@redhat.com>
-> > > > 	Date:   Tue May 20 08:53:21 2014 -0600
-> > > > 
-> > > >     	PCI: Introduce new device binding path using pci_dev.driver_override
-> > > > 
-> > > > In order to bind PCI slots to specific drivers use:
-> > > > 	pci=driver[xxxx:xx:xx.x]=foo,driver[xxxx:xx:xx.x]=bar,...
-> > > > 
-> > > > Signed-off-by: Marcel Apfelbaum <marcel.a@redhat.com>
-> > > > ---
-> > > > v3 -> v4:
-> > > >  - Addressed Alex Williamson's comments:
-> > > >    - Modified the type of driver_override_entry's fields
-> > > >    - Used PCI_DEVFN when appropriated
-> > > >    - Removed redundant checks
-> > > >    - Replaced BUG_ON with pr_err messages
-> > > >    - Simpler command line parsing
-> > > >  - Addressed Michael S. Tsirkin comments
-> > > >    - removed DRIVER_OVERRIDE_NAME_LENGTH limitation
-> > > > v2 -> v3:
-> > > >  - Corrected subject line
-> > > > v1 -> v2:
-> > > >  - Addressed Michael S. Tsirkin comments
-> > > >    - Removed 32 slots limitation
-> > > >    - Better handling of memory allocation failures
-> > > >      (preferred BUG_ON over error messages)
-> > > >  - Addressed Alex Williamson's comments:
-> > > >    - Modified commit message to show parameter usage more clear.
-> > > >  - I preferred to re-use parse_args instead of manually using
-> > > >    strstr in order to better comply with command line parsing
-> > > >    rules.
-> > > >  - I didn't use any locking when parsing the command line args
-> > > >    (see parse_done usage) assuming that first call will be
-> > > >    early in system boot and no race can occur. Please correct
-> > > >    me if I am wrong.
-> > > > 
-> > > > Notes:
-> > > >  - I have further ideas on top of this patch based on your reviews.
-> > > >    I thought of:
-> > > >    - Use wildcards to specify entire buses/devices, something like:
-> > > >      	driver[0001:02:*.*]=pci-stub
-> > > >    - Use comma to separate several devices:
-> > > >      	driver[0001:02:03.4,0001:02:04.0,...]=pci-stub
-> > > >    - Make domain optional:
-> > > >    	driver[00:03.0]=pci-stub
-> > > > 
-> > > > Comments will be appreciated,
-> > > > Thanks,
-> > > > Marcel
-> > > >  Documentation/kernel-parameters.txt |   4 ++
-> > > >  drivers/pci/bus.c                   | 111 ++++++++++++++++++++++++++++++++++++
-> > > >  drivers/pci/pci.c                   |   2 +
-> > > >  3 files changed, 117 insertions(+)
-> > > 
-> > > The driver_override feature that we're making use of here is also going
-> > > to be supported by platform devices and potentially more bustypes in the
-> > > future, so I'm concerned that making a pci specific kernel parameter is
-> > > too shortsighted.  Instead we could hook on to BUS_NOTIFY_ADD_DEVICE for
-> > > bustypes that support driver_override so we can have a common interface.
-> > The real question here if those bus types/devices would benefit from this
-> > feature, and I also must confess that I have no knowledge of the other buses.
-> > Can anyone confirm that it does make sense for them?
-> 
-> Platform devices are adding vfio support, so I expect the next logical
-> question will be how to reserve devices for use by vfio at boot.
-Well, I'll have to learn more about vfio before saying anything,
-but my question is if it can be deferred or it has to be part of
-this patch. If the platform devices do not have a slot like hw address, 
-maybe it can be configured separately.
+Some new drivers, such as the Intel QAT driver, drivers/crypto/qat,
+require that a specific node be assigned to the device in order to
+achieve maximum performance for the device, and will fail to load if the
+device has NUMA_NO_NODE.  Users can in some cases, with additional
+information provided by vendor support, determine what the correct numa
+node is supposed to be.  In the cases a quick hack of the driver results
+in a function QAT device.
 
-I saw this patch as a PCI patch, and not "driver_override" expansion;
-meaning that I only leveraged an existing feature, not trying to
-extend it.
-If I am wrong, please point me to a more robust solution.
+In theory, it should be possible to map a PCI device to a PCI root bridge
+to a specific node, however, in practice it is not possible.  Nodes may
+have multiple PCI root bridges, may share multiple PCI root bridges, or
+may not have an active root bridge assigned.  Hardware manufacturers may
+specifically have designed systems without numa node to PCI root bridge
+mappings.  Without assistance from some hardware reporting mechanism
+(SMBIOS, ACPI, etc.) there is no reliable way to determine the numa node
+for a PCI bridge or device.  Typically this numa mapping is done via the
+ACPI _PXM values in the ACPI tables, however, there are many systems out
+there that do not populate the ACPI _PXM entries and therefore do not have
+correct PCI device numa_node values.
 
+Hardware vendors are accepting of reported bugs for the ACPI _PXM entries,
+but production fixes are typically seen in 6 months to a year and in
+some past cases, never.
 
-> 
-> > > Perhaps:
-> > > 
-> > > driver_override=pci,0000:02:00.0=pci-stub;platform,fakename=vfio-platform
-> > > 
-> > > Finding delimiters that don't conflict may be challenging.  Also, can we
-> > > assume that bus-name:dev-name is unique for every bustype?  It is for
-> > > pci, platform?
-> > For PCI, sure the domain:bus:dev.func is unique, for platform I have no idea,
-> > can anyone that knows "platform" confirm or deny?
-> > 
-> > > 
-> > > It also seems like there's a question of how long should this override
-> > > last and how does the user disable it?  
-> > > I think with pci-stub.ids=
-> > > $VENDOR:$DEVICE a user can echo the IDs to the pci-stub/remove_id sysfs
-> > > entry to cancel the effect.
-> > The way I see it is simple, the override specified in kernel command line
-> > last as long as the user does not specifically remove it using
-> > echo "" > /sys/.../driver_override
-> > and then unbind and bind the device again.
-> > 
-> > >   The only option here seems to be a reboot.
-> > Please see above
-> 
-> That's only a temporary removal though, if the device is removed and
-> re-added, either via physical hotplug or sysfs, the override is
-> re-applied.  Thanks,
-Bear with me please,
+This patch introduces a mechanism to allow a user that knows the correct
+value of the numa node to set it via sysfs.  As suggested by Alexander
+and Bjorn, the setting of the value issues a loud FW_BUG message and
+TAINTS notify the user that the issue really is a firmware bug.
 
-If we empty the driver_override file (cat "" /sys/bus/.../slot/driver_override)
-as suggested above, the override will not be reapplied.
+To use this, one can do
 
-So, it is a consistent model:
-1. The end-user specified the driver in command-line, so he wants it there
-   even after unbinding/binding or hotplug operations.
-2. If the end-user "changes his mind", he doesn't need to reboot the system,
-   only to clear the driver_override sysfs file and from this moment on
-   the system behaves like usual. (at next unbind/bind or hotplug)
+echo 3 > /sys/devices/pci0000:ff/0000:03:1f.3/numa_node
 
-I hope I got it right,
-Thanks,
-Marcel
+to set the numa node for PCI device 0000:03:1f.3.
 
+Cc: Myron Stowe <mstowe@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alexander Ducyk <alexander.h.duyck@redhat.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Prarit Bhargava <prarit@redhat.com>
 
-> 
-> Alex
-> 
-> > > Do we need a /sys/bus/pci/driver_overrides/{add_name,remove_name} for
-> > > this interface?  Thanks,
-> > While it does not hurt, I see it as optional since a simple removal of
-> > driver_override and rebind does the same
-> > 
-> > Thanks,
-> > Marcel
-> > 
-> > > 
-> > > Alex
-> > > 
-> > > > diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-> > > > index 5ae8608..c1cbb4c 100644
-> > > > --- a/Documentation/kernel-parameters.txt
-> > > > +++ b/Documentation/kernel-parameters.txt
-> > > > @@ -2631,6 +2631,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
-> > > >  		pcie_scan_all	Scan all possible PCIe devices.  Otherwise we
-> > > >  				only look for one device below a PCIe downstream
-> > > >  				port.
-> > > > +		driver		Provide an override to the devid<->driver mapping
-> > > > +				for a specific slot.
-> > > > +				Bind PCI slot 0001:02:03.4 to pci-stub by:
-> > > > +					driver[0001:02:03.4]=pci-stub
-> > > >  
-> > > >  	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
-> > > >  			Management.
-> > > > diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> > > > index 73aef51..b49f5cc 100644
-> > > > --- a/drivers/pci/bus.c
-> > > > +++ b/drivers/pci/bus.c
-> > > > @@ -15,6 +15,8 @@
-> > > >  #include <linux/proc_fs.h>
-> > > >  #include <linux/slab.h>
-> > > >  
-> > > > +#include <asm/setup.h>
-> > > > +
-> > > >  #include "pci.h"
-> > > >  
-> > > >  void pci_add_resource_offset(struct list_head *resources, struct resource *res,
-> > > > @@ -230,6 +232,114 @@ EXPORT_SYMBOL(pci_bus_alloc_resource);
-> > > >  
-> > > >  void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
-> > > >  
-> > > > +struct driver_override_entry {
-> > > > +	u16 domain;
-> > > > +	u8 bus;
-> > > > +	u8 devfn;
-> > > > +	char *driver_name;
-> > > > +	struct list_head list;
-> > > > +};
-> > > > +
-> > > > +static LIST_HEAD(driver_override_entries);
-> > > > +
-> > > > +static int pci_device_parse_driver_override(char *param, char *val,
-> > > > +					    const char *unused)
-> > > > +{
-> > > > +	unsigned int domain, bus, dev, fn;
-> > > > +	char  *buf;
-> > > > +	struct driver_override_entry *entry;
-> > > > +	int ret;
-> > > > +
-> > > > +	buf = kmalloc(COMMAND_LINE_SIZE, GFP_KERNEL);
-> > > > +	if (!buf)
-> > > > +		goto err_buf;
-> > > > +
-> > > > +	while (val) {
-> > > > +		char *k = strchr(val, ',');
-> > > > +
-> > > > +		if (k)
-> > > > +			*k++ = 0;
-> > > > +
-> > > > +		if (strncmp(val, "driver", 6)) {
-> > > > +			val = k;
-> > > > +			continue;
-> > > > +		}
-> > > > +
-> > > > +		memset(buf, 0, COMMAND_LINE_SIZE);
-> > > > +		ret = sscanf(val + 6, "[%4x:%2x:%2x.%2x]=%s",
-> > > > +			     &domain, &bus, &dev, &fn, buf);
-> > > > +		if (ret != 5) {
-> > > > +			pr_warn("PCI: Invalid command line: %s\n", val);
-> > > > +			val = k;
-> > > > +			continue;
-> > > > +		}
-> > > > +
-> > > > +		entry = kzalloc(sizeof(*entry), GFP_KERNEL);
-> > > > +		if (!entry)
-> > > > +			goto err_entry;
-> > > > +
-> > > > +		INIT_LIST_HEAD(&entry->list);
-> > > > +		entry->domain = domain;
-> > > > +		entry->bus = bus;
-> > > > +		entry->devfn = PCI_DEVFN(dev, fn);
-> > > > +		entry->driver_name = kstrdup(buf, GFP_KERNEL);
-> > > > +		if (!entry->driver_name)
-> > > > +			goto err_driver_name;
-> > > > +
-> > > > +		list_add_tail(&entry->list, &driver_override_entries);
-> > > > +		val = k;
-> > > > +	}
-> > > > +
-> > > > +	kfree(buf);
-> > > > +	return 0;
-> > > > +
-> > > > +err_driver_name:
-> > > > +	kfree(entry);
-> > > > +
-> > > > +err_entry:
-> > > > +	kfree(buf);
-> > > > +
-> > > > +err_buf:
-> > > > +	pr_err("PCI: Out of memory while parsing command line: %s\n", val);
-> > > > +	return -ENOMEM;
-> > > > +}
-> > > > +
-> > > > +static void pci_device_setup_driver_override(struct pci_dev *dev)
-> > > > +{
-> > > > +	static int parse_done;
-> > > > +	struct driver_override_entry *entry;
-> > > > +
-> > > > +	if (!parse_done) {
-> > > > +		char *cmdline = kstrdup(saved_command_line, GFP_KERNEL);
-> > > > +
-> > > > +		if (!cmdline)
-> > > > +			goto err_out_of_mem;
-> > > > +
-> > > > +		parse_args("pci", cmdline, NULL,
-> > > > +			   0, 0, 0, &pci_device_parse_driver_override);
-> > > > +		kfree(cmdline);
-> > > > +		parse_done = 1;
-> > > > +	}
-> > > > +
-> > > > +	list_for_each_entry(entry, &driver_override_entries, list) {
-> > > > +		if (pci_domain_nr(dev->bus) != entry->domain ||
-> > > > +		    dev->bus->number != entry->bus ||
-> > > > +		    dev->devfn != entry->devfn)
-> > > > +			continue;
-> > > > +
-> > > > +		dev->driver_override = kstrdup(entry->driver_name, GFP_KERNEL);
-> > > > +		if (!dev->driver_override)
-> > > > +			goto err_out_of_mem;
-> > > > +
-> > > > +		break;
-> > > > +	}
-> > > > +
-> > > > +	return;
-> > > > +
-> > > > +err_out_of_mem:
-> > > > +	pr_err("PCI: Out of memory while setting up driver override\n");
-> > > > +}
-> > > > +
-> > > >  /**
-> > > >   * pci_bus_add_device - start driver for a single device
-> > > >   * @dev: device to add
-> > > > @@ -245,6 +355,7 @@ void pci_bus_add_device(struct pci_dev *dev)
-> > > >  	 * are not assigned yet for some devices.
-> > > >  	 */
-> > > >  	pci_fixup_device(pci_fixup_final, dev);
-> > > > +	pci_device_setup_driver_override(dev);
-> > > >  	pci_create_sysfs_dev_files(dev);
-> > > >  	pci_proc_attach_device(dev);
-> > > >  
-> > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > > index 625a4ac..37809d4 100644
-> > > > --- a/drivers/pci/pci.c
-> > > > +++ b/drivers/pci/pci.c
-> > > > @@ -4508,6 +4508,8 @@ static int __init pci_setup(char *str)
-> > > >  				pcie_bus_config = PCIE_BUS_PEER2PEER;
-> > > >  			} else if (!strncmp(str, "pcie_scan_all", 13)) {
-> > > >  				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
-> > > > +			} else if (!strncmp(str, "driver", 6)) {
-> > > > +				/* lazy evaluation by the pci subsystem */
-> > > >  			} else {
-> > > >  				printk(KERN_ERR "PCI: Unknown option `%s'\n",
-> > > >  						str);
-> > > 
-> > > 
-> > > 
-> > 
-> > 
-> > 
-> 
-> 
-> 
-> 
+[v2]: add warning about broken BIOS, rework message after attempting
+to determine numa node on a wide number of broken systems, add
+Documentation.
+---
+ Documentation/ABI/testing/sysfs-bus-pci |   13 +++++++++++++
+ drivers/pci/pci-sysfs.c                 |   29 ++++++++++++++++++++++++++++-
+ 2 files changed, 41 insertions(+), 1 deletion(-)
 
-
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+index ee6c040..76007b3 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci
++++ b/Documentation/ABI/testing/sysfs-bus-pci
+@@ -281,3 +281,16 @@ Description:
+ 		opt-out of driver binding using a driver_override name such as
+ 		"none".  Only a single driver may be specified in the override,
+ 		there is no support for parsing delimiters.
++
++What:		/sys/bus/pci/devices/.../numa_node
++Date:		Oct 2014
++Contact:	Prarit Bhargava <prarit@redhat.com>
++Description:
++		This file contains the value of the NUMA node that the PCI
++		device is attached to, or -1 if the device is attached to
++		multiple nodes.  The file can be written to to override the
++		value if the user determines that the system's firmware has
++		provided an incorrect value.  If this file is written to
++		the user should report a firmware bug to the system vendor.
++		Writing to this file will result in kernel taint of
++		TAINT_FIRMWARE_WORKAROUND.
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 92b6d9a..e5a4664 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -221,12 +221,39 @@ static ssize_t enabled_show(struct device *dev, struct device_attribute *attr,
+ static DEVICE_ATTR_RW(enabled);
+ 
+ #ifdef CONFIG_NUMA
++static ssize_t numa_node_store(struct device *dev,
++			       struct device_attribute *attr,
++			       const char *buf, size_t count)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	int node, ret;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EPERM;
++
++	ret = kstrtoint(buf, 0, &node);
++	if (ret)
++		return ret;
++
++	if (!node_online(node))
++		return -EINVAL;
++
++	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
++	dev_alert(&pdev->dev,
++		  FW_BUG "Overriding NUMA node to %d.  Contact your vendor for updates.",
++		  node);
++
++	dev->numa_node = node;
++
++	return count;
++}
++
+ static ssize_t numa_node_show(struct device *dev, struct device_attribute *attr,
+ 			      char *buf)
+ {
+ 	return sprintf(buf, "%d\n", dev->numa_node);
+ }
+-static DEVICE_ATTR_RO(numa_node);
++static DEVICE_ATTR_RW(numa_node);
+ #endif
+ 
+ static ssize_t dma_mask_bits_show(struct device *dev,
+-- 
+1.7.9.3
 
