@@ -1,179 +1,142 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v3 13/27] x86/xen/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-Date: Wed, 15 Oct 2014 11:07:01 +0800
-Message-ID: <1413342435-7876-14-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
-References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:28099 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752658AbaJWH0j (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Oct 2014 03:26:39 -0400
+Message-ID: <5448AD9A.7060300@hp.com>
+Date: Thu, 23 Oct 2014 15:26:18 +0800
+From: "Li, ZhenHua" <zhen-hual@hp.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Takao Indoh <indou.takao@jp.fujitsu.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linda.knippers@hp.com, jerry.hoemann@hp.com, lisa.mitchell@hp.com,
+	alexander.duyck@gmail.com, rwright@hp.com,
+	Joerg Roedel <joro@8bytes.org>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	Tom Vaden <tom.vaden@hp.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>
+Subject: Re: [PATCH 1/1] pci: fix dmar fault for kdump kernel
+References: <1412925191-27970-1-git-send-email-zhen-hual@hp.com> <543CEE32.50109@hp.com> <543E2CD5.60708@jp.fujitsu.com> <CAErSpo4isVMeBipp3TngVtZ2CmeQva-6RSHgS8O4C9M+p1ua=Q@mail.gmail.com>
+In-Reply-To: <CAErSpo4isVMeBipp3TngVtZ2CmeQva-6RSHgS8O4C9M+p1ua=Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use MSI chip framework instead of arch MSI functions to configure
-MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+On 10/22/2014 10:47 AM, Bjorn Helgaas wrote:
+> [+cc Joerg, Eric, Tom, David, iommu list]
+>
+> On Wed, Oct 15, 2014 at 2:14 AM, Takao Indoh <indou.takao@jp.fujitsu.com> wrote:
+>> (2014/10/14 18:34), Li, ZhenHua wrote:
+>>> I tested on the latest stable version 3.17, it works well.
+>>>
+>>> On 10/10/2014 03:13 PM, Li, Zhen-Hua wrote:
+>>>> On a HP system with Intel vt-d supported and many PCI devices on it,
+>>>> when kernel crashed and the kdump kernel boots with intel_iommu=on,
+>>>> there may be some unexpected DMA requests on this adapter, which will
+>>>> cause DMA Remapping faults like:
+>>>>       dmar: DRHD: handling fault status reg 102
+>>>>       dmar: DMAR:[DMA Read] Request device [41:00.0] fault addr fff81000
+>>>>       DMAR:[fault reason 01] Present bit in root entry is clear
+>>>>
+>>>> This bug may happen on *any* PCI device.
+>>>> Analysis for this bug:
+>>>>
+>>>> The present bit is set in this function:
+>>>>
+>>>> static struct context_entry * device_to_context_entry(
+>>>>                   struct intel_iommu *iommu, u8 bus, u8 devfn)
+>>>> {
+>>>>       ......
+>>>>                   set_root_present(root);
+>>>>       ......
+>>>> }
+>>>>
+>>>> Calling tree:
+>>>>       device driver
+>>>>           intel_alloc_coherent
+>>>>               __intel_map_single
+>>>>                   domain_context_mapping
+>>>>                       domain_context_mapping_one
+>>>>                           device_to_context_entry
+>>>>
+>>>> This means, the present bit in root entry will not be set until the device
+>>>> driver is loaded.
+>>>>
+>>>> But in the kdump kernel, hardware devices are not aware that control has
+>>>> transferred to the second kernel, and those drivers must initialize again.
+>>>> Consequently there may be unexpected DMA requests from devices activity
+>>>> initiated in the first kernel leading to the DMA Remapping errors in the
+>>>> second kernel.
+>>>>
+>>>> To fix this DMAR fault, we need to reset the bus that this device on. Reset
+>>>> the device itself does not work.
+>
+> You have not explained why the DMAR faults are a problem.  The fault
+> is just an indication that the IOMMU prevented a DMA from completing.
+> If the DMA is an artifact of the crashed kernel, we probably don't
+> *want* it to complete, so taking a DMAR fault seems like exactly the
+> right thing.
+>
+> If the problem is that we're being flooded with messages, it's easy
+> enough to just tone down the printks.
+>
+>>>> A patch for this bug that has been sent before:
+>>>> https://lkml.org/lkml/2014/9/30/55
+>>>> As in discussion, this bug may happen on *any* device, so we need to reset all
+>>>> pci devices.
+>>>>
+>>>> There was an original version(Takao Indoh) that resets the pcie devices:
+>>>> https://lkml.org/lkml/2013/5/14/9
+>>
+>> As far as I can remember, the original patch was nacked by
+>> the following reasons:
+>>
+>> 1) On sparc, the IOMMU is initialized before PCI devices are enumerated,
+>>     so there would still be a window where ongoing DMA could cause an
+>>     IOMMU error.
+>>
+>> 2) Basically Bjorn is thinking device reset should be done in the
+>>     1st kernel before jumping into 2nd kernel.
+>
+> If you're referring to this: https://lkml.org/lkml/2013/6/12/16, what
+> I said was "It would be at least conceivable to reset the devices ...
+> before the kexec."  That's not a requirement to do it in the first
+> kernel, just an idea that I thought should be investigated.  And Eric
+> has good reasons for *not* doing the reset in the first kernel, so it
+> turned out not to be a very good idea.
+>
+> My fundamental problem with this whole reset thing is that it's a
+> sledgehammer approach and it's ugly.  Using the IOMMU seems like a
+> much more elegant approach.
+>
+> So if we are forced to accept the reset solution, I want to at least
+> have a concise explanation of why we can't use the IOMMU.
+>
+In my understanding, the reset is necessary, because no one knows if
+there are any other problems if the devices are not reset in the kdump
+kernel.  OS must boot with the devices in a clean state.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Acked-by: David Vrabel <david.vrabel@citrix.com>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
----
- arch/x86/pci/xen.c |   58 +++++++++++++++++++++++++++++++++++-----------------
- 1 files changed, 39 insertions(+), 19 deletions(-)
+But this will not prevent us from using Bill's iommu patch. I think the
+most important part for Bill's patch is to dump the data, not to fix
+the dmar faults, though it also fixed that.
 
-diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-index e5b8b78..75067ca 100644
---- a/arch/x86/pci/xen.c
-+++ b/arch/x86/pci/xen.c
-@@ -157,7 +157,8 @@ static int acpi_register_gsi_xen(struct device *dev, u32 gsi,
- struct xen_pci_frontend_ops *xen_pci_frontend;
- EXPORT_SYMBOL_GPL(xen_pci_frontend);
- 
--static int xen_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+static int xen_setup_msi_irqs(struct msi_chip *chip,
-+		struct pci_dev *dev, int nvec, int type)
- {
- 	int irq, ret, i;
- 	struct msi_desc *msidesc;
-@@ -219,7 +220,8 @@ static void xen_msi_compose_msg(struct pci_dev *pdev, unsigned int pirq,
- 	msg->data = XEN_PIRQ_MSI_DATA;
- }
- 
--static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+static int xen_hvm_setup_msi_irqs(struct msi_chip *chip,
-+		struct pci_dev *dev, int nvec, int type)
- {
- 	int irq, pirq;
- 	struct msi_desc *msidesc;
-@@ -267,7 +269,8 @@ error:
- #ifdef CONFIG_XEN_DOM0
- static bool __read_mostly pci_seg_supported = true;
- 
--static int xen_initdom_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+static int xen_initdom_setup_msi_irqs(struct msi_chip *chip,
-+		struct pci_dev *dev, int nvec, int type)
- {
- 	int ret = 0;
- 	struct msi_desc *msidesc;
-@@ -349,7 +352,8 @@ out:
- 	return ret;
- }
- 
--static void xen_initdom_restore_msi_irqs(struct pci_dev *dev)
-+static void xen_initdom_restore_msi_irqs(struct msi_chip *chip,
-+		struct pci_dev *dev)
- {
- 	int ret = 0;
- 
-@@ -376,7 +380,13 @@ static void xen_initdom_restore_msi_irqs(struct pci_dev *dev)
- }
- #endif
- 
--static void xen_teardown_msi_irqs(struct pci_dev *dev)
-+static void xen_teardown_msi_irq(struct msi_chip *chip, unsigned int irq)
-+{
-+	xen_destroy_irq(irq);
-+}
-+
-+static void xen_teardown_msi_irqs(struct msi_chip *chip,
-+		struct pci_dev *dev)
- {
- 	struct msi_desc *msidesc;
- 
-@@ -386,14 +396,22 @@ static void xen_teardown_msi_irqs(struct pci_dev *dev)
- 	else
- 		xen_pci_frontend_disable_msi(dev);
- 
--	/* Free the IRQ's and the msidesc using the generic code. */
--	default_teardown_msi_irqs(dev);
--}
-+	list_for_each_entry(msidesc, &dev->msi_list, list) {
-+		int i, nvec;
-+		if (msidesc->irq == 0)
-+			continue;
-+		if (msidesc->nvec_used)
-+			nvec = msidesc->nvec_used;
-+		else
-+			nvec = 1 << msidesc->msi_attrib.multiple;
-+		for (i = 0; i < nvec; i++)
-+			xen_teardown_msi_irq(chip, msidesc->irq + i);
-+	}
- 
--static void xen_teardown_msi_irq(unsigned int irq)
--{
--	xen_destroy_irq(irq);
- }
-+
-+struct msi_chip xen_msi_chip;
-+
- #endif
- 
- int __init pci_xen_init(void)
-@@ -414,9 +432,9 @@ int __init pci_xen_init(void)
- #endif
- 
- #ifdef CONFIG_PCI_MSI
--	x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
--	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
--	x86_msi.teardown_msi_irqs = xen_teardown_msi_irqs;
-+	xen_msi_chip.setup_irqs = xen_setup_msi_irqs;
-+	xen_msi_chip.teardown_irqs = xen_teardown_msi_irqs;
-+	x86_msi_chip = &xen_msi_chip;
- 	pci_msi_ignore_mask = 1;
- #endif
- 	return 0;
-@@ -436,8 +454,9 @@ int __init pci_xen_hvm_init(void)
- #endif
- 
- #ifdef CONFIG_PCI_MSI
--	x86_msi.setup_msi_irqs = xen_hvm_setup_msi_irqs;
--	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
-+	xen_msi_chip.setup_irqs = xen_hvm_setup_msi_irqs;
-+	xen_msi_chip.teardown_irq = xen_teardown_msi_irq;
-+	x86_msi_chip = &xen_msi_chip;
- #endif
- 	return 0;
- }
-@@ -494,9 +513,10 @@ int __init pci_xen_initial_domain(void)
- 	int irq;
- 
- #ifdef CONFIG_PCI_MSI
--	x86_msi.setup_msi_irqs = xen_initdom_setup_msi_irqs;
--	x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
--	x86_msi.restore_msi_irqs = xen_initdom_restore_msi_irqs;
-+	xen_msi_chip.setup_irqs = xen_initdom_setup_msi_irqs;
-+	xen_msi_chip.teardown_irq = xen_teardown_msi_irq;
-+	xen_msi_chip.restore_irqs = xen_initdom_restore_msi_irqs;
-+	x86_msi_chip = &xen_msi_chip;
- 	pci_msi_ignore_mask = 1;
- #endif
- 	xen_setup_acpi_sci();
--- 
-1.7.1
+Zhenhua
+> The changelog above is perfectly accurate, but it's really not very
+> useful because it only explains the code without exploring any of the
+> interesting issues.
+>
+> Bjorn
+>
+>> And Bill Sumner proposed another idea.
+>> http://comments.gmane.org/gmane.linux.kernel.iommu/4828
+>> I don't know the current status of this patch, but I think Jerry Hoemann
+>> is working on this.
+>>
+>> Thanks,
+>> Takao Indoh
+>>
+>>
 
