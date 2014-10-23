@@ -1,70 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f46.google.com ([209.85.192.46]:34468 "EHLO
-	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755362AbaJHASc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Oct 2014 20:18:32 -0400
-Received: by mail-qg0-f46.google.com with SMTP id z60so6212034qgd.19
-        for <linux-pci@vger.kernel.org>; Tue, 07 Oct 2014 17:18:32 -0700 (PDT)
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <54489EDE.5070109@huawei.com>
+Date: Thu, 23 Oct 2014 14:23:26 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1412725790.30859.214.camel@pasglop>
-References: <1412656696.30859.122.camel@pasglop>
-	<CADnq5_NFt8neiOAg896d3-DbAn0rnrE7iXaTFmkNGSg-J9oSkA@mail.gmail.com>
-	<1412725790.30859.214.camel@pasglop>
-Date: Tue, 7 Oct 2014 20:18:32 -0400
-Message-ID: <CADnq5_OhSYa+zXBp03_rrvNFTahcaQrtX2o5+H049Nig9378gg@mail.gmail.com>
-Subject: Re: [PATCH v3 4/7] sound/radeon: Add quirk for broken 64-bit MSI
-From: Alex Deucher <alexdeucher@gmail.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Takashi Iwai <tiwai@suse.de>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Liviu Dudau <liviu@dudau.co.uk>
+Subject: Re: [PATCH v3 05/27] PCI: tegra: Save msi chip in pci_sys_data
+References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com> <1413342435-7876-6-git-send-email-wangyijing@huawei.com> <20141023051831.GB11770@google.com>
+In-Reply-To: <20141023051831.GB11770@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 7, 2014 at 7:49 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Tue, 2014-10-07 at 19:47 -0400, Alex Deucher wrote:
->> > While recent ASICs have that problem fixed, they don't seem to
->> > be listed in the PCI IDs of the current driver, so let's quirk all
->> > the ATI HDMI for now. The consequences are nil on x86 anyway.
->> >
->> > Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
->> > Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
->> > CC: <stable@vger.kernel.org>
+On 2014/10/23 13:18, Bjorn Helgaas wrote:
+> On Wed, Oct 15, 2014 at 11:06:53AM +0800, Yijing Wang wrote:
+>> Save msi chip in pci_sys_data instead of assign
+>> msi chip to every pci bus in .add_bus().
 >>
->> Further discussion with the hw teams have revealed that this is still
->> an issue on newer asics so I think your original patch is correct
->> after all.  Just disable 64 bit MSIs on all AMD audio PCI ids.
->
-> Ok. You confirm that this is however good on newer video side right ?
->
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> ---
+>>  drivers/pci/host/pci-tegra.c |   13 +++----------
+>>  1 files changed, 3 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+>> index 3d43874..5af0525 100644
+>> --- a/drivers/pci/host/pci-tegra.c
+>> +++ b/drivers/pci/host/pci-tegra.c
+>> @@ -694,15 +694,6 @@ static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+>>  	return irq;
+>>  }
+>>  
+>> -static void tegra_pcie_add_bus(struct pci_bus *bus)
+>> -{
+>> -	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+>> -		struct tegra_pcie *pcie = sys_to_pcie(bus->sysdata);
+>> -
+>> -		bus->msi = &pcie->msi.chip;
+>> -	}
+>> -}
+>> -
+>>  static struct pci_bus *tegra_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+>>  {
+>>  	struct tegra_pcie *pcie = sys_to_pcie(sys);
+>> @@ -1881,11 +1872,13 @@ static int tegra_pcie_enable(struct tegra_pcie *pcie)
+>>  
+>>  	memset(&hw, 0, sizeof(hw));
+>>  
+>> +#ifdef CONFIG_PCI_MSI
+>> +	hw.msi_chip = &pcie->msi.chip;
+>> +#endif
+> 
+> Why did you use "#ifdef CONFIG_PCI_MSI" instead of the
+> "IS_ENABLED(CONFIG_PCI_MSI)" used previously?
 
-Yes, this was definitely fixed on the GPU side.
+Just personal habit. :)
 
-> Also, is there a known issue that if MSI were once enabled, the chip
-> still shoots them even if we disable them in config space ?
->
-> When testing my new patch set, I was trying to test the error path
-> when the arch does *not* honor the limitation. The error went back
-> up to the driver as far as I can tell (ie, pci_enable_msi() failed),
-> but the system still got into error state as if the card had tried
-> to shoot an MSI to the wrong address.
->
-> (I suspect the graphics side)
+> 
+> It's true that CONFIG_PCI_MSI will never be a tristate symbol, so we don't
+> really *need* the extra smarts of IS_ENABLED(), but I'm fairly sympathetic
+> to James' argument [1] that we should just use IS_ENABLED() all the time
+> because it's simpler overall.
+> 
+> If you want to change the #ifdef to IS_ENABLED(), that should be a separate
+> patch from your msi_chip change, and we can debate the merits of that by
+> itself.
+> 
+> [1] http://lkml.iu.edu//hypermail/linux/kernel/1204.3/00081.html
 
-I'm not aware of any such issue, but I can ask the hw guys if there is
-anything special required to disable MSIs beyond the pci config space
-settings.
+Hi Bjorn, thanks for your guidance. I will use IS_ENABLED() instead of #ifdef for simplification
+in a separate patch.
 
-Alex
+> 
+>>  	hw.nr_controllers = 1;
+>>  	hw.private_data = (void **)&pcie;
+>>  	hw.setup = tegra_pcie_setup;
+>>  	hw.map_irq = tegra_pcie_map_irq;
+>> -	hw.add_bus = tegra_pcie_add_bus;
+>>  	hw.scan = tegra_pcie_scan_bus;
+>>  	hw.ops = &tegra_pcie_ops;
+>>  
+>> -- 
+>> 1.7.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
+> 
+> .
+> 
 
->
-> Cheers,
-> Ben.
->
->
+
+-- 
+Thanks!
+Yijing
+
