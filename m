@@ -1,53 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [65.55.169.138] ([65.55.169.138]:4086 "EHLO
-	na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751569AbaJTCtx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 19 Oct 2014 22:49:53 -0400
-From: Richard Zhu <richard.zhu@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
-	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
-	Richard Zhu <richard.zhu@freescale.com>
-Subject: [PATCH v7 03/13] PCI: dra7xx: Change the func type of host init
-Date: Mon, 20 Oct 2014 10:19:06 +0800
-Message-ID: <1413771556-32212-4-git-send-email-richard.zhu@freescale.com>
-In-Reply-To: <1413771556-32212-1-git-send-email-richard.zhu@freescale.com>
-References: <1413771556-32212-1-git-send-email-richard.zhu@freescale.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:50959 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932187AbaJWUuZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Oct 2014 16:50:25 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI / PM: handle failure to enable wakeup on PCIe PME
+Date: Thu, 23 Oct 2014 23:10:53 +0200
+Message-ID: <1818126.LJQmbmS0sp@vostro.rjw.lan>
+In-Reply-To: <20141023181118.GC15847@google.com>
+References: <1413981115-22045-1-git-send-email-l.stach@pengutronix.de> <5149964.v982KmMHFP@vostro.rjw.lan> <20141023181118.GC15847@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order to avoid compilation warning, change
-the func type of host init from void to int.
+On Thursday, October 23, 2014 12:11:18 PM Bjorn Helgaas wrote:
+> On Wed, Oct 22, 2014 at 03:34:56PM +0200, Rafael J. Wysocki wrote:
+> > On Wednesday, October 22, 2014 02:31:55 PM Lucas Stach wrote:
+> > > If the irqchip handling the PCIe PME interrupt is not able
+> > > to enable interrupt wakeup we should properly reflect this
+> > > in the PME suspend status.
+> > > 
+> > > This fixes a kernel warning on resume, where it would try
+> > > to disable the irq wakeup that failed to be activated while
+> > > suspending. The issue was introduced with 76cde7e49590
+> > > (PCI / PM: Make PCIe PME interrupts wake up from suspend-to-idle).
+> > > 
+> > > Reported-by: Richard Zhu <richard.zhu@freescale.com>
+> > > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> > > Tested-by: Richard Zhu <richard.zhu@freescale.com>
+> > 
+> > Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > 
+> > Bjorn, do you want me to handle this or will you take it?
+> 
+> It fixes 76cde7e49590, which it looks like you merged for v3.18-rc1, so
+> probably this should be merged as a fix before v3.18, right?  If you agree,
+> you can go ahead and merge it since you merged the original.
 
-Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
----
- drivers/pci/host/pci-dra7xx.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+OK, I've queued it up for my next pull request (which most likely will be sent
+tomorrow).
 
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 52b34fe..7b11968 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -141,13 +141,15 @@ static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
- 				   LEG_EP_INTERRUPTS);
- }
- 
--static void dra7xx_pcie_host_init(struct pcie_port *pp)
-+static int dra7xx_pcie_host_init(struct pcie_port *pp)
- {
- 	dw_pcie_setup_rc(pp);
- 	dra7xx_pcie_establish_link(pp);
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
- 		dw_pcie_msi_init(pp);
- 	dra7xx_pcie_enable_interrupts(pp);
-+
-+	return 0;
- }
- 
- static struct pcie_host_ops dra7xx_pcie_host_ops = {
+> It would be nice to have the actual warning, e.g., just the "Unbalanced IRQ
+> 384 wake disable" part, in the changelog to help correlate this with the 
+> place where the problem is detected.
+
+Done.
+
+Rafael
+
+
+> > > ---
+> > > Trimmed warning on resume looks like this:
+> > > [  109.292736] WARNING: CPU: 0 PID: 609 at kernel/irq/manage.c:536 irq_set_irq_wake+0xc0/0xf8()
+> > > [  109.301193] Unbalanced IRQ 384 wake disable
+> > > [  109.305392] Modules linked in:
+> > > [  109.308502] CPU: 0 PID: 609 Comm: kworker/u2:9 Tainted: G        W      3.18.0-rc1-00009-g820df3d-dirty #268
+> > > [  109.318368] Workqueue: events_unbound async_run_entry_fn
+> > > [  109.323718] Backtrace:
+> > > [  109.326233] [<80012460>] (dump_backtrace) from [<80012744>] (show_stack+0x18/0x1c)
+> > > [  109.339616] [<8001272c>] (show_stack) from [<806d8dc8>] (dump_stack+0x8c/0xa4)
+> > > [  109.346885] [<806d8d3c>] (dump_stack) from [<8002a88c>] (warn_slowpath_common+0x70/0x94)
+> > > [  109.360773] [<8002a81c>] (warn_slowpath_common) from [<8002a8e8>] (warn_slowpath_fmt+0x38/0x40)
+> > > [  109.376334] [<8002a8b4>] (warn_slowpath_fmt) from [<8006c2a8>] (irq_set_irq_wake+0xc0/0xf8)
+> > > [  109.388351] [<8006c1e8>] (irq_set_irq_wake) from [<802f22cc>] (pcie_pme_resume+0x34/0x64)
+> > > [  109.402328] [<802f2298>] (pcie_pme_resume) from [<802f1590>] (resume_iter+0x44/0x50)
+> > > [  109.413742] [<802f154c>] (resume_iter) from [<803784d4>] (device_for_each_child+0x4c/0x78)
+> > > [  109.422039] [<80378488>] (device_for_each_child) from [<802f196c>] (pcie_port_device_resume+0x18/0x20)
+> > > [  109.436085] [<802f1954>] (pcie_port_device_resume) from [<802e6f40>] (pci_pm_resume+0x7c/0x10c)
+> > > [  109.444829] [<802e6ec4>] (pci_pm_resume) from [<8038502c>] (dpm_run_callback.isra.12+0x34/0x7c)
+> > > [  109.459323] [<80384ff8>] (dpm_run_callback.isra.12) from [<8038543c>] (device_resume+0xb8/0x194)
+> > > [  109.474961] [<80385384>] (device_resume) from [<80385538>] (async_resume+0x20/0x4c)
+> > > [  109.490523] [<80385518>] (async_resume) from [<800471a0>] (async_run_entry_fn+0x48/0x11c)
+> > > [  109.502371] [<80047158>] (async_run_entry_fn) from [<8003f46c>] (process_one_work+0x1ac/0x414)
+> > > [  109.515711] [<8003f2c0>] (process_one_work) from [<8003ff50>] (worker_thread+0x148/0x4e0)
+> > > [  109.534446] [<8003fe08>] (worker_thread) from [<80044704>] (kthread+0xdc/0xf8)
+> > > [  109.552225] [<80044628>] (kthread) from [<8000ec08>] (ret_from_fork+0x14/0x2c)
+> > > ---
+> > >  drivers/pci/pcie/pme.c | 6 ++++--
+> > >  1 file changed, 4 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+> > > index a9f9c46e5022..63fc63911295 100644
+> > > --- a/drivers/pci/pcie/pme.c
+> > > +++ b/drivers/pci/pcie/pme.c
+> > > @@ -397,6 +397,7 @@ static int pcie_pme_suspend(struct pcie_device *srv)
+> > >  	struct pcie_pme_service_data *data = get_service_data(srv);
+> > >  	struct pci_dev *port = srv->port;
+> > >  	bool wakeup;
+> > > +	int ret;
+> > >  
+> > >  	if (device_may_wakeup(&port->dev)) {
+> > >  		wakeup = true;
+> > > @@ -407,9 +408,10 @@ static int pcie_pme_suspend(struct pcie_device *srv)
+> > >  	}
+> > >  	spin_lock_irq(&data->lock);
+> > >  	if (wakeup) {
+> > > -		enable_irq_wake(srv->irq);
+> > > +		ret = enable_irq_wake(srv->irq);
+> > >  		data->suspend_level = PME_SUSPEND_WAKEUP;
+> > > -	} else {
+> > > +	}
+> > > +	if (!wakeup || ret) {
+> > >  		struct pci_dev *port = srv->port;
+> > >  
+> > >  		pcie_pme_interrupt_enable(port, false);
+> > > 
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -- 
-1.9.1
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
