@@ -1,75 +1,142 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Jason Chang <jason.chang@amd.com>,
-	"Vincent Wan" <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v3 14/19] usb: dwc3: set SUSPHY bit for all cores
-Date: Tue, 28 Oct 2014 19:54:35 +0800
-Message-ID: <1414497280-3126-15-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
-References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:47766 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752107AbaJWNxn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 Oct 2014 09:53:43 -0400
+Message-ID: <1414072370.2376.83.camel@localhost.localdomain>
+Subject: Re: [PATCH v4] PCI: add kernel parameter to override devid<->driver
+ mapping.
+From: Marcel Apfelbaum <marcel.a@redhat.com>
+To: Stuart Yoder <stuart.yoder@freescale.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"marcel@redhat.com" <marcel@redhat.com>,
+	"mst@redhat.com" <mst@redhat.com>
+Date: Thu, 23 Oct 2014 16:52:50 +0300
+In-Reply-To: <78dc034416ad42f1a2c8343ea1401fae@CY1PR0301MB0748.namprd03.prod.outlook.com>
+References: <1413813882-27047-1-git-send-email-marcel.a@redhat.com>
+	 <1414002755.4202.253.camel@ul30vt.home>
+	 <1414067521.2376.54.camel@localhost.localdomain>
+	 <78dc034416ad42f1a2c8343ea1401fae@CY1PR0301MB0748.namprd03.prod.outlook.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is recommended to set USB3 and USB2 SUSPHY bits to '1' after the core
-initialization is completed above the dwc3 revision 1.94a.
+On Thu, 2014-10-23 at 13:51 +0000, Stuart Yoder wrote:
+> 
+> > -----Original Message-----
+> > From: Marcel Apfelbaum [mailto:marcel.a@redhat.com]
+> > Sent: Thursday, October 23, 2014 7:32 AM
+> > To: Alex Williamson
+> > Cc: linux-pci@vger.kernel.org; bhelgaas@google.com; linux-kernel@vger.kernel.org; marcel@redhat.com;
+> > mst@redhat.com; Yoder Stuart-B08248
+> > Subject: Re: [PATCH v4] PCI: add kernel parameter to override devid<->driver mapping.
+> > 
+> > On Wed, 2014-10-22 at 12:32 -0600, Alex Williamson wrote:
+> > > [cc+ stuart]
+> > >
+> > > On Mon, 2014-10-20 at 17:04 +0300, Marcel Apfelbaum wrote:
+> > > > Scanning a lot of devices during boot requires a lot of time.
+> > > > On other scenarios there is a need to bind a driver to a specific slot.
+> > > >
+> > > > Binding devices to pci-stub driver does not work,
+> > > > as it will not differentiate between devices of the
+> > > > same type. Using some start scripts is error prone.
+> > > >
+> > > > The solution leverages driver_override functionality introduced by
+> > > >
+> > > > 	commit: 782a985d7af26db39e86070d28f987cad21313c0
+> > > > 	Author: Alex Williamson <alex.williamson@redhat.com>
+> > > > 	Date:   Tue May 20 08:53:21 2014 -0600
+> > > >
+> > > >     	PCI: Introduce new device binding path using pci_dev.driver_override
+> > > >
+> > > > In order to bind PCI slots to specific drivers use:
+> > > > 	pci=driver[xxxx:xx:xx.x]=foo,driver[xxxx:xx:xx.x]=bar,...
+> > > >
+> > > > Signed-off-by: Marcel Apfelbaum <marcel.a@redhat.com>
+> > > > ---
+> > > > v3 -> v4:
+> > > >  - Addressed Alex Williamson's comments:
+> > > >    - Modified the type of driver_override_entry's fields
+> > > >    - Used PCI_DEVFN when appropriated
+> > > >    - Removed redundant checks
+> > > >    - Replaced BUG_ON with pr_err messages
+> > > >    - Simpler command line parsing
+> > > >  - Addressed Michael S. Tsirkin comments
+> > > >    - removed DRIVER_OVERRIDE_NAME_LENGTH limitation
+> > > > v2 -> v3:
+> > > >  - Corrected subject line
+> > > > v1 -> v2:
+> > > >  - Addressed Michael S. Tsirkin comments
+> > > >    - Removed 32 slots limitation
+> > > >    - Better handling of memory allocation failures
+> > > >      (preferred BUG_ON over error messages)
+> > > >  - Addressed Alex Williamson's comments:
+> > > >    - Modified commit message to show parameter usage more clear.
+> > > >  - I preferred to re-use parse_args instead of manually using
+> > > >    strstr in order to better comply with command line parsing
+> > > >    rules.
+> > > >  - I didn't use any locking when parsing the command line args
+> > > >    (see parse_done usage) assuming that first call will be
+> > > >    early in system boot and no race can occur. Please correct
+> > > >    me if I am wrong.
+> > > >
+> > > > Notes:
+> > > >  - I have further ideas on top of this patch based on your reviews.
+> > > >    I thought of:
+> > > >    - Use wildcards to specify entire buses/devices, something like:
+> > > >      	driver[0001:02:*.*]=pci-stub
+> > > >    - Use comma to separate several devices:
+> > > >      	driver[0001:02:03.4,0001:02:04.0,...]=pci-stub
+> > > >    - Make domain optional:
+> > > >    	driver[00:03.0]=pci-stub
+> > > >
+> > > > Comments will be appreciated,
+> > > > Thanks,
+> > > > Marcel
+> > > >  Documentation/kernel-parameters.txt |   4 ++
+> > > >  drivers/pci/bus.c                   | 111 ++++++++++++++++++++++++++++++++++++
+> > > >  drivers/pci/pci.c                   |   2 +
+> > > >  3 files changed, 117 insertions(+)
+> > >
+> > > The driver_override feature that we're making use of here is also going
+> > > to be supported by platform devices and potentially more bustypes in the
+> > > future, so I'm concerned that making a pci specific kernel parameter is
+> > > too shortsighted.  Instead we could hook on to BUS_NOTIFY_ADD_DEVICE for
+> > > bustypes that support driver_override so we can have a common interface.
+> > The real question here if those bus types/devices would benefit from this
+> > feature, and I also must confess that I have no knowledge of the other buses.
+> > Can anyone confirm that it does make sense for them?
+> 
+> We don't have vfio-platform in use yet, so not much actual real world user
+> experience yet.  But, I think it makes sense.   Especially, given that we are
+> inventing a kernel parameter I think we should design the syntax so that it
+> can work buses can implement support for this.  The driver_override mechanism
+> is not bus specific, so let's not make the kernel parameter bus specific.
+Make sense, point taken.
+I'll come up with something.
 
-Signed-off-by: Huang Rui <ray.huang@amd.com>
----
- drivers/usb/dwc3/core.c | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+Thank you Stuart,
+Marcel
+> 
+> > > Perhaps:
+> > >
+> > > driver_override=pci,0000:02:00.0=pci-stub;platform,fakename=vfio-platform
+> > >
+> > > Finding delimiters that don't conflict may be challenging.  Also, can we
+> > > assume that bus-name:dev-name is unique for every bustype?  It is for
+> > > pci, platform?
+> > For PCI, sure the domain:bus:dev.func is unique, for platform I have no idea,
+> > can anyone that knows "platform" confirm or deny?
+> 
+> Yes, dev-name will be unique.  All platform devices are under a single
+> platform bus.
+> 
+> Stuart
 
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index e36fcd0..7b5cd76 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -374,6 +374,15 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
- 
- 	reg = dwc3_readl(dwc->regs, DWC3_GUSB3PIPECTL(0));
- 
-+	/*
-+	 * Above 1.94a, it is recommended to set DWC3_GUSB3PIPECTL_SUSPHY
-+	 * to '0' during coreConsultant configuration. So default value
-+	 * will be '0' when the core is reset. Application needs to set it
-+	 * to '1' after the core initialization is completed.
-+	 */
-+	if (dwc->revision > DWC3_REVISION_194A)
-+		reg |= DWC3_GUSB3PIPECTL_SUSPHY;
-+
- 	if (dwc->u2ss_inp3_quirk)
- 		reg |= DWC3_GUSB3PIPECTL_U2SSINP3OK;
- 
-@@ -398,6 +407,21 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
- 	dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
- 
- 	mdelay(100);
-+
-+	reg = dwc3_readl(dwc->regs, DWC3_GUSB2PHYCFG(0));
-+
-+	/*
-+	 * Above 1.94a, it is recommended to set DWC3_GUSB2PHYCFG_SUSPHY to
-+	 * '0' during coreConsultant configuration. So default value will
-+	 * be '0' when the core is reset. Application needs to set it to
-+	 * '1' after the core initialization is completed.
-+	 */
-+	if (dwc->revision > DWC3_REVISION_194A)
-+		reg |= DWC3_GUSB2PHYCFG_SUSPHY;
-+
-+	dwc3_writel(dwc->regs, DWC3_GUSB2PHYCFG(0), reg);
-+
-+	mdelay(100);
- }
- 
- /**
--- 
-1.9.1
+
 
