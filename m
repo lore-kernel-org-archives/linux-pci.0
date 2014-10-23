@@ -1,79 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:62406 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753413AbaJNSeX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Oct 2014 14:34:23 -0400
-Received: by mail-ig0-f181.google.com with SMTP id r10so15793328igi.8
-        for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 11:34:22 -0700 (PDT)
-Date: Tue, 14 Oct 2014 12:34:19 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: matt@masarand.com
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH 07/18] Delayed cris setup of PCI IRQs to bus scan time
-Message-ID: <20141014183419.GG10125@google.com>
-References: <1412222866-21068-1-git-send-email-matt@masarand.com>
- <1412222866-21068-8-git-send-email-matt@masarand.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Stuart Yoder <stuart.yoder@freescale.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	Marcel Apfelbaum <marcel.a@redhat.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"marcel@redhat.com" <marcel@redhat.com>,
+	"mst@redhat.com" <mst@redhat.com>
+Subject: RE: [PATCH v4] PCI: add kernel parameter to override devid<->driver
+ mapping.
+Date: Thu, 23 Oct 2014 13:44:57 +0000
+Message-ID: <d093a0738f61433aafe5ddd36d0393e9@CY1PR0301MB0748.namprd03.prod.outlook.com>
+References: <1413813882-27047-1-git-send-email-marcel.a@redhat.com>
+ <1414002755.4202.253.camel@ul30vt.home>
+In-Reply-To: <1414002755.4202.253.camel@ul30vt.home>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1412222866-21068-8-git-send-email-matt@masarand.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 02, 2014 at 05:07:35AM +0100, matt@masarand.com wrote:
-> From: Matthew Minter <matt@masarand.com>
-> 
-> PCI IRQs are currently configured to be enabled once at boot in a
-> dedicated pass. This means that PCI devices which are hot-plugged after
-> boot time will not be given an IRQ, this patch-set fixes this by
-> registering the assignment function to be called later in the device
-> enable path.
-> 
-> Signed-off-by: Matthew Minter <matt@masarand.com>
-> 
-> ---
->  arch/cris/arch-v32/drivers/pci/bios.c | 14 +++++---------
->  1 file changed, 5 insertions(+), 9 deletions(-)
-> 
-> diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
-> index 64a5fb9..d04ecc8 100644
-> --- a/arch/cris/arch-v32/drivers/pci/bios.c
-> +++ b/arch/cris/arch-v32/drivers/pci/bios.c
-> @@ -80,20 +80,16 @@ int pcibios_enable_resources(struct pci_dev *dev, int mask)
->  	return 0;
->  }
->  
-> -int pcibios_enable_irq(struct pci_dev *dev)
-> +int pcibios_enable_irq(struct pci_dev *dev, u8 slot, u8 pin)
->  {
->  	dev->irq = EXT_INTR_VECT;
->  	return 0;
->  }
->  
-> -int pcibios_enable_device(struct pci_dev *dev, int mask)
-> +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
->  {
-> -	int err;
-> -
-> -	if ((err = pcibios_enable_resources(dev, mask)) < 0)
-> -		return err;
-
-If I understand correctly, this means we'd now use the default
-pcibios_enable_device() from drivers/pci/pci.c, which uses
-pci_enable_resources(), instead of cris's pcibios_enable_resources().
-
-That's a good thing that we should do someday, but it's out of scope for
-this series because they *are* different, and we need to evaluate whether
-it's safe to use the default version instead of the cris version.  Also, I
-think this patch leaves the cris pcibios_enable_resources() unused.
-
-> -
-> -	if (!dev->msi_enabled)
-> -		pcibios_enable_irq(dev);
-> +	bridge->swizzle_irq = NULL;
-> +	bridge->map_irq = pcibios_enable_irq;
->  	return 0;
->  }
-> +
-> -- 
-> 2.1.0
-> 
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQWxleCBXaWxsaWFtc29u
+IFttYWlsdG86YWxleC53aWxsaWFtc29uQHJlZGhhdC5jb21dDQo+IFNlbnQ6IFdlZG5lc2RheSwg
+T2N0b2JlciAyMiwgMjAxNCAxOjMzIFBNDQo+IFRvOiBNYXJjZWwgQXBmZWxiYXVtDQo+IENjOiBs
+aW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBsaW51eC1rZXJu
+ZWxAdmdlci5rZXJuZWwub3JnOyBtYXJjZWxAcmVkaGF0LmNvbTsNCj4gbXN0QHJlZGhhdC5jb207
+IFlvZGVyIFN0dWFydC1CMDgyNDgNCj4gU3ViamVjdDogUmU6IFtQQVRDSCB2NF0gUENJOiBhZGQg
+a2VybmVsIHBhcmFtZXRlciB0byBvdmVycmlkZSBkZXZpZDwtPmRyaXZlciBtYXBwaW5nLg0KPiAN
+Cj4gW2NjKyBzdHVhcnRdDQo+IA0KPiBPbiBNb24sIDIwMTQtMTAtMjAgYXQgMTc6MDQgKzAzMDAs
+IE1hcmNlbCBBcGZlbGJhdW0gd3JvdGU6DQo+ID4gU2Nhbm5pbmcgYSBsb3Qgb2YgZGV2aWNlcyBk
+dXJpbmcgYm9vdCByZXF1aXJlcyBhIGxvdCBvZiB0aW1lLg0KPiA+IE9uIG90aGVyIHNjZW5hcmlv
+cyB0aGVyZSBpcyBhIG5lZWQgdG8gYmluZCBhIGRyaXZlciB0byBhIHNwZWNpZmljIHNsb3QuDQo+
+ID4NCj4gPiBCaW5kaW5nIGRldmljZXMgdG8gcGNpLXN0dWIgZHJpdmVyIGRvZXMgbm90IHdvcmss
+DQo+ID4gYXMgaXQgd2lsbCBub3QgZGlmZmVyZW50aWF0ZSBiZXR3ZWVuIGRldmljZXMgb2YgdGhl
+DQo+ID4gc2FtZSB0eXBlLiBVc2luZyBzb21lIHN0YXJ0IHNjcmlwdHMgaXMgZXJyb3IgcHJvbmUu
+DQo+ID4NCj4gPiBUaGUgc29sdXRpb24gbGV2ZXJhZ2VzIGRyaXZlcl9vdmVycmlkZSBmdW5jdGlv
+bmFsaXR5IGludHJvZHVjZWQgYnkNCj4gPg0KPiA+IAljb21taXQ6IDc4MmE5ODVkN2FmMjZkYjM5
+ZTg2MDcwZDI4Zjk4N2NhZDIxMzEzYzANCj4gPiAJQXV0aG9yOiBBbGV4IFdpbGxpYW1zb24gPGFs
+ZXgud2lsbGlhbXNvbkByZWRoYXQuY29tPg0KPiA+IAlEYXRlOiAgIFR1ZSBNYXkgMjAgMDg6NTM6
+MjEgMjAxNCAtMDYwMA0KPiA+DQo+ID4gICAgIAlQQ0k6IEludHJvZHVjZSBuZXcgZGV2aWNlIGJp
+bmRpbmcgcGF0aCB1c2luZyBwY2lfZGV2LmRyaXZlcl9vdmVycmlkZQ0KPiA+DQo+ID4gSW4gb3Jk
+ZXIgdG8gYmluZCBQQ0kgc2xvdHMgdG8gc3BlY2lmaWMgZHJpdmVycyB1c2U6DQo+ID4gCXBjaT1k
+cml2ZXJbeHh4eDp4eDp4eC54XT1mb28sZHJpdmVyW3h4eHg6eHg6eHgueF09YmFyLC4uLg0KPiA+
+DQo+ID4gU2lnbmVkLW9mZi1ieTogTWFyY2VsIEFwZmVsYmF1bSA8bWFyY2VsLmFAcmVkaGF0LmNv
+bT4NCj4gPiAtLS0NCj4gPiB2MyAtPiB2NDoNCj4gPiAgLSBBZGRyZXNzZWQgQWxleCBXaWxsaWFt
+c29uJ3MgY29tbWVudHM6DQo+ID4gICAgLSBNb2RpZmllZCB0aGUgdHlwZSBvZiBkcml2ZXJfb3Zl
+cnJpZGVfZW50cnkncyBmaWVsZHMNCj4gPiAgICAtIFVzZWQgUENJX0RFVkZOIHdoZW4gYXBwcm9w
+cmlhdGVkDQo+ID4gICAgLSBSZW1vdmVkIHJlZHVuZGFudCBjaGVja3MNCj4gPiAgICAtIFJlcGxh
+Y2VkIEJVR19PTiB3aXRoIHByX2VyciBtZXNzYWdlcw0KPiA+ICAgIC0gU2ltcGxlciBjb21tYW5k
+IGxpbmUgcGFyc2luZw0KPiA+ICAtIEFkZHJlc3NlZCBNaWNoYWVsIFMuIFRzaXJraW4gY29tbWVu
+dHMNCj4gPiAgICAtIHJlbW92ZWQgRFJJVkVSX09WRVJSSURFX05BTUVfTEVOR1RIIGxpbWl0YXRp
+b24NCj4gPiB2MiAtPiB2MzoNCj4gPiAgLSBDb3JyZWN0ZWQgc3ViamVjdCBsaW5lDQo+ID4gdjEg
+LT4gdjI6DQo+ID4gIC0gQWRkcmVzc2VkIE1pY2hhZWwgUy4gVHNpcmtpbiBjb21tZW50cw0KPiA+
+ICAgIC0gUmVtb3ZlZCAzMiBzbG90cyBsaW1pdGF0aW9uDQo+ID4gICAgLSBCZXR0ZXIgaGFuZGxp
+bmcgb2YgbWVtb3J5IGFsbG9jYXRpb24gZmFpbHVyZXMNCj4gPiAgICAgIChwcmVmZXJyZWQgQlVH
+X09OIG92ZXIgZXJyb3IgbWVzc2FnZXMpDQo+ID4gIC0gQWRkcmVzc2VkIEFsZXggV2lsbGlhbXNv
+bidzIGNvbW1lbnRzOg0KPiA+ICAgIC0gTW9kaWZpZWQgY29tbWl0IG1lc3NhZ2UgdG8gc2hvdyBw
+YXJhbWV0ZXIgdXNhZ2UgbW9yZSBjbGVhci4NCj4gPiAgLSBJIHByZWZlcnJlZCB0byByZS11c2Ug
+cGFyc2VfYXJncyBpbnN0ZWFkIG9mIG1hbnVhbGx5IHVzaW5nDQo+ID4gICAgc3Ryc3RyIGluIG9y
+ZGVyIHRvIGJldHRlciBjb21wbHkgd2l0aCBjb21tYW5kIGxpbmUgcGFyc2luZw0KPiA+ICAgIHJ1
+bGVzLg0KPiA+ICAtIEkgZGlkbid0IHVzZSBhbnkgbG9ja2luZyB3aGVuIHBhcnNpbmcgdGhlIGNv
+bW1hbmQgbGluZSBhcmdzDQo+ID4gICAgKHNlZSBwYXJzZV9kb25lIHVzYWdlKSBhc3N1bWluZyB0
+aGF0IGZpcnN0IGNhbGwgd2lsbCBiZQ0KPiA+ICAgIGVhcmx5IGluIHN5c3RlbSBib290IGFuZCBu
+byByYWNlIGNhbiBvY2N1ci4gUGxlYXNlIGNvcnJlY3QNCj4gPiAgICBtZSBpZiBJIGFtIHdyb25n
+Lg0KPiA+DQo+ID4gTm90ZXM6DQo+ID4gIC0gSSBoYXZlIGZ1cnRoZXIgaWRlYXMgb24gdG9wIG9m
+IHRoaXMgcGF0Y2ggYmFzZWQgb24geW91ciByZXZpZXdzLg0KPiA+ICAgIEkgdGhvdWdodCBvZjoN
+Cj4gPiAgICAtIFVzZSB3aWxkY2FyZHMgdG8gc3BlY2lmeSBlbnRpcmUgYnVzZXMvZGV2aWNlcywg
+c29tZXRoaW5nIGxpa2U6DQo+ID4gICAgICAJZHJpdmVyWzAwMDE6MDI6Ki4qXT1wY2ktc3R1Yg0K
+PiA+ICAgIC0gVXNlIGNvbW1hIHRvIHNlcGFyYXRlIHNldmVyYWwgZGV2aWNlczoNCj4gPiAgICAg
+IAlkcml2ZXJbMDAwMTowMjowMy40LDAwMDE6MDI6MDQuMCwuLi5dPXBjaS1zdHViDQo+ID4gICAg
+LSBNYWtlIGRvbWFpbiBvcHRpb25hbDoNCj4gPiAgICAJZHJpdmVyWzAwOjAzLjBdPXBjaS1zdHVi
+DQo+ID4NCj4gPiBDb21tZW50cyB3aWxsIGJlIGFwcHJlY2lhdGVkLA0KPiA+IFRoYW5rcywNCj4g
+PiBNYXJjZWwNCj4gPiAgRG9jdW1lbnRhdGlvbi9rZXJuZWwtcGFyYW1ldGVycy50eHQgfCAgIDQg
+KysNCj4gPiAgZHJpdmVycy9wY2kvYnVzLmMgICAgICAgICAgICAgICAgICAgfCAxMTEgKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrDQo+ID4gIGRyaXZlcnMvcGNpL3BjaS5jICAg
+ICAgICAgICAgICAgICAgIHwgICAyICsNCj4gPiAgMyBmaWxlcyBjaGFuZ2VkLCAxMTcgaW5zZXJ0
+aW9ucygrKQ0KPiANCj4gVGhlIGRyaXZlcl9vdmVycmlkZSBmZWF0dXJlIHRoYXQgd2UncmUgbWFr
+aW5nIHVzZSBvZiBoZXJlIGlzIGFsc28gZ29pbmcNCj4gdG8gYmUgc3VwcG9ydGVkIGJ5IHBsYXRm
+b3JtIGRldmljZXMgYW5kIHBvdGVudGlhbGx5IG1vcmUgYnVzdHlwZXMgaW4gdGhlDQo+IGZ1dHVy
+ZSwgc28gSSdtIGNvbmNlcm5lZCB0aGF0IG1ha2luZyBhIHBjaSBzcGVjaWZpYyBrZXJuZWwgcGFy
+YW1ldGVyIGlzDQo+IHRvbyBzaG9ydHNpZ2h0ZWQuICBJbnN0ZWFkIHdlIGNvdWxkIGhvb2sgb24g
+dG8gQlVTX05PVElGWV9BRERfREVWSUNFIGZvcg0KPiBidXN0eXBlcyB0aGF0IHN1cHBvcnQgZHJp
+dmVyX292ZXJyaWRlIHNvIHdlIGNhbiBoYXZlIGEgY29tbW9uIGludGVyZmFjZS4NCj4gUGVyaGFw
+czoNCj4gDQo+IGRyaXZlcl9vdmVycmlkZT1wY2ksMDAwMDowMjowMC4wPXBjaS1zdHViO3BsYXRm
+b3JtLGZha2VuYW1lPXZmaW8tcGxhdGZvcm0NCj4gDQo+IEZpbmRpbmcgZGVsaW1pdGVycyB0aGF0
+IGRvbid0IGNvbmZsaWN0IG1heSBiZSBjaGFsbGVuZ2luZy4NCg0KSSB0aGluayB3aGF0IHlvdSBw
+cm9wb3NlZCB3b3Jrcy0tICA8YnVzLW5hbWU+LDxidXMtZGV2Pj08ZHJpdmVyPjsNCg0KVGhpbmsg
+dGhhdCB3aWxsIHdvcmsgZm9yIFBDSSwgcGxhdGZvcm0sIGFuZCB0aGUgbmV3IGZzbC1tYyBidXMg
+d2UgYXJlIHdvcmtpbmcNCm9uLg0KDQo+IEFsc28sIGNhbiB3ZQ0KPiBhc3N1bWUgdGhhdCBidXMt
+bmFtZTpkZXYtbmFtZSBpcyB1bmlxdWUgZm9yIGV2ZXJ5IGJ1c3R5cGU/ICBJdCBpcyBmb3INCj4g
+cGNpLCBwbGF0Zm9ybT8NCg0KSSB0aGluayB0aGF0IGhhcyB0byBiZSB0aGUgY2FzZS4NCg0KPiBJ
+dCBhbHNvIHNlZW1zIGxpa2UgdGhlcmUncyBhIHF1ZXN0aW9uIG9mIGhvdyBsb25nIHNob3VsZCB0
+aGlzIG92ZXJyaWRlDQo+IGxhc3QgYW5kIGhvdyBkb2VzIHRoZSB1c2VyIGRpc2FibGUgaXQ/DQoN
+Cklzbid0IHRoYXQgYSBnZW5lcmFsIHF1ZXN0aW9uIGZvciB0aGUgImRyaXZlcl9vdmVycnJpZGUi
+IG1lY2hhbmlzbT8NCkknbSBmb3JnZXR0aW5nIGlmIHRoZSBtZWNoYW5pc20gaW4gdGhlIGtlcm5l
+bCBub3cgaGFzIGEgd2F5IHRvIGRpc2FibGUNCml0LS0gIGUuZy4gZWNobyAvZGV2L251bGwgPiAv
+c3lzL3BjaS9kZXZpY2VzLy4uLi9kcml2ZXJfb3ZlcnJpZGUgPz8NCg0KU28sIGl0IHdvdWxkIGxh
+c3QgdW50aWwgZXhwbGljaXRseSBkaXNhYmxlZCB0aHJvdWdoIHN5c2ZzLg0KDQo+IEkgdGhpbmsg
+d2l0aCBwY2ktc3R1Yi5pZHM9DQo+ICRWRU5ET1I6JERFVklDRSBhIHVzZXIgY2FuIGVjaG8gdGhl
+IElEcyB0byB0aGUgcGNpLXN0dWIvcmVtb3ZlX2lkIHN5c2ZzDQo+IGVudHJ5IHRvIGNhbmNlbCB0
+aGUgZWZmZWN0LiAgVGhlIG9ubHkgb3B0aW9uIGhlcmUgc2VlbXMgdG8gYmUgYSByZWJvb3QuDQo+
+IERvIHdlIG5lZWQgYSAvc3lzL2J1cy9wY2kvZHJpdmVyX292ZXJyaWRlcy97YWRkX25hbWUscmVt
+b3ZlX25hbWV9IGZvcg0KPiB0aGlzIGludGVyZmFjZT8gIFRoYW5rcywNCg0KVGhhbmtzLA0KU3R1
+YXJ0DQo=
