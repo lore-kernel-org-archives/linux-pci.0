@@ -1,49 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0113.outbound.protection.outlook.com ([157.56.111.113]:29696
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751268AbaJPIXJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 16 Oct 2014 04:23:09 -0400
-From: Richard Zhu <richard.zhu@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
-	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Richard Zhu <richard.zhu@freescale.com>
-Subject: [PATCH v6 12/13] ARM: imx6sx: Add syscon into gpc dts
-Date: Thu, 16 Oct 2014 15:52:42 +0800
-Message-ID: <1413445963-24706-13-git-send-email-richard.zhu@freescale.com>
-In-Reply-To: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
-References: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:8866 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751410AbaJWQdt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 Oct 2014 12:33:49 -0400
+Message-ID: <1414082022.27420.39.camel@ul30vt.home>
+Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass through
+ (vfio)
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Andreas Hartmann <andihartmann@freenet.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Date: Thu, 23 Oct 2014 10:33:42 -0600
+In-Reply-To: <54492606.5090308@maya.org>
+References: <20140923210318.498dacbd@dualc.maya.org>
+			 <1411502866.24563.8.camel@ul30vt.home> <5437A958.3000201@maya.org>
+			 <CAErSpo5kkk4itqqmCMU=08-XMcDknur8VY++F3A2LajdvTptOA@mail.gmail.com>
+			 <5437F1F5.3010706@maya.org>
+			 <CAErSpo6DuWEcJb_gfS=5JnKN8b4DXXV9+u-CRa8m3db0dbzpsQ@mail.gmail.com>
+			 <543804BC.3080307@maya.org>
+			 <CAErSpo450czUtAM104o+RS=yOcmP+3MKMH7mYk=UYhVJ2+cfSQ@mail.gmail.com>
+			 <20141011003219.560cca97@dualc.maya.org>
+			 <20141010225408.GA24493@google.com> <5438CC1E.3060407@maya.org>
+			 <1413360267.4202.70.camel@ul30vt.home> <54406B34.1050808@maya.org>
+			 <1413925580.4202.189.camel@ul30vt.home>
+		 <1413927152.4202.195.camel@ul30vt.home> <5447D9D9.9030909@maya.org>
+	 <1414010215.4202.275.camel@ul30vt.home> <54492606.5090308@maya.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Richard Zhu <r65037@freescale.com>
+On Thu, 2014-10-23 at 18:00 +0200, Andreas Hartmann wrote:
+> Alex Williamson wrote:
+> > On Wed, 2014-10-22 at 18:22 +0200, Andreas Hartmann wrote:
+> >> Alex Williamson wrote:
+> >>> --- a/drivers/pci/pci.c
+> >>> +++ b/drivers/pci/pci.c
+> >>> @@ -3308,15 +3308,15 @@ static int __pci_dev_reset(struct pci_dev *dev, int prob
+> >>>         if (rc != -ENOTTY)
+> >>>                 goto done;
+> >>>  
+> >>> -       rc = pci_pm_reset(dev, probe);
+> >>> +       rc = pci_dev_reset_slot_function(dev, probe);
+> >>>         if (rc != -ENOTTY)
+> >>>                 goto done;
+> >>>  
+> >>> -       rc = pci_dev_reset_slot_function(dev, probe);
+> >>> +       rc = pci_parent_bus_reset(dev, probe);
+> >>>         if (rc != -ENOTTY)
+> >>>                 goto done;
+> >>>  
+> >>> -       rc = pci_parent_bus_reset(dev, probe);
+> >>> +       rc = pci_pm_reset(dev, probe);
+> >>>  done:
+> >>>         return rc;
+> >>>  }
+> >>
+> >> This way it's crashing with echo 1 > reset, too.
+> > 
+> > Ok, so it's somehow related to doing a bus reset with virtual channel
+> > save/restore while PM reset with VC save/restore works ok as apparently
+> > does bus reset without VC save/restore.  Let's try to do a manual bus
+> > reset so we can look at the post reset state of the device before the
+> > kernel tries to restore it.
+> > 
+> > First bind the target device 03:00.0 to pci-stub or vfio-pci so that we
+> > know it's not being used.
+> > 
+> > Next capture lspci -xxxx -s 3:00.0 so we have the starting state.
+> > 
+> > Then we'll do a bus reset using setpci:
+> > # setpci -s 00:05.0 3e.w=40:40
+> > <if you script this, wait at least 2ms here>
+> > # setpci -s 00:05.0 3e.w=00:40
+> > <wait 1 second here>
+> > 
+> > Now re-capture lspci -xxxx -s 3:00.0
+> 
+> The machine is booted w/ vfio bound to 3:00.0 as usual (now for testing
+> linux 3.14)
+> 
+> lspci -xxxx -s 3:00.0
+> setpci -s 00:05.0 3e.w=40:40
+> usleep 10
+> setpci -s 00:05.0 3e.w=00:40
+> sleep 1
+> lspci -xxxx -s 3:00.0
+> 
+> I didn't get the second lspci because the machine already was hanging.
+> The first output is attached completely.
 
-In order to manipulate gpc bits for imx6sx
-pcie in driver, add syscon into gpc dts
+Hmm, that doesn't make much sense.  You had found that if you disabled
+the VC save/restore then QEMU works.  That should have still been using
+secondary bus reset as we're trying to do here, so I don't understand
+why we can't do a manual secondary bus reset now.
 
-Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
----
- arch/arm/boot/dts/imx6sx.dtsi | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+If you use Bjorn's previous patch to disable VC save/restore and my
+patch to reorder the reset mechanisms, does echo 1 > reset for the sysfs
+entry for the device also still cause a hang?
 
-diff --git a/arch/arm/boot/dts/imx6sx.dtsi b/arch/arm/boot/dts/imx6sx.dtsi
-index 0dfeade..88d7fd7 100644
---- a/arch/arm/boot/dts/imx6sx.dtsi
-+++ b/arch/arm/boot/dts/imx6sx.dtsi
-@@ -689,7 +689,8 @@
- 			};
- 
- 			gpc: gpc@020dc000 {
--				compatible = "fsl,imx6sx-gpc", "fsl,imx6q-gpc";
-+				compatible = "fsl,imx6sx-gpc",
-+					     "fsl,imx6q-gpc", "syscon";
- 				reg = <0x020dc000 0x4000>;
- 				interrupts = <GIC_SPI 89 IRQ_TYPE_LEVEL_HIGH>;
- 			};
--- 
-1.9.1
+Can you provide a link to the specific model for this card?  Thanks,
+
+Alex
 
