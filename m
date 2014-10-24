@@ -1,171 +1,165 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4645 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932237AbaJWOty (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 23 Oct 2014 10:49:54 -0400
-Message-ID: <1414075786.27420.19.camel@ul30vt.home>
-Subject: Re: [PATCH v4] PCI: add kernel parameter to override devid<->driver
- mapping.
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Marcel Apfelbaum <marcel.a@redhat.com>
-Cc: Stuart Yoder <stuart.yoder@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"marcel@redhat.com" <marcel@redhat.com>,
-	"mst@redhat.com" <mst@redhat.com>
-Date: Thu, 23 Oct 2014 08:49:46 -0600
-In-Reply-To: <1414074808.2376.88.camel@localhost.localdomain>
-References: <1413813882-27047-1-git-send-email-marcel.a@redhat.com>
-	 <1414002755.4202.253.camel@ul30vt.home>
-	 <d093a0738f61433aafe5ddd36d0393e9@CY1PR0301MB0748.namprd03.prod.outlook.com>
-	 <1414072672.27420.12.camel@ul30vt.home>
-	 <1414074808.2376.88.camel@localhost.localdomain>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sat, 25 Oct 2014 01:01:28 +0800
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>
+CC: Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Paul Zimmerman" <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 07/16] usb: dwc3: add lpm erratum support
+Message-ID: <20141024170128.GA5149@hr-slim.amd.com>
+References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+ <1413536021-4886-8-git-send-email-ray.huang@amd.com>
+ <20141017144859.GC26260@saruman>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20141017144859.GC26260@saruman>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2014-10-23 at 17:33 +0300, Marcel Apfelbaum wrote:
-> On Thu, 2014-10-23 at 07:57 -0600, Alex Williamson wrote:
-> > On Thu, 2014-10-23 at 13:44 +0000, Stuart Yoder wrote:
-> > > 
-> > > > -----Original Message-----
-> > > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > > > Sent: Wednesday, October 22, 2014 1:33 PM
-> > > > To: Marcel Apfelbaum
-> > > > Cc: linux-pci@vger.kernel.org; bhelgaas@google.com; linux-kernel@vger.kernel.org; marcel@redhat.com;
-> > > > mst@redhat.com; Yoder Stuart-B08248
-> > > > Subject: Re: [PATCH v4] PCI: add kernel parameter to override devid<->driver mapping.
-> > > > 
-> > > > [cc+ stuart]
-> > > > 
-> > > > On Mon, 2014-10-20 at 17:04 +0300, Marcel Apfelbaum wrote:
-> > > > > Scanning a lot of devices during boot requires a lot of time.
-> > > > > On other scenarios there is a need to bind a driver to a specific slot.
-> > > > >
-> > > > > Binding devices to pci-stub driver does not work,
-> > > > > as it will not differentiate between devices of the
-> > > > > same type. Using some start scripts is error prone.
-> > > > >
-> > > > > The solution leverages driver_override functionality introduced by
-> > > > >
-> > > > > 	commit: 782a985d7af26db39e86070d28f987cad21313c0
-> > > > > 	Author: Alex Williamson <alex.williamson@redhat.com>
-> > > > > 	Date:   Tue May 20 08:53:21 2014 -0600
-> > > > >
-> > > > >     	PCI: Introduce new device binding path using pci_dev.driver_override
-> > > > >
-> > > > > In order to bind PCI slots to specific drivers use:
-> > > > > 	pci=driver[xxxx:xx:xx.x]=foo,driver[xxxx:xx:xx.x]=bar,...
-> > > > >
-> > > > > Signed-off-by: Marcel Apfelbaum <marcel.a@redhat.com>
-> > > > > ---
-> > > > > v3 -> v4:
-> > > > >  - Addressed Alex Williamson's comments:
-> > > > >    - Modified the type of driver_override_entry's fields
-> > > > >    - Used PCI_DEVFN when appropriated
-> > > > >    - Removed redundant checks
-> > > > >    - Replaced BUG_ON with pr_err messages
-> > > > >    - Simpler command line parsing
-> > > > >  - Addressed Michael S. Tsirkin comments
-> > > > >    - removed DRIVER_OVERRIDE_NAME_LENGTH limitation
-> > > > > v2 -> v3:
-> > > > >  - Corrected subject line
-> > > > > v1 -> v2:
-> > > > >  - Addressed Michael S. Tsirkin comments
-> > > > >    - Removed 32 slots limitation
-> > > > >    - Better handling of memory allocation failures
-> > > > >      (preferred BUG_ON over error messages)
-> > > > >  - Addressed Alex Williamson's comments:
-> > > > >    - Modified commit message to show parameter usage more clear.
-> > > > >  - I preferred to re-use parse_args instead of manually using
-> > > > >    strstr in order to better comply with command line parsing
-> > > > >    rules.
-> > > > >  - I didn't use any locking when parsing the command line args
-> > > > >    (see parse_done usage) assuming that first call will be
-> > > > >    early in system boot and no race can occur. Please correct
-> > > > >    me if I am wrong.
-> > > > >
-> > > > > Notes:
-> > > > >  - I have further ideas on top of this patch based on your reviews.
-> > > > >    I thought of:
-> > > > >    - Use wildcards to specify entire buses/devices, something like:
-> > > > >      	driver[0001:02:*.*]=pci-stub
-> > > > >    - Use comma to separate several devices:
-> > > > >      	driver[0001:02:03.4,0001:02:04.0,...]=pci-stub
-> > > > >    - Make domain optional:
-> > > > >    	driver[00:03.0]=pci-stub
-> > > > >
-> > > > > Comments will be appreciated,
-> > > > > Thanks,
-> > > > > Marcel
-> > > > >  Documentation/kernel-parameters.txt |   4 ++
-> > > > >  drivers/pci/bus.c                   | 111 ++++++++++++++++++++++++++++++++++++
-> > > > >  drivers/pci/pci.c                   |   2 +
-> > > > >  3 files changed, 117 insertions(+)
-> > > > 
-> > > > The driver_override feature that we're making use of here is also going
-> > > > to be supported by platform devices and potentially more bustypes in the
-> > > > future, so I'm concerned that making a pci specific kernel parameter is
-> > > > too shortsighted.  Instead we could hook on to BUS_NOTIFY_ADD_DEVICE for
-> > > > bustypes that support driver_override so we can have a common interface.
-> > > > Perhaps:
-> > > > 
-> > > > driver_override=pci,0000:02:00.0=pci-stub;platform,fakename=vfio-platform
-> > > > 
-> > > > Finding delimiters that don't conflict may be challenging.
-> > > 
-> > > I think what you proposed works--  <bus-name>,<bus-dev>=<driver>;
-> > > 
-> > > Think that will work for PCI, platform, and the new fsl-mc bus we are working
-> > > on.
-> > > 
-> > > > Also, can we
-> > > > assume that bus-name:dev-name is unique for every bustype?  It is for
-> > > > pci, platform?
-> > > 
-> > > I think that has to be the case.
-> > > 
-> > > > It also seems like there's a question of how long should this override
-> > > > last and how does the user disable it?
-> > > 
-> > > Isn't that a general question for the "driver_overrride" mechanism?
-> > > I'm forgetting if the mechanism in the kernel now has a way to disable
-> > > it--  e.g. echo /dev/null > /sys/pci/devices/.../driver_override ??
-> > > 
-> > > So, it would last until explicitly disabled through sysfs.
+On Fri, Oct 17, 2014 at 09:48:59AM -0500, Felipe Balbi wrote:
+> On Fri, Oct 17, 2014 at 04:53:32PM +0800, Huang Rui wrote:
+> > When parameter DWC_USB3_LPM_ERRATA_ENABLE is enabled in Andvanced Configuration
+> > of coreConsultant, it supports of xHCI BESL Errata Dated 10/19/2011 is enabled
+> > in host mode. In device mode it adds the capability to send NYET response based
+> > on the BESL value received in the LPM token.
 > > 
-> > Yes, when you set a driver_override on a device you cancel it by writing
-> > a NULL string to the same interface.  The problem is that here we have a
-> > new entity in the driver scan that keeps re-applying the driver_override
-> > as devices are scanned with no way to stop it.  So you can certainly
-> > undo the immediate effect and bind the device to another driver, but if
-> > the device is removed and re-scanned there's no way to stop if from
-> > re-applying the override.  Thanks,
-> Hi Alex,
+> > This patch add an entry that soc platform is able to define the lpm capacity
+> > with their own device tree or bus glue layer.
+> > 
+> > Suggested-by: Felipe Balbi <balbi@ti.com>
+> > Signed-off-by: Huang Rui <ray.huang@amd.com>
+> > ---
+> >  drivers/usb/dwc3/core.c          |  2 ++
+> >  drivers/usb/dwc3/core.h          | 24 +++++++++++++++---------
+> >  drivers/usb/dwc3/dwc3-pci.c      |  1 +
+> >  drivers/usb/dwc3/gadget.c        |  7 +++++++
+> >  drivers/usb/dwc3/platform_data.h |  1 +
+> >  5 files changed, 26 insertions(+), 9 deletions(-)
+> > 
+> > diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+> > index 819e501..25db533 100644
+> > --- a/drivers/usb/dwc3/core.c
+> > +++ b/drivers/usb/dwc3/core.c
+> > @@ -708,11 +708,13 @@ static int dwc3_probe(struct platform_device *pdev)
+> >  
+> >  	if (node) {
+> >  		dwc->maximum_speed = of_usb_get_maximum_speed(node);
+> > +		dwc->has_lpm_erratum = of_property_read_bool(node, "snps,has-lpm-erratum");
+> >  
+> >  		dwc->needs_fifo_resize = of_property_read_bool(node, "tx-fifo-resize");
+> >  		dwc->dr_mode = of_usb_get_dr_mode(node);
+> >  	} else if (pdata) {
+> >  		dwc->maximum_speed = pdata->maximum_speed;
+> > +		dwc->has_lpm_erratum = pdata->has_lpm_erratum;
+> >  
+> >  		dwc->needs_fifo_resize = pdata->tx_fifo_resize;
+> >  		dwc->dr_mode = pdata->dr_mode;
+> > diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+> > index cfe0d57..d58479e 100644
+> > --- a/drivers/usb/dwc3/core.h
+> > +++ b/drivers/usb/dwc3/core.h
+> > @@ -246,16 +246,19 @@
+> >  #define DWC3_DCTL_TRGTULST_SS_INACT	(DWC3_DCTL_TRGTULST(6))
+> >  
+> >  /* These apply for core versions 1.94a and later */
+> > -#define DWC3_DCTL_KEEP_CONNECT	(1 << 19)
+> > -#define DWC3_DCTL_L1_HIBER_EN	(1 << 18)
+> > -#define DWC3_DCTL_CRS		(1 << 17)
+> > -#define DWC3_DCTL_CSS		(1 << 16)
+> > +#define DWC3_DCTL_LPM_ERRATA_MASK	DWC3_DCTL_LPM_ERRATA(0xf)
+> > +#define DWC3_DCTL_LPM_ERRATA(n)		((n) << 20)
+> > -#define DWC3_DCTL_INITU2ENA	(1 << 12)
+> > -#define DWC3_DCTL_ACCEPTU2ENA	(1 << 11)
+> > -#define DWC3_DCTL_INITU1ENA	(1 << 10)
+> > -#define DWC3_DCTL_ACCEPTU1ENA	(1 << 9)
+> > -#define DWC3_DCTL_TSTCTRL_MASK	(0xf << 1)
+> > +#define DWC3_DCTL_KEEP_CONNECT		(1 << 19)
+> > +#define DWC3_DCTL_L1_HIBER_EN		(1 << 18)
+> > +#define DWC3_DCTL_CRS			(1 << 17)
+> > +#define DWC3_DCTL_CSS			(1 << 16)
+> > +
+> > +#define DWC3_DCTL_INITU2ENA		(1 << 12)
+> > +#define DWC3_DCTL_ACCEPTU2ENA		(1 << 11)
+> > +#define DWC3_DCTL_INITU1ENA		(1 << 10)
+> > +#define DWC3_DCTL_ACCEPTU1ENA		(1 << 9)
+> > +#define DWC3_DCTL_TSTCTRL_MASK		(0xf << 1)
+> >  
+> >  #define DWC3_DCTL_ULSTCHNGREQ_MASK	(0x0f << 5)
+> >  #define DWC3_DCTL_ULSTCHNGREQ(n) (((n) << 5) & DWC3_DCTL_ULSTCHNGREQ_MASK)
+> > @@ -665,6 +668,8 @@ struct dwc3_scratchpad_array {
+> >   * @ep0_bounced: true when we used bounce buffer
+> >   * @ep0_expect_in: true when we expect a DATA IN transfer
+> >   * @has_hibernation: true when dwc3 was configured with Hibernation
+> > + * @has_lpm_erratum: true when core was configured with LPM Erratum. Note that
+> > + *			there's now way for software to detect this in runtime.
+> >   * @is_selfpowered: true when we are selfpowered
+> >   * @is_fpga: true when we are using the FPGA board
+> >   * @needs_fifo_resize: not all users might want fifo resizing, flag it
+> > @@ -771,6 +776,7 @@ struct dwc3 {
+> >  	unsigned		ep0_bounced:1;
+> >  	unsigned		ep0_expect_in:1;
+> >  	unsigned		has_hibernation:1;
+> > +	unsigned		has_lpm_erratum:1;
+> >  	unsigned		is_selfpowered:1;
+> >  	unsigned		is_fpga:1;
+> >  	unsigned		needs_fifo_resize:1;
+> > diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
+> > index a89db6c..bbe946c 100644
+> > --- a/drivers/usb/dwc3/dwc3-pci.c
+> > +++ b/drivers/usb/dwc3/dwc3-pci.c
+> > @@ -148,6 +148,7 @@ static int dwc3_pci_probe(struct pci_dev *pci,
+> >  
+> >  	if (pci->vendor == PCI_VENDOR_ID_AMD && pci->device ==
+> >  			PCI_DEVICE_ID_AMD_NL) {
+> > +		dwc3_pdata.has_lpm_erratum = true;
+> >  		dwc3_pdata.quirks |= DWC3_QUIRK_AMD_NL;
+> >  	}
+> >  
 > 
-> I checked the above scenario and after driver_override is cleared
-> an we do bind/unbind, the mapping defined in the command line
-> does not apply anymore.
+> let's combine all AMD patches as the last patch in the series so we add
+> AMD support with all quirks in one place.
 > 
-> My steps were:
-> 1. define the override in command-line -> the mapped driver is used instead of the native one
-> 2. unbind the device from the slot -> no driver for device
-> 3. remove the driver_override mapping form the slot -> no mapping defined
-> 3, bind the device again -> native driver in use.
+> > diff --git a/drivers/usb/dwc3/gadget.c b/drivers/usb/dwc3/gadget.c
+> > index 1f2a719..33bfc70 100644
+> > --- a/drivers/usb/dwc3/gadget.c
+> > +++ b/drivers/usb/dwc3/gadget.c
+> > @@ -1581,6 +1581,13 @@ static int dwc3_gadget_start(struct usb_gadget *g,
+> >  	}
+> >  	dwc3_writel(dwc->regs, DWC3_DCFG, reg);
+> >  
+> > +	if (dwc->has_lpm_erratum) {
+> > +		reg = dwc3_readl(dwc->regs, DWC3_DCTL);
+> > +		/* REVISIT should this be configurable ? */
+> > +		reg |= DWC3_DCTL_LPM_ERRATA(0xf);
+> 
+> as Paul mentioned, this should definitely be configurable. So we need to
+> discuss how to make that configurable too.
+> 
 
-That's not the scenario I'm describing.  Use the remove and rescan sysfs
-attributes to do a software hotplug and you'll see that the
-driver_override will always be re-applied to the device.  For example:
+Can I define a 4-bits variable (lpm_nyet_thres) to let platform vendor able to configure
+the besl value at DT or glue layer?
 
-# echo "" > /sys/bus/pci/devices/0000:02:00.0/driver_override
-# echo 1 > /sys/bus/pci/devices/0000:02:00.0/remove
-# echo 1 > /sys/bus/pci/rescan
-# cat /sys/bus/pci/devices/0000:02:00.0/driver_override
+struct dwc3_platform_data {
+        ...
+        unsigned has_lpm_erratum:1;
+        unsigned lpm_nyet_thres:4;
+}
 
-I expect the last step will show the original override re-applied.
+Then put the value at probe like:
+
+dwc->has_lpm_erratum = of_property_read_u8(node, "snps,lpm-nyet-thres");
+
+I don't find a 4-bit "Find from a property" interface, so can I use
+of_property_read_u8 instead for ARM platforms?
+
+Then do:
+if (dwc->has_lpm_erratum)
+        reg |= DWC3_DCTL_LPM_ERRATA(dwc->lpm_nyet_thres);
+
 Thanks,
-
-Alex
-
+Rui
