@@ -1,58 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foo.masarand.uk ([69.164.217.139]:56357 "EHLO foo.masarand.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752399AbaJBEIF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Oct 2014 00:08:05 -0400
-From: matt@masarand.com
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, Matthew Minter <matt@masarand.com>
-Subject: [PATCH 11/18] Delayed mips setup of PCI IRQs to bus scan time
-Date: Thu,  2 Oct 2014 05:07:39 +0100
-Message-Id: <1412222866-21068-12-git-send-email-matt@masarand.com>
-In-Reply-To: <1412222866-21068-1-git-send-email-matt@masarand.com>
-References: <1412222866-21068-1-git-send-email-matt@masarand.com>
+Received: from mail-by2on0142.outbound.protection.outlook.com ([207.46.100.142]:14256
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751507AbaJXDBM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 Oct 2014 23:01:12 -0400
+From: Richard Zhu <richard.zhu@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
+	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
+	<m-karicheri2@ti.com>, Richard Zhu <r65037@freescale.com>,
+	Richard Zhu <richard.zhu@freescale.com>
+Subject: [PATCH V1] PCI: imx6: Wait the clocks to stabilize after ref_en
+Date: Fri, 24 Oct 2014 10:30:52 +0800
+Message-ID: <1414117852-31657-2-git-send-email-richard.zhu@freescale.com>
+In-Reply-To: <1414117852-31657-1-git-send-email-richard.zhu@freescale.com>
+References: <1414117852-31657-1-git-send-email-richard.zhu@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Matthew Minter <matt@masarand.com>
+From: Richard Zhu <r65037@freescale.com>
 
-Currently mips PCI IRQs are assigned at boot, this creates an extra
-pass over the PCI bus and causes hot-plugged devices which are not
-present at boot to not be given IRQs, this patch set fixes this by
-registering assignment functions which are then run later during the
-device enable code path.
+For boards without a reset GPIO we skip the delay between enabling the
+pcie_ref_clk and touching the RC registers for configuration.
+This hangs the system if there isn't a proper delay to ensure the clocks
+are settled in the DW PCIe core.
 
-Signed-off-by: Matthew Minter <matt@masarand.com>
+Also iMX6Q always needs an additional 10us delay to make sure the reset
+is propagated through the core, as we don't have an explicitly
+controlled reset input on this SoC.
 
+Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
+Tested-by: Tim Harvey <tharvey@gateworks.com>
+Tested-by: Fabio Estevam <fabio.estevam@freescale.com>
+Tested-by: Fabio Estevam <fabio.estevam@freescale.com>
 ---
- arch/mips/pci/pci.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ drivers/pci/host/pci-imx6.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
-index 1bf60b1..dc660a0 100644
---- a/arch/mips/pci/pci.c
-+++ b/arch/mips/pci/pci.c
-@@ -242,13 +242,18 @@ static int __init pcibios_init(void)
- 	for (hose = hose_head; hose; hose = hose->next)
- 		pcibios_scanbus(hose);
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 233fe8a..eac96fb 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -275,15 +275,22 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		goto err_pcie;
+ 	}
  
--	pci_fixup_irqs(pci_common_swizzle, pcibios_map_irq);
+-	/* allow the clocks to stabilize */
+-	usleep_range(200, 500);
 -
- 	pci_initialized = 1;
+ 	/* power up core phy and enable ref clock */
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
++	/*
++	 * the async reset input need ref clock to sync internally,
++	 * when the ref clock comes after reset, internal synced
++	 * reset time is too short , cannot meet the requirement.
++	 * add one ~10us delay here.
++	 */
++	udelay(10);
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
  
- 	return 0;
- }
- 
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+       bridge->swizzle_irq = pci_common_swizzle;
-+       bridge->map_irq = pcibios_map_irq;
-+       return 0;
-+}
++	/* allow the clocks to stabilize */
++	usleep_range(200, 500);
 +
- subsys_initcall(pcibios_init);
- 
- static int pcibios_enable_resources(struct pci_dev *dev, int mask)
+ 	/* Some boards don't have PCIe reset GPIO. */
+ 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+ 		gpio_set_value(imx6_pcie->reset_gpio, 0);
 -- 
-2.1.0
+1.9.1
 
