@@ -1,149 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f52.google.com ([209.85.216.52]:62703 "EHLO
-	mail-qa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750942AbaJ1QU0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Oct 2014 12:20:26 -0400
-Received: by mail-qa0-f52.google.com with SMTP id u7so695039qaz.39
-        for <linux-pci@vger.kernel.org>; Tue, 28 Oct 2014 09:20:26 -0700 (PDT)
+Received: from mail-la0-f42.google.com ([209.85.215.42]:63006 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751014AbaJXBvQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Oct 2014 21:51:16 -0400
 MIME-Version: 1.0
-In-Reply-To: <CADnq5_NQRkwtsKP0818i=TGr6t-u+MbJUX6y_FvgQUT=eh4PRA@mail.gmail.com>
-References: <2354837.kuMZPK0Y1Q@segfault> <CAErSpo6zLY8RVAHnLe81jjOE8cxGzskjPq3HL7eZVOtC-WF6=w@mail.gmail.com>
- <2298090.n99M7dPPE3@segfault> <CAErSpo4C=zANrE6muRf93nxLtmOG-U0xhWQPV_=fb8dFaKG8yw@mail.gmail.com>
- <CADnq5_O54_rjL=hxg8-4GV57JC=6j16OeFOM-zbmoMuL5yJKqw@mail.gmail.com>
- <CAErSpo6aBAuK27LwHrdi_X1fxfZ9NN4BkqQj6h4rqHD9ssNnAA@mail.gmail.com> <CADnq5_NQRkwtsKP0818i=TGr6t-u+MbJUX6y_FvgQUT=eh4PRA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 28 Oct 2014 10:20:05 -0600
-Message-ID: <CAErSpo40xKYFKmAaF+uHsRQRHBrFV4Fn2ZMKc+KOnQyZJAQhtA@mail.gmail.com>
-Subject: Re: [Bulk] Re: [3.16-rcX][pciehp][radeon] PCIe HotPlug conflicts with
- radeon GPU
-To: Alex Deucher <alexdeucher@gmail.com>
-Cc: Shawn Starr <shawn.starr@rogers.com>,
-	Alex Deucher <alexander.deucher@amd.com>,
+In-Reply-To: <1411445498-20250-3-git-send-email-r65037@freescale.com>
+References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
+	<1411445498-20250-3-git-send-email-r65037@freescale.com>
+Date: Thu, 23 Oct 2014 23:51:14 -0200
+Message-ID: <CAOMZO5D6_py-OUsz57mcJOdCShQk0jOjJMPD=4VTzj_FoOkMjQ@mail.gmail.com>
+Subject: Re: [PATCH v2 2/5] PCI: imx6: wait the clocks to stabilize after ref_en
+From: Fabio Estevam <festevam@gmail.com>
+To: Richard Zhu <r65037@freescale.com>
+Cc: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	DRI mailing list <dri-devel@lists.freedesktop.org>,
-	=?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>
+	Shawn Guo <shawn.guo@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Alex Williamson, Rajat]
+Hi Richard,
 
-On Tue, Oct 28, 2014 at 9:45 AM, Alex Deucher <alexdeucher@gmail.com> wrote:
-> On Mon, Oct 27, 2014 at 12:44 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Sun, Oct 26, 2014 at 11:31 AM, Alex Deucher <alexdeucher@gmail.com> wrote:
->>> On Mon, Oct 13, 2014 at 12:11 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>> [+cc Alex, Christian, dri-devel]
->>>>
->>>> On Sat, Oct 11, 2014 at 1:37 PM, Shawn Starr <shawn.starr@rogers.com> wrote:
->>>>> On September 11, 2014 04:26:21 PM Bjorn Helgaas wrote:
->>>>>> [+cc linux-pci]
->>>>>>
->>>>>> On Sat, Aug 2, 2014 at 10:02 AM, Shawn Starr <shawn.starr@rogers.com> wrote:
->>>>>> > Hello devs,
->>>>>> >
->>>>>> > There are two issues I am encountering with the PCIe Hotplug driver on my
->>>>>> > Lenovo Laptop (W500). I note this goes back further than 3.15.
->>>>>> >
->>>>>> > It is noted here:
->>>>>> > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=
->>>>>> > f244d8b623dae7a7bc695b0336f67729b95a9736
->>>>>> > https://bugzilla.kernel.org/show_bug.cgi?id=79701
->>>>>> >
->>>>>> > And my open bug here:
->>>>>> > https://bugzilla.kernel.org/show_bug.cgi?id=77261
->>>>>> >
->>>>>> > 1) If I enable the device to use both the integrated and discrete GPU,
->>>>>> > pciehp will decide to force unload radeon because it puts itself into a
->>>>>> > power saving state, fails back to the Intel integrated GPU in this case
->>>>>> > unless I tell radeon.ko to runpm=0 (no power management, then pciehp wont
->>>>>> > touch it).
->>>>>> >
->>>>>> > 2) If the Radeon GPU resets and you use pci_reset=1 for kernel module
->>>>>> > option, pciehp decides to force unload radeon even though the GPU is
->>>>>> > trying to setup after failing.
->>>>>> >
->>>>>> > Kernel I am using right now: 3.16.0-0.rc7.git3.1.fc21.x86_64 (about to
->>>>>> > boot into snapshot kernel-core-3.16.0-0.rc7.git4.1.fc21.x86_64)
->>>>>> Hi Shawn,
->>>>>>
->>>>>> Thanks for the report and sorry that it got dropped.  But I see you're
->>>>>> cc'd on https://bugzilla.kernel.org/show_bug.cgi?id=79701, so you've
->>>>>> probably seen the work there.  If you can try out the patches I just
->>>>>> posted, that would be great.
->>>>>>
->>>>>> Bjorn
->>>>>
->>>>> Hi Bjorn,
->>>>>
->>>>> For #1) This is fixed in linux-next (tracking 3.18.0-0.rc0.git1.2.fc22.1.x86_64
->>>>> nondebug kernel for Fedora). PCIe HotPlug no longer unloads radeon. For this
->>>>> bugzilla report we can close it.
->>>>>
->>>>> #2) This still has weird results however, radeon.hard_reset=1 is experimental
->>>>> and while it attempts to reset GPU, PCIe HotPlug seems to interact in this.
->>>>>
->>>>> This can be tested by adding to grub command line radeon.hard_reset=1.
->>>>> When X has started up, trigger a reset by cat
->>>>> /sys/kernel/debug/dri/#/radeon_gpu_reset. It will output 0, cat it again will
->>>>> show 1.
->>>>>
->>>>> Attempt to drag a window. The this will trigger a GPU reset, but fail to
->>>>> recover, its unknown if PCIe HotPlug is preventing a proper reset or not but
->>>>> there is pciehp calls in the stack trace.
->>>>
->>>> A PCIe device reset usually looks like a hotplug event because the
->>>> PCIe link goes down and comes back up.  As far as the PCI core is
->>>> concerned, it can't tell the difference between (1) a simple reset
->>>> where the link bounces and (2) removal of one device followed by
->>>> addition of another.
->>>>
->>>> b440bde74f04 ("PCI: Add pci_ignore_hotplug() to ignore hotplug events
->>>> for a device") addressed this for some similar cases, but it looks
->>>> like we probably need some more calls to pci_ignore_hotplug() in the
->>>> radeon driver reset methods.
->>>>
->>>> Can you please open a bugzilla and attach the complete dmesg log,
->>>> including the GPU reset and recovery failure?
->>>
->>> Is there a way we could temporarily disable pci hotplug around a GPU reset?
->>
->> There is pci_ignore_hotplug().  Do you mean something more?  Oh, I
->> guess you mean a way to disable, then *re*-enable hotplug.  We can
->> easily add that if that would help.
+On Tue, Sep 23, 2014 at 1:11 AM, Richard Zhu <r65037@freescale.com> wrote:
+> - a while delay is mandatory required after pcie_ref_clk_en
+> is set. Otherwise, the system would be hang on imx6qdl ard
+> boards, because that imx6qdl boards don't have the reset_gpio.
+> - the clocks should be stable already after the
+> "clk_prepare_enable" is return. So I think it's ok to move the
+> usleep delay after the pcie_ref_en is set.
 >
-> Exactly.  I was thinking I could disable hotplug, do the gpu hard
-> reset, then re-enable hotplug.
+> Signed-off-by: Richard Zhu <r65037@freescale.com>
 
-That approach sounds fine to me.
+Tested-by: Fabio Estevam <fabio.estevam@freescale.com>
 
-We're accumulating ways to deal with this issue, and I wonder if they
-could be unified a bit.  At least the following are related:
+Without this patch we notice that the kernel does not boot anymore
+since commit  3fce0e882f61 (PCI: imx6: Delay enabling reference clock
+for SS until it stabilizes) on a system that does not pass the PCI
+gpio reset in the dtb. This causes a regression on mx6 nitrogen
+boards.
 
-  b440bde74f04 PCI: Add pci_ignore_hotplug() to ignore hotplug events
-for a device
-  06a8d89af551 PCI: pciehp: Disable link notification across slot reset
-  2e35afaefe64 PCI: pciehp: Add reset_slot() method
-
-2e35afaefe64 adds a pciehp reset method that disables presence detect
-notification and stops any pciehp polling for events.
-
-06a8d89af551 extends that pciehp reset method to also disable link
-status notifications.
-
-b440bde74f04 adds an explicit interface for drivers
-(pci_ignore_hotplug()), since some drivers reset devices in
-device-specific ways rather than using the pci_reset_function() path.
-This leaves notifications enabled but ignores them if they arrive.
-And of course, this didn't add a way to *enable* hotplug again, which
-is what we need here.
-
-The b440bde74f04 approach is extensible to other hotplug drivers, but
-I am a little worried about races and polling.  What happens if we
-ignore hotplug events, reset the device, start paying attention to
-hotplug events again, and *then* the hotplug interrupt arrives or the
-poll for events happens?
-
-Bjorn
+I would suggest that you resend this patch only so that it could be
+applied into 3.18 as a bug fix.
