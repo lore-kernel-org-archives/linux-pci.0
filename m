@@ -1,68 +1,121 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 16 Oct 2014 11:24:45 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH RFC 2/2] arm: kernel: fix pci_mmap_page_range() offset
- calculation
-Message-ID: <20141016102445.GA28187@red-moon>
-References: <1413374624-30066-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1413374624-30066-2-git-send-email-lorenzo.pieralisi@arm.com>
- <20141015222932.GL27405@n2100.arm.linux.org.uk>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:34996 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751653AbaJXQfd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Oct 2014 12:35:33 -0400
+Received: by mail-ie0-f180.google.com with SMTP id at20so2687021iec.39
+        for <linux-pci@vger.kernel.org>; Fri, 24 Oct 2014 09:35:32 -0700 (PDT)
+Date: Fri, 24 Oct 2014 10:35:29 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Huang Rui <ray.huang@amd.com>
+Cc: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 02/16] pci: quirks: add quirk to avoid AMD NL to bind
+ with xhci
+Message-ID: <20141024163529.GA7075@google.com>
+References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+ <1413536021-4886-3-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <20141015222932.GL27405@n2100.arm.linux.org.uk>
-Content-Type: text/plain; charset=WINDOWS-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1413536021-4886-3-git-send-email-ray.huang@amd.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Russell,
+On Fri, Oct 17, 2014 at 04:53:27PM +0800, Huang Rui wrote:
+> The dwc3 controller is the PCI-E device in AMD NL platform, but the class code
+> of PCI header is 0x0c0330, the same with xHC. That's because it needs to meet
+> the windows enviroment. The dwc3 controller acted as only host mode to bind with
+> windows xhci driver.
+> But on linux, sometimes, it would auto-bind with xhci driver as well (class code
+> 0x0c0330) despite it uses Pid/Vid on dwc3 driver.
 
-thanks for having a look.
+This changelog really doesn't make any sense unless the reader already
+knows everything.  I think you mean something like this:
 
-On Wed, Oct 15, 2014 at 11:29:32PM +0100, Russell King - ARM Linux wrote:
-> On Wed, Oct 15, 2014 at 01:03:41PM +0100, Lorenzo Pieralisi wrote:
-> > ARM relies on the standard implementation of pci_resource_to_user()
-> > which actually is an identity map and exports to user space
-> > PCI memory resources as they are stored in PCI devices resources (ie BARs)
-> > which represent CPU physical addresses (fixed-up using BUS to CPU
-> > address conversions) not PCI bus addresses.
+  The AMD NL (please explain what "NL" is; Google has no clue) SoC contains
+  a DesignWare USB3 Dual-Role Device that can be operated either as a USB
+  Host or a USB Device.  In the AMD NL platform, this device ([1022:7912])
+  has a class code of PCI_CLASS_SERIAL_USB_XHCI (0x0c0330), which means the
+  xhci driver will claim it.
+
+  But the dwc3 driver is a more specific driver for this device, and we'd
+  prefer to use it instead of xhci.  To prevent xhci from claiming the
+  device, change the class code to 0x0c03fe, which the PCI r3.0 spec
+  defines as "USB device (not host controller)".  The dwc3 driver can then
+  claim it based on its Vendor and Device ID.
+
+Obviously, this means the device won't work at all unless dwc3 is enabled.
+Previously, it probably would work as a host controller with the xhci
+driver.  I assume this change is what you want.
+
+> Heikki suggested to use the quirk to fix this issue, and the detailed discussion
+> is at below thread:
+> http://marc.info/?l=linux-usb&m=141197934712824&w=2
+
+This changelog needs to be wrapped so no line is longer than 75 characters.
+
+Please run "git log --oneline --no-merges drivers/pci/quirks.c" and make
+your subject line match the rest.  In particular, "PCI" (not "pci"), drop
+the "quirks:" part, and capitalize "Add".
+
+> Suggested-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Huang Rui <ray.huang@amd.com>
+> ---
+>  drivers/pci/quirks.c | 20 ++++++++++++++++++++
+>  1 file changed, 20 insertions(+)
 > 
-> This paragraph seems wrong.
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 90acb32..3c911b7 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -378,6 +378,26 @@ static void quirk_ati_exploding_mce(struct pci_dev *dev)
+>  }
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,	PCI_DEVICE_ID_ATI_RS100,   quirk_ati_exploding_mce);
+>  
+> +/* FIXME should define in <linux/pci_ids.h> */
+> +#define PCI_DEVICE_ID_AMD_NL	0x7912
+
+If you KNOW this should be in linux/pci_ids.h (and it looks like it COULD
+go there, since you do use the same definition in patch [01/16]), why don't
+you just do it?  Why are you wasting our time reviewing trivial stuff like
+this?
+
+> +
+> +/*
+> + * AMD NL SoC 7912 PCI device is dwc3 controller, but the class code of PCI
+> + * header is 0x0c0330, the same with xHC. That's because it need to meet the
+> + * windows enviroment. The dwc3 controller acted as only host mode to bind with
+> + * windows xhci driver. But on linux, sometimes, we auto-bind with xhci driver
+> + * as well (class code 0x0c0330) despite we use Pid/Vid on dwc3 driver. So this
+> + * quirk used a dummy class code to avoid to bind with xhci driver at booting
+> + * phase.
+> + */
+> +static void quirk_amd_nl_class(struct pci_dev *pdev)
+> +{
+> +	/* Use a dummy class value instead of PCI header provided */
+
+When you say "dummy class value," that makes it sound like you just chose
+a random invalid value.  But this value is actually defined by the spec, so
+you should use the description from the spec, namely, "USB device (not host
+controller)".
+
+Bjorn
+
+> +	pdev->class = 0x0c03fe;
+> +}
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_NL,
+> +		quirk_amd_nl_class);
+> +
+>  /*
+>   * Let's make the southbridge information explicit instead
+>   * of having to worry about people probing the ACPI areas,
+> -- 
+> 1.9.1
 > 
-> It first says that PCI memory resources contain the same values that the
-> PCI device has in its BAR.  It then goes on to say that they are CPU
-> physical addresses.  That is not true.
-> 
-> For example, DC21285 systems always have done this as: the PCI bars
-> contain the _bus_ addresses, which tend to be in the range 0 to
-> 0x7fffffff.  These correspond with a CPU physical address of
-> 0x80000000 to 0xffffffff.  The PCI bus resources for IOMEM resources
-> contains the CPU physical address of the mapping.
-
-It is a commit log wording problem, I exactly meant what you said, I
-will reword it (or remove "ie BARs" from it, since it is misleading).
-
-I think that the word "BAR" is a bit misused in helpers function like:
-
-pci_resource_{start/end/len}
-
-too but as long as we all know what that means (and I write proper
-commit logs :)) it is all fine.
-
-> > On platforms where the mapping between CPU and BUS address is not a 1:1
-> > mapping this is erroneous, in that an additional shift is applied to
-> > an already fixed-up offset passed from userspace.
-> 
-> Yes, I think this is a correct patch inspite of the description. :)
-
-Great, I will reword it and wait for comments on patch 1 that changes
-pci_mmap_fits() (it does not affect ARM, but would like to get both changes
-in coherently - ie if I am asked to change patch 1 I will probably have
-to change this patch too).
-
-Thanks,
-Lorenzo
-
