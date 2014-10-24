@@ -1,62 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:43538 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752355AbaJLOjP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 12 Oct 2014 10:39:15 -0400
-Message-ID: <1413124703.2459.18.camel@antimon.intern.lynxeye.de>
-Subject: Re: [PATCH v5 8/9] ARM: imx6sx: add imx6sx pcie related gpr bits
- definitions
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Richard Zhu <richard.zhu@freescale.com>
-Cc: linux-pci@vger.kernel.org, shawn.guo@freescale.com,
-	festevam@gmail.com, tharvey@gateworks.com,
-	Richard Zhu <r65037@freescale.com>
-Date: Sun, 12 Oct 2014 16:38:23 +0200
-In-Reply-To: <1412919676-25344-9-git-send-email-richard.zhu@freescale.com>
-References: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com>
-	 <1412919676-25344-9-git-send-email-richard.zhu@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-bn1bon0147.outbound.protection.outlook.com ([157.56.111.147]:48890
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756415AbaJXMI1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 24 Oct 2014 08:08:27 -0400
+Message-ID: <544A4132.8000404@amd.com>
+Date: Fri, 24 Oct 2014 07:08:18 -0500
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+MIME-Version: 1.0
+To: Mark Rutland <mark.rutland@arm.com>
+CC: Will Deacon <Will.Deacon@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Thomas Lendacky <Thomas.Lendacky@amd.com>,
+	Joel Schopp <Joel.Schopp@amd.com>
+Subject: Re: [RFC 1/4] arm64: amd-seattle: Adding device tree for AMD Seattle
+ platform
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <1411937610-22125-2-git-send-email-suravee.suthikulpanit@amd.com>
+ <20141010134534.GC6004@leverpostej>
+In-Reply-To: <20141010134534.GC6004@leverpostej>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Freitag, den 10.10.2014, 13:41 +0800 schrieb Richard Zhu:
-> From: Richard Zhu <r65037@freescale.com>
-> 
-> Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
+On 10/10/2014 8:45 AM, Mark Rutland wrote:
+> Hi Suravee,
+>
+> On Sun, Sep 28, 2014 at 09:53:27PM +0100, suravee.suthikulpanit@amd.com wrote:
+>> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>>
+>> Initial revision of device tree for AMD Seattle platform
+>
+> To check: how is it possible to make use of a DTB generated from this
+> dts? Can a user update the DTB used by the Seattle firmware?
 
-You are using those defines in the PCIe driver changes, so the need to
-be sorted before them in the series as they need to be picked up by
-Bjorn to make sure we don't introduce build regressions.
+In the current FW, there is a mechanism that users can modify and 
+provide UEFI with the updated device tree to override the one that comes 
+with Seattle firmware.
 
-> ---
->  include/linux/mfd/syscon/imx6q-iomuxc-gpr.h | 9 +++++++++
->  1 file changed, 9 insertions(+)
-> 
-> diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-> index ff44374..3273b87 100644
-> --- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-> +++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-> @@ -301,6 +301,7 @@
->  #define IMX6Q_GPR12_DEVICE_TYPE			(0xf << 12)
->  #define IMX6Q_GPR12_PCIE_CTL_2			BIT(10)
->  #define IMX6Q_GPR12_LOS_LEVEL			(0x1f << 4)
-> +#define IMX6Q_GPR12_LOS_LEVEL_9			(0x9 << 4)
->  
->  #define IMX6Q_GPR13_SDMA_STOP_REQ		BIT(30)
->  #define IMX6Q_GPR13_CAN2_STOP_REQ		BIT(29)
-> @@ -395,4 +396,12 @@
->  #define IMX6SL_GPR1_FEC_CLOCK_MUX1_SEL_MASK    (0x3 << 17)
->  #define IMX6SL_GPR1_FEC_CLOCK_MUX2_SEL_MASK    (0x1 << 14)
->  
-> +/* For imx6sx iomux gpr register field define */
-> +#define IMX6SX_GPR5_PCIE_BTNRST			BIT(19)
-> +#define IMX6SX_GPR5_PCIE_PERST			BIT(18)
-> +
-> +#define IMX6SX_GPR12_PCIE_PM_TURN_OFF		BIT(16)
-> +#define IMX6SX_GPR12_PCIE_TEST_PD		BIT(30)
-> +#define IMX6SX_GPR12_RX_EQ_MASK			(0x7 << 0)
-> +#define IMX6SX_GPR12_RX_EQ_2			(0x2 << 0)
->  #endif /* __LINUX_IMX6Q_IOMUXC_GPR_H */
+[...];
+>> +
+>> +       timer@1,1060000 {
+>> +               compatible = "arm,standalone_a5_twd";
+>> +               reg = <0 0x1060000 0 0x40>;
+>> +               interrupts =
+>> +                       <0 378 4>,
+>> +                       <0 379 4>;
+>> +       };
+>
+> This binding does not exist in mainline.
+
+I am removing this.
+
+>
+>> +
+>> +       ccp: ccp@1,00100000 {
+>> +               compatible = "amd,ccp-seattle-v1a";
+>> +               reg = <0 0x00100000 0 0x10000>;
+>> +               interrupts = <0 3 4>;
+>> +               dma-coherent;
+>> +       };
+>
+> Nor does this.
+
+The binding for this one is here 
+(http://lxr.free-electrons.com/source/Documentation/devicetree/bindings/crypto/amd-ccp.txt).
 
 
+ > [....]
+>
+>> +               linux,pci-probe-only;
+>
+> Why is this necessary?
+
+This was defined in the PCI Generic Host Controller binding here 
+(http://lxr.free-electrons.com/source/Documentation/devicetree/bindings/pci/host-generic-pci.txt).
+
+>
+>> +       };
+>> +
+>> +       aliases {
+>> +               serial0 = &v2m_serial0;
+>> +       };
+>> +
+>> +       /* Note: This entry is modified by UEFI */
+>
+> In what way is this modified?
+
+1. UEFI would basically take out certain CPUs and modify the cpu-map 
+accordingly.
+2. Change method to psci-0.2 when support is in place.
+3. Update release address.
+
+Actually, the "cpus" entry should/will be fully auto generated by UEFI 
+in the future BIOS. I think I'll be taking this out completely for now.
+
+> [...]
+>
+>> +
+>> +       /* Note: This entry is modified by UEFI */
+>> +       memory@8000000000 {
+>> +               device_type = "memory";
+>> +               reg = <0x00000080 0x00000000 0x1 0x00000000>; /* 4GB */
+>> +       };
+>
+> Why does UEFI modify this? When booted via UEFI we use the UEFI memory
+> map.
+
+True. But for non-EFI boot (as fallback), we still need this. UEFI will 
+update the amount of detected memory.
+
+Actually, same here as the "cpus", this entry should/will go away 
+completely from the static DT, and UEFI will auto-generate this in the 
+future firmware.
+
+Thanks,
+
+Suravee
