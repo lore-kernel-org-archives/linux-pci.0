@@ -1,268 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:48944 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751500AbaJ0MDq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Oct 2014 08:03:46 -0400
-Date: Mon, 27 Oct 2014 12:03:35 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH RFC 2/2] drivers: pci: convert generic host controller to
- DT resource parsing API
-Message-ID: <20141027120335.GQ8768@arm.com>
-References: <1414077787-20633-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1414077787-20633-2-git-send-email-lorenzo.pieralisi@arm.com>
+Received: from mail-bl2on0117.outbound.protection.outlook.com ([65.55.169.117]:58808
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751507AbaJXDG5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 Oct 2014 23:06:57 -0400
+From: Richard Zhu <richard.zhu@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
+	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
+	<m-karicheri2@ti.com>, Richard Zhu <r65037@freescale.com>,
+	Richard Zhu <richard.zhu@freescale.com>
+Subject: [PATCH V2] PCI: imx6: Wait the clocks to stabilize after ref_en
+Date: Fri, 24 Oct 2014 10:36:40 +0800
+Message-ID: <1414118200-2018-2-git-send-email-richard.zhu@freescale.com>
+In-Reply-To: <1414118200-2018-1-git-send-email-richard.zhu@freescale.com>
+References: <1414118200-2018-1-git-send-email-richard.zhu@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1414077787-20633-2-git-send-email-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 23, 2014 at 04:23:07PM +0100, Lorenzo Pieralisi wrote:
-> In order to consolidate DT configuration for PCI host controllers in the
-> kernel, a new API (ie of_pci_get_host_bridge_resources()) was developed
-> to allow parsing and assigning IO/BUS/MEM resources from DT, removing
-> duplicated code present in the majority of pci host driver implementations.
-> 
-> This patch converts the existing PCI generic host controller driver to
-> the new API. Most of the code parsing ranges and creating resources is
-> now delegated to of_pci_get_host_bridge_resources() API.
-> 
-> The PCI host controller code carries out resources filtering on the
-> resulting resource list and maps IO space by using the newly introduced
-> pci_ioremap_iospace() API.
-> 
-> New code supports only one IO resource per generic host controller, which
-> should cater for all existing host controller configurations.
-> 
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> ---
->  drivers/pci/host/pci-host-generic.c | 120 ++++++++----------------------------
->  1 file changed, 27 insertions(+), 93 deletions(-)
+From: Richard Zhu <r65037@freescale.com>
 
-Looks fine to me -- I assume you tested this under a 32-bit kernel?
+For boards without a reset GPIO we skip the delay between enabling the
+pcie_ref_clk and touching the RC registers for configuration.
+This hangs the system if there isn't a proper delay to ensure the clocks
+are settled in the DW PCIe core.
 
-  Acked-by: Will Deacon <will.deacon@arm.com>
+Also iMX6Q always needs an additional 10us delay to make sure the reset
+is propagated through the core, as we don't have an explicitly
+controlled reset input on this SoC.
 
-Will
+Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
+Tested-by: Tim Harvey <tharvey@gateworks.com>
+Tested-by: Fabio Estevam <fabio.estevam@freescale.com>
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+---
+ drivers/pci/host/pci-imx6.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> index 1e1a80f..1895907 100644
-> --- a/drivers/pci/host/pci-host-generic.c
-> +++ b/drivers/pci/host/pci-host-generic.c
-> @@ -32,7 +32,7 @@ struct gen_pci_cfg_bus_ops {
->  
->  struct gen_pci_cfg_windows {
->  	struct resource				res;
-> -	struct resource				bus_range;
-> +	struct resource				*bus_range;
->  	void __iomem				**win;
->  
->  	const struct gen_pci_cfg_bus_ops	*ops;
-> @@ -50,7 +50,7 @@ static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
->  {
->  	struct pci_sys_data *sys = bus->sysdata;
->  	struct gen_pci *pci = sys->private_data;
-> -	resource_size_t idx = bus->number - pci->cfg.bus_range.start;
-> +	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
->  
->  	return pci->cfg.win[idx] + ((devfn << 8) | where);
->  }
-> @@ -66,7 +66,7 @@ static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
->  {
->  	struct pci_sys_data *sys = bus->sysdata;
->  	struct gen_pci *pci = sys->private_data;
-> -	resource_size_t idx = bus->number - pci->cfg.bus_range.start;
-> +	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
->  
->  	return pci->cfg.win[idx] + ((devfn << 12) | where);
->  }
-> @@ -138,106 +138,50 @@ static const struct of_device_id gen_pci_of_match[] = {
->  };
->  MODULE_DEVICE_TABLE(of, gen_pci_of_match);
->  
-> -static int gen_pci_calc_io_offset(struct device *dev,
-> -				  struct of_pci_range *range,
-> -				  struct resource *res,
-> -				  resource_size_t *offset)
-> -{
-> -	static atomic_t wins = ATOMIC_INIT(0);
-> -	int err, idx, max_win;
-> -	unsigned int window;
-> -
-> -	if (!PAGE_ALIGNED(range->cpu_addr))
-> -		return -EINVAL;
-> -
-> -	max_win = (IO_SPACE_LIMIT + 1) / SZ_64K;
-> -	idx = atomic_inc_return(&wins);
-> -	if (idx > max_win)
-> -		return -ENOSPC;
-> -
-> -	window = (idx - 1) * SZ_64K;
-> -	err = pci_ioremap_io(window, range->cpu_addr);
-> -	if (err)
-> -		return err;
-> -
-> -	of_pci_range_to_resource(range, dev->of_node, res);
-> -	res->start = window;
-> -	res->end = res->start + range->size - 1;
-> -	*offset = window - range->pci_addr;
-> -	return 0;
-> -}
-> -
-> -static int gen_pci_calc_mem_offset(struct device *dev,
-> -				   struct of_pci_range *range,
-> -				   struct resource *res,
-> -				   resource_size_t *offset)
-> -{
-> -	of_pci_range_to_resource(range, dev->of_node, res);
-> -	*offset = range->cpu_addr - range->pci_addr;
-> -	return 0;
-> -}
-> -
->  static void gen_pci_release_of_pci_ranges(struct gen_pci *pci)
->  {
-> -	struct pci_host_bridge_window *win;
-> -
-> -	list_for_each_entry(win, &pci->resources, list)
-> -		release_resource(win->res);
-> -
->  	pci_free_resource_list(&pci->resources);
->  }
->  
->  static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
->  {
-> -	struct of_pci_range range;
-> -	struct of_pci_range_parser parser;
->  	int err, res_valid = 0;
->  	struct device *dev = pci->host.dev.parent;
->  	struct device_node *np = dev->of_node;
-> +	resource_size_t iobase;
-> +	struct pci_host_bridge_window *win;
->  
-> -	if (of_pci_range_parser_init(&parser, np)) {
-> -		dev_err(dev, "missing \"ranges\" property\n");
-> -		return -EINVAL;
-> -	}
-> +	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources,
-> +					       &iobase);
-> +	if (err)
-> +		return err;
->  
-> -	for_each_of_pci_range(&parser, &range) {
-> -		struct resource *parent, *res;
-> -		resource_size_t offset;
-> -		u32 restype = range.flags & IORESOURCE_TYPE_BITS;
-> +	list_for_each_entry(win, &pci->resources, list) {
-> +		struct resource *parent, *res = win->res;
->  
-> -		res = devm_kmalloc(dev, sizeof(*res), GFP_KERNEL);
-> -		if (!res) {
-> -			err = -ENOMEM;
-> -			goto out_release_res;
-> -		}
-> -
-> -		switch (restype) {
-> +		switch (resource_type(res)) {
->  		case IORESOURCE_IO:
->  			parent = &ioport_resource;
-> -			err = gen_pci_calc_io_offset(dev, &range, res, &offset);
-> +			err = pci_remap_iospace(res, iobase);
-> +			if (err) {
-> +				dev_warn(dev, "error %d: failed to map resource %pR\n",
-> +					 err, res);
-> +				continue;
-> +			}
->  			break;
->  		case IORESOURCE_MEM:
->  			parent = &iomem_resource;
-> -			err = gen_pci_calc_mem_offset(dev, &range, res, &offset);
-> -			res_valid |= !(res->flags & IORESOURCE_PREFETCH || err);
-> +			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
->  			break;
-> +		case IORESOURCE_BUS:
-> +			pci->cfg.bus_range = res;
->  		default:
-> -			err = -EINVAL;
->  			continue;
->  		}
->  
-> -		if (err) {
-> -			dev_warn(dev,
-> -				 "error %d: failed to add resource [type 0x%x, %lld bytes]\n",
-> -				 err, restype, range.size);
-> -			continue;
-> -		}
-> -
-> -		err = request_resource(parent, res);
-> +		err = devm_request_resource(dev, parent, res);
->  		if (err)
->  			goto out_release_res;
-> -
-> -		pci_add_resource_offset(&pci->resources, res, offset);
->  	}
->  
->  	if (!res_valid) {
-> @@ -262,14 +206,6 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
->  	struct device *dev = pci->host.dev.parent;
->  	struct device_node *np = dev->of_node;
->  
-> -	if (of_pci_parse_bus_range(np, &pci->cfg.bus_range))
-> -		pci->cfg.bus_range = (struct resource) {
-> -			.name	= np->name,
-> -			.start	= 0,
-> -			.end	= 0xff,
-> -			.flags	= IORESOURCE_BUS,
-> -		};
-> -
->  	err = of_address_to_resource(np, 0, &pci->cfg.res);
->  	if (err) {
->  		dev_err(dev, "missing \"reg\" property\n");
-> @@ -277,12 +213,12 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
->  	}
->  
->  	/* Limit the bus-range to fit within reg */
-> -	bus_max = pci->cfg.bus_range.start +
-> +	bus_max = pci->cfg.bus_range->start +
->  		  (resource_size(&pci->cfg.res) >> pci->cfg.ops->bus_shift) - 1;
-> -	pci->cfg.bus_range.end = min_t(resource_size_t, pci->cfg.bus_range.end,
-> -				       bus_max);
-> +	pci->cfg.bus_range->end = min_t(resource_size_t,
-> +					pci->cfg.bus_range->end, bus_max);
->  
-> -	pci->cfg.win = devm_kcalloc(dev, resource_size(&pci->cfg.bus_range),
-> +	pci->cfg.win = devm_kcalloc(dev, resource_size(pci->cfg.bus_range),
->  				    sizeof(*pci->cfg.win), GFP_KERNEL);
->  	if (!pci->cfg.win)
->  		return -ENOMEM;
-> @@ -293,7 +229,7 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
->  				     "Configuration Space"))
->  		return -ENOMEM;
->  
-> -	bus_range = &pci->cfg.bus_range;
-> +	bus_range = pci->cfg.bus_range;
->  	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
->  		u32 idx = busn - bus_range->start;
->  		u32 sz = 1 << pci->cfg.ops->bus_shift;
-> @@ -305,8 +241,6 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
->  			return -ENOMEM;
->  	}
->  
-> -	/* Register bus resource */
-> -	pci_add_resource(&pci->resources, bus_range);
->  	return 0;
->  }
->  
-> -- 
-> 2.1.2
-> 
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 233fe8a..eac96fb 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -275,15 +275,22 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		goto err_pcie;
+ 	}
+ 
+-	/* allow the clocks to stabilize */
+-	usleep_range(200, 500);
+-
+ 	/* power up core phy and enable ref clock */
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
++	/*
++	 * the async reset input need ref clock to sync internally,
++	 * when the ref clock comes after reset, internal synced
++	 * reset time is too short , cannot meet the requirement.
++	 * add one ~10us delay here.
++	 */
++	udelay(10);
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+ 
++	/* allow the clocks to stabilize */
++	usleep_range(200, 500);
++
+ 	/* Some boards don't have PCIe reset GPIO. */
+ 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+ 		gpio_set_value(imx6_pcie->reset_gpio, 0);
+-- 
+1.9.1
+
