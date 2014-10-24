@@ -1,62 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0137.outbound.protection.outlook.com ([157.56.111.137]:36579
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750999AbaJHGlL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 8 Oct 2014 02:41:11 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>,
-	Fabio Estevam <festevam@gmail.com>
-CC: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shengchao Guo <Shawn.Guo@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Tim Harvey <tharvey@gateworks.com>
-Subject: RE: [PATCH v4 10/10] ARM: imx6sx: enable pcie on imx6sx sdb board
-Date: Wed, 8 Oct 2014 06:41:07 +0000
-Message-ID: <f11b939d2a1f4d6f823bc36d55eb3d09@DM2PR0301MB0862.namprd03.prod.outlook.com>
-References: <1412069804-17162-1-git-send-email-r65037@freescale.com>
-	<1412069804-17162-11-git-send-email-r65037@freescale.com>,<CAOMZO5A3Bdxdspc_UnJcQ-DVrmUXQCKW0W08msnDs7TELzXEJg@mail.gmail.com>
- <28E9FA64-81D5-42C2-ABCA-8B72239EC6AA@freescale.com>
-In-Reply-To: <28E9FA64-81D5-42C2-ABCA-8B72239EC6AA@freescale.com>
-Content-Type: text/plain; charset="gb2312"
-MIME-Version: 1.0
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:48385 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752680AbaJXQ2b (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Oct 2014 12:28:31 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-kernel@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH RFC v2 2/2] arm: kernel: fix pci_mmap_page_range() offset calculation
+Date: Fri, 24 Oct 2014 17:28:06 +0100
+Message-Id: <1414168089-8130-3-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1414168089-8130-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1414168089-8130-1-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgRmFiaW86DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogWmh1IFJp
-Y2hhcmQtUjY1MDM3DQo+IFNlbnQ6IFRodXJzZGF5LCBPY3RvYmVyIDAyLCAyMDE0IDEwOjQwIEFN
-DQo+IFRvOiBGYWJpbyBFc3RldmFtDQo+IENjOiBaaHUgUmljaGFyZC1SNjUwMzc7IGxpbnV4LXBj
-aS1vd25lckB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LQ0KPiBwY2lAdmdlci5rZXJuZWwub3JnOyBH
-dW8gU2hhd24tUjY1MDczOyBMdWNhcyBTdGFjaDsgVGltIEhhcnZleQ0KPiBTdWJqZWN0OiBSZTog
-W1BBVENIIHY0IDEwLzEwXSBBUk06IGlteDZzeDogZW5hYmxlIHBjaWUgb24gaW14NnN4IHNkYiBi
-b2FyZA0KPiANCj4gWWVzLCAgUENJRV9QV1JfRU4gd291bGQgYmUgYWRkZWQgbGF0ZXIuDQo+IFRo
-YW5rcywgRmFiaW8uDQo+IA0KPiBCZXN0IHJlZ2FyZHMNCj4gUmljaGFyZA0KPiANCj4gPiDU2iAy
-MDE0xOoxMNTCMcjVo6zJz87nMTI6MjGjrCJGYWJpbyBFc3RldmFtIiA8ZmVzdGV2YW1AZ21haWwu
-Y29tPiDQtLXAo7oNCj4gPg0KPiA+IEhpIFJpY2hhcmQsDQo+ID4NCj4gPj4gT24gVHVlLCBTZXAg
-MzAsIDIwMTQgYXQgNjozNiBBTSwgUmljaGFyZCBaaHUgPHI2NTAzN0BmcmVlc2NhbGUuY29tPiB3
-cm90ZToNCj4gPj4gU2lnbmVkLW9mZi1ieTogUmljaGFyZCBaaHUgPHI2NTAzN0BmcmVlc2NhbGUu
-Y29tPg0KPiA+PiAtLS0NCj4gPj4gYXJjaC9hcm0vYm9vdC9kdHMvaW14NnN4LXNkYi5kdHMgfCAx
-MyArKysrKysrKysrKysrDQo+ID4+IDEgZmlsZSBjaGFuZ2VkLCAxMyBpbnNlcnRpb25zKCspDQo+
-ID4+DQo+ID4+IGRpZmYgLS1naXQgYS9hcmNoL2FybS9ib290L2R0cy9pbXg2c3gtc2RiLmR0cw0K
-PiA+PiBiL2FyY2gvYXJtL2Jvb3QvZHRzL2lteDZzeC1zZGIuZHRzDQo+ID4+IGluZGV4IGEzOTgw
-ZDkuLjI5NzY5MTMgMTAwNjQ0DQo+ID4+IC0tLSBhL2FyY2gvYXJtL2Jvb3QvZHRzL2lteDZzeC1z
-ZGIuZHRzDQo+ID4+ICsrKyBiL2FyY2gvYXJtL2Jvb3QvZHRzL2lteDZzeC1zZGIuZHRzDQo+ID4+
-IEBAIC0yNTEsNiArMjUxLDEzIEBADQo+ID4+ICAgICAgICB9Ow0KPiA+PiB9Ow0KPiA+Pg0KPiA+
-PiArJnBjaWUgew0KPiA+PiArICAgICAgIHBpbmN0cmwtbmFtZXMgPSAiZGVmYXVsdCI7DQo+ID4+
-ICsgICAgICAgcGluY3RybC0wID0gPCZwaW5jdHJsX3BjaWU+Ow0KPiA+PiArICAgICAgIHJlc2V0
-LWdwaW8gPSA8JmdwaW8yIDAgMD47DQo+ID4+ICsgICAgICAgc3RhdHVzID0gIm9rYXkiOw0KPiA+
-PiArfTsNCj4gPg0KPiA+IFRoZXJlIGlzIGFsc28gR1BJTzJfMSB3aGljaCBpcyB0aGUgUENJRV9Q
-V1JfRU4gc2lnbmFsIGFuZCBzaG91bGQgYmUNCj4gPiBhZGRlZCBhcyBhIEdQSU8gY29udHJvbGxl
-ZCByZWd1bGF0b3IuDQpbUmljaGFyZF0gVGhlIEdJUE8gY29udHJvbGxlZCByZWd1bGF0b3IgaXMg
-ZGlzY2FyZGVkIGluIHRoZSBsYXRlc3Qga2VybmVsLCBpdCBpcyBwb2ludGVkIG91dCBieSBMdWNh
-cyBpbiB0aGUNCnByZXZpb3VzIHJldmlldy4NCiINCj4gQEAgLTUwMiw2ICs1MDMsNyBAQA0KPiAg
-JnBjaWUgew0KPiAgCXBpbmN0cmwtbmFtZXMgPSAiZGVmYXVsdCI7DQo+ICAJcGluY3RybC0wID0g
-PCZwaW5jdHJsX3BjaWU+Ow0KPiArCXBvd2VyLW9uLWdwaW8gPSA8JmdwaW8zIDE5IDA+Ow0KPiAg
-CXJlc2V0LWdwaW8gPSA8JmdwaW83IDEyIDA+Ow0KPiAgCXN0YXR1cyA9ICJva2F5IjsNCj4gIH07
-DQoNClRoaXMgaHVuayBpcyB3cm9uZy4gVGhlcmUgaXMgbm8gInBvd2VyLW9uLWdwaW8iIGluIHRo
-ZSBiaW5kaW5nIGFueW1vcmUuDQpBbHNvIHRoZXJlIGlzIGFscmVhZHkgYSBjaGFuZ2UgaW4gU2hh
-d25zIHRyZWUgdG8gbW9kZWwgdGhpcyBhcyBhIGFsd2F5cy1vbiByZWd1bGF0b3IuIElmIHdlIHJl
-YWxseSB3YW50IHRvIGNvbnRyb2wgcGNpIGJ1cyBwb3dlciB0aGlzIG5lZWRzIHRvIGJlIGRvbmUg
-dGhyb3VnaCB0aGlzIHJlZ3VsYXRvciwgbm90IHNvbWUgYXJiaXRyYXJ5IGdwaW8gaGFjay4NCiIN
-Cg0KQmVzdCBSZWdhcmRzDQpSaWNoYXJkIFpodQ0KDQo=
+The pci_mmap_page_range() API should be written to expect offset
+values representing PCI memory resource addresses as seen by user
+space, through the pci_resource_to_user() API.
+
+ARM relies on the standard implementation of pci_resource_to_user()
+which actually is an identity map and exports to user space
+PCI memory resources as they are stored in PCI devices resources
+structures, which represent CPU physical addresses (fixed-up using
+BUS to CPU address conversions) not PCI bus addresses.
+
+Therefore, on ARM platforms where the mapping between CPU and BUS
+address is not a 1:1 the current pci_mmap_page_range() implementation is
+erroneous, in that an additional shift is applied to an already fixed-up
+offset passed from userspace.
+
+Hence, this patch removes the mem_offset from the pgoff calculation
+since the offset as passed from user space already represents the CPU
+physical address corresponding to the resource to be mapped, ie no
+additional offset should be applied.
+
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Russell King <linux@arm.linux.org.uk>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+---
+ arch/arm/kernel/bios32.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 17a26c1..b56fa2d 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -626,21 +626,15 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+-	struct pci_sys_data *root = dev->sysdata;
+-	unsigned long phys;
+-
+-	if (mmap_state == pci_mmap_io) {
++	if (mmap_state == pci_mmap_io)
+ 		return -EINVAL;
+-	} else {
+-		phys = vma->vm_pgoff + (root->mem_offset >> PAGE_SHIFT);
+-	}
+ 
+ 	/*
+ 	 * Mark this as IO
+ 	 */
+ 	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+ 
+-	if (remap_pfn_range(vma, vma->vm_start, phys,
++	if (remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
+ 			     vma->vm_end - vma->vm_start,
+ 			     vma->vm_page_prot))
+ 		return -EAGAIN;
+-- 
+2.1.2
+
