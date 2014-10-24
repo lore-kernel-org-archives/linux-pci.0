@@ -1,439 +1,147 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [Patch Part2 v3 01/24] irqdomain: Introduce new interfaces to
- support hierarchy irqdomains
-From: Yingjoe Chen <yingjoe.chen@mediatek.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bear.ext.ti.com ([192.94.94.41]:36220 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756957AbaJXP0x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 24 Oct 2014 11:26:53 -0400
+Date: Fri, 24 Oct 2014 10:26:28 -0500
+From: Felipe Balbi <balbi@ti.com>
+To: Huang Rui <ray.huang@amd.com>
+CC: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	<x86@kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>
-In-Reply-To: <1414484803-10311-2-git-send-email-jiang.liu@linux.intel.com>
-References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
-	 <1414484803-10311-2-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 28 Oct 2014 17:48:31 +0800
-Message-ID: <1414489711.32399.53.camel@mtksdaap41>
+	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 06/16] usb: dwc3: add disscramble quirk
+Message-ID: <20141024152628.GC26941@saruman>
+Reply-To: <balbi@ti.com>
+References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+ <1413536021-4886-7-git-send-email-ray.huang@amd.com>
+ <20141017144532.GB26260@saruman>
+ <20141020063827.GB24357@hr-slim.amd.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="LwW0XdcUbUexiWVK"
+In-Reply-To: <20141020063827.GB24357@hr-slim.amd.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+--LwW0XdcUbUexiWVK
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Hi Jiang,
+On Mon, Oct 20, 2014 at 02:38:28PM +0800, Huang Rui wrote:
+> On Fri, Oct 17, 2014 at 09:45:32AM -0500, Felipe Balbi wrote:
+> > Hi,
+> >=20
+> > On Fri, Oct 17, 2014 at 04:53:31PM +0800, Huang Rui wrote:
+> > > AMD NL fpga needs to enable disscramble quirk. And this quirk doesn't=
+ need on
+> > > the true soc.
+> > >=20
+> > > Signed-off-by: Huang Rui <ray.huang@amd.com>
+> > > ---
+> > >  drivers/usb/dwc3/core.c          | 8 +++++++-
+> > >  drivers/usb/dwc3/dwc3-pci.c      | 5 +++++
+> > >  drivers/usb/dwc3/platform_data.h | 4 ++++
+> > >  3 files changed, 16 insertions(+), 1 deletion(-)
+> > >=20
+> > > diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+> > > index 50c0eae..819e501 100644
+> > > --- a/drivers/usb/dwc3/core.c
+> > > +++ b/drivers/usb/dwc3/core.c
+> > > @@ -422,7 +422,6 @@ static int dwc3_core_init(struct dwc3 *dwc)
+> > > =20
+> > >  	reg =3D dwc3_readl(dwc->regs, DWC3_GCTL);
+> > >  	reg &=3D ~DWC3_GCTL_SCALEDOWN_MASK;
+> > > -	reg &=3D ~DWC3_GCTL_DISSCRAMBLE;
+> > > =20
+> > >  	switch (DWC3_GHWPARAMS1_EN_PWROPT(dwc->hwparams.hwparams1)) {
+> > >  	case DWC3_GHWPARAMS1_EN_PWROPT_CLK:
+> > > @@ -461,6 +460,13 @@ static int dwc3_core_init(struct dwc3 *dwc)
+> > >  		dwc->is_fpga =3D true;
+> > >  	}
+> > > =20
+> > > +	if ((dwc->quirks & DWC3_QUIRK_AMD_NL) && dwc->is_fpga)
+> > > +		dwc->quirks |=3D DWC3_QUIRK_DISSCRAMBLE;
+> > > +
+> > > +	if (dwc->quirks & DWC3_QUIRK_DISSCRAMBLE)
+> >=20
+> > this should only be set if is_fpga, and this quirk should be a 1-bit
+> > flag, so here's what you should do:
+> >=20
+> > 	WARN_ONCE(dwc->disable_scramble_quirk && !dwc->is_fpga,
+> > 		"disable_scramble cannot be used on non-FPGA builds\n");
+> >=20
+> > 	if (dwc->disable_scramble && dwc->is_fpga)
+> > 		reg |=3D DWC3_GCTL_DISSCRAMBLE;
+> > 	else
+> > 		reg &=3D ~DWC3_GCTL_DISSCRAMBLE;
+> >=20
+>=20
+> OK, will update it in V3.
+>=20
+> > > +		reg |=3D DWC3_GCTL_DISSCRAMBLE;
+> > > +	else
+> > > +		reg &=3D ~DWC3_GCTL_DISSCRAMBLE;
+> >=20
+> > add a blank line here, to aid readability.
+> >=20
+>=20
+> OK, will add it.
+>=20
+> > >  	/*
+> > >  	 * WORKAROUND: DWC3 revisions <1.90a have a bug
+> > >  	 * where the device can fail to connect at SuperSpeed
+> > > diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
+> > > index 18569a4..a89db6c 100644
+> > > --- a/drivers/usb/dwc3/dwc3-pci.c
+> > > +++ b/drivers/usb/dwc3/dwc3-pci.c
+> > > @@ -146,6 +146,11 @@ static int dwc3_pci_probe(struct pci_dev *pci,
+> > >  	res[1].name	=3D "dwc_usb3";
+> > >  	res[1].flags	=3D IORESOURCE_IRQ;
+> > > =20
+> > > +	if (pci->vendor =3D=3D PCI_VENDOR_ID_AMD && pci->device =3D=3D
+> > > +			PCI_DEVICE_ID_AMD_NL) {
+> > > +		dwc3_pdata.quirks |=3D DWC3_QUIRK_AMD_NL;
+> > > +	}
+> >=20
+> > should be part of another patch and the quirk is
+> > "disable_scramble_quirk", not AMD.
+> >=20
+>=20
+> Got it, you would like to keep this patch just for fpga disscramble
+> quirk and do not add any 3rd platform info, right?
 
-On Tue, 2014-10-28 at 16:26 +0800, Jiang Liu wrote:
-<deleted...>
-> @@ -471,7 +469,7 @@ unsigned int irq_create_of_mapping(struct of_phandle_args *irq_data)
->  	struct irq_domain *domain;
->  	irq_hw_number_t hwirq;
->  	unsigned int type = IRQ_TYPE_NONE;
-> -	unsigned int virq;
-> +	int virq;
->  
->  	domain = irq_data->np ? irq_find_host(irq_data->np) : irq_default_domain;
->  	if (!domain) {
-> @@ -480,6 +478,11 @@ unsigned int irq_create_of_mapping(struct of_phandle_args *irq_data)
->  		return 0;
->  	}
->  
-> +	if (irq_domain_is_hierarchy(domain)) {
-> +		virq = irq_domain_alloc_irqs(domain, 1, NUMA_NO_NODE, irq_data);
-> +		return virq <= 0 ? 0 : virq;
-> +	}
-> +
->  	/* If domain has no translation, then we assume interrupt line */
->  	if (domain->ops->xlate == NULL)
->  		hwirq = irq_data->args[0];
-> @@ -540,8 +543,8 @@ unsigned int irq_find_mapping(struct irq_domain *domain,
->  		return 0;
->  
->  	if (hwirq < domain->revmap_direct_max_irq) {
-> -		data = irq_get_irq_data(hwirq);
-> -		if (data && (data->domain == domain) && (data->hwirq == hwirq))
-> +		data = irq_domain_get_irq_data(domain, hwirq);
-> +		if (data && data->hwirq == hwirq)
->  			return hwirq;
->  	}
+right. So far only FPGA-based systems need this :-)
 
-Why do you want to move irq_domain_alloc_irqs up there?
+--=20
+balbi
 
-On the ARM side, the irqchips will be different on different SoCs, so we
-will need to implement irq_find_mapping check and set_type in several
-different location. This leads to code duplication. It is preferred to
-do these in general code [1], [2]
+--LwW0XdcUbUexiWVK
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-Is it acceptable if we do irq_find_mapping and set_type here like [3]?
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
-[1]
-http://lists.infradead.org/pipermail/linux-arm-kernel/2014-October/294294.html
-[2]
-http://lists.infradead.org/pipermail/linux-arm-kernel/2014-October/294306.html
-[3]
-http://lists.infradead.org/pipermail/linux-arm-kernel/2014-October/296543.html
+iQIcBAEBAgAGBQJUSm+kAAoJEIaOsuA1yqREmWUP/REwJX7PJlz+4QpftDPTbwTh
+AqtdshSZ2kmxfAPQd3GWVsU2K4lrNT3OUCZdZgB9lB8q9psJzCR7SaGGHKy8szVf
+ZUQrw2gWzCN5KN/6TLiSnLvPAMkIlnivudEEZ3hvjISuk5x/zRyZGJuuMChfZ/1y
+TXIwyKQJcrndzLZo5Zsqh6dvUxLYaImmf8Gfez6ccianL3yXIyYbAg05uBzjTJkl
+iYO3yOsh6t+JkOHdrDJiETh7kdSMVX3uoKsZS2usyKs2Xn+5AwHYijI3whC1Xmcl
++/MuAEF8NL357D1LAEHuhpadmU7mro28zeHt3Hf0qrTNhPhOdWJ8L08KPsExjvzC
+DVo5awl29twuI/65tJhVJ5QDP+uEbu4q1xszpgDVl+hwDmaWcn9N7Y/86X503uyt
+5e8mSSpJkcA1hg35zVZgNx8akHDPKtXuSN4RENK+fh60t1SDQDl3hK/TCHLSVm6T
+adm1nkMp9VI80nv48FwL00pr4E/KSZcue5SRQyMLoTUm9/gnM8R3pVi+P+7F5oI4
+11NjlrTboIMOH9viP7u0EUOJGMORUYMG4aiZdhrcb3BaoDRBULGTJW8FgV0lOlpI
+bkKb4Oy28QFk11D2L+QPePJhd6m2e54t2newZjwp4pl08M7ghoZsygI2dYVTtMC1
+WMfUVCm3BDeZzX/w87fK
+=ZIM6
+-----END PGP SIGNATURE-----
 
-
-Joe.C
-
-
->  
-> @@ -709,3 +712,341 @@ const struct irq_domain_ops irq_domain_simple_ops = {
->  	.xlate = irq_domain_xlate_onetwocell,
->  };
->  EXPORT_SYMBOL_GPL(irq_domain_simple_ops);
-> +
-> +static int irq_domain_alloc_descs(int virq, unsigned int cnt,
-> +				  irq_hw_number_t hwirq, int node)
-> +{
-> +	unsigned int hint;
-> +
-> +	if (virq >= 0) {
-> +		virq = irq_alloc_descs(virq, virq, cnt, node);
-> +	} else {
-> +		hint = hwirq % nr_irqs;
-> +		if (hint == 0)
-> +			hint++;
-> +		virq = irq_alloc_descs_from(hint, cnt, node);
-> +		if (virq <= 0 && hint > 1)
-> +			virq = irq_alloc_descs_from(1, cnt, node);
-> +	}
-> +
-> +	return virq;
-> +}
-> +
-> +#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
-> +static void irq_domain_insert_irq(int virq)
-> +{
-> +	struct irq_data *data;
-> +
-> +	for (data = irq_get_irq_data(virq); data; data = data->parent_data) {
-> +		struct irq_domain *domain = data->domain;
-> +		irq_hw_number_t hwirq = data->hwirq;
-> +
-> +		if (hwirq < domain->revmap_size) {
-> +			domain->linear_revmap[hwirq] = virq;
-> +		} else {
-> +			mutex_lock(&revmap_trees_mutex);
-> +			radix_tree_insert(&domain->revmap_tree, hwirq, data);
-> +			mutex_unlock(&revmap_trees_mutex);
-> +		}
-> +
-> +		/* If not already assigned, give the domain the chip's name */
-> +		if (!domain->name && data->chip)
-> +			domain->name = data->chip->name;
-> +	}
-> +
-> +	irq_clear_status_flags(virq, IRQ_NOREQUEST);
-> +}
-> +
-> +static void irq_domain_remove_irq(int virq)
-> +{
-> +	struct irq_data *data;
-> +
-> +	irq_set_status_flags(virq, IRQ_NOREQUEST);
-> +	irq_set_chip_and_handler(virq, NULL, NULL);
-> +	synchronize_irq(virq);
-> +	smp_mb();
-> +
-> +	for (data = irq_get_irq_data(virq); data; data = data->parent_data) {
-> +		struct irq_domain *domain = data->domain;
-> +		irq_hw_number_t hwirq = data->hwirq;
-> +
-> +		if (hwirq < domain->revmap_size) {
-> +			domain->linear_revmap[hwirq] = 0;
-> +		} else {
-> +			mutex_lock(&revmap_trees_mutex);
-> +			radix_tree_delete(&domain->revmap_tree, hwirq);
-> +			mutex_unlock(&revmap_trees_mutex);
-> +		}
-> +	}
-> +}
-> +
-> +static struct irq_data *irq_domain_insert_irq_data(struct irq_domain *domain,
-> +						   struct irq_data *child)
-> +{
-> +	struct irq_data *irq_data;
-> +
-> +	irq_data = kzalloc_node(sizeof(*irq_data), GFP_KERNEL, child->node);
-> +	if (irq_data) {
-> +		child->parent_data = irq_data;
-> +		irq_data->irq = child->irq;
-> +		irq_data->node = child->node;
-> +		irq_data->domain = domain;
-> +	}
-> +
-> +	return irq_data;
-> +}
-> +
-> +static void irq_domain_free_irq_data(unsigned int virq, unsigned int nr_irqs)
-> +{
-> +	int i;
-> +	struct irq_data *irq_data, *tmp;
-> +
-> +	for (i = 0; i < nr_irqs; i++) {
-> +		irq_data = irq_get_irq_data(virq + i);
-> +		tmp = irq_data->parent_data;
-> +		irq_data->parent_data = NULL;
-> +		irq_data->domain = NULL;
-> +
-> +		while (tmp) {
-> +			irq_data = tmp;
-> +			tmp = tmp->parent_data;
-> +			kfree(irq_data);
-> +		}
-> +	}
-> +}
-> +
-> +static int irq_domain_alloc_irq_data(struct irq_domain *domain,
-> +				     unsigned int virq, unsigned int nr_irqs)
-> +{
-> +	int i;
-> +	struct irq_data *irq_data;
-> +	struct irq_domain *parent;
-> +
-> +	/* The outermost irq_data is embedded in struct irq_desc */
-> +	for (i = 0; i < nr_irqs; i++) {
-> +		irq_data = irq_get_irq_data(virq + i);
-> +		irq_data->domain = domain;
-> +
-> +		for (parent = domain->parent; parent; parent = parent->parent) {
-> +			irq_data = irq_domain_insert_irq_data(parent, irq_data);
-> +			if (!irq_data) {
-> +				irq_domain_free_irq_data(virq, i + 1);
-> +				return -ENOMEM;
-> +			}
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +/**
-> + * irq_domain_get_irq_data - Get irq_data associated with @virq and @domain
-> + * @domain: domain to match
-> + * @virq: IRQ number to get irq_data
-> + */
-> +struct irq_data *irq_domain_get_irq_data(struct irq_domain *domain,
-> +					 unsigned int virq)
-> +{
-> +	struct irq_data *irq_data;
-> +
-> +	for (irq_data = irq_get_irq_data(virq); irq_data;
-> +	     irq_data = irq_data->parent_data)
-> +		if (irq_data->domain == domain)
-> +			return irq_data;
-> +
-> +	return NULL;
-> +}
-> +
-> +int irq_domain_set_hwirq_and_chip(struct irq_domain *domain, unsigned int virq,
-> +				  irq_hw_number_t hwirq, struct irq_chip *chip,
-> +				  void *chip_data)
-> +{
-> +	struct irq_data *irq_data = irq_domain_get_irq_data(domain, virq);
-> +
-> +	if (!irq_data)
-> +		return -ENOENT;
-> +
-> +	irq_data->hwirq = hwirq;
-> +	irq_data->chip = chip ? chip : &no_irq_chip;
-> +	irq_data->chip_data = chip_data;
-> +
-> +	return 0;
-> +}
-> +
-> +void irq_domain_reset_irq_data(struct irq_data *irq_data)
-> +{
-> +	irq_data->hwirq = 0;
-> +	irq_data->chip = &no_irq_chip;
-> +	irq_data->chip_data = NULL;
-> +}
-> +
-> +/**
-> + * __irq_domain_alloc_irqs - Allocate IRQs from domain
-> + * @domain: domain to allocate from
-> + * @irq_base: allocate specified IRQ nubmer if irq_base >= 0
-> + * @nr_irqs: number of IRQs to allocate
-> + * @node: NUMA node id for memory allocation
-> + * @arg: domain specific argument
-> + * @realloc: IRQ descriptors have already been allocated if true
-> + *
-> + * Allocate IRQ numbers and initialized all data structures to support
-> + * hiearchy IRQ domains.
-> + * Parameter @realloc is mainly to support legacy IRQs.
-> + * Returns error code or allocated IRQ number
-> + *
-> + * The whole process to setup an IRQ has been split into two steps.
-> + * The first step, __irq_domain_alloc_irqs(), is to allocate IRQ
-> + * descriptor and required hardware resources. The second step,
-> + * irq_domain_activate_irq(), is to program hardwares with preallocated
-> + * resources. In this way, it's easier to rollback when failing to
-> + * allocate resources.
-> + */
-> +int __irq_domain_alloc_irqs(struct irq_domain *domain, int irq_base,
-> +			    unsigned int nr_irqs, int node, void *arg,
-> +			    bool realloc)
-> +{
-> +	int i, ret, virq;
-> +
-> +	if (domain == NULL) {
-> +		domain = irq_default_domain;
-> +		if (WARN(!domain, "domain is NULL; cannot allocate IRQ\n"))
-> +			return -EINVAL;
-> +	}
-> +
-> +	if (!domain->ops->alloc) {
-> +		pr_debug("domain->ops->alloc() is NULL\n");
-> +		return -ENOSYS;
-> +	}
-> +
-> +	if (realloc && irq_base >= 0) {
-> +		virq = irq_base;
-> +	} else {
-> +		virq = irq_domain_alloc_descs(irq_base, nr_irqs, 0, node);
-> +		if (virq < 0) {
-> +			pr_debug("cannot allocate IRQ(base %d, count %d)\n",
-> +				 irq_base, nr_irqs);
-> +			return virq;
-> +		}
-> +	}
-> +
-> +	if (irq_domain_alloc_irq_data(domain, virq, nr_irqs)) {
-> +		pr_debug("cannot allocate memory for IRQ%d\n", virq);
-> +		ret = -ENOMEM;
-> +		goto out_free_desc;
-> +	}
-> +
-> +	mutex_lock(&irq_domain_mutex);
-> +	ret = domain->ops->alloc(domain, virq, nr_irqs, arg);
-> +	if (ret < 0) {
-> +		mutex_unlock(&irq_domain_mutex);
-> +		goto out_free_irq_data;
-> +	}
-> +	for (i = 0; i < nr_irqs; i++)
-> +		irq_domain_insert_irq(virq + i);
-> +	mutex_unlock(&irq_domain_mutex);
-> +
-> +	return virq;
-> +
-> +out_free_irq_data:
-> +	irq_domain_free_irq_data(virq, nr_irqs);
-> +out_free_desc:
-> +	irq_free_descs(virq, nr_irqs);
-> +	return ret;
-> +}
-> +
-> +/**
-> + * irq_domain_free_irqs - Free IRQ number and associated data structures
-> + * @virq: base IRQ number
-> + * @nr_irqs: number of IRQs to free
-> + */
-> +void irq_domain_free_irqs(unsigned int virq, unsigned int nr_irqs)
-> +{
-> +	int i;
-> +	struct irq_data *data = irq_get_irq_data(virq);
-> +
-> +	if (WARN(!data || !data->domain || !data->domain->ops->free,
-> +		 "NULL pointer, cannot free irq\n"))
-> +		return;
-> +
-> +	mutex_lock(&irq_domain_mutex);
-> +	for (i = 0; i < nr_irqs; i++)
-> +		irq_domain_remove_irq(virq + i);
-> +	data->domain->ops->free(data->domain, virq, nr_irqs);
-> +	mutex_unlock(&irq_domain_mutex);
-> +
-> +	irq_domain_free_irq_data(virq, nr_irqs);
-> +	irq_free_descs(virq, nr_irqs);
-> +}
-> +
-> +/**
-> + * irq_domain_activate_irq - Call domain_ops->activate recursively to activate
-> + *			     interrupt
-> + * @irq_data: outermost irq_data associated with interrupt
-> + *
-> + * This is the second step to call domain_ops->activate to program interrupt
-> + * controllers, so the interrupt could actually get delivered.
-> + */
-> +int irq_domain_activate_irq(struct irq_data *irq_data)
-> +{
-> +	int ret = 0;
-> +
-> +	if (irq_data && irq_data->domain) {
-> +		struct irq_domain *domain = irq_data->domain;
-> +
-> +		if (irq_data->parent_data)
-> +			ret = irq_domain_activate_irq(irq_data->parent_data);
-> +		if (ret == 0 && domain->ops->activate)
-> +			ret = domain->ops->activate(domain, irq_data);
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +/**
-> + * irq_domain_deactivate_irq - Call domain_ops->deactivate recursively to
-> + *			       deactivate interrupt
-> + * @irq_data: outermost irq_data associated with interrupt
-> + *
-> + * It calls domain_ops->deactivate to program interrupt controllers to disable
-> + * interrupt delivery.
-> + */
-> +int irq_domain_deactivate_irq(struct irq_data *irq_data)
-> +{
-> +	int ret = 0;
-> +
-> +	if (irq_data && irq_data->domain) {
-> +		struct irq_domain *domain = irq_data->domain;
-> +
-> +		if (domain->ops->deactivate)
-> +			ret = domain->ops->deactivate(domain, irq_data);
-> +		if (ret == 0 && irq_data->parent_data)
-> +			ret = irq_domain_deactivate_irq(irq_data->parent_data);
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +static void irq_domain_check_hierarchy(struct irq_domain *domain)
-> +{
-> +	/* Hierarchy irq_domains must implement callback alloc() */
-> +	if (domain->ops->alloc)
-> +		domain->flags |= IRQ_DOMAIN_FLAG_HIERARCHY;
-> +}
-> +#else	/* CONFIG_IRQ_DOMAIN_HIERARCHY */
-> +/**
-> + * irq_domain_get_irq_data - Get irq_data associated with @virq and @domain
-> + * @domain: domain to match
-> + * @virq: IRQ number to get irq_data
-> + */
-> +struct irq_data *irq_domain_get_irq_data(struct irq_domain *domain,
-> +					 unsigned int virq)
-> +{
-> +	struct irq_data *irq_data = irq_get_irq_data(virq);
-> +
-> +	return (irq_data && irq_data->domain == domain) ? irq_data : NULL;
-> +}
-> +
-> +static void irq_domain_check_hierarchy(struct irq_domain *domain)
-> +{
-> +}
-> +#endif	/* CONFIG_IRQ_DOMAIN_HIERARCHY */
-
-
+--LwW0XdcUbUexiWVK--
