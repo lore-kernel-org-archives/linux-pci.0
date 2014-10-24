@@ -1,168 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:39158 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932676AbaJOCZs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Oct 2014 22:25:48 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v3 04/27] arm/MSI: Save MSI chip in pci_sys_data
-Date: Wed, 15 Oct 2014 11:06:52 +0800
-Message-ID: <1413342435-7876-5-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
-References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:49978 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757012AbaJXP1X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 24 Oct 2014 11:27:23 -0400
+Date: Fri, 24 Oct 2014 10:27:00 -0500
+From: Felipe Balbi <balbi@ti.com>
+To: Huang Rui <ray.huang@amd.com>
+CC: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 08/16] usb: dwc3: add u2exit lfps quirk
+Message-ID: <20141024152700.GD26941@saruman>
+Reply-To: <balbi@ti.com>
+References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+ <1413536021-4886-9-git-send-email-ray.huang@amd.com>
+ <20141017145000.GD26260@saruman>
+ <20141020064331.GC24357@hr-slim.amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="rz+pwK2yUstbofK6"
+In-Reply-To: <20141020064331.GC24357@hr-slim.amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Saving msi chip in pci_sys_data can make pci bus and
-devices don't need to know msi chip detail, it also
-make pci enumeration code be decoupled from msi chip.
-In fact, all pci devices under the same pci hostbridge
-share same msi chip. So msi chip should be seen as one
-of resources or attributes to be initialized in pci host
-bridge driver. Currently, pci hostbridge drivers create
-pci_host_bridge in pci_create_root_bus(), and pass arch
-specific pci sysdata to core pci scan functions. So pci
-arch sysdata is good place to save msi chip.
+--rz+pwK2yUstbofK6
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/arm/include/asm/mach/pci.h |    6 ++++++
- arch/arm/include/asm/pci.h      |    9 +++++++++
- arch/arm/kernel/bios32.c        |    3 +++
- drivers/pci/msi.c               |    6 ++++++
- include/linux/pci.h             |    9 +++++++++
- 5 files changed, 33 insertions(+), 0 deletions(-)
+On Mon, Oct 20, 2014 at 02:43:31PM +0800, Huang Rui wrote:
+> On Fri, Oct 17, 2014 at 09:50:00AM -0500, Felipe Balbi wrote:
+> > Hi,
+> >=20
+> > On Fri, Oct 17, 2014 at 04:53:33PM +0800, Huang Rui wrote:
+> > > AMD NL needs to enable u2exit lfps quirk.
+> > >=20
+> > > Signed-off-by: Huang Rui <ray.huang@amd.com>
+> > > ---
+> > >  drivers/usb/dwc3/core.c          | 4 ++++
+> > >  drivers/usb/dwc3/core.h          | 1 +
+> > >  drivers/usb/dwc3/dwc3-pci.c      | 3 ++-
+> > >  drivers/usb/dwc3/platform_data.h | 1 +
+> > >  4 files changed, 8 insertions(+), 1 deletion(-)
+> > >=20
+> > > diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+> > > index 25db533..7322d85 100644
+> > > --- a/drivers/usb/dwc3/core.c
+> > > +++ b/drivers/usb/dwc3/core.c
+> > > @@ -467,6 +467,10 @@ static int dwc3_core_init(struct dwc3 *dwc)
+> > >  		reg |=3D DWC3_GCTL_DISSCRAMBLE;
+> > >  	else
+> > >  		reg &=3D ~DWC3_GCTL_DISSCRAMBLE;
+> > > +
+> > > +	if (dwc->quirks & DWC3_QUIRK_U2EXIT_LFPS)
+> >=20
+> > this should be:
+> >=20
+> > 	if (dwc->u2_exit_lfps_quirk)
+> >=20
+>=20
+> OK, will update it in V3.
+>=20
+> > > +		reg |=3D DWC3_GCTL_U2EXIT_LFPS;
+> > > +
+> > >  	/*
+> > >  	 * WORKAROUND: DWC3 revisions <1.90a have a bug
+> > >  	 * where the device can fail to connect at SuperSpeed
+> > > diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+> > > index d58479e..3d27f10 100644
+> > > --- a/drivers/usb/dwc3/core.h
+> > > +++ b/drivers/usb/dwc3/core.h
+> > > @@ -166,6 +166,7 @@
+> > >  #define DWC3_GCTL_SCALEDOWN(n)		((n) << 4)
+> > >  #define DWC3_GCTL_SCALEDOWN_MASK	DWC3_GCTL_SCALEDOWN(3)
+> > >  #define DWC3_GCTL_DISSCRAMBLE		(1 << 3)
+> > > +#define DWC3_GCTL_U2EXIT_LFPS		(1 << 2)
+> > >  #define DWC3_GCTL_GBLHIBERNATIONEN	(1 << 1)
+> > >  #define DWC3_GCTL_DSBLCLKGTNG		(1 << 0)
+> > > =20
+> > > diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
+> > > index bbe946c..cdb9b04 100644
+> > > --- a/drivers/usb/dwc3/dwc3-pci.c
+> > > +++ b/drivers/usb/dwc3/dwc3-pci.c
+> > > @@ -149,7 +149,8 @@ static int dwc3_pci_probe(struct pci_dev *pci,
+> > >  	if (pci->vendor =3D=3D PCI_VENDOR_ID_AMD && pci->device =3D=3D
+> > >  			PCI_DEVICE_ID_AMD_NL) {
+> > >  		dwc3_pdata.has_lpm_erratum =3D true;
+> > > -		dwc3_pdata.quirks |=3D DWC3_QUIRK_AMD_NL;
+> > > +		dwc3_pdata.quirks |=3D DWC3_QUIRK_AMD_NL
+> > > +			| DWC3_QUIRK_U2EXIT_LFPS;
+> > >  	}
+> >=20
+> > should be combined and the last patch in the series.
+> >=20
+>=20
+> You want to make all the AMD quirks enablement info and device id at
+> last patch, right?
 
-diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-index 7fc4278..59b0d87 100644
---- a/arch/arm/include/asm/mach/pci.h
-+++ b/arch/arm/include/asm/mach/pci.h
-@@ -22,6 +22,9 @@ struct hw_pci {
- #ifdef CONFIG_PCI_DOMAINS
- 	int		domain;
- #endif
-+#ifdef CONFIG_PCI_MSI
-+	struct msi_chip *msi_chip;
-+#endif
- 	struct pci_ops	*ops;
- 	int		nr_controllers;
- 	void		**private_data;
-@@ -47,6 +50,9 @@ struct pci_sys_data {
- #ifdef CONFIG_PCI_DOMAINS
- 	int		domain;
- #endif
-+#ifdef CONFIG_PCI_MSI
-+	struct msi_chip *msi_chip;
-+#endif
- 	struct list_head node;
- 	int		busnr;		/* primary bus number			*/
- 	u64		mem_offset;	/* bus->cpu memory mapping offset	*/
-diff --git a/arch/arm/include/asm/pci.h b/arch/arm/include/asm/pci.h
-index 7e95d85..b562c09 100644
---- a/arch/arm/include/asm/pci.h
-+++ b/arch/arm/include/asm/pci.h
-@@ -31,6 +31,15 @@ static inline int pci_proc_domain(struct pci_bus *bus)
- }
- #endif /* CONFIG_PCI_DOMAINS */
- 
-+#ifdef CONFIG_PCI_MSI
-+static inline struct msi_chip *pci_msi_chip(struct pci_bus *bus)
-+{
-+	struct pci_sys_data *root = bus->sysdata;
-+
-+	return root->msi_chip;
-+}
-+#endif
-+
- /*
-  * The PCI address space does equal the physical memory address space.
-  * The networking and block device layers use this boolean for bounce
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 17a26c1..a19038d 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -471,6 +471,9 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- #ifdef CONFIG_PCI_DOMAINS
- 		sys->domain  = hw->domain;
- #endif
-+#ifdef CONFIG_PCI_MSI
-+		sys->msi_chip = hw->msi_chip;
-+#endif
- 		sys->busnr   = busnr;
- 		sys->swizzle = hw->swizzle;
- 		sys->map_irq = hw->map_irq;
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 22e413c..f11108c 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -35,6 +35,9 @@ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- 	struct msi_chip *chip = dev->bus->msi;
- 	int err;
- 
-+	if (!chip)
-+		chip = pci_msi_chip(dev->bus);
-+
- 	if (!chip || !chip->setup_irq)
- 		return -EINVAL;
- 
-@@ -50,6 +53,9 @@ void __weak arch_teardown_msi_irq(unsigned int irq)
- 	struct msi_desc *entry = irq_get_msi_desc(irq);
- 	struct msi_chip *chip = entry->dev->bus->msi;
- 
-+	if (!chip)
-+		chip = pci_msi_chip(entry->dev->bus);
-+
- 	if (!chip || !chip->teardown_irq)
- 		return;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 9cd2721..7a48b40 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1433,6 +1433,15 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
- 
- #include <asm/pci.h>
- 
-+/* Just avoid compile error, will be clean up later */
-+#ifdef CONFIG_PCI_MSI
-+
-+#ifndef pci_msi_chip
-+#define pci_msi_chip(bus)	NULL
-+#endif
-+
-+#endif
-+
- /* these helpers provide future and backwards compatibility
-  * for accessing popular PCI BAR info */
- #define pci_resource_start(dev, bar)	((dev)->resource[(bar)].start)
--- 
-1.7.1
+Correct, that way we avoid bisection points were AMD is "supported" but
+not working.
 
+--=20
+balbi
+
+--rz+pwK2yUstbofK6
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUSm/EAAoJEIaOsuA1yqREvHEP/3fXRur64fJMGBi4R+YbDoYG
+p2YsproY6D0BNLwPnKPRK6ud7qIQtogofrCJynvjIU9zKbosLxTUPsCR8PX8uTyF
+za8UKMdwlSxtz5cGaPmicTelhJKJT9WxD0OjiyeMvbIqTqrjvqN5F5fNU95C2N10
+XB6VYhImv/hC6H74wawuBPPD7LIF1KSdhR3GmnjVxWo1N5j778EsfaIBcQrzCm8O
+O5dvZDjLBJR5ED0xhB//7Vu2h08HC4gnFRxPVqNrh3BeoSpGoXZH/tZqgpEqypWM
+qPVG+jM3cHXXJcYsCERldO9nUb4kJweeWdg7D8lc8INFpfvoXEFLyEidWxnoRm9y
+xBM7ybnXJfixqyfi3OzYI8Ai8lIkIJ5aN/nPWZbr3aVJmxttD42esuTRKLbWE18n
+YXmYS3Pxk/mgNvmu4JH3DxT2/h/MYoGA8nzZMqRUPRmIpQVvHSQBJt4VA/IrVkZ6
+RKySlkiof1f4ufk5m0H6YG4l4uJNEndGq1/oaXYKvBgagFux4/wmUcsopqJcYjny
+CfScYUcpHtYykZnR7aq5b4F8Gk6o1cYIvAN/GCMv6icTE5tw9XWU2cNWmBfPCt/l
+IHOhtR4xIvgslFTFHi+XNvUaxfrm04/ybx8uvH4TvZFQqwaRrNhAShReS/ULHVfV
+bk1AE7m/hF6WQDZtTcfM
+=1Fuo
+-----END PGP SIGNATURE-----
+
+--rz+pwK2yUstbofK6--
