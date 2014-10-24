@@ -1,90 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25645 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756101AbaJ2WZc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Oct 2014 18:25:32 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH] PCI: fix sriov enabling with virtual bus
-Date: Wed, 29 Oct 2014 15:26:10 -0700
-Message-Id: <1414621570-20777-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-kernel@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"David S. Miller" <davem@davemloft.net>,
+	Michal Simek <monstr@monstr.eu>,
+	Martin Wilck <martin.wilck@ts.fujitsu.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH RFC v2 0/2] Fix procfs PCI resources mmap
+Date: Fri, 24 Oct 2014 17:28:04 +0100
+Message-Id: <1414168089-8130-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-While enabling sriov for intel igb device got:
+The way PCI memory resources are exported to user space through procfs
+is not uniform across architectures. In particular, some architectures
+(ie SPARC) export the resource PCI bus address to user space, whereas
+others (ARM, PowerPC, Microblaze) export the resource CPU physical address.
+This convention should be followed when it comes to passing the pgoff
+values to the mmap syscall to map the resource in question.
 
-sca05-0a81fda5:~ # echo 7 > /sys/bus/pci/devices/0000\:09\:00.0/sriov_numvfs 
-[  729.612191] pci 0000:0a:10.0: [8086:1520] type 00 class 0x020000
-[  729.619002] BUG: unable to handle kernel NULL pointer dereference at 00000000000000e8
-[  729.627767] IP: [<ffffffff815901cb>] pci_get_hp_params+0x5b/0x640
-[  729.634593] PGD 0 
-[  729.636844] Oops: 0000 [#1] SMP 
-[  729.640466] Modules linked in:
-...
-[  729.795268] Call Trace:
-[  729.798007]  [<ffffffff81ea0843>] ? pci_mmcfg_read+0x123/0x140
-[  729.804519]  [<ffffffff81ea0770>] ? pci_mmcfg_read+0x50/0x140
-[  729.810942]  [<ffffffff815692a3>] pci_configure_device+0x33/0x350
-[  729.817744]  [<ffffffff8156aba4>] pci_device_add+0x24/0x160
-[  729.823965]  [<ffffffff8158f3bb>] pci_enable_sriov+0x4db/0x7d0
-[  729.830486]  [<ffffffff81b63f54>] ? igb_pci_enable_sriov+0xe4/0x200
-[  729.837481]  [<ffffffff81b63f7f>] igb_pci_enable_sriov+0x10f/0x200
-[  729.844386]  [<ffffffff8155129c>] ? _kstrtoull+0x2c/0x80
-[  729.850315]  [<ffffffff81b640a5>] igb_pci_sriov_configure+0x35/0x40
-[  729.857318]  [<ffffffff815752b5>] sriov_numvfs_store+0xe5/0x140
-[  729.863934]  [<ffffffff817e1f88>] dev_attr_store+0x18/0x30
-[  729.870063]  [<ffffffff812624d8>] sysfs_kf_write+0x48/0x60
-[  729.876186]  [<ffffffff812617ef>] ? kernfs_fop_write+0xaf/0x170
-[  729.882797]  [<ffffffff81261827>] kernfs_fop_write+0xe7/0x170
-[  729.889222]  [<ffffffff811ef66b>] vfs_write+0xcb/0x1c0
-[  729.894958]  [<ffffffff811f0019>] SyS_write+0x49/0xb0
-...
-[  729.943531] ---[ end trace 7cf0cdb66637665a ]---
+Consequently, the checks applied to the offset passed to the mmap syscall
+(in pci_mmap_fits()) are to be interpreted differently on different
+architectures, and in particular they should match the values exported to
+user space through the pci_resource_to_user() conversion function.
 
-and pci_get_hp_params+0x5b point to
-0xffffffff815901cb is in pci_get_hp_params (include/linux/device.h:815).
-810	#include <linux/pm_wakeup.h>
-811	
-812	static inline const char *dev_name(const struct device *dev)
-813	{
-814		/* Use the init name until the kobject becomes available */
-815		if (dev->init_name)
-816			return dev->init_name;
-817	
-818		return kobject_name(&dev->kobj);
+This patch series addresses two issues. First patch applies the
+pci_resource_to_user() filter to the PCI resource that is being
+mapped in order to carry out a proper check against the pgoff passed
+from user space. Second patch fixes the way the pgoff is handled in
+the ARM pci_mmap_page_range() implementation.
 
-The root cause:
-Now pci_configure_device/pci_get_hp_params will be called for every pci_dev,
-including VF that is under virtual bus. But virtual bus does not have bridge
-set. So we can not refer pbus->self->dev directly.
+v1 posting:
 
-Add checking with pbus->slef and bail out early.
+http://marc.info/?l=linux-kernel&m=141337461318554&w=2
 
-Fixing: commit 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
+v1 => v2
+- Reworded commit log as per RMK comments
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Lorenzo Pieralisi (2):
+  drivers: pci: fix pci_mmap_fits() implementation for procfs mmap
+  arm: kernel: fix pci_mmap_page_range() offset calculation
 
----
- include/linux/pci-acpi.h |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ arch/arm/kernel/bios32.c | 10 ++--------
+ drivers/pci/pci-sysfs.c  | 13 ++++++++-----
+ 2 files changed, 10 insertions(+), 13 deletions(-)
 
-Index: linux-2.6/include/linux/pci-acpi.h
-===================================================================
---- linux-2.6.orig/include/linux/pci-acpi.h
-+++ linux-2.6/include/linux/pci-acpi.h
-@@ -44,8 +44,12 @@ static inline acpi_handle acpi_pci_get_b
- 
- 	if (pci_is_root_bus(pbus))
- 		dev = pbus->bridge;
--	else
-+	else {
-+		if (!pbus->self)
-+			return NULL;
-+
- 		dev = &pbus->self->dev;
-+	}
- 
- 	dev_printk(KERN_DEBUG, &pbus->dev, "  bridge ACPI_HANDLE %p : %s\n",
- 			 ACPI_HANDLE(dev), dev_name(dev));
+-- 
+2.1.2
+
