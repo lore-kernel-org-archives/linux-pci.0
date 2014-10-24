@@ -1,60 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:51250 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754665AbaJUK1L (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Oct 2014 06:27:11 -0400
-Message-ID: <1413887229.2751.4.camel@pengutronix.de>
-Subject: Re: [PATCH v8 2/9] PCI: designware: Fix one potential assignment
- error of cfg start
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Richard Zhu <richard.zhu@freescale.com>
-Cc: linux-pci@vger.kernel.org, shawn.guo@freescale.com,
-	festevam@gmail.com, tharvey@gateworks.com, m-karicheri2@ti.com,
-	Richard Zhu <r65037@freescale.com>
-Date: Tue, 21 Oct 2014 12:27:09 +0200
-In-Reply-To: <1413782724-30795-3-git-send-email-richard.zhu@freescale.com>
-References: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
-	 <1413782724-30795-3-git-send-email-richard.zhu@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-bl2on0147.outbound.protection.outlook.com ([65.55.169.147]:24576
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752602AbaJXFRa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 24 Oct 2014 01:17:30 -0400
+From: "Richard.Zhu@freescale.com" <Richard.Zhu@freescale.com>
+To: Fabio Estevam <festevam@gmail.com>
+CC: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shengchao Guo <Shawn.Guo@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: RE: [PATCH v2 2/5] PCI: imx6: wait the clocks to stabilize after
+ ref_en
+Date: Fri, 24 Oct 2014 02:46:11 +0000
+Message-ID: <6d4aaceb4c6e4fdbb4dac6ea51953d53@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
+	<1411445498-20250-3-git-send-email-r65037@freescale.com>
+ <CAOMZO5D6_py-OUsz57mcJOdCShQk0jOjJMPD=4VTzj_FoOkMjQ@mail.gmail.com>
+In-Reply-To: <CAOMZO5D6_py-OUsz57mcJOdCShQk0jOjJMPD=4VTzj_FoOkMjQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Montag, den 20.10.2014, 13:25 +0800 schrieb Richard Zhu:
-> From: Richard Zhu <r65037@freescale.com>
-> 
-> if va_cfg0_base/va_cfg1_base are initialized by
-> designware core, the pp->cfg.start is not initialized
-> properly, when IORESOURCE_MEM "config" is represented
-> as cfg space resource.
-> solution: assign cfg_res->start to pp->cfg.start.
-> 
-> Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
-> ---
->  drivers/pci/host/pcie-designware.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 8d1c809..e3cd54a 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -472,6 +472,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  	if (cfg_res) {
->  		pp->config.cfg0_size = resource_size(cfg_res)/2;
->  		pp->config.cfg1_size = resource_size(cfg_res)/2;
-> +		pp->cfg.start = cfg_res->start;
->  		pp->cfg0_base = cfg_res->start;
->  		pp->cfg1_base = cfg_res->start + pp->config.cfg0_size;
->  
-
-I think this patch should not be needed anymore. Please look at commit
-ec98e9ab6f24 (PCI: designware: Fix configuration base address when using
-'reg') in 3.18-rc1. I think it fixes the same bug, but in a different
-way. Can you confirm that this works for you?
-
-Regards,
-Lucas
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
-
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEZhYmlvIEVzdGV2YW0gW21h
+aWx0bzpmZXN0ZXZhbUBnbWFpbC5jb21dDQo+IFNlbnQ6IEZyaWRheSwgT2N0b2JlciAyNCwgMjAx
+NCA5OjUxIEFNDQo+IFRvOiBaaHUgUmljaGFyZC1SNjUwMzcNCj4gQ2M6IGxpbnV4LXBjaS1vd25l
+ckB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IEd1byBTaGF3bi0N
+Cj4gUjY1MDczOyBMdWNhcyBTdGFjaDsgVGltIEhhcnZleTsgQmpvcm4gSGVsZ2Fhcw0KPiBTdWJq
+ZWN0OiBSZTogW1BBVENIIHYyIDIvNV0gUENJOiBpbXg2OiB3YWl0IHRoZSBjbG9ja3MgdG8gc3Rh
+YmlsaXplIGFmdGVyDQo+IHJlZl9lbg0KPiANCj4gSGkgUmljaGFyZCwNCj4gDQo+IE9uIFR1ZSwg
+U2VwIDIzLCAyMDE0IGF0IDE6MTEgQU0sIFJpY2hhcmQgWmh1IDxyNjUwMzdAZnJlZXNjYWxlLmNv
+bT4gd3JvdGU6DQo+ID4gLSBhIHdoaWxlIGRlbGF5IGlzIG1hbmRhdG9yeSByZXF1aXJlZCBhZnRl
+ciBwY2llX3JlZl9jbGtfZW4gaXMgc2V0Lg0KPiA+IE90aGVyd2lzZSwgdGhlIHN5c3RlbSB3b3Vs
+ZCBiZSBoYW5nIG9uIGlteDZxZGwgYXJkIGJvYXJkcywgYmVjYXVzZQ0KPiA+IHRoYXQgaW14NnFk
+bCBib2FyZHMgZG9uJ3QgaGF2ZSB0aGUgcmVzZXRfZ3Bpby4NCj4gPiAtIHRoZSBjbG9ja3Mgc2hv
+dWxkIGJlIHN0YWJsZSBhbHJlYWR5IGFmdGVyIHRoZSAiY2xrX3ByZXBhcmVfZW5hYmxlIg0KPiA+
+IGlzIHJldHVybi4gU28gSSB0aGluayBpdCdzIG9rIHRvIG1vdmUgdGhlIHVzbGVlcCBkZWxheSBh
+ZnRlciB0aGUNCj4gPiBwY2llX3JlZl9lbiBpcyBzZXQuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5
+OiBSaWNoYXJkIFpodSA8cjY1MDM3QGZyZWVzY2FsZS5jb20+DQo+IA0KPiBUZXN0ZWQtYnk6IEZh
+YmlvIEVzdGV2YW0gPGZhYmlvLmVzdGV2YW1AZnJlZXNjYWxlLmNvbT4NCj4gDQo+IFdpdGhvdXQg
+dGhpcyBwYXRjaCB3ZSBub3RpY2UgdGhhdCB0aGUga2VybmVsIGRvZXMgbm90IGJvb3QgYW55bW9y
+ZSBzaW5jZQ0KPiBjb21taXQgIDNmY2UwZTg4MmY2MSAoUENJOiBpbXg2OiBEZWxheSBlbmFibGlu
+ZyByZWZlcmVuY2UgY2xvY2sgZm9yIFNTIHVudGlsDQo+IGl0IHN0YWJpbGl6ZXMpIG9uIGEgc3lz
+dGVtIHRoYXQgZG9lcyBub3QgcGFzcyB0aGUgUENJIGdwaW8gcmVzZXQgaW4gdGhlIGR0Yi4NCj4g
+VGhpcyBjYXVzZXMgYSByZWdyZXNzaW9uIG9uIG14NiBuaXRyb2dlbiBib2FyZHMuDQo+IA0KPiBJ
+IHdvdWxkIHN1Z2dlc3QgdGhhdCB5b3UgcmVzZW5kIHRoaXMgcGF0Y2ggb25seSBzbyB0aGF0IGl0
+IGNvdWxkIGJlIGFwcGxpZWQNCj4gaW50byAzLjE4IGFzIGEgYnVnIGZpeC4NCg0KDQpPa2F5LCBJ
+IHdvdWxkIHNlbmQgb3V0IHRoZSBwYXRjaCB0b2RheS4NCg0KQmVzdCBSZWdhcmRzDQpSaWNoYXJk
+IFpodQ0K
