@@ -1,88 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:34240 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752549AbaJBBxq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Oct 2014 21:53:46 -0400
-Date: Thu, 2 Oct 2014 11:53:38 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Alex Deucher <alexdeucher@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linuxppc-dev@ozlabs.org,
-	Dave Airlie <airlied@linux.ie>, linux-pci@vger.kernel.org,
-	Anton Blanchard <anton@au1.ibm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Takashi Iwai <tiwai@suse.de>,
-	Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2 3/4] sound/radeon: Move 64-bit MSI quirk from arch to
- driver
-Message-ID: <20141002115338.3a0ae11f@canb.auug.org.au>
-In-Reply-To: <1412210082.10667.2.camel@pasglop>
-References: <1412210082.10667.2.camel@pasglop>
+Received: from mail-la0-f51.google.com ([209.85.215.51]:54350 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752276AbaJYT4g (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 Oct 2014 15:56:36 -0400
+Received: by mail-la0-f51.google.com with SMTP id q1so951121lam.24
+        for <linux-pci@vger.kernel.org>; Sat, 25 Oct 2014 12:56:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/c=QZ8QV/xwUIs48KR6IIKHx"; protocol="application/pgp-signature"
+In-Reply-To: <1414118200-2018-2-git-send-email-richard.zhu@freescale.com>
+References: <1414118200-2018-1-git-send-email-richard.zhu@freescale.com>
+	<1414118200-2018-2-git-send-email-richard.zhu@freescale.com>
+Date: Sat, 25 Oct 2014 10:46:54 -0200
+Message-ID: <CAOMZO5DxSXmNXU0pZ0QOb82niVmgmS34nM_ub+-KheG7BvgJFA@mail.gmail.com>
+Subject: Re: [PATCH V2] PCI: imx6: Wait the clocks to stabilize after ref_en
+From: Fabio Estevam <festevam@gmail.com>
+To: Richard Zhu <richard.zhu@freescale.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shawn Guo <shawn.guo@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Tim Harvey <tharvey@gateworks.com>,
+	m-karicheri2 <m-karicheri2@ti.com>,
+	Richard Zhu <r65037@freescale.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/c=QZ8QV/xwUIs48KR6IIKHx
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi Richard,
 
-Hi Ben,
-
-On Thu, 02 Oct 2014 10:34:42 +1000 Benjamin Herrenschmidt <benh@kernel.cras=
-hing.org> wrote:
+On Fri, Oct 24, 2014 at 12:36 AM, Richard Zhu <richard.zhu@freescale.com> wrote:
+> From: Richard Zhu <r65037@freescale.com>
 >
-> diff --git a/sound/pci/hda/hda_intel.c b/sound/pci/hda/hda_intel.c
-> index aa302fb..f91ba7f 100644
-> --- a/sound/pci/hda/hda_intel.c
-> +++ b/sound/pci/hda/hda_intel.c
-> @@ -296,7 +296,8 @@ enum {
-> =20
->  /* quirks for ATI/AMD HDMI */
->  #define AZX_DCAPS_PRESET_ATI_HDMI \
-> -	(AZX_DCAPS_NO_TCSEL | AZX_DCAPS_SYNC_WRITE | AZX_DCAPS_POSFIX_LPIB)
-> +	(AZX_DCAPS_NO_TCSEL | AZX_DCAPS_SYNC_WRITE | AZX_DCAPS_POSFIX_LPIB|\
-> +	 AZX_DCAPS_NO_MSI64)
-> =20
->  /* quirks for Nvidia */
->  #define AZX_DCAPS_PRESET_NVIDIA \
-> @@ -1505,9 +1506,14 @@ static int azx_first_init(struct azx *chip)
->  		return -ENXIO;
->  	}
-> =20
-> -	if (chip->msi)
-> +	if (chip->msi) {
-> +		if (chip->driver_caps & AZX_DCAPS_NO_MSI64) {
-> +			dev_dbg(card->dev, "Disabling 64bit MSI\n");
-> +			pci->no_64bit_msi =3D true;
+> For boards without a reset GPIO we skip the delay between enabling the
+> pcie_ref_clk and touching the RC registers for configuration.
+> This hangs the system if there isn't a proper delay to ensure the clocks
+> are settled in the DW PCIe core.
+>
+> Also iMX6Q always needs an additional 10us delay to make sure the reset
+> is propagated through the core, as we don't have an explicitly
+> controlled reset input on this SoC.
+>
+> Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
+> Tested-by: Tim Harvey <tharvey@gateworks.com>
+> Tested-by: Fabio Estevam <fabio.estevam@freescale.com>
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
 
-You get the idea :-)
+The previous Tested-by tags that myself and Tim gave were for the
+previous version of the patch without the delay.
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
+I tested this new version of the patch now and you have my new tag :-)
 
---Sig_/c=QZ8QV/xwUIs48KR6IIKHx
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Tested-by: Fabio Estevam <fabio.estevam@freescale.com>
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+I would suggest you to resed this patch (you can add Lucas's Acked-by)
+and also make sure to copy Bjorn so that it can be applied to 3.18 as
+a fix.
 
-iQIcBAEBCAAGBQJULLAnAAoJEMDTa8Ir7ZwVzG0P/isbB7zvLZqybONzSR850tGb
-8TsJpbXTzxrXiGJJIYwGubHJYUiOm+9lLcjMxTxILplkMd1vJ1rqB4YSVHSGe97A
-f1m2B3E3ufQiqkM5fHSAOwxpZAE8kVD/7LdqPzH3Ac/VQCibEVeci5mDNJ5sUvAp
-9SczWcTRFhcd9nwvs6/kX3WDEUVfb4vhl+pjsf7sg3AJU9C6xG6rHDTbkwpbGWMc
-pTp6mJ/NiinnK0GFfaFiWZ1ZYBlWUVs4cKEntgr2ReztWwFRkwkydeW8mZVs55W9
-RftHVoQMAms4G0wjvDAmks3PU1wjkRRvaa3SDW6jDZvd3uHOeLE2unMnBdw44Nde
-IO5+RNLYWnyH+9sYg0DFwQJbA4w3USrboJFe3zgHhNiC3I99/aRUgEaUfAmgphBz
-EGq4r7u1KxXS0pDYF8C52BBIbPnrE9/tQYFskEQlodKR14tcZupFGlHfXPE3eiUp
-+KvKjTJnYfzfHr7EkdXqhYbbenQqNM0o9qKCcfZy7537EK0Cgo9WKrYroAXj1zwk
-Z8yJgVsc3P3OYLTShI6i8Wasw/dqwJWP0q+MLhj8lhDQ7U48c96knUirEdqm8ZHE
-5GBgq3/AMcNBLd5P/XW9ItST1cJ7whyhzypYbECbvwC3RVGgNHksodjg54jEGuEh
-JekybX5Su1IrvqT1iDms
-=1SgU
------END PGP SIGNATURE-----
-
---Sig_/c=QZ8QV/xwUIs48KR6IIKHx--
+Thanks
