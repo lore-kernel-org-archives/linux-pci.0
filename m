@@ -1,89 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:34067 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754221AbaJBPeG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Oct 2014 11:34:06 -0400
-Received: by mail-pa0-f53.google.com with SMTP id kq14so2686663pab.26
-        for <linux-pci@vger.kernel.org>; Thu, 02 Oct 2014 08:34:06 -0700 (PDT)
-Date: Thu, 2 Oct 2014 09:34:02 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Alex Deucher <alexdeucher@gmail.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
-Subject: Re: [PATCH v2 2/4] gpu/radeon: Move 64-bit MSI quirk from arch to
- driver
-Message-ID: <20141002153402.GC18056@google.com>
-References: <1412210062.10667.1.camel@pasglop>
+Received: from mout1.freenet.de ([195.4.92.91]:45249 "EHLO mout1.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751003AbaJYSoI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 25 Oct 2014 14:44:08 -0400
+Message-ID: <544B3D14.70907@maya.org>
+Date: Sat, 25 Oct 2014 08:03:00 +0200
+From: Andreas Hartmann <andihartmann@freenet.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1412210062.10667.1.camel@pasglop>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass
+ through (vfio)
+References: <20140923210318.498dacbd@dualc.maya.org>				 <1411502866.24563.8.camel@ul30vt.home> <5437A958.3000201@maya.org>				 <CAErSpo5kkk4itqqmCMU=08-XMcDknur8VY++F3A2LajdvTptOA@mail.gmail.com>				 <5437F1F5.3010706@maya.org>				 <CAErSpo6DuWEcJb_gfS=5JnKN8b4DXXV9+u-CRa8m3db0dbzpsQ@mail.gmail.com>				 <543804BC.3080307@maya.org>				 <CAErSpo450czUtAM104o+RS=yOcmP+3MKMH7mYk=UYhVJ2+cfSQ@mail.gmail.com>				 <20141011003219.560cca97@dualc.maya.org>				 <20141010225408.GA24493@google.com> <5438CC1E.3060407@maya.org>				 <1413360267.4202.70.camel@ul30vt.home> <54406B34.1050808@maya.org>				 <1413925580.4202.189.camel@ul30vt.home>			 <1413927152.4202.195.camel@ul30vt.home> <5447D9D9.9030909@maya.org>		 <1414010215.4202.275.camel@ul30vt.home> <54492606.5090308@maya.org>	 <1414082022.27420.39.camel@ul30vt.home> <54493BFA.8010609@maya.org> <1414093023.27420.40.camel@ul30vt.home>
+In-Reply-To: <1414093023.27420.40.camel@ul30vt.home>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 02, 2014 at 10:34:22AM +1000, Benjamin Herrenschmidt wrote:
+Alex Williamson wrote:
+> On Thu, 2014-10-23 at 19:33 +0200, Andreas Hartmann wrote:
+>> Alex Williamson wrote:
+>> [...]
+>>> If you use Bjorn's previous patch to disable VC save/restore and my
+>>> patch to reorder the reset mechanisms, does echo 1 > reset for the sysfs
+>>> entry for the device also still cause a hang?
+>>
+>> Yes - it's hanging too (w/ vfio bound to the device - didn't test other
+>> possibilities).
 > 
-> A number of radeon cards have a HW limitation causing them to be
-> unable to generate the full 64-bit of address bits for MSIs. This
-> breaks MSIs on some platforms such as POWER machines.
-> 
-> We used to have a powerpc specific quirk to address that on a
-> single card, but this doesn't scale very well, this is better
-> put under control of the drivers who know precisely what a given
-> HW revision can do.
-> 
-> This moves the setting of the quirk flag to the radeon driver
-> 
-> Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> ---
-> 
-> v2: This is just adjusted to the new flag name
+> Does it happen regardless of the slot the card is plugged into?  Thanks,
 
-I'm sorta confused because I got two "v2 2/4" emails a minute or so apart.
-I assume they're the same.
+As I already wrote, it's not possible to plug the device to another
+port. But besides that, let me stress some "findings" I made over the
+past view weeks I'm now knowing about this problem. Maybe it gives you
+an idea about what's going on:
 
-> 
->  arch/powerpc/kernel/pci_64.c            |  1 -
->  drivers/gpu/drm/radeon/radeon_irq_kms.c | 10 ++++++++++
->  2 files changed, 10 insertions(+), 1 deletion(-)
-> 
-> diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
-> index d41a831..5330f6d 100644
-> --- a/arch/powerpc/kernel/pci_64.c
-> +++ b/arch/powerpc/kernel/pci_64.c
-> @@ -271,5 +271,4 @@ static void quirk_radeon_32bit_msi(struct pci_dev *dev)
->  {
->  	dev->no_64bit_msi = true;
->  }
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x68f2, quirk_radeon_32bit_msi);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0xaa68, quirk_radeon_32bit_msi);
 
-Why do we keep the 0xaa68 quirk?  Shouldn't that be made generic, too?
+- I did all of the tests in text mode on the console. Normally, there is
+a blinking cursor. When doing the echo 1 > reset, the shell doesn't come
+back again and the blinking of the cursor gets immediately slower.
+Getting slower means: it takes some more time until it is on / off again
+again. This way, it "blinks" another not exceeding 2 times until it's
+finally dead.
+It looks like the machine would have suddenly extremely high load (there
+are 8 cores!) - but this seems to be not true, because the cpu fan stays
+silent - the rpm isn't changed at all.
 
-> diff --git a/drivers/gpu/drm/radeon/radeon_irq_kms.c b/drivers/gpu/drm/radeon/radeon_irq_kms.c
-> index 16807af..e760671 100644
-> --- a/drivers/gpu/drm/radeon/radeon_irq_kms.c
-> +++ b/drivers/gpu/drm/radeon/radeon_irq_kms.c
-> @@ -202,6 +202,16 @@ static bool radeon_msi_ok(struct radeon_device *rdev)
->  	if (rdev->flags & RADEON_IS_AGP)
->  		return false;
->  
-> +	/*
-> +	 * Older chips have a HW limitation, they can only generate 40 bits
-> +	 * of address for "64-bit" MSIs which breaks on some platforms, notably
-> +	 * IBM POWER servers, so we limit them
-> +	 */
-> +	if (rdev->family < CHIP_BONAIRE) {
-> +		dev_info(rdev->dev, "radeon: MSI limited to 32-bit\n");
-> +		rdev->pdev->no_64bit_msi = true;
-> +	}
-> +
->  	/* force MSI on */
->  	if (radeon_msi == 1)
->  		return true;
-> 
-> 
-> 
+
+- Most of the time, I'm doing tests which fail, I'm having problems
+after the hang with USB (it's the Etron device). Problem means: initrd
+isn't able to communicate with the device (but bios and grub2 didn't had
+any problem, because keyboard worked fine, which is connected via USB
+3). At this point, it is necessary to disconnect the mains completely
+and wait half a minute until the problem disappears.
+
+Seldom, I too had this problem even on bios stage: the keyboard couldn't
+be seen even by the bios any more.
+
+
+- Sometimes (really seldom - now happened about 3 times), it gets
+extremely hard to return to normal operation after that hang. This
+means: Since a few weeks, I'm running kernel 3.12.28-3-desktop out of
+the box (= as provided by openSUSE). Sometimes now, I got (apparently)
+the same problems (= PCIe passthrough hangs the complete machine) w/
+3.12.28 as I'm having with stock >= 3.14 after testing. It's even
+useless then to reconnect the mains (I experienced this 2 times in
+series after one hang yesterday). At this point, I have to run kernel
+3.10.x (which runs pretty fine as usual) and only after that, 3.12 works
+again as expected (as appeared once yesterday while tests w/ disabled
+USB 3 devices via bios).
+
+
+- I think there is a relationship between how long the hang is active
+and the consecutive problems coming up. If the hang is immediately (max
+about 1s) reset w/ the reset knob, it is possible, that there is no USB
+problem after reboot and the machine works completely fine with 3.12.x
+again.
+
+
+Conclusion (from my point of view):
+The broken reset seems to do something really _extreme ugly_ w/ the
+hardware, which has the potential to break the hardware "lasting" or the
+consecutive software isn't able at all to correctly reconfigure the
+system again - even after reconnecting the mains.
+Fortunately I'm having an old kernel version (3.10.x), which seems to be
+able to "repair" the hardware again. But I have to emphasis that the
+situation is really highly questionable and I'm meanwhile fearing to
+break my board finally, which is working really _extremely_ stable
+besides that.
+
+
+
+Out of interest:
+Bjorn's patch disables vc save/restore support - and the machine works
+fine again. Why is it needed at all if it seems to work perfectly w/o
+it? What's the additional benefit? Or in other words: What am I missing
+until today :-) ? What would be better? What could I do more?
+
+
+
+Thanks,
+kind regards,
+Andreas
