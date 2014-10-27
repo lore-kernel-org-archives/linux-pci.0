@@ -1,111 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:8607 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751626AbaJ3EuR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 00:50:17 -0400
-Message-ID: <5451C379.1050508@linux.intel.com>
-Date: Thu, 30 Oct 2014 12:50:01 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Received: from mail-qa0-f45.google.com ([209.85.216.45]:60370 "EHLO
+	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750855AbaJ0Qoa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Oct 2014 12:44:30 -0400
+Received: by mail-qa0-f45.google.com with SMTP id dc16so4044135qab.4
+        for <linux-pci@vger.kernel.org>; Mon, 27 Oct 2014 09:44:29 -0700 (PDT)
 MIME-Version: 1.0
-To: Thomas Gleixner <tglx@linutronix.de>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux-foundation.org
-Subject: Re: [Patch Part2 v3 15/24] x86, MSI: Use hierarchy irqdomain to manage
- MSI interrupts
-References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com> <1414484803-10311-16-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1410282046120.5308@nanos> <5450A9D8.108@linux.intel.com> <alpine.DEB.2.11.1410291017180.5308@nanos>
-In-Reply-To: <alpine.DEB.2.11.1410291017180.5308@nanos>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <CADnq5_O54_rjL=hxg8-4GV57JC=6j16OeFOM-zbmoMuL5yJKqw@mail.gmail.com>
+References: <2354837.kuMZPK0Y1Q@segfault> <CAErSpo6zLY8RVAHnLe81jjOE8cxGzskjPq3HL7eZVOtC-WF6=w@mail.gmail.com>
+ <2298090.n99M7dPPE3@segfault> <CAErSpo4C=zANrE6muRf93nxLtmOG-U0xhWQPV_=fb8dFaKG8yw@mail.gmail.com>
+ <CADnq5_O54_rjL=hxg8-4GV57JC=6j16OeFOM-zbmoMuL5yJKqw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 27 Oct 2014 10:44:09 -0600
+Message-ID: <CAErSpo6aBAuK27LwHrdi_X1fxfZ9NN4BkqQj6h4rqHD9ssNnAA@mail.gmail.com>
+Subject: Re: [Bulk] Re: [3.16-rcX][pciehp][radeon] PCIe HotPlug conflicts with
+ radeon GPU
+To: Alex Deucher <alexdeucher@gmail.com>
+Cc: Shawn Starr <shawn.starr@rogers.com>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
+	DRI mailing list <dri-devel@lists.freedesktop.org>,
+	=?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/10/29 17:19, Thomas Gleixner wrote:
->> Hi Thomas,
->> 	Thanks for your great suggestion and I have worked out a draft
->> patch to achieve what you want:)
->> 	I have made following changes to irq core to get rid of remapped
->> irq logic from msi.c:
->> 1) Add IRQ_SET_MASK_OK_DONE in addition to IRQ_SET_MASK_OK and
->> IRQ_SET_MASK_OK_NOCOPY. IRQ_SET_MASK_OK_DONE is the same as
->> IRQ_SET_MASK_OK for irq core and indicates to stacked irqchip that
->> parent irqchips have done all work and skip any handling in descendant
->> irqchips.
->> 2) Add int (*irq_compose_msi_msg)(struct irq_data *data, struct msi_msg
->> *msg) into struct irq_chip. I'm still hesitating to return void or int
->> here. By returning void, irq_chip_compose_msi_msg() will be simpler,
->> but it loses flexibility.
-> 
-> void should be sufficient. If the chip advertises this function it
-> better can provide a proper msi msg :)
->  
->> With above changes to core, we could remove all knowledge of irq
->> remapping from msi.c and the irq remapping interfaces get simpler too.
->> Please refer to following patch for details. The patch passes basic
->> booting tests with irq remapping enabled. If it's OK, I will fold
->> it into the patch set.
-> 
-> Yes. That looks reasonable. 
->  
->> IOAPIC runs into the same situation, but I need some more time
->> to find a solution:)
-> 
-> I'm sure you will!
-Hi Thomas,
-	I have reviewed IOAPIC related change again, but the conclusion
-may not be what you expect:(
-	Currently IOAPIC driver detects IRQ remapping for following
-tasks:
-1) Issue different EOI command to IOAPIC chip for unammped and remapped
-   interrupts. It uses pin number instead of vector number for remapped
-   interrupts.
-2) Print different format for IOAPIC entries for unmapped and remapped
-   interrupts.
-3) ioapic_ack_level() uses different method for unmapped and remapped
-   interrupts
-4) create different IOAPIC entry content for unmapped and remapped
-   interrupts
-5) choose different flow handler for unmapped and remapped interrupts
+On Sun, Oct 26, 2014 at 11:31 AM, Alex Deucher <alexdeucher@gmail.com> wrote:
+> On Mon, Oct 13, 2014 at 12:11 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> [+cc Alex, Christian, dri-devel]
+>>
+>> On Sat, Oct 11, 2014 at 1:37 PM, Shawn Starr <shawn.starr@rogers.com> wrote:
+>>> On September 11, 2014 04:26:21 PM Bjorn Helgaas wrote:
+>>>> [+cc linux-pci]
+>>>>
+>>>> On Sat, Aug 2, 2014 at 10:02 AM, Shawn Starr <shawn.starr@rogers.com> wrote:
+>>>> > Hello devs,
+>>>> >
+>>>> > There are two issues I am encountering with the PCIe Hotplug driver on my
+>>>> > Lenovo Laptop (W500). I note this goes back further than 3.15.
+>>>> >
+>>>> > It is noted here:
+>>>> > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=
+>>>> > f244d8b623dae7a7bc695b0336f67729b95a9736
+>>>> > https://bugzilla.kernel.org/show_bug.cgi?id=79701
+>>>> >
+>>>> > And my open bug here:
+>>>> > https://bugzilla.kernel.org/show_bug.cgi?id=77261
+>>>> >
+>>>> > 1) If I enable the device to use both the integrated and discrete GPU,
+>>>> > pciehp will decide to force unload radeon because it puts itself into a
+>>>> > power saving state, fails back to the Intel integrated GPU in this case
+>>>> > unless I tell radeon.ko to runpm=0 (no power management, then pciehp wont
+>>>> > touch it).
+>>>> >
+>>>> > 2) If the Radeon GPU resets and you use pci_reset=1 for kernel module
+>>>> > option, pciehp decides to force unload radeon even though the GPU is
+>>>> > trying to setup after failing.
+>>>> >
+>>>> > Kernel I am using right now: 3.16.0-0.rc7.git3.1.fc21.x86_64 (about to
+>>>> > boot into snapshot kernel-core-3.16.0-0.rc7.git4.1.fc21.x86_64)
+>>>> Hi Shawn,
+>>>>
+>>>> Thanks for the report and sorry that it got dropped.  But I see you're
+>>>> cc'd on https://bugzilla.kernel.org/show_bug.cgi?id=79701, so you've
+>>>> probably seen the work there.  If you can try out the patches I just
+>>>> posted, that would be great.
+>>>>
+>>>> Bjorn
+>>>
+>>> Hi Bjorn,
+>>>
+>>> For #1) This is fixed in linux-next (tracking 3.18.0-0.rc0.git1.2.fc22.1.x86_64
+>>> nondebug kernel for Fedora). PCIe HotPlug no longer unloads radeon. For this
+>>> bugzilla report we can close it.
+>>>
+>>> #2) This still has weird results however, radeon.hard_reset=1 is experimental
+>>> and while it attempts to reset GPU, PCIe HotPlug seems to interact in this.
+>>>
+>>> This can be tested by adding to grub command line radeon.hard_reset=1.
+>>> When X has started up, trigger a reset by cat
+>>> /sys/kernel/debug/dri/#/radeon_gpu_reset. It will output 0, cat it again will
+>>> show 1.
+>>>
+>>> Attempt to drag a window. The this will trigger a GPU reset, but fail to
+>>> recover, its unknown if PCIe HotPlug is preventing a proper reset or not but
+>>> there is pciehp calls in the stack trace.
+>>
+>> A PCIe device reset usually looks like a hotplug event because the
+>> PCIe link goes down and comes back up.  As far as the PCI core is
+>> concerned, it can't tell the difference between (1) a simple reset
+>> where the link bounces and (2) removal of one device followed by
+>> addition of another.
+>>
+>> b440bde74f04 ("PCI: Add pci_ignore_hotplug() to ignore hotplug events
+>> for a device") addressed this for some similar cases, but it looks
+>> like we probably need some more calls to pci_ignore_hotplug() in the
+>> radeon driver reset methods.
+>>
+>> Can you please open a bugzilla and attach the complete dmesg log,
+>> including the GPU reset and recovery failure?
+>
+> Is there a way we could temporarily disable pci hotplug around a GPU reset?
 
-For MSI, it only needs to solve task 4) above. For IOAPIC, it needs
-to solve all five tasks above, which may cause big changes to irq_chip.
-And it even may cause IRQ remapping driver call back into IOAPIC driver,
-which breaks another rules that only the driver touches corresponding
-interrupt controller.
+There is pci_ignore_hotplug().  Do you mean something more?  Oh, I
+guess you mean a way to disable, then *re*-enable hotplug.  We can
+easily add that if that would help.
 
-On the other hand, MSI is almost platform independent, so it's
-reasonable to change public struct irq_chip to support MSI.
-But IOAPIC is a sort of platform dependent (x86 and IA64), so it
-doesn't sound good to make great change to struct irq_chip to support
-IOAPIC.
-
-So I prefer keeping IOAPIC driver sensing interrupt remapping and
-acting different for unmapped and remapped interrupts.
-This breaks the layered design, but it does make code simpler.
-
-What's your thoughts?
-Regards!
-Gerry
-
-
-> 
-> Thanks,
-> 
-> 	tglx
-> 
+Bjorn
