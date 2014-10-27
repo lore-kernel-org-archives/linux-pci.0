@@ -1,131 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:57200 "EHLO
+Received: from devils.ext.ti.com ([198.47.26.153]:36610 "EHLO
 	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751846AbaJQOpu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Oct 2014 10:45:50 -0400
-Date: Fri, 17 Oct 2014 09:45:32 -0500
-From: Felipe Balbi <balbi@ti.com>
-To: Huang Rui <ray.huang@amd.com>
-CC: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 06/16] usb: dwc3: add disscramble quirk
-Message-ID: <20141017144532.GB26260@saruman>
-Reply-To: <balbi@ti.com>
-References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
- <1413536021-4886-7-git-send-email-ray.huang@amd.com>
+	with ESMTP id S1752190AbaJ0SG6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Oct 2014 14:06:58 -0400
+Message-ID: <544E89BA.9020200@ti.com>
+Date: Mon, 27 Oct 2014 14:06:50 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="LyciRD1jyfeSSjG0"
-In-Reply-To: <1413536021-4886-7-git-send-email-ray.huang@amd.com>
+To: Jingoo Han <jg1.han@samsung.com>
+CC: "'Bjorn Helgaas'" <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>,
+	"'Santosh Shilimkar'" <ssantosh@kernel.org>
+Subject: Re: [PATCH] PCI: keystone: make local symbol static
+References: <000101cfee66$7d1ed040$775c70c0$%han@samsung.com>
+In-Reply-To: <000101cfee66$7d1ed040$775c70c0$%han@samsung.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---LyciRD1jyfeSSjG0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Hi,
-
-On Fri, Oct 17, 2014 at 04:53:31PM +0800, Huang Rui wrote:
-> AMD NL fpga needs to enable disscramble quirk. And this quirk doesn't nee=
-d on
-> the true soc.
->=20
-> Signed-off-by: Huang Rui <ray.huang@amd.com>
+On 10/22/2014 10:10 PM, Jingoo Han wrote:
+> Make local symbol static, because this is used only in this file.
+>
+> Signed-off-by: Jingoo Han<jg1.han@samsung.com>
 > ---
->  drivers/usb/dwc3/core.c          | 8 +++++++-
->  drivers/usb/dwc3/dwc3-pci.c      | 5 +++++
->  drivers/usb/dwc3/platform_data.h | 4 ++++
->  3 files changed, 16 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-> index 50c0eae..819e501 100644
-> --- a/drivers/usb/dwc3/core.c
-> +++ b/drivers/usb/dwc3/core.c
-> @@ -422,7 +422,6 @@ static int dwc3_core_init(struct dwc3 *dwc)
-> =20
->  	reg =3D dwc3_readl(dwc->regs, DWC3_GCTL);
->  	reg &=3D ~DWC3_GCTL_SCALEDOWN_MASK;
-> -	reg &=3D ~DWC3_GCTL_DISSCRAMBLE;
-> =20
->  	switch (DWC3_GHWPARAMS1_EN_PWROPT(dwc->hwparams.hwparams1)) {
->  	case DWC3_GHWPARAMS1_EN_PWROPT_CLK:
-> @@ -461,6 +460,13 @@ static int dwc3_core_init(struct dwc3 *dwc)
->  		dwc->is_fpga =3D true;
->  	}
-> =20
-> +	if ((dwc->quirks & DWC3_QUIRK_AMD_NL) && dwc->is_fpga)
-> +		dwc->quirks |=3D DWC3_QUIRK_DISSCRAMBLE;
-> +
-> +	if (dwc->quirks & DWC3_QUIRK_DISSCRAMBLE)
+>   drivers/pci/host/pci-keystone-dw.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+> index 34086ce..4a97cd1 100644
+> --- a/drivers/pci/host/pci-keystone-dw.c
+> +++ b/drivers/pci/host/pci-keystone-dw.c
+> @@ -201,7 +201,7 @@ static int ks_dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+>   	return 0;
+>   }
+>
+> -const struct irq_domain_ops ks_dw_pcie_msi_domain_ops = {
+> +static const struct irq_domain_ops ks_dw_pcie_msi_domain_ops = {
+>   	.map = ks_dw_pcie_msi_map,
+>   };
+>
+Jingoo Han,
 
-this should only be set if is_fpga, and this quirk should be a 1-bit
-flag, so here's what you should do:
+Thanks for the patch.
 
-	WARN_ONCE(dwc->disable_scramble_quirk && !dwc->is_fpga,
-		"disable_scramble cannot be used on non-FPGA builds\n");
+Acked-by: Murali Karicheri <m-karicheri2@ti.com>
 
-	if (dwc->disable_scramble && dwc->is_fpga)
-		reg |=3D DWC3_GCTL_DISSCRAMBLE;
-	else
-		reg &=3D ~DWC3_GCTL_DISSCRAMBLE;
-
-> +		reg |=3D DWC3_GCTL_DISSCRAMBLE;
-> +	else
-> +		reg &=3D ~DWC3_GCTL_DISSCRAMBLE;
-
-add a blank line here, to aid readability.
-
->  	/*
->  	 * WORKAROUND: DWC3 revisions <1.90a have a bug
->  	 * where the device can fail to connect at SuperSpeed
-> diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
-> index 18569a4..a89db6c 100644
-> --- a/drivers/usb/dwc3/dwc3-pci.c
-> +++ b/drivers/usb/dwc3/dwc3-pci.c
-> @@ -146,6 +146,11 @@ static int dwc3_pci_probe(struct pci_dev *pci,
->  	res[1].name	=3D "dwc_usb3";
->  	res[1].flags	=3D IORESOURCE_IRQ;
-> =20
-> +	if (pci->vendor =3D=3D PCI_VENDOR_ID_AMD && pci->device =3D=3D
-> +			PCI_DEVICE_ID_AMD_NL) {
-> +		dwc3_pdata.quirks |=3D DWC3_QUIRK_AMD_NL;
-> +	}
-
-should be part of another patch and the quirk is
-"disable_scramble_quirk", not AMD.
-
---=20
-balbi
-
---LyciRD1jyfeSSjG0
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJUQSuMAAoJEIaOsuA1yqREM84P/16X8tKJCCHzOQd2yYvvi2FG
-JkDbxb4I5mX9AmxAYpjr3mG/WTaLNZteRsh2lrck/oXzD4+l7BM6zXE0z8vxS1rx
-7xxP84H6eBX6J1NVKZJi3CTJ4mUo2jW4RucPN/fETH24odEmxIuuutagQd8ET2/v
-gYofKcWfXJTL/Id7ZHRJ+1Ah/QlfDM1W8xcOP0wldt7MA3tXX7r9HTi0m8ortLSU
-LK277cS5btbgh3GiZrPinDi94l7TBmy3u58FzUoV01Tc0x0bPNC4G5iwy5hZLteW
-pEXtSUUtd19Ise8nuiC0G7kCArAokaMb5EXMIFPotP5fGdCn98AKTfhRMaUMqOdx
-pD5mKcbhKHnccFuUpXt7+etdt9y+BaEWb1aASlhe/DFvmwbrr518vLqoDeA1QrWc
-7/sbnSZoeO6eikC9K9DaQrGfMHRRHhXr3drkSc0yzdaN68/PO5Z+R26KiScvszrP
-iCkaBdFQoUmgIFXCB/h5XavQ9vQOMVK0hmeQs7CUQ4iReofEZ00dqc3BARu/i2DX
-u5itcnHJ5DtjHBPh1nt/LekLT2AcJuWjxjHM0cHXoldPJc2tivS++Tpt8+crz8Tm
-0tChQVzR2g8oJuHVAucJtCETs5buEWfG6ZvjkmJW/kPdKtvQTPHtiY9eXz9JD2zo
-UpKYdfsgSV46GVsCPyQs
-=hFRu
------END PGP SIGNATURE-----
-
---LyciRD1jyfeSSjG0--
+-- 
+Murali Karicheri
+Linux Kernel, Texas Instruments
