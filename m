@@ -1,108 +1,156 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:38929 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751775AbaJCBnL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Oct 2014 21:43:11 -0400
-MIME-Version: 1.0
-Reply-To: rajatxjain@gmail.com
-In-Reply-To: <20141002063423.GA1405@katana>
-References: <542A3593.4020108@gmail.com>
-	<CAErSpo7BkXDHOZwHzwEu2BN3=39xFwQOyrjgVo6afWKMsnYT=A@mail.gmail.com>
-	<20140930211339.GA1264@katana>
-	<CAA93t1out+gJO29_0tn1zLJv_MUwJ458XKNT3Lo6WW+mH9XeRQ@mail.gmail.com>
-	<20141001072949.GA1322@katana>
-	<CAA93t1qjzAWQqkZQcJYFZxvuhy6o1N2gJ+j=AKgcqE=zup=BJw@mail.gmail.com>
-	<20141002063423.GA1405@katana>
-Date: Thu, 2 Oct 2014 18:43:10 -0700
-Message-ID: <CAA93t1p-gj4FzbpaVVzWzcFmZHooVcrr3+XLNv1YyYssScep4Q@mail.gmail.com>
-Subject: Re: [PATCH 0/4] Driver for talking to PLX PEX8xxx PCIe switch over I2C
-From: Rajat Jain <rajatxjain@gmail.com>
-To: Wolfram Sang <wsa@the-dreams.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Jiri Kosina <jkosina@suse.cz>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-i2c <linux-i2c@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [Patch Part1 v3 04/20] x86, irq: Convert irq_2_pin list to generic list
+Date: Mon, 27 Oct 2014 16:11:55 +0800
+Message-Id: <1414397531-28254-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Wolfram,
+From: Yinghai Lu <yinghai@kernel.org>
 
-Thanks a lot for your review and comments. I understand and will
-update with those APIs and send out a V2.
+Use generic list to replace private list implementation so we could
+use generic helper functions to operate it.
 
-Thanks & Best Regards,
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Cc: Joerg Roedel <joro@8bytes.org>
+---
+ arch/x86/include/asm/hw_irq.h  |    2 +-
+ arch/x86/kernel/apic/io_apic.c |   28 +++++++++++-----------------
+ 2 files changed, 12 insertions(+), 18 deletions(-)
 
-Rajat Jain
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 64330c2e172e..28f283988c8e 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -138,7 +138,7 @@ struct irq_2_irte {
+  * Most irqs are mapped 1:1 with pins.
+  */
+ struct irq_cfg {
+-	struct irq_pin_list	*irq_2_pin;
++	struct list_head	irq_2_pin;
+ 	cpumask_var_t		domain;
+ 	cpumask_var_t		old_domain;
+ 	u8			vector;
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 117ec58fff02..00bd61fd1b5a 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -74,7 +74,7 @@
+ 		for_each_pin((idx), (pin))
+ 
+ #define for_each_irq_pin(entry, head) \
+-	for (entry = head; entry; entry = entry->next)
++	list_for_each_entry(entry, &head, list)
+ 
+ /*
+  *      Is the SiS APIC rmw bug present ?
+@@ -229,8 +229,8 @@ void mp_save_irq(struct mpc_intsrc *m)
+ }
+ 
+ struct irq_pin_list {
++	struct list_head list;
+ 	int apic, pin;
+-	struct irq_pin_list *next;
+ };
+ 
+ static struct irq_pin_list *alloc_irq_pin_list(int node)
+@@ -297,6 +297,7 @@ static struct irq_cfg *alloc_irq_cfg(unsigned int irq, int node)
+ 		goto out_cfg;
+ 	if (!zalloc_cpumask_var_node(&cfg->old_domain, GFP_KERNEL, node))
+ 		goto out_domain;
++	INIT_LIST_HEAD(&cfg->irq_2_pin);
+ 	return cfg;
+ out_domain:
+ 	free_cpumask_var(cfg->domain);
+@@ -460,15 +461,12 @@ static void ioapic_mask_entry(int apic, int pin)
+  */
+ static int __add_pin_to_irq_node(struct irq_cfg *cfg, int node, int apic, int pin)
+ {
+-	struct irq_pin_list **last, *entry;
++	struct irq_pin_list *entry;
+ 
+ 	/* don't allow duplicates */
+-	last = &cfg->irq_2_pin;
+-	for_each_irq_pin(entry, cfg->irq_2_pin) {
++	for_each_irq_pin(entry, cfg->irq_2_pin)
+ 		if (entry->apic == apic && entry->pin == pin)
+ 			return 0;
+-		last = &entry->next;
+-	}
+ 
+ 	entry = alloc_irq_pin_list(node);
+ 	if (!entry) {
+@@ -479,22 +477,19 @@ static int __add_pin_to_irq_node(struct irq_cfg *cfg, int node, int apic, int pi
+ 	entry->apic = apic;
+ 	entry->pin = pin;
+ 
+-	*last = entry;
++	list_add_tail(&entry->list, &cfg->irq_2_pin);
+ 	return 0;
+ }
+ 
+ static void __remove_pin_from_irq(struct irq_cfg *cfg, int apic, int pin)
+ {
+-	struct irq_pin_list **last, *entry;
++	struct irq_pin_list *tmp, *entry;
+ 
+-	last = &cfg->irq_2_pin;
+-	for_each_irq_pin(entry, cfg->irq_2_pin)
++	list_for_each_entry_safe(entry, tmp, &cfg->irq_2_pin, list)
+ 		if (entry->apic == apic && entry->pin == pin) {
+-			*last = entry->next;
++			list_del(&entry->list);
+ 			kfree(entry);
+ 			return;
+-		} else {
+-			last = &entry->next;
+ 		}
+ }
+ 
+@@ -1739,8 +1734,7 @@ __apicdebuginit(void) print_IO_APICs(void)
+ 		cfg = irq_cfg(irq);
+ 		if (!cfg)
+ 			continue;
+-		entry = cfg->irq_2_pin;
+-		if (!entry)
++		if (list_empty(&cfg->irq_2_pin))
+ 			continue;
+ 		printk(KERN_DEBUG "IRQ%d ", irq);
+ 		for_each_irq_pin(entry, cfg->irq_2_pin)
+@@ -4068,7 +4062,7 @@ void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq)
+ 
+ 	ioapic_mask_entry(ioapic, pin);
+ 	__remove_pin_from_irq(cfg, ioapic, pin);
+-	WARN_ON(cfg->irq_2_pin != NULL);
++	WARN_ON(!list_empty(&cfg->irq_2_pin));
+ 	arch_teardown_hwirq(virq);
+ }
+ 
+-- 
+1.7.10.4
 
-On Wed, Oct 1, 2014 at 11:34 PM, Wolfram Sang <wsa@the-dreams.de> wrote:
->
->> I understand and agree. In fact in the internal version of this driver
->> (that I have not yet sent out for review), we do have APIs added
->> similar to what you mention above. Currently I have APIs that:
->> - Enable / Disable PCIe links.
->> - Change the upstream port.
->> - Enable / Disable Non-transparent mode etc.
->
-> Now, that sounds better to me...
->
->> However, I did not send them all out for review because I don't have
->> the hardware to try and test them out on ALL the supported devices
->> (also would require considerable amount of time). I have tested those
->> APIs on PEX8713 only, because for e.g.I only have PEX8713 in a HW that
->> connects to 2 CPUs at the same time.
->
-> That is a common problem to not have enough hardware to test. You could
-> ask on the PCI mailing list for testers. The solution usually lies in
-> showing the code rather than not showing the code.
->
->> the switch. Yes, I agree that we can have another layer of abstraction
->> so that we have:
->>
->> - The Core logic code (that knows "How do we want the switch to behave")
->> - A PEX8xxx driver (that knows "which registers to program")
->> - A PEX8xxx I2C driver ("How to program those registers") - this driver.
->>
->> I do understand that your suggestion is to include and bundle the
->> latter two into this same driver.
->
-> It definately should be this way. Nobody else than the PEX8xxx driver
-> should be able to send I2C messeges to the device! And this is
-> absolutely standard, the logic how to talk to a device knows also how to
-> prepare the I2C messages. One reason where it could be factored out is
-> if there are multiple ways of transportation possible, like I2C or SPI.
->
->> However since the possibilities
->> (about which APIs to provide) are too much and not enough hardware to
->> test it, would it be acceptable if I include those APIs, but support
->> them for only 1 device (and return error for others)?
->
-> Start with what YOU need and show us (all of it). From there, we can
-> decide: do we start with one driver and factor out later, do we start
-> with a sub-subsystem right away, etc... And there is still the question
-> what APIs you provide, how they are implemented and if we really should
-> have them in-kernel. I think that question will be more interesting for
-> Bjorn because I don't really know much about switches in the PCI world.
->
->> with those APIs, I feel exposing the Read/Write APIs will be useful -
->> because what core logic wants to achieve can be highly device and
->> platform specific.
->
-> That could also be solved by fixup-callbacks, but we'd need to see the
-> core to tell, really.
->
->> Also, a sysfs interface for this switch is proving
->> to be a very helpful development aid :-) (personal experience :-))
->
-> Sure, but such development aids don't need to be upstream. Especially if
-> they create ABI such as sysfs-entries.
->
-> Thanks and regards,
->
->    Wolfram
