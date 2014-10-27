@@ -1,120 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0145.outbound.protection.outlook.com ([65.55.169.145]:61026
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752157AbaJQJO1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 17 Oct 2014 05:14:27 -0400
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v2 05/16] usb: dwc3: add quirks support to be compatible for kinds of SoCs
-Date: Fri, 17 Oct 2014 16:53:30 +0800
-Message-ID: <1413536021-4886-6-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
-References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v7 06/18] ACPI: Fix minor syntax issues in processor_core.c
+Date: Mon, 27 Oct 2014 13:21:36 +0800
+Message-Id: <1414387308-27148-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds a quirks flag at dwc3 structure, and SoCs platform vendor is
-able to define this flag in platform data at bus glue layer. Then do some
-independent behaviors at dwc3 core level.
+Fix minor syntax issues in processor_core.c to follow coding styles.
 
-Signed-off-by: Huang Rui <ray.huang@amd.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/usb/dwc3/core.c          | 2 ++
- drivers/usb/dwc3/core.h          | 3 +++
- drivers/usb/dwc3/dwc3-pci.c      | 9 +++++++++
- drivers/usb/dwc3/platform_data.h | 2 ++
- 4 files changed, 16 insertions(+)
+ drivers/acpi/processor_core.c |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index ddac372..50c0eae 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -710,6 +710,8 @@ static int dwc3_probe(struct platform_device *pdev)
- 
- 		dwc->needs_fifo_resize = pdata->tx_fifo_resize;
- 		dwc->dr_mode = pdata->dr_mode;
-+
-+		dwc->quirks = pdata->quirks;
+diff --git a/drivers/acpi/processor_core.c b/drivers/acpi/processor_core.c
+index ef58f46c8442..342942f90a10 100644
+--- a/drivers/acpi/processor_core.c
++++ b/drivers/acpi/processor_core.c
+@@ -125,13 +125,12 @@ static int map_mat_entry(acpi_handle handle, int type, u32 acpi_id)
  	}
  
- 	/* default to superspeed if no maximum_speed passed */
-diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-index f6ee623..cfe0d57 100644
---- a/drivers/usb/dwc3/core.h
-+++ b/drivers/usb/dwc3/core.h
-@@ -636,6 +636,7 @@ struct dwc3_scratchpad_array {
-  * @u1u2: only used on revisions <1.83a for workaround
-  * @maximum_speed: maximum speed requested (mainly for testing purposes)
-  * @revision: revision register contents
-+ * @quirks: represents different SOCs hardware work-arounds and quirks
-  * @dr_mode: requested mode of operation
-  * @usb2_phy: pointer to USB2 PHY
-  * @usb3_phy: pointer to USB3 PHY
-@@ -740,6 +741,8 @@ struct dwc3 {
- #define DWC3_REVISION_270A	0x5533270a
- #define DWC3_REVISION_280A	0x5533280a
+ 	header = (struct acpi_subtable_header *)obj->buffer.pointer;
+-	if (header->type == ACPI_MADT_TYPE_LOCAL_APIC) {
++	if (header->type == ACPI_MADT_TYPE_LOCAL_APIC)
+ 		map_lapic_id(header, acpi_id, &apic_id);
+-	} else if (header->type == ACPI_MADT_TYPE_LOCAL_SAPIC) {
++	else if (header->type == ACPI_MADT_TYPE_LOCAL_SAPIC)
+ 		map_lsapic_id(header, type, acpi_id, &apic_id);
+-	} else if (header->type == ACPI_MADT_TYPE_LOCAL_X2APIC) {
++	else if (header->type == ACPI_MADT_TYPE_LOCAL_X2APIC)
+ 		map_x2apic_id(header, type, acpi_id, &apic_id);
+-	}
  
-+	u32			quirks;
-+
- 	enum dwc3_ep0_next	ep0_next_event;
- 	enum dwc3_ep0_state	ep0state;
- 	enum dwc3_link_state	link_state;
-diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
-index 3806547..18569a4 100644
---- a/drivers/usb/dwc3/dwc3-pci.c
-+++ b/drivers/usb/dwc3/dwc3-pci.c
-@@ -25,6 +25,8 @@
- #include <linux/usb/otg.h>
- #include <linux/usb/usb_phy_generic.h>
- 
-+#include "platform_data.h"
-+
- /* FIXME define these in <linux/pci_ids.h> */
- #define PCI_VENDOR_ID_SYNOPSYS		0x16c3
- #define PCI_DEVICE_ID_SYNOPSYS_HAPSUSB3	0xabcd
-@@ -103,6 +105,9 @@ static int dwc3_pci_probe(struct pci_dev *pci,
- 	struct dwc3_pci		*glue;
- 	int			ret;
- 	struct device		*dev = &pci->dev;
-+	struct dwc3_platform_data dwc3_pdata;
-+
-+	memset(&dwc3_pdata, 0x00, sizeof(dwc3_pdata));
- 
- 	glue = devm_kzalloc(dev, sizeof(*glue), GFP_KERNEL);
- 	if (!glue)
-@@ -149,6 +154,10 @@ static int dwc3_pci_probe(struct pci_dev *pci,
- 
- 	pci_set_drvdata(pci, glue);
- 
-+	ret = platform_device_add_data(dwc3, &dwc3_pdata, sizeof(dwc3_pdata));
-+	if (ret)
-+		goto err3;
-+
- 	dma_set_coherent_mask(&dwc3->dev, dev->coherent_dma_mask);
- 
- 	dwc3->dev.dma_mask = dev->dma_mask;
-diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
-index 7db34f0..1d3d65f 100644
---- a/drivers/usb/dwc3/platform_data.h
-+++ b/drivers/usb/dwc3/platform_data.h
-@@ -24,4 +24,6 @@ struct dwc3_platform_data {
- 	enum usb_device_speed maximum_speed;
- 	enum usb_dr_mode dr_mode;
- 	bool tx_fifo_resize;
-+
-+	u32     quirks;
- };
+ exit:
+ 	kfree(buffer.pointer);
+@@ -164,7 +163,7 @@ int acpi_map_cpuid(int apic_id, u32 acpi_id)
+ 		 * For example,
+ 		 *
+ 		 * Scope (_PR)
+-                 * {
++		 * {
+ 		 *     Processor (CPU0, 0x00, 0x00000410, 0x06) {}
+ 		 *     Processor (CPU1, 0x01, 0x00000410, 0x06) {}
+ 		 *     Processor (CPU2, 0x02, 0x00000410, 0x06) {}
 -- 
-1.9.1
+1.7.10.4
 
