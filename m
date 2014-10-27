@@ -1,136 +1,51 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
+MIME-Version: 1.0
+In-Reply-To: <20141027025531.GB5149@hr-slim.amd.com>
+References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+ <1413536021-4886-3-git-send-email-ray.huang@amd.com> <20141024163529.GA7075@google.com>
+ <20141027025531.GB5149@hr-slim.amd.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 27 Oct 2014 07:21:10 -0600
+Message-ID: <CAErSpo6qdkteY=UW-f23vOHwYj0x+yheno-_XvLerdB2W5wA8w@mail.gmail.com>
+Subject: Re: [PATCH v2 02/16] pci: quirks: add quirk to avoid AMD NL to bind
+ with xhci
+To: Huang Rui <ray.huang@amd.com>
+Cc: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v3 11/24] iommu/vt-d: Change prototypes to prepare for enabling hierarchy irqdomain
-Date: Tue, 28 Oct 2014 16:26:29 +0800
-Message-Id: <1414484803-10311-12-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
+	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Prepare for support hierarchy irqdomain by changing function prototypes,
-should be no function changes.
+On Sun, Oct 26, 2014 at 8:55 PM, Huang Rui <ray.huang@amd.com> wrote:
+> On Fri, Oct 24, 2014 at 10:35:29AM -0600, Bjorn Helgaas wrote:
+>> On Fri, Oct 17, 2014 at 04:53:27PM +0800, Huang Rui wrote:
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel_irq_remapping.c |   22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+>> > +/* FIXME should define in <linux/pci_ids.h> */
+>> > +#define PCI_DEVICE_ID_AMD_NL       0x7912
+>>
+>> If you KNOW this should be in linux/pci_ids.h (and it looks like it COULD
+>> go there, since you do use the same definition in patch [01/16]), why don't
+>> you just do it?  Why are you wasting our time reviewing trivial stuff like
+>> this?
+>>
+>
+> Apology, I was told that it could not add device id into pci_ids.h
+> from my buddy with below thread discussion last year, but I don't
+> confirm at current. I check the git log at pci_ids.h, it looks like
+> it's able to add device id marco again, is that right?
+>
+> http://marc.info/?l=linux-pci&m=137028614924258&w=2
+>
+> If I misunderstand your meaning, please correct me.
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index fd181cf8a589..5acad492701e 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -82,10 +82,10 @@ static int get_irte(int irq, struct irte *entry)
- 	return 0;
- }
- 
--static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
-+static int alloc_irte(struct intel_iommu *iommu, int irq,
-+		      struct irq_2_iommu *irq_iommu, u16 count)
- {
- 	struct ir_table *table = iommu->ir_table;
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
- 	struct irq_cfg *cfg = irq_cfg(irq);
- 	unsigned int mask = 0;
- 	unsigned long flags;
-@@ -173,9 +173,9 @@ static int set_irte_irq(int irq, struct intel_iommu *iommu, u16 index, u16 subha
- 	return 0;
- }
- 
--static int modify_irte(int irq, struct irte *irte_modified)
-+static int modify_irte(struct irq_2_iommu *irq_iommu,
-+		       struct irte *irte_modified)
- {
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
- 	struct intel_iommu *iommu;
- 	unsigned long flags;
- 	struct irte *irte;
-@@ -242,7 +242,7 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
- 		return 0;
- 
- 	iommu = irq_iommu->iommu;
--	index = irq_iommu->irte_index + irq_iommu->sub_handle;
-+	index = irq_iommu->irte_index;
- 
- 	start = iommu->ir_table->base + index;
- 	end = start + (1 << irq_iommu->irte_mask);
-@@ -937,7 +937,7 @@ static int intel_setup_ioapic_entry(int irq,
- 		pr_warn("No mapping iommu for ioapic %d\n", ioapic_id);
- 		index = -ENODEV;
- 	} else {
--		index = alloc_irte(iommu, irq, 1);
-+		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
- 		if (index < 0) {
- 			pr_warn("Failed to allocate IRTE for ioapic %d\n",
- 				ioapic_id);
-@@ -953,7 +953,7 @@ static int intel_setup_ioapic_entry(int irq,
- 	/* Set source-id of interrupt request */
- 	set_ioapic_sid(&irte, ioapic_id);
- 
--	modify_irte(irq, &irte);
-+	modify_irte(irq_2_iommu(irq), &irte);
- 
- 	apic_printk(APIC_VERBOSE, KERN_DEBUG "IOAPIC[%d]: "
- 		"Set IRTE entry (P:%d FPD:%d Dst_Mode:%d "
-@@ -1040,7 +1040,7 @@ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 	 * Atomically updates the IRTE with the new destination, vector
- 	 * and flushes the interrupt entry cache.
- 	 */
--	modify_irte(irq, &irte);
-+	modify_irte(irq_2_iommu(irq), &irte);
- 
- 	/*
- 	 * After this point, all the interrupts will start arriving
-@@ -1076,7 +1076,7 @@ static void intel_compose_msi_msg(struct pci_dev *pdev,
- 	else
- 		set_hpet_sid(&irte, hpet_id);
- 
--	modify_irte(irq, &irte);
-+	modify_irte(irq_2_iommu(irq), &irte);
- 
- 	msg->address_hi = MSI_ADDR_BASE_HI;
- 	msg->data = sub_handle;
-@@ -1103,7 +1103,7 @@ static int intel_msi_alloc_irq(struct pci_dev *dev, int irq, int nvec)
- 		       "Unable to map PCI %s to iommu\n", pci_name(dev));
- 		index = -ENOENT;
- 	} else {
--		index = alloc_irte(iommu, irq, nvec);
-+		index = alloc_irte(iommu, irq, irq_2_iommu(irq), nvec);
- 		if (index < 0) {
- 			printk(KERN_ERR
- 			       "Unable to allocate %d IRTE for PCI %s\n",
-@@ -1147,7 +1147,7 @@ static int intel_alloc_hpet_msi(unsigned int irq, unsigned int id)
- 	down_read(&dmar_global_lock);
- 	iommu = map_hpet_to_ir(id);
- 	if (iommu) {
--		index = alloc_irte(iommu, irq, 1);
-+		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
- 		if (index >= 0)
- 			ret = 0;
- 	}
--- 
-1.7.10.4
+Just read the text at the beginning of pci_ids.h.
 
+If you have to use the same ID in two different files, you should add
+it to pci_ids.h.
