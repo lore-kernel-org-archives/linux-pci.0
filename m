@@ -1,157 +1,223 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:51658 "EHLO gate.crashing.org"
+Received: from mga01.intel.com ([192.55.52.88]:3358 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752075AbaJBBOo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Oct 2014 21:14:44 -0400
-Message-ID: <1412210052.10667.0.camel@pasglop>
-Subject: [PATCH v2 1/4] pci/msi: Move "no_64bit_msi" flag from powerpc to
- generic pci_dev
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Alex Deucher <alexdeucher@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Dave Airlie <airlied@linux.ie>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
-Date: Thu, 02 Oct 2014 10:34:12 +1000
-In-Reply-To: <1412112324.4285.160.camel@pasglop>
-References: <1412048401.4285.128.camel@pasglop>
-	 <CAErSpo4B6kuZJcKwreNvW1qC5sZ=1Ko71vbzNz7T8-_pjf7mww@mail.gmail.com>
-	 <CADnq5_PT+dX=KA4epGNRaoraco2z1pe5K7UgqLmTUhWMnvtWkw@mail.gmail.com>
-	 <1412108504.4285.155.camel@pasglop>
-	 <CADnq5_O_iLAZUKLL4nph8VwuP2NOkWXhBZC2XTSkFm5P42WZ+g@mail.gmail.com>
-	 <1412110946.4285.158.camel@pasglop>
-	 <CADnq5_OXBax1+TKPsR2RDYTWijQKDVw34ECfWzcwN2SibCGYTg@mail.gmail.com>
-	 <1412112324.4285.160.camel@pasglop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751618AbaJ0IKX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 27 Oct 2014 04:10:23 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v3 06/20] x86, irq: Rename local APIC related functions in io_apic.c as apic_xxx()
+Date: Mon, 27 Oct 2014 16:11:57 +0800
+Message-Id: <1414397531-28254-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Rename local APIC related functions in io_apic.c as apic_xxx() instead
+of ioapic_xxx(), later they will be moved into separate file.
 
-Some devices have broken 64-bit MSI support which only support some
-address bits (40 to 48 typically). This doesn't work on some platforms
-such as POWER servers, so we need a quirk.
-
-Currently we keep a flag in a powerpc specific data structure which we
-have per PCI device. However this is impractical as we really want the
-driver to set that flag appropriately (and the driver shouldn't touch
-that arch specific data structure).
-
-It's also not unlikely that this limitation will affect other architectures
-in the long run.
-
-So this moves the flag to struct pci_dev instead and adjusts the
-corresponding arch/powerpc code to look for it there. At this point,
-there is no attempt at making other architectures honor it just yet,
-though it appears that x86 doesn't care and always generates 32-bit
-MSI addresses.
-
-Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: <stable@vger.kernel.org>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
+ arch/x86/include/asm/hw_irq.h  |    4 ++--
+ arch/x86/kernel/apic/io_apic.c |   42 ++++++++++++++++++++--------------------
+ arch/x86/platform/uv/uv_irq.c  |    2 +-
+ 3 files changed, 24 insertions(+), 24 deletions(-)
 
-v2: Rename flag to "no_64bit_msi" as suggested by Bjorn
-
- arch/powerpc/include/asm/pci-bridge.h     | 2 --
- arch/powerpc/kernel/pci_64.c              | 5 +----
- arch/powerpc/platforms/powernv/pci-ioda.c | 3 +--
- arch/powerpc/platforms/powernv/pci.c      | 3 +--
- arch/powerpc/platforms/pseries/msi.c      | 2 +-
- include/linux/pci.h                       | 1 +
- 6 files changed, 5 insertions(+), 11 deletions(-)
-
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 4ca90a3..725247b 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -159,8 +159,6 @@ struct pci_dn {
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 8188d648d48c..18e8717bf644 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -137,8 +137,8 @@ extern int assign_irq_vector(int, struct irq_cfg *, const struct cpumask *);
+ extern void send_cleanup_vector(struct irq_cfg *);
  
- 	int	pci_ext_config_space;	/* for pci devices */
+ struct irq_data;
+-int __ioapic_set_affinity(struct irq_data *, const struct cpumask *,
+-			  unsigned int *dest_id);
++int apic_set_affinity(struct irq_data *, const struct cpumask *,
++		      unsigned int *dest_id);
+ #endif	/* CONFIG_X86_LOCAL_APIC */
  
--	bool	force_32bit_msi;
--
- 	struct	pci_dev *pcidev;	/* back-pointer to the pci device */
- #ifdef CONFIG_EEH
- 	struct eeh_dev *edev;		/* eeh device */
-diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
-index 155013d..d41a831 100644
---- a/arch/powerpc/kernel/pci_64.c
-+++ b/arch/powerpc/kernel/pci_64.c
-@@ -269,10 +269,7 @@ EXPORT_SYMBOL(pcibus_to_node);
- 
- static void quirk_radeon_32bit_msi(struct pci_dev *dev)
- {
--	struct pci_dn *pdn = pci_get_pdn(dev);
--
--	if (pdn)
--		pdn->force_32bit_msi = true;
-+	dev->no_64bit_msi = true;
+ #ifdef CONFIG_X86_IO_APIC
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 00bd61fd1b5a..c8be3fa0844d 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -2252,7 +2252,7 @@ static unsigned int startup_ioapic_irq(struct irq_data *data)
+ 	return was_pending;
  }
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x68f2, quirk_radeon_32bit_msi);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0xaa68, quirk_radeon_32bit_msi);
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index df241b1..a188bb8 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1311,7 +1311,6 @@ static int pnv_pci_ioda_msi_setup(struct pnv_phb *phb, struct pci_dev *dev,
- 				  unsigned int is_64, struct msi_msg *msg)
+ 
+-static int ioapic_retrigger_irq(struct irq_data *data)
++static int apic_retrigger_irq(struct irq_data *data)
  {
- 	struct pnv_ioda_pe *pe = pnv_ioda_get_pe(dev);
--	struct pci_dn *pdn = pci_get_pdn(dev);
- 	struct irq_data *idata;
- 	struct irq_chip *ichip;
- 	unsigned int xive_num = hwirq - phb->msi_base;
-@@ -1327,7 +1326,7 @@ static int pnv_pci_ioda_msi_setup(struct pnv_phb *phb, struct pci_dev *dev,
- 		return -ENXIO;
- 
- 	/* Force 32-bit MSI on some broken devices */
--	if (pdn && pdn->force_32bit_msi)
-+	if (dev->no_64bit_msi)
- 		is_64 = 0;
- 
- 	/* Assign XIVE to PE */
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index b854b57..89c6608 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -50,9 +50,8 @@ static int pnv_msi_check_device(struct pci_dev* pdev, int nvec, int type)
+ 	struct irq_cfg *cfg = data->chip_data;
+ 	unsigned long flags;
+@@ -2407,8 +2407,8 @@ static void __target_IO_APIC_irq(unsigned int irq, unsigned int dest, struct irq
+  * ->cpu_mask_to_apicid of that in dest_id, or returns -1 and
+  * leaves data->affinity untouched.
+  */
+-int __ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+-			  unsigned int *dest_id)
++int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
++		      unsigned int *dest_id)
  {
- 	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
- 	struct pnv_phb *phb = hose->private_data;
--	struct pci_dn *pdn = pci_get_pdn(pdev);
+ 	struct irq_cfg *cfg = data->chip_data;
+ 	unsigned int irq = data->irq;
+@@ -2449,7 +2449,7 @@ int native_ioapic_set_affinity(struct irq_data *data,
+ 		return -EPERM;
  
--	if (pdn && pdn->force_32bit_msi && !phb->msi32_support)
-+	if (pdev->no_64bit_msi && !phb->msi32_support)
- 		return -ENODEV;
+ 	raw_spin_lock_irqsave(&ioapic_lock, flags);
+-	ret = __ioapic_set_affinity(data, mask, &dest);
++	ret = apic_set_affinity(data, mask, &dest);
+ 	if (!ret) {
+ 		/* Only the high 8 bits are valid. */
+ 		dest = SET_APIC_LOGICAL_ID(dest);
+@@ -2460,7 +2460,7 @@ int native_ioapic_set_affinity(struct irq_data *data,
+ 	return ret;
+ }
  
- 	return (phb && phb->msi_bmp.bitmap) ? 0 : -ENODEV;
-diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
-index 18ff462..6fd96d8 100644
---- a/arch/powerpc/platforms/pseries/msi.c
-+++ b/arch/powerpc/platforms/pseries/msi.c
-@@ -429,7 +429,7 @@ static int rtas_setup_msi_irqs(struct pci_dev *pdev, int nvec_in, int type)
- 	 */
- again:
- 	if (type == PCI_CAP_ID_MSI) {
--		if (pdn->force_32bit_msi) {
-+		if (pdev->no_64bit_msi) {
- 			rc = rtas_change_msi(pdn, RTAS_CHANGE_32MSI_FN, nvec);
- 			if (rc < 0) {
- 				/*
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 96453f9..fc938003 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -331,6 +331,7 @@ struct pci_dev {
- 	unsigned int	is_added:1;
- 	unsigned int	is_busmaster:1; /* device is busmaster */
- 	unsigned int	no_msi:1;	/* device may not use msi */
-+	unsigned int    no_64bit_msi:1;	/* Device has broken 64-bit MSIs */
- 	unsigned int	block_cfg_access:1;	/* config space access is blocked */
- 	unsigned int	broken_parity_status:1;	/* Device generates false positive parity */
- 	unsigned int	irq_reroute_variant:2;	/* device needs IRQ rerouting variant */
-
-
+-static void ack_apic_edge(struct irq_data *data)
++static void apic_ack_edge(struct irq_data *data)
+ {
+ 	irq_complete_move(data->chip_data);
+ 	irq_move_irq(data);
+@@ -2549,7 +2549,7 @@ static inline void ioapic_irqd_unmask(struct irq_data *data,
+ }
+ #endif
+ 
+-static void ack_apic_level(struct irq_data *data)
++static void ack_ioapic_level(struct irq_data *data)
+ {
+ 	struct irq_cfg *cfg = data->chip_data;
+ 	int i, irq = data->irq;
+@@ -2621,10 +2621,10 @@ static struct irq_chip ioapic_chip __read_mostly = {
+ 	.irq_startup		= startup_ioapic_irq,
+ 	.irq_mask		= mask_ioapic_irq,
+ 	.irq_unmask		= unmask_ioapic_irq,
+-	.irq_ack		= ack_apic_edge,
+-	.irq_eoi		= ack_apic_level,
++	.irq_ack		= apic_ack_edge,
++	.irq_eoi		= ack_ioapic_level,
+ 	.irq_set_affinity	= native_ioapic_set_affinity,
+-	.irq_retrigger		= ioapic_retrigger_irq,
++	.irq_retrigger		= apic_retrigger_irq,
+ 	.flags			= IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
+@@ -3159,7 +3159,7 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+ 	unsigned int dest;
+ 	int ret;
+ 
+-	ret = __ioapic_set_affinity(data, mask, &dest);
++	ret = apic_set_affinity(data, mask, &dest);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -3183,9 +3183,9 @@ static struct irq_chip msi_chip = {
+ 	.name			= "PCI-MSI",
+ 	.irq_unmask		= unmask_msi_irq,
+ 	.irq_mask		= mask_msi_irq,
+-	.irq_ack		= ack_apic_edge,
++	.irq_ack		= apic_ack_edge,
+ 	.irq_set_affinity	= msi_set_affinity,
+-	.irq_retrigger		= ioapic_retrigger_irq,
++	.irq_retrigger		= apic_retrigger_irq,
+ 	.flags			= IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
+@@ -3261,7 +3261,7 @@ dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 	struct msi_msg msg;
+ 	int ret;
+ 
+-	ret = __ioapic_set_affinity(data, mask, &dest);
++	ret = apic_set_affinity(data, mask, &dest);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -3282,9 +3282,9 @@ static struct irq_chip dmar_msi_type = {
+ 	.name			= "DMAR_MSI",
+ 	.irq_unmask		= dmar_msi_unmask,
+ 	.irq_mask		= dmar_msi_mask,
+-	.irq_ack		= ack_apic_edge,
++	.irq_ack		= apic_ack_edge,
+ 	.irq_set_affinity	= dmar_msi_set_affinity,
+-	.irq_retrigger		= ioapic_retrigger_irq,
++	.irq_retrigger		= apic_retrigger_irq,
+ 	.flags			= IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
+@@ -3313,7 +3313,7 @@ static int hpet_msi_set_affinity(struct irq_data *data,
+ 	unsigned int dest;
+ 	int ret;
+ 
+-	ret = __ioapic_set_affinity(data, mask, &dest);
++	ret = apic_set_affinity(data, mask, &dest);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -3333,9 +3333,9 @@ static struct irq_chip hpet_msi_type = {
+ 	.name = "HPET_MSI",
+ 	.irq_unmask = hpet_msi_unmask,
+ 	.irq_mask = hpet_msi_mask,
+-	.irq_ack = ack_apic_edge,
++	.irq_ack = apic_ack_edge,
+ 	.irq_set_affinity = hpet_msi_set_affinity,
+-	.irq_retrigger = ioapic_retrigger_irq,
++	.irq_retrigger = apic_retrigger_irq,
+ 	.flags = IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
+@@ -3385,7 +3385,7 @@ ht_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+ 	unsigned int dest;
+ 	int ret;
+ 
+-	ret = __ioapic_set_affinity(data, mask, &dest);
++	ret = apic_set_affinity(data, mask, &dest);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -3397,9 +3397,9 @@ static struct irq_chip ht_irq_chip = {
+ 	.name			= "PCI-HT",
+ 	.irq_mask		= mask_ht_irq,
+ 	.irq_unmask		= unmask_ht_irq,
+-	.irq_ack		= ack_apic_edge,
++	.irq_ack		= apic_ack_edge,
+ 	.irq_set_affinity	= ht_set_affinity,
+-	.irq_retrigger		= ioapic_retrigger_irq,
++	.irq_retrigger		= apic_retrigger_irq,
+ 	.flags			= IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
+diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
+index b233681af4de..3e8fab740c1d 100644
+--- a/arch/x86/platform/uv/uv_irq.c
++++ b/arch/x86/platform/uv/uv_irq.c
+@@ -204,7 +204,7 @@ uv_set_irq_affinity(struct irq_data *data, const struct cpumask *mask,
+ 	struct uv_IO_APIC_route_entry *entry;
+ 	int mmr_pnode;
+ 
+-	if (__ioapic_set_affinity(data, mask, &dest))
++	if (apic_set_affinity(data, mask, &dest))
+ 		return -1;
+ 
+ 	mmr_value = 0;
+-- 
+1.7.10.4
 
