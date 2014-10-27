@@ -1,171 +1,92 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v4 14/20] usb: dwc3: add Tx de-emphasis quirk
-Date: Thu, 30 Oct 2014 18:08:39 +0800
-Message-ID: <1414663725-2195-15-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
-References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:17108 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753016AbaJ0IN7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 27 Oct 2014 04:13:59 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Joerg Roedel <joro@8bytes.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	iommu@lists.linux-foundation.org
+Subject: [Patch Part1 v3 18/20] iommu/vt-d: Use helpers to access irq_cfg data structure associated with IRQ
+Date: Mon, 27 Oct 2014 16:12:09 +0800
+Message-Id: <1414397531-28254-19-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds Tx de-emphasis quirk, and the Tx de-emphasis value is
-configurable according to PIPE3 specification.
+Use helpers to access irq_cfg data structure associated with IRQ,
+instead of accessing irq_data->chip_data directly. Later we could
+rewrite those helpers to support hierarchy irqdomain.
 
-Value		Description
-0		-6dB de-emphasis
-1		-3.5dB de-emphasis
-2		No de-emphasis
-3		Reserved
-
-It can be configured on DT or platform data.
-
-Signed-off-by: Huang Rui <ray.huang@amd.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- Documentation/devicetree/bindings/usb/dwc3.txt |  3 +++
- drivers/usb/dwc3/core.c                        | 17 +++++++++++++++++
- drivers/usb/dwc3/core.h                        | 11 +++++++++++
- drivers/usb/dwc3/platform_data.h               |  3 +++
- 4 files changed, 34 insertions(+)
+ drivers/iommu/intel_irq_remapping.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/usb/dwc3.txt b/Documentation/devicetree/bindings/usb/dwc3.txt
-index 38bac28..a9e54ae 100644
---- a/Documentation/devicetree/bindings/usb/dwc3.txt
-+++ b/Documentation/devicetree/bindings/usb/dwc3.txt
-@@ -29,6 +29,9 @@ Optional properties:
-  - snps,lfps_filter_quirk: when set core will filter LFPS reception.
-  - snps,rx_detect_poll_quirk: when set core will disable a 400us delay to start
- 			Polling LFPS after RX.Detect.
-+ - snps,tx_de_emphasis_quirk: when set core will set Tx de-emphasis value.
-+ - snps,tx_de_emphasis: the value driven to the PHY is controlled by the
-+			LTSSM during USB3 Compliance mode.
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 7c80661b35c1..fd181cf8a589 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -55,7 +55,7 @@ static int __init parse_ioapics_under_ir(void);
  
- This is usually a subnode to DWC3 glue to which it is connected.
+ static struct irq_2_iommu *irq_2_iommu(unsigned int irq)
+ {
+-	struct irq_cfg *cfg = irq_get_chip_data(irq);
++	struct irq_cfg *cfg = irq_cfg(irq);
+ 	return cfg ? &cfg->irq_2_iommu : NULL;
+ }
  
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index e02c3b0..b55fa5b 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -401,6 +401,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
- 	if (dwc->rx_detect_poll_quirk)
- 		reg |= DWC3_GUSB3PIPECTL_RX_DETOPOLL;
+@@ -86,7 +86,7 @@ static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
+ {
+ 	struct ir_table *table = iommu->ir_table;
+ 	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
+-	struct irq_cfg *cfg = irq_get_chip_data(irq);
++	struct irq_cfg *cfg = irq_cfg(irq);
+ 	unsigned int mask = 0;
+ 	unsigned long flags;
+ 	int index;
+@@ -154,7 +154,7 @@ static int map_irq_to_irte_handle(int irq, u16 *sub_handle)
+ static int set_irte_irq(int irq, struct intel_iommu *iommu, u16 index, u16 subhandle)
+ {
+ 	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
+-	struct irq_cfg *cfg = irq_get_chip_data(irq);
++	struct irq_cfg *cfg = irq_cfg(irq);
+ 	unsigned long flags;
  
-+	if (dwc->tx_de_emphasis_quirk)
-+		reg |= DWC3_GUSB3PIPECTL_TX_DEEPH(dwc->tx_de_emphasis);
-+
- 	dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
+ 	if (!irq_iommu)
+@@ -1008,7 +1008,7 @@ static int
+ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 			  bool force)
+ {
+-	struct irq_cfg *cfg = data->chip_data;
++	struct irq_cfg *cfg = irqd_cfg(data);
+ 	unsigned int dest, irq = data->irq;
+ 	struct irte irte;
+ 	int err;
+@@ -1063,7 +1063,7 @@ static void intel_compose_msi_msg(struct pci_dev *pdev,
+ 	u16 sub_handle = 0;
+ 	int ir_index;
  
- 	mdelay(100);
-@@ -717,6 +720,7 @@ static int dwc3_probe(struct platform_device *pdev)
- 	struct resource		*res;
- 	struct dwc3		*dwc;
- 	u8			lpm_nyet_threshold;
-+	u8			tx_de_emphasis;
+-	cfg = irq_get_chip_data(irq);
++	cfg = irq_cfg(irq);
  
- 	int			ret;
- 
-@@ -775,6 +779,9 @@ static int dwc3_probe(struct platform_device *pdev)
- 	/* default to highest possible threshold */
- 	lpm_nyet_threshold = 0xff;
- 
-+	/* default to -3.5dB de-emphasis */
-+	tx_de_emphasis = 1;
-+
- 	if (node) {
- 		dwc->maximum_speed = of_usb_get_maximum_speed(node);
- 		dwc->has_lpm_erratum = of_property_read_bool(node,
-@@ -802,6 +809,11 @@ static int dwc3_probe(struct platform_device *pdev)
- 				"snps,lfps_filter_quirk");
- 		dwc->rx_detect_poll_quirk = of_property_read_bool(node,
- 				"snps,rx_detect_poll_quirk");
-+
-+		dwc->tx_de_emphasis_quirk = of_property_read_bool(node,
-+				"snps,tx_de_emphasis_quirk");
-+		of_property_read_u8(node, "snps,tx_de_emphasis",
-+				&tx_de_emphasis);
- 	} else if (pdata) {
- 		dwc->maximum_speed = pdata->maximum_speed;
- 		dwc->has_lpm_erratum = pdata->has_lpm_erratum;
-@@ -819,6 +831,10 @@ static int dwc3_probe(struct platform_device *pdev)
- 		dwc->del_phy_power_chg_quirk = pdata->del_phy_power_chg_quirk;
- 		dwc->lfps_filter_quirk = pdata->lfps_filter_quirk;
- 		dwc->rx_detect_poll_quirk = pdata->rx_detect_poll_quirk;
-+
-+		dwc->tx_de_emphasis_quirk = pdata->tx_de_emphasis_quirk;
-+		if (pdata->tx_de_emphasis)
-+			tx_de_emphasis = pdata->tx_de_emphasis;
- 	}
- 
- 	/* default to superspeed if no maximum_speed passed */
-@@ -826,6 +842,7 @@ static int dwc3_probe(struct platform_device *pdev)
- 		dwc->maximum_speed = USB_SPEED_SUPER;
- 
- 	dwc->lpm_nyet_threshold = lpm_nyet_threshold;
-+	dwc->tx_de_emphasis = tx_de_emphasis;
- 
- 	ret = dwc3_core_get_phy(dwc);
- 	if (ret)
-diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-index eeef976..469ee13 100644
---- a/drivers/usb/dwc3/core.h
-+++ b/drivers/usb/dwc3/core.h
-@@ -185,6 +185,8 @@
- #define DWC3_GUSB3PIPECTL_SUSPHY	(1 << 17)
- #define DWC3_GUSB3PIPECTL_LFPSFILT	(1 << 9)
- #define DWC3_GUSB3PIPECTL_RX_DETOPOLL	(1 << 8)
-+#define DWC3_GUSB3PIPECTL_TX_DEEPH_MASK	DWC3_GUSB3PIPECTL_TX_DEEPH(3)
-+#define DWC3_GUSB3PIPECTL_TX_DEEPH(n)	((n) << 1)
- 
- /* Global TX Fifo Size Register */
- #define DWC3_GTXFIFOSIZ_TXFDEF(n)	((n) & 0xffff)
-@@ -695,6 +697,12 @@ struct dwc3_scratchpad_array {
-  * @del_phy_power_chg_quirk: set if we enable delay phy power change quirk
-  * @lfps_filter_quirk: set if we enable LFPS filter quirk
-  * @rx_detect_poll_quirk: set if we enable rx_detect to polling LFPS quirk
-+ * @tx_de_emphasis_quirk: set if we enable Tx de-emphasis quirk
-+ * @tx_de_emphasis: Tx de-emphasis value
-+ * 	0       - -6dB de-emphasis
-+ * 	1       - -3.5dB de-emphasis
-+ * 	2       - No de-emphasis
-+ * 	3       - Reserved
-  */
- struct dwc3 {
- 	struct usb_ctrlrequest	*ctrl_req;
-@@ -810,6 +818,9 @@ struct dwc3 {
- 	unsigned		del_phy_power_chg_quirk:1;
- 	unsigned		lfps_filter_quirk:1;
- 	unsigned		rx_detect_poll_quirk:1;
-+
-+	unsigned		tx_de_emphasis_quirk:1;
-+	unsigned		tx_de_emphasis:2;
- };
- 
- /* -------------------------------------------------------------------------- */
-diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
-index 4a0f06b..e1ab900 100644
---- a/drivers/usb/dwc3/platform_data.h
-+++ b/drivers/usb/dwc3/platform_data.h
-@@ -36,4 +36,7 @@ struct dwc3_platform_data {
- 	unsigned del_phy_power_chg_quirk:1;
- 	unsigned lfps_filter_quirk:1;
- 	unsigned rx_detect_poll_quirk:1;
-+
-+	unsigned tx_de_emphasis_quirk:1;
-+	unsigned tx_de_emphasis:2;
- };
+ 	ir_index = map_irq_to_irte_handle(irq, &sub_handle);
+ 	BUG_ON(ir_index == -1);
 -- 
-1.9.1
+1.7.10.4
 
