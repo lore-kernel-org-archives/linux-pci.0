@@ -1,74 +1,205 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:5900 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751757AbaJ0IL2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 27 Oct 2014 04:11:28 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v3 18/27] MIPS/Xlp: Remove the dead function destroy_irq() to fix build error
-Date: Wed, 15 Oct 2014 11:07:06 +0800
-Message-ID: <1413342435-7876-19-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
-References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v3 10/20] x86, irq: Replace printk(KERN_LVL) with pr_lvl() utilities
+Date: Mon, 27 Oct 2014 16:12:01 +0800
+Message-Id: <1414397531-28254-11-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit 465665f78a7 ("mips: Kill pointless destroy_irq()") removed
-the destroy_irq(). So remove the leftover one in xlp_setup_msix()
-to fix build error.
+Replace printk(KENR_LVL) with pr_lvl() to keep checkpatch script silent.
 
-arch/mips/pci/msi-xlp.c: In function 'xlp_setup_msix':
-arch/mips/pci/msi-xlp.c:447:3: error: implicit declaration of function 'destroy_irq'..
-cc1: some warnings being treated as errors
-make[1]: *** [arch/mips/pci/msi-xlp.o] Error 1
-make: *** [arch/mips/pci/] Error 2
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/mips/pci/msi-xlp.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+ arch/x86/kernel/apic/vector.c |   69 ++++++++++++++++++++---------------------
+ 1 file changed, 34 insertions(+), 35 deletions(-)
 
-diff --git a/arch/mips/pci/msi-xlp.c b/arch/mips/pci/msi-xlp.c
-index fa374fe..e469dc7 100644
---- a/arch/mips/pci/msi-xlp.c
-+++ b/arch/mips/pci/msi-xlp.c
-@@ -443,10 +443,8 @@ static int xlp_setup_msix(uint64_t lnkbase, int node, int link,
- 	msg.data = 0xc00 | msixvec;
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 248ad962c09a..f728cbfc29a9 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -506,27 +506,26 @@ static void __init print_local_APIC(void *dummy)
+ 	unsigned int i, v, ver, maxlvt;
+ 	u64 icr;
  
- 	ret = irq_set_msi_desc(xirq, desc);
--	if (ret < 0) {
--		destroy_irq(xirq);
-+	if (ret < 0)
- 		return ret;
--	}
+-	printk(KERN_DEBUG "printing local APIC contents on CPU#%d/%d:\n",
+-		smp_processor_id(), hard_smp_processor_id());
++	pr_debug("printing local APIC contents on CPU#%d/%d:\n",
++		 smp_processor_id(), hard_smp_processor_id());
+ 	v = apic_read(APIC_ID);
+-	printk(KERN_INFO "... APIC ID:      %08x (%01x)\n", v, read_apic_id());
++	pr_info("... APIC ID:      %08x (%01x)\n", v, read_apic_id());
+ 	v = apic_read(APIC_LVR);
+-	printk(KERN_INFO "... APIC VERSION: %08x\n", v);
++	pr_info("... APIC VERSION: %08x\n", v);
+ 	ver = GET_APIC_VERSION(v);
+ 	maxlvt = lapic_get_maxlvt();
  
- 	write_msi_msg(xirq, &msg);
- 	return 0;
+ 	v = apic_read(APIC_TASKPRI);
+-	printk(KERN_DEBUG "... APIC TASKPRI: %08x (%02x)\n",
+-	       v, v & APIC_TPRI_MASK);
++	pr_debug("... APIC TASKPRI: %08x (%02x)\n", v, v & APIC_TPRI_MASK);
+ 
+ 	if (APIC_INTEGRATED(ver)) {                     /* !82489DX */
+ 		if (!APIC_XAPIC(ver)) {
+ 			v = apic_read(APIC_ARBPRI);
+-			printk(KERN_DEBUG "... APIC ARBPRI: %08x (%02x)\n", v,
+-			       v & APIC_ARBPRI_MASK);
++			pr_debug("... APIC ARBPRI: %08x (%02x)\n",
++				 v, v & APIC_ARBPRI_MASK);
+ 		}
+ 		v = apic_read(APIC_PROCPRI);
+-		printk(KERN_DEBUG "... APIC PROCPRI: %08x\n", v);
++		pr_debug("... APIC PROCPRI: %08x\n", v);
+ 	}
+ 
+ 	/*
+@@ -535,23 +534,23 @@ static void __init print_local_APIC(void *dummy)
+ 	 */
+ 	if (!APIC_INTEGRATED(ver) || maxlvt == 3) {
+ 		v = apic_read(APIC_RRR);
+-		printk(KERN_DEBUG "... APIC RRR: %08x\n", v);
++		pr_debug("... APIC RRR: %08x\n", v);
+ 	}
+ 
+ 	v = apic_read(APIC_LDR);
+-	printk(KERN_DEBUG "... APIC LDR: %08x\n", v);
++	pr_debug("... APIC LDR: %08x\n", v);
+ 	if (!x2apic_enabled()) {
+ 		v = apic_read(APIC_DFR);
+-		printk(KERN_DEBUG "... APIC DFR: %08x\n", v);
++		pr_debug("... APIC DFR: %08x\n", v);
+ 	}
+ 	v = apic_read(APIC_SPIV);
+-	printk(KERN_DEBUG "... APIC SPIV: %08x\n", v);
++	pr_debug("... APIC SPIV: %08x\n", v);
+ 
+-	printk(KERN_DEBUG "... APIC ISR field:\n");
++	pr_debug("... APIC ISR field:\n");
+ 	print_APIC_field(APIC_ISR);
+-	printk(KERN_DEBUG "... APIC TMR field:\n");
++	pr_debug("... APIC TMR field:\n");
+ 	print_APIC_field(APIC_TMR);
+-	printk(KERN_DEBUG "... APIC IRR field:\n");
++	pr_debug("... APIC IRR field:\n");
+ 	print_APIC_field(APIC_IRR);
+ 
+ 	if (APIC_INTEGRATED(ver)) {             /* !82489DX */
+@@ -559,46 +558,46 @@ static void __init print_local_APIC(void *dummy)
+ 			apic_write(APIC_ESR, 0);
+ 
+ 		v = apic_read(APIC_ESR);
+-		printk(KERN_DEBUG "... APIC ESR: %08x\n", v);
++		pr_debug("... APIC ESR: %08x\n", v);
+ 	}
+ 
+ 	icr = apic_icr_read();
+-	printk(KERN_DEBUG "... APIC ICR: %08x\n", (u32)icr);
+-	printk(KERN_DEBUG "... APIC ICR2: %08x\n", (u32)(icr >> 32));
++	pr_debug("... APIC ICR: %08x\n", (u32)icr);
++	pr_debug("... APIC ICR2: %08x\n", (u32)(icr >> 32));
+ 
+ 	v = apic_read(APIC_LVTT);
+-	printk(KERN_DEBUG "... APIC LVTT: %08x\n", v);
++	pr_debug("... APIC LVTT: %08x\n", v);
+ 
+ 	if (maxlvt > 3) {                       /* PC is LVT#4. */
+ 		v = apic_read(APIC_LVTPC);
+-		printk(KERN_DEBUG "... APIC LVTPC: %08x\n", v);
++		pr_debug("... APIC LVTPC: %08x\n", v);
+ 	}
+ 	v = apic_read(APIC_LVT0);
+-	printk(KERN_DEBUG "... APIC LVT0: %08x\n", v);
++	pr_debug("... APIC LVT0: %08x\n", v);
+ 	v = apic_read(APIC_LVT1);
+-	printk(KERN_DEBUG "... APIC LVT1: %08x\n", v);
++	pr_debug("... APIC LVT1: %08x\n", v);
+ 
+ 	if (maxlvt > 2) {			/* ERR is LVT#3. */
+ 		v = apic_read(APIC_LVTERR);
+-		printk(KERN_DEBUG "... APIC LVTERR: %08x\n", v);
++		pr_debug("... APIC LVTERR: %08x\n", v);
+ 	}
+ 
+ 	v = apic_read(APIC_TMICT);
+-	printk(KERN_DEBUG "... APIC TMICT: %08x\n", v);
++	pr_debug("... APIC TMICT: %08x\n", v);
+ 	v = apic_read(APIC_TMCCT);
+-	printk(KERN_DEBUG "... APIC TMCCT: %08x\n", v);
++	pr_debug("... APIC TMCCT: %08x\n", v);
+ 	v = apic_read(APIC_TDCR);
+-	printk(KERN_DEBUG "... APIC TDCR: %08x\n", v);
++	pr_debug("... APIC TDCR: %08x\n", v);
+ 
+ 	if (boot_cpu_has(X86_FEATURE_EXTAPIC)) {
+ 		v = apic_read(APIC_EFEAT);
+ 		maxlvt = (v >> 16) & 0xff;
+-		printk(KERN_DEBUG "... APIC EFEAT: %08x\n", v);
++		pr_debug("... APIC EFEAT: %08x\n", v);
+ 		v = apic_read(APIC_ECTRL);
+-		printk(KERN_DEBUG "... APIC ECTRL: %08x\n", v);
++		pr_debug("... APIC ECTRL: %08x\n", v);
+ 		for (i = 0; i < maxlvt; i++) {
+ 			v = apic_read(APIC_EILVTn(i));
+-			printk(KERN_DEBUG "... APIC EILVT%d: %08x\n", i, v);
++			pr_debug("... APIC EILVT%d: %08x\n", i, v);
+ 		}
+ 	}
+ 	pr_cont("\n");
+@@ -628,15 +627,15 @@ static void __init print_PIC(void)
+ 	if (!nr_legacy_irqs())
+ 		return;
+ 
+-	printk(KERN_DEBUG "\nprinting PIC contents\n");
++	pr_debug("\nprinting PIC contents\n");
+ 
+ 	raw_spin_lock_irqsave(&i8259A_lock, flags);
+ 
+ 	v = inb(0xa1) << 8 | inb(0x21);
+-	printk(KERN_DEBUG "... PIC  IMR: %04x\n", v);
++	pr_debug("... PIC  IMR: %04x\n", v);
+ 
+ 	v = inb(0xa0) << 8 | inb(0x20);
+-	printk(KERN_DEBUG "... PIC  IRR: %04x\n", v);
++	pr_debug("... PIC  IRR: %04x\n", v);
+ 
+ 	outb(0x0b, 0xa0);
+ 	outb(0x0b, 0x20);
+@@ -646,10 +645,10 @@ static void __init print_PIC(void)
+ 
+ 	raw_spin_unlock_irqrestore(&i8259A_lock, flags);
+ 
+-	printk(KERN_DEBUG "... PIC  ISR: %04x\n", v);
++	pr_debug("... PIC  ISR: %04x\n", v);
+ 
+ 	v = inb(0x4d1) << 8 | inb(0x4d0);
+-	printk(KERN_DEBUG "... PIC ELCR: %04x\n", v);
++	pr_debug("... PIC ELCR: %04x\n", v);
+ }
+ 
+ static int show_lapic __initdata = 1;
 -- 
-1.7.1
+1.7.10.4
 
