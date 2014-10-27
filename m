@@ -1,202 +1,252 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0114.outbound.protection.outlook.com ([65.55.169.114]:56493
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751231AbaJQJN1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Oct 2014 05:13:27 -0400
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
+Received: from mga11.intel.com ([192.55.52.93]:24557 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752178AbaJ0INR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 27 Oct 2014 04:13:17 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v2 00/16] usb: dwc3: add support for AMD NL SoC
-Date: Fri, 17 Oct 2014 16:53:25 +0800
-Message-ID: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="yes"
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Vivek Goyal <vgoyal@redhat.com>, Baoquan He <bhe@redhat.com>,
+	Matt Fleming <matt.fleming@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Christian Gmeiner <christian.gmeiner@gmail.com>,
+	"Li, Aubrey" <aubrey.li@linux.intel.com>,
+	Ryan Desfosses <ryan@desfo.org>,
+	Quentin Lambert <lambert.quentin@gmail.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "H. Peter Anvin" <hpa@linux.intel.com>,
+	Ingo Molnar <mingo@kernel.org>
+Subject: [Patch Part1 v3 13/20] x86, irq: Move IOAPIC related declarations from hw_irq.h into io_apic.h
+Date: Mon, 27 Oct 2014 16:12:04 +0800
+Message-Id: <1414397531-28254-14-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Clean up code by moving IOAPIC related declarations from hw_irq.h into
+io_apic.h.
 
-The series of patches add AMD NL SoC support for DesignWare USB3 OTG IP with
-PCI bus glue layer. This controller supported hibernation, LPM erratum and used
-the 2.80a IP version and amd own phy. Current implementation support both
-simulation and SoC platform. And already tested with gadget zero and msc tool.
-It works well on file storage gadget.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/hw_irq.h      |   33 ---------------------------------
+ arch/x86/include/asm/io_apic.h     |   23 ++++++++++++++++++++---
+ arch/x86/kernel/apic/io_apic.c     |   10 ++++++++++
+ arch/x86/kernel/crash.c            |    1 +
+ arch/x86/kernel/machine_kexec_32.c |    1 +
+ arch/x86/kernel/machine_kexec_64.c |    1 +
+ arch/x86/kernel/reboot.c           |    1 +
+ drivers/pci/hotplug/ibmphp_core.c  |    1 +
+ 8 files changed, 35 insertions(+), 36 deletions(-)
 
-
-These patches are generated on balbi/testing/next
-
-Changes from v1 -> v2
-- remove dual role function temporarily
-- add pci quirk to avoid to bind with xhci driver
-- distinguish between simulation board and soc
-- break down all the special quirks
-
-
-Patch 1:
-- add PCI device id into pci bus glue
-
-Patch 2:
-- add PCI quirk to avoid to bind with xhci
-
-Patch 3:
-- enable hibernation
-
-Patch 4:
-- distinguish between simulation board and soc
-
-Patch 5:
-- add quirks flag to be compatible for kinds of soc
-
-Patch 6 - 16:
-- as felipe's suggestion, break down all the special quirks of amd nl
-
-
-Patch set already passed all the MSC testing, detailed result is below:
-
-root@hr-ub:/home/ray/felipe/usb-tools# ./msc.sh -o /dev/sdb1
-Starting test suite: 2014年 10月 09日 星期四 18:02:41 CST
-test 0a: simple 4k read/write
-test  0: sent       3.91 MB read       0.03 MB/s write       0.03 MB/s ... success
-test 0b: simple 8k read/write
-test  0: sent       7.81 MB read       6.15 MB/s write       5.96 MB/s ... success
-test 0c: simple 16k read/write
-test  0: sent      15.62 MB read      14.30 MB/s write      12.97 MB/s ... success
-test 0d: simple 32k read/write
-test  0: sent      31.25 MB read      18.26 MB/s write      17.10 MB/s ... success
-test 0e: simple 64k read/write
-test  0: sent      62.50 MB read      22.00 MB/s write      16.33 MB/s ... success
-test 1: simple 1-sector read/write
-test  1: sent     500.00 kB read       1.05 MB/s write       0.93 MB/s ... success
-test 2: simple 8-sectors read/write
-test  2: sent       3.91 MB read       6.52 MB/s write       6.10 MB/s ... success
-test 3: simple 32-sectors read/write
-test  3: sent      15.62 MB read      14.33 MB/s write      13.14 MB/s ... success
-test 4: simple 64-sectors read/write
-test  4: sent      31.25 MB read      17.79 MB/s write      16.38 MB/s ... success
-test 5a: scatter/gather for 2-sectors buflen 4k
-test  5: sent    1000.00 kB read       1.85 MB/s write       1.56 MB/s ... success
-test 5b: scatter/gather for 2-sectors buflen 8k
-test  5: sent    1000.00 kB read       1.91 MB/s write       1.63 MB/s ... success
-test 5c: scatter/gather for 2-sectors buflen 16k
-test  5: sent    1000.00 kB read       1.94 MB/s write       1.62 MB/s ... success
-test 5d: scatter/gather for 2-sectors buflen 32k
-test  5: sent    1000.00 kB read       1.93 MB/s write       1.64 MB/s ... success
-test 5e: scatter/gather for 2-sectors buflen 64k
-test  5: sent    1000.00 kB read       1.96 MB/s write       1.68 MB/s ... success
-test 6a: scatter/gather for 8-sectors buflen 4k
-test  6: sent       3.91 MB read       6.53 MB/s write       6.05 MB/s ... success
-test 6b: scatter/gather for 8-sectors buflen 8k
-test  6: sent       3.91 MB read       6.56 MB/s write       5.98 MB/s ... success
-test 6c: scatter/gather for 8-sectors buflen 16k
-test  6: sent       3.91 MB read       6.55 MB/s write       6.15 MB/s ... success
-test 6d: scatter/gather for 8-sectors buflen 32k
-test  6: sent       3.91 MB read       6.51 MB/s write       6.06 MB/s ... success
-test 6e: scatter/gather for 8-sectors buflen 64k
-test  6: sent       3.91 MB read       6.50 MB/s write       6.06 MB/s ... success
-test 7a: scatter/gather for 32-sectors buflen 16k
-test  7: sent      15.62 MB read      14.23 MB/s write      12.99 MB/s ... success
-test 7b: scatter/gather for 32-sectors buflen 32k
-test  7: sent      15.62 MB read      14.27 MB/s write      12.91 MB/s ... success
-test 7c: scatter/gather for 32-sectors buflen 64k
-test  7: sent      15.62 MB read      14.73 MB/s write      13.00 MB/s ... success
-test 8a: scatter/gather for 64-sectors buflen 32k
-test  8: sent      31.25 MB read      18.42 MB/s write      16.65 MB/s ... success
-test 8b: scatter/gather for 64-sectors buflen 64k
-test  8: sent      31.25 MB read      17.70 MB/s write      16.39 MB/s ... success
-test 9: scatter/gather for 128-sectors buflen 64k
-test  9: sent      62.50 MB read      21.14 MB/s write      16.07 MB/s ... success
-test 10: read over the end of the block device
-test 10: sent      62.01 MB read       0.00 MB/s write       0.00 MB/s ... success
-test 11: lseek past the end of the block device
-test 11: sent       0.00 B read       0.00 MB/s write       0.00 MB/s ... success
-test 12: write over the end of the block device
-test 12: sent       0.00 B read       0.00 MB/s write       0.00 MB/s ... success
-test 13: write 1 sg, read 8 random size sgs
-test 13: sent      62.50 MB read      21.61 MB/s write      16.21 MB/s ... success
-test 14: write 8 random size sgs, read 1 sg
-test 14: sent      62.50 MB read      22.52 MB/s write      18.61 MB/s ... success
-test 15: write and read 8 random size sgs
-test 15: sent      62.50 MB read      22.31 MB/s write      19.28 MB/s ... success
-test 16a: read with heap allocated buffer
-test 16: sent      62.50 MB read      21.69 MB/s write       0.00 MB/s ... success
-test 16b: read with stack allocated buffer
-test 16: sent      62.50 MB read      21.42 MB/s write       0.00 MB/s ... success
-test 17a: write with heap allocated buffer
-test 17: sent       0.00 B read       0.00 MB/s write      19.94 MB/s ... success
-test 17b: write with stack allocated buffer
-test 17: sent       0.00 B read       0.00 MB/s write      20.09 MB/s ... success
-test 18a: write 0x00 and read it back
-test 18: sent      62.50 MB read      21.94 MB/s write      16.96 MB/s ... success
-test 18b: write 0xff and read it back
-test 18: sent      62.50 MB read      19.89 MB/s write      15.51 MB/s ... success
-test 18c: write 0x55 and read it back
-test 18: sent      62.50 MB read      22.00 MB/s write      16.62 MB/s ... success
-test 18d: write 0xaa and read it back
-test 18: sent      62.50 MB read      21.81 MB/s write      16.53 MB/s ... success
-test 18e: write 0x11 and read it back
-test 18: sent      62.50 MB read      22.33 MB/s write      17.00 MB/s ... success
-test 18f: write 0x22 and read it back
-test 18: sent      62.50 MB read      21.66 MB/s write      16.44 MB/s ... success
-test 18g: write 0x44 and read it back
-test 18: sent      62.50 MB read      22.23 MB/s write      17.08 MB/s ... success
-test 18h: write 0x88 and read it back
-test 18: sent      62.50 MB read      21.54 MB/s write      16.17 MB/s ... success
-test 18i: write 0x33 and read it back
-test 18: sent      62.50 MB read      21.20 MB/s write      16.58 MB/s ... success
-test 18j: write 0x66 and read it back
-test 18: sent      62.50 MB read      21.82 MB/s write      16.13 MB/s ... success
-test 18k: write 0x99 and read it back
-test 18: sent      62.50 MB read      21.92 MB/s write      16.36 MB/s ... success
-test 18l: write 0xcc and read it back
-test 18: sent      62.50 MB read      22.37 MB/s write      16.74 MB/s ... success
-test 18m: write 0x77 and read it back
-test 18: sent      62.50 MB read      22.34 MB/s write      16.24 MB/s ... success
-test 18n: write 0xbb and read it back
-test 18: sent      62.50 MB read      21.82 MB/s write      16.23 MB/s ... success
-test 18o: write 0xdd and read it back
-test 18: sent      62.50 MB read      21.38 MB/s write      16.48 MB/s ... success
-test 18p: write 0xee and read it back
-test 18: sent      62.50 MB read      22.33 MB/s write      16.15 MB/s ... success
-Test suite ended: 2014年 10月 09日 星期四 18:13:36 CST
-
-
-Thanks,
-Rui
-
-Huang Rui (16):
-  usb: dwc3: add AMD NL support
-  pci: quirks: add quirk to avoid AMD NL to bind with xhci
-  usb: dwc3: enable hibernation if to be supported
-  usb: dwc3: add a flag to check if it is fpga board
-  usb: dwc3: add quirks support to be compatible for kinds of SoCs
-  usb: dwc3: add disscramble quirk
-  usb: dwc3: add lpm erratum support
-  usb: dwc3: add u2exit lfps quirk
-  usb: dwc3: add P3 in U2 SS inactive quirk
-  usb: dwc3: add request p1p2p3 quirk
-  usb: dwc3: add delay p1p2p3 quirk
-  usb: dwc3: add delay phy power change quirk
-  usb: dwc3: add lfps filter quirk
-  usb: dwc3: enable rx_detect to polling lfps quirk
-  usb: dwc3: add tx demphasis quirk
-  usb: dwc3: enable usb suspend phy
-
- drivers/pci/quirks.c             | 20 ++++++++++++
- drivers/usb/dwc3/core.c          | 66 +++++++++++++++++++++++++++++++++++++++-
- drivers/usb/dwc3/core.h          | 42 +++++++++++++++++++------
- drivers/usb/dwc3/dwc3-pci.c      | 26 ++++++++++++++++
- drivers/usb/dwc3/gadget.c        |  7 +++++
- drivers/usb/dwc3/platform_data.h | 16 ++++++++++
- 6 files changed, 167 insertions(+), 10 deletions(-)
-
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index dca760e9cd12..7624fffc2822 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -154,39 +154,6 @@ static inline void lock_vector_lock(void) {}
+ static inline void unlock_vector_lock(void) {}
+ #endif	/* CONFIG_X86_LOCAL_APIC */
+ 
+-/* IOAPIC */
+-#ifdef CONFIG_X86_IO_APIC
+-struct io_apic_irq_attr {
+-	int ioapic;
+-	int ioapic_pin;
+-	int trigger;
+-	int polarity;
+-};
+-
+-static inline void set_io_apic_irq_attr(struct io_apic_irq_attr *irq_attr,
+-					int ioapic, int ioapic_pin,
+-					int trigger, int polarity)
+-{
+-	irq_attr->ioapic	= ioapic;
+-	irq_attr->ioapic_pin	= ioapic_pin;
+-	irq_attr->trigger	= trigger;
+-	irq_attr->polarity	= polarity;
+-}
+-
+-extern void setup_IO_APIC(void);
+-extern void enable_IO_APIC(void);
+-extern void disable_IO_APIC(void);
+-extern void setup_ioapic_dest(void);
+-extern int IO_APIC_get_PCI_irq_vector(int bus, int devfn, int pin);
+-extern void print_IO_APICs(void);
+-
+-extern unsigned long io_apic_irqs;
+-#define IO_APIC_IRQ(x) (((x) >= NR_IRQS_LEGACY) || ((1 << (x)) & io_apic_irqs))
+-#else	/* CONFIG_X86_IO_APIC */
+-#define IO_APIC_IRQ(x)	0
+-static inline void print_IO_APICs(void) {}
+-#endif	/* CONFIG_X86_IO_APIC */
+-
+ /* Statistics */
+ extern atomic_t irq_err_count;
+ extern atomic_t irq_mis_count;
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index a2245cb5ca3f..533803dc3733 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -132,6 +132,10 @@ extern int noioapicquirk;
+ /* -1 if "noapic" boot option passed */
+ extern int noioapicreroute;
+ 
++extern unsigned long io_apic_irqs;
++
++#define IO_APIC_IRQ(x) (((x) >= NR_IRQS_LEGACY) || ((1 << (x)) & io_apic_irqs))
++
+ /*
+  * If we use the IO-APIC for IRQ routing, disable automatic
+  * assignment of PCI IRQ's.
+@@ -139,7 +143,6 @@ extern int noioapicreroute;
+ #define io_apic_assign_pci_irqs \
+ 	(mp_irq_entries && !skip_ioapic_setup && io_apic_irqs)
+ 
+-struct io_apic_irq_attr;
+ struct irq_cfg;
+ extern void ioapic_insert_resources(void);
+ 
+@@ -157,6 +160,13 @@ extern int restore_ioapic_entries(void);
+ extern void setup_ioapic_ids_from_mpc(void);
+ extern void setup_ioapic_ids_from_mpc_nocheck(void);
+ 
++struct io_apic_irq_attr {
++	int ioapic;
++	int ioapic_pin;
++	int trigger;
++	int polarity;
++};
++
+ enum ioapic_domain_type {
+ 	IOAPIC_DOMAIN_INVALID,
+ 	IOAPIC_DOMAIN_LEGACY,
+@@ -196,6 +206,7 @@ extern int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node);
+ extern void __init pre_init_apic_IRQ0(void);
+ 
+ extern void mp_save_irq(struct mpc_intsrc *m);
++extern bool mp_should_keep_irq(struct device *dev);
+ 
+ extern void disable_ioapic_support(void);
+ 
+@@ -226,13 +237,19 @@ static inline void io_apic_modify(unsigned int apic, unsigned int reg, unsigned
+ 
+ extern void io_apic_eoi(unsigned int apic, unsigned int vector);
+ 
+-extern bool mp_should_keep_irq(struct device *dev);
+-
++extern void setup_IO_APIC(void);
++extern void enable_IO_APIC(void);
++extern void disable_IO_APIC(void);
++extern void setup_ioapic_dest(void);
++extern int IO_APIC_get_PCI_irq_vector(int bus, int devfn, int pin);
++extern void print_IO_APICs(void);
+ #else  /* !CONFIG_X86_IO_APIC */
+ 
++#define IO_APIC_IRQ(x)		0
+ #define io_apic_assign_pci_irqs 0
+ #define setup_ioapic_ids_from_mpc x86_init_noop
+ static inline void ioapic_insert_resources(void) { }
++static inline void print_IO_APICs(void) {}
+ #define gsi_top (NR_IRQS_LEGACY)
+ static inline int mp_find_ioapic(u32 gsi) { return 0; }
+ static inline u32 mp_pin_to_gsi(int ioapic, int pin) { return UINT_MAX; }
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index b52166a69189..b6f249ac5d20 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3015,6 +3015,16 @@ int mp_ioapic_registered(u32 gsi_base)
+ 	return 0;
+ }
+ 
++static inline void set_io_apic_irq_attr(struct io_apic_irq_attr *irq_attr,
++					int ioapic, int ioapic_pin,
++					int trigger, int polarity)
++{
++	irq_attr->ioapic	= ioapic;
++	irq_attr->ioapic_pin	= ioapic_pin;
++	irq_attr->trigger	= trigger;
++	irq_attr->polarity	= polarity;
++}
++
+ int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 		     irq_hw_number_t hwirq)
+ {
+diff --git a/arch/x86/kernel/crash.c b/arch/x86/kernel/crash.c
+index f5ab56d14287..aceb2f90c716 100644
+--- a/arch/x86/kernel/crash.c
++++ b/arch/x86/kernel/crash.c
+@@ -28,6 +28,7 @@
+ #include <asm/nmi.h>
+ #include <asm/hw_irq.h>
+ #include <asm/apic.h>
++#include <asm/io_apic.h>
+ #include <asm/hpet.h>
+ #include <linux/kdebug.h>
+ #include <asm/cpu.h>
+diff --git a/arch/x86/kernel/machine_kexec_32.c b/arch/x86/kernel/machine_kexec_32.c
+index 72e8e310258d..469b23d6acc2 100644
+--- a/arch/x86/kernel/machine_kexec_32.c
++++ b/arch/x86/kernel/machine_kexec_32.c
+@@ -20,6 +20,7 @@
+ #include <asm/tlbflush.h>
+ #include <asm/mmu_context.h>
+ #include <asm/apic.h>
++#include <asm/io_apic.h>
+ #include <asm/cpufeature.h>
+ #include <asm/desc.h>
+ #include <asm/cacheflush.h>
+diff --git a/arch/x86/kernel/machine_kexec_64.c b/arch/x86/kernel/machine_kexec_64.c
+index 485981059a40..415480d3ea84 100644
+--- a/arch/x86/kernel/machine_kexec_64.c
++++ b/arch/x86/kernel/machine_kexec_64.c
+@@ -22,6 +22,7 @@
+ #include <asm/pgtable.h>
+ #include <asm/tlbflush.h>
+ #include <asm/mmu_context.h>
++#include <asm/io_apic.h>
+ #include <asm/debugreg.h>
+ #include <asm/kexec-bzimage64.h>
+ 
+diff --git a/arch/x86/kernel/reboot.c b/arch/x86/kernel/reboot.c
+index 17962e667a91..bae6c609888e 100644
+--- a/arch/x86/kernel/reboot.c
++++ b/arch/x86/kernel/reboot.c
+@@ -12,6 +12,7 @@
+ #include <acpi/reboot.h>
+ #include <asm/io.h>
+ #include <asm/apic.h>
++#include <asm/io_apic.h>
+ #include <asm/desc.h>
+ #include <asm/hpet.h>
+ #include <asm/pgtable.h>
+diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
+index d261e623541f..96c5c729cdbc 100644
+--- a/drivers/pci/hotplug/ibmphp_core.c
++++ b/drivers/pci/hotplug/ibmphp_core.c
+@@ -36,6 +36,7 @@
+ #include <linux/wait.h>
+ #include "../pci.h"
+ #include <asm/pci_x86.h>		/* for struct irq_routing_table */
++#include <asm/io_apic.h>
+ #include "ibmphp.h"
+ 
+ #define attn_on(sl)  ibmphp_hpc_writeslot (sl, HPC_SLOT_ATTNON)
 -- 
-1.9.1
+1.7.10.4
 
