@@ -1,96 +1,125 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 30 Oct 2014 09:18:57 -0500
-From: Felipe Balbi <balbi@ti.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: <balbi@ti.com>, Huang Rui <ray.huang@amd.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: Re: [PATCH v4 01/20] usb: dwc3: enable hibernation if to be supported
-Message-ID: <20141030141857.GJ6482@saruman>
-Reply-To: <balbi@ti.com>
-References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
- <4077930.b7qzaS4pBb@wuerfel>
- <20141030140832.GH6482@saruman>
- <2025342.7A7Ashtuyx@wuerfel>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:39253 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752929AbaJ0Ml4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Oct 2014 08:41:56 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 14/16] Sparc/MSI: Use MSI controller framework to configure MSI/MSI-X irq
+Date: Mon, 27 Oct 2014 21:22:20 +0800
+Message-ID: <1414416142-31239-15-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
+References: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="cDtQGJ/EJIRf/Cpq"
-In-Reply-To: <2025342.7A7Ashtuyx@wuerfel>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---cDtQGJ/EJIRf/Cpq
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Use MSI controller framework instead of arch MSI functions to configure
+MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
 
-On Thu, Oct 30, 2014 at 03:14:17PM +0100, Arnd Bergmann wrote:
-> On Thursday 30 October 2014 09:08:32 Felipe Balbi wrote:
-> > On Thu, Oct 30, 2014 at 12:35:56PM +0100, Arnd Bergmann wrote:
-> > > On Thursday 30 October 2014 18:08:26 Huang Rui wrote:
-> > > > It enables hibernation if the function is set in coreConsultant.
-> > > >=20
-> > > > Suggested-by: Felipe Balbi <balbi@ti.com>
-> > > > Signed-off-by: Huang Rui <ray.huang@amd.com>
-> > > > Signed-off-by: Felipe Balbi <balbi@ti.com>
-> > > >=20
-> > >=20
-> > > Something went wrong with the Signed-off-by lines here.=20
-> > > You should never add someone else's Signed-off-by below yours.
-> > >=20
-> > > I took a brief look at the entire series and the patches all look good
-> > > to me, but you have made the same mistake with the Signed-off-by
-> > > multiple times.
-> >=20
-> > there are no mistakes, I just asked Huang to resend what I had on my
-> > testing/next because it had not been sent to devicetree mailing list.
-> >=20
->=20
-> It's definitely a tricky question what the right Signed-off-by
-> chain is in this case, I guess strictly speaking it could have
-> been=20
->=20
-> Suggested-by: Felipe Balbi <balbi@ti.com>
-> Signed-off-by: Huang Rui <ray.huang@amd.com>
-> Signed-off-by: Felipe Balbi <balbi@ti.com>
-> Signed-off-by: Huang Rui <ray.huang@amd.com>
->=20
-> which could correctly track where the patches went, but it's also
-> somewhat silly.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Acked-by: David S. Miller <davem@davemloft.net>
+---
+ arch/sparc/kernel/pci.c      |   20 ++++++++++++++++++--
+ arch/sparc/kernel/pci_impl.h |    3 +++
+ 2 files changed, 21 insertions(+), 2 deletions(-)
 
-somewhat ? You don't need to be so black and white.
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index b36365f..c691a10 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -656,6 +656,9 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ 
+ 	printk("PCI: Scanning PBM %s\n", node->full_name);
+ 
++#ifdef CONFIG_PCI_MSI
++	pbm->msi_ctrl = &sparc_msi_ctrl;
++#endif
+ 	pci_add_resource_offset(&resources, &pbm->io_space,
+ 				pbm->io_space.start);
+ 	pci_add_resource_offset(&resources, &pbm->mem_space,
+@@ -905,7 +908,15 @@ int pci_domain_nr(struct pci_bus *pbus)
+ EXPORT_SYMBOL(pci_domain_nr);
+ 
+ #ifdef CONFIG_PCI_MSI
+-int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
++struct msi_controller *pcibios_msi_controller(struct pci_bus *bus)
++{
++	struct pci_pbm_info *pbm = bus->sysdata;
++
++	return pbm->msi_ctrl;
++}
++
++static int sparc_setup_msi_irq(struct msi_controller *ctrl,
++		struct pci_dev *pdev, struct msi_desc *desc)
+ {
+ 	struct pci_pbm_info *pbm = pdev->dev.archdata.host_controller;
+ 	unsigned int irq;
+@@ -916,7 +927,7 @@ int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
+ 	return pbm->setup_msi_irq(&irq, pdev, desc);
+ }
+ 
+-void arch_teardown_msi_irq(unsigned int irq)
++static void sparc_teardown_msi_irq(struct msi_controller *ctrl, unsigned int irq)
+ {
+ 	struct msi_desc *entry = irq_get_msi_desc(irq);
+ 	struct pci_dev *pdev = entry->dev;
+@@ -925,6 +936,11 @@ void arch_teardown_msi_irq(unsigned int irq)
+ 	if (pbm->teardown_msi_irq)
+ 		pbm->teardown_msi_irq(irq, pdev);
+ }
++
++struct msi_controller sparc_msi_ctrl = {
++	.setup_irq = sparc_setup_msi_irq,
++	.teardown_irq = sparc_teardown_msi_irq,
++};
+ #endif /* !(CONFIG_PCI_MSI) */
+ 
+ static void ali_sound_dma_hack(struct pci_dev *pdev, int set_bit)
+diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
+index 75803c7..e02642d 100644
+--- a/arch/sparc/kernel/pci_impl.h
++++ b/arch/sparc/kernel/pci_impl.h
+@@ -55,6 +55,8 @@ struct sparc64_msiq_cookie {
+ 	struct pci_pbm_info *pbm;
+ 	unsigned long msiqid;
+ };
++
++extern struct msi_controller sparc_msi_ctrl;
+ #endif
+ 
+ struct pci_pbm_info {
+@@ -132,6 +134,7 @@ struct pci_pbm_info {
+ 	void				*msi_queues;
+ 	unsigned long			*msi_bitmap;
+ 	unsigned int			*msi_irq_table;
++	struct msi_controller *msi_ctrl;
+ 	int (*setup_msi_irq)(unsigned int *irq_p, struct pci_dev *pdev,
+ 			     struct msi_desc *entry);
+ 	void (*teardown_msi_irq)(unsigned int irq, struct pci_dev *pdev);
+-- 
+1.7.1
 
---=20
-balbi
-
---cDtQGJ/EJIRf/Cpq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJUUkjRAAoJEIaOsuA1yqREjk8P/1ZrLRuZqVFKhnwUAAE3ZVzA
-5QsPgWItY6dIvCRDESvI0y4QMJGJZ/IZqtcgH3D86hjLIoGntQJicuUCeiEniwXR
-Z94v9U8CjaZuUUB78pdXtzmgWuykw9yyVdhKNHTz4hS2azpG8nMl1AFgYOiCMjub
-a+9cLLKs/Eov3YLGwfet5mShMgrnb/2SG/JgHafL6E/jIieaISFcRfEq5Sn6r7Gi
-iEFj2sdNsjilOYnL+MdoL6aBn6h0Q/NnUY7ao6s+Mw1+3G/NCQ8+QYxLDQ6fP02p
-h2RSmy+R7w8bNRFK3hj0cx/qSX5jdSkLtdb4EbszJZIfWSlWNWsy4RRE2Nd/QwmE
-0my/nOMfy1QHSK8dgwb+PKpuNlAKXeKpg6Z+Zjm+R1xwFPIzwZennR0LRHWgYjT6
-n9G2A4XOww9yOIQnSVymsTbU+AneyDAnmic4wu5XgR6uOM6hvE9BGCDyRNOpwktk
-dQMgR1QSIQRwFxJevv+IsMWfyqwHawBBZHmtjx7E7+bQtoxXC2rGNhpn5SUrTWVx
-KWI7pG65Y5Y/yQHVLIjkf8IsgBaIanYhYCVMQiLYp90uSCGUzaQ+dgTWRSuU1SB6
-egA4m98N31hJzZ2gctduFYtCHPSurzhVSG0NceR5YGs2E5lAUSVhHBCE00e0oULm
-jCA0LeYb4AFee/QGEPlr
-=mF9r
------END PGP SIGNATURE-----
-
---cDtQGJ/EJIRf/Cpq--
