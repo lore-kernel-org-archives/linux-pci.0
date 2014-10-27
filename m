@@ -1,142 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47766 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752107AbaJWNxn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 23 Oct 2014 09:53:43 -0400
-Message-ID: <1414072370.2376.83.camel@localhost.localdomain>
-Subject: Re: [PATCH v4] PCI: add kernel parameter to override devid<->driver
- mapping.
-From: Marcel Apfelbaum <marcel.a@redhat.com>
-To: Stuart Yoder <stuart.yoder@freescale.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"marcel@redhat.com" <marcel@redhat.com>,
-	"mst@redhat.com" <mst@redhat.com>
-Date: Thu, 23 Oct 2014 16:52:50 +0300
-In-Reply-To: <78dc034416ad42f1a2c8343ea1401fae@CY1PR0301MB0748.namprd03.prod.outlook.com>
-References: <1413813882-27047-1-git-send-email-marcel.a@redhat.com>
-	 <1414002755.4202.253.camel@ul30vt.home>
-	 <1414067521.2376.54.camel@localhost.localdomain>
-	 <78dc034416ad42f1a2c8343ea1401fae@CY1PR0301MB0748.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, Borislav Petkov <bp@alien8.de>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v3 00/20] Prepare for enabling hierarchy irqdomain on x86
+Date: Mon, 27 Oct 2014 16:11:51 +0800
+Message-Id: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2014-10-23 at 13:51 +0000, Stuart Yoder wrote:
-> 
-> > -----Original Message-----
-> > From: Marcel Apfelbaum [mailto:marcel.a@redhat.com]
-> > Sent: Thursday, October 23, 2014 7:32 AM
-> > To: Alex Williamson
-> > Cc: linux-pci@vger.kernel.org; bhelgaas@google.com; linux-kernel@vger.kernel.org; marcel@redhat.com;
-> > mst@redhat.com; Yoder Stuart-B08248
-> > Subject: Re: [PATCH v4] PCI: add kernel parameter to override devid<->driver mapping.
-> > 
-> > On Wed, 2014-10-22 at 12:32 -0600, Alex Williamson wrote:
-> > > [cc+ stuart]
-> > >
-> > > On Mon, 2014-10-20 at 17:04 +0300, Marcel Apfelbaum wrote:
-> > > > Scanning a lot of devices during boot requires a lot of time.
-> > > > On other scenarios there is a need to bind a driver to a specific slot.
-> > > >
-> > > > Binding devices to pci-stub driver does not work,
-> > > > as it will not differentiate between devices of the
-> > > > same type. Using some start scripts is error prone.
-> > > >
-> > > > The solution leverages driver_override functionality introduced by
-> > > >
-> > > > 	commit: 782a985d7af26db39e86070d28f987cad21313c0
-> > > > 	Author: Alex Williamson <alex.williamson@redhat.com>
-> > > > 	Date:   Tue May 20 08:53:21 2014 -0600
-> > > >
-> > > >     	PCI: Introduce new device binding path using pci_dev.driver_override
-> > > >
-> > > > In order to bind PCI slots to specific drivers use:
-> > > > 	pci=driver[xxxx:xx:xx.x]=foo,driver[xxxx:xx:xx.x]=bar,...
-> > > >
-> > > > Signed-off-by: Marcel Apfelbaum <marcel.a@redhat.com>
-> > > > ---
-> > > > v3 -> v4:
-> > > >  - Addressed Alex Williamson's comments:
-> > > >    - Modified the type of driver_override_entry's fields
-> > > >    - Used PCI_DEVFN when appropriated
-> > > >    - Removed redundant checks
-> > > >    - Replaced BUG_ON with pr_err messages
-> > > >    - Simpler command line parsing
-> > > >  - Addressed Michael S. Tsirkin comments
-> > > >    - removed DRIVER_OVERRIDE_NAME_LENGTH limitation
-> > > > v2 -> v3:
-> > > >  - Corrected subject line
-> > > > v1 -> v2:
-> > > >  - Addressed Michael S. Tsirkin comments
-> > > >    - Removed 32 slots limitation
-> > > >    - Better handling of memory allocation failures
-> > > >      (preferred BUG_ON over error messages)
-> > > >  - Addressed Alex Williamson's comments:
-> > > >    - Modified commit message to show parameter usage more clear.
-> > > >  - I preferred to re-use parse_args instead of manually using
-> > > >    strstr in order to better comply with command line parsing
-> > > >    rules.
-> > > >  - I didn't use any locking when parsing the command line args
-> > > >    (see parse_done usage) assuming that first call will be
-> > > >    early in system boot and no race can occur. Please correct
-> > > >    me if I am wrong.
-> > > >
-> > > > Notes:
-> > > >  - I have further ideas on top of this patch based on your reviews.
-> > > >    I thought of:
-> > > >    - Use wildcards to specify entire buses/devices, something like:
-> > > >      	driver[0001:02:*.*]=pci-stub
-> > > >    - Use comma to separate several devices:
-> > > >      	driver[0001:02:03.4,0001:02:04.0,...]=pci-stub
-> > > >    - Make domain optional:
-> > > >    	driver[00:03.0]=pci-stub
-> > > >
-> > > > Comments will be appreciated,
-> > > > Thanks,
-> > > > Marcel
-> > > >  Documentation/kernel-parameters.txt |   4 ++
-> > > >  drivers/pci/bus.c                   | 111 ++++++++++++++++++++++++++++++++++++
-> > > >  drivers/pci/pci.c                   |   2 +
-> > > >  3 files changed, 117 insertions(+)
-> > >
-> > > The driver_override feature that we're making use of here is also going
-> > > to be supported by platform devices and potentially more bustypes in the
-> > > future, so I'm concerned that making a pci specific kernel parameter is
-> > > too shortsighted.  Instead we could hook on to BUS_NOTIFY_ADD_DEVICE for
-> > > bustypes that support driver_override so we can have a common interface.
-> > The real question here if those bus types/devices would benefit from this
-> > feature, and I also must confess that I have no knowledge of the other buses.
-> > Can anyone confirm that it does make sense for them?
-> 
-> We don't have vfio-platform in use yet, so not much actual real world user
-> experience yet.  But, I think it makes sense.   Especially, given that we are
-> inventing a kernel parameter I think we should design the syntax so that it
-> can work buses can implement support for this.  The driver_override mechanism
-> is not bus specific, so let's not make the kernel parameter bus specific.
-Make sense, point taken.
-I'll come up with something.
+We plan to restructure x86 interrupt code based on hierarchy irqdomain,
+that is to build irqdomains for CPU vector, interrupt remapping unit,
+IOAPIC, MSI and HPET etc and orgonize those irqdomains in hierarchy mode.
 
-Thank you Stuart,
-Marcel
-> 
-> > > Perhaps:
-> > >
-> > > driver_override=pci,0000:02:00.0=pci-stub;platform,fakename=vfio-platform
-> > >
-> > > Finding delimiters that don't conflict may be challenging.  Also, can we
-> > > assume that bus-name:dev-name is unique for every bustype?  It is for
-> > > pci, platform?
-> > For PCI, sure the domain:bus:dev.func is unique, for platform I have no idea,
-> > can anyone that knows "platform" confirm or deny?
-> 
-> Yes, dev-name will be unique.  All platform devices are under a single
-> platform bus.
-> 
-> Stuart
+This patchset is preparation work to enable hierarchy irqdomain on x86
+platforms. It splits out code for vector management, MSI, HTIRQ from
+ioapic.c into separate files. It also introduces some helper functions
+to access irq_cfg, which will ease transition to hierarchy irqdomain
+later.
 
+It's based on patchset at:
+https://lkml.org/lkml/2014/10/27/7
 
+And you may access it at:
+https://github.com/jiangliu/linux.git irqdomain/p1v3
+
+V2->V3:
+1) Rebase to v3.18-rc2
+V1->V2:
+1) fix a building failure found by 0day test bed
+2) rebase to latest upstream kernel
+
+Jiang Liu (19):
+  ACPI, irq, x86: Get rid of special handling of GSI for ACPI SCI
+  x86, irq, ACPI: Fix building warning of unused code
+  x86, irq: Kill fourth parameter of IO_APIC_get_PCI_irq_vector()
+  x86, irq: Refine hw_irq.h to prepare for irqdomain support
+  x86, irq: Rename local APIC related functions in io_apic.c as
+    apic_xxx()
+  x86, irq: Protect __clear_irq_vector() with vector_lock
+  x86, irq: Introduce helpers to access struct irq_cfg
+  x86, irq: Move local APIC related code from io_apic.c into vector.c
+  x86, irq: Replace printk(KERN_LVL) with pr_lvl() utilities
+  x86, irq: Move PCI MSI related code from io_apic.c into msi.c
+  x86, irq: Move HT IRQ related code from io_apic.c into htirq.c
+  x86, irq: Move IOAPIC related declarations from hw_irq.h into
+    io_apic.h
+  x86, irq: Move IRQ initialization routines from io_apic.c into
+    vector.c
+  x86, irq: Make MSI and HT_IRQ indepenent of X86_IO_APIC
+  x86, irq: Use helpers to access irq_cfg data structure associated
+    with IRQ
+  x86: irq_remapping: Use helpers to access irq_cfg data structure
+    associated with IRQ
+  iommu/vt-d: Use helpers to access irq_cfg data structure associated
+    with IRQ
+  iommu/amd: Use helpers to access irq_cfg data structure associated
+    with IRQ
+  x86, irq: Fix link error of undefined reference to
+    send_cleanup_vector
+
+Yinghai Lu (1):
+  x86, irq: Convert irq_2_pin list to generic list
+
+ arch/x86/Kconfig                    |    6 +-
+ arch/x86/include/asm/hw_irq.h       |   76 +--
+ arch/x86/include/asm/io_apic.h      |   29 +-
+ arch/x86/include/asm/pci.h          |    3 +
+ arch/x86/kernel/acpi/boot.c         |   12 +-
+ arch/x86/kernel/apic/Makefile       |    4 +-
+ arch/x86/kernel/apic/htirq.c        |  107 ++++
+ arch/x86/kernel/apic/io_apic.c      | 1100 ++---------------------------------
+ arch/x86/kernel/apic/msi.c          |  286 +++++++++
+ arch/x86/kernel/apic/vector.c       |  717 +++++++++++++++++++++++
+ arch/x86/kernel/crash.c             |    1 +
+ arch/x86/kernel/irqinit.c           |   22 -
+ arch/x86/kernel/machine_kexec_32.c  |    1 +
+ arch/x86/kernel/machine_kexec_64.c  |    1 +
+ arch/x86/kernel/reboot.c            |    1 +
+ arch/x86/pci/irq.c                  |    6 +-
+ arch/x86/platform/uv/uv_irq.c       |    6 +-
+ drivers/iommu/amd_iommu.c           |   14 +-
+ drivers/iommu/intel_irq_remapping.c |   10 +-
+ drivers/iommu/irq_remapping.c       |    6 +-
+ drivers/pci/Kconfig                 |    2 +-
+ drivers/pci/hotplug/ibmphp_core.c   |    6 +-
+ 22 files changed, 1238 insertions(+), 1178 deletions(-)
+ create mode 100644 arch/x86/kernel/apic/htirq.c
+ create mode 100644 arch/x86/kernel/apic/msi.c
+ create mode 100644 arch/x86/kernel/apic/vector.c
+
+-- 
+1.7.10.4
 
