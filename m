@@ -1,114 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0117.outbound.protection.outlook.com ([157.56.111.117]:1484
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752972AbaJQJPl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 17 Oct 2014 05:15:41 -0400
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v2 09/16] usb: dwc3: add P3 in U2 SS inactive quirk
-Date: Fri, 17 Oct 2014 16:53:34 +0800
-Message-ID: <1413536021-4886-10-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
-References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+Received: from mail-qg0-f54.google.com ([209.85.192.54]:41577 "EHLO
+	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750873AbaJ0RXt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Oct 2014 13:23:49 -0400
+Received: by mail-qg0-f54.google.com with SMTP id q108so929842qgd.27
+        for <linux-pci@vger.kernel.org>; Mon, 27 Oct 2014 10:23:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <bug-86951-41252@https.bugzilla.kernel.org/>
+References: <bug-86951-41252@https.bugzilla.kernel.org/>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 27 Oct 2014 11:23:26 -0600
+Message-ID: <CAErSpo7LiM9zpxhNgOYWRg1njE4XSDh8OxU1SOJBG-VReaADeA@mail.gmail.com>
+Subject: Re: [Bug 86951] New: iommu regression
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Cc: "alex.williamson@redhat.com" <alex.williamson@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-AMD NL needs to enable P3 OK for U2/SSInactive on USB3PIPE register.
+[+to linux-pci, +cc Alex]
 
-Signed-off-by: Huang Rui <ray.huang@amd.com>
----
- drivers/usb/dwc3/core.c          | 20 ++++++++++++++++++++
- drivers/usb/dwc3/core.h          |  1 +
- drivers/usb/dwc3/dwc3-pci.c      |  3 ++-
- drivers/usb/dwc3/platform_data.h |  1 +
- 4 files changed, 24 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index 7322d85..9d0a249 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -365,6 +365,24 @@ static void dwc3_cache_hwparams(struct dwc3 *dwc)
- }
- 
- /**
-+ * dwc3_phy_setup - Configure USB3 PHY Interface of DWC3 Core
-+ * @dwc: Pointer to our controller context structure
-+ */
-+static void dwc3_phy_setup(struct dwc3 *dwc)
-+{
-+	u32 reg;
-+
-+	reg = dwc3_readl(dwc->regs, DWC3_GUSB3PIPECTL(0));
-+
-+	if (dwc->quirks & DWC3_QUIRK_U2SSINP3OK)
-+		reg |= DWC3_GUSB3PIPECTL_U2SSINP3OK;
-+
-+	dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
-+
-+	mdelay(100);
-+}
-+
-+/**
-  * dwc3_core_init - Low-level initialization of DWC3 Core
-  * @dwc: Pointer to our controller context structure
-  *
-@@ -484,6 +502,8 @@ static int dwc3_core_init(struct dwc3 *dwc)
- 
- 	dwc3_writel(dwc->regs, DWC3_GCTL, reg);
- 
-+	dwc3_phy_setup(dwc);
-+
- 	ret = dwc3_alloc_scratch_buffers(dwc);
- 	if (ret)
- 		goto err1;
-diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-index 3d27f10..71cb255 100644
---- a/drivers/usb/dwc3/core.h
-+++ b/drivers/usb/dwc3/core.h
-@@ -176,6 +176,7 @@
- 
- /* Global USB3 PIPE Control Register */
- #define DWC3_GUSB3PIPECTL_PHYSOFTRST	(1 << 31)
-+#define DWC3_GUSB3PIPECTL_U2SSINP3OK	(1 << 29)
- #define DWC3_GUSB3PIPECTL_SUSPHY	(1 << 17)
- 
- /* Global TX Fifo Size Register */
-diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
-index cdb9b04..1235eb3 100644
---- a/drivers/usb/dwc3/dwc3-pci.c
-+++ b/drivers/usb/dwc3/dwc3-pci.c
-@@ -150,7 +150,8 @@ static int dwc3_pci_probe(struct pci_dev *pci,
- 			PCI_DEVICE_ID_AMD_NL) {
- 		dwc3_pdata.has_lpm_erratum = true;
- 		dwc3_pdata.quirks |= DWC3_QUIRK_AMD_NL
--			| DWC3_QUIRK_U2EXIT_LFPS;
-+			| DWC3_QUIRK_U2EXIT_LFPS
-+			| DWC3_QUIRK_U2SSINP3OK;
- 	}
- 
- 	ret = platform_device_add_resources(dwc3, res, ARRAY_SIZE(res));
-diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
-index a6463c0..ad03563 100644
---- a/drivers/usb/dwc3/platform_data.h
-+++ b/drivers/usb/dwc3/platform_data.h
-@@ -31,5 +31,6 @@ struct dwc3_platform_data {
- #define DWC3_QUIRK_AMD_NL		(1 << 0)
- #define DWC3_QUIRK_DISSCRAMBLE		(1 << 1)
- #define DWC3_QUIRK_U2EXIT_LFPS		(1 << 2)
-+#define DWC3_QUIRK_U2SSINP3OK		(1 << 3)
- 
- };
--- 
-1.9.1
-
+On Sun, Oct 26, 2014 at 7:56 AM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=86951
+>
+>             Bug ID: 86951
+>            Summary: iommu regression
+>            Product: Drivers
+>            Version: 2.5
+>     Kernel Version: 3.13
+>           Hardware: All
+>                 OS: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: PCI
+>           Assignee: drivers_pci@kernel-bugs.osdl.org
+>           Reporter: nodenet@hotmail.com
+>         Regression: No
+>
+> I am trying to make a Digium TDM410 PCI card available to a guest VM via VT-d /
+> IOMMU. This appears to work under kernel 3.2 but not via any later kernel
+> tested since.
+>
+> I noted pci_find_upstream_pcie_bridge errors
+> (https://bugzilla.kernel.org/show_bug.cgi?id=44881) which appear resolved in
+> 3.17 and above but was advised to file a new bug as this appears to be a new
+> problem.
+>
+> Working kernel linux 3.2.0-70-generic
+> Tested but not working 3.5.0-54-generic, 3.13.0-37-generic,
+> 3.16.6-031606-generic, 3.17.1-031701-generic or 3.18.0-031800rc1-generic.
+>
+> 3.17.1 and 3.18.0-rc1 resolve the pci_find_upstream_pcie_bridge error message
+> both still have the DMAR errors, the later has both read and write errors.
+>
+> https://bugs.launchpad.net/ubuntu/+source/linux-lts-trusty/+bug/1385388
+>
+> I believe this type of configuration is often achieved using Xen but I am using
+> virtualbox 4.1.34 and it is possible there are some quirks associated with my
+> motherboard.
+>
+> Motherboard: Gigabyte Technology Co., Ltd. Z87X-D3H/Z87X-D3H-CF, BIOS F9
+> 08/25/2014 (latest)
+>
+> 03:00.0 Ethernet controller: Digium, Inc. Wildcard TDM410 4-port analog card
+> (rev 11)
+> 03:00.0 0200: d161:8005 (rev 11)
+>
+> 02:00.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 41) (prog-if 01
+> [Subtractive decode])
+> 02:00.0 0604: 8086:244e (rev 41)
+>
+> typical errors shown on the host when module loaded via modprobe in the
+> guest....
+>
+> Oct 26 06:35:39 kernel: [ 227.795652] dmar: DRHD: handling fault status reg 3
+> Oct 26 06:35:39 kernel: [ 227.795678] dmar: DMAR:[DMA Read] Request device
+> [03:00.0] fault addr 73ac6000
+> Oct 26 06:35:39 kernel: [ 227.795678] DMAR:[fault reason 06] PTE Read access is
+> not set
+>
+> Modprobe freezes in the guest, guest is causing a high cpu load and freezes on
+> reboot due to possible spin lock.
+>
+> --
+> You are receiving this mail because:
+> You are watching the assignee of the bug.
