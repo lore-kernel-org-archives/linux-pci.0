@@ -1,50 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 9 Oct 2014 08:23:01 +0200
-From: Robert Richter <robert.richter@caviumnetworks.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Robert Richter <rric@kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Sunil Goutham <sgoutham@cavium.com>
-Subject: Re: [PATCH 3/6] pci, thunder: Add PCIe host controller devicetree
- bindings
-Message-ID: <20141009062301.GJ31556@rric.localhost>
-References: <1411573068-12952-1-git-send-email-rric@kernel.org>
- <1411573068-12952-4-git-send-email-rric@kernel.org>
- <3082935.e3X4GsVUDn@wuerfel>
- <20141007142744.GE31556@rric.localhost>
- <20141007150149.GW4652@e106497-lin.cambridge.arm.com>
- <20141008084927.GH31556@rric.localhost>
- <20141008164432.GC15382@e106497-lin.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20141008164432.GC15382@e106497-lin.cambridge.arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, rui.zhang@intel.com,
+	linux-pm@vger.kernel.org
+Subject: [Patch v7 01/18] ACPI, irq: fix regression casued by 6b9fb7082409
+Date: Mon, 27 Oct 2014 13:21:31 +0800
+Message-Id: <1414387308-27148-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08.10.14 17:44:32, Liviu Dudau wrote:
-> On Wed, Oct 08, 2014 at 09:49:27AM +0100, Robert Richter wrote:
-> > On 07.10.14 16:01:49, Liviu Dudau wrote:
-> > I am quite confused a bit on which is the latest code base now. I was
-> > looking into Bjorn's pci/host-generic and there is a different
-> > implemetation:
+When IOAPIC is disabled, acpi_gsi_to_irq() should return gsi directly
+instead of calling mp_map_gsi_to_irq() to translate gsi to IRQ by IOAPIC.
+It fixes https://bugzilla.kernel.org/show_bug.cgi?id=84381.
 
-> > This differs also from v13. Please check.
+Reported-by: Thomas Richter <thor@math.tu-berlin.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: rui.zhang@intel.com
+Cc: <stable@vger.kernel.org> # 3.17
+---
+ arch/x86/kernel/acpi/boot.c |   13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-> I'm not sure what you are looking at. Commit 41e5c0f81d3e does look like
-> my v13. Not sure why you are still seeing this v11 version.
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index b436fc735aa4..eceba9d9e116 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -604,14 +604,19 @@ void __init acpi_pic_sci_set_trigger(unsigned int irq, u16 trigger)
+ 
+ int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
+ {
+-	int irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
++	int irq;
+ 
+-	if (irq >= 0) {
++	if (acpi_irq_model == ACPI_IRQ_MODEL_PIC) {
++		*irqp = gsi;
++	} else {
++		irq = mp_map_gsi_to_irq(gsi,
++					IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
++		if (irq < 0)
++			return -1;
+ 		*irqp = irq;
+-		return 0;
+ 	}
+ 
+-	return -1;
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(acpi_gsi_to_irq);
+ 
+-- 
+1.7.10.4
 
-Right, my bad. Sorry for the noise.
-
--Robert
