@@ -1,39 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0131.outbound.protection.outlook.com ([65.55.169.131]:19648
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750765AbaJPIXH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 16 Oct 2014 04:23:07 -0400
-From: Richard Zhu <richard.zhu@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
-	<l.stach@pengutronix.de>, <tharvey@gateworks.com>
-Subject: [PATCH v6]PCI: imx6: enable pcie on imx6sx sdb and imx6qdl sabreauto.
-Date: Thu, 16 Oct 2014 15:52:30 +0800
-Message-ID: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:12357 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751816AbaJ0CDG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 26 Oct 2014 22:03:06 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <wangyijing@huawei.com>, <linux-pci@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	<linux-s390@vger.kernel.org>
+Subject: [PATCH 3/3] s390/MSI: Use __msi_mask_irq() instead of default_msi_mask_irq()
+Date: Mon, 27 Oct 2014 10:44:38 +0800
+Message-ID: <1414377878-23497-4-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1414377878-23497-1-git-send-email-wangyijing@huawei.com>
+References: <1414377878-23497-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Main changes since the v5:
-1.use noirq pm_ops instead of the syscore pm_ops
-2.in order to not break compilation, move gpr bits modifications, before
-imx6 pcie changes.
-3.host init maybe failed, return negative value when there is a failure
-in the host init. In responding, the host_init func type had been change from
-void to init.
+Now only s390/MSI use default_msi_mask_irq() and
+default_msix_mask_irq(), replace them with the common
+msi mask irq functions __msi_mask_irq() and __msix_mask_irq().
+Remove default_msi_mask_irq() and default_msix_mask_irq().
 
-[PATCH v6 01/13] PCI: designware: Refine setup_rc and add msi data
-[PATCH v6 02/13] PCI: designware: Set func type of host init to int
-[PATCH v6 03/13] PCI: dra7xx: Change the func type of host init
-[PATCH v6 04/13] PCI: exynos: Change the func type of host init
-[PATCH v6 05/13] PCI: spear: Change the func type of host init
-[PATCH v6 06/13] PCI: designware: Fix one potential assignment error
-[PATCH v6 07/13] ARM: imx6sx: Add imx6sx pcie related gpr bits
-[PATCH v6 08/13] PCI: imx6: Wait the clocks to stabilize after ref_en
-[PATCH v6 09/13] PCI: imx6: Add imx6sx pcie support
-[PATCH v6 10/13] ARM: imx6qdl: Enable pcie on imx6qdl sabreauto
-[PATCH v6 11/13] ARM: imx6: Update dts and binding for imx6sx pcie
-[PATCH v6 12/13] ARM: imx6sx: Add syscon into gpc dts
-[PATCH v6 13/13] ARM: imx6sx: Enable pcie on imx6sx sdb board
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Sebastian Ott <sebott@linux.vnet.ibm.com>
+CC: linux-s390@vger.kernel.org
+---
+ arch/s390/pci/pci.c |    4 ++--
+ include/linux/msi.h |    2 --
+ 2 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index 2fa7b14..552b990 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -448,9 +448,9 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
+ 	/* Release MSI interrupts */
+ 	list_for_each_entry(msi, &pdev->msi_list, list) {
+ 		if (msi->msi_attrib.is_msix)
+-			default_msix_mask_irq(msi, 1);
++			__msix_mask_irq(msi, 1);
+ 		else
+-			default_msi_mask_irq(msi, 1, 1);
++			__msi_mask_irq(msi, 1, 1);
+ 		irq_set_msi_desc(msi->irq, NULL);
+ 		irq_free_desc(msi->irq);
+ 		msi->msg.address_lo = 0;
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index f6630a5..efad127 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -64,8 +64,6 @@ void arch_restore_msi_irqs(struct pci_dev *dev);
+ 
+ void default_teardown_msi_irqs(struct pci_dev *dev);
+ void default_restore_msi_irqs(struct pci_dev *dev);
+-#define default_msi_mask_irq  __msi_mask_irq
+-#define default_msix_mask_irq  __msix_mask_irq
+ 
+ struct msi_chip {
+ 	struct module *owner;
+-- 
+1.7.1
+
