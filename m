@@ -1,112 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:39281 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756917AbaJaJke (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Oct 2014 05:40:34 -0400
-Date: Fri, 31 Oct 2014 10:40:27 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-cc: Marc Zyngier <marc.zyngier@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>, jason@lakedaemon.net,
-	Catalin.Marinas@arm.com, Will.Deacon@arm.com, liviu.dudau@arm.com,
-	Harish.Kasiviswanathan@amd.com,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: Re: [V9 PATCH 2/2] irqchip: gicv2m: Add supports for ARM GICv2m
- MSI(-X)
-In-Reply-To: <1414743990-28421-3-git-send-email-suravee.suthikulpanit@amd.com>
-Message-ID: <alpine.DEB.2.11.1410311014050.5308@nanos>
-References: <1414743990-28421-1-git-send-email-suravee.suthikulpanit@amd.com> <1414743990-28421-3-git-send-email-suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Prarit Bhargava <prarit@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	Ingo Molnar <mingo@kernel.org>
+Subject: [Patch v7 10/18] x86, irq: Prefer assigned ID in APIC ID register for x86_64
+Date: Mon, 27 Oct 2014 13:21:40 +0800
+Message-Id: <1414387308-27148-11-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 31 Oct 2014, suravee.suthikulpanit@amd.com wrote:
-> +/*
-> + * alloc_msi_irq - Allocate MSIs from available MSI bitmap.
-> + * @data: Pointer to v2m_data
-> + * @nvec: Number of interrupts to allocate
-> + * @irq: Pointer to the allocated irq
-> + *
-> + * Allocates interrupts only if the contiguous range of MSIs
-> + * with specified nvec are available. Otherwise return the number
-> + * of available interrupts. If none are available, then returns -ENOENT.
+From: Yinghai Lu <yinghai@kernel.org>
 
-And the exact purpose of returning the number of available interrupts
-is?
+Perfer the assigned ID in APIC ID register for x86_64 if it's still
+available.
 
-> + */
-> +static int alloc_msi_irq(struct v2m_data *data, int nvec, int *irq)
-> +{
-> +	int size = data->nr_spis;
-> +	int next = size, i = nvec, ret;
-> +
-> +	/* We should never allocate more than available nr_spis */
-> +	if (i >= size)
-> +		i = size;
-> +
-> +	spin_lock(&data->msi_cnt_lock);
-> +
-> +	for (; i > 0; i--) {
-> +		next = bitmap_find_next_zero_area(data->bm,
-> +					size, 0, i, 0);
-> +		if (next < size)
-> +			break;
-> +	}
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/io_apic.c |   35 ++++++++++++++++++++++++++++++-----
+ 1 file changed, 30 insertions(+), 5 deletions(-)
 
-That we need a pointless loop here.
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index acaee90fc9cc..eaa7ea385600 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3580,26 +3580,51 @@ static int __init io_apic_get_unique_id(int ioapic, int apic_id)
+ 	return apic_id;
+ }
+ 
+-static u8 __init io_apic_unique_id(u8 id)
++static u8 __init io_apic_unique_id(int idx, u8 id)
+ {
+ 	if ((boot_cpu_data.x86_vendor == X86_VENDOR_INTEL) &&
+ 	    !APIC_XAPIC(apic_version[boot_cpu_physical_apicid]))
+-		return io_apic_get_unique_id(nr_ioapics, id);
++		return io_apic_get_unique_id(idx, id);
+ 	else
+ 		return id;
+ }
+ #else
+-static u8 __init io_apic_unique_id(u8 id)
++static u8 __init io_apic_unique_id(int idx, u8 id)
+ {
+ 	int i;
++	u8 new_id;
++	unsigned long flags;
+ 	DECLARE_BITMAP(used, 256);
++	union IO_APIC_reg_00 reg_00;
+ 
+ 	bitmap_zero(used, 256);
+ 	for_each_ioapic(i)
+ 		__set_bit(mpc_ioapic_id(i), used);
+ 	if (!test_bit(id, used))
+ 		return id;
+-	return find_first_zero_bit(used, 256);
++
++	/* check register at first */
++	raw_spin_lock_irqsave(&ioapic_lock, flags);
++	reg_00.raw = io_apic_read(idx, 0);
++	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
++	new_id = reg_00.bits.ID;
++	if (!test_bit(new_id, used)) {
++		apic_printk(APIC_VERBOSE, KERN_INFO
++			"IOAPIC[%d]: Using reg apic_id %d instead of %d\n",
++			 idx, new_id, id);
++		return new_id;
++	}
++
++	new_id = find_first_zero_bit(used, 256);
++	reg_00.bits.ID = new_id;
++	raw_spin_lock_irqsave(&ioapic_lock, flags);
++	io_apic_write(idx, 0, reg_00.raw);
++	reg_00.raw = io_apic_read(idx, 0);
++	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
++	/* Sanity check */
++	BUG_ON(reg_00.bits.ID != new_id);
++
++	return new_id;
+ }
+ #endif
+ 
+@@ -3865,7 +3890,7 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 		return;
+ 	}
+ 
+-	ioapics[idx].mp_config.apicid = io_apic_unique_id(id);
++	ioapics[idx].mp_config.apicid = io_apic_unique_id(idx, id);
+ 	ioapics[idx].mp_config.apicver = io_apic_get_version(idx);
+ 
+ 	/*
+-- 
+1.7.10.4
 
-> +static int gicv2m_setup_msi_irq(struct msi_chip *chip, struct pci_dev *pdev,
-> +				struct msi_desc *desc)
-> +{
-> +	int hwirq = 0, virq, avail;
-> +	struct v2m_data *v2m = container_of(chip, struct v2m_data, msi_chip);
-> +
-> +	if (!desc) {
-> +		dev_err(&pdev->dev,
-> +			"MSI setup failed. Invalid msi descriptor\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	avail = alloc_msi_irq(v2m, 1, &hwirq);
-> +	if (avail != 0) {
-
-So that the caller can turn any non zero return value into -ENOSPC.
-
-> +		dev_err(&pdev->dev,
-> +			"MSI setup failed. Cannnot allocate IRQ\n");
-> +		return -ENOSPC;
-> +	}
-
-Brilliant design.
-
-> +	virq = __irq_domain_alloc_irqs(v2m->domain, hwirq,
-> +				       1, NUMA_NO_NODE, v2m, true);
-
-And surely the ability of alloc_msi_irq() to allocate a contiguous
-vector space is required to satisfy an hardcoded allocation of ONE
-interrupt.
-
-What is guaranteeing that the caller only requests a single interrupt?
-
-> +err_out:
-
-Single error exit which undoes the stuff in the same order it got
-initialized is just plain wrong. Ever looked at proper error exits in
-other kernel files?
-
-> +	of_pci_msi_chip_remove(&v2m->msi_chip);
-> +	if (v2m->base)
-> +		iounmap(v2m->base);
-> +	if (v2m->bm)
-> +		kzfree(v2m->bm);
-
-Of course you need to zero out the kzalloced bitmap before freeing it
-in order not to leak the secrets of a zeroed buffer to the sneaky
-black hats, right?
-
-Oh well...
-
-      tglx
