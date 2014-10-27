@@ -1,60 +1,68 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <544D9A8E.6030607@huawei.com>
-Date: Mon, 27 Oct 2014 09:06:22 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Ralf Baechle <ralf@linux-mips.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Liviu Dudau <liviu@dudau.co.uk>
-Subject: Re: [PATCH v3 16/27] Mips/MSI: Save msi chip in pci sysdata
-References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com> <1413342435-7876-17-git-send-email-wangyijing@huawei.com> <20141025130428.GD16738@linux-mips.org>
-In-Reply-To: <20141025130428.GD16738@linux-mips.org>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-arch-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [Patch v7 03/18] ACPI, irq, x86: Return IRQ instead of GSI in mp_register_gsi()
+Date: Mon, 27 Oct 2014 13:21:33 +0800
+Message-Id: <1414387308-27148-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/10/25 21:04, Ralf Baechle wrote:
-> On Wed, Oct 15, 2014 at 11:07:04AM +0800, Yijing Wang wrote:
-> 
->> +static inline struct msi_chip *pci_msi_chip(struct pci_bus *bus)
->> +{
->> +	struct pci_controller *control = (struct pci_controller *)bus->sysdata;
-> 
-> bus->sysdata is void * so this cast is unnecessary.
+The GSI for ACPI SCI may be shared with other devices. For example,
 
-Yes, will update it, thanks!
+Function mp_register_gsi() should return IRQ number, so fix a regression
+by returning mp_map_gsi_to_irq(gsi, 0) instead of gsi.
 
-> 
->   Ralf
-> 
-> .
-> 
+The regression was caused by commit 84245af7297ced9e8fe "x86, irq, ACPI:
+Change __acpi_register_gsi to return IRQ number instead of GSI" and
+exposed on a SuperMicro system, which shares one GSI between ACPI SCI
+and PCI device, with following failure:
 
+http://sourceforge.net/p/linux1394/mailman/linux1394-user/?viewmonth=201410
+[    0.000000] ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 20 low
+level)
+[    2.699224] firewire_ohci 0000:06:00.0: failed to allocate interrupt
+20
 
+Reported-and-Tested-by: Daniel Robbins <drobbins@funtoo.org>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: <stable@vger.kernel.org> # 3.17
+---
+ arch/x86/kernel/acpi/boot.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index eceba9d9e116..e077c080a519 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -397,7 +397,7 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
+ 
+ 	/* Don't set up the ACPI SCI because it's already set up */
+ 	if (acpi_gbl_FADT.sci_interrupt == gsi)
+-		return gsi;
++		return mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC);
+ 
+ 	trigger = trigger == ACPI_EDGE_SENSITIVE ? 0 : 1;
+ 	polarity = polarity == ACPI_ACTIVE_HIGH ? 0 : 1;
 -- 
-Thanks!
-Yijing
+1.7.10.4
 
