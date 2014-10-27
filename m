@@ -1,57 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [157.56.110.118] ([157.56.110.118]:11168 "EHLO
-	na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752079AbaJTCve (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 19 Oct 2014 22:51:34 -0400
-From: Richard Zhu <richard.zhu@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
-	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Richard Zhu <richard.zhu@freescale.com>
-Subject: [PATCH v7 07/13] ARM: imx6sx: Add imx6sx pcie related gpr bits definitions
-Date: Mon, 20 Oct 2014 10:19:10 +0800
-Message-ID: <1413771556-32212-8-git-send-email-richard.zhu@freescale.com>
-In-Reply-To: <1413771556-32212-1-git-send-email-richard.zhu@freescale.com>
-References: <1413771556-32212-1-git-send-email-richard.zhu@freescale.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Subject: Re: [Patch v7 05/18] ACPI: Correct return value of acpi_dev_resource_address_space()
+Date: Tue, 28 Oct 2014 00:11:53 +0100
+Message-ID: <2637527.N3qngMM9sh@vostro.rjw.lan>
+In-Reply-To: <CAErSpo6hq9+RV9sFe2gZL2mMHTPEDGQDfqP5J=TAZtJsj_1-Pg@mail.gmail.com>
+References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com> <1414387308-27148-6-git-send-email-jiang.liu@linux.intel.com> <CAErSpo6hq9+RV9sFe2gZL2mMHTPEDGQDfqP5J=TAZtJsj_1-Pg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Richard Zhu <r65037@freescale.com>
+On Monday, October 27, 2014 04:49:06 PM Bjorn Helgaas wrote:
+> On Sun, Oct 26, 2014 at 11:21 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+> > Change acpi_dev_resource_address_space() to return failure if the
+> > acpi_resource structure can't be converted to an ACPI address64
+> > structure, so caller could correctly detect failure.
+> 
+> Fixes: 046d9ce6820e ("ACPI: Move device resources interpretation code
+> from PNP to ACPI core")
+> 
+> Possible stable candidate?  046d9ce6820e appeared in v3.8.
 
-Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
----
- include/linux/mfd/syscon/imx6q-iomuxc-gpr.h | 9 +++++++++
- 1 file changed, 9 insertions(+)
+Well, are we seeing problems with it?
 
-diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-index ff44374..3273b87 100644
---- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-+++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-@@ -301,6 +301,7 @@
- #define IMX6Q_GPR12_DEVICE_TYPE			(0xf << 12)
- #define IMX6Q_GPR12_PCIE_CTL_2			BIT(10)
- #define IMX6Q_GPR12_LOS_LEVEL			(0x1f << 4)
-+#define IMX6Q_GPR12_LOS_LEVEL_9			(0x9 << 4)
- 
- #define IMX6Q_GPR13_SDMA_STOP_REQ		BIT(30)
- #define IMX6Q_GPR13_CAN2_STOP_REQ		BIT(29)
-@@ -395,4 +396,12 @@
- #define IMX6SL_GPR1_FEC_CLOCK_MUX1_SEL_MASK    (0x3 << 17)
- #define IMX6SL_GPR1_FEC_CLOCK_MUX2_SEL_MASK    (0x1 << 14)
- 
-+/* For imx6sx iomux gpr register field define */
-+#define IMX6SX_GPR5_PCIE_BTNRST			BIT(19)
-+#define IMX6SX_GPR5_PCIE_PERST			BIT(18)
-+
-+#define IMX6SX_GPR12_PCIE_PM_TURN_OFF		BIT(16)
-+#define IMX6SX_GPR12_PCIE_TEST_PD		BIT(30)
-+#define IMX6SX_GPR12_RX_EQ_MASK			(0x7 << 0)
-+#define IMX6SX_GPR12_RX_EQ_2			(0x2 << 0)
- #endif /* __LINUX_IMX6Q_IOMUXC_GPR_H */
+> > Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> > ---
+> >  drivers/acpi/resource.c |    2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+> > index 2ba8f02ced36..782a0d15c25f 100644
+> > --- a/drivers/acpi/resource.c
+> > +++ b/drivers/acpi/resource.c
+> > @@ -200,7 +200,7 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+> >
+> >         status = acpi_resource_to_address64(ares, &addr);
+> >         if (ACPI_FAILURE(status))
+> > -               return true;
+> > +               return false;
+> >
+> >         res->start = addr.minimum;
+> >         res->end = addr.maximum;
+> > --
+> > 1.7.10.4
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -- 
-1.9.1
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
