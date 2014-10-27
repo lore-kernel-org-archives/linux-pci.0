@@ -1,88 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foo.masarand.uk ([69.164.217.139]:56324 "EHLO foo.masarand.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751439AbaJBD7Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Oct 2014 23:59:24 -0400
-From: matt@masarand.com
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, Vality <matt@masarand.com>
-Subject: [PATCH 14/18] Delayed tile setup of PCI IRQs to bus scan time
-Date: Thu,  2 Oct 2014 04:50:33 +0100
-Message-Id: <1412221837-17452-15-git-send-email-matt@masarand.com>
-In-Reply-To: <1412221837-17452-1-git-send-email-matt@masarand.com>
-References: <1412221837-17452-1-git-send-email-matt@masarand.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:46419 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751428AbaJ0TpQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Oct 2014 15:45:16 -0400
+Date: Mon, 27 Oct 2014 15:45:01 -0400
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: David Vrabel <david.vrabel@citrix.com>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	xen-devel@lists.xenproject.org
+Subject: Re: [Xen-devel] [PATCH 1/3] x86/xen: Introduce a global flag to fix
+ the MSI mask bug
+Message-ID: <20141027194501.GI14654@laptop.dumpdata.com>
+References: <1414377878-23497-1-git-send-email-wangyijing@huawei.com>
+ <1414377878-23497-2-git-send-email-wangyijing@huawei.com>
+ <544E27F6.8010607@citrix.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <544E27F6.8010607@citrix.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Vality <matt@masarand.com>
+On Mon, Oct 27, 2014 at 11:09:42AM +0000, David Vrabel wrote:
+> On 27/10/14 02:44, Yijing Wang wrote:
+> > Commit 0e4ccb1505a9 ("PCI: Add x86_msi.msi_mask_irq() and msix_mask_irq()")
+> > fixed MSI mask bug which may cause kernel crash. But the commit
+> > made MSI code complex. Introduce a new global flag "pci_msi_ignore_mask"
+> > to ignore MSI/MSI-X to fix this issue, it's a cleaner solution.
+> > And the commit 0e4ccb1505a9 will be reverted in the later patch.
+> 
+> Reviewed-by: David Vrabel <david.vrabel@citrix.com>
+> 
+> In the sense that it keeps the odd Xen behaviour.  But...
+> 
+> Konrad, why was this fixed like this in the first place?  IMO, it would
 
-Currently pcibios_init is running pci_fixup_irqs in order to assign
-IRQs to PCI devices, this is only done once at boot-time and causes
-devices hot-plugged after boot time to not be allocated an IRQ.
-This is fixed in this patch-set by delaying the allocation untill
-device enable time by registering the function to be called later.
+As 0e4ccb1505a9 explains:
+    PCI: Add x86_msi.msi_mask_irq() and msix_mask_irq()
+    
+    Certain platforms do not allow writes in the MSI-X BARs to setup or tear
+    down vector values.  To combat against the generic code trying to write to
+    that and either silently being ignored or crashing due to the pagetables
+    being marked R/O this patch introduces a platform override.
+    
+    Note that we keep two separate, non-weak, functions default_mask_msi_irqs()
+    and default_mask_msix_irqs() for the behavior of the arch_mask_msi_irqs()
+    and arch_mask_msix_irqs(), as the default behavior is needed by x86 PCI
+    code.
+    
+    For Xen, which does not allow the guest to write to MSI-X tables - as the
+    hypervisor is solely responsible for setting the vector values - we
+    implement two nops.
+    
+    This fixes a Xen guest crash when passing a PCI device with MSI-X to the
+    guest.  See the bugzilla for more details.
+    
+    [bhelgaas: add bugzilla info]
+    Reference: https://bugzilla.kernel.org/show_bug.cgi?id=64581
 
----
- arch/tile/kernel/pci.c    | 10 +++++++---
- arch/tile/kernel/pci_gx.c | 10 +++++++---
- 2 files changed, 14 insertions(+), 6 deletions(-)
-
-diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
-index 1f80a88..6dc0bd8 100644
---- a/arch/tile/kernel/pci.c
-+++ b/arch/tile/kernel/pci.c
-@@ -313,9 +313,6 @@ int __init pcibios_init(void)
- 		}
- 	}
- 
--	/* Do machine dependent PCI interrupt routing */
--	pci_fixup_irqs(pci_common_swizzle, tile_map_irq);
--
- 	/*
- 	 * This comes from the generic Linux PCI driver.
- 	 *
-@@ -367,6 +364,13 @@ int __init pcibios_init(void)
- }
- subsys_initcall(pcibios_init);
- 
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	bridge->swizzle_irq = pci_common_swizzle;
-+	bridge->map_irq = tile_map_irq;
-+	return 0;
-+}
-+
- /*
-  * No bus fixups needed.
-  */
-diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
-index e39f9c5..7d1b5bf 100644
---- a/arch/tile/kernel/pci_gx.c
-+++ b/arch/tile/kernel/pci_gx.c
-@@ -893,9 +893,6 @@ int __init pcibios_init(void)
- 		next_busno = bus->busn_res.end + 1;
- 	}
- 
--	/* Do machine dependent PCI interrupt routing */
--	pci_fixup_irqs(pci_common_swizzle, tile_map_irq);
--
- 	/*
- 	 * This comes from the generic Linux PCI driver.
- 	 *
-@@ -1048,6 +1045,13 @@ alloc_mem_map_failed:
- }
- subsys_initcall(pcibios_init);
- 
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	bridge->swizzle_irq = pci_common_swizzle;
-+	bridge->map_irq = tile_map_irq;
-+	return 0;
-+}
-+
- /* No bus fixups needed. */
- void pcibios_fixup_bus(struct pci_bus *bus)
- {
--- 
-2.1.0
-
+> have been better to get Xen to trap-and-emulate accesses to the relevant
+> MSI/MSI-X registers.  The mask/unmask on setup/teardown isn't
+> performance critical.
+> 
+> David
+> 
+> _______________________________________________
+> Xen-devel mailing list
+> Xen-devel@lists.xen.org
+> http://lists.xen.org/xen-devel
