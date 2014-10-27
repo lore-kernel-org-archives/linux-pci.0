@@ -1,220 +1,212 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14415 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750868AbaJAH0n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Oct 2014 03:26:43 -0400
-Date: Wed, 1 Oct 2014 10:30:08 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Marcel Apfelbaum <marcel.a@redhat.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, marcel@redhat.com,
-	alex.williamson@redhat.com
-Subject: Re: [PATCH] PCI: add kernel parameter to override devid<->driver
- mapping.
-Message-ID: <20141001073008.GC31859@redhat.com>
-References: <1412095115-28982-1-git-send-email-marcel.a@redhat.com>
- <20141001065227.GB31859@redhat.com>
- <1412147206.2772.8.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1412147206.2772.8.camel@localhost.localdomain>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch v7 04/18] x86, PCI, ACPI: Kill private function resource_to_addr() in arch/x86/pci/acpi.c
+Date: Mon, 27 Oct 2014 13:21:34 +0800
+Message-Id: <1414387308-27148-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 01, 2014 at 10:06:46AM +0300, Marcel Apfelbaum wrote:
-> On Wed, 2014-10-01 at 09:52 +0300, Michael S. Tsirkin wrote:
-> > On Tue, Sep 30, 2014 at 07:38:35PM +0300, Marcel Apfelbaum wrote:
-> > > Scanning a lot of devices during boot requires a lot of time.
-> > > On other scenarios there is a need to bind a driver to a specific slot.
-> > > 
-> > > Binding devices to pci-stub driver does not work,
-> > > as it will not differentiate between devices of the
-> > > same type. Using some start scripts is error prone.
-> > > 
-> > > The solution leverages driver_override functionality introduced by
-> > > 
-> > > 	commit: 782a985d7af26db39e86070d28f987cad21313c0
-> > > 	Author: Alex Williamson <alex.williamson@redhat.com>
-> > > 	Date:   Tue May 20 08:53:21 2014 -0600
-> > > 
-> > >     	PCI: Introduce new device binding path using pci_dev.driver_override
-> > > 
-> > > In order to bind PCI slot 0001:02:03.4 to pci-stub use:
-> > > 	driver[0001:02:03.4]=pci-stub
-> > > 
-> > > Signed-off-by: Marcel Apfelbaum <marcel.a@redhat.com>
-> > > ---
-> > > Notes:
-> > >  - For the moment only 32 slots can be assigned specific driver.
-> > >  - I have further ideas on top of this patch based on your reviews.
-> > >    I thought of:
-> > >    - Use wildcards to specify entire buses/devices, something like:
-> > >      	driver[0001:02:*.*]=pci-stub
-> > >    - Use comma to separate several devices:
-> > >      	driver[0001:02:03.4,0001:02:04.0,...]=pci-stub
-> > >    - Make domain optional:
-> > >    	driver[00:03.0]=pci-stub
-> > > 
-> > > Comments will be appreciated,
-> > > Thanks,
-> > > Marcel
-> > > 
-> > > Documentation/kernel-parameters.txt |  4 +++
-> > >  drivers/pci/bus.c                   |  1 +
-> > >  drivers/pci/pci.c                   | 61 +++++++++++++++++++++++++++++++++++++
-> > >  drivers/pci/pci.h                   |  1 +
-> > >  4 files changed, 67 insertions(+)
-> > > 
-> > > diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-> > > index 5ae8608..c1cbb4c 100644
-> > > --- a/Documentation/kernel-parameters.txt
-> > > +++ b/Documentation/kernel-parameters.txt
-> > > @@ -2631,6 +2631,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
-> > >  		pcie_scan_all	Scan all possible PCIe devices.  Otherwise we
-> > >  				only look for one device below a PCIe downstream
-> > >  				port.
-> > > +		driver		Provide an override to the devid<->driver mapping
-> > > +				for a specific slot.
-> > > +				Bind PCI slot 0001:02:03.4 to pci-stub by:
-> > > +					driver[0001:02:03.4]=pci-stub
-> > >  
-> > >  	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
-> > >  			Management.
-> > > diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> > > index 73aef51..7a7ed85 100644
-> > > --- a/drivers/pci/bus.c
-> > > +++ b/drivers/pci/bus.c
-> > > @@ -245,6 +245,7 @@ void pci_bus_add_device(struct pci_dev *dev)
-> > >  	 * are not assigned yet for some devices.
-> > >  	 */
-> > >  	pci_fixup_device(pci_fixup_final, dev);
-> > > +	pci_device_setup_driver_override(dev);
-> > >  	pci_create_sysfs_dev_files(dev);
-> > >  	pci_proc_attach_device(dev);
-> > >  
-> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > index b7678be..0a3e07c 100644
-> > > --- a/drivers/pci/pci.c
-> > > +++ b/drivers/pci/pci.c
-> > > @@ -4426,6 +4426,65 @@ void __weak pci_fixup_cardbus(struct pci_bus *bus)
-> > >  }
-> > >  EXPORT_SYMBOL(pci_fixup_cardbus);
-> > >  
-> > > +#define DRIVER_OVERRIDE_NAME_LENGTH 64
-> > > +#define DRIVER_OVERRIDE_MAP_SIZE 32
-> > > +
-> > > +struct driver_override_entry {
-> > > +	unsigned int domain;
-> > > +	unsigned char bus;
-> > > +	unsigned int devfn;
-> > > +	char driver_name[DRIVER_OVERRIDE_NAME_LENGTH];
-> > > +};
-> > > +
-> > > +static struct driver_override_entry __initdata
-> > > +	driver_override_map[DRIVER_OVERRIDE_MAP_SIZE];
-> > > +static int driver_override_num_entries __initdata;
-> > > +
-> > > +void pci_device_setup_driver_override(struct pci_dev *dev)
-> > > +{
-> > > +	int i;
-> > > +
-> > > +	for (i = 0; i < driver_override_num_entries; i++) {
-> > > +		if (pci_domain_nr(dev->bus) != driver_override_map[i].domain ||
-> > > +		    dev->bus->number != driver_override_map[i].bus ||
-> > > +		    dev->devfn != driver_override_map[i].devfn)
-> > > +			continue;
-> > > +
-> > > +		dev->driver_override = kstrndup(driver_override_map[i].driver_name,
-> > > +						DRIVER_OVERRIDE_NAME_LENGTH,
-> > > +						GFP_KERNEL);
-> > 
-> > 
-> Hi,
-> 
-> > You allocate this entry but never free it?
-> Is being freed in pci_release_dev function.
-> 
-> > Shouldn't allocation failure be handled in some way?
-> I thought about it, but in my opinion there is no need for error
-> handling in this situation.
-> - On the worst case scenario it will load the regular driver, no harm done.
->   (kstrndup will return NULL)
-> - It is used in pci_bus_add_device workflow that has no error flow
->   that I am aware of, and even if it were an error flow, in my opinion
->   this is not enough to stop system boot.
-> But thinking of this again, maybe a pr_err message?
-> 
-> Your review is most appreciated.
-> Thanks,
-> Marcel
-> 
-> 
+Private function resource_to_addr() is used to parse ACPI resources
+for PCI host bridge. There are public interfaces available for that
+purpose, so replace resource_to_addr() with public interfaces.
 
-Thinking more about it, how about just using strstr to search a string
-of overrides?  This will completely remove the artificial
-DRIVER_OVERRIDE_MAP_SIZE as well.
+Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/pci/acpi.c |  144 +++++++++++++++++++--------------------------------
+ 1 file changed, 53 insertions(+), 91 deletions(-)
 
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index cfd1b132b8e3..3f72d934dc16 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -218,114 +218,76 @@ static void teardown_mcfg_map(struct pci_root_info *info)
+ }
+ #endif
+ 
+-static acpi_status resource_to_addr(struct acpi_resource *resource,
+-				    struct acpi_resource_address64 *addr)
+-{
+-	acpi_status status;
+-	struct acpi_resource_memory24 *memory24;
+-	struct acpi_resource_memory32 *memory32;
+-	struct acpi_resource_fixed_memory32 *fixed_memory32;
+-
+-	memset(addr, 0, sizeof(*addr));
+-	switch (resource->type) {
+-	case ACPI_RESOURCE_TYPE_MEMORY24:
+-		memory24 = &resource->data.memory24;
+-		addr->resource_type = ACPI_MEMORY_RANGE;
+-		addr->minimum = memory24->minimum;
+-		addr->address_length = memory24->address_length;
+-		addr->maximum = addr->minimum + addr->address_length - 1;
+-		return AE_OK;
+-	case ACPI_RESOURCE_TYPE_MEMORY32:
+-		memory32 = &resource->data.memory32;
+-		addr->resource_type = ACPI_MEMORY_RANGE;
+-		addr->minimum = memory32->minimum;
+-		addr->address_length = memory32->address_length;
+-		addr->maximum = addr->minimum + addr->address_length - 1;
+-		return AE_OK;
+-	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
+-		fixed_memory32 = &resource->data.fixed_memory32;
+-		addr->resource_type = ACPI_MEMORY_RANGE;
+-		addr->minimum = fixed_memory32->address;
+-		addr->address_length = fixed_memory32->address_length;
+-		addr->maximum = addr->minimum + addr->address_length - 1;
+-		return AE_OK;
+-	case ACPI_RESOURCE_TYPE_ADDRESS16:
+-	case ACPI_RESOURCE_TYPE_ADDRESS32:
+-	case ACPI_RESOURCE_TYPE_ADDRESS64:
+-		status = acpi_resource_to_address64(resource, addr);
+-		if (ACPI_SUCCESS(status) &&
+-		    (addr->resource_type == ACPI_MEMORY_RANGE ||
+-		    addr->resource_type == ACPI_IO_RANGE) &&
+-		    addr->address_length > 0) {
+-			return AE_OK;
+-		}
+-		break;
+-	}
+-	return AE_ERROR;
+-}
+-
+ static acpi_status count_resource(struct acpi_resource *acpi_res, void *data)
+ {
+ 	struct pci_root_info *info = data;
+-	struct acpi_resource_address64 addr;
+-	acpi_status status;
++	struct resource r = {
++		.flags = 0
++	};
+ 
+-	status = resource_to_addr(acpi_res, &addr);
+-	if (ACPI_SUCCESS(status))
++	if (!acpi_dev_resource_memory(acpi_res, &r) &&
++	    !acpi_dev_resource_address_space(acpi_res, &r))
++		return AE_OK;
++
++	if ((r.flags & (IORESOURCE_IO | IORESOURCE_MEM)) && resource_size(&r))
+ 		info->res_num++;
++
+ 	return AE_OK;
+ }
+ 
+ static acpi_status setup_resource(struct acpi_resource *acpi_res, void *data)
+ {
+ 	struct pci_root_info *info = data;
+-	struct resource *res;
+-	struct acpi_resource_address64 addr;
+-	acpi_status status;
+-	unsigned long flags;
+-	u64 start, orig_end, end;
++	u64 translation_offset = 0;
++	struct resource r = {
++		.flags = 0
++	};
++
++	if (acpi_dev_resource_memory(acpi_res, &r)) {
++		r.flags &= IORESOURCE_MEM | IORESOURCE_IO;
++	} else if (acpi_dev_resource_address_space(acpi_res, &r)) {
++		u64 orig_end;
++		struct acpi_resource_address64 addr;
++
++		r.flags &= IORESOURCE_MEM | IORESOURCE_IO;
++		if (r.flags == 0)
++			return AE_OK;
+ 
+-	status = resource_to_addr(acpi_res, &addr);
+-	if (!ACPI_SUCCESS(status))
+-		return AE_OK;
++		if (ACPI_FAILURE(acpi_resource_to_address64(acpi_res, &addr)))
++			return AE_OK;
+ 
+-	if (addr.resource_type == ACPI_MEMORY_RANGE) {
+-		flags = IORESOURCE_MEM;
+-		if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
+-			flags |= IORESOURCE_PREFETCH;
+-	} else if (addr.resource_type == ACPI_IO_RANGE) {
+-		flags = IORESOURCE_IO;
+-	} else
+-		return AE_OK;
++		if (addr.resource_type == ACPI_MEMORY_RANGE &&
++		    addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
++			r.flags |= IORESOURCE_PREFETCH;
+ 
+-	start = addr.minimum + addr.translation_offset;
+-	orig_end = end = addr.maximum + addr.translation_offset;
++		translation_offset = addr.translation_offset;
++		orig_end = r.end;
++		r.start += translation_offset;
++		r.end += translation_offset;
+ 
+-	/* Exclude non-addressable range or non-addressable portion of range */
+-	end = min(end, (u64)iomem_resource.end);
+-	if (end <= start) {
+-		dev_info(&info->bridge->dev,
+-			"host bridge window [%#llx-%#llx] "
+-			"(ignored, not CPU addressable)\n", start, orig_end);
+-		return AE_OK;
+-	} else if (orig_end != end) {
+-		dev_info(&info->bridge->dev,
+-			"host bridge window [%#llx-%#llx] "
+-			"([%#llx-%#llx] ignored, not CPU addressable)\n", 
+-			start, orig_end, end + 1, orig_end);
++		/* Exclude non-addressable range or non-addressable portion of range */
++		r.end = min(r.end, iomem_resource.end);
++		if (r.end <= r.start) {
++			dev_info(&info->bridge->dev,
++				"host bridge window [%#llx-%#llx] (ignored, not CPU addressable)\n",
++				 r.start, orig_end);
++			return AE_OK;
++		} else if (orig_end != r.end) {
++			dev_info(&info->bridge->dev,
++				"host bridge window [%#llx-%#llx] ([%#llx-%#llx] ignored, not CPU addressable)\n",
++				r.start, orig_end, r.end + 1, orig_end);
++		}
+ 	}
+ 
+-	res = &info->res[info->res_num];
+-	res->name = info->name;
+-	res->flags = flags;
+-	res->start = start;
+-	res->end = end;
+-	info->res_offset[info->res_num] = addr.translation_offset;
+-	info->res_num++;
+-
+-	if (!pci_use_crs)
+-		dev_printk(KERN_DEBUG, &info->bridge->dev,
+-			   "host bridge window %pR (ignored)\n", res);
++	if (r.flags && resource_size(&r)) {
++		r.name = info->name;
++		info->res[info->res_num] = r;
++		info->res_offset[info->res_num] = translation_offset;
++		info->res_num++;
++		if (!pci_use_crs)
++			dev_printk(KERN_DEBUG, &info->bridge->dev,
++				   "host bridge window %pR (ignored)\n", &r);
++	}
+ 
+ 	return AE_OK;
+ }
+-- 
+1.7.10.4
 
-
-
-> > 
-> > > +		break;
-> > > +	}
-> > > +}
-> > > +
-> > > +static void __init pci_parse_driver_override(char *str)
-> > > +{
-> > > +	unsigned int domain, bus, dev, fn;
-> > > +	char driver_name[DRIVER_OVERRIDE_NAME_LENGTH];
-> > > +	int ret, next_entry;
-> > > +	char format[] = "[%4x:%2x:%2x.%2x]=%%%ds";
-> > > +
-> > > +	sprintf(format + 18, "%%%ds", DRIVER_OVERRIDE_NAME_LENGTH);
-> > > +	ret = sscanf(str, format, &domain, &bus, &dev, &fn, driver_name);
-> > > +
-> > > +	if (ret != 5) {
-> > > +		pr_err("PCI: Invalid command line: driver%s\n", str);
-> > > +		return;
-> > > +	}
-> > > +
-> > > +	if (driver_override_num_entries == DRIVER_OVERRIDE_MAP_SIZE) {
-> > > +		pr_err("PCI: Driver map overflow - ignoring driver%s\n", str);
-> > > +		return;
-> > > +	}
-> > > +
-> > > +	next_entry = driver_override_num_entries++;
-> > > +	driver_override_map[next_entry].domain = domain;
-> > > +	driver_override_map[next_entry].bus = bus && 0xff;
-> > > +	driver_override_map[next_entry].devfn = ((dev & 0x1f) << 3) | (fn & 0x7);
-> > > +	memcpy(driver_override_map[next_entry].driver_name,
-> > > +	       driver_name, sizeof(driver_name));
-> > > +}
-> > > +
-> > >  static int __init pci_setup(char *str)
-> > >  {
-> > >  	while (str) {
-> > > @@ -4468,6 +4527,8 @@ static int __init pci_setup(char *str)
-> > >  				pcie_bus_config = PCIE_BUS_PEER2PEER;
-> > >  			} else if (!strncmp(str, "pcie_scan_all", 13)) {
-> > >  				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
-> > > +			} else if (!strncmp(str, "driver", 6)) {
-> > > +				pci_parse_driver_override(str + 6);
-> > >  			} else {
-> > >  				printk(KERN_ERR "PCI: Unknown option `%s'\n",
-> > >  						str);
-> > > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> > > index 0601890..023d78b 100644
-> > > --- a/drivers/pci/pci.h
-> > > +++ b/drivers/pci/pci.h
-> > > @@ -197,6 +197,7 @@ enum pci_bar_type {
-> > >  bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
-> > >  				int crs_timeout);
-> > >  int pci_setup_device(struct pci_dev *dev);
-> > > +void pci_device_setup_driver_override(struct pci_dev *dev);
-> > >  int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
-> > >  		    struct resource *res, unsigned int reg);
-> > >  int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type);
-> > > -- 
-> > > 1.8.3.1
-> 
-> 
