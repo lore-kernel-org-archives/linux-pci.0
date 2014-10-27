@@ -1,12 +1,6 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:42208 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750892AbaJ1RrZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Oct 2014 13:47:25 -0400
-Date: Tue, 28 Oct 2014 18:47:22 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
@@ -15,38 +9,42 @@ Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
 	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Len Brown <len.brown@intel.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-	linux-pm@vger.kernel.org
-Subject: Re: [Patch v7 17/18] x86, irq: Introduce helper to check whether an
- IOAPIC has been registered
-Message-ID: <20141028174722.GB9134@amd>
-References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
- <1414387308-27148-18-git-send-email-jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1414387308-27148-18-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v3 20/20] x86, irq: Fix link error of undefined reference to send_cleanup_vector
+Date: Mon, 27 Oct 2014 16:12:11 +0800
+Message-Id: <1414397531-28254-21-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon 2014-10-27 13:21:47, Jiang Liu wrote:
-> Introduce acpi_ioapic_registered() to check whether an IOAPIC has already
-> been registered, it will be used when enabling IOAPIC hotplug.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Define an empty send_cleanup_vector() for UP kernel to fix link error
+of undefined reference, which is used by uv_irq and irq_remapping.
 
-Nothing obviously wrong.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/vector.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-Acked-by: Pavel Machek <pavel@ucw.cz>
-
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index fa318a4a2969..5ac840a4cc53 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -481,6 +481,7 @@ void irq_force_complete_move(int irq)
+ 	__irq_complete_move(cfg, cfg->vector);
+ }
+ #else
++void send_cleanup_vector(struct irq_cfg *cfg) { }
+ void irq_complete_move(struct irq_cfg *cfg) { }
+ #endif
+ 
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+1.7.10.4
+
