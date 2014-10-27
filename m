@@ -1,199 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:52562 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755724AbaJ1ViC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Oct 2014 17:38:02 -0400
-Date: Tue, 28 Oct 2014 22:37:17 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux-foundation.org
-Subject: Re: [Patch Part2 v3 15/24] x86, MSI: Use hierarchy irqdomain to
- manage MSI interrupts
-In-Reply-To: <1414484803-10311-16-git-send-email-jiang.liu@linux.intel.com>
-Message-ID: <alpine.DEB.2.11.1410282046120.5308@nanos>
-References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com> <1414484803-10311-16-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Message-ID: <544D9A8E.6030607@huawei.com>
+Date: Mon, 27 Oct 2014 09:06:22 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+To: Ralf Baechle <ralf@linux-mips.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
+	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Liviu Dudau <liviu@dudau.co.uk>
+Subject: Re: [PATCH v3 16/27] Mips/MSI: Save msi chip in pci sysdata
+References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com> <1413342435-7876-17-git-send-email-wangyijing@huawei.com> <20141025130428.GD16738@linux-mips.org>
+In-Reply-To: <20141025130428.GD16738@linux-mips.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 28 Oct 2014, Jiang Liu wrote:
-> +static int msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
-> +			    bool force)
-> +{
-> +	struct irq_data *parent = data->parent_data;
-> +	int ret;
->  
-> -	msg.data &= ~MSI_DATA_VECTOR_MASK;
-> -	msg.data |= MSI_DATA_VECTOR(cfg->vector);
-> -	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
-> -	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
-> +	ret = parent->chip->irq_set_affinity(parent, mask, force);
-> +	/* No need to reprogram MSI registers if interrupt is remapped */
-> +	if (ret >= 0 && !msi_irq_remapped(data)) {
-> +		struct msi_msg msg;
->  
-> -	__write_msi_msg(data->msi_desc, &msg);
-> +		__get_cached_msi_msg(data->msi_desc, &msg);
-> +		msi_update_msg(&msg, data);
-> +		__write_msi_msg(data->msi_desc, &msg);
-> +	}
+On 2014/10/25 21:04, Ralf Baechle wrote:
+> On Wed, Oct 15, 2014 at 11:07:04AM +0800, Yijing Wang wrote:
+> 
+>> +static inline struct msi_chip *pci_msi_chip(struct pci_bus *bus)
+>> +{
+>> +	struct pci_controller *control = (struct pci_controller *)bus->sysdata;
+> 
+> bus->sysdata is void * so this cast is unnecessary.
 
-I'm not too happy about the msi_irq_remapped() conditional here. It
-violates the whole concept of domain stacking somewhat.
+Yes, will update it, thanks!
 
-A better separation would be to add a callback to the irq chip:
+> 
+>   Ralf
+> 
+> .
+> 
 
-  	void (*irq_write_msi_msg)(struct irq_data *data, struct msi_desc *msi_desc, bool cached);
 
-and change this code to:
-
-    	if (ret >= 0)
-	   	parent->chip->irq_write_msi_msg(parent, data->msi-desc, true);
-  
-> -	return IRQ_SET_MASK_OK_NOCOPY;
-> +	return ret;
->  }
-
-And do the same here:
-
-> +static int msi_domain_activate(struct irq_domain *domain,
-> +			       struct irq_data *irq_data)
-> +{
-> +	struct msi_msg msg;
-> +	struct irq_cfg *cfg = irqd_cfg(irq_data);
-> +
-> +	/*
-> +	 * irq_data->chip_data is MSI/MSIx offset.
-> +	 * MSI-X message is written per-IRQ, the offset is always 0.
-> +	 * MSI message denotes a contiguous group of IRQs, written for 0th IRQ.
-> +	 */
-> +	if (irq_data->chip_data)
-> +		return 0;
-
-        parent->chip->irq_write_msi_msg(parent, data->msi_desc, false);  		
-
-> +	if (msi_irq_remapped(irq_data))
-> +		irq_remapping_get_msi_entry(irq_data->parent_data, &msg);
-> +	else
-> +		native_compose_msi_msg(NULL, irq_data->irq, cfg->dest_apicid,
-> +				       &msg, 0);
-> +	write_msi_msg(irq_data->irq, &msg);
-> +
-> +	return 0;
-> +}
-
-And here:
-
-> +static int msi_domain_deactivate(struct irq_domain *domain,
-> +				 struct irq_data *irq_data)
-> +{
-> +	struct msi_msg msg;
-> +
-> +	if (irq_data->chip_data)
-> +		return 0;
-> +
-> +	memset(&msg, 0, sizeof(msg));
-> +	write_msi_msg(irq_data->irq, &msg);
-
-  	parent->chip->irq_write_msi_msg(parent, NULL, false);
-
-> +	return 0;
-> +}
-
-And let the vector and the remapping domain deal with it in their callbacks.
-
-> @@ -166,25 +264,59 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
->  
->  int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->  {
-> -	struct msi_desc *msidesc;
-> -	int irq, ret;
-> +	int irq, cnt, nvec_pow2;
-> +	struct irq_domain *domain;
-> +	struct msi_desc *msidesc, *iter;
-> +	struct irq_alloc_info info;
-> +	int node = dev_to_node(&dev->dev);
->  
-> -	/* Multiple MSI vectors only supported with interrupt remapping */
-> -	if (type == PCI_CAP_ID_MSI && nvec > 1)
-> -		return 1;
-> +	if (disable_apic)
-> +		return -ENOSYS;
->  
-> -	list_for_each_entry(msidesc, &dev->msi_list, list) {
-> -		irq = irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
-> +	init_irq_alloc_info(&info, NULL);
-> +	info.msi_dev = dev;
-> +	if (type == PCI_CAP_ID_MSI) {
-> +		msidesc = list_first_entry(&dev->msi_list,
-> +					   struct msi_desc, list);
-> +		WARN_ON(!list_is_singular(&dev->msi_list));
-> +		WARN_ON(msidesc->irq);
-> +		WARN_ON(msidesc->msi_attrib.multiple);
-> +		WARN_ON(msidesc->nvec_used);
-> +		info.type = X86_IRQ_ALLOC_TYPE_MSI;
-> +		cnt = nvec;
-> +	} else {
-> +		info.type = X86_IRQ_ALLOC_TYPE_MSIX;
-> +		cnt = 1;
-> +	}
-
-We have a similar issue here.
-
-> +	domain = irq_remapping_get_irq_domain(&info);
-
-We add domain specific knowledge to the MSI implementation. Not
-necessary at all.
-
-Again MSI is not an x86 problem and we really can move most of that to
-the core code. The above sanity checks and the distinction between MSI
-and MSIX can be handled in the core code. And every domain involved in
-the MSI chain would need a alloc_msi() callback.
-
-So native_setup_msi_irqs() would boil down to:
-+ {
-+	if (disable_apic)
-+		return -ENOSYS;
-+ 
-+	return irq_domain_alloc_msi(msi_domain, dev, nvec, type);   
-+ }
-
-Now that core function performs the sanity checks for the MSI case. In
-fact it should not proceed when a warning condition is detected. Not a
-x86 issue at all, its true for every MSI implementation.
-
-Then it calls down the domain allocation chain. x86_msi_domain would
-simply hand down to the parent domain. That would either be the remap
-domain or the vector domain.
-
-The reject for the multi MSI would only be implemented in the vector
-domain callback, while the remap domain can handle it. Once we gain
-support for allocating consecutive vectors for multi-MSI in the vector
-domain we would not have to change any of the MSI code at all. 
-
-Thoughts?
-
-Thanks,
-
-	tglx
+-- 
+Thanks!
+Yijing
 
