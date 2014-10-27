@@ -1,121 +1,169 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [Patch Part2 v3 01/24] irqdomain: Introduce new interfaces to
- support hierarchy irqdomains
-From: Yingjoe Chen <yingjoe.chen@mediatek.com>
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>
-CC: Jiang Liu <jiang.liu@linux.intel.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
 	<linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>
-In-Reply-To: <5450B309.4040607@arm.com>
-References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
-	 <1414484803-10311-2-git-send-email-jiang.liu@linux.intel.com>
-	 <1414489711.32399.53.camel@mtksdaap41>
-	 <alpine.DEB.2.11.1410282010340.5308@nanos> <544FF900.4020601@arm.com>
-	 <alpine.DEB.2.11.1410282116220.5308@nanos>  <5450B309.4040607@arm.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Oct 2014 18:10:33 +0800
-Message-ID: <1414577433.32399.63.camel@mtksdaap41>
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 05/16] x86/MSI: Remove unused MSI weak arch functions
+Date: Mon, 27 Oct 2014 21:22:11 +0800
+Message-ID: <1414416142-31239-6-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
+References: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Now we can clean up MSI weak arch functions in x86.
 
-On Wed, 2014-10-29 at 09:27 +0000, Marc Zyngier wrote:
-> On 28/10/14 20:23, Thomas Gleixner wrote:
-> > On Tue, 28 Oct 2014, Marc Zyngier wrote:
-> >> On 28/10/14 19:37, Thomas Gleixner wrote:
-> >>> So while we are at it:
-> >>>
-> >>>> +	if (irq_domain_is_hierarchy(domain)) {
-> >>>> +		if (domain->ops->xlate) {
-> >>>> +			/*
-> >>>> +			 * If we've already configured this interrupt,
-> >>>> +			 * don't do it again, or hell will break loose.
-> >>>> +			 */
-> >>>> +			virq = irq_find_mapping(domain, hwirq);
-> >>>> +			if (virq)
-> >>>> +				return virq;
-> >>>
-> >>> I can understand that it is an issue if the mapping exists already,
-> >>> but I have to ask WHY is it correct behaviour to call into that code
-> >>> for an existing mapping.
-> >>
-> >> As I have originally looked at this, I'll answer the question:
-> >>
-> >> The generic DT code parses the whole tree, and generates platform
-> >> devices as it goes. As part of the platform device creation, it
-> >> populates the IRQ resources, which translates into calling into
-> >> irq_create_of_mapping(). You could argue that this behaviour is crazy,
-> >> and I wouldn't disagree.
-> > 
-> > Mooo.
-> 
-> Quite.
-> 
-> >> See http://www.spinics.net/lists/devicetree/msg53164.html for more gory
-> >> details.
-> >>
-> >>> And why would this check only apply if domain->ops->xlate is set?
-> >>> irq_create_mapping() does it unconditionally.
-> >>
-> >> My original code used the xlate callback to parse the opaque irq_data,
-> >> computing hwirq, and I suspect this is a leftover of it. The above code
-> >> seems to pull hwirq out of thin air, which is probably not the intended
-> >> behaviour. Joe?
-> > 
-> > No. Here is the full patch from Joe:
-> > 
-> >   http://lists.infradead.org/pipermail/linux-arm-kernel/2014-October/296543.html
-> > 
-> > hwirq gets either set from hwirq = irq_data->args[0] or from the xlate
-> > call.
-> 
-> Ah, that makes a lot more sense.
-> 
-> > But my question still stands:
-> > 
-> > Why would this check only apply if domain->ops->xlate is set?
-> > irq_create_mapping() does it unconditionally.
-> 
-> I don't think we should consider xlate at all. We already resolved hwirq
-> (either directly or through a xlate call), and the check should always
-> be performed (otherwise we're likely to fall into the same trap again).
-> Looks like a bug to me.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/x86/include/asm/pci.h      |    5 +----
+ arch/x86/include/asm/x86_init.h |    4 ----
+ arch/x86/kernel/apic/io_apic.c  |   21 +++++----------------
+ arch/x86/kernel/x86_init.c      |   24 ------------------------
+ 4 files changed, 6 insertions(+), 48 deletions(-)
 
-I see it now.
-When irq_create_of_mapping() is called, we know there exists a mapping
-between irq_data and hwirq. If xlate exists, we get the mapping from
-xlate call, otherwise irq_data->args[0] is hwirq. This is true even when
-using hierarchy irqdomain. So yes, we should also check for existing
-mapping for empty domain->ops->xlate.
-I corrected this in my latest version.
-http://lists.infradead.org/pipermail/linux-arm-kernel/2014-October/298158.html
-
-Thanks for catching this.
-
-Joe.C
-
-
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 1af3d77..21fe24f 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -99,14 +99,11 @@ extern void pci_iommu_alloc(void);
+ #ifdef CONFIG_PCI_MSI
+ /* implemented in arch/x86/kernel/apic/io_apic. */
+ struct msi_desc;
+-int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+-void native_teardown_msi_irq(unsigned int irq);
+-void native_restore_msi_irqs(struct pci_dev *dev);
++void native_teardown_msi_irq(struct msi_controller *ctrl, unsigned int irq);
+ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ 		  unsigned int irq_base, unsigned int irq_offset);
+ extern struct msi_controller *x86_msi_ctrl;
+ #else
+-#define native_setup_msi_irqs		NULL
+ #define native_teardown_msi_irq		NULL
+ #endif
+ 
+diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+index f58a9c7..2514f67 100644
+--- a/arch/x86/include/asm/x86_init.h
++++ b/arch/x86/include/asm/x86_init.h
+@@ -174,13 +174,9 @@ struct pci_dev;
+ struct msi_msg;
+ 
+ struct x86_msi_ops {
+-	int (*setup_msi_irqs)(struct pci_dev *dev, int nvec, int type);
+ 	void (*compose_msi_msg)(struct pci_dev *dev, unsigned int irq,
+ 				unsigned int dest, struct msi_msg *msg,
+ 			       u8 hpet_id);
+-	void (*teardown_msi_irq)(unsigned int irq);
+-	void (*teardown_msi_irqs)(struct pci_dev *dev);
+-	void (*restore_msi_irqs)(struct pci_dev *dev);
+ 	int  (*setup_hpet_msi)(unsigned int irq, unsigned int id);
+ };
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 8b8c671..04bf011 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3207,7 +3207,8 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ 	return 0;
+ }
+ 
+-int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++static int native_setup_msi_irqs(struct msi_controller *ctrl,
++		struct pci_dev *dev, int nvec, int type)
+ {
+ 	struct msi_desc *msidesc;
+ 	unsigned int irq;
+@@ -3234,26 +3235,14 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 	return 0;
+ }
+ 
+-static int __native_setup_msi_irqs(struct msi_controller *ctrl, 
+-		struct pci_dev *dev, int nvec, int type)
+-{
+-	return native_setup_msi_irqs(dev, nvec, type);
+-}
+-
+-void native_teardown_msi_irq(unsigned int irq)
++void native_teardown_msi_irq(struct msi_controller *ctrl, unsigned int irq)
+ {
+ 	irq_free_hwirq(irq);
+ }
+ 
+-static void __native_teardown_msi_irq(struct msi_controller *ctrl, 
+-		unsigned int irq)
+-{
+-	native_teardown_msi_irq(irq);
+-}
+-
+ static struct msi_controller native_msi_ctrl = {
+-	.setup_irqs = __native_setup_msi_irqs,
+-	.teardown_irq = __native_teardown_msi_irq,
++	.setup_irqs = native_setup_msi_irqs,
++	.teardown_irq = native_teardown_msi_irq,
+ };
+ 
+ struct msi_controller *pcibios_msi_controller(struct pci_bus *bus)
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index 234b072..cc32568 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -110,34 +110,10 @@ EXPORT_SYMBOL_GPL(x86_platform);
+ 
+ #if defined(CONFIG_PCI_MSI)
+ struct x86_msi_ops x86_msi = {
+-	.setup_msi_irqs		= native_setup_msi_irqs,
+ 	.compose_msi_msg	= native_compose_msi_msg,
+-	.teardown_msi_irq	= native_teardown_msi_irq,
+-	.teardown_msi_irqs	= default_teardown_msi_irqs,
+-	.restore_msi_irqs	= default_restore_msi_irqs,
+ 	.setup_hpet_msi		= default_setup_hpet_msi,
+ };
+ 
+-/* MSI arch specific hooks */
+-int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+-{
+-	return x86_msi.setup_msi_irqs(dev, nvec, type);
+-}
+-
+-void arch_teardown_msi_irqs(struct pci_dev *dev)
+-{
+-	x86_msi.teardown_msi_irqs(dev);
+-}
+-
+-void arch_teardown_msi_irq(unsigned int irq)
+-{
+-	x86_msi.teardown_msi_irq(irq);
+-}
+-
+-void arch_restore_msi_irqs(struct pci_dev *dev)
+-{
+-	x86_msi.restore_msi_irqs(dev);
+-}
+ #endif
+ 
+ struct x86_io_apic_ops x86_io_apic_ops = {
+-- 
+1.7.1
 
