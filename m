@@ -1,118 +1,188 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:5724 "EHLO
-	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753060AbaJTLFX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Oct 2014 07:05:23 -0400
-From: Vidya Sagar <vidyas@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-	<swarren@wwwdotorg.org>
-CC: <kthota@nvidia.com>, <linux-tegra@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Vidya Sagar <vidyas@nvidia.com>
-Subject: [PATCH v2] PCI: tegra: Enable root port specific features
-Date: Mon, 20 Oct 2014 16:34:51 +0530
-Message-ID: <1413803091-10824-1-git-send-email-vidyas@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga11.intel.com ([192.55.52.93]:27125 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752406AbaJ0FVH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 27 Oct 2014 01:21:07 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch v7 12/18] x86, irq: Keep balance of IOAPIC pin reference count
+Date: Mon, 27 Oct 2014 13:21:42 +0800
+Message-Id: <1414387308-27148-13-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enables root port to advertise its ASPM-L1 capability
-resulting in possible link entry to L1 when an ASPM-L1 capable
-device is connected
-Enables per-controller & per-TMS clock clamping by default
-Enabling above features result in more power saving
+To keep balance of IOAPIC pin reference count, we need to protect
+pirq_enable_irq(), acpi_pci_irq_enable() and intel_mid_pci_irq_enable()
+from reentrance. There are two cases which will cause reentrance.
 
-It also avoids PM message truncation by waiting for DLLP to finish
-before entering into L1 or L2
+The first case is caused by suspend/hibernation. If pcibios_disable_irq
+is called during suspending/hibernating, we don't release the assigned
+IRQ number, otherwise it may break the suspend/hibernation. So late when
+pcibios_enable_irq is called during resume, we shouldn't allocate IRQ
+number again.
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+The second case is that function acpi_pci_irq_enable() may be called
+twice for PCI devices present at boot time as below:
+1) pci_acpi_init()
+	--> acpi_pci_irq_enable() if pci_routeirq is true
+2) pci_enable_device()
+	--> pcibios_enable_device()
+		--> acpi_pci_irq_enable()
+We can't kill kernel parameter pci_routeirq yet because it's still
+needed for debugging purpose.
+
+So flag irq_managed is introduced to track whether IRQ number is
+assigned by OS and to protect pirq_enable_irq(), acpi_pci_irq_enable()
+and intel_mid_pci_irq_enable() from reentrance.
+
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
-v2:
- Removed rp_read() & rp_write() as they seem to be redundant
- Moved port disable code under error condition i.e. it the link
-  is down, corresponding port will be disabled
+ arch/x86/pci/intel_mid_pci.c |   10 +++++++++-
+ arch/x86/pci/irq.c           |    7 ++++++-
+ drivers/acpi/pci_irq.c       |   11 +++++++++--
+ include/linux/pci.h          |    1 +
+ 4 files changed, 25 insertions(+), 4 deletions(-)
 
- drivers/pci/host/pci-tegra.c | 50 +++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 45 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 3d43874..7f32b07 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -237,6 +237,18 @@
- 		(0xf  << PADS_REFCLK_CFG_DRVI_SHIFT)     \
- 	)
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+index b9958c364075..44b9271580b5 100644
+--- a/arch/x86/pci/intel_mid_pci.c
++++ b/arch/x86/pci/intel_mid_pci.c
+@@ -210,6 +210,9 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ {
+ 	int polarity;
  
-+#define NV_PCIE2_RP_VEND_XP1			0x00000F04
-+#define NV_PCIE2_RP_VEND_XP_LINK_PVT_CTL_L1_ASPM_SUPPORT	(1 << 21)
++	if (dev->irq_managed && dev->irq > 0)
++		return 0;
 +
-+#define NV_PCIE2_RP_VEND_XP_BIST		0x00000F4C
-+#define PCIE2_RP_VEND_XP_BIST_GOTO_L1_L2_AFTER_DLLP_DONE	(1 << 28)
+ 	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
+ 		polarity = 0; /* active high */
+ 	else
+@@ -224,13 +227,18 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ 	if (mp_map_gsi_to_irq(dev->irq, IOAPIC_MAP_ALLOC) < 0)
+ 		return -EBUSY;
+ 
++	dev->irq_managed = 1;
 +
-+#define NV_PCIE2_RP_PRIV_MISC			0x00000FE0
-+#define PCIE2_RP_PRIV_MISC_CTLR_CLK_CLAMP_THRESHOLD	(0xF << 16)
-+#define PCIE2_RP_PRIV_MISC_CTLR_CLK_CLAMP_ENABLE	(1 << 23)
-+#define PCIE2_RP_PRIV_MISC_TMS_CLK_CLAMP_THRESHOLD	(0xF << 24)
-+#define PCIE2_RP_PRIV_MISC_TMS_CLK_CLAMP_ENABLE		(1 << 31)
-+
- struct tegra_msi {
- 	struct msi_chip chip;
- 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
-@@ -1859,6 +1871,32 @@ retry:
- 	return false;
+ 	return 0;
  }
  
-+/* Enable various features of root port */
-+static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
-+{
-+	unsigned int data;
-+
-+	/* Power mangagement settings */
-+	/* Enable clock clamping by default */
-+	data = readl(port->base + NV_PCIE2_RP_PRIV_MISC);
-+	data |= PCIE2_RP_PRIV_MISC_CTLR_CLK_CLAMP_THRESHOLD |
-+		PCIE2_RP_PRIV_MISC_CTLR_CLK_CLAMP_ENABLE |
-+		PCIE2_RP_PRIV_MISC_TMS_CLK_CLAMP_THRESHOLD |
-+		PCIE2_RP_PRIV_MISC_TMS_CLK_CLAMP_ENABLE;
-+	writel(data, port->base + NV_PCIE2_RP_PRIV_MISC);
-+
-+	/* Enable rootport to advertise its ASPM - L1 capability */
-+	data = readl(port->base + NV_PCIE2_RP_VEND_XP1);
-+	data |= NV_PCIE2_RP_VEND_XP_LINK_PVT_CTL_L1_ASPM_SUPPORT;
-+	writel(data, port->base + NV_PCIE2_RP_VEND_XP1);
-+
-+	/* LTSSM : wait for DLLP to finish before entering L1 or L2/L3 */
-+	/* to avoid truncating PM messages resulting in receiver errors */
-+	data = readl(port->base + NV_PCIE2_RP_VEND_XP_BIST);
-+	data |= PCIE2_RP_VEND_XP_BIST_GOTO_L1_L2_AFTER_DLLP_DONE;
-+	writel(data, port->base + NV_PCIE2_RP_VEND_XP_BIST);
-+}
-+
- static int tegra_pcie_enable(struct tegra_pcie *pcie)
+ static void intel_mid_pci_irq_disable(struct pci_dev *dev)
  {
- 	struct tegra_pcie_port *port, *tmp;
-@@ -1870,13 +1908,15 @@ static int tegra_pcie_enable(struct tegra_pcie *pcie)
+-	if (!mp_should_keep_irq(&dev->dev) && dev->irq > 0)
++	if (!mp_should_keep_irq(&dev->dev) && dev->irq_managed &&
++	    dev->irq > 0) {
+ 		mp_unmap_irq(dev->irq);
++		dev->irq_managed = 0;
++	}
+ }
  
- 		tegra_pcie_port_enable(port);
+ struct pci_ops intel_mid_pci_ops = {
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index eb500c2592ad..a47e2dea0972 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -1202,6 +1202,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 			int irq;
+ 			struct io_apic_irq_attr irq_attr;
  
--		if (tegra_pcie_port_check_link(port))
-+		if (!tegra_pcie_port_check_link(port)) {
-+			dev_info(pcie->dev, "link %u down, ignoring\n",
-+				port->index);
-+			tegra_pcie_port_disable(port);
-+			tegra_pcie_port_free(port);
- 			continue;
-+		}
- 
--		dev_info(pcie->dev, "link %u down, ignoring\n", port->index);
--
--		tegra_pcie_port_disable(port);
--		tegra_pcie_port_free(port);
-+		tegra_pcie_enable_rp_features(port);
++			if (dev->irq_managed && dev->irq > 0)
++				return 0;
++
+ 			irq = IO_APIC_get_PCI_irq_vector(dev->bus->number,
+ 						PCI_SLOT(dev->devfn),
+ 						pin - 1, &irq_attr);
+@@ -1228,6 +1231,7 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 			}
+ 			dev = temp_dev;
+ 			if (irq >= 0) {
++				dev->irq_managed = 1;
+ 				dev->irq = irq;
+ 				dev_info(&dev->dev, "PCI->APIC IRQ transform: "
+ 					 "INT %c -> IRQ %d\n", 'A' + pin - 1, irq);
+@@ -1257,8 +1261,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ static void pirq_disable_irq(struct pci_dev *dev)
+ {
+ 	if (io_apic_assign_pci_irqs && !mp_should_keep_irq(&dev->dev) &&
+-	    dev->irq) {
++	    dev->irq_managed && dev->irq) {
+ 		mp_unmap_irq(dev->irq);
+ 		dev->irq = 0;
++		dev->irq_managed = 0;
+ 	}
+ }
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index 6e6b80eb0bba..5f1fdca65e5f 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -413,6 +413,9 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+ 		return 0;
  	}
  
- 	memset(&hw, 0, sizeof(hw));
++	if (dev->irq_managed && dev->irq > 0)
++		return 0;
++
+ 	entry = acpi_pci_irq_lookup(dev, pin);
+ 	if (!entry) {
+ 		/*
+@@ -456,6 +459,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+ 		return rc;
+ 	}
+ 	dev->irq = rc;
++	dev->irq_managed = 1;
+ 
+ 	if (link)
+ 		snprintf(link_desc, sizeof(link_desc), " -> Link[%s]", link);
+@@ -478,7 +482,7 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	u8 pin;
+ 
+ 	pin = dev->pin;
+-	if (!pin)
++	if (!pin || !dev->irq_managed || dev->irq <= 0)
+ 		return;
+ 
+ 	/* Keep IOAPIC pin configuration when suspending */
+@@ -506,6 +510,9 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	 */
+ 
+ 	dev_dbg(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
+-	if (gsi >= 0 && dev->irq > 0)
++	if (gsi >= 0) {
+ 		acpi_unregister_gsi(gsi);
++		dev->irq = 0;
++		dev->irq_managed = 0;
++	}
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5be8db45e368..2a8c4055ae9d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -348,6 +348,7 @@ struct pci_dev {
+ 	unsigned int	__aer_firmware_first:1;
+ 	unsigned int	broken_intx_masking:1;
+ 	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
++	unsigned int	irq_managed:1;
+ 	pci_dev_flags_t dev_flags;
+ 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
+ 
 -- 
-1.8.1.5
+1.7.10.4
 
