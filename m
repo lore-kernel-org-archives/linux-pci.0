@@ -1,67 +1,92 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:12601 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751518AbaJ0FUl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 27 Oct 2014 01:20:41 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	"Thierry Reding" <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 00/10] Save MSI chip in pci_sys_data
-Date: Mon, 27 Oct 2014 15:48:37 +0800
-Message-ID: <1414396127-30023-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Prarit Bhargava <prarit@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	Ingo Molnar <mingo@kernel.org>
+Subject: [Patch v7 09/18] x86, irq: Split out alloc_ioapic_save_registers()
+Date: Mon, 27 Oct 2014 13:21:39 +0800
+Message-Id: <1414387308-27148-10-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now PCI host bridge drivers in arm associate MSI chip and
-PCI bus by adding .add_bus(), and assign MSI chip pointer
-to every PCI bus. Associating MSI chip and every PCI bus
-is not necessary. All PCI busses under same PCI host brdige
-share the same MSI chip. So saving MSI chip in pci_sys_data
-is a better solution, it make PCI host bridge drivers clean.
-Because we still need to provide arch spec pcibios_msi_controller()
-to extract MSI controller pointer, a better solution is to
-refactor PCI host bridge, make a generic pci_host_bridge, and
-save common info like PCI domain number, MSI chip, resources
-in it. We will do that work in another series as soon.
+From: Yinghai Lu <yinghai@kernel.org>
 
-To Bjorn: Because struct msi_chip defined in struct hw_pci and pci_sys_data
-is under the #ifdef CONFIG_PCI_MSI, if we use if(IS_ENABLED(CONFIG_PCI_MSI))
-in PCI host bridge drivers, it will cause build errors when the CONFIG_PCI_MSI
-is off. So I keep #ifdef CONFIG_PCI_MSI in this series.
+Split out alloc_ioapic_save_registers() from early_irq_init(),
+so it could be used for ioapic hotplug later.
 
-Yijing Wang (10):
-  MSI: Rename msi_chip to msi_controller for better readability
-  PCI/MSI: Introduce weak pcibios_msi_controller()
-  arm/MSI: Save MSI controller in pci_sys_data
-  PCI: tegra: Save MSI controller in pci_sys_data
-  PCI: designware: Save MSI controller in pci_sys_data
-  PCI: rcar: Save MSI controller in pci_sys_data
-  PCI: mvebu: Save MSI controller in pci_sys_data
-  PCI: xilinx: Save MSI controller in pci_sys_data
-  arm/PCI: Clean unused pcibios_add_bus() and pcibios_remove_bus()
-  PCI/MSI: Remove useless bus->msi assignment
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/kernel/apic/io_apic.c |   22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
 
- arch/arm/include/asm/mach/pci.h     |   10 +++++---
- arch/arm/kernel/bios32.c            |   28 ++++++++++--------------
- drivers/irqchip/irq-armada-370-xp.c |   22 +++++++++---------
- drivers/of/of_pci.c                 |   40 +++++++++++++++++-----------------
- drivers/pci/host/pci-keystone-dw.c  |    4 +-
- drivers/pci/host/pci-keystone.h     |    2 +-
- drivers/pci/host/pci-mvebu.c        |   14 ++++-------
- drivers/pci/host/pci-tegra.c        |   37 +++++++++++++-------------------
- drivers/pci/host/pcie-designware.c  |   25 +++++++--------------
- drivers/pci/host/pcie-designware.h  |    2 +-
- drivers/pci/host/pcie-rcar.c        |   37 +++++++++++++-------------------
- drivers/pci/host/pcie-xilinx.c      |   27 +++++++----------------
- drivers/pci/msi.c                   |   22 ++++++++++++++-----
- drivers/pci/probe.c                 |    1 -
- include/linux/msi.h                 |    6 ++--
- include/linux/of_pci.h              |   14 ++++++------
- include/linux/pci.h                 |    2 +-
- 17 files changed, 132 insertions(+), 161 deletions(-)
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 1183d545da1e..acaee90fc9cc 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -237,6 +237,19 @@ static struct irq_pin_list *alloc_irq_pin_list(int node)
+ 	return kzalloc_node(sizeof(struct irq_pin_list), GFP_KERNEL, node);
+ }
+ 
++static void alloc_ioapic_saved_registers(int idx)
++{
++	size_t size;
++
++	if (ioapics[idx].saved_registers)
++		return;
++
++	size = sizeof(struct IO_APIC_route_entry) * ioapics[idx].nr_registers;
++	ioapics[idx].saved_registers = kzalloc(size, GFP_KERNEL);
++	if (!ioapics[idx].saved_registers)
++		pr_err("IOAPIC %d: suspend/resume impossible!\n", idx);
++}
++
+ int __init arch_early_irq_init(void)
+ {
+ 	struct irq_cfg *cfg;
+@@ -245,13 +258,8 @@ int __init arch_early_irq_init(void)
+ 	if (!nr_legacy_irqs())
+ 		io_apic_irqs = ~0UL;
+ 
+-	for_each_ioapic(i) {
+-		ioapics[i].saved_registers =
+-			kzalloc(sizeof(struct IO_APIC_route_entry) *
+-				ioapics[i].nr_registers, GFP_KERNEL);
+-		if (!ioapics[i].saved_registers)
+-			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
+-	}
++	for_each_ioapic(i)
++		alloc_ioapic_saved_registers(i);
+ 
+ 	/*
+ 	 * For legacy IRQ's, start with assigning irq0 to irq15 to
+-- 
+1.7.10.4
 
