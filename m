@@ -1,85 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f48.google.com ([209.85.216.48]:57634 "EHLO
-	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752326AbaJBBTZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 21:19:25 -0400
-Received: by mail-qa0-f48.google.com with SMTP id dc16so1197906qab.7
-        for <linux-pci@vger.kernel.org>; Wed, 01 Oct 2014 18:19:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1412201282.4285.232.camel@pasglop>
-References: <1412129393.4285.195.camel@pasglop>
-	<s5htx3o44tv.wl-tiwai@suse.de>
-	<1412149289.4285.204.camel@pasglop>
-	<s5hr3ys43ev.wl-tiwai@suse.de>
-	<s5hoatw42f6.wl-tiwai@suse.de>
-	<CADnq5_P1qTkedSuFfgJ=dd5cWji1-OUbmKoUyq+kLQgPGYYaQw@mail.gmail.com>
-	<1412201282.4285.232.camel@pasglop>
-Date: Wed, 1 Oct 2014 21:19:24 -0400
-Message-ID: <CADnq5_PuquWuwoJuOL_rNk_bkWmKh4Mh2fu2r7dNASHktFAN_w@mail.gmail.com>
-Subject: Re: [PATCH 4/4] sounds/hda/radeon: Disable 64-bit DMA on radeon
-From: Alex Deucher <alexdeucher@gmail.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Takashi Iwai <tiwai@suse.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:57000 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752934AbaJ0IOR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 27 Oct 2014 04:14:17 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Joerg Roedel <joro@8bytes.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	iommu@lists.linux-foundation.org
+Subject: [Patch Part1 v3 19/20] iommu/amd: Use helpers to access irq_cfg data structure associated with IRQ
+Date: Mon, 27 Oct 2014 16:12:10 +0800
+Message-Id: <1414397531-28254-20-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 1, 2014 at 6:08 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Wed, 2014-10-01 at 13:58 -0400, Alex Deucher wrote:
->> Patch looks good.  Audio DMAs are limited to 40 bits, same as the GPU
->> side.  I'm still waiting to hear back on the MSIs for audio, but they
->> probably follow the GPU side, so I expect they should be fixed on Sea
->> Islands as well.
->
-> In the audio driver we don't have the "family names", just a list of
-> PCI IDs, do you happen to know which ones are unaffected ?
+Use helpers to access irq_cfg data structure associated with IRQ,
+instead of accessing irq_data->chip_data directly. Later we could
+rewrite those helpers to support hierarchy irqdomain.
 
-The list of unaffected ones are:
-0x1308 //kaveri
-0x9840 //Kabini
-0xaac0 //bonaire
-0xaac8 //hawaii
-0xaad8 //tonga
-Pus all newer asics.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/amd_iommu.c |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-Alternatively, the list of older asics that are affected (some of
-these may not even support MSI64 in the first place):
-0x1314 //palm
-0x7919 //RS690
-0x793b //RS600
-0x7969 //RS740
-0x960f //RS780
-0x9646 //sumo
-0x970f //RS880
-0x9902 //trinity
-0xaa00 //R600
-0xaa08 //RV630
-0xaa10 //RV610
-0xaa18 //RV670
-0xaa20 //RV635
-0xaa28 //RV620
-0xaa30 //RV770
-0xaa38 //RV730
-0xaa40 //RV710
-0xaa48 //RV740
-0xaa50 //cypress
-0xaa58 //juniper
-0xaa60 //redwood
-0xaa68 //cedar
-0xaa80 //cayman
-0xaa88 //barts
-0xaa90 //turks
-0xaa98 //caicos
-0xaaa0 //tahiti
-0xaab0 //verde, pitcairn, oland
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index 505a9adac2d5..6fda7cc789eb 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -4068,7 +4068,7 @@ static int setup_ioapic_entry(int irq, struct IO_APIC_route_entry *entry,
+ 	int devid;
+ 	int ret;
+ 
+-	cfg = irq_get_chip_data(irq);
++	cfg = irq_cfg(irq);
+ 	if (!cfg)
+ 		return -EINVAL;
+ 
+@@ -4131,7 +4131,7 @@ static int set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 	if (!config_enabled(CONFIG_SMP))
+ 		return -1;
+ 
+-	cfg       = data->chip_data;
++	cfg       = irqd_cfg(data);
+ 	irq       = data->irq;
+ 	irte_info = &cfg->irq_2_irte;
+ 
+@@ -4169,7 +4169,7 @@ static int free_irq(int irq)
+ 	struct irq_2_irte *irte_info;
+ 	struct irq_cfg *cfg;
+ 
+-	cfg = irq_get_chip_data(irq);
++	cfg = irq_cfg(irq);
+ 	if (!cfg)
+ 		return -EINVAL;
+ 
+@@ -4188,7 +4188,7 @@ static void compose_msi_msg(struct pci_dev *pdev,
+ 	struct irq_cfg *cfg;
+ 	union irte irte;
+ 
+-	cfg = irq_get_chip_data(irq);
++	cfg = irq_cfg(irq);
+ 	if (!cfg)
+ 		return;
+ 
+@@ -4217,7 +4217,7 @@ static int msi_alloc_irq(struct pci_dev *pdev, int irq, int nvec)
+ 	if (!pdev)
+ 		return -EINVAL;
+ 
+-	cfg = irq_get_chip_data(irq);
++	cfg = irq_cfg(irq);
+ 	if (!cfg)
+ 		return -EINVAL;
+ 
+@@ -4237,7 +4237,7 @@ static int msi_setup_irq(struct pci_dev *pdev, unsigned int irq,
+ 	if (!pdev)
+ 		return -EINVAL;
+ 
+-	cfg = irq_get_chip_data(irq);
++	cfg = irq_cfg(irq);
+ 	if (!cfg)
+ 		return -EINVAL;
+ 
+@@ -4260,7 +4260,7 @@ static int alloc_hpet_msi(unsigned int irq, unsigned int id)
+ 	struct irq_cfg *cfg;
+ 	int index, devid;
+ 
+-	cfg = irq_get_chip_data(irq);
++	cfg = irq_cfg(irq);
+ 	if (!cfg)
+ 		return -EINVAL;
+ 
+-- 
+1.7.10.4
 
-It might be better to only set the msi32 flag on the above affected
-asics so we don't have to worry about new ones.
-
-Alex
