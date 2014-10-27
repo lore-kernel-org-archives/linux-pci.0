@@ -1,69 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0130.outbound.protection.outlook.com ([207.46.100.130]:7575
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751241AbaJPIXJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 16 Oct 2014 04:23:09 -0400
-From: Richard Zhu <richard.zhu@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
-	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Richard Zhu <richard.zhu@freescale.com>
-Subject: [PATCH v6 08/13] PCI: imx6: Wait the clocks to stabilize after ref_en
-Date: Thu, 16 Oct 2014 15:52:38 +0800
-Message-ID: <1413445963-24706-9-git-send-email-richard.zhu@freescale.com>
-In-Reply-To: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
-References: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [Patch v7 14/18] x86, irq, ACPI: Introduce a rwsem to protect IOAPIC operations from hotplug
+Date: Mon, 27 Oct 2014 13:21:44 +0800
+Message-Id: <1414387308-27148-15-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Richard Zhu <r65037@freescale.com>
+We are going to support ACPI based IOAPIC hotplug, so introduce a rwsem
+to protect IOAPIC data structures from IOAPIC hotplug. We choose to
+serialize in ACPI instead of in the IOAPIC core because:
+1) currently we are only plan to support ACPI based IOAPIC hotplug
+2) it's much more cleaner and easier
+3) It does't affect IOAPIC discovered by devicetree, SFI and mpparse.
 
-For boards without a reset gpio we skip the delay between enabling
-the pcie_ref_clk and touching the RC registers for configuration.
-System would be hangs when the clocks are not yet settled in the DW
-PCIe core. So we need to make sure that there is always an
-appropriate delay between those two actions.
-
-Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
-Tested-by: Tim Harvey <tharvey@gateworks.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/host/pci-imx6.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ arch/x86/kernel/acpi/boot.c |   21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 233fe8a..eac96fb 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -275,15 +275,22 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 		goto err_pcie;
- 	}
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index e077c080a519..3f6b665f5aa6 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -76,6 +76,19 @@ int acpi_fix_pin2_polarity __initdata;
+ static u64 acpi_lapic_addr __initdata = APIC_DEFAULT_PHYS_BASE;
+ #endif
  
--	/* allow the clocks to stabilize */
--	usleep_range(200, 500);
--
- 	/* power up core phy and enable ref clock */
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
-+	/*
-+	 * the async reset input need ref clock to sync internally,
-+	 * when the ref clock comes after reset, internal synced
-+	 * reset time is too short , cannot meet the requirement.
-+	 * add one ~10us delay here.
-+	 */
-+	udelay(10);
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
- 
-+	/* allow the clocks to stabilize */
-+	usleep_range(200, 500);
++/*
++ * Locks related to IOAPIC hotplug
++ * Hotplug side:
++ * 	->lock_device_hotplug()	//device_hotplug_lock
++ *		->acpi_ioapic_rwsem
++ *			->ioapic_lock
++ * Interrupt mapping side:
++ *	->acpi_ioapic_rwsem
++ *		->ioapic_mutex
++ *			->ioapic_lock
++ */
++static DECLARE_RWSEM(acpi_ioapic_rwsem);
 +
- 	/* Some boards don't have PCIe reset GPIO. */
- 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
- 		gpio_set_value(imx6_pcie->reset_gpio, 0);
+ /* --------------------------------------------------------------------------
+                               Boot-time Configuration
+    -------------------------------------------------------------------------- */
+@@ -609,8 +622,10 @@ int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
+ 	if (acpi_irq_model == ACPI_IRQ_MODEL_PIC) {
+ 		*irqp = gsi;
+ 	} else {
++		down_read(&acpi_ioapic_rwsem);
+ 		irq = mp_map_gsi_to_irq(gsi,
+ 					IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
++		up_read(&acpi_ioapic_rwsem);
+ 		if (irq < 0)
+ 			return -1;
+ 		*irqp = irq;
+@@ -651,7 +666,9 @@ static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
+ 	int irq = gsi;
+ 
+ #ifdef CONFIG_X86_IO_APIC
++	down_read(&acpi_ioapic_rwsem);
+ 	irq = mp_register_gsi(dev, gsi, trigger, polarity);
++	up_read(&acpi_ioapic_rwsem);
+ #endif
+ 
+ 	return irq;
+@@ -660,7 +677,9 @@ static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
+ static void acpi_unregister_gsi_ioapic(u32 gsi)
+ {
+ #ifdef CONFIG_X86_IO_APIC
++	down_read(&acpi_ioapic_rwsem);
+ 	mp_unregister_gsi(gsi);
++	up_read(&acpi_ioapic_rwsem);
+ #endif
+ }
+ 
+@@ -1186,7 +1205,9 @@ static void __init acpi_process_madt(void)
+ 			/*
+ 			 * Parse MADT IO-APIC entries
+ 			 */
++			down_write(&acpi_ioapic_rwsem);
+ 			error = acpi_parse_madt_ioapic_entries();
++			up_write(&acpi_ioapic_rwsem);
+ 			if (!error) {
+ 				acpi_set_irq_model_ioapic();
+ 
 -- 
-1.9.1
+1.7.10.4
 
