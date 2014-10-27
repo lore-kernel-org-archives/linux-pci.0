@@ -1,69 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0133.outbound.protection.outlook.com ([207.46.100.133]:45856
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750901AbaJAUOr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Oct 2014 16:14:47 -0400
-Date: Wed, 1 Oct 2014 12:41:15 -0700
-From: Guenter Roeck <groeck@juniper.net>
-To: Danielle Costantino <danielle.costantino@gmail.com>
-CC: linux-i2c <linux-i2c@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiri Kosina <jkosina@suse.cz>,
-	Andrew Morton <akpm@linux-foundation.org>,
+Received: from szxga02-in.huawei.com ([119.145.14.65]:28067 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751492AbaJ0Mlm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Oct 2014 08:41:42 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
+	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
 	"David S. Miller" <davem@davemloft.net>,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Rajat Jain <rajatjain@juniper.net>
-Subject: Re: Fwd: [Proposal] PM sleep children of inactive I2C bus segments
- off Masters in multi-master systems
-Message-ID: <20141001194115.GA6948@svl-evodev-groeck.juniper.net>
-References: <CAAVjN7dwS62EKMnuZc_P1UjkbRVk6RXqJ91GwWZ96bbY5Ct-rg@mail.gmail.com>
- <CAAVjN7eUmBVcAGPbcn3qsJ9M9uu2nkFoKHqGhhKGekZSceGiMw@mail.gmail.com>
- <20141001184304.GA6832@svl-evodev-groeck.juniper.net>
- <CAAVjN7edpkXYMHBm+wLegA_pc0hnm_YZf_z=Ni3h=EbDTmfegQ@mail.gmail.com>
+	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 08/16] MIPS/Xlp/MSI: Use MSI controller framework to configure MSI/MSI-X irq
+Date: Mon, 27 Oct 2014 21:22:14 +0800
+Message-ID: <1414416142-31239-9-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
+References: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CAAVjN7edpkXYMHBm+wLegA_pc0hnm_YZf_z=Ni3h=EbDTmfegQ@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 01, 2014 at 11:44:59AM -0700, Danielle Costantino wrote:
-> Re-sending Proposal:
-> 
-> Currently I2C mux devices that support multiple master arbitration are
-> the i2c-mux-pca9541 and i2c-arb-gpio-challenge drivers. I propose to
-> add the ability to configure an interrupt pin from the Master Selector
-> device to indicate that bus ownership has been lost. Once the device
-> loses ownership, all of its children should enter a pm sleep mode (as
-> you can't talk to them at this point) until master-ship has been
-> reacquired.
-> 
-Not sure I understand what you are proposing here.
+Use MSI controller framework instead of arch MSI functions to configure
+MSI/MSI-X IRQ. So we can manage MSI/MSI-X irq in a unified framework.
 
-A typical use case would be a power supply such as the one supported by
-drivers/hwmon/lineage-pem.c from both an active and standby system
-controller. The power supply needs to be accessible from both controllers.
-If one controller looses access, it can only mean that it did not follow
-the access protocol. Similar, one controller enforcing access means that
-it either does not follow the access protocol either, or that the other
-end did not follow the protocol (or maybe the other end died).
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/mips/include/asm/netlogic/xlp-hal/pcibus.h |    1 +
+ arch/mips/pci/msi-xlp.c                         |   11 +++++++++--
+ arch/mips/pci/pci-xlp.c                         |    3 +++
+ 3 files changed, 13 insertions(+), 2 deletions(-)
 
-In all cases, loss of access does not mean that the end device can or should
-be put in sleep mode, not even logically. All it means is that there was
-an access protocol error. Not sure if there is anything that can be done
-about that, but putting the device into sleep mode does not seem to be
-an appropriate response to me.
+diff --git a/arch/mips/include/asm/netlogic/xlp-hal/pcibus.h b/arch/mips/include/asm/netlogic/xlp-hal/pcibus.h
+index 91540f4..8e6869a 100644
+--- a/arch/mips/include/asm/netlogic/xlp-hal/pcibus.h
++++ b/arch/mips/include/asm/netlogic/xlp-hal/pcibus.h
+@@ -103,6 +103,7 @@
+ 
+ #ifdef CONFIG_PCI_MSI
+ void xlp_init_node_msi_irqs(int node, int link);
++extern struct msi_controller xlp_msi_ctrl;
+ #else
+ static inline void xlp_init_node_msi_irqs(int node, int link) {}
+ #endif
+diff --git a/arch/mips/pci/msi-xlp.c b/arch/mips/pci/msi-xlp.c
+index fa374fe..d18a162 100644
+--- a/arch/mips/pci/msi-xlp.c
++++ b/arch/mips/pci/msi-xlp.c
+@@ -245,7 +245,8 @@ static struct irq_chip xlp_msix_chip = {
+ 	.irq_unmask	= unmask_msi_irq,
+ };
+ 
+-void arch_teardown_msi_irq(unsigned int irq)
++static void xlp_teardown_msi_irq(struct msi_controller *ctrl,
++		unsigned int irq)
+ {
+ }
+ 
+@@ -452,7 +453,8 @@ static int xlp_setup_msix(uint64_t lnkbase, int node, int link,
+ 	return 0;
+ }
+ 
+-int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
++static int xlp_setup_msi_irq(struct msi_controller *ctrl,
++		struct pci_dev *dev, struct msi_desc *desc)
+ {
+ 	struct pci_dev *lnkdev;
+ 	uint64_t lnkbase;
+@@ -474,6 +476,11 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ 		return xlp_setup_msi(lnkbase, node, link, desc);
+ }
+ 
++struct msi_controller xlp_msi_ctrl = {
++	.setup_irq = xlp_setup_msi_irq,
++	.teardown_irq = xlp_teardown_msi_irq,
++};
++
+ void __init xlp_init_node_msi_irqs(int node, int link)
+ {
+ 	struct nlm_soc_info *nodep;
+diff --git a/arch/mips/pci/pci-xlp.c b/arch/mips/pci/pci-xlp.c
+index 7babf01..ab80417 100644
+--- a/arch/mips/pci/pci-xlp.c
++++ b/arch/mips/pci/pci-xlp.c
+@@ -174,6 +174,9 @@ struct pci_controller nlm_pci_controller = {
+ 	.mem_offset	= 0x00000000UL,
+ 	.io_resource	= &nlm_pci_io_resource,
+ 	.io_offset	= 0x00000000UL,
++#ifdef CONFIG_PCI_MSI
++	.msi_ctrl = &xlp_msi_ctrl,
++#endif
+ };
+ 
+ struct pci_dev *xlp_get_pcie_link(const struct pci_dev *dev)
+-- 
+1.7.1
 
-> This has come up as an issue when the master loses control over a bus
-> the return code of all transactions to its lave devices is EIO (not
-> very helpful).
-> 
-But, again, doesn't that mean that there was some access protocol error ?
-Shouldn't it try to re-acquire mastership instead, and block all accesses
-to slaves until it acquired it ?
-
-Thanks,
-Guenter
