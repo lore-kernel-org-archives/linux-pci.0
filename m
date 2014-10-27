@@ -1,104 +1,134 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Stuart Yoder <stuart.yoder@freescale.com>
-To: Alex Williamson <alex.williamson@redhat.com>,
-	Marcel Apfelbaum <marcel.a@redhat.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"marcel@redhat.com" <marcel@redhat.com>,
-	"mst@redhat.com" <mst@redhat.com>
-Subject: RE: [PATCH v4] PCI: add kernel parameter to override devid<->driver
- mapping.
-Date: Thu, 23 Oct 2014 13:44:57 +0000
-Message-ID: <d093a0738f61433aafe5ddd36d0393e9@CY1PR0301MB0748.namprd03.prod.outlook.com>
-References: <1413813882-27047-1-git-send-email-marcel.a@redhat.com>
- <1414002755.4202.253.camel@ul30vt.home>
-In-Reply-To: <1414002755.4202.253.camel@ul30vt.home>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Prarit Bhargava <prarit@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: [Patch v7 11/18] x86, irq: Remove __init marker for functions will be used by IOAPIC hotplug
+Date: Mon, 27 Oct 2014 13:21:41 +0800
+Message-Id: <1414387308-27148-12-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQWxleCBXaWxsaWFtc29u
-IFttYWlsdG86YWxleC53aWxsaWFtc29uQHJlZGhhdC5jb21dDQo+IFNlbnQ6IFdlZG5lc2RheSwg
-T2N0b2JlciAyMiwgMjAxNCAxOjMzIFBNDQo+IFRvOiBNYXJjZWwgQXBmZWxiYXVtDQo+IENjOiBs
-aW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBsaW51eC1rZXJu
-ZWxAdmdlci5rZXJuZWwub3JnOyBtYXJjZWxAcmVkaGF0LmNvbTsNCj4gbXN0QHJlZGhhdC5jb207
-IFlvZGVyIFN0dWFydC1CMDgyNDgNCj4gU3ViamVjdDogUmU6IFtQQVRDSCB2NF0gUENJOiBhZGQg
-a2VybmVsIHBhcmFtZXRlciB0byBvdmVycmlkZSBkZXZpZDwtPmRyaXZlciBtYXBwaW5nLg0KPiAN
-Cj4gW2NjKyBzdHVhcnRdDQo+IA0KPiBPbiBNb24sIDIwMTQtMTAtMjAgYXQgMTc6MDQgKzAzMDAs
-IE1hcmNlbCBBcGZlbGJhdW0gd3JvdGU6DQo+ID4gU2Nhbm5pbmcgYSBsb3Qgb2YgZGV2aWNlcyBk
-dXJpbmcgYm9vdCByZXF1aXJlcyBhIGxvdCBvZiB0aW1lLg0KPiA+IE9uIG90aGVyIHNjZW5hcmlv
-cyB0aGVyZSBpcyBhIG5lZWQgdG8gYmluZCBhIGRyaXZlciB0byBhIHNwZWNpZmljIHNsb3QuDQo+
-ID4NCj4gPiBCaW5kaW5nIGRldmljZXMgdG8gcGNpLXN0dWIgZHJpdmVyIGRvZXMgbm90IHdvcmss
-DQo+ID4gYXMgaXQgd2lsbCBub3QgZGlmZmVyZW50aWF0ZSBiZXR3ZWVuIGRldmljZXMgb2YgdGhl
-DQo+ID4gc2FtZSB0eXBlLiBVc2luZyBzb21lIHN0YXJ0IHNjcmlwdHMgaXMgZXJyb3IgcHJvbmUu
-DQo+ID4NCj4gPiBUaGUgc29sdXRpb24gbGV2ZXJhZ2VzIGRyaXZlcl9vdmVycmlkZSBmdW5jdGlv
-bmFsaXR5IGludHJvZHVjZWQgYnkNCj4gPg0KPiA+IAljb21taXQ6IDc4MmE5ODVkN2FmMjZkYjM5
-ZTg2MDcwZDI4Zjk4N2NhZDIxMzEzYzANCj4gPiAJQXV0aG9yOiBBbGV4IFdpbGxpYW1zb24gPGFs
-ZXgud2lsbGlhbXNvbkByZWRoYXQuY29tPg0KPiA+IAlEYXRlOiAgIFR1ZSBNYXkgMjAgMDg6NTM6
-MjEgMjAxNCAtMDYwMA0KPiA+DQo+ID4gICAgIAlQQ0k6IEludHJvZHVjZSBuZXcgZGV2aWNlIGJp
-bmRpbmcgcGF0aCB1c2luZyBwY2lfZGV2LmRyaXZlcl9vdmVycmlkZQ0KPiA+DQo+ID4gSW4gb3Jk
-ZXIgdG8gYmluZCBQQ0kgc2xvdHMgdG8gc3BlY2lmaWMgZHJpdmVycyB1c2U6DQo+ID4gCXBjaT1k
-cml2ZXJbeHh4eDp4eDp4eC54XT1mb28sZHJpdmVyW3h4eHg6eHg6eHgueF09YmFyLC4uLg0KPiA+
-DQo+ID4gU2lnbmVkLW9mZi1ieTogTWFyY2VsIEFwZmVsYmF1bSA8bWFyY2VsLmFAcmVkaGF0LmNv
-bT4NCj4gPiAtLS0NCj4gPiB2MyAtPiB2NDoNCj4gPiAgLSBBZGRyZXNzZWQgQWxleCBXaWxsaWFt
-c29uJ3MgY29tbWVudHM6DQo+ID4gICAgLSBNb2RpZmllZCB0aGUgdHlwZSBvZiBkcml2ZXJfb3Zl
-cnJpZGVfZW50cnkncyBmaWVsZHMNCj4gPiAgICAtIFVzZWQgUENJX0RFVkZOIHdoZW4gYXBwcm9w
-cmlhdGVkDQo+ID4gICAgLSBSZW1vdmVkIHJlZHVuZGFudCBjaGVja3MNCj4gPiAgICAtIFJlcGxh
-Y2VkIEJVR19PTiB3aXRoIHByX2VyciBtZXNzYWdlcw0KPiA+ICAgIC0gU2ltcGxlciBjb21tYW5k
-IGxpbmUgcGFyc2luZw0KPiA+ICAtIEFkZHJlc3NlZCBNaWNoYWVsIFMuIFRzaXJraW4gY29tbWVu
-dHMNCj4gPiAgICAtIHJlbW92ZWQgRFJJVkVSX09WRVJSSURFX05BTUVfTEVOR1RIIGxpbWl0YXRp
-b24NCj4gPiB2MiAtPiB2MzoNCj4gPiAgLSBDb3JyZWN0ZWQgc3ViamVjdCBsaW5lDQo+ID4gdjEg
-LT4gdjI6DQo+ID4gIC0gQWRkcmVzc2VkIE1pY2hhZWwgUy4gVHNpcmtpbiBjb21tZW50cw0KPiA+
-ICAgIC0gUmVtb3ZlZCAzMiBzbG90cyBsaW1pdGF0aW9uDQo+ID4gICAgLSBCZXR0ZXIgaGFuZGxp
-bmcgb2YgbWVtb3J5IGFsbG9jYXRpb24gZmFpbHVyZXMNCj4gPiAgICAgIChwcmVmZXJyZWQgQlVH
-X09OIG92ZXIgZXJyb3IgbWVzc2FnZXMpDQo+ID4gIC0gQWRkcmVzc2VkIEFsZXggV2lsbGlhbXNv
-bidzIGNvbW1lbnRzOg0KPiA+ICAgIC0gTW9kaWZpZWQgY29tbWl0IG1lc3NhZ2UgdG8gc2hvdyBw
-YXJhbWV0ZXIgdXNhZ2UgbW9yZSBjbGVhci4NCj4gPiAgLSBJIHByZWZlcnJlZCB0byByZS11c2Ug
-cGFyc2VfYXJncyBpbnN0ZWFkIG9mIG1hbnVhbGx5IHVzaW5nDQo+ID4gICAgc3Ryc3RyIGluIG9y
-ZGVyIHRvIGJldHRlciBjb21wbHkgd2l0aCBjb21tYW5kIGxpbmUgcGFyc2luZw0KPiA+ICAgIHJ1
-bGVzLg0KPiA+ICAtIEkgZGlkbid0IHVzZSBhbnkgbG9ja2luZyB3aGVuIHBhcnNpbmcgdGhlIGNv
-bW1hbmQgbGluZSBhcmdzDQo+ID4gICAgKHNlZSBwYXJzZV9kb25lIHVzYWdlKSBhc3N1bWluZyB0
-aGF0IGZpcnN0IGNhbGwgd2lsbCBiZQ0KPiA+ICAgIGVhcmx5IGluIHN5c3RlbSBib290IGFuZCBu
-byByYWNlIGNhbiBvY2N1ci4gUGxlYXNlIGNvcnJlY3QNCj4gPiAgICBtZSBpZiBJIGFtIHdyb25n
-Lg0KPiA+DQo+ID4gTm90ZXM6DQo+ID4gIC0gSSBoYXZlIGZ1cnRoZXIgaWRlYXMgb24gdG9wIG9m
-IHRoaXMgcGF0Y2ggYmFzZWQgb24geW91ciByZXZpZXdzLg0KPiA+ICAgIEkgdGhvdWdodCBvZjoN
-Cj4gPiAgICAtIFVzZSB3aWxkY2FyZHMgdG8gc3BlY2lmeSBlbnRpcmUgYnVzZXMvZGV2aWNlcywg
-c29tZXRoaW5nIGxpa2U6DQo+ID4gICAgICAJZHJpdmVyWzAwMDE6MDI6Ki4qXT1wY2ktc3R1Yg0K
-PiA+ICAgIC0gVXNlIGNvbW1hIHRvIHNlcGFyYXRlIHNldmVyYWwgZGV2aWNlczoNCj4gPiAgICAg
-IAlkcml2ZXJbMDAwMTowMjowMy40LDAwMDE6MDI6MDQuMCwuLi5dPXBjaS1zdHViDQo+ID4gICAg
-LSBNYWtlIGRvbWFpbiBvcHRpb25hbDoNCj4gPiAgICAJZHJpdmVyWzAwOjAzLjBdPXBjaS1zdHVi
-DQo+ID4NCj4gPiBDb21tZW50cyB3aWxsIGJlIGFwcHJlY2lhdGVkLA0KPiA+IFRoYW5rcywNCj4g
-PiBNYXJjZWwNCj4gPiAgRG9jdW1lbnRhdGlvbi9rZXJuZWwtcGFyYW1ldGVycy50eHQgfCAgIDQg
-KysNCj4gPiAgZHJpdmVycy9wY2kvYnVzLmMgICAgICAgICAgICAgICAgICAgfCAxMTEgKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrDQo+ID4gIGRyaXZlcnMvcGNpL3BjaS5jICAg
-ICAgICAgICAgICAgICAgIHwgICAyICsNCj4gPiAgMyBmaWxlcyBjaGFuZ2VkLCAxMTcgaW5zZXJ0
-aW9ucygrKQ0KPiANCj4gVGhlIGRyaXZlcl9vdmVycmlkZSBmZWF0dXJlIHRoYXQgd2UncmUgbWFr
-aW5nIHVzZSBvZiBoZXJlIGlzIGFsc28gZ29pbmcNCj4gdG8gYmUgc3VwcG9ydGVkIGJ5IHBsYXRm
-b3JtIGRldmljZXMgYW5kIHBvdGVudGlhbGx5IG1vcmUgYnVzdHlwZXMgaW4gdGhlDQo+IGZ1dHVy
-ZSwgc28gSSdtIGNvbmNlcm5lZCB0aGF0IG1ha2luZyBhIHBjaSBzcGVjaWZpYyBrZXJuZWwgcGFy
-YW1ldGVyIGlzDQo+IHRvbyBzaG9ydHNpZ2h0ZWQuICBJbnN0ZWFkIHdlIGNvdWxkIGhvb2sgb24g
-dG8gQlVTX05PVElGWV9BRERfREVWSUNFIGZvcg0KPiBidXN0eXBlcyB0aGF0IHN1cHBvcnQgZHJp
-dmVyX292ZXJyaWRlIHNvIHdlIGNhbiBoYXZlIGEgY29tbW9uIGludGVyZmFjZS4NCj4gUGVyaGFw
-czoNCj4gDQo+IGRyaXZlcl9vdmVycmlkZT1wY2ksMDAwMDowMjowMC4wPXBjaS1zdHViO3BsYXRm
-b3JtLGZha2VuYW1lPXZmaW8tcGxhdGZvcm0NCj4gDQo+IEZpbmRpbmcgZGVsaW1pdGVycyB0aGF0
-IGRvbid0IGNvbmZsaWN0IG1heSBiZSBjaGFsbGVuZ2luZy4NCg0KSSB0aGluayB3aGF0IHlvdSBw
-cm9wb3NlZCB3b3Jrcy0tICA8YnVzLW5hbWU+LDxidXMtZGV2Pj08ZHJpdmVyPjsNCg0KVGhpbmsg
-dGhhdCB3aWxsIHdvcmsgZm9yIFBDSSwgcGxhdGZvcm0sIGFuZCB0aGUgbmV3IGZzbC1tYyBidXMg
-d2UgYXJlIHdvcmtpbmcNCm9uLg0KDQo+IEFsc28sIGNhbiB3ZQ0KPiBhc3N1bWUgdGhhdCBidXMt
-bmFtZTpkZXYtbmFtZSBpcyB1bmlxdWUgZm9yIGV2ZXJ5IGJ1c3R5cGU/ICBJdCBpcyBmb3INCj4g
-cGNpLCBwbGF0Zm9ybT8NCg0KSSB0aGluayB0aGF0IGhhcyB0byBiZSB0aGUgY2FzZS4NCg0KPiBJ
-dCBhbHNvIHNlZW1zIGxpa2UgdGhlcmUncyBhIHF1ZXN0aW9uIG9mIGhvdyBsb25nIHNob3VsZCB0
-aGlzIG92ZXJyaWRlDQo+IGxhc3QgYW5kIGhvdyBkb2VzIHRoZSB1c2VyIGRpc2FibGUgaXQ/DQoN
-Cklzbid0IHRoYXQgYSBnZW5lcmFsIHF1ZXN0aW9uIGZvciB0aGUgImRyaXZlcl9vdmVycnJpZGUi
-IG1lY2hhbmlzbT8NCkknbSBmb3JnZXR0aW5nIGlmIHRoZSBtZWNoYW5pc20gaW4gdGhlIGtlcm5l
-bCBub3cgaGFzIGEgd2F5IHRvIGRpc2FibGUNCml0LS0gIGUuZy4gZWNobyAvZGV2L251bGwgPiAv
-c3lzL3BjaS9kZXZpY2VzLy4uLi9kcml2ZXJfb3ZlcnJpZGUgPz8NCg0KU28sIGl0IHdvdWxkIGxh
-c3QgdW50aWwgZXhwbGljaXRseSBkaXNhYmxlZCB0aHJvdWdoIHN5c2ZzLg0KDQo+IEkgdGhpbmsg
-d2l0aCBwY2ktc3R1Yi5pZHM9DQo+ICRWRU5ET1I6JERFVklDRSBhIHVzZXIgY2FuIGVjaG8gdGhl
-IElEcyB0byB0aGUgcGNpLXN0dWIvcmVtb3ZlX2lkIHN5c2ZzDQo+IGVudHJ5IHRvIGNhbmNlbCB0
-aGUgZWZmZWN0LiAgVGhlIG9ubHkgb3B0aW9uIGhlcmUgc2VlbXMgdG8gYmUgYSByZWJvb3QuDQo+
-IERvIHdlIG5lZWQgYSAvc3lzL2J1cy9wY2kvZHJpdmVyX292ZXJyaWRlcy97YWRkX25hbWUscmVt
-b3ZlX25hbWV9IGZvcg0KPiB0aGlzIGludGVyZmFjZT8gIFRoYW5rcywNCg0KVGhhbmtzLA0KU3R1
-YXJ0DQo=
+Remove __init marker for functions which will be used by IOAPIC hotplug
+at runtime.
+
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h |    4 ++--
+ arch/x86/kernel/apic/io_apic.c |   18 +++++++++---------
+ 2 files changed, 11 insertions(+), 11 deletions(-)
+
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 1733ab49ac5e..a666dcdeea67 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -188,8 +188,8 @@ extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
+ extern u32 mp_pin_to_gsi(int ioapic, int pin);
+ extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags);
+ extern void mp_unmap_irq(int irq);
+-extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
+-				      struct ioapic_domain_cfg *cfg);
++extern void mp_register_ioapic(int id, u32 address, u32 gsi_base,
++			       struct ioapic_domain_cfg *cfg);
+ extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 			    irq_hw_number_t hwirq);
+ extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index eaa7ea385600..581e51728871 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3459,7 +3459,7 @@ io_apic_setup_irq_pin(unsigned int irq, int node, struct io_apic_irq_attr *attr)
+ 	return ret;
+ }
+ 
+-static int __init io_apic_get_redir_entries(int ioapic)
++static int io_apic_get_redir_entries(int ioapic)
+ {
+ 	union IO_APIC_reg_01	reg_01;
+ 	unsigned long flags;
+@@ -3505,7 +3505,7 @@ int __init arch_probe_nr_irqs(void)
+ }
+ 
+ #ifdef CONFIG_X86_32
+-static int __init io_apic_get_unique_id(int ioapic, int apic_id)
++static int io_apic_get_unique_id(int ioapic, int apic_id)
+ {
+ 	union IO_APIC_reg_00 reg_00;
+ 	static physid_mask_t apic_id_map = PHYSID_MASK_NONE;
+@@ -3580,7 +3580,7 @@ static int __init io_apic_get_unique_id(int ioapic, int apic_id)
+ 	return apic_id;
+ }
+ 
+-static u8 __init io_apic_unique_id(int idx, u8 id)
++static u8 io_apic_unique_id(int idx, u8 id)
+ {
+ 	if ((boot_cpu_data.x86_vendor == X86_VENDOR_INTEL) &&
+ 	    !APIC_XAPIC(apic_version[boot_cpu_physical_apicid]))
+@@ -3589,7 +3589,7 @@ static u8 __init io_apic_unique_id(int idx, u8 id)
+ 		return id;
+ }
+ #else
+-static u8 __init io_apic_unique_id(int idx, u8 id)
++static u8 io_apic_unique_id(int idx, u8 id)
+ {
+ 	int i;
+ 	u8 new_id;
+@@ -3628,7 +3628,7 @@ static u8 __init io_apic_unique_id(int idx, u8 id)
+ }
+ #endif
+ 
+-static int __init io_apic_get_version(int ioapic)
++static int io_apic_get_version(int ioapic)
+ {
+ 	union IO_APIC_reg_01	reg_01;
+ 	unsigned long flags;
+@@ -3832,7 +3832,7 @@ int mp_find_ioapic_pin(int ioapic, u32 gsi)
+ 	return gsi - gsi_cfg->gsi_base;
+ }
+ 
+-static __init int bad_ioapic(unsigned long address)
++static int bad_ioapic(unsigned long address)
+ {
+ 	if (nr_ioapics >= MAX_IO_APICS) {
+ 		pr_warn("WARNING: Max # of I/O APICs (%d) exceeded (found %d), skipping\n",
+@@ -3846,7 +3846,7 @@ static __init int bad_ioapic(unsigned long address)
+ 	return 0;
+ }
+ 
+-static __init int bad_ioapic_register(int idx)
++static int bad_ioapic_register(int idx)
+ {
+ 	union IO_APIC_reg_00 reg_00;
+ 	union IO_APIC_reg_01 reg_01;
+@@ -3865,8 +3865,8 @@ static __init int bad_ioapic_register(int idx)
+ 	return 0;
+ }
+ 
+-void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
+-			       struct ioapic_domain_cfg *cfg)
++void mp_register_ioapic(int id, u32 address, u32 gsi_base,
++			struct ioapic_domain_cfg *cfg)
+ {
+ 	int idx = 0;
+ 	int entries;
+-- 
+1.7.10.4
+
