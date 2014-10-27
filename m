@@ -1,85 +1,124 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v3 08/27] PCI: mvebu: Save msi chip in pci_sys_data
-Date: Wed, 15 Oct 2014 11:06:56 +0800
-Message-ID: <1413342435-7876-9-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
-References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Prarit Bhargava <prarit@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
+	linux-pm@vger.kernel.org
+Subject: [Patch v7 17/18] x86, irq: Introduce helper to check whether an IOAPIC has been registered
+Date: Mon, 27 Oct 2014 13:21:47 +0800
+Message-Id: <1414387308-27148-18-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Save msi chip in pci_sys_data instead of assign
-msi chip to every pci bus in .add_bus().
+Introduce acpi_ioapic_registered() to check whether an IOAPIC has already
+been registered, it will be used when enabling IOAPIC hotplug.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/host/pci-mvebu.c |   10 +++-------
- 1 files changed, 3 insertions(+), 7 deletions(-)
+ arch/x86/include/asm/io_apic.h |    1 +
+ arch/x86/kernel/acpi/boot.c    |   22 ++++++++++++++++++++++
+ arch/x86/kernel/apic/io_apic.c |   11 +++++++++++
+ include/linux/acpi.h           |    1 +
+ 4 files changed, 35 insertions(+)
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index b1315e1..f8e9c6c 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -774,12 +774,6 @@ static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- 	return bus;
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 7c04b8ec22a4..ca742d5249db 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -191,6 +191,7 @@ extern void mp_unmap_irq(int irq);
+ extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 			      struct ioapic_domain_cfg *cfg);
+ extern int mp_unregister_ioapic(u32 gsi_base);
++extern int mp_ioapic_registered(u32 gsi_base);
+ extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 			    irq_hw_number_t hwirq);
+ extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index bc61a5c0e7b6..f27b33194e06 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -825,6 +825,28 @@ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base)
  }
+ EXPORT_SYMBOL(acpi_unregister_ioapic);
  
--static void mvebu_pcie_add_bus(struct pci_bus *bus)
--{
--	struct mvebu_pcie *pcie = sys_to_pcie(bus->sysdata);
--	bus->msi = pcie->msi;
--}
--
- static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
- 						 const struct resource *res,
- 						 resource_size_t start,
-@@ -816,6 +810,9 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
- 
- 	memset(&hw, 0, sizeof(hw));
- 
-+#ifdef CONFIG_PCI_MSI
-+	hw.msi_chip = pcie->msi;
++/**
++ * acpi_ioapic_registered - Check whether IOAPIC assoicatied with @gsi_base
++ *			    has been registered
++ * @handle:	ACPI handle of the IOAPIC deivce
++ * @gsi_base:	GSI base associated with the IOAPIC
++ *
++ * Assume caller holds some type of lock to serialize acpi_ioapic_registered()
++ * with acpi_register_ioapic()/acpi_unregister_ioapic().
++ */
++int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base)
++{
++	int ret = 0;
++
++#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
++	down_read(&acpi_ioapic_rwsem);
++	ret  = mp_ioapic_registered(gsi_base);
++	up_read(&acpi_ioapic_rwsem);
 +#endif
- 	hw.nr_controllers = 1;
- 	hw.private_data   = (void **)&pcie;
- 	hw.setup          = mvebu_pcie_setup;
-@@ -823,7 +820,6 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
- 	hw.map_irq        = of_irq_parse_and_map_pci;
- 	hw.ops            = &mvebu_pcie_ops;
- 	hw.align_resource = mvebu_pcie_align_resource;
--	hw.add_bus        = mvebu_pcie_add_bus;
- 
- 	pci_common_init(&hw);
++
++	return ret;
++}
++
+ static int __init acpi_parse_sbf(struct acpi_table_header *table)
+ {
+ 	struct acpi_table_boot *sb;
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 9e5432ee2070..df3858de3031 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -4018,6 +4018,17 @@ int mp_unregister_ioapic(u32 gsi_base)
+ 	return 0;
  }
+ 
++int mp_ioapic_registered(u32 gsi_base)
++{
++	int ioapic;
++
++	for_each_ioapic(ioapic)
++		if (ioapics[ioapic].gsi_config.gsi_base == gsi_base)
++			return 1;
++
++	return 0;
++}
++
+ int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 		     irq_hw_number_t hwirq)
+ {
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 77cecd0350e7..be6be0f91337 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -152,6 +152,7 @@ int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
+ 
+ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
+ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base);
++int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base);
+ void acpi_irq_stats_init(void);
+ extern u32 acpi_irq_handled;
+ extern u32 acpi_irq_not_handled;
 -- 
-1.7.1
+1.7.10.4
 
