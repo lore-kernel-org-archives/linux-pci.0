@@ -1,8 +1,4 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:3388 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751618AbaJ0IKc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 27 Oct 2014 04:10:32 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
@@ -12,104 +8,45 @@ To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Prarit Bhargava <prarit@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part1 v3 07/20] x86, irq: Protect __clear_irq_vector() with vector_lock
-Date: Mon, 27 Oct 2014 16:11:58 +0800
-Message-Id: <1414397531-28254-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v7 05/18] ACPI: Correct return value of acpi_dev_resource_address_space()
+Date: Mon, 27 Oct 2014 13:21:35 +0800
+Message-Id: <1414387308-27148-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function __clear_irq_vector() accesses vector related data structure,
-so protect it with vector_lock. Also rename it as clear_irq_vector().
+Change acpi_dev_resource_address_space() to return failure if the
+acpi_resource structure can't be converted to an ACPI address64
+structure, so caller could correctly detect failure.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/kernel/apic/io_apic.c |   19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
+ drivers/acpi/resource.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index c8be3fa0844d..2de22ddf215a 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -1349,10 +1349,12 @@ int assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
- 	return err;
- }
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 2ba8f02ced36..782a0d15c25f 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -200,7 +200,7 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
  
--static void __clear_irq_vector(int irq, struct irq_cfg *cfg)
-+static void clear_irq_vector(int irq, struct irq_cfg *cfg)
- {
- 	int cpu, vector;
-+	unsigned long flags;
+ 	status = acpi_resource_to_address64(ares, &addr);
+ 	if (ACPI_FAILURE(status))
+-		return true;
++		return false;
  
-+	raw_spin_lock_irqsave(&vector_lock, flags);
- 	BUG_ON(!cfg->vector);
- 
- 	vector = cfg->vector;
-@@ -1362,8 +1364,11 @@ static void __clear_irq_vector(int irq, struct irq_cfg *cfg)
- 	cfg->vector = 0;
- 	cpumask_clear(cfg->domain);
- 
--	if (likely(!cfg->move_in_progress))
-+	if (likely(!cfg->move_in_progress)) {
-+		raw_spin_unlock_irqrestore(&vector_lock, flags);
- 		return;
-+	}
-+
- 	for_each_cpu_and(cpu, cfg->old_domain, cpu_online_mask) {
- 		for (vector = FIRST_EXTERNAL_VECTOR; vector < NR_VECTORS; vector++) {
- 			if (per_cpu(vector_irq, cpu)[vector] != irq)
-@@ -1373,6 +1378,7 @@ static void __clear_irq_vector(int irq, struct irq_cfg *cfg)
- 		}
- 	}
- 	cfg->move_in_progress = 0;
-+	raw_spin_unlock_irqrestore(&vector_lock, flags);
- }
- 
- void __setup_vector_irq(int cpu)
-@@ -1499,7 +1505,7 @@ static void setup_ioapic_irq(unsigned int irq, struct irq_cfg *cfg,
- 					 &dest)) {
- 		pr_warn("Failed to obtain apicid for ioapic %d, pin %d\n",
- 			mpc_ioapic_id(attr->ioapic), attr->ioapic_pin);
--		__clear_irq_vector(irq, cfg);
-+		clear_irq_vector(irq, cfg);
- 
- 		return;
- 	}
-@@ -1513,7 +1519,7 @@ static void setup_ioapic_irq(unsigned int irq, struct irq_cfg *cfg,
- 	if (x86_io_apic_ops.setup_entry(irq, &entry, dest, cfg->vector, attr)) {
- 		pr_warn("Failed to setup ioapic entry for ioapic  %d, pin %d\n",
- 			mpc_ioapic_id(attr->ioapic), attr->ioapic_pin);
--		__clear_irq_vector(irq, cfg);
-+		clear_irq_vector(irq, cfg);
- 
- 		return;
- 	}
-@@ -3083,12 +3089,9 @@ int arch_setup_hwirq(unsigned int irq, int node)
- void arch_teardown_hwirq(unsigned int irq)
- {
- 	struct irq_cfg *cfg = irq_cfg(irq);
--	unsigned long flags;
- 
- 	free_remapped_irq(irq);
--	raw_spin_lock_irqsave(&vector_lock, flags);
--	__clear_irq_vector(irq, cfg);
--	raw_spin_unlock_irqrestore(&vector_lock, flags);
-+	clear_irq_vector(irq, cfg);
- 	free_irq_cfg(irq, cfg);
- }
- 
+ 	res->start = addr.minimum;
+ 	res->end = addr.maximum;
 -- 
 1.7.10.4
 
