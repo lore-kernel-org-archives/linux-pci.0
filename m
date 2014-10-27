@@ -1,138 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [207.46.100.145] ([207.46.100.145]:27936 "EHLO
-	na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751505AbaJMGxF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Oct 2014 02:53:05 -0400
-Message-ID: <543B767E.8000800@freescale.com>
-Date: Mon, 13 Oct 2014 14:51:42 +0800
-From: Lian Minghuan-B31939 <B31939@freescale.com>
+Received: from mail-qa0-f53.google.com ([209.85.216.53]:45516 "EHLO
+	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754398AbaJ0TcI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Oct 2014 15:32:08 -0400
+Received: by mail-qa0-f53.google.com with SMTP id n8so1950317qaq.40
+        for <linux-pci@vger.kernel.org>; Mon, 27 Oct 2014 12:32:07 -0700 (PDT)
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"Zang Roy-R61911" <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v4] PCI: Layerscape: Add Layerscape PCIe driver
-References: <1411888107-27640-1-git-send-email-Minghuan.Lian@freescale.com>
- <8584310.bgN0fYJaqP@wuerfel>
-In-Reply-To: <8584310.bgN0fYJaqP@wuerfel>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <544E99FD.5040306@web.de>
+References: <544D37F7.2060800@web.de> <1414399977.2421.1.camel@pengutronix.de> <544E99FD.5040306@web.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 27 Oct 2014 13:31:47 -0600
+Message-ID: <CAErSpo5Wsmjqm1rMi_46j_Y-6h+9eNv7Rc1OH0Wm7S1VmMNWWA@mail.gmail.com>
+Subject: Re: Setting cpu affinity for MSI-X on i.mx6 possible?
+To: Heiner Kallweit <heiner.kallweit@web.de>
+Cc: Lucas Stach <l.stach@pengutronix.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
-
-Sorry for delay in my reply.
-Please see my comments inline.
-
-On 2014年09月30日 17:18, Arnd Bergmann wrote:
-> On Sunday 28 September 2014 15:08:27 Minghuan Lian wrote:
->> Add support for Freescale Layerscape PCIe controller. This driver
->> re-uses the designware core code.
->>
->> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
-> I'm still not too happy about the MSI handling here. I think you
-> really need to have a separate driver for the msi controller.
-[Minghuan] LS1021 does not contains MSI controller.
-SCFG contains only one register to implement MSI interrupt support.
-And I reused pci-designware.c MSI API.
->> +/* SCFG MSI register */
->> +#define SCFG_SPIMSICR		0x40
->> +#define SCFG_SPIMSICLRCR	0x90
->> +
->> +#define MSI_LS1021A_ADDR		0x1570040
->> +#define MSI_LS1021A_DATA(pex_idx)	(0xb3 + pex_idx)
->  From what I can tell, the 'scfg' registers are mostly for MSI, and
-> the MSI_LS1021A_ADDR that you have hardcoded here is actually part of
-> the scfg area itself. You should never hardwire that in a PCI host
-> driver.
+On Mon, Oct 27, 2014 at 1:16 PM, Heiner Kallweit <heiner.kallweit@web.de> wrote:
+> Thanks, Lucas.
 >
-> Please make a separate MSI driver instead and use the 'msi-parent'
-> property.
-[Minghuan] There is only one register in SCFG used for MSI.
-I really do not want to write a separate MSI driver only for one 
-register and two MSI interrupts.
-It is really not good to use hardcode MSI_LS1021A_ADDR.
-I hope to change it when adding LS2085 PCI driver support.
-SCFG contains some registers used for PCI link status, PCI error 
-interrupt and PCI PME support.
-This is the first patch and will continue to improve.
-
->> +static u32 ls_pcie_get_msi_addr(struct pcie_port *pp)
->> +{
->> +	return MSI_LS1021A_ADDR;
->> +}
->> +
->> +static u32 ls_pcie_get_msi_data(struct pcie_port *pp, int pos)
->> +{
->> +	struct ls_pcie *pcie = to_ls_pcie(pp);
->> +
->> +	return MSI_LS1021A_DATA(pcie->index);
->> +}
-> Does this mean you can have only one device on this PCI host that
-> uses MSI?
-[Minghuan] Yes. LS1021A provides  only one MSI interrupt for a PCI 
-controller NOT 32.
->> +static irqreturn_t ls_pcie_msi_irq_handler(int irq, void *data)
->> +{
->> +	struct pcie_port *pp = data;
->> +	struct ls_pcie *pcie = to_ls_pcie(pp);
->> +	unsigned int msi_irq;
->> +
->> +	/* clear the interrupt */
->> +	regmap_write(pcie->scfg, SCFG_SPIMSICLRCR,
->> +		     MSI_LS1021A_DATA(pcie->index));
->> +
->> +	msi_irq = irq_find_mapping(pp->irq_domain, 0);
->> +	if (!msi_irq) {
->> +		/*
->> +		 * that's weird who triggered this?
->> +		 * just clear it
->> +		 */
->> +		dev_err(pcie->dev, "unexpected MSI\n");
->> +		return IRQ_NONE;
->> +	}
->> +
->> +	generic_handle_irq(msi_irq);
->> +	return IRQ_HANDLED;
->> +}
-> Since you have only one addr/data value per host controller, does that mean
-> that you can have only one device on this host that uses one interrupt?
+> It's interesting however that the igb driver claims it's using MSI-X.
+> Maybe the DW PCIE drivers offers MSI-X on the bus and just internally falls back to MSI?
 >
-> How do you ensure that the second user that tries to call pci_enable_msi
-> gets an error? Is there only one internal device attached to the host?
-[Minghuan] I used the following code to reserve 31 MSI interrupt.
-static void ls1021a_pcie_msi_fixup(struct pcie_port *pp)
-{
-     int i;
+> Rgds, Heiner
+>
+> [    4.165850] igb: Intel(R) Gigabit Ethernet Network Driver - version 5.2.15-k
+> [    4.172930] igb: Copyright (c) 2007-2014 Intel Corporation.
+> [    4.178638] igb 0000:01:00.0: enabling device (0140 -> 0142)
+> [    4.235789] igb 0000:01:00.0: added PHC on eth0
+> [    4.235793] igb 0000:01:00.0: Intel(R) Gigabit Ethernet Network Connection
+> [    4.235799] igb 0000:01:00.0: eth0: (PCIe:2.5Gb/s:Width x1) 00:01:c0:14:b1:58
+> [    4.235804] igb 0000:01:00.0: eth0: PBA No: FFFFFF-0FF
+> [    4.235810] igb 0000:01:00.0: Using MSI-X interrupts. 2 rx queue(s), 2 tx queue(s)
 
-     /*
-      * LS1021A has only one MSI interrupt
-      * Set all msi interrupts as used except the first one
-      */
-     for (i = 1; i < MAX_MSI_IRQS; i++)
-         set_bit(i, pp->msi_irq_in_use);
-}
->> +	if (of_device_is_compatible(pcie->dev->of_node, "fsl,ls1021a-pcie")) {
->> +		/*
->> +		 * LS1021A Workaround for internal TKT228622
->> +		 * to fix the INTx hang issue
->> +		 */
->> +		val = ioread32(pcie->dbi + PCIE_STRFMR1);
->> +		val &= 0xffff;
->> +		iowrite32(val, pcie->dbi + PCIE_STRFMR1);
->> +
->> +		ls1021a_pcie_msi_fixup(pp);
->> +	}
->> +}
-> "fsl,ls1021a-pcie" is the only one supported by this driver, so the
-> check is useless.
-[Minghuan] Ok. I will remove the 'if" and will re-add when adding LS2085 
-PCI driver.
-> 	Arnd
+What does "lspci -vvs01:00.0" say?  It *looks* like igb pays attention
+to whether enabling MSI-X worked, but that path in the driver is not
+completely trivial, and I got tired of tracing the code to verify it.
 
+Bjorn
