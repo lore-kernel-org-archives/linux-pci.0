@@ -1,47 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:57700 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751576AbaJAPpa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Oct 2014 11:45:30 -0400
-Date: Wed, 1 Oct 2014 17:45:24 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, tglx@linutronix.de,
-	hpa@zytor.com, x86@kernel.org, bp@suse.de,
-	dan.carpenter@oracle.com, dougthompson@xmission.com,
-	m.chehab@samsung.com, linux-edac@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/4] edac, amd64_edac: Add F15h M60h support
-Message-ID: <20141001154523.GF18271@pd.tnic>
-References: <1411070230-10298-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
- <20141001113235.GC18271@pd.tnic>
- <542C1EAA.4050408@amd.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 27 Oct 2014 15:44:46 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Will Deacon <will.deacon@arm.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH RFC 2/2] drivers: pci: convert generic host controller to
+ DT resource parsing API
+Message-ID: <20141027154446.GA773@red-moon>
+References: <1414077787-20633-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1414077787-20633-2-git-send-email-lorenzo.pieralisi@arm.com>
+ <20141027120335.GQ8768@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <542C1EAA.4050408@amd.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141027120335.GQ8768@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 01, 2014 at 10:32:58AM -0500, Aravind Gopalakrishnan wrote:
-> >>+			if (dcsm & 0x3) {
-> >>+				/* LRDIMMs */
-> >>+				edac_dbg(1, "  DIMM type: LRDIMM %dx rank multiply;"
-> >>+					 "CS = %d; all DIMMs support ECC: %s\n",
-> >>+					 (dcsm & 0x3), cs,
-> >>+					 (dclr & BIT(19)) ? "yes" : "no");
-> >Why do we need to iterate over the DRAM CS sets? Just for the rank
-> >multiplier, apparently. We dump those normally in read_dct_base_mask(),
-> >though.
+On Mon, Oct 27, 2014 at 12:03:35PM +0000, Will Deacon wrote:
+> On Thu, Oct 23, 2014 at 04:23:07PM +0100, Lorenzo Pieralisi wrote:
+> > In order to consolidate DT configuration for PCI host controllers in the
+> > kernel, a new API (ie of_pci_get_host_bridge_resources()) was developed
+> > to allow parsing and assigning IO/BUS/MEM resources from DT, removing
+> > duplicated code present in the majority of pci host driver implementations.
+> > 
+> > This patch converts the existing PCI generic host controller driver to
+> > the new API. Most of the code parsing ranges and creating resources is
+> > now delegated to of_pci_get_host_bridge_resources() API.
+> > 
+> > The PCI host controller code carries out resources filtering on the
+> > resulting resource list and maps IO space by using the newly introduced
+> > pci_ioremap_iospace() API.
+> > 
+> > New code supports only one IO resource per generic host controller, which
+> > should cater for all existing host controller configurations.
+> > 
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: Will Deacon <will.deacon@arm.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > ---
+> >  drivers/pci/host/pci-host-generic.c | 120 ++++++++----------------------------
+> >  1 file changed, 27 insertions(+), 93 deletions(-)
 > 
-> It's not just for rank multiplier.. we find that it's LRDIMM only by
-> examining dcsm. Hence the iteration here..
+> Looks fine to me -- I assume you tested this under a 32-bit kernel?
 
-So we can look only at the first DCSM, no? Or are there systems with
-different types of LRDIMMs on one DCT?
+Yes, through kvmtools, 32-bit guest on 32/64 bits hosts. I will keep on
+testing it before asking to merge it in -next. I would be grateful if the
+parsing logic could be tested on arm64 too (Suravee, did you give them
+a try ?) and collect the resulting tested-by.
 
--- 
-Regards/Gruss,
-    Boris.
+>   Acked-by: Will Deacon <will.deacon@arm.com>
 
-Sent from a fat crate under my desk. Formatting is fine.
---
+Thank you !
+Lorenzo
