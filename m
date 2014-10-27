@@ -1,115 +1,191 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bbn0108.outbound.protection.outlook.com ([157.56.111.108]:53976
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752322AbaJTFX5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Oct 2014 01:23:57 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <richard.zhu@freescale.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shengchao Guo <Shawn.Guo@freescale.com>,
-	"festevam@gmail.com" <festevam@gmail.com>,
-	"tharvey@gateworks.com" <tharvey@gateworks.com>
-Subject: RE: [PATCH v6 01/13] PCI: designware: Refine setup_rc and add msi
- data restore
-Date: Mon, 20 Oct 2014 05:23:52 +0000
-Message-ID: <df55ded1295f4069a8e679800aa09f8f@DM2PR0301MB0862.namprd03.prod.outlook.com>
-References: <1413445963-24706-1-git-send-email-richard.zhu@freescale.com>
-	 <1413445963-24706-2-git-send-email-richard.zhu@freescale.com>
- <1413455817.2165.6.camel@antimon.intern.lynxeye.de>
-In-Reply-To: <1413455817.2165.6.camel@antimon.intern.lynxeye.de>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Prarit Bhargava <prarit@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v3 16/20] x86, irq: Use helpers to access irq_cfg data structure associated with IRQ
+Date: Mon, 27 Oct 2014 16:12:07 +0800
+Message-Id: <1414397531-28254-17-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEx1Y2FzIFN0YWNoIFttYWls
-dG86bC5zdGFjaEBwZW5ndXRyb25peC5kZV0NCj4gU2VudDogVGh1cnNkYXksIE9jdG9iZXIgMTYs
-IDIwMTQgNjozNyBQTQ0KPiBUbzogUmljaGFyZCBaaHUNCj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtl
-cm5lbC5vcmc7IEd1byBTaGF3bi1SNjUwNzM7IGZlc3RldmFtQGdtYWlsLmNvbTsNCj4gdGhhcnZl
-eUBnYXRld29ya3MuY29tOyBaaHUgUmljaGFyZC1SNjUwMzcNCj4gU3ViamVjdDogUmU6IFtQQVRD
-SCB2NiAwMS8xM10gUENJOiBkZXNpZ253YXJlOiBSZWZpbmUgc2V0dXBfcmMgYW5kIGFkZCBtc2kN
-Cj4gZGF0YSByZXN0b3JlDQo+IA0KPiBBbSBEb25uZXJzdGFnLCBkZW4gMTYuMTAuMjAxNCwgMTU6
-NTIgKzA4MDAgc2NocmllYiBSaWNoYXJkIFpodToNCj4gPiBGcm9tOiBSaWNoYXJkIFpodSA8cjY1
-MDM3QGZyZWVzY2FsZS5jb20+DQo+ID4NCj4gPiAtIG1vdmUgInByb2dyYW0gY29ycmVjdCBjbGFz
-cyBmb3IgUkMiIGZyb20gZHdfcGNpZV9ob3N0X2luaXQoKSB0bw0KPiA+IGR3X3BjaWVfc2V0dXBf
-cmMoKS4gc2luY2UgdGhpcyBpcyBSQyBzZXR1cCwgaXQncyBiZXR0ZXIgdG8gY29udGFpbmVkDQo+
-ID4gaW4gZHdfcGNpZV9zZXR1cF9yYyBmdW5jdGlvbi4NCj4gPiBUaGVuLCBSQyBjYW4gYmUgcmUt
-c2V0dXAgcmVhbGx5IGJ5IGR3X3BjaWVfc2V0dXBfcmMoKS4NCj4gPiAtIGFkZCBvbmUgc3RvcmUv
-cmUtc3RvcmUgbXNpIGNmZyBmdW5jdGlvbnMuIEJlY2F1c2UgdGhhdCBwY2llDQo+ID4gY29udHJv
-bGxlciBtYXliZSBwb3dlcmVkIG9mZiBkdXJpbmcgc3lzdGVtIHN1c3BlbmQsIGFuZCB0aGUgbXNp
-IGRhdGENCj4gPiBjb25maWd1cmF0aW9uIHdvdWxkIGJlIGxvc3QuDQo+ID4gdGhlc2UgZnVuY3Rp
-b25zIGNhbiBiZSB1c2VkIHRvIHN0b3JlL3Jlc3RvcmUgdGhlIG1zaSBkYXRhIGFuZA0KPiA+IG1z
-aV9lbmFibGUgZHVyaW5nIHRoZSBzdXNwZW5kL3Jlc3VtZSBjYWxsYmFjay4NCj4gPg0KPiA+IFNp
-Z25lZC1vZmYtYnk6IFJpY2hhcmQgWmh1IDxyaWNoYXJkLnpodUBmcmVlc2NhbGUuY29tPg0KPiAN
-Cj4gTkFLIGZvciB0aGUgcmVhc29ucyBiZWxvdy4NCj4gDQo+ID4gLS0tDQo+ID4gIGRyaXZlcnMv
-cGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmMgfCAyMSArKysrKysrKysrKysrKysrKystLS0NCj4g
-PiBkcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5oIHwgIDMgKysrDQo+ID4gIDIgZmls
-ZXMgY2hhbmdlZCwgMjEgaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkNCj4gPg0KPiA+IGRp
-ZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5jDQo+ID4gYi9kcml2
-ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5jDQo+ID4gaW5kZXggNTM4YmJmMy4uYjFmODJm
-ZiAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5jDQo+
-ID4gKysrIGIvZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUuYw0KPiA+IEBAIC0xOTQs
-NiArMTk0LDE5IEBAIHZvaWQgZHdfcGNpZV9tc2lfaW5pdChzdHJ1Y3QgcGNpZV9wb3J0ICpwcCkN
-Cj4gPiAgCWR3X3BjaWVfd3Jfb3duX2NvbmYocHAsIFBDSUVfTVNJX0FERFJfSEksIDQsIDApOyAg
-fQ0KPiA+DQo+ID4gK3ZvaWQgZHdfcGNpZV9tc2lfY2ZnX3N0b3JlKHN0cnVjdCBwY2llX3BvcnQg
-KnBwKSB7DQo+ID4gKwlkd19wY2llX3JkX293bl9jb25mKHBwLCBQQ0lFX01TSV9JTlRSMF9FTkFC
-TEUsIDQsICZwcC0+bXNpX2VuYWJsZSk7DQo+IA0KPiBZb3UgYXJlIG9ubHkgc2F2aW5nIGFuZCBy
-ZXN0b3JpbmcgdGhpcyBvbmUgcmVnaXN0ZXIuIFdoaWxlIHRoaXMgbWlnaHQgd29yayBmb3INCj4g
-dGhlIGN1cnJlbnQgaW1wbGVtZW50YXRpb24gdGhhdCB1c2VzIG9ubHkgYSBtYXggb2YgMzIgdmVj
-dG9ycyB0aGlzIGlzIG5vdCB0cnVlDQo+IGluIGdlbmVyYWwuIEF0IGxlYXN0IHRoZSBpbXg2IGlt
-cGxlbWVudGF0aW9uIHN1cHBvcnRzIHVwIHRvIDEyOCB2ZWN0b3JzLCBzbw0KPiBhY3R1YWxseSA0
-IHJlZ2lzdGVycyBtaWdodCBiZSB1c2VkIGhlcmUuDQo+DQpbUmljaGFyZF0gT2ssIGFsbCB0aGUg
-Zm91ciByZWdpc3RlcnMgd291bGQgYmUgc3RvcmVkL3JlLXN0b3JlZC4NCiANCj4gPiArfQ0KPiA+
-ICsNCj4gPiArdm9pZCBkd19wY2llX21zaV9jZmdfcmVzdG9yZShzdHJ1Y3QgcGNpZV9wb3J0ICpw
-cCkgew0KPiA+ICsJZHdfcGNpZV93cl9vd25fY29uZihwcCwgUENJRV9NU0lfQUREUl9MTywgNCwN
-Cj4gPiArCQkJdmlydF90b19waHlzKCh2b2lkICopcHAtPm1zaV9kYXRhKSk7DQo+ID4gKwlkd19w
-Y2llX3dyX293bl9jb25mKHBwLCBQQ0lFX01TSV9BRERSX0hJLCA0LCAwKTsNCj4gPiArCWR3X3Bj
-aWVfd3Jfb3duX2NvbmYocHAsIFBDSUVfTVNJX0lOVFIwX0VOQUJMRSwgNCwgcHAtPm1zaV9lbmFi
-bGUpOw0KPiANCj4gTXVyYWxpIGFza2VkIHlvdSB0byB0YWtlIGludG8gYWNjb3VudCB0aGUgbmV3
-bHkgYWRkZWQgcmVxdWlyZW1lbnRzIGZvciBvbGRlcg0KPiBkZXNpZ253YXJlIGNvcmVzLiBZb3Ug
-ZGlkIG5vdC4NCltSaWNoYXJkXSBTb3JyeSwgTXVyYWxpJ3MgY29tbWVudHMgaXMgbWlzc2VkIGJl
-Zm9yZSwgd291bGQgYmUgYWRkZWQgbGF0ZXIuDQo+IA0KPiA+ICt9DQo+ID4gKw0KPiA+ICBzdGF0
-aWMgaW50IGZpbmRfdmFsaWRfcG9zMChzdHJ1Y3QgcGNpZV9wb3J0ICpwcCwgaW50IG1zZ3ZlYywg
-aW50IHBvcywNCj4gPiBpbnQgKnBvczApICB7DQo+ID4gIAlpbnQgZmxhZyA9IDE7DQo+ID4gQEAg
-LTU3MCw5ICs1ODMsNiBAQCBpbnQgX19pbml0IGR3X3BjaWVfaG9zdF9pbml0KHN0cnVjdCBwY2ll
-X3BvcnQgKnBwKQ0KPiA+DQo+ID4gIAlkd19wY2llX3dyX293bl9jb25mKHBwLCBQQ0lfQkFTRV9B
-RERSRVNTXzAsIDQsIDApOw0KPiA+DQo+ID4gLQkvKiBwcm9ncmFtIGNvcnJlY3QgY2xhc3MgZm9y
-IFJDICovDQo+ID4gLQlkd19wY2llX3dyX293bl9jb25mKHBwLCBQQ0lfQ0xBU1NfREVWSUNFLCAy
-LCBQQ0lfQ0xBU1NfQlJJREdFX1BDSSk7DQo+ID4gLQ0KPiA+ICAJZHdfcGNpZV9yZF9vd25fY29u
-ZihwcCwgUENJRV9MSU5LX1dJRFRIX1NQRUVEX0NPTlRST0wsIDQsICZ2YWwpOw0KPiA+ICAJdmFs
-IHw9IFBPUlRfTE9HSUNfU1BFRURfQ0hBTkdFOw0KPiA+ICAJZHdfcGNpZV93cl9vd25fY29uZihw
-cCwgUENJRV9MSU5LX1dJRFRIX1NQRUVEX0NPTlRST0wsIDQsIHZhbCk7IEBADQo+ID4gLTkxNyw2
-ICs5MjcsMTEgQEAgdm9pZCBkd19wY2llX3NldHVwX3JjKHN0cnVjdCBwY2llX3BvcnQgKnBwKQ0K
-PiA+ICAJdmFsID0gbWVtbGltaXQgfCBtZW1iYXNlOw0KPiA+ICAJZHdfcGNpZV93cml0ZWxfcmMo
-cHAsIHZhbCwgUENJX01FTU9SWV9CQVNFKTsNCj4gPg0KPiA+ICsJLyogcHJvZ3JhbSBjb3JyZWN0
-IGNsYXNzIGZvciBSQyAqLw0KPiA+ICsJZHdfcGNpZV9yZWFkbF9yYyhwcCwgUENJX0NMQVNTX1JF
-VklTSU9OLCAmdmFsKTsNCj4gPiArCXZhbCB8PSBQQ0lfQ0xBU1NfQlJJREdFX1BDSSA8PCAxNjsN
-Cj4gPiArCWR3X3BjaWVfd3JpdGVsX3JjKHBwLCB2YWwsIFBDSV9DTEFTU19SRVZJU0lPTik7DQo+
-ID4gKw0KPiANCj4gVGhpcyBpcyBnZXR0aW5nIHJpZGljdWxvdXMuIEhvdyBtYW55IHRpbWUgZGlk
-IEkgYXNrIHlvdSB0byBjaGFuZ2UgdGhpcyBub3cuDQo+IFRoaXMgaHVuayBzaG91bGQganVzdCBy
-ZWFkOg0KPiANCj4gKwkvKiBwcm9ncmFtIGNvcnJlY3QgY2xhc3MgZm9yIFJDICovDQo+ICsJZHdf
-cGNpZV93cl9vd25fY29uZihwcCwgUENJX0NMQVNTX0RFVklDRSwgMiwgUENJX0NMQVNTX0JSSURH
-RV9QQ0kpOw0KPiArDQo+IA0KW1JpY2hhcmRdIE9rLCB3b3VsZCBiZSBrZXB0IHRoaXMgd2F5LiBU
-aGFua3MuDQoNCj4gPiAgCS8qIHNldHVwIGNvbW1hbmQgcmVnaXN0ZXIgKi8NCj4gPiAgCWR3X3Bj
-aWVfcmVhZGxfcmMocHAsIFBDSV9DT01NQU5ELCAmdmFsKTsNCj4gPiAgCXZhbCAmPSAweGZmZmYw
-MDAwOw0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5o
-DQo+ID4gYi9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5oDQo+ID4gaW5kZXggYTQ3
-NmU2MC4uYjBiZmVkMCAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVz
-aWdud2FyZS5oDQo+ID4gKysrIGIvZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUuaA0K
-PiA+IEBAIC01Niw2ICs1Niw3IEBAIHN0cnVjdCBwY2llX3BvcnQgew0KPiA+ICAJaW50CQkJbXNp
-X2lycTsNCj4gPiAgCXN0cnVjdCBpcnFfZG9tYWluCSppcnFfZG9tYWluOw0KPiA+ICAJdW5zaWdu
-ZWQgbG9uZwkJbXNpX2RhdGE7DQo+ID4gKwl1bnNpZ25lZCBpbnQJCW1zaV9lbmFibGU7DQo+ID4g
-IAlERUNMQVJFX0JJVE1BUChtc2lfaXJxX2luX3VzZSwgTUFYX01TSV9JUlFTKTsgIH07DQo+ID4N
-Cj4gPiBAQCAtODMsNiArODQsOCBAQCBpbnQgZHdfcGNpZV9jZmdfcmVhZCh2b2lkIF9faW9tZW0g
-KmFkZHIsIGludCB3aGVyZSwNCj4gPiBpbnQgc2l6ZSwgdTMyICp2YWwpOyAgaW50IGR3X3BjaWVf
-Y2ZnX3dyaXRlKHZvaWQgX19pb21lbSAqYWRkciwgaW50DQo+ID4gd2hlcmUsIGludCBzaXplLCB1
-MzIgdmFsKTsgIGlycXJldHVybl90IGR3X2hhbmRsZV9tc2lfaXJxKHN0cnVjdA0KPiA+IHBjaWVf
-cG9ydCAqcHApOyAgdm9pZCBkd19wY2llX21zaV9pbml0KHN0cnVjdCBwY2llX3BvcnQgKnBwKTsN
-Cj4gPiArdm9pZCBkd19wY2llX21zaV9jZmdfc3RvcmUoc3RydWN0IHBjaWVfcG9ydCAqcHApOyB2
-b2lkDQo+ID4gK2R3X3BjaWVfbXNpX2NmZ19yZXN0b3JlKHN0cnVjdCBwY2llX3BvcnQgKnBwKTsN
-Cj4gPiAgaW50IGR3X3BjaWVfbGlua191cChzdHJ1Y3QgcGNpZV9wb3J0ICpwcCk7ICB2b2lkDQo+
-ID4gZHdfcGNpZV9zZXR1cF9yYyhzdHJ1Y3QgcGNpZV9wb3J0ICpwcCk7ICBpbnQgZHdfcGNpZV9o
-b3N0X2luaXQoc3RydWN0DQo+ID4gcGNpZV9wb3J0ICpwcCk7DQo+IA0KDQoNCkJlc3QgUmVnYXJk
-cw0KUmljaGFyZCBaaHUNCg0K
+Use helpers to access irq_cfg data structure associated with IRQ,
+instead of accessing irq_data->chip_data directly. Later we could
+rewrite those helpers to support hierarchy irqdomain.
+
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/htirq.c   |    2 +-
+ arch/x86/kernel/apic/io_apic.c |   10 +++++-----
+ arch/x86/kernel/apic/msi.c     |    6 +++---
+ arch/x86/kernel/apic/vector.c  |    6 +++---
+ arch/x86/platform/uv/uv_irq.c  |    4 ++--
+ 5 files changed, 14 insertions(+), 14 deletions(-)
+
+diff --git a/arch/x86/kernel/apic/htirq.c b/arch/x86/kernel/apic/htirq.c
+index a4980c5091f0..816f36e979ad 100644
+--- a/arch/x86/kernel/apic/htirq.c
++++ b/arch/x86/kernel/apic/htirq.c
+@@ -39,7 +39,7 @@ static void target_ht_irq(unsigned int irq, unsigned int dest, u8 vector)
+ static int
+ ht_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+ {
+-	struct irq_cfg *cfg = data->chip_data;
++	struct irq_cfg *cfg = irqd_cfg(data);
+ 	unsigned int dest;
+ 	int ret;
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index f94094a0b00d..68158c5112d2 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -501,7 +501,7 @@ static void mask_ioapic(struct irq_cfg *cfg)
+ 
+ static void mask_ioapic_irq(struct irq_data *data)
+ {
+-	mask_ioapic(data->chip_data);
++	mask_ioapic(irqd_cfg(data));
+ }
+ 
+ static void __unmask_ioapic(struct irq_cfg *cfg)
+@@ -520,7 +520,7 @@ static void unmask_ioapic(struct irq_cfg *cfg)
+ 
+ static void unmask_ioapic_irq(struct irq_data *data)
+ {
+-	unmask_ioapic(data->chip_data);
++	unmask_ioapic(irqd_cfg(data));
+ }
+ 
+ /*
+@@ -1801,7 +1801,7 @@ static unsigned int startup_ioapic_irq(struct irq_data *data)
+ 		if (legacy_pic->irq_pending(irq))
+ 			was_pending = 1;
+ 	}
+-	__unmask_ioapic(data->chip_data);
++	__unmask_ioapic(irqd_cfg(data));
+ 	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
+ 
+ 	return was_pending;
+@@ -1852,7 +1852,7 @@ int native_ioapic_set_affinity(struct irq_data *data,
+ 	if (!ret) {
+ 		/* Only the high 8 bits are valid. */
+ 		dest = SET_APIC_LOGICAL_ID(dest);
+-		__target_IO_APIC_irq(irq, dest, data->chip_data);
++		__target_IO_APIC_irq(irq, dest, irqd_cfg(data));
+ 		ret = IRQ_SET_MASK_OK_NOCOPY;
+ 	}
+ 	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
+@@ -1943,7 +1943,7 @@ static inline void ioapic_irqd_unmask(struct irq_data *data,
+ 
+ static void ack_ioapic_level(struct irq_data *data)
+ {
+-	struct irq_cfg *cfg = data->chip_data;
++	struct irq_cfg *cfg = irqd_cfg(data);
+ 	int i, irq = data->irq;
+ 	unsigned long v;
+ 	bool masked;
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 5c049f94da29..6916246294eb 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -78,7 +78,7 @@ static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq,
+ static int
+ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+ {
+-	struct irq_cfg *cfg = data->chip_data;
++	struct irq_cfg *cfg = irqd_cfg(data);
+ 	struct msi_msg msg;
+ 	unsigned int dest;
+ 	int ret;
+@@ -180,7 +180,7 @@ static int
+ dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 		      bool force)
+ {
+-	struct irq_cfg *cfg = data->chip_data;
++	struct irq_cfg *cfg = irqd_cfg(data);
+ 	unsigned int dest, irq = data->irq;
+ 	struct msi_msg msg;
+ 	int ret;
+@@ -235,7 +235,7 @@ int arch_setup_dmar_msi(unsigned int irq)
+ static int hpet_msi_set_affinity(struct irq_data *data,
+ 				 const struct cpumask *mask, bool force)
+ {
+-	struct irq_cfg *cfg = data->chip_data;
++	struct irq_cfg *cfg = irqd_cfg(data);
+ 	struct msi_msg msg;
+ 	unsigned int dest;
+ 	int ret;
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 2d778f508f65..fa318a4a2969 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -321,7 +321,7 @@ void setup_vector_irq(int cpu)
+ 
+ int apic_retrigger_irq(struct irq_data *data)
+ {
+-	struct irq_cfg *cfg = data->chip_data;
++	struct irq_cfg *cfg = irqd_cfg(data);
+ 	unsigned long flags;
+ 	int cpu;
+ 
+@@ -335,7 +335,7 @@ int apic_retrigger_irq(struct irq_data *data)
+ 
+ void apic_ack_edge(struct irq_data *data)
+ {
+-	irq_complete_move(data->chip_data);
++	irq_complete_move(irqd_cfg(data));
+ 	irq_move_irq(data);
+ 	ack_APIC_irq();
+ }
+@@ -348,7 +348,7 @@ void apic_ack_edge(struct irq_data *data)
+ int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 		      unsigned int *dest_id)
+ {
+-	struct irq_cfg *cfg = data->chip_data;
++	struct irq_cfg *cfg = irqd_cfg(data);
+ 	unsigned int irq = data->irq;
+ 	int err;
+ 
+diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
+index 3e8fab740c1d..0ce673645432 100644
+--- a/arch/x86/platform/uv/uv_irq.c
++++ b/arch/x86/platform/uv/uv_irq.c
+@@ -131,7 +131,7 @@ arch_enable_uv_irq(char *irq_name, unsigned int irq, int cpu, int mmr_blade,
+ 		       unsigned long mmr_offset, int limit)
+ {
+ 	const struct cpumask *eligible_cpu = cpumask_of(cpu);
+-	struct irq_cfg *cfg = irq_get_chip_data(irq);
++	struct irq_cfg *cfg = irq_cfg(irq);
+ 	unsigned long mmr_value;
+ 	struct uv_IO_APIC_route_entry *entry;
+ 	int mmr_pnode, err;
+@@ -198,7 +198,7 @@ static int
+ uv_set_irq_affinity(struct irq_data *data, const struct cpumask *mask,
+ 		    bool force)
+ {
+-	struct irq_cfg *cfg = data->chip_data;
++	struct irq_cfg *cfg = irqd_cfg(data);
+ 	unsigned int dest;
+ 	unsigned long mmr_value, mmr_offset;
+ 	struct uv_IO_APIC_route_entry *entry;
+-- 
+1.7.10.4
+
