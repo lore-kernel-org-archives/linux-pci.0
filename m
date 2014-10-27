@@ -1,78 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:48385 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752680AbaJXQ2b (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Oct 2014 12:28:31 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-kernel@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH RFC v2 2/2] arm: kernel: fix pci_mmap_page_range() offset calculation
-Date: Fri, 24 Oct 2014 17:28:06 +0100
-Message-Id: <1414168089-8130-3-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1414168089-8130-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1414168089-8130-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v3 08/20] x86, irq: Introduce helpers to access struct irq_cfg
+Date: Mon, 27 Oct 2014 16:11:59 +0800
+Message-Id: <1414397531-28254-9-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The pci_mmap_page_range() API should be written to expect offset
-values representing PCI memory resource addresses as seen by user
-space, through the pci_resource_to_user() API.
+Change irq_cfg() from static to extern, also introduce helper function
+irqd_cfg(). Later we could rewrite these two helpers when enabling
+hierarchy irqdomain.
 
-ARM relies on the standard implementation of pci_resource_to_user()
-which actually is an identity map and exports to user space
-PCI memory resources as they are stored in PCI devices resources
-structures, which represent CPU physical addresses (fixed-up using
-BUS to CPU address conversions) not PCI bus addresses.
-
-Therefore, on ARM platforms where the mapping between CPU and BUS
-address is not a 1:1 the current pci_mmap_page_range() implementation is
-erroneous, in that an additional shift is applied to an already fixed-up
-offset passed from userspace.
-
-Hence, this patch removes the mem_offset from the pgoff calculation
-since the offset as passed from user space already represents the CPU
-physical address corresponding to the resource to be mapped, ie no
-additional offset should be applied.
-
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Russell King <linux@arm.linux.org.uk>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/arm/kernel/bios32.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+ arch/x86/include/asm/hw_irq.h  |    2 ++
+ arch/x86/kernel/apic/io_apic.c |    7 ++++++-
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 17a26c1..b56fa2d 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -626,21 +626,15 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 18e8717bf644..f457fcd0f3ba 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -132,6 +132,8 @@ struct irq_cfg {
+ 	};
+ };
+ 
++extern struct irq_cfg *irq_cfg(unsigned int irq);
++extern struct irq_cfg *irqd_cfg(struct irq_data *irq_data);
+ extern void setup_vector_irq(int cpu);
+ extern int assign_irq_vector(int, struct irq_cfg *, const struct cpumask *);
+ extern void send_cleanup_vector(struct irq_cfg *);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 2de22ddf215a..c44d74fbab95 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -281,11 +281,16 @@ int __init arch_early_irq_init(void)
+ 	return 0;
+ }
+ 
+-static inline struct irq_cfg *irq_cfg(unsigned int irq)
++struct irq_cfg *irq_cfg(unsigned int irq)
  {
--	struct pci_sys_data *root = dev->sysdata;
--	unsigned long phys;
--
--	if (mmap_state == pci_mmap_io) {
-+	if (mmap_state == pci_mmap_io)
- 		return -EINVAL;
--	} else {
--		phys = vma->vm_pgoff + (root->mem_offset >> PAGE_SHIFT);
--	}
+ 	return irq_get_chip_data(irq);
+ }
  
- 	/*
- 	 * Mark this as IO
- 	 */
- 	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
- 
--	if (remap_pfn_range(vma, vma->vm_start, phys,
-+	if (remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
- 			     vma->vm_end - vma->vm_start,
- 			     vma->vm_page_prot))
- 		return -EAGAIN;
++struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
++{
++	return irq_data->chip_data;
++}
++
+ static struct irq_cfg *alloc_irq_cfg(unsigned int irq, int node)
+ {
+ 	struct irq_cfg *cfg;
 -- 
-2.1.2
+1.7.10.4
 
