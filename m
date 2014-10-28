@@ -1,57 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0134.outbound.protection.outlook.com ([157.56.111.134]:56832
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1759254AbaJ3Lly (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 07:41:54 -0400
-Date: Thu, 30 Oct 2014 19:36:27 +0800
-From: Huang Rui <ray.huang@amd.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Felipe Balbi <balbi@ti.com>,
+Received: from mail-qg0-f47.google.com ([209.85.192.47]:63195 "EHLO
+	mail-qg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753244AbaJ1Nay (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Oct 2014 09:30:54 -0400
+Received: by mail-qg0-f47.google.com with SMTP id j107so461434qga.6
+        for <linux-pci@vger.kernel.org>; Tue, 28 Oct 2014 06:30:53 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1414497280-3126-18-git-send-email-ray.huang@amd.com>
+References: <1414497280-3126-1-git-send-email-ray.huang@amd.com> <1414497280-3126-18-git-send-email-ray.huang@amd.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 28 Oct 2014 07:30:32 -0600
+Message-ID: <CAErSpo5MQMKjrOCv96miaNvcFRsz51dtgHzCwKJD48_n1LQLoQ@mail.gmail.com>
+Subject: Re: [PATCH v3 17/19] PCI: Add support for AMD Nolan USB3 DRD
+To: Huang Rui <ray.huang@amd.com>
+Cc: Felipe Balbi <balbi@ti.com>,
 	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
 	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
 	Jason Chang <jason.chang@amd.com>,
 	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: Re: [PATCH v4 01/20] usb: dwc3: enable hibernation if to be supported
-Message-ID: <20141030113627.GA15526@hr-slim.amd.com>
-References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
- <1414663725-2195-2-git-send-email-ray.huang@amd.com>
- <4077930.b7qzaS4pBb@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4077930.b7qzaS4pBb@wuerfel>
+	USB list <linux-usb@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 30, 2014 at 12:35:56PM +0100, Arnd Bergmann wrote:
-> On Thursday 30 October 2014 18:08:26 Huang Rui wrote:
-> > It enables hibernation if the function is set in coreConsultant.
-> > 
-> > Suggested-by: Felipe Balbi <balbi@ti.com>
-> > Signed-off-by: Huang Rui <ray.huang@amd.com>
-> > Signed-off-by: Felipe Balbi <balbi@ti.com>
-> > 
-> 
-> Something went wrong with the Signed-off-by lines here. 
-> You should never add someone else's Signed-off-by below yours.
-> 
-> I took a brief look at the entire series and the patches all look good
-> to me, but you have made the same mistake with the Signed-off-by
-> multiple times.
-> 
+On Tue, Oct 28, 2014 at 5:54 AM, Huang Rui <ray.huang@amd.com> wrote:
+> This patch adds PCI id for USB3 Dual-Role Device of AMD Nolan (NL) SoC.
+> It will be used for PCI quirks and DWC3 device driver.
+>
+> Signed-off-by: Jason Chang <jason.chang@amd.com>
+> Signed-off-by: Huang Rui <ray.huang@amd.com>
 
-Actually, this patch is applied at testing branch, so Felipe added his
-Signed-off-by. Please see:
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-http://git.kernel.org/cgit/linux/kernel/git/balbi/usb.git/commit/?h=testing/next&id=5c9669f92c9441d134f7776274e9afb71c246acc
+Please merge along with the rest of your series.
 
-I just update some comment description in V4.
-
-Thanks,
-Rui
+> ---
+>  include/linux/pci_ids.h | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 1fa99a3..5decad7 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -562,6 +562,7 @@
+>  #define PCI_DEVICE_ID_AMD_8131_BRIDGE  0x7450
+>  #define PCI_DEVICE_ID_AMD_8131_APIC    0x7451
+>  #define PCI_DEVICE_ID_AMD_8132_BRIDGE  0x7458
+> +#define PCI_DEVICE_ID_AMD_NL_USB       0x7912
+>  #define PCI_DEVICE_ID_AMD_CS5535_IDE    0x208F
+>  #define PCI_DEVICE_ID_AMD_CS5536_ISA    0x2090
+>  #define PCI_DEVICE_ID_AMD_CS5536_FLASH  0x2091
+> --
+> 1.9.1
+>
