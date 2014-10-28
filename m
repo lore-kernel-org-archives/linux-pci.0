@@ -1,95 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foo.masarand.uk ([69.164.217.139]:56343 "EHLO foo.masarand.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752371AbaJBEIB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Oct 2014 00:08:01 -0400
-From: matt@masarand.com
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org
-Subject: [PATCH V3] Delay allocation of PCI device IRQs from boot time until bus scan time to fix PCI hotplugging
-Date: Thu,  2 Oct 2014 05:07:28 +0100
-Message-Id: <1412222866-21068-1-git-send-email-matt@masarand.com>
+Received: from mail-bn1bon0114.outbound.protection.outlook.com ([157.56.111.114]:44592
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755346AbaJ1L4w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 Oct 2014 07:56:52 -0400
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Jason Chang <jason.chang@amd.com>,
+	"Vincent Wan" <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v3 12/19] usb: dwc3: add rx_detect to polling lfps quirk
+Date: Tue, 28 Oct 2014 19:54:33 +0800
+Message-ID: <1414497280-3126-13-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
+References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sorry, the previous submission was damaged by my editor which purged the sign off lines from the patches,
-this is a fixed version.
+This patch adds RX_DETECT to Polling.LFPS control quirk, and some special
+platforms can configure that if it is needed.
 
-pci_fixup_irqs is the current method used in most arches to assign IRQs to
-PCI devices. This has a number of flaws including it requiring an extra walk
-of the PCI bus and most importantly not running for devices which are added
-after boot time, this includes hot-added devices on boards that support this.
+Signed-off-by: Huang Rui <ray.huang@amd.com>
+---
+ drivers/usb/dwc3/core.c          | 6 ++++++
+ drivers/usb/dwc3/core.h          | 3 +++
+ drivers/usb/dwc3/platform_data.h | 1 +
+ 3 files changed, 10 insertions(+)
 
-This patch set modifies the IRQ mapping and swizzling infrastructure
-such that functions are registered by the boot code (instead of being
-run directly by the boot code) and then run later in the enable_device
-path such that it will apply to all devices and not only those inserted
-at boot time.
-
-This is cleaner as it unifies how each architecture allocates PCI IRQs as much
-as possible (some arches were particularly resistant to these changes so some
-work-arounds have been used or the change disabled completely).
-
-The caveat here is that I have been forced to modify some architecture specific
-code for various architectures which I cannot test due to not having such boards
-available. The code seems correct and the changes in most cases are small and
-trivial however I have not tested all the patches for rare arches.
-
-NEW: Since the last version all changes and suggested bug fixes have been implemented
-the patch-set has also been rebased onto the latest kernel version to ease merging.
-
-Many Thanks,
-Matthew
-
-Note also that I have switched email addresses due to a change in employment
-but I am indeed the same person who submitted the previous versions of this patch.
-
- arch/alpha/kernel/pci.c                 | 16 +++---
- arch/alpha/kernel/sys_nautilus.c        |  1 -
- arch/arm/kernel/bios32.c                | 13 +++--
- arch/cris/arch-v32/drivers/pci/bios.c   | 14 ++---
- arch/frv/mb93090-mb00/pci-frv.h         |  1 -
- arch/frv/mb93090-mb00/pci-irq.c         | 28 ++++++----
- arch/frv/mb93090-mb00/pci-vdk.c         |  1 -
- arch/ia64/pci/pci.c                     |  3 ++
- arch/m68k/platform/coldfire/pci.c       |  8 ++-
- arch/microblaze/pci/pci-common.c        | 10 ++--
- arch/mips/pci/pci.c                     |  9 +++-
- arch/mn10300/unit-asb2305/pci-asb2305.h |  5 +-
- arch/mn10300/unit-asb2305/pci-irq.c     | 25 ++-------
- arch/mn10300/unit-asb2305/pci.c         | 21 +++-----
- arch/parisc/kernel/pci.c                |  8 ++-
- arch/powerpc/kernel/pci-common.c        | 26 ++++-----
- arch/s390/pci/pci.c                     |  7 +++
- arch/sh/drivers/pci/fixups-cayman.c     |  2 +-
- arch/sh/drivers/pci/fixups-dreamcast.c  |  2 +-
- arch/sh/drivers/pci/fixups-r7780rp.c    |  2 +-
- arch/sh/drivers/pci/fixups-rts7751r2d.c |  6 +--
- arch/sh/drivers/pci/fixups-sdk7780.c    |  4 +-
- arch/sh/drivers/pci/fixups-se7751.c     |  2 +-
- arch/sh/drivers/pci/fixups-sh03.c       |  2 +-
- arch/sh/drivers/pci/fixups-snapgear.c   |  2 +-
- arch/sh/drivers/pci/fixups-titan.c      |  4 +-
- arch/sh/drivers/pci/pci.c               | 10 ++--
- arch/sh/drivers/pci/pcie-sh7786.c       |  2 +-
- arch/sparc/kernel/leon_pci.c            | 12 ++++-
- arch/sparc/kernel/pci.c                 | 21 ++++++--
- arch/tile/kernel/pci.c                  | 10 ++--
- arch/tile/kernel/pci_gx.c               | 10 ++--
- arch/unicore32/kernel/pci.c             | 11 ++--
- arch/x86/include/asm/pci_x86.h          |  7 +--
- arch/x86/kernel/x86_init.c              |  1 -
- arch/x86/pci/acpi.c                     |  5 +-
- arch/x86/pci/common.c                   |  2 -
- arch/x86/pci/irq.c                      | 94 ++++++++++++++++++---------------
- drivers/of/of_pci_irq.c                 |  2 +-
- drivers/pci/Makefile                    | 15 +-----
- drivers/pci/host-bridge.c               |  2 +-
- drivers/pci/pci.c                       |  5 +-
- drivers/pci/pci.h                       |  1 +
- drivers/pci/probe.c                     | 12 -----
- drivers/pci/setup-irq.c                 | 34 ++++++------
- include/linux/pci.h                     |  6 ++-
- 46 files changed, 265 insertions(+), 219 deletions(-)
-
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index 86ed064..19019dc 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -389,6 +389,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
+ 	if (dwc->lfps_filter_quirk)
+ 		reg |= DWC3_GUSB3PIPECTL_LFPSFILT;
+ 
++	if (dwc->rx_detect_poll_quirk)
++		reg |= DWC3_GUSB3PIPECTL_RX_DETOPOLL;
++
+ 	dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
+ 
+ 	mdelay(100);
+@@ -771,6 +774,8 @@ static int dwc3_probe(struct platform_device *pdev)
+ 				"snps,del_phy_power_chg_quirk");
+ 		dwc->lfps_filter_quirk = of_property_read_bool(node,
+ 				"snps,lfps_filter_quirk");
++		dwc->rx_detect_poll_quirk = of_property_read_bool(node,
++				"snps,rx_detect_poll_quirk");
+ 	} else if (pdata) {
+ 		dwc->maximum_speed = pdata->maximum_speed;
+ 		dwc->has_lpm_erratum = pdata->has_lpm_erratum;
+@@ -787,6 +792,7 @@ static int dwc3_probe(struct platform_device *pdev)
+ 		dwc->del_p1p2p3_quirk = pdata->del_p1p2p3_quirk;
+ 		dwc->del_phy_power_chg_quirk = pdata->del_phy_power_chg_quirk;
+ 		dwc->lfps_filter_quirk = pdata->lfps_filter_quirk;
++		dwc->rx_detect_poll_quirk = pdata->rx_detect_poll_quirk;
+ 	}
+ 
+ 	/* default to superspeed if no maximum_speed passed */
+diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+index 23b48a0..57a203a 100644
+--- a/drivers/usb/dwc3/core.h
++++ b/drivers/usb/dwc3/core.h
+@@ -184,6 +184,7 @@
+ #define DWC3_GUSB3PIPECTL_DEPOCHANGE	(1 << 18)
+ #define DWC3_GUSB3PIPECTL_SUSPHY	(1 << 17)
+ #define DWC3_GUSB3PIPECTL_LFPSFILT	(1 << 9)
++#define DWC3_GUSB3PIPECTL_RX_DETOPOLL	(1 << 8)
+ 
+ /* Global TX Fifo Size Register */
+ #define DWC3_GTXFIFOSIZ_TXFDEF(n)	((n) & 0xffff)
+@@ -693,6 +694,7 @@ struct dwc3_scratchpad_array {
+  * @del_p1p2p3_quirk: set if we enable delay p1p2p3 quirk
+  * @del_phy_power_chg_quirk: set if we enable delay phy power change quirk
+  * @lfps_filter_quirk: set if we enable LFPS filter quirk
++ * @rx_detect_poll_quirk: set if we enable rx_detect to polling lfps quirk
+  */
+ struct dwc3 {
+ 	struct usb_ctrlrequest	*ctrl_req;
+@@ -807,6 +809,7 @@ struct dwc3 {
+ 	unsigned                del_p1p2p3_quirk:1;
+ 	unsigned		del_phy_power_chg_quirk:1;
+ 	unsigned		lfps_filter_quirk:1;
++	unsigned		rx_detect_poll_quirk:1;
+ };
+ 
+ /* -------------------------------------------------------------------------- */
+diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
+index 89918e5..9776764 100644
+--- a/drivers/usb/dwc3/platform_data.h
++++ b/drivers/usb/dwc3/platform_data.h
+@@ -34,4 +34,5 @@ struct dwc3_platform_data {
+ 	unsigned del_p1p2p3_quirk:1;
+ 	unsigned del_phy_power_chg_quirk:1;
+ 	unsigned lfps_filter_quirk:1;
++	unsigned rx_detect_poll_quirk:1;
+ };
+-- 
+1.9.1
 
