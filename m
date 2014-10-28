@@ -1,62 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:53455 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750816AbaJPKFW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 16 Oct 2014 06:05:22 -0400
-Message-ID: <1413453882.11213.95.camel@pasglop>
-Subject: Re: of/pci: Fix the conversion of IO ranges into IO resources
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Michael Ellerman <mpe@ellerman.id.au>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Date: Thu, 16 Oct 2014 21:04:42 +1100
-In-Reply-To: <20141016090529.GG4599@e106497-lin.cambridge.arm.com>
-References: <20141009200235.55E5166107E@gitolite.kernel.org>
-	 <1413358507.4748.4.camel@pasglop>
-	 <20141015090239.GB18070@e106497-lin.cambridge.arm.com>
-	 <1413428148.20705.2.camel@concordia>
-	 <20141016090529.GG4599@e106497-lin.cambridge.arm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Jason Chang <jason.chang@amd.com>,
+	"Vincent Wan" <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v3 10/19] usb: dwc3: add delay phy power change quirk
+Date: Tue, 28 Oct 2014 19:54:31 +0800
+Message-ID: <1414497280-3126-11-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
+References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2014-10-16 at 10:05 +0100, Liviu Dudau wrote:
-> So you are going to continue converting IO ranges as IORESOURCE_MEM resources but with a
-> different flag. Is that something that powerpc depends on or is it an artifact of too
-> much code living around the kernel that has built in assumption of that being the fact?
-> I'm trying to understand the world around powerpc so as to attempt to make a useful
-> contribution in the future.
+This patch adds delay PHY power change from P0 to P1/P2/P3 when link state
+changing from U0 to U1/U2/U3 respectively, and some special platforms can
+configure that if it is needed.
 
-I'm not sure I understand what you mean and which specific resources you
-are talking about.
+Signed-off-by: Huang Rui <ray.huang@amd.com>
+---
+ drivers/usb/dwc3/core.c          | 6 ++++++
+ drivers/usb/dwc3/core.h          | 3 +++
+ drivers/usb/dwc3/platform_data.h | 1 +
+ 3 files changed, 10 insertions(+)
 
-For PCI devices, the IO BAR resources have IORESOURCE_IO ... 
-
-The case where we might get an IORESOURCE_MEM, at least that's how my old
-code used to work, was is if we try to use the device-tree to convert a
-PCI IO device address before we have initialized our mappings (ie, before
-we have probed our PCI host bridges).
-
-In that case, we would get an IORESOURCE_MEM (which is functional as long
-as one ioremap's and uses the proper accessors for memory resources).
-
-Once we have the PCI host bridges probed, the IO space is assigned, and
-such conversion routines will transform the addresses properly into IO
-resources.
-
-Note that it's fairly rare that we use the device-tree for PCI based
-resources anyway and even rarer than we do that before the PCI host
-bridges have been properly setup and thus their IO space allocated.
-
-Note that the problems exposed by these patches can be entirely reproduced
-in qemu using virtio, so you should be able to test a little bit if you
-have a reasonably fast x86 box to run qemu on.
-
-Cheers,
-Ben.
-
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index 244c71a..97796d7 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -383,6 +383,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
+ 	if (dwc->del_p1p2p3_quirk)
+ 		reg |= DWC3_GUSB3PIPECTL_DEP1P2P3_EN;
+ 
++	if (dwc->del_phy_power_chg_quirk)
++		reg |= DWC3_GUSB3PIPECTL_DEPOCHANGE;
++
+ 	dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
+ 
+ 	mdelay(100);
+@@ -761,6 +764,8 @@ static int dwc3_probe(struct platform_device *pdev)
+ 				"snps,req_p1p2p3_quirk");
+ 		dwc->del_p1p2p3_quirk = of_property_read_bool(node,
+ 				"snps,del_p1p2p3_quirk");
++		dwc->del_phy_power_chg_quirk = of_property_read_bool(node,
++				"snps,del_phy_power_chg_quirk");
+ 	} else if (pdata) {
+ 		dwc->maximum_speed = pdata->maximum_speed;
+ 		dwc->has_lpm_erratum = pdata->has_lpm_erratum;
+@@ -775,6 +780,7 @@ static int dwc3_probe(struct platform_device *pdev)
+ 		dwc->u2ss_inp3_quirk = pdata->u2ss_inp3_quirk;
+ 		dwc->req_p1p2p3_quirk = pdata->req_p1p2p3_quirk;
+ 		dwc->del_p1p2p3_quirk = pdata->del_p1p2p3_quirk;
++		dwc->del_phy_power_chg_quirk = pdata->del_phy_power_chg_quirk;
+ 	}
+ 
+ 	/* default to superspeed if no maximum_speed passed */
+diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+index a91f42d..13bc46b 100644
+--- a/drivers/usb/dwc3/core.h
++++ b/drivers/usb/dwc3/core.h
+@@ -181,6 +181,7 @@
+ #define DWC3_GUSB3PIPECTL_DEP1P2P3(n)	((n) << 19)
+ #define DWC3_GUSB3PIPECTL_DEP1P2P3_MASK	DWC3_GUSB3PIPECTL_DEP1P2P3(7)
+ #define DWC3_GUSB3PIPECTL_DEP1P2P3_EN	DWC3_GUSB3PIPECTL_DEP1P2P3(1)
++#define DWC3_GUSB3PIPECTL_DEPOCHANGE	(1 << 18)
+ #define DWC3_GUSB3PIPECTL_SUSPHY	(1 << 17)
+ 
+ /* Global TX Fifo Size Register */
+@@ -689,6 +690,7 @@ struct dwc3_scratchpad_array {
+  * @u2ss_inp3_quirk: set if we enable P3 OK for U2/SS Inactive quirk
+  * @req_p1p2p3_quirk: set if we enable request p1p2p3 quirk
+  * @del_p1p2p3_quirk: set if we enable delay p1p2p3 quirk
++ * @del_phy_power_chg_quirk: set if we enable delay phy power change quirk
+  */
+ struct dwc3 {
+ 	struct usb_ctrlrequest	*ctrl_req;
+@@ -801,6 +803,7 @@ struct dwc3 {
+ 	unsigned		u2ss_inp3_quirk:1;
+ 	unsigned		req_p1p2p3_quirk:1;
+ 	unsigned                del_p1p2p3_quirk:1;
++	unsigned		del_phy_power_chg_quirk:1;
+ };
+ 
+ /* -------------------------------------------------------------------------- */
+diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
+index 6dca665..1dea0c0 100644
+--- a/drivers/usb/dwc3/platform_data.h
++++ b/drivers/usb/dwc3/platform_data.h
+@@ -32,4 +32,5 @@ struct dwc3_platform_data {
+ 	unsigned u2ss_inp3_quirk:1;
+ 	unsigned req_p1p2p3_quirk:1;
+ 	unsigned del_p1p2p3_quirk:1;
++	unsigned del_phy_power_chg_quirk:1;
+ };
+-- 
+1.9.1
 
