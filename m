@@ -1,102 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 17 Oct 2014 09:59:42 -0500
-From: Felipe Balbi <balbi@ti.com>
-To: Huang Rui <ray.huang@amd.com>
-CC: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 16/16] usb: dwc3: enable usb suspend phy
-Message-ID: <20141017145942.GL26260@saruman>
-Reply-To: <balbi@ti.com>
-References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
- <1413536021-4886-17-git-send-email-ray.huang@amd.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="YIleam+9adpUeYf+"
-In-Reply-To: <1413536021-4886-17-git-send-email-ray.huang@amd.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:46754 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753093AbaJ1MKd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Oct 2014 08:10:33 -0400
+Message-ID: <1414498231.3300.3.camel@pengutronix.de>
+Subject: Re: Setting cpu affinity for MSI-X on i.mx6 possible?
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Heiner Kallweit <heiner.kallweit@web.de>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Date: Tue, 28 Oct 2014 13:10:31 +0100
+In-Reply-To: <544E99FD.5040306@web.de>
+References: <544D37F7.2060800@web.de>
+	 <1414399977.2421.1.camel@pengutronix.de> <544E99FD.5040306@web.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---YIleam+9adpUeYf+
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Am Montag, den 27.10.2014, 20:16 +0100 schrieb Heiner Kallweit:
+> Thanks, Lucas.
+> 
+> It's interesting however that the igb driver claims it's using MSI-X.
+> Maybe the DW PCIE drivers offers MSI-X on the bus and just internally falls back to MSI?
+> 
+Are you running a upstream or downstream vendor kernel?
+On my upstream kernel igb properly falls back to MSI.
 
-Hi,
+Regards,
+Lucas
 
-On Fri, Oct 17, 2014 at 04:53:41PM +0800, Huang Rui wrote:
-> AMD NL needs to suspend usb3 ss phy, but this doesn't enable on simulation
-> board.
->=20
-> Signed-off-by: Huang Rui <ray.huang@amd.com>
-> ---
->  drivers/usb/dwc3/core.c          | 7 ++++++-
->  drivers/usb/dwc3/dwc3-pci.c      | 3 ++-
->  drivers/usb/dwc3/platform_data.h | 1 +
->  3 files changed, 9 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-> index 3ccfe41..4a98696 100644
-> --- a/drivers/usb/dwc3/core.c
-> +++ b/drivers/usb/dwc3/core.c
-> @@ -395,6 +395,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
->  	if (dwc->quirks & DWC3_QUIRK_TX_DEEPH)
->  		reg |=3D DWC3_GUSB3PIPECTL_TX_DEEPH(1);
-> =20
-> +	if (dwc->quirks & DWC3_QUIRK_SUSPHY)
+> Rgds, Heiner
+> 
+> [    4.165850] igb: Intel(R) Gigabit Ethernet Network Driver - version 5.2.15-k
+> [    4.172930] igb: Copyright (c) 2007-2014 Intel Corporation.
+> [    4.178638] igb 0000:01:00.0: enabling device (0140 -> 0142)
+> [    4.235789] igb 0000:01:00.0: added PHC on eth0
+> [    4.235793] igb 0000:01:00.0: Intel(R) Gigabit Ethernet Network Connection
+> [    4.235799] igb 0000:01:00.0: eth0: (PCIe:2.5Gb/s:Width x1) 00:01:c0:14:b1:58
+> [    4.235804] igb 0000:01:00.0: eth0: PBA No: FFFFFF-0FF
+> [    4.235810] igb 0000:01:00.0: Using MSI-X interrupts. 2 rx queue(s), 2 tx queue(s)
+> 
+> 
+> Am 27.10.2014 um 09:52 schrieb Lucas Stach:
+> > Hello Heiner,
+> > 
+> > Am Sonntag, den 26.10.2014, 19:05 +0100 schrieb Heiner Kallweit:
+> >> I use a mini pc with i.mx6 dual and Intel igb based nic (I211) connected via PCIE.
+> >> igb driver uses MSI-X and creates two rx/tx queue pairs. However the IRQs of all queues are handled by the same CPU.
+> >> Changing affinity is not possible. Obvious direct reason is that irq_chip PCI-MSI doesn't implement the callback
+> >> for setting cpu affinity.
+> >> I'd appreciate a hint whether this is a general limitation of the Cortex-A9 / GICv1 / Synopsys Designware
+> >> architecture or whether just a proper implementation is missing yet.
+> >>
+> >> Rgds, Heiner
+> > 
+> > The MSI controller on imx6 doesn't support MSI-X so igb falls back to
+> > regular MSI interrupts. Also all MSI interrupts are aggregated into a
+> > single GIC interrupt line. This means the best we could do is switch all
+> > PCIe MSI interrupts to some other CPU. Configuring the CPU affinity on a
+> > per interrupt basis is impossible on this hardware.
+> > 
+> > Regards,
+> > Lucas
+> > 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-should be:
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
-	if (!dwc->suspend_usb3_phy_quirk)
-
-> +		reg |=3D DWC3_GUSB3PIPECTL_SUSPHY;
-
-IIRC, databook asks us to set that bit anyway, so the quirk is disabling
-that bit. Am I missing something ? Paul ?
-
-> diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
-> index 146eb2f..71401a3 100644
-> --- a/drivers/usb/dwc3/dwc3-pci.c
-> +++ b/drivers/usb/dwc3/dwc3-pci.c
-> @@ -157,7 +157,8 @@ static int dwc3_pci_probe(struct pci_dev *pci,
->  			| DWC3_QUIRK_DEPOCHANGE
->  			| DWC3_QUIRK_LFPSFILT
->  			| DWC3_QUIRK_RX_DETOPOLL
-> -			| DWC3_QUIRK_TX_DEEPH;
-> +			| DWC3_QUIRK_TX_DEEPH
-> +			| DWC3_QUIRK_SUSPHY;
-
-last patch
-
---=20
-balbi
-
---YIleam+9adpUeYf+
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJUQS7eAAoJEIaOsuA1yqREDxAP/3bP1YOorM6RVqpBx7ZEA62O
-iGV2bXRYyULHEEX0VG/Y/CtXPeVoUz+/mdD9Vwf8LUv+kj0GfuH6cRgiCKPhIZco
-SGr8yBFnm2OzWOnMSEnopqnBqNw5mS7Lk8hf97C5s/hAhW/JVd0oobyrlbAGgt+V
-qmAcAYCv88bJLM2jCpNk9BQX44tRXB8aGqqsGxX4ROlKBmoH6LP6nHhxA9XToOPu
-2lh97qBjXr+II+nldEi5v0KBRQCBfkTusImVKY7gO/BEToph938Nz+B/aLSkte7d
-uxChDTBRdpb2e6EWD44zSlHtaUaUswOZJ1bGBBz3NlQQO/3IzWMDwF6KY7D8ZIg5
-lo1ZmmAMnp1cw33ad7xym8fr4pYCbiCftaEsFPIfG6GYoGD8jQGAajwYcUgYEAmo
-aArbiRYD1MRgnYZGECl3zq4avm3Y4GYUuTgAPC/sgw/sfuKmvgx09MQELUhl+B7+
-2lFJIJzGdQvfwubATk7WlkNm7dPVJrThMEaQdNnfex5G0CDcymZCeoCj9Sr82c/6
-KiUewj7aV55nI60Ls7id/qb3E+UdYdiI4NU423wcXVSL//+0E4ZmA6P+8Rl4uZ0e
-UzC6iPCIdI9zud8ptYNNBAKnILVOXa0cc/D1WiZBEnqyTNsa2nS4vZuf8R06BMVo
-v/Gx4AB4JqJpLWnADspv
-=LGaU
------END PGP SIGNATURE-----
-
---YIleam+9adpUeYf+--
