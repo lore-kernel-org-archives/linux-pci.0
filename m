@@ -1,169 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:31377 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751267AbaJOTvd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 15 Oct 2014 15:51:33 -0400
-Message-ID: <543ED040.1010601@redhat.com>
-Date: Wed, 15 Oct 2014 15:51:28 -0400
-From: Prarit Bhargava <prarit@redhat.com>
+Received: from mail-qc0-f178.google.com ([209.85.216.178]:60892 "EHLO
+	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753916AbaJ1SNZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Oct 2014 14:13:25 -0400
+Received: by mail-qc0-f178.google.com with SMTP id b13so1106574qcw.23
+        for <linux-pci@vger.kernel.org>; Tue, 28 Oct 2014 11:13:23 -0700 (PDT)
 MIME-Version: 1.0
-CC: Bjorn Helgaas <bhelgaas@google.com>,
+In-Reply-To: <1414387308-27148-2-git-send-email-jiang.liu@linux.intel.com>
+References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com> <1414387308-27148-2-git-send-email-jiang.liu@linux.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 28 Oct 2014 12:13:01 -0600
+Message-ID: <CAErSpo5Dh8rx42HkS3cPoJ1=oQq2qsFAut5LK83obbghy+OsFA@mail.gmail.com>
+Subject: Re: [Patch v7 01/18] ACPI, irq: fix regression casued by 6b9fb7082409
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Myron Stowe <mstowe@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] pci, add sysfs numa_node write function
-References: <1413399924-599-1-git-send-email-prarit@redhat.com> <CAErSpo6Oy1S1OECirp6=tz+pQWUtkFE6p1LTzNaYtzxoX73FWw@mail.gmail.com> <543ECF6F.2030705@redhat.com>
-In-Reply-To: <543ECF6F.2030705@redhat.com>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"Zhang, Rui" <rui.zhang@intel.com>,
+	Linux PM list <linux-pm@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
-To: unlisted-recipients:; (no To-header on input)
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/15/2014 03:47 PM, Prarit Bhargava wrote:
-> On 10/15/2014 03:23 PM, Bjorn Helgaas wrote:
->> Hi Prarit,
->>
->> On Wed, Oct 15, 2014 at 1:05 PM, Prarit Bhargava <prarit@redhat.com> wrote:
->>> Consider a multi-node, multiple pci root bridge system which can be
->>> configured into one large node or one node/socket.  When configuring the
->>> system the numa_node value for each PCI root bridge is always set
->>> incorrectly to -1, or NUMA_NO_NODE, rather than to the node value of each
->>> socket.  Each PCI device inherits the numa value directly from it's parent
->>> device, so that the NUMA_NO_NODE value is passed through the entire PCI
->>> tree.
->>>
->>> Some new drivers, such as the Intel QAT driver, drivers/crypto/qat,
->>> require that a specific node be assigned to the device in order to
->>> achieve maximum performance for the device, and will fail to load if the
->>> device has NUMA_NO_NODE.
->>
->> It seems ... unfriendly for a driver to fail to load just because it
->> can't guarantee maximum performance.  Out of curiosity, where does
->> this actually happen?  I had a quick look for NUMA_NO_NODE and
->> module_init() functions in drivers/crypto/qat, and I didn't see the
->> spot.
-> 
-> The whole point of the Intel QAT driver is to guarantee max performance.  If
-> that is not possible the driver should not load (according to the thread
-> mentioned below)
-> 
+The subject should describe the change you're making.  "Fix regression
+caused by xxx" doesn't say anything about what the patch does.
 
-Whups.  This thread:
+On Sun, Oct 26, 2014 at 11:21 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+> When IOAPIC is disabled, acpi_gsi_to_irq() should return gsi directly
+> instead of calling mp_map_gsi_to_irq() to translate gsi to IRQ by IOAPIC.
 
-http://marc.info/?l=linux-crypto-vger&m=141279031626999&w=2
+I don't know what the convention is or if there even is one, but "GSI"
+is even more of an acronym than "IRQ", so I'd capitalize it.
 
+> It fixes https://bugzilla.kernel.org/show_bug.cgi?id=84381.
 
->>
->>> The driver would load if the numa_node value
->>> was equal to or greater than -1 and quickly hacking the driver results in
->>> a functional QAT driver.
->>>
->>> Using lspci and numactl it is easy to determine what the numa value should
->>> be.  The problem is that there is no way to set it.  This patch adds a
->>> store function for the PCI device's numa_node value.
->>
->> I'm not familiar with numactl.  It sounds like it can show you the
->> NUMA topology?  Where does that information come from?
-> 
-> You can map at least what nodes are available (although I suppose you can get
-> the same information from dmesg).  You have to do a bit of hunting through the
-> PCI tree to determine the root PCI devices, but you can determine which root
-> device is connected to which node.
-> 
->>
->>> To use this, one can do
->>>
->>> echo 3 > /sys/devices/pci0000:ff/0000:ff:1f.3/numa_node
->>>
->>> to set the numa node for PCI device 0000:ff:1f.3.
->>
->> It definitely seems wrong that we don't set the node number correctly.
->> pci_acpi_scan_root() sets the node number by looking for a _PXM method
->> that applies to the host bridge.  Why does that not work in this case?
->>  Does the BIOS not supply _PXM?
-> 
-> Yeah ... unfortunately the BIOS is broken in this case.  And I know what you're
-> thinking ;) -- why not get the BIOS fixed?  I'm through relying on BIOS fixes
-> which can take six months to a year to appear in a production version... I've
-> been bitten too many times by promises of BIOS fixes that never materialize.
-> 
-> We have systems that only have a support cycle of 3 years, and things like ACPI
-> _PXM updates are at the bottom of the list :/.
-> 
-> FWIW, on this particular system I have a filed a bug with the vendor.
-> 
->>
->> If there's information that numactl uses, maybe the kernel should use that, too?
->>
->> A sysfs interface might be a useful workaround, but obviously it would
->> be far better if we could fix the BIOS and/or kernel so the workaround
->> isn't necessary in the first place.
-> 
-> Yep ... but like I said, I don't think anyone wants to wait a year.  What if we
-> never see a fix?
-> 
-> Side issue:  While investigating this I noticed that plain kmalloc() is used in
-> the setup code.  Is there a reason we don't use kmalloc_node() in
-> pci_alloc_dev(), and other allocation functions?  It seems like we should be to
-> optimize system performance.  OTOH ... I haven't done any measurements to see if
-> it actually makes a difference :)
-> 
-> P.
-> 
->>
->> Bjorn
->>
->>> Cc: Myron Stowe <mstowe@redhat.com>
->>> Cc: Bjorn Helgaas <bhelgaas@google.com>
->>> Cc: linux-pci@vger.kernel.org
->>> Signed-off-by: Prarit Bhargava <prarit@redhat.com>
->>> ---
->>>  drivers/pci/pci-sysfs.c |   23 ++++++++++++++++++++++-
->>>  1 file changed, 22 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
->>> index 92b6d9a..c05ed30 100644
->>> --- a/drivers/pci/pci-sysfs.c
->>> +++ b/drivers/pci/pci-sysfs.c
->>> @@ -221,12 +221,33 @@ static ssize_t enabled_show(struct device *dev, struct device_attribute *attr,
->>>  static DEVICE_ATTR_RW(enabled);
->>>
->>>  #ifdef CONFIG_NUMA
->>> +static ssize_t numa_node_store(struct device *dev,
->>> +                              struct device_attribute *attr,
->>> +                              const char *buf, size_t count)
->>> +{
->>> +       int node, ret;
->>> +
->>> +       if (!capable(CAP_SYS_ADMIN))
->>> +               return -EPERM;
->>> +
->>> +       ret = kstrtoint(buf, 0, &node);
->>> +       if (ret)
->>> +               return ret;
->>> +
->>> +       if (!node_online(node))
->>> +               return -EINVAL;
->>> +
->>> +       dev->numa_node = node;
->>> +
->>> +       return count;
->>> +}
->>> +
->>>  static ssize_t numa_node_show(struct device *dev, struct device_attribute *attr,
->>>                               char *buf)
->>>  {
->>>         return sprintf(buf, "%d\n", dev->numa_node);
->>>  }
->>> -static DEVICE_ATTR_RO(numa_node);
->>> +static DEVICE_ATTR_RW(numa_node);
->>>  #endif
->>>
->>>  static ssize_t dma_mask_bits_show(struct device *dev,
->>> --
->>> 1.7.9.3
->>>
->>
->>
-> 
+A line like the following may be useful to those who have to backport this.
 
+Fixes: 6b9fb7082409 ("x86, ACPI, irq: Consolidate algorithm of mapping
+(ioapic, pin) to IRQ number")
+
+> Reported-by: Thomas Richter <thor@math.tu-berlin.de>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> Cc: rui.zhang@intel.com
+> Cc: <stable@vger.kernel.org> # 3.17
+> ---
+>  arch/x86/kernel/acpi/boot.c |   13 +++++++++----
+>  1 file changed, 9 insertions(+), 4 deletions(-)
+>
+> diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+> index b436fc735aa4..eceba9d9e116 100644
+> --- a/arch/x86/kernel/acpi/boot.c
+> +++ b/arch/x86/kernel/acpi/boot.c
+> @@ -604,14 +604,19 @@ void __init acpi_pic_sci_set_trigger(unsigned int irq, u16 trigger)
+>
+>  int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
+>  {
+> -       int irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
+> +       int irq;
+>
+> -       if (irq >= 0) {
+> +       if (acpi_irq_model == ACPI_IRQ_MODEL_PIC) {
+> +               *irqp = gsi;
+> +       } else {
+> +               irq = mp_map_gsi_to_irq(gsi,
+> +                                       IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
+> +               if (irq < 0)
+> +                       return -1;
+>                 *irqp = irq;
+> -               return 0;
+>         }
+>
+> -       return -1;
+> +       return 0;
+>  }
+>  EXPORT_SYMBOL_GPL(acpi_gsi_to_irq);
+>
+> --
+> 1.7.10.4
+>
