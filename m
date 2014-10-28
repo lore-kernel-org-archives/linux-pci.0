@@ -1,469 +1,502 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:52629 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751621AbaJJNpn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Oct 2014 09:45:43 -0400
-Date: Fri, 10 Oct 2014 14:45:34 +0100
-From: Mark Rutland <mark.rutland@arm.com>
-To: "suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
-Cc: Will Deacon <Will.Deacon@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Thomas Lendacky <Thomas.Lendacky@amd.com>,
-	Joel Schopp <Joel.Schopp@amd.com>
-Subject: Re: [RFC 1/4] arm64: amd-seattle: Adding device tree for AMD Seattle
- platform
-Message-ID: <20141010134534.GC6004@leverpostej>
-References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
- <1411937610-22125-2-git-send-email-suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1411937610-22125-2-git-send-email-suravee.suthikulpanit@amd.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	iommu@lists.linux-foundation.org
+Subject: [Patch Part2 v3 12/24] iommu/vt-d: Enhance Intel IR driver to suppport hierarchy irqdomain
+Date: Tue, 28 Oct 2014 16:26:30 +0800
+Message-Id: <1414484803-10311-13-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Suravee,
+Enhance Intel interrupt remapping driver to support hierarchy irqdomain,
+it will simplify the code eventually. It also implements intel_ir_chip
+to support stacked irq_chip.
 
-On Sun, Sep 28, 2014 at 09:53:27PM +0100, suravee.suthikulpanit@amd.com wrote:
-> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->
-> Initial revision of device tree for AMD Seattle platform
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel_irq_remapping.c |  356 +++++++++++++++++++++++++++++++++--
+ include/linux/intel-iommu.h         |    4 +
+ 2 files changed, 342 insertions(+), 18 deletions(-)
 
-To check: how is it possible to make use of a DTB generated from this
-dts? Can a user update the DTB used by the Seattle firmware?
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 5acad492701e..fdaa15026909 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -8,6 +8,7 @@
+ #include <linux/irq.h>
+ #include <linux/intel-iommu.h>
+ #include <linux/acpi.h>
++#include <linux/irqdomain.h>
+ #include <asm/io_apic.h>
+ #include <asm/smp.h>
+ #include <asm/cpu.h>
+@@ -31,6 +32,15 @@ struct hpet_scope {
+ 	unsigned int devfn;
+ };
+ 
++struct intel_ir_data {
++	struct irq_2_iommu			irq_2_iommu;
++	struct irte				irte_entry;
++	union {
++		struct msi_msg			msi_entry;
++		struct IR_IO_APIC_route_entry	ioapic_entry;
++	};
++};
++
+ #define IR_X2APIC_MODE(mode) (mode ? (1 << 11) : 0)
+ #define IRTE_DEST(dest) ((x2apic_mode) ? dest : dest << 8)
+ 
+@@ -50,6 +60,7 @@ static int ir_ioapic_num, ir_hpet_num;
+  * the dmar_global_lock.
+  */
+ static DEFINE_RAW_SPINLOCK(irq_2_ir_lock);
++static struct irq_domain_ops intel_ir_domain_ops;
+ 
+ static int __init parse_ioapics_under_ir(void);
+ 
+@@ -263,7 +274,7 @@ static int free_irte(int irq)
+ 	unsigned long flags;
+ 	int rc;
+ 
+-	if (!irq_iommu)
++	if (!irq_iommu || irq_iommu->iommu == NULL)
+ 		return -1;
+ 
+ 	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
+@@ -480,36 +491,47 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
+ 	struct page *pages;
+ 	unsigned long *bitmap;
+ 
+-	ir_table = iommu->ir_table = kzalloc(sizeof(struct ir_table),
+-					     GFP_ATOMIC);
+-
+-	if (!iommu->ir_table)
++	ir_table = kzalloc(sizeof(struct ir_table), GFP_ATOMIC);
++	if (!ir_table)
+ 		return -ENOMEM;
+ 
+ 	pages = alloc_pages_node(iommu->node, GFP_ATOMIC | __GFP_ZERO,
+ 				 INTR_REMAP_PAGE_ORDER);
+-
+ 	if (!pages) {
+ 		pr_err("IR%d: failed to allocate pages of order %d\n",
+ 		       iommu->seq_id, INTR_REMAP_PAGE_ORDER);
+-		kfree(iommu->ir_table);
+-		return -ENOMEM;
++		goto out_free_table;
+ 	}
+ 
+ 	bitmap = kcalloc(BITS_TO_LONGS(INTR_REMAP_TABLE_ENTRIES),
+ 			 sizeof(long), GFP_ATOMIC);
+ 	if (bitmap == NULL) {
+ 		pr_err("IR%d: failed to allocate bitmap\n", iommu->seq_id);
+-		__free_pages(pages, INTR_REMAP_PAGE_ORDER);
+-		kfree(ir_table);
+-		return -ENOMEM;
++		goto out_free_pages;
++	}
++
++	iommu->ir_domain = irq_domain_add_linear(NULL, INTR_REMAP_TABLE_ENTRIES,
++						 &intel_ir_domain_ops, iommu);
++	if (!iommu->ir_domain) {
++		pr_err("IR%d: failed to allocate irqdomain\n", iommu->seq_id);
++		goto out_free_bitmap;
+ 	}
++	iommu->ir_domain->parent = arch_get_ir_parent_domain();
++	iommu->ir_msi_domain = arch_create_msi_irq_domain(iommu->ir_domain);
+ 
+ 	ir_table->base = page_address(pages);
+ 	ir_table->bitmap = bitmap;
+-
++	iommu->ir_table = ir_table;
+ 	iommu_set_irq_remapping(iommu, mode);
+ 	return 0;
++
++out_free_bitmap:
++	kfree(bitmap);
++out_free_pages:
++	__free_pages(pages, INTR_REMAP_PAGE_ORDER);
++out_free_table:
++	kfree(ir_table);
++	return -ENOMEM;
+ }
+ 
+ /*
+@@ -1013,12 +1035,6 @@ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 	struct irte irte;
+ 	int err;
+ 
+-	if (!config_enabled(CONFIG_SMP))
+-		return -EINVAL;
+-
+-	if (!cpumask_intersects(mask, cpu_online_mask))
+-		return -EINVAL;
+-
+ 	if (get_irte(irq, &irte))
+ 		return -EBUSY;
+ 
+@@ -1156,6 +1172,72 @@ static int intel_alloc_hpet_msi(unsigned int irq, unsigned int id)
+ 	return ret;
+ }
+ 
++static struct irq_domain *intel_get_ir_irq_domain(struct irq_alloc_info *info)
++{
++	struct intel_iommu *iommu = NULL;
++
++	if (!info)
++		return NULL;
++
++	switch (info->type) {
++	case X86_IRQ_ALLOC_TYPE_IOAPIC:
++		iommu = map_ioapic_to_ir(info->ioapic_id);
++		break;
++	case X86_IRQ_ALLOC_TYPE_HPET:
++		iommu = map_hpet_to_ir(info->hpet_id);
++		break;
++	case X86_IRQ_ALLOC_TYPE_MSI:
++	case X86_IRQ_ALLOC_TYPE_MSIX:
++		iommu = map_dev_to_ir(info->msi_dev);
++		break;
++	default:
++		BUG_ON(1);
++		break;
++	}
++
++	return iommu ? iommu->ir_domain : NULL;
++}
++
++static struct irq_domain *intel_get_irq_domain(struct irq_alloc_info *info)
++{
++	struct intel_iommu *iommu;
++
++	if (!info)
++		return NULL;
++
++	switch (info->type) {
++	case X86_IRQ_ALLOC_TYPE_MSI:
++	case X86_IRQ_ALLOC_TYPE_MSIX:
++		iommu = map_dev_to_ir(info->msi_dev);
++		if (iommu)
++			return iommu->ir_msi_domain;
++		break;
++	default:
++		break;
++	}
++
++	return NULL;
++}
++
++static int intel_get_ioapic_entry(struct irq_data *irq_data,
++				  struct IR_IO_APIC_route_entry *entry)
++{
++	struct intel_ir_data *ir_data = irq_data->chip_data;
++
++	*entry = ir_data->ioapic_entry;
++
++	return 0;
++}
++
++static int intel_get_msi_entry(struct irq_data *irq_data, struct msi_msg *msg)
++{
++	struct intel_ir_data *ir_data = irq_data->chip_data;
++
++	*msg = ir_data->msi_entry;
++
++	return 0;
++}
++
+ struct irq_remap_ops intel_irq_remap_ops = {
+ 	.supported		= intel_irq_remapping_supported,
+ 	.prepare		= dmar_table_init,
+@@ -1170,4 +1252,242 @@ struct irq_remap_ops intel_irq_remap_ops = {
+ 	.msi_alloc_irq		= intel_msi_alloc_irq,
+ 	.msi_setup_irq		= intel_msi_setup_irq,
+ 	.alloc_hpet_msi		= intel_alloc_hpet_msi,
++	.get_ir_irq_domain	= intel_get_ir_irq_domain,
++	.get_irq_domain		= intel_get_irq_domain,
++	.get_ioapic_entry	= intel_get_ioapic_entry,
++	.get_msi_entry		= intel_get_msi_entry,
++};
++
++/*
++ * Migrate the IO-APIC irq in the presence of intr-remapping.
++ *
++ * For both level and edge triggered, irq migration is a simple atomic
++ * update(of vector and cpu destination) of IRTE and flush the hardware cache.
++ *
++ * For level triggered, we eliminate the io-apic RTE modification (with the
++ * updated vector information), by using a virtual vector (io-apic pin number).
++ * Real vector that is used for interrupting cpu will be coming from
++ * the interrupt-remapping table entry.
++ *
++ * As the migration is a simple atomic update of IRTE, the same mechanism
++ * is used to migrate MSI irq's in the presence of interrupt-remapping.
++ */
++static int
++intel_ir_set_affinity(struct irq_data *data, const struct cpumask *mask,
++		      bool force)
++{
++	struct intel_ir_data *ir_data = data->chip_data;
++	struct irte *irte = &ir_data->irte_entry;
++	struct irq_cfg *cfg = irqd_cfg(data);
++	struct irq_data *parent = data->parent_data;
++	int ret;
++
++	ret = parent->chip->irq_set_affinity(parent, mask, force);
++	if (ret < 0)
++		return ret;
++
++	/*
++	 * Atomically updates the IRTE with the new destination, vector
++	 * and flushes the interrupt entry cache.
++	 */
++	irte->vector = cfg->vector;
++	irte->dest_id = IRTE_DEST(cfg->dest_apicid);
++	modify_irte(&ir_data->irq_2_iommu, irte);
++
++	/*
++	 * After this point, all the interrupts will start arriving
++	 * at the new destination. So, time to cleanup the previous
++	 * vector allocation.
++	 */
++	if (cfg->move_in_progress)
++		send_cleanup_vector(cfg);
++
++	return ret;
++}
++
++static struct irq_chip intel_ir_chip = {
++	.irq_ack = ir_ack_apic_edge,
++	.irq_set_affinity = intel_ir_set_affinity,
++};
++
++static void intel_irq_remapping_prepare_irte(struct intel_ir_data *data,
++					     struct irq_cfg *irq_cfg,
++					     struct irq_alloc_info *info,
++					     int index, int sub_handle)
++{
++	struct irte *irte = &data->irte_entry;
++	struct IR_IO_APIC_route_entry *entry = &data->ioapic_entry;
++	struct msi_msg *msg = &data->msi_entry;
++
++	prepare_irte(irte, irq_cfg->vector, irq_cfg->dest_apicid);
++	switch (info->type) {
++	case X86_IRQ_ALLOC_TYPE_IOAPIC:
++		/* Set source-id of interrupt request */
++		set_ioapic_sid(irte, info->ioapic_id);
++		apic_printk(APIC_VERBOSE, KERN_DEBUG "IOAPIC[%d]: Set IRTE entry (P:%d FPD:%d Dst_Mode:%d Redir_hint:%d Trig_Mode:%d Dlvry_Mode:%X Avail:%X Vector:%02X Dest:%08X SID:%04X SQ:%X SVT:%X)\n",
++			info->ioapic_id, irte->present, irte->fpd,
++			irte->dst_mode, irte->redir_hint,
++			irte->trigger_mode, irte->dlvry_mode,
++			irte->avail, irte->vector, irte->dest_id,
++			irte->sid, irte->sq, irte->svt);
++
++		memset(entry, 0, sizeof(*entry));
++		entry->index2	= (index >> 15) & 0x1;
++		entry->zero	= 0;
++		entry->format	= 1;
++		entry->index	= (index & 0x7fff);
++		/*
++		 * IO-APIC RTE will be configured with virtual vector.
++		 * irq handler will do the explicit EOI to the io-apic.
++		 */
++		entry->vector	= info->ioapic_pin;
++		entry->mask	= 0;			/* enable IRQ */
++		entry->trigger	= info->ioapic_trigger;
++		entry->polarity	= info->ioapic_polarity;
++		if (info->ioapic_trigger)
++			entry->mask = 1; /* Mask level triggered irqs. */
++		break;
++
++	case X86_IRQ_ALLOC_TYPE_HPET:
++	case X86_IRQ_ALLOC_TYPE_MSI:
++	case X86_IRQ_ALLOC_TYPE_MSIX:
++		if (info->type == X86_IRQ_ALLOC_TYPE_HPET)
++			set_hpet_sid(irte, info->hpet_id);
++		else
++			set_msi_sid(irte, info->msi_dev);
++
++		msg->address_hi = MSI_ADDR_BASE_HI;
++		msg->data = sub_handle;
++		msg->address_lo = MSI_ADDR_BASE_LO | MSI_ADDR_IR_EXT_INT |
++				  MSI_ADDR_IR_SHV |
++				  MSI_ADDR_IR_INDEX1(index) |
++				  MSI_ADDR_IR_INDEX2(index);
++		break;
++
++	default:
++		BUG_ON(1);
++		break;
++	}
++}
++
++static void intel_free_irq_resources(struct irq_domain *domain,
++				     unsigned int virq, unsigned int nr_irqs)
++{
++	struct irq_data *irq_data;
++	struct intel_ir_data *data;
++	struct irq_2_iommu *irq_iommu;
++	unsigned long flags;
++	int i;
++
++	for (i = 0; i < nr_irqs; i++) {
++		irq_data = irq_domain_get_irq_data(domain, virq  + i);
++		if (irq_data && irq_data->chip_data) {
++			data = irq_data->chip_data;
++			irq_iommu = &data->irq_2_iommu;
++			raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
++			clear_entries(irq_iommu);
++			raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
++			irq_domain_reset_irq_data(irq_data);
++			kfree(data);
++		}
++	}
++}
++
++static int intel_irq_remapping_alloc(struct irq_domain *domain,
++				     unsigned int virq, unsigned int nr_irqs,
++				     void *arg)
++{
++	struct intel_iommu *iommu = domain->host_data;
++	struct irq_alloc_info *info = arg;
++	struct intel_ir_data *data;
++	struct irq_data *irq_data;
++	struct irq_cfg *irq_cfg;
++	int i, ret, index;
++
++	if (!info || !iommu)
++		return -EINVAL;
++	if (nr_irqs > 1 && info->type != X86_IRQ_ALLOC_TYPE_MSI &&
++	    info->type != X86_IRQ_ALLOC_TYPE_MSIX)
++		return -EINVAL;
++
++	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
++	if (ret < 0)
++		return ret;
++
++	ret = -ENOMEM;
++	data = kzalloc(sizeof(*data), GFP_KERNEL);
++	if (!data)
++		goto out_free_parent;
++
++	down_read(&dmar_global_lock);
++	index = alloc_irte(iommu, virq, &data->irq_2_iommu, nr_irqs);
++	up_read(&dmar_global_lock);
++	if (index < 0) {
++		pr_warn("Failed to allocate IRTE\n");
++		kfree(data);
++		goto out_free_parent;
++	}
++
++	for (i = 0; i < nr_irqs; i++) {
++		irq_data = irq_domain_get_irq_data(domain, virq + i);
++		irq_cfg = irqd_cfg(irq_data);
++		if (!irq_data || !irq_cfg) {
++			ret = -EINVAL;
++			goto out_free_data;
++		}
++
++		if (i > 0) {
++			data = kzalloc(sizeof(*data), GFP_KERNEL);
++			if (!data)
++				goto out_free_data;
++		}
++		irq_data->hwirq = (index << 16) + i;
++		irq_data->chip_data = data;
++		irq_data->chip = &intel_ir_chip;
++		intel_irq_remapping_prepare_irte(data, irq_cfg, info, index, i);
++		irq_set_status_flags(virq + i, IRQ_MOVE_PCNTXT);
++	}
++	return 0;
++
++out_free_data:
++	intel_free_irq_resources(domain, virq, i);
++out_free_parent:
++	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
++	return ret;
++}
++
++static void intel_irq_remapping_free(struct irq_domain *domain,
++				     unsigned int virq, unsigned int nr_irqs)
++{
++	intel_free_irq_resources(domain, virq, nr_irqs);
++	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
++}
++
++static int intel_irq_remapping_activate(struct irq_domain *domain,
++					struct irq_data *irq_data)
++{
++	struct intel_ir_data *data = irq_data->chip_data;
++
++	modify_irte(&data->irq_2_iommu, &data->irte_entry);
++
++	return 0;
++}
++
++static int intel_irq_remapping_deactivate(struct irq_domain *domain,
++					  struct irq_data *irq_data)
++{
++	struct intel_ir_data *data = irq_data->chip_data;
++	struct irte entry;
++
++	memset(&entry, 0, sizeof(entry));
++	modify_irte(&data->irq_2_iommu, &entry);
++
++	return 0;
++}
++
++static struct irq_domain_ops intel_ir_domain_ops = {
++	.alloc = intel_irq_remapping_alloc,
++	.free = intel_irq_remapping_free,
++	.activate = intel_irq_remapping_activate,
++	.deactivate = intel_irq_remapping_deactivate,
+ };
+diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+index a65208a8fe18..ecaf3a937845 100644
+--- a/include/linux/intel-iommu.h
++++ b/include/linux/intel-iommu.h
+@@ -286,6 +286,8 @@ struct q_inval {
+ 
+ #define INTR_REMAP_TABLE_ENTRIES	65536
+ 
++struct irq_domain;
++
+ struct ir_table {
+ 	struct irte *base;
+ 	unsigned long *bitmap;
+@@ -335,6 +337,8 @@ struct intel_iommu {
+ 
+ #ifdef CONFIG_IRQ_REMAP
+ 	struct ir_table *ir_table;	/* Interrupt remapping info */
++	struct irq_domain *ir_domain;
++	struct irq_domain *ir_msi_domain;
+ #endif
+ 	struct device	*iommu_dev; /* IOMMU-sysfs device */
+ 	int		node;
+-- 
+1.7.10.4
 
->
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: Mark Rutland <mark.rutland@arm.com>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Catalin Marinas <catalin.marinas@arm.com>
-> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> Signed-off-by: Thomas Lendacky <Thomas.Lendacky@amd.com>
-> Signed-off-by: Joel Schopp <Joel.Schopp@amd.com>
-> ---
->  arch/arm64/boot/dts/Makefile                |   1 +
->  arch/arm64/boot/dts/amd-seattle-periph.dtsi | 175 ++++++++++++++++++++
->  arch/arm64/boot/dts/amd-seattle.dts         | 245 ++++++++++++++++++++++++++++
->  3 files changed, 421 insertions(+)
->  create mode 100644 arch/arm64/boot/dts/amd-seattle-periph.dtsi
->  create mode 100644 arch/arm64/boot/dts/amd-seattle.dts
->
-> diff --git a/arch/arm64/boot/dts/Makefile b/arch/arm64/boot/dts/Makefile
-> index c52bdb0..11cb2e3 100644
-> --- a/arch/arm64/boot/dts/Makefile
-> +++ b/arch/arm64/boot/dts/Makefile
-> @@ -1,5 +1,6 @@
->  dtb-$(CONFIG_ARCH_VEXPRESS) += rtsm_ve-aemv8a.dtb foundation-v8.dtb
->  dtb-$(CONFIG_ARCH_XGENE) += apm-mustang.dtb
-> +dtb-$(CONFIG_ARCH_SEATTLE) += amd-seattle.dtb
->
->  targets += dtbs
->  targets += $(dtb-y)
-> diff --git a/arch/arm64/boot/dts/amd-seattle-periph.dtsi b/arch/arm64/boot/dts/amd-seattle-periph.dtsi
-> new file mode 100644
-> index 0000000..e5bcf1c
-> --- /dev/null
-> +++ b/arch/arm64/boot/dts/amd-seattle-periph.dtsi
-> @@ -0,0 +1,175 @@
-> +/*
-> + * DTS file for AMD Seattle Peripheral
-> + *
-> + * Copyright (C) 2014 Advanced Micro Devices, Inc.
-> + */
-> +
-> +motherboard {
-> +       arm,v2m-memory-map = "rs1";
-> +       compatible = "arm,vexpress,v2m-p1", "simple-bus";
-
-The v2m stuff above can go. This isn't a versatile express, and we won't
-use those properties anyway.
-
-> +       #address-cells = <2>;
-> +       #size-cells = <2>;
-> +       ranges;
-> +
-> +       adl3clk_100mhz: clk100mhz_0 {
-> +               compatible = "fixed-clock";
-> +               #clock-cells = <0>;
-> +               clock-frequency = <100000000>;
-> +               clock-output-names = "adl3clk_100mhz";
-> +       };
-> +
-> +       ccpclk_375mhz: clk375mhz {
-> +               compatible = "fixed-clock";
-> +               #clock-cells = <0>;
-> +               clock-frequency = <375000000>;
-> +               clock-output-names = "ccpclk_375mhz";
-> +       };
-> +
-> +       sataclk_333mhz: clk333mhz {
-> +               compatible = "fixed-clock";
-> +               #clock-cells = <0>;
-> +               clock-frequency = <333000000>;
-> +               clock-output-names = "sataclk_333mhz";
-> +       };
-> +
-> +       pcieclk_500mhz: clk500mhz_0 {
-> +               compatible = "fixed-clock";
-> +               #clock-cells = <0>;
-> +               clock-frequency = <500000000>;
-> +               clock-output-names = "pcieclk_500mhz";
-> +       };
-> +
-> +       dmaclk_500mhz: clk500mhz_1 {
-> +               compatible = "fixed-clock";
-> +               #clock-cells = <0>;
-> +               clock-frequency = <500000000>;
-> +               clock-output-names = "dmaclk_500mhz";
-> +       };
-> +
-> +       miscclk_250mhz: clk250mhz_4 {
-> +               compatible = "fixed-clock";
-> +               #clock-cells = <0>;
-> +               clock-frequency = <250000000>;
-> +               clock-output-names = "miscclk_250mhz";
-> +       };
-> +
-> +       uartspiclk_100mhz: clk100mhz_1 {
-> +               compatible = "fixed-clock";
-> +               #clock-cells = <0>;
-> +               clock-frequency = <100000000>;
-> +               clock-output-names = "uartspiclk_100mhz";
-> +       };
-> +
-> +       dma0: dma@1,0500000 {
-> +               compatible = "arm,pl330", "arm,primecell";
-> +               reg = <0 0x0500000 0 0x1000>;
-> +               interrupts =
-> +                       <0 368 4>,
-> +                       <0 369 4>,
-> +                       <0 370 4>,
-> +                       <0 371 4>,
-> +                       <0 372 4>,
-> +                       <0 373 4>,
-> +                       <0 374 4>,
-> +                       <0 375 4>;
-> +               clocks = <&dmaclk_500mhz>;
-> +               clock-names = "apb_pclk";
-> +               #dma-cells = <1>;
-> +               #stream-id-cells = <32>;
-
-I didn't spot an SMMU, so I think this should go.
-
-> +       };
-> +
-> +       sata0: sata@1,00300000 {
-> +               compatible = "snps,spear-ahci";
-> +               reg = <0 0x300000 0 0x800>;
-> +               interrupts = <0 355 4>;
-> +               clocks = <&sataclk_333mhz>;
-> +               clock-names = "apb_pclk";
-> +               #stream-id-cells = <32>;
-
-Likewise.
-
-> +               dma-coherent;
-> +       };
-> +
-> +       i2c@1,1000000 {
-> +               compatible = "snps,designware-i2c";
-> +               reg = <0 0x01000000 0 0x1000>;
-> +               interrupts = <0 357 4>;
-> +               clocks = <&uartspiclk_100mhz>;
-> +               clock-names = "apb_pclk";
-> +       };
-> +
-> +       v2m_serial0: uart@1,1010000 {
-> +               compatible = "arm,pl011", "arm,primecell";
-> +               reg = <0 0x1010000 0 0x1000>;
-> +               interrupts = <0 328 4>;
-> +               clocks = <&uartspiclk_100mhz>, <&uartspiclk_100mhz>;
-> +               clock-names = "uartclk", "apb_pclk";
-> +       };
-> +
-> +       ssp@1,1020000 {
-> +               #gpio-cells = <2>;
-> +               compatible = "arm,pl022", "arm,primecell";
-
-Please put the compatible property first in each node.
-
-> +               reg = <0 0x1020000 0 0x1000>;
-> +               spi-controller;
-> +               interrupts = <0 330 4>;
-> +               clocks = <&uartspiclk_100mhz>;
-> +               clock-names = "apb_pclk";
-> +       };
-> +
-> +       ssp@1,1030000 {
-> +               #gpio-cells = <2>;
-> +               compatible = "arm,pl022", "arm,primecell";
-> +               reg = <0 0x1030000 0 0x1000>;
-> +               spi-controller;
-> +               interrupts = <0 329 4>;
-> +               clocks = <&uartspiclk_100mhz>;
-> +               clock-names = "apb_pclk";
-> +               num-cs = <1>;
-> +               #address-cells = <1>;
-> +               #size-cells = <0>;
-> +
-> +               sdcard@1 {
-> +                       compatible = "mmc-spi-slot";
-> +                       reg = <0>;
-
-The unit-address should match the first reg entry.
-
-> +                       spi-max-frequency = <20000000>;
-> +                       pl022,hierarchy = <0>;
-> +                       pl022,interface = <0>;
-> +                       pl022,com-mode = <0x0>;
-> +                       pl022,rx-level-trig = <0>;
-> +                       pl022,tx-level-trig = <0>;
-> +               };
-> +       };
-> +
-> +       gpio@1,1040000 {
-> +               #gpio-cells = <2>;
-> +               compatible = "arm,pl061", "arm,primecell";
-> +               reg = <0 0x1040000 0 0x1000>;
-> +               gpio-controller;
-> +               interrupts = <0 359 4>;
-> +               clocks = <&uartspiclk_100mhz>;
-> +               clock-names = "apb_pclk";
-> +       };
-> +
-> +       gpio@1,1050000 {
-> +               #gpio-cells = <2>;
-> +               compatible = "arm,pl061", "arm,primecell";
-> +               reg = <0 0x1050000 0 0x1000>;
-> +               gpio-controller;
-> +               interrupts = <0 358 4>;
-> +               clocks = <&uartspiclk_100mhz>;
-> +               clock-names = "apb_pclk";
-> +       };
-> +
-> +       timer@1,1060000 {
-> +               compatible = "arm,standalone_a5_twd";
-> +               reg = <0 0x1060000 0 0x40>;
-> +               interrupts =
-> +                       <0 378 4>,
-> +                       <0 379 4>;
-> +       };
-
-This binding does not exist in mainline.
-
-> +
-> +       ccp: ccp@1,00100000 {
-> +               compatible = "amd,ccp-seattle-v1a";
-> +               reg = <0 0x00100000 0 0x10000>;
-> +               interrupts = <0 3 4>;
-> +               dma-coherent;
-> +       };
-
-Nor does this.
-
-> +};
-> diff --git a/arch/arm64/boot/dts/amd-seattle.dts b/arch/arm64/boot/dts/amd-seattle.dts
-> new file mode 100644
-> index 0000000..3096d1a
-> --- /dev/null
-> +++ b/arch/arm64/boot/dts/amd-seattle.dts
-> @@ -0,0 +1,245 @@
-> +/*
-> + * DTS file for AMD Seattle
-> + *
-> + * Copyright (C) 2014 Advanced Micro Devices, Inc.
-> + */
-> +
-> +/dts-v1/;
-> +
-> +/ {
-> +       compatible = "amd,seattle";
-> +       interrupt-parent = <&gic>;
-> +       #address-cells = <2>;
-> +       #size-cells = <2>;
-> +
-> +       chosen {
-> +               bootargs = "console=ttyAMA0,115200 earlycon=pl011,0xe1010000";
-
-Please use stdout-path instead.
-
-> +               linux,pci-probe-only;
-
-Why is this necessary?
-
-> +       };
-> +
-> +       aliases {
-> +               serial0 = &v2m_serial0;
-> +       };
-> +
-> +       /* Note: This entry is modified by UEFI */
-
-In what way is this modified?
-
-> +       cpus {
-> +               #address-cells = <2>;
-> +               #size-cells = <0>;
-> +
-> +               cpu-map {
-> +                       cluster0 {
-> +                               core0 {
-> +                                       cpu = <&CPU0>;
-> +                               };
-> +                               core1 {
-> +                                       cpu = <&CPU1>;
-> +                               };
-> +                       };
-> +                       cluster1 {
-> +                               core0 {
-> +                                       cpu = <&CPU2>;
-> +                               };
-> +                               core1 {
-> +                                       cpu = <&CPU3>;
-> +                               };
-> +                       };
-> +                       cluster2 {
-> +                               core0 {
-> +                                       cpu = <&CPU4>;
-> +                               };
-> +                               core1 {
-> +                                       cpu = <&CPU5>;
-> +                               };
-> +                       };
-> +                       cluster3 {
-> +                               core0 {
-> +                                       cpu = <&CPU6>;
-> +                               };
-> +                               core1 {
-> +                                       cpu = <&CPU7>;
-> +                               };
-> +                       };
-> +               };
-> +               /* Cluster 0 Core 0 */
-> +               CPU0: cpu@0 {
-> +                       device_type = "cpu";
-> +                       compatible = "arm,armv8";
-
-Can we have the actual CPU name, please?
-
-> +                       reg = <0x0 0x0000>;
-> +                       enable-method = "spin-table";
-> +                       cpu-release-addr = <0x80 0x30000050>;
-
-Not PSCI?
-
-> +               };
-> +
-> +               /* Cluster 0 Core 1 */
-> +               CPU1: cpu@1 {
-> +                       device_type = "cpu";
-> +                       compatible = "arm,armv8";
-> +                       reg = <0x0 0x0001>;
-> +                       enable-method = "spin-table";
-> +                       cpu-release-addr = <0x80 0x30000058>;
-
-At least the release addresses are unique...
-
-> +               };
-
-[...]
-
-> +
-> +       /* Note: This entry is modified by UEFI */
-> +       memory@8000000000 {
-> +               device_type = "memory";
-> +               reg = <0x00000080 0x00000000 0x1 0x00000000>; /* 4GB */
-> +       };
-
-Why does UEFI modify this? When booted via UEFI we use the UEFI memory
-map.
-
-How exactly does UEFI modify this?
-
-> +
-> +       gic: interrupt-controller@e1101000 {
-> +               compatible = "arm,gic-400", "arm,cortex-a15-gic";
-> +               #interrupt-cells = <3>;
-> +               #address-cells = <2>;
-> +               #size-cells = <2>;
-> +               interrupt-controller;
-> +               ranges = <0 0 0 0xe1100000 0 0x100000>;
-
-Please keep this together with #address-cells and #size-cells.
-
-> +               reg = <0x0 0xe1110000 0 0x1000>,  /* gic dist */
-> +                     <0x0 0xe112f000 0 0x2000>,  /* gic cpu */
-> +                     <0x0 0xe1140000 0 0x10000>, /* gic virtual ic*/
-> +                     <0x0 0xe1160000 0 0x10000>; /* gic virtual cpu*/
-
-The comments are confusing, because they don't match the architected
-names. I would drop them.
-
-> +               interrupts = <1 8 0xf04>;
-> +               v2m0: v2m@0x8000 {
-> +                       compatible = "arm,gic-v2m-frame";
-> +                       msi-controller;
-> +                       arm,msi-base-spi = <64>;
-> +                       arm,msi-num-spis = <256>;
-> +                       reg = <0x0 0x80000 0 0x1000>;
-> +               };
-> +       };
-> +
-> +       timer {
-> +               compatible = "arm,armv8-timer";
-> +               interrupts = <1 13 0xff01>,
-> +                            <1 14 0xff01>,
-> +                            <1 11 0xff01>,
-> +                            <1 10 0xff01>;
-> +       };
-> +
-> +       pmu {
-> +               compatible = "arm,armv8-pmuv3";
-> +               interrupts = <0 7 4>,
-> +                            <0 8 4>,
-> +                            <0 9 4>,
-> +                            <0 10 4>,
-> +                            <0 11 4>,
-> +                            <0 12 4>,
-> +                            <0 13 4>,
-> +                            <0 14 4>;
-> +       };
-> +
-> +       /* This entry is modified by UEFI */
-> +       pcie0: pcie-controller{
-> +               compatible = "pci-host-ecam-generic";
-
-I unfortunately don't know enough about this binding to comment. I'll
-leave that up to someone familiar with PCIe.
-
-> +               #address-cells = <3>;
-> +               #size-cells = <2>;
-> +               device_type = "pci";
-> +               bus-range = <0 0xff>;
-> +               reg = <0 0xf0000000 0 0x10000000>;
-> +               dma-coherent;
-> +               msi-parent = <&v2m0>;
-> +
-> +               interrupts =
-> +                       <0 320 4>, /* ioc_soc_serr */
-> +                       <0 321 4>; /* ioc_soc_sci */
-> +
-> +               ranges = <
-> +                       /* I/O Memory (size=64K) */
-> +                       0x01000000 0x00 0xefff0000 0x00 0xefff0000 0x00 0x00010000
-
-However, please bracket list entries individually.
-
-Thanks,
-Mark.
