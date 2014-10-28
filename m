@@ -1,186 +1,80 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v3 17/27] MIPS/Octeon/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-Date: Wed, 15 Oct 2014 11:07:05 +0800
-Message-ID: <1413342435-7876-18-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
-References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Paul Zimmerman <Paul.Zimmerman@synopsys.com>
+To: "balbi@ti.com" <balbi@ti.com>
+CC: Huang Rui <ray.huang@amd.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Jason Chang <jason.chang@amd.com>,
+	"Vincent Wan" <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v3 01/19] usb: dwc3: enable hibernation if to be
+ supported
+Date: Tue, 28 Oct 2014 19:15:29 +0000
+Message-ID: <A2CA0424C0A6F04399FB9E1CD98E0304844E691D@US01WEMBX2.internal.synopsys.com>
+References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
+ <1414497280-3126-2-git-send-email-ray.huang@amd.com>
+ <A2CA0424C0A6F04399FB9E1CD98E0304844E68B7@US01WEMBX2.internal.synopsys.com>
+ <20141028185059.GE25735@saruman>
+ <A2CA0424C0A6F04399FB9E1CD98E0304844E68E4@US01WEMBX2.internal.synopsys.com>
+ <20141028190122.GF25735@saruman>
+In-Reply-To: <20141028190122.GF25735@saruman>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use MSI chip framework instead of arch MSI functions to configure
-MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+> From: Felipe Balbi [mailto:balbi@ti.com]
+> Sent: Tuesday, October 28, 2014 12:01 PM
+> 
+> On Tue, Oct 28, 2014 at 06:55:50PM +0000, Paul Zimmerman wrote:
+> > > From: Felipe Balbi [mailto:balbi@ti.com]
+> > > Sent: Tuesday, October 28, 2014 11:51 AM
+> > >
+> > > On Tue, Oct 28, 2014 at 06:47:08PM +0000, Paul Zimmerman wrote:
+> > > > > From: Huang Rui [mailto:ray.huang@amd.com]
+> > > > > Sent: Tuesday, October 28, 2014 4:54 AM
+> > > > >
+> > > > > It enables hibernation if the function is set in coreConsultant.
+> > > > >
+> > > > > Suggested-by: Felipe Balbi <balbi@ti.com>
+> > > > > Signed-off-by: Huang Rui <ray.huang@amd.com>
+> > > > > ---
+> > > > >  drivers/usb/dwc3/core.c | 1 +
+> > > > >  1 file changed, 1 insertion(+)
+> > > > >
+> > > > > diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+> > > > > index fa396fc..bf77509 100644
+> > > > > --- a/drivers/usb/dwc3/core.c
+> > > > > +++ b/drivers/usb/dwc3/core.c
+> > > > > @@ -449,6 +449,7 @@ static int dwc3_core_init(struct dwc3 *dwc)
+> > > > >  	case DWC3_GHWPARAMS1_EN_PWROPT_HIB:
+> > > > >  		/* enable hibernation here */
+> > > > >  		dwc->nr_scratch = DWC3_GHWPARAMS4_HIBER_SCRATCHBUFS(hwparams4);
+> > > > > +		reg |= DWC3_GCTL_GBLHIBERNATIONEN;
+> > > > >  		break;
+> > > > >  	default:
+> > > > >  		dev_dbg(dwc->dev, "No power optimization available\n");
+> > > >
+> > > > What effect does this have when the controller is in device mode? I
+> > > > expect it will start generating DWC3_DEVICE_EVENT_HIBER_REQ interrupt
+> > > > events when this register bit is set. So the dev_WARN_ONCE in
+> > > > dwc3_gadget_interrupt() will start firing, I think.
+> > >
+> > > Ok, so this *has* to wait for proper hibernation support ?
+> >
+> > Ah, never mind. Since the hibernation event is not enabled in the
+> > DEVTEN register, the controller shouldn't generate that event after
+> > all. So I think it should be OK. Sorry for the noise.
+> 
+> do you think it's still nice to have a comment here ?
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/mips/include/asm/octeon/pci-octeon.h |    4 +++
- arch/mips/pci/msi-octeon.c                |   31 ++++++++++++++++------------
- arch/mips/pci/pci-octeon.c                |    3 ++
- 3 files changed, 25 insertions(+), 13 deletions(-)
+Maybe something along the lines of "enabling this bit so that host-mode
+hibernation will work, device-mode hibernation is not implemented yet"?
 
-diff --git a/arch/mips/include/asm/octeon/pci-octeon.h b/arch/mips/include/asm/octeon/pci-octeon.h
-index 64ba56a..27ffe42 100644
---- a/arch/mips/include/asm/octeon/pci-octeon.h
-+++ b/arch/mips/include/asm/octeon/pci-octeon.h
-@@ -66,4 +66,8 @@ enum octeon_dma_bar_type {
-  */
- extern enum octeon_dma_bar_type octeon_dma_bar_type;
- 
-+#ifdef CONFIG_PCI_MSI
-+extern struct msi_chip octeon_msi_chip;
-+#endif
-+
- #endif
-diff --git a/arch/mips/pci/msi-octeon.c b/arch/mips/pci/msi-octeon.c
-index 63bbe07..fd4d698 100644
---- a/arch/mips/pci/msi-octeon.c
-+++ b/arch/mips/pci/msi-octeon.c
-@@ -57,7 +57,7 @@ static int msi_irq_size;
-  *
-  * Returns 0 on success.
-  */
--int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
-+static int octeon_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- {
- 	struct msi_msg msg;
- 	u16 control;
-@@ -132,12 +132,12 @@ msi_irq_allocated:
- 	/* Make sure the search for available interrupts didn't fail */
- 	if (irq >= 64) {
- 		if (request_private_bits) {
--			pr_err("arch_setup_msi_irq: Unable to find %d free interrupts, trying just one",
--			       1 << request_private_bits);
-+			pr_err("%s: Unable to find %d free interrupts, trying just one",
-+			       __func__, 1 << request_private_bits);
- 			request_private_bits = 0;
- 			goto try_only_one;
- 		} else
--			panic("arch_setup_msi_irq: Unable to find a free MSI interrupt");
-+			panic("%s: Unable to find a free MSI interrupt", __func__);
- 	}
- 
- 	/* MSI interrupts start at logical IRQ OCTEON_IRQ_MSI_BIT0 */
-@@ -168,7 +168,7 @@ msi_irq_allocated:
- 		msg.address_hi = (0 + CVMX_SLI_PCIE_MSI_RCV) >> 32;
- 		break;
- 	default:
--		panic("arch_setup_msi_irq: Invalid octeon_dma_bar_type");
-+		panic("%s: Invalid octeon_dma_bar_type", __func__);
- 	}
- 	msg.data = irq - OCTEON_IRQ_MSI_BIT0;
- 
-@@ -182,7 +182,8 @@ msi_irq_allocated:
- 	return 0;
- }
- 
--int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+static int octeon_setup_msi_irqs(struct msi_chip *chip, struct pci_dev *dev,
-+		int nvec, int type)
- {
- 	struct msi_desc *entry;
- 	int ret;
-@@ -201,7 +202,7 @@ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 		return 1;
- 
- 	list_for_each_entry(entry, &dev->msi_list, list) {
--		ret = arch_setup_msi_irq(dev, entry);
-+		ret = octeon_setup_msi_irq(dev, entry);
- 		if (ret < 0)
- 			return ret;
- 		if (ret > 0)
-@@ -210,14 +211,13 @@ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 
- 	return 0;
- }
--
- /**
-  * Called when a device no longer needs its MSI interrupts. All
-  * MSI interrupts for the device are freed.
-  *
-  * @irq:    The devices first irq number. There may be multple in sequence.
-  */
--void arch_teardown_msi_irq(unsigned int irq)
-+static void octeon_teardown_msi_irq(struct msi_chip *chip, unsigned int irq)
- {
- 	int number_irqs;
- 	u64 bitmask;
-@@ -226,8 +226,8 @@ void arch_teardown_msi_irq(unsigned int irq)
- 
- 	if ((irq < OCTEON_IRQ_MSI_BIT0)
- 		|| (irq > msi_irq_size + OCTEON_IRQ_MSI_BIT0))
--		panic("arch_teardown_msi_irq: Attempted to teardown illegal "
--		      "MSI interrupt (%d)", irq);
-+		panic("%s: Attempted to teardown illegal "
-+			"MSI interrupt (%d)", __func__, irq);
- 
- 	irq -= OCTEON_IRQ_MSI_BIT0;
- 	index = irq / 64;
-@@ -249,8 +249,8 @@ void arch_teardown_msi_irq(unsigned int irq)
- 	/* Shift the mask to the correct bit location */
- 	bitmask <<= irq0;
- 	if ((msi_free_irq_bitmask[index] & bitmask) != bitmask)
--		panic("arch_teardown_msi_irq: Attempted to teardown MSI "
--		      "interrupt (%d) not in use", irq);
-+		panic("%s: Attempted to teardown MSI "
-+			"interrupt (%d) not in use", __func__, irq);
- 
- 	/* Checks are done, update the in use bitmask */
- 	spin_lock(&msi_free_irq_bitmask_lock);
-@@ -259,6 +259,11 @@ void arch_teardown_msi_irq(unsigned int irq)
- 	spin_unlock(&msi_free_irq_bitmask_lock);
- }
- 
-+struct msi_chip octeon_msi_chip = {
-+	.setup_irqs = octeon_setup_msi_irqs,
-+	.teardown_irq = octeon_teardown_msi_irq,
-+};
-+
- static DEFINE_RAW_SPINLOCK(octeon_irq_msi_lock);
- 
- static u64 msi_rcv_reg[4];
-diff --git a/arch/mips/pci/pci-octeon.c b/arch/mips/pci/pci-octeon.c
-index 59cccd9..aefaa8a 100644
---- a/arch/mips/pci/pci-octeon.c
-+++ b/arch/mips/pci/pci-octeon.c
-@@ -356,6 +356,9 @@ static struct pci_controller octeon_pci_controller = {
- 	.io_resource = &octeon_pci_io_resource,
- 	.io_offset = 0,
- 	.io_map_base = OCTEON_PCI_IOSPACE_BASE,
-+#ifdef CONFIG_PCI_MSI
-+	.msi_chip = &octeon_msi_chip,
-+#endif
- };
- 
- 
 -- 
-1.7.1
+Paul
 
