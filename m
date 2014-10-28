@@ -1,125 +1,147 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6559 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755275AbaJVQCp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 22 Oct 2014 12:02:45 -0400
-Message-ID: <1413993749.4202.197.camel@ul30vt.home>
-Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass through
- (vfio)
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Andreas Hartmann <andihartmann@freenet.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Date: Wed, 22 Oct 2014 10:02:29 -0600
-In-Reply-To: <20141022173405.2e5474a1@dualc.maya.org>
-References: <20140923210318.498dacbd@dualc.maya.org>
-			 <1411502866.24563.8.camel@ul30vt.home> <5437A958.3000201@maya.org>
-			 <CAErSpo5kkk4itqqmCMU=08-XMcDknur8VY++F3A2LajdvTptOA@mail.gmail.com>
-			 <5437F1F5.3010706@maya.org>
-			 <CAErSpo6DuWEcJb_gfS=5JnKN8b4DXXV9+u-CRa8m3db0dbzpsQ@mail.gmail.com>
-			 <543804BC.3080307@maya.org>
-			 <CAErSpo450czUtAM104o+RS=yOcmP+3MKMH7mYk=UYhVJ2+cfSQ@mail.gmail.com>
-			 <20141011003219.560cca97@dualc.maya.org>
-			 <20141010225408.GA24493@google.com> <5438CC1E.3060407@maya.org>
-		 <1413360267.4202.70.camel@ul30vt.home> <54406B34.1050808@maya.org>
-	 <1413925580.4202.189.camel@ul30vt.home>
-	 <20141022173405.2e5474a1@dualc.maya.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [Patch Part2 v3 00/24] Enable hierarchy irqdomian on x86 platforms
+Date: Tue, 28 Oct 2014 16:26:18 +0800
+Message-Id: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-10-22 at 17:34 +0200, Andreas Hartmann wrote:
-> Alex Williamson schrieb:
-> > Hi Andreas,
-> > 
-> > On Fri, 2014-10-17 at 03:04 +0200, Andreas Hartmann wrote:
-> >> Hello Alex,
-> >>
-> >> Alex Williamson wrote:
-> >>> Hi Andreas,
-> >> [...]
-> >>> Sorry for the breakage.  Is it possible to run lspci on the device in a
-> >>> loop from the host and capture whether we're failing to restore some of
-> >>> the VC bits to their previous state? 
-> >>
-> >>> Does the problem also occur if you
-> >>> unbind from host driver,
-> >>
-> >> The machine is booted w/ blacklisted ath9k. Then, the device is bound to
-> >> vfio:
-> >>
-> >> echo "168c 0030" > /sys/bus/pci/drivers/vfio-pci/new_id
-> >> echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
-> >> echo 0000:03:00.0 > /sys/bus/pci/drivers/vfio-pci/bind
-> >>
-> >> afterwards the VM is started -> hang.
-> >>
-> >> W/o starting th VM, I can bind it to vfio and unbind it from vfio w/o
-> >> any problem.
-> >>
-> >>> echo 1 > reset in pci-sysfs,
-> >>
-> >> echo 1 > /sys/bus/pci/devices/0000:03:00.0 works w/o any problem while
-> >> bound to vfio. Even after unbinding from vfio and rebinding to vfio
-> >> again ... .
-> >>
-> >>> and re-bind to the
-> >>
-> >> Do you mean loading ath9k in host system after unbinding from vfio? If
-> >> yes: Works w/o any problem. It's even possible to reset it or do a
-> >> ifconfig wlan0 up, ifconfig wlan0 down, rmmod ath9k, bind it to vfio
-> >> again and reset it, ....
-> >>
-> >> Looks like the hang only is triggered by qemu-system_x86_64 on startup
-> >> the VM.
-> >>
-> >>> host?  I'll also try to reproduce on my 990fx system, but I won't be
-> >>> able to do that until next week due to travel.  Thanks,
-> > 
-> > Could you send me the lspci -vvvxxxx for the device and parent root
-> > port?  Thanks,
-> 
-> 
-> Done with kernel 3.12.28 in host while the device was used in VM:
-> 
-> # lspci -vt
-> -[0000:00]-+-00.0  Advanced Micro Devices, Inc. [AMD/ATI] RD890 PCI to PCI bridge (external gfx0 port B)
->            +-00.2  Advanced Micro Devices, Inc. [AMD/ATI] RD990 I/O Memory Management Unit (IOMMU)
->            +-02.0-[01]--+-00.0  Advanced Micro Devices, Inc. [AMD/ATI] Turks PRO [Radeon HD 6570/7570]
->            |            \-00.1  Advanced Micro Devices, Inc. [AMD/ATI] Turks/Whistler HDMI Audio [Radeon HD 6000 Series]
->            +-04.0-[02]----00.0  Etron Technology, Inc. EJ168 USB 3.0 Host Controller
->            +-05.0-[03]----00.0  Qualcomm Atheros AR93xx Wireless Network Adapter
->            +-09.0-[04]----00.0  Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller
->            +-0a.0-[05]----00.0  Etron Technology, Inc. EJ168 USB 3.0 Host Controller
->            +-11.0  Advanced Micro Devices, Inc. [AMD/ATI] SB7x0/SB8x0/SB9x0 SATA Controller [AHCI mode]
->            +-12.0  Advanced Micro Devices, Inc. [AMD/ATI] SB7x0/SB8x0/SB9x0 USB OHCI0 Controller
->            +-12.2  Advanced Micro Devices, Inc. [AMD/ATI] SB7x0/SB8x0/SB9x0 USB EHCI Controller
->            +-13.0  Advanced Micro Devices, Inc. [AMD/ATI] SB7x0/SB8x0/SB9x0 USB OHCI0 Controller
->            +-13.2  Advanced Micro Devices, Inc. [AMD/ATI] SB7x0/SB8x0/SB9x0 USB EHCI Controller
->            +-14.0  Advanced Micro Devices, Inc. [AMD/ATI] SBx00 SMBus Controller
->            +-14.2  Advanced Micro Devices, Inc. [AMD/ATI] SBx00 Azalia (Intel HDA)
->            +-14.3  Advanced Micro Devices, Inc. [AMD/ATI] SB7x0/SB8x0/SB9x0 LPC host controller
->            +-14.4-[06]--+-06.0  Intel Corporation 82557/8/9/0/1 Ethernet Pro 100
->            |            \-0e.0  VIA Technologies, Inc. VT6306/7/8 [Fire II(M)] IEEE 1394 OHCI Controller
->            +-14.5  Advanced Micro Devices, Inc. [AMD/ATI] SB7x0/SB8x0/SB9x0 USB OHCI2 Controller
->            +-15.0-[07]--
->            +-16.0  Advanced Micro Devices, Inc. [AMD/ATI] SB7x0/SB8x0/SB9x0 USB OHCI0 Controller
->            +-16.2  Advanced Micro Devices, Inc. [AMD/ATI] SB7x0/SB8x0/SB9x0 USB EHCI Controller
->            +-18.0  Advanced Micro Devices, Inc. [AMD] Family 15h Processor Function 0
->            +-18.1  Advanced Micro Devices, Inc. [AMD] Family 15h Processor Function 1
->            +-18.2  Advanced Micro Devices, Inc. [AMD] Family 15h Processor Function 2
->            +-18.3  Advanced Micro Devices, Inc. [AMD] Family 15h Processor Function 3
->            +-18.4  Advanced Micro Devices, Inc. [AMD] Family 15h Processor Function 4
->            \-18.5  Advanced Micro Devices, Inc. [AMD] Family 15h Processor Function 5
-> 
-> 
-> # lspci -s 03:00 -vvvxxxx
-> 03:00.0 Network controller: Qualcomm Atheros AR93xx Wireless Network Adapter (rev 01)
-[snip]
-> 
-> 
-> I'm not sure what you mean with "parent root port". Could it be this:
+We plan to restructure x86 interrupt code based on hierarchy irqdomain,
+that is to build irqdomains for CPU vector, interrupt remapping unit,
+IOAPIC, MSI and HPET etc and organize those irqdomains in hierarchy mode.
+Each irqdomain manages corresponding interrupt controller and talks to
+parent interrupt controller through public irqdomain interfaces. We also
+support stacked irq_chip based on hierarchy irqdomain. It will make the
+x86 interrupt architecture much more clear and more easy to maintain
+with hierarchy irqdomain and stacked irq_chip. It may also help ARM
+interrupt management architecture too.
 
-No, it's 00:05.0
+This is the second patch set to enable support of hierarchy irqdomain
+on x86 platforms. It depends on the first part at:
+https://lkml.org/lkml/2014/10/27/122
+And you may access it at:
+https://github.com/jiangliu/linux.git irqdomain/p2v3
+
+And there will be a third patch set to convert IOAPIC driver to support
+hierarchy irqdomain and clean up code.
+
+The first patch extends irqdomain interfaces to support hierarchy
+irqdomain. Hope this interface could be used by other architectures too,
+such as ARM/ARM64.
+The second patch introduces two helper functions to support stacked
+irq_chip.
+Patch 3-9 implements an irqdomain to manange CPU interrupt vectors, and
+it's the root irqdomain for x86 platforms.
+Patch 10-13 converts Intel and AMD interrupt remapping drivers to
+support hierarchy irqdomain.
+Patch 14-16 converts HPET and MSI to support hierarchy irqdomain.
+Patch 17-20 cleans up unsued code in x86 arch and interrupt remapping
+drivers.
+Patch 21-24 converts DMAR, HTIRQ and UV to support hierarchy irqdomain.
+
+We have tested this patchset on Intel 32-bit and 64-bit systems. And it
+also passes Fengguang's 0day tests. But helps are need for testing:
+1) AMD interrupt remapping 
+2) AMD HT_IRQ
+3) UV platform
+
+V2->V3:
+1) Fix bugs in handling OF irqdomain
+2) Add documentation
+3) Rebase to v3.18-rc2
+V1->V2
+1) Add hierarchy iredomain support of DMAR IRQ and UV IRQ.
+2) Fix bugs reported by Joe C.
+3) Address all review comments from Thomas
+4) Fix a bug found during tests
+5) Fix errors and warning found by 0day tests
+
+Jiang Liu (24):
+  irqdomain: Introduce new interfaces to support hierarchy irqdomains
+  genirq: Introduce helper functions to support stacked irq_chip
+  x86, irq: Save destination CPU ID in irq_cfg
+  x86, irq: Use hierarchy irqdomain to manage CPU interrupt vectors
+  x86, hpet: Use new irqdomain interfaces to allocate/free IRQ
+  x86, MSI: Use new irqdomain interfaces to allocate/free IRQ
+  x86, uv: Use new irqdomain interfaces to allocate/free IRQ
+  x86, htirq: Use new irqdomain interfaces to allocate/free IRQ
+  x86, dmar: Use new irqdomain interfaces to allocate/free IRQ
+  x86: irq_remapping: Introduce new interfaces to support hierarchy
+    irqdomain
+  iommu/vt-d: Change prototypes to prepare for enabling hierarchy
+    irqdomain
+  iommu/vt-d: Enhance Intel IR driver to suppport hierarchy irqdomain
+  iommu/amd: Enhance AMD IR driver to suppport hierarchy irqdomain
+  x86, hpet: Enhance HPET IRQ to support hierarchy irqdomain
+  x86, MSI: Use hierarchy irqdomain to manage MSI interrupts
+  x86, irq: Directly call native_compose_msi_msg() for DMAR IRQ
+  iommu/vt-d: Clean up unused MSI related code
+  iommu/amd: Clean up unused MSI related code
+  x86: irq_remapping: Clean up unused MSI related code
+  x86, irq: Clean up unused MSI related code and interfaces
+  iommu/vt-d: Refine the interfaces to create IRQ for DMAR unit
+  x86, irq: Use hierarchy irqdomain to manage DMAR interrupts
+  x86, htirq: Use hierarchy irqdomain to manage Hypertransport
+    interrupts
+  x86, uv: Use hierarchy irqdomain to manage UV interrupts
+
+ Documentation/IRQ-domain.txt          |   71 +++++
+ arch/ia64/include/asm/irq_remapping.h |    2 -
+ arch/ia64/kernel/msi_ia64.c           |   30 +-
+ arch/x86/Kconfig                      |    3 +-
+ arch/x86/include/asm/hpet.h           |   16 +-
+ arch/x86/include/asm/hw_irq.h         |   82 +++++
+ arch/x86/include/asm/irq_remapping.h  |   85 ++++-
+ arch/x86/include/asm/pci.h            |    5 -
+ arch/x86/include/asm/x86_init.h       |    4 -
+ arch/x86/kernel/apic/htirq.c          |  178 ++++++++---
+ arch/x86/kernel/apic/io_apic.c        |    3 -
+ arch/x86/kernel/apic/msi.c            |  545 +++++++++++++++++++++++++--------
+ arch/x86/kernel/apic/vector.c         |  160 +++++++++-
+ arch/x86/kernel/hpet.c                |   57 +---
+ arch/x86/kernel/x86_init.c            |    2 -
+ arch/x86/platform/uv/uv_irq.c         |  301 +++++++-----------
+ drivers/iommu/amd_iommu.c             |  388 ++++++++++++++++++-----
+ drivers/iommu/amd_iommu_init.c        |    4 +
+ drivers/iommu/amd_iommu_proto.h       |    9 +
+ drivers/iommu/amd_iommu_types.h       |    5 +
+ drivers/iommu/dmar.c                  |   19 +-
+ drivers/iommu/intel_irq_remapping.c   |  470 +++++++++++++++++++---------
+ drivers/iommu/irq_remapping.c         |  227 +++++---------
+ drivers/iommu/irq_remapping.h         |   23 +-
+ drivers/pci/htirq.c                   |   48 +--
+ include/linux/dmar.h                  |    3 +-
+ include/linux/htirq.h                 |   22 +-
+ include/linux/intel-iommu.h           |    4 +
+ include/linux/irq.h                   |   10 +
+ include/linux/irqdomain.h             |   81 +++++
+ kernel/irq/Kconfig                    |    4 +
+ kernel/irq/chip.c                     |   20 ++
+ kernel/irq/irqdomain.c                |  373 +++++++++++++++++++++-
+ 33 files changed, 2319 insertions(+), 935 deletions(-)
+
+-- 
+1.7.10.4
 
