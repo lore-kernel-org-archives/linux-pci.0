@@ -1,77 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og107.obsmtp.com ([64.18.0.184]:58696 "HELO
-	exprod5og107.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751665AbaJBTYL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Oct 2014 15:24:11 -0400
-Received: by mail-wg0-f51.google.com with SMTP id b13so3942839wgh.10
-        for <linux-pci@vger.kernel.org>; Thu, 02 Oct 2014 12:24:09 -0700 (PDT)
+Received: from mail-by2on0110.outbound.protection.outlook.com ([207.46.100.110]:37280
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755649AbaJ1L5O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 Oct 2014 07:57:14 -0400
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Jason Chang <jason.chang@amd.com>,
+	"Vincent Wan" <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v3 17/19] PCI: Add support for AMD Nolan USB3 DRD
+Date: Tue, 28 Oct 2014 19:54:38 +0800
+Message-ID: <1414497280-3126-18-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
+References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo4i4+0c6Qy9w3tKXex2M7Q=Ry8aG-cbO1_uiC8wtD7puQ@mail.gmail.com>
-References: <1411765707-28822-1-git-send-email-tinamdar@apm.com>
-	<20141001191403.GC22713@google.com>
-	<2135522.DVGa59N1mx@wuerfel>
-	<CAErSpo4i4+0c6Qy9w3tKXex2M7Q=Ry8aG-cbO1_uiC8wtD7puQ@mail.gmail.com>
-Date: Thu, 2 Oct 2014 12:24:09 -0700
-Message-ID: <CACoXjc=dymmxz0zC0+0Gj0CE9qtseZnae6C6S2PBEeGU-cvgFA@mail.gmail.com>
-Subject: Re: [PATCH v10 0/4] APM X-Gene PCIe host controller
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 2, 2014 at 7:36 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, Oct 2, 2014 at 6:20 AM, Arnd Bergmann <arnd@arndb.de> wrote:
->> On Wednesday 01 October 2014 13:14:03 Bjorn Helgaas wrote:
->>> On Fri, Sep 26, 2014 at 02:08:23PM -0700, Tanmay Inamdar wrote:
->>> > This patch adds support for AppliedMicro X-Gene PCIe host controller. The
->>> > driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
->>> > cards.
->>> >
->>> > X-Gene PCIe controller driver has depedency on the pcie arm64 arch support.
->>> > Liviu Dudau from ARM has sent a patch set for pcie arm64 arch support and
->>> > support for creating generic pcie bridge from device tree. Liviu's patches
->>> > are available here
->>> > https://lkml.org/lkml/2014/9/23/852
->>> >
->>> > If someone wishes to test PCIe on X-Gene with this patch set, above mentioned
->>> > patches from Liviu must be applied before the patches in this patch set. Also
->>> > please use latest xgene u-boot firmware.
->>>
->>> I applied these on pci/host-xgene (based on pci/host-generic).  I hope to
->>> merge these for v3.18.  It'd be nice to have a device tree person like Arnd
->>> or Rob take a look at the arch/arm64/boot/dts/ bits.
->>
->> Those changes should normally go through the arm-soc tree, but we
->> have not done that so far for arm64 stuff, so I'm not blaming anybody.
->>
->> The dts changes all look good to me, and I think it's ok to have them
->> go through your tree this time.
->>
->> Acked-by: Arnd Bergmann <arnd@arndb.de>
->>
->> In the future, we should all have an eye on this more to ensure that
->> the .dts changes all go through arm-soc.
->
-> The arch/arm64/boot/dts patch is at the tip of my branch, and I'd be
-> more than happy to drop it.  It would be nice to have it in v3.18
-> along with the driver, though, so I'll keep it until somebody chimes
-> in to put it in arm-soc.
->
+This patch adds PCI id for USB3 Dual-Role Device of AMD Nolan (NL) SoC.
+It will be used for PCI quirks and DWC3 device driver.
 
-Thanks Bjorn and Arnd.
+Signed-off-by: Jason Chang <jason.chang@amd.com>
+Signed-off-by: Huang Rui <ray.huang@amd.com>
+---
+ include/linux/pci_ids.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-> Bjorn
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 1fa99a3..5decad7 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -562,6 +562,7 @@
+ #define PCI_DEVICE_ID_AMD_8131_BRIDGE	0x7450
+ #define PCI_DEVICE_ID_AMD_8131_APIC	0x7451
+ #define PCI_DEVICE_ID_AMD_8132_BRIDGE	0x7458
++#define PCI_DEVICE_ID_AMD_NL_USB	0x7912
+ #define PCI_DEVICE_ID_AMD_CS5535_IDE    0x208F
+ #define PCI_DEVICE_ID_AMD_CS5536_ISA    0x2090
+ #define PCI_DEVICE_ID_AMD_CS5536_FLASH  0x2091
+-- 
+1.9.1
+
