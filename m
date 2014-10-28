@@ -1,59 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:16670 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750981AbaJAHJS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 03:09:18 -0400
-Received: from epcpsbgr3.samsung.com
- (u143.gpu120.samsung.co.kr [203.254.230.143])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0NCR0002J7VG2D30@mailout2.samsung.com> for
- linux-pci@vger.kernel.org; Wed, 01 Oct 2014 16:09:17 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Lucas Stach' <l.stach@pengutronix.de>
-Cc: 'Pratyush Anand' <pratyush.anand@st.com>,
-	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
-References: <1412094987-1894-1-git-send-email-l.stach@pengutronix.de>
- <20141001042815.GA24581@pratyush-vbox>
-In-reply-to: <20141001042815.GA24581@pratyush-vbox>
-Subject: Re: [PATCH 0/2] Designware MSI fixes
-Date: Wed, 01 Oct 2014 16:09:10 +0900
-Message-id: <006801cfdd46$9cbcecb0$d636c610$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1414497280-3126-19-git-send-email-ray.huang@amd.com>
+References: <1414497280-3126-1-git-send-email-ray.huang@amd.com> <1414497280-3126-19-git-send-email-ray.huang@amd.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 28 Oct 2014 07:29:39 -0600
+Message-ID: <CAErSpo44qsS_PBaia+Hy86XPsuik_x+u-8Ec2M73j36f1KNzig@mail.gmail.com>
+Subject: Re: [PATCH v3 18/19] PCI: Add quirk to prevent AMD NL USB3 DRD to
+ bind with xHCI driver
+To: Huang Rui <ray.huang@amd.com>
+Cc: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, October 01, 2014 1:28 PM, Pratyush Anand wrote:
-> On Wed, Oct 01, 2014 at 12:36:25AM +0800, Lucas Stach wrote:
-> > Those two patches were part of my designware multi-msi series. I decided
-> > to postpone that one a little bit until the treewide MSI chip patches from
-> > Yijing Wang have landed, but those two patches are just too obvious
-> > fixes/style corrections to let them wait any longer.
-> >
-> > Both patches were tested by Jingoo Han as part of the earlier series, but
-> > I had to modify them a bit for the rebase, so any review/testing much
-> > appreciated. Patches are on top of the pci/host-designware branch.
-> >
-> > Lucas Stach (2):
-> >   PCI: designware: remove bogus multiple MSI setup
-> >   PCI: designware: remove open-coded bitmap operations
-> >
-> 
-> Looks cleaner to me.
-> Reviewed-by: Pratyush Anand <pratyush.anand@st.com>
+I suggest a subject like this:
 
-Acked-by: Jingoo Han <jg1.han@samsung.com>
+PCI: Prevent xHCI driver from claiming AMD Nolan USB3 DRD device
 
-Best regards,
-Jingoo Han
+On Tue, Oct 28, 2014 at 5:54 AM, Huang Rui <ray.huang@amd.com> wrote:
+> The AMD Nolan (NL) SoC contains a DesignWare USB3 Dual-Role Device that can
+> be operated either as a USB Host or a USB Device.  In the AMD NL platform,
+> this device ([1022:7912]) has a class code of PCI_CLASS_SERIAL_USB_XHCI
+> (0x0c0330), which means the xhci driver will claim it.
+>
+> But the dwc3 driver is a more specific driver for this device, and we'd
+> prefer to use it instead of xhci.  To prevent xhci from claiming the
+> device, change the class code to 0x0c03fe, which the PCI r3.0 spec defines
+> as "USB device (not host controller)".  The dwc3 driver can then claim it
+> based on its Vendor and Device ID.
+>
+> Suggested-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
 
-> 
-> >  drivers/pci/host/pcie-designware.c | 98 ++++++--------------------------------
-> >  1 file changed, 14 insertions(+), 84 deletions(-)
-> >
-> > --
-> > 2.1.0
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
+Please merge along with the rest of your series.
+
+> Cc: Jason Chang <jason.chang@amd.com>
+> Signed-off-by: Huang Rui <ray.huang@amd.com>
+> ---
+>  drivers/pci/quirks.c | 20 ++++++++++++++++++++
+>  1 file changed, 20 insertions(+)
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 90acb32..1152bef 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -379,6 +379,26 @@ static void quirk_ati_exploding_mce(struct pci_dev *dev)
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,     PCI_DEVICE_ID_ATI_RS100,   quirk_ati_exploding_mce);
+>
+>  /*
+> + * In the AMD NL platform, this device ([1022:7912]) has a class code of
+> + * PCI_CLASS_SERIAL_USB_XHCI (0x0c0330), which means the xhci driver will
+> + * claim it.
+> + * But the dwc3 driver is a more specific driver for this device, and we'd
+> + * prefer to use it instead of xhci. To prevent xhci from claiming the
+> + * device, change the class code to 0x0c03fe, which the PCI r3.0 spec
+> + * defines as "USB device (not host controller)". The dwc3 driver can then
+> + * claim it based on its Vendor and Device ID.
+> + */
+> +static void quirk_amd_nl_class(struct pci_dev *pdev)
+> +{
+> +       /*
+> +        * Use 'USB Device' (0x0x03fe) instead of PCI header provided
+> +        */
+> +       pdev->class = 0x0c03fe;
+> +}
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_NL_USB,
+> +               quirk_amd_nl_class);
+> +
+> +/*
+>   * Let's make the southbridge information explicit instead
+>   * of having to worry about people probing the ACPI areas,
+>   * for example.. (Yes, it happens, and if you read the wrong
+> --
+> 1.9.1
+>
