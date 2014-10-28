@@ -1,129 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [157.56.111.142] ([157.56.111.142]:56448 "EHLO
-	na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753127AbaJMCc1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 12 Oct 2014 22:32:27 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <richard.zhu@freescale.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shengchao Guo <Shawn.Guo@freescale.com>,
-	"festevam@gmail.com" <festevam@gmail.com>,
-	"tharvey@gateworks.com" <tharvey@gateworks.com>
-Subject: RE: [PATCH v5 6/9] ARM: imx6: update dts and binding for imx6sx pcie
-Date: Mon, 13 Oct 2014 02:32:13 +0000
-Message-ID: <d452e739b5fd46cd905c4cfee5756393@DM2PR0301MB0862.namprd03.prod.outlook.com>
-References: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com>
-	 <1412919676-25344-7-git-send-email-richard.zhu@freescale.com>
- <1413124507.2459.16.camel@antimon.intern.lynxeye.de>
-In-Reply-To: <1413124507.2459.16.camel@antimon.intern.lynxeye.de>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:62639 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751391AbaJ1MGf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Oct 2014 08:06:35 -0400
+Received: by mail-lb0-f172.google.com with SMTP id n15so453286lbi.17
+        for <linux-pci@vger.kernel.org>; Tue, 28 Oct 2014 05:06:33 -0700 (PDT)
+Message-ID: <544F86C7.3060100@cogentembedded.com>
+Date: Tue, 28 Oct 2014 15:06:31 +0300
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
+To: Huang Rui <ray.huang@amd.com>, Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 18/19] PCI: Add quirk to prevent AMD NL USB3 DRD to
+ bind with xHCI driver
+References: <1414497280-3126-1-git-send-email-ray.huang@amd.com> <1414497280-3126-19-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1414497280-3126-19-git-send-email-ray.huang@amd.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4LXBjaS1vd25lckB2
-Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1wY2ktb3duZXJAdmdlci5rZXJuZWwub3JnXQ0K
-PiBPbiBCZWhhbGYgT2YgTHVjYXMgU3RhY2gNCj4gU2VudDogU3VuZGF5LCBPY3RvYmVyIDEyLCAy
-MDE0IDEwOjM1IFBNDQo+IFRvOiBSaWNoYXJkIFpodQ0KPiBDYzogbGludXgtcGNpQHZnZXIua2Vy
-bmVsLm9yZzsgR3VvIFNoYXduLVI2NTA3MzsgZmVzdGV2YW1AZ21haWwuY29tOw0KPiB0aGFydmV5
-QGdhdGV3b3Jrcy5jb207IFpodSBSaWNoYXJkLVI2NTAzNw0KPiBTdWJqZWN0OiBSZTogW1BBVENI
-IHY1IDYvOV0gQVJNOiBpbXg2OiB1cGRhdGUgZHRzIGFuZCBiaW5kaW5nIGZvciBpbXg2c3ggcGNp
-ZQ0KPiANCj4gQW0gRnJlaXRhZywgZGVuIDEwLjEwLjIwMTQsIDEzOjQxICswODAwIHNjaHJpZWIg
-UmljaGFyZCBaaHU6DQo+ID4gRnJvbTogUmljaGFyZCBaaHUgPHI2NTAzN0BmcmVlc2NhbGUuY29t
-Pg0KPiA+DQo+ID4gLSBpbXg2c3ggcGNpZSBwaHkgaGFzIGl0cyBvd24gcG93ZXIgcmVndWxhdG9y
-LiBBZGQgdGhlIHBjaWUgcGh5IHBvd2VyDQo+ID4gc3VwcHkgaW50byBpbTZzeCBwY2llIGR0cyBh
-bmQgYmluZGluZy4NCj4gPiAtIGluIG9yZGVyIHRvIGFsaWduIHdpdGggaW14NnFkbCdzIHBjaWUg
-ZHRzLCByZS1mb3JtYXQgaW14NnN4IHBjaWUNCj4gPiBkdHMuDQo+ID4gLSBpbiBvcmRlciB0byBh
-bGlnbiB3aXRoIGlteDZxZGwgcGNpZSBkdHMgZm9ybWF0IGFuZCBrZWVwIGNsZWFuIG9mDQo+ID4g
-aW14NiBwY2llIGRyaXZlciwga2VlcCB0aGUgcGNpZSBwaHkgY2xvY2sgaW4gaW14NnN4IHBjaWUg
-ZHRzLCBhbHRob3VnaA0KPiA+IGl0J3MgdGhlIHBhcmVudCBjbGsgb2YgdGhlIHBjaWUgYnVzIGNs
-b2NrIG5vdywgYW5kIHdvdWxkIGJlIGVuYWJsZWQNCj4gPiBhdXRvbWF0aWNhbGx5IHdoZW4gcGNp
-ZSBidXMgY2xvY2sgaXMgZW5hYmxlZC4gc2Vjb25kbHksIGl0J3MgcG9zc2libGUNCj4gPiB0aGF0
-IHRoZSBleHRlcm5hbCBvc2MgbWF5YmUgdXNlZCBhcyBzb3VyY2Ugb2YgdGhlIHBjaWVfYnVzIGNs
-ayBpbg0KPiA+IGJvYXJkIGRlc2lnbiBpbiBmdXR1cmUuDQo+ID4gLSBkaXNwX2F4aSBjbG9jayBp
-cyByZXF1aXJlZCBieSBwY2llIGluYm91bmQgYXhpIHBvcnQuDQo+ID4gQWRkIG9uZSBtb3JlIGNs
-b2NrIG5hbWVkIHBjaWVfaW5ib3VuZF9heGkgZm9yIGlteDZzeCBwY2llLg0KPiA+DQo+ID4gU2ln
-bmVkLW9mZi1ieTogUmljaGFyZCBaaHUgPHJpY2hhcmQuemh1QGZyZWVzY2FsZS5jb20+DQo+IA0K
-PiBPbmUgbml0IGJlbG93LCBvdGhlcndpc2UgdGhpcyBsb29rcyBmaW5lIG5vdy4NCj4gDQo+ID4g
-LS0tDQo+ID4gIC4uLi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9mc2wsaW14NnEtcGNpZS50eHQg
-ICAgIHwgIDggKysrKystDQo+ID4gIGFyY2gvYXJtL2Jvb3QvZHRzL2lteDZzeC5kdHNpICAgICAg
-ICAgICAgICAgICAgICAgIHwgMzIgKysrKysrKysrKysrLS0tLS0tLQ0KPiAtLS0NCj4gPiAgMiBm
-aWxlcyBjaGFuZ2VkLCAyNSBpbnNlcnRpb25zKCspLCAxNSBkZWxldGlvbnMoLSkNCj4gPg0KPiA+
-IGRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2ZzbCxp
-bXg2cS1wY2llLnR4dA0KPiA+IGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3Bj
-aS9mc2wsaW14NnEtcGNpZS50eHQNCj4gPiBpbmRleCA5NDU1ZmQwLi5hZDgxMTc5IDEwMDY0NA0K
-PiA+IC0tLSBhL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvZnNsLGlteDZx
-LXBjaWUudHh0DQo+ID4gKysrIGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3Bj
-aS9mc2wsaW14NnEtcGNpZS50eHQNCj4gPiBAQCAtNCw3ICs0LDcgQEAgVGhpcyBQQ0llIGhvc3Qg
-Y29udHJvbGxlciBpcyBiYXNlZCBvbiB0aGUgU3lub3BzaXMNCj4gPiBEZXNpZ253YXJlIFBDSWUg
-SVAgIGFuZCB0aHVzIGluaGVyaXRzIGFsbCB0aGUgY29tbW9uIHByb3BlcnRpZXMgZGVmaW5lZCBp
-bg0KPiBkZXNpZ253YXJlLXBjaWUudHh0Lg0KPiA+DQo+ID4gIFJlcXVpcmVkIHByb3BlcnRpZXM6
-DQo+ID4gLS0gY29tcGF0aWJsZTogImZzbCxpbXg2cS1wY2llIg0KPiA+ICstIGNvbXBhdGlibGU6
-ICJmc2wsaW14NnEtcGNpZSIsICJmc2wsaW14NnN4LXBjaWUiDQo+ID4gIC0gcmVnOiBiYXNlIGFk
-ZHJlc3NlIGFuZCBsZW5ndGggb2YgdGhlIHBjaWUgY29udHJvbGxlcg0KPiA+ICAtIGludGVycnVw
-dHM6IEEgbGlzdCBvZiBpbnRlcnJ1cHQgb3V0cHV0cyBvZiB0aGUgY29udHJvbGxlci4gTXVzdCBj
-b250YWluDQo+IGFuDQo+ID4gICAgZW50cnkgZm9yIGVhY2ggZW50cnkgaW4gdGhlIGludGVycnVw
-dC1uYW1lcyBwcm9wZXJ0eS4NCj4gPiBAQCAtMTMsNiArMTMsMTIgQEAgUmVxdWlyZWQgcHJvcGVy
-dGllczoNCj4gPiAgLSBjbG9jay1uYW1lczogTXVzdCBpbmNsdWRlIHRoZSBmb2xsb3dpbmcgYWRk
-aXRpb25hbCBlbnRyaWVzOg0KPiA+ICAJLSAicGNpZV9waHkiDQo+ID4NCj4gPiArQWRkaXRpb25h
-bCByZXF1aXJlZCBwcm9wZXJ0aWVzIGZvciBpbXg2c3gtcGNpZToNCj4gPiArLSBjbG9jayBuYW1l
-czogTXVzdCBpbmNsdWRlIHRoZSBmb2xsb3dpbmcgYWRkaXRpb25hbCBlbnRyaWVzOg0KPiA+ICsJ
-LSAicGNpZV9pbmJvdW5kX2F4aSINCj4gPiArLSBwb3dlciBzdXBwbGllczoNCj4gPiArCS0gcGNp
-ZS1waHktc3VwcGx5OiByZWd1bGF0b3IgdXNlZCB0byBwb3dlciB0aGUgUENJZSBQSFkNCj4gPiAr
-DQo+ID4gIEV4YW1wbGU6DQo+ID4NCj4gPiAgCXBjaWVAMHgwMTAwMDAwMCB7DQo+ID4gZGlmZiAt
-LWdpdCBhL2FyY2gvYXJtL2Jvb3QvZHRzL2lteDZzeC5kdHNpDQo+ID4gYi9hcmNoL2FybS9ib290
-L2R0cy9pbXg2c3guZHRzaSBpbmRleCBmNGI5ZGE2Li5lZWZlZGJhIDEwMDY0NA0KPiA+IC0tLSBh
-L2FyY2gvYXJtL2Jvb3QvZHRzL2lteDZzeC5kdHNpDQo+ID4gKysrIGIvYXJjaC9hcm0vYm9vdC9k
-dHMvaW14NnN4LmR0c2kNCj4gPiBAQCAtNTk5LDkgKzU5OSw5IEBADQo+ID4gIAkJCQkJYW5hdG9w
-LW1heC12b2x0YWdlID0gPDE0NTAwMDA+Ow0KPiA+ICAJCQkJfTsNCj4gPg0KPiA+IC0JCQkJcmVn
-X3BjaWU6IHJlZ3VsYXRvci12ZGRwY2llQDE0MCB7DQo+ID4gKwkJCQlyZWdfcGNpZV9waHk6IHJl
-Z3VsYXRvci12ZGRwY2llLXBoeUAxNDAgew0KPiA+ICAJCQkJCWNvbXBhdGlibGUgPSAiZnNsLGFu
-YXRvcC1yZWd1bGF0b3IiOw0KPiA+IC0JCQkJCXJlZ3VsYXRvci1uYW1lID0gInZkZHBjaWUiOw0K
-PiA+ICsJCQkJCXJlZ3VsYXRvci1uYW1lID0gInZkZHBjaWUtcGh5IjsNCj4gPiAgCQkJCQlyZWd1
-bGF0b3ItbWluLW1pY3Jvdm9sdCA9IDw3MjUwMDA+Ow0KPiA+ICAJCQkJCXJlZ3VsYXRvci1tYXgt
-bWljcm92b2x0ID0gPDE0NTAwMDA+Ow0KPiA+ICAJCQkJCWFuYXRvcC1yZWctb2Zmc2V0ID0gPDB4
-MTQwPjsNCj4gPiBAQCAtMTE4NCwyNCArMTE4NCwyOCBAQA0KPiA+DQo+ID4gIAkJcGNpZTogcGNp
-ZUAweDA4MDAwMDAwIHsNCj4gPiAgCQkJY29tcGF0aWJsZSA9ICJmc2wsaW14NnN4LXBjaWUiLCAi
-c25wcyxkdy1wY2llIjsNCj4gPiAtCQkJcmVnID0gPDB4MDhmZmMwMDAgMHg0MDAwPjsgLyogREJJ
-ICovDQo+ID4gKwkJCXJlZyA9IDwweDA4ZmZjMDAwIDB4NDAwMD4sIDwweDA4ZjAwMDAwIDB4ODAw
-MDA+Ow0KPiA+ICsJCQlyZWctbmFtZXMgPSAicmNfZGJpIiwgImNvbmZpZyI7DQo+IA0KPiBXaGls
-ZSBpdCBkb2Vzbid0IG1ha2UgYSBmdWNudGlvbmFsIGNoYW5nZSwgSSB3b3VsZCBsaWtlIHRvIHNl
-ZSB0aGlzIGFsaWduZWQgdG8NCj4gaW14NnEsIHdoaWNoIG1lYW5zIHRoZSBmaXJzdCByZWcgbmFt
-ZSBpcyBqdXN0ICJkYmkiLg0KPiANCltSaWNoYXJkXSBUaGFua3MgZm9yIHlvdXIga2luZGx5IHJl
-dmlldy4NClRoZSBuYW1lIHdvdWxkIGJlIGNoYW5nZWQgZnJvbSAicmNfZGJpIiB0byAiZGJpIiwg
-dGhhbmtzLg0KDQo+ID4gIAkJCSNhZGRyZXNzLWNlbGxzID0gPDM+Ow0KPiA+ICAJCQkjc2l6ZS1j
-ZWxscyA9IDwyPjsNCj4gPiAgCQkJZGV2aWNlX3R5cGUgPSAicGNpIjsNCj4gPiAtCQkJCSAgLyog
-Y29uZmlndXJhdGlvbiBzcGFjZSAqLw0KPiA+IC0JCQlyYW5nZXMgPSA8MHgwMDAwMDgwMCAwIDB4
-MDhmMDAwMDAgMHgwOGYwMDAwMCAwIDB4MDAwODAwMDANCj4gPiAtCQkJCSAgLyogZG93bnN0cmVh
-bSBJL08gKi8NCj4gPiAtCQkJCSAgMHg4MTAwMDAwMCAwIDAgICAgICAgICAgMHgwOGY4MDAwMCAw
-IDB4MDAwMTAwMDANCj4gPiAtCQkJCSAgLyogbm9uLXByZWZldGNoYWJsZSBtZW1vcnkgKi8NCj4g
-PiAtCQkJCSAgMHg4MjAwMDAwMCAwIDB4MDgwMDAwMDAgMHgwODAwMDAwMCAwIDB4MDBmMDAwMDA+
-Ow0KPiA+ICsJCQlyYW5nZXMgPSA8MHg4MTAwMDAwMCAwIDAgICAgICAgICAgMHgwOGY4MDAwMCAw
-IDB4MDAwMTAwMDAgLyoNCj4gZG93bnN0cmVhbSBJL08gKi8NCj4gPiArCQkJCSAgMHg4MjAwMDAw
-MCAwIDB4MDgwMDAwMDAgMHgwODAwMDAwMCAwIDB4MDBmMDAwMDA+OyAvKg0KPiA+ICtub24tcHJl
-ZmV0Y2hhYmxlIG1lbW9yeSAqLw0KPiA+ICAJCQludW0tbGFuZXMgPSA8MT47DQo+ID4gLQkJCWlu
-dGVycnVwdHMgPSA8R0lDX1NQSSAxMjMgSVJRX1RZUEVfTEVWRUxfSElHSD47DQo+ID4gLQkJCWNs
-b2NrcyA9IDwmY2xrcyBJTVg2U1hfQ0xLX1BDSUVfUkVGXzEyNU0+LA0KPiA+IC0JCQkJIDwmY2xr
-cyBJTVg2U1hfQ0xLX1BDSUVfQVhJPiwNCj4gPiArCQkJaW50ZXJydXB0cyA9IDxHSUNfU1BJIDEy
-MCBJUlFfVFlQRV9MRVZFTF9ISUdIPjsNCj4gPiArCQkJaW50ZXJydXB0LW5hbWVzID0gIm1zaSI7
-DQo+ID4gKwkJCSNpbnRlcnJ1cHQtY2VsbHMgPSA8MT47DQo+ID4gKwkJCWludGVycnVwdC1tYXAt
-bWFzayA9IDwwIDAgMCAweDc+Ow0KPiA+ICsJCQlpbnRlcnJ1cHQtbWFwID0gPDAgMCAwIDEgJmlu
-dGMgR0lDX1NQSSAxMjMgSVJRX1RZUEVfTEVWRUxfSElHSD4sDQo+ID4gKwkJCSAgICAgICAgICAg
-ICAgICA8MCAwIDAgMiAmaW50YyBHSUNfU1BJIDEyMiBJUlFfVFlQRV9MRVZFTF9ISUdIPiwNCj4g
-PiArCQkJICAgICAgICAgICAgICAgIDwwIDAgMCAzICZpbnRjIEdJQ19TUEkgMTIxIElSUV9UWVBF
-X0xFVkVMX0hJR0g+LA0KPiA+ICsJCQkgICAgICAgICAgICAgICAgPDAgMCAwIDQgJmludGMgR0lD
-X1NQSSAxMjAgSVJRX1RZUEVfTEVWRUxfSElHSD47DQo+ID4gKwkJCWNsb2NrcyA9IDwmY2xrcyBJ
-TVg2U1hfQ0xLX1BDSUVfQVhJPiwNCj4gPiAgCQkJCSA8JmNsa3MgSU1YNlNYX0NMS19MVkRTMV9P
-VVQ+LA0KPiA+ICsJCQkJIDwmY2xrcyBJTVg2U1hfQ0xLX1BDSUVfUkVGXzEyNU0+LA0KPiA+ICAJ
-CQkJIDwmY2xrcyBJTVg2U1hfQ0xLX0RJU1BMQVlfQVhJPjsNCj4gPiAtCQkJY2xvY2stbmFtZXMg
-PSAicGNpZV9yZWZfMTI1bSIsICJwY2llX2F4aSIsDQo+ID4gLQkJCQkgICAgICAibHZkc19nYXRl
-IiwgImRpc3BsYXlfYXhpIjsNCj4gPiArCQkJY2xvY2stbmFtZXMgPSAicGNpZSIsICJwY2llX2J1
-cyIsICJwY2llX3BoeSIsDQo+ICJwY2llX2luYm91bmRfYXhpIjsNCj4gPiArCQkJcGNpZS1waHkt
-c3VwcGx5ID0gPCZyZWdfcGNpZV9waHk+Ow0KPiA+ICAJCQlzdGF0dXMgPSAiZGlzYWJsZWQiOw0K
-PiA+ICAJCX07DQo+ID4gIAl9Ow0KPiANCj4gDQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJlIGZyb20g
-dGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1wY2kiIGluIHRoZQ0K
-PiBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnIE1vcmUgbWFq
-b3Jkb21vIGluZm8gYXQNCj4gaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5o
-dG1sDQoNCg0KQmVzdCBSZWdhcmRzDQpSaWNoYXJkIFpodQ0KDQo=
+Hello.
+
+On 10/28/2014 2:54 PM, Huang Rui wrote:
+
+> The AMD Nolan (NL) SoC contains a DesignWare USB3 Dual-Role Device that can
+> be operated either as a USB Host or a USB Device.  In the AMD NL platform,
+> this device ([1022:7912]) has a class code of PCI_CLASS_SERIAL_USB_XHCI
+> (0x0c0330), which means the xhci driver will claim it.
+
+> But the dwc3 driver is a more specific driver for this device, and we'd
+> prefer to use it instead of xhci.  To prevent xhci from claiming the
+> device, change the class code to 0x0c03fe, which the PCI r3.0 spec defines
+> as "USB device (not host controller)".  The dwc3 driver can then claim it
+> based on its Vendor and Device ID.
+
+> Suggested-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Jason Chang <jason.chang@amd.com>
+> Signed-off-by: Huang Rui <ray.huang@amd.com>
+> ---
+>   drivers/pci/quirks.c | 20 ++++++++++++++++++++
+>   1 file changed, 20 insertions(+)
+
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 90acb32..1152bef 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -379,6 +379,26 @@ static void quirk_ati_exploding_mce(struct pci_dev *dev)
+>   DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,	PCI_DEVICE_ID_ATI_RS100,   quirk_ati_exploding_mce);
+>
+>   /*
+> + * In the AMD NL platform, this device ([1022:7912]) has a class code of
+> + * PCI_CLASS_SERIAL_USB_XHCI (0x0c0330), which means the xhci driver will
+> + * claim it.
+> + * But the dwc3 driver is a more specific driver for this device, and we'd
+> + * prefer to use it instead of xhci. To prevent xhci from claiming the
+> + * device, change the class code to 0x0c03fe, which the PCI r3.0 spec
+> + * defines as "USB device (not host controller)". The dwc3 driver can then
+> + * claim it based on its Vendor and Device ID.
+> + */
+> +static void quirk_amd_nl_class(struct pci_dev *pdev)
+> +{
+> +	/*
+> +	 * Use 'USB Device' (0x0x03fe) instead of PCI header provided
+
+     0x0c03fe, you mean?
+
+> +	 */
+> +	pdev->class = 0x0c03fe;
+> +}
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_NL_USB,
+
+    I'm not sure it was a good idea to declare the ID in pci_ids.h -- it's 
+been long discouraged.
+
+WBR, Sergei
+
