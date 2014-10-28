@@ -1,38 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rrcs-76-79-27-186.west.biz.rr.com ([76.79.27.186]:49371 "EHLO
-	rrcs-76-79-27-186.west.biz.rr.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934857AbaJ3VX5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Oct 2014 17:23:57 -0400
-Date: Thu, 30 Oct 2014 16:23:51 -0500
-From: Jeff Epler <jepler@unpythonic.net>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: fix name of 'enable' sysfs file
-Message-ID: <20141030212351.GA4590@unpythonic.net>
-References: <20141030163028.GA22250@kroah.com>
+Received: from mail-bn1bon0145.outbound.protection.outlook.com ([157.56.111.145]:56672
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755621AbaJ1L5J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 Oct 2014 07:57:09 -0400
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Jason Chang <jason.chang@amd.com>,
+	"Vincent Wan" <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v3 16/19] usb: dwc3: add disable usb2 suspend phy quirk
+Date: Tue, 28 Oct 2014 19:54:37 +0800
+Message-ID: <1414497280-3126-17-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
+References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141030163028.GA22250@kroah.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 30, 2014 at 09:30:28AM -0700, Greg Kroah-Hartman wrote:
-> From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> 
-> Back in commit 5136b2da770d ("PCI: convert bus code to use dev_groups"),
-> I misstyped the 'enable' sysfs file as 'enabled', which broke the
-> userspace api.  This patch fixes that issue by renaming the file back.
-> 
-> Reported-by: Jeff Epler <jepler@unpythonic.net>
-> Cc: stable <stable@vger.kernel.org> # 3.13
-> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+This patch adds disable usb2 suspend phy quirk, and some special platforms
+can configure that if it is needed.
 
-Tested-by: Jeff Epler <jepler@unpythonic.net>
+Signed-off-by: Huang Rui <ray.huang@amd.com>
+---
+ drivers/usb/dwc3/core.c          | 6 ++++++
+ drivers/usb/dwc3/core.h          | 2 ++
+ drivers/usb/dwc3/platform_data.h | 1 +
+ 3 files changed, 9 insertions(+)
 
-(with the caveat that, since LinuxCNC uses the -rt kernel, I tested this
-change manually backported to 3.14-rt)
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index aec393b..33a8f3c 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -422,6 +422,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
+ 	if (dwc->revision > DWC3_REVISION_194A)
+ 		reg |= DWC3_GUSB2PHYCFG_SUSPHY;
+ 
++	if (dwc->dis_u2_susphy_quirk)
++		reg &= ~DWC3_GUSB2PHYCFG_SUSPHY;
++
+ 	dwc3_writel(dwc->regs, DWC3_GUSB2PHYCFG(0), reg);
+ 
+ 	mdelay(100);
+@@ -812,6 +815,8 @@ static int dwc3_probe(struct platform_device *pdev)
+ 				"snps,rx_detect_poll_quirk");
+ 		dwc->dis_u3_susphy_quirk = of_property_read_bool(node,
+ 				"snps,dis_u3_susphy_quirk");
++		dwc->dis_u2_susphy_quirk = of_property_read_bool(node,
++				"snps,dis_u2_susphy_quirk");
+ 
+ 		dwc->tx_deemph_quirk = of_property_read_bool(node,
+ 				"snps,tx_deemph_quirk");
+@@ -835,6 +840,7 @@ static int dwc3_probe(struct platform_device *pdev)
+ 		dwc->lfps_filter_quirk = pdata->lfps_filter_quirk;
+ 		dwc->rx_detect_poll_quirk = pdata->rx_detect_poll_quirk;
+ 		dwc->dis_u3_susphy_quirk = pdata->dis_u3_susphy_quirk;
++		dwc->dis_u2_susphy_quirk = pdata->dis_u2_susphy_quirk;
+ 
+ 		dwc->tx_deemph_quirk = pdata->tx_deemph_quirk;
+ 		if (pdata->tx_deemph)
+diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+index 686d3b9..8b94ad5 100644
+--- a/drivers/usb/dwc3/core.h
++++ b/drivers/usb/dwc3/core.h
+@@ -698,6 +698,7 @@ struct dwc3_scratchpad_array {
+  * @lfps_filter_quirk: set if we enable LFPS filter quirk
+  * @rx_detect_poll_quirk: set if we enable rx_detect to polling lfps quirk
+  * @dis_u3_susphy_quirk: set if we disable usb3 suspend phy
++ * @dis_u2_susphy_quirk: set if we disable usb2 suspend phy
+  * @tx_deemph_quirk: set if we enable Tx deemphasis quirk
+  * @tx_deemph: Tx deemphasis value
+  *	0	- -6dB de-emphasis
+@@ -820,6 +821,7 @@ struct dwc3 {
+ 	unsigned		lfps_filter_quirk:1;
+ 	unsigned		rx_detect_poll_quirk:1;
+ 	unsigned		dis_u3_susphy_quirk:1;
++	unsigned		dis_u2_susphy_quirk:1;
+ 
+ 	unsigned		tx_deemph_quirk:1;
+ 	unsigned		tx_deemph:2;
+diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
+index c8115c7..1cfd384 100644
+--- a/drivers/usb/dwc3/platform_data.h
++++ b/drivers/usb/dwc3/platform_data.h
+@@ -36,6 +36,7 @@ struct dwc3_platform_data {
+ 	unsigned lfps_filter_quirk:1;
+ 	unsigned rx_detect_poll_quirk:1;
+ 	unsigned dis_u3_susphy_quirk:1;
++	unsigned dis_u2_susphy_quirk:1;
+ 
+ 	unsigned tx_deemph_quirk:1;
+ 	unsigned tx_deemph:2;
+-- 
+1.9.1
 
-Thanks again for your fast action on this.
-
-Jeff
