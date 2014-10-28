@@ -1,109 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:36728 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754110AbaJWL1l convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Oct 2014 07:27:41 -0400
-Date: Thu, 23 Oct 2014 12:27:31 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
+Received: from devils.ext.ti.com ([198.47.26.153]:39246 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750722AbaJ1Smp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Oct 2014 14:42:45 -0400
+Date: Tue, 28 Oct 2014 13:42:13 -0500
+From: Felipe Balbi <balbi@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Huang Rui <ray.huang@amd.com>, Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	USB list <linux-usb@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	jgunthorpe@obsidianresearch.com
-Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
-Message-ID: <20141023112731.GA5823@e102568-lin.cambridge.arm.com>
-References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
- <3256560.C0cZnIlnAv@wuerfel>
- <20141022155914.GB25939@e102568-lin.cambridge.arm.com>
- <2148776.X8NPqiYA6S@wuerfel>
- <20141023091309.GF25302@e106497-lin.cambridge.arm.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 04/19] usb: dwc3: add disscramble quirk
+Message-ID: <20141028184213.GC25735@saruman>
+Reply-To: <balbi@ti.com>
+References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
+ <1414497280-3126-5-git-send-email-ray.huang@amd.com>
+ <CAErSpo5vRcGxu=e61tCEwNVL913_Lxne=1KW+JtQVpc6jgCaHg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20141023091309.GF25302@e106497-lin.cambridge.arm.com>
-Content-Type: text/plain; charset=WINDOWS-1252
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="yLVHuoLXiP9kZBkt"
+In-Reply-To: <CAErSpo5vRcGxu=e61tCEwNVL913_Lxne=1KW+JtQVpc6jgCaHg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 23, 2014 at 10:13:09AM +0100, Liviu Dudau wrote:
-> On Wed, Oct 22, 2014 at 09:52:19PM +0100, Arnd Bergmann wrote:
-> > On Wednesday 22 October 2014 16:59:14 Lorenzo Pieralisi wrote:
-> > > On Wed, Oct 01, 2014 at 10:38:45AM +0100, Arnd Bergmann wrote:
-> > > 
-> > > [...]
-> > > 
-> > > > The arm32 implementations of pci_domain_nr/pci_proc_domain can probably be
-> > > > removed if we change the arm32 pcibios_init_hw function to call the new
-> > > > interfaces that set the domain number.
-> > > 
-> > > I wished, but it is a bit more complicated than I thought unfortunately,
-> > > mostly because some drivers, eg cns3xxx set the domain numbers
-> > > statically in pci_sys_data and this sets a chain of dependency that is
-> > > not easy to untangle. I think cns3xxx is the only legacy driver that "uses"
-> > > the domain number (in pci_sys_data) in a way that clashes with the
-> > > generic domain_nr implementation, I need to give it more thought.
-> > 
-> > Just had a look at that driver, shouldn't be too hard to change, see below.
-> 
-> I like this!
-> 
-> One thing though ...
+--yLVHuoLXiP9kZBkt
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I like it too, it is one way of removing the artificial domain dependency
-from this driver.
+Hi,
 
-I think that by removing that, we could switch to CONFIG_PCI_DOMAINS_GENERIC
-on ARM32. I will remove the dependency in drivers/pci/host/pci-mvebu.c
-introduced by commit 2613ba48. pci_sys_data.domain is always 0 in that
-driver so its usefulness is doubtful, comments welcome, copied Jason in
-if he has comments.
+On Tue, Oct 28, 2014 at 10:39:26AM -0600, Bjorn Helgaas wrote:
+> On Tue, Oct 28, 2014 at 5:54 AM, Huang Rui <ray.huang@amd.com> wrote:
+> > This patch adds disscramble quirk, and it only needs to be enabled at f=
+pga
+>=20
+> "disscramble" (in subject and above) is not a real word.
+>=20
+> I see that DWC3_GCTL_DISSCRAMBLE is already defined in
+> drivers/usb/dwc3/core.h even before your patches, so I suppose it's
+> something the hardware designers made up.
 
-[...]
+hehe, disable scramble :-)
 
-> > @@ -323,6 +309,14 @@ static int cns3xxx_pcie_abort_handler(unsigned long addr, unsigned int fsr,
-> >  void __init cns3xxx_pcie_init_late(void)
-> >  {
-> >  	int i;
-> > +	void *private_data;
-> > +	struct hw_pci hw_pci = {
-> > +		.nr_controllers = 1,
-> > +		.ops = &cns3xxx_pcie_ops,
-> > +		.setup = cns3xxx_pci_setup,
-> > +		.map_irq = cns3xxx_pcie_map_irq,
-> > +		.private_data = &private_data,
-> > +	};
-> >  
-> >  	pcibios_min_io = 0;
-> >  	pcibios_min_mem = 0;
-> > @@ -335,7 +329,9 @@ void __init cns3xxx_pcie_init_late(void)
-> >  		cns3xxx_pwr_soft_rst(0x1 << PM_SOFT_RST_REG_OFFST_PCIE(i));
-> >  		cns3xxx_pcie_check_link(&cns3xxx_pcie[i]);
-> >  		cns3xxx_pcie_hw_init(&cns3xxx_pcie[i]);
-> > -		pci_common_init(&cns3xxx_pcie[i].hw_pci);
-> > +		hw_pci->domain = i;
+--=20
+balbi
 
-+		hw_pci.domain = i;
+--yLVHuoLXiP9kZBkt
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-I will remove this since if we move to generic domains it is useless to
-pass the value through hw_pci.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
-> > +		private_data = &cns3xxx_pcie[i];
-> 
-> Is this dance with pointers absolutely necessary? Does gcc though dishes at you
-> for doing hw_pci->private_data = &cns3xxx_pcie[i] directly?
+iQIcBAEBAgAGBQJUT+OFAAoJEIaOsuA1yqREl9oP/1R2h7m49fmZriFB6u9g8bpS
+qTazfs/gKQC+8rXTCuKyQI1xLC2BxMNhmlbbndoTrQ4v+zV3RpBQ12tkq89fI7QW
+rjK7wNOcPiqxSgwur/teRbTY/XKPU3IFDeG1Oe5c5N5h8/nCw8xcj3ncUzAfILDz
+dE/jTyjTMczOMBoLzIr6TUb1Cc3L3Tir50iN7BI1iYjCYCasWkt7cnweqs6scr6d
+HTahz6xrek+7cAVdcywzQQNPzs5fo7ogeAgr3Z6d8cUGY4qHUEqhHPIcuC5xooxS
+UHFpo2P+J7BzzECfTh4ubo6iVX9TlKc2GY5bth6hagG/+tr/BPCjTZjtYzX6kZPX
+iej5ia4hlOydAdxV2SjdCODdRzEX0qeqoYHSK3WYi8eooV9LBPu1FlevdZKPOlsO
+RFUYeIu3d63UDjIAJQ5+fujnQkEqbqjcfCXtoH+ABsD2c6C3ce2Xlq9XBTV55OFh
+X+a125Eb3QAiTfKTS8JuIfeTM4/Zs0W01JV+CZox1T8DoZdnAk8VtiLVk+vEg0z8
+u61SUCwqei47T8JP7bU+QX6hrLTq3UjLx5JzEwlfxC/Ui4oq33xnyqWDq56tYoHo
+l5SUTTORi53JYutL5Z+G/644yzFeRMhZR5zHgtah+TZanstT3iFKDpSi/f1i4PJo
+IlhGi0wSDgQ5gKjDLHLA
+=wKXT
+-----END PGP SIGNATURE-----
 
-You can't, hw_pci.private_data is void **.
-
-Lorenzo
-
+--yLVHuoLXiP9kZBkt--
