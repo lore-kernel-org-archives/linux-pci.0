@@ -1,49 +1,149 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [65.55.169.138] ([65.55.169.138]:4086 "EHLO
-	na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751846AbaJTCtz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 19 Oct 2014 22:49:55 -0400
-From: Richard Zhu <richard.zhu@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
-	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Richard Zhu <richard.zhu@freescale.com>
-Subject: [PATCH v7 12/13] ARM: imx6sx: Add syscon into gpc dts
-Date: Mon, 20 Oct 2014 10:19:15 +0800
-Message-ID: <1413771556-32212-13-git-send-email-richard.zhu@freescale.com>
-In-Reply-To: <1413771556-32212-1-git-send-email-richard.zhu@freescale.com>
-References: <1413771556-32212-1-git-send-email-richard.zhu@freescale.com>
+Received: from mail-qa0-f52.google.com ([209.85.216.52]:62703 "EHLO
+	mail-qa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750942AbaJ1QU0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Oct 2014 12:20:26 -0400
+Received: by mail-qa0-f52.google.com with SMTP id u7so695039qaz.39
+        for <linux-pci@vger.kernel.org>; Tue, 28 Oct 2014 09:20:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CADnq5_NQRkwtsKP0818i=TGr6t-u+MbJUX6y_FvgQUT=eh4PRA@mail.gmail.com>
+References: <2354837.kuMZPK0Y1Q@segfault> <CAErSpo6zLY8RVAHnLe81jjOE8cxGzskjPq3HL7eZVOtC-WF6=w@mail.gmail.com>
+ <2298090.n99M7dPPE3@segfault> <CAErSpo4C=zANrE6muRf93nxLtmOG-U0xhWQPV_=fb8dFaKG8yw@mail.gmail.com>
+ <CADnq5_O54_rjL=hxg8-4GV57JC=6j16OeFOM-zbmoMuL5yJKqw@mail.gmail.com>
+ <CAErSpo6aBAuK27LwHrdi_X1fxfZ9NN4BkqQj6h4rqHD9ssNnAA@mail.gmail.com> <CADnq5_NQRkwtsKP0818i=TGr6t-u+MbJUX6y_FvgQUT=eh4PRA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 28 Oct 2014 10:20:05 -0600
+Message-ID: <CAErSpo40xKYFKmAaF+uHsRQRHBrFV4Fn2ZMKc+KOnQyZJAQhtA@mail.gmail.com>
+Subject: Re: [Bulk] Re: [3.16-rcX][pciehp][radeon] PCIe HotPlug conflicts with
+ radeon GPU
+To: Alex Deucher <alexdeucher@gmail.com>
+Cc: Shawn Starr <shawn.starr@rogers.com>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
+	DRI mailing list <dri-devel@lists.freedesktop.org>,
+	=?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Richard Zhu <r65037@freescale.com>
+[+cc Alex Williamson, Rajat]
 
-In order to manipulate gpc bits for imx6sx
-pcie in driver, add syscon into gpc dts
+On Tue, Oct 28, 2014 at 9:45 AM, Alex Deucher <alexdeucher@gmail.com> wrote:
+> On Mon, Oct 27, 2014 at 12:44 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Sun, Oct 26, 2014 at 11:31 AM, Alex Deucher <alexdeucher@gmail.com> wrote:
+>>> On Mon, Oct 13, 2014 at 12:11 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>> [+cc Alex, Christian, dri-devel]
+>>>>
+>>>> On Sat, Oct 11, 2014 at 1:37 PM, Shawn Starr <shawn.starr@rogers.com> wrote:
+>>>>> On September 11, 2014 04:26:21 PM Bjorn Helgaas wrote:
+>>>>>> [+cc linux-pci]
+>>>>>>
+>>>>>> On Sat, Aug 2, 2014 at 10:02 AM, Shawn Starr <shawn.starr@rogers.com> wrote:
+>>>>>> > Hello devs,
+>>>>>> >
+>>>>>> > There are two issues I am encountering with the PCIe Hotplug driver on my
+>>>>>> > Lenovo Laptop (W500). I note this goes back further than 3.15.
+>>>>>> >
+>>>>>> > It is noted here:
+>>>>>> > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=
+>>>>>> > f244d8b623dae7a7bc695b0336f67729b95a9736
+>>>>>> > https://bugzilla.kernel.org/show_bug.cgi?id=79701
+>>>>>> >
+>>>>>> > And my open bug here:
+>>>>>> > https://bugzilla.kernel.org/show_bug.cgi?id=77261
+>>>>>> >
+>>>>>> > 1) If I enable the device to use both the integrated and discrete GPU,
+>>>>>> > pciehp will decide to force unload radeon because it puts itself into a
+>>>>>> > power saving state, fails back to the Intel integrated GPU in this case
+>>>>>> > unless I tell radeon.ko to runpm=0 (no power management, then pciehp wont
+>>>>>> > touch it).
+>>>>>> >
+>>>>>> > 2) If the Radeon GPU resets and you use pci_reset=1 for kernel module
+>>>>>> > option, pciehp decides to force unload radeon even though the GPU is
+>>>>>> > trying to setup after failing.
+>>>>>> >
+>>>>>> > Kernel I am using right now: 3.16.0-0.rc7.git3.1.fc21.x86_64 (about to
+>>>>>> > boot into snapshot kernel-core-3.16.0-0.rc7.git4.1.fc21.x86_64)
+>>>>>> Hi Shawn,
+>>>>>>
+>>>>>> Thanks for the report and sorry that it got dropped.  But I see you're
+>>>>>> cc'd on https://bugzilla.kernel.org/show_bug.cgi?id=79701, so you've
+>>>>>> probably seen the work there.  If you can try out the patches I just
+>>>>>> posted, that would be great.
+>>>>>>
+>>>>>> Bjorn
+>>>>>
+>>>>> Hi Bjorn,
+>>>>>
+>>>>> For #1) This is fixed in linux-next (tracking 3.18.0-0.rc0.git1.2.fc22.1.x86_64
+>>>>> nondebug kernel for Fedora). PCIe HotPlug no longer unloads radeon. For this
+>>>>> bugzilla report we can close it.
+>>>>>
+>>>>> #2) This still has weird results however, radeon.hard_reset=1 is experimental
+>>>>> and while it attempts to reset GPU, PCIe HotPlug seems to interact in this.
+>>>>>
+>>>>> This can be tested by adding to grub command line radeon.hard_reset=1.
+>>>>> When X has started up, trigger a reset by cat
+>>>>> /sys/kernel/debug/dri/#/radeon_gpu_reset. It will output 0, cat it again will
+>>>>> show 1.
+>>>>>
+>>>>> Attempt to drag a window. The this will trigger a GPU reset, but fail to
+>>>>> recover, its unknown if PCIe HotPlug is preventing a proper reset or not but
+>>>>> there is pciehp calls in the stack trace.
+>>>>
+>>>> A PCIe device reset usually looks like a hotplug event because the
+>>>> PCIe link goes down and comes back up.  As far as the PCI core is
+>>>> concerned, it can't tell the difference between (1) a simple reset
+>>>> where the link bounces and (2) removal of one device followed by
+>>>> addition of another.
+>>>>
+>>>> b440bde74f04 ("PCI: Add pci_ignore_hotplug() to ignore hotplug events
+>>>> for a device") addressed this for some similar cases, but it looks
+>>>> like we probably need some more calls to pci_ignore_hotplug() in the
+>>>> radeon driver reset methods.
+>>>>
+>>>> Can you please open a bugzilla and attach the complete dmesg log,
+>>>> including the GPU reset and recovery failure?
+>>>
+>>> Is there a way we could temporarily disable pci hotplug around a GPU reset?
+>>
+>> There is pci_ignore_hotplug().  Do you mean something more?  Oh, I
+>> guess you mean a way to disable, then *re*-enable hotplug.  We can
+>> easily add that if that would help.
+>
+> Exactly.  I was thinking I could disable hotplug, do the gpu hard
+> reset, then re-enable hotplug.
 
-Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
----
- arch/arm/boot/dts/imx6sx.dtsi | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+That approach sounds fine to me.
 
-diff --git a/arch/arm/boot/dts/imx6sx.dtsi b/arch/arm/boot/dts/imx6sx.dtsi
-index 0dfeade..88d7fd7 100644
---- a/arch/arm/boot/dts/imx6sx.dtsi
-+++ b/arch/arm/boot/dts/imx6sx.dtsi
-@@ -689,7 +689,8 @@
- 			};
- 
- 			gpc: gpc@020dc000 {
--				compatible = "fsl,imx6sx-gpc", "fsl,imx6q-gpc";
-+				compatible = "fsl,imx6sx-gpc",
-+					     "fsl,imx6q-gpc", "syscon";
- 				reg = <0x020dc000 0x4000>;
- 				interrupts = <GIC_SPI 89 IRQ_TYPE_LEVEL_HIGH>;
- 			};
--- 
-1.9.1
+We're accumulating ways to deal with this issue, and I wonder if they
+could be unified a bit.  At least the following are related:
 
+  b440bde74f04 PCI: Add pci_ignore_hotplug() to ignore hotplug events
+for a device
+  06a8d89af551 PCI: pciehp: Disable link notification across slot reset
+  2e35afaefe64 PCI: pciehp: Add reset_slot() method
+
+2e35afaefe64 adds a pciehp reset method that disables presence detect
+notification and stops any pciehp polling for events.
+
+06a8d89af551 extends that pciehp reset method to also disable link
+status notifications.
+
+b440bde74f04 adds an explicit interface for drivers
+(pci_ignore_hotplug()), since some drivers reset devices in
+device-specific ways rather than using the pci_reset_function() path.
+This leaves notifications enabled but ignores them if they arrive.
+And of course, this didn't add a way to *enable* hotplug again, which
+is what we need here.
+
+The b440bde74f04 approach is extensible to other hotplug drivers, but
+I am a little worried about races and polling.  What happens if we
+ignore hotplug events, reset the device, start paying attention to
+hotplug events again, and *then* the hotplug interrupt arrives or the
+poll for events happens?
+
+Bjorn
