@@ -1,165 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 25 Oct 2014 01:01:28 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2on0122.outbound.protection.outlook.com ([65.55.169.122]:23744
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754719AbaJ1L5U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 Oct 2014 07:57:20 -0400
 From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>
-CC: Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Paul Zimmerman" <Paul.Zimmerman@synopsys.com>,
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
 	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	Jason Chang <jason.chang@amd.com>,
+	"Vincent Wan" <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
 	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 07/16] usb: dwc3: add lpm erratum support
-Message-ID: <20141024170128.GA5149@hr-slim.amd.com>
-References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
- <1413536021-4886-8-git-send-email-ray.huang@amd.com>
- <20141017144859.GC26260@saruman>
+	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v3 18/19] PCI: Add quirk to prevent AMD NL USB3 DRD to bind with xHCI driver
+Date: Tue, 28 Oct 2014 19:54:39 +0800
+Message-ID: <1414497280-3126-19-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
+References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20141017144859.GC26260@saruman>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 17, 2014 at 09:48:59AM -0500, Felipe Balbi wrote:
-> On Fri, Oct 17, 2014 at 04:53:32PM +0800, Huang Rui wrote:
-> > When parameter DWC_USB3_LPM_ERRATA_ENABLE is enabled in Andvanced Configuration
-> > of coreConsultant, it supports of xHCI BESL Errata Dated 10/19/2011 is enabled
-> > in host mode. In device mode it adds the capability to send NYET response based
-> > on the BESL value received in the LPM token.
-> > 
-> > This patch add an entry that soc platform is able to define the lpm capacity
-> > with their own device tree or bus glue layer.
-> > 
-> > Suggested-by: Felipe Balbi <balbi@ti.com>
-> > Signed-off-by: Huang Rui <ray.huang@amd.com>
-> > ---
-> >  drivers/usb/dwc3/core.c          |  2 ++
-> >  drivers/usb/dwc3/core.h          | 24 +++++++++++++++---------
-> >  drivers/usb/dwc3/dwc3-pci.c      |  1 +
-> >  drivers/usb/dwc3/gadget.c        |  7 +++++++
-> >  drivers/usb/dwc3/platform_data.h |  1 +
-> >  5 files changed, 26 insertions(+), 9 deletions(-)
-> > 
-> > diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-> > index 819e501..25db533 100644
-> > --- a/drivers/usb/dwc3/core.c
-> > +++ b/drivers/usb/dwc3/core.c
-> > @@ -708,11 +708,13 @@ static int dwc3_probe(struct platform_device *pdev)
-> >  
-> >  	if (node) {
-> >  		dwc->maximum_speed = of_usb_get_maximum_speed(node);
-> > +		dwc->has_lpm_erratum = of_property_read_bool(node, "snps,has-lpm-erratum");
-> >  
-> >  		dwc->needs_fifo_resize = of_property_read_bool(node, "tx-fifo-resize");
-> >  		dwc->dr_mode = of_usb_get_dr_mode(node);
-> >  	} else if (pdata) {
-> >  		dwc->maximum_speed = pdata->maximum_speed;
-> > +		dwc->has_lpm_erratum = pdata->has_lpm_erratum;
-> >  
-> >  		dwc->needs_fifo_resize = pdata->tx_fifo_resize;
-> >  		dwc->dr_mode = pdata->dr_mode;
-> > diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-> > index cfe0d57..d58479e 100644
-> > --- a/drivers/usb/dwc3/core.h
-> > +++ b/drivers/usb/dwc3/core.h
-> > @@ -246,16 +246,19 @@
-> >  #define DWC3_DCTL_TRGTULST_SS_INACT	(DWC3_DCTL_TRGTULST(6))
-> >  
-> >  /* These apply for core versions 1.94a and later */
-> > -#define DWC3_DCTL_KEEP_CONNECT	(1 << 19)
-> > -#define DWC3_DCTL_L1_HIBER_EN	(1 << 18)
-> > -#define DWC3_DCTL_CRS		(1 << 17)
-> > -#define DWC3_DCTL_CSS		(1 << 16)
-> > +#define DWC3_DCTL_LPM_ERRATA_MASK	DWC3_DCTL_LPM_ERRATA(0xf)
-> > +#define DWC3_DCTL_LPM_ERRATA(n)		((n) << 20)
-> > -#define DWC3_DCTL_INITU2ENA	(1 << 12)
-> > -#define DWC3_DCTL_ACCEPTU2ENA	(1 << 11)
-> > -#define DWC3_DCTL_INITU1ENA	(1 << 10)
-> > -#define DWC3_DCTL_ACCEPTU1ENA	(1 << 9)
-> > -#define DWC3_DCTL_TSTCTRL_MASK	(0xf << 1)
-> > +#define DWC3_DCTL_KEEP_CONNECT		(1 << 19)
-> > +#define DWC3_DCTL_L1_HIBER_EN		(1 << 18)
-> > +#define DWC3_DCTL_CRS			(1 << 17)
-> > +#define DWC3_DCTL_CSS			(1 << 16)
-> > +
-> > +#define DWC3_DCTL_INITU2ENA		(1 << 12)
-> > +#define DWC3_DCTL_ACCEPTU2ENA		(1 << 11)
-> > +#define DWC3_DCTL_INITU1ENA		(1 << 10)
-> > +#define DWC3_DCTL_ACCEPTU1ENA		(1 << 9)
-> > +#define DWC3_DCTL_TSTCTRL_MASK		(0xf << 1)
-> >  
-> >  #define DWC3_DCTL_ULSTCHNGREQ_MASK	(0x0f << 5)
-> >  #define DWC3_DCTL_ULSTCHNGREQ(n) (((n) << 5) & DWC3_DCTL_ULSTCHNGREQ_MASK)
-> > @@ -665,6 +668,8 @@ struct dwc3_scratchpad_array {
-> >   * @ep0_bounced: true when we used bounce buffer
-> >   * @ep0_expect_in: true when we expect a DATA IN transfer
-> >   * @has_hibernation: true when dwc3 was configured with Hibernation
-> > + * @has_lpm_erratum: true when core was configured with LPM Erratum. Note that
-> > + *			there's now way for software to detect this in runtime.
-> >   * @is_selfpowered: true when we are selfpowered
-> >   * @is_fpga: true when we are using the FPGA board
-> >   * @needs_fifo_resize: not all users might want fifo resizing, flag it
-> > @@ -771,6 +776,7 @@ struct dwc3 {
-> >  	unsigned		ep0_bounced:1;
-> >  	unsigned		ep0_expect_in:1;
-> >  	unsigned		has_hibernation:1;
-> > +	unsigned		has_lpm_erratum:1;
-> >  	unsigned		is_selfpowered:1;
-> >  	unsigned		is_fpga:1;
-> >  	unsigned		needs_fifo_resize:1;
-> > diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
-> > index a89db6c..bbe946c 100644
-> > --- a/drivers/usb/dwc3/dwc3-pci.c
-> > +++ b/drivers/usb/dwc3/dwc3-pci.c
-> > @@ -148,6 +148,7 @@ static int dwc3_pci_probe(struct pci_dev *pci,
-> >  
-> >  	if (pci->vendor == PCI_VENDOR_ID_AMD && pci->device ==
-> >  			PCI_DEVICE_ID_AMD_NL) {
-> > +		dwc3_pdata.has_lpm_erratum = true;
-> >  		dwc3_pdata.quirks |= DWC3_QUIRK_AMD_NL;
-> >  	}
-> >  
-> 
-> let's combine all AMD patches as the last patch in the series so we add
-> AMD support with all quirks in one place.
-> 
-> > diff --git a/drivers/usb/dwc3/gadget.c b/drivers/usb/dwc3/gadget.c
-> > index 1f2a719..33bfc70 100644
-> > --- a/drivers/usb/dwc3/gadget.c
-> > +++ b/drivers/usb/dwc3/gadget.c
-> > @@ -1581,6 +1581,13 @@ static int dwc3_gadget_start(struct usb_gadget *g,
-> >  	}
-> >  	dwc3_writel(dwc->regs, DWC3_DCFG, reg);
-> >  
-> > +	if (dwc->has_lpm_erratum) {
-> > +		reg = dwc3_readl(dwc->regs, DWC3_DCTL);
-> > +		/* REVISIT should this be configurable ? */
-> > +		reg |= DWC3_DCTL_LPM_ERRATA(0xf);
-> 
-> as Paul mentioned, this should definitely be configurable. So we need to
-> discuss how to make that configurable too.
-> 
+The AMD Nolan (NL) SoC contains a DesignWare USB3 Dual-Role Device that can
+be operated either as a USB Host or a USB Device.  In the AMD NL platform,
+this device ([1022:7912]) has a class code of PCI_CLASS_SERIAL_USB_XHCI
+(0x0c0330), which means the xhci driver will claim it.
 
-Can I define a 4-bits variable (lpm_nyet_thres) to let platform vendor able to configure
-the besl value at DT or glue layer?
+But the dwc3 driver is a more specific driver for this device, and we'd
+prefer to use it instead of xhci.  To prevent xhci from claiming the
+device, change the class code to 0x0c03fe, which the PCI r3.0 spec defines
+as "USB device (not host controller)".  The dwc3 driver can then claim it
+based on its Vendor and Device ID.
 
-struct dwc3_platform_data {
-        ...
-        unsigned has_lpm_erratum:1;
-        unsigned lpm_nyet_thres:4;
-}
+Suggested-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jason Chang <jason.chang@amd.com>
+Signed-off-by: Huang Rui <ray.huang@amd.com>
+---
+ drivers/pci/quirks.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-Then put the value at probe like:
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 90acb32..1152bef 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -379,6 +379,26 @@ static void quirk_ati_exploding_mce(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,	PCI_DEVICE_ID_ATI_RS100,   quirk_ati_exploding_mce);
+ 
+ /*
++ * In the AMD NL platform, this device ([1022:7912]) has a class code of
++ * PCI_CLASS_SERIAL_USB_XHCI (0x0c0330), which means the xhci driver will
++ * claim it.
++ * But the dwc3 driver is a more specific driver for this device, and we'd
++ * prefer to use it instead of xhci. To prevent xhci from claiming the
++ * device, change the class code to 0x0c03fe, which the PCI r3.0 spec
++ * defines as "USB device (not host controller)". The dwc3 driver can then
++ * claim it based on its Vendor and Device ID.
++ */
++static void quirk_amd_nl_class(struct pci_dev *pdev)
++{
++	/*
++	 * Use 'USB Device' (0x0x03fe) instead of PCI header provided
++	 */
++	pdev->class = 0x0c03fe;
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_NL_USB,
++		quirk_amd_nl_class);
++
++/*
+  * Let's make the southbridge information explicit instead
+  * of having to worry about people probing the ACPI areas,
+  * for example.. (Yes, it happens, and if you read the wrong
+-- 
+1.9.1
 
-dwc->has_lpm_erratum = of_property_read_u8(node, "snps,lpm-nyet-thres");
-
-I don't find a 4-bit "Find from a property" interface, so can I use
-of_property_read_u8 instead for ARM platforms?
-
-Then do:
-if (dwc->has_lpm_erratum)
-        reg |= DWC3_DCTL_LPM_ERRATA(dwc->lpm_nyet_thres);
-
-Thanks,
-Rui
