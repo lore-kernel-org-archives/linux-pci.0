@@ -1,50 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0118.outbound.protection.outlook.com ([207.46.100.118]:14112
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752480AbaJTFzr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Oct 2014 01:55:47 -0400
-From: Richard Zhu <richard.zhu@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
-	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
-	<m-karicheri2@ti.com>, Richard Zhu <r65037@freescale.com>,
-	Richard Zhu <richard.zhu@freescale.com>
-Subject: [PATCH v8 2/9] PCI: designware: Fix one potential assignment error of cfg start
-Date: Mon, 20 Oct 2014 13:25:17 +0800
-Message-ID: <1413782724-30795-3-git-send-email-richard.zhu@freescale.com>
-In-Reply-To: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
-References: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:54974 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750855AbaJ1TBw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 Oct 2014 15:01:52 -0400
+Date: Tue, 28 Oct 2014 14:01:22 -0500
+From: Felipe Balbi <balbi@ti.com>
+To: Paul Zimmerman <Paul.Zimmerman@synopsys.com>
+CC: "balbi@ti.com" <balbi@ti.com>, Huang Rui <ray.huang@amd.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 01/19] usb: dwc3: enable hibernation if to be supported
+Message-ID: <20141028190122.GF25735@saruman>
+Reply-To: <balbi@ti.com>
+References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
+ <1414497280-3126-2-git-send-email-ray.huang@amd.com>
+ <A2CA0424C0A6F04399FB9E1CD98E0304844E68B7@US01WEMBX2.internal.synopsys.com>
+ <20141028185059.GE25735@saruman>
+ <A2CA0424C0A6F04399FB9E1CD98E0304844E68E4@US01WEMBX2.internal.synopsys.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="ExXT7PjY8AI4Hyfa"
+In-Reply-To: <A2CA0424C0A6F04399FB9E1CD98E0304844E68E4@US01WEMBX2.internal.synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Richard Zhu <r65037@freescale.com>
+--ExXT7PjY8AI4Hyfa
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-if va_cfg0_base/va_cfg1_base are initialized by
-designware core, the pp->cfg.start is not initialized
-properly, when IORESOURCE_MEM "config" is represented
-as cfg space resource.
-solution: assign cfg_res->start to pp->cfg.start.
+On Tue, Oct 28, 2014 at 06:55:50PM +0000, Paul Zimmerman wrote:
+> > From: Felipe Balbi [mailto:balbi@ti.com]
+> > Sent: Tuesday, October 28, 2014 11:51 AM
+> >=20
+> > On Tue, Oct 28, 2014 at 06:47:08PM +0000, Paul Zimmerman wrote:
+> > > > From: Huang Rui [mailto:ray.huang@amd.com]
+> > > > Sent: Tuesday, October 28, 2014 4:54 AM
+> > > >
+> > > > It enables hibernation if the function is set in coreConsultant.
+> > > >
+> > > > Suggested-by: Felipe Balbi <balbi@ti.com>
+> > > > Signed-off-by: Huang Rui <ray.huang@amd.com>
+> > > > ---
+> > > >  drivers/usb/dwc3/core.c | 1 +
+> > > >  1 file changed, 1 insertion(+)
+> > > >
+> > > > diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+> > > > index fa396fc..bf77509 100644
+> > > > --- a/drivers/usb/dwc3/core.c
+> > > > +++ b/drivers/usb/dwc3/core.c
+> > > > @@ -449,6 +449,7 @@ static int dwc3_core_init(struct dwc3 *dwc)
+> > > >  	case DWC3_GHWPARAMS1_EN_PWROPT_HIB:
+> > > >  		/* enable hibernation here */
+> > > >  		dwc->nr_scratch =3D DWC3_GHWPARAMS4_HIBER_SCRATCHBUFS(hwparams4);
+> > > > +		reg |=3D DWC3_GCTL_GBLHIBERNATIONEN;
+> > > >  		break;
+> > > >  	default:
+> > > >  		dev_dbg(dwc->dev, "No power optimization available\n");
+> > >
+> > > What effect does this have when the controller is in device mode? I
+> > > expect it will start generating DWC3_DEVICE_EVENT_HIBER_REQ interrupt
+> > > events when this register bit is set. So the dev_WARN_ONCE in
+> > > dwc3_gadget_interrupt() will start firing, I think.
+> >=20
+> > Ok, so this *has* to wait for proper hibernation support ?
+>=20
+> Ah, never mind. Since the hibernation event is not enabled in the
+> DEVTEN register, the controller shouldn't generate that event after
+> all. So I think it should be OK. Sorry for the noise.
 
-Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
----
- drivers/pci/host/pcie-designware.c | 1 +
- 1 file changed, 1 insertion(+)
+do you think it's still nice to have a comment here ?
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 8d1c809..e3cd54a 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -472,6 +472,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 	if (cfg_res) {
- 		pp->config.cfg0_size = resource_size(cfg_res)/2;
- 		pp->config.cfg1_size = resource_size(cfg_res)/2;
-+		pp->cfg.start = cfg_res->start;
- 		pp->cfg0_base = cfg_res->start;
- 		pp->cfg1_base = cfg_res->start + pp->config.cfg0_size;
- 
--- 
-1.9.1
+--=20
+balbi
 
+--ExXT7PjY8AI4Hyfa
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUT+gCAAoJEIaOsuA1yqRE4isP/2suNJRt7UP73/aRm8J7uAR4
+MMFmH+/KdZm94Zswlgdt3GCArnuLe/9xTjnYoSO2xPLLb5Km3lNYK/I7YjMvLI9Y
+21GW7N0XQsYxwcSXqf+tWDK27I2ATScIWLFEVmA7SzdiAbc5ltJWsY4zJ/dNdGqw
+P43/OFazl/aTqeWsV/QDkrBR77KSZ7tQ9i8/mUNJ6HmFAxraJJk9NkQQA83yBdLi
+TCIpgdcYdFq9NaODr+Vlzpfwx18vCjENzV9rhKuDHsd6UT6J7XRV4VBfifwkmlrk
+QG/EMT8SoD+8Vp1JmXZI6Z3oSyXVZ5M4hO4bh0W31mQuKFWh/kHmPhkTRP6p/MpJ
+WWMRC5udwPs/vaeQxEwLhOu9X/BAMCktnP+ii1mtyxvhqaUi1V7ppoTwj3p4BQFn
+jN4w4bhr9UxODtE9Q3U+7ggC6YuEx1txpfK++dJFkcHGsoKhP+nko5xwnQhiBn5l
+d00CNf8DPpeeS2LOBGrCyzZIuEJkOauFVDDZ+cX+RJcozjabwVyxamWc5wJuivwK
+QV4xaEilalDt3g00+XvgQQjbZ7g6g4ih5x0+Xf0rsqbS3+NnMWQdNndpY/LdpF5U
+hdG9+1TwJYRuGQ6pRrahaTMGLkDkkE/8Wg/x3O9F7Vfqj5QqICYybKkdFMr8s6f2
+8AUw+LSMaDm97FJ8WRM5
+=X2we
+-----END PGP SIGNATURE-----
+
+--ExXT7PjY8AI4Hyfa--
