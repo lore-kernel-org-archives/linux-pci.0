@@ -1,561 +1,200 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:44466 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752127AbaJXKE0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Oct 2014 06:04:26 -0400
-Date: Fri, 24 Oct 2014 11:04:20 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>
-Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
-Message-ID: <20141024100420.GX25302@e106497-lin.cambridge.arm.com>
-References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
- <2148776.X8NPqiYA6S@wuerfel>
- <20141023091309.GF25302@e106497-lin.cambridge.arm.com>
- <2355100.WsW1DXh57P@wuerfel>
+Received: from mail-qg0-f53.google.com ([209.85.192.53]:40329 "EHLO
+	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751030AbaJ1QbM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Oct 2014 12:31:12 -0400
+Received: by mail-qg0-f53.google.com with SMTP id z107so776148qgd.26
+        for <linux-pci@vger.kernel.org>; Tue, 28 Oct 2014 09:31:10 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <2355100.WsW1DXh57P@wuerfel>
+In-Reply-To: <1414497280-3126-6-git-send-email-ray.huang@amd.com>
+References: <1414497280-3126-1-git-send-email-ray.huang@amd.com> <1414497280-3126-6-git-send-email-ray.huang@amd.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 28 Oct 2014 10:30:50 -0600
+Message-ID: <CAErSpo7JeiJSD+-XAMZH+D8r9Knkq80KPUroYYbqak6EQ6f4RA@mail.gmail.com>
+Subject: Re: [PATCH v3 05/19] usb: dwc3: add lpm erratum support
+To: Huang Rui <ray.huang@amd.com>
+Cc: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 23, 2014 at 02:33:16PM +0100, Arnd Bergmann wrote:
-> On Thursday 23 October 2014 10:13:09 Liviu Dudau wrote:
-> > > @@ -335,7 +329,9 @@ void __init cns3xxx_pcie_init_late(void)
-> > >               cns3xxx_pwr_soft_rst(0x1 << PM_SOFT_RST_REG_OFFST_PCIE(i));
-> > >               cns3xxx_pcie_check_link(&cns3xxx_pcie[i]);
-> > >               cns3xxx_pcie_hw_init(&cns3xxx_pcie[i]);
-> > > -             pci_common_init(&cns3xxx_pcie[i].hw_pci);
-> > > +             hw_pci->domain = i;
-> > > +             private_data = &cns3xxx_pcie[i];
-> >
-> > Is this dance with pointers absolutely necessary? Does gcc though dishes at you
-> > for doing hw_pci->private_data = &cns3xxx_pcie[i] directly?
-> 
-> hw_pci->private_data is an array of pointers to private_data for each
-> host controller instance within the domain. There is only one entry
-> here, but you still the the correct type, so that would be
-> 
->         hw_pci->private_data = (void **)&&cns3xxx_pcie[i];
-> 
-> which is even more confusing and ugly than what I wrote. If you have
-> a better idea, I'm all for it. Maybe it's clearer to write like this
-> (taken from rcar driver)?
+On Tue, Oct 28, 2014 at 5:54 AM, Huang Rui <ray.huang@amd.com> wrote:
+> When parameter DWC_USB3_LPM_ERRATA_ENABLE is enabled in Andvanced
 
-I was not questioning the implementation (and I do like it) I was just
-wondering if it is to work around some quirk of gcc. As I did not had
-the time to test it I was hoping that if there is a gcc requirement to
-phrase the code that way you might provide me with an answer.
+"Advanced"
 
-Best regards,
-Liviu
+> Configuration of coreConsultant, it supports of xHCI BESL Errata Dated
 
-> 
->         void *hw_private[1];
->         hw_pci.private_data = hw_private;
-> 
->         for each host {
->                 ...
->                 hw_private[0] = &cns3xxx_pcie[i];
->                 pci_common_init_dev(&hw_pci);
->         }
-> 
-> Note that all 'modern' controllers always use nr_controllers=1, so we
-> only need a single private_data pointer per domain, and the entire
-> hw_pci interface is a bit pointless.
-> 
-> The platforms that currently require it are iop13xx, dove, mv78xx0
-> and orion5x. We have plans to remove the last three platforms in
-> the next merge window or two, once all users are able to migrate to
-> mach-mvebu. Once that happens, we could probably move the entire
-> hw_pci logic that deals with multiple hosts per domain into the
-> iop13xx pci driver if we want to. A less intrusive simplification
-> would be to convert all 'multiplatform'-aware host controllers to
-> use pci_common_init_dev() and then take hw_pci out of that.
-> 
-> See below for a sample patch I just did. It duplicates the code from
-> pci_common_init_dev/pci_common_init because we know that all users
-> of pci_common_init_dev are modern and only pass a single host bridge.
-> The new pci_common_init_dev is simpler than the old one but should
-> do the exact same thing for all current users, with the addition
-> of propagating the return value.
-> 
-> pci_init_single() is the new internal helper and we should be able to
-> convert all existing users of pci_common_init_dev() to use that directly
-> and no longer define hw_pci at all.
-> 
-> I've converted two drivers to give an example, but the conversions
-> should be done in follow-up patches really, and the pci_common_init_dev
-> function removed after all users are moved over.
-> 
-> The new pci_init_single() is also rather simple, and it should just
-> converge with what we do for arm64 over time.
-> 
->         Arnd
-> 
+I can't parse "is supports of" and I don't know enough to suggest an
+alternate wording.
+
+> 10/19/2011 is enabled in host mode. In device mode it adds the capability
+> to send NYET response threshold based on the BESL value received in the LPM
+> token, and the threhold is configurable for each soc platform.
+
+"threshold"
+
+> This patch adds an entry that soc platform is able to define the lpm
+> capacity with their own device tree or bus glue layer.
+>
+> Signed-off-by: Huang Rui <ray.huang@amd.com>
 > ---
->  arch/arm/include/asm/mach/pci.h     |  20 ++++---
->  arch/arm/kernel/bios32.c            | 103 ++++++++++++++++++++++++++++++++++--
->  drivers/pci/host/pci-host-generic.c |  53 ++++++++-----------
->  drivers/pci/host/pci-mvebu.c        |  44 +++++++--------
->  4 files changed, 157 insertions(+), 63 deletions(-)
-> 
-> diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-> index 7fc42784becb..fe7e13759ec0 100644
-> --- a/arch/arm/include/asm/mach/pci.h
-> +++ b/arch/arm/include/asm/mach/pci.h
-> @@ -73,16 +73,22 @@ struct pci_sys_data {
->  /*
->   * Call this with your hw_pci struct to initialise the PCI system.
->   */
-> -void pci_common_init_dev(struct device *, struct hw_pci *);
-> +void pci_common_init(struct hw_pci *);
-> 
->  /*
-> - * Compatibility wrapper for older platforms that do not care about
-> - * passing the parent device.
-> + * Used by modern platforms, only one host allowed.
->   */
-> -static inline void pci_common_init(struct hw_pci *hw)
-> -{
-> -       pci_common_init_dev(NULL, hw);
-> -}
-> +int pci_common_init_dev(struct device *, struct hw_pci *);
+>  drivers/usb/dwc3/core.c          | 16 +++++++++++++++-
+>  drivers/usb/dwc3/core.h          | 26 +++++++++++++++++---------
+>  drivers/usb/dwc3/gadget.c        | 13 +++++++++++++
+>  drivers/usb/dwc3/platform_data.h |  2 ++
+>  4 files changed, 47 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+> index c320835..4f37a43 100644
+> --- a/drivers/usb/dwc3/core.c
+> +++ b/drivers/usb/dwc3/core.c
+> @@ -652,6 +652,7 @@ static int dwc3_probe(struct platform_device *pdev)
+>         struct device_node      *node = dev->of_node;
+>         struct resource         *res;
+>         struct dwc3             *dwc;
+> +       u8                      lpm_nyet_thres;
+>
+>         int                     ret;
+>
+> @@ -707,16 +708,27 @@ static int dwc3_probe(struct platform_device *pdev)
+>          */
+>         res->start -= DWC3_GLOBALS_REGS_START;
+>
+> +       /* default to highest possible threshold */
+> +       lpm_nyet_thres = 0xff;
 > +
-> +/*
-> + * Replaces pci_common_init_dev for drivers that want to do the
-> + * initialization simpler and avoid defining hw_pci
-> + */
-> +int pci_init_single(struct device *parent,
-> +                   struct pci_sys_data *sys,
-> +                   struct pci_bus *(*scan)(int nr, struct pci_sys_data *),
-> +                   struct pci_ops *ops);
+>         if (node) {
+>                 dwc->maximum_speed = of_usb_get_maximum_speed(node);
+> +               dwc->has_lpm_erratum = of_property_read_bool(node,
+> +                               "snps,has-lpm-erratum");
+> +               of_property_read_u8(node, "snps,lpm-nyet-thres",
+> +                               &lpm_nyet_thres);
+>
+> -               dwc->needs_fifo_resize = of_property_read_bool(node, "tx-fifo-resize");
+> +               dwc->needs_fifo_resize = of_property_read_bool(node,
+> +                               "tx-fifo-resize");
+>                 dwc->dr_mode = of_usb_get_dr_mode(node);
+>
+>                 dwc->disable_scramble_quirk = of_property_read_bool(node,
+>                                 "snps,disable_scramble_quirk");
+>         } else if (pdata) {
+>                 dwc->maximum_speed = pdata->maximum_speed;
+> +               dwc->has_lpm_erratum = pdata->has_lpm_erratum;
+> +               if (pdata->lpm_nyet_thres)
+> +                       lpm_nyet_thres = pdata->lpm_nyet_thres;
+>
+>                 dwc->needs_fifo_resize = pdata->tx_fifo_resize;
+>                 dwc->dr_mode = pdata->dr_mode;
+> @@ -728,6 +740,8 @@ static int dwc3_probe(struct platform_device *pdev)
+>         if (dwc->maximum_speed == USB_SPEED_UNKNOWN)
+>                 dwc->maximum_speed = USB_SPEED_SUPER;
+>
+> +       dwc->lpm_nyet_thres = lpm_nyet_thres;
 > +
-> 
->  /*
->   * Setup early fixed I/O mapping.
-> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-> index 17a26c17f7f5..bccc8703e575 100644
-> --- a/arch/arm/kernel/bios32.c
-> +++ b/arch/arm/kernel/bios32.c
-> @@ -456,8 +456,7 @@ static int pcibios_init_resources(int busnr, struct pci_sys_data *sys)
->         return 0;
->  }
-> 
-> -static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
-> -                           struct list_head *head)
-> +static void pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
->  {
->         struct pci_sys_data *sys = NULL;
->         int ret;
-> @@ -494,7 +493,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
->                         if (hw->scan)
->                                 sys->bus = hw->scan(nr, sys);
->                         else
-> -                               sys->bus = pci_scan_root_bus(parent, sys->busnr,
-> +                               sys->bus = pci_scan_root_bus(NULL, sys->busnr,
->                                                 hw->ops, sys, &sys->resources);
-> 
->                         if (!sys->bus)
-> @@ -511,7 +510,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
->         }
->  }
-> 
-> -void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
-> +void pci_common_init(struct hw_pci *hw)
->  {
->         struct pci_sys_data *sys;
->         LIST_HEAD(head);
-> @@ -519,7 +518,7 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
->         pci_add_flags(PCI_REASSIGN_ALL_RSRC);
->         if (hw->preinit)
->                 hw->preinit();
-> -       pcibios_init_hw(parent, hw, &head);
-> +       pcibios_init_hw(hw, &head);
->         if (hw->postinit)
->                 hw->postinit();
-> 
-> @@ -559,6 +558,100 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
->         }
->  }
-> 
-> +int pci_init_single(struct device *parent,
-> +                   struct pci_sys_data *sys,
-> +                   struct pci_bus *(*scan)(int nr, struct pci_sys_data *),
-> +                   struct pci_ops *ops)
-> +{
-> +       int ret;
-> +       struct pci_bus *bus;
+>         ret = dwc3_core_get_phy(dwc);
+>         if (ret)
+>                 return ret;
+> diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+> index 56bada6..19d1ecb 100644
+> --- a/drivers/usb/dwc3/core.h
+> +++ b/drivers/usb/dwc3/core.h
+> @@ -246,16 +246,19 @@
+>  #define DWC3_DCTL_TRGTULST_SS_INACT    (DWC3_DCTL_TRGTULST(6))
+>
+>  /* These apply for core versions 1.94a and later */
+> -#define DWC3_DCTL_KEEP_CONNECT (1 << 19)
+> -#define DWC3_DCTL_L1_HIBER_EN  (1 << 18)
+> -#define DWC3_DCTL_CRS          (1 << 17)
+> -#define DWC3_DCTL_CSS          (1 << 16)
+> +#define DWC3_DCTL_LPM_ERRATA_MASK      DWC3_DCTL_LPM_ERRATA(0xf)
+> +#define DWC3_DCTL_LPM_ERRATA(n)                ((n) << 20)
+>
+> -#define DWC3_DCTL_INITU2ENA    (1 << 12)
+> -#define DWC3_DCTL_ACCEPTU2ENA  (1 << 11)
+> -#define DWC3_DCTL_INITU1ENA    (1 << 10)
+> -#define DWC3_DCTL_ACCEPTU1ENA  (1 << 9)
+> -#define DWC3_DCTL_TSTCTRL_MASK (0xf << 1)
+> +#define DWC3_DCTL_KEEP_CONNECT         (1 << 19)
+> +#define DWC3_DCTL_L1_HIBER_EN          (1 << 18)
+> +#define DWC3_DCTL_CRS                  (1 << 17)
+> +#define DWC3_DCTL_CSS                  (1 << 16)
 > +
-> +       ret = pcibios_init_resources(0, sys);
-> +       if (ret)
-> +               return ret;
-> +
-> +       if (scan)
-> +               bus = scan(0, sys);
-> +       else
-> +               bus = pci_scan_root_bus(parent, 0, ops, sys, &sys->resources);
-> +
-> +       if (!bus) {
-> +               dev_err(parent, "PCI: unable to scan bus!");
-> +               return -ENXIO;
-> +       }
-> +       sys->bus = bus;
-> +
-> +       pci_fixup_irqs(pcibios_swizzle, pcibios_map_irq);
-> +
-> +       if (!pci_has_flag(PCI_PROBE_ONLY)) {
-> +               /*
-> +                * Size the bridge windows.
-> +                */
-> +               pci_bus_size_bridges(bus);
-> +
-> +               /*
-> +                * Assign resources.
-> +                */
-> +               pci_bus_assign_resources(bus);
-> +       }
-> +
-> +       /*
-> +        * Tell drivers about devices found.
-> +        */
-> +       pci_bus_add_devices(bus);
-> +
-> +       /* Configure PCI Express settings */
-> +       if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
-> +               struct pci_bus *child;
-> +
-> +               list_for_each_entry(child, &bus->children, node)
-> +                       pcie_bus_configure_settings(child);
-> +       }
-> +
-> +       return 0;
-> +}
-> +
-> +int pci_common_init_dev(struct device *parent, struct hw_pci *hw)
-> +{
-> +       struct pci_sys_data *sys;
-> +       int ret;
-> +
-> +       if (hw->nr_controllers != 1 ||
-> +           hw->preinit || hw->postinit)
-> +               return -EINVAL;
-> +
-> +       sys = kzalloc(sizeof(struct pci_sys_data), GFP_KERNEL);
-> +       if (!sys)
-> +               return -ENOMEM;
-> +
-> +#ifdef CONFIG_PCI_DOMAINS
-> +       sys->domain  = hw->domain;
-> +#endif
-> +       sys->swizzle = hw->swizzle;
-> +       sys->map_irq = hw->map_irq;
-> +       sys->align_resource = hw->align_resource;
-> +       sys->add_bus = hw->add_bus;
-> +       sys->remove_bus = hw->remove_bus;
-> +       INIT_LIST_HEAD(&sys->resources);
-> +
-> +       if (hw->private_data)
-> +               sys->private_data = hw->private_data[0];
-> +
-> +       pci_add_flags(PCI_REASSIGN_ALL_RSRC);
-> +       ret = hw->setup(0, sys);
-> +       if (ret == 0)
-> +               ret = -ENXIO;
-> +       if (ret < 0)
-> +               return ret;
-> +
-> +       ret = pcibios_init_sysdata(parent, sys, hw->scan, hw->ops);
-> +       if (ret)
-> +               /* FIXME: undo ->setup */
-> +               kfree(sys);
-> +
-> +       return ret;
-> +}
-> +
->  #ifndef CONFIG_PCI_HOST_ITE8152
->  void pcibios_set_master(struct pci_dev *dev)
->  {
-> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> index 3d2076f59911..3542a7b740e5 100644
-> --- a/drivers/pci/host/pci-host-generic.c
-> +++ b/drivers/pci/host/pci-host-generic.c
-> @@ -40,16 +40,20 @@ struct gen_pci_cfg_windows {
-> 
->  struct gen_pci {
->         struct pci_host_bridge                  host;
-> +       struct pci_sys_data                     sys;
->         struct gen_pci_cfg_windows              cfg;
-> -       struct list_head                        resources;
->  };
-> 
-> +static inline struct gen_pci *gen_pci_from_sys(struct pci_sys_data *sys)
-> +{
-> +       return container_of(sys, struct gen_pci, sys);
-> +}
-> +
->  static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
->                                              unsigned int devfn,
->                                              int where)
->  {
-> -       struct pci_sys_data *sys = bus->sysdata;
-> -       struct gen_pci *pci = sys->private_data;
-> +       struct gen_pci *pci = gen_pci_from_sys(bus->sysdata);
->         resource_size_t idx = bus->number - pci->cfg.bus_range.start;
-> 
->         return pci->cfg.win[idx] + ((devfn << 8) | where);
-> @@ -64,8 +68,7 @@ static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
->                                               unsigned int devfn,
->                                               int where)
->  {
-> -       struct pci_sys_data *sys = bus->sysdata;
-> -       struct gen_pci *pci = sys->private_data;
-> +       struct gen_pci *pci = gen_pci_from_sys(bus->sysdata);
->         resource_size_t idx = bus->number - pci->cfg.bus_range.start;
-> 
->         return pci->cfg.win[idx] + ((devfn << 12) | where);
-> @@ -80,8 +83,7 @@ static int gen_pci_config_read(struct pci_bus *bus, unsigned int devfn,
->                                 int where, int size, u32 *val)
->  {
->         void __iomem *addr;
-> -       struct pci_sys_data *sys = bus->sysdata;
-> -       struct gen_pci *pci = sys->private_data;
-> +       struct gen_pci *pci = gen_pci_from_sys(bus->sysdata);
-> 
->         addr = pci->cfg.ops->map_bus(bus, devfn, where);
-> 
-> @@ -103,8 +105,7 @@ static int gen_pci_config_write(struct pci_bus *bus, unsigned int devfn,
->                                  int where, int size, u32 val)
->  {
->         void __iomem *addr;
-> -       struct pci_sys_data *sys = bus->sysdata;
-> -       struct gen_pci *pci = sys->private_data;
-> +       struct gen_pci *pci = gen_pci_from_sys(bus->sysdata);
-> 
->         addr = pci->cfg.ops->map_bus(bus, devfn, where);
-> 
-> @@ -181,10 +182,10 @@ static void gen_pci_release_of_pci_ranges(struct gen_pci *pci)
->  {
->         struct pci_host_bridge_window *win;
-> 
-> -       list_for_each_entry(win, &pci->resources, list)
-> +       list_for_each_entry(win, &pci->sys.resources, list)
->                 release_resource(win->res);
-> 
-> -       pci_free_resource_list(&pci->resources);
-> +       pci_free_resource_list(&pci->sys.resources);
->  }
-> 
->  static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
-> @@ -237,7 +238,7 @@ static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
->                 if (err)
->                         goto out_release_res;
-> 
-> -               pci_add_resource_offset(&pci->resources, res, offset);
-> +               pci_add_resource_offset(&pci->sys.resources, res, offset);
->         }
-> 
->         if (!res_valid) {
-> @@ -306,17 +307,10 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
->         }
-> 
->         /* Register bus resource */
-> -       pci_add_resource(&pci->resources, bus_range);
-> +       pci_add_resource(&pci->sys.resources, bus_range);
->         return 0;
->  }
-> 
-> -static int gen_pci_setup(int nr, struct pci_sys_data *sys)
-> -{
-> -       struct gen_pci *pci = sys->private_data;
-> -       list_splice_init(&pci->resources, &sys->resources);
-> -       return 1;
-> -}
-> -
->  static int gen_pci_probe(struct platform_device *pdev)
->  {
->         int err;
-> @@ -326,17 +320,12 @@ static int gen_pci_probe(struct platform_device *pdev)
->         struct device *dev = &pdev->dev;
->         struct device_node *np = dev->of_node;
->         struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-> -       struct hw_pci hw = {
-> -               .nr_controllers = 1,
-> -               .private_data   = (void **)&pci,
-> -               .setup          = gen_pci_setup,
-> -               .map_irq        = of_irq_parse_and_map_pci,
-> -               .ops            = &gen_pci_ops,
-> -       };
-> 
->         if (!pci)
->                 return -ENOMEM;
-> 
-> +       pci->sys.map_irq        = of_irq_parse_and_map_pci,
-> +
->         type = of_get_property(np, "device_type", NULL);
->         if (!type || strcmp(type, "pci")) {
->                 dev_err(dev, "invalid \"device_type\" %s\n", type);
-> @@ -355,7 +344,7 @@ static int gen_pci_probe(struct platform_device *pdev)
->         pci->cfg.ops = of_id->data;
->         pci->host.dev.parent = dev;
->         INIT_LIST_HEAD(&pci->host.windows);
-> -       INIT_LIST_HEAD(&pci->resources);
-> +       INIT_LIST_HEAD(&pci->sys.resources);
-> 
->         /* Parse our PCI ranges and request their resources */
->         err = gen_pci_parse_request_of_pci_ranges(pci);
-> @@ -369,8 +358,12 @@ static int gen_pci_probe(struct platform_device *pdev)
->                 return err;
->         }
-> 
-> -       pci_common_init_dev(dev, &hw);
-> -       return 0;
-> +       pci_add_flags(PCI_REASSIGN_ALL_RSRC);
-> +       err = pci_init_single(dev, &pci->sys, NULL, &gen_pci_ops);
-> +       if (err)
-> +               gen_pci_release_of_pci_ranges(pci);
-> +
-> +       return err;
->  }
-> 
->  static struct platform_driver gen_pci_driver = {
-> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> index b1315e197ffb..e1381c0699be 100644
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -99,6 +99,7 @@ struct mvebu_pcie_port;
->  struct mvebu_pcie {
->         struct platform_device *pdev;
->         struct mvebu_pcie_port *ports;
-> +       struct pci_sys_data sysdata;
->         struct msi_chip *msi;
->         struct resource io;
->         char io_name[30];
-> @@ -611,7 +612,7 @@ static int mvebu_sw_pci_bridge_write(struct mvebu_pcie_port *port,
-> 
->  static inline struct mvebu_pcie *sys_to_pcie(struct pci_sys_data *sys)
->  {
-> -       return sys->private_data;
-> +       return container_of(sys, struct mvebu_pcie, sysdata);
->  }
-> 
->  static struct mvebu_pcie_port *mvebu_pcie_find_port(struct mvebu_pcie *pcie,
-> @@ -718,11 +719,26 @@ static struct pci_ops mvebu_pcie_ops = {
->         .write = mvebu_pcie_wr_conf,
->  };
-> 
-> -static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
-> +/* FIXME: move the code around to avoid these */
-> +static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys);
-> +static void mvebu_pcie_add_bus(struct pci_bus *bus);
-> +static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
-> +                                                const struct resource *res,
-> +                                                resource_size_t start,
-> +                                                resource_size_t size,
-> +                                                resource_size_t align);
-> +
-> +static int mvebu_pcie_enable(struct mvebu_pcie *pcie)
->  {
-> -       struct mvebu_pcie *pcie = sys_to_pcie(sys);
->         int i;
->         int domain = 0;
-> +       struct pci_sys_data *sys = &pcie->sysdata;
-> +
-> +       pcie->sysdata = (struct pci_sys_data) {
-> +               .map_irq        = of_irq_parse_and_map_pci,
-> +               .align_resource = mvebu_pcie_align_resource,
-> +               .add_bus        = mvebu_pcie_add_bus,
-> +       };
-> 
->  #ifdef CONFIG_PCI_DOMAINS
->         domain = sys->domain;
-> @@ -738,11 +754,13 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
->         if (request_resource(&iomem_resource, &pcie->mem))
->                 return 0;
-> 
-> +       INIT_LIST_HEAD(&sys->resources);
->         if (resource_size(&pcie->realio) != 0) {
->                 if (request_resource(&ioport_resource, &pcie->realio)) {
->                         release_resource(&pcie->mem);
->                         return 0;
->                 }
-> +
->                 pci_add_resource_offset(&sys->resources, &pcie->realio,
->                                         sys->io_offset);
->         }
-> @@ -756,7 +774,9 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
->                 mvebu_pcie_setup_hw(port);
->         }
-> 
-> -       return 1;
-> +       pci_add_flags(PCI_REASSIGN_ALL_RSRC);
-> +       return pci_init_single(&pcie->pdev->dev, &pcie->sysdata,
-> +                              mvebu_pcie_scan_bus, &mvebu_pcie_ops);
->  }
-> 
->  static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
-> @@ -810,24 +830,6 @@ static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
->                 return start;
->  }
-> 
-> -static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
-> -{
-> -       struct hw_pci hw;
-> -
-> -       memset(&hw, 0, sizeof(hw));
-> -
-> -       hw.nr_controllers = 1;
-> -       hw.private_data   = (void **)&pcie;
-> -       hw.setup          = mvebu_pcie_setup;
-> -       hw.scan           = mvebu_pcie_scan_bus;
-> -       hw.map_irq        = of_irq_parse_and_map_pci;
-> -       hw.ops            = &mvebu_pcie_ops;
-> -       hw.align_resource = mvebu_pcie_align_resource;
-> -       hw.add_bus        = mvebu_pcie_add_bus;
-> -
-> -       pci_common_init(&hw);
-> -}
-> -
->  /*
->   * Looks up the list of register addresses encoded into the reg =
->   * <...> property for one that matches the given port/lane. Once
-> @@ -1066,9 +1068,7 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
->                 pci_ioremap_io(i, pcie->io.start + i);
-> 
->         mvebu_pcie_msi_enable(pcie);
-> -       mvebu_pcie_enable(pcie);
-> -
-> -       return 0;
-> +       return mvebu_pcie_enable(pcie);
->  }
-> 
->  static const struct of_device_id mvebu_pcie_of_match_table[] = {
-> 
-> 
-> 
+> +#define DWC3_DCTL_INITU2ENA            (1 << 12)
+> +#define DWC3_DCTL_ACCEPTU2ENA          (1 << 11)
+> +#define DWC3_DCTL_INITU1ENA            (1 << 10)
+> +#define DWC3_DCTL_ACCEPTU1ENA          (1 << 9)
+> +#define DWC3_DCTL_TSTCTRL_MASK         (0xf << 1)
+>
+>  #define DWC3_DCTL_ULSTCHNGREQ_MASK     (0x0f << 5)
+>  #define DWC3_DCTL_ULSTCHNGREQ(n) (((n) << 5) & DWC3_DCTL_ULSTCHNGREQ_MASK)
+> @@ -664,6 +667,9 @@ struct dwc3_scratchpad_array {
+>   * @ep0_bounced: true when we used bounce buffer
+>   * @ep0_expect_in: true when we expect a DATA IN transfer
+>   * @has_hibernation: true when dwc3 was configured with Hibernation
+> + * @has_lpm_erratum: true when core was configured with LPM Erratum. Note that
+> + *                     there's now way for software to detect this in runtime.
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+"no way" (not "now way").  Also, "at runtime" is more idiomatic than
+"in runtime."
 
+> + * @lpm_nyet_thres: LPM NYET response threshold
+>   * @is_selfpowered: true when we are selfpowered
+>   * @is_fpga: true when we are using the FPGA board
+>   * @needs_fifo_resize: not all users might want fifo resizing, flag it
+> @@ -769,6 +775,8 @@ struct dwc3 {
+>         unsigned                ep0_bounced:1;
+>         unsigned                ep0_expect_in:1;
+>         unsigned                has_hibernation:1;
+> +       unsigned                has_lpm_erratum:1;
+> +       unsigned                lpm_nyet_thres:4;
+>         unsigned                is_selfpowered:1;
+>         unsigned                is_fpga:1;
+>         unsigned                needs_fifo_resize:1;
+> diff --git a/drivers/usb/dwc3/gadget.c b/drivers/usb/dwc3/gadget.c
+> index 7a64c2f..b918a65 100644
+> --- a/drivers/usb/dwc3/gadget.c
+> +++ b/drivers/usb/dwc3/gadget.c
+> @@ -2297,6 +2297,19 @@ static void dwc3_gadget_conndone_interrupt(struct dwc3 *dwc)
+>                  */
+>                 reg |= DWC3_DCTL_HIRD_THRES(12);
+>
+> +               /*
+> +                * When dwc3 revisions >= 2.40a, LPM Erratum is enabled and
+> +                * DCFG.LPMCap is set, core responses with an ACK and the
+> +                * BESL value in the LPM token is less than or equal to lPM
+> +                * NYET threshold.
+> +                */
+> +               WARN(dwc->revision < DWC3_REVISION_240A
+> +                               && dwc->has_lpm_erratum,
+> +                               "LPM Erratum not available on dwc3 revisisions < 2.40a\n");
+> +
+> +               if (dwc->has_lpm_erratum)
+> +                       reg |= DWC3_DCTL_LPM_ERRATA(dwc->lpm_nyet_thres);
+> +
+>                 dwc3_writel(dwc->regs, DWC3_DCTL, reg);
+>         } else {
+>                 reg = dwc3_readl(dwc->regs, DWC3_DCTL);
+> diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
+> index 9209d02..2e546ac 100644
+> --- a/drivers/usb/dwc3/platform_data.h
+> +++ b/drivers/usb/dwc3/platform_data.h
+> @@ -26,4 +26,6 @@ struct dwc3_platform_data {
+>         bool tx_fifo_resize;
+>
+>         unsigned disable_scramble_quirk:1;
+> +       unsigned has_lpm_erratum:1;
+> +       unsigned lpm_nyet_thres:4;
+>  };
+> --
+> 1.9.1
+>
