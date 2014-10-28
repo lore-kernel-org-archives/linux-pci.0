@@ -1,73 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.60.111]:53912 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750810AbaJ1Szw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Oct 2014 14:55:52 -0400
-From: Paul Zimmerman <Paul.Zimmerman@synopsys.com>
-To: "balbi@ti.com" <balbi@ti.com>
-CC: Huang Rui <ray.huang@amd.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
+Received: from mail-bn1on0142.outbound.protection.outlook.com ([157.56.110.142]:56416
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751155AbaJ1PQR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 Oct 2014 11:16:17 -0400
+Date: Tue, 28 Oct 2014 23:17:16 +0800
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>
+CC: Alan Stern <stern@rowland.harvard.edu>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Paul Zimmerman" <Paul.Zimmerman@synopsys.com>,
 	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
 	Jason Chang <jason.chang@amd.com>,
 	"Vincent Wan" <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v3 01/19] usb: dwc3: enable hibernation if to be
- supported
-Date: Tue, 28 Oct 2014 18:55:50 +0000
-Message-ID: <A2CA0424C0A6F04399FB9E1CD98E0304844E68E4@US01WEMBX2.internal.synopsys.com>
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 00/19] usb: dwc3: add support for AMD Nolan SoC
+Message-ID: <20141028151715.GB4519@hr-slim.amd.com>
 References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
- <1414497280-3126-2-git-send-email-ray.huang@amd.com>
- <A2CA0424C0A6F04399FB9E1CD98E0304844E68B7@US01WEMBX2.internal.synopsys.com>
- <20141028185059.GE25735@saruman>
-In-Reply-To: <20141028185059.GE25735@saruman>
-Content-Type: text/plain; charset="us-ascii"
+ <20141028144156.GC8123@saruman>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20141028144156.GC8123@saruman>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Felipe Balbi [mailto:balbi@ti.com]
-> Sent: Tuesday, October 28, 2014 11:51 AM
+On Tue, Oct 28, 2014 at 09:41:56AM -0500, Felipe Balbi wrote:
+> Hi,
 > 
-> On Tue, Oct 28, 2014 at 06:47:08PM +0000, Paul Zimmerman wrote:
-> > > From: Huang Rui [mailto:ray.huang@amd.com]
-> > > Sent: Tuesday, October 28, 2014 4:54 AM
-> > >
-> > > It enables hibernation if the function is set in coreConsultant.
-> > >
-> > > Suggested-by: Felipe Balbi <balbi@ti.com>
-> > > Signed-off-by: Huang Rui <ray.huang@amd.com>
-> > > ---
-> > >  drivers/usb/dwc3/core.c | 1 +
-> > >  1 file changed, 1 insertion(+)
-> > >
-> > > diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-> > > index fa396fc..bf77509 100644
-> > > --- a/drivers/usb/dwc3/core.c
-> > > +++ b/drivers/usb/dwc3/core.c
-> > > @@ -449,6 +449,7 @@ static int dwc3_core_init(struct dwc3 *dwc)
-> > >  	case DWC3_GHWPARAMS1_EN_PWROPT_HIB:
-> > >  		/* enable hibernation here */
-> > >  		dwc->nr_scratch = DWC3_GHWPARAMS4_HIBER_SCRATCHBUFS(hwparams4);
-> > > +		reg |= DWC3_GCTL_GBLHIBERNATIONEN;
-> > >  		break;
-> > >  	default:
-> > >  		dev_dbg(dwc->dev, "No power optimization available\n");
-> >
-> > What effect does this have when the controller is in device mode? I
-> > expect it will start generating DWC3_DEVICE_EVENT_HIBER_REQ interrupt
-> > events when this register bit is set. So the dev_WARN_ONCE in
-> > dwc3_gadget_interrupt() will start firing, I think.
+> On Tue, Oct 28, 2014 at 07:54:21PM +0800, Huang Rui wrote:
+> > Hi,
+> > 
+> > The series of patches add AMD Nolan (NL) SoC support for DesignWare USB3
+> > OTG IP with PCI bus glue layer. This controller supported hibernation, LPM
+> > erratum and used the 2.80a IP version and amd own phy. Current
+> > implementation support both simulation and SoC platform. And already tested
+> > with gadget zero and msc tool. It works well on file storage gadget.
+> > 
+> > 
+> > These patches are generated on balbi/testing/next
+> > 
+> > Changes from v2 -> v3
+> > - Confirmed these quirks will be needed in product level
+> > - Move AMD configuration patch to the last one with all quirk flags
+> > - Make all quirks as 1-bit field instead of single-bits on a 32-bit
+> >   variable
+> > - Add all quirks DeviceTree counterparts
+> > - Make LPM erratum configurable
+> > - Add PCI ID into pci_ids.h because it will be used both on PCI and DWC3
+> >   device driver.
+> > 
+> > Changes from v1 -> v2
+> > - Remove dual role function temporarily
+> > - Add pci quirk to avoid to bind with xhci driver
+> > - Distinguish between simulation board and soc
+> > - Break down all the special quirks
 > 
-> Ok, so this *has* to wait for proper hibernation support ?
+> In all patches touching DeviceTree, you should add the matching binding
+> documentation under Documentation/devicetree/bindings/usb/dwc3.txt
+> 
 
-Ah, never mind. Since the hibernation event is not enabled in the
-DEVTEN register, the controller shouldn't generate that event after
-all. So I think it should be OK. Sorry for the noise.
+OK, will add this documentation.
 
--- 
-Paul
+> There are still a few cases where you're clipping words too harshly, for
+> example tx_deemph doesn't look very intuitive, if you spell it out as
+> tx_deemphasis, it's easier to read. Remember that humans will be the
+> ones fiddling with those quirks.
+> 
+> A few of your patches I have fixed myself and they now sit on
+> testing/next, please rebase your remaining changes there and make sure
+> to add DeviceTree documentation.
+> 
+> When resending, please resend the entire series (even the ones I have
+> already taken) because you also didn't Cc devicetree mailing list.
+> 
 
+Got it, could I also Cc stable mailing list and make them back port to
+stable trees?
+
+Thanks,
+Rui
