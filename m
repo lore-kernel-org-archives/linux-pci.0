@@ -1,99 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16946 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755657AbaJWNDV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 23 Oct 2014 09:03:21 -0400
-Date: Thu, 23 Oct 2014 16:06:54 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Marcel Apfelbaum <marcel.a@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 28 Oct 2014 21:23:11 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Marc Zyngier <marc.zyngier@arm.com>
+cc: Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"x86@kernel.org" <x86@kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	marcel@redhat.com,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>
-Subject: Re: [PATCH v4] PCI: add kernel parameter to override devid<->driver
- mapping.
-Message-ID: <20141023130654.GA11446@redhat.com>
-References: <1413813882-27047-1-git-send-email-marcel.a@redhat.com>
- <CAErSpo4bx1tZMi1rhKhRoE6v9EVr6iTFVw=oQaLEpzT+h=U5Tg@mail.gmail.com>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>
+Subject: Re: [Patch Part2 v3 01/24] irqdomain: Introduce new interfaces to
+ support hierarchy irqdomains
+In-Reply-To: <544FF900.4020601@arm.com>
+Message-ID: <alpine.DEB.2.11.1410282116220.5308@nanos>
+References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>  <1414484803-10311-2-git-send-email-jiang.liu@linux.intel.com> <1414489711.32399.53.camel@mtksdaap41> <alpine.DEB.2.11.1410282010340.5308@nanos> <544FF900.4020601@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4bx1tZMi1rhKhRoE6v9EVr6iTFVw=oQaLEpzT+h=U5Tg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 22, 2014 at 03:28:29PM -0600, Bjorn Helgaas wrote:
-> Hi Marcel,
+On Tue, 28 Oct 2014, Marc Zyngier wrote:
+> On 28/10/14 19:37, Thomas Gleixner wrote:
+> > So while we are at it:
+> > 
+> >> +	if (irq_domain_is_hierarchy(domain)) {
+> >> +		if (domain->ops->xlate) {
+> >> +			/*
+> >> +			 * If we've already configured this interrupt,
+> >> +			 * don't do it again, or hell will break loose.
+> >> +			 */
+> >> +			virq = irq_find_mapping(domain, hwirq);
+> >> +			if (virq)
+> >> +				return virq;
+> > 
+> > I can understand that it is an issue if the mapping exists already,
+> > but I have to ask WHY is it correct behaviour to call into that code
+> > for an existing mapping.
 > 
-> I'm not quite clear on what the objective is here, so I apologize for
-> some questions that probably seem silly.
+> As I have originally looked at this, I'll answer the question:
 > 
-> On Mon, Oct 20, 2014 at 8:04 AM, Marcel Apfelbaum <marcel.a@redhat.com> wrote:
-> > Scanning a lot of devices during boot requires a lot of time.
-> 
-> I think what takes a lot of time is the .probe() method for some
-> drivers, right?  I first thought you meant that it took a long time
-> for the PCI core to enumerate a lot of devices, but you're not
-> changing anything there.
-> 
-> If the intent is to reduce boot time, I don't think this is a general
-> solution.  Drivers should be able to schedule asynchronous things in
-> their .probe() methods if necessary.
+> The generic DT code parses the whole tree, and generates platform
+> devices as it goes. As part of the platform device creation, it
+> populates the IRQ resources, which translates into calling into
+> irq_create_of_mapping(). You could argue that this behaviour is crazy,
+> and I wouldn't disagree.
 
-If this worked for all devices, we could just make probe
-asynchronous in PCI core.
-Unfortunately this doesn't work esp for storage devices
-since people expect disks to be available for mount immediately.
+Mooo.
 
-If the point of the patch is to speed up boot, we could
-try to probe everything in parallel?
-Probe is serialized now, right?
+> See http://www.spinics.net/lists/devicetree/msg53164.html for more gory
+> details.
+> 
+> > And why would this check only apply if domain->ops->xlate is set?
+> > irq_create_mapping() does it unconditionally.
+> 
+> My original code used the xlate callback to parse the opaque irq_data,
+> computing hwirq, and I suspect this is a leftover of it. The above code
+> seems to pull hwirq out of thin air, which is probably not the intended
+> behaviour. Joe?
 
+No. Here is the full patch from Joe:
 
-> > On other scenarios there is a need to bind a driver to a specific slot.
-> 
-> A short example here would be good.  Are you talking about something
-> like binding a NIC driver to one device while leaving others unbound
-> for use by guests?
-> 
-> > Binding devices to pci-stub driver does not work,
-> > as it will not differentiate between devices of the
-> > same type.
-> 
-> I assume you mean booting with "pci-stub.ids=$VENDOR:$DEVICE" will
-> make pci-stub bind to *all* matching devices, and you only want it to
-> bind to some.  Maybe pci-stub could be extended to pay attention to
-> PCI bus addresses in addition to vendor/device IDs.
-> 
-> > Using some start scripts is error prone.
-> >
-> > The solution leverages driver_override functionality introduced by
-> >
-> >         commit: 782a985d7af26db39e86070d28f987cad21313c0
-> >         Author: Alex Williamson <alex.williamson@redhat.com>
-> >         Date:   Tue May 20 08:53:21 2014 -0600
-> >
-> >         PCI: Introduce new device binding path using pci_dev.driver_override
-> >
-> > In order to bind PCI slots to specific drivers use:
-> >         pci=driver[xxxx:xx:xx.x]=foo,driver[xxxx:xx:xx.x]=bar,...
-> 
-> If/when you address Alex's comments about other bus types, can you
-> also update the changelog to use the canonical commit reference
-> format, i.e., 782a985d7af2 ("PCI: Introduce new device binding path
-> using pci_dev.driver_override") in this case?
-> 
-> PCI bus numbers are mutable, e.g., they can change with hotplug or
-> other configuration changes.  But I don't have any better suggestion,
-> so I guess all we can do is be aware of this.
+  http://lists.infradead.org/pipermail/linux-arm-kernel/2014-October/296543.html
 
-We could use slot capability for addressing if that's available.
+hwirq gets either set from hwirq = irq_data->args[0] or from the xlate
+call.
 
-> Speaking of hotplug, this is only a boot-time kernel parameter, with
-> no opportunity to use this, e.g., to add slot/driver pairs, after
-> boot.  Do you not need that because of Alex's driver_override thing?
-> How can we integrate this all together into a coherent whole?  I'm a
-> little confused as to how this would all be documented in a form
-> usable by end-users.
-> 
-> Bjorn
+But my question still stands:
+
+Why would this check only apply if domain->ops->xlate is set?
+irq_create_mapping() does it unconditionally.
+
+Thanks,
+
+	tglx
