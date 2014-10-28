@@ -9,60 +9,128 @@ To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
 	Borislav Petkov <bp@alien8.de>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>
 Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [Patch v7 03/18] ACPI, irq, x86: Return IRQ instead of GSI in mp_register_gsi()
-Date: Mon, 27 Oct 2014 13:21:33 +0800
-Message-Id: <1414387308-27148-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	iommu@lists.linux-foundation.org
+Subject: [Patch Part2 v3 11/24] iommu/vt-d: Change prototypes to prepare for enabling hierarchy irqdomain
+Date: Tue, 28 Oct 2014 16:26:29 +0800
+Message-Id: <1414484803-10311-12-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The GSI for ACPI SCI may be shared with other devices. For example,
+Prepare for support hierarchy irqdomain by changing function prototypes,
+should be no function changes.
 
-Function mp_register_gsi() should return IRQ number, so fix a regression
-by returning mp_map_gsi_to_irq(gsi, 0) instead of gsi.
-
-The regression was caused by commit 84245af7297ced9e8fe "x86, irq, ACPI:
-Change __acpi_register_gsi to return IRQ number instead of GSI" and
-exposed on a SuperMicro system, which shares one GSI between ACPI SCI
-and PCI device, with following failure:
-
-http://sourceforge.net/p/linux1394/mailman/linux1394-user/?viewmonth=201410
-[    0.000000] ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 20 low
-level)
-[    2.699224] firewire_ohci 0000:06:00.0: failed to allocate interrupt
-20
-
-Reported-and-Tested-by: Daniel Robbins <drobbins@funtoo.org>
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: <stable@vger.kernel.org> # 3.17
 ---
- arch/x86/kernel/acpi/boot.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/iommu/intel_irq_remapping.c |   22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index eceba9d9e116..e077c080a519 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -397,7 +397,7 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index fd181cf8a589..5acad492701e 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -82,10 +82,10 @@ static int get_irte(int irq, struct irte *entry)
+ 	return 0;
+ }
  
- 	/* Don't set up the ACPI SCI because it's already set up */
- 	if (acpi_gbl_FADT.sci_interrupt == gsi)
--		return gsi;
-+		return mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC);
+-static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
++static int alloc_irte(struct intel_iommu *iommu, int irq,
++		      struct irq_2_iommu *irq_iommu, u16 count)
+ {
+ 	struct ir_table *table = iommu->ir_table;
+-	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
+ 	struct irq_cfg *cfg = irq_cfg(irq);
+ 	unsigned int mask = 0;
+ 	unsigned long flags;
+@@ -173,9 +173,9 @@ static int set_irte_irq(int irq, struct intel_iommu *iommu, u16 index, u16 subha
+ 	return 0;
+ }
  
- 	trigger = trigger == ACPI_EDGE_SENSITIVE ? 0 : 1;
- 	polarity = polarity == ACPI_ACTIVE_HIGH ? 0 : 1;
+-static int modify_irte(int irq, struct irte *irte_modified)
++static int modify_irte(struct irq_2_iommu *irq_iommu,
++		       struct irte *irte_modified)
+ {
+-	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
+ 	struct intel_iommu *iommu;
+ 	unsigned long flags;
+ 	struct irte *irte;
+@@ -242,7 +242,7 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
+ 		return 0;
+ 
+ 	iommu = irq_iommu->iommu;
+-	index = irq_iommu->irte_index + irq_iommu->sub_handle;
++	index = irq_iommu->irte_index;
+ 
+ 	start = iommu->ir_table->base + index;
+ 	end = start + (1 << irq_iommu->irte_mask);
+@@ -937,7 +937,7 @@ static int intel_setup_ioapic_entry(int irq,
+ 		pr_warn("No mapping iommu for ioapic %d\n", ioapic_id);
+ 		index = -ENODEV;
+ 	} else {
+-		index = alloc_irte(iommu, irq, 1);
++		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
+ 		if (index < 0) {
+ 			pr_warn("Failed to allocate IRTE for ioapic %d\n",
+ 				ioapic_id);
+@@ -953,7 +953,7 @@ static int intel_setup_ioapic_entry(int irq,
+ 	/* Set source-id of interrupt request */
+ 	set_ioapic_sid(&irte, ioapic_id);
+ 
+-	modify_irte(irq, &irte);
++	modify_irte(irq_2_iommu(irq), &irte);
+ 
+ 	apic_printk(APIC_VERBOSE, KERN_DEBUG "IOAPIC[%d]: "
+ 		"Set IRTE entry (P:%d FPD:%d Dst_Mode:%d "
+@@ -1040,7 +1040,7 @@ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 	 * Atomically updates the IRTE with the new destination, vector
+ 	 * and flushes the interrupt entry cache.
+ 	 */
+-	modify_irte(irq, &irte);
++	modify_irte(irq_2_iommu(irq), &irte);
+ 
+ 	/*
+ 	 * After this point, all the interrupts will start arriving
+@@ -1076,7 +1076,7 @@ static void intel_compose_msi_msg(struct pci_dev *pdev,
+ 	else
+ 		set_hpet_sid(&irte, hpet_id);
+ 
+-	modify_irte(irq, &irte);
++	modify_irte(irq_2_iommu(irq), &irte);
+ 
+ 	msg->address_hi = MSI_ADDR_BASE_HI;
+ 	msg->data = sub_handle;
+@@ -1103,7 +1103,7 @@ static int intel_msi_alloc_irq(struct pci_dev *dev, int irq, int nvec)
+ 		       "Unable to map PCI %s to iommu\n", pci_name(dev));
+ 		index = -ENOENT;
+ 	} else {
+-		index = alloc_irte(iommu, irq, nvec);
++		index = alloc_irte(iommu, irq, irq_2_iommu(irq), nvec);
+ 		if (index < 0) {
+ 			printk(KERN_ERR
+ 			       "Unable to allocate %d IRTE for PCI %s\n",
+@@ -1147,7 +1147,7 @@ static int intel_alloc_hpet_msi(unsigned int irq, unsigned int id)
+ 	down_read(&dmar_global_lock);
+ 	iommu = map_hpet_to_ir(id);
+ 	if (iommu) {
+-		index = alloc_irte(iommu, irq, 1);
++		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
+ 		if (index >= 0)
+ 			ret = 0;
+ 	}
 -- 
 1.7.10.4
 
