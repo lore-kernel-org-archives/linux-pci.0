@@ -1,94 +1,75 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Daniel J Blueman <daniel@numascale.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Daniel J Blueman <daniel@numascale.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Steffen Persvold <sp@numascale.com>
-Subject: [PATCH 1/3] Numachip: fixes
-Date: Wed, 15 Oct 2014 20:53:06 +0800
-Message-Id: <1413377588-6985-1-git-send-email-daniel@numascale.com>
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Jason Chang <jason.chang@amd.com>,
+	"Vincent Wan" <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v3 14/19] usb: dwc3: set SUSPHY bit for all cores
+Date: Tue, 28 Oct 2014 19:54:35 +0800
+Message-ID: <1414497280-3126-15-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
+References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix APIC declaration to be consistent with definition; this addresses
-a compilation failure with the development branch of GCC, see:
-https://bugzilla.kernel.org/show_bug.cgi?id=78251
+It is recommended to set USB3 and USB2 SUSPHY bits to '1' after the core
+initialization is completed above the dwc3 revision 1.94a.
 
-Fix 16-bit APIC ID truncation and redundant APIC ICR idle polling
-for IPI to self (AMD64 APICs are documented in the system developer
-manuals to queue APIC writes).
-
-Finally, add safe function to check if Numachip is detected, to be
-used elsewhere.
-
-Candidate for stable.
-
-Signed-off-by: Daniel J Blueman <daniel@numascale.com>
-Reviewed-by: Steffen Persvold <sp@numascale.com>
+Signed-off-by: Huang Rui <ray.huang@amd.com>
 ---
- arch/x86/include/asm/numachip/numachip.h |  9 +++++++++
- arch/x86/kernel/apic/apic_numachip.c     | 12 ++++++++----
- 2 files changed, 17 insertions(+), 4 deletions(-)
+ drivers/usb/dwc3/core.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
-diff --git a/arch/x86/include/asm/numachip/numachip.h b/arch/x86/include/asm/numachip/numachip.h
-index 1c6f7f6..3e1f4f9 100644
---- a/arch/x86/include/asm/numachip/numachip.h
-+++ b/arch/x86/include/asm/numachip/numachip.h
-@@ -16,4 +16,13 @@
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index e36fcd0..7b5cd76 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -374,6 +374,15 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
  
- extern int __init pci_numachip_init(void);
+ 	reg = dwc3_readl(dwc->regs, DWC3_GUSB3PIPECTL(0));
  
-+#ifdef CONFIG_X86_NUMACHIP
-+extern bool is_numachip_system(void);
-+#else
-+static inline bool is_numachip_system(void)
-+{
-+	return 0;
-+}
-+#endif
++	/*
++	 * Above 1.94a, it is recommended to set DWC3_GUSB3PIPECTL_SUSPHY
++	 * to '0' during coreConsultant configuration. So default value
++	 * will be '0' when the core is reset. Application needs to set it
++	 * to '1' after the core initialization is completed.
++	 */
++	if (dwc->revision > DWC3_REVISION_194A)
++		reg |= DWC3_GUSB3PIPECTL_SUSPHY;
 +
- #endif /* _ASM_X86_NUMACHIP_NUMACHIP_H */
-diff --git a/arch/x86/kernel/apic/apic_numachip.c b/arch/x86/kernel/apic/apic_numachip.c
-index ae91539..4156470 100644
---- a/arch/x86/kernel/apic/apic_numachip.c
-+++ b/arch/x86/kernel/apic/apic_numachip.c
-@@ -30,9 +30,13 @@
- #include <asm/apic_flat_64.h>
- #include <asm/pgtable.h>
+ 	if (dwc->u2ss_inp3_quirk)
+ 		reg |= DWC3_GUSB3PIPECTL_U2SSINP3OK;
  
--static int numachip_system __read_mostly;
-+static bool numachip_system __read_mostly;
-+static const struct apic apic_numachip __refconst;
+@@ -398,6 +407,21 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
+ 	dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
  
--static const struct apic apic_numachip __read_mostly;
-+bool is_numachip_system(void)
-+{
-+	return numachip_system;
-+}
- 
- static unsigned int get_apic_id(unsigned long x)
- {
-@@ -40,7 +44,7 @@ static unsigned int get_apic_id(unsigned long x)
- 	unsigned int id;
- 
- 	rdmsrl(MSR_FAM10H_NODE_ID, value);
--	id = ((x >> 24) & 0xffU) | ((value << 2) & 0x3f00U);
-+	id = ((x >> 24) & 0xffU) | ((value << 2) & 0xff00U);
- 
- 	return id;
- }
-@@ -145,7 +149,7 @@ static void numachip_send_IPI_all(int vector)
- 
- static void numachip_send_IPI_self(int vector)
- {
--	__default_send_IPI_shortcut(APIC_DEST_SELF, vector, APIC_DEST_PHYSICAL);
-+	apic_write(APIC_SELF_IPI, vector);
+ 	mdelay(100);
++
++	reg = dwc3_readl(dwc->regs, DWC3_GUSB2PHYCFG(0));
++
++	/*
++	 * Above 1.94a, it is recommended to set DWC3_GUSB2PHYCFG_SUSPHY to
++	 * '0' during coreConsultant configuration. So default value will
++	 * be '0' when the core is reset. Application needs to set it to
++	 * '1' after the core initialization is completed.
++	 */
++	if (dwc->revision > DWC3_REVISION_194A)
++		reg |= DWC3_GUSB2PHYCFG_SUSPHY;
++
++	dwc3_writel(dwc->regs, DWC3_GUSB2PHYCFG(0), reg);
++
++	mdelay(100);
  }
  
- static int __init numachip_probe(void)
+ /**
 -- 
 1.9.1
 
