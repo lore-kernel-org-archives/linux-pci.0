@@ -1,152 +1,167 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v3 12/27] x86/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-Date: Wed, 15 Oct 2014 11:07:00 +0800
-Message-ID: <1413342435-7876-13-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
-References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 28 Oct 2014 15:51:52 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Vidya Sagar <vidyas@nvidia.com>
+Cc: bhelgaas@google.com, swarren@wwwdotorg.org, kthota@nvidia.com,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: tegra: Enable root port specific features
+Message-ID: <20141028145151.GD17770@ulmo>
+References: <1413803091-10824-1-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="3Gf/FFewwPeBMqCJ"
+In-Reply-To: <1413803091-10824-1-git-send-email-vidyas@nvidia.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use MSI chip framework instead of arch MSI functions to configure
-MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/x86/include/asm/pci.h     |   13 +++++++++++++
- arch/x86/kernel/apic/io_apic.c |   19 +++++++++++++++++++
- arch/x86/pci/acpi.c            |    1 +
- arch/x86/pci/common.c          |    3 +++
- 4 files changed, 36 insertions(+), 0 deletions(-)
+--3Gf/FFewwPeBMqCJ
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 0892ea0..f41b58a 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -20,6 +20,9 @@ struct pci_sysdata {
- #ifdef CONFIG_X86_64
- 	void		*iommu;		/* IOMMU private data */
- #endif
-+#ifdef CONFIG_PCI_MSI
-+	struct msi_chip *msi_chip;
-+#endif
- };
- 
- extern int pci_routeirq;
-@@ -41,6 +44,15 @@ static inline int pci_proc_domain(struct pci_bus *bus)
- }
- #endif
- 
-+#ifdef CONFIG_PCI_MSI
-+static inline struct msi_chip *pci_msi_chip(struct pci_bus *bus)
-+{
-+	struct pci_sysdata *sd = bus->sysdata;
-+
-+	return sd->msi_chip;
-+}
-+#endif
-+
- /* Can be used to override the logic in pci_scan_bus for skipping
-    already-configured bus numbers - to be used for buggy BIOSes
-    or architectures with incomplete PCI setup by the loader */
-@@ -101,6 +113,7 @@ void native_teardown_msi_irq(unsigned int irq);
- void native_restore_msi_irqs(struct pci_dev *dev);
- int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
- 		  unsigned int irq_base, unsigned int irq_offset);
-+extern struct msi_chip *x86_msi_chip;
- #else
- #define native_setup_msi_irqs		NULL
- #define native_teardown_msi_irq		NULL
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 29290f5..ec79b38 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3227,11 +3227,30 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 	return 0;
- }
- 
-+static int __native_setup_msi_irqs(struct msi_chip *chip,
-+		struct pci_dev *dev, int nvec, int type)
-+{
-+	return native_setup_msi_irqs(dev, nvec, type);
-+}
-+
- void native_teardown_msi_irq(unsigned int irq)
- {
- 	irq_free_hwirq(irq);
- }
- 
-+static void __native_teardown_msi_irq(struct msi_chip *chip,
-+		unsigned int irq)
-+{
-+	native_teardown_msi_irq(irq);
-+}
-+
-+static struct msi_chip native_msi_chip = {
-+	.setup_irqs = __native_setup_msi_irqs,
-+	.teardown_irq = __native_teardown_msi_irq,
-+};
-+
-+struct msi_chip *x86_msi_chip = &native_msi_chip;
-+
- #ifdef CONFIG_DMAR_TABLE
- static int
- dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index cfd1b13..6341d6d 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -508,6 +508,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 
- 	sd = &info->sd;
- 	sd->domain = domain;
-+	sd->msi_chip = x86_msi_chip;
- 	sd->node = node;
- 	sd->companion = device;
- 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 7b20bcc..0b2319a 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -468,6 +468,9 @@ void pcibios_scan_root(int busnum)
- 		return;
- 	}
- 	sd->node = x86_pci_root_bus_node(busnum);
-+#ifdef CONFIG_PCI_MSI
-+	sd->msi_chip = x86_msi_chip;
-+#endif
- 	x86_pci_root_bus_resources(busnum, &resources);
- 	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busnum);
- 	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, sd, &resources);
--- 
-1.7.1
+On Mon, Oct 20, 2014 at 04:34:51PM +0530, Vidya Sagar wrote:
+> Enables root port to advertise its ASPM-L1 capability
+> resulting in possible link entry to L1 when an ASPM-L1 capable
+> device is connected
+> Enables per-controller & per-TMS clock clamping by default
+> Enabling above features result in more power saving
+>=20
+> It also avoids PM message truncation by waiting for DLLP to finish
+> before entering into L1 or L2
+>=20
+> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> ---
+> v2:
+>  Removed rp_read() & rp_write() as they seem to be redundant
+>  Moved port disable code under error condition i.e. it the link
+>   is down, corresponding port will be disabled
+>=20
+>  drivers/pci/host/pci-tegra.c | 50 ++++++++++++++++++++++++++++++++++++++=
++-----
+>  1 file changed, 45 insertions(+), 5 deletions(-)
+>=20
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index 3d43874..7f32b07 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -237,6 +237,18 @@
+>  		(0xf  << PADS_REFCLK_CFG_DRVI_SHIFT)     \
+>  	)
+> =20
+> +#define NV_PCIE2_RP_VEND_XP1			0x00000F04
+> +#define NV_PCIE2_RP_VEND_XP_LINK_PVT_CTL_L1_ASPM_SUPPORT	(1 << 21)
+> +
+> +#define NV_PCIE2_RP_VEND_XP_BIST		0x00000F4C
+> +#define PCIE2_RP_VEND_XP_BIST_GOTO_L1_L2_AFTER_DLLP_DONE	(1 << 28)
+> +
+> +#define NV_PCIE2_RP_PRIV_MISC			0x00000FE0
+> +#define PCIE2_RP_PRIV_MISC_CTLR_CLK_CLAMP_THRESHOLD	(0xF << 16)
+> +#define PCIE2_RP_PRIV_MISC_CTLR_CLK_CLAMP_ENABLE	(1 << 23)
+> +#define PCIE2_RP_PRIV_MISC_TMS_CLK_CLAMP_THRESHOLD	(0xF << 24)
+> +#define PCIE2_RP_PRIV_MISC_TMS_CLK_CLAMP_ENABLE		(1 << 31)
 
+These registers should move to the section where other RP_* registers
+are already defined. Also, please adjust the name to match what's
+already there.
+
+In particular you also redefine RP_PRIV_MISC here.
+
+> +/* Enable various features of root port */
+> +static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
+> +{
+> +	unsigned int data;
+
+u32 please. And maybe rename it to something like "value" to be more
+consistent with other parts of the driver.
+
+> +
+> +	/* Power mangagement settings */
+> +	/* Enable clock clamping by default */
+> +	data =3D readl(port->base + NV_PCIE2_RP_PRIV_MISC);
+> +	data |=3D PCIE2_RP_PRIV_MISC_CTLR_CLK_CLAMP_THRESHOLD |
+> +		PCIE2_RP_PRIV_MISC_CTLR_CLK_CLAMP_ENABLE |
+> +		PCIE2_RP_PRIV_MISC_TMS_CLK_CLAMP_THRESHOLD |
+> +		PCIE2_RP_PRIV_MISC_TMS_CLK_CLAMP_ENABLE;
+> +	writel(data, port->base + NV_PCIE2_RP_PRIV_MISC);
+> +
+> +	/* Enable rootport to advertise its ASPM - L1 capability */
+> +	data =3D readl(port->base + NV_PCIE2_RP_VEND_XP1);
+> +	data |=3D NV_PCIE2_RP_VEND_XP_LINK_PVT_CTL_L1_ASPM_SUPPORT;
+> +	writel(data, port->base + NV_PCIE2_RP_VEND_XP1);
+> +
+> +	/* LTSSM : wait for DLLP to finish before entering L1 or L2/L3 */
+> +	/* to avoid truncating PM messages resulting in receiver errors */
+
+See Documentation/CodingStyle for the proper format of multi-line
+comments.
+
+> +	data =3D readl(port->base + NV_PCIE2_RP_VEND_XP_BIST);
+> +	data |=3D PCIE2_RP_VEND_XP_BIST_GOTO_L1_L2_AFTER_DLLP_DONE;
+> +	writel(data, port->base + NV_PCIE2_RP_VEND_XP_BIST);
+> +}
+
+I think these features could all be implemented in separate functions,
+which would allow you to give them meaningful names and make these odd
+comments obsolete. Or if you want to be more verbose about explaining
+the features, having separate functions for them will give you a good
+place for such comments.
+
+> +
+>  static int tegra_pcie_enable(struct tegra_pcie *pcie)
+>  {
+>  	struct tegra_pcie_port *port, *tmp;
+> @@ -1870,13 +1908,15 @@ static int tegra_pcie_enable(struct tegra_pcie *p=
+cie)
+> =20
+>  		tegra_pcie_port_enable(port);
+> =20
+> -		if (tegra_pcie_port_check_link(port))
+> +		if (!tegra_pcie_port_check_link(port)) {
+> +			dev_info(pcie->dev, "link %u down, ignoring\n",
+> +				port->index);
+
+This isn't properly aligned.
+
+> +			tegra_pcie_port_disable(port);
+> +			tegra_pcie_port_free(port);
+>  			continue;
+> +		}
+> =20
+> -		dev_info(pcie->dev, "link %u down, ignoring\n", port->index);
+> -
+> -		tegra_pcie_port_disable(port);
+> -		tegra_pcie_port_free(port);
+> +		tegra_pcie_enable_rp_features(port);
+>  	}
+
+I think the new function is oddly named. Perhaps something like
+tegra_pcie_enable_pm() or tegra_pcie_port_init() would work better. The
+latter would for example give us a good point to do other work that's
+not "enabling a feature" if we need that kind of thing in the future.
+
+Thierry
+
+--3Gf/FFewwPeBMqCJ
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJUT62HAAoJEN0jrNd/PrOhBNsQAKes/G+j+ELuMx2RP1CuMrQ7
+jjEM4FIlgTXgAbmWi59QVAbH/WvlwKbZY9rVbAxcUMVUpyU+8RkUsSV98bqS2pjD
+prv75aiUhKHmUnrkvP/DxUCIgAhUwmi4roxVDRXFRlCbupdpfVSc5HeUUDVvi17Y
+UdrIgnDTTMrtcLCMyk/kJbuq4rK8FFcZOWhBt0rMyMbmLCmRLn1BxIjkhso/QC1y
+wyx+KdUeDNWOAsJoKRwE5qznyeHUI46uHlXuCdRoT+f5/tT6iq0wb1bDO1Gc4lLA
+sCZW2nbihtzQFGOagFNlSWt6YcVqJcDFP0ZlWvARpJnmHuFx3Q4qwVoldI0eJru2
+kLIPOL13kLUonIDA2DfpJUn/fMtLE1pt9/opntX8zziivU/KZzwqp0ENQIoj60ce
+gel+MWhA1tSt+Yfxbqc+sojhQlPhKx2WRYJ57hzKgBNaO6cd2tFSq2RNtY6BH+il
+OGHLIB91I4LO60F/t/o2OigpYq1xjI71QKXCx/cgiqO/RPdcdXw69Uif4hJPP3dD
+Fy9SpV9ro3y4KnwLVkruPhKZMP6t5ju2/niW+ZtrbtuGgHp6txXyp/YSqPjMc61t
+GCbgOW1XBRwNxXp+Pv+WDCMMhFlRng12SQO85eOCYT/nFPOP6ljM7rq3VZWt3M2I
+wjqq9IbYBqZZ4Yces40J
+=Dqr1
+-----END PGP SIGNATURE-----
+
+--3Gf/FFewwPeBMqCJ--
