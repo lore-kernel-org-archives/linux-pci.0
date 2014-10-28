@@ -1,72 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [65.55.169.124] ([65.55.169.124]:50320 "EHLO
-	na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751409AbaJaI2p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 31 Oct 2014 04:28:45 -0400
-From: <suravee.suthikulpanit@amd.com>
-To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
-	<jason@lakedaemon.net>, <tglx@linutronix.de>
-CC: <Catalin.Marinas@arm.com>, <Will.Deacon@arm.com>,
-	<liviu.dudau@arm.com>, <Harish.Kasiviswanathan@amd.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	"Suravee Suthikulpanit" <Suravee.Suthikulpanit@amd.com>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-Subject: [V9 PATCH 1/2] genirq: Add irq_chip_set_type_parent function
-Date: Fri, 31 Oct 2014 03:26:29 -0500
-Message-ID: <1414743990-28421-2-git-send-email-suravee.suthikulpanit@amd.com>
-In-Reply-To: <1414743990-28421-1-git-send-email-suravee.suthikulpanit@amd.com>
-References: <1414743990-28421-1-git-send-email-suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [Patch Part2 v3 06/24] x86, MSI: Use new irqdomain interfaces to allocate/free IRQ
+Date: Tue, 28 Oct 2014 16:26:24 +0800
+Message-Id: <1414484803-10311-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Use new irqdomain interfaces to allocate/free IRQ for MSI, so we could
+kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
 
-Add a helper function to set irq type in parent irq domain.
-
-Signed-off-by: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- include/linux/irq.h |  1 +
- kernel/irq/chip.c   | 10 ++++++++++
- 2 files changed, 11 insertions(+)
+ arch/x86/kernel/apic/msi.c |   14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index 6159256..e3952fa 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -440,6 +440,7 @@ extern void irq_chip_ack_parent(struct irq_data *data);
- extern void irq_chip_mask_parent(struct irq_data *data);
- extern void irq_chip_unmask_parent(struct irq_data *data);
- extern void irq_chip_eoi_parent(struct irq_data *data);
-+extern int irq_chip_set_type_parent(struct irq_data *data, unsigned int type);
- extern int irq_chip_set_affinity_parent(struct irq_data *data,
- 				const struct cpumask *dest, bool force);
- extern int irq_chip_retrigger_hierarchy(struct irq_data *data);
-diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index 0ecc270..b24eca3 100644
---- a/kernel/irq/chip.c
-+++ b/kernel/irq/chip.c
-@@ -847,6 +847,16 @@ void irq_chip_eoi_parent(struct irq_data *data)
- 	data->chip->irq_eoi(data);
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 6916246294eb..7e45991c0e79 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -14,6 +14,7 @@
+ #include <linux/dmar.h>
+ #include <linux/hpet.h>
+ #include <linux/msi.h>
++#include <linux/irqdomain.h>
+ #include <asm/msidef.h>
+ #include <asm/hpet.h>
+ #include <asm/hw_irq.h>
+@@ -146,23 +147,20 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ {
+ 	struct msi_desc *msidesc;
+-	unsigned int irq;
+-	int node, ret;
++	int irq, ret;
+ 
+ 	/* Multiple MSI vectors only supported with interrupt remapping */
+ 	if (type == PCI_CAP_ID_MSI && nvec > 1)
+ 		return 1;
+ 
+-	node = dev_to_node(&dev->dev);
+-
+ 	list_for_each_entry(msidesc, &dev->msi_list, list) {
+-		irq = irq_alloc_hwirq(node);
+-		if (!irq)
++		irq = irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
++		if (irq <= 0)
+ 			return -ENOSPC;
+ 
+ 		ret = setup_msi_irq(dev, msidesc, irq, 0);
+ 		if (ret < 0) {
+-			irq_free_hwirq(irq);
++			irq_domain_free_irqs(irq, 1);
+ 			return ret;
+ 		}
+ 
+@@ -172,7 +170,7 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 
+ void native_teardown_msi_irq(unsigned int irq)
+ {
+-	irq_free_hwirq(irq);
++	irq_domain_free_irqs(irq, 1);
  }
  
-+int irq_chip_set_type_parent(struct irq_data *data, unsigned int type)
-+{
-+	data = data->parent_data;
-+
-+	if (data->chip && data->chip->irq_set_type)
-+		return data->chip->irq_set_type(data, type);
-+
-+	return -ENOSYS;
-+}
-+
- int irq_chip_set_affinity_parent(struct irq_data *data,
- 				 const struct cpumask *dest, bool force)
- {
+ #ifdef CONFIG_DMAR_TABLE
 -- 
-1.9.3
+1.7.10.4
 
