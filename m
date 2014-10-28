@@ -1,144 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:50073 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751510AbaJXP3z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 24 Oct 2014 11:29:55 -0400
-Date: Fri, 24 Oct 2014 10:29:33 -0500
+Received: from devils.ext.ti.com ([198.47.26.153]:56567 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752538AbaJ1Om0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Oct 2014 10:42:26 -0400
+Date: Tue, 28 Oct 2014 09:41:56 -0500
 From: Felipe Balbi <balbi@ti.com>
 To: Huang Rui <ray.huang@amd.com>
 CC: Felipe Balbi <balbi@ti.com>,
-	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
 	Alan Stern <stern@rowland.harvard.edu>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
 	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Jason Chang <jason.chang@amd.com>,
 	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 16/16] usb: dwc3: enable usb suspend phy
-Message-ID: <20141024152933.GF26941@saruman>
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 00/19] usb: dwc3: add support for AMD Nolan SoC
+Message-ID: <20141028144156.GC8123@saruman>
 Reply-To: <balbi@ti.com>
-References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
- <1413536021-4886-17-git-send-email-ray.huang@amd.com>
- <20141017145942.GL26260@saruman>
- <A2CA0424C0A6F04399FB9E1CD98E0304844E3423@US01WEMBX2.internal.synopsys.com>
- <20141017184819.GX26260@saruman>
- <20141020084153.GD24357@hr-slim.amd.com>
- <20141020090124.GE24357@hr-slim.amd.com>
+References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="dWYAkE0V1FpFQHQ3"
-In-Reply-To: <20141020090124.GE24357@hr-slim.amd.com>
+	protocol="application/pgp-signature"; boundary="kfjH4zxOES6UT95V"
+In-Reply-To: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---dWYAkE0V1FpFQHQ3
-Content-Type: text/plain; charset=utf-8
+--kfjH4zxOES6UT95V
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Oct 20, 2014 at 05:01:25PM +0800, Huang Rui wrote:
-> On Mon, Oct 20, 2014 at 04:41:54PM +0800, Huang Rui wrote:
-> > On Fri, Oct 17, 2014 at 01:48:19PM -0500, Felipe Balbi wrote:
-> > > Hi,
-> > >=20
-> > > On Fri, Oct 17, 2014 at 06:41:04PM +0000, Paul Zimmerman wrote:
-> > > > > From: Felipe Balbi [mailto:balbi@ti.com]
-> > > > > Sent: Friday, October 17, 2014 8:00 AM
-> > > > >=20
-> > > > > On Fri, Oct 17, 2014 at 04:53:41PM +0800, Huang Rui wrote:
-> > > > > > AMD NL needs to suspend usb3 ss phy, but this doesn't enable on=
- simulation
-> > > > > > board.
-> > > > > >
-> > > > > > Signed-off-by: Huang Rui <ray.huang@amd.com>
-> > > > > > ---
-> > > > > >  drivers/usb/dwc3/core.c          | 7 ++++++-
-> > > > > >  drivers/usb/dwc3/dwc3-pci.c      | 3 ++-
-> > > > > >  drivers/usb/dwc3/platform_data.h | 1 +
-> > > > > >  3 files changed, 9 insertions(+), 2 deletions(-)
-> > > > > >
-> > > > > > diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-> > > > > > index 3ccfe41..4a98696 100644
-> > > > > > --- a/drivers/usb/dwc3/core.c
-> > > > > > +++ b/drivers/usb/dwc3/core.c
-> > > > > > @@ -395,6 +395,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
-> > > > > >  	if (dwc->quirks & DWC3_QUIRK_TX_DEEPH)
-> > > > > >  		reg |=3D DWC3_GUSB3PIPECTL_TX_DEEPH(1);
-> > > > > >
-> > > > > > +	if (dwc->quirks & DWC3_QUIRK_SUSPHY)
-> > > > >=20
-> > > > > should be:
-> > > > >=20
-> > > > > 	if (!dwc->suspend_usb3_phy_quirk)
-> > > > >=20
-> > > > > > +		reg |=3D DWC3_GUSB3PIPECTL_SUSPHY;
-> > > > >=20
-> > > > > IIRC, databook asks us to set that bit anyway, so the quirk is di=
-sabling
-> > > > > that bit. Am I missing something ? Paul ?
-> > > >=20
-> > > > It looks to me that Huang's patch is enabling that bit, not disabli=
-ng
-> > > > it.
-> > >=20
-> > > right, but that's what's actually quirky right ? IIRC, Databook asks =
-us
-> > > to set usb2 and usb3 suspend phy bits and we're just not doing it.
-> > >=20
-> > > > Currently the driver does not set either DWC3_GUSB3PIPECTL_SUSPHY or
-> > > > DWC3_GUSB2PHYCFG_SUSPHY (unless it has been added by that big patch
-> > > > series you just posted). According to the databook, both of those
-> > > > bits should be set to 1 after the core initialization has completed.
-> > >=20
-> > > there you go. So unless that quirk bit flag is set, we're safe of
-> > > setting SUSPHY bit for everybody.
-> > >=20
-> >=20
->=20
-> I read the databook again, below words (DWC3_GUSB3PIPECTL_SUSPHY) is
-> copied from databook:
->=20
-> For DRD/OTG configurations, it is recommended that this bit is set to=E2=
-=80=98
-> 0=E2=80=99 during coreConsultant configuration. If it is set to =E2=80=99=
-1=E2=80=99, then the
-> application should clear this bit after power-on reset. Application
-> needs to set it to =E2=80=991=E2=80=99 after the core initialization is c=
-ompleted.
-> For all other configurations, this bit can be set to =E2=80=991=E2=80=99 =
-during core
-> configuration.
->=20
-> I see it's recommended to set '0' if on DRD/OTG configuration.
+Hi,
 
-0 at the beginning of probe() sequence so core can communicate with its
-PHYs, then set it to one at the end of probe().
+On Tue, Oct 28, 2014 at 07:54:21PM +0800, Huang Rui wrote:
+> Hi,
+>=20
+> The series of patches add AMD Nolan (NL) SoC support for DesignWare USB3
+> OTG IP with PCI bus glue layer. This controller supported hibernation, LPM
+> erratum and used the 2.80a IP version and amd own phy. Current
+> implementation support both simulation and SoC platform. And already test=
+ed
+> with gadget zero and msc tool. It works well on file storage gadget.
+>=20
+>=20
+> These patches are generated on balbi/testing/next
+>=20
+> Changes from v2 -> v3
+> - Confirmed these quirks will be needed in product level
+> - Move AMD configuration patch to the last one with all quirk flags
+> - Make all quirks as 1-bit field instead of single-bits on a 32-bit
+>   variable
+> - Add all quirks DeviceTree counterparts
+> - Make LPM erratum configurable
+> - Add PCI ID into pci_ids.h because it will be used both on PCI and DWC3
+>   device driver.
+>=20
+> Changes from v1 -> v2
+> - Remove dual role function temporarily
+> - Add pci quirk to avoid to bind with xhci driver
+> - Distinguish between simulation board and soc
+> - Break down all the special quirks
+
+In all patches touching DeviceTree, you should add the matching binding
+documentation under Documentation/devicetree/bindings/usb/dwc3.txt
+
+There are still a few cases where you're clipping words too harshly, for
+example tx_deemph doesn't look very intuitive, if you spell it out as
+tx_deemphasis, it's easier to read. Remember that humans will be the
+ones fiddling with those quirks.
+
+A few of your patches I have fixed myself and they now sit on
+testing/next, please rebase your remaining changes there and make sure
+to add DeviceTree documentation.
+
+When resending, please resend the entire series (even the ones I have
+already taken) because you also didn't Cc devicetree mailing list.
+
+cheers
 
 --=20
 balbi
 
---dWYAkE0V1FpFQHQ3
+--kfjH4zxOES6UT95V
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1
 
-iQIcBAEBAgAGBQJUSnBdAAoJEIaOsuA1yqREKWMQAJbbFfUiBsFCMnBvujcsl2Uo
-pAAdW1PdW1wESrvwkN1+xXTHbnUtoXlPDwoumPO25VBPGd4ZFoF31LkEMUN/Wuvz
-hhWYINqi01Nqp+cppc536w3RsONhobxgdLsDGEkcKzME5s5zm1HfyEcBZWRHvHm1
-tJ+l7MBV6pyj8ZDnVi5SbVBLgszY7OC2bltKi7C68vg75zcpup5WijdQU7UwXUKq
-GDVBye57yYTHe+NEqU+hW5Jnue/ApLkpbELvP7atq7zroW/OdLoS3AGXNjT0Avzg
-olANiCqm7qpCXfLO4oHutCSsLQ3kN2MQJQhz/I2nkHe+Sht8/zPNej3WF+hRInpf
-oNsjhF1Yqn0dl8KD8TqyqmPa4pc+FHcAvjUzFNj6wYsCrC4FOXcxth6T9JJklDf1
-kA/uQusu7+8ykWfiU7HHRcx/rGdctMfnngjQKkEm/mo2xxc0Myzs2X2ShiIvCrSW
-BQGYl6EQ5L90Coua1ss3ZqwgXGq/4jSYTy/2r56mtCGpdWspQGUY38eh4zhnxzsj
-Dv1hPO5tTOp42ewWw4oe9AorllyqqjaQSak9USRLcdCbDbzlft2H6xpL3vG+DXq5
-BaB4g7iLGqHW/9ZpnAyJ4jlegHFBMX5mTGFAUr2NNZDgOaqxYGWZUA0GKRMMreyC
-gGnqY33TzqCkvAlzeC+l
-=S+8w
+iQIcBAEBAgAGBQJUT6s0AAoJEIaOsuA1yqRE7NYP/RVFFlxbqfvKIz6ZUVBkaTK5
+ZXtyzVYuL95XOy95g9UDtkf51BQmeVNPdHJ8B2kDZhaS1tNU5JPVsK2B+lFGIoQf
+e1Vomi5RS7F2MdJ4yE0xaq/Bq1HG37S+sescEXgab3fO209aUAW9jNuliURpAe0I
+zhZWNJzoi9vIFnyb943sb8ytiQWp4pYTSRKRn16or9y0eSzEKgMioyaAH4aerSr/
+ZpBYKYPFIbI9N91aKpoAx2P4H2TlYtziWXmwiReCSwO99yH7qpFpvNAA0T4i2UNI
+VbDARH9pm26YwYPjW0FI+vpvCFMdEVA0AkeQpDK/3jegcK0oh8H31g2hsZ/XRGBf
+XqCyn47q6GaJz1HqXx6NiAiUNO11zcMTFHkWKUbLBZZ3Ge+E6Myyz8AzlvTjVeC9
+hMQxqzZDgP3LZ/XP//Bxs0Rf9UUbG4aDgESzYrHZVuJlf0hfOph+ewDhKcAWYkhk
+Fbq2ZG1Na9VDIF1H4zpqgSFq1lVbn0vFp/2Fd9DKtpYp4EZOfmHeMHC6rkXNDuIc
+PgJLbLzBcjumC/iZL+e5ZQpEp6FkUPU84XJ/HLKf9meZqQVOx06mRtYB+Drn3/+z
+893A7YHTLa/wq8K0zXQWU/U8ZSJpcTAdXubvQ0t0KxS/hXWt5OZ2EcaI9h27VaVG
+Ybu/W38cTeKMl1y+aXbq
+=u9vT
 -----END PGP SIGNATURE-----
 
---dWYAkE0V1FpFQHQ3--
+--kfjH4zxOES6UT95V--
