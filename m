@@ -1,31 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0113.outbound.protection.outlook.com ([207.46.100.113]:29904
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751507AbaJXDGz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 23 Oct 2014 23:06:55 -0400
-From: Richard Zhu <richard.zhu@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
-	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
-	<m-karicheri2@ti.com>
-Subject: [PATCH V2]PCI: imx6: Wait the clocks to stabilize after ref_en
-Date: Fri, 24 Oct 2014 10:36:39 +0800
-Message-ID: <1414118200-2018-1-git-send-email-richard.zhu@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [Patch Part2 v3 16/24] x86, irq: Directly call native_compose_msi_msg() for DMAR IRQ
+Date: Tue, 28 Oct 2014 16:26:34 +0800
+Message-Id: <1414484803-10311-17-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fabio suggested to resend this patch only, since he notice that
-the kernel does not boot anymore since commit  3fce0e882f61
-(PCI: imx6: Delay enabling reference clock for SS until it stabilizes)
-on a system that does not pass the PCI gpio reset in the dtb. This causes
-a regression on mx6 nitrogen boards.
+DMAR interrupt won't be remapped by interrupt remapping hardware,
+so directly call native_compose_msi_msg() for DMAR IRQ to compose MSI
+message data. This will help to simplify MSI code later.
 
-Add "Signed-off-by: Lucas Stach <l.stach@pengutronix.de>" into the patch.
-
-[PATCH V2] PCI: imx6: Wait the clocks to stabilize after ref_en
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/host/pci-imx6.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ arch/x86/kernel/apic/msi.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 354abd7ef2ad..6aac2ec1b3ef 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -396,12 +396,10 @@ static struct irq_chip dmar_msi_type = {
+ 
+ int arch_setup_dmar_msi(unsigned int irq)
+ {
+-	int ret;
+ 	struct msi_msg msg;
++	struct irq_cfg *cfg = irq_cfg(irq);
+ 
+-	ret = msi_compose_msg(NULL, irq, &msg, -1);
+-	if (ret < 0)
+-		return ret;
++	native_compose_msi_msg(NULL, irq, cfg->dest_apicid, &msg, -1);
+ 	dmar_msi_write(irq, &msg);
+ 	irq_set_chip_and_handler_name(irq, &dmar_msi_type, handle_edge_irq,
+ 				      "edge");
+-- 
+1.7.10.4
+
