@@ -1,124 +1,123 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:50278 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750722AbaJ1PYb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 Oct 2014 11:24:31 -0400
+Date: Tue, 28 Oct 2014 10:23:59 -0500
+From: Felipe Balbi <balbi@ti.com>
+To: Huang Rui <ray.huang@amd.com>
+CC: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Prarit Bhargava <prarit@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-	linux-pm@vger.kernel.org
-Subject: [Patch v7 17/18] x86, irq: Introduce helper to check whether an IOAPIC has been registered
-Date: Mon, 27 Oct 2014 13:21:47 +0800
-Message-Id: <1414387308-27148-18-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 00/19] usb: dwc3: add support for AMD Nolan SoC
+Message-ID: <20141028152359.GF8123@saruman>
+Reply-To: <balbi@ti.com>
+References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
+ <20141028144156.GC8123@saruman>
+ <20141028151715.GB4519@hr-slim.amd.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="WlEyl6ow+jlIgNUh"
+In-Reply-To: <20141028151715.GB4519@hr-slim.amd.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce acpi_ioapic_registered() to check whether an IOAPIC has already
-been registered, it will be used when enabling IOAPIC hotplug.
+--WlEyl6ow+jlIgNUh
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h |    1 +
- arch/x86/kernel/acpi/boot.c    |   22 ++++++++++++++++++++++
- arch/x86/kernel/apic/io_apic.c |   11 +++++++++++
- include/linux/acpi.h           |    1 +
- 4 files changed, 35 insertions(+)
+On Tue, Oct 28, 2014 at 11:17:16PM +0800, Huang Rui wrote:
+> On Tue, Oct 28, 2014 at 09:41:56AM -0500, Felipe Balbi wrote:
+> > Hi,
+> >=20
+> > On Tue, Oct 28, 2014 at 07:54:21PM +0800, Huang Rui wrote:
+> > > Hi,
+> > >=20
+> > > The series of patches add AMD Nolan (NL) SoC support for DesignWare U=
+SB3
+> > > OTG IP with PCI bus glue layer. This controller supported hibernation=
+, LPM
+> > > erratum and used the 2.80a IP version and amd own phy. Current
+> > > implementation support both simulation and SoC platform. And already =
+tested
+> > > with gadget zero and msc tool. It works well on file storage gadget.
+> > >=20
+> > >=20
+> > > These patches are generated on balbi/testing/next
+> > >=20
+> > > Changes from v2 -> v3
+> > > - Confirmed these quirks will be needed in product level
+> > > - Move AMD configuration patch to the last one with all quirk flags
+> > > - Make all quirks as 1-bit field instead of single-bits on a 32-bit
+> > >   variable
+> > > - Add all quirks DeviceTree counterparts
+> > > - Make LPM erratum configurable
+> > > - Add PCI ID into pci_ids.h because it will be used both on PCI and D=
+WC3
+> > >   device driver.
+> > >=20
+> > > Changes from v1 -> v2
+> > > - Remove dual role function temporarily
+> > > - Add pci quirk to avoid to bind with xhci driver
+> > > - Distinguish between simulation board and soc
+> > > - Break down all the special quirks
+> >=20
+> > In all patches touching DeviceTree, you should add the matching binding
+> > documentation under Documentation/devicetree/bindings/usb/dwc3.txt
+> >=20
+>=20
+> OK, will add this documentation.
+>=20
+> > There are still a few cases where you're clipping words too harshly, for
+> > example tx_deemph doesn't look very intuitive, if you spell it out as
+> > tx_deemphasis, it's easier to read. Remember that humans will be the
+> > ones fiddling with those quirks.
+> >=20
+> > A few of your patches I have fixed myself and they now sit on
+> > testing/next, please rebase your remaining changes there and make sure
+> > to add DeviceTree documentation.
+> >=20
+> > When resending, please resend the entire series (even the ones I have
+> > already taken) because you also didn't Cc devicetree mailing list.
+> >=20
+>=20
+> Got it, could I also Cc stable mailing list and make them back port to
+> stable trees?
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 7c04b8ec22a4..ca742d5249db 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -191,6 +191,7 @@ extern void mp_unmap_irq(int irq);
- extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 			      struct ioapic_domain_cfg *cfg);
- extern int mp_unregister_ioapic(u32 gsi_base);
-+extern int mp_ioapic_registered(u32 gsi_base);
- extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 			    irq_hw_number_t hwirq);
- extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index bc61a5c0e7b6..f27b33194e06 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -825,6 +825,28 @@ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base)
- }
- EXPORT_SYMBOL(acpi_unregister_ioapic);
- 
-+/**
-+ * acpi_ioapic_registered - Check whether IOAPIC assoicatied with @gsi_base
-+ *			    has been registered
-+ * @handle:	ACPI handle of the IOAPIC deivce
-+ * @gsi_base:	GSI base associated with the IOAPIC
-+ *
-+ * Assume caller holds some type of lock to serialize acpi_ioapic_registered()
-+ * with acpi_register_ioapic()/acpi_unregister_ioapic().
-+ */
-+int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base)
-+{
-+	int ret = 0;
-+
-+#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-+	down_read(&acpi_ioapic_rwsem);
-+	ret  = mp_ioapic_registered(gsi_base);
-+	up_read(&acpi_ioapic_rwsem);
-+#endif
-+
-+	return ret;
-+}
-+
- static int __init acpi_parse_sbf(struct acpi_table_header *table)
- {
- 	struct acpi_table_boot *sb;
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 9e5432ee2070..df3858de3031 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -4018,6 +4018,17 @@ int mp_unregister_ioapic(u32 gsi_base)
- 	return 0;
- }
- 
-+int mp_ioapic_registered(u32 gsi_base)
-+{
-+	int ioapic;
-+
-+	for_each_ioapic(ioapic)
-+		if (ioapics[ioapic].gsi_config.gsi_base == gsi_base)
-+			return 1;
-+
-+	return 0;
-+}
-+
- int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 		     irq_hw_number_t hwirq)
- {
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 77cecd0350e7..be6be0f91337 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -152,6 +152,7 @@ int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
- 
- int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
- int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base);
-+int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base);
- void acpi_irq_stats_init(void);
- extern u32 acpi_irq_handled;
- extern u32 acpi_irq_not_handled;
--- 
-1.7.10.4
+there are no bug fixes, are there ? Please read
+Documentation/stable_kernel_rules.txt
 
+--=20
+balbi
+
+--WlEyl6ow+jlIgNUh
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUT7UPAAoJEIaOsuA1yqREtlwQAKzNh7jEzmEQ4UkfKf8ItfKu
+u9rHDh6+T3Amzntz8Aa+VFeXSl2Eg3tbxAe9KtqC5VRSXjK2oNIxtos2T1p1Eg1h
+EKV9mLEOlWvzgg+2oYbPx2j9PtGSavA5edtMhK23xfDGgsmuo/53tYamQJGE7xGg
+mjkkmGcCUVvwrUjpWphx6akR9UqUccvz0D/orShXCQCrrLAbRIeSnHNaCh86wLXX
+aorgv/ZNSg5PayOtigQNyaUFKbTQ+srpcpZicQmck4hQUMx3LbYxrsK3ENxWtogr
+3kU36oGM9YjxaxOEeQ/NWhcIZM+/4QHgfY3PCa+cfl6fGRr6TSvOqEu5XkfrBbW7
+A2HH46HIe1J751fdZLr1QZEnk0qRWZYt+h/F1rtLqNzZkMvhuKGYK5GPzRo7dz3W
+KbfMoGKwZZF0mpHWZ+/3OM6AvsLVziKiJQ3EroonOpClOAhFpNAV2K3s9Y28Dlt/
+6cIGsCYzjk0JLtaui6S/Ek+RHihuVcSFaGwxVhr1VAi1XCmYFalnMCijIQgO+buP
+89XeHCwBR2r9/kZR7qo10IB08iBwkPKWaTyXKgzdmIj9PRCTnFBuX5PspMnaCdQS
+6K54CY/zir8OAgKCcxNKZPJtN1kgSEyjFYIqDVjcQjGJrqdmUDk4NumObqbZb0Xk
+euAk9xA8EjdLV4glbdUs
+=X2NL
+-----END PGP SIGNATURE-----
+
+--WlEyl6ow+jlIgNUh--
