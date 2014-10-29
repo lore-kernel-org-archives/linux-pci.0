@@ -1,69 +1,159 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0142.outbound.protection.outlook.com ([157.56.111.142]:10523
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753085AbaJMCeP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 12 Oct 2014 22:34:15 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <richard.zhu@freescale.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shengchao Guo <Shawn.Guo@freescale.com>,
-	"festevam@gmail.com" <festevam@gmail.com>,
-	"tharvey@gateworks.com" <tharvey@gateworks.com>
-Subject: RE: [PATCH v5 8/9] ARM: imx6sx: add imx6sx pcie related gpr bits
- definitions
-Date: Mon, 13 Oct 2014 02:34:10 +0000
-Message-ID: <a9f132948e7540b09f393b6b3d9b78ec@DM2PR0301MB0862.namprd03.prod.outlook.com>
-References: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com>
-	 <1412919676-25344-9-git-send-email-richard.zhu@freescale.com>
- <1413124703.2459.18.camel@antimon.intern.lynxeye.de>
-In-Reply-To: <1413124703.2459.18.camel@antimon.intern.lynxeye.de>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:60503 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753455AbaJ2Roo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 Oct 2014 13:44:44 -0400
+Message-ID: <1414604677.27420.263.camel@ul30vt.home>
+Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass through
+ (vfio)
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Andreas Hartmann <andihartmann@freenet.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Date: Wed, 29 Oct 2014 11:44:37 -0600
+In-Reply-To: <54511A16.30602@maya.org>
+References: <20140923210318.498dacbd@dualc.maya.org>
+						 <1411502866.24563.8.camel@ul30vt.home> <5437A958.3000201@maya.org>
+						 <CAErSpo5kkk4itqqmCMU=08-XMcDknur8VY++F3A2LajdvTptOA@mail.gmail.com>
+						 <5437F1F5.3010706@maya.org>
+						 <CAErSpo6DuWEcJb_gfS=5JnKN8b4DXXV9+u-CRa8m3db0dbzpsQ@mail.gmail.com>
+						 <543804BC.3080307@maya.org>
+						 <CAErSpo450czUtAM104o+RS=yOcmP+3MKMH7mYk=UYhVJ2+cfSQ@mail.gmail.com>
+						 <20141011003219.560cca97@dualc.maya.org>
+						 <20141010225408.GA24493@google.com> <5438CC1E.3060407@maya.org>
+						 <1413360267.4202.70.camel@ul30vt.home> <54406B34.1050808@maya.org>
+						 <1413925580.4202.189.camel@ul30vt.home>
+					 <1413927152.4202.195.camel@ul30vt.home> <5447D9D9.9030909@maya.org>
+				 <1414010215.4202.275.camel@ul30vt.home> <54492606.5090308@maya.org>
+			 <1414082022.27420.39.camel@ul30vt.home> <54493BFA.8010609@maya.org>
+		 <1414093023.27420.40.camel@ul30vt.home> <544B3D14.70907@maya.org>
+	 <1414533068.27420.226.camel@ul30vt.home> <54511A16.30602@maya.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4LXBjaS1vd25lckB2
-Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1wY2ktb3duZXJAdmdlci5rZXJuZWwub3JnXQ0K
-PiBPbiBCZWhhbGYgT2YgTHVjYXMgU3RhY2gNCj4gU2VudDogU3VuZGF5LCBPY3RvYmVyIDEyLCAy
-MDE0IDEwOjM4IFBNDQo+IFRvOiBSaWNoYXJkIFpodQ0KPiBDYzogbGludXgtcGNpQHZnZXIua2Vy
-bmVsLm9yZzsgR3VvIFNoYXduLVI2NTA3MzsgZmVzdGV2YW1AZ21haWwuY29tOw0KPiB0aGFydmV5
-QGdhdGV3b3Jrcy5jb207IFpodSBSaWNoYXJkLVI2NTAzNw0KPiBTdWJqZWN0OiBSZTogW1BBVENI
-IHY1IDgvOV0gQVJNOiBpbXg2c3g6IGFkZCBpbXg2c3ggcGNpZSByZWxhdGVkIGdwciBiaXRzDQo+
-IGRlZmluaXRpb25zDQo+IA0KPiBBbSBGcmVpdGFnLCBkZW4gMTAuMTAuMjAxNCwgMTM6NDEgKzA4
-MDAgc2NocmllYiBSaWNoYXJkIFpodToNCj4gPiBGcm9tOiBSaWNoYXJkIFpodSA8cjY1MDM3QGZy
-ZWVzY2FsZS5jb20+DQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBSaWNoYXJkIFpodSA8cmljaGFy
-ZC56aHVAZnJlZXNjYWxlLmNvbT4NCj4gDQo+IFlvdSBhcmUgdXNpbmcgdGhvc2UgZGVmaW5lcyBp
-biB0aGUgUENJZSBkcml2ZXIgY2hhbmdlcywgc28gdGhlIG5lZWQgdG8gYmUNCj4gc29ydGVkIGJl
-Zm9yZSB0aGVtIGluIHRoZSBzZXJpZXMgYXMgdGhleSBuZWVkIHRvIGJlIHBpY2tlZCB1cCBieSBC
-am9ybiB0byBtYWtlDQo+IHN1cmUgd2UgZG9uJ3QgaW50cm9kdWNlIGJ1aWxkIHJlZ3Jlc3Npb25z
-Lg0KPiANCltSaWNoYXJkXSBUaGFua3MgZm9yIHlvdXIga2luZGx5IHJldmlldy4NCk9rLCB3b3Vs
-ZCBiZSBwbGFjZWQganVzdCBiZWhpbmQgdGhlIG1vZGlmaWNhdGlvbnMgb2YgdGhlIGRlc2lnbi13
-YXJlIGNvZGVzLg0KDQo+ID4gLS0tDQo+ID4gIGluY2x1ZGUvbGludXgvbWZkL3N5c2Nvbi9pbXg2
-cS1pb211eGMtZ3ByLmggfCA5ICsrKysrKysrKw0KPiA+ICAxIGZpbGUgY2hhbmdlZCwgOSBpbnNl
-cnRpb25zKCspDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9tZmQvc3lzY29u
-L2lteDZxLWlvbXV4Yy1ncHIuaA0KPiA+IGIvaW5jbHVkZS9saW51eC9tZmQvc3lzY29uL2lteDZx
-LWlvbXV4Yy1ncHIuaA0KPiA+IGluZGV4IGZmNDQzNzQuLjMyNzNiODcgMTAwNjQ0DQo+ID4gLS0t
-IGEvaW5jbHVkZS9saW51eC9tZmQvc3lzY29uL2lteDZxLWlvbXV4Yy1ncHIuaA0KPiA+ICsrKyBi
-L2luY2x1ZGUvbGludXgvbWZkL3N5c2Nvbi9pbXg2cS1pb211eGMtZ3ByLmgNCj4gPiBAQCAtMzAx
-LDYgKzMwMSw3IEBADQo+ID4gICNkZWZpbmUgSU1YNlFfR1BSMTJfREVWSUNFX1RZUEUJCQkoMHhm
-IDw8IDEyKQ0KPiA+ICAjZGVmaW5lIElNWDZRX0dQUjEyX1BDSUVfQ1RMXzIJCQlCSVQoMTApDQo+
-ID4gICNkZWZpbmUgSU1YNlFfR1BSMTJfTE9TX0xFVkVMCQkJKDB4MWYgPDwgNCkNCj4gPiArI2Rl
-ZmluZSBJTVg2UV9HUFIxMl9MT1NfTEVWRUxfOQkJCSgweDkgPDwgNCkNCj4gPg0KPiA+ICAjZGVm
-aW5lIElNWDZRX0dQUjEzX1NETUFfU1RPUF9SRVEJCUJJVCgzMCkNCj4gPiAgI2RlZmluZSBJTVg2
-UV9HUFIxM19DQU4yX1NUT1BfUkVRCQlCSVQoMjkpDQo+ID4gQEAgLTM5NSw0ICszOTYsMTIgQEAN
-Cj4gPiAgI2RlZmluZSBJTVg2U0xfR1BSMV9GRUNfQ0xPQ0tfTVVYMV9TRUxfTUFTSyAgICAoMHgz
-IDw8IDE3KQ0KPiA+ICAjZGVmaW5lIElNWDZTTF9HUFIxX0ZFQ19DTE9DS19NVVgyX1NFTF9NQVNL
-ICAgICgweDEgPDwgMTQpDQo+ID4NCj4gPiArLyogRm9yIGlteDZzeCBpb211eCBncHIgcmVnaXN0
-ZXIgZmllbGQgZGVmaW5lICovDQo+ID4gKyNkZWZpbmUgSU1YNlNYX0dQUjVfUENJRV9CVE5SU1QJ
-CQlCSVQoMTkpDQo+ID4gKyNkZWZpbmUgSU1YNlNYX0dQUjVfUENJRV9QRVJTVAkJCUJJVCgxOCkN
-Cj4gPiArDQo+ID4gKyNkZWZpbmUgSU1YNlNYX0dQUjEyX1BDSUVfUE1fVFVSTl9PRkYJCUJJVCgx
-NikNCj4gPiArI2RlZmluZSBJTVg2U1hfR1BSMTJfUENJRV9URVNUX1BECQlCSVQoMzApDQo+ID4g
-KyNkZWZpbmUgSU1YNlNYX0dQUjEyX1JYX0VRX01BU0sJCQkoMHg3IDw8IDApDQo+ID4gKyNkZWZp
-bmUgSU1YNlNYX0dQUjEyX1JYX0VRXzIJCQkoMHgyIDw8IDApDQo+ID4gICNlbmRpZiAvKiBfX0xJ
-TlVYX0lNWDZRX0lPTVVYQ19HUFJfSCAqLw0KPiANCj4gDQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJl
-IGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1wY2kiIGlu
-IHRoZQ0KPiBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnIE1v
-cmUgbWFqb3Jkb21vIGluZm8gYXQNCj4gaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8t
-aW5mby5odG1sDQoNCkJlc3QgUmVnYXJkcw0KUmljaGFyZCBaaHUNCg==
+On Wed, 2014-10-29 at 17:47 +0100, Andreas Hartmann wrote:
+> Alex Williamson wrote:
+> > On Sat, 2014-10-25 at 08:03 +0200, Andreas Hartmann wrote:
+> >>
+> >> Out of interest:
+> >> Bjorn's patch disables vc save/restore support - and the machine works
+> >> fine again. Why is it needed at all if it seems to work perfectly w/o
+> >> it? What's the additional benefit? Or in other words: What am I missing
+> >> until today :-) ? What would be better? What could I do more?
+> > 
+> > 
+> > You're right, in the configuration you have the endpoint device has a
+> > Virtual Channel capability but the upstream root port does not.  The
+> > spec is not at all clear about defining the endpoints for enabling
+> > Virtual Channel in each type of configuration, but I think that if we
+> > have an upstream port that does not support Virtual Channel, we can skip
+> > the save/restore.  Please test the patch below.
+> > 
+> > I'm also still completely confused about whether this is a VC
+> > save/restore issue or a bus reset issue.  You originally bisected this
+> > back to the VC save/restore patch, but you also found that a manual,
+> > setpci-based bus reset triggered a system hang.
+> 
+> With your additional patch posted here:
+> http://article.gmane.org/gmane.linux.kernel.pci/36162
+
+Right, a reset via sysfs also triggered it with that patch, but the
+reset via setpci is independent of any VC save/restore and still hung
+your box.
+
+> 
+> >  I believe that
+> > re-ordering the kernel reset mechanisms also triggered this.  Since
+> > recent versions of QEMU are going to favor a bus reset over PM reset, I
+> > don't have a lot of confidence that we're actually solving the problem
+> > for you.  Please make sure to test with a recent QEMU to be sure we'll
+> > do a bus reset.
+> 
+> I'm running qemu 2.1.0 (newest is 2.1.2 - but this shouldn't be a
+> problem) and tested w/ linux 3.17.
+
+Yep, just want to make sure it's QEMU new enough to do a bus reset and
+kernel with matching support.
+
+> > diff --git a/drivers/pci/vc.c b/drivers/pci/vc.c
+> > index 7e1304d..6d13d34 100644
+> > --- a/drivers/pci/vc.c
+> > +++ b/drivers/pci/vc.c
+> > @@ -339,6 +339,25 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
+> >  	return buf ? 0 : len;
+> >  }
+> >  
+> > +/**
+> > + * pci_vc_needs_save - Determine whether a VC capability needs to be saved
+> > + * @dev: device
+> > + * @id: VC capability ID (VC/VC9/MFVC)
+> > + *
+> > + * In configurations where we have a VC or MFVC capability, but the upstream
+> > + * device does not, we assume that VC save (and therefore restore) is not
+> > + * necessary.  The intention is to only do VC save/restore in configuration
+> > + * where it's necessary and hopefully avoid reset issues.
+> > + */
+> > +static bool pci_vc_needs_save(struct pci_dev *dev, u16 id)
+> > +{
+> > +	if (id == PCI_EXT_CAP_ID_VC9 || pci_is_root_bus(dev->bus) ||
+> > +	    pci_find_ext_capability(dev->bus->self, PCI_EXT_CAP_ID_VC))
+> > +		return true;
+> > +
+> > +	return false;
+> > +}
+> > +
+> >  static struct {
+> >  	u16 id;
+> >  	const char *name;
+> > @@ -362,7 +381,7 @@ int pci_save_vc_state(struct pci_dev *dev)
+> >  		struct pci_cap_saved_state *save_state;
+> >  
+> >  		pos = pci_find_ext_capability(dev, vc_caps[i].id);
+> > -		if (!pos)
+> > +		if (!posi || !pci_vc_needs_save(dev, vc_caps[i].id))
+>                         ^
+> This should be most probably !pos (and not !posi - because !posi does
+> through a compile error).
+
+Oops, sorry.
+
+> >  			continue;
+> >  
+> >  		save_state = pci_find_saved_ext_cap(dev, vc_caps[i].id);
+> > @@ -422,7 +441,7 @@ void pci_allocate_vc_save_buffers(struct pci_dev *dev)
+> >  	for (i = 0; i < ARRAY_SIZE(vc_caps); i++) {
+> >  		int len, pos = pci_find_ext_capability(dev, vc_caps[i].id);
+> >  
+> > -		if (!pos)
+> > +		if (!pos || !pci_vc_needs_save(dev, vc_caps[i].id))
+> >  			continue;
+> >  
+> >  		len = pci_vc_do_save_buffer(dev, pos, NULL, false);
+> 
+> W/ the above patch, the machine hangs again (w/ qemu and setpci), but w/
+> Bjorn's patch (and nothing more applied) which disables vc save/restore,
+> the machine just works fine ... . I especially retested this case to be
+> really sure. I'm so sorry. But that's how it behaves here :-(
+
+Hmm, the intention was that this should effectively do the same thing as
+Bjorn's patch.  The Atheros device (03:00.0) reports a VC capability but
+the root port above it (00:05.0) does not.  The test in
+pci_vc_needs_save() should therefore be false for all tests within the
+if() block and the function should return false, causing us to neither
+allocate a save buffer or perform a save.  The restore will
+automatically be skipped since there's no save buffer.
+
+This is what I was afraid of, on one hand you've bisected and proved via
+patching that the problem is exclusively due to VC save/restore, but we
+also have testing that indicates that we can't do a bus reset at all on
+this port.  So I re-iterate my confusion that we don't seem to have a
+good idea which is the problem.  Do you have any other devices that you
+can install in the slot for testing?  Maybe if we knew that bus reset is
+only a problem with the Atheros card then we could blacklist it.
+Thanks,
+
+Alex
+
+
