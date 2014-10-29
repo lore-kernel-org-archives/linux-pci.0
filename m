@@ -1,54 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foo.masarand.uk ([69.164.217.139]:56348 "EHLO foo.masarand.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752383AbaJBEIE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Oct 2014 00:08:04 -0400
-From: matt@masarand.com
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, Matthew Minter <matt@masarand.com>
-Subject: [PATCH 09/18] Delayed m68k setup of PCI IRQs to bus scan time
-Date: Thu,  2 Oct 2014 05:07:37 +0100
-Message-Id: <1412222866-21068-10-git-send-email-matt@masarand.com>
-In-Reply-To: <1412222866-21068-1-git-send-email-matt@masarand.com>
-References: <1412222866-21068-1-git-send-email-matt@masarand.com>
+Received: from mail-bn1bon0146.outbound.protection.outlook.com ([157.56.111.146]:10992
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755363AbaJ2IJw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 Oct 2014 04:09:52 -0400
+Date: Wed, 29 Oct 2014 16:08:09 +0800
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Jason Chang <jason.chang@amd.com>,
+	"Vincent Wan" <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 13/19] usb: dwc3: add tx demphasis quirk
+Message-ID: <20141029080809.GB10840@hr-slim.amd.com>
+References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
+ <1414497280-3126-14-git-send-email-ray.huang@amd.com>
+ <CAErSpo6ouE7AZi8ysTFnTNtKc8R9w-71AhXe6b-_0g_yeR-=Ag@mail.gmail.com>
+ <20141028184303.GD25735@saruman>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20141028184303.GD25735@saruman>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Matthew Minter <matt@masarand.com>
+On Tue, Oct 28, 2014 at 01:43:03PM -0500, Felipe Balbi wrote:
+> On Tue, Oct 28, 2014 at 10:27:27AM -0600, Bjorn Helgaas wrote:
+> > On Tue, Oct 28, 2014 at 5:54 AM, Huang Rui <ray.huang@amd.com> wrote:
+> > > This patch adds Tx demphasis quirk, and the Tx demphasis value is
+> > 
+> > "demphasis" (above and in subject) should be "de-emphasis" as used in
+> > the code and comments below.
+> 
+> +1
+> 
 
-Currently PCI IRQs are assigned during mcf_pci_init which is only run
-at boot time, this causes devices which are connected after boot time
-to not receive an IRQ, this patch set fixes this by registering an IRQ
-assignment function to be run later at device enable time.
-
-Signed-off-by: Matthew Minter <matt@masarand.com>
-
----
- arch/m68k/platform/coldfire/pci.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/arch/m68k/platform/coldfire/pci.c b/arch/m68k/platform/coldfire/pci.c
-index df96792..058ca86 100644
---- a/arch/m68k/platform/coldfire/pci.c
-+++ b/arch/m68k/platform/coldfire/pci.c
-@@ -316,10 +316,16 @@ static int __init mcf_pci_init(void)
- 	rootbus->resource[0] = &mcf_pci_io;
- 	rootbus->resource[1] = &mcf_pci_mem;
- 
--	pci_fixup_irqs(pci_common_swizzle, mcf_pci_map_irq);
- 	pci_bus_size_bridges(rootbus);
- 	pci_bus_assign_resources(rootbus);
- 	return 0;
- }
- 
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	bridge->swizzle_irq = pci_common_swizzle;
-+	bridge->map_irq = mcf_pci_map_irq;
-+	return 0;
-+}
-+
- subsys_initcall(mcf_pci_init);
--- 
-2.1.0
-
+OK, will update
