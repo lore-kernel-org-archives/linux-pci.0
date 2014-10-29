@@ -1,50 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [207.46.100.141] ([207.46.100.141]:26448 "EHLO
-	na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751993AbaJTCvf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 19 Oct 2014 22:51:35 -0400
-From: Richard Zhu <richard.zhu@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
-	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Richard Zhu <richard.zhu@freescale.com>
-Subject: [PATCH v7 06/13] PCI: designware: Fix one potential assignment error of cfg start
-Date: Mon, 20 Oct 2014 10:19:09 +0800
-Message-ID: <1413771556-32212-7-git-send-email-richard.zhu@freescale.com>
-In-Reply-To: <1413771556-32212-1-git-send-email-richard.zhu@freescale.com>
-References: <1413771556-32212-1-git-send-email-richard.zhu@freescale.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 29 Oct 2014 15:44:16 +0800
+From: Huang Rui <ray.huang@amd.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Jason Chang <jason.chang@amd.com>,
+	"Vincent Wan" <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 05/19] usb: dwc3: add lpm erratum support
+Message-ID: <20141029074416.GA10840@hr-slim.amd.com>
+References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
+ <1414497280-3126-6-git-send-email-ray.huang@amd.com>
+ <CAErSpo7JeiJSD+-XAMZH+D8r9Knkq80KPUroYYbqak6EQ6f4RA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAErSpo7JeiJSD+-XAMZH+D8r9Knkq80KPUroYYbqak6EQ6f4RA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Richard Zhu <r65037@freescale.com>
+On Tue, Oct 28, 2014 at 10:30:50AM -0600, Bjorn Helgaas wrote:
+> On Tue, Oct 28, 2014 at 5:54 AM, Huang Rui <ray.huang@amd.com> wrote:
+> > When parameter DWC_USB3_LPM_ERRATA_ENABLE is enabled in Andvanced
+> 
+> "Advanced"
+> 
+> > Configuration of coreConsultant, it supports of xHCI BESL Errata Dated
+> 
+> I can't parse "is supports of" and I don't know enough to suggest an
+> alternate wording.
+> 
+> > 10/19/2011 is enabled in host mode. In device mode it adds the capability
+> > to send NYET response threshold based on the BESL value received in the LPM
+> > token, and the threhold is configurable for each soc platform.
+> 
+> "threshold"
+> 
 
-if va_cfg0_base/va_cfg1_base are initialized by
-designware core, the pp->cfg.start is not initialized
-properly, when IORESOURCE_MEM "config" is represented
-as cfg space resource.
-solution: assign cfg_res->start to pp->cfg.start.
+Thanks to reminder.
 
-Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
----
- drivers/pci/host/pcie-designware.c | 1 +
- 1 file changed, 1 insertion(+)
+It should be:
+When parameter DWC_USB3_LPM_ERRATA_ENABLE is enabled in Advanced
+Configuration of coreConsultant, support of xHCI BESL Errata Dated
+10/19/2011 is enabled in host mode. In device mode it adds the
+capability to send NYET response threshold based on the BESL value
+received in the LPM token, and the threshold is configurable for each
+SoC platform.
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 1a2b477..3edd94d 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -450,6 +450,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 	if (cfg_res) {
- 		pp->config.cfg0_size = resource_size(cfg_res)/2;
- 		pp->config.cfg1_size = resource_size(cfg_res)/2;
-+		pp->cfg.start = cfg_res->start;
- 		pp->cfg0_base = cfg_res->start;
- 		pp->cfg1_base = cfg_res->start + pp->config.cfg0_size;
- 
--- 
-1.9.1
-
+Thanks,
+Rui
