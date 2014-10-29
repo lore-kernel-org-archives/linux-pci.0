@@ -1,153 +1,224 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:65075 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751917AbaJJNy0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Oct 2014 09:54:26 -0400
-Received: by mail-ig0-f169.google.com with SMTP id uq10so6915243igb.4
-        for <linux-pci@vger.kernel.org>; Fri, 10 Oct 2014 06:54:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140910141514.GC27864@e106497-lin.cambridge.arm.com>
-References: <CAA8O7Crwi7=afUpLoC1O5H9ymjYEPyb63kO8QdFuPx6RUJ8NpQ@mail.gmail.com>
-	<20140910141514.GC27864@e106497-lin.cambridge.arm.com>
-Date: Fri, 10 Oct 2014 08:54:25 -0500
-Message-ID: <CAA8O7CrqkjGTiK68iWDe6C9-VMT5OF=D72u4mR9edOzUGjQwPQ@mail.gmail.com>
-Subject: Re: designware: prefetch and 64-bit addr support?
-From: L H <swdevgid@gmail.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:41761 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755629AbaJ2SQ1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 Oct 2014 14:16:27 -0400
+Message-ID: <1414606581.27420.266.camel@ul30vt.home>
+Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass through
+ (vfio)
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Andreas Hartmann <andihartmann@freenet.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Date: Wed, 29 Oct 2014 12:16:21 -0600
+In-Reply-To: <54512A91.2010606@maya.org>
+References: <20140923210318.498dacbd@dualc.maya.org>
+							 <CAErSpo5kkk4itqqmCMU=08-XMcDknur8VY++F3A2LajdvTptOA@mail.gmail.com>
+							 <5437F1F5.3010706@maya.org>
+							 <CAErSpo6DuWEcJb_gfS=5JnKN8b4DXXV9+u-CRa8m3db0dbzpsQ@mail.gmail.com>
+							 <543804BC.3080307@maya.org>
+							 <CAErSpo450czUtAM104o+RS=yOcmP+3MKMH7mYk=UYhVJ2+cfSQ@mail.gmail.com>
+							 <20141011003219.560cca97@dualc.maya.org>
+							 <20141010225408.GA24493@google.com> <5438CC1E.3060407@maya.org>
+							 <1413360267.4202.70.camel@ul30vt.home> <54406B34.1050808@maya.org>
+							 <1413925580.4202.189.camel@ul30vt.home>
+						 <1413927152.4202.195.camel@ul30vt.home> <5447D9D9.9030909@maya.org>
+					 <1414010215.4202.275.camel@ul30vt.home> <54492606.5090308@maya.org>
+				 <1414082022.27420.39.camel@ul30vt.home> <54493BFA.8010609@maya.org>
+			 <1414093023.27420.40.camel@ul30vt.home> <544B3D14.70907@maya.org>
+		 <1414533068.27420.226.camel@ul30vt.home> <54511A16.30602@maya.org>
+	 <1414604677.27420.263.camel@ul30vt.home> <54512A91.2010606@maya.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thank you Liviu for the detailed response.  I've been buried with work
-and out on personal matters so I'm just now able to resume
-participation on this thread.
+On Wed, 2014-10-29 at 18:57 +0100, Andreas Hartmann wrote:
+> Alex Williamson schrieb:
+> > On Wed, 2014-10-29 at 17:47 +0100, Andreas Hartmann wrote:
+> >> Alex Williamson wrote:
+> >>> On Sat, 2014-10-25 at 08:03 +0200, Andreas Hartmann wrote:
+> >>>>
+> >>>> Out of interest:
+> >>>> Bjorn's patch disables vc save/restore support - and the machine works
+> >>>> fine again. Why is it needed at all if it seems to work perfectly w/o
+> >>>> it? What's the additional benefit? Or in other words: What am I missing
+> >>>> until today :-) ? What would be better? What could I do more?
+> >>>
+> >>>
+> >>> You're right, in the configuration you have the endpoint device has a
+> >>> Virtual Channel capability but the upstream root port does not.  The
+> >>> spec is not at all clear about defining the endpoints for enabling
+> >>> Virtual Channel in each type of configuration, but I think that if we
+> >>> have an upstream port that does not support Virtual Channel, we can skip
+> >>> the save/restore.  Please test the patch below.
+> >>>
+> >>> I'm also still completely confused about whether this is a VC
+> >>> save/restore issue or a bus reset issue.  You originally bisected this
+> >>> back to the VC save/restore patch, but you also found that a manual,
+> >>> setpci-based bus reset triggered a system hang.
+> >>
+> >> With your additional patch posted here:
+> >> http://article.gmane.org/gmane.linux.kernel.pci/36162
+> > 
+> > Right, a reset via sysfs also triggered it with that patch, but the
+> > reset via setpci is independent of any VC save/restore and still hung
+> > your box.
+> > 
+> >>
+> >>>  I believe that
+> >>> re-ordering the kernel reset mechanisms also triggered this.  Since
+> >>> recent versions of QEMU are going to favor a bus reset over PM reset, I
+> >>> don't have a lot of confidence that we're actually solving the problem
+> >>> for you.  Please make sure to test with a recent QEMU to be sure we'll
+> >>> do a bus reset.
+> >>
+> >> I'm running qemu 2.1.0 (newest is 2.1.2 - but this shouldn't be a
+> >> problem) and tested w/ linux 3.17.
+> > 
+> > Yep, just want to make sure it's QEMU new enough to do a bus reset and
+> > kernel with matching support.
+> > 
+> >>> diff --git a/drivers/pci/vc.c b/drivers/pci/vc.c
+> >>> index 7e1304d..6d13d34 100644
+> >>> --- a/drivers/pci/vc.c
+> >>> +++ b/drivers/pci/vc.c
+> >>> @@ -339,6 +339,25 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
+> >>>  	return buf ? 0 : len;
+> >>>  }
+> >>>  
+> >>> +/**
+> >>> + * pci_vc_needs_save - Determine whether a VC capability needs to be saved
+> >>> + * @dev: device
+> >>> + * @id: VC capability ID (VC/VC9/MFVC)
+> >>> + *
+> >>> + * In configurations where we have a VC or MFVC capability, but the upstream
+> >>> + * device does not, we assume that VC save (and therefore restore) is not
+> >>> + * necessary.  The intention is to only do VC save/restore in configuration
+> >>> + * where it's necessary and hopefully avoid reset issues.
+> >>> + */
+> >>> +static bool pci_vc_needs_save(struct pci_dev *dev, u16 id)
+> >>> +{
+> >>> +	if (id == PCI_EXT_CAP_ID_VC9 || pci_is_root_bus(dev->bus) ||
+> >>> +	    pci_find_ext_capability(dev->bus->self, PCI_EXT_CAP_ID_VC))
+> >>> +		return true;
+> >>> +
+> >>> +	return false;
+> >>> +}
+> >>> +
+> >>>  static struct {
+> >>>  	u16 id;
+> >>>  	const char *name;
+> >>> @@ -362,7 +381,7 @@ int pci_save_vc_state(struct pci_dev *dev)
+> >>>  		struct pci_cap_saved_state *save_state;
+> >>>  
+> >>>  		pos = pci_find_ext_capability(dev, vc_caps[i].id);
+> >>> -		if (!pos)
+> >>> +		if (!posi || !pci_vc_needs_save(dev, vc_caps[i].id))
+> >>                         ^
+> >> This should be most probably !pos (and not !posi - because !posi does
+> >> through a compile error).
+> > 
+> > Oops, sorry.
+> > 
+> >>>  			continue;
+> >>>  
+> >>>  		save_state = pci_find_saved_ext_cap(dev, vc_caps[i].id);
+> >>> @@ -422,7 +441,7 @@ void pci_allocate_vc_save_buffers(struct pci_dev *dev)
+> >>>  	for (i = 0; i < ARRAY_SIZE(vc_caps); i++) {
+> >>>  		int len, pos = pci_find_ext_capability(dev, vc_caps[i].id);
+> >>>  
+> >>> -		if (!pos)
+> >>> +		if (!pos || !pci_vc_needs_save(dev, vc_caps[i].id))
+> >>>  			continue;
+> >>>  
+> >>>  		len = pci_vc_do_save_buffer(dev, pos, NULL, false);
+> >>
+> >> W/ the above patch, the machine hangs again (w/ qemu and setpci), but w/
+> >> Bjorn's patch (and nothing more applied) which disables vc save/restore,
+> >> the machine just works fine ... . I especially retested this case to be
+> >> really sure. I'm so sorry. But that's how it behaves here :-(
+> > 
+> > Hmm, the intention was that this should effectively do the same thing as
+> > Bjorn's patch.  The Atheros device (03:00.0) reports a VC capability but
+> > the root port above it (00:05.0) does not.
+> 
+> Are you sure, that this patch really works (-> here!) as expected? Would
+> it be possible to add some debug output printing to the actual console
+> (not to log file) to be sure it really works as expected? Maybe some
+> more output to get an idea what's actually going on? Or is it just a
+> timing issue?
 
-I did successfully get prefetch memory support working on my platform.
-As you indicated, because the prefetchable flags are preserved in the
-resource, the PCI framework handled it just fine, with, however, a
-small change to dw_pcie_setup_rc().   That's because that function
-originally just assumed that the memory region was non-prefetch.  I
-added a check for the prefetch flag in dw_pcie_setup_rc() and
-initialized the root-complex's host bridge registers appropriately:
+Sure, here's some added printks (and fixed posi).  You should be able to
+run 'dmesg | grep pci_vc_needs_save' after boot and see device
+0000:03:00.0.  Hopefully you won't see the pci_save_vc_state() printk as
+you assign the device.
+
+diff --git a/drivers/pci/vc.c b/drivers/pci/vc.c
+index 7e1304d..300e126 100644
+--- a/drivers/pci/vc.c
++++ b/drivers/pci/vc.c
+@@ -339,6 +339,26 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
+ 	return buf ? 0 : len;
+ }
+ 
++/**
++ * pci_vc_needs_save - Determine whether a VC capability needs to be saved
++ * @dev: device
++ * @id: VC capability ID (VC/VC9/MFVC)
++ *
++ * In configurations where we have a VC or MFVC capability, but the upstream
++ * device does not, we assume that VC save (and therefore restore) is not
++ * necessary.  The intention is to only do VC save/restore in configuration
++ * where it's necessary and hopefully avoid reset issues.
++ */
++static bool pci_vc_needs_save(struct pci_dev *dev, u16 id)
++{
++	if (id == PCI_EXT_CAP_ID_VC9 || pci_is_root_bus(dev->bus) ||
++	    pci_find_ext_capability(dev->bus->self, PCI_EXT_CAP_ID_VC))
++		return true;
++
++	printk("%s(%s, %x) returning false\n", __func__, pci_name(dev), id);
++	return false;
++}
++
+ static struct {
+ 	u16 id;
+ 	const char *name;
+@@ -362,7 +382,7 @@ int pci_save_vc_state(struct pci_dev *dev)
+ 		struct pci_cap_saved_state *save_state;
+ 
+ 		pos = pci_find_ext_capability(dev, vc_caps[i].id);
+-		if (!pos)
++		if (!pos || !pci_vc_needs_save(dev, vc_caps[i].id))
+ 			continue;
+ 
+ 		save_state = pci_find_saved_ext_cap(dev, vc_caps[i].id);
+@@ -372,6 +392,7 @@ int pci_save_vc_state(struct pci_dev *dev)
+ 			return -ENOMEM;
+ 		}
+ 
++	I	printk("%s doing %s save on %s\n", __func__, vc_caps[i].name, pci_name(dev));
+ 		ret = pci_vc_do_save_buffer(dev, pos, save_state, true);
+ 		if (ret) {
+ 			dev_err(&dev->dev, "%s save unsuccessful %s\n",
+@@ -403,6 +424,7 @@ void pci_restore_vc_state(struct pci_dev *dev)
+ 		if (!save_state || !pos)
+ 			continue;
+ 
++	I	printk("%s doing %s restore on %s\n", __func__, vc_caps[i].name, pci_name(dev));
+ 		pci_vc_do_save_buffer(dev, pos, save_state, false);
+ 	}
+ }
+@@ -422,7 +444,7 @@ void pci_allocate_vc_save_buffers(struct pci_dev *dev)
+ 	for (i = 0; i < ARRAY_SIZE(vc_caps); i++) {
+ 		int len, pos = pci_find_ext_capability(dev, vc_caps[i].id);
+ 
+-		if (!pos)
++		if (!pos || !pci_vc_needs_save(dev, vc_caps[i].id))
+ 			continue;
+ 
+ 		len = pci_vc_do_save_buffer(dev, pos, NULL, false);
 
 
--       /* setup memory base, memory limit */
--       membase = ((u32)pp->mem_base & 0xfff00000) >> 16;
--       memlimit = (config->mem_size + (u32)pp->mem_base) & 0xfff00000;
--       val = memlimit | membase;
--       dw_pcie_writel_rc(pp, val, PCI_MEMORY_BASE);
-+       if (!(pp->mem.flags & IORESOURCE_PREFETCH)) {
-+               /* setup memory base, memory limit */
-+               membase = ((u32)pp->mem_base & 0xfff00000) >> 16;
-+               memlimit = (config->mem_size + (u32)pp->mem_base) & 0xfff00000;
-+               val = memlimit | membase;
-+               dw_pcie_writel_rc(pp, val, PCI_MEMORY_BASE);
-+       }
-+       else {
-+               /* setup prefetch memory base, limit */
-+               membase = (lower_32_bits(pp->mem_base) & 0xfff00000) >> 16;
-+               memlimit = (lower_32_bits(config->mem_size) +
-+                               lower_32_bits(pp->mem_base)) & 0xfff00000;
-+               val = memlimit | membase;
-+               dw_pcie_writel_rc(pp, val, PCI_PREF_MEMORY_BASE);
-+               dw_pcie_writel_rc(pp, upper_32_bits(pp->mem_base),
-PCI_PREF_BASE_UPPER32);
-+               dw_pcie_writel_rc(pp, upper_32_bits(pp->mem_base +
-config->mem_size), PCI_PREF_LIMIT_UPPER32);
-+       }
 
-Note that this, of course, follows the current driver implementation
-that supports only one PCI memory region:  either prefetch or
-non-prefetch.  For the purposes of supporting more SoC's which employ
-DesignWare, the driver can easily be extended to support both but I
-understand the mindset of leaving that to whomever needs multiple
-memory regions.
-
-thanks again,
-LH
-
-
-
-On Wed, Sep 10, 2014 at 9:15 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> On Wed, Sep 03, 2014 at 09:57:11PM +0100, L H wrote:
->> Greetings my fellow PCI designware developers.  I'm working on an
->> implementation that relies on the PCIe DesignWare IP and am writing a
->> platform-specific layer to link with the designware code, but have run
->> into a couple challenges.
->>
->> Reading the pcie-designware.c (looking at the master branch of a repo
->> cloned from git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git --
->> is that the best branch/repo to view?), it appears to me that the
->> dw_pcie_host_init() code doesn't comprehend prefetch memory ranges,
->> but instead just assumes that a memory range is non-prefetch despite
->> its encoding in the device-tree.  Am I reading that correctly?  The
->> loop for walking the ranges begins with:
->>
->>     for_each_of_pci_range(&parser, &range) {
->>         unsigned long restype = range.flags & IORESOURCE_TYPE_BITS;
->>
->> The bitmask for IORESOURCE_TYPE_BITS would result in a restype
->> ignorant of the IORESOURCE_PREFETCH bit, right?   The ensuing code
->> flow then treats the range as non-prefetch unless I missed something.
->
-> Hi LH,
->
-> You are not reading all of the code. The designware code only cares
-> about the type of the range (IO, MEM, cfg?). But the conversion from
-> range to resource that happens in of_pci_range_to_resource() *does*
-> preserve the prefetchable flags and that is being used by the generic
-> PCI framework.
->
->>
->> Curiously, I also noted that the for_each_of_pcie_range() which calls
->> of_pci_range_parser_one() that in turn includes calls to
->> of_bus_pci_get_flags() does not set the IORESOURCE_MEM_64 bit parsed
->> from the range either.
->
-> Where exactly do you expect those flags to be read into?
->
->>
->> If I followed that all correctly, is the proper assumption that all of
->> the current implementations relying on the designware code only use
->> 32-bit non-prefetch memory ranges?
->
-> No, I don't think that is correct. What I would say is that the current
-> designware PCIe code does not care whether the memory is prefetcheable
-> or not for the DW specific part of the setup.
->
-> Best regards,
-> Liviu
->
->>
->> The platform which I'm working on will use a large 64-bit PCI memory
->> address space, and thus I need 64-bit memory apertures which implies,
->> I think, only prefetch memory.
->>
->> I hasten to add this isn't a complaint or critique of the valuable
->> work developed up to this point. I'm very grateful to have it as a
->> rich starting point.  I'm reaching out to the list here as a newbie to
->> verify my comprehension of the designware code, and if valid, to
->> inquire if there's any effort by anyone currently to support 64-bit
->> prefetch ranges.  I've accepted the real possibility that I might be
->> blazing this trail myself, but just wanted to check if anyone else has
->> considered it or working on this support to avoid a redundant effort.
->>
->> thanks,
->> LH
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
-> --
-> ====================
-> | I would like to |
-> | fix the world,  |
-> | but they're not |
-> | giving me the   |
->  \ source code!  /
->   ---------------
->     ¯\_(ツ)_/¯
->
