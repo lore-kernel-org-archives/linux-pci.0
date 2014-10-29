@@ -1,87 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:24846 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751313AbaJOIpp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Oct 2014 04:45:45 -0400
-Message-ID: <543E3427.2040207@hp.com>
-Date: Wed, 15 Oct 2014 16:45:27 +0800
-From: "Li, ZhenHua" <zhen-hual@hp.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 29 Oct 2014 14:53:04 +0800
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Jason Chang <jason.chang@amd.com>,
+	"Vincent Wan" <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 01/19] usb: dwc3: enable hibernation if to be supported
+Message-ID: <20141029065304.GB8935@hr-slim.amd.com>
+References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
+ <1414497280-3126-2-git-send-email-ray.huang@amd.com>
+ <A2CA0424C0A6F04399FB9E1CD98E0304844E68B7@US01WEMBX2.internal.synopsys.com>
+ <20141028185059.GE25735@saruman>
+ <A2CA0424C0A6F04399FB9E1CD98E0304844E68E4@US01WEMBX2.internal.synopsys.com>
+ <20141028190122.GF25735@saruman>
+ <A2CA0424C0A6F04399FB9E1CD98E0304844E691D@US01WEMBX2.internal.synopsys.com>
+ <20141028191852.GJ25735@saruman>
 MIME-Version: 1.0
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>
-CC: Jerry.Hoemann@hp.com, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com, zhenhua@hp.com,
-	"Vaden, Tom L (HP Server OS Architecture)" <tom.vaden@hp.com>
-Subject: Re: [PATCH 0/8] iommu/vt-d: Fix crash dump failure caused by legacy
- DMA/IO
-References: <1398386198-19304-1-git-send-email-bill.sumner@hp.com> <1398854973.12733.23.camel@i7.infradead.org> <20140702133258.GN26537@8bytes.org> <20140711162745.GA8335@anatevka.fc.hp.com> <543E2BDA.8030906@hp.com>
-In-Reply-To: <543E2BDA.8030906@hp.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20141028191852.GJ25735@saruman>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add Tom to CC list.
-On 10/15/2014 04:10 PM, Li, ZhenHua wrote:
-> David, Joerg,
-> I plan to merge this patch set with 3.17 stable kernel, and split this
-> patch set into two :
-> 1. The core part, including the changed functions, like [Patch 4/8],
-> [Patch 8/8].
-> 2. For the formatting issues, like [Patch 1/8],[Patch 3/8],  including
-> the changes for code formations, creation of new files
-> intel-iommu-kdump.c, intel-iommu-private.h.
->
-> I believe this will make the patch set more clear to read and understand.
->
-> What are your suggestions?
->
-> Thanks
-> Zhenhua
->
->
-> On 07/12/2014 12:27 AM, Jerry Hoemann wrote:
->> On Wed, Jul 02, 2014 at 03:32:59PM +0200, Joerg Roedel wrote:
->>> Hi David,
->>>
->>> On Wed, Apr 30, 2014 at 11:49:33AM +0100, David Woodhouse wrote:
->>>> There could be all kinds of existing mappings in the DMA page tables,
->>>> and I'm not sure it's safe to preserve them. What prevents the
->>>> crashdump
->>>> kernel from trying to use any of the physical pages which are
->>>> accessible, and which could thus be corrupted by stray DMA?
->>>>
->>>> In fact, the old kernel could even have set up 1:1 passthrough mappings
->>>> for some devices, which would then be able to DMA *anywhere*. Surely we
->>>> need to prevent that?
->>>
->>> Ideally we would prevent that, yes. But the problem is that a failed DMA
->>> transaction might put the device into an unrecoverable state. Usually
->>> any in-flight DMA transactions should only target buffers set up by the
->>> previous kernel and not corrupt any data.
->>>
->>>> After the last round of this patchset, we discussed a potential
->>>> improvement where you point every virtual bus address at the *same*
->>>> physical scratch page.
->>>
->>> That is a solution to prevent the in-flight DMA failures. But what
->>> happens when there is some in-flight DMA to a disk to write some inodes
->>> or a new superblock. Then this scratch address-space may cause
->>> filesystem corruption at worst.
->>>
->>> So with this in mind I would prefer initially taking over the
->>> page-tables from the old kernel before the device drivers re-initialize
->>> the devices.
->>>
->>>
->>>     Joerg
->>
->> David, Joerg,
->>
->> What do you think here?  Do you want me to update the patch set for 3.17?
->>
->> Jerry
->>
->
+On Tue, Oct 28, 2014 at 02:18:52PM -0500, Felipe Balbi wrote:
+> On Tue, Oct 28, 2014 at 07:15:29PM +0000, Paul Zimmerman wrote:
+> > > From: Felipe Balbi [mailto:balbi@ti.com]
+> > > Sent: Tuesday, October 28, 2014 12:01 PM
+> > > 
+> > > On Tue, Oct 28, 2014 at 06:55:50PM +0000, Paul Zimmerman wrote:
+> > > > > From: Felipe Balbi [mailto:balbi@ti.com]
+> > > > > Sent: Tuesday, October 28, 2014 11:51 AM
+> > > > >
+> > > > > On Tue, Oct 28, 2014 at 06:47:08PM +0000, Paul Zimmerman wrote:
+> > > > > > > From: Huang Rui [mailto:ray.huang@amd.com]
+> > > > > > > Sent: Tuesday, October 28, 2014 4:54 AM
+> > > > > > >
+> > > > > > > It enables hibernation if the function is set in coreConsultant.
+> > > > > > >
+> > > > > > > Suggested-by: Felipe Balbi <balbi@ti.com>
+> > > > > > > Signed-off-by: Huang Rui <ray.huang@amd.com>
+> > > > > > > ---
+> > > > > > >  drivers/usb/dwc3/core.c | 1 +
+> > > > > > >  1 file changed, 1 insertion(+)
+> > > > > > >
+> > > > > > > diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+> > > > > > > index fa396fc..bf77509 100644
+> > > > > > > --- a/drivers/usb/dwc3/core.c
+> > > > > > > +++ b/drivers/usb/dwc3/core.c
+> > > > > > > @@ -449,6 +449,7 @@ static int dwc3_core_init(struct dwc3 *dwc)
+> > > > > > >  	case DWC3_GHWPARAMS1_EN_PWROPT_HIB:
+> > > > > > >  		/* enable hibernation here */
+> > > > > > >  		dwc->nr_scratch = DWC3_GHWPARAMS4_HIBER_SCRATCHBUFS(hwparams4);
+> > > > > > > +		reg |= DWC3_GCTL_GBLHIBERNATIONEN;
+> > > > > > >  		break;
+> > > > > > >  	default:
+> > > > > > >  		dev_dbg(dwc->dev, "No power optimization available\n");
+> > > > > >
+> > > > > > What effect does this have when the controller is in device mode? I
+> > > > > > expect it will start generating DWC3_DEVICE_EVENT_HIBER_REQ interrupt
+> > > > > > events when this register bit is set. So the dev_WARN_ONCE in
+> > > > > > dwc3_gadget_interrupt() will start firing, I think.
+> > > > >
+> > > > > Ok, so this *has* to wait for proper hibernation support ?
+> > > >
+> > > > Ah, never mind. Since the hibernation event is not enabled in the
+> > > > DEVTEN register, the controller shouldn't generate that event after
+> > > > all. So I think it should be OK. Sorry for the noise.
+> > > 
+> > > do you think it's still nice to have a comment here ?
+> > 
+> > Maybe something along the lines of "enabling this bit so that host-mode
+> > hibernation will work, device-mode hibernation is not implemented yet"?
+> 
+> sounds good to me. Huang, can you update your patch to add this comment
+> Paul suggested ?
+> 
 
+OK, will update in V4.
+
+Thanks,
+Rui
