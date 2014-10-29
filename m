@@ -1,90 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foo.masarand.uk ([69.164.217.139]:56363 "EHLO foo.masarand.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752383AbaJBEIH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Oct 2014 00:08:07 -0400
-From: matt@masarand.com
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, Matthew Minter <matt@masarand.com>
-Subject: [PATCH 14/18] Delayed tile setup of PCI IRQs to bus scan time
-Date: Thu,  2 Oct 2014 05:07:42 +0100
-Message-Id: <1412222866-21068-15-git-send-email-matt@masarand.com>
-In-Reply-To: <1412222866-21068-1-git-send-email-matt@masarand.com>
-References: <1412222866-21068-1-git-send-email-matt@masarand.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:25645 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756101AbaJ2WZc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Oct 2014 18:25:32 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] PCI: fix sriov enabling with virtual bus
+Date: Wed, 29 Oct 2014 15:26:10 -0700
+Message-Id: <1414621570-20777-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Matthew Minter <matt@masarand.com>
+While enabling sriov for intel igb device got:
 
-Currently pcibios_init is running pci_fixup_irqs in order to assign
-IRQs to PCI devices, this is only done once at boot-time and causes
-devices hot-plugged after boot time to not be allocated an IRQ.
-This is fixed in this patch-set by delaying the allocation untill
-device enable time by registering the function to be called later.
+sca05-0a81fda5:~ # echo 7 > /sys/bus/pci/devices/0000\:09\:00.0/sriov_numvfs 
+[  729.612191] pci 0000:0a:10.0: [8086:1520] type 00 class 0x020000
+[  729.619002] BUG: unable to handle kernel NULL pointer dereference at 00000000000000e8
+[  729.627767] IP: [<ffffffff815901cb>] pci_get_hp_params+0x5b/0x640
+[  729.634593] PGD 0 
+[  729.636844] Oops: 0000 [#1] SMP 
+[  729.640466] Modules linked in:
+...
+[  729.795268] Call Trace:
+[  729.798007]  [<ffffffff81ea0843>] ? pci_mmcfg_read+0x123/0x140
+[  729.804519]  [<ffffffff81ea0770>] ? pci_mmcfg_read+0x50/0x140
+[  729.810942]  [<ffffffff815692a3>] pci_configure_device+0x33/0x350
+[  729.817744]  [<ffffffff8156aba4>] pci_device_add+0x24/0x160
+[  729.823965]  [<ffffffff8158f3bb>] pci_enable_sriov+0x4db/0x7d0
+[  729.830486]  [<ffffffff81b63f54>] ? igb_pci_enable_sriov+0xe4/0x200
+[  729.837481]  [<ffffffff81b63f7f>] igb_pci_enable_sriov+0x10f/0x200
+[  729.844386]  [<ffffffff8155129c>] ? _kstrtoull+0x2c/0x80
+[  729.850315]  [<ffffffff81b640a5>] igb_pci_sriov_configure+0x35/0x40
+[  729.857318]  [<ffffffff815752b5>] sriov_numvfs_store+0xe5/0x140
+[  729.863934]  [<ffffffff817e1f88>] dev_attr_store+0x18/0x30
+[  729.870063]  [<ffffffff812624d8>] sysfs_kf_write+0x48/0x60
+[  729.876186]  [<ffffffff812617ef>] ? kernfs_fop_write+0xaf/0x170
+[  729.882797]  [<ffffffff81261827>] kernfs_fop_write+0xe7/0x170
+[  729.889222]  [<ffffffff811ef66b>] vfs_write+0xcb/0x1c0
+[  729.894958]  [<ffffffff811f0019>] SyS_write+0x49/0xb0
+...
+[  729.943531] ---[ end trace 7cf0cdb66637665a ]---
 
-Signed-off-by: Matthew Minter <matt@masarand.com>
+and pci_get_hp_params+0x5b point to
+0xffffffff815901cb is in pci_get_hp_params (include/linux/device.h:815).
+810	#include <linux/pm_wakeup.h>
+811	
+812	static inline const char *dev_name(const struct device *dev)
+813	{
+814		/* Use the init name until the kobject becomes available */
+815		if (dev->init_name)
+816			return dev->init_name;
+817	
+818		return kobject_name(&dev->kobj);
+
+The root cause:
+Now pci_configure_device/pci_get_hp_params will be called for every pci_dev,
+including VF that is under virtual bus. But virtual bus does not have bridge
+set. So we can not refer pbus->self->dev directly.
+
+Add checking with pbus->slef and bail out early.
+
+Fixing: commit 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
 ---
- arch/tile/kernel/pci.c    | 10 +++++++---
- arch/tile/kernel/pci_gx.c | 10 +++++++---
- 2 files changed, 14 insertions(+), 6 deletions(-)
+ include/linux/pci-acpi.h |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
-index 1f80a88..6dc0bd8 100644
---- a/arch/tile/kernel/pci.c
-+++ b/arch/tile/kernel/pci.c
-@@ -313,9 +313,6 @@ int __init pcibios_init(void)
- 		}
- 	}
+Index: linux-2.6/include/linux/pci-acpi.h
+===================================================================
+--- linux-2.6.orig/include/linux/pci-acpi.h
++++ linux-2.6/include/linux/pci-acpi.h
+@@ -44,8 +44,12 @@ static inline acpi_handle acpi_pci_get_b
  
--	/* Do machine dependent PCI interrupt routing */
--	pci_fixup_irqs(pci_common_swizzle, tile_map_irq);
--
- 	/*
- 	 * This comes from the generic Linux PCI driver.
- 	 *
-@@ -367,6 +364,13 @@ int __init pcibios_init(void)
- }
- subsys_initcall(pcibios_init);
- 
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	bridge->swizzle_irq = pci_common_swizzle;
-+	bridge->map_irq = tile_map_irq;
-+	return 0;
-+}
+ 	if (pci_is_root_bus(pbus))
+ 		dev = pbus->bridge;
+-	else
++	else {
++		if (!pbus->self)
++			return NULL;
 +
- /*
-  * No bus fixups needed.
-  */
-diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
-index e39f9c5..7d1b5bf 100644
---- a/arch/tile/kernel/pci_gx.c
-+++ b/arch/tile/kernel/pci_gx.c
-@@ -893,9 +893,6 @@ int __init pcibios_init(void)
- 		next_busno = bus->busn_res.end + 1;
- 	}
+ 		dev = &pbus->self->dev;
++	}
  
--	/* Do machine dependent PCI interrupt routing */
--	pci_fixup_irqs(pci_common_swizzle, tile_map_irq);
--
- 	/*
- 	 * This comes from the generic Linux PCI driver.
- 	 *
-@@ -1048,6 +1045,13 @@ alloc_mem_map_failed:
- }
- subsys_initcall(pcibios_init);
- 
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	bridge->swizzle_irq = pci_common_swizzle;
-+	bridge->map_irq = tile_map_irq;
-+	return 0;
-+}
-+
- /* No bus fixups needed. */
- void pcibios_fixup_bus(struct pci_bus *bus)
- {
--- 
-2.1.0
-
+ 	dev_printk(KERN_DEBUG, &pbus->dev, "  bridge ACPI_HANDLE %p : %s\n",
+ 			 ACPI_HANDLE(dev), dev_name(dev));
