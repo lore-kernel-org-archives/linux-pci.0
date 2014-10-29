@@ -1,102 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:34568 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751053AbaJAIyk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 04:54:40 -0400
-Date: Wed, 1 Oct 2014 09:54:36 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Rob Herring <robh@kernel.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] of/pci: add pci_pio_to_address dummy for !CONFIG_OF
-Message-ID: <20141001085436.GA841@e106497-lin.cambridge.arm.com>
-References: <706416181.hbVGLDA3o6@wuerfel>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 29 Oct 2014 10:19:15 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	iommu@lists.linux-foundation.org
+Subject: Re: [Patch Part2 v3 15/24] x86, MSI: Use hierarchy irqdomain to
+ manage MSI interrupts
+In-Reply-To: <5450A9D8.108@linux.intel.com>
+Message-ID: <alpine.DEB.2.11.1410291017180.5308@nanos>
+References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com> <1414484803-10311-16-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1410282046120.5308@nanos> <5450A9D8.108@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <706416181.hbVGLDA3o6@wuerfel>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 30, 2014 at 02:19:05PM +0100, Arnd Bergmann wrote:
-> The pci_register_io_range() and pci_pio_to_address() were recently
-> introduced to generalize the handling of memory mapped PCI I/O space,
-> but they are only valid when CONFIG_OF is set, leading to a possible
-> build error:
-> 
-> drivers/pci/host/pcie-rcar.c: In function 'rcar_pcie_setup_window':
-> drivers/pci/host/pcie-rcar.c:340:3: error: implicit declaration of function 'pci_pio_to_address' [-Werror=implicit-function-declaration]
->    res_start = pci_pio_to_address(res->start);
->    ^
-> drivers/pci/host/pcie-rcar.c: In function 'rcar_pcie_probe':
-> drivers/pci/host/pcie-rcar.c:945:3: error: implicit declaration of function 'of_pci_range_to_resource' [-Werror=implicit-function-declaration]
->    err = of_pci_range_to_resource(&range, pdev->dev.of_node,
->    ^
-> cc1: some warnings being treated as errors
-> 
-> This provides inline dummy implementations for the case that
-> CONFIG_OF is disabled, to allow better build testing.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 279c5dd046 ("of/pci: Add pci_register_io_range() and pci_pio_to_address()")
-> 
-> diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-> index 7ebb877b07c2..851097aab115 100644
-> --- a/include/linux/of_address.h
-> +++ b/include/linux/of_address.h
-> @@ -71,6 +71,11 @@ static inline const __be32 *of_get_address(struct device_node *dev, int index,
->  	return NULL;
->  }
->  
-> +static inline phys_addr_t pci_pio_to_address(unsigned long pio)
-> +{
-> +	return 0;
-> +}
-> +
->  static inline int of_pci_range_parser_init(struct of_pci_range_parser *parser,
->  			struct device_node *node)
->  {
-> @@ -144,6 +149,12 @@ static inline const __be32 *of_get_pci_address(struct device_node *dev,
->  {
->  	return NULL;
->  }
-> +static inline int of_pci_range_to_resource(struct of_pci_range *range,
-> +					   struct device_node *np,
-> +					   struct resource *res)
-> +{
-> +	return -ENOSYS;
-> +}
->  #endif /* CONFIG_OF_ADDRESS && CONFIG_PCI */
->  
->  #endif /* __OF_ADDRESS_H */
-> 
+On Wed, 29 Oct 2014, Jiang Liu wrote:
+> On 2014/10/29 5:37, Thomas Gleixner wrote:
+> > On Tue, 28 Oct 2014, Jiang Liu wrote:
+> >> +static int msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
+> >> +			    bool force)
+> >> +{
+> >> +	struct irq_data *parent = data->parent_data;
+> >> +	int ret;
+> >>  
+> >> -	msg.data &= ~MSI_DATA_VECTOR_MASK;
+> >> -	msg.data |= MSI_DATA_VECTOR(cfg->vector);
+> >> -	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
+> >> -	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
+> >> +	ret = parent->chip->irq_set_affinity(parent, mask, force);
+> >> +	/* No need to reprogram MSI registers if interrupt is remapped */
+> >> +	if (ret >= 0 && !msi_irq_remapped(data)) {
+> >> +		struct msi_msg msg;
+> >>  
+> >> -	__write_msi_msg(data->msi_desc, &msg);
+> >> +		__get_cached_msi_msg(data->msi_desc, &msg);
+> >> +		msi_update_msg(&msg, data);
+> >> +		__write_msi_msg(data->msi_desc, &msg);
+> >> +	}
+> > 
+> > I'm not too happy about the msi_irq_remapped() conditional here. It
+> > violates the whole concept of domain stacking somewhat.
+> > 
+> > A better separation would be to add a callback to the irq chip:
+> > 
+> >   	void (*irq_write_msi_msg)(struct irq_data *data, struct msi_desc *msi_desc, bool cached);
+> > 
+> > and change this code to:
+> > 
+> >     	if (ret >= 0)
+> > 	   	parent->chip->irq_write_msi_msg(parent, data->msi-desc, true);
+> >   
+> Hi Thomas,
+> 	Thanks for your great suggestion and I have worked out a draft
+> patch to achieve what you want:)
+> 	I have made following changes to irq core to get rid of remapped
+> irq logic from msi.c:
+> 1) Add IRQ_SET_MASK_OK_DONE in addition to IRQ_SET_MASK_OK and
+> IRQ_SET_MASK_OK_NOCOPY. IRQ_SET_MASK_OK_DONE is the same as
+> IRQ_SET_MASK_OK for irq core and indicates to stacked irqchip that
+> parent irqchips have done all work and skip any handling in descendant
+> irqchips.
+> 2) Add int (*irq_compose_msi_msg)(struct irq_data *data, struct msi_msg
+> *msg) into struct irq_chip. I'm still hesitating to return void or int
+> here. By returning void, irq_chip_compose_msi_msg() will be simpler,
+> but it loses flexibility.
 
-Arnd,
+void should be sufficient. If the chip advertises this function it
+better can provide a proper msi msg :)
+ 
+> With above changes to core, we could remove all knowledge of irq
+> remapping from msi.c and the irq remapping interfaces get simpler too.
+> Please refer to following patch for details. The patch passes basic
+> booting tests with irq remapping enabled. If it's OK, I will fold
+> it into the patch set.
 
-I have a more general question that is related only vaguely to this patch but it was prompted by it:
-given that this pcie-rcar.c driver is so dependent on the OF functionality, why the fix(es) (in
-general) tend to prefer creating these dummy functions for !CONFIG_OF rather than making
-CONFIG_PCI_RCAR_GEN2_PCIE dependent on CONFIG_OF? We are basically compiling a driver that we can
-guarantee it will fail when used without OF support and contribute to the overall size of the kernel.
-Given the presentation you have done at Linaro Connect last month on this topic, I started to wonder
-if there is a deeper API style agreement that is not apparent to me?
+Yes. That looks reasonable. 
+ 
+> IOAPIC runs into the same situation, but I need some more time
+> to find a solution:)
 
-Thanks for your time,
-Liviu
+I'm sure you will!
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+Thanks,
 
+	tglx
