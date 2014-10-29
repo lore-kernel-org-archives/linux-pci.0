@@ -1,97 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:57180 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932072AbaJ3UEm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Oct 2014 16:04:42 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [RFC PATCH 0/2] arm: pcibios: remove pci_sys_data domain
-Date: Thu, 30 Oct 2014 21:03:51 +0100
-Message-ID: <2033107.209JbeZvkg@wuerfel>
-In-Reply-To: <20141030193538.GK26820@obsidianresearch.com>
-References: <1414669490-1217-1-git-send-email-lorenzo.pieralisi@arm.com> <3532414.9PZuBnKWYz@wuerfel> <20141030193538.GK26820@obsidianresearch.com>
+Received: from mail-by2on0145.outbound.protection.outlook.com ([207.46.100.145]:3169
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932834AbaJ2Ogi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 Oct 2014 10:36:38 -0400
+Date: Wed, 29 Oct 2014 22:33:19 +0800
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>
+CC: Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Paul Zimmerman" <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Jason Chang <jason.chang@amd.com>,
+	"Vincent Wan" <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 19/19] usb: dwc3: add support for AMD NL platform
+Message-ID: <20141029143319.GD10840@hr-slim.amd.com>
+References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
+ <1414497280-3126-20-git-send-email-ray.huang@amd.com>
+ <20141028133856.GB8123@saruman> <20141028143536.GA4519@hr-slim.amd.com>
+ <20141029091342.GC10840@hr-slim.amd.com> <20141029141146.GF11572@saruman>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20141029141146.GF11572@saruman>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 30 October 2014 13:35:38 Jason Gunthorpe wrote:
-> On Thu, Oct 30, 2014 at 08:21:40PM +0100, Arnd Bergmann wrote:
-> 
-> > > So how does mvebu now allocate a unique domain number per mvebu_pcie?
+On Wed, Oct 29, 2014 at 09:11:46AM -0500, Felipe Balbi wrote:
+> On Wed, Oct 29, 2014 at 05:13:43PM +0800, Huang Rui wrote:
+> > Hi Felipe, Paul,
 > > 
-> > I believe the answer to that is that the mvebu PCIe driver currently only
-> > supports one domain, and it will have the unique number '0', which is the
-> > default.
+> > On Tue, Oct 28, 2014 at 10:35:37PM +0800, Huang Rui wrote:
+> > > On Tue, Oct 28, 2014 at 08:38:56AM -0500, Felipe Balbi wrote:
+> > 
+> > <snip>
+> > 
+> > > > 
+> > > > however, as I mentioned before, the core shouldn't have to know that
+> > > > it's running on an AMD platform. We already support several different
+> > > > platforms (OMAP5, AM437x, DRA7xx, Exynos5, Exynos7, Qcom, Merrifield,
+> > > > Baytrail, Braswell, HAPS PCIe, and STiH407) and none of them get their
+> > > > $my_awesome_platform flag in dwc3, why should AMD be any different ?
+> > > > 
+> > > > This is the only part of $subject that I cannot accept because it would
+> > > > mean we would be giving AMD a special treatment when there shouldn't be
+> > > > any, for anybody.
+> > > > 
+> > > 
+> > > That's because I used this flag to enable below quirks on AMD NL FPGA
+> > > board, and FPGA flag only can be detected on core. Can I set
+> > > disable_scramble_quirk, dis_u3_susphy_quirk, and dis_u2_susphy_quirk
+> > > for all the FPGA platforms?
+> > > 
+> > > if (dwc->amd_nl_plat && dwc->is_fpga) {
+> > >         dwc->disable_scramble_quirk = true;
+> > >         dwc->dis_u3_susphy_quirk = true;
+> > >         dwc->dis_u2_susphy_quirk = true;
+> > > }
+> > > 
+> > 
+> > I confirmed with HW designer, these three quirks only will be needed
+> > on FPGA board. And these should *not* be used on non-FPGA board, as you
+> > known.
+> > 
+> > So I would like to use below conditions on dwc3 core. When I set these
+> > quirk flags in pci glue layer, then core can filter them by is_fpga
+> > flag to support both on FPGA and SoC. Is there any concern? If that, I
+> > should remove WARN_ONCE at disable_scramble flag.
+> > 
+> > if (dwc->disable_scramble_quirk && dwc->is_fpga) {..}
+> > 
+> > if (dwc->dis_u2_susphy_quirk && dwc->is_fpga) {..}
+> > 
+> > if (dwc->dis_u3_susphy_quirk && dwc->is_fpga) {..}
 > 
-> It is like most of the the other new drivers, each mvebu_pcie_probe
-> expects to create a new domain with a unique bus number set for that
-> platform_device. AFAIK everything is uniq'd to the struct mcebu_pcie,
-> so there is nothing precluding the driver from being instantiated
-> twice.
+> the problem is that somebody might need this on non-FPGA. Currently,
+> only AMD needs these and only on FPGA, but you never know.
 > 
-> Indeed, the way mvebu hardware works you could actually create a DT
-> that assigned some ports to one domain and some other ports to a
-> different domain, using two platform_devices. All that was missing
-> from the driver was to increment the domain number.
+> I guess we can add it like this for now and once we have a real AMD
+> product, we drop FPGA support from AMD.
+> 
 
-Right, makes sense.
+OK, agree.
 
-> I think Lorenzo's patches improve this, at least it appears that
-> unique domain numbers are now being assigned, I'm not sure - I'm a
-> little confused how we can safely blindly apply the new domain logic
-> without the driver opt'ing in....
+Then I comments below WARN_ONCE, OK?
 
-I think it will just work: the host driver should not care about
-the particular domain number, it just needs to be unique, which
-the core now ensures.
+/* FIXME it should be used after AMD NL product taps out */
+#if 0
+WARN_ONCE(dwc->disable_scramble_quirk && !dwc->is_fpga,
+"disable_scramble cannot be used on non-FPGA builds\n");
+#endif
 
-> I thought older PCI platforms tended to call pci_common_init for each
-> physical PCI bus, and we don't want them to suddenly have non-zero
-> domain numbers??
-
-Only cns3xxx calls pci_common_init with fixed domain numbers, and
-Lorenzo's patch 1/2 changes it. All other drivers fall into one
-of three categories:
-
-a) there is only ever one host bridge
-b) There are multiple host bridges, but they are all in the same
-   domain, and the driver calls pci_common_init() once to initialize
-   them all, and pci_common_init calls back into the driver with
-   the hw_pci->setup() function passing the instance number.
-c) The driver calls pci_common_init_dev() for each new host bridge
-   and assigns a new domain every time but never has more than one
-   host bridge per domain.
-
-a) and b) are not impacted by this patch, while c) becomes simpler.
-
-BTW, pci-mvebu is currently the only driver using c) with pci_common_init
-rather than pci_common_init_dev. We should probably apply this trivial
-patch to make it more consistent:
-
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index b1315e197ffb..efe4bd370b37 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -825,7 +825,7 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
- 	hw.align_resource = mvebu_pcie_align_resource;
- 	hw.add_bus        = mvebu_pcie_add_bus;
- 
--	pci_common_init(&hw);
-+	pci_common_init_dev(&pcie->pdev.dev, &hw);
- }
- 
- /*
-
-
-	Arnd
+Thanks,
+Rui
