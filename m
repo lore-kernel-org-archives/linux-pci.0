@@ -1,203 +1,194 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36342 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752846AbaJGOpV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Oct 2014 10:45:21 -0400
-From: Marcel Apfelbaum <marcel.a@redhat.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: linux-kernel@vger.kernel.org, marcel@redhat.com, mst@redhat.com,
-	alex.williamson@redhat.com
-Subject: [Qemu-devel] [PATCH v2] PCI: add kernel parameter to override devid<->driver mapping.
-Date: Tue,  7 Oct 2014 17:44:15 +0300
-Message-Id: <1412693055-1794-1-git-send-email-marcel.a@redhat.com>
+Received: from mail-bn1on0115.outbound.protection.outlook.com ([157.56.110.115]:9184
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933331AbaJ2PaU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 Oct 2014 11:30:20 -0400
+Message-ID: <54510806.9080102@amd.com>
+Date: Wed, 29 Oct 2014 10:30:14 -0500
+From: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
+MIME-Version: 1.0
+To: Borislav Petkov <bp@alien8.de>
+CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<tglx@linutronix.de>, <hpa@zytor.com>, <x86@kernel.org>,
+	<bp@suse.de>, <dan.carpenter@oracle.com>,
+	<dougthompson@xmission.com>, <m.chehab@samsung.com>,
+	<linux-edac@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH V2 4/4] edac, amd64_edac: Add F15h M60h support
+References: <1412640280-11452-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+ <20141010174954.GA13017@pd.tnic>
+In-Reply-To: <20141010174954.GA13017@pd.tnic>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Scanning a lot of devices during boot requires a lot of time.
-On other scenarios there is a need to bind a driver to a specific slot.
+On 10/10/2014 12:49 PM, Borislav Petkov wrote:
+> On Mon, Oct 06, 2014 at 07:04:40PM -0500, Aravind Gopalakrishnan wrote:
+>> This patch adds support for ECC error decoding for F15h M60h processor.
+>> Aside from the usual changes, the patch adds support for some new features
+>> in the processor:
+>>   - DDR4(unbuffered, registered); LRDIMM DDR3 support
+>>     - relevant debug messages have been modified/added to report these
+>>       memory types
+>>   - new dbam_to_cs mappers
+>>     - if (F15h M60h && LRDIMM); we need a 'multiplier' value to find
+>>       cs_size. This multiplier value is obtained from the per-dimm
+>>       DCSM register. So, change the interface to accept a 'cs_mask_nr'
+>>       value to facilitate this calculation
+>>   - new determine_memory_type low_ops
+>>     - introduced to remove too many if-else conditions in
+>>       determine_memory_type().
+>>     - This is now called early in read_mc_regs() to cache dram_type
+>>
+>> Misc cleanup:
+>>   - amd64_pci_table[] is condensed by using PCI_VDEVICE macro.
+>>
+>> Testing details:
+>> Tested the patch by injecting 'ECC' type errors using mce_amd_inj
+>> and error decoding works fine.
+>>
+>> Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+>> ---
+>> Changes in V2
+>>   - Cache dram_type in amd64_pvt structure (per Boris suggestion)
+>>   - Introduce per-family low_ops for determine_memory_type() to reduce
+>>     number of if-else statements
+>>     - Call this early in read_mc_regs() to cache dram_type
+>>     - The debug messages are moved around a bit as a result to print
+>>       dram_type immediately
+>>
+>>   drivers/edac/amd64_edac.c | 253 ++++++++++++++++++++++++++++++++--------------
+>>   drivers/edac/amd64_edac.h |  16 ++-
+>>   2 files changed, 188 insertions(+), 81 deletions(-)
+>>
+>> diff --git a/drivers/edac/amd64_edac.c b/drivers/edac/amd64_edac.c
+>> index bbd6514..6cc3243 100644
+>> --- a/drivers/edac/amd64_edac.c
+>> +++ b/drivers/edac/amd64_edac.c
+>> @@ -692,9 +692,18 @@ static void debug_dump_dramcfg_low(struct amd64_pvt *pvt, u32 dclr, int chan)
+>>   {
+>>   	edac_dbg(1, "F2x%d90 (DRAM Cfg Low): 0x%08x\n", chan, dclr);
+>>   
+>> -	edac_dbg(1, "  DIMM type: %sbuffered; all DIMMs support ECC: %s\n",
+>> -		 (dclr & BIT(16)) ?  "un" : "",
+>> -		 (dclr & BIT(19)) ? "yes" : "no");
+>> +	if (pvt->dram_type == MEM_LRDDR3) {
+>> +		u32 dcsm = pvt->csels[chan].csmasks[0];
+>> +		/*
+>> +		 * It's assumed all LRDIMMs in a DCT are going to be of
+>> +		 * same 'type' until proven otherwise. So, use a cs
+>> +		 * value of '0' here to get dcsm value.
+>> +		 */
+>> +		edac_dbg(1, " LRDIMM %dx rank multiply\n", (dcsm & 0x3));
+>> +	}
+>> +
+>> +	edac_dbg(1, "All DIMMs support ECC:%s\n",
+>> +		    (dclr & BIT(19)) ? "yes" : "no");
+>>   
+>>   	edac_dbg(1, "  PAR/ERR parity: %s\n",
+>>   		 (dclr & BIT(8)) ?  "enabled" : "disabled");
+>> @@ -756,7 +765,7 @@ static void prep_chip_selects(struct amd64_pvt *pvt)
+>>   	if (pvt->fam == 0xf && pvt->ext_model < K8_REV_F) {
+>>   		pvt->csels[0].b_cnt = pvt->csels[1].b_cnt = 8;
+>>   		pvt->csels[0].m_cnt = pvt->csels[1].m_cnt = 8;
+>> -	} else if (pvt->fam == 0x15 && pvt->model >= 0x30) {
+>> +	} else if (pvt->fam == 0x15 && pvt->model == 0x30) {
+>>   		pvt->csels[0].b_cnt = pvt->csels[1].b_cnt = 4;
+>>   		pvt->csels[0].m_cnt = pvt->csels[1].m_cnt = 2;
+>>   	} else {
+>> @@ -813,25 +822,57 @@ static void read_dct_base_mask(struct amd64_pvt *pvt)
+>>   	}
+>>   }
+>>   
+>> -static enum mem_type determine_memory_type(struct amd64_pvt *pvt, int cs)
+>> +void determine_memory_type_k8(struct amd64_pvt *pvt)
+>>   {
+>> -	enum mem_type type;
+>> -
+>> -	/* F15h supports only DDR3 */
+>> -	if (pvt->fam >= 0x15)
+>> -		type = (pvt->dclr0 & BIT(16)) ?	MEM_DDR3 : MEM_RDDR3;
+>> -	else if (pvt->fam == 0x10 || pvt->ext_model >= K8_REV_F) {
+>> +	if (pvt->ext_model >= K8_REV_F) {
+>>   		if (pvt->dchr0 & DDR3_MODE)
+>> -			type = (pvt->dclr0 & BIT(16)) ?	MEM_DDR3 : MEM_RDDR3;
+>> +			pvt->dram_type = (pvt->dclr0 & BIT(16)) ?
+>> +					 MEM_DDR3 : MEM_RDDR3;
+>>   		else
+>> -			type = (pvt->dclr0 & BIT(16)) ? MEM_DDR2 : MEM_RDDR2;
+>> +			pvt->dram_type = (pvt->dclr0 & BIT(16)) ?
+>> +					 MEM_DDR2 : MEM_RDDR2;
+> If you want to do separate ->determine_memory_type() per family, you can
+> at least avoid code duplication here above ^^^ by doing
+>
+> 	return determine_memory_type_f10(pvt);
+>
+> for the K8-revF and later at least.
+>
+> Or, you can do a nice clean switch/case and keep the logic for the
+> memory type in one function. See which one looks cleaner but from where
+> I'm standing, the per-family pointers are a bit too much for this case,
+> IMHO.
+>
+> Oh, btw, they all should be static declarations, of course.
+>
+>>   	} else {
+>> -		type = (pvt->dclr0 & BIT(18)) ? MEM_DDR : MEM_RDDR;
+>> +		pvt->dram_type = (pvt->dclr0 & BIT(18)) ? MEM_DDR : MEM_RDDR;
+>>   	}
+>> +}
+>>   
+>> -	amd64_info("CS%d: %s\n", cs, edac_mem_types[type]);
+>> +void determine_memory_type_f10(struct amd64_pvt *pvt)
+>> +{
+>> +	if (pvt->dchr0 & DDR3_MODE)
+>> +		pvt->dram_type = (pvt->dclr0 & BIT(16)) ?
+>> +				 MEM_DDR3 : MEM_RDDR3;
+>> +	else
+>> +		pvt->dram_type = (pvt->dclr0 & BIT(16)) ?
+>> +				 MEM_DDR2 : MEM_RDDR2;
+>> +}
+>>   
+>> -	return type;
+>> +void determine_memory_type_f15(struct amd64_pvt *pvt)
+>> +{
+>> +	if (pvt->model == 0x60) {
+>> +		/*
+>> +		 * We use a Chip Select value of '0' to obtain dcsm.
+>> +		 * Theoretically, it is possible to populate LRDIMMs
+>> +		 * of different 'Rank' value on a DCT. But this is
+>> +		 * not a common case. So, it's reasonable to assume
+>> +		 * all DIMMs are going to be of same 'type' until
+>> +		 * proven otherwise.
+>> +		 */
+>> +		u32 dram_ctrl;
+>> +		u32 dcsm = pvt->csels[0].csmasks[0];
+>> +
+>> +		amd64_read_dct_pci_cfg(pvt, 0, DRAM_CONTROL,
+>> +				       &dram_ctrl);
+>> +		pvt->dram_type = (((dram_ctrl >> 8) & 0x7) == 0x2) ? MEM_DDR4 :
+>> +				 (pvt->dclr0 & BIT(16)) ? MEM_DDR3 :
+>> +				 (dcsm & 0x3) ? MEM_LRDDR3 : MEM_RDDR3;
+> This is pretty unreadable, please do a simpler if-else instead.
 
-Binding devices to pci-stub driver does not work,
-as it will not differentiate between devices of the
-same type. Using some start scripts is error prone.
+Ok, will do.
 
-The solution leverages driver_override functionality introduced by
+>> +	} else {
+>> +		pvt->dram_type = (pvt->dclr0 & BIT(16)) ? MEM_DDR3 : MEM_RDDR3;
+>> +	}
+>> +}
+>> +
+>> +void determine_memory_type_f16(struct amd64_pvt *pvt)
+>> +{
+>> +	pvt->dram_type = (pvt->dclr0 & BIT(16)) ? MEM_DDR3 : MEM_RDDR3;
+> This line tends to repeat a lot - the switch/case version starts to
+> sound much better all of a sudden... :-)
+>
+>
 
-	commit: 782a985d7af26db39e86070d28f987cad21313c0
-	Author: Alex Williamson <alex.williamson@redhat.com>
-	Date:   Tue May 20 08:53:21 2014 -0600
+switch-case is fine too (although it'll probably be one big function..).
+I thought per-family pointers might be more manageable; anyway, I'll 
+re-implement this as a switch-case and send as V3.
 
-    	PCI: Introduce new device binding path using pci_dev.driver_override
-
-In order to bind PCI slots to specific drivers use:
-	pci=driver[xxxx:xx:xx.x]=foo,driver[xxxx:xx:xx.x]=bar,...
-
-Signed-off-by: Marcel Apfelbaum <marcel.a@redhat.com>
----
-v1 -> v2:
- - Addressed Michael S. Tsirkin comments
-   - Removed 32 slots limitation
-   - Better handling of memory allocation failures
-     (preferred BUG_ON over error messages)
- - Addressed Alex Williamson's comments:
-   - Modified commit message to show parameter usage more clear.
- - I preferred to re-use parse_args instead of manually using
-   strstr in order to better comply with command line parsing
-   rules.
- - I didn't use any locking when parsing the command line args
-   (see parse_done usage) assuming that first call will be
-   early in system boot and no race can occur. Please correct
-   me if I am wrong.
-
-Notes:
- - I have further ideas on top of this patch based on your reviews.
-   I thought of:
-   - Use wildcards to specify entire buses/devices, something like:
-     	driver[0001:02:*.*]=pci-stub
-   - Use comma to separate several devices:
-     	driver[0001:02:03.4,0001:02:04.0,...]=pci-stub
-   - Make domain optional:
-   	driver[00:03.0]=pci-stub
-
-Comments will be appreciated,
 Thanks,
-Marcel
- Documentation/kernel-parameters.txt |  4 ++
- drivers/pci/bus.c                   | 86 +++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.c                   |  2 +
- 3 files changed, 92 insertions(+)
-
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 5ae8608..c1cbb4c 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -2631,6 +2631,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 		pcie_scan_all	Scan all possible PCIe devices.  Otherwise we
- 				only look for one device below a PCIe downstream
- 				port.
-+		driver		Provide an override to the devid<->driver mapping
-+				for a specific slot.
-+				Bind PCI slot 0001:02:03.4 to pci-stub by:
-+					driver[0001:02:03.4]=pci-stub
- 
- 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
- 			Management.
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 73aef51..d2c0721 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -230,6 +230,91 @@ EXPORT_SYMBOL(pci_bus_alloc_resource);
- 
- void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
- 
-+#define DRIVER_OVERRIDE_NAME_LENGTH 64
-+
-+struct driver_override_entry {
-+	unsigned int domain;
-+	unsigned char bus;
-+	unsigned int devfn;
-+	char driver_name[DRIVER_OVERRIDE_NAME_LENGTH];
-+	struct list_head list;
-+};
-+
-+static LIST_HEAD(driver_override_entries);
-+
-+static int pci_device_parse_driver_override(char *param, char *val,
-+					    const char *unused)
-+{
-+	unsigned int domain, bus, dev, fn;
-+	char driver_name[DRIVER_OVERRIDE_NAME_LENGTH];
-+	char format[] = "[%4x:%2x:%2x.%2x]=%%%ds";
-+	struct driver_override_entry *entry;
-+	int ret;
-+
-+	while (val) {
-+		char *k = strchr(val, ',');
-+
-+		if (k)
-+			*k++ = 0;
-+
-+		if (strncmp(val, "driver", 6)) {
-+			val = k;
-+			continue;
-+		}
-+
-+		sprintf(format + 18, "%%%ds", DRIVER_OVERRIDE_NAME_LENGTH);
-+		ret = sscanf(val + 6, format, &domain, &bus, &dev, &fn,
-+			     driver_name);
-+		if (ret != 5) {
-+			pr_err("PCI: Invalid command line: %s\n", val);
-+			val = k;
-+			continue;
-+		}
-+
-+		entry = kzalloc(sizeof(*entry), GFP_KERNEL);
-+		BUG_ON(!entry);
-+
-+		INIT_LIST_HEAD(&entry->list);
-+		entry->domain = domain;
-+		entry->bus = bus && 0xff;
-+		entry->devfn = ((dev & 0x1f) << 3) | (fn & 0x7);
-+		memcpy(entry->driver_name, driver_name, sizeof(driver_name));
-+
-+		list_add_tail(&entry->list, &driver_override_entries);
-+		val = k;
-+	}
-+
-+	return 0;
-+}
-+
-+static void pci_device_setup_driver_override(struct pci_dev *dev)
-+{
-+	static int parse_done;
-+	struct driver_override_entry *entry;
-+
-+	if (!parse_done) {
-+		char *cmdline = kstrdup(saved_command_line, GFP_KERNEL);
-+
-+		BUG_ON(!cmdline);
-+
-+		parse_args("pci", cmdline, NULL,
-+			   0, 0, 0, &pci_device_parse_driver_override);
-+		kfree(cmdline);
-+		parse_done = 1;
-+	}
-+
-+	list_for_each_entry(entry, &driver_override_entries, list) {
-+		if (pci_domain_nr(dev->bus) != entry->domain ||
-+		    dev->bus->number != entry->bus ||
-+		    dev->devfn != entry->devfn)
-+			continue;
-+
-+		dev->driver_override = kstrdup(entry->driver_name, GFP_KERNEL);
-+		BUG_ON(!dev->driver_override);
-+		break;
-+	}
-+}
-+
- /**
-  * pci_bus_add_device - start driver for a single device
-  * @dev: device to add
-@@ -245,6 +330,7 @@ void pci_bus_add_device(struct pci_dev *dev)
- 	 * are not assigned yet for some devices.
- 	 */
- 	pci_fixup_device(pci_fixup_final, dev);
-+	pci_device_setup_driver_override(dev);
- 	pci_create_sysfs_dev_files(dev);
- 	pci_proc_attach_device(dev);
- 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b7678be..6bd7844 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4468,6 +4468,8 @@ static int __init pci_setup(char *str)
- 				pcie_bus_config = PCIE_BUS_PEER2PEER;
- 			} else if (!strncmp(str, "pcie_scan_all", 13)) {
- 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
-+			} else if (!strncmp(str, "driver", 6)) {
-+				/* lazy evaluation by the pci subsystem */
- 			} else {
- 				printk(KERN_ERR "PCI: Unknown option `%s'\n",
- 						str);
--- 
-1.8.3.1
-
+-Aravind
