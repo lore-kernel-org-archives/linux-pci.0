@@ -1,7 +1,11 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Subject: Re: [Patch Part2 v3 01/24] irqdomain: Introduce new interfaces to
+ support hierarchy irqdomains
+From: Yingjoe Chen <yingjoe.chen@mediatek.com>
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>
+CC: Jiang Liu <jiang.liu@linux.intel.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
@@ -9,230 +13,109 @@ To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
 	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch Part2 v3 22/24] x86, irq: Use hierarchy irqdomain to manage DMAR interrupts
-Date: Tue, 28 Oct 2014 16:26:40 +0800
-Message-Id: <1414484803-10311-23-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>
+In-Reply-To: <5450B309.4040607@arm.com>
 References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
+	 <1414484803-10311-2-git-send-email-jiang.liu@linux.intel.com>
+	 <1414489711.32399.53.camel@mtksdaap41>
+	 <alpine.DEB.2.11.1410282010340.5308@nanos> <544FF900.4020601@arm.com>
+	 <alpine.DEB.2.11.1410282116220.5308@nanos>  <5450B309.4040607@arm.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 29 Oct 2014 18:10:33 +0800
+Message-ID: <1414577433.32399.63.camel@mtksdaap41>
+MIME-Version: 1.0
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance DMAR code to support hierarchy irqdomain, it helps to make
-the architecture more clear.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/hw_irq.h |    7 +++
- arch/x86/kernel/apic/msi.c    |  129 +++++++++++++++++++++++++++++++----------
- 2 files changed, 106 insertions(+), 30 deletions(-)
+On Wed, 2014-10-29 at 09:27 +0000, Marc Zyngier wrote:
+> On 28/10/14 20:23, Thomas Gleixner wrote:
+> > On Tue, 28 Oct 2014, Marc Zyngier wrote:
+> >> On 28/10/14 19:37, Thomas Gleixner wrote:
+> >>> So while we are at it:
+> >>>
+> >>>> +	if (irq_domain_is_hierarchy(domain)) {
+> >>>> +		if (domain->ops->xlate) {
+> >>>> +			/*
+> >>>> +			 * If we've already configured this interrupt,
+> >>>> +			 * don't do it again, or hell will break loose.
+> >>>> +			 */
+> >>>> +			virq = irq_find_mapping(domain, hwirq);
+> >>>> +			if (virq)
+> >>>> +				return virq;
+> >>>
+> >>> I can understand that it is an issue if the mapping exists already,
+> >>> but I have to ask WHY is it correct behaviour to call into that code
+> >>> for an existing mapping.
+> >>
+> >> As I have originally looked at this, I'll answer the question:
+> >>
+> >> The generic DT code parses the whole tree, and generates platform
+> >> devices as it goes. As part of the platform device creation, it
+> >> populates the IRQ resources, which translates into calling into
+> >> irq_create_of_mapping(). You could argue that this behaviour is crazy,
+> >> and I wouldn't disagree.
+> > 
+> > Mooo.
+> 
+> Quite.
+> 
+> >> See http://www.spinics.net/lists/devicetree/msg53164.html for more gory
+> >> details.
+> >>
+> >>> And why would this check only apply if domain->ops->xlate is set?
+> >>> irq_create_mapping() does it unconditionally.
+> >>
+> >> My original code used the xlate callback to parse the opaque irq_data,
+> >> computing hwirq, and I suspect this is a leftover of it. The above code
+> >> seems to pull hwirq out of thin air, which is probably not the intended
+> >> behaviour. Joe?
+> > 
+> > No. Here is the full patch from Joe:
+> > 
+> >   http://lists.infradead.org/pipermail/linux-arm-kernel/2014-October/296543.html
+> > 
+> > hwirq gets either set from hwirq = irq_data->args[0] or from the xlate
+> > call.
+> 
+> Ah, that makes a lot more sense.
+> 
+> > But my question still stands:
+> > 
+> > Why would this check only apply if domain->ops->xlate is set?
+> > irq_create_mapping() does it unconditionally.
+> 
+> I don't think we should consider xlate at all. We already resolved hwirq
+> (either directly or through a xlate call), and the check should always
+> be performed (otherwise we're likely to fall into the same trap again).
+> Looks like a bug to me.
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 1ff7a7f61bf9..176c624c9cc9 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -122,6 +122,7 @@ enum irq_alloc_type {
- 	X86_IRQ_ALLOC_TYPE_HPET,
- 	X86_IRQ_ALLOC_TYPE_MSI,
- 	X86_IRQ_ALLOC_TYPE_MSIX,
-+	X86_IRQ_ALLOC_TYPE_DMAR,
- };
- 
- struct irq_alloc_info {
-@@ -150,6 +151,12 @@ struct irq_alloc_info {
- 			u32		ioapic_polarity : 1;
- 		};
- #endif
-+#ifdef	CONFIG_DMAR_TABLE
-+		struct {
-+			int		dmar_id;
-+			void		*dmar_data;
-+		};
-+#endif
- 	};
- };
- 
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 11ced51d6ef2..bd4275038436 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -69,6 +69,9 @@ static void msi_update_msg(struct msi_msg *msg, struct irq_data *irq_data)
- 	msg->data |= MSI_DATA_VECTOR(cfg->vector);
- 	msg->address_lo &= ~MSI_ADDR_DEST_ID_MASK;
- 	msg->address_lo |= MSI_ADDR_DEST_ID(cfg->dest_apicid);
-+	if (x2apic_enabled())
-+		msg->address_hi = MSI_ADDR_BASE_HI |
-+				  MSI_ADDR_EXT_DEST_ID(cfg->dest_apicid);
- }
- 
- static bool msi_irq_remapped(struct irq_data *irq_data)
-@@ -302,59 +305,125 @@ static int
- dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 		      bool force)
- {
--	struct irq_cfg *cfg = irqd_cfg(data);
--	unsigned int dest, irq = data->irq;
-+	struct irq_data *parent = data->parent_data;
- 	struct msi_msg msg;
- 	int ret;
- 
--	ret = apic_set_affinity(data, mask, &dest);
--	if (ret)
--		return ret;
--
--	dmar_msi_read(irq, &msg);
--
--	msg.data &= ~MSI_DATA_VECTOR_MASK;
--	msg.data |= MSI_DATA_VECTOR(cfg->vector);
--	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
--	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
--	msg.address_hi = MSI_ADDR_BASE_HI | MSI_ADDR_EXT_DEST_ID(dest);
--
--	dmar_msi_write(irq, &msg);
-+	ret = parent->chip->irq_set_affinity(parent, mask, force);
-+	if (ret >= 0) {
-+		dmar_msi_read(data->irq, &msg);
-+		msi_update_msg(&msg, data);
-+		dmar_msi_write(data->irq, &msg);
-+	}
- 
--	return IRQ_SET_MASK_OK_NOCOPY;
-+	return ret;
- }
- 
- static struct irq_chip dmar_msi_type = {
- 	.name			= "DMAR_MSI",
- 	.irq_unmask		= dmar_msi_unmask,
- 	.irq_mask		= dmar_msi_mask,
--	.irq_ack		= apic_ack_edge,
-+	.irq_ack		= irq_chip_ack_parent,
- 	.irq_set_affinity	= dmar_msi_set_affinity,
--	.irq_retrigger		= apic_retrigger_irq,
-+	.irq_retrigger		= irq_chip_retrigger_hierarchy,
-  	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
- 
--int dmar_alloc_hwirq(int id, int node, void *arg)
-+static int dmar_domain_alloc(struct irq_domain *domain, unsigned int virq,
-+			     unsigned int nr_irqs, void *arg)
-+{
-+	struct irq_alloc_info *info = arg;
-+	int ret;
-+
-+	if (nr_irqs > 1 || !info || info->type != X86_IRQ_ALLOC_TYPE_DMAR)
-+		return -EINVAL;
-+	if (irq_find_mapping(domain, info->dmar_id)) {
-+		pr_warn("IRQ for DMAR%d already exists.\n", info->dmar_id);
-+		return -EEXIST;
-+	}
-+
-+	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
-+	if (ret >= 0) {
-+		irq_domain_set_hwirq_and_chip(domain, virq, info->dmar_id,
-+					      &dmar_msi_type, NULL);
-+		irq_set_handler_data(virq, info->dmar_data);
-+		__irq_set_handler(virq, handle_edge_irq, 0, "edge");
-+	}
-+
-+	return ret;
-+}
-+
-+static void dmar_domain_free(struct irq_domain *domain, unsigned int virq,
-+			     unsigned int nr_irqs)
-+{
-+	BUG_ON(nr_irqs > 1);
-+	msi_reset_irq_data_and_handler(domain, virq);
-+	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
-+}
-+
-+static int dmar_domain_activate(struct irq_domain *domain,
-+				struct irq_data *irq_data)
-+{
-+	struct msi_msg msg;
-+
-+	native_compose_msi_msg(irqd_cfg(irq_data), &msg);
-+	dmar_msi_write(irq_data->irq, &msg);
-+
-+	return 0;
-+}
-+
-+static int dmar_domain_deactivate(struct irq_domain *domain,
-+				  struct irq_data *irq_data)
- {
--	int irq;
- 	struct msi_msg msg;
- 
--	irq = irq_domain_alloc_irqs(NULL, 1, node, NULL);
--	if (irq > 0) {
--		irq_set_handler_data(irq, arg);
--		irq_set_chip_and_handler_name(irq, &dmar_msi_type,
--					      handle_edge_irq, "edge");
--		native_compose_msi_msg(irq_cfg(irq), &msg);
--		dmar_msi_write(irq, &msg);
-+	memset(&msg, 0, sizeof(msg));
-+	dmar_msi_write(irq_data->irq, &msg);
-+
-+	return 0;
-+}
-+
-+static struct irq_domain_ops dmar_domain_ops = {
-+	.alloc = dmar_domain_alloc,
-+	.free = dmar_domain_free,
-+	.activate = dmar_domain_activate,
-+	.deactivate = dmar_domain_deactivate,
-+};
-+
-+static struct irq_domain *dmar_get_irq_domain(void)
-+{
-+	static struct irq_domain *dmar_domain;
-+	static DEFINE_MUTEX(dmar_lock);
-+
-+	mutex_lock(&dmar_lock);
-+	if (dmar_domain == NULL) {
-+		dmar_domain = irq_domain_add_tree(NULL, &dmar_domain_ops, NULL);
-+		if (dmar_domain)
-+			dmar_domain->parent = x86_vector_domain;
- 	}
-+	mutex_unlock(&dmar_lock);
-+
-+	return dmar_domain;
-+}
-+
-+int dmar_alloc_hwirq(int id, int node, void *arg)
-+{
-+	struct irq_domain *domain = dmar_get_irq_domain();
-+	struct irq_alloc_info info;
-+
-+	if (!domain)
-+		return -1;
-+
-+	init_irq_alloc_info(&info, NULL);
-+	info.type = X86_IRQ_ALLOC_TYPE_DMAR;
-+	info.dmar_id = id;
-+	info.dmar_data = arg;
- 
--	return irq;
-+	return irq_domain_alloc_irqs(domain, 1, node, &info);
- }
- 
- void dmar_free_hwirq(int irq)
- {
--	irq_set_handler_data(irq, NULL);
--	irq_set_handler(irq, NULL);
- 	irq_domain_free_irqs(irq, 1);
- }
- #endif
--- 
-1.7.10.4
+I see it now.
+When irq_create_of_mapping() is called, we know there exists a mapping
+between irq_data and hwirq. If xlate exists, we get the mapping from
+xlate call, otherwise irq_data->args[0] is hwirq. This is true even when
+using hierarchy irqdomain. So yes, we should also check for existing
+mapping for empty domain->ops->xlate.
+I corrected this in my latest version.
+http://lists.infradead.org/pipermail/linux-arm-kernel/2014-October/298158.html
+
+Thanks for catching this.
+
+Joe.C
+
+
 
