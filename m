@@ -1,155 +1,139 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:10339 "EHLO mx1.redhat.com"
+Received: from mout2.freenet.de ([195.4.92.92]:34262 "EHLO mout2.freenet.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752107AbaJWN57 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 23 Oct 2014 09:57:59 -0400
-Message-ID: <1414072672.27420.12.camel@ul30vt.home>
-Subject: Re: [PATCH v4] PCI: add kernel parameter to override devid<->driver
- mapping.
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Stuart Yoder <stuart.yoder@freescale.com>
-Cc: Marcel Apfelbaum <marcel.a@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"marcel@redhat.com" <marcel@redhat.com>,
-	"mst@redhat.com" <mst@redhat.com>
-Date: Thu, 23 Oct 2014 07:57:52 -0600
-In-Reply-To: <d093a0738f61433aafe5ddd36d0393e9@CY1PR0301MB0748.namprd03.prod.outlook.com>
-References: <1413813882-27047-1-git-send-email-marcel.a@redhat.com>
-	 <1414002755.4202.253.camel@ul30vt.home>
-	 <d093a0738f61433aafe5ddd36d0393e9@CY1PR0301MB0748.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S932414AbaJ2R7h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 Oct 2014 13:59:37 -0400
+Message-ID: <54512A91.2010606@maya.org>
+Date: Wed, 29 Oct 2014 18:57:37 +0100
+From: Andreas Hartmann <andihartmann@freenet.de>
+MIME-Version: 1.0
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass
+ through (vfio)
+References: <20140923210318.498dacbd@dualc.maya.org>						 <CAErSpo5kkk4itqqmCMU=08-XMcDknur8VY++F3A2LajdvTptOA@mail.gmail.com>						 <5437F1F5.3010706@maya.org>						 <CAErSpo6DuWEcJb_gfS=5JnKN8b4DXXV9+u-CRa8m3db0dbzpsQ@mail.gmail.com>						 <543804BC.3080307@maya.org>						 <CAErSpo450czUtAM104o+RS=yOcmP+3MKMH7mYk=UYhVJ2+cfSQ@mail.gmail.com>						 <20141011003219.560cca97@dualc.maya.org>						 <20141010225408.GA24493@google.com> <5438CC1E.3060407@maya.org>						 <1413360267.4202.70.camel@ul30vt.home> <54406B34.1050808@maya.org>						 <1413925580.4202.189.camel@ul30vt.home>					 <1413927152.4202.195.camel@ul30vt.home> <5447D9D9.9030909@maya.org>				 <1414010215.4202.275.camel@ul30vt.home> <54492606.5090308@maya.org>			 <1414082022.27420.39.camel@ul30vt.home> <54493BFA.8010609@maya.org>		 <1414093023.27420.40.camel@ul30vt.home> <544B3D14.70907@maya.org>	 <1414533068.27420.226.camel@ul30vt.home> <54511A16.30602@maya.org> <1414604677.27420.263.camel@ul30vt.home>
+In-Reply-To: <1414604677.27420.263.camel@ul30vt.home>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2014-10-23 at 13:44 +0000, Stuart Yoder wrote:
+Alex Williamson schrieb:
+> On Wed, 2014-10-29 at 17:47 +0100, Andreas Hartmann wrote:
+>> Alex Williamson wrote:
+>>> On Sat, 2014-10-25 at 08:03 +0200, Andreas Hartmann wrote:
+>>>>
+>>>> Out of interest:
+>>>> Bjorn's patch disables vc save/restore support - and the machine works
+>>>> fine again. Why is it needed at all if it seems to work perfectly w/o
+>>>> it? What's the additional benefit? Or in other words: What am I missing
+>>>> until today :-) ? What would be better? What could I do more?
+>>>
+>>>
+>>> You're right, in the configuration you have the endpoint device has a
+>>> Virtual Channel capability but the upstream root port does not.  The
+>>> spec is not at all clear about defining the endpoints for enabling
+>>> Virtual Channel in each type of configuration, but I think that if we
+>>> have an upstream port that does not support Virtual Channel, we can skip
+>>> the save/restore.  Please test the patch below.
+>>>
+>>> I'm also still completely confused about whether this is a VC
+>>> save/restore issue or a bus reset issue.  You originally bisected this
+>>> back to the VC save/restore patch, but you also found that a manual,
+>>> setpci-based bus reset triggered a system hang.
+>>
+>> With your additional patch posted here:
+>> http://article.gmane.org/gmane.linux.kernel.pci/36162
 > 
-> > -----Original Message-----
-> > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > Sent: Wednesday, October 22, 2014 1:33 PM
-> > To: Marcel Apfelbaum
-> > Cc: linux-pci@vger.kernel.org; bhelgaas@google.com; linux-kernel@vger.kernel.org; marcel@redhat.com;
-> > mst@redhat.com; Yoder Stuart-B08248
-> > Subject: Re: [PATCH v4] PCI: add kernel parameter to override devid<->driver mapping.
-> > 
-> > [cc+ stuart]
-> > 
-> > On Mon, 2014-10-20 at 17:04 +0300, Marcel Apfelbaum wrote:
-> > > Scanning a lot of devices during boot requires a lot of time.
-> > > On other scenarios there is a need to bind a driver to a specific slot.
-> > >
-> > > Binding devices to pci-stub driver does not work,
-> > > as it will not differentiate between devices of the
-> > > same type. Using some start scripts is error prone.
-> > >
-> > > The solution leverages driver_override functionality introduced by
-> > >
-> > > 	commit: 782a985d7af26db39e86070d28f987cad21313c0
-> > > 	Author: Alex Williamson <alex.williamson@redhat.com>
-> > > 	Date:   Tue May 20 08:53:21 2014 -0600
-> > >
-> > >     	PCI: Introduce new device binding path using pci_dev.driver_override
-> > >
-> > > In order to bind PCI slots to specific drivers use:
-> > > 	pci=driver[xxxx:xx:xx.x]=foo,driver[xxxx:xx:xx.x]=bar,...
-> > >
-> > > Signed-off-by: Marcel Apfelbaum <marcel.a@redhat.com>
-> > > ---
-> > > v3 -> v4:
-> > >  - Addressed Alex Williamson's comments:
-> > >    - Modified the type of driver_override_entry's fields
-> > >    - Used PCI_DEVFN when appropriated
-> > >    - Removed redundant checks
-> > >    - Replaced BUG_ON with pr_err messages
-> > >    - Simpler command line parsing
-> > >  - Addressed Michael S. Tsirkin comments
-> > >    - removed DRIVER_OVERRIDE_NAME_LENGTH limitation
-> > > v2 -> v3:
-> > >  - Corrected subject line
-> > > v1 -> v2:
-> > >  - Addressed Michael S. Tsirkin comments
-> > >    - Removed 32 slots limitation
-> > >    - Better handling of memory allocation failures
-> > >      (preferred BUG_ON over error messages)
-> > >  - Addressed Alex Williamson's comments:
-> > >    - Modified commit message to show parameter usage more clear.
-> > >  - I preferred to re-use parse_args instead of manually using
-> > >    strstr in order to better comply with command line parsing
-> > >    rules.
-> > >  - I didn't use any locking when parsing the command line args
-> > >    (see parse_done usage) assuming that first call will be
-> > >    early in system boot and no race can occur. Please correct
-> > >    me if I am wrong.
-> > >
-> > > Notes:
-> > >  - I have further ideas on top of this patch based on your reviews.
-> > >    I thought of:
-> > >    - Use wildcards to specify entire buses/devices, something like:
-> > >      	driver[0001:02:*.*]=pci-stub
-> > >    - Use comma to separate several devices:
-> > >      	driver[0001:02:03.4,0001:02:04.0,...]=pci-stub
-> > >    - Make domain optional:
-> > >    	driver[00:03.0]=pci-stub
-> > >
-> > > Comments will be appreciated,
-> > > Thanks,
-> > > Marcel
-> > >  Documentation/kernel-parameters.txt |   4 ++
-> > >  drivers/pci/bus.c                   | 111 ++++++++++++++++++++++++++++++++++++
-> > >  drivers/pci/pci.c                   |   2 +
-> > >  3 files changed, 117 insertions(+)
-> > 
-> > The driver_override feature that we're making use of here is also going
-> > to be supported by platform devices and potentially more bustypes in the
-> > future, so I'm concerned that making a pci specific kernel parameter is
-> > too shortsighted.  Instead we could hook on to BUS_NOTIFY_ADD_DEVICE for
-> > bustypes that support driver_override so we can have a common interface.
-> > Perhaps:
-> > 
-> > driver_override=pci,0000:02:00.0=pci-stub;platform,fakename=vfio-platform
-> > 
-> > Finding delimiters that don't conflict may be challenging.
+> Right, a reset via sysfs also triggered it with that patch, but the
+> reset via setpci is independent of any VC save/restore and still hung
+> your box.
 > 
-> I think what you proposed works--  <bus-name>,<bus-dev>=<driver>;
+>>
+>>>  I believe that
+>>> re-ordering the kernel reset mechanisms also triggered this.  Since
+>>> recent versions of QEMU are going to favor a bus reset over PM reset, I
+>>> don't have a lot of confidence that we're actually solving the problem
+>>> for you.  Please make sure to test with a recent QEMU to be sure we'll
+>>> do a bus reset.
+>>
+>> I'm running qemu 2.1.0 (newest is 2.1.2 - but this shouldn't be a
+>> problem) and tested w/ linux 3.17.
 > 
-> Think that will work for PCI, platform, and the new fsl-mc bus we are working
-> on.
+> Yep, just want to make sure it's QEMU new enough to do a bus reset and
+> kernel with matching support.
 > 
-> > Also, can we
-> > assume that bus-name:dev-name is unique for every bustype?  It is for
-> > pci, platform?
+>>> diff --git a/drivers/pci/vc.c b/drivers/pci/vc.c
+>>> index 7e1304d..6d13d34 100644
+>>> --- a/drivers/pci/vc.c
+>>> +++ b/drivers/pci/vc.c
+>>> @@ -339,6 +339,25 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
+>>>  	return buf ? 0 : len;
+>>>  }
+>>>  
+>>> +/**
+>>> + * pci_vc_needs_save - Determine whether a VC capability needs to be saved
+>>> + * @dev: device
+>>> + * @id: VC capability ID (VC/VC9/MFVC)
+>>> + *
+>>> + * In configurations where we have a VC or MFVC capability, but the upstream
+>>> + * device does not, we assume that VC save (and therefore restore) is not
+>>> + * necessary.  The intention is to only do VC save/restore in configuration
+>>> + * where it's necessary and hopefully avoid reset issues.
+>>> + */
+>>> +static bool pci_vc_needs_save(struct pci_dev *dev, u16 id)
+>>> +{
+>>> +	if (id == PCI_EXT_CAP_ID_VC9 || pci_is_root_bus(dev->bus) ||
+>>> +	    pci_find_ext_capability(dev->bus->self, PCI_EXT_CAP_ID_VC))
+>>> +		return true;
+>>> +
+>>> +	return false;
+>>> +}
+>>> +
+>>>  static struct {
+>>>  	u16 id;
+>>>  	const char *name;
+>>> @@ -362,7 +381,7 @@ int pci_save_vc_state(struct pci_dev *dev)
+>>>  		struct pci_cap_saved_state *save_state;
+>>>  
+>>>  		pos = pci_find_ext_capability(dev, vc_caps[i].id);
+>>> -		if (!pos)
+>>> +		if (!posi || !pci_vc_needs_save(dev, vc_caps[i].id))
+>>                         ^
+>> This should be most probably !pos (and not !posi - because !posi does
+>> through a compile error).
 > 
-> I think that has to be the case.
+> Oops, sorry.
 > 
-> > It also seems like there's a question of how long should this override
-> > last and how does the user disable it?
+>>>  			continue;
+>>>  
+>>>  		save_state = pci_find_saved_ext_cap(dev, vc_caps[i].id);
+>>> @@ -422,7 +441,7 @@ void pci_allocate_vc_save_buffers(struct pci_dev *dev)
+>>>  	for (i = 0; i < ARRAY_SIZE(vc_caps); i++) {
+>>>  		int len, pos = pci_find_ext_capability(dev, vc_caps[i].id);
+>>>  
+>>> -		if (!pos)
+>>> +		if (!pos || !pci_vc_needs_save(dev, vc_caps[i].id))
+>>>  			continue;
+>>>  
+>>>  		len = pci_vc_do_save_buffer(dev, pos, NULL, false);
+>>
+>> W/ the above patch, the machine hangs again (w/ qemu and setpci), but w/
+>> Bjorn's patch (and nothing more applied) which disables vc save/restore,
+>> the machine just works fine ... . I especially retested this case to be
+>> really sure. I'm so sorry. But that's how it behaves here :-(
 > 
-> Isn't that a general question for the "driver_overrride" mechanism?
-> I'm forgetting if the mechanism in the kernel now has a way to disable
-> it--  e.g. echo /dev/null > /sys/pci/devices/.../driver_override ??
-> 
-> So, it would last until explicitly disabled through sysfs.
+> Hmm, the intention was that this should effectively do the same thing as
+> Bjorn's patch.  The Atheros device (03:00.0) reports a VC capability but
+> the root port above it (00:05.0) does not.
 
-Yes, when you set a driver_override on a device you cancel it by writing
-a NULL string to the same interface.  The problem is that here we have a
-new entity in the driver scan that keeps re-applying the driver_override
-as devices are scanned with no way to stop it.  So you can certainly
-undo the immediate effect and bind the device to another driver, but if
-the device is removed and re-scanned there's no way to stop if from
-re-applying the override.  Thanks,
-
-Alex
-
-> > I think with pci-stub.ids=
-> > $VENDOR:$DEVICE a user can echo the IDs to the pci-stub/remove_id sysfs
-> > entry to cancel the effect.  The only option here seems to be a reboot.
-> > Do we need a /sys/bus/pci/driver_overrides/{add_name,remove_name} for
-> > this interface?  Thanks,
-> 
-> Thanks,
-> Stuart
+Are you sure, that this patch really works (-> here!) as expected? Would
+it be possible to add some debug output printing to the actual console
+(not to log file) to be sure it really works as expected? Maybe some
+more output to get an idea what's actually going on? Or is it just a
+timing issue?
 
 
+Thanks,
+Andreas
 
