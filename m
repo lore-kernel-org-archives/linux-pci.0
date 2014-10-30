@@ -1,108 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:44492 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754243AbaJNSha (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Oct 2014 14:37:30 -0400
-Received: by mail-ig0-f177.google.com with SMTP id a13so15803056igq.10
-        for <linux-pci@vger.kernel.org>; Tue, 14 Oct 2014 11:37:30 -0700 (PDT)
-Date: Tue, 14 Oct 2014 12:37:26 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: matt@masarand.com
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH 08/18] Delayed frv setup of PCI IRQs to bus scan time
-Message-ID: <20141014183726.GH10125@google.com>
-References: <1412222866-21068-1-git-send-email-matt@masarand.com>
- <1412222866-21068-9-git-send-email-matt@masarand.com>
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:51056 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932788AbaJ3Qwz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Oct 2014 12:52:55 -0400
+Date: Thu, 30 Oct 2014 16:52:46 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Krzysztof Halasa <khalasa@piap.pl>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Mohit Kumar <mohit.kumar@st.com>
+Subject: Re: [RFC PATCH 0/2] arm: pcibios: remove pci_sys_data domain
+Message-ID: <20141030165246.GC2048@red-moon>
+References: <1414669490-1217-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20141030162552.GC26820@obsidianresearch.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1412222866-21068-9-git-send-email-matt@masarand.com>
+In-Reply-To: <20141030162552.GC26820@obsidianresearch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 02, 2014 at 05:07:36AM +0100, matt@masarand.com wrote:
-> From: Matthew Minter <matt@masarand.com>
-> 
-> PCI IRQs are being assigned during the frv pcibios phase. This causes
-> devices which are not connected at boot but are later hot-plugged
-> to not receive an IRQ. This patch set causes the pcibios to instead
-> register an IRQ assignment function which is called during the enable
-> device path to apply to all devices.
-> 
-> Signed-off-by: Matthew Minter <matt@masarand.com>
-> 
-> ---
->  arch/frv/mb93090-mb00/pci-frv.h |  1 -
->  arch/frv/mb93090-mb00/pci-irq.c | 28 +++++++++++++++++-----------
->  arch/frv/mb93090-mb00/pci-vdk.c |  1 -
->  3 files changed, 17 insertions(+), 13 deletions(-)
-> 
-> diff --git a/arch/frv/mb93090-mb00/pci-frv.h b/arch/frv/mb93090-mb00/pci-frv.h
-> index a7e487fe..492b56d 100644
-> --- a/arch/frv/mb93090-mb00/pci-frv.h
-> +++ b/arch/frv/mb93090-mb00/pci-frv.h
-> @@ -36,5 +36,4 @@ extern struct pci_ops *__nongpreldata pci_root_ops;
->  extern unsigned int pcibios_irq_mask;
->  
->  void pcibios_irq_init(void);
-> -void pcibios_fixup_irqs(void);
->  void pcibios_enable_irq(struct pci_dev *dev);
-> diff --git a/arch/frv/mb93090-mb00/pci-irq.c b/arch/frv/mb93090-mb00/pci-irq.c
-> index 1c35c93..3463e30 100644
-> --- a/arch/frv/mb93090-mb00/pci-irq.c
-> +++ b/arch/frv/mb93090-mb00/pci-irq.c
-> @@ -40,19 +40,25 @@ void __init pcibios_irq_init(void)
->  {
->  }
->  
-> -void __init pcibios_fixup_irqs(void)
-> +int pcibios_map_irq(struct pci_dev *dev, uint8_t slot, uint8_t pin)
->  {
-> -	struct pci_dev *dev = NULL;
-> -	uint8_t line, pin;
-> -
-> -	for_each_pci_dev(dev) {
-> -		pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
-> -		if (pin) {
-> -			dev->irq = pci_bus0_irq_routing[PCI_SLOT(dev->devfn)][pin - 1];
-> -			pci_write_config_byte(dev, PCI_INTERRUPT_LINE, dev->irq);
-> -		}
-> -		pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &line);
-> +	uint8_t line;
-> +	int irq;
-> +
-> +	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+[Dropped Anton, his email address bounces]
 
-Doesn't your common code always read PCI_INTERRUPT_PIN and pass it in, so
-you wouldn't need to read it again here?
-
-> +	if (pin) {
-> +		irq = pci_bus0_irq_routing[PCI_SLOT(dev->devfn)][pin - 1];
-> +		pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
->  	}
-> +	pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &line);
-> +	return irq;
-> +}
-> +
-> +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-> +{
-> +	bridge->swizzle_irq = NULL;
-> +	bridge->map_irq = pcibios_map_irq;
-> +	return 0;
->  }
->  
->  void pcibios_enable_irq(struct pci_dev *dev)
-> diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
-> index efa5d65..86657a7 100644
-> --- a/arch/frv/mb93090-mb00/pci-vdk.c
-> +++ b/arch/frv/mb93090-mb00/pci-vdk.c
-> @@ -386,7 +386,6 @@ int __init pcibios_init(void)
->  	pci_scan_root_bus(NULL, 0, pci_root_ops, NULL, &resources);
->  
->  	pcibios_irq_init();
-> -	pcibios_fixup_irqs();
->  	pcibios_resource_survey();
->  
->  	return 0;
-> -- 
-> 2.1.0
+On Thu, Oct 30, 2014 at 04:25:52PM +0000, Jason Gunthorpe wrote:
+> On Thu, Oct 30, 2014 at 11:44:46AM +0000, Lorenzo Pieralisi wrote:
 > 
+> > Code in drivers/pci/pci-mvebu.c has been changed to add a domain
+> > number to PCI resources by using the nr value coming from the setup
+> > pcibios32 callback, which may not be correct and should be considered
+> > a temporary solution waiting for review comments.
+> 
+> The intent of the string was to have the domain number so that
+> resources in /proc/iomem can be correlated with lspci.
+> 
+> This would be a 'best practice' - all PCI drivers need to request
+> resource, and the resource should be relatable back to the PCI
+> domain... So it would be best if the domain number was available at
+> this point in a driver's flow.
+
+It is not available with the new approach and the generic PCI domains since
+the set-up hook is called before creating the pci_bus. That's why
+I mentioned that in the cover letter, and that's good it caught your
+attention.
+
+On a side note, when the resources are parsed from DT ranges, ie in:
+
+of_pci_get_host_bridge_resources()
+
+the resources won't contain the domain number you are looking for here, for
+the records, so we'd better find an agreement sooner rather than later.
+
+> > -       snprintf(pcie->mem_name, sizeof(pcie->mem_name), "PCI MEM %04x",
+> > -                domain);
+> > +       snprintf(pcie->mem_name, sizeof(pcie->mem_name), "PCI MEM %04x", nr);
+> 
+> I'm not sure what 'nr' is in this context, if it is not the domain
+> number then I'd just drop the 0x04x entirely rather than include
+> some nonsense number...
+
+nr is the index (0 to nr_controllers) in struct hw_pci of the controller
+being set-up. For this driver it is always 0, and BTW, sys->domain was 0 too
+and I do not see any code that can change its value to anything other
+than 0, at least in the mainline kernel.
+
+So basically I could go as far as sticking 0000 to the string given the
+current code. I did not drop the 0x04x entirely since I do not want to break
+userspace, I was tempted though, let me know if I am allowed to do that.
+
+Thanks,
+Lorenzo
