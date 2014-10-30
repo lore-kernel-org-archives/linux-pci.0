@@ -1,132 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:62798 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750945AbaJAUtr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 16:49:47 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v4 15/20] usb: dwc3: add disable usb3 suspend phy quirk
+Date: Thu, 30 Oct 2014 18:08:40 +0800
+Message-ID: <1414663725-2195-16-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <20141001204302.GA7744@svl-evodev-groeck.juniper.net>
-References: <CAAVjN7dwS62EKMnuZc_P1UjkbRVk6RXqJ91GwWZ96bbY5Ct-rg@mail.gmail.com>
-	<CAAVjN7eUmBVcAGPbcn3qsJ9M9uu2nkFoKHqGhhKGekZSceGiMw@mail.gmail.com>
-	<20141001184304.GA6832@svl-evodev-groeck.juniper.net>
-	<CAAVjN7edpkXYMHBm+wLegA_pc0hnm_YZf_z=Ni3h=EbDTmfegQ@mail.gmail.com>
-	<20141001194115.GA6948@svl-evodev-groeck.juniper.net>
-	<CAAVjN7fGRzyu7gxavJUay+K_Mm-0t1T_0Bysk6-sdaqu5=5k5A@mail.gmail.com>
-	<20141001202058.GB6948@svl-evodev-groeck.juniper.net>
-	<CAAVjN7e4nO579TfAJ5zMNe__Q9yU_-6naq4-0vm1rimespSrsw@mail.gmail.com>
-	<20141001204302.GA7744@svl-evodev-groeck.juniper.net>
-Date: Wed, 1 Oct 2014 13:49:45 -0700
-Message-ID: <CAAVjN7dyiSonvsEfawTSi_bJ9umxMFfmA_WAdwz=Yd6wsN4uzA@mail.gmail.com>
-Subject: Re: Fwd: [Proposal] PM sleep children of inactive I2C bus segments
- off Masters in multi-master systems
-From: Danielle Costantino <danielle.costantino@gmail.com>
-To: Guenter Roeck <groeck@juniper.net>
-Cc: linux-i2c <linux-i2c@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiri Kosina <jkosina@suse.cz>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Rajat Jain <rajatjain@juniper.net>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks, I will probably work on error return values for master
-selectors and add IRQ support to the pca9541 driver.
+This patch adds disable usb3 suspend phy quirk, and some special platforms
+can configure that if it is needed.
 
-On Wed, Oct 1, 2014 at 1:43 PM, Guenter Roeck <groeck@juniper.net> wrote:
-> On Wed, Oct 01, 2014 at 01:32:28PM -0700, Danielle Costantino wrote:
->> My goal was to automatically put the devices behind the master
->> selector in a (logical) state where all settings would be verified and
->> if needed corrected and initialized back to how the device was
->> configured prior to giving up the bus.
->>
->
-> That kind of reaction could result in a re-configuration war
-> if both masters disagree how devices should be configured.
-> Also, unless I am missing something, it would require changes
-> in pretty much every i2c client driver. That doesn't really sound
-> feasible to me.
->
-> Maybe you can find an error code which with some level of confidence
-> reflects "lost mastership". Then you can implement whatever makes sense
-> for your use case in your user space application(s).
->
-> Guenter
->
->> The error return is the main issue, but I was hoping to automate
->> multi-master bus re-initialization.
->>
->> On Wed, Oct 1, 2014 at 1:20 PM, Guenter Roeck <groeck@juniper.net> wrote:
->> > On Wed, Oct 01, 2014 at 01:03:59PM -0700, Danielle Costantino wrote:
->> >> On Wed, Oct 1, 2014 at 12:41 PM, Guenter Roeck <groeck@juniper.net> wrote:
->> >> > On Wed, Oct 01, 2014 at 11:44:59AM -0700, Danielle Costantino wrote:
->> >> >> Re-sending Proposal:
->> >> >>
->> >> >> Currently I2C mux devices that support multiple master arbitration are
->> >> >> the i2c-mux-pca9541 and i2c-arb-gpio-challenge drivers. I propose to
->> >> >> add the ability to configure an interrupt pin from the Master Selector
->> >> >> device to indicate that bus ownership has been lost. Once the device
->> >> >> loses ownership, all of its children should enter a pm sleep mode (as
->> >> >> you can't talk to them at this point) until master-ship has been
->> >> >> reacquired.
->> >> >>
->> >> > Not sure I understand what you are proposing here.
->> >>
->> >> Lets say you have a active - standby based multi-master system. If the
->> >> other master forced arbitration (took mastership) the next transation
->> >> on any slaves of that bus would return EAGAIN or EBUSY.
->> >>
->> >> Another point is that once mastership has been lost, the configuration
->> >> of the devices on that bus are no longer known to be valid...therefor
->> >> a re-init of those devices may be needed.
->> >>
->> > Unfortunately that is a generic problem in a multi-master system.
->> > You never know if the other end reconfigured a device or not,
->> > even if there was no error.
->> >
->> >> > A typical use case would be a power supply such as the one supported by
->> >> > drivers/hwmon/lineage-pem.c from both an active and standby system
->> >> > controller. The power supply needs to be accessible from both controllers.
->> >> > If one controller looses access, it can only mean that it did not follow
->> >> > the access protocol. Similar, one controller enforcing access means that
->> >> > it either does not follow the access protocol either, or that the other
->> >> > end did not follow the protocol (or maybe the other end died).
->> >> >
->> >> > In all cases, loss of access does not mean that the end device can or should
->> >> > be put in sleep mode, not even logically. All it means is that there was
->> >> > an access protocol error. Not sure if there is anything that can be done
->> >> > about that, but putting the device into sleep mode does not seem to be
->> >> > an appropriate response to me.
->> >> >
->> >> >> This has come up as an issue when the master loses control over a bus
->> >> >> the return code of all transactions to its lave devices is EIO (not
->> >> >> very helpful).
->> >> >>
->> >> > But, again, doesn't that mean that there was some access protocol error ?
->> >> > Shouldn't it try to re-acquire mastership instead, and block all accesses
->> >> > to slaves until it acquired it ?
->> >>
->> >> EIO is such a generic error it makes finding weather there was a
->> >> problem communicating or is no longer master of the bus segment.
->> >>
->> > AFAICS the only time the pca9541 driver returns -EIO is if a transaction
->> > did not complete. Only possible improvement I could imagine would be to
->> > check if mastership was lost if there was an error, and return something
->> > more useful if that is the case. Both -EBUSY or -EAGAIN might make sense
->> > here; I don't really know what would be better or more appropriate.
->> >
->> > Guenter
->>
->>
->>
->> --
->> - Danielle Costantino
+Signed-off-by: Huang Rui <ray.huang@amd.com>
+---
+ Documentation/devicetree/bindings/usb/dwc3.txt | 1 +
+ drivers/usb/dwc3/core.c                        | 7 +++++++
+ drivers/usb/dwc3/core.h                        | 2 ++
+ drivers/usb/dwc3/platform_data.h               | 1 +
+ 4 files changed, 11 insertions(+)
 
-
-
+diff --git a/Documentation/devicetree/bindings/usb/dwc3.txt b/Documentation/devicetree/bindings/usb/dwc3.txt
+index a9e54ae..3720fca 100644
+--- a/Documentation/devicetree/bindings/usb/dwc3.txt
++++ b/Documentation/devicetree/bindings/usb/dwc3.txt
+@@ -32,6 +32,7 @@ Optional properties:
+  - snps,tx_de_emphasis_quirk: when set core will set Tx de-emphasis value.
+  - snps,tx_de_emphasis: the value driven to the PHY is controlled by the
+ 			LTSSM during USB3 Compliance mode.
++ - snps,dis_u3_susphy_quirk: when set core will disable USB3 suspend phy.
+ 
+ This is usually a subnode to DWC3 glue to which it is connected.
+ 
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index b55fa5b..fdc715a 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -404,6 +404,10 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
+ 	if (dwc->tx_de_emphasis_quirk)
+ 		reg |= DWC3_GUSB3PIPECTL_TX_DEEPH(dwc->tx_de_emphasis);
+ 
++	/* FIXME will move FPGA flag when AMD NL taps out */
++	if (dwc->dis_u3_susphy_quirk && dwc->is_fpga)
++		reg &= ~DWC3_GUSB3PIPECTL_SUSPHY;
++
+ 	dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
+ 
+ 	mdelay(100);
+@@ -809,6 +813,8 @@ static int dwc3_probe(struct platform_device *pdev)
+ 				"snps,lfps_filter_quirk");
+ 		dwc->rx_detect_poll_quirk = of_property_read_bool(node,
+ 				"snps,rx_detect_poll_quirk");
++		dwc->dis_u3_susphy_quirk = of_property_read_bool(node,
++				"snps,dis_u3_susphy_quirk");
+ 
+ 		dwc->tx_de_emphasis_quirk = of_property_read_bool(node,
+ 				"snps,tx_de_emphasis_quirk");
+@@ -831,6 +837,7 @@ static int dwc3_probe(struct platform_device *pdev)
+ 		dwc->del_phy_power_chg_quirk = pdata->del_phy_power_chg_quirk;
+ 		dwc->lfps_filter_quirk = pdata->lfps_filter_quirk;
+ 		dwc->rx_detect_poll_quirk = pdata->rx_detect_poll_quirk;
++		dwc->dis_u3_susphy_quirk = pdata->dis_u3_susphy_quirk;
+ 
+ 		dwc->tx_de_emphasis_quirk = pdata->tx_de_emphasis_quirk;
+ 		if (pdata->tx_de_emphasis)
+diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+index 469ee13..be793f7 100644
+--- a/drivers/usb/dwc3/core.h
++++ b/drivers/usb/dwc3/core.h
+@@ -697,6 +697,7 @@ struct dwc3_scratchpad_array {
+  * @del_phy_power_chg_quirk: set if we enable delay phy power change quirk
+  * @lfps_filter_quirk: set if we enable LFPS filter quirk
+  * @rx_detect_poll_quirk: set if we enable rx_detect to polling LFPS quirk
++ * @dis_u3_susphy_quirk: set if we disable usb3 suspend phy
+  * @tx_de_emphasis_quirk: set if we enable Tx de-emphasis quirk
+  * @tx_de_emphasis: Tx de-emphasis value
+  * 	0       - -6dB de-emphasis
+@@ -818,6 +819,7 @@ struct dwc3 {
+ 	unsigned		del_phy_power_chg_quirk:1;
+ 	unsigned		lfps_filter_quirk:1;
+ 	unsigned		rx_detect_poll_quirk:1;
++	unsigned		dis_u3_susphy_quirk:1;
+ 
+ 	unsigned		tx_de_emphasis_quirk:1;
+ 	unsigned		tx_de_emphasis:2;
+diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
+index e1ab900..0f1d5ad 100644
+--- a/drivers/usb/dwc3/platform_data.h
++++ b/drivers/usb/dwc3/platform_data.h
+@@ -36,6 +36,7 @@ struct dwc3_platform_data {
+ 	unsigned del_phy_power_chg_quirk:1;
+ 	unsigned lfps_filter_quirk:1;
+ 	unsigned rx_detect_poll_quirk:1;
++	unsigned dis_u3_susphy_quirk:1;
+ 
+ 	unsigned tx_de_emphasis_quirk:1;
+ 	unsigned tx_de_emphasis:2;
 -- 
-- Danielle Costantino
+1.9.1
+
