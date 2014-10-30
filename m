@@ -1,82 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:61749 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753369AbaJ1IZB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 28 Oct 2014 04:25:01 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 30 Oct 2014 09:08:32 -0500
+From: Felipe Balbi <balbi@ti.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Huang Rui <ray.huang@amd.com>, Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Andy Lutomirski <luto@amacapital.net>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch Part2 v3 05/24] x86, hpet: Use new irqdomain interfaces to allocate/free IRQ
-Date: Tue, 28 Oct 2014 16:26:23 +0800
-Message-Id: <1414484803-10311-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+Subject: Re: [PATCH v4 01/20] usb: dwc3: enable hibernation if to be supported
+Message-ID: <20141030140832.GH6482@saruman>
+Reply-To: <balbi@ti.com>
+References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+ <1414663725-2195-2-git-send-email-ray.huang@amd.com>
+ <4077930.b7qzaS4pBb@wuerfel>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="X1xGqyAVbSpAWs5A"
+In-Reply-To: <4077930.b7qzaS4pBb@wuerfel>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new irqdomain interfaces to allocate/free IRQ for HPET, so we could
-kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
+--X1xGqyAVbSpAWs5A
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/hpet.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+On Thu, Oct 30, 2014 at 12:35:56PM +0100, Arnd Bergmann wrote:
+> On Thursday 30 October 2014 18:08:26 Huang Rui wrote:
+> > It enables hibernation if the function is set in coreConsultant.
+> >=20
+> > Suggested-by: Felipe Balbi <balbi@ti.com>
+> > Signed-off-by: Huang Rui <ray.huang@amd.com>
+> > Signed-off-by: Felipe Balbi <balbi@ti.com>
+> >=20
+>=20
+> Something went wrong with the Signed-off-by lines here.=20
+> You should never add someone else's Signed-off-by below yours.
+>=20
+> I took a brief look at the entire series and the patches all look good
+> to me, but you have made the same mistake with the Signed-off-by
+> multiple times.
 
-diff --git a/arch/x86/kernel/hpet.c b/arch/x86/kernel/hpet.c
-index 319bcb9372fe..24db2d33fab7 100644
---- a/arch/x86/kernel/hpet.c
-+++ b/arch/x86/kernel/hpet.c
-@@ -11,6 +11,7 @@
- #include <linux/cpu.h>
- #include <linux/pm.h>
- #include <linux/io.h>
-+#include <linux/irqdomain.h>
- 
- #include <asm/fixmap.h>
- #include <asm/hpet.h>
-@@ -476,7 +477,7 @@ static int hpet_msi_next_event(unsigned long delta,
- static int hpet_setup_msi_irq(unsigned int irq)
- {
- 	if (x86_msi.setup_hpet_msi(irq, hpet_blockid)) {
--		irq_free_hwirq(irq);
-+		irq_domain_free_irqs(irq, 1);
- 		return -EINVAL;
- 	}
- 	return 0;
-@@ -484,9 +485,10 @@ static int hpet_setup_msi_irq(unsigned int irq)
- 
- static int hpet_assign_irq(struct hpet_dev *dev)
- {
--	unsigned int irq = irq_alloc_hwirq(-1);
-+	int irq;
- 
--	if (!irq)
-+	irq = irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
-+	if (irq <= 0)
- 		return -EINVAL;
- 
- 	irq_set_handler_data(irq, dev);
--- 
-1.7.10.4
+there are no mistakes, I just asked Huang to resend what I had on my
+testing/next because it had not been sent to devicetree mailing list.
 
+--=20
+balbi
+
+--X1xGqyAVbSpAWs5A
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUUkZgAAoJEIaOsuA1yqREgMMQAKMXQfr0PWErwr7WmC0dOSOi
+9UauOEaMI/MzTxBDSVqsjdKjmtyk41QUFucSWxaRcQELyCmgLef5//wj0zS0ucqP
+X0Bu7rL/NAuQSRfXq+ZYfBjjWDtCdTMijlELjoMKhQqyaydZkHFuiHsModh3XjJb
+GJ65WigMBLdKXBOVZp9si1FpwkcdOPFnMrPwyiUrVEoDlG1yTyiXUl+QfZFagfjw
+a/osgH0HJ4lgq53D19VPTj5Ybz7Cxv0ba0crdIcebKFN9yoRu8jSLf/u8y9uRSnk
+GdlIYWOivrIx/HtT64B5mjWhXtaS+9eQTKs4Xm9A1Rj4ZvvgTknwtYlPp8FKzXqs
+gjaaMTKESVRn3V5o7pgtj2jg7AORvQs0eE8gDBMqoMAxyHjn7Sf3xHNIum+Kscau
+fvV+XBK123eX64P7Rzky60fZZXwtp7MTd0m1eAVUsGbz3JuCzGvJOe6z1+EVc/n4
+hSPf6BQQDxzwkSrZLXz6Ey//fAqgNoLzQ6smYQBNYIoqfGLgmDW3a8PfkERda/qJ
+bc9dvjA7iFNB/xMUx3/fTRlq8cMMaFE50s0tkh17vA7K9w2KFQP8+a8mGwlpoJ4I
+x158x/QWVYNESdrrnA4P08T5fWo31BDTI/jwDmyNeZtAi+Dg99Zm97ViwidIBsZK
+J6sE8O4FvE4PF2ZR69EY
+=hiSZ
+-----END PGP SIGNATURE-----
+
+--X1xGqyAVbSpAWs5A--
