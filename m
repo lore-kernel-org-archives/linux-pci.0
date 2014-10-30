@@ -1,155 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:57471 "EHLO gate.crashing.org"
+Received: from bear.ext.ti.com ([192.94.94.41]:53160 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753426AbaJBAeE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Oct 2014 20:34:04 -0400
-Message-ID: <1412210012.4285.250.camel@pasglop>
-Subject: [PATCH v2 1/4] pci/msi: Move "no_64bit_msi" flag from powerpc to
- generic pci_dev
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Alex Deucher <alexdeucher@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Dave Airlie <airlied@linux.ie>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Takashi Iwai <tiwai@suse.de>, linux-pci@vger.kernel.org,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
-Date: Thu, 02 Oct 2014 10:33:32 +1000
-In-Reply-To: <1412112324.4285.160.camel@pasglop>
-References: <1412048401.4285.128.camel@pasglop>
-	 <CAErSpo4B6kuZJcKwreNvW1qC5sZ=1Ko71vbzNz7T8-_pjf7mww@mail.gmail.com>
-	 <CADnq5_PT+dX=KA4epGNRaoraco2z1pe5K7UgqLmTUhWMnvtWkw@mail.gmail.com>
-	 <1412108504.4285.155.camel@pasglop>
-	 <CADnq5_O_iLAZUKLL4nph8VwuP2NOkWXhBZC2XTSkFm5P42WZ+g@mail.gmail.com>
-	 <1412110946.4285.158.camel@pasglop>
-	 <CADnq5_OXBax1+TKPsR2RDYTWijQKDVw34ECfWzcwN2SibCGYTg@mail.gmail.com>
-	 <1412112324.4285.160.camel@pasglop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1759415AbaJ3QiO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Oct 2014 12:38:14 -0400
+Date: Thu, 30 Oct 2014 11:37:43 -0500
+From: Felipe Balbi <balbi@ti.com>
+To: Huang Rui <ray.huang@amd.com>
+CC: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+Subject: Re: [PATCH v4 20/20] usb: dwc3: make HIRD threshold configurable
+Message-ID: <20141030163743.GJ10130@saruman>
+Reply-To: <balbi@ti.com>
+References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+ <1414663725-2195-21-git-send-email-ray.huang@amd.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="x+RZeZVNR8VILNfK"
+In-Reply-To: <1414663725-2195-21-git-send-email-ray.huang@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some devices have broken 64-bit MSI support which only support some
-address bits (40 to 48 typically). This doesn't work on some platforms
-such as POWER servers, so we need a quirk.
+--x+RZeZVNR8VILNfK
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Currently we keep a flag in a powerpc specific data structure which we
-have per PCI device. However this is impractical as we really want the
-driver to set that flag appropriately (and the driver shouldn't touch
-that arch specific data structure).
+On Thu, Oct 30, 2014 at 06:08:45PM +0800, Huang Rui wrote:
+> HIRD threshold should be configurable by different platforms.
+>=20
+> From DesignWare databook:
+> When HIRD_Threshold[4] is set to 1b1 and HIRD value is greater than or
+> equal to the value in HIRD_Threshold[3:0], dwc3 asserts output signals
+> utmi_l1_suspend_n to put PHY into Deep Low-Power mode in L1.
+>=20
+> When HIRD_Threshold[4] is set to 1b0 or the HIRD value is less than
+> HIRD_Threshold[3:0], dwc3 asserts output signals utmi_sleep_n on L1.
+>=20
+> Signed-off-by: Huang Rui <ray.huang@amd.com>
+> ---
+>  Documentation/devicetree/bindings/usb/dwc3.txt |  3 +++
+>  drivers/usb/dwc3/core.c                        | 17 +++++++++++++++++
+>  drivers/usb/dwc3/core.h                        |  6 ++++++
+>  drivers/usb/dwc3/gadget.c                      |  6 +-----
+>  drivers/usb/dwc3/platform_data.h               |  3 +++
+>  5 files changed, 30 insertions(+), 5 deletions(-)
+>=20
+> diff --git a/Documentation/devicetree/bindings/usb/dwc3.txt b/Documentati=
+on/devicetree/bindings/usb/dwc3.txt
+> index feaf2c8..5b99755 100644
+> --- a/Documentation/devicetree/bindings/usb/dwc3.txt
+> +++ b/Documentation/devicetree/bindings/usb/dwc3.txt
+> @@ -34,6 +34,9 @@ Optional properties:
+>  			LTSSM during USB3 Compliance mode.
+>   - snps,dis_u3_susphy_quirk: when set core will disable USB3 suspend phy.
+>   - snps,dis_u2_susphy_quirk: when set core will disable USB2 suspend phy.
+> + - snps,is-utmi-l1-suspend: true when DWC3 asserts output signal
+> +			utmi_l1_suspend_n, false when asserts utmi_sleep_n
+> + - snps,hird-threshold: HIRD threshold
+> =20
+>  This is usually a subnode to DWC3 glue to which it is connected.
+> =20
+> diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+> index a28ed1c..f4172ab 100644
+> --- a/drivers/usb/dwc3/core.c
+> +++ b/drivers/usb/dwc3/core.c
+> @@ -729,6 +729,7 @@ static int dwc3_probe(struct platform_device *pdev)
+>  	struct dwc3		*dwc;
+>  	u8			lpm_nyet_threshold;
+>  	u8			tx_de_emphasis;
+> +	u8			hird_threshold;
+> =20
+>  	int			ret;
+> =20
+> @@ -790,12 +791,22 @@ static int dwc3_probe(struct platform_device *pdev)
+>  	/* default to -3.5dB de-emphasis */
+>  	tx_de_emphasis =3D 1;
+> =20
+> +	/*
+> +	 * defalut to assert utmi_sleep_n and use maximum allowed HIRD
 
-It's also not unlikely that this limitation will affect other architectures
-in the long run.
+default
 
-So this moves the flag to struct pci_dev instead and adjusts the
-corresponding arch/powerpc code to look for it there. At this point,
-there is no attempt at making other architectures honor it just yet,
-though it appears that x86 doesn't care and always generates 32-bit
-MSI addresses.
+--=20
+balbi
 
-Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: <stable@vger.kernel.org>
----
+--x+RZeZVNR8VILNfK
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-v2: Rename flag to "no_64bit_msi" as suggested by Bjorn
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
- arch/powerpc/include/asm/pci-bridge.h     | 2 --
- arch/powerpc/kernel/pci_64.c              | 5 +----
- arch/powerpc/platforms/powernv/pci-ioda.c | 3 +--
- arch/powerpc/platforms/powernv/pci.c      | 3 +--
- arch/powerpc/platforms/pseries/msi.c      | 2 +-
- include/linux/pci.h                       | 1 +
- 6 files changed, 5 insertions(+), 11 deletions(-)
+iQIcBAEBAgAGBQJUUmlWAAoJEIaOsuA1yqREX38P/0vRdfmp9nEwyb+cLlk4lbLI
+/ShZCybrSc3nyRTuvb9IZQpU64NEXrSjUO8M4jmgpBmfX6phlvYkHpqE0dyroazb
+sqY5ugYu+K10XOvqolOhtnGvEFr44MZ31LSWx+7KY6iTSzZuQWUrcabxGN6Tuekw
+o4Pj6JKtcrC6C+AKG7jHKol0Tu7elBH4wo+SO0Ufz8sJJmtgOPr9CVBe/aeBmACq
+v0ZxDxCQeHpaDous65lCK8gfgQU42A7jodub82GnP5O4CW8xAMR88TWC7tTecrRQ
+quSzPBubYLc9ZGSn/FytoPG3hmU/sHuGhz3Poyz5YzSEIIXnxAioAodGBE0ic9LO
+O6wFzwMT0WzDbivIaNopKc2YgoZcwO1Ewt10QA0jor7rwzbU5uSG8/WvQnXwb8KG
+mwdmYdTIzRXXlb+XgFnYiXoAxkG2l1COhLQr53F6hhIKQ6kwrLuh2JCJngH8mEHc
+MtY8Potf0jHCnCRczeZl1NB6x5o9uTkPgBbI/vE2oSkR8rdSw6ddjeq/IJHIsFkP
+9SM79w4uUXVI6jMNmfpCCAHoJExP/8yDxeuDEpJKEeqS73O1KvWBGISznyXwJzoi
+L0LC2+BrZYggiHofnlS9wrrcImb+H5/+lzi2p3YiZ76a0i0EB42GymGcRXAVIX/M
+itmYQSSKHekYkoos0cNR
+=hbzq
+-----END PGP SIGNATURE-----
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 4ca90a3..725247b 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -159,8 +159,6 @@ struct pci_dn {
- 
- 	int	pci_ext_config_space;	/* for pci devices */
- 
--	bool	force_32bit_msi;
--
- 	struct	pci_dev *pcidev;	/* back-pointer to the pci device */
- #ifdef CONFIG_EEH
- 	struct eeh_dev *edev;		/* eeh device */
-diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
-index 155013d..d41a831 100644
---- a/arch/powerpc/kernel/pci_64.c
-+++ b/arch/powerpc/kernel/pci_64.c
-@@ -269,10 +269,7 @@ EXPORT_SYMBOL(pcibus_to_node);
- 
- static void quirk_radeon_32bit_msi(struct pci_dev *dev)
- {
--	struct pci_dn *pdn = pci_get_pdn(dev);
--
--	if (pdn)
--		pdn->force_32bit_msi = true;
-+	dev->no_64bit_msi = true;
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x68f2, quirk_radeon_32bit_msi);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0xaa68, quirk_radeon_32bit_msi);
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index df241b1..a188bb8 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1311,7 +1311,6 @@ static int pnv_pci_ioda_msi_setup(struct pnv_phb *phb, struct pci_dev *dev,
- 				  unsigned int is_64, struct msi_msg *msg)
- {
- 	struct pnv_ioda_pe *pe = pnv_ioda_get_pe(dev);
--	struct pci_dn *pdn = pci_get_pdn(dev);
- 	struct irq_data *idata;
- 	struct irq_chip *ichip;
- 	unsigned int xive_num = hwirq - phb->msi_base;
-@@ -1327,7 +1326,7 @@ static int pnv_pci_ioda_msi_setup(struct pnv_phb *phb, struct pci_dev *dev,
- 		return -ENXIO;
- 
- 	/* Force 32-bit MSI on some broken devices */
--	if (pdn && pdn->force_32bit_msi)
-+	if (dev->no_64bit_msi)
- 		is_64 = 0;
- 
- 	/* Assign XIVE to PE */
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index b854b57..89c6608 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -50,9 +50,8 @@ static int pnv_msi_check_device(struct pci_dev* pdev, int nvec, int type)
- {
- 	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
- 	struct pnv_phb *phb = hose->private_data;
--	struct pci_dn *pdn = pci_get_pdn(pdev);
- 
--	if (pdn && pdn->force_32bit_msi && !phb->msi32_support)
-+	if (pdev->no_64bit_msi && !phb->msi32_support)
- 		return -ENODEV;
- 
- 	return (phb && phb->msi_bmp.bitmap) ? 0 : -ENODEV;
-diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
-index 18ff462..6fd96d8 100644
---- a/arch/powerpc/platforms/pseries/msi.c
-+++ b/arch/powerpc/platforms/pseries/msi.c
-@@ -429,7 +429,7 @@ static int rtas_setup_msi_irqs(struct pci_dev *pdev, int nvec_in, int type)
- 	 */
- again:
- 	if (type == PCI_CAP_ID_MSI) {
--		if (pdn->force_32bit_msi) {
-+		if (pdev->no_64bit_msi) {
- 			rc = rtas_change_msi(pdn, RTAS_CHANGE_32MSI_FN, nvec);
- 			if (rc < 0) {
- 				/*
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 96453f9..fc938003 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -331,6 +331,7 @@ struct pci_dev {
- 	unsigned int	is_added:1;
- 	unsigned int	is_busmaster:1; /* device is busmaster */
- 	unsigned int	no_msi:1;	/* device may not use msi */
-+	unsigned int    no_64bit_msi:1;	/* Device has broken 64-bit MSIs */
- 	unsigned int	block_cfg_access:1;	/* config space access is blocked */
- 	unsigned int	broken_parity_status:1;	/* Device generates false positive parity */
- 	unsigned int	irq_reroute_variant:2;	/* device needs IRQ rerouting variant */
-
-
+--x+RZeZVNR8VILNfK--
