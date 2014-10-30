@@ -1,174 +1,66 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <5448571F.6030105@huawei.com>
-Date: Thu, 23 Oct 2014 09:17:19 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:50838 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758922AbaJ3Lo7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Oct 2014 07:44:59 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Cc: liviu.dudau@arm.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Krzysztof Halasa <khalasa@piap.pl>,
+	Anton Vorontsov <avorontsov@mvista.com>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Liviu Dudau <liviu@dudau.co.uk>
-Subject: Re: [PATCH v3 24/27] IA64/MSI: Use MSI chip framework to configure
- MSI/MSI-X irq
-References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com> <1413342435-7876-25-git-send-email-wangyijing@huawei.com> <20141022235345.GE4795@google.com>
-In-Reply-To: <20141022235345.GE4795@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-arch-owner@vger.kernel.org
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Mohit Kumar <mohit.kumar@st.com>
+Subject: [RFC PATCH 0/2] arm: pcibios: remove pci_sys_data domain
+Date: Thu, 30 Oct 2014 11:44:46 +0000
+Message-Id: <1414669490-1217-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/10/23 7:53, Bjorn Helgaas wrote:
-> On Wed, Oct 15, 2014 at 11:07:12AM +0800, Yijing Wang wrote:
->> Use MSI chip framework instead of arch MSI functions to configure
->> MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
-> 
-> This needs slightly more detail.  You're using the MSI chip framework
-> "instead of arch MSI functions".  Well, there are still arch-specific
-> functions, i.e., arch_ia64_setup_msi_irq() and
-> arch_ia64_teardown_msi_irq().
-> 
-> We used to have arch_setup_msi_irq() which had a weak default
-> implementation, and a strong arch-specific implementation here, and you're
-> replacing that model with the new "msi-ops" model.  I don't know how you
-> want to write that, but it's not that you're getting rid of the
-> arch-specific code; you're keeping arch-specific code but structuring it
-> differently.
+This patchset is a first RFC stab at removing the dependency on pci_sys_data
+domain field on ARM platforms and by replacing it with generic code that
+stashes the domain value in the pci_bus control structure, introduced in
 
-Hm, I will rename the msi-ops functions.
+commit 41e5c0f81d3e676d671d96a0a1fafb27abfbd9
+("of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()")
 
-> 
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> ---
->>  arch/ia64/include/asm/pci.h |   10 ++++++++++
->>  arch/ia64/kernel/msi_ia64.c |   14 ++++++++++----
->>  arch/ia64/pci/pci.c         |    1 +
->>  3 files changed, 21 insertions(+), 4 deletions(-)
->>
->> diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
->> index 52af5ed..907dcba 100644
->> --- a/arch/ia64/include/asm/pci.h
->> +++ b/arch/ia64/include/asm/pci.h
->> @@ -94,6 +94,7 @@ struct pci_controller {
->>  	int segment;
->>  	int node;		/* nearest node with memory or NUMA_NO_NODE for global allocation */
->>  
->> +	struct msi_chip *msi_chip;
->>  	void *platform_data;
->>  };
->>  
->> @@ -101,6 +102,15 @@ struct pci_controller {
->>  #define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
->>  #define pci_domain_nr(busdev)    (PCI_CONTROLLER(busdev)->segment)
->>  
->> +extern struct msi_chip chip;
-> 
-> Please make this name more descriptive.  "chip" is way too generic for a
-> global name.
+commit 670ba0c8883b576d0aec28bd7a838358a4be1
+("PCI: Add generic domain handling")
 
-OK, what about rename it to ia64_msi_chip, and rename the original static irq_chip ia64_msi_chip to
-static irq_chip msi_chip like in x86.
+All the drivers converted (apart from PCIe designware, tested on iMX6SL)
+were only compile tested for lack of HW, so along some comments, testing
+and verifying that patchset does not break any existing platform are
+very appreciated.
 
-> 
->> +static inline struct msi_chip *pci_msi_chip(struct pci_bus *bus)
->> +{
->> +	struct pci_controller *ctrl = bus->sysdata;
->> +
->> +	return ctrl->msi_chip;
->> +}
->> +
->>  extern struct pci_ops pci_root_ops;
->>  
->>  static inline int pci_proc_domain(struct pci_bus *bus)
->> diff --git a/arch/ia64/kernel/msi_ia64.c b/arch/ia64/kernel/msi_ia64.c
->> index 8c3730c..401fc98 100644
->> --- a/arch/ia64/kernel/msi_ia64.c
->> +++ b/arch/ia64/kernel/msi_ia64.c
->> @@ -112,15 +112,16 @@ static struct irq_chip ia64_msi_chip = {
->>  };
->>  
->>  
->> -int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
->> +static int arch_ia64_setup_msi_irq(struct msi_chip *chip,
->> +		struct pci_dev *dev, struct msi_desc *desc)
->>  {
->>  	if (platform_setup_msi_irq)
->> -		return platform_setup_msi_irq(pdev, desc);
->> +		return platform_setup_msi_irq(dev, desc);
->>  
->> -	return ia64_setup_msi_irq(pdev, desc);
->> +	return ia64_setup_msi_irq(dev, desc);
-> 
-> Please don't make gratuitous changes ("pdev" -> "dev") at the same time,
-> especially since the rest of the file still uses "pdev".
+Code in drivers/pci/pci-mvebu.c has been changed to add a domain
+number to PCI resources by using the nr value coming from the setup
+pcibios32 callback, which may not be correct and should be considered
+a temporary solution waiting for review comments.
 
-OK.
+The patchset removes entirely the pci_sys_data.domain field, since its
+usage is removed at the same time in the respective host controllers
+and ARM is made to select the configuration option
+CONFIG_PCI_DOMAINS_GENERIC by default, which compiles a domain_nr in the
+pci_bus structure so that the pci_domain_nr() look-up can rely on it.
 
-> 
->>  }
->>  
->> -void arch_teardown_msi_irq(unsigned int irq)
->> +static void arch_ia64_teardown_msi_irq(struct msi_chip *chip, unsigned int irq)
->>  {
->>  	if (platform_teardown_msi_irq)
->>  		return platform_teardown_msi_irq(irq);
->> @@ -128,6 +129,11 @@ void arch_teardown_msi_irq(unsigned int irq)
->>  	return ia64_teardown_msi_irq(irq);
->>  }
->>  
->> +struct msi_chip chip = {
->> +	.setup_irq = arch_ia64_setup_msi_irq,
->> +	.teardown_irq = arch_ia64_teardown_msi_irq,
->> +};
->> +
->>  #ifdef CONFIG_INTEL_IOMMU
->>  #ifdef CONFIG_SMP
->>  static int dmar_msi_set_affinity(struct irq_data *data,
->> diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
->> index 291a582..299b67d 100644
->> --- a/arch/ia64/pci/pci.c
->> +++ b/arch/ia64/pci/pci.c
->> @@ -437,6 +437,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->>  
->>  	controller->companion = device;
->>  	controller->node = acpi_get_node(device->handle);
->> +	controller->msi_chip = &chip;
->>  
->>  	info = kzalloc(sizeof(*info), GFP_KERNEL);
->>  	if (!info) {
->> -- 
->> 1.7.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> Please read the FAQ at  http://www.tux.org/lkml/
-> 
-> .
-> 
+Lorenzo Pieralisi (2):
+  arm: cns3xxx: pci: remove artificial dependency on pci_sys_data domain
+  arm: pcibios: move to generic PCI domains
 
+ arch/arm/Kconfig                   |  3 +++
+ arch/arm/include/asm/mach/pci.h    |  3 ---
+ arch/arm/include/asm/pci.h         |  7 -------
+ arch/arm/kernel/bios32.c           | 26 ++++++++++++++++++++++---
+ arch/arm/mach-cns3xxx/pcie.c       | 40 ++++++++++++++++----------------------
+ drivers/pci/host/pci-mvebu.c       | 10 ++--------
+ drivers/pci/host/pcie-designware.c |  3 ---
+ drivers/pci/host/pcie-rcar.c       |  3 ---
+ 8 files changed, 45 insertions(+), 50 deletions(-)
 
 -- 
-Thanks!
-Yijing
+2.1.2
 
