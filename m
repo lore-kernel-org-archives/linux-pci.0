@@ -1,57 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0142.outbound.protection.outlook.com ([157.56.111.142]:21776
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752479AbaJTFzs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Oct 2014 01:55:48 -0400
-From: Richard Zhu <richard.zhu@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
-	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
-	<m-karicheri2@ti.com>, Richard Zhu <r65037@freescale.com>,
-	Richard Zhu <richard.zhu@freescale.com>
-Subject: [PATCH v8 3/9] ARM: imx6sx: Add imx6sx pcie related gpr bits definitions
-Date: Mon, 20 Oct 2014 13:25:18 +0800
-Message-ID: <1413782724-30795-4-git-send-email-richard.zhu@freescale.com>
-In-Reply-To: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
-References: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:35846 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758128AbaJ3Qbj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Oct 2014 12:31:39 -0400
+Date: Thu, 30 Oct 2014 09:30:28 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jeff Epler <jepler@unpythonic.net>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: fix name of 'enable' sysfs file
+Message-ID: <20141030163028.GA22250@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Richard Zhu <r65037@freescale.com>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
+Back in commit 5136b2da770d ("PCI: convert bus code to use dev_groups"),
+I misstyped the 'enable' sysfs file as 'enabled', which broke the
+userspace api.  This patch fixes that issue by renaming the file back.
+
+Reported-by: Jeff Epler <jepler@unpythonic.net>
+Cc: stable <stable@vger.kernel.org> # 3.13
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
 ---
- include/linux/mfd/syscon/imx6q-iomuxc-gpr.h | 9 +++++++++
- 1 file changed, 9 insertions(+)
 
-diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-index ff44374..3273b87 100644
---- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-+++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-@@ -301,6 +301,7 @@
- #define IMX6Q_GPR12_DEVICE_TYPE			(0xf << 12)
- #define IMX6Q_GPR12_PCIE_CTL_2			BIT(10)
- #define IMX6Q_GPR12_LOS_LEVEL			(0x1f << 4)
-+#define IMX6Q_GPR12_LOS_LEVEL_9			(0x9 << 4)
- 
- #define IMX6Q_GPR13_SDMA_STOP_REQ		BIT(30)
- #define IMX6Q_GPR13_CAN2_STOP_REQ		BIT(29)
-@@ -395,4 +396,12 @@
- #define IMX6SL_GPR1_FEC_CLOCK_MUX1_SEL_MASK    (0x3 << 17)
- #define IMX6SL_GPR1_FEC_CLOCK_MUX2_SEL_MASK    (0x1 << 14)
- 
-+/* For imx6sx iomux gpr register field define */
-+#define IMX6SX_GPR5_PCIE_BTNRST			BIT(19)
-+#define IMX6SX_GPR5_PCIE_PERST			BIT(18)
-+
-+#define IMX6SX_GPR12_PCIE_PM_TURN_OFF		BIT(16)
-+#define IMX6SX_GPR12_PCIE_TEST_PD		BIT(30)
-+#define IMX6SX_GPR12_RX_EQ_MASK			(0x7 << 0)
-+#define IMX6SX_GPR12_RX_EQ_2			(0x2 << 0)
- #endif /* __LINUX_IMX6Q_IOMUXC_GPR_H */
--- 
-1.9.1
+Jeff, if you could test this to make sure I got it right, that would be
+great.  Again, sorry about this, it was a dumb typo on my part.
 
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 92b6d9ab00e4..2c6643fdc0cf 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -185,7 +185,7 @@ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
+ }
+ static DEVICE_ATTR_RO(modalias);
+ 
+-static ssize_t enabled_store(struct device *dev, struct device_attribute *attr,
++static ssize_t enable_store(struct device *dev, struct device_attribute *attr,
+ 			     const char *buf, size_t count)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+@@ -210,7 +210,7 @@ static ssize_t enabled_store(struct device *dev, struct device_attribute *attr,
+ 	return result < 0 ? result : count;
+ }
+ 
+-static ssize_t enabled_show(struct device *dev, struct device_attribute *attr,
++static ssize_t enable_show(struct device *dev, struct device_attribute *attr,
+ 			    char *buf)
+ {
+ 	struct pci_dev *pdev;
+@@ -218,7 +218,7 @@ static ssize_t enabled_show(struct device *dev, struct device_attribute *attr,
+ 	pdev = to_pci_dev(dev);
+ 	return sprintf(buf, "%u\n", atomic_read(&pdev->enable_cnt));
+ }
+-static DEVICE_ATTR_RW(enabled);
++static DEVICE_ATTR_RW(enable);
+ 
+ #ifdef CONFIG_NUMA
+ static ssize_t numa_node_show(struct device *dev, struct device_attribute *attr,
+@@ -563,7 +563,7 @@ static struct attribute *pci_dev_attrs[] = {
+ #endif
+ 	&dev_attr_dma_mask_bits.attr,
+ 	&dev_attr_consistent_dma_mask_bits.attr,
+-	&dev_attr_enabled.attr,
++	&dev_attr_enable.attr,
+ 	&dev_attr_broken_parity_status.attr,
+ 	&dev_attr_msi_bus.attr,
+ #if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
