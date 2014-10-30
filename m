@@ -1,64 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:49457 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754764AbaJWPXZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Oct 2014 11:23:25 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Cc: liviu.dudau@arm.com, Suravee.Suthikulpanit@amd.com,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Will Deacon <will.deacon@arm.com>
-Subject: [PATCH RFC 1/2] drivers: pci: fix window allocation order wrt bus_range filtering
-Date: Thu, 23 Oct 2014 16:23:06 +0100
-Message-Id: <1414077787-20633-1-git-send-email-lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=WINDOWS-1252
+Received: from cantor2.suse.de ([195.135.220.15]:47765 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757327AbaJ3Qup (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Oct 2014 12:50:45 -0400
+Date: Thu, 30 Oct 2014 17:50:41 +0100 (CET)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jeff Epler <jepler@unpythonic.net>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: fix name of 'enable' sysfs file
+In-Reply-To: <20141030163028.GA22250@kroah.com>
+Message-ID: <alpine.LRH.2.00.1410301749560.11562@twin.jikos.cz>
+References: <20141030163028.GA22250@kroah.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The number of windows allocated for the host bridge depends on the
-bus resource. Instead of first allocating the windows and then
-limit the bus resource, this patch reshuffles the code so that if any
-limitation is applied to the bus resource it is taken into account in
-the windows allocation.
+On Thu, 30 Oct 2014, Greg Kroah-Hartman wrote:
 
-Cc: Will Deacon <will.deacon@arm.com>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
----
- drivers/pci/host/pci-host-generic.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+> From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> 
+> Back in commit 5136b2da770d ("PCI: convert bus code to use dev_groups"),
+> I misstyped the 'enable' sysfs file as 'enabled', which broke the
+> userspace api.  This patch fixes that issue by renaming the file back.
 
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-hos=
-t-generic.c
-index 3d2076f..1e1a80f 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -276,17 +276,17 @@ static int gen_pci_parse_map_cfg_windows(struct gen_p=
-ci *pci)
- =09=09return err;
- =09}
-=20
--=09pci->cfg.win =3D devm_kcalloc(dev, resource_size(&pci->cfg.bus_range),
--=09=09=09=09    sizeof(*pci->cfg.win), GFP_KERNEL);
--=09if (!pci->cfg.win)
--=09=09return -ENOMEM;
--
- =09/* Limit the bus-range to fit within reg */
- =09bus_max =3D pci->cfg.bus_range.start +
- =09=09  (resource_size(&pci->cfg.res) >> pci->cfg.ops->bus_shift) - 1;
- =09pci->cfg.bus_range.end =3D min_t(resource_size_t, pci->cfg.bus_range.en=
-d,
- =09=09=09=09       bus_max);
-=20
-+=09pci->cfg.win =3D devm_kcalloc(dev, resource_size(&pci->cfg.bus_range),
-+=09=09=09=09    sizeof(*pci->cfg.win), GFP_KERNEL);
-+=09if (!pci->cfg.win)
-+=09=09return -ENOMEM;
-+
- =09/* Map our Configuration Space windows */
- =09if (!devm_request_mem_region(dev, pci->cfg.res.start,
- =09=09=09=09     resource_size(&pci->cfg.res),
---=20
-2.1.2
+But this is in turn 3.13 -> 3.18 userspace interface breakage ... I don't 
+think there is other graceful way out of this than creating a symlink so 
+that both variants work, right?
 
+-- 
+Jiri Kosina
+SUSE Labs
 
