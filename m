@@ -1,217 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:54056 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756563AbaJ1I1h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 28 Oct 2014 04:27:37 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v3 17/24] iommu/vt-d: Clean up unused MSI related code
-Date: Tue, 28 Oct 2014 16:26:35 +0800
-Message-Id: <1414484803-10311-18-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mout.kundenserver.de ([212.227.126.187]:57180 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932072AbaJ3UEm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Oct 2014 16:04:42 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Krzysztof Halasa <khalasa@piap.pl>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [RFC PATCH 0/2] arm: pcibios: remove pci_sys_data domain
+Date: Thu, 30 Oct 2014 21:03:51 +0100
+Message-ID: <2033107.209JbeZvkg@wuerfel>
+In-Reply-To: <20141030193538.GK26820@obsidianresearch.com>
+References: <1414669490-1217-1-git-send-email-lorenzo.pieralisi@arm.com> <3532414.9PZuBnKWYz@wuerfel> <20141030193538.GK26820@obsidianresearch.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now MSI interrupt has been converted to new hierarchy irqdomain
-interfaces, so kill legacy MSI related code.
+On Thursday 30 October 2014 13:35:38 Jason Gunthorpe wrote:
+> On Thu, Oct 30, 2014 at 08:21:40PM +0100, Arnd Bergmann wrote:
+> 
+> > > So how does mvebu now allocate a unique domain number per mvebu_pcie?
+> > 
+> > I believe the answer to that is that the mvebu PCIe driver currently only
+> > supports one domain, and it will have the unique number '0', which is the
+> > default.
+> 
+> It is like most of the the other new drivers, each mvebu_pcie_probe
+> expects to create a new domain with a unique bus number set for that
+> platform_device. AFAIK everything is uniq'd to the struct mcebu_pcie,
+> so there is nothing precluding the driver from being instantiated
+> twice.
+> 
+> Indeed, the way mvebu hardware works you could actually create a DT
+> that assigned some ports to one domain and some other ports to a
+> different domain, using two platform_devices. All that was missing
+> from the driver was to increment the domain number.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel_irq_remapping.c |  144 -----------------------------------
- 1 file changed, 144 deletions(-)
+Right, makes sense.
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index fdaa15026909..9742011190fb 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -146,44 +146,6 @@ static int qi_flush_iec(struct intel_iommu *iommu, int index, int mask)
- 	return qi_submit_sync(&desc, iommu);
+> I think Lorenzo's patches improve this, at least it appears that
+> unique domain numbers are now being assigned, I'm not sure - I'm a
+> little confused how we can safely blindly apply the new domain logic
+> without the driver opt'ing in....
+
+I think it will just work: the host driver should not care about
+the particular domain number, it just needs to be unique, which
+the core now ensures.
+
+> I thought older PCI platforms tended to call pci_common_init for each
+> physical PCI bus, and we don't want them to suddenly have non-zero
+> domain numbers??
+
+Only cns3xxx calls pci_common_init with fixed domain numbers, and
+Lorenzo's patch 1/2 changes it. All other drivers fall into one
+of three categories:
+
+a) there is only ever one host bridge
+b) There are multiple host bridges, but they are all in the same
+   domain, and the driver calls pci_common_init() once to initialize
+   them all, and pci_common_init calls back into the driver with
+   the hw_pci->setup() function passing the instance number.
+c) The driver calls pci_common_init_dev() for each new host bridge
+   and assigns a new domain every time but never has more than one
+   host bridge per domain.
+
+a) and b) are not impacted by this patch, while c) becomes simpler.
+
+BTW, pci-mvebu is currently the only driver using c) with pci_common_init
+rather than pci_common_init_dev. We should probably apply this trivial
+patch to make it more consistent:
+
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index b1315e197ffb..efe4bd370b37 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -825,7 +825,7 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
+ 	hw.align_resource = mvebu_pcie_align_resource;
+ 	hw.add_bus        = mvebu_pcie_add_bus;
+ 
+-	pci_common_init(&hw);
++	pci_common_init_dev(&pcie->pdev.dev, &hw);
  }
  
--static int map_irq_to_irte_handle(int irq, u16 *sub_handle)
--{
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
--	unsigned long flags;
--	int index;
--
--	if (!irq_iommu)
--		return -1;
--
--	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
--	*sub_handle = irq_iommu->sub_handle;
--	index = irq_iommu->irte_index;
--	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
--	return index;
--}
--
--static int set_irte_irq(int irq, struct intel_iommu *iommu, u16 index, u16 subhandle)
--{
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
--	struct irq_cfg *cfg = irq_cfg(irq);
--	unsigned long flags;
--
--	if (!irq_iommu)
--		return -1;
--
--	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
--
--	cfg->remapped = 1;
--	irq_iommu->iommu = iommu;
--	irq_iommu->irte_index = index;
--	irq_iommu->sub_handle = subhandle;
--	irq_iommu->irte_mask = 0;
--
--	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
--
--	return 0;
--}
--
- static int modify_irte(struct irq_2_iommu *irq_iommu,
- 		       struct irte *irte_modified)
- {
-@@ -1070,108 +1032,6 @@ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 	return 0;
- }
- 
--static void intel_compose_msi_msg(struct pci_dev *pdev,
--				  unsigned int irq, unsigned int dest,
--				  struct msi_msg *msg, u8 hpet_id)
--{
--	struct irq_cfg *cfg;
--	struct irte irte;
--	u16 sub_handle = 0;
--	int ir_index;
--
--	cfg = irq_cfg(irq);
--
--	ir_index = map_irq_to_irte_handle(irq, &sub_handle);
--	BUG_ON(ir_index == -1);
--
--	prepare_irte(&irte, cfg->vector, dest);
--
--	/* Set source-id of interrupt request */
--	if (pdev)
--		set_msi_sid(&irte, pdev);
--	else
--		set_hpet_sid(&irte, hpet_id);
--
--	modify_irte(irq_2_iommu(irq), &irte);
--
--	msg->address_hi = MSI_ADDR_BASE_HI;
--	msg->data = sub_handle;
--	msg->address_lo = MSI_ADDR_BASE_LO | MSI_ADDR_IR_EXT_INT |
--			  MSI_ADDR_IR_SHV |
--			  MSI_ADDR_IR_INDEX1(ir_index) |
--			  MSI_ADDR_IR_INDEX2(ir_index);
--}
--
--/*
-- * Map the PCI dev to the corresponding remapping hardware unit
-- * and allocate 'nvec' consecutive interrupt-remapping table entries
-- * in it.
-- */
--static int intel_msi_alloc_irq(struct pci_dev *dev, int irq, int nvec)
--{
--	struct intel_iommu *iommu;
--	int index;
--
--	down_read(&dmar_global_lock);
--	iommu = map_dev_to_ir(dev);
--	if (!iommu) {
--		printk(KERN_ERR
--		       "Unable to map PCI %s to iommu\n", pci_name(dev));
--		index = -ENOENT;
--	} else {
--		index = alloc_irte(iommu, irq, irq_2_iommu(irq), nvec);
--		if (index < 0) {
--			printk(KERN_ERR
--			       "Unable to allocate %d IRTE for PCI %s\n",
--			       nvec, pci_name(dev));
--			index = -ENOSPC;
--		}
--	}
--	up_read(&dmar_global_lock);
--
--	return index;
--}
--
--static int intel_msi_setup_irq(struct pci_dev *pdev, unsigned int irq,
--			       int index, int sub_handle)
--{
--	struct intel_iommu *iommu;
--	int ret = -ENOENT;
--
--	down_read(&dmar_global_lock);
--	iommu = map_dev_to_ir(pdev);
--	if (iommu) {
--		/*
--		 * setup the mapping between the irq and the IRTE
--		 * base index, the sub_handle pointing to the
--		 * appropriate interrupt remap table entry.
--		 */
--		set_irte_irq(irq, iommu, index, sub_handle);
--		ret = 0;
--	}
--	up_read(&dmar_global_lock);
--
--	return ret;
--}
--
--static int intel_alloc_hpet_msi(unsigned int irq, unsigned int id)
--{
--	int ret = -1;
--	struct intel_iommu *iommu;
--	int index;
--
--	down_read(&dmar_global_lock);
--	iommu = map_hpet_to_ir(id);
--	if (iommu) {
--		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
--		if (index >= 0)
--			ret = 0;
--	}
--	up_read(&dmar_global_lock);
--
--	return ret;
--}
--
- static struct irq_domain *intel_get_ir_irq_domain(struct irq_alloc_info *info)
- {
- 	struct intel_iommu *iommu = NULL;
-@@ -1248,10 +1108,6 @@ struct irq_remap_ops intel_irq_remap_ops = {
- 	.setup_ioapic_entry	= intel_setup_ioapic_entry,
- 	.set_affinity		= intel_ioapic_set_affinity,
- 	.free_irq		= free_irte,
--	.compose_msi_msg	= intel_compose_msi_msg,
--	.msi_alloc_irq		= intel_msi_alloc_irq,
--	.msi_setup_irq		= intel_msi_setup_irq,
--	.alloc_hpet_msi		= intel_alloc_hpet_msi,
- 	.get_ir_irq_domain	= intel_get_ir_irq_domain,
- 	.get_irq_domain		= intel_get_irq_domain,
- 	.get_ioapic_entry	= intel_get_ioapic_entry,
--- 
-1.7.10.4
+ /*
 
+
+	Arnd
