@@ -1,81 +1,26 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:61592 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751211AbaJaQys (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Oct 2014 12:54:48 -0400
-Received: by mail-ig0-f169.google.com with SMTP id hn18so1314275igb.2
-        for <linux-pci@vger.kernel.org>; Fri, 31 Oct 2014 09:54:47 -0700 (PDT)
-Date: Fri, 31 Oct 2014 10:54:44 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Richard Zhu <r65037@freescale.com>,
-	Kamal Mostafa <kamal@canonical.com>
-Subject: [GIT PULL] PCI fixes for v3.18
-Message-ID: <20141031165444.GA6168@google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 29 Oct 2014 20:16:15 -0500
+From: Jeff Epler <jepler@unpythonic.net>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: incompatible pci sysfs change since 3.12 (5136b2da770d)
+Message-ID: <20141030011615.GB59253@unpythonic.net>
+References: <20141030002258.GA59253@unpythonic.net>
+ <20141030003657.GA5487@kroah.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20141030003657.GA5487@kroah.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+On Wed, Oct 29, 2014 at 05:36:57PM -0700, Greg Kroah-Hartman wrote:
+> Ugh, that's my fault, I made a typo and should not have renamed the
+> sysfs file, very sorry about that.
+> 
+> I'll work on making up a patch to fix this and get it into the stable
+> kernels so that you don't have to have a work-around for very long.
 
-These changes, intended for v3.18, fix:
+Thank you!  I appreciate your quick response.
 
-  - An unintentional sysfs filename change.  5136b2da770d, which appeared
-    in v3.13, changed "enable" to "enabled", and this changes it back.  Old
-    users of "enable" are currently broken and will be helped by this
-    change.  Anything that started to use "enabled" after v3.13 will be
-    broken by this change.  If necessary, we can add a symlink to make both
-    work, but this patch doesn't do that.
-
-    See http://lkml.kernel.org/r/20141030163028.GA22250@kroah.com ("[PATCH]
-    PCI: fix name of 'enable' sysfs file").
-
-  - An i.MX6 clock problem that prevents mx6 nitrogen boards from booting.
-
-  - A mistaken duplicate merge that added a check twice.  Nothing's broken;
-    this just removes the unnecessary code.
-
-Bjorn
-
-
-The following changes since commit f114040e3ea6e07372334ade75d1ee0775c355e1:
-
-  Linux 3.18-rc1 (2014-10-19 18:08:38 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v3.18-fixes-1
-
-for you to fetch changes up to d8e7d53a2fc14e0830ab728cb84ee19933d3ac8d:
-
-  PCI: Rename sysfs 'enabled' file back to 'enable' (2014-10-30 11:17:10 -0600)
-
-----------------------------------------------------------------
-PCI updates for v3.18:
-
-  Sysfs
-    - Fix "enable" filename change (Greg Kroah-Hartman)
-
-  PCI device hotplug
-    - Revert duplicate merge (Kamal Mostafa)
-
-  Freescale i.MX6
-    - Wait for clocks to stabilize after ref_en (Richard Zhu)
-
-----------------------------------------------------------------
-Greg Kroah-Hartman (1):
-      PCI: Rename sysfs 'enabled' file back to 'enable'
-
-Kamal Mostafa (1):
-      Revert duplicate "PCI: pciehp: Prevent NULL dereference during probe"
-
-Richard Zhu (1):
-      PCI: imx6: Wait for clocks to stabilize after ref_en
-
- drivers/pci/host/pci-imx6.c       | 13 ++++++++++---
- drivers/pci/hotplug/pciehp_core.c |  7 -------
- drivers/pci/pci-sysfs.c           |  8 ++++----
- 3 files changed, 14 insertions(+), 14 deletions(-)
+Jeff
