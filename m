@@ -1,77 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60303 "EHLO mx1.redhat.com"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:53648 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757832AbaJ3R4g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 13:56:36 -0400
-Subject: [PATCH 1/3] PCI: Restore detection of read-only BARs
-From: Myron Stowe <myron.stowe@redhat.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: willy@linux.intel.com, unruh@physics.ubc.ca,
-	linux-kernel@vger.kernel.org, martin@lucina.net
-Date: Thu, 30 Oct 2014 11:54:37 -0600
-Message-ID: <20141030175437.22238.47243.stgit@amt.stowe>
-In-Reply-To: <20141030175430.22238.47671.stgit@amt.stowe>
-References: <20141030175430.22238.47671.stgit@amt.stowe>
+	id S1758818AbaJ3QjM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Oct 2014 12:39:12 -0400
+Date: Thu, 30 Oct 2014 11:38:40 -0500
+From: Felipe Balbi <balbi@ti.com>
+To: Huang Rui <ray.huang@amd.com>
+CC: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+Subject: Re: [PATCH v4 19/20] usb: dwc3: add support for AMD Nolan platform
+Message-ID: <20141030163840.GK10130@saruman>
+Reply-To: <balbi@ti.com>
+References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+ <1414663725-2195-20-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="9/GiYV45wF7IL3Iq"
+In-Reply-To: <1414663725-2195-20-git-send-email-ray.huang@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit 6ac665c63dca ("PCI: rewrite PCI BAR reading code") altered
-__pci_read_base's local variable 'l', masking off its lower non-addressing
-related bits, prior to it being passed in as the 'base' parameter to
-pci_size().  This masking broke pci_size's r/o BAR detection logic's
-comparison check for r/o BARs that have lower order bits set.  For such
-occurrences, the 'base == maxbase' check will no longer ever be "true".
+--9/GiYV45wF7IL3Iq
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-This patch resolves this issue by also masking off the non-addressing
-related bits of 'sz' before passing it into pci_size() as the 'maxbase'
-parameter.  With this change the r/o detection logic of pci_size() will
-once again catch known occurrences that have been encountered to date:
-  - AGP aperture BAR of AMD-7xx host bridges; if the AGP window
-    disabled, this BAR is read-only and read as 0x00000008 [1]
-  - BAR0-4 of ALi IDE controllers can be non-zero and read-only [1]
-  - Intel Sandy Bridge - Thermal Management Controller [8086:0103];
-    BAR 0 returning 0xfed98004 [2]
-  - Intel Xeon E5 v3/Core i7 Power Control Unit [8086:2fc0];
-    Bar 0 returning 0x00001a [3]
+On Thu, Oct 30, 2014 at 06:08:44PM +0800, Huang Rui wrote:
+> This patch adds support for AMD Nolan (NL) FPGA and SoC platform.
+>=20
+> Cc: Jason Chang <jason.chang@amd.com>
+> Signed-off-by: Huang Rui <ray.huang@amd.com>
+> ---
+>  drivers/usb/dwc3/dwc3-pci.c | 23 +++++++++++++++++++++++
+>  1 file changed, 23 insertions(+)
+>=20
+> diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
+> index ada975f..257fb3f9e 100644
+> --- a/drivers/usb/dwc3/dwc3-pci.c
+> +++ b/drivers/usb/dwc3/dwc3-pci.c
+> @@ -145,6 +145,28 @@ static int dwc3_pci_probe(struct pci_dev *pci,
+>  	res[1].name	=3D "dwc_usb3";
+>  	res[1].flags	=3D IORESOURCE_IRQ;
+> =20
+> +	if (pci->vendor =3D=3D PCI_VENDOR_ID_AMD &&
+> +			pci->device =3D=3D PCI_DEVICE_ID_AMD_NL_USB) {
+> +		dwc3_pdata.has_lpm_erratum =3D true;
+> +		dwc3_pdata.lpm_nyet_threshold =3D 0xf;
+> +
+> +		dwc3_pdata.u2exit_lfps_quirk =3D true;
+> +		dwc3_pdata.u2ss_inp3_quirk =3D true;
+> +		dwc3_pdata.req_p1p2p3_quirk =3D true;
+> +		dwc3_pdata.del_p1p2p3_quirk =3D true;
+> +		dwc3_pdata.del_phy_power_chg_quirk =3D true;
+> +		dwc3_pdata.lfps_filter_quirk =3D true;
+> +		dwc3_pdata.rx_detect_poll_quirk =3D true;
+> +
+> +		dwc3_pdata.tx_de_emphasis_quirk =3D true;
+> +		dwc3_pdata.tx_de_emphasis =3D 1;
+> +
+> +		/* FIXME these quirks should move when AMD NL taps out */
 
+do you mean ?
 
-[1] From Thomas Gleixner's "Linux kernel history" repository:
-    https://git.kernel.org/cgit/linux/kernel/git/tglx/history.git/commit/drivers/pci/probe.c?id=1307ef6621991f1c4bc3cec1b5a4ebd6fd3d66b9
-    pre-git commit 1307ef662199  "PCI: probing read-only Bars"
-[2] https://bugzilla.kernel.org/show_bug.cgi?id=43331
-[3] https://bugzilla.kernel.org/show_bug.cgi?id=85991
+		/*
+		 * FIXME these quirks should be removed when AMD NL
+		 * tapes out
+		 */
 
+--=20
+balbi
 
-Reported-by: William Unruh <unruh@physics.ubc.ca>
-Reported-by: Martin Lucina <martin@lucina.net>
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
-Cc: Matthew Wilcox <willy@linux.intel.com>
----
- drivers/pci/probe.c |    3 +++
- 1 file changed, 3 insertions(+)
+--9/GiYV45wF7IL3Iq
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 5ed9930..19dc247 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -216,14 +216,17 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 		res->flags |= IORESOURCE_SIZEALIGN;
- 		if (res->flags & IORESOURCE_IO) {
- 			l &= PCI_BASE_ADDRESS_IO_MASK;
-+			sz &= PCI_BASE_ADDRESS_IO_MASK;
- 			mask = PCI_BASE_ADDRESS_IO_MASK & (u32) IO_SPACE_LIMIT;
- 		} else {
- 			l &= PCI_BASE_ADDRESS_MEM_MASK;
-+			sz &= PCI_BASE_ADDRESS_MEM_MASK;
- 			mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
- 		}
- 	} else {
- 		res->flags |= (l & IORESOURCE_ROM_ENABLE);
- 		l &= PCI_ROM_ADDRESS_MASK;
-+		sz &= PCI_ROM_ADDRESS_MASK;
- 		mask = (u32)PCI_ROM_ADDRESS_MASK;
- 	}
- 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
+iQIcBAEBAgAGBQJUUmmQAAoJEIaOsuA1yqREcloQAIYWuyNamu1jTQuS04awCOsW
+9sq5zcWdhy64WcUnlWF+KZDuXMaOXEnygbcHmbWh1M+DNX/16NXfa7iQl4srkiFg
+uTYCdCvTwskuoH3C0EE2ongP7nlwcYvuX/TvndP1qlndZtqm4vBqYT7gddnJ6S3n
+bYjBYGqyb05yS97zn9SZV1HVr5DmP3N17BjapUqqjYFwmcl3P3uAYfsBirTsSQS8
+u1P3k4m6UgG1qO+mQZjAoC/JFqELY57A0qGC67ubrZXNSqtUq1MOt5kTMeyOfaJP
+QJTOsqBets5pen/FvwXYSWpgZIUL9ZaxV3OfenCYowWzsfXI0pRpmvr78/0R5KbH
+zW/AJN6lzEEAA/FAAFp8PvIm15W1/RneyjQ39KWueHLzbf7jTHebI3vOp+bO8nJa
+DOv7zkxQAm54FCkpPmvOPyUrjUrJyD7hw0/XilfH9Oz5AzoaUzkUKjAVUWdKq1gc
+tS9yIVogHOWhWeW5QumUCqRbO2nItXclHBSlno9fTaJ5jxdCfMY2AUztpPBejdu6
+2Bqbonvj5EJgqiyCFpQFfpGMRZB0Is+Da8RHcrQlyNXsC8WoMqRM6CCfHZGVAWEK
+z0sf6qsWB8okm3YvR/FE5PyawC+6yhdEe0HwKH5RoXEHrRals+tHawsdjVKm3mD2
+2F/gs/Ysl7Gvrrn/wgw+
+=x4Sv
+-----END PGP SIGNATURE-----
+
+--9/GiYV45wF7IL3Iq--
