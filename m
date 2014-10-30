@@ -1,100 +1,163 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:53717 "EHLO arroyo.ext.ti.com"
+Received: from mx1.redhat.com ([209.132.183.28]:48911 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759279AbaJ3QkQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 12:40:16 -0400
-Date: Thu, 30 Oct 2014 11:39:43 -0500
-From: Felipe Balbi <balbi@ti.com>
-To: Huang Rui <ray.huang@amd.com>
-CC: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: Re: [PATCH v4 16/20] usb: dwc3: add disable usb2 suspend phy quirk
-Message-ID: <20141030163943.GL10130@saruman>
-Reply-To: <balbi@ti.com>
-References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
- <1414663725-2195-17-git-send-email-ray.huang@amd.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="MsEL38XAg4rx1uDx"
-In-Reply-To: <1414663725-2195-17-git-send-email-ray.huang@amd.com>
+	id S1761105AbaJ3Tp4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Oct 2014 15:45:56 -0400
+Message-ID: <1414698349.27420.302.camel@ul30vt.home>
+Subject: Re: Hard and silent lock up since linux 3.14 with PCIe pass through
+ (vfio)
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Andreas Hartmann <andihartmann@freenet.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Date: Thu, 30 Oct 2014 13:45:49 -0600
+In-Reply-To: <20141030200922.15126d7a@dualc.maya.org>
+References: <20140923210318.498dacbd@dualc.maya.org>
+										 <20141011003219.560cca97@dualc.maya.org>
+										 <20141010225408.GA24493@google.com> <5438CC1E.3060407@maya.org>
+										 <1413360267.4202.70.camel@ul30vt.home> <54406B34.1050808@maya.org>
+										 <1413925580.4202.189.camel@ul30vt.home>
+									 <1413927152.4202.195.camel@ul30vt.home> <5447D9D9.9030909@maya.org>
+								 <1414010215.4202.275.camel@ul30vt.home> <54492606.5090308@maya.org>
+							 <1414082022.27420.39.camel@ul30vt.home> <54493BFA.8010609@maya.org>
+						 <1414093023.27420.40.camel@ul30vt.home> <544B3D14.70907@maya.org>
+					 <1414533068.27420.226.camel@ul30vt.home> <54511A16.30602@maya.org>
+				 <1414604677.27420.263.camel@ul30vt.home> <54512A91.2010606@maya.org>
+			 <1414606581.27420.266.camel@ul30vt.home>
+			 <20141029204344.61d5fc73@dualc.maya.org>
+		 <1414615824.27420.281.camel@ul30vt.home> <545268E8.3080107@maya.org>
+	 <1414688299.27420.292.camel@ul30vt.home>
+	 <20141030200922.15126d7a@dualc.maya.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---MsEL38XAg4rx1uDx
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Thu, 2014-10-30 at 20:09 +0100, Andreas Hartmann wrote:
+> Alex Williamson wrote:
+> > On Thu, 2014-10-30 at 17:35 +0100, Andreas Hartmann wrote:
+> >> Alex Williamson wrote:
+> >>> On Wed, 2014-10-29 at 20:43 +0100, Andreas Hartmann wrote:
+> >> [...]
+> >>>> Therefore, I never should need pci_save_vc_state and
+> >>>> pci_restore_vc_state. Thus, it should be ok to add "return" at the
+> >>>> beginning of each of these function, true? Then it should work.
+> >>>>
+> >>>> I tested it. It worked.
+> >>>>
+> >>>> But if I'm removing only one of these returns either in
+> >>>> pci_save_vc_state or pci_restore_vc_state, the machine hangs again.
+> >>>>
+> >>>> Therefore, there must be something odd going on in the for loops. Isn't
+> >>>> it possible to add some useful debug code to these loops to see what's
+> >>>> really going on? But the output *must* go to the actual console,
+> >>>> otherwise I can't see it!
+> >>>>
+> >>>>
+> >>>> int pci_save_vc_state(struct pci_dev *dev)
+> >>>> {
+> >>>>         return 0; // must be set
+> >>>>         int i;
+> >>>>
+> >>>>         for (i = 0; i < ARRAY_SIZE(vc_caps); i++) {
+> >> 		   // continue; -> works
+> >>>>                 int pos, ret;
+> >>>>                 struct pci_cap_saved_state *save_state;
+> >> 		   // continue does not work!
+> >>
+> >> --> Most probably the
+> >>
+> >>             struct pci_cap_saved_state *save_state;
+> >>
+> >>     makes the system hang!
+> > 
+> > We've done nothing more than declare variables there, there's no actual
+> > code.  What happens if you increase the delay after bus reset, edit
+> > drivers/pci/pci.c, find the call to ssleep(1) and change the 1 to a 2,
+> > doubling the delay after reset.
+> 
+> Same behaviour.
+> 
+> >  It seems like VC save/restore is just a
+> > scapegoat for the platform already being broken by the bus reset.  Also,
+> > if you have any other card to test in this slot, it would be useful
+> > comparison data to know if we're dealing with an endpoint issue or a bus
+> > issue.
+> 
+> I organized an Intel pcie card:
+> 
+> 03:00.0 Ethernet controller: Intel Corporation 82574L Gigabit Network Connection
+>         Subsystem: Intel Corporation Gigabit CT Desktop Adapter
+>         Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Interrupt: pin A routed to IRQ 17
+>         Region 0: Memory at fdbc0000 (32-bit, non-prefetchable) [disabled] [size=128K]
+>         Region 1: Memory at fdb00000 (32-bit, non-prefetchable) [disabled] [size=512K]
+>         Region 2: I/O ports at cf00 [disabled] [size=32]
+>         Region 3: Memory at fdbfc000 (32-bit, non-prefetchable) [disabled] [size=16K]
+>         [virtual] Expansion ROM at fdb80000 [disabled] [size=256K]
+>         Capabilities: [c8] Power Management version 2
+>                 Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+>                 Status: D0 NoSoftRst- PME-Enable+ DSel=0 DScale=1 PME-
+>         Capabilities: [d0] MSI: Enable- Count=1/1 Maskable- 64bit+
+>                 Address: 0000000000000000  Data: 0000
+>         Capabilities: [e0] Express (v1) Endpoint, MSI 00
+>                 DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
+>                         ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+>                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+>                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+>                         MaxPayload 128 bytes, MaxReadReq 512 bytes
+>                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+>                 LnkCap: Port #1, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <128ns, L1 <64us
+>                         ClockPM- Surprise- LLActRep- BwNot-
+>                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+>                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>                 LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+>         Capabilities: [a0] MSI-X: Enable- Count=5 Masked-
+>                 Vector table: BAR=3 offset=00000000
+>                 PBA: BAR=3 offset=00002000
+>         Capabilities: [100 v1] Advanced Error Reporting
+>                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>                 UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+>                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+>                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+>                 AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
+>         Capabilities: [140 v1] Device Serial Number 00-1b-21-ff-ff-cf-8f-57
+>         Kernel driver in use: vfio-pci
+> 
+> 
+> and tested with the same kernel, which hangs w/ atheros card. It just
+> worked. Not just once, but each of the tests I did. I retested w/
+> atheros -> hang. Tested again with intel-card -> works. Back to
+> atheros -> hang.
 
-On Thu, Oct 30, 2014 at 06:08:41PM +0800, Huang Rui wrote:
-> This patch adds disable usb2 suspend phy quirk, and some special platforms
-> can configure that if it is needed.
->=20
-> Signed-off-by: Huang Rui <ray.huang@amd.com>
-> ---
->  Documentation/devicetree/bindings/usb/dwc3.txt | 1 +
->  drivers/usb/dwc3/core.c                        | 7 +++++++
->  drivers/usb/dwc3/core.h                        | 2 ++
->  drivers/usb/dwc3/platform_data.h               | 1 +
->  4 files changed, 11 insertions(+)
->=20
-> diff --git a/Documentation/devicetree/bindings/usb/dwc3.txt b/Documentati=
-on/devicetree/bindings/usb/dwc3.txt
-> index 3720fca..feaf2c8 100644
-> --- a/Documentation/devicetree/bindings/usb/dwc3.txt
-> +++ b/Documentation/devicetree/bindings/usb/dwc3.txt
-> @@ -33,6 +33,7 @@ Optional properties:
->   - snps,tx_de_emphasis: the value driven to the PHY is controlled by the
->  			LTSSM during USB3 Compliance mode.
->   - snps,dis_u3_susphy_quirk: when set core will disable USB3 suspend phy.
-> + - snps,dis_u2_susphy_quirk: when set core will disable USB2 suspend phy.
-> =20
->  This is usually a subnode to DWC3 glue to which it is connected.
-> =20
-> diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-> index fdc715a..a28ed1c 100644
-> --- a/drivers/usb/dwc3/core.c
-> +++ b/drivers/usb/dwc3/core.c
-> @@ -423,6 +423,10 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
->  	if (dwc->revision > DWC3_REVISION_194A)
->  		reg |=3D DWC3_GUSB2PHYCFG_SUSPHY;
-> =20
-> +	/* FIXME will move FPGA flag when AMD NL taps out */
+Thanks for the test.
 
-no need to mention AMD NL here. We still want to have is_fpga flag, just
-dwc3-pci will be patches once AMD NL tapes out.
+> Seems to be really a problem w/ the atheros card, which is triggered by
+> new vc save/restore.
 
---=20
-balbi
+It seems more like the bus reset, not the VC save/restore.  As far a
+interacting with hardware is concerned, there's no difference between
+the two cases where you found one continue works and the other doesn't.
 
---MsEL38XAg4rx1uDx
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+> Well, but what to do now? I know how to "fix" it. But this means I have
+> to compile my kernels again on my own if it is >= 3.14.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
+Let's not give up hope just yet, I'd like to try another bus reset
+mechanism with setpci.  Install the Atheros card and bind it to
+pci-stub, then do:
 
-iQIcBAEBAgAGBQJUUmnPAAoJEIaOsuA1yqREOKYQAIIe8r593ur0DYjQMBjEGJau
-QNQK7elaWJ6IpjnN9oe+Nejc53Nr5yT1n8qfBebbJzLIVknO5ZYZD4TAT4daBviM
-gsgShOUaFDm4ZZfnjBz477paGZ7kUpOhAd3hWY6qJwTR7mltb+ROFVqe66/yy84V
-6Luzv+Doj6scZkmkCtbNF9NKaGUa95QwegCPPgeBSohCxv6j7070fnRWhp2DAxPG
-JXKVlh55qZqjAuqQZ0f4lMCMNfEh2YoHjmuL9mbcaFAph4mjIReTqoQoyWtrOUFn
-SvNbIlYLOPFsT+odFRaEc+nH+UmFpLf0buu/EUCqncK3xcs7BZrEuJU2XvD/xGAL
-numV6PBJpMQBEyvs7/qij072TJ4glgG3IXXZ3hTxloFCBwqUjy6eqItf6KT7nata
-1KuRvgiwwGLv9u611tHg/tZgcHity/uED5atO1MSaEfZrpPuWX9JVyLKumdUyQFK
-9MVj//i+OWVo58wTOhWHASmGxCU/4AlekL3OyVWnV2rGqrfGIK4BugwQQudosVo0
-HaLBle3iOjVSN+vD6GRTaWyqZ9hljtBoMryOqSHJeewdOjVu42TjeAtSyE/Wub3u
-yhqbqzYbjeez+S/kbYWNmYojbZVtJ1umC3d0GAmbh7m6Fus+gANBSe1iKzlRSyU5
-Wm7eJQwZR9NtccHdwQki
-=PIJK
------END PGP SIGNATURE-----
+setpci -s 00:05.0 68.w=0010:0010
+sleep 0.1
+setpci -s 00:05.0 68.w=0000:0010
+sleep 1
+lspci -xxx -s 3:00.0
 
---MsEL38XAg4rx1uDx--
+This uses the link disable control rather than the secondary bus reset.
+Typically the results between the two are the same, but maybe we'll get
+lucky.  The BIOS manages to reset the bus with this device installed
+somehow, so there must be a mechanism to do it.  Thanks,
+
+Alex
+
