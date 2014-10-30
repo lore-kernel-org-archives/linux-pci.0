@@ -1,76 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0124.outbound.protection.outlook.com ([207.46.100.124]:16956
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758445AbaJ3KKY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 06:10:24 -0400
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v4 03/20] usb: dwc3: initialize platform data at pci glue layer
-Date: Thu, 30 Oct 2014 18:08:28 +0800
-Message-ID: <1414663725-2195-4-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
-References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:51125 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760763AbaJ3SJu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Oct 2014 14:09:50 -0400
+Date: Thu, 30 Oct 2014 18:09:41 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Krzysztof Halasa <khalasa@piap.pl>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Mohit Kumar <mohit.kumar@st.com>
+Subject: Re: [RFC PATCH 0/2] arm: pcibios: remove pci_sys_data domain
+Message-ID: <20141030180941.GA17911@red-moon>
+References: <1414669490-1217-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20141030162552.GC26820@obsidianresearch.com>
+ <20141030165246.GC2048@red-moon>
+ <20141030170305.GE26820@obsidianresearch.com>
+ <20141030173914.GS1069@e106497-lin.cambridge.arm.com>
+ <20141030174541.GH26820@obsidianresearch.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141030174541.GH26820@obsidianresearch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch initializes platform data at pci glue layer, and SoCs x86-based
-platform vendor is able to define their flags in platform data at bus glue
-layer. Then do some independent behaviors at dwc3 core level.
+On Thu, Oct 30, 2014 at 05:45:41PM +0000, Jason Gunthorpe wrote:
+> On Thu, Oct 30, 2014 at 05:39:15PM +0000, Liviu Dudau wrote:
+> 
+> > But of_pci_get_host_bridge_resources() does not request the resources, it only
+> > creates them out of the DT ranges. If/when the driver decides the list of
+> > resources is correct and it can work with it can also request them and use
+> > whatever domain number allocation strategy it wants (auto-incrementing or DT
+> > based). So I don't think the global sequencing is broken here.
+> 
+> So how does mvebu now allocate a unique domain number per mvebu_pcie?
+> 
+> Which hw_pci callback should do that?
 
-Signed-off-by: Huang Rui <ray.huang@amd.com>
-Signed-off-by: Felipe Balbi <balbi@ti.com>
----
- drivers/usb/dwc3/dwc3-pci.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+It is done through core code in pci_create_root_bus(), that in turn
+calls pci_bus_assign_domain_nr() which is implemented now in pcibios
+for arm, it is all in patch 2. What Liviu is saying is correct, it all
+depends on *when* the resource naming should be applied. For code
+relying on pcibios the setup hw_pci hook() is likely to be the place where
+resources are requested and the domain is not set-up yet there with
+the generic PCI domains approach, hence I can't attach a domain number
+to the resource names in question.
 
-diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
-index a36cf66..ada975f 100644
---- a/drivers/usb/dwc3/dwc3-pci.c
-+++ b/drivers/usb/dwc3/dwc3-pci.c
-@@ -25,6 +25,8 @@
- #include <linux/usb/otg.h>
- #include <linux/usb/usb_phy_generic.h>
- 
-+#include "platform_data.h"
-+
- /* FIXME define these in <linux/pci_ids.h> */
- #define PCI_VENDOR_ID_SYNOPSYS		0x16c3
- #define PCI_DEVICE_ID_SYNOPSYS_HAPSUSB3	0xabcd
-@@ -102,6 +104,9 @@ static int dwc3_pci_probe(struct pci_dev *pci,
- 	struct dwc3_pci		*glue;
- 	int			ret;
- 	struct device		*dev = &pci->dev;
-+	struct dwc3_platform_data dwc3_pdata;
-+
-+	memset(&dwc3_pdata, 0x00, sizeof(dwc3_pdata));
- 
- 	glue = devm_kzalloc(dev, sizeof(*glue), GFP_KERNEL);
- 	if (!glue)
-@@ -148,6 +153,10 @@ static int dwc3_pci_probe(struct pci_dev *pci,
- 
- 	pci_set_drvdata(pci, glue);
- 
-+	ret = platform_device_add_data(dwc3, &dwc3_pdata, sizeof(dwc3_pdata));
-+	if (ret)
-+		goto err3;
-+
- 	dma_set_coherent_mask(&dwc3->dev, dev->coherent_dma_mask);
- 
- 	dwc3->dev.dma_mask = dev->dma_mask;
--- 
-1.9.1
-
+Lorenzo
