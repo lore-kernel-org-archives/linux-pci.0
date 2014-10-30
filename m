@@ -1,52 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:50458 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751191AbaJOW4H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 15 Oct 2014 18:56:07 -0400
-Message-ID: <1413413732.11213.27.camel@pasglop>
-Subject: Re: [PATCH v3 4/7] sound/radeon: Add quirk for broken 64-bit MSI
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Dave Airlie <airlied@linux.ie>, Takashi Iwai <tiwai@suse.de>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org,
-	Alex Deucher <alexdeucher@gmail.com>
-Date: Thu, 16 Oct 2014 09:55:32 +1100
-In-Reply-To: <20141015221914.GD15225@google.com>
-References: <1412656696.30859.122.camel@pasglop>
-	 <CADnq5_NFt8neiOAg896d3-DbAn0rnrE7iXaTFmkNGSg-J9oSkA@mail.gmail.com>
-	 <1412746096.30859.229.camel@pasglop> <20141015221914.GD15225@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:51016 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756126AbaJ3QUc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Oct 2014 12:20:32 -0400
+Date: Thu, 30 Oct 2014 16:20:22 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [RFC PATCH 2/2] arm: pcibios: move to generic PCI domains
+Message-ID: <20141030162022.GA2048@red-moon>
+References: <1414669490-1217-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1414669490-1217-3-git-send-email-lorenzo.pieralisi@arm.com>
+ <1803568.ShmHEYg5Ky@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1803568.ShmHEYg5Ky@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-10-15 at 16:19 -0600, Bjorn Helgaas wrote:
->   PCI/MSI: Add device flag indicating that 64-bit MSIs don't work
+On Thu, Oct 30, 2014 at 11:55:31AM +0000, Arnd Bergmann wrote:
+> On Thursday 30 October 2014 11:44:48 Lorenzo Pieralisi wrote:
+> > Most if not all ARM PCI host controller device drivers either ignore the
+> > domain field in the pci_sys_data structure or just increment it every
+> > time a host controller is probed, using it as a domain counter.
+> > 
+> > Therefore, instead of relying on pci_sys_data to stash the domain number
+> > in a standard location, ARM pcibios code can be moved to the newly
+> > introduced generic PCI domains code, implemented in commits:
+> > 
+> > commit 41e5c0f81d3e676d671d96a0a1fafb27abfbd9
+> > ("of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()")
+> > 
+> > commit 670ba0c8883b576d0aec28bd7a838358a4be1
+> > ("PCI: Add generic domain handling")
+> > 
+> > In order to assign a domain number dynamically, the ARM pcibios defines
+> > the function, called by core PCI code:
+> > 
+> > void pci_bus_assign_domain_nr(...)
+> > 
+> > that relies on a DT property to define the domain number or falls back to
+> > a counter; its usage replaces the current domain assignment code in PCI
+> > host controllers present in the kernel.
+> > 
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> > Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> > Cc: Jingoo Han <jg1.han@samsung.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Russell King <linux@arm.linux.org.uk>
+> > Cc: Mohit Kumar <mohit.kumar@st.com>
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > 
 > 
-> I'd be happy to merge it, but given what I know now, I would wait and merge
-> it during the v3.19 merge window.  It sounds like it's more urgent than
-> that and should be merged earlier, but from the changelogs, it looks like
-> we're just replacing the powerpc-specific quirk with a more generic one.
+> Acked-by: Arnd Bergmann <arnd@arndb.de>
 > 
-> So I assume you'll merge it via powerpc unless I hear otherwise.
+> Very nice!
 
-Either way works but it's easy to keep it all in one series in one tree.
+Thank you very much, I would be grateful if Jason, Jingoo, and Phil can
+give the patch a go on the respective platforms and hopefully I will add
+their tested-by tags.
 
-The urgency is that the current powerpc quirk works only with one specific
-card (ie, one device ID for gfx and one for audio) and misses the DMA limitation
-of the sound driver (which is a somewhat orthogonal issue but the patch for it is
-in the series).
+I guess pci_sys_data.add_bus pointer is the next to go :)
 
-Any other radeon card causes the machine to crash at boot (the driver doesn't
-recover well from the EEH error triggered by the bad MSI address and the world
-falls over from there).
-
-So I want this to go back into distros.
-
-Cheers,
-Ben.
-
-
+Lorenzo
