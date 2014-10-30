@@ -1,282 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f170.google.com ([209.85.216.170]:42711 "EHLO
-	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750868AbaJBCNj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 22:13:39 -0400
-Received: by mail-qc0-f170.google.com with SMTP id m20so1508824qcx.1
-        for <linux-pci@vger.kernel.org>; Wed, 01 Oct 2014 19:13:38 -0700 (PDT)
+Received: from mail-bn1bon0137.outbound.protection.outlook.com ([157.56.111.137]:16304
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932936AbaJ3KKp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Oct 2014 06:10:45 -0400
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v4 07/20] usb: dwc3: add P3 in U2 SS Inactive quirk
+Date: Thu, 30 Oct 2014 18:08:32 +0800
+Message-ID: <1414663725-2195-8-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <1412210082.10667.2.camel@pasglop>
-References: <1412210082.10667.2.camel@pasglop>
-Date: Wed, 1 Oct 2014 22:13:38 -0400
-Message-ID: <CADnq5_PhuFbRPgzAa_hEA1czTQjY9xdLFOWhL393DN4CYDnFng@mail.gmail.com>
-Subject: Re: [PATCH v2 3/4] sound/radeon: Move 64-bit MSI quirk from arch to driver
-From: Alex Deucher <alexdeucher@gmail.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Takashi Iwai <tiwai@suse.de>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
-Content-Type: multipart/mixed; boundary=001a11c1234021915c0504672a5c
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---001a11c1234021915c0504672a5c
-Content-Type: text/plain; charset=UTF-8
+This patch adds P3 in U2 SS Inactive quirk, and some special platforms can
+configure that if it is needed.
 
-On Wed, Oct 1, 2014 at 8:34 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
->
-> A number of radeon cards have a HW limitation causing them to be
-> unable to generate the full 64-bit of address bits for MSIs. This
-> breaks MSIs on some platforms such as POWER machines.
->
-> We used to have a powerpc specific quirk to address that on a
-> single card, but this doesn't scale very well, this is better
-> put under control of the drivers who know precisely what a given
-> HW revision can do.
->
-> This moves the setting of the quirk flag to the audio driver.
->
-> While recent ASICs have that problem fixed, they don't seem to
-> be listed in the PCI IDs of the current driver, so let's quirk all
-> the ATI HDMI for now. The consequences are nil on x86 anyway.
->
-> Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> CC: <stable@vger.kernel.org>
+[ balbi@ti.com : added DeviceTree binding documentation ]
 
-The attached updated patch only flags the affected asics.
+Signed-off-by: Huang Rui <ray.huang@amd.com>
+Signed-off-by: Felipe Balbi <balbi@ti.com>
+---
+ Documentation/devicetree/bindings/usb/dwc3.txt |  1 +
+ drivers/usb/dwc3/core.c                        | 23 +++++++++++++++++++++++
+ drivers/usb/dwc3/core.h                        |  3 +++
+ drivers/usb/dwc3/platform_data.h               |  1 +
+ 4 files changed, 28 insertions(+)
 
-Alex
+diff --git a/Documentation/devicetree/bindings/usb/dwc3.txt b/Documentation/devicetree/bindings/usb/dwc3.txt
+index 79ed37c..f714357 100644
+--- a/Documentation/devicetree/bindings/usb/dwc3.txt
++++ b/Documentation/devicetree/bindings/usb/dwc3.txt
+@@ -19,6 +19,7 @@ Optional properties:
+  - snps,has-lpm-erratum: true when DWC3 was configured with LPM Erratum enabled
+  - snps,lpm-nyet-threshold: LPM NYET threshold
+  - snps,u2exit_lfps_quirk: set if we want to enable U2Exit LFPS quirk
++ - snps,u2ss_inp3_quirk: set if we enable P3 OK for U2/SS Inactive quirk
+ 
+ This is usually a subnode to DWC3 glue to which it is connected.
+ 
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index 6d1f09f..0a935cb 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -365,6 +365,24 @@ static void dwc3_cache_hwparams(struct dwc3 *dwc)
+ }
+ 
+ /**
++ * dwc3_phy_setup - Configure USB PHY Interface of DWC3 Core
++ * @dwc: Pointer to our controller context structure
++ */
++static void dwc3_phy_setup(struct dwc3 *dwc)
++{
++	u32 reg;
++
++	reg = dwc3_readl(dwc->regs, DWC3_GUSB3PIPECTL(0));
++
++	if (dwc->u2ss_inp3_quirk)
++		reg |= DWC3_GUSB3PIPECTL_U2SSINP3OK;
++
++	dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
++
++	mdelay(100);
++}
++
++/**
+  * dwc3_core_init - Low-level initialization of DWC3 Core
+  * @dwc: Pointer to our controller context structure
+  *
+@@ -486,6 +504,8 @@ static int dwc3_core_init(struct dwc3 *dwc)
+ 
+ 	dwc3_writel(dwc->regs, DWC3_GCTL, reg);
+ 
++	dwc3_phy_setup(dwc);
++
+ 	ret = dwc3_alloc_scratch_buffers(dwc);
+ 	if (ret)
+ 		goto err1;
+@@ -731,6 +751,8 @@ static int dwc3_probe(struct platform_device *pdev)
+ 				"snps,disable_scramble_quirk");
+ 		dwc->u2exit_lfps_quirk = of_property_read_bool(node,
+ 				"snps,u2exit_lfps_quirk");
++		dwc->u2ss_inp3_quirk = of_property_read_bool(node,
++				"snps,u2ss_inp3_quirk");
+ 	} else if (pdata) {
+ 		dwc->maximum_speed = pdata->maximum_speed;
+ 		dwc->has_lpm_erratum = pdata->has_lpm_erratum;
+@@ -742,6 +764,7 @@ static int dwc3_probe(struct platform_device *pdev)
+ 
+ 		dwc->disable_scramble_quirk = pdata->disable_scramble_quirk;
+ 		dwc->u2exit_lfps_quirk = pdata->u2exit_lfps_quirk;
++		dwc->u2ss_inp3_quirk = pdata->u2ss_inp3_quirk;
+ 	}
+ 
+ 	/* default to superspeed if no maximum_speed passed */
+diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+index 45130a1..3843511 100644
+--- a/drivers/usb/dwc3/core.h
++++ b/drivers/usb/dwc3/core.h
+@@ -176,6 +176,7 @@
+ 
+ /* Global USB3 PIPE Control Register */
+ #define DWC3_GUSB3PIPECTL_PHYSOFTRST	(1 << 31)
++#define DWC3_GUSB3PIPECTL_U2SSINP3OK	(1 << 29)
+ #define DWC3_GUSB3PIPECTL_SUSPHY	(1 << 17)
+ 
+ /* Global TX Fifo Size Register */
+@@ -681,6 +682,7 @@ struct dwc3_scratchpad_array {
+  * @three_stage_setup: set if we perform a three phase setup
+  * @disable_scramble_quirk: set if we enable the disable scramble quirk
+  * @u2exit_lfps_quirk: set if we enable U2Exit LFPS quirk
++ * @u2ss_inp3_quirk: set if we enable P3 OK for U2/SS Inactive quirk
+  */
+ struct dwc3 {
+ 	struct usb_ctrlrequest	*ctrl_req;
+@@ -790,6 +792,7 @@ struct dwc3 {
+ 
+ 	unsigned		disable_scramble_quirk:1;
+ 	unsigned		u2exit_lfps_quirk:1;
++	unsigned		u2ss_inp3_quirk:1;
+ };
+ 
+ /* -------------------------------------------------------------------------- */
+diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
+index 3f21591..cf92c81 100644
+--- a/drivers/usb/dwc3/platform_data.h
++++ b/drivers/usb/dwc3/platform_data.h
+@@ -30,4 +30,5 @@ struct dwc3_platform_data {
+ 	unsigned disable_scramble_quirk:1;
+ 	unsigned has_lpm_erratum:1;
+ 	unsigned u2exit_lfps_quirk:1;
++	unsigned u2ss_inp3_quirk:1;
+ };
+-- 
+1.9.1
 
-> ---
->  arch/powerpc/kernel/pci_64.c |  6 ------
->  sound/pci/hda/hda_intel.c    | 10 ++++++++--
->  sound/pci/hda/hda_priv.h     |  1 +
->  3 files changed, 9 insertions(+), 8 deletions(-)
->
-> diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
-> index 5330f6d..b15194e 100644
-> --- a/arch/powerpc/kernel/pci_64.c
-> +++ b/arch/powerpc/kernel/pci_64.c
-> @@ -266,9 +266,3 @@ int pcibus_to_node(struct pci_bus *bus)
->  }
->  EXPORT_SYMBOL(pcibus_to_node);
->  #endif
-> -
-> -static void quirk_radeon_32bit_msi(struct pci_dev *dev)
-> -{
-> -       dev->no_64bit_msi = true;
-> -}
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0xaa68, quirk_radeon_32bit_msi);
-> diff --git a/sound/pci/hda/hda_intel.c b/sound/pci/hda/hda_intel.c
-> index aa302fb..f91ba7f 100644
-> --- a/sound/pci/hda/hda_intel.c
-> +++ b/sound/pci/hda/hda_intel.c
-> @@ -296,7 +296,8 @@ enum {
->
->  /* quirks for ATI/AMD HDMI */
->  #define AZX_DCAPS_PRESET_ATI_HDMI \
-> -       (AZX_DCAPS_NO_TCSEL | AZX_DCAPS_SYNC_WRITE | AZX_DCAPS_POSFIX_LPIB)
-> +       (AZX_DCAPS_NO_TCSEL | AZX_DCAPS_SYNC_WRITE | AZX_DCAPS_POSFIX_LPIB|\
-> +        AZX_DCAPS_NO_MSI64)
->
->  /* quirks for Nvidia */
->  #define AZX_DCAPS_PRESET_NVIDIA \
-> @@ -1505,9 +1506,14 @@ static int azx_first_init(struct azx *chip)
->                 return -ENXIO;
->         }
->
-> -       if (chip->msi)
-> +       if (chip->msi) {
-> +               if (chip->driver_caps & AZX_DCAPS_NO_MSI64) {
-> +                       dev_dbg(card->dev, "Disabling 64bit MSI\n");
-> +                       pci->no_64bit_msi = true;
-> +               }
->                 if (pci_enable_msi(pci) < 0)
->                         chip->msi = 0;
-> +       }
->
->         if (azx_acquire_irq(chip, 0) < 0)
->                 return -EBUSY;
-> diff --git a/sound/pci/hda/hda_priv.h b/sound/pci/hda/hda_priv.h
-> index 949cd43..5016014 100644
-> --- a/sound/pci/hda/hda_priv.h
-> +++ b/sound/pci/hda/hda_priv.h
-> @@ -171,6 +171,7 @@ enum { SDI0, SDI1, SDI2, SDI3, SDO0, SDO1, SDO2, SDO3 };
->  #define AZX_DCAPS_PM_RUNTIME   (1 << 26)       /* runtime PM support */
->  #define AZX_DCAPS_I915_POWERWELL (1 << 27)     /* HSW i915 powerwell support */
->  #define AZX_DCAPS_CORBRP_SELF_CLEAR (1 << 28)  /* CORBRP clears itself after reset */
-> +#define AZX_DCAPS_NO_MSI64      (1 << 29)      /* Stick to 32-bit MSIs */
->
->  /* HD Audio class code */
->  #define PCI_CLASS_MULTIMEDIA_HD_AUDIO  0x0403
->
->
->
->
-
---001a11c1234021915c0504672a5c
-Content-Type: text/x-patch; charset=US-ASCII;
-	name="0001-sound-radeon-Move-64-bit-MSI-quirk-from-arch-to-driv.patch"
-Content-Disposition: attachment;
-	filename="0001-sound-radeon-Move-64-bit-MSI-quirk-from-arch-to-driv.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_i0rgy5qs0
-
-RnJvbSA0MTJmY2UwOTI5NTU4NjAyYTQzYTQxZmVhYjA1MWM0Y2Y3M2M3MTQyIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBCZW5qYW1pbiBIZXJyZW5zY2htaWR0IDxiZW5oQGtlcm5lbC5j
-cmFzaGluZy5vcmc+CkRhdGU6IFRodSwgMiBPY3QgMjAxNCAxMDozNDo0MiArMTAwMApTdWJqZWN0
-OiBbUEFUQ0hdIHNvdW5kL3JhZGVvbjogTW92ZSA2NC1iaXQgTVNJIHF1aXJrIGZyb20gYXJjaCB0
-byBkcml2ZXIgKHYyKQoKQSBudW1iZXIgb2YgcmFkZW9uIGNhcmRzIGhhdmUgYSBIVyBsaW1pdGF0
-aW9uIGNhdXNpbmcgdGhlbSB0byBiZQp1bmFibGUgdG8gZ2VuZXJhdGUgdGhlIGZ1bGwgNjQtYml0
-IG9mIGFkZHJlc3MgYml0cyBmb3IgTVNJcy4gVGhpcwpicmVha3MgTVNJcyBvbiBzb21lIHBsYXRm
-b3JtcyBzdWNoIGFzIFBPV0VSIG1hY2hpbmVzLgoKV2UgdXNlZCB0byBoYXZlIGEgcG93ZXJwYyBz
-cGVjaWZpYyBxdWlyayB0byBhZGRyZXNzIHRoYXQgb24gYQpzaW5nbGUgY2FyZCwgYnV0IHRoaXMg
-ZG9lc24ndCBzY2FsZSB2ZXJ5IHdlbGwsIHRoaXMgaXMgYmV0dGVyCnB1dCB1bmRlciBjb250cm9s
-IG9mIHRoZSBkcml2ZXJzIHdobyBrbm93IHByZWNpc2VseSB3aGF0IGEgZ2l2ZW4KSFcgcmV2aXNp
-b24gY2FuIGRvLgoKVGhpcyBtb3ZlcyB0aGUgc2V0dGluZyBvZiB0aGUgcXVpcmsgZmxhZyB0byB0
-aGUgYXVkaW8gZHJpdmVyLgoKV2hpbGUgcmVjZW50IEFTSUNzIGhhdmUgdGhhdCBwcm9ibGVtIGZp
-eGVkLCB0aGV5IGRvbid0IHNlZW0gdG8KYmUgbGlzdGVkIGluIHRoZSBQQ0kgSURzIG9mIHRoZSBj
-dXJyZW50IGRyaXZlciwgc28gbGV0J3MgcXVpcmsgYWxsCnRoZSBBVEkgSERNSSBmb3Igbm93LiBU
-aGUgY29uc2VxdWVuY2VzIGFyZSBuaWwgb24geDg2IGFueXdheS4KCnYyOiBBbGV4IERldWNoZXI6
-IG9ubHkgcXVpcmsgdGhlIGFmZmVjdGVkIGFzaWNzCgpTaWduZWQtb2ZmLWJ5OiBCZW5qYW1pbiBI
-ZXJyZW5zY2htaWR0IDxiZW5oQGtlcm5lbC5jcmFzaGluZy5vcmc+CkNDOiA8c3RhYmxlQHZnZXIu
-a2VybmVsLm9yZz4KLS0tCiBhcmNoL3Bvd2VycGMva2VybmVsL3BjaV82NC5jIHwgIDYgLS0tCiBz
-b3VuZC9wY2kvaGRhL2hkYV9pbnRlbC5jICAgIHwgOTYgKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKy0tLS0tLS0tLS0tLS0KIHNvdW5kL3BjaS9oZGEvaGRhX3ByaXYuaCAgICAgfCAgMSAr
-CiAzIGZpbGVzIGNoYW5nZWQsIDY5IGluc2VydGlvbnMoKyksIDM0IGRlbGV0aW9ucygtKQoKZGlm
-ZiAtLWdpdCBhL2FyY2gvcG93ZXJwYy9rZXJuZWwvcGNpXzY0LmMgYi9hcmNoL3Bvd2VycGMva2Vy
-bmVsL3BjaV82NC5jCmluZGV4IDUzMzBmNmQuLmIxNTE5NGUgMTAwNjQ0Ci0tLSBhL2FyY2gvcG93
-ZXJwYy9rZXJuZWwvcGNpXzY0LmMKKysrIGIvYXJjaC9wb3dlcnBjL2tlcm5lbC9wY2lfNjQuYwpA
-QCAtMjY2LDkgKzI2NiwzIEBAIGludCBwY2lidXNfdG9fbm9kZShzdHJ1Y3QgcGNpX2J1cyAqYnVz
-KQogfQogRVhQT1JUX1NZTUJPTChwY2lidXNfdG9fbm9kZSk7CiAjZW5kaWYKLQotc3RhdGljIHZv
-aWQgcXVpcmtfcmFkZW9uXzMyYml0X21zaShzdHJ1Y3QgcGNpX2RldiAqZGV2KQotewotCWRldi0+
-bm9fNjRiaXRfbXNpID0gdHJ1ZTsKLX0KLURFQ0xBUkVfUENJX0ZJWFVQX0ZJTkFMKFBDSV9WRU5E
-T1JfSURfQVRJLCAweGFhNjgsIHF1aXJrX3JhZGVvbl8zMmJpdF9tc2kpOwpkaWZmIC0tZ2l0IGEv
-c291bmQvcGNpL2hkYS9oZGFfaW50ZWwuYyBiL3NvdW5kL3BjaS9oZGEvaGRhX2ludGVsLmMKaW5k
-ZXggYWEzMDJmYi4uNDg5NmYyNSAxMDA2NDQKLS0tIGEvc291bmQvcGNpL2hkYS9oZGFfaW50ZWwu
-YworKysgYi9zb3VuZC9wY2kvaGRhL2hkYV9pbnRlbC5jCkBAIC0xNTA1LDkgKzE1MDUsMTQgQEAg
-c3RhdGljIGludCBhenhfZmlyc3RfaW5pdChzdHJ1Y3QgYXp4ICpjaGlwKQogCQlyZXR1cm4gLUVO
-WElPOwogCX0KIAotCWlmIChjaGlwLT5tc2kpCisJaWYgKGNoaXAtPm1zaSkgeworCQlpZiAoY2hp
-cC0+ZHJpdmVyX2NhcHMgJiBBWlhfRENBUFNfTk9fTVNJNjQpIHsKKwkJCWRldl9kYmcoY2FyZC0+
-ZGV2LCAiRGlzYWJsaW5nIDY0Yml0IE1TSVxuIik7CisJCQlwY2ktPm5vXzY0Yml0X21zaSA9IHRy
-dWU7CisJCX0KIAkJaWYgKHBjaV9lbmFibGVfbXNpKHBjaSkgPCAwKQogCQkJY2hpcC0+bXNpID0g
-MDsKKwl9CiAKIAlpZiAoYXp4X2FjcXVpcmVfaXJxKGNoaXAsIDApIDwgMCkKIAkJcmV0dXJuIC1F
-QlVTWTsKQEAgLTIwNjIsNTggKzIwNjcsOTMgQEAgc3RhdGljIGNvbnN0IHN0cnVjdCBwY2lfZGV2
-aWNlX2lkIGF6eF9pZHNbXSA9IHsKIAl7IFBDSV9ERVZJQ0UoMHgxMDIyLCAweDc4MGQpLAogCSAg
-LmRyaXZlcl9kYXRhID0gQVpYX0RSSVZFUl9HRU5FUklDIHwgQVpYX0RDQVBTX1BSRVNFVF9BVElf
-U0IgfSwKIAkvKiBBVEkgSERNSSAqLwotCXsgUENJX0RFVklDRSgweDEwMDIsIDB4NzkzYiksCi0J
-ICAuZHJpdmVyX2RhdGEgPSBBWlhfRFJJVkVSX0FUSUhETUkgfCBBWlhfRENBUFNfUFJFU0VUX0FU
-SV9IRE1JIH0sCisJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHgxMzE0KSwKKwkgIC5kcml2ZXJfZGF0
-YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAg
-QVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHg3OTE5KSwKLQkg
-IC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJ
-X0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQ
-U19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCisJeyBQQ0lfREVW
-SUNFKDB4MTAwMiwgMHg3OTY5KSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERN
-SSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0s
-CisJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHg3OTNiKSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9E
-UklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBT
-X05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHg5NjBmKSwKLQkgIC5kcml2ZXJf
-ZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwK
-KwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRf
-QVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCisJeyBQQ0lfREVWSUNFKDB4MTAw
-MiwgMHg5NjQ2KSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9E
-Q0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lf
-REVWSUNFKDB4MTAwMiwgMHg5NzBmKSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJ
-SERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFa
-WF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RD
-QVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYTAwKSwKLQkgIC5kcml2
-ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkg
-fSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVT
-RVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4
-MTAwMiwgMHhhYTA4KSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFa
-WF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJf
-QVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01T
-STY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYTEwKSwKLQkgIC5kcml2ZXJfZGF0YSA9
-IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5k
-cml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hE
-TUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhh
-YTE4KSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19Q
-UkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8
-IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJ
-eyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYTIwKSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklW
-RVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0
-YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAg
-QVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYTI4KSwKLQkg
-IC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJ
-X0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQ
-U19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVW
-SUNFKDB4MTAwMiwgMHhhYTMwKSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERN
-SSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9E
-UklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBT
-X05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYTM4KSwKLQkgIC5kcml2ZXJf
-ZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwK
-KwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRf
-QVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAw
-MiwgMHhhYTQwKSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9E
-Q0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJ
-SERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0
-IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYTQ4KSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFa
-WF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2
-ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkg
-fAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYTUw
-KSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVT
-RVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFa
-WF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQ
-Q0lfREVWSUNFKDB4MTAwMiwgMHhhYTU4KSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJf
-QVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9
-IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpY
-X0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYTYwKSwKLQkgIC5k
-cml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hE
-TUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19Q
-UkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNF
-KDB4MTAwMiwgMHhhYTY4KSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8
-IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklW
-RVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05P
-X01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYTgwKSwKLQkgIC5kcml2ZXJfZGF0
-YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkg
-IC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJ
-X0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwg
-MHhhYTg4KSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQ
-U19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERN
-SSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0s
-CiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYTkwKSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9E
-UklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJf
-ZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAor
-CSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYTk4KSwK
-LQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9EQ0FQU19QUkVTRVRf
-QVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSSB8IEFaWF9E
-Q0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lf
-REVWSUNFKDB4MTAwMiwgMHg5OTAyKSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJ
-SERNSV9OUyB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9
-IEFaWF9EUklWRVJfQVRJSERNSV9OUyB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAg
-QVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYWEwKSwKLQkg
-IC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSV9OUyB8IEFaWF9EQ0FQU19QUkVTRVRf
-QVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSV9OUyB8IEFa
-WF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQ
-Q0lfREVWSUNFKDB4MTAwMiwgMHhhYWE4KSwKLQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJf
-QVRJSERNSV9OUyB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0
-YSA9IEFaWF9EUklWRVJfQVRJSERNSV9OUyB8IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAor
-CSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJeyBQQ0lfREVWSUNFKDB4MTAwMiwgMHhhYWIwKSwK
-LQkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSV9OUyB8IEFaWF9EQ0FQU19QUkVT
-RVRfQVRJX0hETUkgfSwKKwkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfQVRJSERNSV9OUyB8
-IEFaWF9EQ0FQU19QUkVTRVRfQVRJX0hETUkgfAorCSAgQVpYX0RDQVBTX05PX01TSTY0IH0sCiAJ
-LyogVklBIFZUODI1MS9WVDgyMzdBICovCiAJeyBQQ0lfREVWSUNFKDB4MTEwNiwgMHgzMjg4KSwK
-IAkgIC5kcml2ZXJfZGF0YSA9IEFaWF9EUklWRVJfVklBIHwgQVpYX0RDQVBTX1BPU0ZJWF9WSUEg
-fSwKZGlmZiAtLWdpdCBhL3NvdW5kL3BjaS9oZGEvaGRhX3ByaXYuaCBiL3NvdW5kL3BjaS9oZGEv
-aGRhX3ByaXYuaAppbmRleCA5NDljZDQzLi41MDE2MDE0IDEwMDY0NAotLS0gYS9zb3VuZC9wY2kv
-aGRhL2hkYV9wcml2LmgKKysrIGIvc291bmQvcGNpL2hkYS9oZGFfcHJpdi5oCkBAIC0xNzEsNiAr
-MTcxLDcgQEAgZW51bSB7IFNESTAsIFNESTEsIFNESTIsIFNESTMsIFNETzAsIFNETzEsIFNETzIs
-IFNETzMgfTsKICNkZWZpbmUgQVpYX0RDQVBTX1BNX1JVTlRJTUUJKDEgPDwgMjYpCS8qIHJ1bnRp
-bWUgUE0gc3VwcG9ydCAqLwogI2RlZmluZSBBWlhfRENBUFNfSTkxNV9QT1dFUldFTEwgKDEgPDwg
-MjcpCS8qIEhTVyBpOTE1IHBvd2Vyd2VsbCBzdXBwb3J0ICovCiAjZGVmaW5lIEFaWF9EQ0FQU19D
-T1JCUlBfU0VMRl9DTEVBUiAoMSA8PCAyOCkJLyogQ09SQlJQIGNsZWFycyBpdHNlbGYgYWZ0ZXIg
-cmVzZXQgKi8KKyNkZWZpbmUgQVpYX0RDQVBTX05PX01TSTY0ICAgICAgKDEgPDwgMjkpCS8qIFN0
-aWNrIHRvIDMyLWJpdCBNU0lzICovCiAKIC8qIEhEIEF1ZGlvIGNsYXNzIGNvZGUgKi8KICNkZWZp
-bmUgUENJX0NMQVNTX01VTFRJTUVESUFfSERfQVVESU8JMHgwNDAzCi0tIAoxLjguMy4xCgo=
---001a11c1234021915c0504672a5c--
