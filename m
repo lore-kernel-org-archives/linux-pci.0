@@ -1,112 +1,187 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:48073 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752744AbaJBWXt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Oct 2014 18:23:49 -0400
-Message-ID: <1412288593.28143.37.camel@pasglop>
-Subject: Re: [PATCH v2 2/4] gpu/radeon: Move 64-bit MSI quirk from arch to
- driver
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex Deucher <alexdeucher@gmail.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Takashi Iwai <tiwai@suse.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@au1.ibm.com>, linuxppc-dev@ozlabs.org
-Date: Fri, 03 Oct 2014 08:23:13 +1000
-In-Reply-To: <CAErSpo4XYYJGZvAH7bQp6DXdBtLFT4e8WR6ve3mdV1LY0JdgPA@mail.gmail.com>
-References: <1412210062.10667.1.camel@pasglop>
-	 <20141002153402.GC18056@google.com> <1412283745.28143.23.camel@pasglop>
-	 <CAErSpo4XYYJGZvAH7bQp6DXdBtLFT4e8WR6ve3mdV1LY0JdgPA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-by2on0140.outbound.protection.outlook.com ([207.46.100.140]:12778
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S934002AbaJ3KLt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Oct 2014 06:11:49 -0400
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v4 20/20] usb: dwc3: make HIRD threshold configurable
+Date: Thu, 30 Oct 2014 18:08:45 +0800
+Message-ID: <1414663725-2195-21-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2014-10-02 at 15:44 -0600, Bjorn Helgaas wrote:
-> On Thu, Oct 2, 2014 at 3:02 PM, Benjamin Herrenschmidt
-> <benh@kernel.crashing.org> wrote:
-> > On Thu, 2014-10-02 at 09:34 -0600, Bjorn Helgaas wrote:
-> >> On Thu, Oct 02, 2014 at 10:34:22AM +1000, Benjamin Herrenschmidt wrote:
-> >> >
-> >> > A number of radeon cards have a HW limitation causing them to be
-> >> > unable to generate the full 64-bit of address bits for MSIs. This
-> >> > breaks MSIs on some platforms such as POWER machines.
-> >> >
-> >> > We used to have a powerpc specific quirk to address that on a
-> >> > single card, but this doesn't scale very well, this is better
-> >> > put under control of the drivers who know precisely what a given
-> >> > HW revision can do.
-> >> >
-> >> > This moves the setting of the quirk flag to the radeon driver
-> >> >
-> >> > Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> >> > ---
-> >> >
-> >> > v2: This is just adjusted to the new flag name
-> >>
-> >> I'm sorta confused because I got two "v2 2/4" emails a minute or so apart.
-> >> I assume they're the same.
-> >
-> > Yes, evo blew up while sending the series the first time around :(
-> 
-> No problem.  My real question is below, but you probably missed it
-> because of my email gripe :)
+HIRD threshold should be configurable by different platforms.
 
-Heh ok :-)
+>From DesignWare databook:
+When HIRD_Threshold[4] is set to 1b1 and HIRD value is greater than or
+equal to the value in HIRD_Threshold[3:0], dwc3 asserts output signals
+utmi_l1_suspend_n to put PHY into Deep Low-Power mode in L1.
 
-> >> >  arch/powerpc/kernel/pci_64.c            |  1 -
-> >> >  drivers/gpu/drm/radeon/radeon_irq_kms.c | 10 ++++++++++
-> >> >  2 files changed, 10 insertions(+), 1 deletion(-)
-> >> >
-> >> > diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
-> >> > index d41a831..5330f6d 100644
-> >> > --- a/arch/powerpc/kernel/pci_64.c
-> >> > +++ b/arch/powerpc/kernel/pci_64.c
-> >> > @@ -271,5 +271,4 @@ static void quirk_radeon_32bit_msi(struct pci_dev *dev)
-> >> >  {
-> >> >     dev->no_64bit_msi = true;
-> >> >  }
-> >> > -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x68f2, quirk_radeon_32bit_msi);
-> >> >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0xaa68, quirk_radeon_32bit_msi);
-> >>
-> >> Why do we keep the 0xaa68 quirk?  Shouldn't that be made generic, too?
+When HIRD_Threshold[4] is set to 1b0 or the HIRD value is less than
+HIRD_Threshold[3:0], dwc3 asserts output signals utmi_sleep_n on L1.
 
-aa68 is the audio part, it's removed by the audio driver patch.
+Signed-off-by: Huang Rui <ray.huang@amd.com>
+---
+ Documentation/devicetree/bindings/usb/dwc3.txt |  3 +++
+ drivers/usb/dwc3/core.c                        | 17 +++++++++++++++++
+ drivers/usb/dwc3/core.h                        |  6 ++++++
+ drivers/usb/dwc3/gadget.c                      |  6 +-----
+ drivers/usb/dwc3/platform_data.h               |  3 +++
+ 5 files changed, 30 insertions(+), 5 deletions(-)
 
-But I can break things down into smaller bits as you suggested. I'll try
-to get that sorted later today.
-
-Cheers,
-Ben.
-
-> >> > diff --git a/drivers/gpu/drm/radeon/radeon_irq_kms.c b/drivers/gpu/drm/radeon/radeon_irq_kms.c
-> >> > index 16807af..e760671 100644
-> >> > --- a/drivers/gpu/drm/radeon/radeon_irq_kms.c
-> >> > +++ b/drivers/gpu/drm/radeon/radeon_irq_kms.c
-> >> > @@ -202,6 +202,16 @@ static bool radeon_msi_ok(struct radeon_device *rdev)
-> >> >     if (rdev->flags & RADEON_IS_AGP)
-> >> >             return false;
-> >> >
-> >> > +   /*
-> >> > +    * Older chips have a HW limitation, they can only generate 40 bits
-> >> > +    * of address for "64-bit" MSIs which breaks on some platforms, notably
-> >> > +    * IBM POWER servers, so we limit them
-> >> > +    */
-> >> > +   if (rdev->family < CHIP_BONAIRE) {
-> >> > +           dev_info(rdev->dev, "radeon: MSI limited to 32-bit\n");
-> >> > +           rdev->pdev->no_64bit_msi = true;
-> >> > +   }
-> >> > +
-> >> >     /* force MSI on */
-> >> >     if (radeon_msi == 1)
-> >> >             return true;
-> >> >
-> >> >
-> >> >
-> >
-> >
-
+diff --git a/Documentation/devicetree/bindings/usb/dwc3.txt b/Documentation/devicetree/bindings/usb/dwc3.txt
+index feaf2c8..5b99755 100644
+--- a/Documentation/devicetree/bindings/usb/dwc3.txt
++++ b/Documentation/devicetree/bindings/usb/dwc3.txt
+@@ -34,6 +34,9 @@ Optional properties:
+ 			LTSSM during USB3 Compliance mode.
+  - snps,dis_u3_susphy_quirk: when set core will disable USB3 suspend phy.
+  - snps,dis_u2_susphy_quirk: when set core will disable USB2 suspend phy.
++ - snps,is-utmi-l1-suspend: true when DWC3 asserts output signal
++			utmi_l1_suspend_n, false when asserts utmi_sleep_n
++ - snps,hird-threshold: HIRD threshold
+ 
+ This is usually a subnode to DWC3 glue to which it is connected.
+ 
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index a28ed1c..f4172ab 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -729,6 +729,7 @@ static int dwc3_probe(struct platform_device *pdev)
+ 	struct dwc3		*dwc;
+ 	u8			lpm_nyet_threshold;
+ 	u8			tx_de_emphasis;
++	u8			hird_threshold;
+ 
+ 	int			ret;
+ 
+@@ -790,12 +791,22 @@ static int dwc3_probe(struct platform_device *pdev)
+ 	/* default to -3.5dB de-emphasis */
+ 	tx_de_emphasis = 1;
+ 
++	/*
++	 * defalut to assert utmi_sleep_n and use maximum allowed HIRD
++	 * threshold value of 0b1100
++	 */
++	hird_threshold = 12;
++
+ 	if (node) {
+ 		dwc->maximum_speed = of_usb_get_maximum_speed(node);
+ 		dwc->has_lpm_erratum = of_property_read_bool(node,
+ 				"snps,has-lpm-erratum");
+ 		of_property_read_u8(node, "snps,lpm-nyet-threshold",
+ 				&lpm_nyet_threshold);
++		dwc->is_utmi_l1_suspend = of_property_read_bool(node,
++				"snps,is-utmi-l1-suspend");
++		of_property_read_u8(node, "snps,hird-threshold",
++				&hird_threshold);
+ 
+ 		dwc->needs_fifo_resize = of_property_read_bool(node,
+ 				"tx-fifo-resize");
+@@ -831,6 +842,9 @@ static int dwc3_probe(struct platform_device *pdev)
+ 		dwc->has_lpm_erratum = pdata->has_lpm_erratum;
+ 		if (pdata->lpm_nyet_threshold)
+ 			lpm_nyet_threshold = pdata->lpm_nyet_threshold;
++		dwc->is_utmi_l1_suspend = pdata->is_utmi_l1_suspend;
++		if (pdata->hird_threshold)
++			hird_threshold = pdata->hird_threshold;
+ 
+ 		dwc->needs_fifo_resize = pdata->tx_fifo_resize;
+ 		dwc->dr_mode = pdata->dr_mode;
+@@ -858,6 +872,9 @@ static int dwc3_probe(struct platform_device *pdev)
+ 	dwc->lpm_nyet_threshold = lpm_nyet_threshold;
+ 	dwc->tx_de_emphasis = tx_de_emphasis;
+ 
++	dwc->hird_threshold = hird_threshold
++		| (dwc->is_utmi_l1_suspend << 4);
++
+ 	ret = dwc3_core_get_phy(dwc);
+ 	if (ret)
+ 		return ret;
+diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+index 8b6c308..2c90139 100644
+--- a/drivers/usb/dwc3/core.h
++++ b/drivers/usb/dwc3/core.h
+@@ -675,12 +675,16 @@ struct dwc3_scratchpad_array {
+  * @test_mode: true when we're entering a USB test mode
+  * @test_mode_nr: test feature selector
+  * @lpm_nyet_threshold: LPM NYET response threshold
++ * @hird_threshold: HIRD threshold
+  * @delayed_status: true when gadget driver asks for delayed status
+  * @ep0_bounced: true when we used bounce buffer
+  * @ep0_expect_in: true when we expect a DATA IN transfer
+  * @has_hibernation: true when dwc3 was configured with Hibernation
+  * @has_lpm_erratum: true when core was configured with LPM Erratum. Note that
+  *			there's now way for software to detect this in runtime.
++ * @is_utmi_l1_suspend: the core asserts output signal
++ * 	0	- utmi_sleep_n
++ * 	1	- utmi_l1_suspend_n
+  * @is_selfpowered: true when we are selfpowered
+  * @is_fpga: true when we are using the FPGA board
+  * @needs_fifo_resize: not all users might want fifo resizing, flag it
+@@ -797,12 +801,14 @@ struct dwc3 {
+ 	u8			test_mode;
+ 	u8			test_mode_nr;
+ 	u8			lpm_nyet_threshold;
++	u8			hird_threshold;
+ 
+ 	unsigned		delayed_status:1;
+ 	unsigned		ep0_bounced:1;
+ 	unsigned		ep0_expect_in:1;
+ 	unsigned		has_hibernation:1;
+ 	unsigned		has_lpm_erratum:1;
++	unsigned		is_utmi_l1_suspend:1;
+ 	unsigned		is_selfpowered:1;
+ 	unsigned		is_fpga:1;
+ 	unsigned		needs_fifo_resize:1;
+diff --git a/drivers/usb/dwc3/gadget.c b/drivers/usb/dwc3/gadget.c
+index 2c0d19a4..303bb67 100644
+--- a/drivers/usb/dwc3/gadget.c
++++ b/drivers/usb/dwc3/gadget.c
+@@ -2291,11 +2291,7 @@ static void dwc3_gadget_conndone_interrupt(struct dwc3 *dwc)
+ 		reg = dwc3_readl(dwc->regs, DWC3_DCTL);
+ 		reg &= ~(DWC3_DCTL_HIRD_THRES_MASK | DWC3_DCTL_L1_HIBER_EN);
+ 
+-		/*
+-		 * TODO: This should be configurable. For now using
+-		 * maximum allowed HIRD threshold value of 0b1100
+-		 */
+-		reg |= DWC3_DCTL_HIRD_THRES(12);
++		reg |= DWC3_DCTL_HIRD_THRES(dwc->hird_threshold);
+ 
+ 		/*
+ 		 * When dwc3 revisions >= 2.40a, LPM Erratum is enabled and
+diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
+index 245300b..a3a3b6d 100644
+--- a/drivers/usb/dwc3/platform_data.h
++++ b/drivers/usb/dwc3/platform_data.h
+@@ -25,6 +25,9 @@ struct dwc3_platform_data {
+ 	enum usb_dr_mode dr_mode;
+ 	bool tx_fifo_resize;
+ 
++	unsigned is_utmi_l1_suspend:1;
++	u8 hird_threshold;
++
+ 	u8 lpm_nyet_threshold;
+ 
+ 	unsigned disable_scramble_quirk:1;
+-- 
+1.9.1
 
