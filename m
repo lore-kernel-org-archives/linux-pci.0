@@ -1,110 +1,92 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bear.ext.ti.com ([192.94.94.41]:53368 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758966AbaJ3Qmk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Oct 2014 12:42:40 -0400
+Date: Thu, 30 Oct 2014 11:42:10 -0500
+From: Felipe Balbi <balbi@ti.com>
+To: Huang Rui <ray.huang@amd.com>
+CC: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, Borislav Petkov <bp@alien8.de>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch Part1 v3 00/20] Prepare for enabling hierarchy irqdomain on x86
-Date: Mon, 27 Oct 2014 16:11:51 +0800
-Message-Id: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
+	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+Subject: Re: [PATCH v4 14/20] usb: dwc3: add Tx de-emphasis quirk
+Message-ID: <20141030164210.GM10130@saruman>
+Reply-To: <balbi@ti.com>
+References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+ <1414663725-2195-15-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="kK1uqZGE6pgsGNyR"
+In-Reply-To: <1414663725-2195-15-git-send-email-ray.huang@amd.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We plan to restructure x86 interrupt code based on hierarchy irqdomain,
-that is to build irqdomains for CPU vector, interrupt remapping unit,
-IOAPIC, MSI and HPET etc and orgonize those irqdomains in hierarchy mode.
+--kK1uqZGE6pgsGNyR
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-This patchset is preparation work to enable hierarchy irqdomain on x86
-platforms. It splits out code for vector management, MSI, HTIRQ from
-ioapic.c into separate files. It also introduces some helper functions
-to access irq_cfg, which will ease transition to hierarchy irqdomain
-later.
+On Thu, Oct 30, 2014 at 06:08:39PM +0800, Huang Rui wrote:
+> This patch adds Tx de-emphasis quirk, and the Tx de-emphasis value is
+> configurable according to PIPE3 specification.
+>=20
+> Value		Description
+> 0		-6dB de-emphasis
+> 1		-3.5dB de-emphasis
+> 2		No de-emphasis
+> 3		Reserved
+>=20
+> It can be configured on DT or platform data.
+>=20
+> Signed-off-by: Huang Rui <ray.huang@amd.com>
 
-It's based on patchset at:
-https://lkml.org/lkml/2014/10/27/7
+doesn't apply:
 
-And you may access it at:
-https://github.com/jiangliu/linux.git irqdomain/p1v3
+checking file Documentation/devicetree/bindings/usb/dwc3.txt
+checking file drivers/usb/dwc3/core.c
+Hunk #2 succeeded at 718 (offset -2 lines).
+Hunk #3 succeeded at 777 (offset -2 lines).
+Hunk #4 succeeded at 807 (offset -2 lines).
+Hunk #5 succeeded at 829 (offset -2 lines).
+Hunk #6 succeeded at 840 (offset -2 lines).
+checking file drivers/usb/dwc3/core.h
+Hunk #2 FAILED at 697.
+1 out of 3 hunks FAILED
+checking file drivers/usb/dwc3/platform_data.h
 
-V2->V3:
-1) Rebase to v3.18-rc2
-V1->V2:
-1) fix a building failure found by 0day test bed
-2) rebase to latest upstream kernel
+please rebase on testing/next
 
-Jiang Liu (19):
-  ACPI, irq, x86: Get rid of special handling of GSI for ACPI SCI
-  x86, irq, ACPI: Fix building warning of unused code
-  x86, irq: Kill fourth parameter of IO_APIC_get_PCI_irq_vector()
-  x86, irq: Refine hw_irq.h to prepare for irqdomain support
-  x86, irq: Rename local APIC related functions in io_apic.c as
-    apic_xxx()
-  x86, irq: Protect __clear_irq_vector() with vector_lock
-  x86, irq: Introduce helpers to access struct irq_cfg
-  x86, irq: Move local APIC related code from io_apic.c into vector.c
-  x86, irq: Replace printk(KERN_LVL) with pr_lvl() utilities
-  x86, irq: Move PCI MSI related code from io_apic.c into msi.c
-  x86, irq: Move HT IRQ related code from io_apic.c into htirq.c
-  x86, irq: Move IOAPIC related declarations from hw_irq.h into
-    io_apic.h
-  x86, irq: Move IRQ initialization routines from io_apic.c into
-    vector.c
-  x86, irq: Make MSI and HT_IRQ indepenent of X86_IO_APIC
-  x86, irq: Use helpers to access irq_cfg data structure associated
-    with IRQ
-  x86: irq_remapping: Use helpers to access irq_cfg data structure
-    associated with IRQ
-  iommu/vt-d: Use helpers to access irq_cfg data structure associated
-    with IRQ
-  iommu/amd: Use helpers to access irq_cfg data structure associated
-    with IRQ
-  x86, irq: Fix link error of undefined reference to
-    send_cleanup_vector
+--=20
+balbi
 
-Yinghai Lu (1):
-  x86, irq: Convert irq_2_pin list to generic list
+--kK1uqZGE6pgsGNyR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
- arch/x86/Kconfig                    |    6 +-
- arch/x86/include/asm/hw_irq.h       |   76 +--
- arch/x86/include/asm/io_apic.h      |   29 +-
- arch/x86/include/asm/pci.h          |    3 +
- arch/x86/kernel/acpi/boot.c         |   12 +-
- arch/x86/kernel/apic/Makefile       |    4 +-
- arch/x86/kernel/apic/htirq.c        |  107 ++++
- arch/x86/kernel/apic/io_apic.c      | 1100 ++---------------------------------
- arch/x86/kernel/apic/msi.c          |  286 +++++++++
- arch/x86/kernel/apic/vector.c       |  717 +++++++++++++++++++++++
- arch/x86/kernel/crash.c             |    1 +
- arch/x86/kernel/irqinit.c           |   22 -
- arch/x86/kernel/machine_kexec_32.c  |    1 +
- arch/x86/kernel/machine_kexec_64.c  |    1 +
- arch/x86/kernel/reboot.c            |    1 +
- arch/x86/pci/irq.c                  |    6 +-
- arch/x86/platform/uv/uv_irq.c       |    6 +-
- drivers/iommu/amd_iommu.c           |   14 +-
- drivers/iommu/intel_irq_remapping.c |   10 +-
- drivers/iommu/irq_remapping.c       |    6 +-
- drivers/pci/Kconfig                 |    2 +-
- drivers/pci/hotplug/ibmphp_core.c   |    6 +-
- 22 files changed, 1238 insertions(+), 1178 deletions(-)
- create mode 100644 arch/x86/kernel/apic/htirq.c
- create mode 100644 arch/x86/kernel/apic/msi.c
- create mode 100644 arch/x86/kernel/apic/vector.c
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
--- 
-1.7.10.4
+iQIcBAEBAgAGBQJUUmpiAAoJEIaOsuA1yqREJQEP/R+XsYU79Wlt3oZgaoBt76uB
+wkfYTqMEwT+Dqks40b0qKBZdCvrKdj9GmqyN2BD2ou2KRuqZkvBwKKDbQIb6BWXz
+5x5ylIgg+3jJu7DmWNyV9afjBPX3pRy/Eex38zSUL9BMDn84m4kZLZFb/oFQQiR6
+aW3W1sJ4pOcW+TzyfUGY+8JaY2yTYd+67p/e1gNtnVIy8/+MTq9824vsUG8fMrqI
+E13zlEmpyFX/mne2iwVrU6Q1PCtYErUTPdRuOCl+EnwLHADMXPtRNBE6ulNKZ8Un
+iVvZTGX4V2ymLuuxJBmRHKE535Gxy3mJ2iKc7kn82DQCNaXGXhxCH/UwhtEprw5X
+BlRldJAqvyYn1I3hPph0ZxkJdrHYt5FuHS3KRQh446CyNBfP5I9EjpTtY6ftszc2
+phBGMUUQnI8TyiABjCp6E7j9+SqFEw7yom2lSJIRCuNICO8KTjm78ZtL8W9Fb1lW
+hLjAYFo0s+r/03WcAsxFWvJNP57ihCu7AN7lQXD9Z13j52izMHGFHQmsg2ejHj8N
+vHW3kneMQ/tyW7XF1QFwkdvi2BonoEfcuXspumQkHs6UVdUUKXZrkp7liMWqS89b
+DmlefY+Y0sPU9aeoJKRoAaj5S8LfbSl2oiPlJo4bALeTTveABbxFYCA3G8PCDZW9
+FC4tAH2hPths+v+iXjdW
+=x5G4
+-----END PGP SIGNATURE-----
 
+--kK1uqZGE6pgsGNyR--
