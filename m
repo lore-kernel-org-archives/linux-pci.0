@@ -1,130 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0116.outbound.protection.outlook.com ([207.46.100.116]:64576
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+Received: from mail-bl2on0101.outbound.protection.outlook.com ([65.55.169.101]:47470
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752493AbaJTFzz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Oct 2014 01:55:55 -0400
-From: Richard Zhu <richard.zhu@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
-	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
-	<m-karicheri2@ti.com>, Richard Zhu <r65037@freescale.com>,
-	Richard Zhu <richard.zhu@freescale.com>
-Subject: [PATCH v8 7/9] ARM: imx6: Update dts and binding for imx6sx pcie
-Date: Mon, 20 Oct 2014 13:25:22 +0800
-Message-ID: <1413782724-30795-8-git-send-email-richard.zhu@freescale.com>
-In-Reply-To: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
-References: <1413782724-30795-1-git-send-email-richard.zhu@freescale.com>
+	id S932923AbaJ3KKj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Oct 2014 06:10:39 -0400
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v4 06/20] usb: dwc3: add U2Exit LFPS quirk
+Date: Thu, 30 Oct 2014 18:08:31 +0800
+Message-ID: <1414663725-2195-7-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Richard Zhu <r65037@freescale.com>
+This patch adds U2Exit LFPS quirk, and some special platforms can configure
+that if it is needed.
 
-- imx6sx pcie phy has its own power regulator. Add the
-pcie phy power suppy into im6sx pcie dts and binding.
-- in order to align with imx6qdl's pcie dts, re-format
-imx6sx pcie dts.
-- in order to align with imx6qdl pcie dts format and
-keep clean of imx6 pcie driver, keep the pcie phy clock
-in imx6sx pcie dts, although it's the parent clk of the
-pcie bus clock now, and would be enabled automatically
-when pcie bus clock is enabled. secondly, it's
-possible that the external osc maybe used as source
-of the pcie_bus clk in board design in future.
-- disp_axi clock is required by pcie inbound axi port.
-Add one more clock named pcie_inbound_axi for imx6sx pcie.
+[ balbi@ti.com : added DeviceTree binding documentation ]
 
-Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
+Signed-off-by: Huang Rui <ray.huang@amd.com>
+Signed-off-by: Felipe Balbi <balbi@ti.com>
 ---
- .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  8 +++++-
- arch/arm/boot/dts/imx6sx.dtsi                      | 32 ++++++++++++----------
- 2 files changed, 25 insertions(+), 15 deletions(-)
+ Documentation/devicetree/bindings/usb/dwc3.txt | 1 +
+ drivers/usb/dwc3/core.c                        | 6 ++++++
+ drivers/usb/dwc3/core.h                        | 3 +++
+ drivers/usb/dwc3/platform_data.h               | 1 +
+ 4 files changed, 11 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index 9455fd0..ad81179 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -4,7 +4,7 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
- and thus inherits all the common properties defined in designware-pcie.txt.
+diff --git a/Documentation/devicetree/bindings/usb/dwc3.txt b/Documentation/devicetree/bindings/usb/dwc3.txt
+index 2b0c1f2..79ed37c 100644
+--- a/Documentation/devicetree/bindings/usb/dwc3.txt
++++ b/Documentation/devicetree/bindings/usb/dwc3.txt
+@@ -18,6 +18,7 @@ Optional properties:
+ 	Only really useful for FPGA builds.
+  - snps,has-lpm-erratum: true when DWC3 was configured with LPM Erratum enabled
+  - snps,lpm-nyet-threshold: LPM NYET threshold
++ - snps,u2exit_lfps_quirk: set if we want to enable U2Exit LFPS quirk
  
- Required properties:
--- compatible: "fsl,imx6q-pcie"
-+- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie"
- - reg: base addresse and length of the pcie controller
- - interrupts: A list of interrupt outputs of the controller. Must contain an
-   entry for each entry in the interrupt-names property.
-@@ -13,6 +13,12 @@ Required properties:
- - clock-names: Must include the following additional entries:
- 	- "pcie_phy"
+ This is usually a subnode to DWC3 glue to which it is connected.
  
-+Additional required properties for imx6sx-pcie:
-+- clock names: Must include the following additional entries:
-+	- "pcie_inbound_axi"
-+- power supplies:
-+	- pcie-phy-supply: regulator used to power the PCIe PHY
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index 2ac96e4..6d1f09f 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -470,6 +470,9 @@ static int dwc3_core_init(struct dwc3 *dwc)
+ 	else
+ 		reg &= ~DWC3_GCTL_DISSCRAMBLE;
+ 
++	if (dwc->u2exit_lfps_quirk)
++		reg |= DWC3_GCTL_U2EXIT_LFPS;
 +
- Example:
+ 	/*
+ 	 * WORKAROUND: DWC3 revisions <1.90a have a bug
+ 	 * where the device can fail to connect at SuperSpeed
+@@ -726,6 +729,8 @@ static int dwc3_probe(struct platform_device *pdev)
  
- 	pcie@0x01000000 {
-diff --git a/arch/arm/boot/dts/imx6sx.dtsi b/arch/arm/boot/dts/imx6sx.dtsi
-index f4b9da6..0dfeade 100644
---- a/arch/arm/boot/dts/imx6sx.dtsi
-+++ b/arch/arm/boot/dts/imx6sx.dtsi
-@@ -599,9 +599,9 @@
- 					anatop-max-voltage = <1450000>;
- 				};
+ 		dwc->disable_scramble_quirk = of_property_read_bool(node,
+ 				"snps,disable_scramble_quirk");
++		dwc->u2exit_lfps_quirk = of_property_read_bool(node,
++				"snps,u2exit_lfps_quirk");
+ 	} else if (pdata) {
+ 		dwc->maximum_speed = pdata->maximum_speed;
+ 		dwc->has_lpm_erratum = pdata->has_lpm_erratum;
+@@ -736,6 +741,7 @@ static int dwc3_probe(struct platform_device *pdev)
+ 		dwc->dr_mode = pdata->dr_mode;
  
--				reg_pcie: regulator-vddpcie@140 {
-+				reg_pcie_phy: regulator-vddpcie-phy@140 {
- 					compatible = "fsl,anatop-regulator";
--					regulator-name = "vddpcie";
-+					regulator-name = "vddpcie-phy";
- 					regulator-min-microvolt = <725000>;
- 					regulator-max-microvolt = <1450000>;
- 					anatop-reg-offset = <0x140>;
-@@ -1184,24 +1184,28 @@
+ 		dwc->disable_scramble_quirk = pdata->disable_scramble_quirk;
++		dwc->u2exit_lfps_quirk = pdata->u2exit_lfps_quirk;
+ 	}
  
- 		pcie: pcie@0x08000000 {
- 			compatible = "fsl,imx6sx-pcie", "snps,dw-pcie";
--			reg = <0x08ffc000 0x4000>; /* DBI */
-+			reg = <0x08ffc000 0x4000>, <0x08f00000 0x80000>;
-+			reg-names = "dbi", "config";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
--				  /* configuration space */
--			ranges = <0x00000800 0 0x08f00000 0x08f00000 0 0x00080000
--				  /* downstream I/O */
--				  0x81000000 0 0          0x08f80000 0 0x00010000
--				  /* non-prefetchable memory */
--				  0x82000000 0 0x08000000 0x08000000 0 0x00f00000>;
-+			ranges = <0x81000000 0 0          0x08f80000 0 0x00010000 /* downstream I/O */
-+				  0x82000000 0 0x08000000 0x08000000 0 0x00f00000>; /* non-prefetchable memory */
- 			num-lanes = <1>;
--			interrupts = <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>;
--			clocks = <&clks IMX6SX_CLK_PCIE_REF_125M>,
--				 <&clks IMX6SX_CLK_PCIE_AXI>,
-+			interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "msi";
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0x7>;
-+			interrupt-map = <0 0 0 1 &intc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
-+			                <0 0 0 2 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
-+			                <0 0 0 3 &intc GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>,
-+			                <0 0 0 4 &intc GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&clks IMX6SX_CLK_PCIE_AXI>,
- 				 <&clks IMX6SX_CLK_LVDS1_OUT>,
-+				 <&clks IMX6SX_CLK_PCIE_REF_125M>,
- 				 <&clks IMX6SX_CLK_DISPLAY_AXI>;
--			clock-names = "pcie_ref_125m", "pcie_axi",
--				      "lvds_gate", "display_axi";
-+			clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_inbound_axi";
-+			pcie-phy-supply = <&reg_pcie_phy>;
- 			status = "disabled";
- 		};
- 	};
+ 	/* default to superspeed if no maximum_speed passed */
+diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+index 34f1e08..45130a1 100644
+--- a/drivers/usb/dwc3/core.h
++++ b/drivers/usb/dwc3/core.h
+@@ -166,6 +166,7 @@
+ #define DWC3_GCTL_SCALEDOWN(n)		((n) << 4)
+ #define DWC3_GCTL_SCALEDOWN_MASK	DWC3_GCTL_SCALEDOWN(3)
+ #define DWC3_GCTL_DISSCRAMBLE		(1 << 3)
++#define DWC3_GCTL_U2EXIT_LFPS		(1 << 2)
+ #define DWC3_GCTL_GBLHIBERNATIONEN	(1 << 1)
+ #define DWC3_GCTL_DSBLCLKGTNG		(1 << 0)
+ 
+@@ -679,6 +680,7 @@ struct dwc3_scratchpad_array {
+  * @start_config_issued: true when StartConfig command has been issued
+  * @three_stage_setup: set if we perform a three phase setup
+  * @disable_scramble_quirk: set if we enable the disable scramble quirk
++ * @u2exit_lfps_quirk: set if we enable U2Exit LFPS quirk
+  */
+ struct dwc3 {
+ 	struct usb_ctrlrequest	*ctrl_req;
+@@ -787,6 +789,7 @@ struct dwc3 {
+ 	unsigned		three_stage_setup:1;
+ 
+ 	unsigned		disable_scramble_quirk:1;
++	unsigned		u2exit_lfps_quirk:1;
+ };
+ 
+ /* -------------------------------------------------------------------------- */
+diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
+index e128308..3f21591 100644
+--- a/drivers/usb/dwc3/platform_data.h
++++ b/drivers/usb/dwc3/platform_data.h
+@@ -29,4 +29,5 @@ struct dwc3_platform_data {
+ 
+ 	unsigned disable_scramble_quirk:1;
+ 	unsigned has_lpm_erratum:1;
++	unsigned u2exit_lfps_quirk:1;
+ };
 -- 
 1.9.1
 
