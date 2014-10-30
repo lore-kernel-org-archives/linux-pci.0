@@ -1,92 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:12601 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751518AbaJ0FUl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 27 Oct 2014 01:20:41 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Prarit Bhargava <prarit@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	Ingo Molnar <mingo@kernel.org>
-Subject: [Patch v7 09/18] x86, irq: Split out alloc_ioapic_save_registers()
-Date: Mon, 27 Oct 2014 13:21:39 +0800
-Message-Id: <1414387308-27148-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 0/3] PCI: Fix detection of read-only BARs
+From: Myron Stowe <myron.stowe@redhat.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: willy@linux.intel.com, unruh@physics.ubc.ca,
+	linux-kernel@vger.kernel.org, martin@lucina.net
+Date: Thu, 30 Oct 2014 11:54:31 -0600
+Message-ID: <20141030175430.22238.47671.stgit@amt.stowe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
+While non-conformant, PCI devices having read-only (r/o) BARs - registers
+that when read return fixed, non-zero, values regardless of whether or
+not their being sized - occasionally turn up.  Pre-git commit 1307ef662199
+[1] was the initial attempt to detect such BARs.  The detection mechanism
+used however ended up exposing further unexpected behaviors on enough
+devices that it had to be reverted [2].
 
-Split out alloc_ioapic_save_registers() from early_irq_init(),
-so it could be used for ioapic hotplug later.
+A subsequent solution, which is still currently in use, was put in place
+with pre-git commit 2c79a80ab7b7 ("[PCI] Correctly size hardwired empty
+BARs").  This solution's logic detects r/o BARs via the following (see
+'pci_size()'):
+        /* base == maxbase can be valid only if the BAR has
+           already been programmed with all 1s.  */
+        if (base == maxbase && ((base | size) & mask) != mask)
+                return 0;
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- arch/x86/kernel/apic/io_apic.c |   22 +++++++++++++++-------
- 1 file changed, 15 insertions(+), 7 deletions(-)
+Later, commit 6ac665c63dca ("PCI: rewrite PCI BAR reading code") was
+introduced, re-factoring PCI's core BAR sizing logic.  The commit altered
+__pci_read_base's local variable 'l', stripping off its lower,
+non-addressing related bits, prior to being passed in as the 'base'
+parameter to pci_size().  This masking broke the r/o BAR detection logic's
+first comparison check for r/o BARs that have any of their lower order
+bits, bits that are not part of a BARs "base address" field, set.  For
+such cases, the 'base == maxbase' comparison check will no longer ever be
+"true".
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 1183d545da1e..acaee90fc9cc 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -237,6 +237,19 @@ static struct irq_pin_list *alloc_irq_pin_list(int node)
- 	return kzalloc_node(sizeof(struct irq_pin_list), GFP_KERNEL, node);
- }
- 
-+static void alloc_ioapic_saved_registers(int idx)
-+{
-+	size_t size;
-+
-+	if (ioapics[idx].saved_registers)
-+		return;
-+
-+	size = sizeof(struct IO_APIC_route_entry) * ioapics[idx].nr_registers;
-+	ioapics[idx].saved_registers = kzalloc(size, GFP_KERNEL);
-+	if (!ioapics[idx].saved_registers)
-+		pr_err("IOAPIC %d: suspend/resume impossible!\n", idx);
-+}
-+
- int __init arch_early_irq_init(void)
- {
- 	struct irq_cfg *cfg;
-@@ -245,13 +258,8 @@ int __init arch_early_irq_init(void)
- 	if (!nr_legacy_irqs())
- 		io_apic_irqs = ~0UL;
- 
--	for_each_ioapic(i) {
--		ioapics[i].saved_registers =
--			kzalloc(sizeof(struct IO_APIC_route_entry) *
--				ioapics[i].nr_registers, GFP_KERNEL);
--		if (!ioapics[i].saved_registers)
--			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
--	}
-+	for_each_ioapic(i)
-+		alloc_ioapic_saved_registers(i);
- 
- 	/*
- 	 * For legacy IRQ's, start with assigning irq0 to irq15 to
+This series restores the r/o BAR detection logic so that it will once
+again catch, and ignore, such occurrences as have been encountered to
+date:
+  - AGP aperture BAR of AMD-7xx host bridges; if the AGP window
+    disabled, this BAR is read-only and read as 0x00000008 [1]
+  - BAR0-4 of ALi IDE controllers can be non-zero and read-only [1]
+  - Intel Sandy Bridge - Thermal Management Controller [8086:0103];
+    BAR 0 returning 0xfed98004 [3]
+  - Intel Xeon E5 v3/Core i7 Power Control Unit [8086:2fc0];
+    Bar 0 returning 0x00001a [4]
+
+
+[1] From Thomas Gleixner's "Linux kernel history" repository:
+    https://git.kernel.org/cgit/linux/kernel/git/tglx/history.git/commit/drivers/pci/probe.c?id=1307ef6621991f1c4bc3cec1b5a4ebd6fd3d66b9
+    pre-git commit 1307ef662199  "PCI: probing read-only Bars"
+[2] Pre-git commit 182d090b9dfe  "Undo due to weird behaviour on various
+    boxes"
+[3] https://bugzilla.kernel.org/show_bug.cgi?id=43331
+[4] https://bugzilla.kernel.org/show_bug.cgi?id=85991
+
+
+Myron Stowe (3):
+      PCI: Restore detection of read-only BARs
+      PCI: Re-factor __pci_read_base
+      PCI: Add a informational printk for invalid BARs
+
+
+ drivers/pci/probe.c |   75 +++++++++++++++++++++++----------------------------
+ 1 file changed, 34 insertions(+), 41 deletions(-)
+
 -- 
-1.7.10.4
-
