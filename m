@@ -1,61 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:51033 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758649AbaJ3QVd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Oct 2014 12:21:33 -0400
-Date: Thu, 30 Oct 2014 16:21:17 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Mohit Kumar <mohit.kumar@st.com>
-Subject: Re: [RFC PATCH 2/2] arm: pcibios: move to generic PCI domains
-Message-ID: <20141030162117.GB2048@red-moon>
-References: <1414669490-1217-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1414669490-1217-3-git-send-email-lorenzo.pieralisi@arm.com>
- <54522EA1.20707@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH] PCI: Remove fixed parameter in pci_iov_resource_bar()
+From: Myron Stowe <myron.stowe@redhat.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: chrisw@sous-sol.org, ddutile@redhat.com,
+	linux-kernel@vger.kernel.org, yuzhao@google.com
+Date: Thu, 30 Oct 2014 15:28:17 -0600
+Message-ID: <20141030212816.9654.73990.stgit@amt.stowe>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54522EA1.20707@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 30, 2014 at 12:27:13PM +0000, Yijing Wang wrote:
-> On 2014/10/30 19:44, Lorenzo Pieralisi wrote:
-> > Most if not all ARM PCI host controller device drivers either ignore the
-> > domain field in the pci_sys_data structure or just increment it every
-> > time a host controller is probed, using it as a domain counter.
-> > 
-> > Therefore, instead of relying on pci_sys_data to stash the domain number
-> > in a standard location, ARM pcibios code can be moved to the newly
-> > introduced generic PCI domains code, implemented in commits:
-> > 
-> > commit 41e5c0f81d3e676d671d96a0a1fafb27abfbd9
-> > ("of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()")
-> > 
-> > commit 670ba0c8883b576d0aec28bd7a838358a4be1
-> > ("PCI: Add generic domain handling")
-> > 
-> > In order to assign a domain number dynamically, the ARM pcibios defines
-> > the function, called by core PCI code:
-> > 
-> > void pci_bus_assign_domain_nr(...)
-> > 
-> > that relies on a DT property to define the domain number or falls back to
-> > a counter; its usage replaces the current domain assignment code in PCI
-> > host controllers present in the kernel.
-> 
-> Nice clean up.
-> 
-> Reviewed-by: Yijing Wang <wangyijing@huawei.com>
+pci_iov_resource_bar() always sets its 'pci_bar_type' parameter to
+'pci_bar_unknown'.  Drop the parameter and just use 'pci_bar_unknown'
+directly in the callers.
 
-Thank you Yijing !
-Lorenzo
+No functional change intended.
+
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+Cc: Chris Wright <chrisw@sous-sol.org>
+Cc: Yu Zhao <yuzhao@google.com>
+---
+ drivers/pci/iov.c |   11 +++--------
+ drivers/pci/pci.c |    3 ++-
+ drivers/pci/pci.h |    3 +--
+ 3 files changed, 6 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 4d109c0..4b3a4ea 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -479,20 +479,16 @@ void pci_iov_release(struct pci_dev *dev)
+  * pci_iov_resource_bar - get position of the SR-IOV BAR
+  * @dev: the PCI device
+  * @resno: the resource number
+- * @type: the BAR type to be filled in
+  *
+  * Returns position of the BAR encapsulated in the SR-IOV capability.
+  */
+-int pci_iov_resource_bar(struct pci_dev *dev, int resno,
+-			 enum pci_bar_type *type)
++int pci_iov_resource_bar(struct pci_dev *dev, int resno)
+ {
+ 	if (resno < PCI_IOV_RESOURCES || resno > PCI_IOV_RESOURCE_END)
+ 		return 0;
+ 
+ 	BUG_ON(!dev->is_physfn);
+ 
+-	*type = pci_bar_unknown;
+-
+ 	return dev->sriov->pos + PCI_SRIOV_BAR +
+ 		4 * (resno - PCI_IOV_RESOURCES);
+ }
+@@ -510,13 +506,12 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno,
+ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
+ {
+ 	struct resource tmp;
+-	enum pci_bar_type type;
+-	int reg = pci_iov_resource_bar(dev, resno, &type);
++	int reg = pci_iov_resource_bar(dev, resno);
+ 
+ 	if (!reg)
+ 		return 0;
+ 
+-	 __pci_read_base(dev, type, &tmp, reg);
++	 __pci_read_base(dev, pci_bar_unknown, &tmp, reg);
+ 	return resource_alignment(&tmp);
+ }
+ 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 625a4ac..7bf2465 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4180,7 +4180,8 @@ int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type)
+ 		return dev->rom_base_reg;
+ 	} else if (resno < PCI_BRIDGE_RESOURCES) {
+ 		/* device specific resource */
+-		reg = pci_iov_resource_bar(dev, resno, type);
++		*type = pci_bar_unknown;
++		reg = pci_iov_resource_bar(dev, resno);
+ 		if (reg)
+ 			return reg;
+ 	}
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 0601890..e0b5f17 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -251,8 +251,7 @@ static inline void pci_restore_ats_state(struct pci_dev *dev)
+ #ifdef CONFIG_PCI_IOV
+ int pci_iov_init(struct pci_dev *dev);
+ void pci_iov_release(struct pci_dev *dev);
+-int pci_iov_resource_bar(struct pci_dev *dev, int resno,
+-			 enum pci_bar_type *type);
++int pci_iov_resource_bar(struct pci_dev *dev, int resno);
+ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno);
+ void pci_restore_iov_state(struct pci_dev *dev);
+ int pci_iov_bus_range(struct pci_bus *bus);
+
