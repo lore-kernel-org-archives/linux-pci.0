@@ -1,62 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:59397 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751177AbaJPD67 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 15 Oct 2014 23:58:59 -0400
-Message-ID: <1413431917.11213.56.camel@pasglop>
-Subject: Re: of/pci: Fix the conversion of IO ranges into IO resources
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Liviu Dudau <Liviu.Dudau@arm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Date: Thu, 16 Oct 2014 14:58:37 +1100
-In-Reply-To: <1413428148.20705.2.camel@concordia>
-References: <20141009200235.55E5166107E@gitolite.kernel.org>
-	 <1413358507.4748.4.camel@pasglop>
-	 <20141015090239.GB18070@e106497-lin.cambridge.arm.com>
-	 <1413428148.20705.2.camel@concordia>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-by2on0127.outbound.protection.outlook.com ([207.46.100.127]:14592
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932936AbaJ3KLF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Oct 2014 06:11:05 -0400
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v4 11/20] usb: dwc3: add LFPS filter quirk
+Date: Thu, 30 Oct 2014 18:08:36 +0800
+Message-ID: <1414663725-2195-12-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2014-10-16 at 13:55 +1100, Michael Ellerman wrote:
-> Yes, we already provide our own version of pci_address_to_pio().
-> 
-> The problem is it's too early to call it when we come in from
-> find_and_init_phbs() -> pci_process_bridge_OF_ranges(), so it returns junk.
-> 
-> I think you were expecting us to hit the #ifndef PCI_IOBASE case, which looks
-> like it might have worked.
-> 
-> For now we're just going to stop using of_pci_range_to_resource().
+This patch adds LFPS filter quirk, and some special platforms can configure
+that if it is needed.
 
-Right, this is a band-aid to fix things now. For the long run, I think we could
-exploit Liviu's code with a few changes:
+[ balbi@ti.com : added DeviceTree binding documentation ]
 
- - We would want to add a variant of pci_register_io_range() that takes the actual
-PIO address as an argument so we can use it to "register" our ranges on ppc64
-since we decide where in IO space they go using our own algorithm and we don't
-want to change that. That would make the generic pci_pio_to_address() and
-pci_address_to_pio() work for us. At least for ppc64.
+Signed-off-by: Huang Rui <ray.huang@amd.com>
+Signed-off-by: Felipe Balbi <balbi@ti.com>
+---
+ Documentation/devicetree/bindings/usb/dwc3.txt | 1 +
+ drivers/usb/dwc3/core.c                        | 6 ++++++
+ drivers/usb/dwc3/core.h                        | 3 +++
+ drivers/usb/dwc3/platform_data.h               | 1 +
+ 4 files changed, 11 insertions(+)
 
- - For ppc32, we might want to consider changing the horrible pointer arithmetic
-we do today (which keeps breaking) and just switch to the allocator inside
-pci_register_io_range() and use it like ARM does.
-
- - I object to of_pci_range_to_resource() implicitly doing the allocation/registration
-of the range. It should fail if the range isn't registered. The architecture code
-should explicitly register the IO ranges before trying to turn them into resources.
-
-Now, this will take a bit more time to sort out (and the latter comment will
-mean, if addressed, some changes to the new ARM code which I don't think I have
-the bandwidth to do), so I'm happy to settle for whatever band-aid Michael is
-coming up with for 3.18 but we should consider improving things for .19
-
-Cheers,
-Ben.
-
+diff --git a/Documentation/devicetree/bindings/usb/dwc3.txt b/Documentation/devicetree/bindings/usb/dwc3.txt
+index 216cc35..0647100 100644
+--- a/Documentation/devicetree/bindings/usb/dwc3.txt
++++ b/Documentation/devicetree/bindings/usb/dwc3.txt
+@@ -26,6 +26,7 @@ Optional properties:
+ 			amount of 8B10B errors occur.
+  - snps,del_phy_power_chg_quirk: when set core will delay PHY power change
+ 			from P0 to P1/P2/P3.
++ - snps,lfps_filter_quirk: when set core will filter LFPS reception.
+ 
+ This is usually a subnode to DWC3 glue to which it is connected.
+ 
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index deceb7c..ae7ff8f 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -386,6 +386,9 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
+ 	if (dwc->del_phy_power_chg_quirk)
+ 		reg |= DWC3_GUSB3PIPECTL_DEPOCHANGE;
+ 
++	if (dwc->lfps_filter_quirk)
++		reg |= DWC3_GUSB3PIPECTL_LFPSFILT;
++
+ 	dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
+ 
+ 	mdelay(100);
+@@ -768,6 +771,8 @@ static int dwc3_probe(struct platform_device *pdev)
+ 				"snps,del_p1p2p3_quirk");
+ 		dwc->del_phy_power_chg_quirk = of_property_read_bool(node,
+ 				"snps,del_phy_power_chg_quirk");
++		dwc->lfps_filter_quirk = of_property_read_bool(node,
++				"snps,lfps_filter_quirk");
+ 	} else if (pdata) {
+ 		dwc->maximum_speed = pdata->maximum_speed;
+ 		dwc->has_lpm_erratum = pdata->has_lpm_erratum;
+@@ -783,6 +788,7 @@ static int dwc3_probe(struct platform_device *pdev)
+ 		dwc->req_p1p2p3_quirk = pdata->req_p1p2p3_quirk;
+ 		dwc->del_p1p2p3_quirk = pdata->del_p1p2p3_quirk;
+ 		dwc->del_phy_power_chg_quirk = pdata->del_phy_power_chg_quirk;
++		dwc->lfps_filter_quirk = pdata->lfps_filter_quirk;
+ 	}
+ 
+ 	/* default to superspeed if no maximum_speed passed */
+diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+index 176f3f1..cf9dd73 100644
+--- a/drivers/usb/dwc3/core.h
++++ b/drivers/usb/dwc3/core.h
+@@ -183,6 +183,7 @@
+ #define DWC3_GUSB3PIPECTL_DEP1P2P3_EN	DWC3_GUSB3PIPECTL_DEP1P2P3(1)
+ #define DWC3_GUSB3PIPECTL_DEPOCHANGE	(1 << 18)
+ #define DWC3_GUSB3PIPECTL_SUSPHY	(1 << 17)
++#define DWC3_GUSB3PIPECTL_LFPSFILT	(1 << 9)
+ 
+ /* Global TX Fifo Size Register */
+ #define DWC3_GTXFIFOSIZ_TXFDEF(n)	((n) & 0xffff)
+@@ -691,6 +692,7 @@ struct dwc3_scratchpad_array {
+  * @req_p1p2p3_quirk: set if we enable request P1/P2/P3 quirk
+  * @del_p1p2p3_quirk: set if we enable delay P1/P2/P3 quirk
+  * @del_phy_power_chg_quirk: set if we enable delay phy power change quirk
++ * @lfps_filter_quirk: set if we enable LFPS filter quirk
+  */
+ struct dwc3 {
+ 	struct usb_ctrlrequest	*ctrl_req;
+@@ -804,6 +806,7 @@ struct dwc3 {
+ 	unsigned		req_p1p2p3_quirk:1;
+ 	unsigned                del_p1p2p3_quirk:1;
+ 	unsigned		del_phy_power_chg_quirk:1;
++	unsigned		lfps_filter_quirk:1;
+ };
+ 
+ /* -------------------------------------------------------------------------- */
+diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
+index ae67151..dad0211 100644
+--- a/drivers/usb/dwc3/platform_data.h
++++ b/drivers/usb/dwc3/platform_data.h
+@@ -34,4 +34,5 @@ struct dwc3_platform_data {
+ 	unsigned req_p1p2p3_quirk:1;
+ 	unsigned del_p1p2p3_quirk:1;
+ 	unsigned del_phy_power_chg_quirk:1;
++	unsigned lfps_filter_quirk:1;
+ };
+-- 
+1.9.1
 
