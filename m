@@ -1,80 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Paul Zimmerman <Paul.Zimmerman@synopsys.com>
-To: "balbi@ti.com" <balbi@ti.com>
-CC: Huang Rui <ray.huang@amd.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Jason Chang <jason.chang@amd.com>,
-	"Vincent Wan" <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v3 01/19] usb: dwc3: enable hibernation if to be
- supported
-Date: Tue, 28 Oct 2014 19:15:29 +0000
-Message-ID: <A2CA0424C0A6F04399FB9E1CD98E0304844E691D@US01WEMBX2.internal.synopsys.com>
-References: <1414497280-3126-1-git-send-email-ray.huang@amd.com>
- <1414497280-3126-2-git-send-email-ray.huang@amd.com>
- <A2CA0424C0A6F04399FB9E1CD98E0304844E68B7@US01WEMBX2.internal.synopsys.com>
- <20141028185059.GE25735@saruman>
- <A2CA0424C0A6F04399FB9E1CD98E0304844E68E4@US01WEMBX2.internal.synopsys.com>
- <20141028190122.GF25735@saruman>
-In-Reply-To: <20141028190122.GF25735@saruman>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.24]:65288 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759255AbaJ3Lzp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Oct 2014 07:55:45 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	linux-pci@vger.kernel.org,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>, liviu.dudau@arm.com,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [RFC PATCH 2/2] arm: pcibios: move to generic PCI domains
+Date: Thu, 30 Oct 2014 12:55:31 +0100
+Message-ID: <1803568.ShmHEYg5Ky@wuerfel>
+In-Reply-To: <1414669490-1217-3-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1414669490-1217-1-git-send-email-lorenzo.pieralisi@arm.com> <1414669490-1217-3-git-send-email-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Felipe Balbi [mailto:balbi@ti.com]
-> Sent: Tuesday, October 28, 2014 12:01 PM
+On Thursday 30 October 2014 11:44:48 Lorenzo Pieralisi wrote:
+> Most if not all ARM PCI host controller device drivers either ignore the
+> domain field in the pci_sys_data structure or just increment it every
+> time a host controller is probed, using it as a domain counter.
 > 
-> On Tue, Oct 28, 2014 at 06:55:50PM +0000, Paul Zimmerman wrote:
-> > > From: Felipe Balbi [mailto:balbi@ti.com]
-> > > Sent: Tuesday, October 28, 2014 11:51 AM
-> > >
-> > > On Tue, Oct 28, 2014 at 06:47:08PM +0000, Paul Zimmerman wrote:
-> > > > > From: Huang Rui [mailto:ray.huang@amd.com]
-> > > > > Sent: Tuesday, October 28, 2014 4:54 AM
-> > > > >
-> > > > > It enables hibernation if the function is set in coreConsultant.
-> > > > >
-> > > > > Suggested-by: Felipe Balbi <balbi@ti.com>
-> > > > > Signed-off-by: Huang Rui <ray.huang@amd.com>
-> > > > > ---
-> > > > >  drivers/usb/dwc3/core.c | 1 +
-> > > > >  1 file changed, 1 insertion(+)
-> > > > >
-> > > > > diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-> > > > > index fa396fc..bf77509 100644
-> > > > > --- a/drivers/usb/dwc3/core.c
-> > > > > +++ b/drivers/usb/dwc3/core.c
-> > > > > @@ -449,6 +449,7 @@ static int dwc3_core_init(struct dwc3 *dwc)
-> > > > >  	case DWC3_GHWPARAMS1_EN_PWROPT_HIB:
-> > > > >  		/* enable hibernation here */
-> > > > >  		dwc->nr_scratch = DWC3_GHWPARAMS4_HIBER_SCRATCHBUFS(hwparams4);
-> > > > > +		reg |= DWC3_GCTL_GBLHIBERNATIONEN;
-> > > > >  		break;
-> > > > >  	default:
-> > > > >  		dev_dbg(dwc->dev, "No power optimization available\n");
-> > > >
-> > > > What effect does this have when the controller is in device mode? I
-> > > > expect it will start generating DWC3_DEVICE_EVENT_HIBER_REQ interrupt
-> > > > events when this register bit is set. So the dev_WARN_ONCE in
-> > > > dwc3_gadget_interrupt() will start firing, I think.
-> > >
-> > > Ok, so this *has* to wait for proper hibernation support ?
-> >
-> > Ah, never mind. Since the hibernation event is not enabled in the
-> > DEVTEN register, the controller shouldn't generate that event after
-> > all. So I think it should be OK. Sorry for the noise.
+> Therefore, instead of relying on pci_sys_data to stash the domain number
+> in a standard location, ARM pcibios code can be moved to the newly
+> introduced generic PCI domains code, implemented in commits:
 > 
-> do you think it's still nice to have a comment here ?
+> commit 41e5c0f81d3e676d671d96a0a1fafb27abfbd9
+> ("of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()")
+> 
+> commit 670ba0c8883b576d0aec28bd7a838358a4be1
+> ("PCI: Add generic domain handling")
+> 
+> In order to assign a domain number dynamically, the ARM pcibios defines
+> the function, called by core PCI code:
+> 
+> void pci_bus_assign_domain_nr(...)
+> 
+> that relies on a DT property to define the domain number or falls back to
+> a counter; its usage replaces the current domain assignment code in PCI
+> host controllers present in the kernel.
+> 
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> Cc: Jingoo Han <jg1.han@samsung.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Russell King <linux@arm.linux.org.uk>
+> Cc: Mohit Kumar <mohit.kumar@st.com>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> 
 
-Maybe something along the lines of "enabling this bit so that host-mode
-hibernation will work, device-mode hibernation is not implemented yet"?
+Acked-by: Arnd Bergmann <arnd@arndb.de>
 
--- 
-Paul
-
+Very nice!
