@@ -1,38 +1,25 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:60185 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750947AbaJSJYx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 19 Oct 2014 05:24:53 -0400
-Date: Sun, 19 Oct 2014 11:24:48 +0200
-From: Ingo Molnar <mingo@kernel.org>
-To: Daniel J Blueman <daniel@numascale.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Steffen Persvold <sp@numascale.com>
-Subject: Re: [PATCH v2 2/5] Numachip: APIC fixes
-Message-ID: <20141019092448.GA29407@gmail.com>
-References: <1413683152-31302-1-git-send-email-daniel@numascale.com>
- <1413683152-31302-2-git-send-email-daniel@numascale.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 30 Oct 2014 13:09:34 -0500
+From: Jeff Epler <jepler@unpythonic.net>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: incompatible pci sysfs change since 3.12 (5136b2da770d)
+Message-ID: <20141030180934.GC59253@unpythonic.net>
+References: <20141030002258.GA59253@unpythonic.net>
+ <20141030003657.GA5487@kroah.com>
+ <20141030011615.GB59253@unpythonic.net>
+ <20141030163053.GB22250@kroah.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1413683152-31302-2-git-send-email-daniel@numascale.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20141030163053.GB22250@kroah.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Oct 30, 2014 at 09:30:53AM -0700, Greg Kroah-Hartman wrote:
+> I've now sent a patch that should fix this.  If you could verify it, I'd
+> appreciate it.
 
-* Daniel J Blueman <daniel@numascale.com> wrote:
+Will test.  Thank you.  The patch sure looks plausible.
 
-> Fix 16-bit APIC ID truncation and redundant APIC ICR idle polling for IPI
-> to self (AMD64 APICs are documented in the system developer manuals to
-> queue APIC writes).
-
-That is again two fixes - there should be one fix per patch, with 
-a good description of what the effects of the bug were and what 
-the advantages of the change are - for each change separately.
-
-Thanks,
-
-	Ingo
+Jeff
