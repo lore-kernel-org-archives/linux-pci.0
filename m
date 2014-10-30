@@ -1,129 +1,83 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v3 24/27] IA64/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-Date: Wed, 15 Oct 2014 11:07:12 +0800
-Message-ID: <1413342435-7876-25-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
-References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1on0111.outbound.protection.outlook.com ([157.56.110.111]:29824
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933367AbaJ3KLO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Oct 2014 06:11:14 -0400
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v4 13/20] usb: dwc3: set SUSPHY bit for all cores
+Date: Thu, 30 Oct 2014 18:08:38 +0800
+Message-ID: <1414663725-2195-14-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use MSI chip framework instead of arch MSI functions to configure
-MSI/MSI-X irq. So we can manage MSI/MSI-X irq in a unified framework.
+It is recommended to set USB3 and USB2 SUSPHY bits to '1' after the core
+initialization is completed above the dwc3 revision 1.94a.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Huang Rui <ray.huang@amd.com>
+Signed-off-by: Felipe Balbi <balbi@ti.com>
 ---
- arch/ia64/include/asm/pci.h |   10 ++++++++++
- arch/ia64/kernel/msi_ia64.c |   14 ++++++++++----
- arch/ia64/pci/pci.c         |    1 +
- 3 files changed, 21 insertions(+), 4 deletions(-)
+ drivers/usb/dwc3/core.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
-diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-index 52af5ed..907dcba 100644
---- a/arch/ia64/include/asm/pci.h
-+++ b/arch/ia64/include/asm/pci.h
-@@ -94,6 +94,7 @@ struct pci_controller {
- 	int segment;
- 	int node;		/* nearest node with memory or NUMA_NO_NODE for global allocation */
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index 11b0ab08..e02c3b0 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -374,6 +374,15 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
  
-+	struct msi_chip *msi_chip;
- 	void *platform_data;
- };
+ 	reg = dwc3_readl(dwc->regs, DWC3_GUSB3PIPECTL(0));
  
-@@ -101,6 +102,15 @@ struct pci_controller {
- #define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
- #define pci_domain_nr(busdev)    (PCI_CONTROLLER(busdev)->segment)
- 
-+extern struct msi_chip chip;
++	/*
++	 * Above 1.94a, it is recommended to set DWC3_GUSB3PIPECTL_SUSPHY
++	 * to '0' during coreConsultant configuration. So default value
++	 * will be '0' when the core is reset. Application needs to set it
++	 * to '1' after the core initialization is completed.
++	 */
++	if (dwc->revision > DWC3_REVISION_194A)
++		reg |= DWC3_GUSB3PIPECTL_SUSPHY;
 +
-+static inline struct msi_chip *pci_msi_chip(struct pci_bus *bus)
-+{
-+	struct pci_controller *ctrl = bus->sysdata;
+ 	if (dwc->u2ss_inp3_quirk)
+ 		reg |= DWC3_GUSB3PIPECTL_U2SSINP3OK;
+ 
+@@ -395,6 +404,21 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
+ 	dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
+ 
+ 	mdelay(100);
 +
-+	return ctrl->msi_chip;
-+}
++	reg = dwc3_readl(dwc->regs, DWC3_GUSB2PHYCFG(0));
 +
- extern struct pci_ops pci_root_ops;
- 
- static inline int pci_proc_domain(struct pci_bus *bus)
-diff --git a/arch/ia64/kernel/msi_ia64.c b/arch/ia64/kernel/msi_ia64.c
-index 8c3730c..401fc98 100644
---- a/arch/ia64/kernel/msi_ia64.c
-+++ b/arch/ia64/kernel/msi_ia64.c
-@@ -112,15 +112,16 @@ static struct irq_chip ia64_msi_chip = {
- };
- 
- 
--int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
-+static int arch_ia64_setup_msi_irq(struct msi_chip *chip,
-+		struct pci_dev *dev, struct msi_desc *desc)
- {
- 	if (platform_setup_msi_irq)
--		return platform_setup_msi_irq(pdev, desc);
-+		return platform_setup_msi_irq(dev, desc);
- 
--	return ia64_setup_msi_irq(pdev, desc);
-+	return ia64_setup_msi_irq(dev, desc);
++	/*
++	 * Above 1.94a, it is recommended to set DWC3_GUSB2PHYCFG_SUSPHY to
++	 * '0' during coreConsultant configuration. So default value will
++	 * be '0' when the core is reset. Application needs to set it to
++	 * '1' after the core initialization is completed.
++	 */
++	if (dwc->revision > DWC3_REVISION_194A)
++		reg |= DWC3_GUSB2PHYCFG_SUSPHY;
++
++	dwc3_writel(dwc->regs, DWC3_GUSB2PHYCFG(0), reg);
++
++	mdelay(100);
  }
  
--void arch_teardown_msi_irq(unsigned int irq)
-+static void arch_ia64_teardown_msi_irq(struct msi_chip *chip, unsigned int irq)
- {
- 	if (platform_teardown_msi_irq)
- 		return platform_teardown_msi_irq(irq);
-@@ -128,6 +129,11 @@ void arch_teardown_msi_irq(unsigned int irq)
- 	return ia64_teardown_msi_irq(irq);
- }
- 
-+struct msi_chip chip = {
-+	.setup_irq = arch_ia64_setup_msi_irq,
-+	.teardown_irq = arch_ia64_teardown_msi_irq,
-+};
-+
- #ifdef CONFIG_INTEL_IOMMU
- #ifdef CONFIG_SMP
- static int dmar_msi_set_affinity(struct irq_data *data,
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 291a582..299b67d 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -437,6 +437,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 
- 	controller->companion = device;
- 	controller->node = acpi_get_node(device->handle);
-+	controller->msi_chip = &chip;
- 
- 	info = kzalloc(sizeof(*info), GFP_KERNEL);
- 	if (!info) {
+ /**
 -- 
-1.7.1
+1.9.1
 
