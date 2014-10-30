@@ -1,205 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:5900 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751757AbaJ0IL2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 27 Oct 2014 04:11:28 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part1 v3 10/20] x86, irq: Replace printk(KERN_LVL) with pr_lvl() utilities
-Date: Mon, 27 Oct 2014 16:12:01 +0800
-Message-Id: <1414397531-28254-11-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from cmexedge2.emulex.com ([138.239.224.100]:52919 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759470AbaJ3Niy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Oct 2014 09:38:54 -0400
+From: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.Com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v1] pci: Limit VPD length of Emulex adapters to the
+ actual length supported.
+Date: Thu, 30 Oct 2014 13:38:28 +0000
+Message-ID: <BF3270C86E8B1349A26C34E4EC1C44CB3E860095@CMEXMB1.ad.emulex.com>
+References: <1f6d7b6c-7189-4fe3-926b-42609724cab9@CMEXHTCAS2.ad.emulex.com>
+ <20141023154054.GA7137@google.com>
+In-Reply-To: <20141023154054.GA7137@google.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace printk(KENR_LVL) with pr_lvl() to keep checkpatch script silent.
+Hi Bjorn,
+Please find my comments inline.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/vector.c |   69 ++++++++++++++++++++---------------------
- 1 file changed, 34 insertions(+), 35 deletions(-)
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> Sent: Thursday, October 23, 2014 9:11 PM
+> To: Venkat Duvvuru
+> Cc: linux-pci@vger.kernel.org
+> Subject: Re: [PATCH v1] pci: Limit VPD length of Emulex adapters to the actual
+> length supported.
+> 
+> On Thu, Oct 16, 2014 at 02:16:42PM +0530, Venkat Duvvuru wrote:
+> > By default pci utilities/subsystem tries to read 32k bytes of vpd data no
+> matter
+> > what the device supports. This can lead to unexpected behavior depending
+> > on how each of the devices handle this condition. This patch fixes the
+> > problem for Emulex adapter family.
+> >
+> > v1:
+> > Addressed Bjorn's comments
+> > 1. Removed Vendor id and Device id macros from pci_ids.h and
+> >    using the Vendor and Device id values directly in
+> DECLARE_PCI_FIXUP_FINAL() lines.
+> >
+> > Signed-off-by: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.com>
+> 
+> Hi Venkat,
+> 
+> I'll merge this (in some form), but I'd like the changelog to include more
+> details about what unexpected behavior occurs when reading too much data.
+> This is to help people who trip over this problem find this patch as the
+> solution.
+[Venkat] "Timeout" happens on excessive VPD reads and  Kernel keeps logging the following message 
+"vpd r/w failed.  This is likely a firmware bug on this device.  Contact the card vendor for a firmware update"
+> 
+> In my opinion, this is a hardware defect, and I'd like to know what your
+> hardware folks think, because I don't want to have to merge similar quirks
+> for future devices.  Here's my reasoning:
+> 
+> If a device doesn't implement the entire 32K of possible VPD space, I would
+> expect the device to just return zeros or 0xff, or maybe alias the space by
+> dropping the high-order unused address bits.
+[Venkat] We do return 0xffs beyond the supported size but excessive VPD reads are causing timeouts when the adapter is handling some high priority work.
 
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 248ad962c09a..f728cbfc29a9 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -506,27 +506,26 @@ static void __init print_local_APIC(void *dummy)
- 	unsigned int i, v, ver, maxlvt;
- 	u64 icr;
- 
--	printk(KERN_DEBUG "printing local APIC contents on CPU#%d/%d:\n",
--		smp_processor_id(), hard_smp_processor_id());
-+	pr_debug("printing local APIC contents on CPU#%d/%d:\n",
-+		 smp_processor_id(), hard_smp_processor_id());
- 	v = apic_read(APIC_ID);
--	printk(KERN_INFO "... APIC ID:      %08x (%01x)\n", v, read_apic_id());
-+	pr_info("... APIC ID:      %08x (%01x)\n", v, read_apic_id());
- 	v = apic_read(APIC_LVR);
--	printk(KERN_INFO "... APIC VERSION: %08x\n", v);
-+	pr_info("... APIC VERSION: %08x\n", v);
- 	ver = GET_APIC_VERSION(v);
- 	maxlvt = lapic_get_maxlvt();
- 
- 	v = apic_read(APIC_TASKPRI);
--	printk(KERN_DEBUG "... APIC TASKPRI: %08x (%02x)\n",
--	       v, v & APIC_TPRI_MASK);
-+	pr_debug("... APIC TASKPRI: %08x (%02x)\n", v, v & APIC_TPRI_MASK);
- 
- 	if (APIC_INTEGRATED(ver)) {                     /* !82489DX */
- 		if (!APIC_XAPIC(ver)) {
- 			v = apic_read(APIC_ARBPRI);
--			printk(KERN_DEBUG "... APIC ARBPRI: %08x (%02x)\n", v,
--			       v & APIC_ARBPRI_MASK);
-+			pr_debug("... APIC ARBPRI: %08x (%02x)\n",
-+				 v, v & APIC_ARBPRI_MASK);
- 		}
- 		v = apic_read(APIC_PROCPRI);
--		printk(KERN_DEBUG "... APIC PROCPRI: %08x\n", v);
-+		pr_debug("... APIC PROCPRI: %08x\n", v);
- 	}
- 
- 	/*
-@@ -535,23 +534,23 @@ static void __init print_local_APIC(void *dummy)
- 	 */
- 	if (!APIC_INTEGRATED(ver) || maxlvt == 3) {
- 		v = apic_read(APIC_RRR);
--		printk(KERN_DEBUG "... APIC RRR: %08x\n", v);
-+		pr_debug("... APIC RRR: %08x\n", v);
- 	}
- 
- 	v = apic_read(APIC_LDR);
--	printk(KERN_DEBUG "... APIC LDR: %08x\n", v);
-+	pr_debug("... APIC LDR: %08x\n", v);
- 	if (!x2apic_enabled()) {
- 		v = apic_read(APIC_DFR);
--		printk(KERN_DEBUG "... APIC DFR: %08x\n", v);
-+		pr_debug("... APIC DFR: %08x\n", v);
- 	}
- 	v = apic_read(APIC_SPIV);
--	printk(KERN_DEBUG "... APIC SPIV: %08x\n", v);
-+	pr_debug("... APIC SPIV: %08x\n", v);
- 
--	printk(KERN_DEBUG "... APIC ISR field:\n");
-+	pr_debug("... APIC ISR field:\n");
- 	print_APIC_field(APIC_ISR);
--	printk(KERN_DEBUG "... APIC TMR field:\n");
-+	pr_debug("... APIC TMR field:\n");
- 	print_APIC_field(APIC_TMR);
--	printk(KERN_DEBUG "... APIC IRR field:\n");
-+	pr_debug("... APIC IRR field:\n");
- 	print_APIC_field(APIC_IRR);
- 
- 	if (APIC_INTEGRATED(ver)) {             /* !82489DX */
-@@ -559,46 +558,46 @@ static void __init print_local_APIC(void *dummy)
- 			apic_write(APIC_ESR, 0);
- 
- 		v = apic_read(APIC_ESR);
--		printk(KERN_DEBUG "... APIC ESR: %08x\n", v);
-+		pr_debug("... APIC ESR: %08x\n", v);
- 	}
- 
- 	icr = apic_icr_read();
--	printk(KERN_DEBUG "... APIC ICR: %08x\n", (u32)icr);
--	printk(KERN_DEBUG "... APIC ICR2: %08x\n", (u32)(icr >> 32));
-+	pr_debug("... APIC ICR: %08x\n", (u32)icr);
-+	pr_debug("... APIC ICR2: %08x\n", (u32)(icr >> 32));
- 
- 	v = apic_read(APIC_LVTT);
--	printk(KERN_DEBUG "... APIC LVTT: %08x\n", v);
-+	pr_debug("... APIC LVTT: %08x\n", v);
- 
- 	if (maxlvt > 3) {                       /* PC is LVT#4. */
- 		v = apic_read(APIC_LVTPC);
--		printk(KERN_DEBUG "... APIC LVTPC: %08x\n", v);
-+		pr_debug("... APIC LVTPC: %08x\n", v);
- 	}
- 	v = apic_read(APIC_LVT0);
--	printk(KERN_DEBUG "... APIC LVT0: %08x\n", v);
-+	pr_debug("... APIC LVT0: %08x\n", v);
- 	v = apic_read(APIC_LVT1);
--	printk(KERN_DEBUG "... APIC LVT1: %08x\n", v);
-+	pr_debug("... APIC LVT1: %08x\n", v);
- 
- 	if (maxlvt > 2) {			/* ERR is LVT#3. */
- 		v = apic_read(APIC_LVTERR);
--		printk(KERN_DEBUG "... APIC LVTERR: %08x\n", v);
-+		pr_debug("... APIC LVTERR: %08x\n", v);
- 	}
- 
- 	v = apic_read(APIC_TMICT);
--	printk(KERN_DEBUG "... APIC TMICT: %08x\n", v);
-+	pr_debug("... APIC TMICT: %08x\n", v);
- 	v = apic_read(APIC_TMCCT);
--	printk(KERN_DEBUG "... APIC TMCCT: %08x\n", v);
-+	pr_debug("... APIC TMCCT: %08x\n", v);
- 	v = apic_read(APIC_TDCR);
--	printk(KERN_DEBUG "... APIC TDCR: %08x\n", v);
-+	pr_debug("... APIC TDCR: %08x\n", v);
- 
- 	if (boot_cpu_has(X86_FEATURE_EXTAPIC)) {
- 		v = apic_read(APIC_EFEAT);
- 		maxlvt = (v >> 16) & 0xff;
--		printk(KERN_DEBUG "... APIC EFEAT: %08x\n", v);
-+		pr_debug("... APIC EFEAT: %08x\n", v);
- 		v = apic_read(APIC_ECTRL);
--		printk(KERN_DEBUG "... APIC ECTRL: %08x\n", v);
-+		pr_debug("... APIC ECTRL: %08x\n", v);
- 		for (i = 0; i < maxlvt; i++) {
- 			v = apic_read(APIC_EILVTn(i));
--			printk(KERN_DEBUG "... APIC EILVT%d: %08x\n", i, v);
-+			pr_debug("... APIC EILVT%d: %08x\n", i, v);
- 		}
- 	}
- 	pr_cont("\n");
-@@ -628,15 +627,15 @@ static void __init print_PIC(void)
- 	if (!nr_legacy_irqs())
- 		return;
- 
--	printk(KERN_DEBUG "\nprinting PIC contents\n");
-+	pr_debug("\nprinting PIC contents\n");
- 
- 	raw_spin_lock_irqsave(&i8259A_lock, flags);
- 
- 	v = inb(0xa1) << 8 | inb(0x21);
--	printk(KERN_DEBUG "... PIC  IMR: %04x\n", v);
-+	pr_debug("... PIC  IMR: %04x\n", v);
- 
- 	v = inb(0xa0) << 8 | inb(0x20);
--	printk(KERN_DEBUG "... PIC  IRR: %04x\n", v);
-+	pr_debug("... PIC  IRR: %04x\n", v);
- 
- 	outb(0x0b, 0xa0);
- 	outb(0x0b, 0x20);
-@@ -646,10 +645,10 @@ static void __init print_PIC(void)
- 
- 	raw_spin_unlock_irqrestore(&i8259A_lock, flags);
- 
--	printk(KERN_DEBUG "... PIC  ISR: %04x\n", v);
-+	pr_debug("... PIC  ISR: %04x\n", v);
- 
- 	v = inb(0x4d1) << 8 | inb(0x4d0);
--	printk(KERN_DEBUG "... PIC ELCR: %04x\n", v);
-+	pr_debug("... PIC ELCR: %04x\n", v);
- }
- 
- static int show_lapic __initdata = 1;
--- 
-1.7.10.4
-
+> 
+> The only thing I see in the spec related to this is (PCI r3.0, Appendix I,
+> "VPD Data" description): "Reading or writing data outside of the VPD space
+> in the storage component is not allowed."  The only way I see for software
+> to determine the size of the storage is to parse the data looking for an
+> End Tag.
+> 
+> I don't think it's reasonable to make correct hardware operation depend on
+> the contents of the storage, so if something bad happens when software
+> reads past the end, that looks like a hardware defect to me.
