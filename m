@@ -1,189 +1,54 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1on0140.outbound.protection.outlook.com ([157.56.110.140]:28064
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933893AbaJ3KLh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Oct 2014 06:11:37 -0400
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v4 17/20] PCI: Add support for AMD Nolan USB3 DRD
+Date: Thu, 30 Oct 2014 18:08:42 +0800
+Message-ID: <1414663725-2195-18-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
-Date: Fri, 24 Oct 2014 14:38:17 +0200
-Message-ID: <CAJZ5v0jo9hABMsOC0JUi=A+Sxj9g_JP3fMX5_Gj+pEkeAeQ3yQ@mail.gmail.com>
-Subject: [GIT PULL] ACPI and power management updates for 3.18-rc1
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+This patch adds PCI id for USB3 Dual-Role Device of AMD Nolan (NL) SoC.
+It will be used for PCI quirks and DWC3 device driver.
 
-Please pull from
+Signed-off-by: Jason Chang <jason.chang@amd.com>
+Signed-off-by: Huang Rui <ray.huang@amd.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ include/linux/pci_ids.h | 1 +
+ 1 file changed, 1 insertion(+)
 
- git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
- pm+acpi-3.18-rc2
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 1fa99a3..5decad7 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -562,6 +562,7 @@
+ #define PCI_DEVICE_ID_AMD_8131_BRIDGE	0x7450
+ #define PCI_DEVICE_ID_AMD_8131_APIC	0x7451
+ #define PCI_DEVICE_ID_AMD_8132_BRIDGE	0x7458
++#define PCI_DEVICE_ID_AMD_NL_USB	0x7912
+ #define PCI_DEVICE_ID_AMD_CS5535_IDE    0x208F
+ #define PCI_DEVICE_ID_AMD_CS5536_ISA    0x2090
+ #define PCI_DEVICE_ID_AMD_CS5536_FLASH  0x2091
+-- 
+1.9.1
 
-to receive ACPI and power management updates for v3.18-rc2 with
-top-most commit a91e99e27a683608d221fb18b70d7de9d801de4a
-
- Merge branches 'pm-cpuidle' and 'pm-cpufreq'
-
-on top of commit f114040e3ea6e07372334ade75d1ee0775c355e1
-
- Linux 3.18-rc1
-
-This is material that didn't make it to my 3.18-rc1 pull request
-for various reasons, mostly related to timing and travel
-(LinuxCon EU / LPC) plus a couple of fixes for recent bugs.
-The only really new thing here is the PM QoS class for memory
-bandwidth, but it is simple enough and users of it will be added
-in the next cycle.  One major change in behavior is that platform
-devices enumerated by ACPI will use 32-bit DMA mask by default.
-Also included is an ACPICA update to a new upstream release,
-but that's mostly cleanups, changes in tools and similar.  The
-rest is fixes and cleanups mostly.
-
-Specifics:
-
- - Fix for a recent PCI power management change that overlooked
-   the fact that some IRQ chips might not be able to configure
-   PCIe PME for system wakeup from Lucas Stach.
-
- - Fix for a bug introduced in 3.17 where acpi_device_wakeup()
-   is called with a wrong ordering of arguments from Zhang Rui.
-
- - A bunch of intel_pstate driver fixes (all -stable candidates)
-   from Dirk Brandewie, Gabriele Mazzotta and Pali Rohár.
-
- - Fixes for a rather long-standing problem with the OOM killer
-   and the freezer that frozen processes killed by the OOM do
-   not actually release any memory until they are thawed, so
-   OOM-killing them is rather pointless, with a couple of
-   cleanups on top (Michal Hocko, Cong Wang, Rafael J Wysocki).
-
- - ACPICA update to upstream release 20140926, inlcuding mostly
-   cleanups reducing differences between the upstream ACPICA and
-   the kernel code, tools changes (acpidump, acpiexec) and
-   support for the _DDN object (Bob Moore, Lv Zheng).
-
- - New PM QoS class for memory bandwidth from Tomeu Vizoso.
-
- - Default 32-bit DMA mask for platform devices enumerated by ACPI
-   (this change is mostly needed for some drivers development in
-   progress targeted at 3.19) from Heikki Krogerus.
-
- - ACPI EC driver cleanups, mostly related to debugging, from
-   Lv Zheng.
-
- - cpufreq-dt driver updates from Thomas Petazzoni.
-
- - powernv cpuidle driver update from Preeti U Murthy.
-
-Thanks!
-
-
----------------
-
-Bob Moore (4):
-      ACPICA: Add string for _DDN method name.
-      ACPICA: iASL/Disassembler: Add support for hardware summary mapfiles.
-      ACPICA: acpiexec: Do not put STDIN into raw mode unless it is a terminal.
-      ACPICA: Update version to 20140926.
-
-Cong Wang (2):
-      freezer: Do not freeze tasks killed by OOM killer
-      freezer: remove obsolete comments in __thaw_task()
-
-Dirk Brandewie (4):
-      cpufreq: expose scaling_cur_freq sysfs file for set_policy() drivers
-      intel_pstate: Don't lose sysfs settings during cpu offline
-      intel_pstate: Fix BYT frequency reporting
-      intel_pstate: Correct BYT VID values.
-
-Gabriele Mazzotta (1):
-      cpufreq: intel_pstate: Reflect current no_turbo state correctly
-
-Heikki Krogerus (1):
-      ACPI / platform: provide default DMA mask
-
-Lucas Stach (1):
-      PCI / PM: handle failure to enable wakeup on PCIe PME
-
-Lv Zheng (11):
-      ACPICA: acpidump: Add ACPI 1.0 RSDP support.
-      ACPICA: Events: Reduce indent divergences of events files.
-      ACPICA: Events: Reduce source code difference in
-acpi_install_gpe_handler().
-      ACPICA: Events: Update GPE handler removal, match behavior of
-handler install.
-      ACPICA: Events: Reduce source code difference for the
-ACPI_EVENT_FLAG_HANDLE support.
-      ACPICA: Events: Reduce source code difference for the
-ACPI_EVENT_FLAG_HANDLE renaming.
-      ACPI / EC: Add CPU ID to debugging messages.
-      ACPI / EC: Enhance the logs to apply to QR_EC transactions.
-      ACPI / EC: Add detailed command/query debugging information.
-      ACPI / EC: Refine event/query debugging messages.
-      ACPI / EC: Cleanup coding style.
-
-Michal Hocko (2):
-      OOM, PM: OOM killed task shouldn't escape PM suspend
-      PM: convert do_each_thread to for_each_process_thread
-
-Pali Rohár (1):
-      cpufreq: intel_pstate: Fix setting max_perf_pct in performance policy
-
-Preeti U. Murthy (1):
-      cpuidle: powernv: Populate cpuidle state details by querying the
-device-tree
-
-Rafael J. Wysocki (1):
-      PM / freezer: Clean up code after recent fixes
-
-Thomas Petazzoni (3):
-      cpufreq: allow driver-specific data
-      cpufreq: cpufreq-dt: extend with platform_data
-      cpufreq: cpufreq-dt: adjust message related to regulators
-
-Tomeu Vizoso (1):
-      PM / QoS: Add PM_QOS_MEMORY_BANDWIDTH class
-
-Zhang Rui (1):
-      ACPI: invoke acpi_device_wakeup() with correct parameters
-
----------------
-
- Documentation/power/pm_qos_interface.txt           |   4 +-
- drivers/acpi/acpi_platform.c                       |   2 +
- drivers/acpi/acpica/achware.h                      |   2 +-
- drivers/acpi/acpica/aclocal.h                      |   4 +-
- drivers/acpi/acpica/actables.h                     |   2 +
- drivers/acpi/acpica/amlresrc.h                     |  34 +++++++
- drivers/acpi/acpica/evgpe.c                        |  23 ++---
- drivers/acpi/acpica/evgpeinit.c                    |   1 +
- drivers/acpi/acpica/evxface.c                      |  27 +++--
- drivers/acpi/acpica/evxfevnt.c                     |  40 +++++---
- drivers/acpi/acpica/evxfgpe.c                      |  12 +--
- drivers/acpi/acpica/hwgpe.c                        |   9 +-
- drivers/acpi/acpica/tbxfroot.c                     |  33 ++++++-
- drivers/acpi/device_pm.c                           |   2 +-
- drivers/acpi/ec.c                                  | 107 +++++++++++++-------
- drivers/acpi/scan.c                                |   2 +-
- drivers/acpi/sysfs.c                               |   4 +-
- drivers/cpufreq/cpufreq-dt.c                       |  21 +++-
- drivers/cpufreq/cpufreq.c                          |  38 +++++--
- drivers/cpufreq/intel_pstate.c                     | 110 ++++++++++++++++-----
- drivers/cpuidle/cpuidle-powernv.c                  |  27 ++++-
- drivers/pci/pcie/pme.c                             |   6 +-
- include/acpi/acnames.h                             |   1 +
- include/acpi/acpixf.h                              |   2 +-
- include/acpi/actypes.h                             |   4 +-
- include/linux/cpufreq-dt.h                         |  22 +++++
- include/linux/cpufreq.h                            |   2 +
- include/linux/oom.h                                |   3 +
- include/linux/pm_qos.h                             |   5 +-
- kernel/freezer.c                                   |   9 +-
- kernel/power/process.c                             |  57 +++++++++--
- kernel/power/qos.c                                 |  27 ++++-
- mm/oom_kill.c                                      |  17 ++++
- mm/page_alloc.c                                    |   8 ++
- .../acpi/os_specific/service_layers/osunixxf.c     |   8 ++
- tools/power/acpi/tools/acpidump/apdump.c           |   2 +-
- 36 files changed, 527 insertions(+), 150 deletions(-)
