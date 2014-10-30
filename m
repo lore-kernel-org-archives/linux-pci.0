@@ -1,114 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:28067 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751492AbaJ0Mlm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Oct 2014 08:41:42 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 08/16] MIPS/Xlp/MSI: Use MSI controller framework to configure MSI/MSI-X irq
-Date: Mon, 27 Oct 2014 21:22:14 +0800
-Message-ID: <1414416142-31239-9-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
-References: <1414416142-31239-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 29 Oct 2014 17:36:57 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Jeff Epler <jepler@unpythonic.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: incompatible pci sysfs change since 3.12 (5136b2da770d)
+Message-ID: <20141030003657.GA5487@kroah.com>
+References: <20141030002258.GA59253@unpythonic.net>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141030002258.GA59253@unpythonic.net>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use MSI controller framework instead of arch MSI functions to configure
-MSI/MSI-X IRQ. So we can manage MSI/MSI-X irq in a unified framework.
+On Wed, Oct 29, 2014 at 07:22:58PM -0500, Jeff Epler wrote:
+> Hi.
+> 
+> I am an author of LinuxCNC, a GPL'd CNC control for Linux.
+> 
+> Recently we added support for userspace PCI drivers.  This worked with
+> kernel 3.2 but doesn't with kernel 3.16.  The software fails early with
+>     Failed to open "/sys/devices/pci0000:00/.../enable" (Permission denied)
+> 
+> This appears to be because our software relies on the documented
+> "enable" sysfs file for pci devices (Documentation/filesystem/sysfs-pci.txt)
+> which was (unintentionally?) changed to "enabled" in the above-named
+> patch:
+> 
+> 5136b2da770d PCI: convert bus code to use dev_groups
+> ...
+> +static DEVICE_ATTR_RW(enabled);
+> ...
+> -   __ATTR(enable, 0600, is_enabled_show, is_enabled_store),
+> 
+> Are we in the LinuxCNC project wrong in thinking that stuff in /sys (and
+> not /sys/debug) is supposed to be a durable API/interface for userspace
+> to the kernel?  (It must be a low-usage API if it went unnoticed for a
+> year :-/)
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/mips/include/asm/netlogic/xlp-hal/pcibus.h |    1 +
- arch/mips/pci/msi-xlp.c                         |   11 +++++++++--
- arch/mips/pci/pci-xlp.c                         |    3 +++
- 3 files changed, 13 insertions(+), 2 deletions(-)
+Ugh, that's my fault, I made a typo and should not have renamed the
+sysfs file, very sorry about that.
 
-diff --git a/arch/mips/include/asm/netlogic/xlp-hal/pcibus.h b/arch/mips/include/asm/netlogic/xlp-hal/pcibus.h
-index 91540f4..8e6869a 100644
---- a/arch/mips/include/asm/netlogic/xlp-hal/pcibus.h
-+++ b/arch/mips/include/asm/netlogic/xlp-hal/pcibus.h
-@@ -103,6 +103,7 @@
- 
- #ifdef CONFIG_PCI_MSI
- void xlp_init_node_msi_irqs(int node, int link);
-+extern struct msi_controller xlp_msi_ctrl;
- #else
- static inline void xlp_init_node_msi_irqs(int node, int link) {}
- #endif
-diff --git a/arch/mips/pci/msi-xlp.c b/arch/mips/pci/msi-xlp.c
-index fa374fe..d18a162 100644
---- a/arch/mips/pci/msi-xlp.c
-+++ b/arch/mips/pci/msi-xlp.c
-@@ -245,7 +245,8 @@ static struct irq_chip xlp_msix_chip = {
- 	.irq_unmask	= unmask_msi_irq,
- };
- 
--void arch_teardown_msi_irq(unsigned int irq)
-+static void xlp_teardown_msi_irq(struct msi_controller *ctrl,
-+		unsigned int irq)
- {
- }
- 
-@@ -452,7 +453,8 @@ static int xlp_setup_msix(uint64_t lnkbase, int node, int link,
- 	return 0;
- }
- 
--int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
-+static int xlp_setup_msi_irq(struct msi_controller *ctrl,
-+		struct pci_dev *dev, struct msi_desc *desc)
- {
- 	struct pci_dev *lnkdev;
- 	uint64_t lnkbase;
-@@ -474,6 +476,11 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- 		return xlp_setup_msi(lnkbase, node, link, desc);
- }
- 
-+struct msi_controller xlp_msi_ctrl = {
-+	.setup_irq = xlp_setup_msi_irq,
-+	.teardown_irq = xlp_teardown_msi_irq,
-+};
-+
- void __init xlp_init_node_msi_irqs(int node, int link)
- {
- 	struct nlm_soc_info *nodep;
-diff --git a/arch/mips/pci/pci-xlp.c b/arch/mips/pci/pci-xlp.c
-index 7babf01..ab80417 100644
---- a/arch/mips/pci/pci-xlp.c
-+++ b/arch/mips/pci/pci-xlp.c
-@@ -174,6 +174,9 @@ struct pci_controller nlm_pci_controller = {
- 	.mem_offset	= 0x00000000UL,
- 	.io_resource	= &nlm_pci_io_resource,
- 	.io_offset	= 0x00000000UL,
-+#ifdef CONFIG_PCI_MSI
-+	.msi_ctrl = &xlp_msi_ctrl,
-+#endif
- };
- 
- struct pci_dev *xlp_get_pcie_link(const struct pci_dev *dev)
--- 
-1.7.1
+I'll work on making up a patch to fix this and get it into the stable
+kernels so that you don't have to have a work-around for very long.
 
+> We'll have to work around it by modifying our software (since we'd like
+> to work with the kernels people already have) in any case.
+> 
+> Even if it is not going to be changed compatibly with older kernels, it
+> seems like the documentation should be updated!
+
+I'll fix it up, this was just a bug, my apologies.
+
+greg k-h
