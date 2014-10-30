@@ -1,71 +1,118 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f173.google.com ([209.85.216.173]:56913 "EHLO
-	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752122AbaJBOgh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Oct 2014 10:36:37 -0400
-Received: by mail-qc0-f173.google.com with SMTP id x13so2240924qcv.32
-        for <linux-pci@vger.kernel.org>; Thu, 02 Oct 2014 07:36:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <2135522.DVGa59N1mx@wuerfel>
-References: <1411765707-28822-1-git-send-email-tinamdar@apm.com>
- <20141001191403.GC22713@google.com> <2135522.DVGa59N1mx@wuerfel>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 30 Oct 2014 11:09:13 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 2 Oct 2014 08:36:16 -0600
-Message-ID: <CAErSpo4i4+0c6Qy9w3tKXex2M7Q=Ry8aG-cbO1_uiC8wtD7puQ@mail.gmail.com>
-Subject: Re: [PATCH v10 0/4] APM X-Gene PCIe host controller
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	linux-acpi@vger.kernel.org
+Subject: Re: [PATCH] PCI: fix sriov enabling with virtual bus
+Message-ID: <20141030170913.GA6982@google.com>
+References: <1414621570-20777-1-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1414621570-20777-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 2, 2014 at 6:20 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Wednesday 01 October 2014 13:14:03 Bjorn Helgaas wrote:
->> On Fri, Sep 26, 2014 at 02:08:23PM -0700, Tanmay Inamdar wrote:
->> > This patch adds support for AppliedMicro X-Gene PCIe host controller. The
->> > driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
->> > cards.
->> >
->> > X-Gene PCIe controller driver has depedency on the pcie arm64 arch support.
->> > Liviu Dudau from ARM has sent a patch set for pcie arm64 arch support and
->> > support for creating generic pcie bridge from device tree. Liviu's patches
->> > are available here
->> > https://lkml.org/lkml/2014/9/23/852
->> >
->> > If someone wishes to test PCIe on X-Gene with this patch set, above mentioned
->> > patches from Liviu must be applied before the patches in this patch set. Also
->> > please use latest xgene u-boot firmware.
->>
->> I applied these on pci/host-xgene (based on pci/host-generic).  I hope to
->> merge these for v3.18.  It'd be nice to have a device tree person like Arnd
->> or Rob take a look at the arch/arm64/boot/dts/ bits.
->
-> Those changes should normally go through the arm-soc tree, but we
-> have not done that so far for arm64 stuff, so I'm not blaming anybody.
->
-> The dts changes all look good to me, and I think it's ok to have them
-> go through your tree this time.
->
-> Acked-by: Arnd Bergmann <arnd@arndb.de>
->
-> In the future, we should all have an eye on this more to ensure that
-> the .dts changes all go through arm-soc.
+[+cc Rafael, linux-acpi]
 
-The arch/arm64/boot/dts patch is at the tip of my branch, and I'd be
-more than happy to drop it.  It would be nice to have it in v3.18
-along with the driver, though, so I'll keep it until somebody chimes
-in to put it in arm-soc.
+On Wed, Oct 29, 2014 at 03:26:10PM -0700, Yinghai Lu wrote:
+> While enabling sriov for intel igb device got:
+> 
+> sca05-0a81fda5:~ # echo 7 > /sys/bus/pci/devices/0000\:09\:00.0/sriov_numvfs 
+> [  729.612191] pci 0000:0a:10.0: [8086:1520] type 00 class 0x020000
+> [  729.619002] BUG: unable to handle kernel NULL pointer dereference at 00000000000000e8
+> [  729.627767] IP: [<ffffffff815901cb>] pci_get_hp_params+0x5b/0x640
+> [  729.634593] PGD 0 
+> [  729.636844] Oops: 0000 [#1] SMP 
+> [  729.640466] Modules linked in:
+> ...
+> [  729.795268] Call Trace:
+> [  729.798007]  [<ffffffff81ea0843>] ? pci_mmcfg_read+0x123/0x140
+> [  729.804519]  [<ffffffff81ea0770>] ? pci_mmcfg_read+0x50/0x140
+> [  729.810942]  [<ffffffff815692a3>] pci_configure_device+0x33/0x350
+> [  729.817744]  [<ffffffff8156aba4>] pci_device_add+0x24/0x160
+> [  729.823965]  [<ffffffff8158f3bb>] pci_enable_sriov+0x4db/0x7d0
+> [  729.830486]  [<ffffffff81b63f54>] ? igb_pci_enable_sriov+0xe4/0x200
+> [  729.837481]  [<ffffffff81b63f7f>] igb_pci_enable_sriov+0x10f/0x200
+> [  729.844386]  [<ffffffff8155129c>] ? _kstrtoull+0x2c/0x80
+> [  729.850315]  [<ffffffff81b640a5>] igb_pci_sriov_configure+0x35/0x40
+> [  729.857318]  [<ffffffff815752b5>] sriov_numvfs_store+0xe5/0x140
+> [  729.863934]  [<ffffffff817e1f88>] dev_attr_store+0x18/0x30
+> [  729.870063]  [<ffffffff812624d8>] sysfs_kf_write+0x48/0x60
+> [  729.876186]  [<ffffffff812617ef>] ? kernfs_fop_write+0xaf/0x170
+> [  729.882797]  [<ffffffff81261827>] kernfs_fop_write+0xe7/0x170
+> [  729.889222]  [<ffffffff811ef66b>] vfs_write+0xcb/0x1c0
+> [  729.894958]  [<ffffffff811f0019>] SyS_write+0x49/0xb0
+> ...
+> [  729.943531] ---[ end trace 7cf0cdb66637665a ]---
+> 
+> and pci_get_hp_params+0x5b point to
+> 0xffffffff815901cb is in pci_get_hp_params (include/linux/device.h:815).
+> 810	#include <linux/pm_wakeup.h>
+> 811	
+> 812	static inline const char *dev_name(const struct device *dev)
+> 813	{
+> 814		/* Use the init name until the kobject becomes available */
+> 815		if (dev->init_name)
+> 816			return dev->init_name;
+> 817	
+> 818		return kobject_name(&dev->kobj);
+> 
+> The root cause:
+> Now pci_configure_device/pci_get_hp_params will be called for every pci_dev,
+> including VF that is under virtual bus. But virtual bus does not have bridge
+> set. So we can not refer pbus->self->dev directly.
 
-Bjorn
+This raises the question of what the correct behavior should be.  Your
+patch certainly avoids the NULL pointer dereference.  It does so by making
+acpi_pci_get_bridge_handle() fail gracefully, which means we will not look
+for _HPP/_HPX for VF devices.  Is that what we want?
+
+Most of the fields included in _HPX are read-only or not applicable for
+VFs, but we need to at least ask the question of whether we want to
+completely ignore _HPX for VFs.  If we do, I think maybe we should make
+that more explicit in the code, e.g., by adding an explicit test of
+dev->is_virtfn, instead of relying on this special case behavior of
+acpi_pci_get_bridge_handle() that in turn depends on the obscure property
+of a VF not having a bridge device.
+
+Personally, I think that since the _HPX spec doesn't mention VFs at all, we
+might want to assume that _HPX should apply to VFs, just like it applies to
+PFs.  I can imagine future _HPX record formats, or non-ACPI firmware
+configuration hints, that *would* apply to VFs, so it seems like it would
+be pretty arbitrary to say "we won't configure VF devices at all."
+
+> Add checking with pbus->slef and bail out early.
+> 
+> Fixing: commit 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
+
+Thanks for including this, but why not use the same format everybody else
+does:
+
+Fixes: 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
+
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> 
+> ---
+>  include/linux/pci-acpi.h |    6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> Index: linux-2.6/include/linux/pci-acpi.h
+> ===================================================================
+> --- linux-2.6.orig/include/linux/pci-acpi.h
+> +++ linux-2.6/include/linux/pci-acpi.h
+> @@ -44,8 +44,12 @@ static inline acpi_handle acpi_pci_get_b
+>  
+>  	if (pci_is_root_bus(pbus))
+>  		dev = pbus->bridge;
+> -	else
+> +	else {
+> +		if (!pbus->self)
+> +			return NULL;
+> +
+>  		dev = &pbus->self->dev;
+> +	}
+>  
+>  	dev_printk(KERN_DEBUG, &pbus->dev, "  bridge ACPI_HANDLE %p : %s\n",
+>  			 ACPI_HANDLE(dev), dev_name(dev));
