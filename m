@@ -1,54 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0148.outbound.protection.outlook.com ([157.56.110.148]:29024
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758632AbaJaDM7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 23:12:59 -0400
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v5 4/8] PCI: Add support for AMD Nolan USB3 DRD
-Date: Fri, 31 Oct 2014 11:11:15 +0800
-Message-ID: <1414725079-11490-5-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1414725079-11490-1-git-send-email-ray.huang@amd.com>
-References: <1414725079-11490-1-git-send-email-ray.huang@amd.com>
+Received: from mail-qc0-f179.google.com ([209.85.216.179]:33588 "EHLO
+	mail-qc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759889AbaJ3T1g (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Oct 2014 15:27:36 -0400
+Received: by mail-qc0-f179.google.com with SMTP id o8so4605857qcw.38
+        for <linux-pci@vger.kernel.org>; Thu, 30 Oct 2014 12:27:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAE9FiQVU7F=MXUVEwmemz61=TbL5imFecHexUik+3DtqWKOHGA@mail.gmail.com>
+References: <1414621570-20777-1-git-send-email-yinghai@kernel.org>
+ <20141030170913.GA6982@google.com> <CAE9FiQVU7F=MXUVEwmemz61=TbL5imFecHexUik+3DtqWKOHGA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 30 Oct 2014 13:27:15 -0600
+Message-ID: <CAErSpo4E+ObyKb8wggT6rKQsT+VCXyoY4xqSFHitgq2bkSk6Pg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: fix sriov enabling with virtual bus
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds PCI id for USB3 Dual-Role Device of AMD Nolan (NL) SoC.
-It will be used for PCI quirks and DWC3 device driver.
+On Thu, Oct 30, 2014 at 12:57 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Thu, Oct 30, 2014 at 10:09 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-Signed-off-by: Jason Chang <jason.chang@amd.com>
-Signed-off-by: Huang Rui <ray.huang@amd.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- include/linux/pci_ids.h | 1 +
- 1 file changed, 1 insertion(+)
+>>> Fixing: commit 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
+>>
+>> Thanks for including this, but why not use the same format everybody else
+>> does:
+>>
+>> Fixes: 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
+>
+> will do that later. Is that formalized ?
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 1fa99a3..5decad7 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -562,6 +562,7 @@
- #define PCI_DEVICE_ID_AMD_8131_BRIDGE	0x7450
- #define PCI_DEVICE_ID_AMD_8131_APIC	0x7451
- #define PCI_DEVICE_ID_AMD_8132_BRIDGE	0x7458
-+#define PCI_DEVICE_ID_AMD_NL_USB	0x7912
- #define PCI_DEVICE_ID_AMD_CS5535_IDE    0x208F
- #define PCI_DEVICE_ID_AMD_CS5536_ISA    0x2090
- #define PCI_DEVICE_ID_AMD_CS5536_FLASH  0x2091
--- 
-1.9.1
+I don't know that it's formalized, but it seems to be a common
+convention, and using "Fixing: commit" instead of "Fixes:" doesn't
+seem to add value.  I guess I must spend more time reading git
+logs than most people :)
 
+> checkpatch.pl only need 12 commit code, and (" ..") format.
