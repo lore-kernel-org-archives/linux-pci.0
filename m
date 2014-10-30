@@ -1,94 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bbn0105.outbound.protection.outlook.com ([157.56.111.105]:32800
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752031AbaJQJOZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 17 Oct 2014 05:14:25 -0400
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v2 06/16] usb: dwc3: add disscramble quirk
-Date: Fri, 17 Oct 2014 16:53:31 +0800
-Message-ID: <1413536021-4886-7-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
-References: <1413536021-4886-1-git-send-email-ray.huang@amd.com>
+Received: from mx1.redhat.com ([209.132.183.28]:60303 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757832AbaJ3R4g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Oct 2014 13:56:36 -0400
+Subject: [PATCH 1/3] PCI: Restore detection of read-only BARs
+From: Myron Stowe <myron.stowe@redhat.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: willy@linux.intel.com, unruh@physics.ubc.ca,
+	linux-kernel@vger.kernel.org, martin@lucina.net
+Date: Thu, 30 Oct 2014 11:54:37 -0600
+Message-ID: <20141030175437.22238.47243.stgit@amt.stowe>
+In-Reply-To: <20141030175430.22238.47671.stgit@amt.stowe>
+References: <20141030175430.22238.47671.stgit@amt.stowe>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-AMD NL fpga needs to enable disscramble quirk. And this quirk doesn't need on
-the true soc.
+Commit 6ac665c63dca ("PCI: rewrite PCI BAR reading code") altered
+__pci_read_base's local variable 'l', masking off its lower non-addressing
+related bits, prior to it being passed in as the 'base' parameter to
+pci_size().  This masking broke pci_size's r/o BAR detection logic's
+comparison check for r/o BARs that have lower order bits set.  For such
+occurrences, the 'base == maxbase' check will no longer ever be "true".
 
-Signed-off-by: Huang Rui <ray.huang@amd.com>
+This patch resolves this issue by also masking off the non-addressing
+related bits of 'sz' before passing it into pci_size() as the 'maxbase'
+parameter.  With this change the r/o detection logic of pci_size() will
+once again catch known occurrences that have been encountered to date:
+  - AGP aperture BAR of AMD-7xx host bridges; if the AGP window
+    disabled, this BAR is read-only and read as 0x00000008 [1]
+  - BAR0-4 of ALi IDE controllers can be non-zero and read-only [1]
+  - Intel Sandy Bridge - Thermal Management Controller [8086:0103];
+    BAR 0 returning 0xfed98004 [2]
+  - Intel Xeon E5 v3/Core i7 Power Control Unit [8086:2fc0];
+    Bar 0 returning 0x00001a [3]
+
+
+[1] From Thomas Gleixner's "Linux kernel history" repository:
+    https://git.kernel.org/cgit/linux/kernel/git/tglx/history.git/commit/drivers/pci/probe.c?id=1307ef6621991f1c4bc3cec1b5a4ebd6fd3d66b9
+    pre-git commit 1307ef662199  "PCI: probing read-only Bars"
+[2] https://bugzilla.kernel.org/show_bug.cgi?id=43331
+[3] https://bugzilla.kernel.org/show_bug.cgi?id=85991
+
+
+Reported-by: William Unruh <unruh@physics.ubc.ca>
+Reported-by: Martin Lucina <martin@lucina.net>
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+Cc: Matthew Wilcox <willy@linux.intel.com>
 ---
- drivers/usb/dwc3/core.c          | 8 +++++++-
- drivers/usb/dwc3/dwc3-pci.c      | 5 +++++
- drivers/usb/dwc3/platform_data.h | 4 ++++
- 3 files changed, 16 insertions(+), 1 deletion(-)
+ drivers/pci/probe.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index 50c0eae..819e501 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -422,7 +422,6 @@ static int dwc3_core_init(struct dwc3 *dwc)
- 
- 	reg = dwc3_readl(dwc->regs, DWC3_GCTL);
- 	reg &= ~DWC3_GCTL_SCALEDOWN_MASK;
--	reg &= ~DWC3_GCTL_DISSCRAMBLE;
- 
- 	switch (DWC3_GHWPARAMS1_EN_PWROPT(dwc->hwparams.hwparams1)) {
- 	case DWC3_GHWPARAMS1_EN_PWROPT_CLK:
-@@ -461,6 +460,13 @@ static int dwc3_core_init(struct dwc3 *dwc)
- 		dwc->is_fpga = true;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 5ed9930..19dc247 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -216,14 +216,17 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 		res->flags |= IORESOURCE_SIZEALIGN;
+ 		if (res->flags & IORESOURCE_IO) {
+ 			l &= PCI_BASE_ADDRESS_IO_MASK;
++			sz &= PCI_BASE_ADDRESS_IO_MASK;
+ 			mask = PCI_BASE_ADDRESS_IO_MASK & (u32) IO_SPACE_LIMIT;
+ 		} else {
+ 			l &= PCI_BASE_ADDRESS_MEM_MASK;
++			sz &= PCI_BASE_ADDRESS_MEM_MASK;
+ 			mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
+ 		}
+ 	} else {
+ 		res->flags |= (l & IORESOURCE_ROM_ENABLE);
+ 		l &= PCI_ROM_ADDRESS_MASK;
++		sz &= PCI_ROM_ADDRESS_MASK;
+ 		mask = (u32)PCI_ROM_ADDRESS_MASK;
  	}
  
-+	if ((dwc->quirks & DWC3_QUIRK_AMD_NL) && dwc->is_fpga)
-+		dwc->quirks |= DWC3_QUIRK_DISSCRAMBLE;
-+
-+	if (dwc->quirks & DWC3_QUIRK_DISSCRAMBLE)
-+		reg |= DWC3_GCTL_DISSCRAMBLE;
-+	else
-+		reg &= ~DWC3_GCTL_DISSCRAMBLE;
- 	/*
- 	 * WORKAROUND: DWC3 revisions <1.90a have a bug
- 	 * where the device can fail to connect at SuperSpeed
-diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
-index 18569a4..a89db6c 100644
---- a/drivers/usb/dwc3/dwc3-pci.c
-+++ b/drivers/usb/dwc3/dwc3-pci.c
-@@ -146,6 +146,11 @@ static int dwc3_pci_probe(struct pci_dev *pci,
- 	res[1].name	= "dwc_usb3";
- 	res[1].flags	= IORESOURCE_IRQ;
- 
-+	if (pci->vendor == PCI_VENDOR_ID_AMD && pci->device ==
-+			PCI_DEVICE_ID_AMD_NL) {
-+		dwc3_pdata.quirks |= DWC3_QUIRK_AMD_NL;
-+	}
-+
- 	ret = platform_device_add_resources(dwc3, res, ARRAY_SIZE(res));
- 	if (ret) {
- 		dev_err(dev, "couldn't add resources to dwc3 device\n");
-diff --git a/drivers/usb/dwc3/platform_data.h b/drivers/usb/dwc3/platform_data.h
-index 1d3d65f..9c5f074 100644
---- a/drivers/usb/dwc3/platform_data.h
-+++ b/drivers/usb/dwc3/platform_data.h
-@@ -26,4 +26,8 @@ struct dwc3_platform_data {
- 	bool tx_fifo_resize;
- 
- 	u32     quirks;
-+
-+#define DWC3_QUIRK_AMD_NL		(1 << 0)
-+#define DWC3_QUIRK_DISSCRAMBLE		(1 << 1)
-+
- };
--- 
-1.9.1
 
