@@ -1,64 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [207.46.100.106] ([207.46.100.106]:8224 "EHLO
-	na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752031AbaJTCvc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 19 Oct 2014 22:51:32 -0400
-From: Richard Zhu <richard.zhu@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
-	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
-	Richard Zhu <richard.zhu@freescale.com>
-Subject: [PATCH v7 02/13] PCI: designware: Set func type of host init to int
-Date: Mon, 20 Oct 2014 10:19:05 +0800
-Message-ID: <1413771556-32212-3-git-send-email-richard.zhu@freescale.com>
-In-Reply-To: <1413771556-32212-1-git-send-email-richard.zhu@freescale.com>
-References: <1413771556-32212-1-git-send-email-richard.zhu@freescale.com>
+Received: from mail-bn1bn0106.outbound.protection.outlook.com ([157.56.110.106]:13716
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1758587AbaJ3KKM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Oct 2014 06:10:12 -0400
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v4 01/20] usb: dwc3: enable hibernation if to be supported
+Date: Thu, 30 Oct 2014 18:08:26 +0800
+Message-ID: <1414663725-2195-2-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-host init maybe failed, change the func type of host_init
-defined in struct pci_host_ops from void to int.
+It enables hibernation if the function is set in coreConsultant.
 
-Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
+Suggested-by: Felipe Balbi <balbi@ti.com>
+Signed-off-by: Huang Rui <ray.huang@amd.com>
+Signed-off-by: Felipe Balbi <balbi@ti.com>
 ---
- drivers/pci/host/pcie-designware.c | 7 +++++--
- drivers/pci/host/pcie-designware.h | 2 +-
- 2 files changed, 6 insertions(+), 3 deletions(-)
+ drivers/usb/dwc3/core.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index b1f82ff..1a2b477 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -578,8 +578,11 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 		}
- 	}
- 
--	if (pp->ops->host_init)
--		pp->ops->host_init(pp);
-+	if (pp->ops->host_init) {
-+		ret = pp->ops->host_init(pp);
-+		if (ret < 0)
-+			return ret;
-+	}
- 
- 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
- 
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index b0bfed0..57ab11d 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -72,7 +72,7 @@ struct pcie_host_ops {
- 	int (*wr_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
- 			unsigned int devfn, int where, int size, u32 val);
- 	int (*link_up)(struct pcie_port *pp);
--	void (*host_init)(struct pcie_port *pp);
-+	int (*host_init)(struct pcie_port *pp);
- 	void (*msi_set_irq)(struct pcie_port *pp, int irq);
- 	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
- 	u32 (*get_msi_data)(struct pcie_port *pp);
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index fa396fc..5a47482 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -447,8 +447,14 @@ static int dwc3_core_init(struct dwc3 *dwc)
+ 			reg &= ~DWC3_GCTL_DSBLCLKGTNG;
+ 		break;
+ 	case DWC3_GHWPARAMS1_EN_PWROPT_HIB:
+-		/* enable hibernation here */
+ 		dwc->nr_scratch = DWC3_GHWPARAMS4_HIBER_SCRATCHBUFS(hwparams4);
++		/*
++		 * Enable hibernation here.
++		 *
++		 * Enabling this bit so that host-mode hibernation will
++		 * work, device-mode hibernation is not implemented yet.
++		 */
++		reg |= DWC3_GCTL_GBLHIBERNATIONEN;
+ 		break;
+ 	default:
+ 		dev_dbg(dwc->dev, "No power optimization available\n");
 -- 
 1.9.1
 
