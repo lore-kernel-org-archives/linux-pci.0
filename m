@@ -1,87 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:49298 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750954AbaJAUEA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 16:04:00 -0400
-MIME-Version: 1.0
-In-Reply-To: <20141001194115.GA6948@svl-evodev-groeck.juniper.net>
-References: <CAAVjN7dwS62EKMnuZc_P1UjkbRVk6RXqJ91GwWZ96bbY5Ct-rg@mail.gmail.com>
-	<CAAVjN7eUmBVcAGPbcn3qsJ9M9uu2nkFoKHqGhhKGekZSceGiMw@mail.gmail.com>
-	<20141001184304.GA6832@svl-evodev-groeck.juniper.net>
-	<CAAVjN7edpkXYMHBm+wLegA_pc0hnm_YZf_z=Ni3h=EbDTmfegQ@mail.gmail.com>
-	<20141001194115.GA6948@svl-evodev-groeck.juniper.net>
-Date: Wed, 1 Oct 2014 13:03:59 -0700
-Message-ID: <CAAVjN7fGRzyu7gxavJUay+K_Mm-0t1T_0Bysk6-sdaqu5=5k5A@mail.gmail.com>
-Subject: Re: Fwd: [Proposal] PM sleep children of inactive I2C bus segments
- off Masters in multi-master systems
-From: Danielle Costantino <danielle.costantino@gmail.com>
-To: Guenter Roeck <groeck@juniper.net>
-Cc: linux-i2c <linux-i2c@vger.kernel.org>,
+Received: from mail-by2on0105.outbound.protection.outlook.com ([207.46.100.105]:30976
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1161552AbaJaBnW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Oct 2014 21:43:22 -0400
+Date: Fri, 31 Oct 2014 09:35:51 +0800
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>
+CC: Alan Stern <stern@rowland.harvard.edu>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiri Kosina <jkosina@suse.cz>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Rajat Jain <rajatjain@juniper.net>
-Content-Type: text/plain; charset=UTF-8
+	"Paul Zimmerman" <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+Subject: Re: [PATCH v4 19/20] usb: dwc3: add support for AMD Nolan platform
+Message-ID: <20141031013550.GC20367@hr-slim.amd.com>
+References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+ <1414663725-2195-20-git-send-email-ray.huang@amd.com>
+ <20141030163840.GK10130@saruman>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20141030163840.GK10130@saruman>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 1, 2014 at 12:41 PM, Guenter Roeck <groeck@juniper.net> wrote:
-> On Wed, Oct 01, 2014 at 11:44:59AM -0700, Danielle Costantino wrote:
->> Re-sending Proposal:
->>
->> Currently I2C mux devices that support multiple master arbitration are
->> the i2c-mux-pca9541 and i2c-arb-gpio-challenge drivers. I propose to
->> add the ability to configure an interrupt pin from the Master Selector
->> device to indicate that bus ownership has been lost. Once the device
->> loses ownership, all of its children should enter a pm sleep mode (as
->> you can't talk to them at this point) until master-ship has been
->> reacquired.
->>
-> Not sure I understand what you are proposing here.
+On Thu, Oct 30, 2014 at 11:38:40AM -0500, Felipe Balbi wrote:
+> On Thu, Oct 30, 2014 at 06:08:44PM +0800, Huang Rui wrote:
+> > This patch adds support for AMD Nolan (NL) FPGA and SoC platform.
+> > 
+> > Cc: Jason Chang <jason.chang@amd.com>
+> > Signed-off-by: Huang Rui <ray.huang@amd.com>
+> > ---
+> >  drivers/usb/dwc3/dwc3-pci.c | 23 +++++++++++++++++++++++
+> >  1 file changed, 23 insertions(+)
+> > 
+> > diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
+> > index ada975f..257fb3f9e 100644
+> > --- a/drivers/usb/dwc3/dwc3-pci.c
+> > +++ b/drivers/usb/dwc3/dwc3-pci.c
+> > @@ -145,6 +145,28 @@ static int dwc3_pci_probe(struct pci_dev *pci,
+> >  	res[1].name	= "dwc_usb3";
+> >  	res[1].flags	= IORESOURCE_IRQ;
+> >  
+> > +	if (pci->vendor == PCI_VENDOR_ID_AMD &&
+> > +			pci->device == PCI_DEVICE_ID_AMD_NL_USB) {
+> > +		dwc3_pdata.has_lpm_erratum = true;
+> > +		dwc3_pdata.lpm_nyet_threshold = 0xf;
+> > +
+> > +		dwc3_pdata.u2exit_lfps_quirk = true;
+> > +		dwc3_pdata.u2ss_inp3_quirk = true;
+> > +		dwc3_pdata.req_p1p2p3_quirk = true;
+> > +		dwc3_pdata.del_p1p2p3_quirk = true;
+> > +		dwc3_pdata.del_phy_power_chg_quirk = true;
+> > +		dwc3_pdata.lfps_filter_quirk = true;
+> > +		dwc3_pdata.rx_detect_poll_quirk = true;
+> > +
+> > +		dwc3_pdata.tx_de_emphasis_quirk = true;
+> > +		dwc3_pdata.tx_de_emphasis = 1;
+> > +
+> > +		/* FIXME these quirks should move when AMD NL taps out */
+> 
+> do you mean ?
+> 
+> 		/*
+> 		 * FIXME these quirks should be removed when AMD NL
+> 		 * tapes out
+> 		 */
+> 
 
-Lets say you have a active - standby based multi-master system. If the
-other master forced arbitration (took mastership) the next transation
-on any slaves of that bus would return EAGAIN or EBUSY.
+That's right, will update.
 
-Another point is that once mastership has been lost, the configuration
-of the devices on that bus are no longer known to be valid...therefor
-a re-init of those devices may be needed.
-
-> A typical use case would be a power supply such as the one supported by
-> drivers/hwmon/lineage-pem.c from both an active and standby system
-> controller. The power supply needs to be accessible from both controllers.
-> If one controller looses access, it can only mean that it did not follow
-> the access protocol. Similar, one controller enforcing access means that
-> it either does not follow the access protocol either, or that the other
-> end did not follow the protocol (or maybe the other end died).
->
-> In all cases, loss of access does not mean that the end device can or should
-> be put in sleep mode, not even logically. All it means is that there was
-> an access protocol error. Not sure if there is anything that can be done
-> about that, but putting the device into sleep mode does not seem to be
-> an appropriate response to me.
->
->> This has come up as an issue when the master loses control over a bus
->> the return code of all transactions to its lave devices is EIO (not
->> very helpful).
->>
-> But, again, doesn't that mean that there was some access protocol error ?
-> Shouldn't it try to re-acquire mastership instead, and block all accesses
-> to slaves until it acquired it ?
-
-EIO is such a generic error it makes finding weather there was a
-problem communicating or is no longer master of the bus segment.
-
->
-> Thanks,
-> Guenter
-
-Thanks
-
--- 
-- Danielle Costantino
+Thanks,
+Rui
