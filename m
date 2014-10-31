@@ -1,69 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:57354 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759686AbaJ3SnA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 14:43:00 -0400
-Date: Thu, 30 Oct 2014 12:42:50 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
+Received: from [157.56.110.110] ([157.56.110.110]:53211 "EHLO
+	na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751187AbaJaI1A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 31 Oct 2014 04:27:00 -0400
+From: <suravee.suthikulpanit@amd.com>
+To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
+	<jason@lakedaemon.net>, <tglx@linutronix.de>
+CC: <Catalin.Marinas@arm.com>, <Will.Deacon@arm.com>,
+	<liviu.dudau@arm.com>, <Harish.Kasiviswanathan@amd.com>,
 	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Mohit Kumar <mohit.kumar@st.com>
-Subject: Re: [RFC PATCH 0/2] arm: pcibios: remove pci_sys_data domain
-Message-ID: <20141030184250.GI26820@obsidianresearch.com>
-References: <1414669490-1217-1-git-send-email-lorenzo.pieralisi@arm.com>
- <20141030162552.GC26820@obsidianresearch.com>
- <20141030165246.GC2048@red-moon>
- <20141030170305.GE26820@obsidianresearch.com>
- <20141030173914.GS1069@e106497-lin.cambridge.arm.com>
- <20141030174541.GH26820@obsidianresearch.com>
- <20141030180941.GA17911@red-moon>
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	"Suravee Suthikulpanit" <Suravee.Suthikulpanit@amd.com>
+Subject: [V9 PATCH 0/2] irqchip: gic: Introduce ARM GICv2m MSI(-X) support
+Date: Fri, 31 Oct 2014 03:26:28 -0500
+Message-ID: <1414743990-28421-1-git-send-email-suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141030180941.GA17911@red-moon>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 30, 2014 at 06:09:41PM +0000, Lorenzo Pieralisi wrote:
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-> It is done through core code in pci_create_root_bus(), that in turn
-> calls pci_bus_assign_domain_nr() which is implemented now in pcibios
-> for arm, it is all in patch 2. What Liviu is saying is correct, it
-> all
+This patch set introduces support for MSI(-X) in GICv2m specification,
+which is implemented in some variation of GIC400.
 
-Does request_resources have to be called before pci_create_root_bus
-for everything to work right? I didn't trace too deeply, but
-pci_create_root_bus is doing all sorts of things with the resource
-list.. 
+This patch set is rebased from: 
+    Git tree   : git://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git
+    Git branch : domain_hierarchy
+    Last commit: 97d4ea1f0922fb47dd1b09cd2694b7fa5b519db9
 
-We already know that missing the request_resource causes some subtle
-misbehavior in the PCI core...
+Changes in V9 includes:
+  * GICv2m is now adopting the new domain hierarchy, which requires
+    GICv2m to implements its own irq_chip and irq_domain, as a child of GIC. 
+    GICv2m domain is intialized using the SPI base and the number of SPIs from
+    V2M_MSI_TYPER registers (or the override value from DT).
 
-Also:
+  * Simplified GIC logic that was used to handle MSI stuff. Now the v2m
+    stuff is cleanly separated.
 
-+void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-+{
-+       int domain = of_get_pci_domain_nr(parent->of_node);
-+
-+       if (domain >= 0) {
-+               dt_domain_found = true;
-+       } else if (dt_domain_found == true) {
-+               dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
-+                       parent->of_node->full_name);
-+               return;
+History:
+    V8: https://lkml.org/lkml/2014/9/20/111
+    V7: https://lkml.org/lkml/2014/9/17/751
 
-There isn't any way to return an error from pci_bus_assign_domain_nr,
-so I'd think it must always assign something to bus->domain_nr?
-Or does higher level code bail out of there are duplicate domains?
+Suravee Suthikulpanit (2):
+  genirq: Add irq_chip_set_type_parent function
+  irqchip: gicv2m: Add supports for ARM GICv2m MSI(-X)
 
-Should this error case call pci_get_new_domain_nr() anyhow?
+ Documentation/devicetree/bindings/arm/gic.txt |  53 ++++
+ arch/arm64/Kconfig                            |   1 +
+ drivers/irqchip/Kconfig                       |   5 +
+ drivers/irqchip/Makefile                      |   1 +
+ drivers/irqchip/irq-gic-v2m.c                 | 395 ++++++++++++++++++++++++++
+ drivers/irqchip/irq-gic-v2m.h                 |   7 +
+ drivers/irqchip/irq-gic.c                     |  21 +-
+ include/linux/irq.h                           |   1 +
+ kernel/irq/chip.c                             |  10 +
+ 9 files changed, 490 insertions(+), 4 deletions(-)
+ create mode 100644 drivers/irqchip/irq-gic-v2m.c
+ create mode 100644 drivers/irqchip/irq-gic-v2m.h
 
-Jason
+-- 
+1.9.3
+
