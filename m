@@ -1,74 +1,250 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relmlor4.renesas.com ([210.160.252.174]:36928 "EHLO
+	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1757992AbaJaNnz convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 31 Oct 2014 09:43:55 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	"Jingoo Han" <jg1.han@samsung.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch Part2 v3 03/24] x86, irq: Save destination CPU ID in irq_cfg
-Date: Tue, 28 Oct 2014 16:26:21 +0800
-Message-Id: <1414484803-10311-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414484803-10311-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Russell King <linux@arm.linux.org.uk>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Simon Horman <simon@horms.net>
+Subject: RE: [RFC PATCH 2/2] arm: pcibios: move to generic PCI domains
+Date: Fri, 31 Oct 2014 13:43:49 +0000
+Message-ID: <b095e031880c44f0b79c8c42bc8d7bd5@SIXPR06MB0639.apcprd06.prod.outlook.com>
+References: <1414669490-1217-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1414669490-1217-3-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1414669490-1217-3-git-send-email-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Cache destination CPU APIC ID into struct irq_cfg when assigning vector
-for interrupt. Upper layer just needs to read the cached APIC ID instead
-of calling apic->cpu_mask_to_apicid_and(), it helps to hide APIC driver
-details from IOAPIC/HPET/MSI drivers..
+Hi Lorenzo,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/hw_irq.h |    1 +
- arch/x86/kernel/apic/vector.c |    6 ++++++
- 2 files changed, 7 insertions(+)
+On 30 October 2014 11:45, Lorenzo wrote:
+> Most if not all ARM PCI host controller device drivers either ignore the
+> domain field in the pci_sys_data structure or just increment it every
+> time a host controller is probed, using it as a domain counter.
+> 
+> Therefore, instead of relying on pci_sys_data to stash the domain number
+> in a standard location, ARM pcibios code can be moved to the newly
+> introduced generic PCI domains code, implemented in commits:
+> 
+> commit 41e5c0f81d3e676d671d96a0a1fafb27abfbd9
+> ("of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()")
+> 
+> commit 670ba0c8883b576d0aec28bd7a838358a4be1
+> ("PCI: Add generic domain handling")
+> 
+> In order to assign a domain number dynamically, the ARM pcibios defines
+> the function, called by core PCI code:
+> 
+> void pci_bus_assign_domain_nr(...)
+> 
+> that relies on a DT property to define the domain number or falls back to
+> a counter; its usage replaces the current domain assignment code in PCI
+> host controllers present in the kernel.
+> 
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> Cc: Jingoo Han <jg1.han@samsung.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Russell King <linux@arm.linux.org.uk>
+> Cc: Mohit Kumar <mohit.kumar@st.com>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 7624fffc2822..3d51d74d6c01 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -116,6 +116,7 @@ struct irq_data;
- struct irq_cfg {
- 	cpumask_var_t		domain;
- 	cpumask_var_t		old_domain;
-+	unsigned int		dest_apicid;
- 	u8			vector;
- 	u8			move_in_progress : 1;
- #ifdef CONFIG_IRQ_REMAP
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 5ac840a4cc53..02cb5d386985 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -188,6 +188,12 @@ next:
- 	}
- 	free_cpumask_var(tmp_mask);
- 
-+	if (!err) {
-+		/* cache destination APIC IDs into cfg->dest_apicid */
-+		err = apic->cpu_mask_to_apicid_and(mask, cfg->domain,
-+						   &cfg->dest_apicid);
-+	}
-+
- 	return err;
- }
- 
--- 
-1.7.10.4
+This patch fixes a current problem with R-Car devices where there is an
+internal PCI bridge and an external PCIe bridge on the devices. Both drivers
+work independently but need to be on different domains. Just needed to enable
+PCI_DOMAINS along with this.
+I've done basic testing that the internal PCI and external PCIe work at the
+same time.
 
+Acked-by: Phil Edworthy <phil.edworthy@renesas.com>
+
+Thanks
+Phil
+> ---
+>  arch/arm/Kconfig                   |  3 +++
+>  arch/arm/include/asm/mach/pci.h    |  3 ---
+>  arch/arm/include/asm/pci.h         |  7 -------
+>  arch/arm/kernel/bios32.c           | 26 +++++++++++++++++++++++---
+>  drivers/pci/host/pci-mvebu.c       | 10 ++--------
+>  drivers/pci/host/pcie-designware.c |  3 ---
+>  drivers/pci/host/pcie-rcar.c       |  3 ---
+>  7 files changed, 28 insertions(+), 27 deletions(-)
+> 
+> diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+> index 89c4b5c..29544f0 100644
+> --- a/arch/arm/Kconfig
+> +++ b/arch/arm/Kconfig
+> @@ -1292,6 +1292,9 @@ config PCI_DOMAINS
+>  	bool
+>  	depends on PCI
+> 
+> +config PCI_DOMAINS_GENERIC
+> +	def_bool PCI_DOMAINS
+> +
+>  config PCI_NANOENGINE
+>  	bool "BSE nanoEngine PCI support"
+>  	depends on SA1100_NANOENGINE
+> diff --git a/arch/arm/include/asm/mach/pci.h
+> b/arch/arm/include/asm/mach/pci.h
+> index 7fc4278..f19f627 100644
+> --- a/arch/arm/include/asm/mach/pci.h
+> +++ b/arch/arm/include/asm/mach/pci.h
+> @@ -44,9 +44,6 @@ struct hw_pci {
+>   * Per-controller structure
+>   */
+>  struct pci_sys_data {
+> -#ifdef CONFIG_PCI_DOMAINS
+> -	int		domain;
+> -#endif
+>  	struct list_head node;
+>  	int		busnr;		/* primary bus number			*/
+>  	u64		mem_offset;	/* bus->cpu memory mapping offset	*/
+> diff --git a/arch/arm/include/asm/pci.h b/arch/arm/include/asm/pci.h
+> index 7e95d85..585dc33 100644
+> --- a/arch/arm/include/asm/pci.h
+> +++ b/arch/arm/include/asm/pci.h
+> @@ -18,13 +18,6 @@ static inline int pcibios_assign_all_busses(void)
+>  }
+> 
+>  #ifdef CONFIG_PCI_DOMAINS
+> -static inline int pci_domain_nr(struct pci_bus *bus)
+> -{
+> -	struct pci_sys_data *root = bus->sysdata;
+> -
+> -	return root->domain;
+> -}
+> -
+>  static inline int pci_proc_domain(struct pci_bus *bus)
+>  {
+>  	return pci_domain_nr(bus);
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> index 17a26c1..d8c2b4e 100644
+> --- a/arch/arm/kernel/bios32.c
+> +++ b/arch/arm/kernel/bios32.c
+> @@ -11,6 +11,8 @@
+>  #include <linux/slab.h>
+>  #include <linux/init.h>
+>  #include <linux/io.h>
+> +#include <linux/of.h>
+> +#include <linux/of_pci.h>
+> 
+>  #include <asm/mach-types.h>
+>  #include <asm/mach/map.h>
+> @@ -468,9 +470,6 @@ static void pcibios_init_hw(struct device *parent, struct
+> hw_pci *hw,
+>  		if (!sys)
+>  			panic("PCI: unable to allocate sys data!");
+> 
+> -#ifdef CONFIG_PCI_DOMAINS
+> -		sys->domain  = hw->domain;
+> -#endif
+>  		sys->busnr   = busnr;
+>  		sys->swizzle = hw->swizzle;
+>  		sys->map_irq = hw->map_irq;
+> @@ -511,6 +510,27 @@ static void pcibios_init_hw(struct device *parent, struct
+> hw_pci *hw,
+>  	}
+>  }
+> 
+> +#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> +static bool dt_domain_found;
+> +
+> +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> +{
+> +	int domain = of_get_pci_domain_nr(parent->of_node);
+> +
+> +	if (domain >= 0) {
+> +		dt_domain_found = true;
+> +	} else if (dt_domain_found == true) {
+> +		dev_err(parent, "Node %s is missing \"linux,pci-domain\"
+> property in DT\n",
+> +			parent->of_node->full_name);
+> +		return;
+> +	} else {
+> +		domain = pci_get_new_domain_nr();
+> +	}
+> +
+> +	bus->domain_nr = domain;
+> +}
+> +#endif
+> +
+>  void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
+>  {
+>  	struct pci_sys_data *sys;
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index b1315e1..2b4c1f2 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -722,17 +722,11 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data
+> *sys)
+>  {
+>  	struct mvebu_pcie *pcie = sys_to_pcie(sys);
+>  	int i;
+> -	int domain = 0;
+> 
+> -#ifdef CONFIG_PCI_DOMAINS
+> -	domain = sys->domain;
+> -#endif
+> -
+> -	snprintf(pcie->mem_name, sizeof(pcie->mem_name), "PCI MEM %04x",
+> -		 domain);
+> +	snprintf(pcie->mem_name, sizeof(pcie->mem_name), "PCI MEM %04x",
+> nr);
+>  	pcie->mem.name = pcie->mem_name;
+> 
+> -	snprintf(pcie->io_name, sizeof(pcie->io_name), "PCI I/O %04x",
+> domain);
+> +	snprintf(pcie->io_name, sizeof(pcie->io_name), "PCI I/O %04x", nr);
+>  	pcie->realio.name = pcie->io_name;
+> 
+>  	if (request_resource(&iomem_resource, &pcie->mem))
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-
+> designware.c
+> index dfed00a..6790b87 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -502,9 +502,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>  	dw_pci.private_data = (void **)&pp;
+> 
+>  	pci_common_init_dev(pp->dev, &dw_pci);
+> -#ifdef CONFIG_PCI_DOMAINS
+> -	dw_pci.domain++;
+> -#endif
+> 
+>  	return 0;
+>  }
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index 61158e0..b6b859e 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -404,9 +404,6 @@ static void rcar_pcie_enable(struct rcar_pcie *pcie)
+>  	rcar_pci.private_data = (void **)&pcie;
+> 
+>  	pci_common_init_dev(&pdev->dev, &rcar_pci);
+> -#ifdef CONFIG_PCI_DOMAINS
+> -	rcar_pci.domain++;
+> -#endif
+>  }
+> 
+>  static int phy_wait_for_ack(struct rcar_pcie *pcie)
+> --
+> 2.1.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
