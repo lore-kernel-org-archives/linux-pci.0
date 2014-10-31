@@ -1,101 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0133.outbound.protection.outlook.com ([157.56.111.133]:48621
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758072AbaJ3KKQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Oct 2014 06:10:16 -0400
-From: Huang Rui <ray.huang@amd.com>
-To: Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Jason Chang <jason.chang@amd.com>,
-	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Huang Rui <ray.huang@amd.com>
-Subject: [PATCH v4 02/20] usb: dwc3: add a flag to check if it is FPGA board
-Date: Thu, 30 Oct 2014 18:08:27 +0800
-Message-ID: <1414663725-2195-3-git-send-email-ray.huang@amd.com>
-In-Reply-To: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
-References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+Received: from mail-ig0-f169.google.com ([209.85.213.169]:61592 "EHLO
+	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751211AbaJaQys (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Oct 2014 12:54:48 -0400
+Received: by mail-ig0-f169.google.com with SMTP id hn18so1314275igb.2
+        for <linux-pci@vger.kernel.org>; Fri, 31 Oct 2014 09:54:47 -0700 (PDT)
+Date: Fri, 31 Oct 2014 10:54:44 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Richard Zhu <r65037@freescale.com>,
+	Kamal Mostafa <kamal@canonical.com>
+Subject: [GIT PULL] PCI fixes for v3.18
+Message-ID: <20141031165444.GA6168@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some chip vendor is on pre-silicon phase, which needs to use the simulation
-board. It should have the same product and vendor id with the true SoC, but
-might have some minor different configurations.
+Hi Linus,
 
-Below thread discussion proposes to find a method to distinguish between
-simulation board and SoC.
+These changes, intended for v3.18, fix:
 
-http://marc.info/?l=linux-usb&m=141194772206369&w=2
+  - An unintentional sysfs filename change.  5136b2da770d, which appeared
+    in v3.13, changed "enable" to "enabled", and this changes it back.  Old
+    users of "enable" are currently broken and will be helped by this
+    change.  Anything that started to use "enabled" after v3.13 will be
+    broken by this change.  If necessary, we can add a symlink to make both
+    work, but this patch doesn't do that.
 
-In Advanced Configuration of coreConsultant, there is the parameter of
-DWC_USB_EN_FPGA. This bit has the function we need. And it would response
-as 7 bit of GHWPARAMS6 register. So it's able to check this functional bit
-to confirm if works on FPGA board.
+    See http://lkml.kernel.org/r/20141030163028.GA22250@kroah.com ("[PATCH]
+    PCI: fix name of 'enable' sysfs file").
 
-Reported-by: Felipe Balbi <balbi@ti.com>
-Signed-off-by: Huang Rui <ray.huang@amd.com>
-Signed-off-by: Felipe Balbi <balbi@ti.com>
----
- drivers/usb/dwc3/core.c | 6 ++++++
- drivers/usb/dwc3/core.h | 5 +++++
- 2 files changed, 11 insertions(+)
+  - An i.MX6 clock problem that prevents mx6 nitrogen boards from booting.
 
-diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index 5a47482..c8ae098 100644
---- a/drivers/usb/dwc3/core.c
-+++ b/drivers/usb/dwc3/core.c
-@@ -460,6 +460,12 @@ static int dwc3_core_init(struct dwc3 *dwc)
- 		dev_dbg(dwc->dev, "No power optimization available\n");
- 	}
- 
-+	/* check if current dwc3 is on simulation board */
-+	if (dwc->hwparams.hwparams6 & DWC3_GHWPARAMS6_EN_FPGA) {
-+		dev_dbg(dwc->dev, "it is on FPGA board\n");
-+		dwc->is_fpga = true;
-+	}
-+
- 	/*
- 	 * WORKAROUND: DWC3 revisions <1.90a have a bug
- 	 * where the device can fail to connect at SuperSpeed
-diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-index a715ee1..f6ee623 100644
---- a/drivers/usb/dwc3/core.h
-+++ b/drivers/usb/dwc3/core.h
-@@ -210,6 +210,9 @@
- #define DWC3_GHWPARAMS4_HIBER_SCRATCHBUFS(n)	(((n) & (0x0f << 13)) >> 13)
- #define DWC3_MAX_HIBER_SCRATCHBUFS		15
- 
-+/* Global HWPARAMS6 Register */
-+#define DWC3_GHWPARAMS6_EN_FPGA			(1 << 7)
-+
- /* Device Configuration Register */
- #define DWC3_DCFG_DEVADDR(addr)	((addr) << 3)
- #define DWC3_DCFG_DEVADDR_MASK	DWC3_DCFG_DEVADDR(0x7f)
-@@ -662,6 +665,7 @@ struct dwc3_scratchpad_array {
-  * @ep0_expect_in: true when we expect a DATA IN transfer
-  * @has_hibernation: true when dwc3 was configured with Hibernation
-  * @is_selfpowered: true when we are selfpowered
-+ * @is_fpga: true when we are using the FPGA board
-  * @needs_fifo_resize: not all users might want fifo resizing, flag it
-  * @pullups_connected: true when Run/Stop bit is set
-  * @resize_fifos: tells us it's ok to reconfigure our TxFIFO sizes.
-@@ -765,6 +769,7 @@ struct dwc3 {
- 	unsigned		ep0_expect_in:1;
- 	unsigned		has_hibernation:1;
- 	unsigned		is_selfpowered:1;
-+	unsigned		is_fpga:1;
- 	unsigned		needs_fifo_resize:1;
- 	unsigned		pullups_connected:1;
- 	unsigned		resize_fifos:1;
--- 
-1.9.1
+  - A mistaken duplicate merge that added a check twice.  Nothing's broken;
+    this just removes the unnecessary code.
 
+Bjorn
+
+
+The following changes since commit f114040e3ea6e07372334ade75d1ee0775c355e1:
+
+  Linux 3.18-rc1 (2014-10-19 18:08:38 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v3.18-fixes-1
+
+for you to fetch changes up to d8e7d53a2fc14e0830ab728cb84ee19933d3ac8d:
+
+  PCI: Rename sysfs 'enabled' file back to 'enable' (2014-10-30 11:17:10 -0600)
+
+----------------------------------------------------------------
+PCI updates for v3.18:
+
+  Sysfs
+    - Fix "enable" filename change (Greg Kroah-Hartman)
+
+  PCI device hotplug
+    - Revert duplicate merge (Kamal Mostafa)
+
+  Freescale i.MX6
+    - Wait for clocks to stabilize after ref_en (Richard Zhu)
+
+----------------------------------------------------------------
+Greg Kroah-Hartman (1):
+      PCI: Rename sysfs 'enabled' file back to 'enable'
+
+Kamal Mostafa (1):
+      Revert duplicate "PCI: pciehp: Prevent NULL dereference during probe"
+
+Richard Zhu (1):
+      PCI: imx6: Wait for clocks to stabilize after ref_en
+
+ drivers/pci/host/pci-imx6.c       | 13 ++++++++++---
+ drivers/pci/hotplug/pciehp_core.c |  7 -------
+ drivers/pci/pci-sysfs.c           |  8 ++++----
+ 3 files changed, 14 insertions(+), 14 deletions(-)
