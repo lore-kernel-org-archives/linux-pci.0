@@ -1,100 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:47235 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751930AbaJASAr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Oct 2014 14:00:47 -0400
-Received: by mail-ig0-f171.google.com with SMTP id h15so705386igd.10
-        for <linux-pci@vger.kernel.org>; Wed, 01 Oct 2014 11:00:47 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v5 6/8] usb: dwc3: add support for AMD Nolan platform
+Date: Fri, 31 Oct 2014 11:11:17 +0800
+Message-ID: <1414725079-11490-7-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1414725079-11490-1-git-send-email-ray.huang@amd.com>
+References: <1414725079-11490-1-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <CAJ+vNU30=+YXkBHjzs_4n49TSJU0CuuSx54X3M7AVg8JRSLTfw@mail.gmail.com>
-References: <1411445498-20250-1-git-send-email-r65037@freescale.com>
-	<1411445498-20250-3-git-send-email-r65037@freescale.com>
-	<1411466190.3256.7.camel@pengutronix.de>
-	<CAJ+vNU30=+YXkBHjzs_4n49TSJU0CuuSx54X3M7AVg8JRSLTfw@mail.gmail.com>
-Date: Wed, 1 Oct 2014 11:00:46 -0700
-Message-ID: <CAJ+vNU18ZgO9ketUmNj0+FC3zCzhsnv_wB6Cq+7BdiwT1y5XYw@mail.gmail.com>
-Subject: Re: [PATCH v2 2/5] PCI: imx6: wait the clocks to stabilize after ref_en
-From: Tim Harvey <tharvey@gateworks.com>
-To: Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <r65037@freescale.com>
-Cc: linux-pci-owner@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shawn Guo <shawn.guo@freescale.com>,
-	Fabio Estevam <festevam@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 23, 2014 at 5:28 AM, Tim Harvey <tharvey@gateworks.com> wrote:
-> On Tue, Sep 23, 2014 at 2:56 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
->> Am Dienstag, den 23.09.2014, 12:11 +0800 schrieb Richard Zhu:
->>> - a while delay is mandatory required after pcie_ref_clk_en
->>> is set. Otherwise, the system would be hang on imx6qdl ard
->>> boards, because that imx6qdl boards don't have the reset_gpio.
->>> - the clocks should be stable already after the
->>> "clk_prepare_enable" is return. So I think it's ok to move the
->>> usleep delay after the pcie_ref_en is set.
->>>
->>
->> You are describing a lot of the conditions around the issue, but not the
->> issue itself, which makes it hard to follow your commit message. After
->> looking at the code I think the problem is this (and should be described
->> accordingly):
->>
->> For boards without a reset gpio we skip the delay between enabling the
->> pcie_ref_clk and touching the RC registers for configuration. Apparently
->> this hangs when the clocks are not yet settled in the DW PCIe core. So
->> we need to make sure that there is always an appropriate delay between
->> those two actions.
->>
->> I have not found this constraint anywhere in the i.MX6 Reference Manual,
->> nor in the DW PCIe documents I have access to, which makes me a bit feel
->> a bit unhappy about this. Richard, do you have better info on why this
->> delay is needed and how long it needs to be? Or is this just empirical?
->>
->> In general I'm ok with this patch, but still want a confirmation from
->> Tim that this doesn't break anything.
->
-> I agree with Lucas' comments and also agree that this can use some
-> testing. Based on my previous findings PCI link is very fragile. It
-> will take me a few days to get a proper test setup in a thermal
-> chamber with a host of boards but I will report back when I have
-> findings.
->
-> Tim
->
->>
->>> Signed-off-by: Richard Zhu <r65037@freescale.com>
->>> ---
->>>  drivers/pci/host/pci-imx6.c | 6 +++---
->>>  1 file changed, 3 insertions(+), 3 deletions(-)
->>>
->>> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
->>> index 233fe8a..bc4222b 100644
->>> --- a/drivers/pci/host/pci-imx6.c
->>> +++ b/drivers/pci/host/pci-imx6.c
->>> @@ -275,15 +275,15 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
->>>               goto err_pcie;
->>>       }
->>>
->>> -     /* allow the clocks to stabilize */
->>> -     usleep_range(200, 500);
->>> -
->>>       /* power up core phy and enable ref clock */
->>>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
->>>                       IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
->>>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
->>>                       IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
->>>
->>> +     /* allow the clocks to stabilize */
->>> +     usleep_range(200, 500);
->>> +
->>>       /* Some boards don't have PCIe reset GPIO. */
->>>       if (gpio_is_valid(imx6_pcie->reset_gpio)) {
->>>               gpio_set_value(imx6_pcie->reset_gpio, 0);
->>
+This patch adds support for AMD Nolan (NL) FPGA and SoC platform.
 
-I tested this across temperature over 300+ boots each on several IMX6
-based boards with switches and did not encounter any link failures.
+Cc: Jason Chang <jason.chang@amd.com>
+Signed-off-by: Huang Rui <ray.huang@amd.com>
+---
+ drivers/usb/dwc3/dwc3-pci.c | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
-Tested-by: Tim Harvey <tharvey@gateworks.com>
+diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
+index ada975f..7c4faf7 100644
+--- a/drivers/usb/dwc3/dwc3-pci.c
++++ b/drivers/usb/dwc3/dwc3-pci.c
+@@ -145,6 +145,31 @@ static int dwc3_pci_probe(struct pci_dev *pci,
+ 	res[1].name	= "dwc_usb3";
+ 	res[1].flags	= IORESOURCE_IRQ;
+ 
++	if (pci->vendor == PCI_VENDOR_ID_AMD &&
++			pci->device == PCI_DEVICE_ID_AMD_NL_USB) {
++		dwc3_pdata.has_lpm_erratum = true;
++		dwc3_pdata.lpm_nyet_threshold = 0xf;
++
++		dwc3_pdata.u2exit_lfps_quirk = true;
++		dwc3_pdata.u2ss_inp3_quirk = true;
++		dwc3_pdata.req_p1p2p3_quirk = true;
++		dwc3_pdata.del_p1p2p3_quirk = true;
++		dwc3_pdata.del_phy_power_chg_quirk = true;
++		dwc3_pdata.lfps_filter_quirk = true;
++		dwc3_pdata.rx_detect_poll_quirk = true;
++
++		dwc3_pdata.tx_de_emphasis_quirk = true;
++		dwc3_pdata.tx_de_emphasis = 1;
++
++		/*
++		 * FIXME these quirks should be removed when AMD NL
++		 * taps out
++		 */
++		dwc3_pdata.disable_scramble_quirk = true;
++		dwc3_pdata.dis_u3_susphy_quirk = true;
++		dwc3_pdata.dis_u2_susphy_quirk = true;
++	}
++
+ 	ret = platform_device_add_resources(dwc3, res, ARRAY_SIZE(res));
+ 	if (ret) {
+ 		dev_err(dev, "couldn't add resources to dwc3 device\n");
+@@ -194,6 +219,7 @@ static const struct pci_device_id dwc3_pci_id_table[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_BSW), },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_BYT), },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_MRFLD), },
++	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_NL_USB), },
+ 	{  }	/* Terminating Entry */
+ };
+ MODULE_DEVICE_TABLE(pci, dwc3_pci_id_table);
+-- 
+1.9.1
+
