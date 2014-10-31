@@ -1,95 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0133.outbound.protection.outlook.com ([207.46.100.133]:45917
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750905AbaJJGLp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 10 Oct 2014 02:11:45 -0400
-From: Richard Zhu <richard.zhu@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <shawn.guo@freescale.com>, <festevam@gmail.com>,
-	<l.stach@pengutronix.de>, <tharvey@gateworks.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Richard Zhu <richard.zhu@freescale.com>
-Subject: [PATCH v5 1/9] PCI: designware: refine setup_rc and add msi data restore
-Date: Fri, 10 Oct 2014 13:41:08 +0800
-Message-ID: <1412919676-25344-2-git-send-email-richard.zhu@freescale.com>
-In-Reply-To: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com>
-References: <1412919676-25344-1-git-send-email-richard.zhu@freescale.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 30 Oct 2014 22:00:10 -0500
+From: Felipe Balbi <balbi@ti.com>
+To: Huang Rui <ray.huang@amd.com>
+CC: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+Subject: Re: [PATCH v4 14/20] usb: dwc3: add Tx de-emphasis quirk
+Message-ID: <20141031030010.GB1080@saruman>
+Reply-To: <balbi@ti.com>
+References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+ <1414663725-2195-15-git-send-email-ray.huang@amd.com>
+ <20141030164210.GM10130@saruman>
+ <20141031012954.GA20367@hr-slim.amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="jq0ap7NbKX2Kqbes"
+In-Reply-To: <20141031012954.GA20367@hr-slim.amd.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Richard Zhu <r65037@freescale.com>
+--jq0ap7NbKX2Kqbes
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-- move "program correct class for RC" from dw_pcie_host_init()
-to dw_pcie_setup_rc(). since this is RC setup, it's
-better to contained in dw_pcie_setup_rc function.
-Then, RC can be re-setup really by dw_pcie_setup_rc().
-- add one re-store msi data function. Because that
-pcie controller maybe powered off during system suspend,
-and the msi data configuration would be lost.
-this functions can be used to restore the msi data
-during the resume callback.
+Hi,
 
-Signed-off-by: Richard Zhu <richard.zhu@freescale.com>
----
- drivers/pci/host/pcie-designware.c | 15 ++++++++++++---
- drivers/pci/host/pcie-designware.h |  1 +
- 2 files changed, 13 insertions(+), 3 deletions(-)
+On Fri, Oct 31, 2014 at 09:29:55AM +0800, Huang Rui wrote:
+> On Thu, Oct 30, 2014 at 11:42:10AM -0500, Felipe Balbi wrote:
+> > On Thu, Oct 30, 2014 at 06:08:39PM +0800, Huang Rui wrote:
+> > > This patch adds Tx de-emphasis quirk, and the Tx de-emphasis value is
+> > > configurable according to PIPE3 specification.
+> > >=20
+> > > Value		Description
+> > > 0		-6dB de-emphasis
+> > > 1		-3.5dB de-emphasis
+> > > 2		No de-emphasis
+> > > 3		Reserved
+> > >=20
+> > > It can be configured on DT or platform data.
+> > >=20
+> > > Signed-off-by: Huang Rui <ray.huang@amd.com>
+> >=20
+> > doesn't apply:
+> >=20
+> > checking file Documentation/devicetree/bindings/usb/dwc3.txt
+> > checking file drivers/usb/dwc3/core.c
+> > Hunk #2 succeeded at 718 (offset -2 lines).
+> > Hunk #3 succeeded at 777 (offset -2 lines).
+> > Hunk #4 succeeded at 807 (offset -2 lines).
+> > Hunk #5 succeeded at 829 (offset -2 lines).
+> > Hunk #6 succeeded at 840 (offset -2 lines).
+> > checking file drivers/usb/dwc3/core.h
+> > Hunk #2 FAILED at 697.
+> > 1 out of 3 hunks FAILED
+> > checking file drivers/usb/dwc3/platform_data.h
+> >=20
+> > please rebase on testing/next
+> >=20
+>=20
+> That's because in patch 12 and other ones you applied, I changed
+> addreviations to uppercase such as "lfps" -> "LFPS", "fpga" -> "FPGA".
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 538bbf3..ae1e6c5 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -194,6 +194,13 @@ void dw_pcie_msi_init(struct pcie_port *pp)
- 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
- }
- 
-+void dw_pcie_msi_cfg_restore(struct pcie_port *pp)
-+{
-+	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
-+			virt_to_phys((void *)pp->msi_data));
-+	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
-+}
-+
- static int find_valid_pos0(struct pcie_port *pp, int msgvec, int pos, int *pos0)
- {
- 	int flag = 1;
-@@ -570,9 +577,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 
- 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
- 
--	/* program correct class for RC */
--	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
--
- 	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
- 	val |= PORT_LOGIC_SPEED_CHANGE;
- 	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
-@@ -917,6 +921,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	val = memlimit | membase;
- 	dw_pcie_writel_rc(pp, val, PCI_MEMORY_BASE);
- 
-+	/* program correct class for RC */
-+	dw_pcie_readl_rc(pp, PCI_CLASS_REVISION, &val);
-+	val |= PCI_CLASS_BRIDGE_PCI << 16;
-+	dw_pcie_writel_rc(pp, val, PCI_CLASS_REVISION);
-+
- 	/* setup command register */
- 	dw_pcie_readl_rc(pp, PCI_COMMAND, &val);
- 	val &= 0xffff0000;
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index a476e60..bb75715 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -83,6 +83,7 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
- int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
- irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
- void dw_pcie_msi_init(struct pcie_port *pp);
-+void dw_pcie_msi_cfg_restore(struct pcie_port *pp);
- int dw_pcie_link_up(struct pcie_port *pp);
- void dw_pcie_setup_rc(struct pcie_port *pp);
- int dw_pcie_host_init(struct pcie_port *pp);
--- 
-1.9.1
+didn't notice that. I'll just reapply the entire series.
 
+> Previous 13 patches are already applied. Do you mean, I send the other
+> patches since "Tx de-emphasis" (patch 14) after rebased current
+> branch.
+>=20
+> If yes, at patch 1, "Enabling this bit ... hibernation .. yet", should
+> it be updated in extra patch?
+
+don't worry, I'll reapply the whole series, thanks :-)
+
+--=20
+balbi
+
+--jq0ap7NbKX2Kqbes
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUUvs6AAoJEIaOsuA1yqREZ5gP/0O2Awqolw+xdH0HB0yJ2Ys1
+EKNq8PEYrXazHL65nCQYeTlHm2yjqQoVk9fs6sFcBHuda5TUQqr5VS4MiDepNvge
+YD0KDRD27fwjaWvZ317R7uoPu3T8ovDZSsRTrUtmfhmgJ+J6BDTsKbgWLaIS2NYf
+NNuU5kxr2GS1hHp3egR54tK9AK5JptmsI7wNg7Nex5Pzsy1MpDCdHeoT40leg5N5
+F9Li4m+0EBapmxjZMfTRPIVFkF8JvpRhq5GeQsM/0P6vkvf3jsrhXKqQQ4+UjjMA
+0FCUuHbyXKYiZ0hBQOYPfQGJ3AJqEcnB0K/kZMTpU7WkjUQPtCtAxTl545nisT3X
+XiJviKKsVMzw1GD6FEZmuy8M4NfzDHrxpenzi3hHsi5aEaTnsCGdzmVRXfrClY3S
+X6uHT4ZROWPA1lpyvR8O5kLqQC/fSqj2UA/mTJdovdUTBwXApEQ7pC14E0Nvjvof
+uyk9H2IN9tC2vBB0/8eRJCN5Ni5E8cKxm+ZbF23VDv2pjPKNDAZVAzqTC/ms4iZF
+O07XbTam3nvh0tj/g7szQ5k6eo277CzK1ULOCQFD9x4PnUDNCcNCP4eHW9Veag4/
+WYDG/pN1JgUK7thIM2x1yJAGyUzMWpLh8oUx1WrER1PZ/+bBTy78FLha2IUZY7zb
+dMhny++MnxkXrTmTbJHz
+=U9H7
+-----END PGP SIGNATURE-----
+
+--jq0ap7NbKX2Kqbes--
