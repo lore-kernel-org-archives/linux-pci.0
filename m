@@ -1,191 +1,73 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1on0135.outbound.protection.outlook.com ([157.56.110.135]:45635
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1161426AbaJaBmb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Oct 2014 21:42:31 -0400
+Date: Fri, 31 Oct 2014 09:34:59 +0800
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>
+CC: Alan Stern <stern@rowland.harvard.edu>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Prarit Bhargava <prarit@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part1 v3 16/20] x86, irq: Use helpers to access irq_cfg data structure associated with IRQ
-Date: Mon, 27 Oct 2014 16:12:07 +0800
-Message-Id: <1414397531-28254-17-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414397531-28254-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	"Paul Zimmerman" <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+Subject: Re: [PATCH v4 16/20] usb: dwc3: add disable usb2 suspend phy quirk
+Message-ID: <20141031013459.GB20367@hr-slim.amd.com>
+References: <1414663725-2195-1-git-send-email-ray.huang@amd.com>
+ <1414663725-2195-17-git-send-email-ray.huang@amd.com>
+ <20141030163943.GL10130@saruman>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20141030163943.GL10130@saruman>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use helpers to access irq_cfg data structure associated with IRQ,
-instead of accessing irq_data->chip_data directly. Later we could
-rewrite those helpers to support hierarchy irqdomain.
+On Thu, Oct 30, 2014 at 11:39:43AM -0500, Felipe Balbi wrote:
+> On Thu, Oct 30, 2014 at 06:08:41PM +0800, Huang Rui wrote:
+> > This patch adds disable usb2 suspend phy quirk, and some special platforms
+> > can configure that if it is needed.
+> > 
+> > Signed-off-by: Huang Rui <ray.huang@amd.com>
+> > ---
+> >  Documentation/devicetree/bindings/usb/dwc3.txt | 1 +
+> >  drivers/usb/dwc3/core.c                        | 7 +++++++
+> >  drivers/usb/dwc3/core.h                        | 2 ++
+> >  drivers/usb/dwc3/platform_data.h               | 1 +
+> >  4 files changed, 11 insertions(+)
+> > 
+> > diff --git a/Documentation/devicetree/bindings/usb/dwc3.txt b/Documentation/devicetree/bindings/usb/dwc3.txt
+> > index 3720fca..feaf2c8 100644
+> > --- a/Documentation/devicetree/bindings/usb/dwc3.txt
+> > +++ b/Documentation/devicetree/bindings/usb/dwc3.txt
+> > @@ -33,6 +33,7 @@ Optional properties:
+> >   - snps,tx_de_emphasis: the value driven to the PHY is controlled by the
+> >  			LTSSM during USB3 Compliance mode.
+> >   - snps,dis_u3_susphy_quirk: when set core will disable USB3 suspend phy.
+> > + - snps,dis_u2_susphy_quirk: when set core will disable USB2 suspend phy.
+> >  
+> >  This is usually a subnode to DWC3 glue to which it is connected.
+> >  
+> > diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+> > index fdc715a..a28ed1c 100644
+> > --- a/drivers/usb/dwc3/core.c
+> > +++ b/drivers/usb/dwc3/core.c
+> > @@ -423,6 +423,10 @@ static void dwc3_phy_setup(struct dwc3 *dwc)
+> >  	if (dwc->revision > DWC3_REVISION_194A)
+> >  		reg |= DWC3_GUSB2PHYCFG_SUSPHY;
+> >  
+> > +	/* FIXME will move FPGA flag when AMD NL taps out */
+> 
+> no need to mention AMD NL here. We still want to have is_fpga flag, just
+> dwc3-pci will be patches once AMD NL tapes out.
+> 
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/htirq.c   |    2 +-
- arch/x86/kernel/apic/io_apic.c |   10 +++++-----
- arch/x86/kernel/apic/msi.c     |    6 +++---
- arch/x86/kernel/apic/vector.c  |    6 +++---
- arch/x86/platform/uv/uv_irq.c  |    4 ++--
- 5 files changed, 14 insertions(+), 14 deletions(-)
+OK, will move it.
 
-diff --git a/arch/x86/kernel/apic/htirq.c b/arch/x86/kernel/apic/htirq.c
-index a4980c5091f0..816f36e979ad 100644
---- a/arch/x86/kernel/apic/htirq.c
-+++ b/arch/x86/kernel/apic/htirq.c
-@@ -39,7 +39,7 @@ static void target_ht_irq(unsigned int irq, unsigned int dest, u8 vector)
- static int
- ht_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
- {
--	struct irq_cfg *cfg = data->chip_data;
-+	struct irq_cfg *cfg = irqd_cfg(data);
- 	unsigned int dest;
- 	int ret;
- 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index f94094a0b00d..68158c5112d2 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -501,7 +501,7 @@ static void mask_ioapic(struct irq_cfg *cfg)
- 
- static void mask_ioapic_irq(struct irq_data *data)
- {
--	mask_ioapic(data->chip_data);
-+	mask_ioapic(irqd_cfg(data));
- }
- 
- static void __unmask_ioapic(struct irq_cfg *cfg)
-@@ -520,7 +520,7 @@ static void unmask_ioapic(struct irq_cfg *cfg)
- 
- static void unmask_ioapic_irq(struct irq_data *data)
- {
--	unmask_ioapic(data->chip_data);
-+	unmask_ioapic(irqd_cfg(data));
- }
- 
- /*
-@@ -1801,7 +1801,7 @@ static unsigned int startup_ioapic_irq(struct irq_data *data)
- 		if (legacy_pic->irq_pending(irq))
- 			was_pending = 1;
- 	}
--	__unmask_ioapic(data->chip_data);
-+	__unmask_ioapic(irqd_cfg(data));
- 	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
- 
- 	return was_pending;
-@@ -1852,7 +1852,7 @@ int native_ioapic_set_affinity(struct irq_data *data,
- 	if (!ret) {
- 		/* Only the high 8 bits are valid. */
- 		dest = SET_APIC_LOGICAL_ID(dest);
--		__target_IO_APIC_irq(irq, dest, data->chip_data);
-+		__target_IO_APIC_irq(irq, dest, irqd_cfg(data));
- 		ret = IRQ_SET_MASK_OK_NOCOPY;
- 	}
- 	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
-@@ -1943,7 +1943,7 @@ static inline void ioapic_irqd_unmask(struct irq_data *data,
- 
- static void ack_ioapic_level(struct irq_data *data)
- {
--	struct irq_cfg *cfg = data->chip_data;
-+	struct irq_cfg *cfg = irqd_cfg(data);
- 	int i, irq = data->irq;
- 	unsigned long v;
- 	bool masked;
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 5c049f94da29..6916246294eb 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -78,7 +78,7 @@ static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq,
- static int
- msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
- {
--	struct irq_cfg *cfg = data->chip_data;
-+	struct irq_cfg *cfg = irqd_cfg(data);
- 	struct msi_msg msg;
- 	unsigned int dest;
- 	int ret;
-@@ -180,7 +180,7 @@ static int
- dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 		      bool force)
- {
--	struct irq_cfg *cfg = data->chip_data;
-+	struct irq_cfg *cfg = irqd_cfg(data);
- 	unsigned int dest, irq = data->irq;
- 	struct msi_msg msg;
- 	int ret;
-@@ -235,7 +235,7 @@ int arch_setup_dmar_msi(unsigned int irq)
- static int hpet_msi_set_affinity(struct irq_data *data,
- 				 const struct cpumask *mask, bool force)
- {
--	struct irq_cfg *cfg = data->chip_data;
-+	struct irq_cfg *cfg = irqd_cfg(data);
- 	struct msi_msg msg;
- 	unsigned int dest;
- 	int ret;
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 2d778f508f65..fa318a4a2969 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -321,7 +321,7 @@ void setup_vector_irq(int cpu)
- 
- int apic_retrigger_irq(struct irq_data *data)
- {
--	struct irq_cfg *cfg = data->chip_data;
-+	struct irq_cfg *cfg = irqd_cfg(data);
- 	unsigned long flags;
- 	int cpu;
- 
-@@ -335,7 +335,7 @@ int apic_retrigger_irq(struct irq_data *data)
- 
- void apic_ack_edge(struct irq_data *data)
- {
--	irq_complete_move(data->chip_data);
-+	irq_complete_move(irqd_cfg(data));
- 	irq_move_irq(data);
- 	ack_APIC_irq();
- }
-@@ -348,7 +348,7 @@ void apic_ack_edge(struct irq_data *data)
- int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 		      unsigned int *dest_id)
- {
--	struct irq_cfg *cfg = data->chip_data;
-+	struct irq_cfg *cfg = irqd_cfg(data);
- 	unsigned int irq = data->irq;
- 	int err;
- 
-diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
-index 3e8fab740c1d..0ce673645432 100644
---- a/arch/x86/platform/uv/uv_irq.c
-+++ b/arch/x86/platform/uv/uv_irq.c
-@@ -131,7 +131,7 @@ arch_enable_uv_irq(char *irq_name, unsigned int irq, int cpu, int mmr_blade,
- 		       unsigned long mmr_offset, int limit)
- {
- 	const struct cpumask *eligible_cpu = cpumask_of(cpu);
--	struct irq_cfg *cfg = irq_get_chip_data(irq);
-+	struct irq_cfg *cfg = irq_cfg(irq);
- 	unsigned long mmr_value;
- 	struct uv_IO_APIC_route_entry *entry;
- 	int mmr_pnode, err;
-@@ -198,7 +198,7 @@ static int
- uv_set_irq_affinity(struct irq_data *data, const struct cpumask *mask,
- 		    bool force)
- {
--	struct irq_cfg *cfg = data->chip_data;
-+	struct irq_cfg *cfg = irqd_cfg(data);
- 	unsigned int dest;
- 	unsigned long mmr_value, mmr_offset;
- 	struct uv_IO_APIC_route_entry *entry;
--- 
-1.7.10.4
-
+Thanks,
+Rui
