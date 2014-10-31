@@ -1,74 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f179.google.com ([209.85.216.179]:41530 "EHLO
-	mail-qc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754699AbaJUPfJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Oct 2014 11:35:09 -0400
-Received: by mail-qc0-f179.google.com with SMTP id x3so1074362qcv.24
-        for <linux-pci@vger.kernel.org>; Tue, 21 Oct 2014 08:35:05 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:46204 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750797AbaJaRNJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 31 Oct 2014 13:13:09 -0400
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH] driver core: Fix unbalanced device reference in drivers_probe
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Date: Fri, 31 Oct 2014 11:13:07 -0600
+Message-ID: <20141031171223.14088.79944.stgit@gimli.home>
 MIME-Version: 1.0
-In-Reply-To: <20141021143709.GA19376@jtlinux>
-References: <20141021143709.GA19376@jtlinux>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 21 Oct 2014 09:34:44 -0600
-Message-ID: <CAErSpo7beR59ZjbWrnFpqVwk6OGm0wBUHYUdBr1Q1uyewZ32bA@mail.gmail.com>
-Subject: Re: Question regarding pci_request_region()
-To: Johannes Thumshirn <johannes.thumshirn@men.de>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 21, 2014 at 8:37 AM, Johannes Thumshirn
-<johannes.thumshirn@men.de> wrote:
-> Hi,
->
-> I've some questions regarding pci_request_region(). Is there a similar function
-> that allows me to request the memory from a PCIe device, but not a whole BAR?
+bus_find_device_by_name() acquires a device reference which is never
+released.  This results in an object leak, which on older kernels
+results in failure to release all resources of PCI devices.  libvirt
+uses drivers_probe to re-attach devices to the host after assignment
+and is therefore a common trigger for this leak.
 
-You can always do something like this:
+Example:
 
-  start = pci_resource_start(dev, 0);
-  request_mem_region(start, 0x200, KBUILD_MODNAME);
-  ioremap(start, 0x200);
+# cd /sys/bus/pci/
+# dmesg -C
+# echo 1 > devices/0000\:01\:00.0/sriov_numvfs
+# echo 0 > devices/0000\:01\:00.0/sriov_numvfs
+# dmesg | grep 01:10
+ pci 0000:01:10.0: [8086:10ca] type 00 class 0x020000
+ kobject: '0000:01:10.0' (ffff8801d79cd0a8): kobject_add_internal: parent: '0000:00:01.0', set: 'devices'
+ kobject: '0000:01:10.0' (ffff8801d79cd0a8): kobject_uevent_env
+ kobject: '0000:01:10.0' (ffff8801d79cd0a8): fill_kobj_path: path = '/devices/pci0000:00/0000:00:01.0/0000:01:10.0'
+ kobject: '0000:01:10.0' (ffff8801d79cd0a8): kobject_uevent_env
+ kobject: '0000:01:10.0' (ffff8801d79cd0a8): fill_kobj_path: path = '/devices/pci0000:00/0000:00:01.0/0000:01:10.0'
+ kobject: '0000:01:10.0' (ffff8801d79cd0a8): kobject_uevent_env
+ kobject: '0000:01:10.0' (ffff8801d79cd0a8): fill_kobj_path: path = '/devices/pci0000:00/0000:00:01.0/0000:01:10.0'
+ kobject: '0000:01:10.0' (ffff8801d79cd0a8): kobject_cleanup, parent           (null)
+ kobject: '0000:01:10.0' (ffff8801d79cd0a8): calling ktype release
+ kobject: '0000:01:10.0': free name
 
-> in drivers/mcb/mcb-pci.c I do a pci_request_region() for BAR 0. But I only need
-> the first 0x200 bytes. pci_request_region() locks the memory and thus probing of
-> mcb attached sub devices fails, as they can't do a request_mem on their part of
-> the PCI memory space until the mcb parser is done and releases BAR0.
+[kobject freed as expected]
 
-The default assumption is that the driver bound to a PCI device is the
-only user of the BARs.  For example, if there is no driver bound to a
-device, the PCI core assumes that it can reassign the BARs.
+# dmesg -C
+# echo 1 > devices/0000\:01\:00.0/sriov_numvfs
+# echo 0000:01:10.0 > drivers_probe
+# echo 0 > devices/0000\:01\:00.0/sriov_numvfs
+# dmesg | grep 01:10
+ pci 0000:01:10.0: [8086:10ca] type 00 class 0x020000
+ kobject: '0000:01:10.0' (ffff8801d79ce0a8): kobject_add_internal: parent: '0000:00:01.0', set: 'devices'
+ kobject: '0000:01:10.0' (ffff8801d79ce0a8): kobject_uevent_env
+ kobject: '0000:01:10.0' (ffff8801d79ce0a8): fill_kobj_path: path = '/devices/pci0000:00/0000:00:01.0/0000:01:10.0'
+ kobject: '0000:01:10.0' (ffff8801d79ce0a8): kobject_uevent_env
+ kobject: '0000:01:10.0' (ffff8801d79ce0a8): fill_kobj_path: path = '/devices/pci0000:00/0000:00:01.0/0000:01:10.0'
+ kobject: '0000:01:10.0' (ffff8801d79ce0a8): kobject_uevent_env
+ kobject: '0000:01:10.0' (ffff8801d79ce0a8): fill_kobj_path: path = '/devices/pci0000:00/0000:00:01.0/0000:01:10.0'
 
-You can carve up a BAR among sub-devices, but you should make sure
-that some driver remains bound to the PCI device as long as any
-sub-driver is active.  The top-level driver doesn't need to keep any
-BARs mapped itself, but it should remain bound to the device.
+[no free]
 
-It looks like mcb_pci_probe() disables the device before it returns.
-That doesn't seem like a good idea if you have sub-devices that are
-accessed via the device's BARs.  At a minimum, pci_disable_device()
-turns off bus mastering, and it may also disable IRQs
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Cc: stable@vger.kernel.org
+---
 
-> Generally this is no problem when you build all drivers as modules, but once I
-> do build in drivers, probing fails. Before rewriting all mcb based drivers to
-> use deferred probing I wanted to ask if there is a more clean way to do this.
+ drivers/base/bus.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-Deferred probing sounds like a workaround for a deeper problem.  It
-seems like you basically have a PCI device that is effectively a
-bridge to a MEN Chameleon Bus.  That means than when you enumerate
-such a device, the probe routine (mcb_pci_probe(), I think) should in
-turn enumerate any MCB devices "behind" it, i.e., the sub-devices.
+diff --git a/drivers/base/bus.c b/drivers/base/bus.c
+index 83e910a5..876bae5 100644
+--- a/drivers/base/bus.c
++++ b/drivers/base/bus.c
+@@ -254,13 +254,15 @@ static ssize_t store_drivers_probe(struct bus_type *bus,
+ 				   const char *buf, size_t count)
+ {
+ 	struct device *dev;
++	int err = -EINVAL;
+ 
+ 	dev = bus_find_device_by_name(bus, NULL, buf);
+ 	if (!dev)
+ 		return -ENODEV;
+-	if (bus_rescan_devices_helper(dev, NULL) != 0)
+-		return -EINVAL;
+-	return count;
++	if (bus_rescan_devices_helper(dev, NULL) == 0)
++		err = count;
++	put_device(dev);
++	return err;
+ }
+ 
+ static struct device *next_device(struct klist_iter *i)
 
-There should not be any ordering dependency between mcb_pci_probe()
-and the module_init functions of the drivers.  It is perfectly legal
-for a driver to register before there are any devices for it to bind
-to.  If a driver like men_z135_uart.c initializes first, it should
-register itself as an MCB driver, but its probe function won't be
-called because there's no matching device yet.  When mcb_pci_probe()
-runs later to claim the MCB "bridge", it should enumerate the MCB
-devices and add them.  When the devices are added, we should check for
-any already-registered drivers that match them and call their probe
-functions at that time.
-
-Bjorn
