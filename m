@@ -1,118 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:56331 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932772AbaJOC0F (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Oct 2014 22:26:05 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<Bharat.Bhushan@freescale.com>, <x86@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v3 19/27] MIPS/Xlp/MSI: Use MSI chip framework to configure MSI/MSI-X irq
-Date: Wed, 15 Oct 2014 11:07:07 +0800
-Message-ID: <1413342435-7876-20-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
-References: <1413342435-7876-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-bn1bon0110.outbound.protection.outlook.com ([157.56.111.110]:65408
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757694AbaJaDNC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Oct 2014 23:13:02 -0400
+From: Huang Rui <ray.huang@amd.com>
+To: Felipe Balbi <balbi@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Paul Zimmerman <Paul.Zimmerman@synopsys.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Jason Chang <jason.chang@amd.com>,
+	Vincent Wan <vincent.wan@amd.com>, Tony Li <tony.li@amd.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	Huang Rui <ray.huang@amd.com>
+Subject: [PATCH v5 5/8] PCI: Prevent xHCI driver from claiming AMD Nolan USB3 DRD device
+Date: Fri, 31 Oct 2014 11:11:16 +0800
+Message-ID: <1414725079-11490-6-git-send-email-ray.huang@amd.com>
+In-Reply-To: <1414725079-11490-1-git-send-email-ray.huang@amd.com>
+References: <1414725079-11490-1-git-send-email-ray.huang@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use MSI chip framework instead of arch MSI functions to configure
-MSI/MSI-X IRQ. So we can manage MSI/MSI-X irq in a unified framework.
+The AMD Nolan (NL) SoC contains a DesignWare USB3 Dual-Role Device that can
+be operated either as a USB Host or a USB Device.  In the AMD NL platform,
+this device ([1022:7912]) has a class code of PCI_CLASS_SERIAL_USB_XHCI
+(0x0c0330), which means the xhci driver will claim it.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+But the dwc3 driver is a more specific driver for this device, and we'd
+prefer to use it instead of xhci.  To prevent xhci from claiming the
+device, change the class code to 0x0c03fe, which the PCI r3.0 spec defines
+as "USB device (not host controller)".  The dwc3 driver can then claim it
+based on its Vendor and Device ID.
+
+Suggested-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jason Chang <jason.chang@amd.com>
+Signed-off-by: Huang Rui <ray.huang@amd.com>
 ---
- arch/mips/include/asm/netlogic/xlp-hal/pcibus.h |    1 +
- arch/mips/pci/msi-xlp.c                         |   11 +++++++++--
- arch/mips/pci/pci-xlp.c                         |    3 +++
- 3 files changed, 13 insertions(+), 2 deletions(-)
+ drivers/pci/quirks.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/arch/mips/include/asm/netlogic/xlp-hal/pcibus.h b/arch/mips/include/asm/netlogic/xlp-hal/pcibus.h
-index 91540f4..90646ad 100644
---- a/arch/mips/include/asm/netlogic/xlp-hal/pcibus.h
-+++ b/arch/mips/include/asm/netlogic/xlp-hal/pcibus.h
-@@ -103,6 +103,7 @@
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 90acb32..ed6f89b 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -379,6 +379,26 @@ static void quirk_ati_exploding_mce(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,	PCI_DEVICE_ID_ATI_RS100,   quirk_ati_exploding_mce);
  
- #ifdef CONFIG_PCI_MSI
- void xlp_init_node_msi_irqs(int node, int link);
-+extern struct msi_chip xlp_chip;
- #else
- static inline void xlp_init_node_msi_irqs(int node, int link) {}
- #endif
-diff --git a/arch/mips/pci/msi-xlp.c b/arch/mips/pci/msi-xlp.c
-index e469dc7..cca2257 100644
---- a/arch/mips/pci/msi-xlp.c
-+++ b/arch/mips/pci/msi-xlp.c
-@@ -245,7 +245,8 @@ static struct irq_chip xlp_msix_chip = {
- 	.irq_unmask	= unmask_msi_irq,
- };
- 
--void arch_teardown_msi_irq(unsigned int irq)
-+static void xlp_teardown_msi_irq(struct msi_chip *chip,
-+		unsigned int irq)
- {
- }
- 
-@@ -450,7 +451,8 @@ static int xlp_setup_msix(uint64_t lnkbase, int node, int link,
- 	return 0;
- }
- 
--int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
-+static int xlp_setup_msi_irq(struct msi_chip *chip,
-+		struct pci_dev *dev, struct msi_desc *desc)
- {
- 	struct pci_dev *lnkdev;
- 	uint64_t lnkbase;
-@@ -472,6 +474,11 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- 		return xlp_setup_msi(lnkbase, node, link, desc);
- }
- 
-+struct msi_chip xlp_chip = {
-+	.setup_irq = xlp_setup_msi_irq,
-+	.teardown_irq = xlp_teardown_msi_irq,
-+};
+ /*
++ * In the AMD NL platform, this device ([1022:7912]) has a class code of
++ * PCI_CLASS_SERIAL_USB_XHCI (0x0c0330), which means the xhci driver will
++ * claim it.
++ * But the dwc3 driver is a more specific driver for this device, and we'd
++ * prefer to use it instead of xhci. To prevent xhci from claiming the
++ * device, change the class code to 0x0c03fe, which the PCI r3.0 spec
++ * defines as "USB device (not host controller)". The dwc3 driver can then
++ * claim it based on its Vendor and Device ID.
++ */
++static void quirk_amd_nl_class(struct pci_dev *pdev)
++{
++	/*
++	 * Use 'USB Device' (0x0c03fe) instead of PCI header provided
++	 */
++	pdev->class = 0x0c03fe;
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_NL_USB,
++		quirk_amd_nl_class);
 +
- void __init xlp_init_node_msi_irqs(int node, int link)
- {
- 	struct nlm_soc_info *nodep;
-diff --git a/arch/mips/pci/pci-xlp.c b/arch/mips/pci/pci-xlp.c
-index 7babf01..5d7b6a0 100644
---- a/arch/mips/pci/pci-xlp.c
-+++ b/arch/mips/pci/pci-xlp.c
-@@ -174,6 +174,9 @@ struct pci_controller nlm_pci_controller = {
- 	.mem_offset	= 0x00000000UL,
- 	.io_resource	= &nlm_pci_io_resource,
- 	.io_offset	= 0x00000000UL,
-+#ifdef CONFIG_PCI_MSI
-+	.msi_chip = &xlp_chip,
-+#endif
- };
- 
- struct pci_dev *xlp_get_pcie_link(const struct pci_dev *dev)
++/*
+  * Let's make the southbridge information explicit instead
+  * of having to worry about people probing the ACPI areas,
+  * for example.. (Yes, it happens, and if you read the wrong
 -- 
-1.7.1
+1.9.1
 
