@@ -1,87 +1,53 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v6 04/27] x86, MSI: Use new irqdomain interfaces to allocate/free IRQ
-Date: Tue, 25 Nov 2014 13:53:13 +0800
-Message-Id: <1416894816-23245-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
+Date: Sat, 1 Nov 2014 18:51:59 +0100
+From: Martin Mares <mj@ucw.cz>
+To: Tom Gundersen <teg@jklm.no>
+Cc: linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	Kay Sievers <kay@vrfy.org>
+Subject: udev/hwdb support in pciutils (Re: [PATCH RESEND][pciutils] libpci:
+ pci_id_lookup - add udev/hwdb support)
+Message-ID: <mj+md-20141101.174026.23374.albireo@ucw.cz>
+References: <CAG-2HqXsEBB_nxUF4gza-eTsUjmysYR7iPEjJPUFyR1rC2KGMg@mail.gmail.com>
+ <CAPXgP12MLL_Z5gyrCndQLRT6SR_TJi9xHp1HkHMX1ahwnxx3yw@mail.gmail.com>
+ <mj+md-20131215.091609.28546.nikam@ucw.cz>
+ <CAPXgP10+1WtX8_xN+QSHvKws01hbKhP3FN95sXk9EtezdSPtqg@mail.gmail.com>
+ <mj+md-20131215.110132.29802.nikam@ucw.cz>
+ <CAG-2HqUGcBB1-YUvLZpqm1EZ69OSksa+iGcCEqVWxYsehDqx8Q@mail.gmail.com>
+ <CAG-2HqWYZtTMNRvLwWRy-5_5yb=EasiWzpL2xc0_42SyP=bg1w@mail.gmail.com>
+ <CAG-2HqVS1avGdvi6SFc1dq0sCzcA4z5sZUBH4WhpNN87tZrnxA@mail.gmail.com>
+ <mj+md-20140212.194230.3341.nikam@ucw.cz>
+ <CAG-2HqUN3Ftdd=3XSe-et3pgXy71Fu9DbMqREQDycwL4kD9Paw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAG-2HqUN3Ftdd=3XSe-et3pgXy71Fu9DbMqREQDycwL4kD9Paw@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new irqdomain interfaces to allocate/free IRQ for PCI MSI, so we
-could kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
+Hi Tom!
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/msi.c |   14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
+The support for hwdb has finally landed in mainline pciutils.
 
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 75f4f560f4c2..d5def489ca5b 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -14,6 +14,7 @@
- #include <linux/dmar.h>
- #include <linux/hpet.h>
- #include <linux/msi.h>
-+#include <linux/irqdomain.h>
- #include <asm/msidef.h>
- #include <asm/hpet.h>
- #include <asm/hw_irq.h>
-@@ -146,23 +147,20 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
- int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- {
- 	struct msi_desc *msidesc;
--	unsigned int irq;
--	int node, ret;
-+	int irq, ret;
- 
- 	/* Multiple MSI vectors only supported with interrupt remapping */
- 	if (type == PCI_CAP_ID_MSI && nvec > 1)
- 		return 1;
- 
--	node = dev_to_node(&dev->dev);
--
- 	list_for_each_entry(msidesc, &dev->msi_list, list) {
--		irq = irq_alloc_hwirq(node);
--		if (!irq)
-+		irq = irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
-+		if (irq <= 0)
- 			return -ENOSPC;
- 
- 		ret = setup_msi_irq(dev, msidesc, irq, 0);
- 		if (ret < 0) {
--			irq_free_hwirq(irq);
-+			irq_domain_free_irqs(irq, 1);
- 			return ret;
- 		}
- 
-@@ -172,7 +170,7 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 
- void native_teardown_msi_irq(unsigned int irq)
- {
--	irq_free_hwirq(irq);
-+	irq_domain_free_irqs(irq, 1);
- }
- 
- #ifdef CONFIG_DMAR_TABLE
+I have modified your patch to bring it closer to the rest of device
+naming logic. Namely:
+
+  •  The interface to HWDB now lives in a separate source file
+     lib/names-hwdb.c. It is called from the main entry point
+     to the name resolver (lib/names.c).
+
+  •  Resolved names are cached in the hash table and they participate
+     in the system of priorities. They have lower priority than pci.ids,
+     but higher than remote lookups via DNS. (Therefore if a distro
+     decides not to ship pci.ids, hwdb is used exclusively for all
+     local lookups.)
+
+  •  There is a flag to suppress the use of HWDB (PCI_LOOKUP_NO_HWDB)
+     and also a configuration parameter for the same (hwdb.disable).
+
+Aside of the README, everything should be ready for a public release.
+Could you please verify that it still works for you?
+
+				Have a nice fortnight
 -- 
-1.7.10.4
-
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+Uncle Ed's Rule of Thumb:  Never use your thumb for a rule.
