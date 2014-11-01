@@ -1,133 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:47350 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751840AbaKCMNe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Nov 2014 07:13:34 -0500
-Received: from epcpsbgr1.samsung.com
- (u141.gpu120.samsung.co.kr [203.254.230.141])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0NEG00BDJPYJSR10@mailout1.samsung.com> for
- linux-pci@vger.kernel.org; Mon, 03 Nov 2014 21:13:32 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Lucas Stach' <l.stach@pengutronix.de>,
-	'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	'Liviu Dudau' <Liviu.Dudau@arm.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Phil Edworthy' <phil.edworthy@renesas.com>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Russell King' <linux@arm.linux.org.uk>,
-	'Mohit Kumar' <mohit.kumar@st.com>,
-	'Richard Zhu' <r65037@freescale.com>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Murali Karicheri' <m-karicheri2@ti.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1414669490-1217-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1414669490-1217-3-git-send-email-lorenzo.pieralisi@arm.com>
- <003401cff704$09755cd0$1c601670$%han@samsung.com>
- <20141103112309.GB24433@red-moon> <1415014431.26755.1.camel@pengutronix.de>
-In-reply-to: <1415014431.26755.1.camel@pengutronix.de>
-Subject: Re: [RFC PATCH 2/2] arm: pcibios: move to generic PCI domains
-Date: Mon, 03 Nov 2014 21:13:52 +0900
-Message-id: <000901cff75f$a75da640$f618f2c0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8
+Received: from mx1.redhat.com ([209.132.183.28]:53075 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755726AbaKASL0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 1 Nov 2014 14:11:26 -0400
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sA1IBQ2s017851
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+	for <linux-pci@vger.kernel.org>; Sat, 1 Nov 2014 14:11:26 -0400
+From: Prarit Bhargava <prarit@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: Prarit Bhargava <prarit@redhat.com>,
+	Myron Stowe <mstowe@redhat.com>
+Subject: [PATCH] pci, add FW_BUG warning to pci= kernel option
+Date: Sat,  1 Nov 2014 14:11:19 -0400
+Message-Id: <1414865479-25792-1-git-send-email-prarit@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, November 03, 2014 8:34 PM, Lucas Stach wrote:
-> Am Montag, den 03.11.2014, 11:23 +0000 schrieb Lorenzo Pieralisi:
-> > On Mon, Nov 03, 2014 at 01:18:12AM +0000, Jingoo Han wrote:
-> > > On Thursday, October 30, 2014 8:45 PM, Lorenzo Pieralisi wrote:
-> > > >
-> > > > Most if not all ARM PCI host controller device drivers either ignore the
-> > > > domain field in the pci_sys_data structure or just increment it every
-> > > > time a host controller is probed, using it as a domain counter.
-> > > >
-> > > > Therefore, instead of relying on pci_sys_data to stash the domain number
-> > > > in a standard location, ARM pcibios code can be moved to the newly
-> > > > introduced generic PCI domains code, implemented in commits:
-> > > >
-> > > > commit 41e5c0f81d3e676d671d96a0a1fafb27abfbd9
-> > > > ("of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()")
-> > > >
-> > > > commit 670ba0c8883b576d0aec28bd7a838358a4be1
-> > > > ("PCI: Add generic domain handling")
-> > > >
-> > > > In order to assign a domain number dynamically, the ARM pcibios defines
-> > > > the function, called by core PCI code:
-> > > >
-> > > > void pci_bus_assign_domain_nr(...)
-> > > >
-> > > > that relies on a DT property to define the domain number or falls back to
-> > > > a counter; its usage replaces the current domain assignment code in PCI
-> > > > host controllers present in the kernel.
-> > > >
-> > > > Cc: Arnd Bergmann <arnd@arndb.de>
-> > > > Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> > > > Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> > > > Cc: Jingoo Han <jg1.han@samsung.com>
-> > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > > > Cc: Russell King <linux@arm.linux.org.uk>
-> > > > Cc: Mohit Kumar <mohit.kumar@st.com>
-> > > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > >
-> > > (+CC Richard Zhu, Lucas Stach, Kishon Vijay Abraham I, Murali Karicheri)
-> > >
-> > > Acked-by: Jingoo Han <jg1.han@samsung.com>
-> >
-> > Thank you Jingoo.
-> >
-> > > For a long time, I have wanted the patch like this. Personally,
-> > > I want to increase the build coverage and keep the same binary
-> > > regardless of config options as possible; thus, I don't like
-> > > #ifdef guards such as '#ifdef CONFIG_PCI_DOMAINS'. When I submitted
-> > > the first patch for 'pcie-designware.c', I was not able to find
-> > > a way to remove '#ifdef CONFIG_PCI_DOMAINS' from 'pcie-designware.c'.
-> > >
-> > > This patch looks good and I think that this patch will not make
-> > > the problem. However, I didn't test this patch with Exynos platform,
-> > > due to some reasons. So, I hope that other engineers test this patch
-> > > on other SoC platforms related to designware PCIe.
-> > >
-> > > To Mohit Kumar (ST SPEAR13XX), Richard Zhu/Lucas Stach (IMX6)
-> > >     Kishon Vijay Abraham I (TI DRA7XX), Murali Karicheri (TI KEYSTONE)
-> > >
-> > > Would you test this patch and share the result?
-> > > It would be very helpful. Thank you.
-> >
-> > I am happy to wait for a week or two before asking to add this code to -next,
-> > it would be definitely great to get more coverage on pcie-designware.
-> >
-> I've just tested this on i.MX6 on top of 3.18-rc3. Given that we only
-> use a single domain there this patch should obviously not break
-> anything. Testing backs this claim, so:
-> 
-> Tested-by: Lucas Stach <l.stach@pengutronix.de>
+The kernel should boot PCI without the use of kernel parameters.  Display
+a FW_BUG warning when pci= is used.
 
-Thank you for your testing!
-In fact, Exynos uses multi domain structures.
+Cc: Myron Stowe <mstowe@redhat.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+---
+ drivers/pci/pci.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-> 
-> I also looked through the patch briefly and it seems sane to me, so this
-> is also:
-> 
-> Acked-by: Lucas Stach <l.stach@pengutronix.de>
-> 
-> I don't like the fact that a proper binding documentation is missing for
-> the "linux,pci-domain" property, but this isn't the fault of this
-> patchset.
-
-I agree with your opinion. I also thought that the binding documentation
-for the "linux,pci-domain" property is needed.
-
-> 
-> Regards,
-> Lucas
-> 
-> --
-> Pengutronix e.K.             | Lucas Stach                 |
-> Industrial Linux Solutions   | http://www.pengutronix.de/  |
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 625a4ac..5172060b 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4515,6 +4515,8 @@ static int __init pci_setup(char *str)
+ 		}
+ 		str = k;
+ 	}
++	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
++	pr_crit(FW_BUG "The PCI configuration has been overridden thorugh the use of pci=.  Please report the issue you are attempting to resolve to your hardware vendor.\n");
+ 	return 0;
+ }
+ early_param("pci", pci_setup);
+-- 
+1.7.9.3
 
