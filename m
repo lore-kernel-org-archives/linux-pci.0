@@ -1,48 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0107.outbound.protection.outlook.com ([207.46.100.107]:47904
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751771AbaKKPs5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 11 Nov 2014 10:48:57 -0500
-Message-ID: <54622C58.1040701@amd.com>
-Date: Tue, 11 Nov 2014 22:33:44 +0700
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Received: from jabberwock.ucw.cz ([46.255.230.98]:43641 "EHLO
+	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758825AbaKAPcN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Nov 2014 11:32:13 -0400
+Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [89.239.2.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
+	by jabberwock.ucw.cz (Postfix) with ESMTPS id AD95F1C014C
+	for <linux-pci@vger.kernel.org>; Sat,  1 Nov 2014 16:25:30 +0100 (CET)
+Date: Sat, 1 Nov 2014 16:25:29 +0100
+From: Martin Mares <mj@ucw.cz>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, rajatxjain@gmail.com
+Subject: Re: [PATCH] lspci: Correct Root Capabilities "CRS Software
+ Visibility" bit
+Message-ID: <mj+md-20141101.152518.18073.albireo@ucw.cz>
+References: <20140902040346.18691.58345.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-To: Will Deacon <will.deacon@arm.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/2] PCI: generic: Add set_msi_parent callback
-References: <1415647480-3320-1-git-send-email-suravee.suthikulpanit@amd.com>
- <1415647480-3320-3-git-send-email-suravee.suthikulpanit@amd.com>
- <20141111112424.GB16265@arm.com>
-In-Reply-To: <20141111112424.GB16265@arm.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140902040346.18691.58345.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/11/14 18:24, Will Deacon wrote:
->> @@ -313,6 +324,9 @@ static int gen_pci_probe(struct platform_device *pdev)
->> >  		return err;
->> >  	}
->> >
->> >+	pci->mchip = of_pci_find_msi_chip_by_node(of_parse_phandle(np,
->> >+						  "msi-parent", 0));
-> This bit should be in the generic of_pci.c code and not duplicated for
-> each host controller.
->
-> Will
+Hi!
 
-I forgot to mention and include in the patch that we are also 
-introducing "msi-parent" binding to the generic host controller. I'll do 
-that in v2.
+> lspci incorrectly tests bit 4, not bit 0, for "CRS Software Visibility" in
+> the Root Capabilities register, so it shows "RootCap: CRSVisible-" even for
+> devices that do support Software Visibility.
+> 
+> Use the correct definition for PCI_EXP_RTCAP_CRSVIS.
 
-Unless this is something that we would like to add to the generic OF 
-binding for PCI, I think it should be in the pci-host-generic.c.
+Thanks, applied.
 
-Thanks,
-Suravee
+				Have a nice fortnight
+-- 
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+"The generation of random numbers is too important to be left to chance."
