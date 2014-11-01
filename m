@@ -1,63 +1,42 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH 1/3] PCI/MSI: Initial hook for archs to declare multivector
-	MSI support
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, tglx@linutronix.de, mingo@redhat.com,
-	hpa@zytor.com, joro@8bytes.org, iommu@lists.linux-foundation.org
-Date: Fri, 21 Nov 2014 15:08:33 -0700
-Message-ID: <20141121220833.31095.12371.stgit@gimli.home>
-In-Reply-To: <20141121213752.31095.30735.stgit@gimli.home>
-References: <20141121213752.31095.30735.stgit@gimli.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from jabberwock.ucw.cz ([46.255.230.98]:43644 "EHLO
+	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758848AbaKAPcN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Nov 2014 11:32:13 -0400
+Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [89.239.2.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
+	by jabberwock.ucw.cz (Postfix) with ESMTPS id 1A9471C0146
+	for <linux-pci@vger.kernel.org>; Sat,  1 Nov 2014 16:22:31 +0100 (CET)
+Date: Sat, 1 Nov 2014 16:22:30 +0100
+From: Martin Mares <mj@ucw.cz>
+To: Thomas Renninger <trenn@suse.de>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] lspci: Show device name as exported by BIOS (sysfs label
+ attribute) (V2)
+Message-ID: <mj+md-20141101.152159.17702.albireo@ucw.cz>
+References: <1390856419-35985-1-git-send-email-trenn@suse.de>
+ <1390895462-60699-1-git-send-email-trenn@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1390895462-60699-1-git-send-email-trenn@suse.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For the most part multivector MSI is not supported and drivers and
-hardware wanting multiple vectors opt for MSI-X instead.  It seems
-though that having the ability to query the arch/platform code to
-determine whether allocating multiple MSI vectors will ever succeed
-is a useful thing.  For instance, vfio-pci can use this to determine
-whether to expose multiple MSI vectors to the user.  If we know we
-cannot ever support more than one vector, we have a better shot at
-the userspace driver working, especially if it's a guest OS, if we
-only expose one vector as being available in the interface.
+Hi!
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
+> The Device name of a PCI or PCI Express device under OS may be exported via
+> ACPI _DSM function with function index 7.
+> This allows to connect a described PCI device in the platform documentation
+> or as labeled on the chassis with PCI devices shown via lspci.
+> The kernel already exports this string through sysfs under a PCI device through
+> the "label" sysfs attribute.
 
- drivers/pci/msi.c   |    5 +++++
- include/linux/msi.h |    1 +
- 2 files changed, 6 insertions(+)
+Thanks, applied. (With minor changes, like using OBJBUFSIZE instead of
+a hard-coded constant 1024.)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 9fab30a..36b503a 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -79,6 +79,11 @@ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 	return 0;
- }
- 
-+bool __weak arch_supports_multivector_msi(struct pci_dev *dev)
-+{
-+	return false;
-+}
-+
- /*
-  * We have a default implementation available as a separate non-weak
-  * function, as it is used by the Xen x86 PCI code
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 44f4746..2365c64 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -58,6 +58,7 @@ void arch_teardown_msi_irq(unsigned int irq);
- int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
- void arch_teardown_msi_irqs(struct pci_dev *dev);
- void arch_restore_msi_irqs(struct pci_dev *dev);
-+bool arch_supports_multivector_msi(struct pci_dev *dev);
- 
- void default_teardown_msi_irqs(struct pci_dev *dev);
- void default_restore_msi_irqs(struct pci_dev *dev);
-
+				Have a nice fortnight
+-- 
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+Got mole problems? Call Avogadro, 602-1023!
