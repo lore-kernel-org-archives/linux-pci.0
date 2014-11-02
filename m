@@ -1,69 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:1455 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751988AbaKQLAM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 17 Nov 2014 06:00:12 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Borislav Petkov <bp@alien8.de>,
 	"H. Peter Anvin" <hpa@zytor.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Alexander Gordeev <agordeev@redhat.com>
-Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch V3 1/9] PCI, MSI: Fix errors caused by commit e5f1a59c4e12
-Date: Mon, 17 Nov 2014 19:03:14 +0800
-Message-Id: <1416222202-28002-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416222202-28002-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416222202-28002-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [Patch v8 03/18] x86, irq, ACPI: Return IRQ instead of GSI in mp_register_gsi()
+Date: Sun,  2 Nov 2014 14:04:18 +0800
+Message-Id: <1414908273-7552-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414908273-7552-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414908273-7552-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Better to fold into commit e5f1a59c4e12 ("PCI/MSI: Rename write_msi_msg()
-to pci_write_msi_msg()").
+Function mp_register_gsi() returns blindly the GSI number for the ACPI
+SCI interrupt. That causes a regression when the GSI for ACPI SCI is
+shared with other devices.
 
+The regression was caused by commit 84245af7297ced9e8fe "x86, irq, ACPI:
+Change __acpi_register_gsi to return IRQ number instead of GSI" and
+exposed on a SuperMicro system, which shares one GSI between ACPI SCI
+and PCI device, with following failure:
+
+http://sourceforge.net/p/linux1394/mailman/linux1394-user/?viewmonth=201410
+[    0.000000] ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 20 low
+level)
+[    2.699224] firewire_ohci 0000:06:00.0: failed to allocate interrupt
+20
+
+Return mp_map_gsi_to_irq(gsi, 0) instead of the GSI number.
+
+Reported-and-Tested-by: Daniel Robbins <drobbins@funtoo.org>
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Len Brown <len.brown@intel.com>
+Cc: Pavel Machek <pavel@ucw.cz>
+Cc: <stable@vger.kernel.org> # 3.17
+Link: http://lkml.kernel.org/r/1414387308-27148-4-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/pci/msi.c   |    2 +-
- include/linux/msi.h |    2 --
- 2 files changed, 1 insertion(+), 3 deletions(-)
+ arch/x86/kernel/acpi/boot.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 564850b1316e..9c53b865cb1b 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1084,7 +1084,7 @@ void pci_msi_domain_write_msg(struct irq_data *irq_data, struct msi_msg *msg)
- 	 * MSI message denotes a contiguous group of IRQs, written for 0th IRQ.
- 	 */
- 	if (desc->irq == irq_data->irq)
--		pci_write_msi_msg(desc, msg);
-+		__pci_write_msi_msg(desc, msg);
- }
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index eceba9d9e116..e077c080a519 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -397,7 +397,7 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
  
- /*
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 8112a17cdca1..190c7abbec84 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -44,11 +44,9 @@ struct msi_desc {
- 	struct msi_msg msg;
- };
+ 	/* Don't set up the ACPI SCI because it's already set up */
+ 	if (acpi_gbl_FADT.sci_interrupt == gsi)
+-		return gsi;
++		return mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC);
  
--#ifdef CONFIG_PCI_MSI
- void __pci_read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void pci_write_msi_msg(unsigned int irq, struct msi_msg *msg);
--#endif
- 
- /*
-  * The arch hooks to setup up msi irqs. Those functions are
+ 	trigger = trigger == ACPI_EDGE_SENSITIVE ? 0 : 1;
+ 	polarity = polarity == ACPI_ACTIVE_HIGH ? 0 : 1;
 -- 
 1.7.10.4
 
