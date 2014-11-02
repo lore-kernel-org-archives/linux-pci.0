@@ -1,108 +1,171 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 13 Nov 2014 14:27:42 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Marc Zyngier <marc.zyngier@arm.com>
-cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [RFC Part4 v1 00/17] Refine support of non-PCI-compliant
- Message
-In-Reply-To: <546495AB.9050308@arm.com>
-Message-ID: <alpine.DEB.2.11.1411131410560.3935@nanos>
-References: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com> <546364FA.7010806@arm.com> <alpine.DEB.2.11.1411121512270.3935@nanos> <546495AB.9050308@arm.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:49808 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752045AbaKBPmL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Nov 2014 10:42:11 -0500
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 3 Nov 2014 01:42:09 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 29A7E2CE804D
+	for <linux-pci@vger.kernel.org>; Mon,  3 Nov 2014 02:42:07 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sA2Fg5HG38731952
+	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:42:05 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sA2Fg6FB028372
+	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:42:06 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V9 12/18] powerpc/powernv: Expand VF resources according to the number of total_pe
+Date: Sun,  2 Nov 2014 23:41:28 +0800
+Message-Id: <1414942894-17034-13-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 13 Nov 2014, Marc Zyngier wrote:
-> On 12/11/14 14:46, Thomas Gleixner wrote:
-> > On Wed, 12 Nov 2014, Marc Zyngier wrote:
-> >> This patch introduces two optionnal fields to the msi_chip structure:
-> >> - a pointer to an irq domain, describing the MSI domain associated
-> >>   with this msi_chip. To be populated with msi_create_irq_domain.
-> >> - a domain_alloc_irqs() callback that has the same purpose as
-> >>   arch_setup_msi_irqs(), with the above domain as an additional
-> >>   parameter.
-> >>
-> >> If both of these fields are non-NULL, then domain_alloc_irqs() is
-> >> called, bypassing the setup_irq callback. This allows the MSI driver
-> >> to use the domain stacking feature without mandating core support in
-> >> the architecture.
-> > 
-> > I'd rather have the callback in the irqdomain itself. Along with a
-> > callback to free the interrupts.
-> > 
-> > AFAICT is msi_chip more or less a wrapper around the actual MSI irq
-> > domain. So we rather move towards assigning irqdomain to the pci bus
-> > and get rid of msi_chip instead of adding another level of obscure
-> > indirection through msi_chip.
-> 
-> I can see that putting the irq domain at the bus level makes a lot of 
-> sense (assuming nobody tries to have multiple MSI controllers per bus...).
+On PHB3, PF IOV BAR will be covered by M64 BAR to have better PE isolation.
+Mostly the total_pe number is different from the total_VFs, which will lead to
+a conflict between MMIO space and the PE number.
 
-That would be interesting :)
+For example, total_VFs is 128 and total_pe is 256, then the second half of M64
+BAR space will be part of other PCI device, which may already belongs to other
+PEs.
+
+This patch expands the PF IOV BAR size to reserve total_pe number of VF's BAR
+size, which prevents the conflict.
+
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/machdep.h        |    4 +++
+ arch/powerpc/include/asm/pci-bridge.h     |    3 ++
+ arch/powerpc/kernel/pci-common.c          |    5 +++
+ arch/powerpc/platforms/powernv/pci-ioda.c |   56 +++++++++++++++++++++++++++++
+ 4 files changed, 68 insertions(+)
+
+diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+index 8242262..86d47ca 100644
+--- a/arch/powerpc/include/asm/machdep.h
++++ b/arch/powerpc/include/asm/machdep.h
+@@ -254,6 +254,10 @@ struct machdep_calls {
+ 	/* Reset the secondary bus of bridge */
+ 	void  (*pcibios_reset_secondary_bus)(struct pci_dev *dev);
  
-> So I'm starting with something like this:
-> 
-> diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-> index 640a1ec..07e50fc 100644
-> --- a/include/linux/irqdomain.h
-> +++ b/include/linux/irqdomain.h
-> @@ -41,6 +41,7 @@ struct irq_domain;
->  struct of_device_id;
->  struct irq_chip;
->  struct irq_data;
-> +struct device;
->  
->  /* Number of irqs reserved for a legacy isa controller */
->  #define NUM_ISA_INTERRUPTS	16
-> @@ -76,6 +77,10 @@ struct irq_domain_ops {
->  		     unsigned int nr_irqs);
->  	void (*activate)(struct irq_domain *d, struct irq_data *irq_data);
->  	void (*deactivate)(struct irq_domain *d, struct irq_data *irq_data);
-> +	int (*prepare_alloc_irqs)(struct irq_domain *d, struct device *dev,
-> +				  unsigned int nr_irqs, int type);
-> +	int (*cleanup_free_irqs)(struct irq_domain *d, struct device *dev,
-> +				 unsigned int virq, unsigned int nr_irqs);
->  #endif
->  };
-> 
-> How do you see this behaving? At the moment, I have the "prepare" callback
-> directly calling into pci_msi_domain_alloc_irqs() so that the irqs get
-> created, but I have the nagging feeling that it's not what you want... ;-)
-> The main issue I can see is that if more than one domain in the stack
-> implements that, who gets to call pci_msi_domain_alloc_irqs?
->
-> If we try to decouple those two, there is a problem with the creation of
-> the intermediate structure (the irq_alloc_info that's in Jiang's patches),
-> as this is a arch/driver/whatever specific structure.
-
-Hard to tell. I just saw Jiangs new series arrive and I want to look
-at that first before muttering nonsense.
-
-Thanks,
-
-	tglx
++#ifdef CONFIG_PCI_IOV
++	void (*pcibios_fixup_sriov)(struct pci_bus *bus);
++#endif /* CONFIG_PCI_IOV */
++
+ 	/* Called to shutdown machine specific hardware not already controlled
+ 	 * by other drivers.
+ 	 */
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 063d79d..ff26045 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -172,6 +172,9 @@ struct pci_dn {
+ #define IODA_INVALID_PE		(-1)
+ #ifdef CONFIG_PPC_POWERNV
+ 	int	pe_number;
++#ifdef CONFIG_PCI_IOV
++	u16     max_vfs;		/* number of VFs IOV BAR expended */
++#endif /* CONFIG_PCI_IOV */
+ #endif
+ 	struct list_head child_list;
+ 	struct list_head list;
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 17acfa7..4e3d87d 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1645,6 +1645,11 @@ void pcibios_scan_phb(struct pci_controller *hose)
+ 	if (ppc_md.pcibios_fixup_phb)
+ 		ppc_md.pcibios_fixup_phb(hose);
+ 
++#ifdef CONFIG_PCI_IOV
++	if (ppc_md.pcibios_fixup_sriov)
++		ppc_md.pcibios_fixup_sriov(bus);
++#endif /* CONFIG_PCI_IOV */
++
+ 	/* Configure PCI Express settings */
+ 	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+ 		struct pci_bus *child;
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 6d35ed9..ef279d3 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1601,6 +1601,59 @@ static void pnv_pci_init_ioda_msis(struct pnv_phb *phb)
+ static void pnv_pci_init_ioda_msis(struct pnv_phb *phb) { }
+ #endif /* CONFIG_PCI_MSI */
+ 
++#ifdef CONFIG_PCI_IOV
++static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
++{
++	struct pci_controller *hose;
++	struct pnv_phb *phb;
++	struct resource *res;
++	int i;
++	resource_size_t size;
++	struct pci_dn *pdn;
++
++	if (!pdev->is_physfn || pdev->is_added)
++		return;
++
++	hose = pci_bus_to_host(pdev->bus);
++	phb = hose->private_data;
++
++	pdn = pci_get_pdn(pdev);
++	pdn->max_vfs = 0;
++
++	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
++		res = &pdev->resource[i];
++		if (!res->flags || res->parent)
++			continue;
++		if (!pnv_pci_is_mem_pref_64(res->flags)) {
++			dev_warn(&pdev->dev, " Skipping expanding IOV BAR %pR on %s\n",
++				 res, pci_name(pdev));
++			continue;
++		}
++
++		dev_dbg(&pdev->dev, " Fixing VF BAR[%d] %pR to\n", i, res);
++		size = pci_iov_resource_size(pdev, i);
++		res->end = res->start + size * phb->ioda.total_pe - 1;
++		dev_dbg(&pdev->dev, "                       %pR\n", res);
++	}
++	pdn->max_vfs = phb->ioda.total_pe;
++}
++
++static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
++{
++	struct pci_dev *pdev;
++	struct pci_bus *b;
++
++	list_for_each_entry(pdev, &bus->devices, bus_list) {
++		b = pdev->subordinate;
++
++		if (b)
++			pnv_pci_ioda_fixup_sriov(b);
++
++		pnv_pci_ioda_fixup_iov_resources(pdev);
++	}
++}
++#endif /* CONFIG_PCI_IOV */
++
+ /*
+  * This function is supposed to be called on basis of PE from top
+  * to bottom style. So the the I/O or MMIO segment assigned to
+@@ -1983,6 +2036,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
+ 	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
+ 	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
++#ifdef CONFIG_PCI_IOV
++	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
++#endif /* CONFIG_PCI_IOV */
+ 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+ 
+ 	/* Reset IODA tables to a clean state */
+-- 
+1.7.9.5
 
