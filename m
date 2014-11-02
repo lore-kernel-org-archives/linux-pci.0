@@ -1,86 +1,159 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5465134B.7070709@arm.com>
-Date: Thu, 13 Nov 2014 20:23:39 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Alexander Gordeev <agordeev@redhat.com>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [Patch V1 3/6] genirq: Introduce msi_domain_{alloc|free}_irqs()
-References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com> <1415879029-20098-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415879029-20098-4-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=WINDOWS-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:57043 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751132AbaKBPlr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Nov 2014 10:41:47 -0500
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 3 Nov 2014 01:41:45 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id E5DAB2BB0023
+	for <linux-pci@vger.kernel.org>; Mon,  3 Nov 2014 02:41:41 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sA2FheqB8192134
+	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:43:40 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sA2FfeCw028013
+	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:41:41 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V9 01/18] PCI/IOV: Export interface for retrieve VF's BDF
+Date: Sun,  2 Nov 2014 23:41:17 +0800
+Message-Id: <1414942894-17034-2-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13/11/14 11:43, Jiang Liu wrote:
-> Introduce msi_domain_{alloc|free}_irqs() to alloc/free interrupts
-> from generic MSI irqdomain.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  include/linux/msi.h |   35 ++++++++++++++++++++++++++++++
->  kernel/irq/msi.c    |   59 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 94 insertions(+)
-> 
-> diff --git a/include/linux/msi.h b/include/linux/msi.h
-> index 714716a3ffdd..6b356a1410b2 100644
-> --- a/include/linux/msi.h
-> +++ b/include/linux/msi.h
-> @@ -3,6 +3,7 @@
->  
->  #include <linux/kobject.h>
->  #include <linux/list.h>
-> +#include <asm/hw_irq.h>		/* for msi_alloc_info_t */
->  
->  struct msi_msg {
->  	u32	address_lo;	/* low 32 bits of msi message address */
-> @@ -100,7 +101,26 @@ struct irq_chip;
->  struct device_node;
->  struct msi_domain_info;
->  
-> +#ifndef NUM_MSI_ALLOC_SCRATCHPAD_REGS
-> +#define NUM_MSI_ALLOC_SCRATCHPAD_REGS	2
-> +#endif
-> +
-> +/*
-> + * Default structure for MSI interrupt allocation.
-> + * Arch may overwrite it by define msi_alloc_info_t.
-> + */
-> +struct msi_alloc_info {
-> +	struct msi_desc *desc;
-> +	irq_hw_number_t hwirq;
-> +	long		scratchpad[NUM_MSI_ALLOC_SCRATCHPAD_REGS];
+When implementing the SR-IOV on PowerNV platform, some resource reservation is
+needed for VFs which don't exist at the bootup stage. To do the match between
+resources and VFs, the code need to get the VF's BDF in advance.
 
-As much as I'm relieved to see a generic structure here, could
-scratchpad be slightly less awkward to use? Something like:
+In this patch, it exports the interface to retrieve VF's BDF:
+   * Make the virtfn_bus as an interface
+   * Make the virtfn_devfn as an interface
+   * Rename them with more specific name
+   * Code cleanup in pci_sriov_resource_alignment()
 
-struct msi_alloc_info {
-	[...]
-	union	{
-		unsigned long ul;
-		void *ptr;
-	} scratchpad[NUM_MSI_ALLOC_SCRATCHPAD_REGS];
-};
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/iov.c   |   22 +++++++++++++---------
+ include/linux/pci.h |   11 +++++++++++
+ 2 files changed, 24 insertions(+), 9 deletions(-)
 
-That would avoid some very ugly casting.
-
-Thanks,
-
-	M.
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 4d109c0..5e8091b 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -19,14 +19,18 @@
+ 
+ #define VIRTFN_ID_LEN	16
+ 
+-static inline u8 virtfn_bus(struct pci_dev *dev, int id)
++int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
+ {
++	if (!dev->is_physfn)
++		return -EINVAL;
+ 	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
+ 				    dev->sriov->stride * id) >> 8);
+ }
+ 
+-static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
++int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
+ {
++	if (!dev->is_physfn)
++		return -EINVAL;
+ 	return (dev->devfn + dev->sriov->offset +
+ 		dev->sriov->stride * id) & 0xff;
+ }
+@@ -69,7 +73,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	struct pci_bus *bus;
+ 
+ 	mutex_lock(&iov->dev->sriov->lock);
+-	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
++	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
+ 	if (!bus)
+ 		goto failed;
+ 
+@@ -77,7 +81,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	if (!virtfn)
+ 		goto failed0;
+ 
+-	virtfn->devfn = virtfn_devfn(dev, id);
++	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
+ 	virtfn->vendor = dev->vendor;
+ 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
+ 	pci_setup_device(virtfn);
+@@ -140,8 +144,8 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+ 	struct pci_sriov *iov = dev->sriov;
+ 
+ 	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
+-					     virtfn_bus(dev, id),
+-					     virtfn_devfn(dev, id));
++					     pci_iov_virtfn_bus(dev, id),
++					     pci_iov_virtfn_devfn(dev, id));
+ 	if (!virtfn)
+ 		return;
+ 
+@@ -216,7 +220,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	iov->offset = offset;
+ 	iov->stride = stride;
+ 
+-	if (virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
++	if (pci_iov_virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
+ 		dev_err(&dev->dev, "SR-IOV: bus number out of range\n");
+ 		return -ENOMEM;
+ 	}
+@@ -516,7 +520,7 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
+ 	if (!reg)
+ 		return 0;
+ 
+-	 __pci_read_base(dev, type, &tmp, reg);
++	__pci_read_base(dev, type, &tmp, reg);
+ 	return resource_alignment(&tmp);
+ }
+ 
+@@ -546,7 +550,7 @@ int pci_iov_bus_range(struct pci_bus *bus)
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		if (!dev->is_physfn)
+ 			continue;
+-		busnr = virtfn_bus(dev, dev->sriov->total_VFs - 1);
++		busnr = pci_iov_virtfn_bus(dev, dev->sriov->total_VFs - 1);
+ 		if (busnr > max)
+ 			max = busnr;
+ 	}
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5be8db4..3ed7c66 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1654,6 +1654,9 @@ int pci_ext_cfg_avail(void);
+ void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
+ 
+ #ifdef CONFIG_PCI_IOV
++int pci_iov_virtfn_bus(struct pci_dev *dev, int id);
++int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
++
+ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+ void pci_disable_sriov(struct pci_dev *dev);
+ int pci_num_vf(struct pci_dev *dev);
+@@ -1661,6 +1664,14 @@ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+ int pci_sriov_get_totalvfs(struct pci_dev *dev);
+ #else
++static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
++{
++	return -ENOSYS;
++}
++static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
++{
++	return -ENOSYS;
++}
+ static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+ { return -ENODEV; }
+ static inline void pci_disable_sriov(struct pci_dev *dev) { }
 -- 
-Jazz is not dead. It just smells funny...
+1.7.9.5
 
