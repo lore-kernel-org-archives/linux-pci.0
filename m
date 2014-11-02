@@ -1,107 +1,168 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:60559 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753258AbaKRRxq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 12:53:46 -0500
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"huxinwei\@huawei.com" <huxinwei@huawei.com>,
-	Wuyun <wuyun.wu@huawei.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>
-Subject: Re: [PATCH 00/10] Save MSI chip in pci_sys_data
-In-Reply-To: <alpine.DEB.2.11.1411172138191.3909@nanos> (Thomas Gleixner's
-	message of "Mon, 17 Nov 2014 21:02:46 +0000")
-References: <1414396127-30023-1-git-send-email-wangyijing@huawei.com>
-	<20141112042359.GK28161@google.com> <20141117025914.GC4280@google.com>
-	<alpine.DEB.2.11.1411171035270.3909@nanos>
-	<CAErSpo46d0OJbO6tuDUXb2q7+00BUuHzJdsCr+aOhY4we+zn=w@mail.gmail.com>
-	<alpine.DEB.2.11.1411172138191.3909@nanos>
-Date: Tue, 18 Nov 2014 17:53:36 +0000
-Message-ID: <87tx1wcs4f.fsf@approximate.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:56282 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751998AbaKBPmK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Nov 2014 10:42:10 -0500
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 3 Nov 2014 01:42:08 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id E625B2BB0047
+	for <linux-pci@vger.kernel.org>; Mon,  3 Nov 2014 02:42:04 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sA2FfrYO41484390
+	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:41:53 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sA2Fg3hh028341
+	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:42:04 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V9 11/18] powerpc/powernv: Allocate pe->iommu_table dynamically
+Date: Sun,  2 Nov 2014 23:41:27 +0800
+Message-Id: <1414942894-17034-12-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 17 2014 at  9:02:46 pm GMT, Thomas Gleixner <tglx@linutronix.de> wrote:
-> On Mon, 17 Nov 2014, Bjorn Helgaas wrote:
->> On Mon, Nov 17, 2014 at 2:38 AM, Thomas Gleixner <tglx@linutronix.de> wrote:
->> > The simplest way to dead with it is that I pull in pci/msi (assuming
->> > that it contains only the above) and base the rest of it on top, so I
->> > can deal with the resulting conflicts. So you still can keep that in
->> > your pile and no matter who sends the pull request first everything
->> > will just fall in place.
->>
->> In addition to the ("Save MSI chip in pci_sys_data") series, my
->> pci/msi branch contains these:
->>
->>   f83386942702 s390/MSI: Use __msi_mask_irq() instead of default_msi_mask_irq()
->>   03f56e42d03e Revert "PCI: Add x86_msi.msi_mask_irq() and msix_mask_irq()"
->>   38737d82f9f0 PCI/MSI: Add pci_msi_ignore_mask to prevent writes to
->> MSI/MSI-X Mask Bits
->>
->> but I don't think it will hurt if you pull in those as well.
->
-> They are blessed by you, so I don't worry :)
->
->> The bigger problem might be the first patch of the "Save MSI chip in
->> pci_sys_data", which renames "struct msi_chip" to "struct
->> msi_controller".  I asked Yijing to do that because I didn't think
->> "_chip" really conveyed any information.  I didn't know we were going
->> to have quite this many MSI-related patches to fix up.
->
-> Not a big deal at all. I pulled your branch and fixed up the pending
-> mess on top of it. Not a really big deal.
->
->> So I'll just leave my pci/msi branch as-is for now.  If the rename is
->> too painful, let me know and I'll drop the branch and we can rework
->> the rest of the "Save MSI chip in pci_sys_data" series to match.
->
-> No, not a problem at all. If I can carry your branch and it is
-> immutable then I think we are fine.
->
-> The changes we have stashed on top of this which touch linux/msi.h and
-> pci/msi.c are at the end of this mail. But most of this is
-> selfcontained and wont hurt anything which does not enable the
-> required config options. The diffstat is:
->
->  drivers/pci/msi.c   |  334 +++++++++++++++++++++++++++++++++++++++++-----------
->  include/linux/msi.h |  158 +++++++++++++++++++++++-
->  2 files changed, 422 insertions(+), 70 deletions(-)
->
-> Looks large, but it provides common infrastructure which allows ARM64
-> to implement MSI support w/o any of the gazillion weak arch
-> callbacks. Jiangs x86 work distangles the convoluted mess we have with
-> irq remapping etc. and we can have non PCI based MSI interrupts as a
-> bonus.
->
-> So I'm pretty happy with the outcome now. The stacked irqdomains
-> really worked out well so far. I don't think that the pci/msi.c side
-> will see much updates on that in the next weeks. Though based on that
-> we'll try to get rid of the whole weak arch_xxx in the long run, but
-> that's a different issue and nothing we need to worry about now.
->
-> I'm going to push out the current state of affairs soon and will ask
-> all involved folks to have a look on that. If I don't hear someone
-> crying murder I'm going to make the branch immutable and push it into
-> next so that ARM and x86 can follow up with their stuff which depends
-> on that whole endavour.
+Current iommu_table of a PE is a static field. This will have a problem when
+iommu_free_table is called.
 
-I rebased my ITS series on top of this, and gave it a good
-shake. Nothing fell out, so I'm inclined to say it is perfect.
+This patch allocate iommu_table dynamically.
 
-I'll post the updated series for everyone's enjoyment...
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/iommu.h          |    3 +++
+ arch/powerpc/platforms/powernv/pci-ioda.c |   26 ++++++++++++++------------
+ arch/powerpc/platforms/powernv/pci.h      |    2 +-
+ 3 files changed, 18 insertions(+), 13 deletions(-)
 
-Thanks for having put all that together!
-
-	M.
+diff --git a/arch/powerpc/include/asm/iommu.h b/arch/powerpc/include/asm/iommu.h
+index 42632c7..0fedacb 100644
+--- a/arch/powerpc/include/asm/iommu.h
++++ b/arch/powerpc/include/asm/iommu.h
+@@ -78,6 +78,9 @@ struct iommu_table {
+ 	struct iommu_group *it_group;
+ #endif
+ 	void (*set_bypass)(struct iommu_table *tbl, bool enable);
++#ifdef CONFIG_PPC_POWERNV
++	void           *data;
++#endif
+ };
+ 
+ /* Pure 2^n version of get_order */
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index df49dc6..6d35ed9 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -785,6 +785,10 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, int all)
+ 		return;
+ 	}
+ 
++	pe->tce32_table = kzalloc_node(sizeof(struct iommu_table),
++			GFP_KERNEL, hose->node);
++	pe->tce32_table->data = pe;
++
+ 	/* Associate it with all child devices */
+ 	pnv_ioda_setup_same_PE(bus, pe);
+ 
+@@ -858,7 +862,7 @@ static void pnv_pci_ioda_dma_dev_setup(struct pnv_phb *phb, struct pci_dev *pdev
+ 
+ 	pe = &phb->ioda.pe_array[pdn->pe_number];
+ 	WARN_ON(get_dma_ops(&pdev->dev) != &dma_iommu_ops);
+-	set_iommu_table_base_and_group(&pdev->dev, &pe->tce32_table);
++	set_iommu_table_base_and_group(&pdev->dev, pe->tce32_table);
+ }
+ 
+ static int pnv_pci_ioda_dma_set_mask(struct pnv_phb *phb,
+@@ -885,7 +889,7 @@ static int pnv_pci_ioda_dma_set_mask(struct pnv_phb *phb,
+ 	} else {
+ 		dev_info(&pdev->dev, "Using 32-bit DMA via iommu\n");
+ 		set_dma_ops(&pdev->dev, &dma_iommu_ops);
+-		set_iommu_table_base(&pdev->dev, &pe->tce32_table);
++		set_iommu_table_base(&pdev->dev, pe->tce32_table);
+ 	}
+ 	*pdev->dev.dma_mask = dma_mask;
+ 	return 0;
+@@ -922,9 +926,9 @@ static void pnv_ioda_setup_bus_dma(struct pnv_ioda_pe *pe,
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		if (add_to_iommu_group)
+ 			set_iommu_table_base_and_group(&dev->dev,
+-						       &pe->tce32_table);
++						       pe->tce32_table);
+ 		else
+-			set_iommu_table_base(&dev->dev, &pe->tce32_table);
++			set_iommu_table_base(&dev->dev, pe->tce32_table);
+ 
+ 		if (dev->subordinate)
+ 			pnv_ioda_setup_bus_dma(pe, dev->subordinate,
+@@ -1014,8 +1018,7 @@ static void pnv_pci_ioda2_tce_invalidate(struct pnv_ioda_pe *pe,
+ void pnv_pci_ioda_tce_invalidate(struct iommu_table *tbl,
+ 				 __be64 *startp, __be64 *endp, bool rm)
+ {
+-	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
+-					      tce32_table);
++	struct pnv_ioda_pe *pe = tbl->data;
+ 	struct pnv_phb *phb = pe->phb;
+ 
+ 	if (phb->type == PNV_PHB_IODA1)
+@@ -1081,7 +1084,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+ 	}
+ 
+ 	/* Setup linux iommu table */
+-	tbl = &pe->tce32_table;
++	tbl = pe->tce32_table;
+ 	pnv_pci_setup_iommu_table(tbl, addr, TCE32_TABLE_SIZE * segs,
+ 				  base << 28, IOMMU_PAGE_SHIFT_4K);
+ 
+@@ -1119,8 +1122,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+ 
+ static void pnv_pci_ioda2_set_bypass(struct iommu_table *tbl, bool enable)
+ {
+-	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
+-					      tce32_table);
++	struct pnv_ioda_pe *pe = tbl->data;
+ 	uint16_t window_id = (pe->pe_number << 1 ) + 1;
+ 	int64_t rc;
+ 
+@@ -1165,10 +1167,10 @@ static void pnv_pci_ioda2_setup_bypass_pe(struct pnv_phb *phb,
+ 	pe->tce_bypass_base = 1ull << 59;
+ 
+ 	/* Install set_bypass callback for VFIO */
+-	pe->tce32_table.set_bypass = pnv_pci_ioda2_set_bypass;
++	pe->tce32_table->set_bypass = pnv_pci_ioda2_set_bypass;
+ 
+ 	/* Enable bypass by default */
+-	pnv_pci_ioda2_set_bypass(&pe->tce32_table, true);
++	pnv_pci_ioda2_set_bypass(pe->tce32_table, true);
+ }
+ 
+ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+@@ -1216,7 +1218,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+ 	}
+ 
+ 	/* Setup linux iommu table */
+-	tbl = &pe->tce32_table;
++	tbl = pe->tce32_table;
+ 	pnv_pci_setup_iommu_table(tbl, addr, tce_table_size, 0,
+ 			IOMMU_PAGE_SHIFT_4K);
+ 
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index 9dc4143..0f24a14 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -53,7 +53,7 @@ struct pnv_ioda_pe {
+ 	/* "Base" iommu table, ie, 4K TCEs, 32-bit DMA */
+ 	int			tce32_seg;
+ 	int			tce32_segcount;
+-	struct iommu_table	tce32_table;
++	struct iommu_table	*tce32_table;
+ 	phys_addr_t		tce_inval_reg_phys;
+ 
+ 	/* 64-bit TCE bypass region */
 -- 
-Jazz is not dead. It just smells funny.
+1.7.9.5
+
