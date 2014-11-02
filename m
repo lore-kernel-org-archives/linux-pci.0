@@ -1,61 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34050 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752502AbaKUWSD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 17:18:03 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux@eikelenboom.it
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: [PATCH v4 2/7] driver core: Provide an wrapper around the mutex to do lockdep warnings
-Date: Fri, 21 Nov 2014 17:17:46 -0500
-Message-Id: <1416608271-18931-3-git-send-email-konrad.wilk@oracle.com>
-In-Reply-To: <1416608271-18931-1-git-send-email-konrad.wilk@oracle.com>
-References: <1416608271-18931-1-git-send-email-konrad.wilk@oracle.com>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:45297 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751612AbaKBPmE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Nov 2014 10:42:04 -0500
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 3 Nov 2014 01:42:02 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 5DFCA2BB0023
+	for <linux-pci@vger.kernel.org>; Mon,  3 Nov 2014 02:42:00 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sA2FfmVm20250842
+	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:41:48 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sA2Ffx17028261
+	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:41:59 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V9 09/18] powerpc/pci: remove pci_dn->pcidev field
+Date: Sun,  2 Nov 2014 23:41:25 +0800
+Message-Id: <1414942894-17034-10-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Instead of open-coding it in drivers that want to double check
-that their functions are indeed holding the device lock.
+The field pci_dn->pcidev is assigned but not used.
 
-Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Suggested-by: David Vrabel <david.vrabel@citrix.com>
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+This patch removes this field.
+
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/xen/xen-pciback/pci_stub.c | 2 +-
- include/linux/device.h             | 5 +++++
- 2 files changed, 6 insertions(+), 1 deletion(-)
+ arch/powerpc/include/asm/pci-bridge.h     |    1 -
+ arch/powerpc/platforms/powernv/pci-ioda.c |    1 -
+ 2 files changed, 2 deletions(-)
 
-diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
-index 9cbe1a3..8b77089 100644
---- a/drivers/xen/xen-pciback/pci_stub.c
-+++ b/drivers/xen/xen-pciback/pci_stub.c
-@@ -278,7 +278,7 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
- 	/* Cleanup our device
- 	 * (so it's ready for the next domain)
- 	 */
--	lockdep_assert_held(&dev->dev.mutex);
-+	device_lock_assert(&dev->dev);
- 	__pci_reset_function_locked(dev);
- 	pci_restore_state(dev);
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 757d7bb..063d79d 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -166,7 +166,6 @@ struct pci_dn {
  
-diff --git a/include/linux/device.h b/include/linux/device.h
-index ce1f2160..41d6a75 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -911,6 +911,11 @@ static inline void device_unlock(struct device *dev)
- 	mutex_unlock(&dev->mutex);
- }
+ 	bool	force_32bit_msi;
  
-+static inline void device_lock_assert(struct device *dev)
-+{
-+	lockdep_assert_held(&dev->mutex);
-+}
-+
- void driver_init(void);
- 
- /*
+-	struct	pci_dev *pcidev;	/* back-pointer to the pci device */
+ #ifdef CONFIG_EEH
+ 	struct eeh_dev *edev;		/* eeh device */
+ #endif
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 468a0f2..df49dc6 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -727,7 +727,6 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
+ 				pci_name(dev));
+ 			continue;
+ 		}
+-		pdn->pcidev = dev;
+ 		pdn->pe_number = pe->pe_number;
+ 		pe->dma_weight += pnv_ioda_dma_weight(dev);
+ 		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
 -- 
-1.9.3
+1.7.9.5
 
