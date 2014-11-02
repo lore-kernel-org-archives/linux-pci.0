@@ -1,76 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:44373 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934003AbaKMTho (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 14:37:44 -0500
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Thierry Reding <thierry.reding@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 1/2] PCI: tegra: apply relaxed ordering fixup only on Tegra
-Date: Thu, 13 Nov 2014 20:37:36 +0100
-Message-Id: <1415907457-3147-2-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1415907457-3147-1-git-send-email-l.stach@pengutronix.de>
-References: <1415907457-3147-1-git-send-email-l.stach@pengutronix.de>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:49813 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752045AbaKBPmR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Nov 2014 10:42:17 -0500
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 3 Nov 2014 01:42:16 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id EE8CB2CE8047
+	for <linux-pci@vger.kernel.org>; Mon,  3 Nov 2014 02:42:13 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sA2FiC9539846132
+	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:44:12 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sA2FgCL6028470
+	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:42:13 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V9 15/18] powerpc/powernv: Shift VF resource with an offset
+Date: Sun,  2 Nov 2014 23:41:31 +0800
+Message-Id: <1414942894-17034-16-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The fixup to enable relaxed ordering on all PCI devices was
-executed unconditionally if the Tegra PCI host driver was
-built into the kernel. This doesn't play nice with a
-multiplatform kernel executed on other platforms which
-may not need this fixup.
+On PowrNV platform, resource position in M64 implies the PE# the resource
+belongs to. In some particular case, adjustment of a resource is necessary to
+locate it to a correct position in M64.
 
-Make sure to only apply the fixup if the root port is
-a Tegra.
+This patch introduces a function to shift the 'real' PF IOV BAR address
+according to an offset.
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
- drivers/pci/host/pci-tegra.c | 26 +++++++++++++++++++++++++-
- 1 file changed, 25 insertions(+), 1 deletion(-)
+ arch/powerpc/platforms/powernv/pci-ioda.c |   31 +++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 3d43874319be..d5a14f22ebb8 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -647,10 +647,34 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0bf1, tegra_pcie_fixup_class);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1c, tegra_pcie_fixup_class);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1d, tegra_pcie_fixup_class);
- 
-+static int tegra_pcie_root_is_tegra(struct pci_dev *dev)
-+{
-+	struct pci_bus *bus = dev->bus;
-+	struct pci_dev *root_bridge;
-+
-+	/* walk up the PCIe hierarchy to the first level below the root bus */
-+	while (bus->parent && bus->parent->self)
-+		bus = bus->parent;
-+
-+	/*
-+	 * If there is no bridge on the bus the passed device is the root
-+	 * bridge itself.
-+	 */
-+	root_bridge = bus->self ? bus->self : dev;
-+	if (root_bridge->vendor == PCI_VENDOR_ID_NVIDIA &&
-+	    (root_bridge->device == 0x0bf0 || root_bridge->device == 0x0bf1 ||
-+	     root_bridge->device == 0x0e1c || root_bridge->device == 0x0e1d ||
-+	     root_bridge->device == 0x0e12 || root_bridge->device == 0x0e13))
-+		return 1;
-+
-+	return 0;
-+}
- /* Tegra PCIE requires relaxed ordering */
- static void tegra_pcie_relax_enable(struct pci_dev *dev)
- {
--	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_RELAX_EN);
-+	if (tegra_pcie_root_is_tegra(dev))
-+		pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
-+					 PCI_EXP_DEVCTL_RELAX_EN);
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index f7abba3..5034a3c 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -14,6 +14,7 @@
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
+ #include <linux/crash_dump.h>
++#include <linux/pci_regs.h>
+ #include <linux/debugfs.h>
+ #include <linux/delay.h>
+ #include <linux/string.h>
+@@ -644,6 +645,36 @@ static unsigned int pnv_ioda_dma_weight(struct pci_dev *dev)
+ 	return 10;
  }
- DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, tegra_pcie_relax_enable);
  
++#ifdef CONFIG_PCI_IOV
++static void pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
++{
++	struct pci_dn *pdn = pci_get_pdn(dev);
++	int i;
++	struct resource *res;
++	resource_size_t size;
++
++	if (!dev->is_physfn)
++		return;
++
++	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
++		res = &dev->resource[i];
++		if (!res->flags || !res->parent)
++			continue;
++
++		if (!pnv_pci_is_mem_pref_64(res->flags))
++			continue;
++
++		dev_info(&dev->dev, " Shifting VF BAR %pR to\n", res);
++		size = pci_iov_resource_size(dev, i);
++		res->start += size*offset;
++
++		dev_info(&dev->dev, "                 %pR\n", res);
++		pci_update_resource(dev, i);
++	}
++	pdn->max_vfs -= offset;
++}
++#endif /* CONFIG_PCI_IOV */
++
+ #if 0
+ static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
+ {
 -- 
-2.1.1
+1.7.9.5
 
