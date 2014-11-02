@@ -1,100 +1,118 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [RFC Part4 v1 04/17] PCI/MSI: Replace msi_update_msg() with irq_chip_compose_msi_msg()
-Date: Sun,  9 Nov 2014 23:10:26 +0800
-Message-Id: <1415545839-28263-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:53029 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752045AbaKBPmX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Nov 2014 10:42:23 -0500
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 3 Nov 2014 01:42:21 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id B3E153578048
+	for <linux-pci@vger.kernel.org>; Mon,  3 Nov 2014 02:42:18 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sA2Fg6eX40173636
+	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:42:07 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sA2FgHMk028512
+	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:42:18 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V9 17/18] powerpc/powernv: Expanding IOV BAR, with m64_per_iov supported
+Date: Sun,  2 Nov 2014 23:41:33 +0800
+Message-Id: <1414942894-17034-18-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function irq_chip_compose_msi_msg() can achieve the same goal as
-msi_update_msg(), so kill msi_update_msg().
+M64 aperture size is limited on PHB3. When the IOV BAR is too big, this will
+exceed the limitation and failed to be assigned.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+This patch introduce a different expanding based on the IOV BAR size:
+
+IOV BAR size is smaller than 64M, expand to total_pe.
+IOV BAR size is bigger than 64M, roundup power2.
+
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
- arch/x86/kernel/apic/msi.c |   25 ++++---------------------
- 1 file changed, 4 insertions(+), 21 deletions(-)
+ arch/powerpc/include/asm/pci-bridge.h     |    2 ++
+ arch/powerpc/platforms/powernv/pci-ioda.c |   31 +++++++++++++++++++++++++++--
+ 2 files changed, 31 insertions(+), 2 deletions(-)
 
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 12919b3c6cf4..727e4254f124 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -53,31 +53,16 @@ static void msi_compose_msg(struct irq_data *data, struct msi_msg *msg)
- 		MSI_DATA_VECTOR(cfg->vector);
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 8d8d40a..a336c7a 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -176,6 +176,8 @@ struct pci_dn {
+ 	u16     max_vfs;		/* number of VFs IOV BAR expended */
+ 	u16     vf_pes;			/* VF PE# under this PF */
+ 	int     offset;			/* PE# for the first VF PE */
++#define M64_PER_IOV 4
++	int     m64_per_iov;
+ #define IODA_INVALID_M64        (-1)
+ 	int     m64_wins[PCI_SRIOV_NUM_BARS];
+ #endif /* CONFIG_PCI_IOV */
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 649f49d4..a4e78ab 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -2059,6 +2059,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 	int i;
+ 	resource_size_t size;
+ 	struct pci_dn *pdn;
++	int mul, total_vfs;
+ 
+ 	if (!pdev->is_physfn || pdev->is_added)
+ 		return;
+@@ -2069,6 +2070,32 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 	pdn = pci_get_pdn(pdev);
+ 	pdn->max_vfs = 0;
+ 
++	total_vfs = pci_sriov_get_totalvfs(pdev);
++	pdn->m64_per_iov = 1;
++	mul = phb->ioda.total_pe;
++
++	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
++		res = &pdev->resource[i];
++		if (!res->flags || res->parent)
++			continue;
++		if (!pnv_pci_is_mem_pref_64(res->flags)) {
++			dev_warn(&pdev->dev, " non M64 IOV BAR %pR on %s\n",
++					res, pci_name(pdev));
++			continue;
++		}
++
++		size = pci_iov_resource_size(pdev, i);
++
++		/* bigger than 64M */
++		if (size > (1 << 26)) {
++			dev_info(&pdev->dev, "PowerNV: VF BAR[%d] size "
++					"is bigger than 64M, roundup power2\n", i);
++			pdn->m64_per_iov = M64_PER_IOV;
++			mul = __roundup_pow_of_two(total_vfs);
++			break;
++		}
++	}
++
+ 	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
+ 		res = &pdev->resource[i];
+ 		if (!res->flags || res->parent)
+@@ -2081,10 +2108,10 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 
+ 		dev_dbg(&pdev->dev, " Fixing VF BAR[%d] %pR to\n", i, res);
+ 		size = pci_iov_resource_size(pdev, i);
+-		res->end = res->start + size * phb->ioda.total_pe - 1;
++		res->end = res->start + size * mul - 1;
+ 		dev_dbg(&pdev->dev, "                       %pR\n", res);
+ 	}
+-	pdn->max_vfs = phb->ioda.total_pe;
++	pdn->max_vfs = mul;
  }
  
--static void msi_update_msg(struct msi_msg *msg, struct irq_data *irq_data)
--{
--	struct irq_cfg *cfg = irqd_cfg(irq_data);
--
--	msg->data &= ~MSI_DATA_VECTOR_MASK;
--	msg->data |= MSI_DATA_VECTOR(cfg->vector);
--	msg->address_lo &= ~MSI_ADDR_DEST_ID_MASK;
--	msg->address_lo |= MSI_ADDR_DEST_ID(cfg->dest_apicid);
--	if (x2apic_enabled())
--		msg->address_hi = MSI_ADDR_BASE_HI |
--				  MSI_ADDR_EXT_DEST_ID(cfg->dest_apicid);
--}
--
- static int msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 			    bool force)
- {
- 	struct irq_data *parent = data->parent_data;
-+	struct msi_msg msg;
- 	int ret;
- 
- 	ret = parent->chip->irq_set_affinity(parent, mask, force);
- 	if (ret >= 0 && ret != IRQ_SET_MASK_OK_DONE) {
--		struct msi_msg msg;
--
--		__get_cached_msi_msg(data->msi_desc, &msg);
--		msi_update_msg(&msg, data);
-+		irq_chip_compose_msi_msg(data, &msg);
- 		__write_msi_msg(data->msi_desc, &msg);
- 	}
- 
-@@ -179,8 +164,7 @@ dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 
- 	ret = parent->chip->irq_set_affinity(parent, mask, force);
- 	if (ret >= 0) {
--		dmar_msi_read(data->irq, &msg);
--		msi_update_msg(&msg, data);
-+		irq_chip_compose_msi_msg(data, &msg);
- 		dmar_msi_write(data->irq, &msg);
- 	}
- 
-@@ -310,8 +294,7 @@ static int hpet_msi_set_affinity(struct irq_data *data,
- 
- 	ret = parent->chip->irq_set_affinity(parent, mask, force);
- 	if (ret >= 0 && ret != IRQ_SET_MASK_OK_DONE) {
--		hpet_msi_read(data->handler_data, &msg);
--		msi_update_msg(&msg, data);
-+		irq_chip_compose_msi_msg(data, &msg);
- 		hpet_msi_write(data->handler_data, &msg);
- 	}
- 
+ static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
 -- 
-1.7.10.4
+1.7.9.5
 
