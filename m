@@ -1,580 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:54305 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753861AbaKHSNq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 8 Nov 2014 13:13:46 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: zajec5@gmail.com, arnd@arndb.de, florian@openwrt.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC] PCI: BCM5301X: add PCIe2 driver for BCM5301X SoCs
-Date: Sat,  8 Nov 2014 19:13:12 +0100
-Message-Id: <1415470392-28229-1-git-send-email-hauke@hauke-m.de>
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:45245 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751612AbaKBPl7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Nov 2014 10:41:59 -0500
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 3 Nov 2014 01:41:57 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id D167B357804C
+	for <linux-pci@vger.kernel.org>; Mon,  3 Nov 2014 02:41:55 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sA2Ffs2D37093604
+	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:41:54 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sA2FfsgU028185
+	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:41:55 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V9 07/18] powerpc/pci: Define pcibios_disable_device() on powerpc
+Date: Sun,  2 Nov 2014 23:41:23 +0800
+Message-Id: <1414942894-17034-8-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This driver supports the PCIe controller found on the BCM4708 and
-similar SoCs. The controller itself is automatically detected by bcma.
+When driver remove a pci_dev, it will call pcibios_disable_device() which is
+platform dependent. This gives flexibility to platforms.
 
-This controller is found on SoCs usually used in SOHO routers to
-connect the wifi cards to the SoC. All the of the BCM5301X SoCs I know
-of have 2 or 3 of these controllers in the SoC.
+This patch defines this weak function on powerpc architecture.
 
-I had to use PCI domains otherwise the pci_create_root_bus() function
-in drivers/pci/probe.c would fail for the second controller being
-registered because pci_find_bus() would find the same PCIe bus again
-and assume it is already registered, which ends up in a kernel panic in
-pcibios_init_hw() in arch/arm/kernel/bios32.c
-
-The ARM PCI code assumes that every controller has an I/O space and
-adds a dummy area if the driver does not specify one. This will work
-for the first controller, but when we register the second one this will
-result in an error. To prevent this problem we add an empty I/O space.
-
-Currently I have problems with probing the devices on the bus, because
-pci_bus_add_devices() is called too early in pci_scan_root_bus() in
-drivers/pci/probe.c, before pci_bus_assign_resources() was called in
-pci_common_init_dev() in arch/arm/kernel/bios32.c. When the devices are
-added too early they do not have any resources and adding fails. I have
-to remove the call to pci_bus_add_devices() in pci_scan_root_bus() to
-make registration work, calling pci_bus_add_devices() later again does
-not fix this problem.
-
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
- arch/arm/mach-bcm/Kconfig            |   1 +
- drivers/pci/host/Kconfig             |   7 +
- drivers/pci/host/Makefile            |   1 +
- drivers/pci/host/pci-host-bcm5301x.c | 483 +++++++++++++++++++++++++++++++++++
- 4 files changed, 492 insertions(+)
- create mode 100644 drivers/pci/host/pci-host-bcm5301x.c
+ arch/powerpc/include/asm/machdep.h |    5 ++++-
+ arch/powerpc/kernel/pci-common.c   |    8 ++++++++
+ 2 files changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/arch/arm/mach-bcm/Kconfig b/arch/arm/mach-bcm/Kconfig
-index 2abad74..a3d3ede 100644
---- a/arch/arm/mach-bcm/Kconfig
-+++ b/arch/arm/mach-bcm/Kconfig
-@@ -86,6 +86,7 @@ config ARCH_BCM_5301X
- 	select HAVE_ARM_TWD if SMP
- 	select ARM_GLOBAL_TIMER
- 	select CLKSRC_ARM_GLOBAL_TIMER_SCHED_CLOCK
-+	select PCI_DOMAINS if PCI
- 	help
- 	  Support for Broadcom BCM470X and BCM5301X SoCs with ARM CPU cores.
+diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+index 307347f..8242262 100644
+--- a/arch/powerpc/include/asm/machdep.h
++++ b/arch/powerpc/include/asm/machdep.h
+@@ -240,7 +240,10 @@ struct machdep_calls {
  
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 3dc25fa..ead54e9 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -91,4 +91,11 @@ config PCI_XGENE
- 	  There are 5 internal PCIe ports available. Each port is GEN3 capable
- 	  and have varied lanes from x1 to x8.
+ 	/* Called when pci_enable_device() is called. Returns 0 to
+ 	 * allow assignment/enabling of the device. */
+-	int  (*pcibios_enable_device_hook)(struct pci_dev *);
++	int (*pcibios_enable_device_hook)(struct pci_dev *);
++
++	/* Called when pci_disable_device() is called. */
++	void (*pcibios_disable_device_hook)(struct pci_dev *);
  
-+config PCI_BCM5301X
-+	bool "BCM5301X PCIe2 host controller"
-+	depends on BCMA && OF && ARM && PCI_DOMAINS
-+	help
-+	  Say Y here if you want to support the PCIe host controller found
-+	  on Broadcom BCM5301X and BCM470X (Northstar) SoCs.
-+
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 26b3461..036f1a0 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -11,3 +11,4 @@ obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
- obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
- obj-$(CONFIG_PCIE_XILINX) += pcie-xilinx.o
- obj-$(CONFIG_PCI_XGENE) += pci-xgene.o
-+obj-$(CONFIG_PCI_BCM5301X) += pci-host-bcm5301x.o
-diff --git a/drivers/pci/host/pci-host-bcm5301x.c b/drivers/pci/host/pci-host-bcm5301x.c
-new file mode 100644
-index 0000000..8b7ba62
---- /dev/null
-+++ b/drivers/pci/host/pci-host-bcm5301x.c
-@@ -0,0 +1,483 @@
-+/*
-+ * Northstar PCI-Express driver
-+ * Only supports Root-Complex (RC) mode
-+ *
-+ * Notes:
-+ * PCI Domains are being used to identify the PCIe port 1:1.
-+ *
-+ * Only MEM access is supported, PAX does not support IO.
-+ *
-+ * Copyright 2012-2014, Broadcom Corporation
-+ * Copyright 2014, Hauke Mehrtens <hauke@hauke-m.de>
-+ *
-+ * Licensed under the GNU/GPL. See COPYING for details.
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/bug.h>
-+#include <linux/delay.h>
-+#include <linux/pci.h>
-+#include <linux/io.h>
-+#include <linux/ioport.h>
-+#include <linux/interrupt.h>
-+#include <linux/bcma/bcma.h>
-+#include <linux/bcma/bcma_driver_pcie2.h>
-+#include <linux/of_irq.h>
-+
-+#define	SOC_PCIE_HDR_OFF	0x400	/* 256 bytes per function */
-+
-+static int bcma_pcie2_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ 	/* Called after scan and before resource survey */
+ 	void (*pcibios_fixup_phb)(struct pci_controller *hose);
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 399d813..17acfa7 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1452,6 +1452,14 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 	return pci_enable_resources(dev, mask);
+ }
+ 
++void pcibios_disable_device(struct pci_dev *dev)
 +{
-+	struct pci_sys_data *sys = pdev->sysdata;
-+	struct bcma_device *bdev = sys->private_data;
++	if (ppc_md.pcibios_disable_device_hook)
++		ppc_md.pcibios_disable_device_hook(dev);
 +
-+	/*
-+	 * Every PCIe controller has 5 IRQ number and the last one is
-+	 * triggered every time, use that one
-+	 */
-+	if (bdev && bdev->dev.of_node)
-+		return irq_of_parse_and_map(bdev->dev.of_node, 4);
-+
-+	return bdev->irq;
++	return;
 +}
 +
-+static u32 bcma_pcie2_cfg_base(struct bcma_device *bdev, int busno,
-+			       unsigned int devfn, int where)
-+{
-+	int slot = PCI_SLOT(devfn);
-+	int fn = PCI_FUNC(devfn);
-+	u32 addr_reg;
-+
-+	if (busno == 0) {
-+		if (slot >= 1)
-+			return 0;
-+		bcma_write32(bdev, BCMA_CORE_PCIE2_CONFIGINDADDR,
-+			     where & 0xffc);
-+		return BCMA_CORE_PCIE2_CONFIGINDDATA;
-+	}
-+	if (fn > 1)
-+		return 0;
-+	addr_reg = (busno & 0xff) << 20 | (slot << 15) | (fn << 12) |
-+		   (where & 0xffc) | (1 & 0x3);
-+
-+	bcma_write32(bdev, BCMA_CORE_PCIE2_CFG_ADDR, addr_reg);
-+	return BCMA_CORE_PCIE2_CFG_DATA;
-+}
-+
-+static u32 bcma_pcie2_read_config(struct bcma_device *bdev, int busno,
-+				  unsigned int devfn, int where, int size)
-+{
-+	u32 base;
-+	u32 data_reg;
-+	u32 mask;
-+	int shift;
-+
-+	base = bcma_pcie2_cfg_base(bdev, busno, devfn, where);
-+
-+	if (!base)
-+		return ~0UL;
-+
-+	data_reg = bcma_read32(bdev, base);
-+
-+	/* NS: CLASS field is R/O, and set to wrong 0x200 value */
-+	if (busno == 0 && devfn == 0) {
-+		/*
-+		 * RC's class is 0x0280, but Linux PCI driver needs 0x604
-+		 * for a PCIe bridge. So we must fixup the class code
-+		 * to 0x604 here.
-+		 */
-+		if ((where & 0xffc) == PCI_CLASS_REVISION) {
-+			data_reg &= 0xff;
-+			data_reg |= 0x604 << 16;
-+		}
-+	}
-+	/* HEADER_TYPE=00 indicates the port in EP mode */
-+
-+	if (size == 4)
-+		return data_reg;
-+
-+	mask = (1 << (size * 8)) - 1;
-+	shift = (where % 4) * 8;
-+	return (data_reg >> shift) & mask;
-+}
-+
-+static void bcma_pcie2_write_config(struct bcma_device *bdev, int busno,
-+				    unsigned int devfn, int where, int size,
-+				    u32 val)
-+{
-+	u32 base;
-+	u32 data_reg;
-+
-+	base = bcma_pcie2_cfg_base(bdev, busno, devfn, where);
-+
-+	if (!base)
-+		return;
-+
-+	if (size < 4) {
-+		u32 mask = (1 << (size * 8)) - 1;
-+		int shift = (where % 4) * 8;
-+
-+		data_reg = bcma_read32(bdev, base);
-+		data_reg &= ~(mask << shift);
-+		data_reg |= (val & mask) << shift;
-+	} else {
-+		data_reg = val;
-+	}
-+
-+	bcma_write32(bdev, base, data_reg);
-+}
-+
-+static u8 bcma_pcie2_read_config8(struct bcma_device *bdev, int busno,
-+				  unsigned int devfn, int where)
-+{
-+	return bcma_pcie2_read_config(bdev, busno, devfn, where, 1);
-+}
-+
-+static u16 bcma_pcie2_read_config16(struct bcma_device *bdev, int busno,
-+				    unsigned int devfn, int where)
-+{
-+	return bcma_pcie2_read_config(bdev, busno, devfn, where, 2);
-+}
-+
-+static u32 bcma_pcie2_read_config32(struct bcma_device *bdev, int busno,
-+				    unsigned int devfn, int where)
-+{
-+	return bcma_pcie2_read_config(bdev, busno, devfn, where, 4);
-+}
-+
-+static void bcma_pcie2_write_config8(struct bcma_device *bdev, int busno,
-+				     unsigned int devfn, int where, u8 val)
-+{
-+	return bcma_pcie2_write_config(bdev, busno, devfn, where, 1, val);
-+}
-+
-+static void bcma_pcie2_write_config16(struct bcma_device *bdev, int busno,
-+				      unsigned int devfn, int where, u16 val)
-+{
-+	return bcma_pcie2_write_config(bdev, busno, devfn, where, 2, val);
-+}
-+
-+static void bcma_pcie2_write_config32(struct bcma_device *bdev, int busno,
-+				      unsigned int devfn, int where, u32 val)
-+{
-+	return bcma_pcie2_write_config(bdev, busno, devfn, where, 4, val);
-+}
-+
-+static int bcma_pcie2_read_config_pci(struct pci_bus *bus, unsigned int devfn,
-+				   int where, int size, u32 *val)
-+{
-+	struct pci_sys_data *sys = bus->sysdata;
-+	struct bcma_device *bdev = sys->private_data;
-+
-+	*val = bcma_pcie2_read_config(bdev, bus->number, devfn, where, size);
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int bcma_pcie2_write_config_pci(struct pci_bus *bus, unsigned int devfn,
-+				    int where, int size, u32 val)
-+{
-+	struct pci_sys_data *sys = bus->sysdata;
-+	struct bcma_device *bdev = sys->private_data;
-+
-+	bcma_pcie2_write_config(bdev, bus->number, devfn, where, size, val);
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+/*
-+ * Methods for accessing configuration registers
-+ */
-+static struct pci_ops bcma_pcie2_ops = {
-+	.read = bcma_pcie2_read_config_pci,
-+	.write = bcma_pcie2_write_config_pci,
-+};
-+
-+/*
-+ * Check link status, return 0 if link is up in RC mode,
-+ * otherwise return non-zero
-+ */
-+static int bcma_pcie2_check_link(struct bcma_device *bdev, bool allow_gen2)
-+{
-+	u32 devfn = 0;
-+	u32 tmp32;
-+	u8 tmp8;
-+
-+	tmp32 = bcma_pcie2_read_config32(bdev, 0, devfn, 0xdc);
-+	tmp32 &= ~0xf;
-+	if (allow_gen2)
-+		tmp32 |= 2;
-+	else {
-+		/* force PCIE GEN1 */
-+		tmp32 |= 1;
-+	}
-+	bcma_pcie2_write_config32(bdev, 0, devfn, 0xdc, tmp32);
-+
-+	/* See if the port is in EP mode, indicated by header type 00 */
-+	tmp8 = bcma_pcie2_read_config8(bdev, 0, devfn, PCI_HEADER_TYPE);
-+	if (tmp8 != PCI_HEADER_TYPE_BRIDGE) {
-+		dev_info(&bdev->dev, "Port %d in End-Point mode - ignored\n",
-+			 bdev->core_unit);
-+		return -ENODEV;
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * Initializte the PCIe controller
-+ */
-+static void bcma_pcie2_hw_init(struct bcma_device *bdev)
-+{
-+	u32 tmp32;
-+	u16 tmp16;
-+
-+	/* Change MPS and MRRS to 512 */
-+	tmp16 = bcma_pcie2_read_config16(bdev, 0, 0, 0x4d4);
-+	tmp16 &= ~7;
-+	tmp16 |= 2;
-+	bcma_pcie2_write_config16(bdev, 0, 0, 0x4d4, tmp16);
-+
-+	tmp32 = bcma_pcie2_read_config32(bdev, 0, 0, 0xb4);
-+	tmp32 &= ~((7 << 12) | (7 << 5));
-+	tmp32 |= (2 << 12) | (2 << 5);
-+	bcma_pcie2_write_config32(bdev, 0, 0, 0xb4, tmp32);
-+
-+	/*
-+	 * Turn-on Root-Complex (RC) mode, from reset default of EP
-+	 * The mode is set by straps, can be overwritten via DMU
-+	 * register <cru_straps_control> bit 5, "1" means RC
-+	 */
-+
-+	/* Send a downstream reset */
-+	bcma_write32(bdev, BCMA_CORE_PCIE2_CLK_CONTROL,
-+		     PCIE2_CLKC_RST_OE | PCIE2_CLKC_RST);
-+	udelay(250);
-+	bcma_write32(bdev, BCMA_CORE_PCIE2_CLK_CONTROL, PCIE2_CLKC_RST_OE);
-+	mdelay(250);
-+
-+	/* TBD: take care of PM, check we're on */
-+}
-+
-+/*
-+ * Setup the address translation
-+ *
-+ * NOTE: All PCI-to-CPU address mapping are 1:1 for simplicity
-+ */
-+static int bcma_pcie2_map_init(struct bcma_device *bdev, u32 addr)
-+{
-+	/* 64MB alignment */
-+	if (!addr || (addr & (SZ_64M - 1)))
-+		return -EINVAL;
-+
-+	bcma_write32(bdev, BCMA_CORE_PCIE2_OMAP0_LOWER, addr);
-+	bcma_write32(bdev, BCMA_CORE_PCIE2_OARR0, addr | 0x01);
-+
-+	bcma_write32(bdev, BCMA_CORE_PCIE2_OMAP1_LOWER, addr + SZ_64M);
-+	bcma_write32(bdev, BCMA_CORE_PCIE2_OARR1, (addr + SZ_64M) | 0x01);
-+
-+	/*
-+	 * Inbound address translation setup
-+	 * Northstar only maps up to 128 MiB inbound, DRAM could be up to 1 GiB.
-+	 *
-+	 * For now allow access to entire DRAM, assuming it is less than 128MiB,
-+	 * otherwise DMA bouncing mechanism may be required.
-+	 * Also consider DMA mask to limit DMA physical address
-+	 */
-+	/* 64-bit LE regs, write low word, high is 0 at reset */
-+	bcma_write32(bdev, BCMA_CORE_PCIE2_FUNC0_IMAP1, PHYS_OFFSET | 0x1);
-+	bcma_write32(bdev, BCMA_CORE_PCIE2_IARR1_LOWER,
-+			   PHYS_OFFSET | ((SZ_128M >> 20) & 0xff));
-+	return 0;
-+}
-+
-+/*
-+ * Setup PCIE Host bridge
-+ */
-+static int bcma_pcie2_bridge_init(struct bcma_device *bdev, u32 addr, u32 size)
-+{
-+	bcma_pcie2_write_config8(bdev, 0, 0, PCI_PRIMARY_BUS, 0);
-+	bcma_pcie2_write_config8(bdev, 0, 0, PCI_SECONDARY_BUS, 1);
-+	bcma_pcie2_write_config8(bdev, 0, 0, PCI_SUBORDINATE_BUS, 4);
-+
-+	bcma_pcie2_read_config8(bdev, 0, 0, PCI_PRIMARY_BUS);
-+	bcma_pcie2_read_config8(bdev, 0, 0, PCI_SECONDARY_BUS);
-+	bcma_pcie2_read_config8(bdev, 0, 0, PCI_SUBORDINATE_BUS);
-+
-+	/* MEM_BASE, MEM_LIM require 1MB alignment */
-+	if (((addr >> 16) & 0xf) || (((addr + size) >> 16) & 0xf))
-+		return -EINVAL;
-+
-+	bcma_pcie2_write_config16(bdev, 0, 0, PCI_MEMORY_BASE, addr >> 16);
-+	bcma_pcie2_write_config16(bdev, 0, 0, PCI_MEMORY_LIMIT,
-+		(addr + size) >> 16);
-+
-+	/* These registers are not supported on the NS */
-+	bcma_pcie2_write_config16(bdev, 0, 0, PCI_IO_BASE_UPPER16, 0);
-+	bcma_pcie2_write_config16(bdev, 0, 0, PCI_IO_LIMIT_UPPER16, 0);
-+
-+	/* Force class to that of a Bridge */
-+	bcma_pcie2_write_config16(bdev, 0, 0, PCI_CLASS_DEVICE,
-+				  PCI_CLASS_BRIDGE_PCI);
-+
-+	bcma_pcie2_read_config16(bdev, 0, 0, PCI_CLASS_DEVICE);
-+	bcma_pcie2_read_config16(bdev, 0, 0, PCI_MEMORY_BASE);
-+	bcma_pcie2_read_config16(bdev, 0, 0, PCI_MEMORY_LIMIT);
-+	return 0;
-+}
-+
-+static void bcma_pcie2_3rd_init(struct bcma_bus *bus)
-+{
-+	/* PCIE PLL block register (base 0x8000) */
-+	bcma_chipco_b_mii_write(&bus->drv_cc_b, 0x00000088, 0x57fe8000);
-+	/* Check PCIE PLL lock status */
-+	bcma_chipco_b_mii_write(&bus->drv_cc_b, 0x00000088, 0x67c60000);
-+}
-+
-+/* To improve PCIE phy jitter */
-+static void bcma_pcie2_improve_phy_jitter(struct bcma_bus *bus, int phyaddr)
-+{
-+	u32 val;
-+
-+	/* Change blkaddr */
-+	val = (1 << 30) | (1 << 28) | (phyaddr << 23) | (0x1f << 18) |
-+		(2 << 16) | (0x863 << 4);
-+	bcma_chipco_b_mii_write(&bus->drv_cc_b, 0x0000009a, val);
-+
-+	/* Write 0x0190 to 0x13 regaddr */
-+	val = (1 << 30) | (1 << 28) | (phyaddr << 23) | (0x13 << 18) |
-+		(2 << 16) | 0x0190;
-+	bcma_chipco_b_mii_write(&bus->drv_cc_b, 0x0000009a, val);
-+
-+	/* Write 0x0191 to 0x19 regaddr */
-+	val = (1 << 30) | (1 << 28) | (phyaddr << 23) | (0x19 << 18) |
-+		(2 << 16) | 0x0191;
-+	bcma_chipco_b_mii_write(&bus->drv_cc_b, 0x0000009a, val);
-+}
-+
-+static int bcma_pcie2_setup(int nr, struct pci_sys_data *sys)
-+{
-+	struct bcma_device *bdev = sys->private_data;
-+	struct bcma_bus *bus = bdev->bus;
-+	struct resource *res;
-+	struct bcma_device *arm_core;
-+	u32 cru_straps_ctrl;
-+	int ret;
-+	int phyaddr;
-+
-+	if (bdev->core_unit == 2) {
-+		arm_core = bcma_find_core(bus, BCMA_CORE_ARMCA9);
-+		cru_straps_ctrl = bcma_read32(arm_core, 0x2a0);
-+
-+		/* 3rd PCIE is not selected */
-+		if (cru_straps_ctrl & 0x10)
-+			return -ENODEV;
-+
-+		bcma_pcie2_3rd_init(bus);
-+		phyaddr = 0xf;
-+	} else {
-+		phyaddr = bdev->core_unit;
-+	}
-+	bcma_pcie2_improve_phy_jitter(bus, phyaddr);
-+
-+	/* create mem resource */
-+	res = devm_kzalloc(&bdev->dev, sizeof(*res), GFP_KERNEL);
-+	if (!res)
-+		return -EINVAL;
-+
-+	res->start = bdev->addr_s[0];
-+	res->end = res->start + SZ_128M - 1;
-+	res->name = "PCIe configuration mem space";
-+	res->flags = IORESOURCE_MEM;
-+
-+	ret = devm_request_resource(&bdev->dev, &iomem_resource, res);
-+	if (ret)
-+		return ret;
-+
-+	pci_add_resource(&sys->resources, res);
-+
-+	/* This PCIe controller does not support IO Mem, so use a dummy one. */
-+	res = devm_kzalloc(&bdev->dev, sizeof(*res), GFP_KERNEL);
-+	if (!res)
-+		return -EINVAL;
-+
-+	res->start = 0;
-+	res->end = 0;
-+	res->name = "PCIe dummy IO space";
-+	res->flags = IORESOURCE_IO;
-+
-+	pci_add_resource(&sys->resources, res);
-+
-+	bcma_pcie2_hw_init(bdev);
-+	ret = bcma_pcie2_map_init(bdev, bdev->addr_s[0]);
-+	if (ret)
-+		return ret;
-+
-+	/*
-+	 * Skip inactive ports -
-+	 * will need to change this for hot-plugging
-+	 */
-+	ret = bcma_pcie2_check_link(bdev, true);
-+	if (ret)
-+		return ret;
-+
-+	ret = bcma_pcie2_bridge_init(bdev, bdev->addr_s[0], SZ_128M);
-+	if (ret)
-+		return ret;
-+
-+	return 1;
-+}
-+
-+static int bcma_pcie2_probe(struct bcma_device *bdev)
-+{
-+	struct hw_pci hw = {
-+		.nr_controllers = 1,
-+		.domain		= bdev->core_unit,
-+		.private_data	= (void **)&bdev,
-+		.setup		= bcma_pcie2_setup,
-+		.map_irq	= bcma_pcie2_map_irq,
-+		.ops		= &bcma_pcie2_ops,
-+	};
-+
-+	dev_info(&bdev->dev, "initializing PCIe controller\n");
-+
-+	/* Announce this port to ARM/PCI common code */
-+	pci_common_init_dev(&bdev->dev, &hw);
-+
-+	/* Setup virtual-wire interrupts */
-+	bcma_write32(bdev, BCMA_CORE_PCIE2_SYS_RC_INTX_EN, 0xf);
-+
-+	/* Enable memory and bus master */
-+	bcma_write32(bdev, SOC_PCIE_HDR_OFF + 4, 0x6);
-+
-+	return 0;
-+}
-+
-+static const struct bcma_device_id bcma_pcie2_table[] = {
-+	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_NS_PCIEG2, BCMA_ANY_REV, BCMA_ANY_CLASS),
-+	BCMA_CORETABLE_END
-+};
-+MODULE_DEVICE_TABLE(bcma, bcma_pcie2_table);
-+
-+static struct bcma_driver bcma_pcie2_driver = {
-+	.name		= KBUILD_MODNAME,
-+	.id_table	= bcma_pcie2_table,
-+	.probe		= bcma_pcie2_probe,
-+};
-+
-+static int __init bcma_pcie2_init(void)
-+{
-+	return bcma_driver_register(&bcma_pcie2_driver);
-+}
-+module_init(bcma_pcie2_init);
-+
-+static void __exit bcma_pcie2_exit(void)
-+{
-+	bcma_driver_unregister(&bcma_pcie2_driver);
-+}
-+module_exit(bcma_pcie2_exit);
-+
-+MODULE_AUTHOR("Hauke Mehrtens");
-+MODULE_DESCRIPTION("PCIe Gen2 driver for BCMA");
-+MODULE_LICENSE("GPLv2");
+ resource_size_t pcibios_io_space_offset(struct pci_controller *hose)
+ {
+ 	return (unsigned long) hose->io_base_virt - _IO_BASE;
 -- 
-1.9.1
+1.7.9.5
 
