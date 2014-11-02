@@ -1,96 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:61272 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753914AbaKOOUs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 15 Nov 2014 09:20:48 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch V2 0/9] Refine generic/PCI MSI irqodmian interfaces
-Date: Sat, 15 Nov 2014 22:23:58 +0800
-Message-Id: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:50526 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751612AbaKBPlz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Nov 2014 10:41:55 -0500
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 3 Nov 2014 01:41:54 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 361A8357804C
+	for <linux-pci@vger.kernel.org>; Mon,  3 Nov 2014 02:41:51 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sA2FfnTi35455038
+	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:41:49 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sA2Ffoji028094
+	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:41:50 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V9 05/18] powerpc/pci: Add PCI resource alignment documentation
+Date: Sun,  2 Nov 2014 23:41:21 +0800
+Message-Id: <1414942894-17034-6-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set is based on tip/irq/irqdomain and tries to refine
-interfaces to support irqdomain for generic MSI and PCI MSI.
+In order to enable SRIOV on PowerNV platform, the PF's IOV BAR needs to be
+adjusted:
+    1. size expaned
+    2. aligned to M64BT size
 
-Patch 1 is just minor fixes for tip/irq/irqdomain.
+This patch documents this change on the reason and how.
 
-Patch 2-4 introduce mechanisms to help reduce irqdomain users' code size.
-When converting XEN to use hierarchy irqdomain, I found the code size
-increases about 100 lines. So we still need helpers to reduce code size.
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ .../powerpc/pci_iov_resource_on_powernv.txt        |   75 ++++++++++++++++++++
+ 1 file changed, 75 insertions(+)
+ create mode 100644 Documentation/powerpc/pci_iov_resource_on_powernv.txt
 
-Patch 5 introduces some helpers to hide struct msi_desc implementation
-details, so later we could move msi_list from struct pci_dev into
-struct device to enable generic MSI support.
-
-Patch 6 introduces msi_domain_{alloc|free}_irqs() which generalize
-pci_msi_domain_alloc_irqs() to support generic MSI.
-
-Patch 7 introduces default data structures and callback implementations
-to support msi_domain_alloc_irqs(), so reduce burden on generic MSI
-users.
-
-Patch 8 converts PCI MSI to use generic MSI interfaces, and also
-implement default callbacks for PCI MSI.
-
-Patch 9 introduces a mechanism to replace arch_setup_msi_irq()/
-arch_setup_msi_irqs()/arch_teardown_msi_irq()/arch_teardown_msi_irqs().
-
-With this patch set applied, the generic MSI and PCI MSI interfaces
-are much easier to use. For extreme case, you only need to define
-a "struct msi_domain_info" and don't need to implement any callbacks,
-just using the default callbacks is OK:)
-
-This patch set is also a preparation for:
-1) Kill all weak functions in drivers/pci/msi.c
-2) Implement support for non-PCI-compliant MSI device
-
-It has been tested on x86 platforms, comments are welcomed!
-
-V1->V2:
-1) Fix bugs reported by Marc
-2) Rename MSI_FLAG_USE_DEF_OPS as MSI_FLAG_USE_DEF_DOM_OPS
-3) Add support of MSI_FLAG_USE_DEF_CHIP_OPS
-4) Include linxu/irqhandler.h to use irq_flow_handler_t instead of "void *"
-5) Change iterfaces to pass in "nvect" to msi_domain_ops.msi_prepare()
-6) Add new interfaces/flags to help reduce irqdomain users' code size
-
-Jiang Liu (8):
-  PCI, MSI: Fix errors caused by commit e5f1a59c4e12
-  irqdomain: Implement a method to automatically call parent domain's
-    alloc/free
-  irqdomain: Introduce helper function irq_domain_add_hierarchy()
-  PCI, MSI: Introduce helpers to hide struct msi_desc implementation
-    details
-  genirq: Introduce msi_domain_{alloc|free}_irqs()
-  genirq: Provide default callbacks for msi_domain_ops
-  PCI, MSI: Refine irqdomain interfaces to simplify its usage
-  PCI, MSI: Provide mechanism to alloc/free MSI/MSIX interrupt from
-    irqdomain
-
-Yingjoe Chen (1):
-  irqdomain: Use consistent prototype for irq_domain_free_irqs_*
-
- drivers/pci/msi.c         |  181 ++++++++++++++++++++++++++++++++++++---------
- include/linux/irqdomain.h |   33 ++++-----
- include/linux/msi.h       |   99 ++++++++++++++++++++++---
- kernel/irq/irqdomain.c    |   93 +++++++++++++++++++++--
- kernel/irq/msi.c          |  169 ++++++++++++++++++++++++++++++++++++++++--
- 5 files changed, 502 insertions(+), 73 deletions(-)
-
+diff --git a/Documentation/powerpc/pci_iov_resource_on_powernv.txt b/Documentation/powerpc/pci_iov_resource_on_powernv.txt
+new file mode 100644
+index 0000000..8b3f346
+--- /dev/null
++++ b/Documentation/powerpc/pci_iov_resource_on_powernv.txt
+@@ -0,0 +1,75 @@
++Wei Yang <weiyang@linux.vnet.ibm.com>
++26 Aug 2014
++
++This document describes the requirement from hardware for PCI MMIO resource
++sizing and assignment on PowerNV platform and how generic PCI code handle this
++requirement.
++
++1. Hardware requirement on PowerNV platform
++On PowerNV platform, IODA2 version, it has 16 M64 BARs, which is used to map
++MMIO range to PE#. Each M64 BAR would cover one MMIO range and this range is
++divided by *total_pe* number evenly with one piece corresponding to one PE.
++
++We decide to leverage this M64 BAR to map VFs to their individual PE, since
++for SRIOV VFs their BAR share the same size.
++
++By doing so, it introduces another problem. The *total_pe* number usually is
++bigger than the total_VFs. If we map one IOV BAR directly to one M64 BAR, some
++part in M64 BAR will map to another devices MMIO range.
++
++     0      1                     total_VFs - 1
++     +------+------+-     -+------+------+
++     |      |      |  ...  |      |      |
++     +------+------+-     -+------+------+
++
++                           IOV BAR
++     0      1                     total_VFs - 1          total_pe - 1
++     +------+------+-     -+------+------+-      -+------+------+
++     |      |      |  ...  |      |      |   ...  |      |      |
++     +------+------+-     -+------+------+-      -+------+------+
++
++                           M64 BAR
++
++		Figure 1.0 Direct map IOV BAR
++
++As Figure 1.0 indicates, the range [total_VFs, total_pe - 1] in M64 BAR may
++map to some MMIO range on other device.
++
++The solution currently we have is to expand the IOV BAR to *total_pe* number.
++
++     0      1                     total_VFs - 1          total_pe - 1
++     +------+------+-     -+------+------+-      -+------+------+
++     |      |      |  ...  |      |      |   ...  |      |      |
++     +------+------+-     -+------+------+-      -+------+------+
++
++                           IOV BAR
++     0      1                     total_VFs - 1          total_pe - 1
++     +------+------+-     -+------+------+-      -+------+------+
++     |      |      |  ...  |      |      |   ...  |      |      |
++     +------+------+-     -+------+------+-      -+------+------+
++
++                           M64 BAR
++
++		Figure 1.1 Map expanded IOV BAR
++
++By expanding the IOV BAR, this ensures the whole M64 range will not effect
++others.
++
++2. How generic PCI code handle it
++Till now, it looks good to make it work, while another problem comes. The M64
++BAR start address needs to be size aligned, while the original generic PCI
++code assign the IOV BAR with individual VF BAR size aligned.
++
++Since usually one SRIOV VF BAR size is the same as its PF size, the original
++generic PCI code will not count in the IOV BAR alignment. (The alignment is
++the same as its PF.) With the change from PowerNV platform, this changes. The
++alignment of the IOV BAR is now the total size, then we need to count in it.
++
++From:
++	alignment(IOV BAR) = size(VF BAR) = size(PF BAR)
++To:
++	alignment(IOV BAR) = size(IOV BAR)
++
++In commit(PCI: Take additional IOV BAR alignment in sizing and assigning), it
++has add_align to track the alignment from IOV BAR and use it to meet the
++requirement.
 -- 
-1.7.10.4
+1.7.9.5
 
