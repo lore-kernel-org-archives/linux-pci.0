@@ -1,88 +1,188 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 6 Nov 2014 00:48:41 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:8687 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752272AbaKBGC7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 2 Nov 2014 01:02:59 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org
-Subject: Re: [Patch Part2 v4 01/31] irqdomain: Introduce new interfaces to
- support hierarchy irqdomains
-In-Reply-To: <1415102525-9898-2-git-send-email-jiang.liu@linux.intel.com>
-Message-ID: <alpine.DEB.2.11.1411060044100.24960@nanos>
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com> <1415102525-9898-2-git-send-email-jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch v8 12/18] x86, irq: Keep balance of IOAPIC pin reference count
+Date: Sun,  2 Nov 2014 14:04:27 +0800
+Message-Id: <1414908273-7552-13-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414908273-7552-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414908273-7552-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 4 Nov 2014, Jiang Liu wrote:
->  /* Number of irqs reserved for a legacy isa controller */
->  #define NUM_ISA_INTERRUPTS	16
-> @@ -64,6 +66,16 @@ struct irq_domain_ops {
->  	int (*xlate)(struct irq_domain *d, struct device_node *node,
->  		     const u32 *intspec, unsigned int intsize,
->  		     unsigned long *out_hwirq, unsigned int *out_type);
-> +
-> +#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
-> +	/* extended V2 interfaces to support hierarchy irq_domains */
-> +	int (*alloc)(struct irq_domain *d, unsigned int virq,
-> +		     unsigned int nr_irqs, void *arg);
-> +	void (*free)(struct irq_domain *d, unsigned int virq,
-> +		     unsigned int nr_irqs);
-> +	int (*activate)(struct irq_domain *d, struct irq_data *irq_data);
-> +	int (*deactivate)(struct irq_domain *d, struct irq_data *irq_data);
+To keep balance of IOAPIC pin reference count, we need to protect
+pirq_enable_irq(), acpi_pci_irq_enable() and intel_mid_pci_irq_enable()
+from reentrance. There are two cases which will cause reentrance.
 
-Why do we have a return value here? Especially the deactivate one
-makes no sense at all.
+The first case is caused by suspend/hibernation. If pcibios_disable_irq
+is called during suspending/hibernating, we don't release the assigned
+IRQ number, otherwise it may break the suspend/hibernation. So late when
+pcibios_enable_irq is called during resume, we shouldn't allocate IRQ
+number again.
 
-> +extern int irq_domain_activate_irq(struct irq_data *irq_data);
-> +extern int irq_domain_deactivate_irq(struct irq_data *irq_data);
+The second case is that function acpi_pci_irq_enable() may be called
+twice for PCI devices present at boot time as below:
+1) pci_acpi_init()
+	--> acpi_pci_irq_enable() if pci_routeirq is true
+2) pci_enable_device()
+	--> pcibios_enable_device()
+		--> acpi_pci_irq_enable()
+We can't kill kernel parameter pci_routeirq yet because it's still
+needed for debugging purpose.
 
-And here.
+So flag irq_managed is introduced to track whether IRQ number is
+assigned by OS and to protect pirq_enable_irq(), acpi_pci_irq_enable()
+and intel_mid_pci_irq_enable() from reentrance.
 
-> @@ -178,6 +179,7 @@ int irq_startup(struct irq_desc *desc, bool resend)
->  	irq_state_clr_disabled(desc);
->  	desc->depth = 0;
->  
-> +	irq_domain_activate_irq(&desc->irq_data);
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/pci/intel_mid_pci.c |   10 +++++++++-
+ arch/x86/pci/irq.c           |    7 ++++++-
+ drivers/acpi/pci_irq.c       |   11 +++++++++--
+ include/linux/pci.h          |    1 +
+ 4 files changed, 25 insertions(+), 4 deletions(-)
 
-We do not check it and we cannot do here AFAICT.
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+index b9958c364075..44b9271580b5 100644
+--- a/arch/x86/pci/intel_mid_pci.c
++++ b/arch/x86/pci/intel_mid_pci.c
+@@ -210,6 +210,9 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ {
+ 	int polarity;
+ 
++	if (dev->irq_managed && dev->irq > 0)
++		return 0;
++
+ 	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
+ 		polarity = 0; /* active high */
+ 	else
+@@ -224,13 +227,18 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ 	if (mp_map_gsi_to_irq(dev->irq, IOAPIC_MAP_ALLOC) < 0)
+ 		return -EBUSY;
+ 
++	dev->irq_managed = 1;
++
+ 	return 0;
+ }
+ 
+ static void intel_mid_pci_irq_disable(struct pci_dev *dev)
+ {
+-	if (!mp_should_keep_irq(&dev->dev) && dev->irq > 0)
++	if (!mp_should_keep_irq(&dev->dev) && dev->irq_managed &&
++	    dev->irq > 0) {
+ 		mp_unmap_irq(dev->irq);
++		dev->irq_managed = 0;
++	}
+ }
+ 
+ struct pci_ops intel_mid_pci_ops = {
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index eb500c2592ad..a47e2dea0972 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -1202,6 +1202,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 			int irq;
+ 			struct io_apic_irq_attr irq_attr;
+ 
++			if (dev->irq_managed && dev->irq > 0)
++				return 0;
++
+ 			irq = IO_APIC_get_PCI_irq_vector(dev->bus->number,
+ 						PCI_SLOT(dev->devfn),
+ 						pin - 1, &irq_attr);
+@@ -1228,6 +1231,7 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 			}
+ 			dev = temp_dev;
+ 			if (irq >= 0) {
++				dev->irq_managed = 1;
+ 				dev->irq = irq;
+ 				dev_info(&dev->dev, "PCI->APIC IRQ transform: "
+ 					 "INT %c -> IRQ %d\n", 'A' + pin - 1, irq);
+@@ -1257,8 +1261,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ static void pirq_disable_irq(struct pci_dev *dev)
+ {
+ 	if (io_apic_assign_pci_irqs && !mp_should_keep_irq(&dev->dev) &&
+-	    dev->irq) {
++	    dev->irq_managed && dev->irq) {
+ 		mp_unmap_irq(dev->irq);
+ 		dev->irq = 0;
++		dev->irq_managed = 0;
+ 	}
+ }
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index 6e6b80eb0bba..5f1fdca65e5f 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -413,6 +413,9 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+ 		return 0;
+ 	}
+ 
++	if (dev->irq_managed && dev->irq > 0)
++		return 0;
++
+ 	entry = acpi_pci_irq_lookup(dev, pin);
+ 	if (!entry) {
+ 		/*
+@@ -456,6 +459,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+ 		return rc;
+ 	}
+ 	dev->irq = rc;
++	dev->irq_managed = 1;
+ 
+ 	if (link)
+ 		snprintf(link_desc, sizeof(link_desc), " -> Link[%s]", link);
+@@ -478,7 +482,7 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	u8 pin;
+ 
+ 	pin = dev->pin;
+-	if (!pin)
++	if (!pin || !dev->irq_managed || dev->irq <= 0)
+ 		return;
+ 
+ 	/* Keep IOAPIC pin configuration when suspending */
+@@ -506,6 +510,9 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	 */
+ 
+ 	dev_dbg(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
+-	if (gsi >= 0 && dev->irq > 0)
++	if (gsi >= 0) {
+ 		acpi_unregister_gsi(gsi);
++		dev->irq = 0;
++		dev->irq_managed = 0;
++	}
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5be8db45e368..2a8c4055ae9d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -348,6 +348,7 @@ struct pci_dev {
+ 	unsigned int	__aer_firmware_first:1;
+ 	unsigned int	broken_intx_masking:1;
+ 	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
++	unsigned int	irq_managed:1;
+ 	pci_dev_flags_t dev_flags;
+ 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
+ 
+-- 
+1.7.10.4
 
->  	if (desc->irq_data.chip->irq_startup) {
->  		ret = desc->irq_data.chip->irq_startup(&desc->irq_data);
->  		irq_state_clr_masked(desc);
-> @@ -199,6 +201,7 @@ void irq_shutdown(struct irq_desc *desc)
->  		desc->irq_data.chip->irq_disable(&desc->irq_data);
->  	else
->  		desc->irq_data.chip->irq_mask(&desc->irq_data);
-> +	irq_domain_deactivate_irq(&desc->irq_data);
-
-Ditto.
-
-So the return value for irq_domain_deactivate_irq() is silly to begin
-with, but also the return value for irq_domain_activate_irq() does not
-really make sense. We've allocated the resources for the interrupt
-already down the hierarchy chain. So there is no reason why the actual
-activation should fail.
-
-Thanks,
-
-	tglx
