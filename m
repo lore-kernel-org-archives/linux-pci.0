@@ -1,127 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:58888 "EHLO
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:50520 "EHLO
 	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751252AbaKYJLW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Nov 2014 04:11:22 -0500
+	with ESMTP id S1751406AbaKBPls (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Nov 2014 10:41:48 -0500
 Received: from /spool/local
 	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 25 Nov 2014 19:11:20 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 4B8302BB005A
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 20:11:18 +1100 (EST)
+	Mon, 3 Nov 2014 01:41:46 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 442752BB0023
+	for <linux-pci@vger.kernel.org>; Mon,  3 Nov 2014 02:41:44 +1100 (EST)
 Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAP9BHNh38797564
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 20:11:18 +1100
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sA2FhgFa39518326
+	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:43:42 +1100
 Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAP9BGLc025281
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 20:11:17 +1100
-Date: Tue, 25 Nov 2014 17:11:14 +0800
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sA2FfhTm028033
+	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:41:43 +1100
 From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Refresh offset/stride after NumVFs is written
-Message-ID: <20141125091114.GA314@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1416624759-13543-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <20141124230108.GA8765@shangw>
- <20141125031455.GA9070@richard>
- <20141125034651.GA5646@shangw>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141125034651.GA5646@shangw>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V9 02/18] PCI: Add weak pcibios_iov_resource_alignment() interface
+Date: Sun,  2 Nov 2014 23:41:18 +0800
+Message-Id: <1414942894-17034-3-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 25, 2014 at 02:46:52PM +1100, Gavin Shan wrote:
->On Tue, Nov 25, 2014 at 11:14:55AM +0800, Wei Yang wrote:
->>On Tue, Nov 25, 2014 at 10:01:08AM +1100, Gavin Shan wrote:
->>>On Sat, Nov 22, 2014 at 10:52:39AM +0800, Wei Yang wrote:
->>>>According to SR-IOV spec sec 3.3.9, 3.3.10, the NumVFs setting change will
->>>>affect the offset and stride. Current implementation doesn't refresh the
->>>>offset/stride cached in pci_sriov structure.
->>>>
->>>>This patch introduces a wrapper pci_iov_set_numvfs(), which refresh these two
->>>>value after NumVFs is written.
->>>>
->>>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>>>---
->>>> drivers/pci/iov.c |   17 +++++++++++++----
->>>> 1 file changed, 13 insertions(+), 4 deletions(-)
->>>>
->>>>diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->>>>index 4d109c0..c7010c5 100644
->>>>--- a/drivers/pci/iov.c
->>>>+++ b/drivers/pci/iov.c
->>>>@@ -31,6 +31,15 @@ static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
->>>> 		dev->sriov->stride * id) & 0xff;
->>>> }
->>>>
->>>>+static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
->>>>+{
->>>>+	struct pci_sriov *iov = dev->sriov;
->>>>+
->>>>+	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
->>>
->>>I'm suspecting writing to PCI_SRIOV_NUM_VF would take some time to take
->>>effect.
->>>
->>>>+	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &iov->offset);
->>>>+	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &iov->stride);
->>>>+}
->>>>+
->>>> static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
->>>> {
->>>> 	struct pci_bus *child;
->>>>@@ -243,7 +252,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->>>> 			return rc;
->>>> 	}
->>>>
->>>>-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
->>>>+	pci_iov_set_numvfs(dev, nr_virtfn);
->>>> 	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
->>>> 	pci_cfg_access_lock(dev);
->>>> 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
->>>>@@ -272,7 +281,7 @@ failed:
->>>> 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
->>>> 	pci_cfg_access_lock(dev);
->>>> 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
->>>>-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
->>>>+	pci_iov_set_numvfs(dev, 0);
->>>> 	ssleep(1);
->>>
->>>The 1 second delay here might be for waiting VFs to be ready.
->>>
->>
->>Hmm... so add this ssleep() in pci_iov_set_numvfs() would be better?
->>
->
->I was not suggesting to do that. I just raised the concern for you
->to look into.
->
+The alignment of PF's IOV BAR is designed to be the individual size of a VF's
+BAR size. This works fine for many platforms, but on PowerNV platform it needs
+some change.
 
-I looked in the SPEC sec 3.3.3.1 VF Enable. In this section, it says this:
+The original alignment works, since at sizing and assigning stage the
+requirement is from an individual VF's BAR size instead of the PF's IOV BAR.
+This is the reason for the original code to just retrieve the individual
+VF BAR size as the alignment.
 
-To allow components to perform internal initialization, system software must wait for at least
-100 ms after changing the VF Enable bit from a 0 to a 1, before it is permitted to issue Requests to
-the VFs which are enabled by that VF Enable bit. The Root Complex and/or system software must
-allow at least 1.0 s after Setting the VF Enable bit, before it may determine that a VF which fails to
-return a Successful Completion status for a valid Configuration Request is broken. After Setting the
-VF Enable bit, the VFs enabled by that VF Enable bit are permitted to return a CRS status to
-configuration requests up to the 1.0 s limit, if they are not ready to provide a Successful Completion
-status for a valid Configuration Request. Additionally, a VF is not permitted to return CRS after
-having previously returned a Successful Completion without an intervening VF disable or other valid
-reset condition.
+On PowerNV platform, it is required to align the whole PF IOV BAR to a hardware
+segment. Based on this fact, the alignment of PF's IOV BAR should be
+calculated seperately.
 
-As my understanding, it will take 1ms or 1s after VF Enable bit is set.
-Actually I am confused with the two different time, in which case we needs to
-wait for different time? And some place we add a lock, but no lock in others.
+This patch introduces a weak pcibios_iov_resource_alignment() interface, which
+gives platform a chance to implement specific method to calculate the PF's IOV
+BAR alignment.
 
-While from the SPEC, I don't see some description the NumVFs field will take
-some time to be effective.
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/iov.c   |   11 ++++++++++-
+ include/linux/pci.h |    3 +++
+ 2 files changed, 13 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 5e8091b..4d1685d 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -501,6 +501,12 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno,
+ 		4 * (resno - PCI_IOV_RESOURCES);
+ }
+ 
++resource_size_t __weak pcibios_iov_resource_alignment(struct pci_dev *dev,
++		int resno, resource_size_t align)
++{
++	return align;
++}
++
+ /**
+  * pci_sriov_resource_alignment - get resource alignment for VF BAR
+  * @dev: the PCI device
+@@ -515,13 +521,16 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
+ {
+ 	struct resource tmp;
+ 	enum pci_bar_type type;
++	resource_size_t align;
+ 	int reg = pci_iov_resource_bar(dev, resno, &type);
+ 
+ 	if (!reg)
+ 		return 0;
+ 
+ 	__pci_read_base(dev, type, &tmp, reg);
+-	return resource_alignment(&tmp);
++	align = resource_alignment(&tmp);
++
++	return pcibios_iov_resource_alignment(dev, resno, align);
+ }
+ 
+ /**
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 3ed7c66..bbf8058 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1159,6 +1159,9 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus);
+ void pci_setup_bridge(struct pci_bus *bus);
+ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+ 					 unsigned long type);
++resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev,
++						 int resno,
++						 resource_size_t align);
+ 
+ #define PCI_VGA_STATE_CHANGE_BRIDGE (1 << 0)
+ #define PCI_VGA_STATE_CHANGE_DECODES (1 << 1)
 -- 
-Richard Yang
-Help you, Help me
+1.7.9.5
 
