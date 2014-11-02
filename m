@@ -1,62 +1,266 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:57444 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750796AbaKDHvB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Nov 2014 02:51:01 -0500
-Date: Tue, 4 Nov 2014 08:50:50 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Daniel J Blueman <daniel@numascale.com>
-cc: Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Steffen Persvold <sp@numascale.com>
-Subject: Re: [PATCH v3 5/5] Use 2GB memory block size on large x86-64
- systems
-In-Reply-To: <5458807E.80701@numascale.com>
-Message-ID: <alpine.DEB.2.11.1411040848090.5308@nanos>
-References: <1414915813-2462-1-git-send-email-daniel@numascale.com> <1414915813-2462-5-git-send-email-daniel@numascale.com> <alpine.DEB.2.11.1411032021331.5308@nanos> <54580C9E.7070706@numascale.com> <alpine.DEB.2.11.1411040033530.5308@nanos>
- <5458807E.80701@numascale.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:53016 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751998AbaKBPmG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Nov 2014 10:42:06 -0500
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 3 Nov 2014 01:42:04 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 954BF357804C
+	for <linux-pci@vger.kernel.org>; Mon,  3 Nov 2014 02:42:02 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sA2FhxXV34472160
+	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:43:59 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sA2Fg1Nu028313
+	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:42:02 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V9 10/18] powerpc/powernv: Use pci_dn in PCI config accessor
+Date: Sun,  2 Nov 2014 23:41:26 +0800
+Message-Id: <1414942894-17034-11-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 4 Nov 2014, Daniel J Blueman wrote:
-> On 11/04/2014 07:36 AM, Thomas Gleixner wrote:
-> > On Tue, 4 Nov 2014, Daniel J Blueman wrote:
-> > > > > @@ -1247,9 +1246,9 @@ static unsigned long
-> > > > > probe_memory_block_size(void)
-> > > > >    	/* start from 2g */
-> > > > >    	unsigned long bz = 1UL<<31;
-> > > > > 
-> > > > > -#ifdef CONFIG_X86_UV
-> > > > > -	if (is_uv_system()) {
-> > > > > -		printk(KERN_INFO "UV: memory block size 2GB\n");
-> > > > > +#ifdef CONFIG_X86_64
-> > > > 
-> > > > And this brainless 's/CONFIG_X86_UV/CONFIG_X86_64/' sucks even
-> > > > more. I'm sure you can figure out the WHY yourself.
-> > > 
-> > > The benefit of this is applicable to other architectures. I'm unable to
-> > > test
-> > > the change, but if you agree it's conservative enough, I'll drop the
-> > > ifdef?
-> > 
-> > Which other architectures? Care to turn on your brain before replying?
-> 
-> Clearly 64-bit architectures, including X86, MIPS, PARISC, SPARC, AArch64,
-> ia64,
+The PCI config accessors rely on device node. Unfortunately, VFs
+don't have corresponding device nodes. So we have to switch to
+pci_dn for PCI config access.
 
-ROTFL
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/eeh-powernv.c |   14 +++++-
+ arch/powerpc/platforms/powernv/pci.c         |   69 ++++++++++----------------
+ arch/powerpc/platforms/powernv/pci.h         |    4 +-
+ 3 files changed, 40 insertions(+), 47 deletions(-)
 
-> however, I must be missing something, as a sizeof(long)/CONFIG_64BIT
-> check would be redundant if we agree to drop the ifdef, as we're already
-> checking the number of physical pages, which is bounded by the same limits.
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 1d19e79..c63b6c1 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -419,21 +419,31 @@ static inline bool powernv_eeh_cfg_blocked(struct device_node *dn)
+ static int powernv_eeh_read_config(struct device_node *dn,
+ 				   int where, int size, u32 *val)
+ {
++	struct pci_dn *pdn = PCI_DN(dn);
++
++	if (!pdn)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
+ 	if (powernv_eeh_cfg_blocked(dn)) {
+ 		*val = 0xFFFFFFFF;
+ 		return PCIBIOS_SET_FAILED;
+ 	}
+ 
+-	return pnv_pci_cfg_read(dn, where, size, val);
++	return pnv_pci_cfg_read(pdn, where, size, val);
+ }
+ 
+ static int powernv_eeh_write_config(struct device_node *dn,
+ 				    int where, int size, u32 val)
+ {
++	struct pci_dn *pdn = PCI_DN(dn);
++
++	if (!pdn)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
+ 	if (powernv_eeh_cfg_blocked(dn))
+ 		return PCIBIOS_SET_FAILED;
+ 
+-	return pnv_pci_cfg_write(dn, where, size, val);
++	return pnv_pci_cfg_write(pdn, where, size, val);
+ }
+ 
+ /**
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index b2187d0..f8dbb3f 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -368,9 +368,9 @@ static void pnv_pci_handle_eeh_config(struct pnv_phb *phb, u32 pe_no)
+ 	spin_unlock_irqrestore(&phb->lock, flags);
+ }
+ 
+-static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
+-				     struct device_node *dn)
++static void pnv_pci_config_check_eeh(struct pci_dn *pdn)
+ {
++	struct pnv_phb *phb = pdn->phb->private_data;
+ 	u8	fstate;
+ 	__be16	pcierr;
+ 	int	pe_no;
+@@ -381,7 +381,7 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
+ 	 * setup that yet. So all ER errors should be mapped to
+ 	 * reserved PE.
+ 	 */
+-	pe_no = PCI_DN(dn)->pe_number;
++	pe_no = pdn->pe_number;
+ 	if (pe_no == IODA_INVALID_PE) {
+ 		if (phb->type == PNV_PHB_P5IOC2)
+ 			pe_no = 0;
+@@ -409,8 +409,7 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
+ 	}
+ 
+ 	cfg_dbg(" -> EEH check, bdfn=%04x PE#%d fstate=%x\n",
+-		(PCI_DN(dn)->busno << 8) | (PCI_DN(dn)->devfn),
+-		pe_no, fstate);
++		(pdn->busno << 8) | (pdn->devfn), pe_no, fstate);
+ 
+ 	/* Clear the frozen state if applicable */
+ 	if (fstate == OPAL_EEH_STOPPED_MMIO_FREEZE ||
+@@ -427,10 +426,9 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
+ 	}
+ }
+ 
+-int pnv_pci_cfg_read(struct device_node *dn,
++int pnv_pci_cfg_read(struct pci_dn *pdn,
+ 		     int where, int size, u32 *val)
+ {
+-	struct pci_dn *pdn = PCI_DN(dn);
+ 	struct pnv_phb *phb = pdn->phb->private_data;
+ 	u32 bdfn = (pdn->busno << 8) | pdn->devfn;
+ 	s64 rc;
+@@ -464,10 +462,9 @@ int pnv_pci_cfg_read(struct device_node *dn,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+-int pnv_pci_cfg_write(struct device_node *dn,
++int pnv_pci_cfg_write(struct pci_dn *pdn,
+ 		      int where, int size, u32 val)
+ {
+-	struct pci_dn *pdn = PCI_DN(dn);
+ 	struct pnv_phb *phb = pdn->phb->private_data;
+ 	u32 bdfn = (pdn->busno << 8) | pdn->devfn;
+ 
+@@ -491,18 +488,17 @@ int pnv_pci_cfg_write(struct device_node *dn,
+ }
+ 
+ #if CONFIG_EEH
+-static bool pnv_pci_cfg_check(struct pci_controller *hose,
+-			      struct device_node *dn)
++static bool pnv_pci_cfg_check(struct pci_dn *pdn)
+ {
+ 	struct eeh_dev *edev = NULL;
+-	struct pnv_phb *phb = hose->private_data;
++	struct pnv_phb *phb = pdn->phb->private_data;
+ 
+ 	/* EEH not enabled ? */
+ 	if (!(phb->flags & PNV_PHB_FLAG_EEH))
+ 		return true;
+ 
+ 	/* PE reset or device removed ? */
+-	edev = of_node_to_eeh_dev(dn);
++	edev = pdn->edev;
+ 	if (edev) {
+ 		if (edev->pe &&
+ 		    (edev->pe->state & EEH_PE_CFG_BLOCKED))
+@@ -515,8 +511,7 @@ static bool pnv_pci_cfg_check(struct pci_controller *hose,
+ 	return true;
+ }
+ #else
+-static inline pnv_pci_cfg_check(struct pci_controller *hose,
+-				struct device_node *dn)
++static inline pnv_pci_cfg_check(struct pci_dn *pdn)
+ {
+ 	return true;
+ }
+@@ -526,32 +521,26 @@ static int pnv_pci_read_config(struct pci_bus *bus,
+ 			       unsigned int devfn,
+ 			       int where, int size, u32 *val)
+ {
+-	struct device_node *dn, *busdn = pci_bus_to_OF_node(bus);
+ 	struct pci_dn *pdn;
+ 	struct pnv_phb *phb;
+-	bool found = false;
+ 	int ret;
+ 
+ 	*val = 0xFFFFFFFF;
+-	for (dn = busdn->child; dn; dn = dn->sibling) {
+-		pdn = PCI_DN(dn);
+-		if (pdn && pdn->devfn == devfn) {
+-			phb = pdn->phb->private_data;
+-			found = true;
+-			break;
+-		}
+-	}
++	pdn = pci_get_pdn_by_devfn(bus, devfn);
++	if (!pdn)
++		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	if (!found || !pnv_pci_cfg_check(pdn->phb, dn))
++	if (!pnv_pci_cfg_check(pdn))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	ret = pnv_pci_cfg_read(dn, where, size, val);
+-	if (phb->flags & PNV_PHB_FLAG_EEH) {
++	ret = pnv_pci_cfg_read(pdn, where, size, val);
++	phb = pdn->phb->private_data;
++	if (phb->flags & PNV_PHB_FLAG_EEH && pdn->edev) {
+ 		if (*val == EEH_IO_ERROR_VALUE(size) &&
+-		    eeh_dev_check_failure(of_node_to_eeh_dev(dn)))
++		    eeh_dev_check_failure(pdn->edev))
+                         return PCIBIOS_DEVICE_NOT_FOUND;
+ 	} else {
+-		pnv_pci_config_check_eeh(phb, dn);
++		pnv_pci_config_check_eeh(pdn);
+ 	}
+ 
+ 	return ret;
+@@ -561,27 +550,21 @@ static int pnv_pci_write_config(struct pci_bus *bus,
+ 				unsigned int devfn,
+ 				int where, int size, u32 val)
+ {
+-	struct device_node *dn, *busdn = pci_bus_to_OF_node(bus);
+ 	struct pci_dn *pdn;
+ 	struct pnv_phb *phb;
+-	bool found = false;
+ 	int ret;
+ 
+-	for (dn = busdn->child; dn; dn = dn->sibling) {
+-		pdn = PCI_DN(dn);
+-		if (pdn && pdn->devfn == devfn) {
+-			phb = pdn->phb->private_data;
+-			found = true;
+-			break;
+-		}
+-	}
++	pdn = pci_get_pdn_by_devfn(bus, devfn);
++	if (!pdn)
++		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	if (!found || !pnv_pci_cfg_check(pdn->phb, dn))
++	if (!pnv_pci_cfg_check(pdn))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	ret = pnv_pci_cfg_write(dn, where, size, val);
++	ret = pnv_pci_cfg_write(pdn, where, size, val);
++	phb = pdn->phb->private_data;
+ 	if (!(phb->flags & PNV_PHB_FLAG_EEH))
+-		pnv_pci_config_check_eeh(phb, dn);
++		pnv_pci_config_check_eeh(pdn);
+ 
+ 	return ret;
+ }
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index 34d29eb..9dc4143 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -219,9 +219,9 @@ extern struct pnv_eeh_ops ioda_eeh_ops;
+ 
+ void pnv_pci_dump_phb_diag_data(struct pci_controller *hose,
+ 				unsigned char *log_buff);
+-int pnv_pci_cfg_read(struct device_node *dn,
++int pnv_pci_cfg_read(struct pci_dn *pdn,
+ 		     int where, int size, u32 *val);
+-int pnv_pci_cfg_write(struct device_node *dn,
++int pnv_pci_cfg_write(struct pci_dn *pdn,
+ 		      int where, int size, u32 val);
+ extern void pnv_pci_setup_iommu_table(struct iommu_table *tbl,
+ 				      void *tce_mem, u64 tce_size,
+-- 
+1.7.9.5
 
-# diffstat $this_patch
-
-should precicely tell you what you're missing.
-
-Thanks,
-
-	tglx
