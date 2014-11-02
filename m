@@ -1,83 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:47651 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935120AbaKNQNc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Nov 2014 11:13:32 -0500
-Message-ID: <54662A27.6030201@arm.com>
-Date: Fri, 14 Nov 2014 16:13:27 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [Patch V1 0/6] Refine generic/PCI MSI irqodmian interfaces
-References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com> <54651BE2.9080008@arm.com> <alpine.DEB.2.11.1411132207470.3935@nanos> <5465227E.6000309@arm.com> <5466259A.7060505@linux.intel.com>
-In-Reply-To: <5466259A.7060505@linux.intel.com>
-Content-Type: text/plain; charset=WINDOWS-1252
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:49797 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751612AbaKBPl5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Nov 2014 10:41:57 -0500
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 3 Nov 2014 01:41:56 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 8AFFF2CE8040
+	for <linux-pci@vger.kernel.org>; Mon,  3 Nov 2014 02:41:53 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sA2Fho9L31654000
+	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:43:50 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sA2FfqR0028121
+	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:41:53 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V9 06/18] powerpc/pci: Don't unset pci resources for VFs
+Date: Sun,  2 Nov 2014 23:41:22 +0800
+Message-Id: <1414942894-17034-7-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 14/11/14 15:54, Jiang Liu wrote:
-> On 2014/11/14 5:28, Marc Zyngier wrote:
->> On 13/11/14 21:11, Thomas Gleixner wrote:
->>> On Thu, 13 Nov 2014, Marc Zyngier wrote:
->>>> With the new stacked irq domains, it becomes pretty tempting
->>>> to allocate an MSI domain per PCI bus, which would remove
->>>> the requirement of either relying on arch-specific code, or
->>>> a default PCI MSI domain.
->>>
->>> Right. That's what I roughly had in mind. And that would solve the
->>> multi-iommu issue on x86 nicely as well. We establish the association
->>> at the time where the bus gets populated. So the whole lookup magic
->>> simply goes away.
->>
->> Great. I've pushed the whole thing out with this patch, the couple
->> of fixes I mentioned earlier, as well as the whole ITS code:
->>
->> git://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git irq/stacked-its-v2
-> Hi Marc,
-> 	I have looked at the code, and found some issues.
-> 1) With my next version, no need to implemeent its_pci_msi_free()
-> anymore. msi_domain_free_irqs() will reset desc->irq to zero
-> for all architectures.
+If we're going to reassign resources with flag PCI_REASSIGN_ALL_RSRC, all
+resources will be cleaned out during device header fixup time and then get
+reassigned by PCI core. However, the VF resources won't be reassigned and
+thus, we shouldn't clean them out.
 
-Great. The less code, the better.
+This patch adds a condition. If the pci_dev is a VF, skip the resource
+unset process.
 
-> 2) This piece of code in its_msi_prepare() may run into trouble
-> for PCI device with both MSI and MSIX capability. I will change
-> msi_prepare() prototype to pass in the "nvec" parameter. And you
-> may access first_pci_msi_entry()->msi_attrib.is_msix to get
-> allocation type if needed.
-> 	nvec = pci_msix_vec_count(pdev);
-> 	if (nvec < 0)
-> 		nvec = pci_msi_vec_count(pdev);
-> 	if (nvec < 0)
-> 		return nvec;
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/kernel/pci-common.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-Ah, good point. Having nvec will make things simpler indeed. I have the
-feeling that the ITS driver may not be the only one to require such a thing.
-
-> 3) Do we need to increase the default of NUM_MSI_ALLOC_SCRATCHPAD_REGS
-> to 4? 2 is a little too limited.
-
-I'd say that 2 is enough for now. The ITS only uses one (the second one
-is for debug only). Should the need arise, we can bump it up later.
-
-Thanks,
-
-	M.
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index e5dad9a..399d813 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -789,6 +789,10 @@ static void pcibios_fixup_resources(struct pci_dev *dev)
+ 		       pci_name(dev));
+ 		return;
+ 	}
++
++	if (dev->is_virtfn)
++		return;
++
+ 	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+ 		struct resource *res = dev->resource + i;
+ 		struct pci_bus_region reg;
 -- 
-Jazz is not dead. It just smells funny...
+1.7.9.5
 
