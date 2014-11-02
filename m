@@ -1,78 +1,125 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:57424 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932394AbaKMLTb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 06:19:31 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-kernel@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [RFC PATCH v3 2/2] arm: kernel: fix pci_mmap_page_range() offset calculation
-Date: Thu, 13 Nov 2014 11:19:16 +0000
-Message-Id: <1415877558-8906-3-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1415877558-8906-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1415877558-8906-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Prarit Bhargava <prarit@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
+	linux-pm@vger.kernel.org
+Subject: [Patch v8 17/18] x86, irq: Introduce helper to check whether an IOAPIC has been registered
+Date: Sun,  2 Nov 2014 14:04:32 +0800
+Message-Id: <1414908273-7552-18-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414908273-7552-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414908273-7552-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The pci_mmap_page_range() API should be written to expect offset
-values representing PCI memory resource addresses as seen by user
-space, through the pci_resource_to_user() API.
+Introduce acpi_ioapic_registered() to check whether an IOAPIC has already
+been registered, it will be used when enabling IOAPIC hotplug.
 
-ARM relies on the standard implementation of pci_resource_to_user()
-which actually is an identity map and exports to user space
-PCI memory resources as they are stored in PCI devices resources
-structures, which represent CPU physical addresses (fixed-up using
-BUS to CPU address conversions) not PCI bus addresses.
-
-Therefore, on ARM platforms where the mapping between CPU and BUS
-address is not a 1:1 the current pci_mmap_page_range() implementation is
-erroneous, in that an additional shift is applied to an already fixed-up
-offset passed from userspace.
-
-Hence, this patch removes the mem_offset from the pgoff calculation
-since the offset as passed from user space already represents the CPU
-physical address corresponding to the resource to be mapped, ie no
-additional offset should be applied.
-
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Russell King <linux@arm.linux.org.uk>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Acked-by: Pavel Machek <pavel@ucw.cz>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/arm/kernel/bios32.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+ arch/x86/include/asm/io_apic.h |    1 +
+ arch/x86/kernel/acpi/boot.c    |   22 ++++++++++++++++++++++
+ arch/x86/kernel/apic/io_apic.c |   11 +++++++++++
+ include/linux/acpi.h           |    1 +
+ 4 files changed, 35 insertions(+)
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 17a26c1..b56fa2d 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -626,21 +626,15 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 7c04b8ec22a4..ca742d5249db 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -191,6 +191,7 @@ extern void mp_unmap_irq(int irq);
+ extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 			      struct ioapic_domain_cfg *cfg);
+ extern int mp_unregister_ioapic(u32 gsi_base);
++extern int mp_ioapic_registered(u32 gsi_base);
+ extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 			    irq_hw_number_t hwirq);
+ extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 37a990146e90..0e18705cee1e 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -825,6 +825,28 @@ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base)
+ }
+ EXPORT_SYMBOL(acpi_unregister_ioapic);
+ 
++/**
++ * acpi_ioapic_registered - Check whether IOAPIC assoicatied with @gsi_base
++ *			    has been registered
++ * @handle:	ACPI handle of the IOAPIC deivce
++ * @gsi_base:	GSI base associated with the IOAPIC
++ *
++ * Assume caller holds some type of lock to serialize acpi_ioapic_registered()
++ * with acpi_register_ioapic()/acpi_unregister_ioapic().
++ */
++int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base)
++{
++	int ret = 0;
++
++#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
++	down_read(&acpi_ioapic_rwsem);
++	ret  = mp_ioapic_registered(gsi_base);
++	up_read(&acpi_ioapic_rwsem);
++#endif
++
++	return ret;
++}
++
+ static int __init acpi_parse_sbf(struct acpi_table_header *table)
  {
--	struct pci_sys_data *root = dev->sysdata;
--	unsigned long phys;
--
--	if (mmap_state == pci_mmap_io) {
-+	if (mmap_state == pci_mmap_io)
- 		return -EINVAL;
--	} else {
--		phys = vma->vm_pgoff + (root->mem_offset >> PAGE_SHIFT);
--	}
+ 	struct acpi_table_boot *sb;
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 9e5432ee2070..df3858de3031 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -4018,6 +4018,17 @@ int mp_unregister_ioapic(u32 gsi_base)
+ 	return 0;
+ }
  
- 	/*
- 	 * Mark this as IO
- 	 */
- 	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
++int mp_ioapic_registered(u32 gsi_base)
++{
++	int ioapic;
++
++	for_each_ioapic(ioapic)
++		if (ioapics[ioapic].gsi_config.gsi_base == gsi_base)
++			return 1;
++
++	return 0;
++}
++
+ int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 		     irq_hw_number_t hwirq)
+ {
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 77cecd0350e7..be6be0f91337 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -152,6 +152,7 @@ int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
  
--	if (remap_pfn_range(vma, vma->vm_start, phys,
-+	if (remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
- 			     vma->vm_end - vma->vm_start,
- 			     vma->vm_page_prot))
- 		return -EAGAIN;
+ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
+ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base);
++int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base);
+ void acpi_irq_stats_init(void);
+ extern u32 acpi_irq_handled;
+ extern u32 acpi_irq_not_handled;
 -- 
-2.1.2
+1.7.10.4
 
