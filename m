@@ -1,99 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:9864 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752108AbaKIOo7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 9 Nov 2014 09:44:59 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V7 4/8] iommu/vt-d: Search for ACPI _DSM method for DMAR hotplug
-Date: Sun,  9 Nov 2014 22:47:59 +0800
-Message-Id: <1415544483-27990-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415544483-27990-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415544483-27990-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Daniel J Blueman <daniel@numascale.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Daniel J Blueman <daniel@numascale.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Steffen Persvold <sp@numascale.com>
+Subject: [PATCH v3 3/5] Numachip: Add safe is-present function
+Date: Sun,  2 Nov 2014 16:10:11 +0800
+Message-Id: <1414915813-2462-3-git-send-email-daniel@numascale.com>
+In-Reply-To: <1414915813-2462-1-git-send-email-daniel@numascale.com>
+References: <1414915813-2462-1-git-send-email-daniel@numascale.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to Intel VT-d specification, _DSM method to support DMAR
-hotplug should exist directly under corresponding ACPI object
-representing PCI host bridge. But some BIOSes doesn't conform to
-this, so search for _DSM method in the subtree starting from the
-ACPI object representing the PCI host bridge.
+Add safe function to check if Numachip is detected, to be used elsewhere.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Reviewed-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Daniel J Blueman <daniel@numascale.com>
 ---
- drivers/iommu/dmar.c |   33 ++++++++++++++++++++++++++++++---
- 1 file changed, 30 insertions(+), 3 deletions(-)
+ arch/x86/include/asm/numachip/numachip.h | 9 +++++++++
+ arch/x86/kernel/apic/apic_numachip.c     | 9 +++++++--
+ 2 files changed, 16 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index 0bd536d769a9..9847613085e1 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -1942,21 +1942,48 @@ static int dmar_hotplug_remove(acpi_handle handle)
- 	return ret;
+diff --git a/arch/x86/include/asm/numachip/numachip.h b/arch/x86/include/asm/numachip/numachip.h
+index 1c6f7f6..3e1f4f9 100644
+--- a/arch/x86/include/asm/numachip/numachip.h
++++ b/arch/x86/include/asm/numachip/numachip.h
+@@ -16,4 +16,13 @@
+ 
+ extern int __init pci_numachip_init(void);
+ 
++#ifdef CONFIG_X86_NUMACHIP
++extern bool is_numachip_system(void);
++#else
++static inline bool is_numachip_system(void)
++{
++	return 0;
++}
++#endif
++
+ #endif /* _ASM_X86_NUMACHIP_NUMACHIP_H */
+diff --git a/arch/x86/kernel/apic/apic_numachip.c b/arch/x86/kernel/apic/apic_numachip.c
+index bd083c0..c965b69 100644
+--- a/arch/x86/kernel/apic/apic_numachip.c
++++ b/arch/x86/kernel/apic/apic_numachip.c
+@@ -30,7 +30,7 @@
+ #include <asm/apic_flat_64.h>
+ #include <asm/pgtable.h>
+ 
+-static int numachip_system __read_mostly;
++static bool numachip_system __read_mostly;
+ 
+ static const struct apic apic_numachip __refconst;
+ 
+@@ -173,11 +173,16 @@ static void fixup_cpu_id(struct cpuinfo_x86 *c, int node)
+ 	}
  }
  
-+static acpi_status dmar_get_dsm_handle(acpi_handle handle, u32 lvl,
-+				       void *context, void **retval)
++bool is_numachip_system(void)
 +{
-+	acpi_handle *phdl = retval;
-+
-+	if (dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD)) {
-+		*phdl = handle;
-+		return AE_CTRL_TERMINATE;
-+	}
-+
-+	return AE_OK;
++	return numachip_system;
 +}
 +
- static int dmar_device_hotplug(acpi_handle handle, bool insert)
+ static int __init numachip_system_init(void)
  {
- 	int ret;
-+	acpi_handle tmp = NULL;
-+	acpi_status status;
+ 	unsigned int val;
  
- 	if (!dmar_in_use())
+-	if (!numachip_system)
++	if (!is_numachip_system())
  		return 0;
  
--	if (!dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD))
-+	if (dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD)) {
-+		tmp = handle;
-+	} else {
-+		status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
-+					     ACPI_UINT32_MAX,
-+					     dmar_get_dsm_handle,
-+					     NULL, NULL, &tmp);
-+		if (ACPI_FAILURE(status)) {
-+			pr_warn("Failed to locate _DSM method.\n");
-+			return -ENXIO;
-+		}
-+	}
-+	if (tmp == NULL)
- 		return 0;
- 
- 	down_write(&dmar_global_lock);
- 	if (insert)
--		ret = dmar_hotplug_insert(handle);
-+		ret = dmar_hotplug_insert(tmp);
- 	else
--		ret = dmar_hotplug_remove(handle);
-+		ret = dmar_hotplug_remove(tmp);
- 	up_write(&dmar_global_lock);
- 
- 	return ret;
+ 	x86_cpuinit.fixup_cpu_id = fixup_cpu_id;
 -- 
-1.7.10.4
+1.9.1
 
