@@ -1,95 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:60092 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753160AbaKRLpm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 06:45:42 -0500
-Date: Tue, 18 Nov 2014 11:45:18 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"huxinwei@huawei.com" <huxinwei@huawei.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Wuyun <wuyun.wu@huawei.com>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [RFC PATCH 00/16] Refine PCI host bridge scan interfaces
-Message-ID: <20141118114518.GA3514@red-moon>
-References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
- <1463511.o4kE8TX3Bd@wuerfel>
- <546B2ACC.90304@huawei.com>
- <20535707.3sA6NjSINh@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20535707.3sA6NjSINh@wuerfel>
-Sender: linux-pci-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [Patch v8 14/18] x86, irq, ACPI: Introduce a rwsem to protect IOAPIC operations from hotplug
+Date: Sun,  2 Nov 2014 14:04:29 +0800
+Message-Id: <1414908273-7552-15-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1414908273-7552-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1414908273-7552-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 18, 2014 at 11:30:11AM +0000, Arnd Bergmann wrote:
-> On Tuesday 18 November 2014 19:17:32 Yijing Wang wrote:
-> > On 2014/11/17 22:13, Arnd Bergmann wrote:
-> > > On Monday 17 November 2014 18:21:34 Yijing Wang wrote:
-> > >> This series is based Linux 3.18-rc1 and Lorenzo Pieralisi's
-> > >> arm PCI domain cleanup patches, link: 
-> > >> https://patchwork.ozlabs.org/patch/407585/
-> > >>
-> > >> Current pci scan interfaces like pci_scan_root_bus() and directly
-> > >> call pci_create_root_bus()/pci_scan_child_bus() lack flexiblity.
-> > >> Some platform infos like PCI domain and msi_chip have to be
-> > >> associated to PCI bus by some arch specific function.
-> > >> We want to make a generic pci_host_bridge, and make it hold
-> > >> the platform infos or hook. Then we could eliminate the lots
-> > >> of arch pci_domain_nr, also we could associate some platform 
-> > >> ops something like pci_get_msi_chip(struct pci_dev *dev)
-> > >> with pci_host_bridge to avoid introduce arch weak functions.
-> > >>
-> > >> This RFC version not for all platforms, just applied the new
-> > >> scan interface in x86/arm/powerpc/ia64, I will refresh other
-> > >> platforms after the core pci scan interfaces are ok.
-> > > 
-> > > I think overall this is a good direction to take, in particular
-> > > moving more things into struct pci_host_bridge so we can
-> > > slim down the architecture specific code.
-> > 
-> > Hi Arnd, thanks very much for your review and comments!
-> > 
-> > > 
-> > > I don't particularly like the way you use the 'pci_host_info'
-> > > to pass callback pointers and some of the generic information.
-> > > This duplicates some of the issues we are currently trying
-> > > to untangle in the arm32 code to make drivers easier to share
-> > > between architectures.
-> > 
-> > What arm32 code you are trying to untangle for example ?
-> 
-> We have a few problems that currently prevent us from using shared
-> drivers across arm32 and arm64:
-> 
-> - arm32 has an architecture-defined pci_sys_data structure, but
->   we really want to have one that is defined by the host bridge driver
->   and that is architecture independent. Some core functions depend
->   on this structure at the moment, which Lorenzo is trying to
->   undo
+We are going to support ACPI based IOAPIC hotplug, so introduce a rwsem
+to protect IOAPIC data structures from IOAPIC hotplug. We choose to
+serialize in ACPI instead of in the IOAPIC core because:
+1) currently we are only plan to support ACPI based IOAPIC hotplug
+2) it's much more cleaner and easier
+3) It does't affect IOAPIC discovered by devicetree, SFI and mpparse.
 
-Yes, and on this specific point I would like to understand why we
-are adding yet more pci_sys_data data in the last series that is
-already in -next:
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/acpi/boot.c |   21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
-https://lkml.org/lkml/2014/10/27/85
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index e077c080a519..96d775580821 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -76,6 +76,19 @@ int acpi_fix_pin2_polarity __initdata;
+ static u64 acpi_lapic_addr __initdata = APIC_DEFAULT_PHYS_BASE;
+ #endif
+ 
++/*
++ * Locks related to IOAPIC hotplug
++ * Hotplug side:
++ * 	->lock_device_hotplug()	//device_hotplug_lock
++ *		->acpi_ioapic_lock
++ *			->ioapic_lock
++ * Interrupt mapping side:
++ *	->acpi_ioapic_lock
++ *		->ioapic_mutex
++ *			->ioapic_lock
++ */
++static DEFINE_MUTEX(acpi_ioapic_lock);
++
+ /* --------------------------------------------------------------------------
+                               Boot-time Configuration
+    -------------------------------------------------------------------------- */
+@@ -609,8 +622,10 @@ int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
+ 	if (acpi_irq_model == ACPI_IRQ_MODEL_PIC) {
+ 		*irqp = gsi;
+ 	} else {
++		mutex_lock(&acpi_ioapic_lock);
+ 		irq = mp_map_gsi_to_irq(gsi,
+ 					IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
++		mutex_unlock(&acpi_ioapic_lock);
+ 		if (irq < 0)
+ 			return -1;
+ 		*irqp = irq;
+@@ -651,7 +666,9 @@ static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
+ 	int irq = gsi;
+ 
+ #ifdef CONFIG_X86_IO_APIC
++	mutex_lock(&acpi_ioapic_lock);
+ 	irq = mp_register_gsi(dev, gsi, trigger, polarity);
++	mutex_unlock(&acpi_ioapic_lock);
+ #endif
+ 
+ 	return irq;
+@@ -660,7 +677,9 @@ static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
+ static void acpi_unregister_gsi_ioapic(u32 gsi)
+ {
+ #ifdef CONFIG_X86_IO_APIC
++	mutex_lock(&acpi_ioapic_lock);
+ 	mp_unregister_gsi(gsi);
++	mutex_unlock(&acpi_ioapic_lock);
+ #endif
+ }
+ 
+@@ -1186,7 +1205,9 @@ static void __init acpi_process_madt(void)
+ 			/*
+ 			 * Parse MADT IO-APIC entries
+ 			 */
++			mutex_lock(&acpi_ioapic_lock);
+ 			error = acpi_parse_madt_ioapic_entries();
++			mutex_unlock(&acpi_ioapic_lock);
+ 			if (!error) {
+ 				acpi_set_irq_model_ioapic();
+ 
+-- 
+1.7.10.4
 
-What does this buy us ? The cover letter says already that there *is*
-a better solution, why do not we work on that instead of adding more churn
-to arch specific code ?
-
-Thanks,
-Lorenzo
