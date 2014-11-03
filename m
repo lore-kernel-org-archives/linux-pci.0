@@ -1,161 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:12184 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754900AbaKSGwc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 01:52:32 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>,
+Received: from kirsty.vergenet.net ([202.4.237.240]:34043 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750959AbaKCX0i (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Nov 2014 18:26:38 -0500
+Date: Tue, 4 Nov 2014 08:26:25 +0900
+From: Simon Horman <horms@verge.net.au>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	Liviu Dudau <liviu@dudau.co.uk>, Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	<linux-alpha@vger.kernel.org>, <linux-m68k@lists.linux-m68k.org>,
-	<sparclinux@vger.kernel.org>
-Subject: [PATCH 1/5] PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
-Date: Wed, 19 Nov 2014 15:32:45 +0800
-Message-ID: <1416382369-13587-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1416382369-13587-1-git-send-email-wangyijing@huawei.com>
-References: <1416382369-13587-1-git-send-email-wangyijing@huawei.com>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Mohit Kumar <mohit.kumar@st.com>
+Subject: Re: [RFC PATCH 2/2] arm: pcibios: move to generic PCI domains
+Message-ID: <20141103232625.GA22642@verge.net.au>
+References: <1414669490-1217-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1414669490-1217-3-git-send-email-lorenzo.pieralisi@arm.com>
+ <b095e031880c44f0b79c8c42bc8d7bd5@SIXPR06MB0639.apcprd06.prod.outlook.com>
+ <CAErSpo7R5V1MeDSg+9-+CqVbk_vDn6pRsNwFQS9L97Fkw=7nDA@mail.gmail.com>
+ <08260858dd004e4881e7fbd4b23ea795@SIXPR06MB0639.apcprd06.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <08260858dd004e4881e7fbd4b23ea795@SIXPR06MB0639.apcprd06.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pci_bus_add_devices() should not be placed in
-pci_scan_bus(). Now pci devices will be added
-to driver core once its creation. All the things
-left in pci_bus_add_devices() are driver attach
-and other trivial things. pci_scan_bus() should
-be the function responsible for scanning PCI devices,
-not including device driver attached. Other, lots
-callers of pci_scan_bus() call pci_bus_size_bridges()
-and pci_bus_assign_resources() after pci_scan_bus().
-It's not correct, but because pci_scan_bus() always
-be called before driver loaded, so maybe no problem
-will cause. We should rip out pci_bus_add_devices()
-for better code design.
-No functional change.
+On Fri, Oct 31, 2014 at 05:04:49PM +0000, Phil Edworthy wrote:
+> Hi Bjorn,
+> 
+> On 31 October 2014 16:37, Bjorn wrote:
+> > On Fri, Oct 31, 2014 at 7:43 AM, Phil Edworthy
+> > <phil.edworthy@renesas.com> wrote:
+> > > Hi Lorenzo,
+> > >
+> > > On 30 October 2014 11:45, Lorenzo wrote:
+> > >> Most if not all ARM PCI host controller device drivers either ignore the
+> > >> domain field in the pci_sys_data structure or just increment it every
+> > >> time a host controller is probed, using it as a domain counter.
+> > >>
+> > >> Therefore, instead of relying on pci_sys_data to stash the domain number
+> > >> in a standard location, ARM pcibios code can be moved to the newly
+> > >> introduced generic PCI domains code, implemented in commits:
+> > >>
+> > >> commit 41e5c0f81d3e676d671d96a0a1fafb27abfbd9
+> > >> ("of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()")
+> > >>
+> > >> commit 670ba0c8883b576d0aec28bd7a838358a4be1
+> > >> ("PCI: Add generic domain handling")
+> > >>
+> > >> In order to assign a domain number dynamically, the ARM pcibios defines
+> > >> the function, called by core PCI code:
+> > >>
+> > >> void pci_bus_assign_domain_nr(...)
+> > >>
+> > >> that relies on a DT property to define the domain number or falls back to
+> > >> a counter; its usage replaces the current domain assignment code in PCI
+> > >> host controllers present in the kernel.
+> > >>
+> > >> Cc: Arnd Bergmann <arnd@arndb.de>
+> > >> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> > >> Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> > >> Cc: Jingoo Han <jg1.han@samsung.com>
+> > >> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > >> Cc: Russell King <linux@arm.linux.org.uk>
+> > >> Cc: Mohit Kumar <mohit.kumar@st.com>
+> > >> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > >
+> > > This patch fixes a current problem with R-Car devices where there is an
+> > > internal PCI bridge and an external PCIe bridge on the devices. Both drivers
+> > > work independently but need to be on different domains. Just needed to
+> > enable
+> > > PCI_DOMAINS along with this.
+> > > I've done basic testing that the internal PCI and external PCIe work at the
+> > > same time.
+> > 
+> > Hi Phil,
+> > 
+> > Thanks for testing this.  Can you give me some more guidance on where
+> > you'd like to see this merged?  Until your comment about this fixing a
+> > current problem on R-Car, I probably would have considered this to be
+> > a cleanup and enhancement and hence material for v3.19.  But if R-Car
+> > is actually broken and this fixes it, maybe this should go in for
+> > v3.18 instead.
+> I don’t think its urgent as most of our customers use LTSI kernels, e.g. v3.10.
+> Renesas typically provide out-of-tree BSPs with upstream code back ported, along
+> with other patches. Simon Horman (Renesas maintainer, cc'd) generally handles
+> the back ports, so I'll defer to his opinion.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: "David S. Miller" <davem@davemloft.net>
-CC: Geert Uytterhoeven <geert@linux-m68k.org>
-CC: Guan Xuetao <gxt@mprc.pku.edu.cn>
-CC: linux-alpha@vger.kernel.org
-CC: linux-m68k@lists.linux-m68k.org
-CC: sparclinux@vger.kernel.org
----
- arch/alpha/kernel/sys_nautilus.c  |    1 +
- arch/m68k/coldfire/pci.c          |    1 +
- arch/sparc/kernel/pcic.c          |    2 ++
- arch/unicore32/kernel/pci.c       |   11 +++--------
- drivers/pci/hotplug/ibmphp_core.c |    6 ++++--
- drivers/pci/probe.c               |    1 -
- 6 files changed, 11 insertions(+), 11 deletions(-)
+Hi Phil,
 
-diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
-index 837c0fa..4ae4a40 100644
---- a/arch/alpha/kernel/sys_nautilus.c
-+++ b/arch/alpha/kernel/sys_nautilus.c
-@@ -253,6 +253,7 @@ nautilus_init_pci(void)
- 	   for the root bus, so just clear it. */
- 	bus->self = NULL;
- 	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
-+	pci_bus_add_devices(bus);
- }
- 
- /*
-diff --git a/arch/m68k/coldfire/pci.c b/arch/m68k/coldfire/pci.c
-index df96792..d45f087 100644
---- a/arch/m68k/coldfire/pci.c
-+++ b/arch/m68k/coldfire/pci.c
-@@ -319,6 +319,7 @@ static int __init mcf_pci_init(void)
- 	pci_fixup_irqs(pci_common_swizzle, mcf_pci_map_irq);
- 	pci_bus_size_bridges(rootbus);
- 	pci_bus_assign_resources(rootbus);
-+	pci_bus_add_devices(rootbus);
- 	return 0;
- }
- 
-diff --git a/arch/sparc/kernel/pcic.c b/arch/sparc/kernel/pcic.c
-index 6cc78c2..7a82fe2 100644
---- a/arch/sparc/kernel/pcic.c
-+++ b/arch/sparc/kernel/pcic.c
-@@ -391,6 +391,8 @@ static void __init pcic_pbm_scan_bus(struct linux_pcic *pcic)
- 	struct linux_pbm_info *pbm = &pcic->pbm;
- 
- 	pbm->pci_bus = pci_scan_bus(pbm->pci_first_busno, &pcic_ops, pbm);
-+	if (pbm->pci_bus)
-+		pci_bus_add_devices(pbm->pci_bus);
- #if 0 /* deadwood transplanted from sparc64 */
- 	pci_fill_in_pbm_cookies(pbm->pci_bus, pbm, pbm->prom_node);
- 	pci_record_assignments(pbm, pbm->pci_bus);
-diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
-index 374a055..3d82024 100644
---- a/arch/unicore32/kernel/pci.c
-+++ b/arch/unicore32/kernel/pci.c
-@@ -266,17 +266,12 @@ static int __init pci_common_init(void)
- 	pci_fixup_irqs(pci_common_swizzle, pci_puv3_map_irq);
- 
- 	if (!pci_has_flag(PCI_PROBE_ONLY)) {
--		/*
--		 * Size the bridge windows.
--		 */
-+		/* Size the bridge windows. */
- 		pci_bus_size_bridges(puv3_bus);
--
--		/*
--		 * Assign resources.
--		 */
-+		/* Assign resources. */
- 		pci_bus_assign_resources(puv3_bus);
- 	}
--
-+	pci_bus_add_devices(puv3_bus);
- 	return 0;
- }
- subsys_initcall(pci_common_init);
-diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
-index 3efaf4c..db0f2e8 100644
---- a/drivers/pci/hotplug/ibmphp_core.c
-+++ b/drivers/pci/hotplug/ibmphp_core.c
-@@ -740,7 +740,7 @@ static void ibm_unconfigure_device(struct pci_func *func)
-  */
- static u8 bus_structure_fixup(u8 busno)
- {
--	struct pci_bus *bus;
-+	struct pci_bus *bus, *b;
- 	struct pci_dev *dev;
- 	u16 l;
- 
-@@ -767,7 +767,9 @@ static u8 bus_structure_fixup(u8 busno)
- 					(l != 0x0000) && (l != 0xffff)) {
- 			debug("%s - Inside bus_structure_fixup()\n",
- 							__func__);
--			pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
-+			b = pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
-+			if (b)
-+				pci_bus_add_devices(b);
- 			break;
- 		}
- 	}
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index db16678..5c5e01e 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2120,7 +2120,6 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
- 	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
- 	if (b) {
- 		pci_scan_child_bus(b);
--		pci_bus_add_devices(b);
- 	} else {
- 		pci_free_resource_list(&resources);
- 	}
--- 
-1.7.1
+from my point of view it would be best if this went into -stable if it is a
+fix. However, as you point out, from a customer point of view it shouldn't
+be a big deal as they should get backports via our LTSI kernel regardless of
+if the patch goes through stable or not.
 
+> > If it is currently broken, is there a point where it broke?  I assume
+> > it used to work at one time.  If there's a commit that broke it, it
+> > would be nice to reference that in the changelog and explain exactly
+> > what was broken and how this fixes it.
+> Both the internal PCI and external PCIe drivers work on their own, but have
+> never worked at the same time. I think it was just unfortunate timing when I
+> added the PCIe driver. At that time, the internal PCI driver didn’t have the
+> relevant DT nodes for the board I was using so I didn't see any conflicts.
+> 
+> Thanks
+> Phil
