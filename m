@@ -1,178 +1,236 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:24366 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752646AbaKYHto (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 25 Nov 2014 02:49:44 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
-Subject: [Patch Part3 v4 12/38] x86, irq: Kill x86_io_apic_ops.print_entries and related interfaces
-Date: Tue, 25 Nov 2014 15:49:36 +0800
-Message-Id: <1416901802-24211-13-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:43982 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750706AbaKCDyW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Nov 2014 22:54:22 -0500
+Message-ID: <5456FB07.40002@huawei.com>
+Date: Mon, 3 Nov 2014 11:48:23 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>, <linux-pci@vger.kernel.org>
+CC: <liviu.dudau@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	"Mohit Kumar" <mohit.kumar@st.com>
+Subject: Re: [RFC PATCH 2/2] arm: pcibios: move to generic PCI domains
+References: <1414669490-1217-1-git-send-email-lorenzo.pieralisi@arm.com> <1414669490-1217-3-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1414669490-1217-3-git-send-email-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now there is no user of x86_io_apic_ops.print_entries anymore, so kill
-it.
+On 2014/10/30 19:44, Lorenzo Pieralisi wrote:
+> Most if not all ARM PCI host controller device drivers either ignore the
+> domain field in the pci_sys_data structure or just increment it every
+> time a host controller is probed, using it as a domain counter.
+> 
+> Therefore, instead of relying on pci_sys_data to stash the domain number
+> in a standard location, ARM pcibios code can be moved to the newly
+> introduced generic PCI domains code, implemented in commits:
+> 
+> commit 41e5c0f81d3e676d671d96a0a1fafb27abfbd9
+> ("of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()")
+> 
+> commit 670ba0c8883b576d0aec28bd7a838358a4be1
+> ("PCI: Add generic domain handling")
+> 
+> In order to assign a domain number dynamically, the ARM pcibios defines
+> the function, called by core PCI code:
+> 
+> void pci_bus_assign_domain_nr(...)
+> 
+> that relies on a DT property to define the domain number or falls back to
+> a counter; its usage replaces the current domain assignment code in PCI
+> host controllers present in the kernel.
+> 
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> Cc: Jingoo Han <jg1.han@samsung.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Russell King <linux@arm.linux.org.uk>
+> Cc: Mohit Kumar <mohit.kumar@st.com>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> ---
+>  arch/arm/Kconfig                   |  3 +++
+>  arch/arm/include/asm/mach/pci.h    |  3 ---
+>  arch/arm/include/asm/pci.h         |  7 -------
+>  arch/arm/kernel/bios32.c           | 26 +++++++++++++++++++++++---
+>  drivers/pci/host/pci-mvebu.c       | 10 ++--------
+>  drivers/pci/host/pcie-designware.c |  3 ---
+>  drivers/pci/host/pcie-rcar.c       |  3 ---
+>  7 files changed, 28 insertions(+), 27 deletions(-)
+> 
+> diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+> index 89c4b5c..29544f0 100644
+> --- a/arch/arm/Kconfig
+> +++ b/arch/arm/Kconfig
+> @@ -1292,6 +1292,9 @@ config PCI_DOMAINS
+>  	bool
+>  	depends on PCI
+>  
+> +config PCI_DOMAINS_GENERIC
+> +	def_bool PCI_DOMAINS
+> +
+>  config PCI_NANOENGINE
+>  	bool "BSE nanoEngine PCI support"
+>  	depends on SA1100_NANOENGINE
+> diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+> index 7fc4278..f19f627 100644
+> --- a/arch/arm/include/asm/mach/pci.h
+> +++ b/arch/arm/include/asm/mach/pci.h
+> @@ -44,9 +44,6 @@ struct hw_pci {
+>   * Per-controller structure
+>   */
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Tested-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/include/asm/io_apic.h      |    3 --
- arch/x86/include/asm/x86_init.h     |    1 -
- arch/x86/kernel/apic/io_apic.c      |   55 -----------------------------------
- arch/x86/kernel/x86_init.c          |    1 -
- drivers/iommu/intel_irq_remapping.c |    7 -----
- 5 files changed, 67 deletions(-)
+domain in hw_pci also should be clean up, right ?
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 3162a91f2b3d..8b4fc2d94bc1 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -225,8 +225,6 @@ extern unsigned int native_io_apic_read(unsigned int apic, unsigned int reg);
- extern void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int val);
- extern void native_io_apic_modify(unsigned int apic, unsigned int reg, unsigned int val);
- extern void native_disable_io_apic(void);
--extern void native_io_apic_print_entries(unsigned int apic, unsigned int nr_entries);
--extern void intel_ir_io_apic_print_entries(unsigned int apic, unsigned int nr_entries);
- extern int native_ioapic_set_affinity(struct irq_data *,
- 				      const struct cpumask *,
- 				      bool);
-@@ -290,7 +288,6 @@ static inline void disable_ioapic_support(void) { }
- #define native_io_apic_write		NULL
- #define native_io_apic_modify		NULL
- #define native_disable_io_apic		NULL
--#define native_io_apic_print_entries	NULL
- #define native_ioapic_set_affinity	NULL
- #define native_setup_ioapic_entry	NULL
- #define native_eoi_ioapic_pin		NULL
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index 1649bb9ca27c..2924bc88034a 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -191,7 +191,6 @@ struct x86_io_apic_ops {
- 	void		(*write)  (unsigned int apic, unsigned int reg, unsigned int value);
- 	void		(*modify) (unsigned int apic, unsigned int reg, unsigned int value);
- 	void		(*disable)(void);
--	void		(*print_entries)(unsigned int apic, unsigned int nr_entries);
- 	int		(*set_affinity)(struct irq_data *data,
- 					const struct cpumask *mask,
- 					bool force);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 551108e35cf0..42dc3ee37e89 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -1332,61 +1332,6 @@ static void __init setup_IO_APIC_irqs(void)
- 	}
- }
- 
--void native_io_apic_print_entries(unsigned int apic, unsigned int nr_entries)
--{
--	int i;
--
--	pr_debug(" NR Dst Mask Trig IRR Pol Stat Dmod Deli Vect:\n");
--
--	for (i = 0; i <= nr_entries; i++) {
--		struct IO_APIC_route_entry entry;
--
--		entry = ioapic_read_entry(apic, i);
--
--		pr_debug(" %02x %02X  ", i, entry.dest);
--		pr_cont("%1d    %1d    %1d   %1d   %1d    "
--			"%1d    %1d    %02X\n",
--			entry.mask,
--			entry.trigger,
--			entry.irr,
--			entry.polarity,
--			entry.delivery_status,
--			entry.dest_mode,
--			entry.delivery_mode,
--			entry.vector);
--	}
--}
--
--void intel_ir_io_apic_print_entries(unsigned int apic,
--				    unsigned int nr_entries)
--{
--	int i;
--
--	pr_debug(" NR Indx Fmt Mask Trig IRR Pol Stat Indx2 Zero Vect:\n");
--
--	for (i = 0; i <= nr_entries; i++) {
--		struct IR_IO_APIC_route_entry *ir_entry;
--		struct IO_APIC_route_entry entry;
--
--		entry = ioapic_read_entry(apic, i);
--
--		ir_entry = (struct IR_IO_APIC_route_entry *)&entry;
--
--		pr_debug(" %02x %04X ", i, ir_entry->index);
--		pr_cont("%1d   %1d    %1d    %1d   %1d   "
--			"%1d    %1d     %X    %02X\n",
--			ir_entry->format,
--			ir_entry->mask,
--			ir_entry->trigger,
--			ir_entry->irr,
--			ir_entry->polarity,
--			ir_entry->delivery_status,
--			ir_entry->index2,
--			ir_entry->zero,
--			ir_entry->vector);
--	}
--}
--
- void ioapic_zap_locks(void)
- {
- 	raw_spin_lock_init(&ioapic_lock);
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index b094d691f2fe..d6f36c7594d7 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -144,7 +144,6 @@ struct x86_io_apic_ops x86_io_apic_ops = {
- 	.write			= native_io_apic_write,
- 	.modify			= native_io_apic_modify,
- 	.disable		= native_disable_io_apic,
--	.print_entries		= native_io_apic_print_entries,
- 	.set_affinity		= native_ioapic_set_affinity,
- 	.setup_entry		= native_setup_ioapic_entry,
- 	.eoi_ioapic_pin		= native_eoi_ioapic_pin,
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index cb00d6bcb6ea..95c44820c851 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -681,13 +681,6 @@ static int __init intel_enable_irq_remapping(void)
- 
- 	irq_remapping_enabled = 1;
- 
--	/*
--	 * VT-d has a different layout for IO-APIC entries when
--	 * interrupt remapping is enabled. So it needs a special routine
--	 * to print IO-APIC entries for debugging purposes too.
--	 */
--	x86_io_apic_ops.print_entries = intel_ir_io_apic_print_entries;
--
- 	pr_info("Enabled IRQ remapping in %s mode\n", eim ? "x2apic" : "xapic");
- 
- 	return eim ? IRQ_REMAP_X2APIC_MODE : IRQ_REMAP_XAPIC_MODE;
+
+struct hw_pci {
+#ifdef CONFIG_PCI_DOMAINS
+	int		domain;
+#endif
+	struct pci_ops	*ops;
+	int		nr_controllers;
+	void		**private_data;
+
+
+>  struct pci_sys_data {
+> -#ifdef CONFIG_PCI_DOMAINS
+> -	int		domain;
+> -#endif
+>  	struct list_head node;
+>  	int		busnr;		/* primary bus number			*/
+>  	u64		mem_offset;	/* bus->cpu memory mapping offset	*/
+> diff --git a/arch/arm/include/asm/pci.h b/arch/arm/include/asm/pci.h
+> index 7e95d85..585dc33 100644
+> --- a/arch/arm/include/asm/pci.h
+> +++ b/arch/arm/include/asm/pci.h
+> @@ -18,13 +18,6 @@ static inline int pcibios_assign_all_busses(void)
+>  }
+>  
+>  #ifdef CONFIG_PCI_DOMAINS
+> -static inline int pci_domain_nr(struct pci_bus *bus)
+> -{
+> -	struct pci_sys_data *root = bus->sysdata;
+> -
+> -	return root->domain;
+> -}
+> -
+>  static inline int pci_proc_domain(struct pci_bus *bus)
+>  {
+>  	return pci_domain_nr(bus);
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> index 17a26c1..d8c2b4e 100644
+> --- a/arch/arm/kernel/bios32.c
+> +++ b/arch/arm/kernel/bios32.c
+> @@ -11,6 +11,8 @@
+>  #include <linux/slab.h>
+>  #include <linux/init.h>
+>  #include <linux/io.h>
+> +#include <linux/of.h>
+> +#include <linux/of_pci.h>
+>  
+>  #include <asm/mach-types.h>
+>  #include <asm/mach/map.h>
+> @@ -468,9 +470,6 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+>  		if (!sys)
+>  			panic("PCI: unable to allocate sys data!");
+>  
+> -#ifdef CONFIG_PCI_DOMAINS
+> -		sys->domain  = hw->domain;
+> -#endif
+>  		sys->busnr   = busnr;
+>  		sys->swizzle = hw->swizzle;
+>  		sys->map_irq = hw->map_irq;
+> @@ -511,6 +510,27 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+>  	}
+>  }
+>  
+> +#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> +static bool dt_domain_found;
+> +
+> +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> +{
+> +	int domain = of_get_pci_domain_nr(parent->of_node);
+> +
+> +	if (domain >= 0) {
+> +		dt_domain_found = true;
+> +	} else if (dt_domain_found == true) {
+> +		dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
+> +			parent->of_node->full_name);
+> +		return;
+> +	} else {
+> +		domain = pci_get_new_domain_nr();
+> +	}
+> +
+> +	bus->domain_nr = domain;
+> +}
+> +#endif
+> +
+>  void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
+>  {
+>  	struct pci_sys_data *sys;
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index b1315e1..2b4c1f2 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -722,17 +722,11 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
+>  {
+>  	struct mvebu_pcie *pcie = sys_to_pcie(sys);
+>  	int i;
+> -	int domain = 0;
+>  
+> -#ifdef CONFIG_PCI_DOMAINS
+> -	domain = sys->domain;
+> -#endif
+> -
+> -	snprintf(pcie->mem_name, sizeof(pcie->mem_name), "PCI MEM %04x",
+> -		 domain);
+> +	snprintf(pcie->mem_name, sizeof(pcie->mem_name), "PCI MEM %04x", nr);
+>  	pcie->mem.name = pcie->mem_name;
+>  
+> -	snprintf(pcie->io_name, sizeof(pcie->io_name), "PCI I/O %04x", domain);
+> +	snprintf(pcie->io_name, sizeof(pcie->io_name), "PCI I/O %04x", nr);
+>  	pcie->realio.name = pcie->io_name;
+>  
+>  	if (request_resource(&iomem_resource, &pcie->mem))
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index dfed00a..6790b87 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -502,9 +502,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>  	dw_pci.private_data = (void **)&pp;
+>  
+>  	pci_common_init_dev(pp->dev, &dw_pci);
+> -#ifdef CONFIG_PCI_DOMAINS
+> -	dw_pci.domain++;
+> -#endif
+>  
+>  	return 0;
+>  }
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index 61158e0..b6b859e 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -404,9 +404,6 @@ static void rcar_pcie_enable(struct rcar_pcie *pcie)
+>  	rcar_pci.private_data = (void **)&pcie;
+>  
+>  	pci_common_init_dev(&pdev->dev, &rcar_pci);
+> -#ifdef CONFIG_PCI_DOMAINS
+> -	rcar_pci.domain++;
+> -#endif
+>  }
+>  
+>  static int phy_wait_for_ack(struct rcar_pcie *pcie)
+> 
+
+
 -- 
-1.7.10.4
+Thanks!
+Yijing
 
