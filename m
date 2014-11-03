@@ -1,85 +1,43 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [Patch Part2 v5 03/31] genirq: Introduce helper functions to support stacked irq_chip
-Date: Thu,  6 Nov 2014 22:20:16 +0800
-Message-Id: <1415283644-2559-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.10]:65221 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751128AbaKCKJl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Nov 2014 05:09:41 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: =?utf-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirqus@gmail.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	linux-pci@vger.kernel.org, Anton Vorontsov <avorontsov@mvista.com>,
+	liviu.dudau@arm.com, Krzysztof Halasa <khalasa@piap.pl>
+Subject: Re: [RFC PATCH 1/2] arm: cns3xxx: pci: remove artificial dependency on pci_sys_data domain
+Date: Mon, 03 Nov 2014 11:09:10 +0100
+Message-ID: <1836395.qmSSqUtRH7@wuerfel>
+In-Reply-To: <CAHXqBFKrVhjKGRmvWep_KsNt2WDM42g5qqpoEUTnuYSZexyt6Q@mail.gmail.com>
+References: <1414669490-1217-1-git-send-email-lorenzo.pieralisi@arm.com> <1414669490-1217-2-git-send-email-lorenzo.pieralisi@arm.com> <CAHXqBFKrVhjKGRmvWep_KsNt2WDM42g5qqpoEUTnuYSZexyt6Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we already support hierarchy irq_data, so introduce several helpers
-to support stacked irq_chips.
+On Saturday 01 November 2014 13:32:08 Michał Mirosław wrote:
+> > @@ -335,7 +328,8 @@ void __init cns3xxx_pcie_init_late(void)
+> >                 cns3xxx_pwr_soft_rst(0x1 << PM_SOFT_RST_REG_OFFST_PCIE(i));
+> >                 cns3xxx_pcie_check_link(&cns3xxx_pcie[i]);
+> >                 cns3xxx_pcie_hw_init(&cns3xxx_pcie[i]);
+> > -               pci_common_init(&cns3xxx_pcie[i].hw_pci);
+> > +               private_data = &cns3xxx_pcie[i];
+> > +               pci_common_init(&hw_pci);
+> >         }
+> 
+> This looks weird. hw_pci.private_data is a pointer to a (temporary)
+> pointer to private data?
+> 
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- include/linux/irq.h |    5 +++++
- kernel/irq/chip.c   |   17 +++++++++++++++++
- 2 files changed, 22 insertions(+)
+hw_pci is a local data structure that is only used to pass arguments
+to pci_common_init. hw_pci->private_data is a pointer to an array of
+pointers to the private data in each host bridge that is created in
+the new domain during the call to pci_common_init. Like most other
+callers, cns3xxx creates only one host bridge per domain, so it's
+an array that contains only one entry.
 
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index 13ba412ce3a0..0adcbbbf2e87 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -443,6 +443,11 @@ extern void handle_percpu_devid_irq(unsigned int irq, struct irq_desc *desc);
- extern void handle_bad_irq(unsigned int irq, struct irq_desc *desc);
- extern void handle_nested_irq(unsigned int irq);
- 
-+#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
-+extern void irq_chip_ack_parent(struct irq_data *data);
-+extern int irq_chip_retrigger_hierarchy(struct irq_data *data);
-+#endif
-+
- /* Handling of unhandled and spurious interrupts: */
- extern void note_interrupt(unsigned int irq, struct irq_desc *desc,
- 			   irqreturn_t action_ret);
-diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index 72a93086216b..12f3e72449eb 100644
---- a/kernel/irq/chip.c
-+++ b/kernel/irq/chip.c
-@@ -850,3 +850,20 @@ void irq_cpu_offline(void)
- 		raw_spin_unlock_irqrestore(&desc->lock, flags);
- 	}
- }
-+
-+#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
-+void irq_chip_ack_parent(struct irq_data *data)
-+{
-+	data = data->parent_data;
-+	data->chip->irq_ack(data);
-+}
-+
-+int irq_chip_retrigger_hierarchy(struct irq_data *data)
-+{
-+	for (data = data->parent_data; data; data = data->parent_data)
-+		if (data->chip && data->chip->irq_retrigger)
-+			return data->chip->irq_retrigger(data);
-+
-+	return -ENOSYS;
-+}
-+#endif
--- 
-1.7.10.4
-
+	Arnd
