@@ -1,79 +1,50 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part3 v4 26/38] x86, irq: Kill struct io_apic_irq_attr
-Date: Tue, 25 Nov 2014 15:49:50 +0800
-Message-Id: <1416901802-24211-27-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qc0-f173.google.com ([209.85.216.173]:54525 "EHLO
+	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751960AbaKCRlm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Nov 2014 12:41:42 -0500
+Received: by mail-qc0-f173.google.com with SMTP id x3so9350249qcv.4
+        for <linux-pci@vger.kernel.org>; Mon, 03 Nov 2014 09:41:42 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <5456C024.4060103@hauke-m.de>
+References: <5456C024.4060103@hauke-m.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 3 Nov 2014 10:41:22 -0700
+Message-ID: <CAErSpo5wxRyfpfaTM-MqwMYqzV4tYzz5uZKV5kRWwi5Y7-CiqQ@mail.gmail.com>
+Subject: Re: PCIe host controller without IO port access.
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rob Herring <robh@kernel.org>, Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now there's no user of struct io_apic_irq_attr anymore, so kill it.
+[+cc Rob (author of 3c5d1699887b), Arnd]
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Tested-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/include/asm/io_apic.h |    7 -------
- arch/x86/kernel/apic/io_apic.c |   10 ----------
- 2 files changed, 17 deletions(-)
+On Sun, Nov 2, 2014 at 4:37 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> Hi,
+>
+> I am currently writing a driver for a PCIe host controller which does
+> not support IO port access.
+>
+> My plan was to only provide IORESOURCE_MEM to pci_sys_data->resources,
+> but then it allocates some generic IORESOURCE_IO memory in
+> arch/arm/kernel/bios32.c:pcibios_init_resources(). This will work for
+> the fist PCIe controller, but when the second controller gets registered
+> I am getting this: "unable to allocate I/O port region (-16)".
+>
+> Is there an example for an arm driver for a PCIe controller which does
+> not support IO port access?
+>
+> Should I change arch/arm/kernel/bios32.c in a way so that it would
+> ignore the io port mem?
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 3b54f0f9cbb7..1597c77725f9 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -157,13 +157,6 @@ extern int restore_ioapic_entries(void);
- extern void setup_ioapic_ids_from_mpc(void);
- extern void setup_ioapic_ids_from_mpc_nocheck(void);
- 
--struct io_apic_irq_attr {
--	int ioapic;
--	int ioapic_pin;
--	int trigger;
--	int polarity;
--};
--
- enum ioapic_domain_type {
- 	IOAPIC_DOMAIN_INVALID,
- 	IOAPIC_DOMAIN_LEGACY,
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 69aa3b04448b..f0ef5832f527 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -2949,16 +2949,6 @@ int mp_ioapic_registered(u32 gsi_base)
- 	return 0;
- }
- 
--static inline void set_io_apic_irq_attr(struct io_apic_irq_attr *irq_attr,
--					int ioapic, int ioapic_pin,
--					int trigger, int polarity)
--{
--	irq_attr->ioapic	= ioapic;
--	irq_attr->ioapic_pin	= ioapic_pin;
--	irq_attr->trigger	= trigger;
--	irq_attr->polarity	= polarity;
--}
--
- static void mp_irqdomain_get_attr(u32 gsi, struct mp_chip_data *data,
- 				  struct irq_alloc_info *info)
- {
--- 
-1.7.10.4
+I think this is a case of "all current platforms support an I/O space,
+so we'll set it up in the ARM PCI core."  But I/O space is not (as far
+as I know) a required feature of PCI host bridges on ARM, so I suspect
+you should change arch/arm/kernel/bios32.c in some way to accomodate
+controllers with no I/O port space at all.
 
+Bjorn
