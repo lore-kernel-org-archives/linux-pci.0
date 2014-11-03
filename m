@@ -1,136 +1,268 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0132.outbound.protection.outlook.com ([157.56.110.132]:41024
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751046AbaKDIKT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Nov 2014 03:10:19 -0500
-From: Rajat Jain <rajatjain@juniper.net>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Sandeep Mann <sandeep@purestorage.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"rajatxjain@gmail.com" <rajatxjain@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"Tejun Heo" <tj@kernel.org>
-Subject: RE: [PATCH] PCI: pciehp: Use ordered workqueue for HPC events
-Date: Tue, 4 Nov 2014 08:10:15 +0000
-Message-ID: <9d8b44697a4e42a5a69012a5f3be1b26@DM2PR05MB975.namprd05.prod.outlook.com>
-References: <1406933232-1560-1-git-send-email-sandeep@purestorage.com>
- <20140904211042.GD17125@google.com>
-In-Reply-To: <20140904211042.GD17125@google.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:52054 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751033AbaKCLXX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Nov 2014 06:23:23 -0500
+Date: Mon, 3 Nov 2014 11:23:09 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Phil Edworthy' <phil.edworthy@renesas.com>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Russell King' <linux@arm.linux.org.uk>,
+	'Mohit Kumar' <mohit.kumar@st.com>,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Lucas Stach' <l.stach@pengutronix.de>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Murali Karicheri' <m-karicheri2@ti.com>
+Subject: Re: [RFC PATCH 2/2] arm: pcibios: move to generic PCI domains
+Message-ID: <20141103112309.GB24433@red-moon>
+References: <1414669490-1217-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1414669490-1217-3-git-send-email-lorenzo.pieralisi@arm.com>
+ <003401cff704$09755cd0$1c601670$%han@samsung.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <003401cff704$09755cd0$1c601670$%han@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
-
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> owner@vger.kernel.org] On Behalf Of Bjorn Helgaas
-> Sent: Thursday, September 04, 2014 2:11 PM
-> To: Sandeep Mann
-> Cc: linux-pci@vger.kernel.org
-> Subject: Re: [PATCH] PCI: pciehp: Use ordered workqueue for HPC events
-> 
-> On Fri, Aug 01, 2014 at 03:47:12PM -0700, Sandeep Mann wrote:
-> > Using an ordered workqueue serializes processing of hotplug event.
-> > Processing an hotplug event for some devices can take a relatively
-> > "long" time, which means if a device is added and removed in quick
-> > succession (or due to flacky hardware), it can lead to multiple
-> > outstanding hotplug events. Processing these events concurrently can
-> > lead to unknown internal state and/or kernel panics.
+On Mon, Nov 03, 2014 at 01:18:12AM +0000, Jingoo Han wrote:
+> On Thursday, October 30, 2014 8:45 PM, Lorenzo Pieralisi wrote:
 > >
-> > Signed-off-by: Sandeep Mann <sandeep@purestorage.com>
-Acked-by: Rajat Jain <rajatxjain@gmail.com>
-
+> > Most if not all ARM PCI host controller device drivers either ignore the
+> > domain field in the pci_sys_data structure or just increment it every
+> > time a host controller is probed, using it as a domain counter.
+> >
+> > Therefore, instead of relying on pci_sys_data to stash the domain number
+> > in a standard location, ARM pcibios code can be moved to the newly
+> > introduced generic PCI domains code, implemented in commits:
+> >
+> > commit 41e5c0f81d3e676d671d96a0a1fafb27abfbd9
+> > ("of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()")
+> >
+> > commit 670ba0c8883b576d0aec28bd7a838358a4be1
+> > ("PCI: Add generic domain handling")
+> >
+> > In order to assign a domain number dynamically, the ARM pcibios defines
+> > the function, called by core PCI code:
+> >
+> > void pci_bus_assign_domain_nr(...)
+> >
+> > that relies on a DT property to define the domain number or falls back to
+> > a counter; its usage replaces the current domain assignment code in PCI
+> > host controllers present in the kernel.
+> >
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> > Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> > Cc: Jingoo Han <jg1.han@samsung.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Russell King <linux@arm.linux.org.uk>
+> > Cc: Mohit Kumar <mohit.kumar@st.com>
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 > 
-> What's the status of this?  I see Rajat's ack, but there was a lot of subsequent
-> discussion, and I'm not sure whether there was a conclusion.
-
-Yes, we concluded that the patch was needed.
-
+> (+CC Richard Zhu, Lucas Stach, Kishon Vijay Abraham I, Murali Karicheri)
 > 
-> Given that, I'd like to see a bugzilla with the relevant background (lspci -vv,
-> dmesg log). 
+> Acked-by: Jingoo Han <jg1.han@samsung.com>
 
-Sandeep, is that something you can provide?
+Thank you Jingoo.
 
-> Also, shpchp_core.c has similar code, so I'd like to see either a
-> similar patch for it or an explanation of why that driver doesn't need it.
+> For a long time, I have wanted the patch like this. Personally,
+> I want to increase the build coverage and keep the same binary
+> regardless of config options as possible; thus, I don't like
+> #ifdef guards such as '#ifdef CONFIG_PCI_DOMAINS'. When I submitted
+> the first patch for 'pcie-designware.c', I was not able to find
+> a way to remove '#ifdef CONFIG_PCI_DOMAINS' from 'pcie-designware.c'.
 > 
+> This patch looks good and I think that this patch will not make
+> the problem. However, I didn't test this patch with Exynos platform,
+> due to some reasons. So, I hope that other engineers test this patch
+> on other SoC platforms related to designware PCIe.
+> 
+> To Mohit Kumar (ST SPEAR13XX), Richard Zhu/Lucas Stach (IMX6)
+>     Kishon Vijay Abraham I (TI DRA7XX), Murali Karicheri (TI KEYSTONE)
+> 
+> Would you test this patch and share the result?
+> It would be very helpful. Thank you.
 
-I can provide that patch. I took a look at the commit history of SHPCHP and PCIEHP
-And I see a bunch of commits that switch to using the unordered work queues.
-
-d347e75847 ("PCI: shpchp: Handle push button event asynchronously")
-10959d72d4 ("PCI: shpchp: Make shpchp_wq non-ordered")
-486b10b9f4 ("PCI: pciehp: Handle push button event asynchronously")
-e24dcbef93 ("shpchp: update workqueue usage")
-a827ea307b ("pciehp: update workqueue usage")
-
-While I'm still trying to understand if there are scenarios where ordered queues can be a problem,
-I'm able to find convincing scenarios where having an unordered queue will fail the driver.
-
-Using ordered queues are definitely a requirement for cases where
-hotplug events can happen very fast enough not to give SW the time to
-handle them. (For e.g., for pciehp: PCIe link fluctuations may result in
-such events).
-
-Problem:
-     Consider a very fast ocuurance of HOTPLUG->UNPLUG->HOTPLUG
-     (fast enough that it does not give the wq to get a chance to run)
-
-     If the wq can be reordered, it is a problem if the worker function
-     is invoked as HOTPLUG->HOTPLUG->UNPLUG.
-
-Why:
-     In the above example, the final result should have been a device
-     added, but if it is reordered like above, thre shall be no device
-     added. The second HOTPLUG event shall be treated as a stray one
-     since a device is already present there (""Cannot add device at..")
-
-Thus we need to have ordered work queues. 
-
-The primary reasons to switch to using unordered workqueues as far
-as I could understand from the logs were (1) avoid using the system
-workqueue, and (2) let the button events be handled asynchronously.
-
-Do you think a ordered workqueue not work for any of the reasons above?
+I am happy to wait for a week or two before asking to add this code to -next,
+it would be definitely great to get more coverage on pcie-designware.
 
 Thanks,
+Lorenzo
 
-Rajat
-
-(PS: In short, I think the ordered workqueues are definitely needed for pciehp, specially with the inclusion of link-state hotplug. I think it will also help the shpchp - but I'm still trying to understand if there are any uncovered scenarios).
-
-
-> So I'll drop this for now, pending these updates.
-> 
-> Bjorn
+> Best regards,
+> Jingoo Han
 > 
 > > ---
-> >  drivers/pci/hotplug/pciehp_hpc.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >  arch/arm/Kconfig                   |  3 +++
+> >  arch/arm/include/asm/mach/pci.h    |  3 ---
+> >  arch/arm/include/asm/pci.h         |  7 -------
+> >  arch/arm/kernel/bios32.c           | 26 +++++++++++++++++++++++---
+> >  drivers/pci/host/pci-mvebu.c       | 10 ++--------
+> >  drivers/pci/host/pcie-designware.c |  3 ---
+> >  drivers/pci/host/pcie-rcar.c       |  3 ---
+> >  7 files changed, 28 insertions(+), 27 deletions(-)
 > >
-> > diff --git a/drivers/pci/hotplug/pciehp_hpc.c
-> > b/drivers/pci/hotplug/pciehp_hpc.c
-> > index 42914e0..c4eedab 100644
-> > --- a/drivers/pci/hotplug/pciehp_hpc.c
-> > +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> > @@ -681,7 +681,7 @@ static int pcie_init_slot(struct controller *ctrl)
-> >  	if (!slot)
-> >  		return -ENOMEM;
+> > diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+> > index 89c4b5c..29544f0 100644
+> > --- a/arch/arm/Kconfig
+> > +++ b/arch/arm/Kconfig
+> > @@ -1292,6 +1292,9 @@ config PCI_DOMAINS
+> >       bool
+> >       depends on PCI
 > >
-> > -	slot->wq = alloc_workqueue("pciehp-%u", 0, 0, PSN(ctrl));
-> > +	slot->wq = alloc_ordered_workqueue("pciehp-%u", 0, PSN(ctrl));
-> >  	if (!slot->wq)
-> >  		goto abort;
+> > +config PCI_DOMAINS_GENERIC
+> > +     def_bool PCI_DOMAINS
+> > +
+> >  config PCI_NANOENGINE
+> >       bool "BSE nanoEngine PCI support"
+> >       depends on SA1100_NANOENGINE
+> > diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+> > index 7fc4278..f19f627 100644
+> > --- a/arch/arm/include/asm/mach/pci.h
+> > +++ b/arch/arm/include/asm/mach/pci.h
+> > @@ -44,9 +44,6 @@ struct hw_pci {
+> >   * Per-controller structure
+> >   */
+> >  struct pci_sys_data {
+> > -#ifdef CONFIG_PCI_DOMAINS
+> > -     int             domain;
+> > -#endif
+> >       struct list_head node;
+> >       int             busnr;          /* primary bus number                   */
+> >       u64             mem_offset;     /* bus->cpu memory mapping offset       */
+> > diff --git a/arch/arm/include/asm/pci.h b/arch/arm/include/asm/pci.h
+> > index 7e95d85..585dc33 100644
+> > --- a/arch/arm/include/asm/pci.h
+> > +++ b/arch/arm/include/asm/pci.h
+> > @@ -18,13 +18,6 @@ static inline int pcibios_assign_all_busses(void)
+> >  }
 > >
+> >  #ifdef CONFIG_PCI_DOMAINS
+> > -static inline int pci_domain_nr(struct pci_bus *bus)
+> > -{
+> > -     struct pci_sys_data *root = bus->sysdata;
+> > -
+> > -     return root->domain;
+> > -}
+> > -
+> >  static inline int pci_proc_domain(struct pci_bus *bus)
+> >  {
+> >       return pci_domain_nr(bus);
+> > diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> > index 17a26c1..d8c2b4e 100644
+> > --- a/arch/arm/kernel/bios32.c
+> > +++ b/arch/arm/kernel/bios32.c
+> > @@ -11,6 +11,8 @@
+> >  #include <linux/slab.h>
+> >  #include <linux/init.h>
+> >  #include <linux/io.h>
+> > +#include <linux/of.h>
+> > +#include <linux/of_pci.h>
+> >
+> >  #include <asm/mach-types.h>
+> >  #include <asm/mach/map.h>
+> > @@ -468,9 +470,6 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+> >               if (!sys)
+> >                       panic("PCI: unable to allocate sys data!");
+> >
+> > -#ifdef CONFIG_PCI_DOMAINS
+> > -             sys->domain  = hw->domain;
+> > -#endif
+> >               sys->busnr   = busnr;
+> >               sys->swizzle = hw->swizzle;
+> >               sys->map_irq = hw->map_irq;
+> > @@ -511,6 +510,27 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+> >       }
+> >  }
+> >
+> > +#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> > +static bool dt_domain_found;
+> > +
+> > +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> > +{
+> > +     int domain = of_get_pci_domain_nr(parent->of_node);
+> > +
+> > +     if (domain >= 0) {
+> > +             dt_domain_found = true;
+> > +     } else if (dt_domain_found == true) {
+> > +             dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
+> > +                     parent->of_node->full_name);
+> > +             return;
+> > +     } else {
+> > +             domain = pci_get_new_domain_nr();
+> > +     }
+> > +
+> > +     bus->domain_nr = domain;
+> > +}
+> > +#endif
+> > +
+> >  void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
+> >  {
+> >       struct pci_sys_data *sys;
+> > diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> > index b1315e1..2b4c1f2 100644
+> > --- a/drivers/pci/host/pci-mvebu.c
+> > +++ b/drivers/pci/host/pci-mvebu.c
+> > @@ -722,17 +722,11 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
+> >  {
+> >       struct mvebu_pcie *pcie = sys_to_pcie(sys);
+> >       int i;
+> > -     int domain = 0;
+> >
+> > -#ifdef CONFIG_PCI_DOMAINS
+> > -     domain = sys->domain;
+> > -#endif
+> > -
+> > -     snprintf(pcie->mem_name, sizeof(pcie->mem_name), "PCI MEM %04x",
+> > -              domain);
+> > +     snprintf(pcie->mem_name, sizeof(pcie->mem_name), "PCI MEM %04x", nr);
+> >       pcie->mem.name = pcie->mem_name;
+> >
+> > -     snprintf(pcie->io_name, sizeof(pcie->io_name), "PCI I/O %04x", domain);
+> > +     snprintf(pcie->io_name, sizeof(pcie->io_name), "PCI I/O %04x", nr);
+> >       pcie->realio.name = pcie->io_name;
+> >
+> >       if (request_resource(&iomem_resource, &pcie->mem))
+> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > index dfed00a..6790b87 100644
+> > --- a/drivers/pci/host/pcie-designware.c
+> > +++ b/drivers/pci/host/pcie-designware.c
+> > @@ -502,9 +502,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> >       dw_pci.private_data = (void **)&pp;
+> >
+> >       pci_common_init_dev(pp->dev, &dw_pci);
+> > -#ifdef CONFIG_PCI_DOMAINS
+> > -     dw_pci.domain++;
+> > -#endif
+> >
+> >       return 0;
+> >  }
+> > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> > index 61158e0..b6b859e 100644
+> > --- a/drivers/pci/host/pcie-rcar.c
+> > +++ b/drivers/pci/host/pcie-rcar.c
+> > @@ -404,9 +404,6 @@ static void rcar_pcie_enable(struct rcar_pcie *pcie)
+> >       rcar_pci.private_data = (void **)&pcie;
+> >
+> >       pci_common_init_dev(&pdev->dev, &rcar_pci);
+> > -#ifdef CONFIG_PCI_DOMAINS
+> > -     rcar_pci.domain++;
+> > -#endif
+> >  }
+> >
+> >  static int phy_wait_for_ack(struct rcar_pcie *pcie)
 > > --
-> > 1.8.3.2
-> >
+> > 2.1.2
+> 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the
-> body of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
