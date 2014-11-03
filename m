@@ -1,154 +1,133 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Alexander Gordeev <agordeev@redhat.com>
-Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch V3 9/9] PCI, MSI: Provide mechanism to alloc/free MSI/MSIX interrupt from irqdomain
-Date: Mon, 17 Nov 2014 19:03:22 +0800
-Message-Id: <1416222202-28002-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416222202-28002-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416222202-28002-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.samsung.com ([203.254.224.24]:47350 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751840AbaKCMNe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Nov 2014 07:13:34 -0500
+Received: from epcpsbgr1.samsung.com
+ (u141.gpu120.samsung.co.kr [203.254.230.141])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0NEG00BDJPYJSR10@mailout1.samsung.com> for
+ linux-pci@vger.kernel.org; Mon, 03 Nov 2014 21:13:32 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Lucas Stach' <l.stach@pengutronix.de>,
+	'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	'Liviu Dudau' <Liviu.Dudau@arm.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Phil Edworthy' <phil.edworthy@renesas.com>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Russell King' <linux@arm.linux.org.uk>,
+	'Mohit Kumar' <mohit.kumar@st.com>,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Murali Karicheri' <m-karicheri2@ti.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1414669490-1217-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1414669490-1217-3-git-send-email-lorenzo.pieralisi@arm.com>
+ <003401cff704$09755cd0$1c601670$%han@samsung.com>
+ <20141103112309.GB24433@red-moon> <1415014431.26755.1.camel@pengutronix.de>
+In-reply-to: <1415014431.26755.1.camel@pengutronix.de>
+Subject: Re: [RFC PATCH 2/2] arm: pcibios: move to generic PCI domains
+Date: Mon, 03 Nov 2014 21:13:52 +0900
+Message-id: <000901cff75f$a75da640$f618f2c0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Provide mechanism to directly alloc/free MSI/MSIX interrupt from
-irqdomain, which will be used to replace arch_setup_msi_irq()/
-arch_setup_msi_irqs()/arch_teardown_msi_irq()/arch_teardown_msi_irqs().
+On Monday, November 03, 2014 8:34 PM, Lucas Stach wrote:
+> Am Montag, den 03.11.2014, 11:23 +0000 schrieb Lorenzo Pieralisi:
+> > On Mon, Nov 03, 2014 at 01:18:12AM +0000, Jingoo Han wrote:
+> > > On Thursday, October 30, 2014 8:45 PM, Lorenzo Pieralisi wrote:
+> > > >
+> > > > Most if not all ARM PCI host controller device drivers either ignore the
+> > > > domain field in the pci_sys_data structure or just increment it every
+> > > > time a host controller is probed, using it as a domain counter.
+> > > >
+> > > > Therefore, instead of relying on pci_sys_data to stash the domain number
+> > > > in a standard location, ARM pcibios code can be moved to the newly
+> > > > introduced generic PCI domains code, implemented in commits:
+> > > >
+> > > > commit 41e5c0f81d3e676d671d96a0a1fafb27abfbd9
+> > > > ("of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()")
+> > > >
+> > > > commit 670ba0c8883b576d0aec28bd7a838358a4be1
+> > > > ("PCI: Add generic domain handling")
+> > > >
+> > > > In order to assign a domain number dynamically, the ARM pcibios defines
+> > > > the function, called by core PCI code:
+> > > >
+> > > > void pci_bus_assign_domain_nr(...)
+> > > >
+> > > > that relies on a DT property to define the domain number or falls back to
+> > > > a counter; its usage replaces the current domain assignment code in PCI
+> > > > host controllers present in the kernel.
+> > > >
+> > > > Cc: Arnd Bergmann <arnd@arndb.de>
+> > > > Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> > > > Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> > > > Cc: Jingoo Han <jg1.han@samsung.com>
+> > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > > Cc: Russell King <linux@arm.linux.org.uk>
+> > > > Cc: Mohit Kumar <mohit.kumar@st.com>
+> > > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > >
+> > > (+CC Richard Zhu, Lucas Stach, Kishon Vijay Abraham I, Murali Karicheri)
+> > >
+> > > Acked-by: Jingoo Han <jg1.han@samsung.com>
+> >
+> > Thank you Jingoo.
+> >
+> > > For a long time, I have wanted the patch like this. Personally,
+> > > I want to increase the build coverage and keep the same binary
+> > > regardless of config options as possible; thus, I don't like
+> > > #ifdef guards such as '#ifdef CONFIG_PCI_DOMAINS'. When I submitted
+> > > the first patch for 'pcie-designware.c', I was not able to find
+> > > a way to remove '#ifdef CONFIG_PCI_DOMAINS' from 'pcie-designware.c'.
+> > >
+> > > This patch looks good and I think that this patch will not make
+> > > the problem. However, I didn't test this patch with Exynos platform,
+> > > due to some reasons. So, I hope that other engineers test this patch
+> > > on other SoC platforms related to designware PCIe.
+> > >
+> > > To Mohit Kumar (ST SPEAR13XX), Richard Zhu/Lucas Stach (IMX6)
+> > >     Kishon Vijay Abraham I (TI DRA7XX), Murali Karicheri (TI KEYSTONE)
+> > >
+> > > Would you test this patch and share the result?
+> > > It would be very helpful. Thank you.
+> >
+> > I am happy to wait for a week or two before asking to add this code to -next,
+> > it would be definitely great to get more coverage on pcie-designware.
+> >
+> I've just tested this on i.MX6 on top of 3.18-rc3. Given that we only
+> use a single domain there this patch should obviously not break
+> anything. Testing backs this claim, so:
+> 
+> Tested-by: Lucas Stach <l.stach@pengutronix.de>
 
-To kill weak functions, this patch introduce a new weak function
-arch_get_pci_msi_domain(), which is to retrieve the MSI irqdomain
-for a PCI device. This weak function could be killed once we get
-a common way to associate MSI domain with PCI device.
+Thank you for your testing!
+In fact, Exynos uses multi domain structures.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/pci/msi.c   |   60 +++++++++++++++++++++++++++++++++++++++++++++++----
- include/linux/msi.h |    3 +++
- 2 files changed, 59 insertions(+), 4 deletions(-)
+> 
+> I also looked through the patch briefly and it seems sane to me, so this
+> is also:
+> 
+> Acked-by: Lucas Stach <l.stach@pengutronix.de>
+> 
+> I don't like the fact that a proper binding documentation is missing for
+> the "linux,pci-domain" property, but this isn't the fault of this
+> patchset.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 62f504887c1d..15d44ef77f50 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -27,8 +27,41 @@ static int pci_msi_enable = 1;
- 
- #define msix_table_size(flags)	((flags & PCI_MSIX_FLAGS_QSIZE) + 1)
- 
--/* Arch hooks */
-+#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-+static struct irq_domain *pci_msi_default_domain;
-+
-+struct irq_domain * __weak arch_get_pci_msi_domain(struct pci_dev *dev)
-+{
-+	return pci_msi_default_domain;
-+}
-+
-+static int pci_msi_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+{
-+	struct irq_domain *domain;
- 
-+	domain = arch_get_pci_msi_domain(dev);
-+	if (domain)
-+		return pci_msi_domain_alloc_irqs(domain, dev, nvec, type);
-+
-+	return arch_setup_msi_irqs(dev, nvec, type);
-+}
-+
-+static void pci_msi_teardown_msi_irqs(struct pci_dev *dev)
-+{
-+	struct irq_domain *domain;
-+
-+	domain = arch_get_pci_msi_domain(dev);
-+	if (domain)
-+		pci_msi_domain_free_irqs(domain, dev);
-+	else
-+		arch_teardown_msi_irqs(dev);
-+}
-+#else
-+#define pci_msi_setup_msi_irqs		arch_setup_msi_irqs
-+#define pci_msi_teardown_msi_irqs	arch_teardown_msi_irqs
-+#endif
-+
-+/* Arch hooks */
- int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- {
- 	struct msi_chip *chip = dev->bus->msi;
-@@ -329,7 +362,7 @@ static void free_msi_irqs(struct pci_dev *dev)
- 			for (i = 0; i < entry->nvec_used; i++)
- 				BUG_ON(irq_has_action(entry->irq + i));
- 
--	arch_teardown_msi_irqs(dev);
-+	pci_msi_teardown_msi_irqs(dev);
- 
- 	list_for_each_entry_safe(entry, tmp, &dev->msi_list, list) {
- 		if (entry->msi_attrib.is_msix) {
-@@ -581,7 +614,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
- 	list_add_tail(&entry->list, &dev->msi_list);
- 
- 	/* Configure MSI capability structure */
--	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
-+	ret = pci_msi_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
- 	if (ret) {
- 		msi_mask_irq(entry, mask, ~mask);
- 		free_msi_irqs(dev);
-@@ -696,7 +729,7 @@ static int msix_capability_init(struct pci_dev *dev,
- 	if (ret)
- 		return ret;
- 
--	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
-+	ret = pci_msi_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
- 	if (ret)
- 		goto out_avail;
- 
-@@ -1196,4 +1229,23 @@ void pci_msi_domain_free_irqs(struct irq_domain *domain, struct pci_dev *dev)
- {
- 	msi_domain_free_irqs(domain, &dev->dev);
- }
-+
-+struct irq_domain *pci_msi_create_default_irq_domain(struct device_node *node,
-+		 struct msi_domain_info *info, struct irq_domain *parent)
-+{
-+	struct irq_domain *domain;
-+	static DEFINE_MUTEX(pci_msi_domain_lock);
-+
-+	mutex_lock(&pci_msi_domain_lock);
-+	if (pci_msi_default_domain) {
-+		pr_err("PCI: default irq domain for PCI MSI has already been created.\n");
-+		domain = NULL;
-+	} else {
-+		domain = pci_msi_create_irq_domain(node, info, parent);
-+		pci_msi_default_domain = domain;
-+	}
-+	mutex_unlock(&pci_msi_domain_lock);
-+
-+	return domain;
-+}
- #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index eadd47c309a7..121c8fdfd889 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -192,6 +192,9 @@ struct irq_domain *pci_msi_create_irq_domain(struct device_node *node,
- int pci_msi_domain_alloc_irqs(struct irq_domain *domain, struct pci_dev *dev,
- 			      int nvec, int type);
- void pci_msi_domain_free_irqs(struct irq_domain *domain, struct pci_dev *dev);
-+struct irq_domain *pci_msi_create_default_irq_domain(struct device_node *node,
-+		 struct msi_domain_info *info, struct irq_domain *parent);
-+
- irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
- 					  struct msi_desc *desc);
- int pci_msi_domain_check_cap(struct irq_domain *domain,
--- 
-1.7.10.4
+I agree with your opinion. I also thought that the binding documentation
+for the "linux,pci-domain" property is needed.
+
+> 
+> Regards,
+> Lucas
+> 
+> --
+> Pengutronix e.K.             | Lucas Stach                 |
+> Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
