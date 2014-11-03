@@ -1,52 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:45199 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751646AbaKFSy6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 13:54:58 -0500
-Received: by mail-ig0-f169.google.com with SMTP id hn18so10734812igb.4
-        for <linux-pci@vger.kernel.org>; Thu, 06 Nov 2014 10:54:57 -0800 (PST)
-Date: Thu, 6 Nov 2014 11:54:53 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Chao Zhou <chao.zhou@intel.com>,
-	Joerg Roedel <joro@8bytes.org>, Yinghai Lu <yinghai@kernel.org>
-Subject: [GIT PULL] PCI fixes for v3.18
-Message-ID: <20141106185453.GA17929@google.com>
+Received: from mail-bn1on0146.outbound.protection.outlook.com ([157.56.110.146]:41424
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752990AbaKCT5s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 3 Nov 2014 14:57:48 -0500
+Message-ID: <5457DE29.4020907@amd.com>
+Date: Mon, 3 Nov 2014 13:57:29 -0600
+From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Marc Zyngier <marc.zyngier@arm.com>
+CC: Mark Rutland <Mark.Rutland@arm.com>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	"Catalin Marinas" <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"Harish.Kasiviswanathan@amd.com" <Harish.Kasiviswanathan@amd.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [V9 PATCH 2/2] irqchip: gicv2m: Add supports for ARM GICv2m MSI(-X)
+References: <1414743990-28421-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <1414743990-28421-3-git-send-email-suravee.suthikulpanit@amd.com>
+ <54574FF7.706@arm.com> <54578CC7.4050901@arm.com>
+In-Reply-To: <54578CC7.4050901@arm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+On 11/3/2014 8:10 AM, Marc Zyngier wrote:
+> On 03/11/14 09:50, Marc Zyngier wrote:
+>
+>>> @@ -843,10 +847,14 @@ static int gic_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
+>>>          unsigned int type = IRQ_TYPE_NONE;
+>>>          struct of_phandle_args *irq_data = arg;
+>>>
+>>> -       ret = gic_irq_domain_xlate(domain, irq_data->np, irq_data->args,
+>>> -                                  irq_data->args_count, &hwirq, &type);
+>>> -       if (ret)
+>>> -               return ret;
+>>> +       if (irq_data) {
+>>> +               ret = gic_irq_domain_xlate(domain, irq_data->np, irq_data->args,
+>>> +                                          irq_data->args_count, &hwirq, &type);
+>>> +               if (ret)
+>>> +                       return ret;
+>>> +       } else {
+>>> +               hwirq = virq;
+>>> +       }
+>>
+>> I'm slightly puzzled here. What's the purpose of this? The whole goal of
+>> the domain hierarchy is to avoid that kind of thing. Also, you should
+>> never have to call xlate on an MSI, because it should never be described
+>> in the device tree the first place.
+>
+> Thinking of it some more:
+>
+> The actual reason why this is required is because the MSI domain calls
+> into this via irq_domain_alloc_irqs_parent(). But because MSIs are not
+> described in DT, they do not have a of_phandle to pass down to the xlate
+> helper. In this case, the v2m widget has the knowledge of what are the
+> valid SPI numbers, and the core GIC code must blindly accept it.
+>
+> This definitely requires a fat comment, because this is far from obvious.
+>
+> Thanks,
+>
+> 	M.
+>
 
-This fixes an oops when enabling SR-IOV VF devices.  The oops is a
-regression I added by configuring all devices during enumeration.
+I'll put in proper comments here.
 
-Bjorn
+Suravee
 
-
-The following changes since commit d8e7d53a2fc14e0830ab728cb84ee19933d3ac8d:
-
-  PCI: Rename sysfs 'enabled' file back to 'enable' (2014-10-30 11:17:10 -0600)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v3.18-fixes-2
-
-for you to fetch changes up to 32f638fc11db0526c706454d9ab4339d55ac89f3:
-
-  PCI: Don't oops on virtual buses in acpi_pci_get_bridge_handle() (2014-11-05 13:06:16 -0700)
-
-----------------------------------------------------------------
-PCI update for v3.18:
-
-  Enumeration
-    - Don't oops on virtual buses in acpi_pci_get_bridge_handle() (Yinghai Lu)
-
-----------------------------------------------------------------
-Yinghai Lu (1):
-      PCI: Don't oops on virtual buses in acpi_pci_get_bridge_handle()
-
- include/linux/pci-acpi.h | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
