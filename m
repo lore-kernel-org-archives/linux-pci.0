@@ -1,111 +1,77 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part3 v4 32/38] x86, irq: Kill function apic_set_affinity()
-Date: Tue, 25 Nov 2014 15:49:56 +0800
-Message-Id: <1416901802-24211-33-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1bn0103.outbound.protection.outlook.com ([157.56.110.103]:36507
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752340AbaKCT5m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 3 Nov 2014 14:57:42 -0500
+Message-ID: <5457DE24.9030302@amd.com>
+Date: Mon, 3 Nov 2014 13:57:24 -0600
+From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+MIME-Version: 1.0
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Marc Zyngier <marc.zyngier@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"Catalin.Marinas@arm.com" <Catalin.Marinas@arm.com>,
+	"Will.Deacon@arm.com" <Will.Deacon@arm.com>,
+	"liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+	"Kasiviswanathan, Harish" <Harish.Kasiviswanathan@amd.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [V9 PATCH 2/2] irqchip: gicv2m: Add supports for ARM GICv2m MSI(-X)
+References: <1414743990-28421-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <1414743990-28421-3-git-send-email-suravee.suthikulpanit@amd.com>
+ <alpine.DEB.2.11.1410311014050.5308@nanos>
+In-Reply-To: <alpine.DEB.2.11.1410311014050.5308@nanos>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now there's no user of apic_set_affinity(), so kill it.
-Also rename vector_set_affinity() to apic_set_affinity() for consistency.
+On 10/31/2014 4:40 AM, Thomas Gleixner wrote:
+> On Fri, 31 Oct 2014, suravee.suthikulpanit@amd.com wrote:
+>> +/*
+>> + * alloc_msi_irq - Allocate MSIs from available MSI bitmap.
+>> + * @data: Pointer to v2m_data
+>> + * @nvec: Number of interrupts to allocate
+>> + * @irq: Pointer to the allocated irq
+>> + *
+>> + * Allocates interrupts only if the contiguous range of MSIs
+>> + * with specified nvec are available. Otherwise return the number
+>> + * of available interrupts. If none are available, then returns -ENOENT.
+>
+> And the exact purpose of returning the number of available interrupts
+> is?
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Tested-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/include/asm/hw_irq.h |    2 --
- arch/x86/kernel/apic/vector.c |   40 +++-------------------------------------
- 2 files changed, 3 insertions(+), 39 deletions(-)
+Initially, I intended to use this function to allocate irqs for both MSI 
+and multi-MSI case. But I'll simplify this and revisit it again when 
+adding the multi-MSI.
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index ea9aebc65ff6..330445236484 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -198,8 +198,6 @@ static inline void irq_complete_move(struct irq_cfg *c) { }
- #endif
- 
- extern void apic_ack_edge(struct irq_data *data);
--extern int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
--			     unsigned int *dest_id);
- #else	/*  CONFIG_X86_LOCAL_APIC */
- static inline void lock_vector_lock(void) {}
- static inline void unlock_vector_lock(void) {}
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index fba4958b6139..436a3400d9ac 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -463,42 +463,8 @@ void apic_ack_edge(struct irq_data *data)
- 	ack_APIC_irq();
- }
- 
--/*
-- * Either sets data->affinity to a valid value, and returns
-- * ->cpu_mask_to_apicid of that in dest_id, or returns -1 and
-- * leaves data->affinity untouched.
-- */
--int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
--		      unsigned int *dest_id)
--{
--	struct irq_cfg *cfg = irqd_cfg(data);
--	unsigned int irq = data->irq;
--	int err;
--
--	if (!config_enabled(CONFIG_SMP))
--		return -EPERM;
--
--	if (!cpumask_intersects(mask, cpu_online_mask))
--		return -EINVAL;
--
--	err = assign_irq_vector(irq, cfg, mask);
--	if (err)
--		return err;
--
--	err = apic->cpu_mask_to_apicid_and(mask, cfg->domain, dest_id);
--	if (err) {
--		if (assign_irq_vector(irq, cfg, data->affinity))
--			pr_err("Failed to recover vector for irq %d\n", irq);
--		return err;
--	}
--
--	cpumask_copy(data->affinity, mask);
--
--	return 0;
--}
--
--static int vector_set_affinity(struct irq_data *irq_data,
--			       const struct cpumask *dest, bool force)
-+static int apic_set_affinity(struct irq_data *irq_data,
-+			     const struct cpumask *dest, bool force)
- {
- 	int err;
- 	int irq = irq_data->irq;
-@@ -524,7 +490,7 @@ static int vector_set_affinity(struct irq_data *irq_data,
- 
- static struct irq_chip lapic_controller = {
- 	.irq_ack		= apic_ack_edge,
--	.irq_set_affinity	= vector_set_affinity,
-+	.irq_set_affinity	= apic_set_affinity,
- 	.irq_retrigger		= apic_retrigger_irq,
- };
- 
--- 
-1.7.10.4
+>
+>> +	virq = __irq_domain_alloc_irqs(v2m->domain, hwirq,
+>> +				       1, NUMA_NO_NODE, v2m, true);
+>
+> And surely the ability of alloc_msi_irq() to allocate a contiguous
+> vector space is required to satisfy an hardcoded allocation of ONE
+> interrupt.
+>
+> What is guaranteeing that the caller only requests a single interrupt?
+
+Since this is calling from gicv2m_setup_msi_irq(), it should only setup 
+1 MSI interrupt.
+
+ >[...]
+>> +err_out:
+>
+> Single error exit which undoes the stuff in the same order it got
+> initialized is just plain wrong. Ever looked at proper error exits in
+> other kernel files?
+>
+
+I'll clean this up in V10. Thanks for pointing this out.
+
+Suravee
 
