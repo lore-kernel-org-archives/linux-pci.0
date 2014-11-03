@@ -1,55 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:11874 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754153AbaKSGwG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 01:52:06 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	Liviu Dudau <liviu@dudau.co.uk>, Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 0/5] PCI scan interfaces clean up
-Date: Wed, 19 Nov 2014 15:32:44 +0800
-Message-ID: <1416382369-13587-1-git-send-email-wangyijing@huawei.com>
+Received: from service87.mimecast.com ([91.220.42.44]:49789 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751506AbaKCOKV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Nov 2014 09:10:21 -0500
+Message-ID: <54578CC7.4050901@arm.com>
+Date: Mon, 03 Nov 2014 14:10:15 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
+CC: Mark Rutland <Mark.Rutland@arm.com>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"Harish.Kasiviswanathan@amd.com" <Harish.Kasiviswanathan@amd.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [V9 PATCH 2/2] irqchip: gicv2m: Add supports for ARM GICv2m MSI(-X)
+References: <1414743990-28421-1-git-send-email-suravee.suthikulpanit@amd.com> <1414743990-28421-3-git-send-email-suravee.suthikulpanit@amd.com> <54574FF7.706@arm.com>
+In-Reply-To: <54574FF7.706@arm.com>
+Content-Type: text/plain; charset=WINDOWS-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 03/11/14 09:50, Marc Zyngier wrote:
 
-Yijing Wang (5):
-  PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
-  PCI: Introduce pci_scan_bus_simple()
-  PCI: Use pci_scan_bus_simple() in simple scene.
-  PCI: Remove pci_scan_bus() and pci_scan_bus_parented()
-  PCI: Rip out pci_bus_add_devices() from pci_scan_root_bus()
+>> @@ -843,10 +847,14 @@ static int gic_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
+>>         unsigned int type = IRQ_TYPE_NONE;
+>>         struct of_phandle_args *irq_data = arg;
+>>
+>> -       ret = gic_irq_domain_xlate(domain, irq_data->np, irq_data->args,
+>> -                                  irq_data->args_count, &hwirq, &type);
+>> -       if (ret)
+>> -               return ret;
+>> +       if (irq_data) {
+>> +               ret = gic_irq_domain_xlate(domain, irq_data->np, irq_data->args,
+>> +                                          irq_data->args_count, &hwirq, &type);
+>> +               if (ret)
+>> +                       return ret;
+>> +       } else {
+>> +               hwirq = virq;
+>> +       }
+> 
+> I'm slightly puzzled here. What's the purpose of this? The whole goal of
+> the domain hierarchy is to avoid that kind of thing. Also, you should
+> never have to call xlate on an MSI, because it should never be described
+> in the device tree the first place.
 
- arch/alpha/kernel/pci.c           |    2 ++
- arch/alpha/kernel/sys_nautilus.c  |    3 ++-
- arch/frv/mb93090-mb00/pci-vdk.c   |    6 ++++--
- arch/ia64/sn/kernel/io_init.c     |    1 +
- arch/m68k/coldfire/pci.c          |    3 ++-
- arch/microblaze/pci/pci-common.c  |    1 +
- arch/mips/pci/pci.c               |    1 +
- arch/mn10300/unit-asb2305/pci.c   |    5 ++++-
- arch/s390/pci/pci.c               |    2 +-
- arch/sh/drivers/pci/pci.c         |    1 +
- arch/sparc/kernel/leon_pci.c      |    1 +
- arch/sparc/kernel/pcic.c          |    5 ++++-
- arch/tile/kernel/pci.c            |    2 ++
- arch/tile/kernel/pci_gx.c         |    2 ++
- arch/unicore32/kernel/pci.c       |   15 +++++----------
- arch/x86/pci/common.c             |    1 +
- arch/xtensa/kernel/pci.c          |    2 ++
- drivers/pci/host/pci-xgene.c      |    1 +
- drivers/pci/hotplug/ibmphp_core.c |    7 +++++--
- drivers/pci/probe.c               |   26 ++------------------------
- drivers/pci/xen-pcifront.c        |    2 +-
- include/linux/pci.h               |    3 +--
- 22 files changed, 46 insertions(+), 46 deletions(-)
+Thinking of it some more:
+
+The actual reason why this is required is because the MSI domain calls
+into this via irq_domain_alloc_irqs_parent(). But because MSIs are not
+described in DT, they do not have a of_phandle to pass down to the xlate
+helper. In this case, the v2m widget has the knowledge of what are the
+valid SPI numbers, and the core GIC code must blindly accept it.
+
+This definitely requires a fat comment, because this is far from obvious.
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
 
