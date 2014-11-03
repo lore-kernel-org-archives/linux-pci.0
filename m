@@ -1,128 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from www.linutronix.de ([62.245.132.108]:56022 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750834AbaKCXhH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Nov 2014 18:37:07 -0500
+Date: Tue, 4 Nov 2014 00:36:57 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Daniel J Blueman <daniel@numascale.com>
+cc: Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v6 07/27] x86, dmar: Use new irqdomain interfaces to allocate/free IRQ
-Date: Tue, 25 Nov 2014 13:53:16 +0800
-Message-Id: <1416894816-23245-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Steffen Persvold <sp@numascale.com>
+Subject: Re: [PATCH v3 5/5] Use 2GB memory block size on large x86-64
+ systems
+In-Reply-To: <54580C9E.7070706@numascale.com>
+Message-ID: <alpine.DEB.2.11.1411040033530.5308@nanos>
+References: <1414915813-2462-1-git-send-email-daniel@numascale.com> <1414915813-2462-5-git-send-email-daniel@numascale.com> <alpine.DEB.2.11.1411032021331.5308@nanos> <54580C9E.7070706@numascale.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new irqdomain interfaces to allocate/free IRQ for DMAR and interrupt
-remapping, so we could kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
+On Tue, 4 Nov 2014, Daniel J Blueman wrote:
 
-The private definition of irq_alloc_hwirqs()/irq_free_hwirqs() are
-temporary solution, it will be removed once we have converted interrupt
-remapping driver to use irqdomain framework.
+> On 11/04/2014 03:38 AM, Thomas Gleixner wrote:
+> > On Sun, 2 Nov 2014, Daniel J Blueman wrote:
+> > 
+> > > On larger x64-64 systems, use a 2GB memory block size to reduce sysfs
+> > > entry creation time by 16x. Large is defined as 64GB or more memory.
+> > 
+> > This changelog sucks.
+> > 
+> > It neither tells which sysfs entries are meant nor does it explain
+> > what the actual effect of this change is aside of speeding up some
+> > random sysfs thingy.
+> 
+> How about this?
+> 
+> On large-memory systems of 64GB or more with memory hot-plug enabled, use a
+> 2GB memory block size. Eg with 64GB memory, this reduces the number of
+> directories in /sys/devices/system/memory from 512 to 32, making it more
+> manageable, and reducing the creation time accordingly.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/irq_remapping.h |    4 ++--
- arch/x86/kernel/apic/msi.c           |   10 ++++++++++
- drivers/iommu/irq_remapping.c        |   17 +++++++++++++++--
- 3 files changed, 27 insertions(+), 4 deletions(-)
+It still does not tell what the downside is of this and why you think
+it does not matter.
+ 
+> > > @@ -1247,9 +1246,9 @@ static unsigned long probe_memory_block_size(void)
+> > >   	/* start from 2g */
+> > >   	unsigned long bz = 1UL<<31;
+> > > 
+> > > -#ifdef CONFIG_X86_UV
+> > > -	if (is_uv_system()) {
+> > > -		printk(KERN_INFO "UV: memory block size 2GB\n");
+> > > +#ifdef CONFIG_X86_64
+> > 
+> > And this brainless 's/CONFIG_X86_UV/CONFIG_X86_64/' sucks even
+> > more. I'm sure you can figure out the WHY yourself.
+> 
+> The benefit of this is applicable to other architectures. I'm unable to test
+> the change, but if you agree it's conservative enough, I'll drop the ifdef?
 
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index b7747c4c2cf2..230dde9b695e 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -103,7 +103,7 @@ static inline bool setup_remapped_irq(int irq,
- }
- #endif /* CONFIG_IRQ_REMAP */
- 
--#define dmar_alloc_hwirq()	irq_alloc_hwirq(-1)
--#define dmar_free_hwirq		irq_free_hwirq
-+extern int dmar_alloc_hwirq(void);
-+extern void dmar_free_hwirq(int irq);
- 
- #endif /* __X86_IRQ_REMAPPING_H */
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index d5def489ca5b..328cf7fbbdc4 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -223,6 +223,16 @@ int arch_setup_dmar_msi(unsigned int irq)
- 				      "edge");
- 	return 0;
- }
-+
-+int dmar_alloc_hwirq(void)
-+{
-+	return irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
-+}
-+
-+void dmar_free_hwirq(int irq)
-+{
-+	irq_domain_free_irqs(irq, 1);
-+}
- #endif
- 
- /*
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 89c4846683be..d29a53e036a2 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -6,6 +6,7 @@
- #include <linux/msi.h>
- #include <linux/irq.h>
- #include <linux/pci.h>
-+#include <linux/irqdomain.h>
- 
- #include <asm/hw_irq.h>
- #include <asm/irq_remapping.h>
-@@ -50,6 +51,18 @@ static void irq_remapping_disable_io_apic(void)
- 		disconnect_bsp_APIC(0);
- }
- 
-+#ifndef CONFIG_GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
-+static unsigned int irq_alloc_hwirqs(int cnt, int node)
-+{
-+	return irq_domain_alloc_irqs(NULL, -1, cnt, node, NULL);
-+}
-+
-+static void irq_free_hwirqs(unsigned int from, int cnt)
-+{
-+	irq_domain_free_irqs(from, cnt);
-+}
-+#endif
-+
- static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
- {
- 	int ret, sub_handle, nvec_pow2, index = 0;
-@@ -105,7 +118,7 @@ static int do_setup_msix_irqs(struct pci_dev *dev, int nvec)
- 
- 	list_for_each_entry(msidesc, &dev->msi_list, list) {
- 
--		irq = irq_alloc_hwirq(node);
-+		irq = irq_alloc_hwirqs(1, node);
- 		if (irq == 0)
- 			return -1;
- 
-@@ -128,7 +141,7 @@ static int do_setup_msix_irqs(struct pci_dev *dev, int nvec)
- 	return 0;
- 
- error:
--	irq_free_hwirq(irq);
-+	irq_free_hwirqs(irq, 1);
- 	return ret;
- }
- 
--- 
-1.7.10.4
+Which other architectures? Care to turn on your brain before replying?
 
+Thanks,
+
+	tglx
