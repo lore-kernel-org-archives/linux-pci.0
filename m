@@ -1,66 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Alexander Gordeev <agordeev@redhat.com>
-Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch V1 2/6] PCI, MSI: Introduce helpers to hide struct msi_desc implemenation details
-Date: Thu, 13 Nov 2014 19:43:44 +0800
-Message-Id: <1415879029-20098-3-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.11.231]:55758 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750914AbaKDRFn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Nov 2014 12:05:43 -0500
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Subject: Re: [PATCH] PCI: add missing DT binding for linux,pci-domain property
+From: Kumar Gala <galak@codeaurora.org>
+In-Reply-To: <1415101660-26450-1-git-send-email-l.stach@pengutronix.de>
+Date: Tue, 4 Nov 2014 11:05:39 -0600
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	devicetree@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Liviu Dudau <Liviu.Dudau@arm.com>
+Message-Id: <560410DB-26D4-4921-BFEA-176A05DA06CB@codeaurora.org>
+References: <1415101660-26450-1-git-send-email-l.stach@pengutronix.de>
+To: Lucas Stach <l.stach@pengutronix.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce helpers to hide struct msi_desc implementation details,
-so we could easily support non-PCI-compliant MSI devices later by
-moving msi_list into struct device.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- include/linux/msi.h |   19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+On Nov 4, 2014, at 5:47 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 190c7abbec84..714716a3ffdd 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -44,6 +44,25 @@ struct msi_desc {
- 	struct msi_msg msg;
- };
- 
-+/* Helpers to hide struct msi_desc implementation details */
-+#define msi_desc_to_dev(desc)		(&(desc)->dev.dev)
-+#define dev_to_msi_list(dev)		(&to_pci_dev((dev))->msi_list)
-+#define first_msi_entry(dev)		\
-+	list_first_entry(dev_to_msi_list((dev)), struct msi_desc, list)
-+#define for_each_msi_entry(desc, dev)	\
-+	list_for_each_entry((desc), dev_to_msi_list((dev)), list)
-+
-+#ifdef CONFIG_PCI_MSI
-+#define first_pci_msi_entry(pdev)	first_msi_entry(&(pdev)->dev)
-+#define for_each_pci_msi_entry(desc, pdev)	\
-+	for_each_msi_entry((desc), &(pdev)->dev)
-+
-+static inline struct pci_dev *msi_desc_to_pci_dev(struct msi_desc *desc)
-+{
-+	return desc->dev;
-+}
-+#endif /* CONFIG_PCI_MSI */
-+
- void __pci_read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void pci_write_msi_msg(unsigned int irq, struct msi_msg *msg);
+> This property was added by 41e5c0f81d3e
+> (of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr())
+> without the required binding documentation. As this property
+> will be supported by a number of host bridge drivers going forward,
+> add it to the common PCI binding doc.
+> 
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> ---
+> This is a non-critical fix, but may still qualify for 3.18-rc as
+> the property was added in this release cycle.
+> ---
+> Documentation/devicetree/bindings/pci/pci.txt | 10 ++++++++++
+> 1 file changed, 10 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
+> index 41aeed38926d..b754f786ed5e 100644
+> --- a/Documentation/devicetree/bindings/pci/pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/pci.txt
+> @@ -7,3 +7,13 @@ And for the interrupt mapping part:
+> 
+> Open Firmware Recommended Practice: Interrupt Mapping
+> http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
+> +
+> +Additionally to the properties specified in the above standards a host bridge
+> +driver implementation may support the following properties:
+> +
+> +- linux,pci-domain:
+> +   If present this property assigns a fixed PCI domain number to a host bridge,
+> +   otherwise an unstable (across boots) unique number will be assigned.
+> +   It is recommended to either not set this property at all or set it for all
+> +   host bridges in the system, otherwise potentially conflicting domain numbers
+> +   may be assigned to root buses behind different host bridges.
+
+Probably should add something about domain numbers being unique across all host bridgse.
+
+- k
+
 -- 
-1.7.10.4
+Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
 
