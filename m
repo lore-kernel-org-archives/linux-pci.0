@@ -1,94 +1,323 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:49813 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752045AbaKBPmR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Nov 2014 10:42:17 -0500
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 3 Nov 2014 01:42:16 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id EE8CB2CE8047
-	for <linux-pci@vger.kernel.org>; Mon,  3 Nov 2014 02:42:13 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sA2FiC9539846132
-	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:44:12 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sA2FgCL6028470
-	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:42:13 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V9 15/18] powerpc/powernv: Shift VF resource with an offset
-Date: Sun,  2 Nov 2014 23:41:31 +0800
-Message-Id: <1414942894-17034-16-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	iommu@lists.linux-foundation.org
+Subject: [Patch Part2 v4 26/31] x86: irq_remapping: Clean up unused MSI related code
+Date: Tue,  4 Nov 2014 20:02:00 +0800
+Message-Id: <1415102525-9898-27-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On PowrNV platform, resource position in M64 implies the PE# the resource
-belongs to. In some particular case, adjustment of a resource is necessary to
-locate it to a correct position in M64.
+Now MSI interrupt has been converted to new hierarchy irqdomain
+interfaces, so kill legacy MSI related code and interfaces.
 
-This patch introduces a function to shift the 'real' PF IOV BAR address
-according to an offset.
-
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/powerpc/platforms/powernv/pci-ioda.c |   31 +++++++++++++++++++++++++++++
- 1 file changed, 31 insertions(+)
+ arch/x86/include/asm/irq_remapping.h |   13 ---
+ arch/x86/include/asm/pci.h           |    5 --
+ arch/x86/kernel/x86_init.c           |    2 -
+ drivers/iommu/irq_remapping.c        |  151 ----------------------------------
+ drivers/iommu/irq_remapping.h        |   14 ----
+ 5 files changed, 185 deletions(-)
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index f7abba3..5034a3c 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -14,6 +14,7 @@
- #include <linux/kernel.h>
- #include <linux/pci.h>
- #include <linux/crash_dump.h>
-+#include <linux/pci_regs.h>
- #include <linux/debugfs.h>
- #include <linux/delay.h>
- #include <linux/string.h>
-@@ -644,6 +645,36 @@ static unsigned int pnv_ioda_dma_weight(struct pci_dev *dev)
- 	return 10;
+diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
+index c4fa0d2291b8..61c50e6e28c8 100644
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -50,10 +50,6 @@ extern int setup_ioapic_remapped_entry(int irq,
+ 				       int vector,
+ 				       struct io_apic_irq_attr *attr);
+ extern void free_remapped_irq(int irq);
+-extern void compose_remapped_msi_msg(struct pci_dev *pdev,
+-				     unsigned int irq, unsigned int dest,
+-				     struct msi_msg *msg, u8 hpet_id);
+-extern int setup_hpet_msi_remapped(unsigned int irq, unsigned int id);
+ extern void panic_if_irq_remap(const char *msg);
+ extern bool setup_remapped_irq(int irq,
+ 			       struct irq_cfg *cfg,
+@@ -98,15 +94,6 @@ static inline int setup_ioapic_remapped_entry(int irq,
+ 	return -ENODEV;
+ }
+ static inline void free_remapped_irq(int irq) { }
+-static inline void compose_remapped_msi_msg(struct pci_dev *pdev,
+-					    unsigned int irq, unsigned int dest,
+-					    struct msi_msg *msg, u8 hpet_id)
+-{
+-}
+-static inline int setup_hpet_msi_remapped(unsigned int irq, unsigned int id)
+-{
+-	return -ENODEV;
+-}
+ 
+ static inline void panic_if_irq_remap(const char *msg)
+ {
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 4e370a5d8117..d8c80ff32e8c 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -96,15 +96,10 @@ extern void pci_iommu_alloc(void);
+ #ifdef CONFIG_PCI_MSI
+ /* implemented in arch/x86/kernel/apic/io_apic. */
+ struct msi_desc;
+-void native_compose_msi_msg(struct pci_dev *pdev, unsigned int irq,
+-			    unsigned int dest, struct msi_msg *msg, u8 hpet_id);
+ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+ void native_teardown_msi_irq(unsigned int irq);
+ void native_restore_msi_irqs(struct pci_dev *dev);
+-int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+-		  unsigned int irq_base, unsigned int irq_offset);
+ #else
+-#define native_compose_msi_msg		NULL
+ #define native_setup_msi_irqs		NULL
+ #define native_teardown_msi_irq		NULL
+ #endif
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index e48b674639cc..814fcbadaad1 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -111,11 +111,9 @@ EXPORT_SYMBOL_GPL(x86_platform);
+ #if defined(CONFIG_PCI_MSI)
+ struct x86_msi_ops x86_msi = {
+ 	.setup_msi_irqs		= native_setup_msi_irqs,
+-	.compose_msi_msg	= native_compose_msi_msg,
+ 	.teardown_msi_irq	= native_teardown_msi_irq,
+ 	.teardown_msi_irqs	= default_teardown_msi_irqs,
+ 	.restore_msi_irqs	= default_restore_msi_irqs,
+-	.setup_hpet_msi		= default_setup_hpet_msi,
+ 	.msi_mask_irq		= default_msi_mask_irq,
+ 	.msix_mask_irq		= default_msix_mask_irq,
+ };
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 414ab0cddbbc..782dea5e4233 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -26,9 +26,6 @@ int no_x2apic_optout;
+ 
+ static struct irq_remap_ops *remap_ops;
+ 
+-static int msi_alloc_remapped_irq(struct pci_dev *pdev, int irq, int nvec);
+-static int msi_setup_remapped_irq(struct pci_dev *pdev, unsigned int irq,
+-				  int index, int sub_handle);
+ static int set_remapped_irq_affinity(struct irq_data *data,
+ 				     const struct cpumask *mask,
+ 				     bool force);
+@@ -51,109 +48,6 @@ static void irq_remapping_disable_io_apic(void)
+ 		disconnect_bsp_APIC(0);
  }
  
-+#ifdef CONFIG_PCI_IOV
-+static void pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
-+{
-+	struct pci_dn *pdn = pci_get_pdn(dev);
-+	int i;
-+	struct resource *res;
-+	resource_size_t size;
-+
-+	if (!dev->is_physfn)
-+		return;
-+
-+	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
-+		res = &dev->resource[i];
-+		if (!res->flags || !res->parent)
-+			continue;
-+
-+		if (!pnv_pci_is_mem_pref_64(res->flags))
-+			continue;
-+
-+		dev_info(&dev->dev, " Shifting VF BAR %pR to\n", res);
-+		size = pci_iov_resource_size(dev, i);
-+		res->start += size*offset;
-+
-+		dev_info(&dev->dev, "                 %pR\n", res);
-+		pci_update_resource(dev, i);
-+	}
-+	pdn->max_vfs -= offset;
-+}
-+#endif /* CONFIG_PCI_IOV */
-+
- #if 0
- static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
+-#ifndef CONFIG_GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
+-static unsigned int irq_alloc_hwirqs(int cnt, int node)
+-{
+-	return irq_domain_alloc_irqs(NULL, -1, cnt, node, NULL);
+-}
+-
+-static void irq_free_hwirqs(unsigned int from, int cnt)
+-{
+-	irq_domain_free_irqs(from, cnt);
+-}
+-#endif
+-
+-static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
+-{
+-	int ret, sub_handle, nvec_pow2, index = 0;
+-	unsigned int irq;
+-	struct msi_desc *msidesc;
+-
+-	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
+-
+-	irq = irq_alloc_hwirqs(nvec, dev_to_node(&dev->dev));
+-	if (irq == 0)
+-		return -ENOSPC;
+-
+-	nvec_pow2 = __roundup_pow_of_two(nvec);
+-	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
+-		if (!sub_handle) {
+-			index = msi_alloc_remapped_irq(dev, irq, nvec_pow2);
+-			if (index < 0) {
+-				ret = index;
+-				goto error;
+-			}
+-		} else {
+-			ret = msi_setup_remapped_irq(dev, irq + sub_handle,
+-						     index, sub_handle);
+-			if (ret < 0)
+-				goto error;
+-		}
+-		ret = setup_msi_irq(dev, msidesc, irq, sub_handle);
+-		if (ret < 0)
+-			goto error;
+-	}
+-	return 0;
+-
+-error:
+-	irq_free_hwirqs(irq, nvec);
+-
+-	/*
+-	 * Restore altered MSI descriptor fields and prevent just destroyed
+-	 * IRQs from tearing down again in default_teardown_msi_irqs()
+-	 */
+-	msidesc->irq = 0;
+-
+-	return ret;
+-}
+-
+-static int do_setup_msix_irqs(struct pci_dev *dev, int nvec)
+-{
+-	int node, ret, sub_handle, index = 0;
+-	struct msi_desc *msidesc;
+-	unsigned int irq;
+-
+-	node		= dev_to_node(&dev->dev);
+-	sub_handle	= 0;
+-
+-	list_for_each_entry(msidesc, &dev->msi_list, list) {
+-
+-		irq = irq_alloc_hwirqs(1, node);
+-		if (irq == 0)
+-			return -1;
+-
+-		if (sub_handle == 0)
+-			ret = index = msi_alloc_remapped_irq(dev, irq, nvec);
+-		else
+-			ret = msi_setup_remapped_irq(dev, irq, index, sub_handle);
+-
+-		if (ret < 0)
+-			goto error;
+-
+-		ret = setup_msi_irq(dev, msidesc, irq, 0);
+-		if (ret < 0)
+-			goto error;
+-
+-		sub_handle += 1;
+-		irq        += 1;
+-	}
+-
+-	return 0;
+-
+-error:
+-	irq_free_hwirqs(irq, 1);
+-	return ret;
+-}
+-
+-static int irq_remapping_setup_msi_irqs(struct pci_dev *dev,
+-					int nvec, int type)
+-{
+-	if (type == PCI_CAP_ID_MSI)
+-		return do_setup_msi_irqs(dev, nvec);
+-	else
+-		return do_setup_msix_irqs(dev, nvec);
+-}
+-
+ static void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
  {
+ 	/*
+@@ -171,8 +65,6 @@ static void __init irq_remapping_modify_x86_ops(void)
+ 	x86_io_apic_ops.set_affinity	= set_remapped_irq_affinity;
+ 	x86_io_apic_ops.setup_entry	= setup_ioapic_remapped_entry;
+ 	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
+-	x86_msi.setup_hpet_msi		= setup_hpet_msi_remapped;
+-	x86_msi.compose_msi_msg		= compose_remapped_msi_msg;
+ }
+ 
+ static __init int setup_nointremap(char *str)
+@@ -319,49 +211,6 @@ void free_remapped_irq(int irq)
+ 		remap_ops->free_irq(irq);
+ }
+ 
+-void compose_remapped_msi_msg(struct pci_dev *pdev,
+-			      unsigned int irq, unsigned int dest,
+-			      struct msi_msg *msg, u8 hpet_id)
+-{
+-	struct irq_cfg *cfg = irq_cfg(irq);
+-
+-	if (!irq_remapped(cfg))
+-		native_compose_msi_msg(pdev, irq, dest, msg, hpet_id);
+-	else if (remap_ops && remap_ops->compose_msi_msg)
+-		remap_ops->compose_msi_msg(pdev, irq, dest, msg, hpet_id);
+-}
+-
+-static int msi_alloc_remapped_irq(struct pci_dev *pdev, int irq, int nvec)
+-{
+-	if (!remap_ops || !remap_ops->msi_alloc_irq)
+-		return -ENODEV;
+-
+-	return remap_ops->msi_alloc_irq(pdev, irq, nvec);
+-}
+-
+-static int msi_setup_remapped_irq(struct pci_dev *pdev, unsigned int irq,
+-				  int index, int sub_handle)
+-{
+-	if (!remap_ops || !remap_ops->msi_setup_irq)
+-		return -ENODEV;
+-
+-	return remap_ops->msi_setup_irq(pdev, irq, index, sub_handle);
+-}
+-
+-int setup_hpet_msi_remapped(unsigned int irq, unsigned int id)
+-{
+-	int ret;
+-
+-	if (!remap_ops || !remap_ops->alloc_hpet_msi)
+-		return -ENODEV;
+-
+-	ret = remap_ops->alloc_hpet_msi(irq, id);
+-	if (ret)
+-		return -EINVAL;
+-
+-	return default_setup_hpet_msi(irq, id);
+-}
+-
+ void panic_if_irq_remap(const char *msg)
+ {
+ 	if (irq_remapping_enabled)
+diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
+index 8c159d6fac46..95b19a6ef16a 100644
+--- a/drivers/iommu/irq_remapping.h
++++ b/drivers/iommu/irq_remapping.h
+@@ -70,20 +70,6 @@ struct irq_remap_ops {
+ 	/* Free an IRQ */
+ 	int (*free_irq)(int);
+ 
+-	/* Create MSI msg to use for interrupt remapping */
+-	void (*compose_msi_msg)(struct pci_dev *,
+-				unsigned int, unsigned int,
+-				struct msi_msg *, u8);
+-
+-	/* Allocate remapping resources for MSI */
+-	int (*msi_alloc_irq)(struct pci_dev *, int, int);
+-
+-	/* Setup the remapped MSI irq */
+-	int (*msi_setup_irq)(struct pci_dev *, unsigned int, int, int);
+-
+-	/* Setup interrupt remapping for an HPET MSI */
+-	int (*alloc_hpet_msi)(unsigned int, unsigned int);
+-
+ 	/* Get the irqdomain associated the IOMMU device */
+ 	struct irq_domain *(*get_ir_irq_domain)(struct irq_alloc_info *);
+ 
 -- 
-1.7.9.5
+1.7.10.4
 
