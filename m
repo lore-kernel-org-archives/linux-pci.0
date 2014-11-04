@@ -1,69 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34933 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754058AbaKPKFj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 16 Nov 2014 05:05:39 -0500
-From: Thomas Renninger <trenn@suse.de>
-To: Martin Mares <mj@ucw.cz>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] lspci: Show device name as exported by BIOS (sysfs label attribute) (V2)
-Date: Sun, 16 Nov 2014 11:05:37 +0100
-Message-ID: <1985533.HjfPJX4Efo@linux-oxht.site>
-In-Reply-To: <mj+md-20141114.213146.9845.albireo@ucw.cz>
-References: <1390856419-35985-1-git-send-email-trenn@suse.de> <15082489.1nYBiW1zHH@skinner> <mj+md-20141114.213146.9845.albireo@ucw.cz>
+Received: from www.linutronix.de ([62.245.132.108]:60271 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751104AbaKDO2r (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Nov 2014 09:28:47 -0500
+Date: Tue, 4 Nov 2014 15:28:39 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+cc: Marc Zyngier <marc.zyngier@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>, jason@lakedaemon.net,
+	Catalin.Marinas@arm.com, Will.Deacon@arm.com, liviu.dudau@arm.com,
+	Harish.Kasiviswanathan@amd.com,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [V10 PATCH 2/2] irqchip: gicv2m: Add supports for ARM GICv2m
+ MSI(-X)
+In-Reply-To: <5458E0BE.2090803@amd.com>
+Message-ID: <alpine.DEB.2.11.1411041526100.4245@nanos>
+References: <1415052977-26036-1-git-send-email-suravee.suthikulpanit@amd.com> <1415052977-26036-3-git-send-email-suravee.suthikulpanit@amd.com> <alpine.DEB.2.11.1411032300160.5308@nanos> <54584681.2010103@amd.com> <alpine.DEB.2.11.1411040903340.5308@nanos>
+ <5458E0BE.2090803@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, November 14, 2014 10:34:39 PM Martin Mares wrote:
-> Hi!
+On Tue, 4 Nov 2014, Suravee Suthikulpanit wrote:
+> And that's what I am trying to do here except that GIC is expecting that
+> information to be passed to it via irq_domain_alloc_irqs(..., args) where args
+> is struct of_phandle_args (e.g. in the kernel/irqdomain.c:
+> irq_create_of_mapping). This works fine when specifying interrupt from DT, but
+> that is not always the case.
 > 
-> > Hm, while using the latest 3.3.0 tarball with our pciutils dist
-> > package I realized that this diff does not perfectly patch
-> > anymore.
-> > 
-> > Unfortunately without author, looks like a gcc guy added it.
-> > I paste it in the end
-> > You may want to incorporate (a shortened version?) it if appropriate.
+> Currently, I can just create a fake of_phandle_args just to pass the hwirq
+> information to GIC.
 > 
-> No, I don't want :-)  While it simplifies the code on Linux, it breaks
-> many other platforms.
+>     --> gicv2m_setup_msi_irq()
+>      |    struct of_phandle_args phan;
+>      |    phan.np = NULL;
+>      |    phan.args_count = 3;
+>      |    phan.args[0] = 0;
+>      |    phan.args[1] = hwirq - 32;
+>      |    phan.args[2] = IRQ_TYPE_EDGE_RISING;
+>      |--> irq_domain_alloc_irqs(d, 1, NUMA_NO_NODE, &phan);
+>       |--> gicv2m_domain_alloc(d, virq, nr_irqs, arg)
+> 	|--> irq_domain_alloc_irqs_parent(d, virq, nr_irqs, arg);
+> 
+> I am trying to figure out what would be a common data structure for this
+> purpose that would work for both Dt and non-DT case (e.g. GICv2m MSI). Unless
+> you think this is ok.
 
-Of course not the whole patch.
-The OS specific stuff must stay.
+You need to sort that out with Marc. It needs to be done in a way
+which is usable for the other potential use cases of stacked domains
+on top of GIC.
 
-It is about (be careful, copy and pasted) these
-which seem to be a nice code reduction:
+Thanks,
 
--#if BYTE_ORDER == BIG_ENDIAN
--#define cpu_to_le16 swab16
--#define cpu_to_le32 swab32
--#define le16_to_cpu swab16
--#define le32_to_cpu swab32
--
--static inline word swab16(word w)
--{
--  return (w << 8) | ((w >> 8) & 0xff);
--}
- 
--static inline u32 swab32(u32 w)
--{
--  return ((w & 0xff000000) >> 24) |
--         ((w & 0x00ff0000) >> 8) |
--         ((w & 0x0000ff00) << 8)  |
--         ((w & 0x000000ff) << 24);
--}
--#else
--#define cpu_to_le16(x) (x)
--#define cpu_to_le32(x) (x)
--#define le16_to_cpu(x) (x)
--#define le32_to_cpu(x) (x)
--#endif
-+#define cpu_to_le16 htole16
-+#define cpu_to_le32 htole32
-+#define le16_to_cpu le16toh
-+#define le32_to_cpu le32toh
-
-
-         Thomas
+	tglx
