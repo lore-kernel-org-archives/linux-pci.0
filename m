@@ -1,74 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:19138 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751193AbaKFBNR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 20:13:17 -0500
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0NEL00KI3FE3UXB0@mailout3.samsung.com> for
- linux-pci@vger.kernel.org; Thu, 06 Nov 2014 10:13:15 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, 'Mohit Kumar' <mohit.kumar@st.com>,
-	'Viresh Kumar' <viresh.kumar@linaro.org>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-Subject: [PATCH] PCI: spear: Add exynos spear13xx before add_pcie_port/pcie_init
-Date: Thu, 06 Nov 2014 10:13:49 +0900
-Message-id: <001401cff95e$ec061f60$c4125e20$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mga11.intel.com ([192.55.52.93]:27695 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753796AbaKDMAt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Nov 2014 07:00:49 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [Patch Part2 v4 06/31] x86, irq: Save destination CPU ID in irq_cfg
+Date: Tue,  4 Nov 2014 20:01:40 +0800
+Message-Id: <1415102525-9898-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The add_pcie_port/pcie_init functions are SPEAr13xx-specific.
-Add exynos prefix to avoid collision in global name space.
+Cache destination CPU APIC ID into struct irq_cfg when assigning vector
+for interrupt. Upper layer just needs to read the cached APIC ID instead
+of calling apic->cpu_mask_to_apicid_and(), it helps to hide APIC driver
+details from IOAPIC/HPET/MSI drivers..
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/host/pcie-spear13xx.c |    9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ arch/x86/include/asm/hw_irq.h |    1 +
+ arch/x86/kernel/apic/vector.c |    6 ++++++
+ 2 files changed, 7 insertions(+)
 
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index 85f594e..63f869f 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -269,7 +269,8 @@ static struct pcie_host_ops spear13xx_pcie_host_ops = {
- 	.host_init = spear13xx_pcie_host_init,
- };
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 7624fffc2822..3d51d74d6c01 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -116,6 +116,7 @@ struct irq_data;
+ struct irq_cfg {
+ 	cpumask_var_t		domain;
+ 	cpumask_var_t		old_domain;
++	unsigned int		dest_apicid;
+ 	u8			vector;
+ 	u8			move_in_progress : 1;
+ #ifdef CONFIG_IRQ_REMAP
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 5ac840a4cc53..02cb5d386985 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -188,6 +188,12 @@ next:
+ 	}
+ 	free_cpumask_var(tmp_mask);
  
--static int add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
-+static int spear13xx_add_pcie_port(struct pcie_port *pp,
-+				   struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
- 	int ret;
-@@ -352,7 +353,7 @@ static int __init spear13xx_pcie_probe(struct platform_device *pdev)
- 	if (of_property_read_bool(np, "st,pcie-is-gen1"))
- 		spear13xx_pcie->is_gen1 = true;
- 
--	ret = add_pcie_port(pp, pdev);
-+	ret = spear13xx_add_pcie_port(pp, pdev);
- 	if (ret < 0)
- 		goto fail_clk;
- 
-@@ -382,11 +383,11 @@ static struct platform_driver spear13xx_pcie_driver __initdata = {
- 
- /* SPEAr13xx PCIe driver does not allow module unload */
- 
--static int __init pcie_init(void)
-+static int __init spear13xx_pcie_init(void)
- {
- 	return platform_driver_register(&spear13xx_pcie_driver);
++	if (!err) {
++		/* cache destination APIC IDs into cfg->dest_apicid */
++		err = apic->cpu_mask_to_apicid_and(mask, cfg->domain,
++						   &cfg->dest_apicid);
++	}
++
+ 	return err;
  }
--module_init(pcie_init);
-+module_init(spear13xx_pcie_init);
  
- MODULE_DESCRIPTION("ST Microelectronics SPEAr13xx PCIe host controller driver");
- MODULE_AUTHOR("Pratyush Anand <pratyush.anand@st.com>");
 -- 
-1.7.9.5
-
+1.7.10.4
 
