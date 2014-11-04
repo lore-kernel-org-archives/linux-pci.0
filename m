@@ -1,139 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:36427 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758214AbaKUL3y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 06:29:54 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v3 1/2] arm: cns3xxx: pci: remove artificial dependency on pci_sys_data domain
-Date: Fri, 21 Nov 2014 11:29:25 +0000
-Message-Id: <1416569367-29409-2-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1416569367-29409-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1416569367-29409-1-git-send-email-lorenzo.pieralisi@arm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5458ECF3.4040308@linux.intel.com>
+Date: Tue, 04 Nov 2014 23:12:51 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Joerg Roedel <joro@8bytes.org>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [Patch Part2 v4 00/31] Enable hierarchy irqdomian on x86 platforms
+References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com> <20141104144730.GE14512@8bytes.org>
+In-Reply-To: <20141104144730.GE14512@8bytes.org>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On cns3xxx platforms the PCI controller probing code relies on an
-artificial dependency on the domain number to look-up the internal
-data structures.
+On 2014/11/4 22:47, Joerg Roedel wrote:
+> Hi Jiang,
+> 
+> On Tue, Nov 04, 2014 at 08:01:34PM +0800, Jiang Liu wrote:
+>> This is the second patch set to enable support of hierarchy irqdomain
+>> on x86 platforms. It depends on the first part at:
+>> https://lkml.org/lkml/2014/10/27/122
+>> And you may access it at:
+>> https://github.com/jiangliu/linux.git irqdomain/p2v4
+> 
+> I gave this some testing on a couple of machines. Unfortunatly it panics
+> on my AMD Kaveri system with IOMMU enabled in drivers/pci/msi.c:
+> 
+> static void msi_set_mask_bit(struct irq_data *data, u32 flag)
+> {
+>         struct msi_desc *desc = irq_data_get_msi(data);
+> 
+>         if (desc->msi_attrib.is_msix) {		<-- at this line something goes wrong
+>                 msix_mask_irq(desc, flag);
+>                 readl(desc->mask_base);         /* Flush write to device */
+>         } else {
+>                 unsigned offset = data->irq - desc->irq;
+>                 msi_mask_irq(desc, 1 << offset, flag << offset);
+>         }
+> }
+> 
+> I am further investigating to find out what went wrong, but maybe you
+> also have an idea?
+Hi Joerg,
+	Thanks for testing:)
+	Do you have the call stack? I have changed the way to call
+irq_set_msi_desc_off() for MSI/MSIx interrupts, which may cause the
+panic. Patch 19-21 changes the PCI MSI code.
+Regards!
+Gerry
 
-This patch reworks the host controller control data structure and
-adds a domain equivalent field named port in it so that the dependency on
-pci_sys_data domain field can be eventually removed.
-
-Acked-by: Krzysztof Hałasa <khalasa@piap.pl>
-Cc: Krzysztof Halasa <khalasa@piap.pl>
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-[lp: added commit log, removed pci_sys_data domain references]
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
----
- arch/arm/mach-cns3xxx/pcie.c | 40 +++++++++++++++++-----------------------
- 1 file changed, 17 insertions(+), 23 deletions(-)
-
-diff --git a/arch/arm/mach-cns3xxx/pcie.c b/arch/arm/mach-cns3xxx/pcie.c
-index 45d6bd0..f6bf9f6 100644
---- a/arch/arm/mach-cns3xxx/pcie.c
-+++ b/arch/arm/mach-cns3xxx/pcie.c
-@@ -30,18 +30,15 @@ struct cns3xxx_pcie {
- 	unsigned int irqs[2];
- 	struct resource res_io;
- 	struct resource res_mem;
--	struct hw_pci hw_pci;
--
-+	int port;
- 	bool linked;
- };
- 
--static struct cns3xxx_pcie cns3xxx_pcie[]; /* forward decl. */
--
- static struct cns3xxx_pcie *sysdata_to_cnspci(void *sysdata)
- {
- 	struct pci_sys_data *root = sysdata;
- 
--	return &cns3xxx_pcie[root->domain];
-+	return root->private_data;
- }
- 
- static struct cns3xxx_pcie *pdev_to_cnspci(const struct pci_dev *dev)
-@@ -192,13 +189,7 @@ static struct cns3xxx_pcie cns3xxx_pcie[] = {
- 			.flags = IORESOURCE_MEM,
- 		},
- 		.irqs = { IRQ_CNS3XXX_PCIE0_RC, IRQ_CNS3XXX_PCIE0_DEVICE, },
--		.hw_pci = {
--			.domain = 0,
--			.nr_controllers = 1,
--			.ops = &cns3xxx_pcie_ops,
--			.setup = cns3xxx_pci_setup,
--			.map_irq = cns3xxx_pcie_map_irq,
--		},
-+		.port = 0,
- 	},
- 	[1] = {
- 		.host_regs = (void __iomem *)CNS3XXX_PCIE1_HOST_BASE_VIRT,
-@@ -217,19 +208,13 @@ static struct cns3xxx_pcie cns3xxx_pcie[] = {
- 			.flags = IORESOURCE_MEM,
- 		},
- 		.irqs = { IRQ_CNS3XXX_PCIE1_RC, IRQ_CNS3XXX_PCIE1_DEVICE, },
--		.hw_pci = {
--			.domain = 1,
--			.nr_controllers = 1,
--			.ops = &cns3xxx_pcie_ops,
--			.setup = cns3xxx_pci_setup,
--			.map_irq = cns3xxx_pcie_map_irq,
--		},
-+		.port = 1,
- 	},
- };
- 
- static void __init cns3xxx_pcie_check_link(struct cns3xxx_pcie *cnspci)
- {
--	int port = cnspci->hw_pci.domain;
-+	int port = cnspci->port;
- 	u32 reg;
- 	unsigned long time;
- 
-@@ -260,9 +245,9 @@ static void __init cns3xxx_pcie_check_link(struct cns3xxx_pcie *cnspci)
- 
- static void __init cns3xxx_pcie_hw_init(struct cns3xxx_pcie *cnspci)
- {
--	int port = cnspci->hw_pci.domain;
-+	int port = cnspci->port;
- 	struct pci_sys_data sd = {
--		.domain = port,
-+		.private_data = cnspci,
- 	};
- 	struct pci_bus bus = {
- 		.number = 0,
-@@ -323,6 +308,14 @@ static int cns3xxx_pcie_abort_handler(unsigned long addr, unsigned int fsr,
- void __init cns3xxx_pcie_init_late(void)
- {
- 	int i;
-+	void *private_data;
-+	struct hw_pci hw_pci = {
-+	       .nr_controllers = 1,
-+	       .ops = &cns3xxx_pcie_ops,
-+	       .setup = cns3xxx_pci_setup,
-+	       .map_irq = cns3xxx_pcie_map_irq,
-+	       .private_data = &private_data,
-+	};
- 
- 	pcibios_min_io = 0;
- 	pcibios_min_mem = 0;
-@@ -335,7 +328,8 @@ void __init cns3xxx_pcie_init_late(void)
- 		cns3xxx_pwr_soft_rst(0x1 << PM_SOFT_RST_REG_OFFST_PCIE(i));
- 		cns3xxx_pcie_check_link(&cns3xxx_pcie[i]);
- 		cns3xxx_pcie_hw_init(&cns3xxx_pcie[i]);
--		pci_common_init(&cns3xxx_pcie[i].hw_pci);
-+		private_data = &cns3xxx_pcie[i];
-+		pci_common_init(&hw_pci);
- 	}
- 
- 	pci_assign_unassigned_resources();
--- 
-2.1.2
-
+> 
+> 
+> 	Joerg
+> 
