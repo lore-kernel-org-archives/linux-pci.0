@@ -1,121 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:41985 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752382AbaKVENu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 23:13:50 -0500
-Message-ID: <54700D52.9050109@gmail.com>
-Date: Sat, 22 Nov 2014 12:13:06 +0800
-From: Yijing Wang <wangyijing0307@gmail.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yijing Wang <wangyijing@huawei.com>
-CC: Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
 	Marc Zyngier <marc.zyngier@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, linux-pci@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>
-Subject: Re: Removal of bus->msi assignment breaks MSI with stacked domains
-References: <546E1771.4030201@arm.com> <20141120215353.GA7987@google.com> <alpine.DEB.2.11.1411202355060.6439@nanos> <546E9B60.9070706@huawei.com> <20141121173110.GB6578@google.com>
-In-Reply-To: <20141121173110.GB6578@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [Patch Part2 v4 02/31] irqdomain: Do irq_find_mapping and set_type for hierarchy irqdomain in case OF
+Date: Tue,  4 Nov 2014 20:01:36 +0800
+Message-Id: <1415102525-9898-3-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Yingjoe Chen <yingjoe.chen@mediatek.com>
 
-在 2014/11/22 1:31, Bjorn Helgaas 写道:
-> On Fri, Nov 21, 2014 at 09:54:40AM +0800, Yijing Wang wrote:
->>>> Thomas, let me know if you want to do that.  I suppose we could add a new
->>>> patch to add it back, but that would leave bisection broken for the
->>>> interval between c167caf8d174 and the patch that adds it back.
->>> Fortunately my irq/irqdomain branch is not immutable yet. So we have
->>> no problem at that point. I can rebase on your branch until tomorrow
->>> night. Or just rebase on mainline and we sort out the merge conflicts
->>> later, i.e. delegate them to Linus so his job of pulling stuff gets
->>> not completely boring.
->> Hi Thomas, sorry for my introducing the broken.
->>
->>> What I'm more worried about is whether this intended change is going
->>> to inflict a problem on Jiangs intention to deduce the MSI irq domain
->>> from the device, which we really need for making DMAR work w/o going
->>> through loops and hoops.
->>>
->>> I have limited knowledge about the actual scope of iommu (DMAR) units
->>> versus device/bus/host-controllers, so I would appreciate a proper
->>> explanation for that from you or Jiang or both.
->> In my personal opinion, if it's not necessary, we should not put stuff
->> into pci_dev or pci_bus. If we plan to save msi_controller in pci_bus or
->> pci_dev.
->> I have a proposal, I would be appreciated if you could give some comments.
->> First we refactor pci_host_bridge to make a generic
->> pci_host_bridge, then we could save pci domain in it to eliminate
->> arch specific functions. I aslo wanted to save msi_controller as
->> pci domain, but now Jiang refactor hierarchy irq domain, and
->> pci devices under the same pci host bridge may need to associate
->> to different msi_controllers.
-> I think this is getting ahead of ourselves.  Let's make small steps.
->
-> We currently have the msi_controller pointer in struct pci_bus.  That was
-> there even before your series.  Your series added pci_msi_controller(),
-> and I reworked it so it looks like this:
->
->      static struct msi_controller *pci_msi_controller(struct pci_dev *dev)
->      {
-> 	   struct msi_controller *msi_ctrl = dev->bus->msi;
->
-> 	   if (msi_ctrl)
-> 		   return msi_ctrl;
->
-> 	   return pcibios_msi_controller(dev);
->      }
->
-> So now your series basically just removes the ARM add_bus() and
-> remove_bus() methods and gets the MSI controller info from the ARM
-> pci_sys_data struct instead of from pci_bus.  Of course, that assumes that
-> on ARM, all devices under a host bridge have the same MSI controller.  That
-> seems like an unwarranted assumption, but if you want to do it for ARM,
-> that's fine with me.
+It is possible to call irq_create_of_mapping to create/translate the
+same IRQ from DT for multiple times. Perform irq_find_mapping check
+and set_type for hierarchy irqdomain in irq_create_of_mapping() to
+avoid duplicate these functionality in all outer most irqdomain.
 
-Agree, we could use pci_msi_controller() to find msi_controller for 
-pci_dev before a
-better common way found.
+Signed-off-by: Yingjoe Chen <yingjoe.chen@mediatek.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ kernel/irq/irqdomain.c |   27 ++++++++++++++++++---------
+ 1 file changed, 18 insertions(+), 9 deletions(-)
 
->
->> So I want to associate a msi_controller finding ops with generic pci_host_bridge,
->> then every pci device could find its msi_controller/irq_domain by a
->> common function
->>
->> E.g
->>
->> struct msi_controller *pci_msi_controller(struct pci_dev *pdev)
->> {
->> 	struct msi_controller *ctrl;
->> 	struct pci_host_bridge *host = find_pci_host_bridge(pdev->bus);
->> 	if (host && host->pci_get_msi_controller)
->> 		ctrl = pci_host_bridge->pci_get_msi_controller(struct pci_dev *pdev);
->>
->> 	return ctrl;	
->> }
-> You can do this for ARM if you want (and your series already accomplishes
-> the same effect, though implemented differently).  But I don't think this
-> is appropriate for the PCI core.
-
-OK. We need a better solution, not only for arm, also need to consider 
-arm64 and
-other platforms.
-
->
-> For anybody who is on this thread but not the original, I reworked the
-> series slightly, see [1].
->
-> Bjorn
->
-> [1] http://lkml.kernel.org/r/20141121172018.GA6578@google.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 899150452ae8..e1351b0bd7f8 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -478,11 +478,6 @@ unsigned int irq_create_of_mapping(struct of_phandle_args *irq_data)
+ 		return 0;
+ 	}
+ 
+-	if (irq_domain_is_hierarchy(domain)) {
+-		virq = irq_domain_alloc_irqs(domain, 1, NUMA_NO_NODE, irq_data);
+-		return virq <= 0 ? 0 : virq;
+-	}
+-
+ 	/* If domain has no translation, then we assume interrupt line */
+ 	if (domain->ops->xlate == NULL)
+ 		hwirq = irq_data->args[0];
+@@ -492,10 +487,24 @@ unsigned int irq_create_of_mapping(struct of_phandle_args *irq_data)
+ 			return 0;
+ 	}
+ 
+-	/* Create mapping */
+-	virq = irq_create_mapping(domain, hwirq);
+-	if (!virq)
+-		return virq;
++	if (irq_domain_is_hierarchy(domain)) {
++		/*
++		 * If we've already configured this interrupt,
++		 * don't do it again, or hell will break loose.
++		 */
++		virq = irq_find_mapping(domain, hwirq);
++		if (virq)
++			return virq;
++
++		virq = irq_domain_alloc_irqs(domain, 1, NUMA_NO_NODE, irq_data);
++		if (virq <= 0)
++			return 0;
++	} else {
++		/* Create mapping */
++		virq = irq_create_mapping(domain, hwirq);
++		if (!virq)
++			return virq;
++	}
+ 
+ 	/* Set type if specified and different than the current one */
+ 	if (type != IRQ_TYPE_NONE &&
+-- 
+1.7.10.4
 
