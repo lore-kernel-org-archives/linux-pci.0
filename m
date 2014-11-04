@@ -1,152 +1,108 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-To: catalin.marinas@arm.com, will.deacon@arm.com, bhelgaas@google.com,
-	lorenzo.pieralisi@arm.com, wangyijing@huawei.com, arnd@arndb.de,
-	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Subject: [PATCH 4/6] x86, acpi, pci: mmconfig_{32,64}.c code refactoring - remove code duplication.
-Date: Wed, 19 Nov 2014 17:04:49 +0100
-Message-Id: <1416413091-13452-5-git-send-email-tomasz.nowicki@linaro.org>
-In-Reply-To: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org>
-References: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2on0103.outbound.protection.outlook.com ([65.55.169.103]:52864
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753722AbaKDOVA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Nov 2014 09:21:00 -0500
+Message-ID: <5458E0BE.2090803@amd.com>
+Date: Tue, 4 Nov 2014 08:20:46 -0600
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+MIME-Version: 1.0
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Marc Zyngier <marc.zyngier@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>, <jason@lakedaemon.net>,
+	<Catalin.Marinas@arm.com>, <Will.Deacon@arm.com>,
+	<liviu.dudau@arm.com>, <Harish.Kasiviswanathan@amd.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>
+Subject: Re: [V10 PATCH 2/2] irqchip: gicv2m: Add supports for ARM GICv2m
+ MSI(-X)
+References: <1415052977-26036-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <1415052977-26036-3-git-send-email-suravee.suthikulpanit@amd.com>
+ <alpine.DEB.2.11.1411032300160.5308@nanos> <54584681.2010103@amd.com>
+ <alpine.DEB.2.11.1411040903340.5308@nanos>
+In-Reply-To: <alpine.DEB.2.11.1411040903340.5308@nanos>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-mmconfig_64.c version is going to be default implementation for arch
-agnostic low-level direct PCI config space accessors via MMCONFIG.
-However, now it initialize raw_pci_ext_ops pointer which is used in
-x86 specific code only. Moreover, mmconfig_32.c is doing the same thing
-at the same time.
 
-Move it to mmconfig_shared.c so it becomes common for both and
-mmconfig_64.c turns out to be purely arch agnostic.
 
-Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
----
- arch/x86/pci/mmconfig-shared.c | 10 ++++++++--
- arch/x86/pci/mmconfig_32.c     | 10 ++--------
- arch/x86/pci/mmconfig_64.c     |  6 ++----
- include/linux/mmconfig.h       |  4 ++++
- 4 files changed, 16 insertions(+), 14 deletions(-)
+On 11/4/14 04:06, Thomas Gleixner wrote:
+> On Mon, 3 Nov 2014, Suravee Suthikulanit wrote:
+>> On 11/3/2014 4:51 PM, Thomas Gleixner wrote:
+>>> On Mon, 3 Nov 2014, suravee.suthikulpanit@amd.com wrote:
+>>>> +	irq_domain_set_hwirq_and_chip(v2m->domain, virq, hwirq,
+>>>> +				&v2m_chip, v2m);
+>>>> +
+>>>> +	irq_set_msi_desc(hwirq, desc);
+>>>> +	irq_set_irq_type(hwirq, IRQ_TYPE_EDGE_RISING);
+>>>
+>>> Sure both calls work perfectly fine as long as virq == hwirq, right?
+>>
+>> I was running into an issue when calling the irq_domain_alloc_irq_parent(), it
+>> requires of_phandle_args pointer to be passed in. However, this does not work
+>> for GICv2m since it does not have interrupt information in the device tree.
+>> So, I decided at first to use direct (virq == hwirq) mapping, which simplifies
+>> the code a bit, but might not be ideal solution, as you pointed out.
+>
+> It's not only far from ideal. It's not a solution at all. Simply
+> because there is no guarantee for virq == hwirq.
+>
+>> An alternative would be to create a temporary struct of_phandle_args, and
+>> populate it with the interrupt information for the requested MSI. Then pass it
+>> to:
+>>    --> irq_domain_alloc_irq_parent
+>>     |--> gic_irq_domain_alloc
+>>       |--> gic_irq_domain_xlate
+>>       |--> gic_irq_domain_map
+>>
+>> However, this would still not be ideal if we want to support ACPI. Another
+>
+> Neither device tree nor ACPI has anything to do with MSI interrupts at
+> runtime.
+>
+> All they do is to tell that there is a MSI controller and where the
+> registers are and in the worst case fixups for a borked MSI_TYPER
+> register.
+>
+> So either the TYPER reg or DT/ACPI gives you a fixed hwirq range which
+> is reserved for MSI. And that's all you need, right?
+>
+Right, I get that part. Figuring out the fixed hwirq range for MSI is 
+not the point I am trying to make here.
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index b397544..e42004c 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -29,6 +29,11 @@
- static bool pci_mmcfg_running_state;
- static bool pci_mmcfg_arch_init_failed;
- 
-+const struct pci_raw_ops pci_mmcfg = {
-+	.read =		pci_mmcfg_read,
-+	.write =	pci_mmcfg_write,
-+};
-+
- static const char *__init pci_mmcfg_e7520(void)
- {
- 	u32 win;
-@@ -486,9 +491,10 @@ static void __init __pci_mmcfg_init(int early)
- 		}
- 	}
- 
--	if (pci_mmcfg_arch_init())
-+	if (pci_mmcfg_arch_init()) {
-+		raw_pci_ext_ops = &pci_mmcfg;
- 		pci_probe = (pci_probe & ~PCI_PROBE_MASK) | PCI_PROBE_MMCONF;
--	else {
-+	} else {
- 		free_all_mmcfg();
- 		pci_mmcfg_arch_init_failed = true;
- 	}
-diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
-index d774672..c0106a6 100644
---- a/arch/x86/pci/mmconfig_32.c
-+++ b/arch/x86/pci/mmconfig_32.c
-@@ -50,7 +50,7 @@ static void pci_exp_set_dev_base(unsigned int base, int bus, int devfn)
- 	}
- }
- 
--static int pci_mmcfg_read(unsigned int seg, unsigned int bus,
-+int pci_mmcfg_read(unsigned int seg, unsigned int bus,
- 			  unsigned int devfn, int reg, int len, u32 *value)
- {
- 	unsigned long flags;
-@@ -89,7 +89,7 @@ err:		*value = -1;
- 	return 0;
- }
- 
--static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
-+int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 			   unsigned int devfn, int reg, int len, u32 value)
- {
- 	unsigned long flags;
-@@ -126,15 +126,9 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 	return 0;
- }
- 
--const struct pci_raw_ops pci_mmcfg = {
--	.read =		pci_mmcfg_read,
--	.write =	pci_mmcfg_write,
--};
--
- int __init pci_mmcfg_arch_init(void)
- {
- 	printk(KERN_INFO "PCI: Using MMCONFIG for extended config space\n");
--	raw_pci_ext_ops = &pci_mmcfg;
- 	return 1;
- }
- 
-diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
-index 1209596..ff2c50c 100644
---- a/arch/x86/pci/mmconfig_64.c
-+++ b/arch/x86/pci/mmconfig_64.c
-@@ -25,7 +25,7 @@ static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus, unsigned i
- 	return NULL;
- }
- 
--static int pci_mmcfg_read(unsigned int seg, unsigned int bus,
-+int pci_mmcfg_read(unsigned int seg, unsigned int bus,
- 			  unsigned int devfn, int reg, int len, u32 *value)
- {
- 	char __iomem *addr;
-@@ -59,7 +59,7 @@ err:		*value = -1;
- 	return 0;
- }
- 
--static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
-+int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 			   unsigned int devfn, int reg, int len, u32 value)
- {
- 	char __iomem *addr;
-@@ -121,8 +121,6 @@ int __init pci_mmcfg_arch_init(void)
- 			return 0;
- 		}
- 
--	raw_pci_ext_ops = &pci_mmcfg;
--
- 	return 1;
- }
- 
-diff --git a/include/linux/mmconfig.h b/include/linux/mmconfig.h
-index 6ccd1ee..ae8ec83 100644
---- a/include/linux/mmconfig.h
-+++ b/include/linux/mmconfig.h
-@@ -43,6 +43,10 @@ int pci_mmcfg_arch_init(void);
- void pci_mmcfg_arch_free(void);
- int pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg);
- void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg);
-+int pci_mmcfg_read(unsigned int seg, unsigned int bus,
-+		   unsigned int devfn, int reg, int len, u32 *value);
-+int pci_mmcfg_write(unsigned int seg, unsigned int bus,
-+		    unsigned int devfn, int reg, int len, u32 value);
- 
- extern struct list_head pci_mmcfg_list;
- 
--- 
-1.9.1
+> [...]
+> All you need is to pick one hwirq out of the existing fixed range and
+> associate it to a newly allocated virq. That's the only information
+> the underlying gic domain has to know about, because it needs to
+> translate from the hwirq to the virq in the low level entry handler
+> gic_handle_irq().
 
+And that's what I am trying to do here except that GIC is expecting that 
+information to be passed to it via irq_domain_alloc_irqs(..., args) 
+where args is struct of_phandle_args (e.g. in the kernel/irqdomain.c: 
+irq_create_of_mapping). This works fine when specifying interrupt from 
+DT, but that is not always the case.
+
+Currently, I can just create a fake of_phandle_args just to pass the 
+hwirq information to GIC.
+
+     --> gicv2m_setup_msi_irq()
+      |    struct of_phandle_args phan;
+      |    phan.np = NULL;
+      |    phan.args_count = 3;
+      |    phan.args[0] = 0;
+      |    phan.args[1] = hwirq - 32;
+      |    phan.args[2] = IRQ_TYPE_EDGE_RISING;
+      |--> irq_domain_alloc_irqs(d, 1, NUMA_NO_NODE, &phan);
+       |--> gicv2m_domain_alloc(d, virq, nr_irqs, arg)
+	|--> irq_domain_alloc_irqs_parent(d, virq, nr_irqs, arg);
+
+I am trying to figure out what would be a common data structure for this 
+purpose that would work for both Dt and non-DT case (e.g. GICv2m MSI). 
+Unless you think this is ok.
+
+Thanks,
+Suravee
