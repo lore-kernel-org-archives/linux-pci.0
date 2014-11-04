@@ -1,110 +1,144 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:34234 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753669AbaKRMO4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 07:14:56 -0500
-Message-ID: <546B3829.9040209@huawei.com>
-Date: Tue, 18 Nov 2014 20:14:33 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <54584681.2010103@amd.com>
+Date: Mon, 3 Nov 2014 21:22:41 -0600
+From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>
-CC: Liviu Dudau <liviu@dudau.co.uk>, Tony Luck <tony.luck@intel.com>,
-	"Russell King" <linux@arm.linux.org.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"huxinwei@huawei.com" <huxinwei@huawei.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Wuyun <wuyun.wu@huawei.com>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [RFC PATCH 00/16] Refine PCI host bridge scan interfaces
-References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com> <1463511.o4kE8TX3Bd@wuerfel> <546B2ACC.90304@huawei.com> <20535707.3sA6NjSINh@wuerfel> <20141118114518.GA3514@red-moon>
-In-Reply-To: <20141118114518.GA3514@red-moon>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Marc Zyngier <marc.zyngier@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>, <jason@lakedaemon.net>,
+	<Catalin.Marinas@arm.com>, <Will.Deacon@arm.com>,
+	<liviu.dudau@arm.com>, <Harish.Kasiviswanathan@amd.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>
+Subject: Re: [V10 PATCH 2/2] irqchip: gicv2m: Add supports for ARM GICv2m
+ MSI(-X)
+References: <1415052977-26036-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <1415052977-26036-3-git-send-email-suravee.suthikulpanit@amd.com>
+ <alpine.DEB.2.11.1411032300160.5308@nanos>
+In-Reply-To: <alpine.DEB.2.11.1411032300160.5308@nanos>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/11/18 19:45, Lorenzo Pieralisi wrote:
-> On Tue, Nov 18, 2014 at 11:30:11AM +0000, Arnd Bergmann wrote:
->> On Tuesday 18 November 2014 19:17:32 Yijing Wang wrote:
->>> On 2014/11/17 22:13, Arnd Bergmann wrote:
->>>> On Monday 17 November 2014 18:21:34 Yijing Wang wrote:
->>>>> This series is based Linux 3.18-rc1 and Lorenzo Pieralisi's
->>>>> arm PCI domain cleanup patches, link: 
->>>>> https://patchwork.ozlabs.org/patch/407585/
->>>>>
->>>>> Current pci scan interfaces like pci_scan_root_bus() and directly
->>>>> call pci_create_root_bus()/pci_scan_child_bus() lack flexiblity.
->>>>> Some platform infos like PCI domain and msi_chip have to be
->>>>> associated to PCI bus by some arch specific function.
->>>>> We want to make a generic pci_host_bridge, and make it hold
->>>>> the platform infos or hook. Then we could eliminate the lots
->>>>> of arch pci_domain_nr, also we could associate some platform 
->>>>> ops something like pci_get_msi_chip(struct pci_dev *dev)
->>>>> with pci_host_bridge to avoid introduce arch weak functions.
->>>>>
->>>>> This RFC version not for all platforms, just applied the new
->>>>> scan interface in x86/arm/powerpc/ia64, I will refresh other
->>>>> platforms after the core pci scan interfaces are ok.
->>>>
->>>> I think overall this is a good direction to take, in particular
->>>> moving more things into struct pci_host_bridge so we can
->>>> slim down the architecture specific code.
->>>
->>> Hi Arnd, thanks very much for your review and comments!
->>>
->>>>
->>>> I don't particularly like the way you use the 'pci_host_info'
->>>> to pass callback pointers and some of the generic information.
->>>> This duplicates some of the issues we are currently trying
->>>> to untangle in the arm32 code to make drivers easier to share
->>>> between architectures.
->>>
->>> What arm32 code you are trying to untangle for example ?
->>
->> We have a few problems that currently prevent us from using shared
->> drivers across arm32 and arm64:
->>
->> - arm32 has an architecture-defined pci_sys_data structure, but
->>   we really want to have one that is defined by the host bridge driver
->>   and that is architecture independent. Some core functions depend
->>   on this structure at the moment, which Lorenzo is trying to
->>   undo
-> 
-> Yes, and on this specific point I would like to understand why we
-> are adding yet more pci_sys_data data in the last series that is
-> already in -next:
-> 
-> https://lkml.org/lkml/2014/10/27/85
-> 
-> What does this buy us ? The cover letter says already that there *is*
-> a better solution, why do not we work on that instead of adding more churn
-> to arch specific code ?
+On 11/3/2014 4:51 PM, Thomas Gleixner wrote:
+> On Mon, 3 Nov 2014, suravee.suthikulpanit@amd.com wrote:
+>> +static void gicv2m_teardown_msi_irq(struct msi_chip *chip, unsigned int irq)
+>> +{
+>> +	int pos;
+>> +	struct v2m_data *v2m = container_of(chip, struct v2m_data, msi_chip);
+>> +
+>> +	spin_lock(&v2m->msi_cnt_lock);
+>
+> Why do you need an extra lock here? Is that stuff not serialized from
+> the msi_chip layer already?
+>
+> If not, why don't we have the serialization there instead of forcing
+> every callback to implement its own?
 
-In my plan, first save msi_chip in pci_sys_data, so we could remove the lots duplicate
-pcibios_add_bus(), second, make a generic pci_host_bridge, and move the msi_chip in that,
-so we could eliminate all MSI arch weak functions. And in arm I think it's no need to
-associate msi_chip with PCI bus, because all pci devices under the same pci host bridge
-share the same msi_chip.
+ From the following call paths:
+   |--> pci_enable_msi_range
+    |--> msi_capability_init
+     |--> arch_setup_msi_irqs
+      |--> arch_setup_msi_irq
+and
+   |--> pci_enable_msix
+    |--> msix_capability_init
+     |--> arch_setup_msi_irqs
+      |--> arch_setup_msi_irq
 
+It serialize when a PCI device driver tries to allocate multiple 
+interrupts. However, AFAICT, it would not serialize the allocation when 
+multiple drivers trying to setup MSI irqs at the same time. I needed 
+that to protect the bitmap structure. I also noticed the same in other 
+drivers as well.
 
+I can look into this more to see where would be a good point.
 
-> 
+>> +	pos = irq - v2m->spi_start;
+>
+> So this assumes that @irq is the hwirq number, right? How does the
+> calling function know about that? It should only have knowledge about
+> the virq number if I'm not missing something.
+>
+> And if I'm missing something, then that msi_chip stuff is seriously
+> broken.
+
+It works this way because of the direct mapping (as you noticed). But I 
+am planning to change that. See below.
+
+>
+>> +	if (pos >= 0 && pos < v2m->nr_spis)
+>
+> So you simply avoid the clear bitmap instead of yelling loudly about
+> being called with completely wrong data?
+
+I'll provide appropriate warnings.
+
+> I would not be surprised if that is related to my question above.
+
+Not quite sure which of the above questions.
+
+>> +	spin_lock(&v2m->msi_cnt_lock);
+>> +	offset = bitmap_find_free_region(v2m->bm, v2m->nr_spis, 0);
+>> +	spin_unlock(&v2m->msi_cnt_lock);
+>> +	if (offset < 0)
+>> +		return offset;
+>> +
+>> +	hwirq = v2m->spi_start + offset;
+>> +	virq = __irq_domain_alloc_irqs(v2m->domain, hwirq,
+>> +				       1, NUMA_NO_NODE, v2m, true);
+>> +	if (virq < 0) {
+>> +		gicv2m_teardown_msi_irq(chip, hwirq);
+>> +		return virq;
+>> +	}
+>> +
+>> +	irq_domain_set_hwirq_and_chip(v2m->domain, virq, hwirq,
+>> +				&v2m_chip, v2m);
+>> +
+>> +	irq_set_msi_desc(hwirq, desc);
+>> +	irq_set_irq_type(hwirq, IRQ_TYPE_EDGE_RISING);
+>
+> Sure both calls work perfectly fine as long as virq == hwirq, right?
+
+I was running into an issue when calling the 
+irq_domain_alloc_irq_parent(), it requires of_phandle_args pointer to be 
+passed in. However, this does not work for GICv2m since it does not have 
+interrupt information in the device tree. So, I decided at first to use 
+direct (virq == hwirq) mapping, which simplifies the code a bit, but 
+might not be ideal solution, as you pointed out.
+
+An alternative would be to create a temporary struct of_phandle_args, 
+and populate it with the interrupt information for the requested MSI. 
+Then pass it to:
+   --> irq_domain_alloc_irq_parent
+    |--> gic_irq_domain_alloc
+      |--> gic_irq_domain_xlate
+      |--> gic_irq_domain_map
+
+However, this would still not be ideal if we want to support ACPI. 
+Another alternative would be coming up with a dedicate structure to be 
+used here. I noticed on X86, it uses struct irq_alloc_info. May be 
+that's what we also need here.
+
+> [...]
+> I do not care at all how YOU waste your time. But I care very much
+> about the fact that YOU are wasting MY precious time by exposing me to
+> your patch trainwrecks.
+
+I don't intend to waste yours or anybody's precious time. Sorry if it 
+takes a couple iterations to work out the issues. Also, I will try to 
+put more comment in my code to make it more clear. Let me know what 
+works best for you to work out the issues.
+
+Thanks,
+
+Suravee
+
+>
 > Thanks,
-> Lorenzo
-> 
-> .
-> 
+>
+> 	tglx
+>
 
-
--- 
-Thanks!
-Yijing
 
