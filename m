@@ -1,60 +1,59 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <5459FBDD.4020504@linux.intel.com>
-Date: Wed, 05 Nov 2014 18:28:45 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Joerg Roedel <joro@8bytes.org>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Daniel J Blueman <daniel@numascale.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [Patch Part2 v4 00/31] Enable hierarchy irqdomian on x86 platforms
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com> <20141104144730.GE14512@8bytes.org> <5458ECF3.4040308@linux.intel.com> <20141105085154.GG10744@8bytes.org> <5459F0DE.6000307@linux.intel.com> <20141105095850.GH10744@8bytes.org>
-In-Reply-To: <20141105095850.GH10744@8bytes.org>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Daniel J Blueman <daniel@numascale.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Steffen Persvold <sp@numascale.com>
+Subject: [PATCH v4 4/4] Use 2GB memory block size on large-memory x86-64 systems
+Date: Tue,  4 Nov 2014 16:29:44 +0800
+Message-Id: <1415089784-28779-4-git-send-email-daniel@numascale.com>
+In-Reply-To: <1415089784-28779-1-git-send-email-daniel@numascale.com>
+References: <1415089784-28779-1-git-send-email-daniel@numascale.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joerg,
-	Seems like a silly bug, could you please help to try this
-fix?
-Regards!
-Gerry
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 7423ee16972f..62ba8a6f6e79 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1211,7 +1211,7 @@ int msi_irq_domain_alloc_irqs(struct irq_domain
-*domain, int type,
-                                msidesc->nvec_used > 1) ?  1 : -ENOSPC;
-                }
-                for (i = 0; i < msidesc->nvec_used; i++)
--                       irq_set_msi_desc_off(virq + i, i, msidesc);
-+                       irq_set_msi_desc_off(virq, i, msidesc);
-        }
+On large-memory x86-64 systems of 64GB or more with memory hot-plug
+enabled, use a 2GB memory block size. Eg with 64GB memory, this reduces
+the number of directories in /sys/devices/system/memory from 512 to 32,
+making it more manageable, and reducing the creation time accordingly.
 
-        list_for_each_entry(msidesc, &dev->msi_list, list)
+This caveat is that the memory can't be offlined (for hotplug or otherwise)
+with finer 128MB granularity, but this is unimportant due to the high
+memory densities generally used with such large-memory systems, where
+eg a single DIMM is the order of 16GB. 
 
-On 2014/11/5 17:58, Joerg Roedel wrote:
-> On Wed, Nov 05, 2014 at 05:41:50PM +0800, Jiang Liu wrote:
->> 	Could you please help to apply the attached patch and send me
->> console outputs?
-> 
-> Sure, here it is.
-> 
+Signed-off-by: Daniel J Blueman <daniel@numascale.com>
+---
+ init_64.c |    7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/arch/x86/mm/init_64.c b/arch/x86/mm/init_64.c
+index df1a992..9622ab2 100644
+--- a/arch/x86/mm/init_64.c
++++ b/arch/x86/mm/init_64.c
+@@ -52,7 +52,6 @@
+ #include <asm/numa.h>
+ #include <asm/cacheflush.h>
+ #include <asm/init.h>
+-#include <asm/uv/uv.h>
+ #include <asm/setup.h>
+ 
+ #include "mm_internal.h"
+@@ -1234,12 +1233,10 @@ static unsigned long probe_memory_block_size(void)
+ 	/* start from 2g */
+ 	unsigned long bz = 1UL<<31;
+ 
+-#ifdef CONFIG_X86_UV
+-	if (is_uv_system()) {
+-		printk(KERN_INFO "UV: memory block size 2GB\n");
++	if (totalram_pages >= (64ULL << (30 - PAGE_SHIFT))) {
++		pr_info("Using 2GB memory block size for large-memory system\n");
+ 		return 2UL * 1024 * 1024 * 1024;
+ 	}
+-#endif
+ 
+ 	/* less than 64g installed */
+ 	if ((max_pfn << PAGE_SHIFT) < (16UL << 32))
