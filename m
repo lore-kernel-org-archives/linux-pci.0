@@ -1,88 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:61267 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751952AbaKQOOW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 09:14:22 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Yijing Wang <wangyijing@huawei.com>,
+Received: from mga11.intel.com ([192.55.52.93]:28336 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751562AbaKDMBQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Nov 2014 07:01:16 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Andy Lutomirski <luto@amacapital.net>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Suravee.Suthikulpanit@amd.com,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linux-ia64@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Wuyun <wuyun.wu@huawei.com>, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [RFC PATCH 00/16] Refine PCI host bridge scan interfaces
-Date: Mon, 17 Nov 2014 15:13:16 +0100
-Message-ID: <1463511.o4kE8TX3Bd@wuerfel>
-In-Reply-To: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
-References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [Patch Part2 v4 08/31] x86, hpet: Use new irqdomain interfaces to allocate/free IRQ
+Date: Tue,  4 Nov 2014 20:01:42 +0800
+Message-Id: <1415102525-9898-9-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 17 November 2014 18:21:34 Yijing Wang wrote:
-> This series is based Linux 3.18-rc1 and Lorenzo Pieralisi's
-> arm PCI domain cleanup patches, link: 
-> https://patchwork.ozlabs.org/patch/407585/
-> 
-> Current pci scan interfaces like pci_scan_root_bus() and directly
-> call pci_create_root_bus()/pci_scan_child_bus() lack flexiblity.
-> Some platform infos like PCI domain and msi_chip have to be
-> associated to PCI bus by some arch specific function.
-> We want to make a generic pci_host_bridge, and make it hold
-> the platform infos or hook. Then we could eliminate the lots
-> of arch pci_domain_nr, also we could associate some platform 
-> ops something like pci_get_msi_chip(struct pci_dev *dev)
-> with pci_host_bridge to avoid introduce arch weak functions.
-> 
-> This RFC version not for all platforms, just applied the new
-> scan interface in x86/arm/powerpc/ia64, I will refresh other
-> platforms after the core pci scan interfaces are ok.
+Use new irqdomain interfaces to allocate/free IRQ for HPET, so we could
+kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
 
-I think overall this is a good direction to take, in particular
-moving more things into struct pci_host_bridge so we can
-slim down the architecture specific code.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/hpet.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-I don't particularly like the way you use the 'pci_host_info'
-to pass callback pointers and some of the generic information.
-This duplicates some of the issues we are currently trying
-to untangle in the arm32 code to make drivers easier to share
-between architectures.
+diff --git a/arch/x86/kernel/hpet.c b/arch/x86/kernel/hpet.c
+index 319bcb9372fe..24db2d33fab7 100644
+--- a/arch/x86/kernel/hpet.c
++++ b/arch/x86/kernel/hpet.c
+@@ -11,6 +11,7 @@
+ #include <linux/cpu.h>
+ #include <linux/pm.h>
+ #include <linux/io.h>
++#include <linux/irqdomain.h>
+ 
+ #include <asm/fixmap.h>
+ #include <asm/hpet.h>
+@@ -476,7 +477,7 @@ static int hpet_msi_next_event(unsigned long delta,
+ static int hpet_setup_msi_irq(unsigned int irq)
+ {
+ 	if (x86_msi.setup_hpet_msi(irq, hpet_blockid)) {
+-		irq_free_hwirq(irq);
++		irq_domain_free_irqs(irq, 1);
+ 		return -EINVAL;
+ 	}
+ 	return 0;
+@@ -484,9 +485,10 @@ static int hpet_setup_msi_irq(unsigned int irq)
+ 
+ static int hpet_assign_irq(struct hpet_dev *dev)
+ {
+-	unsigned int irq = irq_alloc_hwirq(-1);
++	int irq;
+ 
+-	if (!irq)
++	irq = irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
++	if (irq <= 0)
+ 		return -EINVAL;
+ 
+ 	irq_set_handler_data(irq, dev);
+-- 
+1.7.10.4
 
-As a general approach, I'd rather see generic helper functions
-being exported by the PCI core that a driver may or may not
-call. 
-The way you split the interface between things that happen
-before scanning the buses (pci_create_host_bridge) and
-the actual scanning (__pci_create_root_bus, pci_scan_child_bus)
-seems very helpful and I think we can expand that concept further:
-
-- The normal pci_create_host_bridge() function can contain
-  all of the DT scanning functions (finding bus/mem/io resources, 
-  finding the msi-parent), while drivers that don't depend on DT
-  for this information can call the same function and fill the
-  same things after they have the pci_host_bridge pointer.
-
-- If a driver needs to set up mapping windows, it can do that after
-  calling pci_create_host_bridge(). E.g. all the dw_pcie glue drivers
-  can call a dw_pcie_setup_windows() function that takes the resources
-  out of the pci_host_bridge pointer before the bus is scanned.
-
-- The ACPI code can have a completely different way of creating
-  a struct pci_host_bridge, which is also passed into the same
-  bus scanning functions, but doesn't have to come from
-  pci_create_host_bridge.
-
-- The PowerPC of_scan_bus function can take the same pci_host_bridge
-  pointer that comes from pci_create_host_bridge(), but we'd call
-  either pci_create_root_bus or of_scan_bus instead of calling
-  of_scan_bus through an indirect pointer from pci_create_root_bus.
-
-	Arnd
