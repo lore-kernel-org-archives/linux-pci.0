@@ -1,60 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:34110 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750860AbaKEFuo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 00:50:44 -0500
-Date: Wed, 5 Nov 2014 14:50:41 +0900
-From: Simon Horman <horms@verge.net.au>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH] ARM: shmobile: Enable PCI domains for R-Car Gen2 devices
-Message-ID: <20141105055041.GB32680@verge.net.au>
-References: <1415122708-4011-1-git-send-email-phil.edworthy@renesas.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415122708-4011-1-git-send-email-phil.edworthy@renesas.com>
+Received: from numascale.com ([213.162.240.84]:57480 "EHLO numascale.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752224AbaKDIbM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Nov 2014 03:31:12 -0500
+From: Daniel J Blueman <daniel@numascale.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Daniel J Blueman <daniel@numascale.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Steffen Persvold <sp@numascale.com>
+Subject: [PATCH v4 2/4] Numachip: Elide self-IPI ICR polling
+Date: Tue,  4 Nov 2014 16:29:42 +0800
+Message-Id: <1415089784-28779-2-git-send-email-daniel@numascale.com>
+In-Reply-To: <1415089784-28779-1-git-send-email-daniel@numascale.com>
+References: <1415089784-28779-1-git-send-email-daniel@numascale.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 04, 2014 at 05:38:28PM +0000, Phil Edworthy wrote:
-> The PCI core will soon automatically handle the PCI domain number,
-> allowing the internal PCI and external PCIe bridges work at the same time.
-> In order for that to work, we need to enable PCI_DOMAINS.
-> 
-> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+The default self-IPI path polls the ICR to delay sending the IPI until
+there is no IPI in progress. This is redundant on x86-86 APICs, since
+IPIs are queued. See the AMD64 Architecture Programmer's Manual, vol 2,
+p525.
 
-Thanks, I have queued this up.
+Signed-off-by: Daniel J Blueman <daniel@numascale.com>
+---
+ apic_numachip.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> ---
-> 
-> In order to automatically handle the PCI domain number, we need a patch from
-> Lorenzo Pieralisi:
->  "[RFC PATCH 2/2] arm: pcibios: move to generic PCI domains"
-> However, enabling PCI_DOMAINS without this doesn't have an adverse effect,
-> and the plan is to use PCI domains to solve this problem, so we can apply
-> this patch straight away.
-> 
->  arch/arm/mach-shmobile/Kconfig | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/arch/arm/mach-shmobile/Kconfig b/arch/arm/mach-shmobile/Kconfig
-> index 21f457b..1c05768 100644
-> --- a/arch/arm/mach-shmobile/Kconfig
-> +++ b/arch/arm/mach-shmobile/Kconfig
-> @@ -18,6 +18,7 @@ config ARCH_RCAR_GEN2
->  	select PM_RCAR if PM || SMP
->  	select RENESAS_IRQC
->  	select SYS_SUPPORTS_SH_CMT
-> +	select PCI_DOMAINS if PCI
->  
->  config ARCH_RMOBILE
->  	bool
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-sh" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/arch/x86/kernel/apic/apic_numachip.c b/arch/x86/kernel/apic/apic_numachip.c
+index 81d70ba..bd083c0 100644
+--- a/arch/x86/kernel/apic/apic_numachip.c
++++ b/arch/x86/kernel/apic/apic_numachip.c
+@@ -145,7 +145,7 @@ static void numachip_send_IPI_all(int vector)
+ 
+ static void numachip_send_IPI_self(int vector)
+ {
+-	__default_send_IPI_shortcut(APIC_DEST_SELF, vector, APIC_DEST_PHYSICAL);
++	apic_write(APIC_SELF_IPI, vector);
+ }
+ 
+ static int __init numachip_probe(void)
+-- 
+1.9.1
+
