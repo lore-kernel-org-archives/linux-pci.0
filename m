@@ -1,57 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 8bytes.org ([81.169.241.247]:34331 "EHLO theia.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754128AbaKDOrd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Nov 2014 09:47:33 -0500
+Date: Tue, 4 Nov 2014 15:47:30 +0100
+From: Joerg Roedel <joro@8bytes.org>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [Patch Part2 v4 00/31] Enable hierarchy irqdomian on x86
+ platforms
+Message-ID: <20141104144730.GE14512@8bytes.org>
+References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <CACVXFVN1HmyaiR7fXAxjwkBBJJZdW5bNpujfrPPeWRGZ=8FOig@mail.gmail.com>
-References: <1415702040-2790-1-git-send-email-ming.lei@canonical.com>
- <20141111122901.GA4419@red-moon> <CACVXFVNAc9axtESmo1zGZ3GMquTzjzWR3jx-b3tbhhLfQDDRcg@mail.gmail.com>
- <20141111182418.GA5507@red-moon> <CACVXFVPzo2qNGa5DWESS3TXor=u82_SxHb+xzrBCRXtcQxq4Cg@mail.gmail.com>
- <CAErSpo5LELkH=9WAq5MDE6fkVJvPK3miQtqrMnRHY7QyLWigUg@mail.gmail.com> <CACVXFVN1HmyaiR7fXAxjwkBBJJZdW5bNpujfrPPeWRGZ=8FOig@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 12 Nov 2014 20:58:38 -0700
-Message-ID: <CAErSpo7qWc8j2OQuEOUqCohndeosC5iDwk2j03Qb-KeDzDKxVw@mail.gmail.com>
-Subject: Re: [PATCH] pci: generic host: make it more generic
-To: Ming Lei <ming.lei@canonical.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	alvise rigo <a.rigo@virtualopensystems.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 12, 2014 at 1:58 AM, Ming Lei <ming.lei@canonical.com> wrote:
-> On Wed, Nov 12, 2014 at 10:47 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Tue, Nov 11, 2014 at 7:12 PM, Ming Lei <ming.lei@canonical.com> wrote:
->>> ...
->>> Do you think it is doable to introduce a option(from module
->>> parameter, or device tree, ...) to let the driver and PCI core
->>> ignore/bypass all pcibios handling for the generic bus?
->>
->> No, I don't think so.
->
-> Could you explain a bit? In VM world, it might be reasonable to
-> claim that there is no pcibios service or pcibios service needn't.
->
-> IMO it isn't easy to make a cross-arch PCI generic controller
-> driver if pcibios handling has to be involved.
+Hi Jiang,
 
-I'm not going to add kernel or module parameters to change the way the
-basic code works.  We need a way to factor the differences so the PCI
-core code is the same for all arches, and the differences are hidden
-in the arch-specific code.
+On Tue, Nov 04, 2014 at 08:01:34PM +0800, Jiang Liu wrote:
+> This is the second patch set to enable support of hierarchy irqdomain
+> on x86 platforms. It depends on the first part at:
+> https://lkml.org/lkml/2014/10/27/122
+> And you may access it at:
+> https://github.com/jiangliu/linux.git irqdomain/p2v4
 
-That's basically what the pcibios interfaces do.  I suspect they were
-originally named "pcibios" because there's a "PCI BIOS" spec that
-tells you how to make BIOS calls to enumerate devices, access config
-space, manage interrupts, etc.  But "pcibios" is now just the name of
-interfaces to arch-specific functionality.  Most arches don't have a
-BIOS, and most pcibios_*() functions don't make BIOS calls.
+I gave this some testing on a couple of machines. Unfortunatly it panics
+on my AMD Kaveri system with IOMMU enabled in drivers/pci/msi.c:
 
-If you have a new arch that has no "pcibios service" (I don't know
-exactly what you mean by that), you can still implement the
-pcibios_*() interfaces used by the PCI core.  If some of these
-interfaces don't actually do anything on your arch, that's fine; they
-can be no-ops.
+static void msi_set_mask_bit(struct irq_data *data, u32 flag)
+{
+        struct msi_desc *desc = irq_data_get_msi(data);
 
-Bjorn
+        if (desc->msi_attrib.is_msix) {		<-- at this line something goes wrong
+                msix_mask_irq(desc, flag);
+                readl(desc->mask_base);         /* Flush write to device */
+        } else {
+                unsigned offset = data->irq - desc->irq;
+                msi_mask_irq(desc, 1 << offset, flag << offset);
+        }
+}
+
+I am further investigating to find out what went wrong, but maybe you
+also have an idea?
+
+
+	Joerg
+
