@@ -1,107 +1,53 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch Part3 V7 8/8] pci, ACPI, iommu: Enhance pci_root to support DMAR device hotplug
-Date: Sun,  9 Nov 2014 22:48:03 +0800
-Message-Id: <1415544483-27990-9-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415544483-27990-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415544483-27990-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:53971 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751999AbaKDLru (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Nov 2014 06:47:50 -0500
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>
+Cc: devicetree@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: [PATCH] PCI: add missing DT binding for linux,pci-domain property
+Date: Tue,  4 Nov 2014 12:47:40 +0100
+Message-Id: <1415101660-26450-1-git-send-email-l.stach@pengutronix.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Finally enhance pci_root driver to support DMAR device hotplug when
-hot-plugging PCI host bridges.
+This property was added by 41e5c0f81d3e
+(of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr())
+without the required binding documentation. As this property
+will be supported by a number of host bridge drivers going forward,
+add it to the common PCI binding doc.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Reviewed-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
 ---
- drivers/acpi/pci_root.c |   16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
+This is a non-critical fix, but may still qualify for 3.18-rc as
+the property was added in this release cycle.
+---
+ Documentation/devicetree/bindings/pci/pci.txt | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index cd4de7e038ea..c6bcb8c719d8 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -33,6 +33,7 @@
- #include <linux/pci.h>
- #include <linux/pci-acpi.h>
- #include <linux/pci-aspm.h>
-+#include <linux/dmar.h>
- #include <linux/acpi.h>
- #include <linux/slab.h>
- #include <linux/dmi.h>
-@@ -525,6 +526,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	struct acpi_pci_root *root;
- 	acpi_handle handle = device->handle;
- 	int no_aspm = 0, clear_aspm = 0;
-+	bool hotadd = system_state != SYSTEM_BOOTING;
+diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
+index 41aeed38926d..b754f786ed5e 100644
+--- a/Documentation/devicetree/bindings/pci/pci.txt
++++ b/Documentation/devicetree/bindings/pci/pci.txt
+@@ -7,3 +7,13 @@ And for the interrupt mapping part:
  
- 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
- 	if (!root)
-@@ -571,6 +573,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
- 	device->driver_data = root;
- 
-+	if (hotadd && dmar_device_add(handle)) {
-+		result = -ENXIO;
-+		goto end;
-+	}
+ Open Firmware Recommended Practice: Interrupt Mapping
+ http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
 +
- 	pr_info(PREFIX "%s [%s] (domain %04x %pR)\n",
- 	       acpi_device_name(device), acpi_device_bid(device),
- 	       root->segment, &root->secondary);
-@@ -597,7 +604,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 			root->segment, (unsigned int)root->secondary.start);
- 		device->driver_data = NULL;
- 		result = -ENODEV;
--		goto end;
-+		goto remove_dmar;
- 	}
- 
- 	if (clear_aspm) {
-@@ -611,7 +618,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	if (device->wakeup.flags.run_wake)
- 		device_set_run_wake(root->bus->bridge, true);
- 
--	if (system_state != SYSTEM_BOOTING) {
-+	if (hotadd) {
- 		pcibios_resource_survey_bus(root->bus);
- 		pci_assign_unassigned_root_bus_resources(root->bus);
- 	}
-@@ -621,6 +628,9 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	pci_unlock_rescan_remove();
- 	return 1;
- 
-+remove_dmar:
-+	if (hotadd)
-+		dmar_device_remove(handle);
- end:
- 	kfree(root);
- 	return result;
-@@ -639,6 +649,8 @@ static void acpi_pci_root_remove(struct acpi_device *device)
- 
- 	pci_remove_root_bus(root->bus);
- 
-+	dmar_device_remove(device->handle);
++Additionally to the properties specified in the above standards a host bridge
++driver implementation may support the following properties:
 +
- 	pci_unlock_rescan_remove();
- 
- 	kfree(root);
++- linux,pci-domain:
++   If present this property assigns a fixed PCI domain number to a host bridge,
++   otherwise an unstable (across boots) unique number will be assigned.
++   It is recommended to either not set this property at all or set it for all
++   host bridges in the system, otherwise potentially conflicting domain numbers
++   may be assigned to root buses behind different host bridges.
 -- 
-1.7.10.4
+2.1.1
 
