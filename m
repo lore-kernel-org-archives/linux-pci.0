@@ -1,110 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.13]:64630 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751208AbaKDKUJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Nov 2014 05:20:09 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: PCIe host controller without IO port access.
+Date: Tue, 04 Nov 2014 11:19:52 +0100
+Message-ID: <11259965.1OyxqdcJ18@wuerfel>
+In-Reply-To: <54580B03.1090700@hauke-m.de>
+References: <5456C024.4060103@hauke-m.de> <CAL_JsqK0737hND4C0pkNXYwyuecm8K2k=LUMNDZvqdkg=H52NA@mail.gmail.com> <54580B03.1090700@hauke-m.de>
 MIME-Version: 1.0
-In-Reply-To: <545A7087.3050802@laposte.net>
-References: <1415151063-2530-1-git-send-email-chuansheng.liu@intel.com>
- <CAErSpo6cWP2ngErLVzqASkeQOLsB7JjgCC8UuA-S=Lz=AJyf6Q@mail.gmail.com> <545A7087.3050802@laposte.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 5 Nov 2014 12:03:43 -0700
-Message-ID: <CAErSpo4fvoeP9Gab1ZDg=ofjH+aqxGD09nLDTF1ZERnH=yEPxw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Do not enable async suspend for JMicron chips
-To: Barto <mister.freeman@laposte.net>
-Cc: Chuansheng Liu <chuansheng.liu@intel.com>,
-	Aaron Lu <aaron.lu@intel.com>, Tejun Heo <tj@kernel.org>,
-	Rafael Wysocki <rjw@rjwysocki.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 5, 2014 at 11:46 AM, Barto <mister.freeman@laposte.net> wrote:
-> this patch solves these 2 bug reports :
->
-> https://bugzilla.kernel.org/show_bug.cgi?id=84861
->
-> https://bugzilla.kernel.org/show_bug.cgi?id=81551
+On Tuesday 04 November 2014 00:08:51 Hauke Mehrtens wrote:
+> On 11/03/2014 11:00 PM, Rob Herring wrote:
+> > On Mon, Nov 3, 2014 at 11:41 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >> [+cc Rob (author of 3c5d1699887b), Arnd]
+> >>
+> >> On Sun, Nov 2, 2014 at 4:37 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> >>> Hi,
+> >>>
+> >>> I am currently writing a driver for a PCIe host controller which does
+> >>> not support IO port access.
+> >>>
+> >>> My plan was to only provide IORESOURCE_MEM to pci_sys_data->resources,
+> >>> but then it allocates some generic IORESOURCE_IO memory in
+> >>> arch/arm/kernel/bios32.c:pcibios_init_resources(). This will work for
+> >>> the fist PCIe controller, but when the second controller gets registered
+> >>> I am getting this: "unable to allocate I/O port region (-16)".
+> >>>
+> >>> Is there an example for an arm driver for a PCIe controller which does
+> >>> not support IO port access?
+> >>>
+> >>> Should I change arch/arm/kernel/bios32.c in a way so that it would
+> >>> ignore the io port mem?
+> >>
+> >> I think this is a case of "all current platforms support an I/O space,
+> >> so we'll set it up in the ARM PCI core."  But I/O space is not (as far
+> >> as I know) a required feature of PCI host bridges on ARM, so I suspect
+> >> you should change arch/arm/kernel/bios32.c in some way to accomodate
+> >> controllers with no I/O port space at all.
+> > 
+> > I guess we could ignore the error on request_resource or define a way
+> > to flag no i/o space. However, any new driver should be using all the
+> > new generic infrastructure. I think this code path should not even be
+> > called in that case.
 
-Those bugs were already mentioned.  But e6b7e41cdd8c claims to solve
-https://bugzilla.kernel.org/show_bug.cgi?id=81551, and 84861 is a
-duplicate of 81551, so it should also be fixed by e6b7e41cdd8c.
+For all I can tell this is a bug that was introduced by your 3c5d1699887
+("ARM: move PCI i/o resource setup into common code") (yes, I reviewed
+and merged it), which will work fine in one any of these cases
 
-So the question is, why was e6b7e41cdd8c insufficient?  Presumably it
-was tested and somebody thought it did fix the problem.
+- the PCI host driver adds an IORESOURCE_IO entry to its resources for
+  each host it registers
 
-> in simple words : JMicron IDE/Sata controlers family ( JMBxxx ) are not
-> fully compatible with async_suspend feature, when a user tries to put
-> his PC on standby mode then at wake-up JMicron IDE/Sata controlers will
-> not work, because of a brother-relation between the SATA and IDE part on
-> this JMicron PCI card
->
->
->
->
-> Le 05/11/2014 19:01, Bjorn Helgaas a écrit :
->> On Tue, Nov 4, 2014 at 6:31 PM, Chuansheng Liu <chuansheng.liu@intel.com> wrote:
->>> The JMicron chip 361/363/368 contains one SATA controller and
->>> one PATA controller, they are brother-relation ship in PCI tree,
->>> but for powering on these both controller, we must follow the
->>> sequence one by one, otherwise one of them can not be powered on
->>> successfully.
->>
->> This should mention what's broken and what problem a user would see.
->> This changelog sounds a lot like the one for e6b7e41cdd8c, so I don't
->> know if this is for a new, related problem, or what.
->>
->>> So here we disable the async suspend method for Jmicron chip.
->>>
->>> Bug link:
->>> https://bugzilla.kernel.org/show_bug.cgi?id=81551
->>> https://bugzilla.kernel.org/show_bug.cgi?id=84861
->>>
->>> And we can revert the below commit after this patch is applied:
->>> e6b7e41(ata: Disabling the async PM for JMicron chip 363/361)
->>>
->>> Cc: stable@vger.kernel.org # 3.15+
->>> Acked-by: Aaron Lu <aaron.lu@intel.com>
->>> Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
->>> ---
->>>  drivers/pci/pci.c |   12 +++++++++++-
->>>  1 file changed, 11 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>> index 625a4ac..53128f0 100644
->>> --- a/drivers/pci/pci.c
->>> +++ b/drivers/pci/pci.c
->>> @@ -2046,7 +2046,17 @@ void pci_pm_init(struct pci_dev *dev)
->>>         pm_runtime_forbid(&dev->dev);
->>>         pm_runtime_set_active(&dev->dev);
->>>         pm_runtime_enable(&dev->dev);
->>> -       device_enable_async_suspend(&dev->dev);
->>> +
->>> +       /*
->>> +        * The JMicron chip 361/363/368 contains one SATA controller and
->>> +        * one PATA controller, they are brother-relation ship in PCI tree,
->>> +        * but for powering on these both controller, we must follow the
->>> +        * sequence one by one, otherwise one of them can not be powered on
->>> +        * successfully, so here we disable the async suspend method for
->>> +        * Jmicron chip.
->>> +        */
->>> +       if (dev->vendor != PCI_VENDOR_ID_JMICRON)
->>> +               device_enable_async_suspend(&dev->dev);
->>
->> I don't like littering the core PCI code with vendor tests like this.
->> This would be the only one, except for an ancient DECchip 21050 bridge
->> erratum.
->>
->> And why would we want a test for *all* JMicron devices here, when you
->> claim the problem only affects a few specific ones?
->>
->> And what's the story with the e6b7e41cdd8c ("ata: Disabling the async
->> PM for JMicron chip 363/361") connection?  Is something broken even
->> with e6b7e41cdd8c, and this is a better fix?  Or is this simply a
->> different way of fixing the same problem?
->>
->>>         dev->wakeup_prepared = false;
->>>
->>>         dev->pm_cap = 0;
->>> --
->>> 1.7.9.5
->>>
->>
+- there is only one PCI domain, so "busnr" is a unique value.
+
+> Is there an example on how to use the new generic infrastructure? I used
+> drivers/pci/host/pci-host-generic.c as a reference for my driver and
+> thought it is using the recent infrastructure.
+
+We're not there yet unfortunately, but it's getting close and with Lorenzo's
+latest patches we might be able to do it in 3.19. Using the common code
+for this will also make it much easier to have a shared implementation
+that works on both arm32 and mips, as well as arm64 if you ever need that.
+
+> I am working on a BCM5310X SoC and it has a PCIe controller without I/O
+> port. As far as I know it is only intended to connect some Broadcom Wifi
+> cards to the SoC. There are also some MIPS based router SoCs without I/O
+> port support from other vendors.
+
+It's definitely supposed to work without I/O space. I think you could
+work around this issue if you just add an empty I/O window for the host
+in sys->resources. I'm currently unsure what the correct fix would be
+for the ARM code, but as it's not currently causing problems for others,
+we might just keep it the way it is for now and migrate all controllers
+for DT based systems over to the generic implementation first.
+
+	Arnd
