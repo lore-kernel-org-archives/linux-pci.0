@@ -1,54 +1,273 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:62857 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751116AbaKMRJZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 12:09:25 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Minghuan Lian <Minghuan.Lian@freescale.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>
-Subject: Re: [PATCH v6] PCI: Layerscape: Add Layerscape PCIe driver
-Date: Thu, 13 Nov 2014 18:08:54 +0100
-Message-ID: <1504614.TjszoPYyHM@wuerfel>
-In-Reply-To: <20141113163833.GA5064@google.com>
-References: <1415177111-28730-1-git-send-email-Minghuan.Lian@freescale.com> <20141113163833.GA5064@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [Patch Part2 v4 29/31] x86, irq: Use hierarchy irqdomain to manage DMAR interrupts
+Date: Tue,  4 Nov 2014 20:02:03 +0800
+Message-Id: <1415102525-9898-30-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 13 November 2014 09:38:33 Bjorn Helgaas wrote:
-> On Wed, Nov 05, 2014 at 04:45:11PM +0800, Minghuan Lian wrote:
-> > Add support for Freescale Layerscape PCIe controller. This driver
-> > re-uses the designware core code.
-> > 
-> > Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
-> 
-> Applied with Arnd's ack to pci/host-layerscape for v3.19, thanks!
-> 
+Enhance DMAR code to support hierarchy irqdomain, it helps to make
+the architecture more clear.
 
-the build bot just came back with an error:
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/hw_irq.h |    7 ++
+ arch/x86/kernel/apic/msi.c    |  157 ++++++++++++++++++++++++++---------------
+ 2 files changed, 108 insertions(+), 56 deletions(-)
 
-  make.cross ARCH=xtensa 
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index eb206e8b0bb7..1b7501cfee8c 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -122,6 +122,7 @@ enum irq_alloc_type {
+ 	X86_IRQ_ALLOC_TYPE_HPET,
+ 	X86_IRQ_ALLOC_TYPE_MSI,
+ 	X86_IRQ_ALLOC_TYPE_MSIX,
++	X86_IRQ_ALLOC_TYPE_DMAR,
+ };
+ 
+ struct irq_alloc_info {
+@@ -152,6 +153,12 @@ struct irq_alloc_info {
+ 			struct IO_APIC_route_entry *ioapic_entry;
+ 		};
+ #endif
++#ifdef	CONFIG_DMAR_TABLE
++		struct {
++			int		dmar_id;
++			void		*dmar_data;
++		};
++#endif
+ 	};
+ };
+ 
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 79fc6bb0d104..cc70fc659121 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -25,32 +25,6 @@
+ 
+ static struct irq_domain *msi_default_domain;
+ 
+-static void native_compose_msi_msg(struct irq_cfg *cfg, struct msi_msg *msg)
+-{
+-	msg->address_hi = MSI_ADDR_BASE_HI;
+-
+-	if (x2apic_enabled())
+-		msg->address_hi |= MSI_ADDR_EXT_DEST_ID(cfg->dest_apicid);
+-
+-	msg->address_lo =
+-		MSI_ADDR_BASE_LO |
+-		((apic->irq_dest_mode == 0) ?
+-			MSI_ADDR_DEST_MODE_PHYSICAL :
+-			MSI_ADDR_DEST_MODE_LOGICAL) |
+-		((apic->irq_delivery_mode != dest_LowestPrio) ?
+-			MSI_ADDR_REDIRECTION_CPU :
+-			MSI_ADDR_REDIRECTION_LOWPRI) |
+-		MSI_ADDR_DEST_ID(cfg->dest_apicid);
+-
+-	msg->data =
+-		MSI_DATA_TRIGGER_EDGE |
+-		MSI_DATA_LEVEL_ASSERT |
+-		((apic->irq_delivery_mode != dest_LowestPrio) ?
+-			MSI_DATA_DELIVERY_FIXED :
+-			MSI_DATA_DELIVERY_LOWPRI) |
+-		MSI_DATA_VECTOR(cfg->vector);
+-}
+-
+ static void msi_compose_msg(struct irq_data *data, struct msi_msg *msg)
+ {
+ 	struct irq_cfg *cfg = irqd_cfg(data);
+@@ -87,6 +61,9 @@ static void msi_update_msg(struct msi_msg *msg, struct irq_data *irq_data)
+ 	msg->data |= MSI_DATA_VECTOR(cfg->vector);
+ 	msg->address_lo &= ~MSI_ADDR_DEST_ID_MASK;
+ 	msg->address_lo |= MSI_ADDR_DEST_ID(cfg->dest_apicid);
++	if (x2apic_enabled())
++		msg->address_hi = MSI_ADDR_BASE_HI |
++				  MSI_ADDR_EXT_DEST_ID(cfg->dest_apicid);
+ }
+ 
+ static int msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
+@@ -187,59 +164,127 @@ static int
+ dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 		      bool force)
+ {
+-	struct irq_cfg *cfg = irqd_cfg(data);
+-	unsigned int dest, irq = data->irq;
++	struct irq_data *parent = data->parent_data;
+ 	struct msi_msg msg;
+ 	int ret;
+ 
+-	ret = apic_set_affinity(data, mask, &dest);
+-	if (ret)
+-		return ret;
+-
+-	dmar_msi_read(irq, &msg);
+-
+-	msg.data &= ~MSI_DATA_VECTOR_MASK;
+-	msg.data |= MSI_DATA_VECTOR(cfg->vector);
+-	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
+-	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
+-	msg.address_hi = MSI_ADDR_BASE_HI | MSI_ADDR_EXT_DEST_ID(dest);
+-
+-	dmar_msi_write(irq, &msg);
++	ret = parent->chip->irq_set_affinity(parent, mask, force);
++	if (ret >= 0) {
++		dmar_msi_read(data->irq, &msg);
++		msi_update_msg(&msg, data);
++		dmar_msi_write(data->irq, &msg);
++	}
+ 
+-	return IRQ_SET_MASK_OK_NOCOPY;
++	return ret;
+ }
+ 
+ static struct irq_chip dmar_msi_type = {
+ 	.name			= "DMAR_MSI",
+ 	.irq_unmask		= dmar_msi_unmask,
+ 	.irq_mask		= dmar_msi_mask,
+-	.irq_ack		= apic_ack_edge,
++	.irq_ack		= irq_chip_ack_parent,
+ 	.irq_set_affinity	= dmar_msi_set_affinity,
+-	.irq_retrigger		= apic_retrigger_irq,
++	.irq_retrigger		= irq_chip_retrigger_hierarchy,
++	.irq_compose_msi_msg	= msi_compose_msg,
+  	.flags			= IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
+-int dmar_alloc_hwirq(int id, int node, void *arg)
++static int dmar_domain_alloc(struct irq_domain *domain, unsigned int virq,
++			     unsigned int nr_irqs, void *arg)
++{
++	struct irq_alloc_info *info = arg;
++	int ret;
++
++	if (nr_irqs > 1 || !info || info->type != X86_IRQ_ALLOC_TYPE_DMAR)
++		return -EINVAL;
++	if (irq_find_mapping(domain, info->dmar_id)) {
++		pr_warn("IRQ for DMAR%d already exists.\n", info->dmar_id);
++		return -EEXIST;
++	}
++
++	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
++	if (ret >= 0) {
++		irq_domain_set_hwirq_and_chip(domain, virq, info->dmar_id,
++					      &dmar_msi_type, NULL);
++		irq_set_handler_data(virq, info->dmar_data);
++		__irq_set_handler(virq, handle_edge_irq, 0, "edge");
++	}
++
++	return ret;
++}
++
++static void dmar_domain_free(struct irq_domain *domain, unsigned int virq,
++			     unsigned int nr_irqs)
++{
++	BUG_ON(nr_irqs > 1);
++	irq_domain_free_irqs_top(domain, virq, nr_irqs);
++}
++
++static int dmar_domain_activate(struct irq_domain *domain,
++				struct irq_data *irq_data)
++{
++	int ret;
++	struct msi_msg msg;
++
++	ret = irq_chip_compose_msi_msg(irq_data, &msg);
++	if (ret == 0)
++		dmar_msi_write(irq_data->irq, &msg);
++
++	return ret;
++}
++
++static int dmar_domain_deactivate(struct irq_domain *domain,
++				  struct irq_data *irq_data)
+ {
+-	int irq;
+ 	struct msi_msg msg;
+ 
+-	irq = irq_domain_alloc_irqs(NULL, 1, node, NULL);
+-	if (irq > 0) {
+-		irq_set_handler_data(irq, arg);
+-		irq_set_chip_and_handler_name(irq, &dmar_msi_type,
+-					      handle_edge_irq, "edge");
+-		native_compose_msi_msg(irq_cfg(irq), &msg);
+-		dmar_msi_write(irq, &msg);
++	memset(&msg, 0, sizeof(msg));
++	dmar_msi_write(irq_data->irq, &msg);
++
++	return 0;
++}
++
++static struct irq_domain_ops dmar_domain_ops = {
++	.alloc = dmar_domain_alloc,
++	.free = dmar_domain_free,
++	.activate = dmar_domain_activate,
++	.deactivate = dmar_domain_deactivate,
++};
++
++static struct irq_domain *dmar_get_irq_domain(void)
++{
++	static struct irq_domain *dmar_domain;
++	static DEFINE_MUTEX(dmar_lock);
++
++	mutex_lock(&dmar_lock);
++	if (dmar_domain == NULL) {
++		dmar_domain = irq_domain_add_tree(NULL, &dmar_domain_ops, NULL);
++		if (dmar_domain)
++			dmar_domain->parent = x86_vector_domain;
+ 	}
++	mutex_unlock(&dmar_lock);
++
++	return dmar_domain;
++}
++
++int dmar_alloc_hwirq(int id, int node, void *arg)
++{
++	struct irq_domain *domain = dmar_get_irq_domain();
++	struct irq_alloc_info info;
++
++	if (!domain)
++		return -1;
++
++	init_irq_alloc_info(&info, NULL);
++	info.type = X86_IRQ_ALLOC_TYPE_DMAR;
++	info.dmar_id = id;
++	info.dmar_data = arg;
+ 
+-	return irq;
++	return irq_domain_alloc_irqs(domain, 1, node, &info);
+ }
+ 
+ void dmar_free_hwirq(int irq)
+ {
+-	irq_set_handler_data(irq, NULL);
+-	irq_set_handler(irq, NULL);
+ 	irq_domain_free_irqs(irq, 1);
+ }
+ #endif
+-- 
+1.7.10.4
 
-All error/warnings:
-
->> drivers/pci/host/pcie-designware.c:168:52: warning: 'struct pci_sys_data' declared inside parameter list
-    static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
-                                                       ^
->> drivers/pci/host/pcie-designware.c:168:52: warning: its scope is only this definition or declaration, which is probably not what you want
-   drivers/pci/host/pcie-designware.c: In function 'sys_to_pcie':
-   drivers/pci/host/pcie-designware.c:170:12: error: dereferencing pointer to incomplete type
-     return sys->private_data;
-               ^
-   drivers/pci/host/pcie-designware.c: At top level:
->> drivers/pci/host/pcie-designware.c:397:45: warning: 'struct pci_sys_data' declared inside parameter list
-
-
-The new Kconfig symbol evidently needs a 'depends on ARM'.
-
-	Arnd
