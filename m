@@ -1,8 +1,4 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:64161 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753861AbaKHSNx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 8 Nov 2014 13:13:53 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
@@ -12,165 +8,163 @@ To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
 	Joerg Roedel <joro@8bytes.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
-Subject: [Patch Part3 v3 12/38] x86, irq: Kill x86_io_apic_ops.print_entries and related interfaces
-Date: Sun,  9 Nov 2014 02:13:12 +0800
-Message-Id: <1415470418-10874-13-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	iommu@lists.linux-foundation.org
+Subject: [Patch Part2 v4 19/31] PCI/MSI: Simplify PCI MSI code by initializing msi_desc.nvec_used earlier
+Date: Tue,  4 Nov 2014 20:01:53 +0800
+Message-Id: <1415102525-9898-20-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now there is no user of x86_io_apic_ops.print_entries anymore, so kill
-it.
+Simplify PCI MSI code by initializing msi_desc.nvec_used and
+msi_desc.msi_attrib.mutiple when create MSI descriptors.
+
+Also remove redundant checks in IRQ remapping drivers, PCI MSI core
+already guarattees these.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/include/asm/io_apic.h      |    3 --
- arch/x86/include/asm/x86_init.h     |    1 -
- arch/x86/kernel/apic/io_apic.c      |   55 -----------------------------------
- arch/x86/kernel/x86_init.c          |    1 -
- drivers/iommu/intel_irq_remapping.c |    7 -----
- 5 files changed, 67 deletions(-)
+ drivers/iommu/irq_remapping.c |    8 --------
+ drivers/pci/msi.c             |   40 +++++++++++++++-------------------------
+ 2 files changed, 15 insertions(+), 33 deletions(-)
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 3162a91f2b3d..8b4fc2d94bc1 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -225,8 +225,6 @@ extern unsigned int native_io_apic_read(unsigned int apic, unsigned int reg);
- extern void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int val);
- extern void native_io_apic_modify(unsigned int apic, unsigned int reg, unsigned int val);
- extern void native_disable_io_apic(void);
--extern void native_io_apic_print_entries(unsigned int apic, unsigned int nr_entries);
--extern void intel_ir_io_apic_print_entries(unsigned int apic, unsigned int nr_entries);
- extern int native_ioapic_set_affinity(struct irq_data *,
- 				      const struct cpumask *,
- 				      bool);
-@@ -290,7 +288,6 @@ static inline void disable_ioapic_support(void) { }
- #define native_io_apic_write		NULL
- #define native_io_apic_modify		NULL
- #define native_disable_io_apic		NULL
--#define native_io_apic_print_entries	NULL
- #define native_ioapic_set_affinity	NULL
- #define native_setup_ioapic_entry	NULL
- #define native_eoi_ioapic_pin		NULL
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index 9b53cb2acfbb..d49791d2aacf 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -194,7 +194,6 @@ struct x86_io_apic_ops {
- 	void		(*write)  (unsigned int apic, unsigned int reg, unsigned int value);
- 	void		(*modify) (unsigned int apic, unsigned int reg, unsigned int value);
- 	void		(*disable)(void);
--	void		(*print_entries)(unsigned int apic, unsigned int nr_entries);
- 	int		(*set_affinity)(struct irq_data *data,
- 					const struct cpumask *mask,
- 					bool force);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 551108e35cf0..42dc3ee37e89 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -1332,61 +1332,6 @@ static void __init setup_IO_APIC_irqs(void)
- 	}
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 176ff4372b7d..32fe5b1322d0 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -69,19 +69,13 @@ static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
+ 	unsigned int irq;
+ 	struct msi_desc *msidesc;
+ 
+-	WARN_ON(!list_is_singular(&dev->msi_list));
+ 	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
+-	WARN_ON(msidesc->irq);
+-	WARN_ON(msidesc->msi_attrib.multiple);
+-	WARN_ON(msidesc->nvec_used);
+ 
+ 	irq = irq_alloc_hwirqs(nvec, dev_to_node(&dev->dev));
+ 	if (irq == 0)
+ 		return -ENOSPC;
+ 
+ 	nvec_pow2 = __roundup_pow_of_two(nvec);
+-	msidesc->nvec_used = nvec;
+-	msidesc->msi_attrib.multiple = ilog2(nvec_pow2);
+ 	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
+ 		if (!sub_handle) {
+ 			index = msi_alloc_remapped_irq(dev, irq, nvec_pow2);
+@@ -109,8 +103,6 @@ error:
+ 	 * IRQs from tearing down again in default_teardown_msi_irqs()
+ 	 */
+ 	msidesc->irq = 0;
+-	msidesc->nvec_used = 0;
+-	msidesc->msi_attrib.multiple = 0;
+ 
+ 	return ret;
+ }
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index fb2ccb536324..afe974600c7d 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -85,19 +85,13 @@ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+  */
+ void default_teardown_msi_irqs(struct pci_dev *dev)
+ {
++	int i;
+ 	struct msi_desc *entry;
+ 
+-	list_for_each_entry(entry, &dev->msi_list, list) {
+-		int i, nvec;
+-		if (entry->irq == 0)
+-			continue;
+-		if (entry->nvec_used)
+-			nvec = entry->nvec_used;
+-		else
+-			nvec = 1 << entry->msi_attrib.multiple;
+-		for (i = 0; i < nvec; i++)
+-			arch_teardown_msi_irq(entry->irq + i);
+-	}
++	list_for_each_entry(entry, &dev->msi_list, list)
++		if (entry->irq)
++			for (i = 0; i < entry->nvec_used; i++)
++				arch_teardown_msi_irq(entry->irq + i);
  }
  
--void native_io_apic_print_entries(unsigned int apic, unsigned int nr_entries)
--{
--	int i;
--
--	pr_debug(" NR Dst Mask Trig IRR Pol Stat Dmod Deli Vect:\n");
--
--	for (i = 0; i <= nr_entries; i++) {
--		struct IO_APIC_route_entry entry;
--
--		entry = ioapic_read_entry(apic, i);
--
--		pr_debug(" %02x %02X  ", i, entry.dest);
--		pr_cont("%1d    %1d    %1d   %1d   %1d    "
--			"%1d    %1d    %02X\n",
--			entry.mask,
--			entry.trigger,
--			entry.irr,
--			entry.polarity,
--			entry.delivery_status,
--			entry.dest_mode,
--			entry.delivery_mode,
--			entry.vector);
+ void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
+@@ -353,19 +347,12 @@ static void free_msi_irqs(struct pci_dev *dev)
+ 	struct msi_desc *entry, *tmp;
+ 	struct attribute **msi_attrs;
+ 	struct device_attribute *dev_attr;
+-	int count = 0;
++	int i, count = 0;
+ 
+-	list_for_each_entry(entry, &dev->msi_list, list) {
+-		int i, nvec;
+-		if (!entry->irq)
+-			continue;
+-		if (entry->nvec_used)
+-			nvec = entry->nvec_used;
+-		else
+-			nvec = 1 << entry->msi_attrib.multiple;
+-		for (i = 0; i < nvec; i++)
+-			BUG_ON(irq_has_action(entry->irq + i));
 -	}
--}
--
--void intel_ir_io_apic_print_entries(unsigned int apic,
--				    unsigned int nr_entries)
--{
--	int i;
--
--	pr_debug(" NR Indx Fmt Mask Trig IRR Pol Stat Indx2 Zero Vect:\n");
--
--	for (i = 0; i <= nr_entries; i++) {
--		struct IR_IO_APIC_route_entry *ir_entry;
--		struct IO_APIC_route_entry entry;
--
--		entry = ioapic_read_entry(apic, i);
--
--		ir_entry = (struct IR_IO_APIC_route_entry *)&entry;
--
--		pr_debug(" %02x %04X ", i, ir_entry->index);
--		pr_cont("%1d   %1d    %1d    %1d   %1d   "
--			"%1d    %1d     %X    %02X\n",
--			ir_entry->format,
--			ir_entry->mask,
--			ir_entry->trigger,
--			ir_entry->irr,
--			ir_entry->polarity,
--			ir_entry->delivery_status,
--			ir_entry->index2,
--			ir_entry->zero,
--			ir_entry->vector);
--	}
--}
--
- void ioapic_zap_locks(void)
++	list_for_each_entry(entry, &dev->msi_list, list)
++		if (entry->irq)
++			for (i = 0; i < entry->nvec_used; i++)
++				BUG_ON(irq_has_action(entry->irq + i));
+ 
+ 	arch_teardown_msi_irqs(dev);
+ 
+@@ -556,7 +543,7 @@ error_attrs:
+ 	return ret;
+ }
+ 
+-static struct msi_desc *msi_setup_entry(struct pci_dev *dev)
++static struct msi_desc *msi_setup_entry(struct pci_dev *dev, int nvec)
  {
- 	raw_spin_lock_init(&ioapic_lock);
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index 814fcbadaad1..ba5ab975bb5b 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -154,7 +154,6 @@ struct x86_io_apic_ops x86_io_apic_ops = {
- 	.write			= native_io_apic_write,
- 	.modify			= native_io_apic_modify,
- 	.disable		= native_disable_io_apic,
--	.print_entries		= native_io_apic_print_entries,
- 	.set_affinity		= native_ioapic_set_affinity,
- 	.setup_entry		= native_setup_ioapic_entry,
- 	.eoi_ioapic_pin		= native_eoi_ioapic_pin,
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index d32e3699a55e..b0c8113e7a9b 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -660,13 +660,6 @@ static int __init intel_enable_irq_remapping(void)
+ 	u16 control;
+ 	struct msi_desc *entry;
+@@ -574,6 +561,8 @@ static struct msi_desc *msi_setup_entry(struct pci_dev *dev)
+ 	entry->msi_attrib.maskbit	= !!(control & PCI_MSI_FLAGS_MASKBIT);
+ 	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
+ 	entry->msi_attrib.multi_cap	= (control & PCI_MSI_FLAGS_QMASK) >> 1;
++	entry->msi_attrib.multiple	= ilog2(__roundup_pow_of_two(nvec));
++	entry->nvec_used		= nvec;
  
- 	irq_remapping_enabled = 1;
+ 	if (control & PCI_MSI_FLAGS_64BIT)
+ 		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_64;
+@@ -606,7 +595,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
  
--	/*
--	 * VT-d has a different layout for IO-APIC entries when
--	 * interrupt remapping is enabled. So it needs a special routine
--	 * to print IO-APIC entries for debugging purposes too.
--	 */
--	x86_io_apic_ops.print_entries = intel_ir_io_apic_print_entries;
--
- 	pr_info("Enabled IRQ remapping in %s mode\n", eim ? "x2apic" : "xapic");
+ 	msi_set_enable(dev, 0);	/* Disable MSI during set up */
  
- 	return eim ? IRQ_REMAP_X2APIC_MODE : IRQ_REMAP_XAPIC_MODE;
+-	entry = msi_setup_entry(dev);
++	entry = msi_setup_entry(dev, nvec);
+ 	if (!entry)
+ 		return -ENOMEM;
+ 
+@@ -677,6 +666,7 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
+ 		entry->msi_attrib.entry_nr	= entries[i].entry;
+ 		entry->msi_attrib.default_irq	= dev->irq;
+ 		entry->mask_base		= base;
++		entry->nvec_used		= 1;
+ 
+ 		list_add_tail(&entry->list, &dev->msi_list);
+ 	}
 -- 
 1.7.10.4
 
