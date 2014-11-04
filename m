@@ -1,217 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f46.google.com ([209.85.192.46]:44811 "EHLO
-	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932235AbaKRXlE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 18:41:04 -0500
-Received: by mail-qg0-f46.google.com with SMTP id i50so17803920qgf.33
-        for <linux-pci@vger.kernel.org>; Tue, 18 Nov 2014 15:41:03 -0800 (PST)
+Received: from mail-bn1on0132.outbound.protection.outlook.com ([157.56.110.132]:41024
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751046AbaKDIKT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Nov 2014 03:10:19 -0500
+From: Rajat Jain <rajatjain@juniper.net>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Sandeep Mann <sandeep@purestorage.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"rajatxjain@gmail.com" <rajatxjain@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	"Tejun Heo" <tj@kernel.org>
+Subject: RE: [PATCH] PCI: pciehp: Use ordered workqueue for HPC events
+Date: Tue, 4 Nov 2014 08:10:15 +0000
+Message-ID: <9d8b44697a4e42a5a69012a5f3be1b26@DM2PR05MB975.namprd05.prod.outlook.com>
+References: <1406933232-1560-1-git-send-email-sandeep@purestorage.com>
+ <20140904211042.GD17125@google.com>
+In-Reply-To: <20140904211042.GD17125@google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20141118231124.GA6212@shangw>
-References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com> <20141118231124.GA6212@shangw>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 18 Nov 2014 16:40:43 -0700
-Message-ID: <CAErSpo6HPUR+6KmmO0u97ik_Nk4qavOSwPOZL8fKtTzEe_tuGA@mail.gmail.com>
-Subject: Re: [PATCH V9 00/18] Enable SRIOV on PowerNV
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 18, 2014 at 4:11 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
-> On Sun, Nov 02, 2014 at 11:41:16PM +0800, Wei Yang wrote:
->
-> Hello Bjorn,
->
-> Did you have available bandwidth to review it? :-)
+Hello,
 
-I'm working on it right now :)
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> owner@vger.kernel.org] On Behalf Of Bjorn Helgaas
+> Sent: Thursday, September 04, 2014 2:11 PM
+> To: Sandeep Mann
+> Cc: linux-pci@vger.kernel.org
+> Subject: Re: [PATCH] PCI: pciehp: Use ordered workqueue for HPC events
+> 
+> On Fri, Aug 01, 2014 at 03:47:12PM -0700, Sandeep Mann wrote:
+> > Using an ordered workqueue serializes processing of hotplug event.
+> > Processing an hotplug event for some devices can take a relatively
+> > "long" time, which means if a device is added and removed in quick
+> > succession (or due to flacky hardware), it can lead to multiple
+> > outstanding hotplug events. Processing these events concurrently can
+> > lead to unknown internal state and/or kernel panics.
+> >
+> > Signed-off-by: Sandeep Mann <sandeep@purestorage.com>
+Acked-by: Rajat Jain <rajatxjain@gmail.com>
 
->>This patchset enables the SRIOV on POWER8.
->>
->>The gerneral idea is put each VF into one individual PE and allocate required
->>resources like MMIO/DMA/MSI. The major difficulty comes from the MMIO
->>allocation and adjustment for PF's IOV BAR.
->>
->>On P8, we use M64BT to cover a PF's IOV BAR, which could make an individual VF
->>sit in its own PE. This gives more flexiblity, while at the mean time it
->>brings on some restrictions on the PF's IOV BAR size and alignment.
->>
->>To achieve this effect, we need to do some hack on pci devices's resources.
->>1. Expand the IOV BAR properly.
->>   Done by pnv_pci_ioda_fixup_iov_resources().
->>2. Shift the IOV BAR properly.
->>   Done by pnv_pci_vf_resource_shift().
->>3. IOV BAR alignment is calculated by arch dependent function instead of an
->>   individual VF BAR size.
->>   Done by pnv_pcibios_sriov_resource_alignment().
->>4. Take the IOV BAR alignment into consideration in the sizing and assigning.
->>   This is achieved by commit: "PCI: Take additional IOV BAR alignment in
->>   sizing and assigning"
->>
->>Test Environment:
->>       The SRIOV device tested is Emulex Lancer(10df:e220) and
->>       Mellanox ConnectX-3(15b3:1003) on POWER8.
->>
->>Examples on pass through a VF to guest through vfio:
->>       1. unbind the original driver and bind to vfio-pci driver
->>          echo 0000:06:0d.0 > /sys/bus/pci/devices/0000:06:0d.0/driver/unbind
->>          echo  1102 0002 > /sys/bus/pci/drivers/vfio-pci/new_id
->>          Note: this should be done for each device in the same iommu_group
->>       2. Start qemu and pass device through vfio
->>          /home/ywywyang/git/qemu-impreza/ppc64-softmmu/qemu-system-ppc64 \
->>                  -M pseries -m 2048 -enable-kvm -nographic \
->>                  -drive file=/home/ywywyang/kvm/fc19.img \
->>                  -monitor telnet:localhost:5435,server,nowait -boot cd \
->>                  -device "spapr-pci-vfio-host-bridge,id=CXGB3,iommu=26,index=6"
->>
->>Verify this is the exact VF response:
->>       1. ping from a machine in the same subnet(the broadcast domain)
->>       2. run arp -n on this machine
->>          9.115.251.20             ether   00:00:c9:df:ed:bf   C eth0
->>       3. ifconfig in the guest
->>          # ifconfig eth1
->>          eth1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
->>               inet 9.115.251.20  netmask 255.255.255.0  broadcast 9.115.251.255
->>               inet6 fe80::200:c9ff:fedf:edbf  prefixlen 64  scopeid 0x20<link>
->>               ether 00:00:c9:df:ed:bf  txqueuelen 1000 (Ethernet)
->>               RX packets 175  bytes 13278 (12.9 KiB)
->>               RX errors 0  dropped 0  overruns 0  frame 0
->>               TX packets 58  bytes 9276 (9.0 KiB)
->>               TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
->>       4. They have the same MAC address
->>
->>       Note: make sure you shutdown other network interfaces in guest.
->>
->>---
->>v9:
->>   * make the change log consistent in the terminology
->>     PF's IOV BAR -> the SRIOV BAR in PF
->>     VF's BAR -> the normal BAR in VF's view
->>   * rename all newly introduced function from _sriov_ to _iov_
->>   * rename the document to Documentation/powerpc/pci_iov_resource_on_powernv.txt
->>   * add the vendor id and device id of the tested devices
->>   * change return value from EINVAL to ENOSYS for pci_iov_virtfn_bus() and
->>     pci_iov_virtfn_devfn() when it is called on PF or SRIOV is not configured
->>   * rebase on 3.18-rc2 and tested
->>v8:
->>   * use weak funcion pcibios_sriov_resource_size() instead of some flag to
->>     retrieve the IOV BAR size.
->>   * add a document Documentation/powerpc/pci_resource.txt to explain the
->>     design.
->>   * make pci_iov_virtfn_bus()/pci_iov_virtfn_devfn() not inline.
->>   * extract a function res_to_dev_res(), so that it is more general to get
->>     additional size and alignment
->>   * fix one contention which is introduced in "powrepc/pci: Refactor pci_dn".
->>     the root cause is pci_get_slot() takes pci_bus_sem and leads to dead
->>     lock.
->>v7:
->>   * add IORESOURCE_ARCH flag for IOV BAR on powernv platform.
->>   * when IOV BAR has IORESOURCE_ARCH flag, the size is retrieved from
->>     hardware directly. If not, calculate as usual.
->>   * reorder the patch set, group them by subsystem:
->>     PCI, powerpc, powernv
->>   * rebase it on 3.16-rc6
->>v6:
->>   * remove pcibios_enable_sriov()/pcibios_disable_sriov() weak function
->>     similar function is moved to
->>     pnv_pci_enable_device_hook()/pnv_pci_disable_device_hook(). When PF is
->>     enabled, platform will try best to allocate resources for VFs.
->>   * remove pcibios_sriov_resource_size weak function
->>   * VF BAR size is retrieved from hardware directly in virtfn_add()
->>v5:
->>   * merge those SRIOV related platform functions in machdep_calls
->>     wrap them in one CONFIG_PCI_IOV marco
->>   * define IODA_INVALID_M64 to replace (-1)
->>     use this value to represent the m64_wins is not used
->>   * rename pnv_pci_release_dev_dma() to pnv_pci_ioda2_release_dma_pe()
->>     this function is a conterpart to pnv_pci_ioda2_setup_dma_pe()
->>   * change dev_info() to dev_dgb() in pnv_pci_ioda_fixup_iov_resources()
->>     reduce some log in kernel
->>   * release M64 window in pnv_pci_ioda2_release_dma_pe()
->>v4:
->>   * code format fix, eg. not exceed 80 chars
->>   * in commit "ppc/pnv: Add function to deconfig a PE"
->>     check the bus has a bridge before print the name
->>     remove a PE from its own PELTV
->>   * change the function name for sriov resource size/alignment
->>   * rebase on 3.16-rc3
->>   * VFs will not rely on device node
->>     As Grant Likely's comments, kernel should have the ability to handle the
->>     lack of device_node gracefully. Gavin restructure the pci_dn, which
->>     makes the VF will have pci_dn even when VF's device_node is not provided
->>     by firmware.
->>   * clean all the patch title to make them comply with one style
->>   * fix return value for pci_iov_virtfn_bus/pci_iov_virtfn_devfn
->>v3:
->>   * change the return type of virtfn_bus/virtfn_devfn to int
->>     change the name of these two functions to pci_iov_virtfn_bus/pci_iov_virtfn_devfn
->>   * reduce the second parameter or pcibios_sriov_disable()
->>   * use data instead of pe in "ppc/pnv: allocate pe->iommu_table dynamically"
->>   * rename __pci_sriov_resource_size to pcibios_sriov_resource_size
->>   * rename __pci_sriov_resource_alignment to pcibios_sriov_resource_alignment
->>v2:
->>   * change the return value of virtfn_bus/virtfn_devfn to 0
->>   * move some TCE related marco definition to
->>     arch/powerpc/platforms/powernv/pci.h
->>   * fix the __pci_sriov_resource_alignment on powernv platform
->>     During the sizing stage, the IOV BAR is truncated to 0, which will
->>     effect the order of allocation. Fix this, so that make sure BAR will be
->>     allocated ordered by their alignment.
->>v1:
->>   * improve the change log for
->>     "PCI: Add weak __pci_sriov_resource_size() interface"
->>     "PCI: Add weak __pci_sriov_resource_alignment() interface"
->>     "PCI: take additional IOV BAR alignment in sizing and assigning"
->>   * wrap VF PE code in CONFIG_PCI_IOV
->>   * did regression test on P7.
->>
->>Gavin Shan (1):
->>  powrepc/pci: Refactor pci_dn
->>
->>Wei Yang (17):
->>  PCI/IOV: Export interface for retrieve VF's BDF
->>  PCI: Add weak pcibios_iov_resource_alignment() interface
->>  PCI: Add weak pcibios_iov_resource_size() interface
->>  PCI: Take additional PF's IOV BAR alignment in sizing and assigning
->>  powerpc/pci: Add PCI resource alignment documentation
->>  powerpc/pci: Don't unset pci resources for VFs
->>  powerpc/pci: Define pcibios_disable_device() on powerpc
->>  powerpc/pci: remove pci_dn->pcidev field
->>  powerpc/powernv: Use pci_dn in PCI config accessor
->>  powerpc/powernv: Allocate pe->iommu_table dynamically
->>  powerpc/powernv: Expand VF resources according to the number of
->>    total_pe
->>  powerpc/powernv: Implement pcibios_iov_resource_alignment() on
->>    powernv
->>  powerpc/powernv: Implement pcibios_iov_resource_size() on powernv
->>  powerpc/powernv: Shift VF resource with an offset
->>  powerpc/powernv: Allocate VF PE
->>  powerpc/powernv: Expanding IOV BAR, with m64_per_iov supported
->>  powerpc/powernv: Group VF PE when IOV BAR is big on PHB3
->>
->> .../powerpc/pci_iov_resource_on_powernv.txt        |   75 ++
->> arch/powerpc/include/asm/device.h                  |    3 +
->> arch/powerpc/include/asm/iommu.h                   |    3 +
->> arch/powerpc/include/asm/machdep.h                 |   13 +-
->> arch/powerpc/include/asm/pci-bridge.h              |   24 +-
->> arch/powerpc/kernel/pci-common.c                   |   39 +
->> arch/powerpc/kernel/pci-hotplug.c                  |    3 +
->> arch/powerpc/kernel/pci_dn.c                       |  257 ++++++-
->> arch/powerpc/platforms/powernv/eeh-powernv.c       |   14 +-
->> arch/powerpc/platforms/powernv/pci-ioda.c          |  744 +++++++++++++++++++-
->> arch/powerpc/platforms/powernv/pci.c               |   87 +--
->> arch/powerpc/platforms/powernv/pci.h               |   13 +-
->> drivers/pci/iov.c                                  |   60 +-
->> drivers/pci/setup-bus.c                            |   85 ++-
->> include/linux/pci.h                                |   19 +
->> 15 files changed, 1332 insertions(+), 107 deletions(-)
->> create mode 100644 Documentation/powerpc/pci_iov_resource_on_powernv.txt
->>
->>--
->>1.7.9.5
->>
->
+> 
+> What's the status of this?  I see Rajat's ack, but there was a lot of subsequent
+> discussion, and I'm not sure whether there was a conclusion.
+
+Yes, we concluded that the patch was needed.
+
+> 
+> Given that, I'd like to see a bugzilla with the relevant background (lspci -vv,
+> dmesg log). 
+
+Sandeep, is that something you can provide?
+
+> Also, shpchp_core.c has similar code, so I'd like to see either a
+> similar patch for it or an explanation of why that driver doesn't need it.
+> 
+
+I can provide that patch. I took a look at the commit history of SHPCHP and PCIEHP
+And I see a bunch of commits that switch to using the unordered work queues.
+
+d347e75847 ("PCI: shpchp: Handle push button event asynchronously")
+10959d72d4 ("PCI: shpchp: Make shpchp_wq non-ordered")
+486b10b9f4 ("PCI: pciehp: Handle push button event asynchronously")
+e24dcbef93 ("shpchp: update workqueue usage")
+a827ea307b ("pciehp: update workqueue usage")
+
+While I'm still trying to understand if there are scenarios where ordered queues can be a problem,
+I'm able to find convincing scenarios where having an unordered queue will fail the driver.
+
+Using ordered queues are definitely a requirement for cases where
+hotplug events can happen very fast enough not to give SW the time to
+handle them. (For e.g., for pciehp: PCIe link fluctuations may result in
+such events).
+
+Problem:
+     Consider a very fast ocuurance of HOTPLUG->UNPLUG->HOTPLUG
+     (fast enough that it does not give the wq to get a chance to run)
+
+     If the wq can be reordered, it is a problem if the worker function
+     is invoked as HOTPLUG->HOTPLUG->UNPLUG.
+
+Why:
+     In the above example, the final result should have been a device
+     added, but if it is reordered like above, thre shall be no device
+     added. The second HOTPLUG event shall be treated as a stray one
+     since a device is already present there (""Cannot add device at..")
+
+Thus we need to have ordered work queues. 
+
+The primary reasons to switch to using unordered workqueues as far
+as I could understand from the logs were (1) avoid using the system
+workqueue, and (2) let the button events be handled asynchronously.
+
+Do you think a ordered workqueue not work for any of the reasons above?
+
+Thanks,
+
+Rajat
+
+(PS: In short, I think the ordered workqueues are definitely needed for pciehp, specially with the inclusion of link-state hotplug. I think it will also help the shpchp - but I'm still trying to understand if there are any uncovered scenarios).
+
+
+> So I'll drop this for now, pending these updates.
+> 
+> Bjorn
+> 
+> > ---
+> >  drivers/pci/hotplug/pciehp_hpc.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/pci/hotplug/pciehp_hpc.c
+> > b/drivers/pci/hotplug/pciehp_hpc.c
+> > index 42914e0..c4eedab 100644
+> > --- a/drivers/pci/hotplug/pciehp_hpc.c
+> > +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> > @@ -681,7 +681,7 @@ static int pcie_init_slot(struct controller *ctrl)
+> >  	if (!slot)
+> >  		return -ENOMEM;
+> >
+> > -	slot->wq = alloc_workqueue("pciehp-%u", 0, 0, PSN(ctrl));
+> > +	slot->wq = alloc_ordered_workqueue("pciehp-%u", 0, PSN(ctrl));
+> >  	if (!slot->wq)
+> >  		goto abort;
+> >
+> > --
+> > 1.8.3.2
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the
+> body of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
