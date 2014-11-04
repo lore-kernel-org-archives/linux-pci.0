@@ -1,53 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cmexedge2.emulex.com ([138.239.224.100]:51069 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752543AbaKJLwu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Nov 2014 06:52:50 -0500
-From: Sathya Perla <sathya.perla@emulex.com>
-To: <linux-pci@vger.kernel.org>, <netdev@vger.kernel.org>
-CC: <ariel.elior@qlogic.com>, <linux.nics@intel.com>,
-	<shahed.shaikh@qlogic.com>, <ddutile@redhat.com>
-Subject: [PATCH 1/4] pci: move pci_assivned_vfs() check while disabling VFs to pci sub-system
-Date: Mon, 10 Nov 2014 17:23:27 +0530
-Message-ID: <1415620410-4937-2-git-send-email-sathya.perla@emulex.com>
-In-Reply-To: <1415620410-4937-1-git-send-email-sathya.perla@emulex.com>
-References: <1415620410-4937-1-git-send-email-sathya.perla@emulex.com>
+Received: from service87.mimecast.com ([91.220.42.44]:59741 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753547AbaKDOP2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Nov 2014 09:15:28 -0500
+Date: Tue, 4 Nov 2014 14:15:20 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"David S. Miller" <davem@davemloft.net>,
+	Michal Simek <monstr@monstr.eu>,
+	Martin Wilck <martin.wilck@ts.fujitsu.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH RFC v2 0/2] Fix procfs PCI resources mmap
+Message-ID: <20141104141520.GA8802@e102568-lin.cambridge.arm.com>
+References: <1414168089-8130-1-git-send-email-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1414168089-8130-1-git-send-email-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=WINDOWS-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Vasundhara Volam <vasundhara.volam@emulex.com>
+On Fri, Oct 24, 2014 at 05:28:04PM +0100, Lorenzo Pieralisi wrote:
+> The way PCI memory resources are exported to user space through procfs
+> is not uniform across architectures. In particular, some architectures
+> (ie SPARC) export the resource PCI bus address to user space, whereas
+> others (ARM, PowerPC, Microblaze) export the resource CPU physical address.
+> This convention should be followed when it comes to passing the pgoff
+> values to the mmap syscall to map the resource in question.
+> 
+> Consequently, the checks applied to the offset passed to the mmap syscall
+> (in pci_mmap_fits()) are to be interpreted differently on different
+> architectures, and in particular they should match the values exported to
+> user space through the pci_resource_to_user() conversion function.
+> 
+> This patch series addresses two issues. First patch applies the
+> pci_resource_to_user() filter to the PCI resource that is being
+> mapped in order to carry out a proper check against the pgoff passed
+> from user space. Second patch fixes the way the pgoff is handled in
+> the ARM pci_mmap_page_range() implementation.
 
-A user must not be allowed to disable VFs while they are already assigned to
-a guest. This check is being made in each individual driver that implements
-the sriov_configure PCI method.
-This patch fixes this code duplication by moving this check to the
-sriov_nuvfs_store() routine just before invoking sriov_configure() when
-num_vfs is equal to 0.
+I appreciate it is hardly number one priority and by no means urgent,
+but I would like to get some comments if possible on patch 1 since patch
+2, that is a fix for ARM, relies on the approach we go for in order to
+fix the pci_mmap_fits() behaviour (patch 1).
 
-Signed-off-by: Vasundhara Volam <vasundhara.volam@emulex.com>
-Signed-off-by: Sathya Perla <sathya.perla@emulex.com>
----
- drivers/pci/pci-sysfs.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+Comments welcome.
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 2c6643f..6e65b47 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -477,6 +477,11 @@ static ssize_t sriov_numvfs_store(struct device *dev,
- 	}
- 
- 	if (num_vfs == 0) {
-+		if (pci_vfs_assigned(pdev)) {
-+			dev_warn(&pdev->dev, "Cannot disable VFs while they are assigned\n");
-+			return -EBUSY;
-+		}
-+
- 		/* disable VFs */
- 		ret = pdev->driver->sriov_configure(pdev, 0);
- 		if (ret < 0)
--- 
-1.7.1
+Thanks,
+Lorenzo
+
+> 
+> v1 posting:
+> 
+> http://marc.info/?l=linux-kernel&m=141337461318554&w=2
+> 
+> v1 => v2
+> - Reworded commit log as per RMK comments
+> 
+> Lorenzo Pieralisi (2):
+>   drivers: pci: fix pci_mmap_fits() implementation for procfs mmap
+>   arm: kernel: fix pci_mmap_page_range() offset calculation
+> 
+>  arch/arm/kernel/bios32.c | 10 ++--------
+>  drivers/pci/pci-sysfs.c  | 13 ++++++++-----
+>  2 files changed, 10 insertions(+), 13 deletions(-)
+> 
+> -- 
+> 2.1.2
+> 
+> 
 
