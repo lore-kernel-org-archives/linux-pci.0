@@ -1,51 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:14201 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750881AbaKFF1X (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 00:27:23 -0500
-Received: from epcpsbgr5.samsung.com
- (u145.gpu120.samsung.co.kr [203.254.230.145])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0NEL008RQR5M6950@mailout3.samsung.com> for
- linux-pci@vger.kernel.org; Thu, 06 Nov 2014 14:27:22 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
-References: <001301cff95e$a124f6b0$e36ee410$%han@samsung.com>
- <545B01F1.7070009@ti.com>
-In-reply-to: <545B01F1.7070009@ti.com>
-Subject: Re: [PATCH] PCI: dra7xx: Add dra7xx prefix before add_pcie_port
-Date: Thu, 06 Nov 2014 14:27:56 +0900
-Message-id: <001b01cff982$6ba565a0$42f030e0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [Patch Part2 v4 20/31] PCI/MSI: Kill redundant calling for irq_set_msi_desc() for MSIx interrupts
+Date: Tue,  4 Nov 2014 20:01:54 +0800
+Message-Id: <1415102525-9898-21-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, November 06, 2014 2:07 PM, Kishon Vijay Abraham I wrote:
-> 
-> On Thursday 06 November 2014 06:41 AM, Jingoo Han wrote:
-> > The add_pcie_port function is dra7xx-specific. Add exynos prefix
-> > to avoid collision in global name space.
-> 
-> %s/exynos/dra7xx
+It's arch_setup_msi_irq()/arch_setup_msi_irqs()'s responsibility to call
+irq_set_msi_desc() to associate IRQ descriptors and MSI descriptors,
+so kill the redundant call of irq_set_msi_desc() for MSIx interrupts
+in PCI MSI core.
 
-Sorry, it is my bad. I will send patch v2 soon.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/pci/msi.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-> 
-> After fixing this you can add
-> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-
-I appreciated you Acked-by.
-
-Best regards,
-Jingoo Han
-
-> >
-> > Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> > ---
-> >  drivers/pci/host/pci-dra7xx.c |    6 +++---
-> >  1 file changed, 3 insertions(+), 3 deletions(-)
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index afe974600c7d..da181c59394b 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -685,7 +685,6 @@ static void msix_program_entries(struct pci_dev *dev,
+ 						PCI_MSIX_ENTRY_VECTOR_CTRL;
+ 
+ 		entries[i].vector = entry->irq;
+-		irq_set_msi_desc(entry->irq, entry);
+ 		entry->masked = readl(entry->mask_base + offset);
+ 		msix_mask_irq(entry, 1);
+ 		i++;
+-- 
+1.7.10.4
 
