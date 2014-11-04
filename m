@@ -1,55 +1,364 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:36246 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757069AbaKTWVb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Nov 2014 17:21:31 -0500
-Received: by mail-ie0-f174.google.com with SMTP id rl12so3757802iec.19
-        for <linux-pci@vger.kernel.org>; Thu, 20 Nov 2014 14:21:30 -0800 (PST)
-Date: Thu, 20 Nov 2014 15:21:27 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Sathya Perla <sathya.perla@emulex.com>
-Cc: linux-pci@vger.kernel.org, netdev@vger.kernel.org,
-	ariel.elior@qlogic.com, linux.nics@intel.com,
-	shahed.shaikh@qlogic.com, ddutile@redhat.com,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Subject: Re: [PATCH 0/4] move pci_assivned_vfs() check (while disabling VFs)
- to pci sub-system
-Message-ID: <20141120222127.GB7987@google.com>
-References: <1415620410-4937-1-git-send-email-sathya.perla@emulex.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415620410-4937-1-git-send-email-sathya.perla@emulex.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Prarit Bhargava <prarit@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [Patch Part2 v4 07/31] x86, irq: Use hierarchy irqdomain to manage CPU interrupt vectors
+Date: Tue,  4 Nov 2014 20:01:41 +0800
+Message-Id: <1415102525-9898-8-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Jeff]
+Abstract CPU local APIC as an interrupt controller and create an
+irqdomain for it to manage CPU interupt vectors. It's the base to
+enable hierarchy irqdomain on x86 systems. Eventually we will build
+a irqdomain hiearchy as below:
+IOAPIC domain-------|
+MSI/MSI-x domain------> [Inerrupt Remapping domain] -> CPU vector domain
+HPET_IRQ domain_____|                                         ^
+DMAR domain---------------------------------------------------|
+HT_IRQ domain-------------------------------------------------|
 
-On Mon, Nov 10, 2014 at 05:23:26PM +0530, Sathya Perla wrote:
-> A user must not be allowed to disable VFs while they are already assigned to
-> a guest. This check is being made in each individual driver that implements
-> the sriov_configure PCI method.
-> This patch-set fixes this code duplication by moving this check from
-> drivers to the sriov_nuvfs_store() routine just before invoking
-> sriov_configure() when num_vfs is equal to 0.
-> 
-> Vasundhara Volam (4):
->   pci: move pci_assivned_vfs() check while disabling VFs to pci
->     sub-system
->   bnx2x: remove pci_assigned_vfs() check while disabling VFs
->   i40e: remove pci_assigned_vfs() check while disabling VFs
->   qlcnic: remove pci_assigned_vfs() check while disabling VFs
-> 
->  drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c  |    2 +-
->  drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c |    7 +------
->  .../net/ethernet/qlogic/qlcnic/qlcnic_sriov_pf.c   |   10 ----------
->  drivers/pci/pci-sysfs.c                            |    5 +++++
->  4 files changed, 7 insertions(+), 17 deletions(-)
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/Kconfig               |    3 +-
+ arch/x86/include/asm/hw_irq.h  |   15 ++++
+ arch/x86/kernel/apic/io_apic.c |    3 -
+ arch/x86/kernel/apic/vector.c  |  156 ++++++++++++++++++++++++++++++++++++----
+ 4 files changed, 160 insertions(+), 17 deletions(-)
 
-I'm dropping these for the reasons Don & Alex outlined -- they don't fix
-the problem for VFIO, so this amounts to shuffling around code that's known
-to be broken, which seems more confusing than worthwhile.
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 8e3175ba7f4c..9df24a42f54d 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -883,11 +883,12 @@ config X86_LOCAL_APIC
+ 	def_bool y
+ 	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_APIC || PCI_MSI
+ 	select GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
++	select IRQ_DOMAIN
++	select IRQ_DOMAIN_HIERARCHY
+ 
+ config X86_IO_APIC
+ 	def_bool X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_IOAPIC
+ 	depends on X86_LOCAL_APIC
+-	select IRQ_DOMAIN
+ 
+ config X86_REROUTE_FOR_BROKEN_BOOT_IRQS
+ 	bool "Reroute for broken boot IRQs"
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 3d51d74d6c01..78130156601a 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -112,6 +112,15 @@ struct irq_2_irte {
+ 
+ #ifdef	CONFIG_X86_LOCAL_APIC
+ struct irq_data;
++struct irq_domain;
++
++struct irq_alloc_info {
++	u32			flags;
++	const struct cpumask	*mask;	/* CPU mask for vector allocation */
++};
++
++/* Request contigious CPU vectors */
++#define	X86_IRQ_ALLOC_CONTIGOUS_VECTORS	0x1
+ 
+ struct irq_cfg {
+ 	cpumask_var_t		domain;
+@@ -135,6 +144,12 @@ struct irq_cfg {
+ 	};
+ };
+ 
++extern struct irq_domain *x86_vector_domain;
++
++extern void init_irq_alloc_info(struct irq_alloc_info *info,
++				const struct cpumask *mask);
++extern void copy_irq_alloc_info(struct irq_alloc_info *dst,
++				struct irq_alloc_info *src);
+ extern struct irq_cfg *irq_cfg(unsigned int irq);
+ extern struct irq_cfg *irqd_cfg(struct irq_data *irq_data);
+ extern struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 9593c4cac1c0..b46192774d91 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -2353,9 +2353,6 @@ static int mp_irqdomain_create(int ioapic)
+ 		ioapic_dynirq_base = max(ioapic_dynirq_base,
+ 					 gsi_cfg->gsi_end + 1);
+ 
+-	if (gsi_cfg->gsi_base == 0)
+-		irq_set_default_host(ip->irqdomain);
+-
+ 	return 0;
+ }
+ 
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 02cb5d386985..4b5a021f2094 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -3,6 +3,8 @@
+  *
+  * Copyright (C) 1997, 1998, 1999, 2000, 2009 Ingo Molnar, Hajnalka Szabo
+  *	Moved from arch/x86/kernel/apic/io_apic.c.
++ * Jiang Liu <jiang.liu@linux.intel.com>
++ *	Add support of hierarchy irqdomain
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -19,7 +21,9 @@
+ #include <asm/desc.h>
+ #include <asm/irq_remapping.h>
+ 
++struct irq_domain *x86_vector_domain;
+ static DEFINE_RAW_SPINLOCK(vector_lock);
++static struct irq_chip vector_chip;
+ 
+ void lock_vector_lock(void)
+ {
+@@ -36,15 +40,21 @@ void unlock_vector_lock(void)
+ 
+ struct irq_cfg *irq_cfg(unsigned int irq)
+ {
+-	return irq_get_chip_data(irq);
++	return irqd_cfg(irq_get_irq_data(irq));
+ }
+ 
+ struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
+ {
++	if (!irq_data)
++		return NULL;
++
++	while (irq_data->parent_data)
++		irq_data = irq_data->parent_data;
++
+ 	return irq_data->chip_data;
+ }
+ 
+-static struct irq_cfg *alloc_irq_cfg(unsigned int irq, int node)
++static struct irq_cfg *alloc_irq_cfg(int node)
+ {
+ 	struct irq_cfg *cfg;
+ 
+@@ -79,7 +89,7 @@ struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node)
+ 			return cfg;
+ 	}
+ 
+-	cfg = alloc_irq_cfg(at, node);
++	cfg = alloc_irq_cfg(node);
+ 	if (cfg)
+ 		irq_set_chip_data(at, cfg);
+ 	else
+@@ -87,14 +97,13 @@ struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node)
+ 	return cfg;
+ }
+ 
+-static void free_irq_cfg(unsigned int at, struct irq_cfg *cfg)
++static void free_irq_cfg(struct irq_cfg *cfg)
+ {
+-	if (!cfg)
+-		return;
+-	irq_set_chip_data(at, NULL);
+-	free_cpumask_var(cfg->domain);
+-	free_cpumask_var(cfg->old_domain);
+-	kfree(cfg);
++	if (cfg) {
++		free_cpumask_var(cfg->domain);
++		free_cpumask_var(cfg->old_domain);
++		kfree(cfg);
++	}
+ }
+ 
+ static int
+@@ -241,6 +250,90 @@ void clear_irq_vector(int irq, struct irq_cfg *cfg)
+ 	raw_spin_unlock_irqrestore(&vector_lock, flags);
+ }
+ 
++void init_irq_alloc_info(struct irq_alloc_info *info,
++			 const struct cpumask *mask)
++{
++	memset(info, 0, sizeof(*info));
++	info->mask = mask;
++}
++
++void copy_irq_alloc_info(struct irq_alloc_info *dst, struct irq_alloc_info *src)
++{
++	if (src)
++		*dst = *src;
++	else
++		memset(dst, 0, sizeof(*dst));
++}
++
++static inline const struct cpumask *
++irq_alloc_info_get_mask(struct irq_alloc_info *info)
++{
++	return (!info || !info->mask) ? apic->target_cpus() : info->mask;
++}
++
++static void x86_vector_free_irqs(struct irq_domain *domain,
++				 unsigned int virq, unsigned int nr_irqs)
++{
++	int i;
++	struct irq_data *irq_data;
++
++	for (i = 0; i < nr_irqs; i++) {
++		irq_data = irq_domain_get_irq_data(x86_vector_domain, virq + i);
++		if (irq_data && irq_data->chip_data) {
++			free_remapped_irq(virq);
++			clear_irq_vector(virq + i, irq_data->chip_data);
++			free_irq_cfg(irq_data->chip_data);
++			irq_domain_reset_irq_data(irq_data);
++		}
++	}
++}
++
++static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
++				 unsigned int nr_irqs, void *arg)
++{
++	int i, err;
++	struct irq_cfg *cfg;
++	struct irq_data *irq_data;
++	const struct cpumask *mask;
++	struct irq_alloc_info *info = arg;
++
++	if (disable_apic)
++		return -ENXIO;
++
++	/* Currently vector allocator can't guarantee contigious allocations */
++	if ((info->flags & X86_IRQ_ALLOC_CONTIGOUS_VECTORS) && nr_irqs > 1)
++		return -ENOSYS;
++
++	mask = irq_alloc_info_get_mask(info);
++	for (i = 0; i < nr_irqs; i++) {
++		irq_data = irq_domain_get_irq_data(domain, virq + i);
++		BUG_ON(!irq_data);
++		cfg = alloc_irq_cfg(irq_data->node);
++		if (!cfg) {
++			err = -ENOMEM;
++			goto error;
++		}
++
++		irq_data->chip = &vector_chip;
++		irq_data->chip_data = cfg;
++		irq_data->hwirq = virq + i;
++		err = assign_irq_vector(virq, cfg, mask);
++		if (err)
++			goto error;
++	}
++
++	return 0;
++
++error:
++	x86_vector_free_irqs(domain, virq, i + 1);
++	return err;
++}
++
++static struct irq_domain_ops x86_vector_domain_ops = {
++	.alloc = x86_vector_alloc_irqs,
++	.free = x86_vector_free_irqs,
++};
++
+ int __init arch_probe_nr_irqs(void)
+ {
+ 	int nr;
+@@ -266,6 +359,11 @@ int __init arch_probe_nr_irqs(void)
+ 
+ int __init arch_early_irq_init(void)
+ {
++	x86_vector_domain = irq_domain_add_tree(NULL, &x86_vector_domain_ops,
++						NULL);
++	BUG_ON(x86_vector_domain == NULL);
++	irq_set_default_host(x86_vector_domain);
++
+ 	return arch_early_ioapic_init();
+ }
+ 
+@@ -380,6 +478,37 @@ int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 	return 0;
+ }
+ 
++static int vector_set_affinity(struct irq_data *irq_data,
++			       const struct cpumask *dest, bool force)
++{
++	int err;
++	int irq = irq_data->irq;
++	struct irq_cfg *cfg = irq_data->chip_data;
++
++	if (!config_enabled(CONFIG_SMP))
++		return -EPERM;
++
++	if (!cpumask_intersects(dest, cpu_online_mask))
++		return -EINVAL;
++
++	err = assign_irq_vector(irq, cfg, dest);
++	if (err) {
++		struct irq_data *top = irq_get_irq_data(irq);
++
++		if (assign_irq_vector(irq, cfg, top->affinity))
++			pr_err("Failed to recover vector for irq %d\n", irq);
++		return err;
++	}
++
++	return IRQ_SET_MASK_OK;
++}
++
++static struct irq_chip vector_chip = {
++	.irq_ack = apic_ack_edge,
++	.irq_set_affinity = vector_set_affinity,
++	.irq_retrigger = apic_retrigger_irq,
++};
++
+ #ifdef CONFIG_SMP
+ void send_cleanup_vector(struct irq_cfg *cfg)
+ {
+@@ -500,7 +629,7 @@ int arch_setup_hwirq(unsigned int irq, int node)
+ 	unsigned long flags;
+ 	int ret;
+ 
+-	cfg = alloc_irq_cfg(irq, node);
++	cfg = alloc_irq_cfg(node);
+ 	if (!cfg)
+ 		return -ENOMEM;
+ 
+@@ -511,7 +640,7 @@ int arch_setup_hwirq(unsigned int irq, int node)
+ 	if (!ret)
+ 		irq_set_chip_data(irq, cfg);
+ 	else
+-		free_irq_cfg(irq, cfg);
++		free_irq_cfg(cfg);
+ 	return ret;
+ }
+ 
+@@ -521,7 +650,8 @@ void arch_teardown_hwirq(unsigned int irq)
+ 
+ 	free_remapped_irq(irq);
+ 	clear_irq_vector(irq, cfg);
+-	free_irq_cfg(irq, cfg);
++	irq_set_chip_data(irq, NULL);
++	free_irq_cfg(cfg);
+ }
+ 
+ static void __init print_APIC_field(int base)
+-- 
+1.7.10.4
 
-Jeff, if I were you I would drop the i40e patch.  I don't think it makes
-sense to remove the check from i40e before adding it to the PCI core.
-
-Bjorn
