@@ -1,50 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:61201 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751462AbaKKVX7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 16:23:59 -0500
-Received: by mail-ig0-f174.google.com with SMTP id hn18so1786624igb.7
-        for <linux-pci@vger.kernel.org>; Tue, 11 Nov 2014 13:23:58 -0800 (PST)
-Date: Tue, 11 Nov 2014 14:23:53 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	linux-s390@vger.kernel.org, David Vrabel <david.vrabel@citrix.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xenproject.org
-Subject: Re: [PATCH 0/3] xen MSI code clean up
-Message-ID: <20141111212353.GJ28161@google.com>
-References: <1414377878-23497-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-bn1bbn0109.outbound.protection.outlook.com ([157.56.111.109]:25643
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750901AbaKDRAh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Nov 2014 12:00:37 -0500
+Message-ID: <5459062F.6090603@amd.com>
+Date: Tue, 4 Nov 2014 11:00:31 -0600
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1414377878-23497-1-git-send-email-wangyijing@huawei.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>, <marc.zyngier@arm.com>,
+	<mark.rutland@arm.com>, <jason@lakedaemon.net>,
+	<tglx@linutronix.de>
+CC: <Catalin.Marinas@arm.com>, <Will.Deacon@arm.com>,
+	<liviu.dudau@arm.com>, <Harish.Kasiviswanathan@amd.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>
+Subject: Re: [V10 PATCH 2/2] irqchip: gicv2m: Add supports for ARM GICv2m
+ MSI(-X)
+References: <1415052977-26036-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <1415052977-26036-3-git-send-email-suravee.suthikulpanit@amd.com>
+ <5458CE31.3040404@linux.intel.com>
+In-Reply-To: <5458CE31.3040404@linux.intel.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Sebastian, linux-s390, David, Konrad, xen-devel]
+On 11/4/14 07:01, Jiang Liu wrote:
+> Hi Suravee,
+> 	You may build a two level hierarchy irqdomains. Use the
+> utilities in this thread
+> http://www.spinics.net/lists/arm-kernel/msg374722.html to build an MSI
+> irqdomain to manage MSI controllers
+> in PCI devices. And build another irqdomain to manage SPI allocation
+> in GICv2.
+> 	That is: MSI irqdomain (program MSI registers)  -->
+> GIV irqdomain (manage SPIs in GICv2 controller)
 
-On Mon, Oct 27, 2014 at 10:44:35AM +0800, Yijing Wang wrote:
-> 
-> Yijing Wang (3):
->   x86/xen: Introduce a global flag to fix the MSI mask bug
->   x86/xen: Revert "PCI: Add x86_msi.msi_mask_irq() and msix_mask_irq()"
->   s390/MSI: Use __msi_mask_irq() instead of default_msi_mask_irq()
+That's great. I'll look at this patch in and make use of it to create to 
+MSI domain.
 
-I applied these with David's reviewed-by and ack to pci/msi for v3.19.
+Thanks,
 
-I'd like to see an ack from Sebastian for the s390 part, but I guess that
-one is pretty trivial.
+Suravee
 
->  arch/s390/pci/pci.c             |    4 ++--
->  arch/x86/include/asm/x86_init.h |    3 ---
->  arch/x86/kernel/x86_init.c      |   10 ----------
->  arch/x86/pci/xen.c              |   15 +++------------
->  drivers/pci/msi.c               |   29 ++++++++++++-----------------
->  include/linux/msi.h             |    5 +++--
->  6 files changed, 20 insertions(+), 46 deletions(-)
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Regards!
+> Gerry
