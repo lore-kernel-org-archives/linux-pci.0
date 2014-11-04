@@ -1,66 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:17746 "EHLO mga09.intel.com"
+Received: from numascale.com ([213.162.240.84]:44821 "EHLO numascale.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753819AbaKRM5v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 18 Nov 2014 07:57:51 -0500
-Message-ID: <546B4249.7050502@linux.intel.com>
-Date: Tue, 18 Nov 2014 20:57:45 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+	id S1750968AbaKDHaS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Nov 2014 02:30:18 -0500
+Message-ID: <5458807E.80701@numascale.com>
+Date: Tue, 04 Nov 2014 15:30:06 +0800
+From: Daniel J Blueman <daniel@numascale.com>
 MIME-Version: 1.0
-To: Joerg Roedel <joro@8bytes.org>
-CC: David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: Re: [Patch Part3 V7 0/8] Enable support of Intel DMAR device hotplug
-References: <1415544483-27990-1-git-send-email-jiang.liu@linux.intel.com> <20141118102537.GB3762@8bytes.org>
-In-Reply-To: <20141118102537.GB3762@8bytes.org>
-Content-Type: text/plain; charset=windows-1252
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Steffen Persvold <sp@numascale.com>
+Subject: Re: [PATCH v3 5/5] Use 2GB memory block size on large x86-64 systems
+References: <1414915813-2462-1-git-send-email-daniel@numascale.com> <1414915813-2462-5-git-send-email-daniel@numascale.com> <alpine.DEB.2.11.1411032021331.5308@nanos> <54580C9E.7070706@numascale.com> <alpine.DEB.2.11.1411040033530.5308@nanos>
+In-Reply-To: <alpine.DEB.2.11.1411040033530.5308@nanos>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/11/18 18:25, Joerg Roedel wrote:
-> Hi Jiang,
-> 
-> On Sun, Nov 09, 2014 at 10:47:55PM +0800, Jiang Liu wrote:
->> Jiang Liu (8):
->>   iommu/vt-d: Introduce helper function dmar_walk_resources()
->>   iommu/vt-d: Dynamically allocate and free seq_id for DMAR units
->>   iommu/vt-d: Implement DMAR unit hotplug framework
->>   iommu/vt-d: Search for ACPI _DSM method for DMAR hotplug
->>   iommu/vt-d: Enhance intel_irq_remapping driver to support DMAR unit
->>     hotplug
->>   iommu/vt-d: Enhance error recovery in function
->>     intel_enable_irq_remapping()
->>   iommu/vt-d: Enhance intel-iommu driver to support DMAR unit hotplug
->>   pci, ACPI, iommu: Enhance pci_root to support DMAR device hotplug
+On 11/04/2014 07:36 AM, Thomas Gleixner wrote:
+> On Tue, 4 Nov 2014, Daniel J Blueman wrote:
+>
+>> On 11/04/2014 03:38 AM, Thomas Gleixner wrote:
+>>> On Sun, 2 Nov 2014, Daniel J Blueman wrote:
+>>>
+>>>> On larger x64-64 systems, use a 2GB memory block size to reduce sysfs
+>>>> entry creation time by 16x. Large is defined as 64GB or more memory.
+>>>
+>>> This changelog sucks.
+>>>
+>>> It neither tells which sysfs entries are meant nor does it explain
+>>> what the actual effect of this change is aside of speeding up some
+>>> random sysfs thingy.
 >>
->>  drivers/acpi/pci_root.c             |   16 +-
->>  drivers/iommu/dmar.c                |  532 ++++++++++++++++++++++++++++-------
->>  drivers/iommu/intel-iommu.c         |  297 ++++++++++++++-----
->>  drivers/iommu/intel_irq_remapping.c |  249 ++++++++++++----
->>  include/linux/dmar.h                |   50 +++-
->>  5 files changed, 897 insertions(+), 247 deletions(-)
-> 
-> The patches look good, but I need an ack from PCI/ACPI for patch 8
-> before I can merge it. Patches 1-7 are applied.
-Hi Joerg,
-	Thanks for support:)
-	Bjorn has given his acked-by for v6 at
-https://lkml.org/lkml/2014/9/24/975. But I forgot to carry this
-acked-by, sorry:(
-Regards!
-Gerry
-> 
-> Thanks,
-> 
-> 	Joerg
-> 
+>> How about this?
+>>
+>> On large-memory systems of 64GB or more with memory hot-plug enabled, use a
+>> 2GB memory block size. Eg with 64GB memory, this reduces the number of
+>> directories in /sys/devices/system/memory from 512 to 32, making it more
+>> manageable, and reducing the creation time accordingly.
+>
+> It still does not tell what the downside is of this and why you think
+> it does not matter.
+
+Yes, let's make it explicit:
+
+On large-memory systems of 64GB or more with memory hot-plug enabled, 
+use a 2GB memory block size. Eg with 64GB memory, this reduces the 
+number of directories in /sys/devices/system/memory from 512 to 32, 
+making it more manageable, and reducing the creation time accordingly.
+
+This caveat is that the memory can't be offlined (for hotplug or 
+otherwise) with finer 128MB granularity, but this is unimportant due to 
+the high memory densities generally used with such large-memory systems, 
+where eg a single DIMM is the order of 16GB.
+
+>>>> @@ -1247,9 +1246,9 @@ static unsigned long probe_memory_block_size(void)
+>>>>    	/* start from 2g */
+>>>>    	unsigned long bz = 1UL<<31;
+>>>>
+>>>> -#ifdef CONFIG_X86_UV
+>>>> -	if (is_uv_system()) {
+>>>> -		printk(KERN_INFO "UV: memory block size 2GB\n");
+>>>> +#ifdef CONFIG_X86_64
+>>>
+>>> And this brainless 's/CONFIG_X86_UV/CONFIG_X86_64/' sucks even
+>>> more. I'm sure you can figure out the WHY yourself.
+>>
+>> The benefit of this is applicable to other architectures. I'm unable to test
+>> the change, but if you agree it's conservative enough, I'll drop the ifdef?
+>
+> Which other architectures? Care to turn on your brain before replying?
+
+Clearly 64-bit architectures, including X86, MIPS, PARISC, SPARC, 
+AArch64, ia64, however, I must be missing something, as a 
+sizeof(long)/CONFIG_64BIT check would be redundant if we agree to drop 
+the ifdef, as we're already checking the number of physical pages, which 
+is bounded by the same limits.
+
+Thanks,
+   Daniel
+-- 
+Daniel J Blueman
+Principal Software Engineer, Numascale
