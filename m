@@ -1,98 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:42527 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752561AbaKVCwr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 21:52:47 -0500
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Sat, 22 Nov 2014 12:52:45 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 96A0E3578053
-	for <linux-pci@vger.kernel.org>; Sat, 22 Nov 2014 13:52:42 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAM2qguT24641770
-	for <linux-pci@vger.kernel.org>; Sat, 22 Nov 2014 13:52:42 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAM2qffx031234
-	for <linux-pci@vger.kernel.org>; Sat, 22 Nov 2014 13:52:42 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH] PCI: Refresh offset/stride after NumVFs is written
-Date: Sat, 22 Nov 2014 10:52:39 +0800
-Message-Id: <1416624759-13543-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:40932 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750834AbaKEXRr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 18:17:47 -0500
+Received: by mail-ig0-f170.google.com with SMTP id h15so9250492igd.1
+        for <linux-pci@vger.kernel.org>; Wed, 05 Nov 2014 15:17:46 -0800 (PST)
+Date: Wed, 5 Nov 2014 16:17:43 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: Re: [PATCH] PCI: add missing DT binding for linux,pci-domain property
+Message-ID: <20141105231743.GI6168@google.com>
+References: <1415101660-26450-1-git-send-email-l.stach@pengutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1415101660-26450-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to SR-IOV spec sec 3.3.9, 3.3.10, the NumVFs setting change will
-affect the offset and stride. Current implementation doesn't refresh the
-offset/stride cached in pci_sriov structure.
+On Tue, Nov 04, 2014 at 12:47:40PM +0100, Lucas Stach wrote:
+> This property was added by 41e5c0f81d3e
+> (of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr())
+> without the required binding documentation. As this property
+> will be supported by a number of host bridge drivers going forward,
+> add it to the common PCI binding doc.
+> 
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
 
-This patch introduces a wrapper pci_iov_set_numvfs(), which refresh these two
-value after NumVFs is written.
+I merged 41e5c0f81d3e through my tree, and I could merge something like
+this if a consensus develops with some acks.  But I'll just let you guys
+handle it unless you poke me again.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- drivers/pci/iov.c |   17 +++++++++++++----
- 1 file changed, 13 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 4d109c0..c7010c5 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -31,6 +31,15 @@ static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
- 		dev->sriov->stride * id) & 0xff;
- }
- 
-+static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
-+{
-+	struct pci_sriov *iov = dev->sriov;
-+
-+	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
-+	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &iov->offset);
-+	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &iov->stride);
-+}
-+
- static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
- {
- 	struct pci_bus *child;
-@@ -243,7 +252,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 			return rc;
- 	}
- 
--	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
-+	pci_iov_set_numvfs(dev, nr_virtfn);
- 	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
- 	pci_cfg_access_lock(dev);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
-@@ -272,7 +281,7 @@ failed:
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
--	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
-+	pci_iov_set_numvfs(dev, 0);
- 	ssleep(1);
- 	pci_cfg_access_unlock(dev);
- 
-@@ -303,7 +312,7 @@ static void sriov_disable(struct pci_dev *dev)
- 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
- 
- 	iov->num_VFs = 0;
--	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
-+	pci_iov_set_numvfs(dev, 0);
- }
- 
- static int sriov_init(struct pci_dev *dev, int pos)
-@@ -439,7 +448,7 @@ static void sriov_restore_state(struct pci_dev *dev)
- 		pci_update_resource(dev, i);
- 
- 	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
--	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, iov->num_VFs);
-+	pci_iov_set_numvfs(dev, iov->num_VFs);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
- 	if (iov->ctrl & PCI_SRIOV_CTRL_VFE)
- 		msleep(100);
--- 
-1.7.9.5
-
+> ---
+> This is a non-critical fix, but may still qualify for 3.18-rc as
+> the property was added in this release cycle.
+> ---
+>  Documentation/devicetree/bindings/pci/pci.txt | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
+> index 41aeed38926d..b754f786ed5e 100644
+> --- a/Documentation/devicetree/bindings/pci/pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/pci.txt
+> @@ -7,3 +7,13 @@ And for the interrupt mapping part:
+>  
+>  Open Firmware Recommended Practice: Interrupt Mapping
+>  http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
+> +
+> +Additionally to the properties specified in the above standards a host bridge
+> +driver implementation may support the following properties:
+> +
+> +- linux,pci-domain:
+> +   If present this property assigns a fixed PCI domain number to a host bridge,
+> +   otherwise an unstable (across boots) unique number will be assigned.
+> +   It is recommended to either not set this property at all or set it for all
+> +   host bridges in the system, otherwise potentially conflicting domain numbers
+> +   may be assigned to root buses behind different host bridges.
+> -- 
+> 2.1.1
+> 
