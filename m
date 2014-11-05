@@ -1,71 +1,75 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiri Kosina <trivial@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	David Cohen <david.a.cohen@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "H. Peter Anvin" <hpa@linux.intel.com>
-Subject: [Patch Part3 v3 02/38] x86, intel-mid, trivial: Refine code syntax for sfi_parse_mtmr()
-Date: Sun,  9 Nov 2014 02:13:02 +0800
-Message-Id: <1415470418-10874-3-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:21605 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752553AbaKEBf0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Nov 2014 20:35:26 -0500
+Message-ID: <54597EDC.0@intel.com>
+Date: Wed, 05 Nov 2014 09:35:24 +0800
+From: Aaron Lu <aaron.lu@intel.com>
+MIME-Version: 1.0
+To: Chuansheng Liu <chuansheng.liu@intel.com>, bhelgaas@google.com,
+	tj@kernel.org, rjw@rjwysocki.net, mister.freeman@laposte.net
+CC: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Do not enable async suspend for JMicron chips
+References: <1415149665-26669-1-git-send-email-chuansheng.liu@intel.com> <54597E5B.2030701@intel.com>
+In-Reply-To: <54597E5B.2030701@intel.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Correctly indent code in function sfi_parse_mtmr().
+On 11/05/2014 09:33 AM, Aaron Lu wrote:
+> On 11/05/2014 09:07 AM, Chuansheng Liu wrote:
+>> The JMicron chip 361/363/368 contains one SATA controller and
+>> one PATA controller, they are brother-relation ship in PCI tree,
+>> but for powering on these both controller, we must follow the
+>> sequence one by one, otherwise one of them can not be powered on
+>> successfully.
+>>
+>> So here we disable the async suspend method for Jmicron chip.
+>>
+> 
+> Place the buglink here?
+> 
+>   Buglink: https://bugzilla.kernel.org/show_bug.cgi?id=84861
+>   Buglink: https://bugzilla.kernel.org/show_bug.cgi?id=81551
+>> Cc: stable@vger.kernel.org # 3.15+
+>> Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+> 
+> Patch looks good to me, thanks for fixing this!
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Tested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- arch/x86/platform/intel-mid/sfi.c |   20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+BTW, the previous change to the ATA code can be deleted now.
+So maybe also put them into this patch.
 
-diff --git a/arch/x86/platform/intel-mid/sfi.c b/arch/x86/platform/intel-mid/sfi.c
-index aa59f88868f8..9a16749935d4 100644
---- a/arch/x86/platform/intel-mid/sfi.c
-+++ b/arch/x86/platform/intel-mid/sfi.c
-@@ -95,16 +95,16 @@ int __init sfi_parse_mtmr(struct sfi_table_header *table)
- 		pr_debug("timer[%d]: paddr = 0x%08x, freq = %dHz, irq = %d\n",
- 			totallen, (u32)pentry->phys_addr,
- 			pentry->freq_hz, pentry->irq);
--			mp_irq.type = MP_INTSRC;
--			mp_irq.irqtype = mp_INT;
--/* triggering mode edge bit 2-3, active high polarity bit 0-1 */
--			mp_irq.irqflag = 5;
--			mp_irq.srcbus = MP_BUS_ISA;
--			mp_irq.srcbusirq = pentry->irq;	/* IRQ */
--			mp_irq.dstapic = MP_APIC_ALL;
--			mp_irq.dstirq = pentry->irq;
--			mp_save_irq(&mp_irq);
--			mp_map_gsi_to_irq(pentry->irq, IOAPIC_MAP_ALLOC);
-+		mp_irq.type = MP_INTSRC;
-+		mp_irq.irqtype = mp_INT;
-+		/* triggering mode edge bit 2-3, active high polarity bit 0-1 */
-+		mp_irq.irqflag = 5;
-+		mp_irq.srcbus = MP_BUS_ISA;
-+		mp_irq.srcbusirq = pentry->irq;	/* IRQ */
-+		mp_irq.dstapic = MP_APIC_ALL;
-+		mp_irq.dstirq = pentry->irq;
-+		mp_save_irq(&mp_irq);
-+		mp_map_gsi_to_irq(pentry->irq, IOAPIC_MAP_ALLOC);
- 	}
+Regards,
+Aaron
  
- 	return 0;
--- 
-1.7.10.4
+>> ---
+>>  drivers/pci/pci.c |   12 +++++++++++-
+>>  1 file changed, 11 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 625a4ac..53128f0 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -2046,7 +2046,17 @@ void pci_pm_init(struct pci_dev *dev)
+>>  	pm_runtime_forbid(&dev->dev);
+>>  	pm_runtime_set_active(&dev->dev);
+>>  	pm_runtime_enable(&dev->dev);
+>> -	device_enable_async_suspend(&dev->dev);
+>> +
+>> +	/*
+>> +	 * The JMicron chip 361/363/368 contains one SATA controller and
+>> +	 * one PATA controller, they are brother-relation ship in PCI tree,
+>> +	 * but for powering on these both controller, we must follow the
+>> +	 * sequence one by one, otherwise one of them can not be powered on
+>> +	 * successfully, so here we disable the async suspend method for
+>> +	 * Jmicron chip.
+>> +	 */
+>> +	if (dev->vendor != PCI_VENDOR_ID_JMICRON)
+>> +		device_enable_async_suspend(&dev->dev);
+>>  	dev->wakeup_prepared = false;
+>>  
+>>  	dev->pm_cap = 0;
+>>
+> 
 
