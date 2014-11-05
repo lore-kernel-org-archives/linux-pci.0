@@ -1,107 +1,60 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5459FBDD.4020504@linux.intel.com>
+Date: Wed, 05 Nov 2014 18:28:45 +0800
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+MIME-Version: 1.0
+To: Joerg Roedel <joro@8bytes.org>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v6 24/27] x86, PCI/MSI: Simplify the way to deal with remapped MSI interrupts
-Date: Tue, 25 Nov 2014 13:53:33 +0800
-Message-Id: <1416894816-23245-25-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [Patch Part2 v4 00/31] Enable hierarchy irqdomian on x86 platforms
+References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com> <20141104144730.GE14512@8bytes.org> <5458ECF3.4040308@linux.intel.com> <20141105085154.GG10744@8bytes.org> <5459F0DE.6000307@linux.intel.com> <20141105095850.GH10744@8bytes.org>
+In-Reply-To: <20141105095850.GH10744@8bytes.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simplify the way to deal with remapped MSI interrupts, so we could
-kill irq_chip.irq_print_chip later.
+Hi Joerg,
+	Seems like a silly bug, could you please help to try this
+fix?
+Regards!
+Gerry
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 7423ee16972f..62ba8a6f6e79 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1211,7 +1211,7 @@ int msi_irq_domain_alloc_irqs(struct irq_domain
+*domain, int type,
+                                msidesc->nvec_used > 1) ?  1 : -ENOSPC;
+                }
+                for (i = 0; i < msidesc->nvec_used; i++)
+-                       irq_set_msi_desc_off(virq + i, i, msidesc);
++                       irq_set_msi_desc_off(virq, i, msidesc);
+        }
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/msi.c |   28 ++++++++++++++++++++++++----
- 1 file changed, 24 insertions(+), 4 deletions(-)
+        list_for_each_entry(msidesc, &dev->msi_list, list)
 
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 2bf13484fbfd..8e8f2435f25e 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -77,7 +77,6 @@ static struct irq_chip pci_msi_controller = {
- 	.irq_ack		= irq_chip_ack_parent,
- 	.irq_set_affinity	= msi_domain_set_affinity,
- 	.irq_retrigger		= irq_chip_retrigger_hierarchy,
--	.irq_print_chip		= irq_remapping_print_chip,
- 	.irq_compose_msi_msg	= irq_msi_compose_msg,
- 	.irq_write_msi_msg	= pci_msi_domain_write_msg,
- 	.flags			= IRQCHIP_SKIP_SET_WAKE,
-@@ -143,7 +142,7 @@ static struct msi_domain_ops pci_msi_domain_ops = {
- 
- static struct msi_domain_info pci_msi_domain_info = {
- 	.flags		= MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
--			  MSI_FLAG_MULTI_PCI_MSI | MSI_FLAG_PCI_MSIX,
-+			  MSI_FLAG_PCI_MSIX,
- 	.ops		= &pci_msi_domain_ops,
- 	.chip		= &pci_msi_controller,
- 	.handler	= handle_edge_irq,
-@@ -162,9 +161,29 @@ void arch_init_msi_domain(struct irq_domain *parent)
- }
- 
- #ifdef CONFIG_IRQ_REMAP
-+static struct irq_chip pci_msi_ir_controller = {
-+	.name			= "IR-PCI-MSI",
-+	.irq_unmask		= pci_msi_unmask_irq,
-+	.irq_mask		= pci_msi_mask_irq,
-+	.irq_ack		= irq_chip_ack_parent,
-+	.irq_set_affinity	= msi_domain_set_affinity,
-+	.irq_retrigger		= irq_chip_retrigger_hierarchy,
-+	.irq_write_msi_msg	= pci_msi_domain_write_msg,
-+	.flags			= IRQCHIP_SKIP_SET_WAKE,
-+};
-+
-+static struct msi_domain_info pci_msi_ir_domain_info = {
-+	.flags		= MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
-+			  MSI_FLAG_MULTI_PCI_MSI | MSI_FLAG_PCI_MSIX,
-+	.ops		= &pci_msi_domain_ops,
-+	.chip		= &pci_msi_ir_controller,
-+	.handler	= handle_edge_irq,
-+	.handler_name	= "edge",
-+};
-+
- struct irq_domain *arch_create_msi_irq_domain(struct irq_domain *parent)
- {
--	return msi_create_irq_domain(NULL, &pci_msi_domain_info, parent);
-+	return pci_msi_create_irq_domain(NULL, &pci_msi_ir_domain_info, parent);
- }
- #endif
- 
-@@ -325,7 +344,6 @@ static struct irq_chip hpet_msi_controller = {
- 	.irq_ack = irq_chip_ack_parent,
- 	.irq_set_affinity = hpet_msi_set_affinity,
- 	.irq_retrigger = irq_chip_retrigger_hierarchy,
--	.irq_print_chip = irq_remapping_print_chip,
- 	.irq_compose_msi_msg = irq_msi_compose_msg,
- 	.flags = IRQCHIP_SKIP_SET_WAKE,
- };
-@@ -402,6 +420,8 @@ struct irq_domain *hpet_create_irq_domain(int hpet_id)
- 	parent = irq_remapping_get_ir_irq_domain(&info);
- 	if (parent == NULL)
- 		parent = x86_vector_domain;
-+	else
-+		hpet_msi_controller.name = "IR-HPET-MSI";
- 
- 	return irq_domain_add_hierarchy(parent, 0, 0, NULL, &hpet_domain_ops,
- 					(void *)(long)hpet_id);
--- 
-1.7.10.4
-
+On 2014/11/5 17:58, Joerg Roedel wrote:
+> On Wed, Nov 05, 2014 at 05:41:50PM +0800, Jiang Liu wrote:
+>> 	Could you please help to apply the attached patch and send me
+>> console outputs?
+> 
+> Sure, here it is.
+> 
