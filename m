@@ -1,88 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:39724 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753454AbaKMB4J (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 20:56:09 -0500
+Received: from mail-qc0-f170.google.com ([209.85.216.170]:37399 "EHLO
+	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751020AbaKESEF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 13:04:05 -0500
+Date: Wed, 5 Nov 2014 13:04:00 -0500
+From: Tejun Heo <tj@kernel.org>
+To: Chuansheng Liu <chuansheng.liu@intel.com>
+Cc: bhelgaas@google.com, aaron.lu@intel.com, rjw@rjwysocki.net,
+	mister.freeman@laposte.net, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Do not enable async suspend for JMicron chips
+Message-ID: <20141105180400.GI14386@htj.dyndns.org>
+References: <1415149665-26669-1-git-send-email-chuansheng.liu@intel.com>
+ <20141105163159.GE14386@htj.dyndns.org>
 MIME-Version: 1.0
-In-Reply-To: <20141112123232.GE6759@red-moon>
-References: <1415702040-2790-1-git-send-email-ming.lei@canonical.com>
-	<20141111122901.GA4419@red-moon>
-	<CACVXFVNAc9axtESmo1zGZ3GMquTzjzWR3jx-b3tbhhLfQDDRcg@mail.gmail.com>
-	<20141111182418.GA5507@red-moon>
-	<CACVXFVPzo2qNGa5DWESS3TXor=u82_SxHb+xzrBCRXtcQxq4Cg@mail.gmail.com>
-	<20141112095846.GA6759@red-moon>
-	<CACVXFVNn=mDuJ9h3wavvo=H29hzFNisKAYEoF0OiFgm4wVAaLw@mail.gmail.com>
-	<20141112123232.GE6759@red-moon>
-Date: Thu, 13 Nov 2014 09:56:06 +0800
-Message-ID: <CACVXFVOpBh8eZ79XWa7QwFDeDyMXcjsXbXNh6U_JzqtGqP=3fQ@mail.gmail.com>
-Subject: Re: [PATCH] pci: generic host: make it more generic
-From: Ming Lei <ming.lei@canonical.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	alvise rigo <a.rigo@virtualopensystems.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141105163159.GE14386@htj.dyndns.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 12, 2014 at 8:32 PM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> On Wed, Nov 12, 2014 at 10:51:31AM +0000, Ming Lei wrote:
->> On Wed, Nov 12, 2014 at 5:58 PM, Lorenzo Pieralisi
->> <lorenzo.pieralisi@arm.com> wrote:
->> > On Wed, Nov 12, 2014 at 02:12:12AM +0000, Ming Lei wrote:
->> >> On Wed, Nov 12, 2014 at 2:24 AM, Lorenzo Pieralisi
->> >> <lorenzo.pieralisi@arm.com> wrote:
->> >> > On Tue, Nov 11, 2014 at 02:02:20PM +0000, Ming Lei wrote:
->> >> >
->> >> > [...]
->> >> >
->> >> >> > http://lists.infradead.org/pipermail/linux-arm-kernel/2014-October/296535.html
->> >> >> >
->> >> >> > Patch above is already queued and applies most of the changes you have posted
->> >> >> > above.
->> >> >>
->> >> >> I should have looked at list first before writing the patch, :-(
->> >> >>
->> >> >> Could you make it more generic so that other ARCHs(at least ARM64)
->> >> >> can benefit from it too?
->> >> >
->> >> > That's our current goal, we are carrying out clean-ups to remove arch
->> >> > dependency and move code to the generic layer PCI layer.
->> >>
->> >> OK, I am glad to test them after you post them out.
->> >>
->> >> At least, the 'struct gen_pci' pointer can be put in driver data
->> >> of the platform_device now, which may remove dependency on
->> >> pci_sysdata in this driver.  But ARCH's pcibios code still may
->> >> access 'pci_sysdata', do you have patches or solution to handle
->> >> this issue?
->> >
->> > I will consider adding struct gen_pci pointer as platform device
->> > driver data, we are working on removing pci_sys_data dependency in the ARM
->> > pcibios backend, and I do not think we are far from achieving that.
->>
->> Other ARCHs has sort of pcibios backend too, so that said it still
->> depends on ARM or ARM64, doesn't it?
->
-> Yes, so ? If you think there is a way to make this host controller work
+On Wed, Nov 05, 2014 at 11:31:59AM -0500, Tejun Heo wrote:
+> On Wed, Nov 05, 2014 at 09:07:45AM +0800, Chuansheng Liu wrote:
+> > The JMicron chip 361/363/368 contains one SATA controller and
+> > one PATA controller, they are brother-relation ship in PCI tree,
+> > but for powering on these both controller, we must follow the
+> > sequence one by one, otherwise one of them can not be powered on
+> > successfully.
+> > 
+> > So here we disable the async suspend method for Jmicron chip.
+> > 
+> > Cc: stable@vger.kernel.org # 3.15+
+> > Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+> 
+> Applied to libata/for-3.18-fixes.
 
-I mean suppose the driver/device is only for ARM and ARM64, it
-should be easy to support, and it may not be necessary to remove
-pci_sys_data dependency in the ARM, such as:
+Ah, this is a PCI patch.  Popping from libata tree.
 
-- make a different code path for ARM64
-- or like this patch to fake sysdata for ARM
-- or what ever
+Thanks.
 
-> on all arches you fancy using it on with no arch dependency in a proper
-> way step up to the plate and post the code, we will duly review it.
-
-The only way I thought of is to bypass pcibios handling for the
-generic host controller, but it may not be agreed.
-
-Thanks,
-Ming Lei
+-- 
+tejun
