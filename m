@@ -1,107 +1,349 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:1455 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752914AbaKQLAP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 17 Nov 2014 06:00:15 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>
-Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [Patch V3 2/9] irqdomain: Use consistent prototype for irq_domain_free_irqs_*
-Date: Mon, 17 Nov 2014 19:03:15 +0800
-Message-Id: <1416222202-28002-3-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416222202-28002-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416222202-28002-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-bl2on0144.outbound.protection.outlook.com ([65.55.169.144]:14256
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751408AbaKEIoj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 5 Nov 2014 03:44:39 -0500
+From: Minghuan Lian <Minghuan.Lian@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Minghuan Lian" <Minghuan.Lian@freescale.com>
+Subject: [PATCH v6] PCI: Layerscape: Add Layerscape PCIe driver
+Date: Wed, 5 Nov 2014 16:45:11 +0800
+Message-ID: <1415177111-28730-1-git-send-email-Minghuan.Lian@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yingjoe Chen <yingjoe.chen@mediatek.com>
+Add support for Freescale Layerscape PCIe controller. This driver
+re-uses the designware core code.
 
-When using irq_domain_free_irqs_top() directly in irq_domain_ops, gcc
-generate the following warnings:
-
-../drivers/irqchip/irq-gic.c:879:2: warning: initialization from incompatible pointer type [enabled by default]
-../drivers/irqchip/irq-gic.c:879:2: warning: (near initialization for 'gic_irq_domain_hierarchy_ops.free') [enabled by default]
-
-Change to use consistent prototype for all irq_domain_free_irqs*
-
-Better to fold this into "irqdomain: Introduce new interfaces to
-support hierarchy irqdomains".
-
-Signed-off-by: Yingjoe Chen <yingjoe.chen@mediatek.com>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
 ---
- include/linux/irqdomain.h |    9 +++++----
- kernel/irq/irqdomain.c    |    8 ++++----
- 2 files changed, 9 insertions(+), 8 deletions(-)
+Based on pci-next branch
 
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index 640a1ec54772..fbe542967c20 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -270,12 +270,13 @@ extern void irq_domain_set_info(struct irq_domain *domain, unsigned int virq,
- 				void *handler_data, const char *handler_name);
- extern void irq_domain_reset_irq_data(struct irq_data *irq_data);
- extern void irq_domain_free_irqs_common(struct irq_domain *domain,
--					int virq, int nr_irqs);
-+					unsigned int virq,
-+					unsigned int nr_irqs);
- extern void irq_domain_free_irqs_top(struct irq_domain *domain,
--				     int virq, int nr_irqs);
-+				     unsigned int virq, unsigned int nr_irqs);
+Change log:
+v6:
+1. remove MSI support. MSI driver will be implemented in a separate file
+2. remove bitrev() because SCFG is set bit reverse mode as default.
+
+v5:
+1. Add MAINTAINERS information
+2. Remove unnecessary NULL pointer check
+3. Use dev_dbg instead of dev_err in ls_pcie_msi_irq_handler() 
+
+v4:
+1. Add 'depends on OF' to Kconfig 
+
+v3:
+1. Add prefechable mem region and adjust mem region
+2. Rename 'pcie-scfg' to 'fsl,pcie-scfg'
+3. Change MSI interrupt handler
+4. Use module_platform_driver_probe instead of subsys_initcall
+
+v2:
+1. Add pcie-scfg to link scfg device node and remove "fsl, ls-pcie" compatible
+2. Use regmap API to access scfg.
+3. remove ls1021 PCI device ID.
+4. remove unused irq pme_irq and ls_pcie_list.
+5. Do not set scfg bit reverse mode
+
+ .../devicetree/bindings/pci/layerscape-pci.txt     |  42 +++++
+ MAINTAINERS                                        |  10 ++
+ drivers/pci/host/Kconfig                           |   8 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pci-layerscape.c                  | 179 +++++++++++++++++++++
+ 5 files changed, 240 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/layerscape-pci.txt
+ create mode 100644 drivers/pci/host/pci-layerscape.c
+
+diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+new file mode 100644
+index 0000000..40749eb
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+@@ -0,0 +1,42 @@
++Freescale Layerscape PCIe controller
++
++This PCIe host controller is based on the Synopsis Designware PCIe IP
++and thus inherits all the common properties defined in designware-pcie.txt.
++
++Required properties:
++- compatible: should contain the platform identifier such as "fsl,ls1021a-pcie"
++- reg: base addresses and lengths of the PCIe controller
++- interrupts: A list of interrupt outputs of the controller. Must contain an
++  entry for each entry in the interrupt-names property.
++- interrupt-names: Must include the following entries:
++  "intr": The interrupt that is asserted for controller interrupts
++- fsl,pcie-scfg: Must include two entries.
++  The first entry must be a link to the SCFG device node
++  The second entry must be '0' or '1' based on physical PCIe controller index.
++  used to get SCFG PEXN registers
++
++Example:
++
++	pcie@3400000 {
++		compatible = "fsl,ls1021a-pcie", "snps,dw-pcie";
++		reg = <0x00 0x03400000 0x0 0x00010000   /* controller registers */
++		       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
++		reg-names = "regs", "config";
++		interrupts = <GIC_SPI 177 IRQ_TYPE_LEVEL_HIGH>; /* controller interrupt */
++		interrupt-names = "intr";
++		fsl,pcie-scfg = <&scfg 0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		num-lanes = <4>;
++		bus-range = <0x0 0xff>;
++		ranges = <0x81000000 0x0 0x00000000 0x40 0x00010000 0x0 0x00010000   /* downstream I/O */
++			  0xc2000000 0x0 0x20000000 0x40 0x20000000 0x0 0x20000000   /* prefetchable memory */
++			  0x82000000 0x0 0x40000000 0x40 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0000 0 0 1 &gic GIC_SPI 91  IRQ_TYPE_LEVEL_HIGH>,
++				<0000 0 0 2 &gic GIC_SPI 188 IRQ_TYPE_LEVEL_HIGH>,
++				<0000 0 0 3 &gic GIC_SPI 190 IRQ_TYPE_LEVEL_HIGH>,
++				<0000 0 0 4 &gic GIC_SPI 192 IRQ_TYPE_LEVEL_HIGH>;
++	};
+diff --git a/MAINTAINERS b/MAINTAINERS
+index a20df9b..7853d1b 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6983,6 +6983,16 @@ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/xgene-pci.txt
+ F:	drivers/pci/host/pci-xgene.c
  
- static inline int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
--				int irq_base, unsigned int nr_irqs, void *arg)
-+			unsigned int irq_base, unsigned int nr_irqs, void *arg)
- {
- 	if (domain->parent && domain->parent->ops->alloc)
- 		return domain->parent->ops->alloc(domain->parent, irq_base,
-@@ -284,7 +285,7 @@ static inline int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
- }
++PCIe DRIVER FOR FREESCALE LAYERSCAPE
++M:	Minghuan Lian <minghuan.Lian@freescale.com>
++M:	Mingkai Hu <mingkai.hu@freescale.com>
++M:	Roy Zang <tie-fei.zang@freescale.com>
++L:	linuxppc-dev@lists.ozlabs.org
++L:	linux-pci@vger.kernel.org
++L:	linux-arm-kernel@lists.infradead.org
++S:	Maintained
++F:	drivers/pci/host/pci-layerscape.c
++
+ PCI DRIVER FOR IMX6
+ M:	Richard Zhu <r65037@freescale.com>
+ M:	Lucas Stach <l.stach@pengutronix.de>
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 3dc25fa..8ac69aa 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -91,4 +91,12 @@ config PCI_XGENE
+ 	  There are 5 internal PCIe ports available. Each port is GEN3 capable
+ 	  and have varied lanes from x1 to x8.
  
- static inline void irq_domain_free_irqs_parent(struct irq_domain *domain,
--					int irq_base, unsigned int nr_irqs)
-+				unsigned int irq_base, unsigned int nr_irqs)
- {
- 	if (domain->parent && domain->parent->ops->free)
- 		domain->parent->ops->free(domain->parent, irq_base, nr_irqs);
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index 8b0eddee0b21..705fb573e509 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -899,8 +899,8 @@ void irq_domain_reset_irq_data(struct irq_data *irq_data)
- 	irq_data->chip_data = NULL;
- }
- 
--void irq_domain_free_irqs_common(struct irq_domain *domain, int virq,
--				 int nr_irqs)
-+void irq_domain_free_irqs_common(struct irq_domain *domain, unsigned int virq,
-+				 unsigned int nr_irqs)
- {
- 	int i;
- 	struct irq_data *irq_data;
-@@ -913,8 +913,8 @@ void irq_domain_free_irqs_common(struct irq_domain *domain, int virq,
- 	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
- }
- 
--void irq_domain_free_irqs_top(struct irq_domain *domain, int virq,
--			      int nr_irqs)
-+void irq_domain_free_irqs_top(struct irq_domain *domain, unsigned int virq,
-+			      unsigned int nr_irqs)
- {
- 	int i;
- 
++config PCI_LAYERSCAPE
++	bool "Freescale Layerscape PCIe controller"
++	depends on OF
++	select PCIE_DW
++	select MFD_SYSCON
++	help
++	  Say Y here if you want PCIe controller support on Layerscape SoCs.
++
+ endmenu
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 26b3461..44c2699 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -11,3 +11,4 @@ obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
+ obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
+ obj-$(CONFIG_PCIE_XILINX) += pcie-xilinx.o
+ obj-$(CONFIG_PCI_XGENE) += pci-xgene.o
++obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
+diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+new file mode 100644
+index 0000000..6697b1a
+--- /dev/null
++++ b/drivers/pci/host/pci-layerscape.c
+@@ -0,0 +1,179 @@
++/*
++ * PCIe host controller driver for Freescale Layerscape SoCs
++ *
++ * Copyright (C) 2014 Freescale Semiconductor.
++ *
++  * Author: Minghuan Lian <Minghuan.Lian@freescale.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/kernel.h>
++#include <linux/delay.h>
++#include <linux/interrupt.h>
++#include <linux/module.h>
++#include <linux/of_pci.h>
++#include <linux/of_platform.h>
++#include <linux/of_irq.h>
++#include <linux/of_address.h>
++#include <linux/pci.h>
++#include <linux/platform_device.h>
++#include <linux/resource.h>
++#include <linux/mfd/syscon.h>
++#include <linux/regmap.h>
++
++#include "pcie-designware.h"
++
++/* PEX1/2 Misc Ports Status Register */
++#define SCFG_PEXMSCPORTSR(pex_idx)	(0x94 + (pex_idx) * 4)
++#define LTSSM_STATE_SHIFT	20
++#define LTSSM_STATE_MASK	0x3f
++#define LTSSM_PCIE_L0		0x11 /* L0 state */
++
++/* Symbol Timer Register and Filter Mask Register 1 */
++#define PCIE_STRFMR1 0x71c
++
++struct ls_pcie {
++	struct list_head node;
++	struct device *dev;
++	struct pci_bus *bus;
++	void __iomem *dbi;
++	struct regmap *scfg;
++	struct pcie_port pp;
++	int index;
++	int msi_irq;
++};
++
++#define to_ls_pcie(x)	container_of(x, struct ls_pcie, pp)
++
++static int ls_pcie_link_up(struct pcie_port *pp)
++{
++	u32 state;
++	struct ls_pcie *pcie = to_ls_pcie(pp);
++
++	regmap_read(pcie->scfg, SCFG_PEXMSCPORTSR(pcie->index), &state);
++	state = (state >> LTSSM_STATE_SHIFT) & LTSSM_STATE_MASK;
++
++	if (state < LTSSM_PCIE_L0)
++		return 0;
++
++	return 1;
++}
++
++static void ls_pcie_host_init(struct pcie_port *pp)
++{
++	struct ls_pcie *pcie = to_ls_pcie(pp);
++	int count = 0;
++	u32 val;
++
++	dw_pcie_setup_rc(pp);
++
++	while (!ls_pcie_link_up(pp)) {
++		usleep_range(100, 1000);
++		count++;
++		if (count >= 200) {
++			dev_err(pp->dev, "phy link never came up\n");
++			return;
++		}
++	}
++
++	/*
++	 * LS1021A Workaround for internal TKT228622
++	 * to fix the INTx hang issue
++	 */
++	val = ioread32(pcie->dbi + PCIE_STRFMR1);
++	val &= 0xffff;
++	iowrite32(val, pcie->dbi + PCIE_STRFMR1);
++}
++
++static struct pcie_host_ops ls_pcie_host_ops = {
++	.link_up = ls_pcie_link_up,
++	.host_init = ls_pcie_host_init,
++};
++
++static int ls_add_pcie_port(struct ls_pcie *pcie)
++{
++	struct pcie_port *pp;
++	int ret;
++
++	pp = &pcie->pp;
++	pp->dev = pcie->dev;
++	pp->dbi_base = pcie->dbi;
++	pp->root_bus_nr = -1;
++	pp->ops = &ls_pcie_host_ops;
++
++	ret = dw_pcie_host_init(pp);
++	if (ret) {
++		dev_err(pp->dev, "failed to initialize host\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++static int __init ls_pcie_probe(struct platform_device *pdev)
++{
++	struct ls_pcie *pcie;
++	struct resource *dbi_base;
++	u32 index[2];
++	int ret;
++
++	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
++	if (!pcie)
++		return -ENOMEM;
++
++	pcie->dev = &pdev->dev;
++
++	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "regs");
++	if (!dbi_base) {
++		dev_err(&pdev->dev, "missing *regs* space\n");
++		return -ENODEV;
++	}
++
++	pcie->dbi = devm_ioremap_resource(&pdev->dev, dbi_base);
++	if (IS_ERR(pcie->dbi))
++		return PTR_ERR(pcie->dbi);
++
++	pcie->scfg = syscon_regmap_lookup_by_phandle(pdev->dev.of_node,
++						     "fsl,pcie-scfg");
++	if (IS_ERR(pcie->scfg)) {
++		dev_err(&pdev->dev, "No syscfg phandle specified\n");
++		return PTR_ERR(pcie->scfg);
++	}
++
++	ret = of_property_read_u32_array(pdev->dev.of_node,
++					 "fsl,pcie-scfg", index, 2);
++	if (ret)
++		return ret;
++	pcie->index = index[1];
++
++	ret = ls_add_pcie_port(pcie);
++	if (ret < 0)
++		return ret;
++
++	platform_set_drvdata(pdev, pcie);
++
++	return 0;
++}
++
++static const struct of_device_id ls_pcie_of_match[] = {
++	{ .compatible = "fsl,ls1021a-pcie" },
++	{ },
++};
++MODULE_DEVICE_TABLE(of, ls_pcie_of_match);
++
++static struct platform_driver ls_pcie_driver = {
++	.driver = {
++		.name = "layerscape-pcie",
++		.owner = THIS_MODULE,
++		.of_match_table = ls_pcie_of_match,
++	},
++};
++
++module_platform_driver_probe(ls_pcie_driver, ls_pcie_probe);
++
++MODULE_AUTHOR("Minghuan Lian <Minghuan.Lian@freescale.com>");
++MODULE_DESCRIPTION("Freescale Layerscape PCIe host controller driver");
++MODULE_LICENSE("GPL v2");
 -- 
-1.7.10.4
+1.9.1
 
