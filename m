@@ -1,24 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:21605 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752553AbaKEBf0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Nov 2014 20:35:26 -0500
-Message-ID: <54597EDC.0@intel.com>
-Date: Wed, 05 Nov 2014 09:35:24 +0800
-From: Aaron Lu <aaron.lu@intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <545A6547.1030709@laposte.net>
+Date: Wed, 05 Nov 2014 18:58:31 +0100
+From: Barto <mister.freeman@laposte.net>
 MIME-Version: 1.0
-To: Chuansheng Liu <chuansheng.liu@intel.com>, bhelgaas@google.com,
-	tj@kernel.org, rjw@rjwysocki.net, mister.freeman@laposte.net
-CC: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+CC: bhelgaas@google.com, aaron.lu@intel.com, rjw@rjwysocki.net,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	chuansheng.liu@intel.com
 Subject: Re: [PATCH] PCI: Do not enable async suspend for JMicron chips
-References: <1415149665-26669-1-git-send-email-chuansheng.liu@intel.com> <54597E5B.2030701@intel.com>
-In-Reply-To: <54597E5B.2030701@intel.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+References: <1415149665-26669-1-git-send-email-chuansheng.liu@intel.com> <20141105163159.GE14386@htj.dyndns.org>
+In-Reply-To: <20141105163159.GE14386@htj.dyndns.org>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/05/2014 09:33 AM, Aaron Lu wrote:
-> On 11/05/2014 09:07 AM, Chuansheng Liu wrote:
+I tried the patch, it solves the problem,
+
+but I had to change the patch in order to be compatible with 3.18rc3
+source code :
+
+patching file drivers/pci/pci.c
+Hunk #1 FAILED at 2046.
+1 out of 1 hunk FAILED -- saving rejects to file drivers/pci/pci.c.rej
+
+here is the correct patch for kernel 3.18rc3 source code :
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2046,7 +2046,17 @@ void pci_pm_init(struct pci_dev *dev)
+ 	pm_runtime_forbid(&dev->dev);
+ 	pm_runtime_set_active(&dev->dev);
+ 	pm_runtime_enable(&dev->dev);
+-	device_enable_async_suspend(&dev->dev);
++	
++     /*
++      * The JMicron chip 361/363/368 contains one SATA controller and
++      * one PATA controller, they are brother-relation ship in PCI tree,
++      * but for powering on these both controller, we must follow the
++      * sequence one by one, otherwise one of them can not be powered on
++      * successfully, so here we disable the async suspend method for
++      * Jmicron chip.
++      */
++     if (dev->vendor != PCI_VENDOR_ID_JMICRON)
++         device_enable_async_suspend(&dev->dev);
+ 	dev->wakeup_prepared = false;
+
+ 	dev->pm_cap = 0;
+
+
+Le 05/11/2014 17:31, Tejun Heo a écrit :
+> On Wed, Nov 05, 2014 at 09:07:45AM +0800, Chuansheng Liu wrote:
 >> The JMicron chip 361/363/368 contains one SATA controller and
 >> one PATA controller, they are brother-relation ship in PCI tree,
 >> but for powering on these both controller, we must follow the
@@ -27,49 +59,10 @@ On 11/05/2014 09:33 AM, Aaron Lu wrote:
 >>
 >> So here we disable the async suspend method for Jmicron chip.
 >>
-> 
-> Place the buglink here?
-> 
->   Buglink: https://bugzilla.kernel.org/show_bug.cgi?id=84861
->   Buglink: https://bugzilla.kernel.org/show_bug.cgi?id=81551
 >> Cc: stable@vger.kernel.org # 3.15+
 >> Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
 > 
-> Patch looks good to me, thanks for fixing this!
-
-BTW, the previous change to the ATA code can be deleted now.
-So maybe also put them into this patch.
-
-Regards,
-Aaron
- 
->> ---
->>  drivers/pci/pci.c |   12 +++++++++++-
->>  1 file changed, 11 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 625a4ac..53128f0 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -2046,7 +2046,17 @@ void pci_pm_init(struct pci_dev *dev)
->>  	pm_runtime_forbid(&dev->dev);
->>  	pm_runtime_set_active(&dev->dev);
->>  	pm_runtime_enable(&dev->dev);
->> -	device_enable_async_suspend(&dev->dev);
->> +
->> +	/*
->> +	 * The JMicron chip 361/363/368 contains one SATA controller and
->> +	 * one PATA controller, they are brother-relation ship in PCI tree,
->> +	 * but for powering on these both controller, we must follow the
->> +	 * sequence one by one, otherwise one of them can not be powered on
->> +	 * successfully, so here we disable the async suspend method for
->> +	 * Jmicron chip.
->> +	 */
->> +	if (dev->vendor != PCI_VENDOR_ID_JMICRON)
->> +		device_enable_async_suspend(&dev->dev);
->>  	dev->wakeup_prepared = false;
->>  
->>  	dev->pm_cap = 0;
->>
+> Applied to libata/for-3.18-fixes.
 > 
-
+> Thanks.
+> 
