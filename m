@@ -1,40 +1,53 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qg0-f45.google.com ([209.85.192.45]:57475 "EHLO
+	mail-qg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751562AbaKERak (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 12:30:40 -0500
+Received: by mail-qg0-f45.google.com with SMTP id z107so12522464qgd.32
+        for <linux-pci@vger.kernel.org>; Wed, 05 Nov 2014 09:30:36 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1803282.Wzz7IausxS@vostro.rjw.lan>
-References: <Pine.LNX.4.44L0.1411271216470.8104-100000@netrider.rowland.org>
-	<1803282.Wzz7IausxS@vostro.rjw.lan>
-Date: Thu, 27 Nov 2014 23:34:03 +0100
-Message-ID: <CAPDyKFpcHawZ8F+2QdDYO=+qbh=uQb+A+2Rq_M7g9VqMnFtM1A@mail.gmail.com>
-Subject: Re: [PATCH 0/4] PM: Use CONFIG_PM instead of CONFIG_PM_RUNTIME in
- core code
-From: Ulf Hansson <ulf.hansson@linaro.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Kevin Hilman <khilman@kernel.org>
+In-Reply-To: <bug-87781-41252@https.bugzilla.kernel.org/>
+References: <bug-87781-41252@https.bugzilla.kernel.org/>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 5 Nov 2014 10:30:16 -0700
+Message-ID: <CAErSpo69s6i52CD=hxewo2tZNs1w5_zKNJsV7N+-88Dzw9mbqQ@mail.gmail.com>
+Subject: Re: [Bug 87781] New: ExpressCards can not be hotplugged (recognized
+ by colboot only)
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Cc: Yinghai Lu <yinghai@kernel.org>, Rajat Jain <rajatxjain@gmail.com>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[...]
+FYI.
 
-> That said whether or not it is ever useful to set PM_RUNTIME alone is a good
-> question.  In my opinion it is useful today, at least on some platforms that
-> don't really support system suspend or hibernation in any form.  However, it
-> may not be the case any more when suspend-to-idle becomes mature enough,
-> because that should just work for any platform without any kind of special
-> support.  We're still missing some timekeeping bits there, but once that
-> gap has been covered, we may just eliminate PM_SLEEP as well if there's a
-> broad consensus on that.
-
-That's sounds like a good approach, thanks for sharing your ideas and plans.
-
-Feel free to add my reviewed-by tag to this patchset as well.
-
-Kind regards
-Uffe
+On Wed, Nov 5, 2014 at 6:49 AM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=87781
+>
+>             Bug ID: 87781
+>            Summary: ExpressCards can not be hotplugged (recognized by
+>                     colboot only)
+>            Product: Drivers
+>            Version: 2.5
+>     Kernel Version: 3.2.0-4-amd64
+>           Hardware: All
+>                 OS: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: PCI
+>           Assignee: drivers_pci@kernel-bugs.osdl.org
+>           Reporter: estellnb@elstel.org
+>         Regression: No
+>
+> My USB3.0 ExpressCard is only recognized per coldboot.
+> Once I remove the ExpressCard all device nodes stay intact (i.e. of USB sticks
+> plugged into the card) but can no more be mounted on re-plugging the
+> ExpressCard.
+>   Additionally s2ram will no more work as soon as I boot into Linux with an
+> ExpressCard plugged in.
+>
+> --
+> You are receiving this mail because:
+> You are watching the assignee of the bug.
