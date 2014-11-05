@@ -1,62 +1,167 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch Part2 v5 23/31] x86, irq: Directly call native_compose_msi_msg() for DMAR IRQ
-Date: Thu,  6 Nov 2014 22:20:36 +0800
-Message-Id: <1415283644-2559-24-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:42335 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750860AbaKEXj0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 18:39:26 -0500
+Received: by mail-ig0-f175.google.com with SMTP id h3so9782926igd.2
+        for <linux-pci@vger.kernel.org>; Wed, 05 Nov 2014 15:39:25 -0800 (PST)
+Date: Wed, 5 Nov 2014 16:39:21 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>
+Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
+Message-ID: <20141105233921.GJ6168@google.com>
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <3256560.C0cZnIlnAv@wuerfel>
+ <20141022155914.GB25939@e102568-lin.cambridge.arm.com>
+ <2148776.X8NPqiYA6S@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2148776.X8NPqiYA6S@wuerfel>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DMAR interrupt won't be remapped by interrupt remapping hardware,
-so directly call native_compose_msi_msg() for DMAR IRQ to compose MSI
-message data. This will help to simplify MSI code later.
+On Wed, Oct 22, 2014 at 10:52:19PM +0200, Arnd Bergmann wrote:
+> On Wednesday 22 October 2014 16:59:14 Lorenzo Pieralisi wrote:
+> > On Wed, Oct 01, 2014 at 10:38:45AM +0100, Arnd Bergmann wrote:
+> > 
+> > [...]
+> > 
+> > > The arm32 implementations of pci_domain_nr/pci_proc_domain can probably be
+> > > removed if we change the arm32 pcibios_init_hw function to call the new
+> > > interfaces that set the domain number.
+> > 
+> > I wished, but it is a bit more complicated than I thought unfortunately,
+> > mostly because some drivers, eg cns3xxx set the domain numbers
+> > statically in pci_sys_data and this sets a chain of dependency that is
+> > not easy to untangle. I think cns3xxx is the only legacy driver that "uses"
+> > the domain number (in pci_sys_data) in a way that clashes with the
+> > generic domain_nr implementation, I need to give it more thought.
+> 
+> Just had a look at that driver, shouldn't be too hard to change, see below.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/msi.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+This patch is in my patchwork, but it lacks a topic & changelog and I'm not
+sure of its state, so I'm going to drop it for now.  Please post it again
+if you want me to do something with it.  I guess it only touches arch/arm,
+so it would probably be merged via your tree anyway.
 
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index f401bcd23e3a..3e0ac4516000 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -250,12 +250,10 @@ static struct irq_chip dmar_msi_type = {
- 
- int arch_setup_dmar_msi(unsigned int irq)
- {
--	int ret;
- 	struct msi_msg msg;
-+	struct irq_cfg *cfg = irq_cfg(irq);
- 
--	ret = msi_compose_msg(NULL, irq, &msg, -1);
--	if (ret < 0)
--		return ret;
-+	native_compose_msi_msg(NULL, irq, cfg->dest_apicid, &msg, -1);
- 	dmar_msi_write(irq, &msg);
- 	irq_set_chip_and_handler_name(irq, &dmar_msi_type, handle_edge_irq,
- 				      "edge");
--- 
-1.7.10.4
+Bjorn
 
+> diff --git a/arch/arm/mach-cns3xxx/pcie.c b/arch/arm/mach-cns3xxx/pcie.c
+> index 45d6bd09e6ef..aa4b9d7c52fd 100644
+> --- a/arch/arm/mach-cns3xxx/pcie.c
+> +++ b/arch/arm/mach-cns3xxx/pcie.c
+> @@ -30,18 +30,15 @@ struct cns3xxx_pcie {
+>  	unsigned int irqs[2];
+>  	struct resource res_io;
+>  	struct resource res_mem;
+> -	struct hw_pci hw_pci;
+> -
+> +	int port;
+>  	bool linked;
+>  };
+>  
+> -static struct cns3xxx_pcie cns3xxx_pcie[]; /* forward decl. */
+> -
+>  static struct cns3xxx_pcie *sysdata_to_cnspci(void *sysdata)
+>  {
+>  	struct pci_sys_data *root = sysdata;
+>  
+> -	return &cns3xxx_pcie[root->domain];
+> +	return root->private_data;
+>  }
+>  
+>  static struct cns3xxx_pcie *pdev_to_cnspci(const struct pci_dev *dev)
+> @@ -192,13 +189,7 @@ static struct cns3xxx_pcie cns3xxx_pcie[] = {
+>  			.flags = IORESOURCE_MEM,
+>  		},
+>  		.irqs = { IRQ_CNS3XXX_PCIE0_RC, IRQ_CNS3XXX_PCIE0_DEVICE, },
+> -		.hw_pci = {
+> -			.domain = 0,
+> -			.nr_controllers = 1,
+> -			.ops = &cns3xxx_pcie_ops,
+> -			.setup = cns3xxx_pci_setup,
+> -			.map_irq = cns3xxx_pcie_map_irq,
+> -		},
+> +		.port = 0,
+>  	},
+>  	[1] = {
+>  		.host_regs = (void __iomem *)CNS3XXX_PCIE1_HOST_BASE_VIRT,
+> @@ -217,19 +208,13 @@ static struct cns3xxx_pcie cns3xxx_pcie[] = {
+>  			.flags = IORESOURCE_MEM,
+>  		},
+>  		.irqs = { IRQ_CNS3XXX_PCIE1_RC, IRQ_CNS3XXX_PCIE1_DEVICE, },
+> -		.hw_pci = {
+> -			.domain = 1,
+> -			.nr_controllers = 1,
+> -			.ops = &cns3xxx_pcie_ops,
+> -			.setup = cns3xxx_pci_setup,
+> -			.map_irq = cns3xxx_pcie_map_irq,
+> -		},
+> +		.port = 1,
+>  	},
+>  };
+>  
+>  static void __init cns3xxx_pcie_check_link(struct cns3xxx_pcie *cnspci)
+>  {
+> -	int port = cnspci->hw_pci.domain;
+> +	int port = cnspci->port;
+>  	u32 reg;
+>  	unsigned long time;
+>  
+> @@ -260,9 +245,10 @@ static void __init cns3xxx_pcie_check_link(struct cns3xxx_pcie *cnspci)
+>  
+>  static void __init cns3xxx_pcie_hw_init(struct cns3xxx_pcie *cnspci)
+>  {
+> -	int port = cnspci->hw_pci.domain;
+> +	int port = cnspci->port;
+>  	struct pci_sys_data sd = {
+>  		.domain = port,
+> +		.private_data = cnspci,
+>  	};
+>  	struct pci_bus bus = {
+>  		.number = 0,
+> @@ -323,6 +309,14 @@ static int cns3xxx_pcie_abort_handler(unsigned long addr, unsigned int fsr,
+>  void __init cns3xxx_pcie_init_late(void)
+>  {
+>  	int i;
+> +	void *private_data;
+> +	struct hw_pci hw_pci = {
+> +		.nr_controllers = 1,
+> +		.ops = &cns3xxx_pcie_ops,
+> +		.setup = cns3xxx_pci_setup,
+> +		.map_irq = cns3xxx_pcie_map_irq,
+> +		.private_data = &private_data,
+> +	};
+>  
+>  	pcibios_min_io = 0;
+>  	pcibios_min_mem = 0;
+> @@ -335,7 +329,9 @@ void __init cns3xxx_pcie_init_late(void)
+>  		cns3xxx_pwr_soft_rst(0x1 << PM_SOFT_RST_REG_OFFST_PCIE(i));
+>  		cns3xxx_pcie_check_link(&cns3xxx_pcie[i]);
+>  		cns3xxx_pcie_hw_init(&cns3xxx_pcie[i]);
+> -		pci_common_init(&cns3xxx_pcie[i].hw_pci);
+> +		hw_pci->domain = i;
+> +		private_data = &cns3xxx_pcie[i];
+> +		pci_common_init(&hw_pci);
+>  	}
+>  
+>  	pci_assign_unassigned_resources();
+> 
+> 
