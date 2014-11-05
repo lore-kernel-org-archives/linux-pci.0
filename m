@@ -1,55 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:44374 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933991AbaKMTho (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 14:37:44 -0500
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Thierry Reding <thierry.reding@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 2/2] PCI: tegra: remove bogus bridge setup fixup
-Date: Thu, 13 Nov 2014 20:37:37 +0100
-Message-Id: <1415907457-3147-3-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1415907457-3147-1-git-send-email-l.stach@pengutronix.de>
-References: <1415907457-3147-1-git-send-email-l.stach@pengutronix.de>
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:54313 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752983AbaKESBs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 13:01:48 -0500
+Received: by mail-qc0-f174.google.com with SMTP id r5so981950qcx.5
+        for <linux-pci@vger.kernel.org>; Wed, 05 Nov 2014 10:01:47 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1415151063-2530-1-git-send-email-chuansheng.liu@intel.com>
+References: <1415151063-2530-1-git-send-email-chuansheng.liu@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 5 Nov 2014 11:01:15 -0700
+Message-ID: <CAErSpo6cWP2ngErLVzqASkeQOLsB7JjgCC8UuA-S=Lz=AJyf6Q@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Do not enable async suspend for JMicron chips
+To: Chuansheng Liu <chuansheng.liu@intel.com>
+Cc: Aaron Lu <aaron.lu@intel.com>, Tejun Heo <tj@kernel.org>,
+	Rafael Wysocki <rjw@rjwysocki.net>, mister.freeman@laposte.net,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The bridge setup is already done by generic code
-while scanning the buses. Do not duplicate (or potentially
-alter) this setup as a fixup.
+On Tue, Nov 4, 2014 at 6:31 PM, Chuansheng Liu <chuansheng.liu@intel.com> wrote:
+> The JMicron chip 361/363/368 contains one SATA controller and
+> one PATA controller, they are brother-relation ship in PCI tree,
+> but for powering on these both controller, we must follow the
+> sequence one by one, otherwise one of them can not be powered on
+> successfully.
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
- drivers/pci/host/pci-tegra.c | 13 -------------
- 1 file changed, 13 deletions(-)
+This should mention what's broken and what problem a user would see.
+This changelog sounds a lot like the one for e6b7e41cdd8c, so I don't
+know if this is for a new, related problem, or what.
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index d5a14f22ebb8..0ef22505cead 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -624,19 +624,6 @@ static void tegra_pcie_port_free(struct tegra_pcie_port *port)
- 	devm_kfree(pcie->dev, port);
- }
- 
--static void tegra_pcie_fixup_bridge(struct pci_dev *dev)
--{
--	u16 reg;
--
--	if ((dev->class >> 16) == PCI_BASE_CLASS_BRIDGE) {
--		pci_read_config_word(dev, PCI_COMMAND, &reg);
--		reg |= (PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
--			PCI_COMMAND_MASTER | PCI_COMMAND_SERR);
--		pci_write_config_word(dev, PCI_COMMAND, reg);
--	}
--}
--DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, tegra_pcie_fixup_bridge);
--
- /* Tegra PCIE root complex wrongly reports device class */
- static void tegra_pcie_fixup_class(struct pci_dev *dev)
- {
--- 
-2.1.1
+> So here we disable the async suspend method for Jmicron chip.
+>
+> Bug link:
+> https://bugzilla.kernel.org/show_bug.cgi?id=81551
+> https://bugzilla.kernel.org/show_bug.cgi?id=84861
+>
+> And we can revert the below commit after this patch is applied:
+> e6b7e41(ata: Disabling the async PM for JMicron chip 363/361)
+>
+> Cc: stable@vger.kernel.org # 3.15+
+> Acked-by: Aaron Lu <aaron.lu@intel.com>
+> Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+> ---
+>  drivers/pci/pci.c |   12 +++++++++++-
+>  1 file changed, 11 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 625a4ac..53128f0 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2046,7 +2046,17 @@ void pci_pm_init(struct pci_dev *dev)
+>         pm_runtime_forbid(&dev->dev);
+>         pm_runtime_set_active(&dev->dev);
+>         pm_runtime_enable(&dev->dev);
+> -       device_enable_async_suspend(&dev->dev);
+> +
+> +       /*
+> +        * The JMicron chip 361/363/368 contains one SATA controller and
+> +        * one PATA controller, they are brother-relation ship in PCI tree,
+> +        * but for powering on these both controller, we must follow the
+> +        * sequence one by one, otherwise one of them can not be powered on
+> +        * successfully, so here we disable the async suspend method for
+> +        * Jmicron chip.
+> +        */
+> +       if (dev->vendor != PCI_VENDOR_ID_JMICRON)
+> +               device_enable_async_suspend(&dev->dev);
 
+I don't like littering the core PCI code with vendor tests like this.
+This would be the only one, except for an ancient DECchip 21050 bridge
+erratum.
+
+And why would we want a test for *all* JMicron devices here, when you
+claim the problem only affects a few specific ones?
+
+And what's the story with the e6b7e41cdd8c ("ata: Disabling the async
+PM for JMicron chip 363/361") connection?  Is something broken even
+with e6b7e41cdd8c, and this is a better fix?  Or is this simply a
+different way of fixing the same problem?
+
+>         dev->wakeup_prepared = false;
+>
+>         dev->pm_cap = 0;
+> --
+> 1.7.9.5
+>
