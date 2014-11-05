@@ -1,39 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from jabberwock.ucw.cz ([46.255.230.98]:43641 "EHLO
-	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758825AbaKAPcN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Nov 2014 11:32:13 -0400
-Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [89.239.2.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
-	by jabberwock.ucw.cz (Postfix) with ESMTPS id AD95F1C014C
-	for <linux-pci@vger.kernel.org>; Sat,  1 Nov 2014 16:25:30 +0100 (CET)
-Date: Sat, 1 Nov 2014 16:25:29 +0100
-From: Martin Mares <mj@ucw.cz>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, rajatxjain@gmail.com
-Subject: Re: [PATCH] lspci: Correct Root Capabilities "CRS Software
- Visibility" bit
-Message-ID: <mj+md-20141101.152518.18073.albireo@ucw.cz>
-References: <20140902040346.18691.58345.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mout.kundenserver.de ([212.227.126.130]:52861 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751302AbaKEJZE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 04:25:04 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Minghuan Lian <Minghuan.Lian@freescale.com>,
+	linux-pci@vger.kernel.org,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Scott Wood <scottwood@freescale.com>
+Subject: Re: [PATCH v6] PCI: Layerscape: Add Layerscape PCIe driver
+Date: Wed, 05 Nov 2014 10:24:56 +0100
+Message-ID: <13483534.gsaDiXRS9D@wuerfel>
+In-Reply-To: <1415177111-28730-1-git-send-email-Minghuan.Lian@freescale.com>
+References: <1415177111-28730-1-git-send-email-Minghuan.Lian@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140902040346.18691.58345.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi!
-
-> lspci incorrectly tests bit 4, not bit 0, for "CRS Software Visibility" in
-> the Root Capabilities register, so it shows "RootCap: CRSVisible-" even for
-> devices that do support Software Visibility.
+On Wednesday 05 November 2014 16:45:11 Minghuan Lian wrote:
+> Add support for Freescale Layerscape PCIe controller. This driver
+> re-uses the designware core code.
 > 
-> Use the correct definition for PCI_EXP_RTCAP_CRSVIS.
+> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+> 
 
-Thanks, applied.
-
-				Have a nice fortnight
--- 
-Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
-Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
-"The generation of random numbers is too important to be left to chance."
+Acked-by: Arnd Bergmann <arnd@arndb.de>
