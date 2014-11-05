@@ -1,210 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:51546 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754265AbaKHSPf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 8 Nov 2014 13:15:35 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Joerg Roedel <joro@8bytes.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part3 v3 20/38] iommu/amd: Clean up unsued code
-Date: Sun,  9 Nov 2014 02:13:20 +0800
-Message-Id: <1415470418-10874-21-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-qg0-f54.google.com ([209.85.192.54]:53582 "EHLO
+	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750914AbaKEXbj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 18:31:39 -0500
+Received: by mail-qg0-f54.google.com with SMTP id q108so174555qgd.13
+        for <linux-pci@vger.kernel.org>; Wed, 05 Nov 2014 15:31:38 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <544AD7CF.5020006@gmail.com>
+References: <469h2cuyy0a5y5fn77uh3y1b.1413332405802@email.android.com>
+ <20141015210355.GB6579@laptop.dumpdata.com> <544AD7CF.5020006@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 5 Nov 2014 16:31:17 -0700
+Message-ID: <CAErSpo78mX9Q8HDsOFMhzNTjtGqD1aiTTrWH-zwGUEo24EF9CA@mail.gmail.com>
+Subject: Re: [PATCH next] xen: pcifront: Process failure for pcifront_(re)scan_root()
+To: Chen Gang <gang.chen.5i5j@gmail.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have converted to hierarchy irqdomain, so clean up unused code.
+[+cc linux-pci again]
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/amd_iommu.c |  144 ---------------------------------------------
- 1 file changed, 144 deletions(-)
+On Fri, Oct 24, 2014 at 4:50 PM, Chen Gang <gang.chen.5i5j@gmail.com> wrote:
+> On 10/16/14 5:03, Konrad Rzeszutek Wilk wrote:
+>> On Wed, Oct 15, 2014 at 08:20:06AM +0800, Chen Gang wrote:
+>>>
+>>> At least for me, what you said sound OK.
+>>
+>> Let me review it - next week.
+>
+> Please help check this patch, when you have time.
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 336d310b5b7b..704c18e3eb63 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -3996,22 +3996,6 @@ out:
- 	return index;
- }
- 
--static int get_irte(u16 devid, int index, union irte *irte)
--{
--	struct irq_remap_table *table;
--	unsigned long flags;
--
--	table = get_irq_table(devid, false);
--	if (!table)
--		return -ENOMEM;
--
--	spin_lock_irqsave(&table->lock, flags);
--	irte->val = table->table[index];
--	spin_unlock_irqrestore(&table->lock, flags);
--
--	return 0;
--}
--
- static int modify_irte(u16 devid, int index, union irte irte)
- {
- 	struct irq_remap_table *table;
-@@ -4058,131 +4042,6 @@ static void free_irte(u16 devid, int index)
- 	iommu_completion_wait(iommu);
- }
- 
--static int setup_ioapic_entry(int irq, struct IO_APIC_route_entry *entry,
--			      unsigned int destination, int vector,
--			      struct io_apic_irq_attr *attr)
--{
--	struct irq_remap_table *table;
--	struct irq_2_irte *irte_info;
--	struct irq_cfg *cfg;
--	union irte irte;
--	int ioapic_id;
--	int index;
--	int devid;
--	int ret;
--
--	cfg = irq_cfg(irq);
--	if (!cfg)
--		return -EINVAL;
--
--	irte_info = &cfg->irq_2_irte;
--	ioapic_id = mpc_ioapic_id(attr->ioapic);
--	devid     = get_ioapic_devid(ioapic_id);
--
--	if (devid < 0)
--		return devid;
--
--	table = get_irq_table(devid, true);
--	if (table == NULL)
--		return -ENOMEM;
--
--	index = attr->ioapic_pin;
--
--	/* Setup IRQ remapping info */
--	cfg->remapped	      = 1;
--	irte_info->devid      = devid;
--	irte_info->index      = index;
--
--	/* Setup IRTE for IOMMU */
--	irte.val		= 0;
--	irte.fields.vector      = vector;
--	irte.fields.int_type    = apic->irq_delivery_mode;
--	irte.fields.destination = destination;
--	irte.fields.dm          = apic->irq_dest_mode;
--	irte.fields.valid       = 1;
--
--	ret = modify_irte(devid, index, irte);
--	if (ret)
--		return ret;
--
--	/* Setup IOAPIC entry */
--	memset(entry, 0, sizeof(*entry));
--
--	entry->vector        = index;
--	entry->mask          = 0;
--	entry->trigger       = attr->trigger;
--	entry->polarity      = attr->polarity;
--
--	/*
--	 * Mask level triggered irqs.
--	 */
--	if (attr->trigger)
--		entry->mask = 1;
--
--	return 0;
--}
--
--static int set_affinity(struct irq_data *data, const struct cpumask *mask,
--			bool force)
--{
--	struct irq_2_irte *irte_info;
--	unsigned int dest, irq;
--	struct irq_cfg *cfg;
--	union irte irte;
--	int err;
--
--	if (!config_enabled(CONFIG_SMP))
--		return -1;
--
--	cfg       = irqd_cfg(data);
--	irq       = data->irq;
--	irte_info = &cfg->irq_2_irte;
--
--	if (!cpumask_intersects(mask, cpu_online_mask))
--		return -EINVAL;
--
--	if (get_irte(irte_info->devid, irte_info->index, &irte))
--		return -EBUSY;
--
--	if (assign_irq_vector(irq, cfg, mask))
--		return -EBUSY;
--
--	err = apic->cpu_mask_to_apicid_and(cfg->domain, mask, &dest);
--	if (err) {
--		if (assign_irq_vector(irq, cfg, data->affinity))
--			pr_err("AMD-Vi: Failed to recover vector for irq %d\n", irq);
--		return err;
--	}
--
--	irte.fields.vector      = cfg->vector;
--	irte.fields.destination = dest;
--
--	modify_irte(irte_info->devid, irte_info->index, irte);
--
--	if (cfg->move_in_progress)
--		send_cleanup_vector(cfg);
--
--	cpumask_copy(data->affinity, mask);
--
--	return 0;
--}
--
--static int free_irq(int irq)
--{
--	struct irq_2_irte *irte_info;
--	struct irq_cfg *cfg;
--
--	cfg = irq_cfg(irq);
--	if (!cfg)
--		return -EINVAL;
--
--	irte_info = &cfg->irq_2_irte;
--
--	free_irte(irte_info->devid, irte_info->index);
--
--	return 0;
--}
--
- static int get_devid(struct irq_alloc_info *info)
- {
- 	int devid = -1;
-@@ -4256,9 +4115,6 @@ struct irq_remap_ops amd_iommu_irq_ops = {
- 	.disable		= amd_iommu_disable,
- 	.reenable		= amd_iommu_reenable,
- 	.enable_faulting	= amd_iommu_enable_faulting,
--	.setup_ioapic_entry	= setup_ioapic_entry,
--	.set_affinity		= set_affinity,
--	.free_irq		= free_irq,
- 	.get_ir_irq_domain	= get_ir_irq_domain,
- 	.get_irq_domain		= get_irq_domain,
- };
--- 
-1.7.10.4
+linux-pci got dropped from the cc list, which makes it harder for me
+to track this in patchwork.
 
+But I'm waiting for Konrad to either ack this or just take it
+directly.  Here's my ack if you want it:
+
+Acked-by: Bjorn Helgas <bhelgaas@google.com>
+
+>>> Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>
+>>>> On Mon, Oct 06, 2014 at 11:04:45AM +0800, Chen Gang wrote:
+>>>>> When pcifront_rescan_root() or pcifront_scan_root() fails, need return
+>>>>> error code, neither set XenbusStateConnected state, just like the other
+>>>>> areas have done.
+>>>>>
+>>>>> For pcifront_rescan_root(), it will return error code ("num_roots = 0;",
+>>>>> skip xenbus_switch_state return value).
+>>>>>
+>>>>> For pcifront_scan_root(), it will return 0 ("num_roots = 0;", set 0 by
+>>>>> the return value of xenbus_switch_state, which always return 0, at
+>>>>> present).
+>>>>
+>>>> The changelog is somewhat confusing because it talks about the patch hunks
+>>>> in reverse order (the pcifront_scan_root() change is first in the patch,
+>>>> but the changelog mentions pcifront_rescan_root() first).  I *think* this
+>>>> means:
+>>>>
+>>>>  When pcifront_try_connect() finds no PCI roots, it falls back to calling
+>>>>  pcifront_scan_root() for 0000:00.  If that fails, it used to switch to
+>>>>  XenbusStateConnected and return success (because xenbus_switch_state()
+>>>>  currently always succeeds).
+>>>>
+>>>>  If pcifront_scan_root() fails, leave the XenbusState unchanged and
+>>>>  return an error code.
+>>>>
+>>>>  Similarly, pcifront_attach_devices() falls back to calling
+>>>>  pcifront_rescan_root() for 0000:00.  If that fails, it used to
+>>>>  switch to XenbusStateConnected and return an error code.
+>>>>
+>>>>  If pcifront_rescan_root() fails, leave the XenbusState unchanged and
+>>>>  return the error code.
+>>>>
+>>>> The "num_roots" part doesn't seem relevant to me.
+>>>>
+>>>>> Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
+>>>>
+>>>> Konrad, if you want to take this, feel free.  Otherwise, if you ack it and
+>>>> you think my changelog understanding makes sense, I can pick it up.
+>>>>
+>>>> It does seem odd that pcifront_attach_devices() ignores the
+>>>> xenbus_switch_state() return value while pcifront_try_connect() does not.
+>>>> But many other callers also ignore the return value, so maybe that's OK.
+>>>>
+>>>> Bjorn
+>>>>
+>>>>> ---
+>>>>>  drivers/pci/xen-pcifront.c | 10 ++++++++++
+>>>>>  1 file changed, 10 insertions(+)
+>>>>>
+>>>>> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+>>>>> index 53df39a..d78d884 100644
+>>>>> --- a/drivers/pci/xen-pcifront.c
+>>>>> +++ b/drivers/pci/xen-pcifront.c
+>>>>> @@ -866,6 +866,11 @@ static int pcifront_try_connect(struct pcifront_device *pdev)
+>>>>>            xenbus_dev_error(pdev->xdev, err,
+>>>>>                             "No PCI Roots found, trying 0000:00");
+>>>>>            err = pcifront_scan_root(pdev, 0, 0);
+>>>>> +          if (err) {
+>>>>> +                  xenbus_dev_fatal(pdev->xdev, err,
+>>>>> +                                   "Error scanning PCI root 0000:00");
+>>>>> +                  goto out;
+>>>>> +          }
+>>>>>            num_roots = 0;
+>>>>>    } else if (err != 1) {
+>>>>>            if (err == 0)
+>>>>> @@ -947,6 +952,11 @@ static int pcifront_attach_devices(struct pcifront_device *pdev)
+>>>>>            xenbus_dev_error(pdev->xdev, err,
+>>>>>                             "No PCI Roots found, trying 0000:00");
+>>>>>            err = pcifront_rescan_root(pdev, 0, 0);
+>>>>> +          if (err) {
+>>>>> +                  xenbus_dev_fatal(pdev->xdev, err,
+>>>>> +                                   "Error scanning PCI root 0000:00");
+>>>>> +                  goto out;
+>>>>> +          }
+>>>>>            num_roots = 0;
+>>>>>    } else if (err != 1) {
+>>>>>            if (err == 0)
+>>>>> --
+>>>>> 1.9.3
+>
+> --
+> Chen Gang
+>
+> Open, share, and attitude like air, water, and life which God blessed
