@@ -1,101 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:36287 "EHLO
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:53991 "EHLO
 	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755211AbaKUKAz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 05:00:55 -0500
-Message-ID: <546F0D43.4020307@arm.com>
-Date: Fri, 21 Nov 2014 10:00:35 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>
-Subject: Re: Removal of bus->msi assignment breaks MSI with stacked domains
-References: <546E1771.4030201@arm.com> <20141120215353.GA7987@google.com> <alpine.DEB.2.11.1411202355060.6439@nanos> <546E9B60.9070706@huawei.com>
-In-Reply-To: <546E9B60.9070706@huawei.com>
-Content-Type: text/plain; charset=windows-1252
+	with ESMTP id S1751046AbaKFPca (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 10:32:30 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Krzysztof Halasa <khalasa@piap.pl>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Mohit Kumar <mohit.kumar@st.com>
+Subject: [PATCH v2 0/2] arm: pcibios: remove pci_sys_data domain
+Date: Thu,  6 Nov 2014 15:32:12 +0000
+Message-Id: <1415287936-31203-1-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yijing,
+This patchset is a v2 of a previous posting:
 
-On 21/11/14 01:54, Yijing Wang wrote:
->>> Thomas, let me know if you want to do that.  I suppose we could add a new
->>> patch to add it back, but that would leave bisection broken for the
->>> interval between c167caf8d174 and the patch that adds it back.
->>
->> Fortunately my irq/irqdomain branch is not immutable yet. So we have
->> no problem at that point. I can rebase on your branch until tomorrow
->> night. Or just rebase on mainline and we sort out the merge conflicts
->> later, i.e. delegate them to Linus so his job of pulling stuff gets
->> not completely boring.
-> 
-> Hi Thomas, sorry for my introducing the broken.
-> 
->>
->> What I'm more worried about is whether this intended change is going
->> to inflict a problem on Jiangs intention to deduce the MSI irq domain
->> from the device, which we really need for making DMAR work w/o going
->> through loops and hoops.
->>
->> I have limited knowledge about the actual scope of iommu (DMAR) units
->> versus device/bus/host-controllers, so I would appreciate a proper
->> explanation for that from you or Jiang or both.
-> 
-> In my personal opinion, if it's not necessary, we should not put stuff
-> into pci_dev or pci_bus. If we plan to save msi_controller in pci_bus or
-> pci_dev.
-> I have a proposal, I would be appreciated if you could give some comments.
-> First we refactor pci_host_bridge to make a generic
-> pci_host_bridge, then we could save pci domain in it to eliminate
-> arch specific functions. I aslo wanted to save msi_controller as
-> pci domain, but now Jiang refactor hierarchy irq domain, and
-> pci devices under the same pci host bridge may need to associate
-> to different msi_controllers.
-> 
-> So I want to associate a msi_controller finding ops with generic pci_host_bridge,
-> then every pci device could find its msi_controller/irq_domain by a
-> common function
-> 
-> E.g
-> 
-> struct msi_controller *pci_msi_controller(struct pci_dev *pdev)
-> {
-> 	struct msi_controller *ctrl;
-> 	struct pci_host_bridge *host = find_pci_host_bridge(pdev->bus);
-> 	if (host && host->pci_get_msi_controller)
-> 		ctrl = pci_host_bridge->pci_get_msi_controller(struct pci_dev *pdev);
-> 
-> 	return ctrl;	
-> }
-> 
-> If I miss something, please let me know, thanks.
+http://lists.infradead.org/pipermail/linux-arm-kernel/2014-October/298537.html
 
-That feels slightly convoluted for something that should be a very
-simple operation. Does this mean you're trying to represent a situation
-where:
-- a single host bridge has multiple MSI controllers,
-- this bridge serves multiple busses,
-- devices on the same bus can talk to different MSI controllers?
+v1 => v2 changelog
 
-That would be the only case where the current way we pass the
-msi_controller around wouldn't work.
+- Removed stale hw_pci domain member
+- Reworked pci-mvebu domain handling according to review
+- Rebased against 3.18-rc3 and updated the logs
+- Dropped RFC status
 
-If that's what you're trying to do, I can see how this work, but I'd
-suggest you put that infrastructure in place before tearing down the
-existing one. This means being having support at the host-bridge level
-and reasonable defaults for the non-complicated case where bus->msi is
-exactly what you want.
+Original cover letter:
+----
+This patchset is a first RFC stab at removing the dependency on pci_sys_data
+domain field on ARM platforms and by replacing it with generic code that
+stashes the domain value in the pci_bus control structure, introduced in
 
-Thanks,
+commit 41e5c0f81d3e676d671d96a0a1fafb27abfbd9
+("of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()")
 
-	M.
+commit 670ba0c8883b576d0aec28bd7a838358a4be1
+("PCI: Add generic domain handling")
+
+All the drivers converted (apart from PCIe designware, tested on iMX6SL)
+were only compile tested for lack of HW, so along some comments, testing
+and verifying that patchset does not break any existing platform are
+very appreciated.
+
+Code in drivers/pci/pci-mvebu.c has been changed to add a domain
+number to PCI resources by using the nr value coming from the setup
+pcibios32 callback, which may not be correct and should be considered
+a temporary solution waiting for review comments.
+
+The patchset removes entirely the pci_sys_data.domain field, since its
+usage is removed at the same time in the respective host controllers
+and ARM is made to select the configuration option
+CONFIG_PCI_DOMAINS_GENERIC by default, which compiles a domain_nr in the
+pci_bus structure so that the pci_domain_nr() look-up can rely on it.
+
+Lorenzo Pieralisi (2):
+  arm: cns3xxx: pci: remove artificial dependency on pci_sys_data domain
+  arm: pcibios: move to generic PCI domains
+
+ arch/arm/Kconfig                   |  3 +++
+ arch/arm/include/asm/mach/pci.h    |  6 ------
+ arch/arm/include/asm/pci.h         |  7 -------
+ arch/arm/kernel/bios32.c           | 26 ++++++++++++++++++++++---
+ arch/arm/mach-cns3xxx/pcie.c       | 40 ++++++++++++++++----------------------
+ drivers/pci/host/pci-mvebu.c       | 15 ++------------
+ drivers/pci/host/pcie-designware.c |  3 ---
+ drivers/pci/host/pcie-rcar.c       |  3 ---
+ 8 files changed, 45 insertions(+), 58 deletions(-)
+
 -- 
-Jazz is not dead. It just smells funny...
+2.1.2
+
