@@ -1,39 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f51.google.com ([209.85.192.51]:49860 "EHLO
-	mail-qg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753897AbaKRPs6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 10:48:58 -0500
-Received: by mail-qg0-f51.google.com with SMTP id l89so2668614qgf.38
-        for <linux-pci@vger.kernel.org>; Tue, 18 Nov 2014 07:48:58 -0800 (PST)
+Received: from mga02.intel.com ([134.134.136.20]:16455 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751097AbaKFNf1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 6 Nov 2014 08:35:27 -0500
+Message-ID: <545B7919.2080002@linux.intel.com>
+Date: Thu, 06 Nov 2014 21:35:21 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <trinity-7d71b540-5b76-4374-9a00-011d5e8262c3-1416325326852@3capp-webde-bs37>
-References: <bug-88451-41252@https.bugzilla.kernel.org/> <CAErSpo5LgFPz9uUyg6+QchHbNP4G5R6xiYDqfYZp5wyBK-RagA@mail.gmail.com>
- <trinity-7d71b540-5b76-4374-9a00-011d5e8262c3-1416325326852@3capp-webde-bs37>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 18 Nov 2014 08:48:37 -0700
-Message-ID: <CAErSpo4OajjHFNUp-ytAmnEbwq+4trDqmx-egy=prQVrLSmJwg@mail.gmail.com>
-Subject: Re: Re: [Bug 88451] New: PCI devices missing - including USB
- controller. Boot fail
-To: Roland Kletzing <devzero@web.de>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Joerg Roedel <joro@8bytes.org>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [Patch Part2 v4 00/31] Enable hierarchy irqdomian on x86 platforms
+References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com> <20141106130753.GN10744@8bytes.org>
+In-Reply-To: <20141106130753.GN10744@8bytes.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 18, 2014 at 8:42 AM, Roland Kletzing <devzero@web.de> wrote:
-...
-> The answer is simple:
->
-> Apparently, the pci code portion has been separated from ohci_hcd, so it seems ohci_hcd is not
-> responsible anymore for an usb controller sitting on the pci bus, but there`s a separate module
-> now: ohci_pci
->
-> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/drivers/usb/host/ohci-hcd.c?id=2621d0119e574f12496c4ab731265d5777cb6a18
+On 2014/11/6 21:07, Joerg Roedel wrote:
+> On Tue, Nov 04, 2014 at 08:01:34PM +0800, Jiang Liu wrote:
+>> Patch 1-5 enhance irqdomain and irq core to support hierarchy irqdomain
+>> and stacked irqchip.
+>> Patch 6-12 implement an irqdomain to manange CPU interrupt vectors, and
+>> it's the root irqdomain for x86 platforms.
+>> Patch 13-16 converts Intel and AMD interrupt remapping drivers to
+>> support hierarchy irqdomain.
+>> Patch 17-23 converts HPET and MSI to support hierarchy irqdomain.
+>> Patch 24-27 cleans up unsued code in x86 arch and interrupt remapping
+>> drivers.
+>> Patch 28-31 converts DMAR, HTIRQ and UV to support hierarchy irqdomain.
+> 
+> Okay, I looked over the IOMMU changes and did some testing. With Jiangs
+> fix for the AMD Kaveri boot panic it looks good to me. So for the IOMMU
+> parts:
+> 
+> Acked-by: Joerg Roedel <jroedel@suse.de>
+Thanks, Joerg!
 
-...
-
-> I`m putting this (including dmesg from 3.17) to bugzilla and closing it.
-
-Great, thanks for tracking this down!
-
-Bjorn
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
