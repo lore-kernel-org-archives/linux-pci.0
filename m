@@ -1,125 +1,88 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, Borislav Petkov <bp@alien8.de>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v8 00/18] Enable support of IOAPIC hotplug on x86 platforms
-Date: Sun,  2 Nov 2014 14:04:15 +0800
-Message-Id: <1414908273-7552-1-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:10212 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750881AbaKFFgh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 6 Nov 2014 00:36:37 -0500
+Message-ID: <545B08DF.2090608@intel.com>
+Date: Thu, 06 Nov 2014 13:36:31 +0800
+From: Aaron Lu <aaron.lu@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+To: "Liu, Chuansheng" <chuansheng.liu@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Barto <mister.freeman@laposte.net>,
+	"Tejun Heo (tj@kernel.org)" <tj@kernel.org>,
+	Rafael Wysocki <rjw@rjwysocki.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Do not enable async suspend for JMicron chips
+References: <1415151063-2530-1-git-send-email-chuansheng.liu@intel.com> <CAErSpo6cWP2ngErLVzqASkeQOLsB7JjgCC8UuA-S=Lz=AJyf6Q@mail.gmail.com> <545A7087.3050802@laposte.net> <CAErSpo4fvoeP9Gab1ZDg=ofjH+aqxGD09nLDTF1ZERnH=yEPxw@mail.gmail.com> <27240C0AC20F114CBF8149A2696CBE4A01EB7713@SHSMSX101.ccr.corp.intel.com> <CAErSpo4py1GdxczyzgLxjbgmfGEQ6o+He=7wxuVS0BM-Oyd6_w@mail.gmail.com> <27240C0AC20F114CBF8149A2696CBE4A01EB7B96@SHSMSX101.ccr.corp.intel.com>
+In-Reply-To: <27240C0AC20F114CBF8149A2696CBE4A01EB7B96@SHSMSX101.ccr.corp.intel.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set enhances IOAPIC core and ACPI drivers to support IOAPIC
-hotplug on x86 platforms. It's based on v3.18-rc2 at
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+On 11/06/2014 01:29 PM, Liu, Chuansheng wrote:
+> Hello Bjorn,
+> 
+>> -----Original Message-----
+>> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+>> Sent: Thursday, November 06, 2014 12:09 PM
+>> To: Liu, Chuansheng
+>> Cc: Barto; Tejun Heo (tj@kernel.org); Lu, Aaron; Rafael Wysocki;
+>> linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org
+>> Subject: Re: [PATCH] PCI: Do not enable async suspend for JMicron chips
+>>
+>> On Wed, Nov 5, 2014 at 6:48 PM, Liu, Chuansheng
+>> <chuansheng.liu@intel.com> wrote:
+>>> Hello Bjorn,
+>>>
+>>>> -----Original Message-----
+>>>> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+>>>> Sent: Thursday, November 06, 2014 3:04 AM
+>>>> To: Barto
+>>>> Cc: Liu, Chuansheng; Lu, Aaron; Tejun Heo; Rafael Wysocki;
+>>>> linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org
+>>>> Subject: Re: [PATCH] PCI: Do not enable async suspend for JMicron chips
+>>>>
+>>>> On Wed, Nov 5, 2014 at 11:46 AM, Barto <mister.freeman@laposte.net>
+>>>> wrote:
+>>>>> this patch solves these 2 bug reports :
+>>>>>
+>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=84861
+>>>>>
+>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=81551
+>>>>
+>>>> Those bugs were already mentioned.  But e6b7e41cdd8c claims to solve
+>>>> https://bugzilla.kernel.org/show_bug.cgi?id=81551, and 84861 is a
+>>>> duplicate of 81551, so it should also be fixed by e6b7e41cdd8c.
+>>>>
+>>>> So the question is, why was e6b7e41cdd8c insufficient?  Presumably it
+>>>> was tested and somebody thought it did fix the problem.
+>>>
+>>> The first patch e6b7e41cdd8c which is just exclude some of JMicron
+>> chips(363/361) out of async_suspend,
+>>> then Barto found the same issue on JMicron 368, so we need one more
+>> general patch to let JMicron chips
+>>> out of async_suspend, so we make this patch.
+>>>
+>>> Bjorn, tj,
+>>> Could you kindly take this patch? As Barto said, it effected the user
+>> experience indeed, thanks.
+>>
+>> Thanks for clarifying the changelog as far as the different chips and
+>> the different bugzillas.
+>>
+>> But you haven't addressed my concerns about (1) putting a PCI vendor
+>> ID check in the generic PCI core code, and (2) applying this to *all*
+>> JMicron devices.  You might want to explore a quirk-type solution or
+>> maybe just add the JMicron 368 to the checks added by e6b7e41cdd8c.
+> Understand your point, in fact, before this patch submitted, I had written another patch https://lkml.org/lkml/2014/9/24/68
+> which addressed to add the quirk-type solution in ATA code, and Aaron given better suggestion that implemented at pci_pm_init().
+> How do you think of it? Thanks.
 
-You may pull it from 
-https://github.com/jiangliu/linux.git ioapic/hotplug_v8
+I think Bjorn means that we should place the code as a fixup somewhere
+in the quirks.c. I didn't take a closer look but DECLARE_PCI_FIXUP_FINAL
+for those JMicron PCI devices seems to be a proper phase.
 
-We have pick up several patches from Yinghai's original IOAPIC hotplug
-patch set and reimplemented IOAPIC driver as an ACPI driver instead of
-a PCI driver.
-
-It has been tested on a 4-socket Intel SDV with socket hot-addition
-capability. Any suggestions are welcomed!
-
-Patch 1-3 are bugfixes against v3.17 and should target v3.18. Patch 1
-has been merged into tip/x86/urgent.
-Patch 4-7 are bugfixes and enhancements to ACPI subsystem
-Patch 8 killes PCI IOAPIC driver
-Patch 9-17 enhances IOAPIC core to support IOAPIC hotplug
-Patch 18 reimplements ACPI IOAPIC driver and enables IOAPIC hotplug
-
-V7-V8:
-1) Use mutex instead of rwsem to protect IOAPIC from hotplug
-V6->V7:
-1) Rebase to v3.18-rc2
-2) Three bugfixes for v3.18
-V5->V6:
-1) Rebase to the latest v3.17-16
-2) Minor fixes for comments
-V4->V5:
-1) Fix a building error
-2) Don't rename processor_core.c as apic_id.c
-3) Improve comments
-4) Reorder patches to get rid of some temporary code
-V3->V4:
-1) Fix a bug in manage IOAPIC reference count
-2) Rebase to v3.17-rc2
-3) Refine commit messages
-V2->V3:
-1) Refine ACPI resource walk functions for PCI root bus and IOAPIC
-2) Improve commit messages
-3) Reorder patch order for better maintenence
-
-Jiang Liu (15):
-  x86: ACPI: Do not translate GSI number if IOAPIC is disabled
-  x86, intel-mid: Create IRQs for APB timers and RTC timers
-  x86, irq, ACPI: Return IRQ instead of GSI in mp_register_gsi()
-  x86, PCI, ACPI: Kill private function resource_to_addr() in
-    arch/x86/pci/acpi.c
-  ACPI: Correct return value of acpi_dev_resource_address_space()
-  ACPI: Fix minor syntax issues in processor_core.c
-  PCI: Remove PCI ioapic driver
-  x86, irq: Remove __init marker for functions will be used by IOAPIC
-    hotplug
-  x86, irq: Keep balance of IOAPIC pin reference count
-  x86, irq: Refine mp_register_ioapic() to prepare for IOAPIC hotplug
-  x86, irq, ACPI: Introduce a rwsem to protect IOAPIC operations from
-    hotplug
-  x86, irq, ACPI: Implement interface to support ACPI based IOAPIC
-    hot-addition
-  x86, irq, ACPI: Implement interfaces to support ACPI based IOAPIC
-    hot-removal
-  x86, irq: Introduce helper to check whether an IOAPIC has been
-    registered
-  x86, irq, ACPI: Implement ACPI driver to support IOAPIC hotplug
-
-Yinghai Lu (3):
-  ACPI: Add interfaces to parse IOAPIC ID for IOAPIC hotplug
-  x86, irq: Split out alloc_ioapic_save_registers()
-  x86, irq: Prefer assigned ID in APIC ID register for x86_64
-
- arch/x86/include/asm/io_apic.h    |    6 +-
- arch/x86/kernel/acpi/boot.c       |  102 ++++++++++++++--
- arch/x86/kernel/apb_timer.c       |    2 -
- arch/x86/kernel/apic/io_apic.c    |  234 +++++++++++++++++++++++++++++-------
- arch/x86/pci/acpi.c               |  144 +++++++++--------------
- arch/x86/pci/intel_mid_pci.c      |   10 +-
- arch/x86/pci/irq.c                |    7 +-
- arch/x86/platform/intel-mid/sfi.c |    2 +
- drivers/acpi/Kconfig              |    6 +
- drivers/acpi/Makefile             |    1 +
- drivers/acpi/internal.h           |    7 ++
- drivers/acpi/ioapic.c             |  235 +++++++++++++++++++++++++++++++++++++
- drivers/acpi/pci_irq.c            |   11 +-
- drivers/acpi/pci_root.c           |    3 +
- drivers/acpi/processor_core.c     |  131 ++++++++++++++++++---
- drivers/acpi/resource.c           |    2 +-
- drivers/pci/Kconfig               |    7 --
- drivers/pci/Makefile              |    2 -
- drivers/pci/ioapic.c              |  121 -------------------
- include/linux/acpi.h              |    5 +
- include/linux/pci.h               |    1 +
- 21 files changed, 739 insertions(+), 300 deletions(-)
- create mode 100644 drivers/acpi/ioapic.c
- delete mode 100644 drivers/pci/ioapic.c
-
--- 
-1.7.10.4
-
+Thanks,
+Aaron
