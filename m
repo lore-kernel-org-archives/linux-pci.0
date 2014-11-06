@@ -1,125 +1,86 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, Borislav Petkov <bp@alien8.de>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch Part3 v3 00/38] Enable hierarchy irqdomian on x86 platforms
-Date: Sun,  9 Nov 2014 02:13:00 +0800
-Message-Id: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f176.google.com ([209.85.217.176]:57748 "EHLO
+	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751218AbaKFTqz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 14:46:55 -0500
+MIME-Version: 1.0
+In-Reply-To: <20141106153051.GU8916@e106497-lin.cambridge.arm.com>
+References: <1415101660-26450-1-git-send-email-l.stach@pengutronix.de>
+ <20141105231743.GI6168@google.com> <20141106100518.GI8916@e106497-lin.cambridge.arm.com>
+ <CAL_JsqK-g2qW12jatyZBLeBEtpr80o=WWZVet5+OgMtzAAXHJQ@mail.gmail.com> <20141106153051.GU8916@e106497-lin.cambridge.arm.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Thu, 6 Nov 2014 13:46:33 -0600
+Message-ID: <CAL_Jsq+WHyRN+hAaEwH1ZHabEYgTDnpPinoL8pagHYzP4Zfe=g@mail.gmail.com>
+Subject: Re: [PATCH] PCI: add missing DT binding for linux,pci-domain property
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is the last part to enable support of hierarchy domain on x86
-platforms.
+On Thu, Nov 6, 2014 at 9:30 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> On Thu, Nov 06, 2014 at 02:57:35PM +0000, Rob Herring wrote:
+>> On Thu, Nov 6, 2014 at 4:05 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+>> > On Wed, Nov 05, 2014 at 11:17:43PM +0000, Bjorn Helgaas wrote:
+>> >> On Tue, Nov 04, 2014 at 12:47:40PM +0100, Lucas Stach wrote:
+>> >> > This property was added by 41e5c0f81d3e
+>> >> > (of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr())
+>> >> > without the required binding documentation. As this property
+>> >> > will be supported by a number of host bridge drivers going forward,
+>> >> > add it to the common PCI binding doc.
+>> >> >
+>> >> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+>> >>
+>> >> I merged 41e5c0f81d3e through my tree, and I could merge something like
+>> >> this if a consensus develops with some acks.  But I'll just let you guys
+>> >> handle it unless you poke me again.
+>> >
+>> > While I think the "linux,pci-domain" property *must* be documented, I
+>> > would like to get a consensus first on the usage. If we agree that
+>> > the property is mandatory to all host bridge drivers that use OF then
+>> > we need to patch existing drivers (partially done through Lorenzo's
+>> > patches, but other arches are ignoring it). If we say all *new* drivers
+>> > need to use it then we also need to come up with a strategy on how to
+>> > deal with old vs new school drivers.
+>> >
+>> > My preferred approach is the 3rd way: "linux,pci-domain" becomes part of
+>> > the core PCI infrastructure (and we find the common ground with ACPI).
+>> > That way the host bridge drivers don't have to do anything, but the DT
+>> > creators have to specify a value.
+>>
+>> I'm okay with it being in the core. It was the mixture of using the
+>> property and automatic numbering that I had issues with. Any mixture
+>> whether in DT or in drivers should be an error. Also, I think having a
+>> mixture of root bus host drivers would be rare, so I'm not too
+>> concerned about some drivers supporting the property and others not.
+>> In any case, these issues are all with the kernel and not really the
+>> concern for the binding. For the binding, simply all hosts set the
+>> domain or none of them do.
+>
+> Repeating what you've said to verify my understanding: you are OK with
+> the "linux,pci-domain" being handled in the PCI framework and mandatory
+> to all OF-based host bridges and architectures. Failure to include
+> the property should be an error and no host bridge driver should default
+> to the auto-generation of domain numbers.
+>
+> Is that correct?
 
-It first converts IOAPIC to support hierarchy irqdomain, then cleans
-up all unused code and interfaces. It also introduces a kernel boot
-parameter to configure CPU vector allocation policies.
+Not exactly. It is only mandatory when you have multiple root buses.
+But we can't say an existing dtb is in error, so it has to remain
+optional for compatibility. Also, given it is a Linux property, you
+can't really say it is mandatory for all PCI bindings from a DT
+perspective.
 
-It's based on my previous patch set at:
-https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg760868.html
-And you may access it at:
-https://github.com/jiangliu/linux.git irqdomain/p3v3
+While we could have issues in theory if this is handled in the
+drivers, I don't think we will in practice as having root buses with
+different drivers is unlikely.
 
-It has been tested on Intel 64-bit server and 32-bit laptop. It also
-passes Fengguang's 0day tests. Helps are welcomed for testing:
-1) Intel MID platform
-2) Intel CE or OLPC platforms
-
-Patch 1-3 kills pre_init_apic_IRQ0().
-Patch 4-9 convert IOAPIC to use hierarch irqdomain
-Patch 10-36 clean up code, unused interfaces etc.
-Patch 37-38 introduces a mechanism to configure CPU vector allocation
-	policies.
-
-Jiang Liu (37):
-  x86, intel-mid, trivial: Refine code syntax for sfi_parse_mtmr()
-  x86, irq: Kill unused pre_init_apic_IRQ0()
-  x86, irq: Prepare IOAPIC interfaces to support hierarchy irqdomain
-  x86, irq: Implement callbacks to enable hierarchy irqdomain on
-    IOAPICs
-  x86, irq: Refine the way to allocate irq_cfg for legacy IRQs
-  x86, irq: Simplify the way to print IOAPIC entry
-  x86, irq: Introduce helper functions to support hierarchy irqdomain
-    for IOAPIC
-  x86, irq: Convert IOAPIC to use hierarchy irqdomain interfaces
-  x86, irq: Kill unused old IOAPIC irqdomain interfaces
-  x86, irq: Kill unused struct mp_pin_info
-  x86, irq: Kill x86_io_apic_ops.print_entries and related interfaces
-  x86, irq: Kill x86_io_apic_ops.setup_entry and related interfaces
-  x86, irq: Kill x86_io_apic_ops.set_affinity and related interfaces
-  x86, irq: Kill x86_io_apic_ops.eoi_ioapic_pin and related interfaces
-  x86, irq: Kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
-  x86: Clean up unused forward declarations in x86_init.h
-  x86: irq_remapping: Clean up unsued code
-  iommu/vt-d: Clean up unsued code
-  iommu/amd: Clean up unsued code
-  x86: irq_remapping: Clean up unused interfaces
-  x86, irq: Kill irq_cfg.irq_remapped
-  iommu/vt-d: Move struct irq_2_iommu into intel_irq_remapping.c
-  iommu/amd: Move struct irq_2_irte into amd_iommu.c
-  x86, irq: Move irq_cfg.irq_2_pin into io_apic.c
-  x86, irq: Kill struct io_apic_irq_attr
-  x86, irq: Kill x86_io_apic_ops.write and x86_io_apic_ops.modify
-  x86, irq: Clean up io_apic.h
-  x86, irq: Use cached IOAPIC entry instead of reading from hardware
-  x86, irq: Kill unused alloc_irq_and_cfg_at()
-  x86, irq: Change functions only used in vector.c as static
-  x86, irq: Kill function apic_set_affinity()
-  x86, irq: Move check of cfg->move_in_progress into
-    send_cleanup_vector()
-  x86, irq: Move private data in struct irq_cfg into dedicated data
-    structure
-  x86, irq: Refine the way to calculate NR_IRQS
-  ACPI, irq, x86: Kill private function mp_register_gsi()/
-    mp_unregister_gsi()
-  x86, irq: Introduce mechanism to support different vector allocation
-    policies
-  x86, irq: Add kernel parameter vector_alloc to set CPU vector
-    allocation policy
-
-Thomas Gleixner (1):
-  x86, intel-mid: Delay initialization of APB timer
-
- Documentation/kernel-parameters.txt                |    6 +
- arch/x86/Kconfig                                   |    1 -
- arch/x86/include/asm/hw_irq.h                      |   53 +-
- arch/x86/include/asm/io_apic.h                     |   81 +-
- arch/x86/include/asm/irq_remapping.h               |   36 -
- arch/x86/include/asm/irq_vectors.h                 |   18 +-
- arch/x86/include/asm/x86_init.h                    |   16 -
- arch/x86/kernel/acpi/boot.c                        |   69 +-
- arch/x86/kernel/apb_timer.c                        |    4 -
- arch/x86/kernel/apic/io_apic.c                     | 1071 +++++++++-----------
- arch/x86/kernel/apic/vector.c                      |  416 ++++----
- arch/x86/kernel/devicetree.c                       |   37 +-
- arch/x86/kernel/mpparse.c                          |    6 +-
- arch/x86/kernel/x86_init.c                         |    6 -
- arch/x86/pci/intel_mid_pci.c                       |    6 +-
- .../platform/intel-mid/device_libs/platform_wdt.c  |    5 +-
- arch/x86/platform/intel-mid/intel-mid.c            |   18 +-
- arch/x86/platform/intel-mid/sfi.c                  |   30 +-
- arch/x86/platform/sfi/sfi.c                        |    5 +-
- arch/x86/platform/uv/uv_irq.c                      |    3 +-
- drivers/iommu/amd_iommu.c                          |  153 +--
- drivers/iommu/intel_irq_remapping.c                |  206 +---
- drivers/iommu/irq_remapping.c                      |   84 --
- drivers/iommu/irq_remapping.h                      |   16 -
- 24 files changed, 876 insertions(+), 1470 deletions(-)
-
--- 
-1.7.10.4
-
+Rob
