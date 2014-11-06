@@ -1,150 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:57189 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750891AbaKZAIg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Nov 2014 19:08:36 -0500
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 26 Nov 2014 10:08:34 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id D56862BB005F
-	for <linux-pci@vger.kernel.org>; Wed, 26 Nov 2014 11:08:31 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAQ08VSd40042628
-	for <linux-pci@vger.kernel.org>; Wed, 26 Nov 2014 11:08:31 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAQ08U8A020551
-	for <linux-pci@vger.kernel.org>; Wed, 26 Nov 2014 11:08:31 +1100
-Date: Wed, 26 Nov 2014 11:08:30 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au
-Subject: Re: [PATCH 1/8] powerpc/pci: Move pcibios_find_pci_bus() around
-Message-ID: <20141126000830.GA21766@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1416869365-7671-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1416869365-7671-2-git-send-email-gwshan@linux.vnet.ibm.com>
- <1416956310.5089.5.camel@kernel.crashing.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1416956310.5089.5.camel@kernel.crashing.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [Patch Part2 v5 09/31] x86, MSI: Use new irqdomain interfaces to allocate/free IRQ
+Date: Thu,  6 Nov 2014 22:20:22 +0800
+Message-Id: <1415283644-2559-10-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 26, 2014 at 09:58:30AM +1100, Benjamin Herrenschmidt wrote:
->On Tue, 2014-11-25 at 09:49 +1100, Gavin Shan wrote:
->> The patch moves pcibios_find_pci_bus() to PPC kerenl directory so
->> that it can be reused by hotplug code for pSeries and PowerNV
->> platform at the same time.
->> 
->> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->
->Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
->
+Use new irqdomain interfaces to allocate/free IRQ for MSI, so we could
+kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
 
-Thanks, Ben. But Michael needn't pick it up and merge it as the left
-patches need reworks to some extent...
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/msi.c |   14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
-Thanks,
-Gavin
-
->> ---
->>  arch/powerpc/kernel/pci-hotplug.c          | 36 ++++++++++++++++++++++++++++++
->>  arch/powerpc/platforms/pseries/pci_dlpar.c | 32 --------------------------
->>  2 files changed, 36 insertions(+), 32 deletions(-)
->> 
->> diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
->> index 5b78917..6e2b4e3 100644
->> --- a/arch/powerpc/kernel/pci-hotplug.c
->> +++ b/arch/powerpc/kernel/pci-hotplug.c
->> @@ -21,6 +21,42 @@
->>  #include <asm/firmware.h>
->>  #include <asm/eeh.h>
->>  
->> +static struct pci_bus *find_pci_bus(struct pci_bus *bus,
->> +				    struct device_node *dn)
->> +{
->> +	struct pci_bus *tmp, *child = NULL;
->> +	struct device_node *busdn;
->> +
->> +	busdn = pci_bus_to_OF_node(bus);
->> +	if (busdn == dn)
->> +		return bus;
->> +
->> +	list_for_each_entry(tmp, &bus->children, node) {
->> +		child = find_pci_bus(tmp, dn);
->> +		if (child)
->> +			break;
->> +	}
->> +
->> +	return child;
->> +}
->> +
->> +/**
->> + * pcibios_find_pci_bus - find PCI bus according to the given device node
->> + * @dn: Device node
->> + *
->> + * Find the corresponding PCI bus according to the given device node.
->> + */
->> +struct pci_bus *pcibios_find_pci_bus(struct device_node *dn)
->> +{
->> +	struct pci_dn *pdn = PCI_DN(dn);
->> +
->> +	if (!pdn  || !pdn->phb || !pdn->phb->bus)
->> +		return NULL;
->> +
->> +	return find_pci_bus(pdn->phb->bus, dn);
->> +}
->> +EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
->> +
->>  /**
->>   * pcibios_release_device - release PCI device
->>   * @dev: PCI device
->> diff --git a/arch/powerpc/platforms/pseries/pci_dlpar.c b/arch/powerpc/platforms/pseries/pci_dlpar.c
->> index 89e2381..98c50bc 100644
->> --- a/arch/powerpc/platforms/pseries/pci_dlpar.c
->> +++ b/arch/powerpc/platforms/pseries/pci_dlpar.c
->> @@ -32,38 +32,6 @@
->>  #include <asm/firmware.h>
->>  #include <asm/eeh.h>
->>  
->> -static struct pci_bus *
->> -find_bus_among_children(struct pci_bus *bus,
->> -                        struct device_node *dn)
->> -{
->> -	struct pci_bus *child = NULL;
->> -	struct pci_bus *tmp;
->> -	struct device_node *busdn;
->> -
->> -	busdn = pci_bus_to_OF_node(bus);
->> -	if (busdn == dn)
->> -		return bus;
->> -
->> -	list_for_each_entry(tmp, &bus->children, node) {
->> -		child = find_bus_among_children(tmp, dn);
->> -		if (child)
->> -			break;
->> -	};
->> -	return child;
->> -}
->> -
->> -struct pci_bus *
->> -pcibios_find_pci_bus(struct device_node *dn)
->> -{
->> -	struct pci_dn *pdn = dn->data;
->> -
->> -	if (!pdn  || !pdn->phb || !pdn->phb->bus)
->> -		return NULL;
->> -
->> -	return find_bus_among_children(pdn->phb->bus, dn);
->> -}
->> -EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
->> -
->>  struct pci_controller *init_phb_dynamic(struct device_node *dn)
->>  {
->>  	struct pci_controller *phb;
->
->
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 75f4f560f4c2..d5def489ca5b 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -14,6 +14,7 @@
+ #include <linux/dmar.h>
+ #include <linux/hpet.h>
+ #include <linux/msi.h>
++#include <linux/irqdomain.h>
+ #include <asm/msidef.h>
+ #include <asm/hpet.h>
+ #include <asm/hw_irq.h>
+@@ -146,23 +147,20 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ {
+ 	struct msi_desc *msidesc;
+-	unsigned int irq;
+-	int node, ret;
++	int irq, ret;
+ 
+ 	/* Multiple MSI vectors only supported with interrupt remapping */
+ 	if (type == PCI_CAP_ID_MSI && nvec > 1)
+ 		return 1;
+ 
+-	node = dev_to_node(&dev->dev);
+-
+ 	list_for_each_entry(msidesc, &dev->msi_list, list) {
+-		irq = irq_alloc_hwirq(node);
+-		if (!irq)
++		irq = irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
++		if (irq <= 0)
+ 			return -ENOSPC;
+ 
+ 		ret = setup_msi_irq(dev, msidesc, irq, 0);
+ 		if (ret < 0) {
+-			irq_free_hwirq(irq);
++			irq_domain_free_irqs(irq, 1);
+ 			return ret;
+ 		}
+ 
+@@ -172,7 +170,7 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 
+ void native_teardown_msi_irq(unsigned int irq)
+ {
+-	irq_free_hwirq(irq);
++	irq_domain_free_irqs(irq, 1);
+ }
+ 
+ #ifdef CONFIG_DMAR_TABLE
+-- 
+1.7.10.4
 
