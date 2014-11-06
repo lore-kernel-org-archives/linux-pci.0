@@ -1,74 +1,42 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linuxppc-dev@lists.ozlabs.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Suravee.Suthikulpanit@amd.com, linux-ia64@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Wuyun <wuyun.wu@huawei.com>, linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFC PATCH 07/16] PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
-Date: Tue, 18 Nov 2014 10:30:10 +0100
-Message-ID: <1936415.emTbbPeHqx@wuerfel>
-In-Reply-To: <546B041A.4060403@huawei.com>
-References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com> <2507218.mHliopJb05@wuerfel> <546B041A.4060403@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2on0118.outbound.protection.outlook.com ([65.55.169.118]:56864
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750844AbaKFAXZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 5 Nov 2014 19:23:25 -0500
+Message-ID: <545ABF6C.1000308@amd.com>
+Date: Wed, 5 Nov 2014 18:23:08 -0600
+From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+To: Jiang Liu <jiang.liu@linux.intel.com>, <marc.zyngier@arm.com>,
+	<mark.rutland@arm.com>, <jason@lakedaemon.net>,
+	<tglx@linutronix.de>
+CC: <Catalin.Marinas@arm.com>, <Will.Deacon@arm.com>,
+	<liviu.dudau@arm.com>, <Harish.Kasiviswanathan@amd.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>
+Subject: Re: [V10 PATCH 2/2] irqchip: gicv2m: Add supports for ARM GICv2m
+ MSI(-X)
+References: <1415052977-26036-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <1415052977-26036-3-git-send-email-suravee.suthikulpanit@amd.com>
+ <5458CE31.3040404@linux.intel.com> <545ABB4C.8010103@amd.com>
+In-Reply-To: <545ABB4C.8010103@amd.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 18 November 2014 16:32:26 Yijing Wang wrote:
+On 11/5/2014 6:05 PM, Suravee Suthikulanit wrote:
+> - Overall, it seems that msi_domain_alloc() could be quite different
+> across architectures. Would it be possible to declare this function as
+> weak, and allow arch to override (similar to arch_setup_msi_irq)?
 
-> >> +static struct resource busn_resource = {
-> >> +	.name	= "PCI busn",
-> >> +	.start	= 0,
-> >> +	.end	= 255,
-> >> +	.flags	= IORESOURCE_BUS,
-> >> +};
-> > 
-> > I think it would be better to require callers to pass the bus resource
-> > down to the function.
-> 
-> Hmm, I think most of caller will provide the bus resource, but some others
-> will not give any bus resource, extremely, no any resources :(. But we still
-> need properly configure their resources for compatibility.
+Actually, declaring "msi_domain_ops" as non-static, and allow other code 
+to override the .alloc and .free?
 
-I think that is what the conversion to pci_scan_bus_parented() is about:
-The idea is that we add the correct bus resource to callers of
-pci_scan_bus_parented or pci_scan_bus and then change them to call
-pci_scan_root_bus instead.
+Thanks,
 
-> >> +struct pci_host_bridge *pci_create_host_bridge(
-> >> +		struct device *parent, u32 db, 
-> >> +		struct pci_ops *ops, void *sysdata, 
-> >> +		struct list_head *resources)
-> >> +{
-> > 
-> > Do we still need to pass the 'sysdata' in here? If we are guaranteed to
-> > have a device pointer, we should always be able to get the driver
-> > private data from dev_get_drvdata(host->dev->parent).
-> 
-> We need, some platforms pass NULL pointer as host bridge parent.
+Suravee
 
-But those don't have to use the new pci_create_host_bridge() function,
-right?
 
-> >> +	host = kzalloc(sizeof(*host), GFP_KERNEL);
-> >> +	if (!host)
-> >> +		return NULL;
-> > 
-> > devm_kzalloc maybe?
-> 
-> I don't know much detail about devm_kzalloc(), but we have no pci host driver
-> here, and I found no devm_kzalloc() uses in core PCI code before.
 
-It also depends on having a valid device pointer. The idea is that the memory
-is automatically freed if the probe() function returns with an error, or
-the device driver gets unloaded. For the classic PCI hosts that are not
-connected to a device, that wouldn't work of course.
-
-	Arnd
