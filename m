@@ -1,73 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:60629 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932248AbaKMKUU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 05:20:20 -0500
-Message-ID: <1415874015.2420.5.camel@pengutronix.de>
-Subject: Re: [PATCH v2] PCI: designware: Add support 4 ATUs assignment
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Lian Minghuan-B31939 <B31939@freescale.com>
-Cc: Srikanth Thokala <sriku.linux@gmail.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 13 Nov 2014 11:20:15 +0100
-In-Reply-To: <546481A3.5050700@freescale.com>
-References: <1415682444-24911-1-git-send-email-Minghuan.Lian@freescale.com>
-	 <CA+mB=1+4Dzxhbin6z0PUENvjUz-y8bq-K09FXTnSepFvVfe9HQ@mail.gmail.com>
-	 <546308DD.40109@freescale.com>
-	 <CA+mB=1K=Oyzdb2yfBvPRG9DHi-PFjRPtVS_dY9JMOz6dQog8QQ@mail.gmail.com>
-	 <546331E7.5060003@freescale.com>
-	 <CA+mB=1KObT9O783SMcvHy8nJGQPnxyKgP332r5bHx-K_D+LhVg@mail.gmail.com>
-	 <1415809929.2876.5.camel@pengutronix.de> <546481A3.5050700@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mailout3.samsung.com ([203.254.224.33]:16343 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750828AbaKFFhI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 00:37:08 -0500
+Received: from epcpsbgr1.samsung.com
+ (u141.gpu120.samsung.co.kr [203.254.230.141])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0NEL0060YRLTXH80@mailout3.samsung.com> for
+ linux-pci@vger.kernel.org; Thu, 06 Nov 2014 14:37:05 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+Subject: [PATCH] PCI: dra7xx: Add __init annotation to dra7xx_add_pcie_port()
+Date: Thu, 06 Nov 2014 14:37:39 +0900
+Message-id: <001e01cff983$c76f0ed0$564d2c70$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Donnerstag, den 13.11.2014, 18:02 +0800 schrieb Lian Minghuan-B31939:
-> Hi Lucas,
-> 
-> Please see my comments inline.
-> 
-> Thanks,
-> Minghuan
-> 
-> On 2014年11月13日 00:32, Lucas Stach wrote:
-> > Am Mittwoch, den 12.11.2014, 21:53 +0530 schrieb Srikanth Thokala:
-> >> Hi Minghuan,
+Add __init annotation to dra7xx_add_pcie_port(), because
+the dra7xx_add_pcie_port() is called only by dra7xx_pcie_probe()
+that was already marked as __init. Also, this patch fixes
+section mismatch warning.
 
-[...]
+WARNING: drivers/pci/host/built-in.o(.text.unlikely+0xcc): Section mismatch in reference from the function dra7xx_add_pcie_port() to
+the function .init.text:dw_pcie_host_init()
+The function dra7xx_add_pcie_port() references
+the function __init dw_pcie_host_init().
+This is often because dra7xx_add_pcie_port lacks a __init
+annotation or the annotation of dw_pcie_host_init is wrong.
 
-> > Using a smaller type complicates the DT for little to no benefit. I
-> > think it's ok to use u32 here, which is a common standard for integer
-> > values in DT.
-> >
-> > Though this discussion lead me to the question if we even need to have
-> > this property in the DT at all. Isn't this a property that is fixed for
-> > a specific silicon implementation of the DW core? In that case we could
-> > just infer the number of ATUs from the DT compatible, so this should
-> > probably just be added to struct pcie_port and properly initialized by
-> > the SoC glue drivers.
-> [Minghuan]  As far as I know, exynos implements only 2 ATUs, this is why
-> pcie-designware only supports 2 ATU. iMX implements 4 ATUs and LS1021A
-> implements 6 ATUs.
-> 
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+This patch is based on the submitted patch "[PATCH V2] PCI:
+dra7xx: Add dra7xx prefix before add_pcie_port".
 
-Right so we don't need an additional property in the DT at all. The
-number of ATUs is fixed for a specific core compatible and can be passed
-in by the respective exynos, imx and ls1021 glue drivers.
+ drivers/pci/host/pci-dra7xx.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-You may ask the Keystone and Spear maintainers to get the correct number
-of ATUs for those implementations.
-
-Regards,
-Lucas
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 5b4a644..8c69697 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -270,8 +270,8 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static int dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+-				struct platform_device *pdev)
++static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
++				       struct platform_device *pdev)
+ {
+ 	int ret;
+ 	struct pcie_port *pp;
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+1.7.9.5
+
 
