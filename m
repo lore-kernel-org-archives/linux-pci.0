@@ -1,92 +1,141 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34052 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752505AbaKUWSD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 17:18:03 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux@eikelenboom.it
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: [PATCH v4 5/7] xen/pciback: Remove tons of dereferences
-Date: Fri, 21 Nov 2014 17:17:49 -0500
-Message-Id: <1416608271-18931-6-git-send-email-konrad.wilk@oracle.com>
-In-Reply-To: <1416608271-18931-1-git-send-email-konrad.wilk@oracle.com>
-References: <1416608271-18931-1-git-send-email-konrad.wilk@oracle.com>
+Received: from mga14.intel.com ([192.55.52.115]:45273 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751865AbaKFOU3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 6 Nov 2014 09:20:29 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	iommu@lists.linux-foundation.org
+Subject: [Patch Part2 v5 14/31] iommu/vt-d: Change prototypes to prepare for enabling hierarchy irqdomain
+Date: Thu,  6 Nov 2014 22:20:27 +0800
+Message-Id: <1415283644-2559-15-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A little cleanup. No functional difference.
+Prepare for support hierarchy irqdomain by changing function prototypes,
+should be no function changes.
 
-Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Acked-by: Joerg Roedel <jroedel@suse.de>
 ---
- drivers/xen/xen-pciback/pci_stub.c | 20 +++++++++++---------
- 1 file changed, 11 insertions(+), 9 deletions(-)
+ drivers/iommu/intel_irq_remapping.c |   22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
-index e5ff09d..843a2ba 100644
---- a/drivers/xen/xen-pciback/pci_stub.c
-+++ b/drivers/xen/xen-pciback/pci_stub.c
-@@ -631,10 +631,12 @@ static pci_ers_result_t common_process(struct pcistub_device *psdev,
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index fd181cf8a589..5acad492701e 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -82,10 +82,10 @@ static int get_irte(int irq, struct irte *entry)
+ 	return 0;
+ }
+ 
+-static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
++static int alloc_irte(struct intel_iommu *iommu, int irq,
++		      struct irq_2_iommu *irq_iommu, u16 count)
  {
- 	pci_ers_result_t res = result;
- 	struct xen_pcie_aer_op *aer_op;
-+	struct xen_pcibk_device *pdev = psdev->pdev;
-+	struct xen_pci_sharedinfo *sh_info = pdev->sh_info;
- 	int ret;
+ 	struct ir_table *table = iommu->ir_table;
+-	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
+ 	struct irq_cfg *cfg = irq_cfg(irq);
+ 	unsigned int mask = 0;
+ 	unsigned long flags;
+@@ -173,9 +173,9 @@ static int set_irte_irq(int irq, struct intel_iommu *iommu, u16 index, u16 subha
+ 	return 0;
+ }
  
- 	/*with PV AER drivers*/
--	aer_op = &(psdev->pdev->sh_info->aer_op);
-+	aer_op = &(sh_info->aer_op);
- 	aer_op->cmd = aer_cmd ;
- 	/*useful for error_detected callback*/
- 	aer_op->err = state;
-@@ -655,36 +657,36 @@ static pci_ers_result_t common_process(struct pcistub_device *psdev,
- 	* this flag to judge whether we need to check pci-front give aer
- 	* service ack signal
- 	*/
--	set_bit(_PCIB_op_pending, (unsigned long *)&psdev->pdev->flags);
-+	set_bit(_PCIB_op_pending, (unsigned long *)&pdev->flags);
+-static int modify_irte(int irq, struct irte *irte_modified)
++static int modify_irte(struct irq_2_iommu *irq_iommu,
++		       struct irte *irte_modified)
+ {
+-	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
+ 	struct intel_iommu *iommu;
+ 	unsigned long flags;
+ 	struct irte *irte;
+@@ -242,7 +242,7 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
+ 		return 0;
  
- 	/*It is possible that a pcifront conf_read_write ops request invokes
- 	* the callback which cause the spurious execution of wake_up.
- 	* Yet it is harmless and better than a spinlock here
- 	*/
- 	set_bit(_XEN_PCIB_active,
--		(unsigned long *)&psdev->pdev->sh_info->flags);
-+		(unsigned long *)&sh_info->flags);
- 	wmb();
--	notify_remote_via_irq(psdev->pdev->evtchn_irq);
-+	notify_remote_via_irq(pdev->evtchn_irq);
+ 	iommu = irq_iommu->iommu;
+-	index = irq_iommu->irte_index + irq_iommu->sub_handle;
++	index = irq_iommu->irte_index;
  
- 	ret = wait_event_timeout(xen_pcibk_aer_wait_queue,
- 				 !(test_bit(_XEN_PCIB_active, (unsigned long *)
--				 &psdev->pdev->sh_info->flags)), 300*HZ);
-+				 &sh_info->flags)), 300*HZ);
+ 	start = iommu->ir_table->base + index;
+ 	end = start + (1 << irq_iommu->irte_mask);
+@@ -937,7 +937,7 @@ static int intel_setup_ioapic_entry(int irq,
+ 		pr_warn("No mapping iommu for ioapic %d\n", ioapic_id);
+ 		index = -ENODEV;
+ 	} else {
+-		index = alloc_irte(iommu, irq, 1);
++		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
+ 		if (index < 0) {
+ 			pr_warn("Failed to allocate IRTE for ioapic %d\n",
+ 				ioapic_id);
+@@ -953,7 +953,7 @@ static int intel_setup_ioapic_entry(int irq,
+ 	/* Set source-id of interrupt request */
+ 	set_ioapic_sid(&irte, ioapic_id);
  
- 	if (!ret) {
- 		if (test_bit(_XEN_PCIB_active,
--			(unsigned long *)&psdev->pdev->sh_info->flags)) {
-+			(unsigned long *)&sh_info->flags)) {
- 			dev_err(&psdev->dev->dev,
- 				"pcifront aer process not responding!\n");
- 			clear_bit(_XEN_PCIB_active,
--			  (unsigned long *)&psdev->pdev->sh_info->flags);
-+			  (unsigned long *)&sh_info->flags);
- 			aer_op->err = PCI_ERS_RESULT_NONE;
- 			return res;
- 		}
+-	modify_irte(irq, &irte);
++	modify_irte(irq_2_iommu(irq), &irte);
+ 
+ 	apic_printk(APIC_VERBOSE, KERN_DEBUG "IOAPIC[%d]: "
+ 		"Set IRTE entry (P:%d FPD:%d Dst_Mode:%d "
+@@ -1040,7 +1040,7 @@ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 	 * Atomically updates the IRTE with the new destination, vector
+ 	 * and flushes the interrupt entry cache.
+ 	 */
+-	modify_irte(irq, &irte);
++	modify_irte(irq_2_iommu(irq), &irte);
+ 
+ 	/*
+ 	 * After this point, all the interrupts will start arriving
+@@ -1076,7 +1076,7 @@ static void intel_compose_msi_msg(struct pci_dev *pdev,
+ 	else
+ 		set_hpet_sid(&irte, hpet_id);
+ 
+-	modify_irte(irq, &irte);
++	modify_irte(irq_2_iommu(irq), &irte);
+ 
+ 	msg->address_hi = MSI_ADDR_BASE_HI;
+ 	msg->data = sub_handle;
+@@ -1103,7 +1103,7 @@ static int intel_msi_alloc_irq(struct pci_dev *dev, int irq, int nvec)
+ 		       "Unable to map PCI %s to iommu\n", pci_name(dev));
+ 		index = -ENOENT;
+ 	} else {
+-		index = alloc_irte(iommu, irq, nvec);
++		index = alloc_irte(iommu, irq, irq_2_iommu(irq), nvec);
+ 		if (index < 0) {
+ 			printk(KERN_ERR
+ 			       "Unable to allocate %d IRTE for PCI %s\n",
+@@ -1147,7 +1147,7 @@ static int intel_alloc_hpet_msi(unsigned int irq, unsigned int id)
+ 	down_read(&dmar_global_lock);
+ 	iommu = map_hpet_to_ir(id);
+ 	if (iommu) {
+-		index = alloc_irte(iommu, irq, 1);
++		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
+ 		if (index >= 0)
+ 			ret = 0;
  	}
--	clear_bit(_PCIB_op_pending, (unsigned long *)&psdev->pdev->flags);
-+	clear_bit(_PCIB_op_pending, (unsigned long *)&pdev->flags);
- 
- 	if (test_bit(_XEN_PCIF_active,
--		(unsigned long *)&psdev->pdev->sh_info->flags)) {
-+		(unsigned long *)&sh_info->flags)) {
- 		dev_dbg(&psdev->dev->dev,
- 			"schedule pci_conf service in " DRV_NAME "\n");
- 		xen_pcibk_test_and_schedule_op(psdev->pdev);
 -- 
-1.9.3
+1.7.10.4
 
