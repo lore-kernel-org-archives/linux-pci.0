@@ -1,136 +1,271 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:33296 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750770AbaKYDPA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Nov 2014 22:15:00 -0500
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 25 Nov 2014 13:14:58 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 64FBF3578064
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 14:14:57 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAP3Evq518546804
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 14:14:57 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAP3EuIB025900
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 14:14:56 +1100
-Date: Tue, 25 Nov 2014 11:14:55 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Refresh offset/stride after NumVFs is written
-Message-ID: <20141125031455.GA9070@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1416624759-13543-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <20141124230108.GA8765@shangw>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141124230108.GA8765@shangw>
+Received: from mga14.intel.com ([192.55.52.115]:17109 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752233AbaKFOXg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 6 Nov 2014 09:23:36 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [Patch Part2 v5 29/31] x86, irq: Use hierarchy irqdomain to manage DMAR interrupts
+Date: Thu,  6 Nov 2014 22:20:42 +0800
+Message-Id: <1415283644-2559-30-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 25, 2014 at 10:01:08AM +1100, Gavin Shan wrote:
->On Sat, Nov 22, 2014 at 10:52:39AM +0800, Wei Yang wrote:
->>According to SR-IOV spec sec 3.3.9, 3.3.10, the NumVFs setting change will
->>affect the offset and stride. Current implementation doesn't refresh the
->>offset/stride cached in pci_sriov structure.
->>
->>This patch introduces a wrapper pci_iov_set_numvfs(), which refresh these two
->>value after NumVFs is written.
->>
->>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>---
->> drivers/pci/iov.c |   17 +++++++++++++----
->> 1 file changed, 13 insertions(+), 4 deletions(-)
->>
->>diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->>index 4d109c0..c7010c5 100644
->>--- a/drivers/pci/iov.c
->>+++ b/drivers/pci/iov.c
->>@@ -31,6 +31,15 @@ static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
->> 		dev->sriov->stride * id) & 0xff;
->> }
->>
->>+static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
->>+{
->>+	struct pci_sriov *iov = dev->sriov;
->>+
->>+	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
->
->I'm suspecting writing to PCI_SRIOV_NUM_VF would take some time to take
->effect.
->
->>+	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &iov->offset);
->>+	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &iov->stride);
->>+}
->>+
->> static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
->> {
->> 	struct pci_bus *child;
->>@@ -243,7 +252,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->> 			return rc;
->> 	}
->>
->>-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
->>+	pci_iov_set_numvfs(dev, nr_virtfn);
->> 	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
->> 	pci_cfg_access_lock(dev);
->> 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
->>@@ -272,7 +281,7 @@ failed:
->> 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
->> 	pci_cfg_access_lock(dev);
->> 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
->>-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
->>+	pci_iov_set_numvfs(dev, 0);
->> 	ssleep(1);
->
->The 1 second delay here might be for waiting VFs to be ready.
->
+Enhance DMAR code to support hierarchy irqdomain, it helps to make
+the architecture more clear.
 
-Hmm... so add this ssleep() in pci_iov_set_numvfs() would be better?
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/hw_irq.h |    7 ++
+ arch/x86/kernel/apic/msi.c    |  151 ++++++++++++++++++++++++++---------------
+ 2 files changed, 102 insertions(+), 56 deletions(-)
 
->> 	pci_cfg_access_unlock(dev);
->>
->>@@ -303,7 +312,7 @@ static void sriov_disable(struct pci_dev *dev)
->> 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
->>
->> 	iov->num_VFs = 0;
->>-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
->>+	pci_iov_set_numvfs(dev, 0);
->> }
->>
->> static int sriov_init(struct pci_dev *dev, int pos)
->>@@ -439,7 +448,7 @@ static void sriov_restore_state(struct pci_dev *dev)
->> 		pci_update_resource(dev, i);
->>
->> 	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
->>-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, iov->num_VFs);
->>+	pci_iov_set_numvfs(dev, iov->num_VFs);
->> 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
->> 	if (iov->ctrl & PCI_SRIOV_CTRL_VFE)
->> 		msleep(100);
->
->Here's another delay if PCI_SRIOV_CTRL_VFE isn't set previously.
-
-The logic here will not be changed.
-
->
->Thanks,
->Gavin
->
->>-- 
->>1.7.9.5
->>
->>--
->>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>the body of a message to majordomo@vger.kernel.org
->>More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
-
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 047d238e69d2..08240216f949 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -122,6 +122,7 @@ enum irq_alloc_type {
+ 	X86_IRQ_ALLOC_TYPE_HPET,
+ 	X86_IRQ_ALLOC_TYPE_MSI,
+ 	X86_IRQ_ALLOC_TYPE_MSIX,
++	X86_IRQ_ALLOC_TYPE_DMAR,
+ };
+ 
+ struct irq_alloc_info {
+@@ -152,6 +153,12 @@ struct irq_alloc_info {
+ 			struct IO_APIC_route_entry *ioapic_entry;
+ 		};
+ #endif
++#ifdef	CONFIG_DMAR_TABLE
++		struct {
++			int		dmar_id;
++			void		*dmar_data;
++		};
++#endif
+ 	};
+ };
+ 
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 5fc3e61f1b16..a220abbe842e 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -25,32 +25,6 @@
+ 
+ static struct irq_domain *msi_default_domain;
+ 
+-static void native_compose_msi_msg(struct irq_cfg *cfg, struct msi_msg *msg)
+-{
+-	msg->address_hi = MSI_ADDR_BASE_HI;
+-
+-	if (x2apic_enabled())
+-		msg->address_hi |= MSI_ADDR_EXT_DEST_ID(cfg->dest_apicid);
+-
+-	msg->address_lo =
+-		MSI_ADDR_BASE_LO |
+-		((apic->irq_dest_mode == 0) ?
+-			MSI_ADDR_DEST_MODE_PHYSICAL :
+-			MSI_ADDR_DEST_MODE_LOGICAL) |
+-		((apic->irq_delivery_mode != dest_LowestPrio) ?
+-			MSI_ADDR_REDIRECTION_CPU :
+-			MSI_ADDR_REDIRECTION_LOWPRI) |
+-		MSI_ADDR_DEST_ID(cfg->dest_apicid);
+-
+-	msg->data =
+-		MSI_DATA_TRIGGER_EDGE |
+-		MSI_DATA_LEVEL_ASSERT |
+-		((apic->irq_delivery_mode != dest_LowestPrio) ?
+-			MSI_DATA_DELIVERY_FIXED :
+-			MSI_DATA_DELIVERY_LOWPRI) |
+-		MSI_DATA_VECTOR(cfg->vector);
+-}
+-
+ static void msi_compose_msg(struct irq_data *data, struct msi_msg *msg)
+ {
+ 	struct irq_cfg *cfg = irqd_cfg(data);
+@@ -87,6 +61,9 @@ static void msi_update_msg(struct msi_msg *msg, struct irq_data *irq_data)
+ 	msg->data |= MSI_DATA_VECTOR(cfg->vector);
+ 	msg->address_lo &= ~MSI_ADDR_DEST_ID_MASK;
+ 	msg->address_lo |= MSI_ADDR_DEST_ID(cfg->dest_apicid);
++	if (x2apic_enabled())
++		msg->address_hi = MSI_ADDR_BASE_HI |
++				  MSI_ADDR_EXT_DEST_ID(cfg->dest_apicid);
+ }
+ 
+ static int msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
+@@ -187,59 +164,121 @@ static int
+ dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 		      bool force)
+ {
+-	struct irq_cfg *cfg = irqd_cfg(data);
+-	unsigned int dest, irq = data->irq;
++	struct irq_data *parent = data->parent_data;
+ 	struct msi_msg msg;
+ 	int ret;
+ 
+-	ret = apic_set_affinity(data, mask, &dest);
+-	if (ret)
+-		return ret;
+-
+-	dmar_msi_read(irq, &msg);
+-
+-	msg.data &= ~MSI_DATA_VECTOR_MASK;
+-	msg.data |= MSI_DATA_VECTOR(cfg->vector);
+-	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
+-	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
+-	msg.address_hi = MSI_ADDR_BASE_HI | MSI_ADDR_EXT_DEST_ID(dest);
+-
+-	dmar_msi_write(irq, &msg);
++	ret = parent->chip->irq_set_affinity(parent, mask, force);
++	if (ret >= 0) {
++		dmar_msi_read(data->irq, &msg);
++		msi_update_msg(&msg, data);
++		dmar_msi_write(data->irq, &msg);
++	}
+ 
+-	return IRQ_SET_MASK_OK_NOCOPY;
++	return ret;
+ }
+ 
+ static struct irq_chip dmar_msi_type = {
+ 	.name			= "DMAR_MSI",
+ 	.irq_unmask		= dmar_msi_unmask,
+ 	.irq_mask		= dmar_msi_mask,
+-	.irq_ack		= apic_ack_edge,
++	.irq_ack		= irq_chip_ack_parent,
+ 	.irq_set_affinity	= dmar_msi_set_affinity,
+-	.irq_retrigger		= apic_retrigger_irq,
++	.irq_retrigger		= irq_chip_retrigger_hierarchy,
++	.irq_compose_msi_msg	= msi_compose_msg,
+ 	.flags			= IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
+-int dmar_alloc_hwirq(int id, int node, void *arg)
++static int dmar_domain_alloc(struct irq_domain *domain, unsigned int virq,
++			     unsigned int nr_irqs, void *arg)
++{
++	struct irq_alloc_info *info = arg;
++	int ret;
++
++	if (nr_irqs > 1 || !info || info->type != X86_IRQ_ALLOC_TYPE_DMAR)
++		return -EINVAL;
++	if (irq_find_mapping(domain, info->dmar_id)) {
++		pr_warn("IRQ for DMAR%d already exists.\n", info->dmar_id);
++		return -EEXIST;
++	}
++
++	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
++	if (ret >= 0) {
++		irq_domain_set_hwirq_and_chip(domain, virq, info->dmar_id,
++					      &dmar_msi_type, NULL);
++		irq_set_handler_data(virq, info->dmar_data);
++		__irq_set_handler(virq, handle_edge_irq, 0, "edge");
++	}
++
++	return ret;
++}
++
++static void dmar_domain_free(struct irq_domain *domain, unsigned int virq,
++			     unsigned int nr_irqs)
++{
++	BUG_ON(nr_irqs > 1);
++	irq_domain_free_irqs_top(domain, virq, nr_irqs);
++}
++
++static void dmar_domain_activate(struct irq_domain *domain,
++				 struct irq_data *irq_data)
+ {
+-	int irq;
+ 	struct msi_msg msg;
+ 
+-	irq = irq_domain_alloc_irqs(NULL, 1, node, NULL);
+-	if (irq > 0) {
+-		irq_set_handler_data(irq, arg);
+-		irq_set_chip_and_handler_name(irq, &dmar_msi_type,
+-					      handle_edge_irq, "edge");
+-		native_compose_msi_msg(irq_cfg(irq), &msg);
+-		dmar_msi_write(irq, &msg);
++	BUG_ON(irq_chip_compose_msi_msg(irq_data, &msg));
++	dmar_msi_write(irq_data->irq, &msg);
++}
++
++static void dmar_domain_deactivate(struct irq_domain *domain,
++				   struct irq_data *irq_data)
++{
++	struct msi_msg msg;
++
++	memset(&msg, 0, sizeof(msg));
++	dmar_msi_write(irq_data->irq, &msg);
++}
++
++static struct irq_domain_ops dmar_domain_ops = {
++	.alloc = dmar_domain_alloc,
++	.free = dmar_domain_free,
++	.activate = dmar_domain_activate,
++	.deactivate = dmar_domain_deactivate,
++};
++
++static struct irq_domain *dmar_get_irq_domain(void)
++{
++	static struct irq_domain *dmar_domain;
++	static DEFINE_MUTEX(dmar_lock);
++
++	mutex_lock(&dmar_lock);
++	if (dmar_domain == NULL) {
++		dmar_domain = irq_domain_add_tree(NULL, &dmar_domain_ops, NULL);
++		if (dmar_domain)
++			dmar_domain->parent = x86_vector_domain;
+ 	}
++	mutex_unlock(&dmar_lock);
++
++	return dmar_domain;
++}
++
++int dmar_alloc_hwirq(int id, int node, void *arg)
++{
++	struct irq_domain *domain = dmar_get_irq_domain();
++	struct irq_alloc_info info;
++
++	if (!domain)
++		return -1;
++
++	init_irq_alloc_info(&info, NULL);
++	info.type = X86_IRQ_ALLOC_TYPE_DMAR;
++	info.dmar_id = id;
++	info.dmar_data = arg;
+ 
+-	return irq;
++	return irq_domain_alloc_irqs(domain, 1, node, &info);
+ }
+ 
+ void dmar_free_hwirq(int irq)
+ {
+-	irq_set_handler_data(irq, NULL);
+-	irq_set_handler(irq, NULL);
+ 	irq_domain_free_irqs(irq, 1);
+ }
+ #endif
 -- 
-Richard Yang
-Help you, Help me
+1.7.10.4
 
