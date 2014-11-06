@@ -1,100 +1,229 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:43152 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751547AbaKQJkw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 04:40:52 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, Tony Luck <tony.luck@intel.com>,
-	<linux-ia64@vger.kernel.org>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	<Suravee.Suthikulpanit@amd.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [RFC PATCH 10/16] PCI: Add of_scan_bus() to pci_host_info
-Date: Mon, 17 Nov 2014 18:21:44 +0800
-Message-ID: <1416219710-26088-11-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
-References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-ia64@vger.kernel.org, iommu@lists.linux-foundation.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part2 v5 28/31] iommu/vt-d: Refine the interfaces to create IRQ for DMAR unit
+Date: Thu,  6 Nov 2014 22:20:41 +0800
+Message-Id: <1415283644-2559-29-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add of_scan_bus() to support some platforms
-scan bus by of_node.
+Refine the interfaces to create IRQ for DMAR unit. It's a preparation
+for converting DMAR IRQ to irqdomain on x86.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+It also moves dmar_alloc_hwirq()/dmar_free_hwirq() from irq_remapping.h
+to dmar.h. They are not irq_remapping specific.
+
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/host-bridge.c |    1 +
- drivers/pci/probe.c       |   10 +++++++---
- include/linux/pci.h       |    3 +++
- 3 files changed, 11 insertions(+), 3 deletions(-)
+ arch/ia64/include/asm/irq_remapping.h |    2 --
+ arch/ia64/kernel/msi_ia64.c           |   30 +++++++++++++++++++-----------
+ arch/x86/include/asm/irq_remapping.h  |    4 ----
+ arch/x86/kernel/apic/msi.c            |   24 +++++++++++++-----------
+ drivers/iommu/dmar.c                  |   19 +++++--------------
+ include/linux/dmar.h                  |    3 ++-
+ 6 files changed, 39 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 872cae1..1a1f81b 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -52,6 +52,7 @@ struct pci_host_bridge *pci_create_host_bridge(
- 		return NULL;
- 
- 	host->sysdata = info->arg;
-+	host->node = info->node;
- 	host->busnum = PCI_BUSNUM(db);
- 	host->domain = PCI_DOMAIN(db);
- 	host->ops = ops;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 42158fd..2729c41 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2126,9 +2126,13 @@ struct pci_host_bridge *pci_scan_host_bridge(
- 		pci_bus_insert_busn_res(host->bus, host->busnum, 255);
- 	}
- 
--	max = pci_scan_child_bus(host->bus);
--	if (!found)
--		pci_bus_update_busn_res_end(host->bus, max);
-+	if (info->of_scan_bus) {
-+		info->of_scan_bus(host);
-+	} else {
-+		max = pci_scan_child_bus(host->bus);
-+		if (!found)
-+			pci_bus_update_busn_res_end(host->bus, max);
-+	}
- 
- 	return host;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index af1ee86..c4f4438 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -407,6 +407,7 @@ struct pci_host_bridge {
- 	int busnum;
- 	int domain;
- 	void *sysdata;
-+	struct device_node *node;
- 	struct pci_ops *ops;
- 	struct msi_controller *(*get_msi_ctrl)(struct pci_dev *pdev);
- 	void (*release_fn)(struct pci_host_bridge *);
-@@ -416,10 +417,12 @@ struct pci_host_bridge {
- struct pci_host_info {
- 	u8 res_type;
- 	void *arg;
-+	struct device_node *node;
- 	struct list_head *resources; /*just for build, will clean up later */
- 	struct msi_controller *(*get_msi_ctrl)(struct pci_dev *pdev);
- 	int (*init_res)(struct pci_host_bridge *host, 
- 			struct pci_host_info *info);
-+	void (*of_scan_bus)(struct pci_host_bridge *host);
+diff --git a/arch/ia64/include/asm/irq_remapping.h b/arch/ia64/include/asm/irq_remapping.h
+index e3b3556e2e1b..a8687b1d8906 100644
+--- a/arch/ia64/include/asm/irq_remapping.h
++++ b/arch/ia64/include/asm/irq_remapping.h
+@@ -1,6 +1,4 @@
+ #ifndef __IA64_INTR_REMAPPING_H
+ #define __IA64_INTR_REMAPPING_H
+ #define irq_remapping_enabled 0
+-#define dmar_alloc_hwirq	create_irq
+-#define dmar_free_hwirq		destroy_irq
+ #endif
+diff --git a/arch/ia64/kernel/msi_ia64.c b/arch/ia64/kernel/msi_ia64.c
+index 8c3730c3c63d..15032330573b 100644
+--- a/arch/ia64/kernel/msi_ia64.c
++++ b/arch/ia64/kernel/msi_ia64.c
+@@ -166,7 +166,7 @@ static struct irq_chip dmar_msi_type = {
+ 	.irq_retrigger = ia64_msi_retrigger_irq,
  };
  
- static inline void init_pci_host_info(struct pci_host_info *info)
+-static int
++static void
+ msi_compose_msg(struct pci_dev *pdev, unsigned int irq, struct msi_msg *msg)
+ {
+ 	struct irq_cfg *cfg = irq_cfg + irq;
+@@ -188,21 +188,29 @@ msi_compose_msg(struct pci_dev *pdev, unsigned int irq, struct msi_msg *msg)
+ 		MSI_DATA_LEVEL_ASSERT |
+ 		MSI_DATA_DELIVERY_FIXED |
+ 		MSI_DATA_VECTOR(cfg->vector);
+-	return 0;
+ }
+ 
+-int arch_setup_dmar_msi(unsigned int irq)
++int dmar_alloc_hwirq(int id, int node, void *arg)
+ {
+-	int ret;
++	int irq;
+ 	struct msi_msg msg;
+ 
+-	ret = msi_compose_msg(NULL, irq, &msg);
+-	if (ret < 0)
+-		return ret;
+-	dmar_msi_write(irq, &msg);
+-	irq_set_chip_and_handler_name(irq, &dmar_msi_type, handle_edge_irq,
+-				      "edge");
+-	return 0;
++	irq = create_irq();
++	if (irq > 0) {
++		irq_set_handler_data(irq, arg);
++		irq_set_chip_and_handler_name(irq, &dmar_msi_type,
++					      handle_edge_irq, "edge");
++		msi_compose_msg(NULL, irq, &msg);
++		dmar_msi_write(irq, &msg);
++	}
++
++	return irq;
++}
++
++void dmar_free_hwirq(int irq)
++{
++	irq_set_handler_data(irq, NULL);
++	destroy_irq(irq);
+ }
+ #endif /* CONFIG_INTEL_IOMMU */
+ 
+diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
+index 61c50e6e28c8..61ec9234c88e 100644
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -124,8 +124,4 @@ irq_remapping_get_irq_domain(struct irq_alloc_info *info)
+ 
+ #define	irq_remapping_print_chip	NULL
+ #endif /* CONFIG_IRQ_REMAP */
+-
+-extern int dmar_alloc_hwirq(void);
+-extern void dmar_free_hwirq(int irq);
+-
+ #endif /* __X86_IRQ_REMAPPING_H */
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 49f02609a7e0..5fc3e61f1b16 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -219,25 +219,27 @@ static struct irq_chip dmar_msi_type = {
+ 	.flags			= IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
+-int arch_setup_dmar_msi(unsigned int irq)
++int dmar_alloc_hwirq(int id, int node, void *arg)
+ {
++	int irq;
+ 	struct msi_msg msg;
+-	struct irq_cfg *cfg = irq_cfg(irq);
+ 
+-	native_compose_msi_msg(cfg, &msg);
+-	dmar_msi_write(irq, &msg);
+-	irq_set_chip_and_handler_name(irq, &dmar_msi_type, handle_edge_irq,
+-				      "edge");
+-	return 0;
+-}
++	irq = irq_domain_alloc_irqs(NULL, 1, node, NULL);
++	if (irq > 0) {
++		irq_set_handler_data(irq, arg);
++		irq_set_chip_and_handler_name(irq, &dmar_msi_type,
++					      handle_edge_irq, "edge");
++		native_compose_msi_msg(irq_cfg(irq), &msg);
++		dmar_msi_write(irq, &msg);
++	}
+ 
+-int dmar_alloc_hwirq(void)
+-{
+-	return irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
++	return irq;
+ }
+ 
+ void dmar_free_hwirq(int irq)
+ {
++	irq_set_handler_data(irq, NULL);
++	irq_set_handler(irq, NULL);
+ 	irq_domain_free_irqs(irq, 1);
+ }
+ #endif
+diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+index c5c61cabd6e3..25f47937f1d5 100644
+--- a/drivers/iommu/dmar.c
++++ b/drivers/iommu/dmar.c
+@@ -1018,8 +1018,8 @@ static void free_iommu(struct intel_iommu *iommu)
+ 
+ 	if (iommu->irq) {
+ 		free_irq(iommu->irq, iommu);
+-		irq_set_handler_data(iommu->irq, NULL);
+ 		dmar_free_hwirq(iommu->irq);
++		iommu->irq = 0;
+ 	}
+ 
+ 	if (iommu->qi) {
+@@ -1572,23 +1572,14 @@ int dmar_set_interrupt(struct intel_iommu *iommu)
+ 	if (iommu->irq)
+ 		return 0;
+ 
+-	irq = dmar_alloc_hwirq();
+-	if (irq <= 0) {
++	irq = dmar_alloc_hwirq(iommu->seq_id, iommu->node, iommu);
++	if (irq > 0) {
++		iommu->irq = irq;
++	} else {
+ 		pr_err("IOMMU: no free vectors\n");
+ 		return -EINVAL;
+ 	}
+ 
+-	irq_set_handler_data(irq, iommu);
+-	iommu->irq = irq;
+-
+-	ret = arch_setup_dmar_msi(irq);
+-	if (ret) {
+-		irq_set_handler_data(irq, NULL);
+-		iommu->irq = 0;
+-		dmar_free_hwirq(irq);
+-		return ret;
+-	}
+-
+ 	ret = request_irq(irq, dmar_fault, IRQF_NO_THREAD, iommu->name, iommu);
+ 	if (ret)
+ 		pr_err("IOMMU: can't request irq\n");
+diff --git a/include/linux/dmar.h b/include/linux/dmar.h
+index 593fff99e6bf..df3918482073 100644
+--- a/include/linux/dmar.h
++++ b/include/linux/dmar.h
+@@ -189,6 +189,7 @@ extern void dmar_msi_read(int irq, struct msi_msg *msg);
+ extern void dmar_msi_write(int irq, struct msi_msg *msg);
+ extern int dmar_set_interrupt(struct intel_iommu *iommu);
+ extern irqreturn_t dmar_fault(int irq, void *dev_id);
+-extern int arch_setup_dmar_msi(unsigned int irq);
++extern int dmar_alloc_hwirq(int id, int node, void *arg);
++extern void dmar_free_hwirq(int irq);
+ 
+ #endif /* __DMAR_H__ */
 -- 
-1.7.1
+1.7.10.4
 
