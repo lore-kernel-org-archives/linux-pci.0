@@ -1,78 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:58360 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751007AbaKTLyy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Nov 2014 06:54:54 -0500
-Received: by mail-wi0-f179.google.com with SMTP id ex7so5070609wid.6
-        for <linux-pci@vger.kernel.org>; Thu, 20 Nov 2014 03:54:53 -0800 (PST)
-Message-ID: <546DD688.60705@linaro.org>
-Date: Thu, 20 Nov 2014 12:54:48 +0100
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Received: from mail-la0-f52.google.com ([209.85.215.52]:63511 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751398AbaKFTuK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 14:50:10 -0500
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
-CC: Liviu Dudau <liviu@dudau.co.uk>, Tony Luck <tony.luck@intel.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
+In-Reply-To: <1415287400-30426-1-git-send-email-l.stach@pengutronix.de>
+References: <1415287400-30426-1-git-send-email-l.stach@pengutronix.de>
+From: Rob Herring <robherring2@gmail.com>
+Date: Thu, 6 Nov 2014 13:49:48 -0600
+Message-ID: <CAL_JsqKfV3aPuYxK2E8tS1fDjhpJFknqv1nHP+9NYHAfs_owYg@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: add missing DT binding for linux,pci-domain property
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Suravee.Suthikulpanit@amd.com,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-ia64@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Wuyun <wuyun.wu@huawei.com>, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [RFC PATCH 00/16] Refine PCI host bridge scan interfaces
-References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com> <1463511.o4kE8TX3Bd@wuerfel>
-In-Reply-To: <1463511.o4kE8TX3Bd@wuerfel>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 17.11.2014 15:13, Arnd Bergmann wrote:
-> On Monday 17 November 2014 18:21:34 Yijing Wang wrote:
->> This series is based Linux 3.18-rc1 and Lorenzo Pieralisi's
->> arm PCI domain cleanup patches, link:
->> https://patchwork.ozlabs.org/patch/407585/
->>
->> Current pci scan interfaces like pci_scan_root_bus() and directly
->> call pci_create_root_bus()/pci_scan_child_bus() lack flexiblity.
->> Some platform infos like PCI domain and msi_chip have to be
->> associated to PCI bus by some arch specific function.
->> We want to make a generic pci_host_bridge, and make it hold
->> the platform infos or hook. Then we could eliminate the lots
->> of arch pci_domain_nr, also we could associate some platform
->> ops something like pci_get_msi_chip(struct pci_dev *dev)
->> with pci_host_bridge to avoid introduce arch weak functions.
->>
->> This RFC version not for all platforms, just applied the new
->> scan interface in x86/arm/powerpc/ia64, I will refresh other
->> platforms after the core pci scan interfaces are ok.
+On Thu, Nov 6, 2014 at 9:23 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> This property was added by 41e5c0f81d3e
+> (of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr())
+> without the required binding documentation. As this property
+> will be supported by a number of host bridge drivers going forward,
+> add it to the common PCI binding doc.
 >
-> I think overall this is a good direction to take, in particular
-> moving more things into struct pci_host_bridge so we can
-> slim down the architecture specific code.
->
-> I don't particularly like the way you use the 'pci_host_info'
-> to pass callback pointers and some of the generic information.
-> This duplicates some of the issues we are currently trying
-> to untangle in the arm32 code to make drivers easier to share
-> between architectures.
->
-> As a general approach, I'd rather see generic helper functions
-> being exported by the PCI core that a driver may or may not
-> call.
-> The way you split the interface between things that happen
-> before scanning the buses (pci_create_host_bridge) and
-> the actual scanning (__pci_create_root_bus, pci_scan_child_bus)
-> seems very helpful and I think we can expand that concept further:
->
-> - The normal pci_create_host_bridge() function can contain
->    all of the DT scanning functions (finding bus/mem/io resources,
->    finding the msi-parent), while drivers that don't depend on DT
->    for this information can call the same function and fill the
->    same things after they have the pci_host_bridge pointer.
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> ---
+> This is a non-critical fix, but may still qualify for 3.18-rc as
+> the property was added in this release cycle.
 
-How about finding PCI domain number (in the DT way) within 
-pci_create_host_bridge() too ?
+Agreed.
 
-Tomasz
+Acked-by: Rob Herring <robh@kernel.org>
+
+>
+> v2:
+> - emphasize that the property must be present and unique systemwide
+>   if used
+> ---
+>  Documentation/devicetree/bindings/pci/pci.txt | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
+>
+> diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
+> index 41aeed38926d..68c364e2f5e5 100644
+> --- a/Documentation/devicetree/bindings/pci/pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/pci.txt
+> @@ -7,3 +7,14 @@ And for the interrupt mapping part:
+>
+>  Open Firmware Recommended Practice: Interrupt Mapping
+>  http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
+> +
+> +Additionally to the properties specified in the above standards a host bridge
+> +driver implementation may support the following properties:
+> +
+> +- linux,pci-domain:
+> +   If present this property assigns a fixed PCI domain number to a host bridge,
+> +   otherwise an unstable (across boots) unique number will be assigned.
+> +   It is required to either not set this property at all or set it for all
+> +   host bridges in the system, otherwise potentially conflicting domain numbers
+> +   may be assigned to root buses behind different host bridges. The domain
+> +   number for each host bridge in the system must be unique.
+> --
+> 2.1.1
+>
