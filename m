@@ -1,192 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:28889 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752090AbaKQJk5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 04:40:57 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, Tony Luck <tony.luck@intel.com>,
-	<linux-ia64@vger.kernel.org>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	<Suravee.Suthikulpanit@amd.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [RFC PATCH 13/16] ia64/PCI: Use pci_scan_host_bridge() to refactor pci_acpi_scan_root()
-Date: Mon, 17 Nov 2014 18:21:47 +0800
-Message-ID: <1416219710-26088-14-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
-References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mailout2.samsung.com ([203.254.224.25]:34399 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751077AbaKFFaQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 00:30:16 -0500
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0NEL009VGRAFHYC0@mailout2.samsung.com> for
+ linux-pci@vger.kernel.org; Thu, 06 Nov 2014 14:30:15 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <001301cff95e$a124f6b0$e36ee410$%han@samsung.com>
+In-reply-to: <001301cff95e$a124f6b0$e36ee410$%han@samsung.com>
+Subject: [PATCH V2] PCI: dra7xx: Add dra7xx prefix before add_pcie_port
+Date: Thu, 06 Nov 2014 14:30:49 +0900
+Message-id: <001c01cff982$d2e4fa00$78aeee00$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/ia64/pci/pci.c |   84 +++++++++++++++++++++++---------------------------
- 1 files changed, 39 insertions(+), 45 deletions(-)
+The add_pcie_port function is dra7xx-specific. Add dra7xx prefix
+to avoid collision in global name space.
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index aac3220..c7d97ae 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -115,23 +115,10 @@ struct pci_ops pci_root_ops = {
- 	.write = pci_write,
- };
- 
--/* Called by ACPI when it finds a new root bus.  */
--
--static struct pci_controller *alloc_pci_controller(int seg)
--{
--	struct pci_controller *controller;
--
--	controller = kzalloc(sizeof(*controller), GFP_KERNEL);
--	if (!controller)
--		return NULL;
--
--	controller->segment = seg;
--	return controller;
--}
--
- struct pci_root_info {
- 	struct acpi_device *bridge;
--	struct pci_controller *controller;
-+	struct pci_controller controller;
-+	struct acpi_pci_root *root;
- 	struct list_head resources;
- 	struct resource *res;
- 	resource_size_t *res_offset;
-@@ -340,8 +327,6 @@ static void free_pci_root_info_res(struct pci_root_info *info)
- 	kfree(info->res_offset);
- 	info->res_offset = NULL;
- 	info->res_num = 0;
--	kfree(info->controller);
--	info->controller = NULL;
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+- Replace 'exynos' typo with 'dra7xx' in the commit message.
+- Added Kishon's Acked-by.
+
+ drivers/pci/host/pci-dra7xx.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 52b34fe..5b4a644 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -270,8 +270,8 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
  }
  
- static void __release_pci_root_info(struct pci_root_info *info)
-@@ -395,7 +380,7 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
- 	if (info->res_num) {
- 		info->res =
- 			kzalloc_node(sizeof(*info->res) * info->res_num,
--				     GFP_KERNEL, info->controller->node);
-+				     GFP_KERNEL, info->controller.node);
- 		if (!info->res) {
- 			kfree(name);
- 			return -ENOMEM;
-@@ -403,7 +388,7 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
- 
- 		info->res_offset =
- 			kzalloc_node(sizeof(*info->res_offset) * info->res_num,
--					GFP_KERNEL, info->controller->node);
-+					GFP_KERNEL, info->controller.node);
- 		if (!info->res_offset) {
- 			kfree(name);
- 			kfree(info->res);
-@@ -420,6 +405,27 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
- 	return 0;
- }
- 
-+static int pci_acpi_init_res(struct pci_host_bridge *host,
-+		struct pci_host_info *info)
-+{
-+	int ret;
-+	struct pci_host_bridge_window *window, *n;
-+	struct pci_controller *ctrl = info->arg;
-+	struct pci_root_info *arg = container_of(ctrl,
-+			struct pci_root_info, controller);
-+
-+	ret = probe_pci_root_info(arg, arg->root->device, 
-+			host->busnum, host->domain);
-+	if (ret) 
-+		return -1;
-+	list_for_each_entry_safe(window, n, &arg->resources,
-+			list)
-+		list_move_tail(&window->list, &host->windows);
-+	/* insert busn resource at first */
-+	pci_add_resource(&host->windows, &arg->root->secondary);
-+	return 0;
-+}
-+
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+-static int add_pcie_port(struct dra7xx_pcie *dra7xx,
+-			  struct platform_device *pdev)
++static int dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
++				struct platform_device *pdev)
  {
- 	struct acpi_device *device = root->device;
-@@ -427,55 +433,43 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	struct pci_controller *controller;
- 	struct pci_root_info *info = NULL;
- 	int busnum = root->secondary.start;
--	struct pci_bus *pbus;
--	int ret;
--
--	controller = alloc_pci_controller(domain);
--	if (!controller)
--		return NULL;
--
--	controller->companion = device;
--	controller->node = acpi_get_node(device->handle);
-+	struct pci_host_bridge *host;
-+	struct pci_host_info arg;
+ 	int ret;
+ 	struct pcie_port *pp;
+@@ -398,7 +398,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
  
- 	info = kzalloc(sizeof(*info), GFP_KERNEL);
- 	if (!info) {
- 		dev_err(&device->dev,
- 				"pci_bus %04x:%02x: ignored (out of memory)\n",
- 				domain, busnum);
--		kfree(controller);
- 		return NULL;
- 	}
+ 	platform_set_drvdata(pdev, dra7xx);
  
--	info->controller = controller;
-+	controller = &info->controller;
-+	controller->segment = domain;
-+	controller->companion = device;
-+	controller->node = acpi_get_node(device->handle);
- 	INIT_LIST_HEAD(&info->io_resources);
- 	INIT_LIST_HEAD(&info->resources);
-+	init_pci_host_info(&arg);
-+	arg.arg = controller;
-+	arg.init_res = pci_acpi_init_res;
+-	ret = add_pcie_port(dra7xx, pdev);
++	ret = dra7xx_add_pcie_port(dra7xx, pdev);
+ 	if (ret < 0)
+ 		goto err_add_port;
  
--	ret = probe_pci_root_info(info, device, busnum, domain);
--	if (ret) {
--		kfree(info->controller);
--		kfree(info);
--		return NULL;
--	}
--	/* insert busn resource at first */
--	pci_add_resource(&info->resources, &root->secondary);
- 	/*
- 	 * See arch/x86/pci/acpi.c.
- 	 * The desired pci bus might already be scanned in a quirk. We
- 	 * should handle the case here, but it appears that IA64 hasn't
- 	 * such quirk. So we just ignore the case now.
- 	 */
--	pbus = pci_create_root_bus(NULL, busnum, &pci_root_ops, controller,
--				   &info->resources);
--	if (!pbus) {
--		pci_free_resource_list(&info->resources);
-+	host = pci_scan_host_bridge(NULL, PCI_DOMBUS(domain, busnum), 
-+			&pci_root_ops, &arg);
-+	if (!host) {
- 		__release_pci_root_info(info);
- 		return NULL;
- 	}
- 
--	pci_set_host_bridge_release(to_pci_host_bridge(pbus->bridge),
-+	pci_set_host_bridge_release(host,
- 			release_pci_root_info, info);
--	pci_scan_child_bus(pbus);
--	return pbus;
-+	return host->bus;
- }
- 
- int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
 -- 
-1.7.1
+1.7.9.5
+
 
