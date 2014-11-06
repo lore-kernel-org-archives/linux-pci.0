@@ -1,85 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:53311 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751880AbaKGOZG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Nov 2014 09:25:06 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	catalin.marinas@arm.com, will.deacon@arm.com, bhelgaas@google.com,
-	Liviu.Dudau@arm.com, tglx@linutronix.de, mingo@redhat.com,
-	hpa@zytor.com, rjw@rjwysocki.net, linaro-acpi@lists.linaro.org,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [RFC PATCH 4/4] arm64, acpi, pci: Provide arch-specific calls for PCI host bridge dirver (PNP0A03).
-Date: Fri, 07 Nov 2014 15:24:30 +0100
-Message-ID: <4474363.kMvYSLl2Ev@wuerfel>
-In-Reply-To: <1415366876-30811-5-git-send-email-tomasz.nowicki@linaro.org>
-References: <1415366876-30811-1-git-send-email-tomasz.nowicki@linaro.org> <1415366876-30811-5-git-send-email-tomasz.nowicki@linaro.org>
+Received: from mga02.intel.com ([134.134.136.20]:34110 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750883AbaKFBti (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 5 Nov 2014 20:49:38 -0500
+From: "Liu, Chuansheng" <chuansheng.liu@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Barto <mister.freeman@laposte.net>,
+	"Tejun Heo (tj@kernel.org)" <tj@kernel.org>
+CC: "Lu, Aaron" <aaron.lu@intel.com>, Tejun Heo <tj@kernel.org>,
+	"Rafael Wysocki" <rjw@rjwysocki.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] PCI: Do not enable async suspend for JMicron chips
+Date: Thu, 6 Nov 2014 01:48:06 +0000
+Message-ID: <27240C0AC20F114CBF8149A2696CBE4A01EB7713@SHSMSX101.ccr.corp.intel.com>
+References: <1415151063-2530-1-git-send-email-chuansheng.liu@intel.com>
+ <CAErSpo6cWP2ngErLVzqASkeQOLsB7JjgCC8UuA-S=Lz=AJyf6Q@mail.gmail.com>
+ <545A7087.3050802@laposte.net>
+ <CAErSpo4fvoeP9Gab1ZDg=ofjH+aqxGD09nLDTF1ZERnH=yEPxw@mail.gmail.com>
+In-Reply-To: <CAErSpo4fvoeP9Gab1ZDg=ofjH+aqxGD09nLDTF1ZERnH=yEPxw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 07 November 2014 14:27:56 Tomasz Nowicki wrote:
->  
->  #ifdef CONFIG_PCI
-> +struct pci_controller {
-> +	struct acpi_device *companion;
-> +	int segment;
-> +	int node;		/* nearest node with memory or NUMA_NO_NODE for global allocation */
-> +};
-> +
-> +#define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
-> +
-
-Don't use busdev->sysdata in architecture specific code, it belongs to the
-host bridge driver with the new model. For ACPI you don't have a host bridge
-driver, but it's better to keep these separate.
-
-The segment is always the same as the domain number, so just use that.
-The node and companion members here can get added to struct pci_host_bridge.
-
-> @@ -43,7 +53,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
->   */
->  int pcibios_add_device(struct pci_dev *dev)
->  {
-> -	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> +	if (acpi_disabled)
-> +		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
->  
->  	return 0;
->  }
-
-How do you assign the irq number with ACPI? Do you only support MSI?
-
->  /*
->   * raw_pci_read/write - Platform-specific PCI config space access.
-> - *
-> - * Default empty implementation.  Replace with an architecture-specific setup
-> - * routine, if necessary.
->   */
->  int raw_pci_read(unsigned int domain, unsigned int bus,
->  		  unsigned int devfn, int reg, int len, u32 *val)
->  {
-> -	return -EINVAL;
-> +	char __iomem *addr;
-> +
-> +	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095))) {
-> +err:		*val = -1;
-> +		return -EINVAL;
-> +	}
-> +
-> +	rcu_read_lock();
-> +	addr = pci_dev_base(domain, bus, devfn);
-> +	if (!addr) {
-> +		rcu_read_unlock();
-> +		goto err;
-> +	}
-
-The config space accessors should probably be shared with
-drivers/pci/host/pci-host-generic.c, e.g. by moving the rest of
-the new code in there as well, or by moving the config space
-accessors from that file to drivers/pci/mmconfig.c.
-
-	Arnd
+SGVsbG8gQmpvcm4sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpv
+cm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+IFNlbnQ6IFRodXJzZGF5
+LCBOb3ZlbWJlciAwNiwgMjAxNCAzOjA0IEFNDQo+IFRvOiBCYXJ0bw0KPiBDYzogTGl1LCBDaHVh
+bnNoZW5nOyBMdSwgQWFyb247IFRlanVuIEhlbzsgUmFmYWVsIFd5c29ja2k7DQo+IGxpbnV4LXBj
+aUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVj
+dDogUmU6IFtQQVRDSF0gUENJOiBEbyBub3QgZW5hYmxlIGFzeW5jIHN1c3BlbmQgZm9yIEpNaWNy
+b24gY2hpcHMNCj4gDQo+IE9uIFdlZCwgTm92IDUsIDIwMTQgYXQgMTE6NDYgQU0sIEJhcnRvIDxt
+aXN0ZXIuZnJlZW1hbkBsYXBvc3RlLm5ldD4NCj4gd3JvdGU6DQo+ID4gdGhpcyBwYXRjaCBzb2x2
+ZXMgdGhlc2UgMiBidWcgcmVwb3J0cyA6DQo+ID4NCj4gPiBodHRwczovL2J1Z3ppbGxhLmtlcm5l
+bC5vcmcvc2hvd19idWcuY2dpP2lkPTg0ODYxDQo+ID4NCj4gPiBodHRwczovL2J1Z3ppbGxhLmtl
+cm5lbC5vcmcvc2hvd19idWcuY2dpP2lkPTgxNTUxDQo+IA0KPiBUaG9zZSBidWdzIHdlcmUgYWxy
+ZWFkeSBtZW50aW9uZWQuICBCdXQgZTZiN2U0MWNkZDhjIGNsYWltcyB0byBzb2x2ZQ0KPiBodHRw
+czovL2J1Z3ppbGxhLmtlcm5lbC5vcmcvc2hvd19idWcuY2dpP2lkPTgxNTUxLCBhbmQgODQ4NjEg
+aXMgYQ0KPiBkdXBsaWNhdGUgb2YgODE1NTEsIHNvIGl0IHNob3VsZCBhbHNvIGJlIGZpeGVkIGJ5
+IGU2YjdlNDFjZGQ4Yy4NCj4gDQo+IFNvIHRoZSBxdWVzdGlvbiBpcywgd2h5IHdhcyBlNmI3ZTQx
+Y2RkOGMgaW5zdWZmaWNpZW50PyAgUHJlc3VtYWJseSBpdA0KPiB3YXMgdGVzdGVkIGFuZCBzb21l
+Ym9keSB0aG91Z2h0IGl0IGRpZCBmaXggdGhlIHByb2JsZW0uDQoNClRoZSBmaXJzdCBwYXRjaCBl
+NmI3ZTQxY2RkOGMgd2hpY2ggaXMganVzdCBleGNsdWRlIHNvbWUgb2YgSk1pY3JvbiBjaGlwcygz
+NjMvMzYxKSBvdXQgb2YgYXN5bmNfc3VzcGVuZCwNCnRoZW4gQmFydG8gZm91bmQgdGhlIHNhbWUg
+aXNzdWUgb24gSk1pY3JvbiAzNjgsIHNvIHdlIG5lZWQgb25lIG1vcmUgZ2VuZXJhbCBwYXRjaCB0
+byBsZXQgSk1pY3JvbiBjaGlwcw0Kb3V0IG9mIGFzeW5jX3N1c3BlbmQsIHNvIHdlIG1ha2UgdGhp
+cyBwYXRjaC4NCg0KQmpvcm4sIHRqLA0KQ291bGQgeW91IGtpbmRseSB0YWtlIHRoaXMgcGF0Y2g/
+IEFzIEJhcnRvIHNhaWQsIGl0IGVmZmVjdGVkIHRoZSB1c2VyIGV4cGVyaWVuY2UgaW5kZWVkLCB0
+aGFua3MuDQoNCg==
