@@ -1,64 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:18719 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755072AbaKLD1L (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 22:27:11 -0500
-Received: from epcpsbgr4.samsung.com
- (u144.gpu120.samsung.co.kr [203.254.230.144])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+Received: from mailout3.samsung.com ([203.254.224.33]:19138 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751193AbaKFBNR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 20:13:17 -0500
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
  (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0NEW00M7ZPLA26E0@mailout1.samsung.com> for
- linux-pci@vger.kernel.org; Wed, 12 Nov 2014 12:27:10 +0900 (KST)
+ with ESMTP id <0NEL00KI3FE3UXB0@mailout3.samsung.com> for
+ linux-pci@vger.kernel.org; Thu, 06 Nov 2014 10:13:15 +0900 (KST)
 From: Jingoo Han <jg1.han@samsung.com>
 To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Jason Cooper' <jason@lakedaemon.net>
-Subject: [PATCH] PCI: mvebu: Add a blank line after declarations
-Date: Wed, 12 Nov 2014 12:27:54 +0900
-Message-id: <002b01cffe28$a57021d0$f0506570$%han@samsung.com>
+Cc: linux-pci@vger.kernel.org, 'Mohit Kumar' <mohit.kumar@st.com>,
+	'Viresh Kumar' <viresh.kumar@linaro.org>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+Subject: [PATCH] PCI: spear: Add exynos spear13xx before add_pcie_port/pcie_init
+Date: Thu, 06 Nov 2014 10:13:49 +0900
+Message-id: <001401cff95e$ec061f60$c4125e20$%han@samsung.com>
 MIME-version: 1.0
 Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch fixes the following checkpatch warning.
-
-  WARNING: Missing a blank line after declarations
+The add_pcie_port/pcie_init functions are SPEAr13xx-specific.
+Add exynos prefix to avoid collision in global name space.
 
 Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 ---
- drivers/pci/host/pci-mvebu.c |    3 +++
- 1 file changed, 3 insertions(+)
+ drivers/pci/host/pcie-spear13xx.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index b1315e1..0c775afa 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -622,6 +622,7 @@ static struct mvebu_pcie_port *mvebu_pcie_find_port(struct mvebu_pcie *pcie,
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+index 85f594e..63f869f 100644
+--- a/drivers/pci/host/pcie-spear13xx.c
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -269,7 +269,8 @@ static struct pcie_host_ops spear13xx_pcie_host_ops = {
+ 	.host_init = spear13xx_pcie_host_init,
+ };
  
- 	for (i = 0; i < pcie->nports; i++) {
- 		struct mvebu_pcie_port *port = &pcie->ports[i];
-+
- 		if (bus->number == 0 && port->devfn == devfn)
- 			return port;
- 		if (bus->number != 0 &&
-@@ -751,6 +752,7 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
- 
- 	for (i = 0; i < pcie->nports; i++) {
- 		struct mvebu_pcie_port *port = &pcie->ports[i];
-+
- 		if (!port->base)
- 			continue;
- 		mvebu_pcie_setup_hw(port);
-@@ -777,6 +779,7 @@ static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- static void mvebu_pcie_add_bus(struct pci_bus *bus)
+-static int add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
++static int spear13xx_add_pcie_port(struct pcie_port *pp,
++				   struct platform_device *pdev)
  {
- 	struct mvebu_pcie *pcie = sys_to_pcie(bus->sysdata);
-+
- 	bus->msi = pcie->msi;
- }
+ 	struct device *dev = &pdev->dev;
+ 	int ret;
+@@ -352,7 +353,7 @@ static int __init spear13xx_pcie_probe(struct platform_device *pdev)
+ 	if (of_property_read_bool(np, "st,pcie-is-gen1"))
+ 		spear13xx_pcie->is_gen1 = true;
  
+-	ret = add_pcie_port(pp, pdev);
++	ret = spear13xx_add_pcie_port(pp, pdev);
+ 	if (ret < 0)
+ 		goto fail_clk;
+ 
+@@ -382,11 +383,11 @@ static struct platform_driver spear13xx_pcie_driver __initdata = {
+ 
+ /* SPEAr13xx PCIe driver does not allow module unload */
+ 
+-static int __init pcie_init(void)
++static int __init spear13xx_pcie_init(void)
+ {
+ 	return platform_driver_register(&spear13xx_pcie_driver);
+ }
+-module_init(pcie_init);
++module_init(spear13xx_pcie_init);
+ 
+ MODULE_DESCRIPTION("ST Microelectronics SPEAr13xx PCIe host controller driver");
+ MODULE_AUTHOR("Pratyush Anand <pratyush.anand@st.com>");
 -- 
 1.7.9.5
 
