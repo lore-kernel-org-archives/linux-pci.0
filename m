@@ -1,62 +1,97 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch Part2 v4 23/31] x86, irq: Directly call native_compose_msi_msg() for DMAR IRQ
-Date: Tue,  4 Nov 2014 20:01:57 +0800
-Message-Id: <1415102525-9898-24-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:53763 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751916AbaKFJ6n (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 04:58:43 -0500
+Date: Thu, 6 Nov 2014 09:58:39 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Will Deacon <Will.Deacon@arm.com>
+Subject: Re: [PATCH RFC 1/2] drivers: pci: fix window allocation order wrt
+ bus_range filtering
+Message-ID: <20141106095839.GB1923@red-moon>
+References: <1414077787-20633-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20141106000536.GL6168@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141106000536.GL6168@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DMAR interrupt won't be remapped by interrupt remapping hardware,
-so directly call native_compose_msi_msg() for DMAR IRQ to compose MSI
-message data. This will help to simplify MSI code later.
+On Thu, Nov 06, 2014 at 12:05:36AM +0000, Bjorn Helgaas wrote:
+> On Thu, Oct 23, 2014 at 04:23:06PM +0100, Lorenzo Pieralisi wrote:
+> > The number of windows allocated for the host bridge depends on the
+> > bus resource. Instead of first allocating the windows and then
+> > limit the bus resource, this patch reshuffles the code so that if any
+> > limitation is applied to the bus resource it is taken into account in
+> > the windows allocation.
+> > 
+> > Cc: Will Deacon <will.deacon@arm.com>
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> 
+> I applied these with Will's acks to pci/host-generic for v3.19, thanks!
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/msi.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+Thank you !
 
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index f6c06ceba9ee..265178b30816 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -250,12 +250,10 @@ static struct irq_chip dmar_msi_type = {
- 
- int arch_setup_dmar_msi(unsigned int irq)
- {
--	int ret;
- 	struct msi_msg msg;
-+	struct irq_cfg *cfg = irq_cfg(irq);
- 
--	ret = msi_compose_msg(NULL, irq, &msg, -1);
--	if (ret < 0)
--		return ret;
-+	native_compose_msi_msg(NULL, irq, cfg->dest_apicid, &msg, -1);
- 	dmar_msi_write(irq, &msg);
- 	irq_set_chip_and_handler_name(irq, &dmar_msi_type, handle_edge_irq,
- 				      "edge");
--- 
-1.7.10.4
+> In my mind, posting patches to the list is implicitly a request for
+> comments, so I usually don't pay too much attention to things explicitly
+> marked "RFC" because I figure that's a hint that "this is work-in-progress,
+> please comment if you see anything obviously broken."
 
+I decided to give it an RFC tag because it is a rework of existing code
+on top of the new range parsing API and also new iospace remap API, I
+just wanted to be cautious.
+
+Thank you,
+Lorenzo
+
+> 
+> Bjorn
+> 
+> > ---
+> >  drivers/pci/host/pci-host-generic.c | 10 +++++-----
+> >  1 file changed, 5 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> > index 3d2076f..1e1a80f 100644
+> > --- a/drivers/pci/host/pci-host-generic.c
+> > +++ b/drivers/pci/host/pci-host-generic.c
+> > @@ -276,17 +276,17 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+> >  		return err;
+> >  	}
+> >  
+> > -	pci->cfg.win = devm_kcalloc(dev, resource_size(&pci->cfg.bus_range),
+> > -				    sizeof(*pci->cfg.win), GFP_KERNEL);
+> > -	if (!pci->cfg.win)
+> > -		return -ENOMEM;
+> > -
+> >  	/* Limit the bus-range to fit within reg */
+> >  	bus_max = pci->cfg.bus_range.start +
+> >  		  (resource_size(&pci->cfg.res) >> pci->cfg.ops->bus_shift) - 1;
+> >  	pci->cfg.bus_range.end = min_t(resource_size_t, pci->cfg.bus_range.end,
+> >  				       bus_max);
+> >  
+> > +	pci->cfg.win = devm_kcalloc(dev, resource_size(&pci->cfg.bus_range),
+> > +				    sizeof(*pci->cfg.win), GFP_KERNEL);
+> > +	if (!pci->cfg.win)
+> > +		return -ENOMEM;
+> > +
+> >  	/* Map our Configuration Space windows */
+> >  	if (!devm_request_mem_region(dev, pci->cfg.res.start,
+> >  				     resource_size(&pci->cfg.res),
+> > -- 
+> > 2.1.2
+> > 
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Please read the FAQ at  http://www.tux.org/lkml/
+> 
