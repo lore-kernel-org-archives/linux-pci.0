@@ -1,60 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cmexedge1.emulex.com ([138.239.224.99]:20694 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753677AbaKRL1z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 06:27:55 -0500
-From: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.Com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Anish Bhatt <anish@chelsio.com>,
-	Hariprasad Shenai <hariprasad@chelsio.com>,
-	Casey Leedom <leedom@chelsio.com>
-Subject: RE: [PATCH v1] pci: Limit VPD length of Emulex adapters to the
- actual length supported.
-Date: Tue, 18 Nov 2014 11:26:29 +0000
-Message-ID: <BF3270C86E8B1349A26C34E4EC1C44CB3E87D2D3@CMEXMB1.ad.emulex.com>
-References: <1f6d7b6c-7189-4fe3-926b-42609724cab9@CMEXHTCAS2.ad.emulex.com>
- <20141023154054.GA7137@google.com>
- <BF3270C86E8B1349A26C34E4EC1C44CB3E860095@CMEXMB1.ad.emulex.com>
- <CAErSpo7_9xxtBmHOCgxsHeVLbKUeMVhLF6Q9OyFkz11EZbtJCA@mail.gmail.com>
- <BF3270C86E8B1349A26C34E4EC1C44CB3E862DC6@CMEXMB1.ad.emulex.com>
- <CAErSpo7KKka6-nHWnVbqVW3hx-E=4x6cEjeEGEAWz32za6xCGQ@mail.gmail.com>
- <BF3270C86E8B1349A26C34E4EC1C44CB3E87A6A7@CMEXMB1.ad.emulex.com>
- <CAErSpo5xx2QAN1rZqnknAX7xF+5SjpGvEvvVWGuqF_bTh5xRhA@mail.gmail.com>
-In-Reply-To: <CAErSpo5xx2QAN1rZqnknAX7xF+5SjpGvEvvVWGuqF_bTh5xRhA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from service87.mimecast.com ([91.220.42.44]:39046 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751021AbaKFPkx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 10:40:53 -0500
+Date: Thu, 6 Nov 2014 15:40:50 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <Pawel.Moll@arm.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2] PCI: add missing DT binding for linux,pci-domain
+ property
+Message-ID: <20141106154050.GW8916@e106497-lin.cambridge.arm.com>
+References: <1415287400-30426-1-git-send-email-l.stach@pengutronix.de>
 MIME-Version: 1.0
+In-Reply-To: <1415287400-30426-1-git-send-email-l.stach@pengutronix.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpvcm4gSGVsZ2FhcyBb
-bWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+IFNlbnQ6IFR1ZXNkYXksIE5vdmVtYmVyIDE4
-LCAyMDE0IDU6MDIgQU0NCj4gVG86IFZlbmthdCBEdXZ2dXJ1DQo+IENjOiBsaW51eC1wY2lAdmdl
-ci5rZXJuZWwub3JnOyBBbmlzaCBCaGF0dDsgSGFyaXByYXNhZCBTaGVuYWkNCj4gU3ViamVjdDog
-UmU6IFtQQVRDSCB2MV0gcGNpOiBMaW1pdCBWUEQgbGVuZ3RoIG9mIEVtdWxleCBhZGFwdGVycyB0
-byB0aGUNCj4gYWN0dWFsIGxlbmd0aCBzdXBwb3J0ZWQuDQo+IA0KPiBbK2NjIEFuaXNoLCBIYXJp
-cHJhc2FkIChjeGdiNCBtYWludGFpbmVycy9jb250cmlidXRvcnMpXQ0KPiANCj4gQW5pc2gsIEhh
-cmlwcmFzYWQsIGhlcmUncyB0aGUgcHJvYmxlbToNCj4gPj4gSSB0b29rIGEgcXVpY2sgbG9vayBh
-dCB0aG9zZSBkcml2ZXJzLCBhbmQgaXQgYWN0dWFsbHkgbG9va3MgbGlrZSBtb3N0DQo+ID4+IG9m
-IHRoZW0gbG9vayBmb3IgdGhlIHRhZyBzdHJ1Y3R1cmUsIGUuZy4sIGJ5IHVzaW5nIHBjaV92cGRf
-ZmluZF90YWcoKQ0KPiA+PiBvciBkb2luZyBzb21ldGhpbmcgc2ltaWxhci4gIFNvIG1heWJlIGl0
-IGFjdHVhbGx5IHdvdWxkIGJlIHNhZmUgdG8gZG8NCj4gPj4gdGhpcy4gIE1heWJlIHlvdSBjb3Vs
-ZCBoYXZlIGEgbW9yZSB0aG9yb3VnaCBsb29rIGF0IHRoZW0gYW5kIHNlZSBpZg0KPiA+PiB5b3Ug
-YWdyZWU/DQo+ID4gSWYgdGhlIGRldmljZXMgZG9lc24ndCBmb2xsb3cgdGhlIHNwZWMgZm9yIHRo
-ZSBWUEQgY29udGVudHMsIHBjaS1jb3JlIG1heQ0KPiBlbmR1cCByZXF1ZXN0aW5nIDMyayBkYXRh
-IHdoaWNoIHByb2JhYmx5IHdpbGwgbm90IGJyZWFrIGV4aXN0aW5nIHVzZXJzLg0KPiANCj4gVGhl
-IGNhc2UgSSdtIHdvcnJpZWQgYWJvdXQgaXMgYSBkZXZpY2UgdGhhdCBkb2Vzbid0IGZvbGxvdyB0
-aGUgVlBEDQo+IGZvcm1hdCBzcGVjLCBidXQgaXRzIFZQRCBjb250ZW50cyBpbmNsdWRlIGRhdGEg
-dGhhdCBtYXRjaGVzIGFuIEVuZA0KPiBUYWcuICBJZiB3ZSBtYWtlIHBjaV9yZWFkX3ZwZCgpIHN0
-b3Agd2hlbiBpdCBzZWVzIGFuIEVuZCBUYWcsIHdlIG1heQ0KPiBzdG9wIHJlYWRpbmcgZGF0YSBw
-cmVtYXR1cmVseS4NCltWZW5rYXRdIEkgdGhpbmsgaXQncyBmYWlyIHRvIGFzc3VtZSB0aGF0IGRl
-dmljZXMgZWl0aGVyIGZvbGxvdyB0aGUgc3BlYyBvciB0aGV5IGRvbid0Lg0KRXZlbiBpZiB0aGUg
-ZGV2aWNlcyBwYXJ0aWFsbHkgZm9sbG93IHRoZSBzcGVjLCBJZiB0aGUgZmlyc3QgYnl0ZSAoYW5k
-IHRoZSBzdWJzZXF1ZW50IHJlbGV2YW50IGJ5dGVzIHdoaWNoIGFyZSBjYWxjdWxhdGVkIGJhc2Vk
-IG9uIHRoZSBsZW5ndGggYW5kIGRhdGEgb2YgdGhhdCByZXNvdXJjZSkgb2YgdGhlIFZQRCBkYXRh
-IGhhcyBhIHZhbGlkIHRhZywgd2UgY2FuIHN0b3AgYWZ0ZXIgdGhlIEVuZCB0YWcsIG90aGVyd2lz
-ZSByZWFkIDMyayB3b3J0aCBkYXRhLg0KTWlzdW5kZXJzdGFuZGluZyBvdGhlciBWUEQgY29udGVu
-dHMgYXMgRW5kIHRhZyBzZWVtcyB2ZXJ5IHVubGlrZWx5IGFzIHRoZSBwYXJzZXIgY29kZSBjYW4g
-ZGlzdGluZ3Vpc2ggdGFnLCBsZW5ndGggYW5kIGRhdGEgYmFzZWQgb24gdGhlIHNwZWMuDQpGb3Ig
-ZXhhbXBsZSwgcGNpIHV0aWxpdGllcyBhbHdheXMgbG9vayBmb3IgdGhlIEVuZCB0YWcgd2hpbGUg
-cmVhZGluZyBWUEQgZGF0YS4gKGNhcF92cGQgcm91dGluZSBpbiBscy12cGQuYykNCg0K
+On Thu, Nov 06, 2014 at 03:23:20PM +0000, Lucas Stach wrote:
+> This property was added by 41e5c0f81d3e
+> (of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr())
+> without the required binding documentation. As this property
+> will be supported by a number of host bridge drivers going forward,
+> add it to the common PCI binding doc.
+> 
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> ---
+> This is a non-critical fix, but may still qualify for 3.18-rc as
+> the property was added in this release cycle.
+> 
+> v2:
+> - emphasize that the property must be present and unique systemwide
+>   if used
+> ---
+>  Documentation/devicetree/bindings/pci/pci.txt | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
+> index 41aeed38926d..68c364e2f5e5 100644
+> --- a/Documentation/devicetree/bindings/pci/pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/pci.txt
+> @@ -7,3 +7,14 @@ And for the interrupt mapping part:
+>  
+>  Open Firmware Recommended Practice: Interrupt Mapping
+>  http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
+> +
+> +Additionally to the properties specified in the above standards a host bridge
+> +driver implementation may support the following properties:
+> +
+> +- linux,pci-domain:
+> +   If present this property assigns a fixed PCI domain number to a host bridge,
+> +   otherwise an unstable (across boots) unique number will be assigned.
+> +   It is required to either not set this property at all or set it for all
+> +   host bridges in the system, otherwise potentially conflicting domain numbers
+> +   may be assigned to root buses behind different host bridges. The domain
+> +   number for each host bridge in the system must be unique.
+> -- 
+> 2.1.1
+> 
+> 
+
+Acked-by: Liviu Dudau <Liviu.Dudau@arm.com>
+
+Liviu
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
