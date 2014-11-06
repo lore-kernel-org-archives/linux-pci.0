@@ -1,95 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:52822 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932082AbaKDMA4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Nov 2014 07:00:56 -0500
-Date: Tue, 4 Nov 2014 12:00:52 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: add missing DT binding for linux,pci-domain property
-Message-ID: <20141104120052.GE11102@e106497-lin.cambridge.arm.com>
-References: <1415101660-26450-1-git-send-email-l.stach@pengutronix.de>
+Received: from smtp1.tech.numericable.fr ([82.216.111.37]:45086 "EHLO
+	smtp1.tech.numericable.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751065AbaKFF37 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 00:29:59 -0500
+Message-ID: <545B0747.2030201@laposte.net>
+Date: Thu, 06 Nov 2014 06:29:43 +0100
+From: Barto <mister.freeman@laposte.net>
 MIME-Version: 1.0
-In-Reply-To: <1415101660-26450-1-git-send-email-l.stach@pengutronix.de>
-Content-Type: text/plain; charset=UTF-8
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Liu, Chuansheng" <chuansheng.liu@intel.com>
+CC: "Tejun Heo (tj@kernel.org)" <tj@kernel.org>,
+	"Lu, Aaron" <aaron.lu@intel.com>,
+	Rafael Wysocki <rjw@rjwysocki.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Do not enable async suspend for JMicron chips
+References: <1415151063-2530-1-git-send-email-chuansheng.liu@intel.com> <CAErSpo6cWP2ngErLVzqASkeQOLsB7JjgCC8UuA-S=Lz=AJyf6Q@mail.gmail.com> <545A7087.3050802@laposte.net> <CAErSpo4fvoeP9Gab1ZDg=ofjH+aqxGD09nLDTF1ZERnH=yEPxw@mail.gmail.com> <27240C0AC20F114CBF8149A2696CBE4A01EB7713@SHSMSX101.ccr.corp.intel.com> <CAErSpo4py1GdxczyzgLxjbgmfGEQ6o+He=7wxuVS0BM-Oyd6_w@mail.gmail.com>
+In-Reply-To: <CAErSpo4py1GdxczyzgLxjbgmfGEQ6o+He=7wxuVS0BM-Oyd6_w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 04, 2014 at 11:47:40AM +0000, Lucas Stach wrote:
-> This property was added by 41e5c0f81d3e
-> (of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr())
-> without the required binding documentation. As this property
-> will be supported by a number of host bridge drivers going forward,
-> add it to the common PCI binding doc.
+Hello Bjorn,
+
+in my bugreport I have already tried to add the JMicron 368 in the "if
+statement" and it didn't work, check my message here :
+
+https://bugzilla.kernel.org/show_bug.cgi?id=84861#c11
+
+if Chuansheng has choosen a more generic way ( applying the patch to all
+JMicron devices  ) it's because also because we don't know how many
+JMBxxx models could be affected by this bug, tomorrow maybe one user
+would create a bug report about a "JMB369" pci card who have again this
+bug, and maybe on month later another user with a "JMB382", it could be
+a nightmare for Chuanseng if he had to create every time a new patch for
+each model of JMicron,
+
+so for the moment the better approach for me is to disable async_suspend
+for all JMBxxx JMicron, Chuanseng's patch seems reasonnable, as long as
+we don't know the exact list of JMBxxx models we can assume that all
+JMicron SATA/IDE are affected by this problem
+
+
+Le 06/11/2014 05:08, Bjorn Helgaas a écrit :
+
 > 
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> ---
-> This is a non-critical fix, but may still qualify for 3.18-rc as
-> the property was added in this release cycle.
-
-Hi Lucas,
-
-Thanks for taking care of this, sorry it slipped through the cracks
-of last minute changes in this area.
-
-> ---
->  Documentation/devicetree/bindings/pci/pci.txt | 10 ++++++++++
->  1 file changed, 10 insertions(+)
+> But you haven't addressed my concerns about (1) putting a PCI vendor
+> ID check in the generic PCI core code, and (2) applying this to *all*
+> JMicron devices.  You might want to explore a quirk-type solution or
+> maybe just add the JMicron 368 to the checks added by e6b7e41cdd8c.
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-> index 41aeed38926d..b754f786ed5e 100644
-> --- a/Documentation/devicetree/bindings/pci/pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/pci.txt
-> @@ -7,3 +7,13 @@ And for the interrupt mapping part:
->  
->  Open Firmware Recommended Practice: Interrupt Mapping
->  http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
-> +
-> +Additionally to the properties specified in the above standards a host bridge
-> +driver implementation may support the following properties:
-> +
-> +- linux,pci-domain:
-> +   If present this property assigns a fixed PCI domain number to a host bridge,
-> +   otherwise an unstable (across boots) unique number will be assigned.
-> +   It is recommended to either not set this property at all or set it for all
-> +   host bridges in the system, otherwise potentially conflicting domain numbers
-> +   may be assigned to root buses behind different host bridges.
-> -- 
-> 2.1.1
+> Bjorn
 > 
-
-While the description is potentially correct, what it fails to explain is that the
-choice of using the property or generating an unstable (across boots) unique
-number is actually the choice of the host bridge driver at the moment. I know that
-my earlier implementations were defaulting to the automatic numbering, but that has
-been dropped from the final series as Rob Herring was objecting to it.
-
-There is still scope to adopt a wide policy here, but for now it should say something
-to the tune:
-
-   If present this property assigns a fixed PCI domain number to a host bridge,
-   otherwise an unstable (across boots) unique number will be assigned.
-   If you decide to use the property to assign a fixed PCI domain number to a host
-   bridge you have to ensure that all the host bridge drivers present in the system
-   follow the same policy. Otherwise, potentially conflicting domain numbers
-   may be assigned to root busses behind different host bridges.
-
-Best regards,
-Liviu
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
