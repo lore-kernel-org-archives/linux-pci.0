@@ -1,101 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:7566 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753899AbaKHSPC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 8 Nov 2014 13:15:02 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part3 v3 16/38] x86, irq: Kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
-Date: Sun,  9 Nov 2014 02:13:16 +0800
-Message-Id: <1415470418-10874-17-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:53752 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750901AbaKFJwg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 04:52:36 -0500
+Date: Thu, 6 Nov 2014 09:52:31 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>
+Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
+Message-ID: <20141106095231.GA1923@red-moon>
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <2148776.X8NPqiYA6S@wuerfel>
+ <20141105233921.GJ6168@google.com>
+ <2659321.LYB03rL97X@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2659321.LYB03rL97X@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There's no user of irq_alloc_hwirqs(), irq_alloc_hwirq(), irq_free_hwirqs()
-and irq_free_hwirq() anymore, so kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ and
-related code.
+On Thu, Nov 06, 2014 at 12:05:48AM +0000, Arnd Bergmann wrote:
+> On Wednesday 05 November 2014 16:39:21 Bjorn Helgaas wrote:
+> > On Wed, Oct 22, 2014 at 10:52:19PM +0200, Arnd Bergmann wrote:
+> > > On Wednesday 22 October 2014 16:59:14 Lorenzo Pieralisi wrote:
+> > > > On Wed, Oct 01, 2014 at 10:38:45AM +0100, Arnd Bergmann wrote:
+> > > > 
+> > > > [...]
+> > > > 
+> > > > > The arm32 implementations of pci_domain_nr/pci_proc_domain can probably be
+> > > > > removed if we change the arm32 pcibios_init_hw function to call the new
+> > > > > interfaces that set the domain number.
+> > > > 
+> > > > I wished, but it is a bit more complicated than I thought unfortunately,
+> > > > mostly because some drivers, eg cns3xxx set the domain numbers
+> > > > statically in pci_sys_data and this sets a chain of dependency that is
+> > > > not easy to untangle. I think cns3xxx is the only legacy driver that "uses"
+> > > > the domain number (in pci_sys_data) in a way that clashes with the
+> > > > generic domain_nr implementation, I need to give it more thought.
+> > > 
+> > > Just had a look at that driver, shouldn't be too hard to change, see below.
+> > > 
+> > > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> > 
+> > This patch is in my patchwork, but it lacks a topic & changelog and I'm not
+> > sure of its state, so I'm going to drop it for now.  Please post it again
+> > if you want me to do something with it.  I guess it only touches arch/arm,
+> > so it would probably be merged via your tree anyway.
+> 
+> Lorenzo has posted an updated version as
+> 
+> "arm: cns3xxx: pci: remove artificial dependency on pci_sys_data domain",
+> and a second patch that depends on it. That is the version we should be
+> merging, though I'm not sure through which tree.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/Kconfig              |    1 -
- arch/x86/kernel/apic/vector.c |   34 ----------------------------------
- 2 files changed, 35 deletions(-)
+I am posting a v2 shortly, let's discuss the best way to merge it then.
 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index a3675e4f4342..b83ab49c35a7 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -882,7 +882,6 @@ config X86_UP_IOAPIC
- config X86_LOCAL_APIC
- 	def_bool y
- 	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_APIC || PCI_MSI
--	select GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
- 	select IRQ_DOMAIN
- 	select IRQ_DOMAIN_HIERARCHY
- 	select PCI_MSI_IRQ_DOMAIN if PCI_MSI
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 2590a4b4179d..1b8e0cdfbdd1 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -660,40 +660,6 @@ void irq_force_complete_move(int irq)
- }
- #endif
- 
--/*
-- * Dynamic irq allocate and deallocation. Should be replaced by irq domains!
-- */
--int arch_setup_hwirq(unsigned int irq, int node)
--{
--	struct irq_cfg *cfg;
--	unsigned long flags;
--	int ret;
--
--	cfg = alloc_irq_cfg(node);
--	if (!cfg)
--		return -ENOMEM;
--
--	raw_spin_lock_irqsave(&vector_lock, flags);
--	ret = __assign_irq_vector(irq, cfg, apic->target_cpus());
--	raw_spin_unlock_irqrestore(&vector_lock, flags);
--
--	if (!ret)
--		irq_set_chip_data(irq, cfg);
--	else
--		free_irq_cfg(cfg);
--	return ret;
--}
--
--void arch_teardown_hwirq(unsigned int irq)
--{
--	struct irq_cfg *cfg = irq_cfg(irq);
--
--	free_remapped_irq(irq);
--	clear_irq_vector(irq, cfg);
--	irq_set_chip_data(irq, NULL);
--	free_irq_cfg(cfg);
--}
--
- static void __init print_APIC_field(int base)
- {
- 	int i;
--- 
-1.7.10.4
-
+Thanks,
+Lorenzo
