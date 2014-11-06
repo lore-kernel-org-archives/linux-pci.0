@@ -1,141 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:45273 "EHLO mga14.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:17951 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751865AbaKFOU3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 6 Nov 2014 09:20:29 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v5 14/31] iommu/vt-d: Change prototypes to prepare for enabling hierarchy irqdomain
-Date: Thu,  6 Nov 2014 22:20:27 +0800
-Message-Id: <1415283644-2559-15-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
+	id S1750828AbaKFGli (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 6 Nov 2014 01:41:38 -0500
+From: "Liu, Chuansheng" <chuansheng.liu@intel.com>
+To: "Lu, Aaron" <aaron.lu@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Barto <mister.freeman@laposte.net>,
+	"Tejun Heo (tj@kernel.org)" <tj@kernel.org>,
+	Rafael Wysocki <rjw@rjwysocki.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] PCI: Do not enable async suspend for JMicron chips
+Date: Thu, 6 Nov 2014 06:39:14 +0000
+Message-ID: <27240C0AC20F114CBF8149A2696CBE4A01EB7CC3@SHSMSX101.ccr.corp.intel.com>
+References: <1415151063-2530-1-git-send-email-chuansheng.liu@intel.com>
+ <CAErSpo6cWP2ngErLVzqASkeQOLsB7JjgCC8UuA-S=Lz=AJyf6Q@mail.gmail.com>
+ <545A7087.3050802@laposte.net>
+ <CAErSpo4fvoeP9Gab1ZDg=ofjH+aqxGD09nLDTF1ZERnH=yEPxw@mail.gmail.com>
+ <27240C0AC20F114CBF8149A2696CBE4A01EB7713@SHSMSX101.ccr.corp.intel.com>
+ <CAErSpo4py1GdxczyzgLxjbgmfGEQ6o+He=7wxuVS0BM-Oyd6_w@mail.gmail.com>
+ <27240C0AC20F114CBF8149A2696CBE4A01EB7B96@SHSMSX101.ccr.corp.intel.com>
+ <545B08DF.2090608@intel.com>
+In-Reply-To: <545B08DF.2090608@intel.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Prepare for support hierarchy irqdomain by changing function prototypes,
-should be no function changes.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Acked-by: Joerg Roedel <jroedel@suse.de>
----
- drivers/iommu/intel_irq_remapping.c |   22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index fd181cf8a589..5acad492701e 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -82,10 +82,10 @@ static int get_irte(int irq, struct irte *entry)
- 	return 0;
- }
- 
--static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
-+static int alloc_irte(struct intel_iommu *iommu, int irq,
-+		      struct irq_2_iommu *irq_iommu, u16 count)
- {
- 	struct ir_table *table = iommu->ir_table;
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
- 	struct irq_cfg *cfg = irq_cfg(irq);
- 	unsigned int mask = 0;
- 	unsigned long flags;
-@@ -173,9 +173,9 @@ static int set_irte_irq(int irq, struct intel_iommu *iommu, u16 index, u16 subha
- 	return 0;
- }
- 
--static int modify_irte(int irq, struct irte *irte_modified)
-+static int modify_irte(struct irq_2_iommu *irq_iommu,
-+		       struct irte *irte_modified)
- {
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
- 	struct intel_iommu *iommu;
- 	unsigned long flags;
- 	struct irte *irte;
-@@ -242,7 +242,7 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
- 		return 0;
- 
- 	iommu = irq_iommu->iommu;
--	index = irq_iommu->irte_index + irq_iommu->sub_handle;
-+	index = irq_iommu->irte_index;
- 
- 	start = iommu->ir_table->base + index;
- 	end = start + (1 << irq_iommu->irte_mask);
-@@ -937,7 +937,7 @@ static int intel_setup_ioapic_entry(int irq,
- 		pr_warn("No mapping iommu for ioapic %d\n", ioapic_id);
- 		index = -ENODEV;
- 	} else {
--		index = alloc_irte(iommu, irq, 1);
-+		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
- 		if (index < 0) {
- 			pr_warn("Failed to allocate IRTE for ioapic %d\n",
- 				ioapic_id);
-@@ -953,7 +953,7 @@ static int intel_setup_ioapic_entry(int irq,
- 	/* Set source-id of interrupt request */
- 	set_ioapic_sid(&irte, ioapic_id);
- 
--	modify_irte(irq, &irte);
-+	modify_irte(irq_2_iommu(irq), &irte);
- 
- 	apic_printk(APIC_VERBOSE, KERN_DEBUG "IOAPIC[%d]: "
- 		"Set IRTE entry (P:%d FPD:%d Dst_Mode:%d "
-@@ -1040,7 +1040,7 @@ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 	 * Atomically updates the IRTE with the new destination, vector
- 	 * and flushes the interrupt entry cache.
- 	 */
--	modify_irte(irq, &irte);
-+	modify_irte(irq_2_iommu(irq), &irte);
- 
- 	/*
- 	 * After this point, all the interrupts will start arriving
-@@ -1076,7 +1076,7 @@ static void intel_compose_msi_msg(struct pci_dev *pdev,
- 	else
- 		set_hpet_sid(&irte, hpet_id);
- 
--	modify_irte(irq, &irte);
-+	modify_irte(irq_2_iommu(irq), &irte);
- 
- 	msg->address_hi = MSI_ADDR_BASE_HI;
- 	msg->data = sub_handle;
-@@ -1103,7 +1103,7 @@ static int intel_msi_alloc_irq(struct pci_dev *dev, int irq, int nvec)
- 		       "Unable to map PCI %s to iommu\n", pci_name(dev));
- 		index = -ENOENT;
- 	} else {
--		index = alloc_irte(iommu, irq, nvec);
-+		index = alloc_irte(iommu, irq, irq_2_iommu(irq), nvec);
- 		if (index < 0) {
- 			printk(KERN_ERR
- 			       "Unable to allocate %d IRTE for PCI %s\n",
-@@ -1147,7 +1147,7 @@ static int intel_alloc_hpet_msi(unsigned int irq, unsigned int id)
- 	down_read(&dmar_global_lock);
- 	iommu = map_hpet_to_ir(id);
- 	if (iommu) {
--		index = alloc_irte(iommu, irq, 1);
-+		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
- 		if (index >= 0)
- 			ret = 0;
- 	}
--- 
-1.7.10.4
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogTHUsIEFhcm9uDQo+IFNl
+bnQ6IFRodXJzZGF5LCBOb3ZlbWJlciAwNiwgMjAxNCAxOjM3IFBNDQo+IFRvOiBMaXUsIENodWFu
+c2hlbmc7IEJqb3JuIEhlbGdhYXMNCj4gQ2M6IEJhcnRvOyBUZWp1biBIZW8gKHRqQGtlcm5lbC5v
+cmcpOyBSYWZhZWwgV3lzb2NraTsNCj4gbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgt
+a2VybmVsQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIXSBQQ0k6IERvIG5v
+dCBlbmFibGUgYXN5bmMgc3VzcGVuZCBmb3IgSk1pY3JvbiBjaGlwcw0KPiANCj4gT24gMTEvMDYv
+MjAxNCAwMToyOSBQTSwgTGl1LCBDaHVhbnNoZW5nIHdyb3RlOg0KPiA+IEhlbGxvIEJqb3JuLA0K
+PiA+DQo+ID4+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4+IEZyb206IEJqb3JuIEhl
+bGdhYXMgW21haWx0bzpiaGVsZ2Fhc0Bnb29nbGUuY29tXQ0KPiA+PiBTZW50OiBUaHVyc2RheSwg
+Tm92ZW1iZXIgMDYsIDIwMTQgMTI6MDkgUE0NCj4gPj4gVG86IExpdSwgQ2h1YW5zaGVuZw0KPiA+
+PiBDYzogQmFydG87IFRlanVuIEhlbyAodGpAa2VybmVsLm9yZyk7IEx1LCBBYXJvbjsgUmFmYWVs
+IFd5c29ja2k7DQo+ID4+IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2
+Z2VyLmtlcm5lbC5vcmcNCj4gPj4gU3ViamVjdDogUmU6IFtQQVRDSF0gUENJOiBEbyBub3QgZW5h
+YmxlIGFzeW5jIHN1c3BlbmQgZm9yIEpNaWNyb24gY2hpcHMNCj4gPj4NCj4gPj4gT24gV2VkLCBO
+b3YgNSwgMjAxNCBhdCA2OjQ4IFBNLCBMaXUsIENodWFuc2hlbmcNCj4gPj4gPGNodWFuc2hlbmcu
+bGl1QGludGVsLmNvbT4gd3JvdGU6DQo+ID4+PiBIZWxsbyBCam9ybiwNCj4gPj4+DQo+ID4+Pj4g
+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPj4+PiBGcm9tOiBCam9ybiBIZWxnYWFzIFtt
+YWlsdG86YmhlbGdhYXNAZ29vZ2xlLmNvbV0NCj4gPj4+PiBTZW50OiBUaHVyc2RheSwgTm92ZW1i
+ZXIgMDYsIDIwMTQgMzowNCBBTQ0KPiA+Pj4+IFRvOiBCYXJ0bw0KPiA+Pj4+IENjOiBMaXUsIENo
+dWFuc2hlbmc7IEx1LCBBYXJvbjsgVGVqdW4gSGVvOyBSYWZhZWwgV3lzb2NraTsNCj4gPj4+PiBs
+aW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+
+ID4+Pj4gU3ViamVjdDogUmU6IFtQQVRDSF0gUENJOiBEbyBub3QgZW5hYmxlIGFzeW5jIHN1c3Bl
+bmQgZm9yIEpNaWNyb24gY2hpcHMNCj4gPj4+Pg0KPiA+Pj4+IE9uIFdlZCwgTm92IDUsIDIwMTQg
+YXQgMTE6NDYgQU0sIEJhcnRvIDxtaXN0ZXIuZnJlZW1hbkBsYXBvc3RlLm5ldD4NCj4gPj4+PiB3
+cm90ZToNCj4gPj4+Pj4gdGhpcyBwYXRjaCBzb2x2ZXMgdGhlc2UgMiBidWcgcmVwb3J0cyA6DQo+
+ID4+Pj4+DQo+ID4+Pj4+IGh0dHBzOi8vYnVnemlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5jZ2k/
+aWQ9ODQ4NjENCj4gPj4+Pj4NCj4gPj4+Pj4gaHR0cHM6Ly9idWd6aWxsYS5rZXJuZWwub3JnL3No
+b3dfYnVnLmNnaT9pZD04MTU1MQ0KPiA+Pj4+DQo+ID4+Pj4gVGhvc2UgYnVncyB3ZXJlIGFscmVh
+ZHkgbWVudGlvbmVkLiAgQnV0IGU2YjdlNDFjZGQ4YyBjbGFpbXMgdG8gc29sdmUNCj4gPj4+PiBo
+dHRwczovL2J1Z3ppbGxhLmtlcm5lbC5vcmcvc2hvd19idWcuY2dpP2lkPTgxNTUxLCBhbmQgODQ4
+NjEgaXMgYQ0KPiA+Pj4+IGR1cGxpY2F0ZSBvZiA4MTU1MSwgc28gaXQgc2hvdWxkIGFsc28gYmUg
+Zml4ZWQgYnkgZTZiN2U0MWNkZDhjLg0KPiA+Pj4+DQo+ID4+Pj4gU28gdGhlIHF1ZXN0aW9uIGlz
+LCB3aHkgd2FzIGU2YjdlNDFjZGQ4YyBpbnN1ZmZpY2llbnQ/ICBQcmVzdW1hYmx5IGl0DQo+ID4+
+Pj4gd2FzIHRlc3RlZCBhbmQgc29tZWJvZHkgdGhvdWdodCBpdCBkaWQgZml4IHRoZSBwcm9ibGVt
+Lg0KPiA+Pj4NCj4gPj4+IFRoZSBmaXJzdCBwYXRjaCBlNmI3ZTQxY2RkOGMgd2hpY2ggaXMganVz
+dCBleGNsdWRlIHNvbWUgb2YgSk1pY3Jvbg0KPiA+PiBjaGlwcygzNjMvMzYxKSBvdXQgb2YgYXN5
+bmNfc3VzcGVuZCwNCj4gPj4+IHRoZW4gQmFydG8gZm91bmQgdGhlIHNhbWUgaXNzdWUgb24gSk1p
+Y3JvbiAzNjgsIHNvIHdlIG5lZWQgb25lIG1vcmUNCj4gPj4gZ2VuZXJhbCBwYXRjaCB0byBsZXQg
+Sk1pY3JvbiBjaGlwcw0KPiA+Pj4gb3V0IG9mIGFzeW5jX3N1c3BlbmQsIHNvIHdlIG1ha2UgdGhp
+cyBwYXRjaC4NCj4gPj4+DQo+ID4+PiBCam9ybiwgdGosDQo+ID4+PiBDb3VsZCB5b3Uga2luZGx5
+IHRha2UgdGhpcyBwYXRjaD8gQXMgQmFydG8gc2FpZCwgaXQgZWZmZWN0ZWQgdGhlIHVzZXINCj4g
+Pj4gZXhwZXJpZW5jZSBpbmRlZWQsIHRoYW5rcy4NCj4gPj4NCj4gPj4gVGhhbmtzIGZvciBjbGFy
+aWZ5aW5nIHRoZSBjaGFuZ2Vsb2cgYXMgZmFyIGFzIHRoZSBkaWZmZXJlbnQgY2hpcHMgYW5kDQo+
+ID4+IHRoZSBkaWZmZXJlbnQgYnVnemlsbGFzLg0KPiA+Pg0KPiA+PiBCdXQgeW91IGhhdmVuJ3Qg
+YWRkcmVzc2VkIG15IGNvbmNlcm5zIGFib3V0ICgxKSBwdXR0aW5nIGEgUENJIHZlbmRvcg0KPiA+
+PiBJRCBjaGVjayBpbiB0aGUgZ2VuZXJpYyBQQ0kgY29yZSBjb2RlLCBhbmQgKDIpIGFwcGx5aW5n
+IHRoaXMgdG8gKmFsbCoNCj4gPj4gSk1pY3JvbiBkZXZpY2VzLiAgWW91IG1pZ2h0IHdhbnQgdG8g
+ZXhwbG9yZSBhIHF1aXJrLXR5cGUgc29sdXRpb24gb3INCj4gPj4gbWF5YmUganVzdCBhZGQgdGhl
+IEpNaWNyb24gMzY4IHRvIHRoZSBjaGVja3MgYWRkZWQgYnkgZTZiN2U0MWNkZDhjLg0KPiA+IFVu
+ZGVyc3RhbmQgeW91ciBwb2ludCwgaW4gZmFjdCwgYmVmb3JlIHRoaXMgcGF0Y2ggc3VibWl0dGVk
+LCBJIGhhZCB3cml0dGVuDQo+IGFub3RoZXIgcGF0Y2ggaHR0cHM6Ly9sa21sLm9yZy9sa21sLzIw
+MTQvOS8yNC82OA0KPiA+IHdoaWNoIGFkZHJlc3NlZCB0byBhZGQgdGhlIHF1aXJrLXR5cGUgc29s
+dXRpb24gaW4gQVRBIGNvZGUsIGFuZCBBYXJvbiBnaXZlbg0KPiBiZXR0ZXIgc3VnZ2VzdGlvbiB0
+aGF0IGltcGxlbWVudGVkIGF0IHBjaV9wbV9pbml0KCkuDQo+ID4gSG93IGRvIHlvdSB0aGluayBv
+ZiBpdD8gVGhhbmtzLg0KPiANCj4gSSB0aGluayBCam9ybiBtZWFucyB0aGF0IHdlIHNob3VsZCBw
+bGFjZSB0aGUgY29kZSBhcyBhIGZpeHVwIHNvbWV3aGVyZQ0KPiBpbiB0aGUgcXVpcmtzLmMuIEkg
+ZGlkbid0IHRha2UgYSBjbG9zZXIgbG9vayBidXQgREVDTEFSRV9QQ0lfRklYVVBfRklOQUwNCj4g
+Zm9yIHRob3NlIEpNaWNyb24gUENJIGRldmljZXMgc2VlbXMgdG8gYmUgYSBwcm9wZXIgcGhhc2Uu
+DQoNClRoYW5rcyBBYXJvbiwgdGhlbiBob3cgYWJvdXQgYmVsb3cgcGF0Y2g/DQoNCmRpZmYgLS1n
+aXQgYS9kcml2ZXJzL2F0YS9wYXRhX2ptaWNyb24uYyBiL2RyaXZlcnMvYXRhL3BhdGFfam1pY3Jv
+bi5jDQppbmRleCA0N2U0MThiLi45ZTg1Zjg2IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9hdGEvcGF0
+YV9qbWljcm9uLmMNCisrKyBiL2RyaXZlcnMvYXRhL3BhdGFfam1pY3Jvbi5jDQpAQCAtMTU4LDYg
+KzE1OCwyMSBAQCBzdGF0aWMgaW50IGptaWNyb25faW5pdF9vbmUgKHN0cnVjdCBwY2lfZGV2ICpw
+ZGV2LCBjb25zdCBzdHJ1Y3QgcGNpX2RldmljZV9pZCAqaQ0KICAgICAgICByZXR1cm4gYXRhX3Bj
+aV9ibWRtYV9pbml0X29uZShwZGV2LCBwcGksICZqbWljcm9uX3NodCwgTlVMTCwgMCk7DQogfQ0K
+IA0KKy8qDQorICogRm9yIEpNaWNyb24gY2hpcHMsIHdlIG5lZWQgdG8gZGlzYWJsZSB0aGUgYXN5
+bmNfc3VzcGVuZCBtZXRob2QsIG90aGVyd2lzZQ0KKyAqIHRoZXkgd2lsbCBoaXQgdGhlIHBvd2Vy
+LW9uIGlzc3VlIHdoZW4gZG9pbmcgZGV2aWNlIHJlc3VtZSwgYWRkIG9uZSBxdWljaw0KKyAqIHNv
+bHV0aW9uIHRvIGRpc2FibGUgdGhlIGFzeW5jX3N1c3BlbmQgbWV0aG9kLg0KKyAqLw0KK3N0YXRp
+YyB2b2lkIHBjaV9hc3luY19zdXNwZW5kX2ZpeHVwKHN0cnVjdCBwY2lfZGV2ICpwZGV2KQ0KK3sN
+CisgICAgICAgLyoNCisgICAgICAgICogZGlzYWJsaW5nIHRoZSBhc3luY19zdXNwZW5kIG1ldGhv
+ZCBmb3IgSk1pY3JvbiBjaGlwcyB0bw0KKyAgICAgICAgKiBhdm9pZCBkZXZpY2UgcmVzdW1pbmcg
+aXNzdWUuDQorICAgICAgICAqLw0KKyAgICAgICBkZXZpY2VfZGlzYWJsZV9hc3luY19zdXNwZW5k
+KCZwZGV2LT5kZXYpOw0KK30NCitERUNMQVJFX1BDSV9GSVhVUF9GSU5BTChQQ0lfVkVORE9SX0lE
+X0pNSUNST04sIFBDSV9BTllfSUQsIHBjaV9hc3luY19zdXNwZW5kX2ZpeHVwKTsNCisNCiBzdGF0
+aWMgY29uc3Qgc3RydWN0IHBjaV9kZXZpY2VfaWQgam1pY3Jvbl9wY2lfdGJsW10gPSB7DQogICAg
+ICAgIHsgUENJX1ZFTkRPUl9JRF9KTUlDUk9OLCBQQ0lfQU5ZX0lELCBQQ0lfQU5ZX0lELCBQQ0lf
+QU5ZX0lELA0KICAgICAgICAgIFBDSV9DTEFTU19TVE9SQUdFX0lERSA8PCA4LCAweGZmZmYwMCwg
+MCB9LA0KDQpCYXJ0bywNCkNvdWxkIHlvdSBoYXZlIGEgdHJ5IG9uIHlvdXIgc2lkZT8gVGhhbmtz
+Lg0KDQoNCg==
