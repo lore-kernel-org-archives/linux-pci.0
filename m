@@ -1,60 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:55156 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750749AbaKLHmQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 12 Nov 2014 02:42:16 -0500
-Message-ID: <1415777029.5124.42.camel@kernel.crashing.org>
-Subject: Re: [PATCH RFC v2 1/2] drivers: pci: fix pci_mmap_fits()
- implementation for procfs mmap
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Martin Wilck <martin.wilck@ts.fujitsu.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Michael Ellerman <mpe@ellerman.id.au>
-Date: Wed, 12 Nov 2014 18:23:49 +1100
-In-Reply-To: <20141110230454.GA21470@google.com>
-References: <1414168089-8130-1-git-send-email-lorenzo.pieralisi@arm.com>
-	 <1414168089-8130-2-git-send-email-lorenzo.pieralisi@arm.com>
-	 <20141110230454.GA21470@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <545ACFC7.9090204@huawei.com>
+Date: Thu, 6 Nov 2014 09:32:55 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	"Matthias Brugger" <matthias.bgg@gmail.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"Tony Luck" <tony.luck@intel.com>, Joerg Roedel <joro@8bytes.org>,
+	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+	<x86@kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [Patch Part2 v4 20/31] PCI/MSI: Kill redundant calling for irq_set_msi_desc()
+ for MSIx interrupts
+References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com> <1415102525-9898-21-git-send-email-jiang.liu@linux.intel.com> <20141105224504.GG6168@google.com>
+In-Reply-To: <20141105224504.GG6168@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2014-11-10 at 16:04 -0700, Bjorn Helgaas wrote:
-> But I'm not sure I have this right.  If the procfs offset is either
-> the
-> CPU physical address or the BAR value, then pci_resource_to_user()
-> should be (depending on the arch) either a no-op or use
-> pci_resource_to_bus().
+On 2014/11/6 6:45, Bjorn Helgaas wrote:
+> On Tue, Nov 04, 2014 at 08:01:54PM +0800, Jiang Liu wrote:
+>> It's arch_setup_msi_irq()/arch_setup_msi_irqs()'s responsibility to call
+>> irq_set_msi_desc() to associate IRQ descriptors and MSI descriptors,
+>> so kill the redundant call of irq_set_msi_desc() for MSIx interrupts
+>> in PCI MSI core.
 > 
-> But that's not how it's implemented.  Maybe it *could* be?  If
-> pci_resource_to_user() gives you something that's not a CPU physical
-> address and not a bus address, what *does* it give you, and why would
-> we
-> need this third kind of thing?
+> "MSI-X" in English text, "msix" in code.
 > 
-> FWIW, I think the discussion leading up to pci_resource_to_user() is
-> here:
-> http://lkml.iu.edu/hypermail/linux/kernel/0504.3/0467.html
+> The default arch_setup_msi_irq() in drivers/pci/msi.c doesn't call
+> irq_set_msi_desc().  Does it happen somewhere inside chip->setup_irq()?
 
-Oh, man... I remember that was all a giant trainwreck and some stuff
-just couldn't be made completely right due to broken assumptions by
-the proc code and users of it... but I don't remember all the details.
+Yes.
 
-I think /proc users don't necessarily pass a BAR value but something
-they try to somewhat translates themselves via the "resources" file,
-which ends up working ... or not, depending on various factors such
-as 32 vs 64 bit etc...
+I also found this.
+http://www.spinics.net/lists/linux-pci/msg34256.html
 
-I wonder who still uses this interface....
+> 
+> I don't know how to verify that there are calls in all the places needed.
+> That makes me wonder if the factoring is wrong -- maybe irq_set_msi_desc()
+> could be done in some common place.
 
-Cheers,
-Ben.
+In my idea, place the irq_set_msi_desc() in common MSI core is ok, but currently almost
+all MSI arch code call irq_set_msi_desc() in arch code. So a lot of code need to change.
+And arch code setup MSI and MSI-X in the same way, so if MSI work happy without irq_set_msi_desc(entry->irq, entry)
+in common MSI code, MSI-X should be the same.
 
+> 
+>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>> ---
+>>  drivers/pci/msi.c |    1 -
+>>  1 file changed, 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>> index afe974600c7d..da181c59394b 100644
+>> --- a/drivers/pci/msi.c
+>> +++ b/drivers/pci/msi.c
+>> @@ -685,7 +685,6 @@ static void msix_program_entries(struct pci_dev *dev,
+>>  						PCI_MSIX_ENTRY_VECTOR_CTRL;
+>>  
+>>  		entries[i].vector = entry->irq;
+>> -		irq_set_msi_desc(entry->irq, entry);
+>>  		entry->masked = readl(entry->mask_base + offset);
+>>  		msix_mask_irq(entry, 1);
+>>  		i++;
+>> -- 
+>> 1.7.10.4
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
 
