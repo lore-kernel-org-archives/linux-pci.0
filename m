@@ -1,365 +1,323 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:34053 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932313AbaKSQFl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 11:05:41 -0500
-Received: by mail-wi0-f175.google.com with SMTP id l15so5891134wiw.8
-        for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2014 08:05:40 -0800 (PST)
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-To: catalin.marinas@arm.com, will.deacon@arm.com, bhelgaas@google.com,
-	lorenzo.pieralisi@arm.com, wangyijing@huawei.com, arnd@arndb.de,
-	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Subject: [PATCH 5/6] x86, acpi, pci: mmconfig_64.c becomes default implementation for arch agnostic low-level direct PCI config space accessors via MMCONFIG.
-Date: Wed, 19 Nov 2014 17:04:50 +0100
-Message-Id: <1416413091-13452-6-git-send-email-tomasz.nowicki@linaro.org>
-In-Reply-To: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org>
-References: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	iommu@lists.linux-foundation.org
+Subject: [Patch Part2 v5 26/31] x86: irq_remapping: Clean up unused MSI related code
+Date: Thu,  6 Nov 2014 22:20:39 +0800
+Message-Id: <1415283644-2559-27-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Note that x86 32bits machines still have its own low-level direct
-PCI config space accessors.
+Now MSI interrupt has been converted to new hierarchy irqdomain
+interfaces, so kill legacy MSI related code and interfaces.
 
-Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/pci/Makefile      |   5 +-
- arch/x86/pci/mmconfig_64.c | 152 ---------------------------------------------
- drivers/acpi/mmconfig.c    | 134 +++++++++++++++++++++++++++++++++++++++
- 3 files changed, 138 insertions(+), 153 deletions(-)
- delete mode 100644 arch/x86/pci/mmconfig_64.c
+ arch/x86/include/asm/irq_remapping.h |   13 ---
+ arch/x86/include/asm/pci.h           |    5 --
+ arch/x86/kernel/x86_init.c           |    2 -
+ drivers/iommu/irq_remapping.c        |  151 ----------------------------------
+ drivers/iommu/irq_remapping.h        |   14 ----
+ 5 files changed, 185 deletions(-)
 
-diff --git a/arch/x86/pci/Makefile b/arch/x86/pci/Makefile
-index 5c6fc35..35c765b 100644
---- a/arch/x86/pci/Makefile
-+++ b/arch/x86/pci/Makefile
-@@ -1,7 +1,10 @@
- obj-y				:= i386.o init.o
+diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
+index c4fa0d2291b8..61c50e6e28c8 100644
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -50,10 +50,6 @@ extern int setup_ioapic_remapped_entry(int irq,
+ 				       int vector,
+ 				       struct io_apic_irq_attr *attr);
+ extern void free_remapped_irq(int irq);
+-extern void compose_remapped_msi_msg(struct pci_dev *pdev,
+-				     unsigned int irq, unsigned int dest,
+-				     struct msi_msg *msg, u8 hpet_id);
+-extern int setup_hpet_msi_remapped(unsigned int irq, unsigned int id);
+ extern void panic_if_irq_remap(const char *msg);
+ extern bool setup_remapped_irq(int irq,
+ 			       struct irq_cfg *cfg,
+@@ -98,15 +94,6 @@ static inline int setup_ioapic_remapped_entry(int irq,
+ 	return -ENODEV;
+ }
+ static inline void free_remapped_irq(int irq) { }
+-static inline void compose_remapped_msi_msg(struct pci_dev *pdev,
+-					    unsigned int irq, unsigned int dest,
+-					    struct msi_msg *msg, u8 hpet_id)
+-{
+-}
+-static inline int setup_hpet_msi_remapped(unsigned int irq, unsigned int id)
+-{
+-	return -ENODEV;
+-}
  
- obj-$(CONFIG_PCI_BIOS)		+= pcbios.o
--obj-$(CONFIG_PCI_MMCONFIG)	+= mmconfig_$(BITS).o direct.o mmconfig-shared.o
-+obj-$(CONFIG_PCI_MMCONFIG)	+= direct.o mmconfig-shared.o
-+ifeq ($(BITS),32)
-+obj-$(CONFIG_PCI_MMCONFIG)	+= mmconfig_32.o
-+endif
- obj-$(CONFIG_PCI_DIRECT)	+= direct.o
- obj-$(CONFIG_PCI_OLPC)		+= olpc.o
- obj-$(CONFIG_PCI_XEN)		+= xen.o
-diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
-deleted file mode 100644
-index ff2c50c..0000000
---- a/arch/x86/pci/mmconfig_64.c
-+++ /dev/null
-@@ -1,152 +0,0 @@
--/*
-- * mmconfig.c - Low-level direct PCI config space access via MMCONFIG
-- *
-- * This is an 64bit optimized version that always keeps the full mmconfig
-- * space mapped. This allows lockless config space operation.
-- */
--
--#include <linux/pci.h>
--#include <linux/init.h>
--#include <linux/acpi.h>
--#include <linux/bitmap.h>
--#include <linux/rcupdate.h>
--#include <linux/mmconfig.h>
--#include <asm/e820.h>
--#include <asm/pci_x86.h>
--
--#define PREFIX "PCI: "
--
--static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus, unsigned int devfn)
--{
--	struct pci_mmcfg_region *cfg = pci_mmconfig_lookup(seg, bus);
--
--	if (cfg && cfg->virt)
--		return cfg->virt + (PCI_MMCFG_BUS_OFFSET(bus) | (devfn << 12));
--	return NULL;
--}
--
--int pci_mmcfg_read(unsigned int seg, unsigned int bus,
--			  unsigned int devfn, int reg, int len, u32 *value)
--{
--	char __iomem *addr;
--
--	/* Why do we have this when nobody checks it. How about a BUG()!? -AK */
--	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095))) {
--err:		*value = -1;
--		return -EINVAL;
--	}
--
--	rcu_read_lock();
--	addr = pci_dev_base(seg, bus, devfn);
--	if (!addr) {
--		rcu_read_unlock();
--		goto err;
--	}
--
--	switch (len) {
--	case 1:
--		*value = mmio_config_readb(addr + reg);
--		break;
--	case 2:
--		*value = mmio_config_readw(addr + reg);
--		break;
--	case 4:
--		*value = mmio_config_readl(addr + reg);
--		break;
--	}
--	rcu_read_unlock();
--
--	return 0;
--}
--
--int pci_mmcfg_write(unsigned int seg, unsigned int bus,
--			   unsigned int devfn, int reg, int len, u32 value)
--{
--	char __iomem *addr;
--
--	/* Why do we have this when nobody checks it. How about a BUG()!? -AK */
--	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
--		return -EINVAL;
--
--	rcu_read_lock();
--	addr = pci_dev_base(seg, bus, devfn);
--	if (!addr) {
--		rcu_read_unlock();
--		return -EINVAL;
--	}
--
--	switch (len) {
--	case 1:
--		mmio_config_writeb(addr + reg, value);
--		break;
--	case 2:
--		mmio_config_writew(addr + reg, value);
--		break;
--	case 4:
--		mmio_config_writel(addr + reg, value);
--		break;
--	}
--	rcu_read_unlock();
--
--	return 0;
--}
--
--const struct pci_raw_ops pci_mmcfg = {
--	.read =		pci_mmcfg_read,
--	.write =	pci_mmcfg_write,
--};
--
--static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
--{
--	void __iomem *addr;
--	u64 start, size;
--	int num_buses;
--
--	start = cfg->address + PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
--	num_buses = cfg->end_bus - cfg->start_bus + 1;
--	size = PCI_MMCFG_BUS_OFFSET(num_buses);
--	addr = ioremap_nocache(start, size);
--	if (addr)
--		addr -= PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
--	return addr;
--}
--
--int __init pci_mmcfg_arch_init(void)
--{
--	struct pci_mmcfg_region *cfg;
--
--	list_for_each_entry(cfg, &pci_mmcfg_list, list)
--		if (pci_mmcfg_arch_map(cfg)) {
--			pci_mmcfg_arch_free();
--			return 0;
--		}
--
--	return 1;
--}
--
--void __init pci_mmcfg_arch_free(void)
--{
--	struct pci_mmcfg_region *cfg;
--
--	list_for_each_entry(cfg, &pci_mmcfg_list, list)
--		pci_mmcfg_arch_unmap(cfg);
--}
--
--int pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg)
--{
--	cfg->virt = mcfg_ioremap(cfg);
--	if (!cfg->virt) {
--		pr_err(PREFIX "can't map MMCONFIG at %pR\n", &cfg->res);
--		return -ENOMEM;
--	}
--
--	return 0;
--}
--
--void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg)
--{
--	if (cfg && cfg->virt) {
--		iounmap(cfg->virt + PCI_MMCFG_BUS_OFFSET(cfg->start_bus));
--		cfg->virt = NULL;
--	}
--}
-diff --git a/drivers/acpi/mmconfig.c b/drivers/acpi/mmconfig.c
-index d62dccda..c0ad05f 100644
---- a/drivers/acpi/mmconfig.c
-+++ b/drivers/acpi/mmconfig.c
-@@ -12,14 +12,148 @@
- 
- #include <linux/mutex.h>
- #include <linux/rculist.h>
-+#include <linux/pci.h>
- #include <linux/mmconfig.h>
- 
-+#include <asm/pci.h>
-+
- #define PREFIX "PCI: "
- 
- static DEFINE_MUTEX(pci_mmcfg_lock);
- 
- LIST_HEAD(pci_mmcfg_list);
- 
-+static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus,
-+				  unsigned int devfn)
-+{
-+	struct pci_mmcfg_region *cfg = pci_mmconfig_lookup(seg, bus);
-+
-+	if (cfg && cfg->virt)
-+		return cfg->virt + (PCI_MMCFG_BUS_OFFSET(bus) | (devfn << 12));
-+	return NULL;
-+}
-+
-+int __weak pci_mmcfg_read(unsigned int seg, unsigned int bus,
-+			  unsigned int devfn, int reg, int len, u32 *value)
-+{
-+	char __iomem *addr;
-+
-+	/* Why do we have this when nobody checks it. How about a BUG()!? -AK */
-+	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095))) {
-+err:		*value = -1;
-+		return -EINVAL;
-+	}
-+
-+	rcu_read_lock();
-+	addr = pci_dev_base(seg, bus, devfn);
-+	if (!addr) {
-+		rcu_read_unlock();
-+		goto err;
-+	}
-+
-+	switch (len) {
-+	case 1:
-+		*value = mmio_config_readb(addr + reg);
-+		break;
-+	case 2:
-+		*value = mmio_config_readw(addr + reg);
-+		break;
-+	case 4:
-+		*value = mmio_config_readl(addr + reg);
-+		break;
-+	}
-+	rcu_read_unlock();
-+
-+	return 0;
-+}
-+
-+int __weak pci_mmcfg_write(unsigned int seg, unsigned int bus,
-+			   unsigned int devfn, int reg, int len, u32 value)
-+{
-+	char __iomem *addr;
-+
-+	/* Why do we have this when nobody checks it. How about a BUG()!? -AK */
-+	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
-+		return -EINVAL;
-+
-+	rcu_read_lock();
-+	addr = pci_dev_base(seg, bus, devfn);
-+	if (!addr) {
-+		rcu_read_unlock();
-+		return -EINVAL;
-+	}
-+
-+	switch (len) {
-+	case 1:
-+		mmio_config_writeb(addr + reg, value);
-+		break;
-+	case 2:
-+		mmio_config_writew(addr + reg, value);
-+		break;
-+	case 4:
-+		mmio_config_writel(addr + reg, value);
-+		break;
-+	}
-+	rcu_read_unlock();
-+
-+	return 0;
-+}
-+
-+static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
-+{
-+	void __iomem *addr;
-+	u64 start, size;
-+	int num_buses;
-+
-+	start = cfg->address + PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
-+	num_buses = cfg->end_bus - cfg->start_bus + 1;
-+	size = PCI_MMCFG_BUS_OFFSET(num_buses);
-+	addr = ioremap_nocache(start, size);
-+	if (addr)
-+		addr -= PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
-+	return addr;
-+}
-+
-+int __init __weak pci_mmcfg_arch_init(void)
-+{
-+	struct pci_mmcfg_region *cfg;
-+
-+	list_for_each_entry(cfg, &pci_mmcfg_list, list)
-+		if (pci_mmcfg_arch_map(cfg)) {
-+			pci_mmcfg_arch_free();
-+			return 0;
-+		}
-+
-+	return 1;
-+}
-+
-+void __init __weak pci_mmcfg_arch_free(void)
-+{
-+	struct pci_mmcfg_region *cfg;
-+
-+	list_for_each_entry(cfg, &pci_mmcfg_list, list)
-+		pci_mmcfg_arch_unmap(cfg);
-+}
-+
-+int __weak pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg)
-+{
-+	cfg->virt = mcfg_ioremap(cfg);
-+	if (!cfg->virt) {
-+		pr_err(PREFIX "can't map MMCONFIG at %pR\n", &cfg->res);
-+		return -ENOMEM;
-+	}
-+
-+	return 0;
-+}
-+
-+void __weak pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg)
-+{
-+	if (cfg && cfg->virt) {
-+		iounmap(cfg->virt + PCI_MMCFG_BUS_OFFSET(cfg->start_bus));
-+		cfg->virt = NULL;
-+	}
-+}
-+
- static void __init pci_mmconfig_remove(struct pci_mmcfg_region *cfg)
+ static inline void panic_if_irq_remap(const char *msg)
  {
- 	if (cfg->res.parent)
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 4e370a5d8117..d8c80ff32e8c 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -96,15 +96,10 @@ extern void pci_iommu_alloc(void);
+ #ifdef CONFIG_PCI_MSI
+ /* implemented in arch/x86/kernel/apic/io_apic. */
+ struct msi_desc;
+-void native_compose_msi_msg(struct pci_dev *pdev, unsigned int irq,
+-			    unsigned int dest, struct msi_msg *msg, u8 hpet_id);
+ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+ void native_teardown_msi_irq(unsigned int irq);
+ void native_restore_msi_irqs(struct pci_dev *dev);
+-int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+-		  unsigned int irq_base, unsigned int irq_offset);
+ #else
+-#define native_compose_msi_msg		NULL
+ #define native_setup_msi_irqs		NULL
+ #define native_teardown_msi_irq		NULL
+ #endif
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index e48b674639cc..814fcbadaad1 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -111,11 +111,9 @@ EXPORT_SYMBOL_GPL(x86_platform);
+ #if defined(CONFIG_PCI_MSI)
+ struct x86_msi_ops x86_msi = {
+ 	.setup_msi_irqs		= native_setup_msi_irqs,
+-	.compose_msi_msg	= native_compose_msi_msg,
+ 	.teardown_msi_irq	= native_teardown_msi_irq,
+ 	.teardown_msi_irqs	= default_teardown_msi_irqs,
+ 	.restore_msi_irqs	= default_restore_msi_irqs,
+-	.setup_hpet_msi		= default_setup_hpet_msi,
+ 	.msi_mask_irq		= default_msi_mask_irq,
+ 	.msix_mask_irq		= default_msix_mask_irq,
+ };
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 414ab0cddbbc..782dea5e4233 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -26,9 +26,6 @@ int no_x2apic_optout;
+ 
+ static struct irq_remap_ops *remap_ops;
+ 
+-static int msi_alloc_remapped_irq(struct pci_dev *pdev, int irq, int nvec);
+-static int msi_setup_remapped_irq(struct pci_dev *pdev, unsigned int irq,
+-				  int index, int sub_handle);
+ static int set_remapped_irq_affinity(struct irq_data *data,
+ 				     const struct cpumask *mask,
+ 				     bool force);
+@@ -51,109 +48,6 @@ static void irq_remapping_disable_io_apic(void)
+ 		disconnect_bsp_APIC(0);
+ }
+ 
+-#ifndef CONFIG_GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
+-static unsigned int irq_alloc_hwirqs(int cnt, int node)
+-{
+-	return irq_domain_alloc_irqs(NULL, -1, cnt, node, NULL);
+-}
+-
+-static void irq_free_hwirqs(unsigned int from, int cnt)
+-{
+-	irq_domain_free_irqs(from, cnt);
+-}
+-#endif
+-
+-static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
+-{
+-	int ret, sub_handle, nvec_pow2, index = 0;
+-	unsigned int irq;
+-	struct msi_desc *msidesc;
+-
+-	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
+-
+-	irq = irq_alloc_hwirqs(nvec, dev_to_node(&dev->dev));
+-	if (irq == 0)
+-		return -ENOSPC;
+-
+-	nvec_pow2 = __roundup_pow_of_two(nvec);
+-	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
+-		if (!sub_handle) {
+-			index = msi_alloc_remapped_irq(dev, irq, nvec_pow2);
+-			if (index < 0) {
+-				ret = index;
+-				goto error;
+-			}
+-		} else {
+-			ret = msi_setup_remapped_irq(dev, irq + sub_handle,
+-						     index, sub_handle);
+-			if (ret < 0)
+-				goto error;
+-		}
+-		ret = setup_msi_irq(dev, msidesc, irq, sub_handle);
+-		if (ret < 0)
+-			goto error;
+-	}
+-	return 0;
+-
+-error:
+-	irq_free_hwirqs(irq, nvec);
+-
+-	/*
+-	 * Restore altered MSI descriptor fields and prevent just destroyed
+-	 * IRQs from tearing down again in default_teardown_msi_irqs()
+-	 */
+-	msidesc->irq = 0;
+-
+-	return ret;
+-}
+-
+-static int do_setup_msix_irqs(struct pci_dev *dev, int nvec)
+-{
+-	int node, ret, sub_handle, index = 0;
+-	struct msi_desc *msidesc;
+-	unsigned int irq;
+-
+-	node		= dev_to_node(&dev->dev);
+-	sub_handle	= 0;
+-
+-	list_for_each_entry(msidesc, &dev->msi_list, list) {
+-
+-		irq = irq_alloc_hwirqs(1, node);
+-		if (irq == 0)
+-			return -1;
+-
+-		if (sub_handle == 0)
+-			ret = index = msi_alloc_remapped_irq(dev, irq, nvec);
+-		else
+-			ret = msi_setup_remapped_irq(dev, irq, index, sub_handle);
+-
+-		if (ret < 0)
+-			goto error;
+-
+-		ret = setup_msi_irq(dev, msidesc, irq, 0);
+-		if (ret < 0)
+-			goto error;
+-
+-		sub_handle += 1;
+-		irq        += 1;
+-	}
+-
+-	return 0;
+-
+-error:
+-	irq_free_hwirqs(irq, 1);
+-	return ret;
+-}
+-
+-static int irq_remapping_setup_msi_irqs(struct pci_dev *dev,
+-					int nvec, int type)
+-{
+-	if (type == PCI_CAP_ID_MSI)
+-		return do_setup_msi_irqs(dev, nvec);
+-	else
+-		return do_setup_msix_irqs(dev, nvec);
+-}
+-
+ static void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
+ {
+ 	/*
+@@ -171,8 +65,6 @@ static void __init irq_remapping_modify_x86_ops(void)
+ 	x86_io_apic_ops.set_affinity	= set_remapped_irq_affinity;
+ 	x86_io_apic_ops.setup_entry	= setup_ioapic_remapped_entry;
+ 	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
+-	x86_msi.setup_hpet_msi		= setup_hpet_msi_remapped;
+-	x86_msi.compose_msi_msg		= compose_remapped_msi_msg;
+ }
+ 
+ static __init int setup_nointremap(char *str)
+@@ -319,49 +211,6 @@ void free_remapped_irq(int irq)
+ 		remap_ops->free_irq(irq);
+ }
+ 
+-void compose_remapped_msi_msg(struct pci_dev *pdev,
+-			      unsigned int irq, unsigned int dest,
+-			      struct msi_msg *msg, u8 hpet_id)
+-{
+-	struct irq_cfg *cfg = irq_cfg(irq);
+-
+-	if (!irq_remapped(cfg))
+-		native_compose_msi_msg(pdev, irq, dest, msg, hpet_id);
+-	else if (remap_ops && remap_ops->compose_msi_msg)
+-		remap_ops->compose_msi_msg(pdev, irq, dest, msg, hpet_id);
+-}
+-
+-static int msi_alloc_remapped_irq(struct pci_dev *pdev, int irq, int nvec)
+-{
+-	if (!remap_ops || !remap_ops->msi_alloc_irq)
+-		return -ENODEV;
+-
+-	return remap_ops->msi_alloc_irq(pdev, irq, nvec);
+-}
+-
+-static int msi_setup_remapped_irq(struct pci_dev *pdev, unsigned int irq,
+-				  int index, int sub_handle)
+-{
+-	if (!remap_ops || !remap_ops->msi_setup_irq)
+-		return -ENODEV;
+-
+-	return remap_ops->msi_setup_irq(pdev, irq, index, sub_handle);
+-}
+-
+-int setup_hpet_msi_remapped(unsigned int irq, unsigned int id)
+-{
+-	int ret;
+-
+-	if (!remap_ops || !remap_ops->alloc_hpet_msi)
+-		return -ENODEV;
+-
+-	ret = remap_ops->alloc_hpet_msi(irq, id);
+-	if (ret)
+-		return -EINVAL;
+-
+-	return default_setup_hpet_msi(irq, id);
+-}
+-
+ void panic_if_irq_remap(const char *msg)
+ {
+ 	if (irq_remapping_enabled)
+diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
+index 8c159d6fac46..95b19a6ef16a 100644
+--- a/drivers/iommu/irq_remapping.h
++++ b/drivers/iommu/irq_remapping.h
+@@ -70,20 +70,6 @@ struct irq_remap_ops {
+ 	/* Free an IRQ */
+ 	int (*free_irq)(int);
+ 
+-	/* Create MSI msg to use for interrupt remapping */
+-	void (*compose_msi_msg)(struct pci_dev *,
+-				unsigned int, unsigned int,
+-				struct msi_msg *, u8);
+-
+-	/* Allocate remapping resources for MSI */
+-	int (*msi_alloc_irq)(struct pci_dev *, int, int);
+-
+-	/* Setup the remapped MSI irq */
+-	int (*msi_setup_irq)(struct pci_dev *, unsigned int, int, int);
+-
+-	/* Setup interrupt remapping for an HPET MSI */
+-	int (*alloc_hpet_msi)(unsigned int, unsigned int);
+-
+ 	/* Get the irqdomain associated the IOMMU device */
+ 	struct irq_domain *(*get_ir_irq_domain)(struct irq_alloc_info *);
+ 
 -- 
-1.9.1
+1.7.10.4
 
