@@ -1,60 +1,80 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v6 23/27] x86, irq: Normalize x86 irq_chip name
-Date: Tue, 25 Nov 2014 13:53:32 +0800
-Message-Id: <1416894816-23245-24-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [Patch Part2 v5 18/31] PCI/MSI: Remove unnecessary braces around single statements
+Date: Thu,  6 Nov 2014 22:20:31 +0800
+Message-Id: <1415283644-2559-19-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some irq_chip names use underscore, others use hyphen. So normalize them
-to use hythen as separator.
+Per Documentation/CodingStyle, don't use braces around single statements.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/x86/kernel/apic/msi.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/msi.c |    9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index a24b803b199a..2bf13484fbfd 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -188,7 +188,7 @@ dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 9fab30af0e75..fb2ccb536324 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -244,9 +244,8 @@ void default_restore_msi_irqs(struct pci_dev *dev)
+ {
+ 	struct msi_desc *entry;
+ 
+-	list_for_each_entry(entry, &dev->msi_list, list) {
++	list_for_each_entry(entry, &dev->msi_list, list)
+ 		default_restore_msi_irq(dev, entry->irq);
+-	}
  }
  
- static struct irq_chip dmar_msi_controller = {
--	.name			= "DMAR_MSI",
-+	.name			= "DMAR-MSI",
- 	.irq_unmask		= dmar_msi_unmask,
- 	.irq_mask		= dmar_msi_mask,
- 	.irq_ack		= irq_chip_ack_parent,
-@@ -319,7 +319,7 @@ static int hpet_msi_set_affinity(struct irq_data *data,
- }
+ void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+@@ -451,9 +450,8 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
+ 				PCI_MSIX_FLAGS_ENABLE | PCI_MSIX_FLAGS_MASKALL);
  
- static struct irq_chip hpet_msi_controller = {
--	.name = "HPET_MSI",
-+	.name = "HPET-MSI",
- 	.irq_unmask = hpet_msi_unmask,
- 	.irq_mask = hpet_msi_mask,
- 	.irq_ack = irq_chip_ack_parent,
+ 	arch_restore_msi_irqs(dev);
+-	list_for_each_entry(entry, &dev->msi_list, list) {
++	list_for_each_entry(entry, &dev->msi_list, list)
+ 		msix_mask_irq(entry, entry->masked);
+-	}
+ 
+ 	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
+ }
+@@ -497,9 +495,8 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+ 	int count = 0;
+ 
+ 	/* Determine how many msi entries we have */
+-	list_for_each_entry(entry, &pdev->msi_list, list) {
++	list_for_each_entry(entry, &pdev->msi_list, list)
+ 		++num_msi;
+-	}
+ 	if (!num_msi)
+ 		return 0;
+ 
 -- 
 1.7.10.4
 
