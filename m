@@ -1,116 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54350 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750948AbaKUWI4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 21 Nov 2014 17:08:56 -0500
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH 3/3] PCI: Extend and export pci_msi_supported() for
-	multivector MSI
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, tglx@linutronix.de, mingo@redhat.com,
-	hpa@zytor.com, joro@8bytes.org, iommu@lists.linux-foundation.org
-Date: Fri, 21 Nov 2014 15:08:46 -0700
-Message-ID: <20141121220845.31095.19173.stgit@gimli.home>
-In-Reply-To: <20141121213752.31095.30735.stgit@gimli.home>
-References: <20141121213752.31095.30735.stgit@gimli.home>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <545AF986.1040903@linux.intel.com>
+Date: Thu, 06 Nov 2014 12:31:02 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+To: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [Patch Part2 v4 20/31] PCI/MSI: Kill redundant calling for irq_set_msi_desc()
+ for MSIx interrupts
+References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com> <1415102525-9898-21-git-send-email-jiang.liu@linux.intel.com> <20141105224504.GG6168@google.com> <545ACFC7.9090204@huawei.com>
+In-Reply-To: <545ACFC7.9090204@huawei.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Embrace and extend this existing function as an interface to test
-for multivector MSI support.  Drivers can now call this function
-with nvec >1 and type PCI_CAP_ID_MSI to verify whether the platform
-is capable of supporting multiple MSI vectors.
+On 2014/11/6 9:32, Yijing Wang wrote:
+> On 2014/11/6 6:45, Bjorn Helgaas wrote:
+>> On Tue, Nov 04, 2014 at 08:01:54PM +0800, Jiang Liu wrote:
+>>> It's arch_setup_msi_irq()/arch_setup_msi_irqs()'s responsibility to call
+>>> irq_set_msi_desc() to associate IRQ descriptors and MSI descriptors,
+>>> so kill the redundant call of irq_set_msi_desc() for MSIx interrupts
+>>> in PCI MSI core.
+>>
+>> "MSI-X" in English text, "msix" in code.
+>>
+>> The default arch_setup_msi_irq() in drivers/pci/msi.c doesn't call
+>> irq_set_msi_desc().  Does it happen somewhere inside chip->setup_irq()?
+> 
+> Yes.
+> 
+> I also found this.
+> http://www.spinics.net/lists/linux-pci/msg34256.html
+> 
+>>
+>> I don't know how to verify that there are calls in all the places needed.
+>> That makes me wonder if the factoring is wrong -- maybe irq_set_msi_desc()
+>> could be done in some common place.
+> 
+> In my idea, place the irq_set_msi_desc() in common MSI core is ok, but currently almost
+> all MSI arch code call irq_set_msi_desc() in arch code. So a lot of code need to change.
+> And arch code setup MSI and MSI-X in the same way, so if MSI work happy without irq_set_msi_desc(entry->irq, entry)
+> in common MSI code, MSI-X should be the same.
+Hi Bjorn and Yijing,
+	I originally plan was to move irq_set_msi_desc() into common
+PCI MSI code. But when implementing this, I found every
+arch_setup_msi_irq()/arch_setup_msi_irqs() needs to set msidesc->irq,
+thus need to lock the irq descriptor. So I realized we should
+rely on arch_setup_msi_irq() to call irq_set_msi_desc():)
+Regards!
+Gerry
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
-
- drivers/pci/msi.c   |   15 ++++++++++++---
- include/linux/pci.h |    3 +++
- 2 files changed, 15 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 36b503a..da3c709 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -793,12 +793,13 @@ out_free:
-  * pci_msi_supported - check whether MSI may be enabled on a device
-  * @dev: pointer to the pci_dev data structure of MSI device function
-  * @nvec: how many MSIs have been requested ?
-+ * @type: PCI_CAP_ID_MSI or PCI_CAP_ID_MSIX
-  *
-  * Look at global flags, the device itself, and its parent buses
-  * to determine if MSI/-X are supported for the device. If MSI/-X is
-  * supported return 1, else return 0.
-  **/
--static int pci_msi_supported(struct pci_dev *dev, int nvec)
-+int pci_msi_supported(struct pci_dev *dev, int nvec, int type)
- {
- 	struct pci_bus *bus;
- 
-@@ -809,6 +810,9 @@ static int pci_msi_supported(struct pci_dev *dev, int nvec)
- 	if (!dev || dev->no_msi || dev->current_state != PCI_D0)
- 		return 0;
- 
-+	if (type != PCI_CAP_ID_MSI && type != PCI_CAP_ID_MSIX)
-+		return 0;
-+
- 	/*
- 	 * You can't ask to have 0 or less MSIs configured.
- 	 *  a) it's stupid ..
-@@ -828,8 +832,13 @@ static int pci_msi_supported(struct pci_dev *dev, int nvec)
- 		if (bus->bus_flags & PCI_BUS_FLAGS_NO_MSI)
- 			return 0;
- 
-+	if (type == PCI_CAP_ID_MSI && nvec > 1 &&
-+	    !arch_supports_multivector_msi(dev))
-+		return 0;
-+
- 	return 1;
- }
-+EXPORT_SYMBOL(pci_msi_supported);
- 
- /**
-  * pci_msi_vec_count - Return the number of MSI vectors a device can send
-@@ -930,7 +939,7 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
- 	int nr_entries;
- 	int i, j;
- 
--	if (!pci_msi_supported(dev, nvec))
-+	if (!pci_msi_supported(dev, nvec, PCI_CAP_ID_MSIX))
- 		return -EINVAL;
- 
- 	if (!entries)
-@@ -1041,7 +1050,7 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
- 	int nvec;
- 	int rc;
- 
--	if (!pci_msi_supported(dev, minvec))
-+	if (!pci_msi_supported(dev, minvec, PCI_CAP_ID_MSI))
- 		return -EINVAL;
- 
- 	WARN_ON(!!dev->msi_enabled);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c9a8904..f20605e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1197,6 +1197,7 @@ struct msix_entry {
- 
- 
- #ifdef CONFIG_PCI_MSI
-+int pci_msi_supported(struct pci_dev *dev, int nvec, int type);
- int pci_msi_vec_count(struct pci_dev *dev);
- void pci_msi_shutdown(struct pci_dev *dev);
- void pci_disable_msi(struct pci_dev *dev);
-@@ -1225,6 +1226,8 @@ static inline int pci_enable_msix_exact(struct pci_dev *dev,
- 	return 0;
- }
- #else
-+static inline int pci_msi_supported(struct pci_dev *dev, int nvec, int type)
-+{ return 0; }
- static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
- static inline void pci_msi_shutdown(struct pci_dev *dev) { }
- static inline void pci_disable_msi(struct pci_dev *dev) { }
-
+> 
+>>
+>>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>>> ---
+>>>  drivers/pci/msi.c |    1 -
+>>>  1 file changed, 1 deletion(-)
+>>>
+>>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>>> index afe974600c7d..da181c59394b 100644
+>>> --- a/drivers/pci/msi.c
+>>> +++ b/drivers/pci/msi.c
+>>> @@ -685,7 +685,6 @@ static void msix_program_entries(struct pci_dev *dev,
+>>>  						PCI_MSIX_ENTRY_VECTOR_CTRL;
+>>>  
+>>>  		entries[i].vector = entry->irq;
+>>> -		irq_set_msi_desc(entry->irq, entry);
+>>>  		entry->masked = readl(entry->mask_base + offset);
+>>>  		msix_mask_irq(entry, 1);
+>>>  		i++;
+>>> -- 
+>>> 1.7.10.4
+>>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>> .
+>>
+> 
+> 
