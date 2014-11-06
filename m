@@ -1,109 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0118.outbound.protection.outlook.com ([157.56.111.118]:29774
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933262AbaKNMHU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 14 Nov 2014 07:07:20 -0500
-From: "Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>
-To: Lucas Stach <l.stach@pengutronix.de>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>
-CC: Srikanth Thokala <sriku.linux@gmail.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: RE: [PATCH v2] PCI: designware: Add support 4 ATUs assignment
-Date: Fri, 14 Nov 2014 11:30:48 +0000
-Message-ID: <ceb189ef55cf44588b212cc44bb19ef5@BN3PR0301MB1249.namprd03.prod.outlook.com>
-References: <1415682444-24911-1-git-send-email-Minghuan.Lian@freescale.com>
-	 <CA+mB=1+4Dzxhbin6z0PUENvjUz-y8bq-K09FXTnSepFvVfe9HQ@mail.gmail.com>
-	 <546308DD.40109@freescale.com>
-	 <CA+mB=1K=Oyzdb2yfBvPRG9DHi-PFjRPtVS_dY9JMOz6dQog8QQ@mail.gmail.com>
-	 <546331E7.5060003@freescale.com>
-	 <CA+mB=1KObT9O783SMcvHy8nJGQPnxyKgP332r5bHx-K_D+LhVg@mail.gmail.com>
-	 <1415809929.2876.5.camel@pengutronix.de> <546481A3.5050700@freescale.com>
-	 <1415874015.2420.5.camel@pengutronix.de> <54648D61.6050704@freescale.com>
-	 <1415876988.2420.7.camel@pengutronix.de> <5465C19D.3060801@freescale.com>
- <1415959338.4445.1.camel@pengutronix.de>
-In-Reply-To: <1415959338.4445.1.camel@pengutronix.de>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <545B3071.6040904@laposte.net>
+Date: Thu, 06 Nov 2014 09:25:21 +0100
+From: Barto <mister.freeman@laposte.net>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+To: "Liu, Chuansheng" <chuansheng.liu@intel.com>,
+	"Lu, Aaron" <aaron.lu@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: "Tejun Heo (tj@kernel.org)" <tj@kernel.org>,
+	Rafael Wysocki <rjw@rjwysocki.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Do not enable async suspend for JMicron chips
+References: <1415151063-2530-1-git-send-email-chuansheng.liu@intel.com> <CAErSpo6cWP2ngErLVzqASkeQOLsB7JjgCC8UuA-S=Lz=AJyf6Q@mail.gmail.com> <545A7087.3050802@laposte.net> <CAErSpo4fvoeP9Gab1ZDg=ofjH+aqxGD09nLDTF1ZERnH=yEPxw@mail.gmail.com> <27240C0AC20F114CBF8149A2696CBE4A01EB7713@SHSMSX101.ccr.corp.intel.com> <CAErSpo4py1GdxczyzgLxjbgmfGEQ6o+He=7wxuVS0BM-Oyd6_w@mail.gmail.com> <27240C0AC20F114CBF8149A2696CBE4A01EB7B96@SHSMSX101.ccr.corp.intel.com> <545B08DF.2090608@intel.com> <27240C0AC20F114CBF8149A2696CBE4A01EB7CC3@SHSMSX101.ccr.corp.intel.com>
+In-Reply-To: <27240C0AC20F114CBF8149A2696CBE4A01EB7CC3@SHSMSX101.ccr.corp.intel.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogTHVjYXMgU3RhY2ggW21h
-aWx0bzpsLnN0YWNoQHBlbmd1dHJvbml4LmRlXQ0KPiBTZW50OiBGcmlkYXksIE5vdmVtYmVyIDE0
-LCAyMDE0IDY6MDIgUE0NCj4gVG86IExpYW4gTWluZ2h1YW4tQjMxOTM5DQo+IENjOiBTcmlrYW50
-aCBUaG9rYWxhOyBMaWFuIE1pbmdodWFuLUIzMTkzOTsgbGludXgtcGNpQHZnZXIua2VybmVsLm9y
-ZzsNCj4gbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOyBaYW5nIFJveS1SNjE5
-MTE7IEh1IE1pbmdrYWktQjIxMjg0Ow0KPiBCam9ybiBIZWxnYWFzDQo+IFN1YmplY3Q6IFJlOiBb
-UEFUQ0ggdjJdIFBDSTogZGVzaWdud2FyZTogQWRkIHN1cHBvcnQgNCBBVFVzIGFzc2lnbm1lbnQN
-Cj4gDQo+IEFtIEZyZWl0YWcsIGRlbiAxNC4xMS4yMDE0LCAxNjo0NyArMDgwMCBzY2hyaWViIExp
-YW4gTWluZ2h1YW4tQjMxOTM5Og0KPiA+IEhpIEx1Y2FzIGFuZCBhbGwsDQo+ID4NCj4gPiBPbiAy
-MDE05bm0MTHmnIgxM+aXpSAxOTowOSwgTHVjYXMgU3RhY2ggd3JvdGU6DQo+ID4gPiBBbSBEb25u
-ZXJzdGFnLCBkZW4gMTMuMTEuMjAxNCwgMTg6NTIgKzA4MDAgc2NocmllYiBMaWFuIE1pbmdodWFu
-LQ0KPiBCMzE5Mzk6DQo+ID4gPj4gSGkgTHVjYXMsDQo+ID4gPj4NCj4gPiA+PiBPbiAyMDE05bm0
-MTHmnIgxM+aXpSAxODoyMCwgTHVjYXMgU3RhY2ggd3JvdGU6DQo+ID4gPj4+IEFtIERvbm5lcnN0
-YWcsIGRlbiAxMy4xMS4yMDE0LCAxODowMiArMDgwMCBzY2hyaWViIExpYW4gTWluZ2h1YW4tDQo+
-IEIzMTkzOToNCj4gPiA+Pj4+IEhpIEx1Y2FzLA0KPiA+ID4+Pj4NCj4gPiA+Pj4+IFBsZWFzZSBz
-ZWUgbXkgY29tbWVudHMgaW5saW5lLg0KPiA+ID4+Pj4NCj4gPiA+Pj4+IFRoYW5rcywNCj4gPiA+
-Pj4+IE1pbmdodWFuDQo+ID4gPj4+Pg0KPiA+ID4+Pj4gT24gMjAxNOW5tDEx5pyIMTPml6UgMDA6
-MzIsIEx1Y2FzIFN0YWNoIHdyb3RlOg0KPiA+ID4+Pj4+IEFtIE1pdHR3b2NoLCBkZW4gMTIuMTEu
-MjAxNCwgMjE6NTMgKzA1MzAgc2NocmllYiBTcmlrYW50aCBUaG9rYWxhOg0KPiA+ID4+Pj4+PiBI
-aSBNaW5naHVhbiwNCj4gPiA+Pj4gWy4uLl0NCj4gPiA+Pj4NCj4gPiA+Pj4+PiBVc2luZyBhIHNt
-YWxsZXIgdHlwZSBjb21wbGljYXRlcyB0aGUgRFQgZm9yIGxpdHRsZSB0byBubw0KPiA+ID4+Pj4+
-IGJlbmVmaXQuIEkgdGhpbmsgaXQncyBvayB0byB1c2UgdTMyIGhlcmUsIHdoaWNoIGlzIGEgY29t
-bW9uDQo+ID4gPj4+Pj4gc3RhbmRhcmQgZm9yIGludGVnZXIgdmFsdWVzIGluIERULg0KPiA+ID4+
-Pj4+DQo+ID4gPj4+Pj4gVGhvdWdoIHRoaXMgZGlzY3Vzc2lvbiBsZWFkIG1lIHRvIHRoZSBxdWVz
-dGlvbiBpZiB3ZSBldmVuIG5lZWQNCj4gPiA+Pj4+PiB0byBoYXZlIHRoaXMgcHJvcGVydHkgaW4g
-dGhlIERUIGF0IGFsbC4gSXNuJ3QgdGhpcyBhIHByb3BlcnR5DQo+ID4gPj4+Pj4gdGhhdCBpcyBm
-aXhlZCBmb3IgYSBzcGVjaWZpYyBzaWxpY29uIGltcGxlbWVudGF0aW9uIG9mIHRoZSBEVw0KPiA+
-ID4+Pj4+IGNvcmU/IEluIHRoYXQgY2FzZSB3ZSBjb3VsZCBqdXN0IGluZmVyIHRoZSBudW1iZXIg
-b2YgQVRVcyBmcm9tDQo+ID4gPj4+Pj4gdGhlIERUIGNvbXBhdGlibGUsIHNvIHRoaXMgc2hvdWxk
-IHByb2JhYmx5IGp1c3QgYmUgYWRkZWQgdG8NCj4gPiA+Pj4+PiBzdHJ1Y3QgcGNpZV9wb3J0IGFu
-ZCBwcm9wZXJseSBpbml0aWFsaXplZCBieSB0aGUgU29DIGdsdWUgZHJpdmVycy4NCj4gPiA+Pj4+
-IFtNaW5naHVhbl0gIEFzIGZhciBhcyBJIGtub3csIGV4eW5vcyBpbXBsZW1lbnRzIG9ubHkgMiBB
-VFVzLCB0aGlzDQo+ID4gPj4+PiBpcyB3aHkgcGNpZS1kZXNpZ253YXJlIG9ubHkgc3VwcG9ydHMg
-MiBBVFUuIGlNWCBpbXBsZW1lbnRzIDQgQVRVcw0KPiA+ID4+Pj4gYW5kIExTMTAyMUEgaW1wbGVt
-ZW50cyA2IEFUVXMuDQo+ID4gPj4+Pg0KPiA+ID4+PiBSaWdodCBzbyB3ZSBkb24ndCBuZWVkIGFu
-IGFkZGl0aW9uYWwgcHJvcGVydHkgaW4gdGhlIERUIGF0IGFsbC4NCj4gPiA+Pj4gVGhlIG51bWJl
-ciBvZiBBVFVzIGlzIGZpeGVkIGZvciBhIHNwZWNpZmljIGNvcmUgY29tcGF0aWJsZSBhbmQgY2Fu
-DQo+ID4gPj4+IGJlIHBhc3NlZCBpbiBieSB0aGUgcmVzcGVjdGl2ZSBleHlub3MsIGlteCBhbmQg
-bHMxMDIxIGdsdWUgZHJpdmVycy4NCj4gPiA+Pj4NCj4gPiA+Pj4gWW91IG1heSBhc2sgdGhlIEtl
-eXN0b25lIGFuZCBTcGVhciBtYWludGFpbmVycyB0byBnZXQgdGhlIGNvcnJlY3QNCj4gPiA+Pj4g
-bnVtYmVyIG9mIEFUVXMgZm9yIHRob3NlIGltcGxlbWVudGF0aW9ucy4NCiA+ID4+Pg0KPiA+ID4+
-PiBSZWdhcmRzLA0KPiA+ID4+PiBMdWNhcw0KPiA+ID4+IFtNaW5naHVhbl0gWWVzLiBUaGlzIGEg
-d2F5IHRoYXQgc3BlY2lmaWMgY29yZSBkcml2ZXIgcGFzc2VzIHRoZSBBVFUNCj4gPiA+PiBudW1i
-ZXIgdG8gcGNpLWRlc2lnbndhcmUuIEJ1dCBJIHBlcmZlciB0byBhZGRpbmcgZHRzIG5vZGUgZm9y
-IHRoZQ0KPiA+ID4+IGZvbGxvd2luZyByZWFzb25zOg0KPiA+ID4+IDEuIEFUVSBudW1iZXIgaXMg
-aGFyZHdhcmUgYXR0cmlidXRlLCBzbyBpdCBjYW4gYmUgYWRkZWQgdG8gRFRTLg0KPiA+ID4gQnV0
-IGl0IGlzIGEgZHVwbGljYXRpb24gb2YgaW5mb3JtYXRpb24gdGhhdCBjYW4gYmUgaW5mZXJyZWQg
-ZnJvbSB0aGUNCj4gPiA+IERUIGNvbXBhdGlibGUgYWxvbmUsIHdoaWNoIGlzIHVzdWFsbHkgZnJv
-d25lZCB1cG9uLg0KPiA+ID4NCj4gPiA+IEFsc28gaW4gY29udHJhc3QgdG8gdGhlIG51bS1sYW5l
-cyBwcm9wZXJ0eSBJIGRvbid0IHNlZSBhIHVzZS1jYXNlIHRvDQo+ID4gPiByZWR1Y2UgdGhlIG51
-bWJlciBvZiB1c2VkIEFUVXMgaW4gYSBzcGVjaWZpYyBzeXN0ZW0sIHNvIG51bS1hdHVzIGlzDQo+
-ID4gPiBiYXNpY2FsbHkgZml4ZWQgZm9yIGEgc3BlY2lmaWMgaW1wbGVtZW50YXRpb24uDQo+ID4g
-W01pbmdodWFuXSA0QVRVcyBwcm92aWRlcyBiZXR0ZXIgc3VwcG9ydCBmb3IgbXVsdGlwbGUtZnVu
-Y3Rpb24gYW5kDQo+ID4gU1ItSU9WIFBDSWUgZGV2aWNlcy4NCj4gPiBDYW4gYW55b25lIHRlbGwg
-bWUgaWYgdGhlcmUgaXMgdGhlIGNvbXBhbnkgd2lsbCBpbmNyZWFzZSBBVFVzIG51bWJlcj8NCj4g
-PiBJZiB5ZXMsIHdlIHNob3VsZCBhdm9pZCB0aGUgZm9sbG93aW5nIGNvZGU6DQo+ID4NCj4gPiBp
-ZiAob2ZfZGV2aWNlX2lzX2NvbXBhdGlibGUocGNpZS0+ZGV2LT5vZl9ub2RlLCAieHh4LHIxLXBj
-aWUiKSkNCj4gPiAgICAgIGF0dV9udW0gPSAyOw0KPiA+DQo+ID4gaWYgKG9mX2RldmljZV9pc19j
-b21wYXRpYmxlKHBjaWUtPmRldi0+b2Zfbm9kZSwgInh4eCxyMi1wY2llIikpDQo+ID4gICAgICBh
-dHVfbnVtID0gNDsNCj4gPg0KPiBUaGUgbnVtYmVyIG9mIEFUVXMgaXMgZml4ZWQgZm9yIGEgc3Bl
-Y2lmaWMgaW1wbGVtZW50YXRpb24uIElmIHRoZSBudW1iZXINCj4gb2YgQVRVcyBjaGFuZ2VzIGlu
-IGEgbmV3ZXIgaW1wbGVtZW50YXRpb24gb2YgYSBTb0MgdGhlbiB0aGUgc2lsaWNvbg0KPiBpbXBs
-ZW1lbnRhdGlvbiBvZiB0aGUgRFcgUENJZSBjb3JlIGNoYW5nZWQsIHNvIGl0IHNob3VsZCBnZXQg
-YSBuZXcNCj4gY29tcGF0aWJsZSBhbnl3YXkuDQo+IA0KDQpJZiB0aGVyZSBhcmUgbXVsdGlwbGUg
-cGxhdGZvcm1zIHRvIHVzZSB0aGUgc2FtZSBTb0MgZHJpdmVyLCB0aGVyZSB3aWxsIGJlDQptdWx0
-aXBsZSBjYXNlcyBmb3IgZGlmZmVyZW50IHBsYXRmb3JtcyBhcyBNaW5naHVhbiBoYXMgcG9pbnRl
-ZCBvdXQuDQoNCkZvciB0aGUgcGxhdGZvcm0gdGhhdCBvbmx5IGhhcyAyIEFUVXMsIEFUVTAgaXMg
-dXNlZCBmb3IgQ0ZHMCBhbmQgTUVNIGFuZA0KdGhlcmUgd2lsbCBiZSBjb25mbGljdCB3aGVuIE1F
-TSBhbmQgQ0ZHMCBhcmUgYWNjZXNzZWQgc2ltdWx0YW5lb3VzbHkgd2hpY2gNCmhhcyBjYXVzZSB0
-aGUgU0FUQSBsaW5rIGlzc3VlLiBJIHRoaW5rIG1vcmUgQVRVcyB3aWxsIGJlIGFkZGVkIGluIHRo
-ZSANCmZ1dHVyZSBkZXNpZ24sIHRoZW4gb25lIGRyaXZlciBtYXliZSBuZWVkIHRvIGhhbmRsZSBt
-dWx0aXBsZSBwbGF0Zm9ybXMuDQoNCkRUUyBpcyBkZXNpZ25lZCBmb3IgdG8gZGVzY3JpYmUgdGhl
-IGhhcmR3YXJlIHByb3BlcnR5LCBpdCdzIGEgZ2VuZXJhbCB3YXkNCnRvIHB1dCBoYXJkd2FyZSBy
-ZWxhdGVkIHByb3BlcnR5IGludG8gRFRTLg0KDQpUaGFua3MsDQpNaW5na2FpDQoNCg==
+I tried your patch and it doesn't work,
+
+I think you have forgotten something, maybe you need also to modify the
+file /drivers/ata/ahci.c and not only /drivers/ata/pata_jmicron.c
+
+don't forget that I have a JMB363/368 SATA/IDE controller PCIe, which is
+both a SATA and IDE controller in one PCie card, and a IDE hardisk is
+connected on this JMB363/368 SATA/IDE controller PCIe,
+
+for now the patch who works is this :
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2046,7 +2046,17 @@ void pci_pm_init(struct pci_dev *dev)
+ 	pm_runtime_forbid(&dev->dev);
+ 	pm_runtime_set_active(&dev->dev);
+ 	pm_runtime_enable(&dev->dev);
+-	device_enable_async_suspend(&dev->dev);
++	
++     /*
++      * The JMicron chip 361/363/368 contains one SATA controller and
++      * one PATA controller, they are brother-relation ship in PCI tree,
++      * but for powering on these both controller, we must follow the
++      * sequence one by one, otherwise one of them can not be powered on
++      * successfully, so here we disable the async suspend method for
++      * Jmicron chip.
++      */
++     if (dev->vendor != PCI_VENDOR_ID_JMICRON)
++         device_enable_async_suspend(&dev->dev);
+ 	dev->wakeup_prepared = false;
+
+ 	dev->pm_cap = 0;
+
+
+Le 06/11/2014 07:39, Liu, Chuansheng a écrit :
+> 
+
+> diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
+> index 47e418b..9e85f86 100644
+> --- a/drivers/ata/pata_jmicron.c
+> +++ b/drivers/ata/pata_jmicron.c
+> @@ -158,6 +158,21 @@ static int jmicron_init_one (struct pci_dev *pdev, const struct pci_device_id *i
+>         return ata_pci_bmdma_init_one(pdev, ppi, &jmicron_sht, NULL, 0);
+>  }
+>  
+> +/*
+> + * For JMicron chips, we need to disable the async_suspend method, otherwise
+> + * they will hit the power-on issue when doing device resume, add one quick
+> + * solution to disable the async_suspend method.
+> + */
+> +static void pci_async_suspend_fixup(struct pci_dev *pdev)
+> +{
+> +       /*
+> +        * disabling the async_suspend method for JMicron chips to
+> +        * avoid device resuming issue.
+> +        */
+> +       device_disable_async_suspend(&pdev->dev);
+> +}
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, pci_async_suspend_fixup);
+> +
+>  static const struct pci_device_id jmicron_pci_tbl[] = {
+>         { PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+>           PCI_CLASS_STORAGE_IDE << 8, 0xffff00, 0 },
+> 
+> Barto,
+> Could you have a try on your side? Thanks.
+> 
+> 
