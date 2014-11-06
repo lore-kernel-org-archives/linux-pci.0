@@ -1,190 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:41765 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752349AbaKLKT2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 05:19:28 -0500
-Date: Wed, 12 Nov 2014 10:19:07 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
+Received: from mga14.intel.com ([192.55.52.115]:17808 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751293AbaKFOTi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 6 Nov 2014 09:19:38 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>
-Subject: Re: [RFC PATCH v2] drivers: pci: move PCI domain assignment to
- generic PCI code
-Message-ID: <20141112101907.GS12037@e106497-lin.cambridge.arm.com>
-References: <1415637706-2195-1-git-send-email-lorenzo.pieralisi@arm.com>
- <20141112100944.GC6759@red-moon>
-MIME-Version: 1.0
-In-Reply-To: <20141112100944.GC6759@red-moon>
-Content-Type: text/plain; charset=UTF-8
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [Patch Part2 v5 10/31] x86, uv: Use new irqdomain interfaces to allocate/free IRQ
+Date: Thu,  6 Nov 2014 22:20:23 +0800
+Message-Id: <1415283644-2559-11-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 12, 2014 at 10:09:44AM +0000, Lorenzo Pieralisi wrote:
-> On Mon, Nov 10, 2014 at 04:41:46PM +0000, Lorenzo Pieralisi wrote:
-> > The current logic used for PCI domain assignment in arm64
-> > pci_bus_assign_domain_nr() is flawed in that, depending on the host
-> > controllers configuration for a platform and the respective initialization
-> > sequence, core code may end up allocating PCI domain numbers from both DT and
-> > the core code generic domain counter, which would result in PCI domain
-> > allocation aliases/errors.
-> > 
-> > This patch fixes the logic behind the PCI domain number assignment and
-> > moves the resulting code to generic PCI core code so that the same domain
-> > allocation logic is used on all platforms selecting
-> > 
-> > CONFIG_PCI_DOMAINS_GENERIC
-> > 
-> > instead of resorting to an arch specific implementation that might end up
-> > duplicating the PCI domain assignment logic wrongly.
-> > 
-> > Cc: Arnd Bergmann <arnd@arndb.de>
-> > Cc: Liviu Dudau <liviu.dudau@arm.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Rob Herring <robh+dt@kernel.org>
-> > Cc: Catalin Marinas <catalin.marinas@arm.com>
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > ---
-> > v1 => v2:
-> > 
-> > - Moved generic pci_bus_assign_domain_nr() code to PCI core instead of
-> >   adding an OF layer API
-> > - Updated commit log and code comments
-> 
-> Is this approach ok with everyone ? I would need to have this patch
-> queued so that I can rebase the ARM32 pcibios pci_sys_data domain removal
-> on top of it, if everyone agrees of course.
+Use new irqdomain interfaces to allocate/free IRQ, so we could
+kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
 
-Acked-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/platform/uv/uv_irq.c |   27 +++++++++++----------------
+ 1 file changed, 11 insertions(+), 16 deletions(-)
 
-Best regards,
-Liviu
-
-> 
-> Thanks !
-> Lorenzo
-> 
-> > 
-> >  arch/arm64/kernel/pci.c | 22 ----------------------
-> >  drivers/pci/pci.c       | 50 +++++++++++++++++++++++++++++++++++++++++++++++++
-> >  2 files changed, 50 insertions(+), 22 deletions(-)
-> > 
-> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> > index ce5836c..6f93c24 100644
-> > --- a/arch/arm64/kernel/pci.c
-> > +++ b/arch/arm64/kernel/pci.c
-> > @@ -46,25 +46,3 @@ int pcibios_add_device(struct pci_dev *dev)
-> >  
-> >  	return 0;
-> >  }
-> > -
-> > -
-> > -#ifdef CONFIG_PCI_DOMAINS_GENERIC
-> > -static bool dt_domain_found = false;
-> > -
-> > -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> > -{
-> > -	int domain = of_get_pci_domain_nr(parent->of_node);
-> > -
-> > -	if (domain >= 0) {
-> > -		dt_domain_found = true;
-> > -	} else if (dt_domain_found == true) {
-> > -		dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
-> > -			parent->of_node->full_name);
-> > -		return;
-> > -	} else {
-> > -		domain = pci_get_new_domain_nr();
-> > -	}
-> > -
-> > -	bus->domain_nr = domain;
-> > -}
-> > -#endif
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 625a4ac..2279414 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -10,6 +10,8 @@
-> >  #include <linux/kernel.h>
-> >  #include <linux/delay.h>
-> >  #include <linux/init.h>
-> > +#include <linux/of.h>
-> > +#include <linux/of_pci.h>
-> >  #include <linux/pci.h>
-> >  #include <linux/pm.h>
-> >  #include <linux/slab.h>
-> > @@ -4447,6 +4449,54 @@ int pci_get_new_domain_nr(void)
-> >  {
-> >  	return atomic_inc_return(&__domain_nr);
-> >  }
-> > +
-> > +#ifdef CONFIG_PCI_DOMAINS_GENERIC
-> > +
-> > +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> > +{
-> > +	static int use_dt_domains = -1;
-> > +	int domain = of_get_pci_domain_nr(parent->of_node);
-> > +
-> > +	/*
-> > +	 * Check DT domain and use_dt_domains values.
-> > +	 *
-> > +	 * If DT domain property is valid (domain >= 0) and
-> > +	 * use_dt_domains != 0, the DT assignment is valid since this means
-> > +	 * we have not previously allocated a domain number by using
-> > +	 * pci_get_new_domain_nr(); we should also update use_dt_domains to
-> > +	 * 1, to indicate that we have just assigned a domain number from
-> > +	 * DT.
-> > +	 *
-> > +	 * If DT domain property value is not valid (ie domain < 0), and we
-> > +	 * have not previously assigned a domain number from DT
-> > +	 * (use_dt_domains != 1) we should assign a domain number by
-> > +	 * using the:
-> > +	 *
-> > +	 * pci_get_new_domain_nr()
-> > +	 *
-> > +	 * API and update the use_dt_domains value to keep track of method we
-> > +	 * are using to assign domain numbers (use_dt_domains = 0).
-> > +	 *
-> > +	 * All other combinations imply we have a platform that is trying
-> > +	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
-> > +	 * which is a recipe for domain mishandling and it is prevented by
-> > +	 * invalidating the domain value (domain = -1) and printing a
-> > +	 * corresponding error.
-> > +	 */
-> > +	if (domain >= 0 && use_dt_domains) {
-> > +		use_dt_domains = 1;
-> > +	} else if (domain < 0 && use_dt_domains != 1) {
-> > +		use_dt_domains = 0;
-> > +		domain = pci_get_new_domain_nr();
-> > +	} else {
-> > +		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
-> > +			parent->of_node->full_name);
-> > +		domain = -1;
-> > +	}
-> > +
-> > +	bus->domain_nr = domain;
-> > +}
-> > +#endif
-> >  #endif
-> >  
-> >  /**
-> > -- 
-> > 2.1.2
-> > 
-> > 
-> 
-
+diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
+index 0ce673645432..474912d03f40 100644
+--- a/arch/x86/platform/uv/uv_irq.c
++++ b/arch/x86/platform/uv/uv_irq.c
+@@ -12,6 +12,7 @@
+ #include <linux/rbtree.h>
+ #include <linux/slab.h>
+ #include <linux/irq.h>
++#include <linux/irqdomain.h>
+ 
+ #include <asm/apic.h>
+ #include <asm/uv/uv_irq.h>
+@@ -130,24 +131,14 @@ static int
+ arch_enable_uv_irq(char *irq_name, unsigned int irq, int cpu, int mmr_blade,
+ 		       unsigned long mmr_offset, int limit)
+ {
+-	const struct cpumask *eligible_cpu = cpumask_of(cpu);
+ 	struct irq_cfg *cfg = irq_cfg(irq);
+ 	unsigned long mmr_value;
+ 	struct uv_IO_APIC_route_entry *entry;
+-	int mmr_pnode, err;
+-	unsigned int dest;
++	int mmr_pnode;
+ 
+ 	BUILD_BUG_ON(sizeof(struct uv_IO_APIC_route_entry) !=
+ 			sizeof(unsigned long));
+ 
+-	err = assign_irq_vector(irq, cfg, eligible_cpu);
+-	if (err != 0)
+-		return err;
+-
+-	err = apic->cpu_mask_to_apicid_and(eligible_cpu, eligible_cpu, &dest);
+-	if (err != 0)
+-		return err;
+-
+ 	if (limit == UV_AFFINITY_CPU)
+ 		irq_set_status_flags(irq, IRQ_NO_BALANCING);
+ 	else
+@@ -164,7 +155,7 @@ arch_enable_uv_irq(char *irq_name, unsigned int irq, int cpu, int mmr_blade,
+ 	entry->polarity		= 0;
+ 	entry->trigger		= 0;
+ 	entry->mask		= 0;
+-	entry->dest		= dest;
++	entry->dest		= cfg->dest_apicid;
+ 
+ 	mmr_pnode = uv_blade_to_pnode(mmr_blade);
+ 	uv_write_global_mmr64(mmr_pnode, mmr_offset, mmr_value);
+@@ -238,9 +229,13 @@ uv_set_irq_affinity(struct irq_data *data, const struct cpumask *mask,
+ int uv_setup_irq(char *irq_name, int cpu, int mmr_blade,
+ 		 unsigned long mmr_offset, int limit)
+ {
+-	int ret, irq = irq_alloc_hwirq(uv_blade_to_memory_nid(mmr_blade));
++	int ret, irq;
++	struct irq_alloc_info info;
+ 
+-	if (!irq)
++	init_irq_alloc_info(&info, cpumask_of(cpu));
++	irq = irq_domain_alloc_irqs(NULL, 1, uv_blade_to_memory_nid(mmr_blade),
++				    &info);
++	if (irq <= 0)
+ 		return -EBUSY;
+ 
+ 	ret = arch_enable_uv_irq(irq_name, irq, cpu, mmr_blade, mmr_offset,
+@@ -248,7 +243,7 @@ int uv_setup_irq(char *irq_name, int cpu, int mmr_blade,
+ 	if (ret == irq)
+ 		uv_set_irq_2_mmr_info(irq, mmr_offset, mmr_blade);
+ 	else
+-		irq_free_hwirq(irq);
++		irq_domain_free_irqs(irq, 1);
+ 
+ 	return ret;
+ }
+@@ -283,6 +278,6 @@ void uv_teardown_irq(unsigned int irq)
+ 			n = n->rb_right;
+ 	}
+ 	spin_unlock_irqrestore(&uv_irq_lock, irqflags);
+-	irq_free_hwirq(irq);
++	irq_domain_free_irqs(irq, 1);
+ }
+ EXPORT_SYMBOL_GPL(uv_teardown_irq);
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.7.10.4
 
