@@ -1,69 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:55314 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752660AbaKEBdU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Nov 2014 20:33:20 -0500
-Message-ID: <54597E5B.2030701@intel.com>
-Date: Wed, 05 Nov 2014 09:33:15 +0800
-From: Aaron Lu <aaron.lu@intel.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Chuansheng Liu <chuansheng.liu@intel.com>, bhelgaas@google.com,
-	tj@kernel.org, rjw@rjwysocki.net, mister.freeman@laposte.net
-CC: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Do not enable async suspend for JMicron chips
-References: <1415149665-26669-1-git-send-email-chuansheng.liu@intel.com>
-In-Reply-To: <1415149665-26669-1-git-send-email-chuansheng.liu@intel.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <545AD5B3.60009@huawei.com>
+References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+ <1415102525-9898-22-git-send-email-jiang.liu@linux.intel.com>
+ <20141105230952.GH6168@google.com> <545AD5B3.60009@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 5 Nov 2014 21:10:59 -0700
+Message-ID: <CAErSpo5PNAQ40-AQZiz_RTU0JKnSAVXO2Wz=XPQ7aMWjm-iaNA@mail.gmail.com>
+Subject: Re: [Patch Part2 v4 21/31] PCI/MSI: enhance PCI MSI core to support
+ hierarchy irqdomain
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Alexander Gordeev <agordeev@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/05/2014 09:07 AM, Chuansheng Liu wrote:
-> The JMicron chip 361/363/368 contains one SATA controller and
-> one PATA controller, they are brother-relation ship in PCI tree,
-> but for powering on these both controller, we must follow the
-> sequence one by one, otherwise one of them can not be powered on
-> successfully.
-> 
-> So here we disable the async suspend method for Jmicron chip.
+On Wed, Nov 5, 2014 at 6:58 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+
+>>> +{
+>>> +    return (irq_hw_number_t)msidesc->msi_attrib.entry_nr |
+>>> +            PCI_DEVID(pdev->bus->number, pdev->devfn) << 11 |
+>>> +            (pci_domain_nr(pdev->bus) & 0xFFFFFFFF) << 27;
+>>
+>> Where does this bit layout come from?  Is this defined in the spec
+>> somewhere?  A reference would help.
 >
+> Currently, more and more Non-PCI device use MSI(or similar MSI mechanism), like DMAR fault irq
+> and HPET FSB irq. And we have to add additional code to support the MSI capability.
+> So I hope we can decouple MSI code and PCI code, then we can unify all MSI(or Message Based interrupt)
+> in one framework.
 
-Place the buglink here?
+Was that supposed to answer my question?  If so, I didn't understand
+how it explains where the bit layout came from.
 
-  Buglink: https://bugzilla.kernel.org/show_bug.cgi?id=84861
-  Buglink: https://bugzilla.kernel.org/show_bug.cgi?id=81551
-> Cc: stable@vger.kernel.org # 3.15+
-> Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-
-Patch looks good to me, thanks for fixing this!
-
--Aaron
-
-> ---
->  drivers/pci/pci.c |   12 +++++++++++-
->  1 file changed, 11 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 625a4ac..53128f0 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2046,7 +2046,17 @@ void pci_pm_init(struct pci_dev *dev)
->  	pm_runtime_forbid(&dev->dev);
->  	pm_runtime_set_active(&dev->dev);
->  	pm_runtime_enable(&dev->dev);
-> -	device_enable_async_suspend(&dev->dev);
-> +
-> +	/*
-> +	 * The JMicron chip 361/363/368 contains one SATA controller and
-> +	 * one PATA controller, they are brother-relation ship in PCI tree,
-> +	 * but for powering on these both controller, we must follow the
-> +	 * sequence one by one, otherwise one of them can not be powered on
-> +	 * successfully, so here we disable the async suspend method for
-> +	 * Jmicron chip.
-> +	 */
-> +	if (dev->vendor != PCI_VENDOR_ID_JMICRON)
-> +		device_enable_async_suspend(&dev->dev);
->  	dev->wakeup_prepared = false;
->  
->  	dev->pm_cap = 0;
-> 
-
+Bjorn
