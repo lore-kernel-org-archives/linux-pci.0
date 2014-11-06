@@ -1,48 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f46.google.com ([209.85.213.46]:42520 "EHLO
-	mail-yh0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751169AbaKCNy1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Nov 2014 08:54:27 -0500
-Received: by mail-yh0-f46.google.com with SMTP id c41so448896yho.19
-        for <linux-pci@vger.kernel.org>; Mon, 03 Nov 2014 05:54:27 -0800 (PST)
+Received: from szxga01-in.huawei.com ([119.145.14.64]:11085 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751027AbaKFEzZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 23:55:25 -0500
+Message-ID: <545AFF01.8000502@huawei.com>
+Date: Thu, 6 Nov 2014 12:54:25 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <mj+md-20141101.174026.23374.albireo@ucw.cz>
-References: <CAG-2HqXsEBB_nxUF4gza-eTsUjmysYR7iPEjJPUFyR1rC2KGMg@mail.gmail.com>
- <CAPXgP12MLL_Z5gyrCndQLRT6SR_TJi9xHp1HkHMX1ahwnxx3yw@mail.gmail.com>
- <mj+md-20131215.091609.28546.nikam@ucw.cz> <CAPXgP10+1WtX8_xN+QSHvKws01hbKhP3FN95sXk9EtezdSPtqg@mail.gmail.com>
- <mj+md-20131215.110132.29802.nikam@ucw.cz> <CAG-2HqUGcBB1-YUvLZpqm1EZ69OSksa+iGcCEqVWxYsehDqx8Q@mail.gmail.com>
- <CAG-2HqWYZtTMNRvLwWRy-5_5yb=EasiWzpL2xc0_42SyP=bg1w@mail.gmail.com>
- <CAG-2HqVS1avGdvi6SFc1dq0sCzcA4z5sZUBH4WhpNN87tZrnxA@mail.gmail.com>
- <mj+md-20140212.194230.3341.nikam@ucw.cz> <CAG-2HqUN3Ftdd=3XSe-et3pgXy71Fu9DbMqREQDycwL4kD9Paw@mail.gmail.com>
- <mj+md-20141101.174026.23374.albireo@ucw.cz>
-From: Tom Gundersen <teg@jklm.no>
-Date: Mon, 3 Nov 2014 14:54:06 +0100
-Message-ID: <CAG-2HqV10ar6N+khr-s01d+2keL+o3T0itPvN2xe6q0UERgf1Q@mail.gmail.com>
-Subject: Re: udev/hwdb support in pciutils (Re: [PATCH RESEND][pciutils]
- libpci: pci_id_lookup - add udev/hwdb support)
-To: Martin Mares <mj@ucw.cz>
-Cc: linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	Kay Sievers <kay@vrfy.org>
-Content-Type: text/plain; charset=UTF-8
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Alexander Gordeev <agordeev@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"Tony Luck" <tony.luck@intel.com>, Joerg Roedel <joro@8bytes.org>,
+	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [Patch Part2 v4 21/31] PCI/MSI: enhance PCI MSI core to support
+ hierarchy irqdomain
+References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com> <1415102525-9898-22-git-send-email-jiang.liu@linux.intel.com> <20141105230952.GH6168@google.com> <545AD5B3.60009@huawei.com> <CAErSpo5PNAQ40-AQZiz_RTU0JKnSAVXO2Wz=XPQ7aMWjm-iaNA@mail.gmail.com>
+In-Reply-To: <CAErSpo5PNAQ40-AQZiz_RTU0JKnSAVXO2Wz=XPQ7aMWjm-iaNA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Martin,
+On 2014/11/6 12:10, Bjorn Helgaas wrote:
+> On Wed, Nov 5, 2014 at 6:58 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> 
+>>>> +{
+>>>> +    return (irq_hw_number_t)msidesc->msi_attrib.entry_nr |
+>>>> +            PCI_DEVID(pdev->bus->number, pdev->devfn) << 11 |
+>>>> +            (pci_domain_nr(pdev->bus) & 0xFFFFFFFF) << 27;
+>>>
+>>> Where does this bit layout come from?  Is this defined in the spec
+>>> somewhere?  A reference would help.
+>>
+>> Currently, more and more Non-PCI device use MSI(or similar MSI mechanism), like DMAR fault irq
+>> and HPET FSB irq. And we have to add additional code to support the MSI capability.
+>> So I hope we can decouple MSI code and PCI code, then we can unify all MSI(or Message Based interrupt)
+>> in one framework.
+> 
+> Was that supposed to answer my question?  If so, I didn't understand
+> how it explains where the bit layout came from.
 
-On Sat, Nov 1, 2014 at 6:51 PM, Martin Mares <mj@ucw.cz> wrote:
-> The support for hwdb has finally landed in mainline pciutils.
->
-> I have modified your patch to bring it closer to the rest of device
-> naming logic. Namely:
+No, that's just my concern. Because this function uses the pci device id,
+but more and more Non-PCI devices use MSI.
 
-Great! Thanks for merging this, and for working on it.
+> 
+> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
 
-> Aside of the README, everything should be ready for a public release.
-> Could you please verify that it still works for you?
 
-I can verify that it still works as expected, so it is good to go as
-far as I'm concerned.
+-- 
+Thanks!
+Yijing
 
-Cheers,
-
-Tom
