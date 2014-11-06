@@ -1,40 +1,76 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <545CD9A4.3080900@linaro.org>
-Date: Fri, 07 Nov 2014 15:39:32 +0100
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 5 Nov 2014 17:05:36 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, liviu.dudau@arm.com,
+	Suravee.Suthikulpanit@amd.com, Will Deacon <will.deacon@arm.com>
+Subject: Re: [PATCH RFC 1/2] drivers: pci: fix window allocation order wrt
+ bus_range filtering
+Message-ID: <20141106000536.GL6168@google.com>
+References: <1414077787-20633-1-git-send-email-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>, linaro-acpi@lists.linaro.org
-CC: catalin.marinas@arm.com, will.deacon@arm.com, bhelgaas@google.com,
-	Liviu.Dudau@arm.com, tglx@linutronix.de, mingo@redhat.com,
-	hpa@zytor.com, rjw@rjwysocki.net, linux-pci@vger.kernel.org,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [Linaro-acpi] [RFC PATCH 3/4] arm64, acpi, pci: Add arch specific
- functions for mmconfig driver.
-References: <1415366876-30811-1-git-send-email-tomasz.nowicki@linaro.org> <1415366876-30811-4-git-send-email-tomasz.nowicki@linaro.org> <16660879.6KxQndPqBW@wuerfel>
-In-Reply-To: <16660879.6KxQndPqBW@wuerfel>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1414077787-20633-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07.11.2014 15:12, Arnd Bergmann wrote:
-> On Friday 07 November 2014 14:27:55 Tomasz Nowicki wrote:
->> These calls allow to map/unmap PCI config space ranges (which are specified in
->> MMCFG ACPI table).
->>
->> Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
->>
->
-> Nothing in this patch looks arm64 specific, and most of it looks like a
-> copy of the x86 code.
+On Thu, Oct 23, 2014 at 04:23:06PM +0100, Lorenzo Pieralisi wrote:
+> The number of windows allocated for the host bridge depends on the
+> bus resource. Instead of first allocating the windows and then
+> limit the bus resource, this patch reshuffles the code so that if any
+> limitation is applied to the bus resource it is taken into account in
+> the windows allocation.
+> 
+> Cc: Will Deacon <will.deacon@arm.com>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-Yes, most of the logic was borrowed from mmconfig_64.c file, 
-mmconfig_32.c looks differently, though. It is not simple to merge them 
-both. IMO, we have two choices:
-1. Refactor and move mmconfig_64.c out of x86 to e.g. drivers/acpi/ and 
-let it be default.
-2. Stay with solution presented in this patch.
-3. Thoughts ?
+I applied these with Will's acks to pci/host-generic for v3.19, thanks!
 
-Regards,
-Tomasz
+In my mind, posting patches to the list is implicitly a request for
+comments, so I usually don't pay too much attention to things explicitly
+marked "RFC" because I figure that's a hint that "this is work-in-progress,
+please comment if you see anything obviously broken."
+
+Bjorn
+
+> ---
+>  drivers/pci/host/pci-host-generic.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> index 3d2076f..1e1a80f 100644
+> --- a/drivers/pci/host/pci-host-generic.c
+> +++ b/drivers/pci/host/pci-host-generic.c
+> @@ -276,17 +276,17 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+>  		return err;
+>  	}
+>  
+> -	pci->cfg.win = devm_kcalloc(dev, resource_size(&pci->cfg.bus_range),
+> -				    sizeof(*pci->cfg.win), GFP_KERNEL);
+> -	if (!pci->cfg.win)
+> -		return -ENOMEM;
+> -
+>  	/* Limit the bus-range to fit within reg */
+>  	bus_max = pci->cfg.bus_range.start +
+>  		  (resource_size(&pci->cfg.res) >> pci->cfg.ops->bus_shift) - 1;
+>  	pci->cfg.bus_range.end = min_t(resource_size_t, pci->cfg.bus_range.end,
+>  				       bus_max);
+>  
+> +	pci->cfg.win = devm_kcalloc(dev, resource_size(&pci->cfg.bus_range),
+> +				    sizeof(*pci->cfg.win), GFP_KERNEL);
+> +	if (!pci->cfg.win)
+> +		return -ENOMEM;
+> +
+>  	/* Map our Configuration Space windows */
+>  	if (!devm_request_mem_region(dev, pci->cfg.res.start,
+>  				     resource_size(&pci->cfg.res),
+> -- 
+> 2.1.2
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
