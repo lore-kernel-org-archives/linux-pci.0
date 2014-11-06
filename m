@@ -1,123 +1,285 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f169.google.com ([209.85.216.169]:51679 "EHLO
-	mail-qc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751651AbaKKRTw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 12:19:52 -0500
-Received: by mail-qc0-f169.google.com with SMTP id i17so8125184qcy.14
-        for <linux-pci@vger.kernel.org>; Tue, 11 Nov 2014 09:19:52 -0800 (PST)
+Received: from szxga02-in.huawei.com ([119.145.14.65]:39046 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751151AbaKFFnF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 00:43:05 -0500
+Message-ID: <545B0A3B.40805@huawei.com>
+Date: Thu, 6 Nov 2014 13:42:19 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20141111155744.GB4419@red-moon>
-References: <1414168089-8130-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1414168089-8130-2-git-send-email-lorenzo.pieralisi@arm.com>
- <20141110230454.GA21470@google.com> <20141111114825.GA4135@red-moon>
- <CAErSpo4nWpN0xDb3h7FCpExM-Q5fmr5oyuOLf6Y_w55HEQZP4w@mail.gmail.com> <20141111155744.GB4419@red-moon>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 11 Nov 2014 10:19:31 -0700
-Message-ID: <CAErSpo4bZn20LZjrayx=B51eHnNyrHHWFQMB3J_+EQF8ntg0Kw@mail.gmail.com>
-Subject: Re: [PATCH RFC v2 1/2] drivers: pci: fix pci_mmap_fits()
- implementation for procfs mmap
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Martin Wilck <martin.wilck@ts.fujitsu.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Michael Ellerman <mpe@ellerman.id.au>
-Content-Type: text/plain; charset=UTF-8
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	"Matthias Brugger" <matthias.bgg@gmail.com>,
+	Alexander Gordeev <agordeev@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	<x86@kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [Patch Part2 v4 21/31] PCI/MSI: enhance PCI MSI core to support
+ hierarchy irqdomain
+References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com> <1415102525-9898-22-git-send-email-jiang.liu@linux.intel.com> <20141105230952.GH6168@google.com> <545AD5B3.60009@huawei.com> <545B01DC.5060107@linux.intel.com>
+In-Reply-To: <545B01DC.5060107@linux.intel.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 11, 2014 at 8:57 AM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> On Tue, Nov 11, 2014 at 02:20:31PM +0000, Bjorn Helgaas wrote:
->> On Tue, Nov 11, 2014 at 4:48 AM, Lorenzo Pieralisi
->> <lorenzo.pieralisi@arm.com> wrote:
->> > On Mon, Nov 10, 2014 at 11:04:54PM +0000, Bjorn Helgaas wrote:
->> >> ...
->> >> Here's what I think I understand so far:
->> >>
->> >>   Applications can mmap PCI memory space via either sysfs or procfs (the
->> >>   procfs method is deprecated but still supported):
->> >>
->> >>     - In sysfs, there's a separate /sys/devices/pci*/.../resource* file
->> >>       for each device BAR, and the application opens the appropriate
->> >>       file and supplies the offset from the beginning of the BAR as the
->> >>       mmap(2) offset.
->> >>
->> >>     - In procfs, the application opens the single /proc/bus/pci/... file
->> >>       for the device.  On most platforms, it supplies the CPU physical
->> >>       address as the mmap(2) offset.  On a few platforms, such as SPARC,
->> >>       it supplies the bus address, i.e., a BAR value, instead.
->> >>
->> >> But I'm not sure I have this right.  If the procfs offset is either the
->> >> CPU physical address or the BAR value, then pci_resource_to_user()
->> >> should be (depending on the arch) either a no-op or use
->> >> pci_resource_to_bus().
->> >
->> > Exactly (pcibios_resource_to_bus() ?).
->> >
->> >> But that's not how it's implemented.  Maybe it *could* be?  If
->> >> pci_resource_to_user() gives you something that's not a CPU physical
->> >> address and not a bus address, what *does* it give you, and why would we
->> >> need this third kind of thing?
->> >
->> > Well, you need a per arch function implementation where to define if
->> > the conversion from CPU physical address to PCI bus should take place
->> > or not right ? As you mentioned above, if that should be a per-arch
->> > decision, there has to be a per-arch function to filter the resource
->> > in question, I guess that's my understanding behind pci_resource_to_user(),
->> > but I am not sure either, and understanding that was the primary reason
->> > for this patchset so comments are welcome.
+On 2014/11/6 13:06, Jiang Liu wrote:
+> On 2014/11/6 9:58, Yijing Wang wrote:
+>>>>  
+>>>> @@ -1098,3 +1099,128 @@ int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
+>>>>  	return nvec;
+>>>>  }
+>>>>  EXPORT_SYMBOL(pci_enable_msix_range);
+>>>> +
+>>>> +#ifdef	CONFIG_PCI_MSI_IRQ_DOMAIN
+>>>
+>>> Space, not tab.
+>>>
+>>>> +static inline irq_hw_number_t
+>>>> +msi_get_hwirq(struct pci_dev *pdev, struct msi_desc *msidesc)
+>>>
+>>> The convention in this file is "struct pci_dev *dev".  And "struct msi_desc
+>>> *desc" (or maybe "*entry").  Try to converge things, not diverge them.
+>>>
+>>>> +{
+>>>> +	return (irq_hw_number_t)msidesc->msi_attrib.entry_nr |
+>>>> +		PCI_DEVID(pdev->bus->number, pdev->devfn) << 11 |
+>>>> +		(pci_domain_nr(pdev->bus) & 0xFFFFFFFF) << 27;
+>>>
+>>> Where does this bit layout come from?  Is this defined in the spec
+>>> somewhere?  A reference would help.
 >>
->> I agree that we need pci_resource_to_user() because arches do
->> different things, so we can't just remove pci_resource_to_user() and
->> replace it with pci_resource_to_bus().  My point is that we have a
->> generic pci_resource_to_user() implementation that does nothing, and
->> if an arch *does* implement its own pci_resource_to_user(), it seems
->> like it should simply call pci_resource_to_user().
->
-> to_bus() you mean.
+>> Currently, more and more Non-PCI device use MSI(or similar MSI mechanism), like DMAR fault irq
+>> and HPET FSB irq. And we have to add additional code to support the MSI capability.
+>> So I hope we can decouple MSI code and PCI code, then we can unify all MSI(or Message Based interrupt)
+>> in one framework.
+> Hi Yijing,
+> 	I have a following patch to share more code among MSI/DMAR/HPET,
+> which is one step forward as you suggested. Will send out that patch set
+> soon.
 
-Yes, exactly, sorry for my typo.  (And earlier, when I said
-pci_resource_to_bus() instead of pcibios_resource_to_bus().
-pcibios_resource_to_bus() *used* to be an arch-specific function with
-many implementations, which is why it's named pcibios_*.  Now that the
-PCI core supports address translation, it's no longer arch-specific.
-We haven't changed the name to reflect that, but I don't think of it
-along with the rest of the pcibios_*() functions anymore.  Hmm, and
-now we have this pci_resource_to_user() thing, which *is*
-arch-specific, but doesn't have a pcibios_* name.  No wonder this is
-confusing :))
+That's Great! :)
 
-> Well, I agree, but I am not sure it would work on all
-> arches that deviate from the generic implementation, I can't speak for other
-> architectures since I do not have an in-depth knowledge of their PCI
-> internal implementations, in particular in relation to CPU <-> PCI
-> address map conversions/mappings.
->
-> I read your comment as an agreement on the approach I took in my patch,
-> except for the current pci_resource_to_user() implementation(s), which I did
-> not touch.
+> Regards!
+> Gerry
+> 
+>>
+>> Thanks!
+>> Yijing.
+>>
+>>>
+>>>> +}
+>>>> +
+>>>> +static int msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
+>>>> +			    unsigned int nr_irqs, void *arg)
+>>>> +{
+>>>> +	int i, ret;
+>>>> +	irq_hw_number_t hwirq = arch_msi_irq_domain_get_hwirq(arg);
+>>>> +
+>>>> +	if (irq_find_mapping(domain, hwirq) > 0)
+>>>> +		return -EEXIST;
+>>>> +
+>>>> +	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
+>>>> +	if (ret >= 0)
+>>>
+>>> 	if (ret < 0)
+>>> 		return ret;
+>>>
+>>> and un-indent the mainline code below.  Then it's obvious that this is the
+>>> normal case, not the error case.
+>>>
+>>>> +		for (i = 0; i < nr_irqs; i++) {
+>>>> +			irq_domain_set_hwirq_and_chip(domain, virq + i,
+>>>> +					hwirq + i, &msi_chip, (void *)(long)i);
+>>>> +			__irq_set_handler(virq + i, handle_edge_irq, 0, "edge");
+>>>> +		}
+>>>> +
+>>>> +	return ret;
+>>>> +}
+>>>> +
+>>>> +static void msi_domain_free(struct irq_domain *domain, unsigned int virq,
+>>>> +			    unsigned int nr_irqs)
+>>>> +{
+>>>> +	int i;
+>>>> +
+>>>> +	for (i = 0; i < nr_irqs; i++) {
+>>>> +		struct msi_desc *msidesc = irq_get_msi_desc(virq);
+>>>> +
+>>>> +		if (msidesc)
+>>>> +			msidesc->irq = 0;
+>>>> +	}
+>>>> +	irq_domain_free_irqs_top(domain, virq, nr_irqs);
+>>>> +}
+>>>> +
+>>>> +static int msi_domain_activate(struct irq_domain *domain,
+>>>> +			       struct irq_data *irq_data)
+>>>> +{
+>>>> +	int ret = 0;
+>>>> +	struct msi_msg msg;
+>>>> +
+>>>> +	/*
+>>>> +	 * irq_data->chip_data is MSI/MSIx offset.
+>>>
+>>> "MSI-X", as you wrote on the next line.
+>>>
+>>>> +	 * MSI-X message is written per-IRQ, the offset is always 0.
+>>>> +	 * MSI message denotes a contiguous group of IRQs, written for 0th IRQ.
+>>>> +	 */
+>>>> +	if (!irq_data->chip_data) {
+>>>
+>>> 	if (irq_data->chip_data)
+>>> 		return 0;
+>>>
+>>> and un-indent the mainline code below, and drop the "ret = 0" init above.
+>>>
+>>>> +		ret = irq_chip_compose_msi_msg(irq_data, &msg);
+>>>> +		if (ret == 0)
+>>>
+>>> 	if (ret)
+>>> 		return ret;
+>>>
+>>>> +			write_msi_msg(irq_data->irq, &msg);
+>>>> +	}
+>>>> +
+>>>> +	return ret;
+>>> 	return 0;
+>>>> +}
+>>>> +
+>>>> +static int msi_domain_deactivate(struct irq_domain *domain,
+>>>> +				 struct irq_data *irq_data)
+>>>> +{
+>>>> +	struct msi_msg msg;
+>>>> +
+>>>> +	if (irq_data->chip_data) {
+>>>> +		memset(&msg, 0, sizeof(msg));
+>>>> +		write_msi_msg(irq_data->irq, &msg);
+>>>> +	}
+>>>> +
+>>>> +	return 0;
+>>>> +}
+>>>> +
+>>>> +static struct irq_domain_ops msi_domain_ops = {
+>>>> +	.alloc = msi_domain_alloc,
+>>>> +	.free = msi_domain_free,
+>>>> +	.activate = msi_domain_activate,
+>>>> +	.deactivate = msi_domain_deactivate,
+>>>> +};
+>>>> +
+>>>> +struct irq_domain *msi_create_irq_domain(struct irq_domain *parent)
+>>>> +{
+>>>> +	struct irq_domain *domain;
+>>>> +
+>>>> +	domain = irq_domain_add_tree(NULL, &msi_domain_ops, NULL);
+>>>> +	if (domain)
+>>>
+>>> 	if (!domain)
+>>> 		return NULL;
+>>>
+>>> and un-indent this:
+>>>
+>>>> +		domain->parent = parent;
+>>>> +
+>>>> +	return domain;
+>>>> +}
+>>>> +
+>>>> +int msi_irq_domain_alloc_irqs(struct irq_domain *domain, int type,
+>>>> +			      struct pci_dev *dev, void *arg)
+>>>> +{
+>>>> +	int i, virq;
+>>>> +	struct msi_desc *msidesc;
+>>>> +	int node = dev_to_node(&dev->dev);
+>>>> +
+>>>> +	list_for_each_entry(msidesc, &dev->msi_list, list) {
+>>>> +		arch_msi_irq_domain_set_hwirq(arg, msi_get_hwirq(dev, msidesc));
+>>>> +		virq = irq_domain_alloc_irqs(domain, msidesc->nvec_used,
+>>>> +					     node, arg);
+>>>> +		if (virq < 0) {
+>>>> +			/* Special handling for pci_enable_msi_range(). */
+>>>> +			return (type == PCI_CAP_ID_MSI &&
+>>>> +				msidesc->nvec_used > 1) ?  1 : -ENOSPC;	
+>>>
+>>> I think "if" would be easier to read than this ternary expression.
+>>>
+>>>> +		}
+>>>> +		for (i = 0; i < msidesc->nvec_used; i++)
+>>>> +			irq_set_msi_desc_off(virq + i, i, msidesc);
+>>>> +	}
+>>>> +
+>>>> +	list_for_each_entry(msidesc, &dev->msi_list, list)
+>>>> +		if (msidesc->nvec_used == 1)
+>>>> +			dev_dbg(&dev->dev, "irq %d for MSI/MSI-X\n", virq);
+>>>> +		else
+>>>> +			dev_dbg(&dev->dev, "irq [%d-%d] for MSI/MSI-X\n",
+>>>> +				virq, virq + msidesc->nvec_used - 1);
+>>>> +
+>>>> +	return 0;
+>>>> +}
+>>>> +#endif	/* CONFIG_PCI_MSI_IRQ_DOMAIN */
+>>>> diff --git a/include/linux/msi.h b/include/linux/msi.h
+>>>> index 44f4746d033b..05dcd425f82b 100644
+>>>> --- a/include/linux/msi.h
+>>>> +++ b/include/linux/msi.h
+>>>> @@ -75,4 +75,15 @@ struct msi_chip {
+>>>>  	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
+>>>>  };
+>>>>  
+>>>> +#ifdef	CONFIG_PCI_MSI_IRQ_DOMAIN
+>>>
+>>> Use a space here, not a tab.
+>>>
+>>>> +extern struct irq_chip msi_chip;
+>>>
+>>> I don't think "msi_chip" is a good name.  "Chip" only hints that it's a
+>>> semiconductor integrated circuit; it doesn't say anything about what it
+>>> does.  I've suggested "msi_controller" elsewhere.
+>>>
+>>> Why does this need to be exported?  And why should there be only one in a
+>>> system?
+>>>
+>>>> +extern struct irq_domain *msi_create_irq_domain(struct irq_domain *parent);
+>>>> +extern int msi_irq_domain_alloc_irqs(struct irq_domain *domain, int type,
+>>>> +				     struct pci_dev *dev, void *arg);
+>>>> +
+>>>> +extern irq_hw_number_t arch_msi_irq_domain_get_hwirq(void *arg);
+>>>> +extern void arch_msi_irq_domain_set_hwirq(void *arg, irq_hw_number_t hwirq);
+>>>
+>>> Look at the rest of the file and notice that the existing code does not use
+>>> "extern" on function declarations.
+>>>
+>>>> +#endif	/* CONFIG_PCI_MSI_IRQ_DOMAIN */
+>>>
+>>> Use a space here (not a tab), like the #endif just below.
+>>>
+>>>>  #endif /* LINUX_MSI_H */
+>>>> -- 
+>>>> 1.7.10.4
+>>>>
+>>>
+>>> .
+>>>
+>>
+>>
+> 
+> .
+> 
 
-Yes.  I have two things I'd like to clear up:
 
-  1) Your patch changes behavior on platforms that implement their own
-pci_resource_to_user().  So I'd like to mention the details of that in
-the changelog, e.g., "procfs mmap on arches X, Y, Z has been broken
-since commit C, and this change fixes them."  ARM doesn't implement
-pci_resource_to_user(), so I don't think ARM is one of those arches.
-But I'd really like to include specifics on what those arches are, and
-what we think is currently broken, so their maintainers at least get a
-heads-up and can look for that  breakage.
+-- 
+Thanks!
+Yijing
 
-  2) I'd like to take this opportunity to analyze the current
-pci_resource_to_user() implementations and see if we can reduce them
-to calling pcibios_resource_to_bus().  This is obviously separable,
-and I'll apply these patches anyway, but this does seem like a perfect
-opportunity for someone (not necessarily you) to clean this stuff up,
-since it's fresh in our minds.
-
-Bjorn
