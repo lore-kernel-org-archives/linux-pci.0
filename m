@@ -1,71 +1,129 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54716 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751086AbaKKTJe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 11 Nov 2014 14:09:34 -0500
-Message-ID: <54625EE8.1050509@redhat.com>
-Date: Tue, 11 Nov 2014 14:09:28 -0500
-From: Don Dutile <ddutile@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <545BF8C7.7070206@laposte.net>
+Date: Thu, 06 Nov 2014 23:40:07 +0100
+From: Barto <mister.freeman@laposte.net>
 MIME-Version: 1.0
-To: Sathya Perla <sathya.perla@Emulex.Com>, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org
-CC: ariel.elior@qlogic.com, linux.nics@intel.com,
-	shahed.shaikh@qlogic.com
-Subject: Re: [PATCH 0/4] move pci_assivned_vfs() check (while disabling VFs)
- to pci sub-system
-References: <1415620410-4937-1-git-send-email-sathya.perla@emulex.com>
-In-Reply-To: <1415620410-4937-1-git-send-email-sathya.perla@emulex.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+To: "Liu, Chuansheng" <chuansheng.liu@intel.com>
+CC: "aaron.lu"@intel.com, tj@kernel.org, rjw@rjwysocki.net,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: new test
+References: <545B7352.2040408@laposte.net> <27240C0AC20F114CBF8149A2696CBE4A01EB8625@SHSMSX101.ccr.corp.intel.com>
+In-Reply-To: <27240C0AC20F114CBF8149A2696CBE4A01EB8625@SHSMSX101.ccr.corp.intel.com>
+Content-Type: multipart/mixed;
+ boundary="------------060203060507060207030202"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/10/2014 06:53 AM, Sathya Perla wrote:
-> A user must not be allowed to disable VFs while they are already assigned to
-> a guest. This check is being made in each individual driver that implements
-> the sriov_configure PCI method.
-> This patch-set fixes this code duplication by moving this check from
-> drivers to the sriov_nuvfs_store() routine just before invoking
-> sriov_configure() when num_vfs is equal to 0.
->
-> Vasundhara Volam (4):
->    pci: move pci_assivned_vfs() check while disabling VFs to pci
->      sub-system
->    bnx2x: remove pci_assigned_vfs() check while disabling VFs
->    i40e: remove pci_assigned_vfs() check while disabling VFs
->    qlcnic: remove pci_assigned_vfs() check while disabling VFs
->
->   drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c  |    2 +-
->   drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c |    7 +------
->   .../net/ethernet/qlogic/qlcnic/qlcnic_sriov_pf.c   |   10 ----------
->   drivers/pci/pci-sysfs.c                            |    5 +++++
->   4 files changed, 7 insertions(+), 17 deletions(-)
->
-I have had a side conversation with Alex Williamson, VFIO author.
+This is a multi-part message in MIME format.
+--------------060203060507060207030202
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 
-VFIO is the upstream method that device-assignment is managed/handled on kvm now.
-It does not set the PCI_DEV_FLAGS_ASSIGNED pci dev-flags, and thus,
-this check will not work when VFIO is used.
+Hello Liu Chuansheng,
 
-This patch set will only work for the former, kvm-managed, device-assignment method,
-which is currently being deprecated in qemu as well.
+I have good news, your patch based on /drivers/pci/quirks.c works very
+well,
 
-So, yes, it works for kvm managed device-assignment, but not the
-newer, VFIO-based device-assignment.
-
-Note, also, that the pci_assigned_vfs() check in the drivers will
-always return 0 when VFIO is used for device assignment, so keeping
-these checks in the drivers doesn't do what they imply either.
-
-So, taking in the patch solves old, kvm-managed, device assignment,
-but a new method is needed when VFIO is involved.
-
-- Don
-
-ps -- Note: just adding the flag setting in vfio-pci does not necessarily
-       solve this problem.  VFIO does not know if a device is assigned to a guest;
-       it only knows a caller of the ioctl requesting the device to be assigned
-       to vfio, and to be dma-mapped for a region of memory, has been requested.
-       So, a new PF<->VF mechanism needs to be put in place to
-       determine the equivalent information.
+I have no problems after a standby mode, my JMB363/368 SATA/IDE JMicron
+Pcie works without problems
 
 
+Le 06/11/2014 15:33, Liu, Chuansheng a écrit :
+> Thanks Barto. 
+> 
+> Could you try below patch? I made the change in file quirks.c.
+>   
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> 
+> index 90acb32..b40485f 100644
+> 
+> --- a/drivers/pci/quirks.c
+> 
+> +++ b/drivers/pci/quirks.c
+> 
+> @@ -29,6 +29,21 @@
+> 
+> #include "pci.h"
+> 
+>  /*
+> 
+> + * For JMicron chips, we need to disable the async_suspend method,
+> otherwise
+> 
+> + * they will hit the power-on issue when doing device resume, add one quick
+> 
+> + * solution to disable the async_suspend method.
+> 
+> + */
+> 
+> +static void pci_async_suspend_fixup(struct pci_dev *pdev)
+> 
+> +{
+> 
+> +        /* 
+> 
+> +         * disabling the async_suspend method for JMicron chips to
+> 
+> +         * avoid device resuming issue.
+> 
+> +         */
+> 
+> +        device_disable_async_suspend(&pdev->dev);
+> 
+> +}
+> 
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_JMICRON, PCI_ANY_ID,
+> pci_async_suspend_fixup);
+> 
+> +
+> 
+> +/*
+> 
+>   * Decoding should be disabled for a PCI device during BAR sizing to avoid
+> 
+>   * conflict. But doing so may cause problems on host bridge and perhaps
+> other
+> 
+>   * key system devices. For devices that need to have mmio decoding
+> always-on,
+> 
+>  
+> 
+>  
+> 
+
+--------------060203060507060207030202
+Content-Type: text/x-patch;
+ name="jmicron2.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="jmicron2.patch"
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 90acb32..b40485f 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -29,6 +29,21 @@
+#include "pci.h"
+ /*
++ * For JMicron chips, we need to disable the async_suspend method, otherwise
++ * they will hit the power-on issue when doing device resume, add one quick
++ * solution to disable the async_suspend method.
++ */
++static void pci_async_suspend_fixup(struct pci_dev *pdev)
++{
++        /*
++         * disabling the async_suspend method for JMicron chips to
++         * avoid device resuming issue.
++         */
++        device_disable_async_suspend(&pdev->dev);
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, pci_async_suspend_fixup);
++
++/*
+  * Decoding should be disabled for a PCI device during BAR sizing to avoid
+  * conflict. But doing so may cause problems on host bridge and perhaps other
+  * key system devices. For devices that need to have mmio decoding always-on,
+
+--------------060203060507060207030202--
