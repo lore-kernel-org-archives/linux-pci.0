@@ -1,53 +1,66 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-To: catalin.marinas@arm.com, will.deacon@arm.com, bhelgaas@google.com,
-	lorenzo.pieralisi@arm.com, wangyijing@huawei.com, arnd@arndb.de,
-	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Subject: [PATCH 0/6] PCI: MMCONFIG clean up
-Date: Wed, 19 Nov 2014 17:04:45 +0100
-Message-Id: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from numascale.com ([213.162.240.84]:33564 "EHLO numascale.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751212AbaKFEwY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 5 Nov 2014 23:52:24 -0500
+From: Daniel J Blueman <daniel@numascale.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Yinghai Lu <yinghai@kernel.org>
+Cc: Daniel J Blueman <daniel@numascale.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Steffen Persvold <sp@numascale.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH] x86: Drop redundant memory-block sizing code
+Date: Thu,  6 Nov 2014 12:50:14 +0800
+Message-Id: <1415249414-20888-1-git-send-email-daniel@numascale.com>
+In-Reply-To: <ojh5M-xh-17@gated-at.bofh.it>
+References: <ojh5M-xh-17@gated-at.bofh.it>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-MMCFG ACPI table has no arch dependencies so it can be used across all
-architectures. Currently MMCONFIG related code resides in arch/x86 directories.
-This patch set is goint to isolate non-architecure specific code and make
-it accessible from drivers/pci/ directory.
+Drop the unused code from selecting a fixed memory block size of 2GB
+on large-memory x86-64 systems.
 
-Tomasz Nowicki (6):
-  x86, acpi, pci: Reorder logic of pci_mmconfig_insert() function
-  x86, acpi, pci: Move arch-agnostic MMCFG code out of arch/x86/
-    directory
-  x86, acpi, pci: Move PCI config space accessors.
-  x86, acpi, pci: mmconfig_{32,64}.c code refactoring - remove code
-    duplication.
-  x86, acpi, pci: mmconfig_64.c becomes default implementation for arch
-    agnostic low-level direct PCI config space accessors via MMCONFIG.
-  pci, acpi: Share ACPI PCI config space accessors.
+Signed-off-by: Daniel J Blueman <daniel@numascale.com>
+---
+ arch/x86/mm/init_64.c | 18 +-----------------
+ 1 file changed, 1 insertion(+), 17 deletions(-)
 
- arch/x86/include/asm/pci.h     |  42 +++++
- arch/x86/include/asm/pci_x86.h |  72 --------
- arch/x86/pci/Makefile          |   5 +-
- arch/x86/pci/acpi.c            |   1 +
- arch/x86/pci/init.c            |   1 +
- arch/x86/pci/mmconfig-shared.c | 242 ++++---------------------
- arch/x86/pci/mmconfig_32.c     |  11 +-
- arch/x86/pci/mmconfig_64.c     | 153 ----------------
- drivers/acpi/Makefile          |   1 +
- drivers/acpi/bus.c             |   1 +
- drivers/acpi/mmconfig.c        | 396 +++++++++++++++++++++++++++++++++++++++++
- include/linux/mmconfig.h       |  62 +++++++
- include/linux/pci.h            |   8 -
- 13 files changed, 541 insertions(+), 454 deletions(-)
- delete mode 100644 arch/x86/pci/mmconfig_64.c
- create mode 100644 drivers/acpi/mmconfig.c
- create mode 100644 include/linux/mmconfig.h
-
+diff --git a/arch/x86/mm/init_64.c b/arch/x86/mm/init_64.c
+index ebca30f..09c0567 100644
+--- a/arch/x86/mm/init_64.c
++++ b/arch/x86/mm/init_64.c
+@@ -1243,28 +1243,12 @@ int in_gate_area_no_mm(unsigned long addr)
+ 
+ static unsigned long probe_memory_block_size(void)
+ {
+-	/* start from 2g */
+-	unsigned long bz = 1UL<<31;
+-
+ 	if (totalram_pages >= (64ULL << (30 - PAGE_SHIFT))) {
+ 		pr_info("Using 2GB memory block size for large-memory system\n");
+ 		return 2UL * 1024 * 1024 * 1024;
+ 	}
+ 
+-	/* less than 64g installed */
+-	if ((max_pfn << PAGE_SHIFT) < (16UL << 32))
+-		return MIN_MEMORY_BLOCK_SIZE;
+-
+-	/* get the tail size */
+-	while (bz > MIN_MEMORY_BLOCK_SIZE) {
+-		if (!((max_pfn << PAGE_SHIFT) & (bz - 1)))
+-			break;
+-		bz >>= 1;
+-	}
+-
+-	printk(KERN_DEBUG "memory block size : %ldMB\n", bz >> 20);
+-
+-	return bz;
++	return MIN_MEMORY_BLOCK_SIZE;
+ }
+ 
+ static unsigned long memory_block_size_probed;
 -- 
 1.9.1
 
