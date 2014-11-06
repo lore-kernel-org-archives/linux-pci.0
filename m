@@ -1,76 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:55591 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751062AbaKEWpI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 17:45:08 -0500
-Received: by mail-ig0-f181.google.com with SMTP id l13so2540992iga.2
-        for <linux-pci@vger.kernel.org>; Wed, 05 Nov 2014 14:45:08 -0800 (PST)
-Date: Wed, 5 Nov 2014 15:45:04 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [Patch Part2 v4 20/31] PCI/MSI: Kill redundant calling for
- irq_set_msi_desc() for MSIx interrupts
-Message-ID: <20141105224504.GG6168@google.com>
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
- <1415102525-9898-21-git-send-email-jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415102525-9898-21-git-send-email-jiang.liu@linux.intel.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:53283 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751173AbaKFPXb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 10:23:31 -0500
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>
+Cc: devicetree@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Liviu Dudau <Liviu.Dudau@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v2] PCI: add missing DT binding for linux,pci-domain property
+Date: Thu,  6 Nov 2014 16:23:20 +0100
+Message-Id: <1415287400-30426-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 04, 2014 at 08:01:54PM +0800, Jiang Liu wrote:
-> It's arch_setup_msi_irq()/arch_setup_msi_irqs()'s responsibility to call
-> irq_set_msi_desc() to associate IRQ descriptors and MSI descriptors,
-> so kill the redundant call of irq_set_msi_desc() for MSIx interrupts
-> in PCI MSI core.
+This property was added by 41e5c0f81d3e
+(of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr())
+without the required binding documentation. As this property
+will be supported by a number of host bridge drivers going forward,
+add it to the common PCI binding doc.
 
-"MSI-X" in English text, "msix" in code.
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+---
+This is a non-critical fix, but may still qualify for 3.18-rc as
+the property was added in this release cycle.
 
-The default arch_setup_msi_irq() in drivers/pci/msi.c doesn't call
-irq_set_msi_desc().  Does it happen somewhere inside chip->setup_irq()?
+v2:
+- emphasize that the property must be present and unique systemwide
+  if used
+---
+ Documentation/devicetree/bindings/pci/pci.txt | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-I don't know how to verify that there are calls in all the places needed.
-That makes me wonder if the factoring is wrong -- maybe irq_set_msi_desc()
-could be done in some common place.
+diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
+index 41aeed38926d..68c364e2f5e5 100644
+--- a/Documentation/devicetree/bindings/pci/pci.txt
++++ b/Documentation/devicetree/bindings/pci/pci.txt
+@@ -7,3 +7,14 @@ And for the interrupt mapping part:
+ 
+ Open Firmware Recommended Practice: Interrupt Mapping
+ http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
++
++Additionally to the properties specified in the above standards a host bridge
++driver implementation may support the following properties:
++
++- linux,pci-domain:
++   If present this property assigns a fixed PCI domain number to a host bridge,
++   otherwise an unstable (across boots) unique number will be assigned.
++   It is required to either not set this property at all or set it for all
++   host bridges in the system, otherwise potentially conflicting domain numbers
++   may be assigned to root buses behind different host bridges. The domain
++   number for each host bridge in the system must be unique.
+-- 
+2.1.1
 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  drivers/pci/msi.c |    1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index afe974600c7d..da181c59394b 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -685,7 +685,6 @@ static void msix_program_entries(struct pci_dev *dev,
->  						PCI_MSIX_ENTRY_VECTOR_CTRL;
->  
->  		entries[i].vector = entry->irq;
-> -		irq_set_msi_desc(entry->irq, entry);
->  		entry->masked = readl(entry->mask_base + offset);
->  		msix_mask_irq(entry, 1);
->  		i++;
-> -- 
-> 1.7.10.4
-> 
