@@ -1,47 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:37909 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751245AbaKFJkK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 6 Nov 2014 04:40:10 -0500
-Date: Thu, 6 Nov 2014 10:40:07 +0100
-From: Borislav Petkov <bp@alien8.de>
-To: Daniel J Blueman <daniel@numascale.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Steffen Persvold <sp@numascale.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] x86: Drop redundant memory-block sizing code
-Message-ID: <20141106094007.GA4849@pd.tnic>
-References: <ojh5M-xh-17@gated-at.bofh.it>
- <1415249414-20888-1-git-send-email-daniel@numascale.com>
+Received: from www.linutronix.de ([62.245.132.108]:40086 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750990AbaKFAti (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 19:49:38 -0500
+Date: Thu, 6 Nov 2014 01:49:21 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+cc: Jiang Liu <jiang.liu@linux.intel.com>, marc.zyngier@arm.com,
+	mark.rutland@arm.com, jason@lakedaemon.net,
+	Catalin.Marinas@arm.com, Will.Deacon@arm.com, liviu.dudau@arm.com,
+	Harish.Kasiviswanathan@amd.com,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [V10 PATCH 2/2] irqchip: gicv2m: Add supports for ARM GICv2m
+ MSI(-X)
+In-Reply-To: <545ABF6C.1000308@amd.com>
+Message-ID: <alpine.DEB.2.11.1411060146050.24960@nanos>
+References: <1415052977-26036-1-git-send-email-suravee.suthikulpanit@amd.com> <1415052977-26036-3-git-send-email-suravee.suthikulpanit@amd.com> <5458CE31.3040404@linux.intel.com> <545ABB4C.8010103@amd.com> <545ABF6C.1000308@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1415249414-20888-1-git-send-email-daniel@numascale.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 06, 2014 at 12:50:14PM +0800, Daniel J Blueman wrote:
-> Drop the unused code from selecting a fixed memory block size of 2GB
-> on large-memory x86-64 systems.
+On Wed, 5 Nov 2014, Suravee Suthikulanit wrote:
+> On 11/5/2014 6:05 PM, Suravee Suthikulanit wrote:
+> > - Overall, it seems that msi_domain_alloc() could be quite different
+> > across architectures. Would it be possible to declare this function as
+> > weak, and allow arch to override (similar to arch_setup_msi_irq)?
 > 
-> Signed-off-by: Daniel J Blueman <daniel@numascale.com>
+> Actually, declaring "msi_domain_ops" as non-static, and allow other code to
+> override the .alloc and .free?
 
-This commit message is seriously lacking an explanation why? Why is it
-unused, why is it ok on systems with mem < 64g, what is the problem it
-solves, ...
+Why do you want to do that?
 
-Just ask yourself this when you write commit messages: would anyone else
-be able to understand what this commit was improving when anyone reads
-that commit message months, maybe years from now.
+Thanks,
 
-Thanks.
-
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
+	tglx
