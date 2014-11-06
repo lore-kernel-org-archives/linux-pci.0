@@ -1,209 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:43165 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751947AbaKQJkw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 04:40:52 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, Tony Luck <tony.luck@intel.com>,
-	<linux-ia64@vger.kernel.org>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	<Suravee.Suthikulpanit@amd.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [RFC PATCH 11/16] x86/PCI: Use pci_scan_host_bridge() instead of pci_create_root_bus()
-Date: Mon, 17 Nov 2014 18:21:45 +0800
-Message-ID: <1416219710-26088-12-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
-References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [Patch Part2 v5 02/31] irqdomain: Do irq_find_mapping and set_type for hierarchy irqdomain in case OF
+Date: Thu,  6 Nov 2014 22:20:15 +0800
+Message-Id: <1415283644-2559-3-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we could use pci_scan_host_bridge() to refactor
-pci_acpi_scan_root().
+From: Yingjoe Chen <yingjoe.chen@mediatek.com>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+It is possible to call irq_create_of_mapping to create/translate the
+same IRQ from DT for multiple times. Perform irq_find_mapping check
+and set_type for hierarchy irqdomain in irq_create_of_mapping() to
+avoid duplicate these functionality in all outer most irqdomain.
+
+Signed-off-by: Yingjoe Chen <yingjoe.chen@mediatek.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/pci/acpi.c   |   65 ++++++++++++++++++++++++++++++-------------------
- arch/x86/pci/common.c |   23 ++++++++++++-----
- 2 files changed, 56 insertions(+), 32 deletions(-)
+ kernel/irq/irqdomain.c |   27 ++++++++++++++++++---------
+ 1 file changed, 18 insertions(+), 9 deletions(-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index cfd1b13..528fca3 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -13,6 +13,7 @@ struct pci_root_info {
- 	unsigned int res_num;
- 	struct resource *res;
- 	resource_size_t *res_offset;
-+	struct acpi_pci_root *root;
- 	struct pci_sysdata sd;
- #ifdef	CONFIG_PCI_MMCONFIG
- 	bool mcfg_added;
-@@ -467,16 +468,40 @@ static void probe_pci_root_info(struct pci_root_info *info,
- 				info);
- }
- 
-+static int pci_acpi_init_res(struct pci_host_bridge *host,
-+		struct pci_host_info *arg)
-+{
-+	struct pci_sysdata *sd = arg->arg;
-+	struct pci_root_info *info = container_of(sd,
-+			struct pci_root_info, sd);
-+
-+	/* insert busn res at first */
-+	pci_add_resource(&host->windows,  &info->root->secondary);
-+	/*
-+	 * _CRS with no apertures is normal, so only fall back to
-+	 * defaults or native bridge info if we're ignoring _CRS.
-+	 */
-+	if (pci_use_crs)
-+		add_resources(info, &host->windows);
-+	else {
-+		free_pci_root_info_res(info);
-+		x86_pci_root_bus_resources(host->busnum, &host->windows);
-+	}
-+	
-+	return 0;
-+}
-+
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- {
- 	struct acpi_device *device = root->device;
- 	struct pci_root_info *info;
- 	int domain = root->segment;
- 	int busnum = root->secondary.start;
--	LIST_HEAD(resources);
- 	struct pci_bus *bus;
- 	struct pci_sysdata *sd;
- 	int node;
-+	struct pci_host_info arg;
-+	struct pci_host_bridge *host;
- 
- 	if (pci_ignore_seg)
- 		domain = 0;
-@@ -506,10 +531,14 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 		return NULL;
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 610891e63844..4811bee1b8a7 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -478,11 +478,6 @@ unsigned int irq_create_of_mapping(struct of_phandle_args *irq_data)
+ 		return 0;
  	}
  
-+	info->root = root;
- 	sd = &info->sd;
- 	sd->domain = domain;
- 	sd->node = node;
- 	sd->companion = device;
-+	init_pci_host_info(&arg);
-+	arg.arg = sd;
-+	arg.init_res = pci_acpi_init_res;
- 
- 	bus = pci_find_bus(domain, busnum);
- 	if (bus) {
-@@ -522,33 +551,19 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	} else {
- 		probe_pci_root_info(info, device, busnum, domain);
- 
--		/* insert busn res at first */
--		pci_add_resource(&resources,  &root->secondary);
--		/*
--		 * _CRS with no apertures is normal, so only fall back to
--		 * defaults or native bridge info if we're ignoring _CRS.
--		 */
--		if (pci_use_crs)
--			add_resources(info, &resources);
--		else {
--			free_pci_root_info_res(info);
--			x86_pci_root_bus_resources(busnum, &resources);
-+		if (!setup_mcfg_map(info, domain, (u8)root->secondary.start,
-+				    (u8)root->secondary.end, root->mcfg_addr)) {
-+			host = pci_scan_host_bridge(NULL, PCI_DOMBUS(domain, busnum), 
-+					&pci_root_ops, &arg);
-+			bus = host->bus;
- 		}
- 
--		if (!setup_mcfg_map(info, domain, (u8)root->secondary.start,
--				    (u8)root->secondary.end, root->mcfg_addr))
--			bus = pci_create_root_bus(NULL, busnum, &pci_root_ops,
--						  sd, &resources);
+-	if (irq_domain_is_hierarchy(domain)) {
+-		virq = irq_domain_alloc_irqs(domain, 1, NUMA_NO_NODE, irq_data);
+-		return virq <= 0 ? 0 : virq;
+-	}
 -
--		if (bus) {
--			pci_scan_child_bus(bus);
--			pci_set_host_bridge_release(
--				to_pci_host_bridge(bus->bridge),
-+		if (bus) 
-+			pci_set_host_bridge_release(host,
- 				release_pci_root_info, info);
--		} else {
--			pci_free_resource_list(&resources);
-+		else 
- 			__release_pci_root_info(info);
--		}
-+		
+ 	/* If domain has no translation, then we assume interrupt line */
+ 	if (domain->ops->xlate == NULL)
+ 		hwirq = irq_data->args[0];
+@@ -492,10 +487,24 @@ unsigned int irq_create_of_mapping(struct of_phandle_args *irq_data)
+ 			return 0;
  	}
  
- 	/* After the PCI-E bus has been walked and all devices discovered,
-@@ -568,7 +583,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 
- int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- {
--	struct pci_sysdata *sd = bridge->bus->sysdata;
-+	struct pci_sysdata *sd = bridge->sysdata;
- 
- 	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
- 	return 0;
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index b16632b..0032065 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -456,11 +456,18 @@ void __init dmi_check_pciprobe(void)
- 	dmi_check_system(pciprobe_dmi_table);
- }
- 
-+static int pcibios_init_res(struct pci_host_bridge *host,
-+		struct pci_host_info *info)
-+{
-+	x86_pci_root_bus_resources(host->busnum, &host->windows);
-+	return 0;
-+}
+-	/* Create mapping */
+-	virq = irq_create_mapping(domain, hwirq);
+-	if (!virq)
+-		return virq;
++	if (irq_domain_is_hierarchy(domain)) {
++		/*
++		 * If we've already configured this interrupt,
++		 * don't do it again, or hell will break loose.
++		 */
++		virq = irq_find_mapping(domain, hwirq);
++		if (virq)
++			return virq;
 +
- void pcibios_scan_root(int busnum)
- {
--	struct pci_bus *bus;
- 	struct pci_sysdata *sd;
--	LIST_HEAD(resources);
-+	struct pci_host_info info;
-+	struct pci_host_bridge *host;
++		virq = irq_domain_alloc_irqs(domain, 1, NUMA_NO_NODE, irq_data);
++		if (virq <= 0)
++			return 0;
++	} else {
++		/* Create mapping */
++		virq = irq_create_mapping(domain, hwirq);
++		if (!virq)
++			return virq;
++	}
  
- 	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
- 	if (!sd) {
-@@ -468,14 +475,16 @@ void pcibios_scan_root(int busnum)
- 		return;
- 	}
- 	sd->node = x86_pci_root_bus_node(busnum);
--	x86_pci_root_bus_resources(busnum, &resources);
-+	init_pci_host_info(&info);
-+	info.init_res = pcibios_init_res;
-+	info.arg = sd;
- 	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busnum);
--	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, sd, &resources);
--	if (bus) {
--		pci_bus_add_devices(bus);
-+	host = pci_scan_host_bridge(NULL, PCI_DOMBUS(0, busnum),
-+		   	&pci_root_ops, &info);
-+	if (host) {
-+		pci_bus_add_devices(host->bus);
- 		return;
- 	} 
--	pci_free_resource_list(&resources);
- 	kfree(sd);
- }
- 
+ 	/* Set type if specified and different than the current one */
+ 	if (type != IRQ_TYPE_NONE &&
 -- 
-1.7.1
+1.7.10.4
 
