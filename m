@@ -1,82 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f44.google.com ([209.85.216.44]:43265 "EHLO
-	mail-qa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752709AbaKLEIo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 23:08:44 -0500
-Received: by mail-qa0-f44.google.com with SMTP id w8so7942240qac.17
-        for <linux-pci@vger.kernel.org>; Tue, 11 Nov 2014 20:08:43 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20141112031118.GA15257@shangw>
-References: <1415760163-12517-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <CAErSpo7mEo61GP4oxcodKWFFXaaESae96qLiR1RE0CFsahr29g@mail.gmail.com> <20141112031118.GA15257@shangw>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 11 Nov 2014 21:08:23 -0700
-Message-ID: <CAErSpo5OZxsB-X=tQWbWf3Q-wSvru3-+8_h5456QXZoMYeGKhA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Fix device node for virtual bus
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga14.intel.com ([192.55.52.115]:49106 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751413AbaKFOSU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 6 Nov 2014 09:18:20 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [Patch Part2 v5 04/31] genirq: Introduce irq_chip.irq_compose_msi_msg() to support stacked irqchip
+Date: Thu,  6 Nov 2014 22:20:17 +0800
+Message-Id: <1415283644-2559-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 11, 2014 at 8:11 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
-> On Tue, Nov 11, 2014 at 07:55:19PM -0700, Bjorn Helgaas wrote:
->>On Tue, Nov 11, 2014 at 7:42 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
->>> pci_set_bus_of_node() sets virtual PCI bus's device node to PHB's
->>> device node wrongly. The patch fixes the issue.
->>
->>This needs more detail.  How is this bug visible to users?  Is there a
->>bug report?  Is this a regression?  Should it be marked for stable?
->>
->
-> I don't have opened bug for it. I just found the problem (maybe not
-> a problem) when reading the code: The original implementation binds
-> PHB device-tree node with "virtual bus", which doesn't make sense.
+Add callback irq_compose_msi_msg to struct irq_chip, which will be used
+to support stacked irqchip.
 
-Does this result in something being wrong in sysfs?  How is this bug
-visible to users?
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ include/linux/irq.h |    5 +++++
+ kernel/irq/chip.c   |   17 +++++++++++++++++
+ 2 files changed, 22 insertions(+)
 
-> Yes, I guess it should be marked for stable if you don't object.
->
->>We use "virtual bus" to refer to buses created for SR-IOV VFs that are
->>not on the same bus as the PF.  These virtual buses have no bridge
->>device leading to them.  But I think you're talking about something
->>totally different.  Or maybe that *is* what you're talking about,
->>since this patch resembles 2ba29e270e97 ("PCI: Use pci_is_root_bus()
->>to check for root bus").
->>
->
-> "virtual bus" here is the buses created for SR-IOV VFs. Yes, the
-> code changes resembles commit 2ba29e270e97.
->
-> Thanks,
-> Gavin
->
->>Bjorn
->>
->>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>> ---
->>>  drivers/pci/of.c | 4 ++--
->>>  1 file changed, 2 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
->>> index f092993..7b2256b 100644
->>> --- a/drivers/pci/of.c
->>> +++ b/drivers/pci/of.c
->>> @@ -31,9 +31,9 @@ void pci_release_of_node(struct pci_dev *dev)
->>>
->>>  void pci_set_bus_of_node(struct pci_bus *bus)
->>>  {
->>> -       if (bus->self == NULL)
->>> +       if (pci_is_root_bus(bus))
->>>                 bus->dev.of_node = pcibios_get_phb_of_node(bus);
->>> -       else
->>> +       else if (bus->self)
->>>                 bus->dev.of_node = of_node_get(bus->self->dev.of_node);
->>>  }
->>>
->>> --
->>> 1.8.3.2
->>>
->>
->
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index 0adcbbbf2e87..536b7fc6c8f4 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -29,6 +29,7 @@ struct seq_file;
+ struct module;
+ struct irq_desc;
+ struct irq_data;
++struct msi_msg;
+ typedef	void (*irq_flow_handler_t)(unsigned int irq,
+ 					    struct irq_desc *desc);
+ typedef	void (*irq_preflow_handler_t)(struct irq_data *data);
+@@ -320,6 +321,7 @@ static inline irq_hw_number_t irqd_to_hwirq(struct irq_data *d)
+  *				any other callback related to this irq
+  * @irq_release_resources:	optional to release resources acquired with
+  *				irq_request_resources
++ * @irq_compose_msi_msg:	optional to compose message content for MSI
+  * @flags:		chip specific flags
+  */
+ struct irq_chip {
+@@ -356,6 +358,8 @@ struct irq_chip {
+ 	int		(*irq_request_resources)(struct irq_data *data);
+ 	void		(*irq_release_resources)(struct irq_data *data);
+ 
++	void		(*irq_compose_msi_msg)(struct irq_data *data, struct msi_msg *msg);
++
+ 	unsigned long	flags;
+ };
+ 
+@@ -443,6 +447,7 @@ extern void handle_percpu_devid_irq(unsigned int irq, struct irq_desc *desc);
+ extern void handle_bad_irq(unsigned int irq, struct irq_desc *desc);
+ extern void handle_nested_irq(unsigned int irq);
+ 
++extern int irq_chip_compose_msi_msg(struct irq_data *data, struct msi_msg *msg);
+ #ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
+ extern void irq_chip_ack_parent(struct irq_data *data);
+ extern int irq_chip_retrigger_hierarchy(struct irq_data *data);
+diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
+index 12f3e72449eb..8f362db17a8a 100644
+--- a/kernel/irq/chip.c
++++ b/kernel/irq/chip.c
+@@ -867,3 +867,20 @@ int irq_chip_retrigger_hierarchy(struct irq_data *data)
+ 	return -ENOSYS;
+ }
+ #endif
++
++int irq_chip_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
++{
++	struct irq_data *pos = NULL;
++
++#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
++	for (; data; data = data->parent_data)
++#endif
++		if (data->chip && data->chip->irq_compose_msi_msg)
++			pos = data;
++	if (!pos)
++		return -ENOSYS;
++
++	pos->chip->irq_compose_msi_msg(pos, msg);
++
++	return 0;
++}
+-- 
+1.7.10.4
+
