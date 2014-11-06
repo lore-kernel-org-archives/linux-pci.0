@@ -1,120 +1,146 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	x86@kernel.org, Matthias Brugger <matthias.bgg@gmail.com>,
-	Alexander Gordeev <agordeev@redhat.com>,
-	Anton Blanchard <anton@samba.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linuxppc-dev@lists.ozlabs.org, xen-devel@lists.xenproject.org
-Subject: [RFC Part4 v1 11/17] PCI, MSI: Rename __read_msi_msg() as __pci_read_msi_msg()
-Date: Sun,  9 Nov 2014 23:10:33 +0800
-Message-Id: <1415545839-28263-12-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp1.tech.numericable.fr ([82.216.111.37]:35696 "EHLO
+	smtp1.tech.numericable.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750931AbaKFBgT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 20:36:19 -0500
+Message-ID: <545AD080.9080408@laposte.net>
+Date: Thu, 06 Nov 2014 02:36:00 +0100
+From: Barto <mister.freeman@laposte.net>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Chuansheng Liu <chuansheng.liu@intel.com>,
+	Aaron Lu <aaron.lu@intel.com>, Tejun Heo <tj@kernel.org>,
+	Rafael Wysocki <rjw@rjwysocki.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Do not enable async suspend for JMicron chips
+References: <1415151063-2530-1-git-send-email-chuansheng.liu@intel.com> <CAErSpo6cWP2ngErLVzqASkeQOLsB7JjgCC8UuA-S=Lz=AJyf6Q@mail.gmail.com> <545A7087.3050802@laposte.net> <CAErSpo4fvoeP9Gab1ZDg=ofjH+aqxGD09nLDTF1ZERnH=yEPxw@mail.gmail.com>
+In-Reply-To: <CAErSpo4fvoeP9Gab1ZDg=ofjH+aqxGD09nLDTF1ZERnH=yEPxw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rename __read_msi_msg() as __pci_read_msi_msg() and kill unused
-read_msi_msg(). It's a preparation to separate generic MSI code
-from PCI core.
+Bjorn : the patch initialy created for bug  81551 ( ATAPI-CD-ROM-drive
+dead after resume from suspend/s2disk ) was not enough for the bug 84861
+( JMicron Technology Corp. JMB368 IDE controller dead after resume when
+async suspend is enabled ),
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/powerpc/platforms/pseries/msi.c |    2 +-
- arch/x86/pci/xen.c                   |    2 +-
- drivers/pci/msi.c                    |    9 +--------
- include/linux/msi.h                  |    3 +--
- 4 files changed, 4 insertions(+), 12 deletions(-)
+the reason : there are too much models inside the family of JMBxxx
+JMicron SATA/IDE controlers PCI cards,  and the first patch targets ONLY
+the JMB363/361 model, which is not enough :
 
-diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
-index 8ab5add4ac82..90f756d0f58f 100644
---- a/arch/powerpc/platforms/pseries/msi.c
-+++ b/arch/powerpc/platforms/pseries/msi.c
-@@ -476,7 +476,7 @@ again:
- 		irq_set_msi_desc(virq, entry);
- 
- 		/* Read config space back so we can restore after reset */
--		__read_msi_msg(entry, &msg);
-+		__pci_read_msi_msg(entry, &msg);
- 		entry->msg = msg;
- 	}
- 
-diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-index 093f5f4272d3..a48ca2f8b93e 100644
---- a/arch/x86/pci/xen.c
-+++ b/arch/x86/pci/xen.c
-@@ -229,7 +229,7 @@ static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 		return 1;
- 
- 	list_for_each_entry(msidesc, &dev->msi_list, list) {
--		__read_msi_msg(msidesc, &msg);
-+		__pci_read_msi_msg(msidesc, &msg);
- 		pirq = MSI_ADDR_EXT_DEST_ID(msg.address_hi) |
- 			((msg.address_lo >> MSI_ADDR_DEST_ID_SHIFT) & 0xff);
- 		if (msg.data != XEN_PIRQ_MSI_DATA ||
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index e1814f4be4b9..6011dfb475a1 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -243,7 +243,7 @@ void default_restore_msi_irqs(struct pci_dev *dev)
- 		default_restore_msi_irq(dev, entry->irq);
- }
- 
--void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
-+void __pci_read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- {
- 	BUG_ON(entry->dev->current_state != PCI_D0);
- 
-@@ -273,13 +273,6 @@ void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- 	}
- }
- 
--void read_msi_msg(unsigned int irq, struct msi_msg *msg)
--{
--	struct msi_desc *entry = irq_get_msi_desc(irq);
--
--	__read_msi_msg(entry, msg);
--}
--
- void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- {
- 	if (entry->dev->current_state != PCI_D0) {
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 19502186a64d..4b0d070ff481 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -61,9 +61,8 @@ void msi_domain_deactivate(struct irq_domain *domain,
- 
- #ifdef CONFIG_PCI_MSI
- /* Helper functions */
--void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-+void __pci_read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
--void read_msi_msg(unsigned int irq, struct msi_msg *msg);
- void write_msi_msg(unsigned int irq, struct msi_msg *msg);
- 
- /*
--- 
-1.7.10.4
+if (pdev->vendor == PCI_VENDOR_ID_JMICRON &&
++		(pdev->device == PCI_DEVICE_ID_JMICRON_JMB363 ||
++		pdev->device == PCI_DEVICE_ID_JMICRON_JMB361))
++		device_disable_async_suspend(&pdev->dev);
 
+for example I have a JMB363/368 JMicron SATA/IDE PCI card, and the first
+patch created for the bug 81551 is not enough, that's why Chuansheng Liu
+created a new patch who targets ALL models of JMicron JMBxxx SATA/IDE
+cards, in order to be sure that these models of JMicron will have
+"async_suspend feature disabled,
+
+the good patch who works for all models of JMicron JMBxx SATA/IDE
+controlers :
+
++     if (dev->vendor != PCI_VENDOR_ID_JMICRON)
++         device_enable_async_suspend(&dev->dev);
+ 	dev->wakeup_prepared = false;
+
+	
+
+
+
+Le 05/11/2014 20:03, Bjorn Helgaas a écrit :
+> On Wed, Nov 5, 2014 at 11:46 AM, Barto <mister.freeman@laposte.net> wrote:
+>> this patch solves these 2 bug reports :
+>>
+>> https://bugzilla.kernel.org/show_bug.cgi?id=
+>>
+>> https://bugzilla.kernel.org/show_bug.cgi?id=81551
+> 
+> Those bugs were already mentioned.  But e6b7e41cdd8c claims to solve
+> https://bugzilla.kernel.org/show_bug.cgi?id=81551, and 84861 is a
+> duplicate of 81551, so it should also be fixed by e6b7e41cdd8c.
+> 
+> So the question is, why was e6b7e41cdd8c insufficient?  Presumably it
+> was tested and somebody thought it did fix the problem.
+> 
+>> in simple words : JMicron IDE/Sata controlers family ( JMBxxx ) are not
+>> fully compatible with async_suspend feature, when a user tries to put
+>> his PC on standby mode then at wake-up JMicron IDE/Sata controlers will
+>> not work, because of a brother-relation between the SATA and IDE part on
+>> this JMicron PCI card
+>>
+>>
+>>
+>>
+>> Le 05/11/2014 19:01, Bjorn Helgaas a écrit :
+>>> On Tue, Nov 4, 2014 at 6:31 PM, Chuansheng Liu <chuansheng.liu@intel.com> wrote:
+>>>> The JMicron chip 361/363/368 contains one SATA controller and
+>>>> one PATA controller, they are brother-relation ship in PCI tree,
+>>>> but for powering on these both controller, we must follow the
+>>>> sequence one by one, otherwise one of them can not be powered on
+>>>> successfully.
+>>>
+>>> This should mention what's broken and what problem a user would see.
+>>> This changelog sounds a lot like the one for e6b7e41cdd8c, so I don't
+>>> know if this is for a new, related problem, or what.
+>>>
+>>>> So here we disable the async suspend method for Jmicron chip.
+>>>>
+>>>> Bug link:
+>>>> https://bugzilla.kernel.org/show_bug.cgi?id=81551
+>>>> https://bugzilla.kernel.org/show_bug.cgi?id=84861
+>>>>
+>>>> And we can revert the below commit after this patch is applied:
+>>>> e6b7e41(ata: Disabling the async PM for JMicron chip 363/361)
+>>>>
+>>>> Cc: stable@vger.kernel.org # 3.15+
+>>>> Acked-by: Aaron Lu <aaron.lu@intel.com>
+>>>> Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+>>>> ---
+>>>>  drivers/pci/pci.c |   12 +++++++++++-
+>>>>  1 file changed, 11 insertions(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>>> index 625a4ac..53128f0 100644
+>>>> --- a/drivers/pci/pci.c
+>>>> +++ b/drivers/pci/pci.c
+>>>> @@ -2046,7 +2046,17 @@ void pci_pm_init(struct pci_dev *dev)
+>>>>         pm_runtime_forbid(&dev->dev);
+>>>>         pm_runtime_set_active(&dev->dev);
+>>>>         pm_runtime_enable(&dev->dev);
+>>>> -       device_enable_async_suspend(&dev->dev);
+>>>> +
+>>>> +       /*
+>>>> +        * The JMicron chip 361/363/368 contains one SATA controller and
+>>>> +        * one PATA controller, they are brother-relation ship in PCI tree,
+>>>> +        * but for powering on these both controller, we must follow the
+>>>> +        * sequence one by one, otherwise one of them can not be powered on
+>>>> +        * successfully, so here we disable the async suspend method for
+>>>> +        * Jmicron chip.
+>>>> +        */
+>>>> +       if (dev->vendor != PCI_VENDOR_ID_JMICRON)
+>>>> +               device_enable_async_suspend(&dev->dev);
+>>>
+>>> I don't like littering the core PCI code with vendor tests like this.
+>>> This would be the only one, except for an ancient DECchip 21050 bridge
+>>> erratum.
+>>>
+>>> And why would we want a test for *all* JMicron devices here, when you
+>>> claim the problem only affects a few specific ones?
+>>>
+>>> And what's the story with the e6b7e41cdd8c ("ata: Disabling the async
+>>> PM for JMicron chip 363/361") connection?  Is something broken even
+>>> with e6b7e41cdd8c, and this is a better fix?  Or is this simply a
+>>> different way of fixing the same problem?
+>>>
+>>>>         dev->wakeup_prepared = false;
+>>>>
+>>>>         dev->pm_cap = 0;
+>>>> --
+>>>> 1.7.9.5
+>>>>
+>>>
+> 
