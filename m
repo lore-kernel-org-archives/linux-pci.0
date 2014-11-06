@@ -1,70 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cmexedge2.emulex.com ([138.239.224.100]:11383 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751180AbaKQPMs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 10:12:48 -0500
-From: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.Com>
-To: "Bjorn Helgaas (bhelgaas@google.com)" <bhelgaas@google.com>
-CC: "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v1] pci: Limit VPD length of Emulex adapters to the
- actual length supported.
-Date: Mon, 17 Nov 2014 15:12:15 +0000
-Message-ID: <BF3270C86E8B1349A26C34E4EC1C44CB3E87A6A7@CMEXMB1.ad.emulex.com>
-References: <1f6d7b6c-7189-4fe3-926b-42609724cab9@CMEXHTCAS2.ad.emulex.com>
- <20141023154054.GA7137@google.com>
- <BF3270C86E8B1349A26C34E4EC1C44CB3E860095@CMEXMB1.ad.emulex.com>
- <CAErSpo7_9xxtBmHOCgxsHeVLbKUeMVhLF6Q9OyFkz11EZbtJCA@mail.gmail.com>
- <BF3270C86E8B1349A26C34E4EC1C44CB3E862DC6@CMEXMB1.ad.emulex.com>
- <CAErSpo7KKka6-nHWnVbqVW3hx-E=4x6cEjeEGEAWz32za6xCGQ@mail.gmail.com>
-In-Reply-To: <CAErSpo7KKka6-nHWnVbqVW3hx-E=4x6cEjeEGEAWz32za6xCGQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mailout2.samsung.com ([203.254.224.25]:36162 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751083AbaKFFhx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 00:37:53 -0500
+Received: from epcpsbgr3.samsung.com
+ (u143.gpu120.samsung.co.kr [203.254.230.143])
+ by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0NEL008SORMWTUD0@mailout2.samsung.com> for
+ linux-pci@vger.kernel.org; Thu, 06 Nov 2014 14:37:45 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, 'Mohit Kumar' <mohit.kumar@st.com>,
+	'Viresh Kumar' <viresh.kumar@linaro.org>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+Subject: [PATCH] PCI: spear: Add __init annotation to spear13xx_add_pcie_port()
+Date: Thu, 06 Nov 2014 14:38:18 +0900
+Message-id: <001f01cff983$deb4da20$9c1e8e60$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-U29ycnkgZm9yIGEgZGVsYXllZCByZXNwb25zZS4NCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2Ut
-LS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86YmhlbGdhYXNAZ29vZ2xlLmNvbV0N
-Cj4gU2VudDogVHVlc2RheSwgTm92ZW1iZXIgMDQsIDIwMTQgMTE6MDUgUE0NCj4gVG86IFZlbmth
-dCBEdXZ2dXJ1DQo+IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJl
-OiBbUEFUQ0ggdjFdIHBjaTogTGltaXQgVlBEIGxlbmd0aCBvZiBFbXVsZXggYWRhcHRlcnMgdG8g
-dGhlDQo+IGFjdHVhbCBsZW5ndGggc3VwcG9ydGVkLg0KPiANCj4gPiBJbiB0aGlzIGNhc2Ugd2hl
-biB0aGUgaG9zdCByZWFkcyAzMmsgc3BhY2UsIHRoZSBhZGFwdGVyIGdldHMgYXJvdW5kIDhLDQo+
-IGludGVycnVwdHMgYW5kIHNvbWV0aW1lcyBnZXRzIG92ZXJ3aGVsbWVkIHdpdGggdGhlIGludGVy
-cnVwdCBzdG9ybS4gVGhpcw0KPiBjb3VsZCBjYXVzZSB0aGUgYWRhcHRlciB0byBzdG9wIGZ1bmN0
-aW9uaW5nIHByb3Blcmx5Lg0KPiA+IExpbWl0aW5nIHRoZSBWUEQgcmVhZCB0byAxSyBjYXVzZXMg
-b25seSAyNTYgaW50ZXJydXB0cyAob24gdGhlIGFkYXB0ZXIpIGFuZA0KPiB0aGUgcHJvYmxlbSBu
-ZXZlciBzZWVtcyB0byBvY2N1ci4NCj4gPiBUaGlzIGhhcyBiZWVuIHRoZSBtYWluIG1vdGl2YXRp
-b24gYmVoaW5kIG15IHBhdGNoLg0KPiA+IEkgZG8gYWdyZWUgdGhhdCB0aGUgdGltZW91dCBjb3Vs
-ZCBzdGlsbCBvY2N1ciBldmVuIHdoZW4gcmVhZGluZyB0aGUgMUsNCj4gaW1wbGVtZW50ZWQgc3Bh
-Y2UsIGJ1dCBJIGZlZWwgaXQncyBoaWdobHkgaW1wcm9iYWJsZS4NCj4gDQo+IE9LLiAgSSB3b3Vs
-ZCBndWVzcyB0aGF0IHNvbWV0aGluZyBsaWtlDQo+IA0KPiAgIHdoaWxlIC9iaW4vdHJ1ZTsgZG8N
-Cj4gICAgIGNhdCAvc3lzL2RldmljZXMvcGNpMDAwMDowMC8wMDAwOjAwOjAwLjAvdnBkDQo+ICAg
-ZG9uZQ0KPiANCj4gY291bGQgc3RpbGwgb3ZlcndoZWxtIHRoZSBhZGFwdGVyLCBldmVuIHdpdGgg
-dGhlIDFLIGxpbWl0IGluIHBsYWNlLg0KQ29ycmVjdC4NCg0KPiANCj4gPiBBcyBhbiBhbHRlcm5h
-dGl2ZSBzb2x1dGlvbiwgd291bGQgeW91IGJlIG9wZW4gdG8gYSBmaXggaW4gUENJIC1jb3JlIHRv
-IHN0b3ANCj4gcmVhZGluZyBhZnRlciB0aGUgRW5kLXRhZyBpcyBkZXRlY3RlZD8gIChUaGlzIGxv
-Z2ljIGlzIHVzZWQgYnkgcGNpLXV0aWxpdHkgKGxzLQ0KPiB2cGQuYykgd2hpbGUgcmVhZGluZyBW
-UEQgZGF0YS4pDQo+ID4gSSBub3cgZmVlbCB0aGF0IHRoaXMgaXMgdGhlICpyaWdodCogc29sdXRp
-b24gdGhhbiBteSBwY2ktcXVpcmtzIHBhdGNoLg0KPiANCj4gVGhhdCdzIGEgcG9zc2liaWxpdHks
-IGFuZCBpZiB3ZSB3ZXJlIGltcGxlbWVudGluZyBWUEQgc3VwcG9ydCBmcm9tDQo+IHNjcmF0Y2gs
-IEknZCBwcm9iYWJseSBkbyBpdCB0aGF0IHdheS4NCj4gDQo+IE15IG9ubHkgY29uY2VybiB3aXRo
-IGNoYW5naW5nIG5vdyBpcyB0aGF0IGl0IGNvdWxkIGJyZWFrIGV4aXN0aW5nDQo+IHVzZXJzIGZv
-ciBkZXZpY2VzIHdoZXJlIHRoZSBWUEQgY29udGVudCBkb2Vzbid0IGhhdmUgdGhlIHN0cnVjdHVy
-ZQ0KPiBzcGVjaWZpZWQgYnkgdGhlIHNwZWMuICBUaGVyZSBhcmVuJ3QgKnRvbyogbWFueSB1c2Vy
-cyBvZg0KPiBwY2lfcmVhZF92cGQoKSBpbiB0aGUgdHJlZSwgc28gaXQgbWlnaHQgYmUgZmVhc2li
-bGUgdG8ganVzdCBhc2sgdGhlDQo+IGJueDJ4LCB0ZzMsIGN4Z2I0LCBza3kyLCBhbmQgZWZ4IGZv
-bGtzIHdoZXRoZXIgdGhleSB0aGluayBpdCdzIHNhZmUuDQo+IA0KPiBJIHRvb2sgYSBxdWljayBs
-b29rIGF0IHRob3NlIGRyaXZlcnMsIGFuZCBpdCBhY3R1YWxseSBsb29rcyBsaWtlIG1vc3QNCj4g
-b2YgdGhlbSBsb29rIGZvciB0aGUgdGFnIHN0cnVjdHVyZSwgZS5nLiwgYnkgdXNpbmcgcGNpX3Zw
-ZF9maW5kX3RhZygpDQo+IG9yIGRvaW5nIHNvbWV0aGluZyBzaW1pbGFyLiAgU28gbWF5YmUgaXQg
-YWN0dWFsbHkgd291bGQgYmUgc2FmZSB0byBkbw0KPiB0aGlzLiAgTWF5YmUgeW91IGNvdWxkIGhh
-dmUgYSBtb3JlIHRob3JvdWdoIGxvb2sgYXQgdGhlbSBhbmQgc2VlIGlmDQo+IHlvdSBhZ3JlZT8N
-CklmIHRoZSBkZXZpY2VzIGRvZXNuJ3QgZm9sbG93IHRoZSBzcGVjIGZvciB0aGUgVlBEIGNvbnRl
-bnRzLCBwY2ktY29yZSBtYXkgZW5kdXAgcmVxdWVzdGluZyAzMmsgZGF0YSB3aGljaCBwcm9iYWJs
-eSB3aWxsIG5vdCBicmVhayBleGlzdGluZyB1c2Vycy4NCkkgbG9va2VkIGludG8gYWxsIHRoZSBw
-Y2lfcmVhZF92cGQgdXNlcnMgKGRyaXZlcnMpIGFuZCB0aGV5IHNlZW0gdG8gYmUgZG9pbmcgcGNp
-X2ZpbmRfdnBkX3RhZyBvciBwY2lfdnBkX2ZpbmRfaW5mb19rZXl3b3JkIHRvIGZpbmQgYSBzcGVj
-aWZpYyB0YWcva2V5d29yZCBhbmQgbm90IGFsbCB0aGUgdGFncy9rZXl3b3Jkcy4NCkEgc2FmZXIg
-YXBwcm9hY2ggcHJvYmFibHkgaXMgdG8gbG9vayBmb3IgdGhlIGVuZCB0YWcgaW4gcGNpX3JlYWRf
-dnBkLCBpZiBvZmZzZXQgaXMgInplcm8iIGJlY2F1c2Ugc29tZSBkcml2ZXJzIGFyZSBkb2luZyAi
-cGNpX3JlYWRfdnBkIiB3aXRoIGEgbm9uLXplcm8gb2Zmc2V0Lg0KDQoNCi9WZW5rYXQuDQo=
+Add __init annotation to spear13xx_add_pcie_port(), because
+the spear13xx_add_pcie_port() is called only by spear13xx_pcie_probe()
+that was already marked as __init. Also, this patch fixes
+section mismatch warning.
+
+WARNING: drivers/pci/host/built-in.o(.text.unlikely+0x94): Section mismatch in reference from the function spear13xx_add_pcie_port()
+to the function .init.text:dw_pcie_host_init()
+The function spear13xx_add_pcie_port() references
+the function __init dw_pcie_host_init().
+This is often because spear13xx_add_pcie_port lacks a __init
+annotation or the annotation of dw_pcie_host_init is wrong.
+
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+This patch is based on the submitted patch "[PATCH V2] PCI:
+spear: Add spear13xx before add_pcie_port/pcie_initt".
+
+ drivers/pci/host/pcie-spear13xx.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+index 63f869f..60f43cd 100644
+--- a/drivers/pci/host/pcie-spear13xx.c
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -269,8 +269,8 @@ static struct pcie_host_ops spear13xx_pcie_host_ops = {
+ 	.host_init = spear13xx_pcie_host_init,
+ };
+ 
+-static int spear13xx_add_pcie_port(struct pcie_port *pp,
+-				   struct platform_device *pdev)
++static int __init spear13xx_add_pcie_port(struct pcie_port *pp,
++					 struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	int ret;
+-- 
+1.7.9.5
+
+
