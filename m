@@ -1,59 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:53283 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751173AbaKFPXb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 10:23:31 -0500
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>
-Cc: devicetree@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Liviu Dudau <Liviu.Dudau@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v2] PCI: add missing DT binding for linux,pci-domain property
-Date: Thu,  6 Nov 2014 16:23:20 +0100
-Message-Id: <1415287400-30426-1-git-send-email-l.stach@pengutronix.de>
+Received: from www.linutronix.de ([62.245.132.108]:41904 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751234AbaKFKmm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 05:42:42 -0500
+Date: Thu, 6 Nov 2014 11:42:32 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+cc: Jiang Liu <jiang.liu@linux.intel.com>, marc.zyngier@arm.com,
+	mark.rutland@arm.com, jason@lakedaemon.net,
+	Catalin.Marinas@arm.com, Will.Deacon@arm.com, liviu.dudau@arm.com,
+	Harish.Kasiviswanathan@amd.com,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [V10 PATCH 2/2] irqchip: gicv2m: Add supports for ARM GICv2m
+ MSI(-X)
+In-Reply-To: <alpine.DEB.2.11.1411060146050.24960@nanos>
+Message-ID: <alpine.DEB.2.11.1411061131330.24960@nanos>
+References: <1415052977-26036-1-git-send-email-suravee.suthikulpanit@amd.com> <1415052977-26036-3-git-send-email-suravee.suthikulpanit@amd.com> <5458CE31.3040404@linux.intel.com> <545ABB4C.8010103@amd.com> <545ABF6C.1000308@amd.com>
+ <alpine.DEB.2.11.1411060146050.24960@nanos>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This property was added by 41e5c0f81d3e
-(of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr())
-without the required binding documentation. As this property
-will be supported by a number of host bridge drivers going forward,
-add it to the common PCI binding doc.
+On Thu, 6 Nov 2014, Thomas Gleixner wrote:
+> On Wed, 5 Nov 2014, Suravee Suthikulanit wrote:
+> > On 11/5/2014 6:05 PM, Suravee Suthikulanit wrote:
+> > > - Overall, it seems that msi_domain_alloc() could be quite different
+> > > across architectures. Would it be possible to declare this function as
+> > > weak, and allow arch to override (similar to arch_setup_msi_irq)?
+> > 
+> > Actually, declaring "msi_domain_ops" as non-static, and allow other code to
+> > override the .alloc and .free?
+> 
+> Why do you want to do that?
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
-This is a non-critical fix, but may still qualify for 3.18-rc as
-the property was added in this release cycle.
+I know why. Because you want to spare a level of hierarchy. But thats
+wrong simply because MSI itself is an interrupt chip at the device
+level.
 
-v2:
-- emphasize that the property must be present and unique systemwide
-  if used
----
- Documentation/devicetree/bindings/pci/pci.txt | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+[ MSI ] ---> [ GIC-MSI ] ---> [ GIC ]
 
-diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-index 41aeed38926d..68c364e2f5e5 100644
---- a/Documentation/devicetree/bindings/pci/pci.txt
-+++ b/Documentation/devicetree/bindings/pci/pci.txt
-@@ -7,3 +7,14 @@ And for the interrupt mapping part:
- 
- Open Firmware Recommended Practice: Interrupt Mapping
- http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
-+
-+Additionally to the properties specified in the above standards a host bridge
-+driver implementation may support the following properties:
-+
-+- linux,pci-domain:
-+   If present this property assigns a fixed PCI domain number to a host bridge,
-+   otherwise an unstable (across boots) unique number will be assigned.
-+   It is required to either not set this property at all or set it for all
-+   host bridges in the system, otherwise potentially conflicting domain numbers
-+   may be assigned to root buses behind different host bridges. The domain
-+   number for each host bridge in the system must be unique.
--- 
-2.1.1
+So the MSI level only cares about the allocation of the virq
+space. GIC-MSI allocates out of the bitmap which handles the hard
+wired range of MSI capable GIC interrupts and GIC handles the
+underlying functionality.
+
+And this makes a lot of sense, if you think about interrupt
+remapping. If ARM ever grows that you simply insert it into the chain:
+
+[ MSI ] ---> [ Remap] ---> [ GIC-MSI ] ---> [ GIC ]
+
+If you look at Jiangs x86 implementation it does exactly that.
+
+[ MSI ] ---> [ Vector ]
+
+[ MSI ] ---> [ Remap ] ---> [ Vector ]
+
+And because ARM has this intermediate layer of GIC-MSI you need to
+represent it in the hierarchy whether you like it or not. If you'd try
+to bolt the GIC-MSI magic into the MSI layer itself, then interrupt
+remapping would never work.
+
+Thanks,
+
+	tglx
+
 
