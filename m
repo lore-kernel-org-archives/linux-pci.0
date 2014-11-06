@@ -1,52 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:23134 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751521AbaKLDYZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 22:24:25 -0500
-Received: from epcpsbgr4.samsung.com
- (u144.gpu120.samsung.co.kr [203.254.230.144])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0NEW00JS4PGOMY70@mailout2.samsung.com> for
- linux-pci@vger.kernel.org; Wed, 12 Nov 2014 12:24:24 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
-	'Richard Zhu' <r65037@freescale.com>,
-	'Lucas Stach' <l.stach@pengutronix.de>
-Subject: [PATCH] PCI: imx6: Use tabs for indentation
-Date: Wed, 12 Nov 2014 12:25:09 +0900
-Message-id: <002801cffe28$43176f70$c9464e50$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 6 Nov 2014 12:59:25 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Alexander Gordeev <agordeev@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	x86@kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	LAK <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [Patch Part2 v4 21/31] PCI/MSI: enhance PCI MSI core to support
+ hierarchy irqdomain
+In-Reply-To: <545B5E5B.8090300@linux.intel.com>
+Message-ID: <alpine.DEB.2.11.1411061258560.24960@nanos>
+References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com> <1415102525-9898-22-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1411061023400.24960@nanos> <545B5E5B.8090300@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch fixes the following checkpatch error.
+On Thu, 6 Nov 2014, Jiang Liu wrote:
+> On 2014/11/6 18:01, Thomas Gleixner wrote:
+> Hi Thomas,
+> 	Actually I'm working on a patch set to improve MSI support in
+> the way you described above this afternoon. And I'm also trying to
+> split MSI code into PCI dependent part and PCI independent part.
+> I plan to add a file kernel/irq/msi.c to host PCI independent part,
 
-  ERROR: code indent should use tabs where possible
+kernel/irq/msi.c is fine.
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- drivers/pci/host/pci-imx6.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Thanks,
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 233fe8a..8a7530b 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -526,8 +526,8 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
- 		}
- 
- 		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
--		                       imx6_pcie_msi_handler,
--		                       IRQF_SHARED, "mx6-pcie-msi", pp);
-+				       imx6_pcie_msi_handler,
-+				       IRQF_SHARED, "mx6-pcie-msi", pp);
- 		if (ret) {
- 			dev_err(&pdev->dev, "failed to request MSI irq\n");
- 			return -ENODEV;
--- 
-1.7.9.5
-
-
+	tglx
