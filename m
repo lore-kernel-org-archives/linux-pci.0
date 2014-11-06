@@ -1,150 +1,403 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:47780 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933506AbaKNLmH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Nov 2014 06:42:07 -0500
-Message-ID: <1415965321.4445.4.camel@pengutronix.de>
-Subject: Re: [PATCH v2] PCI: designware: Add support 4 ATUs assignment
-From: Lucas Stach <l.stach@pengutronix.de>
-To: "Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>
-Cc: "Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Srikanth Thokala <sriku.linux@gmail.com>,
+Received: from mga01.intel.com ([192.55.52.88]:2230 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752241AbaKFOXj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 6 Nov 2014 09:23:39 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Date: Fri, 14 Nov 2014 12:42:01 +0100
-In-Reply-To: <ceb189ef55cf44588b212cc44bb19ef5@BN3PR0301MB1249.namprd03.prod.outlook.com>
-References: <1415682444-24911-1-git-send-email-Minghuan.Lian@freescale.com>
-	 <CA+mB=1+4Dzxhbin6z0PUENvjUz-y8bq-K09FXTnSepFvVfe9HQ@mail.gmail.com>
-	 <546308DD.40109@freescale.com>
-	 <CA+mB=1K=Oyzdb2yfBvPRG9DHi-PFjRPtVS_dY9JMOz6dQog8QQ@mail.gmail.com>
-	 <546331E7.5060003@freescale.com>
-	 <CA+mB=1KObT9O783SMcvHy8nJGQPnxyKgP332r5bHx-K_D+LhVg@mail.gmail.com>
-	 <1415809929.2876.5.camel@pengutronix.de> <546481A3.5050700@freescale.com>
-	 <1415874015.2420.5.camel@pengutronix.de> <54648D61.6050704@freescale.com>
-	 <1415876988.2420.7.camel@pengutronix.de> <5465C19D.3060801@freescale.com>
-	 <1415959338.4445.1.camel@pengutronix.de>
-	 <ceb189ef55cf44588b212cc44bb19ef5@BN3PR0301MB1249.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Andy Lutomirski <luto@amacapital.net>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [Patch Part2 v5 17/31] x86, hpet: Enhance HPET IRQ to support hierarchy irqdomain
+Date: Thu,  6 Nov 2014 22:20:30 +0800
+Message-Id: <1415283644-2559-18-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Freitag, den 14.11.2014, 11:30 +0000 schrieb
-Mingkai.Hu@freescale.com:
-> 
-> 
-> > -----Original Message-----
-> > From: Lucas Stach [mailto:l.stach@pengutronix.de]
-> > Sent: Friday, November 14, 2014 6:02 PM
-> > To: Lian Minghuan-B31939
-> > Cc: Srikanth Thokala; Lian Minghuan-B31939; linux-pci@vger.kernel.org;
-> > linux-arm-kernel@lists.infradead.org; Zang Roy-R61911; Hu Mingkai-B21284;
-> > Bjorn Helgaas
-> > Subject: Re: [PATCH v2] PCI: designware: Add support 4 ATUs assignment
-> > 
-> > Am Freitag, den 14.11.2014, 16:47 +0800 schrieb Lian Minghuan-B31939:
-> > > Hi Lucas and all,
-> > >
-> > > On 2014年11月13日 19:09, Lucas Stach wrote:
-> > > > Am Donnerstag, den 13.11.2014, 18:52 +0800 schrieb Lian Minghuan-
-> > B31939:
-> > > >> Hi Lucas,
-> > > >>
-> > > >> On 2014年11月13日 18:20, Lucas Stach wrote:
-> > > >>> Am Donnerstag, den 13.11.2014, 18:02 +0800 schrieb Lian Minghuan-
-> > B31939:
-> > > >>>> Hi Lucas,
-> > > >>>>
-> > > >>>> Please see my comments inline.
-> > > >>>>
-> > > >>>> Thanks,
-> > > >>>> Minghuan
-> > > >>>>
-> > > >>>> On 2014年11月13日 00:32, Lucas Stach wrote:
-> > > >>>>> Am Mittwoch, den 12.11.2014, 21:53 +0530 schrieb Srikanth Thokala:
-> > > >>>>>> Hi Minghuan,
-> > > >>> [...]
-> > > >>>
-> > > >>>>> Using a smaller type complicates the DT for little to no
-> > > >>>>> benefit. I think it's ok to use u32 here, which is a common
-> > > >>>>> standard for integer values in DT.
-> > > >>>>>
-> > > >>>>> Though this discussion lead me to the question if we even need
-> > > >>>>> to have this property in the DT at all. Isn't this a property
-> > > >>>>> that is fixed for a specific silicon implementation of the DW
-> > > >>>>> core? In that case we could just infer the number of ATUs from
-> > > >>>>> the DT compatible, so this should probably just be added to
-> > > >>>>> struct pcie_port and properly initialized by the SoC glue drivers.
-> > > >>>> [Minghuan]  As far as I know, exynos implements only 2 ATUs, this
-> > > >>>> is why pcie-designware only supports 2 ATU. iMX implements 4 ATUs
-> > > >>>> and LS1021A implements 6 ATUs.
-> > > >>>>
-> > > >>> Right so we don't need an additional property in the DT at all.
-> > > >>> The number of ATUs is fixed for a specific core compatible and can
-> > > >>> be passed in by the respective exynos, imx and ls1021 glue drivers.
-> > > >>>
-> > > >>> You may ask the Keystone and Spear maintainers to get the correct
-> > > >>> number of ATUs for those implementations.
->  > >>>
-> > > >>> Regards,
-> > > >>> Lucas
-> > > >> [Minghuan] Yes. This a way that specific core driver passes the ATU
-> > > >> number to pci-designware. But I perfer to adding dts node for the
-> > > >> following reasons:
-> > > >> 1. ATU number is hardware attribute, so it can be added to DTS.
-> > > > But it is a duplication of information that can be inferred from the
-> > > > DT compatible alone, which is usually frowned upon.
-> > > >
-> > > > Also in contrast to the num-lanes property I don't see a use-case to
-> > > > reduce the number of used ATUs in a specific system, so num-atus is
-> > > > basically fixed for a specific implementation.
-> > > [Minghuan] 4ATUs provides better support for multiple-function and
-> > > SR-IOV PCIe devices.
-> > > Can anyone tell me if there is the company will increase ATUs number?
-> > > If yes, we should avoid the following code:
-> > >
-> > > if (of_device_is_compatible(pcie->dev->of_node, "xxx,r1-pcie"))
-> > >      atu_num = 2;
-> > >
-> > > if (of_device_is_compatible(pcie->dev->of_node, "xxx,r2-pcie"))
-> > >      atu_num = 4;
-> > >
-> > The number of ATUs is fixed for a specific implementation. If the number
-> > of ATUs changes in a newer implementation of a SoC then the silicon
-> > implementation of the DW PCIe core changed, so it should get a new
-> > compatible anyway.
-> > 
-> 
-> If there are multiple platforms to use the same SoC driver, there will be
-> multiple cases for different platforms as Minghuan has pointed out.
-> 
-> For the platform that only has 2 ATUs, ATU0 is used for CFG0 and MEM and
-> there will be conflict when MEM and CFG0 are accessed simultaneously which
-> has cause the SATA link issue. I think more ATUs will be added in the 
-> future design, then one driver maybe need to handle multiple platforms.
-> 
-> DTS is designed for to describe the hardware property, it's a general way
-> to put hardware related property into DTS.
-> 
-If another platform uses the same driver you should still have a
-specific compatible for that platform. Exactly to differentiate those
-silicon implementation differences.
+Enhance HPET code to support hierarchy irqdomain, it helps to make
+the architecture more clear.
 
-If you add 2 more ATUs to the layerscape pcie in a future design it is
-not fsl,ls1021a-pcie anymore, but for example fsl,ls1100-pcie. Also you
-don't need the code construct as seen above. The number of ATU can be
-added to implementation specific data.
-Please look at the Tegra PCI driver and especially struct
-tegra_pcie_soc_data on how to properly abstract properties that are
-defined by a specific silicon implementation of a core.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/hpet.h |    7 +-
+ arch/x86/kernel/apic/msi.c  |  166 ++++++++++++++++++++++++++++++++++++++-----
+ arch/x86/kernel/hpet.c      |   57 ++++-----------
+ 3 files changed, 169 insertions(+), 61 deletions(-)
 
-Regards,
-Lucas
-
+diff --git a/arch/x86/include/asm/hpet.h b/arch/x86/include/asm/hpet.h
+index 36f7125945e3..e87e9faf87a9 100644
+--- a/arch/x86/include/asm/hpet.h
++++ b/arch/x86/include/asm/hpet.h
+@@ -74,11 +74,16 @@ extern unsigned int hpet_readl(unsigned int a);
+ extern void force_hpet_resume(void);
+ 
+ struct irq_data;
++struct hpet_dev;
++struct irq_domain;
++
+ extern void hpet_msi_unmask(struct irq_data *data);
+ extern void hpet_msi_mask(struct irq_data *data);
+-struct hpet_dev;
+ extern void hpet_msi_write(struct hpet_dev *hdev, struct msi_msg *msg);
+ extern void hpet_msi_read(struct hpet_dev *hdev, struct msi_msg *msg);
++extern struct irq_domain *hpet_create_irq_domain(int hpet_id);
++extern int hpet_assign_irq(struct irq_domain *domain,
++			   struct hpet_dev *dev, int dev_num);
+ 
+ #ifdef CONFIG_PCI_MSI
+ extern int default_setup_hpet_msi(unsigned int irq, unsigned int id);
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 328cf7fbbdc4..f3c463cc8173 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -51,6 +51,44 @@ void native_compose_msi_msg(struct pci_dev *pdev,
+ 		MSI_DATA_VECTOR(cfg->vector);
+ }
+ 
++static void irq_msi_compose_msg(struct irq_data *data, struct msi_msg *msg)
++{
++	struct irq_cfg *cfg = irqd_cfg(data);
++
++	msg->address_hi = MSI_ADDR_BASE_HI;
++
++	if (x2apic_enabled())
++		msg->address_hi |= MSI_ADDR_EXT_DEST_ID(cfg->dest_apicid);
++
++	msg->address_lo =
++		MSI_ADDR_BASE_LO |
++		((apic->irq_dest_mode == 0) ?
++			MSI_ADDR_DEST_MODE_PHYSICAL :
++			MSI_ADDR_DEST_MODE_LOGICAL) |
++		((apic->irq_delivery_mode != dest_LowestPrio) ?
++			MSI_ADDR_REDIRECTION_CPU :
++			MSI_ADDR_REDIRECTION_LOWPRI) |
++		MSI_ADDR_DEST_ID(cfg->dest_apicid);
++
++	msg->data =
++		MSI_DATA_TRIGGER_EDGE |
++		MSI_DATA_LEVEL_ASSERT |
++		((apic->irq_delivery_mode != dest_LowestPrio) ?
++			MSI_DATA_DELIVERY_FIXED :
++			MSI_DATA_DELIVERY_LOWPRI) |
++		MSI_DATA_VECTOR(cfg->vector);
++}
++
++static void msi_update_msg(struct msi_msg *msg, struct irq_data *irq_data)
++{
++	struct irq_cfg *cfg = irqd_cfg(irq_data);
++
++	msg->data &= ~MSI_DATA_VECTOR_MASK;
++	msg->data |= MSI_DATA_VECTOR(cfg->vector);
++	msg->address_lo &= ~MSI_ADDR_DEST_ID_MASK;
++	msg->address_lo |= MSI_ADDR_DEST_ID(cfg->dest_apicid);
++}
++
+ static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq,
+ 			   struct msi_msg *msg, u8 hpet_id)
+ {
+@@ -239,38 +277,37 @@ void dmar_free_hwirq(int irq)
+  * MSI message composition
+  */
+ #ifdef CONFIG_HPET_TIMER
++static inline int hpet_dev_id(struct irq_domain *domain)
++{
++	return (int)(long)domain->host_data;
++}
+ 
+ static int hpet_msi_set_affinity(struct irq_data *data,
+ 				 const struct cpumask *mask, bool force)
+ {
+-	struct irq_cfg *cfg = irqd_cfg(data);
++	struct irq_data *parent = data->parent_data;
+ 	struct msi_msg msg;
+-	unsigned int dest;
+ 	int ret;
+ 
+-	ret = apic_set_affinity(data, mask, &dest);
+-	if (ret)
+-		return ret;
+-
+-	hpet_msi_read(data->handler_data, &msg);
+-
+-	msg.data &= ~MSI_DATA_VECTOR_MASK;
+-	msg.data |= MSI_DATA_VECTOR(cfg->vector);
+-	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
+-	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
+-
+-	hpet_msi_write(data->handler_data, &msg);
++	ret = parent->chip->irq_set_affinity(parent, mask, force);
++	if (ret >= 0 && ret != IRQ_SET_MASK_OK_DONE) {
++		hpet_msi_read(data->handler_data, &msg);
++		msi_update_msg(&msg, data);
++		hpet_msi_write(data->handler_data, &msg);
++	}
+ 
+-	return IRQ_SET_MASK_OK_NOCOPY;
++	return ret;
+ }
+ 
+ static struct irq_chip hpet_msi_type = {
+ 	.name = "HPET_MSI",
+ 	.irq_unmask = hpet_msi_unmask,
+ 	.irq_mask = hpet_msi_mask,
+-	.irq_ack = apic_ack_edge,
++	.irq_ack = irq_chip_ack_parent,
+ 	.irq_set_affinity = hpet_msi_set_affinity,
+-	.irq_retrigger = apic_retrigger_irq,
++	.irq_retrigger = irq_chip_retrigger_hierarchy,
++	.irq_print_chip = irq_remapping_print_chip,
++	.irq_compose_msi_msg = irq_msi_compose_msg,
+ 	.flags = IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
+@@ -291,4 +328,99 @@ int default_setup_hpet_msi(unsigned int irq, unsigned int id)
+ 	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
+ 	return 0;
+ }
++
++static int hpet_domain_alloc(struct irq_domain *domain, unsigned int virq,
++			     unsigned int nr_irqs, void *arg)
++{
++	struct irq_alloc_info *info = arg;
++	int ret;
++
++	if (nr_irqs > 1 || !info || info->type != X86_IRQ_ALLOC_TYPE_HPET)
++		return -EINVAL;
++	if (irq_find_mapping(domain, info->hpet_index)) {
++		pr_warn("IRQ for HPET%d already exists.\n", info->hpet_index);
++		return -EEXIST;
++	}
++
++	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
++	if (ret >= 0) {
++		irq_set_status_flags(virq, IRQ_MOVE_PCNTXT);
++		irq_domain_set_hwirq_and_chip(domain, virq, info->hpet_index,
++					      &hpet_msi_type, NULL);
++		irq_set_handler_data(virq, info->hpet_data);
++		__irq_set_handler(virq, handle_edge_irq, 0, "edge");
++	}
++
++	return ret;
++}
++
++static void hpet_domain_free(struct irq_domain *domain, unsigned int virq,
++			     unsigned int nr_irqs)
++{
++	BUG_ON(nr_irqs > 1);
++	irq_clear_status_flags(virq, IRQ_MOVE_PCNTXT);
++	irq_domain_free_irqs_top(domain, virq, nr_irqs);
++}
++
++static void hpet_domain_activate(struct irq_domain *domain,
++				struct irq_data *irq_data)
++{
++	struct msi_msg msg;
++
++	BUG_ON(irq_chip_compose_msi_msg(irq_data, &msg));
++	hpet_msi_write(irq_get_handler_data(irq_data->irq), &msg);
++}
++
++static void hpet_domain_deactivate(struct irq_domain *domain,
++				  struct irq_data *irq_data)
++{
++	struct msi_msg msg;
++
++	memset(&msg, 0, sizeof(msg));
++	hpet_msi_write(irq_get_handler_data(irq_data->irq), &msg);
++}
++
++static struct irq_domain_ops hpet_domain_ops = {
++	.alloc = hpet_domain_alloc,
++	.free = hpet_domain_free,
++	.activate = hpet_domain_activate,
++	.deactivate = hpet_domain_deactivate,
++};
++
++struct irq_domain *hpet_create_irq_domain(int hpet_id)
++{
++	struct irq_domain *domain;
++	struct irq_alloc_info info;
++
++	if (x86_vector_domain == NULL)
++		return NULL;
++
++	init_irq_alloc_info(&info, NULL);
++	info.type = X86_IRQ_ALLOC_TYPE_HPET;
++	info.hpet_id = hpet_id;
++
++	domain = irq_domain_add_tree(NULL, &hpet_domain_ops,
++				     (void *)(long)hpet_id);
++	if (domain) {
++		domain->parent = irq_remapping_get_ir_irq_domain(&info);
++		if (!domain->parent)
++			domain->parent = x86_vector_domain;
++	}
++
++	return domain;
++}
++
++int hpet_assign_irq(struct irq_domain *domain, struct hpet_dev *dev,
++		    int dev_num)
++{
++	struct irq_alloc_info info;
++
++	init_irq_alloc_info(&info, NULL);
++	info.type = X86_IRQ_ALLOC_TYPE_HPET;
++	info.hpet_data = dev;
++	info.hpet_id = hpet_dev_id(domain);
++	info.hpet_index = dev_num;
++
++	return irq_domain_alloc_irqs(domain, 1, NUMA_NO_NODE, NULL);
++}
+ #endif
+diff --git a/arch/x86/kernel/hpet.c b/arch/x86/kernel/hpet.c
+index 24db2d33fab7..a22d7288202b 100644
+--- a/arch/x86/kernel/hpet.c
++++ b/arch/x86/kernel/hpet.c
+@@ -306,8 +306,6 @@ static void hpet_legacy_clockevent_register(void)
+ 	printk(KERN_DEBUG "hpet clockevent registered\n");
+ }
+ 
+-static int hpet_setup_msi_irq(unsigned int irq);
+-
+ static void hpet_set_mode(enum clock_event_mode mode,
+ 			  struct clock_event_device *evt, int timer)
+ {
+@@ -358,7 +356,7 @@ static void hpet_set_mode(enum clock_event_mode mode,
+ 			hpet_enable_legacy_int();
+ 		} else {
+ 			struct hpet_dev *hdev = EVT_TO_HPET_DEV(evt);
+-			hpet_setup_msi_irq(hdev->irq);
++			irq_domain_activate_irq(irq_get_irq_data(hdev->irq));
+ 			disable_irq(hdev->irq);
+ 			irq_set_affinity(hdev->irq, cpumask_of(hdev->cpu));
+ 			enable_irq(hdev->irq);
+@@ -424,6 +422,7 @@ static int hpet_legacy_next_event(unsigned long delta,
+ 
+ static DEFINE_PER_CPU(struct hpet_dev *, cpu_hpet_dev);
+ static struct hpet_dev	*hpet_devs;
++static struct irq_domain *hpet_domain;
+ 
+ void hpet_msi_unmask(struct irq_data *data)
+ {
+@@ -474,32 +473,6 @@ static int hpet_msi_next_event(unsigned long delta,
+ 	return hpet_next_event(delta, evt, hdev->num);
+ }
+ 
+-static int hpet_setup_msi_irq(unsigned int irq)
+-{
+-	if (x86_msi.setup_hpet_msi(irq, hpet_blockid)) {
+-		irq_domain_free_irqs(irq, 1);
+-		return -EINVAL;
+-	}
+-	return 0;
+-}
+-
+-static int hpet_assign_irq(struct hpet_dev *dev)
+-{
+-	int irq;
+-
+-	irq = irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
+-	if (irq <= 0)
+-		return -EINVAL;
+-
+-	irq_set_handler_data(irq, dev);
+-
+-	if (hpet_setup_msi_irq(irq))
+-		return -EINVAL;
+-
+-	dev->irq = irq;
+-	return 0;
+-}
+-
+ static irqreturn_t hpet_interrupt_handler(int irq, void *data)
+ {
+ 	struct hpet_dev *dev = (struct hpet_dev *)data;
+@@ -542,9 +515,6 @@ static void init_one_hpet_msi_clockevent(struct hpet_dev *hdev, int cpu)
+ 	if (!(hdev->flags & HPET_DEV_VALID))
+ 		return;
+ 
+-	if (hpet_setup_msi_irq(hdev->irq))
+-		return;
+-
+ 	hdev->cpu = cpu;
+ 	per_cpu(cpu_hpet_dev, cpu) = hdev;
+ 	evt->name = hdev->name;
+@@ -576,7 +546,7 @@ static void hpet_msi_capability_lookup(unsigned int start_timer)
+ 	unsigned int id;
+ 	unsigned int num_timers;
+ 	unsigned int num_timers_used = 0;
+-	int i;
++	int i, irq;
+ 
+ 	if (hpet_msi_disable)
+ 		return;
+@@ -589,6 +559,10 @@ static void hpet_msi_capability_lookup(unsigned int start_timer)
+ 	num_timers++; /* Value read out starts from 0 */
+ 	hpet_print_config();
+ 
++	hpet_domain = hpet_create_irq_domain(hpet_blockid);
++	if (!hpet_domain)
++		return;
++
+ 	hpet_devs = kzalloc(sizeof(struct hpet_dev) * num_timers, GFP_KERNEL);
+ 	if (!hpet_devs)
+ 		return;
+@@ -603,15 +577,16 @@ static void hpet_msi_capability_lookup(unsigned int start_timer)
+ 		if (!(cfg & HPET_TN_FSB_CAP))
+ 			continue;
+ 
++		irq = hpet_assign_irq(hpet_domain, hdev, hdev->num);
++		if (irq < 0)
++			continue;
++
++		sprintf(hdev->name, "hpet%d", i);
++		hdev->num = i;
++		hdev->irq = irq;
+ 		hdev->flags = 0;
+ 		if (cfg & HPET_TN_PERIODIC_CAP)
+ 			hdev->flags |= HPET_DEV_PERI_CAP;
+-		hdev->num = i;
+-
+-		sprintf(hdev->name, "hpet%d", i);
+-		if (hpet_assign_irq(hdev))
+-			continue;
+-
+ 		hdev->flags |= HPET_DEV_FSB_CAP;
+ 		hdev->flags |= HPET_DEV_VALID;
+ 		num_timers_used++;
+@@ -711,10 +686,6 @@ static int hpet_cpuhp_notify(struct notifier_block *n,
+ }
+ #else
+ 
+-static int hpet_setup_msi_irq(unsigned int irq)
+-{
+-	return 0;
+-}
+ static void hpet_msi_capability_lookup(unsigned int start_timer)
+ {
+ 	return;
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+1.7.10.4
 
