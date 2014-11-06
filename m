@@ -1,84 +1,268 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:36329 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754587AbaKUK3q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 05:29:46 -0500
-Message-ID: <546F140B.1050607@arm.com>
-Date: Fri, 21 Nov 2014 10:29:31 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:36936 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750915AbaKFB7B (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 20:59:01 -0500
+Message-ID: <545AD5B3.60009@huawei.com>
+Date: Thu, 6 Nov 2014 09:58:11 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Yijing Wang <wangyijing@huawei.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@kernel.org>,
-	Arjan van de Ven <arjan@infradead.org>,
-	David Woodhouse <dwmw2@infradead.org>
-Subject: Re: Removal of bus->msi assignment breaks MSI with stacked domains
-References: <546E1771.4030201@arm.com> <546E93DC.8010902@huawei.com> <alpine.DEB.2.11.1411210233250.6439@nanos>
-In-Reply-To: <alpine.DEB.2.11.1411210233250.6439@nanos>
-Content-Type: text/plain; charset=windows-1252
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	"Matthias Brugger" <matthias.bgg@gmail.com>,
+	Alexander Gordeev <agordeev@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	<x86@kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [Patch Part2 v4 21/31] PCI/MSI: enhance PCI MSI core to support
+ hierarchy irqdomain
+References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com> <1415102525-9898-22-git-send-email-jiang.liu@linux.intel.com> <20141105230952.GH6168@google.com>
+In-Reply-To: <20141105230952.GH6168@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Thomas,
+>>  
+>> @@ -1098,3 +1099,128 @@ int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
+>>  	return nvec;
+>>  }
+>>  EXPORT_SYMBOL(pci_enable_msix_range);
+>> +
+>> +#ifdef	CONFIG_PCI_MSI_IRQ_DOMAIN
+> 
+> Space, not tab.
+> 
+>> +static inline irq_hw_number_t
+>> +msi_get_hwirq(struct pci_dev *pdev, struct msi_desc *msidesc)
+> 
+> The convention in this file is "struct pci_dev *dev".  And "struct msi_desc
+> *desc" (or maybe "*entry").  Try to converge things, not diverge them.
+> 
+>> +{
+>> +	return (irq_hw_number_t)msidesc->msi_attrib.entry_nr |
+>> +		PCI_DEVID(pdev->bus->number, pdev->devfn) << 11 |
+>> +		(pci_domain_nr(pdev->bus) & 0xFFFFFFFF) << 27;
+> 
+> Where does this bit layout come from?  Is this defined in the spec
+> somewhere?  A reference would help.
 
-On 21/11/14 01:46, Thomas Gleixner wrote:
-> On Fri, 21 Nov 2014, Yijing Wang wrote:
->> On 2014/11/21 0:31, Marc Zyngier wrote:
->>> Bjorn, Yijing,
->>>
->>> I've just realized that patch c167caf8d174 (PCI/MSI: Remove useless
->>> bus->msi assignment) completely breaks MSI on arm64 when using the new
->>> MSI stacked domain:
+Currently, more and more Non-PCI device use MSI(or similar MSI mechanism), like DMAR fault irq
+and HPET FSB irq. And we have to add additional code to support the MSI capability.
+So I hope we can decouple MSI code and PCI code, then we can unify all MSI(or Message Based interrupt)
+in one framework.
+
+Thanks!
+Yijing.
+
+> 
+>> +}
+>> +
+>> +static int msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
+>> +			    unsigned int nr_irqs, void *arg)
+>> +{
+>> +	int i, ret;
+>> +	irq_hw_number_t hwirq = arch_msi_irq_domain_get_hwirq(arg);
+>> +
+>> +	if (irq_find_mapping(domain, hwirq) > 0)
+>> +		return -EEXIST;
+>> +
+>> +	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
+>> +	if (ret >= 0)
+> 
+> 	if (ret < 0)
+> 		return ret;
+> 
+> and un-indent the mainline code below.  Then it's obvious that this is the
+> normal case, not the error case.
+> 
+>> +		for (i = 0; i < nr_irqs; i++) {
+>> +			irq_domain_set_hwirq_and_chip(domain, virq + i,
+>> +					hwirq + i, &msi_chip, (void *)(long)i);
+>> +			__irq_set_handler(virq + i, handle_edge_irq, 0, "edge");
+>> +		}
+>> +
+>> +	return ret;
+>> +}
+>> +
+>> +static void msi_domain_free(struct irq_domain *domain, unsigned int virq,
+>> +			    unsigned int nr_irqs)
+>> +{
+>> +	int i;
+>> +
+>> +	for (i = 0; i < nr_irqs; i++) {
+>> +		struct msi_desc *msidesc = irq_get_msi_desc(virq);
+>> +
+>> +		if (msidesc)
+>> +			msidesc->irq = 0;
+>> +	}
+>> +	irq_domain_free_irqs_top(domain, virq, nr_irqs);
+>> +}
+>> +
+>> +static int msi_domain_activate(struct irq_domain *domain,
+>> +			       struct irq_data *irq_data)
+>> +{
+>> +	int ret = 0;
+>> +	struct msi_msg msg;
+>> +
+>> +	/*
+>> +	 * irq_data->chip_data is MSI/MSIx offset.
+> 
+> "MSI-X", as you wrote on the next line.
+> 
+>> +	 * MSI-X message is written per-IRQ, the offset is always 0.
+>> +	 * MSI message denotes a contiguous group of IRQs, written for 0th IRQ.
+>> +	 */
+>> +	if (!irq_data->chip_data) {
+> 
+> 	if (irq_data->chip_data)
+> 		return 0;
+> 
+> and un-indent the mainline code below, and drop the "ret = 0" init above.
+> 
+>> +		ret = irq_chip_compose_msi_msg(irq_data, &msg);
+>> +		if (ret == 0)
+> 
+> 	if (ret)
+> 		return ret;
+> 
+>> +			write_msi_msg(irq_data->irq, &msg);
+>> +	}
+>> +
+>> +	return ret;
+> 	return 0;
+>> +}
+>> +
+>> +static int msi_domain_deactivate(struct irq_domain *domain,
+>> +				 struct irq_data *irq_data)
+>> +{
+>> +	struct msi_msg msg;
+>> +
+>> +	if (irq_data->chip_data) {
+>> +		memset(&msg, 0, sizeof(msg));
+>> +		write_msi_msg(irq_data->irq, &msg);
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static struct irq_domain_ops msi_domain_ops = {
+>> +	.alloc = msi_domain_alloc,
+>> +	.free = msi_domain_free,
+>> +	.activate = msi_domain_activate,
+>> +	.deactivate = msi_domain_deactivate,
+>> +};
+>> +
+>> +struct irq_domain *msi_create_irq_domain(struct irq_domain *parent)
+>> +{
+>> +	struct irq_domain *domain;
+>> +
+>> +	domain = irq_domain_add_tree(NULL, &msi_domain_ops, NULL);
+>> +	if (domain)
+> 
+> 	if (!domain)
+> 		return NULL;
+> 
+> and un-indent this:
+> 
+>> +		domain->parent = parent;
+>> +
+>> +	return domain;
+>> +}
+>> +
+>> +int msi_irq_domain_alloc_irqs(struct irq_domain *domain, int type,
+>> +			      struct pci_dev *dev, void *arg)
+>> +{
+>> +	int i, virq;
+>> +	struct msi_desc *msidesc;
+>> +	int node = dev_to_node(&dev->dev);
+>> +
+>> +	list_for_each_entry(msidesc, &dev->msi_list, list) {
+>> +		arch_msi_irq_domain_set_hwirq(arg, msi_get_hwirq(dev, msidesc));
+>> +		virq = irq_domain_alloc_irqs(domain, msidesc->nvec_used,
+>> +					     node, arg);
+>> +		if (virq < 0) {
+>> +			/* Special handling for pci_enable_msi_range(). */
+>> +			return (type == PCI_CAP_ID_MSI &&
+>> +				msidesc->nvec_used > 1) ?  1 : -ENOSPC;	
+> 
+> I think "if" would be easier to read than this ternary expression.
+> 
+>> +		}
+>> +		for (i = 0; i < msidesc->nvec_used; i++)
+>> +			irq_set_msi_desc_off(virq + i, i, msidesc);
+>> +	}
+>> +
+>> +	list_for_each_entry(msidesc, &dev->msi_list, list)
+>> +		if (msidesc->nvec_used == 1)
+>> +			dev_dbg(&dev->dev, "irq %d for MSI/MSI-X\n", virq);
+>> +		else
+>> +			dev_dbg(&dev->dev, "irq [%d-%d] for MSI/MSI-X\n",
+>> +				virq, virq + msidesc->nvec_used - 1);
+>> +
+>> +	return 0;
+>> +}
+>> +#endif	/* CONFIG_PCI_MSI_IRQ_DOMAIN */
+>> diff --git a/include/linux/msi.h b/include/linux/msi.h
+>> index 44f4746d033b..05dcd425f82b 100644
+>> --- a/include/linux/msi.h
+>> +++ b/include/linux/msi.h
+>> @@ -75,4 +75,15 @@ struct msi_chip {
+>>  	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
+>>  };
+>>  
+>> +#ifdef	CONFIG_PCI_MSI_IRQ_DOMAIN
+> 
+> Use a space here, not a tab.
+> 
+>> +extern struct irq_chip msi_chip;
+> 
+> I don't think "msi_chip" is a good name.  "Chip" only hints that it's a
+> semiconductor integrated circuit; it doesn't say anything about what it
+> does.  I've suggested "msi_controller" elsewhere.
+> 
+> Why does this need to be exported?  And why should there be only one in a
+> system?
+> 
+>> +extern struct irq_domain *msi_create_irq_domain(struct irq_domain *parent);
+>> +extern int msi_irq_domain_alloc_irqs(struct irq_domain *domain, int type,
+>> +				     struct pci_dev *dev, void *arg);
+>> +
+>> +extern irq_hw_number_t arch_msi_irq_domain_get_hwirq(void *arg);
+>> +extern void arch_msi_irq_domain_set_hwirq(void *arg, irq_hw_number_t hwirq);
+> 
+> Look at the rest of the file and notice that the existing code does not use
+> "extern" on function declarations.
+> 
+>> +#endif	/* CONFIG_PCI_MSI_IRQ_DOMAIN */
+> 
+> Use a space here (not a tab), like the #endif just below.
+> 
+>>  #endif /* LINUX_MSI_H */
+>> -- 
+>> 1.7.10.4
 >>
->> Sorry, this is my first part to refactor MSI related code, now how
->> to get pci msi_controller depends arch
->> functions(pcibios_msi_controller() or arch_setup_msi_irq()), we are
->> working on generic pci_host_bridge, after that, we could eventually
->> eliminate MSI arch functions and find pci dev 's msi controller by
->> pci_host_bridge->get_msi_controller().
 > 
-> The main question is why you think that pci_host_bridge is the proper
-> place to store that information.
+> .
 > 
-> On x86 we have DMAR units associated to a single device. Each DMAR
-> unit is a seperate MSI irq domain. 
-> 
-> Can you guarantee that the pci_host_bridge is the right point to
-> provide the association of the device to the irq domain?
-> 
-> So the real question is:
-> 
->    What is the association level requirement to properly identify the
->    irqdomain for a specific device on any given architecture with and
->    without IOMMU, interrupt redirection etc.
-> 
-> To be honest: I don't know.
-> 
-> My gut feeling tells me that it's at the device level, but I really
-> leave that decision to the experts in that field.
 
-Given the above requirement (single device associated to DMAR), I can
-see two possibilities:
-- we represent DMAR as a single PCI bus: feels a bit artificial
-- we move the MSI domain to the device, as you suggested.
 
-The second one seems a lot more attractive to me. What I don't
-completely see is how the host bridge has all required the knowledge.
-
-Also, it is not clear to me what is the advantage of getting rid of the
-MSI controller. By doing so, we loose an important part of the topology
-information (the irq domain is another level of abstraction).
-
-Thanks,
-
-	M.
 -- 
-Jazz is not dead. It just smells funny...
+Thanks!
+Yijing
+
