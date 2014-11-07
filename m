@@ -1,157 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:50234 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750975AbaKZATe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Nov 2014 19:19:34 -0500
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
-	Wed, 26 Nov 2014 10:19:32 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id B03F62CE8058
-	for <linux-pci@vger.kernel.org>; Wed, 26 Nov 2014 11:19:29 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAQ0JTZD27263140
-	for <linux-pci@vger.kernel.org>; Wed, 26 Nov 2014 11:19:29 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAQ0JS6h001679
-	for <linux-pci@vger.kernel.org>; Wed, 26 Nov 2014 11:19:29 +1100
-Message-ID: <1416961167.5089.41.camel@au1.ibm.com>
-Subject: Re: [PATCH 1/8] powerpc/pci: Move pcibios_find_pci_bus() around
-From: Benjamin Herrenschmidt <benh@au1.ibm.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	mpe@ellerman.id.au
-Date: Wed, 26 Nov 2014 11:19:27 +1100
-In-Reply-To: <20141126000830.GA21766@shangw>
-References: <1416869365-7671-1-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <1416869365-7671-2-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <1416956310.5089.5.camel@kernel.crashing.org>
-	 <20141126000830.GA21766@shangw>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from aserp1040.oracle.com ([141.146.126.69]:43342 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751051AbaKGB7t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 20:59:49 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] PCI: Apply _HPX link control for all supported pcie device
+Date: Thu,  6 Nov 2014 17:59:40 -0800
+Message-Id: <1415325580-5974-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-11-26 at 11:08 +1100, Gavin Shan wrote:
-> On Wed, Nov 26, 2014 at 09:58:30AM +1100, Benjamin Herrenschmidt wrote:
-> >On Tue, 2014-11-25 at 09:49 +1100, Gavin Shan wrote:
-> >> The patch moves pcibios_find_pci_bus() to PPC kerenl directory so
-> >> that it can be reused by hotplug code for pSeries and PowerNV
-> >> platform at the same time.
-> >> 
-> >> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> >
-> >Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> >
-> 
-> Thanks, Ben. But Michael needn't pick it up and merge it as the left
-> patches need reworks to some extent...
+With commit 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
+and following commits, we apply _HPX for pci devices.
 
-Sure but you can keep that ack around for that specific patch :P)
+that is called via pci_scan_slot
+			==>pci_scan_single_device
+				==>pci_device_add
+					==>pci_configure_device
+						==>program_hpp_type2
+and dev->subordinate is not allocated yet.
 
-Cheers,
-Ben.
+So that link control setup get skipped.
 
-> Thanks,
-> Gavin
-> 
-> >> ---
-> >>  arch/powerpc/kernel/pci-hotplug.c          | 36 ++++++++++++++++++++++++++++++
-> >>  arch/powerpc/platforms/pseries/pci_dlpar.c | 32 --------------------------
-> >>  2 files changed, 36 insertions(+), 32 deletions(-)
-> >> 
-> >> diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
-> >> index 5b78917..6e2b4e3 100644
-> >> --- a/arch/powerpc/kernel/pci-hotplug.c
-> >> +++ b/arch/powerpc/kernel/pci-hotplug.c
-> >> @@ -21,6 +21,42 @@
-> >>  #include <asm/firmware.h>
-> >>  #include <asm/eeh.h>
-> >>  
-> >> +static struct pci_bus *find_pci_bus(struct pci_bus *bus,
-> >> +				    struct device_node *dn)
-> >> +{
-> >> +	struct pci_bus *tmp, *child = NULL;
-> >> +	struct device_node *busdn;
-> >> +
-> >> +	busdn = pci_bus_to_OF_node(bus);
-> >> +	if (busdn == dn)
-> >> +		return bus;
-> >> +
-> >> +	list_for_each_entry(tmp, &bus->children, node) {
-> >> +		child = find_pci_bus(tmp, dn);
-> >> +		if (child)
-> >> +			break;
-> >> +	}
-> >> +
-> >> +	return child;
-> >> +}
-> >> +
-> >> +/**
-> >> + * pcibios_find_pci_bus - find PCI bus according to the given device node
-> >> + * @dn: Device node
-> >> + *
-> >> + * Find the corresponding PCI bus according to the given device node.
-> >> + */
-> >> +struct pci_bus *pcibios_find_pci_bus(struct device_node *dn)
-> >> +{
-> >> +	struct pci_dn *pdn = PCI_DN(dn);
-> >> +
-> >> +	if (!pdn  || !pdn->phb || !pdn->phb->bus)
-> >> +		return NULL;
-> >> +
-> >> +	return find_pci_bus(pdn->phb->bus, dn);
-> >> +}
-> >> +EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
-> >> +
-> >>  /**
-> >>   * pcibios_release_device - release PCI device
-> >>   * @dev: PCI device
-> >> diff --git a/arch/powerpc/platforms/pseries/pci_dlpar.c b/arch/powerpc/platforms/pseries/pci_dlpar.c
-> >> index 89e2381..98c50bc 100644
-> >> --- a/arch/powerpc/platforms/pseries/pci_dlpar.c
-> >> +++ b/arch/powerpc/platforms/pseries/pci_dlpar.c
-> >> @@ -32,38 +32,6 @@
-> >>  #include <asm/firmware.h>
-> >>  #include <asm/eeh.h>
-> >>  
-> >> -static struct pci_bus *
-> >> -find_bus_among_children(struct pci_bus *bus,
-> >> -                        struct device_node *dn)
-> >> -{
-> >> -	struct pci_bus *child = NULL;
-> >> -	struct pci_bus *tmp;
-> >> -	struct device_node *busdn;
-> >> -
-> >> -	busdn = pci_bus_to_OF_node(bus);
-> >> -	if (busdn == dn)
-> >> -		return bus;
-> >> -
-> >> -	list_for_each_entry(tmp, &bus->children, node) {
-> >> -		child = find_bus_among_children(tmp, dn);
-> >> -		if (child)
-> >> -			break;
-> >> -	};
-> >> -	return child;
-> >> -}
-> >> -
-> >> -struct pci_bus *
-> >> -pcibios_find_pci_bus(struct device_node *dn)
-> >> -{
-> >> -	struct pci_dn *pdn = dn->data;
-> >> -
-> >> -	if (!pdn  || !pdn->phb || !pdn->phb->bus)
-> >> -		return NULL;
-> >> -
-> >> -	return find_bus_among_children(pdn->phb->bus, dn);
-> >> -}
-> >> -EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
-> >> -
-> >>  struct pci_controller *init_phb_dynamic(struct device_node *dn)
-> >>  {
-> >>  	struct pci_controller *phb;
-> >
-> >
+Acoording to ACPI spec, there is no requirement that need to be set to pcie
+root port or downstream port.
 
+We could just change to pcie_cap_has_lnkctl to cover all pcie devices with
+link control cap.
 
+Fixes: 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
+---
+ drivers/pci/access.c |   13 -------------
+ drivers/pci/pci.h    |   13 +++++++++++++
+ drivers/pci/probe.c  |    2 +-
+ 3 files changed, 14 insertions(+), 14 deletions(-)
+
+Index: linux-2.6/drivers/pci/probe.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/probe.c
++++ linux-2.6/drivers/pci/probe.c
+@@ -1323,7 +1323,7 @@ static void program_hpp_type2(struct pci
+ 			~hpp->pci_exp_devctl_and, hpp->pci_exp_devctl_or);
+ 
+ 	/* Initialize Link Control Register */
+-	if (dev->subordinate)
++	if (pcie_cap_has_lnkctl(dev))
+ 		pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
+ 			~hpp->pci_exp_lnkctl_and, hpp->pci_exp_lnkctl_or);
+ 
+Index: linux-2.6/drivers/pci/access.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/access.c
++++ linux-2.6/drivers/pci/access.c
+@@ -444,19 +444,6 @@ static inline int pcie_cap_version(const
+ 	return pcie_caps_reg(dev) & PCI_EXP_FLAGS_VERS;
+ }
+ 
+-static inline bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
+-{
+-	int type = pci_pcie_type(dev);
+-
+-	return type == PCI_EXP_TYPE_ENDPOINT ||
+-	       type == PCI_EXP_TYPE_LEG_END ||
+-	       type == PCI_EXP_TYPE_ROOT_PORT ||
+-	       type == PCI_EXP_TYPE_UPSTREAM ||
+-	       type == PCI_EXP_TYPE_DOWNSTREAM ||
+-	       type == PCI_EXP_TYPE_PCI_BRIDGE ||
+-	       type == PCI_EXP_TYPE_PCIE_BRIDGE;
+-}
+-
+ static inline bool pcie_cap_has_sltctl(const struct pci_dev *dev)
+ {
+ 	int type = pci_pcie_type(dev);
+Index: linux-2.6/drivers/pci/pci.h
+===================================================================
+--- linux-2.6.orig/drivers/pci/pci.h
++++ linux-2.6/drivers/pci/pci.h
+@@ -6,6 +6,19 @@
+ 
+ extern const unsigned char pcie_link_speed[];
+ 
++static inline bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
++{
++	int type = pci_pcie_type(dev);
++
++	return type == PCI_EXP_TYPE_ENDPOINT ||
++	       type == PCI_EXP_TYPE_LEG_END ||
++	       type == PCI_EXP_TYPE_ROOT_PORT ||
++	       type == PCI_EXP_TYPE_UPSTREAM ||
++	       type == PCI_EXP_TYPE_DOWNSTREAM ||
++	       type == PCI_EXP_TYPE_PCI_BRIDGE ||
++	       type == PCI_EXP_TYPE_PCIE_BRIDGE;
++}
++
+ /* Functions internal to the PCI core code */
+ 
+ int pci_create_sysfs_dev_files(struct pci_dev *pdev);
