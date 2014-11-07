@@ -1,246 +1,126 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Alexander Gordeev <agordeev@redhat.com>
-Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch V3 7/9] genirq: Provide default callbacks for msi_domain_ops
-Date: Mon, 17 Nov 2014 19:03:20 +0800
-Message-Id: <1416222202-28002-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416222202-28002-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416222202-28002-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:62284 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751678AbaKGPh5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Nov 2014 10:37:57 -0500
+MIME-Version: 1.0
+In-Reply-To: <20141107152311.GJ8916@e106497-lin.cambridge.arm.com>
+References: <1415101660-26450-1-git-send-email-l.stach@pengutronix.de>
+ <20141105231743.GI6168@google.com> <20141106100518.GI8916@e106497-lin.cambridge.arm.com>
+ <CAL_JsqK-g2qW12jatyZBLeBEtpr80o=WWZVet5+OgMtzAAXHJQ@mail.gmail.com>
+ <20141106153051.GU8916@e106497-lin.cambridge.arm.com> <CAL_Jsq+WHyRN+hAaEwH1ZHabEYgTDnpPinoL8pagHYzP4Zfe=g@mail.gmail.com>
+ <20141107101728.GZ8916@e106497-lin.cambridge.arm.com> <CAL_JsqKdwLkybzLHdYcg81vEYfZvLu3_Cg1vZyoAyuobi6Vc4Q@mail.gmail.com>
+ <20141107152311.GJ8916@e106497-lin.cambridge.arm.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Fri, 7 Nov 2014 09:37:34 -0600
+Message-ID: <CAL_JsqLGav-_g1eq9Q_YsUrNao4KpHqYPHsm6qKxR1VkcicZ=Q@mail.gmail.com>
+Subject: Re: [PATCH] PCI: add missing DT binding for linux,pci-domain property
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Extend struct msi_domain_info and provide default callbacks for
-msi_domain_ops.
+On Fri, Nov 7, 2014 at 9:23 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> On Fri, Nov 07, 2014 at 02:00:56PM +0000, Rob Herring wrote:
+>> On Fri, Nov 7, 2014 at 4:17 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+>> > On Thu, Nov 06, 2014 at 07:46:33PM +0000, Rob Herring wrote:
+>> >> On Thu, Nov 6, 2014 at 9:30 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+>> >> > On Thu, Nov 06, 2014 at 02:57:35PM +0000, Rob Herring wrote:
+>> >> >> On Thu, Nov 6, 2014 at 4:05 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+>> >> >> > On Wed, Nov 05, 2014 at 11:17:43PM +0000, Bjorn Helgaas wrote:
+>> >> >> >> On Tue, Nov 04, 2014 at 12:47:40PM +0100, Lucas Stach wrote:
+>> >> >> >> > This property was added by 41e5c0f81d3e
+>> >> >> >> > (of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr())
+>> >> >> >> > without the required binding documentation. As this property
+>> >> >> >> > will be supported by a number of host bridge drivers going forward,
+>> >> >> >> > add it to the common PCI binding doc.
+>> >> >> >> >
+>> >> >> >> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+>> >> >> >>
+>> >> >> >> I merged 41e5c0f81d3e through my tree, and I could merge something like
+>> >> >> >> this if a consensus develops with some acks.  But I'll just let you guys
+>> >> >> >> handle it unless you poke me again.
+>> >> >> >
+>> >> >> > While I think the "linux,pci-domain" property *must* be documented, I
+>> >> >> > would like to get a consensus first on the usage. If we agree that
+>> >> >> > the property is mandatory to all host bridge drivers that use OF then
+>> >> >> > we need to patch existing drivers (partially done through Lorenzo's
+>> >> >> > patches, but other arches are ignoring it). If we say all *new* drivers
+>> >> >> > need to use it then we also need to come up with a strategy on how to
+>> >> >> > deal with old vs new school drivers.
+>> >> >> >
+>> >> >> > My preferred approach is the 3rd way: "linux,pci-domain" becomes part of
+>> >> >> > the core PCI infrastructure (and we find the common ground with ACPI).
+>> >> >> > That way the host bridge drivers don't have to do anything, but the DT
+>> >> >> > creators have to specify a value.
+>> >> >>
+>> >> >> I'm okay with it being in the core. It was the mixture of using the
+>> >> >> property and automatic numbering that I had issues with. Any mixture
+>> >> >> whether in DT or in drivers should be an error. Also, I think having a
+>> >> >> mixture of root bus host drivers would be rare, so I'm not too
+>> >> >> concerned about some drivers supporting the property and others not.
+>> >> >> In any case, these issues are all with the kernel and not really the
+>> >> >> concern for the binding. For the binding, simply all hosts set the
+>> >> >> domain or none of them do.
+>> >> >
+>> >> > Repeating what you've said to verify my understanding: you are OK with
+>> >> > the "linux,pci-domain" being handled in the PCI framework and mandatory
+>> >> > to all OF-based host bridges and architectures. Failure to include
+>> >> > the property should be an error and no host bridge driver should default
+>> >> > to the auto-generation of domain numbers.
+>> >> >
+>> >> > Is that correct?
+>> >>
+>> >> Not exactly. It is only mandatory when you have multiple root buses.
+>> >> But we can't say an existing dtb is in error, so it has to remain
+>> >> optional for compatibility. Also, given it is a Linux property, you
+>> >> can't really say it is mandatory for all PCI bindings from a DT
+>> >> perspective.
+>> >>
+>> >> While we could have issues in theory if this is handled in the
+>> >> drivers, I don't think we will in practice as having root buses with
+>> >> different drivers is unlikely.
+>> >
+>> > That's correct. However, I would like to bring to you attention that as
+>> > long as the property is treated as optional in certain cases we will need,
+>> > in the framework code, to mix the assignment of a domain number coming from
+>> > parsing of the property with the auto-numbering scheme in order to support
+>> > old DT files. And that was one of your major concerns when reviewing the
+>> > series. Any suggestions or clarifications?
+>>
+>> We have to support both allocation schemes, but not on the same
+>> system. A mixture on a given system is an error. So the cases to
+>> handle are like this:
+>>
+>> 1 root bus w/ domain -> use domain prop
+>> 1 root bus w/o domain -> auto numbering
+>> N root buses w/ domains -> use domain prop
+>> N root buses w/o domains -> auto numbering
+>> N root buses w/ and w/o domains -> error
+>
+> Agree.
+>
+>>
+>> I also had issues just around the implementation details, but we can
+>> discuss those when there is another version.
+>
+> Well, there is a version already in arch/arm64/kernel/pci.c:
+> pci_bus_assign_domain_nr() and I believe it works on all the cases
+> listed above. Question is if you agree on making this the default
+> implementation for OF-based architectures. Lorenzo has already
+> copied it into arch/arm.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- include/linux/msi.h |   29 ++++++++++---
- kernel/irq/msi.c    |  116 +++++++++++++++++++++++++++++++++++++++++++++++----
- 2 files changed, 132 insertions(+), 13 deletions(-)
+I agree it is correct implementation for correct DTs, but it doesn't
+handle some error cases. I'll comment on Lorenzo's ARM version about
+specifics.
 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 243c4eb485a6..3571b4715c75 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -3,6 +3,7 @@
- 
- #include <linux/kobject.h>
- #include <linux/list.h>
-+#include <linux/irqhandler.h>
- #include <asm/hw_irq.h>		/* for msi_alloc_info_t */
- 
- struct msi_msg {
-@@ -124,13 +125,15 @@ typedef struct msi_alloc_info msi_alloc_info_t;
- 
- struct msi_domain_ops {
- 	/* Callbacks for msi_create_irq_domain() */
--	void		(*calc_hwirq)(struct msi_domain_info *info, void *arg,
-+	void		(*calc_hwirq)(struct msi_domain_info *info,
-+				      msi_alloc_info_t *arg,
- 				      struct msi_desc *desc);
--	irq_hw_number_t	(*get_hwirq)(struct msi_domain_info *info, void *arg);
-+	irq_hw_number_t	(*get_hwirq)(struct msi_domain_info *info,
-+				     msi_alloc_info_t *arg);
- 	int		(*msi_init)(struct irq_domain *domain,
- 				    struct msi_domain_info *info,
- 				    unsigned int virq, irq_hw_number_t hwirq,
--				    void *arg);
-+				    msi_alloc_info_t *arg);
- 	void		(*msi_free)(struct irq_domain *domain,
- 				    struct msi_domain_info *info,
- 				    unsigned int virq);
-@@ -150,15 +153,31 @@ struct msi_domain_ops {
- };
- 
- struct msi_domain_info {
-+	u32			flags;
- 	struct msi_domain_ops	*ops;
- 	struct irq_chip		*chip;
--	void			*data;
-+	void			*chip_data;	/* optional chip data */
-+	irq_flow_handler_t	handler;	/* optional flow handler */
-+	void			*handler_data;	/* optional handler data */
-+	const char		*handler_name;	/* optional handler name */
-+	void			*data;		/* optional private data */
- };
- 
-+/* Use default MSI domain ops if possible */
-+#define MSI_FLAG_USE_DEF_DOM_OPS	0x1
-+/* Use default MSI chip ops if possible */
-+#define MSI_FLAG_USE_DEF_CHIP_OPS	0x2
-+/* Build identity map between hwirq and irq */
-+#define MSI_FLAG_IDENTITY_MAP		0x10
-+/* Support multiple PCI MSI interrupts */
-+#define MSI_FLAG_MULTI_PCI_MSI		0x100
-+/* Support PCI MSIX interrupts */
-+#define MSI_FLAG_PCI_MSIX		0x200
-+
- int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 			    bool force);
- 
--struct irq_domain *msi_create_irq_domain(struct device_node *of_node,
-+struct irq_domain *msi_create_irq_domain(struct device_node *node,
- 					 struct msi_domain_info *info,
- 					 struct irq_domain *parent);
- int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
-diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
-index 586cd8b3a174..1aa06b3281d6 100644
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -9,6 +9,8 @@
-  * This file contains common code to support Message Signalled Interrupt for
-  * PCI compatible and non PCI compatible devices.
-  */
-+#include <linux/types.h>
-+#include <linux/device.h>
- #include <linux/irq.h>
- #include <linux/irqdomain.h>
- #include <linux/msi.h>
-@@ -114,17 +116,110 @@ static struct irq_domain_ops msi_domain_ops = {
- 	.deactivate	= msi_domain_deactivate,
- };
- 
--struct irq_domain *msi_create_irq_domain(struct device_node *of_node,
-+#ifndef msi_alloc_info_t
-+static irq_hw_number_t msi_domain_ops_get_hwirq(struct msi_domain_info *info,
-+						struct msi_alloc_info *arg)
-+{
-+	return arg->hwirq;
-+}
-+
-+static int msi_domain_ops_prepare(struct irq_domain *domain, struct device *dev,
-+				  int nvec, struct msi_alloc_info *arg)
-+{
-+	memset(arg, 0, sizeof(*arg));
-+
-+	return 0;
-+}
-+
-+static int msi_domain_ops_set_desc(struct msi_alloc_info *arg,
-+				   struct msi_desc *desc)
-+{
-+	arg->desc = desc;
-+
-+	return 0;
-+}
-+#else
-+#define msi_domain_ops_get_hwirq	NULL
-+#define msi_domain_ops_prepare		NULL
-+#define msi_domain_ops_set_desc		NULL
-+#endif /* msi_alloc_info_t */
-+
-+static int msi_domain_ops_init(struct irq_domain *domain,
-+			       struct msi_domain_info *info,
-+			       unsigned int virq, irq_hw_number_t hwirq,
-+			       msi_alloc_info_t *arg)
-+{
-+	irq_domain_set_hwirq_and_chip(domain, virq, hwirq, info->chip,
-+				      info->chip_data);
-+	if (info->handler && info->handler_name) {
-+		__irq_set_handler(virq, info->handler, 0, info->handler_name);
-+		if (info->handler_data)
-+			irq_set_handler_data(virq, info->handler_data);
-+	}
-+
-+	return 0;
-+}
-+
-+static int msi_domain_ops_check(struct irq_domain *domain,
-+				struct msi_domain_info *info,
-+				struct device *dev)
-+{
-+	return 0;
-+}
-+
-+static struct msi_domain_ops msi_domain_ops_default = {
-+	.get_hwirq	= msi_domain_ops_get_hwirq,
-+	.msi_init	= msi_domain_ops_init,
-+	.msi_check	= msi_domain_ops_check,
-+	.msi_prepare	= msi_domain_ops_prepare,
-+	.set_desc	= msi_domain_ops_set_desc,
-+};
-+
-+static void msi_domain_update_dom_ops(struct msi_domain_info *info)
-+{
-+	struct msi_domain_ops *ops = info->ops;
-+
-+	if (ops == NULL) {
-+		info->ops = &msi_domain_ops_default;
-+		return;
-+	}
-+
-+	if (ops->get_hwirq == NULL)
-+		ops->get_hwirq = msi_domain_ops_default.get_hwirq;
-+	if (ops->msi_init == NULL)
-+		ops->msi_init = msi_domain_ops_default.msi_init;
-+	if (ops->msi_check == NULL)
-+		ops->msi_check = msi_domain_ops_default.msi_check;
-+	if (ops->msi_prepare == NULL)
-+		ops->msi_prepare = msi_domain_ops_default.msi_prepare;
-+	if (ops->set_desc == NULL)
-+		ops->set_desc = msi_domain_ops_default.set_desc;
-+}
-+
-+static void msi_domain_update_chip_ops(struct msi_domain_info *info)
-+{
-+	struct irq_chip *chip = info->chip;
-+
-+	BUG_ON(!chip);
-+	if (!chip->irq_mask)
-+		chip->irq_mask = mask_msi_irq;
-+	if (!chip->irq_unmask)
-+		chip->irq_unmask = unmask_msi_irq;
-+	if (!chip->irq_set_affinity)
-+		chip->irq_set_affinity = msi_domain_set_affinity;
-+}
-+
-+struct irq_domain *msi_create_irq_domain(struct device_node *node,
- 					 struct msi_domain_info *info,
- 					 struct irq_domain *parent)
- {
--	struct irq_domain *domain;
--
--	domain = irq_domain_add_tree(of_node, &msi_domain_ops, info);
--	if (domain)
--		domain->parent = parent;
-+	if (info->flags & MSI_FLAG_USE_DEF_DOM_OPS)
-+		msi_domain_update_dom_ops(info);
-+	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
-+		msi_domain_update_chip_ops(info);
- 
--	return domain;
-+	return irq_domain_add_hierarchy(parent, 0, 0, node, &msi_domain_ops,
-+					info);
- }
- 
- int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
-@@ -147,7 +242,12 @@ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
- 		if (ret)
- 			goto handle_error;
- 
--		virq = __irq_domain_alloc_irqs(domain, -1, desc->nvec_used,
-+		if (info->flags & MSI_FLAG_IDENTITY_MAP)
-+			virq = (int)ops->get_hwirq(info, &arg);
-+		else
-+			virq = -1;
-+
-+		virq = __irq_domain_alloc_irqs(domain, virq, desc->nvec_used,
- 					       dev_to_node(dev), &arg, false);
- 		if (virq >= 0) {
- 			for (i = 0; i < desc->nvec_used; i++)
--- 
-1.7.10.4
-
+Rob
