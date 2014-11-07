@@ -1,331 +1,583 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	David Cohen <david.a.cohen@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [Patch Part3 v4 04/38] x86, irq: Prepare IOAPIC interfaces to support hierarchy irqdomain
-Date: Tue, 25 Nov 2014 15:49:28 +0800
-Message-Id: <1416901802-24211-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 7 Nov 2014 14:55:25 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Cc: Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	"mingo@redhat.com" <mingo@redhat.com>,
+	"hpa@zytor.com" <hpa@zytor.com>,
+	"rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
+Subject: Re: [RFC PATCH 4/4] arm64, acpi, pci: Provide arch-specific calls
+ for PCI host bridge dirver (PNP0A03).
+Message-ID: <20141107145525.GH8916@e106497-lin.cambridge.arm.com>
+References: <1415366876-30811-1-git-send-email-tomasz.nowicki@linaro.org>
+ <1415366876-30811-5-git-send-email-tomasz.nowicki@linaro.org>
+MIME-Version: 1.0
+In-Reply-To: <1415366876-30811-5-git-send-email-tomasz.nowicki@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce helper functions to manipulate struct irq_alloc_info for IOAPIC.
-Also add extra parameter to IOAPIC interfaces to prepare for hierarchy
-irqdomain. Function mp_set_gsi_attr() will be killed once we have
-switched to hierarchy irqdomain.
+On Fri, Nov 07, 2014 at 01:27:56PM +0000, Tomasz Nowicki wrote:
+> Code inspired by arch/x86/pci/acpi.c and arch/ia64/pci/pci.c files.
+> The main reasons why we need this:
+> - parse and manage resources (BUS, IO and MEM)
+> - create pci root bus and enumerate its children
+> - provide PCI config space accessors (via MMCONFIG)
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Tested-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/include/asm/io_apic.h                     |   14 ++++++-
- arch/x86/kernel/acpi/boot.c                        |    9 +++--
- arch/x86/kernel/apic/io_apic.c                     |   39 +++++++++++++-------
- arch/x86/pci/intel_mid_pci.c                       |    4 +-
- .../platform/intel-mid/device_libs/platform_wdt.c  |    4 +-
- arch/x86/platform/intel-mid/sfi.c                  |    9 +++--
- 6 files changed, 56 insertions(+), 23 deletions(-)
+Hi Tomasz,
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 3207143f0a44..cdda8ed7592f 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -95,6 +95,8 @@ struct IR_IO_APIC_route_entry {
- 		index		: 15;
- } __attribute__ ((packed));
- 
-+struct irq_alloc_info;
-+
- #define IOAPIC_AUTO     -1
- #define IOAPIC_EDGE     0
- #define IOAPIC_LEVEL    1
-@@ -194,7 +196,8 @@ extern u32 gsi_top;
- extern int mp_find_ioapic(u32 gsi);
- extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
- extern u32 mp_pin_to_gsi(int ioapic, int pin);
--extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags);
-+extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags,
-+			     struct irq_alloc_info *info);
- extern void mp_unmap_irq(int irq);
- extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 			      struct ioapic_domain_cfg *cfg);
-@@ -203,6 +206,8 @@ extern int mp_ioapic_registered(u32 gsi_base);
- extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 			    irq_hw_number_t hwirq);
- extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
-+extern void ioapic_set_alloc_attr(struct irq_alloc_info *info,
-+				  int node, int trigger, int polarity);
- extern int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node);
- 
- extern void mp_save_irq(struct mpc_intsrc *m);
-@@ -253,7 +258,12 @@ static inline void print_IO_APICs(void) {}
- #define gsi_top (NR_IRQS_LEGACY)
- static inline int mp_find_ioapic(u32 gsi) { return 0; }
- static inline u32 mp_pin_to_gsi(int ioapic, int pin) { return UINT_MAX; }
--static inline int mp_map_gsi_to_irq(u32 gsi, unsigned int flags) { return gsi; }
-+static inline int mp_map_gsi_to_irq(u32 gsi, unsigned int flags,
-+				    struct irq_alloc_info *info)
-+{
-+	return gsi;
-+}
-+
- static inline void mp_unmap_irq(int irq) { }
- 
- static inline int save_ioapic_entries(void)
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 4433a4be8171..ca640b1dded6 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -404,6 +404,7 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 			   int polarity)
- {
- 	int irq, node;
-+	struct irq_alloc_info info;
- 
- 	if (acpi_irq_model != ACPI_IRQ_MODEL_IOAPIC)
- 		return gsi;
-@@ -416,7 +417,8 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 		return -1;
- 	}
- 
--	irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC);
-+	ioapic_set_alloc_attr(&info, node, trigger, polarity);
-+	irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC, &info);
- 	if (irq < 0)
- 		return irq;
- 
-@@ -434,7 +436,7 @@ static void mp_unregister_gsi(u32 gsi)
- 	if (acpi_irq_model != ACPI_IRQ_MODEL_IOAPIC)
- 		return;
- 
--	irq = mp_map_gsi_to_irq(gsi, 0);
-+	irq = mp_map_gsi_to_irq(gsi, 0, NULL);
- 	if (irq > 0)
- 		mp_unmap_irq(irq);
- }
-@@ -618,7 +620,8 @@ int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
- 	} else {
- 		mutex_lock(&acpi_ioapic_lock);
- 		irq = mp_map_gsi_to_irq(gsi,
--					IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
-+					IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK,
-+					NULL);
- 		mutex_unlock(&acpi_ioapic_lock);
- 		if (irq < 0)
- 			return -1;
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 919afe772347..8b3b8560ebda 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -938,7 +938,19 @@ static int irq_trigger(int idx)
- 	return trigger;
- }
- 
--static int alloc_irq_from_domain(struct irq_domain *domain, u32 gsi, int pin)
-+void ioapic_set_alloc_attr(struct irq_alloc_info *info, int node,
-+			   int trigger, int polarity)
-+{
-+	init_irq_alloc_info(info, NULL);
-+	info->type = X86_IRQ_ALLOC_TYPE_IOAPIC;
-+	info->ioapic_node = node;
-+	info->ioapic_trigger = trigger;
-+	info->ioapic_polarity = polarity;
-+	info->ioapic_valid = 1;
-+}
-+
-+static int alloc_irq_from_domain(struct irq_domain *domain, u32 gsi, int pin,
-+				 struct irq_alloc_info *info)
- {
- 	int irq = -1;
- 	int ioapic = (int)(long)domain->host_data;
-@@ -971,11 +983,11 @@ static int alloc_irq_from_domain(struct irq_domain *domain, u32 gsi, int pin)
- }
- 
- static int mp_map_pin_to_irq(u32 gsi, int idx, int ioapic, int pin,
--			     unsigned int flags)
-+			     unsigned int flags, struct irq_alloc_info *info)
- {
- 	int irq;
- 	struct irq_domain *domain = mp_ioapic_irqdomain(ioapic);
--	struct mp_pin_info *info = mp_pin_info(ioapic, pin);
-+	struct mp_pin_info *pinfo = mp_pin_info(ioapic, pin);
- 
- 	if (!domain)
- 		return -1;
-@@ -997,30 +1009,30 @@ static int mp_map_pin_to_irq(u32 gsi, int idx, int ioapic, int pin,
- 	if (idx >= 0 && test_bit(mp_irqs[idx].srcbus, mp_bus_not_pci)) {
- 		irq = mp_irqs[idx].srcbusirq;
- 		if (flags & IOAPIC_MAP_ALLOC) {
--			if (info->count == 0 &&
-+			if (pinfo->count == 0 &&
- 			    mp_irqdomain_map(domain, irq, pin) != 0)
- 				irq = -1;
- 
- 			/* special handling for timer IRQ0 */
- 			if (irq == 0)
--				info->count++;
-+				pinfo->count++;
- 		}
- 	} else {
- 		irq = irq_find_mapping(domain, pin);
- 		if (irq <= 0 && (flags & IOAPIC_MAP_ALLOC))
--			irq = alloc_irq_from_domain(domain, gsi, pin);
-+			irq = alloc_irq_from_domain(domain, gsi, pin, info);
- 	}
- 
- 	if (flags & IOAPIC_MAP_ALLOC) {
- 		/* special handling for legacy IRQs */
--		if (irq < nr_legacy_irqs() && info->count == 1 &&
-+		if (irq < nr_legacy_irqs() && pinfo->count == 1 &&
- 		    mp_irqdomain_map(domain, irq, pin) != 0)
- 			irq = -1;
- 
- 		if (irq > 0)
--			info->count++;
--		else if (info->count == 0)
--			info->set = 0;
-+			pinfo->count++;
-+		else if (pinfo->count == 0)
-+			pinfo->set = 0;
- 	}
- 
- 	mutex_unlock(&ioapic_mutex);
-@@ -1058,10 +1070,11 @@ static int pin_2_irq(int idx, int ioapic, int pin, unsigned int flags)
- 	}
- #endif
- 
--	return  mp_map_pin_to_irq(gsi, idx, ioapic, pin, flags);
-+	return  mp_map_pin_to_irq(gsi, idx, ioapic, pin, flags, NULL);
- }
- 
--int mp_map_gsi_to_irq(u32 gsi, unsigned int flags)
-+int mp_map_gsi_to_irq(u32 gsi, unsigned int flags,
-+		      struct irq_alloc_info *info)
- {
- 	int ioapic, pin, idx;
- 
-@@ -1074,7 +1087,7 @@ int mp_map_gsi_to_irq(u32 gsi, unsigned int flags)
- 	if ((flags & IOAPIC_MAP_CHECK) && idx < 0)
- 		return -1;
- 
--	return mp_map_pin_to_irq(gsi, idx, ioapic, pin, flags);
-+	return mp_map_pin_to_irq(gsi, idx, ioapic, pin, flags, info);
- }
- 
- void mp_unmap_irq(int irq)
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index 44b9271580b5..fd9c4223acba 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -208,6 +208,7 @@ static int pci_write(struct pci_bus *bus, unsigned int devfn, int where,
- 
- static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- {
-+	struct irq_alloc_info info;
- 	int polarity;
- 
- 	if (dev->irq_managed && dev->irq > 0)
-@@ -217,6 +218,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 		polarity = 0; /* active high */
- 	else
- 		polarity = 1; /* active low */
-+	ioapic_set_alloc_attr(&info, dev_to_node(&dev->dev), 1, polarity);
- 
- 	/*
- 	 * MRST only have IOAPIC, the PCI irq lines are 1:1 mapped to
-@@ -224,7 +226,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 	 */
- 	if (mp_set_gsi_attr(dev->irq, 1, polarity, dev_to_node(&dev->dev)))
- 		return -EBUSY;
--	if (mp_map_gsi_to_irq(dev->irq, IOAPIC_MAP_ALLOC) < 0)
-+	if (mp_map_gsi_to_irq(dev->irq, IOAPIC_MAP_ALLOC, &info) < 0)
- 		return -EBUSY;
- 
- 	dev->irq_managed = 1;
-diff --git a/arch/x86/platform/intel-mid/device_libs/platform_wdt.c b/arch/x86/platform/intel-mid/device_libs/platform_wdt.c
-index 0b283d4d0ad7..de0009f6d555 100644
---- a/arch/x86/platform/intel-mid/device_libs/platform_wdt.c
-+++ b/arch/x86/platform/intel-mid/device_libs/platform_wdt.c
-@@ -27,6 +27,7 @@ static struct platform_device wdt_dev = {
- static int tangier_probe(struct platform_device *pdev)
- {
- 	int gsi;
-+	struct irq_alloc_info info;
- 	struct intel_mid_wdt_pdata *pdata = pdev->dev.platform_data;
- 
- 	if (!pdata)
-@@ -34,8 +35,9 @@ static int tangier_probe(struct platform_device *pdev)
- 
- 	/* IOAPIC builds identity mapping between GSI and IRQ on MID */
- 	gsi = pdata->irq;
-+	ioapic_set_alloc_attr(&info, cpu_to_node(0), 1, 0);
- 	if (mp_set_gsi_attr(gsi, 1, 0, cpu_to_node(0)) ||
--	    mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC) <= 0) {
-+	    mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC, &info) <= 0) {
- 		dev_warn(&pdev->dev, "cannot find interrupt %d in ioapic\n",
- 			 gsi);
- 		return -EINVAL;
-diff --git a/arch/x86/platform/intel-mid/sfi.c b/arch/x86/platform/intel-mid/sfi.c
-index 9a16749935d4..7d17355d820e 100644
---- a/arch/x86/platform/intel-mid/sfi.c
-+++ b/arch/x86/platform/intel-mid/sfi.c
-@@ -104,7 +104,7 @@ int __init sfi_parse_mtmr(struct sfi_table_header *table)
- 		mp_irq.dstapic = MP_APIC_ALL;
- 		mp_irq.dstirq = pentry->irq;
- 		mp_save_irq(&mp_irq);
--		mp_map_gsi_to_irq(pentry->irq, IOAPIC_MAP_ALLOC);
-+		mp_map_gsi_to_irq(pentry->irq, IOAPIC_MAP_ALLOC, NULL);
- 	}
- 
- 	return 0;
-@@ -175,7 +175,7 @@ int __init sfi_parse_mrtc(struct sfi_table_header *table)
- 		mp_irq.dstapic = MP_APIC_ALL;
- 		mp_irq.dstirq = pentry->irq;
- 		mp_save_irq(&mp_irq);
--		mp_map_gsi_to_irq(pentry->irq, IOAPIC_MAP_ALLOC);
-+		mp_map_gsi_to_irq(pentry->irq, IOAPIC_MAP_ALLOC, NULL);
- 	}
- 	return 0;
- }
-@@ -434,6 +434,7 @@ static int __init sfi_parse_devs(struct sfi_table_header *table)
- 	struct devs_id *dev = NULL;
- 	int num, i, ret;
- 	int polarity;
-+	struct irq_alloc_info info;
- 
- 	sb = (struct sfi_table_simple *)table;
- 	num = SFI_GET_NUM_ENTRIES(sb, struct sfi_device_table_entry);
-@@ -467,9 +468,11 @@ static int __init sfi_parse_devs(struct sfi_table_header *table)
- 				polarity = 1;
- 			}
- 
-+			ioapic_set_alloc_attr(&info, NUMA_NO_NODE, 1, polarity);
- 			ret = mp_set_gsi_attr(irq, 1, polarity, NUMA_NO_NODE);
- 			if (ret == 0)
--				ret = mp_map_gsi_to_irq(irq, IOAPIC_MAP_ALLOC);
-+				ret = mp_map_gsi_to_irq(irq, IOAPIC_MAP_ALLOC,
-+							&info);
- 			WARN_ON(ret < 0);
- 		}
- 
+I have some comments to your code:
+
+> 
+> Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+> ---
+>  arch/arm64/include/asm/pci.h |   8 +
+>  arch/arm64/kernel/pci.c      | 401 +++++++++++++++++++++++++++++++++++++++++--
+>  2 files changed, 391 insertions(+), 18 deletions(-)
+> 
+> diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
+> index fded096..ecd940f 100644
+> --- a/arch/arm64/include/asm/pci.h
+> +++ b/arch/arm64/include/asm/pci.h
+> @@ -33,6 +33,14 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+>  extern int isa_dma_bridge_buggy;
+> 
+>  #ifdef CONFIG_PCI
+> +struct pci_controller {
+> +       struct acpi_device *companion;
+> +       int segment;
+> +       int node;               /* nearest node with memory or NUMA_NO_NODE for global allocation */
+> +};
+> +
+> +#define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
+
+I am trying to move away from the model where the architecture dictates the shape
+of the pci_controller structure. Can I suggest that you put all this code and the
+one under #ifdef CONFIG_ACPI in a separate file, say arch/arm64/kernel/pci-acpi.c ?
+Or that you add an #ifdef CONFIG_ACPI around this structure definition?
+
+I can't see anyone using this definition outside ACPI (due to struct acpi_device
+dependency) and I would like to avoid it conflicting with other host bridge
+drivers trying to define the same name structure.
+
+
+> +
+>  static inline int pci_proc_domain(struct pci_bus *bus)
+>  {
+>         return 1;
+> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> index 42fb195..cc34ded 100644
+> --- a/arch/arm64/kernel/pci.c
+> +++ b/arch/arm64/kernel/pci.c
+> @@ -1,6 +1,10 @@
+>  /*
+> - * Code borrowed from powerpc/kernel/pci-common.c
+> + * Code borrowed from powerpc/kernel/pci-common.c and arch/ia64/pci/pci.c
+>   *
+> + * Copyright (c) 2002, 2005 Hewlett-Packard Development Company, L.P.
+> + *     David Mosberger-Tang <davidm@hpl.hp.com>
+> + *     Bjorn Helgaas <bjorn.helgaas@hp.com>
+> + * Copyright (C) 2004 Silicon Graphics, Inc.
+>   * Copyright (C) 2003 Anton Blanchard <anton@au.ibm.com>, IBM
+>   * Copyright (C) 2014 ARM Ltd.
+>   *
+> @@ -17,10 +21,16 @@
+>  #include <linux/mm.h>
+>  #include <linux/of_pci.h>
+>  #include <linux/of_platform.h>
+> +#include <linux/of_address.h>
+>  #include <linux/slab.h>
+> +#include <linux/pci.h>
+> +#include <linux/acpi.h>
+> +#include <linux/mmconfig.h>
+> 
+>  #include <asm/pci-bridge.h>
+> 
+> +#define PREFIX "PCI: "
+
+Where is this used?
+
+> +
+>  /*
+>   * Called after each bus is probed, but before its children are examined
+>   */
+> @@ -43,7 +53,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>   */
+>  int pcibios_add_device(struct pci_dev *dev)
+>  {
+> -       dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> +       if (acpi_disabled)
+> +               dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> 
+>         return 0;
+>  }
+> @@ -54,45 +65,399 @@ static bool dt_domain_found = false;
+> 
+>  void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+>  {
+> -       int domain = of_get_pci_domain_nr(parent->of_node);
+> +       int domain = -1;
+> 
+> -       if (domain >= 0) {
+> -               dt_domain_found = true;
+> -       } else if (dt_domain_found == true) {
+> -               dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
+> -                       parent->of_node->full_name);
+> -               return;
+> +       if (acpi_disabled) {
+> +               domain = of_get_pci_domain_nr(parent->of_node);
+> +
+> +               if (domain >= 0) {
+> +                       dt_domain_found = true;
+> +               } else if (dt_domain_found == true) {
+> +                       dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
+> +                               parent->of_node->full_name);
+> +                       return;
+> +               } else {
+> +                       domain = pci_get_new_domain_nr();
+> +               }
+>         } else {
+> -               domain = pci_get_new_domain_nr();
+> +               /*
+> +                * Take the domain nr from associated private data.
+> +                * Case where bus has parent is covered in pci_alloc_bus()
+> +                */
+> +               if (!parent)
+> +                       domain = PCI_CONTROLLER(bus)->segment;
+
+I would also like to wrap this into an ACPI specific function. Reason for it
+is that when I get to split the pci_host_bridge creation out of pci_create_root_bus()
+this will become a pci_controller property.
+
+>         }
+> 
+>         bus->domain_nr = domain;
+>  }
+>  #endif
+> 
+> +static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus,
+> +                                 unsigned int devfn)
+> +{
+> +       struct pci_mmcfg_region *cfg = pci_mmconfig_lookup(seg, bus);
+> +
+> +       if (cfg && cfg->virt)
+> +               return cfg->virt + (PCI_MMCFG_BUS_OFFSET(bus) | (devfn << 12));
+> +       return NULL;
+> +}
+> +
+>  /*
+>   * raw_pci_read/write - Platform-specific PCI config space access.
+> - *
+> - * Default empty implementation.  Replace with an architecture-specific setup
+> - * routine, if necessary.
+>   */
+>  int raw_pci_read(unsigned int domain, unsigned int bus,
+>                   unsigned int devfn, int reg, int len, u32 *val)
+>  {
+> -       return -EINVAL;
+> +       char __iomem *addr;
+> +
+> +       if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095))) {
+> +err:           *val = -1;
+
+I believe the general usage is to have labels on their own line.
+
+> +               return -EINVAL;
+> +       }
+> +
+> +       rcu_read_lock();
+> +       addr = pci_dev_base(domain, bus, devfn);
+> +       if (!addr) {
+> +               rcu_read_unlock();
+> +               goto err;
+> +       }
+> +
+> +       switch (len) {
+> +       case 1:
+> +               *val = readb(addr + reg);
+> +               break;
+> +       case 2:
+> +               *val = readw(addr + reg);
+> +               break;
+> +       case 4:
+> +               *val = readl(addr + reg);
+> +               break;
+> +       }
+> +       rcu_read_unlock();
+> +
+> +       return 0;
+>  }
+> 
+>  int raw_pci_write(unsigned int domain, unsigned int bus,
+>                 unsigned int devfn, int reg, int len, u32 val)
+>  {
+> -       return -EINVAL;
+> +       char __iomem *addr;
+> +
+> +       if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
+> +               return -EINVAL;
+> +
+> +       rcu_read_lock();
+> +       addr = pci_dev_base(domain, bus, devfn);
+> +       if (!addr) {
+> +               rcu_read_unlock();
+> +               return -EINVAL;
+> +       }
+> +
+> +       switch (len) {
+> +       case 1:
+> +               writeb(val, addr + reg);
+> +               break;
+> +       case 2:
+> +               writew(val, addr + reg);
+> +               break;
+> +       case 4:
+> +               writel(val, addr + reg);
+> +               break;
+> +       }
+> +       rcu_read_unlock();
+> +
+> +       return 0;
+>  }
+> 
+
+These raw_pci_{read,write} functions are all ACPI specific so they can move
+into the new file as well.
+
+
+>  #ifdef CONFIG_ACPI
+> +static int pci_read(struct pci_bus *bus, unsigned int devfn, int where,
+> +                   int size, u32 *value)
+> +{
+> +       return raw_pci_read(pci_domain_nr(bus), bus->number,
+> +                           devfn, where, size, value);
+> +}
+> +
+> +static int pci_write(struct pci_bus *bus, unsigned int devfn, int where,
+> +                    int size, u32 value)
+> +{
+> +       return raw_pci_write(pci_domain_nr(bus), bus->number,
+> +                            devfn, where, size, value);
+> +}
+> +
+> +struct pci_ops pci_root_ops = {
+> +       .read = pci_read,
+> +       .write = pci_write,
+> +};
+> +
+> +static struct pci_controller *alloc_pci_controller(int seg)
+> +{
+> +       struct pci_controller *controller;
+> +
+> +       controller = kzalloc(sizeof(*controller), GFP_KERNEL);
+> +       if (!controller)
+> +               return NULL;
+> +
+> +       controller->segment = seg;
+> +       return controller;
+> +}
+> +
+> +struct pci_root_info {
+> +       struct acpi_device *bridge;
+> +       struct pci_controller *controller;
+> +       struct list_head resources;
+> +       struct resource *res;
+> +       resource_size_t *res_offset;
+
+Why do you need to keep an array of res_offsets here? You only seem
+to be using the values once when you add the resource to the host
+bridge windows.
+
+> +       unsigned int res_num;
+> +       char *name;
+> +};
+> +
+> +static acpi_status resource_to_window(struct acpi_resource *resource,
+> +                                     struct acpi_resource_address64 *addr)
+> +{
+> +       acpi_status status;
+> +
+> +       /*
+> +        * We're only interested in _CRS descriptors that are
+> +        *      - address space descriptors for memory
+> +        *      - non-zero size
+> +        *      - producers, i.e., the address space is routed downstream,
+> +        *        not consumed by the bridge itself
+> +        */
+> +       status = acpi_resource_to_address64(resource, addr);
+> +       if (ACPI_SUCCESS(status) &&
+> +           (addr->resource_type == ACPI_MEMORY_RANGE ||
+> +            addr->resource_type == ACPI_IO_RANGE) &&
+> +           addr->address_length &&
+> +           addr->producer_consumer == ACPI_PRODUCER)
+> +               return AE_OK;
+> +
+> +       return AE_ERROR;
+> +}
+> +
+> +static acpi_status count_window(struct acpi_resource *resource, void *data)
+> +{
+> +       unsigned int *windows = (unsigned int *) data;
+> +       struct acpi_resource_address64 addr;
+> +       acpi_status status;
+> +
+> +       status = resource_to_window(resource, &addr);
+> +       if (ACPI_SUCCESS(status))
+> +               (*windows)++;
+> +
+> +       return AE_OK;
+> +}
+> +
+> +static acpi_status add_window(struct acpi_resource *res, void *data)
+> +{
+> +       struct pci_root_info *info = data;
+> +       struct resource *resource;
+> +       struct acpi_resource_address64 addr;
+> +       acpi_status status;
+> +       unsigned long flags;
+> +       struct resource *root;
+> +       u64 start;
+> +
+> +       /* Return AE_OK for non-window resources to keep scanning for more */
+> +       status = resource_to_window(res, &addr);
+> +       if (!ACPI_SUCCESS(status))
+> +               return AE_OK;
+> +
+> +       if (addr.resource_type == ACPI_MEMORY_RANGE) {
+> +               flags = IORESOURCE_MEM;
+> +               root = &iomem_resource;
+> +       } else if (addr.resource_type == ACPI_IO_RANGE) {
+> +               flags = IORESOURCE_IO;
+> +               root = &ioport_resource;
+> +       } else
+> +               return AE_OK;
+> +
+> +       start = addr.minimum + addr.translation_offset;
+> +
+> +       resource = &info->res[info->res_num];
+> +       resource->name = info->name;
+> +       resource->flags = flags;
+> +       resource->start = start;
+> +       resource->end = resource->start + addr.address_length - 1;
+> +
+> +       if (flags & IORESOURCE_IO) {
+> +               unsigned long port;
+> +               int err;
+> +
+> +               err = pci_register_io_range(start, addr.address_length);
+> +               if (err)
+> +                       return AE_OK;
+> +
+> +               port = pci_address_to_pio(start);
+> +               if (port == (unsigned long)-1)
+> +                       return AE_OK;
+> +
+> +               resource->start = port;
+> +               resource->end = port + addr.address_length - 1;
+> +
+> +               if (pci_remap_iospace(resource, start) < 0)
+> +                       return AE_OK;
+
+You seem to leave around invalid resources every time you return in this code
+path due to your choice of ignoring error conditions.
+
+I think there are a few things that can be streamlined in this patch, but
+overall I think it looks promising.
+
+Best regards,
+Liviu
+
+
+> +
+> +               info->res_offset[info->res_num] = 0;
+> +       } else
+> +               info->res_offset[info->res_num] = addr.translation_offset;
+> +
+> +       if (insert_resource(root, resource)) {
+> +               dev_err(&info->bridge->dev,
+> +                       "can't allocate host bridge window %pR\n",
+> +                       resource);
+> +       } else {
+> +               if (addr.translation_offset)
+> +                       dev_info(&info->bridge->dev, "host bridge window %pR "
+> +                                "(PCI address [%#llx-%#llx])\n",
+> +                                resource,
+> +                                resource->start - addr.translation_offset,
+> +                                resource->end - addr.translation_offset);
+> +               else
+> +                       dev_info(&info->bridge->dev,
+> +                                "host bridge window %pR\n", resource);
+> +       }
+> +
+> +       pci_add_resource_offset(&info->resources, resource,
+> +                               info->res_offset[info->res_num]);
+> +       info->res_num++;
+> +       return AE_OK;
+> +}
+> +
+> +static void free_pci_root_info_res(struct pci_root_info *info)
+> +{
+> +       kfree(info->name);
+> +       kfree(info->res);
+> +       info->res = NULL;
+> +       kfree(info->res_offset);
+> +       info->res_offset = NULL;
+> +       info->res_num = 0;
+> +       kfree(info->controller);
+> +       info->controller = NULL;
+> +}
+> +
+> +static void __release_pci_root_info(struct pci_root_info *info)
+> +{
+> +       int i;
+> +       struct resource *res;
+> +
+> +       for (i = 0; i < info->res_num; i++) {
+> +               res = &info->res[i];
+> +
+> +               if (!res->parent)
+> +                       continue;
+> +
+> +               if (!(res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
+> +                       continue;
+> +
+> +               release_resource(res);
+> +       }
+> +
+> +       free_pci_root_info_res(info);
+> +       kfree(info);
+> +}
+> +
+> +static void release_pci_root_info(struct pci_host_bridge *bridge)
+> +{
+> +       struct pci_root_info *info = bridge->release_data;
+> +
+> +       __release_pci_root_info(info);
+> +}
+> +
+> +static int
+> +probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+> +               int busnum, int domain)
+> +{
+> +       char *name;
+> +
+> +       name = kmalloc(16, GFP_KERNEL);
+> +       if (!name)
+> +               return -ENOMEM;
+> +
+> +       sprintf(name, "PCI Bus %04x:%02x", domain, busnum);
+> +       info->bridge = device;
+> +       info->name = name;
+> +
+> +       acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_window,
+> +                       &info->res_num);
+> +       if (info->res_num) {
+> +               info->res =
+> +                       kzalloc_node(sizeof(*info->res) * info->res_num,
+> +                                    GFP_KERNEL, info->controller->node);
+> +               if (!info->res) {
+> +                       kfree(name);
+> +                       return -ENOMEM;
+> +               }
+> +
+> +               info->res_offset =
+> +                       kzalloc_node(sizeof(*info->res_offset) * info->res_num,
+> +                                       GFP_KERNEL, info->controller->node);
+> +               if (!info->res_offset) {
+> +                       kfree(name);
+> +                       kfree(info->res);
+> +                       info->res = NULL;
+> +                       return -ENOMEM;
+> +               }
+> +
+> +               info->res_num = 0;
+> +               acpi_walk_resources(device->handle, METHOD_NAME__CRS,
+> +                       add_window, info);
+> +       } else
+> +               kfree(name);
+> +
+> +       return 0;
+> +}
+> +
+>  /* Root bridge scanning */
+>  struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>  {
+> -       /* TODO: Should be revisited when implementing PCI on ACPI */
+> -       return NULL;
+> +       struct acpi_device *device = root->device;
+> +       int domain = root->segment;
+> +       int bus = root->secondary.start;
+> +       struct pci_controller *controller;
+> +       struct pci_root_info *info = NULL;
+> +       int busnum = root->secondary.start;
+> +       struct pci_bus *pbus;
+> +       int ret;
+> +
+> +       controller = alloc_pci_controller(domain);
+> +       if (!controller)
+> +               return NULL;
+> +
+> +       controller->companion = device;
+> +       controller->node = acpi_get_node(device->handle);
+> +
+> +       info = kzalloc(sizeof(*info), GFP_KERNEL);
+> +       if (!info) {
+> +               dev_err(&device->dev,
+> +                               "pci_bus %04x:%02x: ignored (out of memory)\n",
+> +                               domain, busnum);
+> +               kfree(controller);
+> +               return NULL;
+> +       }
+> +
+> +       info->controller = controller;
+> +       INIT_LIST_HEAD(&info->resources);
+> +
+> +       ret = probe_pci_root_info(info, device, busnum, domain);
+> +       if (ret) {
+> +               kfree(info->controller);
+> +               kfree(info);
+> +               return NULL;
+> +       }
+> +       /* insert busn resource at first */
+> +       pci_add_resource(&info->resources, &root->secondary);
+> +
+> +       pbus = pci_create_root_bus(NULL, bus, &pci_root_ops, controller,
+> +                                  &info->resources);
+> +       if (!pbus) {
+> +               pci_free_resource_list(&info->resources);
+> +               __release_pci_root_info(info);
+> +               return NULL;
+> +       }
+> +
+> +       pci_set_host_bridge_release(to_pci_host_bridge(pbus->bridge),
+> +                       release_pci_root_info, info);
+> +       pci_scan_child_bus(pbus);
+> +       return pbus;
+>  }
+> -#endif
+> +#endif /* CONFIG_ACPI */
+> --
+> 1.9.1
+> 
+> 
+
 -- 
-1.7.10.4
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
