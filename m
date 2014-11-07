@@ -1,54 +1,38 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:64521 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756236AbaKTXLi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Nov 2014 18:11:38 -0500
-Received: by mail-ie0-f171.google.com with SMTP id rl12so3837360iec.30
-        for <linux-pci@vger.kernel.org>; Thu, 20 Nov 2014 15:11:38 -0800 (PST)
-Date: Thu, 20 Nov 2014 16:11:35 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Fix device node for virtual bus
-Message-ID: <20141120231135.GE7987@google.com>
-References: <1415760163-12517-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <545CDA87.2040701@linaro.org>
+Date: Fri, 07 Nov 2014 15:43:19 +0100
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415760163-12517-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
+CC: catalin.marinas@arm.com, will.deacon@arm.com, bhelgaas@google.com,
+	Liviu.Dudau@arm.com, tglx@linutronix.de, mingo@redhat.com,
+	hpa@zytor.com, rjw@rjwysocki.net, linaro-acpi@lists.linaro.org,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [RFC PATCH 2/4] x86, acpi, pci: Isolate new PCI mmconfig entry
+ insertion.
+References: <1415366876-30811-1-git-send-email-tomasz.nowicki@linaro.org> <1415366876-30811-3-git-send-email-tomasz.nowicki@linaro.org> <1927317.6tJuq4S5Om@wuerfel>
+In-Reply-To: <1927317.6tJuq4S5Om@wuerfel>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 12, 2014 at 01:42:43PM +1100, Gavin Shan wrote:
-> pci_set_bus_of_node() sets virtual PCI bus's device node to PHB's
-> device node wrongly. The patch fixes the issue.
-> 
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+On 07.11.2014 15:09, Arnd Bergmann wrote:
+> On Friday 07 November 2014 14:27:54 Tomasz Nowicki wrote:
+>> Add special pci_mmcfg_insert_lock mutex since pci_mmcfg_lock was moved
+>> to common file. No functional changes.
+>>
+>> Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+>>
+>
+> What is the new lock protecting against? You no longer have a mutual
+> exclusion with the other code, which looks like it is a functional
+> change, and also incorrect.
+>
+> It also sounds like the code was broken after the first patch and
+> you need this one to make it compile again. You can't do that, and
+> instead need to change the locking rules first.
 
-Applied to pci/misc for v3.19, thanks!
+Oh, that's right! Sorry I will take a look again.
 
-Thanks for explaining this to me.  It seems obvious now that I look at the
-code.
-
-> ---
->  drivers/pci/of.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-> index f092993..7b2256b 100644
-> --- a/drivers/pci/of.c
-> +++ b/drivers/pci/of.c
-> @@ -31,9 +31,9 @@ void pci_release_of_node(struct pci_dev *dev)
->  
->  void pci_set_bus_of_node(struct pci_bus *bus)
->  {
-> -	if (bus->self == NULL)
-> +	if (pci_is_root_bus(bus))
->  		bus->dev.of_node = pcibios_get_phb_of_node(bus);
-> -	else
-> +	else if (bus->self)
->  		bus->dev.of_node = of_node_get(bus->self->dev.of_node);
->  }
->  
-> -- 
-> 1.8.3.2
-> 
+Tomasz
