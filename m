@@ -1,54 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from numascale.com ([213.162.240.84]:34765 "EHLO numascale.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751921AbaKBIK4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 2 Nov 2014 03:10:56 -0500
-From: Daniel J Blueman <daniel@numascale.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Daniel J Blueman <daniel@numascale.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Steffen Persvold <sp@numascale.com>
-Subject: [PATCH v3 5/5] Use 2GB memory block size on large x86-64 systems
-Date: Sun,  2 Nov 2014 16:10:13 +0800
-Message-Id: <1414915813-2462-5-git-send-email-daniel@numascale.com>
-In-Reply-To: <1414915813-2462-1-git-send-email-daniel@numascale.com>
-References: <1414915813-2462-1-git-send-email-daniel@numascale.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+To: catalin.marinas@arm.com, will.deacon@arm.com, bhelgaas@google.com,
+	Liviu.Dudau@arm.com, tglx@linutronix.de, mingo@redhat.com,
+	hpa@zytor.com, rjw@rjwysocki.net
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Subject: [RFC PATCH 2/4] x86, acpi, pci: Isolate new PCI mmconfig entry insertion.
+Date: Fri,  7 Nov 2014 14:27:54 +0100
+Message-Id: <1415366876-30811-3-git-send-email-tomasz.nowicki@linaro.org>
+In-Reply-To: <1415366876-30811-1-git-send-email-tomasz.nowicki@linaro.org>
+References: <1415366876-30811-1-git-send-email-tomasz.nowicki@linaro.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On larger x64-64 systems, use a 2GB memory block size to reduce sysfs
-entry creation time by 16x. Large is defined as 64GB or more memory.
+Add special pci_mmcfg_insert_lock mutex since pci_mmcfg_lock was moved
+to common file. No functional changes.
 
-Signed-off-by: Daniel J Blueman <daniel@numascale.com>
+Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
 ---
- arch/x86/mm/init_64.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ arch/x86/pci/mmconfig-shared.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/arch/x86/mm/init_64.c b/arch/x86/mm/init_64.c
-index 4cb8763..6002e80 100644
---- a/arch/x86/mm/init_64.c
-+++ b/arch/x86/mm/init_64.c
-@@ -52,7 +52,6 @@
- #include <asm/numa.h>
- #include <asm/cacheflush.h>
- #include <asm/init.h>
--#include <asm/uv/uv.h>
- #include <asm/setup.h>
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 94c3d38..d1e45e7 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -28,6 +28,7 @@
+ /* Indicate if the mmcfg resources have been placed into the resource table. */
+ static bool pci_mmcfg_running_state;
+ static bool pci_mmcfg_arch_init_failed;
++static DEFINE_MUTEX(pci_mmcfg_insert_lock);
  
- #include "mm_internal.h"
-@@ -1247,9 +1246,9 @@ static unsigned long probe_memory_block_size(void)
- 	/* start from 2g */
- 	unsigned long bz = 1UL<<31;
+ static const char *__init pci_mmcfg_e7520(void)
+ {
+@@ -566,7 +567,7 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 	if (start > end)
+ 		return -EINVAL;
  
--#ifdef CONFIG_X86_UV
--	if (is_uv_system()) {
--		printk(KERN_INFO "UV: memory block size 2GB\n");
-+#ifdef CONFIG_X86_64
-+	if (totalram_pages >= (64ULL << (30 - PAGE_SHIFT))) {
-+		pr_info("Using 2GB memory block size for large-memory system\n");
- 		return 2UL * 1024 * 1024 * 1024;
+-	mutex_lock(&pci_mmcfg_lock);
++	mutex_lock(&pci_mmcfg_insert_lock);
+ 	cfg = pci_mmconfig_lookup(seg, start);
+ 	if (cfg) {
+ 		if (cfg->end_bus < end)
+@@ -575,12 +576,12 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 				 "domain %04x [bus %02x-%02x] "
+ 				 "only partially covers this bridge\n",
+ 				  cfg->segment, cfg->start_bus, cfg->end_bus);
+-		mutex_unlock(&pci_mmcfg_lock);
++		mutex_unlock(&pci_mmcfg_insert_lock);
+ 		return -EEXIST;
  	}
- #endif
+ 
+ 	if (!addr) {
+-		mutex_unlock(&pci_mmcfg_lock);
++		mutex_unlock(&pci_mmcfg_insert_lock);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -621,7 +622,7 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 		kfree(cfg);
+ 	}
+ 
+-	mutex_unlock(&pci_mmcfg_lock);
++	mutex_unlock(&pci_mmcfg_insert_lock);
+ 
+ 	return rc;
+ }
+-- 
+1.9.1
+
