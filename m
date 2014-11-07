@@ -1,58 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:60271 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751104AbaKDO2r (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Nov 2014 09:28:47 -0500
-Date: Tue, 4 Nov 2014 15:28:39 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-cc: Marc Zyngier <marc.zyngier@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>, jason@lakedaemon.net,
-	Catalin.Marinas@arm.com, Will.Deacon@arm.com, liviu.dudau@arm.com,
-	Harish.Kasiviswanathan@amd.com,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	devicetree@vger.kernel.org
+Received: from mga03.intel.com ([134.134.136.65]:9998 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750998AbaKGBAm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 6 Nov 2014 20:00:42 -0500
+Message-ID: <545C19B4.6040006@linux.intel.com>
+Date: Fri, 07 Nov 2014 09:00:36 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>
+CC: "suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"Harish.Kasiviswanathan@amd.com" <Harish.Kasiviswanathan@amd.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
 Subject: Re: [V10 PATCH 2/2] irqchip: gicv2m: Add supports for ARM GICv2m
  MSI(-X)
-In-Reply-To: <5458E0BE.2090803@amd.com>
-Message-ID: <alpine.DEB.2.11.1411041526100.4245@nanos>
-References: <1415052977-26036-1-git-send-email-suravee.suthikulpanit@amd.com> <1415052977-26036-3-git-send-email-suravee.suthikulpanit@amd.com> <alpine.DEB.2.11.1411032300160.5308@nanos> <54584681.2010103@amd.com> <alpine.DEB.2.11.1411040903340.5308@nanos>
- <5458E0BE.2090803@amd.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+References: <1415052977-26036-1-git-send-email-suravee.suthikulpanit@amd.com> <1415052977-26036-3-git-send-email-suravee.suthikulpanit@amd.com> <5458CE31.3040404@linux.intel.com> <545ABB4C.8010103@amd.com> <545ABF6C.1000308@amd.com> <alpine.DEB.2.11.1411060146050.24960@nanos> <alpine.DEB.2.11.1411061131330.24960@nanos> <545BA301.8000709@arm.com>
+In-Reply-To: <545BA301.8000709@arm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 4 Nov 2014, Suravee Suthikulpanit wrote:
-> And that's what I am trying to do here except that GIC is expecting that
-> information to be passed to it via irq_domain_alloc_irqs(..., args) where args
-> is struct of_phandle_args (e.g. in the kernel/irqdomain.c:
-> irq_create_of_mapping). This works fine when specifying interrupt from DT, but
-> that is not always the case.
+On 2014/11/7 0:34, Marc Zyngier wrote:
+> Hi Thomas,
 > 
-> Currently, I can just create a fake of_phandle_args just to pass the hwirq
-> information to GIC.
+> On 06/11/14 10:42, Thomas Gleixner wrote:
+>> On Thu, 6 Nov 2014, Thomas Gleixner wrote:
+>>> On Wed, 5 Nov 2014, Suravee Suthikulanit wrote:
+>>>> On 11/5/2014 6:05 PM, Suravee Suthikulanit wrote:
+>>>>> - Overall, it seems that msi_domain_alloc() could be quite different
+>>>>> across architectures. Would it be possible to declare this function as
+>>>>> weak, and allow arch to override (similar to arch_setup_msi_irq)?
+>>>>
+>>>> Actually, declaring "msi_domain_ops" as non-static, and allow other code to
+>>>> override the .alloc and .free?
+>>>
+>>> Why do you want to do that?
+>>
+>> I know why. Because you want to spare a level of hierarchy. But thats
+>> wrong simply because MSI itself is an interrupt chip at the device
+>> level.
+>>
+>> [ MSI ] ---> [ GIC-MSI ] ---> [ GIC ]
+>>
+>> So the MSI level only cares about the allocation of the virq
+>> space. GIC-MSI allocates out of the bitmap which handles the hard
+>> wired range of MSI capable GIC interrupts and GIC handles the
+>> underlying functionality.
+>>
+>> And this makes a lot of sense, if you think about interrupt
+>> remapping. If ARM ever grows that you simply insert it into the chain:
+>>
+>> [ MSI ] ---> [ Remap] ---> [ GIC-MSI ] ---> [ GIC ]
 > 
->     --> gicv2m_setup_msi_irq()
->      |    struct of_phandle_args phan;
->      |    phan.np = NULL;
->      |    phan.args_count = 3;
->      |    phan.args[0] = 0;
->      |    phan.args[1] = hwirq - 32;
->      |    phan.args[2] = IRQ_TYPE_EDGE_RISING;
->      |--> irq_domain_alloc_irqs(d, 1, NUMA_NO_NODE, &phan);
->       |--> gicv2m_domain_alloc(d, virq, nr_irqs, arg)
-> 	|--> irq_domain_alloc_irqs_parent(d, virq, nr_irqs, arg);
+> I think ARM has reached that stage with the ITS block in GICv3:
+> - Each device gets programmed with a set of  "event IDs" ranging from 0
+> to N-1, with N being the number of MSI vectors used by the device
+> - the ITS uses both the device ID (basically the PCI requester ID) and
+> the event ID to parse a set of software-managed tables (think page
+> tables for interrupts).
 > 
-> I am trying to figure out what would be a common data structure for this
-> purpose that would work for both Dt and non-DT case (e.g. GICv2m MSI). Unless
-> you think this is ok.
+> The x86 remapping thing looks quite similar to that, by reading a couple
+> of pages from the VT-D document.
+> 
+> So the way I understand the layout (and please correct me if I'm wrong,
+> which is certainly the case) is that the MSI domain is entirely generic,
+> allocates the virq, uses Remap as a parent, and uses
+> irq_chip_compose_msi_msg to call into the parent and generate whatever
+> goes into the MSI message.
+Hi Marc,
+	It works exactly in this way:)
 
-You need to sort that out with Marc. It needs to be done in a way
-which is usable for the other potential use cases of stacked domains
-on top of GIC.
+> 
+> I'm still struggling a bit to see how the remapping layer can access the
+> requester ID. x86 uses the irq_alloc_info to store that (the result of
+> an msi_get_hwirq call), but we don't have an equivalent structure on
+> arm/arm64.
+irq_alloc_info is newly introduced for hierarchy irqdomain on x86.
+Regards!
+Gerry
 
-Thanks,
-
-	tglx
+> 
+> I'll try to hack something with my current ITS driver and come back with
+> the results.
+> 
+> Thanks,
+> 
+> 	M.
+> 
