@@ -1,144 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <54584681.2010103@amd.com>
-Date: Mon, 3 Nov 2014 21:22:41 -0600
-From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.187]:53311 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751880AbaKGOZG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Nov 2014 09:25:06 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	catalin.marinas@arm.com, will.deacon@arm.com, bhelgaas@google.com,
+	Liviu.Dudau@arm.com, tglx@linutronix.de, mingo@redhat.com,
+	hpa@zytor.com, rjw@rjwysocki.net, linaro-acpi@lists.linaro.org,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [RFC PATCH 4/4] arm64, acpi, pci: Provide arch-specific calls for PCI host bridge dirver (PNP0A03).
+Date: Fri, 07 Nov 2014 15:24:30 +0100
+Message-ID: <4474363.kMvYSLl2Ev@wuerfel>
+In-Reply-To: <1415366876-30811-5-git-send-email-tomasz.nowicki@linaro.org>
+References: <1415366876-30811-1-git-send-email-tomasz.nowicki@linaro.org> <1415366876-30811-5-git-send-email-tomasz.nowicki@linaro.org>
 MIME-Version: 1.0
-To: Thomas Gleixner <tglx@linutronix.de>
-CC: Marc Zyngier <marc.zyngier@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>, <jason@lakedaemon.net>,
-	<Catalin.Marinas@arm.com>, <Will.Deacon@arm.com>,
-	<liviu.dudau@arm.com>, <Harish.Kasiviswanathan@amd.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: Re: [V10 PATCH 2/2] irqchip: gicv2m: Add supports for ARM GICv2m
- MSI(-X)
-References: <1415052977-26036-1-git-send-email-suravee.suthikulpanit@amd.com>
- <1415052977-26036-3-git-send-email-suravee.suthikulpanit@amd.com>
- <alpine.DEB.2.11.1411032300160.5308@nanos>
-In-Reply-To: <alpine.DEB.2.11.1411032300160.5308@nanos>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/3/2014 4:51 PM, Thomas Gleixner wrote:
-> On Mon, 3 Nov 2014, suravee.suthikulpanit@amd.com wrote:
->> +static void gicv2m_teardown_msi_irq(struct msi_chip *chip, unsigned int irq)
->> +{
->> +	int pos;
->> +	struct v2m_data *v2m = container_of(chip, struct v2m_data, msi_chip);
->> +
->> +	spin_lock(&v2m->msi_cnt_lock);
->
-> Why do you need an extra lock here? Is that stuff not serialized from
-> the msi_chip layer already?
->
-> If not, why don't we have the serialization there instead of forcing
-> every callback to implement its own?
+On Friday 07 November 2014 14:27:56 Tomasz Nowicki wrote:
+>  
+>  #ifdef CONFIG_PCI
+> +struct pci_controller {
+> +	struct acpi_device *companion;
+> +	int segment;
+> +	int node;		/* nearest node with memory or NUMA_NO_NODE for global allocation */
+> +};
+> +
+> +#define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
+> +
 
- From the following call paths:
-   |--> pci_enable_msi_range
-    |--> msi_capability_init
-     |--> arch_setup_msi_irqs
-      |--> arch_setup_msi_irq
-and
-   |--> pci_enable_msix
-    |--> msix_capability_init
-     |--> arch_setup_msi_irqs
-      |--> arch_setup_msi_irq
+Don't use busdev->sysdata in architecture specific code, it belongs to the
+host bridge driver with the new model. For ACPI you don't have a host bridge
+driver, but it's better to keep these separate.
 
-It serialize when a PCI device driver tries to allocate multiple 
-interrupts. However, AFAICT, it would not serialize the allocation when 
-multiple drivers trying to setup MSI irqs at the same time. I needed 
-that to protect the bitmap structure. I also noticed the same in other 
-drivers as well.
+The segment is always the same as the domain number, so just use that.
+The node and companion members here can get added to struct pci_host_bridge.
 
-I can look into this more to see where would be a good point.
+> @@ -43,7 +53,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>   */
+>  int pcibios_add_device(struct pci_dev *dev)
+>  {
+> -	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> +	if (acpi_disabled)
+> +		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+>  
+>  	return 0;
+>  }
 
->> +	pos = irq - v2m->spi_start;
->
-> So this assumes that @irq is the hwirq number, right? How does the
-> calling function know about that? It should only have knowledge about
-> the virq number if I'm not missing something.
->
-> And if I'm missing something, then that msi_chip stuff is seriously
-> broken.
+How do you assign the irq number with ACPI? Do you only support MSI?
 
-It works this way because of the direct mapping (as you noticed). But I 
-am planning to change that. See below.
+>  /*
+>   * raw_pci_read/write - Platform-specific PCI config space access.
+> - *
+> - * Default empty implementation.  Replace with an architecture-specific setup
+> - * routine, if necessary.
+>   */
+>  int raw_pci_read(unsigned int domain, unsigned int bus,
+>  		  unsigned int devfn, int reg, int len, u32 *val)
+>  {
+> -	return -EINVAL;
+> +	char __iomem *addr;
+> +
+> +	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095))) {
+> +err:		*val = -1;
+> +		return -EINVAL;
+> +	}
+> +
+> +	rcu_read_lock();
+> +	addr = pci_dev_base(domain, bus, devfn);
+> +	if (!addr) {
+> +		rcu_read_unlock();
+> +		goto err;
+> +	}
 
->
->> +	if (pos >= 0 && pos < v2m->nr_spis)
->
-> So you simply avoid the clear bitmap instead of yelling loudly about
-> being called with completely wrong data?
+The config space accessors should probably be shared with
+drivers/pci/host/pci-host-generic.c, e.g. by moving the rest of
+the new code in there as well, or by moving the config space
+accessors from that file to drivers/pci/mmconfig.c.
 
-I'll provide appropriate warnings.
-
-> I would not be surprised if that is related to my question above.
-
-Not quite sure which of the above questions.
-
->> +	spin_lock(&v2m->msi_cnt_lock);
->> +	offset = bitmap_find_free_region(v2m->bm, v2m->nr_spis, 0);
->> +	spin_unlock(&v2m->msi_cnt_lock);
->> +	if (offset < 0)
->> +		return offset;
->> +
->> +	hwirq = v2m->spi_start + offset;
->> +	virq = __irq_domain_alloc_irqs(v2m->domain, hwirq,
->> +				       1, NUMA_NO_NODE, v2m, true);
->> +	if (virq < 0) {
->> +		gicv2m_teardown_msi_irq(chip, hwirq);
->> +		return virq;
->> +	}
->> +
->> +	irq_domain_set_hwirq_and_chip(v2m->domain, virq, hwirq,
->> +				&v2m_chip, v2m);
->> +
->> +	irq_set_msi_desc(hwirq, desc);
->> +	irq_set_irq_type(hwirq, IRQ_TYPE_EDGE_RISING);
->
-> Sure both calls work perfectly fine as long as virq == hwirq, right?
-
-I was running into an issue when calling the 
-irq_domain_alloc_irq_parent(), it requires of_phandle_args pointer to be 
-passed in. However, this does not work for GICv2m since it does not have 
-interrupt information in the device tree. So, I decided at first to use 
-direct (virq == hwirq) mapping, which simplifies the code a bit, but 
-might not be ideal solution, as you pointed out.
-
-An alternative would be to create a temporary struct of_phandle_args, 
-and populate it with the interrupt information for the requested MSI. 
-Then pass it to:
-   --> irq_domain_alloc_irq_parent
-    |--> gic_irq_domain_alloc
-      |--> gic_irq_domain_xlate
-      |--> gic_irq_domain_map
-
-However, this would still not be ideal if we want to support ACPI. 
-Another alternative would be coming up with a dedicate structure to be 
-used here. I noticed on X86, it uses struct irq_alloc_info. May be 
-that's what we also need here.
-
-> [...]
-> I do not care at all how YOU waste your time. But I care very much
-> about the fact that YOU are wasting MY precious time by exposing me to
-> your patch trainwrecks.
-
-I don't intend to waste yours or anybody's precious time. Sorry if it 
-takes a couple iterations to work out the issues. Also, I will try to 
-put more comment in my code to make it more clear. Let me know what 
-works best for you to work out the issues.
-
-Thanks,
-
-Suravee
-
->
-> Thanks,
->
-> 	tglx
->
-
-
+	Arnd
