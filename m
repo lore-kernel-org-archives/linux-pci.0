@@ -1,39 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:40086 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750990AbaKFAti (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 19:49:38 -0500
-Date: Thu, 6 Nov 2014 01:49:21 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-cc: Jiang Liu <jiang.liu@linux.intel.com>, marc.zyngier@arm.com,
-	mark.rutland@arm.com, jason@lakedaemon.net,
-	Catalin.Marinas@arm.com, Will.Deacon@arm.com, liviu.dudau@arm.com,
-	Harish.Kasiviswanathan@amd.com,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: Re: [V10 PATCH 2/2] irqchip: gicv2m: Add supports for ARM GICv2m
- MSI(-X)
-In-Reply-To: <545ABF6C.1000308@amd.com>
-Message-ID: <alpine.DEB.2.11.1411060146050.24960@nanos>
-References: <1415052977-26036-1-git-send-email-suravee.suthikulpanit@amd.com> <1415052977-26036-3-git-send-email-suravee.suthikulpanit@amd.com> <5458CE31.3040404@linux.intel.com> <545ABB4C.8010103@amd.com> <545ABF6C.1000308@amd.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Cc: linaro-acpi@lists.linaro.org, catalin.marinas@arm.com,
+	will.deacon@arm.com, bhelgaas@google.com, Liviu.Dudau@arm.com,
+	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+	rjw@rjwysocki.net, linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [Linaro-acpi] [RFC PATCH 3/4] arm64, acpi, pci: Add arch specific functions for mmconfig driver.
+Date: Fri, 07 Nov 2014 15:54:09 +0100
+Message-ID: <2483899.fnsktEmYFO@wuerfel>
+In-Reply-To: <545CD9A4.3080900@linaro.org>
+References: <1415366876-30811-1-git-send-email-tomasz.nowicki@linaro.org> <16660879.6KxQndPqBW@wuerfel> <545CD9A4.3080900@linaro.org>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 5 Nov 2014, Suravee Suthikulanit wrote:
-> On 11/5/2014 6:05 PM, Suravee Suthikulanit wrote:
-> > - Overall, it seems that msi_domain_alloc() could be quite different
-> > across architectures. Would it be possible to declare this function as
-> > weak, and allow arch to override (similar to arch_setup_msi_irq)?
+On Friday 07 November 2014 15:39:32 Tomasz Nowicki wrote:
+> On 07.11.2014 15:12, Arnd Bergmann wrote:
+> > On Friday 07 November 2014 14:27:55 Tomasz Nowicki wrote:
+> >> These calls allow to map/unmap PCI config space ranges (which are specified in
+> >> MMCFG ACPI table).
+> >>
+> >> Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+> >>
+> >
+> > Nothing in this patch looks arm64 specific, and most of it looks like a
+> > copy of the x86 code.
 > 
-> Actually, declaring "msi_domain_ops" as non-static, and allow other code to
-> override the .alloc and .free?
+> Yes, most of the logic was borrowed from mmconfig_64.c file, 
+> mmconfig_32.c looks differently, though. It is not simple to merge them 
+> both. IMO, we have two choices:
+> 1. Refactor and move mmconfig_64.c out of x86 to e.g. drivers/acpi/ and 
+> let it be default.
+> 2. Stay with solution presented in this patch.
+> 3. Thoughts ?
 
-Why do you want to do that?
+If the code is generic, it should be shared with as many architectures as
+possible. Moving the x86-64 implementation to drivers/acpi/ would immediately
+let you share it with two out of the four architectures (x86-64 and arm64,
+but not x86-32 and ia64) as well as any potential other architectures that
+might implement ACPI in the future.
 
-Thanks,
-
-	tglx
+	Arnd
