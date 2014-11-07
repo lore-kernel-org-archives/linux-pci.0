@@ -1,5 +1,5 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 3 Nov 2014 10:41:09 +0100 (CET)
+Date: Fri, 7 Nov 2014 11:40:12 +0100 (CET)
 From: Thomas Gleixner <tglx@linutronix.de>
 To: Jiang Liu <jiang.liu@linux.intel.com>
 cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
@@ -10,38 +10,44 @@ cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
 	Borislav Petkov <bp@alien8.de>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org, Grant Likely <grant.likely@linaro.org>,
-	Prarit Bhargava <prarit@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Alexander Gordeev <agordeev@redhat.com>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-	linux-pm@vger.kernel.org
-Subject: Re: [Patch v8 15/18] x86, irq, ACPI: Implement interface to support
- ACPI based IOAPIC hot-addition
-In-Reply-To: <1414908273-7552-16-git-send-email-jiang.liu@linux.intel.com>
-Message-ID: <alpine.DEB.2.11.1411031039470.5308@nanos>
-References: <1414908273-7552-1-git-send-email-jiang.liu@linux.intel.com> <1414908273-7552-16-git-send-email-jiang.liu@linux.intel.com>
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [Patch Part2 v5 21/31] PCI/MSI: Enhance core to support hierarchy
+ irqdomain
+In-Reply-To: <1415283644-2559-22-git-send-email-jiang.liu@linux.intel.com>
+Message-ID: <alpine.DEB.2.11.1411071139260.3789@nanos>
+References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com> <1415283644-2559-22-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 2 Nov 2014, Jiang Liu wrote:
-> +	down_write(&acpi_ioapic_rwsem);
+On Thu, 6 Nov 2014, Jiang Liu wrote:
 
-That wants to be acpi_ioapic_lock. Same issue in the following
-patches. You fixed it up in the last patch.
+> Enhance PCI MSI core to support hierarchy irqdomain, so the common
+> code could be shared among architectures.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+> Hi Thomas,
+> 	These changes are a temporary solution, I'm working on another
+> patch set which will refine these interfaces, especially kill 
+> arch_msi_irq_domain_{set|get}_hwirq().
 
-Please don't resend. I folded the hunks back to the proper places
-already.
+Ok. Please don't forget the irq_chip change :)
 
 Thanks,
 
 	tglx
-
-
