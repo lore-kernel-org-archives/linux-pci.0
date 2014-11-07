@@ -1,132 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0115.outbound.protection.outlook.com ([157.56.111.115]:15717
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751647AbaKJCEU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 9 Nov 2014 21:04:20 -0500
-Message-ID: <54601D09.3090902@amd.com>
-Date: Mon, 10 Nov 2014 09:03:53 +0700
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Received: from mail-la0-f48.google.com ([209.85.215.48]:38312 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751225AbaKGQH6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Nov 2014 11:07:58 -0500
+Received: by mail-la0-f48.google.com with SMTP id gq15so4604639lab.7
+        for <linux-pci@vger.kernel.org>; Fri, 07 Nov 2014 08:07:56 -0800 (PST)
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	"Matthias Brugger" <matthias.bgg@gmail.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Alexander Gordeev <agordeev@redhat.com>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	<x86@kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [Patch Part2 v5 21/31] PCI/MSI: Enhance core to support hierarchy
- irqdomain
-References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
- <1415283644-2559-22-git-send-email-jiang.liu@linux.intel.com>
- <545EED04.4090008@amd.com> <545F1478.3040808@linux.intel.com>
-In-Reply-To: <545F1478.3040808@linux.intel.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+In-Reply-To: <1415287936-31203-3-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1415287936-31203-1-git-send-email-lorenzo.pieralisi@arm.com> <1415287936-31203-3-git-send-email-lorenzo.pieralisi@arm.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Fri, 7 Nov 2014 10:07:30 -0600
+Message-ID: <CAL_JsqLCXwZ-xkByThCj99kwN1W7sHVx=8bKfxmBt-vTHZoATA@mail.gmail.com>
+Subject: Re: [PATCH v2 2/2] arm: pcibios: move to generic PCI domains
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/9/14 14:15, Jiang Liu wrote:
-> On 2014/11/9 12:26, Suravee Suthikulpanit wrote:
->> Hi Gerry,
->>
->> Please see my comments / questions below.
->>
->> On 11/6/14 21:20, Jiang Liu wrote:
->>> Enhance PCI MSI core to support hierarchy irqdomain, so the common
->>> code could be shared among architectures.
->>>
->>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->>> ---
->>> Hi Thomas,
->>>      These changes are a temporary solution, I'm working on another
->>> patch set which will refine these interfaces, especially kill
->>> arch_msi_irq_domain_{set|get}_hwirq().
->>> Regards!
->>> Gerry
->>
->> Would the change includes the struct irqdomain_msi_data proposed by
->> Thomas here (https://lkml.org/lkml/2014/11/6/210)?
-> Hi Suravee,
-> 	I'm working on another patch set which will refine the way to
-> create irqdomain for MSI. I hope will solve all issues mentioned by
-> Thomas. I will post that patch set as RFC within one or two days.
-
-Let me know if I can help.
-
->>
->>> [...]
->>> +static int msi_domain_alloc(struct irq_domain *domain, unsigned int
->>> virq,
->>> +                unsigned int nr_irqs, void *arg)
->>> +{
->>> +    int i, ret;
->>> +    irq_hw_number_t hwirq = arch_msi_irq_domain_get_hwirq(arg);
->>> +
->>> +    if (irq_find_mapping(domain, hwirq) > 0)
->>> +        return -EEXIST;
->>> +
->>> +    ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
->>> +    if (ret < 0)
->>> +        return ret;
->>> +
->>
->> When executing irq_domain_alloc_irqs_parent(), it triggers the following
->> warning message due to
->>
->>      WARN_ON(desc->irq_data.chip == &no_irq_chip)
->>
->> ------------[ cut here ]------------
->> WARNING: CPU: 2 PID: 912 at kernel/irq/chip.c:734
->> __irq_set_handler+0x138/0x13c()
->> Modules linked in: mlx4_core(+) rtc_efi efivarfs
->> CPU: 2 PID: 912 Comm: modprobe Not tainted 3.18.0-rc3-p2v5+ #53
->> Call trace:
->> [<fffffe00000963d4>] dump_backtrace+0x0/0x16c
->> [<fffffe0000096550>] show_stack+0x10/0x1c
->> [<fffffe000067545c>] dump_stack+0x74/0x98
->> [<fffffe00000b205c>] warn_slowpath_common+0x84/0xac
->> [<fffffe00000b2148>] warn_slowpath_null+0x14/0x20
->> [<fffffe00000ed968>] __irq_set_handler+0x134/0x13c
->> [<fffffe000042af14>] gic_irq_domain_map+0x4c/0xac
->> [<fffffe000042afd4>] gic_irq_domain_alloc+0x60/0x88
->> [<fffffe000042b374>] gicv2m_domain_alloc+0x30/0xa8
->> [<fffffe00000efc1c>] __irq_domain_alloc_irqs+0x144/0x30c
->> [<fffffe000042b58c>] gicv2m_setup_msi_irq+0xc0/0x118
->> [<fffffe000044548c>] arch_setup_msi_irq+0x34/0x60
->> [<fffffe0000445544>] arch_setup_msi_irqs+0x50/0xb0
->> [<fffffe0000445e3c>] pci_enable_msix+0x310/0x39c
->> [<fffffe0000445efc>] pci_enable_msix_range+0x34/0x9c
->> ....
->>
->> However, I think if we call irq_domain_set_hwirq_and_chip() in the
->> msi_create_irq_domain() as suggested by Thomas, that should also fix
->> this issue.
-> We didn't trigger this warning on x86 because only the outer-most
-> irqdomain will set irq flow handler. On ARM, the inner GIC domain
-> will set irq flow handler, but the irq_data->chip for outer-most
-> domain hasn't been set yet.
+On Thu, Nov 6, 2014 at 9:32 AM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> Most if not all ARM PCI host controller device drivers either ignore the
+> domain field in the pci_sys_data structure or just increment it every
+> time a host controller is probed, using it as a domain counter.
 >
-> I'm still find a way out here. Maybe we need to relax the WARN_ON().
+> Therefore, instead of relying on pci_sys_data to stash the domain number
+> in a standard location, ARM pcibios code can be moved to the newly
+> introduced generic PCI domains code, implemented in commits:
+>
+> commit 41e5c0f81d3e676d671d96a0a1fafb27abfbd9
+> ("of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()")
+>
+> commit 670ba0c8883b576d0aec28bd7a838358a4be1
+> ("PCI: Add generic domain handling")
+>
+> In order to assign a domain number dynamically, the ARM pcibios defines
+> the function, called by core PCI code:
+>
+> void pci_bus_assign_domain_nr(...)
+>
+> that relies on a DT property to define the domain number or falls back to
+> a counter; its usage replaces the current domain assignment code in PCI
+> host controllers present in the kernel.
 
-What if we just switch the order and call the 
-irq_domain_alloc_irqs_parent() after the loop? That way we can still 
-keep the WARN_ON().
+I realize you are just copying the arm64 version, but as we've agreed
+the DT domain handling should be common and what the error cases are,
+I've got some comments on the current implementation.
 
-Suravee
+[...]
+
+> +#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> +static bool dt_domain_found;
+
+This can be moved into the function.
+
+> +
+> +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> +{
+> +       int domain = of_get_pci_domain_nr(parent->of_node);
+> +
+> +       if (domain >= 0) {
+> +               dt_domain_found = true;
+> +       } else if (dt_domain_found == true) {
+> +               dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
+> +                       parent->of_node->full_name);
+> +               return;
+
+No error other than a printk? Do we want to set domain_nr to an
+illegal value or something?
+
+> +       } else {
+> +               domain = pci_get_new_domain_nr();
+> +       }
+> +
+> +       bus->domain_nr = domain;
+> +}
+
+This doesn't handle the case where the 1st node(s) probed does not
+have a domain prop and a later one does. I think something like this
+should work:
+
+static int use_dt_domains = -1;
+int domain = of_get_pci_domain_nr(parent->of_node);
+
+if (domain >= 0 && use_dt_domains) {
+        use_dt_domains = 1;
+} else if (domain < 0 && use_dt_domain != 1) {
+        use_dt_domains = 0;
+        domain = pci_get_new_domain_nr();
+} else {
+        dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\"
+property in DT\n",
+                 parent->of_node->full_name);
+        domain = -1;  // Not sure if -1 would be illegal or not????
+}
+
+bus->domain_nr = domain;
+
+
+Rob
