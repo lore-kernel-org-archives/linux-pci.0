@@ -1,268 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:36936 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750915AbaKFB7B (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 20:59:01 -0500
-Message-ID: <545AD5B3.60009@huawei.com>
-Date: Thu, 6 Nov 2014 09:58:11 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:54769 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751441AbaKGRf6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Nov 2014 12:35:58 -0500
+Date: Fri, 7 Nov 2014 17:35:54 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v2 2/2] arm: pcibios: move to generic PCI domains
+Message-ID: <20141107173554.GB3569@red-moon>
+References: <1415287936-31203-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1415287936-31203-3-git-send-email-lorenzo.pieralisi@arm.com>
+ <CAL_JsqLCXwZ-xkByThCj99kwN1W7sHVx=8bKfxmBt-vTHZoATA@mail.gmail.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	"Matthias Brugger" <matthias.bgg@gmail.com>,
-	Alexander Gordeev <agordeev@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	<x86@kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [Patch Part2 v4 21/31] PCI/MSI: enhance PCI MSI core to support
- hierarchy irqdomain
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com> <1415102525-9898-22-git-send-email-jiang.liu@linux.intel.com> <20141105230952.GH6168@google.com>
-In-Reply-To: <20141105230952.GH6168@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAL_JsqLCXwZ-xkByThCj99kwN1W7sHVx=8bKfxmBt-vTHZoATA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>  
->> @@ -1098,3 +1099,128 @@ int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
->>  	return nvec;
->>  }
->>  EXPORT_SYMBOL(pci_enable_msix_range);
->> +
->> +#ifdef	CONFIG_PCI_MSI_IRQ_DOMAIN
+On Fri, Nov 07, 2014 at 04:07:30PM +0000, Rob Herring wrote:
+> On Thu, Nov 6, 2014 at 9:32 AM, Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+> > Most if not all ARM PCI host controller device drivers either ignore the
+> > domain field in the pci_sys_data structure or just increment it every
+> > time a host controller is probed, using it as a domain counter.
+> >
+> > Therefore, instead of relying on pci_sys_data to stash the domain number
+> > in a standard location, ARM pcibios code can be moved to the newly
+> > introduced generic PCI domains code, implemented in commits:
+> >
+> > commit 41e5c0f81d3e676d671d96a0a1fafb27abfbd9
+> > ("of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()")
+> >
+> > commit 670ba0c8883b576d0aec28bd7a838358a4be1
+> > ("PCI: Add generic domain handling")
+> >
+> > In order to assign a domain number dynamically, the ARM pcibios defines
+> > the function, called by core PCI code:
+> >
+> > void pci_bus_assign_domain_nr(...)
+> >
+> > that relies on a DT property to define the domain number or falls back to
+> > a counter; its usage replaces the current domain assignment code in PCI
+> > host controllers present in the kernel.
 > 
-> Space, not tab.
-> 
->> +static inline irq_hw_number_t
->> +msi_get_hwirq(struct pci_dev *pdev, struct msi_desc *msidesc)
-> 
-> The convention in this file is "struct pci_dev *dev".  And "struct msi_desc
-> *desc" (or maybe "*entry").  Try to converge things, not diverge them.
-> 
->> +{
->> +	return (irq_hw_number_t)msidesc->msi_attrib.entry_nr |
->> +		PCI_DEVID(pdev->bus->number, pdev->devfn) << 11 |
->> +		(pci_domain_nr(pdev->bus) & 0xFFFFFFFF) << 27;
-> 
-> Where does this bit layout come from?  Is this defined in the spec
-> somewhere?  A reference would help.
+> I realize you are just copying the arm64 version, but as we've agreed
+> the DT domain handling should be common and what the error cases are,
+> I've got some comments on the current implementation.
 
-Currently, more and more Non-PCI device use MSI(or similar MSI mechanism), like DMAR fault irq
-and HPET FSB irq. And we have to add additional code to support the MSI capability.
-So I hope we can decouple MSI code and PCI code, then we can unify all MSI(or Message Based interrupt)
-in one framework.
-
-Thanks!
-Yijing.
+So this means that either I patch arm64 code with your implementation
+below and I duplicate the code for arm too, or I have to factor out an
+implementation based on your code below and add it somewhere in common
+kernel code (drivers/pci/pci.c ? drivers/pci/of.c ?), where, it has to be
+seen.
 
 > 
->> +}
->> +
->> +static int msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
->> +			    unsigned int nr_irqs, void *arg)
->> +{
->> +	int i, ret;
->> +	irq_hw_number_t hwirq = arch_msi_irq_domain_get_hwirq(arg);
->> +
->> +	if (irq_find_mapping(domain, hwirq) > 0)
->> +		return -EEXIST;
->> +
->> +	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
->> +	if (ret >= 0)
+> [...]
 > 
-> 	if (ret < 0)
-> 		return ret;
+> > +#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> > +static bool dt_domain_found;
 > 
-> and un-indent the mainline code below.  Then it's obvious that this is the
-> normal case, not the error case.
-> 
->> +		for (i = 0; i < nr_irqs; i++) {
->> +			irq_domain_set_hwirq_and_chip(domain, virq + i,
->> +					hwirq + i, &msi_chip, (void *)(long)i);
->> +			__irq_set_handler(virq + i, handle_edge_irq, 0, "edge");
->> +		}
->> +
->> +	return ret;
->> +}
->> +
->> +static void msi_domain_free(struct irq_domain *domain, unsigned int virq,
->> +			    unsigned int nr_irqs)
->> +{
->> +	int i;
->> +
->> +	for (i = 0; i < nr_irqs; i++) {
->> +		struct msi_desc *msidesc = irq_get_msi_desc(virq);
->> +
->> +		if (msidesc)
->> +			msidesc->irq = 0;
->> +	}
->> +	irq_domain_free_irqs_top(domain, virq, nr_irqs);
->> +}
->> +
->> +static int msi_domain_activate(struct irq_domain *domain,
->> +			       struct irq_data *irq_data)
->> +{
->> +	int ret = 0;
->> +	struct msi_msg msg;
->> +
->> +	/*
->> +	 * irq_data->chip_data is MSI/MSIx offset.
-> 
-> "MSI-X", as you wrote on the next line.
-> 
->> +	 * MSI-X message is written per-IRQ, the offset is always 0.
->> +	 * MSI message denotes a contiguous group of IRQs, written for 0th IRQ.
->> +	 */
->> +	if (!irq_data->chip_data) {
-> 
-> 	if (irq_data->chip_data)
-> 		return 0;
-> 
-> and un-indent the mainline code below, and drop the "ret = 0" init above.
-> 
->> +		ret = irq_chip_compose_msi_msg(irq_data, &msg);
->> +		if (ret == 0)
-> 
-> 	if (ret)
-> 		return ret;
-> 
->> +			write_msi_msg(irq_data->irq, &msg);
->> +	}
->> +
->> +	return ret;
-> 	return 0;
->> +}
->> +
->> +static int msi_domain_deactivate(struct irq_domain *domain,
->> +				 struct irq_data *irq_data)
->> +{
->> +	struct msi_msg msg;
->> +
->> +	if (irq_data->chip_data) {
->> +		memset(&msg, 0, sizeof(msg));
->> +		write_msi_msg(irq_data->irq, &msg);
->> +	}
->> +
->> +	return 0;
->> +}
->> +
->> +static struct irq_domain_ops msi_domain_ops = {
->> +	.alloc = msi_domain_alloc,
->> +	.free = msi_domain_free,
->> +	.activate = msi_domain_activate,
->> +	.deactivate = msi_domain_deactivate,
->> +};
->> +
->> +struct irq_domain *msi_create_irq_domain(struct irq_domain *parent)
->> +{
->> +	struct irq_domain *domain;
->> +
->> +	domain = irq_domain_add_tree(NULL, &msi_domain_ops, NULL);
->> +	if (domain)
-> 
-> 	if (!domain)
-> 		return NULL;
-> 
-> and un-indent this:
-> 
->> +		domain->parent = parent;
->> +
->> +	return domain;
->> +}
->> +
->> +int msi_irq_domain_alloc_irqs(struct irq_domain *domain, int type,
->> +			      struct pci_dev *dev, void *arg)
->> +{
->> +	int i, virq;
->> +	struct msi_desc *msidesc;
->> +	int node = dev_to_node(&dev->dev);
->> +
->> +	list_for_each_entry(msidesc, &dev->msi_list, list) {
->> +		arch_msi_irq_domain_set_hwirq(arg, msi_get_hwirq(dev, msidesc));
->> +		virq = irq_domain_alloc_irqs(domain, msidesc->nvec_used,
->> +					     node, arg);
->> +		if (virq < 0) {
->> +			/* Special handling for pci_enable_msi_range(). */
->> +			return (type == PCI_CAP_ID_MSI &&
->> +				msidesc->nvec_used > 1) ?  1 : -ENOSPC;	
-> 
-> I think "if" would be easier to read than this ternary expression.
-> 
->> +		}
->> +		for (i = 0; i < msidesc->nvec_used; i++)
->> +			irq_set_msi_desc_off(virq + i, i, msidesc);
->> +	}
->> +
->> +	list_for_each_entry(msidesc, &dev->msi_list, list)
->> +		if (msidesc->nvec_used == 1)
->> +			dev_dbg(&dev->dev, "irq %d for MSI/MSI-X\n", virq);
->> +		else
->> +			dev_dbg(&dev->dev, "irq [%d-%d] for MSI/MSI-X\n",
->> +				virq, virq + msidesc->nvec_used - 1);
->> +
->> +	return 0;
->> +}
->> +#endif	/* CONFIG_PCI_MSI_IRQ_DOMAIN */
->> diff --git a/include/linux/msi.h b/include/linux/msi.h
->> index 44f4746d033b..05dcd425f82b 100644
->> --- a/include/linux/msi.h
->> +++ b/include/linux/msi.h
->> @@ -75,4 +75,15 @@ struct msi_chip {
->>  	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
->>  };
->>  
->> +#ifdef	CONFIG_PCI_MSI_IRQ_DOMAIN
-> 
-> Use a space here, not a tab.
-> 
->> +extern struct irq_chip msi_chip;
-> 
-> I don't think "msi_chip" is a good name.  "Chip" only hints that it's a
-> semiconductor integrated circuit; it doesn't say anything about what it
-> does.  I've suggested "msi_controller" elsewhere.
-> 
-> Why does this need to be exported?  And why should there be only one in a
-> system?
-> 
->> +extern struct irq_domain *msi_create_irq_domain(struct irq_domain *parent);
->> +extern int msi_irq_domain_alloc_irqs(struct irq_domain *domain, int type,
->> +				     struct pci_dev *dev, void *arg);
->> +
->> +extern irq_hw_number_t arch_msi_irq_domain_get_hwirq(void *arg);
->> +extern void arch_msi_irq_domain_set_hwirq(void *arg, irq_hw_number_t hwirq);
-> 
-> Look at the rest of the file and notice that the existing code does not use
-> "extern" on function declarations.
-> 
->> +#endif	/* CONFIG_PCI_MSI_IRQ_DOMAIN */
-> 
-> Use a space here (not a tab), like the #endif just below.
-> 
->>  #endif /* LINUX_MSI_H */
->> -- 
->> 1.7.10.4
->>
-> 
-> .
-> 
+> This can be moved into the function.
 
+Yes, I noticed while putting the patch together, I was more concerned
+about the removal of pci_sys_data.domain than the code parsing the domain
+value, which I considered agreed upon.
 
--- 
-Thanks!
-Yijing
+> > +
+> > +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> > +{
+> > +       int domain = of_get_pci_domain_nr(parent->of_node);
+> > +
+> > +       if (domain >= 0) {
+> > +               dt_domain_found = true;
+> > +       } else if (dt_domain_found == true) {
+> > +               dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
+> > +                       parent->of_node->full_name);
+> > +               return;
+> 
+> No error other than a printk? Do we want to set domain_nr to an
+> illegal value or something?
 
+See above.
+
+> > +       } else {
+> > +               domain = pci_get_new_domain_nr();
+> > +       }
+> > +
+> > +       bus->domain_nr = domain;
+> > +}
+> 
+> This doesn't handle the case where the 1st node(s) probed does not
+> have a domain prop and a later one does. I think something like this
+> should work:
+
+Well, a boolean won't do, your code below looks ok, I can add a trivial enum
+to make use_dt_domains usage clearer (but I think a comment to your code will
+do):
+
+enum {
+	PCI_DOMAIN_INVALID,
+	PCI_DOMAIN_DT,
+	PCI_DOMAIN_DEFAULT
+};
+
+> static int use_dt_domains = -1;
+> int domain = of_get_pci_domain_nr(parent->of_node);
+> 
+> if (domain >= 0 && use_dt_domains) {
+>         use_dt_domains = 1;
+> } else if (domain < 0 && use_dt_domain != 1) {
+>         use_dt_domains = 0;
+>         domain = pci_get_new_domain_nr();
+> } else {
+>         dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\"
+> property in DT\n",
+>                  parent->of_node->full_name);
+>         domain = -1;  // Not sure if -1 would be illegal or not????
+
+I have to check, that's a valid point, we can't certainly leave it as it is.
+
+Thanks,
+Lorenzo
