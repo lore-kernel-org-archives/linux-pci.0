@@ -1,112 +1,125 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:34043 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750959AbaKCX0i (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Nov 2014 18:26:38 -0500
-Date: Tue, 4 Nov 2014 08:26:25 +0900
-From: Simon Horman <horms@verge.net.au>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"liviu.dudau@arm.com" <liviu.dudau@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Mohit Kumar <mohit.kumar@st.com>
-Subject: Re: [RFC PATCH 2/2] arm: pcibios: move to generic PCI domains
-Message-ID: <20141103232625.GA22642@verge.net.au>
-References: <1414669490-1217-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1414669490-1217-3-git-send-email-lorenzo.pieralisi@arm.com>
- <b095e031880c44f0b79c8c42bc8d7bd5@SIXPR06MB0639.apcprd06.prod.outlook.com>
- <CAErSpo7R5V1MeDSg+9-+CqVbk_vDn6pRsNwFQS9L97Fkw=7nDA@mail.gmail.com>
- <08260858dd004e4881e7fbd4b23ea795@SIXPR06MB0639.apcprd06.prod.outlook.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <08260858dd004e4881e7fbd4b23ea795@SIXPR06MB0639.apcprd06.prod.outlook.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, Borislav Petkov <bp@alien8.de>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch Part3 v3 00/38] Enable hierarchy irqdomian on x86 platforms
+Date: Sun,  9 Nov 2014 02:13:00 +0800
+Message-Id: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 31, 2014 at 05:04:49PM +0000, Phil Edworthy wrote:
-> Hi Bjorn,
-> 
-> On 31 October 2014 16:37, Bjorn wrote:
-> > On Fri, Oct 31, 2014 at 7:43 AM, Phil Edworthy
-> > <phil.edworthy@renesas.com> wrote:
-> > > Hi Lorenzo,
-> > >
-> > > On 30 October 2014 11:45, Lorenzo wrote:
-> > >> Most if not all ARM PCI host controller device drivers either ignore the
-> > >> domain field in the pci_sys_data structure or just increment it every
-> > >> time a host controller is probed, using it as a domain counter.
-> > >>
-> > >> Therefore, instead of relying on pci_sys_data to stash the domain number
-> > >> in a standard location, ARM pcibios code can be moved to the newly
-> > >> introduced generic PCI domains code, implemented in commits:
-> > >>
-> > >> commit 41e5c0f81d3e676d671d96a0a1fafb27abfbd9
-> > >> ("of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()")
-> > >>
-> > >> commit 670ba0c8883b576d0aec28bd7a838358a4be1
-> > >> ("PCI: Add generic domain handling")
-> > >>
-> > >> In order to assign a domain number dynamically, the ARM pcibios defines
-> > >> the function, called by core PCI code:
-> > >>
-> > >> void pci_bus_assign_domain_nr(...)
-> > >>
-> > >> that relies on a DT property to define the domain number or falls back to
-> > >> a counter; its usage replaces the current domain assignment code in PCI
-> > >> host controllers present in the kernel.
-> > >>
-> > >> Cc: Arnd Bergmann <arnd@arndb.de>
-> > >> Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> > >> Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> > >> Cc: Jingoo Han <jg1.han@samsung.com>
-> > >> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > >> Cc: Russell King <linux@arm.linux.org.uk>
-> > >> Cc: Mohit Kumar <mohit.kumar@st.com>
-> > >> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > >
-> > > This patch fixes a current problem with R-Car devices where there is an
-> > > internal PCI bridge and an external PCIe bridge on the devices. Both drivers
-> > > work independently but need to be on different domains. Just needed to
-> > enable
-> > > PCI_DOMAINS along with this.
-> > > I've done basic testing that the internal PCI and external PCIe work at the
-> > > same time.
-> > 
-> > Hi Phil,
-> > 
-> > Thanks for testing this.  Can you give me some more guidance on where
-> > you'd like to see this merged?  Until your comment about this fixing a
-> > current problem on R-Car, I probably would have considered this to be
-> > a cleanup and enhancement and hence material for v3.19.  But if R-Car
-> > is actually broken and this fixes it, maybe this should go in for
-> > v3.18 instead.
-> I don’t think its urgent as most of our customers use LTSI kernels, e.g. v3.10.
-> Renesas typically provide out-of-tree BSPs with upstream code back ported, along
-> with other patches. Simon Horman (Renesas maintainer, cc'd) generally handles
-> the back ports, so I'll defer to his opinion.
+This is the last part to enable support of hierarchy domain on x86
+platforms.
 
-Hi Phil,
+It first converts IOAPIC to support hierarchy irqdomain, then cleans
+up all unused code and interfaces. It also introduces a kernel boot
+parameter to configure CPU vector allocation policies.
 
-from my point of view it would be best if this went into -stable if it is a
-fix. However, as you point out, from a customer point of view it shouldn't
-be a big deal as they should get backports via our LTSI kernel regardless of
-if the patch goes through stable or not.
+It's based on my previous patch set at:
+https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg760868.html
+And you may access it at:
+https://github.com/jiangliu/linux.git irqdomain/p3v3
 
-> > If it is currently broken, is there a point where it broke?  I assume
-> > it used to work at one time.  If there's a commit that broke it, it
-> > would be nice to reference that in the changelog and explain exactly
-> > what was broken and how this fixes it.
-> Both the internal PCI and external PCIe drivers work on their own, but have
-> never worked at the same time. I think it was just unfortunate timing when I
-> added the PCIe driver. At that time, the internal PCI driver didn’t have the
-> relevant DT nodes for the board I was using so I didn't see any conflicts.
-> 
-> Thanks
-> Phil
+It has been tested on Intel 64-bit server and 32-bit laptop. It also
+passes Fengguang's 0day tests. Helps are welcomed for testing:
+1) Intel MID platform
+2) Intel CE or OLPC platforms
+
+Patch 1-3 kills pre_init_apic_IRQ0().
+Patch 4-9 convert IOAPIC to use hierarch irqdomain
+Patch 10-36 clean up code, unused interfaces etc.
+Patch 37-38 introduces a mechanism to configure CPU vector allocation
+	policies.
+
+Jiang Liu (37):
+  x86, intel-mid, trivial: Refine code syntax for sfi_parse_mtmr()
+  x86, irq: Kill unused pre_init_apic_IRQ0()
+  x86, irq: Prepare IOAPIC interfaces to support hierarchy irqdomain
+  x86, irq: Implement callbacks to enable hierarchy irqdomain on
+    IOAPICs
+  x86, irq: Refine the way to allocate irq_cfg for legacy IRQs
+  x86, irq: Simplify the way to print IOAPIC entry
+  x86, irq: Introduce helper functions to support hierarchy irqdomain
+    for IOAPIC
+  x86, irq: Convert IOAPIC to use hierarchy irqdomain interfaces
+  x86, irq: Kill unused old IOAPIC irqdomain interfaces
+  x86, irq: Kill unused struct mp_pin_info
+  x86, irq: Kill x86_io_apic_ops.print_entries and related interfaces
+  x86, irq: Kill x86_io_apic_ops.setup_entry and related interfaces
+  x86, irq: Kill x86_io_apic_ops.set_affinity and related interfaces
+  x86, irq: Kill x86_io_apic_ops.eoi_ioapic_pin and related interfaces
+  x86, irq: Kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
+  x86: Clean up unused forward declarations in x86_init.h
+  x86: irq_remapping: Clean up unsued code
+  iommu/vt-d: Clean up unsued code
+  iommu/amd: Clean up unsued code
+  x86: irq_remapping: Clean up unused interfaces
+  x86, irq: Kill irq_cfg.irq_remapped
+  iommu/vt-d: Move struct irq_2_iommu into intel_irq_remapping.c
+  iommu/amd: Move struct irq_2_irte into amd_iommu.c
+  x86, irq: Move irq_cfg.irq_2_pin into io_apic.c
+  x86, irq: Kill struct io_apic_irq_attr
+  x86, irq: Kill x86_io_apic_ops.write and x86_io_apic_ops.modify
+  x86, irq: Clean up io_apic.h
+  x86, irq: Use cached IOAPIC entry instead of reading from hardware
+  x86, irq: Kill unused alloc_irq_and_cfg_at()
+  x86, irq: Change functions only used in vector.c as static
+  x86, irq: Kill function apic_set_affinity()
+  x86, irq: Move check of cfg->move_in_progress into
+    send_cleanup_vector()
+  x86, irq: Move private data in struct irq_cfg into dedicated data
+    structure
+  x86, irq: Refine the way to calculate NR_IRQS
+  ACPI, irq, x86: Kill private function mp_register_gsi()/
+    mp_unregister_gsi()
+  x86, irq: Introduce mechanism to support different vector allocation
+    policies
+  x86, irq: Add kernel parameter vector_alloc to set CPU vector
+    allocation policy
+
+Thomas Gleixner (1):
+  x86, intel-mid: Delay initialization of APB timer
+
+ Documentation/kernel-parameters.txt                |    6 +
+ arch/x86/Kconfig                                   |    1 -
+ arch/x86/include/asm/hw_irq.h                      |   53 +-
+ arch/x86/include/asm/io_apic.h                     |   81 +-
+ arch/x86/include/asm/irq_remapping.h               |   36 -
+ arch/x86/include/asm/irq_vectors.h                 |   18 +-
+ arch/x86/include/asm/x86_init.h                    |   16 -
+ arch/x86/kernel/acpi/boot.c                        |   69 +-
+ arch/x86/kernel/apb_timer.c                        |    4 -
+ arch/x86/kernel/apic/io_apic.c                     | 1071 +++++++++-----------
+ arch/x86/kernel/apic/vector.c                      |  416 ++++----
+ arch/x86/kernel/devicetree.c                       |   37 +-
+ arch/x86/kernel/mpparse.c                          |    6 +-
+ arch/x86/kernel/x86_init.c                         |    6 -
+ arch/x86/pci/intel_mid_pci.c                       |    6 +-
+ .../platform/intel-mid/device_libs/platform_wdt.c  |    5 +-
+ arch/x86/platform/intel-mid/intel-mid.c            |   18 +-
+ arch/x86/platform/intel-mid/sfi.c                  |   30 +-
+ arch/x86/platform/sfi/sfi.c                        |    5 +-
+ arch/x86/platform/uv/uv_irq.c                      |    3 +-
+ drivers/iommu/amd_iommu.c                          |  153 +--
+ drivers/iommu/intel_irq_remapping.c                |  206 +---
+ drivers/iommu/irq_remapping.c                      |   84 --
+ drivers/iommu/irq_remapping.h                      |   16 -
+ 24 files changed, 876 insertions(+), 1470 deletions(-)
+
+-- 
+1.7.10.4
+
