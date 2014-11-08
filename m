@@ -1,267 +1,248 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:51546 "EHLO mga01.intel.com"
+Received: from hauke-m.de ([5.39.93.123]:54398 "EHLO hauke-m.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754262AbaKHSPb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 8 Nov 2014 13:15:31 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Joerg Roedel <joro@8bytes.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part3 v3 19/38] iommu/vt-d: Clean up unsued code
-Date: Sun,  9 Nov 2014 02:13:19 +0800
-Message-Id: <1415470418-10874-20-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+	id S1752407AbaKHV1C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 8 Nov 2014 16:27:02 -0500
+Message-ID: <545E8AA2.6050301@hauke-m.de>
+Date: Sat, 08 Nov 2014 22:26:58 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
+CC: linux-pci@vger.kernel.org, zajec5@gmail.com, florian@openwrt.org
+Subject: Re: [RFC] PCI: BCM5301X: add PCIe2 driver for BCM5301X SoCs
+References: <1415470392-28229-1-git-send-email-hauke@hauke-m.de> <1756974.RYWuW6FYtL@wuerfel>
+In-Reply-To: <1756974.RYWuW6FYtL@wuerfel>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have converted to hierarchy irqdomain, so clean up unused code.
+On 11/08/2014 08:47 PM, Arnd Bergmann wrote:
+> On Saturday 08 November 2014 19:13:12 Hauke Mehrtens wrote:
+> 
+>> diff --git a/drivers/pci/host/pci-host-bcm5301x.c b/drivers/pci/host/pci-host-bcm5301x.c
+>> new file mode 100644
+>> index 0000000..8b7ba62
+>> --- /dev/null
+>> +++ b/drivers/pci/host/pci-host-bcm5301x.c
+>> @@ -0,0 +1,483 @@
+>> +/*
+>> + * Northstar PCI-Express driver
+>> + * Only supports Root-Complex (RC) mode
+>> + *
+>> + * Notes:
+>> + * PCI Domains are being used to identify the PCIe port 1:1.
+>> + *
+>> + * Only MEM access is supported, PAX does not support IO.
+> 
+> What is PAX?
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel_irq_remapping.c |  187 +----------------------------------
- 1 file changed, 1 insertion(+), 186 deletions(-)
+This is the name of the PCIe controller I think, This was copied from
+the vendor driver, I hope Florian knows more details.
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index b0c8113e7a9b..0040d7899285 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -63,35 +63,6 @@ static struct irq_domain_ops intel_ir_domain_ops;
- 
- static int __init parse_ioapics_under_ir(void);
- 
--static struct irq_2_iommu *irq_2_iommu(unsigned int irq)
--{
--	struct irq_cfg *cfg = irq_cfg(irq);
--	return cfg ? &cfg->irq_2_iommu : NULL;
--}
--
--static int get_irte(int irq, struct irte *entry)
--{
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
--	unsigned long flags;
--	int index;
--
--	if (!entry || !irq_iommu)
--		return -1;
--
--	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
--
--	if (unlikely(!irq_iommu->iommu)) {
--		raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
--		return -1;
--	}
--
--	index = irq_iommu->irte_index + irq_iommu->sub_handle;
--	*entry = *(irq_iommu->iommu->ir_table->base + index);
--
--	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
--	return 0;
--}
--
- static int alloc_irte(struct intel_iommu *iommu, int irq,
- 		      struct irq_2_iommu *irq_iommu, u16 count)
- {
-@@ -229,29 +200,6 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
- 	return qi_flush_iec(iommu, index, irq_iommu->irte_mask);
- }
- 
--static int free_irte(int irq)
--{
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
--	unsigned long flags;
--	int rc;
--
--	if (!irq_iommu || irq_iommu->iommu == NULL)
--		return -1;
--
--	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
--
--	rc = clear_entries(irq_iommu);
--
--	irq_iommu->iommu = NULL;
--	irq_iommu->irte_index = 0;
--	irq_iommu->sub_handle = 0;
--	irq_iommu->irte_mask = 0;
--
--	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
--
--	return rc;
--}
--
- /*
-  * source validation type
-  */
-@@ -875,8 +823,7 @@ error:
- 	return -1;
- }
- 
--static void prepare_irte(struct irte *irte, int vector,
--			 unsigned int dest)
-+static void prepare_irte(struct irte *irte, int vector, unsigned int dest)
- {
- 	memset(irte, 0, sizeof(*irte));
- 
-@@ -896,135 +843,6 @@ static void prepare_irte(struct irte *irte, int vector,
- 	irte->redir_hint = 1;
- }
- 
--static int intel_setup_ioapic_entry(int irq,
--				    struct IO_APIC_route_entry *route_entry,
--				    unsigned int destination, int vector,
--				    struct io_apic_irq_attr *attr)
--{
--	int ioapic_id = mpc_ioapic_id(attr->ioapic);
--	struct intel_iommu *iommu;
--	struct IR_IO_APIC_route_entry *entry;
--	struct irte irte;
--	int index;
--
--	down_read(&dmar_global_lock);
--	iommu = map_ioapic_to_ir(ioapic_id);
--	if (!iommu) {
--		pr_warn("No mapping iommu for ioapic %d\n", ioapic_id);
--		index = -ENODEV;
--	} else {
--		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
--		if (index < 0) {
--			pr_warn("Failed to allocate IRTE for ioapic %d\n",
--				ioapic_id);
--			index = -ENOMEM;
--		}
--	}
--	up_read(&dmar_global_lock);
--	if (index < 0)
--		return index;
--
--	prepare_irte(&irte, vector, destination);
--
--	/* Set source-id of interrupt request */
--	set_ioapic_sid(&irte, ioapic_id);
--
--	modify_irte(irq_2_iommu(irq), &irte);
--
--	apic_printk(APIC_VERBOSE, KERN_DEBUG "IOAPIC[%d]: "
--		"Set IRTE entry (P:%d FPD:%d Dst_Mode:%d "
--		"Redir_hint:%d Trig_Mode:%d Dlvry_Mode:%X "
--		"Avail:%X Vector:%02X Dest:%08X "
--		"SID:%04X SQ:%X SVT:%X)\n",
--		attr->ioapic, irte.present, irte.fpd, irte.dst_mode,
--		irte.redir_hint, irte.trigger_mode, irte.dlvry_mode,
--		irte.avail, irte.vector, irte.dest_id,
--		irte.sid, irte.sq, irte.svt);
--
--	entry = (struct IR_IO_APIC_route_entry *)route_entry;
--	memset(entry, 0, sizeof(*entry));
--
--	entry->index2	= (index >> 15) & 0x1;
--	entry->zero	= 0;
--	entry->format	= 1;
--	entry->index	= (index & 0x7fff);
--	/*
--	 * IO-APIC RTE will be configured with virtual vector.
--	 * irq handler will do the explicit EOI to the io-apic.
--	 */
--	entry->vector	= attr->ioapic_pin;
--	entry->mask	= 0;			/* enable IRQ */
--	entry->trigger	= attr->trigger;
--	entry->polarity	= attr->polarity;
--
--	/* Mask level triggered irqs.
--	 * Use IRQ_DELAYED_DISABLE for edge triggered irqs.
--	 */
--	if (attr->trigger)
--		entry->mask = 1;
--
--	return 0;
--}
--
--/*
-- * Migrate the IO-APIC irq in the presence of intr-remapping.
-- *
-- * For both level and edge triggered, irq migration is a simple atomic
-- * update(of vector and cpu destination) of IRTE and flush the hardware cache.
-- *
-- * For level triggered, we eliminate the io-apic RTE modification (with the
-- * updated vector information), by using a virtual vector (io-apic pin number).
-- * Real vector that is used for interrupting cpu will be coming from
-- * the interrupt-remapping table entry.
-- *
-- * As the migration is a simple atomic update of IRTE, the same mechanism
-- * is used to migrate MSI irq's in the presence of interrupt-remapping.
-- */
--static int
--intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
--			  bool force)
--{
--	struct irq_cfg *cfg = irqd_cfg(data);
--	unsigned int dest, irq = data->irq;
--	struct irte irte;
--	int err;
--
--	if (get_irte(irq, &irte))
--		return -EBUSY;
--
--	err = assign_irq_vector(irq, cfg, mask);
--	if (err)
--		return err;
--
--	err = apic->cpu_mask_to_apicid_and(cfg->domain, mask, &dest);
--	if (err) {
--		if (assign_irq_vector(irq, cfg, data->affinity))
--			pr_err("Failed to recover vector for irq %d\n", irq);
--		return err;
--	}
--
--	irte.vector = cfg->vector;
--	irte.dest_id = IRTE_DEST(dest);
--
--	/*
--	 * Atomically updates the IRTE with the new destination, vector
--	 * and flushes the interrupt entry cache.
--	 */
--	modify_irte(irq_2_iommu(irq), &irte);
--
--	/*
--	 * After this point, all the interrupts will start arriving
--	 * at the new destination. So, time to cleanup the previous
--	 * vector allocation.
--	 */
--	if (cfg->move_in_progress)
--		send_cleanup_vector(cfg);
--
--	cpumask_copy(data->affinity, mask);
--
--	return 0;
--}
--
- static struct irq_domain *intel_get_ir_irq_domain(struct irq_alloc_info *info)
- {
- 	struct intel_iommu *iommu = NULL;
-@@ -1079,9 +897,6 @@ struct irq_remap_ops intel_irq_remap_ops = {
- 	.disable		= disable_irq_remapping,
- 	.reenable		= reenable_irq_remapping,
- 	.enable_faulting	= enable_drhd_fault_handling,
--	.setup_ioapic_entry	= intel_setup_ioapic_entry,
--	.set_affinity		= intel_ioapic_set_affinity,
--	.free_irq		= free_irte,
- 	.get_ir_irq_domain	= intel_get_ir_irq_domain,
- 	.get_irq_domain		= intel_get_irq_domain,
- };
--- 
-1.7.10.4
+>> +static int bcma_pcie2_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+>> +{
+>> +	struct pci_sys_data *sys = pdev->sysdata;
+>> +	struct bcma_device *bdev = sys->private_data;
+>> +
+>> +	/*
+>> +	 * Every PCIe controller has 5 IRQ number and the last one is
+>> +	 * triggered every time, use that one
+>> +	 */
+>> +	if (bdev && bdev->dev.of_node)
+>> +		return irq_of_parse_and_map(bdev->dev.of_node, 4);
+>> +
+>> +	return bdev->irq;
+>> +}
+> 
+> If you have an OF device node for the PCI host, you don't need this,
+> there should already be an interrupt-map property that correctly
+> maps this into the interrupt domain of the bcma bus, so you can use
+> the default of_irq_parse_and_map_pci function.
 
+So I just have to define a interrupt-map property for the device this
+driver gets registered for and then I can use the default implementation?
+
+>> +static u32 bcma_pcie2_cfg_base(struct bcma_device *bdev, int busno,
+>> +			       unsigned int devfn, int where)
+>> +{
+>> +	int slot = PCI_SLOT(devfn);
+>> +	int fn = PCI_FUNC(devfn);
+>> +	u32 addr_reg;
+>> +
+>> +	if (busno == 0) {
+>> +		if (slot >= 1)
+>> +			return 0;
+>> +		bcma_write32(bdev, BCMA_CORE_PCIE2_CONFIGINDADDR,
+>> +			     where & 0xffc);
+>> +		return BCMA_CORE_PCIE2_CONFIGINDDATA;
+>> +	}
+>> +	if (fn > 1)
+>> +		return 0;
+>> +	addr_reg = (busno & 0xff) << 20 | (slot << 15) | (fn << 12) |
+>> +		   (where & 0xffc) | (1 & 0x3);
+>> +
+>> +	bcma_write32(bdev, BCMA_CORE_PCIE2_CFG_ADDR, addr_reg);
+>> +	return BCMA_CORE_PCIE2_CFG_DATA;
+>> +}
+> 
+> The normal buses seem to be ECAM compliant, I wonder if we can have the
+> code to access those shared between this driver, pci-host-generic.c and
+> the ACPI PCI implementation.
+
+There are just a few lines we can share I do not think that would be
+worth the effort.
+
+> The root bus is unfortunately not compliant, which for some reason
+> is common on a lot of controllers.
+> 
+>> +static u32 bcma_pcie2_read_config(struct bcma_device *bdev, int busno,
+>> +				  unsigned int devfn, int where, int size)
+>> +{
+>> +	u32 base;
+>> +	u32 data_reg;
+>> +	u32 mask;
+>> +	int shift;
+>> +
+>> +	base = bcma_pcie2_cfg_base(bdev, busno, devfn, where);
+>> +
+>> +	if (!base)
+>> +		return ~0UL;
+>> +
+>> +	data_reg = bcma_read32(bdev, base);
+>> +
+>> +	/* NS: CLASS field is R/O, and set to wrong 0x200 value */
+>> +	if (busno == 0 && devfn == 0) {
+>> +		/*
+>> +		 * RC's class is 0x0280, but Linux PCI driver needs 0x604
+>> +		 * for a PCIe bridge. So we must fixup the class code
+>> +		 * to 0x604 here.
+>> +		 */
+>> +		if ((where & 0xffc) == PCI_CLASS_REVISION) {
+>> +			data_reg &= 0xff;
+>> +			data_reg |= 0x604 << 16;
+>> +		}
+>> +	}
+>> +	/* HEADER_TYPE=00 indicates the port in EP mode */
+>> +
+>> +	if (size == 4)
+>> +		return data_reg;
+>> +
+>> +	mask = (1 << (size * 8)) - 1;
+>> +	shift = (where % 4) * 8;
+>> +	return (data_reg >> shift) & mask;
+>> +}
+> 
+> Interesting. 0x0280 is PCI_CLASS_NETWORK_OTHER, I guess this is the
+> same PCI core that is used on broadcom network adapters in endpoint
+> mode, and when someone tweaked the core to do root complex mode,
+> they forgot to fix this.
+
+They did this with the old PCIe controller used on MIPS based SoCs,
+there it was even the same core and one could only identify if it is
+running in root complex mode with some strange register read and
+checking the exception. In this generation they agve the core a
+different number than the PCI client core used on wifi cards.
+
+> Which code depends on this? I think I've seem something similar in
+> other host drivers, so maybe we can change the core code instead.
+
+It is used in many places in the core PCI code, I think it is better to
+change this to the correct value, but the pci-tegra.c driver does it in
+a better way, by adding a DECLARE_PCI_FIXUP_EARLY only changing the
+struct data, I will use that version.
+
+>> +
+>> +static u8 bcma_pcie2_read_config8(struct bcma_device *bdev, int busno,
+>> +				  unsigned int devfn, int where)
+>> +{
+>> +	return bcma_pcie2_read_config(bdev, busno, devfn, where, 1);
+>> +}
+>> +
+>> +static u16 bcma_pcie2_read_config16(struct bcma_device *bdev, int busno,
+>> +				    unsigned int devfn, int where)
+>> +{
+>> +	return bcma_pcie2_read_config(bdev, busno, devfn, where, 2);
+>> +}
+>> +
+>> +static u32 bcma_pcie2_read_config32(struct bcma_device *bdev, int busno,
+>> +				    unsigned int devfn, int where)
+>> +{
+>> +	return bcma_pcie2_read_config(bdev, busno, devfn, where, 4);
+>> +}
+> 
+> These all seem to be relatively pointless, I'd just open-code the
+> bcma_pcie2_read_config call in the calling function.
+
+I will inline them.
+
+>> +
+>> +/*
+>> + * Initializte the PCIe controller
+>> + */
+>> +static void bcma_pcie2_hw_init(struct bcma_device *bdev)
+>> +{
+>> +	u32 tmp32;
+>> +	u16 tmp16;
+>> +
+>> +	/* Change MPS and MRRS to 512 */
+>> +	tmp16 = bcma_pcie2_read_config16(bdev, 0, 0, 0x4d4);
+>> +	tmp16 &= ~7;
+>> +	tmp16 |= 2;
+>> +	bcma_pcie2_write_config16(bdev, 0, 0, 0x4d4, tmp16);
+>> +
+>> +	tmp32 = bcma_pcie2_read_config32(bdev, 0, 0, 0xb4);
+>> +	tmp32 &= ~((7 << 12) | (7 << 5));
+>> +	tmp32 |= (2 << 12) | (2 << 5);
+>> +	bcma_pcie2_write_config32(bdev, 0, 0, 0xb4, tmp32);
+>> +
+>> +	/*
+>> +	 * Turn-on Root-Complex (RC) mode, from reset default of EP
+>> +	 * The mode is set by straps, can be overwritten via DMU
+>> +	 * register <cru_straps_control> bit 5, "1" means RC
+>> +	 */
+>> +
+>> +	/* Send a downstream reset */
+>> +	bcma_write32(bdev, BCMA_CORE_PCIE2_CLK_CONTROL,
+>> +		     PCIE2_CLKC_RST_OE | PCIE2_CLKC_RST);
+>> +	udelay(250);
+>> +	bcma_write32(bdev, BCMA_CORE_PCIE2_CLK_CONTROL, PCIE2_CLKC_RST_OE);
+>> +	mdelay(250);
+>> +
+>> +	/* TBD: take care of PM, check we're on */
+>> +}
+> 
+> Can you turn the two delays into msleep()? Wasting 250ms of CPU time is
+> really nasty.
+
+Yes I will do that.
+
+>> +	/*
+>> +	 * Inbound address translation setup
+>> +	 * Northstar only maps up to 128 MiB inbound, DRAM could be up to 1 GiB.
+>> +	 *
+>> +	 * For now allow access to entire DRAM, assuming it is less than 128MiB,
+>> +	 * otherwise DMA bouncing mechanism may be required.
+>> +	 * Also consider DMA mask to limit DMA physical address
+>> +	 */
+>> +	/* 64-bit LE regs, write low word, high is 0 at reset */
+>> +	bcma_write32(bdev, BCMA_CORE_PCIE2_FUNC0_IMAP1, PHYS_OFFSET | 0x1);
+>> +	bcma_write32(bdev, BCMA_CORE_PCIE2_IARR1_LOWER,
+>> +			   PHYS_OFFSET | ((SZ_128M >> 20) & 0xff));
+> 
+> Maybe I should bully you into enabling swiotlb on arm32 ;-)
+
+This sounds complicated, I hope I can avoid it. ;-)
+
+> Do you have any machines with more than 128MB of RAM that use this?
+
+Yes, the device I use mostly has 256 MB ram, but I have only activated
+the first 128MB because the last time I tried activating the rest caused
+some problems and I still had to fix some other stuff. ;-)
+
+> According to wikidevi.com [http://tinyurl.com/pdtw2h4], most machines
+> with bcm4708/81/9 have 256MB or 512MB. I think it shouldn't be too hard
+> to get swiotlb to work on arm32, given that we already use it on arm64.
+
+Hauke
+
+Hauke
