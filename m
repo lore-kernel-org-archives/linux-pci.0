@@ -1,46 +1,90 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Cc: linaro-acpi@lists.linaro.org, catalin.marinas@arm.com,
-	will.deacon@arm.com, bhelgaas@google.com, Liviu.Dudau@arm.com,
-	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-	rjw@rjwysocki.net, linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [Linaro-acpi] [RFC PATCH 3/4] arm64, acpi, pci: Add arch specific functions for mmconfig driver.
-Date: Fri, 07 Nov 2014 15:54:09 +0100
-Message-ID: <2483899.fnsktEmYFO@wuerfel>
-In-Reply-To: <545CD9A4.3080900@linaro.org>
-References: <1415366876-30811-1-git-send-email-tomasz.nowicki@linaro.org> <16660879.6KxQndPqBW@wuerfel> <545CD9A4.3080900@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:46363 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754097AbaKHSQC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 8 Nov 2014 13:16:02 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
+Subject: [Patch Part3 v3 24/38] iommu/amd: Move struct irq_2_irte into amd_iommu.c
+Date: Sun,  9 Nov 2014 02:13:24 +0800
+Message-Id: <1415470418-10874-25-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 07 November 2014 15:39:32 Tomasz Nowicki wrote:
-> On 07.11.2014 15:12, Arnd Bergmann wrote:
-> > On Friday 07 November 2014 14:27:55 Tomasz Nowicki wrote:
-> >> These calls allow to map/unmap PCI config space ranges (which are specified in
-> >> MMCFG ACPI table).
-> >>
-> >> Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-> >>
-> >
-> > Nothing in this patch looks arm64 specific, and most of it looks like a
-> > copy of the x86 code.
-> 
-> Yes, most of the logic was borrowed from mmconfig_64.c file, 
-> mmconfig_32.c looks differently, though. It is not simple to merge them 
-> both. IMO, we have two choices:
-> 1. Refactor and move mmconfig_64.c out of x86 to e.g. drivers/acpi/ and 
-> let it be default.
-> 2. Stay with solution presented in this patch.
-> 3. Thoughts ?
+Now only amd_iommu.c access irq_2_irte, so move it from hw_irq.h into
+amd_iommu.c.
 
-If the code is generic, it should be shared with as many architectures as
-possible. Moving the x86-64 implementation to drivers/acpi/ would immediately
-let you share it with two out of the four architectures (x86-64 and arm64,
-but not x86-32 and ia64) as well as any potential other architectures that
-might implement ACPI in the future.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/hw_irq.h |   13 -------------
+ drivers/iommu/amd_iommu.c     |    5 +++++
+ 2 files changed, 5 insertions(+), 13 deletions(-)
 
-	Arnd
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 8dd38c205719..a086893fa710 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -94,14 +94,6 @@ extern void trace_call_function_single_interrupt(void);
+ #define trace_kvm_posted_intr_ipi kvm_posted_intr_ipi
+ #endif /* CONFIG_TRACING */
+ 
+-#ifdef CONFIG_IRQ_REMAP
+-/* AMD specific interrupt remapping information */
+-struct irq_2_irte {
+-	u16 devid; /* Device ID for IRTE table */
+-	u16 index; /* Index into IRTE table*/
+-};
+-#endif	/* CONFIG_IRQ_REMAP */
+-
+ struct irq_domain;
+ 
+ #ifdef	CONFIG_X86_LOCAL_APIC
+@@ -182,11 +174,6 @@ struct irq_cfg {
+ 	unsigned int		dest_apicid;
+ 	u8			vector;
+ 	u8			move_in_progress : 1;
+-#ifdef CONFIG_IRQ_REMAP
+-	union {
+-		struct irq_2_irte  irq_2_irte;
+-	};
+-#endif
+ 	union {
+ #ifdef CONFIG_X86_IO_APIC
+ 		struct {
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index 2f76656a88ce..236cc7ee0b85 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -3855,6 +3855,11 @@ union irte {
+ 	} fields;
+ };
+ 
++struct irq_2_irte {
++	u16 devid; /* Device ID for IRTE table */
++	u16 index; /* Index into IRTE table*/
++};
++
+ struct amd_ir_data {
+ 	struct irq_2_irte			irq_2_irte;
+ 	union irte				irte_entry;
+-- 
+1.7.10.4
+
