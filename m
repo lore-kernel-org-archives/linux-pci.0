@@ -1,134 +1,573 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f169.google.com ([209.85.216.169]:64902 "EHLO
-	mail-qc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750998AbaKDRev (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Nov 2014 12:34:51 -0500
-Received: by mail-qc0-f169.google.com with SMTP id i17so11411916qcy.28
-        for <linux-pci@vger.kernel.org>; Tue, 04 Nov 2014 09:34:50 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <BF3270C86E8B1349A26C34E4EC1C44CB3E862DC6@CMEXMB1.ad.emulex.com>
-References: <1f6d7b6c-7189-4fe3-926b-42609724cab9@CMEXHTCAS2.ad.emulex.com>
- <20141023154054.GA7137@google.com> <BF3270C86E8B1349A26C34E4EC1C44CB3E860095@CMEXMB1.ad.emulex.com>
- <CAErSpo7_9xxtBmHOCgxsHeVLbKUeMVhLF6Q9OyFkz11EZbtJCA@mail.gmail.com> <BF3270C86E8B1349A26C34E4EC1C44CB3E862DC6@CMEXMB1.ad.emulex.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 4 Nov 2014 10:34:30 -0700
-Message-ID: <CAErSpo7KKka6-nHWnVbqVW3hx-E=4x6cEjeEGEAWz32za6xCGQ@mail.gmail.com>
-Subject: Re: [PATCH v1] pci: Limit VPD length of Emulex adapters to the actual
- length supported.
-To: Venkat Duvvuru <VenkatKumar.Duvvuru@emulex.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga14.intel.com ([192.55.52.115]:20323 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754077AbaKHSSY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 8 Nov 2014 13:18:24 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part3 v3 34/38] x86, irq: Move private data in struct irq_cfg into dedicated data structure
+Date: Sun,  9 Nov 2014 02:13:34 +0800
+Message-Id: <1415470418-10874-35-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 3, 2014 at 5:18 AM, Venkat Duvvuru
-<VenkatKumar.Duvvuru@emulex.com> wrote:
->
->
->> -----Original Message-----
->> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
->> Sent: Thursday, October 30, 2014 9:03 PM
->> To: Venkat Duvvuru
->> Cc: linux-pci@vger.kernel.org
->> Subject: Re: [PATCH v1] pci: Limit VPD length of Emulex adapters to the actual
->> length supported.
->>
->> On Thu, Oct 30, 2014 at 7:38 AM, Venkat Duvvuru
->> <VenkatKumar.Duvvuru@emulex.com> wrote:
->> > Hi Bjorn,
->> > Please find my comments inline.
->> >
->> >> -----Original Message-----
->> >> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
->> >> Sent: Thursday, October 23, 2014 9:11 PM
->> >> To: Venkat Duvvuru
->> >> Cc: linux-pci@vger.kernel.org
->> >> Subject: Re: [PATCH v1] pci: Limit VPD length of Emulex adapters to the
->> actual
->> >> length supported.
->> >>
->> >> On Thu, Oct 16, 2014 at 02:16:42PM +0530, Venkat Duvvuru wrote:
->> >> > By default pci utilities/subsystem tries to read 32k bytes of vpd data no
->> >> matter
->> >> > what the device supports. This can lead to unexpected behavior depending
->> >> > on how each of the devices handle this condition. This patch fixes the
->> >> > problem for Emulex adapter family.
->> >> >
->> >> > v1:
->> >> > Addressed Bjorn's comments
->> >> > 1. Removed Vendor id and Device id macros from pci_ids.h and
->> >> >    using the Vendor and Device id values directly in
->> >> DECLARE_PCI_FIXUP_FINAL() lines.
->> >> >
->> >> > Signed-off-by: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.com>
->> >>
->> >> Hi Venkat,
->> >>
->> >> I'll merge this (in some form), but I'd like the changelog to include more
->> >> details about what unexpected behavior occurs when reading too much
->> data.
->> >> This is to help people who trip over this problem find this patch as the
->> >> solution.
->> > [Venkat] "Timeout" happens on excessive VPD reads and  Kernel keeps
->> logging the following message
->> > "vpd r/w failed.  This is likely a firmware bug on this device.  Contact the card
->> vendor for a firmware update"
->> >>
->> >> In my opinion, this is a hardware defect, and I'd like to know what your
->> >> hardware folks think, because I don't want to have to merge similar quirks
->> >> for future devices.  Here's my reasoning:
->> >>
->> >> If a device doesn't implement the entire 32K of possible VPD space, I would
->> >> expect the device to just return zeros or 0xff, or maybe alias the space by
->> >> dropping the high-order unused address bits.
->> > [Venkat] We do return 0xffs beyond the supported size but excessive VPD
->> reads are causing timeouts when the adapter is handling some high priority
->> work.
->>
->> That makes it sounds like this is really an issue with how the adapter
->> firmware manages the workload, not something strictly related to the
->> size of implemented VPD space. In other words, it sounds like it's
->> possible for the timeout to occur even when reading the space that
->> *is* implemented.
-> In this case when the host reads 32k space, the adapter gets around 8K interrupts and sometimes gets overwhelmed with the interrupt storm. This could cause the adapter to stop functioning properly.
-> Limiting the VPD read to 1K causes only 256 interrupts (on the adapter) and the problem never seems to occur.
-> This has been the main motivation behind my patch.
-> I do agree that the timeout could still occur even when reading the 1K implemented space, but I feel it's highly improbable.
+Several fields in struct irq_cfg are private to vector.c, so move it
+into dedicated data structure. This helps to hide implementation
+details.
 
-OK.  I would guess that something like
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/hw_irq.h |    3 -
+ arch/x86/kernel/apic/vector.c |  221 ++++++++++++++++++++++-------------------
+ 2 files changed, 119 insertions(+), 105 deletions(-)
 
-  while /bin/true; do
-    cat /sys/devices/pci0000:00/0000:00:00.0/vpd
-  done
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index c7a616c8f9a1..236aea888847 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -169,11 +169,8 @@ struct irq_alloc_info {
+ #define	X86_IRQ_ALLOC_CONTIGOUS_VECTORS	0x1
+ 
+ struct irq_cfg {
+-	cpumask_var_t		domain;
+-	cpumask_var_t		old_domain;
+ 	unsigned int		dest_apicid;
+ 	u8			vector;
+-	u8			move_in_progress : 1;
+ };
+ 
+ extern struct irq_domain *x86_vector_domain;
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 76c82170f04f..c6c954bb2947 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -21,11 +21,18 @@
+ #include <asm/desc.h>
+ #include <asm/irq_remapping.h>
+ 
++struct apic_chip_data {
++	struct irq_cfg		cfg;
++	cpumask_var_t		domain;
++	cpumask_var_t		old_domain;
++	u8			move_in_progress : 1;
++};
++
+ struct irq_domain *x86_vector_domain;
+ static DEFINE_RAW_SPINLOCK(vector_lock);
+ static struct irq_chip vector_chip;
+ #ifdef	CONFIG_X86_IO_APIC
+-static struct irq_cfg *legacy_irq_cfgs[NR_IRQS_LEGACY];
++static struct apic_chip_data *legacy_irq_data[NR_IRQS_LEGACY];
+ #endif
+ 
+ void lock_vector_lock(void)
+@@ -41,12 +48,7 @@ void unlock_vector_lock(void)
+ 	raw_spin_unlock(&vector_lock);
+ }
+ 
+-struct irq_cfg *irq_cfg(unsigned int irq)
+-{
+-	return irqd_cfg(irq_get_irq_data(irq));
+-}
+-
+-struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
++static struct apic_chip_data *apic_chip_data(struct irq_data *irq_data)
+ {
+ 	if (!irq_data)
+ 		return NULL;
+@@ -57,36 +59,48 @@ struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
+ 	return irq_data->chip_data;
+ }
+ 
+-static struct irq_cfg *alloc_irq_cfg(int node)
++struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
++{
++	struct apic_chip_data *data = apic_chip_data(irq_data);
++
++	return data ? &data->cfg : NULL;
++}
++
++struct irq_cfg *irq_cfg(unsigned int irq)
+ {
+-	struct irq_cfg *cfg;
++	return irqd_cfg(irq_get_irq_data(irq));
++}
+ 
+-	cfg = kzalloc_node(sizeof(*cfg), GFP_KERNEL, node);
+-	if (!cfg)
++static struct apic_chip_data *alloc_apic_chip_data(int node)
++{
++	struct apic_chip_data *data;
++
++	data = kzalloc_node(sizeof(*data), GFP_KERNEL, node);
++	if (!data)
+ 		return NULL;
+-	if (!zalloc_cpumask_var_node(&cfg->domain, GFP_KERNEL, node))
+-		goto out_cfg;
+-	if (!zalloc_cpumask_var_node(&cfg->old_domain, GFP_KERNEL, node))
++	if (!zalloc_cpumask_var_node(&data->domain, GFP_KERNEL, node))
++		goto out_data;
++	if (!zalloc_cpumask_var_node(&data->old_domain, GFP_KERNEL, node))
+ 		goto out_domain;
+-	return cfg;
++	return data;
+ out_domain:
+-	free_cpumask_var(cfg->domain);
+-out_cfg:
+-	kfree(cfg);
++	free_cpumask_var(data->domain);
++out_data:
++	kfree(data);
+ 	return NULL;
+ }
+ 
+-static void free_irq_cfg(struct irq_cfg *cfg)
++static void free_apic_chip_data(struct apic_chip_data *data)
+ {
+-	if (cfg) {
+-		free_cpumask_var(cfg->domain);
+-		free_cpumask_var(cfg->old_domain);
+-		kfree(cfg);
++	if (data) {
++		free_cpumask_var(data->domain);
++		free_cpumask_var(data->old_domain);
++		kfree(data);
+ 	}
+ }
+ 
+-static int
+-__assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
++static int __assign_irq_vector(int irq, struct apic_chip_data *d,
++			       const struct cpumask *mask)
+ {
+ 	/*
+ 	 * NOTE! The local APIC isn't very good at handling
+@@ -104,7 +118,7 @@ __assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
+ 	int cpu, err;
+ 	cpumask_var_t tmp_mask;
+ 
+-	if (cfg->move_in_progress)
++	if (d->move_in_progress)
+ 		return -EBUSY;
+ 
+ 	if (!alloc_cpumask_var(&tmp_mask, GFP_ATOMIC))
+@@ -112,26 +126,26 @@ __assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
+ 
+ 	/* Only try and allocate irqs on cpus that are present */
+ 	err = -ENOSPC;
+-	cpumask_clear(cfg->old_domain);
++	cpumask_clear(d->old_domain);
+ 	cpu = cpumask_first_and(mask, cpu_online_mask);
+ 	while (cpu < nr_cpu_ids) {
+ 		int new_cpu, vector, offset;
+ 
+ 		apic->vector_allocation_domain(cpu, tmp_mask, mask);
+ 
+-		if (cpumask_subset(tmp_mask, cfg->domain)) {
++		if (cpumask_subset(tmp_mask, d->domain)) {
+ 			err = 0;
+-			if (cpumask_equal(tmp_mask, cfg->domain))
++			if (cpumask_equal(tmp_mask, d->domain))
+ 				break;
+ 			/*
+ 			 * New cpumask using the vector is a proper subset of
+ 			 * the current in use mask. So cleanup the vector
+ 			 * allocation for the members that are not used anymore.
+ 			 */
+-			cpumask_andnot(cfg->old_domain, cfg->domain, tmp_mask);
+-			cfg->move_in_progress =
+-			   cpumask_intersects(cfg->old_domain, cpu_online_mask);
+-			cpumask_and(cfg->domain, cfg->domain, tmp_mask);
++			cpumask_andnot(d->old_domain, d->domain, tmp_mask);
++			d->move_in_progress =
++			   cpumask_intersects(d->old_domain, cpu_online_mask);
++			cpumask_and(d->domain, d->domain, tmp_mask);
+ 			break;
+ 		}
+ 
+@@ -145,8 +159,8 @@ next:
+ 		}
+ 
+ 		if (unlikely(current_vector == vector)) {
+-			cpumask_or(cfg->old_domain, cfg->old_domain, tmp_mask);
+-			cpumask_andnot(tmp_mask, mask, cfg->old_domain);
++			cpumask_or(d->old_domain, d->old_domain, tmp_mask);
++			cpumask_andnot(tmp_mask, mask, d->old_domain);
+ 			cpu = cpumask_first_and(tmp_mask, cpu_online_mask);
+ 			continue;
+ 		}
+@@ -162,15 +176,15 @@ next:
+ 		/* Found one! */
+ 		current_vector = vector;
+ 		current_offset = offset;
+-		if (cfg->vector) {
+-			cpumask_copy(cfg->old_domain, cfg->domain);
+-			cfg->move_in_progress =
+-			   cpumask_intersects(cfg->old_domain, cpu_online_mask);
++		if (d->cfg.vector) {
++			cpumask_copy(d->old_domain, d->domain);
++			d->move_in_progress =
++			   cpumask_intersects(d->old_domain, cpu_online_mask);
+ 		}
+ 		for_each_cpu_and(new_cpu, tmp_mask, cpu_online_mask)
+ 			per_cpu(vector_irq, new_cpu)[vector] = irq;
+-		cfg->vector = vector;
+-		cpumask_copy(cfg->domain, tmp_mask);
++		d->cfg.vector = vector;
++		cpumask_copy(d->domain, tmp_mask);
+ 		err = 0;
+ 		break;
+ 	}
+@@ -178,46 +192,46 @@ next:
+ 
+ 	if (!err) {
+ 		/* cache destination APIC IDs into cfg->dest_apicid */
+-		err = apic->cpu_mask_to_apicid_and(mask, cfg->domain,
+-						   &cfg->dest_apicid);
++		err = apic->cpu_mask_to_apicid_and(mask, d->domain,
++						   &d->cfg.dest_apicid);
+ 	}
+ 
+ 	return err;
+ }
+ 
+-static int assign_irq_vector(int irq, struct irq_cfg *cfg,
++static int assign_irq_vector(int irq, struct apic_chip_data *data,
+ 			     const struct cpumask *mask)
+ {
+ 	int err;
+ 	unsigned long flags;
+ 
+ 	raw_spin_lock_irqsave(&vector_lock, flags);
+-	err = __assign_irq_vector(irq, cfg, mask);
++	err = __assign_irq_vector(irq, data, mask);
+ 	raw_spin_unlock_irqrestore(&vector_lock, flags);
+ 	return err;
+ }
+ 
+-static void clear_irq_vector(int irq, struct irq_cfg *cfg)
++static void clear_irq_vector(int irq, struct apic_chip_data *data)
+ {
+ 	int cpu, vector;
+ 	unsigned long flags;
+ 
+ 	raw_spin_lock_irqsave(&vector_lock, flags);
+-	BUG_ON(!cfg->vector);
++	BUG_ON(!data->cfg.vector);
+ 
+-	vector = cfg->vector;
+-	for_each_cpu_and(cpu, cfg->domain, cpu_online_mask)
++	vector = data->cfg.vector;
++	for_each_cpu_and(cpu, data->domain, cpu_online_mask)
+ 		per_cpu(vector_irq, cpu)[vector] = VECTOR_UNDEFINED;
+ 
+-	cfg->vector = 0;
+-	cpumask_clear(cfg->domain);
++	data->cfg.vector = 0;
++	cpumask_clear(data->domain);
+ 
+-	if (likely(!cfg->move_in_progress)) {
++	if (likely(!data->move_in_progress)) {
+ 		raw_spin_unlock_irqrestore(&vector_lock, flags);
+ 		return;
+ 	}
+ 
+-	for_each_cpu_and(cpu, cfg->old_domain, cpu_online_mask) {
++	for_each_cpu_and(cpu, data->old_domain, cpu_online_mask) {
+ 		for (vector = FIRST_EXTERNAL_VECTOR; vector < NR_VECTORS;
+ 		     vector++) {
+ 			if (per_cpu(vector_irq, cpu)[vector] != irq)
+@@ -226,7 +240,7 @@ static void clear_irq_vector(int irq, struct irq_cfg *cfg)
+ 			break;
+ 		}
+ 	}
+-	cfg->move_in_progress = 0;
++	data->move_in_progress = 0;
+ 	raw_spin_unlock_irqrestore(&vector_lock, flags);
+ }
+ 
+@@ -261,10 +275,10 @@ static void x86_vector_free_irqs(struct irq_domain *domain,
+ 		irq_data = irq_domain_get_irq_data(x86_vector_domain, virq + i);
+ 		if (irq_data && irq_data->chip_data) {
+ 			clear_irq_vector(virq + i, irq_data->chip_data);
+-			free_irq_cfg(irq_data->chip_data);
++			free_apic_chip_data(irq_data->chip_data);
+ #ifdef	CONFIG_X86_IO_APIC
+ 			if (virq + i < nr_legacy_irqs())
+-				legacy_irq_cfgs[virq + i] = NULL;
++				legacy_irq_data[virq + i] = NULL;
+ #endif
+ 			irq_domain_reset_irq_data(irq_data);
+ 		}
+@@ -275,7 +289,7 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
+ 				 unsigned int nr_irqs, void *arg)
+ {
+ 	int i, err;
+-	struct irq_cfg *cfg;
++	struct apic_chip_data *data;
+ 	struct irq_data *irq_data;
+ 	const struct cpumask *mask;
+ 	struct irq_alloc_info *info = arg;
+@@ -292,20 +306,20 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
+ 		irq_data = irq_domain_get_irq_data(domain, virq + i);
+ 		BUG_ON(!irq_data);
+ #ifdef	CONFIG_X86_IO_APIC
+-		if (virq + i < nr_legacy_irqs() && legacy_irq_cfgs[virq + i])
+-			cfg = legacy_irq_cfgs[virq + i];
++		if (virq + i < nr_legacy_irqs() && legacy_irq_data[virq + i])
++			data = legacy_irq_data[virq + i];
+ 		else
+ #endif
+-			cfg = alloc_irq_cfg(irq_data->node);
+-		if (!cfg) {
++			data = alloc_apic_chip_data(irq_data->node);
++		if (!data) {
+ 			err = -ENOMEM;
+ 			goto error;
+ 		}
+ 
+ 		irq_data->chip = &vector_chip;
+-		irq_data->chip_data = cfg;
++		irq_data->chip_data = data;
+ 		irq_data->hwirq = virq + i;
+-		err = assign_irq_vector(virq, cfg, mask);
++		err = assign_irq_vector(virq, data, mask);
+ 		if (err)
+ 			goto error;
+ 	}
+@@ -349,22 +363,22 @@ int __init arch_probe_nr_irqs(void)
+ static void init_legacy_irqs(void)
+ {
+ 	int i, node = cpu_to_node(0);
+-	struct irq_cfg *cfg;
++	struct apic_chip_data *data;
+ 
+ 	/*
+ 	 * For legacy IRQ's, start with assigning irq0 to irq15 to
+ 	 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
+ 	 */
+ 	for (i = 0; i < nr_legacy_irqs(); i++) {
+-		cfg = legacy_irq_cfgs[i] = alloc_irq_cfg(node);
+-		BUG_ON(!cfg);
++		data = legacy_irq_data[i] = alloc_apic_chip_data(node);
++		BUG_ON(!data);
+ 		/*
+ 		 * For legacy IRQ's, start with assigning irq0 to irq15 to
+ 		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
+ 		 */
+-		cfg->vector = IRQ0_VECTOR + i;
+-		cpumask_setall(cfg->domain);
+-		irq_set_chip_data(i, cfg);
++		data->cfg.vector = IRQ0_VECTOR + i;
++		cpumask_setall(data->domain);
++		irq_set_chip_data(i, data);
+ 	}
+ }
+ #else
+@@ -390,7 +404,7 @@ static void __setup_vector_irq(int cpu)
+ {
+ 	/* Initialize vector_irq on a new cpu */
+ 	int irq, vector;
+-	struct irq_cfg *cfg;
++	struct apic_chip_data *data;
+ 
+ 	/*
+ 	 * vector_lock will make sure that we don't run into irq vector
+@@ -400,13 +414,13 @@ static void __setup_vector_irq(int cpu)
+ 	raw_spin_lock(&vector_lock);
+ 	/* Mark the inuse vectors */
+ 	for_each_active_irq(irq) {
+-		cfg = irq_cfg(irq);
+-		if (!cfg)
++		data = apic_chip_data(irq_get_irq_data(irq));
++		if (!data)
+ 			continue;
+ 
+-		if (!cpumask_test_cpu(cpu, cfg->domain))
++		if (!cpumask_test_cpu(cpu, data->domain))
+ 			continue;
+-		vector = cfg->vector;
++		vector = data->cfg.vector;
+ 		per_cpu(vector_irq, cpu)[vector] = irq;
+ 	}
+ 	/* Mark the free vectors */
+@@ -415,8 +429,8 @@ static void __setup_vector_irq(int cpu)
+ 		if (irq <= VECTOR_UNDEFINED)
+ 			continue;
+ 
+-		cfg = irq_cfg(irq);
+-		if (!cpumask_test_cpu(cpu, cfg->domain))
++		data = apic_chip_data(irq_get_irq_data(irq));
++		if (!cpumask_test_cpu(cpu, data->domain))
+ 			per_cpu(vector_irq, cpu)[vector] = VECTOR_UNDEFINED;
+ 	}
+ 	raw_spin_unlock(&vector_lock);
+@@ -442,15 +456,15 @@ void setup_vector_irq(int cpu)
+ 	__setup_vector_irq(cpu);
+ }
+ 
+-static int apic_retrigger_irq(struct irq_data *data)
++static int apic_retrigger_irq(struct irq_data *irq_data)
+ {
+-	struct irq_cfg *cfg = irqd_cfg(data);
++	struct apic_chip_data *data = apic_chip_data(irq_data);
+ 	unsigned long flags;
+ 	int cpu;
+ 
+ 	raw_spin_lock_irqsave(&vector_lock, flags);
+-	cpu = cpumask_first_and(cfg->domain, cpu_online_mask);
+-	apic->send_IPI_mask(cpumask_of(cpu), cfg->vector);
++	cpu = cpumask_first_and(data->domain, cpu_online_mask);
++	apic->send_IPI_mask(cpumask_of(cpu), data->cfg.vector);
+ 	raw_spin_unlock_irqrestore(&vector_lock, flags);
+ 
+ 	return 1;
+@@ -468,7 +482,7 @@ static int apic_set_affinity(struct irq_data *irq_data,
+ {
+ 	int err;
+ 	int irq = irq_data->irq;
+-	struct irq_cfg *cfg = irq_data->chip_data;
++	struct apic_chip_data *data = irq_data->chip_data;
+ 
+ 	if (!config_enabled(CONFIG_SMP))
+ 		return -EPERM;
+@@ -476,11 +490,11 @@ static int apic_set_affinity(struct irq_data *irq_data,
+ 	if (!cpumask_intersects(dest, cpu_online_mask))
+ 		return -EINVAL;
+ 
+-	err = assign_irq_vector(irq, cfg, dest);
++	err = assign_irq_vector(irq, data, dest);
+ 	if (err) {
+ 		struct irq_data *top = irq_get_irq_data(irq);
+ 
+-		if (assign_irq_vector(irq, cfg, top->affinity))
++		if (assign_irq_vector(irq, data, top->affinity))
+ 			pr_err("Failed to recover vector for irq %d\n", irq);
+ 		return err;
+ 	}
+@@ -495,28 +509,31 @@ static struct irq_chip vector_chip = {
+ };
+ 
+ #ifdef CONFIG_SMP
+-static void __send_cleanup_vector(struct irq_cfg *cfg)
++static void __send_cleanup_vector(struct apic_chip_data *data)
+ {
+ 	cpumask_var_t cleanup_mask;
+ 
+ 	if (unlikely(!alloc_cpumask_var(&cleanup_mask, GFP_ATOMIC))) {
+ 		unsigned int i;
+ 
+-		for_each_cpu_and(i, cfg->old_domain, cpu_online_mask)
++		for_each_cpu_and(i, data->old_domain, cpu_online_mask)
+ 			apic->send_IPI_mask(cpumask_of(i),
+ 					    IRQ_MOVE_CLEANUP_VECTOR);
+ 	} else {
+-		cpumask_and(cleanup_mask, cfg->old_domain, cpu_online_mask);
++		cpumask_and(cleanup_mask, data->old_domain, cpu_online_mask);
+ 		apic->send_IPI_mask(cleanup_mask, IRQ_MOVE_CLEANUP_VECTOR);
+ 		free_cpumask_var(cleanup_mask);
+ 	}
+-	cfg->move_in_progress = 0;
++	data->move_in_progress = 0;
+ }
+ 
+ void send_cleanup_vector(struct irq_cfg *cfg)
+ {
+-	if (cfg->move_in_progress)
+-		__send_cleanup_vector(cfg);
++	struct apic_chip_data *data;
++
++	data = container_of(cfg, struct apic_chip_data, cfg);
++	if (data->move_in_progress)
++		__send_cleanup_vector(data);
+ }
+ 
+ asmlinkage __visible void smp_irq_move_cleanup_interrupt(void)
+@@ -532,7 +549,7 @@ asmlinkage __visible void smp_irq_move_cleanup_interrupt(void)
+ 		int irq;
+ 		unsigned int irr;
+ 		struct irq_desc *desc;
+-		struct irq_cfg *cfg;
++		struct apic_chip_data *data;
+ 
+ 		irq = __this_cpu_read(vector_irq[vector]);
+ 
+@@ -543,8 +560,8 @@ asmlinkage __visible void smp_irq_move_cleanup_interrupt(void)
+ 		if (!desc)
+ 			continue;
+ 
+-		cfg = irq_cfg(irq);
+-		if (!cfg)
++		data = apic_chip_data(&desc->irq_data);
++		if (!data)
+ 			continue;
+ 
+ 		raw_spin_lock(&desc->lock);
+@@ -553,10 +570,11 @@ asmlinkage __visible void smp_irq_move_cleanup_interrupt(void)
+ 		 * Check if the irq migration is in progress. If so, we
+ 		 * haven't received the cleanup request yet for this irq.
+ 		 */
+-		if (cfg->move_in_progress)
++		if (data->move_in_progress)
+ 			goto unlock;
+ 
+-		if (vector == cfg->vector && cpumask_test_cpu(me, cfg->domain))
++		if (vector == data->cfg.vector &&
++		    cpumask_test_cpu(me, data->domain))
+ 			goto unlock;
+ 
+ 		irr = apic_read(APIC_IRR + (vector / 32 * 0x10));
+@@ -582,14 +600,15 @@ unlock:
+ static void __irq_complete_move(struct irq_cfg *cfg, unsigned vector)
+ {
+ 	unsigned me;
++	struct apic_chip_data *data;
+ 
+-	if (likely(!cfg->move_in_progress))
++	data = container_of(cfg, struct apic_chip_data, cfg);
++	if (likely(!data->move_in_progress))
+ 		return;
+ 
+ 	me = smp_processor_id();
+-
+-	if (vector == cfg->vector && cpumask_test_cpu(me, cfg->domain))
+-		__send_cleanup_vector(cfg);
++	if (vector == data->cfg.vector && cpumask_test_cpu(me, data->domain))
++		__send_cleanup_vector(data);
+ }
+ 
+ void irq_complete_move(struct irq_cfg *cfg)
+@@ -601,10 +620,8 @@ void irq_force_complete_move(int irq)
+ {
+ 	struct irq_cfg *cfg = irq_cfg(irq);
+ 
+-	if (!cfg)
+-		return;
+-
+-	__irq_complete_move(cfg, cfg->vector);
++	if (cfg)
++		__irq_complete_move(cfg, cfg->vector);
+ }
+ #endif
+ 
+-- 
+1.7.10.4
 
-could still overwhelm the adapter, even with the 1K limit in place.
-
-> As an alternative solution, would you be open to a fix in PCI -core to stop reading after the End-tag is detected?  (This logic is used by pci-utility (ls-vpd.c) while reading VPD data.)
-> I now feel that this is the *right* solution than my pci-quirks patch.
-
-That's a possibility, and if we were implementing VPD support from
-scratch, I'd probably do it that way.
-
-My only concern with changing now is that it could break existing
-users for devices where the VPD content doesn't have the structure
-specified by the spec.  There aren't *too* many users of
-pci_read_vpd() in the tree, so it might be feasible to just ask the
-bnx2x, tg3, cxgb4, sky2, and efx folks whether they think it's safe.
-
-I took a quick look at those drivers, and it actually looks like most
-of them look for the tag structure, e.g., by using pci_vpd_find_tag()
-or doing something similar.  So maybe it actually would be safe to do
-this.  Maybe you could have a more thorough look at them and see if
-you agree?
-
->> You say the kernel "keeps logging" the message.  From the code, it
->> looks like it should only log it once per attempt to read or write the
->> VPD.  Is that what you observe, or is there a problem where we don't
->> abort the read/write after the first timeout, and we emit many
->> messages?
-> Yes the kernel logs only for one time per attempt but there are configurations where we have many VFs per PF and we see this message for every VF and PF.
-
-Makes sense.  It's really just one message per device, but there can
-be many devices.
-
-Bjorn
