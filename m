@@ -1,154 +1,125 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:55626 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753798AbaKJQlw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Nov 2014 11:41:52 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Liviu Dudau <liviu.dudau@arm.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>
-Subject: [RFC PATCH v2] drivers: pci: move PCI domain assignment to generic PCI code
-Date: Mon, 10 Nov 2014 16:41:46 +0000
-Message-Id: <1415637706-2195-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [Patch Part3 v3 36/38] ACPI, irq, x86: Kill private function mp_register_gsi()/ mp_unregister_gsi()
+Date: Sun,  9 Nov 2014 02:13:36 +0800
+Message-Id: <1415470418-10874-37-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The current logic used for PCI domain assignment in arm64
-pci_bus_assign_domain_nr() is flawed in that, depending on the host
-controllers configuration for a platform and the respective initialization
-sequence, core code may end up allocating PCI domain numbers from both DT and
-the core code generic domain counter, which would result in PCI domain
-allocation aliases/errors.
+Function mp_register_gsi() is only called once, so fold it into caller
+acpi_register_gsi_ioapic(). Do the same for mp_unregister_gsi().
 
-This patch fixes the logic behind the PCI domain number assignment and
-moves the resulting code to generic PCI core code so that the same domain
-allocation logic is used on all platforms selecting
-
-CONFIG_PCI_DOMAINS_GENERIC
-
-instead of resorting to an arch specific implementation that might end up
-duplicating the PCI domain assignment logic wrongly.
-
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Liviu Dudau <liviu.dudau@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
-v1 => v2:
+ arch/x86/kernel/acpi/boot.c |   57 ++++++++++++++-----------------------------
+ 1 file changed, 18 insertions(+), 39 deletions(-)
 
-- Moved generic pci_bus_assign_domain_nr() code to PCI core instead of
-  adding an OF layer API
-- Updated commit log and code comments
-
- arch/arm64/kernel/pci.c | 22 ----------------------
- drivers/pci/pci.c       | 50 +++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 50 insertions(+), 22 deletions(-)
-
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index ce5836c..6f93c24 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -46,25 +46,3 @@ int pcibios_add_device(struct pci_dev *dev)
- 
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 509a48f49fc7..e54a8d72ae6e 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -400,42 +400,6 @@ static int mp_config_acpi_gsi(struct device *dev, u32 gsi, int trigger,
  	return 0;
  }
--
--
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
--static bool dt_domain_found = false;
--
--void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ 
+-static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
+-			   int polarity)
 -{
--	int domain = of_get_pci_domain_nr(parent->of_node);
+-	int irq, node;
+-	struct irq_alloc_info info;
 -
--	if (domain >= 0) {
--		dt_domain_found = true;
--	} else if (dt_domain_found == true) {
--		dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
--			parent->of_node->full_name);
--		return;
--	} else {
--		domain = pci_get_new_domain_nr();
--	}
+-	if (acpi_irq_model != ACPI_IRQ_MODEL_IOAPIC)
+-		return gsi;
 -
--	bus->domain_nr = domain;
+-	trigger = trigger == ACPI_EDGE_SENSITIVE ? 0 : 1;
+-	polarity = polarity == ACPI_ACTIVE_HIGH ? 0 : 1;
+-	node = dev ? dev_to_node(dev) : NUMA_NO_NODE;
+-	ioapic_set_alloc_attr(&info, node, trigger, polarity);
+-	irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC, &info);
+-	if (irq < 0)
+-		return irq;
+-
+-	/* Don't set up the ACPI SCI because it's already set up */
+-	if (enable_update_mptable && acpi_gbl_FADT.sci_interrupt != gsi)
+-		mp_config_acpi_gsi(dev, gsi, trigger, polarity);
+-
+-	return irq;
 -}
--#endif
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 625a4ac..2279414 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -10,6 +10,8 @@
- #include <linux/kernel.h>
- #include <linux/delay.h>
- #include <linux/init.h>
-+#include <linux/of.h>
-+#include <linux/of_pci.h>
- #include <linux/pci.h>
- #include <linux/pm.h>
- #include <linux/slab.h>
-@@ -4447,6 +4449,54 @@ int pci_get_new_domain_nr(void)
+-
+-static void mp_unregister_gsi(u32 gsi)
+-{
+-	int irq;
+-
+-	if (acpi_irq_model != ACPI_IRQ_MODEL_IOAPIC)
+-		return;
+-
+-	irq = mp_map_gsi_to_irq(gsi, 0, NULL);
+-	if (irq > 0)
+-		mp_unmap_irq(irq);
+-}
+-
+ static struct irq_domain_ops acpi_irqdomain_ops = {
+ 	.alloc = mp_irqdomain_alloc,
+ 	.free = mp_irqdomain_free,
+@@ -657,10 +621,21 @@ static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
+ 				    int trigger, int polarity)
  {
- 	return atomic_inc_return(&__domain_nr);
- }
+ 	int irq = gsi;
+-
+ #ifdef CONFIG_X86_IO_APIC
++	int node;
++	struct irq_alloc_info info;
 +
-+#ifdef CONFIG_PCI_DOMAINS_GENERIC
++	node = dev ? dev_to_node(dev) : NUMA_NO_NODE;
++	trigger = trigger == ACPI_EDGE_SENSITIVE ? 0 : 1;
++	polarity = polarity == ACPI_ACTIVE_HIGH ? 0 : 1;
++	ioapic_set_alloc_attr(&info, node, trigger, polarity);
 +
-+void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-+{
-+	static int use_dt_domains = -1;
-+	int domain = of_get_pci_domain_nr(parent->of_node);
-+
-+	/*
-+	 * Check DT domain and use_dt_domains values.
-+	 *
-+	 * If DT domain property is valid (domain >= 0) and
-+	 * use_dt_domains != 0, the DT assignment is valid since this means
-+	 * we have not previously allocated a domain number by using
-+	 * pci_get_new_domain_nr(); we should also update use_dt_domains to
-+	 * 1, to indicate that we have just assigned a domain number from
-+	 * DT.
-+	 *
-+	 * If DT domain property value is not valid (ie domain < 0), and we
-+	 * have not previously assigned a domain number from DT
-+	 * (use_dt_domains != 1) we should assign a domain number by
-+	 * using the:
-+	 *
-+	 * pci_get_new_domain_nr()
-+	 *
-+	 * API and update the use_dt_domains value to keep track of method we
-+	 * are using to assign domain numbers (use_dt_domains = 0).
-+	 *
-+	 * All other combinations imply we have a platform that is trying
-+	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
-+	 * which is a recipe for domain mishandling and it is prevented by
-+	 * invalidating the domain value (domain = -1) and printing a
-+	 * corresponding error.
-+	 */
-+	if (domain >= 0 && use_dt_domains) {
-+		use_dt_domains = 1;
-+	} else if (domain < 0 && use_dt_domains != 1) {
-+		use_dt_domains = 0;
-+		domain = pci_get_new_domain_nr();
-+	} else {
-+		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
-+			parent->of_node->full_name);
-+		domain = -1;
-+	}
-+
-+	bus->domain_nr = domain;
-+}
-+#endif
+ 	mutex_lock(&acpi_ioapic_lock);
+-	irq = mp_register_gsi(dev, gsi, trigger, polarity);
++	irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC, &info);
++	/* Don't set up the ACPI SCI because it's already set up */
++	if (irq >= 0 && enable_update_mptable &&
++	    acpi_gbl_FADT.sci_interrupt != gsi)
++		mp_config_acpi_gsi(dev, gsi, trigger, polarity);
+ 	mutex_unlock(&acpi_ioapic_lock);
  #endif
  
- /**
+@@ -670,8 +645,12 @@ static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
+ static void acpi_unregister_gsi_ioapic(u32 gsi)
+ {
+ #ifdef CONFIG_X86_IO_APIC
++	int irq;
++
+ 	mutex_lock(&acpi_ioapic_lock);
+-	mp_unregister_gsi(gsi);
++	irq = mp_map_gsi_to_irq(gsi, 0, NULL);
++	if (irq > 0)
++		mp_unmap_irq(irq);
+ 	mutex_unlock(&acpi_ioapic_lock);
+ #endif
+ }
 -- 
-2.1.2
+1.7.10.4
 
