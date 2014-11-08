@@ -1,152 +1,216 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:42383 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932352AbaKSXa2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 18:30:28 -0500
-Received: by mail-ig0-f177.google.com with SMTP id uq10so1885274igb.4
-        for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2014 15:30:27 -0800 (PST)
-Date: Wed, 19 Nov 2014 16:30:24 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH V9 08/18] powrepc/pci: Refactor pci_dn
-Message-ID: <20141119233024.GF23467@google.com>
-References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1414942894-17034-9-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mout.kundenserver.de ([212.227.17.10]:52177 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751231AbaKHTrv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 8 Nov 2014 14:47:51 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-pci@vger.kernel.org,
+	zajec5@gmail.com, florian@openwrt.org
+Subject: Re: [RFC] PCI: BCM5301X: add PCIe2 driver for BCM5301X SoCs
+Date: Sat, 08 Nov 2014 20:47:34 +0100
+Message-ID: <1756974.RYWuW6FYtL@wuerfel>
+In-Reply-To: <1415470392-28229-1-git-send-email-hauke@hauke-m.de>
+References: <1415470392-28229-1-git-send-email-hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1414942894-17034-9-git-send-email-weiyang@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Nov 02, 2014 at 11:41:24PM +0800, Wei Yang wrote:
-> From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> 
-> pci_dn is the extension of PCI device node and it's created from
-> device node. Unfortunately, VFs that are enabled dynamically by
-> PF's driver and they don't have corresponding device nodes, and
-> pci_dn. The patch refactors pci_dn to support VFs:
-> 
->    * pci_dn is organized as a hierarchy tree. VF's pci_dn is put
->      to the child list of pci_dn of PF's bridge. pci_dn of other
->      device put to the child list of pci_dn of its upstream bridge.
-> 
->    * VF's pci_dn is expected to be created dynamically when applying
->      final fixup to PF. VF's pci_dn will be destroyed when releasing
->      PF's pci_dev instance. pci_dn of other device is still created
->      from device node as before.
-> 
->    * For one particular PCI device (VF or not), its pci_dn can be
->      found from pdev->dev.archdata.firmware_data, PCI_DN(devnode),
->      or parent's list. The fast path (fetching pci_dn through PCI
->      device instance) is populated during early fixup time.
-> 
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
-> ...
+On Saturday 08 November 2014 19:13:12 Hauke Mehrtens wrote:
 
-> +struct pci_dn *add_dev_pci_info(struct pci_dev *pdev)
+> diff --git a/drivers/pci/host/pci-host-bcm5301x.c b/drivers/pci/host/pci-host-bcm5301x.c
+> new file mode 100644
+> index 0000000..8b7ba62
+> --- /dev/null
+> +++ b/drivers/pci/host/pci-host-bcm5301x.c
+> @@ -0,0 +1,483 @@
+> +/*
+> + * Northstar PCI-Express driver
+> + * Only supports Root-Complex (RC) mode
+> + *
+> + * Notes:
+> + * PCI Domains are being used to identify the PCIe port 1:1.
+> + *
+> + * Only MEM access is supported, PAX does not support IO.
+
+What is PAX?
+
+> +static int bcma_pcie2_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
 > +{
-> +#ifdef CONFIG_PCI_IOV
-> +	struct pci_dn *parent, *pdn;
-> +	int i;
+> +	struct pci_sys_data *sys = pdev->sysdata;
+> +	struct bcma_device *bdev = sys->private_data;
 > +
-> +	/* Only support IOV for now */
-> +	if (!pdev->is_physfn)
-> +		return pci_get_pdn(pdev);
+> +	/*
+> +	 * Every PCIe controller has 5 IRQ number and the last one is
+> +	 * triggered every time, use that one
+> +	 */
+> +	if (bdev && bdev->dev.of_node)
+> +		return irq_of_parse_and_map(bdev->dev.of_node, 4);
 > +
-> +	/* Check if VFs have been populated */
-> +	pdn = pci_get_pdn(pdev);
-> +	if (!pdn || (pdn->flags & PCI_DN_FLAG_IOV_VF))
-> +		return NULL;
+> +	return bdev->irq;
+> +}
+
+If you have an OF device node for the PCI host, you don't need this,
+there should already be an interrupt-map property that correctly
+maps this into the interrupt domain of the bcma bus, so you can use
+the default of_irq_parse_and_map_pci function.
+
+> +static u32 bcma_pcie2_cfg_base(struct bcma_device *bdev, int busno,
+> +			       unsigned int devfn, int where)
+> +{
+> +	int slot = PCI_SLOT(devfn);
+> +	int fn = PCI_FUNC(devfn);
+> +	u32 addr_reg;
 > +
-> +	pdn->flags |= PCI_DN_FLAG_IOV_VF;
-> +	parent = pci_bus_to_pdn(pdev->bus);
-> +	if (!parent)
-> +		return NULL;
+> +	if (busno == 0) {
+> +		if (slot >= 1)
+> +			return 0;
+> +		bcma_write32(bdev, BCMA_CORE_PCIE2_CONFIGINDADDR,
+> +			     where & 0xffc);
+> +		return BCMA_CORE_PCIE2_CONFIGINDDATA;
+> +	}
+> +	if (fn > 1)
+> +		return 0;
+> +	addr_reg = (busno & 0xff) << 20 | (slot << 15) | (fn << 12) |
+> +		   (where & 0xffc) | (1 & 0x3);
 > +
-> +	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
-> +		pdn = add_one_dev_pci_info(parent, NULL,
-> +					   pci_iov_virtfn_bus(pdev, i),
-> +					   pci_iov_virtfn_devfn(pdev, i));
+> +	bcma_write32(bdev, BCMA_CORE_PCIE2_CFG_ADDR, addr_reg);
+> +	return BCMA_CORE_PCIE2_CFG_DATA;
+> +}
 
-I'm not sure this makes sense, but I certainly don't know this code, so
-maybe I'm missing something.
+The normal buses seem to be ECAM compliant, I wonder if we can have the
+code to access those shared between this driver, pci-host-generic.c and
+the ACPI PCI implementation.
 
-pci_iov_virtfn_bus() and pci_iov_virtfn_devfn() depend on
-pdev->sriov->stride and pdev->sriov->offset.  These are read from VF Stride
-and First VF Offset in the SR-IOV capability by sriov_init(), which is
-called before add_dev_pci_info():
+The root bus is unfortunately not compliant, which for some reason
+is common on a lot of controllers.
 
-  pci_scan_child_bus
-    pci_scan_slot
-      pci_scan_single_device
-	pci_device_add
-	  pci_init_capabilities
-	    pci_iov_init(PF)
-	      sriov_init(PF, pos)
-		pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, 0)
-		pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET, &offset)
-		pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE, &stride)
-		iov->offset = offset
-		iov->stride = stride
-
-  pci_bus_add_devices
-    pci_bus_add_device
-      pci_fixup_device(pci_fixup_final)
-	add_dev_pci_info
-	  pci_iov_virtfn_bus
-	    return ... + sriov->offset + (sriov->stride * id) ...
-
-But both First VF Offset and VF Stride change when ARI Capable Hierarchy or
-NumVFs changes (SR-IOV spec sec 3.3.9, 3.3.10).  We set NumVFs to zero in
-sriov_init() above.  We will change NumVFs to something different when a
-driver calls pci_enable_sriov():
-
-  pci_enable_sriov
-    sriov_enable
-      pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn)
-
-Now First VF Offset and VF Stride have changed from what they were when we
-called pci_iov_virtfn_bus() above.
-
-> +		if (!pdn) {
-> +			pr_warn("%s: Cannot create firmware data "
-> +				"for VF#%d of %s\n",
-> +				__func__, i, pci_name(pdev));
-> +			return NULL;
+> +static u32 bcma_pcie2_read_config(struct bcma_device *bdev, int busno,
+> +				  unsigned int devfn, int where, int size)
+> +{
+> +	u32 base;
+> +	u32 data_reg;
+> +	u32 mask;
+> +	int shift;
+> +
+> +	base = bcma_pcie2_cfg_base(bdev, busno, devfn, where);
+> +
+> +	if (!base)
+> +		return ~0UL;
+> +
+> +	data_reg = bcma_read32(bdev, base);
+> +
+> +	/* NS: CLASS field is R/O, and set to wrong 0x200 value */
+> +	if (busno == 0 && devfn == 0) {
+> +		/*
+> +		 * RC's class is 0x0280, but Linux PCI driver needs 0x604
+> +		 * for a PCIe bridge. So we must fixup the class code
+> +		 * to 0x604 here.
+> +		 */
+> +		if ((where & 0xffc) == PCI_CLASS_REVISION) {
+> +			data_reg &= 0xff;
+> +			data_reg |= 0x604 << 16;
 > +		}
 > +	}
-> +#endif
+> +	/* HEADER_TYPE=00 indicates the port in EP mode */
 > +
-> +	return pci_get_pdn(pdev);
+> +	if (size == 4)
+> +		return data_reg;
+> +
+> +	mask = (1 << (size * 8)) - 1;
+> +	shift = (where % 4) * 8;
+> +	return (data_reg >> shift) & mask;
 > +}
-> ...
 
-> +static void pci_dev_pdn_create(struct pci_dev *pdev)
+Interesting. 0x0280 is PCI_CLASS_NETWORK_OTHER, I guess this is the
+same PCI core that is used on broadcom network adapters in endpoint
+mode, and when someone tweaked the core to do root complex mode,
+they forgot to fix this.
+
+Which code depends on this? I think I've seem something similar in
+other host drivers, so maybe we can change the core code instead.
+
+> +
+> +static u8 bcma_pcie2_read_config8(struct bcma_device *bdev, int busno,
+> +				  unsigned int devfn, int where)
 > +{
-> +	add_dev_pci_info(pdev);
+> +	return bcma_pcie2_read_config(bdev, busno, devfn, where, 1);
 > +}
-> +DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pci_dev_pdn_create);
-
-There are no other callers of add_dev_pci_info(), so it seems pointless to
-declare it in arch/powerpc/include/asm/pci-bridge.h and add this wrapper
-around it.
-
 > +
-> +static void pci_dev_pdn_setup(struct pci_dev *pdev)
+> +static u16 bcma_pcie2_read_config16(struct bcma_device *bdev, int busno,
+> +				    unsigned int devfn, int where)
 > +{
-> +	struct pci_dn *pdn;
-> +
-> +	if (pdev->dev.archdata.firmware_data)
-> +		return;
-> +
-> +	/* Setup the fast path */
-> +	pdn = pci_get_pdn(pdev);
-> +	pdev->dev.archdata.firmware_data = pdn;
+> +	return bcma_pcie2_read_config(bdev, busno, devfn, where, 2);
 > +}
-> +DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, pci_dev_pdn_setup);
-> -- 
-> 1.7.9.5
-> 
+> +
+> +static u32 bcma_pcie2_read_config32(struct bcma_device *bdev, int busno,
+> +				    unsigned int devfn, int where)
+> +{
+> +	return bcma_pcie2_read_config(bdev, busno, devfn, where, 4);
+> +}
+
+These all seem to be relatively pointless, I'd just open-code the
+bcma_pcie2_read_config call in the calling function.
+
+> +
+> +/*
+> + * Initializte the PCIe controller
+> + */
+> +static void bcma_pcie2_hw_init(struct bcma_device *bdev)
+> +{
+> +	u32 tmp32;
+> +	u16 tmp16;
+> +
+> +	/* Change MPS and MRRS to 512 */
+> +	tmp16 = bcma_pcie2_read_config16(bdev, 0, 0, 0x4d4);
+> +	tmp16 &= ~7;
+> +	tmp16 |= 2;
+> +	bcma_pcie2_write_config16(bdev, 0, 0, 0x4d4, tmp16);
+> +
+> +	tmp32 = bcma_pcie2_read_config32(bdev, 0, 0, 0xb4);
+> +	tmp32 &= ~((7 << 12) | (7 << 5));
+> +	tmp32 |= (2 << 12) | (2 << 5);
+> +	bcma_pcie2_write_config32(bdev, 0, 0, 0xb4, tmp32);
+> +
+> +	/*
+> +	 * Turn-on Root-Complex (RC) mode, from reset default of EP
+> +	 * The mode is set by straps, can be overwritten via DMU
+> +	 * register <cru_straps_control> bit 5, "1" means RC
+> +	 */
+> +
+> +	/* Send a downstream reset */
+> +	bcma_write32(bdev, BCMA_CORE_PCIE2_CLK_CONTROL,
+> +		     PCIE2_CLKC_RST_OE | PCIE2_CLKC_RST);
+> +	udelay(250);
+> +	bcma_write32(bdev, BCMA_CORE_PCIE2_CLK_CONTROL, PCIE2_CLKC_RST_OE);
+> +	mdelay(250);
+> +
+> +	/* TBD: take care of PM, check we're on */
+> +}
+
+Can you turn the two delays into msleep()? Wasting 250ms of CPU time is
+really nasty.
+
+> +	/*
+> +	 * Inbound address translation setup
+> +	 * Northstar only maps up to 128 MiB inbound, DRAM could be up to 1 GiB.
+> +	 *
+> +	 * For now allow access to entire DRAM, assuming it is less than 128MiB,
+> +	 * otherwise DMA bouncing mechanism may be required.
+> +	 * Also consider DMA mask to limit DMA physical address
+> +	 */
+> +	/* 64-bit LE regs, write low word, high is 0 at reset */
+> +	bcma_write32(bdev, BCMA_CORE_PCIE2_FUNC0_IMAP1, PHYS_OFFSET | 0x1);
+> +	bcma_write32(bdev, BCMA_CORE_PCIE2_IARR1_LOWER,
+> +			   PHYS_OFFSET | ((SZ_128M >> 20) & 0xff));
+
+Maybe I should bully you into enabling swiotlb on arm32 ;-)
+
+Do you have any machines with more than 128MB of RAM that use this?
+
+According to wikidevi.com [http://tinyurl.com/pdtw2h4], most machines
+with bcm4708/81/9 have 256MB or 512MB. I think it shouldn't be too hard
+to get swiotlb to work on arm32, given that we already use it on arm64.
+
+	Arnd
