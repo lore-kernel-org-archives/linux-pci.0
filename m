@@ -1,79 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:21230 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751002AbaKFB3I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 20:29:08 -0500
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0NEL00A3WG4JEF50@mailout4.samsung.com> for
- linux-pci@vger.kernel.org; Thu, 06 Nov 2014 10:29:07 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, 'Mohit Kumar' <mohit.kumar@st.com>,
-	'Viresh Kumar' <viresh.kumar@linaro.org>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <001401cff95e$ec061f60$c4125e20$%han@samsung.com>
-In-reply-to: <001401cff95e$ec061f60$c4125e20$%han@samsung.com>
-Subject: [PATCH V2] PCI: spear: Add spear13xx before add_pcie_port/pcie_init
-Date: Thu, 06 Nov 2014 10:29:41 +0900
-Message-id: <001601cff961$232f2570$698d7050$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part3 v3 31/38] x86, irq: Change functions only used in vector.c as static
+Date: Sun,  9 Nov 2014 02:13:31 +0800
+Message-Id: <1415470418-10874-32-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The add_pcie_port/pcie_init functions are SPEAr13xx-specific.
-Add spear13xx prefix to avoid collision in global name space.
+Function {assign|clear}_irq_vector() and apic_retrigger_irq() are only
+used in file vector.c, so change them as static.
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
-Change since v1:
-- Remove 'exynos' typo from the commit message.
+ arch/x86/include/asm/hw_irq.h |    3 ---
+ arch/x86/kernel/apic/vector.c |    7 ++++---
+ 2 files changed, 4 insertions(+), 6 deletions(-)
 
- drivers/pci/host/pcie-spear13xx.c |    9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index 85f594e..63f869f 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -269,7 +269,8 @@ static struct pcie_host_ops spear13xx_pcie_host_ops = {
- 	.host_init = spear13xx_pcie_host_init,
- };
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 00d6143affe7..dee2069d7c19 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -186,8 +186,6 @@ extern struct irq_cfg *irq_cfg(unsigned int irq);
+ extern struct irq_cfg *irqd_cfg(struct irq_data *irq_data);
+ extern void lock_vector_lock(void);
+ extern void unlock_vector_lock(void);
+-extern int assign_irq_vector(int, struct irq_cfg *, const struct cpumask *);
+-extern void clear_irq_vector(int irq, struct irq_cfg *cfg);
+ extern void setup_vector_irq(int cpu);
+ #ifdef CONFIG_SMP
+ extern void send_cleanup_vector(struct irq_cfg *);
+@@ -197,7 +195,6 @@ static inline void send_cleanup_vector(struct irq_cfg *c) { }
+ static inline void irq_complete_move(struct irq_cfg *c) { }
+ #endif
  
--static int add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
-+static int spear13xx_add_pcie_port(struct pcie_port *pp,
-+				   struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
- 	int ret;
-@@ -352,7 +353,7 @@ static int __init spear13xx_pcie_probe(struct platform_device *pdev)
- 	if (of_property_read_bool(np, "st,pcie-is-gen1"))
- 		spear13xx_pcie->is_gen1 = true;
- 
--	ret = add_pcie_port(pp, pdev);
-+	ret = spear13xx_add_pcie_port(pp, pdev);
- 	if (ret < 0)
- 		goto fail_clk;
- 
-@@ -382,11 +383,11 @@ static struct platform_driver spear13xx_pcie_driver __initdata = {
- 
- /* SPEAr13xx PCIe driver does not allow module unload */
- 
--static int __init pcie_init(void)
-+static int __init spear13xx_pcie_init(void)
- {
- 	return platform_driver_register(&spear13xx_pcie_driver);
+-extern int apic_retrigger_irq(struct irq_data *data);
+ extern void apic_ack_edge(struct irq_data *data);
+ extern int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 			     unsigned int *dest_id);
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 6df30d713f67..4fa940aa24c1 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -185,7 +185,8 @@ next:
+ 	return err;
  }
--module_init(pcie_init);
-+module_init(spear13xx_pcie_init);
  
- MODULE_DESCRIPTION("ST Microelectronics SPEAr13xx PCIe host controller driver");
- MODULE_AUTHOR("Pratyush Anand <pratyush.anand@st.com>");
+-int assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
++static int assign_irq_vector(int irq, struct irq_cfg *cfg,
++			     const struct cpumask *mask)
+ {
+ 	int err;
+ 	unsigned long flags;
+@@ -196,7 +197,7 @@ int assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
+ 	return err;
+ }
+ 
+-void clear_irq_vector(int irq, struct irq_cfg *cfg)
++static void clear_irq_vector(int irq, struct irq_cfg *cfg)
+ {
+ 	int cpu, vector;
+ 	unsigned long flags;
+@@ -441,7 +442,7 @@ void setup_vector_irq(int cpu)
+ 	__setup_vector_irq(cpu);
+ }
+ 
+-int apic_retrigger_irq(struct irq_data *data)
++static int apic_retrigger_irq(struct irq_data *data)
+ {
+ 	struct irq_cfg *cfg = irqd_cfg(data);
+ 	unsigned long flags;
 -- 
-1.7.9.5
-
+1.7.10.4
 
