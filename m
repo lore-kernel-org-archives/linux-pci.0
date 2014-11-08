@@ -1,186 +1,181 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:33040 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754367AbaKSJj4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 04:39:56 -0500
-Date: Wed, 19 Nov 2014 09:39:48 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Yijing Wang <wangyijing@huawei.com>, bhelgaas@google.com
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>
-Subject: Re: [RFC PATCH v2] drivers: pci: move PCI domain assignment to
- generic PCI code
-Message-ID: <20141119093948.GA8751@red-moon>
-References: <1415637706-2195-1-git-send-email-lorenzo.pieralisi@arm.com>
- <546C5FF2.5090903@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <546C5FF2.5090903@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
+Subject: [Patch Part3 v3 14/38] x86, irq: Kill x86_io_apic_ops.set_affinity and related interfaces
+Date: Sun,  9 Nov 2014 02:13:14 +0800
+Message-Id: <1415470418-10874-15-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 19, 2014 at 09:16:34AM +0000, Yijing Wang wrote:
-> Hi Lorenzo,
->    You should send this to Bjorn instead of cc. Other, why put the OF related
-> function in PCI core. Why not move it in drivers/of/of_pci.c ?
+Now there is no user of x86_io_apic_ops.set_affinity anymore, so kill
+it.
 
-I did, you missed v1, and the problem is that with ACPI forthcoming we
-do not want to have domain assignment scattered in different places,
-but part of core code (ie a single function that prevents mixed
-initialization from DT/counter and so on).
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h  |    4 ----
+ arch/x86/include/asm/x86_init.h |    3 ---
+ arch/x86/kernel/apic/io_apic.c  |   25 +------------------------
+ arch/x86/kernel/x86_init.c      |    1 -
+ drivers/iommu/irq_remapping.c   |   16 ----------------
+ 5 files changed, 1 insertion(+), 48 deletions(-)
 
-Bjorn, are you fine with this patch ? Do you want me to resend it as
-part of the ARM 32 PCI domain refactoring [1] ? [1] depends on this
-patch going in first.
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 0c66c4759987..5fba350fec1f 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -222,9 +222,6 @@ extern unsigned int native_io_apic_read(unsigned int apic, unsigned int reg);
+ extern void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int val);
+ extern void native_io_apic_modify(unsigned int apic, unsigned int reg, unsigned int val);
+ extern void native_disable_io_apic(void);
+-extern int native_ioapic_set_affinity(struct irq_data *,
+-				      const struct cpumask *,
+-				      bool);
+ 
+ static inline unsigned int io_apic_read(unsigned int apic, unsigned int reg)
+ {
+@@ -285,7 +282,6 @@ static inline void disable_ioapic_support(void) { }
+ #define native_io_apic_write		NULL
+ #define native_io_apic_modify		NULL
+ #define native_disable_io_apic		NULL
+-#define native_ioapic_set_affinity	NULL
+ #define native_eoi_ioapic_pin		NULL
+ #endif
+ 
+diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+index 7de44a329028..2637e8fb978d 100644
+--- a/arch/x86/include/asm/x86_init.h
++++ b/arch/x86/include/asm/x86_init.h
+@@ -194,9 +194,6 @@ struct x86_io_apic_ops {
+ 	void		(*write)  (unsigned int apic, unsigned int reg, unsigned int value);
+ 	void		(*modify) (unsigned int apic, unsigned int reg, unsigned int value);
+ 	void		(*disable)(void);
+-	int		(*set_affinity)(struct irq_data *data,
+-					const struct cpumask *mask,
+-					bool force);
+ 	void		(*eoi_ioapic_pin)(int apic, int pin, int vector);
+ };
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index c862f8299a3f..26fa504b57f6 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1777,29 +1777,6 @@ static void __target_IO_APIC_irq(unsigned int irq, unsigned int dest, struct irq
+ 	}
+ }
+ 
+-int native_ioapic_set_affinity(struct irq_data *data,
+-			       const struct cpumask *mask,
+-			       bool force)
+-{
+-	unsigned int dest, irq = data->irq;
+-	unsigned long flags;
+-	int ret;
+-
+-	if (!config_enabled(CONFIG_SMP))
+-		return -EPERM;
+-
+-	raw_spin_lock_irqsave(&ioapic_lock, flags);
+-	ret = apic_set_affinity(data, mask, &dest);
+-	if (!ret) {
+-		/* Only the high 8 bits are valid. */
+-		dest = SET_APIC_LOGICAL_ID(dest);
+-		__target_IO_APIC_irq(irq, dest, irqd_cfg(data));
+-		ret = IRQ_SET_MASK_OK_NOCOPY;
+-	}
+-	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
+-	return ret;
+-}
+-
+ atomic_t irq_mis_count;
+ 
+ #ifdef CONFIG_GENERIC_PENDING_IRQ
+@@ -2676,7 +2653,7 @@ void __init setup_ioapic_dest(void)
+ 		else
+ 			mask = apic->target_cpus();
+ 
+-		x86_io_apic_ops.set_affinity(idata, mask, false);
++		irq_set_affinity(irq, mask);
+ 	}
+ 
+ }
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index 77d0ea3dd1ea..377b22008280 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -154,6 +154,5 @@ struct x86_io_apic_ops x86_io_apic_ops = {
+ 	.write			= native_io_apic_write,
+ 	.modify			= native_io_apic_modify,
+ 	.disable		= native_disable_io_apic,
+-	.set_affinity		= native_ioapic_set_affinity,
+ 	.eoi_ioapic_pin		= native_eoi_ioapic_pin,
+ };
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index c66de7848619..0e2a80491170 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -26,10 +26,6 @@ int no_x2apic_optout;
+ 
+ static struct irq_remap_ops *remap_ops;
+ 
+-static int set_remapped_irq_affinity(struct irq_data *data,
+-				     const struct cpumask *mask,
+-				     bool force);
+-
+ static bool irq_remapped(struct irq_cfg *cfg)
+ {
+ 	return (cfg->remapped == 1);
+@@ -62,7 +58,6 @@ static void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
+ static void __init irq_remapping_modify_x86_ops(void)
+ {
+ 	x86_io_apic_ops.disable		= irq_remapping_disable_io_apic;
+-	x86_io_apic_ops.set_affinity	= set_remapped_irq_affinity;
+ 	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
+ }
+ 
+@@ -177,16 +172,6 @@ int __init irq_remap_enable_fault_handling(void)
+ 	return remap_ops->enable_faulting();
+ }
+ 
+-static int set_remapped_irq_affinity(struct irq_data *data,
+-				     const struct cpumask *mask, bool force)
+-{
+-	if (!config_enabled(CONFIG_SMP) || !remap_ops ||
+-	    !remap_ops->set_affinity)
+-		return 0;
+-
+-	return remap_ops->set_affinity(data, mask, force);
+-}
+-
+ void free_remapped_irq(int irq)
+ {
+ 	struct irq_cfg *cfg = irq_cfg(irq);
+@@ -238,7 +223,6 @@ void irq_remap_modify_chip_defaults(struct irq_chip *chip)
+ 	chip->irq_print_chip = ir_print_prefix;
+ 	chip->irq_ack = ir_ack_apic_edge;
+ 	chip->irq_eoi = ir_ack_apic_level;
+-	chip->irq_set_affinity = x86_io_apic_ops.set_affinity;
+ }
+ 
+ bool setup_remapped_irq(int irq, struct irq_cfg *cfg, struct irq_chip *chip)
+-- 
+1.7.10.4
 
-Thanks,
-Lorenzo
-
-[1] http://www.spinics.net/lists/arm-kernel/msg375423.html
-
-> On 2014/11/11 0:41, Lorenzo Pieralisi wrote:
-> > The current logic used for PCI domain assignment in arm64
-> > pci_bus_assign_domain_nr() is flawed in that, depending on the host
-> > controllers configuration for a platform and the respective initialization
-> > sequence, core code may end up allocating PCI domain numbers from both DT and
-> > the core code generic domain counter, which would result in PCI domain
-> > allocation aliases/errors.
-> > 
-> > This patch fixes the logic behind the PCI domain number assignment and
-> > moves the resulting code to generic PCI core code so that the same domain
-> > allocation logic is used on all platforms selecting
-> > 
-> > CONFIG_PCI_DOMAINS_GENERIC
-> > 
-> > instead of resorting to an arch specific implementation that might end up
-> > duplicating the PCI domain assignment logic wrongly.
-> > 
-> > Cc: Arnd Bergmann <arnd@arndb.de>
-> > Cc: Liviu Dudau <liviu.dudau@arm.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Rob Herring <robh+dt@kernel.org>
-> > Cc: Catalin Marinas <catalin.marinas@arm.com>
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > ---
-> > v1 => v2:
-> > 
-> > - Moved generic pci_bus_assign_domain_nr() code to PCI core instead of
-> >   adding an OF layer API
-> > - Updated commit log and code comments
-> > 
-> >  arch/arm64/kernel/pci.c | 22 ----------------------
-> >  drivers/pci/pci.c       | 50 +++++++++++++++++++++++++++++++++++++++++++++++++
-> >  2 files changed, 50 insertions(+), 22 deletions(-)
-> > 
-> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> > index ce5836c..6f93c24 100644
-> > --- a/arch/arm64/kernel/pci.c
-> > +++ b/arch/arm64/kernel/pci.c
-> > @@ -46,25 +46,3 @@ int pcibios_add_device(struct pci_dev *dev)
-> >  
-> >  	return 0;
-> >  }
-> > -
-> > -
-> > -#ifdef CONFIG_PCI_DOMAINS_GENERIC
-> > -static bool dt_domain_found = false;
-> > -
-> > -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> > -{
-> > -	int domain = of_get_pci_domain_nr(parent->of_node);
-> > -
-> > -	if (domain >= 0) {
-> > -		dt_domain_found = true;
-> > -	} else if (dt_domain_found == true) {
-> > -		dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
-> > -			parent->of_node->full_name);
-> > -		return;
-> > -	} else {
-> > -		domain = pci_get_new_domain_nr();
-> > -	}
-> > -
-> > -	bus->domain_nr = domain;
-> > -}
-> > -#endif
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 625a4ac..2279414 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -10,6 +10,8 @@
-> >  #include <linux/kernel.h>
-> >  #include <linux/delay.h>
-> >  #include <linux/init.h>
-> > +#include <linux/of.h>
-> > +#include <linux/of_pci.h>
-> >  #include <linux/pci.h>
-> >  #include <linux/pm.h>
-> >  #include <linux/slab.h>
-> > @@ -4447,6 +4449,54 @@ int pci_get_new_domain_nr(void)
-> >  {
-> >  	return atomic_inc_return(&__domain_nr);
-> >  }
-> > +
-> > +#ifdef CONFIG_PCI_DOMAINS_GENERIC
-> > +
-> > +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> > +{
-> > +	static int use_dt_domains = -1;
-> > +	int domain = of_get_pci_domain_nr(parent->of_node);
-> > +
-> > +	/*
-> > +	 * Check DT domain and use_dt_domains values.
-> > +	 *
-> > +	 * If DT domain property is valid (domain >= 0) and
-> > +	 * use_dt_domains != 0, the DT assignment is valid since this means
-> > +	 * we have not previously allocated a domain number by using
-> > +	 * pci_get_new_domain_nr(); we should also update use_dt_domains to
-> > +	 * 1, to indicate that we have just assigned a domain number from
-> > +	 * DT.
-> > +	 *
-> > +	 * If DT domain property value is not valid (ie domain < 0), and we
-> > +	 * have not previously assigned a domain number from DT
-> > +	 * (use_dt_domains != 1) we should assign a domain number by
-> > +	 * using the:
-> > +	 *
-> > +	 * pci_get_new_domain_nr()
-> > +	 *
-> > +	 * API and update the use_dt_domains value to keep track of method we
-> > +	 * are using to assign domain numbers (use_dt_domains = 0).
-> > +	 *
-> > +	 * All other combinations imply we have a platform that is trying
-> > +	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
-> > +	 * which is a recipe for domain mishandling and it is prevented by
-> > +	 * invalidating the domain value (domain = -1) and printing a
-> > +	 * corresponding error.
-> > +	 */
-> > +	if (domain >= 0 && use_dt_domains) {
-> > +		use_dt_domains = 1;
-> > +	} else if (domain < 0 && use_dt_domains != 1) {
-> > +		use_dt_domains = 0;
-> > +		domain = pci_get_new_domain_nr();
-> > +	} else {
-> > +		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
-> > +			parent->of_node->full_name);
-> > +		domain = -1;
-> > +	}
-> > +
-> > +	bus->domain_nr = domain;
-> > +}
-> > +#endif
-> >  #endif
-> >  
-> >  /**
-> > 
-> 
-> 
-> -- 
-> Thanks!
-> Yijing
-> 
-> 
