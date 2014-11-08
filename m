@@ -1,4 +1,8 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:51546 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754262AbaKHSPb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 8 Nov 2014 13:15:31 -0500
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
@@ -8,163 +12,256 @@ To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Borislav Petkov <bp@alien8.de>, Joerg Roedel <joro@8bytes.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part3 v3 29/38] x86, irq: Use cached IOAPIC entry instead of reading from hardware
-Date: Sun,  9 Nov 2014 02:13:29 +0800
-Message-Id: <1415470418-10874-30-git-send-email-jiang.liu@linux.intel.com>
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	iommu@lists.linux-foundation.org
+Subject: [Patch Part3 v3 19/38] iommu/vt-d: Clean up unsued code
+Date: Sun,  9 Nov 2014 02:13:19 +0800
+Message-Id: <1415470418-10874-20-git-send-email-jiang.liu@linux.intel.com>
 In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
 References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use cahced IOAPIC entry instead of reading data from IOAPIC hardware
-registers to improve performance.
+Now we have converted to hierarchy irqdomain, so clean up unused code.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/kernel/apic/io_apic.c |   78 +++++++++++-----------------------------
- 1 file changed, 21 insertions(+), 57 deletions(-)
+ drivers/iommu/intel_irq_remapping.c |  187 +----------------------------------
+ 1 file changed, 1 insertion(+), 186 deletions(-)
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index a915ee005148..60e3ee6c92d3 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -69,8 +69,13 @@
- int acpi_get_override_irq(u32 gsi, int *trigger, int *polarity);
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index b0c8113e7a9b..0040d7899285 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -63,35 +63,6 @@ static struct irq_domain_ops intel_ir_domain_ops;
  
- /*
-- *      Is the SiS APIC rmw bug present ?
-+ * Is the SiS APIC rmw bug present ?
-  *      -1 = don't know, 0 = no, 1 = yes
-+ * When doing a read-modify-write operation on IOAPIC registers, older SiS APIC
-+ * requires we rewrite the index register again where the read already set up
-+ * the index register.
-+ * The code to make use of sis_apic_bug has been removed, but we don't want to
-+ * loss this knowledge.
-  */
- int sis_apic_bug = -1;
+ static int __init parse_ioapics_under_ir(void);
  
-@@ -290,22 +295,6 @@ static void io_apic_write(unsigned int apic, unsigned int reg,
- 	writel(value, &io_apic->data);
- }
- 
--/*
-- * Re-write a value: to be used for read-modify-write
-- * cycles where the read already set up the index register.
-- *
-- * Older SiS APIC requires we rewrite the index register
-- */
--static void io_apic_modify(unsigned int apic, unsigned int reg,
--			   unsigned int value)
+-static struct irq_2_iommu *irq_2_iommu(unsigned int irq)
 -{
--	struct io_apic __iomem *io_apic = io_apic_base(apic);
--
--	if (sis_apic_bug)
--		writel(reg, &io_apic->index);
--	writel(value, &io_apic->data);
+-	struct irq_cfg *cfg = irq_cfg(irq);
+-	return cfg ? &cfg->irq_2_iommu : NULL;
 -}
 -
- union entry_union {
- 	struct { u32 w1, w2; };
- 	struct IO_APIC_route_entry entry;
-@@ -442,29 +431,23 @@ static void __init replace_pin_at_irq_node(struct mp_chip_data *data, int node,
- 	add_pin_to_irq_node(data, node, newapic, newpin);
- }
- 
--static void __io_apic_modify_irq(struct irq_pin_list *entry,
--				 int mask_and, int mask_or,
--				 void (*final)(struct irq_pin_list *entry))
+-static int get_irte(int irq, struct irte *entry)
 -{
--	unsigned int reg, pin;
+-	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
+-	unsigned long flags;
+-	int index;
 -
--	pin = entry->pin;
--	reg = io_apic_read(entry->apic, 0x10 + pin * 2);
--	reg &= mask_and;
--	reg |= mask_or;
--	io_apic_modify(entry->apic, 0x10 + pin * 2, reg);
--	if (final)
--		final(entry);
--}
+-	if (!entry || !irq_iommu)
+-		return -1;
 -
- static void io_apic_modify_irq(struct mp_chip_data *data,
- 			       int mask_and, int mask_or,
- 			       void (*final)(struct irq_pin_list *entry))
- {
-+	union entry_union eu;
- 	struct irq_pin_list *entry;
- 
--	for_each_irq_pin(entry, data->irq_2_pin)
--		__io_apic_modify_irq(entry, mask_and, mask_or, final);
-+	eu.entry = data->entry;
-+	eu.w1 &= mask_and;
-+	eu.w1 |= mask_or;
-+	data->entry = eu.entry;
-+
-+	for_each_irq_pin(entry, data->irq_2_pin) {
-+		__ioapic_write_entry(entry->apic, entry->pin, data->entry);
-+		if (final)
-+			final(entry);
-+	}
- }
- 
- static void io_apic_sync(struct irq_pin_list *entry)
-@@ -1729,28 +1712,6 @@ static unsigned int startup_ioapic_irq(struct irq_data *data)
- 	return was_pending;
- }
- 
--static void __target_IO_APIC_irq(unsigned int irq, struct irq_cfg *cfg,
--				 struct mp_chip_data *data)
--{
--	int apic, pin;
--	struct irq_pin_list *entry;
--	u8 vector = cfg->vector;
--	unsigned int dest = SET_APIC_LOGICAL_ID(cfg->dest_apicid);
+-	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
 -
--	for_each_irq_pin(entry, data->irq_2_pin) {
--		unsigned int reg;
--
--		apic = entry->apic;
--		pin = entry->pin;
--
--		io_apic_write(apic, 0x11 + pin*2, dest);
--		reg = io_apic_read(apic, 0x10 + pin*2);
--		reg &= ~IO_APIC_REDIR_VECTOR_MASK;
--		reg |= vector;
--		io_apic_modify(apic, 0x10 + pin*2, reg);
+-	if (unlikely(!irq_iommu->iommu)) {
+-		raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
+-		return -1;
 -	}
+-
+-	index = irq_iommu->irte_index + irq_iommu->sub_handle;
+-	*entry = *(irq_iommu->iommu->ir_table->base + index);
+-
+-	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
+-	return 0;
 -}
 -
- atomic_t irq_mis_count;
- 
- #ifdef CONFIG_GENERIC_PENDING_IRQ
-@@ -1916,6 +1877,7 @@ static int ioapic_set_affinity(struct irq_data *irq_data,
+ static int alloc_irte(struct intel_iommu *iommu, int irq,
+ 		      struct irq_2_iommu *irq_iommu, u16 count)
  {
- 	struct irq_data *parent = irq_data->parent_data;
- 	struct mp_chip_data *data = irq_data->chip_data;
-+	struct irq_pin_list *entry;
- 	struct irq_cfg *cfg;
- 	unsigned long flags;
- 	int ret;
-@@ -1926,7 +1888,9 @@ static int ioapic_set_affinity(struct irq_data *irq_data,
- 		cfg = irqd_cfg(irq_data);
- 		data->entry.dest = SET_APIC_LOGICAL_ID(cfg->dest_apicid);
- 		data->entry.vector = cfg->vector;
--		__target_IO_APIC_irq(irq_data->irq, cfg, irq_data->chip_data);
-+		for_each_irq_pin(entry, data->irq_2_pin)
-+			__ioapic_write_entry(entry->apic, entry->pin,
-+					     data->entry);
- 	}
- 	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
+@@ -229,29 +200,6 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
+ 	return qi_flush_iec(iommu, index, irq_iommu->irte_mask);
+ }
  
+-static int free_irte(int irq)
+-{
+-	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
+-	unsigned long flags;
+-	int rc;
+-
+-	if (!irq_iommu || irq_iommu->iommu == NULL)
+-		return -1;
+-
+-	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
+-
+-	rc = clear_entries(irq_iommu);
+-
+-	irq_iommu->iommu = NULL;
+-	irq_iommu->irte_index = 0;
+-	irq_iommu->sub_handle = 0;
+-	irq_iommu->irte_mask = 0;
+-
+-	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
+-
+-	return rc;
+-}
+-
+ /*
+  * source validation type
+  */
+@@ -875,8 +823,7 @@ error:
+ 	return -1;
+ }
+ 
+-static void prepare_irte(struct irte *irte, int vector,
+-			 unsigned int dest)
++static void prepare_irte(struct irte *irte, int vector, unsigned int dest)
+ {
+ 	memset(irte, 0, sizeof(*irte));
+ 
+@@ -896,135 +843,6 @@ static void prepare_irte(struct irte *irte, int vector,
+ 	irte->redir_hint = 1;
+ }
+ 
+-static int intel_setup_ioapic_entry(int irq,
+-				    struct IO_APIC_route_entry *route_entry,
+-				    unsigned int destination, int vector,
+-				    struct io_apic_irq_attr *attr)
+-{
+-	int ioapic_id = mpc_ioapic_id(attr->ioapic);
+-	struct intel_iommu *iommu;
+-	struct IR_IO_APIC_route_entry *entry;
+-	struct irte irte;
+-	int index;
+-
+-	down_read(&dmar_global_lock);
+-	iommu = map_ioapic_to_ir(ioapic_id);
+-	if (!iommu) {
+-		pr_warn("No mapping iommu for ioapic %d\n", ioapic_id);
+-		index = -ENODEV;
+-	} else {
+-		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
+-		if (index < 0) {
+-			pr_warn("Failed to allocate IRTE for ioapic %d\n",
+-				ioapic_id);
+-			index = -ENOMEM;
+-		}
+-	}
+-	up_read(&dmar_global_lock);
+-	if (index < 0)
+-		return index;
+-
+-	prepare_irte(&irte, vector, destination);
+-
+-	/* Set source-id of interrupt request */
+-	set_ioapic_sid(&irte, ioapic_id);
+-
+-	modify_irte(irq_2_iommu(irq), &irte);
+-
+-	apic_printk(APIC_VERBOSE, KERN_DEBUG "IOAPIC[%d]: "
+-		"Set IRTE entry (P:%d FPD:%d Dst_Mode:%d "
+-		"Redir_hint:%d Trig_Mode:%d Dlvry_Mode:%X "
+-		"Avail:%X Vector:%02X Dest:%08X "
+-		"SID:%04X SQ:%X SVT:%X)\n",
+-		attr->ioapic, irte.present, irte.fpd, irte.dst_mode,
+-		irte.redir_hint, irte.trigger_mode, irte.dlvry_mode,
+-		irte.avail, irte.vector, irte.dest_id,
+-		irte.sid, irte.sq, irte.svt);
+-
+-	entry = (struct IR_IO_APIC_route_entry *)route_entry;
+-	memset(entry, 0, sizeof(*entry));
+-
+-	entry->index2	= (index >> 15) & 0x1;
+-	entry->zero	= 0;
+-	entry->format	= 1;
+-	entry->index	= (index & 0x7fff);
+-	/*
+-	 * IO-APIC RTE will be configured with virtual vector.
+-	 * irq handler will do the explicit EOI to the io-apic.
+-	 */
+-	entry->vector	= attr->ioapic_pin;
+-	entry->mask	= 0;			/* enable IRQ */
+-	entry->trigger	= attr->trigger;
+-	entry->polarity	= attr->polarity;
+-
+-	/* Mask level triggered irqs.
+-	 * Use IRQ_DELAYED_DISABLE for edge triggered irqs.
+-	 */
+-	if (attr->trigger)
+-		entry->mask = 1;
+-
+-	return 0;
+-}
+-
+-/*
+- * Migrate the IO-APIC irq in the presence of intr-remapping.
+- *
+- * For both level and edge triggered, irq migration is a simple atomic
+- * update(of vector and cpu destination) of IRTE and flush the hardware cache.
+- *
+- * For level triggered, we eliminate the io-apic RTE modification (with the
+- * updated vector information), by using a virtual vector (io-apic pin number).
+- * Real vector that is used for interrupting cpu will be coming from
+- * the interrupt-remapping table entry.
+- *
+- * As the migration is a simple atomic update of IRTE, the same mechanism
+- * is used to migrate MSI irq's in the presence of interrupt-remapping.
+- */
+-static int
+-intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+-			  bool force)
+-{
+-	struct irq_cfg *cfg = irqd_cfg(data);
+-	unsigned int dest, irq = data->irq;
+-	struct irte irte;
+-	int err;
+-
+-	if (get_irte(irq, &irte))
+-		return -EBUSY;
+-
+-	err = assign_irq_vector(irq, cfg, mask);
+-	if (err)
+-		return err;
+-
+-	err = apic->cpu_mask_to_apicid_and(cfg->domain, mask, &dest);
+-	if (err) {
+-		if (assign_irq_vector(irq, cfg, data->affinity))
+-			pr_err("Failed to recover vector for irq %d\n", irq);
+-		return err;
+-	}
+-
+-	irte.vector = cfg->vector;
+-	irte.dest_id = IRTE_DEST(dest);
+-
+-	/*
+-	 * Atomically updates the IRTE with the new destination, vector
+-	 * and flushes the interrupt entry cache.
+-	 */
+-	modify_irte(irq_2_iommu(irq), &irte);
+-
+-	/*
+-	 * After this point, all the interrupts will start arriving
+-	 * at the new destination. So, time to cleanup the previous
+-	 * vector allocation.
+-	 */
+-	if (cfg->move_in_progress)
+-		send_cleanup_vector(cfg);
+-
+-	cpumask_copy(data->affinity, mask);
+-
+-	return 0;
+-}
+-
+ static struct irq_domain *intel_get_ir_irq_domain(struct irq_alloc_info *info)
+ {
+ 	struct intel_iommu *iommu = NULL;
+@@ -1079,9 +897,6 @@ struct irq_remap_ops intel_irq_remap_ops = {
+ 	.disable		= disable_irq_remapping,
+ 	.reenable		= reenable_irq_remapping,
+ 	.enable_faulting	= enable_drhd_fault_handling,
+-	.setup_ioapic_entry	= intel_setup_ioapic_entry,
+-	.set_affinity		= intel_ioapic_set_affinity,
+-	.free_irq		= free_irte,
+ 	.get_ir_irq_domain	= intel_get_ir_irq_domain,
+ 	.get_irq_domain		= intel_get_irq_domain,
+ };
 -- 
 1.7.10.4
 
