@@ -1,67 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:57474 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750869AbaKXWtd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Nov 2014 17:49:33 -0500
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 25 Nov 2014 08:49:31 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 678DB2BB005C
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 09:49:28 +1100 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAOMnSdA33226870
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 09:49:28 +1100
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAOMnRX5008707
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 09:49:27 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH 2/8] powerpc/pci: Don't scan empty slot
-Date: Tue, 25 Nov 2014 09:49:19 +1100
-Message-Id: <1416869365-7671-3-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1416869365-7671-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1416869365-7671-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part3 v3 30/38] x86, irq: Kill unused alloc_irq_and_cfg_at()
+Date: Sun,  9 Nov 2014 02:13:30 +0800
+Message-Id: <1415470418-10874-31-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In hotplug case, function pcibios_add_pci_devices() is called to
-rescan the specified PCI bus, which possibly doesn't have any child
-devices. Access to the PCI bus's child device node will cause kernel
-crash without exception. The patch adds two more conditions to avoid
-the kernel crash.
+There's no caller of alloc_irq_and_cfg_at() anymore, so kill it.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/powerpc/kernel/pci-hotplug.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ arch/x86/include/asm/hw_irq.h |    1 -
+ arch/x86/kernel/apic/vector.c |   21 ---------------------
+ 2 files changed, 22 deletions(-)
 
-diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
-index 6e2b4e3..ea5513b 100644
---- a/arch/powerpc/kernel/pci-hotplug.c
-+++ b/arch/powerpc/kernel/pci-hotplug.c
-@@ -105,7 +105,7 @@ EXPORT_SYMBOL_GPL(pcibios_remove_pci_devices);
-  * is how this routine differs from other, similar pcibios
-  * routines.)
-  */
--void pcibios_add_pci_devices(struct pci_bus * bus)
-+void pcibios_add_pci_devices(struct pci_bus *bus)
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 75789c0299e0..00d6143affe7 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -184,7 +184,6 @@ extern void copy_irq_alloc_info(struct irq_alloc_info *dst,
+ 				struct irq_alloc_info *src);
+ extern struct irq_cfg *irq_cfg(unsigned int irq);
+ extern struct irq_cfg *irqd_cfg(struct irq_data *irq_data);
+-extern struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node);
+ extern void lock_vector_lock(void);
+ extern void unlock_vector_lock(void);
+ extern int assign_irq_vector(int, struct irq_cfg *, const struct cpumask *);
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 59faffbf39cc..6df30d713f67 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -76,27 +76,6 @@ out_cfg:
+ 	return NULL;
+ }
+ 
+-struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node)
+-{
+-	int res = irq_alloc_desc_at(at, node);
+-	struct irq_cfg *cfg;
+-
+-	if (res < 0) {
+-		if (res != -EEXIST)
+-			return NULL;
+-		cfg = irq_cfg(at);
+-		if (cfg)
+-			return cfg;
+-	}
+-
+-	cfg = alloc_irq_cfg(node);
+-	if (cfg)
+-		irq_set_chip_data(at, cfg);
+-	else
+-		irq_free_desc(at);
+-	return cfg;
+-}
+-
+ static void free_irq_cfg(struct irq_cfg *cfg)
  {
- 	int slotno, mode, pass, max;
- 	struct pci_dev *dev;
-@@ -120,7 +120,8 @@ void pcibios_add_pci_devices(struct pci_bus * bus)
- 	if (mode == PCI_PROBE_DEVTREE) {
- 		/* use ofdt-based probe */
- 		of_rescan_bus(dn, bus);
--	} else if (mode == PCI_PROBE_NORMAL) {
-+	} else if (mode == PCI_PROBE_NORMAL &&
-+		   dn->child && PCI_DN(dn->child)) {
- 		/*
- 		 * Use legacy probe. In the partial hotplug case, we
- 		 * probably have grandchildren devices unplugged. So
+ 	if (cfg) {
 -- 
-1.8.3.2
+1.7.10.4
 
