@@ -8,126 +8,123 @@ To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>
 Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v4 12/31] x86, dmar: Use new irqdomain interfaces to allocate/free IRQ
-Date: Tue,  4 Nov 2014 20:01:46 +0800
-Message-Id: <1415102525-9898-13-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part3 v3 08/38] x86, irq: Introduce helper functions to support hierarchy irqdomain for IOAPIC
+Date: Sun,  9 Nov 2014 02:13:08 +0800
+Message-Id: <1415470418-10874-9-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new irqdomain interfaces to allocate/free IRQ for DMAR and interrupt
-remapping, so we could kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
-
-The private definition of irq_alloc_hwirqs()/irq_free_hwirqs() are
-temporary solution, it will be removed once we have converted interrupt
-remapping driver to use irqdomain framework.
+Introduce several helper functions, which will be used to enable
+hierarchy irqdomain for IOAPIC.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/include/asm/irq_remapping.h |    4 ++--
- arch/x86/kernel/apic/msi.c           |   10 ++++++++++
- drivers/iommu/irq_remapping.c        |   17 +++++++++++++++--
- 3 files changed, 27 insertions(+), 4 deletions(-)
+ arch/x86/kernel/apic/io_apic.c |   59 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 59 insertions(+)
 
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index b7747c4c2cf2..230dde9b695e 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -103,7 +103,7 @@ static inline bool setup_remapped_irq(int irq,
- }
- #endif /* CONFIG_IRQ_REMAP */
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index b2618d48d572..721be8ce77c8 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -67,6 +67,8 @@
+ #define for_each_irq_pin(entry, head) \
+ 	list_for_each_entry(entry, &head, list)
  
--#define dmar_alloc_hwirq()	irq_alloc_hwirq(-1)
--#define dmar_free_hwirq		irq_free_hwirq
-+extern int dmar_alloc_hwirq(void);
-+extern void dmar_free_hwirq(int irq);
- 
- #endif /* __X86_IRQ_REMAPPING_H */
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 7e45991c0e79..4bb2b583be7f 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -223,6 +223,16 @@ int arch_setup_dmar_msi(unsigned int irq)
- 				      "edge");
- 	return 0;
- }
++int acpi_get_override_irq(u32 gsi, int *trigger, int *polarity);
 +
-+int dmar_alloc_hwirq(void)
-+{
-+	return irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
-+}
-+
-+void dmar_free_hwirq(int irq)
-+{
-+	irq_domain_free_irqs(irq, 1);
-+}
- #endif
- 
  /*
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index e9fbd68db96e..63886bafed9f 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -6,6 +6,7 @@
- #include <linux/msi.h>
- #include <linux/irq.h>
- #include <linux/pci.h>
-+#include <linux/irqdomain.h>
+  *      Is the SiS APIC rmw bug present ?
+  *      -1 = don't know, 0 = no, 1 = yes
+@@ -82,6 +84,7 @@ struct mp_chip_data {
+ 	struct IO_APIC_route_entry entry;
+ 	int trigger;
+ 	int polarity;
++	u32 count;
+ 	bool isa_irq;
+ };
  
- #include <asm/hw_irq.h>
- #include <asm/irq_remapping.h>
-@@ -50,6 +51,18 @@ static void irq_remapping_disable_io_apic(void)
- 		disconnect_bsp_APIC(0);
+@@ -945,6 +948,42 @@ void ioapic_set_alloc_attr(struct irq_alloc_info *info, int node,
+ 	info->ioapic_valid = 1;
  }
  
-+#ifndef CONFIG_GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
-+static unsigned int irq_alloc_hwirqs(int cnt, int node)
++static void ioapic_copy_alloc_attr(struct irq_alloc_info *dst,
++				   struct irq_alloc_info *src,
++				   u32 gsi, int ioapic_idx, int pin)
 +{
-+	return irq_domain_alloc_irqs(NULL, -1, cnt, node, NULL);
++	int trigger, polarity;
++
++	copy_irq_alloc_info(dst, src);
++	dst->type = X86_IRQ_ALLOC_TYPE_IOAPIC;
++	dst->ioapic_id = mpc_ioapic_id(ioapic_idx);
++	dst->ioapic_pin = pin;
++	dst->ioapic_valid = 1;
++	if (src && src->ioapic_valid) {
++		dst->ioapic_node = src->ioapic_node;
++		dst->ioapic_trigger = src->ioapic_trigger;
++		dst->ioapic_polarity = src->ioapic_polarity;
++	} else {
++		dst->ioapic_node = NUMA_NO_NODE;
++		if (acpi_get_override_irq(gsi, &trigger, &polarity) >= 0) {
++			dst->ioapic_trigger = trigger;
++			dst->ioapic_polarity = polarity;
++		} else {
++			/*
++			 * PCI interrupts are always polarity one level
++			 * triggered.
++			 */
++			dst->ioapic_trigger = 1;
++			dst->ioapic_polarity = 1;
++		}
++	}
 +}
 +
-+static void irq_free_hwirqs(unsigned int from, int cnt)
++static int ioapic_alloc_attr_node(struct irq_alloc_info *info)
 +{
-+	irq_domain_free_irqs(from, cnt);
++	return (info && info->ioapic_valid) ? info->ioapic_node : NUMA_NO_NODE;
 +}
-+#endif
 +
- static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
+ static void mp_register_handler(unsigned int irq, unsigned long trigger)
  {
- 	int ret, sub_handle, nvec_pow2, index = 0;
-@@ -113,7 +126,7 @@ static int do_setup_msix_irqs(struct pci_dev *dev, int nvec)
- 
- 	list_for_each_entry(msidesc, &dev->msi_list, list) {
- 
--		irq = irq_alloc_hwirq(node);
-+		irq = irq_alloc_hwirqs(1, node);
- 		if (irq == 0)
- 			return -1;
- 
-@@ -136,7 +149,7 @@ static int do_setup_msix_irqs(struct pci_dev *dev, int nvec)
- 	return 0;
- 
- error:
--	irq_free_hwirq(irq);
-+	irq_free_hwirqs(irq, 1);
- 	return ret;
+ 	irq_flow_handler_t hdl;
+@@ -962,6 +1001,26 @@ static void mp_register_handler(unsigned int irq, unsigned long trigger)
+ 	__irq_set_handler(irq, hdl, 0, fasteoi ? "fasteoi" : "edge");
  }
  
++static bool mp_check_pin_attr(int irq, struct irq_alloc_info *info)
++{
++	struct mp_chip_data *data = irq_get_chip_data(irq);
++
++	/*
++	 * setup_IO_APIC_irqs() programs all legacy IRQs with default trigger
++	 * and polarity attirbutes. So allow the first user to reprogram the
++	 * pin with real trigger and polarity attributes.
++	 */
++	if (irq < nr_legacy_irqs() && data->count == 1) {
++		if (info->ioapic_trigger != data->trigger)
++			mp_register_handler(irq, data->trigger);
++		data->entry.trigger = data->trigger = info->ioapic_trigger;
++		data->entry.polarity = data->polarity = info->ioapic_polarity;
++	}
++
++	return data->trigger == info->ioapic_trigger &&
++	       data->polarity == info->ioapic_polarity;
++}
++
+ static int alloc_irq_from_domain(struct irq_domain *domain, u32 gsi, int pin,
+ 				 struct irq_alloc_info *info)
+ {
 -- 
 1.7.10.4
 
