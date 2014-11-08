@@ -1,70 +1,133 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sun, 23 Nov 2014 21:20:21 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Alex Williamson <alex.williamson@redhat.com>
-cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, x86@kernel.org, mingo@redhat.com,
-	hpa@zytor.com, joro@8bytes.org, iommu@lists.linux-foundation.org
-Subject: Re: [PATCH 1/3] PCI/MSI: Initial hook for archs to declare multivector
- MSI support
-In-Reply-To: <20141121220833.31095.12371.stgit@gimli.home>
-Message-ID: <alpine.DEB.2.11.1411232109140.6439@nanos>
-References: <20141121213752.31095.30735.stgit@gimli.home> <20141121220833.31095.12371.stgit@gimli.home>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part3 v3 27/38] x86, irq: Kill x86_io_apic_ops.write and x86_io_apic_ops.modify
+Date: Sun,  9 Nov 2014 02:13:27 +0800
+Message-Id: <1415470418-10874-28-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 21 Nov 2014, Alex Williamson wrote:
-> For the most part multivector MSI is not supported and drivers and
-> hardware wanting multiple vectors opt for MSI-X instead.  It seems
-> though that having the ability to query the arch/platform code to
-> determine whether allocating multiple MSI vectors will ever succeed
-> is a useful thing.  For instance, vfio-pci can use this to determine
-> whether to expose multiple MSI vectors to the user.  If we know we
-> cannot ever support more than one vector, we have a better shot at
-> the userspace driver working, especially if it's a guest OS, if we
-> only expose one vector as being available in the interface.
-> 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
-> 
->  drivers/pci/msi.c   |    5 +++++
->  include/linux/msi.h |    1 +
->  2 files changed, 6 insertions(+)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 9fab30a..36b503a 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -79,6 +79,11 @@ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->  	return 0;
->  }
->  
-> +bool __weak arch_supports_multivector_msi(struct pci_dev *dev)
+x86_io_apic_ops.write is always set to native_io_apic_write(),
+and nobody overrides it. So get rid of the indirection by changing
+native_io_apic_write() as io_apic_write() and killing
+x86_io_apic_ops.write.
 
-Please not another weak arch function. We are in the process to reduce
-them not to extend them.
+Do the same for x86_io_apic_ops.modify and native_io_apic_modify().
 
-arch_supports is pretty much wrong here anyway. We are moving away
-from arch MSI dependencies simply because it's not a arch property per
-se.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h  |   13 -------------
+ arch/x86/include/asm/x86_init.h |    2 --
+ arch/x86/kernel/apic/io_apic.c  |    6 ++++--
+ arch/x86/kernel/x86_init.c      |    2 --
+ 4 files changed, 4 insertions(+), 19 deletions(-)
 
-Multi MSI is a property of the underlying interrupt controllers and
-there might be several MSI interrupt domains on a given system. They
-can or cannot support multi MSI.
-
-The current x86 implementation is a tangled maze and Jiang is in the
-process to distangle it completely. Until thats done x86 is not going
-to add new ad hoc interfaces.
-
-Once we converted everything over to the new hierarchical irqdomains
-we can add such an interface to the code, but for now I'm not
-accepting anything like that into x86 msi related code.
-
-Thanks,
-
-	tglx
-
-
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 1597c77725f9..21578af00243 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -208,8 +208,6 @@ extern void disable_ioapic_support(void);
+ 
+ extern void __init native_io_apic_init_mappings(void);
+ extern unsigned int native_io_apic_read(unsigned int apic, unsigned int reg);
+-extern void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int val);
+-extern void native_io_apic_modify(unsigned int apic, unsigned int reg, unsigned int val);
+ extern void native_disable_io_apic(void);
+ 
+ static inline unsigned int io_apic_read(unsigned int apic, unsigned int reg)
+@@ -217,15 +215,6 @@ static inline unsigned int io_apic_read(unsigned int apic, unsigned int reg)
+ 	return x86_io_apic_ops.read(apic, reg);
+ }
+ 
+-static inline void io_apic_write(unsigned int apic, unsigned int reg, unsigned int value)
+-{
+-	x86_io_apic_ops.write(apic, reg, value);
+-}
+-static inline void io_apic_modify(unsigned int apic, unsigned int reg, unsigned int value)
+-{
+-	x86_io_apic_ops.modify(apic, reg, value);
+-}
+-
+ extern void setup_IO_APIC(void);
+ extern void enable_IO_APIC(void);
+ extern void disable_IO_APIC(void);
+@@ -266,8 +255,6 @@ static inline void mp_save_irq(struct mpc_intsrc *m) { };
+ static inline void disable_ioapic_support(void) { }
+ #define native_io_apic_init_mappings	NULL
+ #define native_io_apic_read		NULL
+-#define native_io_apic_write		NULL
+-#define native_io_apic_modify		NULL
+ #define native_disable_io_apic		NULL
+ #endif
+ 
+diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+index 3755cd2bbb94..398717e7493d 100644
+--- a/arch/x86/include/asm/x86_init.h
++++ b/arch/x86/include/asm/x86_init.h
+@@ -185,8 +185,6 @@ struct x86_msi_ops {
+ struct x86_io_apic_ops {
+ 	void		(*init)   (void);
+ 	unsigned int	(*read)   (unsigned int apic, unsigned int reg);
+-	void		(*write)  (unsigned int apic, unsigned int reg, unsigned int value);
+-	void		(*modify) (unsigned int apic, unsigned int reg, unsigned int value);
+ 	void		(*disable)(void);
+ };
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index f0ef5832f527..7a3679e43b67 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -277,7 +277,8 @@ unsigned int native_io_apic_read(unsigned int apic, unsigned int reg)
+ 	return readl(&io_apic->data);
+ }
+ 
+-void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int value)
++static void io_apic_write(unsigned int apic, unsigned int reg,
++			  unsigned int value)
+ {
+ 	struct io_apic __iomem *io_apic = io_apic_base(apic);
+ 
+@@ -291,7 +292,8 @@ void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int valu
+  *
+  * Older SiS APIC requires we rewrite the index register
+  */
+-void native_io_apic_modify(unsigned int apic, unsigned int reg, unsigned int value)
++static void io_apic_modify(unsigned int apic, unsigned int reg,
++			   unsigned int value)
+ {
+ 	struct io_apic __iomem *io_apic = io_apic_base(apic);
+ 
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index ac2b604c00ec..30140bdf6d62 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -151,7 +151,5 @@ u32 arch_msix_mask_irq(struct msi_desc *desc, u32 flag)
+ struct x86_io_apic_ops x86_io_apic_ops = {
+ 	.init			= native_io_apic_init_mappings,
+ 	.read			= native_io_apic_read,
+-	.write			= native_io_apic_write,
+-	.modify			= native_io_apic_modify,
+ 	.disable		= native_disable_io_apic,
+ };
+-- 
+1.7.10.4
 
