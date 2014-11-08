@@ -1,115 +1,210 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:58695 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753660AbaKLCqh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 21:46:37 -0500
-Message-ID: <5462CA00.10601@huawei.com>
-Date: Wed, 12 Nov 2014 10:46:24 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
+Received: from mga01.intel.com ([192.55.52.88]:51546 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754265AbaKHSPf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 8 Nov 2014 13:15:35 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: RFC for ideas to clean up PCI MSI code
-References: <54624D35.2070808@linux.intel.com>
-In-Reply-To: <54624D35.2070808@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Joerg Roedel <joro@8bytes.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	iommu@lists.linux-foundation.org
+Subject: [Patch Part3 v3 20/38] iommu/amd: Clean up unsued code
+Date: Sun,  9 Nov 2014 02:13:20 +0800
+Message-Id: <1415470418-10874-21-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/11/12 1:53, Jiang Liu wrote:
-> Hi Bjorn, Yijing and Thomas,
-> 	Recently Yijing is trying to kill some weak functions in
-> drivers/pci/msi.c by using msi_chip mechanism. And it inspired me
-> that we could go one step further to kill those weak functions
-> at all and move common PCI MSI code into PCI core by using the
-> new hierarch irqdomain framework.
-> 	The way to achieve the goal is:
-> 1) arch code creates irqdomain for PCI MSI controllers. By default,
-> there's only one global PCI MSI irqdomain. But there's may be multiple
-> for some architecture like x86. So arch also need to implement a weak
-> function (I know you don't like weak functions):
-> 	struct irq_domain *arch_get_pci_msi_irq_domain(struct pci_dev *);
+Now we have converted to hierarchy irqdomain, so clean up unused code.
 
-Arm also may have multiple msi_chips/msi irq domains, currently, corresponding msi_chip is stored
-in bus->msi. But it's not a good idea, I'm refactoring generic pci host bridge, we could
-save it in generic pci_host_bridge.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/amd_iommu.c |  144 ---------------------------------------------
+ 1 file changed, 144 deletions(-)
 
-> 
-> 2) replace
-> arch_setup_msi_irqs()/arch_setup_msi_irqs()/arch_teardown_msi_irqs()/arch_teardown_msi_irq()
-> with
-> irq_domain interfaces.
-
-Agree.
-
-> 
-> 3) kill arch_msi_mask_irq()/arch_msi_mask_irq() by directly setting
-> irq_chip.irq_mask()/irq_unmask().
-
-arch_msi_mask_irq() is only called in pci_msi_shutdown, in this case,
-the msi mask status will not be overrode, so we can restore it later.
-If use irq_chip.irq_mask(), we need another place to save the mask status.
-
-> 
-> 4) we could also find a way to kill arch_restore_msi_irqs() by using
-> new irqdomain interfaces.
-
-My personal opinion, I think place arch_retore_msi_irqs() stuffs in irq_chip is better. :)
-
-
-> 
-> For arch code to support the new MSI, it needs to implement callbacks in
-> msi_domain_ops and irq_chip. All other PCI MSI code becomes common
-> and will be moved into pci/msi.c. Proposed interfaces as below:
-> 
-> struct irq_chip {
->         void            (*irq_compose_msi_msg)(struct irq_data *data,
-> struct msi_msg *msg);
-> };
-> 
-> struct msi_domain_ops {
->         void (*calc_hwirq)(struct msi_domain_info *info, void *arg,
->                            struct msi_desc *desc);
->         irq_hw_number_t (*get_hwirq)(struct msi_domain_info *info, void
-> *arg);
->         int (*msi_init)(struct irq_domain *domain, struct
-> msi_domain_info *info,
->                         unsigned int virq, irq_hw_number_t hwirq, void
-> *arg);
->         void (*msi_free)(struct irq_domain *domain,
->                          struct msi_domain_info *info, unsigned int virq);
-> };
-> 
-> struct msi_domain_info {
->         struct msi_domain_ops *ops;
->         struct irq_chip *chip;
->         void *data;
-> };
-> 
-> struct irq_domain *msi_create_irq_domain(struct device_node *of_node,
->                                          struct msi_domain_info *info,
->                                          struct irq_domain *parent);
-> 
-> So, what's your thoughts about the proposal? If now objection, I may
-> send out a draft version for x86 within about one week:)
-
-I think the proposal is better than original msi_chip framework.
-I like this idea. :)
-
-Thanks!
-Yijing.
-
-
-> Thanks!
-> Gerry
-> 
-> .
-> 
-
-
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index 336d310b5b7b..704c18e3eb63 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -3996,22 +3996,6 @@ out:
+ 	return index;
+ }
+ 
+-static int get_irte(u16 devid, int index, union irte *irte)
+-{
+-	struct irq_remap_table *table;
+-	unsigned long flags;
+-
+-	table = get_irq_table(devid, false);
+-	if (!table)
+-		return -ENOMEM;
+-
+-	spin_lock_irqsave(&table->lock, flags);
+-	irte->val = table->table[index];
+-	spin_unlock_irqrestore(&table->lock, flags);
+-
+-	return 0;
+-}
+-
+ static int modify_irte(u16 devid, int index, union irte irte)
+ {
+ 	struct irq_remap_table *table;
+@@ -4058,131 +4042,6 @@ static void free_irte(u16 devid, int index)
+ 	iommu_completion_wait(iommu);
+ }
+ 
+-static int setup_ioapic_entry(int irq, struct IO_APIC_route_entry *entry,
+-			      unsigned int destination, int vector,
+-			      struct io_apic_irq_attr *attr)
+-{
+-	struct irq_remap_table *table;
+-	struct irq_2_irte *irte_info;
+-	struct irq_cfg *cfg;
+-	union irte irte;
+-	int ioapic_id;
+-	int index;
+-	int devid;
+-	int ret;
+-
+-	cfg = irq_cfg(irq);
+-	if (!cfg)
+-		return -EINVAL;
+-
+-	irte_info = &cfg->irq_2_irte;
+-	ioapic_id = mpc_ioapic_id(attr->ioapic);
+-	devid     = get_ioapic_devid(ioapic_id);
+-
+-	if (devid < 0)
+-		return devid;
+-
+-	table = get_irq_table(devid, true);
+-	if (table == NULL)
+-		return -ENOMEM;
+-
+-	index = attr->ioapic_pin;
+-
+-	/* Setup IRQ remapping info */
+-	cfg->remapped	      = 1;
+-	irte_info->devid      = devid;
+-	irte_info->index      = index;
+-
+-	/* Setup IRTE for IOMMU */
+-	irte.val		= 0;
+-	irte.fields.vector      = vector;
+-	irte.fields.int_type    = apic->irq_delivery_mode;
+-	irte.fields.destination = destination;
+-	irte.fields.dm          = apic->irq_dest_mode;
+-	irte.fields.valid       = 1;
+-
+-	ret = modify_irte(devid, index, irte);
+-	if (ret)
+-		return ret;
+-
+-	/* Setup IOAPIC entry */
+-	memset(entry, 0, sizeof(*entry));
+-
+-	entry->vector        = index;
+-	entry->mask          = 0;
+-	entry->trigger       = attr->trigger;
+-	entry->polarity      = attr->polarity;
+-
+-	/*
+-	 * Mask level triggered irqs.
+-	 */
+-	if (attr->trigger)
+-		entry->mask = 1;
+-
+-	return 0;
+-}
+-
+-static int set_affinity(struct irq_data *data, const struct cpumask *mask,
+-			bool force)
+-{
+-	struct irq_2_irte *irte_info;
+-	unsigned int dest, irq;
+-	struct irq_cfg *cfg;
+-	union irte irte;
+-	int err;
+-
+-	if (!config_enabled(CONFIG_SMP))
+-		return -1;
+-
+-	cfg       = irqd_cfg(data);
+-	irq       = data->irq;
+-	irte_info = &cfg->irq_2_irte;
+-
+-	if (!cpumask_intersects(mask, cpu_online_mask))
+-		return -EINVAL;
+-
+-	if (get_irte(irte_info->devid, irte_info->index, &irte))
+-		return -EBUSY;
+-
+-	if (assign_irq_vector(irq, cfg, mask))
+-		return -EBUSY;
+-
+-	err = apic->cpu_mask_to_apicid_and(cfg->domain, mask, &dest);
+-	if (err) {
+-		if (assign_irq_vector(irq, cfg, data->affinity))
+-			pr_err("AMD-Vi: Failed to recover vector for irq %d\n", irq);
+-		return err;
+-	}
+-
+-	irte.fields.vector      = cfg->vector;
+-	irte.fields.destination = dest;
+-
+-	modify_irte(irte_info->devid, irte_info->index, irte);
+-
+-	if (cfg->move_in_progress)
+-		send_cleanup_vector(cfg);
+-
+-	cpumask_copy(data->affinity, mask);
+-
+-	return 0;
+-}
+-
+-static int free_irq(int irq)
+-{
+-	struct irq_2_irte *irte_info;
+-	struct irq_cfg *cfg;
+-
+-	cfg = irq_cfg(irq);
+-	if (!cfg)
+-		return -EINVAL;
+-
+-	irte_info = &cfg->irq_2_irte;
+-
+-	free_irte(irte_info->devid, irte_info->index);
+-
+-	return 0;
+-}
+-
+ static int get_devid(struct irq_alloc_info *info)
+ {
+ 	int devid = -1;
+@@ -4256,9 +4115,6 @@ struct irq_remap_ops amd_iommu_irq_ops = {
+ 	.disable		= amd_iommu_disable,
+ 	.reenable		= amd_iommu_reenable,
+ 	.enable_faulting	= amd_iommu_enable_faulting,
+-	.setup_ioapic_entry	= setup_ioapic_entry,
+-	.set_affinity		= set_affinity,
+-	.free_irq		= free_irq,
+ 	.get_ir_irq_domain	= get_ir_irq_domain,
+ 	.get_irq_domain		= get_irq_domain,
+ };
 -- 
-Thanks!
-Yijing
+1.7.10.4
 
