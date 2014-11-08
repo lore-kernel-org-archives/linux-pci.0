@@ -1,79 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:24155 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933754AbaKNBKX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 20:10:23 -0500
-Message-ID: <54655632.2040209@huawei.com>
-Date: Fri, 14 Nov 2014 09:09:06 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	"Borislav Petkov" <bp@alien8.de>, "H. Peter Anvin" <hpa@zytor.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [Patch V1 0/6] Refine generic/PCI MSI irqodmian interfaces
-References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com> <54651BE2.9080008@arm.com> <54654C10.2040102@linux.intel.com>
-In-Reply-To: <54654C10.2040102@linux.intel.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part3 v3 26/38] x86, irq: Kill struct io_apic_irq_attr
+Date: Sun,  9 Nov 2014 02:13:26 +0800
+Message-Id: <1415470418-10874-27-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/11/14 8:25, Jiang Liu wrote:
-> On 2014/11/14 5:00, Marc Zyngier wrote:
->> On 13/11/14 11:43, Jiang Liu wrote:
->>> This patch set is based on tip/irq/irqdomain and tries to refine
->>> interfaces to support irqdomain for generic MSI and PCI MSI.
->>>
->>> With this patch set applied, the generic MSI and PCI MSI interfaces
->>> are much easier to use. For extreme case, you only need to define
->>> a "struct msi_domain_info" and don't need to implement any callbacks,
->>> just using the default callbacks is OK:)
->>>
->>> This patch set is also a preparation for:
->>> 1) Kill all weak functions in drivers/pci/msi.c
->>> 2) Implement support for non-PCI-compliant MSI device
->>
->> I've rebased (once more!) the GICv3 ITS driver on top of this, and this
->> is definitely a major improvement. This is basically the first version
->> I can use without having to hack into the core code (apart from the
->> couple of nits I've mentioned earlier).
-> Sorry for the rebasing, but I hope it worthy rebasing:)
-> 
->>
->> Now, Thomas' idea of putting the irq_domain close to the bus is very
->> appealing, and I've tweaked an earlier patch in order to do this:
-> I feel that's the right direction. There are other threads discussing
-> associating an MSI controller structure with each PCI bus (at least
-> root bus).
-> http://www.spinics.net/lists/arm-kernel/msg376328.html
+Now there's no user of struct io_apic_irq_attr anymore, so kill it.
 
-Associate the irq domain and PCI bus is not necessary, because all PCI buses under same host bridge
-always share same MSI chip/irq domain, we only need associate them and pci host bridge.
-I'm refactoring the pci_host_bridge, make it be a generic one, rip out of the pci root bus
-creation, so we could put the irq domain and pci domain etc.. in it. Finally, we could
-eliminate lots platform arch functions. I will post it out within one week.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h |    7 -------
+ arch/x86/kernel/apic/io_apic.c |   10 ----------
+ 2 files changed, 17 deletions(-)
 
-Thanks!
-Yijing.
-
-> Regards!
-> Gerry
-> 
-> .
-> 
-
-
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 3b54f0f9cbb7..1597c77725f9 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -157,13 +157,6 @@ extern int restore_ioapic_entries(void);
+ extern void setup_ioapic_ids_from_mpc(void);
+ extern void setup_ioapic_ids_from_mpc_nocheck(void);
+ 
+-struct io_apic_irq_attr {
+-	int ioapic;
+-	int ioapic_pin;
+-	int trigger;
+-	int polarity;
+-};
+-
+ enum ioapic_domain_type {
+ 	IOAPIC_DOMAIN_INVALID,
+ 	IOAPIC_DOMAIN_LEGACY,
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 69aa3b04448b..f0ef5832f527 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -2949,16 +2949,6 @@ int mp_ioapic_registered(u32 gsi_base)
+ 	return 0;
+ }
+ 
+-static inline void set_io_apic_irq_attr(struct io_apic_irq_attr *irq_attr,
+-					int ioapic, int ioapic_pin,
+-					int trigger, int polarity)
+-{
+-	irq_attr->ioapic	= ioapic;
+-	irq_attr->ioapic_pin	= ioapic_pin;
+-	irq_attr->trigger	= trigger;
+-	irq_attr->polarity	= polarity;
+-}
+-
+ static void mp_irqdomain_get_attr(u32 gsi, struct mp_chip_data *data,
+ 				  struct irq_alloc_info *info)
+ {
 -- 
-Thanks!
-Yijing
+1.7.10.4
 
