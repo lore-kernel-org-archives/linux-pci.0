@@ -1,45 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53075 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:25785 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755726AbaKASL0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 1 Nov 2014 14:11:26 -0400
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sA1IBQ2s017851
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-pci@vger.kernel.org>; Sat, 1 Nov 2014 14:11:26 -0400
-From: Prarit Bhargava <prarit@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: Prarit Bhargava <prarit@redhat.com>,
-	Myron Stowe <mstowe@redhat.com>
-Subject: [PATCH] pci, add FW_BUG warning to pci= kernel option
-Date: Sat,  1 Nov 2014 14:11:19 -0400
-Message-Id: <1414865479-25792-1-git-send-email-prarit@redhat.com>
+	id S1754294AbaKHSPr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 8 Nov 2014 13:15:47 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
+Subject: [Patch Part3 v3 22/38] x86, irq: Kill irq_cfg.irq_remapped
+Date: Sun,  9 Nov 2014 02:13:22 +0800
+Message-Id: <1415470418-10874-23-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The kernel should boot PCI without the use of kernel parameters.  Display
-a FW_BUG warning when pci= is used.
+Now there is no user of irq_cfg.irq_remapped, so kill it.
 
-Cc: Myron Stowe <mstowe@redhat.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/pci.c |    2 ++
- 1 file changed, 2 insertions(+)
+ arch/x86/include/asm/hw_irq.h       |    1 -
+ drivers/iommu/amd_iommu.c           |    1 -
+ drivers/iommu/intel_irq_remapping.c |    2 --
+ 3 files changed, 4 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 625a4ac..5172060b 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4515,6 +4515,8 @@ static int __init pci_setup(char *str)
- 		}
- 		str = k;
- 	}
-+	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
-+	pr_crit(FW_BUG "The PCI configuration has been overridden thorugh the use of pci=.  Please report the issue you are attempting to resolve to your hardware vendor.\n");
- 	return 0;
- }
- early_param("pci", pci_setup);
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index a007dae5feaf..7ad26bb42e57 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -191,7 +191,6 @@ struct irq_cfg {
+ 	u8			vector;
+ 	u8			move_in_progress : 1;
+ #ifdef CONFIG_IRQ_REMAP
+-	u8			remapped : 1;
+ 	union {
+ 		struct irq_2_iommu irq_2_iommu;
+ 		struct irq_2_irte  irq_2_irte;
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index 704c18e3eb63..2f76656a88ce 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -4129,7 +4129,6 @@ static void irq_remapping_prepare_irte(struct amd_ir_data *data,
+ 	struct msi_msg *msg = &data->msi_entry;
+ 	struct IO_APIC_route_entry *entry;
+ 
+-	irq_cfg->remapped = 1;
+ 	data->irq_2_irte.devid = devid;
+ 	data->irq_2_irte.index = index + sub_handle;
+ 
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 0040d7899285..5e3e529e8d88 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -67,7 +67,6 @@ static int alloc_irte(struct intel_iommu *iommu, int irq,
+ 		      struct irq_2_iommu *irq_iommu, u16 count)
+ {
+ 	struct ir_table *table = iommu->ir_table;
+-	struct irq_cfg *cfg = irq_cfg(irq);
+ 	unsigned int mask = 0;
+ 	unsigned long flags;
+ 	int index;
+@@ -94,7 +93,6 @@ static int alloc_irte(struct intel_iommu *iommu, int irq,
+ 	if (index < 0) {
+ 		pr_warn("IR%d: can't allocate an IRTE\n", iommu->seq_id);
+ 	} else {
+-		cfg->remapped = 1;
+ 		irq_iommu->iommu = iommu;
+ 		irq_iommu->irte_index =  index;
+ 		irq_iommu->sub_handle = 0;
 -- 
-1.7.9.3
+1.7.10.4
 
