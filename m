@@ -1,4 +1,8 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:1552 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753973AbaKHSTC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 8 Nov 2014 13:19:02 -0500
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
@@ -8,174 +12,84 @@ To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>
+	Borislav Petkov <bp@alien8.de>,
+	Jonathan Corbet <corbet@lwn.net>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
 Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
-Subject: [Patch Part3 v3 14/38] x86, irq: Kill x86_io_apic_ops.set_affinity and related interfaces
-Date: Sun,  9 Nov 2014 02:13:14 +0800
-Message-Id: <1415470418-10874-15-git-send-email-jiang.liu@linux.intel.com>
+	linux-acpi@vger.kernel.org,
+	Daniel J Blueman <daniel@numascale.com>,
+	linux-doc@vger.kernel.org
+Subject: [Patch Part3 v3 38/38] x86, irq: Add kernel parameter vector_alloc to set CPU vector allocation policy
+Date: Sun,  9 Nov 2014 02:13:38 +0800
+Message-Id: <1415470418-10874-39-git-send-email-jiang.liu@linux.intel.com>
 In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
 References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now there is no user of x86_io_apic_ops.set_affinity anymore, so kill
-it.
+Parameter vector_alloc should be set to an integer with:
+bit 0:	enable allocating CPU vector from CPUs on device local node.
+	That's to allocate from cpumask_of_node(irq_data->node).
+bit 1: enable the default policy, which is to allocate from
+       apic->target_cpus().
+
+When allocating vectors, it tries all enabled policies from lower bit
+position to higher bit position.
+
+This option could be use to optimize interrupt distribution on large
+system such as NumaChip etc.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Daniel J Blueman <daniel@numascale.com>
 ---
- arch/x86/include/asm/io_apic.h  |    4 ----
- arch/x86/include/asm/x86_init.h |    3 ---
- arch/x86/kernel/apic/io_apic.c  |   25 +------------------------
- arch/x86/kernel/x86_init.c      |    1 -
- drivers/iommu/irq_remapping.c   |   16 ----------------
- 5 files changed, 1 insertion(+), 48 deletions(-)
+ Documentation/kernel-parameters.txt |    6 ++++++
+ arch/x86/kernel/apic/vector.c       |   11 +++++++++++
+ 2 files changed, 17 insertions(+)
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 0c66c4759987..5fba350fec1f 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -222,9 +222,6 @@ extern unsigned int native_io_apic_read(unsigned int apic, unsigned int reg);
- extern void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int val);
- extern void native_io_apic_modify(unsigned int apic, unsigned int reg, unsigned int val);
- extern void native_disable_io_apic(void);
--extern int native_ioapic_set_affinity(struct irq_data *,
--				      const struct cpumask *,
--				      bool);
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 4c81a860cc2b..a175c5016954 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -3709,6 +3709,12 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 	vector=		[IA-64,SMP]
+ 			vector=percpu: enable percpu vector domain
  
- static inline unsigned int io_apic_read(unsigned int apic, unsigned int reg)
++	vector_alloc=	[x86,SMP]
++			vector_alloc=policy: policy is a bitmap, bit 0
++			for allocating CPU vector from CPUs on device local
++			node; bit 1 for the default policy to allocating from
++			apic->target_cpus(). All higher bits are reserved.
++
+ 	video=		[FB] Frame buffer configuration
+ 			See Documentation/fb/modedb.txt.
+ 
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index a3f640d34b1e..be95846643bf 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -79,6 +79,17 @@ void set_vector_alloc_policy(unsigned int policy)
+ 		x86_vector_alloc_policy = policy | X86_VECTOR_POL_CALLER;
+ }
+ 
++static int __init apic_parse_vector_policy(char *str)
++{
++	int policy;
++
++	if (get_option(&str, &policy) == 1)
++		set_vector_alloc_policy(policy);
++
++	return 1;
++}
++__setup("vector_alloc=", apic_parse_vector_policy);
++
+ static struct apic_chip_data *alloc_apic_chip_data(int node)
  {
-@@ -285,7 +282,6 @@ static inline void disable_ioapic_support(void) { }
- #define native_io_apic_write		NULL
- #define native_io_apic_modify		NULL
- #define native_disable_io_apic		NULL
--#define native_ioapic_set_affinity	NULL
- #define native_eoi_ioapic_pin		NULL
- #endif
- 
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index 7de44a329028..2637e8fb978d 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -194,9 +194,6 @@ struct x86_io_apic_ops {
- 	void		(*write)  (unsigned int apic, unsigned int reg, unsigned int value);
- 	void		(*modify) (unsigned int apic, unsigned int reg, unsigned int value);
- 	void		(*disable)(void);
--	int		(*set_affinity)(struct irq_data *data,
--					const struct cpumask *mask,
--					bool force);
- 	void		(*eoi_ioapic_pin)(int apic, int pin, int vector);
- };
- 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index c862f8299a3f..26fa504b57f6 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -1777,29 +1777,6 @@ static void __target_IO_APIC_irq(unsigned int irq, unsigned int dest, struct irq
- 	}
- }
- 
--int native_ioapic_set_affinity(struct irq_data *data,
--			       const struct cpumask *mask,
--			       bool force)
--{
--	unsigned int dest, irq = data->irq;
--	unsigned long flags;
--	int ret;
--
--	if (!config_enabled(CONFIG_SMP))
--		return -EPERM;
--
--	raw_spin_lock_irqsave(&ioapic_lock, flags);
--	ret = apic_set_affinity(data, mask, &dest);
--	if (!ret) {
--		/* Only the high 8 bits are valid. */
--		dest = SET_APIC_LOGICAL_ID(dest);
--		__target_IO_APIC_irq(irq, dest, irqd_cfg(data));
--		ret = IRQ_SET_MASK_OK_NOCOPY;
--	}
--	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
--	return ret;
--}
--
- atomic_t irq_mis_count;
- 
- #ifdef CONFIG_GENERIC_PENDING_IRQ
-@@ -2676,7 +2653,7 @@ void __init setup_ioapic_dest(void)
- 		else
- 			mask = apic->target_cpus();
- 
--		x86_io_apic_ops.set_affinity(idata, mask, false);
-+		irq_set_affinity(irq, mask);
- 	}
- 
- }
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index 77d0ea3dd1ea..377b22008280 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -154,6 +154,5 @@ struct x86_io_apic_ops x86_io_apic_ops = {
- 	.write			= native_io_apic_write,
- 	.modify			= native_io_apic_modify,
- 	.disable		= native_disable_io_apic,
--	.set_affinity		= native_ioapic_set_affinity,
- 	.eoi_ioapic_pin		= native_eoi_ioapic_pin,
- };
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index c66de7848619..0e2a80491170 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -26,10 +26,6 @@ int no_x2apic_optout;
- 
- static struct irq_remap_ops *remap_ops;
- 
--static int set_remapped_irq_affinity(struct irq_data *data,
--				     const struct cpumask *mask,
--				     bool force);
--
- static bool irq_remapped(struct irq_cfg *cfg)
- {
- 	return (cfg->remapped == 1);
-@@ -62,7 +58,6 @@ static void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
- static void __init irq_remapping_modify_x86_ops(void)
- {
- 	x86_io_apic_ops.disable		= irq_remapping_disable_io_apic;
--	x86_io_apic_ops.set_affinity	= set_remapped_irq_affinity;
- 	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
- }
- 
-@@ -177,16 +172,6 @@ int __init irq_remap_enable_fault_handling(void)
- 	return remap_ops->enable_faulting();
- }
- 
--static int set_remapped_irq_affinity(struct irq_data *data,
--				     const struct cpumask *mask, bool force)
--{
--	if (!config_enabled(CONFIG_SMP) || !remap_ops ||
--	    !remap_ops->set_affinity)
--		return 0;
--
--	return remap_ops->set_affinity(data, mask, force);
--}
--
- void free_remapped_irq(int irq)
- {
- 	struct irq_cfg *cfg = irq_cfg(irq);
-@@ -238,7 +223,6 @@ void irq_remap_modify_chip_defaults(struct irq_chip *chip)
- 	chip->irq_print_chip = ir_print_prefix;
- 	chip->irq_ack = ir_ack_apic_edge;
- 	chip->irq_eoi = ir_ack_apic_level;
--	chip->irq_set_affinity = x86_io_apic_ops.set_affinity;
- }
- 
- bool setup_remapped_irq(int irq, struct irq_cfg *cfg, struct irq_chip *chip)
+ 	struct apic_chip_data *data;
 -- 
 1.7.10.4
 
