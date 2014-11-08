@@ -1,76 +1,77 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 5 Nov 2014 17:05:36 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, liviu.dudau@arm.com,
-	Suravee.Suthikulpanit@amd.com, Will Deacon <will.deacon@arm.com>
-Subject: Re: [PATCH RFC 1/2] drivers: pci: fix window allocation order wrt
- bus_range filtering
-Message-ID: <20141106000536.GL6168@google.com>
-References: <1414077787-20633-1-git-send-email-lorenzo.pieralisi@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1414077787-20633-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:51546 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754043AbaKHSPj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 8 Nov 2014 13:15:39 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Joerg Roedel <joro@8bytes.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	iommu@lists.linux-foundation.org
+Subject: [Patch Part3 v3 21/38] x86: irq_remapping: Clean up unused interfaces
+Date: Sun,  9 Nov 2014 02:13:21 +0800
+Message-Id: <1415470418-10874-22-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 23, 2014 at 04:23:06PM +0100, Lorenzo Pieralisi wrote:
-> The number of windows allocated for the host bridge depends on the
-> bus resource. Instead of first allocating the windows and then
-> limit the bus resource, this patch reshuffles the code so that if any
-> limitation is applied to the bus resource it is taken into account in
-> the windows allocation.
-> 
-> Cc: Will Deacon <will.deacon@arm.com>
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Now we have converted to hierarchy irqdomain, so clean up unused
+interfaces.
 
-I applied these with Will's acks to pci/host-generic for v3.19, thanks!
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/irq_remapping.h |   16 ----------------
+ 1 file changed, 16 deletions(-)
 
-In my mind, posting patches to the list is implicitly a request for
-comments, so I usually don't pay too much attention to things explicitly
-marked "RFC" because I figure that's a hint that "this is work-in-progress,
-please comment if you see anything obviously broken."
+diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
+index 95b19a6ef16a..4bd791d72e5e 100644
+--- a/drivers/iommu/irq_remapping.h
++++ b/drivers/iommu/irq_remapping.h
+@@ -24,11 +24,7 @@
+ 
+ #ifdef CONFIG_IRQ_REMAP
+ 
+-struct IO_APIC_route_entry;
+-struct io_apic_irq_attr;
+ struct irq_data;
+-struct cpumask;
+-struct pci_dev;
+ struct msi_msg;
+ struct irq_domain;
+ struct irq_alloc_info;
+@@ -58,18 +54,6 @@ struct irq_remap_ops {
+ 	/* Enable fault handling */
+ 	int  (*enable_faulting)(void);
+ 
+-	/* IO-APIC setup routine */
+-	int (*setup_ioapic_entry)(int irq, struct IO_APIC_route_entry *,
+-				  unsigned int, int,
+-				  struct io_apic_irq_attr *);
+-
+-	/* Set the CPU affinity of a remapped interrupt */
+-	int (*set_affinity)(struct irq_data *data, const struct cpumask *mask,
+-			    bool force);
+-
+-	/* Free an IRQ */
+-	int (*free_irq)(int);
+-
+ 	/* Get the irqdomain associated the IOMMU device */
+ 	struct irq_domain *(*get_ir_irq_domain)(struct irq_alloc_info *);
+ 
+-- 
+1.7.10.4
 
-Bjorn
-
-> ---
->  drivers/pci/host/pci-host-generic.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> index 3d2076f..1e1a80f 100644
-> --- a/drivers/pci/host/pci-host-generic.c
-> +++ b/drivers/pci/host/pci-host-generic.c
-> @@ -276,17 +276,17 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
->  		return err;
->  	}
->  
-> -	pci->cfg.win = devm_kcalloc(dev, resource_size(&pci->cfg.bus_range),
-> -				    sizeof(*pci->cfg.win), GFP_KERNEL);
-> -	if (!pci->cfg.win)
-> -		return -ENOMEM;
-> -
->  	/* Limit the bus-range to fit within reg */
->  	bus_max = pci->cfg.bus_range.start +
->  		  (resource_size(&pci->cfg.res) >> pci->cfg.ops->bus_shift) - 1;
->  	pci->cfg.bus_range.end = min_t(resource_size_t, pci->cfg.bus_range.end,
->  				       bus_max);
->  
-> +	pci->cfg.win = devm_kcalloc(dev, resource_size(&pci->cfg.bus_range),
-> +				    sizeof(*pci->cfg.win), GFP_KERNEL);
-> +	if (!pci->cfg.win)
-> +		return -ENOMEM;
-> +
->  	/* Map our Configuration Space windows */
->  	if (!devm_request_mem_region(dev, pci->cfg.res.start,
->  				     resource_size(&pci->cfg.res),
-> -- 
-> 2.1.2
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
