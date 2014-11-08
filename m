@@ -1,69 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:11873 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754080AbaKSGwG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 01:52:06 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	Liviu Dudau <liviu@dudau.co.uk>, Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 2/5] PCI: Introduce pci_scan_bus_simple()
-Date: Wed, 19 Nov 2014 15:32:46 +0800
-Message-ID: <1416382369-13587-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1416382369-13587-1-git-send-email-wangyijing@huawei.com>
-References: <1416382369-13587-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part3 v3 17/38] x86: Clean up unused forward declarations in x86_init.h
+Date: Sun,  9 Nov 2014 02:13:17 +0800
+Message-Id: <1415470418-10874-18-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now pci_scan_bus() and pci_scan_bus_parented()
-are almost the same except parent device.
-There is no need to use two similar scan interfaces.
-Introduce pci_scan_bus_simple() which is same
-as pci_scan_bus_parented(). And remove pci_scan_bus()
-and pci_scan_bus_parented() in later patch.
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/probe.c |   18 ++++++++++++++++++
- 1 files changed, 18 insertions(+), 0 deletions(-)
+ arch/x86/include/asm/x86_init.h |    6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 5c5e01e..a8d90d4 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2089,6 +2089,24 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- }
- EXPORT_SYMBOL(pci_scan_root_bus);
+diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+index fa6b1b5128ee..3755cd2bbb94 100644
+--- a/arch/x86/include/asm/x86_init.h
++++ b/arch/x86/include/asm/x86_init.h
+@@ -171,7 +171,6 @@ struct x86_platform_ops {
+ };
  
-+struct pci_bus *pci_scan_bus_simple(struct device *parent,
-+		int bus, struct pci_ops *ops, void *sysdata)
-+{
-+	LIST_HEAD(resources);
-+	struct pci_bus *b;
-+
-+	pci_add_resource(&resources, &ioport_resource);
-+	pci_add_resource(&resources, &iomem_resource);
-+	pci_add_resource(&resources, &busn_resource);
-+	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
-+	if (b)
-+		pci_scan_child_bus(b);
-+	else
-+		pci_free_resource_list(&resources);
-+	return b;
-+}
-+EXPORT_SYMBOL(pci_scan_bus_simple);
-+
- /* Deprecated; use pci_scan_root_bus() instead */
- struct pci_bus *pci_scan_bus_parented(struct device *parent,
- 		int bus, struct pci_ops *ops, void *sysdata)
+ struct pci_dev;
+-struct msi_msg;
+ struct msi_desc;
+ 
+ struct x86_msi_ops {
+@@ -183,11 +182,6 @@ struct x86_msi_ops {
+ 	u32 (*msix_mask_irq)(struct msi_desc *desc, u32 flag);
+ };
+ 
+-struct IO_APIC_route_entry;
+-struct io_apic_irq_attr;
+-struct irq_data;
+-struct cpumask;
+-
+ struct x86_io_apic_ops {
+ 	void		(*init)   (void);
+ 	unsigned int	(*read)   (unsigned int apic, unsigned int reg);
 -- 
-1.7.1
+1.7.10.4
 
