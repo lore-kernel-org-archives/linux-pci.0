@@ -1,54 +1,187 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19961 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752050AbaKUWSB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 17:18:01 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux@eikelenboom.it
-Subject: [PATCH v4] Fixes for PCI backend for 3.19
-Date: Fri, 21 Nov 2014 17:17:44 -0500
-Message-Id: <1416608271-18931-1-git-send-email-konrad.wilk@oracle.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
+Subject: [Patch Part3 v3 13/38] x86, irq: Kill x86_io_apic_ops.setup_entry and related interfaces
+Date: Sun,  9 Nov 2014 02:13:13 +0800
+Message-Id: <1415470418-10874-14-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Now there is no user of x86_io_apic_ops.setup_entry anymore, so kill it.
 
-Hey,
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h       |    4 ----
+ arch/x86/include/asm/irq_remapping.h |   13 -------------
+ arch/x86/include/asm/x86_init.h      |    3 ---
+ arch/x86/kernel/apic/io_apic.c       |   24 ------------------------
+ arch/x86/kernel/x86_init.c           |    1 -
+ drivers/iommu/irq_remapping.c        |   13 -------------
+ 6 files changed, 58 deletions(-)
 
-The last time I posted these patches: https://lkml.org/lkml/2014/7/8/533
-was so long ago that I don't even remember most comments. The only
-one that stuck in mind was David's recommendation to add a new PCI API
-call and use that. See patch #6 and #7.
-
-The original posting (v3) had an extra patch that would do slot and
-bus reset using do_flr SysFS attribute. I will revisit that once I am
-done with this patchset.
-
-I also seem to have had in my a bunch of 'SoB' from David - which
-makes no sense - unless I pulled from his tree. Anyhow wherewere
-I saw them I removed them.
-
-Please take a look and comment. If I missed some comment from months
-ago hopefully the new version has clarified them.
-
-
- drivers/pci/pci.c                     |  5 +--
- drivers/xen/xen-pciback/passthrough.c | 14 ++++++--
- drivers/xen/xen-pciback/pci_stub.c    | 60 ++++++++++++++++++++++-------------
- drivers/xen/xen-pciback/pciback.h     |  7 ++--
- drivers/xen/xen-pciback/vpci.c        | 14 ++++++--
- drivers/xen/xen-pciback/xenbus.c      |  4 +--
- include/linux/device.h                |  5 +++
- include/linux/pci.h                   |  2 ++
- 8 files changed, 76 insertions(+), 35 deletions(-)
-
-Konrad Rzeszutek Wilk (7):
-      xen/pciback: Don't deadlock when unbinding.
-      driver core: Provide an wrapper around the mutex to do lockdep warnings
-      xen/pciback: Include the domain id if removing the device whilst still in use
-      xen/pciback: Print out the domain owning the device.
-      xen/pciback: Remove tons of dereferences
-      PCI: Expose pci_load_saved_state for public consumption.
-      xen/pciback: Restore configuration space when detaching from a guest.
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 8b4fc2d94bc1..0c66c4759987 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -150,9 +150,6 @@ struct irq_cfg;
+ extern void ioapic_insert_resources(void);
+ extern int arch_early_ioapic_init(void);
+ 
+-extern int native_setup_ioapic_entry(int, struct IO_APIC_route_entry *,
+-				     unsigned int, int,
+-				     struct io_apic_irq_attr *);
+ extern void eoi_ioapic_irq(unsigned int irq, struct irq_cfg *cfg);
+ 
+ extern void native_eoi_ioapic_pin(int apic, int pin, int vector);
+@@ -289,7 +286,6 @@ static inline void disable_ioapic_support(void) { }
+ #define native_io_apic_modify		NULL
+ #define native_disable_io_apic		NULL
+ #define native_ioapic_set_affinity	NULL
+-#define native_setup_ioapic_entry	NULL
+ #define native_eoi_ioapic_pin		NULL
+ #endif
+ 
+diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
+index 61ec9234c88e..adbd21a1145e 100644
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -44,11 +44,6 @@ extern int irq_remapping_enable(void);
+ extern void irq_remapping_disable(void);
+ extern int irq_remapping_reenable(int);
+ extern int irq_remap_enable_fault_handling(void);
+-extern int setup_ioapic_remapped_entry(int irq,
+-				       struct IO_APIC_route_entry *entry,
+-				       unsigned int destination,
+-				       int vector,
+-				       struct io_apic_irq_attr *attr);
+ extern void free_remapped_irq(int irq);
+ extern void panic_if_irq_remap(const char *msg);
+ extern bool setup_remapped_irq(int irq,
+@@ -85,14 +80,6 @@ static inline int irq_remapping_enable(void) { return -ENODEV; }
+ static inline void irq_remapping_disable(void) { }
+ static inline int irq_remapping_reenable(int eim) { return -ENODEV; }
+ static inline int irq_remap_enable_fault_handling(void) { return -ENODEV; }
+-static inline int setup_ioapic_remapped_entry(int irq,
+-					      struct IO_APIC_route_entry *entry,
+-					      unsigned int destination,
+-					      int vector,
+-					      struct io_apic_irq_attr *attr)
+-{
+-	return -ENODEV;
+-}
+ static inline void free_remapped_irq(int irq) { }
+ 
+ static inline void panic_if_irq_remap(const char *msg)
+diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+index d49791d2aacf..7de44a329028 100644
+--- a/arch/x86/include/asm/x86_init.h
++++ b/arch/x86/include/asm/x86_init.h
+@@ -197,9 +197,6 @@ struct x86_io_apic_ops {
+ 	int		(*set_affinity)(struct irq_data *data,
+ 					const struct cpumask *mask,
+ 					bool force);
+-	int		(*setup_entry)(int irq, struct IO_APIC_route_entry *entry,
+-				       unsigned int destination, int vector,
+-				       struct io_apic_irq_attr *attr);
+ 	void		(*eoi_ioapic_pin)(int apic, int pin, int vector);
+ };
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 42dc3ee37e89..c862f8299a3f 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1289,30 +1289,6 @@ static inline int IO_APIC_irq_trigger(int irq)
+ }
+ #endif
+ 
+-int native_setup_ioapic_entry(int irq, struct IO_APIC_route_entry *entry,
+-			      unsigned int destination, int vector,
+-			      struct io_apic_irq_attr *attr)
+-{
+-	memset(entry, 0, sizeof(*entry));
+-
+-	entry->delivery_mode = apic->irq_delivery_mode;
+-	entry->dest_mode     = apic->irq_dest_mode;
+-	entry->dest	     = destination;
+-	entry->vector	     = vector;
+-	entry->mask	     = 0;			/* enable IRQ */
+-	entry->trigger	     = attr->trigger;
+-	entry->polarity	     = attr->polarity;
+-
+-	/*
+-	 * Mask level triggered irqs.
+-	 * Use IRQ_DELAYED_DISABLE for edge triggered irqs.
+-	 */
+-	if (attr->trigger)
+-		entry->mask = 1;
+-
+-	return 0;
+-}
+-
+ static void __init setup_IO_APIC_irqs(void)
+ {
+ 	unsigned int ioapic, pin;
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index ba5ab975bb5b..77d0ea3dd1ea 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -155,6 +155,5 @@ struct x86_io_apic_ops x86_io_apic_ops = {
+ 	.modify			= native_io_apic_modify,
+ 	.disable		= native_disable_io_apic,
+ 	.set_affinity		= native_ioapic_set_affinity,
+-	.setup_entry		= native_setup_ioapic_entry,
+ 	.eoi_ioapic_pin		= native_eoi_ioapic_pin,
+ };
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 782dea5e4233..c66de7848619 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -63,7 +63,6 @@ static void __init irq_remapping_modify_x86_ops(void)
+ {
+ 	x86_io_apic_ops.disable		= irq_remapping_disable_io_apic;
+ 	x86_io_apic_ops.set_affinity	= set_remapped_irq_affinity;
+-	x86_io_apic_ops.setup_entry	= setup_ioapic_remapped_entry;
+ 	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
+ }
+ 
+@@ -178,18 +177,6 @@ int __init irq_remap_enable_fault_handling(void)
+ 	return remap_ops->enable_faulting();
+ }
+ 
+-int setup_ioapic_remapped_entry(int irq,
+-				struct IO_APIC_route_entry *entry,
+-				unsigned int destination, int vector,
+-				struct io_apic_irq_attr *attr)
+-{
+-	if (!remap_ops || !remap_ops->setup_ioapic_entry)
+-		return -ENODEV;
+-
+-	return remap_ops->setup_ioapic_entry(irq, entry, destination,
+-					     vector, attr);
+-}
+-
+ static int set_remapped_irq_affinity(struct irq_data *data,
+ 				     const struct cpumask *mask, bool force)
+ {
+-- 
+1.7.10.4
 
