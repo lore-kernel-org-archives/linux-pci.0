@@ -1,56 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:55136 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751436AbaKCTie (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Nov 2014 14:38:34 -0500
-Date: Mon, 3 Nov 2014 20:38:23 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Daniel J Blueman <daniel@numascale.com>
-cc: Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
+Received: from mga11.intel.com ([192.55.52.93]:30726 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932081AbaKHSSb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 8 Nov 2014 13:18:31 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jan Beulich <JBeulich@suse.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Steffen Persvold <sp@numascale.com>
-Subject: Re: [PATCH v3 5/5] Use 2GB memory block size on large x86-64
- systems
-In-Reply-To: <1414915813-2462-5-git-send-email-daniel@numascale.com>
-Message-ID: <alpine.DEB.2.11.1411032021331.5308@nanos>
-References: <1414915813-2462-1-git-send-email-daniel@numascale.com> <1414915813-2462-5-git-send-email-daniel@numascale.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part3 v3 35/38] x86, irq: Refine the way to calculate NR_IRQS
+Date: Sun,  9 Nov 2014 02:13:35 +0800
+Message-Id: <1415470418-10874-36-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 2 Nov 2014, Daniel J Blueman wrote:
+Now we have made MSI independent of IOAPIC, so we need to refine the
+way to calculate NR_IRQS to support configuration with MSI enabled but
+IOAPIC disabled.
 
-> On larger x64-64 systems, use a 2GB memory block size to reduce sysfs
-> entry creation time by 16x. Large is defined as 64GB or more memory.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/irq_vectors.h |   18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
 
-This changelog sucks.
-
-It neither tells which sysfs entries are meant nor does it explain
-what the actual effect of this change is aside of speeding up some
-random sysfs thingy.
-
-> @@ -1247,9 +1246,9 @@ static unsigned long probe_memory_block_size(void)
->  	/* start from 2g */
->  	unsigned long bz = 1UL<<31;
->  
-> -#ifdef CONFIG_X86_UV
-> -	if (is_uv_system()) {
-> -		printk(KERN_INFO "UV: memory block size 2GB\n");
-> +#ifdef CONFIG_X86_64
-
-And this brainless 's/CONFIG_X86_UV/CONFIG_X86_64/' sucks even
-more. I'm sure you can figure out the WHY yourself.
-
-> +	if (totalram_pages >= (64ULL << (30 - PAGE_SHIFT))) {
-> +		pr_info("Using 2GB memory block size for large-memory system\n");
->  		return 2UL * 1024 * 1024 * 1024;
->  	}
->  #endif
-
-Thanks,
-
-	tglx
-
+diff --git a/arch/x86/include/asm/irq_vectors.h b/arch/x86/include/asm/irq_vectors.h
+index 666c89ec4bd7..b26cb124a4f1 100644
+--- a/arch/x86/include/asm/irq_vectors.h
++++ b/arch/x86/include/asm/irq_vectors.h
+@@ -155,18 +155,22 @@ static inline int invalid_vm86_irq(int irq)
+  * static arrays.
+  */
  
+-#define NR_IRQS_LEGACY			  16
++#define NR_IRQS_LEGACY			16
+ 
+-#define IO_APIC_VECTOR_LIMIT		( 32 * MAX_IO_APICS )
++#define CPU_VECTOR_LIMIT		(64 * NR_CPUS)
++#define IO_APIC_VECTOR_LIMIT		(32 * MAX_IO_APICS)
+ 
+-#ifdef CONFIG_X86_IO_APIC
+-# define CPU_VECTOR_LIMIT		(64 * NR_CPUS)
+-# define NR_IRQS					\
++#if defined(CONFIG_X86_IO_APIC) && defined(CONFIG_PCI_MSI)
++#define NR_IRQS						\
+ 	(CPU_VECTOR_LIMIT > IO_APIC_VECTOR_LIMIT ?	\
+ 		(NR_VECTORS + CPU_VECTOR_LIMIT)  :	\
+ 		(NR_VECTORS + IO_APIC_VECTOR_LIMIT))
+-#else /* !CONFIG_X86_IO_APIC: */
+-# define NR_IRQS			NR_IRQS_LEGACY
++#elif defined(CONFIG_X86_IO_APIC)
++#define	NR_IRQS				(NR_VECTORS + IO_APIC_VECTOR_LIMIT)
++#elif defined(CONFIG_PCI_MSI)
++#define NR_IRQS				(NR_VECTORS + CPU_VECTOR_LIMIT)
++#else
++#define NR_IRQS				NR_IRQS_LEGACY
+ #endif
+ 
+ #endif /* _ASM_X86_IRQ_VECTORS_H */
+-- 
+1.7.10.4
+
