@@ -1,4 +1,8 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:37821 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751948AbaKIPHq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 9 Nov 2014 10:07:46 -0500
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
@@ -8,82 +12,107 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
 Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part3 v4 07/38] x86, irq: Simplify the way to print IOAPIC entry
-Date: Tue, 25 Nov 2014 15:49:31 +0800
-Message-Id: <1416901802-24211-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [RFC Part4 v1 02/17] genirq: Introduce helper irq_domain_set_info() to reduce duplicated code
+Date: Sun,  9 Nov 2014 23:10:24 +0800
+Message-Id: <1415545839-28263-3-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simplify the way to print IOAPIC entry content, so we could kill
-native_io_apic_print_entries(), intel_ir_io_apic_print_entries()
-and x86_io_apic_ops.print_entries() later.
+Introduce helper irq_domain_set_info() to reduce duplicated code.
+We use "void *handler" instead of "irq_flow_handler_t handler" to solve
+a recursive header file inclusion issue.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Tested-by: Joerg Roedel <jroedel@suse.de>
 ---
- arch/x86/kernel/apic/io_apic.c |   30 ++++++++++++++++++++++++++++--
- 1 file changed, 28 insertions(+), 2 deletions(-)
+ arch/x86/kernel/apic/htirq.c  |    5 ++---
+ arch/x86/platform/uv/uv_irq.c |    5 ++---
+ include/linux/irqdomain.h     |    4 ++++
+ kernel/irq/irqdomain.c        |   10 ++++++++++
+ 4 files changed, 18 insertions(+), 6 deletions(-)
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 74a0e95cfb3d..b2618d48d572 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -1424,6 +1424,33 @@ void ioapic_zap_locks(void)
- 	raw_spin_lock_init(&ioapic_lock);
+diff --git a/arch/x86/kernel/apic/htirq.c b/arch/x86/kernel/apic/htirq.c
+index 900f1401a452..1448df3f9e9f 100644
+--- a/arch/x86/kernel/apic/htirq.c
++++ b/arch/x86/kernel/apic/htirq.c
+@@ -96,9 +96,8 @@ static int htirq_domain_alloc(struct irq_domain *domain, unsigned int virq,
+ 	ht_cfg->update = info->ht_update;
+ 	ht_cfg->pos = info->ht_pos;
+ 	ht_cfg->idx = 0x10 + (info->ht_idx * 2);
+-	irq_domain_set_hwirq_and_chip(domain, virq, hwirq, &ht_irq_chip,
+-				      ht_cfg);
+-	__irq_set_handler(virq, handle_edge_irq, 0, "edge");
++	irq_domain_set_info(domain, virq, hwirq, &ht_irq_chip, ht_cfg,
++			    handle_edge_irq, NULL, "edge");
+ 
+ 	return 0;
+ }
+diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
+index 66d531e71c9a..b242e0aada19 100644
+--- a/arch/x86/platform/uv/uv_irq.c
++++ b/arch/x86/platform/uv/uv_irq.c
+@@ -102,9 +102,8 @@ static int uv_domain_alloc(struct irq_domain *domain, unsigned int virq,
+ 
+ 		chip_data->pnode = uv_blade_to_pnode(info->uv_blade);
+ 		chip_data->offset = info->uv_offset;
+-		irq_domain_set_hwirq_and_chip(domain, virq, virq,
+-					      &uv_irq_chip, chip_data);
+-		__irq_set_handler(virq, handle_percpu_irq, 0, info->uv_name);
++		irq_domain_set_info(domain, virq, virq, &uv_irq_chip, chip_data,
++				    handle_percpu_irq, NULL, info->uv_name);
+ 	} else {
+ 		kfree(chip_data);
+ 	}
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index 50931e936149..fb7af45f9425 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -263,6 +263,10 @@ extern int irq_domain_set_hwirq_and_chip(struct irq_domain *domain,
+ 					 irq_hw_number_t hwirq,
+ 					 struct irq_chip *chip,
+ 					 void *chip_data);
++extern void irq_domain_set_info(struct irq_domain *domain, unsigned int virq,
++				irq_hw_number_t hwirq, struct irq_chip *chip,
++				void *chip_data, void *handler,
++				void *handler_data, const char *handler_name);
+ extern void irq_domain_reset_irq_data(struct irq_data *irq_data);
+ extern void irq_domain_free_irqs_common(struct irq_domain *domain,
+ 					int virq, int nr_irqs);
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 4811bee1b8a7..1da30ae88665 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -882,6 +882,16 @@ int irq_domain_set_hwirq_and_chip(struct irq_domain *domain, unsigned int virq,
+ 	return 0;
  }
  
-+static void io_apic_print_entries(unsigned int apic, unsigned int nr_entries)
++void irq_domain_set_info(struct irq_domain *domain, unsigned int virq,
++			 irq_hw_number_t hwirq, struct irq_chip *chip,
++			 void *chip_data, void *handler, void *handler_data,
++			 const char *handler_name)
 +{
-+	int i;
-+	char buf[256];
-+	struct IO_APIC_route_entry entry;
-+	struct IR_IO_APIC_route_entry *ir_entry = (void *)&entry;
-+
-+	printk(KERN_DEBUG "IOAPIC %d:\n", apic);
-+	for (i = 0; i <= nr_entries; i++) {
-+		entry = ioapic_read_entry(apic, i);
-+		snprintf(buf, sizeof(buf),
-+			 " pin%02x, %s, %s, %s, V(%02X), IRR(%1d), S(%1d)",
-+			 i, entry.mask ? "enabled" : "disabled",
-+			 entry.trigger ? "level" : "edge",
-+			 entry.polarity ? "high" : "low",
-+			 entry.vector, entry.irr, entry.delivery_status);
-+		if (ir_entry->format)
-+			printk(KERN_DEBUG "%s, remapped, I(%04X),  Z(%X)\n",
-+			       buf, (ir_entry->index << 15) | ir_entry->index,
-+			       ir_entry->zero);
-+		else
-+			printk(KERN_DEBUG "%s, %s, D(%02X), M(%1d)\n",
-+			       buf, entry.dest_mode ? "logical" : "physical",
-+			       entry.dest, entry.delivery_mode);
-+	}
++	irq_domain_set_hwirq_and_chip(domain, virq, hwirq, chip, chip_data);
++	__irq_set_handler(virq, handler, 0, handler_name);
++	irq_set_handler_data(virq, handler_data);
 +}
 +
- static void __init print_IO_APIC(int ioapic_idx)
+ void irq_domain_reset_irq_data(struct irq_data *irq_data)
  {
- 	union IO_APIC_reg_00 reg_00;
-@@ -1477,8 +1504,7 @@ static void __init print_IO_APIC(int ioapic_idx)
- 	}
- 
- 	printk(KERN_DEBUG ".... IRQ redirection table:\n");
--
--	x86_io_apic_ops.print_entries(ioapic_idx, reg_01.bits.entries);
-+	io_apic_print_entries(ioapic_idx, reg_01.bits.entries);
- }
- 
- void __init print_IO_APICs(void)
+ 	irq_data->hwirq = 0;
 -- 
 1.7.10.4
 
