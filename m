@@ -1,60 +1,173 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f47.google.com ([209.85.216.47]:46750 "EHLO
-	mail-qa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965318AbaKLCzk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 21:55:40 -0500
-Received: by mail-qa0-f47.google.com with SMTP id dc16so7969237qab.34
-        for <linux-pci@vger.kernel.org>; Tue, 11 Nov 2014 18:55:40 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1415760163-12517-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1415760163-12517-1-git-send-email-gwshan@linux.vnet.ibm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 11 Nov 2014 19:55:19 -0700
-Message-ID: <CAErSpo7mEo61GP4oxcodKWFFXaaESae96qLiR1RE0CFsahr29g@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Fix device node for virtual bus
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
+	Mike Marciniszyn <infinipath@intel.com>,
+	Roland Dreier <roland@kernel.org>,
+	Sean Hefty <sean.hefty@intel.com>,
+	Hal Rosenstock <hal.rosenstock@gmail.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-rdma@vger.kernel.org
+Subject: [RFC Part4 v1 16/17] x86, htirq: Kill struct ht_irq_msg by reusing struct msi_msg
+Date: Sun,  9 Nov 2014 23:10:38 +0800
+Message-Id: <1415545839-28263-17-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 11, 2014 at 7:42 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
-> pci_set_bus_of_node() sets virtual PCI bus's device node to PHB's
-> device node wrongly. The patch fixes the issue.
+Reuse struct msi_msg for HT interrupts, so we could use common MSI code
+to manage HT interrupts later.
 
-This needs more detail.  How is this bug visible to users?  Is there a
-bug report?  Is this a regression?  Should it be marked for stable?
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/htirq.c                |    6 +++---
+ drivers/infiniband/hw/ipath/ipath_iba6110.c |    2 +-
+ drivers/pci/htirq.c                         |    8 ++++----
+ include/linux/htirq.h                       |   14 +++++---------
+ 4 files changed, 13 insertions(+), 17 deletions(-)
 
-We use "virtual bus" to refer to buses created for SR-IOV VFs that are
-not on the same bus as the PF.  These virtual buses have no bridge
-device leading to them.  But I think you're talking about something
-totally different.  Or maybe that *is* what you're talking about,
-since this patch resembles 2ba29e270e97 ("PCI: Use pci_is_root_bus()
-to check for root bus").
+diff --git a/arch/x86/kernel/apic/htirq.c b/arch/x86/kernel/apic/htirq.c
+index 1448df3f9e9f..b6503510f1af 100644
+--- a/arch/x86/kernel/apic/htirq.c
++++ b/arch/x86/kernel/apic/htirq.c
+@@ -34,7 +34,7 @@ ht_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+ 
+ 	ret = parent->chip->irq_set_affinity(parent, mask, force);
+ 	if (ret >= 0) {
+-		struct ht_irq_msg msg;
++		struct msi_msg msg;
+ 		struct irq_cfg *cfg = irqd_cfg(data);
+ 
+ 		fetch_ht_irq_msg(data->irq, &msg);
+@@ -115,7 +115,7 @@ static void htirq_domain_free(struct irq_domain *domain, unsigned int virq,
+ static void htirq_domain_activate(struct irq_domain *domain,
+ 				  struct irq_data *irq_data)
+ {
+-	struct ht_irq_msg msg;
++	struct msi_msg msg;
+ 	struct irq_cfg *cfg = irqd_cfg(irq_data);
+ 
+ 	msg.address_hi = HT_IRQ_HIGH_DEST_ID(cfg->dest_apicid);
+@@ -137,7 +137,7 @@ static void htirq_domain_activate(struct irq_domain *domain,
+ static void htirq_domain_deactivate(struct irq_domain *domain,
+ 				    struct irq_data *irq_data)
+ {
+-	struct ht_irq_msg msg;
++	struct msi_msg msg;
+ 
+ 	memset(&msg, 0, sizeof(msg));
+ 	write_ht_irq_msg(irq_data->irq, &msg);
+diff --git a/drivers/infiniband/hw/ipath/ipath_iba6110.c b/drivers/infiniband/hw/ipath/ipath_iba6110.c
+index 7cc305488a3d..b49ce8942b57 100644
+--- a/drivers/infiniband/hw/ipath/ipath_iba6110.c
++++ b/drivers/infiniband/hw/ipath/ipath_iba6110.c
+@@ -986,7 +986,7 @@ static int ipath_ht_intconfig(struct ipath_devdata *dd)
+ }
+ 
+ static void ipath_ht_irq_update(struct pci_dev *dev, int irq,
+-				struct ht_irq_msg *msg)
++				struct msi_msg *msg)
+ {
+ 	struct ipath_devdata *dd = pci_get_drvdata(dev);
+ 	u64 prev_intconfig = dd->ipath_intconfig;
+diff --git a/drivers/pci/htirq.c b/drivers/pci/htirq.c
+index 7eb4109a3df4..3bbbc5cdcb9b 100644
+--- a/drivers/pci/htirq.c
++++ b/drivers/pci/htirq.c
+@@ -23,7 +23,7 @@
+  */
+ static DEFINE_SPINLOCK(ht_irq_lock);
+ 
+-void write_ht_irq_msg(unsigned int irq, struct ht_irq_msg *msg)
++void write_ht_irq_msg(unsigned int irq, struct msi_msg *msg)
+ {
+ 	struct ht_irq_cfg *cfg = irq_get_handler_data(irq);
+ 	unsigned long flags;
+@@ -43,7 +43,7 @@ void write_ht_irq_msg(unsigned int irq, struct ht_irq_msg *msg)
+ 	cfg->msg = *msg;
+ }
+ 
+-void fetch_ht_irq_msg(unsigned int irq, struct ht_irq_msg *msg)
++void fetch_ht_irq_msg(unsigned int irq, struct msi_msg *msg)
+ {
+ 	struct ht_irq_cfg *cfg = irq_get_handler_data(irq);
+ 
+@@ -53,7 +53,7 @@ void fetch_ht_irq_msg(unsigned int irq, struct ht_irq_msg *msg)
+ void mask_ht_irq(struct irq_data *data)
+ {
+ 	struct ht_irq_cfg *cfg = irq_data_get_irq_handler_data(data);
+-	struct ht_irq_msg msg = cfg->msg;
++	struct msi_msg msg = cfg->msg;
+ 
+ 	msg.address_lo |= 1;
+ 	write_ht_irq_msg(data->irq, &msg);
+@@ -62,7 +62,7 @@ void mask_ht_irq(struct irq_data *data)
+ void unmask_ht_irq(struct irq_data *data)
+ {
+ 	struct ht_irq_cfg *cfg = irq_data_get_irq_handler_data(data);
+-	struct ht_irq_msg msg = cfg->msg;
++	struct msi_msg msg = cfg->msg;
+ 
+ 	msg.address_lo &= ~1;
+ 	write_ht_irq_msg(data->irq, &msg);
+diff --git a/include/linux/htirq.h b/include/linux/htirq.h
+index d4a527e58434..98e432f7f9b1 100644
+--- a/include/linux/htirq.h
++++ b/include/linux/htirq.h
+@@ -1,16 +1,12 @@
+ #ifndef LINUX_HTIRQ_H
+ #define LINUX_HTIRQ_H
++#include <linux/msi.h>
+ 
+ struct pci_dev;
+ struct irq_data;
+ 
+-struct ht_irq_msg {
+-	u32	address_lo;	/* low 32 bits of the ht irq message */
+-	u32	address_hi;	/* high 32 bits of the it irq message */
+-};
+-
+ typedef void (ht_irq_update_t)(struct pci_dev *dev, int irq,
+-			       struct ht_irq_msg *msg);
++			       struct msi_msg *msg);
+ 
+ struct ht_irq_cfg {
+ 	struct pci_dev *dev;
+@@ -18,12 +14,12 @@ struct ht_irq_cfg {
+ 	ht_irq_update_t *update;
+ 	unsigned pos;
+ 	unsigned idx;
+-	struct ht_irq_msg msg;
++	struct msi_msg msg;
+ };
+ 
+ /* Helper functions.. */
+-void fetch_ht_irq_msg(unsigned int irq, struct ht_irq_msg *msg);
+-void write_ht_irq_msg(unsigned int irq, struct ht_irq_msg *msg);
++void fetch_ht_irq_msg(unsigned int irq, struct msi_msg *msg);
++void write_ht_irq_msg(unsigned int irq, struct msi_msg *msg);
+ void mask_ht_irq(struct irq_data *data);
+ void unmask_ht_irq(struct irq_data *data);
+ 
+-- 
+1.7.10.4
 
-Bjorn
-
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->  drivers/pci/of.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-> index f092993..7b2256b 100644
-> --- a/drivers/pci/of.c
-> +++ b/drivers/pci/of.c
-> @@ -31,9 +31,9 @@ void pci_release_of_node(struct pci_dev *dev)
->
->  void pci_set_bus_of_node(struct pci_bus *bus)
->  {
-> -       if (bus->self == NULL)
-> +       if (pci_is_root_bus(bus))
->                 bus->dev.of_node = pcibios_get_phb_of_node(bus);
-> -       else
-> +       else if (bus->self)
->                 bus->dev.of_node = of_node_get(bus->self->dev.of_node);
->  }
->
-> --
-> 1.8.3.2
->
