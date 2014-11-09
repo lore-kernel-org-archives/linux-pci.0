@@ -1,74 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:21018 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750868AbaKFFbo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 6 Nov 2014 00:31:44 -0500
-From: "Liu, Chuansheng" <chuansheng.liu@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Barto <mister.freeman@laposte.net>,
-	"Tejun Heo (tj@kernel.org)" <tj@kernel.org>,
-	"Lu, Aaron" <aaron.lu@intel.com>,
-	Rafael Wysocki <rjw@rjwysocki.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] PCI: Do not enable async suspend for JMicron chips
-Date: Thu, 6 Nov 2014 05:29:55 +0000
-Message-ID: <27240C0AC20F114CBF8149A2696CBE4A01EB7B96@SHSMSX101.ccr.corp.intel.com>
-References: <1415151063-2530-1-git-send-email-chuansheng.liu@intel.com>
- <CAErSpo6cWP2ngErLVzqASkeQOLsB7JjgCC8UuA-S=Lz=AJyf6Q@mail.gmail.com>
- <545A7087.3050802@laposte.net>
- <CAErSpo4fvoeP9Gab1ZDg=ofjH+aqxGD09nLDTF1ZERnH=yEPxw@mail.gmail.com>
- <27240C0AC20F114CBF8149A2696CBE4A01EB7713@SHSMSX101.ccr.corp.intel.com>
- <CAErSpo4py1GdxczyzgLxjbgmfGEQ6o+He=7wxuVS0BM-Oyd6_w@mail.gmail.com>
-In-Reply-To: <CAErSpo4py1GdxczyzgLxjbgmfGEQ6o+He=7wxuVS0BM-Oyd6_w@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch Part3 V7 8/8] pci, ACPI, iommu: Enhance pci_root to support DMAR device hotplug
+Date: Sun,  9 Nov 2014 22:48:03 +0800
+Message-Id: <1415544483-27990-9-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415544483-27990-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415544483-27990-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGVsbG8gQmpvcm4sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpv
-cm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+IFNlbnQ6IFRodXJzZGF5
-LCBOb3ZlbWJlciAwNiwgMjAxNCAxMjowOSBQTQ0KPiBUbzogTGl1LCBDaHVhbnNoZW5nDQo+IENj
-OiBCYXJ0bzsgVGVqdW4gSGVvICh0akBrZXJuZWwub3JnKTsgTHUsIEFhcm9uOyBSYWZhZWwgV3lz
-b2NraTsNCj4gbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2Vy
-bmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIXSBQQ0k6IERvIG5vdCBlbmFibGUgYXN5bmMg
-c3VzcGVuZCBmb3IgSk1pY3JvbiBjaGlwcw0KPiANCj4gT24gV2VkLCBOb3YgNSwgMjAxNCBhdCA2
-OjQ4IFBNLCBMaXUsIENodWFuc2hlbmcNCj4gPGNodWFuc2hlbmcubGl1QGludGVsLmNvbT4gd3Jv
-dGU6DQo+ID4gSGVsbG8gQmpvcm4sDQo+ID4NCj4gPj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0t
-LS0NCj4gPj4gRnJvbTogQmpvcm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21d
-DQo+ID4+IFNlbnQ6IFRodXJzZGF5LCBOb3ZlbWJlciAwNiwgMjAxNCAzOjA0IEFNDQo+ID4+IFRv
-OiBCYXJ0bw0KPiA+PiBDYzogTGl1LCBDaHVhbnNoZW5nOyBMdSwgQWFyb247IFRlanVuIEhlbzsg
-UmFmYWVsIFd5c29ja2k7DQo+ID4+IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtl
-cm5lbEB2Z2VyLmtlcm5lbC5vcmcNCj4gPj4gU3ViamVjdDogUmU6IFtQQVRDSF0gUENJOiBEbyBu
-b3QgZW5hYmxlIGFzeW5jIHN1c3BlbmQgZm9yIEpNaWNyb24gY2hpcHMNCj4gPj4NCj4gPj4gT24g
-V2VkLCBOb3YgNSwgMjAxNCBhdCAxMTo0NiBBTSwgQmFydG8gPG1pc3Rlci5mcmVlbWFuQGxhcG9z
-dGUubmV0Pg0KPiA+PiB3cm90ZToNCj4gPj4gPiB0aGlzIHBhdGNoIHNvbHZlcyB0aGVzZSAyIGJ1
-ZyByZXBvcnRzIDoNCj4gPj4gPg0KPiA+PiA+IGh0dHBzOi8vYnVnemlsbGEua2VybmVsLm9yZy9z
-aG93X2J1Zy5jZ2k/aWQ9ODQ4NjENCj4gPj4gPg0KPiA+PiA+IGh0dHBzOi8vYnVnemlsbGEua2Vy
-bmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9ODE1NTENCj4gPj4NCj4gPj4gVGhvc2UgYnVncyB3ZXJl
-IGFscmVhZHkgbWVudGlvbmVkLiAgQnV0IGU2YjdlNDFjZGQ4YyBjbGFpbXMgdG8gc29sdmUNCj4g
-Pj4gaHR0cHM6Ly9idWd6aWxsYS5rZXJuZWwub3JnL3Nob3dfYnVnLmNnaT9pZD04MTU1MSwgYW5k
-IDg0ODYxIGlzIGENCj4gPj4gZHVwbGljYXRlIG9mIDgxNTUxLCBzbyBpdCBzaG91bGQgYWxzbyBi
-ZSBmaXhlZCBieSBlNmI3ZTQxY2RkOGMuDQo+ID4+DQo+ID4+IFNvIHRoZSBxdWVzdGlvbiBpcywg
-d2h5IHdhcyBlNmI3ZTQxY2RkOGMgaW5zdWZmaWNpZW50PyAgUHJlc3VtYWJseSBpdA0KPiA+PiB3
-YXMgdGVzdGVkIGFuZCBzb21lYm9keSB0aG91Z2h0IGl0IGRpZCBmaXggdGhlIHByb2JsZW0uDQo+
-ID4NCj4gPiBUaGUgZmlyc3QgcGF0Y2ggZTZiN2U0MWNkZDhjIHdoaWNoIGlzIGp1c3QgZXhjbHVk
-ZSBzb21lIG9mIEpNaWNyb24NCj4gY2hpcHMoMzYzLzM2MSkgb3V0IG9mIGFzeW5jX3N1c3BlbmQs
-DQo+ID4gdGhlbiBCYXJ0byBmb3VuZCB0aGUgc2FtZSBpc3N1ZSBvbiBKTWljcm9uIDM2OCwgc28g
-d2UgbmVlZCBvbmUgbW9yZQ0KPiBnZW5lcmFsIHBhdGNoIHRvIGxldCBKTWljcm9uIGNoaXBzDQo+
-ID4gb3V0IG9mIGFzeW5jX3N1c3BlbmQsIHNvIHdlIG1ha2UgdGhpcyBwYXRjaC4NCj4gPg0KPiA+
-IEJqb3JuLCB0aiwNCj4gPiBDb3VsZCB5b3Uga2luZGx5IHRha2UgdGhpcyBwYXRjaD8gQXMgQmFy
-dG8gc2FpZCwgaXQgZWZmZWN0ZWQgdGhlIHVzZXINCj4gZXhwZXJpZW5jZSBpbmRlZWQsIHRoYW5r
-cy4NCj4gDQo+IFRoYW5rcyBmb3IgY2xhcmlmeWluZyB0aGUgY2hhbmdlbG9nIGFzIGZhciBhcyB0
-aGUgZGlmZmVyZW50IGNoaXBzIGFuZA0KPiB0aGUgZGlmZmVyZW50IGJ1Z3ppbGxhcy4NCj4gDQo+
-IEJ1dCB5b3UgaGF2ZW4ndCBhZGRyZXNzZWQgbXkgY29uY2VybnMgYWJvdXQgKDEpIHB1dHRpbmcg
-YSBQQ0kgdmVuZG9yDQo+IElEIGNoZWNrIGluIHRoZSBnZW5lcmljIFBDSSBjb3JlIGNvZGUsIGFu
-ZCAoMikgYXBwbHlpbmcgdGhpcyB0byAqYWxsKg0KPiBKTWljcm9uIGRldmljZXMuICBZb3UgbWln
-aHQgd2FudCB0byBleHBsb3JlIGEgcXVpcmstdHlwZSBzb2x1dGlvbiBvcg0KPiBtYXliZSBqdXN0
-IGFkZCB0aGUgSk1pY3JvbiAzNjggdG8gdGhlIGNoZWNrcyBhZGRlZCBieSBlNmI3ZTQxY2RkOGMu
-DQpVbmRlcnN0YW5kIHlvdXIgcG9pbnQsIGluIGZhY3QsIGJlZm9yZSB0aGlzIHBhdGNoIHN1Ym1p
-dHRlZCwgSSBoYWQgd3JpdHRlbiBhbm90aGVyIHBhdGNoIGh0dHBzOi8vbGttbC5vcmcvbGttbC8y
-MDE0LzkvMjQvNjgNCndoaWNoIGFkZHJlc3NlZCB0byBhZGQgdGhlIHF1aXJrLXR5cGUgc29sdXRp
-b24gaW4gQVRBIGNvZGUsIGFuZCBBYXJvbiBnaXZlbiBiZXR0ZXIgc3VnZ2VzdGlvbiB0aGF0IGlt
-cGxlbWVudGVkIGF0IHBjaV9wbV9pbml0KCkuDQpIb3cgZG8geW91IHRoaW5rIG9mIGl0PyBUaGFu
-a3MuDQoNCg0K
+Finally enhance pci_root driver to support DMAR device hotplug when
+hot-plugging PCI host bridges.
+
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Reviewed-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/acpi/pci_root.c |   16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index cd4de7e038ea..c6bcb8c719d8 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -33,6 +33,7 @@
+ #include <linux/pci.h>
+ #include <linux/pci-acpi.h>
+ #include <linux/pci-aspm.h>
++#include <linux/dmar.h>
+ #include <linux/acpi.h>
+ #include <linux/slab.h>
+ #include <linux/dmi.h>
+@@ -525,6 +526,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	struct acpi_pci_root *root;
+ 	acpi_handle handle = device->handle;
+ 	int no_aspm = 0, clear_aspm = 0;
++	bool hotadd = system_state != SYSTEM_BOOTING;
+ 
+ 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
+ 	if (!root)
+@@ -571,6 +573,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
+ 	device->driver_data = root;
+ 
++	if (hotadd && dmar_device_add(handle)) {
++		result = -ENXIO;
++		goto end;
++	}
++
+ 	pr_info(PREFIX "%s [%s] (domain %04x %pR)\n",
+ 	       acpi_device_name(device), acpi_device_bid(device),
+ 	       root->segment, &root->secondary);
+@@ -597,7 +604,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 			root->segment, (unsigned int)root->secondary.start);
+ 		device->driver_data = NULL;
+ 		result = -ENODEV;
+-		goto end;
++		goto remove_dmar;
+ 	}
+ 
+ 	if (clear_aspm) {
+@@ -611,7 +618,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	if (device->wakeup.flags.run_wake)
+ 		device_set_run_wake(root->bus->bridge, true);
+ 
+-	if (system_state != SYSTEM_BOOTING) {
++	if (hotadd) {
+ 		pcibios_resource_survey_bus(root->bus);
+ 		pci_assign_unassigned_root_bus_resources(root->bus);
+ 	}
+@@ -621,6 +628,9 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	pci_unlock_rescan_remove();
+ 	return 1;
+ 
++remove_dmar:
++	if (hotadd)
++		dmar_device_remove(handle);
+ end:
+ 	kfree(root);
+ 	return result;
+@@ -639,6 +649,8 @@ static void acpi_pci_root_remove(struct acpi_device *device)
+ 
+ 	pci_remove_root_bus(root->bus);
+ 
++	dmar_device_remove(device->handle);
++
+ 	pci_unlock_rescan_remove();
+ 
+ 	kfree(root);
+-- 
+1.7.10.4
+
