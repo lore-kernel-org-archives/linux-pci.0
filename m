@@ -1,45 +1,120 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:62540 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752593AbaKZUaL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Nov 2014 15:30:11 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH] PCI: tegra: Use physical range for I/O mapping
-Date: Wed, 26 Nov 2014 21:30:04 +0100
-Message-ID: <2943259.8mh79BAhne@wuerfel>
-In-Reply-To: <20141126201758.GA19624@mithrandir>
-References: <1417018897-3965-1-git-send-email-thierry.reding@gmail.com> <3072281.UjpXkitFjL@wuerfel> <20141126201758.GA19624@mithrandir>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	x86@kernel.org, Matthias Brugger <matthias.bgg@gmail.com>,
+	Alexander Gordeev <agordeev@redhat.com>,
+	Anton Blanchard <anton@samba.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linuxppc-dev@lists.ozlabs.org, xen-devel@lists.xenproject.org
+Subject: [RFC Part4 v1 11/17] PCI, MSI: Rename __read_msi_msg() as __pci_read_msi_msg()
+Date: Sun,  9 Nov 2014 23:10:33 +0800
+Message-Id: <1415545839-28263-12-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 26 November 2014 21:18:03 Thierry Reding wrote:
-> On Wed, Nov 26, 2014 at 05:55:05PM +0100, Arnd Bergmann wrote:
-> > On Wednesday 26 November 2014 17:21:37 Thierry Reding wrote:
-> > > -
-> > > +       pci_add_resource_offset(&sys->resources, &pcie->pio, sys->io_offset);
-> > >         pci_add_resource_offset(&sys->resources, &pcie->mem, sys->mem_offset);
-> > >         pci_add_resource_offset(&sys->resources, &pcie->prefetch,
-> > >                                 sys->mem_offset);
-> > > 
-> > 
-> > You don't set sys->io_offset anywhere, which is a bug if you have multiple
-> > instances of the PCI host in one system. In my draft patch, I was setting
-> > both io_offset and mem_offset for consistency, and while mem_offset would
-> > in practice be always zero (as discussed on IRC), the io_offset in fact has
-> > a realistic chance of being nonzero and you should definitely set it.
-> 
-> I was going to do that in a follow-up patch since it isn't needed to fix
-> this particular regression.
+Rename __read_msi_msg() as __pci_read_msi_msg() and kill unused
+read_msi_msg(). It's a preparation to separate generic MSI code
+from PCI core.
 
-Makes sense, but then I think you can do the request_resource() and
-pci_add_resource_offset() additions in the same follow-up patch as well,
-and only change the computation in the regression fix.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/powerpc/platforms/pseries/msi.c |    2 +-
+ arch/x86/pci/xen.c                   |    2 +-
+ drivers/pci/msi.c                    |    9 +--------
+ include/linux/msi.h                  |    3 +--
+ 4 files changed, 4 insertions(+), 12 deletions(-)
 
-	Arnd
+diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
+index 8ab5add4ac82..90f756d0f58f 100644
+--- a/arch/powerpc/platforms/pseries/msi.c
++++ b/arch/powerpc/platforms/pseries/msi.c
+@@ -476,7 +476,7 @@ again:
+ 		irq_set_msi_desc(virq, entry);
+ 
+ 		/* Read config space back so we can restore after reset */
+-		__read_msi_msg(entry, &msg);
++		__pci_read_msi_msg(entry, &msg);
+ 		entry->msg = msg;
+ 	}
+ 
+diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+index 093f5f4272d3..a48ca2f8b93e 100644
+--- a/arch/x86/pci/xen.c
++++ b/arch/x86/pci/xen.c
+@@ -229,7 +229,7 @@ static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 		return 1;
+ 
+ 	list_for_each_entry(msidesc, &dev->msi_list, list) {
+-		__read_msi_msg(msidesc, &msg);
++		__pci_read_msi_msg(msidesc, &msg);
+ 		pirq = MSI_ADDR_EXT_DEST_ID(msg.address_hi) |
+ 			((msg.address_lo >> MSI_ADDR_DEST_ID_SHIFT) & 0xff);
+ 		if (msg.data != XEN_PIRQ_MSI_DATA ||
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index e1814f4be4b9..6011dfb475a1 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -243,7 +243,7 @@ void default_restore_msi_irqs(struct pci_dev *dev)
+ 		default_restore_msi_irq(dev, entry->irq);
+ }
+ 
+-void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
++void __pci_read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	BUG_ON(entry->dev->current_state != PCI_D0);
+ 
+@@ -273,13 +273,6 @@ void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ 	}
+ }
+ 
+-void read_msi_msg(unsigned int irq, struct msi_msg *msg)
+-{
+-	struct msi_desc *entry = irq_get_msi_desc(irq);
+-
+-	__read_msi_msg(entry, msg);
+-}
+-
+ void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	if (entry->dev->current_state != PCI_D0) {
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 19502186a64d..4b0d070ff481 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -61,9 +61,8 @@ void msi_domain_deactivate(struct irq_domain *domain,
+ 
+ #ifdef CONFIG_PCI_MSI
+ /* Helper functions */
+-void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
++void __pci_read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+-void read_msi_msg(unsigned int irq, struct msi_msg *msg);
+ void write_msi_msg(unsigned int irq, struct msi_msg *msg);
+ 
+ /*
+-- 
+1.7.10.4
+
