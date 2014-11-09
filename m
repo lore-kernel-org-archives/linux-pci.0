@@ -1,82 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:64035 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933518AbaKNCSN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 21:18:13 -0500
-Message-ID: <54656617.7090000@huawei.com>
-Date: Fri, 14 Nov 2014 10:16:55 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Thomas Gleixner <tglx@linutronix.de>
-CC: Jiang Liu <jiang.liu@linux.intel.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Received: from mga02.intel.com ([134.134.136.20]:62538 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752353AbaKIPJA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 9 Nov 2014 10:09:00 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Borislav Petkov <bp@alien8.de>,
 	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
 	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Alexander Gordeev <agordeev@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [Patch V1 0/6] Refine generic/PCI MSI irqodmian interfaces
-References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com> <54651BE2.9080008@arm.com> <54654C10.2040102@linux.intel.com> <54655632.2040209@huawei.com> <alpine.DEB.2.11.1411140211480.3935@nanos>
-In-Reply-To: <alpine.DEB.2.11.1411140211480.3935@nanos>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC Part4 v1 08/17] PCI/MSI: Use irq_chip.irq_write_msi_msg() to share common code
+Date: Sun,  9 Nov 2014 23:10:30 +0800
+Message-Id: <1415545839-28263-9-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/11/14 9:31, Thomas Gleixner wrote:
-> On Fri, 14 Nov 2014, Yijing Wang wrote:
-> 
-> Could you please use a mail client which does proper line wraps or
-> configure yours to do so?
-> 
->> Associate the irq domain and PCI bus is not necessary, because all
->> PCI buses under same host bridge always share same MSI chip/irq
->> domain, we only need associate them and pci host bridge.
->>
->> I'm refactoring the pci_host_bridge, make it be a generic one, rip
->> out of the pci root bus creation, so we could put the irq domain and
->> pci domain etc.. in it. Finally, we could eliminate lots platform
->> arch functions. I will post it out within one week.
-> 
-> That's a completely orthogonal problem. From the MSI/interrupt
-> handling POV it does not matter at all where that information is
-> stored. All we care about is that it is retrievable via the (pci)
-> device which tries to setup MSI[X].
-> 
-> So we can store/retrieve it via generic functions into/from whatever
-> is available right now. If the irq side has generic interfaces to do
-> so then this wont conflict with your decisions to change the final
-> storage point because all it takes is to tweak the storage/retrieve
-> functions.
-> 
-> So all we need at the moment is an agreed on way to store/retrieve
-> that information which is based on the current shared infrastructure,
-> aka. Linus tree. If we can utilize that you are completely free to
-> change the association mechanism underneath.
+Change PCI MSI code to use irq_chip.irq_write_msi_msg() to share more
+common code later.
 
-Hi Thomas, thanks for your explanation. Now I got it,
-I will consider more about it.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/pci/msi.c   |   24 ++++++------------------
+ include/linux/msi.h |    3 +++
+ 2 files changed, 9 insertions(+), 18 deletions(-)
 
-Thanks!
-Yijing.
-
-
-> 
-> Thanks,
-> 
-> 	tglx
-> 
-> .
-> 
-
-
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index b811739b43c5..cc6207e3b6bc 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1111,7 +1111,7 @@ int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 	ret = parent->chip->irq_set_affinity(parent, mask, force);
+ 	if (ret >= 0 && ret != IRQ_SET_MASK_OK_DONE) {
+ 		irq_chip_compose_msi_msg(data, &msg);
+-		__write_msi_msg(data->msi_desc, &msg);
++		irq_chip_write_msi_msg(data, &msg);
+ 	}
+ 
+ 	return ret;
+@@ -1177,32 +1177,20 @@ static void msi_domain_free(struct irq_domain *domain, unsigned int virq,
+ 	irq_domain_free_irqs_top(domain, virq, nr_irqs);
+ }
+ 
+-static void msi_domain_activate(struct irq_domain *domain,
+-				struct irq_data *irq_data)
++void msi_domain_activate(struct irq_domain *domain, struct irq_data *irq_data)
+ {
+ 	struct msi_msg msg;
+ 
+-	/*
+-	 * irq_data->chip_data is MSI/MSI-X offset.
+-	 * MSI-X message is written per-IRQ, the offset is always 0.
+-	 * MSI message denotes a contiguous group of IRQs, written for 0th IRQ.
+-	 */
+-	if (irq_data->chip_data)
+-		return;
+-
+ 	BUG_ON(irq_chip_compose_msi_msg(irq_data, &msg));
+-	__write_msi_msg(irq_data->msi_desc, &msg);
++	irq_chip_write_msi_msg(irq_data, &msg);
+ }
+ 
+-static void msi_domain_deactivate(struct irq_domain *domain,
+-				  struct irq_data *irq_data)
++void msi_domain_deactivate(struct irq_domain *domain, struct irq_data *irq_data)
+ {
+ 	struct msi_msg msg;
+ 
+-	if (!irq_data->chip_data) {
+-		memset(&msg, 0, sizeof(msg));
+-		__write_msi_msg(irq_data->msi_desc, &msg);
+-	}
++	memset(&msg, 0, sizeof(msg));
++	irq_chip_write_msi_msg(irq_data, &msg);
+ }
+ 
+ static struct irq_domain_ops msi_domain_ops = {
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 312197f64070..bd0f9d8c6fe1 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -81,6 +81,9 @@ struct irq_chip;
+ 
+ int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 			    bool force);
++void msi_domain_activate(struct irq_domain *domain, struct irq_data *irq_data);
++void msi_domain_deactivate(struct irq_domain *domain,
++			   struct irq_data *irq_data);
+ struct irq_domain *msi_create_irq_domain(struct device_node *of_node,
+ 					 struct irq_chip *chip,
+ 					 struct irq_domain *parent);
 -- 
-Thanks!
-Yijing
+1.7.10.4
 
