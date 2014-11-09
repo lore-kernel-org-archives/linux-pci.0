@@ -1,6 +1,10 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <545F1478.3040808@linux.intel.com>
+Date: Sun, 09 Nov 2014 15:15:04 +0800
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+MIME-Version: 1.0
+To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
@@ -12,159 +16,144 @@ To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Grant Likely <grant.likely@linaro.org>,
 	Marc Zyngier <marc.zyngier@arm.com>,
 	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Alexander Gordeev <agordeev@redhat.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	x86@kernel.org, linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v4 19/31] PCI/MSI: Simplify PCI MSI code by initializing msi_desc.nvec_used earlier
-Date: Tue,  4 Nov 2014 20:01:53 +0800
-Message-Id: <1415102525-9898-20-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [Patch Part2 v5 21/31] PCI/MSI: Enhance core to support hierarchy
+ irqdomain
+References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com> <1415283644-2559-22-git-send-email-jiang.liu@linux.intel.com> <545EED04.4090008@amd.com>
+In-Reply-To: <545EED04.4090008@amd.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simplify PCI MSI code by initializing msi_desc.nvec_used and
-msi_desc.msi_attrib.mutiple when create MSI descriptors.
+On 2014/11/9 12:26, Suravee Suthikulpanit wrote:
+> Hi Gerry,
+> 
+> Please see my comments / questions below.
+> 
+> On 11/6/14 21:20, Jiang Liu wrote:
+>> Enhance PCI MSI core to support hierarchy irqdomain, so the common
+>> code could be shared among architectures.
+>>
+>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>> ---
+>> Hi Thomas,
+>>     These changes are a temporary solution, I'm working on another
+>> patch set which will refine these interfaces, especially kill
+>> arch_msi_irq_domain_{set|get}_hwirq().
+>> Regards!
+>> Gerry
+> 
+> Would the change includes the struct irqdomain_msi_data proposed by
+> Thomas here (https://lkml.org/lkml/2014/11/6/210)?
+Hi Suravee,
+	I'm working on another patch set which will refine the way to
+create irqdomain for MSI. I hope will solve all issues mentioned by
+Thomas. I will post that patch set as RFC within one or two days.
 
-Also remove redundant checks in IRQ remapping drivers, PCI MSI core
-already guarattees these.
+> 
+>> [...]
+>> +static int msi_domain_alloc(struct irq_domain *domain, unsigned int
+>> virq,
+>> +                unsigned int nr_irqs, void *arg)
+>> +{
+>> +    int i, ret;
+>> +    irq_hw_number_t hwirq = arch_msi_irq_domain_get_hwirq(arg);
+>> +
+>> +    if (irq_find_mapping(domain, hwirq) > 0)
+>> +        return -EEXIST;
+>> +
+>> +    ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
+>> +    if (ret < 0)
+>> +        return ret;
+>> +
+> 
+> When executing irq_domain_alloc_irqs_parent(), it triggers the following
+> warning message due to
+> 
+>     WARN_ON(desc->irq_data.chip == &no_irq_chip)
+> 
+> ------------[ cut here ]------------
+> WARNING: CPU: 2 PID: 912 at kernel/irq/chip.c:734
+> __irq_set_handler+0x138/0x13c()
+> Modules linked in: mlx4_core(+) rtc_efi efivarfs
+> CPU: 2 PID: 912 Comm: modprobe Not tainted 3.18.0-rc3-p2v5+ #53
+> Call trace:
+> [<fffffe00000963d4>] dump_backtrace+0x0/0x16c
+> [<fffffe0000096550>] show_stack+0x10/0x1c
+> [<fffffe000067545c>] dump_stack+0x74/0x98
+> [<fffffe00000b205c>] warn_slowpath_common+0x84/0xac
+> [<fffffe00000b2148>] warn_slowpath_null+0x14/0x20
+> [<fffffe00000ed968>] __irq_set_handler+0x134/0x13c
+> [<fffffe000042af14>] gic_irq_domain_map+0x4c/0xac
+> [<fffffe000042afd4>] gic_irq_domain_alloc+0x60/0x88
+> [<fffffe000042b374>] gicv2m_domain_alloc+0x30/0xa8
+> [<fffffe00000efc1c>] __irq_domain_alloc_irqs+0x144/0x30c
+> [<fffffe000042b58c>] gicv2m_setup_msi_irq+0xc0/0x118
+> [<fffffe000044548c>] arch_setup_msi_irq+0x34/0x60
+> [<fffffe0000445544>] arch_setup_msi_irqs+0x50/0xb0
+> [<fffffe0000445e3c>] pci_enable_msix+0x310/0x39c
+> [<fffffe0000445efc>] pci_enable_msix_range+0x34/0x9c
+> ....
+> 
+> However, I think if we call irq_domain_set_hwirq_and_chip() in the
+> msi_create_irq_domain() as suggested by Thomas, that should also fix
+> this issue.
+We didn't trigger this warning on x86 because only the outer-most
+irqdomain will set irq flow handler. On ARM, the inner GIC domain
+will set irq flow handler, but the irq_data->chip for outer-most
+domain hasn't been set yet.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/irq_remapping.c |    8 --------
- drivers/pci/msi.c             |   40 +++++++++++++++-------------------------
- 2 files changed, 15 insertions(+), 33 deletions(-)
+I'm still find a way out here. Maybe we need to relax the WARN_ON().
 
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 176ff4372b7d..32fe5b1322d0 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -69,19 +69,13 @@ static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
- 	unsigned int irq;
- 	struct msi_desc *msidesc;
- 
--	WARN_ON(!list_is_singular(&dev->msi_list));
- 	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
--	WARN_ON(msidesc->irq);
--	WARN_ON(msidesc->msi_attrib.multiple);
--	WARN_ON(msidesc->nvec_used);
- 
- 	irq = irq_alloc_hwirqs(nvec, dev_to_node(&dev->dev));
- 	if (irq == 0)
- 		return -ENOSPC;
- 
- 	nvec_pow2 = __roundup_pow_of_two(nvec);
--	msidesc->nvec_used = nvec;
--	msidesc->msi_attrib.multiple = ilog2(nvec_pow2);
- 	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
- 		if (!sub_handle) {
- 			index = msi_alloc_remapped_irq(dev, irq, nvec_pow2);
-@@ -109,8 +103,6 @@ error:
- 	 * IRQs from tearing down again in default_teardown_msi_irqs()
- 	 */
- 	msidesc->irq = 0;
--	msidesc->nvec_used = 0;
--	msidesc->msi_attrib.multiple = 0;
- 
- 	return ret;
- }
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index fb2ccb536324..afe974600c7d 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -85,19 +85,13 @@ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-  */
- void default_teardown_msi_irqs(struct pci_dev *dev)
- {
-+	int i;
- 	struct msi_desc *entry;
- 
--	list_for_each_entry(entry, &dev->msi_list, list) {
--		int i, nvec;
--		if (entry->irq == 0)
--			continue;
--		if (entry->nvec_used)
--			nvec = entry->nvec_used;
--		else
--			nvec = 1 << entry->msi_attrib.multiple;
--		for (i = 0; i < nvec; i++)
--			arch_teardown_msi_irq(entry->irq + i);
--	}
-+	list_for_each_entry(entry, &dev->msi_list, list)
-+		if (entry->irq)
-+			for (i = 0; i < entry->nvec_used; i++)
-+				arch_teardown_msi_irq(entry->irq + i);
- }
- 
- void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
-@@ -353,19 +347,12 @@ static void free_msi_irqs(struct pci_dev *dev)
- 	struct msi_desc *entry, *tmp;
- 	struct attribute **msi_attrs;
- 	struct device_attribute *dev_attr;
--	int count = 0;
-+	int i, count = 0;
- 
--	list_for_each_entry(entry, &dev->msi_list, list) {
--		int i, nvec;
--		if (!entry->irq)
--			continue;
--		if (entry->nvec_used)
--			nvec = entry->nvec_used;
--		else
--			nvec = 1 << entry->msi_attrib.multiple;
--		for (i = 0; i < nvec; i++)
--			BUG_ON(irq_has_action(entry->irq + i));
--	}
-+	list_for_each_entry(entry, &dev->msi_list, list)
-+		if (entry->irq)
-+			for (i = 0; i < entry->nvec_used; i++)
-+				BUG_ON(irq_has_action(entry->irq + i));
- 
- 	arch_teardown_msi_irqs(dev);
- 
-@@ -556,7 +543,7 @@ error_attrs:
- 	return ret;
- }
- 
--static struct msi_desc *msi_setup_entry(struct pci_dev *dev)
-+static struct msi_desc *msi_setup_entry(struct pci_dev *dev, int nvec)
- {
- 	u16 control;
- 	struct msi_desc *entry;
-@@ -574,6 +561,8 @@ static struct msi_desc *msi_setup_entry(struct pci_dev *dev)
- 	entry->msi_attrib.maskbit	= !!(control & PCI_MSI_FLAGS_MASKBIT);
- 	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
- 	entry->msi_attrib.multi_cap	= (control & PCI_MSI_FLAGS_QMASK) >> 1;
-+	entry->msi_attrib.multiple	= ilog2(__roundup_pow_of_two(nvec));
-+	entry->nvec_used		= nvec;
- 
- 	if (control & PCI_MSI_FLAGS_64BIT)
- 		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_64;
-@@ -606,7 +595,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
- 
- 	msi_set_enable(dev, 0);	/* Disable MSI during set up */
- 
--	entry = msi_setup_entry(dev);
-+	entry = msi_setup_entry(dev, nvec);
- 	if (!entry)
- 		return -ENOMEM;
- 
-@@ -677,6 +666,7 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
- 		entry->msi_attrib.entry_nr	= entries[i].entry;
- 		entry->msi_attrib.default_irq	= dev->irq;
- 		entry->mask_base		= base;
-+		entry->nvec_used		= 1;
- 
- 		list_add_tail(&entry->list, &dev->msi_list);
- 	}
--- 
-1.7.10.4
+> 
+>> +    for (i = 0; i < nr_irqs; i++) {
+>> +        irq_domain_set_hwirq_and_chip(domain, virq + i, hwirq + i,
+>> +                          domain->host_data,
+>> +                          (void *)(long)i);
+>> +        __irq_set_handler(virq + i, handle_edge_irq, 0, "edge");
+>> +    }
+> 
+> Is there are a way to specify other type of handler besides edge?
+Yes, the new patch set will address this requirement.
 
+> 
+>> [...]
+>> +static void msi_domain_activate(struct irq_domain *domain,
+>> +                struct irq_data *irq_data)
+>> +{
+>> +    struct msi_msg msg;
+>> +
+>> +    /*
+>> +     * irq_data->chip_data is MSI/MSI-X offset.
+>> +     * MSI-X message is written per-IRQ, the offset is always 0.
+>> +     * MSI message denotes a contiguous group of IRQs, written for
+>> 0th IRQ.
+>> +     */
+>> +    if (irq_data->chip_data)
+>> +        return;
+> 
+> Actually, I am a bit confused with this comment here.  If you look at
+> "/drivers/pci/msi.c: arch_setup_msi_irq()", it calls
+> irq_set_chip_data(des->irq, chip) where chip is *msi_chip.
+> 
+> It looks like if the arch uses this API, it would conflict with what you
+> have here where the irq_data->chip_data would be not NULL at the logic
+> above, and would always return.
+Good point, it's work on x86, but will break ARM or other platforms.
+Will refine this part.
+Regards!
+Gerry
+> 
+> Thank you,
+> 
+> Suravee
