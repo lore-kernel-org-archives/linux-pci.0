@@ -1,113 +1,316 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:48506 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750745AbaKURbO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 12:31:14 -0500
-Received: by mail-ie0-f179.google.com with SMTP id rp18so5398388iec.10
-        for <linux-pci@vger.kernel.org>; Fri, 21 Nov 2014 09:31:13 -0800 (PST)
-Date: Fri, 21 Nov 2014 10:31:10 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, linux-pci@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>
-Subject: Re: Removal of bus->msi assignment breaks MSI with stacked domains
-Message-ID: <20141121173110.GB6578@google.com>
-References: <546E1771.4030201@arm.com>
- <20141120215353.GA7987@google.com>
- <alpine.DEB.2.11.1411202355060.6439@nanos>
- <546E9B60.9070706@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <546E9B60.9070706@huawei.com>
+Received: from mga09.intel.com ([134.134.136.24]:9864 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752174AbaKIOpM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 9 Nov 2014 09:45:12 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V7 7/8] iommu/vt-d: Enhance intel-iommu driver to support DMAR unit hotplug
+Date: Sun,  9 Nov 2014 22:48:02 +0800
+Message-Id: <1415544483-27990-8-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415544483-27990-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415544483-27990-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 21, 2014 at 09:54:40AM +0800, Yijing Wang wrote:
-> >> Thomas, let me know if you want to do that.  I suppose we could add a new
-> >> patch to add it back, but that would leave bisection broken for the
-> >> interval between c167caf8d174 and the patch that adds it back.
-> > 
-> > Fortunately my irq/irqdomain branch is not immutable yet. So we have
-> > no problem at that point. I can rebase on your branch until tomorrow
-> > night. Or just rebase on mainline and we sort out the merge conflicts
-> > later, i.e. delegate them to Linus so his job of pulling stuff gets
-> > not completely boring.
-> 
-> Hi Thomas, sorry for my introducing the broken.
-> 
-> > 
-> > What I'm more worried about is whether this intended change is going
-> > to inflict a problem on Jiangs intention to deduce the MSI irq domain
-> > from the device, which we really need for making DMAR work w/o going
-> > through loops and hoops.
-> > 
-> > I have limited knowledge about the actual scope of iommu (DMAR) units
-> > versus device/bus/host-controllers, so I would appreciate a proper
-> > explanation for that from you or Jiang or both.
-> 
-> In my personal opinion, if it's not necessary, we should not put stuff
-> into pci_dev or pci_bus. If we plan to save msi_controller in pci_bus or
-> pci_dev.
-> I have a proposal, I would be appreciated if you could give some comments.
-> First we refactor pci_host_bridge to make a generic
-> pci_host_bridge, then we could save pci domain in it to eliminate
-> arch specific functions. I aslo wanted to save msi_controller as
-> pci domain, but now Jiang refactor hierarchy irq domain, and
-> pci devices under the same pci host bridge may need to associate
-> to different msi_controllers.
+Implement required callback functions for intel-iommu driver
+to support DMAR unit hotplug.
 
-I think this is getting ahead of ourselves.  Let's make small steps.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Reviewed-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/iommu/intel-iommu.c |  206 +++++++++++++++++++++++++++++++------------
+ 1 file changed, 151 insertions(+), 55 deletions(-)
 
-We currently have the msi_controller pointer in struct pci_bus.  That was
-there even before your series.  Your series added pci_msi_controller(),
-and I reworked it so it looks like this:
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index ca7075014ee3..9a4fee8122c4 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -1125,8 +1125,11 @@ static int iommu_alloc_root_entry(struct intel_iommu *iommu)
+ 	unsigned long flags;
+ 
+ 	root = (struct root_entry *)alloc_pgtable_page(iommu->node);
+-	if (!root)
++	if (!root) {
++		pr_err("IOMMU: allocating root entry for %s failed\n",
++			iommu->name);
+ 		return -ENOMEM;
++	}
+ 
+ 	__iommu_flush_cache(iommu, root, ROOT_SIZE);
+ 
+@@ -1466,7 +1469,7 @@ static int iommu_init_domains(struct intel_iommu *iommu)
+ 	return 0;
+ }
+ 
+-static void free_dmar_iommu(struct intel_iommu *iommu)
++static void disable_dmar_iommu(struct intel_iommu *iommu)
+ {
+ 	struct dmar_domain *domain;
+ 	int i;
+@@ -1490,11 +1493,16 @@ static void free_dmar_iommu(struct intel_iommu *iommu)
+ 
+ 	if (iommu->gcmd & DMA_GCMD_TE)
+ 		iommu_disable_translation(iommu);
++}
+ 
+-	kfree(iommu->domains);
+-	kfree(iommu->domain_ids);
+-	iommu->domains = NULL;
+-	iommu->domain_ids = NULL;
++static void free_dmar_iommu(struct intel_iommu *iommu)
++{
++	if ((iommu->domains) && (iommu->domain_ids)) {
++		kfree(iommu->domains);
++		kfree(iommu->domain_ids);
++		iommu->domains = NULL;
++		iommu->domain_ids = NULL;
++	}
+ 
+ 	g_iommus[iommu->seq_id] = NULL;
+ 
+@@ -2701,6 +2709,41 @@ static int __init iommu_prepare_static_identity_mapping(int hw)
+ 	return 0;
+ }
+ 
++static void intel_iommu_init_qi(struct intel_iommu *iommu)
++{
++	/*
++	 * Start from the sane iommu hardware state.
++	 * If the queued invalidation is already initialized by us
++	 * (for example, while enabling interrupt-remapping) then
++	 * we got the things already rolling from a sane state.
++	 */
++	if (!iommu->qi) {
++		/*
++		 * Clear any previous faults.
++		 */
++		dmar_fault(-1, iommu);
++		/*
++		 * Disable queued invalidation if supported and already enabled
++		 * before OS handover.
++		 */
++		dmar_disable_qi(iommu);
++	}
++
++	if (dmar_enable_qi(iommu)) {
++		/*
++		 * Queued Invalidate not enabled, use Register Based Invalidate
++		 */
++		iommu->flush.flush_context = __iommu_flush_context;
++		iommu->flush.flush_iotlb = __iommu_flush_iotlb;
++		pr_info("IOMMU: %s using Register based invalidation\n",
++			iommu->name);
++	} else {
++		iommu->flush.flush_context = qi_flush_context;
++		iommu->flush.flush_iotlb = qi_flush_iotlb;
++		pr_info("IOMMU: %s using Queued invalidation\n", iommu->name);
++	}
++}
++
+ static int __init init_dmars(void)
+ {
+ 	struct dmar_drhd_unit *drhd;
+@@ -2729,6 +2772,10 @@ static int __init init_dmars(void)
+ 			  DMAR_UNITS_SUPPORTED);
+ 	}
+ 
++	/* Preallocate enough resources for IOMMU hot-addition */
++	if (g_num_of_iommus < DMAR_UNITS_SUPPORTED)
++		g_num_of_iommus = DMAR_UNITS_SUPPORTED;
++
+ 	g_iommus = kcalloc(g_num_of_iommus, sizeof(struct intel_iommu *),
+ 			GFP_KERNEL);
+ 	if (!g_iommus) {
+@@ -2757,58 +2804,14 @@ static int __init init_dmars(void)
+ 		 * among all IOMMU's. Need to Split it later.
+ 		 */
+ 		ret = iommu_alloc_root_entry(iommu);
+-		if (ret) {
+-			printk(KERN_ERR "IOMMU: allocate root entry failed\n");
++		if (ret)
+ 			goto free_iommu;
+-		}
+ 		if (!ecap_pass_through(iommu->ecap))
+ 			hw_pass_through = 0;
+ 	}
+ 
+-	/*
+-	 * Start from the sane iommu hardware state.
+-	 */
+-	for_each_active_iommu(iommu, drhd) {
+-		/*
+-		 * If the queued invalidation is already initialized by us
+-		 * (for example, while enabling interrupt-remapping) then
+-		 * we got the things already rolling from a sane state.
+-		 */
+-		if (iommu->qi)
+-			continue;
+-
+-		/*
+-		 * Clear any previous faults.
+-		 */
+-		dmar_fault(-1, iommu);
+-		/*
+-		 * Disable queued invalidation if supported and already enabled
+-		 * before OS handover.
+-		 */
+-		dmar_disable_qi(iommu);
+-	}
+-
+-	for_each_active_iommu(iommu, drhd) {
+-		if (dmar_enable_qi(iommu)) {
+-			/*
+-			 * Queued Invalidate not enabled, use Register Based
+-			 * Invalidate
+-			 */
+-			iommu->flush.flush_context = __iommu_flush_context;
+-			iommu->flush.flush_iotlb = __iommu_flush_iotlb;
+-			printk(KERN_INFO "IOMMU %d 0x%Lx: using Register based "
+-			       "invalidation\n",
+-				iommu->seq_id,
+-			       (unsigned long long)drhd->reg_base_addr);
+-		} else {
+-			iommu->flush.flush_context = qi_flush_context;
+-			iommu->flush.flush_iotlb = qi_flush_iotlb;
+-			printk(KERN_INFO "IOMMU %d 0x%Lx: using Queued "
+-			       "invalidation\n",
+-				iommu->seq_id,
+-			       (unsigned long long)drhd->reg_base_addr);
+-		}
+-	}
++	for_each_active_iommu(iommu, drhd)
++		intel_iommu_init_qi(iommu);
+ 
+ 	if (iommu_pass_through)
+ 		iommu_identity_mapping |= IDENTMAP_ALL;
+@@ -2894,8 +2897,10 @@ static int __init init_dmars(void)
+ 	return 0;
+ 
+ free_iommu:
+-	for_each_active_iommu(iommu, drhd)
++	for_each_active_iommu(iommu, drhd) {
++		disable_dmar_iommu(iommu);
+ 		free_dmar_iommu(iommu);
++	}
+ 	kfree(deferred_flush);
+ free_g_iommus:
+ 	kfree(g_iommus);
+@@ -3801,9 +3806,100 @@ int dmar_check_one_atsr(struct acpi_dmar_header *hdr, void *arg)
+ 	return 0;
+ }
+ 
++static int intel_iommu_add(struct dmar_drhd_unit *dmaru)
++{
++	int sp, ret = 0;
++	struct intel_iommu *iommu = dmaru->iommu;
++
++	if (g_iommus[iommu->seq_id])
++		return 0;
++
++	if (hw_pass_through && !ecap_pass_through(iommu->ecap)) {
++		pr_warn("IOMMU: %s doesn't support hardware pass through.\n",
++			iommu->name);
++		return -ENXIO;
++	}
++	if (!ecap_sc_support(iommu->ecap) &&
++	    domain_update_iommu_snooping(iommu)) {
++		pr_warn("IOMMU: %s doesn't support snooping.\n",
++			iommu->name);
++		return -ENXIO;
++	}
++	sp = domain_update_iommu_superpage(iommu) - 1;
++	if (sp >= 0 && !(cap_super_page_val(iommu->cap) & (1 << sp))) {
++		pr_warn("IOMMU: %s doesn't support large page.\n",
++			iommu->name);
++		return -ENXIO;
++	}
++
++	/*
++	 * Disable translation if already enabled prior to OS handover.
++	 */
++	if (iommu->gcmd & DMA_GCMD_TE)
++		iommu_disable_translation(iommu);
++
++	g_iommus[iommu->seq_id] = iommu;
++	ret = iommu_init_domains(iommu);
++	if (ret == 0)
++		ret = iommu_alloc_root_entry(iommu);
++	if (ret)
++		goto out;
++
++	if (dmaru->ignored) {
++		/*
++		 * we always have to disable PMRs or DMA may fail on this device
++		 */
++		if (force_on)
++			iommu_disable_protect_mem_regions(iommu);
++		return 0;
++	}
++
++	intel_iommu_init_qi(iommu);
++	iommu_flush_write_buffer(iommu);
++	ret = dmar_set_interrupt(iommu);
++	if (ret)
++		goto disable_iommu;
++
++	iommu_set_root_entry(iommu);
++	iommu->flush.flush_context(iommu, 0, 0, 0, DMA_CCMD_GLOBAL_INVL);
++	iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
++	iommu_enable_translation(iommu);
++
++	if (si_domain) {
++		ret = iommu_attach_domain(si_domain, iommu);
++		if (ret < 0 || si_domain->id != ret)
++			goto disable_iommu;
++		domain_attach_iommu(si_domain, iommu);
++	}
++
++	iommu_disable_protect_mem_regions(iommu);
++	return 0;
++
++disable_iommu:
++	disable_dmar_iommu(iommu);
++out:
++	free_dmar_iommu(iommu);
++	return ret;
++}
++
+ int dmar_iommu_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
+ {
+-	return intel_iommu_enabled ? -ENOSYS : 0;
++	int ret = 0;
++	struct intel_iommu *iommu = dmaru->iommu;
++
++	if (!intel_iommu_enabled)
++		return 0;
++	if (iommu == NULL)
++		return -EINVAL;
++
++	if (insert) {
++		ret = intel_iommu_add(dmaru);
++	} else {
++		disable_dmar_iommu(iommu);
++		free_dmar_iommu(iommu);
++	}
++
++	return ret;
+ }
+ 
+ static void intel_iommu_free_dmars(void)
+-- 
+1.7.10.4
 
-    static struct msi_controller *pci_msi_controller(struct pci_dev *dev)
-    {
-	   struct msi_controller *msi_ctrl = dev->bus->msi;
-
-	   if (msi_ctrl)
-		   return msi_ctrl;
-
-	   return pcibios_msi_controller(dev);
-    }
-
-So now your series basically just removes the ARM add_bus() and
-remove_bus() methods and gets the MSI controller info from the ARM
-pci_sys_data struct instead of from pci_bus.  Of course, that assumes that
-on ARM, all devices under a host bridge have the same MSI controller.  That
-seems like an unwarranted assumption, but if you want to do it for ARM,
-that's fine with me.
-
-> So I want to associate a msi_controller finding ops with generic pci_host_bridge,
-> then every pci device could find its msi_controller/irq_domain by a
-> common function
-> 
-> E.g
-> 
-> struct msi_controller *pci_msi_controller(struct pci_dev *pdev)
-> {
-> 	struct msi_controller *ctrl;
-> 	struct pci_host_bridge *host = find_pci_host_bridge(pdev->bus);
-> 	if (host && host->pci_get_msi_controller)
-> 		ctrl = pci_host_bridge->pci_get_msi_controller(struct pci_dev *pdev);
-> 
-> 	return ctrl;	
-> }
-
-You can do this for ARM if you want (and your series already accomplishes
-the same effect, though implemented differently).  But I don't think this
-is appropriate for the PCI core.
-
-For anybody who is on this thread but not the original, I reworked the
-series slightly, see [1].
-
-Bjorn
-
-[1] http://lkml.kernel.org/r/20141121172018.GA6578@google.com
