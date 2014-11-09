@@ -1,59 +1,174 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:2053 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756722AbaKUDUM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 20 Nov 2014 22:20:12 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
 	Grant Likely <grant.likely@linaro.org>,
 	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch irqdomain: Enhance irq_domain_free_irqs_common() to support parentless irqdomain
-Date: Fri, 21 Nov 2014 11:23:26 +0800
-Message-Id: <1416540206-18103-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [RFC Part4 v1 09/17] x86, irq: Simplify MSI/DMAR/HPET implementation by using common code
+Date: Sun,  9 Nov 2014 23:10:31 +0800
+Message-Id: <1415545839-28263-10-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Originally irq_domain_free_irqs_common() is designed to be used by
-irqdomains with parent. But there are desires to reuse for parentless
-irqdomains for code reduction.
-So check domain->parent before invoking irq_domain_free_irqs_parent().
+Use common code to simplify MSI/DMAR/HPET driver implementation.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
-Hi Thomas,
-	This patch applies to tip/irq/irqdomain, it helps to reduce code
-size on ARM. Seems we still have chance to merge it into tip/irq/irqdomain:)
-Regards!
-Gerry
----
- kernel/irq/irqdomain.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ arch/x86/kernel/apic/msi.c |   81 ++++----------------------------------------
+ 1 file changed, 6 insertions(+), 75 deletions(-)
 
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index 029acf11efed..0449d2869e17 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -975,7 +975,8 @@ void irq_domain_free_irqs_common(struct irq_domain *domain, unsigned int virq,
- 		if (irq_data)
- 			irq_domain_reset_irq_data(irq_data);
- 	}
--	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
-+	if (domain->parent)
-+		irq_domain_free_irqs_parent(domain, virq, nr_irqs);
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 842d71699912..f625c2f21377 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -140,23 +140,6 @@ struct irq_domain *arch_create_msi_irq_domain(struct irq_domain *parent)
+ #endif
+ 
+ #ifdef CONFIG_DMAR_TABLE
+-static int
+-dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
+-		      bool force)
+-{
+-	struct irq_data *parent = data->parent_data;
+-	struct msi_msg msg;
+-	int ret;
+-
+-	ret = parent->chip->irq_set_affinity(parent, mask, force);
+-	if (ret >= 0) {
+-		irq_chip_compose_msi_msg(data, &msg);
+-		dmar_msi_write(data->irq, &msg);
+-	}
+-
+-	return ret;
+-}
+-
+ static void dmar_msi_write_msg(struct irq_data *data, struct msi_msg *msg)
+ {
+ 	dmar_msi_write(data->irq, msg);
+@@ -167,7 +150,7 @@ static struct irq_chip dmar_msi_type = {
+ 	.irq_unmask		= dmar_msi_unmask,
+ 	.irq_mask		= dmar_msi_mask,
+ 	.irq_ack		= irq_chip_ack_parent,
+-	.irq_set_affinity	= dmar_msi_set_affinity,
++	.irq_set_affinity	= msi_domain_set_affinity,
+ 	.irq_retrigger		= irq_chip_retrigger_hierarchy,
+ 	.irq_compose_msi_msg	= msi_compose_msg,
+ 	.irq_write_msi_msg	= dmar_msi_write_msg,
+@@ -205,29 +188,11 @@ static void dmar_domain_free(struct irq_domain *domain, unsigned int virq,
+ 	irq_domain_free_irqs_top(domain, virq, nr_irqs);
  }
  
- /**
+-static void dmar_domain_activate(struct irq_domain *domain,
+-				 struct irq_data *irq_data)
+-{
+-	struct msi_msg msg;
+-
+-	BUG_ON(irq_chip_compose_msi_msg(irq_data, &msg));
+-	dmar_msi_write(irq_data->irq, &msg);
+-}
+-
+-static void dmar_domain_deactivate(struct irq_domain *domain,
+-				   struct irq_data *irq_data)
+-{
+-	struct msi_msg msg;
+-
+-	memset(&msg, 0, sizeof(msg));
+-	dmar_msi_write(irq_data->irq, &msg);
+-}
+-
+ static struct irq_domain_ops dmar_domain_ops = {
+ 	.alloc = dmar_domain_alloc,
+ 	.free = dmar_domain_free,
+-	.activate = dmar_domain_activate,
+-	.deactivate = dmar_domain_deactivate,
++	.activate = msi_domain_activate,
++	.deactivate = msi_domain_deactivate,
+ };
+ 
+ static struct irq_domain *dmar_get_irq_domain(void)
+@@ -277,22 +242,6 @@ static inline int hpet_dev_id(struct irq_domain *domain)
+ 	return (int)(long)domain->host_data;
+ }
+ 
+-static int hpet_msi_set_affinity(struct irq_data *data,
+-				 const struct cpumask *mask, bool force)
+-{
+-	struct irq_data *parent = data->parent_data;
+-	struct msi_msg msg;
+-	int ret;
+-
+-	ret = parent->chip->irq_set_affinity(parent, mask, force);
+-	if (ret >= 0 && ret != IRQ_SET_MASK_OK_DONE) {
+-		irq_chip_compose_msi_msg(data, &msg);
+-		hpet_msi_write(data->handler_data, &msg);
+-	}
+-
+-	return ret;
+-}
+-
+ static void hpet_msi_write_msg(struct irq_data *data, struct msi_msg *msg)
+ {
+ 	hpet_msi_write(data->handler_data, msg);
+@@ -303,7 +252,7 @@ static struct irq_chip hpet_msi_type = {
+ 	.irq_unmask = hpet_msi_unmask,
+ 	.irq_mask = hpet_msi_mask,
+ 	.irq_ack = irq_chip_ack_parent,
+-	.irq_set_affinity = hpet_msi_set_affinity,
++	.irq_set_affinity = msi_domain_set_affinity,
+ 	.irq_retrigger = irq_chip_retrigger_hierarchy,
+ 	.irq_compose_msi_msg = msi_compose_msg,
+ 	.irq_write_msi_msg = hpet_msi_write_msg,
+@@ -343,29 +292,11 @@ static void hpet_domain_free(struct irq_domain *domain, unsigned int virq,
+ 	irq_domain_free_irqs_top(domain, virq, nr_irqs);
+ }
+ 
+-static void hpet_domain_activate(struct irq_domain *domain,
+-				struct irq_data *irq_data)
+-{
+-	struct msi_msg msg;
+-
+-	BUG_ON(irq_chip_compose_msi_msg(irq_data, &msg));
+-	hpet_msi_write(irq_get_handler_data(irq_data->irq), &msg);
+-}
+-
+-static void hpet_domain_deactivate(struct irq_domain *domain,
+-				  struct irq_data *irq_data)
+-{
+-	struct msi_msg msg;
+-
+-	memset(&msg, 0, sizeof(msg));
+-	hpet_msi_write(irq_get_handler_data(irq_data->irq), &msg);
+-}
+-
+ static struct irq_domain_ops hpet_domain_ops = {
+ 	.alloc = hpet_domain_alloc,
+ 	.free = hpet_domain_free,
+-	.activate = hpet_domain_activate,
+-	.deactivate = hpet_domain_deactivate,
++	.activate = msi_domain_activate,
++	.deactivate = msi_domain_deactivate,
+ };
+ 
+ struct irq_domain *hpet_create_irq_domain(int hpet_id)
 -- 
 1.7.10.4
 
