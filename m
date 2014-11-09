@@ -1,69 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH 2/4] PCI: quirk AMD/ATI VGA cards to avoid PM reset
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Alex Deucher <alexander.deucher@amd.com>
-Date: Fri, 21 Nov 2014 11:24:14 -0700
-Message-ID: <20141121182414.26669.48397.stgit@gimli.home>
-In-Reply-To: <20141121180322.26669.65689.stgit@gimli.home>
-References: <20141121180322.26669.65689.stgit@gimli.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC Part4 v1 06/17] genirq: Introduce callback irq_chip.irq_write_msi_msg
+Date: Sun,  9 Nov 2014 23:10:28 +0800
+Message-Id: <1415545839-28263-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some AMD/ATI GPUs report that they support PM reset (NoSoftRst-) but
-initiating such a reset has no apparent affect on the device.  The
-monitor remains sync'd, the framebuffer contents are retained, etc.
-Callers of pci_reset_function() don't necessarily have a way to
-validate whether a reset was effective, so we really want to avoid
-making use of a known non-effective reset.  Returning an error in
-such cases appears to be the better option.  For users like vfio-pci,
-this allows the driver to escalate to the bus reset interfaces.
+Introduce callback irq_chip.irq_write_msi_msg, so we could share common
+code among MSI alike interrupt controllers, such as HPET and DMAR.
 
-If a device lives on the root bus, there's really no further
-escalation path, so we exempt PM reset as potentially better than
-nothing.
-
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: Alex Deucher <alexander.deucher@amd.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
+ include/linux/irq.h |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
- drivers/pci/quirks.c |   21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 90acb32..561e10d 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3008,6 +3008,27 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8169,
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
- 			 quirk_broken_intx_masking);
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index 041edd6dc409..99aea9925b21 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -326,6 +326,7 @@ static inline irq_hw_number_t irqd_to_hwirq(struct irq_data *d)
+  * @irq_release_resources:	optional to release resources acquired with
+  *				irq_request_resources
+  * @irq_compose_msi_msg:	optional to compose message content for MSI
++ * @irq_write_msi_msg:	optional to write message content for MSI
+  * @flags:		chip specific flags
+  */
+ struct irq_chip {
+@@ -363,6 +364,7 @@ struct irq_chip {
+ 	void		(*irq_release_resources)(struct irq_data *data);
  
-+static void quirk_no_pm_reset(struct pci_dev *dev)
+ 	void		(*irq_compose_msi_msg)(struct irq_data *data, struct msi_msg *msg);
++	void		(*irq_write_msi_msg)(struct irq_data *data, struct msi_msg *msg);
+ 
+ 	unsigned long	flags;
+ };
+@@ -457,6 +459,12 @@ extern void irq_chip_ack_parent(struct irq_data *data);
+ extern int irq_chip_retrigger_hierarchy(struct irq_data *data);
+ #endif
+ 
++static inline void irq_chip_write_msi_msg(struct irq_data *data,
++					  struct msi_msg *msg)
 +{
-+	/*
-+	 * A non-effective PM reset may be better than nothing
-+	 * if we can't do a bus reset
-+	 */
-+	if (!pci_is_root_bus(dev->bus))
-+		dev->dev_flags |= PCI_DEV_FLAGS_NO_PM_RESET;
++	data->chip->irq_write_msi_msg(data, msg);
 +}
 +
-+/*
-+ * Some AMD/ATI GPUS (HD8570 - Oland) report supporting PM reset via D3->D0
-+ * transition (NoSoftRst-).  This reset mechanims seems to have no effect
-+ * whatsoever on the device, even retaining the framebuffer contents and
-+ * monitor sync.  Advertising this support makes other layers, like VFIO
-+ * assume pci_reset_function() is viable for this device.  Mark it as
-+ * unavailable to skip it when testing reset methods.
-+ */
-+DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_ATI, PCI_ANY_ID,
-+			       PCI_CLASS_DISPLAY_VGA, 8, quirk_no_pm_reset);
-+
- #ifdef CONFIG_ACPI
- /*
-  * Apple: Shutdown Cactus Ridge Thunderbolt controller.
+ /* Handling of unhandled and spurious interrupts: */
+ extern void note_interrupt(unsigned int irq, struct irq_desc *desc,
+ 			   irqreturn_t action_ret);
+-- 
+1.7.10.4
 
