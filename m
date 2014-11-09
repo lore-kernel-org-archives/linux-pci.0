@@ -1,167 +1,366 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Alexander Gordeev <agordeev@redhat.com>
 Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
-Subject: [Patch Part3 v3 18/38] x86: irq_remapping: Clean up unsued code
-Date: Sun,  9 Nov 2014 02:13:18 +0800
-Message-Id: <1415470418-10874-19-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC Part4 v1 10/17] PCI, MSI: Split MSI code into PCI dependent and PCI independent parts
+Date: Sun,  9 Nov 2014 23:10:32 +0800
+Message-Id: <1415545839-28263-11-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have converted to hierarchy irqdomain, so clean up unused code.
+Some interrupt controllers, such as DMAR and HPET interrupt controllers,
+make use of the same mechanism as PCI MSI interrupt, but they are not
+PCI compatible. So split MSI code into PCI dependent part and PCI
+independent part for code reuse later.
+
+PCI dependent part is still hosted in drivers/pci/msi.c and a new file
+kernel/irq/msi.c is created to host PCI independent part.
+
+Use CONFIG_PCI_MSI to guard PCI dependent code in file include/linux/msi.h,
+especially guarding PCI related fields in struct msi_desc.
+For backward compatibility, we choose to conditionally embedded PCI
+related fields in struct msi_desc instead of introducing
+struct pci_msi_desc.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/include/asm/irq_remapping.h |   23 ----------------------
- arch/x86/kernel/apic/vector.c        |    1 -
- drivers/iommu/irq_remapping.c        |   36 ----------------------------------
- 3 files changed, 60 deletions(-)
+ drivers/pci/Kconfig |    4 +++-
+ drivers/pci/msi.c   |   50 ----------------------------------------
+ include/linux/msi.h |   64 ++++++++++++++++++++++++++++++---------------------
+ kernel/irq/Kconfig  |   10 +++++++-
+ kernel/irq/Makefile |    1 +
+ kernel/irq/msi.c    |   61 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 112 insertions(+), 78 deletions(-)
+ create mode 100644 kernel/irq/msi.c
 
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index adbd21a1145e..71d28ddd42f8 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -26,12 +26,7 @@
- #include <asm/hw_irq.h>
- #include <asm/io_apic.h>
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 022e89745f86..7a8f1c5e65af 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -4,6 +4,7 @@
+ config PCI_MSI
+ 	bool "Message Signaled Interrupts (MSI and MSI-X)"
+ 	depends on PCI
++	select GENERIC_MSI_IRQ
+ 	help
+ 	   This allows device drivers to enable MSI (Message Signaled
+ 	   Interrupts).  Message Signaled Interrupts enable a device to
+@@ -18,7 +19,8 @@ config PCI_MSI
  
--struct IO_APIC_route_entry;
--struct io_apic_irq_attr;
+ config PCI_MSI_IRQ_DOMAIN
+ 	bool
+-	depends on PCI_MSI && IRQ_DOMAIN_HIERARCHY
++	depends on PCI_MSI
++	select GENERIC_MSI_IRQ_DOMAIN
+ 
+ config PCI_DEBUG
+ 	bool "PCI Debugging"
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index cc6207e3b6bc..e1814f4be4b9 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -280,24 +280,6 @@ void read_msi_msg(unsigned int irq, struct msi_msg *msg)
+ 	__read_msi_msg(entry, msg);
+ }
+ 
+-void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+-{
+-	/* Assert that the cache is valid, assuming that
+-	 * valid messages are not all-zeroes. */
+-	BUG_ON(!(entry->msg.address_hi | entry->msg.address_lo |
+-		 entry->msg.data));
+-
+-	*msg = entry->msg;
+-}
+-
+-void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg)
+-{
+-	struct msi_desc *entry = irq_get_msi_desc(irq);
+-
+-	__get_cached_msi_msg(entry, msg);
+-}
+-EXPORT_SYMBOL_GPL(get_cached_msi_msg);
+-
+ void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	if (entry->dev->current_state != PCI_D0) {
+@@ -1101,22 +1083,6 @@ int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
+ EXPORT_SYMBOL(pci_enable_msix_range);
+ 
+ #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
+-int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
+-			    bool force)
+-{
+-	struct irq_data *parent = data->parent_data;
+-	struct msi_msg msg;
+-	int ret;
+-
+-	ret = parent->chip->irq_set_affinity(parent, mask, force);
+-	if (ret >= 0 && ret != IRQ_SET_MASK_OK_DONE) {
+-		irq_chip_compose_msi_msg(data, &msg);
+-		irq_chip_write_msi_msg(data, &msg);
+-	}
+-
+-	return ret;
+-}
+-
+ void pci_msi_write_msg(struct irq_data *irq_data, struct msi_msg *msg)
+ {
+ 	struct msi_desc *desc = irq_data->msi_desc;
+@@ -1177,22 +1143,6 @@ static void msi_domain_free(struct irq_domain *domain, unsigned int virq,
+ 	irq_domain_free_irqs_top(domain, virq, nr_irqs);
+ }
+ 
+-void msi_domain_activate(struct irq_domain *domain, struct irq_data *irq_data)
+-{
+-	struct msi_msg msg;
+-
+-	BUG_ON(irq_chip_compose_msi_msg(irq_data, &msg));
+-	irq_chip_write_msi_msg(irq_data, &msg);
+-}
+-
+-void msi_domain_deactivate(struct irq_domain *domain, struct irq_data *irq_data)
+-{
+-	struct msi_msg msg;
+-
+-	memset(&msg, 0, sizeof(msg));
+-	irq_chip_write_msi_msg(irq_data, &msg);
+-}
+-
+ static struct irq_domain_ops msi_domain_ops = {
+ 	.alloc = msi_domain_alloc,
+ 	.free = msi_domain_free,
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index bd0f9d8c6fe1..19502186a64d 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -4,25 +4,24 @@
+ #include <linux/kobject.h>
+ #include <linux/list.h>
+ 
++struct irq_data;
++struct irq_chip;
++struct irq_domain;
++struct device_node;
++
+ struct msi_msg {
+ 	u32	address_lo;	/* low 32 bits of msi message address */
+ 	u32	address_hi;	/* high 32 bits of msi message address */
+ 	u32	data;		/* 16 bits of msi message data */
+ };
+ 
+-/* Helper functions */
+-struct irq_data;
+-struct msi_desc;
+-void mask_msi_irq(struct irq_data *data);
+-void unmask_msi_irq(struct irq_data *data);
+-void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+-void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+-void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+-void read_msi_msg(unsigned int irq, struct msi_msg *msg);
+-void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
+-void write_msi_msg(unsigned int irq, struct msi_msg *msg);
+-
+ struct msi_desc {
++	struct list_head list;
++	unsigned int irq;
++	unsigned int nvec_used;		/* number of messages */
++	struct msi_msg msg;		/* Last set MSI message */
++
++#ifdef CONFIG_PCI_MSI
+ 	struct {
+ 		__u8	is_msix	: 1;
+ 		__u8	multiple: 3;	/* log2 num of messages allocated */
+@@ -34,21 +33,40 @@ struct msi_desc {
+ 	} msi_attrib;
+ 
+ 	u32 masked;			/* mask bits */
+-	unsigned int irq;
+-	unsigned int nvec_used;		/* number of messages */
+-	struct list_head list;
+ 
+ 	union {
+ 		void __iomem *mask_base;
+ 		u8 mask_pos;
+ 	};
+ 	struct pci_dev *dev;
+-
+-	/* Last set MSI message */
+-	struct msi_msg msg;
++#endif
+ };
+ 
+ /*
++ * Some drivers unconditionally reference {mask|unmask}_msi_irq(),
++ * so can't guard them with CONFIG_PCI_MSI
++ */
++void mask_msi_irq(struct irq_data *data);
++void unmask_msi_irq(struct irq_data *data);
++void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
++void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
++
++#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
++int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
++			    bool force);
++void msi_domain_activate(struct irq_domain *domain, struct irq_data *irq_data);
++void msi_domain_deactivate(struct irq_domain *domain,
++			   struct irq_data *irq_data);
++#endif /* CONFIG_GENERIC_MSI_IRQ_DOMAIN */
++
++#ifdef CONFIG_PCI_MSI
++/* Helper functions */
++void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
++void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
++void read_msi_msg(unsigned int irq, struct msi_msg *msg);
++void write_msi_msg(unsigned int irq, struct msi_msg *msg);
++
++/*
+  * The arch hooks to setup up msi irqs. Those functions are
+  * implemented as weak symbols so that they /can/ be overriden by
+  * architecture specific code if needed.
+@@ -76,14 +94,6 @@ struct msi_chip {
+ };
+ 
+ #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
+-struct irq_domain;
 -struct irq_chip;
- struct msi_msg;
--struct pci_dev;
--struct irq_cfg;
- struct irq_alloc_info;
+-
+-int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
+-			    bool force);
+-void msi_domain_activate(struct irq_domain *domain, struct irq_data *irq_data);
+-void msi_domain_deactivate(struct irq_domain *domain,
+-			   struct irq_data *irq_data);
+ struct irq_domain *msi_create_irq_domain(struct device_node *of_node,
+ 					 struct irq_chip *chip,
+ 					 struct irq_domain *parent);
+@@ -95,4 +105,6 @@ irq_hw_number_t arch_msi_irq_domain_get_hwirq(void *arg);
+ void arch_msi_irq_domain_set_hwirq(void *arg, irq_hw_number_t hwirq);
+ #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
  
- #ifdef CONFIG_IRQ_REMAP
-@@ -44,13 +39,7 @@ extern int irq_remapping_enable(void);
- extern void irq_remapping_disable(void);
- extern int irq_remapping_reenable(int);
- extern int irq_remap_enable_fault_handling(void);
--extern void free_remapped_irq(int irq);
- extern void panic_if_irq_remap(const char *msg);
--extern bool setup_remapped_irq(int irq,
--			       struct irq_cfg *cfg,
--			       struct irq_chip *chip);
--
--void irq_remap_modify_chip_defaults(struct irq_chip *chip);
++#endif /* CONFIG_PCI_MSI */
++
+ #endif /* LINUX_MSI_H */
+diff --git a/kernel/irq/Kconfig b/kernel/irq/Kconfig
+index e9b580eccc01..9c4c5d4d58e9 100644
+--- a/kernel/irq/Kconfig
++++ b/kernel/irq/Kconfig
+@@ -57,7 +57,15 @@ config IRQ_DOMAIN
  
- extern struct irq_domain *irq_remapping_get_ir_irq_domain(
- 				struct irq_alloc_info *info);
-@@ -80,23 +69,11 @@ static inline int irq_remapping_enable(void) { return -ENODEV; }
- static inline void irq_remapping_disable(void) { }
- static inline int irq_remapping_reenable(int eim) { return -ENODEV; }
- static inline int irq_remap_enable_fault_handling(void) { return -ENODEV; }
--static inline void free_remapped_irq(int irq) { }
+ config IRQ_DOMAIN_HIERARCHY
+ 	bool
+-	depends on IRQ_DOMAIN
++	select IRQ_DOMAIN
++
++config GENERIC_MSI_IRQ
++	bool
++
++config GENERIC_MSI_IRQ_DOMAIN
++	bool
++	select IRQ_DOMAIN_HIERARCHY
++	select GENERIC_MSI_IRQ
  
- static inline void panic_if_irq_remap(const char *msg)
- {
- }
- 
--static inline void irq_remap_modify_chip_defaults(struct irq_chip *chip)
--{
--}
--
--static inline bool setup_remapped_irq(int irq,
--				      struct irq_cfg *cfg,
--				      struct irq_chip *chip)
--{
--	return false;
--}
--
- static inline struct irq_domain *
- irq_remapping_get_ir_irq_domain(struct irq_alloc_info *info)
- {
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 1b8e0cdfbdd1..292ed916032f 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -283,7 +283,6 @@ static void x86_vector_free_irqs(struct irq_domain *domain,
- 	for (i = 0; i < nr_irqs; i++) {
- 		irq_data = irq_domain_get_irq_data(x86_vector_domain, virq + i);
- 		if (irq_data && irq_data->chip_data) {
--			free_remapped_irq(virq);
- 			clear_irq_vector(virq + i, irq_data->chip_data);
- 			free_irq_cfg(irq_data->chip_data);
- #ifdef	CONFIG_X86_IO_APIC
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 058755b9b530..1d0daeecdc99 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -26,11 +26,6 @@ int no_x2apic_optout;
- 
- static struct irq_remap_ops *remap_ops;
- 
--static bool irq_remapped(struct irq_cfg *cfg)
--{
--	return (cfg->remapped == 1);
--}
--
- static void irq_remapping_disable_io_apic(void)
- {
- 	/*
-@@ -160,17 +155,6 @@ int __init irq_remap_enable_fault_handling(void)
- 	return remap_ops->enable_faulting();
- }
- 
--void free_remapped_irq(int irq)
--{
--	struct irq_cfg *cfg = irq_cfg(irq);
--
--	if (!remap_ops || !remap_ops->free_irq)
--		return;
--
--	if (irq_remapped(cfg))
--		remap_ops->free_irq(irq);
--}
--
- void panic_if_irq_remap(const char *msg)
- {
- 	if (irq_remapping_enabled)
-@@ -195,26 +179,6 @@ void irq_remapping_print_chip(struct irq_data *data, struct seq_file *p)
- 		seq_printf(p, " %s", data->chip->name);
- }
- 
--static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
--{
--	seq_printf(p, " IR-%s", data->chip->name);
--}
--
--void irq_remap_modify_chip_defaults(struct irq_chip *chip)
--{
--	chip->irq_print_chip = ir_print_prefix;
--	chip->irq_ack = ir_ack_apic_edge;
--}
--
--bool setup_remapped_irq(int irq, struct irq_cfg *cfg, struct irq_chip *chip)
--{
--	if (!irq_remapped(cfg))
--		return false;
--	irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
--	irq_remap_modify_chip_defaults(chip);
--	return true;
--}
--
- /**
-  * irq_remapping_get_ir_irq_domain - Get the irqdomain associated the IOMMU
-  *				     device serving @info
+ config HANDLE_DOMAIN_IRQ
+ 	bool
+diff --git a/kernel/irq/Makefile b/kernel/irq/Makefile
+index fff17381f0af..d12123526e2b 100644
+--- a/kernel/irq/Makefile
++++ b/kernel/irq/Makefile
+@@ -6,3 +6,4 @@ obj-$(CONFIG_IRQ_DOMAIN) += irqdomain.o
+ obj-$(CONFIG_PROC_FS) += proc.o
+ obj-$(CONFIG_GENERIC_PENDING_IRQ) += migration.o
+ obj-$(CONFIG_PM_SLEEP) += pm.o
++obj-$(CONFIG_GENERIC_MSI_IRQ) += msi.o
+diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+new file mode 100644
+index 000000000000..6ae0bd7ee204
+--- /dev/null
++++ b/kernel/irq/msi.c
+@@ -0,0 +1,61 @@
++/*
++ * linux/kernel/irq/msi.c
++ *
++ * Copyright (C) 2014 Intel Corp.
++ * Author: Jiang Liu <jiang.liu@linux.intel.com>
++ *
++ * This file is licensed under GPLv2.
++ *
++ * This file contains common code to support Message Signalled Interrupt for
++ * PCI compatible and non PCI compatible devices.
++ */
++#include <linux/irq.h>
++#include <linux/irqdomain.h>
++#include <linux/msi.h>
++
++void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
++{
++	*msg = entry->msg;
++}
++
++void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg)
++{
++	struct msi_desc *entry = irq_get_msi_desc(irq);
++
++	__get_cached_msi_msg(entry, msg);
++}
++EXPORT_SYMBOL_GPL(get_cached_msi_msg);
++
++#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
++int msi_domain_set_affinity(struct irq_data *irq_data,
++			    const struct cpumask *mask, bool force)
++{
++	struct irq_data *parent = irq_data->parent_data;
++	struct msi_msg msg;
++	int ret;
++
++	ret = parent->chip->irq_set_affinity(parent, mask, force);
++	if (ret >= 0 && ret != IRQ_SET_MASK_OK_DONE) {
++		BUG_ON(irq_chip_compose_msi_msg(irq_data, &msg));
++		irq_chip_write_msi_msg(irq_data, &msg);
++	}
++
++	return ret;
++}
++
++void msi_domain_activate(struct irq_domain *domain, struct irq_data *irq_data)
++{
++	struct msi_msg msg;
++
++	BUG_ON(irq_chip_compose_msi_msg(irq_data, &msg));
++	irq_chip_write_msi_msg(irq_data, &msg);
++}
++
++void msi_domain_deactivate(struct irq_domain *domain, struct irq_data *irq_data)
++{
++	struct msi_msg msg;
++
++	memset(&msg, 0, sizeof(msg));
++	irq_chip_write_msi_msg(irq_data, &msg);
++}
++#endif /* CONFIG_GENERIC_MSI_IRQ_DOMAIN */
 -- 
 1.7.10.4
 
