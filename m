@@ -1,4 +1,4 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
@@ -8,131 +8,216 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Alexander Gordeev <agordeev@redhat.com>
 Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v6 06/27] x86, htirq: Use new irqdomain interfaces to allocate/free IRQ
-Date: Tue, 25 Nov 2014 13:53:15 +0800
-Message-Id: <1416894816-23245-7-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [RFC Part4 v1 13/17] MSI: Provide irqdomain support for generic MSI
+Date: Sun,  9 Nov 2014 23:10:35 +0800
+Message-Id: <1415545839-28263-14-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new irqdomain interfaces to allocate/free IRQ for HTIRQ, so we could
-kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
-
-This patch changes the interfaces between arch independent PCI driver
-and arch specific code. Currently HT_IRQ is only enabled on x86, so it
-shouldn't break other architectures.
+Enhance generic MSI code to support hierarchy irqdomain.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/kernel/apic/htirq.c |   26 +++++++++++++-------------
- drivers/pci/htirq.c          |    7 +++----
- include/linux/htirq.h        |    2 ++
- 3 files changed, 18 insertions(+), 17 deletions(-)
+ arch/x86/kernel/apic/msi.c |    4 +--
+ drivers/pci/msi.c          |    6 ++--
+ include/linux/msi.h        |   29 ++++++++++++++++--
+ kernel/irq/msi.c           |   70 ++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 101 insertions(+), 8 deletions(-)
 
-diff --git a/arch/x86/kernel/apic/htirq.c b/arch/x86/kernel/apic/htirq.c
-index 816f36e979ad..b307ee7a7148 100644
---- a/arch/x86/kernel/apic/htirq.c
-+++ b/arch/x86/kernel/apic/htirq.c
-@@ -14,6 +14,7 @@
- #include <linux/device.h>
- #include <linux/pci.h>
- #include <linux/htirq.h>
-+#include <linux/irqdomain.h>
- #include <asm/hw_irq.h>
- #include <asm/apic.h>
- #include <asm/hypertransport.h>
-@@ -61,31 +62,30 @@ static struct irq_chip ht_irq_chip = {
- 	.flags			= IRQCHIP_SKIP_SET_WAKE,
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index f625c2f21377..9774092012b8 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -116,7 +116,7 @@ void arch_init_msi_domain(struct irq_domain *parent)
+ 	if (disable_apic)
+ 		return;
+ 
+-	msi_default_domain = msi_create_irq_domain(NULL, &msi_chip, parent);
++	msi_default_domain = pci_msi_create_irq_domain(NULL, &msi_chip, parent);
+ 	if (!msi_default_domain)
+ 		pr_warn("failed to initialize irqdomain for MSI/MSI-x.\n");
+ }
+@@ -135,7 +135,7 @@ static struct irq_chip msi_ir_chip = {
+ 
+ struct irq_domain *arch_create_msi_irq_domain(struct irq_domain *parent)
+ {
+-	return msi_create_irq_domain(NULL, &msi_ir_chip, parent);
++	return pci_msi_create_irq_domain(NULL, &msi_ir_chip, parent);
+ }
+ #endif
+ 
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 80be534df522..17343cb4d756 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1142,9 +1142,9 @@ static struct irq_domain_ops msi_domain_ops = {
+ 	.deactivate = msi_domain_deactivate,
  };
  
-+int arch_alloc_ht_irq(struct pci_dev *dev)
-+{
-+	return irq_domain_alloc_irqs(NULL, 1, dev_to_node(&dev->dev), NULL);
-+}
-+
-+void arch_free_ht_irq(int irq)
-+{
-+	irq_domain_free_irqs(irq, 1);
-+}
-+
- int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
+-struct irq_domain *msi_create_irq_domain(struct device_node *of_node,
+-					 struct irq_chip *chip,
+-					 struct irq_domain *parent)
++struct irq_domain *pci_msi_create_irq_domain(struct device_node *of_node,
++					     struct irq_chip *chip,
++					     struct irq_domain *parent)
  {
- 	struct irq_cfg *cfg;
- 	struct ht_irq_msg msg;
--	unsigned dest;
--	int err;
+ 	struct irq_domain *domain;
  
- 	if (disable_apic)
- 		return -ENXIO;
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 5639970db71d..43c0a7ae0df7 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -8,6 +8,7 @@ struct irq_data;
+ struct irq_chip;
+ struct irq_domain;
+ struct device_node;
++struct irq_domain;
  
- 	cfg = irq_cfg(irq);
--	err = assign_irq_vector(irq, cfg, apic->target_cpus());
--	if (err)
--		return err;
--
--	err = apic->cpu_mask_to_apicid_and(cfg->domain,
--					   apic->target_cpus(), &dest);
--	if (err)
--		return err;
--
--	msg.address_hi = HT_IRQ_HIGH_DEST_ID(dest);
-+	msg.address_hi = HT_IRQ_HIGH_DEST_ID(cfg->dest_apicid);
+ struct msi_msg {
+ 	u32	address_lo;	/* low 32 bits of msi message address */
+@@ -52,11 +53,33 @@ void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
  
- 	msg.address_lo =
- 		HT_IRQ_LOW_BASE |
--		HT_IRQ_LOW_DEST_ID(dest) |
-+		HT_IRQ_LOW_DEST_ID(cfg->dest_apicid) |
- 		HT_IRQ_LOW_VECTOR(cfg->vector) |
- 		((apic->irq_dest_mode == 0) ?
- 			HT_IRQ_LOW_DM_PHYSICAL :
-diff --git a/drivers/pci/htirq.c b/drivers/pci/htirq.c
-index a94dd2c4183a..ceb0ebeb7b5f 100644
---- a/drivers/pci/htirq.c
-+++ b/drivers/pci/htirq.c
-@@ -117,8 +117,8 @@ int __ht_create_irq(struct pci_dev *dev, int idx, ht_irq_update_t *update)
- 	cfg->msg.address_lo = 0xffffffff;
- 	cfg->msg.address_hi = 0xffffffff;
+ #ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
++struct msi_domain_info;
++
++struct msi_domain_ops {
++	void (*calc_hwirq)(struct msi_domain_info *info, void *arg,
++			   struct msi_desc *desc);
++	irq_hw_number_t (*get_hwirq)(struct msi_domain_info *info, void *arg);
++	int (*msi_init)(struct irq_domain *domain, struct msi_domain_info *info,
++			unsigned int virq, irq_hw_number_t hwirq, void *arg);
++	void (*msi_free)(struct irq_domain *domain,
++			 struct msi_domain_info *info, unsigned int virq);
++};
++
++struct msi_domain_info {
++	struct msi_domain_ops *ops;
++	struct irq_chip *chip;
++	void *data;
++};
++
+ int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 			    bool force);
+ void msi_domain_activate(struct irq_domain *domain, struct irq_data *irq_data);
+ void msi_domain_deactivate(struct irq_domain *domain,
+ 			   struct irq_data *irq_data);
++struct irq_domain *msi_create_irq_domain(struct device_node *of_node,
++					 struct msi_domain_info *info,
++					 struct irq_domain *parent);
++struct msi_domain_info *msi_get_domain_info(struct irq_domain *domain);
+ #endif /* CONFIG_GENERIC_MSI_IRQ_DOMAIN */
  
--	irq = irq_alloc_hwirq(dev_to_node(&dev->dev));
--	if (!irq) {
-+	irq = arch_alloc_ht_irq(dev);
-+	if (irq <= 0) {
- 		kfree(cfg);
- 		return -EBUSY;
- 	}
-@@ -163,8 +163,7 @@ void ht_destroy_irq(unsigned int irq)
- 	cfg = irq_get_handler_data(irq);
- 	irq_set_chip(irq, NULL);
- 	irq_set_handler_data(irq, NULL);
--	irq_free_hwirq(irq);
--
-+	arch_free_ht_irq(irq);
- 	kfree(cfg);
+ #ifdef CONFIG_PCI_MSI
+@@ -94,9 +117,9 @@ struct msi_chip {
+ };
+ 
+ #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
+-struct irq_domain *msi_create_irq_domain(struct device_node *of_node,
+-					 struct irq_chip *chip,
+-					 struct irq_domain *parent);
++struct irq_domain *pci_msi_create_irq_domain(struct device_node *of_node,
++					     struct irq_chip *chip,
++					     struct irq_domain *parent);
+ void pci_msi_write_msg(struct irq_data *irq_data, struct msi_msg *msg);
+ int msi_irq_domain_alloc_irqs(struct irq_domain *domain, int type,
+ 			      struct pci_dev *dev, void *arg);
+diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+index 6ae0bd7ee204..85a50254d815 100644
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -58,4 +58,74 @@ void msi_domain_deactivate(struct irq_domain *domain, struct irq_data *irq_data)
+ 	memset(&msg, 0, sizeof(msg));
+ 	irq_chip_write_msi_msg(irq_data, &msg);
  }
- EXPORT_SYMBOL(ht_destroy_irq);
-diff --git a/include/linux/htirq.h b/include/linux/htirq.h
-index 70a1dbbf2093..5caa51b7b95c 100644
---- a/include/linux/htirq.h
-+++ b/include/linux/htirq.h
-@@ -15,6 +15,8 @@ void unmask_ht_irq(struct irq_data *data);
- 
- /* The arch hook for getting things started */
- int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev);
-+int arch_alloc_ht_irq(struct pci_dev *dev);
-+void arch_free_ht_irq(int irq);
- 
- /* For drivers of buggy hardware */
- typedef void (ht_irq_update_t)(struct pci_dev *dev, int irq,
++
++static int msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
++			    unsigned int nr_irqs, void *arg)
++{
++	int i, ret;
++	struct msi_domain_info *info = domain->host_data;
++	struct msi_domain_ops *ops = info->ops;
++	irq_hw_number_t hwirq = ops->get_hwirq(info, arg);
++
++	if (irq_find_mapping(domain, hwirq) > 0)
++		return -EEXIST;
++
++	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
++	if (ret < 0)
++		return ret;
++
++	for (i = 0; i < nr_irqs; i++) {
++		ret = ops->msi_init(domain, info, virq + i, hwirq + i, arg);
++		if (ret < 0) {
++			if (ops->msi_free) {
++				for (i--; i > 0; i--)
++					ops->msi_free(domain, info, virq + i);
++			}
++			irq_domain_free_irqs_top(domain, virq, nr_irqs);
++			return ret;
++		}
++	}
++
++	return 0;
++}
++
++static void msi_domain_free(struct irq_domain *domain, unsigned int virq,
++			    unsigned int nr_irqs)
++{
++	int i;
++	struct msi_domain_info *info = domain->host_data;
++
++	if (info->ops->msi_free) {
++		for (i = 0; i < nr_irqs; i++)
++			info->ops->msi_free(domain, info, virq + i);
++	}
++	irq_domain_free_irqs_top(domain, virq, nr_irqs);
++}
++
++static struct irq_domain_ops msi_domain_ops = {
++	.alloc = msi_domain_alloc,
++	.free = msi_domain_free,
++	.activate = msi_domain_activate,
++	.deactivate = msi_domain_deactivate,
++};
++
++struct irq_domain *msi_create_irq_domain(struct device_node *of_node,
++					 struct msi_domain_info *info,
++					 struct irq_domain *parent)
++{
++	struct irq_domain *domain;
++
++	domain = irq_domain_add_tree(of_node, &msi_domain_ops, info);
++	if (!domain)
++		return NULL;
++
++	domain->parent = parent;
++
++	return domain;
++}
++
++struct msi_domain_info *msi_get_domain_info(struct irq_domain *domain)
++{
++	return (struct msi_domain_info *)domain->host_data;
++}
+ #endif /* CONFIG_GENERIC_MSI_IRQ_DOMAIN */
 -- 
 1.7.10.4
 
