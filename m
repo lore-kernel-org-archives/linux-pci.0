@@ -1,115 +1,75 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 6 Nov 2014 11:01:47 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:9864 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751600AbaKIOoo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 9 Nov 2014 09:44:44 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Alexander Gordeev <agordeev@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	x86@kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	LAK <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [Patch Part2 v4 21/31] PCI/MSI: enhance PCI MSI core to support
- hierarchy irqdomain
-In-Reply-To: <1415102525-9898-22-git-send-email-jiang.liu@linux.intel.com>
-Message-ID: <alpine.DEB.2.11.1411061023400.24960@nanos>
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com> <1415102525-9898-22-git-send-email-jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V7 0/8] Enable support of Intel DMAR device hotplug
+Date: Sun,  9 Nov 2014 22:47:55 +0800
+Message-Id: <1415544483-27990-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 4 Nov 2014, Jiang Liu wrote:
-> +#ifdef	CONFIG_PCI_MSI_IRQ_DOMAIN
-> +static inline irq_hw_number_t
-> +msi_get_hwirq(struct pci_dev *pdev, struct msi_desc *msidesc)
-> +{
-> +	return (irq_hw_number_t)msidesc->msi_attrib.entry_nr |
-> +		PCI_DEVID(pdev->bus->number, pdev->devfn) << 11 |
-> +		(pci_domain_nr(pdev->bus) & 0xFFFFFFFF) << 27;
-> +}
-> +
-> +static int msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
-> +			    unsigned int nr_irqs, void *arg)
-> +{
-> +	int i, ret;
-> +	irq_hw_number_t hwirq = arch_msi_irq_domain_get_hwirq(arg);
-> +
-> +	if (irq_find_mapping(domain, hwirq) > 0)
-> +		return -EEXIST;
-> +
-> +	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
-> +	if (ret >= 0)
-> +		for (i = 0; i < nr_irqs; i++) {
-> +			irq_domain_set_hwirq_and_chip(domain, virq + i,
-> +					hwirq + i, &msi_chip, (void *)(long)i);
+When hot plugging a descrete IOH or a physical processor with embedded
+IIO, we need to handle DMAR(or IOMMU) unit in the PCIe host bridge if
+DMAR is in use. This patch set tries to enhance current DMAR/IOMMU/IR
+drivers to support hotplug and is based on latest Linus master branch.
 
-I think msi_chip being a global unique thing is problematic. It does
-not allow multi platform kernels to select a chip at boot time and it
-does not allow per domain chip implementations when you have multiple
-msi domains. Aside of that msi_chip is a pretty bad name for a global.
+All prerequisite patches to support DMAR device hotplug have been merged
+into the mainstream kernel, and this is the last patch set to enable
+DMAR device hotplug.
 
-The solution is rather simple and msi is wide spread enough to justify
-that.
+You may access the patch set at:
+https://github.com/jiangliu/linux.git iommu/hotplug_v7
 
-struct irqdomain_msi_data {
-       struct irq_chip       *irq_chip;
-};
+This patch set has been tested on Intel development machine.
+Appreciate any comments and tests.
 
-We make that a struct so we can accomodate for other special things
-which might be domain rather than architecture specific. One
-obvious use case would be to hold the arch_msi_irq_domain_get/set_hwirq
-callbacks.
+V6->V7:
+1) Rebase to v3.18-rc3
+V5->V6:
+1) Fix a race condition found during review
+2) Refine dmar_walk_resources() to dmar_walk_remapping_entries()
 
-struct irq_domain *msi_create_irq_domain(struct irq_domain *parent,
-       		  			 struct irqdomain_msi_data *data)
-{
-        struct irq_domain *domain;
+Patch 1-4 enhances DMAR framework to support hotplug
+Patch 5 enhances Intel interrupt remapping driver to support hotplug
+Patch 6 enhances error handling in Intel IR driver
+Patch 7 enhance Intel IOMMU to support hotplug
+Patch 8 enhance ACPI pci_root driver to handle DMAR units
 
-        domain = irq_domain_add_tree(NULL, &msi_domain_ops, NULL);
-        if (domain) {
-                domain->parent = parent;
-		domain->msi_data = data;
-	}
-        return domain;
-}
+Jiang Liu (8):
+  iommu/vt-d: Introduce helper function dmar_walk_resources()
+  iommu/vt-d: Dynamically allocate and free seq_id for DMAR units
+  iommu/vt-d: Implement DMAR unit hotplug framework
+  iommu/vt-d: Search for ACPI _DSM method for DMAR hotplug
+  iommu/vt-d: Enhance intel_irq_remapping driver to support DMAR unit
+    hotplug
+  iommu/vt-d: Enhance error recovery in function
+    intel_enable_irq_remapping()
+  iommu/vt-d: Enhance intel-iommu driver to support DMAR unit hotplug
+  pci, ACPI, iommu: Enhance pci_root to support DMAR device hotplug
 
-Now the above becomes:
+ drivers/acpi/pci_root.c             |   16 +-
+ drivers/iommu/dmar.c                |  532 ++++++++++++++++++++++++++++-------
+ drivers/iommu/intel-iommu.c         |  297 ++++++++++++++-----
+ drivers/iommu/intel_irq_remapping.c |  249 ++++++++++++----
+ include/linux/dmar.h                |   50 +++-
+ 5 files changed, 897 insertions(+), 247 deletions(-)
 
-    	struct irq_chip *msi_chip = domain->msi_data->irq_chip;
+-- 
+1.7.10.4
 
-	irq_domain_set_hwirq_and_chip(domain, virq + i,
-				      hwirq + i, msi_chip, (void *)(long)i);
-
-> +int msi_irq_domain_alloc_irqs(struct irq_domain *domain, int type,
-> +			      struct pci_dev *dev, void *arg)
-> +{
-> +	int i, virq;
-> +	struct msi_desc *msidesc;
-> +	int node = dev_to_node(&dev->dev);
-> +
-> +	list_for_each_entry(msidesc, &dev->msi_list, list) {
-> +		arch_msi_irq_domain_set_hwirq(arg, msi_get_hwirq(dev, msidesc));
-
-The arch_xxx callbacks want to be documented. It's not obvious what
-they are supposed to do.
-
-Thanks,
-
-	tglx
