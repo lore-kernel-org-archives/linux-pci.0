@@ -1,60 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:33636 "EHLO mail.skyhub.de"
+Received: from mga02.intel.com ([134.134.136.20]:37802 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750985AbaKFL4k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 6 Nov 2014 06:56:40 -0500
-Date: Thu, 6 Nov 2014 12:56:37 +0100
-From: Borislav Petkov <bp@alien8.de>
-To: Daniel J Blueman <daniel@numascale.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
+	id S1751948AbaKIPHd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 9 Nov 2014 10:07:33 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Steffen Persvold <sp@numascale.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] x86: Drop redundant memory-block sizing code
-Message-ID: <20141106115636.GA4318@pd.tnic>
-References: <ojh5M-xh-17@gated-at.bofh.it>
- <1415249414-20888-1-git-send-email-daniel@numascale.com>
- <20141106094007.GA4849@pd.tnic>
- <545B4E84.7050707@numascale.com>
- <20141106104034.GB4849@pd.tnic>
- <545B5735.8000401@numascale.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <545B5735.8000401@numascale.com>
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [RFC Part4 v1 01/17] x86, irq: Normalize x86 irq_chip name
+Date: Sun,  9 Nov 2014 23:10:23 +0800
+Message-Id: <1415545839-28263-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 06, 2014 at 07:10:45PM +0800, Daniel J Blueman wrote:
-> "As the first check for 64GB or larger memory returns a 2GB memory
-> block size in that case, the following check for less than 64GB will
-> always
+Some irq_chip names use underscore, others use hyphen. So normalize them.
 
-Right, but why isn't there a simple else? Instead, the >64GB case is
-looking at totalram_pages but the so-called else case is looking at
-max_pfn. Why, what's the difference?
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/msi.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-My purely hypothetical suspicion is this thing used to handle some
-special case with memory holes where totalram_pages was still < 64GB but
-max_pfn was above. I'm looking at this memory block size approximation
-downwards which supposedly used to do something at some point, right?
-
-Now, when you remove this, it doesn't do so anymore, potentially
-breaking some machines.
-
-Or is this simply unfortunate coding and totalram_pages and max_pfn are
-equivalent?
-
-Questions over questions... Maybe it is time for some git log
-archeology...
-
-:-)
-
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index a220abbe842e..adc76eba59bd 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -179,7 +179,7 @@ dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ }
+ 
+ static struct irq_chip dmar_msi_type = {
+-	.name			= "DMAR_MSI",
++	.name			= "DMAR-MSI",
+ 	.irq_unmask		= dmar_msi_unmask,
+ 	.irq_mask		= dmar_msi_mask,
+ 	.irq_ack		= irq_chip_ack_parent,
+@@ -310,7 +310,7 @@ static int hpet_msi_set_affinity(struct irq_data *data,
+ }
+ 
+ static struct irq_chip hpet_msi_type = {
+-	.name = "HPET_MSI",
++	.name = "HPET-MSI",
+ 	.irq_unmask = hpet_msi_unmask,
+ 	.irq_mask = hpet_msi_mask,
+ 	.irq_ack = irq_chip_ack_parent,
 -- 
-Regards/Gruss,
-    Boris.
+1.7.10.4
 
-Sent from a fat crate under my desk. Formatting is fine.
---
