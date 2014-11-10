@@ -1,207 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19976 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752560AbaKUWSD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 17:18:03 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux@eikelenboom.it
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: [PATCH v4 1/7] xen/pciback: Don't deadlock when unbinding.
-Date: Fri, 21 Nov 2014 17:17:45 -0500
-Message-Id: <1416608271-18931-2-git-send-email-konrad.wilk@oracle.com>
-In-Reply-To: <1416608271-18931-1-git-send-email-konrad.wilk@oracle.com>
-References: <1416608271-18931-1-git-send-email-konrad.wilk@oracle.com>
+Received: from cmexedge1.emulex.com ([138.239.224.99]:50288 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750933AbaKJLv6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Nov 2014 06:51:58 -0500
+From: Sathya Perla <sathya.perla@emulex.com>
+To: <linux-pci@vger.kernel.org>, <netdev@vger.kernel.org>
+CC: <ariel.elior@qlogic.com>, <linux.nics@intel.com>,
+	<shahed.shaikh@qlogic.com>, <ddutile@redhat.com>
+Subject: [PATCH 2/4] bnx2x: remove pci_assigned_vfs() check while disabling VFs
+Date: Mon, 10 Nov 2014 17:23:28 +0530
+Message-ID: <1415620410-4937-3-git-send-email-sathya.perla@emulex.com>
+In-Reply-To: <1415620410-4937-1-git-send-email-sathya.perla@emulex.com>
+References: <1415620410-4937-1-git-send-email-sathya.perla@emulex.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As commit 0a9fd0152929db372ff61b0d6c280fdd34ae8bdb
-'xen/pciback: Document the entry points for 'pcistub_put_pci_dev''
-explained there are four entry points in this function.
-Two of them are when the user fiddles in the SysFS to
-unbind a device which might be in use by a guest or not.
+From: Vasundhara Volam <vasundhara.volam@emulex.com>
 
-Both 'unbind' states will cause a deadlock as the the PCI lock has
-already been taken, which then pci_device_reset tries to take.
+The pci_assigned_vfs() check (while disabling VFs) is being moved to the
+pci-sysfs.c file and will be done before invoking sriov_configure().
 
-We can simplify this by requiring that all callers of
-pcistub_put_pci_dev MUST hold the device lock. And then
-we can just call the lockless version of pci_device_reset.
-
-To make it even simpler we will modify xen_pcibk_release_pci_dev
-to quality whether it should take a lock or not - as it ends
-up calling xen_pcibk_release_pci_dev and needs to hold the lock.
-
-Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Signed-off-by: Vasundhara Volam <vasundhara.volam@emulex.com>
+Signed-off-by: Sathya Perla <sathya.perla@emulex.com>
 ---
- drivers/xen/xen-pciback/passthrough.c | 14 +++++++++++---
- drivers/xen/xen-pciback/pci_stub.c    | 12 ++++++------
- drivers/xen/xen-pciback/pciback.h     |  7 ++++---
- drivers/xen/xen-pciback/vpci.c        | 14 +++++++++++---
- drivers/xen/xen-pciback/xenbus.c      |  2 +-
- 5 files changed, 33 insertions(+), 16 deletions(-)
+ drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/xen/xen-pciback/passthrough.c b/drivers/xen/xen-pciback/passthrough.c
-index 828dddc..f16a30e 100644
---- a/drivers/xen/xen-pciback/passthrough.c
-+++ b/drivers/xen/xen-pciback/passthrough.c
-@@ -69,7 +69,7 @@ static int __xen_pcibk_add_pci_dev(struct xen_pcibk_device *pdev,
- }
- 
- static void __xen_pcibk_release_pci_dev(struct xen_pcibk_device *pdev,
--					struct pci_dev *dev)
-+					struct pci_dev *dev, bool lock)
- {
- 	struct passthrough_dev_data *dev_data = pdev->pci_dev_data;
- 	struct pci_dev_entry *dev_entry, *t;
-@@ -87,8 +87,13 @@ static void __xen_pcibk_release_pci_dev(struct xen_pcibk_device *pdev,
- 
- 	mutex_unlock(&dev_data->lock);
- 
--	if (found_dev)
-+	if (found_dev) {
-+		if (lock)
-+			device_lock(&found_dev->dev);
- 		pcistub_put_pci_dev(found_dev);
-+		if (lock)
-+			device_unlock(&found_dev->dev);
-+	}
- }
- 
- static int __xen_pcibk_init_devices(struct xen_pcibk_device *pdev)
-@@ -156,8 +161,11 @@ static void __xen_pcibk_release_devices(struct xen_pcibk_device *pdev)
- 	struct pci_dev_entry *dev_entry, *t;
- 
- 	list_for_each_entry_safe(dev_entry, t, &dev_data->dev_list, list) {
-+		struct pci_dev *dev = dev_entry->dev;
- 		list_del(&dev_entry->list);
--		pcistub_put_pci_dev(dev_entry->dev);
-+		device_lock(&dev->dev);
-+		pcistub_put_pci_dev(dev);
-+		device_unlock(&dev->dev);
- 		kfree(dev_entry);
- 	}
- 
-diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
-index 017069a..9cbe1a3 100644
---- a/drivers/xen/xen-pciback/pci_stub.c
-+++ b/drivers/xen/xen-pciback/pci_stub.c
-@@ -250,6 +250,8 @@ struct pci_dev *pcistub_get_pci_dev(struct xen_pcibk_device *pdev,
-  *  - 'echo BDF > unbind' with a guest still using it. See pcistub_remove
-  *
-  *  As such we have to be careful.
-+ *
-+ *  To make this easier, the caller has to hold the device lock.
-  */
- void pcistub_put_pci_dev(struct pci_dev *dev)
- {
-@@ -276,11 +278,8 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
- 	/* Cleanup our device
- 	 * (so it's ready for the next domain)
- 	 */
--
--	/* This is OK - we are running from workqueue context
--	 * and want to inhibit the user from fiddling with 'reset'
--	 */
--	pci_reset_function(dev);
-+	lockdep_assert_held(&dev->dev.mutex);
-+	__pci_reset_function_locked(dev);
- 	pci_restore_state(dev);
- 
- 	/* This disables the device. */
-@@ -567,7 +566,8 @@ static void pcistub_remove(struct pci_dev *dev)
- 			/* N.B. This ends up calling pcistub_put_pci_dev which ends up
- 			 * doing the FLR. */
- 			xen_pcibk_release_pci_dev(found_psdev->pdev,
--						found_psdev->dev);
-+						found_psdev->dev,
-+						false /* caller holds the lock. */);
- 		}
- 
- 		spin_lock_irqsave(&pcistub_devices_lock, flags);
-diff --git a/drivers/xen/xen-pciback/pciback.h b/drivers/xen/xen-pciback/pciback.h
-index f72af87..58e38d5 100644
---- a/drivers/xen/xen-pciback/pciback.h
-+++ b/drivers/xen/xen-pciback/pciback.h
-@@ -99,7 +99,8 @@ struct xen_pcibk_backend {
- 		    unsigned int *domain, unsigned int *bus,
- 		    unsigned int *devfn);
- 	int (*publish)(struct xen_pcibk_device *pdev, publish_pci_root_cb cb);
--	void (*release)(struct xen_pcibk_device *pdev, struct pci_dev *dev);
-+	void (*release)(struct xen_pcibk_device *pdev, struct pci_dev *dev,
-+                        bool lock);
- 	int (*add)(struct xen_pcibk_device *pdev, struct pci_dev *dev,
- 		   int devid, publish_pci_dev_cb publish_cb);
- 	struct pci_dev *(*get)(struct xen_pcibk_device *pdev,
-@@ -122,10 +123,10 @@ static inline int xen_pcibk_add_pci_dev(struct xen_pcibk_device *pdev,
- }
- 
- static inline void xen_pcibk_release_pci_dev(struct xen_pcibk_device *pdev,
--					     struct pci_dev *dev)
-+					     struct pci_dev *dev, bool lock)
- {
- 	if (xen_pcibk_backend && xen_pcibk_backend->release)
--		return xen_pcibk_backend->release(pdev, dev);
-+		return xen_pcibk_backend->release(pdev, dev, lock);
- }
- 
- static inline struct pci_dev *
-diff --git a/drivers/xen/xen-pciback/vpci.c b/drivers/xen/xen-pciback/vpci.c
-index 51afff9..c99f8bb 100644
---- a/drivers/xen/xen-pciback/vpci.c
-+++ b/drivers/xen/xen-pciback/vpci.c
-@@ -145,7 +145,7 @@ out:
- }
- 
- static void __xen_pcibk_release_pci_dev(struct xen_pcibk_device *pdev,
--					struct pci_dev *dev)
-+					struct pci_dev *dev, bool lock)
- {
- 	int slot;
- 	struct vpci_dev_data *vpci_dev = pdev->pci_dev_data;
-@@ -169,8 +169,13 @@ static void __xen_pcibk_release_pci_dev(struct xen_pcibk_device *pdev,
- out:
- 	mutex_unlock(&vpci_dev->lock);
- 
--	if (found_dev)
-+	if (found_dev) {
-+		if (lock)
-+			device_lock(&found_dev->dev);
- 		pcistub_put_pci_dev(found_dev);
-+		if (lock)
-+			device_unlock(&found_dev->dev);
-+	}
- }
- 
- static int __xen_pcibk_init_devices(struct xen_pcibk_device *pdev)
-@@ -208,8 +213,11 @@ static void __xen_pcibk_release_devices(struct xen_pcibk_device *pdev)
- 		struct pci_dev_entry *e, *tmp;
- 		list_for_each_entry_safe(e, tmp, &vpci_dev->dev_list[slot],
- 					 list) {
-+			struct pci_dev *dev = e->dev;
- 			list_del(&e->list);
--			pcistub_put_pci_dev(e->dev);
-+			device_lock(&dev->dev);
-+			pcistub_put_pci_dev(dev);
-+			device_unlock(&dev->dev);
- 			kfree(e);
- 		}
- 	}
-diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
-index ad8d30c..eeee499 100644
---- a/drivers/xen/xen-pciback/xenbus.c
-+++ b/drivers/xen/xen-pciback/xenbus.c
-@@ -291,7 +291,7 @@ static int xen_pcibk_remove_device(struct xen_pcibk_device *pdev,
- 
- 	/* N.B. This ends up calling pcistub_put_pci_dev which ends up
- 	 * doing the FLR. */
--	xen_pcibk_release_pci_dev(pdev, dev);
-+	xen_pcibk_release_pci_dev(pdev, dev, true /* use the lock. */);
- 
- out:
- 	return err;
+diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c
+index c88b20a..e90a10b 100644
+--- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c
++++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c
+@@ -2481,7 +2481,7 @@ int bnx2x_sriov_configure(struct pci_dev *dev, int num_vfs_param)
+ 	bp->requested_nr_virtfn = num_vfs_param;
+ 	if (num_vfs_param == 0) {
+ 		bnx2x_set_pf_tx_switching(bp, false);
+-		bnx2x_disable_sriov(bp);
++		pci_disable_sriov(bp->pdev);
+ 		return 0;
+ 	} else {
+ 		return bnx2x_enable_sriov(bp);
 -- 
-1.9.3
+1.7.1
 
