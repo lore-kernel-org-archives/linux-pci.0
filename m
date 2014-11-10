@@ -1,66 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:54144 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756487AbaKUBqO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Nov 2014 20:46:14 -0500
-Date: Fri, 21 Nov 2014 02:46:06 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Yijing Wang <wangyijing@huawei.com>
-cc: Marc Zyngier <marc.zyngier@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, linux-pci@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@kernel.org>,
-	Arjan van de Ven <arjan@infradead.org>,
-	David Woodhouse <dwmw2@infradead.org>
-Subject: Re: Removal of bus->msi assignment breaks MSI with stacked domains
-In-Reply-To: <546E93DC.8010902@huawei.com>
-Message-ID: <alpine.DEB.2.11.1411210233250.6439@nanos>
-References: <546E1771.4030201@arm.com> <546E93DC.8010902@huawei.com>
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:55517 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751815AbaKJNwf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Nov 2014 08:52:35 -0500
+Date: Mon, 10 Nov 2014 13:52:32 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [RFC PATCH] drivers: of: move PCI domain assignment to generic
+ OF code
+Message-ID: <20141110135232.GC15484@red-moon>
+References: <1415622368-14612-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1459907.RIyEjnM4cg@wuerfel>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1459907.RIyEjnM4cg@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 21 Nov 2014, Yijing Wang wrote:
-> On 2014/11/21 0:31, Marc Zyngier wrote:
-> > Bjorn, Yijing,
+On Mon, Nov 10, 2014 at 12:51:19PM +0000, Arnd Bergmann wrote:
+> On Monday 10 November 2014 12:26:08 Lorenzo Pieralisi wrote:
+> > ---
+> >  arch/arm64/kernel/pci.c | 14 +++--------
+> >  drivers/of/of_pci.c     | 66 +++++++++++++++++++++++++++++++++++++++++++++++--
+> >  include/linux/of_pci.h  |  7 +++---
+> >  3 files changed, 71 insertions(+), 16 deletions(-)
 > > 
-> > I've just realized that patch c167caf8d174 (PCI/MSI: Remove useless
-> > bus->msi assignment) completely breaks MSI on arm64 when using the new
-> > MSI stacked domain:
+> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> > index ce5836c..5e21c1c 100644
+> > --- a/arch/arm64/kernel/pci.c
+> > +++ b/arch/arm64/kernel/pci.c
+> > @@ -49,20 +49,14 @@ int pcibios_add_device(struct pci_dev *dev)
+> >  
+> >  
+> >  #ifdef CONFIG_PCI_DOMAINS_GENERIC
+> > -static bool dt_domain_found = false;
+> >  
+> >  void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> >  {
+> > -	int domain = of_get_pci_domain_nr(parent->of_node);
+> > +	int domain = of_assign_pci_domain_nr(parent->of_node);
+> >  
+> > -	if (domain >= 0) {
+> > -		dt_domain_found = true;
+> > -	} else if (dt_domain_found == true) {
+> > -		dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
+> > -			parent->of_node->full_name);
+> > -		return;
+> > -	} else {
+> > -		domain = pci_get_new_domain_nr();
+> > +	if (domain < 0) {
+> > +		dev_err(parent, "PCI domain assignment failed\n");
+> > +		domain = -1;
+> >  	}
+> >  
+> >  	bus->domain_nr = domain;
 > 
-> Sorry, this is my first part to refactor MSI related code, now how
-> to get pci msi_controller depends arch
-> functions(pcibios_msi_controller() or arch_setup_msi_irq()), we are
-> working on generic pci_host_bridge, after that, we could eventually
-> eliminate MSI arch functions and find pci dev 's msi controller by
-> pci_host_bridge->get_msi_controller().
+> Is there a need to still keep this in architecture specific code? Why
+> not move it to drivers/pci and let other firmware infrastructure
+> hook in there directly.
 
-The main question is why you think that pci_host_bridge is the proper
-place to store that information.
+Ok, I can move the function to drivers/pci/pci.c, I did not want to add
+OF code in there but if it is ok with Bjorn I will move the generic
 
-On x86 we have DMAR units associated to a single device. Each DMAR
-unit is a seperate MSI irq domain. 
+pci_bus_assign_domain_nr()
 
-Can you guarantee that the pci_host_bridge is the right point to
-provide the association of the device to the irq domain?
+there and be done with this.
 
-So the real question is:
+> >  {
+> > @@ -45,10 +45,9 @@ of_pci_parse_bus_range(struct device_node *node, struct resource *res)
+> >  	return -EINVAL;
+> >  }
+> >  
+> > -static inline int
+> > -of_get_pci_domain_nr(struct device_node *node)
+> > +static inline int of_assign_pci_domain_nr(struct device_node *node)
+> >  {
+> > -	return -1;
+> > +	return pci_get_new_domain_nr();
+> >  }
+> >  #endif
+> 
+> This gets a bit tricky otherwise once we add ACPI in the mix, with all
+> combinations of OF and ACPI at compile time and at runtime.
 
-   What is the association level requirement to properly identify the
-   irqdomain for a specific device on any given architecture with and
-   without IOMMU, interrupt redirection etc.
-
-To be honest: I don't know.
-
-My gut feeling tells me that it's at the device level, but I really
-leave that decision to the experts in that field.
+I definitely agree, that's why it is an RFC, basically wanted to
+understand what we want to do with the generic implementation and where
+to move it.
 
 Thanks,
-
-	tglx
+Lorenzo
