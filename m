@@ -1,106 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49594 "EHLO mx1.redhat.com"
+Received: from mail.skyhub.de ([78.46.96.112]:39972 "EHLO mail.skyhub.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753660AbaKRMmT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 18 Nov 2014 07:42:19 -0500
-Message-ID: <546B3EA1.90100@redhat.com>
-Date: Tue, 18 Nov 2014 07:42:09 -0500
-From: Prarit Bhargava <prarit@redhat.com>
+	id S1752856AbaKJQLI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 10 Nov 2014 11:11:08 -0500
+Date: Mon, 10 Nov 2014 17:11:05 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Daniel J Blueman <daniel@numascale.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Steffen Persvold <sp@numascale.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] x86: Drop redundant memory-block sizing code
+Message-ID: <20141110161105.GF4359@pd.tnic>
+References: <ojh5M-xh-17@gated-at.bofh.it>
+ <1415249414-20888-1-git-send-email-daniel@numascale.com>
+ <20141106094007.GA4849@pd.tnic>
+ <545B4E84.7050707@numascale.com>
+ <20141106104034.GB4849@pd.tnic>
+ <545B5735.8000401@numascale.com>
+ <20141106115636.GA4318@pd.tnic>
+ <54607F54.2050707@numascale.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Myron Stowe <mstowe@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Linux-Arch <linux-arch@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH] pci, add FW_BUG warning to pci= kernel option
-References: <1414865479-25792-1-git-send-email-prarit@redhat.com> <20141111035902.GC28161@google.com> <CAErSpo7q1U_HpEeB_pMWJPae3a+oysEwR660m2bV5KdZ7oCr0w@mail.gmail.com>
-In-Reply-To: <CAErSpo7q1U_HpEeB_pMWJPae3a+oysEwR660m2bV5KdZ7oCr0w@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <54607F54.2050707@numascale.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 11/17/2014 06:42 PM, Bjorn Helgaas wrote:
-> On Mon, Nov 10, 2014 at 8:59 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> [+cc lkml, linux-arch, Linus]
->>
->> On Sat, Nov 01, 2014 at 02:11:19PM -0400, Prarit Bhargava wrote:
->>> The kernel should boot PCI without the use of kernel parameters.  Display
->>> a FW_BUG warning when pci= is used.
->>>
->>> Cc: Myron Stowe <mstowe@redhat.com>
->>> Cc: linux-pci@vger.kernel.org
->>> Signed-off-by: Prarit Bhargava <prarit@redhat.com>
->>> ---
->>>  drivers/pci/pci.c |    2 ++
->>>  1 file changed, 2 insertions(+)
->>>
->>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>> index 625a4ac..5172060b 100644
->>> --- a/drivers/pci/pci.c
->>> +++ b/drivers/pci/pci.c
->>> @@ -4515,6 +4515,8 @@ static int __init pci_setup(char *str)
->>>               }
->>>               str = k;
->>>       }
->>> +     add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
->>> +     pr_crit(FW_BUG "The PCI configuration has been overridden thorugh the use of pci=.  Please report the issue you are attempting to resolve to your hardware vendor.\n");
->>
->> My goal is to be able to boot without any "pci=" parameters, so from that
->> perspective, I like this.
->>
->> When people have a problem booting Linux, they often try a variety of
->> things like "pci=assign-busses", "pci=nocrs", "pci=nomsi", "pci=nommconf",
->> "pci=noacpi", etc.  If they find something that works, there's a tendency
->> to treat that as a "solution."  I'd rather that they report it, so we can
->> try to fix the bug or add a quirk so the *next* person won't have to figure
->> out the right parameters to use.
->>
->> My worry is that there are a few things where Linux isn't smart enough to
->> do the right thing automatically, and I don't think we'll have a good
->> solution in the near future.  For example:
->>
->>     pci=norom
->>     pci=pcie_bus_perf,pcie_bus_safe,etc.
->>     pci=cbiosize=...
->>     pci=cbmemsize=...
->>     pci=resource_alignment=...
->>     pci=hpiosize=...
->>     pci=hpmemsize=...
->>     pci=realloc
->>
->> I don't like the fact that these options exist, but I suspect there are
->> users that do depend on them and might find this warning too aggressive.
->>
->> So I'm interested in opinions on whether this is a good idea at all and
->> whether we should exclude some options from the warning/tainting.
+On Mon, Nov 10, 2014 at 05:03:16PM +0800, Daniel J Blueman wrote:
+> Yes, totalram_pages doesn't count the MMIO hole, whereas max_pfn does.
 > 
-> Hi Prarit,
-> 
-> We didn't get any nibbles :)
-> 
-> I don't think we can realistically taint the kernel for *all* "pci="
-> options.  So if you want to pursue this, maybe you could enhance this
-> so we can have a whitelist of options that we will support without
-> tainting.  Then we can argue about what should be on the list and go
-> from there.  Does that seem reasonable?
+> I've made NumaConnect firmware changes that will guarantee max_pfn is always
+> aligned to at least 2GB, so bdee237c0343a5d1a6cf72c7ea68e88338b26e08 "x86:
+> mm: Use 2GB memory block size on large-memory x86-64 systems" can be dropped
+> and Yinghai's approach will give 2GB memory blocks on our systems.
 
-Sorry for the lower-case typing.  I broke my elbow and am down to one hand.
+What about the rest of the systems? I.e., the !numascale ones. This is
+generic code which needs to support all, not only your flavour.
 
-bjorn, yep sounds reasonable.  i'll do this (slowly unfortunately because of my
-arm) ...
+-- 
+Regards/Gruss,
+    Boris.
 
-P.
-
-> 
-> This is a somewhat more aggressive use of tainting than we've had in
-> the past, so we might have to iterate on this a bit.
-> 
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Sent from a fat crate under my desk. Formatting is fine.
+--
