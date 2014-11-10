@@ -1,28 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:11550 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755232AbaKOBt3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Nov 2014 20:49:29 -0500
-From: "Allan, Bruce W" <bruce.w.allan@intel.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Subject: 
-Date: Sat, 15 Nov 2014 01:49:09 +0000
-Message-ID: <804857E1F29AAC47BF68C404FC60A1846586CB67@ORSMSX105.amr.corp.intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: <suravee.suthikulpanit@amd.com>
+To: <bhelgaas@google.com>
+CC: <liviu.dudau@arm.com>, <lorenzo.pieralisi@arm.com>,
+	<will.deacon@arm.com>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH 2/2] PCI: generic: Add set_msi_parent callback
+Date: Mon, 10 Nov 2014 13:24:40 -0600
+Message-ID: <1415647480-3320-3-git-send-email-suravee.suthikulpanit@amd.com>
+In-Reply-To: <1415647480-3320-1-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1415647480-3320-1-git-send-email-suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Let's try this again as plain text...
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-For a PCIe device with SR-IOV support enabled (e.g. the PF device ID is 0xf001 at 0000:07:00.0 and the 16 VFs have device ID 0xf002 at 0000:07:01.0 through 0000:07:02.7), if the hardware attempts a DMA read/write of memory that was mapped by the PF devfn but instead uses a requester id of one of the VF devfns (enabled but not yet assigned to a VM) it fails and generates log messages similar to:
+This patch implement set_msi_parent callback for PCI generic host controller.
 
-[  416.800881] dmar: DRHD: handling fault status reg 2
-[  416.800887] dmar: DMAR:[DMA Read] Request device [07:02.2] fault addr ffff0000
-DMAR:[fault reason 02] Present bit in context entry is clear
+Cc: Bjorn Helgass <bhelgaas@google.com>
+Cc: Liviu Dudau <liviu.dudau@arm.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+---
+ drivers/pci/host/pci-host-generic.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-Shouldn't a DMA alias quirk that sets the PCI_DEV_FLAGS_DMA_ALIAS_DEVFN flag and dma_alias_devfn to the PF devfn for all VF devfns work-around this issue, or am I misunderstanding what a DMA alias quirk is supposed to do?  If a DMA alias quirk cannot resolve this, what is the most appropriate way to handle this?
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 036ab1b..f9bb97a 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -42,6 +42,7 @@ struct gen_pci {
+ 	struct pci_host_bridge			host;
+ 	struct gen_pci_cfg_windows		cfg;
+ 	struct list_head			resources;
++	struct msi_chip				*mchip;
+ };
+ 
+ #ifdef CONFIG_ARM
+@@ -128,9 +129,19 @@ static int gen_pci_config_write(struct pci_bus *bus, unsigned int devfn,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
++static int gen_pci_set_msi_parent(struct pci_bus *bus)
++{
++	struct gen_pci *pci = bus_to_gen_pci(bus);
++
++	bus->msi = pci->mchip;
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
+ static struct pci_ops gen_pci_ops = {
+ 	.read	= gen_pci_config_read,
+ 	.write	= gen_pci_config_write,
++	.set_msi_parent = gen_pci_set_msi_parent,
+ };
+ 
+ static const struct of_device_id gen_pci_of_match[] = {
+@@ -313,6 +324,9 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 		return err;
+ 	}
+ 
++	pci->mchip = of_pci_find_msi_chip_by_node(of_parse_phandle(np,
++						  "msi-parent", 0));
++
+ #ifdef CONFIG_ARM
+ 	pci_common_init_dev(dev, &hw);
+ #else
+-- 
+1.9.3
 
-Thanks,
-Bruce.
