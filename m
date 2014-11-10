@@ -1,107 +1,215 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:37852 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932566AbaKMMj7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 13 Nov 2014 07:39:59 -0500
-Message-ID: <5464A68E.4010004@linux.intel.com>
-Date: Thu, 13 Nov 2014 20:39:42 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>
-CC: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [Patch V1 0/6] Refine generic/PCI MSI irqodmian interfaces
-References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com> <5464A3F8.1000807@huawei.com>
-In-Reply-To: <5464A3F8.1000807@huawei.com>
-Content-Type: text/plain; charset=utf-8
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:46558 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752076AbaKJMAW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Nov 2014 07:00:22 -0500
+Message-ID: <1415620820.20340.1.camel@pengutronix.de>
+Subject: Re: [PATCH] PCI: designware: Add support 4 ATUs assignment
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Minghuan Lian <Minghuan.Lian@freescale.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 10 Nov 2014 13:00:20 +0100
+In-Reply-To: <1415616205-21255-1-git-send-email-Minghuan.Lian@freescale.com>
+References: <1415616205-21255-1-git-send-email-Minghuan.Lian@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Am Montag, den 10.11.2014, 18:43 +0800 schrieb Minghuan Lian:
+> Currently, pcie-designware.c only supports two ATUs, ATU0 is used
+> for CFG0 and MEM, ATU1 is used for CFG1 and IO. There is a conflict
+> when MEM and CFG0 are accessed simultaneously. The patch adds
+> 'num-atus' property to PCIe dts node to describe the number of
+> PCIe controller's ATUs. If num_atus is bigger than or equal to 4,
+> we will change ATUs assignment: ATU0 for CFG0, ATU1 for CFG1,
+> ATU2 for MEM, ATU3 for IO.
+> 
+> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+> ---
+>  .../devicetree/bindings/pci/designware-pcie.txt    |  1 +
+>  drivers/pci/host/pcie-designware.c                 | 48 ++++++++++++++++------
+>  drivers/pci/host/pcie-designware.h                 |  5 +++
+>  3 files changed, 41 insertions(+), 13 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> index 9f4faa8..500796e 100644
+> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> @@ -26,3 +26,4 @@ Optional properties:
+>  - bus-range: PCI bus numbers covered (it is recommended for new devicetrees to
+>    specify this property, to keep backwards compatibility a range of 0x00-0xff
+>    is assumed if not present)
+> +- num-atus: number of ATUs
 
+This lacks documentation for the default value if not present.
 
-On 2014/11/13 20:28, Yijing Wang wrote:
-> On 2014/11/13 19:43, Jiang Liu wrote:
->> This patch set is based on tip/irq/irqdomain and tries to refine
->> interfaces to support irqdomain for generic MSI and PCI MSI.
->>
->> Patch 1 is just minor fixes for tip/irq/irqdomain.
->>
->> Patch 2 introduces some helpers to hide struct msi_desc implementation
->> details, so later we could move msi_list from struct pci_dev into
->> struct device to enable generic MSI support.
-> 
-> Hi Gerry,
->    I tried to move msi info(eg. msi_list) into struct device, but I found
-> DMAR fault interrupt is initialized before the driver core init. And I don't
-> know whether there are other devices like ARM consolidator(introduced in GIC v3)
-> need to be initialized before driver core. What do you think about this ?
-Hi Yijing,
-	DMAR interrupt doesn't make use of msi_desc, so has no
-dependency on msi_list.
-	Actually there are two levels of generic MSI sharing. The first
-level is to share common irq_chip/irqdomain code, such as HPET, DMAR and
-HT_IRQ. The second level is to share msi_desc, such as some device
-on ARM side as you have mentioned.
-	With this patch set applied, we achieve level one sharing. For
-level two sharing, we need to move msi_list into struct device, refactor
-struct msi_desc, and provide a generic pci_enable_msix_range alike
-user interfaces. I'm still working on this part, so we could cooperate
-with each other.
-Thanks!
-Gerry
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index dfed00a..b872dd0 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -48,6 +48,8 @@
+>  #define PCIE_ATU_VIEWPORT		0x900
+>  #define PCIE_ATU_REGION_INBOUND		(0x1 << 31)
+>  #define PCIE_ATU_REGION_OUTBOUND	(0x0 << 31)
+> +#define PCIE_ATU_REGION_INDEX3		(0x3 << 0)
+> +#define PCIE_ATU_REGION_INDEX2		(0x2 << 0)
+>  #define PCIE_ATU_REGION_INDEX1		(0x1 << 0)
+>  #define PCIE_ATU_REGION_INDEX0		(0x0 << 0)
+>  #define PCIE_ATU_CR1			0x904
+> @@ -346,7 +348,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>  	struct of_pci_range range;
+>  	struct of_pci_range_parser parser;
+>  	struct resource *cfg_res;
+> -	u32 val, na, ns;
+> +	u32 num_atus, val, na, ns;
+>  	const __be32 *addrp;
+>  	int i, index, ret;
+>  
+> @@ -486,6 +488,18 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>  		}
+>  	}
+>  
+> +	if (of_property_read_u32(np, "num-atus", &num_atus))
+> +		num_atus = 2;
 
-> 
-> Thanks!
-> Yijing.
-> 
->>
->> Patch 3 introduces msi_domain_{alloc|free}_irqs() which generalize
->> pci_msi_domain_alloc_irqs() to support generic MSI.
->>
->> Patch 4 introduces default data structures and callback implementations
->> to support msi_domain_alloc_irqs(), so reduce burden on generic MSI
->> users.
->>
->> Patch 5 converts PCI MSI to use generic MSI interfaces, and also
->> implement default callbacks for PCI MSI.
->>
->> Patch 6 introduces a mechanism to replace arch_setup_msi_irq()/
->> arch_setup_msi_irqs()/arch_teardown_msi_irq()/arch_teardown_msi_irqs().
->>
->> With this patch set applied, the generic MSI and PCI MSI interfaces
->> are much easier to use. For extreme case, you only need to define
->> a "struct msi_domain_info" and don't need to implement any callbacks,
->> just using the default callbacks is OK:)
->>
->> This patch set is also a preparation for:
->> 1) Kill all weak functions in drivers/pci/msi.c
->> 2) Implement support for non-PCI-compliant MSI device
->>
->> It has been tested on x86 platforms, comments are welcomed!
->>
->> Jiang Liu (6):
->>   PCI, MSI: Fix errors caused by commit e5f1a59c4e12
->>   PCI, MSI: Introduce helpers to hide struct msi_desc implemenation
->>     details
->>   genirq: Introduce msi_domain_{alloc|free}_irqs()
->>   genirq: Provide default callbacks for msi_domain_ops
->>   PCI, MSI: Refine irqdomain interfaces to simplify its usage
->>   PCI, MSI: Provide mechanism to alloc/free MSI/MSIX interrupt from
->>     irqdomain
->>
->>  drivers/pci/msi.c   |  170 ++++++++++++++++++++++++++++++++++++++++-----------
->>  include/linux/msi.h |   90 ++++++++++++++++++++++++---
->>  kernel/irq/msi.c    |  150 ++++++++++++++++++++++++++++++++++++++++++++-
->>  3 files changed, 366 insertions(+), 44 deletions(-)
->>
-> 
-> 
+You don't need this check. Just initialize num_atus to 2,
+of_property_read_u32() won't touch the value if the property isn't
+found.
+
+> +	if (num_atus >= 4) {
+> +		pp->atu_cfg0_idx = PCIE_ATU_REGION_INDEX0;
+> +		pp->atu_cfg1_idx = PCIE_ATU_REGION_INDEX1;
+> +		pp->atu_mem_idx = PCIE_ATU_REGION_INDEX2;
+> +		pp->atu_io_idx = PCIE_ATU_REGION_INDEX3;
+> +	} else {
+> +		pp->atu_cfg0_idx = pp->atu_mem_idx = PCIE_ATU_REGION_INDEX0;
+> +		pp->atu_cfg1_idx = pp->atu_io_idx = PCIE_ATU_REGION_INDEX1;
+> +	}
+> +
+>  	if (pp->ops->host_init)
+>  		pp->ops->host_init(pp);
+>  
+> @@ -511,8 +525,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>  
+>  static void dw_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)
+>  {
+> -	/* Program viewport 0 : OUTBOUND : CFG0 */
+> -	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
+> +	/* Program viewport : OUTBOUND : CFG0 */
+> +	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | pp->atu_cfg0_idx,
+>  			  PCIE_ATU_VIEWPORT);
+>  	dw_pcie_writel_rc(pp, pp->cfg0_mod_base, PCIE_ATU_LOWER_BASE);
+>  	dw_pcie_writel_rc(pp, (pp->cfg0_mod_base >> 32), PCIE_ATU_UPPER_BASE);
+> @@ -526,8 +540,8 @@ static void dw_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)
+>  
+>  static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
+>  {
+> -	/* Program viewport 1 : OUTBOUND : CFG1 */
+> -	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
+> +	/* Program viewport : OUTBOUND : CFG1 */
+> +	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | pp->atu_cfg1_idx,
+>  			  PCIE_ATU_VIEWPORT);
+>  	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
+>  	dw_pcie_writel_rc(pp, pp->cfg1_mod_base, PCIE_ATU_LOWER_BASE);
+> @@ -541,8 +555,8 @@ static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
+>  
+>  static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
+>  {
+> -	/* Program viewport 0 : OUTBOUND : MEM */
+> -	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
+> +	/* Program viewport : OUTBOUND : MEM */
+> +	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | pp->atu_mem_idx,
+>  			  PCIE_ATU_VIEWPORT);
+>  	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, PCIE_ATU_CR1);
+>  	dw_pcie_writel_rc(pp, pp->mem_mod_base, PCIE_ATU_LOWER_BASE);
+> @@ -557,8 +571,8 @@ static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
+>  
+>  static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
+>  {
+> -	/* Program viewport 1 : OUTBOUND : IO */
+> -	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
+> +	/* Program viewport : OUTBOUND : IO */
+> +	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | pp->atu_io_idx,
+>  			  PCIE_ATU_VIEWPORT);
+>  	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_IO, PCIE_ATU_CR1);
+>  	dw_pcie_writel_rc(pp, pp->io_mod_base, PCIE_ATU_LOWER_BASE);
+> @@ -585,12 +599,14 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+>  		dw_pcie_prog_viewport_cfg0(pp, busdev);
+>  		ret = dw_pcie_cfg_read(pp->va_cfg0_base + address, where, size,
+>  				val);
+> -		dw_pcie_prog_viewport_mem_outbound(pp);
+> +		if (pp->atu_mem_idx == pp->atu_cfg0_idx)
+> +			dw_pcie_prog_viewport_mem_outbound(pp);
+>  	} else {
+>  		dw_pcie_prog_viewport_cfg1(pp, busdev);
+>  		ret = dw_pcie_cfg_read(pp->va_cfg1_base + address, where, size,
+>  				val);
+> -		dw_pcie_prog_viewport_io_outbound(pp);
+> +		if (pp->atu_io_idx == pp->atu_cfg1_idx)
+> +			dw_pcie_prog_viewport_io_outbound(pp);
+>  	}
+>  
+>  	return ret;
+> @@ -610,12 +626,14 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+>  		dw_pcie_prog_viewport_cfg0(pp, busdev);
+>  		ret = dw_pcie_cfg_write(pp->va_cfg0_base + address, where, size,
+>  				val);
+> -		dw_pcie_prog_viewport_mem_outbound(pp);
+> +		if (pp->atu_mem_idx == pp->atu_cfg0_idx)
+> +			dw_pcie_prog_viewport_mem_outbound(pp);
+>  	} else {
+>  		dw_pcie_prog_viewport_cfg1(pp, busdev);
+>  		ret = dw_pcie_cfg_write(pp->va_cfg1_base + address, where, size,
+>  				val);
+> -		dw_pcie_prog_viewport_io_outbound(pp);
+> +		if (pp->atu_io_idx == pp->atu_cfg1_idx)
+> +			dw_pcie_prog_viewport_io_outbound(pp);
+>  	}
+>  
+>  	return ret;
+> @@ -770,6 +788,10 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>  	u32 membase;
+>  	u32 memlimit;
+>  
+> +	/* set ATUs setting for MEM and IO */
+> +	dw_pcie_prog_viewport_mem_outbound(pp);
+> +	dw_pcie_prog_viewport_io_outbound(pp);
+> +
+>  	/* set the number of lanes */
+>  	dw_pcie_readl_rc(pp, PCIE_PORT_LINK_CONTROL, &val);
+>  	val &= ~PORT_LINK_MODE_MASK;
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index c625675..404f601 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -53,6 +53,11 @@ struct pcie_port {
+>  	struct irq_domain	*irq_domain;
+>  	unsigned long		msi_data;
+>  	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+> +	/* ATUs setting */
+> +	u8			atu_cfg0_idx;
+> +	u8			atu_cfg1_idx;
+> +	u8			atu_mem_idx;
+> +	u8			atu_io_idx;
+
+I don't like those single values. Can we please make this an array
+indexed by a proper enum? Like this:
+
+enum ATU_TYPE {
+	ATU_TYPE_CFG0 = 0,
+	ATU_TYPE_CFG1 = 1,
+	ATU_TYPE_MEM  = 2,
+	ATU_TYPE_IO   = 3,
+	ATU_TYPE_MAX
+}
+
+u8	atu_idx[ATU_TYPE_MAX];
+
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
+
