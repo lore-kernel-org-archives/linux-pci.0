@@ -1,81 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:58898 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750912AbaKRFIn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 18 Nov 2014 00:08:43 -0500
-Message-ID: <546AD456.3030000@linux.intel.com>
-Date: Tue, 18 Nov 2014 13:08:38 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Received: from cmexedge2.emulex.com ([138.239.224.100]:51069 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752161AbaKJLwu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Nov 2014 06:52:50 -0500
+From: Sathya Perla <sathya.perla@emulex.com>
+To: <linux-pci@vger.kernel.org>, <netdev@vger.kernel.org>
+CC: <ariel.elior@qlogic.com>, <linux.nics@intel.com>,
+	<shahed.shaikh@qlogic.com>, <ddutile@redhat.com>
+Subject: [PATCH 0/4] move pci_assivned_vfs() check (while disabling VFs) to pci sub-system
+Date: Mon, 10 Nov 2014 17:23:26 +0530
+Message-ID: <1415620410-4937-1-git-send-email-sathya.perla@emulex.com>
 MIME-Version: 1.0
-To: Thomas Gleixner <tglx@linutronix.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Tony Luck <tony.luck@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	LAK <linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [Patch V3 0/9] Refine generic/PCI MSI irqodmian interfaces
-References: <1416222202-28002-1-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1411180133130.3909@nanos>
-In-Reply-To: <alpine.DEB.2.11.1411180133130.3909@nanos>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/11/18 8:59, Thomas Gleixner wrote:
-> On Mon, 17 Nov 2014, Jiang Liu wrote:
->> This patch set is based on tip/irq/irqdomain and tries to refine
->> interfaces to support irqdomain for generic MSI and PCI MSI.
-> 
-> So to make progress on that matter I picked that up along with a few
-> other patches which affect the core code (more stacked irq callbacks
-> and Marcs workaround for the handler assignment issue).
-> 
-> I rebased the whole lot on Bjorns pci/msi branch as discussed in this
-> thread: https://lkml.org/lkml/2014/11/16/292
-> 
-> After that I spent quite some time to reorder and fold back patches so
-> we have no obvious wreckage, but at the same time preserve at least
-> some of the development process for this.
-> 
-> Finally I added docbook comments where missing (please provide them
-> next time yourself).
-Sure, need improvements on docs.
+A user must not be allowed to disable VFs while they are already assigned to
+a guest. This check is being made in each individual driver that implements
+the sriov_configure PCI method.
+This patch-set fixes this code duplication by moving this check from
+drivers to the sriov_nuvfs_store() routine just before invoking
+sriov_configure() when num_vfs is equal to 0.
 
-> 
-> Marc ran an initial smoketest on an early iteration which did not fall
-> into bits and pieces right away.
-> 
-> The only major change is that I got rid of the ugly
-> 
-> #ifndef msi_alloc_info_t
-> 
-> trickery by moving the generic version into include/asm-generic/msi.h
-> 
-> So if you want to use the generic version, you need to create your
-> arch/xxx/include/asm/msi.h file which includes asm-generic/msi.h.
-> 
-> For the ones who want to override it, create
-> arch/xxx/include/asm/msi.h, include whatever it takes and provide the
-> proper typedef.
-Two issues are solved by adding new header files, a good technique to
-improve code quality:)
+Vasundhara Volam (4):
+  pci: move pci_assivned_vfs() check while disabling VFs to pci
+    sub-system
+  bnx2x: remove pci_assigned_vfs() check while disabling VFs
+  i40e: remove pci_assigned_vfs() check while disabling VFs
+  qlcnic: remove pci_assigned_vfs() check while disabling VFs
 
-> 
-> I'll send that patch (7bde31a7969f) out tomorrow morning as I want to
-> have Arnds blessing for that.
-> 
-<snip>
-> I really rely on your cooperation here, as I don't want to end up with
-> an unexplainable mess when the stuff hits Linus tree and he starts
-> rumaging for his diving harpune ....
-I have rebased x86 changes onto tip/irq/irqdomain, it works perfectly:)
+ drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c  |    2 +-
+ drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c |    7 +------
+ .../net/ethernet/qlogic/qlcnic/qlcnic_sriov_pf.c   |   10 ----------
+ drivers/pci/pci-sysfs.c                            |    5 +++++
+ 4 files changed, 7 insertions(+), 17 deletions(-)
 
-Regards!
-Gerry
