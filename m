@@ -1,123 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:56011 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751316AbaKKEX3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Nov 2014 23:23:29 -0500
-Received: by mail-ie0-f179.google.com with SMTP id rl12so10403326iec.24
-        for <linux-pci@vger.kernel.org>; Mon, 10 Nov 2014 20:23:28 -0800 (PST)
-Date: Mon, 10 Nov 2014 21:23:24 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Apply _HPX link control for all supported pcie
- device
-Message-ID: <20141111042324.GF28161@google.com>
-References: <1415325580-5974-1-git-send-email-yinghai@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415325580-5974-1-git-send-email-yinghai@kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:50349 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751373AbaKJUpd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 10 Nov 2014 15:45:33 -0500
+Message-ID: <1415652328.16601.277.camel@ul30vt.home>
+Subject: Re: [PATCH] PCI: pciehp: Flush slot control prior to reset
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
+	rajatxjain@gmail.com, yinghai@kernel.org
+Date: Mon, 10 Nov 2014 13:45:28 -0700
+In-Reply-To: <20141107225359.1937.61243.stgit@gimli.home>
+References: <20141107225359.1937.61243.stgit@gimli.home>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 06, 2014 at 05:59:40PM -0800, Yinghai Lu wrote:
-> With commit 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
-> and following commits, we apply _HPX for pci devices.
+On Fri, 2014-11-07 at 15:54 -0700, Alex Williamson wrote:
+> Since 3461a068661c we don't automatically do a pcie_wait_cmd() for
+> as part of pcie_write_cmd(), it needs to be called explicitly or
+> triggered by the next pcie_write_cmd().  However, when we do a
+> secondary bus reset and we're using pcie_write_cmd() to make sure
+> that we don't see that bus reset as a hotplug event, we really want
+> to make sure the update is complete.  Testing on an old Lenovo S20
+> system, which sets surprise hotplug for some slots, this failure to
+> flush results in a link down event seen by the hotplug controller
+> when we issue the bus reset and returns us to the undesireable
+> behavior of removing and re-adding the device.  Force a flush by
+> adding an explicit call to pcie_wait_cmd().
 > 
-> that is called via pci_scan_slot
-> 			==>pci_scan_single_device
-> 				==>pci_device_add
-> 					==>pci_configure_device
-> 						==>program_hpp_type2
-> and dev->subordinate is not allocated yet.
-> 
-> So that link control setup get skipped.
-> 
-> Acoording to ACPI spec, there is no requirement that need to be set to pcie
-> root port or downstream port.
-> 
-> We could just change to pcie_cap_has_lnkctl to cover all pcie devices with
-> link control cap.
-> 
-> Fixes: 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> 
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> Cc: stable@vger.kernel.org [3.17]
 > ---
->  drivers/pci/access.c |   13 -------------
->  drivers/pci/pci.h    |   13 +++++++++++++
->  drivers/pci/probe.c  |    2 +-
->  3 files changed, 14 insertions(+), 14 deletions(-)
 > 
-> Index: linux-2.6/drivers/pci/probe.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/probe.c
-> +++ linux-2.6/drivers/pci/probe.c
-> @@ -1323,7 +1323,7 @@ static void program_hpp_type2(struct pci
->  			~hpp->pci_exp_devctl_and, hpp->pci_exp_devctl_or);
+>  drivers/pci/hotplug/pciehp_hpc.c |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 0ebf754..e540966 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -660,6 +660,7 @@ int pciehp_reset_slot(struct slot *slot, int probe)
+>  		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, 0);
+>  	if (pciehp_poll_mode)
+>  		del_timer_sync(&ctrl->poll_timer);
+> +	pcie_wait_cmd(ctrl);
 >  
->  	/* Initialize Link Control Register */
-> -	if (dev->subordinate)
-> +	if (pcie_cap_has_lnkctl(dev))
->  		pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
->  			~hpp->pci_exp_lnkctl_and, hpp->pci_exp_lnkctl_or);
-
-Nice catch!  It's much cleaner to do this based on pcie_cap_has_lnkctl().
-
-> Index: linux-2.6/drivers/pci/access.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/access.c
-> +++ linux-2.6/drivers/pci/access.c
-> @@ -444,19 +444,6 @@ static inline int pcie_cap_version(const
->  	return pcie_caps_reg(dev) & PCI_EXP_FLAGS_VERS;
->  }
+>  	pci_reset_bridge_secondary_bus(ctrl->pcie->port);
 >  
-> -static inline bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
-> -{
-> -	int type = pci_pcie_type(dev);
-> -
-> -	return type == PCI_EXP_TYPE_ENDPOINT ||
-> -	       type == PCI_EXP_TYPE_LEG_END ||
-> -	       type == PCI_EXP_TYPE_ROOT_PORT ||
-> -	       type == PCI_EXP_TYPE_UPSTREAM ||
-> -	       type == PCI_EXP_TYPE_DOWNSTREAM ||
-> -	       type == PCI_EXP_TYPE_PCI_BRIDGE ||
-> -	       type == PCI_EXP_TYPE_PCIE_BRIDGE;
-> -}
-> -
->  static inline bool pcie_cap_has_sltctl(const struct pci_dev *dev)
->  {
->  	int type = pci_pcie_type(dev);
-> Index: linux-2.6/drivers/pci/pci.h
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/pci.h
-> +++ linux-2.6/drivers/pci/pci.h
-> @@ -6,6 +6,19 @@
->  
->  extern const unsigned char pcie_link_speed[];
->  
-> +static inline bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
-> +{
-> +	int type = pci_pcie_type(dev);
-> +
-> +	return type == PCI_EXP_TYPE_ENDPOINT ||
-> +	       type == PCI_EXP_TYPE_LEG_END ||
-> +	       type == PCI_EXP_TYPE_ROOT_PORT ||
-> +	       type == PCI_EXP_TYPE_UPSTREAM ||
-> +	       type == PCI_EXP_TYPE_DOWNSTREAM ||
-> +	       type == PCI_EXP_TYPE_PCI_BRIDGE ||
-> +	       type == PCI_EXP_TYPE_PCIE_BRIDGE;
-> +}
+> 
 
-But I don't want to move pcie_cap_has_lnkctl() to pci.h and leave
-pcie_cap_has_sltctl() and pcie_cap_has_rtctl() in access.c.  They're all
-related, so I think they should stay together.
+I think we might need a similar change on the other side of the reset,
+calling pcie_wait_cmd() explicitly before we re-enable polling.  The
+patch above passed about 7000 VM startup/shutdown cycles (up from zero
+w/o the patch), but it did eventually get a spurious hotplug.  With the
+additional pcie_wait_cmd() I'm thinking about, I've passed 8000 cycles.
+TL;DR, I'm probably sending a v2 of this patch.  Thanks,
 
-What if we left them in access.c, made them non-static, non-inline, and
-just added prototypes to pci.h?  Or I guess we could add a prototype just
-for pcie_cap_has_lnkctl(), since that's the only one we need so far.
+Alex
 
-Bjorn
-
-> +
->  /* Functions internal to the PCI core code */
->  
->  int pci_create_sysfs_dev_files(struct pci_dev *pdev);
