@@ -1,56 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:60119 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755202AbaKLD2T (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 22:28:19 -0500
-Received: from epcpsbgr5.samsung.com
- (u145.gpu120.samsung.co.kr [203.254.230.145])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0NEW002WLPN64200@mailout3.samsung.com> for
- linux-pci@vger.kernel.org; Wed, 12 Nov 2014 12:28:18 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
-	'Mohit Kumar' <mohit.kumar@st.com>,
-	'Viresh Kumar' <viresh.kumar@linaro.org>,
-	'Pratyush Anand' <pratyush.anand@st.com>
-Subject: [PATCH] PCI: spear: Remove unnecessary OOM message
-Date: Wed, 12 Nov 2014 12:29:02 +0900
-Message-id: <002d01cffe28$ce2f5870$6a8e0950$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:35701 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752723AbaKJO6n (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Nov 2014 09:58:43 -0500
+Message-ID: <1415631509.20340.5.camel@pengutronix.de>
+Subject: Re: [PATCH v2] PCI: add missing DT binding for linux,pci-domain
+ property
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Date: Mon, 10 Nov 2014 15:58:29 +0100
+In-Reply-To: <CAL_JsqKfV3aPuYxK2E8tS1fDjhpJFknqv1nHP+9NYHAfs_owYg@mail.gmail.com>
+References: <1415287400-30426-1-git-send-email-l.stach@pengutronix.de>
+	 <CAL_JsqKfV3aPuYxK2E8tS1fDjhpJFknqv1nHP+9NYHAfs_owYg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The site-specific OOM messages are unnecessary, because they
-duplicate the MM subsystem generic OOM message. This patch
-fixes the following checkpatch warning.
+Am Donnerstag, den 06.11.2014, 13:49 -0600 schrieb Rob Herring:
+> On Thu, Nov 6, 2014 at 9:23 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> > This property was added by 41e5c0f81d3e
+> > (of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr())
+> > without the required binding documentation. As this property
+> > will be supported by a number of host bridge drivers going forward,
+> > add it to the common PCI binding doc.
+> >
+> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> > ---
+> > This is a non-critical fix, but may still qualify for 3.18-rc as
+> > the property was added in this release cycle.
+> 
+> Agreed.
+> 
+> Acked-by: Rob Herring <robh@kernel.org>
+> 
 
-  WARNING: Possible unnecessary 'out of memory' message
+So how should we proceed here? Are you going to pick it up or should
+Bjorn route this through the PCI tree?
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- drivers/pci/host/pcie-spear13xx.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+> >
+> > v2:
+> > - emphasize that the property must be present and unique systemwide
+> >   if used
+> > ---
+> >  Documentation/devicetree/bindings/pci/pci.txt | 11 +++++++++++
+> >  1 file changed, 11 insertions(+)
+> >
+> > diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
+> > index 41aeed38926d..68c364e2f5e5 100644
+> > --- a/Documentation/devicetree/bindings/pci/pci.txt
+> > +++ b/Documentation/devicetree/bindings/pci/pci.txt
+> > @@ -7,3 +7,14 @@ And for the interrupt mapping part:
+> >
+> >  Open Firmware Recommended Practice: Interrupt Mapping
+> >  http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
+> > +
+> > +Additionally to the properties specified in the above standards a host bridge
+> > +driver implementation may support the following properties:
+> > +
+> > +- linux,pci-domain:
+> > +   If present this property assigns a fixed PCI domain number to a host bridge,
+> > +   otherwise an unstable (across boots) unique number will be assigned.
+> > +   It is required to either not set this property at all or set it for all
+> > +   host bridges in the system, otherwise potentially conflicting domain numbers
+> > +   may be assigned to root buses behind different host bridges. The domain
+> > +   number for each host bridge in the system must be unique.
+> > --
+> > 2.1.1
+> >
 
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index 85f594e..4647b62 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -308,10 +308,8 @@ static int __init spear13xx_pcie_probe(struct platform_device *pdev)
- 	int ret;
- 
- 	spear13xx_pcie = devm_kzalloc(dev, sizeof(*spear13xx_pcie), GFP_KERNEL);
--	if (!spear13xx_pcie) {
--		dev_err(dev, "no memory for SPEAr13xx pcie\n");
-+	if (!spear13xx_pcie)
- 		return -ENOMEM;
--	}
- 
- 	spear13xx_pcie->phy = devm_phy_get(dev, "pcie-phy");
- 	if (IS_ERR(spear13xx_pcie->phy)) {
 -- 
-1.7.9.5
-
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
