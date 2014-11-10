@@ -1,81 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:58705 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751097AbaKFHL6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 02:11:58 -0500
+Received: from mail-oi0-f50.google.com ([209.85.218.50]:52374 "EHLO
+	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750832AbaKJGiB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Nov 2014 01:38:01 -0500
+Received: by mail-oi0-f50.google.com with SMTP id v63so4887888oia.23
+        for <linux-pci@vger.kernel.org>; Sun, 09 Nov 2014 22:38:00 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20141105215713.GC6168@google.com>
-References: <1414621570-20777-1-git-send-email-yinghai@kernel.org>
-	<20141030170913.GA6982@google.com>
-	<20141105202252.GB6168@google.com>
-	<1808324.GlBOqbYcPz@vostro.rjw.lan>
-	<20141105215713.GC6168@google.com>
-Date: Wed, 5 Nov 2014 23:11:57 -0800
-Message-ID: <CAE9FiQVdd5dfAebJVD=CR+s=HeHXKVJ2sN0WD6RbE-WpS7+sZg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: fix sriov enabling with virtual bus
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+In-Reply-To: <001601cff961$232f2570$698d7050$%han@samsung.com>
+References: <001401cff95e$ec061f60$c4125e20$%han@samsung.com>
+	<001601cff961$232f2570$698d7050$%han@samsung.com>
+Date: Mon, 10 Nov 2014 12:08:00 +0530
+Message-ID: <CAKohpom7pABuYxk8Us=MZQeB0pdnNxJW8_CgEBw4enHeYTp-ig@mail.gmail.com>
+Subject: Re: [PATCH V2] PCI: spear: Add spear13xx before add_pcie_port/pcie_init
+From: Viresh Kumar <viresh.kumar@linaro.org>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Chao Zhou <chao.zhou@intel.com>, Joerg Roedel <joro@8bytes.org>
+	Mohit Kumar <mohit.kumar@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 5, 2014 at 1:57 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+On 6 November 2014 06:59, Jingoo Han <jg1.han@samsung.com> wrote:
+> The add_pcie_port/pcie_init functions are SPEAr13xx-specific.
+> Add spear13xx prefix to avoid collision in global name space.
 >
-> It's relatively common to start with a pci_dev and look for an ACPI handle
-> that corresponds to that device or the closest enclosing scope, so maybe
-> there should be a way to do that directly.
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> ---
+> Change since v1:
+> - Remove 'exynos' typo from the commit message.
+
+Its better now, sorry for earlier reply.
+
 >
-> For pci_get_hp_params(), I think the current code is actually slightly
-> buggy because we don't look for _HPP/_HPX on the device itself; we only
-> look at the bridges upstream from it.
+>  drivers/pci/host/pcie-spear13xx.c |    9 +++++----
+>  1 file changed, 5 insertions(+), 4 deletions(-)
 >
-> What I had in mind was something like the following (untested and not for
-> application).
+> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+> index 85f594e..63f869f 100644
+> --- a/drivers/pci/host/pcie-spear13xx.c
+> +++ b/drivers/pci/host/pcie-spear13xx.c
+> @@ -269,7 +269,8 @@ static struct pcie_host_ops spear13xx_pcie_host_ops = {
+>         .host_init = spear13xx_pcie_host_init,
+>  };
+>
+> -static int add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
+> +static int spear13xx_add_pcie_port(struct pcie_port *pp,
+> +                                  struct platform_device *pdev)
+>  {
+>         struct device *dev = &pdev->dev;
+>         int ret;
+> @@ -352,7 +353,7 @@ static int __init spear13xx_pcie_probe(struct platform_device *pdev)
+>         if (of_property_read_bool(np, "st,pcie-is-gen1"))
+>                 spear13xx_pcie->is_gen1 = true;
+>
+> -       ret = add_pcie_port(pp, pdev);
+> +       ret = spear13xx_add_pcie_port(pp, pdev);
+>         if (ret < 0)
+>                 goto fail_clk;
+>
+> @@ -382,11 +383,11 @@ static struct platform_driver spear13xx_pcie_driver __initdata = {
+>
+>  /* SPEAr13xx PCIe driver does not allow module unload */
+>
+> -static int __init pcie_init(void)
+> +static int __init spear13xx_pcie_init(void)
+>  {
+>         return platform_driver_register(&spear13xx_pcie_driver);
+>  }
+> -module_init(pcie_init);
+> +module_init(spear13xx_pcie_init);
+>
+>  MODULE_DESCRIPTION("ST Microelectronics SPEAr13xx PCIe host controller driver");
+>  MODULE_AUTHOR("Pratyush Anand <pratyush.anand@st.com>");
 
-
-
-> + * Search for an ACPI handle.  The PCI device itself may have one, or an
-> + * upstream device (either a PCI-to-PCI bridge or a PCI host bridge) may
-> + * have one.
-> + */
-> +acpi_handle pci_find_acpi_handle(struct pci_dev *pdev)
-> +{
-> +       struct device *dev;
-> +       acpi_handle handle;
-> +       struct pci_bus *bus;
-> +
-> +       dev = &pdev->dev;
-> +       handle = ACPI_HANDLE(dev);
-> +       while (!handle) {
-> +               pdev = pci_physfn(pdev);
-
-I'm a little worried about to apply hpx value for PFs to VFs.
-
-> +               bus = pdev->bus;
-> +               if (pci_is_root_bus(bus))
-> +                       dev = bus->bridge;
-> +               else {
-> +                       pdev = bus->self;
-> +                       dev = &pdev->dev;
-> +               }
-> +               handle = ACPI_HANDLE(dev);
-> +       }
-> +       return handle;
-> +}
-
-
-Also found another problem,
-pci_device_add==>pci_configure_device==>program_hpp_type2() path.
-and program_hpp_type2() will check dev->subordinate().
-
-but at the time child bridge is not scanned yet.
-
-Maybe we should move pci_configure_device later ?
-
-Yinghai Lu
+Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
