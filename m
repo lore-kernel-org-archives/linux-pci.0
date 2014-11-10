@@ -1,172 +1,132 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-To: catalin.marinas@arm.com, will.deacon@arm.com, bhelgaas@google.com,
-	lorenzo.pieralisi@arm.com, wangyijing@huawei.com, arnd@arndb.de,
-	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Subject: [PATCH 1/6] x86, acpi, pci: Reorder logic of pci_mmconfig_insert() function
-Date: Wed, 19 Nov 2014 17:04:46 +0100
-Message-Id: <1416413091-13452-2-git-send-email-tomasz.nowicki@linaro.org>
-In-Reply-To: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org>
-References: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1bon0115.outbound.protection.outlook.com ([157.56.111.115]:15717
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751647AbaKJCEU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 9 Nov 2014 21:04:20 -0500
+Message-ID: <54601D09.3090902@amd.com>
+Date: Mon, 10 Nov 2014 09:03:53 +0700
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+MIME-Version: 1.0
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	"Matthias Brugger" <matthias.bgg@gmail.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Alexander Gordeev <agordeev@redhat.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	<x86@kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [Patch Part2 v5 21/31] PCI/MSI: Enhance core to support hierarchy
+ irqdomain
+References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
+ <1415283644-2559-22-git-send-email-jiang.liu@linux.intel.com>
+ <545EED04.4090008@amd.com> <545F1478.3040808@linux.intel.com>
+In-Reply-To: <545F1478.3040808@linux.intel.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch is the first step of MMCONFIG refactoring process.
+On 11/9/14 14:15, Jiang Liu wrote:
+> On 2014/11/9 12:26, Suravee Suthikulpanit wrote:
+>> Hi Gerry,
+>>
+>> Please see my comments / questions below.
+>>
+>> On 11/6/14 21:20, Jiang Liu wrote:
+>>> Enhance PCI MSI core to support hierarchy irqdomain, so the common
+>>> code could be shared among architectures.
+>>>
+>>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>>> ---
+>>> Hi Thomas,
+>>>      These changes are a temporary solution, I'm working on another
+>>> patch set which will refine these interfaces, especially kill
+>>> arch_msi_irq_domain_{set|get}_hwirq().
+>>> Regards!
+>>> Gerry
+>>
+>> Would the change includes the struct irqdomain_msi_data proposed by
+>> Thomas here (https://lkml.org/lkml/2014/11/6/210)?
+> Hi Suravee,
+> 	I'm working on another patch set which will refine the way to
+> create irqdomain for MSI. I hope will solve all issues mentioned by
+> Thomas. I will post that patch set as RFC within one or two days.
 
-Code that uses pci_mmcfg_lock will be moved to common file and become
-accessible for all architectures. pci_mmconfig_insert() cannot be moved
-so easily since it is mixing generic mmcfg code with x86 specific logic
-inside of mutual exclusive block guarded by pci_mmcfg_lock.
+Let me know if I can help.
 
-To get rid of that constraint we reorder actions as fallow:
-1. mmconfig entry allocation can be done at first, does not need lock
-2. insertion to iomem_resource has its own lock, no need to wrap it into mutex
-3. insertion to mmconfig list can be done as the final stage in separate
-function (candidate for further factoring)
+>>
+>>> [...]
+>>> +static int msi_domain_alloc(struct irq_domain *domain, unsigned int
+>>> virq,
+>>> +                unsigned int nr_irqs, void *arg)
+>>> +{
+>>> +    int i, ret;
+>>> +    irq_hw_number_t hwirq = arch_msi_irq_domain_get_hwirq(arg);
+>>> +
+>>> +    if (irq_find_mapping(domain, hwirq) > 0)
+>>> +        return -EEXIST;
+>>> +
+>>> +    ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
+>>> +    if (ret < 0)
+>>> +        return ret;
+>>> +
+>>
+>> When executing irq_domain_alloc_irqs_parent(), it triggers the following
+>> warning message due to
+>>
+>>      WARN_ON(desc->irq_data.chip == &no_irq_chip)
+>>
+>> ------------[ cut here ]------------
+>> WARNING: CPU: 2 PID: 912 at kernel/irq/chip.c:734
+>> __irq_set_handler+0x138/0x13c()
+>> Modules linked in: mlx4_core(+) rtc_efi efivarfs
+>> CPU: 2 PID: 912 Comm: modprobe Not tainted 3.18.0-rc3-p2v5+ #53
+>> Call trace:
+>> [<fffffe00000963d4>] dump_backtrace+0x0/0x16c
+>> [<fffffe0000096550>] show_stack+0x10/0x1c
+>> [<fffffe000067545c>] dump_stack+0x74/0x98
+>> [<fffffe00000b205c>] warn_slowpath_common+0x84/0xac
+>> [<fffffe00000b2148>] warn_slowpath_null+0x14/0x20
+>> [<fffffe00000ed968>] __irq_set_handler+0x134/0x13c
+>> [<fffffe000042af14>] gic_irq_domain_map+0x4c/0xac
+>> [<fffffe000042afd4>] gic_irq_domain_alloc+0x60/0x88
+>> [<fffffe000042b374>] gicv2m_domain_alloc+0x30/0xa8
+>> [<fffffe00000efc1c>] __irq_domain_alloc_irqs+0x144/0x30c
+>> [<fffffe000042b58c>] gicv2m_setup_msi_irq+0xc0/0x118
+>> [<fffffe000044548c>] arch_setup_msi_irq+0x34/0x60
+>> [<fffffe0000445544>] arch_setup_msi_irqs+0x50/0xb0
+>> [<fffffe0000445e3c>] pci_enable_msix+0x310/0x39c
+>> [<fffffe0000445efc>] pci_enable_msix_range+0x34/0x9c
+>> ....
+>>
+>> However, I think if we call irq_domain_set_hwirq_and_chip() in the
+>> msi_create_irq_domain() as suggested by Thomas, that should also fix
+>> this issue.
+> We didn't trigger this warning on x86 because only the outer-most
+> irqdomain will set irq flow handler. On ARM, the inner GIC domain
+> will set irq flow handler, but the irq_data->chip for outer-most
+> domain hasn't been set yet.
+>
+> I'm still find a way out here. Maybe we need to relax the WARN_ON().
 
-Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
----
- arch/x86/pci/mmconfig-shared.c | 100 ++++++++++++++++++++++-------------------
- 1 file changed, 54 insertions(+), 46 deletions(-)
+What if we just switch the order and call the 
+irq_domain_alloc_irqs_parent() after the loop? That way we can still 
+keep the WARN_ON().
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 326198a..ac24e1c 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -692,6 +692,39 @@ static int __init pci_mmcfg_late_insert_resources(void)
-  */
- late_initcall(pci_mmcfg_late_insert_resources);
- 
-+static int __init pci_mmconfig_inject(struct pci_mmcfg_region *cfg)
-+{
-+	struct pci_mmcfg_region *cfg_conflict;
-+	int err = 0;
-+
-+	mutex_lock(&pci_mmcfg_lock);
-+	cfg_conflict = pci_mmconfig_lookup(cfg->segment, cfg->start_bus);
-+	if (cfg_conflict) {
-+		if (cfg_conflict->end_bus < cfg->end_bus)
-+			pr_info(FW_INFO "MMCONFIG for "
-+				"domain %04x [bus %02x-%02x] "
-+				"only partially covers this bridge\n",
-+				cfg_conflict->segment, cfg_conflict->start_bus,
-+				cfg_conflict->end_bus);
-+		err = -EEXIST;
-+		goto out;
-+	}
-+
-+	if (pci_mmcfg_arch_map(cfg)) {
-+		pr_warn("fail to map MMCONFIG %pR.\n", &cfg->res);
-+		err = -ENOMEM;
-+		goto out;
-+	} else {
-+		list_add_sorted(cfg);
-+		pr_info("MMCONFIG at %pR (base %#lx)\n",
-+			&cfg->res, (unsigned long)cfg->address);
-+
-+	}
-+out:
-+	mutex_unlock(&pci_mmcfg_lock);
-+	return err;
-+}
-+
- /* Add MMCFG information for host bridges */
- int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
- 			phys_addr_t addr)
-@@ -703,66 +736,41 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
- 	if (!(pci_probe & PCI_PROBE_MMCONF) || pci_mmcfg_arch_init_failed)
- 		return -ENODEV;
- 
--	if (start > end)
-+	if (start > end || !addr)
- 		return -EINVAL;
- 
--	mutex_lock(&pci_mmcfg_lock);
--	cfg = pci_mmconfig_lookup(seg, start);
--	if (cfg) {
--		if (cfg->end_bus < end)
--			dev_info(dev, FW_INFO
--				 "MMCONFIG for "
--				 "domain %04x [bus %02x-%02x] "
--				 "only partially covers this bridge\n",
--				  cfg->segment, cfg->start_bus, cfg->end_bus);
--		mutex_unlock(&pci_mmcfg_lock);
--		return -EEXIST;
--	}
--
--	if (!addr) {
--		mutex_unlock(&pci_mmcfg_lock);
--		return -EINVAL;
--	}
--
- 	rc = -EBUSY;
- 	cfg = pci_mmconfig_alloc(seg, start, end, addr);
- 	if (cfg == NULL) {
- 		dev_warn(dev, "fail to add MMCONFIG (out of memory)\n");
--		rc = -ENOMEM;
-+		return -ENOMEM;
- 	} else if (!pci_mmcfg_check_reserved(dev, cfg, 0)) {
- 		dev_warn(dev, FW_BUG "MMCONFIG %pR isn't reserved\n",
- 			 &cfg->res);
--	} else {
--		/* Insert resource if it's not in boot stage */
--		if (pci_mmcfg_running_state)
--			tmp = insert_resource_conflict(&iomem_resource,
--						       &cfg->res);
--
--		if (tmp) {
--			dev_warn(dev,
--				 "MMCONFIG %pR conflicts with "
--				 "%s %pR\n",
--				 &cfg->res, tmp->name, tmp);
--		} else if (pci_mmcfg_arch_map(cfg)) {
--			dev_warn(dev, "fail to map MMCONFIG %pR.\n",
--				 &cfg->res);
--		} else {
--			list_add_sorted(cfg);
--			dev_info(dev, "MMCONFIG at %pR (base %#lx)\n",
--				 &cfg->res, (unsigned long)addr);
--			cfg = NULL;
--			rc = 0;
--		}
-+		goto error;
- 	}
- 
--	if (cfg) {
--		if (cfg->res.parent)
--			release_resource(&cfg->res);
--		kfree(cfg);
-+	/* Insert resource if it's not in boot stage */
-+	if (pci_mmcfg_running_state)
-+		tmp = insert_resource_conflict(&iomem_resource, &cfg->res);
-+
-+	if (tmp) {
-+		dev_warn(dev,
-+			 "MMCONFIG %pR conflicts with %s %pR\n",
-+			 &cfg->res, tmp->name, tmp);
-+		goto error;
- 	}
- 
--	mutex_unlock(&pci_mmcfg_lock);
-+	rc = pci_mmconfig_inject(cfg);
-+	if (rc)
-+		goto error;
-+
-+	return 0;
- 
-+error:
-+	if (cfg->res.parent)
-+		release_resource(&cfg->res);
-+	kfree(cfg);
- 	return rc;
- }
- 
--- 
-1.9.1
-
+Suravee
