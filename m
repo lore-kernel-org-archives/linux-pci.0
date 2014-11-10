@@ -1,86 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:50789 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754893AbaKUIqs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 03:46:48 -0500
-Message-ID: <1416559571.2423.1.camel@pengutronix.de>
-Subject: Re: Removal of bus->msi assignment breaks MSI with stacked domains
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, linux-pci@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@kernel.org>,
-	Arjan van de Ven <arjan@infradead.org>,
-	David Woodhouse <dwmw2@infradead.org>
-Date: Fri, 21 Nov 2014 09:46:11 +0100
-In-Reply-To: <546E9DF0.5010002@huawei.com>
-References: <546E1771.4030201@arm.com> <546E93DC.8010902@huawei.com>
-	 <alpine.DEB.2.11.1411210233250.6439@nanos> <546E9DF0.5010002@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from numascale.com ([213.162.240.84]:34749 "EHLO numascale.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751801AbaKJJDa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 10 Nov 2014 04:03:30 -0500
+Message-ID: <54607F54.2050707@numascale.com>
+Date: Mon, 10 Nov 2014 17:03:16 +0800
+From: Daniel J Blueman <daniel@numascale.com>
+MIME-Version: 1.0
+To: Borislav Petkov <bp@alien8.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>
+CC: Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Steffen Persvold <sp@numascale.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] x86: Drop redundant memory-block sizing code
+References: <ojh5M-xh-17@gated-at.bofh.it> <1415249414-20888-1-git-send-email-daniel@numascale.com> <20141106094007.GA4849@pd.tnic> <545B4E84.7050707@numascale.com> <20141106104034.GB4849@pd.tnic> <545B5735.8000401@numascale.com> <20141106115636.GA4318@pd.tnic>
+In-Reply-To: <20141106115636.GA4318@pd.tnic>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Freitag, den 21.11.2014, 10:05 +0800 schrieb Yijing Wang:
-> On 2014/11/21 9:46, Thomas Gleixner wrote:
-> > On Fri, 21 Nov 2014, Yijing Wang wrote:
-> >> On 2014/11/21 0:31, Marc Zyngier wrote:
-> >>> Bjorn, Yijing,
-> >>>
-> >>> I've just realized that patch c167caf8d174 (PCI/MSI: Remove useless
-> >>> bus->msi assignment) completely breaks MSI on arm64 when using the new
-> >>> MSI stacked domain:
-> >>
-> >> Sorry, this is my first part to refactor MSI related code, now how
-> >> to get pci msi_controller depends arch
-> >> functions(pcibios_msi_controller() or arch_setup_msi_irq()), we are
-> >> working on generic pci_host_bridge, after that, we could eventually
-> >> eliminate MSI arch functions and find pci dev 's msi controller by
-> >> pci_host_bridge->get_msi_controller().
-> > 
-> > The main question is why you think that pci_host_bridge is the proper
-> > place to store that information.
-> > 
-> > On x86 we have DMAR units associated to a single device. Each DMAR
-> > unit is a seperate MSI irq domain. 
-> > 
-> > Can you guarantee that the pci_host_bridge is the right point to
-> > provide the association of the device to the irq domain?
-> > 
-> > So the real question is:
-> > 
-> >    What is the association level requirement to properly identify the
-> >    irqdomain for a specific device on any given architecture with and
-> >    without IOMMU, interrupt redirection etc.
-> > 
-> > To be honest: I don't know.
-> > 
-> > My gut feeling tells me that it's at the device level, but I really
-> > leave that decision to the experts in that field.
-> 
-> I choose the pci_host_bridge to place the .get_msi_ctrl() ops, because
-> I think how to associate pci_dev and msi_controller is platform specific,
-> and we could initialize pci_host_bridge in platform pci host drivers to
-> avoid call platform specific functions when we scan or setup a pci device.
-> 
-I'm in favor of having the irqdomain attached to struct device even.
-Please keep in mind that going forward PCI will not be the only bus
-using MSI. Also having it attached to the device allows you to find the
-the domain by just walking up the chain of parent devices until you find
-one with an attached domain. A host bridge isn't different in that
-regard from any other device. This should work for all platforms AFAICS.
+On 11/06/2014 07:56 PM, Borislav Petkov wrote:
+> On Thu, Nov 06, 2014 at 07:10:45PM +0800, Daniel J Blueman wrote:
+>> "As the first check for 64GB or larger memory returns a 2GB memory
+>> block size in that case, the following check for less than 64GB will
+>> always
+>
+> Right, but why isn't there a simple else? Instead, the >64GB case is
+> looking at totalram_pages but the so-called else case is looking at
+> max_pfn. Why, what's the difference?
+>
+> My purely hypothetical suspicion is this thing used to handle some
+> special case with memory holes where totalram_pages was still < 64GB but
+> max_pfn was above. I'm looking at this memory block size approximation
+> downwards which supposedly used to do something at some point, right?
+>
+> Now, when you remove this, it doesn't do so anymore, potentially
+> breaking some machines.
+>
+> Or is this simply unfortunate coding and totalram_pages and max_pfn are
+> equivalent?
+>
+> Questions over questions... Maybe it is time for some git log
+> archeology...
 
-Regards,
-Lucas
+Yes, totalram_pages doesn't count the MMIO hole, whereas max_pfn does.
 
+I've made NumaConnect firmware changes that will guarantee max_pfn is 
+always aligned to at least 2GB, so 
+bdee237c0343a5d1a6cf72c7ea68e88338b26e08 "x86: mm: Use 2GB memory block 
+size on large-memory x86-64 systems" can be dropped and Yinghai's 
+approach will give 2GB memory blocks on our systems.
+
+Thanks,
+   Daniel
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
-
+Daniel J Blueman
+Principal Software Engineer, Numascale
