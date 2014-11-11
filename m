@@ -1,135 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:38663 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750828AbaKYKDb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Nov 2014 05:03:31 -0500
-Date: Tue, 25 Nov 2014 10:03:26 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Martin Wilck <martin.wilck@ts.fujitsu.com>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [RFC PATCH v3 1/2] drivers: pci: fix pci_mmap_fits()
- implementation for procfs mmap
-Message-ID: <20141125100326.GB1849@red-moon>
-References: <1415877558-8906-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1415877558-8906-2-git-send-email-lorenzo.pieralisi@arm.com>
- <20141121175114.GC6578@google.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:47158 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751221AbaKKBtu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Nov 2014 20:49:50 -0500
+Message-ID: <54616B26.5000902@huawei.com>
+Date: Tue, 11 Nov 2014 09:49:26 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141121175114.GC6578@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: <linux-pci@vger.kernel.org>,
+	David Vrabel <david.vrabel@citrix.com>,
+	<xen-devel@lists.xenproject.org>
+Subject: Re: [PATCH 1/3] x86/xen: Introduce a global flag to fix the MSI mask
+ bug
+References: <1414377878-23497-1-git-send-email-wangyijing@huawei.com> <1414377878-23497-2-git-send-email-wangyijing@huawei.com> <20141111000456.GB21470@google.com>
+In-Reply-To: <20141111000456.GB21470@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 21, 2014 at 05:51:14PM +0000, Bjorn Helgaas wrote:
-> On Thu, Nov 13, 2014 at 11:19:15AM +0000, Lorenzo Pieralisi wrote:
-> > The introduction of pci_mmap_fits() in commit:
-> > 
-> > b5ff7df3df9efab511244d5a299fce706c71af48
-> > "Check mapped ranges on sysfs resource files"
-> > 
-> > allowed to check for valid range mappings of PCI resources to user space
-> > when mapping PCI resources through the sysfs filesystem.
-> > 
-> > The mapping of resources through the sysfs expects the offset passed
-> > by the user through the mmap syscall to be 0, and the pgoff is adjusted
-> > by the kernel to memory map the resource to the CPU physical address
-> > corresponding to the PCI resource in question.
-> > 
-> > The usage of procfs mapping of PCI resources (/proc/bus/pci files)
-> > is more controversial in that userspace programs mapping PCI resources
-> > are expected to pass in the mmap offset field either a CPU physical address
-> > or a PCI bar value, depending on the architecture.
-> > 
-> > By the time pci_mmap_fits() was used to check PCI resource ranges for
-> > procfs PCI resources mapping in commit:
-> > 
-> > 9eff02e2042f96fb2aedd02e032eca1c5333d7
-> > "PCI: check mmap range of /proc/bus/pci files too"
-> > 
-> > the procfs interface for mmapping resources to user space broke, since
-> > pci_mmap_fits() expected the offset passed from user space in the mmap
-> > call to be 0, not the CPU physical address or PCI BAR value of the
-> > resource in question.
-> > 
-> > Subsequent attempts at fixing the pci_mmap_fits() implementation failed
-> > to fix the issue (or fixed the issue in some architectures but not for
-> > all of them, ARM and SPARC procfs interface PCI resources mapping stayed
-> > broken throughout) in particular commits:
-> > 
-> > 8c05cd08a7504b855c265263e84af61aabafa329
-> > "PCI: fix offset check for sysfs mmapped files"
-> > 
-> > and
-> > 
-> > 3b519e4ea618b6943a82931630872907f9ac2c2b
-> > "PCI: fix size checks for mmap() on /proc/bus/pci files"
-> > 
-> > fixed procfs PCI resources mapping checks in pci_mmap_fits for some
-> > architectures, but not for architectures like SPARC that expects
-> > the offset value passed from user space through the mmap syscall
-> > (when mapping through procfs) to represent the PCI BAR value of the
-> > resource to be mapped.
-> > 
-> > The reason behind the breakage is the following. The addresses stored
-> > in PCI device resources for memory spaces correspond to CPU physical
-> > addresses, which do not necessarily map 1:1 to PCI bus addresses as
-> > programmed in PCI devices configuration spaces.
-> > 
-> > This implies that the sanity checks carried out in pci_mmap_fits() to
-> > ensure that the user executes an mmap of a "real" pci resource are
-> > erroneous when executed through procfs. Some platforms (ie SPARC)
-> > expect the offset value to be passed in (procfs mapping) to be the
-> > PCI BAR configuration value as read from the PCI device configuration
-> > space, not the fixed-up CPU physical address that is present in PCI
-> > device resources.
-> > 
-> > The required pgoff (offset in mmap syscall) value passed from userspace
-> > is supposed to represent the resource value exported through
-> > /proc/bus/pci/devices when the resource is mmapped though procfs (and 0
-> > when the mapping is carried out through sysfs resource files), which
-> > corresponds to the PCI resource filtered through the pci_resource_to_user()
-> > API.
-> > 
-> > This patch converts the PCI resource to the expected "user visible"
-> > value through pci_resource_to_user() before carrying out sanity checks
-> > in pci_mmap_fits() so that the check is carried out on the resource
-> > values as expected from the userspace mmap API.
-> > 
-> > Cc: Arnd Bergmann <arnd@arndb.de>
-> > Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> > Cc: Russell King <linux@arm.linux.org.uk>
-> > Cc: David S. Miller <davem@davemloft.net>
-> > Cc: Michal Simek <monstr@monstr.eu>
-> > Cc: Martin Wilck <martin.wilck@ts.fujitsu.com>
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+On 2014/11/11 8:04, Bjorn Helgaas wrote:
+> On Mon, Oct 27, 2014 at 10:44:36AM +0800, Yijing Wang wrote:
+>> Commit 0e4ccb1505a9 ("PCI: Add x86_msi.msi_mask_irq() and msix_mask_irq()")
+>> fixed MSI mask bug which may cause kernel crash. But the commit
+>> made MSI code complex. Introduce a new global flag "pci_msi_ignore_mask"
+>> to ignore MSI/MSI-X to fix this issue, it's a cleaner solution.
+>> And the commit 0e4ccb1505a9 will be reverted in the later patch.
 > 
-> Hi Lorenzo,
+> The 0e4ccb1505a9 changelog says Xen guests can't write to MSI-X BARs.
+> But it makes mask_irq a no-op for both MSI-X and MSI.  The MSI mask bit is
+> in config space, not in memory space.  So why does mask_irq need to be a
+> no-op for MSI as well?  Are Xen guests prohibited from writing to config
+> space, too?  (It's fine if they are; it's just that the changelog
+> specifically mentioned MSI-X memory space tables, and it didn't mention
+> config space at all.)
 > 
-> I think this patch is the right thing to do.  I'm going to try to write
-> patches for microblaze, mips, powerpc, and sparc that implement their
-> pci_resource_to_user() in terms of pcibios_resource_to_bus() (the patches
-> are easy; it's the arguments for correctness that take time).  Then I'll
-> try to convince myself that those arches are currently broken and will be
-> fixed by your patch below.
+> And I *assume* there's some Xen mechanism that accomplishes the mask_irq in
+> a different way, since the actual mask_irq interface does nothing?  (This
+> is really a question for 0e4ccb1505a9, since I don't think this particular
+> patch changes anything in that respect.)
 
-I think that in doing that you might end up breaking at least powerpc
-and microblaze proc and sys interfaces, but I agree with the process.
+Yes, it's another history problem, maybe Konrad know the detail.
 
-> But I'll be on vacation all next week, so this will take me some time and
-> it may not make the next merge window.
+> 
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> CC: David Vrabel <david.vrabel@citrix.com>
+>> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+>> CC: xen-devel@lists.xenproject.org
+>> ---
+>>  arch/x86/pci/xen.c  |    2 ++
+>>  drivers/pci/msi.c   |    7 ++++++-
+>>  include/linux/msi.h |    1 +
+>>  3 files changed, 9 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+>> index 093f5f4..5ef62ed 100644
+>> --- a/arch/x86/pci/xen.c
+>> +++ b/arch/x86/pci/xen.c
+>> @@ -427,6 +427,7 @@ int __init pci_xen_init(void)
+>>  	x86_msi.teardown_msi_irqs = xen_teardown_msi_irqs;
+>>  	x86_msi.msi_mask_irq = xen_nop_msi_mask_irq;
+>>  	x86_msi.msix_mask_irq = xen_nop_msix_mask_irq;
+>> +	pci_msi_ignore_mask = 1;
+>>  #endif
+>>  	return 0;
+>>  }
+>> @@ -508,6 +509,7 @@ int __init pci_xen_initial_domain(void)
+>>  	x86_msi.restore_msi_irqs = xen_initdom_restore_msi_irqs;
+>>  	x86_msi.msi_mask_irq = xen_nop_msi_mask_irq;
+>>  	x86_msi.msix_mask_irq = xen_nop_msix_mask_irq;
+>> +	pci_msi_ignore_mask = 1;
+>>  #endif
+>>  	xen_setup_acpi_sci();
+>>  	__acpi_register_gsi = acpi_register_gsi_xen;
+>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>> index 38511d9..ecb5f54 100644
+>> --- a/drivers/pci/msi.c
+>> +++ b/drivers/pci/msi.c
+>> @@ -23,6 +23,7 @@
+>>  #include "pci.h"
+>>  
+>>  static int pci_msi_enable = 1;
+>> +int pci_msi_ignore_mask;
+>>  
+>>  #define msix_table_size(flags)	((flags & PCI_MSIX_FLAGS_QSIZE) + 1)
+>>  
+>> @@ -166,7 +167,7 @@ u32 default_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+>>  {
+>>  	u32 mask_bits = desc->masked;
+>>  
+>> -	if (!desc->msi_attrib.maskbit)
+>> +	if (pci_msi_ignore_mask || !desc->msi_attrib.maskbit)
+>>  		return 0;
+>>  
+>>  	mask_bits &= ~mask;
+>> @@ -198,6 +199,10 @@ u32 default_msix_mask_irq(struct msi_desc *desc, u32 flag)
+>>  	u32 mask_bits = desc->masked;
+>>  	unsigned offset = desc->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE +
+>>  						PCI_MSIX_ENTRY_VECTOR_CTRL;
+>> +
+>> +	if (pci_msi_ignore_mask)
+>> +		return 0;
+>> +
+>>  	mask_bits &= ~PCI_MSIX_ENTRY_CTRL_MASKBIT;
+>>  	if (flag)
+>>  		mask_bits |= PCI_MSIX_ENTRY_CTRL_MASKBIT;
+>> diff --git a/include/linux/msi.h b/include/linux/msi.h
+>> index 44f4746..86dc501 100644
+>> --- a/include/linux/msi.h
+>> +++ b/include/linux/msi.h
+>> @@ -10,6 +10,7 @@ struct msi_msg {
+>>  	u32	data;		/* 16 bits of msi message data */
+>>  };
+>>  
+>> +extern int pci_msi_ignore_mask;
+>>  /* Helper functions */
+>>  struct irq_data;
+>>  struct msi_desc;
+>> -- 
+>> 1.7.1
+>>
+> 
+> .
+> 
 
-I understand that, it holds back patch 2, but it is fine since it can
-get in as a fix even if it misses the merge window, as long as you
-agree with the overall approach.
 
-Thank you,
-Lorenzo
+-- 
+Thanks!
+Yijing
+
