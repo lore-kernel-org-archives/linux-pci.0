@@ -1,105 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f50.google.com ([209.85.215.50]:41828 "EHLO
-	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752883AbaKLQ3u (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 11:29:50 -0500
-Received: by mail-la0-f50.google.com with SMTP id hs14so5336679lab.23
-        for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2014 08:29:48 -0800 (PST)
+Received: from mail-ig0-f169.google.com ([209.85.213.169]:45354 "EHLO
+	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750993AbaKKBCg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Nov 2014 20:02:36 -0500
+Received: by mail-ig0-f169.google.com with SMTP id hn18so276618igb.0
+        for <linux-pci@vger.kernel.org>; Mon, 10 Nov 2014 17:02:36 -0800 (PST)
+Date: Mon, 10 Nov 2014 18:02:31 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Myron Stowe <myron.stowe@redhat.com>
+Cc: linux-pci@vger.kernel.org, willy@linux.intel.com,
+	unruh@physics.ubc.ca, linux-kernel@vger.kernel.org,
+	martin@lucina.net
+Subject: Re: [PATCH 1/3] PCI: Restore detection of read-only BARs
+Message-ID: <20141111010231.GC21470@google.com>
+References: <20141030175430.22238.47671.stgit@amt.stowe>
+ <20141030175437.22238.47243.stgit@amt.stowe>
 MIME-Version: 1.0
-In-Reply-To: <002901cffe28$544504b0$fccf0e10$%han@samsung.com>
-References: <002901cffe28$544504b0$fccf0e10$%han@samsung.com>
-Date: Wed, 12 Nov 2014 21:59:48 +0530
-Message-ID: <CA+mB=1KiOEXn2Zg1GPPHUV4ybXYYQfHNgCkTJSthvbR0jMyYOw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: exynos: Remove unnecessary return statement
-From: Srikanth Thokala <sriku.linux@gmail.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141030175437.22238.47243.stgit@amt.stowe>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 12, 2014 at 8:55 AM, Jingoo Han <jg1.han@samsung.com> wrote:
-> This patch fixes the following checkpatch warning.
->
->   WARNING: void function return statements are not generally useful
->
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+On Thu, Oct 30, 2014 at 11:54:37AM -0600, Myron Stowe wrote:
+> Commit 6ac665c63dca ("PCI: rewrite PCI BAR reading code") altered
+> __pci_read_base's local variable 'l', masking off its lower non-addressing
+> related bits, prior to it being passed in as the 'base' parameter to
+> pci_size().  This masking broke pci_size's r/o BAR detection logic's
+> comparison check for r/o BARs that have lower order bits set.  For such
+> occurrences, the 'base == maxbase' check will no longer ever be "true".
+> 
+> This patch resolves this issue by also masking off the non-addressing
+> related bits of 'sz' before passing it into pci_size() as the 'maxbase'
+> parameter.  With this change the r/o detection logic of pci_size() will
+> once again catch known occurrences that have been encountered to date:
+>   - AGP aperture BAR of AMD-7xx host bridges; if the AGP window
+>     disabled, this BAR is read-only and read as 0x00000008 [1]
+>   - BAR0-4 of ALi IDE controllers can be non-zero and read-only [1]
+>   - Intel Sandy Bridge - Thermal Management Controller [8086:0103];
+>     BAR 0 returning 0xfed98004 [2]
+>   - Intel Xeon E5 v3/Core i7 Power Control Unit [8086:2fc0];
+>     Bar 0 returning 0x00001a [3]
+> 
+> 
+> [1] From Thomas Gleixner's "Linux kernel history" repository:
+>     https://git.kernel.org/cgit/linux/kernel/git/tglx/history.git/commit/drivers/pci/probe.c?id=1307ef6621991f1c4bc3cec1b5a4ebd6fd3d66b9
+>     pre-git commit 1307ef662199  "PCI: probing read-only Bars"
+> [2] https://bugzilla.kernel.org/show_bug.cgi?id=43331
+> [3] https://bugzilla.kernel.org/show_bug.cgi?id=85991
+
+I like this patch and I think it's correct.
+
+The only thing that bothers me is that Martin reported that lspci showed
+"Memory at <ignored>" for this BAR:
+https://bugzilla.kernel.org/show_bug.cgi?id=43331#c36 .
+
+I guess this is because lspci reads the BAR values from
+/sys/bus/pci/devices/.../config, which uses pci_read_config(), which
+actually reads config space again, so it sees whatever is actually in the
+BAR, not the cleared out resource in the pci_dev. Oh well, I guess that's
+OK.
+
+> Reported-by: William Unruh <unruh@physics.ubc.ca>
+> Reported-by: Martin Lucina <martin@lucina.net>
+> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> Cc: Matthew Wilcox <willy@linux.intel.com>
 > ---
->  drivers/pci/host/pci-exynos.c |    8 --------
->  1 file changed, 8 deletions(-)
->
-
-Acked-by: Srikanth Thokala <sriku.linux@gmail.com>
-
-- Srikanth
-
-> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-> index c5d0ca3..41ab139 100644
-> --- a/drivers/pci/host/pci-exynos.c
-> +++ b/drivers/pci/host/pci-exynos.c
-> @@ -312,7 +312,6 @@ static void exynos_pcie_assert_reset(struct pcie_port *pp)
->         if (exynos_pcie->reset_gpio >= 0)
->                 devm_gpio_request_one(pp->dev, exynos_pcie->reset_gpio,
->                                 GPIOF_OUT_INIT_HIGH, "RESET");
-> -       return;
->  }
->
->  static int exynos_pcie_establish_link(struct pcie_port *pp)
-> @@ -388,7 +387,6 @@ static void exynos_pcie_clear_irq_pulse(struct pcie_port *pp)
->
->         val = exynos_elb_readl(exynos_pcie, PCIE_IRQ_PULSE);
->         exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_PULSE);
-> -       return;
->  }
->
->  static void exynos_pcie_enable_irq_pulse(struct pcie_port *pp)
-> @@ -400,7 +398,6 @@ static void exynos_pcie_enable_irq_pulse(struct pcie_port *pp)
->         val = IRQ_INTA_ASSERT | IRQ_INTB_ASSERT |
->                 IRQ_INTC_ASSERT | IRQ_INTD_ASSERT,
->         exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_EN_PULSE);
-> -       return;
->  }
->
->  static irqreturn_t exynos_pcie_irq_handler(int irq, void *arg)
-> @@ -429,7 +426,6 @@ static void exynos_pcie_msi_init(struct pcie_port *pp)
->         val = exynos_elb_readl(exynos_pcie, PCIE_IRQ_EN_LEVEL);
->         val |= IRQ_MSI_ENABLE;
->         exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_EN_LEVEL);
-> -       return;
->  }
->
->  static void exynos_pcie_enable_interrupts(struct pcie_port *pp)
-> @@ -438,8 +434,6 @@ static void exynos_pcie_enable_interrupts(struct pcie_port *pp)
->
->         if (IS_ENABLED(CONFIG_PCI_MSI))
->                 exynos_pcie_msi_init(pp);
-> -
-> -       return;
->  }
->
->  static inline void exynos_pcie_readl_rc(struct pcie_port *pp,
-> @@ -448,7 +442,6 @@ static inline void exynos_pcie_readl_rc(struct pcie_port *pp,
->         exynos_pcie_sideband_dbi_r_mode(pp, true);
->         *val = readl(dbi_base);
->         exynos_pcie_sideband_dbi_r_mode(pp, false);
-> -       return;
->  }
->
->  static inline void exynos_pcie_writel_rc(struct pcie_port *pp,
-> @@ -457,7 +450,6 @@ static inline void exynos_pcie_writel_rc(struct pcie_port *pp,
->         exynos_pcie_sideband_dbi_w_mode(pp, true);
->         writel(val, dbi_base);
->         exynos_pcie_sideband_dbi_w_mode(pp, false);
-> -       return;
->  }
->
->  static int exynos_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
-> --
-> 1.7.9.5
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  drivers/pci/probe.c |    3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 5ed9930..19dc247 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -216,14 +216,17 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+>  		res->flags |= IORESOURCE_SIZEALIGN;
+>  		if (res->flags & IORESOURCE_IO) {
+>  			l &= PCI_BASE_ADDRESS_IO_MASK;
+> +			sz &= PCI_BASE_ADDRESS_IO_MASK;
+>  			mask = PCI_BASE_ADDRESS_IO_MASK & (u32) IO_SPACE_LIMIT;
+>  		} else {
+>  			l &= PCI_BASE_ADDRESS_MEM_MASK;
+> +			sz &= PCI_BASE_ADDRESS_MEM_MASK;
+>  			mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
+>  		}
+>  	} else {
+>  		res->flags |= (l & IORESOURCE_ROM_ENABLE);
+>  		l &= PCI_ROM_ADDRESS_MASK;
+> +		sz &= PCI_ROM_ADDRESS_MASK;
+>  		mask = (u32)PCI_ROM_ADDRESS_MASK;
+>  	}
+>  
+> 
