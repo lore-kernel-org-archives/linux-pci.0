@@ -1,122 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:63658 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750996AbaKYFvq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 25 Nov 2014 00:51:46 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v6 05/27] x86, uv: Use new irqdomain interfaces to allocate/free IRQ
-Date: Tue, 25 Nov 2014 13:53:14 +0800
-Message-Id: <1416894816-23245-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:50404 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751644AbaKKUYf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 15:24:35 -0500
+Received: by mail-ie0-f169.google.com with SMTP id tr6so12340762ieb.28
+        for <linux-pci@vger.kernel.org>; Tue, 11 Nov 2014 12:24:35 -0800 (PST)
+Date: Tue, 11 Nov 2014 13:24:30 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	David Vrabel <david.vrabel@citrix.com>,
+	xen-devel@lists.xenproject.org
+Subject: Re: [PATCH 1/3] x86/xen: Introduce a global flag to fix the MSI mask
+ bug
+Message-ID: <20141111202430.GH28161@google.com>
+References: <1414377878-23497-1-git-send-email-wangyijing@huawei.com>
+ <1414377878-23497-2-git-send-email-wangyijing@huawei.com>
+ <20141111000456.GB21470@google.com>
+ <20141111154538.GC6597@laptop.dumpdata.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141111154538.GC6597@laptop.dumpdata.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new irqdomain interfaces to allocate/free IRQ, so we could
-kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
+On Tue, Nov 11, 2014 at 10:45:38AM -0500, Konrad Rzeszutek Wilk wrote:
+> On Mon, Nov 10, 2014 at 05:04:56PM -0700, Bjorn Helgaas wrote:
+> > On Mon, Oct 27, 2014 at 10:44:36AM +0800, Yijing Wang wrote:
+> > > Commit 0e4ccb1505a9 ("PCI: Add x86_msi.msi_mask_irq() and msix_mask_irq()")
+> > > fixed MSI mask bug which may cause kernel crash. But the commit
+> > > made MSI code complex. Introduce a new global flag "pci_msi_ignore_mask"
+> > > to ignore MSI/MSI-X to fix this issue, it's a cleaner solution.
+> > > And the commit 0e4ccb1505a9 will be reverted in the later patch.
+> > 
+> > The 0e4ccb1505a9 changelog says Xen guests can't write to MSI-X BARs.
+> > But it makes mask_irq a no-op for both MSI-X and MSI.  The MSI mask bit is
+> > in config space, not in memory space.  So why does mask_irq need to be a
+> > no-op for MSI as well?  Are Xen guests prohibited from writing to config
+> 
+> The PV guests it refers do not do write to config space. They have
+> an PCI frontend and backend driver which communicates to the backend (the
+> trusted domain) to setup the MSI and MSI-X. The 'pci_xen_init' (arch/x86/pci/xen.c)
+> is the one that sets up the overrides. When an MSI or MSI-X is requested
+> it is done via the request_irq which ends up calling 'xen_setup_msi_irqs'.
+> If you look there you can see:
+> 
+> 173         if (type == PCI_CAP_ID_MSIX)
+> 174                 ret = xen_pci_frontend_enable_msix(dev, v, nvec);
+> 175         else
+> 176                 ret = xen_pci_frontend_enable_msi(dev, v);
+> 177         if (ret)
+> 178                 goto error;
+> 
+> Which are the calls to the Xen PCI driver to communicate with the
+> backend to setup the MSI.
+> 
+> > space, too?  (It's fine if they are; it's just that the changelog
+> > specifically mentioned MSI-X memory space tables, and it didn't mention
+> > config space at all.)
+> 
+> Correct. The config space is accessible to the guest but if it writes
+> to it - all of those values are ignored by the hypervisor - and that
+> is because the backend is suppose to communicate to the hypervisor
+> whether the guest can indeed setup MSI or MSI-X.
+> 
+> > 
+> > And I *assume* there's some Xen mechanism that accomplishes the mask_irq in
+> > a different way, since the actual mask_irq interface does nothing?  (This
+> > is really a question for 0e4ccb1505a9, since I don't think this particular
+> > patch changes anything in that respect.)
+> 
+> Correct. 'request_irq' ends up doing that. Or rather it ends up
+> calling xen_setup_msi_irqs which takes care of that.
+> 
+> The Xen PV guests (not to be confused with Xen HVM guests) run without
+> any emulated devices. That means most of the x86 platform things - ioports,
+> VGA, etc - are removed. Instead that functionality is provided via 
+> frontend drivers that communicate to the backend via a ring.
+> 
+> Hopefully this clarifies it?
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/platform/uv/uv_irq.c |   27 +++++++++++----------------
- 1 file changed, 11 insertions(+), 16 deletions(-)
+I think so.  I propose the following changelog.  Let me know if it's still
+inaccurate:
 
-diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
-index 0ce673645432..474912d03f40 100644
---- a/arch/x86/platform/uv/uv_irq.c
-+++ b/arch/x86/platform/uv/uv_irq.c
-@@ -12,6 +12,7 @@
- #include <linux/rbtree.h>
- #include <linux/slab.h>
- #include <linux/irq.h>
-+#include <linux/irqdomain.h>
- 
- #include <asm/apic.h>
- #include <asm/uv/uv_irq.h>
-@@ -130,24 +131,14 @@ static int
- arch_enable_uv_irq(char *irq_name, unsigned int irq, int cpu, int mmr_blade,
- 		       unsigned long mmr_offset, int limit)
- {
--	const struct cpumask *eligible_cpu = cpumask_of(cpu);
- 	struct irq_cfg *cfg = irq_cfg(irq);
- 	unsigned long mmr_value;
- 	struct uv_IO_APIC_route_entry *entry;
--	int mmr_pnode, err;
--	unsigned int dest;
-+	int mmr_pnode;
- 
- 	BUILD_BUG_ON(sizeof(struct uv_IO_APIC_route_entry) !=
- 			sizeof(unsigned long));
- 
--	err = assign_irq_vector(irq, cfg, eligible_cpu);
--	if (err != 0)
--		return err;
--
--	err = apic->cpu_mask_to_apicid_and(eligible_cpu, eligible_cpu, &dest);
--	if (err != 0)
--		return err;
--
- 	if (limit == UV_AFFINITY_CPU)
- 		irq_set_status_flags(irq, IRQ_NO_BALANCING);
- 	else
-@@ -164,7 +155,7 @@ arch_enable_uv_irq(char *irq_name, unsigned int irq, int cpu, int mmr_blade,
- 	entry->polarity		= 0;
- 	entry->trigger		= 0;
- 	entry->mask		= 0;
--	entry->dest		= dest;
-+	entry->dest		= cfg->dest_apicid;
- 
- 	mmr_pnode = uv_blade_to_pnode(mmr_blade);
- 	uv_write_global_mmr64(mmr_pnode, mmr_offset, mmr_value);
-@@ -238,9 +229,13 @@ uv_set_irq_affinity(struct irq_data *data, const struct cpumask *mask,
- int uv_setup_irq(char *irq_name, int cpu, int mmr_blade,
- 		 unsigned long mmr_offset, int limit)
- {
--	int ret, irq = irq_alloc_hwirq(uv_blade_to_memory_nid(mmr_blade));
-+	int ret, irq;
-+	struct irq_alloc_info info;
- 
--	if (!irq)
-+	init_irq_alloc_info(&info, cpumask_of(cpu));
-+	irq = irq_domain_alloc_irqs(NULL, 1, uv_blade_to_memory_nid(mmr_blade),
-+				    &info);
-+	if (irq <= 0)
- 		return -EBUSY;
- 
- 	ret = arch_enable_uv_irq(irq_name, irq, cpu, mmr_blade, mmr_offset,
-@@ -248,7 +243,7 @@ int uv_setup_irq(char *irq_name, int cpu, int mmr_blade,
- 	if (ret == irq)
- 		uv_set_irq_2_mmr_info(irq, mmr_offset, mmr_blade);
- 	else
--		irq_free_hwirq(irq);
-+		irq_domain_free_irqs(irq, 1);
- 
- 	return ret;
- }
-@@ -283,6 +278,6 @@ void uv_teardown_irq(unsigned int irq)
- 			n = n->rb_right;
- 	}
- 	spin_unlock_irqrestore(&uv_irq_lock, irqflags);
--	irq_free_hwirq(irq);
-+	irq_domain_free_irqs(irq, 1);
- }
- EXPORT_SYMBOL_GPL(uv_teardown_irq);
--- 
-1.7.10.4
+  PCI/MSI: Add pci_msi_ignore_mask to prevent MSI/MSI-X BAR writes
 
+  MSI-X vector Mask Bits are in MSI-X Tables in PCI memory space.  Xen guests
+  can't write to those tables.  MSI vector Mask Bits are in PCI configuration
+  space.  Xen guests can write to config space, but those writes are ignored.
+
+  Commit 0e4ccb1505a9 ("PCI: Add x86_msi.msi_mask_irq() and
+  msix_mask_irq()") added a way to override default_mask_msi_irqs() and
+  default_mask_msix_irqs() so they can be no-ops in Xen guests, but this is
+  more complicated than necessary.
+
+  Add "pci_msi_ignore_mask" in the core PCI MSI code.  If set,
+  default_mask_msi_irqs() and default_mask_msix_irqs() return without doing
+  anything.  This is less flexible, but much simpler.
+
+I guess you mentioned PV and HVM guests, and it sounds like all this only
+applies to HVM guests.
+
+Bjorn
