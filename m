@@ -1,168 +1,123 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [Patch Part2 v4 00/31] Enable hierarchy irqdomian on x86 platforms
-Date: Tue,  4 Nov 2014 20:01:34 +0800
-Message-Id: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:56011 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751316AbaKKEX3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Nov 2014 23:23:29 -0500
+Received: by mail-ie0-f179.google.com with SMTP id rl12so10403326iec.24
+        for <linux-pci@vger.kernel.org>; Mon, 10 Nov 2014 20:23:28 -0800 (PST)
+Date: Mon, 10 Nov 2014 21:23:24 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Apply _HPX link control for all supported pcie
+ device
+Message-ID: <20141111042324.GF28161@google.com>
+References: <1415325580-5974-1-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1415325580-5974-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We plan to restructure x86 interrupt code based on hierarchy irqdomain,
-that is to build irqdomains for CPU vector, interrupt remapping unit,
-IOAPIC, MSI and HPET etc and organize those irqdomains in hierarchy mode.
-Each irqdomain manages corresponding interrupt controller and talks to
-parent interrupt controller through public irqdomain interfaces. We also
-support stacked irq_chip based on hierarchy irqdomain. It will make the
-x86 interrupt architecture much more clear and more easy to maintain
-with hierarchy irqdomain and stacked irq_chip. It may also help ARM
-interrupt management architecture too.
+On Thu, Nov 06, 2014 at 05:59:40PM -0800, Yinghai Lu wrote:
+> With commit 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
+> and following commits, we apply _HPX for pci devices.
+> 
+> that is called via pci_scan_slot
+> 			==>pci_scan_single_device
+> 				==>pci_device_add
+> 					==>pci_configure_device
+> 						==>program_hpp_type2
+> and dev->subordinate is not allocated yet.
+> 
+> So that link control setup get skipped.
+> 
+> Acoording to ACPI spec, there is no requirement that need to be set to pcie
+> root port or downstream port.
+> 
+> We could just change to pcie_cap_has_lnkctl to cover all pcie devices with
+> link control cap.
+> 
+> Fixes: 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> 
+> ---
+>  drivers/pci/access.c |   13 -------------
+>  drivers/pci/pci.h    |   13 +++++++++++++
+>  drivers/pci/probe.c  |    2 +-
+>  3 files changed, 14 insertions(+), 14 deletions(-)
+> 
+> Index: linux-2.6/drivers/pci/probe.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/probe.c
+> +++ linux-2.6/drivers/pci/probe.c
+> @@ -1323,7 +1323,7 @@ static void program_hpp_type2(struct pci
+>  			~hpp->pci_exp_devctl_and, hpp->pci_exp_devctl_or);
+>  
+>  	/* Initialize Link Control Register */
+> -	if (dev->subordinate)
+> +	if (pcie_cap_has_lnkctl(dev))
+>  		pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
+>  			~hpp->pci_exp_lnkctl_and, hpp->pci_exp_lnkctl_or);
 
-This is the second patch set to enable support of hierarchy irqdomain
-on x86 platforms. It depends on the first part at:
-https://lkml.org/lkml/2014/10/27/122
-And you may access it at:
-https://github.com/jiangliu/linux.git irqdomain/p2v4
+Nice catch!  It's much cleaner to do this based on pcie_cap_has_lnkctl().
 
-And there will be a third patch set to convert IOAPIC driver to support
-hierarchy irqdomain and clean up code.
+> Index: linux-2.6/drivers/pci/access.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/access.c
+> +++ linux-2.6/drivers/pci/access.c
+> @@ -444,19 +444,6 @@ static inline int pcie_cap_version(const
+>  	return pcie_caps_reg(dev) & PCI_EXP_FLAGS_VERS;
+>  }
+>  
+> -static inline bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
+> -{
+> -	int type = pci_pcie_type(dev);
+> -
+> -	return type == PCI_EXP_TYPE_ENDPOINT ||
+> -	       type == PCI_EXP_TYPE_LEG_END ||
+> -	       type == PCI_EXP_TYPE_ROOT_PORT ||
+> -	       type == PCI_EXP_TYPE_UPSTREAM ||
+> -	       type == PCI_EXP_TYPE_DOWNSTREAM ||
+> -	       type == PCI_EXP_TYPE_PCI_BRIDGE ||
+> -	       type == PCI_EXP_TYPE_PCIE_BRIDGE;
+> -}
+> -
+>  static inline bool pcie_cap_has_sltctl(const struct pci_dev *dev)
+>  {
+>  	int type = pci_pcie_type(dev);
+> Index: linux-2.6/drivers/pci/pci.h
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/pci.h
+> +++ linux-2.6/drivers/pci/pci.h
+> @@ -6,6 +6,19 @@
+>  
+>  extern const unsigned char pcie_link_speed[];
+>  
+> +static inline bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
+> +{
+> +	int type = pci_pcie_type(dev);
+> +
+> +	return type == PCI_EXP_TYPE_ENDPOINT ||
+> +	       type == PCI_EXP_TYPE_LEG_END ||
+> +	       type == PCI_EXP_TYPE_ROOT_PORT ||
+> +	       type == PCI_EXP_TYPE_UPSTREAM ||
+> +	       type == PCI_EXP_TYPE_DOWNSTREAM ||
+> +	       type == PCI_EXP_TYPE_PCI_BRIDGE ||
+> +	       type == PCI_EXP_TYPE_PCIE_BRIDGE;
+> +}
 
-Patch 1-5 enhance irqdomain and irq core to support hierarchy irqdomain
-and stacked irqchip.
-Patch 6-12 implement an irqdomain to manange CPU interrupt vectors, and
-it's the root irqdomain for x86 platforms.
-Patch 13-16 converts Intel and AMD interrupt remapping drivers to
-support hierarchy irqdomain.
-Patch 17-23 converts HPET and MSI to support hierarchy irqdomain.
-Patch 24-27 cleans up unsued code in x86 arch and interrupt remapping
-drivers.
-Patch 28-31 converts DMAR, HTIRQ and UV to support hierarchy irqdomain.
+But I don't want to move pcie_cap_has_lnkctl() to pci.h and leave
+pcie_cap_has_sltctl() and pcie_cap_has_rtctl() in access.c.  They're all
+related, so I think they should stay together.
 
-We have tested this patchset on Intel 32-bit and 64-bit systems. And it
-also passes Fengguang's 0day tests. But helps are need for testing:
-1) AMD interrupt remapping 
-2) AMD HT_IRQ
-3) UV platform
+What if we left them in access.c, made them non-static, non-inline, and
+just added prototypes to pci.h?  Or I guess we could add a prototype just
+for pcie_cap_has_lnkctl(), since that's the only one we need so far.
 
-V3->V4:
-1) Simplify IRQ remapping interfaces
-2) Hide all IRQ remapping logic from MSI/HPET drivers
-3) Move most MSI irqdomain code to public drivers/pci/msi.c so it could
-   be resued
-4) Improve common PCI MSI code
-5) Rebase to tip/x86/apic
-V2->V3:
-1) Fix bugs in handling OF irqdomain
-2) Add documentation
-3) Rebase to v3.18-rc2
-V1->V2
-1) Add hierarchy iredomain support of DMAR IRQ and UV IRQ.
-2) Fix bugs reported by Joe C.
-3) Address all review comments from Thomas
-4) Fix a bug found during tests
-5) Fix errors and warning found by 0day tests
+Bjorn
 
-Jiang Liu (30):
-  irqdomain: Introduce new interfaces to support hierarchy irqdomains
-  genirq: Introduce helper functions to support stacked irq_chip
-  genirq: Introduce irq_chip.irq_compose_msi_msg() to support stacked
-    irqchip
-  genirq: Add IRQ_SET_MASK_OK_DONE to support stacked irqchip
-  x86, irq: Save destination CPU ID in irq_cfg
-  x86, irq: Use hierarchy irqdomain to manage CPU interrupt vectors
-  x86, hpet: Use new irqdomain interfaces to allocate/free IRQ
-  x86, MSI: Use new irqdomain interfaces to allocate/free IRQ
-  x86, uv: Use new irqdomain interfaces to allocate/free IRQ
-  x86, htirq: Use new irqdomain interfaces to allocate/free IRQ
-  x86, dmar: Use new irqdomain interfaces to allocate/free IRQ
-  x86: irq_remapping: Introduce new interfaces to support hierarchy
-    irqdomain
-  iommu/vt-d: Change prototypes to prepare for enabling hierarchy
-    irqdomain
-  iommu/vt-d: Enhance Intel IR driver to suppport hierarchy irqdomain
-  iommu/amd: Enhance AMD IR driver to suppport hierarchy irqdomain
-  x86, hpet: Enhance HPET IRQ to support hierarchy irqdomain
-  PCI/MSI, trivial: Fix minor syntax issues according to coding styles
-  PCI/MSI: Simplify PCI MSI code by initializing msi_desc.nvec_used
-    earlier
-  PCI/MSI: Kill redundant calling for irq_set_msi_desc() for MSIx
-    interrupts
-  PCI/MSI: enhance PCI MSI core to support hierarchy irqdomain
-  x86, PCI, MSI: Use hierarchy irqdomain to manage MSI interrupts
-  x86, irq: Directly call native_compose_msi_msg() for DMAR IRQ
-  iommu/vt-d: Clean up unused MSI related code
-  iommu/amd: Clean up unused MSI related code
-  x86: irq_remapping: Clean up unused MSI related code
-  x86, irq: Clean up unused MSI related code and interfaces
-  iommu/vt-d: Refine the interfaces to create IRQ for DMAR unit
-  x86, irq: Use hierarchy irqdomain to manage DMAR interrupts
-  x86, htirq: Use hierarchy irqdomain to manage Hypertransport
-    interrupts
-  x86, uv: Use hierarchy irqdomain to manage UV interrupts
-
-Yingjoe Chen (1):
-  irqdomain: Do irq_find_mapping and set_type for hierarchy irqdomain
-    in case OF
-
- Documentation/IRQ-domain.txt          |   71 +++++
- arch/ia64/include/asm/irq_remapping.h |    2 -
- arch/ia64/kernel/msi_ia64.c           |   30 ++-
- arch/x86/Kconfig                      |    4 +-
- arch/x86/include/asm/hpet.h           |   16 +-
- arch/x86/include/asm/hw_irq.h         |   87 ++++++
- arch/x86/include/asm/irq_remapping.h  |   50 ++--
- arch/x86/include/asm/pci.h            |    5 -
- arch/x86/include/asm/x86_init.h       |    4 -
- arch/x86/kernel/apic/htirq.c          |  176 +++++++++----
- arch/x86/kernel/apic/io_apic.c        |    3 -
- arch/x86/kernel/apic/msi.c            |  432 ++++++++++++++++++++----------
- arch/x86/kernel/apic/vector.c         |  165 +++++++++++-
- arch/x86/kernel/hpet.c                |   57 ++--
- arch/x86/kernel/x86_init.c            |    2 -
- arch/x86/platform/uv/uv_irq.c         |  299 ++++++++-------------
- drivers/iommu/amd_iommu.c             |  380 ++++++++++++++++++++------
- drivers/iommu/amd_iommu_init.c        |    4 +
- drivers/iommu/amd_iommu_proto.h       |    9 +
- drivers/iommu/amd_iommu_types.h       |    5 +
- drivers/iommu/dmar.c                  |   19 +-
- drivers/iommu/intel_irq_remapping.c   |  469 ++++++++++++++++++++++-----------
- drivers/iommu/irq_remapping.c         |  197 ++++----------
- drivers/iommu/irq_remapping.h         |   20 +-
- drivers/pci/Kconfig                   |    4 +
- drivers/pci/htirq.c                   |   48 +---
- drivers/pci/msi.c                     |  176 ++++++++++---
- include/linux/dmar.h                  |    3 +-
- include/linux/htirq.h                 |   22 +-
- include/linux/intel-iommu.h           |    4 +
- include/linux/irq.h                   |   19 ++
- include/linux/irqdomain.h             |   86 ++++++
- include/linux/msi.h                   |   11 +
- kernel/irq/Kconfig                    |    4 +
- kernel/irq/chip.c                     |   37 +++
- kernel/irq/irqdomain.c                |  416 +++++++++++++++++++++++++++--
- kernel/irq/manage.c                   |    2 +
- 37 files changed, 2347 insertions(+), 991 deletions(-)
-
--- 
-1.7.10.4
-
+> +
+>  /* Functions internal to the PCI core code */
+>  
+>  int pci_create_sysfs_dev_files(struct pci_dev *pdev);
