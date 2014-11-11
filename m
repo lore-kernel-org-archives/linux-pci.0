@@ -1,90 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:52252 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751160AbaKFMgt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 07:36:49 -0500
-Date: Thu, 6 Nov 2014 12:36:42 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: add missing DT binding for linux,pci-domain property
-Message-ID: <20141106123642.GT8916@e106497-lin.cambridge.arm.com>
-References: <1415101660-26450-1-git-send-email-l.stach@pengutronix.de>
- <20141105231743.GI6168@google.com>
- <20141106100518.GI8916@e106497-lin.cambridge.arm.com>
- <3491668.yjzKoIEZd4@wuerfel>
+Received: from mail-bl2on0123.outbound.protection.outlook.com ([65.55.169.123]:21047
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751086AbaKKTRt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 11 Nov 2014 14:17:49 -0500
+From: <suravee.suthikulpanit@amd.com>
+To: <bhelgaas@google.com>
+CC: <liviu.dudau@arm.com>, <lorenzo.pieralisi@arm.com>,
+	<will.deacon@arm.com>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH V2 0/2] PCI: generic: Assiging msi-controller to PCI hostbridge
+Date: Tue, 11 Nov 2014 13:17:32 -0600
+Message-ID: <1415733454-24322-1-git-send-email-suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <3491668.yjzKoIEZd4@wuerfel>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 06, 2014 at 11:42:41AM +0000, Arnd Bergmann wrote:
-> On Thursday 06 November 2014 10:05:18 Liviu Dudau wrote:
-> > On Wed, Nov 05, 2014 at 11:17:43PM +0000, Bjorn Helgaas wrote:
-> > > On Tue, Nov 04, 2014 at 12:47:40PM +0100, Lucas Stach wrote:
-> > > > This property was added by 41e5c0f81d3e
-> > > > (of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr())
-> > > > without the required binding documentation. As this property
-> > > > will be supported by a number of host bridge drivers going forward,
-> > > > add it to the common PCI binding doc.
-> > > > 
-> > > > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> > > 
-> > > I merged 41e5c0f81d3e through my tree, and I could merge something like
-> > > this if a consensus develops with some acks.  But I'll just let you guys
-> > > handle it unless you poke me again.
-> > 
-> > While I think the "linux,pci-domain" property *must* be documented, I
-> > would like to get a consensus first on the usage. If we agree that
-> > the property is mandatory to all host bridge drivers that use OF then
-> > we need to patch existing drivers (partially done through Lorenzo's
-> > patches, but other arches are ignoring it). If we say all *new* drivers
-> > need to use it then we also need to come up with a strategy on how to
-> > deal with old vs new school drivers.
-> > 
-> > My preferred approach is the 3rd way: "linux,pci-domain" becomes part of
-> > the core PCI infrastructure (and we find the common ground with ACPI).
-> > That way the host bridge drivers don't have to do anything, but the DT
-> > creators have to specify a value.
-> > 
-> > Pinging Rob to try to get a peek on this thoughts.
-> 
-> Parsing "linux,pci-domain" from the PCI core code seems like the best
-> solution to me, but we still have to support dtbs that don't contain
-> it. Lorenzo's patch gets this right I think.
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-Agree. But we are not covering other architectures that use OF yet.
+This patch set introduces a new callback function to allow PCI host drivers
+to specify MSI controller to be used for the child buses / devices.
 
-> 
-> ACPI is easy here, because it already requires the domain to be
-> explicit.
+This is reabased from:
+    git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/host-generic
 
-I was thinking more along the line of code sharing.
+Changes from V1:
+    - Adding "msi-parent" device tree binding in documentation.
+    - Rebase the patch to get rid of artifacts from other precursor patch
+      accidently applied to the developement tree. This should now apply cleanly
+      to the pci/host-generic branch.
 
-Best regards,
-Liviu
+Suravee Suthikulpanit (2):
+  PCI: Add new pci_ops for setting MSI parent for PCI bus
+  PCI: generic: Add set_msi_parent callback
 
-> 
-> 	Arnd
-> 
-> 
+ Documentation/devicetree/bindings/pci/host-generic-pci.txt |  3 +++
+ drivers/pci/host/pci-host-generic.c                        | 13 +++++++++++++
+ drivers/pci/probe.c                                        |  3 +++
+ include/linux/pci.h                                        |  1 +
+ 4 files changed, 20 insertions(+)
 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.9.3
 
