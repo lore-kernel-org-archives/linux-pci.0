@@ -1,37 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f44.google.com ([209.85.192.44]:43673 "EHLO
-	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753817AbaKROBE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 09:01:04 -0500
-Received: by mail-qg0-f44.google.com with SMTP id z60so2436649qgd.31
-        for <linux-pci@vger.kernel.org>; Tue, 18 Nov 2014 06:01:02 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <546B3EA1.90100@redhat.com>
-References: <1414865479-25792-1-git-send-email-prarit@redhat.com>
- <20141111035902.GC28161@google.com> <CAErSpo7q1U_HpEeB_pMWJPae3a+oysEwR660m2bV5KdZ7oCr0w@mail.gmail.com>
- <546B3EA1.90100@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 18 Nov 2014 07:00:42 -0700
-Message-ID: <CAErSpo6Xy8OOxEDGe08C_h3VMYMw1CvjCeUdfP4CooixH=4mEQ@mail.gmail.com>
-Subject: Re: [PATCH] pci, add FW_BUG warning to pci= kernel option
-To: Prarit Bhargava <prarit@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Myron Stowe <mstowe@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Linux-Arch <linux-arch@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from userp1040.oracle.com ([156.151.31.81]:39959 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750790AbaKKUJ5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 15:09:57 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2] PCI: Apply _HPX link control for all supported pcie device
+Date: Tue, 11 Nov 2014 12:09:46 -0800
+Message-Id: <1415736586-16044-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 18, 2014 at 5:42 AM, Prarit Bhargava <prarit@redhat.com> wrote:
+With commit 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
+and following commits, we apply _HPX for pci devices.
 
-> Sorry for the lower-case typing.  I broke my elbow and am down to one hand.
->
-> bjorn, yep sounds reasonable.  i'll do this (slowly unfortunately because of my
-> arm) ...
+that is called via pci_scan_slot
+			==>pci_scan_single_device
+				==>pci_device_add
+					==>pci_configure_device
+						==>program_hpp_type2
+and dev->subordinate is not allocated yet.
 
-Ouch, sorry to hear that.  We need to get working on that direct
-mind-computer interface :)  Hope your elbow heals well!
+So that link control setup get skipped.
 
-Bjorn
+Acoording to ACPI spec, there is no requirement that need to be set to pcie
+root port or downstream port.
+
+We could just change to pcie_cap_has_lnkctl to cover all pcie devices with
+link control cap.
+
+-v2: Do not move pcie_cap_has_lnkctl() out of pci/access.c according to Bjorn.
+
+Fixes: 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
+---
+ drivers/pci/access.c |    2 +-
+ drivers/pci/pci.h    |    2 ++
+ drivers/pci/probe.c  |    2 +-
+ 3 files changed, 4 insertions(+), 2 deletions(-)
+
+Index: linux-2.6/drivers/pci/probe.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/probe.c
++++ linux-2.6/drivers/pci/probe.c
+@@ -1323,7 +1323,7 @@ static void program_hpp_type2(struct pci
+ 			~hpp->pci_exp_devctl_and, hpp->pci_exp_devctl_or);
+ 
+ 	/* Initialize Link Control Register */
+-	if (dev->subordinate)
++	if (pcie_cap_has_lnkctl(dev))
+ 		pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
+ 			~hpp->pci_exp_lnkctl_and, hpp->pci_exp_lnkctl_or);
+ 
+Index: linux-2.6/drivers/pci/pci.h
+===================================================================
+--- linux-2.6.orig/drivers/pci/pci.h
++++ linux-2.6/drivers/pci/pci.h
+@@ -6,6 +6,8 @@
+ 
+ extern const unsigned char pcie_link_speed[];
+ 
++bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
++
+ /* Functions internal to the PCI core code */
+ 
+ int pci_create_sysfs_dev_files(struct pci_dev *pdev);
+Index: linux-2.6/drivers/pci/access.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/access.c
++++ linux-2.6/drivers/pci/access.c
+@@ -444,7 +444,7 @@ static inline int pcie_cap_version(const
+ 	return pcie_caps_reg(dev) & PCI_EXP_FLAGS_VERS;
+ }
+ 
+-static inline bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
++bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
+ {
+ 	int type = pci_pcie_type(dev);
+ 
