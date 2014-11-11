@@ -1,106 +1,71 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC Part4 v1 00/17] Refine support of non-PCI-compliant Message
-Date: Sun,  9 Nov 2014 23:10:22 +0800
-Message-Id: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:54716 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751086AbaKKTJe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 11 Nov 2014 14:09:34 -0500
+Message-ID: <54625EE8.1050509@redhat.com>
+Date: Tue, 11 Nov 2014 14:09:28 -0500
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
+To: Sathya Perla <sathya.perla@Emulex.Com>, linux-pci@vger.kernel.org,
+	netdev@vger.kernel.org
+CC: ariel.elior@qlogic.com, linux.nics@intel.com,
+	shahed.shaikh@qlogic.com
+Subject: Re: [PATCH 0/4] move pci_assivned_vfs() check (while disabling VFs)
+ to pci sub-system
+References: <1415620410-4937-1-git-send-email-sathya.perla@emulex.com>
+In-Reply-To: <1415620410-4937-1-git-send-email-sathya.perla@emulex.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some interrupt controllers, such as DMAR/HPET/HT_IRQ, work almost in
-the same as PCI MSI interrupt controller. And there some devices make
-use of PCI MSI mechanism for non-PCI devices on ARm/ARM64 platforms.
+On 11/10/2014 06:53 AM, Sathya Perla wrote:
+> A user must not be allowed to disable VFs while they are already assigned to
+> a guest. This check is being made in each individual driver that implements
+> the sriov_configure PCI method.
+> This patch-set fixes this code duplication by moving this check from
+> drivers to the sriov_nuvfs_store() routine just before invoking
+> sriov_configure() when num_vfs is equal to 0.
+>
+> Vasundhara Volam (4):
+>    pci: move pci_assivned_vfs() check while disabling VFs to pci
+>      sub-system
+>    bnx2x: remove pci_assigned_vfs() check while disabling VFs
+>    i40e: remove pci_assigned_vfs() check while disabling VFs
+>    qlcnic: remove pci_assigned_vfs() check while disabling VFs
+>
+>   drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c  |    2 +-
+>   drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c |    7 +------
+>   .../net/ethernet/qlogic/qlcnic/qlcnic_sriov_pf.c   |   10 ----------
+>   drivers/pci/pci-sysfs.c                            |    5 +++++
+>   4 files changed, 7 insertions(+), 17 deletions(-)
+>
+I have had a side conversation with Alex Williamson, VFIO author.
 
-So this patches tries to split PCI MSI code into PCI dependent part
-and PCI independent part. The PCI independent part will be used to
-support other PCI MSI like interrupt controllers.
+VFIO is the upstream method that device-assignment is managed/handled on kvm now.
+It does not set the PCI_DEV_FLAGS_ASSIGNED pci dev-flags, and thus,
+this check will not work when VFIO is used.
 
-Patch 1-9 are clean ups for previous hierarchy irqdomain patchset
-and preparation for coming PCI MSI code reorganization.
-Patch 10-15 split PCI MSI code and implement common mechanism to support
-other MSI alike interrupt contollers.
-Patch 16-17 converts HT_IRQ to use the common MSI support mechanism.
+This patch set will only work for the former, kvm-managed, device-assignment method,
+which is currently being deprecated in qemu as well.
 
-This patch set only solves the issue to manage interrupt controller,
-but we still need another patch set to provide pci_enable_msix_range()
-alike interfaces to support non-PCI devices. To achieve that, we will:
-1) Move msi_list from struct pci_dev into struct device
-2) Abstract common code from drivers/pci/msi.c into kernel/irq/msi.c
-3) Implement msi_enable_range()/msi_disable() alike interfaces.
+So, yes, it works for kvm managed device-assignment, but not the
+newer, VFIO-based device-assignment.
 
-Apparently, we need much more time to discuss the proposal for next
-patch set.
+Note, also, that the pci_assigned_vfs() check in the drivers will
+always return 0 when VFIO is used for device assignment, so keeping
+these checks in the drivers doesn't do what they imply either.
 
-Hi Thomas and Bjorn,
-	Could you please to review patch 10,13 and give your thoughts?
-Those are the main changes. This patch set only passes compilation and
-boot tests.
+So, taking in the patch solves old, kvm-managed, device assignment,
+but a new method is needed when VFIO is involved.
 
-Regards!
-Gerry
+- Don
 
-Jiang Liu (17):
-  x86, irq: Normalize x86 irq_chip name
-  genirq: Introduce helper irq_domain_set_info() to reduce duplicated
-    code
-  x86, PCI/MSI: Simplify the way to deal with remapped MSI interrupts
-  PCI/MSI: Replace msi_update_msg() with irq_chip_compose_msi_msg()
-  PCI/MSI: Move msi_set_affinity() to PCI core
-  genirq: Introduce callback irq_chip.irq_write_msi_msg
-  x86, irq: Implement irq_chip.irq_write_msi_msg for MSI/DMAR/HPET
-    irq_chips
-  PCI/MSI: Use irq_chip.irq_write_msi_msg() to share common code
-  x86, irq: Simplify MSI/DMAR/HPET implementation by using common code
-  PCI, MSI: Split MSI code into PCI dependent and PCI independent parts
-  PCI, MSI: Rename __read_msi_msg() as __pci_read_msi_msg()
-  PCI, MSI: Rename __write_msi_msg() as __pci_write_msi_msg()
-  MSI: Provide irqdomain support for generic MSI
-  x86, PCI, MSI: Use common code to manage MSI interrupts
-  PCI, MSI: Clean up unused irqdomain related code
-  x86, htirq: Kill struct ht_irq_msg by reusing struct msi_msg
-  x86, htirq: Use common MSI code to manage Hypertransport interrupts
+ps -- Note: just adding the flag setting in vfio-pci does not necessarily
+       solve this problem.  VFIO does not know if a device is assigned to a guest;
+       it only knows a caller of the ioctl requesting the device to be assigned
+       to vfio, and to be dma-mapped for a region of memory, has been requested.
+       So, a new PF<->VF mechanism needs to be put in place to
+       determine the equivalent information.
 
- arch/powerpc/platforms/pseries/msi.c        |    2 +-
- arch/x86/kernel/apic/htirq.c                |  137 +++++-------
- arch/x86/kernel/apic/msi.c                  |  309 ++++++++++++---------------
- arch/x86/pci/xen.c                          |    4 +-
- arch/x86/platform/uv/uv_irq.c               |    5 +-
- drivers/infiniband/hw/ipath/ipath_iba6110.c |    2 +-
- drivers/pci/Kconfig                         |    5 +-
- drivers/pci/htirq.c                         |   20 +-
- drivers/pci/msi.c                           |  144 ++-----------
- include/linux/htirq.h                       |   15 +-
- include/linux/irq.h                         |    8 +
- include/linux/irqdomain.h                   |    4 +
- include/linux/msi.h                         |   89 +++++---
- kernel/irq/Kconfig                          |   10 +-
- kernel/irq/Makefile                         |    1 +
- kernel/irq/irqdomain.c                      |   10 +
- kernel/irq/msi.c                            |  133 ++++++++++++
- 17 files changed, 454 insertions(+), 444 deletions(-)
- create mode 100644 kernel/irq/msi.c
-
--- 
-1.7.10.4
 
