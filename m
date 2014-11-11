@@ -1,129 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <545BF8C7.7070206@laposte.net>
-Date: Thu, 06 Nov 2014 23:40:07 +0100
-From: Barto <mister.freeman@laposte.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:45526 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751653AbaKKRyl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 11 Nov 2014 12:54:41 -0500
+Message-ID: <54624D35.2070808@linux.intel.com>
+Date: Wed, 12 Nov 2014 01:53:57 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-To: "Liu, Chuansheng" <chuansheng.liu@intel.com>
-CC: "aaron.lu"@intel.com, tj@kernel.org, rjw@rjwysocki.net,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: new test
-References: <545B7352.2040408@laposte.net> <27240C0AC20F114CBF8149A2696CBE4A01EB8625@SHSMSX101.ccr.corp.intel.com>
-In-Reply-To: <27240C0AC20F114CBF8149A2696CBE4A01EB8625@SHSMSX101.ccr.corp.intel.com>
-Content-Type: multipart/mixed;
- boundary="------------060203060507060207030202"
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yijing Wang <wangyijing@huawei.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RFC for ideas to clean up PCI MSI code
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------060203060507060207030202
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Hi Bjorn, Yijing and Thomas,
+	Recently Yijing is trying to kill some weak functions in
+drivers/pci/msi.c by using msi_chip mechanism. And it inspired me
+that we could go one step further to kill those weak functions
+at all and move common PCI MSI code into PCI core by using the
+new hierarch irqdomain framework.
+	The way to achieve the goal is:
+1) arch code creates irqdomain for PCI MSI controllers. By default,
+there's only one global PCI MSI irqdomain. But there's may be multiple
+for some architecture like x86. So arch also need to implement a weak
+function (I know you don't like weak functions):
+	struct irq_domain *arch_get_pci_msi_irq_domain(struct pci_dev *);
 
-Hello Liu Chuansheng,
+2) replace
+arch_setup_msi_irqs()/arch_setup_msi_irqs()/arch_teardown_msi_irqs()/arch_teardown_msi_irq()
+with
+irq_domain interfaces.
 
-I have good news, your patch based on /drivers/pci/quirks.c works very
-well,
+3) kill arch_msi_mask_irq()/arch_msi_mask_irq() by directly setting
+irq_chip.irq_mask()/irq_unmask().
 
-I have no problems after a standby mode, my JMB363/368 SATA/IDE JMicron
-Pcie works without problems
+4) we could also find a way to kill arch_restore_msi_irqs() by using
+new irqdomain interfaces.
 
+For arch code to support the new MSI, it needs to implement callbacks in
+msi_domain_ops and irq_chip. All other PCI MSI code becomes common
+and will be moved into pci/msi.c. Proposed interfaces as below:
 
-Le 06/11/2014 15:33, Liu, Chuansheng a écrit :
-> Thanks Barto. 
-> 
-> Could you try below patch? I made the change in file quirks.c.
->   
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> 
-> index 90acb32..b40485f 100644
-> 
-> --- a/drivers/pci/quirks.c
-> 
-> +++ b/drivers/pci/quirks.c
-> 
-> @@ -29,6 +29,21 @@
-> 
-> #include "pci.h"
-> 
->  /*
-> 
-> + * For JMicron chips, we need to disable the async_suspend method,
-> otherwise
-> 
-> + * they will hit the power-on issue when doing device resume, add one quick
-> 
-> + * solution to disable the async_suspend method.
-> 
-> + */
-> 
-> +static void pci_async_suspend_fixup(struct pci_dev *pdev)
-> 
-> +{
-> 
-> +        /* 
-> 
-> +         * disabling the async_suspend method for JMicron chips to
-> 
-> +         * avoid device resuming issue.
-> 
-> +         */
-> 
-> +        device_disable_async_suspend(&pdev->dev);
-> 
-> +}
-> 
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_JMICRON, PCI_ANY_ID,
-> pci_async_suspend_fixup);
-> 
-> +
-> 
-> +/*
-> 
->   * Decoding should be disabled for a PCI device during BAR sizing to avoid
-> 
->   * conflict. But doing so may cause problems on host bridge and perhaps
-> other
-> 
->   * key system devices. For devices that need to have mmio decoding
-> always-on,
-> 
->  
-> 
->  
-> 
+struct irq_chip {
+        void            (*irq_compose_msi_msg)(struct irq_data *data,
+struct msi_msg *msg);
+};
 
---------------060203060507060207030202
-Content-Type: text/x-patch;
- name="jmicron2.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="jmicron2.patch"
+struct msi_domain_ops {
+        void (*calc_hwirq)(struct msi_domain_info *info, void *arg,
+                           struct msi_desc *desc);
+        irq_hw_number_t (*get_hwirq)(struct msi_domain_info *info, void
+*arg);
+        int (*msi_init)(struct irq_domain *domain, struct
+msi_domain_info *info,
+                        unsigned int virq, irq_hw_number_t hwirq, void
+*arg);
+        void (*msi_free)(struct irq_domain *domain,
+                         struct msi_domain_info *info, unsigned int virq);
+};
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 90acb32..b40485f 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -29,6 +29,21 @@
-#include "pci.h"
- /*
-+ * For JMicron chips, we need to disable the async_suspend method, otherwise
-+ * they will hit the power-on issue when doing device resume, add one quick
-+ * solution to disable the async_suspend method.
-+ */
-+static void pci_async_suspend_fixup(struct pci_dev *pdev)
-+{
-+        /*
-+         * disabling the async_suspend method for JMicron chips to
-+         * avoid device resuming issue.
-+         */
-+        device_disable_async_suspend(&pdev->dev);
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, pci_async_suspend_fixup);
-+
-+/*
-  * Decoding should be disabled for a PCI device during BAR sizing to avoid
-  * conflict. But doing so may cause problems on host bridge and perhaps other
-  * key system devices. For devices that need to have mmio decoding always-on,
+struct msi_domain_info {
+        struct msi_domain_ops *ops;
+        struct irq_chip *chip;
+        void *data;
+};
 
---------------060203060507060207030202--
+struct irq_domain *msi_create_irq_domain(struct device_node *of_node,
+                                         struct msi_domain_info *info,
+                                         struct irq_domain *parent);
+
+So, what's your thoughts about the proposal? If now objection, I may
+send out a draft version for x86 within about one week:)
+Thanks!
+Gerry
