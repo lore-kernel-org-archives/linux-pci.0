@@ -1,191 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:55448 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751926AbaKJM0R (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Nov 2014 07:26:17 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>
-Subject: [RFC PATCH] drivers: of: move PCI domain assignment to generic OF code
-Date: Mon, 10 Nov 2014 12:26:08 +0000
-Message-Id: <1415622368-14612-1-git-send-email-lorenzo.pieralisi@arm.com>
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:51283 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751451AbaKKAFB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Nov 2014 19:05:01 -0500
+Received: by mail-ig0-f179.google.com with SMTP id r10so59012igi.6
+        for <linux-pci@vger.kernel.org>; Mon, 10 Nov 2014 16:05:00 -0800 (PST)
+Date: Mon, 10 Nov 2014 17:04:56 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, David Vrabel <david.vrabel@citrix.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	xen-devel@lists.xenproject.org
+Subject: Re: [PATCH 1/3] x86/xen: Introduce a global flag to fix the MSI mask
+ bug
+Message-ID: <20141111000456.GB21470@google.com>
+References: <1414377878-23497-1-git-send-email-wangyijing@huawei.com>
+ <1414377878-23497-2-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1414377878-23497-2-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The current logic used for PCI domain assignment in arm64
-pci_bus_assign_domain_nr() is flawed in that, depending on the host
-controllers configuration for a platform and the respective initialization
-sequence, core code may end up allocating PCI domain numbers from both DT and
-the core code generic domain counter, which would result in PCI domain
-allocation aliases/errors.
+On Mon, Oct 27, 2014 at 10:44:36AM +0800, Yijing Wang wrote:
+> Commit 0e4ccb1505a9 ("PCI: Add x86_msi.msi_mask_irq() and msix_mask_irq()")
+> fixed MSI mask bug which may cause kernel crash. But the commit
+> made MSI code complex. Introduce a new global flag "pci_msi_ignore_mask"
+> to ignore MSI/MSI-X to fix this issue, it's a cleaner solution.
+> And the commit 0e4ccb1505a9 will be reverted in the later patch.
 
-This patch fixes the logic behind the PCI domain number assignment and
-move the resulting code to the generic OF layer so that other archs can
-reuse the same domain allocation logic instead of resorting to an arch
-specific implementation that might end up duplicating the PCI domain
-assignment logic wrongly.
+The 0e4ccb1505a9 changelog says Xen guests can't write to MSI-X BARs.
+But it makes mask_irq a no-op for both MSI-X and MSI.  The MSI mask bit is
+in config space, not in memory space.  So why does mask_irq need to be a
+no-op for MSI as well?  Are Xen guests prohibited from writing to config
+space, too?  (It's fine if they are; it's just that the changelog
+specifically mentioned MSI-X memory space tables, and it didn't mention
+config space at all.)
 
-If OF is not configured for a platform, the code falls back to the
-generic domain numbering implementation through the pci_get_new_domain_nr()
-API.
+And I *assume* there's some Xen mechanism that accomplishes the mask_irq in
+a different way, since the actual mask_irq interface does nothing?  (This
+is really a question for 0e4ccb1505a9, since I don't think this particular
+patch changes anything in that respect.)
 
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Liviu Dudau <liviu.dudau@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
----
- arch/arm64/kernel/pci.c | 14 +++--------
- drivers/of/of_pci.c     | 66 +++++++++++++++++++++++++++++++++++++++++++++++--
- include/linux/of_pci.h  |  7 +++---
- 3 files changed, 71 insertions(+), 16 deletions(-)
-
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index ce5836c..5e21c1c 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -49,20 +49,14 @@ int pcibios_add_device(struct pci_dev *dev)
- 
- 
- #ifdef CONFIG_PCI_DOMAINS_GENERIC
--static bool dt_domain_found = false;
- 
- void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
- {
--	int domain = of_get_pci_domain_nr(parent->of_node);
-+	int domain = of_assign_pci_domain_nr(parent->of_node);
- 
--	if (domain >= 0) {
--		dt_domain_found = true;
--	} else if (dt_domain_found == true) {
--		dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
--			parent->of_node->full_name);
--		return;
--	} else {
--		domain = pci_get_new_domain_nr();
-+	if (domain < 0) {
-+		dev_err(parent, "PCI domain assignment failed\n");
-+		domain = -1;
- 	}
- 
- 	bus->domain_nr = domain;
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 8882b46..43bf591 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -100,7 +100,7 @@ EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
-  * Returns the associated domain number from DT in the range [0-0xffff], or
-  * a negative value if the required property is not found.
-  */
--int of_get_pci_domain_nr(struct device_node *node)
-+static int of_get_pci_domain_nr(struct device_node *node)
- {
- 	const __be32 *value;
- 	int len;
-@@ -114,7 +114,69 @@ int of_get_pci_domain_nr(struct device_node *node)
- 
- 	return domain;
- }
--EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
-+
-+/**
-+ * of_assign_pci_domain_nr() - Assign a PCI domain number
-+ *
-+ * @node: device tree node with the domain information
-+ *
-+ * This function assigns and returns the host bridge domain number by
-+ * first parsing the device tree node to find the linux,pci-domain
-+ * property and falling back to the generic domain number API if DT
-+ * property is not present/valid. The function implements logic that prevents
-+ * code from mixing domain numbers assignments from both DT and the
-+ * generic domain number implementation and returns an error if such
-+ * cases are detected at run-time.
-+ *
-+ * Returns the assigned domain number, or a negative value to signal an error
-+ */
-+int of_assign_pci_domain_nr(struct device_node *node)
-+{
-+	static int use_dt_domains = -1;
-+	int domain = of_get_pci_domain_nr(node);
-+
-+	/*
-+	 * Check DT domain and use_dt_domains values.
-+	 *
-+	 * If DT domain property is valid (domain >= 0) and
-+	 * use_dt_domains != 0, the DT assignment is valid since this means
-+	 * we have not previously allocated a domain number by using
-+	 * pci_get_new_domain_nr().
-+	 *
-+	 * If use_dt_domains value is == 0 and the DT property provides a
-+	 * valid domain number (>=0), this means that we are assigning a
-+	 * domain number from DT but we have previously allocated a domain
-+	 * number by using pci_get_new_domain_nr() so we should bail out with
-+	 * an error.
-+	 *
-+	 * If DT domain property value is not valid, and we have not previously
-+	 * assigned a domain number from DT (use_dt_domains != 1) we
-+	 * should assign a domain number by using the
-+	 *
-+	 * pci_get_new_domain_nr()
-+	 *
-+	 * API and update the use_dt_domains value to keep track of method we
-+	 * are using to assign domain numbers (use_dt_domains = 0).
-+	 *
-+	 * All other combinations imply we have a platform that is trying
-+	 * to mix DT and generic domain number assignments, which is a recipe
-+	 * for domain mishandling and it is prevented by returning an error
-+	 * value to the caller.
-+	 */
-+	if (domain >= 0 && use_dt_domains) {
-+		use_dt_domains = 1;
-+	} else if (domain < 0 && use_dt_domains != 1) {
-+		use_dt_domains = 0;
-+		domain = pci_get_new_domain_nr();
-+	} else {
-+		pr_err("Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
-+			node->full_name);
-+		return -EINVAL;
-+	}
-+
-+	return domain;
-+}
-+EXPORT_SYMBOL_GPL(of_assign_pci_domain_nr);
- 
- #if defined(CONFIG_OF_ADDRESS)
- /**
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index 1fd207e..fbba966 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -15,7 +15,7 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
- int of_pci_get_devfn(struct device_node *np);
- int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
- int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
--int of_get_pci_domain_nr(struct device_node *node);
-+int of_assign_pci_domain_nr(struct device_node *node);
- #else
- static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
- {
-@@ -45,10 +45,9 @@ of_pci_parse_bus_range(struct device_node *node, struct resource *res)
- 	return -EINVAL;
- }
- 
--static inline int
--of_get_pci_domain_nr(struct device_node *node)
-+static inline int of_assign_pci_domain_nr(struct device_node *node)
- {
--	return -1;
-+	return pci_get_new_domain_nr();
- }
- #endif
- 
--- 
-2.1.2
-
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> CC: David Vrabel <david.vrabel@citrix.com>
+> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> CC: xen-devel@lists.xenproject.org
+> ---
+>  arch/x86/pci/xen.c  |    2 ++
+>  drivers/pci/msi.c   |    7 ++++++-
+>  include/linux/msi.h |    1 +
+>  3 files changed, 9 insertions(+), 1 deletions(-)
+> 
+> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+> index 093f5f4..5ef62ed 100644
+> --- a/arch/x86/pci/xen.c
+> +++ b/arch/x86/pci/xen.c
+> @@ -427,6 +427,7 @@ int __init pci_xen_init(void)
+>  	x86_msi.teardown_msi_irqs = xen_teardown_msi_irqs;
+>  	x86_msi.msi_mask_irq = xen_nop_msi_mask_irq;
+>  	x86_msi.msix_mask_irq = xen_nop_msix_mask_irq;
+> +	pci_msi_ignore_mask = 1;
+>  #endif
+>  	return 0;
+>  }
+> @@ -508,6 +509,7 @@ int __init pci_xen_initial_domain(void)
+>  	x86_msi.restore_msi_irqs = xen_initdom_restore_msi_irqs;
+>  	x86_msi.msi_mask_irq = xen_nop_msi_mask_irq;
+>  	x86_msi.msix_mask_irq = xen_nop_msix_mask_irq;
+> +	pci_msi_ignore_mask = 1;
+>  #endif
+>  	xen_setup_acpi_sci();
+>  	__acpi_register_gsi = acpi_register_gsi_xen;
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 38511d9..ecb5f54 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -23,6 +23,7 @@
+>  #include "pci.h"
+>  
+>  static int pci_msi_enable = 1;
+> +int pci_msi_ignore_mask;
+>  
+>  #define msix_table_size(flags)	((flags & PCI_MSIX_FLAGS_QSIZE) + 1)
+>  
+> @@ -166,7 +167,7 @@ u32 default_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+>  {
+>  	u32 mask_bits = desc->masked;
+>  
+> -	if (!desc->msi_attrib.maskbit)
+> +	if (pci_msi_ignore_mask || !desc->msi_attrib.maskbit)
+>  		return 0;
+>  
+>  	mask_bits &= ~mask;
+> @@ -198,6 +199,10 @@ u32 default_msix_mask_irq(struct msi_desc *desc, u32 flag)
+>  	u32 mask_bits = desc->masked;
+>  	unsigned offset = desc->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE +
+>  						PCI_MSIX_ENTRY_VECTOR_CTRL;
+> +
+> +	if (pci_msi_ignore_mask)
+> +		return 0;
+> +
+>  	mask_bits &= ~PCI_MSIX_ENTRY_CTRL_MASKBIT;
+>  	if (flag)
+>  		mask_bits |= PCI_MSIX_ENTRY_CTRL_MASKBIT;
+> diff --git a/include/linux/msi.h b/include/linux/msi.h
+> index 44f4746..86dc501 100644
+> --- a/include/linux/msi.h
+> +++ b/include/linux/msi.h
+> @@ -10,6 +10,7 @@ struct msi_msg {
+>  	u32	data;		/* 16 bits of msi message data */
+>  };
+>  
+> +extern int pci_msi_ignore_mask;
+>  /* Helper functions */
+>  struct irq_data;
+>  struct msi_desc;
+> -- 
+> 1.7.1
+> 
