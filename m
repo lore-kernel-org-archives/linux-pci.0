@@ -1,152 +1,354 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:35071 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753861AbaKHSLR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 8 Nov 2014 13:11:17 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Kuppuswamy Sathyanarayanan
-	<sathyanarayanan.kuppuswamy@linux.intel.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "H. Peter Anvin" <hpa@linux.intel.com>
-Subject: [Patch Part3 v3 01/38] x86, intel-mid: Delay initialization of APB timer
-Date: Sun,  9 Nov 2014 02:13:01 +0800
-Message-Id: <1415470418-10874-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:35996 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751905AbaKKKei (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 05:34:38 -0500
+From: Ming Lei <ming.lei@canonical.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Will Deacon <will.deacon@arm.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: Rob Herring <robh+dt@kernel.org>,
+	alvise rigo <a.rigo@virtualopensystems.com>,
+	Ming Lei <ming.lei@canonical.com>
+Subject: [PATCH] pci: generic host: make it more generic
+Date: Tue, 11 Nov 2014 18:33:59 +0800
+Message-Id: <1415702040-2790-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+This patch converts the generic host controller driver
+into a more generic one, and basically don't need
+platform's pcibios support, and use DT based generic
+APIs to parse resource and remap IO port.
 
-MID has no PIC, but depending on the platform it requires the
-abt_timer, which is connected to irq0. The timer is set up at
-late_time_init().
+This patch has been tested on both ARMv7 and ARMv8
+VM, and in theroy it should support other ARCHs too.
 
-But, looking at the MID code it seems, that there is no reason to do
-so. The only code which might need the timer working is the TSC
-calibration code, but thats a non issue on MID as that is using its
-own empty calibration function. And check_timer() is not invoked
-either because MID has no PIC and therefor no legacy irqs.
+With this patch, virtio PCI block, network and scsi devices
+can work well on ARMv7 and ARMv8 VM.
 
-So if you look at intel_mid_time_init() then you'll see that in the
-ARAT case the timer setup is skipped already. So until the point where
-x86_init.timers.setup_percpu_clockev() is called for the boot cpu
-nothing really needs a timer on MID.
+QEMU needs below patches for runing the test:
 
-According to the MID code the apbt horror is only used for moorestown.
-Medfield and later use the local apic timer without the apbt nonsense.
+- Rob Herring's "Add generic PCI host device" patches
+	http://lists.gnu.org/archive/html/qemu-devel/2014-06/msg03482.html
+	http://lists.gnu.org/archive/html/qemu-devel/2014-06/msg03483.html
+- Alvise Rigo's "Add Generic PCI host device update"
+	http://marc.info/?l=qemu-devel&m=140506329920172&w=2
 
-The best thing we can do is to drop moorestown support and get rid of
-that apbt nonsense alltogether.
+For ARMv8, cpu model of "host" and "cortex-a57" is missed
+in Alvise Rigo's patchset, otherwise ARM64 VM can't boot.
 
-I don't think anyone deeply cares about it not being supported from
-3.18 on. The number of devices which sport a moorestown should be
-pretty limited and the only relevant use case of those is to act as a
-pocket heater with short battery life time. Its pretty pointless to
-update kernels on pocket heaters except for bragging reasons.
+All these QEMU patches can be found in below tree:
 
-If someone at Intel really thinks that we need to keep moorestown
-alive for other than documentary and sentimental reasons, then we can
-move the apbt setup to x86_init.timers.setup_percpu_clockev(). At that
-point the IOAPIC is setup already, so it should just work.
+	http://kernel.ubuntu.com/git?p=ming/qemu.git;a=shortlog;h=refs/heads/arm64-pci-test
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Tested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
 ---
- arch/x86/kernel/apb_timer.c             |    4 ----
- arch/x86/platform/intel-mid/intel-mid.c |   18 +++++++++++++-----
- arch/x86/platform/intel-mid/sfi.c       |    2 --
- 3 files changed, 13 insertions(+), 11 deletions(-)
+ drivers/pci/host/Kconfig            |    2 +-
+ drivers/pci/host/pci-host-generic.c |  196 +++++++++++------------------------
+ 2 files changed, 63 insertions(+), 135 deletions(-)
 
-diff --git a/arch/x86/kernel/apb_timer.c b/arch/x86/kernel/apb_timer.c
-index b708738d016e..7cfdc5467922 100644
---- a/arch/x86/kernel/apb_timer.c
-+++ b/arch/x86/kernel/apb_timer.c
-@@ -179,10 +179,6 @@ static int __init apbt_clockevent_register(void)
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 3dc25fa..885034d 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -50,7 +50,7 @@ config PCI_RCAR_GEN2_PCIE
  
- static void apbt_setup_irq(struct apbt_dev *adev)
+ config PCI_HOST_GENERIC
+ 	bool "Generic PCI host controller"
+-	depends on ARM && OF
++	depends on OF
+ 	help
+ 	  Say Y here if you want to support a simple generic PCI host
+ 	  controller, such as the one emulated by kvmtool.
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 3d2076f..00d0ca3 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -44,12 +44,14 @@ struct gen_pci {
+ 	struct list_head			resources;
+ };
+ 
++/* fake sysdata for cheating ARCH's pcibios code */
++static char	gen_sysdata[256];
++
+ static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
+ 					     unsigned int devfn,
+ 					     int where)
  {
--	/* timer0 irq has been setup early */
--	if (adev->irq == 0)
--		return;
+-	struct pci_sys_data *sys = bus->sysdata;
+-	struct gen_pci *pci = sys->private_data;
++	struct gen_pci *pci = dev_get_drvdata(bus->dev.parent->parent);
+ 	resource_size_t idx = bus->number - pci->cfg.bus_range.start;
+ 
+ 	return pci->cfg.win[idx] + ((devfn << 8) | where);
+@@ -64,8 +66,7 @@ static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
+ 					      unsigned int devfn,
+ 					      int where)
+ {
+-	struct pci_sys_data *sys = bus->sysdata;
+-	struct gen_pci *pci = sys->private_data;
++	struct gen_pci *pci = dev_get_drvdata(bus->dev.parent->parent);
+ 	resource_size_t idx = bus->number - pci->cfg.bus_range.start;
+ 
+ 	return pci->cfg.win[idx] + ((devfn << 12) | where);
+@@ -80,8 +81,7 @@ static int gen_pci_config_read(struct pci_bus *bus, unsigned int devfn,
+ 				int where, int size, u32 *val)
+ {
+ 	void __iomem *addr;
+-	struct pci_sys_data *sys = bus->sysdata;
+-	struct gen_pci *pci = sys->private_data;
++	struct gen_pci *pci = dev_get_drvdata(bus->dev.parent->parent);
+ 
+ 	addr = pci->cfg.ops->map_bus(bus, devfn, where);
+ 
+@@ -103,8 +103,7 @@ static int gen_pci_config_write(struct pci_bus *bus, unsigned int devfn,
+ 				 int where, int size, u32 val)
+ {
+ 	void __iomem *addr;
+-	struct pci_sys_data *sys = bus->sysdata;
+-	struct gen_pci *pci = sys->private_data;
++	struct gen_pci *pci = dev_get_drvdata(bus->dev.parent->parent);
+ 
+ 	addr = pci->cfg.ops->map_bus(bus, devfn, where);
+ 
+@@ -138,45 +137,6 @@ static const struct of_device_id gen_pci_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, gen_pci_of_match);
+ 
+-static int gen_pci_calc_io_offset(struct device *dev,
+-				  struct of_pci_range *range,
+-				  struct resource *res,
+-				  resource_size_t *offset)
+-{
+-	static atomic_t wins = ATOMIC_INIT(0);
+-	int err, idx, max_win;
+-	unsigned int window;
 -
- 	irq_modify_status(adev->irq, 0, IRQ_MOVE_PCNTXT);
- 	irq_set_affinity(adev->irq, cpumask_of(adev->cpu));
+-	if (!PAGE_ALIGNED(range->cpu_addr))
+-		return -EINVAL;
+-
+-	max_win = (IO_SPACE_LIMIT + 1) / SZ_64K;
+-	idx = atomic_inc_return(&wins);
+-	if (idx > max_win)
+-		return -ENOSPC;
+-
+-	window = (idx - 1) * SZ_64K;
+-	err = pci_ioremap_io(window, range->cpu_addr);
+-	if (err)
+-		return err;
+-
+-	of_pci_range_to_resource(range, dev->of_node, res);
+-	res->start = window;
+-	res->end = res->start + range->size - 1;
+-	*offset = window - range->pci_addr;
+-	return 0;
+-}
+-
+-static int gen_pci_calc_mem_offset(struct device *dev,
+-				   struct of_pci_range *range,
+-				   struct resource *res,
+-				   resource_size_t *offset)
+-{
+-	of_pci_range_to_resource(range, dev->of_node, res);
+-	*offset = range->cpu_addr - range->pci_addr;
+-	return 0;
+-}
+-
+ static void gen_pci_release_of_pci_ranges(struct gen_pci *pci)
+ {
+ 	struct pci_host_bridge_window *win;
+@@ -187,72 +147,6 @@ static void gen_pci_release_of_pci_ranges(struct gen_pci *pci)
+ 	pci_free_resource_list(&pci->resources);
  }
-diff --git a/arch/x86/platform/intel-mid/intel-mid.c b/arch/x86/platform/intel-mid/intel-mid.c
-index 1bbedc4b0f88..d8e23a622a33 100644
---- a/arch/x86/platform/intel-mid/intel-mid.c
-+++ b/arch/x86/platform/intel-mid/intel-mid.c
-@@ -81,26 +81,34 @@ static unsigned long __init intel_mid_calibrate_tsc(void)
+ 
+-static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
+-{
+-	struct of_pci_range range;
+-	struct of_pci_range_parser parser;
+-	int err, res_valid = 0;
+-	struct device *dev = pci->host.dev.parent;
+-	struct device_node *np = dev->of_node;
+-
+-	if (of_pci_range_parser_init(&parser, np)) {
+-		dev_err(dev, "missing \"ranges\" property\n");
+-		return -EINVAL;
+-	}
+-
+-	for_each_of_pci_range(&parser, &range) {
+-		struct resource *parent, *res;
+-		resource_size_t offset;
+-		u32 restype = range.flags & IORESOURCE_TYPE_BITS;
+-
+-		res = devm_kmalloc(dev, sizeof(*res), GFP_KERNEL);
+-		if (!res) {
+-			err = -ENOMEM;
+-			goto out_release_res;
+-		}
+-
+-		switch (restype) {
+-		case IORESOURCE_IO:
+-			parent = &ioport_resource;
+-			err = gen_pci_calc_io_offset(dev, &range, res, &offset);
+-			break;
+-		case IORESOURCE_MEM:
+-			parent = &iomem_resource;
+-			err = gen_pci_calc_mem_offset(dev, &range, res, &offset);
+-			res_valid |= !(res->flags & IORESOURCE_PREFETCH || err);
+-			break;
+-		default:
+-			err = -EINVAL;
+-			continue;
+-		}
+-
+-		if (err) {
+-			dev_warn(dev,
+-				 "error %d: failed to add resource [type 0x%x, %lld bytes]\n",
+-				 err, restype, range.size);
+-			continue;
+-		}
+-
+-		err = request_resource(parent, res);
+-		if (err)
+-			goto out_release_res;
+-
+-		pci_add_resource_offset(&pci->resources, res, offset);
+-	}
+-
+-	if (!res_valid) {
+-		dev_err(dev, "non-prefetchable memory resource required\n");
+-		err = -EINVAL;
+-		goto out_release_res;
+-	}
+-
+-	return 0;
+-
+-out_release_res:
+-	gen_pci_release_of_pci_ranges(pci);
+-	return err;
+-}
+-
+ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+ {
+ 	int err;
+@@ -305,16 +199,33 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+ 			return -ENOMEM;
+ 	}
+ 
+-	/* Register bus resource */
+-	pci_add_resource(&pci->resources, bus_range);
  	return 0;
  }
  
-+static void __init intel_mid_setup_bp_timer(void)
-+{
-+	apbt_time_init();
-+	setup_boot_APIC_clock();
-+}
-+
- static void __init intel_mid_time_init(void)
+-static int gen_pci_setup(int nr, struct pci_sys_data *sys)
++static int gen_pci_map_ranges(struct list_head *res,
++		resource_size_t io_base)
  {
- 	sfi_table_parse(SFI_SIG_MTMR, NULL, NULL, sfi_parse_mtmr);
+-	struct gen_pci *pci = sys->private_data;
+-	list_splice_init(&pci->resources, &sys->resources);
+-	return 1;
++	struct pci_host_bridge_window *window;
++	int ret;
 +
- 	switch (intel_mid_timer_options) {
- 	case INTEL_MID_TIMER_APBT_ONLY:
- 		break;
- 	case INTEL_MID_TIMER_LAPIC_APBT:
--		x86_init.timers.setup_percpu_clockev = setup_boot_APIC_clock;
-+		/* Use apbt and local apic */
-+		x86_init.timers.setup_percpu_clockev = intel_mid_setup_bp_timer;
- 		x86_cpuinit.setup_percpu_clockev = setup_secondary_APIC_clock;
--		break;
-+		return;
- 	default:
- 		if (!boot_cpu_has(X86_FEATURE_ARAT))
- 			break;
-+		/* Lapic only, no apbt */
- 		x86_init.timers.setup_percpu_clockev = setup_boot_APIC_clock;
- 		x86_cpuinit.setup_percpu_clockev = setup_secondary_APIC_clock;
- 		return;
- 	}
--	/* we need at least one APB timer */
--	pre_init_apic_IRQ0();
--	apbt_time_init();
++	list_for_each_entry(window, res, list) {
++		struct resource *res = window->res;
++		u64 restype = resource_type(res);
 +
-+	x86_init.timers.setup_percpu_clockev = apbt_time_init;
++		switch (restype) {
++		case IORESOURCE_IO:
++			ret = pci_remap_iospace(res, io_base);
++			if (ret < 0)
++				return ret;
++			break;
++		case IORESOURCE_MEM:
++		case IORESOURCE_BUS:
++			break;
++		default:
++			return -EINVAL;
++		}
++	}
++	return 0;
  }
  
- static void intel_mid_arch_setup(void)
-diff --git a/arch/x86/platform/intel-mid/sfi.c b/arch/x86/platform/intel-mid/sfi.c
-index c14ad34776c4..aa59f88868f8 100644
---- a/arch/x86/platform/intel-mid/sfi.c
-+++ b/arch/x86/platform/intel-mid/sfi.c
-@@ -95,8 +95,6 @@ int __init sfi_parse_mtmr(struct sfi_table_header *table)
- 		pr_debug("timer[%d]: paddr = 0x%08x, freq = %dHz, irq = %d\n",
- 			totallen, (u32)pentry->phys_addr,
- 			pentry->freq_hz, pentry->irq);
--			if (!pentry->irq)
--				continue;
- 			mp_irq.type = MP_INTSRC;
- 			mp_irq.irqtype = mp_INT;
- /* triggering mode edge bit 2-3, active high polarity bit 0-1 */
+ static int gen_pci_probe(struct platform_device *pdev)
+@@ -325,14 +236,11 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 	const int *prop;
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *np = dev->of_node;
++	resource_size_t iobase = 0;
+ 	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+-	struct hw_pci hw = {
+-		.nr_controllers	= 1,
+-		.private_data	= (void **)&pci,
+-		.setup		= gen_pci_setup,
+-		.map_irq	= of_irq_parse_and_map_pci,
+-		.ops		= &gen_pci_ops,
+-	};
++	struct pci_bus *bus;
++	struct pci_dev *pci_dev = NULL;
++	bool probe_only = false;
+ 
+ 	if (!pci)
+ 		return -ENOMEM;
+@@ -346,9 +254,9 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 	prop = of_get_property(of_chosen, "linux,pci-probe-only", NULL);
+ 	if (prop) {
+ 		if (*prop)
+-			pci_add_flags(PCI_PROBE_ONLY);
++			probe_only = true;
+ 		else
+-			pci_clear_flags(PCI_PROBE_ONLY);
++			probe_only = false;
+ 	}
+ 
+ 	of_id = of_match_node(gen_pci_of_match, np);
+@@ -357,20 +265,40 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 	INIT_LIST_HEAD(&pci->host.windows);
+ 	INIT_LIST_HEAD(&pci->resources);
+ 
+-	/* Parse our PCI ranges and request their resources */
+-	err = gen_pci_parse_request_of_pci_ranges(pci);
++	err = of_pci_get_host_bridge_resources(np, 0, 0xff,
++			&pci->resources, &iobase);
+ 	if (err)
+ 		return err;
+ 
+ 	/* Parse and map our Configuration Space windows */
+ 	err = gen_pci_parse_map_cfg_windows(pci);
+-	if (err) {
+-		gen_pci_release_of_pci_ranges(pci);
+-		return err;
++	if (err)
++		goto fail;
++
++	err = gen_pci_map_ranges(&pci->resources, iobase);
++	if (err)
++		goto fail;
++
++	err = -ENOMEM;
++	platform_set_drvdata(pdev, pci);
++	bus = pci_scan_root_bus(dev, 0, &gen_pci_ops, gen_sysdata,
++				&pci->resources);
++	if (!bus)
++		goto fail;
++
++	for_each_pci_dev(pci_dev)
++		pci_dev->irq = of_irq_parse_and_map_pci(pci_dev, 0, 0);
++
++	if (!probe_only) {
++		pci_bus_size_bridges(bus);
++		pci_bus_assign_resources(bus);
++		pci_bus_add_devices(bus);
+ 	}
+ 
+-	pci_common_init_dev(dev, &hw);
+ 	return 0;
++ fail:
++	gen_pci_release_of_pci_ranges(pci);
++	return err;
+ }
+ 
+ static struct platform_driver gen_pci_driver = {
 -- 
-1.7.10.4
+1.7.9.5
 
