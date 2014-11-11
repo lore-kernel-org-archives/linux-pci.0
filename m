@@ -1,60 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:17037 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750999AbaKFBLL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 20:11:11 -0500
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0NEL00A8IFAMEF30@mailout4.samsung.com> for
- linux-pci@vger.kernel.org; Thu, 06 Nov 2014 10:11:10 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-Subject: [PATCH] PCI: dra7xx: Add dra7xx prefix before add_pcie_port
-Date: Thu, 06 Nov 2014 10:11:44 +0900
-Message-id: <001301cff95e$a124f6b0$e36ee410$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:62640 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751352AbaKKSRe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 13:17:34 -0500
+Received: by mail-ig0-f173.google.com with SMTP id r10so1484743igi.0
+        for <linux-pci@vger.kernel.org>; Tue, 11 Nov 2014 10:17:34 -0800 (PST)
+Date: Tue, 11 Nov 2014 11:17:29 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Myron Stowe <myron.stowe@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: Remove fixed parameter in pci_iov_resource_bar()
+Message-ID: <20141111181729.GG28161@google.com>
+References: <20141111150450.15401.41753.stgit@amt.stowe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141111150450.15401.41753.stgit@amt.stowe>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The add_pcie_port function is dra7xx-specific. Add exynos prefix
-to avoid collision in global name space.
+On Tue, Nov 11, 2014 at 08:04:50AM -0700, Myron Stowe wrote:
+> pci_iov_resource_bar() always sets its 'pci_bar_type' parameter to
+> 'pci_bar_unknown'.  Drop the parameter and just use 'pci_bar_unknown'
+> directly in the callers.
+> 
+> No functional change intended.
+> 
+> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> Cc: Chris Wright <chrisw@sous-sol.org>
+> Cc: Yu Zhao <yuzhao@google.com>
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- drivers/pci/host/pci-dra7xx.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+I replaced the v1 patch with this one to fix the build error:
 
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 52b34fe..5b4a644 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -270,8 +270,8 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
- 	return IRQ_HANDLED;
- }
- 
--static int add_pcie_port(struct dra7xx_pcie *dra7xx,
--			  struct platform_device *pdev)
-+static int dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
-+				struct platform_device *pdev)
- {
- 	int ret;
- 	struct pcie_port *pp;
-@@ -398,7 +398,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 
- 	platform_set_drvdata(pdev, dra7xx);
- 
--	ret = add_pcie_port(dra7xx, pdev);
-+	ret = dra7xx_add_pcie_port(dra7xx, pdev);
- 	if (ret < 0)
- 		goto err_add_port;
- 
--- 
-1.7.9.5
+drivers/pci/pci.c:4184:9: error: too few arguments to function 'pci_iov_resource_bar'
 
+Thanks!
 
+> ---
+>  drivers/pci/iov.c |   11 +++--------
+>  drivers/pci/pci.c |    3 ++-
+>  drivers/pci/pci.h |    6 ++----
+>  3 files changed, 7 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 4d109c0..4b3a4ea 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -479,20 +479,16 @@ void pci_iov_release(struct pci_dev *dev)
+>   * pci_iov_resource_bar - get position of the SR-IOV BAR
+>   * @dev: the PCI device
+>   * @resno: the resource number
+> - * @type: the BAR type to be filled in
+>   *
+>   * Returns position of the BAR encapsulated in the SR-IOV capability.
+>   */
+> -int pci_iov_resource_bar(struct pci_dev *dev, int resno,
+> -			 enum pci_bar_type *type)
+> +int pci_iov_resource_bar(struct pci_dev *dev, int resno)
+>  {
+>  	if (resno < PCI_IOV_RESOURCES || resno > PCI_IOV_RESOURCE_END)
+>  		return 0;
+>  
+>  	BUG_ON(!dev->is_physfn);
+>  
+> -	*type = pci_bar_unknown;
+> -
+>  	return dev->sriov->pos + PCI_SRIOV_BAR +
+>  		4 * (resno - PCI_IOV_RESOURCES);
+>  }
+> @@ -510,13 +506,12 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno,
+>  resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
+>  {
+>  	struct resource tmp;
+> -	enum pci_bar_type type;
+> -	int reg = pci_iov_resource_bar(dev, resno, &type);
+> +	int reg = pci_iov_resource_bar(dev, resno);
+>  
+>  	if (!reg)
+>  		return 0;
+>  
+> -	 __pci_read_base(dev, type, &tmp, reg);
+> +	 __pci_read_base(dev, pci_bar_unknown, &tmp, reg);
+>  	return resource_alignment(&tmp);
+>  }
+>  
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 625a4ac..7bf2465 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4180,7 +4180,8 @@ int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type)
+>  		return dev->rom_base_reg;
+>  	} else if (resno < PCI_BRIDGE_RESOURCES) {
+>  		/* device specific resource */
+> -		reg = pci_iov_resource_bar(dev, resno, type);
+> +		*type = pci_bar_unknown;
+> +		reg = pci_iov_resource_bar(dev, resno);
+>  		if (reg)
+>  			return reg;
+>  	}
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 0601890..a0905a0 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -251,8 +251,7 @@ static inline void pci_restore_ats_state(struct pci_dev *dev)
+>  #ifdef CONFIG_PCI_IOV
+>  int pci_iov_init(struct pci_dev *dev);
+>  void pci_iov_release(struct pci_dev *dev);
+> -int pci_iov_resource_bar(struct pci_dev *dev, int resno,
+> -			 enum pci_bar_type *type);
+> +int pci_iov_resource_bar(struct pci_dev *dev, int resno);
+>  resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno);
+>  void pci_restore_iov_state(struct pci_dev *dev);
+>  int pci_iov_bus_range(struct pci_bus *bus);
+> @@ -266,8 +265,7 @@ static inline void pci_iov_release(struct pci_dev *dev)
+>  
+>  {
+>  }
+> -static inline int pci_iov_resource_bar(struct pci_dev *dev, int resno,
+> -				       enum pci_bar_type *type)
+> +static inline int pci_iov_resource_bar(struct pci_dev *dev, int resno)
+>  {
+>  	return 0;
+>  }
+> 
