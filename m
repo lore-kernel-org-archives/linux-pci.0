@@ -1,94 +1,155 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:64239 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750770AbaKYDW2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 24 Nov 2014 22:22:28 -0500
-Message-ID: <5473F5EF.4060007@linux.intel.com>
-Date: Tue, 25 Nov 2014 11:22:23 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:42000 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751221AbaKKPqF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 10:46:05 -0500
+Date: Tue, 11 Nov 2014 10:45:38 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	David Vrabel <david.vrabel@citrix.com>,
+	xen-devel@lists.xenproject.org
+Subject: Re: [PATCH 1/3] x86/xen: Introduce a global flag to fix the MSI mask
+ bug
+Message-ID: <20141111154538.GC6597@laptop.dumpdata.com>
+References: <1414377878-23497-1-git-send-email-wangyijing@huawei.com>
+ <1414377878-23497-2-git-send-email-wangyijing@huawei.com>
+ <20141111000456.GB21470@google.com>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>
-CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, x86@kernel.org, mingo@redhat.com,
-	hpa@zytor.com, joro@8bytes.org, iommu@lists.linux-foundation.org
-Subject: Re: [PATCH 1/3] PCI/MSI: Initial hook for archs to declare multivector
- MSI support
-References: <20141121213752.31095.30735.stgit@gimli.home>	 <20141121220833.31095.12371.stgit@gimli.home>	 <alpine.DEB.2.11.1411232109140.6439@nanos> <1416865524.11825.89.camel@bling.home>
-In-Reply-To: <1416865524.11825.89.camel@bling.home>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141111000456.GB21470@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/11/25 5:45, Alex Williamson wrote:
-> On Sun, 2014-11-23 at 21:20 +0100, Thomas Gleixner wrote:
->> On Fri, 21 Nov 2014, Alex Williamson wrote:
->>> For the most part multivector MSI is not supported and drivers and
->>> hardware wanting multiple vectors opt for MSI-X instead.  It seems
->>> though that having the ability to query the arch/platform code to
->>> determine whether allocating multiple MSI vectors will ever succeed
->>> is a useful thing.  For instance, vfio-pci can use this to determine
->>> whether to expose multiple MSI vectors to the user.  If we know we
->>> cannot ever support more than one vector, we have a better shot at
->>> the userspace driver working, especially if it's a guest OS, if we
->>> only expose one vector as being available in the interface.
->>>
->>> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
->>> ---
->>>
->>>  drivers/pci/msi.c   |    5 +++++
->>>  include/linux/msi.h |    1 +
->>>  2 files changed, 6 insertions(+)
->>>
->>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->>> index 9fab30a..36b503a 100644
->>> --- a/drivers/pci/msi.c
->>> +++ b/drivers/pci/msi.c
->>> @@ -79,6 +79,11 @@ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->>>  	return 0;
->>>  }
->>>  
->>> +bool __weak arch_supports_multivector_msi(struct pci_dev *dev)
->>
->> Please not another weak arch function. We are in the process to reduce
->> them not to extend them.
->>
->> arch_supports is pretty much wrong here anyway. We are moving away
->> from arch MSI dependencies simply because it's not a arch property per
->> se.
->>
->> Multi MSI is a property of the underlying interrupt controllers and
->> there might be several MSI interrupt domains on a given system. They
->> can or cannot support multi MSI.
->>
->> The current x86 implementation is a tangled maze and Jiang is in the
->> process to distangle it completely. Until thats done x86 is not going
->> to add new ad hoc interfaces.
->>
->> Once we converted everything over to the new hierarchical irqdomains
->> we can add such an interface to the code, but for now I'm not
->> accepting anything like that into x86 msi related code.
+On Mon, Nov 10, 2014 at 05:04:56PM -0700, Bjorn Helgaas wrote:
+> On Mon, Oct 27, 2014 at 10:44:36AM +0800, Yijing Wang wrote:
+> > Commit 0e4ccb1505a9 ("PCI: Add x86_msi.msi_mask_irq() and msix_mask_irq()")
+> > fixed MSI mask bug which may cause kernel crash. But the commit
+> > made MSI code complex. Introduce a new global flag "pci_msi_ignore_mask"
+> > to ignore MSI/MSI-X to fix this issue, it's a cleaner solution.
+> > And the commit 0e4ccb1505a9 will be reverted in the later patch.
 > 
-> Ok, I guess I can do some ugliness with associating the IOMMU IRQ
-> remapping capability with multivector MSI support within an #ifdef x86
-> block.  Gross, but I think that's as accurate as I can get w/o a hook
-> through the MSI code.  Is there any target for the refactoring you
-> mention?  Thanks,
-Hi Alex,
-	The hierarchy irqdomain framework and some preparation work
-for PCI MSI refactor will be merged into v3.19, there are already in
-tip tree. If thing goes smoothly, we may finish PCI MSI refactoring
-on x86 platform for the merging window after 3.19, not sure 3.20 or
-4.0:)
-Regards!
-Gerry
+> The 0e4ccb1505a9 changelog says Xen guests can't write to MSI-X BARs.
+> But it makes mask_irq a no-op for both MSI-X and MSI.  The MSI mask bit is
+> in config space, not in memory space.  So why does mask_irq need to be a
+> no-op for MSI as well?  Are Xen guests prohibited from writing to config
+
+The PV guests it refers do not do write to config space. They have
+an PCI frontend and backend driver which communicates to the backend (the
+trusted domain) to setup the MSI and MSI-X. The 'pci_xen_init' (arch/x86/pci/xen.c)
+is the one that sets up the overrides. When an MSI or MSI-X is requested
+it is done via the request_irq which ends up calling 'xen_setup_msi_irqs'.
+If you look there you can see:
+
+173         if (type == PCI_CAP_ID_MSIX)                                            
+174                 ret = xen_pci_frontend_enable_msix(dev, v, nvec);               
+175         else                                                                    
+176                 ret = xen_pci_frontend_enable_msi(dev, v);                      
+177         if (ret)                                                                
+178                 goto error;                                                     
+
+Which are the calls to the Xen PCI driver to communicate with the
+backend to setup the MSI.
+
+> space, too?  (It's fine if they are; it's just that the changelog
+> specifically mentioned MSI-X memory space tables, and it didn't mention
+> config space at all.)
+
+Correct. The config space is accessible to the guest but if it writes
+to it - all of those values are ignored by the hypervisor - and that
+is because the backend is suppose to communicate to the hypervisor
+whether the guest can indeed setup MSI or MSI-X.
+
 > 
-> Alex
+> And I *assume* there's some Xen mechanism that accomplishes the mask_irq in
+> a different way, since the actual mask_irq interface does nothing?  (This
+> is really a question for 0e4ccb1505a9, since I don't think this particular
+> patch changes anything in that respect.)
+
+Correct. 'request_irq' ends up doing that. Or rather it ends up
+calling xen_setup_msi_irqs which takes care of that.
+
+The Xen PV guests (not to be confused with Xen HVM guests) run without
+any emulated devices. That means most of the x86 platform things - ioports,
+VGA, etc - are removed. Instead that functionality is provided via 
+frontend drivers that communicate to the backend via a ring.
+
+Hopefully this clarifies it?
 > 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+> > Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> > CC: David Vrabel <david.vrabel@citrix.com>
+> > CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> > CC: xen-devel@lists.xenproject.org
+> > ---
+> >  arch/x86/pci/xen.c  |    2 ++
+> >  drivers/pci/msi.c   |    7 ++++++-
+> >  include/linux/msi.h |    1 +
+> >  3 files changed, 9 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+> > index 093f5f4..5ef62ed 100644
+> > --- a/arch/x86/pci/xen.c
+> > +++ b/arch/x86/pci/xen.c
+> > @@ -427,6 +427,7 @@ int __init pci_xen_init(void)
+> >  	x86_msi.teardown_msi_irqs = xen_teardown_msi_irqs;
+> >  	x86_msi.msi_mask_irq = xen_nop_msi_mask_irq;
+> >  	x86_msi.msix_mask_irq = xen_nop_msix_mask_irq;
+> > +	pci_msi_ignore_mask = 1;
+> >  #endif
+> >  	return 0;
+> >  }
+> > @@ -508,6 +509,7 @@ int __init pci_xen_initial_domain(void)
+> >  	x86_msi.restore_msi_irqs = xen_initdom_restore_msi_irqs;
+> >  	x86_msi.msi_mask_irq = xen_nop_msi_mask_irq;
+> >  	x86_msi.msix_mask_irq = xen_nop_msix_mask_irq;
+> > +	pci_msi_ignore_mask = 1;
+> >  #endif
+> >  	xen_setup_acpi_sci();
+> >  	__acpi_register_gsi = acpi_register_gsi_xen;
+> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> > index 38511d9..ecb5f54 100644
+> > --- a/drivers/pci/msi.c
+> > +++ b/drivers/pci/msi.c
+> > @@ -23,6 +23,7 @@
+> >  #include "pci.h"
+> >  
+> >  static int pci_msi_enable = 1;
+> > +int pci_msi_ignore_mask;
+> >  
+> >  #define msix_table_size(flags)	((flags & PCI_MSIX_FLAGS_QSIZE) + 1)
+> >  
+> > @@ -166,7 +167,7 @@ u32 default_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+> >  {
+> >  	u32 mask_bits = desc->masked;
+> >  
+> > -	if (!desc->msi_attrib.maskbit)
+> > +	if (pci_msi_ignore_mask || !desc->msi_attrib.maskbit)
+> >  		return 0;
+> >  
+> >  	mask_bits &= ~mask;
+> > @@ -198,6 +199,10 @@ u32 default_msix_mask_irq(struct msi_desc *desc, u32 flag)
+> >  	u32 mask_bits = desc->masked;
+> >  	unsigned offset = desc->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE +
+> >  						PCI_MSIX_ENTRY_VECTOR_CTRL;
+> > +
+> > +	if (pci_msi_ignore_mask)
+> > +		return 0;
+> > +
+> >  	mask_bits &= ~PCI_MSIX_ENTRY_CTRL_MASKBIT;
+> >  	if (flag)
+> >  		mask_bits |= PCI_MSIX_ENTRY_CTRL_MASKBIT;
+> > diff --git a/include/linux/msi.h b/include/linux/msi.h
+> > index 44f4746..86dc501 100644
+> > --- a/include/linux/msi.h
+> > +++ b/include/linux/msi.h
+> > @@ -10,6 +10,7 @@ struct msi_msg {
+> >  	u32	data;		/* 16 bits of msi message data */
+> >  };
+> >  
+> > +extern int pci_msi_ignore_mask;
+> >  /* Helper functions */
+> >  struct irq_data;
+> >  struct msi_desc;
+> > -- 
+> > 1.7.1
+> > 
