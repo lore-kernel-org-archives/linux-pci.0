@@ -1,151 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:61055 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751631AbaKJXE7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Nov 2014 18:04:59 -0500
-Received: by mail-ie0-f182.google.com with SMTP id rd18so10245965iec.41
-        for <linux-pci@vger.kernel.org>; Mon, 10 Nov 2014 15:04:59 -0800 (PST)
-Date: Mon, 10 Nov 2014 16:04:54 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Martin Wilck <martin.wilck@ts.fujitsu.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Michael Ellerman <mpe@ellerman.id.au>
-Subject: Re: [PATCH RFC v2 1/2] drivers: pci: fix pci_mmap_fits()
- implementation for procfs mmap
-Message-ID: <20141110230454.GA21470@google.com>
-References: <1414168089-8130-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1414168089-8130-2-git-send-email-lorenzo.pieralisi@arm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:48175 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750730AbaKKPHK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 11 Nov 2014 10:07:10 -0500
+Subject: [PATCH v2] PCI: Remove fixed parameter in pci_iov_resource_bar()
+From: Myron Stowe <myron.stowe@redhat.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Date: Tue, 11 Nov 2014 08:04:50 -0700
+Message-ID: <20141111150450.15401.41753.stgit@amt.stowe>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1414168089-8130-2-git-send-email-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Michael, since he merged 2311b1f2bbd3, which added
-pci_resource_to_user()]
+pci_iov_resource_bar() always sets its 'pci_bar_type' parameter to
+'pci_bar_unknown'.  Drop the parameter and just use 'pci_bar_unknown'
+directly in the callers.
 
-On Fri, Oct 24, 2014 at 05:28:05PM +0100, Lorenzo Pieralisi wrote:
-> The addresses stored in PCI device resources for memory spaces
-> correspond to CPU physical addresses, which do not necessarily
-> map 1:1 to PCI bus addresses as programmed in PCI devices configuration
-> spaces.
-> 
-> Therefore, the changes applied by commits:
-> 
-> 8c05cd08a7504b855c26526
-> 3b519e4ea618b6943a82931
-> 
-> imply that the sanity checks carried out in pci_mmap_fits() to
-> ensure that the user executes an mmap of a "real" pci resource are
-> erroneous when executed through procfs. Some platforms (ie SPARC)
-> expect the offset value to be passed in (procfs mapping) to be the
-> PCI BAR configuration value as read from the PCI device configuration
-> space, not the fixed-up CPU physical address that is present in PCI
-> device resources.
-> 
-> The required pgoff (offset in mmap syscall) value passed from userspace
-> is supposed to represent the resource value exported through
-> /proc/bus/pci/devices when the resource is mmapped though procfs (and 0
-> when the mapping is carried out through sysfs resource files), which
-> corresponds to the PCI resource filtered through the pci_resource_to_user()
-> API.
-> 
-> This patch converts the PCI resource to the expected "user visible"
-> value through pci_resource_to_user() before carrying out sanity checks
-> in pci_mmap_fits() so that the check is carried out on the resource
-> values as expected from the userspace mmap API.
+No functional change intended.
 
-I'm trying to figure out what's going on here.  I think this fix is
-correct, but it seems like there might be some additional simplification we
-could do.
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+Cc: Chris Wright <chrisw@sous-sol.org>
+Cc: Yu Zhao <yuzhao@google.com>
+---
+ drivers/pci/iov.c |   11 +++--------
+ drivers/pci/pci.c |    3 ++-
+ drivers/pci/pci.h |    6 ++----
+ 3 files changed, 7 insertions(+), 13 deletions(-)
 
-This patch is apparently a bug fix for mmap via procfs.  And the bug
-apparently affects platforms where pci_resource_to_user() applies a
-non-zero offset, i.e., microblaze, mips, power, and sparc.  It would be
-helpful to have a bug report or an example of something that doesn't work.
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 4d109c0..4b3a4ea 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -479,20 +479,16 @@ void pci_iov_release(struct pci_dev *dev)
+  * pci_iov_resource_bar - get position of the SR-IOV BAR
+  * @dev: the PCI device
+  * @resno: the resource number
+- * @type: the BAR type to be filled in
+  *
+  * Returns position of the BAR encapsulated in the SR-IOV capability.
+  */
+-int pci_iov_resource_bar(struct pci_dev *dev, int resno,
+-			 enum pci_bar_type *type)
++int pci_iov_resource_bar(struct pci_dev *dev, int resno)
+ {
+ 	if (resno < PCI_IOV_RESOURCES || resno > PCI_IOV_RESOURCE_END)
+ 		return 0;
+ 
+ 	BUG_ON(!dev->is_physfn);
+ 
+-	*type = pci_bar_unknown;
+-
+ 	return dev->sriov->pos + PCI_SRIOV_BAR +
+ 		4 * (resno - PCI_IOV_RESOURCES);
+ }
+@@ -510,13 +506,12 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno,
+ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
+ {
+ 	struct resource tmp;
+-	enum pci_bar_type type;
+-	int reg = pci_iov_resource_bar(dev, resno, &type);
++	int reg = pci_iov_resource_bar(dev, resno);
+ 
+ 	if (!reg)
+ 		return 0;
+ 
+-	 __pci_read_base(dev, type, &tmp, reg);
++	 __pci_read_base(dev, pci_bar_unknown, &tmp, reg);
+ 	return resource_alignment(&tmp);
+ }
+ 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 625a4ac..7bf2465 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4180,7 +4180,8 @@ int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type)
+ 		return dev->rom_base_reg;
+ 	} else if (resno < PCI_BRIDGE_RESOURCES) {
+ 		/* device specific resource */
+-		reg = pci_iov_resource_bar(dev, resno, type);
++		*type = pci_bar_unknown;
++		reg = pci_iov_resource_bar(dev, resno);
+ 		if (reg)
+ 			return reg;
+ 	}
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 0601890..a0905a0 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -251,8 +251,7 @@ static inline void pci_restore_ats_state(struct pci_dev *dev)
+ #ifdef CONFIG_PCI_IOV
+ int pci_iov_init(struct pci_dev *dev);
+ void pci_iov_release(struct pci_dev *dev);
+-int pci_iov_resource_bar(struct pci_dev *dev, int resno,
+-			 enum pci_bar_type *type);
++int pci_iov_resource_bar(struct pci_dev *dev, int resno);
+ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno);
+ void pci_restore_iov_state(struct pci_dev *dev);
+ int pci_iov_bus_range(struct pci_bus *bus);
+@@ -266,8 +265,7 @@ static inline void pci_iov_release(struct pci_dev *dev)
+ 
+ {
+ }
+-static inline int pci_iov_resource_bar(struct pci_dev *dev, int resno,
+-				       enum pci_bar_type *type)
++static inline int pci_iov_resource_bar(struct pci_dev *dev, int resno)
+ {
+ 	return 0;
+ }
 
-The second patch fixes a bug on ARM.  How does that patch depend on this
-one?  Since ARM doesn't implement pci_resource_to_user(), I wouldn't think
-this first patch would change anything on ARM.
-
-Here's what I think I understand so far:
-
-  Applications can mmap PCI memory space via either sysfs or procfs (the
-  procfs method is deprecated but still supported):
-
-    - In sysfs, there's a separate /sys/devices/pci*/.../resource* file
-      for each device BAR, and the application opens the appropriate
-      file and supplies the offset from the beginning of the BAR as the
-      mmap(2) offset.
-
-    - In procfs, the application opens the single /proc/bus/pci/... file
-      for the device.  On most platforms, it supplies the CPU physical
-      address as the mmap(2) offset.  On a few platforms, such as SPARC,
-      it supplies the bus address, i.e., a BAR value, instead.
-
-But I'm not sure I have this right.  If the procfs offset is either the
-CPU physical address or the BAR value, then pci_resource_to_user()
-should be (depending on the arch) either a no-op or use
-pci_resource_to_bus().
-
-But that's not how it's implemented.  Maybe it *could* be?  If
-pci_resource_to_user() gives you something that's not a CPU physical
-address and not a bus address, what *does* it give you, and why would we
-need this third kind of thing?
-
-FWIW, I think the discussion leading up to pci_resource_to_user() is here:
-http://lkml.iu.edu/hypermail/linux/kernel/0504.3/0467.html
-
-Bjorn
-
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Cc: Russell King <linux@arm.linux.org.uk>
-> Cc: David S. Miller <davem@davemloft.net>
-> Cc: Michal Simek <monstr@monstr.eu>
-> Cc: Martin Wilck <martin.wilck@ts.fujitsu.com>
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> ---
->  drivers/pci/pci-sysfs.c | 13 ++++++++-----
->  1 file changed, 8 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 92b6d9a..777d8bc 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -963,17 +963,20 @@ void pci_remove_legacy_files(struct pci_bus *b)
->  int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vma,
->  		  enum pci_mmap_api mmap_api)
->  {
-> -	unsigned long nr, start, size, pci_start;
-> +	unsigned long nr, start, size, pci_offset;
-> +	resource_size_t pci_start, pci_end;
->  
->  	if (pci_resource_len(pdev, resno) == 0)
->  		return 0;
->  	nr = vma_pages(vma);
->  	start = vma->vm_pgoff;
-> +	pci_resource_to_user(pdev, resno, &pdev->resource[resno],
-> +			     &pci_start, &pci_end);
->  	size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
-> -	pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
-> -			pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
-> -	if (start >= pci_start && start < pci_start + size &&
-> -			start + nr <= pci_start + size)
-> +	pci_offset = (mmap_api == PCI_MMAP_PROCFS) ?
-> +			pci_start >> PAGE_SHIFT : 0;
-> +	if (start >= pci_offset && start < pci_offset + size &&
-> +			start + nr <= pci_offset + size)
->  		return 1;
->  	return 0;
->  }
-> -- 
-> 2.1.2
-> 
