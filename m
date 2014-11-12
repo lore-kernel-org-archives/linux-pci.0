@@ -1,84 +1,52 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
-Subject: [Patch Part3 v3 23/38] iommu/vt-d: Move struct irq_2_iommu into intel_irq_remapping.c
-Date: Sun,  9 Nov 2014 02:13:23 +0800
-Message-Id: <1415470418-10874-24-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:23134 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751521AbaKLDYZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 22:24:25 -0500
+Received: from epcpsbgr4.samsung.com
+ (u144.gpu120.samsung.co.kr [203.254.230.144])
+ by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0NEW00JS4PGOMY70@mailout2.samsung.com> for
+ linux-pci@vger.kernel.org; Wed, 12 Nov 2014 12:24:24 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Lucas Stach' <l.stach@pengutronix.de>
+Subject: [PATCH] PCI: imx6: Use tabs for indentation
+Date: Wed, 12 Nov 2014 12:25:09 +0900
+Message-id: <002801cffe28$43176f70$c9464e50$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now only intel_irq_remapping.c access irq_2_iommu, so move it from
-hw_irq.h into intel_irq_remapping.c.
+This patch fixes the following checkpatch error.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+  ERROR: code indent should use tabs where possible
+
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 ---
- arch/x86/include/asm/hw_irq.h       |    9 ---------
- drivers/iommu/intel_irq_remapping.c |    7 +++++++
- 2 files changed, 7 insertions(+), 9 deletions(-)
+ drivers/pci/host/pci-imx6.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 7ad26bb42e57..8dd38c205719 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -95,14 +95,6 @@ extern void trace_call_function_single_interrupt(void);
- #endif /* CONFIG_TRACING */
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 233fe8a..8a7530b 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -526,8 +526,8 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+ 		}
  
- #ifdef CONFIG_IRQ_REMAP
--/* Intel specific interrupt remapping information */
--struct irq_2_iommu {
--	struct intel_iommu *iommu;
--	u16 irte_index;
--	u16 sub_handle;
--	u8  irte_mask;
--};
--
- /* AMD specific interrupt remapping information */
- struct irq_2_irte {
- 	u16 devid; /* Device ID for IRTE table */
-@@ -192,7 +184,6 @@ struct irq_cfg {
- 	u8			move_in_progress : 1;
- #ifdef CONFIG_IRQ_REMAP
- 	union {
--		struct irq_2_iommu irq_2_iommu;
- 		struct irq_2_irte  irq_2_irte;
- 	};
- #endif
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 5e3e529e8d88..5bd9e6570099 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -32,6 +32,13 @@ struct hpet_scope {
- 	unsigned int devfn;
- };
- 
-+struct irq_2_iommu {
-+	struct intel_iommu *iommu;
-+	u16 irte_index;
-+	u16 sub_handle;
-+	u8  irte_mask;
-+};
-+
- struct intel_ir_data {
- 	struct irq_2_iommu			irq_2_iommu;
- 	struct irte				irte_entry;
+ 		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
+-		                       imx6_pcie_msi_handler,
+-		                       IRQF_SHARED, "mx6-pcie-msi", pp);
++				       imx6_pcie_msi_handler,
++				       IRQF_SHARED, "mx6-pcie-msi", pp);
+ 		if (ret) {
+ 			dev_err(&pdev->dev, "failed to request MSI irq\n");
+ 			return -ENODEV;
 -- 
-1.7.10.4
+1.7.9.5
+
 
