@@ -1,131 +1,115 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Joerg Roedel <joro@8bytes.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v6 09/27] iommu/vt-d: Change prototypes to prepare for enabling hierarchy irqdomain
-Date: Tue, 25 Nov 2014 13:53:18 +0800
-Message-Id: <1416894816-23245-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:58695 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753660AbaKLCqh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 21:46:37 -0500
+Message-ID: <5462CA00.10601@huawei.com>
+Date: Wed, 12 Nov 2014 10:46:24 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: RFC for ideas to clean up PCI MSI code
+References: <54624D35.2070808@linux.intel.com>
+In-Reply-To: <54624D35.2070808@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Prepare for support hierarchy irqdomain by changing function prototypes,
-should be no function changes.
+On 2014/11/12 1:53, Jiang Liu wrote:
+> Hi Bjorn, Yijing and Thomas,
+> 	Recently Yijing is trying to kill some weak functions in
+> drivers/pci/msi.c by using msi_chip mechanism. And it inspired me
+> that we could go one step further to kill those weak functions
+> at all and move common PCI MSI code into PCI core by using the
+> new hierarch irqdomain framework.
+> 	The way to achieve the goal is:
+> 1) arch code creates irqdomain for PCI MSI controllers. By default,
+> there's only one global PCI MSI irqdomain. But there's may be multiple
+> for some architecture like x86. So arch also need to implement a weak
+> function (I know you don't like weak functions):
+> 	struct irq_domain *arch_get_pci_msi_irq_domain(struct pci_dev *);
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Acked-by: Joerg Roedel <jroedel@suse.de>
----
- drivers/iommu/intel_irq_remapping.c |   22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+Arm also may have multiple msi_chips/msi irq domains, currently, corresponding msi_chip is stored
+in bus->msi. But it's not a good idea, I'm refactoring generic pci host bridge, we could
+save it in generic pci_host_bridge.
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index a55b207b9425..8176b54732e9 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -81,10 +81,10 @@ static int get_irte(int irq, struct irte *entry)
- 	return 0;
- }
- 
--static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
-+static int alloc_irte(struct intel_iommu *iommu, int irq,
-+		      struct irq_2_iommu *irq_iommu, u16 count)
- {
- 	struct ir_table *table = iommu->ir_table;
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
- 	struct irq_cfg *cfg = irq_cfg(irq);
- 	unsigned int mask = 0;
- 	unsigned long flags;
-@@ -172,9 +172,9 @@ static int set_irte_irq(int irq, struct intel_iommu *iommu, u16 index, u16 subha
- 	return 0;
- }
- 
--static int modify_irte(int irq, struct irte *irte_modified)
-+static int modify_irte(struct irq_2_iommu *irq_iommu,
-+		       struct irte *irte_modified)
- {
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
- 	struct intel_iommu *iommu;
- 	unsigned long flags;
- 	struct irte *irte;
-@@ -241,7 +241,7 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
- 		return 0;
- 
- 	iommu = irq_iommu->iommu;
--	index = irq_iommu->irte_index + irq_iommu->sub_handle;
-+	index = irq_iommu->irte_index;
- 
- 	start = iommu->ir_table->base + index;
- 	end = start + (1 << irq_iommu->irte_mask);
-@@ -979,7 +979,7 @@ static int intel_setup_ioapic_entry(int irq,
- 		pr_warn("No mapping iommu for ioapic %d\n", ioapic_id);
- 		index = -ENODEV;
- 	} else {
--		index = alloc_irte(iommu, irq, 1);
-+		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
- 		if (index < 0) {
- 			pr_warn("Failed to allocate IRTE for ioapic %d\n",
- 				ioapic_id);
-@@ -995,7 +995,7 @@ static int intel_setup_ioapic_entry(int irq,
- 	/* Set source-id of interrupt request */
- 	set_ioapic_sid(&irte, ioapic_id);
- 
--	modify_irte(irq, &irte);
-+	modify_irte(irq_2_iommu(irq), &irte);
- 
- 	apic_printk(APIC_VERBOSE, KERN_DEBUG "IOAPIC[%d]: "
- 		"Set IRTE entry (P:%d FPD:%d Dst_Mode:%d "
-@@ -1082,7 +1082,7 @@ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 	 * Atomically updates the IRTE with the new destination, vector
- 	 * and flushes the interrupt entry cache.
- 	 */
--	modify_irte(irq, &irte);
-+	modify_irte(irq_2_iommu(irq), &irte);
- 
- 	/*
- 	 * After this point, all the interrupts will start arriving
-@@ -1118,7 +1118,7 @@ static void intel_compose_msi_msg(struct pci_dev *pdev,
- 	else
- 		set_hpet_sid(&irte, hpet_id);
- 
--	modify_irte(irq, &irte);
-+	modify_irte(irq_2_iommu(irq), &irte);
- 
- 	msg->address_hi = MSI_ADDR_BASE_HI;
- 	msg->data = sub_handle;
-@@ -1145,7 +1145,7 @@ static int intel_msi_alloc_irq(struct pci_dev *dev, int irq, int nvec)
- 		       "Unable to map PCI %s to iommu\n", pci_name(dev));
- 		index = -ENOENT;
- 	} else {
--		index = alloc_irte(iommu, irq, nvec);
-+		index = alloc_irte(iommu, irq, irq_2_iommu(irq), nvec);
- 		if (index < 0) {
- 			printk(KERN_ERR
- 			       "Unable to allocate %d IRTE for PCI %s\n",
-@@ -1189,7 +1189,7 @@ static int intel_alloc_hpet_msi(unsigned int irq, unsigned int id)
- 	down_read(&dmar_global_lock);
- 	iommu = map_hpet_to_ir(id);
- 	if (iommu) {
--		index = alloc_irte(iommu, irq, 1);
-+		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
- 		if (index >= 0)
- 			ret = 0;
- 	}
+> 
+> 2) replace
+> arch_setup_msi_irqs()/arch_setup_msi_irqs()/arch_teardown_msi_irqs()/arch_teardown_msi_irq()
+> with
+> irq_domain interfaces.
+
+Agree.
+
+> 
+> 3) kill arch_msi_mask_irq()/arch_msi_mask_irq() by directly setting
+> irq_chip.irq_mask()/irq_unmask().
+
+arch_msi_mask_irq() is only called in pci_msi_shutdown, in this case,
+the msi mask status will not be overrode, so we can restore it later.
+If use irq_chip.irq_mask(), we need another place to save the mask status.
+
+> 
+> 4) we could also find a way to kill arch_restore_msi_irqs() by using
+> new irqdomain interfaces.
+
+My personal opinion, I think place arch_retore_msi_irqs() stuffs in irq_chip is better. :)
+
+
+> 
+> For arch code to support the new MSI, it needs to implement callbacks in
+> msi_domain_ops and irq_chip. All other PCI MSI code becomes common
+> and will be moved into pci/msi.c. Proposed interfaces as below:
+> 
+> struct irq_chip {
+>         void            (*irq_compose_msi_msg)(struct irq_data *data,
+> struct msi_msg *msg);
+> };
+> 
+> struct msi_domain_ops {
+>         void (*calc_hwirq)(struct msi_domain_info *info, void *arg,
+>                            struct msi_desc *desc);
+>         irq_hw_number_t (*get_hwirq)(struct msi_domain_info *info, void
+> *arg);
+>         int (*msi_init)(struct irq_domain *domain, struct
+> msi_domain_info *info,
+>                         unsigned int virq, irq_hw_number_t hwirq, void
+> *arg);
+>         void (*msi_free)(struct irq_domain *domain,
+>                          struct msi_domain_info *info, unsigned int virq);
+> };
+> 
+> struct msi_domain_info {
+>         struct msi_domain_ops *ops;
+>         struct irq_chip *chip;
+>         void *data;
+> };
+> 
+> struct irq_domain *msi_create_irq_domain(struct device_node *of_node,
+>                                          struct msi_domain_info *info,
+>                                          struct irq_domain *parent);
+> 
+> So, what's your thoughts about the proposal? If now objection, I may
+> send out a draft version for x86 within about one week:)
+
+I think the proposal is better than original msi_chip framework.
+I like this idea. :)
+
+Thanks!
+Yijing.
+
+
+> Thanks!
+> Gerry
+> 
+> .
+> 
+
+
 -- 
-1.7.10.4
+Thanks!
+Yijing
 
