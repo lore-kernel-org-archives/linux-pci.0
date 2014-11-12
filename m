@@ -1,60 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:18964 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964789AbaKNA0D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 13 Nov 2014 19:26:03 -0500
-Message-ID: <54654C10.2040102@linux.intel.com>
-Date: Fri, 14 Nov 2014 08:25:52 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:53669 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752856AbaKLQai (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 11:30:38 -0500
+Received: by mail-lb0-f174.google.com with SMTP id w7so946011lbi.5
+        for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2014 08:30:37 -0800 (PST)
 MIME-Version: 1.0
-To: Marc Zyngier <marc.zyngier@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+In-Reply-To: <002801cffe28$43176f70$c9464e50$%han@samsung.com>
+References: <002801cffe28$43176f70$c9464e50$%han@samsung.com>
+Date: Wed, 12 Nov 2014 22:00:37 +0530
+Message-ID: <CA+mB=1+pMxfeqVRbAvDz8RHDg5mEjx=m3+-UL8rrS2wrJ2EkMQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: imx6: Use tabs for indentation
+From: Srikanth Thokala <sriku.linux@gmail.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [Patch V1 0/6] Refine generic/PCI MSI irqodmian interfaces
-References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com> <54651BE2.9080008@arm.com>
-In-Reply-To: <54651BE2.9080008@arm.com>
-Content-Type: text/plain; charset=windows-1252
+	Richard Zhu <r65037@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/11/14 5:00, Marc Zyngier wrote:
-> On 13/11/14 11:43, Jiang Liu wrote:
->> This patch set is based on tip/irq/irqdomain and tries to refine
->> interfaces to support irqdomain for generic MSI and PCI MSI.
->>
->> With this patch set applied, the generic MSI and PCI MSI interfaces
->> are much easier to use. For extreme case, you only need to define
->> a "struct msi_domain_info" and don't need to implement any callbacks,
->> just using the default callbacks is OK:)
->>
->> This patch set is also a preparation for:
->> 1) Kill all weak functions in drivers/pci/msi.c
->> 2) Implement support for non-PCI-compliant MSI device
-> 
-> I've rebased (once more!) the GICv3 ITS driver on top of this, and this
-> is definitely a major improvement. This is basically the first version
-> I can use without having to hack into the core code (apart from the
-> couple of nits I've mentioned earlier).
-Sorry for the rebasing, but I hope it worthy rebasing:)
+On Wed, Nov 12, 2014 at 8:55 AM, Jingoo Han <jg1.han@samsung.com> wrote:
+> This patch fixes the following checkpatch error.
+>
+>   ERROR: code indent should use tabs where possible
+>
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> ---
+>  drivers/pci/host/pci-imx6.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 
-> 
-> Now, Thomas' idea of putting the irq_domain close to the bus is very
-> appealing, and I've tweaked an earlier patch in order to do this:
-I feel that's the right direction. There are other threads discussing
-associating an MSI controller structure with each PCI bus (at least
-root bus).
-http://www.spinics.net/lists/arm-kernel/msg376328.html
-Regards!
-Gerry
+Acked-by: Srikanth Thokala <sriku.linux@gmail.com>
+
+- Srikanth
+
+>
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 233fe8a..8a7530b 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -526,8 +526,8 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+>                 }
+>
+>                 ret = devm_request_irq(&pdev->dev, pp->msi_irq,
+> -                                      imx6_pcie_msi_handler,
+> -                                      IRQF_SHARED, "mx6-pcie-msi", pp);
+> +                                      imx6_pcie_msi_handler,
+> +                                      IRQF_SHARED, "mx6-pcie-msi", pp);
+>                 if (ret) {
+>                         dev_err(&pdev->dev, "failed to request MSI irq\n");
+>                         return -ENODEV;
+> --
+> 1.7.9.5
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
