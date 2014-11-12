@@ -1,268 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:42685 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752769AbaKYHvR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 25 Nov 2014 02:51:17 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Joerg Roedel <joro@8bytes.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part3 v4 19/38] iommu/vt-d: Clean up unsued code
-Date: Tue, 25 Nov 2014 15:49:43 +0800
-Message-Id: <1416901802-24211-20-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:10686 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752582AbaKLNc0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 08:32:26 -0500
+Date: Wed, 12 Nov 2014 08:32:21 -0500
+From: Jason Cooper <jason@lakedaemon.net>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH] PCI: mvebu: Add a blank line after declarations
+Message-ID: <20141112133221.GI3698@titan.lakedaemon.net>
+References: <002b01cffe28$a57021d0$f0506570$%han@samsung.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <002b01cffe28$a57021d0$f0506570$%han@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have converted to hierarchy irqdomain, so clean up unused code.
+On Wed, Nov 12, 2014 at 12:27:54PM +0900, Jingoo Han wrote:
+> This patch fixes the following checkpatch warning.
+> 
+>   WARNING: Missing a blank line after declarations
+> 
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> ---
+>  drivers/pci/host/pci-mvebu.c |    3 +++
+>  1 file changed, 3 insertions(+)
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Tested-by: Joerg Roedel <jroedel@suse.de>
----
- drivers/iommu/intel_irq_remapping.c |  187 +----------------------------------
- 1 file changed, 1 insertion(+), 186 deletions(-)
+Acked-by: Jason Cooper <jason@lakedaemon.net>
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 95c44820c851..9a887ba87dc3 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -62,35 +62,6 @@ static struct irq_domain_ops intel_ir_domain_ops;
- 
- static int __init parse_ioapics_under_ir(void);
- 
--static struct irq_2_iommu *irq_2_iommu(unsigned int irq)
--{
--	struct irq_cfg *cfg = irq_cfg(irq);
--	return cfg ? &cfg->irq_2_iommu : NULL;
--}
--
--static int get_irte(int irq, struct irte *entry)
--{
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
--	unsigned long flags;
--	int index;
--
--	if (!entry || !irq_iommu)
--		return -1;
--
--	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
--
--	if (unlikely(!irq_iommu->iommu)) {
--		raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
--		return -1;
--	}
--
--	index = irq_iommu->irte_index + irq_iommu->sub_handle;
--	*entry = *(irq_iommu->iommu->ir_table->base + index);
--
--	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
--	return 0;
--}
--
- static int alloc_irte(struct intel_iommu *iommu, int irq,
- 		      struct irq_2_iommu *irq_iommu, u16 count)
- {
-@@ -228,29 +199,6 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
- 	return qi_flush_iec(iommu, index, irq_iommu->irte_mask);
- }
- 
--static int free_irte(int irq)
--{
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
--	unsigned long flags;
--	int rc;
--
--	if (!irq_iommu || irq_iommu->iommu == NULL)
--		return -1;
--
--	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
--
--	rc = clear_entries(irq_iommu);
--
--	irq_iommu->iommu = NULL;
--	irq_iommu->irte_index = 0;
--	irq_iommu->sub_handle = 0;
--	irq_iommu->irte_mask = 0;
--
--	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
--
--	return rc;
--}
--
- /*
-  * source validation type
-  */
-@@ -925,8 +873,7 @@ error:
- 	return -1;
- }
- 
--static void prepare_irte(struct irte *irte, int vector,
--			 unsigned int dest)
-+static void prepare_irte(struct irte *irte, int vector, unsigned int dest)
- {
- 	memset(irte, 0, sizeof(*irte));
- 
-@@ -946,135 +893,6 @@ static void prepare_irte(struct irte *irte, int vector,
- 	irte->redir_hint = 1;
- }
- 
--static int intel_setup_ioapic_entry(int irq,
--				    struct IO_APIC_route_entry *route_entry,
--				    unsigned int destination, int vector,
--				    struct io_apic_irq_attr *attr)
--{
--	int ioapic_id = mpc_ioapic_id(attr->ioapic);
--	struct intel_iommu *iommu;
--	struct IR_IO_APIC_route_entry *entry;
--	struct irte irte;
--	int index;
--
--	down_read(&dmar_global_lock);
--	iommu = map_ioapic_to_ir(ioapic_id);
--	if (!iommu) {
--		pr_warn("No mapping iommu for ioapic %d\n", ioapic_id);
--		index = -ENODEV;
--	} else {
--		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
--		if (index < 0) {
--			pr_warn("Failed to allocate IRTE for ioapic %d\n",
--				ioapic_id);
--			index = -ENOMEM;
--		}
--	}
--	up_read(&dmar_global_lock);
--	if (index < 0)
--		return index;
--
--	prepare_irte(&irte, vector, destination);
--
--	/* Set source-id of interrupt request */
--	set_ioapic_sid(&irte, ioapic_id);
--
--	modify_irte(irq_2_iommu(irq), &irte);
--
--	apic_printk(APIC_VERBOSE, KERN_DEBUG "IOAPIC[%d]: "
--		"Set IRTE entry (P:%d FPD:%d Dst_Mode:%d "
--		"Redir_hint:%d Trig_Mode:%d Dlvry_Mode:%X "
--		"Avail:%X Vector:%02X Dest:%08X "
--		"SID:%04X SQ:%X SVT:%X)\n",
--		attr->ioapic, irte.present, irte.fpd, irte.dst_mode,
--		irte.redir_hint, irte.trigger_mode, irte.dlvry_mode,
--		irte.avail, irte.vector, irte.dest_id,
--		irte.sid, irte.sq, irte.svt);
--
--	entry = (struct IR_IO_APIC_route_entry *)route_entry;
--	memset(entry, 0, sizeof(*entry));
--
--	entry->index2	= (index >> 15) & 0x1;
--	entry->zero	= 0;
--	entry->format	= 1;
--	entry->index	= (index & 0x7fff);
--	/*
--	 * IO-APIC RTE will be configured with virtual vector.
--	 * irq handler will do the explicit EOI to the io-apic.
--	 */
--	entry->vector	= attr->ioapic_pin;
--	entry->mask	= 0;			/* enable IRQ */
--	entry->trigger	= attr->trigger;
--	entry->polarity	= attr->polarity;
--
--	/* Mask level triggered irqs.
--	 * Use IRQ_DELAYED_DISABLE for edge triggered irqs.
--	 */
--	if (attr->trigger)
--		entry->mask = 1;
--
--	return 0;
--}
--
--/*
-- * Migrate the IO-APIC irq in the presence of intr-remapping.
-- *
-- * For both level and edge triggered, irq migration is a simple atomic
-- * update(of vector and cpu destination) of IRTE and flush the hardware cache.
-- *
-- * For level triggered, we eliminate the io-apic RTE modification (with the
-- * updated vector information), by using a virtual vector (io-apic pin number).
-- * Real vector that is used for interrupting cpu will be coming from
-- * the interrupt-remapping table entry.
-- *
-- * As the migration is a simple atomic update of IRTE, the same mechanism
-- * is used to migrate MSI irq's in the presence of interrupt-remapping.
-- */
--static int
--intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
--			  bool force)
--{
--	struct irq_cfg *cfg = irqd_cfg(data);
--	unsigned int dest, irq = data->irq;
--	struct irte irte;
--	int err;
--
--	if (get_irte(irq, &irte))
--		return -EBUSY;
--
--	err = assign_irq_vector(irq, cfg, mask);
--	if (err)
--		return err;
--
--	err = apic->cpu_mask_to_apicid_and(cfg->domain, mask, &dest);
--	if (err) {
--		if (assign_irq_vector(irq, cfg, data->affinity))
--			pr_err("Failed to recover vector for irq %d\n", irq);
--		return err;
--	}
--
--	irte.vector = cfg->vector;
--	irte.dest_id = IRTE_DEST(dest);
--
--	/*
--	 * Atomically updates the IRTE with the new destination, vector
--	 * and flushes the interrupt entry cache.
--	 */
--	modify_irte(irq_2_iommu(irq), &irte);
--
--	/*
--	 * After this point, all the interrupts will start arriving
--	 * at the new destination. So, time to cleanup the previous
--	 * vector allocation.
--	 */
--	if (cfg->move_in_progress)
--		send_cleanup_vector(cfg);
--
--	cpumask_copy(data->affinity, mask);
--
--	return 0;
--}
--
- static struct irq_domain *intel_get_ir_irq_domain(struct irq_alloc_info *info)
- {
- 	struct intel_iommu *iommu = NULL;
-@@ -1129,9 +947,6 @@ struct irq_remap_ops intel_irq_remap_ops = {
- 	.disable		= disable_irq_remapping,
- 	.reenable		= reenable_irq_remapping,
- 	.enable_faulting	= enable_drhd_fault_handling,
--	.setup_ioapic_entry	= intel_setup_ioapic_entry,
--	.set_affinity		= intel_ioapic_set_affinity,
--	.free_irq		= free_irte,
- 	.get_ir_irq_domain	= intel_get_ir_irq_domain,
- 	.get_irq_domain		= intel_get_irq_domain,
- };
--- 
-1.7.10.4
+thx,
 
+Jason.
