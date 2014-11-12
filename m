@@ -1,94 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:38181 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753265AbaKRLAB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 06:00:01 -0500
-Date: Tue, 18 Nov 2014 11:59:39 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Arnd Bergmann <arnd@arndb.de>
-cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Tony Luck <tony.luck@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	LAK <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH] asm-generic: Add msi.h
-In-Reply-To: <1703620.E5bhVDQPHc@wuerfel>
-Message-ID: <alpine.DEB.2.11.1411181149350.3909@nanos>
-References: <alpine.DEB.2.11.1411181133080.3909@nanos> <1703620.E5bhVDQPHc@wuerfel>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from mailout3.samsung.com ([203.254.224.33]:60119 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755202AbaKLD2T (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 22:28:19 -0500
+Received: from epcpsbgr5.samsung.com
+ (u145.gpu120.samsung.co.kr [203.254.230.145])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0NEW002WLPN64200@mailout3.samsung.com> for
+ linux-pci@vger.kernel.org; Wed, 12 Nov 2014 12:28:18 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
+	'Mohit Kumar' <mohit.kumar@st.com>,
+	'Viresh Kumar' <viresh.kumar@linaro.org>,
+	'Pratyush Anand' <pratyush.anand@st.com>
+Subject: [PATCH] PCI: spear: Remove unnecessary OOM message
+Date: Wed, 12 Nov 2014 12:29:02 +0900
+Message-id: <002d01cffe28$ce2f5870$6a8e0950$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 18 Nov 2014, Arnd Bergmann wrote:
+The site-specific OOM messages are unnecessary, because they
+duplicate the MM subsystem generic OOM message. This patch
+fixes the following checkpatch warning.
 
-> On Tuesday 18 November 2014 11:34:37 Thomas Gleixner wrote:
-> > To support MSI irq domains we want a generic data structure for
-> > allocation, but we need the option to provide an architecture specific
-> > version of it. So instead of playing #ifdef games in linux/msi.h we
-> > add a generic header file and let architectures decide whether to
-> > include it or to provide their own implementation and provide the
-> > required typedef.
-> 
-> Acked-by: Arnd Bergmann <arnd@arndb.de>
-> 
-> for merging the asm-generic file
-> 
-> > I know that typedefs are not really nice, but in this case there are no
-> > forward declarations required and it's the simplest solution.
-> 
-> I must be missing the obvious: what problem does the typedef solve
-> that you would have with just a struct?
+  WARNING: Possible unnecessary 'out of memory' message
 
-It's not obvious. :)
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/pci/host/pcie-spear13xx.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-The irqdomain stuff is pretty device tree centric, but the new stacked
-irqdomains are to be used by x86 as well. So we made some of the
-interfaces opaque, i.e. void *allocation_arg.
-
-Now MSI is a bit differnet as it cannot be decribed by DT, so we want
-a proper generic data structure for it and of course we want to have a
-type for it.
-
-Now x86 has a bit more convoluted requirements where we prefer for
-simplicity reasons to reuse the allocation data structure which we
-have alredy for the non MSI cases, so it can be handed down to the
-opaque interfaces as well.
-
-So we have the generic:
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+index 85f594e..4647b62 100644
+--- a/drivers/pci/host/pcie-spear13xx.c
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -308,10 +308,8 @@ static int __init spear13xx_pcie_probe(struct platform_device *pdev)
+ 	int ret;
  
-struct msi_alloc_info {
-       ....
-};
-
-and 
-
-struct x86_alloc_info {
-       ...
-};
-
-So we either can do in x86:
-
-struct msi_alloc_info {
-       struct x86_alloc_info info;
-};
-
-or use a typedef which maps x86_alloc_info to msi_alloc_info_t.
-
-I think the typedef is more sane in that case.
-
-Thanks,
-
-	tglx
-
-
+ 	spear13xx_pcie = devm_kzalloc(dev, sizeof(*spear13xx_pcie), GFP_KERNEL);
+-	if (!spear13xx_pcie) {
+-		dev_err(dev, "no memory for SPEAr13xx pcie\n");
++	if (!spear13xx_pcie)
+ 		return -ENOMEM;
+-	}
+ 
+ 	spear13xx_pcie->phy = devm_phy_get(dev, "pcie-phy");
+ 	if (IS_ERR(spear13xx_pcie->phy)) {
+-- 
+1.7.9.5
 
 
