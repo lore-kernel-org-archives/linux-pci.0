@@ -1,23 +1,43 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 6 Nov 2014 08:51:39 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Neela Syam Kolli <megaraidlinux@lsi.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	Alexander Gordeev <agordeev@redhat.com>,
-	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] megaraid_sas : Fix bug in handling return value of
- pci_enable_msix_range()
-Message-ID: <20141106165139.GA17176@infradead.org>
-References: <1415018660-30775-1-git-send-email-jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415018660-30775-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:42095 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752530AbaKLNxo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 08:53:44 -0500
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: [PATCH 2/2] PCI: tegra: Add Kconfig help text
+Date: Wed, 12 Nov 2014 14:53:38 +0100
+Message-Id: <1415800418-22957-2-git-send-email-thierry.reding@gmail.com>
+In-Reply-To: <1415800418-22957-1-git-send-email-thierry.reding@gmail.com>
+References: <1415800418-22957-1-git-send-email-thierry.reding@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks,
+From: Thierry Reding <treding@nvidia.com>
 
-applied to the drivers-for-3.18 branch.
+Add a standard help text to the Kconfig entry for the Tegra PCIe host
+controller driver.
+
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+ drivers/pci/host/Kconfig | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 9c56137e5e5e..9dbb1fc68bc9 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -33,6 +33,9 @@ config PCI_IMX6
+ config PCI_TEGRA
+ 	bool "NVIDIA Tegra PCIe controller"
+ 	depends on ARCH_TEGRA && !ARM64
++	help
++	  Say Y here if you want support for the PCIe host controller found
++	  on NVIDIA Tegra SoCs.
+ 
+ config PCI_RCAR_GEN2
+ 	bool "Renesas R-Car Gen2 Internal PCI controller"
+-- 
+2.1.3
 
