@@ -1,188 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:8687 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752272AbaKBGC7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 2 Nov 2014 01:02:59 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch v8 12/18] x86, irq: Keep balance of IOAPIC pin reference count
-Date: Sun,  2 Nov 2014 14:04:27 +0800
-Message-Id: <1414908273-7552-13-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414908273-7552-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414908273-7552-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from e28smtp07.in.ibm.com ([122.248.162.7]:59464 "EHLO
+	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933155AbaKLCmB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 21:42:01 -0500
+Received: from /spool/local
+	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 12 Nov 2014 08:11:57 +0530
+Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 73A533940045
+	for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2014 08:11:54 +0530 (IST)
+Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
+	by d28relay01.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAC2fdVx55640222
+	for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2014 08:11:40 +0530
+Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
+	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAC2frZR020532
+	for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2014 08:11:53 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v2] PCI: Make reset warning messages different
+Date: Wed, 12 Nov 2014 13:41:51 +1100
+Message-Id: <1415760111-12344-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To keep balance of IOAPIC pin reference count, we need to protect
-pirq_enable_irq(), acpi_pci_irq_enable() and intel_mid_pci_irq_enable()
-from reentrance. There are two cases which will cause reentrance.
+We have same warning message for FLR and AF FLR and users can't
+know which type of resets the PCI device is taking when there are
+pending transactions. The patch makes them different for FLR and
+AF FLR cases.
 
-The first case is caused by suspend/hibernation. If pcibios_disable_irq
-is called during suspending/hibernating, we don't release the assigned
-IRQ number, otherwise it may break the suspend/hibernation. So late when
-pcibios_enable_irq is called during resume, we shouldn't allocate IRQ
-number again.
-
-The second case is that function acpi_pci_irq_enable() may be called
-twice for PCI devices present at boot time as below:
-1) pci_acpi_init()
-	--> acpi_pci_irq_enable() if pci_routeirq is true
-2) pci_enable_device()
-	--> pcibios_enable_device()
-		--> acpi_pci_irq_enable()
-We can't kill kernel parameter pci_routeirq yet because it's still
-needed for debugging purpose.
-
-So flag irq_managed is introduced to track whether IRQ number is
-assigned by OS and to protect pirq_enable_irq(), acpi_pci_irq_enable()
-and intel_mid_pci_irq_enable() from reentrance.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- arch/x86/pci/intel_mid_pci.c |   10 +++++++++-
- arch/x86/pci/irq.c           |    7 ++++++-
- drivers/acpi/pci_irq.c       |   11 +++++++++--
- include/linux/pci.h          |    1 +
- 4 files changed, 25 insertions(+), 4 deletions(-)
+v2: Adjusted messages according to Bjorn's suggestion
+---
+ drivers/pci/pci.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index b9958c364075..44b9271580b5 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -210,6 +210,9 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- {
- 	int polarity;
- 
-+	if (dev->irq_managed && dev->irq > 0)
-+		return 0;
-+
- 	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
- 		polarity = 0; /* active high */
- 	else
-@@ -224,13 +227,18 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 	if (mp_map_gsi_to_irq(dev->irq, IOAPIC_MAP_ALLOC) < 0)
- 		return -EBUSY;
- 
-+	dev->irq_managed = 1;
-+
- 	return 0;
- }
- 
- static void intel_mid_pci_irq_disable(struct pci_dev *dev)
- {
--	if (!mp_should_keep_irq(&dev->dev) && dev->irq > 0)
-+	if (!mp_should_keep_irq(&dev->dev) && dev->irq_managed &&
-+	    dev->irq > 0) {
- 		mp_unmap_irq(dev->irq);
-+		dev->irq_managed = 0;
-+	}
- }
- 
- struct pci_ops intel_mid_pci_ops = {
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index eb500c2592ad..a47e2dea0972 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -1202,6 +1202,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 			int irq;
- 			struct io_apic_irq_attr irq_attr;
- 
-+			if (dev->irq_managed && dev->irq > 0)
-+				return 0;
-+
- 			irq = IO_APIC_get_PCI_irq_vector(dev->bus->number,
- 						PCI_SLOT(dev->devfn),
- 						pin - 1, &irq_attr);
-@@ -1228,6 +1231,7 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 			}
- 			dev = temp_dev;
- 			if (irq >= 0) {
-+				dev->irq_managed = 1;
- 				dev->irq = irq;
- 				dev_info(&dev->dev, "PCI->APIC IRQ transform: "
- 					 "INT %c -> IRQ %d\n", 'A' + pin - 1, irq);
-@@ -1257,8 +1261,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
- static void pirq_disable_irq(struct pci_dev *dev)
- {
- 	if (io_apic_assign_pci_irqs && !mp_should_keep_irq(&dev->dev) &&
--	    dev->irq) {
-+	    dev->irq_managed && dev->irq) {
- 		mp_unmap_irq(dev->irq);
- 		dev->irq = 0;
-+		dev->irq_managed = 0;
- 	}
- }
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index 6e6b80eb0bba..5f1fdca65e5f 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -413,6 +413,9 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 625a4ac..3f12383 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3144,7 +3144,8 @@ static int pcie_flr(struct pci_dev *dev, int probe)
  		return 0;
- 	}
  
-+	if (dev->irq_managed && dev->irq > 0)
-+		return 0;
-+
- 	entry = acpi_pci_irq_lookup(dev, pin);
- 	if (!entry) {
- 		/*
-@@ -456,6 +459,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
- 		return rc;
- 	}
- 	dev->irq = rc;
-+	dev->irq_managed = 1;
+ 	if (!pci_wait_for_pending_transaction(dev))
+-		dev_err(&dev->dev, "transaction is not cleared; proceeding with reset anyway\n");
++		dev_err(&dev->dev, "timed out waiting for pending transaction; "
++				   "performing function level reset\n");
  
- 	if (link)
- 		snprintf(link_desc, sizeof(link_desc), " -> Link[%s]", link);
-@@ -478,7 +482,7 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	u8 pin;
+ 	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
  
- 	pin = dev->pin;
--	if (!pin)
-+	if (!pin || !dev->irq_managed || dev->irq <= 0)
- 		return;
+@@ -3178,7 +3179,8 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
+ 				 PCI_AF_STATUS_TP << 8))
+ 		goto clear;
  
- 	/* Keep IOAPIC pin configuration when suspending */
-@@ -506,6 +510,9 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	 */
+-	dev_err(&dev->dev, "transaction is not cleared; proceeding with reset anyway\n");
++	dev_err(&dev->dev, "timed out waiting for pending transaction; "
++			   "performing AF function level reset\n");
  
- 	dev_dbg(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
--	if (gsi >= 0 && dev->irq > 0)
-+	if (gsi >= 0) {
- 		acpi_unregister_gsi(gsi);
-+		dev->irq = 0;
-+		dev->irq_managed = 0;
-+	}
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5be8db45e368..2a8c4055ae9d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -348,6 +348,7 @@ struct pci_dev {
- 	unsigned int	__aer_firmware_first:1;
- 	unsigned int	broken_intx_masking:1;
- 	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
-+	unsigned int	irq_managed:1;
- 	pci_dev_flags_t dev_flags;
- 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
- 
+ clear:
+ 	pci_write_config_byte(dev, pos + PCI_AF_CTRL, PCI_AF_CTRL_FLR);
 -- 
-1.7.10.4
+1.8.3.2
 
