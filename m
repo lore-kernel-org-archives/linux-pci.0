@@ -1,56 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:43268 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751303AbaKEBYx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Nov 2014 20:24:53 -0500
-From: Chuansheng Liu <chuansheng.liu@intel.com>
-To: bhelgaas@google.com, aaron.lu@intel.com, tj@kernel.org,
-	rjw@rjwysocki.net, mister.freeman@laposte.net
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	chuansheng.liu@intel.com
-Subject: [PATCH] PCI: Do not enable async suspend for JMicron chips
-Date: Wed,  5 Nov 2014 09:07:45 +0800
-Message-Id: <1415149665-26669-1-git-send-email-chuansheng.liu@intel.com>
+Received: from mail-qa0-f43.google.com ([209.85.216.43]:53900 "EHLO
+	mail-qa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755323AbaKLCsH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 21:48:07 -0500
+Received: by mail-qa0-f43.google.com with SMTP id j7so7890467qaq.2
+        for <linux-pci@vger.kernel.org>; Tue, 11 Nov 2014 18:48:06 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CACVXFVPzo2qNGa5DWESS3TXor=u82_SxHb+xzrBCRXtcQxq4Cg@mail.gmail.com>
+References: <1415702040-2790-1-git-send-email-ming.lei@canonical.com>
+ <20141111122901.GA4419@red-moon> <CACVXFVNAc9axtESmo1zGZ3GMquTzjzWR3jx-b3tbhhLfQDDRcg@mail.gmail.com>
+ <20141111182418.GA5507@red-moon> <CACVXFVPzo2qNGa5DWESS3TXor=u82_SxHb+xzrBCRXtcQxq4Cg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 11 Nov 2014 19:47:46 -0700
+Message-ID: <CAErSpo5LELkH=9WAq5MDE6fkVJvPK3miQtqrMnRHY7QyLWigUg@mail.gmail.com>
+Subject: Re: [PATCH] pci: generic host: make it more generic
+To: Ming Lei <ming.lei@canonical.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	alvise rigo <a.rigo@virtualopensystems.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The JMicron chip 361/363/368 contains one SATA controller and
-one PATA controller, they are brother-relation ship in PCI tree,
-but for powering on these both controller, we must follow the
-sequence one by one, otherwise one of them can not be powered on
-successfully.
+On Tue, Nov 11, 2014 at 7:12 PM, Ming Lei <ming.lei@canonical.com> wrote:
+> ...
+> Do you think it is doable to introduce a option(from module
+> parameter, or device tree, ...) to let the driver and PCI core
+> ignore/bypass all pcibios handling for the generic bus?
 
-So here we disable the async suspend method for Jmicron chip.
-
-Cc: stable@vger.kernel.org # 3.15+
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
----
- drivers/pci/pci.c |   12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 625a4ac..53128f0 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2046,7 +2046,17 @@ void pci_pm_init(struct pci_dev *dev)
- 	pm_runtime_forbid(&dev->dev);
- 	pm_runtime_set_active(&dev->dev);
- 	pm_runtime_enable(&dev->dev);
--	device_enable_async_suspend(&dev->dev);
-+
-+	/*
-+	 * The JMicron chip 361/363/368 contains one SATA controller and
-+	 * one PATA controller, they are brother-relation ship in PCI tree,
-+	 * but for powering on these both controller, we must follow the
-+	 * sequence one by one, otherwise one of them can not be powered on
-+	 * successfully, so here we disable the async suspend method for
-+	 * Jmicron chip.
-+	 */
-+	if (dev->vendor != PCI_VENDOR_ID_JMICRON)
-+		device_enable_async_suspend(&dev->dev);
- 	dev->wakeup_prepared = false;
- 
- 	dev->pm_cap = 0;
--- 
-1.7.9.5
-
+No, I don't think so.
