@@ -1,85 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:28886 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752092AbaKQJk5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 04:40:57 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, Tony Luck <tony.luck@intel.com>,
-	<linux-ia64@vger.kernel.org>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	<Suravee.Suthikulpanit@amd.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [RFC PATCH 14/16] arm/PCI: Introduce pci_get_domain_nr()
-Date: Mon, 17 Nov 2014 18:21:48 +0800
-Message-ID: <1416219710-26088-15-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
-References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-la0-f50.google.com ([209.85.215.50]:41828 "EHLO
+	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752883AbaKLQ3u (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 11:29:50 -0500
+Received: by mail-la0-f50.google.com with SMTP id hs14so5336679lab.23
+        for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2014 08:29:48 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <002901cffe28$544504b0$fccf0e10$%han@samsung.com>
+References: <002901cffe28$544504b0$fccf0e10$%han@samsung.com>
+Date: Wed, 12 Nov 2014 21:59:48 +0530
+Message-ID: <CA+mB=1KiOEXn2Zg1GPPHUV4ybXYYQfHNgCkTJSthvbR0jMyYOw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: exynos: Remove unnecessary return statement
+From: Srikanth Thokala <sriku.linux@gmail.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/arm/include/asm/mach/pci.h |    9 +++++++++
- arch/arm/kernel/bios32.c        |    8 ++++++--
- 2 files changed, 15 insertions(+), 2 deletions(-)
+On Wed, Nov 12, 2014 at 8:55 AM, Jingoo Han <jg1.han@samsung.com> wrote:
+> This patch fixes the following checkpatch warning.
+>
+>   WARNING: void function return statements are not generally useful
+>
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> ---
+>  drivers/pci/host/pci-exynos.c |    8 --------
+>  1 file changed, 8 deletions(-)
+>
 
-diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-index f19f627..370b3bd 100644
---- a/arch/arm/include/asm/mach/pci.h
-+++ b/arch/arm/include/asm/mach/pci.h
-@@ -90,6 +90,15 @@ extern void pci_map_io_early(unsigned long pfn);
- static inline void pci_map_io_early(unsigned long pfn) {}
- #endif
- 
-+#ifdef CONFIG_PCI_DOMAINS_GENERIC
-+int pci_get_domain_nr(struct device *parent)
-+#else
-+static inline int pci_get_domain_nr(struct device *parent)
-+{
-+	return 0;
-+}
-+#endif
-+
- /*
-  * PCI controllers
-  */
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index d8c2b4e..3fe56f1 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -513,7 +513,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- #ifdef CONFIG_PCI_DOMAINS_GENERIC
- static bool dt_domain_found;
- 
--void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-+int pci_get_domain_nr(struct device *parent)
- {
- 	int domain = of_get_pci_domain_nr(parent->of_node);
- 
-@@ -526,8 +526,12 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
- 	} else {
- 		domain = pci_get_new_domain_nr();
- 	}
-+	return domain;
-+}
- 
--	bus->domain_nr = domain;
-+void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-+{
-+	bus->domain_nr = pci_get_domain_nr(parent);
- }
- #endif
- 
--- 
-1.7.1
+Acked-by: Srikanth Thokala <sriku.linux@gmail.com>
 
+- Srikanth
+
+> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+> index c5d0ca3..41ab139 100644
+> --- a/drivers/pci/host/pci-exynos.c
+> +++ b/drivers/pci/host/pci-exynos.c
+> @@ -312,7 +312,6 @@ static void exynos_pcie_assert_reset(struct pcie_port *pp)
+>         if (exynos_pcie->reset_gpio >= 0)
+>                 devm_gpio_request_one(pp->dev, exynos_pcie->reset_gpio,
+>                                 GPIOF_OUT_INIT_HIGH, "RESET");
+> -       return;
+>  }
+>
+>  static int exynos_pcie_establish_link(struct pcie_port *pp)
+> @@ -388,7 +387,6 @@ static void exynos_pcie_clear_irq_pulse(struct pcie_port *pp)
+>
+>         val = exynos_elb_readl(exynos_pcie, PCIE_IRQ_PULSE);
+>         exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_PULSE);
+> -       return;
+>  }
+>
+>  static void exynos_pcie_enable_irq_pulse(struct pcie_port *pp)
+> @@ -400,7 +398,6 @@ static void exynos_pcie_enable_irq_pulse(struct pcie_port *pp)
+>         val = IRQ_INTA_ASSERT | IRQ_INTB_ASSERT |
+>                 IRQ_INTC_ASSERT | IRQ_INTD_ASSERT,
+>         exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_EN_PULSE);
+> -       return;
+>  }
+>
+>  static irqreturn_t exynos_pcie_irq_handler(int irq, void *arg)
+> @@ -429,7 +426,6 @@ static void exynos_pcie_msi_init(struct pcie_port *pp)
+>         val = exynos_elb_readl(exynos_pcie, PCIE_IRQ_EN_LEVEL);
+>         val |= IRQ_MSI_ENABLE;
+>         exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_EN_LEVEL);
+> -       return;
+>  }
+>
+>  static void exynos_pcie_enable_interrupts(struct pcie_port *pp)
+> @@ -438,8 +434,6 @@ static void exynos_pcie_enable_interrupts(struct pcie_port *pp)
+>
+>         if (IS_ENABLED(CONFIG_PCI_MSI))
+>                 exynos_pcie_msi_init(pp);
+> -
+> -       return;
+>  }
+>
+>  static inline void exynos_pcie_readl_rc(struct pcie_port *pp,
+> @@ -448,7 +442,6 @@ static inline void exynos_pcie_readl_rc(struct pcie_port *pp,
+>         exynos_pcie_sideband_dbi_r_mode(pp, true);
+>         *val = readl(dbi_base);
+>         exynos_pcie_sideband_dbi_r_mode(pp, false);
+> -       return;
+>  }
+>
+>  static inline void exynos_pcie_writel_rc(struct pcie_port *pp,
+> @@ -457,7 +450,6 @@ static inline void exynos_pcie_writel_rc(struct pcie_port *pp,
+>         exynos_pcie_sideband_dbi_w_mode(pp, true);
+>         writel(val, dbi_base);
+>         exynos_pcie_sideband_dbi_w_mode(pp, false);
+> -       return;
+>  }
+>
+>  static int exynos_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+> --
+> 1.7.9.5
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
