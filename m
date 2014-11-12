@@ -1,171 +1,64 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part3 v4 29/38] x86, irq: Use cached IOAPIC entry instead of reading from hardware
-Date: Tue, 25 Nov 2014 15:49:53 +0800
-Message-Id: <1416901802-24211-30-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qa0-f49.google.com ([209.85.216.49]:37946 "EHLO
+	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752798AbaKLXJz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 18:09:55 -0500
+Received: by mail-qa0-f49.google.com with SMTP id i13so9123792qae.8
+        for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2014 15:09:54 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <863202fec7e0428682edf682c27beb2b@DM2PR03MB592.namprd03.prod.outlook.com>
+References: <863202fec7e0428682edf682c27beb2b@DM2PR03MB592.namprd03.prod.outlook.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 12 Nov 2014 16:09:33 -0700
+Message-ID: <CAErSpo5pbY8oooXT4XD0qqOY8rW74iTi5RbJBO9rUHwRPL54qQ@mail.gmail.com>
+Subject: Re: Sorting out terminology
+To: Jake Oshins <jakeo@microsoft.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use cahced IOAPIC entry instead of reading data from IOAPIC hardware
-registers to improve performance.
+[+cc Yinghai]
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Tested-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/kernel/apic/io_apic.c |   78 +++++++++++-----------------------------
- 1 file changed, 21 insertions(+), 57 deletions(-)
+On Tue, Nov 11, 2014 at 6:04 PM, Jake Oshins <jakeo@microsoft.com> wrote:
+> First, let me introduce myself.  I'm Jake Oshins, and I've been working on Hyper-V and other things at Microsoft for a while.  I'm currently trying to create a front-end driver for Linux running on top of Hyper-V that will enable PCI pass-through, to enable SR-IOV networking, and perhaps some other things over time.  This is similar in form to the "Xen front" PCI implementation, but the specifics are different.
+>
+> Second, let me say that I'd appreciate any response to my query, and I'm perfectly happy to search the archives associated with this list, or others.  But it's clear to me that I don't yet have the terminology that would allow me to narrow my searches.  So if you all could point me in the right direction, if only by telling me "search for posts that contain these words, and probably these people," I would be grateful.
+>
+> With that out of the way, I'm currently struggling with two topics.  First, I can see how to create a root PCI bus, and I can see how to do that in response to events coming in through paravirtual channels.  What's not clear to me is whether there is a way to tear down a root PCI bus after it has been created.  The most natural implementation for me would be to create a root PCI bus whenever a PCI device is offered to the guest VM, tearing down that root bus when the device is removed from the VM.  Would I be better off creating one "fake" root PCI bus that lives forever and placing functions beneath that?  (This seems more complicated to me, unless there's no way to tear down a root.)
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index a915ee005148..8a6293311ee6 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -69,8 +69,13 @@
- int acpi_get_override_irq(u32 gsi, int *trigger, int *polarity);
- 
- /*
-- *      Is the SiS APIC rmw bug present ?
-+ * Is the SiS APIC rmw bug present ?
-  *      -1 = don't know, 0 = no, 1 = yes
-+ * When doing a read-modify-write operation on IOAPIC registers, older SiS APIC
-+ * requires we rewrite the index register again where the read already set up
-+ * the index register.
-+ * The code to make use of sis_apic_bug has been removed, but we don't want to
-+ * loss this knowledge.
-  */
- int sis_apic_bug = -1;
- 
-@@ -290,22 +295,6 @@ static void io_apic_write(unsigned int apic, unsigned int reg,
- 	writel(value, &io_apic->data);
- }
- 
--/*
-- * Re-write a value: to be used for read-modify-write
-- * cycles where the read already set up the index register.
-- *
-- * Older SiS APIC requires we rewrite the index register
-- */
--static void io_apic_modify(unsigned int apic, unsigned int reg,
--			   unsigned int value)
--{
--	struct io_apic __iomem *io_apic = io_apic_base(apic);
--
--	if (sis_apic_bug)
--		writel(reg, &io_apic->index);
--	writel(value, &io_apic->data);
--}
--
- union entry_union {
- 	struct { u32 w1, w2; };
- 	struct IO_APIC_route_entry entry;
-@@ -442,29 +431,23 @@ static void __init replace_pin_at_irq_node(struct mp_chip_data *data, int node,
- 	add_pin_to_irq_node(data, node, newapic, newpin);
- }
- 
--static void __io_apic_modify_irq(struct irq_pin_list *entry,
--				 int mask_and, int mask_or,
--				 void (*final)(struct irq_pin_list *entry))
--{
--	unsigned int reg, pin;
--
--	pin = entry->pin;
--	reg = io_apic_read(entry->apic, 0x10 + pin * 2);
--	reg &= mask_and;
--	reg |= mask_or;
--	io_apic_modify(entry->apic, 0x10 + pin * 2, reg);
--	if (final)
--		final(entry);
--}
--
- static void io_apic_modify_irq(struct mp_chip_data *data,
- 			       int mask_and, int mask_or,
- 			       void (*final)(struct irq_pin_list *entry))
- {
-+	union entry_union eu;
- 	struct irq_pin_list *entry;
- 
--	for_each_irq_pin(entry, data->irq_2_pin)
--		__io_apic_modify_irq(entry, mask_and, mask_or, final);
-+	eu.entry = data->entry;
-+	eu.w1 &= mask_and;
-+	eu.w1 |= mask_or;
-+	data->entry = eu.entry;
-+
-+	for_each_irq_pin(entry, data->irq_2_pin) {
-+		io_apic_write(entry->apic, 0x10 + 2 * entry->pin, eu.w1);
-+		if (final)
-+			final(entry);
-+	}
- }
- 
- static void io_apic_sync(struct irq_pin_list *entry)
-@@ -1729,28 +1712,6 @@ static unsigned int startup_ioapic_irq(struct irq_data *data)
- 	return was_pending;
- }
- 
--static void __target_IO_APIC_irq(unsigned int irq, struct irq_cfg *cfg,
--				 struct mp_chip_data *data)
--{
--	int apic, pin;
--	struct irq_pin_list *entry;
--	u8 vector = cfg->vector;
--	unsigned int dest = SET_APIC_LOGICAL_ID(cfg->dest_apicid);
--
--	for_each_irq_pin(entry, data->irq_2_pin) {
--		unsigned int reg;
--
--		apic = entry->apic;
--		pin = entry->pin;
--
--		io_apic_write(apic, 0x11 + pin*2, dest);
--		reg = io_apic_read(apic, 0x10 + pin*2);
--		reg &= ~IO_APIC_REDIR_VECTOR_MASK;
--		reg |= vector;
--		io_apic_modify(apic, 0x10 + pin*2, reg);
--	}
--}
--
- atomic_t irq_mis_count;
- 
- #ifdef CONFIG_GENERIC_PENDING_IRQ
-@@ -1916,6 +1877,7 @@ static int ioapic_set_affinity(struct irq_data *irq_data,
- {
- 	struct irq_data *parent = irq_data->parent_data;
- 	struct mp_chip_data *data = irq_data->chip_data;
-+	struct irq_pin_list *entry;
- 	struct irq_cfg *cfg;
- 	unsigned long flags;
- 	int ret;
-@@ -1926,7 +1888,9 @@ static int ioapic_set_affinity(struct irq_data *irq_data,
- 		cfg = irqd_cfg(irq_data);
- 		data->entry.dest = SET_APIC_LOGICAL_ID(cfg->dest_apicid);
- 		data->entry.vector = cfg->vector;
--		__target_IO_APIC_irq(irq_data->irq, cfg, irq_data->chip_data);
-+		for_each_irq_pin(entry, data->irq_2_pin)
-+			__ioapic_write_entry(entry->apic, entry->pin,
-+					     data->entry);
- 	}
- 	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
- 
--- 
-1.7.10.4
+I'd start by looking at acpi_pci_root_remove().  Theoretically that
+removes a PCI host bridge.  I say "theoretically" because this is new
+code and I haven't seen any bug reports related to it.  Maybe that
+means it works perfectly, or maybe it means nobody is really using it
+:)  Yinghai Lu has done most of the work in this area.
 
+> Also on the topic of adding root buses, I can see that when creating a root bus, I should supply a resource list.  My question is two-part.  First, can I set this up so that the root PCI buses themselves don't contain any resources at all, with the children's allocations coming from the (ACPI-based) parent?
+
+No, I don't think you can do this.  The current code, which is not as
+generic as we'd like, only looks at _CRS on the host bridge itself (on
+x86, this happens in probe_pci_root_info()).
+
+> Or do I have to partition the address space so that each root bus contains its own regions?  Second, assuming that I have to partition the address space, allocating discretely to each root PCI bus, is there some protocol for changing the size of the allocation on the fly, and if so, where should I look to find that?  This is analogous to the physical world, where a root port's bridge windows might need to be changed to accommodate a device with a really large requirement.
+
+You said "root port's bridge windows," and I think we can change PCIe
+Root Port bridge windows in the same way we can change any other
+PCI-to-PCI bridge's windows.  This is another area that works in
+theory but is not well-exercised, and here we *do* have bug reports,
+so I know it doesn't work perfectly.  Yinghai Lu is also the expert in
+this sort of resource allocation.
+
+But it sounds like you might be talking about changing the host
+bridge's windows, i.e., using _SRS on the host bridge ACPI device, and
+Linux doesn't have any support for that.
+
+Since you mentioned terminology, here's how I use it:
+
+  host bridge = a PNP0A03 or PNP0A08 device
+  root bus = the PCI/PCIe bus immediately below a host bridge (bus
+number is the _MIN of the bus number range in the host bridge _CRS)
+  root port = a PCIe Root Port, which we handle as a regular
+PCI-to-PCI bridge (plus the PCIe services)
+
+Bjorn
