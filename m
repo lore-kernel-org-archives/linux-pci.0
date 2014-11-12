@@ -1,60 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:54896 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753481AbaKRM27 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 07:28:59 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Suravee.Suthikulpanit@amd.com,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linux-ia64@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Wuyun <wuyun.wu@huawei.com>, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [RFC PATCH 00/16] Refine PCI host bridge scan interfaces
-Date: Tue, 18 Nov 2014 13:27:45 +0100
-Message-ID: <1534030.bkpIToWlHq@wuerfel>
-In-Reply-To: <546B38F5.6050708@huawei.com>
-References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com> <20535707.3sA6NjSINh@wuerfel> <546B38F5.6050708@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mailout1.samsung.com ([203.254.224.24]:18570 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752185AbaKLD0Y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 22:26:24 -0500
+Received: from epcpsbgr5.samsung.com
+ (u145.gpu120.samsung.co.kr [203.254.230.145])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0NEW00M5LPJY26E0@mailout1.samsung.com> for
+ linux-pci@vger.kernel.org; Wed, 12 Nov 2014 12:26:22 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, 'Mohit Kumar' <mohit.kumar@st.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+Subject: [PATCH] PCI: designware: Add a blank line after declarations
+Date: Wed, 12 Nov 2014 12:27:04 +0900
+Message-id: <002a01cffe28$87fb3d10$97f1b730$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 18 November 2014 20:17:57 Yijing Wang wrote:
-> 
-> >>
-> >> I hope platforms with ACPI or DT could both use pci_create_host_bridge().
-> >> Why we need to use two different ways to process it ?
-> > 
-> > These are completely different use cases:
-> > 
-> > a) For DT, we want loadable device drivers that start by probing a host
-> >    bridge device which was added through the DT platform code. The
-> >    driver is self-contained, and eventually we want to be able to unload
-> >    it. We have lots of different per-soc drivers that require different
-> >    quirks
-> > 
-> > b) For ACPI, the interface is defined in the ACPI spec across architectures
-> >    and SoCs, we don't have host bridge drivers and the code that initializes
-> >    the PCI is required early during boot and called from architecture
-> >    code. There is no parent device, as ACPI sees PCI as a fundamental building
-> >    block by itself, and there are no drivers because the firmware does
-> >    the initial hardware setup, so we only have to access the config space.
-> 
-> Hmmm, I'm a little confused, so why you think ACPI host driver should not use
-> pci_create_host_bridge(), because ACPI PCI driver has no parent device ?
+This patch fixes the following checkpatch warning.
 
-It's one of the difference. Having a parent device can certainly make your
-life simpler, since you have devm_kzalloc(), dev_info(), etc. Coming from
-the other end, I think ACPI needs PCI to be available during early boot,
-at a time where we might not want pci_create_host_bridge() to do the
-right thing.
+  WARNING: Missing a blank line after declarations
 
-	Arnd
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/pci/host/pcie-designware.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index dfed00a..f9be371 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -380,6 +380,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	/* Get the I/O and memory ranges from DT */
+ 	for_each_of_pci_range(&parser, &range) {
+ 		unsigned long restype = range.flags & IORESOURCE_TYPE_BITS;
++
+ 		if (restype == IORESOURCE_IO) {
+ 			of_pci_range_to_resource(&range, np, &pp->io);
+ 			pp->io.name = "I/O";
+-- 
+1.7.9.5
+
+
