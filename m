@@ -1,90 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:46363 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754097AbaKHSQC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 8 Nov 2014 13:16:02 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
-Subject: [Patch Part3 v3 24/38] iommu/amd: Move struct irq_2_irte into amd_iommu.c
-Date: Sun,  9 Nov 2014 02:13:24 +0800
-Message-Id: <1415470418-10874-25-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mailout1.samsung.com ([203.254.224.24]:18719 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755072AbaKLD1L (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 22:27:11 -0500
+Received: from epcpsbgr4.samsung.com
+ (u144.gpu120.samsung.co.kr [203.254.230.144])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0NEW00M7ZPLA26E0@mailout1.samsung.com> for
+ linux-pci@vger.kernel.org; Wed, 12 Nov 2014 12:27:10 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Jason Cooper' <jason@lakedaemon.net>
+Subject: [PATCH] PCI: mvebu: Add a blank line after declarations
+Date: Wed, 12 Nov 2014 12:27:54 +0900
+Message-id: <002b01cffe28$a57021d0$f0506570$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now only amd_iommu.c access irq_2_irte, so move it from hw_irq.h into
-amd_iommu.c.
+This patch fixes the following checkpatch warning.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+  WARNING: Missing a blank line after declarations
+
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 ---
- arch/x86/include/asm/hw_irq.h |   13 -------------
- drivers/iommu/amd_iommu.c     |    5 +++++
- 2 files changed, 5 insertions(+), 13 deletions(-)
+ drivers/pci/host/pci-mvebu.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 8dd38c205719..a086893fa710 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -94,14 +94,6 @@ extern void trace_call_function_single_interrupt(void);
- #define trace_kvm_posted_intr_ipi kvm_posted_intr_ipi
- #endif /* CONFIG_TRACING */
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index b1315e1..0c775afa 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -622,6 +622,7 @@ static struct mvebu_pcie_port *mvebu_pcie_find_port(struct mvebu_pcie *pcie,
  
--#ifdef CONFIG_IRQ_REMAP
--/* AMD specific interrupt remapping information */
--struct irq_2_irte {
--	u16 devid; /* Device ID for IRTE table */
--	u16 index; /* Index into IRTE table*/
--};
--#endif	/* CONFIG_IRQ_REMAP */
--
- struct irq_domain;
- 
- #ifdef	CONFIG_X86_LOCAL_APIC
-@@ -182,11 +174,6 @@ struct irq_cfg {
- 	unsigned int		dest_apicid;
- 	u8			vector;
- 	u8			move_in_progress : 1;
--#ifdef CONFIG_IRQ_REMAP
--	union {
--		struct irq_2_irte  irq_2_irte;
--	};
--#endif
- 	union {
- #ifdef CONFIG_X86_IO_APIC
- 		struct {
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 2f76656a88ce..236cc7ee0b85 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -3855,6 +3855,11 @@ union irte {
- 	} fields;
- };
- 
-+struct irq_2_irte {
-+	u16 devid; /* Device ID for IRTE table */
-+	u16 index; /* Index into IRTE table*/
-+};
+ 	for (i = 0; i < pcie->nports; i++) {
+ 		struct mvebu_pcie_port *port = &pcie->ports[i];
 +
- struct amd_ir_data {
- 	struct irq_2_irte			irq_2_irte;
- 	union irte				irte_entry;
+ 		if (bus->number == 0 && port->devfn == devfn)
+ 			return port;
+ 		if (bus->number != 0 &&
+@@ -751,6 +752,7 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
+ 
+ 	for (i = 0; i < pcie->nports; i++) {
+ 		struct mvebu_pcie_port *port = &pcie->ports[i];
++
+ 		if (!port->base)
+ 			continue;
+ 		mvebu_pcie_setup_hw(port);
+@@ -777,6 +779,7 @@ static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ static void mvebu_pcie_add_bus(struct pci_bus *bus)
+ {
+ 	struct mvebu_pcie *pcie = sys_to_pcie(bus->sysdata);
++
+ 	bus->msi = pcie->msi;
+ }
+ 
 -- 
-1.7.10.4
+1.7.9.5
+
 
