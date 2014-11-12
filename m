@@ -1,114 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:2253 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751626AbaKRAG0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 19:06:26 -0500
-From: Anish Bhatt <anish@chelsio.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Venkat Duvvuru <VenkatKumar.Duvvuru@emulex.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hariprasad S <hariprasad@chelsio.com>,
-	Casey Leedom <leedom@chelsio.com>
-Subject: RE: [PATCH v1] pci: Limit VPD length of Emulex adapters to the
- actual length supported.
-Date: Tue, 18 Nov 2014 00:06:22 +0000
-Message-ID: <525DB349B3FB5444AE057A887CB2A8D8D82D10@nice.asicdesigners.com>
-References: <1f6d7b6c-7189-4fe3-926b-42609724cab9@CMEXHTCAS2.ad.emulex.com>
- <20141023154054.GA7137@google.com>
- <BF3270C86E8B1349A26C34E4EC1C44CB3E860095@CMEXMB1.ad.emulex.com>
- <CAErSpo7_9xxtBmHOCgxsHeVLbKUeMVhLF6Q9OyFkz11EZbtJCA@mail.gmail.com>
- <BF3270C86E8B1349A26C34E4EC1C44CB3E862DC6@CMEXMB1.ad.emulex.com>
- <CAErSpo7KKka6-nHWnVbqVW3hx-E=4x6cEjeEGEAWz32za6xCGQ@mail.gmail.com>
- <BF3270C86E8B1349A26C34E4EC1C44CB3E87A6A7@CMEXMB1.ad.emulex.com>
- <CAErSpo5xx2QAN1rZqnknAX7xF+5SjpGvEvvVWGuqF_bTh5xRhA@mail.gmail.com>
-In-Reply-To: <CAErSpo5xx2QAN1rZqnknAX7xF+5SjpGvEvvVWGuqF_bTh5xRhA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from [207.46.100.124] ([207.46.100.124]:48304 "EHLO
+	na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751954AbaKLLh3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 12 Nov 2014 06:37:29 -0500
+Message-ID: <54634665.5030003@amd.com>
+Date: Wed, 12 Nov 2014 18:37:09 +0700
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 MIME-Version: 1.0
+To: Srikanth Thokala <sriku.linux@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <liviu.dudau@arm.com>,
+	<lorenzo.pieralisi@arm.com>, <will.deacon@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH V2 2/2] PCI: generic: Add msi_parent DT binding
+References: <1415733454-24322-1-git-send-email-suravee.suthikulpanit@amd.com>
+	<1415733454-24322-3-git-send-email-suravee.suthikulpanit@amd.com>
+	<CA+mB=1LEEtPCixB9Ej74L03yPPH7D6YvfpkZyJgsHCm97-GvKg@mail.gmail.com>
+ <CA+mB=1LKghLd9CuyLgDE9WGG5+VrUJF8r4DEbR7CiZojjoRdvQ@mail.gmail.com>
+In-Reply-To: <CA+mB=1LKghLd9CuyLgDE9WGG5+VrUJF8r4DEbR7CiZojjoRdvQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Q0MnaW5nIENhc2V5LCB3aG8gd291bGQgYmUgYWJsZSB0byBhbnN3ZXIgdGhpcyBtdWNoIGJldHRl
-ciB0aGFuIG1lLg0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEJqb3Ju
-IEhlbGdhYXMgW21haWx0bzpiaGVsZ2Fhc0Bnb29nbGUuY29tXQ0KPiBTZW50OiBNb25kYXksIE5v
-dmVtYmVyIDE3LCAyMDE0IDM6MzIgUE0NCj4gVG86IFZlbmthdCBEdXZ2dXJ1DQo+IENjOiBsaW51
-eC1wY2lAdmdlci5rZXJuZWwub3JnOyBBbmlzaCBCaGF0dDsgSGFyaXByYXNhZCBTDQo+IFN1Ympl
-Y3Q6IFJlOiBbUEFUQ0ggdjFdIHBjaTogTGltaXQgVlBEIGxlbmd0aCBvZiBFbXVsZXggYWRhcHRl
-cnMgdG8gdGhlDQo+IGFjdHVhbCBsZW5ndGggc3VwcG9ydGVkLg0KPiANCj4gWytjYyBBbmlzaCwg
-SGFyaXByYXNhZCAoY3hnYjQgbWFpbnRhaW5lcnMvY29udHJpYnV0b3JzKV0NCj4gDQo+IEFuaXNo
-LCBIYXJpcHJhc2FkLCBoZXJlJ3MgdGhlIHByb2JsZW06DQo+IA0KPiAgIC0gcGNpX3JlYWRfdnBk
-KCkgY3VycmVudGx5IHRyaWVzIHRvIHJlYWQgYXMgbXVjaCBkYXRhIGFzIHRoZSBjYWxsZXIgYXNr
-cyBmb3INCj4gKHVwIHRvIHRoZSAzMksgbGltaXQgaW1wb3NlZCBieSB0aGUgUENJX1ZQRF9QQ0ky
-Ml9TSVpFIGluDQo+IHBjaV92cGRfcGNpMjJfaW5pdCgpKSAuICBJdCBkb2VzIG5vdCBsb29rIGF0
-IHRoZSBkYXRhLCBzbyBpdCBkb2Vzbid0IHN0b3AgaWYgaXQgc2Vlcw0KPiBhbiBFbmQgVGFnLg0K
-PiANCj4gICAtIFNvbWUgZGV2aWNlcyBoYXZlIGJ1Z2d5IGZpcm13YXJlIHRoYXQgY2FuJ3QgaGFu
-ZGxlIDMySyB3b3J0aCBvZiBWUEQNCj4gcmVhZHMuICBCdXQgdGhlaXIgVlBEIGRhdGEgaXMgaW4g
-dGhlIGZvcm1hdCBsYWlkIG91dCBieSB0aGUgc3BlYyAoUENJIHIzLjAsIHNlYw0KPiBJLjEpLCBh
-bmQgaXQgZG9lcyBoYXZlIGFuIEVuZCBUYWcuDQo+IA0KPiBUaGUgcHJvcG9zYWwgaXMgdG8gbWFr
-ZSBwY2lfcmVhZF92cGQoKSBpbnRlcnByZXQgdGhlIGRhdGEgaW50byB0YWdnZWQgaXRlbXMNCj4g
-KG9ubHkgd2hlbiBpdCBzdGFydHMgcmVhZGluZyBhdCBvZmZzZXQgMCksIGFuZCBtYWtlIGl0IHN0
-b3AgaWYgaXQgZW5jb3VudGVycyBhbg0KPiBFbmQgVGFnLg0KPiANCj4gT24gTW9uLCBOb3YgMTcs
-IDIwMTQgYXQgODoxMiBBTSwgVmVua2F0IER1dnZ1cnUNCj4gPFZlbmthdEt1bWFyLkR1dnZ1cnVA
-ZW11bGV4LmNvbT4gd3JvdGU6DQo+ID4gU29ycnkgZm9yIGEgZGVsYXllZCByZXNwb25zZS4NCj4g
-Pg0KPiA+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+PiBGcm9tOiBCam9ybiBIZWxn
-YWFzIFttYWlsdG86YmhlbGdhYXNAZ29vZ2xlLmNvbV0NCj4gPj4gU2VudDogVHVlc2RheSwgTm92
-ZW1iZXIgMDQsIDIwMTQgMTE6MDUgUE0NCj4gPj4gVG86IFZlbmthdCBEdXZ2dXJ1DQo+ID4+IENj
-OiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnDQo+ID4+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjFd
-IHBjaTogTGltaXQgVlBEIGxlbmd0aCBvZiBFbXVsZXggYWRhcHRlcnMgdG8NCj4gPj4gdGhlIGFj
-dHVhbCBsZW5ndGggc3VwcG9ydGVkLg0KPiA+Pg0KPiA+PiA+IEluIHRoaXMgY2FzZSB3aGVuIHRo
-ZSBob3N0IHJlYWRzIDMyayBzcGFjZSwgdGhlIGFkYXB0ZXIgZ2V0cyBhcm91bmQNCj4gPj4gPiA4
-Sw0KPiA+PiBpbnRlcnJ1cHRzIGFuZCBzb21ldGltZXMgZ2V0cyBvdmVyd2hlbG1lZCB3aXRoIHRo
-ZSBpbnRlcnJ1cHQgc3Rvcm0uDQo+ID4+IFRoaXMgY291bGQgY2F1c2UgdGhlIGFkYXB0ZXIgdG8g
-c3RvcCBmdW5jdGlvbmluZyBwcm9wZXJseS4NCj4gPj4gPiBMaW1pdGluZyB0aGUgVlBEIHJlYWQg
-dG8gMUsgY2F1c2VzIG9ubHkgMjU2IGludGVycnVwdHMgKG9uIHRoZQ0KPiA+PiA+IGFkYXB0ZXIp
-IGFuZA0KPiA+PiB0aGUgcHJvYmxlbSBuZXZlciBzZWVtcyB0byBvY2N1ci4NCj4gPj4gPiBUaGlz
-IGhhcyBiZWVuIHRoZSBtYWluIG1vdGl2YXRpb24gYmVoaW5kIG15IHBhdGNoLg0KPiA+PiA+IEkg
-ZG8gYWdyZWUgdGhhdCB0aGUgdGltZW91dCBjb3VsZCBzdGlsbCBvY2N1ciBldmVuIHdoZW4gcmVh
-ZGluZyB0aGUNCj4gPj4gPiAxSw0KPiA+PiBpbXBsZW1lbnRlZCBzcGFjZSwgYnV0IEkgZmVlbCBp
-dCdzIGhpZ2hseSBpbXByb2JhYmxlLg0KPiA+Pg0KPiA+PiBPSy4gIEkgd291bGQgZ3Vlc3MgdGhh
-dCBzb21ldGhpbmcgbGlrZQ0KPiA+Pg0KPiA+PiAgIHdoaWxlIC9iaW4vdHJ1ZTsgZG8NCj4gPj4g
-ICAgIGNhdCAvc3lzL2RldmljZXMvcGNpMDAwMDowMC8wMDAwOjAwOjAwLjAvdnBkDQo+ID4+ICAg
-ZG9uZQ0KPiA+Pg0KPiA+PiBjb3VsZCBzdGlsbCBvdmVyd2hlbG0gdGhlIGFkYXB0ZXIsIGV2ZW4g
-d2l0aCB0aGUgMUsgbGltaXQgaW4gcGxhY2UuDQo+ID4gQ29ycmVjdC4NCj4gPg0KPiA+Pg0KPiA+
-PiA+IEFzIGFuIGFsdGVybmF0aXZlIHNvbHV0aW9uLCB3b3VsZCB5b3UgYmUgb3BlbiB0byBhIGZp
-eCBpbiBQQ0kgLWNvcmUNCj4gPj4gPiB0byBzdG9wDQo+ID4+IHJlYWRpbmcgYWZ0ZXIgdGhlIEVu
-ZC10YWcgaXMgZGV0ZWN0ZWQ/ICAoVGhpcyBsb2dpYyBpcyB1c2VkIGJ5DQo+ID4+IHBjaS11dGls
-aXR5IChscy0NCj4gPj4gdnBkLmMpIHdoaWxlIHJlYWRpbmcgVlBEIGRhdGEuKQ0KPiA+PiA+IEkg
-bm93IGZlZWwgdGhhdCB0aGlzIGlzIHRoZSAqcmlnaHQqIHNvbHV0aW9uIHRoYW4gbXkgcGNpLXF1
-aXJrcyBwYXRjaC4NCj4gPj4NCj4gPj4gVGhhdCdzIGEgcG9zc2liaWxpdHksIGFuZCBpZiB3ZSB3
-ZXJlIGltcGxlbWVudGluZyBWUEQgc3VwcG9ydCBmcm9tDQo+ID4+IHNjcmF0Y2gsIEknZCBwcm9i
-YWJseSBkbyBpdCB0aGF0IHdheS4NCj4gPj4NCj4gPj4gTXkgb25seSBjb25jZXJuIHdpdGggY2hh
-bmdpbmcgbm93IGlzIHRoYXQgaXQgY291bGQgYnJlYWsgZXhpc3RpbmcNCj4gPj4gdXNlcnMgZm9y
-IGRldmljZXMgd2hlcmUgdGhlIFZQRCBjb250ZW50IGRvZXNuJ3QgaGF2ZSB0aGUgc3RydWN0dXJl
-DQo+ID4+IHNwZWNpZmllZCBieSB0aGUgc3BlYy4gIFRoZXJlIGFyZW4ndCAqdG9vKiBtYW55IHVz
-ZXJzIG9mDQo+ID4+IHBjaV9yZWFkX3ZwZCgpIGluIHRoZSB0cmVlLCBzbyBpdCBtaWdodCBiZSBm
-ZWFzaWJsZSB0byBqdXN0IGFzayB0aGUNCj4gPj4gYm54MngsIHRnMywgY3hnYjQsIHNreTIsIGFu
-ZCBlZnggZm9sa3Mgd2hldGhlciB0aGV5IHRoaW5rIGl0J3Mgc2FmZS4NCj4gPj4NCj4gPj4gSSB0
-b29rIGEgcXVpY2sgbG9vayBhdCB0aG9zZSBkcml2ZXJzLCBhbmQgaXQgYWN0dWFsbHkgbG9va3Mg
-bGlrZSBtb3N0DQo+ID4+IG9mIHRoZW0gbG9vayBmb3IgdGhlIHRhZyBzdHJ1Y3R1cmUsIGUuZy4s
-IGJ5IHVzaW5nIHBjaV92cGRfZmluZF90YWcoKQ0KPiA+PiBvciBkb2luZyBzb21ldGhpbmcgc2lt
-aWxhci4gIFNvIG1heWJlIGl0IGFjdHVhbGx5IHdvdWxkIGJlIHNhZmUgdG8gZG8NCj4gPj4gdGhp
-cy4gIE1heWJlIHlvdSBjb3VsZCBoYXZlIGEgbW9yZSB0aG9yb3VnaCBsb29rIGF0IHRoZW0gYW5k
-IHNlZSBpZg0KPiA+PiB5b3UgYWdyZWU/DQo+ID4gSWYgdGhlIGRldmljZXMgZG9lc24ndCBmb2xs
-b3cgdGhlIHNwZWMgZm9yIHRoZSBWUEQgY29udGVudHMsIHBjaS1jb3JlIG1heQ0KPiBlbmR1cCBy
-ZXF1ZXN0aW5nIDMyayBkYXRhIHdoaWNoIHByb2JhYmx5IHdpbGwgbm90IGJyZWFrIGV4aXN0aW5n
-IHVzZXJzLg0KPiANCj4gVGhlIGNhc2UgSSdtIHdvcnJpZWQgYWJvdXQgaXMgYSBkZXZpY2UgdGhh
-dCBkb2Vzbid0IGZvbGxvdyB0aGUgVlBEIGZvcm1hdA0KPiBzcGVjLCBidXQgaXRzIFZQRCBjb250
-ZW50cyBpbmNsdWRlIGRhdGEgdGhhdCBtYXRjaGVzIGFuIEVuZCBUYWcuICBJZiB3ZSBtYWtlDQo+
-IHBjaV9yZWFkX3ZwZCgpIHN0b3Agd2hlbiBpdCBzZWVzIGFuIEVuZCBUYWcsIHdlIG1heSBzdG9w
-IHJlYWRpbmcgZGF0YQ0KPiBwcmVtYXR1cmVseS4NCj4gDQo+ID4gSSBsb29rZWQgaW50byBhbGwg
-dGhlIHBjaV9yZWFkX3ZwZCB1c2VycyAoZHJpdmVycykgYW5kIHRoZXkgc2VlbSB0byBiZQ0KPiBk
-b2luZyBwY2lfZmluZF92cGRfdGFnIG9yIHBjaV92cGRfZmluZF9pbmZvX2tleXdvcmQgdG8gZmlu
-ZCBhIHNwZWNpZmljDQo+IHRhZy9rZXl3b3JkIGFuZCBub3QgYWxsIHRoZSB0YWdzL2tleXdvcmRz
-Lg0KPiANCj4gSSBhZ3JlZSwgd2l0aCBvbmUgZXhjZXB0aW9uOiAgSSBhbSBjb25jZXJuZWQgYWJv
-dXQgZWVwcm9tX3JkX3BoeXMoKSBpbg0KPiBjeGdiNC4gIEluIHRoYXQgY2FzZSwgd2UgdXNlIHRo
-ZSBWUEQgZGF0YSB0byBpbXBsZW1lbnQgdGhlDQo+IGV0aHRvb2xfb3BzLmdldF9lZXByb20oKSBt
-ZXRob2QsIGFuZCB0aGF0IHBhdGggZG9lc24ndCBsb29rIGF0IHRoZSBhY3R1YWwNCj4gZGF0YSBh
-dCBhbGwsIHNvIEkgaGF2ZSBubyBpZGVhIHdoYXQgdGhlIGZvcm1hdCBtaWdodCBiZS4NCj4gDQo+
-IE1heWJlIEhhcmlwcmFzYWQgb3IgQW5pc2ggY2FuIGNvbW1lbnQgb24gdGhpcz8NCj4gDQo+ID4g
-QSBzYWZlciBhcHByb2FjaCBwcm9iYWJseSBpcyB0byBsb29rIGZvciB0aGUgZW5kIHRhZyBpbiBw
-Y2lfcmVhZF92cGQsIGlmDQo+IG9mZnNldCBpcyAiemVybyIgYmVjYXVzZSBzb21lIGRyaXZlcnMg
-YXJlIGRvaW5nICJwY2lfcmVhZF92cGQiIHdpdGggYSBub24tDQo+IHplcm8gb2Zmc2V0Lg0KPiAN
-Cj4gWWVzLCBJIHRoaW5rIHlvdSBjYW4gb25seSBsb29rIGZvciB0aGUgRW5kIFRhZyBpZiB5b3Ug
-c3RhcnQgcmVhZGluZyBhdCBvZmZzZXQNCj4gemVyby4gIElmIHdlIHN0YXJ0IHJlYWRpbmcgc29t
-ZXdoZXJlIGluIHRoZSBtaWRkbGUsIHdlJ2xsIGJlIG91dCBvZiBzeW5jIGFuZA0KPiBtYXkgaW50
-ZXJwcmV0IGRhdGEgYXMgYW4gRW5kIFRhZy4NCj4gDQo+IEJqb3JuDQoNCg==
+
+
+On 11/12/14 14:09, Srikanth Thokala wrote:
+>>> @@ -122,9 +123,19 @@ static int gen_pci_config_write(struct pci_bus *bus, unsigned int devfn,
+>>> >>         return PCIBIOS_SUCCESSFUL;
+>>> >>  }
+>>> >>
+>>> >>+static int gen_pci_set_msi_parent(struct pci_bus *bus)
+>>> >>+{
+>>> >>+       struct gen_pci *pci = bus_to_gen_pci(bus);
+>>> >>+
+>>> >>+       bus->msi = pci->mchip;
+>>> >>+
+>>> >>+       return PCIBIOS_SUCCESSFUL;
+>>> >>+}
+>>> >>+
+>>> >>  static struct pci_ops gen_pci_ops = {
+>>> >>         .read   = gen_pci_config_read,
+>>> >>         .write  = gen_pci_config_write,
+>>> >>+       .set_msi_parent = gen_pci_set_msi_parent,
+>> >
+>> >We assign the msi chip through add_bus() call, do we still need this?
+>> >
+> There are series of patches from Yijing Wang around this.  You may have
+> to go through them.
+>
+> Srikanth
+>
+
+Hm.. I was not aware of this patch. Thanks for the pointer. I'll check 
+them out.
+
+Suravee
