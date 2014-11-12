@@ -1,195 +1,71 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 11 Nov 2014 21:23:59 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>, g@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Prarit Bhargava <prarit@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch v8 13/18] x86, irq: Refine mp_register_ioapic() to prepare for IOAPIC hotplug
-Date: Sun,  2 Nov 2014 14:04:28 +0800
-Message-Id: <1414908273-7552-14-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414908273-7552-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414908273-7552-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH 00/10] Save MSI chip in pci_sys_data
+Message-ID: <20141112042359.GK28161@google.com>
+References: <1414396127-30023-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1414396127-30023-1-git-send-email-wangyijing@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Refine mp_register_ioapic() to prepare for IOAPIC hotplug by:
-1) change return value from void to int.
-2) check for gsi range conflicts
-3) check for IOAPIC physical address conflicts
-4) enhance the way to allocate IOAPIC index
+On Mon, Oct 27, 2014 at 03:48:37PM +0800, Yijing Wang wrote:
+> Now PCI host bridge drivers in arm associate MSI chip and
+> PCI bus by adding .add_bus(), and assign MSI chip pointer
+> to every PCI bus. Associating MSI chip and every PCI bus
+> is not necessary. All PCI busses under same PCI host brdige
+> share the same MSI chip. So saving MSI chip in pci_sys_data
+> is a better solution, it make PCI host bridge drivers clean.
+> Because we still need to provide arch spec pcibios_msi_controller()
+> to extract MSI controller pointer, a better solution is to
+> refactor PCI host bridge, make a generic pci_host_bridge, and
+> save common info like PCI domain number, MSI chip, resources
+> in it. We will do that work in another series as soon.
+> 
+> To Bjorn: Because struct msi_chip defined in struct hw_pci and pci_sys_data
+> is under the #ifdef CONFIG_PCI_MSI, if we use if(IS_ENABLED(CONFIG_PCI_MSI))
+> in PCI host bridge drivers, it will cause build errors when the CONFIG_PCI_MSI
+> is off. So I keep #ifdef CONFIG_PCI_MSI in this series.
+> 
+> Yijing Wang (10):
+>   MSI: Rename msi_chip to msi_controller for better readability
+>   PCI/MSI: Introduce weak pcibios_msi_controller()
+>   arm/MSI: Save MSI controller in pci_sys_data
+>   PCI: tegra: Save MSI controller in pci_sys_data
+>   PCI: designware: Save MSI controller in pci_sys_data
+>   PCI: rcar: Save MSI controller in pci_sys_data
+>   PCI: mvebu: Save MSI controller in pci_sys_data
+>   PCI: xilinx: Save MSI controller in pci_sys_data
+>   arm/PCI: Clean unused pcibios_add_bus() and pcibios_remove_bus()
+>   PCI/MSI: Remove useless bus->msi assignment
+> 
+>  arch/arm/include/asm/mach/pci.h     |   10 +++++---
+>  arch/arm/kernel/bios32.c            |   28 ++++++++++--------------
+>  drivers/irqchip/irq-armada-370-xp.c |   22 +++++++++---------
+>  drivers/of/of_pci.c                 |   40 +++++++++++++++++-----------------
+>  drivers/pci/host/pci-keystone-dw.c  |    4 +-
+>  drivers/pci/host/pci-keystone.h     |    2 +-
+>  drivers/pci/host/pci-mvebu.c        |   14 ++++-------
+>  drivers/pci/host/pci-tegra.c        |   37 +++++++++++++-------------------
+>  drivers/pci/host/pcie-designware.c  |   25 +++++++--------------
+>  drivers/pci/host/pcie-designware.h  |    2 +-
+>  drivers/pci/host/pcie-rcar.c        |   37 +++++++++++++-------------------
+>  drivers/pci/host/pcie-xilinx.c      |   27 +++++++----------------
+>  drivers/pci/msi.c                   |   22 ++++++++++++++-----
+>  drivers/pci/probe.c                 |    1 -
+>  include/linux/msi.h                 |    6 ++--
+>  include/linux/of_pci.h              |   14 ++++++------
+>  include/linux/pci.h                 |    2 +-
+>  17 files changed, 132 insertions(+), 161 deletions(-)
+> 
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h |    4 +-
- arch/x86/kernel/apic/io_apic.c |   87 ++++++++++++++++++++++++++--------------
- 2 files changed, 58 insertions(+), 33 deletions(-)
-
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index a666dcdeea67..8741c1ea33c3 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -188,8 +188,8 @@ extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
- extern u32 mp_pin_to_gsi(int ioapic, int pin);
- extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags);
- extern void mp_unmap_irq(int irq);
--extern void mp_register_ioapic(int id, u32 address, u32 gsi_base,
--			       struct ioapic_domain_cfg *cfg);
-+extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
-+			      struct ioapic_domain_cfg *cfg);
- extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 			    irq_hw_number_t hwirq);
- extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 581e51728871..59267659e5b1 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3832,20 +3832,6 @@ int mp_find_ioapic_pin(int ioapic, u32 gsi)
- 	return gsi - gsi_cfg->gsi_base;
- }
- 
--static int bad_ioapic(unsigned long address)
--{
--	if (nr_ioapics >= MAX_IO_APICS) {
--		pr_warn("WARNING: Max # of I/O APICs (%d) exceeded (found %d), skipping\n",
--			MAX_IO_APICS, nr_ioapics);
--		return 1;
--	}
--	if (!address) {
--		pr_warn("WARNING: Bogus (zero) I/O APIC address found in table, skipping!\n");
--		return 1;
--	}
--	return 0;
--}
--
- static int bad_ioapic_register(int idx)
- {
- 	union IO_APIC_reg_00 reg_00;
-@@ -3865,29 +3851,51 @@ static int bad_ioapic_register(int idx)
- 	return 0;
- }
- 
--void mp_register_ioapic(int id, u32 address, u32 gsi_base,
--			struct ioapic_domain_cfg *cfg)
-+static int find_free_ioapic_entry(void)
- {
--	int idx = 0;
--	int entries;
-+	return nr_ioapics;
-+}
-+
-+/**
-+ * mp_register_ioapic - Register an IOAPIC device
-+ * @id:		hardware IOAPIC ID
-+ * @address:	physical address of IOAPIC register area
-+ * @gsi_base:	base of GSI associated with the IOAPIC
-+ * @cfg:	configuration information for the IOAPIC
-+ */
-+int mp_register_ioapic(int id, u32 address, u32 gsi_base,
-+		       struct ioapic_domain_cfg *cfg)
-+{
-+	u32 gsi_end;
-+	int idx, ioapic, entries;
- 	struct mp_ioapic_gsi *gsi_cfg;
- 
--	if (bad_ioapic(address))
--		return;
-+	if (!address) {
-+		pr_warn("Bogus (zero) I/O APIC address found, skipping!\n");
-+		return -EINVAL;
-+	}
-+	for_each_ioapic(ioapic)
-+		if (ioapics[ioapic].mp_config.apicaddr == address) {
-+			pr_warn("address 0x%x conflicts with IOAPIC%d\n",
-+				address, ioapic);
-+			return -EEXIST;
-+		}
- 
--	idx = nr_ioapics;
-+	idx = find_free_ioapic_entry();
-+	if (idx >= MAX_IO_APICS) {
-+		pr_warn("Max # of I/O APICs (%d) exceeded (found %d), skipping\n",
-+			MAX_IO_APICS, idx);
-+		return -ENOSPC;
-+	}
- 
- 	ioapics[idx].mp_config.type = MP_IOAPIC;
- 	ioapics[idx].mp_config.flags = MPC_APIC_USABLE;
- 	ioapics[idx].mp_config.apicaddr = address;
--	ioapics[idx].irqdomain = NULL;
--	ioapics[idx].irqdomain_cfg = *cfg;
- 
- 	set_fixmap_nocache(FIX_IO_APIC_BASE_0 + idx, address);
--
- 	if (bad_ioapic_register(idx)) {
- 		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
--		return;
-+		return -ENODEV;
- 	}
- 
- 	ioapics[idx].mp_config.apicid = io_apic_unique_id(idx, id);
-@@ -3898,24 +3906,41 @@ void mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 	 * and to prevent reprogramming of IOAPIC pins (PCI GSIs).
- 	 */
- 	entries = io_apic_get_redir_entries(idx);
-+	gsi_end = gsi_base + entries - 1;
-+	for_each_ioapic(ioapic) {
-+		gsi_cfg = mp_ioapic_gsi_routing(ioapic);
-+		if ((gsi_base >= gsi_cfg->gsi_base &&
-+		     gsi_base <= gsi_cfg->gsi_end) ||
-+		    (gsi_end >= gsi_cfg->gsi_base &&
-+		     gsi_end <= gsi_cfg->gsi_end)) {
-+			pr_warn("GSI range [%u-%u] for new IOAPIC conflicts with GSI[%u-%u]\n",
-+				gsi_base, gsi_end,
-+				gsi_cfg->gsi_base, gsi_cfg->gsi_end);
-+			clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
-+			return -ENOSPC;
-+		}
-+	}
- 	gsi_cfg = mp_ioapic_gsi_routing(idx);
- 	gsi_cfg->gsi_base = gsi_base;
--	gsi_cfg->gsi_end = gsi_base + entries - 1;
-+	gsi_cfg->gsi_end = gsi_end;
- 
--	/*
--	 * The number of IO-APIC IRQ registers (== #pins):
--	 */
--	ioapics[idx].nr_registers = entries;
-+	ioapics[idx].irqdomain = NULL;
-+	ioapics[idx].irqdomain_cfg = *cfg;
- 
- 	if (gsi_cfg->gsi_end >= gsi_top)
- 		gsi_top = gsi_cfg->gsi_end + 1;
-+	if (nr_ioapics <= idx)
-+		nr_ioapics = idx + 1;
-+
-+	/* Set nr_registers to mark entry present */
-+	ioapics[idx].nr_registers = entries;
- 
- 	pr_info("IOAPIC[%d]: apic_id %d, version %d, address 0x%x, GSI %d-%d\n",
- 		idx, mpc_ioapic_id(idx),
- 		mpc_ioapic_ver(idx), mpc_ioapic_addr(idx),
- 		gsi_cfg->gsi_base, gsi_cfg->gsi_end);
- 
--	nr_ioapics++;
-+	return 0;
- }
- 
- int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
--- 
-1.7.10.4
-
+Applied to pci/msi for v3.19, thanks.
