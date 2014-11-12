@@ -1,34 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:47794 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751461AbaKBXhO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 2 Nov 2014 18:37:14 -0500
-Message-ID: <5456C024.4060103@hauke-m.de>
-Date: Mon, 03 Nov 2014 00:37:08 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:47999 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752703AbaKLEZB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 23:25:01 -0500
+Received: by mail-ig0-f170.google.com with SMTP id a13so754588igq.3
+        for <linux-pci@vger.kernel.org>; Tue, 11 Nov 2014 20:25:00 -0800 (PST)
+Date: Tue, 11 Nov 2014 21:24:54 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH 10/10] PCI/MSI: Remove useless bus->msi assignment
+Message-ID: <20141112042454.GL28161@google.com>
+References: <1414396127-30023-1-git-send-email-wangyijing@huawei.com>
+ <1414396127-30023-11-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, linux-pci@vger.kernel.org
-Subject: PCIe host controller without IO port access.
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1414396127-30023-11-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Mon, Oct 27, 2014 at 03:48:47PM +0800, Yijing Wang wrote:
+> Thierry introduced MSI chip(now renamed to MSI controller)
+> framework to associate MSI chip and PCI bus in arm.
+> Other platforms still use its own arch MSI functions to
+> support MSI capability. Thierry introduced the bus->msi
+> assignment to make child bus can inherit bus->msi from the parent.
+> But in fact, drivers which used MSI chip always associate
+> MSI chip and PCI bus by add .add_bus() in arm PCI host bridge
+> drivers. Now we have saved MSI chip in pci_sys_data.
+> We can remove this bus->msi assignment safely.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> CC: Thierry Reding <thierry.reding@gmail.com>
+> CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> ---
+>  drivers/pci/msi.c   |    5 -----
+>  drivers/pci/probe.c |    1 -
+>  2 files changed, 0 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index f085f7f..27b6a54 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -37,11 +37,6 @@ struct msi_controller * __weak pcibios_msi_controller(struct pci_bus *bus)
+>  
+>  struct msi_controller *pci_msi_controller(struct pci_bus *bus)
+>  {
+> -	struct msi_controller *ctrl = bus->msi;
+> -
+> -	if (ctrl)
+> -		return ctrl;
+> -
+>  	return pcibios_msi_controller(bus);
+>  }
+>  
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 5ed9930..4b18bf2 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -682,7 +682,6 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>  
+>  	child->parent = parent;
+>  	child->ops = parent->ops;
+> -	child->msi = parent->msi;
 
-I am currently writing a driver for a PCIe host controller which does
-not support IO port access.
+Does this mean that struct pci_bus.msi is now unused?  If not, where is it
+still used?
 
-My plan was to only provide IORESOURCE_MEM to pci_sys_data->resources,
-but then it allocates some generic IORESOURCE_IO memory in
-arch/arm/kernel/bios32.c:pcibios_init_resources(). This will work for
-the fist PCIe controller, but when the second controller gets registered
-I am getting this: "unable to allocate I/O port region (-16)".
-
-Is there an example for an arm driver for a PCIe controller which does
-not support IO port access?
-
-Should I change arch/arm/kernel/bios32.c in a way so that it would
-ignore the io port mem?
-
-Hauke
+>  	child->sysdata = parent->sysdata;
+>  	child->bus_flags = parent->bus_flags;
+>  
+> -- 
+> 1.7.1
+> 
