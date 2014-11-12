@@ -1,140 +1,152 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 5 Nov 2014 14:57:13 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	linux-acpi@vger.kernel.org, Chao Zhou <chao.zhou@intel.com>,
-	Joerg Roedel <joro@8bytes.org>
-Subject: Re: [PATCH] PCI: fix sriov enabling with virtual bus
-Message-ID: <20141105215713.GC6168@google.com>
-References: <1414621570-20777-1-git-send-email-yinghai@kernel.org>
- <20141030170913.GA6982@google.com>
- <20141105202252.GB6168@google.com>
- <1808324.GlBOqbYcPz@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:38234 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752551AbaKLNrp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 08:47:45 -0500
+Message-ID: <546364FA.7010806@arm.com>
+Date: Wed, 12 Nov 2014 13:47:38 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1808324.GlBOqbYcPz@vostro.rjw.lan>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Jiang Liu <jiang.liu@linux.intel.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [RFC Part4 v1 00/17] Refine support of non-PCI-compliant Message
+References: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=WINDOWS-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 05, 2014 at 10:44:25PM +0100, Rafael J. Wysocki wrote:
-> On Wednesday, November 05, 2014 01:22:52 PM Bjorn Helgaas wrote:
-> > ...
-> > The acpi_pci_get_bridge_handle(struct pci_bus *) interface niggles at me a
-> > little because I don't think there's any concept of an ACPI device for a
-> > PCI *bus*, so it doesn't seem like a very good fit to say "find the handle
-> > for this bus".  But that's for later.
+Hi Jiang,
+
+On 09/11/14 15:10, Jiang Liu wrote:
+> Some interrupt controllers, such as DMAR/HPET/HT_IRQ, work almost in
+> the same as PCI MSI interrupt controller. And there some devices make
+> use of PCI MSI mechanism for non-PCI devices on ARm/ARM64 platforms.
 > 
-> To me it does what it says: Get me the handle of the bridge leading to
-> this bus.
+> So this patches tries to split PCI MSI code into PCI dependent part
+> and PCI independent part. The PCI independent part will be used to
+> support other PCI MSI like interrupt controllers.
+> 
+> Patch 1-9 are clean ups for previous hierarchy irqdomain patchset
+> and preparation for coming PCI MSI code reorganization.
+> Patch 10-15 split PCI MSI code and implement common mechanism to support
+> other MSI alike interrupt contollers.
+> Patch 16-17 converts HT_IRQ to use the common MSI support mechanism.
 
-Yeah, I know, it's a great name because it does *exactly* what the name
-says.  I'm just wondering if there's a nicer way to express what the caller
-needs.
+[...]
 
-Two of the three callers start with a pci_dev, look up a pci_bus to pass
-in, and get back a handle corresponding to a pci_host_bridge or a pci_dev
-(or a NULL).  It seems a little cluttered because the pci_bus is only
-incidental and the caller doesn't care about it at all except for passing
-it to acpi_pci_get_bridge_handle().
+I used this patch series (or rather the v2 in your git tree) to rework the GICv3 ITS patch series. So far, the API seems cleaner (fewer global functions, increased flexibility), at the expense of a bit more complexity.
 
-It's relatively common to start with a pci_dev and look for an ACPI handle
-that corresponds to that device or the closest enclosing scope, so maybe
-there should be a way to do that directly.
+One thing is still missing though: the way the MSI stacked domain works at the moment prevents the use of the msi_chip infrastructure (you need to override arch_setup_msi_irqs, which in turn prevents the use of msi_chips using setup_irq/teardown_irq callbacks. On arm/arm64, most MSI controllers are using the latter, while it is likely that the newer ones will be using the stacked domains.
 
-For pci_get_hp_params(), I think the current code is actually slightly
-buggy because we don't look for _HPP/_HPX on the device itself; we only
-look at the bridges upstream from it.
+My solution to this is to slightly extend the msi_chip framework so that we can hock into the MSI domain framework on a per-msi-chip basis (see patch below). With this in place, I can completely get rid of any arm64-specific code (the msi_chip framework becomes good enough for us):
 
-What I had in mind was something like the following (untested and not for
-application).
+>From 5e9157ee7879953f89652d6ad9f296fc0ce6cb87 Mon Sep 17 00:00:00 2001
+From: Marc Zyngier <marc.zyngier@arm.com>
+Date: Wed, 12 Nov 2014 10:32:46 +0000
+Subject: [PATCH v2 02/14] PCI/MSI: Allow an msi_chip to be associated to an
+ irq domain
 
-Bjorn
+The new MSI stacked domain has the interesting effect that it is
+quite hard to use if the architecture doesn't provide its own
+arch_setup_msi_irqs() function to override the default.
 
+This inhibates the msi_chip infrastructure introduced in
+0cbdcfcf427b (PCI: Introduce new MSI chip infrastructure), as it is
+not possible to use it as an indirection between the core MSI code
+and the MSI driver (useful when having multiple MSI controllers that
+do not share the same requirements). The setup_irq and teardown_irq
+are rendered useless, as their role is now taken over by the alloc/free
+functions in the irq domain code.
 
-diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-index 876ccc620440..5e95df56b8ae 100644
---- a/drivers/pci/hotplug/acpi_pcihp.c
-+++ b/drivers/pci/hotplug/acpi_pcihp.c
-@@ -116,20 +116,11 @@ int acpi_get_hp_hw_control_from_firmware(struct pci_dev *pdev, u32 flags)
- 		string = (struct acpi_buffer){ ACPI_ALLOCATE_BUFFER, NULL };
- 	}
- 
--	handle = ACPI_HANDLE(&pdev->dev);
--	if (!handle) {
--		/*
--		 * This hotplug controller was not listed in the ACPI name
--		 * space at all. Try to get acpi handle of parent pci bus.
--		 */
--		struct pci_bus *pbus;
--		for (pbus = pdev->bus; pbus; pbus = pbus->parent) {
--			handle = acpi_pci_get_bridge_handle(pbus);
--			if (handle)
--				break;
--		}
--	}
--
-+	/*
-+	 * We did not find _OSC on the host bridge, so look for any
-+	 * enclosing device with an OSHP method.
-+	 */
-+	handle = pci_find_acpi_handle(pdev);
- 	while (handle) {
- 		acpi_get_name(handle, ACPI_FULL_PATHNAME, &string);
- 		dbg("Trying to get hotplug control for %s \n",
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index 6ebf8edc5f3c..3b3f0720fff0 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -246,14 +246,8 @@ int pci_get_hp_params(struct pci_dev *dev, struct hotplug_params *hpp)
- {
- 	acpi_status status;
- 	acpi_handle handle, phandle;
--	struct pci_bus *pbus;
- 
--	handle = NULL;
--	for (pbus = dev->bus; pbus; pbus = pbus->parent) {
--		handle = acpi_pci_get_bridge_handle(pbus);
--		if (handle)
--			break;
--	}
-+	handle = pci_find_acpi_handle(dev);
+This patch introduces two optionnal fields to the msi_chip structure:
+- a pointer to an irq domain, describing the MSI domain associated
+  with this msi_chip. To be populated with msi_create_irq_domain.
+- a domain_alloc_irqs() callback that has the same purpose as
+  arch_setup_msi_irqs(), with the above domain as an additional
+  parameter.
+
+If both of these fields are non-NULL, then domain_alloc_irqs() is
+called, bypassing the setup_irq callback. This allows the MSI driver
+to use the domain stacking feature without mandating core support in
+the architecture.
+
+Tested on arm64 with the GICv3 ITS.
+
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/pci/msi.c   | 9 ++++++++-
+ include/linux/msi.h | 5 +++++
+ 2 files changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 6c38306..baefc21 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -63,8 +63,15 @@ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
  
  	/*
- 	 * _HPP settings apply to all child buses, until another _HPP is
-@@ -279,6 +273,33 @@ int pci_get_hp_params(struct pci_dev *dev, struct hotplug_params *hpp)
- }
- EXPORT_SYMBOL_GPL(pci_get_hp_params);
+ 	 * If an architecture wants to support multiple MSI, it needs to
+-	 * override arch_setup_msi_irqs()
++	 * override arch_setup_msi_irqs(), or provide a way out on a per
++	 * domain basis.
+ 	 */
++#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
++	struct msi_chip *chip = dev->bus->msi;
++
++	if (chip->domain && chip->domain_alloc_irqs)
++		return chip->domain_alloc_irqs(chip->domain, dev, nvec, type);
++#endif
+ 	if (type == PCI_CAP_ID_MSI && nvec > 1)
+ 		return 1;
  
-+/*
-+ * Search for an ACPI handle.  The PCI device itself may have one, or an
-+ * upstream device (either a PCI-to-PCI bridge or a PCI host bridge) may
-+ * have one.
-+ */
-+acpi_handle pci_find_acpi_handle(struct pci_dev *pdev)
-+{
-+	struct device *dev;
-+	acpi_handle handle;
-+	struct pci_bus *bus;
-+
-+	dev = &pdev->dev;
-+	handle = ACPI_HANDLE(dev);
-+	while (!handle) {
-+		pdev = pci_physfn(pdev);
-+		bus = pdev->bus;
-+		if (pci_is_root_bus(bus))
-+			dev = bus->bridge;
-+		else {
-+			pdev = bus->self;
-+			dev = &pdev->dev;
-+		}
-+		handle = ACPI_HANDLE(dev);
-+	}
-+	return handle;
-+}
-+
- /**
-  * pci_acpi_wake_bus - Root bus wakeup notification fork function.
-  * @work: Work item to handle.
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 0789a4d..7170eea 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -110,7 +110,12 @@ struct msi_chip {
+ 	struct device *dev;
+ 	struct device_node *of_node;
+ 	struct list_head list;
++#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
++	struct irq_domain *domain;
+ 
++	int (*domain_alloc_irqs)(struct irq_domain *domain,
++				 struct pci_dev *pdev, int nvec, int type);
++#endif
+ 	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
+ 			 struct msi_desc *desc);
+ 	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
+-- 
+2.0.4
+
+Thoughts? I'll post the full patch series later today.
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
+
