@@ -1,196 +1,107 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
-Subject: [Patch Part3 v3 15/38] x86, irq: Kill x86_io_apic_ops.eoi_ioapic_pin and related interfaces
-Date: Sun,  9 Nov 2014 02:13:15 +0800
-Message-Id: <1415470418-10874-16-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp04.in.ibm.com ([122.248.162.4]:55653 "EHLO
+	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752599AbaKLFYk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 00:24:40 -0500
+Received: from /spool/local
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 12 Nov 2014 10:54:38 +0530
+Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id B019FE0044
+	for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2014 10:54:44 +0530 (IST)
+Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
+	by d28relay01.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAC5OK2255050458
+	for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2014 10:54:20 +0530
+Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
+	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAC5OXSM005306
+	for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2014 10:54:34 +0530
+Date: Wed, 12 Nov 2014 16:24:31 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Fix device node for virtual bus
+Message-ID: <20141112052431.GA30530@shangw>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1415760163-12517-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <CAErSpo7mEo61GP4oxcodKWFFXaaESae96qLiR1RE0CFsahr29g@mail.gmail.com>
+ <20141112031118.GA15257@shangw>
+ <CAErSpo5OZxsB-X=tQWbWf3Q-wSvru3-+8_h5456QXZoMYeGKhA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo5OZxsB-X=tQWbWf3Q-wSvru3-+8_h5456QXZoMYeGKhA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now there is no user of x86_io_apic_ops.eoi_ioapic_pin anymore, so kill
-it.
+On Tue, Nov 11, 2014 at 09:08:23PM -0700, Bjorn Helgaas wrote:
+>On Tue, Nov 11, 2014 at 8:11 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+>> On Tue, Nov 11, 2014 at 07:55:19PM -0700, Bjorn Helgaas wrote:
+>>>On Tue, Nov 11, 2014 at 7:42 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+>>>> pci_set_bus_of_node() sets virtual PCI bus's device node to PHB's
+>>>> device node wrongly. The patch fixes the issue.
+>>>
+>>>This needs more detail.  How is this bug visible to users?  Is there a
+>>>bug report?  Is this a regression?  Should it be marked for stable?
+>>>
+>>
+>> I don't have opened bug for it. I just found the problem (maybe not
+>> a problem) when reading the code: The original implementation binds
+>> PHB device-tree node with "virtual bus", which doesn't make sense.
+>
+>Does this result in something being wrong in sysfs?  How is this bug
+>visible to users?
+>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h  |    7 -------
- arch/x86/include/asm/x86_init.h |    1 -
- arch/x86/kernel/apic/io_apic.c  |   20 ++++----------------
- arch/x86/kernel/x86_init.c      |    1 -
- drivers/iommu/irq_remapping.c   |   19 -------------------
- 5 files changed, 4 insertions(+), 44 deletions(-)
+No, I don't think it caused anything wrong in sysfs. So I'm not sure
+it's a real problem and need the fix. Please judge.
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 5fba350fec1f..3b54f0f9cbb7 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -150,10 +150,6 @@ struct irq_cfg;
- extern void ioapic_insert_resources(void);
- extern int arch_early_ioapic_init(void);
- 
--extern void eoi_ioapic_irq(unsigned int irq, struct irq_cfg *cfg);
--
--extern void native_eoi_ioapic_pin(int apic, int pin, int vector);
--
- extern int save_ioapic_entries(void);
- extern void mask_ioapic_entries(void);
- extern int restore_ioapic_entries(void);
-@@ -237,8 +233,6 @@ static inline void io_apic_modify(unsigned int apic, unsigned int reg, unsigned
- 	x86_io_apic_ops.modify(apic, reg, value);
- }
- 
--extern void io_apic_eoi(unsigned int apic, unsigned int vector);
--
- extern void setup_IO_APIC(void);
- extern void enable_IO_APIC(void);
- extern void disable_IO_APIC(void);
-@@ -282,7 +276,6 @@ static inline void disable_ioapic_support(void) { }
- #define native_io_apic_write		NULL
- #define native_io_apic_modify		NULL
- #define native_disable_io_apic		NULL
--#define native_eoi_ioapic_pin		NULL
- #endif
- 
- #endif /* _ASM_X86_IO_APIC_H */
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index 2637e8fb978d..fa6b1b5128ee 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -194,7 +194,6 @@ struct x86_io_apic_ops {
- 	void		(*write)  (unsigned int apic, unsigned int reg, unsigned int value);
- 	void		(*modify) (unsigned int apic, unsigned int reg, unsigned int value);
- 	void		(*disable)(void);
--	void		(*eoi_ioapic_pin)(int apic, int pin, int vector);
- };
- 
- extern struct x86_init_ops x86_init;
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 26fa504b57f6..2a10cb9f03bf 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -268,7 +268,7 @@ static __attribute_const__ struct io_apic __iomem *io_apic_base(int idx)
- 		+ (mpc_ioapic_addr(idx) & ~PAGE_MASK);
- }
- 
--void io_apic_eoi(unsigned int apic, unsigned int vector)
-+static inline void io_apic_eoi(unsigned int apic, unsigned int vector)
- {
- 	struct io_apic __iomem *io_apic = io_apic_base(apic);
- 	writel(vector, &io_apic->eoi);
-@@ -524,7 +524,7 @@ static void unmask_ioapic_irq(struct irq_data *data)
-  * Otherwise, we simulate the EOI message manually by changing the trigger
-  * mode to edge and then back to level, with RTE being masked during this.
-  */
--void native_eoi_ioapic_pin(int apic, int pin, int vector)
-+static void __eoi_ioapic_pin(int apic, int pin, int vector)
- {
- 	if (mpc_ioapic_ver(apic) >= 0x20) {
- 		io_apic_eoi(apic, vector);
-@@ -555,19 +555,7 @@ void eoi_ioapic_pin(int vector, struct irq_cfg *cfg)
- 
- 	raw_spin_lock_irqsave(&ioapic_lock, flags);
- 	for_each_irq_pin(entry, cfg->irq_2_pin)
--		native_eoi_ioapic_pin(entry->apic, entry->pin, vector);
--	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
--}
--
--void eoi_ioapic_irq(unsigned int irq, struct irq_cfg *cfg)
--{
--	struct irq_pin_list *entry;
--	unsigned long flags;
--
--	raw_spin_lock_irqsave(&ioapic_lock, flags);
--	for_each_irq_pin(entry, cfg->irq_2_pin)
--		x86_io_apic_ops.eoi_ioapic_pin(entry->apic, entry->pin,
--					       cfg->vector);
-+		__eoi_ioapic_pin(entry->apic, entry->pin, vector);
- 	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
- }
- 
-@@ -603,7 +591,7 @@ static void clear_IO_APIC_pin(unsigned int apic, unsigned int pin)
- 			ioapic_write_entry(apic, pin, entry);
- 		}
- 		raw_spin_lock_irqsave(&ioapic_lock, flags);
--		native_eoi_ioapic_pin(apic, pin, entry.vector);
-+		__eoi_ioapic_pin(apic, pin, entry.vector);
- 		raw_spin_unlock_irqrestore(&ioapic_lock, flags);
- 	}
- 
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index 377b22008280..ac2b604c00ec 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -154,5 +154,4 @@ struct x86_io_apic_ops x86_io_apic_ops = {
- 	.write			= native_io_apic_write,
- 	.modify			= native_io_apic_modify,
- 	.disable		= native_disable_io_apic,
--	.eoi_ioapic_pin		= native_eoi_ioapic_pin,
- };
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 0e2a80491170..058755b9b530 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -44,21 +44,9 @@ static void irq_remapping_disable_io_apic(void)
- 		disconnect_bsp_APIC(0);
- }
- 
--static void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
--{
--	/*
--	 * Intr-remapping uses pin number as the virtual vector
--	 * in the RTE. Actual vector is programmed in
--	 * intr-remapping table entry. Hence for the io-apic
--	 * EOI we use the pin number.
--	 */
--	io_apic_eoi(apic, pin);
--}
--
- static void __init irq_remapping_modify_x86_ops(void)
- {
- 	x86_io_apic_ops.disable		= irq_remapping_disable_io_apic;
--	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
- }
- 
- static __init int setup_nointremap(char *str)
-@@ -194,12 +182,6 @@ void ir_ack_apic_edge(struct irq_data *data)
- 	ack_APIC_irq();
- }
- 
--static void ir_ack_apic_level(struct irq_data *data)
--{
--	ack_APIC_irq();
--	eoi_ioapic_irq(data->irq, irqd_cfg(data));
--}
--
- void irq_remapping_print_chip(struct irq_data *data, struct seq_file *p)
- {
- 	/*
-@@ -222,7 +204,6 @@ void irq_remap_modify_chip_defaults(struct irq_chip *chip)
- {
- 	chip->irq_print_chip = ir_print_prefix;
- 	chip->irq_ack = ir_ack_apic_edge;
--	chip->irq_eoi = ir_ack_apic_level;
- }
- 
- bool setup_remapped_irq(int irq, struct irq_cfg *cfg, struct irq_chip *chip)
--- 
-1.7.10.4
+Thanks,
+Gavin
+
+>> Yes, I guess it should be marked for stable if you don't object.
+>>
+>>>We use "virtual bus" to refer to buses created for SR-IOV VFs that are
+>>>not on the same bus as the PF.  These virtual buses have no bridge
+>>>device leading to them.  But I think you're talking about something
+>>>totally different.  Or maybe that *is* what you're talking about,
+>>>since this patch resembles 2ba29e270e97 ("PCI: Use pci_is_root_bus()
+>>>to check for root bus").
+>>>
+>>
+>> "virtual bus" here is the buses created for SR-IOV VFs. Yes, the
+>> code changes resembles commit 2ba29e270e97.
+>>
+>> Thanks,
+>> Gavin
+>>
+>>>Bjorn
+>>>
+>>>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>>> ---
+>>>>  drivers/pci/of.c | 4 ++--
+>>>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>>>
+>>>> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+>>>> index f092993..7b2256b 100644
+>>>> --- a/drivers/pci/of.c
+>>>> +++ b/drivers/pci/of.c
+>>>> @@ -31,9 +31,9 @@ void pci_release_of_node(struct pci_dev *dev)
+>>>>
+>>>>  void pci_set_bus_of_node(struct pci_bus *bus)
+>>>>  {
+>>>> -       if (bus->self == NULL)
+>>>> +       if (pci_is_root_bus(bus))
+>>>>                 bus->dev.of_node = pcibios_get_phb_of_node(bus);
+>>>> -       else
+>>>> +       else if (bus->self)
+>>>>                 bus->dev.of_node = of_node_get(bus->self->dev.of_node);
+>>>>  }
+>>>>
+>>>> --
+>>>> 1.8.3.2
+>>>>
+>>>
+>>
+>
 
