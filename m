@@ -1,63 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:56434 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753381AbaKRJzq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 04:55:46 -0500
-Date: Tue, 18 Nov 2014 10:55:42 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Myron Stowe <myron.stowe@redhat.com>
-Cc: Kevin Hilman <khilman@kernel.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory =?UTF-8?B?Q2zDqW1lbnQ=?=
-	<gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Subject: Regression caused by "PCI: Shrink decoding-disabled window while
- sizing BARs"
-Message-ID: <20141118105542.457d7863@free-electrons.com>
+Received: from mail-la0-f52.google.com ([209.85.215.52]:38523 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750823AbaKLG4v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 01:56:51 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <1415733454-24322-3-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1415733454-24322-1-git-send-email-suravee.suthikulpanit@amd.com>
+	<1415733454-24322-3-git-send-email-suravee.suthikulpanit@amd.com>
+Date: Wed, 12 Nov 2014 12:26:49 +0530
+Message-ID: <CA+mB=1LEEtPCixB9Ej74L03yPPH7D6YvfpkZyJgsHCm97-GvKg@mail.gmail.com>
+Subject: Re: [PATCH V2 2/2] PCI: generic: Add msi_parent DT binding
+From: Srikanth Thokala <sriku.linux@gmail.com>
+To: suravee.suthikulpanit@amd.com
+Cc: Bjorn Helgaas <bhelgaas@google.com>, liviu.dudau@arm.com,
+	lorenzo.pieralisi@arm.com, will.deacon@arm.com,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+Hi,
 
-Since next-20141117, PCI support is broken on ARM Marvell EBU
-platforms. next-20141114 was working fine. The problem we see is:
+On Wed, Nov 12, 2014 at 12:47 AM,  <suravee.suthikulpanit@amd.com> wrote:
+> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>
+> This patch introduces a new DT binding, msi-parent, which can
+> be used to specify MSI-parent phandle for a particular PCI
+> generic host controller.
+>
+> Also, it implements and registers set_msi_parent callback.
+>
+> Cc: Bjorn Helgass <bhelgaas@google.com>
+> Cc: Liviu Dudau <liviu.dudau@arm.com>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> ---
+>  Documentation/devicetree/bindings/pci/host-generic-pci.txt |  3 +++
+>  drivers/pci/host/pci-host-generic.c                        | 13 +++++++++++++
+>  2 files changed, 16 insertions(+)
+>
+> diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.txt b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+> index cf3e205..6996af7 100644
+> --- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+> @@ -36,6 +36,8 @@ Properties of the host controller node:
+>  - reg            : The Configuration Space base address and size, as accessed
+>                     from the parent bus.
+>
+> +- msi-parent     : Specify the phandle of the corresponded MSI controller
+> +                   for this PCI host controller.
+>
+>  Properties of the /chosen node:
+>
+> @@ -77,6 +79,7 @@ pci {
+>      device_type = "pci";
+>      #address-cells = <3>;
+>      #size-cells = <2>;
+> +    msi-parent = <&msictrl0>;
+>      bus-range = <0x0 0x1>;
+>
+>      // CPU_PHYSICAL(2)  SIZE(2)
+> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> index 1895907..c4fbcda 100644
+> --- a/drivers/pci/host/pci-host-generic.c
+> +++ b/drivers/pci/host/pci-host-generic.c
+> @@ -42,6 +42,7 @@ struct gen_pci {
+>         struct pci_host_bridge                  host;
+>         struct gen_pci_cfg_windows              cfg;
+>         struct list_head                        resources;
+> +       struct msi_chip                         *mchip;
+>  };
+>
+>  static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
+> @@ -122,9 +123,19 @@ static int gen_pci_config_write(struct pci_bus *bus, unsigned int devfn,
+>         return PCIBIOS_SUCCESSFUL;
+>  }
+>
+> +static int gen_pci_set_msi_parent(struct pci_bus *bus)
+> +{
+> +       struct gen_pci *pci = bus_to_gen_pci(bus);
+> +
+> +       bus->msi = pci->mchip;
+> +
+> +       return PCIBIOS_SUCCESSFUL;
+> +}
+> +
+>  static struct pci_ops gen_pci_ops = {
+>         .read   = gen_pci_config_read,
+>         .write  = gen_pci_config_write,
+> +       .set_msi_parent = gen_pci_set_msi_parent,
 
-pci 0000:03:00.0: reg 0x10: can't handle BAR larger than 4GB (size 0xfffffffffff00000)
+We assign the msi chip through add_bus() call, do we still need this?
 
-Therefore, the Marvell-specific MBus window is not setup, and the first
-access to the PCI device registers causes a kernel panic.
+Srikanth
 
-You can compare a successful boot:
-
-  http://storage.armcloud.us/kernel-ci/next/next-20141114/arm-mvebu_v7_defconfig/boot-armada-370-mirabox.html
-
-With a failed boot:
-
-  http://storage.armcloud.us/kernel-ci/next/next-20141117/arm-mvebu_v7_defconfig/boot-armada-370-mirabox.html
-
-It turns out that if I take next-20141117 and revert the two following
-commits:
-
-  7ea945f0bb49423451dbf222f62c6fabc857aaac PCI: Shrink decoding-disabled window while sizing BARs
-  3a02517d5e2aef7cd4524468525a6292c81cfad1 PCI: Support 64-bit bridge windows if we have 64-bit dma_addr_t
-
-Then the PCI support works again.
-
-Note that the Marvell pci-mvebu driver emulates its own PCI bridge, in
-order to support the dynamic creation of MBus windows (this is a
-Marvell specific concept). Therefore, there is a possibility that the
-issue might be that our emulation is not 100% correct, which I'll be
-checking today.
-
-Best regards,
-
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+>  };
+>
+>  static const struct of_device_id gen_pci_of_match[] = {
+> @@ -303,6 +314,8 @@ static int gen_pci_probe(struct platform_device *pdev)
+>                 return err;
+>         }
+>
+> +       pci->mchip = of_pci_find_msi_chip_by_node(of_parse_phandle(np,
+> +                                                 "msi-parent", 0));
+>         pci_common_init_dev(dev, &hw);
+>         return 0;
+>  }
+> --
+> 1.9.3
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
