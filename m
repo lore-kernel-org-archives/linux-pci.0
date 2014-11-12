@@ -1,48 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:64244 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753665AbaKRSSg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 13:18:36 -0500
-Received: by mail-ie0-f180.google.com with SMTP id rp18so4566410iec.39
-        for <linux-pci@vger.kernel.org>; Tue, 18 Nov 2014 10:18:35 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo4k57tdqbEYYcqEiviwoR0LCMUszECumpeL6w80xDeVfg@mail.gmail.com>
-References: <20141118105542.457d7863@free-electrons.com>
-	<20141118105843.3c1651d5@free-electrons.com>
-	<20141118123402.7318ec94@free-electrons.com>
-	<CAErSpo4k57tdqbEYYcqEiviwoR0LCMUszECumpeL6w80xDeVfg@mail.gmail.com>
-Date: Tue, 18 Nov 2014 10:18:35 -0800
-Message-ID: <CAE9FiQX0JO40EE=D88EYGwm2uRjnrX5+McTuofW6QLbS5nLMSw@mail.gmail.com>
-Subject: Re: Regression caused by "PCI: Shrink decoding-disabled window while
- sizing BARs"
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:55156 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750749AbaKLHmQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 12 Nov 2014 02:42:16 -0500
+Message-ID: <1415777029.5124.42.camel@kernel.crashing.org>
+Subject: Re: [PATCH RFC v2 1/2] drivers: pci: fix pci_mmap_fits()
+ implementation for procfs mmap
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Kevin Hilman <khilman@kernel.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	=?UTF-8?Q?Gregory_Cl=C3=A9ment?=
-	<gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Content-Type: text/plain; charset=UTF-8
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	"David S. Miller" <davem@davemloft.net>,
+	Michal Simek <monstr@monstr.eu>,
+	Martin Wilck <martin.wilck@ts.fujitsu.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Michael Ellerman <mpe@ellerman.id.au>
+Date: Wed, 12 Nov 2014 18:23:49 +1100
+In-Reply-To: <20141110230454.GA21470@google.com>
+References: <1414168089-8130-1-git-send-email-lorenzo.pieralisi@arm.com>
+	 <1414168089-8130-2-git-send-email-lorenzo.pieralisi@arm.com>
+	 <20141110230454.GA21470@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 18, 2014 at 6:27 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc Yinghai]
->
-> Yes, that change (3a02517d5e2a ("PCI: Support 64-bit bridge windows if
-> we have 64-bit dma_addr_t")) is in my for-linus branch because it
-> fixes a regression and I intend to merge it for v3.18 (after we figure
-> out these issues, of course).
->
-> I saw this warning yesterday, but haven't heard from Yinghai yet.
+On Mon, 2014-11-10 at 16:04 -0700, Bjorn Helgaas wrote:
+> But I'm not sure I have this right.  If the procfs offset is either
+> the
+> CPU physical address or the BAR value, then pci_resource_to_user()
+> should be (depending on the arch) either a no-op or use
+> pci_resource_to_bus().
+> 
+> But that's not how it's implemented.  Maybe it *could* be?  If
+> pci_resource_to_user() gives you something that's not a CPU physical
+> address and not a bus address, what *does* it give you, and why would
+> we
+> need this third kind of thing?
+> 
+> FWIW, I think the discussion leading up to pci_resource_to_user() is
+> here:
+> http://lkml.iu.edu/hypermail/linux/kernel/0504.3/0467.html
 
-Will send updated version with u64 cast.
+Oh, man... I remember that was all a giant trainwreck and some stuff
+just couldn't be made completely right due to broken assumptions by
+the proc code and users of it... but I don't remember all the details.
 
-Thanks
+I think /proc users don't necessarily pass a BAR value but something
+they try to somewhat translates themselves via the "resources" file,
+which ends up working ... or not, depending on various factors such
+as 32 vs 64 bit etc...
 
-Yinghai
+I wonder who still uses this interface....
+
+Cheers,
+Ben.
+
+
