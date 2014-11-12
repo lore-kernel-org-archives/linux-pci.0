@@ -1,79 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:33066 "EHLO
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:56673 "EHLO
 	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750785AbaKSJ5J (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 04:57:09 -0500
-Date: Wed, 19 Nov 2014 09:57:01 +0000
+	with ESMTP id S1751679AbaKLK11 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 05:27:27 -0500
+Date: Wed, 12 Nov 2014 10:27:26 +0000
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
 	Russell King <linux@arm.linux.org.uk>,
 	"David S. Miller" <davem@davemloft.net>,
 	Michal Simek <monstr@monstr.eu>,
 	Martin Wilck <martin.wilck@ts.fujitsu.com>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [RFC PATCH v3 0/2] Fix procfs PCI resources mmap
-Message-ID: <20141119095701.GB8751@red-moon>
-References: <1415877558-8906-1-git-send-email-lorenzo.pieralisi@arm.com>
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Michael Ellerman <mpe@ellerman.id.au>
+Subject: Re: [PATCH RFC v2 1/2] drivers: pci: fix pci_mmap_fits()
+ implementation for procfs mmap
+Message-ID: <20141112102726.GD6759@red-moon>
+References: <1414168089-8130-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1414168089-8130-2-git-send-email-lorenzo.pieralisi@arm.com>
+ <20141110230454.GA21470@google.com>
+ <1415777029.5124.42.camel@kernel.crashing.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415877558-8906-1-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1415777029.5124.42.camel@kernel.crashing.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 13, 2014 at 11:19:14AM +0000, Lorenzo Pieralisi wrote:
-> The way PCI memory resources are exported to user space through procfs
-> is not uniform across architectures. In particular, some architectures
-> (ie SPARC) export the resource PCI bus address to user space, whereas
-> others (ARM, PowerPC, Microblaze) export the resource CPU physical address.
-> This convention should be followed when it comes to passing the pgoff
-> values to the mmap syscall to map the resource in question.
+On Wed, Nov 12, 2014 at 07:23:49AM +0000, Benjamin Herrenschmidt wrote:
+> On Mon, 2014-11-10 at 16:04 -0700, Bjorn Helgaas wrote:
+> > But I'm not sure I have this right.  If the procfs offset is either
+> > the
+> > CPU physical address or the BAR value, then pci_resource_to_user()
+> > should be (depending on the arch) either a no-op or use
+> > pci_resource_to_bus().
+> > 
+> > But that's not how it's implemented.  Maybe it *could* be?  If
+> > pci_resource_to_user() gives you something that's not a CPU physical
+> > address and not a bus address, what *does* it give you, and why would
+> > we
+> > need this third kind of thing?
+> > 
+> > FWIW, I think the discussion leading up to pci_resource_to_user() is
+> > here:
+> > http://lkml.iu.edu/hypermail/linux/kernel/0504.3/0467.html
 > 
-> Consequently, the checks applied to the offset passed to the mmap syscall
-> (in pci_mmap_fits()) are to be interpreted differently on different
-> architectures, and in particular they should match the values exported to
-> user space through the pci_resource_to_user() conversion function.
+> Oh, man... I remember that was all a giant trainwreck and some stuff
+> just couldn't be made completely right due to broken assumptions by
+> the proc code and users of it... but I don't remember all the details.
 > 
-> This patch series addresses two issues. First patch applies the
-> pci_resource_to_user() filter to the PCI resource that is being
-> mapped in order to carry out a proper check against the pgoff passed
-> from user space. Second patch fixes the way the pgoff is handled in
-> the ARM pci_mmap_page_range() implementation.
+> I think /proc users don't necessarily pass a BAR value but something
+> they try to somewhat translates themselves via the "resources" file,
+> which ends up working ... or not, depending on various factors such
+> as 32 vs 64 bit etc...
 > 
-> v2 posting:
-> 
-> http://marc.info/?l=linux-kernel&m=141416813409829&w=2
-> 
-> v2 => v3
-> - Reworded commit log in order to try to bisect the breakage
->   and provide insights into the commit history that led to the
->   current interface
-> 
-> v1 => v2
-> - Reworded commit log as per RMK comments
+> I wonder who still uses this interface....
 
-Any further comments on this patch ? I would like to send patch 2 to
-RMK patch system asap and if possible get an agreement on patch 1.
++1, even though I do not think that leaving it as it is is a good idea,
+hence I posted this series.
 
-Thank you,
+I tried to fix it while fixing the way ARM pcibios code handles
+pci_mmap_page_range() (for both procfs and sysfs mappings).
+
+I will do what Bjorn suggested, more comments from arches maintainers
+are welcome.
+
 Lorenzo
-
-> Lorenzo Pieralisi (2):
->   drivers: pci: fix pci_mmap_fits() implementation for procfs mmap
->   arm: kernel: fix pci_mmap_page_range() offset calculation
-> 
->  arch/arm/kernel/bios32.c | 10 ++--------
->  drivers/pci/pci-sysfs.c  | 13 ++++++++-----
->  2 files changed, 10 insertions(+), 13 deletions(-)
-> 
-> -- 
-> 2.1.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
