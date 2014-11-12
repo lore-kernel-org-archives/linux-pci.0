@@ -1,64 +1,35 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
-To: Alex Williamson <alex.williamson@redhat.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 2/4] PCI: quirk AMD/ATI VGA cards to avoid PM reset
-Date: Fri, 21 Nov 2014 19:00:32 +0000
-Message-ID: <A3397C8B8B789E45844E7EC5DEAD89D05995CAA6@satlexdag05.amd.com>
-References: <20141121180322.26669.65689.stgit@gimli.home>
- <20141121182414.26669.48397.stgit@gimli.home>
-In-Reply-To: <20141121182414.26669.48397.stgit@gimli.home>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ausxippc101.us.dell.com ([143.166.85.207]:22814 "EHLO
+	ausxippc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752910AbaKLQ2E convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 11:28:04 -0500
+From: <Jordan_Hargrave@Dell.com>
+To: <bhelgaas@google.com>, <David_Waggoner@Dell.com>,
+	<Austin_Bolen@Dell.com>
+CC: <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Date: Wed, 12 Nov 2014 10:18:25 -0600
+Subject: PCI Max payload setting
+Message-ID: <5B3AAEAF6B46EA4D955DF7AD46C2C48516886FB954@AUSX7MCPS303.AMER.DELL.COM>
+References: <20141104162251.GF10744@8bytes.org>,<CAErSpo4Zx8hNjJdHvJeLzj_wAJSa6WCDuJ0XYymK-QU_i+MECg@mail.gmail.com>
+In-Reply-To: <CAErSpo4Zx8hNjJdHvJeLzj_wAJSa6WCDuJ0XYymK-QU_i+MECg@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBBbGV4IFdpbGxpYW1zb24gW21h
-aWx0bzphbGV4LndpbGxpYW1zb25AcmVkaGF0LmNvbV0NCj4gU2VudDogRnJpZGF5LCBOb3ZlbWJl
-ciAyMSwgMjAxNCAxOjI0IFBNDQo+IFRvOiBiaGVsZ2Fhc0Bnb29nbGUuY29tDQo+IENjOiBsaW51
-eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBBbGV4
-DQo+IFdpbGxpYW1zb247IERldWNoZXIsIEFsZXhhbmRlcg0KPiBTdWJqZWN0OiBbUEFUQ0ggMi80
-XSBQQ0k6IHF1aXJrIEFNRC9BVEkgVkdBIGNhcmRzIHRvIGF2b2lkIFBNIHJlc2V0DQo+IA0KPiBT
-b21lIEFNRC9BVEkgR1BVcyByZXBvcnQgdGhhdCB0aGV5IHN1cHBvcnQgUE0gcmVzZXQgKE5vU29m
-dFJzdC0pIGJ1dA0KPiBpbml0aWF0aW5nIHN1Y2ggYSByZXNldCBoYXMgbm8gYXBwYXJlbnQgYWZm
-ZWN0IG9uIHRoZSBkZXZpY2UuICBUaGUNCj4gbW9uaXRvciByZW1haW5zIHN5bmMnZCwgdGhlIGZy
-YW1lYnVmZmVyIGNvbnRlbnRzIGFyZSByZXRhaW5lZCwgZXRjLg0KPiBDYWxsZXJzIG9mIHBjaV9y
-ZXNldF9mdW5jdGlvbigpIGRvbid0IG5lY2Vzc2FyaWx5IGhhdmUgYSB3YXkgdG8NCj4gdmFsaWRh
-dGUgd2hldGhlciBhIHJlc2V0IHdhcyBlZmZlY3RpdmUsIHNvIHdlIHJlYWxseSB3YW50IHRvIGF2
-b2lkDQo+IG1ha2luZyB1c2Ugb2YgYSBrbm93biBub24tZWZmZWN0aXZlIHJlc2V0LiAgUmV0dXJu
-aW5nIGFuIGVycm9yIGluDQo+IHN1Y2ggY2FzZXMgYXBwZWFycyB0byBiZSB0aGUgYmV0dGVyIG9w
-dGlvbi4gIEZvciB1c2VycyBsaWtlIHZmaW8tcGNpLA0KPiB0aGlzIGFsbG93cyB0aGUgZHJpdmVy
-IHRvIGVzY2FsYXRlIHRvIHRoZSBidXMgcmVzZXQgaW50ZXJmYWNlcy4NCj4gDQo+IElmIGEgZGV2
-aWNlIGxpdmVzIG9uIHRoZSByb290IGJ1cywgdGhlcmUncyByZWFsbHkgbm8gZnVydGhlcg0KPiBl
-c2NhbGF0aW9uIHBhdGgsIHNvIHdlIGV4ZW1wdCBQTSByZXNldCBhcyBwb3RlbnRpYWxseSBiZXR0
-ZXIgdGhhbg0KPiBub3RoaW5nLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogQWxleCBXaWxsaWFtc29u
-IDxhbGV4LndpbGxpYW1zb25AcmVkaGF0LmNvbT4NCj4gQ2M6IEFsZXggRGV1Y2hlciA8YWxleGFu
-ZGVyLmRldWNoZXJAYW1kLmNvbT4NCg0KQWNrZWQtYnk6IEFsZXggRGV1Y2hlciA8YWxleGFuZGVy
-LmRldWNoZXJAYW1kLmNvbT4NCg0KPiAtLS0NCj4gDQo+ICBkcml2ZXJzL3BjaS9xdWlya3MuYyB8
-ICAgMjEgKysrKysrKysrKysrKysrKysrKysrDQo+ICAxIGZpbGUgY2hhbmdlZCwgMjEgaW5zZXJ0
-aW9ucygrKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL3F1aXJrcy5jIGIvZHJpdmVy
-cy9wY2kvcXVpcmtzLmMNCj4gaW5kZXggOTBhY2IzMi4uNTYxZTEwZCAxMDA2NDQNCj4gLS0tIGEv
-ZHJpdmVycy9wY2kvcXVpcmtzLmMNCj4gKysrIGIvZHJpdmVycy9wY2kvcXVpcmtzLmMNCj4gQEAg
-LTMwMDgsNiArMzAwOCwyNyBAQA0KPiBERUNMQVJFX1BDSV9GSVhVUF9IRUFERVIoUENJX1ZFTkRP
-Ul9JRF9SRUFMVEVLLCAweDgxNjksDQo+ICBERUNMQVJFX1BDSV9GSVhVUF9IRUFERVIoUENJX1ZF
-TkRPUl9JRF9NRUxMQU5PWCwgUENJX0FOWV9JRCwNCj4gIAkJCSBxdWlya19icm9rZW5faW50eF9t
-YXNraW5nKTsNCj4gDQo+ICtzdGF0aWMgdm9pZCBxdWlya19ub19wbV9yZXNldChzdHJ1Y3QgcGNp
-X2RldiAqZGV2KQ0KPiArew0KPiArCS8qDQo+ICsJICogQSBub24tZWZmZWN0aXZlIFBNIHJlc2V0
-IG1heSBiZSBiZXR0ZXIgdGhhbiBub3RoaW5nDQo+ICsJICogaWYgd2UgY2FuJ3QgZG8gYSBidXMg
-cmVzZXQNCj4gKwkgKi8NCj4gKwlpZiAoIXBjaV9pc19yb290X2J1cyhkZXYtPmJ1cykpDQo+ICsJ
-CWRldi0+ZGV2X2ZsYWdzIHw9IFBDSV9ERVZfRkxBR1NfTk9fUE1fUkVTRVQ7DQo+ICt9DQo+ICsN
-Cj4gKy8qDQo+ICsgKiBTb21lIEFNRC9BVEkgR1BVUyAoSEQ4NTcwIC0gT2xhbmQpIHJlcG9ydCBz
-dXBwb3J0aW5nIFBNIHJlc2V0IHZpYQ0KPiBEMy0+RDANCj4gKyAqIHRyYW5zaXRpb24gKE5vU29m
-dFJzdC0pLiAgVGhpcyByZXNldCBtZWNoYW5pbXMgc2VlbXMgdG8gaGF2ZSBubyBlZmZlY3QNCj4g
-KyAqIHdoYXRzb2V2ZXIgb24gdGhlIGRldmljZSwgZXZlbiByZXRhaW5pbmcgdGhlIGZyYW1lYnVm
-ZmVyIGNvbnRlbnRzIGFuZA0KPiArICogbW9uaXRvciBzeW5jLiAgQWR2ZXJ0aXNpbmcgdGhpcyBz
-dXBwb3J0IG1ha2VzIG90aGVyIGxheWVycywgbGlrZSBWRklPDQo+ICsgKiBhc3N1bWUgcGNpX3Jl
-c2V0X2Z1bmN0aW9uKCkgaXMgdmlhYmxlIGZvciB0aGlzIGRldmljZS4gIE1hcmsgaXQgYXMNCj4g
-KyAqIHVuYXZhaWxhYmxlIHRvIHNraXAgaXQgd2hlbiB0ZXN0aW5nIHJlc2V0IG1ldGhvZHMuDQo+
-ICsgKi8NCj4gK0RFQ0xBUkVfUENJX0ZJWFVQX0NMQVNTX0hFQURFUihQQ0lfVkVORE9SX0lEX0FU
-SSwgUENJX0FOWV9JRCwNCj4gKwkJCSAgICAgICBQQ0lfQ0xBU1NfRElTUExBWV9WR0EsIDgsDQo+
-IHF1aXJrX25vX3BtX3Jlc2V0KTsNCj4gKw0KPiAgI2lmZGVmIENPTkZJR19BQ1BJDQo+ICAvKg0K
-PiAgICogQXBwbGU6IFNodXRkb3duIENhY3R1cyBSaWRnZSBUaHVuZGVyYm9sdCBjb250cm9sbGVy
-Lg0KDQo=
+Jon,
+
+  We are still seeing problems with the current implementation of PCIE MaxPayload setting with hotplug devices (PCIE SSD).
+
+The original implementation I proposed a few years ago used a bottom-up approach for configuring a PCI device when it was added to the system.
+It would read the Parent MPS setting and configure the device to the speed of the parent (or fail to configure the device if parent speed was above device capability).
+
+The implementation in the kernel uses a top-down approach, it is scanning all children devices and potentially setting the bridge speed based on the capability of child devices.  If the default setting is ued (pcie_bus_config = PCIE_BUS_TUNE_OFF) this causes the device to fail as the default speed is 128 and bridge is configured to 256 or greater.  The workaround for that is setting pcie_bus_perf.  However I have seen issues with this on some systems if an I/O transaction is occurring (RAID card) while the bridge speed is being changed. 
+
+We have had to use my original code in both the mtip32xx and nvme drivers to support hotplug properly on our systems due to these shortcomings.
+
+I am looking for a solution that will work properly on our systems out of the box.  I think the bottom-up approach is still best.  We are assuming the BIOS has already setup the payload of the bridges to optimal value.
+
+--jordan hargrave
+Dell Enterprise Linux Engineering
