@@ -1,203 +1,28 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:64703 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752073AbaKFOWz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 6 Nov 2014 09:22:55 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v5 25/31] iommu/amd: Clean up unused MSI related code
-Date: Thu,  6 Nov 2014 22:20:38 +0800
-Message-Id: <1415283644-2559-26-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-bn1on0136.outbound.protection.outlook.com ([157.56.110.136]:63296
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933950AbaKLBhY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 20:37:24 -0500
+From: Jake Oshins <jakeo@microsoft.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Sorting out terminology
+Date: Wed, 12 Nov 2014 01:04:38 +0000
+Message-ID: <863202fec7e0428682edf682c27beb2b@DM2PR03MB592.namprd03.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now MSI interrupt has been converted to new hierarchy irqdomain
-interfaces, so kill legacy MSI related code.
+First, let me introduce myself.  I'm Jake Oshins, and I've been working on Hyper-V and other things at Microsoft for a while.  I'm currently trying to create a front-end driver for Linux running on top of Hyper-V that will enable PCI pass-through, to enable SR-IOV networking, and perhaps some other things over time.  This is similar in form to the "Xen front" PCI implementation, but the specifics are different.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Acked-by: Joerg Roedel <jroedel@suse.de>
----
- drivers/iommu/amd_iommu.c |  115 +--------------------------------------------
- 1 file changed, 2 insertions(+), 113 deletions(-)
+Second, let me say that I'd appreciate any response to my query, and I'm perfectly happy to search the archives associated with this list, or others.  But it's clear to me that I don't yet have the terminology that would allow me to narrow my searches.  So if you all could point me in the right direction, if only by telling me "search for posts that contain these words, and probably these people," I would be grateful.
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 53265d70f0b4..336d310b5b7b 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -3958,8 +3958,7 @@ out_unlock:
- 	return table;
- }
- 
--static int alloc_irq_index(struct irq_cfg *cfg, struct irq_2_irte *irte_info,
--			   u16 devid, int count)
-+static int alloc_irq_index(u16 devid, int count)
- {
- 	struct irq_remap_table *table;
- 	unsigned long flags;
-@@ -3985,11 +3984,6 @@ static int alloc_irq_index(struct irq_cfg *cfg, struct irq_2_irte *irte_info,
- 				table->table[index - c + 1] = IRTE_ALLOCATED;
- 
- 			index -= count - 1;
--
--			cfg->remapped	      = 1;
--			irte_info->devid      = devid;
--			irte_info->index      = index;
--
- 			goto out;
- 		}
- 	}
-@@ -4189,106 +4183,6 @@ static int free_irq(int irq)
- 	return 0;
- }
- 
--static void compose_msi_msg(struct pci_dev *pdev,
--			    unsigned int irq, unsigned int dest,
--			    struct msi_msg *msg, u8 hpet_id)
--{
--	struct irq_2_irte *irte_info;
--	struct irq_cfg *cfg;
--	union irte irte;
--
--	cfg = irq_cfg(irq);
--	if (!cfg)
--		return;
--
--	irte_info = &cfg->irq_2_irte;
--
--	irte.val		= 0;
--	irte.fields.vector	= cfg->vector;
--	irte.fields.int_type    = apic->irq_delivery_mode;
--	irte.fields.destination	= dest;
--	irte.fields.dm		= apic->irq_dest_mode;
--	irte.fields.valid	= 1;
--
--	modify_irte(irte_info->devid, irte_info->index, irte);
--
--	msg->address_hi = MSI_ADDR_BASE_HI;
--	msg->address_lo = MSI_ADDR_BASE_LO;
--	msg->data       = irte_info->index;
--}
--
--static int msi_alloc_irq(struct pci_dev *pdev, int irq, int nvec)
--{
--	struct irq_cfg *cfg;
--	int index;
--	u16 devid;
--
--	if (!pdev)
--		return -EINVAL;
--
--	cfg = irq_cfg(irq);
--	if (!cfg)
--		return -EINVAL;
--
--	devid = get_device_id(&pdev->dev);
--	index = alloc_irq_index(cfg, &cfg->irq_2_irte, devid, nvec);
--
--	return index < 0 ? MAX_IRQS_PER_TABLE : index;
--}
--
--static int msi_setup_irq(struct pci_dev *pdev, unsigned int irq,
--			 int index, int offset)
--{
--	struct irq_2_irte *irte_info;
--	struct irq_cfg *cfg;
--	u16 devid;
--
--	if (!pdev)
--		return -EINVAL;
--
--	cfg = irq_cfg(irq);
--	if (!cfg)
--		return -EINVAL;
--
--	if (index >= MAX_IRQS_PER_TABLE)
--		return 0;
--
--	devid		= get_device_id(&pdev->dev);
--	irte_info	= &cfg->irq_2_irte;
--
--	cfg->remapped	      = 1;
--	irte_info->devid      = devid;
--	irte_info->index      = index + offset;
--
--	return 0;
--}
--
--static int alloc_hpet_msi(unsigned int irq, unsigned int id)
--{
--	struct irq_2_irte *irte_info;
--	struct irq_cfg *cfg;
--	int index, devid;
--
--	cfg = irq_cfg(irq);
--	if (!cfg)
--		return -EINVAL;
--
--	irte_info = &cfg->irq_2_irte;
--	devid     = get_hpet_devid(id);
--	if (devid < 0)
--		return devid;
--
--	index = alloc_irq_index(cfg, &cfg->irq_2_irte, devid, 1);
--	if (index < 0)
--		return index;
--
--	cfg->remapped	      = 1;
--	irte_info->devid      = devid;
--	irte_info->index      = index;
--
--	return 0;
--}
--
- static int get_devid(struct irq_alloc_info *info)
- {
- 	int devid = -1;
-@@ -4365,10 +4259,6 @@ struct irq_remap_ops amd_iommu_irq_ops = {
- 	.setup_ioapic_entry	= setup_ioapic_entry,
- 	.set_affinity		= set_affinity,
- 	.free_irq		= free_irq,
--	.compose_msi_msg	= compose_msi_msg,
--	.msi_alloc_irq		= msi_alloc_irq,
--	.msi_setup_irq		= msi_setup_irq,
--	.alloc_hpet_msi		= alloc_hpet_msi,
- 	.get_ir_irq_domain	= get_ir_irq_domain,
- 	.get_irq_domain		= get_irq_domain,
- };
-@@ -4466,8 +4356,7 @@ static int irq_remapping_alloc(struct irq_domain *domain, unsigned int virq,
- 		else
- 			ret = -ENOMEM;
- 	} else {
--		cfg = irq_cfg(virq);
--		index = alloc_irq_index(cfg, &data->irq_2_irte, devid, nr_irqs);
-+		index = alloc_irq_index(devid, nr_irqs);
- 	}
- 	if (index < 0) {
- 		pr_warn("Failed to allocate IRTE\n");
--- 
-1.7.10.4
+With that out of the way, I'm currently struggling with two topics.  First, I can see how to create a root PCI bus, and I can see how to do that in response to events coming in through paravirtual channels.  What's not clear to me is whether there is a way to tear down a root PCI bus after it has been created.  The most natural implementation for me would be to create a root PCI bus whenever a PCI device is offered to the guest VM, tearing down that root bus when the device is removed from the VM.  Would I be better off creating one "fake" root PCI bus that lives forever and placing functions beneath that?  (This seems more complicated to me, unless there's no way to tear down a root.)
+
+Also on the topic of adding root buses, I can see that when creating a root bus, I should supply a resource list.  My question is two-part.  First, can I set this up so that the root PCI buses themselves don't contain any resources at all, with the children's allocations coming from the (ACPI-based) parent?  Or do I have to partition the address space so that each root bus contains its own regions?  Second, assuming that I have to partition the address space, allocating discretely to each root PCI bus, is there some protocol for changing the size of the allocation on the fly, and if so, where should I look to find that?  This is analogous to the physical world, where a root port's bridge windows might need to be changed to accommodate a device with a really large requirement.
+
+Thanks,
+Jake Oshins
+
 
