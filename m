@@ -1,83 +1,73 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part3 v4 30/38] x86, irq: Kill unused alloc_irq_and_cfg_at()
-Date: Tue, 25 Nov 2014 15:49:54 +0800
-Message-Id: <1416901802-24211-31-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:56779 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752227AbaKLMcb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 07:32:31 -0500
+Date: Wed, 12 Nov 2014 12:32:32 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Ming Lei <ming.lei@canonical.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	alvise rigo <a.rigo@virtualopensystems.com>
+Subject: Re: [PATCH] pci: generic host: make it more generic
+Message-ID: <20141112123232.GE6759@red-moon>
+References: <1415702040-2790-1-git-send-email-ming.lei@canonical.com>
+ <20141111122901.GA4419@red-moon>
+ <CACVXFVNAc9axtESmo1zGZ3GMquTzjzWR3jx-b3tbhhLfQDDRcg@mail.gmail.com>
+ <20141111182418.GA5507@red-moon>
+ <CACVXFVPzo2qNGa5DWESS3TXor=u82_SxHb+xzrBCRXtcQxq4Cg@mail.gmail.com>
+ <20141112095846.GA6759@red-moon>
+ <CACVXFVNn=mDuJ9h3wavvo=H29hzFNisKAYEoF0OiFgm4wVAaLw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CACVXFVNn=mDuJ9h3wavvo=H29hzFNisKAYEoF0OiFgm4wVAaLw@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There's no caller of alloc_irq_and_cfg_at() anymore, so kill it.
+On Wed, Nov 12, 2014 at 10:51:31AM +0000, Ming Lei wrote:
+> On Wed, Nov 12, 2014 at 5:58 PM, Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+> > On Wed, Nov 12, 2014 at 02:12:12AM +0000, Ming Lei wrote:
+> >> On Wed, Nov 12, 2014 at 2:24 AM, Lorenzo Pieralisi
+> >> <lorenzo.pieralisi@arm.com> wrote:
+> >> > On Tue, Nov 11, 2014 at 02:02:20PM +0000, Ming Lei wrote:
+> >> >
+> >> > [...]
+> >> >
+> >> >> > http://lists.infradead.org/pipermail/linux-arm-kernel/2014-October/296535.html
+> >> >> >
+> >> >> > Patch above is already queued and applies most of the changes you have posted
+> >> >> > above.
+> >> >>
+> >> >> I should have looked at list first before writing the patch, :-(
+> >> >>
+> >> >> Could you make it more generic so that other ARCHs(at least ARM64)
+> >> >> can benefit from it too?
+> >> >
+> >> > That's our current goal, we are carrying out clean-ups to remove arch
+> >> > dependency and move code to the generic layer PCI layer.
+> >>
+> >> OK, I am glad to test them after you post them out.
+> >>
+> >> At least, the 'struct gen_pci' pointer can be put in driver data
+> >> of the platform_device now, which may remove dependency on
+> >> pci_sysdata in this driver.  But ARCH's pcibios code still may
+> >> access 'pci_sysdata', do you have patches or solution to handle
+> >> this issue?
+> >
+> > I will consider adding struct gen_pci pointer as platform device
+> > driver data, we are working on removing pci_sys_data dependency in the ARM
+> > pcibios backend, and I do not think we are far from achieving that.
+> 
+> Other ARCHs has sort of pcibios backend too, so that said it still
+> depends on ARM or ARM64, doesn't it?
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Tested-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/include/asm/hw_irq.h |    1 -
- arch/x86/kernel/apic/vector.c |   21 ---------------------
- 2 files changed, 22 deletions(-)
+Yes, so ? If you think there is a way to make this host controller work
+on all arches you fancy using it on with no arch dependency in a proper
+way step up to the plate and post the code, we will duly review it.
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 1ce5f8164c64..a88f5b325bf2 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -186,7 +186,6 @@ extern void copy_irq_alloc_info(struct irq_alloc_info *dst,
- 				struct irq_alloc_info *src);
- extern struct irq_cfg *irq_cfg(unsigned int irq);
- extern struct irq_cfg *irqd_cfg(struct irq_data *irq_data);
--extern struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node);
- extern void lock_vector_lock(void);
- extern void unlock_vector_lock(void);
- extern int assign_irq_vector(int, struct irq_cfg *, const struct cpumask *);
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 91a89500f88f..8467ca47bd4a 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -76,27 +76,6 @@ out_cfg:
- 	return NULL;
- }
- 
--struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node)
--{
--	int res = irq_alloc_desc_at(at, node);
--	struct irq_cfg *cfg;
--
--	if (res < 0) {
--		if (res != -EEXIST)
--			return NULL;
--		cfg = irq_cfg(at);
--		if (cfg)
--			return cfg;
--	}
--
--	cfg = alloc_irq_cfg(node);
--	if (cfg)
--		irq_set_chip_data(at, cfg);
--	else
--		irq_free_desc(at);
--	return cfg;
--}
--
- static void free_irq_cfg(struct irq_cfg *cfg)
- {
- 	if (cfg) {
--- 
-1.7.10.4
-
+Thanks,
+Lorenzo
