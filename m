@@ -1,94 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from numascale.com ([213.162.240.84]:50055 "EHLO numascale.com"
+Received: from mga03.intel.com ([134.134.136.65]:41980 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751926AbaKBIK4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 2 Nov 2014 03:10:56 -0500
-From: Daniel J Blueman <daniel@numascale.com>
+	id S1753000AbaKLOxO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 12 Nov 2014 09:53:14 -0500
+Message-ID: <54637449.4070302@linux.intel.com>
+Date: Wed, 12 Nov 2014 22:52:57 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
+MIME-Version: 1.0
 To: Thomas Gleixner <tglx@linutronix.de>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Daniel J Blueman <daniel@numascale.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Steffen Persvold <sp@numascale.com>
-Subject: [PATCH v3 4/5] Numachip: APIC driver cleanups
-Date: Sun,  2 Nov 2014 16:10:12 +0800
-Message-Id: <1414915813-2462-4-git-send-email-daniel@numascale.com>
-In-Reply-To: <1414915813-2462-1-git-send-email-daniel@numascale.com>
-References: <1414915813-2462-1-git-send-email-daniel@numascale.com>
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [RFC Part4 v1 00/17] Refine support of non-PCI-compliant Message
+References: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com> <546364FA.7010806@arm.com> <alpine.DEB.2.11.1411121512270.3935@nanos>
+In-Reply-To: <alpine.DEB.2.11.1411121512270.3935@nanos>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Drop printing that serves no purpose, as it's printing fixed or known
-values, and mark constant structure appropriately.
+On 2014/11/12 22:46, Thomas Gleixner wrote:
+> On Wed, 12 Nov 2014, Marc Zyngier wrote:
+>> This patch introduces two optionnal fields to the msi_chip structure:
+>> - a pointer to an irq domain, describing the MSI domain associated
+>>   with this msi_chip. To be populated with msi_create_irq_domain.
+>> - a domain_alloc_irqs() callback that has the same purpose as
+>>   arch_setup_msi_irqs(), with the above domain as an additional
+>>   parameter.
+>>
+>> If both of these fields are non-NULL, then domain_alloc_irqs() is
+>> called, bypassing the setup_irq callback. This allows the MSI driver
+>> to use the domain stacking feature without mandating core support in
+>> the architecture.
+> 
+> I'd rather have the callback in the irqdomain itself. Along with a
+> callback to free the interrupts.
+> 
+> AFAICT is msi_chip more or less a wrapper around the actual MSI irq
+> domain. So we rather move towards assigning irqdomain to the pci bus
+> and get rid of msi_chip instead of adding another level of obscure
+> indirection through msi_chip.
+Hi Thomas and Marc,
 
-Signed-off-by: Daniel J Blueman <daniel@numascale.com>
----
- arch/x86/kernel/apic/apic_numachip.c | 22 +++-------------------
- arch/x86/pci/numachip.c              |  2 +-
- 2 files changed, 4 insertions(+), 20 deletions(-)
+I'm trying to replace all weak functions , such as
+arch_setup_msi_irqs()/arch_setup_msi_irq(), in drivers/pci/msi.c.
 
-diff --git a/arch/x86/kernel/apic/apic_numachip.c b/arch/x86/kernel/apic/apic_numachip.c
-index c965b69..6374d94 100644
---- a/arch/x86/kernel/apic/apic_numachip.c
-+++ b/arch/x86/kernel/apic/apic_numachip.c
-@@ -153,20 +153,8 @@ static int __init numachip_probe(void)
- 	return apic == &apic_numachip;
- }
- 
--static void __init map_csrs(void)
--{
--	printk(KERN_INFO "NumaChip: Mapping local CSR space (%016llx - %016llx)\n",
--		NUMACHIP_LCSR_BASE, NUMACHIP_LCSR_BASE + NUMACHIP_LCSR_SIZE - 1);
--	init_extra_mapping_uc(NUMACHIP_LCSR_BASE, NUMACHIP_LCSR_SIZE);
--
--	printk(KERN_INFO "NumaChip: Mapping global CSR space (%016llx - %016llx)\n",
--		NUMACHIP_GCSR_BASE, NUMACHIP_GCSR_BASE + NUMACHIP_GCSR_SIZE - 1);
--	init_extra_mapping_uc(NUMACHIP_GCSR_BASE, NUMACHIP_GCSR_SIZE);
--}
--
- static void fixup_cpu_id(struct cpuinfo_x86 *c, int node)
- {
--
- 	if (c->phys_proc_id != node) {
- 		c->phys_proc_id = node;
- 		per_cpu(cpu_llc_id, smp_processor_id()) = node;
-@@ -180,19 +168,15 @@ bool is_numachip_system(void)
- 
- static int __init numachip_system_init(void)
- {
--	unsigned int val;
--
- 	if (!is_numachip_system())
- 		return 0;
- 
-+	init_extra_mapping_uc(NUMACHIP_LCSR_BASE, NUMACHIP_LCSR_SIZE);
-+	init_extra_mapping_uc(NUMACHIP_GCSR_BASE, NUMACHIP_GCSR_SIZE);
-+
- 	x86_cpuinit.fixup_cpu_id = fixup_cpu_id;
- 	x86_init.pci.arch_init = pci_numachip_init;
- 
--	map_csrs();
--
--	val = read_lcsr(CSR_G0_NODE_IDS);
--	printk(KERN_INFO "NumaChip: Local NodeID = %08x\n", val);
--
- 	return 0;
- }
- early_initcall(numachip_system_init);
-diff --git a/arch/x86/pci/numachip.c b/arch/x86/pci/numachip.c
-index 7307d9d..2e565e6 100644
---- a/arch/x86/pci/numachip.c
-+++ b/arch/x86/pci/numachip.c
-@@ -103,7 +103,7 @@ static int pci_mmcfg_write_numachip(unsigned int seg, unsigned int bus,
- 	return 0;
- }
- 
--const struct pci_raw_ops pci_mmcfg_numachip = {
-+static const struct pci_raw_ops pci_mmcfg_numachip = {
- 	.read = pci_mmcfg_read_numachip,
- 	.write = pci_mmcfg_write_numachip,
- };
--- 
-1.9.1
+The framework core changes are almost ready, but it does take time
+to convert current arch_setup_msi_irqs() implementations to new
+irqdomain interfaces.
 
+Not sure whether it's the right direction to go:(
+Regards!
+Gerry
+> 
+> Thanks,
+> 
+> 	tglx
+> 
