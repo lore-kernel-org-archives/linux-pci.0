@@ -1,149 +1,66 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part3 v4 06/38] x86, irq: Refine the way to allocate irq_cfg for legacy IRQs
-Date: Tue, 25 Nov 2014 15:49:30 +0800
-Message-Id: <1416901802-24211-7-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:35670 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752571AbaKLKve (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 05:51:34 -0500
+MIME-Version: 1.0
+In-Reply-To: <20141112095846.GA6759@red-moon>
+References: <1415702040-2790-1-git-send-email-ming.lei@canonical.com>
+	<20141111122901.GA4419@red-moon>
+	<CACVXFVNAc9axtESmo1zGZ3GMquTzjzWR3jx-b3tbhhLfQDDRcg@mail.gmail.com>
+	<20141111182418.GA5507@red-moon>
+	<CACVXFVPzo2qNGa5DWESS3TXor=u82_SxHb+xzrBCRXtcQxq4Cg@mail.gmail.com>
+	<20141112095846.GA6759@red-moon>
+Date: Wed, 12 Nov 2014 18:51:31 +0800
+Message-ID: <CACVXFVNn=mDuJ9h3wavvo=H29hzFNisKAYEoF0OiFgm4wVAaLw@mail.gmail.com>
+Subject: Re: [PATCH] pci: generic host: make it more generic
+From: Ming Lei <ming.lei@canonical.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	alvise rigo <a.rigo@virtualopensystems.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To support legacy ISA IRQs, we need to preallocate irq_cfg structures
-for legacy ISA IRQs. Refine the way to allocate irq_cfg for legacy ISA
-IRQs, so it's more friend to hierarchy irqdomain implementation.
+On Wed, Nov 12, 2014 at 5:58 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> On Wed, Nov 12, 2014 at 02:12:12AM +0000, Ming Lei wrote:
+>> On Wed, Nov 12, 2014 at 2:24 AM, Lorenzo Pieralisi
+>> <lorenzo.pieralisi@arm.com> wrote:
+>> > On Tue, Nov 11, 2014 at 02:02:20PM +0000, Ming Lei wrote:
+>> >
+>> > [...]
+>> >
+>> >> > http://lists.infradead.org/pipermail/linux-arm-kernel/2014-October/296535.html
+>> >> >
+>> >> > Patch above is already queued and applies most of the changes you have posted
+>> >> > above.
+>> >>
+>> >> I should have looked at list first before writing the patch, :-(
+>> >>
+>> >> Could you make it more generic so that other ARCHs(at least ARM64)
+>> >> can benefit from it too?
+>> >
+>> > That's our current goal, we are carrying out clean-ups to remove arch
+>> > dependency and move code to the generic layer PCI layer.
+>>
+>> OK, I am glad to test them after you post them out.
+>>
+>> At least, the 'struct gen_pci' pointer can be put in driver data
+>> of the platform_device now, which may remove dependency on
+>> pci_sysdata in this driver.  But ARCH's pcibios code still may
+>> access 'pci_sysdata', do you have patches or solution to handle
+>> this issue?
+>
+> I will consider adding struct gen_pci pointer as platform device
+> driver data, we are working on removing pci_sys_data dependency in the ARM
+> pcibios backend, and I do not think we are far from achieving that.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Tested-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/kernel/apic/io_apic.c |   13 +------------
- arch/x86/kernel/apic/vector.c  |   42 +++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 42 insertions(+), 13 deletions(-)
+Other ARCHs has sort of pcibios backend too, so that said it still
+depends on ARM or ARM64, doesn't it?
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index e465171bcbf3..74a0e95cfb3d 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -254,8 +254,7 @@ static void free_ioapic_saved_registers(int idx)
- 
- int __init arch_early_ioapic_init(void)
- {
--	struct irq_cfg *cfg;
--	int i, node = cpu_to_node(0);
-+	int i;
- 
- 	if (!nr_legacy_irqs())
- 		io_apic_irqs = ~0UL;
-@@ -263,16 +262,6 @@ int __init arch_early_ioapic_init(void)
- 	for_each_ioapic(i)
- 		alloc_ioapic_saved_registers(i);
- 
--	/*
--	 * For legacy IRQ's, start with assigning irq0 to irq15 to
--	 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
--	 */
--	for (i = 0; i < nr_legacy_irqs(); i++) {
--		cfg = alloc_irq_and_cfg_at(i, node);
--		cfg->vector = IRQ0_VECTOR + i;
--		cpumask_setall(cfg->domain);
--	}
--
- 	return 0;
- }
- 
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 609db1910fd3..4b8fad9aa685 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -24,6 +24,9 @@
- struct irq_domain *x86_vector_domain;
- static DEFINE_RAW_SPINLOCK(vector_lock);
- static struct irq_chip lapic_controller;
-+#ifdef	CONFIG_X86_IO_APIC
-+static struct irq_cfg *legacy_irq_cfgs[NR_IRQS_LEGACY];
-+#endif
- 
- void lock_vector_lock(void)
- {
-@@ -283,6 +286,10 @@ static void x86_vector_free_irqs(struct irq_domain *domain,
- 			free_remapped_irq(virq);
- 			clear_irq_vector(virq + i, irq_data->chip_data);
- 			free_irq_cfg(irq_data->chip_data);
-+#ifdef	CONFIG_X86_IO_APIC
-+			if (virq + i < nr_legacy_irqs())
-+				legacy_irq_cfgs[virq + i] = NULL;
-+#endif
- 			irq_domain_reset_irq_data(irq_data);
- 		}
- 	}
-@@ -308,7 +315,12 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
- 	for (i = 0; i < nr_irqs; i++) {
- 		irq_data = irq_domain_get_irq_data(domain, virq + i);
- 		BUG_ON(!irq_data);
--		cfg = alloc_irq_cfg(irq_data->node);
-+#ifdef	CONFIG_X86_IO_APIC
-+		if (virq + i < nr_legacy_irqs() && legacy_irq_cfgs[virq + i])
-+			cfg = legacy_irq_cfgs[virq + i];
-+		else
-+#endif
-+			cfg = alloc_irq_cfg(irq_data->node);
- 		if (!cfg) {
- 			err = -ENOMEM;
- 			goto error;
-@@ -357,8 +369,36 @@ int __init arch_probe_nr_irqs(void)
- 	return nr_legacy_irqs();
- }
- 
-+#ifdef	CONFIG_X86_IO_APIC
-+static void init_legacy_irqs(void)
-+{
-+	int i, node = cpu_to_node(0);
-+	struct irq_cfg *cfg;
-+
-+	/*
-+	 * For legacy IRQ's, start with assigning irq0 to irq15 to
-+	 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
-+	 */
-+	for (i = 0; i < nr_legacy_irqs(); i++) {
-+		cfg = legacy_irq_cfgs[i] = alloc_irq_cfg(node);
-+		BUG_ON(!cfg);
-+		/*
-+		 * For legacy IRQ's, start with assigning irq0 to irq15 to
-+		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
-+		 */
-+		cfg->vector = IRQ0_VECTOR + i;
-+		cpumask_setall(cfg->domain);
-+		irq_set_chip_data(i, cfg);
-+	}
-+}
-+#else
-+static void init_legacy_irqs(void) { }
-+#endif
-+
- int __init arch_early_irq_init(void)
- {
-+	init_legacy_irqs();
-+
- 	x86_vector_domain = irq_domain_add_tree(NULL, &x86_vector_domain_ops,
- 						NULL);
- 	BUG_ON(x86_vector_domain == NULL);
--- 
-1.7.10.4
-
+Thanks,
