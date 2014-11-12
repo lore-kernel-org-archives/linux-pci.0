@@ -1,80 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0143.outbound.protection.outlook.com ([207.46.100.143]:10016
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751833AbaKKTRx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 11 Nov 2014 14:17:53 -0500
-From: <suravee.suthikulpanit@amd.com>
-To: <bhelgaas@google.com>
-CC: <liviu.dudau@arm.com>, <lorenzo.pieralisi@arm.com>,
-	<will.deacon@arm.com>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH V2 1/2] PCI: Add new pci_ops for setting MSI parent for PCI bus
-Date: Tue, 11 Nov 2014 13:17:33 -0600
-Message-ID: <1415733454-24322-2-git-send-email-suravee.suthikulpanit@amd.com>
-In-Reply-To: <1415733454-24322-1-git-send-email-suravee.suthikulpanit@amd.com>
-References: <1415733454-24322-1-git-send-email-suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e28smtp06.in.ibm.com ([122.248.162.6]:55459 "EHLO
+	e28smtp06.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753632AbaKLCoE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 21:44:04 -0500
+Received: from /spool/local
+	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 12 Nov 2014 08:14:00 +0530
+Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 579DE1258044
+	for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2014 08:14:00 +0530 (IST)
+Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
+	by d28relay01.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAC2hhDv60293250
+	for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2014 08:13:43 +0530
+Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
+	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAC2hupD007207
+	for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2014 08:13:57 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH] PCI: Remove to_hotplug_slot()
+Date: Wed, 12 Nov 2014 13:43:52 +1100
+Message-Id: <1415760232-12748-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+struct hotplug_slot doesn't have kobj. to_hotplug_slot(), which
+intends converts kobj to hotplug slot, isn't valid any more.
 
-In the pci_scan_root_bus, pci_bus is created and passed down to:
-    pci_scan_child_bus
-        pci_scan_bridge
-    	pci_add_new_bus
-    	    pci_alloc_child_bus
-
-In pci_alloc_child_bus, the parent's msi_chip is propagated to child,
-and the referenced by PCI devices when calling arch_setup_msi_irq().
-
-However, in the current implementation of pci_scan_root_bus, the msi_chip
-of the root_bus is not set before handing off to pci_scan_child_bus.
-
-This patch proposes a new callback function in the struct pci_ops
-to allow host controller to provide a call back for specifying
-msi_chip to be used.
-
-Cc: Bjorn Helgass <bhelgaas@google.com>
-Cc: Liviu Dudau <liviu.dudau@arm.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/pci/probe.c | 3 +++
- include/linux/pci.h | 1 +
- 2 files changed, 4 insertions(+)
+ include/linux/pci_hotplug.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 5ed9930..cf7114d 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2081,6 +2081,9 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- 	if (!b)
- 		return NULL;
- 
-+	if (ops->set_msi_parent)
-+		ops->set_msi_parent(b);
-+
- 	if (!found) {
- 		dev_info(&b->dev,
- 		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5be8db4..6093544 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -560,6 +560,7 @@ static inline int pcibios_err_to_errno(int err)
- struct pci_ops {
- 	int (*read)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
- 	int (*write)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
-+	int (*set_msi_parent)(struct pci_bus *bus);
+diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
+index 2706ee9..8c78950 100644
+--- a/include/linux/pci_hotplug.h
++++ b/include/linux/pci_hotplug.h
+@@ -109,7 +109,6 @@ struct hotplug_slot {
+ 	struct list_head		slot_list;
+ 	struct pci_slot			*pci_slot;
  };
+-#define to_hotplug_slot(n) container_of(n, struct hotplug_slot, kobj)
  
- /*
+ static inline const char *hotplug_slot_name(const struct hotplug_slot *slot)
+ {
 -- 
-1.9.3
+1.8.3.2
 
