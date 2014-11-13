@@ -1,49 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:63232 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753845AbaKDMIB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Nov 2014 07:08:01 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: add missing DT binding for linux,pci-domain property
-Date: Tue, 04 Nov 2014 13:07:47 +0100
-Message-ID: <2606632.6m38glseTk@wuerfel>
-In-Reply-To: <20141104120052.GE11102@e106497-lin.cambridge.arm.com>
-References: <1415101660-26450-1-git-send-email-l.stach@pengutronix.de> <20141104120052.GE11102@e106497-lin.cambridge.arm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <546495AB.9050308@arm.com>
+Date: Thu, 13 Nov 2014 11:27:39 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [RFC Part4 v1 00/17] Refine support of non-PCI-compliant Message
+References: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com> <546364FA.7010806@arm.com> <alpine.DEB.2.11.1411121512270.3935@nanos>
+In-Reply-To: <alpine.DEB.2.11.1411121512270.3935@nanos>
+Content-Type: text/plain; charset=WINDOWS-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 04 November 2014 12:00:52 Liviu Dudau wrote:
-> 
-> While the description is potentially correct, what it fails to explain is that the
-> choice of using the property or generating an unstable (across boots) unique
-> number is actually the choice of the host bridge driver at the moment. I know that
-> my earlier implementations were defaulting to the automatic numbering, but that has
-> been dropped from the final series as Rob Herring was objecting to it.
-> 
-> There is still scope to adopt a wide policy here, but for now it should say something
-> to the tune:
-> 
->    If present this property assigns a fixed PCI domain number to a host bridge,
->    otherwise an unstable (across boots) unique number will be assigned.
->    If you decide to use the property to assign a fixed PCI domain number to a host
->    bridge you have to ensure that all the host bridge drivers present in the system
->    follow the same policy. Otherwise, potentially conflicting domain numbers
->    may be assigned to root busses behind different host bridges.
+Hi Thomas,
 
-But with the latest change to the domain handling, all drivers would implement
-this. I would just mention that Linux kernels older than 3.19 are probably
-going to ignore this property.
+On 12/11/14 14:46, Thomas Gleixner wrote:
+> On Wed, 12 Nov 2014, Marc Zyngier wrote:
+>> This patch introduces two optionnal fields to the msi_chip structure:
+>> - a pointer to an irq domain, describing the MSI domain associated
+>>   with this msi_chip. To be populated with msi_create_irq_domain.
+>> - a domain_alloc_irqs() callback that has the same purpose as
+>>   arch_setup_msi_irqs(), with the above domain as an additional
+>>   parameter.
+>>
+>> If both of these fields are non-NULL, then domain_alloc_irqs() is
+>> called, bypassing the setup_irq callback. This allows the MSI driver
+>> to use the domain stacking feature without mandating core support in
+>> the architecture.
+> 
+> I'd rather have the callback in the irqdomain itself. Along with a
+> callback to free the interrupts.
+> 
+> AFAICT is msi_chip more or less a wrapper around the actual MSI irq
+> domain. So we rather move towards assigning irqdomain to the pci bus
+> and get rid of msi_chip instead of adding another level of obscure
+> indirection through msi_chip.
 
-	Arnd
+I can see that putting the irq domain at the bus level makes a lot of 
+sense (assuming nobody tries to have multiple MSI controllers per bus...).
+
+So I'm starting with something like this:
+
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index 640a1ec..07e50fc 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -41,6 +41,7 @@ struct irq_domain;
+ struct of_device_id;
+ struct irq_chip;
+ struct irq_data;
++struct device;
+ 
+ /* Number of irqs reserved for a legacy isa controller */
+ #define NUM_ISA_INTERRUPTS	16
+@@ -76,6 +77,10 @@ struct irq_domain_ops {
+ 		     unsigned int nr_irqs);
+ 	void (*activate)(struct irq_domain *d, struct irq_data *irq_data);
+ 	void (*deactivate)(struct irq_domain *d, struct irq_data *irq_data);
++	int (*prepare_alloc_irqs)(struct irq_domain *d, struct device *dev,
++				  unsigned int nr_irqs, int type);
++	int (*cleanup_free_irqs)(struct irq_domain *d, struct device *dev,
++				 unsigned int virq, unsigned int nr_irqs);
+ #endif
+ };
+
+How do you see this behaving? At the moment, I have the "prepare" callback
+directly calling into pci_msi_domain_alloc_irqs() so that the irqs get
+created, but I have the nagging feeling that it's not what you want... ;-)
+The main issue I can see is that if more than one domain in the stack
+implements that, who gets to call pci_msi_domain_alloc_irqs?
+
+If we try to decouple those two, there is a problem with the creation of
+the intermediate structure (the irq_alloc_info that's in Jiang's patches),
+as this is a arch/driver/whatever specific structure.
+
+For reference, I've pushed out my current branch (very much a work in
+progress):
+http://git.kernel.org/cgit/linux/kernel/git/maz/arm-platforms.git/log/?h=irq/branch-from-hell
+
+The commits related to this discussion are:
+http://git.kernel.org/cgit/linux/kernel/git/maz/arm-platforms.git/commit/?h=irq/branch-from-hell&id=56ea48e6389fe461cb3ddf01e19afcdcd8f12f66
+and
+http://git.kernel.org/cgit/linux/kernel/git/maz/arm-platforms.git/commit/?h=irq/branch-from-hell&id=855ab8b937967854dd070de2d0aaa07639e19526
+
+as well as the code making use of that:
+http://git.kernel.org/cgit/linux/kernel/git/maz/arm-platforms.git/tree/drivers/irqchip/irq-gic-v3-its.c?h=irq/branch-from-hell&id=9f8ed988c2411831b7512006642e484c151e9a7a#n1184
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
+
