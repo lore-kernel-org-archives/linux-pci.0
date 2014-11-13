@@ -1,79 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:41980 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753000AbaKLOxO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 12 Nov 2014 09:53:14 -0500
-Message-ID: <54637449.4070302@linux.intel.com>
-Date: Wed, 12 Nov 2014 22:52:57 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Received: from mail-bn1bon0133.outbound.protection.outlook.com ([157.56.111.133]:3825
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932784AbaKMShS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 13 Nov 2014 13:37:18 -0500
+From: Jake Oshins <jakeo@microsoft.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: RE: Sorting out terminology
+Date: Thu, 13 Nov 2014 18:04:25 +0000
+Message-ID: <4c98ff3154924990b1d3d20bd51eae8b@DM2PR03MB592.namprd03.prod.outlook.com>
+References: <863202fec7e0428682edf682c27beb2b@DM2PR03MB592.namprd03.prod.outlook.com>
+ <CAErSpo5pbY8oooXT4XD0qqOY8rW74iTi5RbJBO9rUHwRPL54qQ@mail.gmail.com>
+In-Reply-To: <CAErSpo5pbY8oooXT4XD0qqOY8rW74iTi5RbJBO9rUHwRPL54qQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [RFC Part4 v1 00/17] Refine support of non-PCI-compliant Message
-References: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com> <546364FA.7010806@arm.com> <alpine.DEB.2.11.1411121512270.3935@nanos>
-In-Reply-To: <alpine.DEB.2.11.1411121512270.3935@nanos>
-Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/11/12 22:46, Thomas Gleixner wrote:
-> On Wed, 12 Nov 2014, Marc Zyngier wrote:
->> This patch introduces two optionnal fields to the msi_chip structure:
->> - a pointer to an irq domain, describing the MSI domain associated
->>   with this msi_chip. To be populated with msi_create_irq_domain.
->> - a domain_alloc_irqs() callback that has the same purpose as
->>   arch_setup_msi_irqs(), with the above domain as an additional
->>   parameter.
->>
->> If both of these fields are non-NULL, then domain_alloc_irqs() is
->> called, bypassing the setup_irq callback. This allows the MSI driver
->> to use the domain stacking feature without mandating core support in
->> the architecture.
-> 
-> I'd rather have the callback in the irqdomain itself. Along with a
-> callback to free the interrupts.
-> 
-> AFAICT is msi_chip more or less a wrapper around the actual MSI irq
-> domain. So we rather move towards assigning irqdomain to the pci bus
-> and get rid of msi_chip instead of adding another level of obscure
-> indirection through msi_chip.
-Hi Thomas and Marc,
-
-I'm trying to replace all weak functions , such as
-arch_setup_msi_irqs()/arch_setup_msi_irq(), in drivers/pci/msi.c.
-
-The framework core changes are almost ready, but it does take time
-to convert current arch_setup_msi_irqs() implementations to new
-irqdomain interfaces.
-
-Not sure whether it's the right direction to go:(
-Regards!
-Gerry
-> 
-> Thanks,
-> 
-> 	tglx
-> 
+Pj4gSSBjYW4gc2VlIGhvdyB0byBjcmVhdGUgYSByb290IFBDSSBidXMsIGFuZCBJIGNhbiBzZWUg
+aG93IHRvIGRvIHRoYXQgaW4NCj4+IHJlc3BvbnNlIHRvIGV2ZW50cyBjb21pbmcgaW4gdGhyb3Vn
+aCBwYXJhdmlydHVhbCBjaGFubmVscy4gIFdoYXQncyBub3QgY2xlYXINCj4+IHRvIG1lIGlzIHdo
+ZXRoZXIgdGhlcmUgaXMgYSB3YXkgdG8gdGVhciBkb3duIGEgcm9vdCBQQ0kgYnVzIGFmdGVyIGl0
+IGhhcyBiZWVuDQo+PiBjcmVhdGVkLiAgVGhlIG1vc3QgbmF0dXJhbCBpbXBsZW1lbnRhdGlvbiBm
+b3IgbWUgd291bGQgYmUgdG8gY3JlYXRlIGEgcm9vdA0KPj4gUENJIGJ1cyB3aGVuZXZlciBhIFBD
+SSBkZXZpY2UgaXMgb2ZmZXJlZCB0byB0aGUgZ3Vlc3QgVk0sIHRlYXJpbmcgZG93biB0aGF0DQo+
+PiByb290IGJ1cyB3aGVuIHRoZSBkZXZpY2UgaXMgcmVtb3ZlZCBmcm9tIHRoZSBWTS4gIFdvdWxk
+IEkgYmUgYmV0dGVyIG9mZg0KPj4gY3JlYXRpbmcgb25lICJmYWtlIiByb290IFBDSSBidXMgdGhh
+dCBsaXZlcyBmb3JldmVyIGFuZCBwbGFjaW5nIGZ1bmN0aW9ucw0KPj4gYmVuZWF0aCB0aGF0PyAg
+KFRoaXMgc2VlbXMgbW9yZSBjb21wbGljYXRlZCB0byBtZSwgdW5sZXNzIHRoZXJlJ3Mgbm8gd2F5
+DQo+PiB0byB0ZWFyIGRvd24gYSByb290LikNCj4gDQo+IEknZCBzdGFydCBieSBsb29raW5nIGF0
+IGFjcGlfcGNpX3Jvb3RfcmVtb3ZlKCkuICBUaGVvcmV0aWNhbGx5IHRoYXQNCj4gcmVtb3ZlcyBh
+IFBDSSBob3N0IGJyaWRnZS4gIEkgc2F5ICJ0aGVvcmV0aWNhbGx5IiBiZWNhdXNlIHRoaXMgaXMg
+bmV3DQo+IGNvZGUgYW5kIEkgaGF2ZW4ndCBzZWVuIGFueSBidWcgcmVwb3J0cyByZWxhdGVkIHRv
+IGl0LiAgTWF5YmUgdGhhdA0KPiBtZWFucyBpdCB3b3JrcyBwZXJmZWN0bHksIG9yIG1heWJlIGl0
+IG1lYW5zIG5vYm9keSBpcyByZWFsbHkgdXNpbmcgaXQNCj4gOikgIFlpbmdoYWkgTHUgaGFzIGRv
+bmUgbW9zdCBvZiB0aGUgd29yayBpbiB0aGlzIGFyZWEuDQoNClRoYW5rcyBmb3IgdGhpcyBhZHZp
+Y2UuICBUaGF0IGZ1bmN0aW9uIHdhcyB2ZXJ5IGluZm9ybWF0aXZlLiAgSSBkaWRuJ3QgcmVhbGx5
+IGV4cGxhaW4gbXlzZWxmIHByb3Blcmx5LCB0aG91Z2gsIGFuZCBzbyBJIG5lZWQgdG8gZm9sbG93
+IHVwIGhlcmUuICBUaGUgcm9vdCBQQ0kgYnVzIHRoYXQgSSB3b3VsZCBsaWtlIHRvIGV4cG9zZSBp
+cyBub3QgZHJpdmVuIGJ5IEFDUEkuICBUaGUgb25seSByb2xlIHRoYXQgQUNQSSB0YWtlcyBpbiB0
+aGlzIFZNIChhdCBsZWFzdCByZWxldmFudCB0byB0aGlzIGRpc2N1c3Npb24pIGlzIHRvIGNyZWF0
+ZSBhIE1vZHVsZSBEZXZpY2UgKF9DSUQgb2YgIkFDUEkwMDA0Iikgd2hpY2ggaGFzIGEgX0NSUyB0
+aGF0IGV4cG9zZXMgYWxsIHRoZSBhZGRyZXNzIHNwYWNlIGF2YWlsYWJsZSBmb3IgYWxsIHR5cGVz
+IG9mIEkvTyBkZXZpY2VzLCBib3RoIHBhcmF2aXJ0dWFsIGFuZCBQQ0kgcGFzcy10aHJvdWdoLiAg
+VGhlIHBhcmF2aXJ0dWFsIGZyYW1lIGJ1ZmZlciwgZm9yIGluc3RhbmNlLCBhbGxvY2F0ZXMgZnJv
+bSB0aGlzIHJhbmdlLCBhbmQgdGhhdCBpc24ndCBleHBvc2VkIGluIGFueSB3YXkgdGhhdCBsb29r
+cyBsaWtlIGEgUENJIGJ1cy4NCg0KV2hlbiB3ZSBkbyBTUi1JT1YgZm9yIFdpbmRvd3MgZ3Vlc3Rz
+LCB3ZSBqdXN0IGNyZWF0ZSBhIHJvb3QgUENJIGJ1cyBhbmQgcGxhY2UgYSBmdW5jdGlvbiB1bmRl
+cm5lYXRoIHRoZSByb290IGJ1cy4gIE5vIHJvb3QgY29tcGxleCBvciBhbnl0aGluZyBvdGhlciB0
+aGFuIHRoZSBmdW5jdGlvbiBpdHNlbGYgaXMgZXhwb3NlZCBpbiB0aGUgZ3Vlc3QuICBUaGUgcGFy
+YXZpcnR1YWxpemF0aW9uIGlzIHB1cmVseSBhIHByb3RvY29sLCBpbiBjb250cmFzdCB0byB0aGUg
+c3RyYXRlZ2llcyB1c2VkIHdpdGggbGlidmlydCwgWGVuYnVzIGFuZCBvdGhlcnMuICBUaGVyZSBp
+cyBubyBBQ1BJIG5vZGUgZm9yIHRoZSByb290IFBDSSBidXNlcy4gIFRoZXJlIGlzIG5vIGVtdWxh
+dG9yIGZvciB0aGUgaG9zdCBicmlkZ2UsIGV0Yy4NCg0KSSdtIGN1cmlvdXMgd2hldGhlciB0aGlz
+IHN0cmF0ZWd5IGNhbiB3b3JrIGZvciBMaW51eCBndWVzdHMuICBJdCBzZWVtcyBsaWtlIG15IHBh
+cmF2aXJ0dWFsIFBDSSBmcm9udC1lbmQgY291bGQganVzdCBjYWxsIHRoZSBzYW1lIGZ1bmN0aW9u
+cyB0aGF0IGFyZSBpbnZva2VkIGluIGFjcGlfcGNpX3Jvb3RfcmVtb3ZlKCkuICBUaGUgb25seSBp
+bXBlZGltZW50IHNlZW1zIHRvIGJlIHRoYXQgcGNpX3N0b3Bfcm9vdF9idXMoKSBhbmQgcGNpX3Jl
+bW92ZV9yb290X2J1cygpIGFyZSBub3QgbWFya2VkIHdpdGggRVhQT1JUX1NZTUJPTF9HUEwgKCku
+DQoNCldvdWxkIGl0IGJlIGFjY2VwdGFibGUgdG8gbWFyayB0aGVzZSB3aXRoIEVYUE9SVF9TWU1C
+T0xfR1BMKCk/ICBJcyB0aGlzIG5vdCBkb25lIHNpbXBseSBiZWNhdXNlIG5vYm9keSBoYXMgbmVl
+ZGVkIGl0IGJlZm9yZT8gIE9yIGlzIHRoZXJlIHNvbWUgb3RoZXIgcmVhc29uPw0KDQoNCj4gDQo+
+IFlvdSBzYWlkICJyb290IHBvcnQncyBicmlkZ2Ugd2luZG93cywiIGFuZCBJIHRoaW5rIHdlIGNh
+biBjaGFuZ2UgUENJZQ0KPiBSb290IFBvcnQgYnJpZGdlIHdpbmRvd3MgaW4gdGhlIHNhbWUgd2F5
+IHdlIGNhbiBjaGFuZ2UgYW55IG90aGVyDQo+IFBDSS10by1QQ0kgYnJpZGdlJ3Mgd2luZG93cy4g
+IFRoaXMgaXMgYW5vdGhlciBhcmVhIHRoYXQgd29ya3MgaW4NCj4gdGhlb3J5IGJ1dCBpcyBub3Qg
+d2VsbC1leGVyY2lzZWQsIGFuZCBoZXJlIHdlICpkbyogaGF2ZSBidWcgcmVwb3J0cywNCj4gc28g
+SSBrbm93IGl0IGRvZXNuJ3Qgd29yayBwZXJmZWN0bHkuICBZaW5naGFpIEx1IGlzIGFsc28gdGhl
+IGV4cGVydCBpbg0KPiB0aGlzIHNvcnQgb2YgcmVzb3VyY2UgYWxsb2NhdGlvbi4NCj4gDQo+IEJ1
+dCBpdCBzb3VuZHMgbGlrZSB5b3UgbWlnaHQgYmUgdGFsa2luZyBhYm91dCBjaGFuZ2luZyB0aGUg
+aG9zdA0KPiBicmlkZ2UncyB3aW5kb3dzLCBpLmUuLCB1c2luZyBfU1JTIG9uIHRoZSBob3N0IGJy
+aWRnZSBBQ1BJIGRldmljZSwgYW5kDQo+IExpbnV4IGRvZXNuJ3QgaGF2ZSBhbnkgc3VwcG9ydCBm
+b3IgdGhhdC4NCj4gDQo+IFNpbmNlIHlvdSBtZW50aW9uZWQgdGVybWlub2xvZ3ksIGhlcmUncyBo
+b3cgSSB1c2UgaXQ6DQo+IA0KPiAgIGhvc3QgYnJpZGdlID0gYSBQTlAwQTAzIG9yIFBOUDBBMDgg
+ZGV2aWNlDQo+ICAgcm9vdCBidXMgPSB0aGUgUENJL1BDSWUgYnVzIGltbWVkaWF0ZWx5IGJlbG93
+IGEgaG9zdCBicmlkZ2UgKGJ1cw0KPiBudW1iZXIgaXMgdGhlIF9NSU4gb2YgdGhlIGJ1cyBudW1i
+ZXIgcmFuZ2UgaW4gdGhlIGhvc3QgYnJpZGdlIF9DUlMpDQo+ICAgcm9vdCBwb3J0ID0gYSBQQ0ll
+IFJvb3QgUG9ydCwgd2hpY2ggd2UgaGFuZGxlIGFzIGEgcmVndWxhcg0KPiBQQ0ktdG8tUENJIGJy
+aWRnZSAocGx1cyB0aGUgUENJZSBzZXJ2aWNlcykNCj4gDQo+IEJqb3JuDQoNClNpbWlsYXJseSwg
+SSdtIG5vdCB0YWxraW5nIGFib3V0IGludm9raW5nIF9TUlMgb24gYSBob3N0IGJyaWRnZS4gIChJ
+IGtub3cgd2hlcmUgdGhlIHBpdGZhbGxzIGFyZSB0aGVyZSwgYW5kIHdoeSBkb2luZyBpdCBpcyBh
+IGJhZCBpZGVhLiAgSSBoYXBwZW4gdG8gaGF2ZSBpbXBsZW1lbnRlZCB0aGF0IGNvZGUgaW4gV2lu
+ZG93cy4pICBJJ20gdGFsa2luZyBhYm91dCBjaGFuZ2luZyB0aGUgcmVzb3VyY2VzIGFzc2lnbmVk
+IHRvIGEgcHVyZWx5IHBhcmF2aXJ0dWFsIHJvb3QgUENJIGJ1cy4gIEkgYXNzdW1lIHRoYXQgdGhl
+IHByb3RvY29sIGZvciBjaGFuZ2luZyB0aGUgc2l6ZSBvZiBQQ0ktdG8tUENJIGJyaWRnZSB3aW5k
+b3dzIGNvdWxkIGJlIHVzZWQgZm9yIHRoaXMsIHRvby4gIERvIHlvdSBoYXZlIGEgcG9pbnRlciBv
+biB3aGVyZSB0byByZWFkIHRoZSBjb2RlIHRvIHVuZGVyc3RhbmQgdGhpcyBwcm9jZXNzPw0KDQpU
+aGFua3MgYWdhaW4gZm9yIHlvdXIgaGVscCwNCkpha2UgT3NoaW5zDQoNCg==
