@@ -1,83 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp05.in.ibm.com ([122.248.162.5]:56795 "EHLO
-	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750891AbaKYX5e (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Nov 2014 18:57:34 -0500
-Received: from /spool/local
-	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 26 Nov 2014 05:27:31 +0530
-Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
-	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 631DE125804B
-	for <linux-pci@vger.kernel.org>; Wed, 26 Nov 2014 05:27:40 +0530 (IST)
-Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
-	by d28relay04.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAPNw1ih66584648
-	for <linux-pci@vger.kernel.org>; Wed, 26 Nov 2014 05:28:02 +0530
-Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
-	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAPNvPQK026797
-	for <linux-pci@vger.kernel.org>; Wed, 26 Nov 2014 05:27:25 +0530
-Date: Wed, 26 Nov 2014 10:57:24 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au
-Subject: Re: [PATCH 2/8] powerpc/pci: Don't scan empty slot
-Message-ID: <20141125235724.GA20556@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1416869365-7671-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1416869365-7671-3-git-send-email-gwshan@linux.vnet.ibm.com>
- <1416956282.5089.4.camel@kernel.crashing.org>
+Received: from cmexedge1.emulex.com ([138.239.224.99]:28138 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751811AbaKMHFC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 02:05:02 -0500
+From: Sathya Perla <Sathya.Perla@Emulex.Com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	Don Dutile <ddutile@redhat.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"ariel.elior@qlogic.com" <ariel.elior@qlogic.com>,
+	"linux.nics@intel.com" <linux.nics@intel.com>,
+	"shahed.shaikh@qlogic.com" <shahed.shaikh@qlogic.com>
+Subject: RE: [PATCH 0/4] move pci_assivned_vfs() check (while disabling VFs)
+ to pci sub-system
+Date: Thu, 13 Nov 2014 07:04:35 +0000
+Message-ID: <CF9D1877D81D214CB0CA0669EFAE020C68CD95E1@CMEXMB1.ad.emulex.com>
+References: <1415620410-4937-1-git-send-email-sathya.perla@emulex.com>
+	 <54625EE8.1050509@redhat.com> <1415738372.16601.335.camel@ul30vt.home>
+In-Reply-To: <1415738372.16601.335.camel@ul30vt.home>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1416956282.5089.4.camel@kernel.crashing.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 26, 2014 at 09:58:02AM +1100, Benjamin Herrenschmidt wrote:
->On Tue, 2014-11-25 at 09:49 +1100, Gavin Shan wrote:
->> In hotplug case, function pcibios_add_pci_devices() is called to
->> rescan the specified PCI bus, which possibly doesn't have any child
->> devices. Access to the PCI bus's child device node will cause kernel
->> crash without exception. The patch adds two more conditions to avoid
->> the kernel crash.
->> 
->> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->> ---
->>  arch/powerpc/kernel/pci-hotplug.c | 5 +++--
->>  1 file changed, 3 insertions(+), 2 deletions(-)
->> 
->> diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
->> index 6e2b4e3..ea5513b 100644
->> --- a/arch/powerpc/kernel/pci-hotplug.c
->> +++ b/arch/powerpc/kernel/pci-hotplug.c
->> @@ -105,7 +105,7 @@ EXPORT_SYMBOL_GPL(pcibios_remove_pci_devices);
->>   * is how this routine differs from other, similar pcibios
->>   * routines.)
->>   */
->> -void pcibios_add_pci_devices(struct pci_bus * bus)
->> +void pcibios_add_pci_devices(struct pci_bus *bus)
->
->Unrelated whitespace change
->
-
-I'll remove this change out of the patch.
-
-Thanks,
-Gavin
-
->>  {
->>  	int slotno, mode, pass, max;
->>  	struct pci_dev *dev;
->> @@ -120,7 +120,8 @@ void pcibios_add_pci_devices(struct pci_bus * bus)
->>  	if (mode == PCI_PROBE_DEVTREE) {
->>  		/* use ofdt-based probe */
->>  		of_rescan_bus(dn, bus);
->> -	} else if (mode == PCI_PROBE_NORMAL) {
->> +	} else if (mode == PCI_PROBE_NORMAL &&
->> +		   dn->child && PCI_DN(dn->child)) {
->>  		/*
->>  		 * Use legacy probe. In the partial hotplug case, we
->>  		 * probably have grandchildren devices unplugged. So
->
->
-
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBBbGV4IFdpbGxpYW1zb24gW21h
+aWx0bzphbGV4LndpbGxpYW1zb25AcmVkaGF0LmNvbV0NCj4gDQo+IE9uIFR1ZSwgMjAxNC0xMS0x
+MSBhdCAxNDowOSAtMDUwMCwgRG9uIER1dGlsZSB3cm90ZToNCj4gPiBPbiAxMS8xMC8yMDE0IDA2
+OjUzIEFNLCBTYXRoeWEgUGVybGEgd3JvdGU6DQo+ID4gPiBBIHVzZXIgbXVzdCBub3QgYmUgYWxs
+b3dlZCB0byBkaXNhYmxlIFZGcyB3aGlsZSB0aGV5IGFyZSBhbHJlYWR5IGFzc2lnbmVkDQo+IHRv
+DQo+ID4gPiBhIGd1ZXN0LiBUaGlzIGNoZWNrIGlzIGJlaW5nIG1hZGUgaW4gZWFjaCBpbmRpdmlk
+dWFsIGRyaXZlciB0aGF0DQo+IGltcGxlbWVudHMNCj4gPiA+IHRoZSBzcmlvdl9jb25maWd1cmUg
+UENJIG1ldGhvZC4NCj4gPiA+IFRoaXMgcGF0Y2gtc2V0IGZpeGVzIHRoaXMgY29kZSBkdXBsaWNh
+dGlvbiBieSBtb3ZpbmcgdGhpcyBjaGVjayBmcm9tDQo+ID4gPiBkcml2ZXJzIHRvIHRoZSBzcmlv
+dl9udXZmc19zdG9yZSgpIHJvdXRpbmUganVzdCBiZWZvcmUgaW52b2tpbmcNCj4gPiA+IHNyaW92
+X2NvbmZpZ3VyZSgpIHdoZW4gbnVtX3ZmcyBpcyBlcXVhbCB0byAwLg0KPiA+ID4NCj4gPiA+IFZh
+c3VuZGhhcmEgVm9sYW0gKDQpOg0KPiA+ID4gICAgcGNpOiBtb3ZlIHBjaV9hc3Npdm5lZF92ZnMo
+KSBjaGVjayB3aGlsZSBkaXNhYmxpbmcgVkZzIHRvIHBjaQ0KPiA+ID4gICAgICBzdWItc3lzdGVt
+DQo+ID4gPiAgICBibngyeDogcmVtb3ZlIHBjaV9hc3NpZ25lZF92ZnMoKSBjaGVjayB3aGlsZSBk
+aXNhYmxpbmcgVkZzDQo+ID4gPiAgICBpNDBlOiByZW1vdmUgcGNpX2Fzc2lnbmVkX3ZmcygpIGNo
+ZWNrIHdoaWxlIGRpc2FibGluZyBWRnMNCj4gPiA+ICAgIHFsY25pYzogcmVtb3ZlIHBjaV9hc3Np
+Z25lZF92ZnMoKSBjaGVjayB3aGlsZSBkaXNhYmxpbmcgVkZzDQo+ID4gPg0KPiA+ID4gICBkcml2
+ZXJzL25ldC9ldGhlcm5ldC9icm9hZGNvbS9ibngyeC9ibngyeF9zcmlvdi5jICB8ICAgIDIgKy0N
+Cj4gPiA+ICAgZHJpdmVycy9uZXQvZXRoZXJuZXQvaW50ZWwvaTQwZS9pNDBlX3ZpcnRjaG5sX3Bm
+LmMgfCAgICA3ICstLS0tLS0NCj4gPiA+ICAgLi4uL25ldC9ldGhlcm5ldC9xbG9naWMvcWxjbmlj
+L3FsY25pY19zcmlvdl9wZi5jICAgfCAgIDEwIC0tLS0tLS0tLS0NCj4gPiA+ICAgZHJpdmVycy9w
+Y2kvcGNpLXN5c2ZzLmMgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgICA1ICsrKysrDQo+
+ID4gPiAgIDQgZmlsZXMgY2hhbmdlZCwgNyBpbnNlcnRpb25zKCspLCAxNyBkZWxldGlvbnMoLSkN
+Cj4gPiA+DQo+ID4gSSBoYXZlIGhhZCBhIHNpZGUgY29udmVyc2F0aW9uIHdpdGggQWxleCBXaWxs
+aWFtc29uLCBWRklPIGF1dGhvci4NCj4gPg0KPiA+IFZGSU8gaXMgdGhlIHVwc3RyZWFtIG1ldGhv
+ZCB0aGF0IGRldmljZS1hc3NpZ25tZW50IGlzIG1hbmFnZWQvaGFuZGxlZA0KPiBvbiBrdm0gbm93
+Lg0KPiA+IEl0IGRvZXMgbm90IHNldCB0aGUgUENJX0RFVl9GTEFHU19BU1NJR05FRCBwY2kgZGV2
+LWZsYWdzLCBhbmQgdGh1cywNCj4gPiB0aGlzIGNoZWNrIHdpbGwgbm90IHdvcmsgd2hlbiBWRklP
+IGlzIHVzZWQuDQo+ID4NCj4gPiBUaGlzIHBhdGNoIHNldCB3aWxsIG9ubHkgd29yayBmb3IgdGhl
+IGZvcm1lciwga3ZtLW1hbmFnZWQsIGRldmljZS0NCj4gYXNzaWdubWVudCBtZXRob2QsDQo+ID4g
+d2hpY2ggaXMgY3VycmVudGx5IGJlaW5nIGRlcHJlY2F0ZWQgaW4gcWVtdSBhcyB3ZWxsLg0KPiA+
+DQo+ID4gU28sIHllcywgaXQgd29ya3MgZm9yIGt2bSBtYW5hZ2VkIGRldmljZS1hc3NpZ25tZW50
+LCBidXQgbm90IHRoZQ0KPiA+IG5ld2VyLCBWRklPLWJhc2VkIGRldmljZS1hc3NpZ25tZW50Lg0K
+PiA+DQo+ID4gTm90ZSwgYWxzbywgdGhhdCB0aGUgcGNpX2Fzc2lnbmVkX3ZmcygpIGNoZWNrIGlu
+IHRoZSBkcml2ZXJzIHdpbGwNCj4gPiBhbHdheXMgcmV0dXJuIDAgd2hlbiBWRklPIGlzIHVzZWQg
+Zm9yIGRldmljZSBhc3NpZ25tZW50LCBzbyBrZWVwaW5nDQo+ID4gdGhlc2UgY2hlY2tzIGluIHRo
+ZSBkcml2ZXJzIGRvZXNuJ3QgZG8gd2hhdCB0aGV5IGltcGx5IGVpdGhlci4NCj4gPg0KPiA+IFNv
+LCB0YWtpbmcgaW4gdGhlIHBhdGNoIHNvbHZlcyBvbGQsIGt2bS1tYW5hZ2VkLCBkZXZpY2UgYXNz
+aWdubWVudCwNCj4gPiBidXQgYSBuZXcgbWV0aG9kIGlzIG5lZWRlZCB3aGVuIFZGSU8gaXMgaW52
+b2x2ZWQuDQo+ID4NCj4gPiAtIERvbg0KPiA+DQo+ID4gcHMgLS0gTm90ZToganVzdCBhZGRpbmcg
+dGhlIGZsYWcgc2V0dGluZyBpbiB2ZmlvLXBjaSBkb2VzIG5vdCBuZWNlc3NhcmlseQ0KPiA+ICAg
+ICAgICBzb2x2ZSB0aGlzIHByb2JsZW0uICBWRklPIGRvZXMgbm90IGtub3cgaWYgYSBkZXZpY2Ug
+aXMgYXNzaWduZWQgdG8gYQ0KPiBndWVzdDsNCj4gPiAgICAgICAgaXQgb25seSBrbm93cyBhIGNh
+bGxlciBvZiB0aGUgaW9jdGwgcmVxdWVzdGluZyB0aGUgZGV2aWNlIHRvIGJlIGFzc2lnbmVkDQo+
+ID4gICAgICAgIHRvIHZmaW8sIGFuZCB0byBiZSBkbWEtbWFwcGVkIGZvciBhIHJlZ2lvbiBvZiBt
+ZW1vcnksIGhhcyBiZWVuDQo+IHJlcXVlc3RlZC4NCj4gPiAgICAgICAgU28sIGEgbmV3IFBGPC0+
+VkYgbWVjaGFuaXNtIG5lZWRzIHRvIGJlIHB1dCBpbiBwbGFjZSB0bw0KPiA+ICAgICAgICBkZXRl
+cm1pbmUgdGhlIGVxdWl2YWxlbnQgaW5mb3JtYXRpb24uDQo+IA0KPiBwcHMgLS0gTm90ZTogdGVz
+dGluZyBwY2lfYXNzaXZuZWRfdmZzKCkgaXMgcmFjeSwgbm90aGluZyBwcmV2ZW50cyB0aGUgZmxh
+Zw0KPiAJYmVpbmcgYWRkZWQgdG8gYSBkZXZpY2UgYmV0d2VlbiB5b3VyIGNoZWNrIGFuZCByZW1v
+dmluZyB0aGUgVkYNCj4gZGV2aWNlLg0KPiAJVGhpcyBpcyBvbmUgb2YgdGhlIHJlYXNvbnMgdGhh
+dCB2ZmlvLXBjaSBkb2Vzbid0IHVzZSBpdCBhbmQgdGhhdCB0aGlzDQo+IAlpbnRlcmZhY2Ugc2hv
+dWxkIGJlIGRpc2NvdXJhZ2VkIGluIHRoZSBrZXJuZWwuDQoNCkFsZXgvRG9uLCBJIGFncmVlIHdp
+dGggdGhlIHBvaW50cyB5b3UndmUgcmFpc2VkLg0KQnV0LCBJJ2QgbGlrZSB0byBrbm93IHdoZXRo
+ZXIgeW91IHRoaW5rIHRoaXMgcGF0Y2gtc2V0IHNob3VsZCBiZSBhY2NlcHRlZCBvciBub3QuDQpF
+dmVuIHRob3VnaCB0aGlzIHBhdGNoLXNldCBkb2Vzbid0IGZpeCBhbnkgb2YgdGhlIHBlbmRpbmcg
+aXNzdWVzIHJhaXNlZCBoZXJlLA0KaXQncyBhIHNtYWxsIHN0ZXAgZm9yd2FyZCBhcyBpdCByZWR1
+Y2VzIHRoZSBudW1iZXIgb2YgaW52b2NhdGlvbnMgb2YgcGNpX2Fzc2lnbmVkX3ZmcygpDQpjaGVj
+ayB3aGljaCBpcyBhIGdvb2QgdGhpbmcuDQoNCnRoYW5rcywNCi1TYXRoeWENCg==
