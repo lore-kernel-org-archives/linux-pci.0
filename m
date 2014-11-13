@@ -1,68 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:45297 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751612AbaKBPmE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Nov 2014 10:42:04 -0500
-Received: from /spool/local
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 3 Nov 2014 01:42:02 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 5DFCA2BB0023
-	for <linux-pci@vger.kernel.org>; Mon,  3 Nov 2014 02:42:00 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sA2FfmVm20250842
-	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:41:48 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sA2Ffx17028261
-	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:41:59 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V9 09/18] powerpc/pci: remove pci_dn->pcidev field
-Date: Sun,  2 Nov 2014 23:41:25 +0800
-Message-Id: <1414942894-17034-10-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mailout3.samsung.com ([203.254.224.33]:19180 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753499AbaKMCIW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 21:08:22 -0500
+Received: from epcpsbgr4.samsung.com
+ (u144.gpu120.samsung.co.kr [203.254.230.144])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0NEY00HZKGLVOM80@mailout3.samsung.com> for
+ linux-pci@vger.kernel.org; Thu, 13 Nov 2014 11:08:19 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Srikanth Thokala' <sriku.linux@gmail.com>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <002901cffe28$544504b0$fccf0e10$%han@samsung.com>
+ <CA+mB=1KiOEXn2Zg1GPPHUV4ybXYYQfHNgCkTJSthvbR0jMyYOw@mail.gmail.com>
+In-reply-to: <CA+mB=1KiOEXn2Zg1GPPHUV4ybXYYQfHNgCkTJSthvbR0jMyYOw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: exynos: Remove unnecessary return statement
+Date: Thu, 13 Nov 2014 11:09:06 +0900
+Message-id: <000201cffee6$cdd86d80$69894880$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The field pci_dn->pcidev is assigned but not used.
+On Thursday, November 13, 2014 1:30 AM, Srikanth Thokala wrote:
+> 
+> On Wed, Nov 12, 2014 at 8:55 AM, Jingoo Han <jg1.han@samsung.com> wrote:
+> > This patch fixes the following checkpatch warning.
+> >
+> >   WARNING: void function return statements are not generally useful
+> >
+> > Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> > ---
+> >  drivers/pci/host/pci-exynos.c |    8 --------
+> >  1 file changed, 8 deletions(-)
+> >
+> 
+> Acked-by: Srikanth Thokala <sriku.linux@gmail.com>
 
-This patch removes this field.
+Sorry, but your 'Acked-by' is NOT appropriate.
+You are neither a maintainer nor those who contributed the patch
+for Exynos PCIe driver. So, in this case, 'Reviewed-by' looks good
+as below.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/pci-bridge.h     |    1 -
- arch/powerpc/platforms/powernv/pci-ioda.c |    1 -
- 2 files changed, 2 deletions(-)
+Reviewed-by: Srikanth Thokala <sriku.linux@gmail.com>
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 757d7bb..063d79d 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -166,7 +166,6 @@ struct pci_dn {
- 
- 	bool	force_32bit_msi;
- 
--	struct	pci_dev *pcidev;	/* back-pointer to the pci device */
- #ifdef CONFIG_EEH
- 	struct eeh_dev *edev;		/* eeh device */
- #endif
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 468a0f2..df49dc6 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -727,7 +727,6 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
- 				pci_name(dev));
- 			continue;
- 		}
--		pdn->pcidev = dev;
- 		pdn->pe_number = pe->pe_number;
- 		pe->dma_weight += pnv_ioda_dma_weight(dev);
- 		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
--- 
-1.7.9.5
+By the way, you submitted the Xilinx PCIe driver
+(drivers/pci/host/pcie-xilinx.c). Thus, if someone send
+the patch for Xilinx PCIe driver, you can give your Acked-by.
+
+According to the 'Documentation/SubmittingPatches' file,
+
+"If a person was not directly involved in the preparation or handling of a
+patch but wishes to signify and record their approval of it then they can
+arrange to have an Acked-by: line added to the patch's changelog.
+
+Acked-by: is often used by the maintainer of the affected code when that
+maintainer neither contributed to nor forwarded the patch."
+
+My comment will be also applied to the patch "[PATCH] PCI: imx6: Use tabs
+for indentation".
+
+Thank you.
+
+Best regards,
+Jingoo Han
+
+> 
+> - Srikanth
+> 
+> > diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+> > index c5d0ca3..41ab139 100644
+> > --- a/drivers/pci/host/pci-exynos.c
+> > +++ b/drivers/pci/host/pci-exynos.c
+> > @@ -312,7 +312,6 @@ static void exynos_pcie_assert_reset(struct pcie_port *pp)
+> >         if (exynos_pcie->reset_gpio >= 0)
+> >                 devm_gpio_request_one(pp->dev, exynos_pcie->reset_gpio,
+> >                                 GPIOF_OUT_INIT_HIGH, "RESET");
+> > -       return;
+> >  }
+> >
+> >  static int exynos_pcie_establish_link(struct pcie_port *pp)
+> > @@ -388,7 +387,6 @@ static void exynos_pcie_clear_irq_pulse(struct pcie_port *pp)
+> >
+> >         val = exynos_elb_readl(exynos_pcie, PCIE_IRQ_PULSE);
+> >         exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_PULSE);
+> > -       return;
+> >  }
+> >
+> >  static void exynos_pcie_enable_irq_pulse(struct pcie_port *pp)
+> > @@ -400,7 +398,6 @@ static void exynos_pcie_enable_irq_pulse(struct pcie_port *pp)
+> >         val = IRQ_INTA_ASSERT | IRQ_INTB_ASSERT |
+> >                 IRQ_INTC_ASSERT | IRQ_INTD_ASSERT,
+> >         exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_EN_PULSE);
+> > -       return;
+> >  }
+> >
+> >  static irqreturn_t exynos_pcie_irq_handler(int irq, void *arg)
+> > @@ -429,7 +426,6 @@ static void exynos_pcie_msi_init(struct pcie_port *pp)
+> >         val = exynos_elb_readl(exynos_pcie, PCIE_IRQ_EN_LEVEL);
+> >         val |= IRQ_MSI_ENABLE;
+> >         exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_EN_LEVEL);
+> > -       return;
+> >  }
+> >
+> >  static void exynos_pcie_enable_interrupts(struct pcie_port *pp)
+> > @@ -438,8 +434,6 @@ static void exynos_pcie_enable_interrupts(struct pcie_port *pp)
+> >
+> >         if (IS_ENABLED(CONFIG_PCI_MSI))
+> >                 exynos_pcie_msi_init(pp);
+> > -
+> > -       return;
+> >  }
+> >
+> >  static inline void exynos_pcie_readl_rc(struct pcie_port *pp,
+> > @@ -448,7 +442,6 @@ static inline void exynos_pcie_readl_rc(struct pcie_port *pp,
+> >         exynos_pcie_sideband_dbi_r_mode(pp, true);
+> >         *val = readl(dbi_base);
+> >         exynos_pcie_sideband_dbi_r_mode(pp, false);
+> > -       return;
+> >  }
+> >
+> >  static inline void exynos_pcie_writel_rc(struct pcie_port *pp,
+> > @@ -457,7 +450,6 @@ static inline void exynos_pcie_writel_rc(struct pcie_port *pp,
+> >         exynos_pcie_sideband_dbi_w_mode(pp, true);
+> >         writel(val, dbi_base);
+> >         exynos_pcie_sideband_dbi_w_mode(pp, false);
+> > -       return;
+> >  }
+> >
+> >  static int exynos_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+> > --
+> > 1.7.9.5
+> >
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
