@@ -1,69 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:38922 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933540AbaKMSKE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 13:10:04 -0500
-Received: by mail-pd0-f171.google.com with SMTP id r10so15010064pdi.30
-        for <linux-pci@vger.kernel.org>; Thu, 13 Nov 2014 10:10:03 -0800 (PST)
-Date: Thu, 13 Nov 2014 11:09:59 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: suravee.suthikulpanit@amd.com
-Cc: liviu.dudau@arm.com, lorenzo.pieralisi@arm.com,
-	will.deacon@arm.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: Re: [PATCH V2 0/2] PCI: generic: Assiging msi-controller to PCI
- hostbridge
-Message-ID: <20141113180959.GR5064@google.com>
-References: <1415733454-24322-1-git-send-email-suravee.suthikulpanit@amd.com>
+Received: from mout.kundenserver.de ([212.227.17.10]:62857 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751116AbaKMRJZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 12:09:25 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Minghuan Lian <Minghuan.Lian@freescale.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>
+Subject: Re: [PATCH v6] PCI: Layerscape: Add Layerscape PCIe driver
+Date: Thu, 13 Nov 2014 18:08:54 +0100
+Message-ID: <1504614.TjszoPYyHM@wuerfel>
+In-Reply-To: <20141113163833.GA5064@google.com>
+References: <1415177111-28730-1-git-send-email-Minghuan.Lian@freescale.com> <20141113163833.GA5064@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415733454-24322-1-git-send-email-suravee.suthikulpanit@amd.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Yijing]
-
-On Tue, Nov 11, 2014 at 01:17:32PM -0600, suravee.suthikulpanit@amd.com wrote:
-> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+On Thursday 13 November 2014 09:38:33 Bjorn Helgaas wrote:
+> On Wed, Nov 05, 2014 at 04:45:11PM +0800, Minghuan Lian wrote:
+> > Add support for Freescale Layerscape PCIe controller. This driver
+> > re-uses the designware core code.
+> > 
+> > Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
 > 
-> This patch set introduces a new callback function to allow PCI host drivers
-> to specify MSI controller to be used for the child buses / devices.
-
-Hi Suravee, 
-
-As Srikanth mentioned, there's a series of MSI-related stuff from Yijing.
-I recently put them on my pci/msi branch, and they overlap a bit with
-what you're doing here.
-
-So I'll drop these for now.  Maybe there's a way you can accomplish what
-you need by implementing pcibios_msi_controller(), which Yijing added?
-
-Also note that "msi-controller" is already being used in device tree (see
-Documentation/devicetree/bindings/interrupt-controller/marvell), so maybe
-you can do the name.
-
-Bjorn
-
-> This is reabased from:
->     git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/host-generic
+> Applied with Arnd's ack to pci/host-layerscape for v3.19, thanks!
 > 
-> Changes from V1:
->     - Adding "msi-parent" device tree binding in documentation.
->     - Rebase the patch to get rid of artifacts from other precursor patch
->       accidently applied to the developement tree. This should now apply cleanly
->       to the pci/host-generic branch.
-> 
-> Suravee Suthikulpanit (2):
->   PCI: Add new pci_ops for setting MSI parent for PCI bus
->   PCI: generic: Add set_msi_parent callback
-> 
->  Documentation/devicetree/bindings/pci/host-generic-pci.txt |  3 +++
->  drivers/pci/host/pci-host-generic.c                        | 13 +++++++++++++
->  drivers/pci/probe.c                                        |  3 +++
->  include/linux/pci.h                                        |  1 +
->  4 files changed, 20 insertions(+)
-> 
-> -- 
-> 1.9.3
-> 
+
+the build bot just came back with an error:
+
+  make.cross ARCH=xtensa 
+
+All error/warnings:
+
+>> drivers/pci/host/pcie-designware.c:168:52: warning: 'struct pci_sys_data' declared inside parameter list
+    static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+                                                       ^
+>> drivers/pci/host/pcie-designware.c:168:52: warning: its scope is only this definition or declaration, which is probably not what you want
+   drivers/pci/host/pcie-designware.c: In function 'sys_to_pcie':
+   drivers/pci/host/pcie-designware.c:170:12: error: dereferencing pointer to incomplete type
+     return sys->private_data;
+               ^
+   drivers/pci/host/pcie-designware.c: At top level:
+>> drivers/pci/host/pcie-designware.c:397:45: warning: 'struct pci_sys_data' declared inside parameter list
+
+
+The new Kconfig symbol evidently needs a 'depends on ARM'.
+
+	Arnd
