@@ -1,127 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:50526 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751612AbaKBPlz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Nov 2014 10:41:55 -0500
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 3 Nov 2014 01:41:54 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 361A8357804C
-	for <linux-pci@vger.kernel.org>; Mon,  3 Nov 2014 02:41:51 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sA2FfnTi35455038
-	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:41:49 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sA2Ffoji028094
-	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:41:50 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V9 05/18] powerpc/pci: Add PCI resource alignment documentation
-Date: Sun,  2 Nov 2014 23:41:21 +0800
-Message-Id: <1414942894-17034-6-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:56515 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932652AbaKMM4z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 07:56:55 -0500
+Message-ID: <5464AA4A.6020508@huawei.com>
+Date: Thu, 13 Nov 2014 20:55:38 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	"Borislav Petkov" <bp@alien8.de>, "H. Peter Anvin" <hpa@zytor.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>
+CC: Tony Luck <tony.luck@intel.com>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [Patch V1 0/6] Refine generic/PCI MSI irqodmian interfaces
+References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com> <5464A3F8.1000807@huawei.com> <5464A68E.4010004@linux.intel.com>
+In-Reply-To: <5464A68E.4010004@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order to enable SRIOV on PowerNV platform, the PF's IOV BAR needs to be
-adjusted:
-    1. size expaned
-    2. aligned to M64BT size
+On 2014/11/13 20:39, Jiang Liu wrote:
+> 
+> 
+> On 2014/11/13 20:28, Yijing Wang wrote:
+>> On 2014/11/13 19:43, Jiang Liu wrote:
+>>> This patch set is based on tip/irq/irqdomain and tries to refine
+>>> interfaces to support irqdomain for generic MSI and PCI MSI.
+>>>
+>>> Patch 1 is just minor fixes for tip/irq/irqdomain.
+>>>
+>>> Patch 2 introduces some helpers to hide struct msi_desc implementation
+>>> details, so later we could move msi_list from struct pci_dev into
+>>> struct device to enable generic MSI support.
+>>
+>> Hi Gerry,
+>>    I tried to move msi info(eg. msi_list) into struct device, but I found
+>> DMAR fault interrupt is initialized before the driver core init. And I don't
+>> know whether there are other devices like ARM consolidator(introduced in GIC v3)
+>> need to be initialized before driver core. What do you think about this ?
+> Hi Yijing,
+> 	DMAR interrupt doesn't make use of msi_desc, so has no
+> dependency on msi_list.
 
-This patch documents this change on the reason and how.
+OK, I thought we could use msi_desc to describe DMAR/HPET irq, so they could
+share the mask/unmask, write_msg/read_etc.. But maybe it's not a right direction. :)
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- .../powerpc/pci_iov_resource_on_powernv.txt        |   75 ++++++++++++++++++++
- 1 file changed, 75 insertions(+)
- create mode 100644 Documentation/powerpc/pci_iov_resource_on_powernv.txt
+> 	Actually there are two levels of generic MSI sharing. The first
+> level is to share common irq_chip/irqdomain code, such as HPET, DMAR and
+> HT_IRQ. The second level is to share msi_desc, such as some device
+> on ARM side as you have mentioned.
+> 	With this patch set applied, we achieve level one sharing. For
+> level two sharing, we need to move msi_list into struct device, refactor
+> struct msi_desc, and provide a generic pci_enable_msix_range alike
+> user interfaces. I'm still working on this part, so we could cooperate
+> with each other.
 
-diff --git a/Documentation/powerpc/pci_iov_resource_on_powernv.txt b/Documentation/powerpc/pci_iov_resource_on_powernv.txt
-new file mode 100644
-index 0000000..8b3f346
---- /dev/null
-+++ b/Documentation/powerpc/pci_iov_resource_on_powernv.txt
-@@ -0,0 +1,75 @@
-+Wei Yang <weiyang@linux.vnet.ibm.com>
-+26 Aug 2014
-+
-+This document describes the requirement from hardware for PCI MMIO resource
-+sizing and assignment on PowerNV platform and how generic PCI code handle this
-+requirement.
-+
-+1. Hardware requirement on PowerNV platform
-+On PowerNV platform, IODA2 version, it has 16 M64 BARs, which is used to map
-+MMIO range to PE#. Each M64 BAR would cover one MMIO range and this range is
-+divided by *total_pe* number evenly with one piece corresponding to one PE.
-+
-+We decide to leverage this M64 BAR to map VFs to their individual PE, since
-+for SRIOV VFs their BAR share the same size.
-+
-+By doing so, it introduces another problem. The *total_pe* number usually is
-+bigger than the total_VFs. If we map one IOV BAR directly to one M64 BAR, some
-+part in M64 BAR will map to another devices MMIO range.
-+
-+     0      1                     total_VFs - 1
-+     +------+------+-     -+------+------+
-+     |      |      |  ...  |      |      |
-+     +------+------+-     -+------+------+
-+
-+                           IOV BAR
-+     0      1                     total_VFs - 1          total_pe - 1
-+     +------+------+-     -+------+------+-      -+------+------+
-+     |      |      |  ...  |      |      |   ...  |      |      |
-+     +------+------+-     -+------+------+-      -+------+------+
-+
-+                           M64 BAR
-+
-+		Figure 1.0 Direct map IOV BAR
-+
-+As Figure 1.0 indicates, the range [total_VFs, total_pe - 1] in M64 BAR may
-+map to some MMIO range on other device.
-+
-+The solution currently we have is to expand the IOV BAR to *total_pe* number.
-+
-+     0      1                     total_VFs - 1          total_pe - 1
-+     +------+------+-     -+------+------+-      -+------+------+
-+     |      |      |  ...  |      |      |   ...  |      |      |
-+     +------+------+-     -+------+------+-      -+------+------+
-+
-+                           IOV BAR
-+     0      1                     total_VFs - 1          total_pe - 1
-+     +------+------+-     -+------+------+-      -+------+------+
-+     |      |      |  ...  |      |      |   ...  |      |      |
-+     +------+------+-     -+------+------+-      -+------+------+
-+
-+                           M64 BAR
-+
-+		Figure 1.1 Map expanded IOV BAR
-+
-+By expanding the IOV BAR, this ensures the whole M64 range will not effect
-+others.
-+
-+2. How generic PCI code handle it
-+Till now, it looks good to make it work, while another problem comes. The M64
-+BAR start address needs to be size aligned, while the original generic PCI
-+code assign the IOV BAR with individual VF BAR size aligned.
-+
-+Since usually one SRIOV VF BAR size is the same as its PF size, the original
-+generic PCI code will not count in the IOV BAR alignment. (The alignment is
-+the same as its PF.) With the change from PowerNV platform, this changes. The
-+alignment of the IOV BAR is now the total size, then we need to count in it.
-+
-+From:
-+	alignment(IOV BAR) = size(VF BAR) = size(PF BAR)
-+To:
-+	alignment(IOV BAR) = size(IOV BAR)
-+
-+In commit(PCI: Take additional IOV BAR alignment in sizing and assigning), it
-+has add_align to track the alignment from IOV BAR and use it to meet the
-+requirement.
+That's good :)
+
+
+> Thanks!
+> Gerry
+> 
+>>
+>> Thanks!
+>> Yijing.
+>>
+>>>
+>>> Patch 3 introduces msi_domain_{alloc|free}_irqs() which generalize
+>>> pci_msi_domain_alloc_irqs() to support generic MSI.
+>>>
+>>> Patch 4 introduces default data structures and callback implementations
+>>> to support msi_domain_alloc_irqs(), so reduce burden on generic MSI
+>>> users.
+>>>
+>>> Patch 5 converts PCI MSI to use generic MSI interfaces, and also
+>>> implement default callbacks for PCI MSI.
+>>>
+>>> Patch 6 introduces a mechanism to replace arch_setup_msi_irq()/
+>>> arch_setup_msi_irqs()/arch_teardown_msi_irq()/arch_teardown_msi_irqs().
+>>>
+>>> With this patch set applied, the generic MSI and PCI MSI interfaces
+>>> are much easier to use. For extreme case, you only need to define
+>>> a "struct msi_domain_info" and don't need to implement any callbacks,
+>>> just using the default callbacks is OK:)
+>>>
+>>> This patch set is also a preparation for:
+>>> 1) Kill all weak functions in drivers/pci/msi.c
+>>> 2) Implement support for non-PCI-compliant MSI device
+>>>
+>>> It has been tested on x86 platforms, comments are welcomed!
+>>>
+>>> Jiang Liu (6):
+>>>   PCI, MSI: Fix errors caused by commit e5f1a59c4e12
+>>>   PCI, MSI: Introduce helpers to hide struct msi_desc implemenation
+>>>     details
+>>>   genirq: Introduce msi_domain_{alloc|free}_irqs()
+>>>   genirq: Provide default callbacks for msi_domain_ops
+>>>   PCI, MSI: Refine irqdomain interfaces to simplify its usage
+>>>   PCI, MSI: Provide mechanism to alloc/free MSI/MSIX interrupt from
+>>>     irqdomain
+>>>
+>>>  drivers/pci/msi.c   |  170 ++++++++++++++++++++++++++++++++++++++++-----------
+>>>  include/linux/msi.h |   90 ++++++++++++++++++++++++---
+>>>  kernel/irq/msi.c    |  150 ++++++++++++++++++++++++++++++++++++++++++++-
+>>>  3 files changed, 366 insertions(+), 44 deletions(-)
+>>>
+>>
+>>
+> 
+> .
+> 
+
+
 -- 
-1.7.9.5
+Thanks!
+Yijing
 
