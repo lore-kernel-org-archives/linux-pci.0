@@ -1,69 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:56850 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933199AbaKMREU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 12:04:20 -0500
-Received: by mail-pa0-f43.google.com with SMTP id eu11so15610434pac.16
-        for <linux-pci@vger.kernel.org>; Thu, 13 Nov 2014 09:04:19 -0800 (PST)
-Date: Thu, 13 Nov 2014 10:04:15 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Duc Dang <dhdang@apm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <liviu.dudau@arm.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	patches@apm.com, jcm@redhat.com, Tanmay Inamdar <tinamdar@apm.com>
-Subject: Re: [PATCH 1/1] PCI: X-Gene: assign resource to bus before adding
- new devices
-Message-ID: <20141113170415.GF5064@google.com>
-References: <1415322858-4318-1-git-send-email-dhdang@apm.com>
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:64459 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932327AbaKMQFO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 11:05:14 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415322858-4318-1-git-send-email-dhdang@apm.com>
+In-Reply-To: <1415631509.20340.5.camel@pengutronix.de>
+References: <1415287400-30426-1-git-send-email-l.stach@pengutronix.de>
+ <CAL_JsqKfV3aPuYxK2E8tS1fDjhpJFknqv1nHP+9NYHAfs_owYg@mail.gmail.com> <1415631509.20340.5.camel@pengutronix.de>
+From: Rob Herring <robherring2@gmail.com>
+Date: Thu, 13 Nov 2014 10:04:51 -0600
+Message-ID: <CAL_Jsq+oygs12ih0SttbGJYyDTZR3f8-w6egNQuQ+_zwiNxxRg@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: add missing DT binding for linux,pci-domain property
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 06, 2014 at 05:14:18PM -0800, Duc Dang wrote:
-> X-Gene PCIE driver currently depends on Liviu Dudau's patch
-> https://lkml.org/lkml/2014/9/30/166 in order to assign resource
-> to root bus and endpoint devices. The patch was dropped because
-> it will break x86, powerpc and probably others. So X-Gene PCIE
-> host functionality is currently broken.
-> 
-> This patch adds function calls to create and scan root_bus as well
-> as assign unassigned bus resource (similar to Liviu Dudau's patch
-> above). This will help resolve the dependency to Liviu Dudau's patch
-> and make X-Gene PCIE work in latest open-source kernel.
-> 
-> Signed-off-by: Duc Dang <dhdang@apm.com>
-> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+On Mon, Nov 10, 2014 at 8:58 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> Am Donnerstag, den 06.11.2014, 13:49 -0600 schrieb Rob Herring:
+>> On Thu, Nov 6, 2014 at 9:23 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+>> > This property was added by 41e5c0f81d3e
+>> > (of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr())
+>> > without the required binding documentation. As this property
+>> > will be supported by a number of host bridge drivers going forward,
+>> > add it to the common PCI binding doc.
+>> >
+>> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+>> > ---
+>> > This is a non-critical fix, but may still qualify for 3.18-rc as
+>> > the property was added in this release cycle.
+>>
+>> Agreed.
+>>
+>> Acked-by: Rob Herring <robh@kernel.org>
+>>
+>
+> So how should we proceed here? Are you going to pick it up or should
+> Bjorn route this through the PCI tree?
 
-I applied this to for-linus for v3.18, because it fixes a driver we added
-in the v3.18 merge window.  Thanks!
+I believe Bjorn said he would pick this up since he merged the rest.
 
-> ---
->  drivers/pci/host/pci-xgene.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-> index 9ecabfa..2988fe1 100644
-> --- a/drivers/pci/host/pci-xgene.c
-> +++ b/drivers/pci/host/pci-xgene.c
-> @@ -631,10 +631,15 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
->  	if (ret)
->  		return ret;
->  
-> -	bus = pci_scan_root_bus(&pdev->dev, 0, &xgene_pcie_ops, port, &res);
-> +	bus = pci_create_root_bus(&pdev->dev, 0,
-> +					&xgene_pcie_ops, port, &res);
->  	if (!bus)
->  		return -ENOMEM;
->  
-> +	pci_scan_child_bus(bus);
-> +	pci_assign_unassigned_bus_resources(bus);
-> +	pci_bus_add_devices(bus);
-> +
->  	platform_set_drvdata(pdev, port);
->  	return 0;
->  }
-> -- 
-> 1.8.2.1
-> 
+Rob
+
+>
+>> >
+>> > v2:
+>> > - emphasize that the property must be present and unique systemwide
+>> >   if used
+>> > ---
+>> >  Documentation/devicetree/bindings/pci/pci.txt | 11 +++++++++++
+>> >  1 file changed, 11 insertions(+)
+>> >
+>> > diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
+>> > index 41aeed38926d..68c364e2f5e5 100644
+>> > --- a/Documentation/devicetree/bindings/pci/pci.txt
+>> > +++ b/Documentation/devicetree/bindings/pci/pci.txt
+>> > @@ -7,3 +7,14 @@ And for the interrupt mapping part:
+>> >
+>> >  Open Firmware Recommended Practice: Interrupt Mapping
+>> >  http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
+>> > +
+>> > +Additionally to the properties specified in the above standards a host bridge
+>> > +driver implementation may support the following properties:
+>> > +
+>> > +- linux,pci-domain:
+>> > +   If present this property assigns a fixed PCI domain number to a host bridge,
+>> > +   otherwise an unstable (across boots) unique number will be assigned.
+>> > +   It is required to either not set this property at all or set it for all
+>> > +   host bridges in the system, otherwise potentially conflicting domain numbers
+>> > +   may be assigned to root buses behind different host bridges. The domain
+>> > +   number for each host bridge in the system must be unique.
+>> > --
+>> > 2.1.1
+>> >
+>
+> --
+> Pengutronix e.K.             | Lucas Stach                 |
+> Industrial Linux Solutions   | http://www.pengutronix.de/  |
+>
