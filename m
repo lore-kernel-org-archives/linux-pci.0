@@ -1,354 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:41464 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753969AbaKMQik (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 11:38:40 -0500
-Received: by mail-ie0-f176.google.com with SMTP id rd18so16188331iec.35
-        for <linux-pci@vger.kernel.org>; Thu, 13 Nov 2014 08:38:39 -0800 (PST)
-Date: Thu, 13 Nov 2014 09:38:33 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Minghuan Lian <Minghuan.Lian@freescale.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v6] PCI: Layerscape: Add Layerscape PCIe driver
-Message-ID: <20141113163833.GA5064@google.com>
-References: <1415177111-28730-1-git-send-email-Minghuan.Lian@freescale.com>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:47885 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750865AbaKMF3i (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 00:29:38 -0500
+Received: by mail-ie0-f174.google.com with SMTP id x19so14699595ier.5
+        for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2014 21:29:38 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415177111-28730-1-git-send-email-Minghuan.Lian@freescale.com>
+In-Reply-To: <CAE9FiQU-8dusyj6BAKV0w2C_xW6w6fO4vsyAca-TdoRY6xQhVA@mail.gmail.com>
+References: <bug-88131-41252@https.bugzilla.kernel.org/>
+	<CAErSpo6Bfya60UMeN3cxSH3A+cesAAgPuZEb6b6FHnVBFsOxfA@mail.gmail.com>
+	<CAE9FiQU-8dusyj6BAKV0w2C_xW6w6fO4vsyAca-TdoRY6xQhVA@mail.gmail.com>
+Date: Thu, 13 Nov 2014 13:29:38 +0800
+Message-ID: <CALSz7m2w8DuDGkp-uMDka16HZY7R+B8yjuW5G2==xmbk0NOxpQ@mail.gmail.com>
+Subject: Re: [Bug 88131] New: PCI device intel ixgbe and xhci with 64-bit bar
+ address can NOT work on x86_32 PAE kernel.
+From: Aaron Ma <mapengyu@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 05, 2014 at 04:45:11PM +0800, Minghuan Lian wrote:
-> Add support for Freescale Layerscape PCIe controller. This driver
-> re-uses the designware core code.
-> 
-> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+kernel config is uploaded in https://bugzilla.kernel.org/show_bug.cgi?id=88151
 
-Applied with Arnd's ack to pci/host-layerscape for v3.19, thanks!
+The domain is in USB.
 
-> ---
-> Based on pci-next branch
-> 
-> Change log:
-> v6:
-> 1. remove MSI support. MSI driver will be implemented in a separate file
-> 2. remove bitrev() because SCFG is set bit reverse mode as default.
-> 
-> v5:
-> 1. Add MAINTAINERS information
-> 2. Remove unnecessary NULL pointer check
-> 3. Use dev_dbg instead of dev_err in ls_pcie_msi_irq_handler() 
-> 
-> v4:
-> 1. Add 'depends on OF' to Kconfig 
-> 
-> v3:
-> 1. Add prefechable mem region and adjust mem region
-> 2. Rename 'pcie-scfg' to 'fsl,pcie-scfg'
-> 3. Change MSI interrupt handler
-> 4. Use module_platform_driver_probe instead of subsys_initcall
-> 
-> v2:
-> 1. Add pcie-scfg to link scfg device node and remove "fsl, ls-pcie" compatible
-> 2. Use regmap API to access scfg.
-> 3. remove ls1021 PCI device ID.
-> 4. remove unused irq pme_irq and ls_pcie_list.
-> 5. Do not set scfg bit reverse mode
-> 
->  .../devicetree/bindings/pci/layerscape-pci.txt     |  42 +++++
->  MAINTAINERS                                        |  10 ++
->  drivers/pci/host/Kconfig                           |   8 +
->  drivers/pci/host/Makefile                          |   1 +
->  drivers/pci/host/pci-layerscape.c                  | 179 +++++++++++++++++++++
->  5 files changed, 240 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/layerscape-pci.txt
->  create mode 100644 drivers/pci/host/pci-layerscape.c
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-> new file mode 100644
-> index 0000000..40749eb
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-> @@ -0,0 +1,42 @@
-> +Freescale Layerscape PCIe controller
-> +
-> +This PCIe host controller is based on the Synopsis Designware PCIe IP
-> +and thus inherits all the common properties defined in designware-pcie.txt.
-> +
-> +Required properties:
-> +- compatible: should contain the platform identifier such as "fsl,ls1021a-pcie"
-> +- reg: base addresses and lengths of the PCIe controller
-> +- interrupts: A list of interrupt outputs of the controller. Must contain an
-> +  entry for each entry in the interrupt-names property.
-> +- interrupt-names: Must include the following entries:
-> +  "intr": The interrupt that is asserted for controller interrupts
-> +- fsl,pcie-scfg: Must include two entries.
-> +  The first entry must be a link to the SCFG device node
-> +  The second entry must be '0' or '1' based on physical PCIe controller index.
-> +  used to get SCFG PEXN registers
-> +
-> +Example:
-> +
-> +	pcie@3400000 {
-> +		compatible = "fsl,ls1021a-pcie", "snps,dw-pcie";
-> +		reg = <0x00 0x03400000 0x0 0x00010000   /* controller registers */
-> +		       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
-> +		reg-names = "regs", "config";
-> +		interrupts = <GIC_SPI 177 IRQ_TYPE_LEVEL_HIGH>; /* controller interrupt */
-> +		interrupt-names = "intr";
-> +		fsl,pcie-scfg = <&scfg 0>;
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		device_type = "pci";
-> +		num-lanes = <4>;
-> +		bus-range = <0x0 0xff>;
-> +		ranges = <0x81000000 0x0 0x00000000 0x40 0x00010000 0x0 0x00010000   /* downstream I/O */
-> +			  0xc2000000 0x0 0x20000000 0x40 0x20000000 0x0 0x20000000   /* prefetchable memory */
-> +			  0x82000000 0x0 0x40000000 0x40 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
-> +		#interrupt-cells = <1>;
-> +		interrupt-map-mask = <0 0 0 7>;
-> +		interrupt-map = <0000 0 0 1 &gic GIC_SPI 91  IRQ_TYPE_LEVEL_HIGH>,
-> +				<0000 0 0 2 &gic GIC_SPI 188 IRQ_TYPE_LEVEL_HIGH>,
-> +				<0000 0 0 3 &gic GIC_SPI 190 IRQ_TYPE_LEVEL_HIGH>,
-> +				<0000 0 0 4 &gic GIC_SPI 192 IRQ_TYPE_LEVEL_HIGH>;
-> +	};
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index a20df9b..7853d1b 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -6983,6 +6983,16 @@ S:	Maintained
->  F:	Documentation/devicetree/bindings/pci/xgene-pci.txt
->  F:	drivers/pci/host/pci-xgene.c
->  
-> +PCIe DRIVER FOR FREESCALE LAYERSCAPE
-> +M:	Minghuan Lian <minghuan.Lian@freescale.com>
-> +M:	Mingkai Hu <mingkai.hu@freescale.com>
-> +M:	Roy Zang <tie-fei.zang@freescale.com>
-> +L:	linuxppc-dev@lists.ozlabs.org
-> +L:	linux-pci@vger.kernel.org
-> +L:	linux-arm-kernel@lists.infradead.org
-> +S:	Maintained
-> +F:	drivers/pci/host/pci-layerscape.c
-> +
->  PCI DRIVER FOR IMX6
->  M:	Richard Zhu <r65037@freescale.com>
->  M:	Lucas Stach <l.stach@pengutronix.de>
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 3dc25fa..8ac69aa 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -91,4 +91,12 @@ config PCI_XGENE
->  	  There are 5 internal PCIe ports available. Each port is GEN3 capable
->  	  and have varied lanes from x1 to x8.
->  
-> +config PCI_LAYERSCAPE
-> +	bool "Freescale Layerscape PCIe controller"
-> +	depends on OF
-> +	select PCIE_DW
-> +	select MFD_SYSCON
-> +	help
-> +	  Say Y here if you want PCIe controller support on Layerscape SoCs.
-> +
->  endmenu
-> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-> index 26b3461..44c2699 100644
-> --- a/drivers/pci/host/Makefile
-> +++ b/drivers/pci/host/Makefile
-> @@ -11,3 +11,4 @@ obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
->  obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
->  obj-$(CONFIG_PCIE_XILINX) += pcie-xilinx.o
->  obj-$(CONFIG_PCI_XGENE) += pci-xgene.o
-> +obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
-> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-> new file mode 100644
-> index 0000000..6697b1a
-> --- /dev/null
-> +++ b/drivers/pci/host/pci-layerscape.c
-> @@ -0,0 +1,179 @@
-> +/*
-> + * PCIe host controller driver for Freescale Layerscape SoCs
-> + *
-> + * Copyright (C) 2014 Freescale Semiconductor.
-> + *
-> +  * Author: Minghuan Lian <Minghuan.Lian@freescale.com>
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License version 2 as
-> + * published by the Free Software Foundation.
-> + */
-> +
-> +#include <linux/kernel.h>
-> +#include <linux/delay.h>
-> +#include <linux/interrupt.h>
-> +#include <linux/module.h>
-> +#include <linux/of_pci.h>
-> +#include <linux/of_platform.h>
-> +#include <linux/of_irq.h>
-> +#include <linux/of_address.h>
-> +#include <linux/pci.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/resource.h>
-> +#include <linux/mfd/syscon.h>
-> +#include <linux/regmap.h>
-> +
-> +#include "pcie-designware.h"
-> +
-> +/* PEX1/2 Misc Ports Status Register */
-> +#define SCFG_PEXMSCPORTSR(pex_idx)	(0x94 + (pex_idx) * 4)
-> +#define LTSSM_STATE_SHIFT	20
-> +#define LTSSM_STATE_MASK	0x3f
-> +#define LTSSM_PCIE_L0		0x11 /* L0 state */
-> +
-> +/* Symbol Timer Register and Filter Mask Register 1 */
-> +#define PCIE_STRFMR1 0x71c
-> +
-> +struct ls_pcie {
-> +	struct list_head node;
-> +	struct device *dev;
-> +	struct pci_bus *bus;
-> +	void __iomem *dbi;
-> +	struct regmap *scfg;
-> +	struct pcie_port pp;
-> +	int index;
-> +	int msi_irq;
-> +};
-> +
-> +#define to_ls_pcie(x)	container_of(x, struct ls_pcie, pp)
-> +
-> +static int ls_pcie_link_up(struct pcie_port *pp)
-> +{
-> +	u32 state;
-> +	struct ls_pcie *pcie = to_ls_pcie(pp);
-> +
-> +	regmap_read(pcie->scfg, SCFG_PEXMSCPORTSR(pcie->index), &state);
-> +	state = (state >> LTSSM_STATE_SHIFT) & LTSSM_STATE_MASK;
-> +
-> +	if (state < LTSSM_PCIE_L0)
-> +		return 0;
-> +
-> +	return 1;
-> +}
-> +
-> +static void ls_pcie_host_init(struct pcie_port *pp)
-> +{
-> +	struct ls_pcie *pcie = to_ls_pcie(pp);
-> +	int count = 0;
-> +	u32 val;
-> +
-> +	dw_pcie_setup_rc(pp);
-> +
-> +	while (!ls_pcie_link_up(pp)) {
-> +		usleep_range(100, 1000);
-> +		count++;
-> +		if (count >= 200) {
-> +			dev_err(pp->dev, "phy link never came up\n");
-> +			return;
-> +		}
-> +	}
-> +
-> +	/*
-> +	 * LS1021A Workaround for internal TKT228622
-> +	 * to fix the INTx hang issue
-> +	 */
-> +	val = ioread32(pcie->dbi + PCIE_STRFMR1);
-> +	val &= 0xffff;
-> +	iowrite32(val, pcie->dbi + PCIE_STRFMR1);
-> +}
-> +
-> +static struct pcie_host_ops ls_pcie_host_ops = {
-> +	.link_up = ls_pcie_link_up,
-> +	.host_init = ls_pcie_host_init,
-> +};
-> +
-> +static int ls_add_pcie_port(struct ls_pcie *pcie)
-> +{
-> +	struct pcie_port *pp;
-> +	int ret;
-> +
-> +	pp = &pcie->pp;
-> +	pp->dev = pcie->dev;
-> +	pp->dbi_base = pcie->dbi;
-> +	pp->root_bus_nr = -1;
-> +	pp->ops = &ls_pcie_host_ops;
-> +
-> +	ret = dw_pcie_host_init(pp);
-> +	if (ret) {
-> +		dev_err(pp->dev, "failed to initialize host\n");
-> +		return ret;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static int __init ls_pcie_probe(struct platform_device *pdev)
-> +{
-> +	struct ls_pcie *pcie;
-> +	struct resource *dbi_base;
-> +	u32 index[2];
-> +	int ret;
-> +
-> +	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
-> +	if (!pcie)
-> +		return -ENOMEM;
-> +
-> +	pcie->dev = &pdev->dev;
-> +
-> +	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "regs");
-> +	if (!dbi_base) {
-> +		dev_err(&pdev->dev, "missing *regs* space\n");
-> +		return -ENODEV;
-> +	}
-> +
-> +	pcie->dbi = devm_ioremap_resource(&pdev->dev, dbi_base);
-> +	if (IS_ERR(pcie->dbi))
-> +		return PTR_ERR(pcie->dbi);
-> +
-> +	pcie->scfg = syscon_regmap_lookup_by_phandle(pdev->dev.of_node,
-> +						     "fsl,pcie-scfg");
-> +	if (IS_ERR(pcie->scfg)) {
-> +		dev_err(&pdev->dev, "No syscfg phandle specified\n");
-> +		return PTR_ERR(pcie->scfg);
-> +	}
-> +
-> +	ret = of_property_read_u32_array(pdev->dev.of_node,
-> +					 "fsl,pcie-scfg", index, 2);
-> +	if (ret)
-> +		return ret;
-> +	pcie->index = index[1];
-> +
-> +	ret = ls_add_pcie_port(pcie);
-> +	if (ret < 0)
-> +		return ret;
-> +
-> +	platform_set_drvdata(pdev, pcie);
-> +
-> +	return 0;
-> +}
-> +
-> +static const struct of_device_id ls_pcie_of_match[] = {
-> +	{ .compatible = "fsl,ls1021a-pcie" },
-> +	{ },
-> +};
-> +MODULE_DEVICE_TABLE(of, ls_pcie_of_match);
-> +
-> +static struct platform_driver ls_pcie_driver = {
-> +	.driver = {
-> +		.name = "layerscape-pcie",
-> +		.owner = THIS_MODULE,
-> +		.of_match_table = ls_pcie_of_match,
-> +	},
-> +};
-> +
-> +module_platform_driver_probe(ls_pcie_driver, ls_pcie_probe);
-> +
-> +MODULE_AUTHOR("Minghuan Lian <Minghuan.Lian@freescale.com>");
-> +MODULE_DESCRIPTION("Freescale Layerscape PCIe host controller driver");
-> +MODULE_LICENSE("GPL v2");
-> -- 
-> 1.9.1
-> 
+cc Bjorn and ml.
+
+Thanks,
+Pengyu
+
+On Thu, Nov 13, 2014 at 12:32 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Nov 12, 2014 at 8:14 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> [+cc linux-pci, Yinghai]
+>>
+>> Thanks for the report!
+>>
+>> On Wed, Nov 12, 2014 at 8:57 PM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
+>>> https://bugzilla.kernel.org/show_bug.cgi?id=88131
+>>>
+>>>             Bug ID: 88131
+>>>            Summary: PCI device intel ixgbe and xhci with 64-bit bar
+>>>                     address can NOT work on x86_32 PAE kernel.
+>>>            Product: Drivers
+>>>            Version: 2.5
+>>>     Kernel Version: 3.18-rc4
+>>>           Hardware: i386
+>>>                 OS: Linux
+>>>               Tree: Mainline
+>>>             Status: NEW
+>>>           Severity: normal
+>>>           Priority: P1
+>>>          Component: PCI
+>>>           Assignee: drivers_pci@kernel-bugs.osdl.org
+>>>           Reporter: mapengyu@gmail.com
+>>>         Regression: No
+>>>
+>>> Created attachment 157441
+>>>   --> https://bugzilla.kernel.org/attachment.cgi?id=157441&action=edit
+>>> dmesg
+>>>
+>>> PCI device intel ixgbe and xhci with 64-bit bar address can NOT work on x86_32
+>>> kernel.
+>>>
+>>> The bar0 base address of intel ixgbe ethernet card and xhci are above 4G.
+>>> The commit d56dbf5bab8ce44c5407bb099f71987f58d18bb4 try to map the resource
+>>> above 4G.
+>>> Enabled PAE and HIGHMEM64G, it should support 64-bit BAR, but failed on high
+>>> bar address.
+>>
+>> Can you also attach your .config to the bugzilla?
+>>
+>> Is this a regression?  Did it work correctly before d56dbf5bab8c
+>> ("PCI: Allocate 64-bit BARs above 4G when possible")?
+>>
+>> I assume this is the problem you're seeing (for igbe):
+>
+> This is some kind of bug that is uncovered by that commit.
+>
+> I already have two patches for ixgbe one.
+>
+> but xhci could be different problem.
+>
+> Aaron, can you split the bug to two ?
+> one for ixgbe and one for xhci.
+>
+> Thanks
+>
+> Yinghai
