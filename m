@@ -1,119 +1,98 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
-Subject: [Patch Part3 v4 33/38] x86, irq: Move check of cfg->move_in_progress into send_cleanup_vector()
-Date: Tue, 25 Nov 2014 15:49:57 +0800
-Message-Id: <1416901802-24211-34-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:63656 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933449AbaKMRvk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 12:51:40 -0500
+Received: by mail-pa0-f44.google.com with SMTP id et14so922327pad.3
+        for <linux-pci@vger.kernel.org>; Thu, 13 Nov 2014 09:51:40 -0800 (PST)
+Date: Thu, 13 Nov 2014 10:51:36 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: exynos: Remove unnecessary return statement
+Message-ID: <20141113175136.GN5064@google.com>
+References: <002901cffe28$544504b0$fccf0e10$%han@samsung.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <002901cffe28$544504b0$fccf0e10$%han@samsung.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move check of cfg->move_in_progress into send_cleanup_vector() to
-prepare for simplifying struct irq_cfg.
+On Wed, Nov 12, 2014 at 12:25:38PM +0900, Jingoo Han wrote:
+> This patch fixes the following checkpatch warning.
+> 
+>   WARNING: void function return statements are not generally useful
+> 
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Tested-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/kernel/apic/vector.c       |   10 ++++++++--
- arch/x86/platform/uv/uv_irq.c       |    3 +--
- drivers/iommu/amd_iommu.c           |    3 +--
- drivers/iommu/intel_irq_remapping.c |    3 +--
- 4 files changed, 11 insertions(+), 8 deletions(-)
+Applied to pci/host-exynos for v3.19, thanks!
 
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 436a3400d9ac..a5ce2eef0528 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -495,7 +495,7 @@ static struct irq_chip lapic_controller = {
- };
- 
- #ifdef CONFIG_SMP
--void send_cleanup_vector(struct irq_cfg *cfg)
-+static void __send_cleanup_vector(struct irq_cfg *cfg)
- {
- 	cpumask_var_t cleanup_mask;
- 
-@@ -513,6 +513,12 @@ void send_cleanup_vector(struct irq_cfg *cfg)
- 	cfg->move_in_progress = 0;
- }
- 
-+void send_cleanup_vector(struct irq_cfg *cfg)
-+{
-+	if (cfg->move_in_progress)
-+		__send_cleanup_vector(cfg);
-+}
-+
- asmlinkage __visible void smp_irq_move_cleanup_interrupt(void)
- {
- 	unsigned vector, me;
-@@ -583,7 +589,7 @@ static void __irq_complete_move(struct irq_cfg *cfg, unsigned vector)
- 	me = smp_processor_id();
- 
- 	if (vector == cfg->vector && cpumask_test_cpu(me, cfg->domain))
--		send_cleanup_vector(cfg);
-+		__send_cleanup_vector(cfg);
- }
- 
- void irq_complete_move(struct irq_cfg *cfg)
-diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
-index c237ed34a498..b242e0aada19 100644
---- a/arch/x86/platform/uv/uv_irq.c
-+++ b/arch/x86/platform/uv/uv_irq.c
-@@ -63,8 +63,7 @@ uv_set_irq_affinity(struct irq_data *data, const struct cpumask *mask,
- 	ret = parent->chip->irq_set_affinity(parent, mask, force);
- 	if (ret >= 0) {
- 		uv_program_mmr(cfg, data->chip_data);
--		if (cfg->move_in_progress)
--			send_cleanup_vector(cfg);
-+		send_cleanup_vector(cfg);
- 	}
- 
- 	return ret;
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 2e8bbe5e164d..a5c59b434c77 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -4331,8 +4331,7 @@ static int amd_ir_set_affinity(struct irq_data *data,
- 	 * at the new destination. So, time to cleanup the previous
- 	 * vector allocation.
- 	 */
--	if (cfg->move_in_progress)
--		send_cleanup_vector(cfg);
-+	send_cleanup_vector(cfg);
- 
- 	return IRQ_SET_MASK_OK_DONE;
- }
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index acff8493191e..f6da3b2651c0 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -997,8 +997,7 @@ intel_ir_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 	 * at the new destination. So, time to cleanup the previous
- 	 * vector allocation.
- 	 */
--	if (cfg->move_in_progress)
--		send_cleanup_vector(cfg);
-+	send_cleanup_vector(cfg);
- 
- 	return IRQ_SET_MASK_OK_DONE;
- }
--- 
-1.7.10.4
-
+> ---
+>  drivers/pci/host/pci-exynos.c |    8 --------
+>  1 file changed, 8 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+> index c5d0ca3..41ab139 100644
+> --- a/drivers/pci/host/pci-exynos.c
+> +++ b/drivers/pci/host/pci-exynos.c
+> @@ -312,7 +312,6 @@ static void exynos_pcie_assert_reset(struct pcie_port *pp)
+>  	if (exynos_pcie->reset_gpio >= 0)
+>  		devm_gpio_request_one(pp->dev, exynos_pcie->reset_gpio,
+>  				GPIOF_OUT_INIT_HIGH, "RESET");
+> -	return;
+>  }
+>  
+>  static int exynos_pcie_establish_link(struct pcie_port *pp)
+> @@ -388,7 +387,6 @@ static void exynos_pcie_clear_irq_pulse(struct pcie_port *pp)
+>  
+>  	val = exynos_elb_readl(exynos_pcie, PCIE_IRQ_PULSE);
+>  	exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_PULSE);
+> -	return;
+>  }
+>  
+>  static void exynos_pcie_enable_irq_pulse(struct pcie_port *pp)
+> @@ -400,7 +398,6 @@ static void exynos_pcie_enable_irq_pulse(struct pcie_port *pp)
+>  	val = IRQ_INTA_ASSERT | IRQ_INTB_ASSERT |
+>  		IRQ_INTC_ASSERT | IRQ_INTD_ASSERT,
+>  	exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_EN_PULSE);
+> -	return;
+>  }
+>  
+>  static irqreturn_t exynos_pcie_irq_handler(int irq, void *arg)
+> @@ -429,7 +426,6 @@ static void exynos_pcie_msi_init(struct pcie_port *pp)
+>  	val = exynos_elb_readl(exynos_pcie, PCIE_IRQ_EN_LEVEL);
+>  	val |= IRQ_MSI_ENABLE;
+>  	exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_EN_LEVEL);
+> -	return;
+>  }
+>  
+>  static void exynos_pcie_enable_interrupts(struct pcie_port *pp)
+> @@ -438,8 +434,6 @@ static void exynos_pcie_enable_interrupts(struct pcie_port *pp)
+>  
+>  	if (IS_ENABLED(CONFIG_PCI_MSI))
+>  		exynos_pcie_msi_init(pp);
+> -
+> -	return;
+>  }
+>  
+>  static inline void exynos_pcie_readl_rc(struct pcie_port *pp,
+> @@ -448,7 +442,6 @@ static inline void exynos_pcie_readl_rc(struct pcie_port *pp,
+>  	exynos_pcie_sideband_dbi_r_mode(pp, true);
+>  	*val = readl(dbi_base);
+>  	exynos_pcie_sideband_dbi_r_mode(pp, false);
+> -	return;
+>  }
+>  
+>  static inline void exynos_pcie_writel_rc(struct pcie_port *pp,
+> @@ -457,7 +450,6 @@ static inline void exynos_pcie_writel_rc(struct pcie_port *pp,
+>  	exynos_pcie_sideband_dbi_w_mode(pp, true);
+>  	writel(val, dbi_base);
+>  	exynos_pcie_sideband_dbi_w_mode(pp, false);
+> -	return;
+>  }
+>  
+>  static int exynos_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+> -- 
+> 1.7.9.5
+> 
+> 
