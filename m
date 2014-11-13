@@ -1,280 +1,193 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:35032 "EHLO mga01.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:52142 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752432AbaKYHr5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 25 Nov 2014 02:47:57 -0500
+	id S932199AbaKMMle (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 13 Nov 2014 07:41:34 -0500
+Message-ID: <5464A6F6.3070506@linux.intel.com>
+Date: Thu, 13 Nov 2014 20:41:26 +0800
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+MIME-Version: 1.0
+To: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
 	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part3 v4 05/38] x86, irq: Implement callbacks to enable hierarchy irqdomain on IOAPICs
-Date: Tue, 25 Nov 2014 15:49:29 +0800
-Message-Id: <1416901802-24211-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Alexander Gordeev <agordeev@redhat.com>
+CC: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [Patch V1 3/6] genirq: Introduce msi_irq_domain_{alloc|free}_irqs()
+References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com> <1415879029-20098-5-git-send-email-jiang.liu@linux.intel.com> <5464A569.5060300@huawei.com>
+In-Reply-To: <5464A569.5060300@huawei.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement required callbacks to prepare for enabling hierarchy irqdomain
-on IOAPICs. Later we will clean up IOAPIC code a lot by using hierarchy
-irqdomain framework.
+On 2014/11/13 20:34, Yijing Wang wrote:
+> Gerry, this patch seems to be the same as last one.
+Do you means patch 6/6? They are different:)
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Tested-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/include/asm/io_apic.h |   10 +++
- arch/x86/kernel/apic/io_apic.c |  159 +++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 166 insertions(+), 3 deletions(-)
-
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index cdda8ed7592f..073b9c76abcb 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -96,6 +96,7 @@ struct IR_IO_APIC_route_entry {
- } __attribute__ ((packed));
- 
- struct irq_alloc_info;
-+struct irq_data;
- 
- #define IOAPIC_AUTO     -1
- #define IOAPIC_EDGE     0
-@@ -206,6 +207,15 @@ extern int mp_ioapic_registered(u32 gsi_base);
- extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 			    irq_hw_number_t hwirq);
- extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
-+extern int mp_irqdomain_alloc(struct irq_domain *domain, unsigned int virq,
-+			      unsigned int nr_irqs, void *arg);
-+extern void mp_irqdomain_free(struct irq_domain *domain, unsigned int virq,
-+			      unsigned int nr_irqs);
-+extern void mp_irqdomain_activate(struct irq_domain *domain,
-+				  struct irq_data *irq_data);
-+extern void mp_irqdomain_deactivate(struct irq_domain *domain,
-+				    struct irq_data *irq_data);
-+extern int mp_irqdomain_ioapic_idx(struct irq_domain *domain);
- extern void ioapic_set_alloc_attr(struct irq_alloc_info *info,
- 				  int node, int trigger, int polarity);
- extern int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 8b3b8560ebda..e465171bcbf3 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -78,6 +78,13 @@ static DEFINE_MUTEX(ioapic_mutex);
- static unsigned int ioapic_dynirq_base;
- static int ioapic_initialized;
- 
-+struct mp_chip_data {
-+	struct IO_APIC_route_entry entry;
-+	int trigger;
-+	int polarity;
-+	bool isa_irq;
-+};
-+
- struct mp_pin_info {
- 	int trigger;
- 	int polarity;
-@@ -949,11 +956,28 @@ void ioapic_set_alloc_attr(struct irq_alloc_info *info, int node,
- 	info->ioapic_valid = 1;
- }
- 
-+static void mp_register_handler(unsigned int irq, unsigned long trigger)
-+{
-+	irq_flow_handler_t hdl;
-+	bool fasteoi;
-+
-+	if (trigger) {
-+		irq_set_status_flags(irq, IRQ_LEVEL);
-+		fasteoi = true;
-+	} else {
-+		irq_clear_status_flags(irq, IRQ_LEVEL);
-+		fasteoi = false;
-+	}
-+
-+	hdl = fasteoi ? handle_fasteoi_irq : handle_edge_irq;
-+	__irq_set_handler(irq, hdl, 0, fasteoi ? "fasteoi" : "edge");
-+}
-+
- static int alloc_irq_from_domain(struct irq_domain *domain, u32 gsi, int pin,
- 				 struct irq_alloc_info *info)
- {
- 	int irq = -1;
--	int ioapic = (int)(long)domain->host_data;
-+	int ioapic = mp_irqdomain_ioapic_idx(domain);
- 	int type = ioapics[ioapic].irqdomain_cfg.type;
- 
- 	switch (type) {
-@@ -3026,7 +3050,7 @@ static inline void set_io_apic_irq_attr(struct io_apic_irq_attr *irq_attr,
- int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 		     irq_hw_number_t hwirq)
- {
--	int ioapic = (int)(long)domain->host_data;
-+	int ioapic = mp_irqdomain_ioapic_idx(domain);
- 	struct mp_pin_info *info = mp_pin_info(ioapic, hwirq);
- 	struct io_apic_irq_attr attr;
- 
-@@ -3064,7 +3088,7 @@ void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq)
- {
- 	struct irq_data *data = irq_get_irq_data(virq);
- 	struct irq_cfg *cfg = irq_cfg(virq);
--	int ioapic = (int)(long)domain->host_data;
-+	int ioapic = mp_irqdomain_ioapic_idx(domain);
- 	int pin = (int)data->hwirq;
- 
- 	ioapic_mask_entry(ioapic, pin);
-@@ -3073,6 +3097,130 @@ void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq)
- 	arch_teardown_hwirq(virq);
- }
- 
-+static void mp_irqdomain_get_attr(u32 gsi, struct mp_chip_data *data,
-+				 struct irq_alloc_info *info)
-+{
-+	if (info && info->ioapic_valid) {
-+		data->trigger = info->ioapic_trigger;
-+		data->polarity = info->ioapic_polarity;
-+	} else if (acpi_get_override_irq(gsi, &data->trigger,
-+					 &data->polarity) < 0) {
-+		/* PCI interrupts are always polarity one level triggered. */
-+		data->trigger = 1;
-+		data->polarity = 1;
-+	}
-+}
-+
-+static void mp_setup_entry(struct irq_cfg *cfg, struct mp_chip_data *data,
-+			   struct IO_APIC_route_entry *entry)
-+{
-+	memset(entry, 0, sizeof(*entry));
-+	entry->delivery_mode = apic->irq_delivery_mode;
-+	entry->dest_mode     = apic->irq_dest_mode;
-+	entry->dest	     = cfg->dest_apicid;
-+	entry->vector	     = cfg->vector;
-+	entry->mask	     = 0;	/* enable IRQ */
-+	entry->trigger	     = data->trigger;
-+	entry->polarity	     = data->polarity;
-+	/*
-+	 * Mask level triggered irqs.
-+	 * Use IRQ_DELAYED_DISABLE for edge triggered irqs.
-+	 */
-+	if (data->trigger)
-+		entry->mask = 1;
-+}
-+
-+int mp_irqdomain_alloc(struct irq_domain *domain, unsigned int virq,
-+		       unsigned int nr_irqs, void *arg)
-+{
-+	int ret, ioapic, pin;
-+	struct irq_cfg *cfg;
-+	struct irq_data *irq_data;
-+	struct mp_chip_data *data;
-+	struct irq_alloc_info *info = arg;
-+
-+	if (!info || nr_irqs > 1)
-+		return -EINVAL;
-+	irq_data = irq_domain_get_irq_data(domain, virq);
-+	if (!irq_data)
-+		return -EINVAL;
-+
-+	ioapic = mp_irqdomain_ioapic_idx(domain);
-+	pin = info->ioapic_pin;
-+	if (irq_find_mapping(domain, (irq_hw_number_t)pin) > 0)
-+		return -EEXIST;
-+
-+	data = kzalloc(sizeof(*data), GFP_KERNEL);
-+	if (!data)
-+		return -ENOMEM;
-+
-+	info->ioapic_entry = &data->entry;
-+	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, info);
-+	if (ret < 0) {
-+		kfree(data);
-+		return ret;
-+	}
-+
-+	irq_data->hwirq = info->ioapic_pin;
-+	irq_data->chip = &ioapic_chip;
-+	irq_data->chip_data = data;
-+	mp_irqdomain_get_attr(mp_pin_to_gsi(ioapic, pin), data, info);
-+
-+	cfg = irqd_cfg(irq_data);
-+	add_pin_to_irq_node(cfg, info->ioapic_node, ioapic, pin);
-+	if (info->ioapic_entry)
-+		mp_setup_entry(cfg, data, info->ioapic_entry);
-+	mp_register_handler(virq, data->trigger);
-+	if (virq < nr_legacy_irqs())
-+		legacy_pic->mask(virq);
-+
-+	apic_printk(APIC_VERBOSE, KERN_DEBUG
-+		    "IOAPIC[%d]: Set routing entry (%d-%d -> 0x%x -> IRQ %d Mode:%i Active:%i Dest:%d)\n",
-+		    ioapic, mpc_ioapic_id(ioapic), pin, cfg->vector,
-+		    virq, data->trigger, data->polarity, cfg->dest_apicid);
-+
-+	return 0;
-+}
-+
-+void mp_irqdomain_free(struct irq_domain *domain, unsigned int virq,
-+		       unsigned int nr_irqs)
-+{
-+	struct irq_cfg *cfg = irq_cfg(virq);
-+	struct irq_data *irq_data;
-+
-+	BUG_ON(nr_irqs != 1);
-+	irq_data = irq_domain_get_irq_data(domain, virq);
-+	if (irq_data && irq_data->chip_data) {
-+		__remove_pin_from_irq(cfg, mp_irqdomain_ioapic_idx(domain),
-+				      (int)irq_data->hwirq);
-+		WARN_ON(!list_empty(&cfg->irq_2_pin));
-+		kfree(irq_data->chip_data);
-+	}
-+	irq_domain_free_irqs_top(domain, virq, nr_irqs);
-+}
-+
-+void mp_irqdomain_activate(struct irq_domain *domain,
-+			   struct irq_data *irq_data)
-+{
-+	unsigned long flags;
-+	struct irq_pin_list *entry;
-+	struct mp_chip_data *data = irq_data->chip_data;
-+	struct irq_cfg *cfg = irqd_cfg(irq_data);
-+
-+	raw_spin_lock_irqsave(&ioapic_lock, flags);
-+	for_each_irq_pin(entry, cfg->irq_2_pin)
-+		__ioapic_write_entry(entry->apic, entry->pin, data->entry);
-+	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
-+}
-+
-+void mp_irqdomain_deactivate(struct irq_domain *domain,
-+			     struct irq_data *irq_data)
-+{
-+	/* It won't be called for IRQ with multiple IOAPIC pins associated */
-+	ioapic_mask_entry(mp_irqdomain_ioapic_idx(domain),
-+			  (int)irq_data->hwirq);
-+}
-+
- int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node)
- {
- 	int ret = 0;
-@@ -3101,3 +3249,8 @@ int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node)
- 
- 	return ret;
- }
-+
-+int mp_irqdomain_ioapic_idx(struct irq_domain *domain)
-+{
-+	return (int)(long)domain->host_data;
-+}
--- 
-1.7.10.4
-
+> 
+> 
+> On 2014/11/13 19:43, Jiang Liu wrote:
+>> Introduce msi_irq_domain_{alloc|free}_irqs() to alloc/free interrupts
+>> from irqdomain for generic MSI interrupts.
+>>
+>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>> ---
+>>  include/linux/msi.h |   35 ++++++++++++++++++++++++++++++
+>>  kernel/irq/msi.c    |   59 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>>  2 files changed, 94 insertions(+)
+>>
+>> diff --git a/include/linux/msi.h b/include/linux/msi.h
+>> index 714716a3ffdd..6b356a1410b2 100644
+>> --- a/include/linux/msi.h
+>> +++ b/include/linux/msi.h
+>> @@ -3,6 +3,7 @@
+>>  
+>>  #include <linux/kobject.h>
+>>  #include <linux/list.h>
+>> +#include <asm/hw_irq.h>		/* for msi_alloc_info_t */
+>>  
+>>  struct msi_msg {
+>>  	u32	address_lo;	/* low 32 bits of msi message address */
+>> @@ -100,7 +101,26 @@ struct irq_chip;
+>>  struct device_node;
+>>  struct msi_domain_info;
+>>  
+>> +#ifndef NUM_MSI_ALLOC_SCRATCHPAD_REGS
+>> +#define NUM_MSI_ALLOC_SCRATCHPAD_REGS	2
+>> +#endif
+>> +
+>> +/*
+>> + * Default structure for MSI interrupt allocation.
+>> + * Arch may overwrite it by define msi_alloc_info_t.
+>> + */
+>> +struct msi_alloc_info {
+>> +	struct msi_desc *desc;
+>> +	irq_hw_number_t hwirq;
+>> +	long		scratchpad[NUM_MSI_ALLOC_SCRATCHPAD_REGS];
+>> +};
+>> +
+>> +#ifndef msi_alloc_info_t
+>> +typedef struct msi_alloc_info msi_alloc_info_t;
+>> +#endif
+>> +
+>>  struct msi_domain_ops {
+>> +	/* Callbacks for msi_create_irq_domain() */
+>>  	void		(*calc_hwirq)(struct msi_domain_info *info, void *arg,
+>>  				      struct msi_desc *desc);
+>>  	irq_hw_number_t	(*get_hwirq)(struct msi_domain_info *info, void *arg);
+>> @@ -111,6 +131,19 @@ struct msi_domain_ops {
+>>  	void		(*msi_free)(struct irq_domain *domain,
+>>  				    struct msi_domain_info *info,
+>>  				    unsigned int virq);
+>> +
+>> +	/* Callbacks for msi_irq_domain_alloc_irqs() based on msi_descs */
+>> +	int		(*msi_check)(struct irq_domain *domain,
+>> +				     struct msi_domain_info *info,
+>> +				     struct device *dev);
+>> +	int		(*msi_prepare)(struct irq_domain *domain,
+>> +				       struct device *dev,
+>> +				       msi_alloc_info_t *arg);
+>> +	void		(*msi_finish)(msi_alloc_info_t *arg, int retval);
+>> +	void		(*set_desc)(msi_alloc_info_t *arg,
+>> +				    struct msi_desc *desc);
+>> +	int		(*handle_error)(struct irq_domain *domain,
+>> +					struct msi_desc *desc, int error);
+>>  };
+>>  
+>>  struct msi_domain_info {
+>> @@ -125,6 +158,8 @@ int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
+>>  struct irq_domain *msi_create_irq_domain(struct device_node *of_node,
+>>  					 struct msi_domain_info *info,
+>>  					 struct irq_domain *parent);
+>> +int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev);
+>> +void msi_domain_free_irqs(struct irq_domain *domain, struct device *dev);
+>>  struct msi_domain_info *msi_get_domain_info(struct irq_domain *domain);
+>>  
+>>  #endif /* CONFIG_GENERIC_MSI_IRQ_DOMAIN */
+>> diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+>> index 94d6d87ee23e..0b6665de3a60 100644
+>> --- a/kernel/irq/msi.c
+>> +++ b/kernel/irq/msi.c
+>> @@ -13,6 +13,9 @@
+>>  #include <linux/irqdomain.h>
+>>  #include <linux/msi.h>
+>>  
+>> +/* Temparory solution for building, will be removed later */
+>> +#include <linux/pci.h>
+>> +
+>>  void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+>>  {
+>>  	*msg = entry->msg;
+>> @@ -124,6 +127,62 @@ struct irq_domain *msi_create_irq_domain(struct device_node *of_node,
+>>  	return domain;
+>>  }
+>>  
+>> +int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev)
+>> +{
+>> +	int i, ret, virq = -1;
+>> +	msi_alloc_info_t arg;
+>> +	struct msi_desc *desc;
+>> +	struct msi_domain_info *info = domain->host_data;
+>> +	struct msi_domain_ops *ops = info->ops;
+>> +
+>> +	ret = ops->msi_check(domain, info, dev);
+>> +	if (ret == 0)
+>> +		ret = ops->msi_prepare(domain, dev, &arg);
+>> +	if (ret)
+>> +		return ret;
+>> +
+>> +	for_each_msi_entry(desc, dev) {
+>> +		ops->set_desc(&arg, desc);
+>> +
+>> +		virq = __irq_domain_alloc_irqs(domain, -1, desc->nvec_used,
+>> +					       dev_to_node(dev), &arg, false);
+>> +		if (virq < 0) {
+>> +			ret = -ENOSPC;
+>> +			if (ops->handle_error)
+>> +				ret = ops->handle_error(domain, desc, ret);
+>> +			if (ops->msi_finish)
+>> +				ops->msi_finish(&arg, ret);
+>> +			return ret;
+>> +		}
+>> +
+>> +		for (i = 0; i < desc->nvec_used; i++)
+>> +			irq_set_msi_desc_off(virq, i, desc);
+>> +	}
+>> +
+>> +	if (ops->msi_finish)
+>> +		ops->msi_finish(&arg, 0);
+>> +
+>> +	for_each_msi_entry(desc, dev) {
+>> +		if (desc->nvec_used == 1)
+>> +			dev_dbg(dev, "irq %d for MSI\n", virq);
+>> +		else
+>> +			dev_dbg(dev, "irq [%d-%d] for MSI\n",
+>> +				virq, virq + desc->nvec_used - 1);
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +void msi_domain_free_irqs(struct irq_domain *domain, struct device *dev)
+>> +{
+>> +	struct msi_desc *desc;
+>> +
+>> +	for_each_msi_entry(desc, dev) {
+>> +		irq_domain_free_irqs(desc->irq, desc->nvec_used);
+>> +		desc->irq = 0;
+>> +	}
+>> +}
+>> +
+>>  struct msi_domain_info *msi_get_domain_info(struct irq_domain *domain)
+>>  {
+>>  	return (struct msi_domain_info *)domain->host_data;
+>>
+> 
+> 
