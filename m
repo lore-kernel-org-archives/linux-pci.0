@@ -1,69 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:34331 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754128AbaKDOrd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Nov 2014 09:47:33 -0500
-Date: Tue, 4 Nov 2014 15:47:30 +0100
-From: Joerg Roedel <joro@8bytes.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [Patch Part2 v4 00/31] Enable hierarchy irqdomian on x86
- platforms
-Message-ID: <20141104144730.GE14512@8bytes.org>
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:38631 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933512AbaKMReJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 12:34:09 -0500
+Received: by mail-pd0-f173.google.com with SMTP id v10so14965869pde.32
+        for <linux-pci@vger.kernel.org>; Thu, 13 Nov 2014 09:34:09 -0800 (PST)
+Date: Thu, 13 Nov 2014 10:34:04 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, Liviu Dudau <Liviu.Dudau@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2] PCI: add missing DT binding for linux,pci-domain
+ property
+Message-ID: <20141113173404.GJ5064@google.com>
+References: <1415287400-30426-1-git-send-email-l.stach@pengutronix.de>
+ <20141113170921.GG5064@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <20141113170921.GG5064@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jiang,
+On Thu, Nov 13, 2014 at 10:09:21AM -0700, Bjorn Helgaas wrote:
+> On Thu, Nov 06, 2014 at 04:23:20PM +0100, Lucas Stach wrote:
+> > This property was added by 41e5c0f81d3e
+> > (of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr())
+> > without the required binding documentation. As this property
+> > will be supported by a number of host bridge drivers going forward,
+> > add it to the common PCI binding doc.
+> > 
+> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> 
+> Applied with acks from Liviu and Rob to for-linus for v3.18, thanks a lot
+> for working this out!
 
-On Tue, Nov 04, 2014 at 08:01:34PM +0800, Jiang Liu wrote:
-> This is the second patch set to enable support of hierarchy irqdomain
-> on x86 platforms. It depends on the first part at:
-> https://lkml.org/lkml/2014/10/27/122
-> And you may access it at:
-> https://github.com/jiangliu/linux.git irqdomain/p2v4
+Arnd, I just noticed your concern about this being linux-only.  Are you
+happy with this one?  If not, I can drop this.
 
-I gave this some testing on a couple of machines. Unfortunatly it panics
-on my AMD Kaveri system with IOMMU enabled in drivers/pci/msi.c:
-
-static void msi_set_mask_bit(struct irq_data *data, u32 flag)
-{
-        struct msi_desc *desc = irq_data_get_msi(data);
-
-        if (desc->msi_attrib.is_msix) {		<-- at this line something goes wrong
-                msix_mask_irq(desc, flag);
-                readl(desc->mask_base);         /* Flush write to device */
-        } else {
-                unsigned offset = data->irq - desc->irq;
-                msi_mask_irq(desc, 1 << offset, flag << offset);
-        }
-}
-
-I am further investigating to find out what went wrong, but maybe you
-also have an idea?
-
-
-	Joerg
-
+> > ---
+> > This is a non-critical fix, but may still qualify for 3.18-rc as
+> > the property was added in this release cycle.
+> > 
+> > v2:
+> > - emphasize that the property must be present and unique systemwide
+> >   if used
+> > ---
+> >  Documentation/devicetree/bindings/pci/pci.txt | 11 +++++++++++
+> >  1 file changed, 11 insertions(+)
+> > 
+> > diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
+> > index 41aeed38926d..68c364e2f5e5 100644
+> > --- a/Documentation/devicetree/bindings/pci/pci.txt
+> > +++ b/Documentation/devicetree/bindings/pci/pci.txt
+> > @@ -7,3 +7,14 @@ And for the interrupt mapping part:
+> >  
+> >  Open Firmware Recommended Practice: Interrupt Mapping
+> >  http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
+> > +
+> > +Additionally to the properties specified in the above standards a host bridge
+> > +driver implementation may support the following properties:
+> > +
+> > +- linux,pci-domain:
+> > +   If present this property assigns a fixed PCI domain number to a host bridge,
+> > +   otherwise an unstable (across boots) unique number will be assigned.
+> > +   It is required to either not set this property at all or set it for all
+> > +   host bridges in the system, otherwise potentially conflicting domain numbers
+> > +   may be assigned to root buses behind different host bridges. The domain
+> > +   number for each host bridge in the system must be unique.
+> > -- 
+> > 2.1.1
+> > 
