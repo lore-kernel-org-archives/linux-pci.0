@@ -1,103 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:43342 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751051AbaKGB7t (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 20:59:49 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH] PCI: Apply _HPX link control for all supported pcie device
-Date: Thu,  6 Nov 2014 17:59:40 -0800
-Message-Id: <1415325580-5974-1-git-send-email-yinghai@kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:36019 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933636AbaKMVAZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 16:00:25 -0500
+Message-ID: <54651BE2.9080008@arm.com>
+Date: Thu, 13 Nov 2014 21:00:18 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
+MIME-Version: 1.0
+To: Jiang Liu <jiang.liu@linux.intel.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [Patch V1 0/6] Refine generic/PCI MSI irqodmian interfaces
+References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=WINDOWS-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With commit 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
-and following commits, we apply _HPX for pci devices.
+On 13/11/14 11:43, Jiang Liu wrote:
+> This patch set is based on tip/irq/irqdomain and tries to refine
+> interfaces to support irqdomain for generic MSI and PCI MSI.
+> 
+> Patch 1 is just minor fixes for tip/irq/irqdomain.
+> 
+> Patch 2 introduces some helpers to hide struct msi_desc implementation
+> details, so later we could move msi_list from struct pci_dev into
+> struct device to enable generic MSI support.
+> 
+> Patch 3 introduces msi_domain_{alloc|free}_irqs() which generalize
+> pci_msi_domain_alloc_irqs() to support generic MSI.
+> 
+> Patch 4 introduces default data structures and callback implementations
+> to support msi_domain_alloc_irqs(), so reduce burden on generic MSI
+> users.
+> 
+> Patch 5 converts PCI MSI to use generic MSI interfaces, and also
+> implement default callbacks for PCI MSI.
+> 
+> Patch 6 introduces a mechanism to replace arch_setup_msi_irq()/
+> arch_setup_msi_irqs()/arch_teardown_msi_irq()/arch_teardown_msi_irqs().
+> 
+> With this patch set applied, the generic MSI and PCI MSI interfaces
+> are much easier to use. For extreme case, you only need to define
+> a "struct msi_domain_info" and don't need to implement any callbacks,
+> just using the default callbacks is OK:)
+> 
+> This patch set is also a preparation for:
+> 1) Kill all weak functions in drivers/pci/msi.c
+> 2) Implement support for non-PCI-compliant MSI device
 
-that is called via pci_scan_slot
-			==>pci_scan_single_device
-				==>pci_device_add
-					==>pci_configure_device
-						==>program_hpp_type2
-and dev->subordinate is not allocated yet.
+I've rebased (once more!) the GICv3 ITS driver on top of this, and this
+is definitely a major improvement. This is basically the first version
+I can use without having to hack into the core code (apart from the
+couple of nits I've mentioned earlier).
 
-So that link control setup get skipped.
+Now, Thomas' idea of putting the irq_domain close to the bus is very
+appealing, and I've tweaked an earlier patch in order to do this:
 
-Acoording to ACPI spec, there is no requirement that need to be set to pcie
-root port or downstream port.
+>From f73c2df2f1e66fd13902b2c6bb5773df6538b7df Mon Sep 17 00:00:00 2001
+From: Marc Zyngier <marc.zyngier@arm.com>
+Date: Wed, 12 Nov 2014 10:32:46 +0000
+Subject: [PATCH] PCI/MSI: Allow an msi_chip to be associated to an irq domain
 
-We could just change to pcie_cap_has_lnkctl to cover all pcie devices with
-link control cap.
+With the new stacked irq domains, it becomes pretty tempting
+to allocate an MSI domain per PCI bus, which would remove
+the requirement of either relying on arch-specific code, or
+a default PCI MSI domain.
 
-Fixes: 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+By allowing the msi_chip structure to carry a pointer to
+an irq_domain, we can easily use this in pci_msi_setup_msi_irqs.
+The existing code can still be used as a fallback if the MSI driver
+does not populate the domain field.
 
+Tested on arm64 with the GICv3 ITS driver.
+
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 ---
- drivers/pci/access.c |   13 -------------
- drivers/pci/pci.h    |   13 +++++++++++++
- drivers/pci/probe.c  |    2 +-
- 3 files changed, 14 insertions(+), 14 deletions(-)
+ drivers/pci/msi.c   | 9 +++++++--
+ include/linux/msi.h | 3 +++
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
-Index: linux-2.6/drivers/pci/probe.c
-===================================================================
---- linux-2.6.orig/drivers/pci/probe.c
-+++ linux-2.6/drivers/pci/probe.c
-@@ -1323,7 +1323,7 @@ static void program_hpp_type2(struct pci
- 			~hpp->pci_exp_devctl_and, hpp->pci_exp_devctl_or);
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 9947fb4..1752537 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -86,9 +86,14 @@ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
  
- 	/* Initialize Link Control Register */
--	if (dev->subordinate)
-+	if (pcie_cap_has_lnkctl(dev))
- 		pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
- 			~hpp->pci_exp_lnkctl_and, hpp->pci_exp_lnkctl_or);
- 
-Index: linux-2.6/drivers/pci/access.c
-===================================================================
---- linux-2.6.orig/drivers/pci/access.c
-+++ linux-2.6/drivers/pci/access.c
-@@ -444,19 +444,6 @@ static inline int pcie_cap_version(const
- 	return pcie_caps_reg(dev) & PCI_EXP_FLAGS_VERS;
- }
- 
--static inline bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
--{
--	int type = pci_pcie_type(dev);
--
--	return type == PCI_EXP_TYPE_ENDPOINT ||
--	       type == PCI_EXP_TYPE_LEG_END ||
--	       type == PCI_EXP_TYPE_ROOT_PORT ||
--	       type == PCI_EXP_TYPE_UPSTREAM ||
--	       type == PCI_EXP_TYPE_DOWNSTREAM ||
--	       type == PCI_EXP_TYPE_PCI_BRIDGE ||
--	       type == PCI_EXP_TYPE_PCIE_BRIDGE;
--}
--
- static inline bool pcie_cap_has_sltctl(const struct pci_dev *dev)
+ static int pci_msi_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
  {
- 	int type = pci_pcie_type(dev);
-Index: linux-2.6/drivers/pci/pci.h
-===================================================================
---- linux-2.6.orig/drivers/pci/pci.h
-+++ linux-2.6/drivers/pci/pci.h
-@@ -6,6 +6,19 @@
+-	struct irq_domain *domain;
++	struct irq_domain *domain = NULL;
  
- extern const unsigned char pcie_link_speed[];
+-	domain = arch_get_pci_msi_domain(dev);
++#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
++	if (dev->bus->msi)
++		domain = dev->bus->msi->domain;
++#endif
++	if (!domain)
++		domain = arch_get_pci_msi_domain(dev);
+ 	if (domain)
+ 		return pci_msi_domain_alloc_irqs(domain, type, dev);
  
-+static inline bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
-+{
-+	int type = pci_pcie_type(dev);
-+
-+	return type == PCI_EXP_TYPE_ENDPOINT ||
-+	       type == PCI_EXP_TYPE_LEG_END ||
-+	       type == PCI_EXP_TYPE_ROOT_PORT ||
-+	       type == PCI_EXP_TYPE_UPSTREAM ||
-+	       type == PCI_EXP_TYPE_DOWNSTREAM ||
-+	       type == PCI_EXP_TYPE_PCI_BRIDGE ||
-+	       type == PCI_EXP_TYPE_PCIE_BRIDGE;
-+}
-+
- /* Functions internal to the PCI core code */
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 9b2e73e..2325950 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -89,6 +89,9 @@ struct msi_chip {
+ 	struct device *dev;
+ 	struct device_node *of_node;
+ 	struct list_head list;
++#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
++	struct irq_domain *domain;
++#endif
  
- int pci_create_sysfs_dev_files(struct pci_dev *pdev);
+ 	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
+ 			 struct msi_desc *desc);
+-- 
+2.0.4
+
+Thoughts?
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
+
