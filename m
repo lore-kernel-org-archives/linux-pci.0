@@ -1,39 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:55881 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752484AbaKCW6p (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Nov 2014 17:58:45 -0500
-Date: Mon, 3 Nov 2014 23:58:37 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Daniel J Blueman <daniel@numascale.com>
-cc: Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Steffen Persvold <sp@numascale.com>
-Subject: Re: [PATCH v3 3/5] Numachip: Add safe is-present function
-In-Reply-To: <545807ED.5090804@numascale.com>
-Message-ID: <alpine.DEB.2.11.1411032358060.5308@nanos>
-References: <1414915813-2462-1-git-send-email-daniel@numascale.com> <1414915813-2462-3-git-send-email-daniel@numascale.com> <alpine.DEB.2.11.1411032044590.5308@nanos> <545807ED.5090804@numascale.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:60629 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932248AbaKMKUU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 05:20:20 -0500
+Message-ID: <1415874015.2420.5.camel@pengutronix.de>
+Subject: Re: [PATCH v2] PCI: designware: Add support 4 ATUs assignment
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Lian Minghuan-B31939 <B31939@freescale.com>
+Cc: Srikanth Thokala <sriku.linux@gmail.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 13 Nov 2014 11:20:15 +0100
+In-Reply-To: <546481A3.5050700@freescale.com>
+References: <1415682444-24911-1-git-send-email-Minghuan.Lian@freescale.com>
+	 <CA+mB=1+4Dzxhbin6z0PUENvjUz-y8bq-K09FXTnSepFvVfe9HQ@mail.gmail.com>
+	 <546308DD.40109@freescale.com>
+	 <CA+mB=1K=Oyzdb2yfBvPRG9DHi-PFjRPtVS_dY9JMOz6dQog8QQ@mail.gmail.com>
+	 <546331E7.5060003@freescale.com>
+	 <CA+mB=1KObT9O783SMcvHy8nJGQPnxyKgP332r5bHx-K_D+LhVg@mail.gmail.com>
+	 <1415809929.2876.5.camel@pengutronix.de> <546481A3.5050700@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 4 Nov 2014, Daniel J Blueman wrote:
-
-> On 11/04/2014 03:45 AM, Thomas Gleixner wrote:
-> > On Sun, 2 Nov 2014, Daniel J Blueman wrote:
-> > 
-> > > Add safe function to check if Numachip is detected, to be used elsewhere.
-> > 
-> > I cannot find a use case for this. I guess this is a left over of the
-> > earlier 2G change, right?
+Am Donnerstag, den 13.11.2014, 18:02 +0800 schrieb Lian Minghuan-B31939:
+> Hi Lucas,
 > 
-> I left it in as it's common to apic_numachip.c and a Numachip2 patch series
-> I'll present later.
+> Please see my comments inline.
+> 
+> Thanks,
+> Minghuan
+> 
+> On 2014年11月13日 00:32, Lucas Stach wrote:
+> > Am Mittwoch, den 12.11.2014, 21:53 +0530 schrieb Srikanth Thokala:
+> >> Hi Minghuan,
 
-Please move it to that series then.
+[...]
 
-Thanks,
+> > Using a smaller type complicates the DT for little to no benefit. I
+> > think it's ok to use u32 here, which is a common standard for integer
+> > values in DT.
+> >
+> > Though this discussion lead me to the question if we even need to have
+> > this property in the DT at all. Isn't this a property that is fixed for
+> > a specific silicon implementation of the DW core? In that case we could
+> > just infer the number of ATUs from the DT compatible, so this should
+> > probably just be added to struct pcie_port and properly initialized by
+> > the SoC glue drivers.
+> [Minghuan]  As far as I know, exynos implements only 2 ATUs, this is why
+> pcie-designware only supports 2 ATU. iMX implements 4 ATUs and LS1021A
+> implements 6 ATUs.
+> 
 
-	tglx
+Right so we don't need an additional property in the DT at all. The
+number of ATUs is fixed for a specific core compatible and can be passed
+in by the respective exynos, imx and ls1021 glue drivers.
+
+You may ask the Keystone and Spear maintainers to get the correct number
+of ATUs for those implementations.
+
+Regards,
+Lucas
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
+
