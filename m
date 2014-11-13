@@ -1,98 +1,199 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:34132 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932364AbaKMLJ4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 06:09:56 -0500
-Message-ID: <1415876988.2420.7.camel@pengutronix.de>
-Subject: Re: [PATCH v2] PCI: designware: Add support 4 ATUs assignment
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Lian Minghuan-B31939 <B31939@freescale.com>
-Cc: Srikanth Thokala <sriku.linux@gmail.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 13 Nov 2014 12:09:48 +0100
-In-Reply-To: <54648D61.6050704@freescale.com>
-References: <1415682444-24911-1-git-send-email-Minghuan.Lian@freescale.com>
-	 <CA+mB=1+4Dzxhbin6z0PUENvjUz-y8bq-K09FXTnSepFvVfe9HQ@mail.gmail.com>
-	 <546308DD.40109@freescale.com>
-	 <CA+mB=1K=Oyzdb2yfBvPRG9DHi-PFjRPtVS_dY9JMOz6dQog8QQ@mail.gmail.com>
-	 <546331E7.5060003@freescale.com>
-	 <CA+mB=1KObT9O783SMcvHy8nJGQPnxyKgP332r5bHx-K_D+LhVg@mail.gmail.com>
-	 <1415809929.2876.5.camel@pengutronix.de> <546481A3.5050700@freescale.com>
-	 <1415874015.2420.5.camel@pengutronix.de> <54648D61.6050704@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga14.intel.com ([192.55.52.115]:8170 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752725AbaKLOw1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 12 Nov 2014 09:52:27 -0500
+From: Michael Jamet <michael.jamet@intel.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	amir.jer.levy@intel.com, dan.alloun@intel.com,
+	michael.jamet@intel.com
+Subject: [PATCH] pci: support Thunderbolt requirements for I/O resources.
+Date: Thu, 13 Nov 2014 04:52:03 +0200
+Message-Id: <1415847123-15558-1-git-send-email-michael.jamet@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Donnerstag, den 13.11.2014, 18:52 +0800 schrieb Lian Minghuan-B31939:
-> Hi Lucas,
-> 
-> On 2014年11月13日 18:20, Lucas Stach wrote:
-> > Am Donnerstag, den 13.11.2014, 18:02 +0800 schrieb Lian Minghuan-B31939:
-> >> Hi Lucas,
-> >>
-> >> Please see my comments inline.
-> >>
-> >> Thanks,
-> >> Minghuan
-> >>
-> >> On 2014年11月13日 00:32, Lucas Stach wrote:
-> >>> Am Mittwoch, den 12.11.2014, 21:53 +0530 schrieb Srikanth Thokala:
-> >>>> Hi Minghuan,
-> > [...]
-> >
-> >>> Using a smaller type complicates the DT for little to no benefit. I
-> >>> think it's ok to use u32 here, which is a common standard for integer
-> >>> values in DT.
-> >>>
-> >>> Though this discussion lead me to the question if we even need to have
-> >>> this property in the DT at all. Isn't this a property that is fixed for
-> >>> a specific silicon implementation of the DW core? In that case we could
-> >>> just infer the number of ATUs from the DT compatible, so this should
-> >>> probably just be added to struct pcie_port and properly initialized by
-> >>> the SoC glue drivers.
-> >> [Minghuan]  As far as I know, exynos implements only 2 ATUs, this is why
-> >> pcie-designware only supports 2 ATU. iMX implements 4 ATUs and LS1021A
-> >> implements 6 ATUs.
-> >>
-> > Right so we don't need an additional property in the DT at all. The
-> > number of ATUs is fixed for a specific core compatible and can be passed
-> > in by the respective exynos, imx and ls1021 glue drivers.
-> >
-> > You may ask the Keystone and Spear maintainers to get the correct number
-> > of ATUs for those implementations.
-> >
-> > Regards,
-> > Lucas
-> [Minghuan] Yes. This a way that specific core driver passes the ATU 
-> number to
-> pci-designware. But I perfer to adding dts node for the following reasons:
-> 1. ATU number is hardware attribute, so it can be added to DTS.
+Every Thunderbolt-based devices or Thunderbolt-connected
+devices should not allocate PCI I/O resources
+per Thunderbolt specs.
 
-But it is a duplication of information that can be inferred from the DT
-compatible alone, which is usually frowned upon.
+On a Thunderbolt PC, BIOS is responsible to allocate IO
+resources. Kernel shouldn't allocate the PCI I/O resources
+as it interferes with BIOS operation.
+Doing this may cause the devices in the Thunderbolt chain
+not being detected or added, or worse to stuck the
+Thunderbolt Host controller.
 
-Also in contrast to the num-lanes property I don't see a use-case to
-reduce the number of used ATUs in a specific system, so num-atus is
-basically fixed for a specific implementation.
+To prevent this, we detect a chain contains a Thunderbolt
+device by checking the Thunderbolt PCI device id.
 
-> 2. That pci-designware common code parses the 'num-atus' can avoid every 
-> specific controller driver to define and pass num-atus, so can reduce 
-> code size and simplify the specific controller driver implementation.
-> 
-I don't think the code reduction matters here and the simplification is
-minimal.
+The validation is carried out at the pci_enable_device_flags()
+function that checks the PCI device or bridge is Thunderbolt
+chained and avoid IO resources allocation.
 
-Regards,
-Lucas
+In addition, decode_bar() and pci_bridge_check_ranges()
+function has been internally checked for Thunderbolt
+as well to ensure no IO resources are allocated.
 
+Signed-off-by: Michael Jamet <michael.jamet@intel.com>
+---
+ drivers/pci/pci.c       | 64 +++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h       |  2 ++
+ drivers/pci/probe.c     |  3 ++-
+ drivers/pci/setup-bus.c |  4 ++--
+ include/linux/pci.h     |  2 ++
+ 5 files changed, 72 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 625a4ac..41c2619 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -198,6 +198,62 @@ static int __pci_bus_find_cap_start(struct pci_bus *bus,
+ }
+ 
+ /**
++ * pci_is_thunderbolt_device - checks PCI device is Thunderbolt-based.
++ * The only existing way is to check the device id is allocated to Thunderbolt.
++ * @dev: the PCI device structure to check against
++ *
++ * Returns true if the PCI device is of the Thunderbolt type.
++ */
++bool pci_is_thunderbolt_device(struct pci_dev *dev)
++{
++	if ((dev->vendor == PCI_VENDOR_ID_INTEL) &&
++			((dev->device == 0xcaca)
++			|| (dev->device == 0x1513)
++			|| (dev->device == 0xcbca)
++			|| (dev->device == 0x151A)
++			|| (dev->device == 0x151B)
++			|| (dev->device == 0x1549)
++			|| (dev->device == 0x1547)
++			|| (dev->device == 0x1548)
++			|| (dev->device == 0x1566)
++			|| (dev->device == 0x1567)
++			|| (dev->device == 0x1569)
++			|| (dev->device == 0x1568)
++			|| (dev->device == 0x156A)
++			|| (dev->device == 0x156B)
++			|| (dev->device == 0x156C)
++			|| (dev->device == 0x156D)
++			|| (dev->device == 0x1579)
++			|| (dev->device == 0x157A)
++			|| (dev->device == 0x157D)
++			|| (dev->device == 0x157E)))
++		return true;
++
++	return false;
++}
++EXPORT_SYMBOL(pci_is_thunderbolt_device);
++
++/**
++ * pci_is_connected_to_thunderbolt - check if connected to a Thunderbolt chain.
++ * @dev: the PCI device structure to check against
++ *
++ * Returns true if the PCI device s connected is connected to a
++ * Thunderbolt-based in the chain.
++ */
++bool pci_is_connected_to_thunderbolt(struct pci_dev *dev)
++{
++	struct pci_dev *bridge;
++
++	if (pci_is_thunderbolt_device(dev))
++		return true;
++	bridge =  pci_upstream_bridge(dev);
++	if (bridge)
++		return pci_is_connected_to_thunderbolt(bridge);
++	return false;
++}
++EXPORT_SYMBOL(pci_is_connected_to_thunderbolt);
++
++/**
+  * pci_find_capability - query for devices' capabilities
+  * @dev: PCI device to query
+  * @cap: capability code
+@@ -1285,6 +1341,14 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+ 	if (atomic_inc_return(&dev->enable_cnt) > 1)
+ 		return 0;		/* already enabled */
+ 
++	/*
++	 * if IO resource have been requested, but the device is connected
++	 * to Thunderbolt chain, don't allocate IO resource
++	 */
++	if ((flags & IORESOURCE_IO)
++			&& pci_is_connected_to_thunderbolt(dev))
++		flags &= ~IORESOURCE_IO;
++
+ 	bridge = pci_upstream_bridge(dev);
+ 	if (bridge)
+ 		pci_enable_bridge(bridge);
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 0601890..fb9a3b1 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -4,6 +4,8 @@
+ #define PCI_CFG_SPACE_SIZE	256
+ #define PCI_CFG_SPACE_EXP_SIZE	4096
+ 
++bool pci_is_thunderbolt_device(struct pci_dev *dev);
++
+ extern const unsigned char pcie_link_speed[];
+ 
+ /* Functions internal to the PCI core code */
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 5ed9930..d8171af 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -131,7 +131,8 @@ static inline unsigned long decode_bar(struct pci_dev *dev, u32 bar)
+ 
+ 	if ((bar & PCI_BASE_ADDRESS_SPACE) == PCI_BASE_ADDRESS_SPACE_IO) {
+ 		flags = bar & ~PCI_BASE_ADDRESS_IO_MASK;
+-		flags |= IORESOURCE_IO;
++		if (!pci_is_connected_to_thunderbolt(dev))
++			flags |= IORESOURCE_IO;
+ 		return flags;
+ 	}
+ 
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 0482235..79ac38f 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -663,12 +663,12 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+ 	b_res[1].flags |= IORESOURCE_MEM;
+ 
+ 	pci_read_config_word(bridge, PCI_IO_BASE, &io);
+-	if (!io) {
++	if (!io || pci_is_thunderbolt_device(bridge)) {
+ 		pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
+ 		pci_read_config_word(bridge, PCI_IO_BASE, &io);
+ 		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
+ 	}
+-	if (io)
++	if (io && !pci_is_thunderbolt_device(bridge))
+ 		b_res[0].flags |= IORESOURCE_IO;
+ 
+ 	/*  DECchip 21050 pass 2 errata: the bridge may miss an address
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2a8c405..09ddc2c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -931,6 +931,8 @@ int __must_check pci_enable_device_io(struct pci_dev *dev);
+ int __must_check pci_enable_device_mem(struct pci_dev *dev);
+ int __must_check pci_reenable_device(struct pci_dev *);
+ int __must_check pcim_enable_device(struct pci_dev *pdev);
++
++bool pci_is_connected_to_thunderbolt(struct pci_dev *dev);
+ void pcim_pin_device(struct pci_dev *pdev);
+ 
+ static inline int pci_is_enabled(struct pci_dev *pdev)
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+1.9.1
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
