@@ -1,145 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:44030 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753588AbaKMDtj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 22:49:39 -0500
-Received: by mail-lb0-f181.google.com with SMTP id l4so10342333lbv.40
-        for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2014 19:49:37 -0800 (PST)
+Received: from www.linutronix.de ([62.245.132.108]:49259 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934154AbaKMVLy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 16:11:54 -0500
+Date: Thu, 13 Nov 2014 22:11:26 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Marc Zyngier <marc.zyngier@arm.com>
+cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [Patch V1 0/6] Refine generic/PCI MSI irqodmian interfaces
+In-Reply-To: <54651BE2.9080008@arm.com>
+Message-ID: <alpine.DEB.2.11.1411132207470.3935@nanos>
+References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com> <54651BE2.9080008@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <000201cffee6$cdd86d80$69894880$%han@samsung.com>
-References: <002901cffe28$544504b0$fccf0e10$%han@samsung.com>
-	<CA+mB=1KiOEXn2Zg1GPPHUV4ybXYYQfHNgCkTJSthvbR0jMyYOw@mail.gmail.com>
-	<000201cffee6$cdd86d80$69894880$%han@samsung.com>
-Date: Thu, 13 Nov 2014 09:19:37 +0530
-Message-ID: <CA+mB=1LwLCWhNhLWBXRc0FwESXGxAAszbOXrFp0hFyjrtQaTDA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: exynos: Remove unnecessary return statement
-From: Srikanth Thokala <sriku.linux@gmail.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 13, 2014 at 7:39 AM, Jingoo Han <jg1.han@samsung.com> wrote:
-> On Thursday, November 13, 2014 1:30 AM, Srikanth Thokala wrote:
->>
->> On Wed, Nov 12, 2014 at 8:55 AM, Jingoo Han <jg1.han@samsung.com> wrote:
->> > This patch fixes the following checkpatch warning.
->> >
->> >   WARNING: void function return statements are not generally useful
->> >
->> > Signed-off-by: Jingoo Han <jg1.han@samsung.com>
->> > ---
->> >  drivers/pci/host/pci-exynos.c |    8 --------
->> >  1 file changed, 8 deletions(-)
->> >
->>
->> Acked-by: Srikanth Thokala <sriku.linux@gmail.com>
->
-> Sorry, but your 'Acked-by' is NOT appropriate.
-> You are neither a maintainer nor those who contributed the patch
-> for Exynos PCIe driver. So, in this case, 'Reviewed-by' looks good
-> as below.
->
-> Reviewed-by: Srikanth Thokala <sriku.linux@gmail.com>
->
-> By the way, you submitted the Xilinx PCIe driver
-> (drivers/pci/host/pcie-xilinx.c). Thus, if someone send
-> the patch for Xilinx PCIe driver, you can give your Acked-by.
->
-> According to the 'Documentation/SubmittingPatches' file,
->
-> "If a person was not directly involved in the preparation or handling of a
-> patch but wishes to signify and record their approval of it then they can
-> arrange to have an Acked-by: line added to the patch's changelog.
->
-> Acked-by: is often used by the maintainer of the affected code when that
-> maintainer neither contributed to nor forwarded the patch."
->
-> My comment will be also applied to the patch "[PATCH] PCI: imx6: Use tabs
-> for indentation".
+On Thu, 13 Nov 2014, Marc Zyngier wrote:
+> With the new stacked irq domains, it becomes pretty tempting
+> to allocate an MSI domain per PCI bus, which would remove
+> the requirement of either relying on arch-specific code, or
+> a default PCI MSI domain.
 
-Thank you for the information, I will keep that in mind.
+Right. That's what I roughly had in mind. And that would solve the
+multi-iommu issue on x86 nicely as well. We establish the association
+at the time where the bus gets populated. So the whole lookup magic
+simply goes away.
 
-- Srikanth
+Thanks,
 
->
-> Thank you.
->
-> Best regards,
-> Jingoo Han
->
->>
->> - Srikanth
->>
->> > diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
->> > index c5d0ca3..41ab139 100644
->> > --- a/drivers/pci/host/pci-exynos.c
->> > +++ b/drivers/pci/host/pci-exynos.c
->> > @@ -312,7 +312,6 @@ static void exynos_pcie_assert_reset(struct pcie_port *pp)
->> >         if (exynos_pcie->reset_gpio >= 0)
->> >                 devm_gpio_request_one(pp->dev, exynos_pcie->reset_gpio,
->> >                                 GPIOF_OUT_INIT_HIGH, "RESET");
->> > -       return;
->> >  }
->> >
->> >  static int exynos_pcie_establish_link(struct pcie_port *pp)
->> > @@ -388,7 +387,6 @@ static void exynos_pcie_clear_irq_pulse(struct pcie_port *pp)
->> >
->> >         val = exynos_elb_readl(exynos_pcie, PCIE_IRQ_PULSE);
->> >         exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_PULSE);
->> > -       return;
->> >  }
->> >
->> >  static void exynos_pcie_enable_irq_pulse(struct pcie_port *pp)
->> > @@ -400,7 +398,6 @@ static void exynos_pcie_enable_irq_pulse(struct pcie_port *pp)
->> >         val = IRQ_INTA_ASSERT | IRQ_INTB_ASSERT |
->> >                 IRQ_INTC_ASSERT | IRQ_INTD_ASSERT,
->> >         exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_EN_PULSE);
->> > -       return;
->> >  }
->> >
->> >  static irqreturn_t exynos_pcie_irq_handler(int irq, void *arg)
->> > @@ -429,7 +426,6 @@ static void exynos_pcie_msi_init(struct pcie_port *pp)
->> >         val = exynos_elb_readl(exynos_pcie, PCIE_IRQ_EN_LEVEL);
->> >         val |= IRQ_MSI_ENABLE;
->> >         exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_EN_LEVEL);
->> > -       return;
->> >  }
->> >
->> >  static void exynos_pcie_enable_interrupts(struct pcie_port *pp)
->> > @@ -438,8 +434,6 @@ static void exynos_pcie_enable_interrupts(struct pcie_port *pp)
->> >
->> >         if (IS_ENABLED(CONFIG_PCI_MSI))
->> >                 exynos_pcie_msi_init(pp);
->> > -
->> > -       return;
->> >  }
->> >
->> >  static inline void exynos_pcie_readl_rc(struct pcie_port *pp,
->> > @@ -448,7 +442,6 @@ static inline void exynos_pcie_readl_rc(struct pcie_port *pp,
->> >         exynos_pcie_sideband_dbi_r_mode(pp, true);
->> >         *val = readl(dbi_base);
->> >         exynos_pcie_sideband_dbi_r_mode(pp, false);
->> > -       return;
->> >  }
->> >
->> >  static inline void exynos_pcie_writel_rc(struct pcie_port *pp,
->> > @@ -457,7 +450,6 @@ static inline void exynos_pcie_writel_rc(struct pcie_port *pp,
->> >         exynos_pcie_sideband_dbi_w_mode(pp, true);
->> >         writel(val, dbi_base);
->> >         exynos_pcie_sideband_dbi_w_mode(pp, false);
->> > -       return;
->> >  }
->> >
->> >  static int exynos_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
->> > --
->> > 1.7.9.5
->> >
->> >
->> > --
->> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> > the body of a message to majordomo@vger.kernel.org
->> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+	tglx
+
+ 
