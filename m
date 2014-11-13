@@ -1,95 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:14423 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755334AbaKTB4b (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 20:56:31 -0500
-Message-ID: <546D4891.80503@huawei.com>
-Date: Thu, 20 Nov 2014 09:49:05 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:53043 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753579AbaKMEcN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 23:32:13 -0500
+Received: by mail-ie0-f181.google.com with SMTP id rp18so15091657iec.12
+        for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2014 20:32:12 -0800 (PST)
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>,
-	<linux-arm-kernel@lists.infradead.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	"Tony Luck" <tony.luck@intel.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-mips@linux-mips.org>, <linux-sh@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-xtensa@linux-xtensa.org>,
-	<x86@kernel.org>, <sparclinux@vger.kernel.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	<linux-alpha@vger.kernel.org>, <linux-ia64@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [PATCH 5/5] PCI: Rip out pci_bus_add_devices() from pci_scan_root_bus()
-References: <1416382369-13587-1-git-send-email-wangyijing@huawei.com> <1416382369-13587-6-git-send-email-wangyijing@huawei.com> <1645037.uypArjN50l@wuerfel>
-In-Reply-To: <1645037.uypArjN50l@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <CAErSpo6Bfya60UMeN3cxSH3A+cesAAgPuZEb6b6FHnVBFsOxfA@mail.gmail.com>
+References: <bug-88131-41252@https.bugzilla.kernel.org/>
+	<CAErSpo6Bfya60UMeN3cxSH3A+cesAAgPuZEb6b6FHnVBFsOxfA@mail.gmail.com>
+Date: Wed, 12 Nov 2014 20:32:12 -0800
+Message-ID: <CAE9FiQU-8dusyj6BAKV0w2C_xW6w6fO4vsyAca-TdoRY6xQhVA@mail.gmail.com>
+Subject: Re: [Bug 88131] New: PCI device intel ixgbe and xhci with 64-bit bar
+ address can NOT work on x86_32 PAE kernel.
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Aaron Ma <mapengyu@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
->> index 076c35c..97f9730 100644
->> --- a/arch/alpha/kernel/pci.c
->> +++ b/arch/alpha/kernel/pci.c
->> @@ -334,6 +334,8 @@ common_init_pci(void)
->>  
->>  		bus = pci_scan_root_bus(NULL, next_busno, alpha_mv.pci_ops,
->>  					hose, &resources);
->> +		if (bus)
->> +			pci_bus_add_devices(bus);
->>  		hose->bus = bus;
->>  		hose->need_domain_info = need_domain_info;
->>  		next_busno = bus->busn_res.end + 1;
-> 
-> How about making pci_bus_add_devices() handle a NULL argument to save
-> the if() here and elsewhere?
+On Wed, Nov 12, 2014 at 8:14 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc linux-pci, Yinghai]
+>
+> Thanks for the report!
+>
+> On Wed, Nov 12, 2014 at 8:57 PM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=88131
+>>
+>>             Bug ID: 88131
+>>            Summary: PCI device intel ixgbe and xhci with 64-bit bar
+>>                     address can NOT work on x86_32 PAE kernel.
+>>            Product: Drivers
+>>            Version: 2.5
+>>     Kernel Version: 3.18-rc4
+>>           Hardware: i386
+>>                 OS: Linux
+>>               Tree: Mainline
+>>             Status: NEW
+>>           Severity: normal
+>>           Priority: P1
+>>          Component: PCI
+>>           Assignee: drivers_pci@kernel-bugs.osdl.org
+>>           Reporter: mapengyu@gmail.com
+>>         Regression: No
+>>
+>> Created attachment 157441
+>>   --> https://bugzilla.kernel.org/attachment.cgi?id=157441&action=edit
+>> dmesg
+>>
+>> PCI device intel ixgbe and xhci with 64-bit bar address can NOT work on x86_32
+>> kernel.
+>>
+>> The bar0 base address of intel ixgbe ethernet card and xhci are above 4G.
+>> The commit d56dbf5bab8ce44c5407bb099f71987f58d18bb4 try to map the resource
+>> above 4G.
+>> Enabled PAE and HIGHMEM64G, it should support 64-bit BAR, but failed on high
+>> bar address.
+>
+> Can you also attach your .config to the bugzilla?
+>
+> Is this a regression?  Did it work correctly before d56dbf5bab8c
+> ("PCI: Allocate 64-bit BARs above 4G when possible")?
+>
+> I assume this is the problem you're seeing (for igbe):
 
-This make sense, will update it, thanks!
+This is some kind of bug that is uncovered by that commit.
 
->> diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
->> index 1bf60b1..f083688 100644
->> --- a/arch/mips/pci/pci.c
->> +++ b/arch/mips/pci/pci.c
->> @@ -113,6 +113,7 @@ static void pcibios_scanbus(struct pci_controller *hose)
->>  		if (!pci_has_flag(PCI_PROBE_ONLY)) {
->>  			pci_bus_size_bridges(bus);
->>  			pci_bus_assign_resources(bus);
->> +			pci_bus_add_devices(bus);
->>  		}
->>  	}
->>  }
-> 
-> This one looks wrong, I think you still want to call pci_bus_add_devices()
-> even with PCI_PROBE_ONLY set.
+I already have two patches for ixgbe one.
 
-Yes, this is my mistake, :(
+but xhci could be different problem.
 
-> 
->> diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
->> index 1f80a88..007466e 100644
->> --- a/arch/tile/kernel/pci.c
->> +++ b/arch/tile/kernel/pci.c
->> @@ -308,6 +308,8 @@ int __init pcibios_init(void)
->>  			pci_add_resource(&resources, &iomem_resource);
->>  			bus = pci_scan_root_bus(NULL, 0, controller->ops,
->>  						controller, &resources);
->> +			if (bus)
->> +				pci_bus_add_devices(bus);
->>  			controller->root_bus = bus;
->>  			controller->last_busno = bus->busn_res.end;
->>  		}
-> 
-> Should the pci_bus_add_devices come after setting the bus numbers here?
+Aaron, can you split the bug to two ?
+one for ixgbe and one for xhci.
 
-I think it's doesn't matter, but move it backward is ok to me.
+Thanks
 
-> 
-> 	Arnd
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
-
+Yinghai
