@@ -1,304 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:31297 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751218AbaKFOWF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 6 Nov 2014 09:22:05 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v5 13/31] x86: irq_remapping: Introduce new interfaces to support hierarchy irqdomain
-Date: Thu,  6 Nov 2014 22:20:26 +0800
-Message-Id: <1415283644-2559-14-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-qc0-f177.google.com ([209.85.216.177]:39938 "EHLO
+	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933226AbaKMSae convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 13:30:34 -0500
+Received: by mail-qc0-f177.google.com with SMTP id l6so11610793qcy.36
+        for <linux-pci@vger.kernel.org>; Thu, 13 Nov 2014 10:30:34 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4c98ff3154924990b1d3d20bd51eae8b@DM2PR03MB592.namprd03.prod.outlook.com>
+References: <863202fec7e0428682edf682c27beb2b@DM2PR03MB592.namprd03.prod.outlook.com>
+ <CAErSpo5pbY8oooXT4XD0qqOY8rW74iTi5RbJBO9rUHwRPL54qQ@mail.gmail.com> <4c98ff3154924990b1d3d20bd51eae8b@DM2PR03MB592.namprd03.prod.outlook.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 13 Nov 2014 11:30:13 -0700
+Message-ID: <CAErSpo5C5Qq_Dux1bcsSyEWSXG9UD1KsbuQ6L=Lr8VFJBvhgFA@mail.gmail.com>
+Subject: Re: Sorting out terminology
+To: Jake Oshins <jakeo@microsoft.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce new interfaces for interrupt remapping drivers to support
-hierarchy irqdomain:
-1) irq_remapping_get_ir_irq_domain(): get irqdomain associated with an
-   interrupt remapping unit. IOAPIC/HPET drivers use this interface to
-   get parent interrupt remapping irqdomain.
-2) irq_remapping_get_irq_domain(): get irqdomain for an IRQ allocation.
-   This is mainly used to support MSI irqdomain. We must build one MSI
-   irqdomain for each interrupt remapping unit. MSI driver calls this
-   interface to get MSI irqdomain associated with an IR irqdomain which
-   manages the PCI devices.
+On Thu, Nov 13, 2014 at 11:04 AM, Jake Oshins <jakeo@microsoft.com> wrote:
+>>> I can see how to create a root PCI bus, and I can see how to do that in
+>>> response to events coming in through paravirtual channels.  What's not clear
+>>> to me is whether there is a way to tear down a root PCI bus after it has been
+>>> created.  The most natural implementation for me would be to create a root
+>>> PCI bus whenever a PCI device is offered to the guest VM, tearing down that
+>>> root bus when the device is removed from the VM.  Would I be better off
+>>> creating one "fake" root PCI bus that lives forever and placing functions
+>>> beneath that?  (This seems more complicated to me, unless there's no way
+>>> to tear down a root.)
+>>
+>> I'd start by looking at acpi_pci_root_remove().  Theoretically that
+>> removes a PCI host bridge.  I say "theoretically" because this is new
+>> code and I haven't seen any bug reports related to it.  Maybe that
+>> means it works perfectly, or maybe it means nobody is really using it
+>> :)  Yinghai Lu has done most of the work in this area.
+>
+> Thanks for this advice.  That function was very informative.  I didn't really explain myself properly, though, and so I need to follow up here.  The root PCI bus that I would like to expose is not driven by ACPI.  The only role that ACPI takes in this VM (at least relevant to this discussion) is to create a Module Device (_CID of "ACPI0004") which has a _CRS that exposes all the address space available for all types of I/O devices, both paravirtual and PCI pass-through.  The paravirtual frame buffer, for instance, allocates from this range, and that isn't exposed in any way that looks like a PCI bus.
 
-Architecture specific needs to implement two hooks:
-1) arch_get_ir_parent_domain(): get parent irqdomain for IR irqdomain,
-   which is x86_vector_domain on x86 platforms.
-2) arch_create_msi_irq_domain(): create an MSI irqdomain associated with
-   the interrupt remapping unit.
+Makes sense.  I didn't think acpi_pci_root_remove() would be a
+fully-formed solution for you; I
+just pointed you there because it does things similar to what you want to do.
 
-We also add follwing callbacks into struct irq_remap_ops:
-	struct irq_domain *(*get_ir_irq_domain)(struct irq_alloc_info *);
-	struct irq_domain *(*get_irq_domain)(struct irq_alloc_info *);
+> When we do SR-IOV for Windows guests, we just create a root PCI bus and place a function underneath the root bus.  No root complex or anything other than the function itself is exposed in the guest.  The paravirtualization is purely a protocol, in contrast to the strategies used with libvirt, Xenbus and others.  There is no ACPI node for the root PCI buses.  There is no emulator for the host bridge, etc.
+>
+> I'm curious whether this strategy can work for Linux guests.  It seems like my paravirtual PCI front-end could just call the same functions that are invoked in acpi_pci_root_remove().  The only impediment seems to be that pci_stop_root_bus() and pci_remove_root_bus() are not marked with EXPORT_SYMBOL_GPL ().
+>
+> Would it be acceptable to mark these with EXPORT_SYMBOL_GPL()?  Is this not done simply because nobody has needed it before?  Or is there some other reason?
 
-Once all clients of IR have been converted to new hierarchy irqdomain
-interfaces, we will:
-1) Remove set_ioapic_entry, set_affinity, free_irq, compose_msi_msg,
-   msi_alloc_irq, msi_setup_irq, setup_hpet_msi from struct remap_osp
-2) Kill setup_ioapic_remapped_entry, free_remapped_irq,
-   compose_remapped_msi_msg, setup_hpet_msi_remapped, setup_remapped_irq.
-3) Simplify x86_io_apic_ops and x86_msi.
+They're not exported simply because we haven't had any need to export
+them.  I think they could be exported if necessary.
 
-We could achieve a much more clear architecture with all these changes
-applied.
+>> You said "root port's bridge windows," and I think we can change PCIe
+>> Root Port bridge windows in the same way we can change any other
+>> PCI-to-PCI bridge's windows.  This is another area that works in
+>> theory but is not well-exercised, and here we *do* have bug reports,
+>> so I know it doesn't work perfectly.  Yinghai Lu is also the expert in
+>> this sort of resource allocation.
+>>
+>> But it sounds like you might be talking about changing the host
+>> bridge's windows, i.e., using _SRS on the host bridge ACPI device, and
+>> Linux doesn't have any support for that.
+>>
+>> Since you mentioned terminology, here's how I use it:
+>>
+>>   host bridge = a PNP0A03 or PNP0A08 device
+>>   root bus = the PCI/PCIe bus immediately below a host bridge (bus
+>> number is the _MIN of the bus number range in the host bridge _CRS)
+>>   root port = a PCIe Root Port, which we handle as a regular
+>> PCI-to-PCI bridge (plus the PCIe services)
+>>
+>> Bjorn
+>
+> Similarly, I'm not talking about invoking _SRS on a host bridge.  (I know where the pitfalls are there, and why doing it is a bad idea.  I happen to have implemented that code in Windows.)  I'm talking about changing the resources assigned to a purely paravirtual root PCI bus.  I assume that the protocol for changing the size of PCI-to-PCI bridge windows could be used for this, too.  Do you have a pointer on where to read the code to understand this process?
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Acked-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/include/asm/hw_irq.h        |   35 +++++++++++++++++++++++++
- arch/x86/include/asm/irq_remapping.h |   39 +++++++++++++++++++++++++++
- drivers/iommu/irq_remapping.c        |   48 +++++++++++++++++++++++++++++++++-
- drivers/iommu/irq_remapping.h        |   10 +++++++
- 4 files changed, 131 insertions(+), 1 deletion(-)
+The existing resource reassignment code is mostly in
+drivers/pci/setup-bus.c.  It's possible that if you change the
+resources assigned to the paravirtual root bus, it will do the right
+thing.  It's not exactly a case we have today, but it *is* similar to
+the case of a device below a P2P bridge where we changed the window
+size.
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index c19ceefeca65..cf84eac7a394 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -113,10 +113,45 @@ struct irq_2_irte {
- #ifdef	CONFIG_X86_LOCAL_APIC
- struct irq_data;
- struct irq_domain;
-+struct pci_dev;
-+struct msi_desc;
-+
-+enum irq_alloc_type {
-+	X86_IRQ_ALLOC_TYPE_IOAPIC = 1,
-+	X86_IRQ_ALLOC_TYPE_HPET,
-+	X86_IRQ_ALLOC_TYPE_MSI,
-+	X86_IRQ_ALLOC_TYPE_MSIX,
-+};
- 
- struct irq_alloc_info {
-+	enum irq_alloc_type	type;
- 	u32			flags;
- 	const struct cpumask	*mask;	/* CPU mask for vector allocation */
-+	union {
-+		int		unused;
-+#ifdef	CONFIG_HPET_TIMER
-+		struct {
-+			int		hpet_id;
-+			int		hpet_index;
-+			void		*hpet_data;
-+		};
-+#endif
-+#ifdef	CONFIG_PCI_MSI
-+		struct {
-+			struct pci_dev	*msi_dev;
-+			irq_hw_number_t	msi_hwirq;
-+		};
-+#endif
-+#ifdef	CONFIG_X86_IO_APIC
-+		struct {
-+			int		ioapic_id;
-+			int		ioapic_pin;
-+			u32		ioapic_trigger : 1;
-+			u32		ioapic_polarity : 1;
-+			struct IO_APIC_route_entry *ioapic_entry;
-+		};
-+#endif
-+	};
- };
- 
- /* Request contigious CPU vectors */
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index 230dde9b695e..d2410ac8cef9 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -22,6 +22,8 @@
- #ifndef __X86_IRQ_REMAPPING_H
- #define __X86_IRQ_REMAPPING_H
- 
-+#include <linux/irqdomain.h>
-+#include <asm/hw_irq.h>
- #include <asm/io_apic.h>
- 
- struct IO_APIC_route_entry;
-@@ -30,6 +32,7 @@ struct irq_chip;
- struct msi_msg;
- struct pci_dev;
- struct irq_cfg;
-+struct irq_alloc_info;
- 
- #ifdef CONFIG_IRQ_REMAP
- 
-@@ -58,6 +61,28 @@ extern bool setup_remapped_irq(int irq,
- 
- void irq_remap_modify_chip_defaults(struct irq_chip *chip);
- 
-+extern struct irq_domain *irq_remapping_get_ir_irq_domain(
-+				struct irq_alloc_info *info);
-+extern struct irq_domain *irq_remapping_get_irq_domain(
-+				struct irq_alloc_info *info);
-+extern void irq_remapping_print_chip(struct irq_data *data, struct seq_file *p);
-+
-+/*
-+ * Create MSI/MSIx irqdomain for interrupt remapping device, use @parent as
-+ * parent irqdomain.
-+ */
-+static inline struct irq_domain *
-+arch_create_msi_irq_domain(struct irq_domain *parent)
-+{
-+	return NULL;
-+}
-+
-+/* Get parent irqdomain for interrupt remapping irqdomain */
-+static inline struct irq_domain *arch_get_ir_parent_domain(void)
-+{
-+	return x86_vector_domain;
-+}
-+
- #else  /* CONFIG_IRQ_REMAP */
- 
- static inline void setup_irq_remapping_ops(void) { }
-@@ -101,6 +126,20 @@ static inline bool setup_remapped_irq(int irq,
- {
- 	return false;
- }
-+
-+static inline struct irq_domain *
-+irq_remapping_get_ir_irq_domain(struct irq_alloc_info *info)
-+{
-+	return NULL;
-+}
-+
-+static inline struct irq_domain *
-+irq_remapping_get_irq_domain(struct irq_alloc_info *info)
-+{
-+	return NULL;
-+}
-+
-+#define	irq_remapping_print_chip	NULL
- #endif /* CONFIG_IRQ_REMAP */
- 
- extern int dmar_alloc_hwirq(void);
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 63886bafed9f..176ff4372b7d 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -377,7 +377,7 @@ void panic_if_irq_remap(const char *msg)
- 		panic(msg);
- }
- 
--static void ir_ack_apic_edge(struct irq_data *data)
-+void ir_ack_apic_edge(struct irq_data *data)
- {
- 	ack_APIC_irq();
- }
-@@ -388,6 +388,19 @@ static void ir_ack_apic_level(struct irq_data *data)
- 	eoi_ioapic_irq(data->irq, irqd_cfg(data));
- }
- 
-+void irq_remapping_print_chip(struct irq_data *data, struct seq_file *p)
-+{
-+	/*
-+	 * Assume interrupt is remapped if the parent irqdomain isn't the
-+	 * vector domain, which is true for MSI, HPET and IOAPIC on x86
-+	 * platforms.
-+	 */
-+	if (data->domain && data->domain->parent != arch_get_ir_parent_domain())
-+		seq_printf(p, " IR-%s", data->chip->name);
-+	else
-+		seq_printf(p, " %s", data->chip->name);
-+}
-+
- static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
- {
- 	seq_printf(p, " IR-%s", data->chip->name);
-@@ -409,3 +422,36 @@ bool setup_remapped_irq(int irq, struct irq_cfg *cfg, struct irq_chip *chip)
- 	irq_remap_modify_chip_defaults(chip);
- 	return true;
- }
-+
-+/**
-+ * irq_remapping_get_ir_irq_domain - Get the irqdomain associated the IOMMU
-+ *				     device serving @info
-+ * @info: interrupt allocation information, used to find the IOMMU device
-+ *
-+ * It's used to get parent irqdomain for HPET and IOAPIC domains.
-+ * Returns pointer to IRQ domain, or NULL on failure.
-+ */
-+struct irq_domain *
-+irq_remapping_get_ir_irq_domain(struct irq_alloc_info *info)
-+{
-+	if (!remap_ops || !remap_ops->get_ir_irq_domain)
-+		return NULL;
-+
-+	return remap_ops->get_ir_irq_domain(info);
-+}
-+
-+/**
-+ * irq_remapping_get_irq_domain - Get the irqdomain serving the MSI interrupt
-+ * @info: interrupt allocation information, used to find the IOMMU device
-+ *
-+ * It's used to get irqdomain for MSI/MSIx interrupt allocation.
-+ * Returns pointer to IRQ domain, or NULL on failure.
-+ */
-+struct irq_domain *
-+irq_remapping_get_irq_domain(struct irq_alloc_info *info)
-+{
-+	if (!remap_ops || !remap_ops->get_irq_domain)
-+		return NULL;
-+
-+	return remap_ops->get_irq_domain(info);
-+}
-diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
-index fde250f86e60..8c159d6fac46 100644
---- a/drivers/iommu/irq_remapping.h
-+++ b/drivers/iommu/irq_remapping.h
-@@ -30,6 +30,8 @@ struct irq_data;
- struct cpumask;
- struct pci_dev;
- struct msi_msg;
-+struct irq_domain;
-+struct irq_alloc_info;
- 
- extern int disable_irq_remap;
- extern int irq_remap_broken;
-@@ -81,11 +83,19 @@ struct irq_remap_ops {
- 
- 	/* Setup interrupt remapping for an HPET MSI */
- 	int (*alloc_hpet_msi)(unsigned int, unsigned int);
-+
-+	/* Get the irqdomain associated the IOMMU device */
-+	struct irq_domain *(*get_ir_irq_domain)(struct irq_alloc_info *);
-+
-+	/* Get the MSI irqdomain associated with the IOMMU device */
-+	struct irq_domain *(*get_irq_domain)(struct irq_alloc_info *);
- };
- 
- extern struct irq_remap_ops intel_irq_remap_ops;
- extern struct irq_remap_ops amd_iommu_irq_ops;
- 
-+extern void ir_ack_apic_edge(struct irq_data *data);
-+
- #else  /* CONFIG_IRQ_REMAP */
- 
- #define irq_remapping_enabled 0
--- 
-1.7.10.4
-
+Bjorn
