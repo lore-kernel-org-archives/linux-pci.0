@@ -1,51 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cmexedge2.emulex.com ([138.239.224.100]:51069 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752621AbaKJLwu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Nov 2014 06:52:50 -0500
-From: Sathya Perla <sathya.perla@emulex.com>
-To: <linux-pci@vger.kernel.org>, <netdev@vger.kernel.org>
-CC: <ariel.elior@qlogic.com>, <linux.nics@intel.com>,
-	<shahed.shaikh@qlogic.com>, <ddutile@redhat.com>
-Subject: [PATCH 3/4] i40e: remove pci_assigned_vfs() check while disabling VFs
-Date: Mon, 10 Nov 2014 17:23:29 +0530
-Message-ID: <1415620410-4937-4-git-send-email-sathya.perla@emulex.com>
-In-Reply-To: <1415620410-4937-1-git-send-email-sathya.perla@emulex.com>
-References: <1415620410-4937-1-git-send-email-sathya.perla@emulex.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5465134B.7070709@arm.com>
+Date: Thu, 13 Nov 2014 20:23:39 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+To: Jiang Liu <jiang.liu@linux.intel.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Alexander Gordeev <agordeev@redhat.com>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [Patch V1 3/6] genirq: Introduce msi_domain_{alloc|free}_irqs()
+References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com> <1415879029-20098-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415879029-20098-4-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=WINDOWS-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Vasundhara Volam <vasundhara.volam@emulex.com>
+On 13/11/14 11:43, Jiang Liu wrote:
+> Introduce msi_domain_{alloc|free}_irqs() to alloc/free interrupts
+> from generic MSI irqdomain.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  include/linux/msi.h |   35 ++++++++++++++++++++++++++++++
+>  kernel/irq/msi.c    |   59 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 94 insertions(+)
+> 
+> diff --git a/include/linux/msi.h b/include/linux/msi.h
+> index 714716a3ffdd..6b356a1410b2 100644
+> --- a/include/linux/msi.h
+> +++ b/include/linux/msi.h
+> @@ -3,6 +3,7 @@
+>  
+>  #include <linux/kobject.h>
+>  #include <linux/list.h>
+> +#include <asm/hw_irq.h>		/* for msi_alloc_info_t */
+>  
+>  struct msi_msg {
+>  	u32	address_lo;	/* low 32 bits of msi message address */
+> @@ -100,7 +101,26 @@ struct irq_chip;
+>  struct device_node;
+>  struct msi_domain_info;
+>  
+> +#ifndef NUM_MSI_ALLOC_SCRATCHPAD_REGS
+> +#define NUM_MSI_ALLOC_SCRATCHPAD_REGS	2
+> +#endif
+> +
+> +/*
+> + * Default structure for MSI interrupt allocation.
+> + * Arch may overwrite it by define msi_alloc_info_t.
+> + */
+> +struct msi_alloc_info {
+> +	struct msi_desc *desc;
+> +	irq_hw_number_t hwirq;
+> +	long		scratchpad[NUM_MSI_ALLOC_SCRATCHPAD_REGS];
 
-The pci_assigned_vfs() check (while disabling VFs) is being moved to the
-pci-sysfs.c file and will be done before invoking sriov_configure().
+As much as I'm relieved to see a generic structure here, could
+scratchpad be slightly less awkward to use? Something like:
 
-Signed-off-by: Vasundhara Volam <vasundhara.volam@emulex.com>
-Signed-off-by: Sathya Perla <sathya.perla@emulex.com>
----
- drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c |    7 +------
- 1 files changed, 1 insertions(+), 6 deletions(-)
+struct msi_alloc_info {
+	[...]
+	union	{
+		unsigned long ul;
+		void *ptr;
+	} scratchpad[NUM_MSI_ALLOC_SCRATCHPAD_REGS];
+};
 
-diff --git a/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c b/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
-index fff3c27..0028a9a 100644
---- a/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
-+++ b/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
-@@ -951,12 +951,7 @@ int i40e_pci_sriov_configure(struct pci_dev *pdev, int num_vfs)
- 	if (num_vfs)
- 		return i40e_pci_sriov_enable(pdev, num_vfs);
- 
--	if (!pci_vfs_assigned(pf->pdev)) {
--		i40e_free_vfs(pf);
--	} else {
--		dev_warn(&pdev->dev, "Unable to free VFs because some are assigned to VMs.\n");
--		return -EINVAL;
--	}
-+	i40e_free_vfs(pf);
- 	return 0;
- }
- 
+That would avoid some very ugly casting.
+
+Thanks,
+
+	M.
 -- 
-1.7.1
+Jazz is not dead. It just smells funny...
 
