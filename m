@@ -1,75 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:41714 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751115AbaKFEQz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 23:16:55 -0500
-Received: by mail-ig0-f173.google.com with SMTP id r10so10096361igi.6
-        for <linux-pci@vger.kernel.org>; Wed, 05 Nov 2014 20:16:54 -0800 (PST)
-Date: Wed, 5 Nov 2014 21:16:48 -0700
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:46447 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753973AbaKMRJ0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 12:09:26 -0500
+Received: by mail-pa0-f45.google.com with SMTP id lf10so15622272pab.4
+        for <linux-pci@vger.kernel.org>; Thu, 13 Nov 2014 09:09:25 -0800 (PST)
+Date: Thu, 13 Nov 2014 10:09:21 -0700
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Chen Gang <gang.chen.5i5j@gmail.com>
-Cc: konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
-	david.vrabel@citrix.com, xen-devel@lists.xenproject.org,
-	linux-pci@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH next] xen: pcifront: Process failure for
- pcifront_(re)scan_root()
-Message-ID: <20141106041648.GM6168@google.com>
-References: <543206CD.1040505@gmail.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, Liviu Dudau <Liviu.Dudau@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2] PCI: add missing DT binding for linux,pci-domain
+ property
+Message-ID: <20141113170921.GG5064@google.com>
+References: <1415287400-30426-1-git-send-email-l.stach@pengutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <543206CD.1040505@gmail.com>
+In-Reply-To: <1415287400-30426-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 06, 2014 at 11:04:45AM +0800, Chen Gang wrote:
-> When pcifront_rescan_root() or pcifront_scan_root() fails, need return
-> error code, neither set XenbusStateConnected state, just like the other
-> areas have done.
+On Thu, Nov 06, 2014 at 04:23:20PM +0100, Lucas Stach wrote:
+> This property was added by 41e5c0f81d3e
+> (of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr())
+> without the required binding documentation. As this property
+> will be supported by a number of host bridge drivers going forward,
+> add it to the common PCI binding doc.
 > 
-> For pcifront_rescan_root(), it will return error code ("num_roots = 0;",
-> skip xenbus_switch_state return value).
-> 
-> For pcifront_scan_root(), it will return 0 ("num_roots = 0;", set 0 by
-> the return value of xenbus_switch_state, which always return 0, at
-> present).
-> 
-> Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
 
-Applied to pci/virtualization for v3.19, with Konrad's ack and my changelog
-rework.  Thanks!
+Applied with acks from Liviu and Rob to for-linus for v3.18, thanks a lot
+for working this out!
 
 > ---
->  drivers/pci/xen-pcifront.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
+> This is a non-critical fix, but may still qualify for 3.18-rc as
+> the property was added in this release cycle.
 > 
-> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-> index 53df39a..d78d884 100644
-> --- a/drivers/pci/xen-pcifront.c
-> +++ b/drivers/pci/xen-pcifront.c
-> @@ -866,6 +866,11 @@ static int pcifront_try_connect(struct pcifront_device *pdev)
->  		xenbus_dev_error(pdev->xdev, err,
->  				 "No PCI Roots found, trying 0000:00");
->  		err = pcifront_scan_root(pdev, 0, 0);
-> +		if (err) {
-> +			xenbus_dev_fatal(pdev->xdev, err,
-> +					 "Error scanning PCI root 0000:00");
-> +			goto out;
-> +		}
->  		num_roots = 0;
->  	} else if (err != 1) {
->  		if (err == 0)
-> @@ -947,6 +952,11 @@ static int pcifront_attach_devices(struct pcifront_device *pdev)
->  		xenbus_dev_error(pdev->xdev, err,
->  				 "No PCI Roots found, trying 0000:00");
->  		err = pcifront_rescan_root(pdev, 0, 0);
-> +		if (err) {
-> +			xenbus_dev_fatal(pdev->xdev, err,
-> +					 "Error scanning PCI root 0000:00");
-> +			goto out;
-> +		}
->  		num_roots = 0;
->  	} else if (err != 1) {
->  		if (err == 0)
+> v2:
+> - emphasize that the property must be present and unique systemwide
+>   if used
+> ---
+>  Documentation/devicetree/bindings/pci/pci.txt | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
+> index 41aeed38926d..68c364e2f5e5 100644
+> --- a/Documentation/devicetree/bindings/pci/pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/pci.txt
+> @@ -7,3 +7,14 @@ And for the interrupt mapping part:
+>  
+>  Open Firmware Recommended Practice: Interrupt Mapping
+>  http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
+> +
+> +Additionally to the properties specified in the above standards a host bridge
+> +driver implementation may support the following properties:
+> +
+> +- linux,pci-domain:
+> +   If present this property assigns a fixed PCI domain number to a host bridge,
+> +   otherwise an unstable (across boots) unique number will be assigned.
+> +   It is required to either not set this property at all or set it for all
+> +   host bridges in the system, otherwise potentially conflicting domain numbers
+> +   may be assigned to root buses behind different host bridges. The domain
+> +   number for each host bridge in the system must be unique.
 > -- 
-> 1.9.3
+> 2.1.1
+> 
