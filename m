@@ -1,60 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:33159 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751061AbaKYW6S (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 25 Nov 2014 17:58:18 -0500
-Message-ID: <1416956282.5089.4.camel@kernel.crashing.org>
-Subject: Re: [PATCH 2/8] powerpc/pci: Don't scan empty slot
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:37869 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751116AbaKMRcP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 12:32:15 -0500
+Received: by mail-pa0-f44.google.com with SMTP id et14so881838pad.17
+        for <linux-pci@vger.kernel.org>; Thu, 13 Nov 2014 09:32:14 -0800 (PST)
+Date: Thu, 13 Nov 2014 10:32:10 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
 To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	mpe@ellerman.id.au
-Date: Wed, 26 Nov 2014 09:58:02 +1100
-In-Reply-To: <1416869365-7671-3-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1416869365-7671-1-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <1416869365-7671-3-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: Make reset warning messages different
+Message-ID: <20141113173210.GI5064@google.com>
+References: <1415760111-12344-1-git-send-email-gwshan@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1415760111-12344-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2014-11-25 at 09:49 +1100, Gavin Shan wrote:
-> In hotplug case, function pcibios_add_pci_devices() is called to
-> rescan the specified PCI bus, which possibly doesn't have any child
-> devices. Access to the PCI bus's child device node will cause kernel
-> crash without exception. The patch adds two more conditions to avoid
-> the kernel crash.
+On Wed, Nov 12, 2014 at 01:41:51PM +1100, Gavin Shan wrote:
+> We have same warning message for FLR and AF FLR and users can't
+> know which type of resets the PCI device is taking when there are
+> pending transactions. The patch makes them different for FLR and
+> AF FLR cases.
 > 
 > Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+
+Applied to pci/misc for v3.19, thanks!
+
 > ---
->  arch/powerpc/kernel/pci-hotplug.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
+> v2: Adjusted messages according to Bjorn's suggestion
+> ---
+>  drivers/pci/pci.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
 > 
-> diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
-> index 6e2b4e3..ea5513b 100644
-> --- a/arch/powerpc/kernel/pci-hotplug.c
-> +++ b/arch/powerpc/kernel/pci-hotplug.c
-> @@ -105,7 +105,7 @@ EXPORT_SYMBOL_GPL(pcibios_remove_pci_devices);
->   * is how this routine differs from other, similar pcibios
->   * routines.)
->   */
-> -void pcibios_add_pci_devices(struct pci_bus * bus)
-> +void pcibios_add_pci_devices(struct pci_bus *bus)
-
-Unrelated whitespace change
-
->  {
->  	int slotno, mode, pass, max;
->  	struct pci_dev *dev;
-> @@ -120,7 +120,8 @@ void pcibios_add_pci_devices(struct pci_bus * bus)
->  	if (mode == PCI_PROBE_DEVTREE) {
->  		/* use ofdt-based probe */
->  		of_rescan_bus(dn, bus);
-> -	} else if (mode == PCI_PROBE_NORMAL) {
-> +	} else if (mode == PCI_PROBE_NORMAL &&
-> +		   dn->child && PCI_DN(dn->child)) {
->  		/*
->  		 * Use legacy probe. In the partial hotplug case, we
->  		 * probably have grandchildren devices unplugged. So
-
-
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 625a4ac..3f12383 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3144,7 +3144,8 @@ static int pcie_flr(struct pci_dev *dev, int probe)
+>  		return 0;
+>  
+>  	if (!pci_wait_for_pending_transaction(dev))
+> -		dev_err(&dev->dev, "transaction is not cleared; proceeding with reset anyway\n");
+> +		dev_err(&dev->dev, "timed out waiting for pending transaction; "
+> +				   "performing function level reset\n");
+>  
+>  	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
+>  
+> @@ -3178,7 +3179,8 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
+>  				 PCI_AF_STATUS_TP << 8))
+>  		goto clear;
+>  
+> -	dev_err(&dev->dev, "transaction is not cleared; proceeding with reset anyway\n");
+> +	dev_err(&dev->dev, "timed out waiting for pending transaction; "
+> +			   "performing AF function level reset\n");
+>  
+>  clear:
+>  	pci_write_config_byte(dev, pos + PCI_AF_CTRL, PCI_AF_CTRL_FLR);
+> -- 
+> 1.8.3.2
+> 
