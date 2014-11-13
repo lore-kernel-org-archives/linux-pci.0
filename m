@@ -1,57 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:56458 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753779AbaKRJ6r convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 04:58:47 -0500
-Date: Tue, 18 Nov 2014 10:58:43 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Myron Stowe <myron.stowe@redhat.com>
-Cc: Kevin Hilman <khilman@kernel.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory =?UTF-8?B?Q2zDqW1lbnQ=?=
-	<gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Subject: Re: Regression caused by "PCI: Shrink decoding-disabled window
- while sizing BARs"
-Message-ID: <20141118105843.3c1651d5@free-electrons.com>
-In-Reply-To: <20141118105542.457d7863@free-electrons.com>
-References: <20141118105542.457d7863@free-electrons.com>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:38902 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933138AbaKMQmf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 11:42:35 -0500
+Received: by mail-ie0-f178.google.com with SMTP id rp18so16188764iec.9
+        for <linux-pci@vger.kernel.org>; Thu, 13 Nov 2014 08:42:35 -0800 (PST)
+Date: Thu, 13 Nov 2014 09:42:32 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: linux-pci@vger.kernel.org, 'Kishon Vijay Abraham I' <kishon@ti.com>
+Subject: Re: [PATCH V2] PCI: dra7xx: Add dra7xx prefix before add_pcie_port
+Message-ID: <20141113164232.GB5064@google.com>
+References: <001301cff95e$a124f6b0$e36ee410$%han@samsung.com>
+ <001c01cff982$d2e4fa00$78aeee00$%han@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <001c01cff982$d2e4fa00$78aeee00$%han@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
-
-On Tue, 18 Nov 2014 10:55:42 +0100, Thomas Petazzoni wrote:
-
-> Since next-20141117, PCI support is broken on ARM Marvell EBU
-> platforms. next-20141114 was working fine. The problem we see is:
+On Thu, Nov 06, 2014 at 02:30:49PM +0900, Jingoo Han wrote:
+> The add_pcie_port function is dra7xx-specific. Add dra7xx prefix
+> to avoid collision in global name space.
 > 
-> pci 0000:03:00.0: reg 0x10: can't handle BAR larger than 4GB (size 0xfffffffffff00000)
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
 
-Another issue (possibly related, or not), is the following compile time
-warning:
+Applied to pci/host-dra7xx for v3.19, thanks!
 
-/home/thomas/projets/linux-2.6/drivers/pci/probe.c: In function ‘pci_read_bridge_mmio_pref’:
-/home/thomas/projets/linux-2.6/drivers/pci/probe.c:430:5: warning: left shift count >= width of type
-     base |= ((dma_addr_t) mem_base_hi) << 32;
-     ^
-/home/thomas/projets/linux-2.6/drivers/pci/probe.c:431:5: warning: left shift count >= width of type
-     limit |= ((dma_addr_t) mem_limit_hi) << 32;
-     ^
-
-This happens because dma_addr_t is 32 bits on ARM platforms, which
-isn't properly taken into account by the commit that introduces support
-for 64 bits DMA addresses.
-
-Best regards,
-
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+> ---
+> - Replace 'exynos' typo with 'dra7xx' in the commit message.
+> - Added Kishon's Acked-by.
+> 
+>  drivers/pci/host/pci-dra7xx.c |    6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+> index 52b34fe..5b4a644 100644
+> --- a/drivers/pci/host/pci-dra7xx.c
+> +++ b/drivers/pci/host/pci-dra7xx.c
+> @@ -270,8 +270,8 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
+>  	return IRQ_HANDLED;
+>  }
+>  
+> -static int add_pcie_port(struct dra7xx_pcie *dra7xx,
+> -			  struct platform_device *pdev)
+> +static int dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+> +				struct platform_device *pdev)
+>  {
+>  	int ret;
+>  	struct pcie_port *pp;
+> @@ -398,7 +398,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+>  
+>  	platform_set_drvdata(pdev, dra7xx);
+>  
+> -	ret = add_pcie_port(dra7xx, pdev);
+> +	ret = dra7xx_add_pcie_port(dra7xx, pdev);
+>  	if (ret < 0)
+>  		goto err_add_port;
+>  
+> -- 
+> 1.7.9.5
+> 
+> 
