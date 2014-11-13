@@ -1,103 +1,124 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sun, 16 Nov 2014 19:59:14 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>, g@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>
-Subject: Re: [PATCH 00/10] Save MSI chip in pci_sys_data
-Message-ID: <20141117025914.GC4280@google.com>
-References: <1414396127-30023-1-git-send-email-wangyijing@huawei.com>
- <20141112042359.GK28161@google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:57636 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933088AbaKMPWm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 10:22:42 -0500
+Date: Thu, 13 Nov 2014 15:22:43 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Will Deacon <Will.Deacon@arm.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/2] PCI: generic: Add set_msi_parent callback
+Message-ID: <20141113152243.GB9726@red-moon>
+References: <1415647480-3320-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <1415647480-3320-3-git-send-email-suravee.suthikulpanit@amd.com>
+ <20141111112424.GB16265@arm.com>
+ <20141111115227.GF12037@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141112042359.GK28161@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20141111115227.GF12037@e106497-lin.cambridge.arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Marc, Yingjoe]
+On Tue, Nov 11, 2014 at 11:52:27AM +0000, Liviu Dudau wrote:
+> On Tue, Nov 11, 2014 at 11:24:24AM +0000, Will Deacon wrote:
+> > Hi Suravee,
+> > 
+> > On Mon, Nov 10, 2014 at 07:24:40PM +0000, suravee.suthikulpanit@amd.com wrote:
+> > > From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> > > 
+> > > This patch implement set_msi_parent callback for PCI generic host controller.
+> > > 
+> > > Cc: Bjorn Helgass <bhelgaas@google.com>
+> > > Cc: Liviu Dudau <liviu.dudau@arm.com>
+> > > Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > > Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> > > ---
+> > >  drivers/pci/host/pci-host-generic.c | 14 ++++++++++++++
+> > >  1 file changed, 14 insertions(+)
+> > > 
+> > > diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> > > index 036ab1b..f9bb97a 100644
+> > > --- a/drivers/pci/host/pci-host-generic.c
+> > > +++ b/drivers/pci/host/pci-host-generic.c
+> > > @@ -42,6 +42,7 @@ struct gen_pci {
+> > >  	struct pci_host_bridge			host;
+> > >  	struct gen_pci_cfg_windows		cfg;
+> > >  	struct list_head			resources;
+> > > +	struct msi_chip				*mchip;
+> > >  };
+> > >  
+> > >  #ifdef CONFIG_ARM
+> > > @@ -128,9 +129,19 @@ static int gen_pci_config_write(struct pci_bus *bus, unsigned int devfn,
+> > >  	return PCIBIOS_SUCCESSFUL;
+> > >  }
+> > >  
+> > > +static int gen_pci_set_msi_parent(struct pci_bus *bus)
+> > > +{
+> > > +	struct gen_pci *pci = bus_to_gen_pci(bus);
+> > > +
+> > > +	bus->msi = pci->mchip;
+> > > +
+> > > +	return PCIBIOS_SUCCESSFUL;
+> > > +}
+> > 
+> > I don't think this makes much sense a host controller callback. Why can't
+> > bus->msi be set in generic code?
+> 
+> Because of the current way in which a bus gets created and them immediately used for
+> scanning devices if you use pci_scan_root_bus(). Alternative is to use pci_create_root_bus()
+> and increase your code size with the body of pci_scan_root_bus().
+> 
+> Solution is to have pci_host_bridge holding the msi_chip pointer and that gets created
+> before root bus, with pci_scan_root_bus() now having all the info needed to do successful
+> setup of scanned devices.
 
-On Tue, Nov 11, 2014 at 09:23:59PM -0700, Bjorn Helgaas wrote:
-> On Mon, Oct 27, 2014 at 03:48:37PM +0800, Yijing Wang wrote:
-> > Now PCI host bridge drivers in arm associate MSI chip and
-> > PCI bus by adding .add_bus(), and assign MSI chip pointer
-> > to every PCI bus. Associating MSI chip and every PCI bus
-> > is not necessary. All PCI busses under same PCI host brdige
-> > share the same MSI chip. So saving MSI chip in pci_sys_data
-> > is a better solution, it make PCI host bridge drivers clean.
-> > Because we still need to provide arch spec pcibios_msi_controller()
-> > to extract MSI controller pointer, a better solution is to
-> > refactor PCI host bridge, make a generic pci_host_bridge, and
-> > save common info like PCI domain number, MSI chip, resources
-> > in it. We will do that work in another series as soon.
+Why can't we add a hook like pci_bus_assign_domain_nr(), say:
+
+pci_bus_msi_init()
+
+in pci_create_root_bus() that does what Suravee wants in a generic way ?
+
+What am I missing ?
+
+Lorenzo
+
+> 
+> Best regards,
+> Liviu
+> 
 > > 
-> > To Bjorn: Because struct msi_chip defined in struct hw_pci and pci_sys_data
-> > is under the #ifdef CONFIG_PCI_MSI, if we use if(IS_ENABLED(CONFIG_PCI_MSI))
-> > in PCI host bridge drivers, it will cause build errors when the CONFIG_PCI_MSI
-> > is off. So I keep #ifdef CONFIG_PCI_MSI in this series.
+> > >  static struct pci_ops gen_pci_ops = {
+> > >  	.read	= gen_pci_config_read,
+> > >  	.write	= gen_pci_config_write,
+> > > +	.set_msi_parent = gen_pci_set_msi_parent,
+> > >  };
+> > >  
+> > >  static const struct of_device_id gen_pci_of_match[] = {
+> > > @@ -313,6 +324,9 @@ static int gen_pci_probe(struct platform_device *pdev)
+> > >  		return err;
+> > >  	}
+> > >  
+> > > +	pci->mchip = of_pci_find_msi_chip_by_node(of_parse_phandle(np,
+> > > +						  "msi-parent", 0));
 > > 
-> > Yijing Wang (10):
-> >   MSI: Rename msi_chip to msi_controller for better readability
-> >   PCI/MSI: Introduce weak pcibios_msi_controller()
-> >   arm/MSI: Save MSI controller in pci_sys_data
-> >   PCI: tegra: Save MSI controller in pci_sys_data
-> >   PCI: designware: Save MSI controller in pci_sys_data
-> >   PCI: rcar: Save MSI controller in pci_sys_data
-> >   PCI: mvebu: Save MSI controller in pci_sys_data
-> >   PCI: xilinx: Save MSI controller in pci_sys_data
-> >   arm/PCI: Clean unused pcibios_add_bus() and pcibios_remove_bus()
-> >   PCI/MSI: Remove useless bus->msi assignment
+> > This bit should be in the generic of_pci.c code and not duplicated for
+> > each host controller.
 > > 
-> >  arch/arm/include/asm/mach/pci.h     |   10 +++++---
-> >  arch/arm/kernel/bios32.c            |   28 ++++++++++--------------
-> >  drivers/irqchip/irq-armada-370-xp.c |   22 +++++++++---------
-> >  drivers/of/of_pci.c                 |   40 +++++++++++++++++-----------------
-> >  drivers/pci/host/pci-keystone-dw.c  |    4 +-
-> >  drivers/pci/host/pci-keystone.h     |    2 +-
-> >  drivers/pci/host/pci-mvebu.c        |   14 ++++-------
-> >  drivers/pci/host/pci-tegra.c        |   37 +++++++++++++-------------------
-> >  drivers/pci/host/pcie-designware.c  |   25 +++++++--------------
-> >  drivers/pci/host/pcie-designware.h  |    2 +-
-> >  drivers/pci/host/pcie-rcar.c        |   37 +++++++++++++-------------------
-> >  drivers/pci/host/pcie-xilinx.c      |   27 +++++++----------------
-> >  drivers/pci/msi.c                   |   22 ++++++++++++++-----
-> >  drivers/pci/probe.c                 |    1 -
-> >  include/linux/msi.h                 |    6 ++--
-> >  include/linux/of_pci.h              |   14 ++++++------
-> >  include/linux/pci.h                 |    2 +-
-> >  17 files changed, 132 insertions(+), 161 deletions(-)
+> > Will
 > > 
 > 
-> Applied to pci/msi for v3.19, thanks.
-
-This series is currently in the pci "next" branch, but the fact that there
-are so many MSI-related changes from so many people makes me worry that
-we're heading for a merge problem.
-
-Here are the outstanding IRQ- and MSI-related things I've seen:
-
-  Marc   10/25 [00/03] genirq: Add support for "split-EOI" irqchips
-  Yijing 10/27 [00/10] Save MSI chip in pci_sys_data
-  Yijing 10/27 [00/16] Use MSI controller framework to configure MSI/MSI-X
-  Jiang  10/27 [Part1 v3 00/20] Prepare for enabling hierarchy irqdomain on x86
-  Jiang  11/02 [v8 00/18] Enable support of IOAPIC hotplug on x86 platforms
-  Jiang  11/06 [Part2 v5 00/31] Enable hierarchy irqdomian on x86 platforms
-  Jiang  11/09 [Part3 v3 00/38] Enable hierarchy irqdomian on x86 platforms
-  Marc   11/11 [00/15] arm64: PCI/MSI: GICv3 ITS support (stacked domain edition)
-  Thomas 11/12 [00/16] genirq: Hierarchical irq domains and generic MSI interrupt code
-  Jiang  11/15 [V2 00/09] Refine generic/PCI MSI irqodmian interfaces
-  Marc   11/15 [00/02] Stacked domains and MSI improvements
-
-PCI is only a minor participant, and I certainly don't have the expertise
-to deal with all this, so I suspect that I should just drop these from the
-PCI tree and let Thomas deal with them.  It seems like it would make more
-sense to get all this stuff merged together in a single tree rather than
-having some come via PCI and others come from via other trees.
-
-Bjorn
+> -- 
+> ====================
+> | I would like to |
+> | fix the world,  |
+> | but they're not |
+> | giving me the   |
+>  \ source code!  /
+>   ---------------
+>     ¯\_(ツ)_/¯
