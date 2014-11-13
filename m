@@ -1,175 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:2230 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752420AbaKFOZE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 6 Nov 2014 09:25:04 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v5 19/31] PCI/MSI: Simplify PCI MSI code by initializing msi_desc.nvec_used earlier
-Date: Thu,  6 Nov 2014 22:20:32 +0800
-Message-Id: <1415283644-2559-20-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:44374 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933991AbaKMTho (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 14:37:44 -0500
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Thierry Reding <thierry.reding@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 2/2] PCI: tegra: remove bogus bridge setup fixup
+Date: Thu, 13 Nov 2014 20:37:37 +0100
+Message-Id: <1415907457-3147-3-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1415907457-3147-1-git-send-email-l.stach@pengutronix.de>
+References: <1415907457-3147-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simplify PCI MSI code by initializing msi_desc.nvec_used and
-msi_desc.msi_attrib.multiple when creating MSI descriptors.
+The bridge setup is already done by generic code
+while scanning the buses. Do not duplicate (or potentially
+alter) this setup as a fixup.
 
-Also remove redundant checks in IRQ remapping drivers, PCI MSI core
-already guarantees these.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
 ---
- drivers/iommu/irq_remapping.c |    8 --------
- drivers/pci/msi.c             |   40 +++++++++++++++-------------------------
- 2 files changed, 15 insertions(+), 33 deletions(-)
+ drivers/pci/host/pci-tegra.c | 13 -------------
+ 1 file changed, 13 deletions(-)
 
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 176ff4372b7d..32fe5b1322d0 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -69,19 +69,13 @@ static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
- 	unsigned int irq;
- 	struct msi_desc *msidesc;
- 
--	WARN_ON(!list_is_singular(&dev->msi_list));
- 	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
--	WARN_ON(msidesc->irq);
--	WARN_ON(msidesc->msi_attrib.multiple);
--	WARN_ON(msidesc->nvec_used);
- 
- 	irq = irq_alloc_hwirqs(nvec, dev_to_node(&dev->dev));
- 	if (irq == 0)
- 		return -ENOSPC;
- 
- 	nvec_pow2 = __roundup_pow_of_two(nvec);
--	msidesc->nvec_used = nvec;
--	msidesc->msi_attrib.multiple = ilog2(nvec_pow2);
- 	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
- 		if (!sub_handle) {
- 			index = msi_alloc_remapped_irq(dev, irq, nvec_pow2);
-@@ -109,8 +103,6 @@ error:
- 	 * IRQs from tearing down again in default_teardown_msi_irqs()
- 	 */
- 	msidesc->irq = 0;
--	msidesc->nvec_used = 0;
--	msidesc->msi_attrib.multiple = 0;
- 
- 	return ret;
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index d5a14f22ebb8..0ef22505cead 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -624,19 +624,6 @@ static void tegra_pcie_port_free(struct tegra_pcie_port *port)
+ 	devm_kfree(pcie->dev, port);
  }
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index fb2ccb536324..afe974600c7d 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -85,19 +85,13 @@ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-  */
- void default_teardown_msi_irqs(struct pci_dev *dev)
- {
-+	int i;
- 	struct msi_desc *entry;
  
--	list_for_each_entry(entry, &dev->msi_list, list) {
--		int i, nvec;
--		if (entry->irq == 0)
--			continue;
--		if (entry->nvec_used)
--			nvec = entry->nvec_used;
--		else
--			nvec = 1 << entry->msi_attrib.multiple;
--		for (i = 0; i < nvec; i++)
--			arch_teardown_msi_irq(entry->irq + i);
+-static void tegra_pcie_fixup_bridge(struct pci_dev *dev)
+-{
+-	u16 reg;
+-
+-	if ((dev->class >> 16) == PCI_BASE_CLASS_BRIDGE) {
+-		pci_read_config_word(dev, PCI_COMMAND, &reg);
+-		reg |= (PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
+-			PCI_COMMAND_MASTER | PCI_COMMAND_SERR);
+-		pci_write_config_word(dev, PCI_COMMAND, reg);
 -	}
-+	list_for_each_entry(entry, &dev->msi_list, list)
-+		if (entry->irq)
-+			for (i = 0; i < entry->nvec_used; i++)
-+				arch_teardown_msi_irq(entry->irq + i);
- }
- 
- void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
-@@ -353,19 +347,12 @@ static void free_msi_irqs(struct pci_dev *dev)
- 	struct msi_desc *entry, *tmp;
- 	struct attribute **msi_attrs;
- 	struct device_attribute *dev_attr;
--	int count = 0;
-+	int i, count = 0;
- 
--	list_for_each_entry(entry, &dev->msi_list, list) {
--		int i, nvec;
--		if (!entry->irq)
--			continue;
--		if (entry->nvec_used)
--			nvec = entry->nvec_used;
--		else
--			nvec = 1 << entry->msi_attrib.multiple;
--		for (i = 0; i < nvec; i++)
--			BUG_ON(irq_has_action(entry->irq + i));
--	}
-+	list_for_each_entry(entry, &dev->msi_list, list)
-+		if (entry->irq)
-+			for (i = 0; i < entry->nvec_used; i++)
-+				BUG_ON(irq_has_action(entry->irq + i));
- 
- 	arch_teardown_msi_irqs(dev);
- 
-@@ -556,7 +543,7 @@ error_attrs:
- 	return ret;
- }
- 
--static struct msi_desc *msi_setup_entry(struct pci_dev *dev)
-+static struct msi_desc *msi_setup_entry(struct pci_dev *dev, int nvec)
+-}
+-DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, tegra_pcie_fixup_bridge);
+-
+ /* Tegra PCIE root complex wrongly reports device class */
+ static void tegra_pcie_fixup_class(struct pci_dev *dev)
  {
- 	u16 control;
- 	struct msi_desc *entry;
-@@ -574,6 +561,8 @@ static struct msi_desc *msi_setup_entry(struct pci_dev *dev)
- 	entry->msi_attrib.maskbit	= !!(control & PCI_MSI_FLAGS_MASKBIT);
- 	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
- 	entry->msi_attrib.multi_cap	= (control & PCI_MSI_FLAGS_QMASK) >> 1;
-+	entry->msi_attrib.multiple	= ilog2(__roundup_pow_of_two(nvec));
-+	entry->nvec_used		= nvec;
- 
- 	if (control & PCI_MSI_FLAGS_64BIT)
- 		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_64;
-@@ -606,7 +595,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
- 
- 	msi_set_enable(dev, 0);	/* Disable MSI during set up */
- 
--	entry = msi_setup_entry(dev);
-+	entry = msi_setup_entry(dev, nvec);
- 	if (!entry)
- 		return -ENOMEM;
- 
-@@ -677,6 +666,7 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
- 		entry->msi_attrib.entry_nr	= entries[i].entry;
- 		entry->msi_attrib.default_irq	= dev->irq;
- 		entry->mask_base		= base;
-+		entry->nvec_used		= 1;
- 
- 		list_add_tail(&entry->list, &dev->msi_list);
- 	}
 -- 
-1.7.10.4
+2.1.1
 
