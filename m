@@ -1,62 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50349 "EHLO mx1.redhat.com"
+Received: from mga02.intel.com ([134.134.136.20]:34660 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751373AbaKJUpd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 10 Nov 2014 15:45:33 -0500
-Message-ID: <1415652328.16601.277.camel@ul30vt.home>
-Subject: Re: [PATCH] PCI: pciehp: Flush slot control prior to reset
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	rajatxjain@gmail.com, yinghai@kernel.org
-Date: Mon, 10 Nov 2014 13:45:28 -0700
-In-Reply-To: <20141107225359.1937.61243.stgit@gimli.home>
-References: <20141107225359.1937.61243.stgit@gimli.home>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S933920AbaKMXT3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 13 Nov 2014 18:19:29 -0500
+Message-ID: <54653C7A.6060003@linux.intel.com>
+Date: Fri, 14 Nov 2014 07:19:22 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+CC: Will Deacon <Will.Deacon@arm.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/2] PCI: generic: Add set_msi_parent callback
+References: <1415647480-3320-1-git-send-email-suravee.suthikulpanit@amd.com> <1415647480-3320-3-git-send-email-suravee.suthikulpanit@amd.com> <20141111112424.GB16265@arm.com> <20141111115227.GF12037@e106497-lin.cambridge.arm.com> <20141113152243.GB9726@red-moon>
+In-Reply-To: <20141113152243.GB9726@red-moon>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2014-11-07 at 15:54 -0700, Alex Williamson wrote:
-> Since 3461a068661c we don't automatically do a pcie_wait_cmd() for
-> as part of pcie_write_cmd(), it needs to be called explicitly or
-> triggered by the next pcie_write_cmd().  However, when we do a
-> secondary bus reset and we're using pcie_write_cmd() to make sure
-> that we don't see that bus reset as a hotplug event, we really want
-> to make sure the update is complete.  Testing on an old Lenovo S20
-> system, which sets surprise hotplug for some slots, this failure to
-> flush results in a link down event seen by the hotplug controller
-> when we issue the bus reset and returns us to the undesireable
-> behavior of removing and re-adding the device.  Force a flush by
-> adding an explicit call to pcie_wait_cmd().
+On 2014/11/13 23:22, Lorenzo Pieralisi wrote:
+> On Tue, Nov 11, 2014 at 11:52:27AM +0000, Liviu Dudau wrote:
+>> On Tue, Nov 11, 2014 at 11:24:24AM +0000, Will Deacon wrote:
+>>> Hi Suravee,
+>>>
+>>> On Mon, Nov 10, 2014 at 07:24:40PM +0000, suravee.suthikulpanit@amd.com wrote:
+>>>> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>>>
+>>> I don't think this makes much sense a host controller callback. Why can't
+>>> bus->msi be set in generic code?
+>>
+>> Because of the current way in which a bus gets created and them immediately used for
+>> scanning devices if you use pci_scan_root_bus(). Alternative is to use pci_create_root_bus()
+>> and increase your code size with the body of pci_scan_root_bus().
+>>
+>> Solution is to have pci_host_bridge holding the msi_chip pointer and that gets created
+>> before root bus, with pci_scan_root_bus() now having all the info needed to do successful
+>> setup of scanned devices.
 > 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> Cc: stable@vger.kernel.org [3.17]
-> ---
+> Why can't we add a hook like pci_bus_assign_domain_nr(), say:
 > 
->  drivers/pci/hotplug/pciehp_hpc.c |    1 +
->  1 file changed, 1 insertion(+)
+> pci_bus_msi_init()
 > 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 0ebf754..e540966 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -660,6 +660,7 @@ int pciehp_reset_slot(struct slot *slot, int probe)
->  		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, 0);
->  	if (pciehp_poll_mode)
->  		del_timer_sync(&ctrl->poll_timer);
-> +	pcie_wait_cmd(ctrl);
->  
->  	pci_reset_bridge_secondary_bus(ctrl->pcie->port);
->  
+> in pci_create_root_bus() that does what Suravee wants in a generic way ?
++1
+BTW, x86 may have multiple MSI controllers/domains under a host bridge,
+so prefer calling it for every bus instead of for root bus only.
+Regards!
+Gerry
 > 
-
-I think we might need a similar change on the other side of the reset,
-calling pcie_wait_cmd() explicitly before we re-enable polling.  The
-patch above passed about 7000 VM startup/shutdown cycles (up from zero
-w/o the patch), but it did eventually get a spurious hotplug.  With the
-additional pcie_wait_cmd() I'm thinking about, I've passed 8000 cycles.
-TL;DR, I'm probably sending a v2 of this patch.  Thanks,
-
-Alex
-
+> What am I missing ?
+> 
+> Lorenzo
+> 
+>>
+>> Best regards,
+>> Liviu
+>>
+>>>
+>>>>  static struct pci_ops gen_pci_ops = {
+>>>>  	.read	= gen_pci_config_read,
+>>>>  	.write	= gen_pci_config_write,
+>>>> +	.set_msi_parent = gen_pci_set_msi_parent,
+>>>>  };
+>>>>  
+>>>>  static const struct of_device_id gen_pci_of_match[] = {
+>>>> @@ -313,6 +324,9 @@ static int gen_pci_probe(struct platform_device *pdev)
+>>>>  		return err;
+>>>>  	}
+>>>>  
+>>>> +	pci->mchip = of_pci_find_msi_chip_by_node(of_parse_phandle(np,
+>>>> +						  "msi-parent", 0));
+>>>
+>>> This bit should be in the generic of_pci.c code and not duplicated for
+>>> each host controller.
+>>>
+>>> Will
+>>>
+>>
+>> -- 
+>> ====================
+>> | I would like to |
+>> | fix the world,  |
+>> | but they're not |
+>> | giving me the   |
+>>  \ source code!  /
+>>   ---------------
+>>     ¯\_(ツ)_/¯
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
