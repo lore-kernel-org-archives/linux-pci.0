@@ -1,142 +1,64 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:57410 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932394AbaKMLTW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 06:19:22 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-kernel@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch Part2 v5 11/31] x86, htirq: Use new irqdomain interfaces to allocate/free IRQ
-Date: Thu,  6 Nov 2014 22:20:24 +0800
-Message-Id: <1415283644-2559-12-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"David S. Miller" <davem@davemloft.net>,
+	Michal Simek <monstr@monstr.eu>,
+	Martin Wilck <martin.wilck@ts.fujitsu.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [RFC PATCH v3 0/2] Fix procfs PCI resources mmap
+Date: Thu, 13 Nov 2014 11:19:14 +0000
+Message-Id: <1415877558-8906-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new irqdomain interfaces to allocate/free IRQ for HTIRQ, so we could
-kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
+The way PCI memory resources are exported to user space through procfs
+is not uniform across architectures. In particular, some architectures
+(ie SPARC) export the resource PCI bus address to user space, whereas
+others (ARM, PowerPC, Microblaze) export the resource CPU physical address.
+This convention should be followed when it comes to passing the pgoff
+values to the mmap syscall to map the resource in question.
 
-This patch changes the interfaces between arch independent PCI driver
-and arch specific code. Currently HT_IRQ is only enabled on x86, so it
-shouldn't break other architectures.
+Consequently, the checks applied to the offset passed to the mmap syscall
+(in pci_mmap_fits()) are to be interpreted differently on different
+architectures, and in particular they should match the values exported to
+user space through the pci_resource_to_user() conversion function.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/htirq.c |   26 +++++++++++++-------------
- drivers/pci/htirq.c          |    7 +++----
- include/linux/htirq.h        |    2 ++
- 3 files changed, 18 insertions(+), 17 deletions(-)
+This patch series addresses two issues. First patch applies the
+pci_resource_to_user() filter to the PCI resource that is being
+mapped in order to carry out a proper check against the pgoff passed
+from user space. Second patch fixes the way the pgoff is handled in
+the ARM pci_mmap_page_range() implementation.
 
-diff --git a/arch/x86/kernel/apic/htirq.c b/arch/x86/kernel/apic/htirq.c
-index 816f36e979ad..b307ee7a7148 100644
---- a/arch/x86/kernel/apic/htirq.c
-+++ b/arch/x86/kernel/apic/htirq.c
-@@ -14,6 +14,7 @@
- #include <linux/device.h>
- #include <linux/pci.h>
- #include <linux/htirq.h>
-+#include <linux/irqdomain.h>
- #include <asm/hw_irq.h>
- #include <asm/apic.h>
- #include <asm/hypertransport.h>
-@@ -61,31 +62,30 @@ static struct irq_chip ht_irq_chip = {
- 	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
- 
-+int arch_alloc_ht_irq(struct pci_dev *dev)
-+{
-+	return irq_domain_alloc_irqs(NULL, 1, dev_to_node(&dev->dev), NULL);
-+}
-+
-+void arch_free_ht_irq(int irq)
-+{
-+	irq_domain_free_irqs(irq, 1);
-+}
-+
- int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
- {
- 	struct irq_cfg *cfg;
- 	struct ht_irq_msg msg;
--	unsigned dest;
--	int err;
- 
- 	if (disable_apic)
- 		return -ENXIO;
- 
- 	cfg = irq_cfg(irq);
--	err = assign_irq_vector(irq, cfg, apic->target_cpus());
--	if (err)
--		return err;
--
--	err = apic->cpu_mask_to_apicid_and(cfg->domain,
--					   apic->target_cpus(), &dest);
--	if (err)
--		return err;
--
--	msg.address_hi = HT_IRQ_HIGH_DEST_ID(dest);
-+	msg.address_hi = HT_IRQ_HIGH_DEST_ID(cfg->dest_apicid);
- 
- 	msg.address_lo =
- 		HT_IRQ_LOW_BASE |
--		HT_IRQ_LOW_DEST_ID(dest) |
-+		HT_IRQ_LOW_DEST_ID(cfg->dest_apicid) |
- 		HT_IRQ_LOW_VECTOR(cfg->vector) |
- 		((apic->irq_dest_mode == 0) ?
- 			HT_IRQ_LOW_DM_PHYSICAL :
-diff --git a/drivers/pci/htirq.c b/drivers/pci/htirq.c
-index a94dd2c4183a..ceb0ebeb7b5f 100644
---- a/drivers/pci/htirq.c
-+++ b/drivers/pci/htirq.c
-@@ -117,8 +117,8 @@ int __ht_create_irq(struct pci_dev *dev, int idx, ht_irq_update_t *update)
- 	cfg->msg.address_lo = 0xffffffff;
- 	cfg->msg.address_hi = 0xffffffff;
- 
--	irq = irq_alloc_hwirq(dev_to_node(&dev->dev));
--	if (!irq) {
-+	irq = arch_alloc_ht_irq(dev);
-+	if (irq <= 0) {
- 		kfree(cfg);
- 		return -EBUSY;
- 	}
-@@ -163,8 +163,7 @@ void ht_destroy_irq(unsigned int irq)
- 	cfg = irq_get_handler_data(irq);
- 	irq_set_chip(irq, NULL);
- 	irq_set_handler_data(irq, NULL);
--	irq_free_hwirq(irq);
--
-+	arch_free_ht_irq(irq);
- 	kfree(cfg);
- }
- EXPORT_SYMBOL(ht_destroy_irq);
-diff --git a/include/linux/htirq.h b/include/linux/htirq.h
-index 70a1dbbf2093..5caa51b7b95c 100644
---- a/include/linux/htirq.h
-+++ b/include/linux/htirq.h
-@@ -15,6 +15,8 @@ void unmask_ht_irq(struct irq_data *data);
- 
- /* The arch hook for getting things started */
- int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev);
-+int arch_alloc_ht_irq(struct pci_dev *dev);
-+void arch_free_ht_irq(int irq);
- 
- /* For drivers of buggy hardware */
- typedef void (ht_irq_update_t)(struct pci_dev *dev, int irq,
+v2 posting:
+
+http://marc.info/?l=linux-kernel&m=141416813409829&w=2
+
+v2 => v3
+- Reworded commit log in order to try to bisect the breakage
+  and provide insights into the commit history that led to the
+  current interface
+
+v1 => v2
+- Reworded commit log as per RMK comments
+
+Lorenzo Pieralisi (2):
+  drivers: pci: fix pci_mmap_fits() implementation for procfs mmap
+  arm: kernel: fix pci_mmap_page_range() offset calculation
+
+ arch/arm/kernel/bios32.c | 10 ++--------
+ drivers/pci/pci-sysfs.c  | 13 ++++++++-----
+ 2 files changed, 10 insertions(+), 13 deletions(-)
+
 -- 
-1.7.10.4
+2.1.2
 
