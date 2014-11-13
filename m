@@ -1,51 +1,158 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48124 "EHLO mx1.redhat.com"
+Received: from mga03.intel.com ([134.134.136.65]:7391 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933296AbaKMUbc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 13 Nov 2014 15:31:32 -0500
-Message-ID: <1415910648.27937.72.camel@ul30vt.home>
-Subject: Qualcomm Atheros AR93xx reset behavior
-From: Alex Williamson <alex.williamson@redhat.com>
-To: ath9k-devel@qca.qualcomm.com
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@venema.h4ckr.net,
-	Andreas Hartmann <andihartmann@freenet.de>,
-	linux-pci <linux-pci@vger.kernel.org>
-Date: Thu, 13 Nov 2014 13:30:48 -0700
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S932639AbaKMLl3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 13 Nov 2014 06:41:29 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Alexander Gordeev <agordeev@redhat.com>
+Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [Patch V1 6/6] PCI, MSI: Provide mechanism to alloc/free MSI/MSIX interrupt from irqdomain
+Date: Thu, 13 Nov 2014 19:43:49 +0800
+Message-Id: <1415879029-20098-8-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Provide mechanism to directly alloc/free MSI/MSIX interrupt from
+irqdomain, which will be used to replace arch_setup_msi_irq()/
+arch_setup_msi_irqs()/arch_teardown_msi_irq()/arch_teardown_msi_irqs().
 
-This is a question not about the wireless properties of the Atheros
-AR93xx, but about the PCIe bus reset behavior.  We have a user reporting
-errors with a TP-LINK TL-WDN4800 and I've acquired the same card and
-have been able to reproduce the error on two systems.  The problem is
-that if we attempt to do a secondary bus reset or link down from the
-parent bridge of these devices, the card will throw errors like Surprise
-Down and never seems to return to a working state, sometimes throwing
-machine checks if we attempt to access config space again.
+To kill weak functions, this patch introduce a new weak function
+arch_get_pci_msi_domain(), which is to retrieve the MSI irqdomain
+for a PCI device. This weak function could be killed once we get
+a common way to associate MSI domain with PCI device.
 
-The reason for attempting bus resets is that we want to use PCI device
-assignment to attach the device to a virtual machine.  Performing a bus
-reset puts the device in a known state for the VM and clears any guest
-state from the device when returning it to the host.  For most devices
-this works quite well, especially when the device does not support FLR.
-In this case we need to figure out if we need a blacklist mechanism to
-avoid bus resets for this device or whether there's a procedure we can
-use to create a device specific reset in place of a standard bus reset.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/pci/msi.c   |   60 +++++++++++++++++++++++++++++++++++++++++++++++----
+ include/linux/msi.h |    3 +++
+ 2 files changed, 59 insertions(+), 4 deletions(-)
 
-The specific device is:
-
-xx:xx.x Network controller [0280]: Qualcomm Atheros AR93xx Wireless Network Adapter [168c:0030] (rev 01)
-        Subsystem: Qualcomm Atheros Device [168c:3112]
-
-Is there anyone with access to hardware specs for this device that can
-help?  Perhaps there's an errata on the PCIe interface that might
-explain it or some specific steps we can take to make the device behave
-for reset.  Thanks!
-
-Alex
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 0319c21dd208..6f8a2f93187a 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -27,8 +27,41 @@ static int pci_msi_enable = 1;
+ 
+ #define msix_table_size(flags)	((flags & PCI_MSIX_FLAGS_QSIZE) + 1)
+ 
+-/* Arch hooks */
++#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
++static struct irq_domain *pci_msi_default_domain;
++
++struct irq_domain * __weak arch_get_pci_msi_domain(struct pci_dev *dev)
++{
++	return pci_msi_default_domain;
++}
++
++static int pci_msi_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++{
++	struct irq_domain *domain;
+ 
++	domain = arch_get_pci_msi_domain(dev);
++	if (domain)
++		return pci_msi_domain_alloc_irqs(domain, type, dev);
++
++	return arch_setup_msi_irqs(dev, nvec, type);
++}
++
++static void pci_msi_teardown_msi_irqs(struct pci_dev *dev)
++{
++	struct irq_domain *domain;
++
++	domain = arch_get_pci_msi_domain(dev);
++	if (domain)
++		pci_msi_domain_free_irqs(domain, dev);
++	else
++		arch_teardown_msi_irqs(dev);
++}
++#else
++#define pci_msi_setup_msi_irqs		arch_setup_msi_irqs
++#define pci_msi_teardown_msi_irqs	arch_teardown_msi_irqs
++#endif
++
++/* Arch hooks */
+ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ {
+ 	struct msi_chip *chip = dev->bus->msi;
+@@ -329,7 +362,7 @@ static void free_msi_irqs(struct pci_dev *dev)
+ 			for (i = 0; i < entry->nvec_used; i++)
+ 				BUG_ON(irq_has_action(entry->irq + i));
+ 
+-	arch_teardown_msi_irqs(dev);
++	pci_msi_teardown_msi_irqs(dev);
+ 
+ 	list_for_each_entry_safe(entry, tmp, &dev->msi_list, list) {
+ 		if (entry->msi_attrib.is_msix) {
+@@ -581,7 +614,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+ 	list_add_tail(&entry->list, &dev->msi_list);
+ 
+ 	/* Configure MSI capability structure */
+-	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
++	ret = pci_msi_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
+ 	if (ret) {
+ 		msi_mask_irq(entry, mask, ~mask);
+ 		free_msi_irqs(dev);
+@@ -696,7 +729,7 @@ static int msix_capability_init(struct pci_dev *dev,
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
++	ret = pci_msi_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
+ 	if (ret)
+ 		goto out_avail;
+ 
+@@ -1183,4 +1216,23 @@ void pci_msi_domain_free_irqs(struct irq_domain *domain, struct pci_dev *dev)
+ {
+ 	msi_domain_free_irqs(domain, &dev->dev);
+ }
++
++struct irq_domain *pci_msi_create_default_irq_domain(struct device_node *node,
++		 struct msi_domain_info *info, struct irq_domain *parent)
++{
++	struct irq_domain *domain;
++	static DEFINE_MUTEX(pci_msi_domain_lock);
++
++	mutex_lock(&pci_msi_domain_lock);
++	if (pci_msi_default_domain) {
++		pr_err("PCI: default irq domain for PCI MSI has already been created.\n");
++		domain = NULL;
++	} else {
++		domain = msi_create_irq_domain(node, info, parent);
++		pci_msi_default_domain = domain;
++	}
++	mutex_unlock(&pci_msi_domain_lock);
++
++	return domain;
++}
+ #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 9031791e9b4c..e3ec97349535 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -185,6 +185,9 @@ struct irq_domain *pci_msi_create_irq_domain(struct device_node *node,
+ int pci_msi_domain_alloc_irqs(struct irq_domain *domain, int type,
+ 			      struct pci_dev *dev);
+ void pci_msi_domain_free_irqs(struct irq_domain *domain, struct pci_dev *dev);
++struct irq_domain *pci_msi_create_default_irq_domain(struct device_node *node,
++		 struct msi_domain_info *info, struct irq_domain *parent);
++
+ irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
+ 					  struct msi_desc *desc);
+ int pci_msi_domain_check_cap(struct irq_domain *domain,
+-- 
+1.7.10.4
 
