@@ -1,110 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:38312 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751225AbaKGQH6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Nov 2014 11:07:58 -0500
-Received: by mail-la0-f48.google.com with SMTP id gq15so4604639lab.7
-        for <linux-pci@vger.kernel.org>; Fri, 07 Nov 2014 08:07:56 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 13 Nov 2014 10:26:25 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: Apply _HPX link control for all supported pcie
+ device
+Message-ID: <20141113172625.GH5064@google.com>
+References: <1415736586-16044-1-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1415287936-31203-3-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1415287936-31203-1-git-send-email-lorenzo.pieralisi@arm.com> <1415287936-31203-3-git-send-email-lorenzo.pieralisi@arm.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Fri, 7 Nov 2014 10:07:30 -0600
-Message-ID: <CAL_JsqLCXwZ-xkByThCj99kwN1W7sHVx=8bKfxmBt-vTHZoATA@mail.gmail.com>
-Subject: Re: [PATCH v2 2/2] arm: pcibios: move to generic PCI domains
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1415736586-16044-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 6, 2014 at 9:32 AM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> Most if not all ARM PCI host controller device drivers either ignore the
-> domain field in the pci_sys_data structure or just increment it every
-> time a host controller is probed, using it as a domain counter.
->
-> Therefore, instead of relying on pci_sys_data to stash the domain number
-> in a standard location, ARM pcibios code can be moved to the newly
-> introduced generic PCI domains code, implemented in commits:
->
-> commit 41e5c0f81d3e676d671d96a0a1fafb27abfbd9
-> ("of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()")
->
-> commit 670ba0c8883b576d0aec28bd7a838358a4be1
-> ("PCI: Add generic domain handling")
->
-> In order to assign a domain number dynamically, the ARM pcibios defines
-> the function, called by core PCI code:
->
-> void pci_bus_assign_domain_nr(...)
->
-> that relies on a DT property to define the domain number or falls back to
-> a counter; its usage replaces the current domain assignment code in PCI
-> host controllers present in the kernel.
+On Tue, Nov 11, 2014 at 12:09:46PM -0800, Yinghai Lu wrote:
+> With commit 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
+> and following commits, we apply _HPX for pci devices.
+> 
+> that is called via pci_scan_slot
+> 			==>pci_scan_single_device
+> 				==>pci_device_add
+> 					==>pci_configure_device
+> 						==>program_hpp_type2
+> and dev->subordinate is not allocated yet.
+> 
+> So that link control setup get skipped.
+> 
+> Acoording to ACPI spec, there is no requirement that need to be set to pcie
+> root port or downstream port.
+> 
+> We could just change to pcie_cap_has_lnkctl to cover all pcie devices with
+> link control cap.
+> 
+> -v2: Do not move pcie_cap_has_lnkctl() out of pci/access.c according to Bjorn.
+> 
+> Fixes: 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-I realize you are just copying the arm64 version, but as we've agreed
-the DT domain handling should be common and what the error cases are,
-I've got some comments on the current implementation.
+Applied to for-linus for v3.18, thanks!
 
-[...]
-
-> +#ifdef CONFIG_PCI_DOMAINS_GENERIC
-> +static bool dt_domain_found;
-
-This can be moved into the function.
-
+> ---
+>  drivers/pci/access.c |    2 +-
+>  drivers/pci/pci.h    |    2 ++
+>  drivers/pci/probe.c  |    2 +-
+>  3 files changed, 4 insertions(+), 2 deletions(-)
+> 
+> Index: linux-2.6/drivers/pci/probe.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/probe.c
+> +++ linux-2.6/drivers/pci/probe.c
+> @@ -1323,7 +1323,7 @@ static void program_hpp_type2(struct pci
+>  			~hpp->pci_exp_devctl_and, hpp->pci_exp_devctl_or);
+>  
+>  	/* Initialize Link Control Register */
+> -	if (dev->subordinate)
+> +	if (pcie_cap_has_lnkctl(dev))
+>  		pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
+>  			~hpp->pci_exp_lnkctl_and, hpp->pci_exp_lnkctl_or);
+>  
+> Index: linux-2.6/drivers/pci/pci.h
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/pci.h
+> +++ linux-2.6/drivers/pci/pci.h
+> @@ -6,6 +6,8 @@
+>  
+>  extern const unsigned char pcie_link_speed[];
+>  
+> +bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
 > +
-> +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> +{
-> +       int domain = of_get_pci_domain_nr(parent->of_node);
-> +
-> +       if (domain >= 0) {
-> +               dt_domain_found = true;
-> +       } else if (dt_domain_found == true) {
-> +               dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
-> +                       parent->of_node->full_name);
-> +               return;
-
-No error other than a printk? Do we want to set domain_nr to an
-illegal value or something?
-
-> +       } else {
-> +               domain = pci_get_new_domain_nr();
-> +       }
-> +
-> +       bus->domain_nr = domain;
-> +}
-
-This doesn't handle the case where the 1st node(s) probed does not
-have a domain prop and a later one does. I think something like this
-should work:
-
-static int use_dt_domains = -1;
-int domain = of_get_pci_domain_nr(parent->of_node);
-
-if (domain >= 0 && use_dt_domains) {
-        use_dt_domains = 1;
-} else if (domain < 0 && use_dt_domain != 1) {
-        use_dt_domains = 0;
-        domain = pci_get_new_domain_nr();
-} else {
-        dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\"
-property in DT\n",
-                 parent->of_node->full_name);
-        domain = -1;  // Not sure if -1 would be illegal or not????
-}
-
-bus->domain_nr = domain;
-
-
-Rob
+>  /* Functions internal to the PCI core code */
+>  
+>  int pci_create_sysfs_dev_files(struct pci_dev *pdev);
+> Index: linux-2.6/drivers/pci/access.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/access.c
+> +++ linux-2.6/drivers/pci/access.c
+> @@ -444,7 +444,7 @@ static inline int pcie_cap_version(const
+>  	return pcie_caps_reg(dev) & PCI_EXP_FLAGS_VERS;
+>  }
+>  
+> -static inline bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
+> +bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
+>  {
+>  	int type = pci_pcie_type(dev);
+>  
