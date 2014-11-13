@@ -1,92 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:53020 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932419AbaKMMaA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 07:30:00 -0500
-Message-ID: <5464A3F8.1000807@huawei.com>
-Date: Thu, 13 Nov 2014 20:28:40 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-bn1bbn0101.outbound.protection.outlook.com ([157.56.111.101]:44140
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932401AbaKMKvi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 13 Nov 2014 05:51:38 -0500
+Message-ID: <54648D61.6050704@freescale.com>
+Date: Thu, 13 Nov 2014 18:52:17 +0800
+From: Lian Minghuan-B31939 <B31939@freescale.com>
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	"Borislav Petkov" <bp@alien8.de>, "H. Peter Anvin" <hpa@zytor.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>
-CC: Tony Luck <tony.luck@intel.com>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [Patch V1 0/6] Refine generic/PCI MSI irqodmian interfaces
-References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
+To: Lucas Stach <l.stach@pengutronix.de>
+CC: Srikanth Thokala <sriku.linux@gmail.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	"Bjorn Helgaas" <bhelgaas@google.com>
+Subject: Re: [PATCH v2] PCI: designware: Add support 4 ATUs assignment
+References: <1415682444-24911-1-git-send-email-Minghuan.Lian@freescale.com>
+	 <CA+mB=1+4Dzxhbin6z0PUENvjUz-y8bq-K09FXTnSepFvVfe9HQ@mail.gmail.com>
+	 <546308DD.40109@freescale.com>
+	 <CA+mB=1K=Oyzdb2yfBvPRG9DHi-PFjRPtVS_dY9JMOz6dQog8QQ@mail.gmail.com>
+	 <546331E7.5060003@freescale.com>
+	 <CA+mB=1KObT9O783SMcvHy8nJGQPnxyKgP332r5bHx-K_D+LhVg@mail.gmail.com>
+	 <1415809929.2876.5.camel@pengutronix.de> <546481A3.5050700@freescale.com>
+ <1415874015.2420.5.camel@pengutronix.de>
+In-Reply-To: <1415874015.2420.5.camel@pengutronix.de>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/11/13 19:43, Jiang Liu wrote:
-> This patch set is based on tip/irq/irqdomain and tries to refine
-> interfaces to support irqdomain for generic MSI and PCI MSI.
-> 
-> Patch 1 is just minor fixes for tip/irq/irqdomain.
-> 
-> Patch 2 introduces some helpers to hide struct msi_desc implementation
-> details, so later we could move msi_list from struct pci_dev into
-> struct device to enable generic MSI support.
+Hi Lucas,
 
-Hi Gerry,
-   I tried to move msi info(eg. msi_list) into struct device, but I found
-DMAR fault interrupt is initialized before the driver core init. And I don't
-know whether there are other devices like ARM consolidator(introduced in GIC v3)
-need to be initialized before driver core. What do you think about this ?
+On 2014年11月13日 18:20, Lucas Stach wrote:
+> Am Donnerstag, den 13.11.2014, 18:02 +0800 schrieb Lian Minghuan-B31939:
+>> Hi Lucas,
+>>
+>> Please see my comments inline.
+>>
+>> Thanks,
+>> Minghuan
+>>
+>> On 2014年11月13日 00:32, Lucas Stach wrote:
+>>> Am Mittwoch, den 12.11.2014, 21:53 +0530 schrieb Srikanth Thokala:
+>>>> Hi Minghuan,
+> [...]
+>
+>>> Using a smaller type complicates the DT for little to no benefit. I
+>>> think it's ok to use u32 here, which is a common standard for integer
+>>> values in DT.
+>>>
+>>> Though this discussion lead me to the question if we even need to have
+>>> this property in the DT at all. Isn't this a property that is fixed for
+>>> a specific silicon implementation of the DW core? In that case we could
+>>> just infer the number of ATUs from the DT compatible, so this should
+>>> probably just be added to struct pcie_port and properly initialized by
+>>> the SoC glue drivers.
+>> [Minghuan]  As far as I know, exynos implements only 2 ATUs, this is why
+>> pcie-designware only supports 2 ATU. iMX implements 4 ATUs and LS1021A
+>> implements 6 ATUs.
+>>
+> Right so we don't need an additional property in the DT at all. The
+> number of ATUs is fixed for a specific core compatible and can be passed
+> in by the respective exynos, imx and ls1021 glue drivers.
+>
+> You may ask the Keystone and Spear maintainers to get the correct number
+> of ATUs for those implementations.
+>
+> Regards,
+> Lucas
+[Minghuan] Yes. This a way that specific core driver passes the ATU 
+number to
+pci-designware. But I perfer to adding dts node for the following reasons:
+1. ATU number is hardware attribute, so it can be added to DTS.
+2. That pci-designware common code parses the 'num-atus' can avoid every 
+specific controller driver to define and pass num-atus, so can reduce 
+code size and simplify the specific controller driver implementation.
 
-Thanks!
-Yijing.
+Thanks,
+Minghuan
 
-> 
-> Patch 3 introduces msi_domain_{alloc|free}_irqs() which generalize
-> pci_msi_domain_alloc_irqs() to support generic MSI.
-> 
-> Patch 4 introduces default data structures and callback implementations
-> to support msi_domain_alloc_irqs(), so reduce burden on generic MSI
-> users.
-> 
-> Patch 5 converts PCI MSI to use generic MSI interfaces, and also
-> implement default callbacks for PCI MSI.
-> 
-> Patch 6 introduces a mechanism to replace arch_setup_msi_irq()/
-> arch_setup_msi_irqs()/arch_teardown_msi_irq()/arch_teardown_msi_irqs().
-> 
-> With this patch set applied, the generic MSI and PCI MSI interfaces
-> are much easier to use. For extreme case, you only need to define
-> a "struct msi_domain_info" and don't need to implement any callbacks,
-> just using the default callbacks is OK:)
-> 
-> This patch set is also a preparation for:
-> 1) Kill all weak functions in drivers/pci/msi.c
-> 2) Implement support for non-PCI-compliant MSI device
-> 
-> It has been tested on x86 platforms, comments are welcomed!
-> 
-> Jiang Liu (6):
->   PCI, MSI: Fix errors caused by commit e5f1a59c4e12
->   PCI, MSI: Introduce helpers to hide struct msi_desc implemenation
->     details
->   genirq: Introduce msi_domain_{alloc|free}_irqs()
->   genirq: Provide default callbacks for msi_domain_ops
->   PCI, MSI: Refine irqdomain interfaces to simplify its usage
->   PCI, MSI: Provide mechanism to alloc/free MSI/MSIX interrupt from
->     irqdomain
-> 
->  drivers/pci/msi.c   |  170 ++++++++++++++++++++++++++++++++++++++++-----------
->  include/linux/msi.h |   90 ++++++++++++++++++++++++---
->  kernel/irq/msi.c    |  150 ++++++++++++++++++++++++++++++++++++++++++++-
->  3 files changed, 366 insertions(+), 44 deletions(-)
-> 
-
-
--- 
-Thanks!
-Yijing
 
