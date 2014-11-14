@@ -1,121 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:33770 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752530AbaKVC6r (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 21:58:47 -0500
-Message-ID: <546FFBBD.8060909@gmail.com>
-Date: Sat, 22 Nov 2014 10:58:05 +0800
-From: Yijing Wang <wangyijing0307@gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linaro-acpi@lists.linaro.org
+Cc: Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	linux-arm-kernel@lists.infradead.org, rjw@rjwysocki.net,
+	linux-pci@vger.kernel.org, catalin.marinas@arm.com, x86@kernel.org,
+	Liviu.Dudau@arm.com, linux-kernel@vger.kernel.org,
+	will.deacon@arm.com, linux-acpi@vger.kernel.org, mingo@redhat.com,
+	hpa@zytor.com, bhelgaas@google.com, tglx@linutronix.de
+Subject: Re: [Linaro-acpi] [RFC PATCH 4/4] arm64, acpi, pci: Provide arch-specific calls for PCI host bridge dirver (PNP0A03).
+Date: Fri, 14 Nov 2014 15:53:35 +0100
+Message-ID: <2009440.GJsvyI3SUN@wuerfel>
+In-Reply-To: <54660D44.9020406@linaro.org>
+References: <1415366876-30811-1-git-send-email-tomasz.nowicki@linaro.org> <4474363.kMvYSLl2Ev@wuerfel> <54660D44.9020406@linaro.org>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yijing Wang <wangyijing@huawei.com>, g@google.com
-CC: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Subject: Re: [PATCH 00/10] Save MSI chip in pci_sys_data
-References: <1414396127-30023-1-git-send-email-wangyijing@huawei.com> <20141112042359.GK28161@google.com> <20141121172018.GA6578@google.com>
-In-Reply-To: <20141121172018.GA6578@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Friday 14 November 2014 15:10:12 Tomasz Nowicki wrote:
+> On 07.11.2014 15:24, Arnd Bergmann wrote:
+> > On Friday 07 November 2014 14:27:56 Tomasz Nowicki wrote:
+> >>
+> >>   #ifdef CONFIG_PCI
+> >> +struct pci_controller {
+> >> +	struct acpi_device *companion;
+> >> +	int segment;
+> >> +	int node;		/* nearest node with memory or NUMA_NO_NODE for global allocation */
+> >> +};
+> >> +
+> >> +#define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
+> >> +
+> >
+> > Don't use busdev->sysdata in architecture specific code, it belongs to the
+> > host bridge driver with the new model. For ACPI you don't have a host bridge
+> > driver, but it's better to keep these separate.
+> >
+> > The segment is always the same as the domain number, so just use that.
+> > The node and companion members here can get added to struct pci_host_bridge.
+> 
+> The reason why I put segment field to struct pci_controller is to 
+> initialize domain_nr of struct pci_bus being in pci_create_root_bus(), 
+> domain_nr can be used later on though. Correct me I am wrong.
+> 
+> Honestly I do not see the way to create root bus without e.g. 
+> sysdata.segment here.
 
-在 2014/11/22 1:20, Bjorn Helgaas 写道:
-> [+cc Marc]
->
-> On Tue, Nov 11, 2014 at 09:23:59PM -0700, Bjorn Helgaas wrote:
->> On Mon, Oct 27, 2014 at 03:48:37PM +0800, Yijing Wang wrote:
->>> Now PCI host bridge drivers in arm associate MSI chip and
->>> PCI bus by adding .add_bus(), and assign MSI chip pointer
->>> to every PCI bus. Associating MSI chip and every PCI bus
->>> is not necessary. All PCI busses under same PCI host brdige
->>> share the same MSI chip. So saving MSI chip in pci_sys_data
->>> is a better solution, it make PCI host bridge drivers clean.
->>> Because we still need to provide arch spec pcibios_msi_controller()
->>> to extract MSI controller pointer, a better solution is to
->>> refactor PCI host bridge, make a generic pci_host_bridge, and
->>> save common info like PCI domain number, MSI chip, resources
->>> in it. We will do that work in another series as soon.
->>>
->>> To Bjorn: Because struct msi_chip defined in struct hw_pci and pci_sys_data
->>> is under the #ifdef CONFIG_PCI_MSI, if we use if(IS_ENABLED(CONFIG_PCI_MSI))
->>> in PCI host bridge drivers, it will cause build errors when the CONFIG_PCI_MSI
->>> is off. So I keep #ifdef CONFIG_PCI_MSI in this series.
->>>
->>> Yijing Wang (10):
->>>    MSI: Rename msi_chip to msi_controller for better readability
->>>    PCI/MSI: Introduce weak pcibios_msi_controller()
->>>    arm/MSI: Save MSI controller in pci_sys_data
->>>    PCI: tegra: Save MSI controller in pci_sys_data
->>>    PCI: designware: Save MSI controller in pci_sys_data
->>>    PCI: rcar: Save MSI controller in pci_sys_data
->>>    PCI: mvebu: Save MSI controller in pci_sys_data
->>>    PCI: xilinx: Save MSI controller in pci_sys_data
->>>    arm/PCI: Clean unused pcibios_add_bus() and pcibios_remove_bus()
->>>    PCI/MSI: Remove useless bus->msi assignment
->>>
->>>   arch/arm/include/asm/mach/pci.h     |   10 +++++---
->>>   arch/arm/kernel/bios32.c            |   28 ++++++++++--------------
->>>   drivers/irqchip/irq-armada-370-xp.c |   22 +++++++++---------
->>>   drivers/of/of_pci.c                 |   40 +++++++++++++++++-----------------
->>>   drivers/pci/host/pci-keystone-dw.c  |    4 +-
->>>   drivers/pci/host/pci-keystone.h     |    2 +-
->>>   drivers/pci/host/pci-mvebu.c        |   14 ++++-------
->>>   drivers/pci/host/pci-tegra.c        |   37 +++++++++++++-------------------
->>>   drivers/pci/host/pcie-designware.c  |   25 +++++++--------------
->>>   drivers/pci/host/pcie-designware.h  |    2 +-
->>>   drivers/pci/host/pcie-rcar.c        |   37 +++++++++++++-------------------
->>>   drivers/pci/host/pcie-xilinx.c      |   27 +++++++----------------
->>>   drivers/pci/msi.c                   |   22 ++++++++++++++-----
->>>   drivers/pci/probe.c                 |    1 -
->>>   include/linux/msi.h                 |    6 ++--
->>>   include/linux/of_pci.h              |   14 ++++++------
->>>   include/linux/pci.h                 |    2 +-
->>>   17 files changed, 132 insertions(+), 161 deletions(-)
->>>
->> Applied to pci/msi for v3.19, thanks.
-> I reworked this series slightly to:
->
->    - Change pci_msi_controller() and pcibios_msi_controller() from taking a
->      pci_bus * to taking a pci_dev *.  This is so the interface allows
->      per-device MSI controllers.  I don't think there's any reason to assume
->      all devices on a bus have to have the same controller.
->
->    - Drop the last patch ("PCI/MSI: Remove useless bus->msi assignment")
->      because it broke Marc's follow-on patches.
->
-> I updated pci/msi, but I haven't put it in my "next" branch yet because I
-> want confirmation from Fengguang's autobuilder that I didn't break
-> anything.
->
-> Current status of my tree:
->
->      6cf00af0ae15 [1] pci/msi (contains this rework)
->      149792795d2b [2] next (does *not* contain this rework)
->
-> Thomas, if pci/msi looks good to you, feel free to pull it into your tree.
-> The only change you should need to make is to change the parameters to
-> pci_msi_controller() and pcibios_msi_controller().
->
-> Just FYI, I'm leaving on vacation for a week, so I won't be able to fix any
-> issues until Dec 1.
+See the patches that Liviu and Lorenzo have been posting recently. This
+should be straightforward in 3.19.
 
-Hi Bjorn, thanks very much for your improvement for this series.
-It looks good to me. :)
-
->
-> Bjorn
->
-> [1] https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=next&id=6cf00af0ae15
-> [2] https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=next&id=149792795d2b
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
+	Arnd
