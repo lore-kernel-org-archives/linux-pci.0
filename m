@@ -1,118 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:37821 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751948AbaKIPHq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 9 Nov 2014 10:07:46 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [RFC Part4 v1 02/17] genirq: Introduce helper irq_domain_set_info() to reduce duplicated code
-Date: Sun,  9 Nov 2014 23:10:24 +0800
-Message-Id: <1415545839-28263-3-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:48015 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161930AbaKNWV4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Nov 2014 17:21:56 -0500
+Received: by mail-ig0-f173.google.com with SMTP id r10so505573igi.12
+        for <linux-pci@vger.kernel.org>; Fri, 14 Nov 2014 14:21:55 -0800 (PST)
+Date: Fri, 14 Nov 2014 14:21:53 -0800
+From: Dmitry Torokhov <dtor@chromium.org>
+To: Simon Horman <horms@verge.net.au>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: rcar: fix error handling of irq_of_parse_and_map
+Message-ID: <20141114222153.GA39494@dtor-ws>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce helper irq_domain_set_info() to reduce duplicated code.
-We use "void *handler" instead of "irq_flow_handler_t handler" to solve
-a recursive header file inclusion issue.
+Return value of irq_of_parse_and_map() is unsigned int, with 0
+indicating failure, so testing for negative result never works.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Dmitry Torokhov <dtor@chromium.org>
 ---
- arch/x86/kernel/apic/htirq.c  |    5 ++---
- arch/x86/platform/uv/uv_irq.c |    5 ++---
- include/linux/irqdomain.h     |    4 ++++
- kernel/irq/irqdomain.c        |   10 ++++++++++
- 4 files changed, 18 insertions(+), 6 deletions(-)
 
-diff --git a/arch/x86/kernel/apic/htirq.c b/arch/x86/kernel/apic/htirq.c
-index 900f1401a452..1448df3f9e9f 100644
---- a/arch/x86/kernel/apic/htirq.c
-+++ b/arch/x86/kernel/apic/htirq.c
-@@ -96,9 +96,8 @@ static int htirq_domain_alloc(struct irq_domain *domain, unsigned int virq,
- 	ht_cfg->update = info->ht_update;
- 	ht_cfg->pos = info->ht_pos;
- 	ht_cfg->idx = 0x10 + (info->ht_idx * 2);
--	irq_domain_set_hwirq_and_chip(domain, virq, hwirq, &ht_irq_chip,
--				      ht_cfg);
--	__irq_set_handler(virq, handle_edge_irq, 0, "edge");
-+	irq_domain_set_info(domain, virq, hwirq, &ht_irq_chip, ht_cfg,
-+			    handle_edge_irq, NULL, "edge");
+Not tested, found by casual code inspection.
+
+ drivers/pci/host/pcie-rcar.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 9b356c3..6ca976f 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -764,7 +764,7 @@ static int rcar_pcie_get_resources(struct platform_device *pdev,
+ 		goto err_map_reg;
  
- 	return 0;
- }
-diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
-index 66d531e71c9a..b242e0aada19 100644
---- a/arch/x86/platform/uv/uv_irq.c
-+++ b/arch/x86/platform/uv/uv_irq.c
-@@ -102,9 +102,8 @@ static int uv_domain_alloc(struct irq_domain *domain, unsigned int virq,
+ 	i = irq_of_parse_and_map(pdev->dev.of_node, 0);
+-	if (i < 0) {
++	if (!i) {
+ 		dev_err(pcie->dev, "cannot get platform resources for msi interrupt\n");
+ 		err = -ENOENT;
+ 		goto err_map_reg;
+@@ -772,7 +772,7 @@ static int rcar_pcie_get_resources(struct platform_device *pdev,
+ 	pcie->msi.irq1 = i;
  
- 		chip_data->pnode = uv_blade_to_pnode(info->uv_blade);
- 		chip_data->offset = info->uv_offset;
--		irq_domain_set_hwirq_and_chip(domain, virq, virq,
--					      &uv_irq_chip, chip_data);
--		__irq_set_handler(virq, handle_percpu_irq, 0, info->uv_name);
-+		irq_domain_set_info(domain, virq, virq, &uv_irq_chip, chip_data,
-+				    handle_percpu_irq, NULL, info->uv_name);
- 	} else {
- 		kfree(chip_data);
- 	}
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index 50931e936149..fb7af45f9425 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -263,6 +263,10 @@ extern int irq_domain_set_hwirq_and_chip(struct irq_domain *domain,
- 					 irq_hw_number_t hwirq,
- 					 struct irq_chip *chip,
- 					 void *chip_data);
-+extern void irq_domain_set_info(struct irq_domain *domain, unsigned int virq,
-+				irq_hw_number_t hwirq, struct irq_chip *chip,
-+				void *chip_data, void *handler,
-+				void *handler_data, const char *handler_name);
- extern void irq_domain_reset_irq_data(struct irq_data *irq_data);
- extern void irq_domain_free_irqs_common(struct irq_domain *domain,
- 					int virq, int nr_irqs);
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index 4811bee1b8a7..1da30ae88665 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -882,6 +882,16 @@ int irq_domain_set_hwirq_and_chip(struct irq_domain *domain, unsigned int virq,
- 	return 0;
- }
- 
-+void irq_domain_set_info(struct irq_domain *domain, unsigned int virq,
-+			 irq_hw_number_t hwirq, struct irq_chip *chip,
-+			 void *chip_data, void *handler, void *handler_data,
-+			 const char *handler_name)
-+{
-+	irq_domain_set_hwirq_and_chip(domain, virq, hwirq, chip, chip_data);
-+	__irq_set_handler(virq, handler, 0, handler_name);
-+	irq_set_handler_data(virq, handler_data);
-+}
-+
- void irq_domain_reset_irq_data(struct irq_data *irq_data)
- {
- 	irq_data->hwirq = 0;
+ 	i = irq_of_parse_and_map(pdev->dev.of_node, 1);
+-	if (i < 0) {
++	if (!i) {
+ 		dev_err(pcie->dev, "cannot get platform resources for msi interrupt\n");
+ 		err = -ENOENT;
+ 		goto err_map_reg;
 -- 
-1.7.10.4
+2.1.0.rc2.206.gedb03e5
 
+
+-- 
+Dmitry
