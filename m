@@ -1,62 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0133.outbound.protection.outlook.com ([157.56.110.133]:3234
+Received: from mail-bn1bon0118.outbound.protection.outlook.com ([157.56.111.118]:29774
 	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753642AbaKCT5y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 3 Nov 2014 14:57:54 -0500
-Message-ID: <5457DE30.3010200@amd.com>
-Date: Mon, 3 Nov 2014 13:57:36 -0600
-From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-To: Marc Zyngier <marc.zyngier@arm.com>
-CC: Mark Rutland <Mark.Rutland@arm.com>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	"Catalin Marinas" <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"Harish.Kasiviswanathan@amd.com" <Harish.Kasiviswanathan@amd.com>,
+	id S933262AbaKNMHU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 14 Nov 2014 07:07:20 -0500
+From: "Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>
+To: Lucas Stach <l.stach@pengutronix.de>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>
+CC: Srikanth Thokala <sriku.linux@gmail.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [V9 PATCH 2/2] irqchip: gicv2m: Add supports for ARM GICv2m MSI(-X)
-References: <1414743990-28421-1-git-send-email-suravee.suthikulpanit@amd.com>
- <1414743990-28421-3-git-send-email-suravee.suthikulpanit@amd.com>
- <54574FF7.706@arm.com>
-In-Reply-To: <54574FF7.706@arm.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+	Roy Zang <tie-fei.zang@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: RE: [PATCH v2] PCI: designware: Add support 4 ATUs assignment
+Date: Fri, 14 Nov 2014 11:30:48 +0000
+Message-ID: <ceb189ef55cf44588b212cc44bb19ef5@BN3PR0301MB1249.namprd03.prod.outlook.com>
+References: <1415682444-24911-1-git-send-email-Minghuan.Lian@freescale.com>
+	 <CA+mB=1+4Dzxhbin6z0PUENvjUz-y8bq-K09FXTnSepFvVfe9HQ@mail.gmail.com>
+	 <546308DD.40109@freescale.com>
+	 <CA+mB=1K=Oyzdb2yfBvPRG9DHi-PFjRPtVS_dY9JMOz6dQog8QQ@mail.gmail.com>
+	 <546331E7.5060003@freescale.com>
+	 <CA+mB=1KObT9O783SMcvHy8nJGQPnxyKgP332r5bHx-K_D+LhVg@mail.gmail.com>
+	 <1415809929.2876.5.camel@pengutronix.de> <546481A3.5050700@freescale.com>
+	 <1415874015.2420.5.camel@pengutronix.de> <54648D61.6050704@freescale.com>
+	 <1415876988.2420.7.camel@pengutronix.de> <5465C19D.3060801@freescale.com>
+ <1415959338.4445.1.camel@pengutronix.de>
+In-Reply-To: <1415959338.4445.1.camel@pengutronix.de>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/3/2014 3:50 AM, Marc Zyngier wrote:
->> diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
->> >index a99c211..4069eb3 100644
->> >--- a/drivers/irqchip/irq-gic.c
->> >+++ b/drivers/irqchip/irq-gic.c
->> >@@ -46,6 +46,7 @@
->> >  #include <asm/smp_plat.h>
->> >
->> >  #include "irq-gic-common.h"
->> >+#include "irq-gic-v2m.h"
->> >  #include "irqchip.h"
->> >
->> >  union gic_base {
->> >@@ -68,6 +69,9 @@ struct gic_chip_data {
->> >  #ifdef CONFIG_GIC_NON_BANKED
->> >         void __iomem *(*get_base)(union gic_base *);
->> >  #endif
->> >+#ifdef CONFIG_ARM_GIC_V2M
->> >+       struct list_head v2m_list;
->> >+#endif
-> Can't that be something private to the v2m widget driver? I don't think
-> it brings anything to the main GIC driver.
->
-
-Looking at this again, now that we use the hierarchy irqdomain, GIC no 
-longer needs to be handling with children v2m. I'll remove this altogether.
-
-Suravee
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogTHVjYXMgU3RhY2ggW21h
+aWx0bzpsLnN0YWNoQHBlbmd1dHJvbml4LmRlXQ0KPiBTZW50OiBGcmlkYXksIE5vdmVtYmVyIDE0
+LCAyMDE0IDY6MDIgUE0NCj4gVG86IExpYW4gTWluZ2h1YW4tQjMxOTM5DQo+IENjOiBTcmlrYW50
+aCBUaG9rYWxhOyBMaWFuIE1pbmdodWFuLUIzMTkzOTsgbGludXgtcGNpQHZnZXIua2VybmVsLm9y
+ZzsNCj4gbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOyBaYW5nIFJveS1SNjE5
+MTE7IEh1IE1pbmdrYWktQjIxMjg0Ow0KPiBCam9ybiBIZWxnYWFzDQo+IFN1YmplY3Q6IFJlOiBb
+UEFUQ0ggdjJdIFBDSTogZGVzaWdud2FyZTogQWRkIHN1cHBvcnQgNCBBVFVzIGFzc2lnbm1lbnQN
+Cj4gDQo+IEFtIEZyZWl0YWcsIGRlbiAxNC4xMS4yMDE0LCAxNjo0NyArMDgwMCBzY2hyaWViIExp
+YW4gTWluZ2h1YW4tQjMxOTM5Og0KPiA+IEhpIEx1Y2FzIGFuZCBhbGwsDQo+ID4NCj4gPiBPbiAy
+MDE05bm0MTHmnIgxM+aXpSAxOTowOSwgTHVjYXMgU3RhY2ggd3JvdGU6DQo+ID4gPiBBbSBEb25u
+ZXJzdGFnLCBkZW4gMTMuMTEuMjAxNCwgMTg6NTIgKzA4MDAgc2NocmllYiBMaWFuIE1pbmdodWFu
+LQ0KPiBCMzE5Mzk6DQo+ID4gPj4gSGkgTHVjYXMsDQo+ID4gPj4NCj4gPiA+PiBPbiAyMDE05bm0
+MTHmnIgxM+aXpSAxODoyMCwgTHVjYXMgU3RhY2ggd3JvdGU6DQo+ID4gPj4+IEFtIERvbm5lcnN0
+YWcsIGRlbiAxMy4xMS4yMDE0LCAxODowMiArMDgwMCBzY2hyaWViIExpYW4gTWluZ2h1YW4tDQo+
+IEIzMTkzOToNCj4gPiA+Pj4+IEhpIEx1Y2FzLA0KPiA+ID4+Pj4NCj4gPiA+Pj4+IFBsZWFzZSBz
+ZWUgbXkgY29tbWVudHMgaW5saW5lLg0KPiA+ID4+Pj4NCj4gPiA+Pj4+IFRoYW5rcywNCj4gPiA+
+Pj4+IE1pbmdodWFuDQo+ID4gPj4+Pg0KPiA+ID4+Pj4gT24gMjAxNOW5tDEx5pyIMTPml6UgMDA6
+MzIsIEx1Y2FzIFN0YWNoIHdyb3RlOg0KPiA+ID4+Pj4+IEFtIE1pdHR3b2NoLCBkZW4gMTIuMTEu
+MjAxNCwgMjE6NTMgKzA1MzAgc2NocmllYiBTcmlrYW50aCBUaG9rYWxhOg0KPiA+ID4+Pj4+PiBI
+aSBNaW5naHVhbiwNCj4gPiA+Pj4gWy4uLl0NCj4gPiA+Pj4NCj4gPiA+Pj4+PiBVc2luZyBhIHNt
+YWxsZXIgdHlwZSBjb21wbGljYXRlcyB0aGUgRFQgZm9yIGxpdHRsZSB0byBubw0KPiA+ID4+Pj4+
+IGJlbmVmaXQuIEkgdGhpbmsgaXQncyBvayB0byB1c2UgdTMyIGhlcmUsIHdoaWNoIGlzIGEgY29t
+bW9uDQo+ID4gPj4+Pj4gc3RhbmRhcmQgZm9yIGludGVnZXIgdmFsdWVzIGluIERULg0KPiA+ID4+
+Pj4+DQo+ID4gPj4+Pj4gVGhvdWdoIHRoaXMgZGlzY3Vzc2lvbiBsZWFkIG1lIHRvIHRoZSBxdWVz
+dGlvbiBpZiB3ZSBldmVuIG5lZWQNCj4gPiA+Pj4+PiB0byBoYXZlIHRoaXMgcHJvcGVydHkgaW4g
+dGhlIERUIGF0IGFsbC4gSXNuJ3QgdGhpcyBhIHByb3BlcnR5DQo+ID4gPj4+Pj4gdGhhdCBpcyBm
+aXhlZCBmb3IgYSBzcGVjaWZpYyBzaWxpY29uIGltcGxlbWVudGF0aW9uIG9mIHRoZSBEVw0KPiA+
+ID4+Pj4+IGNvcmU/IEluIHRoYXQgY2FzZSB3ZSBjb3VsZCBqdXN0IGluZmVyIHRoZSBudW1iZXIg
+b2YgQVRVcyBmcm9tDQo+ID4gPj4+Pj4gdGhlIERUIGNvbXBhdGlibGUsIHNvIHRoaXMgc2hvdWxk
+IHByb2JhYmx5IGp1c3QgYmUgYWRkZWQgdG8NCj4gPiA+Pj4+PiBzdHJ1Y3QgcGNpZV9wb3J0IGFu
+ZCBwcm9wZXJseSBpbml0aWFsaXplZCBieSB0aGUgU29DIGdsdWUgZHJpdmVycy4NCj4gPiA+Pj4+
+IFtNaW5naHVhbl0gIEFzIGZhciBhcyBJIGtub3csIGV4eW5vcyBpbXBsZW1lbnRzIG9ubHkgMiBB
+VFVzLCB0aGlzDQo+ID4gPj4+PiBpcyB3aHkgcGNpZS1kZXNpZ253YXJlIG9ubHkgc3VwcG9ydHMg
+MiBBVFUuIGlNWCBpbXBsZW1lbnRzIDQgQVRVcw0KPiA+ID4+Pj4gYW5kIExTMTAyMUEgaW1wbGVt
+ZW50cyA2IEFUVXMuDQo+ID4gPj4+Pg0KPiA+ID4+PiBSaWdodCBzbyB3ZSBkb24ndCBuZWVkIGFu
+IGFkZGl0aW9uYWwgcHJvcGVydHkgaW4gdGhlIERUIGF0IGFsbC4NCj4gPiA+Pj4gVGhlIG51bWJl
+ciBvZiBBVFVzIGlzIGZpeGVkIGZvciBhIHNwZWNpZmljIGNvcmUgY29tcGF0aWJsZSBhbmQgY2Fu
+DQo+ID4gPj4+IGJlIHBhc3NlZCBpbiBieSB0aGUgcmVzcGVjdGl2ZSBleHlub3MsIGlteCBhbmQg
+bHMxMDIxIGdsdWUgZHJpdmVycy4NCj4gPiA+Pj4NCj4gPiA+Pj4gWW91IG1heSBhc2sgdGhlIEtl
+eXN0b25lIGFuZCBTcGVhciBtYWludGFpbmVycyB0byBnZXQgdGhlIGNvcnJlY3QNCj4gPiA+Pj4g
+bnVtYmVyIG9mIEFUVXMgZm9yIHRob3NlIGltcGxlbWVudGF0aW9ucy4NCiA+ID4+Pg0KPiA+ID4+
+PiBSZWdhcmRzLA0KPiA+ID4+PiBMdWNhcw0KPiA+ID4+IFtNaW5naHVhbl0gWWVzLiBUaGlzIGEg
+d2F5IHRoYXQgc3BlY2lmaWMgY29yZSBkcml2ZXIgcGFzc2VzIHRoZSBBVFUNCj4gPiA+PiBudW1i
+ZXIgdG8gcGNpLWRlc2lnbndhcmUuIEJ1dCBJIHBlcmZlciB0byBhZGRpbmcgZHRzIG5vZGUgZm9y
+IHRoZQ0KPiA+ID4+IGZvbGxvd2luZyByZWFzb25zOg0KPiA+ID4+IDEuIEFUVSBudW1iZXIgaXMg
+aGFyZHdhcmUgYXR0cmlidXRlLCBzbyBpdCBjYW4gYmUgYWRkZWQgdG8gRFRTLg0KPiA+ID4gQnV0
+IGl0IGlzIGEgZHVwbGljYXRpb24gb2YgaW5mb3JtYXRpb24gdGhhdCBjYW4gYmUgaW5mZXJyZWQg
+ZnJvbSB0aGUNCj4gPiA+IERUIGNvbXBhdGlibGUgYWxvbmUsIHdoaWNoIGlzIHVzdWFsbHkgZnJv
+d25lZCB1cG9uLg0KPiA+ID4NCj4gPiA+IEFsc28gaW4gY29udHJhc3QgdG8gdGhlIG51bS1sYW5l
+cyBwcm9wZXJ0eSBJIGRvbid0IHNlZSBhIHVzZS1jYXNlIHRvDQo+ID4gPiByZWR1Y2UgdGhlIG51
+bWJlciBvZiB1c2VkIEFUVXMgaW4gYSBzcGVjaWZpYyBzeXN0ZW0sIHNvIG51bS1hdHVzIGlzDQo+
+ID4gPiBiYXNpY2FsbHkgZml4ZWQgZm9yIGEgc3BlY2lmaWMgaW1wbGVtZW50YXRpb24uDQo+ID4g
+W01pbmdodWFuXSA0QVRVcyBwcm92aWRlcyBiZXR0ZXIgc3VwcG9ydCBmb3IgbXVsdGlwbGUtZnVu
+Y3Rpb24gYW5kDQo+ID4gU1ItSU9WIFBDSWUgZGV2aWNlcy4NCj4gPiBDYW4gYW55b25lIHRlbGwg
+bWUgaWYgdGhlcmUgaXMgdGhlIGNvbXBhbnkgd2lsbCBpbmNyZWFzZSBBVFVzIG51bWJlcj8NCj4g
+PiBJZiB5ZXMsIHdlIHNob3VsZCBhdm9pZCB0aGUgZm9sbG93aW5nIGNvZGU6DQo+ID4NCj4gPiBp
+ZiAob2ZfZGV2aWNlX2lzX2NvbXBhdGlibGUocGNpZS0+ZGV2LT5vZl9ub2RlLCAieHh4LHIxLXBj
+aWUiKSkNCj4gPiAgICAgIGF0dV9udW0gPSAyOw0KPiA+DQo+ID4gaWYgKG9mX2RldmljZV9pc19j
+b21wYXRpYmxlKHBjaWUtPmRldi0+b2Zfbm9kZSwgInh4eCxyMi1wY2llIikpDQo+ID4gICAgICBh
+dHVfbnVtID0gNDsNCj4gPg0KPiBUaGUgbnVtYmVyIG9mIEFUVXMgaXMgZml4ZWQgZm9yIGEgc3Bl
+Y2lmaWMgaW1wbGVtZW50YXRpb24uIElmIHRoZSBudW1iZXINCj4gb2YgQVRVcyBjaGFuZ2VzIGlu
+IGEgbmV3ZXIgaW1wbGVtZW50YXRpb24gb2YgYSBTb0MgdGhlbiB0aGUgc2lsaWNvbg0KPiBpbXBs
+ZW1lbnRhdGlvbiBvZiB0aGUgRFcgUENJZSBjb3JlIGNoYW5nZWQsIHNvIGl0IHNob3VsZCBnZXQg
+YSBuZXcNCj4gY29tcGF0aWJsZSBhbnl3YXkuDQo+IA0KDQpJZiB0aGVyZSBhcmUgbXVsdGlwbGUg
+cGxhdGZvcm1zIHRvIHVzZSB0aGUgc2FtZSBTb0MgZHJpdmVyLCB0aGVyZSB3aWxsIGJlDQptdWx0
+aXBsZSBjYXNlcyBmb3IgZGlmZmVyZW50IHBsYXRmb3JtcyBhcyBNaW5naHVhbiBoYXMgcG9pbnRl
+ZCBvdXQuDQoNCkZvciB0aGUgcGxhdGZvcm0gdGhhdCBvbmx5IGhhcyAyIEFUVXMsIEFUVTAgaXMg
+dXNlZCBmb3IgQ0ZHMCBhbmQgTUVNIGFuZA0KdGhlcmUgd2lsbCBiZSBjb25mbGljdCB3aGVuIE1F
+TSBhbmQgQ0ZHMCBhcmUgYWNjZXNzZWQgc2ltdWx0YW5lb3VzbHkgd2hpY2gNCmhhcyBjYXVzZSB0
+aGUgU0FUQSBsaW5rIGlzc3VlLiBJIHRoaW5rIG1vcmUgQVRVcyB3aWxsIGJlIGFkZGVkIGluIHRo
+ZSANCmZ1dHVyZSBkZXNpZ24sIHRoZW4gb25lIGRyaXZlciBtYXliZSBuZWVkIHRvIGhhbmRsZSBt
+dWx0aXBsZSBwbGF0Zm9ybXMuDQoNCkRUUyBpcyBkZXNpZ25lZCBmb3IgdG8gZGVzY3JpYmUgdGhl
+IGhhcmR3YXJlIHByb3BlcnR5LCBpdCdzIGEgZ2VuZXJhbCB3YXkNCnRvIHB1dCBoYXJkd2FyZSBy
+ZWxhdGVkIHByb3BlcnR5IGludG8gRFRTLg0KDQpUaGFua3MsDQpNaW5na2FpDQoNCg==
