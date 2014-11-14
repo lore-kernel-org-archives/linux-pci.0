@@ -1,125 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from dliviu.plus.com ([80.229.23.120]:60988 "EHLO smtp.dudau.co.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756313AbaKSTDY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Nov 2014 14:03:24 -0500
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by smtp.dudau.co.uk (Postfix) with SMTP id 41483FFB32
-	for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2014 19:03:22 +0000 (GMT)
-Date: Wed, 19 Nov 2014 19:03:17 +0000
-From: Liviu Dudau <liviu@dudau.co.uk>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-mips@linux-mips.org, linux-sh@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-xtensa@linux-xtensa.org,
-	x86@kernel.org, sparclinux@vger.kernel.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	linux-alpha@vger.kernel.org, linux-ia64@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [PATCH 5/5] PCI: Rip out pci_bus_add_devices() from
- pci_scan_root_bus()
-Message-ID: <20141119190317.GC9162@bart.dudau.co.uk>
-References: <1416382369-13587-1-git-send-email-wangyijing@huawei.com>
- <1416382369-13587-6-git-send-email-wangyijing@huawei.com>
- <1645037.uypArjN50l@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1645037.uypArjN50l@wuerfel>
+Received: from aserp1040.oracle.com ([141.146.126.69]:33169 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933512AbaKND7O (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 22:59:14 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] PCI: Don't reject 64bit mmio on 32bit/PAE mode
+Date: Thu, 13 Nov 2014 19:59:10 -0800
+Message-Id: <1415937550-14469-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 19, 2014 at 01:11:41PM +0100, Arnd Bergmann wrote:
-> On Wednesday 19 November 2014 15:32:49 Yijing Wang wrote:
-> > Just like pci_scan_bus(), we also should rip out
-> > pci_bus_add_devices() from pci_scan_root_bus().
-> > Lots platforms first call pci_scan_root_bus(), but
-> > after that, they call pci_bus_size_bridges() and
-> > pci_bus_assign_resources(). Place pci_bus_add_devices()
-> > in pci_scan_root_bus() hurts PCI scan logic.
-> 
-> I think we really need to wait for Bjorn to comment on this patch,
-> as I mentioned the idea behind pci_scan_root_bus() was to integrate
-> the scanning part, which you now undo, though I can still see this
-> working out in the long run.
-> 
-> > Should no functional change.
-> 
-> But you are moving the pci_bus_add_devices() later in a couple of
-> places. While this seems entirely reasonable, I would consider
-> it a functional change.
-> 
-> > diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
-> > index 076c35c..97f9730 100644
-> > --- a/arch/alpha/kernel/pci.c
-> > +++ b/arch/alpha/kernel/pci.c
-> > @@ -334,6 +334,8 @@ common_init_pci(void)
-> >  
-> >  		bus = pci_scan_root_bus(NULL, next_busno, alpha_mv.pci_ops,
-> >  					hose, &resources);
-> > +		if (bus)
-> > +			pci_bus_add_devices(bus);
-> >  		hose->bus = bus;
-> >  		hose->need_domain_info = need_domain_info;
-> >  		next_busno = bus->busn_res.end + 1;
-> 
-> How about making pci_bus_add_devices() handle a NULL argument to save
-> the if() here and elsewhere?
+Aaron reported 32bit/PAE mode, has problem with 64bit resource.
 
-Actually, I would stop there if the bus is NULL and start cleaning up. If not,
-things are going to blow up three lines down when next_busno is calculated.
+[    6.610012] pci 0000:03:00.0: reg 0x10: [mem 0x383fffc00000-0x383fffdfffff 64bit pref]
+[    6.622195] pci 0000:03:00.0: reg 0x20: [mem 0x383fffe04000-0x383fffe07fff 64bit pref]
+[    6.656112] pci 0000:03:00.1: reg 0x10: [mem 0x383fffa00000-0x383fffbfffff 64bit pref]
+[    6.668293] pci 0000:03:00.1: reg 0x20: [mem 0x383fffe00000-0x383fffe03fff 64bit pref]
+[    6.702055] pci 0000:00:02.2: PCI bridge to [bus 03-04]
+[    6.706434] pci 0000:00:02.2:   bridge window [io  0x1000-0x1fff]
+[    6.711783] pci 0000:00:02.2:   bridge window [mem 0x91900000-0x91cfffff]
+[    6.717906] pci 0000:00:02.2: can't handle 64-bit address space for bridge
 
-Best regards,
-Liviu
+So the kernel reject 64bit mmio on pci pref bridge that is assigned by
+firmware.
 
+When 32bit PAE is enabled, we could support 64bit mmio.
+but BITS_PER_LONG==64 checking could reject firmware assigned mmio that
+is above 4G. On x86 32bit always has BITS_PER_LONG equal to 32.
 
-> > diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
-> > index 1bf60b1..f083688 100644
-> > --- a/arch/mips/pci/pci.c
-> > +++ b/arch/mips/pci/pci.c
-> > @@ -113,6 +113,7 @@ static void pcibios_scanbus(struct pci_controller *hose)
-> >  		if (!pci_has_flag(PCI_PROBE_ONLY)) {
-> >  			pci_bus_size_bridges(bus);
-> >  			pci_bus_assign_resources(bus);
-> > +			pci_bus_add_devices(bus);
-> >  		}
-> >  	}
-> >  }
-> 
-> This one looks wrong, I think you still want to call pci_bus_add_devices()
-> even with PCI_PROBE_ONLY set.
-> 
-> > diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
-> > index 1f80a88..007466e 100644
-> > --- a/arch/tile/kernel/pci.c
-> > +++ b/arch/tile/kernel/pci.c
-> > @@ -308,6 +308,8 @@ int __init pcibios_init(void)
-> >  			pci_add_resource(&resources, &iomem_resource);
-> >  			bus = pci_scan_root_bus(NULL, 0, controller->ops,
-> >  						controller, &resources);
-> > +			if (bus)
-> > +				pci_bus_add_devices(bus);
-> >  			controller->root_bus = bus;
-> >  			controller->last_busno = bus->busn_res.end;
-> >  		}
-> 
-> Should the pci_bus_add_devices come after setting the bus numbers here?
-> 
-> 	Arnd
-> 
+We could use CONFIG_ARCH_DMA_ADDR_T_64BIT or dma_addr_t size checking instead.
+Use dma_addr_t size checking to avoid using MARCO.
 
--- 
--------------------
-   .oooO
-   (   )
-    \ (  Oooo.
-     \_) (   )
-          ) /
-         (_/
+Also need to change to use dma_addr_t instead of unsigned long
+for base/limit to avoid overflow.
 
- One small step
-   for me ...
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=88131
+Reported-by: Aaron Ma <mapengyu@gmail.com>
+Tested-by: Aaron Ma <mapengyu@gmail.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
+---
+ drivers/pci/probe.c |   22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
+
+Index: linux-2.6/drivers/pci/probe.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/probe.c
++++ linux-2.6/drivers/pci/probe.c
+@@ -406,15 +406,15 @@ static void pci_read_bridge_mmio_pref(st
+ {
+ 	struct pci_dev *dev = child->self;
+ 	u16 mem_base_lo, mem_limit_lo;
+-	unsigned long base, limit;
++	dma_addr_t base, limit;
+ 	struct pci_bus_region region;
+ 	struct resource *res;
+ 
+ 	res = child->resource[2];
+ 	pci_read_config_word(dev, PCI_PREF_MEMORY_BASE, &mem_base_lo);
+ 	pci_read_config_word(dev, PCI_PREF_MEMORY_LIMIT, &mem_limit_lo);
+-	base = ((unsigned long) mem_base_lo & PCI_PREF_RANGE_MASK) << 16;
+-	limit = ((unsigned long) mem_limit_lo & PCI_PREF_RANGE_MASK) << 16;
++	base = ((dma_addr_t) mem_base_lo & PCI_PREF_RANGE_MASK) << 16;
++	limit = ((dma_addr_t) mem_limit_lo & PCI_PREF_RANGE_MASK) << 16;
+ 
+ 	if ((mem_base_lo & PCI_PREF_RANGE_TYPE_MASK) == PCI_PREF_RANGE_TYPE_64) {
+ 		u32 mem_base_hi, mem_limit_hi;
+@@ -428,15 +428,15 @@ static void pci_read_bridge_mmio_pref(st
+ 		 * this, just assume they are not being used.
+ 		 */
+ 		if (mem_base_hi <= mem_limit_hi) {
+-#if BITS_PER_LONG == 64
+-			base |= ((unsigned long) mem_base_hi) << 32;
+-			limit |= ((unsigned long) mem_limit_hi) << 32;
+-#else
+-			if (mem_base_hi || mem_limit_hi) {
+-				dev_err(&dev->dev, "can't handle 64-bit address space for bridge\n");
+-				return;
++			if (sizeof(dma_addr_t) < 8) {
++				if (mem_base_hi || mem_limit_hi) {
++					dev_err(&dev->dev, "can't handle 64-bit address space for bridge\n");
++					return;
++				}
++			} else  {
++				base |= ((dma_addr_t) mem_base_hi) << 32;
++				limit |= ((dma_addr_t) mem_limit_hi) << 32;
+ 			}
+-#endif
+ 		}
+ 	}
+ 	if (base <= limit) {
