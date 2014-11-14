@@ -1,59 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:9864 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752052AbaKIOpH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 9 Nov 2014 09:45:07 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
+Received: from service87.mimecast.com ([91.220.42.44]:47651 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935120AbaKNQNc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Nov 2014 11:13:32 -0500
+Message-ID: <54662A27.6030201@arm.com>
+Date: Fri, 14 Nov 2014 16:13:27 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
+MIME-Version: 1.0
+To: Jiang Liu <jiang.liu@linux.intel.com>
+CC: Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
 	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
 	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V7 6/8] iommu/vt-d: Enhance error recovery in function intel_enable_irq_remapping()
-Date: Sun,  9 Nov 2014 22:48:01 +0800
-Message-Id: <1415544483-27990-7-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415544483-27990-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415544483-27990-1-git-send-email-jiang.liu@linux.intel.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [Patch V1 0/6] Refine generic/PCI MSI irqodmian interfaces
+References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com> <54651BE2.9080008@arm.com> <alpine.DEB.2.11.1411132207470.3935@nanos> <5465227E.6000309@arm.com> <5466259A.7060505@linux.intel.com>
+In-Reply-To: <5466259A.7060505@linux.intel.com>
+Content-Type: text/plain; charset=WINDOWS-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance error recovery in function intel_enable_irq_remapping()
-by tearing down all created data structures.
+On 14/11/14 15:54, Jiang Liu wrote:
+> On 2014/11/14 5:28, Marc Zyngier wrote:
+>> On 13/11/14 21:11, Thomas Gleixner wrote:
+>>> On Thu, 13 Nov 2014, Marc Zyngier wrote:
+>>>> With the new stacked irq domains, it becomes pretty tempting
+>>>> to allocate an MSI domain per PCI bus, which would remove
+>>>> the requirement of either relying on arch-specific code, or
+>>>> a default PCI MSI domain.
+>>>
+>>> Right. That's what I roughly had in mind. And that would solve the
+>>> multi-iommu issue on x86 nicely as well. We establish the association
+>>> at the time where the bus gets populated. So the whole lookup magic
+>>> simply goes away.
+>>
+>> Great. I've pushed the whole thing out with this patch, the couple
+>> of fixes I mentioned earlier, as well as the whole ITS code:
+>>
+>> git://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git irq/stacked-its-v2
+> Hi Marc,
+> 	I have looked at the code, and found some issues.
+> 1) With my next version, no need to implemeent its_pci_msi_free()
+> anymore. msi_domain_free_irqs() will reset desc->irq to zero
+> for all architectures.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Reviewed-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/iommu/intel_irq_remapping.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+Great. The less code, the better.
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 7af0b56dc2d1..27541d440849 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -702,9 +702,11 @@ static int __init intel_enable_irq_remapping(void)
- 	return eim ? IRQ_REMAP_X2APIC_MODE : IRQ_REMAP_XAPIC_MODE;
- 
- error:
--	/*
--	 * handle error condition gracefully here!
--	 */
-+	for_each_iommu(iommu, drhd)
-+		if (ecap_ir_support(iommu->ecap)) {
-+			iommu_disable_irq_remapping(iommu);
-+			intel_teardown_irq_remapping(iommu);
-+		}
- 
- 	if (x2apic_present)
- 		pr_warn("Failed to enable irq remapping.  You are vulnerable to irq-injection attacks.\n");
+> 2) This piece of code in its_msi_prepare() may run into trouble
+> for PCI device with both MSI and MSIX capability. I will change
+> msi_prepare() prototype to pass in the "nvec" parameter. And you
+> may access first_pci_msi_entry()->msi_attrib.is_msix to get
+> allocation type if needed.
+> 	nvec = pci_msix_vec_count(pdev);
+> 	if (nvec < 0)
+> 		nvec = pci_msi_vec_count(pdev);
+> 	if (nvec < 0)
+> 		return nvec;
+
+Ah, good point. Having nvec will make things simpler indeed. I have the
+feeling that the ITS driver may not be the only one to require such a thing.
+
+> 3) Do we need to increase the default of NUM_MSI_ALLOC_SCRATCHPAD_REGS
+> to 4? 2 is a little too limited.
+
+I'd say that 2 is enough for now. The ITS only uses one (the second one
+is for debug only). Should the need arise, we can bump it up later.
+
+Thanks,
+
+	M.
 -- 
-1.7.10.4
+Jazz is not dead. It just smells funny...
 
