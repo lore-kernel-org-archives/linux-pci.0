@@ -1,63 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:33523 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752885AbaKLCMP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 21:12:15 -0500
+Received: from mga02.intel.com ([134.134.136.20]:18964 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964789AbaKNA0D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 13 Nov 2014 19:26:03 -0500
+Message-ID: <54654C10.2040102@linux.intel.com>
+Date: Fri, 14 Nov 2014 08:25:52 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20141111182418.GA5507@red-moon>
-References: <1415702040-2790-1-git-send-email-ming.lei@canonical.com>
-	<20141111122901.GA4419@red-moon>
-	<CACVXFVNAc9axtESmo1zGZ3GMquTzjzWR3jx-b3tbhhLfQDDRcg@mail.gmail.com>
-	<20141111182418.GA5507@red-moon>
-Date: Wed, 12 Nov 2014 10:12:12 +0800
-Message-ID: <CACVXFVPzo2qNGa5DWESS3TXor=u82_SxHb+xzrBCRXtcQxq4Cg@mail.gmail.com>
-Subject: Re: [PATCH] pci: generic host: make it more generic
-From: Ming Lei <ming.lei@canonical.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
+To: Marc Zyngier <marc.zyngier@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Tony Luck <tony.luck@intel.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	alvise rigo <a.rigo@virtualopensystems.com>
-Content-Type: text/plain; charset=UTF-8
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [Patch V1 0/6] Refine generic/PCI MSI irqodmian interfaces
+References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com> <54651BE2.9080008@arm.com>
+In-Reply-To: <54651BE2.9080008@arm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 12, 2014 at 2:24 AM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> On Tue, Nov 11, 2014 at 02:02:20PM +0000, Ming Lei wrote:
->
-> [...]
->
->> > http://lists.infradead.org/pipermail/linux-arm-kernel/2014-October/296535.html
->> >
->> > Patch above is already queued and applies most of the changes you have posted
->> > above.
+On 2014/11/14 5:00, Marc Zyngier wrote:
+> On 13/11/14 11:43, Jiang Liu wrote:
+>> This patch set is based on tip/irq/irqdomain and tries to refine
+>> interfaces to support irqdomain for generic MSI and PCI MSI.
 >>
->> I should have looked at list first before writing the patch, :-(
+>> With this patch set applied, the generic MSI and PCI MSI interfaces
+>> are much easier to use. For extreme case, you only need to define
+>> a "struct msi_domain_info" and don't need to implement any callbacks,
+>> just using the default callbacks is OK:)
 >>
->> Could you make it more generic so that other ARCHs(at least ARM64)
->> can benefit from it too?
->
-> That's our current goal, we are carrying out clean-ups to remove arch
-> dependency and move code to the generic layer PCI layer.
+>> This patch set is also a preparation for:
+>> 1) Kill all weak functions in drivers/pci/msi.c
+>> 2) Implement support for non-PCI-compliant MSI device
+> 
+> I've rebased (once more!) the GICv3 ITS driver on top of this, and this
+> is definitely a major improvement. This is basically the first version
+> I can use without having to hack into the core code (apart from the
+> couple of nits I've mentioned earlier).
+Sorry for the rebasing, but I hope it worthy rebasing:)
 
-OK, I am glad to test them after you post them out.
-
-At least, the 'struct gen_pci' pointer can be put in driver data
-of the platform_device now, which may remove dependency on
-pci_sysdata in this driver.  But ARCH's pcibios code still may
-access 'pci_sysdata', do you have patches or solution to handle
-this issue?
-
-Do you think it is doable to introduce a option(from module
-parameter, or device tree, ...) to let the driver and PCI core
-ignore/bypass all pcibios handling for the generic bus?  If that
-is OK, it can provide an approach to reach the goal a bit easy.
-In reality, generic host controller should be only used by VM,
-and VM's firmware shouldn't be very complicated and I think
-the option can meet most of demands.
-
-Thanks,
-Ming Lei
+> 
+> Now, Thomas' idea of putting the irq_domain close to the bus is very
+> appealing, and I've tweaked an earlier patch in order to do this:
+I feel that's the right direction. There are other threads discussing
+associating an MSI controller structure with each PCI bus (at least
+root bus).
+http://www.spinics.net/lists/arm-kernel/msg376328.html
+Regards!
+Gerry
