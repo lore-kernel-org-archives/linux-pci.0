@@ -1,176 +1,96 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:37049 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161396AbaKNRMP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Nov 2014 12:12:15 -0500
+Message-ID: <1415985069.4445.6.camel@pengutronix.de>
+Subject: Re: [Patch V1 0/6] Refine generic/PCI MSI irqodmian interfaces
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
 	Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
 	Yingjoe Chen <yingjoe.chen@mediatek.com>,
 	Borislav Petkov <bp@alien8.de>,
 	"H. Peter Anvin" <hpa@zytor.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch V2 3/9] irqdomain: Implement a method to automatically call parent domain's alloc/free
-Date: Sat, 15 Nov 2014 22:24:01 +0800
-Message-Id: <1416061447-9472-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Date: Fri, 14 Nov 2014 18:11:09 +0100
+In-Reply-To: <546627DD.2050200@arm.com>
+References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com>
+	 <54651BE2.9080008@arm.com> <54654C10.2040102@linux.intel.com>
+	 <54655632.2040209@huawei.com> <alpine.DEB.2.11.1411140211480.3935@nanos>
+	 <54655D44.1070703@linux.intel.com> <54660D7F.70702@gmail.com>
+	 <54661103.8000707@linux.intel.com> <54661CB8.2070704@arm.com>
+	 <54661ED9.8090901@linux.intel.com> <546627DD.2050200@arm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a flags to irq_domain.flags to control whether the irqdomain core
-should automatically call parent irqdomain's alloc/free callbacks. It
-help to reduce hierarchy irqdomains users' code size.
+Am Freitag, den 14.11.2014, 16:03 +0000 schrieb Marc Zyngier:
+> On 14/11/14 15:25, Jiang Liu wrote:
+> > On 2014/11/14 23:16, Marc Zyngier wrote:
+> >> On 14/11/14 14:26, Jiang Liu wrote:
+> >>> On 2014/11/14 22:11, Yijing Wang wrote:
+> >>>>
+> >>> We have achieved 1 and 2. And seems we could also achieve 3 by
+> >>> converting all arch specific PCI MSI code to use hierarchy
+> >>> irqdomain. But not sure whether we could achieve 4, not familiar
+> >>> with ARM world:)
+> >>
+> >> Killing all the weak functions shouldn't be a problem for ARM, we're
+> >> trying very hard not to rely on them.
+> >>
+> >> Killing msi_chip is a different story, as this is what we use to match a
+> >> PCI host controller with its MSI controller (that's what the of_node
+> >> field in msi_chip is for). See drivers/of/of_pci.c for details.
+> >>
+> >> Also, we use msi_chip directly in the MSI drivers as a way to go from a
+> >> pci_dev to the MSI controller specific structure:
+> >>
+> >> http://git.kernel.org/cgit/linux/kernel/git/maz/arm-platforms.git/tree/drivers/irqchip/irq-gic-v3-its.c?h=irq/stacked-its-v2#n1143
+> >>
+> >> If we're going to kill msi_chip, we must make sure we have mechanisms
+> >> that allow the conversion of the existing code.
+> > Hi Marc,
+> > 	Seem it doesn't worth the effort to remove irq_chip,
+> > so I will focus on killing all weak functions first:)
+> > After that, we may kill setup_irq and teardown_irq in irq_chip,
+> > but seems irq_chip still has other usages, so I won't try to
+> > kill irq_chip.
+> 
+> I assume you mean msi_chip! ;-)
+> 
+> Killing setup/teardown_irq is going to require some work. There are a
+> few users in the tree (I can see three in drivers/pci/host and one in
+> drivers/irqchip).
+> 
+> Hopefully, we can get the maintainers to convert them.
+> 
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- include/linux/irqdomain.h |   24 ++++++-----------
- kernel/irq/irqdomain.c    |   66 +++++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 72 insertions(+), 18 deletions(-)
+I can help with both the Designware and Tegra host bridge drivers.
 
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index fbe542967c20..ad92b0b15945 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -130,6 +130,8 @@ struct irq_domain {
- };
- 
- #define	IRQ_DOMAIN_FLAG_HIERARCHY	0x1
-+/* Framework automatically calls parent domain's alloc()/free() */
-+#define	IRQ_DOMAIN_FLAG_AUTO_RECURSIVE	0x2
- #define	IRQ_DOMAIN_FLAG_ARCH1		0x10000
- 
- #ifdef CONFIG_IRQ_DOMAIN
-@@ -274,22 +276,12 @@ extern void irq_domain_free_irqs_common(struct irq_domain *domain,
- 					unsigned int nr_irqs);
- extern void irq_domain_free_irqs_top(struct irq_domain *domain,
- 				     unsigned int virq, unsigned int nr_irqs);
--
--static inline int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
--			unsigned int irq_base, unsigned int nr_irqs, void *arg)
--{
--	if (domain->parent && domain->parent->ops->alloc)
--		return domain->parent->ops->alloc(domain->parent, irq_base,
--						  nr_irqs, arg);
--	return -ENOSYS;
--}
--
--static inline void irq_domain_free_irqs_parent(struct irq_domain *domain,
--				unsigned int irq_base, unsigned int nr_irqs)
--{
--	if (domain->parent && domain->parent->ops->free)
--		domain->parent->ops->free(domain->parent, irq_base, nr_irqs);
--}
-+extern int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
-+					unsigned int irq_base,
-+					unsigned int nr_irqs, void *arg);
-+extern void irq_domain_free_irqs_parent(struct irq_domain *domain,
-+					unsigned int irq_base,
-+					unsigned int nr_irqs);
- 
- static inline bool irq_domain_is_hierarchy(struct irq_domain *domain)
- {
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index 705fb573e509..03fc7d018324 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -925,6 +925,43 @@ void irq_domain_free_irqs_top(struct irq_domain *domain, unsigned int virq,
- 	irq_domain_free_irqs_common(domain, virq, nr_irqs);
- }
- 
-+static bool irq_domain_is_auto_recursive(struct irq_domain *domain)
-+{
-+	return domain->flags & IRQ_DOMAIN_FLAG_AUTO_RECURSIVE;
-+}
-+
-+static void irq_domain_free_irqs_recursive(struct irq_domain *domain,
-+					   unsigned int irq_base,
-+					   unsigned int nr_irqs)
-+{
-+	domain->ops->free(domain, irq_base, nr_irqs);
-+	if (irq_domain_is_auto_recursive(domain)) {
-+		BUG_ON(!domain->parent);
-+		irq_domain_free_irqs_recursive(domain->parent, irq_base,
-+					       nr_irqs);
-+	}
-+}
-+
-+static int irq_domain_alloc_irqs_recursive(struct irq_domain *domain,
-+					   unsigned int irq_base,
-+					   unsigned int nr_irqs, void *arg)
-+{
-+	int ret = 0;
-+	struct irq_domain *parent = domain->parent;
-+	bool recursive = irq_domain_is_auto_recursive(domain);
-+
-+	BUG_ON(recursive && !parent);
-+	if (recursive)
-+		ret = irq_domain_alloc_irqs_recursive(parent, irq_base,
-+						      nr_irqs, arg);
-+	if (ret >= 0)
-+		ret = domain->ops->alloc(domain, irq_base, nr_irqs, arg);
-+	if (ret < 0 && recursive)
-+		irq_domain_free_irqs_recursive(parent, irq_base, nr_irqs);
-+
-+	return ret;
-+}
-+
- /**
-  * __irq_domain_alloc_irqs - Allocate IRQs from domain
-  * @domain: domain to allocate from
-@@ -981,7 +1018,7 @@ int __irq_domain_alloc_irqs(struct irq_domain *domain, int irq_base,
- 	}
- 
- 	mutex_lock(&irq_domain_mutex);
--	ret = domain->ops->alloc(domain, virq, nr_irqs, arg);
-+	ret = irq_domain_alloc_irqs_recursive(domain, virq, nr_irqs, arg);
- 	if (ret < 0) {
- 		mutex_unlock(&irq_domain_mutex);
- 		goto out_free_irq_data;
-@@ -1016,13 +1053,38 @@ void irq_domain_free_irqs(unsigned int virq, unsigned int nr_irqs)
- 	mutex_lock(&irq_domain_mutex);
- 	for (i = 0; i < nr_irqs; i++)
- 		irq_domain_remove_irq(virq + i);
--	data->domain->ops->free(data->domain, virq, nr_irqs);
-+	irq_domain_free_irqs_recursive(data->domain, virq, nr_irqs);
- 	mutex_unlock(&irq_domain_mutex);
- 
- 	irq_domain_free_irq_data(virq, nr_irqs);
- 	irq_free_descs(virq, nr_irqs);
- }
- 
-+int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
-+				 unsigned int irq_base, unsigned int nr_irqs,
-+				 void *arg)
-+{
-+	/* irq_domain_alloc_irqs_recursive() has called parent's alloc() */
-+	if (irq_domain_is_auto_recursive(domain))
-+		return 0;
-+
-+	domain = domain->parent;
-+	if (domain)
-+		return irq_domain_alloc_irqs_recursive(domain, irq_base,
-+						       nr_irqs, arg);
-+
-+	return -ENOSYS;
-+}
-+
-+void irq_domain_free_irqs_parent(struct irq_domain *domain,
-+				 unsigned int irq_base, unsigned int nr_irqs)
-+{
-+	/* irq_domain_free_irqs_recursive() will call parent's free */
-+	if (!irq_domain_is_auto_recursive(domain))
-+		irq_domain_free_irqs_recursive(domain->parent, irq_base,
-+					       nr_irqs);
-+}
-+
- /**
-  * irq_domain_activate_irq - Call domain_ops->activate recursively to activate
-  *			     interrupt
+But that requires:
+1. CCing patches to me, so I know what is going on
+2. Providing good descriptions on what is done in the patchset and how
+the msi_chip users should adjust
+
+With all the MSI changes by various people going on in parallel it's
+hard to follow for someone not looking at this stuff every day.
+
+Regards,
+Lucas
+
 -- 
-1.7.10.4
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
