@@ -1,77 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:42336 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965601AbaKNQDs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Nov 2014 11:03:48 -0500
-Message-ID: <546627DD.2050200@arm.com>
-Date: Fri, 14 Nov 2014 16:03:41 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:46848 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751925AbaKNFKY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 14 Nov 2014 00:10:24 -0500
+Message-ID: <54658EBA.9020706@ti.com>
+Date: Fri, 14 Nov 2014 10:40:18 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>
-CC: Yijing Wang <wangyijing0307@gmail.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [Patch V1 0/6] Refine generic/PCI MSI irqodmian interfaces
-References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com> <54651BE2.9080008@arm.com> <54654C10.2040102@linux.intel.com> <54655632.2040209@huawei.com> <alpine.DEB.2.11.1411140211480.3935@nanos> <54655D44.1070703@linux.intel.com> <54660D7F.70702@gmail.com> <54661103.8000707@linux.intel.com> <54661CB8.2070704@arm.com> <54661ED9.8090901@linux.intel.com>
-In-Reply-To: <54661ED9.8090901@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>
+CC: <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: dra7xx: Add __init annotation to dra7xx_add_pcie_port()
+References: <001e01cff983$c76f0ed0$564d2c70$%han@samsung.com> <20141113165104.GE5064@google.com>
+In-Reply-To: <20141113165104.GE5064@google.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 14/11/14 15:25, Jiang Liu wrote:
-> On 2014/11/14 23:16, Marc Zyngier wrote:
->> On 14/11/14 14:26, Jiang Liu wrote:
->>> On 2014/11/14 22:11, Yijing Wang wrote:
->>>>
->>> We have achieved 1 and 2. And seems we could also achieve 3 by
->>> converting all arch specific PCI MSI code to use hierarchy
->>> irqdomain. But not sure whether we could achieve 4, not familiar
->>> with ARM world:)
+Hi,
+
+On Thursday 13 November 2014 10:21 PM, Bjorn Helgaas wrote:
+> On Thu, Nov 06, 2014 at 02:37:39PM +0900, Jingoo Han wrote:
+>> Add __init annotation to dra7xx_add_pcie_port(), because
+>> the dra7xx_add_pcie_port() is called only by dra7xx_pcie_probe()
+>> that was already marked as __init. Also, this patch fixes
+>> section mismatch warning.
 >>
->> Killing all the weak functions shouldn't be a problem for ARM, we're
->> trying very hard not to rely on them.
+>> WARNING: drivers/pci/host/built-in.o(.text.unlikely+0xcc): Section mismatch in reference from the function dra7xx_add_pcie_port() to
+>> the function .init.text:dw_pcie_host_init()
+>> The function dra7xx_add_pcie_port() references
+>> the function __init dw_pcie_host_init().
+>> This is often because dra7xx_add_pcie_port lacks a __init
+>> annotation or the annotation of dw_pcie_host_init is wrong.
 >>
->> Killing msi_chip is a different story, as this is what we use to match a
->> PCI host controller with its MSI controller (that's what the of_node
->> field in msi_chip is for). See drivers/of/of_pci.c for details.
+>> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> 
+> Applied to pci/host-dra7xx for v3.19, thanks!
+> 
+> Kishon, let me know if there's any issue with this.  It looks like a pretty
+> obvious fix.
+
+Indeed. Don't see a problem with it.
+
+Thanks
+Kishon
+> 
+>> ---
+>> This patch is based on the submitted patch "[PATCH V2] PCI:
+>> dra7xx: Add dra7xx prefix before add_pcie_port".
 >>
->> Also, we use msi_chip directly in the MSI drivers as a way to go from a
->> pci_dev to the MSI controller specific structure:
+>>  drivers/pci/host/pci-dra7xx.c |    4 ++--
+>>  1 file changed, 2 insertions(+), 2 deletions(-)
 >>
->> http://git.kernel.org/cgit/linux/kernel/git/maz/arm-platforms.git/tree/drivers/irqchip/irq-gic-v3-its.c?h=irq/stacked-its-v2#n1143
+>> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+>> index 5b4a644..8c69697 100644
+>> --- a/drivers/pci/host/pci-dra7xx.c
+>> +++ b/drivers/pci/host/pci-dra7xx.c
+>> @@ -270,8 +270,8 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
+>>  	return IRQ_HANDLED;
+>>  }
+>>  
+>> -static int dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+>> -				struct platform_device *pdev)
+>> +static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+>> +				       struct platform_device *pdev)
+>>  {
+>>  	int ret;
+>>  	struct pcie_port *pp;
+>> -- 
+>> 1.7.9.5
 >>
->> If we're going to kill msi_chip, we must make sure we have mechanisms
->> that allow the conversion of the existing code.
-> Hi Marc,
-> 	Seem it doesn't worth the effort to remove irq_chip,
-> so I will focus on killing all weak functions first:)
-> After that, we may kill setup_irq and teardown_irq in irq_chip,
-> but seems irq_chip still has other usages, so I won't try to
-> kill irq_chip.
-
-I assume you mean msi_chip! ;-)
-
-Killing setup/teardown_irq is going to require some work. There are a
-few users in the tree (I can see three in drivers/pci/host and one in
-drivers/irqchip).
-
-Hopefully, we can get the maintainers to convert them.
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
-
+>>
