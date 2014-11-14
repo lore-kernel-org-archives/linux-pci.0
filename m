@@ -1,216 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:21473 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751613AbaKBGCE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 2 Nov 2014 01:02:04 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Received: from service87.mimecast.com ([91.220.42.44]:42336 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965601AbaKNQDs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Nov 2014 11:03:48 -0500
+Message-ID: <546627DD.2050200@arm.com>
+Date: Fri, 14 Nov 2014 16:03:41 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
+MIME-Version: 1.0
+To: Jiang Liu <jiang.liu@linux.intel.com>
+CC: Yijing Wang <wangyijing0307@gmail.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Yijing Wang <wangyijing@huawei.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
 	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch v8 04/18] x86, PCI, ACPI: Kill private function resource_to_addr() in arch/x86/pci/acpi.c
-Date: Sun,  2 Nov 2014 14:04:19 +0800
-Message-Id: <1414908273-7552-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414908273-7552-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414908273-7552-1-git-send-email-jiang.liu@linux.intel.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [Patch V1 0/6] Refine generic/PCI MSI irqodmian interfaces
+References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com> <54651BE2.9080008@arm.com> <54654C10.2040102@linux.intel.com> <54655632.2040209@huawei.com> <alpine.DEB.2.11.1411140211480.3935@nanos> <54655D44.1070703@linux.intel.com> <54660D7F.70702@gmail.com> <54661103.8000707@linux.intel.com> <54661CB8.2070704@arm.com> <54661ED9.8090901@linux.intel.com>
+In-Reply-To: <54661ED9.8090901@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Private function resource_to_addr() is used to parse ACPI resources
-for PCI host bridge. There are public interfaces available for that
-purpose, so replace resource_to_addr() with public interfaces.
+On 14/11/14 15:25, Jiang Liu wrote:
+> On 2014/11/14 23:16, Marc Zyngier wrote:
+>> On 14/11/14 14:26, Jiang Liu wrote:
+>>> On 2014/11/14 22:11, Yijing Wang wrote:
+>>>>
+>>> We have achieved 1 and 2. And seems we could also achieve 3 by
+>>> converting all arch specific PCI MSI code to use hierarchy
+>>> irqdomain. But not sure whether we could achieve 4, not familiar
+>>> with ARM world:)
+>>
+>> Killing all the weak functions shouldn't be a problem for ARM, we're
+>> trying very hard not to rely on them.
+>>
+>> Killing msi_chip is a different story, as this is what we use to match a
+>> PCI host controller with its MSI controller (that's what the of_node
+>> field in msi_chip is for). See drivers/of/of_pci.c for details.
+>>
+>> Also, we use msi_chip directly in the MSI drivers as a way to go from a
+>> pci_dev to the MSI controller specific structure:
+>>
+>> http://git.kernel.org/cgit/linux/kernel/git/maz/arm-platforms.git/tree/drivers/irqchip/irq-gic-v3-its.c?h=irq/stacked-its-v2#n1143
+>>
+>> If we're going to kill msi_chip, we must make sure we have mechanisms
+>> that allow the conversion of the existing code.
+> Hi Marc,
+> 	Seem it doesn't worth the effort to remove irq_chip,
+> so I will focus on killing all weak functions first:)
+> After that, we may kill setup_irq and teardown_irq in irq_chip,
+> but seems irq_chip still has other usages, so I won't try to
+> kill irq_chip.
 
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/pci/acpi.c |  144 +++++++++++++++++++--------------------------------
- 1 file changed, 53 insertions(+), 91 deletions(-)
+I assume you mean msi_chip! ;-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index cfd1b132b8e3..3f72d934dc16 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -218,114 +218,76 @@ static void teardown_mcfg_map(struct pci_root_info *info)
- }
- #endif
- 
--static acpi_status resource_to_addr(struct acpi_resource *resource,
--				    struct acpi_resource_address64 *addr)
--{
--	acpi_status status;
--	struct acpi_resource_memory24 *memory24;
--	struct acpi_resource_memory32 *memory32;
--	struct acpi_resource_fixed_memory32 *fixed_memory32;
--
--	memset(addr, 0, sizeof(*addr));
--	switch (resource->type) {
--	case ACPI_RESOURCE_TYPE_MEMORY24:
--		memory24 = &resource->data.memory24;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = memory24->minimum;
--		addr->address_length = memory24->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_MEMORY32:
--		memory32 = &resource->data.memory32;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = memory32->minimum;
--		addr->address_length = memory32->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
--		fixed_memory32 = &resource->data.fixed_memory32;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = fixed_memory32->address;
--		addr->address_length = fixed_memory32->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_ADDRESS16:
--	case ACPI_RESOURCE_TYPE_ADDRESS32:
--	case ACPI_RESOURCE_TYPE_ADDRESS64:
--		status = acpi_resource_to_address64(resource, addr);
--		if (ACPI_SUCCESS(status) &&
--		    (addr->resource_type == ACPI_MEMORY_RANGE ||
--		    addr->resource_type == ACPI_IO_RANGE) &&
--		    addr->address_length > 0) {
--			return AE_OK;
--		}
--		break;
--	}
--	return AE_ERROR;
--}
--
- static acpi_status count_resource(struct acpi_resource *acpi_res, void *data)
- {
- 	struct pci_root_info *info = data;
--	struct acpi_resource_address64 addr;
--	acpi_status status;
-+	struct resource r = {
-+		.flags = 0
-+	};
- 
--	status = resource_to_addr(acpi_res, &addr);
--	if (ACPI_SUCCESS(status))
-+	if (!acpi_dev_resource_memory(acpi_res, &r) &&
-+	    !acpi_dev_resource_address_space(acpi_res, &r))
-+		return AE_OK;
-+
-+	if ((r.flags & (IORESOURCE_IO | IORESOURCE_MEM)) && resource_size(&r))
- 		info->res_num++;
-+
- 	return AE_OK;
- }
- 
- static acpi_status setup_resource(struct acpi_resource *acpi_res, void *data)
- {
- 	struct pci_root_info *info = data;
--	struct resource *res;
--	struct acpi_resource_address64 addr;
--	acpi_status status;
--	unsigned long flags;
--	u64 start, orig_end, end;
-+	u64 translation_offset = 0;
-+	struct resource r = {
-+		.flags = 0
-+	};
-+
-+	if (acpi_dev_resource_memory(acpi_res, &r)) {
-+		r.flags &= IORESOURCE_MEM | IORESOURCE_IO;
-+	} else if (acpi_dev_resource_address_space(acpi_res, &r)) {
-+		u64 orig_end;
-+		struct acpi_resource_address64 addr;
-+
-+		r.flags &= IORESOURCE_MEM | IORESOURCE_IO;
-+		if (r.flags == 0)
-+			return AE_OK;
- 
--	status = resource_to_addr(acpi_res, &addr);
--	if (!ACPI_SUCCESS(status))
--		return AE_OK;
-+		if (ACPI_FAILURE(acpi_resource_to_address64(acpi_res, &addr)))
-+			return AE_OK;
- 
--	if (addr.resource_type == ACPI_MEMORY_RANGE) {
--		flags = IORESOURCE_MEM;
--		if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
--			flags |= IORESOURCE_PREFETCH;
--	} else if (addr.resource_type == ACPI_IO_RANGE) {
--		flags = IORESOURCE_IO;
--	} else
--		return AE_OK;
-+		if (addr.resource_type == ACPI_MEMORY_RANGE &&
-+		    addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
-+			r.flags |= IORESOURCE_PREFETCH;
- 
--	start = addr.minimum + addr.translation_offset;
--	orig_end = end = addr.maximum + addr.translation_offset;
-+		translation_offset = addr.translation_offset;
-+		orig_end = r.end;
-+		r.start += translation_offset;
-+		r.end += translation_offset;
- 
--	/* Exclude non-addressable range or non-addressable portion of range */
--	end = min(end, (u64)iomem_resource.end);
--	if (end <= start) {
--		dev_info(&info->bridge->dev,
--			"host bridge window [%#llx-%#llx] "
--			"(ignored, not CPU addressable)\n", start, orig_end);
--		return AE_OK;
--	} else if (orig_end != end) {
--		dev_info(&info->bridge->dev,
--			"host bridge window [%#llx-%#llx] "
--			"([%#llx-%#llx] ignored, not CPU addressable)\n", 
--			start, orig_end, end + 1, orig_end);
-+		/* Exclude non-addressable range or non-addressable portion of range */
-+		r.end = min(r.end, iomem_resource.end);
-+		if (r.end <= r.start) {
-+			dev_info(&info->bridge->dev,
-+				"host bridge window [%#llx-%#llx] (ignored, not CPU addressable)\n",
-+				 r.start, orig_end);
-+			return AE_OK;
-+		} else if (orig_end != r.end) {
-+			dev_info(&info->bridge->dev,
-+				"host bridge window [%#llx-%#llx] ([%#llx-%#llx] ignored, not CPU addressable)\n",
-+				r.start, orig_end, r.end + 1, orig_end);
-+		}
- 	}
- 
--	res = &info->res[info->res_num];
--	res->name = info->name;
--	res->flags = flags;
--	res->start = start;
--	res->end = end;
--	info->res_offset[info->res_num] = addr.translation_offset;
--	info->res_num++;
--
--	if (!pci_use_crs)
--		dev_printk(KERN_DEBUG, &info->bridge->dev,
--			   "host bridge window %pR (ignored)\n", res);
-+	if (r.flags && resource_size(&r)) {
-+		r.name = info->name;
-+		info->res[info->res_num] = r;
-+		info->res_offset[info->res_num] = translation_offset;
-+		info->res_num++;
-+		if (!pci_use_crs)
-+			dev_printk(KERN_DEBUG, &info->bridge->dev,
-+				   "host bridge window %pR (ignored)\n", &r);
-+	}
- 
- 	return AE_OK;
- }
+Killing setup/teardown_irq is going to require some work. There are a
+few users in the tree (I can see three in drivers/pci/host and one in
+drivers/irqchip).
+
+Hopefully, we can get the maintainers to convert them.
+
+Thanks,
+
+	M.
 -- 
-1.7.10.4
+Jazz is not dead. It just smells funny...
 
