@@ -1,145 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:33208 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754105AbaKSDVI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 22:21:08 -0500
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 19 Nov 2014 13:21:06 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 852932BB0073
-	for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2014 14:21:03 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAJ3KeFQ34144446
-	for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2014 14:20:40 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAJ3L1vT007436
-	for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2014 14:21:02 +1100
-Date: Wed, 19 Nov 2014 11:21:00 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Benjamin Herrenschmidt <benh@au1.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, Donald Dutile <ddutile@redhat.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH V9 03/18] PCI: Add weak pcibios_iov_resource_size()
- interface
-Message-ID: <20141119032100.GA7105@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1414942894-17034-4-git-send-email-weiyang@linux.vnet.ibm.com>
- <20141119011243.GA23467@google.com>
- <1416363332.5704.18.camel@au1.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1416363332.5704.18.camel@au1.ibm.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:45657 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754830AbaKNKCX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Nov 2014 05:02:23 -0500
+Message-ID: <1415959338.4445.1.camel@pengutronix.de>
+Subject: Re: [PATCH v2] PCI: designware: Add support 4 ATUs assignment
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Lian Minghuan-B31939 <B31939@freescale.com>
+Cc: Srikanth Thokala <sriku.linux@gmail.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 14 Nov 2014 11:02:18 +0100
+In-Reply-To: <5465C19D.3060801@freescale.com>
+References: <1415682444-24911-1-git-send-email-Minghuan.Lian@freescale.com>
+	 <CA+mB=1+4Dzxhbin6z0PUENvjUz-y8bq-K09FXTnSepFvVfe9HQ@mail.gmail.com>
+	 <546308DD.40109@freescale.com>
+	 <CA+mB=1K=Oyzdb2yfBvPRG9DHi-PFjRPtVS_dY9JMOz6dQog8QQ@mail.gmail.com>
+	 <546331E7.5060003@freescale.com>
+	 <CA+mB=1KObT9O783SMcvHy8nJGQPnxyKgP332r5bHx-K_D+LhVg@mail.gmail.com>
+	 <1415809929.2876.5.camel@pengutronix.de> <546481A3.5050700@freescale.com>
+	 <1415874015.2420.5.camel@pengutronix.de> <54648D61.6050704@freescale.com>
+	 <1415876988.2420.7.camel@pengutronix.de> <5465C19D.3060801@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 19, 2014 at 01:15:32PM +1100, Benjamin Herrenschmidt wrote:
->On Tue, 2014-11-18 at 18:12 -0700, Bjorn Helgaas wrote:
->> 
->> Can you help me understand this?
->> 
->> We have previously called sriov_init() on the PF.  There, we sized the VF
->> BARs, which are in the PF's SR-IOV Capability (SR-IOV spec sec 3.3.14).
->> The size we discover is the amount of space required by a single VF, so
->> sriov_init() adjusts PF->resource[PCI_IOV_RESOURCES + i] by multiplying
->> that size by PCI_SRIOV_TOTAL_VF, so this PF resource is now big enough to 
->> hold the VF BAR[i] areas for all the possible VFs.
->
->So I'll let Richard (Wei) answer on the details but I'll just chime in
->about the "big picture". This isn't about changing the spacing between VFs
->which is handled by the system page size.
->
->This is about the way we create MMIO windows from the CPU to the VF BARs.
->
->Basically, we have a (limited) set of 64-bit windows we can create that
->are divided in equal sized segments (256 of them), each segment assigned
->in HW to one of our Partitionable Endpoints (aka domain).
->
->So even if we only ever create 16 VFs for a device, we need to use an
->entire of these windows, which will use 256*VF_size and thus allocate
->that much space. Also the window has to be naturally aligned.
->
->We can then assign the VF BAR to a spot inside that window that corresponds
->to the range of PEs that we have assigned to that device (which typically
->isn't going to be the beginning of the window).
->
+Am Freitag, den 14.11.2014, 16:47 +0800 schrieb Lian Minghuan-B31939:
+> Hi Lucas and all,
+> 
+> On 2014年11月13日 19:09, Lucas Stach wrote:
+> > Am Donnerstag, den 13.11.2014, 18:52 +0800 schrieb Lian Minghuan-B31939:
+> >> Hi Lucas,
+> >>
+> >> On 2014年11月13日 18:20, Lucas Stach wrote:
+> >>> Am Donnerstag, den 13.11.2014, 18:02 +0800 schrieb Lian Minghuan-B31939:
+> >>>> Hi Lucas,
+> >>>>
+> >>>> Please see my comments inline.
+> >>>>
+> >>>> Thanks,
+> >>>> Minghuan
+> >>>>
+> >>>> On 2014年11月13日 00:32, Lucas Stach wrote:
+> >>>>> Am Mittwoch, den 12.11.2014, 21:53 +0530 schrieb Srikanth Thokala:
+> >>>>>> Hi Minghuan,
+> >>> [...]
+> >>>
+> >>>>> Using a smaller type complicates the DT for little to no benefit. I
+> >>>>> think it's ok to use u32 here, which is a common standard for integer
+> >>>>> values in DT.
+> >>>>>
+> >>>>> Though this discussion lead me to the question if we even need to have
+> >>>>> this property in the DT at all. Isn't this a property that is fixed for
+> >>>>> a specific silicon implementation of the DW core? In that case we could
+> >>>>> just infer the number of ATUs from the DT compatible, so this should
+> >>>>> probably just be added to struct pcie_port and properly initialized by
+> >>>>> the SoC glue drivers.
+> >>>> [Minghuan]  As far as I know, exynos implements only 2 ATUs, this is why
+> >>>> pcie-designware only supports 2 ATU. iMX implements 4 ATUs and LS1021A
+> >>>> implements 6 ATUs.
+> >>>>
+> >>> Right so we don't need an additional property in the DT at all. The
+> >>> number of ATUs is fixed for a specific core compatible and can be passed
+> >>> in by the respective exynos, imx and ls1021 glue drivers.
+> >>>
+> >>> You may ask the Keystone and Spear maintainers to get the correct number
+> >>> of ATUs for those implementations.
+> >>>
+> >>> Regards,
+> >>> Lucas
+> >> [Minghuan] Yes. This a way that specific core driver passes the ATU
+> >> number to
+> >> pci-designware. But I perfer to adding dts node for the following reasons:
+> >> 1. ATU number is hardware attribute, so it can be added to DTS.
+> > But it is a duplication of information that can be inferred from the DT
+> > compatible alone, which is usually frowned upon.
+> >
+> > Also in contrast to the num-lanes property I don't see a use-case to
+> > reduce the number of used ATUs in a specific system, so num-atus is
+> > basically fixed for a specific implementation.
+> [Minghuan] 4ATUs provides better support for multiple-function and 
+> SR-IOV PCIe devices.
+> Can anyone tell me if there is the company will increase ATUs number?
+> If yes, we should avoid the following code:
+> 
+> if (of_device_is_compatible(pcie->dev->of_node, "xxx,r1-pcie"))
+>      atu_num = 2;
+> 
+> if (of_device_is_compatible(pcie->dev->of_node, "xxx,r2-pcie"))
+>      atu_num = 4;
+> 
+The number of ATUs is fixed for a specific implementation. If the number
+of ATUs changes in a newer implementation of a SoC then the silicon
+implementation of the DW PCIe core changed, so it should get a new
+compatible anyway.
 
-Bjorn & Ben,
-
-Let me try to explain it. Thanks for Ben's explanation, it would be helpful. We
-are not trying to change the space between VFs.
-
-As mentioned by Ben, we use some HW to map the MMIO space to PE. But the HW
-must map 256 segments with the same size. This will lead a situation like
-this.
-
-   +------+------+        +------+------+------+------+
-   |VF#0  |VF#1  |   ...  |      |VF#N-1|PF#A  |PF#B  |
-   +------+------+        +------+------+------+------+
-
-Suppose N = 254 and the HW map these 256 segments to their corresponding PE#.
-Then it introduces one problem, the PF#A and PF#B have been already assigned
-to some PE#. We can't map one MMIO range to two different PE#.
-
-What we have done is to "Expand the IOV BAR" to fit the whole HW 256 segments.
-By doing so, the MMIO range will look like this.
-
-   +------+------+        +------+------+------+------+------+------+
-   |VF#0  |VF#1  |   ...  |      |VF#N-1|blank |blank |PF#A  |PF#B  |
-   +------+------+        +------+------+------+------+------+------+
-
-We do some tricky to "Expand" the IOV BAR, so that make sure there would not
-be some overlap between VF's PE and PF's PE.
-
-Then this will leads to the IOV BAR size change from:
-   
-   IOV BAR size = (VF BAR aperture size) * VF_number
-
- to:
-   
-   IOV BAR size = (VF BAR aperture size) * 256
-
-This is the reason we need a platform dependent method to get the VF BAR size.
-Otherwise the VF BAR size would be not correct.
-
-Now let's take a look at your example again.
-
-  PF SR-IOV Capability
-    TotalVFs = 4
-    NumVFs = 4
-    System Page Size = 4KB
-    VF BAR0 = [mem 0x00000000-0x00000fff] (4KB at address 0)
-
-  PF  pci_dev->resource[7] = [mem 0x00000000-0x00003fff] (16KB)
-  VF1 pci_dev->resource[0] = [mem 0x00000000-0x00000fff]
-  VF2 pci_dev->resource[0] = [mem 0x00001000-0x00001fff]
-  VF3 pci_dev->resource[0] = [mem 0x00002000-0x00002fff]
-  VF4 pci_dev->resource[0] = [mem 0x00003000-0x00003fff]
-
-The difference after our expanding is the IOV BAR size is 256*4KB instead of
-16KB. So it will look like this:
-
-  PF  pci_dev->resource[7] = [mem 0x00000000-0x000fffff] (1024KB)
-  VF1 pci_dev->resource[0] = [mem 0x00000000-0x00000fff]
-  VF2 pci_dev->resource[0] = [mem 0x00001000-0x00001fff]
-  VF3 pci_dev->resource[0] = [mem 0x00002000-0x00002fff]
-  VF4 pci_dev->resource[0] = [mem 0x00003000-0x00003fff]
-  ...
-  and 252 4KB space leave not used.
-
-So the start address and the size of VF will not change, but the PF's IOV BAR
-will be expanded.
-
->Cheers,
->Ben.
->
-
+Regards,
+Lucas 
 -- 
-Richard Yang
-Help you, Help me
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
