@@ -1,66 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:40143 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932245AbaKMQsk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 11:48:40 -0500
-Received: by mail-pd0-f169.google.com with SMTP id y10so14767074pdj.14
-        for <linux-pci@vger.kernel.org>; Thu, 13 Nov 2014 08:48:40 -0800 (PST)
-Date: Thu, 13 Nov 2014 09:48:33 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: linux-pci@vger.kernel.org, 'Mohit Kumar' <mohit.kumar@st.com>,
-	'Viresh Kumar' <viresh.kumar@linaro.org>,
-	'Pratyush Anand' <pratyush.anand@st.com>
-Subject: Re: [PATCH] PCI: spear: Add __init annotation to
- spear13xx_add_pcie_port()
-Message-ID: <20141113164833.GD5064@google.com>
-References: <001f01cff983$deb4da20$9c1e8e60$%han@samsung.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:24155 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933754AbaKNBKX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 20:10:23 -0500
+Message-ID: <54655632.2040209@huawei.com>
+Date: Fri, 14 Nov 2014 09:09:06 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <001f01cff983$deb4da20$9c1e8e60$%han@samsung.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	"Borislav Petkov" <bp@alien8.de>, "H. Peter Anvin" <hpa@zytor.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [Patch V1 0/6] Refine generic/PCI MSI irqodmian interfaces
+References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com> <54651BE2.9080008@arm.com> <54654C10.2040102@linux.intel.com>
+In-Reply-To: <54654C10.2040102@linux.intel.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 06, 2014 at 02:38:18PM +0900, Jingoo Han wrote:
-> Add __init annotation to spear13xx_add_pcie_port(), because
-> the spear13xx_add_pcie_port() is called only by spear13xx_pcie_probe()
-> that was already marked as __init. Also, this patch fixes
-> section mismatch warning.
+On 2014/11/14 8:25, Jiang Liu wrote:
+> On 2014/11/14 5:00, Marc Zyngier wrote:
+>> On 13/11/14 11:43, Jiang Liu wrote:
+>>> This patch set is based on tip/irq/irqdomain and tries to refine
+>>> interfaces to support irqdomain for generic MSI and PCI MSI.
+>>>
+>>> With this patch set applied, the generic MSI and PCI MSI interfaces
+>>> are much easier to use. For extreme case, you only need to define
+>>> a "struct msi_domain_info" and don't need to implement any callbacks,
+>>> just using the default callbacks is OK:)
+>>>
+>>> This patch set is also a preparation for:
+>>> 1) Kill all weak functions in drivers/pci/msi.c
+>>> 2) Implement support for non-PCI-compliant MSI device
+>>
+>> I've rebased (once more!) the GICv3 ITS driver on top of this, and this
+>> is definitely a major improvement. This is basically the first version
+>> I can use without having to hack into the core code (apart from the
+>> couple of nits I've mentioned earlier).
+> Sorry for the rebasing, but I hope it worthy rebasing:)
 > 
-> WARNING: drivers/pci/host/built-in.o(.text.unlikely+0x94): Section mismatch in reference from the function spear13xx_add_pcie_port()
-> to the function .init.text:dw_pcie_host_init()
-> The function spear13xx_add_pcie_port() references
-> the function __init dw_pcie_host_init().
-> This is often because spear13xx_add_pcie_port lacks a __init
-> annotation or the annotation of dw_pcie_host_init is wrong.
-> 
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+>>
+>> Now, Thomas' idea of putting the irq_domain close to the bus is very
+>> appealing, and I've tweaked an earlier patch in order to do this:
+> I feel that's the right direction. There are other threads discussing
+> associating an MSI controller structure with each PCI bus (at least
+> root bus).
+> http://www.spinics.net/lists/arm-kernel/msg376328.html
 
-Applied with Viresh's ack to pci/host-spear for v3.19, thanks!
+Associate the irq domain and PCI bus is not necessary, because all PCI buses under same host bridge
+always share same MSI chip/irq domain, we only need associate them and pci host bridge.
+I'm refactoring the pci_host_bridge, make it be a generic one, rip out of the pci root bus
+creation, so we could put the irq domain and pci domain etc.. in it. Finally, we could
+eliminate lots platform arch functions. I will post it out within one week.
 
-> ---
-> This patch is based on the submitted patch "[PATCH V2] PCI:
-> spear: Add spear13xx before add_pcie_port/pcie_initt".
+Thanks!
+Yijing.
+
+> Regards!
+> Gerry
 > 
->  drivers/pci/host/pcie-spear13xx.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+> .
 > 
-> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-> index 63f869f..60f43cd 100644
-> --- a/drivers/pci/host/pcie-spear13xx.c
-> +++ b/drivers/pci/host/pcie-spear13xx.c
-> @@ -269,8 +269,8 @@ static struct pcie_host_ops spear13xx_pcie_host_ops = {
->  	.host_init = spear13xx_pcie_host_init,
->  };
->  
-> -static int spear13xx_add_pcie_port(struct pcie_port *pp,
-> -				   struct platform_device *pdev)
-> +static int __init spear13xx_add_pcie_port(struct pcie_port *pp,
-> +					 struct platform_device *pdev)
->  {
->  	struct device *dev = &pdev->dev;
->  	int ret;
-> -- 
-> 1.7.9.5
-> 
-> 
+
+
+-- 
+Thanks!
+Yijing
+
