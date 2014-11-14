@@ -1,60 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:48015 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161930AbaKNWV4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Nov 2014 17:21:56 -0500
-Received: by mail-ig0-f173.google.com with SMTP id r10so505573igi.12
-        for <linux-pci@vger.kernel.org>; Fri, 14 Nov 2014 14:21:55 -0800 (PST)
-Date: Fri, 14 Nov 2014 14:21:53 -0800
-From: Dmitry Torokhov <dtor@chromium.org>
-To: Simon Horman <horms@verge.net.au>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: rcar: fix error handling of irq_of_parse_and_map
-Message-ID: <20141114222153.GA39494@dtor-ws>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <54660D44.9020406@linaro.org>
+Date: Fri, 14 Nov 2014 15:10:12 +0100
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
+CC: catalin.marinas@arm.com, will.deacon@arm.com, bhelgaas@google.com,
+	Liviu.Dudau@arm.com, tglx@linutronix.de, mingo@redhat.com,
+	hpa@zytor.com, rjw@rjwysocki.net, linaro-acpi@lists.linaro.org,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [RFC PATCH 4/4] arm64, acpi, pci: Provide arch-specific calls
+ for PCI host bridge dirver (PNP0A03).
+References: <1415366876-30811-1-git-send-email-tomasz.nowicki@linaro.org> <1415366876-30811-5-git-send-email-tomasz.nowicki@linaro.org> <4474363.kMvYSLl2Ev@wuerfel>
+In-Reply-To: <4474363.kMvYSLl2Ev@wuerfel>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Return value of irq_of_parse_and_map() is unsigned int, with 0
-indicating failure, so testing for negative result never works.
+On 07.11.2014 15:24, Arnd Bergmann wrote:
+> On Friday 07 November 2014 14:27:56 Tomasz Nowicki wrote:
+>>
+>>   #ifdef CONFIG_PCI
+>> +struct pci_controller {
+>> +	struct acpi_device *companion;
+>> +	int segment;
+>> +	int node;		/* nearest node with memory or NUMA_NO_NODE for global allocation */
+>> +};
+>> +
+>> +#define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
+>> +
+>
+> Don't use busdev->sysdata in architecture specific code, it belongs to the
+> host bridge driver with the new model. For ACPI you don't have a host bridge
+> driver, but it's better to keep these separate.
+>
+> The segment is always the same as the domain number, so just use that.
+> The node and companion members here can get added to struct pci_host_bridge.
 
-Signed-off-by: Dmitry Torokhov <dtor@chromium.org>
----
+The reason why I put segment field to struct pci_controller is to 
+initialize domain_nr of struct pci_bus being in pci_create_root_bus(), 
+domain_nr can be used later on though. Correct me I am wrong.
 
-Not tested, found by casual code inspection.
+Honestly I do not see the way to create root bus without e.g. 
+sysdata.segment here.
 
- drivers/pci/host/pcie-rcar.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+>
+>> @@ -43,7 +53,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>>    */
+>>   int pcibios_add_device(struct pci_dev *dev)
+>>   {
+>> -	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+>> +	if (acpi_disabled)
+>> +		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+>>
+>>   	return 0;
+>>   }
+>
+> How do you assign the irq number with ACPI? Do you only support MSI?
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 9b356c3..6ca976f 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -764,7 +764,7 @@ static int rcar_pcie_get_resources(struct platform_device *pdev,
- 		goto err_map_reg;
- 
- 	i = irq_of_parse_and_map(pdev->dev.of_node, 0);
--	if (i < 0) {
-+	if (!i) {
- 		dev_err(pcie->dev, "cannot get platform resources for msi interrupt\n");
- 		err = -ENOENT;
- 		goto err_map_reg;
-@@ -772,7 +772,7 @@ static int rcar_pcie_get_resources(struct platform_device *pdev,
- 	pcie->msi.irq1 = i;
- 
- 	i = irq_of_parse_and_map(pdev->dev.of_node, 1);
--	if (i < 0) {
-+	if (!i) {
- 		dev_err(pcie->dev, "cannot get platform resources for msi interrupt\n");
- 		err = -ENOENT;
- 		goto err_map_reg;
--- 
-2.1.0.rc2.206.gedb03e5
+I missed that, will add in next ver.
 
+>
+>>   /*
+>>    * raw_pci_read/write - Platform-specific PCI config space access.
+>> - *
+>> - * Default empty implementation.  Replace with an architecture-specific setup
+>> - * routine, if necessary.
+>>    */
+>>   int raw_pci_read(unsigned int domain, unsigned int bus,
+>>   		  unsigned int devfn, int reg, int len, u32 *val)
+>>   {
+>> -	return -EINVAL;
+>> +	char __iomem *addr;
+>> +
+>> +	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095))) {
+>> +err:		*val = -1;
+>> +		return -EINVAL;
+>> +	}
+>> +
+>> +	rcu_read_lock();
+>> +	addr = pci_dev_base(domain, bus, devfn);
+>> +	if (!addr) {
+>> +		rcu_read_unlock();
+>> +		goto err;
+>> +	}
+>
+> The config space accessors should probably be shared with
+> drivers/pci/host/pci-host-generic.c, e.g. by moving the rest of
+> the new code in there as well, or by moving the config space
+> accessors from that file to drivers/pci/mmconfig.c.
 
--- 
-Dmitry
+Tomasz
