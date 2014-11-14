@@ -1,59 +1,71 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:64772 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754061AbaKNASs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 13 Nov 2014 19:18:48 -0500
+Message-ID: <54654A63.6040202@linux.intel.com>
+Date: Fri, 14 Nov 2014 08:18:43 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <545AFFF1.5030509@linux.intel.com>
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
- <1415102525-9898-22-git-send-email-jiang.liu@linux.intel.com>
- <20141105230952.GH6168@google.com> <545AFFF1.5030509@linux.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 5 Nov 2014 22:28:55 -0700
-Message-ID: <CAErSpo4JYzSQJQkRTaK-M18RVXaLKX-0yoAm853tu2NJypiL9g@mail.gmail.com>
-Subject: Re: [Patch Part2 v4 21/31] PCI/MSI: enhance PCI MSI core to support
- hierarchy irqdomain
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+To: Marc Zyngier <marc.zyngier@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
 	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
 	Alexander Gordeev <agordeev@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"x86@kernel.org" <x86@kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [Patch V1 3/6] genirq: Introduce msi_domain_{alloc|free}_irqs()
+References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com> <1415879029-20098-4-git-send-email-jiang.liu@linux.intel.com> <5465134B.7070709@arm.com>
+In-Reply-To: <5465134B.7070709@arm.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 5, 2014 at 9:58 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> On 2014/11/6 7:09, Bjorn Helgaas wrote:
->> On Tue, Nov 04, 2014 at 08:01:55PM +0800, Jiang Liu wrote:
-
->>> +{
->>> +    return (irq_hw_number_t)msidesc->msi_attrib.entry_nr |
->>> +            PCI_DEVID(pdev->bus->number, pdev->devfn) << 11 |
->>> +            (pci_domain_nr(pdev->bus) & 0xFFFFFFFF) << 27;
+On 2014/11/14 4:23, Marc Zyngier wrote:
+> On 13/11/14 11:43, Jiang Liu wrote:
+>> Introduce msi_domain_{alloc|free}_irqs() to alloc/free interrupts
+>> from generic MSI irqdomain.
 >>
->> Where does this bit layout come from?  Is this defined in the spec
->> somewhere?  A reference would help.
-> We need a unique number to identify every possible MSI source,
-> and this ID number is only used within the irqdomain subsystem.
-> So we used above algorithm to generate the ID number, there's
-> no specification for it.
+>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>> ---
+>>  include/linux/msi.h |   35 ++++++++++++++++++++++++++++++
+>>  kernel/irq/msi.c    |   59 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>>  2 files changed, 94 insertions(+)
+>>
+>> +/*
+>> + * Default structure for MSI interrupt allocation.
+>> + * Arch may overwrite it by define msi_alloc_info_t.
+>> + */
+>> +struct msi_alloc_info {
+>> +	struct msi_desc *desc;
+>> +	irq_hw_number_t hwirq;
+>> +	long		scratchpad[NUM_MSI_ALLOC_SCRATCHPAD_REGS];
+> 
+> As much as I'm relieved to see a generic structure here, could
+> scratchpad be slightly less awkward to use? Something like:
+> 
+> struct msi_alloc_info {
+> 	[...]
+> 	union	{
+> 		unsigned long ul;
+> 		void *ptr;
+> 	} scratchpad[NUM_MSI_ALLOC_SCRATCHPAD_REGS];
+> };
+> 
+> That would avoid some very ugly casting.
+Great, will changed to this way in next version:)
 
-A comment to that effect would be great.
-
-Bjorn
+> 
+> Thanks,
+> 
+> 	M.
+> 
