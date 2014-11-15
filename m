@@ -1,77 +1,248 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Daniel J Blueman <daniel@numascale.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:61465 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754456AbaKOOV7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 15 Nov 2014 09:21:59 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
 	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Daniel J Blueman <daniel@numascale.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Steffen Persvold <sp@numascale.com>
-Subject: [PATCH v3 3/5] Numachip: Add safe is-present function
-Date: Sun,  2 Nov 2014 16:10:11 +0800
-Message-Id: <1414915813-2462-3-git-send-email-daniel@numascale.com>
-In-Reply-To: <1414915813-2462-1-git-send-email-daniel@numascale.com>
-References: <1414915813-2462-1-git-send-email-daniel@numascale.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Alexander Gordeev <agordeev@redhat.com>
+Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [Patch V2 7/9] genirq: Provide default callbacks for msi_domain_ops
+Date: Sat, 15 Nov 2014 22:24:05 +0800
+Message-Id: <1416061447-9472-8-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add safe function to check if Numachip is detected, to be used elsewhere.
+Extend struct msi_domain_info and provide default callbacks for
+msi_domain_ops.
 
-Signed-off-by: Daniel J Blueman <daniel@numascale.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/include/asm/numachip/numachip.h | 9 +++++++++
- arch/x86/kernel/apic/apic_numachip.c     | 9 +++++++--
- 2 files changed, 16 insertions(+), 2 deletions(-)
+ include/linux/msi.h |   29 ++++++++++---
+ kernel/irq/msi.c    |  113 +++++++++++++++++++++++++++++++++++++++++++++++----
+ 2 files changed, 129 insertions(+), 13 deletions(-)
 
-diff --git a/arch/x86/include/asm/numachip/numachip.h b/arch/x86/include/asm/numachip/numachip.h
-index 1c6f7f6..3e1f4f9 100644
---- a/arch/x86/include/asm/numachip/numachip.h
-+++ b/arch/x86/include/asm/numachip/numachip.h
-@@ -16,4 +16,13 @@
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 7283e155afef..96ee8c3b98cc 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -3,6 +3,7 @@
  
- extern int __init pci_numachip_init(void);
+ #include <linux/kobject.h>
+ #include <linux/list.h>
++#include <linux/irqhandler.h>
+ #include <asm/hw_irq.h>		/* for msi_alloc_info_t */
  
-+#ifdef CONFIG_X86_NUMACHIP
-+extern bool is_numachip_system(void);
+ struct msi_msg {
+@@ -124,13 +125,15 @@ typedef struct msi_alloc_info msi_alloc_info_t;
+ 
+ struct msi_domain_ops {
+ 	/* Callbacks for msi_create_irq_domain() */
+-	void		(*calc_hwirq)(struct msi_domain_info *info, void *arg,
++	void		(*calc_hwirq)(struct msi_domain_info *info,
++				      msi_alloc_info_t *arg,
+ 				      struct msi_desc *desc);
+-	irq_hw_number_t	(*get_hwirq)(struct msi_domain_info *info, void *arg);
++	irq_hw_number_t	(*get_hwirq)(struct msi_domain_info *info,
++				     msi_alloc_info_t *arg);
+ 	int		(*msi_init)(struct irq_domain *domain,
+ 				    struct msi_domain_info *info,
+ 				    unsigned int virq, irq_hw_number_t hwirq,
+-				    void *arg);
++				    msi_alloc_info_t *arg);
+ 	void		(*msi_free)(struct irq_domain *domain,
+ 				    struct msi_domain_info *info,
+ 				    unsigned int virq);
+@@ -150,15 +153,31 @@ struct msi_domain_ops {
+ };
+ 
+ struct msi_domain_info {
++	u32			flags;
+ 	struct msi_domain_ops	*ops;
+ 	struct irq_chip		*chip;
+-	void			*data;
++	void			*chip_data;	/* optional chip data */
++	irq_flow_handler_t	handler;	/* optional flow handler */
++	void			*handler_data;	/* optional handler data */
++	const char		*handler_name;	/* optional handler name */
++	void			*data;		/* optional private data */
+ };
+ 
++/* Use default MSI domain ops if possible */
++#define MSI_FLAG_USE_DEF_DOM_OPS	0x1
++/* Use default MSI chip ops if possible */
++#define MSI_FLAG_USE_DEF_CHIP_OPS	0x2
++/* Build identity map between hwirq and irq */
++#define MSI_FLAG_IDENTITY_MAP		0x10
++/* Support multiple PCI MSI interrupts */
++#define MSI_FLAG_MULTI_PCI_MSI		0x100
++/* Support PCI MSIX interrupts */
++#define MSI_FLAG_PCI_MSIX		0x200
++
+ int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 			    bool force);
+ 
+-struct irq_domain *msi_create_irq_domain(struct device_node *of_node,
++struct irq_domain *msi_create_irq_domain(struct device_node *node,
+ 					 struct msi_domain_info *info,
+ 					 struct irq_domain *parent);
+ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
+diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+index ce054566edf5..ff15fd643b3d 100644
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -9,6 +9,8 @@
+  * This file contains common code to support Message Signalled Interrupt for
+  * PCI compatible and non PCI compatible devices.
+  */
++#include <linux/types.h>
++#include <linux/device.h>
+ #include <linux/irq.h>
+ #include <linux/irqdomain.h>
+ #include <linux/msi.h>
+@@ -114,17 +116,108 @@ static struct irq_domain_ops msi_domain_ops = {
+ 	.deactivate	= msi_domain_deactivate,
+ };
+ 
+-struct irq_domain *msi_create_irq_domain(struct device_node *of_node,
++#ifndef msi_alloc_info_t
++static irq_hw_number_t msi_domain_ops_get_hwirq(struct msi_domain_info *info,
++						struct msi_alloc_info *arg)
++{
++	return arg->hwirq;
++}
++
++static int msi_domain_ops_prepare(struct irq_domain *domain, struct device *dev,
++				  int nvec, struct msi_alloc_info *arg)
++{
++	memset(arg, 0, sizeof(*arg));
++
++	return 0;
++}
++
++static void msi_domain_ops_set_desc(struct msi_alloc_info *arg,
++				    struct msi_desc *desc)
++{
++	arg->desc = desc;
++}
 +#else
-+static inline bool is_numachip_system(void)
++#define msi_domain_ops_get_hwirq	NULL
++#define msi_domain_ops_prepare		NULL
++#define msi_domain_ops_set_desc		NULL
++#endif /* msi_alloc_info_t */
++
++static int msi_domain_ops_init(struct irq_domain *domain,
++			       struct msi_domain_info *info,
++			       unsigned int virq, irq_hw_number_t hwirq,
++			       msi_alloc_info_t *arg)
++{
++	irq_domain_set_hwirq_and_chip(domain, virq, hwirq, info->chip,
++				      info->chip_data);
++	if (info->handler && info->handler_name) {
++		__irq_set_handler(virq, info->handler, 0, info->handler_name);
++		if (info->handler_data)
++			irq_set_handler_data(virq, info->handler_data);
++	}
++
++	return 0;
++}
++
++static int msi_domain_ops_check(struct irq_domain *domain,
++				struct msi_domain_info *info,
++				struct device *dev)
 +{
 +	return 0;
 +}
-+#endif
 +
- #endif /* _ASM_X86_NUMACHIP_NUMACHIP_H */
-diff --git a/arch/x86/kernel/apic/apic_numachip.c b/arch/x86/kernel/apic/apic_numachip.c
-index bd083c0..c965b69 100644
---- a/arch/x86/kernel/apic/apic_numachip.c
-+++ b/arch/x86/kernel/apic/apic_numachip.c
-@@ -30,7 +30,7 @@
- #include <asm/apic_flat_64.h>
- #include <asm/pgtable.h>
- 
--static int numachip_system __read_mostly;
-+static bool numachip_system __read_mostly;
- 
- static const struct apic apic_numachip __refconst;
- 
-@@ -173,11 +173,16 @@ static void fixup_cpu_id(struct cpuinfo_x86 *c, int node)
- 	}
- }
- 
-+bool is_numachip_system(void)
++static struct msi_domain_ops msi_domain_ops_default = {
++	.get_hwirq	= msi_domain_ops_get_hwirq,
++	.msi_init	= msi_domain_ops_init,
++	.msi_check	= msi_domain_ops_check,
++	.msi_prepare	= msi_domain_ops_prepare,
++	.set_desc	= msi_domain_ops_set_desc,
++};
++
++static void msi_domain_update_dom_ops(struct msi_domain_info *info)
 +{
-+	return numachip_system;
++	struct msi_domain_ops *ops = info->ops;
++
++	if (ops == NULL) {
++		info->ops = &msi_domain_ops_default;
++		return;
++	}
++
++	if (ops->get_hwirq == NULL)
++		ops->get_hwirq = msi_domain_ops_default.get_hwirq;
++	if (ops->msi_init == NULL)
++		ops->msi_init = msi_domain_ops_default.msi_init;
++	if (ops->msi_check == NULL)
++		ops->msi_check = msi_domain_ops_default.msi_check;
++	if (ops->msi_prepare == NULL)
++		ops->msi_prepare = msi_domain_ops_default.msi_prepare;
++	if (ops->set_desc == NULL)
++		ops->set_desc = msi_domain_ops_default.set_desc;
 +}
 +
- static int __init numachip_system_init(void)
++static void msi_domain_update_chip_ops(struct msi_domain_info *info)
++{
++	struct irq_chip *chip = info->chip;
++
++	BUG_ON(!chip);
++	if (!chip->irq_mask)
++		chip->irq_mask = mask_msi_irq;
++	if (!chip->irq_unmask)
++		chip->irq_unmask = unmask_msi_irq;
++	if (!chip->irq_set_affinity)
++		chip->irq_set_affinity = msi_domain_set_affinity;
++}
++
++struct irq_domain *msi_create_irq_domain(struct device_node *node,
+ 					 struct msi_domain_info *info,
+ 					 struct irq_domain *parent)
  {
- 	unsigned int val;
+-	struct irq_domain *domain;
++	if (info->flags & MSI_FLAG_USE_DEF_DOM_OPS)
++		msi_domain_update_dom_ops(info);
++	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
++		msi_domain_update_chip_ops(info);
  
--	if (!numachip_system)
-+	if (!is_numachip_system())
- 		return 0;
+-	domain = irq_domain_add_tree(of_node, &msi_domain_ops, info);
+-	if (domain)
+-		domain->parent = parent;
+-
+-	return domain;
++	return irq_domain_add_hierarchy(parent, 0, 0, node, &msi_domain_ops,
++					info);
+ }
  
- 	x86_cpuinit.fixup_cpu_id = fixup_cpu_id;
+ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
+@@ -144,8 +237,12 @@ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
+ 
+ 	for_each_msi_entry(desc, dev) {
+ 		ops->set_desc(&arg, desc);
++		if (info->flags & MSI_FLAG_IDENTITY_MAP)
++			virq = (int)ops->get_hwirq(info, &arg);
++		else
++			virq = -1;
+ 
+-		virq = __irq_domain_alloc_irqs(domain, -1, desc->nvec_used,
++		virq = __irq_domain_alloc_irqs(domain, virq, desc->nvec_used,
+ 					       dev_to_node(dev), &arg, false);
+ 		if (virq < 0) {
+ 			ret = -ENOSPC;
 -- 
-1.9.1
+1.7.10.4
 
