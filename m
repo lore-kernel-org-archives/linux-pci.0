@@ -1,50 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:34110 "EHLO mga02.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:61452 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750883AbaKFBti (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 5 Nov 2014 20:49:38 -0500
-From: "Liu, Chuansheng" <chuansheng.liu@intel.com>
+	id S1754445AbaKOOV5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 15 Nov 2014 09:21:57 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Barto <mister.freeman@laposte.net>,
-	"Tejun Heo (tj@kernel.org)" <tj@kernel.org>
-CC: "Lu, Aaron" <aaron.lu@intel.com>, Tejun Heo <tj@kernel.org>,
-	"Rafael Wysocki" <rjw@rjwysocki.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] PCI: Do not enable async suspend for JMicron chips
-Date: Thu, 6 Nov 2014 01:48:06 +0000
-Message-ID: <27240C0AC20F114CBF8149A2696CBE4A01EB7713@SHSMSX101.ccr.corp.intel.com>
-References: <1415151063-2530-1-git-send-email-chuansheng.liu@intel.com>
- <CAErSpo6cWP2ngErLVzqASkeQOLsB7JjgCC8UuA-S=Lz=AJyf6Q@mail.gmail.com>
- <545A7087.3050802@laposte.net>
- <CAErSpo4fvoeP9Gab1ZDg=ofjH+aqxGD09nLDTF1ZERnH=yEPxw@mail.gmail.com>
-In-Reply-To: <CAErSpo4fvoeP9Gab1ZDg=ofjH+aqxGD09nLDTF1ZERnH=yEPxw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Alexander Gordeev <agordeev@redhat.com>
+Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [Patch V2 5/9] PCI, MSI: Introduce helpers to hide struct msi_desc implementation details
+Date: Sat, 15 Nov 2014 22:24:03 +0800
+Message-Id: <1416061447-9472-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGVsbG8gQmpvcm4sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpv
-cm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+IFNlbnQ6IFRodXJzZGF5
-LCBOb3ZlbWJlciAwNiwgMjAxNCAzOjA0IEFNDQo+IFRvOiBCYXJ0bw0KPiBDYzogTGl1LCBDaHVh
-bnNoZW5nOyBMdSwgQWFyb247IFRlanVuIEhlbzsgUmFmYWVsIFd5c29ja2k7DQo+IGxpbnV4LXBj
-aUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVj
-dDogUmU6IFtQQVRDSF0gUENJOiBEbyBub3QgZW5hYmxlIGFzeW5jIHN1c3BlbmQgZm9yIEpNaWNy
-b24gY2hpcHMNCj4gDQo+IE9uIFdlZCwgTm92IDUsIDIwMTQgYXQgMTE6NDYgQU0sIEJhcnRvIDxt
-aXN0ZXIuZnJlZW1hbkBsYXBvc3RlLm5ldD4NCj4gd3JvdGU6DQo+ID4gdGhpcyBwYXRjaCBzb2x2
-ZXMgdGhlc2UgMiBidWcgcmVwb3J0cyA6DQo+ID4NCj4gPiBodHRwczovL2J1Z3ppbGxhLmtlcm5l
-bC5vcmcvc2hvd19idWcuY2dpP2lkPTg0ODYxDQo+ID4NCj4gPiBodHRwczovL2J1Z3ppbGxhLmtl
-cm5lbC5vcmcvc2hvd19idWcuY2dpP2lkPTgxNTUxDQo+IA0KPiBUaG9zZSBidWdzIHdlcmUgYWxy
-ZWFkeSBtZW50aW9uZWQuICBCdXQgZTZiN2U0MWNkZDhjIGNsYWltcyB0byBzb2x2ZQ0KPiBodHRw
-czovL2J1Z3ppbGxhLmtlcm5lbC5vcmcvc2hvd19idWcuY2dpP2lkPTgxNTUxLCBhbmQgODQ4NjEg
-aXMgYQ0KPiBkdXBsaWNhdGUgb2YgODE1NTEsIHNvIGl0IHNob3VsZCBhbHNvIGJlIGZpeGVkIGJ5
-IGU2YjdlNDFjZGQ4Yy4NCj4gDQo+IFNvIHRoZSBxdWVzdGlvbiBpcywgd2h5IHdhcyBlNmI3ZTQx
-Y2RkOGMgaW5zdWZmaWNpZW50PyAgUHJlc3VtYWJseSBpdA0KPiB3YXMgdGVzdGVkIGFuZCBzb21l
-Ym9keSB0aG91Z2h0IGl0IGRpZCBmaXggdGhlIHByb2JsZW0uDQoNClRoZSBmaXJzdCBwYXRjaCBl
-NmI3ZTQxY2RkOGMgd2hpY2ggaXMganVzdCBleGNsdWRlIHNvbWUgb2YgSk1pY3JvbiBjaGlwcygz
-NjMvMzYxKSBvdXQgb2YgYXN5bmNfc3VzcGVuZCwNCnRoZW4gQmFydG8gZm91bmQgdGhlIHNhbWUg
-aXNzdWUgb24gSk1pY3JvbiAzNjgsIHNvIHdlIG5lZWQgb25lIG1vcmUgZ2VuZXJhbCBwYXRjaCB0
-byBsZXQgSk1pY3JvbiBjaGlwcw0Kb3V0IG9mIGFzeW5jX3N1c3BlbmQsIHNvIHdlIG1ha2UgdGhp
-cyBwYXRjaC4NCg0KQmpvcm4sIHRqLA0KQ291bGQgeW91IGtpbmRseSB0YWtlIHRoaXMgcGF0Y2g/
-IEFzIEJhcnRvIHNhaWQsIGl0IGVmZmVjdGVkIHRoZSB1c2VyIGV4cGVyaWVuY2UgaW5kZWVkLCB0
-aGFua3MuDQoNCg==
+Introduce helpers to hide struct msi_desc implementation details,
+so we could easily support non-PCI-compliant MSI devices later by
+moving msi_list into struct device.
+
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ include/linux/msi.h |   19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 190c7abbec84..714716a3ffdd 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -44,6 +44,25 @@ struct msi_desc {
+ 	struct msi_msg msg;
+ };
+ 
++/* Helpers to hide struct msi_desc implementation details */
++#define msi_desc_to_dev(desc)		(&(desc)->dev.dev)
++#define dev_to_msi_list(dev)		(&to_pci_dev((dev))->msi_list)
++#define first_msi_entry(dev)		\
++	list_first_entry(dev_to_msi_list((dev)), struct msi_desc, list)
++#define for_each_msi_entry(desc, dev)	\
++	list_for_each_entry((desc), dev_to_msi_list((dev)), list)
++
++#ifdef CONFIG_PCI_MSI
++#define first_pci_msi_entry(pdev)	first_msi_entry(&(pdev)->dev)
++#define for_each_pci_msi_entry(desc, pdev)	\
++	for_each_msi_entry((desc), &(pdev)->dev)
++
++static inline struct pci_dev *msi_desc_to_pci_dev(struct msi_desc *desc)
++{
++	return desc->dev;
++}
++#endif /* CONFIG_PCI_MSI */
++
+ void __pci_read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void pci_write_msi_msg(unsigned int irq, struct msi_msg *msg);
+-- 
+1.7.10.4
+
