@@ -1,100 +1,190 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:10397 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757055AbaKUCPH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Nov 2014 21:15:07 -0500
-Message-ID: <546E9F8C.4050307@huawei.com>
-Date: Fri, 21 Nov 2014 10:12:28 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>
-CC: Marc Zyngier <marc.zyngier@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@kernel.org>,
-	Arjan van de Ven <arjan@infradead.org>,
-	David Woodhouse <dwmw2@infradead.org>
-Subject: Re: Removal of bus->msi assignment breaks MSI with stacked domains
-References: <546E1771.4030201@arm.com> <546E93DC.8010902@huawei.com> <alpine.DEB.2.11.1411210233250.6439@nanos> <546E9D80.3090405@linux.intel.com>
-In-Reply-To: <546E9D80.3090405@linux.intel.com>
-Content-Type: text/plain; charset="windows-1252"
+Received: from mga01.intel.com ([192.55.52.88]:61452 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754455AbaKOOV7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 15 Nov 2014 09:21:59 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Alexander Gordeev <agordeev@redhat.com>
+Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [Patch V2 6/9] genirq: Introduce msi_domain_{alloc|free}_irqs()
+Date: Sat, 15 Nov 2014 22:24:04 +0800
+Message-Id: <1416061447-9472-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/11/21 10:03, Jiang Liu wrote:
-> On 2014/11/21 9:46, Thomas Gleixner wrote:
->> On Fri, 21 Nov 2014, Yijing Wang wrote:
->>> On 2014/11/21 0:31, Marc Zyngier wrote:
->>>> Bjorn, Yijing,
->>>>
->>>> I've just realized that patch c167caf8d174 (PCI/MSI: Remove useless
->>>> bus->msi assignment) completely breaks MSI on arm64 when using the new
->>>> MSI stacked domain:
->>>
->>> Sorry, this is my first part to refactor MSI related code, now how
->>> to get pci msi_controller depends arch
->>> functions(pcibios_msi_controller() or arch_setup_msi_irq()), we are
->>> working on generic pci_host_bridge, after that, we could eventually
->>> eliminate MSI arch functions and find pci dev 's msi controller by
->>> pci_host_bridge->get_msi_controller().
->>
->> The main question is why you think that pci_host_bridge is the proper
->> place to store that information.
->>
->> On x86 we have DMAR units associated to a single device. Each DMAR
->> unit is a seperate MSI irq domain. 
->>
->> Can you guarantee that the pci_host_bridge is the right point to
->> provide the association of the device to the irq domain?
->>
->> So the real question is:
->>
->>    What is the association level requirement to properly identify the
->>    irqdomain for a specific device on any given architecture with and
->>    without IOMMU, interrupt redirection etc.
->>
->> To be honest: I don't know.
->>
->> My gut feeling tells me that it's at the device level, but I really
->> leave that decision to the experts in that field.
-> Hi Thomas and Yijing,
-> 	Since we are allocating interrupts for a PCI device, it's
-> natural to get irqdomain from the PCI device itself. If we try to
-> get irqdomain from a PCI bus or host bridge like
-> pci_get_msi_irqdomain(bus or hostbridge), it may fail for x86
-> because x86 may build per-device irqdomain theoretically.
-> So the preferred interface prototype is:
-> 	pci_get_msi_irqdomain(pci_dev) or
-> 	pcibios_msi_controller(pci_dev)
-> It's flexible enough. For architectures on which irqdomain is
-> associated with PCI bus or host bridge, you could get the bus
-> or host bridge from pci_dev. And it won't cause extra computation
-> because you always need to get bus or host bridge from the pci_dev.
+Introduce msi_domain_{alloc|free}_irqs() to alloc/free interrupts
+from generic MSI irqdomain.
 
-Hi Gerry, I mean we could find msi_controller by calling
-pci_host_bridge->pci_get_msi_irqdomain/msi_controller(struct pci_dev *pdev)
-to avoid arch weak function like pcibios_get_msi_controller(struct pci_dev *pdev). :)
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ include/linux/msi.h |   39 +++++++++++++++++++++++++++++++++
+ kernel/irq/msi.c    |   60 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 99 insertions(+)
 
-
-> Regards!
-> Gerry
->>
->> Thanks,
->>
->> 	tglx
->>
-> 
-> .
-> 
-
-
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 714716a3ffdd..7283e155afef 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -3,6 +3,7 @@
+ 
+ #include <linux/kobject.h>
+ #include <linux/list.h>
++#include <asm/hw_irq.h>		/* for msi_alloc_info_t */
+ 
+ struct msi_msg {
+ 	u32	address_lo;	/* low 32 bits of msi message address */
+@@ -100,7 +101,29 @@ struct irq_chip;
+ struct device_node;
+ struct msi_domain_info;
+ 
++#ifndef NUM_MSI_ALLOC_SCRATCHPAD_REGS
++#define NUM_MSI_ALLOC_SCRATCHPAD_REGS	2
++#endif
++
++/*
++ * Default structure for MSI interrupt allocation.
++ * Arch may overwrite it by defining msi_alloc_info_t.
++ */
++struct msi_alloc_info {
++	struct msi_desc			*desc;
++	irq_hw_number_t			hwirq;
++	union {
++		unsigned long		ul;
++		void			*ptr;
++	} scratchpad[NUM_MSI_ALLOC_SCRATCHPAD_REGS];
++};
++
++#ifndef msi_alloc_info_t
++typedef struct msi_alloc_info msi_alloc_info_t;
++#endif
++
+ struct msi_domain_ops {
++	/* Callbacks for msi_create_irq_domain() */
+ 	void		(*calc_hwirq)(struct msi_domain_info *info, void *arg,
+ 				      struct msi_desc *desc);
+ 	irq_hw_number_t	(*get_hwirq)(struct msi_domain_info *info, void *arg);
+@@ -111,6 +134,19 @@ struct msi_domain_ops {
+ 	void		(*msi_free)(struct irq_domain *domain,
+ 				    struct msi_domain_info *info,
+ 				    unsigned int virq);
++
++	/* Callbacks for msi_irq_domain_alloc_irqs() based on msi_descs */
++	int		(*msi_check)(struct irq_domain *domain,
++				     struct msi_domain_info *info,
++				     struct device *dev);
++	int		(*msi_prepare)(struct irq_domain *domain,
++				       struct device *dev, int nvec,
++				       msi_alloc_info_t *arg);
++	void		(*msi_finish)(msi_alloc_info_t *arg, int retval);
++	void		(*set_desc)(msi_alloc_info_t *arg,
++				    struct msi_desc *desc);
++	int		(*handle_error)(struct irq_domain *domain,
++					struct msi_desc *desc, int error);
+ };
+ 
+ struct msi_domain_info {
+@@ -125,6 +161,9 @@ int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ struct irq_domain *msi_create_irq_domain(struct device_node *of_node,
+ 					 struct msi_domain_info *info,
+ 					 struct irq_domain *parent);
++int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
++			  int nvec);
++void msi_domain_free_irqs(struct irq_domain *domain, struct device *dev);
+ struct msi_domain_info *msi_get_domain_info(struct irq_domain *domain);
+ 
+ #endif /* CONFIG_GENERIC_MSI_IRQ_DOMAIN */
+diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+index 94d6d87ee23e..ce054566edf5 100644
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -13,6 +13,9 @@
+ #include <linux/irqdomain.h>
+ #include <linux/msi.h>
+ 
++/* Temparory solution for building, will be removed later */
++#include <linux/pci.h>
++
+ void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	*msg = entry->msg;
+@@ -124,6 +127,63 @@ struct irq_domain *msi_create_irq_domain(struct device_node *of_node,
+ 	return domain;
+ }
+ 
++int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
++			  int nvec)
++{
++	int i, ret, virq = -1;
++	msi_alloc_info_t arg;
++	struct msi_desc *desc;
++	struct msi_domain_info *info = domain->host_data;
++	struct msi_domain_ops *ops = info->ops;
++
++	ret = ops->msi_check(domain, info, dev);
++	if (ret == 0)
++		ret = ops->msi_prepare(domain, dev, nvec, &arg);
++	if (ret)
++		return ret;
++
++	for_each_msi_entry(desc, dev) {
++		ops->set_desc(&arg, desc);
++
++		virq = __irq_domain_alloc_irqs(domain, -1, desc->nvec_used,
++					       dev_to_node(dev), &arg, false);
++		if (virq < 0) {
++			ret = -ENOSPC;
++			if (ops->handle_error)
++				ret = ops->handle_error(domain, desc, ret);
++			if (ops->msi_finish)
++				ops->msi_finish(&arg, ret);
++			return ret;
++		}
++
++		for (i = 0; i < desc->nvec_used; i++)
++			irq_set_msi_desc_off(virq, i, desc);
++	}
++
++	if (ops->msi_finish)
++		ops->msi_finish(&arg, 0);
++
++	for_each_msi_entry(desc, dev) {
++		if (desc->nvec_used == 1)
++			dev_dbg(dev, "irq %d for MSI\n", virq);
++		else
++			dev_dbg(dev, "irq [%d-%d] for MSI\n",
++				virq, virq + desc->nvec_used - 1);
++	}
++
++	return 0;
++}
++
++void msi_domain_free_irqs(struct irq_domain *domain, struct device *dev)
++{
++	struct msi_desc *desc;
++
++	for_each_msi_entry(desc, dev) {
++		irq_domain_free_irqs(desc->irq, desc->nvec_used);
++		desc->irq = 0;
++	}
++}
++
+ struct msi_domain_info *msi_get_domain_info(struct irq_domain *domain)
+ {
+ 	return (struct msi_domain_info *)domain->host_data;
 -- 
-Thanks!
-Yijing
+1.7.10.4
 
