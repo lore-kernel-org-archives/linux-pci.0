@@ -1,82 +1,176 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:52586 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751167AbaKFOTR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 6 Nov 2014 09:19:17 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
 	Grant Likely <grant.likely@linaro.org>,
 	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Andy Lutomirski <luto@amacapital.net>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch Part2 v5 08/31] x86, hpet: Use new irqdomain interfaces to allocate/free IRQ
-Date: Thu,  6 Nov 2014 22:20:21 +0800
-Message-Id: <1415283644-2559-9-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [Patch V2 3/9] irqdomain: Implement a method to automatically call parent domain's alloc/free
+Date: Sat, 15 Nov 2014 22:24:01 +0800
+Message-Id: <1416061447-9472-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new irqdomain interfaces to allocate/free IRQ for HPET, so we could
-kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
+Add a flags to irq_domain.flags to control whether the irqdomain core
+should automatically call parent irqdomain's alloc/free callbacks. It
+help to reduce hierarchy irqdomains users' code size.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/kernel/hpet.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ include/linux/irqdomain.h |   24 ++++++-----------
+ kernel/irq/irqdomain.c    |   66 +++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 72 insertions(+), 18 deletions(-)
 
-diff --git a/arch/x86/kernel/hpet.c b/arch/x86/kernel/hpet.c
-index 319bcb9372fe..24db2d33fab7 100644
---- a/arch/x86/kernel/hpet.c
-+++ b/arch/x86/kernel/hpet.c
-@@ -11,6 +11,7 @@
- #include <linux/cpu.h>
- #include <linux/pm.h>
- #include <linux/io.h>
-+#include <linux/irqdomain.h>
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index fbe542967c20..ad92b0b15945 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -130,6 +130,8 @@ struct irq_domain {
+ };
  
- #include <asm/fixmap.h>
- #include <asm/hpet.h>
-@@ -476,7 +477,7 @@ static int hpet_msi_next_event(unsigned long delta,
- static int hpet_setup_msi_irq(unsigned int irq)
+ #define	IRQ_DOMAIN_FLAG_HIERARCHY	0x1
++/* Framework automatically calls parent domain's alloc()/free() */
++#define	IRQ_DOMAIN_FLAG_AUTO_RECURSIVE	0x2
+ #define	IRQ_DOMAIN_FLAG_ARCH1		0x10000
+ 
+ #ifdef CONFIG_IRQ_DOMAIN
+@@ -274,22 +276,12 @@ extern void irq_domain_free_irqs_common(struct irq_domain *domain,
+ 					unsigned int nr_irqs);
+ extern void irq_domain_free_irqs_top(struct irq_domain *domain,
+ 				     unsigned int virq, unsigned int nr_irqs);
+-
+-static inline int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
+-			unsigned int irq_base, unsigned int nr_irqs, void *arg)
+-{
+-	if (domain->parent && domain->parent->ops->alloc)
+-		return domain->parent->ops->alloc(domain->parent, irq_base,
+-						  nr_irqs, arg);
+-	return -ENOSYS;
+-}
+-
+-static inline void irq_domain_free_irqs_parent(struct irq_domain *domain,
+-				unsigned int irq_base, unsigned int nr_irqs)
+-{
+-	if (domain->parent && domain->parent->ops->free)
+-		domain->parent->ops->free(domain->parent, irq_base, nr_irqs);
+-}
++extern int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
++					unsigned int irq_base,
++					unsigned int nr_irqs, void *arg);
++extern void irq_domain_free_irqs_parent(struct irq_domain *domain,
++					unsigned int irq_base,
++					unsigned int nr_irqs);
+ 
+ static inline bool irq_domain_is_hierarchy(struct irq_domain *domain)
  {
- 	if (x86_msi.setup_hpet_msi(irq, hpet_blockid)) {
--		irq_free_hwirq(irq);
-+		irq_domain_free_irqs(irq, 1);
- 		return -EINVAL;
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 705fb573e509..03fc7d018324 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -925,6 +925,43 @@ void irq_domain_free_irqs_top(struct irq_domain *domain, unsigned int virq,
+ 	irq_domain_free_irqs_common(domain, virq, nr_irqs);
+ }
+ 
++static bool irq_domain_is_auto_recursive(struct irq_domain *domain)
++{
++	return domain->flags & IRQ_DOMAIN_FLAG_AUTO_RECURSIVE;
++}
++
++static void irq_domain_free_irqs_recursive(struct irq_domain *domain,
++					   unsigned int irq_base,
++					   unsigned int nr_irqs)
++{
++	domain->ops->free(domain, irq_base, nr_irqs);
++	if (irq_domain_is_auto_recursive(domain)) {
++		BUG_ON(!domain->parent);
++		irq_domain_free_irqs_recursive(domain->parent, irq_base,
++					       nr_irqs);
++	}
++}
++
++static int irq_domain_alloc_irqs_recursive(struct irq_domain *domain,
++					   unsigned int irq_base,
++					   unsigned int nr_irqs, void *arg)
++{
++	int ret = 0;
++	struct irq_domain *parent = domain->parent;
++	bool recursive = irq_domain_is_auto_recursive(domain);
++
++	BUG_ON(recursive && !parent);
++	if (recursive)
++		ret = irq_domain_alloc_irqs_recursive(parent, irq_base,
++						      nr_irqs, arg);
++	if (ret >= 0)
++		ret = domain->ops->alloc(domain, irq_base, nr_irqs, arg);
++	if (ret < 0 && recursive)
++		irq_domain_free_irqs_recursive(parent, irq_base, nr_irqs);
++
++	return ret;
++}
++
+ /**
+  * __irq_domain_alloc_irqs - Allocate IRQs from domain
+  * @domain: domain to allocate from
+@@ -981,7 +1018,7 @@ int __irq_domain_alloc_irqs(struct irq_domain *domain, int irq_base,
  	}
- 	return 0;
-@@ -484,9 +485,10 @@ static int hpet_setup_msi_irq(unsigned int irq)
  
- static int hpet_assign_irq(struct hpet_dev *dev)
- {
--	unsigned int irq = irq_alloc_hwirq(-1);
-+	int irq;
+ 	mutex_lock(&irq_domain_mutex);
+-	ret = domain->ops->alloc(domain, virq, nr_irqs, arg);
++	ret = irq_domain_alloc_irqs_recursive(domain, virq, nr_irqs, arg);
+ 	if (ret < 0) {
+ 		mutex_unlock(&irq_domain_mutex);
+ 		goto out_free_irq_data;
+@@ -1016,13 +1053,38 @@ void irq_domain_free_irqs(unsigned int virq, unsigned int nr_irqs)
+ 	mutex_lock(&irq_domain_mutex);
+ 	for (i = 0; i < nr_irqs; i++)
+ 		irq_domain_remove_irq(virq + i);
+-	data->domain->ops->free(data->domain, virq, nr_irqs);
++	irq_domain_free_irqs_recursive(data->domain, virq, nr_irqs);
+ 	mutex_unlock(&irq_domain_mutex);
  
--	if (!irq)
-+	irq = irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
-+	if (irq <= 0)
- 		return -EINVAL;
+ 	irq_domain_free_irq_data(virq, nr_irqs);
+ 	irq_free_descs(virq, nr_irqs);
+ }
  
- 	irq_set_handler_data(irq, dev);
++int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
++				 unsigned int irq_base, unsigned int nr_irqs,
++				 void *arg)
++{
++	/* irq_domain_alloc_irqs_recursive() has called parent's alloc() */
++	if (irq_domain_is_auto_recursive(domain))
++		return 0;
++
++	domain = domain->parent;
++	if (domain)
++		return irq_domain_alloc_irqs_recursive(domain, irq_base,
++						       nr_irqs, arg);
++
++	return -ENOSYS;
++}
++
++void irq_domain_free_irqs_parent(struct irq_domain *domain,
++				 unsigned int irq_base, unsigned int nr_irqs)
++{
++	/* irq_domain_free_irqs_recursive() will call parent's free */
++	if (!irq_domain_is_auto_recursive(domain))
++		irq_domain_free_irqs_recursive(domain->parent, irq_base,
++					       nr_irqs);
++}
++
+ /**
+  * irq_domain_activate_irq - Call domain_ops->activate recursively to activate
+  *			     interrupt
 -- 
 1.7.10.4
 
