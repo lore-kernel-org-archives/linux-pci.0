@@ -1,81 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:47999 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752703AbaKLEZB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 23:25:01 -0500
-Received: by mail-ig0-f170.google.com with SMTP id a13so754588igq.3
-        for <linux-pci@vger.kernel.org>; Tue, 11 Nov 2014 20:25:00 -0800 (PST)
-Date: Tue, 11 Nov 2014 21:24:54 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH 10/10] PCI/MSI: Remove useless bus->msi assignment
-Message-ID: <20141112042454.GL28161@google.com>
-References: <1414396127-30023-1-git-send-email-wangyijing@huawei.com>
- <1414396127-30023-11-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1414396127-30023-11-git-send-email-wangyijing@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:51784 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754049AbaKOPX0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 15 Nov 2014 10:23:26 -0500
+Message-ID: <1416064996.27937.177.camel@ul30vt.home>
+Subject: Re: DMA_ALIAS_DEVFN issue
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Allan, Bruce W" <bruce.w.allan@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+Date: Sat, 15 Nov 2014 08:23:16 -0700
+In-Reply-To: <CAErSpo7m9xMy9buOmF==8H_VSkBBqPZD1_OCPYjEz_1Q1n4y0Q@mail.gmail.com>
+References: <CAErSpo7m9xMy9buOmF==8H_VSkBBqPZD1_OCPYjEz_1Q1n4y0Q@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 27, 2014 at 03:48:47PM +0800, Yijing Wang wrote:
-> Thierry introduced MSI chip(now renamed to MSI controller)
-> framework to associate MSI chip and PCI bus in arm.
-> Other platforms still use its own arch MSI functions to
-> support MSI capability. Thierry introduced the bus->msi
-> assignment to make child bus can inherit bus->msi from the parent.
-> But in fact, drivers which used MSI chip always associate
-> MSI chip and PCI bus by add .add_bus() in arm PCI host bridge
-> drivers. Now we have saved MSI chip in pci_sys_data.
-> We can remove this bus->msi assignment safely.
+On Fri, 2014-11-14 at 21:25 -0700, Bjorn Helgaas wrote:
+> [+cc Alex, add a subject]
 > 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> CC: Thierry Reding <thierry.reding@gmail.com>
-> CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> ---
->  drivers/pci/msi.c   |    5 -----
->  drivers/pci/probe.c |    1 -
->  2 files changed, 0 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index f085f7f..27b6a54 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -37,11 +37,6 @@ struct msi_controller * __weak pcibios_msi_controller(struct pci_bus *bus)
->  
->  struct msi_controller *pci_msi_controller(struct pci_bus *bus)
->  {
-> -	struct msi_controller *ctrl = bus->msi;
-> -
-> -	if (ctrl)
-> -		return ctrl;
-> -
->  	return pcibios_msi_controller(bus);
->  }
->  
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 5ed9930..4b18bf2 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -682,7 +682,6 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->  
->  	child->parent = parent;
->  	child->ops = parent->ops;
-> -	child->msi = parent->msi;
+> On Fri, Nov 14, 2014 at 6:49 PM, Allan, Bruce W <bruce.w.allan@intel.com> wrote:
+> > Let's try this again as plain text...
+> >
+> > For a PCIe device with SR-IOV support enabled (e.g. the PF device ID
+> is 0xf001 at 0000:07:00.0 and the 16 VFs have device ID 0xf002 at
+> 0000:07:01.0 through 0000:07:02.7), if the hardware attempts a DMA
+> read/write of memory that was mapped by the PF devfn but instead uses
+> a requester id of one of the VF devfns (enabled but not yet assigned
+> to a VM) it fails and generates log messages similar to:
+> >
+> > [  416.800881] dmar: DRHD: handling fault status reg 2
+> > [  416.800887] dmar: DMAR:[DMA Read] Request device [07:02.2] fault addr ffff0000
+> > DMAR:[fault reason 02] Present bit in context entry is clear
 
-Does this mean that struct pci_bus.msi is now unused?  If not, where is it
-still used?
+This is exactly what IOMMU isolation is meant to do.  A buffer mapped
+for one device should not be accessible from another device.  It really
+doesn't matter if the devices are related as VF/PF, VF/VF, or PF/PF.
 
->  	child->sysdata = parent->sysdata;
->  	child->bus_flags = parent->bus_flags;
->  
-> -- 
-> 1.7.1
-> 
+> > Shouldn't a DMA alias quirk that sets the
+> PCI_DEV_FLAGS_DMA_ALIAS_DEVFN flag and dma_alias_devfn to the PF devfn
+> for all VF devfns work-around this issue, or am I misunderstanding
+> what a DMA alias quirk is supposed to do?  If a DMA alias quirk cannot
+> resolve this, what is the most appropriate way to handle this?
+
+The buffer needs to be mapped for each VF.  If for some reason the VF
+needs implicit access to a PF mapped buffer then this devices is
+completely broken from an isolation perspective and using DMA aliases to
+fix it means that individual VFs will never be assignable to guests.
+Thanks,
+
+Alex
+
