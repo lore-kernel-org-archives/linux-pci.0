@@ -1,72 +1,205 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:63511 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751398AbaKFTuK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 14:50:10 -0500
-MIME-Version: 1.0
-In-Reply-To: <1415287400-30426-1-git-send-email-l.stach@pengutronix.de>
-References: <1415287400-30426-1-git-send-email-l.stach@pengutronix.de>
-From: Rob Herring <robherring2@gmail.com>
-Date: Thu, 6 Nov 2014 13:49:48 -0600
-Message-ID: <CAL_JsqKfV3aPuYxK2E8tS1fDjhpJFknqv1nHP+9NYHAfs_owYg@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: add missing DT binding for linux,pci-domain property
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:61452 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754495AbaKOOWA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 15 Nov 2014 09:22:00 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Alexander Gordeev <agordeev@redhat.com>
+Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [Patch V2 8/9] PCI, MSI: Refine irqdomain interfaces to simplify its usage
+Date: Sat, 15 Nov 2014 22:24:06 +0800
+Message-Id: <1416061447-9472-9-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 6, 2014 at 9:23 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> This property was added by 41e5c0f81d3e
-> (of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr())
-> without the required binding documentation. As this property
-> will be supported by a number of host bridge drivers going forward,
-> add it to the common PCI binding doc.
->
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> ---
-> This is a non-critical fix, but may still qualify for 3.18-rc as
-> the property was added in this release cycle.
+Refine irqdomain interfaces to simplify its usage.
 
-Agreed.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/pci/msi.c   |  119 ++++++++++++++++++++++++++++++++++++++-------------
+ include/linux/msi.h |   13 +++---
+ 2 files changed, 98 insertions(+), 34 deletions(-)
 
-Acked-by: Rob Herring <robh@kernel.org>
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 9c53b865cb1b..1dd5d93bd4b8 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1099,38 +1099,99 @@ irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
+ 		(pci_domain_nr(dev->bus) & 0xFFFFFFFF) << 27;
+ }
+ 
+-int pci_msi_domain_alloc_irqs(struct irq_domain *domain, int type,
+-			      struct pci_dev *dev, void *arg)
++static inline bool pci_msi_desc_is_multi_msi(struct msi_desc *desc)
+ {
+-	struct msi_domain_info *info = domain->host_data;
+-	int node = dev_to_node(&dev->dev);
+-	struct msi_desc *desc;
+-	int i, virq;
+-
+-	list_for_each_entry(desc, &dev->msi_list, list) {
+-		if (info->ops->calc_hwirq)
+-			info->ops->calc_hwirq(info, arg, desc);
+-
+-		virq = irq_domain_alloc_irqs(domain, desc->nvec_used,
+-					     node, arg);
+-		if (virq < 0) {
+-			/* Special handling for pci_enable_msi_range(). */
+-			if (type == PCI_CAP_ID_MSI && desc->nvec_used > 1)
+-				return 1;
+-			else
+-				return -ENOSPC;
+-		}
+-		for (i = 0; i < desc->nvec_used; i++)
+-			irq_set_msi_desc_off(virq, i, desc);
+-	}
++	return !desc->msi_attrib.is_msix && desc->nvec_used > 1;
++}
+ 
+-	list_for_each_entry(desc, &dev->msi_list, list)
+-		if (desc->nvec_used == 1)
+-			dev_dbg(&dev->dev, "irq %d for MSI/MSI-X\n", virq);
+-		else
+-			dev_dbg(&dev->dev, "irq [%d-%d] for MSI/MSI-X\n",
+-				virq, virq + desc->nvec_used - 1);
++int pci_msi_domain_check_cap(struct irq_domain *domain,
++			     struct msi_domain_info *info, struct device *dev)
++{
++	struct msi_desc *desc = first_pci_msi_entry(to_pci_dev(dev));
++
++	/* Special handling to support pci_enable_msi_range() */
++	if (pci_msi_desc_is_multi_msi(desc) &&
++	    !(info->flags & MSI_FLAG_MULTI_PCI_MSI))
++		return 1;
++	else if (desc->msi_attrib.is_msix && !(info->flags & MSI_FLAG_PCI_MSIX))
++		return -ENOTSUPP;
+ 
+ 	return 0;
+ }
++
++static int pci_msi_domain_handle_error(struct irq_domain *domain,
++				       struct msi_desc *desc, int error)
++{
++	/* Special handling to support pci_enable_msi_range() */
++	if (pci_msi_desc_is_multi_msi(desc) && error == -ENOSPC)
++		return 1;
++
++	return error;
++}
++
++#ifndef msi_alloc_info_t
++static void pci_msi_domain_set_desc(struct msi_alloc_info *arg,
++				    struct msi_desc *desc)
++{
++	arg->desc = desc;
++	arg->hwirq = pci_msi_domain_calc_hwirq(msi_desc_to_pci_dev(desc),
++					       desc);
++}
++#else
++#define pci_msi_domain_set_desc		NULL
++#endif
++
++static struct msi_domain_ops pci_msi_domain_ops_default = {
++	.set_desc	= pci_msi_domain_set_desc,
++	.msi_check	= pci_msi_domain_check_cap,
++	.handle_error	= pci_msi_domain_handle_error,
++};
++
++static void pci_msi_domain_update_dom_ops(struct msi_domain_info *info)
++{
++	struct msi_domain_ops *ops = info->ops;
++
++	if (ops == NULL) {
++		info->ops = &pci_msi_domain_ops_default;
++	} else {
++		if (ops->set_desc == NULL)
++			ops->set_desc = pci_msi_domain_set_desc;
++		if (ops->msi_check == NULL)
++			ops->msi_check = pci_msi_domain_check_cap;
++		if (ops->handle_error == NULL)
++			ops->handle_error = pci_msi_domain_handle_error;
++	}
++}
++
++static void pci_msi_domain_update_chip_ops(struct msi_domain_info *info)
++{
++	struct irq_chip *chip = info->chip;
++
++	BUG_ON(!chip);
++	if (!chip->irq_write_msi_msg)
++		chip->irq_write_msi_msg = pci_msi_domain_write_msg;
++}
++
++struct irq_domain *pci_msi_create_irq_domain(struct device_node *node,
++					     struct msi_domain_info *info,
++					     struct irq_domain *parent)
++{
++	if (info->flags & MSI_FLAG_USE_DEF_DOM_OPS)
++		pci_msi_domain_update_dom_ops(info);
++	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
++		pci_msi_domain_update_chip_ops(info);
++
++	return msi_create_irq_domain(node, info, parent);
++}
++
++int pci_msi_domain_alloc_irqs(struct irq_domain *domain, struct pci_dev *dev,
++			      int nvec, int type)
++{
++	return msi_domain_alloc_irqs(domain, &dev->dev, nvec);
++}
++
++void pci_msi_domain_free_irqs(struct irq_domain *domain, struct pci_dev *dev)
++{
++	msi_domain_free_irqs(domain, &dev->dev);
++}
+ #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 96ee8c3b98cc..0463e361fef8 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -125,9 +125,6 @@ typedef struct msi_alloc_info msi_alloc_info_t;
+ 
+ struct msi_domain_ops {
+ 	/* Callbacks for msi_create_irq_domain() */
+-	void		(*calc_hwirq)(struct msi_domain_info *info,
+-				      msi_alloc_info_t *arg,
+-				      struct msi_desc *desc);
+ 	irq_hw_number_t	(*get_hwirq)(struct msi_domain_info *info,
+ 				     msi_alloc_info_t *arg);
+ 	int		(*msi_init)(struct irq_domain *domain,
+@@ -189,10 +186,16 @@ struct msi_domain_info *msi_get_domain_info(struct irq_domain *domain);
+ 
+ #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
+ void pci_msi_domain_write_msg(struct irq_data *irq_data, struct msi_msg *msg);
+-int pci_msi_domain_alloc_irqs(struct irq_domain *domain, int type,
+-			      struct pci_dev *dev, void *arg);
++struct irq_domain *pci_msi_create_irq_domain(struct device_node *node,
++					     struct msi_domain_info *info,
++					     struct irq_domain *parent);
++int pci_msi_domain_alloc_irqs(struct irq_domain *domain, struct pci_dev *dev,
++			      int nvec, int type);
++void pci_msi_domain_free_irqs(struct irq_domain *domain, struct pci_dev *dev);
+ irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
+ 					  struct msi_desc *desc);
++int pci_msi_domain_check_cap(struct irq_domain *domain,
++			     struct msi_domain_info *info, struct device *dev);
+ #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
+ 
+ #endif /* LINUX_MSI_H */
+-- 
+1.7.10.4
 
->
-> v2:
-> - emphasize that the property must be present and unique systemwide
->   if used
-> ---
->  Documentation/devicetree/bindings/pci/pci.txt | 11 +++++++++++
->  1 file changed, 11 insertions(+)
->
-> diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-> index 41aeed38926d..68c364e2f5e5 100644
-> --- a/Documentation/devicetree/bindings/pci/pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/pci.txt
-> @@ -7,3 +7,14 @@ And for the interrupt mapping part:
->
->  Open Firmware Recommended Practice: Interrupt Mapping
->  http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
-> +
-> +Additionally to the properties specified in the above standards a host bridge
-> +driver implementation may support the following properties:
-> +
-> +- linux,pci-domain:
-> +   If present this property assigns a fixed PCI domain number to a host bridge,
-> +   otherwise an unstable (across boots) unique number will be assigned.
-> +   It is required to either not set this property at all or set it for all
-> +   host bridges in the system, otherwise potentially conflicting domain numbers
-> +   may be assigned to root buses behind different host bridges. The domain
-> +   number for each host bridge in the system must be unique.
-> --
-> 2.1.1
->
