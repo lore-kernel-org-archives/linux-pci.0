@@ -1,58 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:58867 "EHLO theia.8bytes.org"
+Received: from mga01.intel.com ([192.55.52.88]:61402 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752917AbaKRKZl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 18 Nov 2014 05:25:41 -0500
-Date: Tue, 18 Nov 2014 11:25:38 +0100
-From: Joerg Roedel <joro@8bytes.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
+	id S1753914AbaKOOVa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 15 Nov 2014 09:21:30 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: Re: [Patch Part3 V7 0/8] Enable support of Intel DMAR device hotplug
-Message-ID: <20141118102537.GB3762@8bytes.org>
-References: <1415544483-27990-1-git-send-email-jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415544483-27990-1-git-send-email-jiang.liu@linux.intel.com>
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Alexander Gordeev <agordeev@redhat.com>
+Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [Patch V2 1/9] PCI, MSI: Fix errors caused by commit e5f1a59c4e12
+Date: Sat, 15 Nov 2014 22:23:59 +0800
+Message-Id: <1416061447-9472-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jiang,
+Better to fold into commit e5f1a59c4e12 ("PCI/MSI: Rename write_msi_msg()
+to pci_write_msi_msg()").
 
-On Sun, Nov 09, 2014 at 10:47:55PM +0800, Jiang Liu wrote:
-> Jiang Liu (8):
->   iommu/vt-d: Introduce helper function dmar_walk_resources()
->   iommu/vt-d: Dynamically allocate and free seq_id for DMAR units
->   iommu/vt-d: Implement DMAR unit hotplug framework
->   iommu/vt-d: Search for ACPI _DSM method for DMAR hotplug
->   iommu/vt-d: Enhance intel_irq_remapping driver to support DMAR unit
->     hotplug
->   iommu/vt-d: Enhance error recovery in function
->     intel_enable_irq_remapping()
->   iommu/vt-d: Enhance intel-iommu driver to support DMAR unit hotplug
->   pci, ACPI, iommu: Enhance pci_root to support DMAR device hotplug
-> 
->  drivers/acpi/pci_root.c             |   16 +-
->  drivers/iommu/dmar.c                |  532 ++++++++++++++++++++++++++++-------
->  drivers/iommu/intel-iommu.c         |  297 ++++++++++++++-----
->  drivers/iommu/intel_irq_remapping.c |  249 ++++++++++++----
->  include/linux/dmar.h                |   50 +++-
->  5 files changed, 897 insertions(+), 247 deletions(-)
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/pci/msi.c   |    2 +-
+ include/linux/msi.h |    2 --
+ 2 files changed, 1 insertion(+), 3 deletions(-)
 
-The patches look good, but I need an ack from PCI/ACPI for patch 8
-before I can merge it. Patches 1-7 are applied.
-
-Thanks,
-
-	Joerg
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 564850b1316e..9c53b865cb1b 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1084,7 +1084,7 @@ void pci_msi_domain_write_msg(struct irq_data *irq_data, struct msi_msg *msg)
+ 	 * MSI message denotes a contiguous group of IRQs, written for 0th IRQ.
+ 	 */
+ 	if (desc->irq == irq_data->irq)
+-		pci_write_msi_msg(desc, msg);
++		__pci_write_msi_msg(desc, msg);
+ }
+ 
+ /*
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 8112a17cdca1..190c7abbec84 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -44,11 +44,9 @@ struct msi_desc {
+ 	struct msi_msg msg;
+ };
+ 
+-#ifdef CONFIG_PCI_MSI
+ void __pci_read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void pci_write_msi_msg(unsigned int irq, struct msi_msg *msg);
+-#endif
+ 
+ /*
+  * The arch hooks to setup up msi irqs. Those functions are
+-- 
+1.7.10.4
 
