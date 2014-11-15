@@ -1,51 +1,39 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linaro-acpi@lists.linaro.org
-Cc: Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	linux-arm-kernel@lists.infradead.org, rjw@rjwysocki.net,
-	linux-pci@vger.kernel.org, catalin.marinas@arm.com, x86@kernel.org,
-	Liviu.Dudau@arm.com, linux-kernel@vger.kernel.org,
-	will.deacon@arm.com, linux-acpi@vger.kernel.org, mingo@redhat.com,
-	hpa@zytor.com, bhelgaas@google.com, tglx@linutronix.de
-Subject: Re: [Linaro-acpi] [RFC PATCH 4/4] arm64, acpi, pci: Provide arch-specific calls for PCI host bridge dirver (PNP0A03).
-Date: Fri, 14 Nov 2014 15:53:35 +0100
-Message-ID: <2009440.GJsvyI3SUN@wuerfel>
-In-Reply-To: <54660D44.9020406@linaro.org>
-References: <1415366876-30811-1-git-send-email-tomasz.nowicki@linaro.org> <4474363.kMvYSLl2Ev@wuerfel> <54660D44.9020406@linaro.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qg0-f54.google.com ([209.85.192.54]:47875 "EHLO
+	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754241AbaKOE0Q convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Nov 2014 23:26:16 -0500
+Received: by mail-qg0-f54.google.com with SMTP id q108so12758510qgd.41
+        for <linux-pci@vger.kernel.org>; Fri, 14 Nov 2014 20:26:15 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 14 Nov 2014 21:25:55 -0700
+Message-ID: <CAErSpo7m9xMy9buOmF==8H_VSkBBqPZD1_OCPYjEz_1Q1n4y0Q@mail.gmail.com>
+Subject: Re: DMA_ALIAS_DEVFN issue
+To: "Allan, Bruce W" <bruce.w.allan@intel.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 14 November 2014 15:10:12 Tomasz Nowicki wrote:
-> On 07.11.2014 15:24, Arnd Bergmann wrote:
-> > On Friday 07 November 2014 14:27:56 Tomasz Nowicki wrote:
-> >>
-> >>   #ifdef CONFIG_PCI
-> >> +struct pci_controller {
-> >> +	struct acpi_device *companion;
-> >> +	int segment;
-> >> +	int node;		/* nearest node with memory or NUMA_NO_NODE for global allocation */
-> >> +};
-> >> +
-> >> +#define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
-> >> +
-> >
-> > Don't use busdev->sysdata in architecture specific code, it belongs to the
-> > host bridge driver with the new model. For ACPI you don't have a host bridge
-> > driver, but it's better to keep these separate.
-> >
-> > The segment is always the same as the domain number, so just use that.
-> > The node and companion members here can get added to struct pci_host_bridge.
-> 
-> The reason why I put segment field to struct pci_controller is to 
-> initialize domain_nr of struct pci_bus being in pci_create_root_bus(), 
-> domain_nr can be used later on though. Correct me I am wrong.
-> 
-> Honestly I do not see the way to create root bus without e.g. 
-> sysdata.segment here.
+[+cc Alex, add a subject]
 
-See the patches that Liviu and Lorenzo have been posting recently. This
-should be straightforward in 3.19.
-
-	Arnd
+On Fri, Nov 14, 2014 at 6:49 PM, Allan, Bruce W <bruce.w.allan@intel.com> wrote:
+> Let's try this again as plain text...
+>
+> For a PCIe device with SR-IOV support enabled (e.g. the PF device ID is 0xf001 at 0000:07:00.0 and the 16 VFs have device ID 0xf002 at 0000:07:01.0 through 0000:07:02.7), if the hardware attempts a DMA read/write of memory that was mapped by the PF devfn but instead uses a requester id of one of the VF devfns (enabled but not yet assigned to a VM) it fails and generates log messages similar to:
+>
+> [  416.800881] dmar: DRHD: handling fault status reg 2
+> [  416.800887] dmar: DMAR:[DMA Read] Request device [07:02.2] fault addr ffff0000
+> DMAR:[fault reason 02] Present bit in context entry is clear
+>
+> Shouldn't a DMA alias quirk that sets the PCI_DEV_FLAGS_DMA_ALIAS_DEVFN flag and dma_alias_devfn to the PF devfn for all VF devfns work-around this issue, or am I misunderstanding what a DMA alias quirk is supposed to do?  If a DMA alias quirk cannot resolve this, what is the most appropriate way to handle this?
+>
+> Thanks,
+> Bruce.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
