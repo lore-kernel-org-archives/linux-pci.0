@@ -1,155 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:46355 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753681AbaKRJQk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 04:16:40 -0500
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 18 Nov 2014 19:16:38 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 1B3E03578075
-	for <linux-pci@vger.kernel.org>; Tue, 18 Nov 2014 20:16:35 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAI9GCDd36569142
-	for <linux-pci@vger.kernel.org>; Tue, 18 Nov 2014 20:16:12 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAI9GYXw026035
-	for <linux-pci@vger.kernel.org>; Tue, 18 Nov 2014 20:16:34 +1100
-Date: Tue, 18 Nov 2014 17:16:28 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/3] PCI: move PCI_FIND_CAP_TTL to pci.h and use it in
- quirks
-Message-ID: <20141118091628.GA25737@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1413269253-8990-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1413269253-8990-2-git-send-email-weiyang@linux.vnet.ibm.com>
- <20141022231830.GC4795@google.com>
- <20141106031202.GA18424@richard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141106031202.GA18424@richard>
+Received: from mga01.intel.com ([192.55.52.88]:61402 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754071AbaKOOVb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 15 Nov 2014 09:21:31 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>
+Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [Patch V2 2/9] irqdomain: Use consistent prototype for irq_domain_free_irqs_*
+Date: Sat, 15 Nov 2014 22:24:00 +0800
+Message-Id: <1416061447-9472-3-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 06, 2014 at 11:12:02AM +0800, Wei Yang wrote:
->On Wed, Oct 22, 2014 at 05:18:30PM -0600, Bjorn Helgaas wrote:
->>[+cc Yinghai]
->>
->>On Tue, Oct 14, 2014 at 02:47:30PM +0800, Wei Yang wrote:
->>> In some quirks, it tries to search a pci cap and use a ttl value to avoid
->>> infinite loop. While the value is hard coded to 48, which is the same as marco
->>> PCI_FIND_CAP_TTL.
->>> 
->>> This patch moves the definition of PCI_FIND_CAP_TTL to pci.h and replace the
->>> hard coded value with it.
->>
->>This seems reasonable (though I added Yinghai in case he knows of any
->>reason why HT capabilities should be different from plain PCI capabilities
->>in this respect).
->
->Hi, Yinghai,
->
->Do you have some historical story on the definition?
->
+From: Yingjoe Chen <yingjoe.chen@mediatek.com>
 
-Hi,
+When using irq_domain_free_irqs_top() directly in irq_domain_ops, gcc
+generate the following warnings:
 
-I am not sure if I missed some mail. This is the last mail I sent, but no
-reply I got yet. Is is ok to send an updated version?
+../drivers/irqchip/irq-gic.c:879:2: warning: initialization from incompatible pointer type [enabled by default]
+../drivers/irqchip/irq-gic.c:879:2: warning: (near initialization for 'gic_irq_domain_hierarchy_ops.free') [enabled by default]
 
->>
->>But I'd prefer to have the definition in drivers/pci/pci.h rather than in
->>include/linux/pci.h, because both users already include drivers/pci/pci.h,
->>and it is less visible.
->>
->>Bjorn
->>
->>> 
->>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>> ---
->>>  drivers/pci/pci.c    |    1 -
->>>  drivers/pci/quirks.c |    8 ++++----
->>>  include/linux/pci.h  |    2 ++
->>>  3 files changed, 6 insertions(+), 5 deletions(-)
->>> 
->>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>> index 2c9ac70..76b002b1 100644
->>> --- a/drivers/pci/pci.c
->>> +++ b/drivers/pci/pci.c
->>> @@ -137,7 +137,6 @@ void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar)
->>>  EXPORT_SYMBOL_GPL(pci_ioremap_bar);
->>>  #endif
->>>  
->>> -#define PCI_FIND_CAP_TTL	48
->>>  
->>>  static int __pci_find_next_cap_ttl(struct pci_bus *bus, unsigned int devfn,
->>>  				   u8 pos, int cap, int *ttl)
->>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->>> index 80c2d01..a5f46b8 100644
->>> --- a/drivers/pci/quirks.c
->>> +++ b/drivers/pci/quirks.c
->>> @@ -2176,7 +2176,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x9601, quirk_amd_780_apc_msi);
->>>   * return 1 if a HT MSI capability is found and enabled */
->>>  static int msi_ht_cap_enabled(struct pci_dev *dev)
->>>  {
->>> -	int pos, ttl = 48;
->>> +	int pos, ttl = PCI_FIND_CAP_TTL;
->>>  
->>>  	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
->>>  	while (pos && ttl--) {
->>> @@ -2235,7 +2235,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_CK804_PCIE,
->>>  /* Force enable MSI mapping capability on HT bridges */
->>>  static void ht_enable_msi_mapping(struct pci_dev *dev)
->>>  {
->>> -	int pos, ttl = 48;
->>> +	int pos, ttl = PCI_FIND_CAP_TTL;
->>>  
->>>  	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
->>>  	while (pos && ttl--) {
->>> @@ -2314,7 +2314,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA,
->>>  
->>>  static int ht_check_msi_mapping(struct pci_dev *dev)
->>>  {
->>> -	int pos, ttl = 48;
->>> +	int pos, ttl = PCI_FIND_CAP_TTL;
->>>  	int found = 0;
->>>  
->>>  	/* check if there is HT MSI cap or enabled on this device */
->>> @@ -2439,7 +2439,7 @@ out:
->>>  
->>>  static void ht_disable_msi_mapping(struct pci_dev *dev)
->>>  {
->>> -	int pos, ttl = 48;
->>> +	int pos, ttl = PCI_FIND_CAP_TTL;
->>>  
->>>  	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
->>>  	while (pos && ttl--) {
->>> diff --git a/include/linux/pci.h b/include/linux/pci.h
->>> index 96453f9..b27b79e 100644
->>> --- a/include/linux/pci.h
->>> +++ b/include/linux/pci.h
->>> @@ -33,6 +33,8 @@
->>>  
->>>  #include <linux/pci_ids.h>
->>>  
->>> +#define PCI_FIND_CAP_TTL	48
->>> +
->>>  /*
->>>   * The PCI interface treats multi-function devices as independent
->>>   * devices.  The slot/function address of each device is encoded
->>> -- 
->>> 1.7.9.5
->>> 
->
->-- 
->Richard Yang
->Help you, Help me
+Change to use consistent prototype for all irq_domain_free_irqs*
 
+Better to fold this into "irqdomain: Introduce new interfaces to
+support hierarchy irqdomains".
+
+Signed-off-by: Yingjoe Chen <yingjoe.chen@mediatek.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ include/linux/irqdomain.h |    9 +++++----
+ kernel/irq/irqdomain.c    |    8 ++++----
+ 2 files changed, 9 insertions(+), 8 deletions(-)
+
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index 640a1ec54772..fbe542967c20 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -270,12 +270,13 @@ extern void irq_domain_set_info(struct irq_domain *domain, unsigned int virq,
+ 				void *handler_data, const char *handler_name);
+ extern void irq_domain_reset_irq_data(struct irq_data *irq_data);
+ extern void irq_domain_free_irqs_common(struct irq_domain *domain,
+-					int virq, int nr_irqs);
++					unsigned int virq,
++					unsigned int nr_irqs);
+ extern void irq_domain_free_irqs_top(struct irq_domain *domain,
+-				     int virq, int nr_irqs);
++				     unsigned int virq, unsigned int nr_irqs);
+ 
+ static inline int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
+-				int irq_base, unsigned int nr_irqs, void *arg)
++			unsigned int irq_base, unsigned int nr_irqs, void *arg)
+ {
+ 	if (domain->parent && domain->parent->ops->alloc)
+ 		return domain->parent->ops->alloc(domain->parent, irq_base,
+@@ -284,7 +285,7 @@ static inline int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
+ }
+ 
+ static inline void irq_domain_free_irqs_parent(struct irq_domain *domain,
+-					int irq_base, unsigned int nr_irqs)
++				unsigned int irq_base, unsigned int nr_irqs)
+ {
+ 	if (domain->parent && domain->parent->ops->free)
+ 		domain->parent->ops->free(domain->parent, irq_base, nr_irqs);
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 8b0eddee0b21..705fb573e509 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -899,8 +899,8 @@ void irq_domain_reset_irq_data(struct irq_data *irq_data)
+ 	irq_data->chip_data = NULL;
+ }
+ 
+-void irq_domain_free_irqs_common(struct irq_domain *domain, int virq,
+-				 int nr_irqs)
++void irq_domain_free_irqs_common(struct irq_domain *domain, unsigned int virq,
++				 unsigned int nr_irqs)
+ {
+ 	int i;
+ 	struct irq_data *irq_data;
+@@ -913,8 +913,8 @@ void irq_domain_free_irqs_common(struct irq_domain *domain, int virq,
+ 	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
+ }
+ 
+-void irq_domain_free_irqs_top(struct irq_domain *domain, int virq,
+-			      int nr_irqs)
++void irq_domain_free_irqs_top(struct irq_domain *domain, unsigned int virq,
++			      unsigned int nr_irqs)
+ {
+ 	int i;
+ 
 -- 
-Richard Yang
-Help you, Help me
+1.7.10.4
 
