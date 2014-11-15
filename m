@@ -1,152 +1,158 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:38234 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752551AbaKLNrp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 08:47:45 -0500
-Message-ID: <546364FA.7010806@arm.com>
-Date: Wed, 12 Nov 2014 13:47:38 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Received: from mga01.intel.com ([192.55.52.88]:61473 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754451AbaKOOWC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 15 Nov 2014 09:22:02 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
 	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
 	Matthias Brugger <matthias.bgg@gmail.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [RFC Part4 v1 00/17] Refine support of non-PCI-compliant Message
-References: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=WINDOWS-1252
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Alexander Gordeev <agordeev@redhat.com>
+Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [Patch V2 9/9] PCI, MSI: Provide mechanism to alloc/free MSI/MSIX interrupt from irqdomain
+Date: Sat, 15 Nov 2014 22:24:07 +0800
+Message-Id: <1416061447-9472-10-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jiang,
+Provide mechanism to directly alloc/free MSI/MSIX interrupt from
+irqdomain, which will be used to replace arch_setup_msi_irq()/
+arch_setup_msi_irqs()/arch_teardown_msi_irq()/arch_teardown_msi_irqs().
 
-On 09/11/14 15:10, Jiang Liu wrote:
-> Some interrupt controllers, such as DMAR/HPET/HT_IRQ, work almost in
-> the same as PCI MSI interrupt controller. And there some devices make
-> use of PCI MSI mechanism for non-PCI devices on ARm/ARM64 platforms.
-> 
-> So this patches tries to split PCI MSI code into PCI dependent part
-> and PCI independent part. The PCI independent part will be used to
-> support other PCI MSI like interrupt controllers.
-> 
-> Patch 1-9 are clean ups for previous hierarchy irqdomain patchset
-> and preparation for coming PCI MSI code reorganization.
-> Patch 10-15 split PCI MSI code and implement common mechanism to support
-> other MSI alike interrupt contollers.
-> Patch 16-17 converts HT_IRQ to use the common MSI support mechanism.
+To kill weak functions, this patch introduce a new weak function
+arch_get_pci_msi_domain(), which is to retrieve the MSI irqdomain
+for a PCI device. This weak function could be killed once we get
+a common way to associate MSI domain with PCI device.
 
-[...]
-
-I used this patch series (or rather the v2 in your git tree) to rework the GICv3 ITS patch series. So far, the API seems cleaner (fewer global functions, increased flexibility), at the expense of a bit more complexity.
-
-One thing is still missing though: the way the MSI stacked domain works at the moment prevents the use of the msi_chip infrastructure (you need to override arch_setup_msi_irqs, which in turn prevents the use of msi_chips using setup_irq/teardown_irq callbacks. On arm/arm64, most MSI controllers are using the latter, while it is likely that the newer ones will be using the stacked domains.
-
-My solution to this is to slightly extend the msi_chip framework so that we can hock into the MSI domain framework on a per-msi-chip basis (see patch below). With this in place, I can completely get rid of any arm64-specific code (the msi_chip framework becomes good enough for us):
-
->From 5e9157ee7879953f89652d6ad9f296fc0ce6cb87 Mon Sep 17 00:00:00 2001
-From: Marc Zyngier <marc.zyngier@arm.com>
-Date: Wed, 12 Nov 2014 10:32:46 +0000
-Subject: [PATCH v2 02/14] PCI/MSI: Allow an msi_chip to be associated to an
- irq domain
-
-The new MSI stacked domain has the interesting effect that it is
-quite hard to use if the architecture doesn't provide its own
-arch_setup_msi_irqs() function to override the default.
-
-This inhibates the msi_chip infrastructure introduced in
-0cbdcfcf427b (PCI: Introduce new MSI chip infrastructure), as it is
-not possible to use it as an indirection between the core MSI code
-and the MSI driver (useful when having multiple MSI controllers that
-do not share the same requirements). The setup_irq and teardown_irq
-are rendered useless, as their role is now taken over by the alloc/free
-functions in the irq domain code.
-
-This patch introduces two optionnal fields to the msi_chip structure:
-- a pointer to an irq domain, describing the MSI domain associated
-  with this msi_chip. To be populated with msi_create_irq_domain.
-- a domain_alloc_irqs() callback that has the same purpose as
-  arch_setup_msi_irqs(), with the above domain as an additional
-  parameter.
-
-If both of these fields are non-NULL, then domain_alloc_irqs() is
-called, bypassing the setup_irq callback. This allows the MSI driver
-to use the domain stacking feature without mandating core support in
-the architecture.
-
-Tested on arm64 with the GICv3 ITS.
-
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/msi.c   | 9 ++++++++-
- include/linux/msi.h | 5 +++++
- 2 files changed, 13 insertions(+), 1 deletion(-)
+ drivers/pci/msi.c   |   60 +++++++++++++++++++++++++++++++++++++++++++++++----
+ include/linux/msi.h |    3 +++
+ 2 files changed, 59 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 6c38306..baefc21 100644
+index 1dd5d93bd4b8..a66a4eaf8111 100644
 --- a/drivers/pci/msi.c
 +++ b/drivers/pci/msi.c
-@@ -63,8 +63,15 @@ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+@@ -27,8 +27,41 @@ static int pci_msi_enable = 1;
  
- 	/*
- 	 * If an architecture wants to support multiple MSI, it needs to
--	 * override arch_setup_msi_irqs()
-+	 * override arch_setup_msi_irqs(), or provide a way out on a per
-+	 * domain basis.
- 	 */
+ #define msix_table_size(flags)	((flags & PCI_MSIX_FLAGS_QSIZE) + 1)
+ 
+-/* Arch hooks */
 +#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-+	struct msi_chip *chip = dev->bus->msi;
++static struct irq_domain *pci_msi_default_domain;
 +
-+	if (chip->domain && chip->domain_alloc_irqs)
-+		return chip->domain_alloc_irqs(chip->domain, dev, nvec, type);
-+#endif
- 	if (type == PCI_CAP_ID_MSI && nvec > 1)
- 		return 1;
- 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 0789a4d..7170eea 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -110,7 +110,12 @@ struct msi_chip {
- 	struct device *dev;
- 	struct device_node *of_node;
- 	struct list_head list;
-+#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
++struct irq_domain * __weak arch_get_pci_msi_domain(struct pci_dev *dev)
++{
++	return pci_msi_default_domain;
++}
++
++static int pci_msi_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++{
 +	struct irq_domain *domain;
  
-+	int (*domain_alloc_irqs)(struct irq_domain *domain,
-+				 struct pci_dev *pdev, int nvec, int type);
++	domain = arch_get_pci_msi_domain(dev);
++	if (domain)
++		return pci_msi_domain_alloc_irqs(domain, dev, nvec, type);
++
++	return arch_setup_msi_irqs(dev, nvec, type);
++}
++
++static void pci_msi_teardown_msi_irqs(struct pci_dev *dev)
++{
++	struct irq_domain *domain;
++
++	domain = arch_get_pci_msi_domain(dev);
++	if (domain)
++		pci_msi_domain_free_irqs(domain, dev);
++	else
++		arch_teardown_msi_irqs(dev);
++}
++#else
++#define pci_msi_setup_msi_irqs		arch_setup_msi_irqs
++#define pci_msi_teardown_msi_irqs	arch_teardown_msi_irqs
 +#endif
- 	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
- 			 struct msi_desc *desc);
- 	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
++
++/* Arch hooks */
+ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ {
+ 	struct msi_chip *chip = dev->bus->msi;
+@@ -329,7 +362,7 @@ static void free_msi_irqs(struct pci_dev *dev)
+ 			for (i = 0; i < entry->nvec_used; i++)
+ 				BUG_ON(irq_has_action(entry->irq + i));
+ 
+-	arch_teardown_msi_irqs(dev);
++	pci_msi_teardown_msi_irqs(dev);
+ 
+ 	list_for_each_entry_safe(entry, tmp, &dev->msi_list, list) {
+ 		if (entry->msi_attrib.is_msix) {
+@@ -581,7 +614,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+ 	list_add_tail(&entry->list, &dev->msi_list);
+ 
+ 	/* Configure MSI capability structure */
+-	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
++	ret = pci_msi_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
+ 	if (ret) {
+ 		msi_mask_irq(entry, mask, ~mask);
+ 		free_msi_irqs(dev);
+@@ -696,7 +729,7 @@ static int msix_capability_init(struct pci_dev *dev,
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
++	ret = pci_msi_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
+ 	if (ret)
+ 		goto out_avail;
+ 
+@@ -1194,4 +1227,23 @@ void pci_msi_domain_free_irqs(struct irq_domain *domain, struct pci_dev *dev)
+ {
+ 	msi_domain_free_irqs(domain, &dev->dev);
+ }
++
++struct irq_domain *pci_msi_create_default_irq_domain(struct device_node *node,
++		 struct msi_domain_info *info, struct irq_domain *parent)
++{
++	struct irq_domain *domain;
++	static DEFINE_MUTEX(pci_msi_domain_lock);
++
++	mutex_lock(&pci_msi_domain_lock);
++	if (pci_msi_default_domain) {
++		pr_err("PCI: default irq domain for PCI MSI has already been created.\n");
++		domain = NULL;
++	} else {
++		domain = pci_msi_create_irq_domain(node, info, parent);
++		pci_msi_default_domain = domain;
++	}
++	mutex_unlock(&pci_msi_domain_lock);
++
++	return domain;
++}
+ #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 0463e361fef8..ba173a6a007e 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -192,6 +192,9 @@ struct irq_domain *pci_msi_create_irq_domain(struct device_node *node,
+ int pci_msi_domain_alloc_irqs(struct irq_domain *domain, struct pci_dev *dev,
+ 			      int nvec, int type);
+ void pci_msi_domain_free_irqs(struct irq_domain *domain, struct pci_dev *dev);
++struct irq_domain *pci_msi_create_default_irq_domain(struct device_node *node,
++		 struct msi_domain_info *info, struct irq_domain *parent);
++
+ irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
+ 					  struct msi_desc *desc);
+ int pci_msi_domain_check_cap(struct irq_domain *domain,
 -- 
-2.0.4
-
-Thoughts? I'll post the full patch series later today.
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+1.7.10.4
 
