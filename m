@@ -1,161 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:51162 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751995AbaKTCBV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 21:01:21 -0500
-Message-ID: <546D4B49.6020408@huawei.com>
-Date: Thu, 20 Nov 2014 10:00:41 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Liviu Dudau <liviu@dudau.co.uk>
-CC: Liviu Dudau <Liviu.Dudau@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"huxinwei@huawei.com" <huxinwei@huawei.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+Received: from mga01.intel.com ([192.55.52.88]:61402 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754190AbaKOOVc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 15 Nov 2014 09:21:32 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Wuyun <wuyun.wu@huawei.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [RFC PATCH 07/16] PCI: Separate pci_host_bridge creation out
- of pci_create_root_bus()
-References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com> <1416219710-26088-8-git-send-email-wangyijing@huawei.com> <2507218.mHliopJb05@wuerfel> <546B041A.4060403@huawei.com> <20141118144819.GK12037@e106497-lin.cambridge.arm.com> <546BFF74.4030101@huawei.com> <20141119162914.GB9162@bart.dudau.co.uk>
-In-Reply-To: <20141119162914.GB9162@bart.dudau.co.uk>
-Content-Type: text/plain; charset="UTF-8"
+	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [Patch V2 4/9] irqdomain: Introduce helper function irq_domain_add_hierarchy()
+Date: Sat, 15 Nov 2014 22:24:02 +0800
+Message-Id: <1416061447-9472-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> Something like this:
->>>
->>> struct pci_controller {
->>> 	struct pci_host_bridge bridge;
->>> 	/* private host bridge data here */
->>> 	.....
->>> };
->>>
->>> #define PCI_CONTROLLER(bus)	({
->>> 	struct pci_host_bridge *hb = to_pci_host_bridge(bus->bridge); \
->>> 	container_of(hb, struct pci_controller, bridge); })
->>>
->>>
->>> Then we can retrieve the host bridge structure from everywhere we have a device.
->>
->> Hi Liviu, it looks good to me, because this change will involve lots platforms,
->> I would think more about it. Thanks for your suggestion very much! :)
-> 
-> Given that I also look at this area maybe we should join forces and divide the problem?
+Introduce helper function irq_domain_add_hierarchy(), which creates
+a linear irqdomain if parameter 'size' is not zero, otherwise creates
+a tree irqdomain.
 
-That's better, we could cooperate to do this. :)
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ include/linux/irqdomain.h |    4 ++++
+ kernel/irq/irqdomain.c    |   19 +++++++++++++++++++
+ 2 files changed, 23 insertions(+)
 
-> 
-> Best regards,
-> Liviu
-> 
->>
->>
->> Thanks!
->> Yijing.
->>
->>>
->>> Best regards,
->>> Liviu
->>>
->>>>
->>>>>
->>>>>> +	host = kzalloc(sizeof(*host), GFP_KERNEL);
->>>>>> +	if (!host)
->>>>>> +		return NULL;
->>>>>
->>>>> devm_kzalloc maybe?
->>>>
->>>> I don't know much detail about devm_kzalloc(), but we have no pci host driver
->>>> here, and I found no devm_kzalloc() uses in core PCI code before.
->>>>
->>>>>
->>>>>> +	if (!resources) {
->>>>>> +		/* Use default IO/MEM/BUS resources*/
->>>>>> +		pci_add_resource(&host->windows, &ioport_resource);
->>>>>> +		pci_add_resource(&host->windows, &iomem_resource);
->>>>>> +		pci_add_resource(&host->windows, &busn_resource);
->>>>>> +	} else {
->>>>>> +		list_for_each_entry_safe(window, n, resources, list)
->>>>>> +			list_move_tail(&window->list, &host->windows);
->>>>>> +	}
->>>>>
->>>>> I think we should assume that the correct resources are passed. You
->>>>> could add a wrapper around this function to convert old platforms
->>>>> though.
->>>>
->>>> OK, I will move these code out of pci_create_host_bridge, and add a wrapper
->>>> to setup the default resources.
->>>>
->>>>>
->>>>>> +EXPORT_SYMBOL(pci_create_host_bridge);
->>>>>
->>>>> EXPORT_SYMBOL_GPL() maybe?
->>>>
->>>> OK, will update it.
->>>>
->>>>>
->>>>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
->>>>>> index 8b11b38..daa7f40 100644
->>>>>> --- a/include/linux/pci.h
->>>>>> +++ b/include/linux/pci.h
->>>>>> @@ -402,7 +402,12 @@ struct pci_host_bridge_window {
->>>>>>  struct pci_host_bridge {
->>>>>>  	struct device dev;
->>>>>>  	struct pci_bus *bus;		/* root bus */
->>>>>> +	struct list_head list;
->>>>>>  	struct list_head windows;	/* pci_host_bridge_windows */
->>>>>> +	int busnum;
->>>>>
->>>>> The busnum should already be implied through the bus resource.
->>>>
->>>> Yes, I will consider remove it and introduce a helper function to get the root bus number, thanks!
->>>>
->>>> Thanks!
->>>> Yijing.
->>>>
->>>>>
->>>>> 	Arnd
->>>>>
->>>>> .
->>>>>
->>>>
->>>>
->>>> -- 
->>>> Thanks!
->>>> Yijing
->>>>
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>
->>>
->>
->>
->> -- 
->> Thanks!
->> Yijing
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> Please read the FAQ at  http://www.tux.org/lkml/
->>
-> 
-
-
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index ad92b0b15945..30e8c753fa98 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -248,6 +248,10 @@ int irq_domain_xlate_onetwocell(struct irq_domain *d, struct device_node *ctrlr,
+ extern struct irq_data *irq_domain_get_irq_data(struct irq_domain *domain,
+ 						unsigned int virq);
+ #ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
++extern struct irq_domain *irq_domain_add_hierarchy(struct irq_domain *parent,
++			unsigned int flags, unsigned int size,
++			struct device_node *node,
++			const struct irq_domain_ops *ops, void *host_data);
+ extern int __irq_domain_alloc_irqs(struct irq_domain *domain, int irq_base,
+ 				   unsigned int nr_irqs, int node, void *arg,
+ 				   bool realloc);
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 03fc7d018324..73c66d6f9ffc 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -742,6 +742,25 @@ static int irq_domain_alloc_descs(int virq, unsigned int cnt,
+ }
+ 
+ #ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
++struct irq_domain *irq_domain_add_hierarchy(struct irq_domain *parent,
++			unsigned int flags, unsigned int size,
++			struct device_node *node,
++			const struct irq_domain_ops *ops, void *host_data)
++{
++	struct irq_domain *domain;
++
++	if (size)
++		domain = irq_domain_add_linear(node, size, ops, host_data);
++	else
++		domain = irq_domain_add_tree(node, ops, host_data);
++	if (domain) {
++		domain->parent = parent;
++		domain->flags |= flags;
++	}
++
++	return domain;
++}
++
+ static void irq_domain_insert_irq(int virq)
+ {
+ 	struct irq_data *data;
 -- 
-Thanks!
-Yijing
+1.7.10.4
 
