@@ -1,93 +1,161 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:28887 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752088AbaKQJk5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 04:40:57 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part3 v4 31/38] x86, irq: Change functions only used in vector.c as static
-Date: Tue, 25 Nov 2014 15:49:55 +0800
-Message-Id: <1416901802-24211-32-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, Tony Luck <tony.luck@intel.com>,
+	<linux-ia64@vger.kernel.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	<Suravee.Suthikulpanit@amd.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [RFC PATCH 15/16] arm/PCI: Use pci_scan_host_bridge() instead of pci_scan_root_bus()
+Date: Mon, 17 Nov 2014 18:21:49 +0800
+Message-ID: <1416219710-26088-16-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function {assign|clear}_irq_vector() and apic_retrigger_irq() are only
-used in file vector.c, so change them as static.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Tested-by: Joerg Roedel <jroedel@suse.de>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- arch/x86/include/asm/hw_irq.h |    3 ---
- arch/x86/kernel/apic/vector.c |    7 ++++---
- 2 files changed, 4 insertions(+), 6 deletions(-)
+ arch/arm/include/asm/mach/pci.h |    1 +
+ arch/arm/kernel/bios32.c        |   52 +++++++++++++++++++++++---------------
+ 2 files changed, 32 insertions(+), 21 deletions(-)
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index a88f5b325bf2..ea9aebc65ff6 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -188,8 +188,6 @@ extern struct irq_cfg *irq_cfg(unsigned int irq);
- extern struct irq_cfg *irqd_cfg(struct irq_data *irq_data);
- extern void lock_vector_lock(void);
- extern void unlock_vector_lock(void);
--extern int assign_irq_vector(int, struct irq_cfg *, const struct cpumask *);
--extern void clear_irq_vector(int irq, struct irq_cfg *cfg);
- extern void setup_vector_irq(int cpu);
- #ifdef CONFIG_SMP
- extern void send_cleanup_vector(struct irq_cfg *);
-@@ -199,7 +197,6 @@ static inline void send_cleanup_vector(struct irq_cfg *c) { }
- static inline void irq_complete_move(struct irq_cfg *c) { }
- #endif
- 
--extern int apic_retrigger_irq(struct irq_data *data);
- extern void apic_ack_edge(struct irq_data *data);
- extern int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 			     unsigned int *dest_id);
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 8467ca47bd4a..fba4958b6139 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -185,7 +185,8 @@ next:
- 	return err;
+diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+index 370b3bd..a26eb3a 100644
+--- a/arch/arm/include/asm/mach/pci.h
++++ b/arch/arm/include/asm/mach/pci.h
+@@ -46,6 +46,7 @@ struct hw_pci {
+ struct pci_sys_data {
+ 	struct list_head node;
+ 	int		busnr;		/* primary bus number			*/
++	u8		nr;
+ 	u64		mem_offset;	/* bus->cpu memory mapping offset	*/
+ 	unsigned long	io_offset;	/* bus->cpu IO mapping offset		*/
+ 	struct pci_bus	*bus;		/* PCI bus				*/
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 3fe56f1..535d7ec 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -426,33 +426,41 @@ static int pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	return irq;
  }
  
--int assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
-+static int assign_irq_vector(int irq, struct irq_cfg *cfg,
-+			     const struct cpumask *mask)
+-static int pcibios_init_resources(int busnr, struct pci_sys_data *sys)
++static int pcibios_init_resources(struct pci_host_bridge *host,
++		struct pci_host_info *info)
  {
- 	int err;
- 	unsigned long flags;
-@@ -196,7 +197,7 @@ int assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
- 	return err;
- }
+ 	int ret;
+-	struct pci_host_bridge_window *window;
++	struct pci_sys_data *sys = info->arg;
++	struct pci_host_bridge_window *window, *n;
  
--void clear_irq_vector(int irq, struct irq_cfg *cfg)
-+static void clear_irq_vector(int irq, struct irq_cfg *cfg)
- {
- 	int cpu, vector;
- 	unsigned long flags;
-@@ -441,7 +442,7 @@ void setup_vector_irq(int cpu)
- 	__setup_vector_irq(cpu);
- }
+ 	if (list_empty(&sys->resources)) {
+-		pci_add_resource_offset(&sys->resources,
++		pci_add_resource_offset(&host->windows,
+ 			 &iomem_resource, sys->mem_offset);
++	} else {
++		list_for_each_entry_safe(window, n,
++				&sys->resources, list) {
++			list_move_tail(&window->list,
++					&host->windows);
++		}
+ 	}
  
--int apic_retrigger_irq(struct irq_data *data)
-+static int apic_retrigger_irq(struct irq_data *data)
+-	list_for_each_entry(window, &sys->resources, list) {
++	list_for_each_entry(window, &host->windows, list) {
+ 		if (resource_type(window->res) == IORESOURCE_IO)
+ 			return 0;
+ 	}
+ 
+-	sys->io_res.start = (busnr * SZ_64K) ?  : pcibios_min_io;
+-	sys->io_res.end = (busnr + 1) * SZ_64K - 1;
++	sys->io_res.start = (sys->nr * SZ_64K) ?  : pcibios_min_io;
++	sys->io_res.end = (sys->nr + 1) * SZ_64K - 1;
+ 	sys->io_res.flags = IORESOURCE_IO;
+ 	sys->io_res.name = sys->io_res_name;
+-	sprintf(sys->io_res_name, "PCI%d I/O", busnr);
++	sprintf(sys->io_res_name, "PCI%d I/O", sys->nr);
+ 
+ 	ret = request_resource(&ioport_resource, &sys->io_res);
+ 	if (ret) {
+ 		pr_err("PCI: unable to allocate I/O port region (%d)\n", ret);
+ 		return ret;
+ 	}
+-	pci_add_resource_offset(&sys->resources, &sys->io_res,
++	pci_add_resource_offset(&host->windows, &sys->io_res,
+ 				sys->io_offset);
+ 
+ 	return 0;
+@@ -462,8 +470,9 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+ 			    struct list_head *head)
  {
- 	struct irq_cfg *cfg = irqd_cfg(data);
- 	unsigned long flags;
+ 	struct pci_sys_data *sys = NULL;
+-	int ret;
+-	int nr, busnr;
++	int ret, nr, busnr, domain;
++	struct pci_host_bridge *host;
++	struct pci_host_info info;
+ 
+ 	for (nr = busnr = 0; nr < hw->nr_controllers; nr++) {
+ 		sys = kzalloc(sizeof(struct pci_sys_data), GFP_KERNEL);
+@@ -471,6 +480,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+ 			panic("PCI: unable to allocate sys data!");
+ 
+ 		sys->busnr   = busnr;
++		sys->nr		 = nr;
+ 		sys->swizzle = hw->swizzle;
+ 		sys->map_irq = hw->map_irq;
+ 		sys->align_resource = hw->align_resource;
+@@ -482,25 +492,25 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+ 			sys->private_data = hw->private_data[nr];
+ 
+ 		ret = hw->setup(nr, sys);
+-
+ 		if (ret > 0) {
+-			ret = pcibios_init_resources(nr, sys);
+-			if (ret)  {
+-				kfree(sys);
+-				break;
+-			}
+-
++			init_pci_host_info(&info);
++			info.arg = sys;
++			info.init_res = pcibios_init_resources;
++			domain = pci_get_domain_nr(parent);
+ 			if (hw->scan)
+ 				sys->bus = hw->scan(nr, sys);
+-			else
+-				sys->bus = pci_scan_root_bus(parent, sys->busnr,
+-						hw->ops, sys, &sys->resources);
++			else {
++				host = pci_scan_host_bridge(parent, 
++						PCI_DOMBUS(domain, sys->busnr),
++						hw->ops, &info);
++				if (host)
++					sys->bus = host->bus;
++			}
+ 
+ 			if (!sys->bus)
+ 				panic("PCI: unable to scan bus!");
+ 
+ 			busnr = sys->bus->busn_res.end + 1;
+-
+ 			list_add(&sys->node, head);
+ 		} else {
+ 			kfree(sys);
 -- 
-1.7.10.4
+1.7.1
 
