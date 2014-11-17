@@ -1,450 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:37834 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751712AbaKFOYG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 6 Nov 2014 09:24:06 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Received: from szxga01-in.huawei.com ([119.145.14.64]:43134 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751995AbaKQJkw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 04:40:52 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch Part2 v5 30/31] x86, htirq: Use hierarchy irqdomain to manage Hypertransport interrupts
-Date: Thu,  6 Nov 2014 22:20:43 +0800
-Message-Id: <1415283644-2559-31-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, Tony Luck <tony.luck@intel.com>,
+	<linux-ia64@vger.kernel.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	<Suravee.Suthikulpanit@amd.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [RFC PATCH 06/16] PCI: Use u32 type to combine PCI domain and bus number
+Date: Mon, 17 Nov 2014 18:21:40 +0800
+Message-ID: <1416219710-26088-7-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use hierarchy irqdomain to manage Hypertransport interrupts.
-We have slightly changed the architecture interfaces to support htirq
-PCI driver, it should be safe because currently Hypertransport interrupt
-is only enabled on x86 platforms.
+Currently, we use int type for bus number in
+pci_create_root_bus() and pci_scan_root_bus().
+Because bus number is <= 255, so we could
+change the bus number argument type to u32,
+and combine PCI domain and bus number, we will
+save the domain number in pci_host_bridge in
+later patch, and eliminate the arch specific
+pci_domain_nr().
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- arch/x86/include/asm/hw_irq.h |   13 ++++
- arch/x86/kernel/apic/htirq.c  |  162 ++++++++++++++++++++++++++++++-----------
- arch/x86/kernel/apic/vector.c |    1 +
- drivers/pci/htirq.c           |   47 ++----------
- include/linux/htirq.h         |   24 ++++--
- 5 files changed, 159 insertions(+), 88 deletions(-)
+ drivers/pci/probe.c      |   11 ++++++-----
+ include/linux/pci.h      |    4 ++--
+ include/uapi/linux/pci.h |    3 +++
+ 3 files changed, 11 insertions(+), 7 deletions(-)
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 08240216f949..b9267d4f54ab 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -159,6 +159,14 @@ struct irq_alloc_info {
- 			void		*dmar_data;
- 		};
- #endif
-+#ifdef	CONFIG_HT_IRQ
-+		struct {
-+			int		ht_pos;
-+			int		ht_idx;
-+			struct pci_dev	*ht_dev;
-+			void		*ht_update;
-+		};
-+#endif
- 	};
- };
- 
-@@ -223,6 +231,11 @@ extern void arch_init_msi_domain(struct irq_domain *domain);
- #else
- static inline void arch_init_msi_domain(struct irq_domain *domain) { }
- #endif
-+#ifdef	CONFIG_HT_IRQ
-+extern void arch_init_htirq_domain(struct irq_domain *domain);
-+#else
-+static inline void arch_init_htirq_domain(struct irq_domain *domain) { }
-+#endif
- 
- /* Statistics */
- extern atomic_t irq_err_count;
-diff --git a/arch/x86/kernel/apic/htirq.c b/arch/x86/kernel/apic/htirq.c
-index b307ee7a7148..900f1401a452 100644
---- a/arch/x86/kernel/apic/htirq.c
-+++ b/arch/x86/kernel/apic/htirq.c
-@@ -3,6 +3,8 @@
-  *
-  * Copyright (C) 1997, 1998, 1999, 2000, 2009 Ingo Molnar, Hajnalka Szabo
-  *	Moved from arch/x86/kernel/apic/io_apic.c.
-+ * Jiang Liu <jiang.liu@linux.intel.com>
-+ *	Add support of hierarchy irqdomain
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -19,70 +21,105 @@
- #include <asm/apic.h>
- #include <asm/hypertransport.h>
- 
-+static struct irq_domain *htirq_domain;
-+
- /*
-  * Hypertransport interrupt support
-  */
--static void target_ht_irq(unsigned int irq, unsigned int dest, u8 vector)
--{
--	struct ht_irq_msg msg;
--
--	fetch_ht_irq_msg(irq, &msg);
--
--	msg.address_lo &= ~(HT_IRQ_LOW_VECTOR_MASK | HT_IRQ_LOW_DEST_ID_MASK);
--	msg.address_hi &= ~(HT_IRQ_HIGH_DEST_ID_MASK);
--
--	msg.address_lo |= HT_IRQ_LOW_VECTOR(vector) | HT_IRQ_LOW_DEST_ID(dest);
--	msg.address_hi |= HT_IRQ_HIGH_DEST_ID(dest);
--
--	write_ht_irq_msg(irq, &msg);
--}
--
- static int
- ht_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 623bfff..adf4d09 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1895,7 +1895,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
  {
--	struct irq_cfg *cfg = irqd_cfg(data);
--	unsigned int dest;
-+	struct irq_data *parent = data->parent_data;
- 	int ret;
- 
--	ret = apic_set_affinity(data, mask, &dest);
--	if (ret)
--		return ret;
--
--	target_ht_irq(data->irq, dest, cfg->vector);
--	return IRQ_SET_MASK_OK_NOCOPY;
-+	ret = parent->chip->irq_set_affinity(parent, mask, force);
-+	if (ret >= 0) {
-+		struct ht_irq_msg msg;
-+		struct irq_cfg *cfg = irqd_cfg(data);
-+
-+		fetch_ht_irq_msg(data->irq, &msg);
-+		msg.address_lo &= ~(HT_IRQ_LOW_VECTOR_MASK |
-+				    HT_IRQ_LOW_DEST_ID_MASK);
-+		msg.address_lo |= HT_IRQ_LOW_VECTOR(cfg->vector) |
-+				  HT_IRQ_LOW_DEST_ID(cfg->dest_apicid);
-+		msg.address_hi &= ~(HT_IRQ_HIGH_DEST_ID_MASK);
-+		msg.address_hi |= HT_IRQ_HIGH_DEST_ID(cfg->dest_apicid);
-+		write_ht_irq_msg(data->irq, &msg);
-+	}
-+
-+	return ret;
  }
  
- static struct irq_chip ht_irq_chip = {
- 	.name			= "PCI-HT",
- 	.irq_mask		= mask_ht_irq,
- 	.irq_unmask		= unmask_ht_irq,
--	.irq_ack		= apic_ack_edge,
-+	.irq_ack		= irq_chip_ack_parent,
- 	.irq_set_affinity	= ht_set_affinity,
--	.irq_retrigger		= apic_retrigger_irq,
-+	.irq_retrigger		= irq_chip_retrigger_hierarchy,
- 	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
- 
--int arch_alloc_ht_irq(struct pci_dev *dev)
-+static int htirq_domain_alloc(struct irq_domain *domain, unsigned int virq,
-+			      unsigned int nr_irqs, void *arg)
+-struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
++struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
+ 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
  {
--	return irq_domain_alloc_irqs(NULL, 1, dev_to_node(&dev->dev), NULL);
-+	struct ht_irq_cfg *ht_cfg;
-+	struct irq_alloc_info *info = arg;
-+	struct pci_dev *dev;
-+	irq_hw_number_t hwirq;
-+	int ret;
-+
-+	if (nr_irqs > 1 || !info)
-+		return -EINVAL;
-+
-+	dev = info->ht_dev;
-+	hwirq = (info->ht_idx & 0xFF) |
-+		PCI_DEVID(dev->bus->number, dev->devfn) << 8 |
-+		(pci_domain_nr(dev->bus) & 0xFFFFFFFF) << 24;
-+	if (irq_find_mapping(domain, hwirq) > 0)
-+		return -EEXIST;
-+
-+	ht_cfg = kmalloc(sizeof(*ht_cfg), GFP_KERNEL);
-+	if (!ht_cfg)
-+		return -ENOMEM;
-+
-+	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, info);
-+	if (ret < 0) {
-+		kfree(ht_cfg);
-+		return ret;
-+	}
-+
-+	/* Initialize msg to a value that will never match the first write. */
-+	ht_cfg->msg.address_lo = 0xffffffff;
-+	ht_cfg->msg.address_hi = 0xffffffff;
-+	ht_cfg->dev = info->ht_dev;
-+	ht_cfg->update = info->ht_update;
-+	ht_cfg->pos = info->ht_pos;
-+	ht_cfg->idx = 0x10 + (info->ht_idx * 2);
-+	irq_domain_set_hwirq_and_chip(domain, virq, hwirq, &ht_irq_chip,
-+				      ht_cfg);
-+	__irq_set_handler(virq, handle_edge_irq, 0, "edge");
-+
-+	return 0;
+ 	int error;
+@@ -1906,6 +1906,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	resource_size_t offset;
+ 	char bus_addr[64];
+ 	char *fmt;
++	u8	bus = PCI_BUSNUM(db);
+ 
+ 	b = pci_alloc_bus(NULL);
+ 	if (!b)
+@@ -2063,7 +2064,7 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+ 			res, ret ? "can not be" : "is");
  }
  
--void arch_free_ht_irq(int irq)
-+static void htirq_domain_free(struct irq_domain *domain, unsigned int virq,
-+			      unsigned int nr_irqs)
+-struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
++struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+ 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
  {
--	irq_domain_free_irqs(irq, 1);
-+	struct irq_data *irq_data = irq_domain_get_irq_data(domain, virq);
-+
-+	BUG_ON(nr_irqs != 1);
-+	kfree(irq_data->chip_data);
-+	irq_domain_free_irqs_top(domain, virq, nr_irqs);
- }
+ 	struct pci_host_bridge_window *window;
+@@ -2084,7 +2085,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ 			}
+ 	}
  
--int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
-+static void htirq_domain_activate(struct irq_domain *domain,
-+				  struct irq_data *irq_data)
- {
--	struct irq_cfg *cfg;
- 	struct ht_irq_msg msg;
-+	struct irq_cfg *cfg = irqd_cfg(irq_data);
+-	b = pci_create_root_bus(parent, bus, ops, sysdata, 
++	b = pci_create_root_bus(parent, db, ops, sysdata, 
+ 			resources ? resources : &default_res);
+ 	if (!b)
+ 		return NULL;
+@@ -2092,8 +2093,8 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ 	if (!found) {
+ 		dev_info(&b->dev,
+ 		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
+-			bus);
+-		pci_bus_insert_busn_res(b, bus, 255);
++			PCI_BUSNUM(db));
++		pci_bus_insert_busn_res(b, PCI_BUSNUM(db), 255);
+ 	}
  
--	if (disable_apic)
--		return -ENXIO;
--
--	cfg = irq_cfg(irq);
- 	msg.address_hi = HT_IRQ_HIGH_DEST_ID(cfg->dest_apicid);
--
- 	msg.address_lo =
- 		HT_IRQ_LOW_BASE |
- 		HT_IRQ_LOW_DEST_ID(cfg->dest_apicid) |
-@@ -95,13 +132,56 @@ int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
- 			HT_IRQ_LOW_MT_FIXED :
- 			HT_IRQ_LOW_MT_ARBITRATED) |
- 		HT_IRQ_LOW_IRQ_MASKED;
-+	write_ht_irq_msg(irq_data->irq, &msg);
-+}
+ 	max = pci_scan_child_bus(b);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 4daef65..8b11b38 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -767,13 +767,13 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+ void pcibios_scan_specific_bus(int busn);
+ struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
+-struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
++struct pci_bus *pci_create_root_bus(struct device *parent, u32 bus,
+ 				    struct pci_ops *ops, void *sysdata,
+ 				    struct list_head *resources);
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+ int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+ void pci_bus_release_busn_res(struct pci_bus *b);
+-struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
++struct pci_bus *pci_scan_root_bus(struct device *parent, u32 bus,
+ 					     struct pci_ops *ops, void *sysdata,
+ 					     struct list_head *resources);
+ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
+diff --git a/include/uapi/linux/pci.h b/include/uapi/linux/pci.h
+index 3c292bc..89c6f15 100644
+--- a/include/uapi/linux/pci.h
++++ b/include/uapi/linux/pci.h
+@@ -30,6 +30,9 @@
+ #define PCI_DEVFN(slot, func)	((((slot) & 0x1f) << 3) | ((func) & 0x07))
+ #define PCI_SLOT(devfn)		(((devfn) >> 3) & 0x1f)
+ #define PCI_FUNC(devfn)		((devfn) & 0x07)
++#define PCI_DOMAIN(db)		((db) >> 16)
++#define PCI_BUSNUM(db)		((db) & 0xffff)
++#define PCI_DOMBUS(domain, bus)		(((domain) << 16) | (bus))
  
--	write_ht_irq_msg(irq, &msg);
-+static void htirq_domain_deactivate(struct irq_domain *domain,
-+				    struct irq_data *irq_data)
-+{
-+	struct ht_irq_msg msg;
- 
--	irq_set_chip_and_handler_name(irq, &ht_irq_chip,
--				      handle_edge_irq, "edge");
-+	memset(&msg, 0, sizeof(msg));
-+	write_ht_irq_msg(irq_data->irq, &msg);
-+}
- 
--	dev_dbg(&dev->dev, "irq %d for HT\n", irq);
-+static struct irq_domain_ops htirq_domain_ops = {
-+	.alloc = htirq_domain_alloc,
-+	.free = htirq_domain_free,
-+	.activate = htirq_domain_activate,
-+	.deactivate = htirq_domain_deactivate,
-+};
- 
--	return 0;
-+void arch_init_htirq_domain(struct irq_domain *parent)
-+{
-+	if (disable_apic)
-+		return;
-+
-+	htirq_domain = irq_domain_add_tree(NULL, &htirq_domain_ops, NULL);
-+	if (!htirq_domain)
-+		pr_warn("failed to initialize irqdomain for HTIRQ.\n");
-+	else
-+		htirq_domain->parent = parent;
-+}
-+
-+int arch_setup_ht_irq(int idx, int pos, struct pci_dev *dev,
-+		      ht_irq_update_t *update)
-+{
-+	struct irq_alloc_info info;
-+
-+	if (!htirq_domain)
-+		return -ENOSYS;
-+
-+	init_irq_alloc_info(&info, NULL);
-+	info.ht_idx = idx;
-+	info.ht_pos = pos;
-+	info.ht_dev = dev;
-+	info.ht_update = update;
-+
-+	return irq_domain_alloc_irqs(htirq_domain, 1, dev_to_node(&dev->dev),
-+				     &info);
-+}
-+
-+void arch_teardown_ht_irq(unsigned int irq)
-+{
-+	irq_domain_free_irqs(irq, 1);
- }
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 6d3cc6a0b1eb..bf4c61660f3d 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -365,6 +365,7 @@ int __init arch_early_irq_init(void)
- 	irq_set_default_host(x86_vector_domain);
- 
- 	arch_init_msi_domain(x86_vector_domain);
-+	arch_init_htirq_domain(x86_vector_domain);
- 
- 	return arch_early_ioapic_init();
- }
-diff --git a/drivers/pci/htirq.c b/drivers/pci/htirq.c
-index ceb0ebeb7b5f..7eb4109a3df4 100644
---- a/drivers/pci/htirq.c
-+++ b/drivers/pci/htirq.c
-@@ -23,20 +23,11 @@
-  */
- static DEFINE_SPINLOCK(ht_irq_lock);
- 
--struct ht_irq_cfg {
--	struct pci_dev *dev;
--	 /* Update callback used to cope with buggy hardware */
--	ht_irq_update_t *update;
--	unsigned pos;
--	unsigned idx;
--	struct ht_irq_msg msg;
--};
--
--
- void write_ht_irq_msg(unsigned int irq, struct ht_irq_msg *msg)
- {
- 	struct ht_irq_cfg *cfg = irq_get_handler_data(irq);
- 	unsigned long flags;
-+
- 	spin_lock_irqsave(&ht_irq_lock, flags);
- 	if (cfg->msg.address_lo != msg->address_lo) {
- 		pci_write_config_byte(cfg->dev, cfg->pos + 2, cfg->idx);
-@@ -55,6 +46,7 @@ void write_ht_irq_msg(unsigned int irq, struct ht_irq_msg *msg)
- void fetch_ht_irq_msg(unsigned int irq, struct ht_irq_msg *msg)
- {
- 	struct ht_irq_cfg *cfg = irq_get_handler_data(irq);
-+
- 	*msg = cfg->msg;
- }
- 
-@@ -86,7 +78,6 @@ void unmask_ht_irq(struct irq_data *data)
-  */
- int __ht_create_irq(struct pci_dev *dev, int idx, ht_irq_update_t *update)
- {
--	struct ht_irq_cfg *cfg;
- 	int max_irq, pos, irq;
- 	unsigned long flags;
- 	u32 data;
-@@ -105,29 +96,9 @@ int __ht_create_irq(struct pci_dev *dev, int idx, ht_irq_update_t *update)
- 	if (idx > max_irq)
- 		return -EINVAL;
- 
--	cfg = kmalloc(sizeof(*cfg), GFP_KERNEL);
--	if (!cfg)
--		return -ENOMEM;
--
--	cfg->dev = dev;
--	cfg->update = update;
--	cfg->pos = pos;
--	cfg->idx = 0x10 + (idx * 2);
--	/* Initialize msg to a value that will never match the first write. */
--	cfg->msg.address_lo = 0xffffffff;
--	cfg->msg.address_hi = 0xffffffff;
--
--	irq = arch_alloc_ht_irq(dev);
--	if (irq <= 0) {
--		kfree(cfg);
--		return -EBUSY;
--	}
--	irq_set_handler_data(irq, cfg);
--
--	if (arch_setup_ht_irq(irq, dev) < 0) {
--		ht_destroy_irq(irq);
--		return -EBUSY;
--	}
-+	irq = arch_setup_ht_irq(idx, pos, dev, update);
-+	if (irq > 0)
-+		dev_dbg(&dev->dev, "irq %d for HT\n", irq);
- 
- 	return irq;
- }
-@@ -158,12 +129,6 @@ EXPORT_SYMBOL(ht_create_irq);
-  */
- void ht_destroy_irq(unsigned int irq)
- {
--	struct ht_irq_cfg *cfg;
--
--	cfg = irq_get_handler_data(irq);
--	irq_set_chip(irq, NULL);
--	irq_set_handler_data(irq, NULL);
--	arch_free_ht_irq(irq);
--	kfree(cfg);
-+	arch_teardown_ht_irq(irq);
- }
- EXPORT_SYMBOL(ht_destroy_irq);
-diff --git a/include/linux/htirq.h b/include/linux/htirq.h
-index 5caa51b7b95c..d4a527e58434 100644
---- a/include/linux/htirq.h
-+++ b/include/linux/htirq.h
-@@ -1,26 +1,38 @@
- #ifndef LINUX_HTIRQ_H
- #define LINUX_HTIRQ_H
- 
-+struct pci_dev;
-+struct irq_data;
-+
- struct ht_irq_msg {
- 	u32	address_lo;	/* low 32 bits of the ht irq message */
- 	u32	address_hi;	/* high 32 bits of the it irq message */
- };
- 
-+typedef void (ht_irq_update_t)(struct pci_dev *dev, int irq,
-+			       struct ht_irq_msg *msg);
-+
-+struct ht_irq_cfg {
-+	struct pci_dev *dev;
-+	 /* Update callback used to cope with buggy hardware */
-+	ht_irq_update_t *update;
-+	unsigned pos;
-+	unsigned idx;
-+	struct ht_irq_msg msg;
-+};
-+
- /* Helper functions.. */
- void fetch_ht_irq_msg(unsigned int irq, struct ht_irq_msg *msg);
- void write_ht_irq_msg(unsigned int irq, struct ht_irq_msg *msg);
--struct irq_data;
- void mask_ht_irq(struct irq_data *data);
- void unmask_ht_irq(struct irq_data *data);
- 
- /* The arch hook for getting things started */
--int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev);
--int arch_alloc_ht_irq(struct pci_dev *dev);
--void arch_free_ht_irq(int irq);
-+int arch_setup_ht_irq(int idx, int pos, struct pci_dev *dev,
-+		      ht_irq_update_t *update);
-+void arch_teardown_ht_irq(unsigned int irq);
- 
- /* For drivers of buggy hardware */
--typedef void (ht_irq_update_t)(struct pci_dev *dev, int irq,
--			       struct ht_irq_msg *msg);
- int __ht_create_irq(struct pci_dev *dev, int idx, ht_irq_update_t *update);
- 
- #endif /* LINUX_HTIRQ_H */
+ /* Ioctls for /proc/bus/pci/X/Y nodes. */
+ #define PCIIOC_BASE		('P' << 24 | 'C' << 16 | 'I' << 8)
 -- 
-1.7.10.4
+1.7.1
 
