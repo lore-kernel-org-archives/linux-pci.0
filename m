@@ -1,273 +1,193 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:52176 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751019AbaKQKZW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 05:25:22 -0500
+Message-ID: <1416219908.2734.1.camel@pengutronix.de>
+Subject: Re: [PATCH v2] PCI: designware: Add support 4 ATUs assignment
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Lian Minghuan-B31939 <B31939@freescale.com>,
 	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch Part2 v4 29/31] x86, irq: Use hierarchy irqdomain to manage DMAR interrupts
-Date: Tue,  4 Nov 2014 20:02:03 +0800
-Message-Id: <1415102525-9898-30-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>
+Cc: "Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	Srikanth Thokala <sriku.linux@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Roy Zang <tie-fei.zang@freescale.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Date: Mon, 17 Nov 2014 11:25:08 +0100
+In-Reply-To: <5469643A.6040906@freescale.com>
+References: <1415682444-24911-1-git-send-email-Minghuan.Lian@freescale.com>
+	 <CA+mB=1+4Dzxhbin6z0PUENvjUz-y8bq-K09FXTnSepFvVfe9HQ@mail.gmail.com>
+	 <546308DD.40109@freescale.com>
+	 <CA+mB=1K=Oyzdb2yfBvPRG9DHi-PFjRPtVS_dY9JMOz6dQog8QQ@mail.gmail.com>
+	 <546331E7.5060003@freescale.com>
+	 <CA+mB=1KObT9O783SMcvHy8nJGQPnxyKgP332r5bHx-K_D+LhVg@mail.gmail.com>
+	 <1415809929.2876.5.camel@pengutronix.de> <546481A3.5050700@freescale.com>
+	 <1415874015.2420.5.camel@pengutronix.de> <54648D61.6050704@freescale.com>
+	 <1415876988.2420.7.camel@pengutronix.de> <5465C19D.3060801@freescale.com>
+	 <1415959338.4445.1.camel@pengutronix.de>
+	 <ceb189ef55cf44588b212cc44bb19ef5@BN3PR0301MB1249.namprd03.prod.outlook.com>
+	 <1415965321.4445.4.camel@pengutronix.de> <5469643A.6040906@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance DMAR code to support hierarchy irqdomain, it helps to make
-the architecture more clear.
+Rob, Mark, Kumar, Ian,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/hw_irq.h |    7 ++
- arch/x86/kernel/apic/msi.c    |  157 ++++++++++++++++++++++++++---------------
- 2 files changed, 108 insertions(+), 56 deletions(-)
+could I please get your opinion on the following matter? Thanks.
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index eb206e8b0bb7..1b7501cfee8c 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -122,6 +122,7 @@ enum irq_alloc_type {
- 	X86_IRQ_ALLOC_TYPE_HPET,
- 	X86_IRQ_ALLOC_TYPE_MSI,
- 	X86_IRQ_ALLOC_TYPE_MSIX,
-+	X86_IRQ_ALLOC_TYPE_DMAR,
- };
- 
- struct irq_alloc_info {
-@@ -152,6 +153,12 @@ struct irq_alloc_info {
- 			struct IO_APIC_route_entry *ioapic_entry;
- 		};
- #endif
-+#ifdef	CONFIG_DMAR_TABLE
-+		struct {
-+			int		dmar_id;
-+			void		*dmar_data;
-+		};
-+#endif
- 	};
- };
- 
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 79fc6bb0d104..cc70fc659121 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -25,32 +25,6 @@
- 
- static struct irq_domain *msi_default_domain;
- 
--static void native_compose_msi_msg(struct irq_cfg *cfg, struct msi_msg *msg)
--{
--	msg->address_hi = MSI_ADDR_BASE_HI;
--
--	if (x2apic_enabled())
--		msg->address_hi |= MSI_ADDR_EXT_DEST_ID(cfg->dest_apicid);
--
--	msg->address_lo =
--		MSI_ADDR_BASE_LO |
--		((apic->irq_dest_mode == 0) ?
--			MSI_ADDR_DEST_MODE_PHYSICAL :
--			MSI_ADDR_DEST_MODE_LOGICAL) |
--		((apic->irq_delivery_mode != dest_LowestPrio) ?
--			MSI_ADDR_REDIRECTION_CPU :
--			MSI_ADDR_REDIRECTION_LOWPRI) |
--		MSI_ADDR_DEST_ID(cfg->dest_apicid);
--
--	msg->data =
--		MSI_DATA_TRIGGER_EDGE |
--		MSI_DATA_LEVEL_ASSERT |
--		((apic->irq_delivery_mode != dest_LowestPrio) ?
--			MSI_DATA_DELIVERY_FIXED :
--			MSI_DATA_DELIVERY_LOWPRI) |
--		MSI_DATA_VECTOR(cfg->vector);
--}
--
- static void msi_compose_msg(struct irq_data *data, struct msi_msg *msg)
- {
- 	struct irq_cfg *cfg = irqd_cfg(data);
-@@ -87,6 +61,9 @@ static void msi_update_msg(struct msi_msg *msg, struct irq_data *irq_data)
- 	msg->data |= MSI_DATA_VECTOR(cfg->vector);
- 	msg->address_lo &= ~MSI_ADDR_DEST_ID_MASK;
- 	msg->address_lo |= MSI_ADDR_DEST_ID(cfg->dest_apicid);
-+	if (x2apic_enabled())
-+		msg->address_hi = MSI_ADDR_BASE_HI |
-+				  MSI_ADDR_EXT_DEST_ID(cfg->dest_apicid);
- }
- 
- static int msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
-@@ -187,59 +164,127 @@ static int
- dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 		      bool force)
- {
--	struct irq_cfg *cfg = irqd_cfg(data);
--	unsigned int dest, irq = data->irq;
-+	struct irq_data *parent = data->parent_data;
- 	struct msi_msg msg;
- 	int ret;
- 
--	ret = apic_set_affinity(data, mask, &dest);
--	if (ret)
--		return ret;
--
--	dmar_msi_read(irq, &msg);
--
--	msg.data &= ~MSI_DATA_VECTOR_MASK;
--	msg.data |= MSI_DATA_VECTOR(cfg->vector);
--	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
--	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
--	msg.address_hi = MSI_ADDR_BASE_HI | MSI_ADDR_EXT_DEST_ID(dest);
--
--	dmar_msi_write(irq, &msg);
-+	ret = parent->chip->irq_set_affinity(parent, mask, force);
-+	if (ret >= 0) {
-+		dmar_msi_read(data->irq, &msg);
-+		msi_update_msg(&msg, data);
-+		dmar_msi_write(data->irq, &msg);
-+	}
- 
--	return IRQ_SET_MASK_OK_NOCOPY;
-+	return ret;
- }
- 
- static struct irq_chip dmar_msi_type = {
- 	.name			= "DMAR_MSI",
- 	.irq_unmask		= dmar_msi_unmask,
- 	.irq_mask		= dmar_msi_mask,
--	.irq_ack		= apic_ack_edge,
-+	.irq_ack		= irq_chip_ack_parent,
- 	.irq_set_affinity	= dmar_msi_set_affinity,
--	.irq_retrigger		= apic_retrigger_irq,
-+	.irq_retrigger		= irq_chip_retrigger_hierarchy,
-+	.irq_compose_msi_msg	= msi_compose_msg,
-  	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
- 
--int dmar_alloc_hwirq(int id, int node, void *arg)
-+static int dmar_domain_alloc(struct irq_domain *domain, unsigned int virq,
-+			     unsigned int nr_irqs, void *arg)
-+{
-+	struct irq_alloc_info *info = arg;
-+	int ret;
-+
-+	if (nr_irqs > 1 || !info || info->type != X86_IRQ_ALLOC_TYPE_DMAR)
-+		return -EINVAL;
-+	if (irq_find_mapping(domain, info->dmar_id)) {
-+		pr_warn("IRQ for DMAR%d already exists.\n", info->dmar_id);
-+		return -EEXIST;
-+	}
-+
-+	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
-+	if (ret >= 0) {
-+		irq_domain_set_hwirq_and_chip(domain, virq, info->dmar_id,
-+					      &dmar_msi_type, NULL);
-+		irq_set_handler_data(virq, info->dmar_data);
-+		__irq_set_handler(virq, handle_edge_irq, 0, "edge");
-+	}
-+
-+	return ret;
-+}
-+
-+static void dmar_domain_free(struct irq_domain *domain, unsigned int virq,
-+			     unsigned int nr_irqs)
-+{
-+	BUG_ON(nr_irqs > 1);
-+	irq_domain_free_irqs_top(domain, virq, nr_irqs);
-+}
-+
-+static int dmar_domain_activate(struct irq_domain *domain,
-+				struct irq_data *irq_data)
-+{
-+	int ret;
-+	struct msi_msg msg;
-+
-+	ret = irq_chip_compose_msi_msg(irq_data, &msg);
-+	if (ret == 0)
-+		dmar_msi_write(irq_data->irq, &msg);
-+
-+	return ret;
-+}
-+
-+static int dmar_domain_deactivate(struct irq_domain *domain,
-+				  struct irq_data *irq_data)
- {
--	int irq;
- 	struct msi_msg msg;
- 
--	irq = irq_domain_alloc_irqs(NULL, 1, node, NULL);
--	if (irq > 0) {
--		irq_set_handler_data(irq, arg);
--		irq_set_chip_and_handler_name(irq, &dmar_msi_type,
--					      handle_edge_irq, "edge");
--		native_compose_msi_msg(irq_cfg(irq), &msg);
--		dmar_msi_write(irq, &msg);
-+	memset(&msg, 0, sizeof(msg));
-+	dmar_msi_write(irq_data->irq, &msg);
-+
-+	return 0;
-+}
-+
-+static struct irq_domain_ops dmar_domain_ops = {
-+	.alloc = dmar_domain_alloc,
-+	.free = dmar_domain_free,
-+	.activate = dmar_domain_activate,
-+	.deactivate = dmar_domain_deactivate,
-+};
-+
-+static struct irq_domain *dmar_get_irq_domain(void)
-+{
-+	static struct irq_domain *dmar_domain;
-+	static DEFINE_MUTEX(dmar_lock);
-+
-+	mutex_lock(&dmar_lock);
-+	if (dmar_domain == NULL) {
-+		dmar_domain = irq_domain_add_tree(NULL, &dmar_domain_ops, NULL);
-+		if (dmar_domain)
-+			dmar_domain->parent = x86_vector_domain;
- 	}
-+	mutex_unlock(&dmar_lock);
-+
-+	return dmar_domain;
-+}
-+
-+int dmar_alloc_hwirq(int id, int node, void *arg)
-+{
-+	struct irq_domain *domain = dmar_get_irq_domain();
-+	struct irq_alloc_info info;
-+
-+	if (!domain)
-+		return -1;
-+
-+	init_irq_alloc_info(&info, NULL);
-+	info.type = X86_IRQ_ALLOC_TYPE_DMAR;
-+	info.dmar_id = id;
-+	info.dmar_data = arg;
- 
--	return irq;
-+	return irq_domain_alloc_irqs(domain, 1, node, &info);
- }
- 
- void dmar_free_hwirq(int irq)
- {
--	irq_set_handler_data(irq, NULL);
--	irq_set_handler(irq, NULL);
- 	irq_domain_free_irqs(irq, 1);
- }
- #endif
+Am Montag, den 17.11.2014, 10:58 +0800 schrieb Lian Minghuan-B31939:
+> Hi Lucas,
+> 
+> On 2014年11月14日 19:42, Lucas Stach wrote:
+> > Am Freitag, den 14.11.2014, 11:30 +0000 schrieb
+> > Mingkai.Hu@freescale.com:
+> >>
+> >>> -----Original Message-----
+> >>> From: Lucas Stach [mailto:l.stach@pengutronix.de]
+> >>> Sent: Friday, November 14, 2014 6:02 PM
+> >>> To: Lian Minghuan-B31939
+> >>> Cc: Srikanth Thokala; Lian Minghuan-B31939; linux-pci@vger.kernel.org;
+> >>> linux-arm-kernel@lists.infradead.org; Zang Roy-R61911; Hu Mingkai-B21284;
+> >>> Bjorn Helgaas
+> >>> Subject: Re: [PATCH v2] PCI: designware: Add support 4 ATUs assignment
+> >>>
+> >>> Am Freitag, den 14.11.2014, 16:47 +0800 schrieb Lian Minghuan-B31939:
+> >>>> Hi Lucas and all,
+> >>>>
+> >>>> On 2014年11月13日 19:09, Lucas Stach wrote:
+> >>>>> Am Donnerstag, den 13.11.2014, 18:52 +0800 schrieb Lian Minghuan-
+> >>> B31939:
+> >>>>>> Hi Lucas,
+> >>>>>>
+> >>>>>> On 2014年11月13日 18:20, Lucas Stach wrote:
+> >>>>>>> Am Donnerstag, den 13.11.2014, 18:02 +0800 schrieb Lian Minghuan-
+> >>> B31939:
+> >>>>>>>> Hi Lucas,
+> >>>>>>>>
+> >>>>>>>> Please see my comments inline.
+> >>>>>>>>
+> >>>>>>>> Thanks,
+> >>>>>>>> Minghuan
+> >>>>>>>>
+> >>>>>>>> On 2014年11月13日 00:32, Lucas Stach wrote:
+> >>>>>>>>> Am Mittwoch, den 12.11.2014, 21:53 +0530 schrieb Srikanth Thokala:
+> >>>>>>>>>> Hi Minghuan,
+> >>>>>>> [...]
+> >>>>>>>
+> >>>>>>>>> Using a smaller type complicates the DT for little to no
+> >>>>>>>>> benefit. I think it's ok to use u32 here, which is a common
+> >>>>>>>>> standard for integer values in DT.
+> >>>>>>>>>
+> >>>>>>>>> Though this discussion lead me to the question if we even need
+> >>>>>>>>> to have this property in the DT at all. Isn't this a property
+> >>>>>>>>> that is fixed for a specific silicon implementation of the DW
+> >>>>>>>>> core? In that case we could just infer the number of ATUs from
+> >>>>>>>>> the DT compatible, so this should probably just be added to
+> >>>>>>>>> struct pcie_port and properly initialized by the SoC glue drivers.
+> >>>>>>>> [Minghuan]  As far as I know, exynos implements only 2 ATUs, this
+> >>>>>>>> is why pcie-designware only supports 2 ATU. iMX implements 4 ATUs
+> >>>>>>>> and LS1021A implements 6 ATUs.
+> >>>>>>>>
+> >>>>>>> Right so we don't need an additional property in the DT at all.
+> >>>>>>> The number of ATUs is fixed for a specific core compatible and can
+> >>>>>>> be passed in by the respective exynos, imx and ls1021 glue drivers.
+> >>>>>>>
+> >>>>>>> You may ask the Keystone and Spear maintainers to get the correct
+> >>>>>>> number of ATUs for those implementations.
+> >>   > >>>
+> >>>>>>> Regards,
+> >>>>>>> Lucas
+> >>>>>> [Minghuan] Yes. This a way that specific core driver passes the ATU
+> >>>>>> number to pci-designware. But I perfer to adding dts node for the
+> >>>>>> following reasons:
+> >>>>>> 1. ATU number is hardware attribute, so it can be added to DTS.
+> >>>>> But it is a duplication of information that can be inferred from the
+> >>>>> DT compatible alone, which is usually frowned upon.
+> >>>>>
+> >>>>> Also in contrast to the num-lanes property I don't see a use-case to
+> >>>>> reduce the number of used ATUs in a specific system, so num-atus is
+> >>>>> basically fixed for a specific implementation.
+> >>>> [Minghuan] 4ATUs provides better support for multiple-function and
+> >>>> SR-IOV PCIe devices.
+> >>>> Can anyone tell me if there is the company will increase ATUs number?
+> >>>> If yes, we should avoid the following code:
+> >>>>
+> >>>> if (of_device_is_compatible(pcie->dev->of_node, "xxx,r1-pcie"))
+> >>>>       atu_num = 2;
+> >>>>
+> >>>> if (of_device_is_compatible(pcie->dev->of_node, "xxx,r2-pcie"))
+> >>>>       atu_num = 4;
+> >>>>
+> >>> The number of ATUs is fixed for a specific implementation. If the number
+> >>> of ATUs changes in a newer implementation of a SoC then the silicon
+> >>> implementation of the DW PCIe core changed, so it should get a new
+> >>> compatible anyway.
+> >>>
+> >> If there are multiple platforms to use the same SoC driver, there will be
+> >> multiple cases for different platforms as Minghuan has pointed out.
+> >>
+> >> For the platform that only has 2 ATUs, ATU0 is used for CFG0 and MEM and
+> >> there will be conflict when MEM and CFG0 are accessed simultaneously which
+> >> has cause the SATA link issue. I think more ATUs will be added in the
+> >> future design, then one driver maybe need to handle multiple platforms.
+> >>
+> >> DTS is designed for to describe the hardware property, it's a general way
+> >> to put hardware related property into DTS.
+> >>
+> > If another platform uses the same driver you should still have a
+> > specific compatible for that platform. Exactly to differentiate those
+> > silicon implementation differences.
+> >
+> > If you add 2 more ATUs to the layerscape pcie in a future design it is
+> > not fsl,ls1021a-pcie anymore, but for example fsl,ls1100-pcie. Also you
+> > don't need the code construct as seen above. The number of ATU can be
+> > added to implementation specific data.
+> > Please look at the Tegra PCI driver and especially struct
+> > tegra_pcie_soc_data on how to properly abstract properties that are
+> > defined by a specific silicon implementation of a core.
+> [Minghuan] Yes, we can added specific data for different implementation.
+> But we need to add hard coded information and assignment statement to
+> the layerscape PCIe driver even to every PCIe driver based on 
+> pcie-designware.c.
+> 
+> Why not use dts?  Nothing needs to be added to specific implementation 
+> driver code.
+> 
+
+This is an implementation detail of the Linux driver. We generally don't
+decide about the DT layout based on implementation details.
+
+> The Device Tree is a data structure for describing hardware. Rather than 
+> hard coding every detail of a device into an operating system, many 
+> aspect of the hardware can be described in a data structure that is 
+> passed to the operating system at boot time.
+> 
+Because in my view this is a duplication of information. I would argue
+that we should not put any properties into the DT that can be easily
+inferred from the device compatible alone.
+
+I can already see problems with DT backwards compatibility for this
+property. You can not make the property mandatory as it this would break
+old DTs. You now assume that if the property isn't present it means that
+2 ATUs are implemented. While it isn't strictly breaking anything having
+the property in the DT means that only systems with a new DTB will set
+the right number of ATUs (4) for i.MX6. This could be easily avoided if
+we just infer the property from the compatible.
+
+But I'm no authority on DT decisions, let's get the proper people on CC
+so we can get to an agreement here.
+
+Regards,
+Lucas
 -- 
-1.7.10.4
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
