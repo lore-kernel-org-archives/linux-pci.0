@@ -1,573 +1,375 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:20323 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754077AbaKHSSY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 8 Nov 2014 13:18:24 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Received: from szxga01-in.huawei.com ([119.145.14.64]:43138 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751653AbaKQJkw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 04:40:52 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part3 v3 34/38] x86, irq: Move private data in struct irq_cfg into dedicated data structure
-Date: Sun,  9 Nov 2014 02:13:34 +0800
-Message-Id: <1415470418-10874-35-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, Tony Luck <tony.luck@intel.com>,
+	<linux-ia64@vger.kernel.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	<Suravee.Suthikulpanit@amd.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [RFC PATCH 04/16] PCI: Rip out pci_bus_add_devices() from pci_scan_root_bus()
+Date: Mon, 17 Nov 2014 18:21:38 +0800
+Message-ID: <1416219710-26088-5-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Several fields in struct irq_cfg are private to vector.c, so move it
-into dedicated data structure. This helps to hide implementation
-details.
+Rip out pci_bus_add_devices() from pci_scan_root_bus()
+for following reasons.
+1. pci_scan_root_bus() means we only do the scan, we should
+not add pci busses.
+2. A lots of drviers which use pci_scan_root_bus() call
+pci_bus_size_bridges(), pci_bus_assign_resources() after
+pci_scan_root_bus(). But strictly speaking pci_bus_add_devices()
+should be called after the resources assignment.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- arch/x86/include/asm/hw_irq.h |    3 -
- arch/x86/kernel/apic/vector.c |  221 ++++++++++++++++++++++-------------------
- 2 files changed, 119 insertions(+), 105 deletions(-)
+ arch/alpha/kernel/pci.c           |    1 +
+ arch/alpha/kernel/sys_nautilus.c  |    1 +
+ arch/frv/mb93090-mb00/pci-vdk.c   |    8 +++++---
+ arch/ia64/sn/kernel/io_init.c     |    2 ++
+ arch/m68k/coldfire/pci.c          |    1 +
+ arch/microblaze/pci/pci-common.c  |    2 +-
+ arch/mips/pci/pci.c               |    1 +
+ arch/mn10300/unit-asb2305/pci.c   |    7 +++++--
+ arch/s390/pci/pci.c               |    2 +-
+ arch/sh/drivers/pci/pci.c         |    1 +
+ arch/sparc/kernel/leon_pci.c      |    1 +
+ arch/sparc/kernel/pcic.c          |    2 ++
+ arch/tile/kernel/pci.c            |    3 ++-
+ arch/tile/kernel/pci_gx.c         |    3 ++-
+ arch/unicore32/kernel/pci.c       |    2 +-
+ arch/x86/pci/common.c             |   10 ++++++----
+ arch/xtensa/kernel/pci.c          |    1 +
+ drivers/pci/host/pci-xgene.c      |    2 +-
+ drivers/pci/hotplug/ibmphp_core.c |    6 ++++--
+ drivers/pci/probe.c               |    1 -
+ 20 files changed, 39 insertions(+), 18 deletions(-)
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index c7a616c8f9a1..236aea888847 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -169,11 +169,8 @@ struct irq_alloc_info {
- #define	X86_IRQ_ALLOC_CONTIGOUS_VECTORS	0x1
+diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
+index 076c35c..81251a5 100644
+--- a/arch/alpha/kernel/pci.c
++++ b/arch/alpha/kernel/pci.c
+@@ -349,6 +349,7 @@ common_init_pci(void)
  
- struct irq_cfg {
--	cpumask_var_t		domain;
--	cpumask_var_t		old_domain;
- 	unsigned int		dest_apicid;
- 	u8			vector;
--	u8			move_in_progress : 1;
- };
- 
- extern struct irq_domain *x86_vector_domain;
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 76c82170f04f..c6c954bb2947 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -21,11 +21,18 @@
- #include <asm/desc.h>
- #include <asm/irq_remapping.h>
- 
-+struct apic_chip_data {
-+	struct irq_cfg		cfg;
-+	cpumask_var_t		domain;
-+	cpumask_var_t		old_domain;
-+	u8			move_in_progress : 1;
-+};
-+
- struct irq_domain *x86_vector_domain;
- static DEFINE_RAW_SPINLOCK(vector_lock);
- static struct irq_chip vector_chip;
- #ifdef	CONFIG_X86_IO_APIC
--static struct irq_cfg *legacy_irq_cfgs[NR_IRQS_LEGACY];
-+static struct apic_chip_data *legacy_irq_data[NR_IRQS_LEGACY];
- #endif
- 
- void lock_vector_lock(void)
-@@ -41,12 +48,7 @@ void unlock_vector_lock(void)
- 	raw_spin_unlock(&vector_lock);
+ 	pci_assign_unassigned_resources();
+ 	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
++	pci_bus_add_devices(bus);
  }
  
--struct irq_cfg *irq_cfg(unsigned int irq)
--{
--	return irqd_cfg(irq_get_irq_data(irq));
--}
+ 
+diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
+index 1047ab3..60fbd77 100644
+--- a/arch/alpha/kernel/sys_nautilus.c
++++ b/arch/alpha/kernel/sys_nautilus.c
+@@ -253,6 +253,7 @@ nautilus_init_pci(void)
+ 	   for the root bus, so just clear it. */
+ 	bus->self = NULL;
+ 	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
++	pci_bus_add_devices(bus);
+ }
+ 
+ /*
+diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
+index efa5d65..85f87dc 100644
+--- a/arch/frv/mb93090-mb00/pci-vdk.c
++++ b/arch/frv/mb93090-mb00/pci-vdk.c
+@@ -316,6 +316,7 @@ void pcibios_fixup_bus(struct pci_bus *bus)
+ 
+ int __init pcibios_init(void)
+ {
++	struct pci_bus *bus = NULL;
+ 	struct pci_ops *dir = NULL;
+ 	LIST_HEAD(resources);
+ 
+@@ -383,12 +384,13 @@ int __init pcibios_init(void)
+ 	printk("PCI: Probing PCI hardware\n");
+ 	pci_add_resource(&resources, &pci_ioport_resource);
+ 	pci_add_resource(&resources, &pci_iomem_resource);
+-	pci_scan_root_bus(NULL, 0, pci_root_ops, NULL, &resources);
 -
--struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
-+static struct apic_chip_data *apic_chip_data(struct irq_data *irq_data)
- {
- 	if (!irq_data)
- 		return NULL;
-@@ -57,36 +59,48 @@ struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
- 	return irq_data->chip_data;
++	bus = pci_scan_root_bus(NULL, 0, pci_root_ops, NULL, &resources);
++	if (!bus)
++		return -ENXIO;
+ 	pcibios_irq_init();
+ 	pcibios_fixup_irqs();
+ 	pcibios_resource_survey();
+-
++	pci_bus_add_devices(bus);
+ 	return 0;
  }
  
--static struct irq_cfg *alloc_irq_cfg(int node)
-+struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
-+{
-+	struct apic_chip_data *data = apic_chip_data(irq_data);
-+
-+	return data ? &data->cfg : NULL;
-+}
-+
-+struct irq_cfg *irq_cfg(unsigned int irq)
- {
--	struct irq_cfg *cfg;
-+	return irqd_cfg(irq_get_irq_data(irq));
-+}
- 
--	cfg = kzalloc_node(sizeof(*cfg), GFP_KERNEL, node);
--	if (!cfg)
-+static struct apic_chip_data *alloc_apic_chip_data(int node)
-+{
-+	struct apic_chip_data *data;
-+
-+	data = kzalloc_node(sizeof(*data), GFP_KERNEL, node);
-+	if (!data)
- 		return NULL;
--	if (!zalloc_cpumask_var_node(&cfg->domain, GFP_KERNEL, node))
--		goto out_cfg;
--	if (!zalloc_cpumask_var_node(&cfg->old_domain, GFP_KERNEL, node))
-+	if (!zalloc_cpumask_var_node(&data->domain, GFP_KERNEL, node))
-+		goto out_data;
-+	if (!zalloc_cpumask_var_node(&data->old_domain, GFP_KERNEL, node))
- 		goto out_domain;
--	return cfg;
-+	return data;
- out_domain:
--	free_cpumask_var(cfg->domain);
--out_cfg:
--	kfree(cfg);
-+	free_cpumask_var(data->domain);
-+out_data:
-+	kfree(data);
- 	return NULL;
- }
- 
--static void free_irq_cfg(struct irq_cfg *cfg)
-+static void free_apic_chip_data(struct apic_chip_data *data)
- {
--	if (cfg) {
--		free_cpumask_var(cfg->domain);
--		free_cpumask_var(cfg->old_domain);
--		kfree(cfg);
-+	if (data) {
-+		free_cpumask_var(data->domain);
-+		free_cpumask_var(data->old_domain);
-+		kfree(data);
+diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
+index 0b5ce82..1be65eb 100644
+--- a/arch/ia64/sn/kernel/io_init.c
++++ b/arch/ia64/sn/kernel/io_init.c
+@@ -271,7 +271,9 @@ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
+  	if (bus == NULL) {
+ 		kfree(res);
+ 		kfree(controller);
++		return;
  	}
++	pci_bus_add_devices(bus);
  }
  
--static int
--__assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
-+static int __assign_irq_vector(int irq, struct apic_chip_data *d,
-+			       const struct cpumask *mask)
- {
- 	/*
- 	 * NOTE! The local APIC isn't very good at handling
-@@ -104,7 +118,7 @@ __assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
- 	int cpu, err;
- 	cpumask_var_t tmp_mask;
- 
--	if (cfg->move_in_progress)
-+	if (d->move_in_progress)
- 		return -EBUSY;
- 
- 	if (!alloc_cpumask_var(&tmp_mask, GFP_ATOMIC))
-@@ -112,26 +126,26 @@ __assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
- 
- 	/* Only try and allocate irqs on cpus that are present */
- 	err = -ENOSPC;
--	cpumask_clear(cfg->old_domain);
-+	cpumask_clear(d->old_domain);
- 	cpu = cpumask_first_and(mask, cpu_online_mask);
- 	while (cpu < nr_cpu_ids) {
- 		int new_cpu, vector, offset;
- 
- 		apic->vector_allocation_domain(cpu, tmp_mask, mask);
- 
--		if (cpumask_subset(tmp_mask, cfg->domain)) {
-+		if (cpumask_subset(tmp_mask, d->domain)) {
- 			err = 0;
--			if (cpumask_equal(tmp_mask, cfg->domain))
-+			if (cpumask_equal(tmp_mask, d->domain))
- 				break;
- 			/*
- 			 * New cpumask using the vector is a proper subset of
- 			 * the current in use mask. So cleanup the vector
- 			 * allocation for the members that are not used anymore.
- 			 */
--			cpumask_andnot(cfg->old_domain, cfg->domain, tmp_mask);
--			cfg->move_in_progress =
--			   cpumask_intersects(cfg->old_domain, cpu_online_mask);
--			cpumask_and(cfg->domain, cfg->domain, tmp_mask);
-+			cpumask_andnot(d->old_domain, d->domain, tmp_mask);
-+			d->move_in_progress =
-+			   cpumask_intersects(d->old_domain, cpu_online_mask);
-+			cpumask_and(d->domain, d->domain, tmp_mask);
- 			break;
- 		}
- 
-@@ -145,8 +159,8 @@ next:
- 		}
- 
- 		if (unlikely(current_vector == vector)) {
--			cpumask_or(cfg->old_domain, cfg->old_domain, tmp_mask);
--			cpumask_andnot(tmp_mask, mask, cfg->old_domain);
-+			cpumask_or(d->old_domain, d->old_domain, tmp_mask);
-+			cpumask_andnot(tmp_mask, mask, d->old_domain);
- 			cpu = cpumask_first_and(tmp_mask, cpu_online_mask);
- 			continue;
- 		}
-@@ -162,15 +176,15 @@ next:
- 		/* Found one! */
- 		current_vector = vector;
- 		current_offset = offset;
--		if (cfg->vector) {
--			cpumask_copy(cfg->old_domain, cfg->domain);
--			cfg->move_in_progress =
--			   cpumask_intersects(cfg->old_domain, cpu_online_mask);
-+		if (d->cfg.vector) {
-+			cpumask_copy(d->old_domain, d->domain);
-+			d->move_in_progress =
-+			   cpumask_intersects(d->old_domain, cpu_online_mask);
- 		}
- 		for_each_cpu_and(new_cpu, tmp_mask, cpu_online_mask)
- 			per_cpu(vector_irq, new_cpu)[vector] = irq;
--		cfg->vector = vector;
--		cpumask_copy(cfg->domain, tmp_mask);
-+		d->cfg.vector = vector;
-+		cpumask_copy(d->domain, tmp_mask);
- 		err = 0;
- 		break;
- 	}
-@@ -178,46 +192,46 @@ next:
- 
- 	if (!err) {
- 		/* cache destination APIC IDs into cfg->dest_apicid */
--		err = apic->cpu_mask_to_apicid_and(mask, cfg->domain,
--						   &cfg->dest_apicid);
-+		err = apic->cpu_mask_to_apicid_and(mask, d->domain,
-+						   &d->cfg.dest_apicid);
- 	}
- 
- 	return err;
+ /*
+diff --git a/arch/m68k/coldfire/pci.c b/arch/m68k/coldfire/pci.c
+index 4d242fb..840a431 100644
+--- a/arch/m68k/coldfire/pci.c
++++ b/arch/m68k/coldfire/pci.c
+@@ -319,6 +319,7 @@ static int __init mcf_pci_init(void)
+ 	pci_fixup_irqs(pci_common_swizzle, mcf_pci_map_irq);
+ 	pci_bus_size_bridges(rootbus);
+ 	pci_bus_assign_resources(rootbus);
++	pci_bus_add_devices(rootbus);
+ 	return 0;
  }
  
--static int assign_irq_vector(int irq, struct irq_cfg *cfg,
-+static int assign_irq_vector(int irq, struct apic_chip_data *data,
- 			     const struct cpumask *mask)
- {
- 	int err;
- 	unsigned long flags;
- 
- 	raw_spin_lock_irqsave(&vector_lock, flags);
--	err = __assign_irq_vector(irq, cfg, mask);
-+	err = __assign_irq_vector(irq, data, mask);
- 	raw_spin_unlock_irqrestore(&vector_lock, flags);
- 	return err;
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index 9037914..9ca7e3f 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -1344,8 +1344,8 @@ static void pcibios_scan_phb(struct pci_controller *hose)
+ 	}
+ 	bus->busn_res.start = hose->first_busno;
+ 	hose->bus = bus;
+-
+ 	hose->last_busno = bus->busn_res.end;
++	pci_bus_add_devices(bus);
  }
  
--static void clear_irq_vector(int irq, struct irq_cfg *cfg)
-+static void clear_irq_vector(int irq, struct apic_chip_data *data)
- {
- 	int cpu, vector;
- 	unsigned long flags;
- 
- 	raw_spin_lock_irqsave(&vector_lock, flags);
--	BUG_ON(!cfg->vector);
-+	BUG_ON(!data->cfg.vector);
- 
--	vector = cfg->vector;
--	for_each_cpu_and(cpu, cfg->domain, cpu_online_mask)
-+	vector = data->cfg.vector;
-+	for_each_cpu_and(cpu, data->domain, cpu_online_mask)
- 		per_cpu(vector_irq, cpu)[vector] = VECTOR_UNDEFINED;
- 
--	cfg->vector = 0;
--	cpumask_clear(cfg->domain);
-+	data->cfg.vector = 0;
-+	cpumask_clear(data->domain);
- 
--	if (likely(!cfg->move_in_progress)) {
-+	if (likely(!data->move_in_progress)) {
- 		raw_spin_unlock_irqrestore(&vector_lock, flags);
- 		return;
- 	}
- 
--	for_each_cpu_and(cpu, cfg->old_domain, cpu_online_mask) {
-+	for_each_cpu_and(cpu, data->old_domain, cpu_online_mask) {
- 		for (vector = FIRST_EXTERNAL_VECTOR; vector < NR_VECTORS;
- 		     vector++) {
- 			if (per_cpu(vector_irq, cpu)[vector] != irq)
-@@ -226,7 +240,7 @@ static void clear_irq_vector(int irq, struct irq_cfg *cfg)
- 			break;
+ static int __init pcibios_init(void)
+diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
+index 1bf60b1..f083688 100644
+--- a/arch/mips/pci/pci.c
++++ b/arch/mips/pci/pci.c
+@@ -113,6 +113,7 @@ static void pcibios_scanbus(struct pci_controller *hose)
+ 		if (!pci_has_flag(PCI_PROBE_ONLY)) {
+ 			pci_bus_size_bridges(bus);
+ 			pci_bus_assign_resources(bus);
++			pci_bus_add_devices(bus);
  		}
  	}
--	cfg->move_in_progress = 0;
-+	data->move_in_progress = 0;
- 	raw_spin_unlock_irqrestore(&vector_lock, flags);
+ }
+diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
+index 6b4339f..011af54 100644
+--- a/arch/mn10300/unit-asb2305/pci.c
++++ b/arch/mn10300/unit-asb2305/pci.c
+@@ -345,6 +345,7 @@ void pcibios_fixup_bus(struct pci_bus *bus)
+  */
+ static int __init pcibios_init(void)
+ {
++	struct pci_bus *bus;
+ 	resource_size_t io_offset, mem_offset;
+ 	LIST_HEAD(resources);
+ 
+@@ -376,11 +377,13 @@ static int __init pcibios_init(void)
+ 
+ 	pci_add_resource_offset(&resources, &pci_ioport_resource, io_offset);
+ 	pci_add_resource_offset(&resources, &pci_iomem_resource, mem_offset);
+-	pci_scan_root_bus(NULL, 0, &pci_direct_ampci, NULL, &resources);
+-
++	bus = pci_scan_root_bus(NULL, 0, &pci_direct_ampci, NULL, &resources);
++	if (!bus)
++		return 0;
+ 	pcibios_irq_init();
+ 	pcibios_fixup_irqs();
+ 	pcibios_resource_survey();
++	pci_bus_add_devices(bus);
+ 	return 0;
  }
  
-@@ -261,10 +275,10 @@ static void x86_vector_free_irqs(struct irq_domain *domain,
- 		irq_data = irq_domain_get_irq_data(x86_vector_domain, virq + i);
- 		if (irq_data && irq_data->chip_data) {
- 			clear_irq_vector(virq + i, irq_data->chip_data);
--			free_irq_cfg(irq_data->chip_data);
-+			free_apic_chip_data(irq_data->chip_data);
- #ifdef	CONFIG_X86_IO_APIC
- 			if (virq + i < nr_legacy_irqs())
--				legacy_irq_cfgs[virq + i] = NULL;
-+				legacy_irq_data[virq + i] = NULL;
- #endif
- 			irq_domain_reset_irq_data(irq_data);
- 		}
-@@ -275,7 +289,7 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
- 				 unsigned int nr_irqs, void *arg)
- {
- 	int i, err;
--	struct irq_cfg *cfg;
-+	struct apic_chip_data *data;
- 	struct irq_data *irq_data;
- 	const struct cpumask *mask;
- 	struct irq_alloc_info *info = arg;
-@@ -292,20 +306,20 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
- 		irq_data = irq_domain_get_irq_data(domain, virq + i);
- 		BUG_ON(!irq_data);
- #ifdef	CONFIG_X86_IO_APIC
--		if (virq + i < nr_legacy_irqs() && legacy_irq_cfgs[virq + i])
--			cfg = legacy_irq_cfgs[virq + i];
-+		if (virq + i < nr_legacy_irqs() && legacy_irq_data[virq + i])
-+			data = legacy_irq_data[virq + i];
- 		else
- #endif
--			cfg = alloc_irq_cfg(irq_data->node);
--		if (!cfg) {
-+			data = alloc_apic_chip_data(irq_data->node);
-+		if (!data) {
- 			err = -ENOMEM;
- 			goto error;
- 		}
- 
- 		irq_data->chip = &vector_chip;
--		irq_data->chip_data = cfg;
-+		irq_data->chip_data = data;
- 		irq_data->hwirq = virq + i;
--		err = assign_irq_vector(virq, cfg, mask);
-+		err = assign_irq_vector(virq, data, mask);
- 		if (err)
- 			goto error;
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index 2fa7b14..016ea48 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -755,7 +755,7 @@ static int zpci_scan_bus(struct zpci_dev *zdev)
+ 		zpci_cleanup_bus_resources(zdev);
+ 		return -EIO;
  	}
-@@ -349,22 +363,22 @@ int __init arch_probe_nr_irqs(void)
- static void init_legacy_irqs(void)
- {
- 	int i, node = cpu_to_node(0);
--	struct irq_cfg *cfg;
-+	struct apic_chip_data *data;
- 
- 	/*
- 	 * For legacy IRQ's, start with assigning irq0 to irq15 to
- 	 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
- 	 */
- 	for (i = 0; i < nr_legacy_irqs(); i++) {
--		cfg = legacy_irq_cfgs[i] = alloc_irq_cfg(node);
--		BUG_ON(!cfg);
-+		data = legacy_irq_data[i] = alloc_apic_chip_data(node);
-+		BUG_ON(!data);
- 		/*
- 		 * For legacy IRQ's, start with assigning irq0 to irq15 to
- 		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
- 		 */
--		cfg->vector = IRQ0_VECTOR + i;
--		cpumask_setall(cfg->domain);
--		irq_set_chip_data(i, cfg);
-+		data->cfg.vector = IRQ0_VECTOR + i;
-+		cpumask_setall(data->domain);
-+		irq_set_chip_data(i, data);
- 	}
+-
++	pci_bus_add_devices(zdev->bus);
+ 	zdev->bus->max_bus_speed = zdev->max_bus_speed;
+ 	return 0;
  }
- #else
-@@ -390,7 +404,7 @@ static void __setup_vector_irq(int cpu)
- {
- 	/* Initialize vector_irq on a new cpu */
- 	int irq, vector;
--	struct irq_cfg *cfg;
-+	struct apic_chip_data *data;
+diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
+index 1bc09ee..efc1051 100644
+--- a/arch/sh/drivers/pci/pci.c
++++ b/arch/sh/drivers/pci/pci.c
+@@ -69,6 +69,7 @@ static void pcibios_scanbus(struct pci_channel *hose)
  
- 	/*
- 	 * vector_lock will make sure that we don't run into irq vector
-@@ -400,13 +414,13 @@ static void __setup_vector_irq(int cpu)
- 	raw_spin_lock(&vector_lock);
- 	/* Mark the inuse vectors */
- 	for_each_active_irq(irq) {
--		cfg = irq_cfg(irq);
--		if (!cfg)
-+		data = apic_chip_data(irq_get_irq_data(irq));
-+		if (!data)
- 			continue;
- 
--		if (!cpumask_test_cpu(cpu, cfg->domain))
-+		if (!cpumask_test_cpu(cpu, data->domain))
- 			continue;
--		vector = cfg->vector;
-+		vector = data->cfg.vector;
- 		per_cpu(vector_irq, cpu)[vector] = irq;
- 	}
- 	/* Mark the free vectors */
-@@ -415,8 +429,8 @@ static void __setup_vector_irq(int cpu)
- 		if (irq <= VECTOR_UNDEFINED)
- 			continue;
- 
--		cfg = irq_cfg(irq);
--		if (!cpumask_test_cpu(cpu, cfg->domain))
-+		data = apic_chip_data(irq_get_irq_data(irq));
-+		if (!cpumask_test_cpu(cpu, data->domain))
- 			per_cpu(vector_irq, cpu)[vector] = VECTOR_UNDEFINED;
- 	}
- 	raw_spin_unlock(&vector_lock);
-@@ -442,15 +456,15 @@ void setup_vector_irq(int cpu)
- 	__setup_vector_irq(cpu);
- }
- 
--static int apic_retrigger_irq(struct irq_data *data)
-+static int apic_retrigger_irq(struct irq_data *irq_data)
- {
--	struct irq_cfg *cfg = irqd_cfg(data);
-+	struct apic_chip_data *data = apic_chip_data(irq_data);
- 	unsigned long flags;
- 	int cpu;
- 
- 	raw_spin_lock_irqsave(&vector_lock, flags);
--	cpu = cpumask_first_and(cfg->domain, cpu_online_mask);
--	apic->send_IPI_mask(cpumask_of(cpu), cfg->vector);
-+	cpu = cpumask_first_and(data->domain, cpu_online_mask);
-+	apic->send_IPI_mask(cpumask_of(cpu), data->cfg.vector);
- 	raw_spin_unlock_irqrestore(&vector_lock, flags);
- 
- 	return 1;
-@@ -468,7 +482,7 @@ static int apic_set_affinity(struct irq_data *irq_data,
- {
- 	int err;
- 	int irq = irq_data->irq;
--	struct irq_cfg *cfg = irq_data->chip_data;
-+	struct apic_chip_data *data = irq_data->chip_data;
- 
- 	if (!config_enabled(CONFIG_SMP))
- 		return -EPERM;
-@@ -476,11 +490,11 @@ static int apic_set_affinity(struct irq_data *irq_data,
- 	if (!cpumask_intersects(dest, cpu_online_mask))
- 		return -EINVAL;
- 
--	err = assign_irq_vector(irq, cfg, dest);
-+	err = assign_irq_vector(irq, data, dest);
- 	if (err) {
- 		struct irq_data *top = irq_get_irq_data(irq);
- 
--		if (assign_irq_vector(irq, cfg, top->affinity))
-+		if (assign_irq_vector(irq, data, top->affinity))
- 			pr_err("Failed to recover vector for irq %d\n", irq);
- 		return err;
- 	}
-@@ -495,28 +509,31 @@ static struct irq_chip vector_chip = {
- };
- 
- #ifdef CONFIG_SMP
--static void __send_cleanup_vector(struct irq_cfg *cfg)
-+static void __send_cleanup_vector(struct apic_chip_data *data)
- {
- 	cpumask_var_t cleanup_mask;
- 
- 	if (unlikely(!alloc_cpumask_var(&cleanup_mask, GFP_ATOMIC))) {
- 		unsigned int i;
- 
--		for_each_cpu_and(i, cfg->old_domain, cpu_online_mask)
-+		for_each_cpu_and(i, data->old_domain, cpu_online_mask)
- 			apic->send_IPI_mask(cpumask_of(i),
- 					    IRQ_MOVE_CLEANUP_VECTOR);
+ 		pci_bus_size_bridges(bus);
+ 		pci_bus_assign_resources(bus);
++		pci_bus_add_devices(bus);
  	} else {
--		cpumask_and(cleanup_mask, cfg->old_domain, cpu_online_mask);
-+		cpumask_and(cleanup_mask, data->old_domain, cpu_online_mask);
- 		apic->send_IPI_mask(cleanup_mask, IRQ_MOVE_CLEANUP_VECTOR);
- 		free_cpumask_var(cleanup_mask);
+ 		pci_free_resource_list(&resources);
  	}
--	cfg->move_in_progress = 0;
-+	data->move_in_progress = 0;
- }
+diff --git a/arch/sparc/kernel/leon_pci.c b/arch/sparc/kernel/leon_pci.c
+index 899b720..2971076 100644
+--- a/arch/sparc/kernel/leon_pci.c
++++ b/arch/sparc/kernel/leon_pci.c
+@@ -40,6 +40,7 @@ void leon_pci_init(struct platform_device *ofdev, struct leon_pci_info *info)
  
- void send_cleanup_vector(struct irq_cfg *cfg)
- {
--	if (cfg->move_in_progress)
--		__send_cleanup_vector(cfg);
-+	struct apic_chip_data *data;
-+
-+	data = container_of(cfg, struct apic_chip_data, cfg);
-+	if (data->move_in_progress)
-+		__send_cleanup_vector(data);
- }
+ 		/* Assign devices with resources */
+ 		pci_assign_unassigned_resources();
++		pci_bus_add_devices(root_bus);
+ 	} else {
+ 		pci_free_resource_list(&resources);
+ 	}
+diff --git a/arch/sparc/kernel/pcic.c b/arch/sparc/kernel/pcic.c
+index 64aafac..5457814 100644
+--- a/arch/sparc/kernel/pcic.c
++++ b/arch/sparc/kernel/pcic.c
+@@ -392,6 +392,8 @@ static void __init pcic_pbm_scan_bus(struct linux_pcic *pcic)
  
- asmlinkage __visible void smp_irq_move_cleanup_interrupt(void)
-@@ -532,7 +549,7 @@ asmlinkage __visible void smp_irq_move_cleanup_interrupt(void)
- 		int irq;
- 		unsigned int irr;
- 		struct irq_desc *desc;
--		struct irq_cfg *cfg;
-+		struct apic_chip_data *data;
+ 	pbm->pci_bus = pci_scan_root_bus(NULL, pbm->pci_first_busno, 
+ 			&pcic_ops, pbm, NULL);
++	if (pbm->pci_bus)
++		pci_bus_add_devices(pbm->pci_bus);
+ #if 0 /* deadwood transplanted from sparc64 */
+ 	pci_fill_in_pbm_cookies(pbm->pci_bus, pbm, pbm->prom_node);
+ 	pci_record_assignments(pbm, pbm->pci_bus);
+diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
+index 1f80a88..268423e 100644
+--- a/arch/tile/kernel/pci.c
++++ b/arch/tile/kernel/pci.c
+@@ -326,7 +326,8 @@ int __init pcibios_init(void)
  
- 		irq = __this_cpu_read(vector_irq[vector]);
- 
-@@ -543,8 +560,8 @@ asmlinkage __visible void smp_irq_move_cleanup_interrupt(void)
- 		if (!desc)
- 			continue;
- 
--		cfg = irq_cfg(irq);
--		if (!cfg)
-+		data = apic_chip_data(&desc->irq_data);
-+		if (!data)
- 			continue;
- 
- 		raw_spin_lock(&desc->lock);
-@@ -553,10 +570,11 @@ asmlinkage __visible void smp_irq_move_cleanup_interrupt(void)
- 		 * Check if the irq migration is in progress. If so, we
- 		 * haven't received the cleanup request yet for this irq.
+ 	/* Configure the max_read_size and max_payload_size values. */
+ 	fixup_read_and_payload_sizes();
+-
++	if (bus)
++		pci_bus_add_devices(bus);
+ 	/* Record the I/O resources in the PCI controller structure. */
+ 	for (i = 0; i < TILE_NUM_PCIE; i++) {
+ 		/*
+diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
+index e39f9c5..5f05a9a 100644
+--- a/arch/tile/kernel/pci_gx.c
++++ b/arch/tile/kernel/pci_gx.c
+@@ -903,7 +903,8 @@ int __init pcibios_init(void)
+ 	 * associated with the devices read in above.
+ 	 */
+ 	pci_assign_unassigned_resources();
+-
++	if (bus)
++		pci_bus_add_devices(bus);
+ 	/* Record the I/O resources in the PCI controller structure. */
+ 	for (i = 0; i < num_rc_controllers; i++) {
+ 		struct pci_controller *controller = &pci_controllers[i];
+diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
+index be0f261..0d4c563 100644
+--- a/arch/unicore32/kernel/pci.c
++++ b/arch/unicore32/kernel/pci.c
+@@ -270,11 +270,11 @@ static int __init pci_common_init(void)
+ 		 * Size the bridge windows.
  		 */
--		if (cfg->move_in_progress)
-+		if (data->move_in_progress)
- 			goto unlock;
- 
--		if (vector == cfg->vector && cpumask_test_cpu(me, cfg->domain))
-+		if (vector == data->cfg.vector &&
-+		    cpumask_test_cpu(me, data->domain))
- 			goto unlock;
- 
- 		irr = apic_read(APIC_IRR + (vector / 32 * 0x10));
-@@ -582,14 +600,15 @@ unlock:
- static void __irq_complete_move(struct irq_cfg *cfg, unsigned vector)
- {
- 	unsigned me;
-+	struct apic_chip_data *data;
- 
--	if (likely(!cfg->move_in_progress))
-+	data = container_of(cfg, struct apic_chip_data, cfg);
-+	if (likely(!data->move_in_progress))
- 		return;
- 
- 	me = smp_processor_id();
+ 		pci_bus_size_bridges(puv3_bus);
 -
--	if (vector == cfg->vector && cpumask_test_cpu(me, cfg->domain))
--		__send_cleanup_vector(cfg);
-+	if (vector == data->cfg.vector && cpumask_test_cpu(me, data->domain))
-+		__send_cleanup_vector(data);
+ 		/*
+ 		 * Assign resources.
+ 		 */
+ 		pci_bus_assign_resources(puv3_bus);
++		pci_bus_add_devices(puv3_bus);
+ 	}
+ 
+ 	return 0;
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 7b20bcc..b16632b 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -471,10 +471,12 @@ void pcibios_scan_root(int busnum)
+ 	x86_pci_root_bus_resources(busnum, &resources);
+ 	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busnum);
+ 	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, sd, &resources);
+-	if (!bus) {
+-		pci_free_resource_list(&resources);
+-		kfree(sd);
+-	}
++	if (bus) {
++		pci_bus_add_devices(bus);
++		return;
++	} 
++	pci_free_resource_list(&resources);
++	kfree(sd);
  }
  
- void irq_complete_move(struct irq_cfg *cfg)
-@@ -601,10 +620,8 @@ void irq_force_complete_move(int irq)
- {
- 	struct irq_cfg *cfg = irq_cfg(irq);
- 
--	if (!cfg)
--		return;
+ void __init pcibios_set_cache_line_size(void)
+diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
+index 5b34033..c4b5b5d 100644
+--- a/arch/xtensa/kernel/pci.c
++++ b/arch/xtensa/kernel/pci.c
+@@ -185,6 +185,7 @@ static int __init pcibios_init(void)
+ 		pci_controller_apertures(pci_ctrl, &resources);
+ 		bus = pci_scan_root_bus(NULL, pci_ctrl->first_busno,
+ 					pci_ctrl->ops, pci_ctrl, &resources);
++		pci_bus_add_devices(bus);
+ 		pci_ctrl->bus = bus;
+ 		pci_ctrl->last_busno = bus->busn_res.end;
+ 		if (next_busno <= pci_ctrl->last_busno)
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index 9ecabfa..e7a4f66 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -634,7 +634,7 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
+ 	bus = pci_scan_root_bus(&pdev->dev, 0, &xgene_pcie_ops, port, &res);
+ 	if (!bus)
+ 		return -ENOMEM;
 -
--	__irq_complete_move(cfg, cfg->vector);
-+	if (cfg)
-+		__irq_complete_move(cfg, cfg->vector);
++	pci_bus_add_devices(bus);
+ 	platform_set_drvdata(pdev, port);
+ 	return 0;
  }
- #endif
+diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
+index b486432..76ce157 100644
+--- a/drivers/pci/hotplug/ibmphp_core.c
++++ b/drivers/pci/hotplug/ibmphp_core.c
+@@ -740,7 +740,7 @@ static void ibm_unconfigure_device(struct pci_func *func)
+  */
+ static u8 bus_structure_fixup(u8 busno)
+ {
+-	struct pci_bus *bus;
++	struct pci_bus *bus, *b;
+ 	struct pci_dev *dev;
+ 	u16 l;
  
+@@ -767,7 +767,9 @@ static u8 bus_structure_fixup(u8 busno)
+ 					(l != 0x0000) && (l != 0xffff)) {
+ 			debug("%s - Inside bus_structure_fixup()\n",
+ 							__func__);
+-			pci_scan_root_bus(NULL, busno, ibmphp_pci_bus->ops, NULL, NULL);
++			b = pci_scan_root_bus(NULL, busno, ibmphp_pci_bus->ops, NULL, NULL);
++			if (b)
++				pci_bus_add_devices(b);
+ 			break;
+ 		}
+ 	}
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 0a02fc2..97711f3 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2101,7 +2101,6 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ 	if (!found)
+ 		pci_bus_update_busn_res_end(b, max);
+ 
+-	pci_bus_add_devices(b);
+ 	return b;
+ }
+ EXPORT_SYMBOL(pci_scan_root_bus);
 -- 
-1.7.10.4
+1.7.1
 
