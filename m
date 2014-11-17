@@ -1,61 +1,192 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from numascale.com ([213.162.240.84]:34749 "EHLO numascale.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751801AbaKJJDa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 10 Nov 2014 04:03:30 -0500
-Message-ID: <54607F54.2050707@numascale.com>
-Date: Mon, 10 Nov 2014 17:03:16 +0800
-From: Daniel J Blueman <daniel@numascale.com>
-MIME-Version: 1.0
-To: Borislav Petkov <bp@alien8.de>,
+Received: from szxga02-in.huawei.com ([119.145.14.65]:28889 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752090AbaKQJk5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 04:40:57 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>
-CC: Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Steffen Persvold <sp@numascale.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] x86: Drop redundant memory-block sizing code
-References: <ojh5M-xh-17@gated-at.bofh.it> <1415249414-20888-1-git-send-email-daniel@numascale.com> <20141106094007.GA4849@pd.tnic> <545B4E84.7050707@numascale.com> <20141106104034.GB4849@pd.tnic> <545B5735.8000401@numascale.com> <20141106115636.GA4318@pd.tnic>
-In-Reply-To: <20141106115636.GA4318@pd.tnic>
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, Tony Luck <tony.luck@intel.com>,
+	<linux-ia64@vger.kernel.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	<Suravee.Suthikulpanit@amd.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [RFC PATCH 13/16] ia64/PCI: Use pci_scan_host_bridge() to refactor pci_acpi_scan_root()
+Date: Mon, 17 Nov 2014 18:21:47 +0800
+Message-ID: <1416219710-26088-14-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/06/2014 07:56 PM, Borislav Petkov wrote:
-> On Thu, Nov 06, 2014 at 07:10:45PM +0800, Daniel J Blueman wrote:
->> "As the first check for 64GB or larger memory returns a 2GB memory
->> block size in that case, the following check for less than 64GB will
->> always
->
-> Right, but why isn't there a simple else? Instead, the >64GB case is
-> looking at totalram_pages but the so-called else case is looking at
-> max_pfn. Why, what's the difference?
->
-> My purely hypothetical suspicion is this thing used to handle some
-> special case with memory holes where totalram_pages was still < 64GB but
-> max_pfn was above. I'm looking at this memory block size approximation
-> downwards which supposedly used to do something at some point, right?
->
-> Now, when you remove this, it doesn't do so anymore, potentially
-> breaking some machines.
->
-> Or is this simply unfortunate coding and totalram_pages and max_pfn are
-> equivalent?
->
-> Questions over questions... Maybe it is time for some git log
-> archeology...
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/ia64/pci/pci.c |   84 +++++++++++++++++++++++---------------------------
+ 1 files changed, 39 insertions(+), 45 deletions(-)
 
-Yes, totalram_pages doesn't count the MMIO hole, whereas max_pfn does.
-
-I've made NumaConnect firmware changes that will guarantee max_pfn is 
-always aligned to at least 2GB, so 
-bdee237c0343a5d1a6cf72c7ea68e88338b26e08 "x86: mm: Use 2GB memory block 
-size on large-memory x86-64 systems" can be dropped and Yinghai's 
-approach will give 2GB memory blocks on our systems.
-
-Thanks,
-   Daniel
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index aac3220..c7d97ae 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -115,23 +115,10 @@ struct pci_ops pci_root_ops = {
+ 	.write = pci_write,
+ };
+ 
+-/* Called by ACPI when it finds a new root bus.  */
+-
+-static struct pci_controller *alloc_pci_controller(int seg)
+-{
+-	struct pci_controller *controller;
+-
+-	controller = kzalloc(sizeof(*controller), GFP_KERNEL);
+-	if (!controller)
+-		return NULL;
+-
+-	controller->segment = seg;
+-	return controller;
+-}
+-
+ struct pci_root_info {
+ 	struct acpi_device *bridge;
+-	struct pci_controller *controller;
++	struct pci_controller controller;
++	struct acpi_pci_root *root;
+ 	struct list_head resources;
+ 	struct resource *res;
+ 	resource_size_t *res_offset;
+@@ -340,8 +327,6 @@ static void free_pci_root_info_res(struct pci_root_info *info)
+ 	kfree(info->res_offset);
+ 	info->res_offset = NULL;
+ 	info->res_num = 0;
+-	kfree(info->controller);
+-	info->controller = NULL;
+ }
+ 
+ static void __release_pci_root_info(struct pci_root_info *info)
+@@ -395,7 +380,7 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+ 	if (info->res_num) {
+ 		info->res =
+ 			kzalloc_node(sizeof(*info->res) * info->res_num,
+-				     GFP_KERNEL, info->controller->node);
++				     GFP_KERNEL, info->controller.node);
+ 		if (!info->res) {
+ 			kfree(name);
+ 			return -ENOMEM;
+@@ -403,7 +388,7 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+ 
+ 		info->res_offset =
+ 			kzalloc_node(sizeof(*info->res_offset) * info->res_num,
+-					GFP_KERNEL, info->controller->node);
++					GFP_KERNEL, info->controller.node);
+ 		if (!info->res_offset) {
+ 			kfree(name);
+ 			kfree(info->res);
+@@ -420,6 +405,27 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+ 	return 0;
+ }
+ 
++static int pci_acpi_init_res(struct pci_host_bridge *host,
++		struct pci_host_info *info)
++{
++	int ret;
++	struct pci_host_bridge_window *window, *n;
++	struct pci_controller *ctrl = info->arg;
++	struct pci_root_info *arg = container_of(ctrl,
++			struct pci_root_info, controller);
++
++	ret = probe_pci_root_info(arg, arg->root->device, 
++			host->busnum, host->domain);
++	if (ret) 
++		return -1;
++	list_for_each_entry_safe(window, n, &arg->resources,
++			list)
++		list_move_tail(&window->list, &host->windows);
++	/* insert busn resource at first */
++	pci_add_resource(&host->windows, &arg->root->secondary);
++	return 0;
++}
++
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+ 	struct acpi_device *device = root->device;
+@@ -427,55 +433,43 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	struct pci_controller *controller;
+ 	struct pci_root_info *info = NULL;
+ 	int busnum = root->secondary.start;
+-	struct pci_bus *pbus;
+-	int ret;
+-
+-	controller = alloc_pci_controller(domain);
+-	if (!controller)
+-		return NULL;
+-
+-	controller->companion = device;
+-	controller->node = acpi_get_node(device->handle);
++	struct pci_host_bridge *host;
++	struct pci_host_info arg;
+ 
+ 	info = kzalloc(sizeof(*info), GFP_KERNEL);
+ 	if (!info) {
+ 		dev_err(&device->dev,
+ 				"pci_bus %04x:%02x: ignored (out of memory)\n",
+ 				domain, busnum);
+-		kfree(controller);
+ 		return NULL;
+ 	}
+ 
+-	info->controller = controller;
++	controller = &info->controller;
++	controller->segment = domain;
++	controller->companion = device;
++	controller->node = acpi_get_node(device->handle);
+ 	INIT_LIST_HEAD(&info->io_resources);
+ 	INIT_LIST_HEAD(&info->resources);
++	init_pci_host_info(&arg);
++	arg.arg = controller;
++	arg.init_res = pci_acpi_init_res;
+ 
+-	ret = probe_pci_root_info(info, device, busnum, domain);
+-	if (ret) {
+-		kfree(info->controller);
+-		kfree(info);
+-		return NULL;
+-	}
+-	/* insert busn resource at first */
+-	pci_add_resource(&info->resources, &root->secondary);
+ 	/*
+ 	 * See arch/x86/pci/acpi.c.
+ 	 * The desired pci bus might already be scanned in a quirk. We
+ 	 * should handle the case here, but it appears that IA64 hasn't
+ 	 * such quirk. So we just ignore the case now.
+ 	 */
+-	pbus = pci_create_root_bus(NULL, busnum, &pci_root_ops, controller,
+-				   &info->resources);
+-	if (!pbus) {
+-		pci_free_resource_list(&info->resources);
++	host = pci_scan_host_bridge(NULL, PCI_DOMBUS(domain, busnum), 
++			&pci_root_ops, &arg);
++	if (!host) {
+ 		__release_pci_root_info(info);
+ 		return NULL;
+ 	}
+ 
+-	pci_set_host_bridge_release(to_pci_host_bridge(pbus->bridge),
++	pci_set_host_bridge_release(host,
+ 			release_pci_root_info, info);
+-	pci_scan_child_bus(pbus);
+-	return pbus;
++	return host->bus;
+ }
+ 
+ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
 -- 
-Daniel J Blueman
-Principal Software Engineer, Numascale
+1.7.1
+
