@@ -1,75 +1,69 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jan Beulich <JBeulich@suse.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part3 v4 35/38] x86, irq: Refine the way to calculate NR_IRQS
-Date: Tue, 25 Nov 2014 15:49:59 +0800
-Message-Id: <1416901802-24211-36-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, Tony Luck <tony.luck@intel.com>,
+	<linux-ia64@vger.kernel.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	<Suravee.Suthikulpanit@amd.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yijing Wang <wangyijing0307@gmail.com>
+Subject: [RFC PATCH 09/16] PCI: Associate .get_msi_ctrl() with pci_host_bridge
+Date: Mon, 17 Nov 2014 18:21:43 +0800
+Message-ID: <1416219710-26088-10-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have made MSI independent of IOAPIC, so we need to refine the
-way to calculate NR_IRQS to support configuration with MSI enabled but
-IOAPIC disabled.
+From: Yijing Wang <wangyijing0307@gmail.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Tested-by: Joerg Roedel <jroedel@suse.de>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- arch/x86/include/asm/irq_vectors.h |   18 +++++++++++-------
- 1 file changed, 11 insertions(+), 7 deletions(-)
+ drivers/pci/host-bridge.c |    1 +
+ include/linux/pci.h       |    2 ++
+ 2 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/arch/x86/include/asm/irq_vectors.h b/arch/x86/include/asm/irq_vectors.h
-index 666c89ec4bd7..b26cb124a4f1 100644
---- a/arch/x86/include/asm/irq_vectors.h
-+++ b/arch/x86/include/asm/irq_vectors.h
-@@ -155,18 +155,22 @@ static inline int invalid_vm86_irq(int irq)
-  * static arrays.
-  */
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 49b6c21..872cae1 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -58,6 +58,7 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 	host->dev.parent = parent;
+ 	INIT_LIST_HEAD(&host->windows);
+ 	host->dev.release = pci_release_host_bridge_dev;
++	host->get_msi_ctrl = info->get_msi_ctrl;
  
--#define NR_IRQS_LEGACY			  16
-+#define NR_IRQS_LEGACY			16
- 
--#define IO_APIC_VECTOR_LIMIT		( 32 * MAX_IO_APICS )
-+#define CPU_VECTOR_LIMIT		(64 * NR_CPUS)
-+#define IO_APIC_VECTOR_LIMIT		(32 * MAX_IO_APICS)
- 
--#ifdef CONFIG_X86_IO_APIC
--# define CPU_VECTOR_LIMIT		(64 * NR_CPUS)
--# define NR_IRQS					\
-+#if defined(CONFIG_X86_IO_APIC) && defined(CONFIG_PCI_MSI)
-+#define NR_IRQS						\
- 	(CPU_VECTOR_LIMIT > IO_APIC_VECTOR_LIMIT ?	\
- 		(NR_VECTORS + CPU_VECTOR_LIMIT)  :	\
- 		(NR_VECTORS + IO_APIC_VECTOR_LIMIT))
--#else /* !CONFIG_X86_IO_APIC: */
--# define NR_IRQS			NR_IRQS_LEGACY
-+#elif defined(CONFIG_X86_IO_APIC)
-+#define	NR_IRQS				(NR_VECTORS + IO_APIC_VECTOR_LIMIT)
-+#elif defined(CONFIG_PCI_MSI)
-+#define NR_IRQS				(NR_VECTORS + CPU_VECTOR_LIMIT)
-+#else
-+#define NR_IRQS				NR_IRQS_LEGACY
- #endif
- 
- #endif /* _ASM_X86_IRQ_VECTORS_H */
+ 	/* this is hack, just for build, will be removed later*/
+ 	b = kzalloc(sizeof(*b), GFP_KERNEL);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index a51f5f5..af1ee86 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -408,6 +408,7 @@ struct pci_host_bridge {
+ 	int domain;
+ 	void *sysdata;
+ 	struct pci_ops *ops;
++	struct msi_controller *(*get_msi_ctrl)(struct pci_dev *pdev);
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
+ };
+@@ -416,6 +417,7 @@ struct pci_host_info {
+ 	u8 res_type;
+ 	void *arg;
+ 	struct list_head *resources; /*just for build, will clean up later */
++	struct msi_controller *(*get_msi_ctrl)(struct pci_dev *pdev);
+ 	int (*init_res)(struct pci_host_bridge *host, 
+ 			struct pci_host_info *info);
+ };
 -- 
-1.7.10.4
+1.7.1
 
