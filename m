@@ -1,164 +1,414 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:33166 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750755AbaKURvR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 12:51:17 -0500
-Received: by mail-ie0-f178.google.com with SMTP id tp5so5409114ieb.37
-        for <linux-pci@vger.kernel.org>; Fri, 21 Nov 2014 09:51:17 -0800 (PST)
-Date: Fri, 21 Nov 2014 10:51:14 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
+Received: from szxga01-in.huawei.com ([119.145.14.64]:43164 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751636AbaKQJkw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 04:40:52 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Martin Wilck <martin.wilck@ts.fujitsu.com>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [RFC PATCH v3 1/2] drivers: pci: fix pci_mmap_fits()
- implementation for procfs mmap
-Message-ID: <20141121175114.GC6578@google.com>
-References: <1415877558-8906-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1415877558-8906-2-git-send-email-lorenzo.pieralisi@arm.com>
+	<linuxppc-dev@lists.ozlabs.org>, Tony Luck <tony.luck@intel.com>,
+	<linux-ia64@vger.kernel.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	<Suravee.Suthikulpanit@amd.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [RFC PATCH 07/16] PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
+Date: Mon, 17 Nov 2014 18:21:41 +0800
+Message-ID: <1416219710-26088-8-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415877558-8906-2-git-send-email-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 13, 2014 at 11:19:15AM +0000, Lorenzo Pieralisi wrote:
-> The introduction of pci_mmap_fits() in commit:
-> 
-> b5ff7df3df9efab511244d5a299fce706c71af48
-> "Check mapped ranges on sysfs resource files"
-> 
-> allowed to check for valid range mappings of PCI resources to user space
-> when mapping PCI resources through the sysfs filesystem.
-> 
-> The mapping of resources through the sysfs expects the offset passed
-> by the user through the mmap syscall to be 0, and the pgoff is adjusted
-> by the kernel to memory map the resource to the CPU physical address
-> corresponding to the PCI resource in question.
-> 
-> The usage of procfs mapping of PCI resources (/proc/bus/pci files)
-> is more controversial in that userspace programs mapping PCI resources
-> are expected to pass in the mmap offset field either a CPU physical address
-> or a PCI bar value, depending on the architecture.
-> 
-> By the time pci_mmap_fits() was used to check PCI resource ranges for
-> procfs PCI resources mapping in commit:
-> 
-> 9eff02e2042f96fb2aedd02e032eca1c5333d7
-> "PCI: check mmap range of /proc/bus/pci files too"
-> 
-> the procfs interface for mmapping resources to user space broke, since
-> pci_mmap_fits() expected the offset passed from user space in the mmap
-> call to be 0, not the CPU physical address or PCI BAR value of the
-> resource in question.
-> 
-> Subsequent attempts at fixing the pci_mmap_fits() implementation failed
-> to fix the issue (or fixed the issue in some architectures but not for
-> all of them, ARM and SPARC procfs interface PCI resources mapping stayed
-> broken throughout) in particular commits:
-> 
-> 8c05cd08a7504b855c265263e84af61aabafa329
-> "PCI: fix offset check for sysfs mmapped files"
-> 
-> and
-> 
-> 3b519e4ea618b6943a82931630872907f9ac2c2b
-> "PCI: fix size checks for mmap() on /proc/bus/pci files"
-> 
-> fixed procfs PCI resources mapping checks in pci_mmap_fits for some
-> architectures, but not for architectures like SPARC that expects
-> the offset value passed from user space through the mmap syscall
-> (when mapping through procfs) to represent the PCI BAR value of the
-> resource to be mapped.
-> 
-> The reason behind the breakage is the following. The addresses stored
-> in PCI device resources for memory spaces correspond to CPU physical
-> addresses, which do not necessarily map 1:1 to PCI bus addresses as
-> programmed in PCI devices configuration spaces.
-> 
-> This implies that the sanity checks carried out in pci_mmap_fits() to
-> ensure that the user executes an mmap of a "real" pci resource are
-> erroneous when executed through procfs. Some platforms (ie SPARC)
-> expect the offset value to be passed in (procfs mapping) to be the
-> PCI BAR configuration value as read from the PCI device configuration
-> space, not the fixed-up CPU physical address that is present in PCI
-> device resources.
-> 
-> The required pgoff (offset in mmap syscall) value passed from userspace
-> is supposed to represent the resource value exported through
-> /proc/bus/pci/devices when the resource is mmapped though procfs (and 0
-> when the mapping is carried out through sysfs resource files), which
-> corresponds to the PCI resource filtered through the pci_resource_to_user()
-> API.
-> 
-> This patch converts the PCI resource to the expected "user visible"
-> value through pci_resource_to_user() before carrying out sanity checks
-> in pci_mmap_fits() so that the check is carried out on the resource
-> values as expected from the userspace mmap API.
-> 
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Cc: Russell King <linux@arm.linux.org.uk>
-> Cc: David S. Miller <davem@davemloft.net>
-> Cc: Michal Simek <monstr@monstr.eu>
-> Cc: Martin Wilck <martin.wilck@ts.fujitsu.com>
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+There are some common PCI infos like domain, msi_controller, these
+infos are saved in arch PCI sysdata, and lots arch specific functions
+like pci_domain_nr() and pcibios_msi_controller() required.
+We could separate pci_host_bridge creation out of pci_create_root_bus(),
+then we could put the common infos in, then we could eliminate
+the arch specifc functions.
 
-Hi Lorenzo,
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/host-bridge.c |   99 +++++++++++++++++++++++++++++++++
+ drivers/pci/probe.c       |  134 ++++++++++++++++----------------------------
+ include/linux/pci.h       |   11 +++-
+ 3 files changed, 158 insertions(+), 86 deletions(-)
 
-I think this patch is the right thing to do.  I'm going to try to write
-patches for microblaze, mips, powerpc, and sparc that implement their
-pci_resource_to_user() in terms of pcibios_resource_to_bus() (the patches
-are easy; it's the arguments for correctness that take time).  Then I'll
-try to convince myself that those arches are currently broken and will be
-fixed by your patch below.
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 0e5f3c9..e31604f 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -8,6 +8,105 @@
+ 
+ #include "pci.h"
+ 
++LIST_HEAD(pci_host_bridge_list);
++DECLARE_RWSEM(pci_host_bridge_sem);
++
++static struct resource busn_resource = {
++	.name	= "PCI busn",
++	.start	= 0,
++	.end	= 255,
++	.flags	= IORESOURCE_BUS,
++};
++
++static void pci_release_host_bridge_dev(struct device *dev)
++{
++	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
++
++	if (bridge->release_fn)
++		bridge->release_fn(bridge);
++	pci_free_resource_list(&bridge->windows);
++	kfree(bridge);
++}
++
++struct pci_host_bridge *pci_create_host_bridge(
++		struct device *parent, u32 db, 
++		struct pci_ops *ops, void *sysdata, 
++		struct list_head *resources)
++{
++	int error;
++	struct pci_bus *b;
++	struct pci_host_bridge *host, *h;
++	struct pci_host_bridge_window *window, *n;
++
++	down_read(&pci_host_bridge_sem);
++	list_for_each_entry(h, &pci_host_bridge_list, list) {
++		if (h->domain == PCI_DOMAIN(db) &&
++				h->busnum == PCI_BUSNUM(db)) {
++			dev_dbg(&h->dev, "pci host bridge exist\n");
++			up_read(&pci_host_bridge_sem);
++			return NULL;
++		}
++	}
++	up_read(&pci_host_bridge_sem);
++
++	host = kzalloc(sizeof(*host), GFP_KERNEL);
++	if (!host)
++		return NULL;
++
++	host->sysdata = sysdata;
++	host->busnum = PCI_BUSNUM(db);
++	host->domain = PCI_DOMAIN(db);
++	host->ops = ops;
++	host->dev.parent = parent;
++	INIT_LIST_HEAD(&host->windows);
++	host->dev.release = pci_release_host_bridge_dev;
++
++	/* this is hack, just for build, will be removed later*/
++	b = kzalloc(sizeof(*b), GFP_KERNEL);
++	b->sysdata = sysdata;
++	pci_bus_assign_domain_nr(b, parent);
++	host->domain = pci_domain_nr(b);
++
++	if (!resources) {
++		/* Use default IO/MEM/BUS resources*/
++		pci_add_resource(&host->windows, &ioport_resource);
++		pci_add_resource(&host->windows, &iomem_resource);
++		pci_add_resource(&host->windows, &busn_resource);
++	} else {
++		list_for_each_entry_safe(window, n, resources, list)
++			list_move_tail(&window->list, &host->windows);
++	}
++
++	dev_set_name(&host->dev, "pci%04x:%02x", host->domain, 
++			host->busnum);
++	error = pcibios_root_bridge_prepare(host);
++	if(error) {
++		kfree(host);
++		return NULL;
++	}
++
++	error = device_register(&host->dev);
++	if (error) {
++		put_device(&host->dev);
++		return NULL;
++	}
++
++	down_write(&pci_host_bridge_sem);
++	list_add_tail(&host->list, &pci_host_bridge_list);
++	up_write(&pci_host_bridge_sem);
++	return host;
++}
++EXPORT_SYMBOL(pci_create_host_bridge);
++
++void pci_free_host_bridge(struct pci_host_bridge *host)
++{
++	down_write(&pci_host_bridge_sem);
++	list_del(&host->list);
++	up_write(&pci_host_bridge_sem);
++
++	device_unregister(&host->dev);
++}
++
+ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+ {
+ 	while (bus->parent)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index adf4d09..d472da4 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -17,13 +17,6 @@
+ #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
+ #define CARDBUS_RESERVE_BUSNR	3
+ 
+-static struct resource busn_resource = {
+-	.name	= "PCI busn",
+-	.start	= 0,
+-	.end	= 255,
+-	.flags	= IORESOURCE_BUS,
+-};
+-
+ /* Ugh.  Need to stop exporting this to modules. */
+ LIST_HEAD(pci_root_buses);
+ EXPORT_SYMBOL(pci_root_buses);
+@@ -508,31 +501,6 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
+ 	return b;
+ }
+ 
+-static void pci_release_host_bridge_dev(struct device *dev)
+-{
+-	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
+-
+-	if (bridge->release_fn)
+-		bridge->release_fn(bridge);
+-
+-	pci_free_resource_list(&bridge->windows);
+-
+-	kfree(bridge);
+-}
+-
+-static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+-{
+-	struct pci_host_bridge *bridge;
+-
+-	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
+-	if (!bridge)
+-		return NULL;
+-
+-	INIT_LIST_HEAD(&bridge->windows);
+-	bridge->bus = b;
+-	return bridge;
+-}
+-
+ static const unsigned char pcix_bus_speed[] = {
+ 	PCI_SPEED_UNKNOWN,		/* 0 */
+ 	PCI_SPEED_66MHz_PCIX,		/* 1 */
+@@ -1895,52 +1863,33 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+ {
+ }
+ 
+-struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
+-		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++struct pci_bus *__pci_create_root_bus(struct pci_host_bridge *bridge)
+ {
+ 	int error;
+-	struct pci_host_bridge *bridge;
+ 	struct pci_bus *b, *b2;
+-	struct pci_host_bridge_window *window, *n;
++	struct pci_host_bridge_window *window;
+ 	struct resource *res;
+ 	resource_size_t offset;
+ 	char bus_addr[64];
+ 	char *fmt;
+-	u8	bus = PCI_BUSNUM(db);
++	struct device *parent = bridge->dev.parent;
+ 
+ 	b = pci_alloc_bus(NULL);
+ 	if (!b)
+ 		return NULL;
+ 
+-	b->sysdata = sysdata;
+-	b->ops = ops;
+-	b->number = b->busn_res.start = bus;
++	b->sysdata = bridge->sysdata;
++	b->ops = bridge->ops;
++	b->number = b->busn_res.start = bridge->busnum;
+ 	pci_bus_assign_domain_nr(b, parent);
+-	b2 = pci_find_bus(pci_domain_nr(b), bus);
++	bridge->domain = pci_domain_nr(b);
++	b2 = pci_find_bus(pci_domain_nr(b), bridge->busnum);
+ 	if (b2) {
+ 		/* If we already got to this bus through a different bridge, ignore it */
+ 		dev_dbg(&b2->dev, "bus already known\n");
+ 		goto err_out;
+ 	}
+ 
+-	bridge = pci_alloc_host_bridge(b);
+-	if (!bridge)
+-		goto err_out;
+-
+-	bridge->dev.parent = parent;
+-	bridge->dev.release = pci_release_host_bridge_dev;
+-	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+-	error = pcibios_root_bridge_prepare(bridge);
+-	if (error) {
+-		kfree(bridge);
+-		goto err_out;
+-	}
+-
+-	error = device_register(&bridge->dev);
+-	if (error) {
+-		put_device(&bridge->dev);
+-		goto err_out;
+-	}
+ 	b->bridge = get_device(&bridge->dev);
+ 	device_enable_async_suspend(b->bridge);
+ 	pci_set_bus_of_node(b);
+@@ -1950,7 +1899,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
+ 
+ 	b->dev.class = &pcibus_class;
+ 	b->dev.parent = b->bridge;
+-	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
++	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), b->number);
+ 	error = device_register(&b->dev);
+ 	if (error)
+ 		goto class_dev_reg_err;
+@@ -1966,12 +1915,11 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
+ 		printk(KERN_INFO "PCI host bridge to bus %s\n", dev_name(&b->dev));
+ 
+ 	/* Add initial resources to the bus */
+-	list_for_each_entry_safe(window, n, resources, list) {
+-		list_move_tail(&window->list, &bridge->windows);
++	list_for_each_entry(window, &bridge->windows, list) {
+ 		res = window->res;
+ 		offset = window->offset;
+ 		if (res->flags & IORESOURCE_BUS)
+-			pci_bus_insert_busn_res(b, bus, res->end);
++			pci_bus_insert_busn_res(b, b->number, res->end);
+ 		else
+ 			pci_bus_add_resource(b, res, 0);
+ 		if (offset) {
+@@ -2001,6 +1949,25 @@ err_out:
+ 	return NULL;
+ }
+ 
++struct pci_bus *pci_create_root_bus(struct device *parent, u32 bus,
++		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++{
++	struct pci_host_bridge *host;
++
++	host = pci_create_host_bridge(parent, bus, ops, 
++			sysdata ,resources);
++	if (!host)
++		return NULL;
++
++	host->bus = __pci_create_root_bus(host);
++	if (!host->bus) {
++		pci_free_host_bridge(host);
++		return NULL;
++	}
++		
++	return host->bus;
++}
++
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+ {
+ 	struct resource *res = &b->busn_res;
+@@ -2069,40 +2036,37 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+ {
+ 	struct pci_host_bridge_window *window;
+ 	bool found = false;
+-	struct pci_bus *b;
+-	LIST_HEAD(default_res);
++	struct pci_host_bridge *host;
+ 	int max;
+ 
+-	if (!resources) {
+-		pci_add_resource(&default_res, &ioport_resource);
+-		pci_add_resource(&default_res, &iomem_resource);
+-		pci_add_resource(&default_res, &busn_resource);
+-	} else {
+-		list_for_each_entry(window, resources, list)
+-			if (window->res->flags & IORESOURCE_BUS) {
+-				found = true;
+-				break;
+-			}
+-	}
++	host = pci_create_host_bridge(parent, db, ops, sysdata, resources);
++	if (!host)
++		return NULL;
+ 
+-	b = pci_create_root_bus(parent, db, ops, sysdata, 
+-			resources ? resources : &default_res);
+-	if (!b)
++	list_for_each_entry(window, &host->windows, list)
++		if (window->res->flags & IORESOURCE_BUS) {
++			found = true;
++			break;
++		}
++
++	host->bus = __pci_create_root_bus(host);
++	if (!host->bus) {
++		pci_free_host_bridge(host);
+ 		return NULL;
++	}
+ 
+ 	if (!found) {
+-		dev_info(&b->dev,
++		dev_info(&host->bus->dev,
+ 		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
+ 			PCI_BUSNUM(db));
+-		pci_bus_insert_busn_res(b, PCI_BUSNUM(db), 255);
++		pci_bus_insert_busn_res(host->bus, PCI_BUSNUM(db), 255);
+ 	}
+ 
+-	max = pci_scan_child_bus(b);
+-
++	max = pci_scan_child_bus(host->bus);
+ 	if (!found)
+-		pci_bus_update_busn_res_end(b, max);
++		pci_bus_update_busn_res_end(host->bus, max);
+ 
+-	return b;
++	return host->bus;
+ }
+ EXPORT_SYMBOL(pci_scan_root_bus);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8b11b38..daa7f40 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -402,7 +402,12 @@ struct pci_host_bridge_window {
+ struct pci_host_bridge {
+ 	struct device dev;
+ 	struct pci_bus *bus;		/* root bus */
++	struct list_head list;
+ 	struct list_head windows;	/* pci_host_bridge_windows */
++	int busnum;
++	int domain;
++	void *sysdata;
++	struct pci_ops *ops;
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
+ };
+@@ -413,7 +418,9 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+ 		     void *release_data);
+ 
+ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
+-
++struct pci_host_bridge *pci_create_host_bridge(
++		struct device *parent, u32 db, struct pci_ops *ops, 
++		void *sys, struct list_head *resources);
+ /*
+  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
+  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
+@@ -770,6 +777,8 @@ void pci_bus_add_devices(const struct pci_bus *bus);
+ struct pci_bus *pci_create_root_bus(struct device *parent, u32 bus,
+ 				    struct pci_ops *ops, void *sysdata,
+ 				    struct list_head *resources);
++struct pci_bus *__pci_create_root_bus(struct pci_host_bridge *host);
++void pci_free_host_bridge(struct pci_host_bridge *host);
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+ int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+ void pci_bus_release_busn_res(struct pci_bus *b);
+-- 
+1.7.1
 
-But I'll be on vacation all next week, so this will take me some time and
-it may not make the next merge window.
-
-Bjorn
-
-> ---
->  drivers/pci/pci-sysfs.c | 13 ++++++++-----
->  1 file changed, 8 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 2c6643f..e4634e3 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -963,17 +963,20 @@ void pci_remove_legacy_files(struct pci_bus *b)
->  int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vma,
->  		  enum pci_mmap_api mmap_api)
->  {
-> -	unsigned long nr, start, size, pci_start;
-> +	unsigned long nr, start, size, pci_offset;
-> +	resource_size_t pci_start, pci_end;
->  
->  	if (pci_resource_len(pdev, resno) == 0)
->  		return 0;
->  	nr = vma_pages(vma);
->  	start = vma->vm_pgoff;
-> +	pci_resource_to_user(pdev, resno, &pdev->resource[resno],
-> +			     &pci_start, &pci_end);
->  	size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
-> -	pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
-> -			pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
-> -	if (start >= pci_start && start < pci_start + size &&
-> -			start + nr <= pci_start + size)
-> +	pci_offset = (mmap_api == PCI_MMAP_PROCFS) ?
-> +			pci_start >> PAGE_SHIFT : 0;
-> +	if (start >= pci_offset && start < pci_offset + size &&
-> +			start + nr <= pci_offset + size)
->  		return 1;
->  	return 0;
->  }
-> -- 
-> 2.1.2
-> 
