@@ -1,43 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:56371 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750859AbaKKSYT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 13:24:19 -0500
-Date: Tue, 11 Nov 2014 18:24:18 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Ming Lei <ming.lei@canonical.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	alvise rigo <a.rigo@virtualopensystems.com>
-Subject: Re: [PATCH] pci: generic host: make it more generic
-Message-ID: <20141111182418.GA5507@red-moon>
-References: <1415702040-2790-1-git-send-email-ming.lei@canonical.com>
- <20141111122901.GA4419@red-moon>
- <CACVXFVNAc9axtESmo1zGZ3GMquTzjzWR3jx-b3tbhhLfQDDRcg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACVXFVNAc9axtESmo1zGZ3GMquTzjzWR3jx-b3tbhhLfQDDRcg@mail.gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:1455 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752351AbaKQLAX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 17 Nov 2014 06:00:23 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [Patch V3 4/9] irqdomain: Introduce helper function irq_domain_add_hierarchy()
+Date: Mon, 17 Nov 2014 19:03:17 +0800
+Message-Id: <1416222202-28002-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416222202-28002-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416222202-28002-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 11, 2014 at 02:02:20PM +0000, Ming Lei wrote:
+Introduce helper function irq_domain_add_hierarchy(), which creates
+a linear irqdomain if parameter 'size' is not zero, otherwise creates
+a tree irqdomain.
 
-[...]
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ include/linux/irqdomain.h |    4 ++++
+ kernel/irq/irqdomain.c    |   19 +++++++++++++++++++
+ 2 files changed, 23 insertions(+)
 
-> > http://lists.infradead.org/pipermail/linux-arm-kernel/2014-October/296535.html
-> >
-> > Patch above is already queued and applies most of the changes you have posted
-> > above.
-> 
-> I should have looked at list first before writing the patch, :-(
-> 
-> Could you make it more generic so that other ARCHs(at least ARM64)
-> can benefit from it too?
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index ad92b0b15945..30e8c753fa98 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -248,6 +248,10 @@ int irq_domain_xlate_onetwocell(struct irq_domain *d, struct device_node *ctrlr,
+ extern struct irq_data *irq_domain_get_irq_data(struct irq_domain *domain,
+ 						unsigned int virq);
+ #ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
++extern struct irq_domain *irq_domain_add_hierarchy(struct irq_domain *parent,
++			unsigned int flags, unsigned int size,
++			struct device_node *node,
++			const struct irq_domain_ops *ops, void *host_data);
+ extern int __irq_domain_alloc_irqs(struct irq_domain *domain, int irq_base,
+ 				   unsigned int nr_irqs, int node, void *arg,
+ 				   bool realloc);
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 03fc7d018324..73c66d6f9ffc 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -742,6 +742,25 @@ static int irq_domain_alloc_descs(int virq, unsigned int cnt,
+ }
+ 
+ #ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
++struct irq_domain *irq_domain_add_hierarchy(struct irq_domain *parent,
++			unsigned int flags, unsigned int size,
++			struct device_node *node,
++			const struct irq_domain_ops *ops, void *host_data)
++{
++	struct irq_domain *domain;
++
++	if (size)
++		domain = irq_domain_add_linear(node, size, ops, host_data);
++	else
++		domain = irq_domain_add_tree(node, ops, host_data);
++	if (domain) {
++		domain->parent = parent;
++		domain->flags |= flags;
++	}
++
++	return domain;
++}
++
+ static void irq_domain_insert_irq(int virq)
+ {
+ 	struct irq_data *data;
+-- 
+1.7.10.4
 
-That's our current goal, we are carrying out clean-ups to remove arch
-dependency and move code to the generic layer PCI layer.
-
-Lorenzo
