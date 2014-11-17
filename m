@@ -1,49 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:33862 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752329AbaKCT3e (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Nov 2014 14:29:34 -0500
-Received: by mail-ig0-f182.google.com with SMTP id hn18so5235962igb.9
-        for <linux-pci@vger.kernel.org>; Mon, 03 Nov 2014 11:29:33 -0800 (PST)
-Date: Mon, 3 Nov 2014 12:29:30 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: linux-pci@vger.kernel.org
-Cc: Elmar Stellnberger <estellnb@elstel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Rajat Jain <rajatxjain@gmail.com>
-Subject: [Bug 43192] ExpressCards are not recognized
-Message-ID: <20141103192930.GA26548@google.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:28886 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752092AbaKQJk5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 04:40:57 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, Tony Luck <tony.luck@intel.com>,
+	<linux-ia64@vger.kernel.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	<Suravee.Suthikulpanit@amd.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [RFC PATCH 14/16] arm/PCI: Introduce pci_get_domain_nr()
+Date: Mon, 17 Nov 2014 18:21:48 +0800
+Message-ID: <1416219710-26088-15-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=43192
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/arm/include/asm/mach/pci.h |    9 +++++++++
+ arch/arm/kernel/bios32.c        |    8 ++++++--
+ 2 files changed, 15 insertions(+), 2 deletions(-)
 
-Elmar reported this bug over two years ago.  Anybody who's interested is
-more than welcome to take a look at it.
+diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+index f19f627..370b3bd 100644
+--- a/arch/arm/include/asm/mach/pci.h
++++ b/arch/arm/include/asm/mach/pci.h
+@@ -90,6 +90,15 @@ extern void pci_map_io_early(unsigned long pfn);
+ static inline void pci_map_io_early(unsigned long pfn) {}
+ #endif
+ 
++#ifdef CONFIG_PCI_DOMAINS_GENERIC
++int pci_get_domain_nr(struct device *parent)
++#else
++static inline int pci_get_domain_nr(struct device *parent)
++{
++	return 0;
++}
++#endif
++
+ /*
+  * PCI controllers
+  */
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index d8c2b4e..3fe56f1 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -513,7 +513,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
+ static bool dt_domain_found;
+ 
+-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
++int pci_get_domain_nr(struct device *parent)
+ {
+ 	int domain = of_get_pci_domain_nr(parent->of_node);
+ 
+@@ -526,8 +526,12 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ 	} else {
+ 		domain = pci_get_new_domain_nr();
+ 	}
++	return domain;
++}
+ 
+-	bus->domain_nr = domain;
++void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
++{
++	bus->domain_nr = pci_get_domain_nr(parent);
+ }
+ #endif
+ 
+-- 
+1.7.1
 
-> Whether I try to use ExpressCards on a system with native ExpressCard
-> interface (Amilo Xi2550, AdapterNo: 07473DD) or with a PCMCIA to
-> ExpressCard adapter (DeLock Card Adapter CardBus for E-Card) lspci does not
-> recognize my ExpressCards (tried with DeLock and Transcend USB 3.0
-> adapter). The only thing which is recognized is the PCMCIA to ExpressCard
-> adapter, not the ExpressCards themselves.
-> 
-> # lspci | grep -i cardbus
-> 00:0b.0 CardBus bridge: Texas Instruments PCIxx12 Cardbus Controller
-> 
-> # diff lspci-n_adapter-only/transcend/delock.msg lspci-n_none.msg
-> 17,18d16
-> < 03:00.0 0c03: 1033:0035 (rev 44)
-> < 03:00.1 0c03: 1033:00e0 (rev 05)
-
-There are also other bugs languishing in the PCI bugzilla:
-
-https://bugzilla.kernel.org/buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&columnlist=assigned_to%2Cbug_status%2Ccf_kernel_version%2Cshort_short_desc&component=PCI&order=bug_id%20DESC
-
-I try to mention new incoming bugs on linux-pci in the hope that somebody
-will adopt them, but sometimes I forget.  Sometimes I can look at things
-myself, but I don't have time to work on them all.
-
-Bjorn
