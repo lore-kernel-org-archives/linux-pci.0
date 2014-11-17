@@ -1,74 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:60077 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756880AbaKSXfF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 18:35:05 -0500
-Received: by mail-ie0-f174.google.com with SMTP id rl12so1680816iec.19
-        for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2014 15:35:05 -0800 (PST)
-Date: Wed, 19 Nov 2014 16:35:02 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH V9 01/18] PCI/IOV: Export interface for retrieve VF's BDF
-Message-ID: <20141119233502.GG23467@google.com>
-References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1414942894-17034-2-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:43133 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751090AbaKQJkw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 04:40:52 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, Tony Luck <tony.luck@intel.com>,
+	<linux-ia64@vger.kernel.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	<Suravee.Suthikulpanit@amd.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [RFC PATCH 05/16] PCI: Use pci_scan_root_bus() instead of pci_scan_bus_parented()
+Date: Mon, 17 Nov 2014 18:21:39 +0800
+Message-ID: <1416219710-26088-6-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1414942894-17034-2-git-send-email-weiyang@linux.vnet.ibm.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Nov 02, 2014 at 11:41:17PM +0800, Wei Yang wrote:
-> When implementing the SR-IOV on PowerNV platform, some resource reservation is
-> needed for VFs which don't exist at the bootup stage. To do the match between
-> resources and VFs, the code need to get the VF's BDF in advance.
-> 
-> In this patch, it exports the interface to retrieve VF's BDF:
->    * Make the virtfn_bus as an interface
->    * Make the virtfn_devfn as an interface
->    * Rename them with more specific name
->    * Code cleanup in pci_sriov_resource_alignment()
-> 
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> ---
->  drivers/pci/iov.c   |   22 +++++++++++++---------
->  include/linux/pci.h |   11 +++++++++++
->  2 files changed, 24 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 4d109c0..5e8091b 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -19,14 +19,18 @@
->  
->  #define VIRTFN_ID_LEN	16
->  
-> -static inline u8 virtfn_bus(struct pci_dev *dev, int id)
-> +int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
->  {
-> +	if (!dev->is_physfn)
-> +		return -EINVAL;
->  	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
->  				    dev->sriov->stride * id) >> 8);
->  }
->  
-> -static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
-> +int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
->  {
-> +	if (!dev->is_physfn)
-> +		return -EINVAL;
->  	return (dev->devfn + dev->sriov->offset +
->  		dev->sriov->stride * id) & 0xff;
->  }
+Now we can remove the deprecated pci_scan_bus_parented(),
+and use pci_scan_root_bus() instead.
 
-I'm concerned about exporting these because they depend on First VF Offset
-and VF Stride from the SR-IOV Capability, and those values change when the
-ARI Capability Hierarchy setting or the NumVFs setting change (SR-IOV spec
-sec 3.3.9, 3.3.10).  The caller doesn't necessarily know about this
-connection and may not be able to deal with the change.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/probe.c        |   19 -------------------
+ drivers/pci/xen-pcifront.c |    6 +++---
+ include/linux/pci.h        |    2 --
+ 3 files changed, 3 insertions(+), 24 deletions(-)
 
-I outlined one possible problem with this in patch 08/18.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 97711f3..623bfff 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2105,25 +2105,6 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ }
+ EXPORT_SYMBOL(pci_scan_root_bus);
+ 
+-/* Deprecated; use pci_scan_root_bus() instead */
+-struct pci_bus *pci_scan_bus_parented(struct device *parent,
+-		int bus, struct pci_ops *ops, void *sysdata)
+-{
+-	LIST_HEAD(resources);
+-	struct pci_bus *b;
+-
+-	pci_add_resource(&resources, &ioport_resource);
+-	pci_add_resource(&resources, &iomem_resource);
+-	pci_add_resource(&resources, &busn_resource);
+-	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
+-	if (b)
+-		pci_scan_child_bus(b);
+-	else
+-		pci_free_resource_list(&resources);
+-	return b;
+-}
+-EXPORT_SYMBOL(pci_scan_bus_parented);
+-
+ /**
+  * pci_rescan_bus_bridge_resize - scan a PCI bus for devices.
+  * @bridge: PCI bridge for the bus to scan
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index 116ca37..fa2e312 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -474,8 +474,8 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 
+ 	pci_lock_rescan_remove();
+ 
+-	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
+-				  &pcifront_bus_ops, sd);
++	b = pci_scan_root_bus(&pdev->xdev->dev, bus,
++				  &pcifront_bus_ops, sd, NULL);
+ 	if (!b) {
+ 		dev_err(&pdev->xdev->dev,
+ 			"Error creating PCI Frontend Bus!\n");
+@@ -488,7 +488,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 
+ 	list_add(&bus_entry->list, &pdev->root_buses);
+ 
+-	/* pci_scan_bus_parented skips devices which do not have a have
++	/* pci_scan_root_bus skips devices which do not have a have
+ 	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
+ 	err = pcifront_scan_bus(pdev, domain, bus, b);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index f8045d6..4daef65 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -767,8 +767,6 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+ void pcibios_scan_specific_bus(int busn);
+ struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
+-struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
+-				      struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 				    struct pci_ops *ops, void *sysdata,
+ 				    struct list_head *resources);
+-- 
+1.7.1
 
-Bjorn
