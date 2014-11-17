@@ -1,47 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:35407 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754559AbaKTQby (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Nov 2014 11:31:54 -0500
-Message-ID: <546E1771.4030201@arm.com>
-Date: Thu, 20 Nov 2014 16:31:45 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:1455 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752914AbaKQLAP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 17 Nov 2014 06:00:15 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yijing Wang <wangyijing@huawei.com>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, linux-pci@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>
-Subject: Removal of bus->msi assignment breaks MSI with stacked domains
-Content-Type: text/plain; charset=utf-8
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>
+Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [Patch V3 2/9] irqdomain: Use consistent prototype for irq_domain_free_irqs_*
+Date: Mon, 17 Nov 2014 19:03:15 +0800
+Message-Id: <1416222202-28002-3-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416222202-28002-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416222202-28002-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn, Yijing,
+From: Yingjoe Chen <yingjoe.chen@mediatek.com>
 
-I've just realized that patch c167caf8d174 (PCI/MSI: Remove useless
-bus->msi assignment) completely breaks MSI on arm64 when using the new
-MSI stacked domain:
+When using irq_domain_free_irqs_top() directly in irq_domain_ops, gcc
+generate the following warnings:
 
-This patch relies on architectures to implement either
-pcibios_msi_controller() or arch_setup_msi_irq(). It turns out that with
-stacked domains, none of this is actually necessary, as long as you can
-access to the msi_controller.
+../drivers/irqchip/irq-gic.c:879:2: warning: initialization from incompatible pointer type [enabled by default]
+../drivers/irqchip/irq-gic.c:879:2: warning: (near initialization for 'gic_irq_domain_hierarchy_ops.free') [enabled by default]
 
-And everything was fine until this patch came around (and managed to
-test on a system where the PCI devices are not directly attached to the
-root bus). Of course, everything now breaks, as we cannot get to the MSI
-controller (which contains the domain we allocate the MSIs from).
+Change to use consistent prototype for all irq_domain_free_irqs*
 
-In short, this patch breaks an important feature on which arm64 relies,
-and I believe this patch should be reverted ASAP.
+Better to fold this into "irqdomain: Introduce new interfaces to
+support hierarchy irqdomains".
 
-Thanks,
+Signed-off-by: Yingjoe Chen <yingjoe.chen@mediatek.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ include/linux/irqdomain.h |    9 +++++----
+ kernel/irq/irqdomain.c    |    8 ++++----
+ 2 files changed, 9 insertions(+), 8 deletions(-)
 
-	M.
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index 640a1ec54772..fbe542967c20 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -270,12 +270,13 @@ extern void irq_domain_set_info(struct irq_domain *domain, unsigned int virq,
+ 				void *handler_data, const char *handler_name);
+ extern void irq_domain_reset_irq_data(struct irq_data *irq_data);
+ extern void irq_domain_free_irqs_common(struct irq_domain *domain,
+-					int virq, int nr_irqs);
++					unsigned int virq,
++					unsigned int nr_irqs);
+ extern void irq_domain_free_irqs_top(struct irq_domain *domain,
+-				     int virq, int nr_irqs);
++				     unsigned int virq, unsigned int nr_irqs);
+ 
+ static inline int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
+-				int irq_base, unsigned int nr_irqs, void *arg)
++			unsigned int irq_base, unsigned int nr_irqs, void *arg)
+ {
+ 	if (domain->parent && domain->parent->ops->alloc)
+ 		return domain->parent->ops->alloc(domain->parent, irq_base,
+@@ -284,7 +285,7 @@ static inline int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
+ }
+ 
+ static inline void irq_domain_free_irqs_parent(struct irq_domain *domain,
+-					int irq_base, unsigned int nr_irqs)
++				unsigned int irq_base, unsigned int nr_irqs)
+ {
+ 	if (domain->parent && domain->parent->ops->free)
+ 		domain->parent->ops->free(domain->parent, irq_base, nr_irqs);
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 8b0eddee0b21..705fb573e509 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -899,8 +899,8 @@ void irq_domain_reset_irq_data(struct irq_data *irq_data)
+ 	irq_data->chip_data = NULL;
+ }
+ 
+-void irq_domain_free_irqs_common(struct irq_domain *domain, int virq,
+-				 int nr_irqs)
++void irq_domain_free_irqs_common(struct irq_domain *domain, unsigned int virq,
++				 unsigned int nr_irqs)
+ {
+ 	int i;
+ 	struct irq_data *irq_data;
+@@ -913,8 +913,8 @@ void irq_domain_free_irqs_common(struct irq_domain *domain, int virq,
+ 	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
+ }
+ 
+-void irq_domain_free_irqs_top(struct irq_domain *domain, int virq,
+-			      int nr_irqs)
++void irq_domain_free_irqs_top(struct irq_domain *domain, unsigned int virq,
++			      unsigned int nr_irqs)
+ {
+ 	int i;
+ 
 -- 
-Jazz is not dead. It just smells funny...
+1.7.10.4
+
