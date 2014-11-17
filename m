@@ -1,74 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:52165 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750845AbaKTNPs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Nov 2014 08:15:48 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Tony Luck <tony.luck@intel.com>,
+Received: from service87.mimecast.com ([91.220.42.44]:42209 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751626AbaKQMIu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 07:08:50 -0500
+Date: Mon, 17 Nov 2014 12:08:39 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"huxinwei@huawei.com" <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
 	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
 	Thierry Reding <thierry.reding@gmail.com>,
-	Suravee.Suthikulpanit@amd.com, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-ia64@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Wuyun <wuyun.wu@huawei.com>, linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFC PATCH 00/16] Refine PCI host bridge scan interfaces
-Date: Thu, 20 Nov 2014 14:15:19 +0100
-Message-ID: <2756150.eOnxg6jMdK@wuerfel>
-In-Reply-To: <546DD804.4010105@linaro.org>
-References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com> <1534030.bkpIToWlHq@wuerfel> <546DD804.4010105@linaro.org>
+	Liviu Dudau <liviu@dudau.co.uk>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
+Subject: Re: [RFC PATCH 14/16] arm/PCI: Introduce pci_get_domain_nr()
+Message-ID: <20141117120839.GA22241@e102568-lin.cambridge.arm.com>
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+ <1416219710-26088-15-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1416219710-26088-15-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset=WINDOWS-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 20 November 2014 13:01:08 Tomasz Nowicki wrote:
-> On 18.11.2014 13:27, Arnd Bergmann wrote:
-> > On Tuesday 18 November 2014 20:17:57 Yijing Wang wrote:
-> >>
-> >>>>
-> >>>> I hope platforms with ACPI or DT could both use pci_create_host_bridge().
-> >>>> Why we need to use two different ways to process it ?
-> >>>
-> >>> These are completely different use cases:
-> >>>
-> >>> a) For DT, we want loadable device drivers that start by probing a host
-> >>>     bridge device which was added through the DT platform code. The
-> >>>     driver is self-contained, and eventually we want to be able to unload
-> >>>     it. We have lots of different per-soc drivers that require different
-> >>>     quirks
-> >>>
-> >>> b) For ACPI, the interface is defined in the ACPI spec across architectures
-> >>>     and SoCs, we don't have host bridge drivers and the code that initializes
-> >>>     the PCI is required early during boot and called from architecture
-> >>>     code. There is no parent device, as ACPI sees PCI as a fundamental building
-> >>>     block by itself, and there are no drivers because the firmware does
-> >>>     the initial hardware setup, so we only have to access the config space.
-> >>
-> >> Hmmm, I'm a little confused, so why you think ACPI host driver should not use
-> >> pci_create_host_bridge(), because ACPI PCI driver has no parent device ?
-> >
-> > It's one of the difference. Having a parent device can certainly make your
-> > life simpler, since you have devm_kzalloc(), dev_info(), etc. Coming from
-> > the other end, I think ACPI needs PCI to be available during early boot,
-> > at a time where we might not want pci_create_host_bridge() to do the
-> > right thing.
+On Mon, Nov 17, 2014 at 10:21:48AM +0000, Yijing Wang wrote:
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  arch/arm/include/asm/mach/pci.h |    9 +++++++++
+>  arch/arm/kernel/bios32.c        |    8 ++++++--
+>  2 files changed, 15 insertions(+), 2 deletions(-)
 > 
-> Device pointer is not required for ACPI, struct acpi_device is all we 
-> need to get all that info. If pci_create_host_bridge() would be DT 
-> specific, it would be nice to have sth similar for ACPI but that is out 
-> of this patch set scope.
+> diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+> index f19f627..370b3bd 100644
+> --- a/arch/arm/include/asm/mach/pci.h
+> +++ b/arch/arm/include/asm/mach/pci.h
+> @@ -90,6 +90,15 @@ extern void pci_map_io_early(unsigned long pfn);
+>  static inline void pci_map_io_early(unsigned long pfn) {}
+>  #endif
+>  
+> +#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> +int pci_get_domain_nr(struct device *parent)
+> +#else
+> +static inline int pci_get_domain_nr(struct device *parent)
+> +{
+> +	return 0;
+> +}
+> +#endif
+> +
+>  /*
+>   * PCI controllers
+>   */
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> index d8c2b4e..3fe56f1 100644
+> --- a/arch/arm/kernel/bios32.c
+> +++ b/arch/arm/kernel/bios32.c
+> @@ -513,7 +513,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+>  #ifdef CONFIG_PCI_DOMAINS_GENERIC
+>  static bool dt_domain_found;
+>  
+> -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> +int pci_get_domain_nr(struct device *parent)
+>  {
+>  	int domain = of_get_pci_domain_nr(parent->of_node);
+>  
+> @@ -526,8 +526,12 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+>  	} else {
+>  		domain = pci_get_new_domain_nr();
+>  	}
+> +	return domain;
+> +}
+>  
+> -	bus->domain_nr = domain;
+> +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> +{
+> +	bus->domain_nr = pci_get_domain_nr(parent);
+>  }
+>  #endif
 
-My point was more that we don't need to have something like it for ACPI,
-since we don't get random drivers that need to be probed that way,
-just one common implementation that calls into the PCI core. We should
-of course share the common bits with pci_create_host_bridge() in some
-form, but that can be done by moving the x86 pci_acpi_scan_root
-function and/or acpi_pci_root_add() to a common place in drivers/pci
-and then refactoring the internals.
+This code is superseded by the last patches I sent to move the domain
+assignment to PCI core code.
 
-	Arnd
+http://lists.infradead.org/pipermail/linux-arm-kernel/2014-November/301220.html
+
+Lorenzo
+
