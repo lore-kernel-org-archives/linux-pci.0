@@ -1,81 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <54655956.10402@linux.intel.com>
-Date: Fri, 14 Nov 2014 09:22:30 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cmexedge2.emulex.com ([138.239.224.100]:11383 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751180AbaKQPMs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 10:12:48 -0500
+From: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.Com>
+To: "Bjorn Helgaas (bhelgaas@google.com)" <bhelgaas@google.com>
+CC: "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v1] pci: Limit VPD length of Emulex adapters to the
+ actual length supported.
+Date: Mon, 17 Nov 2014 15:12:15 +0000
+Message-ID: <BF3270C86E8B1349A26C34E4EC1C44CB3E87A6A7@CMEXMB1.ad.emulex.com>
+References: <1f6d7b6c-7189-4fe3-926b-42609724cab9@CMEXHTCAS2.ad.emulex.com>
+ <20141023154054.GA7137@google.com>
+ <BF3270C86E8B1349A26C34E4EC1C44CB3E860095@CMEXMB1.ad.emulex.com>
+ <CAErSpo7_9xxtBmHOCgxsHeVLbKUeMVhLF6Q9OyFkz11EZbtJCA@mail.gmail.com>
+ <BF3270C86E8B1349A26C34E4EC1C44CB3E862DC6@CMEXMB1.ad.emulex.com>
+ <CAErSpo7KKka6-nHWnVbqVW3hx-E=4x6cEjeEGEAWz32za6xCGQ@mail.gmail.com>
+In-Reply-To: <CAErSpo7KKka6-nHWnVbqVW3hx-E=4x6cEjeEGEAWz32za6xCGQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [Patch V1 0/6] Refine generic/PCI MSI irqodmian interfaces
-References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com> <54651BE2.9080008@arm.com> <54654C10.2040102@linux.intel.com> <54655632.2040209@huawei.com>
-In-Reply-To: <54655632.2040209@huawei.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/11/14 9:09, Yijing Wang wrote:
-> On 2014/11/14 8:25, Jiang Liu wrote:
->> On 2014/11/14 5:00, Marc Zyngier wrote:
->>> On 13/11/14 11:43, Jiang Liu wrote:
->>>> This patch set is based on tip/irq/irqdomain and tries to refine
->>>> interfaces to support irqdomain for generic MSI and PCI MSI.
->>>>
->>>> With this patch set applied, the generic MSI and PCI MSI interfaces
->>>> are much easier to use. For extreme case, you only need to define
->>>> a "struct msi_domain_info" and don't need to implement any callbacks,
->>>> just using the default callbacks is OK:)
->>>>
->>>> This patch set is also a preparation for:
->>>> 1) Kill all weak functions in drivers/pci/msi.c
->>>> 2) Implement support for non-PCI-compliant MSI device
->>>
->>> I've rebased (once more!) the GICv3 ITS driver on top of this, and this
->>> is definitely a major improvement. This is basically the first version
->>> I can use without having to hack into the core code (apart from the
->>> couple of nits I've mentioned earlier).
->> Sorry for the rebasing, but I hope it worthy rebasing:)
->>
->>>
->>> Now, Thomas' idea of putting the irq_domain close to the bus is very
->>> appealing, and I've tweaked an earlier patch in order to do this:
->> I feel that's the right direction. There are other threads discussing
->> associating an MSI controller structure with each PCI bus (at least
->> root bus).
->> http://www.spinics.net/lists/arm-kernel/msg376328.html
-> 
-> Associate the irq domain and PCI bus is not necessary, because all PCI buses under same host bridge
-> always share same MSI chip/irq domain, we only need associate them and pci host bridge.
-> I'm refactoring the pci_host_bridge, make it be a generic one, rip out of the pci root bus
-> creation, so we could put the irq domain and pci domain etc.. in it. Finally, we could
-> eliminate lots platform arch functions. I will post it out within one week.
-Hi Yijing,
-	Theoretically, it's not true on x86 when interrupt remapping
-is enabled. There may be multiple IOMMU(interrupt remapping) units
-serving the same host bridge, so we need different MSI domains
-to serve different PCI devices.
-Regards!
-Gerry
-
-> 
-> Thanks!
-> Yijing.
-> 
->> Regards!
->> Gerry
->>
->> .
->>
-> 
-> 
+U29ycnkgZm9yIGEgZGVsYXllZCByZXNwb25zZS4NCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2Ut
+LS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86YmhlbGdhYXNAZ29vZ2xlLmNvbV0N
+Cj4gU2VudDogVHVlc2RheSwgTm92ZW1iZXIgMDQsIDIwMTQgMTE6MDUgUE0NCj4gVG86IFZlbmth
+dCBEdXZ2dXJ1DQo+IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJl
+OiBbUEFUQ0ggdjFdIHBjaTogTGltaXQgVlBEIGxlbmd0aCBvZiBFbXVsZXggYWRhcHRlcnMgdG8g
+dGhlDQo+IGFjdHVhbCBsZW5ndGggc3VwcG9ydGVkLg0KPiANCj4gPiBJbiB0aGlzIGNhc2Ugd2hl
+biB0aGUgaG9zdCByZWFkcyAzMmsgc3BhY2UsIHRoZSBhZGFwdGVyIGdldHMgYXJvdW5kIDhLDQo+
+IGludGVycnVwdHMgYW5kIHNvbWV0aW1lcyBnZXRzIG92ZXJ3aGVsbWVkIHdpdGggdGhlIGludGVy
+cnVwdCBzdG9ybS4gVGhpcw0KPiBjb3VsZCBjYXVzZSB0aGUgYWRhcHRlciB0byBzdG9wIGZ1bmN0
+aW9uaW5nIHByb3Blcmx5Lg0KPiA+IExpbWl0aW5nIHRoZSBWUEQgcmVhZCB0byAxSyBjYXVzZXMg
+b25seSAyNTYgaW50ZXJydXB0cyAob24gdGhlIGFkYXB0ZXIpIGFuZA0KPiB0aGUgcHJvYmxlbSBu
+ZXZlciBzZWVtcyB0byBvY2N1ci4NCj4gPiBUaGlzIGhhcyBiZWVuIHRoZSBtYWluIG1vdGl2YXRp
+b24gYmVoaW5kIG15IHBhdGNoLg0KPiA+IEkgZG8gYWdyZWUgdGhhdCB0aGUgdGltZW91dCBjb3Vs
+ZCBzdGlsbCBvY2N1ciBldmVuIHdoZW4gcmVhZGluZyB0aGUgMUsNCj4gaW1wbGVtZW50ZWQgc3Bh
+Y2UsIGJ1dCBJIGZlZWwgaXQncyBoaWdobHkgaW1wcm9iYWJsZS4NCj4gDQo+IE9LLiAgSSB3b3Vs
+ZCBndWVzcyB0aGF0IHNvbWV0aGluZyBsaWtlDQo+IA0KPiAgIHdoaWxlIC9iaW4vdHJ1ZTsgZG8N
+Cj4gICAgIGNhdCAvc3lzL2RldmljZXMvcGNpMDAwMDowMC8wMDAwOjAwOjAwLjAvdnBkDQo+ICAg
+ZG9uZQ0KPiANCj4gY291bGQgc3RpbGwgb3ZlcndoZWxtIHRoZSBhZGFwdGVyLCBldmVuIHdpdGgg
+dGhlIDFLIGxpbWl0IGluIHBsYWNlLg0KQ29ycmVjdC4NCg0KPiANCj4gPiBBcyBhbiBhbHRlcm5h
+dGl2ZSBzb2x1dGlvbiwgd291bGQgeW91IGJlIG9wZW4gdG8gYSBmaXggaW4gUENJIC1jb3JlIHRv
+IHN0b3ANCj4gcmVhZGluZyBhZnRlciB0aGUgRW5kLXRhZyBpcyBkZXRlY3RlZD8gIChUaGlzIGxv
+Z2ljIGlzIHVzZWQgYnkgcGNpLXV0aWxpdHkgKGxzLQ0KPiB2cGQuYykgd2hpbGUgcmVhZGluZyBW
+UEQgZGF0YS4pDQo+ID4gSSBub3cgZmVlbCB0aGF0IHRoaXMgaXMgdGhlICpyaWdodCogc29sdXRp
+b24gdGhhbiBteSBwY2ktcXVpcmtzIHBhdGNoLg0KPiANCj4gVGhhdCdzIGEgcG9zc2liaWxpdHks
+IGFuZCBpZiB3ZSB3ZXJlIGltcGxlbWVudGluZyBWUEQgc3VwcG9ydCBmcm9tDQo+IHNjcmF0Y2gs
+IEknZCBwcm9iYWJseSBkbyBpdCB0aGF0IHdheS4NCj4gDQo+IE15IG9ubHkgY29uY2VybiB3aXRo
+IGNoYW5naW5nIG5vdyBpcyB0aGF0IGl0IGNvdWxkIGJyZWFrIGV4aXN0aW5nDQo+IHVzZXJzIGZv
+ciBkZXZpY2VzIHdoZXJlIHRoZSBWUEQgY29udGVudCBkb2Vzbid0IGhhdmUgdGhlIHN0cnVjdHVy
+ZQ0KPiBzcGVjaWZpZWQgYnkgdGhlIHNwZWMuICBUaGVyZSBhcmVuJ3QgKnRvbyogbWFueSB1c2Vy
+cyBvZg0KPiBwY2lfcmVhZF92cGQoKSBpbiB0aGUgdHJlZSwgc28gaXQgbWlnaHQgYmUgZmVhc2li
+bGUgdG8ganVzdCBhc2sgdGhlDQo+IGJueDJ4LCB0ZzMsIGN4Z2I0LCBza3kyLCBhbmQgZWZ4IGZv
+bGtzIHdoZXRoZXIgdGhleSB0aGluayBpdCdzIHNhZmUuDQo+IA0KPiBJIHRvb2sgYSBxdWljayBs
+b29rIGF0IHRob3NlIGRyaXZlcnMsIGFuZCBpdCBhY3R1YWxseSBsb29rcyBsaWtlIG1vc3QNCj4g
+b2YgdGhlbSBsb29rIGZvciB0aGUgdGFnIHN0cnVjdHVyZSwgZS5nLiwgYnkgdXNpbmcgcGNpX3Zw
+ZF9maW5kX3RhZygpDQo+IG9yIGRvaW5nIHNvbWV0aGluZyBzaW1pbGFyLiAgU28gbWF5YmUgaXQg
+YWN0dWFsbHkgd291bGQgYmUgc2FmZSB0byBkbw0KPiB0aGlzLiAgTWF5YmUgeW91IGNvdWxkIGhh
+dmUgYSBtb3JlIHRob3JvdWdoIGxvb2sgYXQgdGhlbSBhbmQgc2VlIGlmDQo+IHlvdSBhZ3JlZT8N
+CklmIHRoZSBkZXZpY2VzIGRvZXNuJ3QgZm9sbG93IHRoZSBzcGVjIGZvciB0aGUgVlBEIGNvbnRl
+bnRzLCBwY2ktY29yZSBtYXkgZW5kdXAgcmVxdWVzdGluZyAzMmsgZGF0YSB3aGljaCBwcm9iYWJs
+eSB3aWxsIG5vdCBicmVhayBleGlzdGluZyB1c2Vycy4NCkkgbG9va2VkIGludG8gYWxsIHRoZSBw
+Y2lfcmVhZF92cGQgdXNlcnMgKGRyaXZlcnMpIGFuZCB0aGV5IHNlZW0gdG8gYmUgZG9pbmcgcGNp
+X2ZpbmRfdnBkX3RhZyBvciBwY2lfdnBkX2ZpbmRfaW5mb19rZXl3b3JkIHRvIGZpbmQgYSBzcGVj
+aWZpYyB0YWcva2V5d29yZCBhbmQgbm90IGFsbCB0aGUgdGFncy9rZXl3b3Jkcy4NCkEgc2FmZXIg
+YXBwcm9hY2ggcHJvYmFibHkgaXMgdG8gbG9vayBmb3IgdGhlIGVuZCB0YWcgaW4gcGNpX3JlYWRf
+dnBkLCBpZiBvZmZzZXQgaXMgInplcm8iIGJlY2F1c2Ugc29tZSBkcml2ZXJzIGFyZSBkb2luZyAi
+cGNpX3JlYWRfdnBkIiB3aXRoIGEgbm9uLXplcm8gb2Zmc2V0Lg0KDQoNCi9WZW5rYXQuDQo=
