@@ -1,66 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:35670 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752571AbaKLKve (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 05:51:34 -0500
+Received: from szxga01-in.huawei.com ([119.145.14.64]:43152 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751547AbaKQJkw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 04:40:52 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, Tony Luck <tony.luck@intel.com>,
+	<linux-ia64@vger.kernel.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	<Suravee.Suthikulpanit@amd.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [RFC PATCH 10/16] PCI: Add of_scan_bus() to pci_host_info
+Date: Mon, 17 Nov 2014 18:21:44 +0800
+Message-ID: <1416219710-26088-11-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20141112095846.GA6759@red-moon>
-References: <1415702040-2790-1-git-send-email-ming.lei@canonical.com>
-	<20141111122901.GA4419@red-moon>
-	<CACVXFVNAc9axtESmo1zGZ3GMquTzjzWR3jx-b3tbhhLfQDDRcg@mail.gmail.com>
-	<20141111182418.GA5507@red-moon>
-	<CACVXFVPzo2qNGa5DWESS3TXor=u82_SxHb+xzrBCRXtcQxq4Cg@mail.gmail.com>
-	<20141112095846.GA6759@red-moon>
-Date: Wed, 12 Nov 2014 18:51:31 +0800
-Message-ID: <CACVXFVNn=mDuJ9h3wavvo=H29hzFNisKAYEoF0OiFgm4wVAaLw@mail.gmail.com>
-Subject: Re: [PATCH] pci: generic host: make it more generic
-From: Ming Lei <ming.lei@canonical.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	alvise rigo <a.rigo@virtualopensystems.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 12, 2014 at 5:58 PM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> On Wed, Nov 12, 2014 at 02:12:12AM +0000, Ming Lei wrote:
->> On Wed, Nov 12, 2014 at 2:24 AM, Lorenzo Pieralisi
->> <lorenzo.pieralisi@arm.com> wrote:
->> > On Tue, Nov 11, 2014 at 02:02:20PM +0000, Ming Lei wrote:
->> >
->> > [...]
->> >
->> >> > http://lists.infradead.org/pipermail/linux-arm-kernel/2014-October/296535.html
->> >> >
->> >> > Patch above is already queued and applies most of the changes you have posted
->> >> > above.
->> >>
->> >> I should have looked at list first before writing the patch, :-(
->> >>
->> >> Could you make it more generic so that other ARCHs(at least ARM64)
->> >> can benefit from it too?
->> >
->> > That's our current goal, we are carrying out clean-ups to remove arch
->> > dependency and move code to the generic layer PCI layer.
->>
->> OK, I am glad to test them after you post them out.
->>
->> At least, the 'struct gen_pci' pointer can be put in driver data
->> of the platform_device now, which may remove dependency on
->> pci_sysdata in this driver.  But ARCH's pcibios code still may
->> access 'pci_sysdata', do you have patches or solution to handle
->> this issue?
->
-> I will consider adding struct gen_pci pointer as platform device
-> driver data, we are working on removing pci_sys_data dependency in the ARM
-> pcibios backend, and I do not think we are far from achieving that.
+Add of_scan_bus() to support some platforms
+scan bus by of_node.
 
-Other ARCHs has sort of pcibios backend too, so that said it still
-depends on ARM or ARM64, doesn't it?
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/host-bridge.c |    1 +
+ drivers/pci/probe.c       |   10 +++++++---
+ include/linux/pci.h       |    3 +++
+ 3 files changed, 11 insertions(+), 3 deletions(-)
 
-Thanks,
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 872cae1..1a1f81b 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -52,6 +52,7 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 		return NULL;
+ 
+ 	host->sysdata = info->arg;
++	host->node = info->node;
+ 	host->busnum = PCI_BUSNUM(db);
+ 	host->domain = PCI_DOMAIN(db);
+ 	host->ops = ops;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 42158fd..2729c41 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2126,9 +2126,13 @@ struct pci_host_bridge *pci_scan_host_bridge(
+ 		pci_bus_insert_busn_res(host->bus, host->busnum, 255);
+ 	}
+ 
+-	max = pci_scan_child_bus(host->bus);
+-	if (!found)
+-		pci_bus_update_busn_res_end(host->bus, max);
++	if (info->of_scan_bus) {
++		info->of_scan_bus(host);
++	} else {
++		max = pci_scan_child_bus(host->bus);
++		if (!found)
++			pci_bus_update_busn_res_end(host->bus, max);
++	}
+ 
+ 	return host;
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index af1ee86..c4f4438 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -407,6 +407,7 @@ struct pci_host_bridge {
+ 	int busnum;
+ 	int domain;
+ 	void *sysdata;
++	struct device_node *node;
+ 	struct pci_ops *ops;
+ 	struct msi_controller *(*get_msi_ctrl)(struct pci_dev *pdev);
+ 	void (*release_fn)(struct pci_host_bridge *);
+@@ -416,10 +417,12 @@ struct pci_host_bridge {
+ struct pci_host_info {
+ 	u8 res_type;
+ 	void *arg;
++	struct device_node *node;
+ 	struct list_head *resources; /*just for build, will clean up later */
+ 	struct msi_controller *(*get_msi_ctrl)(struct pci_dev *pdev);
+ 	int (*init_res)(struct pci_host_bridge *host, 
+ 			struct pci_host_info *info);
++	void (*of_scan_bus)(struct pci_host_bridge *host);
+ };
+ 
+ static inline void init_pci_host_info(struct pci_host_info *info)
+-- 
+1.7.1
+
