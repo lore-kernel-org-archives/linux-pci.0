@@ -1,66 +1,180 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:60483 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753066AbaKRJhM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 04:37:12 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Suravee.Suthikulpanit@amd.com,
+Received: from mga02.intel.com ([134.134.136.20]:1455 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752225AbaKQLAT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 17 Nov 2014 06:00:19 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-ia64@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Wuyun <wuyun.wu@huawei.com>, linuxppc-dev@lists.ozlabs.org,
-	Yijing Wang <wangyijing0307@gmail.com>
-Subject: Re: [RFC PATCH 01/16] PCI: Enhance pci_scan_root_bus() to support default IO/MEM resources
-Date: Tue, 18 Nov 2014 10:36:34 +0100
-Message-ID: <2447172.ADYWdCTnMP@wuerfel>
-In-Reply-To: <546AF8D7.9010103@huawei.com>
-References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com> <2732970.7HG94QvVBv@wuerfel> <546AF8D7.9010103@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Matthias Brugger <matthias.bgg@gmail.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [Patch V3 3/9] irqdomain: Implement a method to automatically call parent domain's alloc/free
+Date: Mon, 17 Nov 2014 19:03:16 +0800
+Message-Id: <1416222202-28002-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416222202-28002-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416222202-28002-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 18 November 2014 15:44:23 Yijing Wang wrote:
-> On 2014/11/17 18:08, Arnd Bergmann wrote:
-> > On Monday 17 November 2014 18:21:35 Yijing Wang wrote:
-> >> -       list_for_each_entry(window, resources, list)
-> >> -               if (window->res->flags & IORESOURCE_BUS) {
-> >> -                       found = true;
-> >> -                       break;
-> >> -               }
-> >> +       if (!resources) {
-> >> +               pci_add_resource(&default_res, &ioport_resource);
-> >> +               pci_add_resource(&default_res, &iomem_resource);
-> >> +               pci_add_resource(&default_res, &busn_resource);
-> >> +       } else {
-> >>
-> > 
-> > Isn't it almost always wrong to do this? You are adding all of the
-> > I/O ports and memory to the host bridge, which will prevent you from
-> > adding another host bridge, and the iomem_resource normally
-> > includes a lot of addresses that are not accessible by the PCI host.
-> 
-> Hi Arnd, pci host bridge windows are the ranges allow child devices to setup
-> from. Add all of IO/MEM here just a limit to child devices, no request for these
-> resources, so it won't hurt another host bridge. Some platforms have no dts or ACPI
-> report host bridge resources, in this case, we directly assign ioport/iomem_resources
-> as the root resources of PCI devices.
+Add a flags to irq_domain.flags to control whether the irqdomain core
+should automatically call parent irqdomain's alloc/free callbacks. It
+help to reduce hierarchy irqdomains users' code size.
 
-But it would be wrong to allow hosts to allocate a device BAR that is not
-visible through the host bridge. I think we need to keep these separate
-from the general case: if you call any of the modern interfaces you have
-to provide the resources and a device. I notice that there is only one
-caller of pci_scan_bus_parented(), we should probably change that over to
-pci_scan_root_bus() or your new interface and remove the old one, but
-keep pci_scan_bus() as the only entry point for all of the legacy users
-that do not know about the resources.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ include/linux/irqdomain.h |   24 ++++++-----------
+ kernel/irq/irqdomain.c    |   66 +++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 72 insertions(+), 18 deletions(-)
 
-	Arnd
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index fbe542967c20..ad92b0b15945 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -130,6 +130,8 @@ struct irq_domain {
+ };
+ 
+ #define	IRQ_DOMAIN_FLAG_HIERARCHY	0x1
++/* Framework automatically calls parent domain's alloc()/free() */
++#define	IRQ_DOMAIN_FLAG_AUTO_RECURSIVE	0x2
+ #define	IRQ_DOMAIN_FLAG_ARCH1		0x10000
+ 
+ #ifdef CONFIG_IRQ_DOMAIN
+@@ -274,22 +276,12 @@ extern void irq_domain_free_irqs_common(struct irq_domain *domain,
+ 					unsigned int nr_irqs);
+ extern void irq_domain_free_irqs_top(struct irq_domain *domain,
+ 				     unsigned int virq, unsigned int nr_irqs);
+-
+-static inline int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
+-			unsigned int irq_base, unsigned int nr_irqs, void *arg)
+-{
+-	if (domain->parent && domain->parent->ops->alloc)
+-		return domain->parent->ops->alloc(domain->parent, irq_base,
+-						  nr_irqs, arg);
+-	return -ENOSYS;
+-}
+-
+-static inline void irq_domain_free_irqs_parent(struct irq_domain *domain,
+-				unsigned int irq_base, unsigned int nr_irqs)
+-{
+-	if (domain->parent && domain->parent->ops->free)
+-		domain->parent->ops->free(domain->parent, irq_base, nr_irqs);
+-}
++extern int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
++					unsigned int irq_base,
++					unsigned int nr_irqs, void *arg);
++extern void irq_domain_free_irqs_parent(struct irq_domain *domain,
++					unsigned int irq_base,
++					unsigned int nr_irqs);
+ 
+ static inline bool irq_domain_is_hierarchy(struct irq_domain *domain)
+ {
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 705fb573e509..03fc7d018324 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -925,6 +925,43 @@ void irq_domain_free_irqs_top(struct irq_domain *domain, unsigned int virq,
+ 	irq_domain_free_irqs_common(domain, virq, nr_irqs);
+ }
+ 
++static bool irq_domain_is_auto_recursive(struct irq_domain *domain)
++{
++	return domain->flags & IRQ_DOMAIN_FLAG_AUTO_RECURSIVE;
++}
++
++static void irq_domain_free_irqs_recursive(struct irq_domain *domain,
++					   unsigned int irq_base,
++					   unsigned int nr_irqs)
++{
++	domain->ops->free(domain, irq_base, nr_irqs);
++	if (irq_domain_is_auto_recursive(domain)) {
++		BUG_ON(!domain->parent);
++		irq_domain_free_irqs_recursive(domain->parent, irq_base,
++					       nr_irqs);
++	}
++}
++
++static int irq_domain_alloc_irqs_recursive(struct irq_domain *domain,
++					   unsigned int irq_base,
++					   unsigned int nr_irqs, void *arg)
++{
++	int ret = 0;
++	struct irq_domain *parent = domain->parent;
++	bool recursive = irq_domain_is_auto_recursive(domain);
++
++	BUG_ON(recursive && !parent);
++	if (recursive)
++		ret = irq_domain_alloc_irqs_recursive(parent, irq_base,
++						      nr_irqs, arg);
++	if (ret >= 0)
++		ret = domain->ops->alloc(domain, irq_base, nr_irqs, arg);
++	if (ret < 0 && recursive)
++		irq_domain_free_irqs_recursive(parent, irq_base, nr_irqs);
++
++	return ret;
++}
++
+ /**
+  * __irq_domain_alloc_irqs - Allocate IRQs from domain
+  * @domain: domain to allocate from
+@@ -981,7 +1018,7 @@ int __irq_domain_alloc_irqs(struct irq_domain *domain, int irq_base,
+ 	}
+ 
+ 	mutex_lock(&irq_domain_mutex);
+-	ret = domain->ops->alloc(domain, virq, nr_irqs, arg);
++	ret = irq_domain_alloc_irqs_recursive(domain, virq, nr_irqs, arg);
+ 	if (ret < 0) {
+ 		mutex_unlock(&irq_domain_mutex);
+ 		goto out_free_irq_data;
+@@ -1016,13 +1053,38 @@ void irq_domain_free_irqs(unsigned int virq, unsigned int nr_irqs)
+ 	mutex_lock(&irq_domain_mutex);
+ 	for (i = 0; i < nr_irqs; i++)
+ 		irq_domain_remove_irq(virq + i);
+-	data->domain->ops->free(data->domain, virq, nr_irqs);
++	irq_domain_free_irqs_recursive(data->domain, virq, nr_irqs);
+ 	mutex_unlock(&irq_domain_mutex);
+ 
+ 	irq_domain_free_irq_data(virq, nr_irqs);
+ 	irq_free_descs(virq, nr_irqs);
+ }
+ 
++int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
++				 unsigned int irq_base, unsigned int nr_irqs,
++				 void *arg)
++{
++	/* irq_domain_alloc_irqs_recursive() has called parent's alloc() */
++	if (irq_domain_is_auto_recursive(domain))
++		return 0;
++
++	domain = domain->parent;
++	if (domain)
++		return irq_domain_alloc_irqs_recursive(domain, irq_base,
++						       nr_irqs, arg);
++
++	return -ENOSYS;
++}
++
++void irq_domain_free_irqs_parent(struct irq_domain *domain,
++				 unsigned int irq_base, unsigned int nr_irqs)
++{
++	/* irq_domain_free_irqs_recursive() will call parent's free */
++	if (!irq_domain_is_auto_recursive(domain))
++		irq_domain_free_irqs_recursive(domain->parent, irq_base,
++					       nr_irqs);
++}
++
+ /**
+  * irq_domain_activate_irq - Call domain_ops->activate recursively to activate
+  *			     interrupt
+-- 
+1.7.10.4
+
