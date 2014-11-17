@@ -1,110 +1,193 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:50533 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752045AbaKBPmQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Nov 2014 10:42:16 -0500
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 3 Nov 2014 01:42:14 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id B6E572CE8040
-	for <linux-pci@vger.kernel.org>; Mon,  3 Nov 2014 02:42:11 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sA2FgAAe28835902
-	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:42:10 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sA2FgAN7028455
-	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:42:11 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V9 14/18] powerpc/powernv: Implement pcibios_iov_resource_size() on powernv
-Date: Sun,  2 Nov 2014 23:41:30 +0800
-Message-Id: <1414942894-17034-15-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mga03.intel.com ([134.134.136.65]:18898 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752965AbaKQLAj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 17 Nov 2014 06:00:39 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Alexander Gordeev <agordeev@redhat.com>
+Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [Patch V3 6/9] genirq: Introduce msi_domain_{alloc|free}_irqs()
+Date: Mon, 17 Nov 2014 19:03:19 +0800
+Message-Id: <1416222202-28002-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416222202-28002-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416222202-28002-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On PowerNV platform, the PF's IOV BAR size would be expanded, which is
-different from the normal case.
+Introduce msi_domain_{alloc|free}_irqs() to alloc/free interrupts
+from generic MSI irqdomain.
 
-This patch retrieves the VF BAR size by total size dividing the expanded number
-of VFs.
-
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/powerpc/include/asm/machdep.h        |    1 +
- arch/powerpc/kernel/pci-common.c          |    8 ++++++++
- arch/powerpc/platforms/powernv/pci-ioda.c |   15 +++++++++++++++
- 3 files changed, 24 insertions(+)
+ include/linux/msi.h |   39 +++++++++++++++++++++++++++++++
+ kernel/irq/msi.c    |   63 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 102 insertions(+)
 
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index 15a13e6..d971874 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -259,6 +259,7 @@ struct machdep_calls {
- 	resource_size_t (*pcibios_iov_resource_alignment)(struct pci_dev *,
- 			                                    int resno,
- 							    resource_size_t align);
-+	resource_size_t (*pcibios_iov_resource_size)(struct pci_dev *, int resno);
- #endif /* CONFIG_PCI_IOV */
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 714716a3ffdd..243c4eb485a6 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -3,6 +3,7 @@
  
- 	/* Called to shutdown machine specific hardware not already controlled
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 581e67b..a2a96d3 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -143,6 +143,14 @@ resource_size_t pcibios_iov_resource_alignment(struct pci_dev *pdev,
+ #include <linux/kobject.h>
+ #include <linux/list.h>
++#include <asm/hw_irq.h>		/* for msi_alloc_info_t */
  
- 	return 0;
- }
+ struct msi_msg {
+ 	u32	address_lo;	/* low 32 bits of msi message address */
+@@ -100,7 +101,29 @@ struct irq_chip;
+ struct device_node;
+ struct msi_domain_info;
+ 
++#ifndef NUM_MSI_ALLOC_SCRATCHPAD_REGS
++#define NUM_MSI_ALLOC_SCRATCHPAD_REGS	2
++#endif
 +
-+resource_size_t pcibios_iov_resource_size(struct pci_dev *pdev, int resno)
++/*
++ * Default structure for MSI interrupt allocation.
++ * Arch may overwrite it by defining msi_alloc_info_t.
++ */
++struct msi_alloc_info {
++	struct msi_desc			*desc;
++	irq_hw_number_t			hwirq;
++	union {
++		unsigned long		ul;
++		void			*ptr;
++	} scratchpad[NUM_MSI_ALLOC_SCRATCHPAD_REGS];
++};
++
++#ifndef msi_alloc_info_t
++typedef struct msi_alloc_info msi_alloc_info_t;
++#endif
++
+ struct msi_domain_ops {
++	/* Callbacks for msi_create_irq_domain() */
+ 	void		(*calc_hwirq)(struct msi_domain_info *info, void *arg,
+ 				      struct msi_desc *desc);
+ 	irq_hw_number_t	(*get_hwirq)(struct msi_domain_info *info, void *arg);
+@@ -111,6 +134,19 @@ struct msi_domain_ops {
+ 	void		(*msi_free)(struct irq_domain *domain,
+ 				    struct msi_domain_info *info,
+ 				    unsigned int virq);
++
++	/* Callbacks for msi_irq_domain_alloc_irqs() based on msi_descs */
++	int		(*msi_check)(struct irq_domain *domain,
++				     struct msi_domain_info *info,
++				     struct device *dev);
++	int		(*msi_prepare)(struct irq_domain *domain,
++				       struct device *dev, int nvec,
++				       msi_alloc_info_t *arg);
++	void		(*msi_finish)(msi_alloc_info_t *arg, int retval);
++	int		(*set_desc)(msi_alloc_info_t *arg,
++				    struct msi_desc *desc);
++	int		(*handle_error)(msi_alloc_info_t *arg,
++					struct msi_desc *desc, int error);
+ };
+ 
+ struct msi_domain_info {
+@@ -125,6 +161,9 @@ int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ struct irq_domain *msi_create_irq_domain(struct device_node *of_node,
+ 					 struct msi_domain_info *info,
+ 					 struct irq_domain *parent);
++int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
++			  int nvec);
++void msi_domain_free_irqs(struct irq_domain *domain, struct device *dev);
+ struct msi_domain_info *msi_get_domain_info(struct irq_domain *domain);
+ 
+ #endif /* CONFIG_GENERIC_MSI_IRQ_DOMAIN */
+diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+index 94d6d87ee23e..586cd8b3a174 100644
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -13,6 +13,9 @@
+ #include <linux/irqdomain.h>
+ #include <linux/msi.h>
+ 
++/* Temparory solution for building, will be removed later */
++#include <linux/pci.h>
++
+ void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	*msg = entry->msg;
+@@ -124,6 +127,66 @@ struct irq_domain *msi_create_irq_domain(struct device_node *of_node,
+ 	return domain;
+ }
+ 
++int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
++			  int nvec)
 +{
-+	if (ppc_md.pcibios_iov_resource_size)
-+		return ppc_md.pcibios_iov_resource_size(pdev, resno);
++	int i, ret, virq = -1;
++	msi_alloc_info_t arg;
++	struct msi_desc *desc;
++	struct msi_domain_info *info = domain->host_data;
++	struct msi_domain_ops *ops = info->ops;
++
++	ret = ops->msi_check(domain, info, dev);
++	if (ret == 0)
++		ret = ops->msi_prepare(domain, dev, nvec, &arg);
++	if (ret)
++		return ret;
++
++	for_each_msi_entry(desc, dev) {
++		ret = ops->set_desc(&arg, desc);
++		if (ret)
++			goto handle_error;
++
++		virq = __irq_domain_alloc_irqs(domain, -1, desc->nvec_used,
++					       dev_to_node(dev), &arg, false);
++		if (virq >= 0) {
++			for (i = 0; i < desc->nvec_used; i++)
++				irq_set_msi_desc_off(virq, i, desc);
++			continue;
++		}
++		ret = -ENOSPC;
++handle_error:
++		if (ops->handle_error)
++			ret = ops->handle_error(&arg, desc, ret);
++		if (ops->msi_finish)
++			ops->msi_finish(&arg, ret);
++		return ret;
++	}
++
++	if (ops->msi_finish)
++		ops->msi_finish(&arg, 0);
++
++	for_each_msi_entry(desc, dev) {
++		if (desc->nvec_used == 1)
++			dev_dbg(dev, "irq %d for MSI\n", virq);
++		else
++			dev_dbg(dev, "irq [%d-%d] for MSI\n",
++				virq, virq + desc->nvec_used - 1);
++	}
 +
 +	return 0;
 +}
- #endif /* CONFIG_PCI_IOV */
- 
- static resource_size_t pcibios_io_size(const struct pci_controller *hose)
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 880d76d..f7abba3 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1847,6 +1847,20 @@ static resource_size_t pnv_pci_iov_resource_alignment(struct pci_dev *pdev,
- 
- 	return align;
- }
 +
-+static resource_size_t pnv_pci_iov_resource_size(struct pci_dev *pdev, int resno)
++void msi_domain_free_irqs(struct irq_domain *domain, struct device *dev)
 +{
-+	struct pci_dn *pdn = pci_get_pdn(pdev);
-+	resource_size_t size = 0;
++	struct msi_desc *desc;
 +
-+	if (!pdn->max_vfs)
-+		return size;
-+
-+	size = resource_size(pdev->resource + resno);
-+	do_div(size, pdn->max_vfs);
-+
-+	return size;
++	for_each_msi_entry(desc, dev) {
++		irq_domain_free_irqs(desc->irq, desc->nvec_used);
++		desc->irq = 0;
++	}
 +}
- #endif /* CONFIG_PCI_IOV */
- 
- /* Prevent enabling devices for which we couldn't properly
-@@ -2058,6 +2072,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- #ifdef CONFIG_PCI_IOV
- 	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
- 	ppc_md.pcibios_iov_resource_alignment = pnv_pci_iov_resource_alignment;
-+	ppc_md.pcibios_iov_resource_size = pnv_pci_iov_resource_size;
- #endif /* CONFIG_PCI_IOV */
- 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
- 
++
+ struct msi_domain_info *msi_get_domain_info(struct irq_domain *domain)
+ {
+ 	return (struct msi_domain_info *)domain->host_data;
 -- 
-1.7.9.5
+1.7.10.4
 
