@@ -1,86 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:13880 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934683AbaKNBUw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 20:20:52 -0500
-Message-ID: <546558B9.1020708@huawei.com>
-Date: Fri, 14 Nov 2014 09:19:53 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mout.kundenserver.de ([212.227.17.24]:57090 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751057AbaKQK5y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 05:57:54 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Suravee.Suthikulpanit@amd.com, linux-ia64@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Wuyun <wuyun.wu@huawei.com>, linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC PATCH 07/16] PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
+Date: Mon, 17 Nov 2014 11:56:36 +0100
+Message-ID: <2507218.mHliopJb05@wuerfel>
+In-Reply-To: <1416219710-26088-8-git-send-email-wangyijing@huawei.com>
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com> <1416219710-26088-8-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	<suravee.suthikulpanit@amd.com>
-CC: <liviu.dudau@arm.com>, <lorenzo.pieralisi@arm.com>,
-	<will.deacon@arm.com>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH V2 0/2] PCI: generic: Assiging msi-controller to PCI hostbridge
-References: <1415733454-24322-1-git-send-email-suravee.suthikulpanit@amd.com> <20141113180959.GR5064@google.com>
-In-Reply-To: <20141113180959.GR5064@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/11/14 2:09, Bjorn Helgaas wrote:
-> [+cc Yijing]
+On Monday 17 November 2014 18:21:41 Yijing Wang wrote:
+> There are some common PCI infos like domain, msi_controller, these
+> infos are saved in arch PCI sysdata, and lots arch specific functions
+> like pci_domain_nr() and pcibios_msi_controller() required.
+> We could separate pci_host_bridge creation out of pci_create_root_bus(),
+> then we could put the common infos in, then we could eliminate
+> the arch specifc functions.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  drivers/pci/host-bridge.c |   99 +++++++++++++++++++++++++++++++++
+>  drivers/pci/probe.c       |  134 ++++++++++++++++----------------------------
+>  include/linux/pci.h       |   11 +++-
+>  3 files changed, 158 insertions(+), 86 deletions(-)
+> 
+> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> index 0e5f3c9..e31604f 100644
+> --- a/drivers/pci/host-bridge.c
+> +++ b/drivers/pci/host-bridge.c
+> @@ -8,6 +8,105 @@
+>  
+>  #include "pci.h"
+>  
+> +LIST_HEAD(pci_host_bridge_list);
+> +DECLARE_RWSEM(pci_host_bridge_sem);
 
-Hi, I'm doing the same thing to associate MSI_controller and PCI host bridge(not PCI bus),
-In my working series, I go one step further, rip out pci host bridge of pci root bus creation.
-And we could put the common things in the generic pci host bridge. I will post it out these
-days. :)
+Unless the pci_host_bridge_sem is accessed thousands of times per second,
+it's normally better to use a simple mutex instead.
 
-Thanks!
-Yijing.
+> +static struct resource busn_resource = {
+> +	.name	= "PCI busn",
+> +	.start	= 0,
+> +	.end	= 255,
+> +	.flags	= IORESOURCE_BUS,
+> +};
 
-> 
-> On Tue, Nov 11, 2014 at 01:17:32PM -0600, suravee.suthikulpanit@amd.com wrote:
->> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->>
->> This patch set introduces a new callback function to allow PCI host drivers
->> to specify MSI controller to be used for the child buses / devices.
-> 
-> Hi Suravee, 
-> 
-> As Srikanth mentioned, there's a series of MSI-related stuff from Yijing.
-> I recently put them on my pci/msi branch, and they overlap a bit with
-> what you're doing here.
-> 
-> So I'll drop these for now.  Maybe there's a way you can accomplish what
-> you need by implementing pcibios_msi_controller(), which Yijing added?
-> 
-> Also note that "msi-controller" is already being used in device tree (see
-> Documentation/devicetree/bindings/interrupt-controller/marvell), so maybe
-> you can do the name.
-> 
-> Bjorn
-> 
->> This is reabased from:
->>     git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/host-generic
->>
->> Changes from V1:
->>     - Adding "msi-parent" device tree binding in documentation.
->>     - Rebase the patch to get rid of artifacts from other precursor patch
->>       accidently applied to the developement tree. This should now apply cleanly
->>       to the pci/host-generic branch.
->>
->> Suravee Suthikulpanit (2):
->>   PCI: Add new pci_ops for setting MSI parent for PCI bus
->>   PCI: generic: Add set_msi_parent callback
->>
->>  Documentation/devicetree/bindings/pci/host-generic-pci.txt |  3 +++
->>  drivers/pci/host/pci-host-generic.c                        | 13 +++++++++++++
->>  drivers/pci/probe.c                                        |  3 +++
->>  include/linux/pci.h                                        |  1 +
->>  4 files changed, 20 insertions(+)
->>
->> -- 
->> 1.9.3
->>
-> 
-> .
-> 
+I think it would be better to require callers to pass the bus resource
+down to the function.
 
+> +struct pci_host_bridge *pci_create_host_bridge(
+> +		struct device *parent, u32 db, 
+> +		struct pci_ops *ops, void *sysdata, 
+> +		struct list_head *resources)
+> +{
 
--- 
-Thanks!
-Yijing
+Do we still need to pass the 'sysdata' in here? If we are guaranteed to
+have a device pointer, we should always be able to get the driver
+private data from dev_get_drvdata(host->dev->parent).
 
+> +	host = kzalloc(sizeof(*host), GFP_KERNEL);
+> +	if (!host)
+> +		return NULL;
+
+devm_kzalloc maybe?
+
+> +	if (!resources) {
+> +		/* Use default IO/MEM/BUS resources*/
+> +		pci_add_resource(&host->windows, &ioport_resource);
+> +		pci_add_resource(&host->windows, &iomem_resource);
+> +		pci_add_resource(&host->windows, &busn_resource);
+> +	} else {
+> +		list_for_each_entry_safe(window, n, resources, list)
+> +			list_move_tail(&window->list, &host->windows);
+> +	}
+
+I think we should assume that the correct resources are passed. You
+could add a wrapper around this function to convert old platforms
+though.
+
+> +EXPORT_SYMBOL(pci_create_host_bridge);
+
+EXPORT_SYMBOL_GPL() maybe?
+
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 8b11b38..daa7f40 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -402,7 +402,12 @@ struct pci_host_bridge_window {
+>  struct pci_host_bridge {
+>  	struct device dev;
+>  	struct pci_bus *bus;		/* root bus */
+> +	struct list_head list;
+>  	struct list_head windows;	/* pci_host_bridge_windows */
+> +	int busnum;
+
+The busnum should already be implied through the bus resource.
+
+	Arnd
