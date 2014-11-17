@@ -1,80 +1,103 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sun, 16 Nov 2014 19:59:14 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>, g@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
 	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [Patch Part2 v5 18/31] PCI/MSI: Remove unnecessary braces around single statements
-Date: Thu,  6 Nov 2014 22:20:31 +0800
-Message-Id: <1415283644-2559-19-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Yingjoe Chen <yingjoe.chen@mediatek.com>
+Subject: Re: [PATCH 00/10] Save MSI chip in pci_sys_data
+Message-ID: <20141117025914.GC4280@google.com>
+References: <1414396127-30023-1-git-send-email-wangyijing@huawei.com>
+ <20141112042359.GK28161@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141112042359.GK28161@google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Per Documentation/CodingStyle, don't use braces around single statements.
+[+cc Marc, Yingjoe]
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/msi.c |    9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+On Tue, Nov 11, 2014 at 09:23:59PM -0700, Bjorn Helgaas wrote:
+> On Mon, Oct 27, 2014 at 03:48:37PM +0800, Yijing Wang wrote:
+> > Now PCI host bridge drivers in arm associate MSI chip and
+> > PCI bus by adding .add_bus(), and assign MSI chip pointer
+> > to every PCI bus. Associating MSI chip and every PCI bus
+> > is not necessary. All PCI busses under same PCI host brdige
+> > share the same MSI chip. So saving MSI chip in pci_sys_data
+> > is a better solution, it make PCI host bridge drivers clean.
+> > Because we still need to provide arch spec pcibios_msi_controller()
+> > to extract MSI controller pointer, a better solution is to
+> > refactor PCI host bridge, make a generic pci_host_bridge, and
+> > save common info like PCI domain number, MSI chip, resources
+> > in it. We will do that work in another series as soon.
+> > 
+> > To Bjorn: Because struct msi_chip defined in struct hw_pci and pci_sys_data
+> > is under the #ifdef CONFIG_PCI_MSI, if we use if(IS_ENABLED(CONFIG_PCI_MSI))
+> > in PCI host bridge drivers, it will cause build errors when the CONFIG_PCI_MSI
+> > is off. So I keep #ifdef CONFIG_PCI_MSI in this series.
+> > 
+> > Yijing Wang (10):
+> >   MSI: Rename msi_chip to msi_controller for better readability
+> >   PCI/MSI: Introduce weak pcibios_msi_controller()
+> >   arm/MSI: Save MSI controller in pci_sys_data
+> >   PCI: tegra: Save MSI controller in pci_sys_data
+> >   PCI: designware: Save MSI controller in pci_sys_data
+> >   PCI: rcar: Save MSI controller in pci_sys_data
+> >   PCI: mvebu: Save MSI controller in pci_sys_data
+> >   PCI: xilinx: Save MSI controller in pci_sys_data
+> >   arm/PCI: Clean unused pcibios_add_bus() and pcibios_remove_bus()
+> >   PCI/MSI: Remove useless bus->msi assignment
+> > 
+> >  arch/arm/include/asm/mach/pci.h     |   10 +++++---
+> >  arch/arm/kernel/bios32.c            |   28 ++++++++++--------------
+> >  drivers/irqchip/irq-armada-370-xp.c |   22 +++++++++---------
+> >  drivers/of/of_pci.c                 |   40 +++++++++++++++++-----------------
+> >  drivers/pci/host/pci-keystone-dw.c  |    4 +-
+> >  drivers/pci/host/pci-keystone.h     |    2 +-
+> >  drivers/pci/host/pci-mvebu.c        |   14 ++++-------
+> >  drivers/pci/host/pci-tegra.c        |   37 +++++++++++++-------------------
+> >  drivers/pci/host/pcie-designware.c  |   25 +++++++--------------
+> >  drivers/pci/host/pcie-designware.h  |    2 +-
+> >  drivers/pci/host/pcie-rcar.c        |   37 +++++++++++++-------------------
+> >  drivers/pci/host/pcie-xilinx.c      |   27 +++++++----------------
+> >  drivers/pci/msi.c                   |   22 ++++++++++++++-----
+> >  drivers/pci/probe.c                 |    1 -
+> >  include/linux/msi.h                 |    6 ++--
+> >  include/linux/of_pci.h              |   14 ++++++------
+> >  include/linux/pci.h                 |    2 +-
+> >  17 files changed, 132 insertions(+), 161 deletions(-)
+> > 
+> 
+> Applied to pci/msi for v3.19, thanks.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 9fab30af0e75..fb2ccb536324 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -244,9 +244,8 @@ void default_restore_msi_irqs(struct pci_dev *dev)
- {
- 	struct msi_desc *entry;
- 
--	list_for_each_entry(entry, &dev->msi_list, list) {
-+	list_for_each_entry(entry, &dev->msi_list, list)
- 		default_restore_msi_irq(dev, entry->irq);
--	}
- }
- 
- void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
-@@ -451,9 +450,8 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
- 				PCI_MSIX_FLAGS_ENABLE | PCI_MSIX_FLAGS_MASKALL);
- 
- 	arch_restore_msi_irqs(dev);
--	list_for_each_entry(entry, &dev->msi_list, list) {
-+	list_for_each_entry(entry, &dev->msi_list, list)
- 		msix_mask_irq(entry, entry->masked);
--	}
- 
- 	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
- }
-@@ -497,9 +495,8 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
- 	int count = 0;
- 
- 	/* Determine how many msi entries we have */
--	list_for_each_entry(entry, &pdev->msi_list, list) {
-+	list_for_each_entry(entry, &pdev->msi_list, list)
- 		++num_msi;
--	}
- 	if (!num_msi)
- 		return 0;
- 
--- 
-1.7.10.4
+This series is currently in the pci "next" branch, but the fact that there
+are so many MSI-related changes from so many people makes me worry that
+we're heading for a merge problem.
 
+Here are the outstanding IRQ- and MSI-related things I've seen:
+
+  Marc   10/25 [00/03] genirq: Add support for "split-EOI" irqchips
+  Yijing 10/27 [00/10] Save MSI chip in pci_sys_data
+  Yijing 10/27 [00/16] Use MSI controller framework to configure MSI/MSI-X
+  Jiang  10/27 [Part1 v3 00/20] Prepare for enabling hierarchy irqdomain on x86
+  Jiang  11/02 [v8 00/18] Enable support of IOAPIC hotplug on x86 platforms
+  Jiang  11/06 [Part2 v5 00/31] Enable hierarchy irqdomian on x86 platforms
+  Jiang  11/09 [Part3 v3 00/38] Enable hierarchy irqdomian on x86 platforms
+  Marc   11/11 [00/15] arm64: PCI/MSI: GICv3 ITS support (stacked domain edition)
+  Thomas 11/12 [00/16] genirq: Hierarchical irq domains and generic MSI interrupt code
+  Jiang  11/15 [V2 00/09] Refine generic/PCI MSI irqodmian interfaces
+  Marc   11/15 [00/02] Stacked domains and MSI improvements
+
+PCI is only a minor participant, and I certainly don't have the expertise
+to deal with all this, so I suspect that I should just drop these from the
+PCI tree and let Thomas deal with them.  It seems like it would make more
+sense to get all this stuff merged together in a single tree rather than
+having some come via PCI and others come from via other trees.
+
+Bjorn
