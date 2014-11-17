@@ -1,87 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:53510 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751078AbaKBGBo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 2 Nov 2014 01:01:44 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	Thomas Richter <thor@math.tu-berlin.de>, rui.zhang@intel.com,
-	linux-pm@vger.kernel.org
-Subject: [Patch v8 01/18] x86: ACPI: Do not translate GSI number if IOAPIC is disabled
-Date: Sun,  2 Nov 2014 14:04:16 +0800
-Message-Id: <1414908273-7552-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414908273-7552-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414908273-7552-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, Tony Luck <tony.luck@intel.com>,
+	<linux-ia64@vger.kernel.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	<Suravee.Suthikulpanit@amd.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [RFC PATCH 03/16] PCI: Clean up pci_scan_bus()
+Date: Mon, 17 Nov 2014 18:21:37 +0800
+Message-ID: <1416219710-26088-4-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When IOAPIC is disabled, acpi_gsi_to_irq() should return gsi directly
-instead of calling mp_map_gsi_to_irq() to translate gsi to IRQ by IOAPIC.
-It fixes https://bugzilla.kernel.org/show_bug.cgi?id=84381.
+No one uses it, clean up.
 
-This regression was introduced with commit 6b9fb7082409 "x86, ACPI,
-irq: Consolidate algorithm of mapping (ioapic, pin) to IRQ number"
-
-Reported-and-Tested-by: Thomas Richter <thor@math.tu-berlin.de>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Thomas Richter <thor@math.tu-berlin.de>
-Cc: rui.zhang@intel.com
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: <stable@vger.kernel.org> # 3.17
-Link: http://lkml.kernel.org/r/1413816327-12850-1-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- arch/x86/kernel/acpi/boot.c |   13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+ drivers/pci/probe.c |   20 --------------------
+ include/linux/pci.h |    1 -
+ 2 files changed, 0 insertions(+), 21 deletions(-)
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index b436fc735aa4..eceba9d9e116 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -604,14 +604,19 @@ void __init acpi_pic_sci_set_trigger(unsigned int irq, u16 trigger)
- 
- int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
- {
--	int irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
-+	int irq;
- 
--	if (irq >= 0) {
-+	if (acpi_irq_model == ACPI_IRQ_MODEL_PIC) {
-+		*irqp = gsi;
-+	} else {
-+		irq = mp_map_gsi_to_irq(gsi,
-+					IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
-+		if (irq < 0)
-+			return -1;
- 		*irqp = irq;
--		return 0;
- 	}
- 
--	return -1;
-+	return 0;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index fc99e88..0a02fc2 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2125,26 +2125,6 @@ struct pci_bus *pci_scan_bus_parented(struct device *parent,
  }
- EXPORT_SYMBOL_GPL(acpi_gsi_to_irq);
+ EXPORT_SYMBOL(pci_scan_bus_parented);
  
+-struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
+-					void *sysdata)
+-{
+-	LIST_HEAD(resources);
+-	struct pci_bus *b;
+-
+-	pci_add_resource(&resources, &ioport_resource);
+-	pci_add_resource(&resources, &iomem_resource);
+-	pci_add_resource(&resources, &busn_resource);
+-	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
+-	if (b) {
+-		pci_scan_child_bus(b);
+-		pci_bus_add_devices(b);
+-	} else {
+-		pci_free_resource_list(&resources);
+-	}
+-	return b;
+-}
+-EXPORT_SYMBOL(pci_scan_bus);
+-
+ /**
+  * pci_rescan_bus_bridge_resize - scan a PCI bus for devices.
+  * @bridge: PCI bridge for the bus to scan
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5be8db4..f8045d6 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -769,7 +769,6 @@ struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
+ struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
+ 				      struct pci_ops *ops, void *sysdata);
+-struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 				    struct pci_ops *ops, void *sysdata,
+ 				    struct list_head *resources);
 -- 
-1.7.10.4
+1.7.1
 
