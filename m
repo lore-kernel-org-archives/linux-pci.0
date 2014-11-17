@@ -1,316 +1,209 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([122.248.162.4]:42730 "EHLO
-	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750755AbaKXWtc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Nov 2014 17:49:32 -0500
-Received: from /spool/local
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 25 Nov 2014 04:19:29 +0530
-Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
-	by d28dlp03.in.ibm.com (Postfix) with ESMTP id C809C1258053
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 04:19:40 +0530 (IST)
-Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
-	by d28relay04.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAOMo3A745613144
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 04:20:03 +0530
-Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
-	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAOMnSTN007520
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 04:19:28 +0530
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH 5/8] PCI/hotplug/rpa: Create PCI slot properly
-Date: Tue, 25 Nov 2014 09:49:22 +1100
-Message-Id: <1416869365-7671-6-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1416869365-7671-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1416869365-7671-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:43165 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751947AbaKQJkw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 04:40:52 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, Tony Luck <tony.luck@intel.com>,
+	<linux-ia64@vger.kernel.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	<Suravee.Suthikulpanit@amd.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [RFC PATCH 11/16] x86/PCI: Use pci_scan_host_bridge() instead of pci_create_root_bus()
+Date: Mon, 17 Nov 2014 18:21:45 +0800
+Message-ID: <1416219710-26088-12-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When loading rpaphp.ko on a P7 box, I didn't see any PCI slots
-created under /sys/bus/pci/slots as expected. It seems that the
-RPA PCI slot stuff has been broken for long time. The driver
-doesn't use the properties of PCI device-tree nodes properly to
-populate PCI slots: device-tree node property "ibm,my-drc-index"
-is the identifier of hotpluggable PCI slot. The (direct or indirect)
-parent device-tree node should have properties associated with the
-"ibm,my-drc-index", which are "ibm,drc-indexes","ibm,drc-names",
-"ibm,drc-types", "ibm,drc-power-domains".
+Now we could use pci_scan_host_bridge() to refactor
+pci_acpi_scan_root().
 
-The patch parses above device-tree node properties to create PCI
-slots properly. One PCI slot is created for PCI device-tree node,
-which has meaningful "ibm,my-drc-index".
-
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/pci/hotplug/rpaphp.h      |   2 +-
- drivers/pci/hotplug/rpaphp_core.c | 205 ++++++++++++++------------------------
- 2 files changed, 74 insertions(+), 133 deletions(-)
+ arch/x86/pci/acpi.c   |   65 ++++++++++++++++++++++++++++++-------------------
+ arch/x86/pci/common.c |   23 ++++++++++++-----
+ 2 files changed, 56 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/pci/hotplug/rpaphp.h b/drivers/pci/hotplug/rpaphp.h
-index b2593e8..39ddbdf 100644
---- a/drivers/pci/hotplug/rpaphp.h
-+++ b/drivers/pci/hotplug/rpaphp.h
-@@ -92,7 +92,7 @@ int rpaphp_get_sensor_state(struct slot *slot, int *state);
- /* rpaphp_core.c */
- int rpaphp_add_slot(struct device_node *dn);
- int rpaphp_get_drc_props(struct device_node *dn, int *drc_index,
--		char **drc_name, char **drc_type, int *drc_power_domain);
-+		char **drc_name, char **drc_type, int *drc_power);
- 
- /* rpaphp_slot.c */
- void dealloc_slot_struct(struct slot *slot);
-diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
-index ff800df..a639c5c 100644
---- a/drivers/pci/hotplug/rpaphp_core.c
-+++ b/drivers/pci/hotplug/rpaphp_core.c
-@@ -165,119 +165,76 @@ static enum pci_bus_speed get_max_bus_speed(struct slot *slot)
- 	return speed;
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index cfd1b13..528fca3 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -13,6 +13,7 @@ struct pci_root_info {
+ 	unsigned int res_num;
+ 	struct resource *res;
+ 	resource_size_t *res_offset;
++	struct acpi_pci_root *root;
+ 	struct pci_sysdata sd;
+ #ifdef	CONFIG_PCI_MMCONFIG
+ 	bool mcfg_added;
+@@ -467,16 +468,40 @@ static void probe_pci_root_info(struct pci_root_info *info,
+ 				info);
  }
  
--static int get_children_props(struct device_node *dn, const int **drc_indexes,
--		const int **drc_names, const int **drc_types,
--		const int **drc_power_domains)
-+static int parse_drc_props(struct device_node *dn, u32 drc_index,
-+			   char **drc_name, char **drc_type, u32 *drc_power)
- {
--	const int *indexes, *names, *types, *domains;
-+	const u32 *indexes, *names, *types, *domains;
-+	char *name, *type;
-+	struct device_node *parent = dn;
-+	u32 i;
++static int pci_acpi_init_res(struct pci_host_bridge *host,
++		struct pci_host_info *arg)
++{
++	struct pci_sysdata *sd = arg->arg;
++	struct pci_root_info *info = container_of(sd,
++			struct pci_root_info, sd);
 +
-+	while ((parent = of_get_parent(parent))) {
-+		indexes = of_get_property(parent, "ibm,drc-indexes", NULL);
-+		names   = of_get_property(parent, "ibm,drc-names", NULL);
-+		types   = of_get_property(parent, "ibm,drc-types", NULL);
-+		domains = of_get_property(parent, "ibm,drc-power-domains", NULL);
-+
-+		if (!indexes || !names || !types || !domains) {
-+			of_node_put(parent);
-+			continue;
-+		}
- 
--	indexes = of_get_property(dn, "ibm,drc-indexes", NULL);
--	names = of_get_property(dn, "ibm,drc-names", NULL);
--	types = of_get_property(dn, "ibm,drc-types", NULL);
--	domains = of_get_property(dn, "ibm,drc-power-domains", NULL);
-+		name = (char *)&names[1];
-+		type = (char *)&types[1];
-+		for (i = 0; i < be32_to_cpu(indexes[0]); i++) {
-+			if (be32_to_cpu(indexes[i + 1]) != drc_index) {
-+				name += (strlen(name) + 1);
-+				type += (strlen(type) + 1);
-+				continue;
-+			}
- 
--	/* Slot does not have dynamically-removable children */
--	if (!indexes || !names || !types || !domains)
--		return -EINVAL;
-+			/* Matched index */
-+			if (drc_name)
-+				*drc_name = name;
-+			if (drc_type)
-+				*drc_type = type;
-+			if (drc_power)
-+				*drc_power = be32_to_cpu(domains[i + 1]);
-+
-+			of_node_put(parent);
-+			return 0;
-+		}
- 
--	if (drc_indexes)
--		*drc_indexes = indexes;
--	/* &drc_names[1] contains NULL terminated slot names */
--	if (drc_names)
--		*drc_names = names;
--	/* &drc_types[1] contains NULL terminated slot types */
--	if (drc_types)
--		*drc_types = types;
--	if (drc_power_domains)
--		*drc_power_domains = domains;
-+		/* Next level parent */
-+		of_node_put(parent);
++	/* insert busn res at first */
++	pci_add_resource(&host->windows,  &info->root->secondary);
++	/*
++	 * _CRS with no apertures is normal, so only fall back to
++	 * defaults or native bridge info if we're ignoring _CRS.
++	 */
++	if (pci_use_crs)
++		add_resources(info, &host->windows);
++	else {
++		free_pci_root_info_res(info);
++		x86_pci_root_bus_resources(host->busnum, &host->windows);
 +	}
- 
--	return 0;
-+	return -ENODEV;
- }
- 
--/* To get the DRC props describing the current node, first obtain it's
-+/*
-+ * To get the DRC props describing the current node, first obtain it's
-  * my-drc-index property.  Next obtain the DRC list from it's parent.  Use
-  * the my-drc-index for correlation, and obtain the requested properties.
-  */
- int rpaphp_get_drc_props(struct device_node *dn, int *drc_index,
--		char **drc_name, char **drc_type, int *drc_power_domain)
-+			 char **drc_name, char **drc_type, int *drc_power)
- {
--	const int *indexes, *names;
--	const int *types, *domains;
--	const unsigned int *my_index;
--	char *name_tmp, *type_tmp;
--	int i, rc;
-+	const u32 *my_index;
- 
-+	/* Check if node is capable of hotplug */
- 	my_index = of_get_property(dn, "ibm,my-drc-index", NULL);
--	/* Node isn't DLPAR/hotplug capable */
- 	if (!my_index)
- 		return -EINVAL;
-+	if (drc_index)
-+		*drc_index = be32_to_cpu(*my_index);
- 
--	rc = get_children_props(dn->parent, &indexes, &names, &types, &domains);
--	if (rc < 0)
--		return -EINVAL;
--
--	name_tmp = (char *) &names[1];
--	type_tmp = (char *) &types[1];
--
--	/* Iterate through parent properties, looking for my-drc-index */
--	for (i = 0; i < be32_to_cpu(indexes[0]); i++) {
--		if ((unsigned int) indexes[i + 1] == *my_index) {
--			if (drc_name)
--				*drc_name = name_tmp;
--			if (drc_type)
--				*drc_type = type_tmp;
--			if (drc_index)
--				*drc_index = be32_to_cpu(*my_index);
--			if (drc_power_domain)
--				*drc_power_domain = be32_to_cpu(domains[i+1]);
--			return 0;
--		}
--		name_tmp += (strlen(name_tmp) + 1);
--		type_tmp += (strlen(type_tmp) + 1);
--	}
--
--	return -EINVAL;
-+	return parse_drc_props(dn, be32_to_cpu(*my_index),
-+			       drc_name, drc_type, drc_power);
- }
- EXPORT_SYMBOL_GPL(rpaphp_get_drc_props);
- 
- /**
-- * is_php_dn() - return true if this is a hotpluggable pci slot, else false
-- * @dn: target &device_node
-- * @indexes: passed to get_children_props()
-- * @names: passed to get_children_props()
-- * @types: returned from get_children_props()
-- * @power_domains:
-- *
-- * This routine will return true only if the device node is
-- * a hotpluggable slot. This routine will return false
-- * for built-in pci slots (even when the built-in slots are
-- * dlparable.)
-- */
--static bool is_php_dn(struct device_node *dn,
--		      const int **indexes, const int **names,
--		      const int **types, const int **power_domains)
--{
--	const int *drc_types;
--	const char *drc_type_str;
--	char *endptr;
--	unsigned long val;
--	int rc;
--
--	rc = get_children_props(dn, indexes, names, &drc_types, power_domains);
--	if (rc < 0)
--		return false;
--
--	/* PCI Hotplug nodes have an integer for drc_type */
--	drc_type_str = (char *)&drc_types[1];
--	val = simple_strtoul(drc_type_str, &endptr, 10);
--	if (endptr == drc_type_str)
--		return false;
--
--	*types = drc_types;
--	return true;
--}
--
--/**
-  * rpaphp_add_slot -- declare a hotplug slot to the hotplug subsystem.
-  * @dn: device node of slot
-  *
-@@ -295,52 +252,36 @@ static bool is_php_dn(struct device_node *dn,
-  */
- int rpaphp_add_slot(struct device_node *dn)
- {
-+	char *name, *type, *endptr;
-+	int index, power_domain;
- 	struct slot *slot;
--	int retval = 0;
--	int i;
--	const int *indexes, *names, *types, *power_domains;
--	char *name, *type;
--
--	if (!dn->name || strcmp(dn->name, "pci"))
--		return 0;
-+	int val, ret;
- 
--	/* If this is not a hotplug slot, return without doing anything. */
--	if (!is_php_dn(dn, &indexes, &names, &types, &power_domains))
--		return 0;
--
--	dbg("Entry %s: dn->full_name=%s\n", __func__, dn->full_name);
--
--	/* register PCI devices */
--	name = (char *) &names[1];
--	type = (char *) &types[1];
--	for (i = 0; i < be32_to_cpu(indexes[0]); i++) {
--		int index;
--
--		index = be32_to_cpu(indexes[i + 1]);
--		slot = alloc_slot_struct(dn, index, name,
--					 be32_to_cpu(power_domains[i + 1]));
--		if (!slot)
--			return -ENOMEM;
--
--		slot->type = simple_strtoul(type, NULL, 10);
--
--		dbg("Found drc-index:0x%x drc-name:%s drc-type:%s\n",
--				index, name, type);
-+	/* Get and parse the hotplug properties */
-+	ret = rpaphp_get_drc_props(dn, &index, &name, &type, &power_domain);
-+	if (ret)
-+		return ret;
- 
--		retval = rpaphp_enable_slot(slot);
--		if (!retval)
--			retval = rpaphp_register_slot(slot);
-+	/* PCI Hotplug nodes have an integer for drc_type */
-+	val = simple_strtoul(type, &endptr, 10);
-+	if (endptr == type)
-+		return -EINVAL;
- 
--		if (retval)
--			dealloc_slot_struct(slot);
-+	slot = alloc_slot_struct(dn, index, name, power_domain);
-+	if (!slot)
-+		return -ENOMEM;
- 
--		name += strlen(name) + 1;
--		type += strlen(type) + 1;
--	}
--	dbg("%s - Exit: rc[%d]\n", __func__, retval);
-+	slot->type = val;
-+	ret = rpaphp_enable_slot(slot);
-+	if (!ret)
-+		ret = rpaphp_register_slot(slot);
-+	if (ret)
-+		goto fail;
- 
--	/* XXX FIXME: reports a failure only if last entry in loop failed */
--	return retval;
++	
 +	return 0;
-+fail:
-+	dealloc_slot_struct(slot);
-+	return ret;
++}
++
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+ 	struct acpi_device *device = root->device;
+ 	struct pci_root_info *info;
+ 	int domain = root->segment;
+ 	int busnum = root->secondary.start;
+-	LIST_HEAD(resources);
+ 	struct pci_bus *bus;
+ 	struct pci_sysdata *sd;
+ 	int node;
++	struct pci_host_info arg;
++	struct pci_host_bridge *host;
+ 
+ 	if (pci_ignore_seg)
+ 		domain = 0;
+@@ -506,10 +531,14 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		return NULL;
+ 	}
+ 
++	info->root = root;
+ 	sd = &info->sd;
+ 	sd->domain = domain;
+ 	sd->node = node;
+ 	sd->companion = device;
++	init_pci_host_info(&arg);
++	arg.arg = sd;
++	arg.init_res = pci_acpi_init_res;
+ 
+ 	bus = pci_find_bus(domain, busnum);
+ 	if (bus) {
+@@ -522,33 +551,19 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	} else {
+ 		probe_pci_root_info(info, device, busnum, domain);
+ 
+-		/* insert busn res at first */
+-		pci_add_resource(&resources,  &root->secondary);
+-		/*
+-		 * _CRS with no apertures is normal, so only fall back to
+-		 * defaults or native bridge info if we're ignoring _CRS.
+-		 */
+-		if (pci_use_crs)
+-			add_resources(info, &resources);
+-		else {
+-			free_pci_root_info_res(info);
+-			x86_pci_root_bus_resources(busnum, &resources);
++		if (!setup_mcfg_map(info, domain, (u8)root->secondary.start,
++				    (u8)root->secondary.end, root->mcfg_addr)) {
++			host = pci_scan_host_bridge(NULL, PCI_DOMBUS(domain, busnum), 
++					&pci_root_ops, &arg);
++			bus = host->bus;
+ 		}
+ 
+-		if (!setup_mcfg_map(info, domain, (u8)root->secondary.start,
+-				    (u8)root->secondary.end, root->mcfg_addr))
+-			bus = pci_create_root_bus(NULL, busnum, &pci_root_ops,
+-						  sd, &resources);
+-
+-		if (bus) {
+-			pci_scan_child_bus(bus);
+-			pci_set_host_bridge_release(
+-				to_pci_host_bridge(bus->bridge),
++		if (bus) 
++			pci_set_host_bridge_release(host,
+ 				release_pci_root_info, info);
+-		} else {
+-			pci_free_resource_list(&resources);
++		else 
+ 			__release_pci_root_info(info);
+-		}
++		
+ 	}
+ 
+ 	/* After the PCI-E bus has been walked and all devices discovered,
+@@ -568,7 +583,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 
+ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+ {
+-	struct pci_sysdata *sd = bridge->bus->sysdata;
++	struct pci_sysdata *sd = bridge->sysdata;
+ 
+ 	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
+ 	return 0;
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index b16632b..0032065 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -456,11 +456,18 @@ void __init dmi_check_pciprobe(void)
+ 	dmi_check_system(pciprobe_dmi_table);
  }
- EXPORT_SYMBOL_GPL(rpaphp_add_slot);
+ 
++static int pcibios_init_res(struct pci_host_bridge *host,
++		struct pci_host_info *info)
++{
++	x86_pci_root_bus_resources(host->busnum, &host->windows);
++	return 0;
++}
++
+ void pcibios_scan_root(int busnum)
+ {
+-	struct pci_bus *bus;
+ 	struct pci_sysdata *sd;
+-	LIST_HEAD(resources);
++	struct pci_host_info info;
++	struct pci_host_bridge *host;
+ 
+ 	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
+ 	if (!sd) {
+@@ -468,14 +475,16 @@ void pcibios_scan_root(int busnum)
+ 		return;
+ 	}
+ 	sd->node = x86_pci_root_bus_node(busnum);
+-	x86_pci_root_bus_resources(busnum, &resources);
++	init_pci_host_info(&info);
++	info.init_res = pcibios_init_res;
++	info.arg = sd;
+ 	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busnum);
+-	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, sd, &resources);
+-	if (bus) {
+-		pci_bus_add_devices(bus);
++	host = pci_scan_host_bridge(NULL, PCI_DOMBUS(0, busnum),
++		   	&pci_root_ops, &info);
++	if (host) {
++		pci_bus_add_devices(host->bus);
+ 		return;
+ 	} 
+-	pci_free_resource_list(&resources);
+ 	kfree(sd);
+ }
  
 -- 
-1.8.3.2
+1.7.1
 
