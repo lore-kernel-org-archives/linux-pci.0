@@ -1,112 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48175 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750730AbaKKPHK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 11 Nov 2014 10:07:10 -0500
-Subject: [PATCH v2] PCI: Remove fixed parameter in pci_iov_resource_bar()
-From: Myron Stowe <myron.stowe@redhat.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Date: Tue, 11 Nov 2014 08:04:50 -0700
-Message-ID: <20141111150450.15401.41753.stgit@amt.stowe>
+Received: from www.linutronix.de ([62.245.132.108]:35694 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751220AbaKQVbS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 16:31:18 -0500
+Date: Mon, 17 Nov 2014 22:31:14 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+cc: Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>
+Subject: Re: [PATCH 00/10] Save MSI chip in pci_sys_data
+In-Reply-To: <CAErSpo7hH=v15w2UgG3mWc_B=YQNA-ZXj_VO_9dHZ3oFrk_yjw@mail.gmail.com>
+Message-ID: <alpine.DEB.2.11.1411172230010.3909@nanos>
+References: <1414396127-30023-1-git-send-email-wangyijing@huawei.com> <20141112042359.GK28161@google.com> <20141117025914.GC4280@google.com> <alpine.DEB.2.11.1411171035270.3909@nanos> <CAErSpo46d0OJbO6tuDUXb2q7+00BUuHzJdsCr+aOhY4we+zn=w@mail.gmail.com>
+ <alpine.DEB.2.11.1411172138191.3909@nanos> <CAErSpo7hH=v15w2UgG3mWc_B=YQNA-ZXj_VO_9dHZ3oFrk_yjw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_iov_resource_bar() always sets its 'pci_bar_type' parameter to
-'pci_bar_unknown'.  Drop the parameter and just use 'pci_bar_unknown'
-directly in the callers.
+On Mon, 17 Nov 2014, Bjorn Helgaas wrote:
+> Super.  Thank you very much for taking care of this; it's a big weight
+> off my mind.
+> 
+> You can add my Acked-by to these patches if you want it.  I would
+> suggest a minor comment expansion here, just because the code *looks
+> like* it's setting up something to match a hardware device:
+> 
+> > +/**
+> > + * pci_msi_domain_calc_hwirq - Generate a unique ID for an MSI source
+> > + * @dev:       Pointer to the PCI device
+> > + * @desc:      Pointer to the msi descriptor
+> > + *
+> > + * The ID number is only used within the irqdomain.
+> 
+> Maybe include something like:
+> 
+>   This "irq_hw_number_t" is an opaque identifier used only by the
+> irqdomain code.
+>   It does not correspond to any hardware implementation or register encoding.
 
-No functional change intended.
+Yes, that's really a way better description of it.
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
-Cc: Chris Wright <chrisw@sous-sol.org>
-Cc: Yu Zhao <yuzhao@google.com>
----
- drivers/pci/iov.c |   11 +++--------
- drivers/pci/pci.c |    3 ++-
- drivers/pci/pci.h |    6 ++----
- 3 files changed, 7 insertions(+), 13 deletions(-)
+Thanks for having a look!
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 4d109c0..4b3a4ea 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -479,20 +479,16 @@ void pci_iov_release(struct pci_dev *dev)
-  * pci_iov_resource_bar - get position of the SR-IOV BAR
-  * @dev: the PCI device
-  * @resno: the resource number
-- * @type: the BAR type to be filled in
-  *
-  * Returns position of the BAR encapsulated in the SR-IOV capability.
-  */
--int pci_iov_resource_bar(struct pci_dev *dev, int resno,
--			 enum pci_bar_type *type)
-+int pci_iov_resource_bar(struct pci_dev *dev, int resno)
- {
- 	if (resno < PCI_IOV_RESOURCES || resno > PCI_IOV_RESOURCE_END)
- 		return 0;
- 
- 	BUG_ON(!dev->is_physfn);
- 
--	*type = pci_bar_unknown;
--
- 	return dev->sriov->pos + PCI_SRIOV_BAR +
- 		4 * (resno - PCI_IOV_RESOURCES);
- }
-@@ -510,13 +506,12 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno,
- resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
- {
- 	struct resource tmp;
--	enum pci_bar_type type;
--	int reg = pci_iov_resource_bar(dev, resno, &type);
-+	int reg = pci_iov_resource_bar(dev, resno);
- 
- 	if (!reg)
- 		return 0;
- 
--	 __pci_read_base(dev, type, &tmp, reg);
-+	 __pci_read_base(dev, pci_bar_unknown, &tmp, reg);
- 	return resource_alignment(&tmp);
- }
- 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 625a4ac..7bf2465 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4180,7 +4180,8 @@ int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type)
- 		return dev->rom_base_reg;
- 	} else if (resno < PCI_BRIDGE_RESOURCES) {
- 		/* device specific resource */
--		reg = pci_iov_resource_bar(dev, resno, type);
-+		*type = pci_bar_unknown;
-+		reg = pci_iov_resource_bar(dev, resno);
- 		if (reg)
- 			return reg;
- 	}
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 0601890..a0905a0 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -251,8 +251,7 @@ static inline void pci_restore_ats_state(struct pci_dev *dev)
- #ifdef CONFIG_PCI_IOV
- int pci_iov_init(struct pci_dev *dev);
- void pci_iov_release(struct pci_dev *dev);
--int pci_iov_resource_bar(struct pci_dev *dev, int resno,
--			 enum pci_bar_type *type);
-+int pci_iov_resource_bar(struct pci_dev *dev, int resno);
- resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno);
- void pci_restore_iov_state(struct pci_dev *dev);
- int pci_iov_bus_range(struct pci_bus *bus);
-@@ -266,8 +265,7 @@ static inline void pci_iov_release(struct pci_dev *dev)
- 
- {
- }
--static inline int pci_iov_resource_bar(struct pci_dev *dev, int resno,
--				       enum pci_bar_type *type)
-+static inline int pci_iov_resource_bar(struct pci_dev *dev, int resno)
- {
- 	return 0;
- }
+       tglx
 
