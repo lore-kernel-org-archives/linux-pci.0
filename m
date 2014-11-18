@@ -1,90 +1,155 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:56277 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751411AbaKKP54 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 10:57:56 -0500
-Date: Tue, 11 Nov 2014 15:57:44 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Martin Wilck <martin.wilck@ts.fujitsu.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Michael Ellerman <mpe@ellerman.id.au>
-Subject: Re: [PATCH RFC v2 1/2] drivers: pci: fix pci_mmap_fits()
- implementation for procfs mmap
-Message-ID: <20141111155744.GB4419@red-moon>
-References: <1414168089-8130-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1414168089-8130-2-git-send-email-lorenzo.pieralisi@arm.com>
- <20141110230454.GA21470@google.com>
- <20141111114825.GA4135@red-moon>
- <CAErSpo4nWpN0xDb3h7FCpExM-Q5fmr5oyuOLf6Y_w55HEQZP4w@mail.gmail.com>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:46355 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753681AbaKRJQk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 04:16:40 -0500
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 18 Nov 2014 19:16:38 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 1B3E03578075
+	for <linux-pci@vger.kernel.org>; Tue, 18 Nov 2014 20:16:35 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAI9GCDd36569142
+	for <linux-pci@vger.kernel.org>; Tue, 18 Nov 2014 20:16:12 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAI9GYXw026035
+	for <linux-pci@vger.kernel.org>; Tue, 18 Nov 2014 20:16:34 +1100
+Date: Tue, 18 Nov 2014 17:16:28 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/3] PCI: move PCI_FIND_CAP_TTL to pci.h and use it in
+ quirks
+Message-ID: <20141118091628.GA25737@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1413269253-8990-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1413269253-8990-2-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20141022231830.GC4795@google.com>
+ <20141106031202.GA18424@richard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4nWpN0xDb3h7FCpExM-Q5fmr5oyuOLf6Y_w55HEQZP4w@mail.gmail.com>
+In-Reply-To: <20141106031202.GA18424@richard>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 11, 2014 at 02:20:31PM +0000, Bjorn Helgaas wrote:
-> On Tue, Nov 11, 2014 at 4:48 AM, Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> > On Mon, Nov 10, 2014 at 11:04:54PM +0000, Bjorn Helgaas wrote:
-> >> ...
-> >> Here's what I think I understand so far:
-> >>
-> >>   Applications can mmap PCI memory space via either sysfs or procfs (the
-> >>   procfs method is deprecated but still supported):
-> >>
-> >>     - In sysfs, there's a separate /sys/devices/pci*/.../resource* file
-> >>       for each device BAR, and the application opens the appropriate
-> >>       file and supplies the offset from the beginning of the BAR as the
-> >>       mmap(2) offset.
-> >>
-> >>     - In procfs, the application opens the single /proc/bus/pci/... file
-> >>       for the device.  On most platforms, it supplies the CPU physical
-> >>       address as the mmap(2) offset.  On a few platforms, such as SPARC,
-> >>       it supplies the bus address, i.e., a BAR value, instead.
-> >>
-> >> But I'm not sure I have this right.  If the procfs offset is either the
-> >> CPU physical address or the BAR value, then pci_resource_to_user()
-> >> should be (depending on the arch) either a no-op or use
-> >> pci_resource_to_bus().
-> >
-> > Exactly (pcibios_resource_to_bus() ?).
-> >
-> >> But that's not how it's implemented.  Maybe it *could* be?  If
-> >> pci_resource_to_user() gives you something that's not a CPU physical
-> >> address and not a bus address, what *does* it give you, and why would we
-> >> need this third kind of thing?
-> >
-> > Well, you need a per arch function implementation where to define if
-> > the conversion from CPU physical address to PCI bus should take place
-> > or not right ? As you mentioned above, if that should be a per-arch
-> > decision, there has to be a per-arch function to filter the resource
-> > in question, I guess that's my understanding behind pci_resource_to_user(),
-> > but I am not sure either, and understanding that was the primary reason
-> > for this patchset so comments are welcome.
-> 
-> I agree that we need pci_resource_to_user() because arches do
-> different things, so we can't just remove pci_resource_to_user() and
-> replace it with pci_resource_to_bus().  My point is that we have a
-> generic pci_resource_to_user() implementation that does nothing, and
-> if an arch *does* implement its own pci_resource_to_user(), it seems
-> like it should simply call pci_resource_to_user().
+On Thu, Nov 06, 2014 at 11:12:02AM +0800, Wei Yang wrote:
+>On Wed, Oct 22, 2014 at 05:18:30PM -0600, Bjorn Helgaas wrote:
+>>[+cc Yinghai]
+>>
+>>On Tue, Oct 14, 2014 at 02:47:30PM +0800, Wei Yang wrote:
+>>> In some quirks, it tries to search a pci cap and use a ttl value to avoid
+>>> infinite loop. While the value is hard coded to 48, which is the same as marco
+>>> PCI_FIND_CAP_TTL.
+>>> 
+>>> This patch moves the definition of PCI_FIND_CAP_TTL to pci.h and replace the
+>>> hard coded value with it.
+>>
+>>This seems reasonable (though I added Yinghai in case he knows of any
+>>reason why HT capabilities should be different from plain PCI capabilities
+>>in this respect).
+>
+>Hi, Yinghai,
+>
+>Do you have some historical story on the definition?
+>
 
-to_bus() you mean. Well, I agree, but I am not sure it would work on all
-arches that deviate from the generic implementation, I can't speak for other
-architectures since I do not have an in-depth knowledge of their PCI
-internal implementations, in particular in relation to CPU <-> PCI
-address map conversions/mappings.
+Hi,
 
-I read your comment as an agreement on the approach I took in my patch,
-except for the current pci_resource_to_user() implementation(s), which I did
-not touch.
+I am not sure if I missed some mail. This is the last mail I sent, but no
+reply I got yet. Is is ok to send an updated version?
 
-Thanks,
-Lorenzo
+>>
+>>But I'd prefer to have the definition in drivers/pci/pci.h rather than in
+>>include/linux/pci.h, because both users already include drivers/pci/pci.h,
+>>and it is less visible.
+>>
+>>Bjorn
+>>
+>>> 
+>>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>> ---
+>>>  drivers/pci/pci.c    |    1 -
+>>>  drivers/pci/quirks.c |    8 ++++----
+>>>  include/linux/pci.h  |    2 ++
+>>>  3 files changed, 6 insertions(+), 5 deletions(-)
+>>> 
+>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>> index 2c9ac70..76b002b1 100644
+>>> --- a/drivers/pci/pci.c
+>>> +++ b/drivers/pci/pci.c
+>>> @@ -137,7 +137,6 @@ void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar)
+>>>  EXPORT_SYMBOL_GPL(pci_ioremap_bar);
+>>>  #endif
+>>>  
+>>> -#define PCI_FIND_CAP_TTL	48
+>>>  
+>>>  static int __pci_find_next_cap_ttl(struct pci_bus *bus, unsigned int devfn,
+>>>  				   u8 pos, int cap, int *ttl)
+>>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>>> index 80c2d01..a5f46b8 100644
+>>> --- a/drivers/pci/quirks.c
+>>> +++ b/drivers/pci/quirks.c
+>>> @@ -2176,7 +2176,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x9601, quirk_amd_780_apc_msi);
+>>>   * return 1 if a HT MSI capability is found and enabled */
+>>>  static int msi_ht_cap_enabled(struct pci_dev *dev)
+>>>  {
+>>> -	int pos, ttl = 48;
+>>> +	int pos, ttl = PCI_FIND_CAP_TTL;
+>>>  
+>>>  	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
+>>>  	while (pos && ttl--) {
+>>> @@ -2235,7 +2235,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_CK804_PCIE,
+>>>  /* Force enable MSI mapping capability on HT bridges */
+>>>  static void ht_enable_msi_mapping(struct pci_dev *dev)
+>>>  {
+>>> -	int pos, ttl = 48;
+>>> +	int pos, ttl = PCI_FIND_CAP_TTL;
+>>>  
+>>>  	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
+>>>  	while (pos && ttl--) {
+>>> @@ -2314,7 +2314,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA,
+>>>  
+>>>  static int ht_check_msi_mapping(struct pci_dev *dev)
+>>>  {
+>>> -	int pos, ttl = 48;
+>>> +	int pos, ttl = PCI_FIND_CAP_TTL;
+>>>  	int found = 0;
+>>>  
+>>>  	/* check if there is HT MSI cap or enabled on this device */
+>>> @@ -2439,7 +2439,7 @@ out:
+>>>  
+>>>  static void ht_disable_msi_mapping(struct pci_dev *dev)
+>>>  {
+>>> -	int pos, ttl = 48;
+>>> +	int pos, ttl = PCI_FIND_CAP_TTL;
+>>>  
+>>>  	pos = pci_find_ht_capability(dev, HT_CAPTYPE_MSI_MAPPING);
+>>>  	while (pos && ttl--) {
+>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>>> index 96453f9..b27b79e 100644
+>>> --- a/include/linux/pci.h
+>>> +++ b/include/linux/pci.h
+>>> @@ -33,6 +33,8 @@
+>>>  
+>>>  #include <linux/pci_ids.h>
+>>>  
+>>> +#define PCI_FIND_CAP_TTL	48
+>>> +
+>>>  /*
+>>>   * The PCI interface treats multi-function devices as independent
+>>>   * devices.  The slot/function address of each device is encoded
+>>> -- 
+>>> 1.7.9.5
+>>> 
+>
+>-- 
+>Richard Yang
+>Help you, Help me
+
+-- 
+Richard Yang
+Help you, Help me
+
