@@ -1,39 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f54.google.com ([209.85.192.54]:47875 "EHLO
-	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754241AbaKOE0Q convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Nov 2014 23:26:16 -0500
-Received: by mail-qg0-f54.google.com with SMTP id q108so12758510qgd.41
-        for <linux-pci@vger.kernel.org>; Fri, 14 Nov 2014 20:26:15 -0800 (PST)
+Received: from mga02.intel.com ([134.134.136.20]:51702 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751248AbaKRIPm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Nov 2014 03:15:42 -0500
+From: "Jamet, Michael" <michael.jamet@intel.com>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Levy, Amir (Jer)" <amir.jer.levy@intel.com>,
+	"Alloun, Dan" <dan.alloun@intel.com>,
+	Rafael Wysocki <rjw@rjwysocki.net>,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: RE: [PATCH] pci: support Thunderbolt requirements for I/O resources.
+Date: Tue, 18 Nov 2014 08:15:21 +0000
+Message-ID: <BC567D27D6B7384F84318942321624DE16179EE6@hasmsx109.ger.corp.intel.com>
+References: <1415847123-15558-1-git-send-email-michael.jamet@intel.com>
+	<CAErSpo7Z5x=U3vSnxrFpwYUDrUrnrrBCe1F9_GQNYqWWQFWNpQ@mail.gmail.com>
+ <CAHp75VcZ0XjcFxjrSgr5-XnWZZa-eZfPH_Fa1Hzb=f+qtE3z9w@mail.gmail.com>
+In-Reply-To: <CAHp75VcZ0XjcFxjrSgr5-XnWZZa-eZfPH_Fa1Hzb=f+qtE3z9w@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 14 Nov 2014 21:25:55 -0700
-Message-ID: <CAErSpo7m9xMy9buOmF==8H_VSkBBqPZD1_OCPYjEz_1Q1n4y0Q@mail.gmail.com>
-Subject: Re: DMA_ALIAS_DEVFN issue
-To: "Allan, Bruce W" <bruce.w.allan@intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Alex, add a subject]
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBBbmR5IFNoZXZjaGVua28gW21h
+aWx0bzphbmR5LnNoZXZjaGVua29AZ21haWwuY29tXQ0KPiBTZW50OiBXZWRuZXNkYXksIE5vdmVt
+YmVyIDEyLCAyMDE0IDIwOjMxDQo+IFRvOiBCam9ybiBIZWxnYWFzDQo+IENjOiBKYW1ldCwgTWlj
+aGFlbDsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVs
+Lm9yZzsNCj4gTGV2eSwgQW1pciAoSmVyKTsgQWxsb3VuLCBEYW47IFJhZmFlbCBXeXNvY2tpOyBB
+bmRyZWFzIE5vZXZlcg0KPiBTdWJqZWN0OiBSZTogW1BBVENIXSBwY2k6IHN1cHBvcnQgVGh1bmRl
+cmJvbHQgcmVxdWlyZW1lbnRzIGZvciBJL08NCj4gcmVzb3VyY2VzLg0KPiANCj4gT24gV2VkLCBO
+b3YgMTIsIDIwMTQgYXQgNzoyOSBQTSwgQmpvcm4gSGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNv
+bT4NCj4gd3JvdGU6DQo+IA0KPiBbXQ0KPiANCj4gPj4gVG8gcHJldmVudCB0aGlzLCB3ZSBkZXRl
+Y3QgYSBjaGFpbiBjb250YWlucyBhIFRodW5kZXJib2x0IGRldmljZSBieQ0KPiA+PiBjaGVja2lu
+ZyB0aGUgVGh1bmRlcmJvbHQgUENJIGRldmljZSBpZC4NCj4gPg0KPiA+IEknbSByZWFsbHkgbm90
+IGhhcHB5IGFib3V0IGNoZWNraW5nIGEgbGlzdCBvZiBkZXZpY2UgSURzIHRvIGlkZW50aWZ5DQo+
+ID4gVGh1bmRlcmJvbHQgZGV2aWNlcy4gIFN1cmVseSB0aGVyZSdzIGEgYmV0dGVyIHdheSwgYmVj
+YXVzZSBhIGxpc3QgbGlrZQ0KPiA+IHRoaXMgaGFzIHRvIGJlIHVwZGF0ZWQgcmVndWxhcmx5Lg0K
+PiANCj4gSSByZWNlbnRseSBwcm9wb3NlZCBpbnRlcm5hbGx5IHRvIHVzZSBxdWlya3MgKHBjaV9m
+aXh1cF9lYXJseSkgZm9yIHRoYXQsIGJ1dA0KPiBhcHBhcmVudGx5IE1pY2hhZWwgZGlkbid0IGhh
+dmUgdGltZSB0byBhbnN3ZXIuIEl0IG1pZ2h0IGJlIGhlIGNhbiBqdXN0DQo+IGNvbW1lbnQgaGVy
+ZSBzaW5jZSB0aGUgcGF0Y2ggYWxyZWFkeSBwdWJsaWMuDQo+IA0KPiAtLQ0KPiBXaXRoIEJlc3Qg
+UmVnYXJkcywNCj4gQW5keSBTaGV2Y2hlbmtvDQoNCkluZGVlZCwgSSd2ZSBleHBsb3JlZCB0aGUg
+cXVpcmtzIG9wdGlvbi4NClVuZm9ydHVuYXRlbHkgdGhlIGZpeHVwIGhvb2sgc2VlbXMgdG8gYmUg
+Y2FsbGVkIHRvbyBsYXRlIGluIHRoZSBjb2RlIA0Kc2luY2UgcGNpX2VuYWJsZV9kZXZpY2UoKWNh
+bGxzIHBjaWJpb3NfZW5hYmxlX2RldmljZSgpIHdoaWNoIGFjdHVhbGx5IA0Kc2VuZCBhIFBDSSBj
+b21tYW5kIHdpdGggIENNRCB8PVBDSV9DT01NQU5EX0lPIGFuZCBjb25maWd1cmUgdGhlIFBDSSBI
+Vy4gDQpUaGUgSU9SRVNPVVJDRV9NRU0gYW5kIElPUkVTT1VSQ0VfSU8gZmxhZ3MgYXJlIHNldCBh
+dCB0aGUgdGltZSB0aGUNCnBjaV9lbmFibGVfZGV2aWNlKCksIHBjaV9lbmFibGVfZGV2aWNlX21l
+bSgpIG9yIHBjaV9lbmFibGVfZGV2aWNlX2lvKCkgDQppcyBjYWxsZWQgZHVyaW5nIGRldmljZSBp
+bml0aWFsaXphdGlvbnMsIHNvIGFuIGVhcmx5IGZpeHVwIGNhbGwgd29uJ3QgaGVscCBlaXRoZXIu
+DQpBdCB0aGlzIHN0YWdlLCB0aGUgUENJIEhXIGlzIGNvbmZpZ3VyZWQgYW5kIGEgZml4dXAgY2Fs
+bCB3b24ndCAgcmVzb2x2ZSB0aGUgaXNzdWUNCnVubGVzcyBhbm90aGVyIFBDSSBjb21tYW5kIGlz
+IHNlbnQgdG8gcmV2ZXJ0IGl0IA0KKGdlbmVyYWxseSBub3QgYWR2aXNlZCB0byBleGVjdXRlIGFn
+YWluIG9uIGhhcmR3YXJlKS4NCg0KTWljaGFlbCANCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpJbnRlbCBJc3JhZWwg
+KDc0KSBMaW1pdGVkCgpUaGlzIGUtbWFpbCBhbmQgYW55IGF0dGFjaG1lbnRzIG1heSBjb250YWlu
+IGNvbmZpZGVudGlhbCBtYXRlcmlhbCBmb3IKdGhlIHNvbGUgdXNlIG9mIHRoZSBpbnRlbmRlZCBy
+ZWNpcGllbnQocykuIEFueSByZXZpZXcgb3IgZGlzdHJpYnV0aW9uCmJ5IG90aGVycyBpcyBzdHJp
+Y3RseSBwcm9oaWJpdGVkLiBJZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQKcmVjaXBpZW50LCBw
+bGVhc2UgY29udGFjdCB0aGUgc2VuZGVyIGFuZCBkZWxldGUgYWxsIGNvcGllcy4K
 
-On Fri, Nov 14, 2014 at 6:49 PM, Allan, Bruce W <bruce.w.allan@intel.com> wrote:
-> Let's try this again as plain text...
->
-> For a PCIe device with SR-IOV support enabled (e.g. the PF device ID is 0xf001 at 0000:07:00.0 and the 16 VFs have device ID 0xf002 at 0000:07:01.0 through 0000:07:02.7), if the hardware attempts a DMA read/write of memory that was mapped by the PF devfn but instead uses a requester id of one of the VF devfns (enabled but not yet assigned to a VM) it fails and generates log messages similar to:
->
-> [  416.800881] dmar: DRHD: handling fault status reg 2
-> [  416.800887] dmar: DMAR:[DMA Read] Request device [07:02.2] fault addr ffff0000
-> DMAR:[fault reason 02] Present bit in context entry is clear
->
-> Shouldn't a DMA alias quirk that sets the PCI_DEV_FLAGS_DMA_ALIAS_DEVFN flag and dma_alias_devfn to the PF devfn for all VF devfns work-around this issue, or am I misunderstanding what a DMA alias quirk is supposed to do?  If a DMA alias quirk cannot resolve this, what is the most appropriate way to handle this?
->
-> Thanks,
-> Bruce.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
