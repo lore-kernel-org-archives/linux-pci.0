@@ -1,268 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:52054 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751033AbaKCLXX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Nov 2014 06:23:23 -0500
-Date: Mon, 3 Nov 2014 11:23:09 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Jamet, Michael" <michael.jamet@intel.com>
+To: Andreas Noever <andreas.noever@gmail.com>,
+	Andy Shevchenko <andy.shevchenko@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Phil Edworthy' <phil.edworthy@renesas.com>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Russell King' <linux@arm.linux.org.uk>,
-	'Mohit Kumar' <mohit.kumar@st.com>,
-	'Richard Zhu' <r65037@freescale.com>,
-	'Lucas Stach' <l.stach@pengutronix.de>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Murali Karicheri' <m-karicheri2@ti.com>
-Subject: Re: [RFC PATCH 2/2] arm: pcibios: move to generic PCI domains
-Message-ID: <20141103112309.GB24433@red-moon>
-References: <1414669490-1217-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1414669490-1217-3-git-send-email-lorenzo.pieralisi@arm.com>
- <003401cff704$09755cd0$1c601670$%han@samsung.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Levy, Amir (Jer)" <amir.jer.levy@intel.com>,
+	"Alloun, Dan" <dan.alloun@intel.com>,
+	Rafael Wysocki <rjw@rjwysocki.net>
+Subject: RE: [PATCH] pci: support Thunderbolt requirements for I/O resources.
+Date: Tue, 18 Nov 2014 08:20:13 +0000
+Message-ID: <BC567D27D6B7384F84318942321624DE16179F2A@hasmsx109.ger.corp.intel.com>
+References: <1415847123-15558-1-git-send-email-michael.jamet@intel.com>
+ <CAErSpo7Z5x=U3vSnxrFpwYUDrUrnrrBCe1F9_GQNYqWWQFWNpQ@mail.gmail.com>
+ <CAHp75VcZ0XjcFxjrSgr5-XnWZZa-eZfPH_Fa1Hzb=f+qtE3z9w@mail.gmail.com>
+ <CAMxnaaXOa_GAFwK+tUrO8DBjENqdd9uaQHKqEMm+i4754Ch3gQ@mail.gmail.com>
+In-Reply-To: <CAMxnaaXOa_GAFwK+tUrO8DBjENqdd9uaQHKqEMm+i4754Ch3gQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <003401cff704$09755cd0$1c601670$%han@samsung.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 03, 2014 at 01:18:12AM +0000, Jingoo Han wrote:
-> On Thursday, October 30, 2014 8:45 PM, Lorenzo Pieralisi wrote:
-> >
-> > Most if not all ARM PCI host controller device drivers either ignore the
-> > domain field in the pci_sys_data structure or just increment it every
-> > time a host controller is probed, using it as a domain counter.
-> >
-> > Therefore, instead of relying on pci_sys_data to stash the domain number
-> > in a standard location, ARM pcibios code can be moved to the newly
-> > introduced generic PCI domains code, implemented in commits:
-> >
-> > commit 41e5c0f81d3e676d671d96a0a1fafb27abfbd9
-> > ("of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()")
-> >
-> > commit 670ba0c8883b576d0aec28bd7a838358a4be1
-> > ("PCI: Add generic domain handling")
-> >
-> > In order to assign a domain number dynamically, the ARM pcibios defines
-> > the function, called by core PCI code:
-> >
-> > void pci_bus_assign_domain_nr(...)
-> >
-> > that relies on a DT property to define the domain number or falls back to
-> > a counter; its usage replaces the current domain assignment code in PCI
-> > host controllers present in the kernel.
-> >
-> > Cc: Arnd Bergmann <arnd@arndb.de>
-> > Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> > Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> > Cc: Jingoo Han <jg1.han@samsung.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Russell King <linux@arm.linux.org.uk>
-> > Cc: Mohit Kumar <mohit.kumar@st.com>
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> 
-> (+CC Richard Zhu, Lucas Stach, Kishon Vijay Abraham I, Murali Karicheri)
-> 
-> Acked-by: Jingoo Han <jg1.han@samsung.com>
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBBbmRyZWFzIE5vZXZlciBbbWFp
+bHRvOmFuZHJlYXMubm9ldmVyQGdtYWlsLmNvbV0NCj4gU2VudDogV2VkbmVzZGF5LCBOb3ZlbWJl
+ciAxMiwgMjAxNCAyMjoxOQ0KPiBUbzogQW5keSBTaGV2Y2hlbmtvDQo+IENjOiBCam9ybiBIZWxn
+YWFzOyBKYW1ldCwgTWljaGFlbDsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgtDQo+
+IGtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IExldnksIEFtaXIgKEplcik7IEFsbG91biwgRGFuOyBS
+YWZhZWwgV3lzb2NraQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIXSBwY2k6IHN1cHBvcnQgVGh1bmRl
+cmJvbHQgcmVxdWlyZW1lbnRzIGZvciBJL08NCj4gcmVzb3VyY2VzLg0KPiANCj4gT24gV2VkLCBO
+b3YgMTIsIDIwMTQgYXQgNzozMCBQTSwgQW5keSBTaGV2Y2hlbmtvDQo+IDxhbmR5LnNoZXZjaGVu
+a29AZ21haWwuY29tPiB3cm90ZToNCj4gPiBPbiBXZWQsIE5vdiAxMiwgMjAxNCBhdCA3OjI5IFBN
+LCBCam9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPg0KPiB3cm90ZToNCj4gPg0KPiA+
+IFtdDQo+ID4NCj4gPj4+IFRvIHByZXZlbnQgdGhpcywgd2UgZGV0ZWN0IGEgY2hhaW4gY29udGFp
+bnMgYSBUaHVuZGVyYm9sdCBkZXZpY2UgYnkNCj4gPj4+IGNoZWNraW5nIHRoZSBUaHVuZGVyYm9s
+dCBQQ0kgZGV2aWNlIGlkLg0KPiA+Pg0KPiA+PiBJJ20gcmVhbGx5IG5vdCBoYXBweSBhYm91dCBj
+aGVja2luZyBhIGxpc3Qgb2YgZGV2aWNlIElEcyB0byBpZGVudGlmeQ0KPiA+PiBUaHVuZGVyYm9s
+dCBkZXZpY2VzLiAgU3VyZWx5IHRoZXJlJ3MgYSBiZXR0ZXIgd2F5LCBiZWNhdXNlIGEgbGlzdA0K
+PiA+PiBsaWtlIHRoaXMgaGFzIHRvIGJlIHVwZGF0ZWQgcmVndWxhcmx5Lg0KPiA+DQo+ID4gSSBy
+ZWNlbnRseSBwcm9wb3NlZCBpbnRlcm5hbGx5IHRvIHVzZSBxdWlya3MgKHBjaV9maXh1cF9lYXJs
+eSkgZm9yDQo+ID4gdGhhdCwgYnV0IGFwcGFyZW50bHkgTWljaGFlbCBkaWRuJ3QgaGF2ZSB0aW1l
+IHRvIGFuc3dlci4gSXQgbWlnaHQgYmUNCj4gPiBoZSBjYW4ganVzdCBjb21tZW50IGhlcmUgc2lu
+Y2UgdGhlIHBhdGNoIGFscmVhZHkgcHVibGljLg0KPiANCj4gSW4gYW55IGNhc2U6IHRoaXMgd2ls
+bCBpbnRlcmZlcmUgd2l0aCB0aHVuZGVyYm9sdCBob3RwbHVnIG9uIEFwcGxlIHN5c3RlbXMsDQo+
+IHdoZXJlIHdlIGRvIG5vdCBoYXZlIEJJT1Mgc3VwcG9ydCBhbmQgaGF2ZSB0byBoYW5kbGUgaG90
+cGx1ZyBldmVudHMgYW5kDQo+IGFzc2lnbiByZXNvdXJjZXMgb3Vyc2VsdmVzLiBTbyBwbGVhc2Ug
+YWRkIGEgRE1JIGNoZWNrIGZvciBBcHBsZSAodGhlIHJldmVyc2UNCj4gb2Ygd2hhdCB3ZSBkbyBp
+bg0KPiBodHRwOi8vbHhyLmZyZWUtDQo+IGVsZWN0cm9ucy5jb20vc291cmNlL2RyaXZlcnMvdGh1
+bmRlcmJvbHQvbmhpLmM/dj0zLjE3I0w2NjQNCj4gKS4NCj4gDQo+IFRoYW5rcywNCj4gQW5kcmVh
+cw0KDQpUaGlzIGlzIGNvcnJlY3QgdGhhdCB0aGUgaG90cGx1ZyBoYW5kbGluZyBtZWNoYW5pc20g
+YW5kIGludGVyYWN0aW9uIHdpdGggQklPUyBpcyBkaWZmZXJlbnQuIA0KSG93ZXZlciwgdGhpcyBw
+YXRjaCBhbHNvIGFwcGxpZXMgZm9yIGFueSBjYXNlLCBzaW5jZSB0aGUgSS9PIHNwYWNlIGlzIGxp
+bWl0ZWQgDQphbmQgbmVlZCB0byBiZSBwcmVzZXJ2ZWQsIHNvIHdlIG11c3QgcHJldmVudCBhbGxv
+Y2F0aW9uIG9mIEkvTyByZXNvdXJjZXMgDQpmcm9tIHRoZSBkZXZpY2VzIGFuZCBhdm9pZGluZyBl
+eGhhdXN0aW9uIHdoaWxlIGNoYWluaW5nIHRoZW0uDQoNCk1pY2hhZWwgDQoNCg0KLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tCkludGVsIElzcmFlbCAoNzQpIExpbWl0ZWQKClRoaXMgZS1tYWlsIGFuZCBhbnkgYXR0YWNo
+bWVudHMgbWF5IGNvbnRhaW4gY29uZmlkZW50aWFsIG1hdGVyaWFsIGZvcgp0aGUgc29sZSB1c2Ug
+b2YgdGhlIGludGVuZGVkIHJlY2lwaWVudChzKS4gQW55IHJldmlldyBvciBkaXN0cmlidXRpb24K
+Ynkgb3RoZXJzIGlzIHN0cmljdGx5IHByb2hpYml0ZWQuIElmIHlvdSBhcmUgbm90IHRoZSBpbnRl
+bmRlZApyZWNpcGllbnQsIHBsZWFzZSBjb250YWN0IHRoZSBzZW5kZXIgYW5kIGRlbGV0ZSBhbGwg
+Y29waWVzLgo=
 
-Thank you Jingoo.
-
-> For a long time, I have wanted the patch like this. Personally,
-> I want to increase the build coverage and keep the same binary
-> regardless of config options as possible; thus, I don't like
-> #ifdef guards such as '#ifdef CONFIG_PCI_DOMAINS'. When I submitted
-> the first patch for 'pcie-designware.c', I was not able to find
-> a way to remove '#ifdef CONFIG_PCI_DOMAINS' from 'pcie-designware.c'.
-> 
-> This patch looks good and I think that this patch will not make
-> the problem. However, I didn't test this patch with Exynos platform,
-> due to some reasons. So, I hope that other engineers test this patch
-> on other SoC platforms related to designware PCIe.
-> 
-> To Mohit Kumar (ST SPEAR13XX), Richard Zhu/Lucas Stach (IMX6)
->     Kishon Vijay Abraham I (TI DRA7XX), Murali Karicheri (TI KEYSTONE)
-> 
-> Would you test this patch and share the result?
-> It would be very helpful. Thank you.
-
-I am happy to wait for a week or two before asking to add this code to -next,
-it would be definitely great to get more coverage on pcie-designware.
-
-Thanks,
-Lorenzo
-
-> Best regards,
-> Jingoo Han
-> 
-> > ---
-> >  arch/arm/Kconfig                   |  3 +++
-> >  arch/arm/include/asm/mach/pci.h    |  3 ---
-> >  arch/arm/include/asm/pci.h         |  7 -------
-> >  arch/arm/kernel/bios32.c           | 26 +++++++++++++++++++++++---
-> >  drivers/pci/host/pci-mvebu.c       | 10 ++--------
-> >  drivers/pci/host/pcie-designware.c |  3 ---
-> >  drivers/pci/host/pcie-rcar.c       |  3 ---
-> >  7 files changed, 28 insertions(+), 27 deletions(-)
-> >
-> > diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-> > index 89c4b5c..29544f0 100644
-> > --- a/arch/arm/Kconfig
-> > +++ b/arch/arm/Kconfig
-> > @@ -1292,6 +1292,9 @@ config PCI_DOMAINS
-> >       bool
-> >       depends on PCI
-> >
-> > +config PCI_DOMAINS_GENERIC
-> > +     def_bool PCI_DOMAINS
-> > +
-> >  config PCI_NANOENGINE
-> >       bool "BSE nanoEngine PCI support"
-> >       depends on SA1100_NANOENGINE
-> > diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-> > index 7fc4278..f19f627 100644
-> > --- a/arch/arm/include/asm/mach/pci.h
-> > +++ b/arch/arm/include/asm/mach/pci.h
-> > @@ -44,9 +44,6 @@ struct hw_pci {
-> >   * Per-controller structure
-> >   */
-> >  struct pci_sys_data {
-> > -#ifdef CONFIG_PCI_DOMAINS
-> > -     int             domain;
-> > -#endif
-> >       struct list_head node;
-> >       int             busnr;          /* primary bus number                   */
-> >       u64             mem_offset;     /* bus->cpu memory mapping offset       */
-> > diff --git a/arch/arm/include/asm/pci.h b/arch/arm/include/asm/pci.h
-> > index 7e95d85..585dc33 100644
-> > --- a/arch/arm/include/asm/pci.h
-> > +++ b/arch/arm/include/asm/pci.h
-> > @@ -18,13 +18,6 @@ static inline int pcibios_assign_all_busses(void)
-> >  }
-> >
-> >  #ifdef CONFIG_PCI_DOMAINS
-> > -static inline int pci_domain_nr(struct pci_bus *bus)
-> > -{
-> > -     struct pci_sys_data *root = bus->sysdata;
-> > -
-> > -     return root->domain;
-> > -}
-> > -
-> >  static inline int pci_proc_domain(struct pci_bus *bus)
-> >  {
-> >       return pci_domain_nr(bus);
-> > diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-> > index 17a26c1..d8c2b4e 100644
-> > --- a/arch/arm/kernel/bios32.c
-> > +++ b/arch/arm/kernel/bios32.c
-> > @@ -11,6 +11,8 @@
-> >  #include <linux/slab.h>
-> >  #include <linux/init.h>
-> >  #include <linux/io.h>
-> > +#include <linux/of.h>
-> > +#include <linux/of_pci.h>
-> >
-> >  #include <asm/mach-types.h>
-> >  #include <asm/mach/map.h>
-> > @@ -468,9 +470,6 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
-> >               if (!sys)
-> >                       panic("PCI: unable to allocate sys data!");
-> >
-> > -#ifdef CONFIG_PCI_DOMAINS
-> > -             sys->domain  = hw->domain;
-> > -#endif
-> >               sys->busnr   = busnr;
-> >               sys->swizzle = hw->swizzle;
-> >               sys->map_irq = hw->map_irq;
-> > @@ -511,6 +510,27 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
-> >       }
-> >  }
-> >
-> > +#ifdef CONFIG_PCI_DOMAINS_GENERIC
-> > +static bool dt_domain_found;
-> > +
-> > +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> > +{
-> > +     int domain = of_get_pci_domain_nr(parent->of_node);
-> > +
-> > +     if (domain >= 0) {
-> > +             dt_domain_found = true;
-> > +     } else if (dt_domain_found == true) {
-> > +             dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
-> > +                     parent->of_node->full_name);
-> > +             return;
-> > +     } else {
-> > +             domain = pci_get_new_domain_nr();
-> > +     }
-> > +
-> > +     bus->domain_nr = domain;
-> > +}
-> > +#endif
-> > +
-> >  void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
-> >  {
-> >       struct pci_sys_data *sys;
-> > diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> > index b1315e1..2b4c1f2 100644
-> > --- a/drivers/pci/host/pci-mvebu.c
-> > +++ b/drivers/pci/host/pci-mvebu.c
-> > @@ -722,17 +722,11 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
-> >  {
-> >       struct mvebu_pcie *pcie = sys_to_pcie(sys);
-> >       int i;
-> > -     int domain = 0;
-> >
-> > -#ifdef CONFIG_PCI_DOMAINS
-> > -     domain = sys->domain;
-> > -#endif
-> > -
-> > -     snprintf(pcie->mem_name, sizeof(pcie->mem_name), "PCI MEM %04x",
-> > -              domain);
-> > +     snprintf(pcie->mem_name, sizeof(pcie->mem_name), "PCI MEM %04x", nr);
-> >       pcie->mem.name = pcie->mem_name;
-> >
-> > -     snprintf(pcie->io_name, sizeof(pcie->io_name), "PCI I/O %04x", domain);
-> > +     snprintf(pcie->io_name, sizeof(pcie->io_name), "PCI I/O %04x", nr);
-> >       pcie->realio.name = pcie->io_name;
-> >
-> >       if (request_resource(&iomem_resource, &pcie->mem))
-> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> > index dfed00a..6790b87 100644
-> > --- a/drivers/pci/host/pcie-designware.c
-> > +++ b/drivers/pci/host/pcie-designware.c
-> > @@ -502,9 +502,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> >       dw_pci.private_data = (void **)&pp;
-> >
-> >       pci_common_init_dev(pp->dev, &dw_pci);
-> > -#ifdef CONFIG_PCI_DOMAINS
-> > -     dw_pci.domain++;
-> > -#endif
-> >
-> >       return 0;
-> >  }
-> > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> > index 61158e0..b6b859e 100644
-> > --- a/drivers/pci/host/pcie-rcar.c
-> > +++ b/drivers/pci/host/pcie-rcar.c
-> > @@ -404,9 +404,6 @@ static void rcar_pcie_enable(struct rcar_pcie *pcie)
-> >       rcar_pci.private_data = (void **)&pcie;
-> >
-> >       pci_common_init_dev(&pdev->dev, &rcar_pci);
-> > -#ifdef CONFIG_PCI_DOMAINS
-> > -     rcar_pci.domain++;
-> > -#endif
-> >  }
-> >
-> >  static int phy_wait_for_ack(struct rcar_pcie *pcie)
-> > --
-> > 2.1.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
