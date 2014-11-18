@@ -1,123 +1,106 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <545910EA.1010903@arm.com>
-Date: Tue, 04 Nov 2014 17:46:18 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:49594 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753660AbaKRMmT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Nov 2014 07:42:19 -0500
+Message-ID: <546B3EA1.90100@redhat.com>
+Date: Tue, 18 Nov 2014 07:42:09 -0500
+From: Prarit Bhargava <prarit@redhat.com>
 MIME-Version: 1.0
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Thomas Gleixner <tglx@linutronix.de>
-CC: Mark Rutland <Mark.Rutland@arm.com>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"Harish.Kasiviswanathan@amd.com" <Harish.Kasiviswanathan@amd.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Myron Stowe <mstowe@redhat.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [V10 PATCH 2/2] irqchip: gicv2m: Add supports for ARM GICv2m
- MSI(-X)
-References: <1415052977-26036-1-git-send-email-suravee.suthikulpanit@amd.com> <1415052977-26036-3-git-send-email-suravee.suthikulpanit@amd.com> <alpine.DEB.2.11.1411032300160.5308@nanos> <54584681.2010103@amd.com> <alpine.DEB.2.11.1411040903340.5308@nanos> <5458E0BE.2090803@amd.com>
-In-Reply-To: <5458E0BE.2090803@amd.com>
-Content-Type: text/plain; charset=WINDOWS-1252
-Sender: linux-kernel-owner@vger.kernel.org
+	Linux-Arch <linux-arch@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH] pci, add FW_BUG warning to pci= kernel option
+References: <1414865479-25792-1-git-send-email-prarit@redhat.com> <20141111035902.GC28161@google.com> <CAErSpo7q1U_HpEeB_pMWJPae3a+oysEwR660m2bV5KdZ7oCr0w@mail.gmail.com>
+In-Reply-To: <CAErSpo7q1U_HpEeB_pMWJPae3a+oysEwR660m2bV5KdZ7oCr0w@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/11/14 14:20, Suravee Suthikulpanit wrote:
-> 
-> 
-> On 11/4/14 04:06, Thomas Gleixner wrote:
->> On Mon, 3 Nov 2014, Suravee Suthikulanit wrote:
->>> On 11/3/2014 4:51 PM, Thomas Gleixner wrote:
->>>> On Mon, 3 Nov 2014, suravee.suthikulpanit@amd.com wrote:
->>>>> +	irq_domain_set_hwirq_and_chip(v2m->domain, virq, hwirq,
->>>>> +				&v2m_chip, v2m);
->>>>> +
->>>>> +	irq_set_msi_desc(hwirq, desc);
->>>>> +	irq_set_irq_type(hwirq, IRQ_TYPE_EDGE_RISING);
->>>>
->>>> Sure both calls work perfectly fine as long as virq == hwirq, right?
+
+
+On 11/17/2014 06:42 PM, Bjorn Helgaas wrote:
+> On Mon, Nov 10, 2014 at 8:59 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> [+cc lkml, linux-arch, Linus]
+>>
+>> On Sat, Nov 01, 2014 at 02:11:19PM -0400, Prarit Bhargava wrote:
+>>> The kernel should boot PCI without the use of kernel parameters.  Display
+>>> a FW_BUG warning when pci= is used.
 >>>
->>> I was running into an issue when calling the irq_domain_alloc_irq_parent(), it
->>> requires of_phandle_args pointer to be passed in. However, this does not work
->>> for GICv2m since it does not have interrupt information in the device tree.
->>> So, I decided at first to use direct (virq == hwirq) mapping, which simplifies
->>> the code a bit, but might not be ideal solution, as you pointed out.
->>
->> It's not only far from ideal. It's not a solution at all. Simply
->> because there is no guarantee for virq == hwirq.
->>
->>> An alternative would be to create a temporary struct of_phandle_args, and
->>> populate it with the interrupt information for the requested MSI. Then pass it
->>> to:
->>>    --> irq_domain_alloc_irq_parent
->>>     |--> gic_irq_domain_alloc
->>>       |--> gic_irq_domain_xlate
->>>       |--> gic_irq_domain_map
+>>> Cc: Myron Stowe <mstowe@redhat.com>
+>>> Cc: linux-pci@vger.kernel.org
+>>> Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+>>> ---
+>>>  drivers/pci/pci.c |    2 ++
+>>>  1 file changed, 2 insertions(+)
 >>>
->>> However, this would still not be ideal if we want to support ACPI. Another
+>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>> index 625a4ac..5172060b 100644
+>>> --- a/drivers/pci/pci.c
+>>> +++ b/drivers/pci/pci.c
+>>> @@ -4515,6 +4515,8 @@ static int __init pci_setup(char *str)
+>>>               }
+>>>               str = k;
+>>>       }
+>>> +     add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
+>>> +     pr_crit(FW_BUG "The PCI configuration has been overridden thorugh the use of pci=.  Please report the issue you are attempting to resolve to your hardware vendor.\n");
 >>
->> Neither device tree nor ACPI has anything to do with MSI interrupts at
->> runtime.
+>> My goal is to be able to boot without any "pci=" parameters, so from that
+>> perspective, I like this.
 >>
->> All they do is to tell that there is a MSI controller and where the
->> registers are and in the worst case fixups for a borked MSI_TYPER
->> register.
+>> When people have a problem booting Linux, they often try a variety of
+>> things like "pci=assign-busses", "pci=nocrs", "pci=nomsi", "pci=nommconf",
+>> "pci=noacpi", etc.  If they find something that works, there's a tendency
+>> to treat that as a "solution."  I'd rather that they report it, so we can
+>> try to fix the bug or add a quirk so the *next* person won't have to figure
+>> out the right parameters to use.
 >>
->> So either the TYPER reg or DT/ACPI gives you a fixed hwirq range which
->> is reserved for MSI. And that's all you need, right?
+>> My worry is that there are a few things where Linux isn't smart enough to
+>> do the right thing automatically, and I don't think we'll have a good
+>> solution in the near future.  For example:
 >>
-> Right, I get that part. Figuring out the fixed hwirq range for MSI is 
-> not the point I am trying to make here.
+>>     pci=norom
+>>     pci=pcie_bus_perf,pcie_bus_safe,etc.
+>>     pci=cbiosize=...
+>>     pci=cbmemsize=...
+>>     pci=resource_alignment=...
+>>     pci=hpiosize=...
+>>     pci=hpmemsize=...
+>>     pci=realloc
+>>
+>> I don't like the fact that these options exist, but I suspect there are
+>> users that do depend on them and might find this warning too aggressive.
+>>
+>> So I'm interested in opinions on whether this is a good idea at all and
+>> whether we should exclude some options from the warning/tainting.
 > 
->> [...]
->> All you need is to pick one hwirq out of the existing fixed range and
->> associate it to a newly allocated virq. That's the only information
->> the underlying gic domain has to know about, because it needs to
->> translate from the hwirq to the virq in the low level entry handler
->> gic_handle_irq().
+> Hi Prarit,
 > 
-> And that's what I am trying to do here except that GIC is expecting that 
-> information to be passed to it via irq_domain_alloc_irqs(..., args) 
-> where args is struct of_phandle_args (e.g. in the kernel/irqdomain.c: 
-> irq_create_of_mapping). This works fine when specifying interrupt from 
-> DT, but that is not always the case.
+> We didn't get any nibbles :)
 > 
-> Currently, I can just create a fake of_phandle_args just to pass the 
-> hwirq information to GIC.
+> I don't think we can realistically taint the kernel for *all* "pci="
+> options.  So if you want to pursue this, maybe you could enhance this
+> so we can have a whitelist of options that we will support without
+> tainting.  Then we can argue about what should be on the list and go
+> from there.  Does that seem reasonable?
+
+Sorry for the lower-case typing.  I broke my elbow and am down to one hand.
+
+bjorn, yep sounds reasonable.  i'll do this (slowly unfortunately because of my
+arm) ...
+
+P.
+
 > 
->      --> gicv2m_setup_msi_irq()
->       |    struct of_phandle_args phan;
->       |    phan.np = NULL;
->       |    phan.args_count = 3;
->       |    phan.args[0] = 0;
->       |    phan.args[1] = hwirq - 32;
->       |    phan.args[2] = IRQ_TYPE_EDGE_RISING;
->       |--> irq_domain_alloc_irqs(d, 1, NUMA_NO_NODE, &phan);
->        |--> gicv2m_domain_alloc(d, virq, nr_irqs, arg)
-> 	|--> irq_domain_alloc_irqs_parent(d, virq, nr_irqs, arg);
+> This is a somewhat more aggressive use of tainting than we've had in
+> the past, so we might have to iterate on this a bit.
 > 
-> I am trying to figure out what would be a common data structure for this 
-> purpose that would work for both Dt and non-DT case (e.g. GICv2m MSI). 
-> Unless you think this is ok.
-
-I think of_phandle_args is the only thing we can use, whether this is DT
-or this other non-DT thing. This is how we represent a GIC HW interrupt
-outside of the GIC itself.
-
-Of course, this creates a dependency between the different domains (a
-child domain *must* know how the parent domain represents its
-interrupt). Things like the v2m widget are completely fused with the GIC
-anyway, so it makes sense.
-
-Things like generic secondary irqchips don't fit that model, but they
-can continue to use the existing framework.
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
-
+> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
