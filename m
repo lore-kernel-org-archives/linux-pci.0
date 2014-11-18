@@ -1,323 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:42568 "EHLO mga14.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:58898 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752348AbaKYFyW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 25 Nov 2014 00:54:22 -0500
+	id S1750912AbaKRFIn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Nov 2014 00:08:43 -0500
+Message-ID: <546AD456.3030000@linux.intel.com>
+Date: Tue, 18 Nov 2014 13:08:38 +0800
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
+MIME-Version: 1.0
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
 	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
 	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
 	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v6 17/27] x86: irq_remapping: Clean up unused MSI related code
-Date: Tue, 25 Nov 2014 13:53:26 +0800
-Message-Id: <1416894816-23245-18-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	LAK <linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [Patch V3 0/9] Refine generic/PCI MSI irqodmian interfaces
+References: <1416222202-28002-1-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1411180133130.3909@nanos>
+In-Reply-To: <alpine.DEB.2.11.1411180133130.3909@nanos>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now MSI interrupt has been converted to new hierarchy irqdomain
-interfaces, so kill legacy MSI related code and interfaces.
+On 2014/11/18 8:59, Thomas Gleixner wrote:
+> On Mon, 17 Nov 2014, Jiang Liu wrote:
+>> This patch set is based on tip/irq/irqdomain and tries to refine
+>> interfaces to support irqdomain for generic MSI and PCI MSI.
+> 
+> So to make progress on that matter I picked that up along with a few
+> other patches which affect the core code (more stacked irq callbacks
+> and Marcs workaround for the handler assignment issue).
+> 
+> I rebased the whole lot on Bjorns pci/msi branch as discussed in this
+> thread: https://lkml.org/lkml/2014/11/16/292
+> 
+> After that I spent quite some time to reorder and fold back patches so
+> we have no obvious wreckage, but at the same time preserve at least
+> some of the development process for this.
+> 
+> Finally I added docbook comments where missing (please provide them
+> next time yourself).
+Sure, need improvements on docs.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/irq_remapping.h |   13 ---
- arch/x86/include/asm/pci.h           |    5 --
- arch/x86/kernel/x86_init.c           |    2 -
- drivers/iommu/irq_remapping.c        |  151 ----------------------------------
- drivers/iommu/irq_remapping.h        |   14 ----
- 5 files changed, 185 deletions(-)
+> 
+> Marc ran an initial smoketest on an early iteration which did not fall
+> into bits and pieces right away.
+> 
+> The only major change is that I got rid of the ugly
+> 
+> #ifndef msi_alloc_info_t
+> 
+> trickery by moving the generic version into include/asm-generic/msi.h
+> 
+> So if you want to use the generic version, you need to create your
+> arch/xxx/include/asm/msi.h file which includes asm-generic/msi.h.
+> 
+> For the ones who want to override it, create
+> arch/xxx/include/asm/msi.h, include whatever it takes and provide the
+> proper typedef.
+Two issues are solved by adding new header files, a good technique to
+improve code quality:)
 
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index 3b11f5a3e092..9c39650acbdd 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -50,10 +50,6 @@ extern int setup_ioapic_remapped_entry(int irq,
- 				       int vector,
- 				       struct io_apic_irq_attr *attr);
- extern void free_remapped_irq(int irq);
--extern void compose_remapped_msi_msg(struct pci_dev *pdev,
--				     unsigned int irq, unsigned int dest,
--				     struct msi_msg *msg, u8 hpet_id);
--extern int setup_hpet_msi_remapped(unsigned int irq, unsigned int id);
- extern void panic_if_irq_remap(const char *msg);
- extern bool setup_remapped_irq(int irq,
- 			       struct irq_cfg *cfg,
-@@ -95,15 +91,6 @@ static inline int setup_ioapic_remapped_entry(int irq,
- 	return -ENODEV;
- }
- static inline void free_remapped_irq(int irq) { }
--static inline void compose_remapped_msi_msg(struct pci_dev *pdev,
--					    unsigned int irq, unsigned int dest,
--					    struct msi_msg *msg, u8 hpet_id)
--{
--}
--static inline int setup_hpet_msi_remapped(unsigned int irq, unsigned int id)
--{
--	return -ENODEV;
--}
- 
- static inline void panic_if_irq_remap(const char *msg)
- {
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 4e370a5d8117..d8c80ff32e8c 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -96,15 +96,10 @@ extern void pci_iommu_alloc(void);
- #ifdef CONFIG_PCI_MSI
- /* implemented in arch/x86/kernel/apic/io_apic. */
- struct msi_desc;
--void native_compose_msi_msg(struct pci_dev *pdev, unsigned int irq,
--			    unsigned int dest, struct msi_msg *msg, u8 hpet_id);
- int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
- void native_teardown_msi_irq(unsigned int irq);
- void native_restore_msi_irqs(struct pci_dev *dev);
--int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
--		  unsigned int irq_base, unsigned int irq_offset);
- #else
--#define native_compose_msi_msg		NULL
- #define native_setup_msi_irqs		NULL
- #define native_teardown_msi_irq		NULL
- #endif
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index 234b0722de53..b094d691f2fe 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -111,11 +111,9 @@ EXPORT_SYMBOL_GPL(x86_platform);
- #if defined(CONFIG_PCI_MSI)
- struct x86_msi_ops x86_msi = {
- 	.setup_msi_irqs		= native_setup_msi_irqs,
--	.compose_msi_msg	= native_compose_msi_msg,
- 	.teardown_msi_irq	= native_teardown_msi_irq,
- 	.teardown_msi_irqs	= default_teardown_msi_irqs,
- 	.restore_msi_irqs	= default_restore_msi_irqs,
--	.setup_hpet_msi		= default_setup_hpet_msi,
- };
- 
- /* MSI arch specific hooks */
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 6ec0099a16d1..7ece17eb92f1 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -26,9 +26,6 @@ int no_x2apic_optout;
- 
- static struct irq_remap_ops *remap_ops;
- 
--static int msi_alloc_remapped_irq(struct pci_dev *pdev, int irq, int nvec);
--static int msi_setup_remapped_irq(struct pci_dev *pdev, unsigned int irq,
--				  int index, int sub_handle);
- static int set_remapped_irq_affinity(struct irq_data *data,
- 				     const struct cpumask *mask,
- 				     bool force);
-@@ -51,109 +48,6 @@ static void irq_remapping_disable_io_apic(void)
- 		disconnect_bsp_APIC(0);
- }
- 
--#ifndef CONFIG_GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
--static unsigned int irq_alloc_hwirqs(int cnt, int node)
--{
--	return irq_domain_alloc_irqs(NULL, -1, cnt, node, NULL);
--}
--
--static void irq_free_hwirqs(unsigned int from, int cnt)
--{
--	irq_domain_free_irqs(from, cnt);
--}
--#endif
--
--static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
--{
--	int ret, sub_handle, nvec_pow2, index = 0;
--	unsigned int irq;
--	struct msi_desc *msidesc;
--
--	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
--
--	irq = irq_alloc_hwirqs(nvec, dev_to_node(&dev->dev));
--	if (irq == 0)
--		return -ENOSPC;
--
--	nvec_pow2 = __roundup_pow_of_two(nvec);
--	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
--		if (!sub_handle) {
--			index = msi_alloc_remapped_irq(dev, irq, nvec_pow2);
--			if (index < 0) {
--				ret = index;
--				goto error;
--			}
--		} else {
--			ret = msi_setup_remapped_irq(dev, irq + sub_handle,
--						     index, sub_handle);
--			if (ret < 0)
--				goto error;
--		}
--		ret = setup_msi_irq(dev, msidesc, irq, sub_handle);
--		if (ret < 0)
--			goto error;
--	}
--	return 0;
--
--error:
--	irq_free_hwirqs(irq, nvec);
--
--	/*
--	 * Restore altered MSI descriptor fields and prevent just destroyed
--	 * IRQs from tearing down again in default_teardown_msi_irqs()
--	 */
--	msidesc->irq = 0;
--
--	return ret;
--}
--
--static int do_setup_msix_irqs(struct pci_dev *dev, int nvec)
--{
--	int node, ret, sub_handle, index = 0;
--	struct msi_desc *msidesc;
--	unsigned int irq;
--
--	node		= dev_to_node(&dev->dev);
--	sub_handle	= 0;
--
--	list_for_each_entry(msidesc, &dev->msi_list, list) {
--
--		irq = irq_alloc_hwirqs(1, node);
--		if (irq == 0)
--			return -1;
--
--		if (sub_handle == 0)
--			ret = index = msi_alloc_remapped_irq(dev, irq, nvec);
--		else
--			ret = msi_setup_remapped_irq(dev, irq, index, sub_handle);
--
--		if (ret < 0)
--			goto error;
--
--		ret = setup_msi_irq(dev, msidesc, irq, 0);
--		if (ret < 0)
--			goto error;
--
--		sub_handle += 1;
--		irq        += 1;
--	}
--
--	return 0;
--
--error:
--	irq_free_hwirqs(irq, 1);
--	return ret;
--}
--
--static int irq_remapping_setup_msi_irqs(struct pci_dev *dev,
--					int nvec, int type)
--{
--	if (type == PCI_CAP_ID_MSI)
--		return do_setup_msi_irqs(dev, nvec);
--	else
--		return do_setup_msix_irqs(dev, nvec);
--}
--
- static void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
- {
- 	/*
-@@ -171,8 +65,6 @@ static void __init irq_remapping_modify_x86_ops(void)
- 	x86_io_apic_ops.set_affinity	= set_remapped_irq_affinity;
- 	x86_io_apic_ops.setup_entry	= setup_ioapic_remapped_entry;
- 	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
--	x86_msi.setup_hpet_msi		= setup_hpet_msi_remapped;
--	x86_msi.compose_msi_msg		= compose_remapped_msi_msg;
- }
- 
- static __init int setup_nointremap(char *str)
-@@ -319,49 +211,6 @@ void free_remapped_irq(int irq)
- 		remap_ops->free_irq(irq);
- }
- 
--void compose_remapped_msi_msg(struct pci_dev *pdev,
--			      unsigned int irq, unsigned int dest,
--			      struct msi_msg *msg, u8 hpet_id)
--{
--	struct irq_cfg *cfg = irq_cfg(irq);
--
--	if (!irq_remapped(cfg))
--		native_compose_msi_msg(pdev, irq, dest, msg, hpet_id);
--	else if (remap_ops && remap_ops->compose_msi_msg)
--		remap_ops->compose_msi_msg(pdev, irq, dest, msg, hpet_id);
--}
--
--static int msi_alloc_remapped_irq(struct pci_dev *pdev, int irq, int nvec)
--{
--	if (!remap_ops || !remap_ops->msi_alloc_irq)
--		return -ENODEV;
--
--	return remap_ops->msi_alloc_irq(pdev, irq, nvec);
--}
--
--static int msi_setup_remapped_irq(struct pci_dev *pdev, unsigned int irq,
--				  int index, int sub_handle)
--{
--	if (!remap_ops || !remap_ops->msi_setup_irq)
--		return -ENODEV;
--
--	return remap_ops->msi_setup_irq(pdev, irq, index, sub_handle);
--}
--
--int setup_hpet_msi_remapped(unsigned int irq, unsigned int id)
--{
--	int ret;
--
--	if (!remap_ops || !remap_ops->alloc_hpet_msi)
--		return -ENODEV;
--
--	ret = remap_ops->alloc_hpet_msi(irq, id);
--	if (ret)
--		return -EINVAL;
--
--	return default_setup_hpet_msi(irq, id);
--}
--
- void panic_if_irq_remap(const char *msg)
- {
- 	if (irq_remapping_enabled)
-diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
-index 8c159d6fac46..95b19a6ef16a 100644
---- a/drivers/iommu/irq_remapping.h
-+++ b/drivers/iommu/irq_remapping.h
-@@ -70,20 +70,6 @@ struct irq_remap_ops {
- 	/* Free an IRQ */
- 	int (*free_irq)(int);
- 
--	/* Create MSI msg to use for interrupt remapping */
--	void (*compose_msi_msg)(struct pci_dev *,
--				unsigned int, unsigned int,
--				struct msi_msg *, u8);
--
--	/* Allocate remapping resources for MSI */
--	int (*msi_alloc_irq)(struct pci_dev *, int, int);
--
--	/* Setup the remapped MSI irq */
--	int (*msi_setup_irq)(struct pci_dev *, unsigned int, int, int);
--
--	/* Setup interrupt remapping for an HPET MSI */
--	int (*alloc_hpet_msi)(unsigned int, unsigned int);
--
- 	/* Get the irqdomain associated the IOMMU device */
- 	struct irq_domain *(*get_ir_irq_domain)(struct irq_alloc_info *);
- 
--- 
-1.7.10.4
+> 
+> I'll send that patch (7bde31a7969f) out tomorrow morning as I want to
+> have Arnds blessing for that.
+> 
+<snip>
+> I really rely on your cooperation here, as I don't want to end up with
+> an unexplainable mess when the stuff hits Linus tree and he starts
+> rumaging for his diving harpune ....
+I have rebased x86 changes onto tip/irq/irqdomain, it works perfectly:)
 
+Regards!
+Gerry
