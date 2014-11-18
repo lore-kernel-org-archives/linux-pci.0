@@ -1,56 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:22770 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752848AbaKLDW0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 22:22:26 -0500
-Received: from epcpsbgr1.samsung.com
- (u141.gpu120.samsung.co.kr [203.254.230.141])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0NEW00H7WPD6ISA0@mailout2.samsung.com> for
- linux-pci@vger.kernel.org; Wed, 12 Nov 2014 12:22:18 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
-	'Murali Karicheri' <m-karicheri2@ti.com>,
-	'Santosh Shilimkar' <ssantosh@kernel.org>
-Subject: [PATCH] PCI: keystone: Remove unnecessary OOM message
-Date: Wed, 12 Nov 2014 12:22:56 +0900
-Message-id: <002601cffe27$f7bca9f0$e735fdd0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mout.kundenserver.de ([212.227.17.24]:56714 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754644AbaKRM0h (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 07:26:37 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linuxppc-dev@lists.ozlabs.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Suravee.Suthikulpanit@amd.com, linux-ia64@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Wuyun <wuyun.wu@huawei.com>, linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC PATCH 07/16] PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
+Date: Tue, 18 Nov 2014 13:25:32 +0100
+Message-ID: <2911754.xsk2IUfQFO@wuerfel>
+In-Reply-To: <546B3124.7070206@huawei.com>
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com> <1936415.emTbbPeHqx@wuerfel> <546B3124.7070206@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The site-specific OOM messages are unnecessary, because they
-duplicate the MM subsystem generic OOM message. This patch
-fixes the following checkpatch warning.
+On Tuesday 18 November 2014 19:44:36 Yijing Wang wrote:
+> On 2014/11/18 17:30, Arnd Bergmann wrote:
+> > On Tuesday 18 November 2014 16:32:26 Yijing Wang wrote:
+> > 
+> >>>> +static struct resource busn_resource = {
+> >>>> +	.name	= "PCI busn",
+> >>>> +	.start	= 0,
+> >>>> +	.end	= 255,
+> >>>> +	.flags	= IORESOURCE_BUS,
+> >>>> +};
+> >>>
+> >>> I think it would be better to require callers to pass the bus resource
+> >>> down to the function.
+> >>
+> >> Hmm, I think most of caller will provide the bus resource, but some others
+> >> will not give any bus resource, extremely, no any resources :(. But we still
+> >> need properly configure their resources for compatibility.
+> > 
+> > I think that is what the conversion to pci_scan_bus_parented() is about:
+> > The idea is that we add the correct bus resource to callers of
+> > pci_scan_bus_parented or pci_scan_bus and then change them to call
+> > pci_scan_root_bus instead.
+> 
+> It looks good to me, but for simplification, or I will try to use a wrapper to
+> process the drivers don't pass the busnr resources, and make sure the generic
+> pci_create_host_bridge() always get the valid resources.
 
-  WARNING: Possible unnecessary 'out of memory' message
-
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- drivers/pci/host/pci-keystone.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-index 1b893bc..62b9454 100644
---- a/drivers/pci/host/pci-keystone.c
-+++ b/drivers/pci/host/pci-keystone.c
-@@ -353,10 +353,9 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+Ok.
  
- 	ks_pcie = devm_kzalloc(&pdev->dev, sizeof(*ks_pcie),
- 				GFP_KERNEL);
--	if (!ks_pcie) {
--		dev_err(dev, "no memory for keystone pcie\n");
-+	if (!ks_pcie)
- 		return -ENOMEM;
--	}
-+
- 	pp = &ks_pcie->pp;
- 
- 	/* initialize SerDes Phy if present */
--- 
-1.7.9.5
+> >>>> +struct pci_host_bridge *pci_create_host_bridge(
+> >>>> +		struct device *parent, u32 db, 
+> >>>> +		struct pci_ops *ops, void *sysdata, 
+> >>>> +		struct list_head *resources)
+> >>>> +{
+> >>>
+> >>> Do we still need to pass the 'sysdata' in here? If we are guaranteed to
+> >>> have a device pointer, we should always be able to get the driver
+> >>> private data from dev_get_drvdata(host->dev->parent).
+> >>
+> >> We need, some platforms pass NULL pointer as host bridge parent.
+> > 
+> > But those don't have to use the new pci_create_host_bridge() function,
+> > right?
+> 
+> As I mentioned in another reply, I hope all pci host drivers could use
+> pci_create_host_bridge(), keep different PCI scan interfaces in PCI core
+> make things become complex.
 
+Doing this for all platforms that have PCI support would be a lot of
+work though, I think it's better to focus on having a the best interface
+for the majority of users.
 
+	Arnd
