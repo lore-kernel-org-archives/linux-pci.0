@@ -1,207 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:42742 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753281AbaKDMFj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Nov 2014 07:05:39 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch Part2 v4 27/31] x86, irq: Clean up unused MSI related code and interfaces
-Date: Tue,  4 Nov 2014 20:02:01 +0800
-Message-Id: <1415102525-9898-28-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:54984 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932100AbaKRQb5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 11:31:57 -0500
+Received: by mail-wi0-f172.google.com with SMTP id n3so2468660wiv.11
+        for <linux-pci@vger.kernel.org>; Tue, 18 Nov 2014 08:31:56 -0800 (PST)
+Date: Tue, 18 Nov 2014 17:31:54 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Kevin Hilman <khilman@linaro.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [PATCH] PCI: fixup __pci_read_base() after refactoring
+Message-ID: <20141118163153.GA30151@ulmo>
+References: <20141118105542.457d7863@free-electrons.com>
+ <1416310271-4423-1-git-send-email-thomas.petazzoni@free-electrons.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="nFreZHaLTZJo0R7j"
+In-Reply-To: <1416310271-4423-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now MSI interrupt has been converted to new hierarchy irqdomain
-interfaces, so kill legacy MSI related code and interfaces.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/hpet.h     |    9 ------
- arch/x86/include/asm/x86_init.h |    4 ---
- arch/x86/kernel/apic/msi.c      |   61 +++++----------------------------------
- 3 files changed, 7 insertions(+), 67 deletions(-)
+--nFreZHaLTZJo0R7j
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/arch/x86/include/asm/hpet.h b/arch/x86/include/asm/hpet.h
-index e87e9faf87a9..5fa9fb0f8809 100644
---- a/arch/x86/include/asm/hpet.h
-+++ b/arch/x86/include/asm/hpet.h
-@@ -85,15 +85,6 @@ extern struct irq_domain *hpet_create_irq_domain(int hpet_id);
- extern int hpet_assign_irq(struct irq_domain *domain,
- 			   struct hpet_dev *dev, int dev_num);
- 
--#ifdef CONFIG_PCI_MSI
--extern int default_setup_hpet_msi(unsigned int irq, unsigned int id);
--#else
--static inline int default_setup_hpet_msi(unsigned int irq, unsigned int id)
--{
--	return -EINVAL;
--}
--#endif
--
- #ifdef CONFIG_HPET_EMULATE_RTC
- 
- #include <linux/interrupt.h>
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index e45e4da96bf1..9b53cb2acfbb 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -176,13 +176,9 @@ struct msi_desc;
- 
- struct x86_msi_ops {
- 	int (*setup_msi_irqs)(struct pci_dev *dev, int nvec, int type);
--	void (*compose_msi_msg)(struct pci_dev *dev, unsigned int irq,
--				unsigned int dest, struct msi_msg *msg,
--			       u8 hpet_id);
- 	void (*teardown_msi_irq)(unsigned int irq);
- 	void (*teardown_msi_irqs)(struct pci_dev *dev);
- 	void (*restore_msi_irqs)(struct pci_dev *dev);
--	int  (*setup_hpet_msi)(unsigned int irq, unsigned int id);
- 	u32 (*msi_mask_irq)(struct msi_desc *desc, u32 mask, u32 flag);
- 	u32 (*msix_mask_irq)(struct msi_desc *desc, u32 flag);
- };
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 265178b30816..6bfe85e96c74 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -25,16 +25,12 @@
- 
- static struct irq_domain *msi_default_domain;
- 
--void native_compose_msi_msg(struct pci_dev *pdev,
--			    unsigned int irq, unsigned int dest,
--			    struct msi_msg *msg, u8 hpet_id)
-+static void native_compose_msi_msg(struct irq_cfg *cfg, struct msi_msg *msg)
- {
--	struct irq_cfg *cfg = irq_cfg(irq);
--
- 	msg->address_hi = MSI_ADDR_BASE_HI;
- 
- 	if (x2apic_enabled())
--		msg->address_hi |= MSI_ADDR_EXT_DEST_ID(dest);
-+		msg->address_hi |= MSI_ADDR_EXT_DEST_ID(cfg->dest_apicid);
- 
- 	msg->address_lo =
- 		MSI_ADDR_BASE_LO |
-@@ -44,7 +40,7 @@ void native_compose_msi_msg(struct pci_dev *pdev,
- 		((apic->irq_delivery_mode != dest_LowestPrio) ?
- 			MSI_ADDR_REDIRECTION_CPU :
- 			MSI_ADDR_REDIRECTION_LOWPRI) |
--		MSI_ADDR_DEST_ID(dest);
-+		MSI_ADDR_DEST_ID(cfg->dest_apicid);
- 
- 	msg->data =
- 		MSI_DATA_TRIGGER_EDGE |
-@@ -55,7 +51,7 @@ void native_compose_msi_msg(struct pci_dev *pdev,
- 		MSI_DATA_VECTOR(cfg->vector);
- }
- 
--static void irq_msi_compose_msg(struct irq_data *data, struct msi_msg *msg)
-+static void msi_compose_msg(struct irq_data *data, struct msi_msg *msg)
- {
- 	struct irq_cfg *cfg = irqd_cfg(data);
- 
-@@ -93,31 +89,6 @@ static void msi_update_msg(struct msi_msg *msg, struct irq_data *irq_data)
- 	msg->address_lo |= MSI_ADDR_DEST_ID(cfg->dest_apicid);
- }
- 
--static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq,
--			   struct msi_msg *msg, u8 hpet_id)
--{
--	struct irq_cfg *cfg;
--	int err;
--	unsigned dest;
--
--	if (disable_apic)
--		return -ENXIO;
--
--	cfg = irq_cfg(irq);
--	err = assign_irq_vector(irq, cfg, apic->target_cpus());
--	if (err)
--		return err;
--
--	err = apic->cpu_mask_to_apicid_and(cfg->domain,
--					   apic->target_cpus(), &dest);
--	if (err)
--		return err;
--
--	x86_msi.compose_msi_msg(pdev, irq, dest, msg, hpet_id);
--
--	return 0;
--}
--
- static int msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 			    bool force)
- {
-@@ -148,7 +119,7 @@ struct irq_chip msi_chip = {
- 	.irq_set_affinity	= msi_set_affinity,
- 	.irq_retrigger		= irq_chip_retrigger_hierarchy,
- 	.irq_print_chip		= irq_remapping_print_chip,
--	.irq_compose_msi_msg	= irq_msi_compose_msg,
-+	.irq_compose_msi_msg	= msi_compose_msg,
-  	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
- 
-@@ -253,7 +224,7 @@ int arch_setup_dmar_msi(unsigned int irq)
- 	struct msi_msg msg;
- 	struct irq_cfg *cfg = irq_cfg(irq);
- 
--	native_compose_msi_msg(NULL, irq, cfg->dest_apicid, &msg, -1);
-+	native_compose_msi_msg(cfg, &msg);
- 	dmar_msi_write(irq, &msg);
- 	irq_set_chip_and_handler_name(irq, &dmar_msi_type, handle_edge_irq,
- 				      "edge");
-@@ -305,28 +276,10 @@ static struct irq_chip hpet_msi_type = {
- 	.irq_set_affinity = hpet_msi_set_affinity,
- 	.irq_retrigger = irq_chip_retrigger_hierarchy,
- 	.irq_print_chip = irq_remapping_print_chip,
--	.irq_compose_msi_msg = irq_msi_compose_msg,
-+	.irq_compose_msi_msg = msi_compose_msg,
-  	.flags = IRQCHIP_SKIP_SET_WAKE,
- };
- 
--int default_setup_hpet_msi(unsigned int irq, unsigned int id)
--{
--	struct irq_chip *chip = &hpet_msi_type;
--	struct msi_msg msg;
--	int ret;
--
--	ret = msi_compose_msg(NULL, irq, &msg, id);
--	if (ret < 0)
--		return ret;
--
--	hpet_msi_write(irq_get_handler_data(irq), &msg);
--	irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
--	setup_remapped_irq(irq, irq_cfg(irq), chip);
--
--	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
--	return 0;
--}
--
- static int hpet_domain_alloc(struct irq_domain *domain, unsigned int virq,
- 			     unsigned int nr_irqs, void *arg)
- {
--- 
-1.7.10.4
+On Tue, Nov 18, 2014 at 12:31:11PM +0100, Thomas Petazzoni wrote:
+> In commit 7ea945f0bb49 ("PCI: Shrink decoding-disabled window while
+> sizing BARs"), Myron Stowe refactored the code of __pci_read_base() in
+> order to reduce the amount of time spent with decoding disabled.
+>=20
+> However, contrary to what was said in the commit log, the commit does
+> introduce some functional change: the pci_size() function that used to
+> be called *before* the BAR size check is done is now called *after*
+> the BAR size check is done.
+>=20
+> This causes some failures on certain platforms (namely ARM Marvell EBU
+> platforms, equipped for example with a PCIe SATA card, or a PCIe USB3
+> XHCI controller):
+>=20
+> pci 0000:03:00.0: reg 0x10: can't handle BAR larger than 4GB (size 0xffff=
+fffffff00000)
+>=20
+> This problem didn't exist before this commit, due to pci_size() being
+> called before doing the PCI BAR size check. Therefore, this commit
+> fixes the problem by restoring the initial order of the operation, by
+> calling pci_size() before doing the PCI BAR size check.
+>=20
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> Fixes: 7ea945f0bb49 ("PCI: Shrink decoding-disabled window while sizing B=
+ARs")
+> ---
+> Note: this fix has been tested to work correctly for me, and the PCI
+> messages I get are now identical to the ones I was getting with
+> 3.18-rc5. However, please review my patch carefully, as I must admit I
+> do not fully understand all the implications of the change as well as
+> the code in __pci_read_base().
+>=20
+> Applies on top of pci/next
+>=20
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> ---
+>  drivers/pci/probe.c | 16 ++++++++--------
+>  1 file changed, 8 insertions(+), 8 deletions(-)
 
+I started seeing this same issue on Tegra today and I can confirm that
+this patch fixes this regression:
+
+Tested-by: Thierry Reding <treding@nvidia.com>
+
+--nFreZHaLTZJo0R7j
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJUa3R5AAoJEN0jrNd/PrOhLGkP/38KE0YJG7BY+VfAVQ6hnmV3
+jT6yXsZj8WMBKAq1KuIg5aagKjzroEkaZi1eXx+bVBjMtZbrILG2+qJZkM6XnrLp
+LA9HO8apOPbQ/uabQpLKxN8mtLBPWc/C1K3XOr7wbGuEMkPys3yVEE8a7ZXo37rs
+yISk28VVsmf+PcMaOaFo3VET2OW316gMcfub9+SQmq/m3EPLgfcAUQmpw4ei912A
+RYWYD42QAuhHchI7T9B+8UUe/MfZVFwSVPqS/2nIB4eLPIy9bEhOCsZs2P78G1yU
+S8nIoJ3TSLEizCDk/CjhQA1fmFTFWeR0VSPgrt/kmi1lte0aOVhIQ/CJMnzNRAdt
+FLNeY5hUTVWu4GhE2nd48geOaKRZzZSca9RLTskMOkNCa6uZbcmqZ7Je0PtJ9apQ
+diSjFSeqq9hIaqT8KqUM1xcBgeYgKaKzijOmeabiLhViXujnKrsbI8nHTh5j3zcL
+FwGh6JVIO0uoXZsCYmzd/wDa1X6daVDqwtLr3pBUjvtRr5zCTqlfoMwmBYRZOftW
+Bd5aoFgxXlY97MiVKEWwkao8ERhd++boiKps0v1SOIEXJfRN5FDDFP5XdspPYGh7
+JO55A0IcxJBhkGwiA2gfSJRzhlqnXaNgVpAfsCT4d2mlBA7q6IoN6QTmujRksx/w
++fF/wcw/f0WEzB07iibq
+=T6wg
+-----END PGP SIGNATURE-----
+
+--nFreZHaLTZJo0R7j--
