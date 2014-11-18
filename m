@@ -1,109 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:43133 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751090AbaKQJkw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 04:40:52 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, Tony Luck <tony.luck@intel.com>,
-	<linux-ia64@vger.kernel.org>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	<Suravee.Suthikulpanit@amd.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [RFC PATCH 05/16] PCI: Use pci_scan_root_bus() instead of pci_scan_bus_parented()
-Date: Mon, 17 Nov 2014 18:21:39 +0800
-Message-ID: <1416219710-26088-6-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
-References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-qc0-f179.google.com ([209.85.216.179]:50077 "EHLO
+	mail-qc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754278AbaKRP6t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 10:58:49 -0500
+Received: by mail-qc0-f179.google.com with SMTP id c9so7581472qcz.10
+        for <linux-pci@vger.kernel.org>; Tue, 18 Nov 2014 07:58:48 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <BC567D27D6B7384F84318942321624DE16179E60@hasmsx109.ger.corp.intel.com>
+References: <1415847123-15558-1-git-send-email-michael.jamet@intel.com>
+ <CAErSpo7Z5x=U3vSnxrFpwYUDrUrnrrBCe1F9_GQNYqWWQFWNpQ@mail.gmail.com> <BC567D27D6B7384F84318942321624DE16179E60@hasmsx109.ger.corp.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 18 Nov 2014 08:58:28 -0700
+Message-ID: <CAErSpo5z41ZOL3xUwwSZ8UE_KGmCDOUmFQ3CY_QwF7JVhU1-EQ@mail.gmail.com>
+Subject: Re: [PATCH] pci: support Thunderbolt requirements for I/O resources.
+To: "Jamet, Michael" <michael.jamet@intel.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Levy, Amir (Jer)" <amir.jer.levy@intel.com>,
+	"Alloun, Dan" <dan.alloun@intel.com>,
+	Rafael Wysocki <rjw@rjwysocki.net>,
+	Andreas Noever <andreas.noever@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we can remove the deprecated pci_scan_bus_parented(),
-and use pci_scan_root_bus() instead.
+On Tue, Nov 18, 2014 at 12:57 AM, Jamet, Michael
+<michael.jamet@intel.com> wrote:
+>> -----Original Message-----
+>> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+>> Sent: Wednesday, November 12, 2014 19:29
+>> To: Jamet, Michael
+>> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; Levy, Amir
+>> (Jer); Alloun, Dan; Rafael Wysocki; Andreas Noever
+>> Subject: Re: [PATCH] pci: support Thunderbolt requirements for I/O
+>> resources.
+>>
+>> [+cc Rafael, Andreas]
+>>
+>> On Wed, Nov 12, 2014 at 7:52 PM, Michael Jamet
+>> <michael.jamet@intel.com> wrote:
+>> > Every Thunderbolt-based devices or Thunderbolt-connected devices
+>> > should not allocate PCI I/O resources per Thunderbolt specs.
+>>
+>> Please include a pointer to those specs in the changelog.
+>>
+>
+> Unfortunately these specs are not publically available.
+>
+>> > On a Thunderbolt PC, BIOS is responsible to allocate IO resources.
+>> > Kernel shouldn't allocate the PCI I/O resources as it interferes with
+>> > BIOS operation.
+>> > Doing this may cause the devices in the Thunderbolt chain not being
+>> > detected or added, or worse to stuck the Thunderbolt Host controller.
+>>
+>> These new kernel/firmware coordination requirements need to be
+>> documented.  If they're already part of a PCIe ECN or PCI firmware spec, just
+>> provide a pointer.
+>>
+>
+> Same, this refers to same specs.
+>
+>> > To prevent this, we detect a chain contains a Thunderbolt device by
+>> > checking the Thunderbolt PCI device id.
+>>
+>> I'm really not happy about checking a list of device IDs to identify
+>> Thunderbolt devices.  Surely there's a better way, because a list like this has
+>> to be updated regularly.
+>>
+>> Bjorn
+>>
+>
+> This was also discussed internally and the only way to identify Thunderbolt devices is to check the device IDs.
+> As you said, this will require us to maintain and keep the list up-to-date as we deliver new devices.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/probe.c        |   19 -------------------
- drivers/pci/xen-pcifront.c |    6 +++---
- include/linux/pci.h        |    2 --
- 3 files changed, 3 insertions(+), 24 deletions(-)
+I don't really see how this can work.  You're asking me to put changes
+based on a secret spec into generic code that is used on every machine
+with PCI.  I have no way to maintain something like that.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 97711f3..623bfff 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2105,25 +2105,6 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- }
- EXPORT_SYMBOL(pci_scan_root_bus);
- 
--/* Deprecated; use pci_scan_root_bus() instead */
--struct pci_bus *pci_scan_bus_parented(struct device *parent,
--		int bus, struct pci_ops *ops, void *sysdata)
--{
--	LIST_HEAD(resources);
--	struct pci_bus *b;
--
--	pci_add_resource(&resources, &ioport_resource);
--	pci_add_resource(&resources, &iomem_resource);
--	pci_add_resource(&resources, &busn_resource);
--	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
--	if (b)
--		pci_scan_child_bus(b);
--	else
--		pci_free_resource_list(&resources);
--	return b;
--}
--EXPORT_SYMBOL(pci_scan_bus_parented);
--
- /**
-  * pci_rescan_bus_bridge_resize - scan a PCI bus for devices.
-  * @bridge: PCI bridge for the bus to scan
-diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-index 116ca37..fa2e312 100644
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -474,8 +474,8 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
- 
- 	pci_lock_rescan_remove();
- 
--	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
--				  &pcifront_bus_ops, sd);
-+	b = pci_scan_root_bus(&pdev->xdev->dev, bus,
-+				  &pcifront_bus_ops, sd, NULL);
- 	if (!b) {
- 		dev_err(&pdev->xdev->dev,
- 			"Error creating PCI Frontend Bus!\n");
-@@ -488,7 +488,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
- 
- 	list_add(&bus_entry->list, &pdev->root_buses);
- 
--	/* pci_scan_bus_parented skips devices which do not have a have
-+	/* pci_scan_root_bus skips devices which do not have a have
- 	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
- 	err = pcifront_scan_bus(pdev, domain, bus, b);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f8045d6..4daef65 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -767,8 +767,6 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
--struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
--				      struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 				    struct pci_ops *ops, void *sysdata,
- 				    struct list_head *resources);
--- 
-1.7.1
+This seems like a major screw up in the design and documentation of Thunderbolt.
 
+Bjorn
