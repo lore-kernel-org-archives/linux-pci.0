@@ -1,196 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM list <linux-pm@vger.kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Kevin Hilman <khilman@kernel.org>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH 1/4] PM: Drop the SET_PM_RUNTIME_PM_OPS() macro
-Date: Thu, 27 Nov 2014 01:38 +0100
-Message-ID: <3484329.phAPviVnbd@vostro.rjw.lan>
-In-Reply-To: <37310416.jZXoh5nfSC@vostro.rjw.lan>
-References: <37310416.jZXoh5nfSC@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:19742 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752212AbaKRLpA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 06:45:00 -0500
+Message-ID: <546B3124.7070206@huawei.com>
+Date: Tue, 18 Nov 2014 19:44:36 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <linuxppc-dev@lists.ozlabs.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	"Russell King" <linux@arm.linux.org.uk>,
+	<linux-pci@vger.kernel.org>, <x86@kernel.org>,
+	<linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
+	"Thierry Reding" <thierry.reding@gmail.com>,
+	<Suravee.Suthikulpanit@amd.com>, <linux-ia64@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Wuyun <wuyun.wu@huawei.com>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [RFC PATCH 07/16] PCI: Separate pci_host_bridge creation out
+ of pci_create_root_bus()
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com> <2507218.mHliopJb05@wuerfel> <546B041A.4060403@huawei.com> <1936415.emTbbPeHqx@wuerfel>
+In-Reply-To: <1936415.emTbbPeHqx@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On 2014/11/18 17:30, Arnd Bergmann wrote:
+> On Tuesday 18 November 2014 16:32:26 Yijing Wang wrote:
+> 
+>>>> +static struct resource busn_resource = {
+>>>> +	.name	= "PCI busn",
+>>>> +	.start	= 0,
+>>>> +	.end	= 255,
+>>>> +	.flags	= IORESOURCE_BUS,
+>>>> +};
+>>>
+>>> I think it would be better to require callers to pass the bus resource
+>>> down to the function.
+>>
+>> Hmm, I think most of caller will provide the bus resource, but some others
+>> will not give any bus resource, extremely, no any resources :(. But we still
+>> need properly configure their resources for compatibility.
+> 
+> I think that is what the conversion to pci_scan_bus_parented() is about:
+> The idea is that we add the correct bus resource to callers of
+> pci_scan_bus_parented or pci_scan_bus and then change them to call
+> pci_scan_root_bus instead.
 
-The SET_PM_RUNTIME_PM_OPS() and SET_RUNTIME_PM_OPS() macros are
-identical except that one of them is not empty for CONFIG_PM set,
-while the other one is not empty for CONFIG_PM_RUNTIME set,
-respectively.
+It looks good to me, but for simplification, or I will try to use a wrapper to
+process the drivers don't pass the busnr resources, and make sure the generic
+pci_create_host_bridge() always get the valid resources.
 
-However, after commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if
-PM_SLEEP is selected) PM_RUNTIME is always set if PM is set, so one
-of these macros is now redundant.
+> 
+>>>> +struct pci_host_bridge *pci_create_host_bridge(
+>>>> +		struct device *parent, u32 db, 
+>>>> +		struct pci_ops *ops, void *sysdata, 
+>>>> +		struct list_head *resources)
+>>>> +{
+>>>
+>>> Do we still need to pass the 'sysdata' in here? If we are guaranteed to
+>>> have a device pointer, we should always be able to get the driver
+>>> private data from dev_get_drvdata(host->dev->parent).
+>>
+>> We need, some platforms pass NULL pointer as host bridge parent.
+> 
+> But those don't have to use the new pci_create_host_bridge() function,
+> right?
 
-For this reason, drop SET_PM_RUNTIME_PM_OPS() and replace it with
-SET_RUNTIME_PM_OPS() everywhere.
+As I mentioned in another reply, I hope all pci host drivers could use
+pci_create_host_bridge(), keep different PCI scan interfaces in PCI core
+make things become complex.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/amba/bus.c                |    2 +-
- drivers/dma/ste_dma40.c           |    2 +-
- drivers/gpio/gpio-zynq.c          |    2 +-
- drivers/i2c/busses/i2c-hix5hd2.c  |    2 +-
- drivers/i2c/busses/i2c-nomadik.c  |    2 +-
- drivers/mmc/host/mmci.c           |    2 +-
- drivers/mmc/host/sh_mobile_sdhi.c |    2 +-
- drivers/mmc/host/tmio_mmc.c       |    2 +-
- drivers/spi/spi-pl022.c           |    2 +-
- include/linux/pm.h                |   11 +----------
- 10 files changed, 10 insertions(+), 19 deletions(-)
 
-Index: linux-pm/drivers/amba/bus.c
-===================================================================
---- linux-pm.orig/drivers/amba/bus.c
-+++ linux-pm/drivers/amba/bus.c
-@@ -124,7 +124,7 @@ static const struct dev_pm_ops amba_pm =
- 	.thaw		= pm_generic_thaw,
- 	.poweroff	= pm_generic_poweroff,
- 	.restore	= pm_generic_restore,
--	SET_PM_RUNTIME_PM_OPS(
-+	SET_RUNTIME_PM_OPS(
- 		amba_pm_runtime_suspend,
- 		amba_pm_runtime_resume,
- 		NULL
-Index: linux-pm/drivers/dma/ste_dma40.c
-===================================================================
---- linux-pm.orig/drivers/dma/ste_dma40.c
-+++ linux-pm/drivers/dma/ste_dma40.c
-@@ -3051,7 +3051,7 @@ static int dma40_runtime_resume(struct d
- 
- static const struct dev_pm_ops dma40_pm_ops = {
- 	SET_LATE_SYSTEM_SLEEP_PM_OPS(dma40_suspend, dma40_resume)
--	SET_PM_RUNTIME_PM_OPS(dma40_runtime_suspend,
-+	SET_RUNTIME_PM_OPS(dma40_runtime_suspend,
- 				dma40_runtime_resume,
- 				NULL)
- };
-Index: linux-pm/drivers/gpio/gpio-zynq.c
-===================================================================
---- linux-pm.orig/drivers/gpio/gpio-zynq.c
-+++ linux-pm/drivers/gpio/gpio-zynq.c
-@@ -578,7 +578,7 @@ static void zynq_gpio_free(struct gpio_c
- 
- static const struct dev_pm_ops zynq_gpio_dev_pm_ops = {
- 	SET_SYSTEM_SLEEP_PM_OPS(zynq_gpio_suspend, zynq_gpio_resume)
--	SET_PM_RUNTIME_PM_OPS(zynq_gpio_runtime_suspend,
-+	SET_RUNTIME_PM_OPS(zynq_gpio_runtime_suspend,
- 			zynq_gpio_runtime_resume, NULL)
- };
- 
-Index: linux-pm/drivers/i2c/busses/i2c-hix5hd2.c
-===================================================================
---- linux-pm.orig/drivers/i2c/busses/i2c-hix5hd2.c
-+++ linux-pm/drivers/i2c/busses/i2c-hix5hd2.c
-@@ -528,7 +528,7 @@ static int hix5hd2_i2c_runtime_resume(st
- #endif
- 
- static const struct dev_pm_ops hix5hd2_i2c_pm_ops = {
--	SET_PM_RUNTIME_PM_OPS(hix5hd2_i2c_runtime_suspend,
-+	SET_RUNTIME_PM_OPS(hix5hd2_i2c_runtime_suspend,
- 			      hix5hd2_i2c_runtime_resume,
- 			      NULL)
- };
-Index: linux-pm/drivers/i2c/busses/i2c-nomadik.c
-===================================================================
---- linux-pm.orig/drivers/i2c/busses/i2c-nomadik.c
-+++ linux-pm/drivers/i2c/busses/i2c-nomadik.c
-@@ -932,7 +932,7 @@ static int nmk_i2c_runtime_resume(struct
- 
- static const struct dev_pm_ops nmk_i2c_pm = {
- 	SET_LATE_SYSTEM_SLEEP_PM_OPS(nmk_i2c_suspend_late, nmk_i2c_resume_early)
--	SET_PM_RUNTIME_PM_OPS(nmk_i2c_runtime_suspend,
-+	SET_RUNTIME_PM_OPS(nmk_i2c_runtime_suspend,
- 			nmk_i2c_runtime_resume,
- 			NULL)
- };
-Index: linux-pm/drivers/mmc/host/mmci.c
-===================================================================
---- linux-pm.orig/drivers/mmc/host/mmci.c
-+++ linux-pm/drivers/mmc/host/mmci.c
-@@ -1843,7 +1843,7 @@ static int mmci_runtime_resume(struct de
- static const struct dev_pm_ops mmci_dev_pm_ops = {
- 	SET_SYSTEM_SLEEP_PM_OPS(pm_runtime_force_suspend,
- 				pm_runtime_force_resume)
--	SET_PM_RUNTIME_PM_OPS(mmci_runtime_suspend, mmci_runtime_resume, NULL)
-+	SET_RUNTIME_PM_OPS(mmci_runtime_suspend, mmci_runtime_resume, NULL)
- };
- 
- static struct amba_id mmci_ids[] = {
-Index: linux-pm/drivers/mmc/host/sh_mobile_sdhi.c
-===================================================================
---- linux-pm.orig/drivers/mmc/host/sh_mobile_sdhi.c
-+++ linux-pm/drivers/mmc/host/sh_mobile_sdhi.c
-@@ -375,7 +375,7 @@ static int sh_mobile_sdhi_remove(struct
- static const struct dev_pm_ops tmio_mmc_dev_pm_ops = {
- 	SET_SYSTEM_SLEEP_PM_OPS(pm_runtime_force_suspend,
- 			pm_runtime_force_resume)
--	SET_PM_RUNTIME_PM_OPS(tmio_mmc_host_runtime_suspend,
-+	SET_RUNTIME_PM_OPS(tmio_mmc_host_runtime_suspend,
- 			tmio_mmc_host_runtime_resume,
- 			NULL)
- };
-Index: linux-pm/drivers/mmc/host/tmio_mmc.c
-===================================================================
---- linux-pm.orig/drivers/mmc/host/tmio_mmc.c
-+++ linux-pm/drivers/mmc/host/tmio_mmc.c
-@@ -135,7 +135,7 @@ static int tmio_mmc_remove(struct platfo
- 
- static const struct dev_pm_ops tmio_mmc_dev_pm_ops = {
- 	SET_SYSTEM_SLEEP_PM_OPS(tmio_mmc_suspend, tmio_mmc_resume)
--	SET_PM_RUNTIME_PM_OPS(tmio_mmc_host_runtime_suspend,
-+	SET_RUNTIME_PM_OPS(tmio_mmc_host_runtime_suspend,
- 			tmio_mmc_host_runtime_resume,
- 			NULL)
- };
-Index: linux-pm/drivers/spi/spi-pl022.c
-===================================================================
---- linux-pm.orig/drivers/spi/spi-pl022.c
-+++ linux-pm/drivers/spi/spi-pl022.c
-@@ -2377,7 +2377,7 @@ static int pl022_runtime_resume(struct d
- 
- static const struct dev_pm_ops pl022_dev_pm_ops = {
- 	SET_SYSTEM_SLEEP_PM_OPS(pl022_suspend, pl022_resume)
--	SET_PM_RUNTIME_PM_OPS(pl022_runtime_suspend, pl022_runtime_resume, NULL)
-+	SET_RUNTIME_PM_OPS(pl022_runtime_suspend, pl022_runtime_resume, NULL)
- };
- 
- static struct vendor_data vendor_arm = {
-Index: linux-pm/include/linux/pm.h
-===================================================================
---- linux-pm.orig/include/linux/pm.h
-+++ linux-pm/include/linux/pm.h
-@@ -342,7 +342,7 @@ struct dev_pm_ops {
- #define SET_LATE_SYSTEM_SLEEP_PM_OPS(suspend_fn, resume_fn)
- #endif
- 
--#ifdef CONFIG_PM_RUNTIME
-+#ifdef CONFIG_PM
- #define SET_RUNTIME_PM_OPS(suspend_fn, resume_fn, idle_fn) \
- 	.runtime_suspend = suspend_fn, \
- 	.runtime_resume = resume_fn, \
-@@ -351,15 +351,6 @@ struct dev_pm_ops {
- #define SET_RUNTIME_PM_OPS(suspend_fn, resume_fn, idle_fn)
- #endif
- 
--#ifdef CONFIG_PM
--#define SET_PM_RUNTIME_PM_OPS(suspend_fn, resume_fn, idle_fn) \
--	.runtime_suspend = suspend_fn, \
--	.runtime_resume = resume_fn, \
--	.runtime_idle = idle_fn,
--#else
--#define SET_PM_RUNTIME_PM_OPS(suspend_fn, resume_fn, idle_fn)
--#endif
--
- /*
-  * Use this if you want to use the same suspend and resume callbacks for suspend
-  * to RAM and hibernation.
+> 
+>>>> +	host = kzalloc(sizeof(*host), GFP_KERNEL);
+>>>> +	if (!host)
+>>>> +		return NULL;
+>>>
+>>> devm_kzalloc maybe?
+>>
+>> I don't know much detail about devm_kzalloc(), but we have no pci host driver
+>> here, and I found no devm_kzalloc() uses in core PCI code before.
+> 
+> It also depends on having a valid device pointer. The idea is that the memory
+> is automatically freed if the probe() function returns with an error, or
+> the device driver gets unloaded. For the classic PCI hosts that are not
+> connected to a device, that wouldn't work of course.
+> 
+> 	Arnd
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
 
