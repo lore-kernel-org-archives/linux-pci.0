@@ -1,107 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([122.248.162.4]:55653 "EHLO
-	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752599AbaKLFYk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 00:24:40 -0500
-Received: from /spool/local
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 12 Nov 2014 10:54:38 +0530
-Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id B019FE0044
-	for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2014 10:54:44 +0530 (IST)
-Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
-	by d28relay01.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAC5OK2255050458
-	for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2014 10:54:20 +0530
-Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
-	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAC5OXSM005306
-	for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2014 10:54:34 +0530
-Date: Wed, 12 Nov 2014 16:24:31 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Fix device node for virtual bus
-Message-ID: <20141112052431.GA30530@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1415760163-12517-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <CAErSpo7mEo61GP4oxcodKWFFXaaESae96qLiR1RE0CFsahr29g@mail.gmail.com>
- <20141112031118.GA15257@shangw>
- <CAErSpo5OZxsB-X=tQWbWf3Q-wSvru3-+8_h5456QXZoMYeGKhA@mail.gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Cc: linaro-acpi@lists.linaro.org, linux-arm-kernel@lists.infradead.org,
+	rjw@rjwysocki.net, linux-pci@vger.kernel.org,
+	catalin.marinas@arm.com, x86@kernel.org, Liviu.Dudau@arm.com,
+	linux-kernel@vger.kernel.org, will.deacon@arm.com,
+	linux-acpi@vger.kernel.org, mingo@redhat.com, hpa@zytor.com,
+	bhelgaas@google.com, tglx@linutronix.de
+Subject: Re: [Linaro-acpi] [RFC PATCH 4/4] arm64, acpi, pci: Provide arch-specific calls for PCI host bridge dirver (PNP0A03).
+Date: Tue, 18 Nov 2014 11:35:40 +0100
+Message-ID: <2257579.qvqyac3u3y@wuerfel>
+In-Reply-To: <546B1CA6.1030300@linaro.org>
+References: <1415366876-30811-1-git-send-email-tomasz.nowicki@linaro.org> <2009440.GJsvyI3SUN@wuerfel> <546B1CA6.1030300@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo5OZxsB-X=tQWbWf3Q-wSvru3-+8_h5456QXZoMYeGKhA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 11, 2014 at 09:08:23PM -0700, Bjorn Helgaas wrote:
->On Tue, Nov 11, 2014 at 8:11 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
->> On Tue, Nov 11, 2014 at 07:55:19PM -0700, Bjorn Helgaas wrote:
->>>On Tue, Nov 11, 2014 at 7:42 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
->>>> pci_set_bus_of_node() sets virtual PCI bus's device node to PHB's
->>>> device node wrongly. The patch fixes the issue.
->>>
->>>This needs more detail.  How is this bug visible to users?  Is there a
->>>bug report?  Is this a regression?  Should it be marked for stable?
->>>
->>
->> I don't have opened bug for it. I just found the problem (maybe not
->> a problem) when reading the code: The original implementation binds
->> PHB device-tree node with "virtual bus", which doesn't make sense.
->
->Does this result in something being wrong in sysfs?  How is this bug
->visible to users?
->
+On Tuesday 18 November 2014 11:17:10 Tomasz Nowicki wrote:
+> On 14.11.2014 15:53, Arnd Bergmann wrote:
+> > On Friday 14 November 2014 15:10:12 Tomasz Nowicki wrote:
+> >> On 07.11.2014 15:24, Arnd Bergmann wrote:
+> >>> On Friday 07 November 2014 14:27:56 Tomasz Nowicki wrote:
+> >>>>
+> >>>>    #ifdef CONFIG_PCI
+> >>>> +struct pci_controller {
+> >>>> +  struct acpi_device *companion;
+> >>>> +  int segment;
+> >>>> +  int node;               /* nearest node with memory or NUMA_NO_NODE for global allocation */
+> >>>> +};
+> >>>> +
+> >>>> +#define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
+> >>>> +
+> >>>
+> >>> Don't use busdev->sysdata in architecture specific code, it belongs to the
+> >>> host bridge driver with the new model. For ACPI you don't have a host bridge
+> >>> driver, but it's better to keep these separate.
+> >>>
+> >>> The segment is always the same as the domain number, so just use that.
+> >>> The node and companion members here can get added to struct pci_host_bridge.
+> >>
+> >> The reason why I put segment field to struct pci_controller is to
+> >> initialize domain_nr of struct pci_bus being in pci_create_root_bus(),
+> >> domain_nr can be used later on though. Correct me I am wrong.
+> >>
+> >> Honestly I do not see the way to create root bus without e.g.
+> >> sysdata.segment here.
+> >
+> > See the patches that Liviu and Lorenzo have been posting recently. This
+> > should be straightforward in 3.19.
+> 
+> Hi Arnd,
+> 
+> I have been looking into patch (if that what you meant) :
+> [RFC PATCH v2] drivers: pci: move PCI domain assignment to generic PCI code
+> 
+> This is not enough for me since it gets domain number from its OF parent 
+> or just uses sequential increased domain number. In my case, I do not 
+> have parent so I need to get segment from ACPI node which is not 
+> available there.
+> 
+> On the other hand, patch set posted by Wang Yijing:
+> [RFC PATCH 00/16] Refine PCI host bridge scan interfaces
+> tends to solve that issue.
+> 
+> What would be the best way for this patch, keep busdev->sysdata usage 
+> and rebase once Wang Yijing patch set will be accepted?
 
-No, I don't think it caused anything wrong in sysfs. So I'm not sure
-it's a real problem and need the fix. Please judge.
+I think the "Refine PCI host bridge scan interfaces" series is still in an
+early stage, you may need something sooner than that.
 
-Thanks,
-Gavin
+What I meant is that with "drivers: pci: move PCI domain assignment to
+generic PCI code", we already have a way to put the domain number into
+'struct pci_bus' and retrieve it from there without ever consulting
+the sysdata pointer. You should build on top of that and do it the same
+way. Of course you will have to put it in there differently, but you can
+get it out the same way.
 
->> Yes, I guess it should be marked for stable if you don't object.
->>
->>>We use "virtual bus" to refer to buses created for SR-IOV VFs that are
->>>not on the same bus as the PF.  These virtual buses have no bridge
->>>device leading to them.  But I think you're talking about something
->>>totally different.  Or maybe that *is* what you're talking about,
->>>since this patch resembles 2ba29e270e97 ("PCI: Use pci_is_root_bus()
->>>to check for root bus").
->>>
->>
->> "virtual bus" here is the buses created for SR-IOV VFs. Yes, the
->> code changes resembles commit 2ba29e270e97.
->>
->> Thanks,
->> Gavin
->>
->>>Bjorn
->>>
->>>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>>> ---
->>>>  drivers/pci/of.c | 4 ++--
->>>>  1 file changed, 2 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
->>>> index f092993..7b2256b 100644
->>>> --- a/drivers/pci/of.c
->>>> +++ b/drivers/pci/of.c
->>>> @@ -31,9 +31,9 @@ void pci_release_of_node(struct pci_dev *dev)
->>>>
->>>>  void pci_set_bus_of_node(struct pci_bus *bus)
->>>>  {
->>>> -       if (bus->self == NULL)
->>>> +       if (pci_is_root_bus(bus))
->>>>                 bus->dev.of_node = pcibios_get_phb_of_node(bus);
->>>> -       else
->>>> +       else if (bus->self)
->>>>                 bus->dev.of_node = of_node_get(bus->self->dev.of_node);
->>>>  }
->>>>
->>>> --
->>>> 1.8.3.2
->>>>
->>>
->>
->
-
+	Arnd
