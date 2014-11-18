@@ -1,94 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cmexedge1.emulex.com ([138.239.224.99]:33210 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751230AbaKCMSq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Nov 2014 07:18:46 -0500
-From: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.Com>
-To: "Bjorn Helgaas (bhelgaas@google.com)" <bhelgaas@google.com>
-CC: "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v1] pci: Limit VPD length of Emulex adapters to the
- actual length supported.
-Date: Mon, 3 Nov 2014 12:18:13 +0000
-Message-ID: <BF3270C86E8B1349A26C34E4EC1C44CB3E862DC6@CMEXMB1.ad.emulex.com>
-References: <1f6d7b6c-7189-4fe3-926b-42609724cab9@CMEXHTCAS2.ad.emulex.com>
- <20141023154054.GA7137@google.com>
- <BF3270C86E8B1349A26C34E4EC1C44CB3E860095@CMEXMB1.ad.emulex.com>
- <CAErSpo7_9xxtBmHOCgxsHeVLbKUeMVhLF6Q9OyFkz11EZbtJCA@mail.gmail.com>
-In-Reply-To: <CAErSpo7_9xxtBmHOCgxsHeVLbKUeMVhLF6Q9OyFkz11EZbtJCA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mout.kundenserver.de ([212.227.17.24]:50512 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752632AbaKRKji (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 05:39:38 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Tony Luck <tony.luck@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	LAK <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] asm-generic: Add msi.h
+Date: Tue, 18 Nov 2014 11:39:20 +0100
+Message-ID: <1703620.E5bhVDQPHc@wuerfel>
+In-Reply-To: <alpine.DEB.2.11.1411181133080.3909@nanos>
+References: <alpine.DEB.2.11.1411181133080.3909@nanos>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpvcm4gSGVsZ2FhcyBb
-bWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+IFNlbnQ6IFRodXJzZGF5LCBPY3RvYmVyIDMw
-LCAyMDE0IDk6MDMgUE0NCj4gVG86IFZlbmthdCBEdXZ2dXJ1DQo+IENjOiBsaW51eC1wY2lAdmdl
-ci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjFdIHBjaTogTGltaXQgVlBEIGxl
-bmd0aCBvZiBFbXVsZXggYWRhcHRlcnMgdG8gdGhlIGFjdHVhbA0KPiBsZW5ndGggc3VwcG9ydGVk
-Lg0KPiANCj4gT24gVGh1LCBPY3QgMzAsIDIwMTQgYXQgNzozOCBBTSwgVmVua2F0IER1dnZ1cnUN
-Cj4gPFZlbmthdEt1bWFyLkR1dnZ1cnVAZW11bGV4LmNvbT4gd3JvdGU6DQo+ID4gSGkgQmpvcm4s
-DQo+ID4gUGxlYXNlIGZpbmQgbXkgY29tbWVudHMgaW5saW5lLg0KPiA+DQo+ID4+IC0tLS0tT3Jp
-Z2luYWwgTWVzc2FnZS0tLS0tDQo+ID4+IEZyb206IEJqb3JuIEhlbGdhYXMgW21haWx0bzpiaGVs
-Z2Fhc0Bnb29nbGUuY29tXQ0KPiA+PiBTZW50OiBUaHVyc2RheSwgT2N0b2JlciAyMywgMjAxNCA5
-OjExIFBNDQo+ID4+IFRvOiBWZW5rYXQgRHV2dnVydQ0KPiA+PiBDYzogbGludXgtcGNpQHZnZXIu
-a2VybmVsLm9yZw0KPiA+PiBTdWJqZWN0OiBSZTogW1BBVENIIHYxXSBwY2k6IExpbWl0IFZQRCBs
-ZW5ndGggb2YgRW11bGV4IGFkYXB0ZXJzIHRvIHRoZQ0KPiBhY3R1YWwNCj4gPj4gbGVuZ3RoIHN1
-cHBvcnRlZC4NCj4gPj4NCj4gPj4gT24gVGh1LCBPY3QgMTYsIDIwMTQgYXQgMDI6MTY6NDJQTSAr
-MDUzMCwgVmVua2F0IER1dnZ1cnUgd3JvdGU6DQo+ID4+ID4gQnkgZGVmYXVsdCBwY2kgdXRpbGl0
-aWVzL3N1YnN5c3RlbSB0cmllcyB0byByZWFkIDMyayBieXRlcyBvZiB2cGQgZGF0YSBubw0KPiA+
-PiBtYXR0ZXINCj4gPj4gPiB3aGF0IHRoZSBkZXZpY2Ugc3VwcG9ydHMuIFRoaXMgY2FuIGxlYWQg
-dG8gdW5leHBlY3RlZCBiZWhhdmlvciBkZXBlbmRpbmcNCj4gPj4gPiBvbiBob3cgZWFjaCBvZiB0
-aGUgZGV2aWNlcyBoYW5kbGUgdGhpcyBjb25kaXRpb24uIFRoaXMgcGF0Y2ggZml4ZXMgdGhlDQo+
-ID4+ID4gcHJvYmxlbSBmb3IgRW11bGV4IGFkYXB0ZXIgZmFtaWx5Lg0KPiA+PiA+DQo+ID4+ID4g
-djE6DQo+ID4+ID4gQWRkcmVzc2VkIEJqb3JuJ3MgY29tbWVudHMNCj4gPj4gPiAxLiBSZW1vdmVk
-IFZlbmRvciBpZCBhbmQgRGV2aWNlIGlkIG1hY3JvcyBmcm9tIHBjaV9pZHMuaCBhbmQNCj4gPj4g
-PiAgICB1c2luZyB0aGUgVmVuZG9yIGFuZCBEZXZpY2UgaWQgdmFsdWVzIGRpcmVjdGx5IGluDQo+
-ID4+IERFQ0xBUkVfUENJX0ZJWFVQX0ZJTkFMKCkgbGluZXMuDQo+ID4+ID4NCj4gPj4gPiBTaWdu
-ZWQtb2ZmLWJ5OiBWZW5rYXQgRHV2dnVydSA8VmVua2F0S3VtYXIuRHV2dnVydUBFbXVsZXguY29t
-Pg0KPiA+Pg0KPiA+PiBIaSBWZW5rYXQsDQo+ID4+DQo+ID4+IEknbGwgbWVyZ2UgdGhpcyAoaW4g
-c29tZSBmb3JtKSwgYnV0IEknZCBsaWtlIHRoZSBjaGFuZ2Vsb2cgdG8gaW5jbHVkZSBtb3JlDQo+
-ID4+IGRldGFpbHMgYWJvdXQgd2hhdCB1bmV4cGVjdGVkIGJlaGF2aW9yIG9jY3VycyB3aGVuIHJl
-YWRpbmcgdG9vIG11Y2gNCj4gZGF0YS4NCj4gPj4gVGhpcyBpcyB0byBoZWxwIHBlb3BsZSB3aG8g
-dHJpcCBvdmVyIHRoaXMgcHJvYmxlbSBmaW5kIHRoaXMgcGF0Y2ggYXMgdGhlDQo+ID4+IHNvbHV0
-aW9uLg0KPiA+IFtWZW5rYXRdICJUaW1lb3V0IiBoYXBwZW5zIG9uIGV4Y2Vzc2l2ZSBWUEQgcmVh
-ZHMgYW5kICBLZXJuZWwga2VlcHMNCj4gbG9nZ2luZyB0aGUgZm9sbG93aW5nIG1lc3NhZ2UNCj4g
-PiAidnBkIHIvdyBmYWlsZWQuICBUaGlzIGlzIGxpa2VseSBhIGZpcm13YXJlIGJ1ZyBvbiB0aGlz
-IGRldmljZS4gIENvbnRhY3QgdGhlIGNhcmQNCj4gdmVuZG9yIGZvciBhIGZpcm13YXJlIHVwZGF0
-ZSINCj4gPj4NCj4gPj4gSW4gbXkgb3BpbmlvbiwgdGhpcyBpcyBhIGhhcmR3YXJlIGRlZmVjdCwg
-YW5kIEknZCBsaWtlIHRvIGtub3cgd2hhdCB5b3VyDQo+ID4+IGhhcmR3YXJlIGZvbGtzIHRoaW5r
-LCBiZWNhdXNlIEkgZG9uJ3Qgd2FudCB0byBoYXZlIHRvIG1lcmdlIHNpbWlsYXIgcXVpcmtzDQo+
-ID4+IGZvciBmdXR1cmUgZGV2aWNlcy4gIEhlcmUncyBteSByZWFzb25pbmc6DQo+ID4+DQo+ID4+
-IElmIGEgZGV2aWNlIGRvZXNuJ3QgaW1wbGVtZW50IHRoZSBlbnRpcmUgMzJLIG9mIHBvc3NpYmxl
-IFZQRCBzcGFjZSwgSSB3b3VsZA0KPiA+PiBleHBlY3QgdGhlIGRldmljZSB0byBqdXN0IHJldHVy
-biB6ZXJvcyBvciAweGZmLCBvciBtYXliZSBhbGlhcyB0aGUgc3BhY2UgYnkNCj4gPj4gZHJvcHBp
-bmcgdGhlIGhpZ2gtb3JkZXIgdW51c2VkIGFkZHJlc3MgYml0cy4NCj4gPiBbVmVua2F0XSBXZSBk
-byByZXR1cm4gMHhmZnMgYmV5b25kIHRoZSBzdXBwb3J0ZWQgc2l6ZSBidXQgZXhjZXNzaXZlIFZQ
-RA0KPiByZWFkcyBhcmUgY2F1c2luZyB0aW1lb3V0cyB3aGVuIHRoZSBhZGFwdGVyIGlzIGhhbmRs
-aW5nIHNvbWUgaGlnaCBwcmlvcml0eQ0KPiB3b3JrLg0KPiANCj4gVGhhdCBtYWtlcyBpdCBzb3Vu
-ZHMgbGlrZSB0aGlzIGlzIHJlYWxseSBhbiBpc3N1ZSB3aXRoIGhvdyB0aGUgYWRhcHRlcg0KPiBm
-aXJtd2FyZSBtYW5hZ2VzIHRoZSB3b3JrbG9hZCwgbm90IHNvbWV0aGluZyBzdHJpY3RseSByZWxh
-dGVkIHRvIHRoZQ0KPiBzaXplIG9mIGltcGxlbWVudGVkIFZQRCBzcGFjZS4gSW4gb3RoZXIgd29y
-ZHMsIGl0IHNvdW5kcyBsaWtlIGl0J3MNCj4gcG9zc2libGUgZm9yIHRoZSB0aW1lb3V0IHRvIG9j
-Y3VyIGV2ZW4gd2hlbiByZWFkaW5nIHRoZSBzcGFjZSB0aGF0DQo+ICppcyogaW1wbGVtZW50ZWQu
-DQpJbiB0aGlzIGNhc2Ugd2hlbiB0aGUgaG9zdCByZWFkcyAzMmsgc3BhY2UsIHRoZSBhZGFwdGVy
-IGdldHMgYXJvdW5kIDhLIGludGVycnVwdHMgYW5kIHNvbWV0aW1lcyBnZXRzIG92ZXJ3aGVsbWVk
-IHdpdGggdGhlIGludGVycnVwdCBzdG9ybS4gVGhpcyBjb3VsZCBjYXVzZSB0aGUgYWRhcHRlciB0
-byBzdG9wIGZ1bmN0aW9uaW5nIHByb3Blcmx5Lg0KTGltaXRpbmcgdGhlIFZQRCByZWFkIHRvIDFL
-IGNhdXNlcyBvbmx5IDI1NiBpbnRlcnJ1cHRzIChvbiB0aGUgYWRhcHRlcikgYW5kIHRoZSBwcm9i
-bGVtIG5ldmVyIHNlZW1zIHRvIG9jY3VyLg0KVGhpcyBoYXMgYmVlbiB0aGUgbWFpbiBtb3RpdmF0
-aW9uIGJlaGluZCBteSBwYXRjaC4NCkkgZG8gYWdyZWUgdGhhdCB0aGUgdGltZW91dCBjb3VsZCBz
-dGlsbCBvY2N1ciBldmVuIHdoZW4gcmVhZGluZyB0aGUgMUsgaW1wbGVtZW50ZWQgc3BhY2UsIGJ1
-dCBJIGZlZWwgaXQncyBoaWdobHkgaW1wcm9iYWJsZS4NCg0KQXMgYW4gYWx0ZXJuYXRpdmUgc29s
-dXRpb24sIHdvdWxkIHlvdSBiZSBvcGVuIHRvIGEgZml4IGluIFBDSSAtY29yZSB0byBzdG9wIHJl
-YWRpbmcgYWZ0ZXIgdGhlIEVuZC10YWcgaXMgZGV0ZWN0ZWQ/ICAoVGhpcyBsb2dpYyBpcyB1c2Vk
-IGJ5IHBjaS11dGlsaXR5IChscy12cGQuYykgd2hpbGUgcmVhZGluZyBWUEQgZGF0YS4pDQpJIG5v
-dyBmZWVsIHRoYXQgdGhpcyBpcyB0aGUgKnJpZ2h0KiBzb2x1dGlvbiB0aGFuIG15IHBjaS1xdWly
-a3MgcGF0Y2guDQoNCj4gWW91IHNheSB0aGUga2VybmVsICJrZWVwcyBsb2dnaW5nIiB0aGUgbWVz
-c2FnZS4gIEZyb20gdGhlIGNvZGUsIGl0DQo+IGxvb2tzIGxpa2UgaXQgc2hvdWxkIG9ubHkgbG9n
-IGl0IG9uY2UgcGVyIGF0dGVtcHQgdG8gcmVhZCBvciB3cml0ZSB0aGUNCj4gVlBELiAgSXMgdGhh
-dCB3aGF0IHlvdSBvYnNlcnZlLCBvciBpcyB0aGVyZSBhIHByb2JsZW0gd2hlcmUgd2UgZG9uJ3QN
-Cj4gYWJvcnQgdGhlIHJlYWQvd3JpdGUgYWZ0ZXIgdGhlIGZpcnN0IHRpbWVvdXQsIGFuZCB3ZSBl
-bWl0IG1hbnkNCj4gbWVzc2FnZXM/DQpZZXMgdGhlIGtlcm5lbCBsb2dzIG9ubHkgZm9yIG9uZSB0
-aW1lIHBlciBhdHRlbXB0IGJ1dCB0aGVyZSBhcmUgY29uZmlndXJhdGlvbnMgd2hlcmUgd2UgaGF2
-ZSBtYW55IFZGcyBwZXIgUEYgYW5kIHdlIHNlZSB0aGlzIG1lc3NhZ2UgZm9yIGV2ZXJ5IFZGIGFu
-ZCBQRi4NCg0KVGhhbmtzLA0KVmVua2F0Lg0K
+On Tuesday 18 November 2014 11:34:37 Thomas Gleixner wrote:
+> To support MSI irq domains we want a generic data structure for
+> allocation, but we need the option to provide an architecture specific
+> version of it. So instead of playing #ifdef games in linux/msi.h we
+> add a generic header file and let architectures decide whether to
+> include it or to provide their own implementation and provide the
+> required typedef.
+
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+
+for merging the asm-generic file
+
+> I know that typedefs are not really nice, but in this case there are no
+> forward declarations required and it's the simplest solution.
+
+I must be missing the obvious: what problem does the typedef solve
+that you would have with just a struct?
+
+	Arnd
