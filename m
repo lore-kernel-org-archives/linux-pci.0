@@ -1,77 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58222 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751751AbaKKUjl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 11 Nov 2014 15:39:41 -0500
-Message-ID: <1415738372.16601.335.camel@ul30vt.home>
-Subject: Re: [PATCH 0/4] move pci_assivned_vfs() check (while disabling VFs)
- to pci sub-system
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Don Dutile <ddutile@redhat.com>
-Cc: Sathya Perla <sathya.perla@Emulex.Com>, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org, ariel.elior@qlogic.com,
-	linux.nics@intel.com, shahed.shaikh@qlogic.com
-Date: Tue, 11 Nov 2014 13:39:32 -0700
-In-Reply-To: <54625EE8.1050509@redhat.com>
-References: <1415620410-4937-1-git-send-email-sathya.perla@emulex.com>
-	 <54625EE8.1050509@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from aserp1040.oracle.com ([141.146.126.69]:25997 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753683AbaKRSTE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 13:19:04 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2] PCI: Don't reject 64bit mmio on 32bit/PAE mode
+Date: Tue, 18 Nov 2014 10:19:04 -0800
+Message-Id: <1416334744-16817-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2014-11-11 at 14:09 -0500, Don Dutile wrote:
-> On 11/10/2014 06:53 AM, Sathya Perla wrote:
-> > A user must not be allowed to disable VFs while they are already assigned to
-> > a guest. This check is being made in each individual driver that implements
-> > the sriov_configure PCI method.
-> > This patch-set fixes this code duplication by moving this check from
-> > drivers to the sriov_nuvfs_store() routine just before invoking
-> > sriov_configure() when num_vfs is equal to 0.
-> >
-> > Vasundhara Volam (4):
-> >    pci: move pci_assivned_vfs() check while disabling VFs to pci
-> >      sub-system
-> >    bnx2x: remove pci_assigned_vfs() check while disabling VFs
-> >    i40e: remove pci_assigned_vfs() check while disabling VFs
-> >    qlcnic: remove pci_assigned_vfs() check while disabling VFs
-> >
-> >   drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c  |    2 +-
-> >   drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c |    7 +------
-> >   .../net/ethernet/qlogic/qlcnic/qlcnic_sriov_pf.c   |   10 ----------
-> >   drivers/pci/pci-sysfs.c                            |    5 +++++
-> >   4 files changed, 7 insertions(+), 17 deletions(-)
-> >
-> I have had a side conversation with Alex Williamson, VFIO author.
-> 
-> VFIO is the upstream method that device-assignment is managed/handled on kvm now.
-> It does not set the PCI_DEV_FLAGS_ASSIGNED pci dev-flags, and thus,
-> this check will not work when VFIO is used.
-> 
-> This patch set will only work for the former, kvm-managed, device-assignment method,
-> which is currently being deprecated in qemu as well.
-> 
-> So, yes, it works for kvm managed device-assignment, but not the
-> newer, VFIO-based device-assignment.
-> 
-> Note, also, that the pci_assigned_vfs() check in the drivers will
-> always return 0 when VFIO is used for device assignment, so keeping
-> these checks in the drivers doesn't do what they imply either.
-> 
-> So, taking in the patch solves old, kvm-managed, device assignment,
-> but a new method is needed when VFIO is involved.
-> 
-> - Don
-> 
-> ps -- Note: just adding the flag setting in vfio-pci does not necessarily
->        solve this problem.  VFIO does not know if a device is assigned to a guest;
->        it only knows a caller of the ioctl requesting the device to be assigned
->        to vfio, and to be dma-mapped for a region of memory, has been requested.
->        So, a new PF<->VF mechanism needs to be put in place to
->        determine the equivalent information.
+Aaron reported 32bit/PAE mode, has problem with 64bit resource.
 
-pps -- Note: testing pci_assivned_vfs() is racy, nothing prevents the flag
-	being added to a device between your check and removing the VF device.
-	This is one of the reasons that vfio-pci doesn't use it and that this
-	interface should be discouraged in the kernel.
+[    6.610012] pci 0000:03:00.0: reg 0x10: [mem 0x383fffc00000-0x383fffdfffff 64bit pref]
+[    6.622195] pci 0000:03:00.0: reg 0x20: [mem 0x383fffe04000-0x383fffe07fff 64bit pref]
+[    6.656112] pci 0000:03:00.1: reg 0x10: [mem 0x383fffa00000-0x383fffbfffff 64bit pref]
+[    6.668293] pci 0000:03:00.1: reg 0x20: [mem 0x383fffe00000-0x383fffe03fff 64bit pref]
+[    6.702055] pci 0000:00:02.2: PCI bridge to [bus 03-04]
+[    6.706434] pci 0000:00:02.2:   bridge window [io  0x1000-0x1fff]
+[    6.711783] pci 0000:00:02.2:   bridge window [mem 0x91900000-0x91cfffff]
+[    6.717906] pci 0000:00:02.2: can't handle 64-bit address space for bridge
 
+So the kernel reject 64bit mmio on pci pref bridge that is assigned by
+firmware.
+
+When 32bit PAE is enabled, we could support 64bit mmio.
+but BITS_PER_LONG==64 checking could reject firmware assigned mmio that
+is above 4G. On x86 32bit always has BITS_PER_LONG equal to 32.
+
+We could use CONFIG_ARCH_DMA_ADDR_T_64BIT or dma_addr_t size checking instead.
+Use dma_addr_t size checking to avoid using MARCO.
+
+Also need to change to use dma_addr_t instead of unsigned long
+for base/limit to avoid overflow.
+
+-v2: add u64 cast to avoid compiler warning.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=88131
+Reported-by: Aaron Ma <mapengyu@gmail.com>
+Tested-by: Aaron Ma <mapengyu@gmail.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
+---
+ drivers/pci/probe.c |   22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
+
+Index: linux-2.6/drivers/pci/probe.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/probe.c
++++ linux-2.6/drivers/pci/probe.c
+@@ -406,15 +406,15 @@ static void pci_read_bridge_mmio_pref(st
+ {
+ 	struct pci_dev *dev = child->self;
+ 	u16 mem_base_lo, mem_limit_lo;
+-	unsigned long base, limit;
++	dma_addr_t base, limit;
+ 	struct pci_bus_region region;
+ 	struct resource *res;
+ 
+ 	res = child->resource[2];
+ 	pci_read_config_word(dev, PCI_PREF_MEMORY_BASE, &mem_base_lo);
+ 	pci_read_config_word(dev, PCI_PREF_MEMORY_LIMIT, &mem_limit_lo);
+-	base = ((unsigned long) mem_base_lo & PCI_PREF_RANGE_MASK) << 16;
+-	limit = ((unsigned long) mem_limit_lo & PCI_PREF_RANGE_MASK) << 16;
++	base = ((dma_addr_t) mem_base_lo & PCI_PREF_RANGE_MASK) << 16;
++	limit = ((dma_addr_t) mem_limit_lo & PCI_PREF_RANGE_MASK) << 16;
+ 
+ 	if ((mem_base_lo & PCI_PREF_RANGE_TYPE_MASK) == PCI_PREF_RANGE_TYPE_64) {
+ 		u32 mem_base_hi, mem_limit_hi;
+@@ -428,15 +428,15 @@ static void pci_read_bridge_mmio_pref(st
+ 		 * this, just assume they are not being used.
+ 		 */
+ 		if (mem_base_hi <= mem_limit_hi) {
+-#if BITS_PER_LONG == 64
+-			base |= ((unsigned long) mem_base_hi) << 32;
+-			limit |= ((unsigned long) mem_limit_hi) << 32;
+-#else
+-			if (mem_base_hi || mem_limit_hi) {
+-				dev_err(&dev->dev, "can't handle 64-bit address space for bridge\n");
+-				return;
++			if (sizeof(dma_addr_t) < 8) {
++				if (mem_base_hi || mem_limit_hi) {
++					dev_err(&dev->dev, "can't handle 64-bit address space for bridge\n");
++					return;
++				}
++			} else  {
++				base |= (dma_addr_t)(((u64)mem_base_hi)<<32);
++				limit |= (dma_addr_t)(((u64)mem_limit_hi)<<32);
+ 			}
+-#endif
+ 		}
+ 	}
+ 	if (base <= limit) {
