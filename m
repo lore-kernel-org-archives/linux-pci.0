@@ -1,65 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:40932 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750834AbaKEXRr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 18:17:47 -0500
-Received: by mail-ig0-f170.google.com with SMTP id h15so9250492igd.1
-        for <linux-pci@vger.kernel.org>; Wed, 05 Nov 2014 15:17:46 -0800 (PST)
-Date: Wed, 5 Nov 2014 16:17:43 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: Re: [PATCH] PCI: add missing DT binding for linux,pci-domain property
-Message-ID: <20141105231743.GI6168@google.com>
-References: <1415101660-26450-1-git-send-email-l.stach@pengutronix.de>
+Received: from www.linutronix.de ([62.245.132.108]:38181 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753265AbaKRLAB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 06:00:01 -0500
+Date: Tue, 18 Nov 2014 11:59:39 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Arnd Bergmann <arnd@arndb.de>
+cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Tony Luck <tony.luck@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	LAK <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] asm-generic: Add msi.h
+In-Reply-To: <1703620.E5bhVDQPHc@wuerfel>
+Message-ID: <alpine.DEB.2.11.1411181149350.3909@nanos>
+References: <alpine.DEB.2.11.1411181133080.3909@nanos> <1703620.E5bhVDQPHc@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415101660-26450-1-git-send-email-l.stach@pengutronix.de>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 04, 2014 at 12:47:40PM +0100, Lucas Stach wrote:
-> This property was added by 41e5c0f81d3e
-> (of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr())
-> without the required binding documentation. As this property
-> will be supported by a number of host bridge drivers going forward,
-> add it to the common PCI binding doc.
-> 
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+On Tue, 18 Nov 2014, Arnd Bergmann wrote:
 
-I merged 41e5c0f81d3e through my tree, and I could merge something like
-this if a consensus develops with some acks.  But I'll just let you guys
-handle it unless you poke me again.
+> On Tuesday 18 November 2014 11:34:37 Thomas Gleixner wrote:
+> > To support MSI irq domains we want a generic data structure for
+> > allocation, but we need the option to provide an architecture specific
+> > version of it. So instead of playing #ifdef games in linux/msi.h we
+> > add a generic header file and let architectures decide whether to
+> > include it or to provide their own implementation and provide the
+> > required typedef.
+> 
+> Acked-by: Arnd Bergmann <arnd@arndb.de>
+> 
+> for merging the asm-generic file
+> 
+> > I know that typedefs are not really nice, but in this case there are no
+> > forward declarations required and it's the simplest solution.
+> 
+> I must be missing the obvious: what problem does the typedef solve
+> that you would have with just a struct?
 
-> ---
-> This is a non-critical fix, but may still qualify for 3.18-rc as
-> the property was added in this release cycle.
-> ---
->  Documentation/devicetree/bindings/pci/pci.txt | 10 ++++++++++
->  1 file changed, 10 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-> index 41aeed38926d..b754f786ed5e 100644
-> --- a/Documentation/devicetree/bindings/pci/pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/pci.txt
-> @@ -7,3 +7,13 @@ And for the interrupt mapping part:
->  
->  Open Firmware Recommended Practice: Interrupt Mapping
->  http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
-> +
-> +Additionally to the properties specified in the above standards a host bridge
-> +driver implementation may support the following properties:
-> +
-> +- linux,pci-domain:
-> +   If present this property assigns a fixed PCI domain number to a host bridge,
-> +   otherwise an unstable (across boots) unique number will be assigned.
-> +   It is recommended to either not set this property at all or set it for all
-> +   host bridges in the system, otherwise potentially conflicting domain numbers
-> +   may be assigned to root buses behind different host bridges.
-> -- 
-> 2.1.1
-> 
+It's not obvious. :)
+
+The irqdomain stuff is pretty device tree centric, but the new stacked
+irqdomains are to be used by x86 as well. So we made some of the
+interfaces opaque, i.e. void *allocation_arg.
+
+Now MSI is a bit differnet as it cannot be decribed by DT, so we want
+a proper generic data structure for it and of course we want to have a
+type for it.
+
+Now x86 has a bit more convoluted requirements where we prefer for
+simplicity reasons to reuse the allocation data structure which we
+have alredy for the non MSI cases, so it can be handed down to the
+opaque interfaces as well.
+
+So we have the generic:
+ 
+struct msi_alloc_info {
+       ....
+};
+
+and 
+
+struct x86_alloc_info {
+       ...
+};
+
+So we either can do in x86:
+
+struct msi_alloc_info {
+       struct x86_alloc_info info;
+};
+
+or use a typedef which maps x86_alloc_info to msi_alloc_info_t.
+
+I think the typedef is more sane in that case.
+
+Thanks,
+
+	tglx
+
+
+
+
