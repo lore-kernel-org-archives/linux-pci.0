@@ -1,223 +1,91 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Alexander Gordeev <agordeev@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.24]:56427 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752632AbaKRLgA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 06:36:00 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Thomas Gleixner <tglx@linutronix.de>,
 	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [Patch Part2 v4 21/31] PCI/MSI: enhance PCI MSI core to support hierarchy irqdomain
-Date: Tue,  4 Nov 2014 20:01:55 +0800
-Message-Id: <1415102525-9898-22-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>
+Subject: Re: [PATCH] asm-generic: Add msi.h
+Date: Tue, 18 Nov 2014 12:33:11 +0100
+Message-ID: <5216496.erm7FtUABJ@wuerfel>
+In-Reply-To: <alpine.DEB.2.11.1411181149350.3909@nanos>
+References: <alpine.DEB.2.11.1411181133080.3909@nanos> <1703620.E5bhVDQPHc@wuerfel> <alpine.DEB.2.11.1411181149350.3909@nanos>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance PCI MSI core to support hierarchy irqdomain, so the common
-code could be shared among architectures.
+On Tuesday 18 November 2014 11:59:39 Thomas Gleixner wrote:
+> On Tue, 18 Nov 2014, Arnd Bergmann wrote:
+> 
+> > On Tuesday 18 November 2014 11:34:37 Thomas Gleixner wrote:
+> > > To support MSI irq domains we want a generic data structure for
+> > > allocation, but we need the option to provide an architecture specific
+> > > version of it. So instead of playing #ifdef games in linux/msi.h we
+> > > add a generic header file and let architectures decide whether to
+> > > include it or to provide their own implementation and provide the
+> > > required typedef.
+> > 
+> > Acked-by: Arnd Bergmann <arnd@arndb.de>
+> > 
+> > for merging the asm-generic file
+> > 
+> > > I know that typedefs are not really nice, but in this case there are no
+> > > forward declarations required and it's the simplest solution.
+> > 
+> > I must be missing the obvious: what problem does the typedef solve
+> > that you would have with just a struct?
+> 
+> It's not obvious. :)
+> 
+> The irqdomain stuff is pretty device tree centric, but the new stacked
+> irqdomains are to be used by x86 as well. So we made some of the
+> interfaces opaque, i.e. void *allocation_arg.
+> 
+> Now MSI is a bit differnet as it cannot be decribed by DT, so we want
+> a proper generic data structure for it and of course we want to have a
+> type for it.
+> 
+> Now x86 has a bit more convoluted requirements where we prefer for
+> simplicity reasons to reuse the allocation data structure which we
+> have alredy for the non MSI cases, so it can be handed down to the
+> opaque interfaces as well.
+> 
+> So we have the generic:
+>  
+> struct msi_alloc_info {
+>        ....
+> };
+> 
+> and 
+> 
+> struct x86_alloc_info {
+>        ...
+> };
+> 
+> So we either can do in x86:
+> 
+> struct msi_alloc_info {
+>        struct x86_alloc_info info;
+> };
+> 
+> or use a typedef which maps x86_alloc_info to msi_alloc_info_t.
+> 
+> I think the typedef is more sane in that case.
+> 
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/pci/Kconfig |    4 ++
- drivers/pci/msi.c   |  126 +++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/msi.h |   11 +++++
- 3 files changed, 141 insertions(+)
+Ok, makes sense.
 
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index b9db0f2ce11f..022e89745f86 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -16,6 +16,10 @@ config PCI_MSI
- 
- 	   If you don't know what to do here, say Y.
- 
-+config PCI_MSI_IRQ_DOMAIN
-+	bool
-+	depends on PCI_MSI && IRQ_DOMAIN_HIERARCHY
-+
- config PCI_DEBUG
- 	bool "PCI Debugging"
- 	depends on PCI && DEBUG_KERNEL
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index da181c59394b..7423ee16972f 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -19,6 +19,7 @@
- #include <linux/errno.h>
- #include <linux/io.h>
- #include <linux/slab.h>
-+#include <linux/irqdomain.h>
- 
- #include "pci.h"
- 
-@@ -1098,3 +1099,128 @@ int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
- 	return nvec;
- }
- EXPORT_SYMBOL(pci_enable_msix_range);
-+
-+#ifdef	CONFIG_PCI_MSI_IRQ_DOMAIN
-+static inline irq_hw_number_t
-+msi_get_hwirq(struct pci_dev *pdev, struct msi_desc *msidesc)
-+{
-+	return (irq_hw_number_t)msidesc->msi_attrib.entry_nr |
-+		PCI_DEVID(pdev->bus->number, pdev->devfn) << 11 |
-+		(pci_domain_nr(pdev->bus) & 0xFFFFFFFF) << 27;
-+}
-+
-+static int msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
-+			    unsigned int nr_irqs, void *arg)
-+{
-+	int i, ret;
-+	irq_hw_number_t hwirq = arch_msi_irq_domain_get_hwirq(arg);
-+
-+	if (irq_find_mapping(domain, hwirq) > 0)
-+		return -EEXIST;
-+
-+	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
-+	if (ret >= 0)
-+		for (i = 0; i < nr_irqs; i++) {
-+			irq_domain_set_hwirq_and_chip(domain, virq + i,
-+					hwirq + i, &msi_chip, (void *)(long)i);
-+			__irq_set_handler(virq + i, handle_edge_irq, 0, "edge");
-+		}
-+
-+	return ret;
-+}
-+
-+static void msi_domain_free(struct irq_domain *domain, unsigned int virq,
-+			    unsigned int nr_irqs)
-+{
-+	int i;
-+
-+	for (i = 0; i < nr_irqs; i++) {
-+		struct msi_desc *msidesc = irq_get_msi_desc(virq);
-+
-+		if (msidesc)
-+			msidesc->irq = 0;
-+	}
-+	irq_domain_free_irqs_top(domain, virq, nr_irqs);
-+}
-+
-+static int msi_domain_activate(struct irq_domain *domain,
-+			       struct irq_data *irq_data)
-+{
-+	int ret = 0;
-+	struct msi_msg msg;
-+
-+	/*
-+	 * irq_data->chip_data is MSI/MSIx offset.
-+	 * MSI-X message is written per-IRQ, the offset is always 0.
-+	 * MSI message denotes a contiguous group of IRQs, written for 0th IRQ.
-+	 */
-+	if (!irq_data->chip_data) {
-+		ret = irq_chip_compose_msi_msg(irq_data, &msg);
-+		if (ret == 0)
-+			write_msi_msg(irq_data->irq, &msg);
-+	}
-+
-+	return ret;
-+}
-+
-+static int msi_domain_deactivate(struct irq_domain *domain,
-+				 struct irq_data *irq_data)
-+{
-+	struct msi_msg msg;
-+
-+	if (irq_data->chip_data) {
-+		memset(&msg, 0, sizeof(msg));
-+		write_msi_msg(irq_data->irq, &msg);
-+	}
-+
-+	return 0;
-+}
-+
-+static struct irq_domain_ops msi_domain_ops = {
-+	.alloc = msi_domain_alloc,
-+	.free = msi_domain_free,
-+	.activate = msi_domain_activate,
-+	.deactivate = msi_domain_deactivate,
-+};
-+
-+struct irq_domain *msi_create_irq_domain(struct irq_domain *parent)
-+{
-+	struct irq_domain *domain;
-+
-+	domain = irq_domain_add_tree(NULL, &msi_domain_ops, NULL);
-+	if (domain)
-+		domain->parent = parent;
-+
-+	return domain;
-+}
-+
-+int msi_irq_domain_alloc_irqs(struct irq_domain *domain, int type,
-+			      struct pci_dev *dev, void *arg)
-+{
-+	int i, virq;
-+	struct msi_desc *msidesc;
-+	int node = dev_to_node(&dev->dev);
-+
-+	list_for_each_entry(msidesc, &dev->msi_list, list) {
-+		arch_msi_irq_domain_set_hwirq(arg, msi_get_hwirq(dev, msidesc));
-+		virq = irq_domain_alloc_irqs(domain, msidesc->nvec_used,
-+					     node, arg);
-+		if (virq < 0) {
-+			/* Special handling for pci_enable_msi_range(). */
-+			return (type == PCI_CAP_ID_MSI &&
-+				msidesc->nvec_used > 1) ?  1 : -ENOSPC;
-+		}
-+		for (i = 0; i < msidesc->nvec_used; i++)
-+			irq_set_msi_desc_off(virq + i, i, msidesc);
-+	}
-+
-+	list_for_each_entry(msidesc, &dev->msi_list, list)
-+		if (msidesc->nvec_used == 1)
-+			dev_dbg(&dev->dev, "irq %d for MSI/MSI-X\n", virq);
-+		else
-+			dev_dbg(&dev->dev, "irq [%d-%d] for MSI/MSI-X\n",
-+				virq, virq + msidesc->nvec_used - 1);
-+
-+	return 0;
-+}
-+#endif	/* CONFIG_PCI_MSI_IRQ_DOMAIN */
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 44f4746d033b..05dcd425f82b 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -75,4 +75,15 @@ struct msi_chip {
- 	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
- };
- 
-+#ifdef	CONFIG_PCI_MSI_IRQ_DOMAIN
-+extern struct irq_chip msi_chip;
-+
-+extern struct irq_domain *msi_create_irq_domain(struct irq_domain *parent);
-+extern int msi_irq_domain_alloc_irqs(struct irq_domain *domain, int type,
-+				     struct pci_dev *dev, void *arg);
-+
-+extern irq_hw_number_t arch_msi_irq_domain_get_hwirq(void *arg);
-+extern void arch_msi_irq_domain_set_hwirq(void *arg, irq_hw_number_t hwirq);
-+#endif	/* CONFIG_PCI_MSI_IRQ_DOMAIN */
-+
- #endif /* LINUX_MSI_H */
--- 
-1.7.10.4
-
+	Arnd
