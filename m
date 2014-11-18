@@ -1,64 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:51702 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751248AbaKRIPm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 18 Nov 2014 03:15:42 -0500
-From: "Jamet, Michael" <michael.jamet@intel.com>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Levy, Amir (Jer)" <amir.jer.levy@intel.com>,
-	"Alloun, Dan" <dan.alloun@intel.com>,
-	Rafael Wysocki <rjw@rjwysocki.net>,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: RE: [PATCH] pci: support Thunderbolt requirements for I/O resources.
-Date: Tue, 18 Nov 2014 08:15:21 +0000
-Message-ID: <BC567D27D6B7384F84318942321624DE16179EE6@hasmsx109.ger.corp.intel.com>
-References: <1415847123-15558-1-git-send-email-michael.jamet@intel.com>
-	<CAErSpo7Z5x=U3vSnxrFpwYUDrUrnrrBCe1F9_GQNYqWWQFWNpQ@mail.gmail.com>
- <CAHp75VcZ0XjcFxjrSgr5-XnWZZa-eZfPH_Fa1Hzb=f+qtE3z9w@mail.gmail.com>
-In-Reply-To: <CAHp75VcZ0XjcFxjrSgr5-XnWZZa-eZfPH_Fa1Hzb=f+qtE3z9w@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from down.free-electrons.com ([37.187.137.238]:57270 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753305AbaKRLbR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 06:31:17 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Kevin Hilman <khilman@linaro.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH] PCI: fixup __pci_read_base() after refactoring
+Date: Tue, 18 Nov 2014 12:31:11 +0100
+Message-Id: <1416310271-4423-1-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <20141118105542.457d7863@free-electrons.com>
+References: <20141118105542.457d7863@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBBbmR5IFNoZXZjaGVua28gW21h
-aWx0bzphbmR5LnNoZXZjaGVua29AZ21haWwuY29tXQ0KPiBTZW50OiBXZWRuZXNkYXksIE5vdmVt
-YmVyIDEyLCAyMDE0IDIwOjMxDQo+IFRvOiBCam9ybiBIZWxnYWFzDQo+IENjOiBKYW1ldCwgTWlj
-aGFlbDsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVs
-Lm9yZzsNCj4gTGV2eSwgQW1pciAoSmVyKTsgQWxsb3VuLCBEYW47IFJhZmFlbCBXeXNvY2tpOyBB
-bmRyZWFzIE5vZXZlcg0KPiBTdWJqZWN0OiBSZTogW1BBVENIXSBwY2k6IHN1cHBvcnQgVGh1bmRl
-cmJvbHQgcmVxdWlyZW1lbnRzIGZvciBJL08NCj4gcmVzb3VyY2VzLg0KPiANCj4gT24gV2VkLCBO
-b3YgMTIsIDIwMTQgYXQgNzoyOSBQTSwgQmpvcm4gSGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNv
-bT4NCj4gd3JvdGU6DQo+IA0KPiBbXQ0KPiANCj4gPj4gVG8gcHJldmVudCB0aGlzLCB3ZSBkZXRl
-Y3QgYSBjaGFpbiBjb250YWlucyBhIFRodW5kZXJib2x0IGRldmljZSBieQ0KPiA+PiBjaGVja2lu
-ZyB0aGUgVGh1bmRlcmJvbHQgUENJIGRldmljZSBpZC4NCj4gPg0KPiA+IEknbSByZWFsbHkgbm90
-IGhhcHB5IGFib3V0IGNoZWNraW5nIGEgbGlzdCBvZiBkZXZpY2UgSURzIHRvIGlkZW50aWZ5DQo+
-ID4gVGh1bmRlcmJvbHQgZGV2aWNlcy4gIFN1cmVseSB0aGVyZSdzIGEgYmV0dGVyIHdheSwgYmVj
-YXVzZSBhIGxpc3QgbGlrZQ0KPiA+IHRoaXMgaGFzIHRvIGJlIHVwZGF0ZWQgcmVndWxhcmx5Lg0K
-PiANCj4gSSByZWNlbnRseSBwcm9wb3NlZCBpbnRlcm5hbGx5IHRvIHVzZSBxdWlya3MgKHBjaV9m
-aXh1cF9lYXJseSkgZm9yIHRoYXQsIGJ1dA0KPiBhcHBhcmVudGx5IE1pY2hhZWwgZGlkbid0IGhh
-dmUgdGltZSB0byBhbnN3ZXIuIEl0IG1pZ2h0IGJlIGhlIGNhbiBqdXN0DQo+IGNvbW1lbnQgaGVy
-ZSBzaW5jZSB0aGUgcGF0Y2ggYWxyZWFkeSBwdWJsaWMuDQo+IA0KPiAtLQ0KPiBXaXRoIEJlc3Qg
-UmVnYXJkcywNCj4gQW5keSBTaGV2Y2hlbmtvDQoNCkluZGVlZCwgSSd2ZSBleHBsb3JlZCB0aGUg
-cXVpcmtzIG9wdGlvbi4NClVuZm9ydHVuYXRlbHkgdGhlIGZpeHVwIGhvb2sgc2VlbXMgdG8gYmUg
-Y2FsbGVkIHRvbyBsYXRlIGluIHRoZSBjb2RlIA0Kc2luY2UgcGNpX2VuYWJsZV9kZXZpY2UoKWNh
-bGxzIHBjaWJpb3NfZW5hYmxlX2RldmljZSgpIHdoaWNoIGFjdHVhbGx5IA0Kc2VuZCBhIFBDSSBj
-b21tYW5kIHdpdGggIENNRCB8PVBDSV9DT01NQU5EX0lPIGFuZCBjb25maWd1cmUgdGhlIFBDSSBI
-Vy4gDQpUaGUgSU9SRVNPVVJDRV9NRU0gYW5kIElPUkVTT1VSQ0VfSU8gZmxhZ3MgYXJlIHNldCBh
-dCB0aGUgdGltZSB0aGUNCnBjaV9lbmFibGVfZGV2aWNlKCksIHBjaV9lbmFibGVfZGV2aWNlX21l
-bSgpIG9yIHBjaV9lbmFibGVfZGV2aWNlX2lvKCkgDQppcyBjYWxsZWQgZHVyaW5nIGRldmljZSBp
-bml0aWFsaXphdGlvbnMsIHNvIGFuIGVhcmx5IGZpeHVwIGNhbGwgd29uJ3QgaGVscCBlaXRoZXIu
-DQpBdCB0aGlzIHN0YWdlLCB0aGUgUENJIEhXIGlzIGNvbmZpZ3VyZWQgYW5kIGEgZml4dXAgY2Fs
-bCB3b24ndCAgcmVzb2x2ZSB0aGUgaXNzdWUNCnVubGVzcyBhbm90aGVyIFBDSSBjb21tYW5kIGlz
-IHNlbnQgdG8gcmV2ZXJ0IGl0IA0KKGdlbmVyYWxseSBub3QgYWR2aXNlZCB0byBleGVjdXRlIGFn
-YWluIG9uIGhhcmR3YXJlKS4NCg0KTWljaGFlbCANCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpJbnRlbCBJc3JhZWwg
-KDc0KSBMaW1pdGVkCgpUaGlzIGUtbWFpbCBhbmQgYW55IGF0dGFjaG1lbnRzIG1heSBjb250YWlu
-IGNvbmZpZGVudGlhbCBtYXRlcmlhbCBmb3IKdGhlIHNvbGUgdXNlIG9mIHRoZSBpbnRlbmRlZCBy
-ZWNpcGllbnQocykuIEFueSByZXZpZXcgb3IgZGlzdHJpYnV0aW9uCmJ5IG90aGVycyBpcyBzdHJp
-Y3RseSBwcm9oaWJpdGVkLiBJZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQKcmVjaXBpZW50LCBw
-bGVhc2UgY29udGFjdCB0aGUgc2VuZGVyIGFuZCBkZWxldGUgYWxsIGNvcGllcy4K
+In commit 7ea945f0bb49 ("PCI: Shrink decoding-disabled window while
+sizing BARs"), Myron Stowe refactored the code of __pci_read_base() in
+order to reduce the amount of time spent with decoding disabled.
+
+However, contrary to what was said in the commit log, the commit does
+introduce some functional change: the pci_size() function that used to
+be called *before* the BAR size check is done is now called *after*
+the BAR size check is done.
+
+This causes some failures on certain platforms (namely ARM Marvell EBU
+platforms, equipped for example with a PCIe SATA card, or a PCIe USB3
+XHCI controller):
+
+pci 0000:03:00.0: reg 0x10: can't handle BAR larger than 4GB (size 0xfffffffffff00000)
+
+This problem didn't exist before this commit, due to pci_size() being
+called before doing the PCI BAR size check. Therefore, this commit
+fixes the problem by restoring the initial order of the operation, by
+calling pci_size() before doing the PCI BAR size check.
+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Fixes: 7ea945f0bb49 ("PCI: Shrink decoding-disabled window while sizing BARs")
+---
+Note: this fix has been tested to work correctly for me, and the PCI
+messages I get are now identical to the ones I was getting with
+3.18-rc5. However, please review my patch carefully, as I must admit I
+do not fully understand all the implications of the change as well as
+the code in __pci_read_base().
+
+Applies on top of pci/next
+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/probe.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index db16678..6168ca1 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -246,6 +246,14 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 	if (!sz64)
+ 		goto fail;
+ 
++	sz64 = pci_size(l64, sz64, mask64);
++
++	if (!sz64) {
++		dev_info(&dev->dev, "%sreg 0x%x: invalid BAR (can't size)\n",
++			 FW_BUG, pos);
++		goto fail;
++	}
++
+ 	if (res->flags & IORESOURCE_MEM_64) {
+ 		if ((sizeof(dma_addr_t) < 8 || sizeof(resource_size_t) < 8) &&
+ 		    sz64 > 0x100000000ULL) {
+@@ -268,14 +276,6 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 		}
+ 	}
+ 
+-	sz64 = pci_size(l64, sz64, mask64);
+-
+-	if (!sz64) {
+-		dev_info(&dev->dev, "%sreg 0x%x: invalid BAR (can't size)\n",
+-			 FW_BUG, pos);
+-		goto fail;
+-	}
+-
+ 	region.start = l64;
+ 	region.end = l64 + sz64;
+ 
+-- 
+2.1.0
 
