@@ -1,55 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f41.google.com ([209.85.192.41]:39839 "EHLO
-	mail-qg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933967AbaKLEKD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 23:10:03 -0500
-Received: by mail-qg0-f41.google.com with SMTP id q107so8389978qgd.14
-        for <linux-pci@vger.kernel.org>; Tue, 11 Nov 2014 20:10:02 -0800 (PST)
+Received: from cmexedge1.emulex.com ([138.239.224.99]:20694 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753677AbaKRL1z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 06:27:55 -0500
+From: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.Com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Anish Bhatt <anish@chelsio.com>,
+	Hariprasad Shenai <hariprasad@chelsio.com>,
+	Casey Leedom <leedom@chelsio.com>
+Subject: RE: [PATCH v1] pci: Limit VPD length of Emulex adapters to the
+ actual length supported.
+Date: Tue, 18 Nov 2014 11:26:29 +0000
+Message-ID: <BF3270C86E8B1349A26C34E4EC1C44CB3E87D2D3@CMEXMB1.ad.emulex.com>
+References: <1f6d7b6c-7189-4fe3-926b-42609724cab9@CMEXHTCAS2.ad.emulex.com>
+ <20141023154054.GA7137@google.com>
+ <BF3270C86E8B1349A26C34E4EC1C44CB3E860095@CMEXMB1.ad.emulex.com>
+ <CAErSpo7_9xxtBmHOCgxsHeVLbKUeMVhLF6Q9OyFkz11EZbtJCA@mail.gmail.com>
+ <BF3270C86E8B1349A26C34E4EC1C44CB3E862DC6@CMEXMB1.ad.emulex.com>
+ <CAErSpo7KKka6-nHWnVbqVW3hx-E=4x6cEjeEGEAWz32za6xCGQ@mail.gmail.com>
+ <BF3270C86E8B1349A26C34E4EC1C44CB3E87A6A7@CMEXMB1.ad.emulex.com>
+ <CAErSpo5xx2QAN1rZqnknAX7xF+5SjpGvEvvVWGuqF_bTh5xRhA@mail.gmail.com>
+In-Reply-To: <CAErSpo5xx2QAN1rZqnknAX7xF+5SjpGvEvvVWGuqF_bTh5xRhA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1415765215.5124.30.camel@kernel.crashing.org>
-References: <1412656696.30859.122.camel@pasglop> <CADnq5_NFt8neiOAg896d3-DbAn0rnrE7iXaTFmkNGSg-J9oSkA@mail.gmail.com>
- <1412746096.30859.229.camel@pasglop> <20141015221914.GD15225@google.com>
- <1413413732.11213.27.camel@pasglop> <20141111211248.GI28161@google.com>
- <1415759019.10731.1.camel@concordia> <1415765215.5124.30.camel@kernel.crashing.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 11 Nov 2014 21:09:42 -0700
-Message-ID: <CAErSpo5yDtsFTMOuYzgF-HzKOVX2Q3cv2-63rk6yH=PSYJkg7Q@mail.gmail.com>
-Subject: Re: [PATCH v3 4/7] sound/radeon: Add quirk for broken 64-bit MSI
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Michael Ellerman <mpe@ellerman.id.au>, linuxppc-dev@ozlabs.org,
-	Dave Airlie <airlied@linux.ie>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Anton Blanchard <anton@au1.ibm.com>,
-	Takashi Iwai <tiwai@suse.de>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Alex Deucher <alexdeucher@gmail.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 11, 2014 at 9:06 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Wed, 2014-11-12 at 13:23 +1100, Michael Ellerman wrote:
->> On Tue, 2014-11-11 at 14:12 -0700, Bjorn Helgaas wrote:
->> > On Thu, Oct 16, 2014 at 09:55:32AM +1100, Benjamin Herrenschmidt wrote:
->> > > On Wed, 2014-10-15 at 16:19 -0600, Bjorn Helgaas wrote:
->> > > >   PCI/MSI: Add device flag indicating that 64-bit MSIs don't work
->> >
->> > I'm still assuming you're going to merge this series, but I don't see it in
->> > your tree (https://git.kernel.org/cgit/linux/kernel/git/benh/powerpc.git/)
->> > yet.  Do you want me to do anything with it?
->>
->> I'm doing the powerpc tree this cycle, so it'd be in my tree, but it's not:
->>
->>   https://git.kernel.org/cgit/linux/kernel/git/mpe/linux.git/
->>
->> Ben if you want me to take it let me know.
->
-> Hrm, I might have dropped the ball accidentally here. Bjorn did you
-> actually Ack the core changes ? In that case we should probably pick it
-> up.
-
-Yep, I acked it earlier in this thread (Oct 15).
-
-Bjorn
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpvcm4gSGVsZ2FhcyBb
+bWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+IFNlbnQ6IFR1ZXNkYXksIE5vdmVtYmVyIDE4
+LCAyMDE0IDU6MDIgQU0NCj4gVG86IFZlbmthdCBEdXZ2dXJ1DQo+IENjOiBsaW51eC1wY2lAdmdl
+ci5rZXJuZWwub3JnOyBBbmlzaCBCaGF0dDsgSGFyaXByYXNhZCBTaGVuYWkNCj4gU3ViamVjdDog
+UmU6IFtQQVRDSCB2MV0gcGNpOiBMaW1pdCBWUEQgbGVuZ3RoIG9mIEVtdWxleCBhZGFwdGVycyB0
+byB0aGUNCj4gYWN0dWFsIGxlbmd0aCBzdXBwb3J0ZWQuDQo+IA0KPiBbK2NjIEFuaXNoLCBIYXJp
+cHJhc2FkIChjeGdiNCBtYWludGFpbmVycy9jb250cmlidXRvcnMpXQ0KPiANCj4gQW5pc2gsIEhh
+cmlwcmFzYWQsIGhlcmUncyB0aGUgcHJvYmxlbToNCj4gPj4gSSB0b29rIGEgcXVpY2sgbG9vayBh
+dCB0aG9zZSBkcml2ZXJzLCBhbmQgaXQgYWN0dWFsbHkgbG9va3MgbGlrZSBtb3N0DQo+ID4+IG9m
+IHRoZW0gbG9vayBmb3IgdGhlIHRhZyBzdHJ1Y3R1cmUsIGUuZy4sIGJ5IHVzaW5nIHBjaV92cGRf
+ZmluZF90YWcoKQ0KPiA+PiBvciBkb2luZyBzb21ldGhpbmcgc2ltaWxhci4gIFNvIG1heWJlIGl0
+IGFjdHVhbGx5IHdvdWxkIGJlIHNhZmUgdG8gZG8NCj4gPj4gdGhpcy4gIE1heWJlIHlvdSBjb3Vs
+ZCBoYXZlIGEgbW9yZSB0aG9yb3VnaCBsb29rIGF0IHRoZW0gYW5kIHNlZSBpZg0KPiA+PiB5b3Ug
+YWdyZWU/DQo+ID4gSWYgdGhlIGRldmljZXMgZG9lc24ndCBmb2xsb3cgdGhlIHNwZWMgZm9yIHRo
+ZSBWUEQgY29udGVudHMsIHBjaS1jb3JlIG1heQ0KPiBlbmR1cCByZXF1ZXN0aW5nIDMyayBkYXRh
+IHdoaWNoIHByb2JhYmx5IHdpbGwgbm90IGJyZWFrIGV4aXN0aW5nIHVzZXJzLg0KPiANCj4gVGhl
+IGNhc2UgSSdtIHdvcnJpZWQgYWJvdXQgaXMgYSBkZXZpY2UgdGhhdCBkb2Vzbid0IGZvbGxvdyB0
+aGUgVlBEDQo+IGZvcm1hdCBzcGVjLCBidXQgaXRzIFZQRCBjb250ZW50cyBpbmNsdWRlIGRhdGEg
+dGhhdCBtYXRjaGVzIGFuIEVuZA0KPiBUYWcuICBJZiB3ZSBtYWtlIHBjaV9yZWFkX3ZwZCgpIHN0
+b3Agd2hlbiBpdCBzZWVzIGFuIEVuZCBUYWcsIHdlIG1heQ0KPiBzdG9wIHJlYWRpbmcgZGF0YSBw
+cmVtYXR1cmVseS4NCltWZW5rYXRdIEkgdGhpbmsgaXQncyBmYWlyIHRvIGFzc3VtZSB0aGF0IGRl
+dmljZXMgZWl0aGVyIGZvbGxvdyB0aGUgc3BlYyBvciB0aGV5IGRvbid0Lg0KRXZlbiBpZiB0aGUg
+ZGV2aWNlcyBwYXJ0aWFsbHkgZm9sbG93IHRoZSBzcGVjLCBJZiB0aGUgZmlyc3QgYnl0ZSAoYW5k
+IHRoZSBzdWJzZXF1ZW50IHJlbGV2YW50IGJ5dGVzIHdoaWNoIGFyZSBjYWxjdWxhdGVkIGJhc2Vk
+IG9uIHRoZSBsZW5ndGggYW5kIGRhdGEgb2YgdGhhdCByZXNvdXJjZSkgb2YgdGhlIFZQRCBkYXRh
+IGhhcyBhIHZhbGlkIHRhZywgd2UgY2FuIHN0b3AgYWZ0ZXIgdGhlIEVuZCB0YWcsIG90aGVyd2lz
+ZSByZWFkIDMyayB3b3J0aCBkYXRhLg0KTWlzdW5kZXJzdGFuZGluZyBvdGhlciBWUEQgY29udGVu
+dHMgYXMgRW5kIHRhZyBzZWVtcyB2ZXJ5IHVubGlrZWx5IGFzIHRoZSBwYXJzZXIgY29kZSBjYW4g
+ZGlzdGluZ3Vpc2ggdGFnLCBsZW5ndGggYW5kIGRhdGEgYmFzZWQgb24gdGhlIHNwZWMuDQpGb3Ig
+ZXhhbXBsZSwgcGNpIHV0aWxpdGllcyBhbHdheXMgbG9vayBmb3IgdGhlIEVuZCB0YWcgd2hpbGUg
+cmVhZGluZyBWUEQgZGF0YS4gKGNhcF92cGQgcm91dGluZSBpbiBscy12cGQuYykNCg0K
