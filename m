@@ -1,124 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:57636 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933088AbaKMPWm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 10:22:42 -0500
-Date: Thu, 13 Nov 2014 15:22:43 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Will Deacon <Will.Deacon@arm.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/2] PCI: generic: Add set_msi_parent callback
-Message-ID: <20141113152243.GB9726@red-moon>
-References: <1415647480-3320-1-git-send-email-suravee.suthikulpanit@amd.com>
- <1415647480-3320-3-git-send-email-suravee.suthikulpanit@amd.com>
- <20141111112424.GB16265@arm.com>
- <20141111115227.GF12037@e106497-lin.cambridge.arm.com>
+Received: from 8bytes.org ([81.169.241.247]:60586 "EHLO theia.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932403AbaKRO2S (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Nov 2014 09:28:18 -0500
+Date: Tue, 18 Nov 2014 15:28:15 +0100
+From: Joerg Roedel <joro@8bytes.org>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: Re: [Patch Part3 V7 0/8] Enable support of Intel DMAR device hotplug
+Message-ID: <20141118142815.GD3762@8bytes.org>
+References: <1415544483-27990-1-git-send-email-jiang.liu@linux.intel.com>
+ <20141118102537.GB3762@8bytes.org>
+ <546B4249.7050502@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20141111115227.GF12037@e106497-lin.cambridge.arm.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <546B4249.7050502@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 11, 2014 at 11:52:27AM +0000, Liviu Dudau wrote:
-> On Tue, Nov 11, 2014 at 11:24:24AM +0000, Will Deacon wrote:
-> > Hi Suravee,
-> > 
-> > On Mon, Nov 10, 2014 at 07:24:40PM +0000, suravee.suthikulpanit@amd.com wrote:
-> > > From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> > > 
-> > > This patch implement set_msi_parent callback for PCI generic host controller.
-> > > 
-> > > Cc: Bjorn Helgass <bhelgaas@google.com>
-> > > Cc: Liviu Dudau <liviu.dudau@arm.com>
-> > > Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > > Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> > > ---
-> > >  drivers/pci/host/pci-host-generic.c | 14 ++++++++++++++
-> > >  1 file changed, 14 insertions(+)
-> > > 
-> > > diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> > > index 036ab1b..f9bb97a 100644
-> > > --- a/drivers/pci/host/pci-host-generic.c
-> > > +++ b/drivers/pci/host/pci-host-generic.c
-> > > @@ -42,6 +42,7 @@ struct gen_pci {
-> > >  	struct pci_host_bridge			host;
-> > >  	struct gen_pci_cfg_windows		cfg;
-> > >  	struct list_head			resources;
-> > > +	struct msi_chip				*mchip;
-> > >  };
-> > >  
-> > >  #ifdef CONFIG_ARM
-> > > @@ -128,9 +129,19 @@ static int gen_pci_config_write(struct pci_bus *bus, unsigned int devfn,
-> > >  	return PCIBIOS_SUCCESSFUL;
-> > >  }
-> > >  
-> > > +static int gen_pci_set_msi_parent(struct pci_bus *bus)
-> > > +{
-> > > +	struct gen_pci *pci = bus_to_gen_pci(bus);
-> > > +
-> > > +	bus->msi = pci->mchip;
-> > > +
-> > > +	return PCIBIOS_SUCCESSFUL;
-> > > +}
-> > 
-> > I don't think this makes much sense a host controller callback. Why can't
-> > bus->msi be set in generic code?
-> 
-> Because of the current way in which a bus gets created and them immediately used for
-> scanning devices if you use pci_scan_root_bus(). Alternative is to use pci_create_root_bus()
-> and increase your code size with the body of pci_scan_root_bus().
-> 
-> Solution is to have pci_host_bridge holding the msi_chip pointer and that gets created
-> before root bus, with pci_scan_root_bus() now having all the info needed to do successful
-> setup of scanned devices.
+On Tue, Nov 18, 2014 at 08:57:45PM +0800, Jiang Liu wrote:
+> 	Bjorn has given his acked-by for v6 at
+> https://lkml.org/lkml/2014/9/24/975. But I forgot to carry this
+> acked-by, sorry:(
 
-Why can't we add a hook like pci_bus_assign_domain_nr(), say:
+Okay, I see, applied the patch with the Acked-by, thanks.
 
-pci_bus_msi_init()
 
-in pci_create_root_bus() that does what Suravee wants in a generic way ?
+	Joerg
 
-What am I missing ?
-
-Lorenzo
-
-> 
-> Best regards,
-> Liviu
-> 
-> > 
-> > >  static struct pci_ops gen_pci_ops = {
-> > >  	.read	= gen_pci_config_read,
-> > >  	.write	= gen_pci_config_write,
-> > > +	.set_msi_parent = gen_pci_set_msi_parent,
-> > >  };
-> > >  
-> > >  static const struct of_device_id gen_pci_of_match[] = {
-> > > @@ -313,6 +324,9 @@ static int gen_pci_probe(struct platform_device *pdev)
-> > >  		return err;
-> > >  	}
-> > >  
-> > > +	pci->mchip = of_pci_find_msi_chip_by_node(of_parse_phandle(np,
-> > > +						  "msi-parent", 0));
-> > 
-> > This bit should be in the generic of_pci.c code and not duplicated for
-> > each host controller.
-> > 
-> > Will
-> > 
-> 
-> -- 
-> ====================
-> | I would like to |
-> | fix the world,  |
-> | but they're not |
-> | giving me the   |
->  \ source code!  /
->   ---------------
->     ¯\_(ツ)_/¯
