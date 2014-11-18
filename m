@@ -1,91 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:47885 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750865AbaKMF3i (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 00:29:38 -0500
-Received: by mail-ie0-f174.google.com with SMTP id x19so14699595ier.5
-        for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2014 21:29:38 -0800 (PST)
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:60092 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753160AbaKRLpm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 06:45:42 -0500
+Date: Tue, 18 Nov 2014 11:45:18 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"huxinwei@huawei.com" <huxinwei@huawei.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Wuyun <wuyun.wu@huawei.com>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [RFC PATCH 00/16] Refine PCI host bridge scan interfaces
+Message-ID: <20141118114518.GA3514@red-moon>
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+ <1463511.o4kE8TX3Bd@wuerfel>
+ <546B2ACC.90304@huawei.com>
+ <20535707.3sA6NjSINh@wuerfel>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQU-8dusyj6BAKV0w2C_xW6w6fO4vsyAca-TdoRY6xQhVA@mail.gmail.com>
-References: <bug-88131-41252@https.bugzilla.kernel.org/>
-	<CAErSpo6Bfya60UMeN3cxSH3A+cesAAgPuZEb6b6FHnVBFsOxfA@mail.gmail.com>
-	<CAE9FiQU-8dusyj6BAKV0w2C_xW6w6fO4vsyAca-TdoRY6xQhVA@mail.gmail.com>
-Date: Thu, 13 Nov 2014 13:29:38 +0800
-Message-ID: <CALSz7m2w8DuDGkp-uMDka16HZY7R+B8yjuW5G2==xmbk0NOxpQ@mail.gmail.com>
-Subject: Re: [Bug 88131] New: PCI device intel ixgbe and xhci with 64-bit bar
- address can NOT work on x86_32 PAE kernel.
-From: Aaron Ma <mapengyu@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20535707.3sA6NjSINh@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-kernel config is uploaded in https://bugzilla.kernel.org/show_bug.cgi?id=88151
+On Tue, Nov 18, 2014 at 11:30:11AM +0000, Arnd Bergmann wrote:
+> On Tuesday 18 November 2014 19:17:32 Yijing Wang wrote:
+> > On 2014/11/17 22:13, Arnd Bergmann wrote:
+> > > On Monday 17 November 2014 18:21:34 Yijing Wang wrote:
+> > >> This series is based Linux 3.18-rc1 and Lorenzo Pieralisi's
+> > >> arm PCI domain cleanup patches, link: 
+> > >> https://patchwork.ozlabs.org/patch/407585/
+> > >>
+> > >> Current pci scan interfaces like pci_scan_root_bus() and directly
+> > >> call pci_create_root_bus()/pci_scan_child_bus() lack flexiblity.
+> > >> Some platform infos like PCI domain and msi_chip have to be
+> > >> associated to PCI bus by some arch specific function.
+> > >> We want to make a generic pci_host_bridge, and make it hold
+> > >> the platform infos or hook. Then we could eliminate the lots
+> > >> of arch pci_domain_nr, also we could associate some platform 
+> > >> ops something like pci_get_msi_chip(struct pci_dev *dev)
+> > >> with pci_host_bridge to avoid introduce arch weak functions.
+> > >>
+> > >> This RFC version not for all platforms, just applied the new
+> > >> scan interface in x86/arm/powerpc/ia64, I will refresh other
+> > >> platforms after the core pci scan interfaces are ok.
+> > > 
+> > > I think overall this is a good direction to take, in particular
+> > > moving more things into struct pci_host_bridge so we can
+> > > slim down the architecture specific code.
+> > 
+> > Hi Arnd, thanks very much for your review and comments!
+> > 
+> > > 
+> > > I don't particularly like the way you use the 'pci_host_info'
+> > > to pass callback pointers and some of the generic information.
+> > > This duplicates some of the issues we are currently trying
+> > > to untangle in the arm32 code to make drivers easier to share
+> > > between architectures.
+> > 
+> > What arm32 code you are trying to untangle for example ?
+> 
+> We have a few problems that currently prevent us from using shared
+> drivers across arm32 and arm64:
+> 
+> - arm32 has an architecture-defined pci_sys_data structure, but
+>   we really want to have one that is defined by the host bridge driver
+>   and that is architecture independent. Some core functions depend
+>   on this structure at the moment, which Lorenzo is trying to
+>   undo
 
-The domain is in USB.
+Yes, and on this specific point I would like to understand why we
+are adding yet more pci_sys_data data in the last series that is
+already in -next:
 
-cc Bjorn and ml.
+https://lkml.org/lkml/2014/10/27/85
+
+What does this buy us ? The cover letter says already that there *is*
+a better solution, why do not we work on that instead of adding more churn
+to arch specific code ?
 
 Thanks,
-Pengyu
-
-On Thu, Nov 13, 2014 at 12:32 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Nov 12, 2014 at 8:14 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> [+cc linux-pci, Yinghai]
->>
->> Thanks for the report!
->>
->> On Wed, Nov 12, 2014 at 8:57 PM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
->>> https://bugzilla.kernel.org/show_bug.cgi?id=88131
->>>
->>>             Bug ID: 88131
->>>            Summary: PCI device intel ixgbe and xhci with 64-bit bar
->>>                     address can NOT work on x86_32 PAE kernel.
->>>            Product: Drivers
->>>            Version: 2.5
->>>     Kernel Version: 3.18-rc4
->>>           Hardware: i386
->>>                 OS: Linux
->>>               Tree: Mainline
->>>             Status: NEW
->>>           Severity: normal
->>>           Priority: P1
->>>          Component: PCI
->>>           Assignee: drivers_pci@kernel-bugs.osdl.org
->>>           Reporter: mapengyu@gmail.com
->>>         Regression: No
->>>
->>> Created attachment 157441
->>>   --> https://bugzilla.kernel.org/attachment.cgi?id=157441&action=edit
->>> dmesg
->>>
->>> PCI device intel ixgbe and xhci with 64-bit bar address can NOT work on x86_32
->>> kernel.
->>>
->>> The bar0 base address of intel ixgbe ethernet card and xhci are above 4G.
->>> The commit d56dbf5bab8ce44c5407bb099f71987f58d18bb4 try to map the resource
->>> above 4G.
->>> Enabled PAE and HIGHMEM64G, it should support 64-bit BAR, but failed on high
->>> bar address.
->>
->> Can you also attach your .config to the bugzilla?
->>
->> Is this a regression?  Did it work correctly before d56dbf5bab8c
->> ("PCI: Allocate 64-bit BARs above 4G when possible")?
->>
->> I assume this is the problem you're seeing (for igbe):
->
-> This is some kind of bug that is uncovered by that commit.
->
-> I already have two patches for ixgbe one.
->
-> but xhci could be different problem.
->
-> Aaron, can you split the bug to two ?
-> one for ixgbe and one for xhci.
->
-> Thanks
->
-> Yinghai
+Lorenzo
