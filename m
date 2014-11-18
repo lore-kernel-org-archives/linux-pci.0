@@ -1,67 +1,110 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Sat, 1 Nov 2014 19:59:39 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [Patch v7 14/18] x86, irq, ACPI: Introduce a rwsem to protect
- IOAPIC operations from hotplug
-In-Reply-To: <1414387308-27148-15-git-send-email-jiang.liu@linux.intel.com>
-Message-ID: <alpine.DEB.2.11.1411011949370.5308@nanos>
-References: <1414387308-27148-1-git-send-email-jiang.liu@linux.intel.com> <1414387308-27148-15-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:34234 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753669AbaKRMO4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 07:14:56 -0500
+Message-ID: <546B3829.9040209@huawei.com>
+Date: Tue, 18 Nov 2014 20:14:33 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>
+CC: Liviu Dudau <liviu@dudau.co.uk>, Tony Luck <tony.luck@intel.com>,
+	"Russell King" <linux@arm.linux.org.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"huxinwei@huawei.com" <huxinwei@huawei.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Wuyun <wuyun.wu@huawei.com>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [RFC PATCH 00/16] Refine PCI host bridge scan interfaces
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com> <1463511.o4kE8TX3Bd@wuerfel> <546B2ACC.90304@huawei.com> <20535707.3sA6NjSINh@wuerfel> <20141118114518.GA3514@red-moon>
+In-Reply-To: <20141118114518.GA3514@red-moon>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 27 Oct 2014, Jiang Liu wrote:
-> We are going to support ACPI based IOAPIC hotplug, so introduce a rwsem
-> to protect IOAPIC data structures from IOAPIC hotplug. We choose to
-> serialize in ACPI instead of in the IOAPIC core because:
-> 1) currently we are only plan to support ACPI based IOAPIC hotplug
-> 2) it's much more cleaner and easier
-> 3) It does't affect IOAPIC discovered by devicetree, SFI and mpparse.
+On 2014/11/18 19:45, Lorenzo Pieralisi wrote:
+> On Tue, Nov 18, 2014 at 11:30:11AM +0000, Arnd Bergmann wrote:
+>> On Tuesday 18 November 2014 19:17:32 Yijing Wang wrote:
+>>> On 2014/11/17 22:13, Arnd Bergmann wrote:
+>>>> On Monday 17 November 2014 18:21:34 Yijing Wang wrote:
+>>>>> This series is based Linux 3.18-rc1 and Lorenzo Pieralisi's
+>>>>> arm PCI domain cleanup patches, link: 
+>>>>> https://patchwork.ozlabs.org/patch/407585/
+>>>>>
+>>>>> Current pci scan interfaces like pci_scan_root_bus() and directly
+>>>>> call pci_create_root_bus()/pci_scan_child_bus() lack flexiblity.
+>>>>> Some platform infos like PCI domain and msi_chip have to be
+>>>>> associated to PCI bus by some arch specific function.
+>>>>> We want to make a generic pci_host_bridge, and make it hold
+>>>>> the platform infos or hook. Then we could eliminate the lots
+>>>>> of arch pci_domain_nr, also we could associate some platform 
+>>>>> ops something like pci_get_msi_chip(struct pci_dev *dev)
+>>>>> with pci_host_bridge to avoid introduce arch weak functions.
+>>>>>
+>>>>> This RFC version not for all platforms, just applied the new
+>>>>> scan interface in x86/arm/powerpc/ia64, I will refresh other
+>>>>> platforms after the core pci scan interfaces are ok.
+>>>>
+>>>> I think overall this is a good direction to take, in particular
+>>>> moving more things into struct pci_host_bridge so we can
+>>>> slim down the architecture specific code.
+>>>
+>>> Hi Arnd, thanks very much for your review and comments!
+>>>
+>>>>
+>>>> I don't particularly like the way you use the 'pci_host_info'
+>>>> to pass callback pointers and some of the generic information.
+>>>> This duplicates some of the issues we are currently trying
+>>>> to untangle in the arm32 code to make drivers easier to share
+>>>> between architectures.
+>>>
+>>> What arm32 code you are trying to untangle for example ?
+>>
+>> We have a few problems that currently prevent us from using shared
+>> drivers across arm32 and arm64:
+>>
+>> - arm32 has an architecture-defined pci_sys_data structure, but
+>>   we really want to have one that is defined by the host bridge driver
+>>   and that is architecture independent. Some core functions depend
+>>   on this structure at the moment, which Lorenzo is trying to
+>>   undo
+> 
+> Yes, and on this specific point I would like to understand why we
+> are adding yet more pci_sys_data data in the last series that is
+> already in -next:
+> 
+> https://lkml.org/lkml/2014/10/27/85
+> 
+> What does this buy us ? The cover letter says already that there *is*
+> a better solution, why do not we work on that instead of adding more churn
+> to arch specific code ?
 
-I had a last intensive look at this series as I was about to merge
-it. So I looked at the locking rules here again
- 
-> +/*
-> + * Locks related to IOAPIC hotplug
-> + * Hotplug side:
-> + * 	->lock_device_hotplug()	//device_hotplug_lock
-> + *		->acpi_ioapic_rwsem
-> + *			->ioapic_lock
-> + * Interrupt mapping side:
-> + *	->acpi_ioapic_rwsem
-> + *		->ioapic_mutex
-> + *			->ioapic_lock
-> + */
+In my plan, first save msi_chip in pci_sys_data, so we could remove the lots duplicate
+pcibios_add_bus(), second, make a generic pci_host_bridge, and move the msi_chip in that,
+so we could eliminate all MSI arch weak functions. And in arm I think it's no need to
+associate msi_chip with PCI bus, because all pci devices under the same pci host bridge
+share the same msi_chip.
 
-This looks sane, but I cannot figure out at all why this needs to be a
-rwsem.
 
-> +static DECLARE_RWSEM(acpi_ioapic_rwsem);
 
-I think it should be a simple mutex because the rwsem does not protect
-against concurrent execution what taken for read.
+> 
+> Thanks,
+> Lorenzo
+> 
+> .
+> 
 
-And the site which takes it for write is in the early boot process
-where nothing runs in parallel AFAICT.
 
-Thanks,
+-- 
+Thanks!
+Yijing
 
-	tglx
