@@ -1,82 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:60165 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753153AbaKDMDK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Nov 2014 07:03:10 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Received: from szxga03-in.huawei.com ([119.145.14.66]:13034 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753347AbaKRAzi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 19:55:38 -0500
+Message-ID: <546A98F5.8080506@huawei.com>
+Date: Tue, 18 Nov 2014 08:55:17 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"huxinwei@huawei.com" <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"x86@kernel.org" <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiri Kosina <trivial@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
 	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [Patch Part2 v4 18/31] PCI/MSI, trivial: Fix minor syntax issues according to coding styles
-Date: Tue,  4 Nov 2014 20:01:52 +0800
-Message-Id: <1415102525-9898-19-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
+Subject: Re: [RFC PATCH 14/16] arm/PCI: Introduce pci_get_domain_nr()
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com> <1416219710-26088-15-git-send-email-wangyijing@huawei.com> <20141117120839.GA22241@e102568-lin.cambridge.arm.com>
+In-Reply-To: <20141117120839.GA22241@e102568-lin.cambridge.arm.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/pci/msi.c |    9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+>>  
+>> -	bus->domain_nr = domain;
+>> +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+>> +{
+>> +	bus->domain_nr = pci_get_domain_nr(parent);
+>>  }
+>>  #endif
+> 
+> This code is superseded by the last patches I sent to move the domain
+> assignment to PCI core code.
+> 
+> http://lists.infradead.org/pipermail/linux-arm-kernel/2014-November/301220.html
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 9fab30af0e75..fb2ccb536324 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -244,9 +244,8 @@ void default_restore_msi_irqs(struct pci_dev *dev)
- {
- 	struct msi_desc *entry;
- 
--	list_for_each_entry(entry, &dev->msi_list, list) {
-+	list_for_each_entry(entry, &dev->msi_list, list)
- 		default_restore_msi_irq(dev, entry->irq);
--	}
- }
- 
- void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
-@@ -451,9 +450,8 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
- 				PCI_MSIX_FLAGS_ENABLE | PCI_MSIX_FLAGS_MASKALL);
- 
- 	arch_restore_msi_irqs(dev);
--	list_for_each_entry(entry, &dev->msi_list, list) {
-+	list_for_each_entry(entry, &dev->msi_list, list)
- 		msix_mask_irq(entry, entry->masked);
--	}
- 
- 	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
- }
-@@ -497,9 +495,8 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
- 	int count = 0;
- 
- 	/* Determine how many msi entries we have */
--	list_for_each_entry(entry, &pdev->msi_list, list) {
-+	list_for_each_entry(entry, &pdev->msi_list, list)
- 		++num_msi;
--	}
- 	if (!num_msi)
- 		return 0;
- 
+OK, I will update it based the latest one.
+
+> 
+> Lorenzo
+> 
+> 
+> .
+> 
+
+
 -- 
-1.7.10.4
+Thanks!
+Yijing
 
