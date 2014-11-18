@@ -1,48 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0123.outbound.protection.outlook.com ([65.55.169.123]:21047
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751086AbaKKTRt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 11 Nov 2014 14:17:49 -0500
-From: <suravee.suthikulpanit@amd.com>
-To: <bhelgaas@google.com>
-CC: <liviu.dudau@arm.com>, <lorenzo.pieralisi@arm.com>,
-	<will.deacon@arm.com>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH V2 0/2] PCI: generic: Assiging msi-controller to PCI hostbridge
-Date: Tue, 11 Nov 2014 13:17:32 -0600
-Message-ID: <1415733454-24322-1-git-send-email-suravee.suthikulpanit@amd.com>
+Received: from 8bytes.org ([81.169.241.247]:58867 "EHLO theia.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752917AbaKRKZl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Nov 2014 05:25:41 -0500
+Date: Tue, 18 Nov 2014 11:25:38 +0100
+From: Joerg Roedel <joro@8bytes.org>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: Re: [Patch Part3 V7 0/8] Enable support of Intel DMAR device hotplug
+Message-ID: <20141118102537.GB3762@8bytes.org>
+References: <1415544483-27990-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1415544483-27990-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Hi Jiang,
 
-This patch set introduces a new callback function to allow PCI host drivers
-to specify MSI controller to be used for the child buses / devices.
+On Sun, Nov 09, 2014 at 10:47:55PM +0800, Jiang Liu wrote:
+> Jiang Liu (8):
+>   iommu/vt-d: Introduce helper function dmar_walk_resources()
+>   iommu/vt-d: Dynamically allocate and free seq_id for DMAR units
+>   iommu/vt-d: Implement DMAR unit hotplug framework
+>   iommu/vt-d: Search for ACPI _DSM method for DMAR hotplug
+>   iommu/vt-d: Enhance intel_irq_remapping driver to support DMAR unit
+>     hotplug
+>   iommu/vt-d: Enhance error recovery in function
+>     intel_enable_irq_remapping()
+>   iommu/vt-d: Enhance intel-iommu driver to support DMAR unit hotplug
+>   pci, ACPI, iommu: Enhance pci_root to support DMAR device hotplug
+> 
+>  drivers/acpi/pci_root.c             |   16 +-
+>  drivers/iommu/dmar.c                |  532 ++++++++++++++++++++++++++++-------
+>  drivers/iommu/intel-iommu.c         |  297 ++++++++++++++-----
+>  drivers/iommu/intel_irq_remapping.c |  249 ++++++++++++----
+>  include/linux/dmar.h                |   50 +++-
+>  5 files changed, 897 insertions(+), 247 deletions(-)
 
-This is reabased from:
-    git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/host-generic
+The patches look good, but I need an ack from PCI/ACPI for patch 8
+before I can merge it. Patches 1-7 are applied.
 
-Changes from V1:
-    - Adding "msi-parent" device tree binding in documentation.
-    - Rebase the patch to get rid of artifacts from other precursor patch
-      accidently applied to the developement tree. This should now apply cleanly
-      to the pci/host-generic branch.
+Thanks,
 
-Suravee Suthikulpanit (2):
-  PCI: Add new pci_ops for setting MSI parent for PCI bus
-  PCI: generic: Add set_msi_parent callback
-
- Documentation/devicetree/bindings/pci/host-generic-pci.txt |  3 +++
- drivers/pci/host/pci-host-generic.c                        | 13 +++++++++++++
- drivers/pci/probe.c                                        |  3 +++
- include/linux/pci.h                                        |  1 +
- 4 files changed, 20 insertions(+)
-
--- 
-1.9.3
+	Joerg
 
