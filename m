@@ -1,107 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:61402 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754071AbaKOOVb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 15 Nov 2014 09:21:31 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Received: from stargate.chelsio.com ([67.207.112.58]:2253 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751626AbaKRAG0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 19:06:26 -0500
+From: Anish Bhatt <anish@chelsio.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>
-Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [Patch V2 2/9] irqdomain: Use consistent prototype for irq_domain_free_irqs_*
-Date: Sat, 15 Nov 2014 22:24:00 +0800
-Message-Id: <1416061447-9472-3-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
+	Venkat Duvvuru <VenkatKumar.Duvvuru@emulex.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hariprasad S <hariprasad@chelsio.com>,
+	Casey Leedom <leedom@chelsio.com>
+Subject: RE: [PATCH v1] pci: Limit VPD length of Emulex adapters to the
+ actual length supported.
+Date: Tue, 18 Nov 2014 00:06:22 +0000
+Message-ID: <525DB349B3FB5444AE057A887CB2A8D8D82D10@nice.asicdesigners.com>
+References: <1f6d7b6c-7189-4fe3-926b-42609724cab9@CMEXHTCAS2.ad.emulex.com>
+ <20141023154054.GA7137@google.com>
+ <BF3270C86E8B1349A26C34E4EC1C44CB3E860095@CMEXMB1.ad.emulex.com>
+ <CAErSpo7_9xxtBmHOCgxsHeVLbKUeMVhLF6Q9OyFkz11EZbtJCA@mail.gmail.com>
+ <BF3270C86E8B1349A26C34E4EC1C44CB3E862DC6@CMEXMB1.ad.emulex.com>
+ <CAErSpo7KKka6-nHWnVbqVW3hx-E=4x6cEjeEGEAWz32za6xCGQ@mail.gmail.com>
+ <BF3270C86E8B1349A26C34E4EC1C44CB3E87A6A7@CMEXMB1.ad.emulex.com>
+ <CAErSpo5xx2QAN1rZqnknAX7xF+5SjpGvEvvVWGuqF_bTh5xRhA@mail.gmail.com>
+In-Reply-To: <CAErSpo5xx2QAN1rZqnknAX7xF+5SjpGvEvvVWGuqF_bTh5xRhA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yingjoe Chen <yingjoe.chen@mediatek.com>
-
-When using irq_domain_free_irqs_top() directly in irq_domain_ops, gcc
-generate the following warnings:
-
-../drivers/irqchip/irq-gic.c:879:2: warning: initialization from incompatible pointer type [enabled by default]
-../drivers/irqchip/irq-gic.c:879:2: warning: (near initialization for 'gic_irq_domain_hierarchy_ops.free') [enabled by default]
-
-Change to use consistent prototype for all irq_domain_free_irqs*
-
-Better to fold this into "irqdomain: Introduce new interfaces to
-support hierarchy irqdomains".
-
-Signed-off-by: Yingjoe Chen <yingjoe.chen@mediatek.com>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- include/linux/irqdomain.h |    9 +++++----
- kernel/irq/irqdomain.c    |    8 ++++----
- 2 files changed, 9 insertions(+), 8 deletions(-)
-
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index 640a1ec54772..fbe542967c20 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -270,12 +270,13 @@ extern void irq_domain_set_info(struct irq_domain *domain, unsigned int virq,
- 				void *handler_data, const char *handler_name);
- extern void irq_domain_reset_irq_data(struct irq_data *irq_data);
- extern void irq_domain_free_irqs_common(struct irq_domain *domain,
--					int virq, int nr_irqs);
-+					unsigned int virq,
-+					unsigned int nr_irqs);
- extern void irq_domain_free_irqs_top(struct irq_domain *domain,
--				     int virq, int nr_irqs);
-+				     unsigned int virq, unsigned int nr_irqs);
- 
- static inline int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
--				int irq_base, unsigned int nr_irqs, void *arg)
-+			unsigned int irq_base, unsigned int nr_irqs, void *arg)
- {
- 	if (domain->parent && domain->parent->ops->alloc)
- 		return domain->parent->ops->alloc(domain->parent, irq_base,
-@@ -284,7 +285,7 @@ static inline int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
- }
- 
- static inline void irq_domain_free_irqs_parent(struct irq_domain *domain,
--					int irq_base, unsigned int nr_irqs)
-+				unsigned int irq_base, unsigned int nr_irqs)
- {
- 	if (domain->parent && domain->parent->ops->free)
- 		domain->parent->ops->free(domain->parent, irq_base, nr_irqs);
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index 8b0eddee0b21..705fb573e509 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -899,8 +899,8 @@ void irq_domain_reset_irq_data(struct irq_data *irq_data)
- 	irq_data->chip_data = NULL;
- }
- 
--void irq_domain_free_irqs_common(struct irq_domain *domain, int virq,
--				 int nr_irqs)
-+void irq_domain_free_irqs_common(struct irq_domain *domain, unsigned int virq,
-+				 unsigned int nr_irqs)
- {
- 	int i;
- 	struct irq_data *irq_data;
-@@ -913,8 +913,8 @@ void irq_domain_free_irqs_common(struct irq_domain *domain, int virq,
- 	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
- }
- 
--void irq_domain_free_irqs_top(struct irq_domain *domain, int virq,
--			      int nr_irqs)
-+void irq_domain_free_irqs_top(struct irq_domain *domain, unsigned int virq,
-+			      unsigned int nr_irqs)
- {
- 	int i;
- 
--- 
-1.7.10.4
-
+Q0MnaW5nIENhc2V5LCB3aG8gd291bGQgYmUgYWJsZSB0byBhbnN3ZXIgdGhpcyBtdWNoIGJldHRl
+ciB0aGFuIG1lLg0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEJqb3Ju
+IEhlbGdhYXMgW21haWx0bzpiaGVsZ2Fhc0Bnb29nbGUuY29tXQ0KPiBTZW50OiBNb25kYXksIE5v
+dmVtYmVyIDE3LCAyMDE0IDM6MzIgUE0NCj4gVG86IFZlbmthdCBEdXZ2dXJ1DQo+IENjOiBsaW51
+eC1wY2lAdmdlci5rZXJuZWwub3JnOyBBbmlzaCBCaGF0dDsgSGFyaXByYXNhZCBTDQo+IFN1Ympl
+Y3Q6IFJlOiBbUEFUQ0ggdjFdIHBjaTogTGltaXQgVlBEIGxlbmd0aCBvZiBFbXVsZXggYWRhcHRl
+cnMgdG8gdGhlDQo+IGFjdHVhbCBsZW5ndGggc3VwcG9ydGVkLg0KPiANCj4gWytjYyBBbmlzaCwg
+SGFyaXByYXNhZCAoY3hnYjQgbWFpbnRhaW5lcnMvY29udHJpYnV0b3JzKV0NCj4gDQo+IEFuaXNo
+LCBIYXJpcHJhc2FkLCBoZXJlJ3MgdGhlIHByb2JsZW06DQo+IA0KPiAgIC0gcGNpX3JlYWRfdnBk
+KCkgY3VycmVudGx5IHRyaWVzIHRvIHJlYWQgYXMgbXVjaCBkYXRhIGFzIHRoZSBjYWxsZXIgYXNr
+cyBmb3INCj4gKHVwIHRvIHRoZSAzMksgbGltaXQgaW1wb3NlZCBieSB0aGUgUENJX1ZQRF9QQ0ky
+Ml9TSVpFIGluDQo+IHBjaV92cGRfcGNpMjJfaW5pdCgpKSAuICBJdCBkb2VzIG5vdCBsb29rIGF0
+IHRoZSBkYXRhLCBzbyBpdCBkb2Vzbid0IHN0b3AgaWYgaXQgc2Vlcw0KPiBhbiBFbmQgVGFnLg0K
+PiANCj4gICAtIFNvbWUgZGV2aWNlcyBoYXZlIGJ1Z2d5IGZpcm13YXJlIHRoYXQgY2FuJ3QgaGFu
+ZGxlIDMySyB3b3J0aCBvZiBWUEQNCj4gcmVhZHMuICBCdXQgdGhlaXIgVlBEIGRhdGEgaXMgaW4g
+dGhlIGZvcm1hdCBsYWlkIG91dCBieSB0aGUgc3BlYyAoUENJIHIzLjAsIHNlYw0KPiBJLjEpLCBh
+bmQgaXQgZG9lcyBoYXZlIGFuIEVuZCBUYWcuDQo+IA0KPiBUaGUgcHJvcG9zYWwgaXMgdG8gbWFr
+ZSBwY2lfcmVhZF92cGQoKSBpbnRlcnByZXQgdGhlIGRhdGEgaW50byB0YWdnZWQgaXRlbXMNCj4g
+KG9ubHkgd2hlbiBpdCBzdGFydHMgcmVhZGluZyBhdCBvZmZzZXQgMCksIGFuZCBtYWtlIGl0IHN0
+b3AgaWYgaXQgZW5jb3VudGVycyBhbg0KPiBFbmQgVGFnLg0KPiANCj4gT24gTW9uLCBOb3YgMTcs
+IDIwMTQgYXQgODoxMiBBTSwgVmVua2F0IER1dnZ1cnUNCj4gPFZlbmthdEt1bWFyLkR1dnZ1cnVA
+ZW11bGV4LmNvbT4gd3JvdGU6DQo+ID4gU29ycnkgZm9yIGEgZGVsYXllZCByZXNwb25zZS4NCj4g
+Pg0KPiA+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+PiBGcm9tOiBCam9ybiBIZWxn
+YWFzIFttYWlsdG86YmhlbGdhYXNAZ29vZ2xlLmNvbV0NCj4gPj4gU2VudDogVHVlc2RheSwgTm92
+ZW1iZXIgMDQsIDIwMTQgMTE6MDUgUE0NCj4gPj4gVG86IFZlbmthdCBEdXZ2dXJ1DQo+ID4+IENj
+OiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnDQo+ID4+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjFd
+IHBjaTogTGltaXQgVlBEIGxlbmd0aCBvZiBFbXVsZXggYWRhcHRlcnMgdG8NCj4gPj4gdGhlIGFj
+dHVhbCBsZW5ndGggc3VwcG9ydGVkLg0KPiA+Pg0KPiA+PiA+IEluIHRoaXMgY2FzZSB3aGVuIHRo
+ZSBob3N0IHJlYWRzIDMyayBzcGFjZSwgdGhlIGFkYXB0ZXIgZ2V0cyBhcm91bmQNCj4gPj4gPiA4
+Sw0KPiA+PiBpbnRlcnJ1cHRzIGFuZCBzb21ldGltZXMgZ2V0cyBvdmVyd2hlbG1lZCB3aXRoIHRo
+ZSBpbnRlcnJ1cHQgc3Rvcm0uDQo+ID4+IFRoaXMgY291bGQgY2F1c2UgdGhlIGFkYXB0ZXIgdG8g
+c3RvcCBmdW5jdGlvbmluZyBwcm9wZXJseS4NCj4gPj4gPiBMaW1pdGluZyB0aGUgVlBEIHJlYWQg
+dG8gMUsgY2F1c2VzIG9ubHkgMjU2IGludGVycnVwdHMgKG9uIHRoZQ0KPiA+PiA+IGFkYXB0ZXIp
+IGFuZA0KPiA+PiB0aGUgcHJvYmxlbSBuZXZlciBzZWVtcyB0byBvY2N1ci4NCj4gPj4gPiBUaGlz
+IGhhcyBiZWVuIHRoZSBtYWluIG1vdGl2YXRpb24gYmVoaW5kIG15IHBhdGNoLg0KPiA+PiA+IEkg
+ZG8gYWdyZWUgdGhhdCB0aGUgdGltZW91dCBjb3VsZCBzdGlsbCBvY2N1ciBldmVuIHdoZW4gcmVh
+ZGluZyB0aGUNCj4gPj4gPiAxSw0KPiA+PiBpbXBsZW1lbnRlZCBzcGFjZSwgYnV0IEkgZmVlbCBp
+dCdzIGhpZ2hseSBpbXByb2JhYmxlLg0KPiA+Pg0KPiA+PiBPSy4gIEkgd291bGQgZ3Vlc3MgdGhh
+dCBzb21ldGhpbmcgbGlrZQ0KPiA+Pg0KPiA+PiAgIHdoaWxlIC9iaW4vdHJ1ZTsgZG8NCj4gPj4g
+ICAgIGNhdCAvc3lzL2RldmljZXMvcGNpMDAwMDowMC8wMDAwOjAwOjAwLjAvdnBkDQo+ID4+ICAg
+ZG9uZQ0KPiA+Pg0KPiA+PiBjb3VsZCBzdGlsbCBvdmVyd2hlbG0gdGhlIGFkYXB0ZXIsIGV2ZW4g
+d2l0aCB0aGUgMUsgbGltaXQgaW4gcGxhY2UuDQo+ID4gQ29ycmVjdC4NCj4gPg0KPiA+Pg0KPiA+
+PiA+IEFzIGFuIGFsdGVybmF0aXZlIHNvbHV0aW9uLCB3b3VsZCB5b3UgYmUgb3BlbiB0byBhIGZp
+eCBpbiBQQ0kgLWNvcmUNCj4gPj4gPiB0byBzdG9wDQo+ID4+IHJlYWRpbmcgYWZ0ZXIgdGhlIEVu
+ZC10YWcgaXMgZGV0ZWN0ZWQ/ICAoVGhpcyBsb2dpYyBpcyB1c2VkIGJ5DQo+ID4+IHBjaS11dGls
+aXR5IChscy0NCj4gPj4gdnBkLmMpIHdoaWxlIHJlYWRpbmcgVlBEIGRhdGEuKQ0KPiA+PiA+IEkg
+bm93IGZlZWwgdGhhdCB0aGlzIGlzIHRoZSAqcmlnaHQqIHNvbHV0aW9uIHRoYW4gbXkgcGNpLXF1
+aXJrcyBwYXRjaC4NCj4gPj4NCj4gPj4gVGhhdCdzIGEgcG9zc2liaWxpdHksIGFuZCBpZiB3ZSB3
+ZXJlIGltcGxlbWVudGluZyBWUEQgc3VwcG9ydCBmcm9tDQo+ID4+IHNjcmF0Y2gsIEknZCBwcm9i
+YWJseSBkbyBpdCB0aGF0IHdheS4NCj4gPj4NCj4gPj4gTXkgb25seSBjb25jZXJuIHdpdGggY2hh
+bmdpbmcgbm93IGlzIHRoYXQgaXQgY291bGQgYnJlYWsgZXhpc3RpbmcNCj4gPj4gdXNlcnMgZm9y
+IGRldmljZXMgd2hlcmUgdGhlIFZQRCBjb250ZW50IGRvZXNuJ3QgaGF2ZSB0aGUgc3RydWN0dXJl
+DQo+ID4+IHNwZWNpZmllZCBieSB0aGUgc3BlYy4gIFRoZXJlIGFyZW4ndCAqdG9vKiBtYW55IHVz
+ZXJzIG9mDQo+ID4+IHBjaV9yZWFkX3ZwZCgpIGluIHRoZSB0cmVlLCBzbyBpdCBtaWdodCBiZSBm
+ZWFzaWJsZSB0byBqdXN0IGFzayB0aGUNCj4gPj4gYm54MngsIHRnMywgY3hnYjQsIHNreTIsIGFu
+ZCBlZnggZm9sa3Mgd2hldGhlciB0aGV5IHRoaW5rIGl0J3Mgc2FmZS4NCj4gPj4NCj4gPj4gSSB0
+b29rIGEgcXVpY2sgbG9vayBhdCB0aG9zZSBkcml2ZXJzLCBhbmQgaXQgYWN0dWFsbHkgbG9va3Mg
+bGlrZSBtb3N0DQo+ID4+IG9mIHRoZW0gbG9vayBmb3IgdGhlIHRhZyBzdHJ1Y3R1cmUsIGUuZy4s
+IGJ5IHVzaW5nIHBjaV92cGRfZmluZF90YWcoKQ0KPiA+PiBvciBkb2luZyBzb21ldGhpbmcgc2lt
+aWxhci4gIFNvIG1heWJlIGl0IGFjdHVhbGx5IHdvdWxkIGJlIHNhZmUgdG8gZG8NCj4gPj4gdGhp
+cy4gIE1heWJlIHlvdSBjb3VsZCBoYXZlIGEgbW9yZSB0aG9yb3VnaCBsb29rIGF0IHRoZW0gYW5k
+IHNlZSBpZg0KPiA+PiB5b3UgYWdyZWU/DQo+ID4gSWYgdGhlIGRldmljZXMgZG9lc24ndCBmb2xs
+b3cgdGhlIHNwZWMgZm9yIHRoZSBWUEQgY29udGVudHMsIHBjaS1jb3JlIG1heQ0KPiBlbmR1cCBy
+ZXF1ZXN0aW5nIDMyayBkYXRhIHdoaWNoIHByb2JhYmx5IHdpbGwgbm90IGJyZWFrIGV4aXN0aW5n
+IHVzZXJzLg0KPiANCj4gVGhlIGNhc2UgSSdtIHdvcnJpZWQgYWJvdXQgaXMgYSBkZXZpY2UgdGhh
+dCBkb2Vzbid0IGZvbGxvdyB0aGUgVlBEIGZvcm1hdA0KPiBzcGVjLCBidXQgaXRzIFZQRCBjb250
+ZW50cyBpbmNsdWRlIGRhdGEgdGhhdCBtYXRjaGVzIGFuIEVuZCBUYWcuICBJZiB3ZSBtYWtlDQo+
+IHBjaV9yZWFkX3ZwZCgpIHN0b3Agd2hlbiBpdCBzZWVzIGFuIEVuZCBUYWcsIHdlIG1heSBzdG9w
+IHJlYWRpbmcgZGF0YQ0KPiBwcmVtYXR1cmVseS4NCj4gDQo+ID4gSSBsb29rZWQgaW50byBhbGwg
+dGhlIHBjaV9yZWFkX3ZwZCB1c2VycyAoZHJpdmVycykgYW5kIHRoZXkgc2VlbSB0byBiZQ0KPiBk
+b2luZyBwY2lfZmluZF92cGRfdGFnIG9yIHBjaV92cGRfZmluZF9pbmZvX2tleXdvcmQgdG8gZmlu
+ZCBhIHNwZWNpZmljDQo+IHRhZy9rZXl3b3JkIGFuZCBub3QgYWxsIHRoZSB0YWdzL2tleXdvcmRz
+Lg0KPiANCj4gSSBhZ3JlZSwgd2l0aCBvbmUgZXhjZXB0aW9uOiAgSSBhbSBjb25jZXJuZWQgYWJv
+dXQgZWVwcm9tX3JkX3BoeXMoKSBpbg0KPiBjeGdiNC4gIEluIHRoYXQgY2FzZSwgd2UgdXNlIHRo
+ZSBWUEQgZGF0YSB0byBpbXBsZW1lbnQgdGhlDQo+IGV0aHRvb2xfb3BzLmdldF9lZXByb20oKSBt
+ZXRob2QsIGFuZCB0aGF0IHBhdGggZG9lc24ndCBsb29rIGF0IHRoZSBhY3R1YWwNCj4gZGF0YSBh
+dCBhbGwsIHNvIEkgaGF2ZSBubyBpZGVhIHdoYXQgdGhlIGZvcm1hdCBtaWdodCBiZS4NCj4gDQo+
+IE1heWJlIEhhcmlwcmFzYWQgb3IgQW5pc2ggY2FuIGNvbW1lbnQgb24gdGhpcz8NCj4gDQo+ID4g
+QSBzYWZlciBhcHByb2FjaCBwcm9iYWJseSBpcyB0byBsb29rIGZvciB0aGUgZW5kIHRhZyBpbiBw
+Y2lfcmVhZF92cGQsIGlmDQo+IG9mZnNldCBpcyAiemVybyIgYmVjYXVzZSBzb21lIGRyaXZlcnMg
+YXJlIGRvaW5nICJwY2lfcmVhZF92cGQiIHdpdGggYSBub24tDQo+IHplcm8gb2Zmc2V0Lg0KPiAN
+Cj4gWWVzLCBJIHRoaW5rIHlvdSBjYW4gb25seSBsb29rIGZvciB0aGUgRW5kIFRhZyBpZiB5b3Ug
+c3RhcnQgcmVhZGluZyBhdCBvZmZzZXQNCj4gemVyby4gIElmIHdlIHN0YXJ0IHJlYWRpbmcgc29t
+ZXdoZXJlIGluIHRoZSBtaWRkbGUsIHdlJ2xsIGJlIG91dCBvZiBzeW5jIGFuZA0KPiBtYXkgaW50
+ZXJwcmV0IGRhdGEgYXMgYW4gRW5kIFRhZy4NCj4gDQo+IEJqb3JuDQoNCg==
