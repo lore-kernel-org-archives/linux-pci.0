@@ -1,102 +1,68 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <545AF986.1040903@linux.intel.com>
-Date: Thu, 06 Nov 2014 12:31:02 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:44695 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753903AbaKRRhr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 12:37:47 -0500
+Received: by mail-pd0-f176.google.com with SMTP id y10so4437546pdj.21
+        for <linux-pci@vger.kernel.org>; Tue, 18 Nov 2014 09:37:46 -0800 (PST)
+From: Kevin Hilman <khilman@linaro.org>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [PATCH] PCI: fixup __pci_read_base() after refactoring
+References: <20141118105542.457d7863@free-electrons.com>
+	<1416310271-4423-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Date: Tue, 18 Nov 2014 09:37:44 -0800
+In-Reply-To: <1416310271-4423-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	(Thomas Petazzoni's message of "Tue, 18 Nov 2014 12:31:11 +0100")
+Message-ID: <7hwq6sxvdj.fsf@linaro.org>
 MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [Patch Part2 v4 20/31] PCI/MSI: Kill redundant calling for irq_set_msi_desc()
- for MSIx interrupts
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com> <1415102525-9898-21-git-send-email-jiang.liu@linux.intel.com> <20141105224504.GG6168@google.com> <545ACFC7.9090204@huawei.com>
-In-Reply-To: <545ACFC7.9090204@huawei.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/11/6 9:32, Yijing Wang wrote:
-> On 2014/11/6 6:45, Bjorn Helgaas wrote:
->> On Tue, Nov 04, 2014 at 08:01:54PM +0800, Jiang Liu wrote:
->>> It's arch_setup_msi_irq()/arch_setup_msi_irqs()'s responsibility to call
->>> irq_set_msi_desc() to associate IRQ descriptors and MSI descriptors,
->>> so kill the redundant call of irq_set_msi_desc() for MSIx interrupts
->>> in PCI MSI core.
->>
->> "MSI-X" in English text, "msix" in code.
->>
->> The default arch_setup_msi_irq() in drivers/pci/msi.c doesn't call
->> irq_set_msi_desc().  Does it happen somewhere inside chip->setup_irq()?
-> 
-> Yes.
-> 
-> I also found this.
-> http://www.spinics.net/lists/linux-pci/msg34256.html
-> 
->>
->> I don't know how to verify that there are calls in all the places needed.
->> That makes me wonder if the factoring is wrong -- maybe irq_set_msi_desc()
->> could be done in some common place.
-> 
-> In my idea, place the irq_set_msi_desc() in common MSI core is ok, but currently almost
-> all MSI arch code call irq_set_msi_desc() in arch code. So a lot of code need to change.
-> And arch code setup MSI and MSI-X in the same way, so if MSI work happy without irq_set_msi_desc(entry->irq, entry)
-> in common MSI code, MSI-X should be the same.
-Hi Bjorn and Yijing,
-	I originally plan was to move irq_set_msi_desc() into common
-PCI MSI code. But when implementing this, I found every
-arch_setup_msi_irq()/arch_setup_msi_irqs() needs to set msidesc->irq,
-thus need to lock the irq descriptor. So I realized we should
-rely on arch_setup_msi_irq() to call irq_set_msi_desc():)
-Regards!
-Gerry
+Thomas Petazzoni <thomas.petazzoni@free-electrons.com> writes:
 
-> 
->>
->>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->>> ---
->>>  drivers/pci/msi.c |    1 -
->>>  1 file changed, 1 deletion(-)
->>>
->>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->>> index afe974600c7d..da181c59394b 100644
->>> --- a/drivers/pci/msi.c
->>> +++ b/drivers/pci/msi.c
->>> @@ -685,7 +685,6 @@ static void msix_program_entries(struct pci_dev *dev,
->>>  						PCI_MSIX_ENTRY_VECTOR_CTRL;
->>>  
->>>  		entries[i].vector = entry->irq;
->>> -		irq_set_msi_desc(entry->irq, entry);
->>>  		entry->masked = readl(entry->mask_base + offset);
->>>  		msix_mask_irq(entry, 1);
->>>  		i++;
->>> -- 
->>> 1.7.10.4
->>>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->> .
->>
-> 
-> 
+> In commit 7ea945f0bb49 ("PCI: Shrink decoding-disabled window while
+> sizing BARs"), Myron Stowe refactored the code of __pci_read_base() in
+> order to reduce the amount of time spent with decoding disabled.
+>
+> However, contrary to what was said in the commit log, the commit does
+> introduce some functional change: the pci_size() function that used to
+> be called *before* the BAR size check is done is now called *after*
+> the BAR size check is done.
+>
+> This causes some failures on certain platforms (namely ARM Marvell EBU
+> platforms, equipped for example with a PCIe SATA card, or a PCIe USB3
+> XHCI controller):
+>
+> pci 0000:03:00.0: reg 0x10: can't handle BAR larger than 4GB (size 0xfffffffffff00000)
+>
+> This problem didn't exist before this commit, due to pci_size() being
+> called before doing the PCI BAR size check. Therefore, this commit
+> fixes the problem by restoring the initial order of the operation, by
+> calling pci_size() before doing the PCI BAR size check.
+>
+
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> Fixes: 7ea945f0bb49 ("PCI: Shrink decoding-disabled window while sizing BARs")
+
+I also boot tested this on armada-370-mirabox (multi_v7_defconfig and
+mvebu_v7_defconfig) where I originally noticed the problem, and it's
+booting fine again.
+
+Tested-by: Kevin Hilman <khilman@linaro.org>
+
+and, you forgot something:  ;)
+
+Reported-by: Kevin Hilman <khilman@linaro.org>
+
+Kevin
