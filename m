@@ -1,60 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:59278 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754203AbaKORKt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 15 Nov 2014 12:10:49 -0500
-From: "Allan, Bruce W" <bruce.w.allan@intel.com>
-To: Alex Williamson <alex.williamson@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Subject: RE: DMA_ALIAS_DEVFN issue
-Date: Sat, 15 Nov 2014 17:10:47 +0000
-Message-ID: <804857E1F29AAC47BF68C404FC60A1846586CE16@ORSMSX105.amr.corp.intel.com>
-References: <CAErSpo7m9xMy9buOmF==8H_VSkBBqPZD1_OCPYjEz_1Q1n4y0Q@mail.gmail.com>
- <1416064996.27937.177.camel@ul30vt.home>
-In-Reply-To: <1416064996.27937.177.camel@ul30vt.home>
-Content-Type: text/plain; charset="utf-8"
+Received: from down.free-electrons.com ([37.187.137.238]:33741 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932175AbaKRVAE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 16:00:04 -0500
+Date: Tue, 18 Nov 2014 22:00:00 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Kevin Hilman <khilman@kernel.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory =?UTF-8?B?Q2zDqW1lbnQ=?=
+	<gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+Subject: Re: Regression caused by "PCI: Shrink decoding-disabled window
+ while sizing BARs"
+Message-ID: <20141118220000.3ab0d2d9@free-electrons.com>
+In-Reply-To: <CAE9FiQX0JO40EE=D88EYGwm2uRjnrX5+McTuofW6QLbS5nLMSw@mail.gmail.com>
+References: <20141118105542.457d7863@free-electrons.com>
+	<20141118105843.3c1651d5@free-electrons.com>
+	<20141118123402.7318ec94@free-electrons.com>
+	<CAErSpo4k57tdqbEYYcqEiviwoR0LCMUszECumpeL6w80xDeVfg@mail.gmail.com>
+	<CAE9FiQX0JO40EE=D88EYGwm2uRjnrX5+McTuofW6QLbS5nLMSw@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBBbGV4IFdpbGxpYW1zb24gW21h
-aWx0bzphbGV4LndpbGxpYW1zb25AcmVkaGF0LmNvbV0NCj4gU2VudDogU2F0dXJkYXksIE5vdmVt
-YmVyIDE1LCAyMDE0IDc6MjMgQU0NCj4gVG86IEJqb3JuIEhlbGdhYXMNCj4gQ2M6IEFsbGFuLCBC
-cnVjZSBXOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBpb21tdUBsaXN0cy5saW51eC0NCj4g
-Zm91bmRhdGlvbi5vcmcNCj4gU3ViamVjdDogUmU6IERNQV9BTElBU19ERVZGTiBpc3N1ZQ0KPiAN
-Cj4gT24gRnJpLCAyMDE0LTExLTE0IGF0IDIxOjI1IC0wNzAwLCBCam9ybiBIZWxnYWFzIHdyb3Rl
-Og0KPiA+IFsrY2MgQWxleCwgYWRkIGEgc3ViamVjdF0NCj4gPg0KPiA+IE9uIEZyaSwgTm92IDE0
-LCAyMDE0IGF0IDY6NDkgUE0sIEFsbGFuLCBCcnVjZSBXIDxicnVjZS53LmFsbGFuQGludGVsLmNv
-bT4NCj4gd3JvdGU6DQo+ID4gPiBMZXQncyB0cnkgdGhpcyBhZ2FpbiBhcyBwbGFpbiB0ZXh0Li4u
-DQo+ID4gPg0KPiA+ID4gRm9yIGEgUENJZSBkZXZpY2Ugd2l0aCBTUi1JT1Ygc3VwcG9ydCBlbmFi
-bGVkIChlLmcuIHRoZSBQRiBkZXZpY2UgSUQNCj4gPiBpcyAweGYwMDEgYXQgMDAwMDowNzowMC4w
-IGFuZCB0aGUgMTYgVkZzIGhhdmUgZGV2aWNlIElEIDB4ZjAwMiBhdA0KPiA+IDAwMDA6MDc6MDEu
-MCB0aHJvdWdoIDAwMDA6MDc6MDIuNyksIGlmIHRoZSBoYXJkd2FyZSBhdHRlbXB0cyBhIERNQQ0K
-PiA+IHJlYWQvd3JpdGUgb2YgbWVtb3J5IHRoYXQgd2FzIG1hcHBlZCBieSB0aGUgUEYgZGV2Zm4g
-YnV0IGluc3RlYWQgdXNlcw0KPiA+IGEgcmVxdWVzdGVyIGlkIG9mIG9uZSBvZiB0aGUgVkYgZGV2
-Zm5zIChlbmFibGVkIGJ1dCBub3QgeWV0IGFzc2lnbmVkDQo+ID4gdG8gYSBWTSkgaXQgZmFpbHMg
-YW5kIGdlbmVyYXRlcyBsb2cgbWVzc2FnZXMgc2ltaWxhciB0bzoNCj4gPiA+DQo+ID4gPiBbICA0
-MTYuODAwODgxXSBkbWFyOiBEUkhEOiBoYW5kbGluZyBmYXVsdCBzdGF0dXMgcmVnIDINCj4gPiA+
-IFsgIDQxNi44MDA4ODddIGRtYXI6IERNQVI6W0RNQSBSZWFkXSBSZXF1ZXN0IGRldmljZSBbMDc6
-MDIuMl0gZmF1bHQNCj4gYWRkciBmZmZmMDAwMA0KPiA+ID4gRE1BUjpbZmF1bHQgcmVhc29uIDAy
-XSBQcmVzZW50IGJpdCBpbiBjb250ZXh0IGVudHJ5IGlzIGNsZWFyDQo+IA0KPiBUaGlzIGlzIGV4
-YWN0bHkgd2hhdCBJT01NVSBpc29sYXRpb24gaXMgbWVhbnQgdG8gZG8uICBBIGJ1ZmZlciBtYXBw
-ZWQNCj4gZm9yIG9uZSBkZXZpY2Ugc2hvdWxkIG5vdCBiZSBhY2Nlc3NpYmxlIGZyb20gYW5vdGhl
-ciBkZXZpY2UuICBJdCByZWFsbHkNCj4gZG9lc24ndCBtYXR0ZXIgaWYgdGhlIGRldmljZXMgYXJl
-IHJlbGF0ZWQgYXMgVkYvUEYsIFZGL1ZGLCBvciBQRi9QRi4NCj4gDQo+ID4gPiBTaG91bGRuJ3Qg
-YSBETUEgYWxpYXMgcXVpcmsgdGhhdCBzZXRzIHRoZQ0KPiA+IFBDSV9ERVZfRkxBR1NfRE1BX0FM
-SUFTX0RFVkZOIGZsYWcgYW5kIGRtYV9hbGlhc19kZXZmbiB0byB0aGUgUEYNCj4gZGV2Zm4NCj4g
-PiBmb3IgYWxsIFZGIGRldmZucyB3b3JrLWFyb3VuZCB0aGlzIGlzc3VlLCBvciBhbSBJIG1pc3Vu
-ZGVyc3RhbmRpbmcNCj4gPiB3aGF0IGEgRE1BIGFsaWFzIHF1aXJrIGlzIHN1cHBvc2VkIHRvIGRv
-PyAgSWYgYSBETUEgYWxpYXMgcXVpcmsgY2Fubm90DQo+ID4gcmVzb2x2ZSB0aGlzLCB3aGF0IGlz
-IHRoZSBtb3N0IGFwcHJvcHJpYXRlIHdheSB0byBoYW5kbGUgdGhpcz8NCj4gDQo+IFRoZSBidWZm
-ZXIgbmVlZHMgdG8gYmUgbWFwcGVkIGZvciBlYWNoIFZGLiAgSWYgZm9yIHNvbWUgcmVhc29uIHRo
-ZSBWRg0KPiBuZWVkcyBpbXBsaWNpdCBhY2Nlc3MgdG8gYSBQRiBtYXBwZWQgYnVmZmVyIHRoZW4g
-dGhpcyBkZXZpY2VzIGlzDQo+IGNvbXBsZXRlbHkgYnJva2VuIGZyb20gYW4gaXNvbGF0aW9uIHBl
-cnNwZWN0aXZlIGFuZCB1c2luZyBETUEgYWxpYXNlcyB0bw0KPiBmaXggaXQgbWVhbnMgdGhhdCBp
-bmRpdmlkdWFsIFZGcyB3aWxsIG5ldmVyIGJlIGFzc2lnbmFibGUgdG8gZ3Vlc3RzLg0KPiBUaGFu
-a3MsDQo+IA0KPiBBbGV4DQoNCkhtbSwgdGhhdC4uLmlzIHVuZm9ydHVuYXRlLiAgVGhhbmtzIEFs
-ZXggZm9yIHRoZSBjbGFyaWZpY2F0aW9uLCBhbmQgdGhhbmtzIEJqb3JuIGZvcg0KYWRkaW5nIEFs
-ZXggYW5kIGEgcHJvcGVyIHN1YmplY3QgdG8gdGhlIHRocmVhZC4NCg0KQnJ1Y2UuDQoNCg==
+Dear Yinghai Lu,
+
+On Tue, 18 Nov 2014 10:18:35 -0800, Yinghai Lu wrote:
+> On Tue, Nov 18, 2014 at 6:27 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > [+cc Yinghai]
+> >
+> > Yes, that change (3a02517d5e2a ("PCI: Support 64-bit bridge windows if
+> > we have 64-bit dma_addr_t")) is in my for-linus branch because it
+> > fixes a regression and I intend to merge it for v3.18 (after we figure
+> > out these issues, of course).
+> >
+> > I saw this warning yesterday, but haven't heard from Yinghai yet.
+> 
+> Will send updated version with u64 cast.
+
+Is a u64 cast really the appropriate solution here? Have you seen my
+proposed fix "[PATCH] PCI: fix probe.c warning
+on !CONFIG_ARCH_DMA_ADDR_T_64BIT platforms" ?
+
+Best regards,
+
+Thomas
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
