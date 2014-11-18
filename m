@@ -1,58 +1,79 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v6 14/27] x86, irq: Directly call native_compose_msi_msg() for DMAR IRQ
-Date: Tue, 25 Nov 2014 13:53:23 +0800
-Message-Id: <1416894816-23245-15-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:56732 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753843AbaKRKRd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 05:17:33 -0500
+Received: by mail-wg0-f51.google.com with SMTP id k14so7882049wgh.24
+        for <linux-pci@vger.kernel.org>; Tue, 18 Nov 2014 02:17:32 -0800 (PST)
+Message-ID: <546B1CA6.1030300@linaro.org>
+Date: Tue, 18 Nov 2014 11:17:10 +0100
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>, linaro-acpi@lists.linaro.org
+CC: linux-arm-kernel@lists.infradead.org, rjw@rjwysocki.net,
+	linux-pci@vger.kernel.org, catalin.marinas@arm.com, x86@kernel.org,
+	Liviu.Dudau@arm.com, linux-kernel@vger.kernel.org,
+	will.deacon@arm.com, linux-acpi@vger.kernel.org, mingo@redhat.com,
+	hpa@zytor.com, bhelgaas@google.com, tglx@linutronix.de
+Subject: Re: [Linaro-acpi] [RFC PATCH 4/4] arm64, acpi, pci: Provide arch-specific
+ calls for PCI host bridge dirver (PNP0A03).
+References: <1415366876-30811-1-git-send-email-tomasz.nowicki@linaro.org> <4474363.kMvYSLl2Ev@wuerfel> <54660D44.9020406@linaro.org> <2009440.GJsvyI3SUN@wuerfel>
+In-Reply-To: <2009440.GJsvyI3SUN@wuerfel>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DMAR interrupt won't be remapped by interrupt remapping hardware,
-so directly call native_compose_msi_msg() for DMAR IRQ to compose MSI
-message data. This will help to simplify MSI code later.
+On 14.11.2014 15:53, Arnd Bergmann wrote:
+> On Friday 14 November 2014 15:10:12 Tomasz Nowicki wrote:
+>> On 07.11.2014 15:24, Arnd Bergmann wrote:
+>>> On Friday 07 November 2014 14:27:56 Tomasz Nowicki wrote:
+>>>>
+>>>>    #ifdef CONFIG_PCI
+>>>> +struct pci_controller {
+>>>> +	struct acpi_device *companion;
+>>>> +	int segment;
+>>>> +	int node;		/* nearest node with memory or NUMA_NO_NODE for global allocation */
+>>>> +};
+>>>> +
+>>>> +#define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
+>>>> +
+>>>
+>>> Don't use busdev->sysdata in architecture specific code, it belongs to the
+>>> host bridge driver with the new model. For ACPI you don't have a host bridge
+>>> driver, but it's better to keep these separate.
+>>>
+>>> The segment is always the same as the domain number, so just use that.
+>>> The node and companion members here can get added to struct pci_host_bridge.
+>>
+>> The reason why I put segment field to struct pci_controller is to
+>> initialize domain_nr of struct pci_bus being in pci_create_root_bus(),
+>> domain_nr can be used later on though. Correct me I am wrong.
+>>
+>> Honestly I do not see the way to create root bus without e.g.
+>> sysdata.segment here.
+>
+> See the patches that Liviu and Lorenzo have been posting recently. This
+> should be straightforward in 3.19.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/msi.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+Hi Arnd,
 
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index e82ab7973477..fa2dd6ebcaea 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -259,12 +259,10 @@ static struct irq_chip dmar_msi_type = {
- 
- int arch_setup_dmar_msi(unsigned int irq)
- {
--	int ret;
- 	struct msi_msg msg;
-+	struct irq_cfg *cfg = irq_cfg(irq);
- 
--	ret = msi_compose_msg(NULL, irq, &msg, -1);
--	if (ret < 0)
--		return ret;
-+	native_compose_msi_msg(NULL, irq, cfg->dest_apicid, &msg, -1);
- 	dmar_msi_write(irq, &msg);
- 	irq_set_chip_and_handler_name(irq, &dmar_msi_type, handle_edge_irq,
- 				      "edge");
--- 
-1.7.10.4
+I have been looking into patch (if that what you meant) :
+[RFC PATCH v2] drivers: pci: move PCI domain assignment to generic PCI code
+
+This is not enough for me since it gets domain number from its OF parent 
+or just uses sequential increased domain number. In my case, I do not 
+have parent so I need to get segment from ACPI node which is not 
+available there.
+
+On the other hand, patch set posted by Wang Yijing:
+[RFC PATCH 00/16] Refine PCI host bridge scan interfaces
+tends to solve that issue.
+
+What would be the best way for this patch, keep busdev->sysdata usage 
+and rebase once Wang Yijing patch set will be accepted?
+
+Regards,
+Tomasz
+
+
 
