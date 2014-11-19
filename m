@@ -1,91 +1,140 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch Part2 v4 09/31] x86, MSI: Use new irqdomain interfaces to allocate/free IRQ
-Date: Tue,  4 Nov 2014 20:01:43 +0800
-Message-Id: <1415102525-9898-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+To: catalin.marinas@arm.com, will.deacon@arm.com, bhelgaas@google.com,
+	lorenzo.pieralisi@arm.com, wangyijing@huawei.com, arnd@arndb.de,
+	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Subject: [PATCH 3/6] x86, acpi, pci: Move PCI config space accessors.
+Date: Wed, 19 Nov 2014 17:04:48 +0100
+Message-Id: <1416413091-13452-4-git-send-email-tomasz.nowicki@linaro.org>
+In-Reply-To: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org>
+References: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new irqdomain interfaces to allocate/free IRQ for MSI, so we could
-kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
+We are going to use mmio_config_{} name convention across all architectures.
+Currently it belongs to asm/pci_x86.h header which should be included
+only for x86 specific files. From now on, those accessors are in asm/pci.h
+header which can be included in non-architecture code much easier.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
 ---
- arch/x86/kernel/apic/msi.c |   14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
+ arch/x86/include/asm/pci.h     | 42 +++++++++++++++++++++++++++++++++++++++++
+ arch/x86/include/asm/pci_x86.h | 43 ------------------------------------------
+ 2 files changed, 42 insertions(+), 43 deletions(-)
 
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 6916246294eb..7e45991c0e79 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -14,6 +14,7 @@
- #include <linux/dmar.h>
- #include <linux/hpet.h>
- #include <linux/msi.h>
-+#include <linux/irqdomain.h>
- #include <asm/msidef.h>
- #include <asm/hpet.h>
- #include <asm/hw_irq.h>
-@@ -146,23 +147,20 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
- int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- {
- 	struct msi_desc *msidesc;
--	unsigned int irq;
--	int node, ret;
-+	int irq, ret;
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 0892ea0..5ba3720 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -71,6 +71,48 @@ void pcibios_set_master(struct pci_dev *dev);
+ struct irq_routing_table *pcibios_get_irq_routing_table(void);
+ int pcibios_set_irq_routing(struct pci_dev *dev, int pin, int irq);
  
- 	/* Multiple MSI vectors only supported with interrupt remapping */
- 	if (type == PCI_CAP_ID_MSI && nvec > 1)
- 		return 1;
++/*
++ * AMD Fam10h CPUs are buggy, and cannot access MMIO config space
++ * on their northbrige except through the * %eax register. As such, you MUST
++ * NOT use normal IOMEM accesses, you need to only use the magic mmio-config
++ * accessor functions.
++ * In fact just use pci_config_*, nothing else please.
++ */
++static inline unsigned char mmio_config_readb(void __iomem *pos)
++{
++	u8 val;
++	asm volatile("movb (%1),%%al" : "=a" (val) : "r" (pos));
++	return val;
++}
++
++static inline unsigned short mmio_config_readw(void __iomem *pos)
++{
++	u16 val;
++	asm volatile("movw (%1),%%ax" : "=a" (val) : "r" (pos));
++	return val;
++}
++
++static inline unsigned int mmio_config_readl(void __iomem *pos)
++{
++	u32 val;
++	asm volatile("movl (%1),%%eax" : "=a" (val) : "r" (pos));
++	return val;
++}
++
++static inline void mmio_config_writeb(void __iomem *pos, u8 val)
++{
++	asm volatile("movb %%al,(%1)" : : "a" (val), "r" (pos) : "memory");
++}
++
++static inline void mmio_config_writew(void __iomem *pos, u16 val)
++{
++	asm volatile("movw %%ax,(%1)" : : "a" (val), "r" (pos) : "memory");
++}
++
++static inline void mmio_config_writel(void __iomem *pos, u32 val)
++{
++	asm volatile("movl %%eax,(%1)" : : "a" (val), "r" (pos) : "memory");
++}
  
--	node = dev_to_node(&dev->dev);
+ #define HAVE_PCI_MMAP
+ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index caba141..42e7332 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -121,49 +121,6 @@ extern int __init pcibios_init(void);
+ extern int pci_legacy_init(void);
+ extern void pcibios_fixup_irqs(void);
+ 
+-/*
+- * AMD Fam10h CPUs are buggy, and cannot access MMIO config space
+- * on their northbrige except through the * %eax register. As such, you MUST
+- * NOT use normal IOMEM accesses, you need to only use the magic mmio-config
+- * accessor functions.
+- * In fact just use pci_config_*, nothing else please.
+- */
+-static inline unsigned char mmio_config_readb(void __iomem *pos)
+-{
+-	u8 val;
+-	asm volatile("movb (%1),%%al" : "=a" (val) : "r" (pos));
+-	return val;
+-}
 -
- 	list_for_each_entry(msidesc, &dev->msi_list, list) {
--		irq = irq_alloc_hwirq(node);
--		if (!irq)
-+		irq = irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
-+		if (irq <= 0)
- 			return -ENOSPC;
- 
- 		ret = setup_msi_irq(dev, msidesc, irq, 0);
- 		if (ret < 0) {
--			irq_free_hwirq(irq);
-+			irq_domain_free_irqs(irq, 1);
- 			return ret;
- 		}
- 
-@@ -172,7 +170,7 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 
- void native_teardown_msi_irq(unsigned int irq)
- {
--	irq_free_hwirq(irq);
-+	irq_domain_free_irqs(irq, 1);
- }
- 
- #ifdef CONFIG_DMAR_TABLE
+-static inline unsigned short mmio_config_readw(void __iomem *pos)
+-{
+-	u16 val;
+-	asm volatile("movw (%1),%%ax" : "=a" (val) : "r" (pos));
+-	return val;
+-}
+-
+-static inline unsigned int mmio_config_readl(void __iomem *pos)
+-{
+-	u32 val;
+-	asm volatile("movl (%1),%%eax" : "=a" (val) : "r" (pos));
+-	return val;
+-}
+-
+-static inline void mmio_config_writeb(void __iomem *pos, u8 val)
+-{
+-	asm volatile("movb %%al,(%1)" : : "a" (val), "r" (pos) : "memory");
+-}
+-
+-static inline void mmio_config_writew(void __iomem *pos, u16 val)
+-{
+-	asm volatile("movw %%ax,(%1)" : : "a" (val), "r" (pos) : "memory");
+-}
+-
+-static inline void mmio_config_writel(void __iomem *pos, u32 val)
+-{
+-	asm volatile("movl %%eax,(%1)" : : "a" (val), "r" (pos) : "memory");
+-}
+-
+ #ifdef CONFIG_PCI
+ # ifdef CONFIG_ACPI
+ #  define x86_default_pci_init		pci_acpi_init
 -- 
-1.7.10.4
+1.9.1
 
