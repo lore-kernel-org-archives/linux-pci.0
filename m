@@ -1,222 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0143.outbound.protection.outlook.com ([157.56.110.143]:24735
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751221AbaKKBsG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 10 Nov 2014 20:48:06 -0500
-Message-ID: <54616AFD.3050404@freescale.com>
-Date: Tue, 11 Nov 2014 09:48:45 +0800
-From: Lian Minghuan-B31939 <B31939@freescale.com>
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:34899 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756970AbaKSVWc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 16:22:32 -0500
+Received: by mail-ig0-f180.google.com with SMTP id h15so1703498igd.13
+        for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2014 13:22:32 -0800 (PST)
+Date: Wed, 19 Nov 2014 14:22:29 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Kevin Hilman <khilman@kernel.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory =?iso-8859-1?Q?Cl=E9ment?=
+	<gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+Subject: Re: Regression caused by "PCI: Shrink decoding-disabled window while
+ sizing BARs"
+Message-ID: <20141119212229.GD23467@google.com>
+References: <20141118105542.457d7863@free-electrons.com>
+ <20141118105843.3c1651d5@free-electrons.com>
+ <20141118123402.7318ec94@free-electrons.com>
+ <CAErSpo4k57tdqbEYYcqEiviwoR0LCMUszECumpeL6w80xDeVfg@mail.gmail.com>
+ <CAE9FiQX0JO40EE=D88EYGwm2uRjnrX5+McTuofW6QLbS5nLMSw@mail.gmail.com>
+ <20141118220000.3ab0d2d9@free-electrons.com>
+ <CAE9FiQXo3ctdFk2Z+duaq1wxSAVCA0tG5_f85-UaLk8+Dafhvg@mail.gmail.com>
 MIME-Version: 1.0
-To: Lucas Stach <l.stach@pengutronix.de>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"Zang Roy-R61911" <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: designware: Add support 4 ATUs assignment
-References: <1415616205-21255-1-git-send-email-Minghuan.Lian@freescale.com>
- <1415620820.20340.1.camel@pengutronix.de>
-In-Reply-To: <1415620820.20340.1.camel@pengutronix.de>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQXo3ctdFk2Z+duaq1wxSAVCA0tG5_f85-UaLk8+Dafhvg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lucas,
+On Tue, Nov 18, 2014 at 02:36:17PM -0800, Yinghai Lu wrote:
+> On Tue, Nov 18, 2014 at 1:00 PM, Thomas Petazzoni
+> <thomas.petazzoni@free-electrons.com> wrote:
+> > Is a u64 cast really the appropriate solution here? Have you seen my
+> > proposed fix "[PATCH] PCI: fix probe.c warning
+> > on !CONFIG_ARCH_DMA_ADDR_T_64BIT platforms" ?
+> 
+> Yes, that I saw your patch.
+> 
+> We want to make that to be consistent with __pci_read_bases()
+> and avoid MACRO.
+> 
+> I think the warning is wrong. aka compile should omit out that branch.
+> as sizeof(dma_addr_t) on !CONFIG_ARCH_DMA_ADDR_T_64BIT
+> is 4 and it is smaller than 8. and those are const, so the compiler should
+> not ...
+> 
+> add the cast just shut off the compiler wrong warning.
+> 
+> code segment:
+> 
+>                         if (sizeof(dma_addr_t) < 8) {
+>                                 if (mem_base_hi || mem_limit_hi) {
+>                                         dev_err(&dev->dev, "can't
+> handle 64-bit address space for bridge\n");
+>                                         return;
+>                                 }
+>                         } else  {
+>                                 base |= (dma_addr_t)(((u64)mem_base_hi)<<32);
+>                                 limit |= (dma_addr_t)(((u64)mem_limit_hi)<<32);
+>                         }
+> 
+> 
 
-Thanks for your comments.
-Please see my reply inline.
+I propose the following third alternative, which always computes full
+64-bit base/limit, then casts them to the dma_addr_t size and compares to
+see if anything got chopped off.
 
-Thanks,
-Minghuan
+This is on top of pci/for-linus.  Whatever we settle on, I'll fold it into
+the original patch before asking Linus to pull it.
 
-On 2014年11月10日 20:00, Lucas Stach wrote:
-> Am Montag, den 10.11.2014, 18:43 +0800 schrieb Minghuan Lian:
->> Currently, pcie-designware.c only supports two ATUs, ATU0 is used
->> for CFG0 and MEM, ATU1 is used for CFG1 and IO. There is a conflict
->> when MEM and CFG0 are accessed simultaneously. The patch adds
->> 'num-atus' property to PCIe dts node to describe the number of
->> PCIe controller's ATUs. If num_atus is bigger than or equal to 4,
->> we will change ATUs assignment: ATU0 for CFG0, ATU1 for CFG1,
->> ATU2 for MEM, ATU3 for IO.
->>
->> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
->> ---
->>   .../devicetree/bindings/pci/designware-pcie.txt    |  1 +
->>   drivers/pci/host/pcie-designware.c                 | 48 ++++++++++++++++------
->>   drivers/pci/host/pcie-designware.h                 |  5 +++
->>   3 files changed, 41 insertions(+), 13 deletions(-)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
->> index 9f4faa8..500796e 100644
->> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
->> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
->> @@ -26,3 +26,4 @@ Optional properties:
->>   - bus-range: PCI bus numbers covered (it is recommended for new devicetrees to
->>     specify this property, to keep backwards compatibility a range of 0x00-0xff
->>     is assumed if not present)
->> +- num-atus: number of ATUs
-> This lacks documentation for the default value if not present.
-[Minghuan] I will add default value
->> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
->> index dfed00a..b872dd0 100644
->> --- a/drivers/pci/host/pcie-designware.c
->> +++ b/drivers/pci/host/pcie-designware.c
->> @@ -48,6 +48,8 @@
->>   #define PCIE_ATU_VIEWPORT		0x900
->>   #define PCIE_ATU_REGION_INBOUND		(0x1 << 31)
->>   #define PCIE_ATU_REGION_OUTBOUND	(0x0 << 31)
->> +#define PCIE_ATU_REGION_INDEX3		(0x3 << 0)
->> +#define PCIE_ATU_REGION_INDEX2		(0x2 << 0)
->>   #define PCIE_ATU_REGION_INDEX1		(0x1 << 0)
->>   #define PCIE_ATU_REGION_INDEX0		(0x0 << 0)
->>   #define PCIE_ATU_CR1			0x904
->> @@ -346,7 +348,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->>   	struct of_pci_range range;
->>   	struct of_pci_range_parser parser;
->>   	struct resource *cfg_res;
->> -	u32 val, na, ns;
->> +	u32 num_atus, val, na, ns;
->>   	const __be32 *addrp;
->>   	int i, index, ret;
->>   
->> @@ -486,6 +488,18 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->>   		}
->>   	}
->>   
->> +	if (of_property_read_u32(np, "num-atus", &num_atus))
->> +		num_atus = 2;
-> You don't need this check. Just initialize num_atus to 2,
-> of_property_read_u32() won't touch the value if the property isn't
-> found.
-[Minghuan] Ok, I will change it.
->> +	if (num_atus >= 4) {
->> +		pp->atu_cfg0_idx = PCIE_ATU_REGION_INDEX0;
->> +		pp->atu_cfg1_idx = PCIE_ATU_REGION_INDEX1;
->> +		pp->atu_mem_idx = PCIE_ATU_REGION_INDEX2;
->> +		pp->atu_io_idx = PCIE_ATU_REGION_INDEX3;
->> +	} else {
->> +		pp->atu_cfg0_idx = pp->atu_mem_idx = PCIE_ATU_REGION_INDEX0;
->> +		pp->atu_cfg1_idx = pp->atu_io_idx = PCIE_ATU_REGION_INDEX1;
->> +	}
->> +
->>   	if (pp->ops->host_init)
->>   		pp->ops->host_init(pp);
->>   
->> @@ -511,8 +525,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->>   
->>   static void dw_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)
->>   {
->> -	/* Program viewport 0 : OUTBOUND : CFG0 */
->> -	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
->> +	/* Program viewport : OUTBOUND : CFG0 */
->> +	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | pp->atu_cfg0_idx,
->>   			  PCIE_ATU_VIEWPORT);
->>   	dw_pcie_writel_rc(pp, pp->cfg0_mod_base, PCIE_ATU_LOWER_BASE);
->>   	dw_pcie_writel_rc(pp, (pp->cfg0_mod_base >> 32), PCIE_ATU_UPPER_BASE);
->> @@ -526,8 +540,8 @@ static void dw_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)
->>   
->>   static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
->>   {
->> -	/* Program viewport 1 : OUTBOUND : CFG1 */
->> -	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
->> +	/* Program viewport : OUTBOUND : CFG1 */
->> +	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | pp->atu_cfg1_idx,
->>   			  PCIE_ATU_VIEWPORT);
->>   	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
->>   	dw_pcie_writel_rc(pp, pp->cfg1_mod_base, PCIE_ATU_LOWER_BASE);
->> @@ -541,8 +555,8 @@ static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
->>   
->>   static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
->>   {
->> -	/* Program viewport 0 : OUTBOUND : MEM */
->> -	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
->> +	/* Program viewport : OUTBOUND : MEM */
->> +	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | pp->atu_mem_idx,
->>   			  PCIE_ATU_VIEWPORT);
->>   	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, PCIE_ATU_CR1);
->>   	dw_pcie_writel_rc(pp, pp->mem_mod_base, PCIE_ATU_LOWER_BASE);
->> @@ -557,8 +571,8 @@ static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
->>   
->>   static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
->>   {
->> -	/* Program viewport 1 : OUTBOUND : IO */
->> -	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
->> +	/* Program viewport : OUTBOUND : IO */
->> +	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | pp->atu_io_idx,
->>   			  PCIE_ATU_VIEWPORT);
->>   	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_IO, PCIE_ATU_CR1);
->>   	dw_pcie_writel_rc(pp, pp->io_mod_base, PCIE_ATU_LOWER_BASE);
->> @@ -585,12 +599,14 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
->>   		dw_pcie_prog_viewport_cfg0(pp, busdev);
->>   		ret = dw_pcie_cfg_read(pp->va_cfg0_base + address, where, size,
->>   				val);
->> -		dw_pcie_prog_viewport_mem_outbound(pp);
->> +		if (pp->atu_mem_idx == pp->atu_cfg0_idx)
->> +			dw_pcie_prog_viewport_mem_outbound(pp);
->>   	} else {
->>   		dw_pcie_prog_viewport_cfg1(pp, busdev);
->>   		ret = dw_pcie_cfg_read(pp->va_cfg1_base + address, where, size,
->>   				val);
->> -		dw_pcie_prog_viewport_io_outbound(pp);
->> +		if (pp->atu_io_idx == pp->atu_cfg1_idx)
->> +			dw_pcie_prog_viewport_io_outbound(pp);
->>   	}
->>   
->>   	return ret;
->> @@ -610,12 +626,14 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
->>   		dw_pcie_prog_viewport_cfg0(pp, busdev);
->>   		ret = dw_pcie_cfg_write(pp->va_cfg0_base + address, where, size,
->>   				val);
->> -		dw_pcie_prog_viewport_mem_outbound(pp);
->> +		if (pp->atu_mem_idx == pp->atu_cfg0_idx)
->> +			dw_pcie_prog_viewport_mem_outbound(pp);
->>   	} else {
->>   		dw_pcie_prog_viewport_cfg1(pp, busdev);
->>   		ret = dw_pcie_cfg_write(pp->va_cfg1_base + address, where, size,
->>   				val);
->> -		dw_pcie_prog_viewport_io_outbound(pp);
->> +		if (pp->atu_io_idx == pp->atu_cfg1_idx)
->> +			dw_pcie_prog_viewport_io_outbound(pp);
->>   	}
->>   
->>   	return ret;
->> @@ -770,6 +788,10 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->>   	u32 membase;
->>   	u32 memlimit;
->>   
->> +	/* set ATUs setting for MEM and IO */
->> +	dw_pcie_prog_viewport_mem_outbound(pp);
->> +	dw_pcie_prog_viewport_io_outbound(pp);
->> +
->>   	/* set the number of lanes */
->>   	dw_pcie_readl_rc(pp, PCIE_PORT_LINK_CONTROL, &val);
->>   	val &= ~PORT_LINK_MODE_MASK;
->> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
->> index c625675..404f601 100644
->> --- a/drivers/pci/host/pcie-designware.h
->> +++ b/drivers/pci/host/pcie-designware.h
->> @@ -53,6 +53,11 @@ struct pcie_port {
->>   	struct irq_domain	*irq_domain;
->>   	unsigned long		msi_data;
->>   	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
->> +	/* ATUs setting */
->> +	u8			atu_cfg0_idx;
->> +	u8			atu_cfg1_idx;
->> +	u8			atu_mem_idx;
->> +	u8			atu_io_idx;
-> I don't like those single values. Can we please make this an array
-> indexed by a proper enum? Like this:
->
-> enum ATU_TYPE {
-> 	ATU_TYPE_CFG0 = 0,
-> 	ATU_TYPE_CFG1 = 1,
-> 	ATU_TYPE_MEM  = 2,
-> 	ATU_TYPE_IO   = 3,
-> 	ATU_TYPE_MAX
-> }
->
-> u8	atu_idx[ATU_TYPE_MAX];
-[Minghuan] Great. it's better to use array.
+Bjorn
 
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 1c5b1ca53bcd..c8ca98c2b480 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -407,6 +407,7 @@ static void pci_read_bridge_mmio_pref(struct pci_bus *child)
+ {
+ 	struct pci_dev *dev = child->self;
+ 	u16 mem_base_lo, mem_limit_lo;
++	u64 base64, limit64;
+ 	dma_addr_t base, limit;
+ 	struct pci_bus_region region;
+ 	struct resource *res;
+@@ -414,8 +415,8 @@ static void pci_read_bridge_mmio_pref(struct pci_bus *child)
+ 	res = child->resource[2];
+ 	pci_read_config_word(dev, PCI_PREF_MEMORY_BASE, &mem_base_lo);
+ 	pci_read_config_word(dev, PCI_PREF_MEMORY_LIMIT, &mem_limit_lo);
+-	base = ((dma_addr_t) mem_base_lo & PCI_PREF_RANGE_MASK) << 16;
+-	limit = ((dma_addr_t) mem_limit_lo & PCI_PREF_RANGE_MASK) << 16;
++	base64 = (mem_base_lo & PCI_PREF_RANGE_MASK) << 16;
++	limit64 = (mem_limit_lo & PCI_PREF_RANGE_MASK) << 16;
+ 
+ 	if ((mem_base_lo & PCI_PREF_RANGE_TYPE_MASK) == PCI_PREF_RANGE_TYPE_64) {
+ 		u32 mem_base_hi, mem_limit_hi;
+@@ -429,17 +430,20 @@ static void pci_read_bridge_mmio_pref(struct pci_bus *child)
+ 		 * this, just assume they are not being used.
+ 		 */
+ 		if (mem_base_hi <= mem_limit_hi) {
+-			if (sizeof(dma_addr_t) < 8) {
+-				if (mem_base_hi || mem_limit_hi) {
+-					dev_err(&dev->dev, "can't handle 64-bit address space for bridge\n");
+-					return;
+-				}
+-			} else  {
+-				base |= ((dma_addr_t) mem_base_hi) << 32;
+-				limit |= ((dma_addr_t) mem_limit_hi) << 32;
+-			}
++			base64 |= (u64) mem_base_hi << 32;
++			limit64 |= (u64) mem_limit_hi << 32;
+ 		}
+ 	}
++
++	base = (dma_addr_t) base64;
++	limit = (dma_addr_t) limit64;
++
++	if (base != base64) {
++		dev_err(&dev->dev, "can't handle bridge window above 4GB (bus address %#010llx)\n",
++			(unsigned long long) base64);
++		return;
++	}
++
+ 	if (base <= limit) {
+ 		res->flags = (mem_base_lo & PCI_PREF_RANGE_TYPE_MASK) |
+ 					 IORESOURCE_MEM | IORESOURCE_PREFETCH;
