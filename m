@@ -1,79 +1,152 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:45245 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751612AbaKBPl7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Nov 2014 10:41:59 -0500
-Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 3 Nov 2014 01:41:57 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id D167B357804C
-	for <linux-pci@vger.kernel.org>; Mon,  3 Nov 2014 02:41:55 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sA2Ffs2D37093604
-	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:41:54 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sA2FfsgU028185
-	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:41:55 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V9 07/18] powerpc/pci: Define pcibios_disable_device() on powerpc
-Date: Sun,  2 Nov 2014 23:41:23 +0800
-Message-Id: <1414942894-17034-8-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+To: catalin.marinas@arm.com, will.deacon@arm.com, bhelgaas@google.com,
+	lorenzo.pieralisi@arm.com, wangyijing@huawei.com, arnd@arndb.de,
+	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Subject: [PATCH 4/6] x86, acpi, pci: mmconfig_{32,64}.c code refactoring - remove code duplication.
+Date: Wed, 19 Nov 2014 17:04:49 +0100
+Message-Id: <1416413091-13452-5-git-send-email-tomasz.nowicki@linaro.org>
+In-Reply-To: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org>
+References: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When driver remove a pci_dev, it will call pcibios_disable_device() which is
-platform dependent. This gives flexibility to platforms.
+mmconfig_64.c version is going to be default implementation for arch
+agnostic low-level direct PCI config space accessors via MMCONFIG.
+However, now it initialize raw_pci_ext_ops pointer which is used in
+x86 specific code only. Moreover, mmconfig_32.c is doing the same thing
+at the same time.
 
-This patch defines this weak function on powerpc architecture.
+Move it to mmconfig_shared.c so it becomes common for both and
+mmconfig_64.c turns out to be purely arch agnostic.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
 ---
- arch/powerpc/include/asm/machdep.h |    5 ++++-
- arch/powerpc/kernel/pci-common.c   |    8 ++++++++
- 2 files changed, 12 insertions(+), 1 deletion(-)
+ arch/x86/pci/mmconfig-shared.c | 10 ++++++++--
+ arch/x86/pci/mmconfig_32.c     | 10 ++--------
+ arch/x86/pci/mmconfig_64.c     |  6 ++----
+ include/linux/mmconfig.h       |  4 ++++
+ 4 files changed, 16 insertions(+), 14 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index 307347f..8242262 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -240,7 +240,10 @@ struct machdep_calls {
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index b397544..e42004c 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -29,6 +29,11 @@
+ static bool pci_mmcfg_running_state;
+ static bool pci_mmcfg_arch_init_failed;
  
- 	/* Called when pci_enable_device() is called. Returns 0 to
- 	 * allow assignment/enabling of the device. */
--	int  (*pcibios_enable_device_hook)(struct pci_dev *);
-+	int (*pcibios_enable_device_hook)(struct pci_dev *);
++const struct pci_raw_ops pci_mmcfg = {
++	.read =		pci_mmcfg_read,
++	.write =	pci_mmcfg_write,
++};
 +
-+	/* Called when pci_disable_device() is called. */
-+	void (*pcibios_disable_device_hook)(struct pci_dev *);
+ static const char *__init pci_mmcfg_e7520(void)
+ {
+ 	u32 win;
+@@ -486,9 +491,10 @@ static void __init __pci_mmcfg_init(int early)
+ 		}
+ 	}
  
- 	/* Called after scan and before resource survey */
- 	void (*pcibios_fixup_phb)(struct pci_controller *hose);
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 399d813..17acfa7 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1452,6 +1452,14 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 	return pci_enable_resources(dev, mask);
+-	if (pci_mmcfg_arch_init())
++	if (pci_mmcfg_arch_init()) {
++		raw_pci_ext_ops = &pci_mmcfg;
+ 		pci_probe = (pci_probe & ~PCI_PROBE_MASK) | PCI_PROBE_MMCONF;
+-	else {
++	} else {
+ 		free_all_mmcfg();
+ 		pci_mmcfg_arch_init_failed = true;
+ 	}
+diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
+index d774672..c0106a6 100644
+--- a/arch/x86/pci/mmconfig_32.c
++++ b/arch/x86/pci/mmconfig_32.c
+@@ -50,7 +50,7 @@ static void pci_exp_set_dev_base(unsigned int base, int bus, int devfn)
+ 	}
  }
  
-+void pcibios_disable_device(struct pci_dev *dev)
-+{
-+	if (ppc_md.pcibios_disable_device_hook)
-+		ppc_md.pcibios_disable_device_hook(dev);
-+
-+	return;
-+}
-+
- resource_size_t pcibios_io_space_offset(struct pci_controller *hose)
+-static int pci_mmcfg_read(unsigned int seg, unsigned int bus,
++int pci_mmcfg_read(unsigned int seg, unsigned int bus,
+ 			  unsigned int devfn, int reg, int len, u32 *value)
  {
- 	return (unsigned long) hose->io_base_virt - _IO_BASE;
+ 	unsigned long flags;
+@@ -89,7 +89,7 @@ err:		*value = -1;
+ 	return 0;
+ }
+ 
+-static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
++int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 			   unsigned int devfn, int reg, int len, u32 value)
+ {
+ 	unsigned long flags;
+@@ -126,15 +126,9 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	return 0;
+ }
+ 
+-const struct pci_raw_ops pci_mmcfg = {
+-	.read =		pci_mmcfg_read,
+-	.write =	pci_mmcfg_write,
+-};
+-
+ int __init pci_mmcfg_arch_init(void)
+ {
+ 	printk(KERN_INFO "PCI: Using MMCONFIG for extended config space\n");
+-	raw_pci_ext_ops = &pci_mmcfg;
+ 	return 1;
+ }
+ 
+diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+index 1209596..ff2c50c 100644
+--- a/arch/x86/pci/mmconfig_64.c
++++ b/arch/x86/pci/mmconfig_64.c
+@@ -25,7 +25,7 @@ static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus, unsigned i
+ 	return NULL;
+ }
+ 
+-static int pci_mmcfg_read(unsigned int seg, unsigned int bus,
++int pci_mmcfg_read(unsigned int seg, unsigned int bus,
+ 			  unsigned int devfn, int reg, int len, u32 *value)
+ {
+ 	char __iomem *addr;
+@@ -59,7 +59,7 @@ err:		*value = -1;
+ 	return 0;
+ }
+ 
+-static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
++int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 			   unsigned int devfn, int reg, int len, u32 value)
+ {
+ 	char __iomem *addr;
+@@ -121,8 +121,6 @@ int __init pci_mmcfg_arch_init(void)
+ 			return 0;
+ 		}
+ 
+-	raw_pci_ext_ops = &pci_mmcfg;
+-
+ 	return 1;
+ }
+ 
+diff --git a/include/linux/mmconfig.h b/include/linux/mmconfig.h
+index 6ccd1ee..ae8ec83 100644
+--- a/include/linux/mmconfig.h
++++ b/include/linux/mmconfig.h
+@@ -43,6 +43,10 @@ int pci_mmcfg_arch_init(void);
+ void pci_mmcfg_arch_free(void);
+ int pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg);
+ void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg);
++int pci_mmcfg_read(unsigned int seg, unsigned int bus,
++		   unsigned int devfn, int reg, int len, u32 *value);
++int pci_mmcfg_write(unsigned int seg, unsigned int bus,
++		    unsigned int devfn, int reg, int len, u32 value);
+ 
+ extern struct list_head pci_mmcfg_list;
+ 
 -- 
-1.7.9.5
+1.9.1
 
