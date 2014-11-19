@@ -1,366 +1,161 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:12184 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754900AbaKSGwc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 01:52:32 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	Liviu Dudau <liviu@dudau.co.uk>, Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Alexander Gordeev <agordeev@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC Part4 v1 10/17] PCI, MSI: Split MSI code into PCI dependent and PCI independent parts
-Date: Sun,  9 Nov 2014 23:10:32 +0800
-Message-Id: <1415545839-28263-11-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	<linux-alpha@vger.kernel.org>, <linux-m68k@lists.linux-m68k.org>,
+	<sparclinux@vger.kernel.org>
+Subject: [PATCH 1/5] PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
+Date: Wed, 19 Nov 2014 15:32:45 +0800
+Message-ID: <1416382369-13587-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1416382369-13587-1-git-send-email-wangyijing@huawei.com>
+References: <1416382369-13587-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some interrupt controllers, such as DMAR and HPET interrupt controllers,
-make use of the same mechanism as PCI MSI interrupt, but they are not
-PCI compatible. So split MSI code into PCI dependent part and PCI
-independent part for code reuse later.
+Pci_bus_add_devices() should not be placed in
+pci_scan_bus(). Now pci devices will be added
+to driver core once its creation. All the things
+left in pci_bus_add_devices() are driver attach
+and other trivial things. pci_scan_bus() should
+be the function responsible for scanning PCI devices,
+not including device driver attached. Other, lots
+callers of pci_scan_bus() call pci_bus_size_bridges()
+and pci_bus_assign_resources() after pci_scan_bus().
+It's not correct, but because pci_scan_bus() always
+be called before driver loaded, so maybe no problem
+will cause. We should rip out pci_bus_add_devices()
+for better code design.
+No functional change.
 
-PCI dependent part is still hosted in drivers/pci/msi.c and a new file
-kernel/irq/msi.c is created to host PCI independent part.
-
-Use CONFIG_PCI_MSI to guard PCI dependent code in file include/linux/msi.h,
-especially guarding PCI related fields in struct msi_desc.
-For backward compatibility, we choose to conditionally embedded PCI
-related fields in struct msi_desc instead of introducing
-struct pci_msi_desc.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: "David S. Miller" <davem@davemloft.net>
+CC: Geert Uytterhoeven <geert@linux-m68k.org>
+CC: Guan Xuetao <gxt@mprc.pku.edu.cn>
+CC: linux-alpha@vger.kernel.org
+CC: linux-m68k@lists.linux-m68k.org
+CC: sparclinux@vger.kernel.org
 ---
- drivers/pci/Kconfig |    4 +++-
- drivers/pci/msi.c   |   50 ----------------------------------------
- include/linux/msi.h |   64 ++++++++++++++++++++++++++++++---------------------
- kernel/irq/Kconfig  |   10 +++++++-
- kernel/irq/Makefile |    1 +
- kernel/irq/msi.c    |   61 ++++++++++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 112 insertions(+), 78 deletions(-)
- create mode 100644 kernel/irq/msi.c
+ arch/alpha/kernel/sys_nautilus.c  |    1 +
+ arch/m68k/coldfire/pci.c          |    1 +
+ arch/sparc/kernel/pcic.c          |    2 ++
+ arch/unicore32/kernel/pci.c       |   11 +++--------
+ drivers/pci/hotplug/ibmphp_core.c |    6 ++++--
+ drivers/pci/probe.c               |    1 -
+ 6 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 022e89745f86..7a8f1c5e65af 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -4,6 +4,7 @@
- config PCI_MSI
- 	bool "Message Signaled Interrupts (MSI and MSI-X)"
- 	depends on PCI
-+	select GENERIC_MSI_IRQ
- 	help
- 	   This allows device drivers to enable MSI (Message Signaled
- 	   Interrupts).  Message Signaled Interrupts enable a device to
-@@ -18,7 +19,8 @@ config PCI_MSI
- 
- config PCI_MSI_IRQ_DOMAIN
- 	bool
--	depends on PCI_MSI && IRQ_DOMAIN_HIERARCHY
-+	depends on PCI_MSI
-+	select GENERIC_MSI_IRQ_DOMAIN
- 
- config PCI_DEBUG
- 	bool "PCI Debugging"
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index cc6207e3b6bc..e1814f4be4b9 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -280,24 +280,6 @@ void read_msi_msg(unsigned int irq, struct msi_msg *msg)
- 	__read_msi_msg(entry, msg);
+diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
+index 837c0fa..4ae4a40 100644
+--- a/arch/alpha/kernel/sys_nautilus.c
++++ b/arch/alpha/kernel/sys_nautilus.c
+@@ -253,6 +253,7 @@ nautilus_init_pci(void)
+ 	   for the root bus, so just clear it. */
+ 	bus->self = NULL;
+ 	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
++	pci_bus_add_devices(bus);
  }
- 
--void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
--{
--	/* Assert that the cache is valid, assuming that
--	 * valid messages are not all-zeroes. */
--	BUG_ON(!(entry->msg.address_hi | entry->msg.address_lo |
--		 entry->msg.data));
--
--	*msg = entry->msg;
--}
--
--void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg)
--{
--	struct msi_desc *entry = irq_get_msi_desc(irq);
--
--	__get_cached_msi_msg(entry, msg);
--}
--EXPORT_SYMBOL_GPL(get_cached_msi_msg);
--
- void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- {
- 	if (entry->dev->current_state != PCI_D0) {
-@@ -1101,22 +1083,6 @@ int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
- EXPORT_SYMBOL(pci_enable_msix_range);
- 
- #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
--int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
--			    bool force)
--{
--	struct irq_data *parent = data->parent_data;
--	struct msi_msg msg;
--	int ret;
--
--	ret = parent->chip->irq_set_affinity(parent, mask, force);
--	if (ret >= 0 && ret != IRQ_SET_MASK_OK_DONE) {
--		irq_chip_compose_msi_msg(data, &msg);
--		irq_chip_write_msi_msg(data, &msg);
--	}
--
--	return ret;
--}
--
- void pci_msi_write_msg(struct irq_data *irq_data, struct msi_msg *msg)
- {
- 	struct msi_desc *desc = irq_data->msi_desc;
-@@ -1177,22 +1143,6 @@ static void msi_domain_free(struct irq_domain *domain, unsigned int virq,
- 	irq_domain_free_irqs_top(domain, virq, nr_irqs);
- }
- 
--void msi_domain_activate(struct irq_domain *domain, struct irq_data *irq_data)
--{
--	struct msi_msg msg;
--
--	BUG_ON(irq_chip_compose_msi_msg(irq_data, &msg));
--	irq_chip_write_msi_msg(irq_data, &msg);
--}
--
--void msi_domain_deactivate(struct irq_domain *domain, struct irq_data *irq_data)
--{
--	struct msi_msg msg;
--
--	memset(&msg, 0, sizeof(msg));
--	irq_chip_write_msi_msg(irq_data, &msg);
--}
--
- static struct irq_domain_ops msi_domain_ops = {
- 	.alloc = msi_domain_alloc,
- 	.free = msi_domain_free,
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index bd0f9d8c6fe1..19502186a64d 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -4,25 +4,24 @@
- #include <linux/kobject.h>
- #include <linux/list.h>
- 
-+struct irq_data;
-+struct irq_chip;
-+struct irq_domain;
-+struct device_node;
-+
- struct msi_msg {
- 	u32	address_lo;	/* low 32 bits of msi message address */
- 	u32	address_hi;	/* high 32 bits of msi message address */
- 	u32	data;		/* 16 bits of msi message data */
- };
- 
--/* Helper functions */
--struct irq_data;
--struct msi_desc;
--void mask_msi_irq(struct irq_data *data);
--void unmask_msi_irq(struct irq_data *data);
--void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
--void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
--void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
--void read_msi_msg(unsigned int irq, struct msi_msg *msg);
--void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
--void write_msi_msg(unsigned int irq, struct msi_msg *msg);
--
- struct msi_desc {
-+	struct list_head list;
-+	unsigned int irq;
-+	unsigned int nvec_used;		/* number of messages */
-+	struct msi_msg msg;		/* Last set MSI message */
-+
-+#ifdef CONFIG_PCI_MSI
- 	struct {
- 		__u8	is_msix	: 1;
- 		__u8	multiple: 3;	/* log2 num of messages allocated */
-@@ -34,21 +33,40 @@ struct msi_desc {
- 	} msi_attrib;
- 
- 	u32 masked;			/* mask bits */
--	unsigned int irq;
--	unsigned int nvec_used;		/* number of messages */
--	struct list_head list;
- 
- 	union {
- 		void __iomem *mask_base;
- 		u8 mask_pos;
- 	};
- 	struct pci_dev *dev;
--
--	/* Last set MSI message */
--	struct msi_msg msg;
-+#endif
- };
  
  /*
-+ * Some drivers unconditionally reference {mask|unmask}_msi_irq(),
-+ * so can't guard them with CONFIG_PCI_MSI
-+ */
-+void mask_msi_irq(struct irq_data *data);
-+void unmask_msi_irq(struct irq_data *data);
-+void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-+void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
-+
-+#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
-+int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
-+			    bool force);
-+void msi_domain_activate(struct irq_domain *domain, struct irq_data *irq_data);
-+void msi_domain_deactivate(struct irq_domain *domain,
-+			   struct irq_data *irq_data);
-+#endif /* CONFIG_GENERIC_MSI_IRQ_DOMAIN */
-+
-+#ifdef CONFIG_PCI_MSI
-+/* Helper functions */
-+void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-+void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-+void read_msi_msg(unsigned int irq, struct msi_msg *msg);
-+void write_msi_msg(unsigned int irq, struct msi_msg *msg);
-+
-+/*
-  * The arch hooks to setup up msi irqs. Those functions are
-  * implemented as weak symbols so that they /can/ be overriden by
-  * architecture specific code if needed.
-@@ -76,14 +94,6 @@ struct msi_chip {
- };
+diff --git a/arch/m68k/coldfire/pci.c b/arch/m68k/coldfire/pci.c
+index df96792..d45f087 100644
+--- a/arch/m68k/coldfire/pci.c
++++ b/arch/m68k/coldfire/pci.c
+@@ -319,6 +319,7 @@ static int __init mcf_pci_init(void)
+ 	pci_fixup_irqs(pci_common_swizzle, mcf_pci_map_irq);
+ 	pci_bus_size_bridges(rootbus);
+ 	pci_bus_assign_resources(rootbus);
++	pci_bus_add_devices(rootbus);
+ 	return 0;
+ }
  
- #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
--struct irq_domain;
--struct irq_chip;
+diff --git a/arch/sparc/kernel/pcic.c b/arch/sparc/kernel/pcic.c
+index 6cc78c2..7a82fe2 100644
+--- a/arch/sparc/kernel/pcic.c
++++ b/arch/sparc/kernel/pcic.c
+@@ -391,6 +391,8 @@ static void __init pcic_pbm_scan_bus(struct linux_pcic *pcic)
+ 	struct linux_pbm_info *pbm = &pcic->pbm;
+ 
+ 	pbm->pci_bus = pci_scan_bus(pbm->pci_first_busno, &pcic_ops, pbm);
++	if (pbm->pci_bus)
++		pci_bus_add_devices(pbm->pci_bus);
+ #if 0 /* deadwood transplanted from sparc64 */
+ 	pci_fill_in_pbm_cookies(pbm->pci_bus, pbm, pbm->prom_node);
+ 	pci_record_assignments(pbm, pbm->pci_bus);
+diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
+index 374a055..3d82024 100644
+--- a/arch/unicore32/kernel/pci.c
++++ b/arch/unicore32/kernel/pci.c
+@@ -266,17 +266,12 @@ static int __init pci_common_init(void)
+ 	pci_fixup_irqs(pci_common_swizzle, pci_puv3_map_irq);
+ 
+ 	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+-		/*
+-		 * Size the bridge windows.
+-		 */
++		/* Size the bridge windows. */
+ 		pci_bus_size_bridges(puv3_bus);
 -
--int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
--			    bool force);
--void msi_domain_activate(struct irq_domain *domain, struct irq_data *irq_data);
--void msi_domain_deactivate(struct irq_domain *domain,
--			   struct irq_data *irq_data);
- struct irq_domain *msi_create_irq_domain(struct device_node *of_node,
- 					 struct irq_chip *chip,
- 					 struct irq_domain *parent);
-@@ -95,4 +105,6 @@ irq_hw_number_t arch_msi_irq_domain_get_hwirq(void *arg);
- void arch_msi_irq_domain_set_hwirq(void *arg, irq_hw_number_t hwirq);
- #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
+-		/*
+-		 * Assign resources.
+-		 */
++		/* Assign resources. */
+ 		pci_bus_assign_resources(puv3_bus);
+ 	}
+-
++	pci_bus_add_devices(puv3_bus);
+ 	return 0;
+ }
+ subsys_initcall(pci_common_init);
+diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
+index 3efaf4c..db0f2e8 100644
+--- a/drivers/pci/hotplug/ibmphp_core.c
++++ b/drivers/pci/hotplug/ibmphp_core.c
+@@ -740,7 +740,7 @@ static void ibm_unconfigure_device(struct pci_func *func)
+  */
+ static u8 bus_structure_fixup(u8 busno)
+ {
+-	struct pci_bus *bus;
++	struct pci_bus *bus, *b;
+ 	struct pci_dev *dev;
+ 	u16 l;
  
-+#endif /* CONFIG_PCI_MSI */
-+
- #endif /* LINUX_MSI_H */
-diff --git a/kernel/irq/Kconfig b/kernel/irq/Kconfig
-index e9b580eccc01..9c4c5d4d58e9 100644
---- a/kernel/irq/Kconfig
-+++ b/kernel/irq/Kconfig
-@@ -57,7 +57,15 @@ config IRQ_DOMAIN
- 
- config IRQ_DOMAIN_HIERARCHY
- 	bool
--	depends on IRQ_DOMAIN
-+	select IRQ_DOMAIN
-+
-+config GENERIC_MSI_IRQ
-+	bool
-+
-+config GENERIC_MSI_IRQ_DOMAIN
-+	bool
-+	select IRQ_DOMAIN_HIERARCHY
-+	select GENERIC_MSI_IRQ
- 
- config HANDLE_DOMAIN_IRQ
- 	bool
-diff --git a/kernel/irq/Makefile b/kernel/irq/Makefile
-index fff17381f0af..d12123526e2b 100644
---- a/kernel/irq/Makefile
-+++ b/kernel/irq/Makefile
-@@ -6,3 +6,4 @@ obj-$(CONFIG_IRQ_DOMAIN) += irqdomain.o
- obj-$(CONFIG_PROC_FS) += proc.o
- obj-$(CONFIG_GENERIC_PENDING_IRQ) += migration.o
- obj-$(CONFIG_PM_SLEEP) += pm.o
-+obj-$(CONFIG_GENERIC_MSI_IRQ) += msi.o
-diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
-new file mode 100644
-index 000000000000..6ae0bd7ee204
---- /dev/null
-+++ b/kernel/irq/msi.c
-@@ -0,0 +1,61 @@
-+/*
-+ * linux/kernel/irq/msi.c
-+ *
-+ * Copyright (C) 2014 Intel Corp.
-+ * Author: Jiang Liu <jiang.liu@linux.intel.com>
-+ *
-+ * This file is licensed under GPLv2.
-+ *
-+ * This file contains common code to support Message Signalled Interrupt for
-+ * PCI compatible and non PCI compatible devices.
-+ */
-+#include <linux/irq.h>
-+#include <linux/irqdomain.h>
-+#include <linux/msi.h>
-+
-+void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
-+{
-+	*msg = entry->msg;
-+}
-+
-+void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg)
-+{
-+	struct msi_desc *entry = irq_get_msi_desc(irq);
-+
-+	__get_cached_msi_msg(entry, msg);
-+}
-+EXPORT_SYMBOL_GPL(get_cached_msi_msg);
-+
-+#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
-+int msi_domain_set_affinity(struct irq_data *irq_data,
-+			    const struct cpumask *mask, bool force)
-+{
-+	struct irq_data *parent = irq_data->parent_data;
-+	struct msi_msg msg;
-+	int ret;
-+
-+	ret = parent->chip->irq_set_affinity(parent, mask, force);
-+	if (ret >= 0 && ret != IRQ_SET_MASK_OK_DONE) {
-+		BUG_ON(irq_chip_compose_msi_msg(irq_data, &msg));
-+		irq_chip_write_msi_msg(irq_data, &msg);
-+	}
-+
-+	return ret;
-+}
-+
-+void msi_domain_activate(struct irq_domain *domain, struct irq_data *irq_data)
-+{
-+	struct msi_msg msg;
-+
-+	BUG_ON(irq_chip_compose_msi_msg(irq_data, &msg));
-+	irq_chip_write_msi_msg(irq_data, &msg);
-+}
-+
-+void msi_domain_deactivate(struct irq_domain *domain, struct irq_data *irq_data)
-+{
-+	struct msi_msg msg;
-+
-+	memset(&msg, 0, sizeof(msg));
-+	irq_chip_write_msi_msg(irq_data, &msg);
-+}
-+#endif /* CONFIG_GENERIC_MSI_IRQ_DOMAIN */
+@@ -767,7 +767,9 @@ static u8 bus_structure_fixup(u8 busno)
+ 					(l != 0x0000) && (l != 0xffff)) {
+ 			debug("%s - Inside bus_structure_fixup()\n",
+ 							__func__);
+-			pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
++			b = pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
++			if (b)
++				pci_bus_add_devices(b);
+ 			break;
+ 		}
+ 	}
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index db16678..5c5e01e 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2120,7 +2120,6 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
+ 	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
+ 	if (b) {
+ 		pci_scan_child_bus(b);
+-		pci_bus_add_devices(b);
+ 	} else {
+ 		pci_free_resource_list(&resources);
+ 	}
 -- 
-1.7.10.4
+1.7.1
 
