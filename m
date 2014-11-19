@@ -1,167 +1,365 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:59072 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757429AbaKTWy4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Nov 2014 17:54:56 -0500
-Received: by mail-ig0-f171.google.com with SMTP id uq10so5639717igb.10
-        for <linux-pci@vger.kernel.org>; Thu, 20 Nov 2014 14:54:55 -0800 (PST)
-Date: Thu, 20 Nov 2014 15:54:49 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>
-Subject: Re: [RFC PATCH v2] drivers: pci: move PCI domain assignment to
- generic PCI code
-Message-ID: <20141120225449.GD7987@google.com>
-References: <1415637706-2195-1-git-send-email-lorenzo.pieralisi@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415637706-2195-1-git-send-email-lorenzo.pieralisi@arm.com>
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:34053 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932313AbaKSQFl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 11:05:41 -0500
+Received: by mail-wi0-f175.google.com with SMTP id l15so5891134wiw.8
+        for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2014 08:05:40 -0800 (PST)
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+To: catalin.marinas@arm.com, will.deacon@arm.com, bhelgaas@google.com,
+	lorenzo.pieralisi@arm.com, wangyijing@huawei.com, arnd@arndb.de,
+	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Subject: [PATCH 5/6] x86, acpi, pci: mmconfig_64.c becomes default implementation for arch agnostic low-level direct PCI config space accessors via MMCONFIG.
+Date: Wed, 19 Nov 2014 17:04:50 +0100
+Message-Id: <1416413091-13452-6-git-send-email-tomasz.nowicki@linaro.org>
+In-Reply-To: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org>
+References: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 10, 2014 at 04:41:46PM +0000, Lorenzo Pieralisi wrote:
-> The current logic used for PCI domain assignment in arm64
-> pci_bus_assign_domain_nr() is flawed in that, depending on the host
-> controllers configuration for a platform and the respective initialization
-> sequence, core code may end up allocating PCI domain numbers from both DT and
-> the core code generic domain counter, which would result in PCI domain
-> allocation aliases/errors.
-> 
-> This patch fixes the logic behind the PCI domain number assignment and
-> moves the resulting code to generic PCI core code so that the same domain
-> allocation logic is used on all platforms selecting
-> 
-> CONFIG_PCI_DOMAINS_GENERIC
-> 
-> instead of resorting to an arch specific implementation that might end up
-> duplicating the PCI domain assignment logic wrongly.
-> 
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Liviu Dudau <liviu.dudau@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: Catalin Marinas <catalin.marinas@arm.com>
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Note that x86 32bits machines still have its own low-level direct
+PCI config space accessors.
 
-Applied with Liviu and Arnd's acks to pci/domain for v3.19, thanks.
+Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+---
+ arch/x86/pci/Makefile      |   5 +-
+ arch/x86/pci/mmconfig_64.c | 152 ---------------------------------------------
+ drivers/acpi/mmconfig.c    | 134 +++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 138 insertions(+), 153 deletions(-)
+ delete mode 100644 arch/x86/pci/mmconfig_64.c
 
-It doesn't matter whether I'm in the to: or cc: list.  The important thing
-is that it appears on the linux-pci list, because I use patchwork as my
-to-do list, and patchwork only vacuums up stuff from linux-pci.
+diff --git a/arch/x86/pci/Makefile b/arch/x86/pci/Makefile
+index 5c6fc35..35c765b 100644
+--- a/arch/x86/pci/Makefile
++++ b/arch/x86/pci/Makefile
+@@ -1,7 +1,10 @@
+ obj-y				:= i386.o init.o
+ 
+ obj-$(CONFIG_PCI_BIOS)		+= pcbios.o
+-obj-$(CONFIG_PCI_MMCONFIG)	+= mmconfig_$(BITS).o direct.o mmconfig-shared.o
++obj-$(CONFIG_PCI_MMCONFIG)	+= direct.o mmconfig-shared.o
++ifeq ($(BITS),32)
++obj-$(CONFIG_PCI_MMCONFIG)	+= mmconfig_32.o
++endif
+ obj-$(CONFIG_PCI_DIRECT)	+= direct.o
+ obj-$(CONFIG_PCI_OLPC)		+= olpc.o
+ obj-$(CONFIG_PCI_XEN)		+= xen.o
+diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+deleted file mode 100644
+index ff2c50c..0000000
+--- a/arch/x86/pci/mmconfig_64.c
++++ /dev/null
+@@ -1,152 +0,0 @@
+-/*
+- * mmconfig.c - Low-level direct PCI config space access via MMCONFIG
+- *
+- * This is an 64bit optimized version that always keeps the full mmconfig
+- * space mapped. This allows lockless config space operation.
+- */
+-
+-#include <linux/pci.h>
+-#include <linux/init.h>
+-#include <linux/acpi.h>
+-#include <linux/bitmap.h>
+-#include <linux/rcupdate.h>
+-#include <linux/mmconfig.h>
+-#include <asm/e820.h>
+-#include <asm/pci_x86.h>
+-
+-#define PREFIX "PCI: "
+-
+-static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus, unsigned int devfn)
+-{
+-	struct pci_mmcfg_region *cfg = pci_mmconfig_lookup(seg, bus);
+-
+-	if (cfg && cfg->virt)
+-		return cfg->virt + (PCI_MMCFG_BUS_OFFSET(bus) | (devfn << 12));
+-	return NULL;
+-}
+-
+-int pci_mmcfg_read(unsigned int seg, unsigned int bus,
+-			  unsigned int devfn, int reg, int len, u32 *value)
+-{
+-	char __iomem *addr;
+-
+-	/* Why do we have this when nobody checks it. How about a BUG()!? -AK */
+-	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095))) {
+-err:		*value = -1;
+-		return -EINVAL;
+-	}
+-
+-	rcu_read_lock();
+-	addr = pci_dev_base(seg, bus, devfn);
+-	if (!addr) {
+-		rcu_read_unlock();
+-		goto err;
+-	}
+-
+-	switch (len) {
+-	case 1:
+-		*value = mmio_config_readb(addr + reg);
+-		break;
+-	case 2:
+-		*value = mmio_config_readw(addr + reg);
+-		break;
+-	case 4:
+-		*value = mmio_config_readl(addr + reg);
+-		break;
+-	}
+-	rcu_read_unlock();
+-
+-	return 0;
+-}
+-
+-int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+-			   unsigned int devfn, int reg, int len, u32 value)
+-{
+-	char __iomem *addr;
+-
+-	/* Why do we have this when nobody checks it. How about a BUG()!? -AK */
+-	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
+-		return -EINVAL;
+-
+-	rcu_read_lock();
+-	addr = pci_dev_base(seg, bus, devfn);
+-	if (!addr) {
+-		rcu_read_unlock();
+-		return -EINVAL;
+-	}
+-
+-	switch (len) {
+-	case 1:
+-		mmio_config_writeb(addr + reg, value);
+-		break;
+-	case 2:
+-		mmio_config_writew(addr + reg, value);
+-		break;
+-	case 4:
+-		mmio_config_writel(addr + reg, value);
+-		break;
+-	}
+-	rcu_read_unlock();
+-
+-	return 0;
+-}
+-
+-const struct pci_raw_ops pci_mmcfg = {
+-	.read =		pci_mmcfg_read,
+-	.write =	pci_mmcfg_write,
+-};
+-
+-static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
+-{
+-	void __iomem *addr;
+-	u64 start, size;
+-	int num_buses;
+-
+-	start = cfg->address + PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
+-	num_buses = cfg->end_bus - cfg->start_bus + 1;
+-	size = PCI_MMCFG_BUS_OFFSET(num_buses);
+-	addr = ioremap_nocache(start, size);
+-	if (addr)
+-		addr -= PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
+-	return addr;
+-}
+-
+-int __init pci_mmcfg_arch_init(void)
+-{
+-	struct pci_mmcfg_region *cfg;
+-
+-	list_for_each_entry(cfg, &pci_mmcfg_list, list)
+-		if (pci_mmcfg_arch_map(cfg)) {
+-			pci_mmcfg_arch_free();
+-			return 0;
+-		}
+-
+-	return 1;
+-}
+-
+-void __init pci_mmcfg_arch_free(void)
+-{
+-	struct pci_mmcfg_region *cfg;
+-
+-	list_for_each_entry(cfg, &pci_mmcfg_list, list)
+-		pci_mmcfg_arch_unmap(cfg);
+-}
+-
+-int pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg)
+-{
+-	cfg->virt = mcfg_ioremap(cfg);
+-	if (!cfg->virt) {
+-		pr_err(PREFIX "can't map MMCONFIG at %pR\n", &cfg->res);
+-		return -ENOMEM;
+-	}
+-
+-	return 0;
+-}
+-
+-void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg)
+-{
+-	if (cfg && cfg->virt) {
+-		iounmap(cfg->virt + PCI_MMCFG_BUS_OFFSET(cfg->start_bus));
+-		cfg->virt = NULL;
+-	}
+-}
+diff --git a/drivers/acpi/mmconfig.c b/drivers/acpi/mmconfig.c
+index d62dccda..c0ad05f 100644
+--- a/drivers/acpi/mmconfig.c
++++ b/drivers/acpi/mmconfig.c
+@@ -12,14 +12,148 @@
+ 
+ #include <linux/mutex.h>
+ #include <linux/rculist.h>
++#include <linux/pci.h>
+ #include <linux/mmconfig.h>
+ 
++#include <asm/pci.h>
++
+ #define PREFIX "PCI: "
+ 
+ static DEFINE_MUTEX(pci_mmcfg_lock);
+ 
+ LIST_HEAD(pci_mmcfg_list);
+ 
++static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus,
++				  unsigned int devfn)
++{
++	struct pci_mmcfg_region *cfg = pci_mmconfig_lookup(seg, bus);
++
++	if (cfg && cfg->virt)
++		return cfg->virt + (PCI_MMCFG_BUS_OFFSET(bus) | (devfn << 12));
++	return NULL;
++}
++
++int __weak pci_mmcfg_read(unsigned int seg, unsigned int bus,
++			  unsigned int devfn, int reg, int len, u32 *value)
++{
++	char __iomem *addr;
++
++	/* Why do we have this when nobody checks it. How about a BUG()!? -AK */
++	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095))) {
++err:		*value = -1;
++		return -EINVAL;
++	}
++
++	rcu_read_lock();
++	addr = pci_dev_base(seg, bus, devfn);
++	if (!addr) {
++		rcu_read_unlock();
++		goto err;
++	}
++
++	switch (len) {
++	case 1:
++		*value = mmio_config_readb(addr + reg);
++		break;
++	case 2:
++		*value = mmio_config_readw(addr + reg);
++		break;
++	case 4:
++		*value = mmio_config_readl(addr + reg);
++		break;
++	}
++	rcu_read_unlock();
++
++	return 0;
++}
++
++int __weak pci_mmcfg_write(unsigned int seg, unsigned int bus,
++			   unsigned int devfn, int reg, int len, u32 value)
++{
++	char __iomem *addr;
++
++	/* Why do we have this when nobody checks it. How about a BUG()!? -AK */
++	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
++		return -EINVAL;
++
++	rcu_read_lock();
++	addr = pci_dev_base(seg, bus, devfn);
++	if (!addr) {
++		rcu_read_unlock();
++		return -EINVAL;
++	}
++
++	switch (len) {
++	case 1:
++		mmio_config_writeb(addr + reg, value);
++		break;
++	case 2:
++		mmio_config_writew(addr + reg, value);
++		break;
++	case 4:
++		mmio_config_writel(addr + reg, value);
++		break;
++	}
++	rcu_read_unlock();
++
++	return 0;
++}
++
++static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
++{
++	void __iomem *addr;
++	u64 start, size;
++	int num_buses;
++
++	start = cfg->address + PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
++	num_buses = cfg->end_bus - cfg->start_bus + 1;
++	size = PCI_MMCFG_BUS_OFFSET(num_buses);
++	addr = ioremap_nocache(start, size);
++	if (addr)
++		addr -= PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
++	return addr;
++}
++
++int __init __weak pci_mmcfg_arch_init(void)
++{
++	struct pci_mmcfg_region *cfg;
++
++	list_for_each_entry(cfg, &pci_mmcfg_list, list)
++		if (pci_mmcfg_arch_map(cfg)) {
++			pci_mmcfg_arch_free();
++			return 0;
++		}
++
++	return 1;
++}
++
++void __init __weak pci_mmcfg_arch_free(void)
++{
++	struct pci_mmcfg_region *cfg;
++
++	list_for_each_entry(cfg, &pci_mmcfg_list, list)
++		pci_mmcfg_arch_unmap(cfg);
++}
++
++int __weak pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg)
++{
++	cfg->virt = mcfg_ioremap(cfg);
++	if (!cfg->virt) {
++		pr_err(PREFIX "can't map MMCONFIG at %pR\n", &cfg->res);
++		return -ENOMEM;
++	}
++
++	return 0;
++}
++
++void __weak pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg)
++{
++	if (cfg && cfg->virt) {
++		iounmap(cfg->virt + PCI_MMCFG_BUS_OFFSET(cfg->start_bus));
++		cfg->virt = NULL;
++	}
++}
++
+ static void __init pci_mmconfig_remove(struct pci_mmcfg_region *cfg)
+ {
+ 	if (cfg->res.parent)
+-- 
+1.9.1
 
-> ---
-> v1 => v2:
-> 
-> - Moved generic pci_bus_assign_domain_nr() code to PCI core instead of
->   adding an OF layer API
-> - Updated commit log and code comments
-> 
->  arch/arm64/kernel/pci.c | 22 ----------------------
->  drivers/pci/pci.c       | 50 +++++++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 50 insertions(+), 22 deletions(-)
-> 
-> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> index ce5836c..6f93c24 100644
-> --- a/arch/arm64/kernel/pci.c
-> +++ b/arch/arm64/kernel/pci.c
-> @@ -46,25 +46,3 @@ int pcibios_add_device(struct pci_dev *dev)
->  
->  	return 0;
->  }
-> -
-> -
-> -#ifdef CONFIG_PCI_DOMAINS_GENERIC
-> -static bool dt_domain_found = false;
-> -
-> -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> -{
-> -	int domain = of_get_pci_domain_nr(parent->of_node);
-> -
-> -	if (domain >= 0) {
-> -		dt_domain_found = true;
-> -	} else if (dt_domain_found == true) {
-> -		dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
-> -			parent->of_node->full_name);
-> -		return;
-> -	} else {
-> -		domain = pci_get_new_domain_nr();
-> -	}
-> -
-> -	bus->domain_nr = domain;
-> -}
-> -#endif
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 625a4ac..2279414 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -10,6 +10,8 @@
->  #include <linux/kernel.h>
->  #include <linux/delay.h>
->  #include <linux/init.h>
-> +#include <linux/of.h>
-> +#include <linux/of_pci.h>
->  #include <linux/pci.h>
->  #include <linux/pm.h>
->  #include <linux/slab.h>
-> @@ -4447,6 +4449,54 @@ int pci_get_new_domain_nr(void)
->  {
->  	return atomic_inc_return(&__domain_nr);
->  }
-> +
-> +#ifdef CONFIG_PCI_DOMAINS_GENERIC
-> +
-> +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> +{
-> +	static int use_dt_domains = -1;
-> +	int domain = of_get_pci_domain_nr(parent->of_node);
-> +
-> +	/*
-> +	 * Check DT domain and use_dt_domains values.
-> +	 *
-> +	 * If DT domain property is valid (domain >= 0) and
-> +	 * use_dt_domains != 0, the DT assignment is valid since this means
-> +	 * we have not previously allocated a domain number by using
-> +	 * pci_get_new_domain_nr(); we should also update use_dt_domains to
-> +	 * 1, to indicate that we have just assigned a domain number from
-> +	 * DT.
-> +	 *
-> +	 * If DT domain property value is not valid (ie domain < 0), and we
-> +	 * have not previously assigned a domain number from DT
-> +	 * (use_dt_domains != 1) we should assign a domain number by
-> +	 * using the:
-> +	 *
-> +	 * pci_get_new_domain_nr()
-> +	 *
-> +	 * API and update the use_dt_domains value to keep track of method we
-> +	 * are using to assign domain numbers (use_dt_domains = 0).
-> +	 *
-> +	 * All other combinations imply we have a platform that is trying
-> +	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
-> +	 * which is a recipe for domain mishandling and it is prevented by
-> +	 * invalidating the domain value (domain = -1) and printing a
-> +	 * corresponding error.
-> +	 */
-> +	if (domain >= 0 && use_dt_domains) {
-> +		use_dt_domains = 1;
-> +	} else if (domain < 0 && use_dt_domains != 1) {
-> +		use_dt_domains = 0;
-> +		domain = pci_get_new_domain_nr();
-> +	} else {
-> +		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
-> +			parent->of_node->full_name);
-> +		domain = -1;
-> +	}
-> +
-> +	bus->domain_nr = domain;
-> +}
-> +#endif
->  #endif
->  
->  /**
-> -- 
-> 2.1.2
-> 
