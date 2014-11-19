@@ -1,74 +1,53 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Andy Lutomirski <luto@amacapital.net>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v6 03/27] x86, hpet: Use new irqdomain interfaces to allocate/free IRQ
-Date: Tue, 25 Nov 2014 13:53:12 +0800
-Message-Id: <1416894816-23245-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+To: catalin.marinas@arm.com, will.deacon@arm.com, bhelgaas@google.com,
+	lorenzo.pieralisi@arm.com, wangyijing@huawei.com, arnd@arndb.de,
+	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Subject: [PATCH 0/6] PCI: MMCONFIG clean up
+Date: Wed, 19 Nov 2014 17:04:45 +0100
+Message-Id: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new irqdomain interfaces to allocate/free IRQ for HPET, so we could
-kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
+MMCFG ACPI table has no arch dependencies so it can be used across all
+architectures. Currently MMCONFIG related code resides in arch/x86 directories.
+This patch set is goint to isolate non-architecure specific code and make
+it accessible from drivers/pci/ directory.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/hpet.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+Tomasz Nowicki (6):
+  x86, acpi, pci: Reorder logic of pci_mmconfig_insert() function
+  x86, acpi, pci: Move arch-agnostic MMCFG code out of arch/x86/
+    directory
+  x86, acpi, pci: Move PCI config space accessors.
+  x86, acpi, pci: mmconfig_{32,64}.c code refactoring - remove code
+    duplication.
+  x86, acpi, pci: mmconfig_64.c becomes default implementation for arch
+    agnostic low-level direct PCI config space accessors via MMCONFIG.
+  pci, acpi: Share ACPI PCI config space accessors.
 
-diff --git a/arch/x86/kernel/hpet.c b/arch/x86/kernel/hpet.c
-index 319bcb9372fe..24db2d33fab7 100644
---- a/arch/x86/kernel/hpet.c
-+++ b/arch/x86/kernel/hpet.c
-@@ -11,6 +11,7 @@
- #include <linux/cpu.h>
- #include <linux/pm.h>
- #include <linux/io.h>
-+#include <linux/irqdomain.h>
- 
- #include <asm/fixmap.h>
- #include <asm/hpet.h>
-@@ -476,7 +477,7 @@ static int hpet_msi_next_event(unsigned long delta,
- static int hpet_setup_msi_irq(unsigned int irq)
- {
- 	if (x86_msi.setup_hpet_msi(irq, hpet_blockid)) {
--		irq_free_hwirq(irq);
-+		irq_domain_free_irqs(irq, 1);
- 		return -EINVAL;
- 	}
- 	return 0;
-@@ -484,9 +485,10 @@ static int hpet_setup_msi_irq(unsigned int irq)
- 
- static int hpet_assign_irq(struct hpet_dev *dev)
- {
--	unsigned int irq = irq_alloc_hwirq(-1);
-+	int irq;
- 
--	if (!irq)
-+	irq = irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
-+	if (irq <= 0)
- 		return -EINVAL;
- 
- 	irq_set_handler_data(irq, dev);
+ arch/x86/include/asm/pci.h     |  42 +++++
+ arch/x86/include/asm/pci_x86.h |  72 --------
+ arch/x86/pci/Makefile          |   5 +-
+ arch/x86/pci/acpi.c            |   1 +
+ arch/x86/pci/init.c            |   1 +
+ arch/x86/pci/mmconfig-shared.c | 242 ++++---------------------
+ arch/x86/pci/mmconfig_32.c     |  11 +-
+ arch/x86/pci/mmconfig_64.c     | 153 ----------------
+ drivers/acpi/Makefile          |   1 +
+ drivers/acpi/bus.c             |   1 +
+ drivers/acpi/mmconfig.c        | 396 +++++++++++++++++++++++++++++++++++++++++
+ include/linux/mmconfig.h       |  62 +++++++
+ include/linux/pci.h            |   8 -
+ 13 files changed, 541 insertions(+), 454 deletions(-)
+ delete mode 100644 arch/x86/pci/mmconfig_64.c
+ create mode 100644 drivers/acpi/mmconfig.c
+ create mode 100644 include/linux/mmconfig.h
+
 -- 
-1.7.10.4
+1.9.1
 
