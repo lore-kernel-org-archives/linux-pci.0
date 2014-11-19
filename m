@@ -1,80 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:54107 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750736AbaKXFJK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 24 Nov 2014 00:09:10 -0500
-Message-ID: <1416805719.4998.15.camel@kernel.crashing.org>
-Subject: linuxppc-dev list <linuxppc-dev@ozlabs.org>
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Michael Ellerman <mpe@ellerman.id.au>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Takashi Iwai <tiwai@suse.de>
-Date: Mon, 24 Nov 2014 16:08:39 +1100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from szxga01-in.huawei.com ([119.145.14.64]:11874 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754153AbaKSGwG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 01:52:06 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	Liviu Dudau <liviu@dudau.co.uk>, Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 0/5] PCI scan interfaces clean up
+Date: Wed, 19 Nov 2014 15:32:44 +0800
+Message-ID: <1416382369-13587-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus !
 
-This series fix a nasty issue with radeon adapters on powerpc servers,
-it's all CC'ed stable and has the relevant maintainers ack's/reviews.
+Yijing Wang (5):
+  PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
+  PCI: Introduce pci_scan_bus_simple()
+  PCI: Use pci_scan_bus_simple() in simple scene.
+  PCI: Remove pci_scan_bus() and pci_scan_bus_parented()
+  PCI: Rip out pci_bus_add_devices() from pci_scan_root_bus()
 
-Basically, some (radeon) adapters have issues with MSI addresses above
-1T (only support 40-bits). We had powerpc specific quirk but it only
-listed a specific revision of an adapter that we shipped with our
-machines and didn't properly handle the audio function which some distros
-enable nowadays.
-
-So we made the quirk generic and fixed both the graphic and audio drivers
-properly to use it.
-
-Without that, ppc64 server machines will crash at boot with a radeon adapter.
-
-Note: This has been brewing for a while, it just needed a last respin which
-got delayed due to us moving ozlabs to a new location in town and other such
-things taking priority.
-
-Cheers,
-Ben.
-
-The following changes since commit 5d01410fe4d92081f349b013a2e7a95429e4f2c9:
-
-  Linux 3.18-rc6 (2014-11-23 15:25:20 -0800)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/benh/powerpc.git 
-
-for you to fetch changes up to 31345e1a071e4e5f2fa8b6be5ca7d1cbce20cfca:
-
-  powerpc/pci: Remove unused force_32bit_msi quirk (2014-11-24 14:36:02 +1100)
-
-----------------------------------------------------------------
-Benjamin Herrenschmidt (6):
-      PCI/MSI: Add device flag indicating that 64-bit MSIs don't work
-      gpu/radeon: Set flag to indicate broken 64-bit MSI
-      sound/radeon: Move 64-bit MSI quirk from arch to driver
-      powerpc/powernv: Honor the generic "no_64bit_msi" flag
-      powerpc/pseries: Honor the generic "no_64bit_msi" flag
-      powerpc/pci: Remove unused force_32bit_msi quirk
-
-Takashi Iwai (1):
-      ALSA: hda - Limit 40bit DMA for AMD HDMI controllers
-
- arch/powerpc/include/asm/pci-bridge.h     |  2 --
- arch/powerpc/kernel/pci_64.c              | 10 ----------
- arch/powerpc/platforms/powernv/pci-ioda.c |  3 +--
- arch/powerpc/platforms/powernv/pci.c      |  3 +--
- arch/powerpc/platforms/pseries/msi.c      |  2 +-
- drivers/gpu/drm/radeon/radeon_irq_kms.c   | 10 ++++++++++
- drivers/pci/msi.c                         | 26 ++++++++++++++++++++++++++
- include/linux/pci.h                       |  1 +
- sound/pci/hda/hda_intel.c                 | 24 +++++++++++++++++++-----
- sound/pci/hda/hda_priv.h                  |  1 +
- 10 files changed, 60 insertions(+), 22 deletions(-)
-
+ arch/alpha/kernel/pci.c           |    2 ++
+ arch/alpha/kernel/sys_nautilus.c  |    3 ++-
+ arch/frv/mb93090-mb00/pci-vdk.c   |    6 ++++--
+ arch/ia64/sn/kernel/io_init.c     |    1 +
+ arch/m68k/coldfire/pci.c          |    3 ++-
+ arch/microblaze/pci/pci-common.c  |    1 +
+ arch/mips/pci/pci.c               |    1 +
+ arch/mn10300/unit-asb2305/pci.c   |    5 ++++-
+ arch/s390/pci/pci.c               |    2 +-
+ arch/sh/drivers/pci/pci.c         |    1 +
+ arch/sparc/kernel/leon_pci.c      |    1 +
+ arch/sparc/kernel/pcic.c          |    5 ++++-
+ arch/tile/kernel/pci.c            |    2 ++
+ arch/tile/kernel/pci_gx.c         |    2 ++
+ arch/unicore32/kernel/pci.c       |   15 +++++----------
+ arch/x86/pci/common.c             |    1 +
+ arch/xtensa/kernel/pci.c          |    2 ++
+ drivers/pci/host/pci-xgene.c      |    1 +
+ drivers/pci/hotplug/ibmphp_core.c |    7 +++++--
+ drivers/pci/probe.c               |   26 ++------------------------
+ drivers/pci/xen-pcifront.c        |    2 +-
+ include/linux/pci.h               |    3 +--
+ 22 files changed, 46 insertions(+), 46 deletions(-)
 
