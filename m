@@ -1,75 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0147.outbound.protection.outlook.com ([157.56.110.147]:3728
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751051AbaKFAFu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 5 Nov 2014 19:05:50 -0500
-Message-ID: <545ABB4C.8010103@amd.com>
-Date: Wed, 5 Nov 2014 18:05:32 -0600
-From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Received: from mout.kundenserver.de ([212.227.17.24]:64518 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753988AbaKSM3Q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 07:29:16 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	linux-ia64@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH 3/5] PCI: Use pci_scan_bus_simple() in simple scene.
+Date: Wed, 19 Nov 2014 13:28:50 +0100
+Message-ID: <3577231.2krnYe8yCU@wuerfel>
+In-Reply-To: <1416382369-13587-4-git-send-email-wangyijing@huawei.com>
+References: <1416382369-13587-1-git-send-email-wangyijing@huawei.com> <1416382369-13587-4-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>, <marc.zyngier@arm.com>,
-	<mark.rutland@arm.com>, <jason@lakedaemon.net>,
-	<tglx@linutronix.de>
-CC: <Catalin.Marinas@arm.com>, <Will.Deacon@arm.com>,
-	<liviu.dudau@arm.com>, <Harish.Kasiviswanathan@amd.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: Re: [V10 PATCH 2/2] irqchip: gicv2m: Add supports for ARM GICv2m
- MSI(-X)
-References: <1415052977-26036-1-git-send-email-suravee.suthikulpanit@amd.com>
- <1415052977-26036-3-git-send-email-suravee.suthikulpanit@amd.com>
- <5458CE31.3040404@linux.intel.com>
-In-Reply-To: <5458CE31.3040404@linux.intel.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/4/2014 7:01 AM, Jiang Liu wrote:
-> Hi Suravee,
-> 	You may build a two level hierarchy irqdomains. Use the
-> utilities in this thread
-> http://www.spinics.net/lists/arm-kernel/msg374722.html  to build an MSI
-> irqdomain to manage MSI controllers
-> in PCI devices. And build another irqdomain to manage SPI allocation
-> in GICv2.
-> 	That is: MSI irqdomain (program MSI registers)  -->
-> GIV irqdomain (manage SPIs in GICv2 controller)
->
-> Regards!
-> Gerry
+On Wednesday 19 November 2014 15:32:47 Yijing Wang wrote:
+> Use pci_scan_bus_simple() to scan pci buses with
+> the default IO/MEM/BUS resources. Use it instead
+> of pci_scan_bus() and pci_scan_bus_parented().
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> 
 
-Gerry,
+I think we should replace pci_scan_bus_parented() with something better
+by making the xen code use pci_scan_root_bus() (see below for a draft
+patch). After that we no longer need the 'parent' argument here and we
+can just keep using the pci_scan_bus() function for the legacy users,
+or rename it if that helps.
 
-I try out your patch from the link above, and I have a couple 
-questions/issues.
+	Arnd
 
-1. In the drivers/pci/msi.c: msi_irq_domain_alloc_irqs(), it seems that 
-the hwirq comes from msi_get_hwirq(dev, msidesc). In GICv2m, hwirq for 
-MSI is fixed over a specific range. This might require arch-specific
-callback.
 
-2. In msi_domain_activate, why "if (!irq_data->chip_data)"?
+8<---
 
-3. In, msi_domain_alloc():
-
-- There should be a way to specify other types of irq handler besides 
-the "handle_edge_irq". In case of GIC, it needs handle_fasteoi_irq.
-
-- When calling irq_domain_set_hwirq_and_chip(), you are passing "(void 
-*)(long)i" for the "void *chip_data" parameter. What is this used for, 
-and where?  Shouldn't this be pointing to arch-specific data structure?
-
-- The code is calling irq_domain_alloc_irqs_parent before the loop, 
-which calls irq_domain_set_hwirq_and_chip() and __irq_set_handler. 
-Shouldn't the order be switched?
-
-- Overall, it seems that msi_domain_alloc() could be quite different 
-across architectures. Would it be possible to declare this function as 
-weak, and allow arch to override (similar to arch_setup_msi_irq)?
-
-Thanks,
-
-Suravee
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index 116ca3746adb..45a4843a608a 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -448,6 +448,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 	struct pci_bus *b;
+ 	struct pcifront_sd *sd = NULL;
+ 	struct pci_bus_entry *bus_entry = NULL;
++	LIST_HEAD(resources);
+ 	int err = 0;
+ 
+ #ifndef CONFIG_PCI_DOMAINS
+@@ -470,17 +471,20 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 		err = -ENOMEM;
+ 		goto err_out;
+ 	}
++	pci_add_resource(&resources, &ioport_resource);
++	pci_add_resource(&resources, &iomem_resource);
+ 	pcifront_init_sd(sd, domain, bus, pdev);
+ 
+ 	pci_lock_rescan_remove();
+ 
+-	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
+-				  &pcifront_bus_ops, sd);
++	b = pci_scan_root_bus(&pdev->xdev->dev, bus, &pcifront_bus_ops, sd,
++			      &resources);
+ 	if (!b) {
+ 		dev_err(&pdev->xdev->dev,
+ 			"Error creating PCI Frontend Bus!\n");
+ 		err = -ENOMEM;
+ 		pci_unlock_rescan_remove();
++		pci_free_resource_list(&resources);
+ 		goto err_out;
+ 	}
+ 
 
