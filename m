@@ -1,354 +1,186 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:35996 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751905AbaKKKei (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 05:34:38 -0500
-From: Ming Lei <ming.lei@canonical.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <will.deacon@arm.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Cc: Rob Herring <robh+dt@kernel.org>,
-	alvise rigo <a.rigo@virtualopensystems.com>,
-	Ming Lei <ming.lei@canonical.com>
-Subject: [PATCH] pci: generic host: make it more generic
-Date: Tue, 11 Nov 2014 18:33:59 +0800
-Message-Id: <1415702040-2790-1-git-send-email-ming.lei@canonical.com>
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:33040 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754367AbaKSJj4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 04:39:56 -0500
+Date: Wed, 19 Nov 2014 09:39:48 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Yijing Wang <wangyijing@huawei.com>, bhelgaas@google.com
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>
+Subject: Re: [RFC PATCH v2] drivers: pci: move PCI domain assignment to
+ generic PCI code
+Message-ID: <20141119093948.GA8751@red-moon>
+References: <1415637706-2195-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <546C5FF2.5090903@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <546C5FF2.5090903@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch converts the generic host controller driver
-into a more generic one, and basically don't need
-platform's pcibios support, and use DT based generic
-APIs to parse resource and remap IO port.
+On Wed, Nov 19, 2014 at 09:16:34AM +0000, Yijing Wang wrote:
+> Hi Lorenzo,
+>    You should send this to Bjorn instead of cc. Other, why put the OF related
+> function in PCI core. Why not move it in drivers/of/of_pci.c ?
 
-This patch has been tested on both ARMv7 and ARMv8
-VM, and in theroy it should support other ARCHs too.
+I did, you missed v1, and the problem is that with ACPI forthcoming we
+do not want to have domain assignment scattered in different places,
+but part of core code (ie a single function that prevents mixed
+initialization from DT/counter and so on).
 
-With this patch, virtio PCI block, network and scsi devices
-can work well on ARMv7 and ARMv8 VM.
+Bjorn, are you fine with this patch ? Do you want me to resend it as
+part of the ARM 32 PCI domain refactoring [1] ? [1] depends on this
+patch going in first.
 
-QEMU needs below patches for runing the test:
+Thanks,
+Lorenzo
 
-- Rob Herring's "Add generic PCI host device" patches
-	http://lists.gnu.org/archive/html/qemu-devel/2014-06/msg03482.html
-	http://lists.gnu.org/archive/html/qemu-devel/2014-06/msg03483.html
-- Alvise Rigo's "Add Generic PCI host device update"
-	http://marc.info/?l=qemu-devel&m=140506329920172&w=2
+[1] http://www.spinics.net/lists/arm-kernel/msg375423.html
 
-For ARMv8, cpu model of "host" and "cortex-a57" is missed
-in Alvise Rigo's patchset, otherwise ARM64 VM can't boot.
-
-All these QEMU patches can be found in below tree:
-
-	http://kernel.ubuntu.com/git?p=ming/qemu.git;a=shortlog;h=refs/heads/arm64-pci-test
-
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
----
- drivers/pci/host/Kconfig            |    2 +-
- drivers/pci/host/pci-host-generic.c |  196 +++++++++++------------------------
- 2 files changed, 63 insertions(+), 135 deletions(-)
-
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 3dc25fa..885034d 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -50,7 +50,7 @@ config PCI_RCAR_GEN2_PCIE
- 
- config PCI_HOST_GENERIC
- 	bool "Generic PCI host controller"
--	depends on ARM && OF
-+	depends on OF
- 	help
- 	  Say Y here if you want to support a simple generic PCI host
- 	  controller, such as the one emulated by kvmtool.
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 3d2076f..00d0ca3 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -44,12 +44,14 @@ struct gen_pci {
- 	struct list_head			resources;
- };
- 
-+/* fake sysdata for cheating ARCH's pcibios code */
-+static char	gen_sysdata[256];
-+
- static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
- 					     unsigned int devfn,
- 					     int where)
- {
--	struct pci_sys_data *sys = bus->sysdata;
--	struct gen_pci *pci = sys->private_data;
-+	struct gen_pci *pci = dev_get_drvdata(bus->dev.parent->parent);
- 	resource_size_t idx = bus->number - pci->cfg.bus_range.start;
- 
- 	return pci->cfg.win[idx] + ((devfn << 8) | where);
-@@ -64,8 +66,7 @@ static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
- 					      unsigned int devfn,
- 					      int where)
- {
--	struct pci_sys_data *sys = bus->sysdata;
--	struct gen_pci *pci = sys->private_data;
-+	struct gen_pci *pci = dev_get_drvdata(bus->dev.parent->parent);
- 	resource_size_t idx = bus->number - pci->cfg.bus_range.start;
- 
- 	return pci->cfg.win[idx] + ((devfn << 12) | where);
-@@ -80,8 +81,7 @@ static int gen_pci_config_read(struct pci_bus *bus, unsigned int devfn,
- 				int where, int size, u32 *val)
- {
- 	void __iomem *addr;
--	struct pci_sys_data *sys = bus->sysdata;
--	struct gen_pci *pci = sys->private_data;
-+	struct gen_pci *pci = dev_get_drvdata(bus->dev.parent->parent);
- 
- 	addr = pci->cfg.ops->map_bus(bus, devfn, where);
- 
-@@ -103,8 +103,7 @@ static int gen_pci_config_write(struct pci_bus *bus, unsigned int devfn,
- 				 int where, int size, u32 val)
- {
- 	void __iomem *addr;
--	struct pci_sys_data *sys = bus->sysdata;
--	struct gen_pci *pci = sys->private_data;
-+	struct gen_pci *pci = dev_get_drvdata(bus->dev.parent->parent);
- 
- 	addr = pci->cfg.ops->map_bus(bus, devfn, where);
- 
-@@ -138,45 +137,6 @@ static const struct of_device_id gen_pci_of_match[] = {
- };
- MODULE_DEVICE_TABLE(of, gen_pci_of_match);
- 
--static int gen_pci_calc_io_offset(struct device *dev,
--				  struct of_pci_range *range,
--				  struct resource *res,
--				  resource_size_t *offset)
--{
--	static atomic_t wins = ATOMIC_INIT(0);
--	int err, idx, max_win;
--	unsigned int window;
--
--	if (!PAGE_ALIGNED(range->cpu_addr))
--		return -EINVAL;
--
--	max_win = (IO_SPACE_LIMIT + 1) / SZ_64K;
--	idx = atomic_inc_return(&wins);
--	if (idx > max_win)
--		return -ENOSPC;
--
--	window = (idx - 1) * SZ_64K;
--	err = pci_ioremap_io(window, range->cpu_addr);
--	if (err)
--		return err;
--
--	of_pci_range_to_resource(range, dev->of_node, res);
--	res->start = window;
--	res->end = res->start + range->size - 1;
--	*offset = window - range->pci_addr;
--	return 0;
--}
--
--static int gen_pci_calc_mem_offset(struct device *dev,
--				   struct of_pci_range *range,
--				   struct resource *res,
--				   resource_size_t *offset)
--{
--	of_pci_range_to_resource(range, dev->of_node, res);
--	*offset = range->cpu_addr - range->pci_addr;
--	return 0;
--}
--
- static void gen_pci_release_of_pci_ranges(struct gen_pci *pci)
- {
- 	struct pci_host_bridge_window *win;
-@@ -187,72 +147,6 @@ static void gen_pci_release_of_pci_ranges(struct gen_pci *pci)
- 	pci_free_resource_list(&pci->resources);
- }
- 
--static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
--{
--	struct of_pci_range range;
--	struct of_pci_range_parser parser;
--	int err, res_valid = 0;
--	struct device *dev = pci->host.dev.parent;
--	struct device_node *np = dev->of_node;
--
--	if (of_pci_range_parser_init(&parser, np)) {
--		dev_err(dev, "missing \"ranges\" property\n");
--		return -EINVAL;
--	}
--
--	for_each_of_pci_range(&parser, &range) {
--		struct resource *parent, *res;
--		resource_size_t offset;
--		u32 restype = range.flags & IORESOURCE_TYPE_BITS;
--
--		res = devm_kmalloc(dev, sizeof(*res), GFP_KERNEL);
--		if (!res) {
--			err = -ENOMEM;
--			goto out_release_res;
--		}
--
--		switch (restype) {
--		case IORESOURCE_IO:
--			parent = &ioport_resource;
--			err = gen_pci_calc_io_offset(dev, &range, res, &offset);
--			break;
--		case IORESOURCE_MEM:
--			parent = &iomem_resource;
--			err = gen_pci_calc_mem_offset(dev, &range, res, &offset);
--			res_valid |= !(res->flags & IORESOURCE_PREFETCH || err);
--			break;
--		default:
--			err = -EINVAL;
--			continue;
--		}
--
--		if (err) {
--			dev_warn(dev,
--				 "error %d: failed to add resource [type 0x%x, %lld bytes]\n",
--				 err, restype, range.size);
--			continue;
--		}
--
--		err = request_resource(parent, res);
--		if (err)
--			goto out_release_res;
--
--		pci_add_resource_offset(&pci->resources, res, offset);
--	}
--
--	if (!res_valid) {
--		dev_err(dev, "non-prefetchable memory resource required\n");
--		err = -EINVAL;
--		goto out_release_res;
--	}
--
--	return 0;
--
--out_release_res:
--	gen_pci_release_of_pci_ranges(pci);
--	return err;
--}
--
- static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
- {
- 	int err;
-@@ -305,16 +199,33 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
- 			return -ENOMEM;
- 	}
- 
--	/* Register bus resource */
--	pci_add_resource(&pci->resources, bus_range);
- 	return 0;
- }
- 
--static int gen_pci_setup(int nr, struct pci_sys_data *sys)
-+static int gen_pci_map_ranges(struct list_head *res,
-+		resource_size_t io_base)
- {
--	struct gen_pci *pci = sys->private_data;
--	list_splice_init(&pci->resources, &sys->resources);
--	return 1;
-+	struct pci_host_bridge_window *window;
-+	int ret;
-+
-+	list_for_each_entry(window, res, list) {
-+		struct resource *res = window->res;
-+		u64 restype = resource_type(res);
-+
-+		switch (restype) {
-+		case IORESOURCE_IO:
-+			ret = pci_remap_iospace(res, io_base);
-+			if (ret < 0)
-+				return ret;
-+			break;
-+		case IORESOURCE_MEM:
-+		case IORESOURCE_BUS:
-+			break;
-+		default:
-+			return -EINVAL;
-+		}
-+	}
-+	return 0;
- }
- 
- static int gen_pci_probe(struct platform_device *pdev)
-@@ -325,14 +236,11 @@ static int gen_pci_probe(struct platform_device *pdev)
- 	const int *prop;
- 	struct device *dev = &pdev->dev;
- 	struct device_node *np = dev->of_node;
-+	resource_size_t iobase = 0;
- 	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
--	struct hw_pci hw = {
--		.nr_controllers	= 1,
--		.private_data	= (void **)&pci,
--		.setup		= gen_pci_setup,
--		.map_irq	= of_irq_parse_and_map_pci,
--		.ops		= &gen_pci_ops,
--	};
-+	struct pci_bus *bus;
-+	struct pci_dev *pci_dev = NULL;
-+	bool probe_only = false;
- 
- 	if (!pci)
- 		return -ENOMEM;
-@@ -346,9 +254,9 @@ static int gen_pci_probe(struct platform_device *pdev)
- 	prop = of_get_property(of_chosen, "linux,pci-probe-only", NULL);
- 	if (prop) {
- 		if (*prop)
--			pci_add_flags(PCI_PROBE_ONLY);
-+			probe_only = true;
- 		else
--			pci_clear_flags(PCI_PROBE_ONLY);
-+			probe_only = false;
- 	}
- 
- 	of_id = of_match_node(gen_pci_of_match, np);
-@@ -357,20 +265,40 @@ static int gen_pci_probe(struct platform_device *pdev)
- 	INIT_LIST_HEAD(&pci->host.windows);
- 	INIT_LIST_HEAD(&pci->resources);
- 
--	/* Parse our PCI ranges and request their resources */
--	err = gen_pci_parse_request_of_pci_ranges(pci);
-+	err = of_pci_get_host_bridge_resources(np, 0, 0xff,
-+			&pci->resources, &iobase);
- 	if (err)
- 		return err;
- 
- 	/* Parse and map our Configuration Space windows */
- 	err = gen_pci_parse_map_cfg_windows(pci);
--	if (err) {
--		gen_pci_release_of_pci_ranges(pci);
--		return err;
-+	if (err)
-+		goto fail;
-+
-+	err = gen_pci_map_ranges(&pci->resources, iobase);
-+	if (err)
-+		goto fail;
-+
-+	err = -ENOMEM;
-+	platform_set_drvdata(pdev, pci);
-+	bus = pci_scan_root_bus(dev, 0, &gen_pci_ops, gen_sysdata,
-+				&pci->resources);
-+	if (!bus)
-+		goto fail;
-+
-+	for_each_pci_dev(pci_dev)
-+		pci_dev->irq = of_irq_parse_and_map_pci(pci_dev, 0, 0);
-+
-+	if (!probe_only) {
-+		pci_bus_size_bridges(bus);
-+		pci_bus_assign_resources(bus);
-+		pci_bus_add_devices(bus);
- 	}
- 
--	pci_common_init_dev(dev, &hw);
- 	return 0;
-+ fail:
-+	gen_pci_release_of_pci_ranges(pci);
-+	return err;
- }
- 
- static struct platform_driver gen_pci_driver = {
--- 
-1.7.9.5
-
+> On 2014/11/11 0:41, Lorenzo Pieralisi wrote:
+> > The current logic used for PCI domain assignment in arm64
+> > pci_bus_assign_domain_nr() is flawed in that, depending on the host
+> > controllers configuration for a platform and the respective initialization
+> > sequence, core code may end up allocating PCI domain numbers from both DT and
+> > the core code generic domain counter, which would result in PCI domain
+> > allocation aliases/errors.
+> > 
+> > This patch fixes the logic behind the PCI domain number assignment and
+> > moves the resulting code to generic PCI core code so that the same domain
+> > allocation logic is used on all platforms selecting
+> > 
+> > CONFIG_PCI_DOMAINS_GENERIC
+> > 
+> > instead of resorting to an arch specific implementation that might end up
+> > duplicating the PCI domain assignment logic wrongly.
+> > 
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: Liviu Dudau <liviu.dudau@arm.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Rob Herring <robh+dt@kernel.org>
+> > Cc: Catalin Marinas <catalin.marinas@arm.com>
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > ---
+> > v1 => v2:
+> > 
+> > - Moved generic pci_bus_assign_domain_nr() code to PCI core instead of
+> >   adding an OF layer API
+> > - Updated commit log and code comments
+> > 
+> >  arch/arm64/kernel/pci.c | 22 ----------------------
+> >  drivers/pci/pci.c       | 50 +++++++++++++++++++++++++++++++++++++++++++++++++
+> >  2 files changed, 50 insertions(+), 22 deletions(-)
+> > 
+> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> > index ce5836c..6f93c24 100644
+> > --- a/arch/arm64/kernel/pci.c
+> > +++ b/arch/arm64/kernel/pci.c
+> > @@ -46,25 +46,3 @@ int pcibios_add_device(struct pci_dev *dev)
+> >  
+> >  	return 0;
+> >  }
+> > -
+> > -
+> > -#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> > -static bool dt_domain_found = false;
+> > -
+> > -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> > -{
+> > -	int domain = of_get_pci_domain_nr(parent->of_node);
+> > -
+> > -	if (domain >= 0) {
+> > -		dt_domain_found = true;
+> > -	} else if (dt_domain_found == true) {
+> > -		dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
+> > -			parent->of_node->full_name);
+> > -		return;
+> > -	} else {
+> > -		domain = pci_get_new_domain_nr();
+> > -	}
+> > -
+> > -	bus->domain_nr = domain;
+> > -}
+> > -#endif
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index 625a4ac..2279414 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -10,6 +10,8 @@
+> >  #include <linux/kernel.h>
+> >  #include <linux/delay.h>
+> >  #include <linux/init.h>
+> > +#include <linux/of.h>
+> > +#include <linux/of_pci.h>
+> >  #include <linux/pci.h>
+> >  #include <linux/pm.h>
+> >  #include <linux/slab.h>
+> > @@ -4447,6 +4449,54 @@ int pci_get_new_domain_nr(void)
+> >  {
+> >  	return atomic_inc_return(&__domain_nr);
+> >  }
+> > +
+> > +#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> > +
+> > +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> > +{
+> > +	static int use_dt_domains = -1;
+> > +	int domain = of_get_pci_domain_nr(parent->of_node);
+> > +
+> > +	/*
+> > +	 * Check DT domain and use_dt_domains values.
+> > +	 *
+> > +	 * If DT domain property is valid (domain >= 0) and
+> > +	 * use_dt_domains != 0, the DT assignment is valid since this means
+> > +	 * we have not previously allocated a domain number by using
+> > +	 * pci_get_new_domain_nr(); we should also update use_dt_domains to
+> > +	 * 1, to indicate that we have just assigned a domain number from
+> > +	 * DT.
+> > +	 *
+> > +	 * If DT domain property value is not valid (ie domain < 0), and we
+> > +	 * have not previously assigned a domain number from DT
+> > +	 * (use_dt_domains != 1) we should assign a domain number by
+> > +	 * using the:
+> > +	 *
+> > +	 * pci_get_new_domain_nr()
+> > +	 *
+> > +	 * API and update the use_dt_domains value to keep track of method we
+> > +	 * are using to assign domain numbers (use_dt_domains = 0).
+> > +	 *
+> > +	 * All other combinations imply we have a platform that is trying
+> > +	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
+> > +	 * which is a recipe for domain mishandling and it is prevented by
+> > +	 * invalidating the domain value (domain = -1) and printing a
+> > +	 * corresponding error.
+> > +	 */
+> > +	if (domain >= 0 && use_dt_domains) {
+> > +		use_dt_domains = 1;
+> > +	} else if (domain < 0 && use_dt_domains != 1) {
+> > +		use_dt_domains = 0;
+> > +		domain = pci_get_new_domain_nr();
+> > +	} else {
+> > +		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
+> > +			parent->of_node->full_name);
+> > +		domain = -1;
+> > +	}
+> > +
+> > +	bus->domain_nr = domain;
+> > +}
+> > +#endif
+> >  #endif
+> >  
+> >  /**
+> > 
+> 
+> 
+> -- 
+> Thanks!
+> Yijing
+> 
+> 
