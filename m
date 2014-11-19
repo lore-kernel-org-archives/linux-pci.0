@@ -1,103 +1,96 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAPDyKFox8bXyFT0861Tc8YY5HLyq5uPVGkfN0G4fXDKqQynkYQ@mail.gmail.com>
-References: <37310416.jZXoh5nfSC@vostro.rjw.lan>
-	<CAPDyKFox8bXyFT0861Tc8YY5HLyq5uPVGkfN0G4fXDKqQynkYQ@mail.gmail.com>
-Date: Thu, 27 Nov 2014 10:20:03 +0100
-Message-ID: <CAPDyKFqrpysnZcV-JwoSrEddmQUMfj9uYvmbVLNL7-fRQyTYFQ@mail.gmail.com>
-Subject: Re: [PATCH 0/4] PM: Use CONFIG_PM instead of CONFIG_PM_RUNTIME in
- core code
-From: Ulf Hansson <ulf.hansson@linaro.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.187]:49271 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752417AbaKSMMI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 07:12:08 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Yijing Wang <wangyijing@huawei.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Kevin Hilman <khilman@kernel.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-mips@linux-mips.org, linux-sh@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-xtensa@linux-xtensa.org,
+	x86@kernel.org, sparclinux@vger.kernel.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	linux-alpha@vger.kernel.org, linux-ia64@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH 5/5] PCI: Rip out pci_bus_add_devices() from pci_scan_root_bus()
+Date: Wed, 19 Nov 2014 13:11:41 +0100
+Message-ID: <1645037.uypArjN50l@wuerfel>
+In-Reply-To: <1416382369-13587-6-git-send-email-wangyijing@huawei.com>
+References: <1416382369-13587-1-git-send-email-wangyijing@huawei.com> <1416382369-13587-6-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 27 November 2014 at 09:57, Ulf Hansson <ulf.hansson@linaro.org> wrote:
-> On 27 November 2014 at 01:37, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->> Hi,
->>
->> After commit b2b49ccbdd54 "PM: Kconfig: Set PM_RUNTIME if PM_SLEEP is
->> selected" (currently in Linux next) CONFIG_PM_RUNTIME is set whenever
->> CONFIG_PM is set, so CONFIG_PM can be used in #ifdefs instead of
->> CONFIG_PM_RUNTIME which simplifies things in quite a few cases.
->>
->> For this reason, the following patches modify some core code to use
->> CONFIG_PM instead of CONFIG_PM_RUNTIME.
->>
->> [1/4] Drop a macro which is redundant after the above commit.
->> [2/4] Use PM instead of PM_RUNTIME in the core device PM code.
->> [3/4] Use PM instead of PM_RUNTIME in the ACPI core.
->> [4/4] Use PM instead of PM_RUNTIME in the PCI core.
->>
->> They build for me for all of the relevant combinations of options (on x86),
->> but more testing (on the other architectures) would be welcome.
->
-> I really like the looks of this patchset!
->
-> Noticed that you have applied it for your bleeding edge branch, I
-> suppose that means you will get some "free" testing in linux-next?
->
-> Anyway, I have tested it for ux500 (including the genpd support for
-> it, available in linux-next). It works nicely!
->
-> I have also tested the two Kconfig options; CONFIG_PM_SLEEP (which
-> selects CONFIG_PM_RUNTIME) and for CONFIG_PM_RUNTIME (with
-> CONFIG_PM_SLEEP unset).
->
-> That brings me to a raise a question; why do we need to keep these two
-> configurations options? Couldn't we also have CONFIG_PM_RUNTIME to
-> select CONFIG_PM_SLEEP, that will further simplify things?
->
+On Wednesday 19 November 2014 15:32:49 Yijing Wang wrote:
+> Just like pci_scan_bus(), we also should rip out
+> pci_bus_add_devices() from pci_scan_root_bus().
+> Lots platforms first call pci_scan_root_bus(), but
+> after that, they call pci_bus_size_bridges() and
+> pci_bus_assign_resources(). Place pci_bus_add_devices()
+> in pci_scan_root_bus() hurts PCI scan logic.
 
-I had look at it. Do you think the below approach could work?
+I think we really need to wait for Bjorn to comment on this patch,
+as I mentioned the idea behind pci_scan_root_bus() was to integrate
+the scanning part, which you now undo, though I can still see this
+working out in the long run.
 
-I guess the questions is if there are some configurations that use
-CONFIG_PM_RUNTIME but not CONFIG_PM_SLEEP. And if so, should we care?
+> Should no functional change.
 
-diff --git a/kernel/power/Kconfig b/kernel/power/Kconfig
-index 6e7708c..425f83a 100644
---- a/kernel/power/Kconfig
-+++ b/kernel/power/Kconfig
-@@ -94,7 +94,6 @@ config PM_STD_PARTITION
- config PM_SLEEP
-        def_bool y
-        depends on SUSPEND || HIBERNATE_CALLBACKS
--       select PM_RUNTIME
+But you are moving the pci_bus_add_devices() later in a couple of
+places. While this seems entirely reasonable, I would consider
+it a functional change.
 
- config PM_SLEEP_SMP
-        def_bool y
-@@ -131,21 +130,12 @@ config PM_WAKELOCKS_GC
-        default y
+> diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
+> index 076c35c..97f9730 100644
+> --- a/arch/alpha/kernel/pci.c
+> +++ b/arch/alpha/kernel/pci.c
+> @@ -334,6 +334,8 @@ common_init_pci(void)
+>  
+>  		bus = pci_scan_root_bus(NULL, next_busno, alpha_mv.pci_ops,
+>  					hose, &resources);
+> +		if (bus)
+> +			pci_bus_add_devices(bus);
+>  		hose->bus = bus;
+>  		hose->need_domain_info = need_domain_info;
+>  		next_busno = bus->busn_res.end + 1;
 
- config PM_RUNTIME
--       bool "Run-time PM core functionality"
--       ---help---
--         Enable functionality allowing I/O devices to be put into energy-saving
--         (low power) states at run time (or autosuspended) after a specified
--         period of inactivity and woken up in response to a hardware-generated
--         wake-up event or a driver's request.
--
--         Hardware support is generally required for this functionality to work
--         and the bus type drivers of the buses the devices are on are
--         responsible for the actual handling of the autosuspend requests and
--         wake-up events.
-+       def_bool y
-+       depends on PM_SLEEP
+How about making pci_bus_add_devices() handle a NULL argument to save
+the if() here and elsewhere?
+> diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
+> index 1bf60b1..f083688 100644
+> --- a/arch/mips/pci/pci.c
+> +++ b/arch/mips/pci/pci.c
+> @@ -113,6 +113,7 @@ static void pcibios_scanbus(struct pci_controller *hose)
+>  		if (!pci_has_flag(PCI_PROBE_ONLY)) {
+>  			pci_bus_size_bridges(bus);
+>  			pci_bus_assign_resources(bus);
+> +			pci_bus_add_devices(bus);
+>  		}
+>  	}
+>  }
 
- config PM
-        def_bool y
--       depends on PM_SLEEP || PM_RUNTIME
-+       depends on PM_SLEEP
+This one looks wrong, I think you still want to call pci_bus_add_devices()
+even with PCI_PROBE_ONLY set.
 
+> diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
+> index 1f80a88..007466e 100644
+> --- a/arch/tile/kernel/pci.c
+> +++ b/arch/tile/kernel/pci.c
+> @@ -308,6 +308,8 @@ int __init pcibios_init(void)
+>  			pci_add_resource(&resources, &iomem_resource);
+>  			bus = pci_scan_root_bus(NULL, 0, controller->ops,
+>  						controller, &resources);
+> +			if (bus)
+> +				pci_bus_add_devices(bus);
+>  			controller->root_bus = bus;
+>  			controller->last_busno = bus->busn_res.end;
+>  		}
 
-Kind regards
-Uffe
+Should the pci_bus_add_devices come after setting the bus numbers here?
+
+	Arnd
