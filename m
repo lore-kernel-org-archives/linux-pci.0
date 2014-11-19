@@ -1,113 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:65206 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932486AbaKURUV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 12:20:21 -0500
-Received: by mail-ig0-f171.google.com with SMTP id uq10so6964610igb.4
-        for <linux-pci@vger.kernel.org>; Fri, 21 Nov 2014 09:20:21 -0800 (PST)
-Date: Fri, 21 Nov 2014 10:20:18 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>, g@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	linux-arm-kernel@lists.infradead.org,
+Received: from dliviu.plus.com ([80.229.23.120]:60988 "EHLO smtp.dudau.co.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756313AbaKSTDY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Nov 2014 14:03:24 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by smtp.dudau.co.uk (Postfix) with SMTP id 41483FFB32
+	for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2014 19:03:22 +0000 (GMT)
+Date: Wed, 19 Nov 2014 19:03:17 +0000
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Tony Luck <tony.luck@intel.com>,
 	Russell King <linux@arm.linux.org.uk>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Subject: Re: [PATCH 00/10] Save MSI chip in pci_sys_data
-Message-ID: <20141121172018.GA6578@google.com>
-References: <1414396127-30023-1-git-send-email-wangyijing@huawei.com>
- <20141112042359.GK28161@google.com>
+	linux-mips@linux-mips.org, linux-sh@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-xtensa@linux-xtensa.org,
+	x86@kernel.org, sparclinux@vger.kernel.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	linux-alpha@vger.kernel.org, linux-ia64@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH 5/5] PCI: Rip out pci_bus_add_devices() from
+ pci_scan_root_bus()
+Message-ID: <20141119190317.GC9162@bart.dudau.co.uk>
+References: <1416382369-13587-1-git-send-email-wangyijing@huawei.com>
+ <1416382369-13587-6-git-send-email-wangyijing@huawei.com>
+ <1645037.uypArjN50l@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141112042359.GK28161@google.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1645037.uypArjN50l@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Marc]
-
-On Tue, Nov 11, 2014 at 09:23:59PM -0700, Bjorn Helgaas wrote:
-> On Mon, Oct 27, 2014 at 03:48:37PM +0800, Yijing Wang wrote:
-> > Now PCI host bridge drivers in arm associate MSI chip and
-> > PCI bus by adding .add_bus(), and assign MSI chip pointer
-> > to every PCI bus. Associating MSI chip and every PCI bus
-> > is not necessary. All PCI busses under same PCI host brdige
-> > share the same MSI chip. So saving MSI chip in pci_sys_data
-> > is a better solution, it make PCI host bridge drivers clean.
-> > Because we still need to provide arch spec pcibios_msi_controller()
-> > to extract MSI controller pointer, a better solution is to
-> > refactor PCI host bridge, make a generic pci_host_bridge, and
-> > save common info like PCI domain number, MSI chip, resources
-> > in it. We will do that work in another series as soon.
-> > 
-> > To Bjorn: Because struct msi_chip defined in struct hw_pci and pci_sys_data
-> > is under the #ifdef CONFIG_PCI_MSI, if we use if(IS_ENABLED(CONFIG_PCI_MSI))
-> > in PCI host bridge drivers, it will cause build errors when the CONFIG_PCI_MSI
-> > is off. So I keep #ifdef CONFIG_PCI_MSI in this series.
-> > 
-> > Yijing Wang (10):
-> >   MSI: Rename msi_chip to msi_controller for better readability
-> >   PCI/MSI: Introduce weak pcibios_msi_controller()
-> >   arm/MSI: Save MSI controller in pci_sys_data
-> >   PCI: tegra: Save MSI controller in pci_sys_data
-> >   PCI: designware: Save MSI controller in pci_sys_data
-> >   PCI: rcar: Save MSI controller in pci_sys_data
-> >   PCI: mvebu: Save MSI controller in pci_sys_data
-> >   PCI: xilinx: Save MSI controller in pci_sys_data
-> >   arm/PCI: Clean unused pcibios_add_bus() and pcibios_remove_bus()
-> >   PCI/MSI: Remove useless bus->msi assignment
-> > 
-> >  arch/arm/include/asm/mach/pci.h     |   10 +++++---
-> >  arch/arm/kernel/bios32.c            |   28 ++++++++++--------------
-> >  drivers/irqchip/irq-armada-370-xp.c |   22 +++++++++---------
-> >  drivers/of/of_pci.c                 |   40 +++++++++++++++++-----------------
-> >  drivers/pci/host/pci-keystone-dw.c  |    4 +-
-> >  drivers/pci/host/pci-keystone.h     |    2 +-
-> >  drivers/pci/host/pci-mvebu.c        |   14 ++++-------
-> >  drivers/pci/host/pci-tegra.c        |   37 +++++++++++++-------------------
-> >  drivers/pci/host/pcie-designware.c  |   25 +++++++--------------
-> >  drivers/pci/host/pcie-designware.h  |    2 +-
-> >  drivers/pci/host/pcie-rcar.c        |   37 +++++++++++++-------------------
-> >  drivers/pci/host/pcie-xilinx.c      |   27 +++++++----------------
-> >  drivers/pci/msi.c                   |   22 ++++++++++++++-----
-> >  drivers/pci/probe.c                 |    1 -
-> >  include/linux/msi.h                 |    6 ++--
-> >  include/linux/of_pci.h              |   14 ++++++------
-> >  include/linux/pci.h                 |    2 +-
-> >  17 files changed, 132 insertions(+), 161 deletions(-)
-> > 
+On Wed, Nov 19, 2014 at 01:11:41PM +0100, Arnd Bergmann wrote:
+> On Wednesday 19 November 2014 15:32:49 Yijing Wang wrote:
+> > Just like pci_scan_bus(), we also should rip out
+> > pci_bus_add_devices() from pci_scan_root_bus().
+> > Lots platforms first call pci_scan_root_bus(), but
+> > after that, they call pci_bus_size_bridges() and
+> > pci_bus_assign_resources(). Place pci_bus_add_devices()
+> > in pci_scan_root_bus() hurts PCI scan logic.
 > 
-> Applied to pci/msi for v3.19, thanks.
+> I think we really need to wait for Bjorn to comment on this patch,
+> as I mentioned the idea behind pci_scan_root_bus() was to integrate
+> the scanning part, which you now undo, though I can still see this
+> working out in the long run.
+> 
+> > Should no functional change.
+> 
+> But you are moving the pci_bus_add_devices() later in a couple of
+> places. While this seems entirely reasonable, I would consider
+> it a functional change.
+> 
+> > diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
+> > index 076c35c..97f9730 100644
+> > --- a/arch/alpha/kernel/pci.c
+> > +++ b/arch/alpha/kernel/pci.c
+> > @@ -334,6 +334,8 @@ common_init_pci(void)
+> >  
+> >  		bus = pci_scan_root_bus(NULL, next_busno, alpha_mv.pci_ops,
+> >  					hose, &resources);
+> > +		if (bus)
+> > +			pci_bus_add_devices(bus);
+> >  		hose->bus = bus;
+> >  		hose->need_domain_info = need_domain_info;
+> >  		next_busno = bus->busn_res.end + 1;
+> 
+> How about making pci_bus_add_devices() handle a NULL argument to save
+> the if() here and elsewhere?
 
-I reworked this series slightly to:
+Actually, I would stop there if the bus is NULL and start cleaning up. If not,
+things are going to blow up three lines down when next_busno is calculated.
 
-  - Change pci_msi_controller() and pcibios_msi_controller() from taking a
-    pci_bus * to taking a pci_dev *.  This is so the interface allows
-    per-device MSI controllers.  I don't think there's any reason to assume
-    all devices on a bus have to have the same controller.
+Best regards,
+Liviu
 
-  - Drop the last patch ("PCI/MSI: Remove useless bus->msi assignment")
-    because it broke Marc's follow-on patches.
 
-I updated pci/msi, but I haven't put it in my "next" branch yet because I
-want confirmation from Fengguang's autobuilder that I didn't break
-anything.
+> > diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
+> > index 1bf60b1..f083688 100644
+> > --- a/arch/mips/pci/pci.c
+> > +++ b/arch/mips/pci/pci.c
+> > @@ -113,6 +113,7 @@ static void pcibios_scanbus(struct pci_controller *hose)
+> >  		if (!pci_has_flag(PCI_PROBE_ONLY)) {
+> >  			pci_bus_size_bridges(bus);
+> >  			pci_bus_assign_resources(bus);
+> > +			pci_bus_add_devices(bus);
+> >  		}
+> >  	}
+> >  }
+> 
+> This one looks wrong, I think you still want to call pci_bus_add_devices()
+> even with PCI_PROBE_ONLY set.
+> 
+> > diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
+> > index 1f80a88..007466e 100644
+> > --- a/arch/tile/kernel/pci.c
+> > +++ b/arch/tile/kernel/pci.c
+> > @@ -308,6 +308,8 @@ int __init pcibios_init(void)
+> >  			pci_add_resource(&resources, &iomem_resource);
+> >  			bus = pci_scan_root_bus(NULL, 0, controller->ops,
+> >  						controller, &resources);
+> > +			if (bus)
+> > +				pci_bus_add_devices(bus);
+> >  			controller->root_bus = bus;
+> >  			controller->last_busno = bus->busn_res.end;
+> >  		}
+> 
+> Should the pci_bus_add_devices come after setting the bus numbers here?
+> 
+> 	Arnd
+> 
 
-Current status of my tree:
+-- 
+-------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
 
-    6cf00af0ae15 [1] pci/msi (contains this rework)
-    149792795d2b [2] next (does *not* contain this rework)
+ One small step
+   for me ...
 
-Thomas, if pci/msi looks good to you, feel free to pull it into your tree.
-The only change you should need to make is to change the parameters to
-pci_msi_controller() and pcibios_msi_controller().
-
-Just FYI, I'm leaving on vacation for a week, so I won't be able to fix any
-issues until Dec 1.
-
-Bjorn
-
-[1] https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=next&id=6cf00af0ae15
-[2] https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=next&id=149792795d2b
