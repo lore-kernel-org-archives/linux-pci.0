@@ -1,57 +1,29 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:62911 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752189AbaKUL5o (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 06:57:44 -0500
-Message-ID: <546F288D.2040705@gmail.com>
-Date: Fri, 21 Nov 2014 19:57:01 +0800
-From: Yijing Wang <wangyijing0307@gmail.com>
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:32979 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754641AbaKSSca (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 13:32:30 -0500
+Received: by mail-ig0-f179.google.com with SMTP id r2so1489097igi.6
+        for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2014 10:32:30 -0800 (PST)
 MIME-Version: 1.0
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>
-Subject: Re: Removal of bus->msi assignment breaks MSI with stacked domains
-References: <546E1771.4030201@arm.com> <546E93DC.8010902@huawei.com> <546F0FB6.3050404@arm.com>
-In-Reply-To: <546F0FB6.3050404@arm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Date: Wed, 19 Nov 2014 11:32:29 -0700
+Message-ID: <CA+r1ZhgMQF4pxwFTRyLQxQJVVzXp17AO0p7FQrfZwoFPWA+FNg@mail.gmail.com>
+Subject: randconfig warnings with next-20141119, in drivers/pci/probe.c
+From: Jim Davis <jim.epost@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hej! Builds with CONFIG_X86_32=y are getting these warning messages
 
-在 2014/11/21 18:11, Marc Zyngier 写道:
-> On 21/11/14 01:22, Yijing Wang wrote:
->> On 2014/11/21 0:31, Marc Zyngier wrote:
->>> Bjorn, Yijing,
->>>
->>> I've just realized that patch c167caf8d174 (PCI/MSI: Remove useless
->>> bus->msi assignment) completely breaks MSI on arm64 when using the new
->>> MSI stacked domain:
->> Sorry, this is my first part to refactor MSI related code, now
->> how to get pci msi_controller depends arch functions(pcibios_msi_controller() or
->> arch_setup_msi_irq()), we are working on generic pci_host_bridge, after that,
->> we could eventually eliminate MSI arch functions and find pci dev 's msi controller
->> by pci_host_bridge->get_msi_controller().
->>
->> Marc, could you tell me what pci host driver in your test platform ?
-> I'm using pci-host-generic (with a couple of patches to help it fit the
-> new "generic pci" infrastructure).
->
-> This lives at:
-> git://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git
-> irq/arm64-pci
+drivers/pci/probe.c:430:5: warning: left shift count >= width of type
+[enabled by default]
+drivers/pci/probe.c:431:5: warning: left shift count >= width of type
+[enabled by default]
 
-Thanks, I would have a look at it.
+which would seem to refer to
 
->
-> Thanks,
->
-> 	M.
-
+                               base |= ((dma_addr_t) mem_base_hi) << 32;
+                                limit |= ((dma_addr_t) mem_limit_hi) << 32;
