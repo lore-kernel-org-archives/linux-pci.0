@@ -1,91 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:56427 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752632AbaKRLgA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 06:36:00 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Tony Luck <tony.luck@intel.com>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>
-Subject: Re: [PATCH] asm-generic: Add msi.h
-Date: Tue, 18 Nov 2014 12:33:11 +0100
-Message-ID: <5216496.erm7FtUABJ@wuerfel>
-In-Reply-To: <alpine.DEB.2.11.1411181149350.3909@nanos>
-References: <alpine.DEB.2.11.1411181133080.3909@nanos> <1703620.E5bhVDQPHc@wuerfel> <alpine.DEB.2.11.1411181149350.3909@nanos>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:11873 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754080AbaKSGwG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 01:52:06 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	Liviu Dudau <liviu@dudau.co.uk>, Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 2/5] PCI: Introduce pci_scan_bus_simple()
+Date: Wed, 19 Nov 2014 15:32:46 +0800
+Message-ID: <1416382369-13587-3-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1416382369-13587-1-git-send-email-wangyijing@huawei.com>
+References: <1416382369-13587-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 18 November 2014 11:59:39 Thomas Gleixner wrote:
-> On Tue, 18 Nov 2014, Arnd Bergmann wrote:
-> 
-> > On Tuesday 18 November 2014 11:34:37 Thomas Gleixner wrote:
-> > > To support MSI irq domains we want a generic data structure for
-> > > allocation, but we need the option to provide an architecture specific
-> > > version of it. So instead of playing #ifdef games in linux/msi.h we
-> > > add a generic header file and let architectures decide whether to
-> > > include it or to provide their own implementation and provide the
-> > > required typedef.
-> > 
-> > Acked-by: Arnd Bergmann <arnd@arndb.de>
-> > 
-> > for merging the asm-generic file
-> > 
-> > > I know that typedefs are not really nice, but in this case there are no
-> > > forward declarations required and it's the simplest solution.
-> > 
-> > I must be missing the obvious: what problem does the typedef solve
-> > that you would have with just a struct?
-> 
-> It's not obvious. :)
-> 
-> The irqdomain stuff is pretty device tree centric, but the new stacked
-> irqdomains are to be used by x86 as well. So we made some of the
-> interfaces opaque, i.e. void *allocation_arg.
-> 
-> Now MSI is a bit differnet as it cannot be decribed by DT, so we want
-> a proper generic data structure for it and of course we want to have a
-> type for it.
-> 
-> Now x86 has a bit more convoluted requirements where we prefer for
-> simplicity reasons to reuse the allocation data structure which we
-> have alredy for the non MSI cases, so it can be handed down to the
-> opaque interfaces as well.
-> 
-> So we have the generic:
->  
-> struct msi_alloc_info {
->        ....
-> };
-> 
-> and 
-> 
-> struct x86_alloc_info {
->        ...
-> };
-> 
-> So we either can do in x86:
-> 
-> struct msi_alloc_info {
->        struct x86_alloc_info info;
-> };
-> 
-> or use a typedef which maps x86_alloc_info to msi_alloc_info_t.
-> 
-> I think the typedef is more sane in that case.
-> 
+Now pci_scan_bus() and pci_scan_bus_parented()
+are almost the same except parent device.
+There is no need to use two similar scan interfaces.
+Introduce pci_scan_bus_simple() which is same
+as pci_scan_bus_parented(). And remove pci_scan_bus()
+and pci_scan_bus_parented() in later patch.
 
-Ok, makes sense.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/probe.c |   18 ++++++++++++++++++
+ 1 files changed, 18 insertions(+), 0 deletions(-)
 
-	Arnd
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 5c5e01e..a8d90d4 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2089,6 +2089,24 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ }
+ EXPORT_SYMBOL(pci_scan_root_bus);
+ 
++struct pci_bus *pci_scan_bus_simple(struct device *parent,
++		int bus, struct pci_ops *ops, void *sysdata)
++{
++	LIST_HEAD(resources);
++	struct pci_bus *b;
++
++	pci_add_resource(&resources, &ioport_resource);
++	pci_add_resource(&resources, &iomem_resource);
++	pci_add_resource(&resources, &busn_resource);
++	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
++	if (b)
++		pci_scan_child_bus(b);
++	else
++		pci_free_resource_list(&resources);
++	return b;
++}
++EXPORT_SYMBOL(pci_scan_bus_simple);
++
+ /* Deprecated; use pci_scan_root_bus() instead */
+ struct pci_bus *pci_scan_bus_parented(struct device *parent,
+ 		int bus, struct pci_ops *ops, void *sysdata)
+-- 
+1.7.1
+
