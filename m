@@ -1,143 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:62289 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932188AbaK0IyL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Nov 2014 03:54:11 -0500
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <liviu.dudau@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: [PATCH v2] PCI: tegra: Use physical range for I/O mapping
-Date: Thu, 27 Nov 2014 09:54:09 +0100
-Message-Id: <1417078449-9556-1-git-send-email-thierry.reding@gmail.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:42731 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753660AbaKSBQM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 20:16:12 -0500
+Message-ID: <546BEF40.70109@huawei.com>
+Date: Wed, 19 Nov 2014 09:15:44 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	"Tony Luck" <tony.luck@intel.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"huxinwei@huawei.com" <huxinwei@huawei.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Wuyun <wuyun.wu@huawei.com>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	Yijing Wang <wangyijing0307@gmail.com>
+Subject: Re: [RFC PATCH 01/16] PCI: Enhance pci_scan_root_bus() to support
+ default IO/MEM resources
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com> <2732970.7HG94QvVBv@wuerfel> <546AF8D7.9010103@huawei.com> <2447172.ADYWdCTnMP@wuerfel> <546B317E.4090800@huawei.com> <20141118142354.GH12037@e106497-lin.cambridge.arm.com>
+In-Reply-To: <20141118142354.GH12037@e106497-lin.cambridge.arm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+On 2014/11/18 22:23, Liviu Dudau wrote:
+> On Tue, Nov 18, 2014 at 11:46:06AM +0000, Yijing Wang wrote:
+>> On 2014/11/18 17:36, Arnd Bergmann wrote:
+>>> On Tuesday 18 November 2014 15:44:23 Yijing Wang wrote:
+>>>> On 2014/11/17 18:08, Arnd Bergmann wrote:
+>>>>> On Monday 17 November 2014 18:21:35 Yijing Wang wrote:
+>>>>>> -       list_for_each_entry(window, resources, list)
+>>>>>> -               if (window->res->flags & IORESOURCE_BUS) {
+>>>>>> -                       found = true;
+>>>>>> -                       break;
+>>>>>> -               }
+>>>>>> +       if (!resources) {
+>>>>>> +               pci_add_resource(&default_res, &ioport_resource);
+>>>>>> +               pci_add_resource(&default_res, &iomem_resource);
+>>>>>> +               pci_add_resource(&default_res, &busn_resource);
+>>>>>> +       } else {
+>>>>>>
+>>>>>
+>>>>> Isn't it almost always wrong to do this? You are adding all of the
+>>>>> I/O ports and memory to the host bridge, which will prevent you from
+>>>>> adding another host bridge, and the iomem_resource normally
+>>>>> includes a lot of addresses that are not accessible by the PCI host.
+>>>>
+>>>> Hi Arnd, pci host bridge windows are the ranges allow child devices to setup
+>>>> from. Add all of IO/MEM here just a limit to child devices, no request for these
+>>>> resources, so it won't hurt another host bridge. Some platforms have no dts or ACPI
+>>>> report host bridge resources, in this case, we directly assign ioport/iomem_resources
+>>>> as the root resources of PCI devices.
+>>>
+>>> But it would be wrong to allow hosts to allocate a device BAR that is not
+>>> visible through the host bridge. I think we need to keep these separate
+>>> from the general case: if you call any of the modern interfaces you have
+>>> to provide the resources and a device. I notice that there is only one
+>>> caller of pci_scan_bus_parented(), we should probably change that over to
+>>> pci_scan_root_bus() or your new interface and remove the old one, but
+>>> keep pci_scan_bus() as the only entry point for all of the legacy users
+>>> that do not know about the resources.
+>>
+>> Ok, I will move this out of the generic interface.
+> 
+> My suggestion would actually be to trigger a warning/error if you detect that the resources
+> are missing. That way we can force the drivers to clean up.
 
-Commit 0b0b0893d49b ("of/pci: Fix the conversion of IO ranges into IO
-resources") changed how I/O resources are parsed from DT. Rather than
-containing the physical address of the I/O region, the addresses will
-now be in I/O address space.
+It make sense to me, thanks.
 
-On Tegra the union of all ranges is used to expose a top-level memory-
-mapped resource for the PCI host bridge. This helps to make /proc/iomem
-more readable.
+> 
+> Best regards,
+> Liviu
+> 
+>>
+>> Thanks!
+>> Yijing.
+>>
+>>>
+>>> 	Arnd
+>>>
+>>> .
+>>>
+>>
+>>
+>> -- 
+>> Thanks!
+>> Yijing
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+> 
 
-Combining both of the above, the union would now include the I/O space
-region. This causes a regression on Tegra20, where the physical base
-address of the PCIe controller (and therefore of the union) is located
-at physical address 0x80000000. Since I/O space starts at 0, the union
-will now include all of system RAM which starts at 0x00000000.
 
-This commit fixes this by keeping two copies of the I/O range: one that
-represents the range in the CPU's physical address space, the other for
-the range in the I/O address space. This allows the translation setup
-within the driver to reuse the physical addresses. The code registering
-the I/O region with the PCI core uses both ranges to establish the
-mapping.
-
-Fixes: 0b0b0893d49b ("of/pci: Fix the conversion of IO ranges into IO resources")
-Reported-by: Marc Zyngier <marc.zyngier@arm.com>
-Suggested-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
-Marc, any chance of getting a Tested-by from you on this? I think you
-said you were seeing this on Harmony and I'm pretty sure this should fix
-the issue for you as well.
-
-Bjorn, this fixes a regression on Tegra20 (it's hidden on later Tegra
-generations because the PCIe controller has moved to the first 1 GiB of
-physical address space) that was introduced in 3.18-rc1, so it would be
-good to get this in before the final 3.18 release.
-
-Changes in v2:
-- remove cleanup not essential to fix the regression (will be part of a
-  follow-up patch)
-
- drivers/pci/host/pci-tegra.c | 28 ++++++++++++++++++++--------
- 1 file changed, 20 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 3d43874319be..19bb19c7db4a 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -276,6 +276,7 @@ struct tegra_pcie {
- 
- 	struct resource all;
- 	struct resource io;
-+	struct resource pio;
- 	struct resource mem;
- 	struct resource prefetch;
- 	struct resource busn;
-@@ -658,7 +659,6 @@ static int tegra_pcie_setup(int nr, struct pci_sys_data *sys)
- {
- 	struct tegra_pcie *pcie = sys_to_pcie(sys);
- 	int err;
--	phys_addr_t io_start;
- 
- 	err = devm_request_resource(pcie->dev, &pcie->all, &pcie->mem);
- 	if (err < 0)
-@@ -668,14 +668,12 @@ static int tegra_pcie_setup(int nr, struct pci_sys_data *sys)
- 	if (err)
- 		return err;
- 
--	io_start = pci_pio_to_address(pcie->io.start);
--
- 	pci_add_resource_offset(&sys->resources, &pcie->mem, sys->mem_offset);
- 	pci_add_resource_offset(&sys->resources, &pcie->prefetch,
- 				sys->mem_offset);
- 	pci_add_resource(&sys->resources, &pcie->busn);
- 
--	pci_ioremap_io(nr * SZ_64K, io_start);
-+	pci_ioremap_io(pcie->pio.start, pcie->io.start);
- 
- 	return 1;
- }
-@@ -786,7 +784,6 @@ static irqreturn_t tegra_pcie_isr(int irq, void *arg)
- static void tegra_pcie_setup_translations(struct tegra_pcie *pcie)
- {
- 	u32 fpci_bar, size, axi_address;
--	phys_addr_t io_start = pci_pio_to_address(pcie->io.start);
- 
- 	/* Bar 0: type 1 extended configuration space */
- 	fpci_bar = 0xfe100000;
-@@ -799,7 +796,7 @@ static void tegra_pcie_setup_translations(struct tegra_pcie *pcie)
- 	/* Bar 1: downstream IO bar */
- 	fpci_bar = 0xfdfc0000;
- 	size = resource_size(&pcie->io);
--	axi_address = io_start;
-+	axi_address = pcie->io.start;
- 	afi_writel(pcie, axi_address, AFI_AXI_BAR1_START);
- 	afi_writel(pcie, size >> 12, AFI_AXI_BAR1_SZ);
- 	afi_writel(pcie, fpci_bar, AFI_FPCI_BAR1);
-@@ -1690,8 +1687,23 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- 
- 		switch (res.flags & IORESOURCE_TYPE_BITS) {
- 		case IORESOURCE_IO:
--			memcpy(&pcie->io, &res, sizeof(res));
--			pcie->io.name = np->full_name;
-+			memcpy(&pcie->pio, &res, sizeof(res));
-+			pcie->pio.name = np->full_name;
-+
-+			/*
-+			 * The Tegra PCIe host bridge uses this to program the
-+			 * mapping of the I/O space to the physical address,
-+			 * so we override the .start and .end fields here that
-+			 * of_pci_range_to_resource() converted to I/O space.
-+			 * We also set the IORESOURCE_MEM type to clarify that
-+			 * the resource is in the physical memory space.
-+			 */
-+			pcie->io.start = range.cpu_addr;
-+			pcie->io.end = range.cpu_addr + range.size - 1;
-+			pcie->io.flags = IORESOURCE_MEM;
-+			pcie->io.name = "I/O";
-+
-+			memcpy(&res, &pcie->io, sizeof(res));
- 			break;
- 
- 		case IORESOURCE_MEM:
 -- 
-2.1.3
+Thanks!
+Yijing
 
