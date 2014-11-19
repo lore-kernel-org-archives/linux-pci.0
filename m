@@ -1,102 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:36249 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757720AbaKUJdO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 04:33:14 -0500
-Message-ID: <546F06D1.30308@arm.com>
-Date: Fri, 21 Nov 2014 09:33:05 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>
-CC: Yijing Wang <wangyijing@huawei.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>
-Subject: Re: Removal of bus->msi assignment breaks MSI with stacked domains
-References: <546E1771.4030201@arm.com> <20141120215353.GA7987@google.com> <alpine.DEB.2.11.1411202355060.6439@nanos> <CAErSpo5UOUnPbsvAJX4kCeuKnPVLyRfq6k0FJPpS2W-5ALwisQ@mail.gmail.com>
-In-Reply-To: <CAErSpo5UOUnPbsvAJX4kCeuKnPVLyRfq6k0FJPpS2W-5ALwisQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:42264 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753439AbaKSCP5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 21:15:57 -0500
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
+	Wed, 19 Nov 2014 12:15:40 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 981B72BB0047
+	for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2014 13:15:34 +1100 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAJ2FB1N40763446
+	for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2014 13:15:11 +1100
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAJ2FXSX017441
+	for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2014 13:15:34 +1100
+Message-ID: <1416363332.5704.18.camel@au1.ibm.com>
+Subject: Re: [PATCH V9 03/18] PCI: Add weak pcibios_iov_resource_size()
+ interface
+From: Benjamin Herrenschmidt <benh@au1.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Donald Dutile <ddutile@redhat.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Date: Wed, 19 Nov 2014 13:15:32 +1100
+In-Reply-To: <20141119011243.GA23467@google.com>
+References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+	 <1414942894-17034-4-git-send-email-weiyang@linux.vnet.ibm.com>
+	 <20141119011243.GA23467@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On 20/11/14 23:30, Bjorn Helgaas wrote:
-> On Thu, Nov 20, 2014 at 4:10 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
->> On Thu, 20 Nov 2014, Bjorn Helgaas wrote:
->>> On Thu, Nov 20, 2014 at 04:31:45PM +0000, Marc Zyngier wrote:
->>>> Bjorn, Yijing,
->>>>
->>>> I've just realized that patch c167caf8d174 (PCI/MSI: Remove useless
->>>> bus->msi assignment) completely breaks MSI on arm64 when using the new
->>>> MSI stacked domain:
->>>>
->>>> This patch relies on architectures to implement either
->>>> pcibios_msi_controller() or arch_setup_msi_irq(). It turns out that with
->>>> stacked domains, none of this is actually necessary, as long as you can
->>>> access to the msi_controller.
->>>>
->>>> And everything was fine until this patch came around (and managed to
->>>> test on a system where the PCI devices are not directly attached to the
->>>> root bus). Of course, everything now breaks, as we cannot get to the MSI
->>>> controller (which contains the domain we allocate the MSIs from).
->>>>
->>>> In short, this patch breaks an important feature on which arm64 relies,
->>>> and I believe this patch should be reverted ASAP.
->>>
->>> I'm happy to revert it from pci/msi, but I think Thomas has already pulled
->>> it into his branch, so he'd have to drop it, too.
->>>
->>> Thomas, let me know if you want to do that.  I suppose we could add a new
->>> patch to add it back, but that would leave bisection broken for the
->>> interval between c167caf8d174 and the patch that adds it back.
->>
->> Fortunately my irq/irqdomain branch is not immutable yet. So we have
->> no problem at that point. I can rebase on your branch until tomorrow
->> night. Or just rebase on mainline and we sort out the merge conflicts
->> later, i.e. delegate them to Linus so his job of pulling stuff gets
->> not completely boring.
->>
->> What I'm more worried about is whether this intended change is going
->> to inflict a problem on Jiangs intention to deduce the MSI irq domain
->> from the device, which we really need for making DMAR work w/o going
->> through loops and hoops.
->>
->> I have limited knowledge about the actual scope of iommu (DMAR) units
->> versus device/bus/host-controllers, so I would appreciate a proper
->> explanation for that from you or Jiang or both.
->>
->> My guts feeling tells me that anything less granular than the bus
->> level is wrong and according to my limited knowledge Intel even has
->> DMARs which are assigned to a single device it's even more wrong. So
->> the proper change would be not to push it from bus to something above
->> the bus, but instead make it a per device property.
+On Tue, 2014-11-18 at 18:12 -0700, Bjorn Helgaas wrote:
 > 
-> I'm not an expert, so hopefully Jiang and Marc will clarify this.
+> Can you help me understand this?
 > 
-> My understanding is that Intel VT-d can do MSI remapping on a
-> per-function basis, so I agree that pci_msi_controller() should
-> probably take a pci_dev instead of a pci_bus.  I think Yijing's series
-> only has one caller, which has the pci_dev, so that should be an easy
-> change.
-> 
-> Marc, does c167caf8d174 break arm64 by itself?  Or does the breakage
-> happen later on, after adding more stacked domain stuff?  If the
-> former, we should definitely revert c167caf8d174 to preserve
-> bisectability, independent of how we fix the pci_msi_controller()
-> interface.
+> We have previously called sriov_init() on the PF.  There, we sized the VF
+> BARs, which are in the PF's SR-IOV Capability (SR-IOV spec sec 3.3.14).
+> The size we discover is the amount of space required by a single VF, so
+> sriov_init() adjusts PF->resource[PCI_IOV_RESOURCES + i] by multiplying
+> that size by PCI_SRIOV_TOTAL_VF, so this PF resource is now big enough to 
+> hold the VF BAR[i] areas for all the possible VFs.
 
-The breakage only happens once we'll add the MSI controller drivers that
-are actively using the stacked domain code (GICv2m and GICv3 ITS). That
-should give us some flexibility to tweak things.
+So I'll let Richard (Wei) answer on the details but I'll just chime in
+about the "big picture". This isn't about changing the spacing between VFs
+which is handled by the system page size.
 
-Thanks,
+This is about the way we create MMIO windows from the CPU to the VF BARs.
 
-	M.
--- 
-Jazz is not dead. It just smells funny...
+Basically, we have a (limited) set of 64-bit windows we can create that
+are divided in equal sized segments (256 of them), each segment assigned
+in HW to one of our Partitionable Endpoints (aka domain).
+
+So even if we only ever create 16 VFs for a device, we need to use an
+entire of these windows, which will use 256*VF_size and thus allocate
+that much space. Also the window has to be naturally aligned.
+
+We can then assign the VF BAR to a spot inside that window that corresponds
+to the range of PEs that we have assigned to that device (which typically
+isn't going to be the beginning of the window).
+
+Cheers,
+Ben.
+
+
