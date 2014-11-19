@@ -1,229 +1,307 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:58198 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754743AbaKSQlc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 11:41:32 -0500
+Date: Wed, 19 Nov 2014 16:41:28 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"huxinwei@huawei.com" <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"x86@kernel.org" <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
 	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-ia64@vger.kernel.org, iommu@lists.linux-foundation.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part2 v5 28/31] iommu/vt-d: Refine the interfaces to create IRQ for DMAR unit
-Date: Thu,  6 Nov 2014 22:20:41 +0800
-Message-Id: <1415283644-2559-29-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Yijing Wang <wangyijing0307@gmail.com>
+Subject: Re: [RFC PATCH 08/16] PCI: Introduce pci_scan_host_bridge() and
+ pci_host_info
+Message-ID: <20141119164128.GX12037@e106497-lin.cambridge.arm.com>
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+ <1416219710-26088-9-git-send-email-wangyijing@huawei.com>
+ <20141118154243.GM12037@e106497-lin.cambridge.arm.com>
+ <546BFBC8.4030104@huawei.com>
+MIME-Version: 1.0
+In-Reply-To: <546BFBC8.4030104@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Refine the interfaces to create IRQ for DMAR unit. It's a preparation
-for converting DMAR IRQ to irqdomain on x86.
+On Wed, Nov 19, 2014 at 02:09:12AM +0000, Yijing Wang wrote:
+> >>  struct pci_host_bridge *pci_create_host_bridge(
+> >> -		struct device *parent, u32 db, 
+> >> -		struct pci_ops *ops, void *sysdata, 
+> >> -		struct list_head *resources)
+> >> +		struct device *parent, u32 db, struct pci_ops *ops, 
+> >> +		struct pci_host_info *info)
+> >>  {
+> >>  	int error;
+> >>  	struct pci_bus *b;
+> >>  	struct pci_host_bridge *host, *h;
+> >> -	struct pci_host_bridge_window *window, *n;
+> >>  
+> >>  	down_read(&pci_host_bridge_sem);
+> >>  	list_for_each_entry(h, &pci_host_bridge_list, list) {
+> >> @@ -53,7 +51,7 @@ struct pci_host_bridge *pci_create_host_bridge(
+> >>  	if (!host)
+> >>  		return NULL;
+> >>  
+> >> -	host->sysdata = sysdata;
+> >> +	host->sysdata = info->arg;
+> >>  	host->busnum = PCI_BUSNUM(db);
+> >>  	host->domain = PCI_DOMAIN(db);
+> >>  	host->ops = ops;
+> >> @@ -63,18 +61,23 @@ struct pci_host_bridge *pci_create_host_bridge(
+> >>  
+> >>  	/* this is hack, just for build, will be removed later*/
+> > 
+> > Why do you need this hack? Just for calling pci_domain_nr() ?
+> 
+> Yes, it's temporary code, we need domain number here for pci host bridge register.
+> 
+> > 
+> >>  	b = kzalloc(sizeof(*b), GFP_KERNEL);
+> >> -	b->sysdata = sysdata;
+> >> +	b->sysdata = host->sysdata;
+> >>  	pci_bus_assign_domain_nr(b, parent);
+> >>  	host->domain = pci_domain_nr(b);
+> >> +	kfree(b);
+> >>  
+> ...
+> >> +static int pci_default_init_res(struct pci_host_bridge *host,
+> >> +		struct pci_host_info *info)
+> >> +{
+> >> +	struct pci_host_bridge_window *window, *n;
+> >> +
+> >> +	if (info->res_type != PCI_HOST_RES_DEFAULT) 
+> >> +		list_for_each_entry_safe(window, n, info->resources,
+> >> +				list)
+> >> +			list_move_tail(&window->list, &host->windows);
+> >> +	else
+> >> +		info->res_type = PCI_HOST_RES_DEFAULT;
+> > 
+> > I'm confused about this assignment. Isn't this a nop as the else part
+> > means info->res_type *is* PCI_HOST_RES_DEFAULT?
+> 
+> No, in this patch, host drivers pass a pci host bridge resources init hook
+> in pci_host_info *info, and we call this info->init_res() in pci_create_host_bridge().
+> 
+> +struct pci_host_info {
+> +	u8 res_type;
+> +	void *arg;
+> +	struct list_head *resources; /*just for build, will clean up later */
+> +	int (*init_res)(struct pci_host_bridge *host,
+> +			struct pci_host_info *info);
+> +};
+> +
 
-It also moves dmar_alloc_hwirq()/dmar_free_hwirq() from irq_remapping.h
-to dmar.h. They are not irq_remapping specific.
+That's not what I've asked! Your code does:
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/ia64/include/asm/irq_remapping.h |    2 --
- arch/ia64/kernel/msi_ia64.c           |   30 +++++++++++++++++++-----------
- arch/x86/include/asm/irq_remapping.h  |    4 ----
- arch/x86/kernel/apic/msi.c            |   24 +++++++++++++-----------
- drivers/iommu/dmar.c                  |   19 +++++--------------
- include/linux/dmar.h                  |    3 ++-
- 6 files changed, 39 insertions(+), 43 deletions(-)
+	if (info->res_type != PCI_HOST_RES_DEFAULT)
+		....
+	else /* info->res_type == PCI_HOST_RES_DEFAULT)
+		info->res_type = PCI_HOST_RES_DEFAULT;
 
-diff --git a/arch/ia64/include/asm/irq_remapping.h b/arch/ia64/include/asm/irq_remapping.h
-index e3b3556e2e1b..a8687b1d8906 100644
---- a/arch/ia64/include/asm/irq_remapping.h
-+++ b/arch/ia64/include/asm/irq_remapping.h
-@@ -1,6 +1,4 @@
- #ifndef __IA64_INTR_REMAPPING_H
- #define __IA64_INTR_REMAPPING_H
- #define irq_remapping_enabled 0
--#define dmar_alloc_hwirq	create_irq
--#define dmar_free_hwirq		destroy_irq
- #endif
-diff --git a/arch/ia64/kernel/msi_ia64.c b/arch/ia64/kernel/msi_ia64.c
-index 8c3730c3c63d..15032330573b 100644
---- a/arch/ia64/kernel/msi_ia64.c
-+++ b/arch/ia64/kernel/msi_ia64.c
-@@ -166,7 +166,7 @@ static struct irq_chip dmar_msi_type = {
- 	.irq_retrigger = ia64_msi_retrigger_irq,
- };
- 
--static int
-+static void
- msi_compose_msg(struct pci_dev *pdev, unsigned int irq, struct msi_msg *msg)
- {
- 	struct irq_cfg *cfg = irq_cfg + irq;
-@@ -188,21 +188,29 @@ msi_compose_msg(struct pci_dev *pdev, unsigned int irq, struct msi_msg *msg)
- 		MSI_DATA_LEVEL_ASSERT |
- 		MSI_DATA_DELIVERY_FIXED |
- 		MSI_DATA_VECTOR(cfg->vector);
--	return 0;
- }
- 
--int arch_setup_dmar_msi(unsigned int irq)
-+int dmar_alloc_hwirq(int id, int node, void *arg)
- {
--	int ret;
-+	int irq;
- 	struct msi_msg msg;
- 
--	ret = msi_compose_msg(NULL, irq, &msg);
--	if (ret < 0)
--		return ret;
--	dmar_msi_write(irq, &msg);
--	irq_set_chip_and_handler_name(irq, &dmar_msi_type, handle_edge_irq,
--				      "edge");
--	return 0;
-+	irq = create_irq();
-+	if (irq > 0) {
-+		irq_set_handler_data(irq, arg);
-+		irq_set_chip_and_handler_name(irq, &dmar_msi_type,
-+					      handle_edge_irq, "edge");
-+		msi_compose_msg(NULL, irq, &msg);
-+		dmar_msi_write(irq, &msg);
-+	}
-+
-+	return irq;
-+}
-+
-+void dmar_free_hwirq(int irq)
-+{
-+	irq_set_handler_data(irq, NULL);
-+	destroy_irq(irq);
- }
- #endif /* CONFIG_INTEL_IOMMU */
- 
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index 61c50e6e28c8..61ec9234c88e 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -124,8 +124,4 @@ irq_remapping_get_irq_domain(struct irq_alloc_info *info)
- 
- #define	irq_remapping_print_chip	NULL
- #endif /* CONFIG_IRQ_REMAP */
--
--extern int dmar_alloc_hwirq(void);
--extern void dmar_free_hwirq(int irq);
--
- #endif /* __X86_IRQ_REMAPPING_H */
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 49f02609a7e0..5fc3e61f1b16 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -219,25 +219,27 @@ static struct irq_chip dmar_msi_type = {
- 	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
- 
--int arch_setup_dmar_msi(unsigned int irq)
-+int dmar_alloc_hwirq(int id, int node, void *arg)
- {
-+	int irq;
- 	struct msi_msg msg;
--	struct irq_cfg *cfg = irq_cfg(irq);
- 
--	native_compose_msi_msg(cfg, &msg);
--	dmar_msi_write(irq, &msg);
--	irq_set_chip_and_handler_name(irq, &dmar_msi_type, handle_edge_irq,
--				      "edge");
--	return 0;
--}
-+	irq = irq_domain_alloc_irqs(NULL, 1, node, NULL);
-+	if (irq > 0) {
-+		irq_set_handler_data(irq, arg);
-+		irq_set_chip_and_handler_name(irq, &dmar_msi_type,
-+					      handle_edge_irq, "edge");
-+		native_compose_msi_msg(irq_cfg(irq), &msg);
-+		dmar_msi_write(irq, &msg);
-+	}
- 
--int dmar_alloc_hwirq(void)
--{
--	return irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
-+	return irq;
- }
- 
- void dmar_free_hwirq(int irq)
- {
-+	irq_set_handler_data(irq, NULL);
-+	irq_set_handler(irq, NULL);
- 	irq_domain_free_irqs(irq, 1);
- }
- #endif
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index c5c61cabd6e3..25f47937f1d5 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -1018,8 +1018,8 @@ static void free_iommu(struct intel_iommu *iommu)
- 
- 	if (iommu->irq) {
- 		free_irq(iommu->irq, iommu);
--		irq_set_handler_data(iommu->irq, NULL);
- 		dmar_free_hwirq(iommu->irq);
-+		iommu->irq = 0;
- 	}
- 
- 	if (iommu->qi) {
-@@ -1572,23 +1572,14 @@ int dmar_set_interrupt(struct intel_iommu *iommu)
- 	if (iommu->irq)
- 		return 0;
- 
--	irq = dmar_alloc_hwirq();
--	if (irq <= 0) {
-+	irq = dmar_alloc_hwirq(iommu->seq_id, iommu->node, iommu);
-+	if (irq > 0) {
-+		iommu->irq = irq;
-+	} else {
- 		pr_err("IOMMU: no free vectors\n");
- 		return -EINVAL;
- 	}
- 
--	irq_set_handler_data(irq, iommu);
--	iommu->irq = irq;
--
--	ret = arch_setup_dmar_msi(irq);
--	if (ret) {
--		irq_set_handler_data(irq, NULL);
--		iommu->irq = 0;
--		dmar_free_hwirq(irq);
--		return ret;
--	}
--
- 	ret = request_irq(irq, dmar_fault, IRQF_NO_THREAD, iommu->name, iommu);
- 	if (ret)
- 		pr_err("IOMMU: can't request irq\n");
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index 593fff99e6bf..df3918482073 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -189,6 +189,7 @@ extern void dmar_msi_read(int irq, struct msi_msg *msg);
- extern void dmar_msi_write(int irq, struct msi_msg *msg);
- extern int dmar_set_interrupt(struct intel_iommu *iommu);
- extern irqreturn_t dmar_fault(int irq, void *dev_id);
--extern int arch_setup_dmar_msi(unsigned int irq);
-+extern int dmar_alloc_hwirq(int id, int node, void *arg);
-+extern void dmar_free_hwirq(int irq);
- 
- #endif /* __DMAR_H__ */
+info->res_type is already == PCI_HOST_RES_DEFAULT in the else side, assignment is a NOP?
+
+
+> 
+> > 
+> >> +
+> >> +	return 0;
+> >> +}
+> ...
+> >> @@ -2038,8 +2057,13 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+> >>  	bool found = false;
+> >>  	struct pci_host_bridge *host;
+> >>  	int max;
+> >> +	struct pci_host_info info;
+> >> +	
+> >> +	info.arg = sysdata;
+> >> +	info.resources = resources;
+> >> +	info.init_res = pci_default_init_res;
+> > 
+> > I have mixed feelings about this patch. While it is heading in the right direction
+> > of moving pci_host_bridge relevant information towards the right user, I don't think
+> > you picked up the right set to move. The resource list is going to be copied into
+> > internal pci_host_bridge list anyway, keeping another copy is not helpful *and*
+> > you have increased the code size.
+> > 
+> > I think for now we should aim to get the *missing* data into pci_host_bridge: MSI
+> > controllers and PCI domain/segment. Then we can do more cleanup.
+> 
+> Hi Liviu, I agree with you here, the changes to resources stuff seems not a perfect
+> solution. In my patch 6, we could pass pci domain nr by u32 PCI_DOMBUS(domain, bus) argument,
+> and store it in pci_host_bridge. For msi controller, we couldn't save the msi_controller
+> in pci_host_bridge. Before we assume one pci host bridge only had one msi_controller,
+> but now something changes, Jiang introduce hierarchy irq domain in x86, and now
+> one pci host bridge may has more than one msi_controller. So I prefer to add a
+> function to pci_host_bridge something like
+> 
+> struct msi_controller *pci_get_msi_controller(struct pci_dev *dev)
+
+Yes, good idea.
+
+> 
+> > 
+> >>  
+> >> -	host = pci_create_host_bridge(parent, db, ops, sysdata, resources);
+> >> +	host = pci_create_host_bridge(parent, db, ops, &info);
+> >>  	if (!host)
+> >>  		return NULL;
+> >>  
+> >> @@ -2070,6 +2094,47 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+> >>  }
+> >>  EXPORT_SYMBOL(pci_scan_root_bus);
+> >>  
+> >> +struct pci_host_bridge *pci_scan_host_bridge(
+> >> +		struct device *parent, u32 db, struct pci_ops *ops,
+> >> +		struct pci_host_info *info)
+> >> +{
+> >> +	struct pci_host_bridge_window *window;
+> >> +	bool found = false;
+> >> +	struct pci_host_bridge *host;
+> >> +	int max;
+> >> +
+> >> +	host = pci_create_host_bridge(parent, db, ops, info);
+> >> +	if (!host)
+> >> +		return NULL;
+> >> +
+> >> +	list_for_each_entry(window, &host->windows, list)
+> >> +		if (window->res->flags & IORESOURCE_BUS) {
+> >> +			found = true;
+> >> +			break;
+> >> +		}
+> >> +
+> >> +	host->bus = __pci_create_root_bus(host);
+> >> +	if (!host->bus) {
+> >> +		pci_free_host_bridge(host);
+> >> +		return NULL;
+> >> +	}
+> >> +
+> >> +	if (!found) {
+> >> +		dev_info(&host->bus->dev,
+> >> +		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
+> >> +			host->busnum);
+> >> +		pci_bus_insert_busn_res(host->bus, host->busnum, 255);
+> >> +	}
+> >> +
+> >> +	max = pci_scan_child_bus(host->bus);
+> >> +	if (!found)
+> >> +		pci_bus_update_busn_res_end(host->bus, max);
+> >> +
+> >> +	return host;
+> >> +
+> >> +}
+> >> +EXPORT_SYMBOL(pci_scan_host_bridge);
+> >> +
+> >>  /**
+> >>   * pci_rescan_bus_bridge_resize - scan a PCI bus for devices.
+> >>   * @bridge: PCI bridge for the bus to scan
+> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> >> index daa7f40..a51f5f5 100644
+> >> --- a/include/linux/pci.h
+> >> +++ b/include/linux/pci.h
+> >> @@ -412,6 +412,21 @@ struct pci_host_bridge {
+> >>  	void *release_data;
+> >>  };
+> >>  
+> >> +struct pci_host_info {
+> >> +	u8 res_type;
+> >> +	void *arg;
+> >> +	struct list_head *resources; /*just for build, will clean up later */
+> >> +	int (*init_res)(struct pci_host_bridge *host, 
+> >> +			struct pci_host_info *info);
+> >> +};
+> >> +
+> >> +static inline void init_pci_host_info(struct pci_host_info *info)
+> >> +{
+> >> +	memset(info, 0 , sizeof(*info));
+> >> +}
+> > 
+> > Where is this used?
+> 
+> Host driver uses it to init pci_host_info.
+
+Might be worth adding it that patch rather than here.
+
+Best regards,
+Liviu
+
+> 
+> > 
+> >> +
+> >> +#define PCI_HOST_RES_DEFAULT	0x2
+> >> +
+> > 
+> > Magic number?
+> 
+> Hmmm, I will rework pci host bridge resources stuff.
+> 
+> > 
+> > Best regards,
+> > Liviu
+> > 
+> >>  #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
+> >>  void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+> >>  		     void (*release_fn)(struct pci_host_bridge *),
+> >> @@ -420,7 +435,7 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+> >>  int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
+> >>  struct pci_host_bridge *pci_create_host_bridge(
+> >>  		struct device *parent, u32 db, struct pci_ops *ops, 
+> >> -		void *sys, struct list_head *resources);
+> >> +		struct pci_host_info *info);
+> >>  /*
+> >>   * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
+> >>   * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
+> >> @@ -785,6 +800,9 @@ void pci_bus_release_busn_res(struct pci_bus *b);
+> >>  struct pci_bus *pci_scan_root_bus(struct device *parent, u32 bus,
+> >>  					     struct pci_ops *ops, void *sysdata,
+> >>  					     struct list_head *resources);
+> >> +struct pci_host_bridge *pci_scan_host_bridge(struct device *parent,
+> >> +		u32 db, struct pci_ops *ops,
+> >> +		struct pci_host_info *info);
+> >>  struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
+> >>  				int busnr);
+> >>  void pcie_update_link_speed(struct pci_bus *bus, u16 link_status);
+> >> -- 
+> >> 1.7.1
+> >>
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >>
+> > 
+> 
+> 
+> -- 
+> Thanks!
+> Yijing
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 -- 
-1.7.10.4
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
