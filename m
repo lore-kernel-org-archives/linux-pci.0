@@ -1,323 +1,329 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:43520 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755740AbaKSBTk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 20:19:40 -0500
+Message-ID: <546BF01B.6010209@huawei.com>
+Date: Wed, 19 Nov 2014 09:19:23 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"huxinwei@huawei.com" <huxinwei@huawei.com>,
+	Wuyun <wuyun.wu@huawei.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"x86@kernel.org" <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
 	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v4 26/31] x86: irq_remapping: Clean up unused MSI related code
-Date: Tue,  4 Nov 2014 20:02:00 +0800
-Message-Id: <1415102525-9898-27-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Yijing Wang <wangyijing0307@gmail.com>
+Subject: Re: [RFC PATCH 02/16] PCI: Use pci_scan_root_bus() instead of pci_scan_bus()
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com> <1416219710-26088-3-git-send-email-wangyijing@huawei.com> <20141118142817.GI12037@e106497-lin.cambridge.arm.com>
+In-Reply-To: <20141118142817.GI12037@e106497-lin.cambridge.arm.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now MSI interrupt has been converted to new hierarchy irqdomain
-interfaces, so kill legacy MSI related code and interfaces.
+On 2014/11/18 22:28, Liviu Dudau wrote:
+> On Mon, Nov 17, 2014 at 10:21:36AM +0000, Yijing Wang wrote:
+>> From: Yijing Wang <wangyijing0307@gmail.com>
+>>
+>> Now we could use pci_scan_root_bus() instead of
+>> pci_scan_bus(), pass NULL resources means use the default
+>> io/mem.
+> 
+> Actually, I think this patch goes in the wrong direction. You are adding
+> two additional parameters that are NULL for every call you replace.
+> pci_scan_bus() was actually intended as a "shortcut with defaults" kind
+> of call so that you don't have to pass a value for parameters you don't
+> care about.
+> 
+> My suggestion would be to keep the function as is and replace the call
+> to pci_create_root_bus() inside with the appropriate sequence.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/irq_remapping.h |   13 ---
- arch/x86/include/asm/pci.h           |    5 --
- arch/x86/kernel/x86_init.c           |    2 -
- drivers/iommu/irq_remapping.c        |  151 ----------------------------------
- drivers/iommu/irq_remapping.h        |   14 ----
- 5 files changed, 185 deletions(-)
+Hmmm, maybe you are right, provide a simple pci scan interfaces
+(which don't care parent and resources) is better than use a complex
+one with several NULL arguments. :)
 
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index c4fa0d2291b8..61c50e6e28c8 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -50,10 +50,6 @@ extern int setup_ioapic_remapped_entry(int irq,
- 				       int vector,
- 				       struct io_apic_irq_attr *attr);
- extern void free_remapped_irq(int irq);
--extern void compose_remapped_msi_msg(struct pci_dev *pdev,
--				     unsigned int irq, unsigned int dest,
--				     struct msi_msg *msg, u8 hpet_id);
--extern int setup_hpet_msi_remapped(unsigned int irq, unsigned int id);
- extern void panic_if_irq_remap(const char *msg);
- extern bool setup_remapped_irq(int irq,
- 			       struct irq_cfg *cfg,
-@@ -98,15 +94,6 @@ static inline int setup_ioapic_remapped_entry(int irq,
- 	return -ENODEV;
- }
- static inline void free_remapped_irq(int irq) { }
--static inline void compose_remapped_msi_msg(struct pci_dev *pdev,
--					    unsigned int irq, unsigned int dest,
--					    struct msi_msg *msg, u8 hpet_id)
--{
--}
--static inline int setup_hpet_msi_remapped(unsigned int irq, unsigned int id)
--{
--	return -ENODEV;
--}
- 
- static inline void panic_if_irq_remap(const char *msg)
- {
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 4e370a5d8117..d8c80ff32e8c 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -96,15 +96,10 @@ extern void pci_iommu_alloc(void);
- #ifdef CONFIG_PCI_MSI
- /* implemented in arch/x86/kernel/apic/io_apic. */
- struct msi_desc;
--void native_compose_msi_msg(struct pci_dev *pdev, unsigned int irq,
--			    unsigned int dest, struct msi_msg *msg, u8 hpet_id);
- int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
- void native_teardown_msi_irq(unsigned int irq);
- void native_restore_msi_irqs(struct pci_dev *dev);
--int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
--		  unsigned int irq_base, unsigned int irq_offset);
- #else
--#define native_compose_msi_msg		NULL
- #define native_setup_msi_irqs		NULL
- #define native_teardown_msi_irq		NULL
- #endif
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index e48b674639cc..814fcbadaad1 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -111,11 +111,9 @@ EXPORT_SYMBOL_GPL(x86_platform);
- #if defined(CONFIG_PCI_MSI)
- struct x86_msi_ops x86_msi = {
- 	.setup_msi_irqs		= native_setup_msi_irqs,
--	.compose_msi_msg	= native_compose_msi_msg,
- 	.teardown_msi_irq	= native_teardown_msi_irq,
- 	.teardown_msi_irqs	= default_teardown_msi_irqs,
- 	.restore_msi_irqs	= default_restore_msi_irqs,
--	.setup_hpet_msi		= default_setup_hpet_msi,
- 	.msi_mask_irq		= default_msi_mask_irq,
- 	.msix_mask_irq		= default_msix_mask_irq,
- };
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 414ab0cddbbc..782dea5e4233 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -26,9 +26,6 @@ int no_x2apic_optout;
- 
- static struct irq_remap_ops *remap_ops;
- 
--static int msi_alloc_remapped_irq(struct pci_dev *pdev, int irq, int nvec);
--static int msi_setup_remapped_irq(struct pci_dev *pdev, unsigned int irq,
--				  int index, int sub_handle);
- static int set_remapped_irq_affinity(struct irq_data *data,
- 				     const struct cpumask *mask,
- 				     bool force);
-@@ -51,109 +48,6 @@ static void irq_remapping_disable_io_apic(void)
- 		disconnect_bsp_APIC(0);
- }
- 
--#ifndef CONFIG_GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
--static unsigned int irq_alloc_hwirqs(int cnt, int node)
--{
--	return irq_domain_alloc_irqs(NULL, -1, cnt, node, NULL);
--}
--
--static void irq_free_hwirqs(unsigned int from, int cnt)
--{
--	irq_domain_free_irqs(from, cnt);
--}
--#endif
--
--static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
--{
--	int ret, sub_handle, nvec_pow2, index = 0;
--	unsigned int irq;
--	struct msi_desc *msidesc;
--
--	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
--
--	irq = irq_alloc_hwirqs(nvec, dev_to_node(&dev->dev));
--	if (irq == 0)
--		return -ENOSPC;
--
--	nvec_pow2 = __roundup_pow_of_two(nvec);
--	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
--		if (!sub_handle) {
--			index = msi_alloc_remapped_irq(dev, irq, nvec_pow2);
--			if (index < 0) {
--				ret = index;
--				goto error;
--			}
--		} else {
--			ret = msi_setup_remapped_irq(dev, irq + sub_handle,
--						     index, sub_handle);
--			if (ret < 0)
--				goto error;
--		}
--		ret = setup_msi_irq(dev, msidesc, irq, sub_handle);
--		if (ret < 0)
--			goto error;
--	}
--	return 0;
--
--error:
--	irq_free_hwirqs(irq, nvec);
--
--	/*
--	 * Restore altered MSI descriptor fields and prevent just destroyed
--	 * IRQs from tearing down again in default_teardown_msi_irqs()
--	 */
--	msidesc->irq = 0;
--
--	return ret;
--}
--
--static int do_setup_msix_irqs(struct pci_dev *dev, int nvec)
--{
--	int node, ret, sub_handle, index = 0;
--	struct msi_desc *msidesc;
--	unsigned int irq;
--
--	node		= dev_to_node(&dev->dev);
--	sub_handle	= 0;
--
--	list_for_each_entry(msidesc, &dev->msi_list, list) {
--
--		irq = irq_alloc_hwirqs(1, node);
--		if (irq == 0)
--			return -1;
--
--		if (sub_handle == 0)
--			ret = index = msi_alloc_remapped_irq(dev, irq, nvec);
--		else
--			ret = msi_setup_remapped_irq(dev, irq, index, sub_handle);
--
--		if (ret < 0)
--			goto error;
--
--		ret = setup_msi_irq(dev, msidesc, irq, 0);
--		if (ret < 0)
--			goto error;
--
--		sub_handle += 1;
--		irq        += 1;
--	}
--
--	return 0;
--
--error:
--	irq_free_hwirqs(irq, 1);
--	return ret;
--}
--
--static int irq_remapping_setup_msi_irqs(struct pci_dev *dev,
--					int nvec, int type)
--{
--	if (type == PCI_CAP_ID_MSI)
--		return do_setup_msi_irqs(dev, nvec);
--	else
--		return do_setup_msix_irqs(dev, nvec);
--}
--
- static void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
- {
- 	/*
-@@ -171,8 +65,6 @@ static void __init irq_remapping_modify_x86_ops(void)
- 	x86_io_apic_ops.set_affinity	= set_remapped_irq_affinity;
- 	x86_io_apic_ops.setup_entry	= setup_ioapic_remapped_entry;
- 	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
--	x86_msi.setup_hpet_msi		= setup_hpet_msi_remapped;
--	x86_msi.compose_msi_msg		= compose_remapped_msi_msg;
- }
- 
- static __init int setup_nointremap(char *str)
-@@ -319,49 +211,6 @@ void free_remapped_irq(int irq)
- 		remap_ops->free_irq(irq);
- }
- 
--void compose_remapped_msi_msg(struct pci_dev *pdev,
--			      unsigned int irq, unsigned int dest,
--			      struct msi_msg *msg, u8 hpet_id)
--{
--	struct irq_cfg *cfg = irq_cfg(irq);
--
--	if (!irq_remapped(cfg))
--		native_compose_msi_msg(pdev, irq, dest, msg, hpet_id);
--	else if (remap_ops && remap_ops->compose_msi_msg)
--		remap_ops->compose_msi_msg(pdev, irq, dest, msg, hpet_id);
--}
--
--static int msi_alloc_remapped_irq(struct pci_dev *pdev, int irq, int nvec)
--{
--	if (!remap_ops || !remap_ops->msi_alloc_irq)
--		return -ENODEV;
--
--	return remap_ops->msi_alloc_irq(pdev, irq, nvec);
--}
--
--static int msi_setup_remapped_irq(struct pci_dev *pdev, unsigned int irq,
--				  int index, int sub_handle)
--{
--	if (!remap_ops || !remap_ops->msi_setup_irq)
--		return -ENODEV;
--
--	return remap_ops->msi_setup_irq(pdev, irq, index, sub_handle);
--}
--
--int setup_hpet_msi_remapped(unsigned int irq, unsigned int id)
--{
--	int ret;
--
--	if (!remap_ops || !remap_ops->alloc_hpet_msi)
--		return -ENODEV;
--
--	ret = remap_ops->alloc_hpet_msi(irq, id);
--	if (ret)
--		return -EINVAL;
--
--	return default_setup_hpet_msi(irq, id);
--}
--
- void panic_if_irq_remap(const char *msg)
- {
- 	if (irq_remapping_enabled)
-diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
-index 8c159d6fac46..95b19a6ef16a 100644
---- a/drivers/iommu/irq_remapping.h
-+++ b/drivers/iommu/irq_remapping.h
-@@ -70,20 +70,6 @@ struct irq_remap_ops {
- 	/* Free an IRQ */
- 	int (*free_irq)(int);
- 
--	/* Create MSI msg to use for interrupt remapping */
--	void (*compose_msi_msg)(struct pci_dev *,
--				unsigned int, unsigned int,
--				struct msi_msg *, u8);
--
--	/* Allocate remapping resources for MSI */
--	int (*msi_alloc_irq)(struct pci_dev *, int, int);
--
--	/* Setup the remapped MSI irq */
--	int (*msi_setup_irq)(struct pci_dev *, unsigned int, int, int);
--
--	/* Setup interrupt remapping for an HPET MSI */
--	int (*alloc_hpet_msi)(unsigned int, unsigned int);
--
- 	/* Get the irqdomain associated the IOMMU device */
- 	struct irq_domain *(*get_ir_irq_domain)(struct irq_alloc_info *);
- 
+
+> 
+> Best regards,
+> Liviu
+> 
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> ---
+>>  arch/alpha/include/asm/pci.h      |    2 +-
+>>  arch/alpha/kernel/sys_nautilus.c  |    2 +-
+>>  arch/cris/include/asm/pci.h       |    2 +-
+>>  arch/ia64/include/asm/pci.h       |    2 +-
+>>  arch/m68k/coldfire/pci.c          |    2 +-
+>>  arch/mips/include/asm/pci.h       |    2 +-
+>>  arch/mn10300/include/asm/pci.h    |    2 +-
+>>  arch/sh/include/asm/pci.h         |    2 +-
+>>  arch/sparc/include/asm/pci_32.h   |    2 +-
+>>  arch/sparc/include/asm/pci_64.h   |    2 +-
+>>  arch/sparc/kernel/pcic.c          |    3 ++-
+>>  arch/unicore32/kernel/pci.c       |    2 +-
+>>  arch/x86/include/asm/pci.h        |    2 +-
+>>  arch/x86/pci/amd_bus.c            |    2 +-
+>>  arch/xtensa/include/asm/pci.h     |    2 +-
+>>  drivers/parisc/dino.c             |    4 ++--
+>>  drivers/pci/hotplug/ibmphp_core.c |    2 +-
+>>  17 files changed, 19 insertions(+), 18 deletions(-)
+>>
+>> diff --git a/arch/alpha/include/asm/pci.h b/arch/alpha/include/asm/pci.h
+>> index f7f680f..157925a 100644
+>> --- a/arch/alpha/include/asm/pci.h
+>> +++ b/arch/alpha/include/asm/pci.h
+>> @@ -49,7 +49,7 @@ struct pci_controller {
+>>  	void *sysdata;
+>>  };
+>>  
+>> -/* Override the logic in pci_scan_bus for skipping already-configured
+>> +/* Override the logic in pci_scan_root_bus for skipping already-configured
+>>     bus numbers.  */
+>>  
+>>  #define pcibios_assign_all_busses()	1
+>> diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
+>> index 837c0fa..1047ab3 100644
+>> --- a/arch/alpha/kernel/sys_nautilus.c
+>> +++ b/arch/alpha/kernel/sys_nautilus.c
+>> @@ -206,7 +206,7 @@ nautilus_init_pci(void)
+>>  	unsigned long memtop = max_low_pfn << PAGE_SHIFT;
+>>  
+>>  	/* Scan our single hose.  */
+>> -	bus = pci_scan_bus(0, alpha_mv.pci_ops, hose);
+>> +	bus = pci_scan_root_bus(NULL, 0, alpha_mv.pci_ops, hose, NULL);
+>>  	hose->bus = bus;
+>>  	pcibios_claim_one_bus(bus);
+>>  
+>> diff --git a/arch/cris/include/asm/pci.h b/arch/cris/include/asm/pci.h
+>> index cc2399c..96b33a6 100644
+>> --- a/arch/cris/include/asm/pci.h
+>> +++ b/arch/cris/include/asm/pci.h
+>> @@ -5,7 +5,7 @@
+>>  #ifdef __KERNEL__
+>>  #include <linux/mm.h>		/* for struct page */
+>>  
+>> -/* Can be used to override the logic in pci_scan_bus for skipping
+>> +/* Can be used to override the logic in pci_scan_root_bus for skipping
+>>     already-configured bus numbers - to be used for buggy BIOSes
+>>     or architectures with incomplete PCI setup by the loader */
+>>  
+>> diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+>> index 52af5ed..64b34d6 100644
+>> --- a/arch/ia64/include/asm/pci.h
+>> +++ b/arch/ia64/include/asm/pci.h
+>> @@ -20,7 +20,7 @@ struct pci_vector_struct {
+>>  };
+>>  
+>>  /*
+>> - * Can be used to override the logic in pci_scan_bus for skipping already-configured bus
+>> + * Can be used to override the logic in pci_scan_root_bus for skipping already-configured bus
+>>   * numbers - to be used for buggy BIOSes or architectures with incomplete PCI setup by the
+>>   * loader.
+>>   */
+>> diff --git a/arch/m68k/coldfire/pci.c b/arch/m68k/coldfire/pci.c
+>> index df96792..4d242fb 100644
+>> --- a/arch/m68k/coldfire/pci.c
+>> +++ b/arch/m68k/coldfire/pci.c
+>> @@ -312,7 +312,7 @@ static int __init mcf_pci_init(void)
+>>  	set_current_state(TASK_UNINTERRUPTIBLE);
+>>  	schedule_timeout(msecs_to_jiffies(200));
+>>  
+>> -	rootbus = pci_scan_bus(0, &mcf_pci_ops, NULL);
+>> +	rootbus = pci_scan_root_bus(NULL, 0, &mcf_pci_ops, NULL, NULL);
+>>  	rootbus->resource[0] = &mcf_pci_io;
+>>  	rootbus->resource[1] = &mcf_pci_mem;
+>>  
+>> diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
+>> index 974b0e3..212030a 100644
+>> --- a/arch/mips/include/asm/pci.h
+>> +++ b/arch/mips/include/asm/pci.h
+>> @@ -60,7 +60,7 @@ extern void register_pci_controller(struct pci_controller *hose);
+>>  extern int pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin);
+>>  
+>>  
+>> -/* Can be used to override the logic in pci_scan_bus for skipping
+>> +/* Can be used to override the logic in pci_scan_root_bus for skipping
+>>     already-configured bus numbers - to be used for buggy BIOSes
+>>     or architectures with incomplete PCI setup by the loader */
+>>  
+>> diff --git a/arch/mn10300/include/asm/pci.h b/arch/mn10300/include/asm/pci.h
+>> index 5f70af2..6305f14 100644
+>> --- a/arch/mn10300/include/asm/pci.h
+>> +++ b/arch/mn10300/include/asm/pci.h
+>> @@ -33,7 +33,7 @@ do {							\
+>>  #define __pcidebug(FMT, BUS, DEVFN, WHERE, ...)	do {} while (0)
+>>  #endif
+>>  
+>> -/* Can be used to override the logic in pci_scan_bus for skipping
+>> +/* Can be used to override the logic in pci_scan_root_bus for skipping
+>>   * already-configured bus numbers - to be used for buggy BIOSes or
+>>   * architectures with incomplete PCI setup by the loader */
+>>  
+>> diff --git a/arch/sh/include/asm/pci.h b/arch/sh/include/asm/pci.h
+>> index 5b45115..69bcb78 100644
+>> --- a/arch/sh/include/asm/pci.h
+>> +++ b/arch/sh/include/asm/pci.h
+>> @@ -3,7 +3,7 @@
+>>  
+>>  #ifdef __KERNEL__
+>>  
+>> -/* Can be used to override the logic in pci_scan_bus for skipping
+>> +/* Can be used to override the logic in pci_scan_root_bus for skipping
+>>     already-configured bus numbers - to be used for buggy BIOSes
+>>     or architectures with incomplete PCI setup by the loader */
+>>  
+>> diff --git a/arch/sparc/include/asm/pci_32.h b/arch/sparc/include/asm/pci_32.h
+>> index 53e9b49..4ef6064 100644
+>> --- a/arch/sparc/include/asm/pci_32.h
+>> +++ b/arch/sparc/include/asm/pci_32.h
+>> @@ -5,7 +5,7 @@
+>>  
+>>  #include <linux/dma-mapping.h>
+>>  
+>> -/* Can be used to override the logic in pci_scan_bus for skipping
+>> +/* Can be used to override the logic in pci_scan_root_bus for skipping
+>>   * already-configured bus numbers - to be used for buggy BIOSes
+>>   * or architectures with incomplete PCI setup by the loader.
+>>   */
+>> diff --git a/arch/sparc/include/asm/pci_64.h b/arch/sparc/include/asm/pci_64.h
+>> index bd00a62..6e017f9 100644
+>> --- a/arch/sparc/include/asm/pci_64.h
+>> +++ b/arch/sparc/include/asm/pci_64.h
+>> @@ -5,7 +5,7 @@
+>>  
+>>  #include <linux/dma-mapping.h>
+>>  
+>> -/* Can be used to override the logic in pci_scan_bus for skipping
+>> +/* Can be used to override the logic in pci_scan_root_bus for skipping
+>>   * already-configured bus numbers - to be used for buggy BIOSes
+>>   * or architectures with incomplete PCI setup by the loader.
+>>   */
+>> diff --git a/arch/sparc/kernel/pcic.c b/arch/sparc/kernel/pcic.c
+>> index 6cc78c2..64aafac 100644
+>> --- a/arch/sparc/kernel/pcic.c
+>> +++ b/arch/sparc/kernel/pcic.c
+>> @@ -390,7 +390,8 @@ static void __init pcic_pbm_scan_bus(struct linux_pcic *pcic)
+>>  {
+>>  	struct linux_pbm_info *pbm = &pcic->pbm;
+>>  
+>> -	pbm->pci_bus = pci_scan_bus(pbm->pci_first_busno, &pcic_ops, pbm);
+>> +	pbm->pci_bus = pci_scan_root_bus(NULL, pbm->pci_first_busno, 
+>> +			&pcic_ops, pbm, NULL);
+>>  #if 0 /* deadwood transplanted from sparc64 */
+>>  	pci_fill_in_pbm_cookies(pbm->pci_bus, pbm, pbm->prom_node);
+>>  	pci_record_assignments(pbm, pbm->pci_bus);
+>> diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
+>> index 374a055..be0f261 100644
+>> --- a/arch/unicore32/kernel/pci.c
+>> +++ b/arch/unicore32/kernel/pci.c
+>> @@ -258,7 +258,7 @@ static int __init pci_common_init(void)
+>>  
+>>  	pci_puv3_preinit();
+>>  
+>> -	puv3_bus = pci_scan_bus(0, &pci_puv3_ops, NULL);
+>> +	puv3_bus = pci_scan_root_bus(NULL, 0, &pci_puv3_ops, NULL, NULL);
+>>  
+>>  	if (!puv3_bus)
+>>  		panic("PCI: unable to scan bus!");
+>> diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+>> index 0892ea0..0540ff7 100644
+>> --- a/arch/x86/include/asm/pci.h
+>> +++ b/arch/x86/include/asm/pci.h
+>> @@ -41,7 +41,7 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+>>  }
+>>  #endif
+>>  
+>> -/* Can be used to override the logic in pci_scan_bus for skipping
+>> +/* Can be used to override the logic in pci_scan_root_bus for skipping
+>>     already-configured bus numbers - to be used for buggy BIOSes
+>>     or architectures with incomplete PCI setup by the loader */
+>>  
+>> diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+>> index c20d2cc..baf6209 100644
+>> --- a/arch/x86/pci/amd_bus.c
+>> +++ b/arch/x86/pci/amd_bus.c
+>> @@ -52,7 +52,7 @@ static struct pci_root_info __init *find_pci_root_info(int node, int link)
+>>  
+>>  /**
+>>   * early_root_info_init()
+>> - * called before pcibios_scan_root and pci_scan_bus
+>> + * called before pcibios_scan_root and pci_scan_root_bus
+>>   * fills the mp_bus_to_cpumask array based according
+>>   * to the LDT Bus Number Registers found in the northbridge.
+>>   */
+>> diff --git a/arch/xtensa/include/asm/pci.h b/arch/xtensa/include/asm/pci.h
+>> index 5d52dc4..377fae9 100644
+>> --- a/arch/xtensa/include/asm/pci.h
+>> +++ b/arch/xtensa/include/asm/pci.h
+>> @@ -13,7 +13,7 @@
+>>  
+>>  #ifdef __KERNEL__
+>>  
+>> -/* Can be used to override the logic in pci_scan_bus for skipping
+>> +/* Can be used to override the logic in pci_scan_root_bus for skipping
+>>   * already-configured bus numbers - to be used for buggy BIOSes
+>>   * or architectures with incomplete PCI setup by the loader
+>>   */
+>> diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
+>> index a0580af..67c31bd 100644
+>> --- a/drivers/parisc/dino.c
+>> +++ b/drivers/parisc/dino.c
+>> @@ -74,7 +74,7 @@
+>>  ** assigned a PCI bus number based on "when" it's discovered.
+>>  **
+>>  ** The "secondary" bus number is set to this before calling
+>> -** pci_scan_bus(). If any PPB's are present, the scan will
+>> +** pci_scan_root_bus(). If any PPB's are present, the scan will
+>>  ** discover them and update the "secondary" and "subordinate"
+>>  ** fields in Dino's pci_bus structure.
+>>  **
+>> @@ -787,7 +787,7 @@ static int __init dino_common_init(struct parisc_device *dev,
+>>  
+>>  	pcibios_register_hba(&dino_dev->hba);
+>>  
+>> -	pci_bios = &dino_bios_ops;   /* used by pci_scan_bus() */
+>> +	pci_bios = &dino_bios_ops;   
+>>  	pci_port = &dino_port_ops;
+>>  
+>>  	/*
+>> diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
+>> index 3efaf4c..b486432 100644
+>> --- a/drivers/pci/hotplug/ibmphp_core.c
+>> +++ b/drivers/pci/hotplug/ibmphp_core.c
+>> @@ -767,7 +767,7 @@ static u8 bus_structure_fixup(u8 busno)
+>>  					(l != 0x0000) && (l != 0xffff)) {
+>>  			debug("%s - Inside bus_structure_fixup()\n",
+>>  							__func__);
+>> -			pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
+>> +			pci_scan_root_bus(NULL, busno, ibmphp_pci_bus->ops, NULL, NULL);
+>>  			break;
+>>  		}
+>>  	}
+>> -- 
+>> 1.7.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+> 
+
+
 -- 
-1.7.10.4
+Thanks!
+Yijing
 
