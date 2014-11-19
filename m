@@ -1,69 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:56673 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751679AbaKLK11 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 05:27:27 -0500
-Date: Wed, 12 Nov 2014 10:27:26 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Martin Wilck <martin.wilck@ts.fujitsu.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Michael Ellerman <mpe@ellerman.id.au>
-Subject: Re: [PATCH RFC v2 1/2] drivers: pci: fix pci_mmap_fits()
- implementation for procfs mmap
-Message-ID: <20141112102726.GD6759@red-moon>
-References: <1414168089-8130-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1414168089-8130-2-git-send-email-lorenzo.pieralisi@arm.com>
- <20141110230454.GA21470@google.com>
- <1415777029.5124.42.camel@kernel.crashing.org>
+Received: from mail-qg0-f50.google.com ([209.85.192.50]:64708 "EHLO
+	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754814AbaKSSwx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 13:52:53 -0500
+Received: by mail-qg0-f50.google.com with SMTP id e89so922219qgf.9
+        for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2014 10:52:52 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415777029.5124.42.camel@kernel.crashing.org>
+In-Reply-To: <CA+r1ZhgMQF4pxwFTRyLQxQJVVzXp17AO0p7FQrfZwoFPWA+FNg@mail.gmail.com>
+References: <CA+r1ZhgMQF4pxwFTRyLQxQJVVzXp17AO0p7FQrfZwoFPWA+FNg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 19 Nov 2014 11:52:32 -0700
+Message-ID: <CAErSpo79Ob-Jx=5Mmn2oJO5kmVhwGhrrpjuMDz9kxQD09CUFQw@mail.gmail.com>
+Subject: Re: randconfig warnings with next-20141119, in drivers/pci/probe.c
+To: Jim Davis <jim.epost@gmail.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 12, 2014 at 07:23:49AM +0000, Benjamin Herrenschmidt wrote:
-> On Mon, 2014-11-10 at 16:04 -0700, Bjorn Helgaas wrote:
-> > But I'm not sure I have this right.  If the procfs offset is either
-> > the
-> > CPU physical address or the BAR value, then pci_resource_to_user()
-> > should be (depending on the arch) either a no-op or use
-> > pci_resource_to_bus().
-> > 
-> > But that's not how it's implemented.  Maybe it *could* be?  If
-> > pci_resource_to_user() gives you something that's not a CPU physical
-> > address and not a bus address, what *does* it give you, and why would
-> > we
-> > need this third kind of thing?
-> > 
-> > FWIW, I think the discussion leading up to pci_resource_to_user() is
-> > here:
-> > http://lkml.iu.edu/hypermail/linux/kernel/0504.3/0467.html
-> 
-> Oh, man... I remember that was all a giant trainwreck and some stuff
-> just couldn't be made completely right due to broken assumptions by
-> the proc code and users of it... but I don't remember all the details.
-> 
-> I think /proc users don't necessarily pass a BAR value but something
-> they try to somewhat translates themselves via the "resources" file,
-> which ends up working ... or not, depending on various factors such
-> as 32 vs 64 bit etc...
-> 
-> I wonder who still uses this interface....
+On Wed, Nov 19, 2014 at 11:32 AM, Jim Davis <jim.epost@gmail.com> wrote:
+> Hej! Builds with CONFIG_X86_32=y are getting these warning messages
+>
+> drivers/pci/probe.c:430:5: warning: left shift count >= width of type
+> [enabled by default]
+> drivers/pci/probe.c:431:5: warning: left shift count >= width of type
+> [enabled by default]
+>
+> which would seem to refer to
+>
+>                                base |= ((dma_addr_t) mem_base_hi) << 32;
+>                                 limit |= ((dma_addr_t) mem_limit_hi) << 32;
 
-+1, even though I do not think that leaving it as it is is a good idea,
-hence I posted this series.
+Hi Jim,
 
-I tried to fix it while fixing the way ARM pcibios code handles
-pci_mmap_page_range() (for both procfs and sysfs mappings).
+Thanks for the note.  This is a known issue and I have a couple
+patches for it, so I hope to get it resolved today.
 
-I will do what Bjorn suggested, more comments from arches maintainers
-are welcome.
-
-Lorenzo
+Bjorn
