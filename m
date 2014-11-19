@@ -1,215 +1,167 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:23669 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751796AbaKBGCS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 2 Nov 2014 01:02:18 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [Patch v8 07/18] ACPI: Add interfaces to parse IOAPIC ID for IOAPIC hotplug
-Date: Sun,  2 Nov 2014 14:04:22 +0800
-Message-Id: <1414908273-7552-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414908273-7552-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414908273-7552-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:12469 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750757AbaKSJRo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 04:17:44 -0500
+Message-ID: <546C5FF2.5090903@huawei.com>
+Date: Wed, 19 Nov 2014 17:16:34 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>
+CC: Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <liviu.dudau@arm.com>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	"Catalin Marinas" <catalin.marinas@arm.com>
+Subject: Re: [RFC PATCH v2] drivers: pci: move PCI domain assignment to generic
+ PCI code
+References: <1415637706-2195-1-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1415637706-2195-1-git-send-email-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
+Hi Lorenzo,
+   You should send this to Bjorn instead of cc. Other, why put the OF related
+function in PCI core. Why not move it in drivers/of/of_pci.c ?
 
-We need to parse APIC ID for IOAPIC registration for IOAPIC hotplug.
-ACPI _MAT method and MADT table are used to figure out IOAPIC ID, just
-like parsing CPU APIC ID for CPU hotplug.
+On 2014/11/11 0:41, Lorenzo Pieralisi wrote:
+> The current logic used for PCI domain assignment in arm64
+> pci_bus_assign_domain_nr() is flawed in that, depending on the host
+> controllers configuration for a platform and the respective initialization
+> sequence, core code may end up allocating PCI domain numbers from both DT and
+> the core code generic domain counter, which would result in PCI domain
+> allocation aliases/errors.
+> 
+> This patch fixes the logic behind the PCI domain number assignment and
+> moves the resulting code to generic PCI core code so that the same domain
+> allocation logic is used on all platforms selecting
+> 
+> CONFIG_PCI_DOMAINS_GENERIC
+> 
+> instead of resorting to an arch specific implementation that might end up
+> duplicating the PCI domain assignment logic wrongly.
+> 
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Liviu Dudau <liviu.dudau@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: Catalin Marinas <catalin.marinas@arm.com>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> ---
+> v1 => v2:
+> 
+> - Moved generic pci_bus_assign_domain_nr() code to PCI core instead of
+>   adding an OF layer API
+> - Updated commit log and code comments
+> 
+>  arch/arm64/kernel/pci.c | 22 ----------------------
+>  drivers/pci/pci.c       | 50 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 50 insertions(+), 22 deletions(-)
+> 
+> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> index ce5836c..6f93c24 100644
+> --- a/arch/arm64/kernel/pci.c
+> +++ b/arch/arm64/kernel/pci.c
+> @@ -46,25 +46,3 @@ int pcibios_add_device(struct pci_dev *dev)
+>  
+>  	return 0;
+>  }
+> -
+> -
+> -#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> -static bool dt_domain_found = false;
+> -
+> -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> -{
+> -	int domain = of_get_pci_domain_nr(parent->of_node);
+> -
+> -	if (domain >= 0) {
+> -		dt_domain_found = true;
+> -	} else if (dt_domain_found == true) {
+> -		dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
+> -			parent->of_node->full_name);
+> -		return;
+> -	} else {
+> -		domain = pci_get_new_domain_nr();
+> -	}
+> -
+> -	bus->domain_nr = domain;
+> -}
+> -#endif
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 625a4ac..2279414 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -10,6 +10,8 @@
+>  #include <linux/kernel.h>
+>  #include <linux/delay.h>
+>  #include <linux/init.h>
+> +#include <linux/of.h>
+> +#include <linux/of_pci.h>
+>  #include <linux/pci.h>
+>  #include <linux/pm.h>
+>  #include <linux/slab.h>
+> @@ -4447,6 +4449,54 @@ int pci_get_new_domain_nr(void)
+>  {
+>  	return atomic_inc_return(&__domain_nr);
+>  }
+> +
+> +#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> +
+> +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> +{
+> +	static int use_dt_domains = -1;
+> +	int domain = of_get_pci_domain_nr(parent->of_node);
+> +
+> +	/*
+> +	 * Check DT domain and use_dt_domains values.
+> +	 *
+> +	 * If DT domain property is valid (domain >= 0) and
+> +	 * use_dt_domains != 0, the DT assignment is valid since this means
+> +	 * we have not previously allocated a domain number by using
+> +	 * pci_get_new_domain_nr(); we should also update use_dt_domains to
+> +	 * 1, to indicate that we have just assigned a domain number from
+> +	 * DT.
+> +	 *
+> +	 * If DT domain property value is not valid (ie domain < 0), and we
+> +	 * have not previously assigned a domain number from DT
+> +	 * (use_dt_domains != 1) we should assign a domain number by
+> +	 * using the:
+> +	 *
+> +	 * pci_get_new_domain_nr()
+> +	 *
+> +	 * API and update the use_dt_domains value to keep track of method we
+> +	 * are using to assign domain numbers (use_dt_domains = 0).
+> +	 *
+> +	 * All other combinations imply we have a platform that is trying
+> +	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
+> +	 * which is a recipe for domain mishandling and it is prevented by
+> +	 * invalidating the domain value (domain = -1) and printing a
+> +	 * corresponding error.
+> +	 */
+> +	if (domain >= 0 && use_dt_domains) {
+> +		use_dt_domains = 1;
+> +	} else if (domain < 0 && use_dt_domains != 1) {
+> +		use_dt_domains = 0;
+> +		domain = pci_get_new_domain_nr();
+> +	} else {
+> +		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
+> +			parent->of_node->full_name);
+> +		domain = -1;
+> +	}
+> +
+> +	bus->domain_nr = domain;
+> +}
+> +#endif
+>  #endif
+>  
+>  /**
+> 
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/processor_core.c |  122 ++++++++++++++++++++++++++++++++++++++---
- include/linux/acpi.h          |    4 ++
- 2 files changed, 117 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/acpi/processor_core.c b/drivers/acpi/processor_core.c
-index 342942f90a10..9ff12905aed9 100644
---- a/drivers/acpi/processor_core.c
-+++ b/drivers/acpi/processor_core.c
-@@ -4,6 +4,10 @@
-  *
-  *	Alex Chiang <achiang@hp.com>
-  *	- Unified x86/ia64 implementations
-+ *
-+ * I/O APIC hotplug support
-+ *	Yinghai Lu <yinghai@kernel.org>
-+ *	Jiang Liu <jiang.liu@intel.com>
-  */
- #include <linux/export.h>
- #include <linux/acpi.h>
-@@ -12,6 +16,21 @@
- #define _COMPONENT		ACPI_PROCESSOR_COMPONENT
- ACPI_MODULE_NAME("processor_core");
- 
-+static struct acpi_table_madt *get_madt_table(void)
-+{
-+	static struct acpi_table_madt *madt;
-+	static int read_madt;
-+
-+	if (!read_madt) {
-+		if (ACPI_FAILURE(acpi_get_table(ACPI_SIG_MADT, 0,
-+					(struct acpi_table_header **)&madt)))
-+			madt = NULL;
-+		read_madt++;
-+	}
-+
-+	return madt;
-+}
-+
- static int map_lapic_id(struct acpi_subtable_header *entry,
- 		 u32 acpi_id, int *apic_id)
- {
-@@ -67,17 +86,10 @@ static int map_lsapic_id(struct acpi_subtable_header *entry,
- static int map_madt_entry(int type, u32 acpi_id)
- {
- 	unsigned long madt_end, entry;
--	static struct acpi_table_madt *madt;
--	static int read_madt;
- 	int apic_id = -1;
-+	struct acpi_table_madt *madt;
- 
--	if (!read_madt) {
--		if (ACPI_FAILURE(acpi_get_table(ACPI_SIG_MADT, 0,
--					(struct acpi_table_header **)&madt)))
--			madt = NULL;
--		read_madt++;
--	}
--
-+	madt = get_madt_table();
- 	if (!madt)
- 		return apic_id;
- 
-@@ -203,3 +215,95 @@ int acpi_get_cpuid(acpi_handle handle, int type, u32 acpi_id)
- 	return acpi_map_cpuid(apic_id, acpi_id);
- }
- EXPORT_SYMBOL_GPL(acpi_get_cpuid);
-+
-+#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-+static int get_ioapic_id(struct acpi_subtable_header *entry, u32 gsi_base,
-+			 u64 *phys_addr, int *ioapic_id)
-+{
-+	struct acpi_madt_io_apic *ioapic = (struct acpi_madt_io_apic *)entry;
-+
-+	if (ioapic->global_irq_base != gsi_base)
-+		return 0;
-+
-+	*phys_addr = ioapic->address;
-+	*ioapic_id = ioapic->id;
-+	return 1;
-+}
-+
-+static int parse_madt_ioapic_entry(u32 gsi_base, u64 *phys_addr)
-+{
-+	struct acpi_subtable_header *hdr;
-+	unsigned long madt_end, entry;
-+	int apic_id = -1;
-+	struct acpi_table_madt *madt;
-+
-+	madt = get_madt_table();
-+	if (!madt)
-+		return apic_id;
-+
-+	entry = (unsigned long)madt;
-+	madt_end = entry + madt->header.length;
-+
-+	/* Parse all entries looking for a match. */
-+	entry += sizeof(struct acpi_table_madt);
-+	while (entry + sizeof(struct acpi_subtable_header) < madt_end) {
-+		hdr = (struct acpi_subtable_header *)entry;
-+		if (hdr->type == ACPI_MADT_TYPE_IO_APIC &&
-+		    get_ioapic_id(hdr, gsi_base, phys_addr, &apic_id))
-+			break;
-+		else
-+			entry += hdr->length;
-+	}
-+
-+	return apic_id;
-+}
-+
-+static int parse_mat_ioapic_entry(acpi_handle handle, u32 gsi_base,
-+				  u64 *phys_addr)
-+{
-+	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
-+	union acpi_object *obj;
-+	struct acpi_subtable_header *header;
-+	int apic_id = -1;
-+
-+	if (ACPI_FAILURE(acpi_evaluate_object(handle, "_MAT", NULL, &buffer)))
-+		goto exit;
-+
-+	if (!buffer.length || !buffer.pointer)
-+		goto exit;
-+
-+	obj = buffer.pointer;
-+	if (obj->type != ACPI_TYPE_BUFFER ||
-+	    obj->buffer.length < sizeof(struct acpi_subtable_header))
-+		goto exit;
-+
-+	header = (struct acpi_subtable_header *)obj->buffer.pointer;
-+	if (header->type == ACPI_MADT_TYPE_IO_APIC)
-+		get_ioapic_id(header, gsi_base, phys_addr, &apic_id);
-+
-+exit:
-+	kfree(buffer.pointer);
-+	return apic_id;
-+}
-+
-+/**
-+ * acpi_get_ioapic_id - Get IOAPIC ID and physical address matching @gsi_base
-+ * @handle:	ACPI object for IOAPIC device
-+ * @gsi_base:	GSI base to match with
-+ * @phys_add:	hold physical address of matching IOAPIC record
-+ *
-+ * Walk resources returned by ACPI_MAT method, then ACPI MADT table, to search
-+ * for an ACPI IOAPIC record matching @gsi_base.
-+ * Return IOAPIC id and physical address if found a match, otherwise return <0.
-+ */
-+int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr)
-+{
-+	int apic_id;
-+
-+	apic_id = parse_mat_ioapic_entry(handle, gsi_base, phys_addr);
-+	if (apic_id == -1)
-+		apic_id = parse_madt_ioapic_entry(gsi_base, phys_addr);
-+
-+	return apic_id;
-+}
-+#endif /* CONFIG_ACPI_HOTPLUG_IOAPIC */
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 407a12f663eb..77cecd0350e7 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -146,6 +146,10 @@ int acpi_map_lsapic(acpi_handle handle, int physid, int *pcpu);
- int acpi_unmap_lsapic(int cpu);
- #endif /* CONFIG_ACPI_HOTPLUG_CPU */
- 
-+#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-+int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
-+#endif
-+
- int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
- int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base);
- void acpi_irq_stats_init(void);
 -- 
-1.7.10.4
+Thanks!
+Yijing
 
