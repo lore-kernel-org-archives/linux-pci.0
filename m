@@ -1,79 +1,165 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:51044 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751707AbaKKDb7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Nov 2014 22:31:59 -0500
-Received: by mail-ig0-f176.google.com with SMTP id l13so325834iga.3
-        for <linux-pci@vger.kernel.org>; Mon, 10 Nov 2014 19:31:58 -0800 (PST)
-Date: Mon, 10 Nov 2014 20:31:54 -0700
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:58814 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754076AbaKSE0E (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 23:26:04 -0500
+Received: by mail-ie0-f175.google.com with SMTP id at20so10213545iec.20
+        for <linux-pci@vger.kernel.org>; Tue, 18 Nov 2014 20:26:04 -0800 (PST)
+Date: Tue, 18 Nov 2014 21:26:01 -0700
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: linux-pci@vger.kernel.org, willy@linux.intel.com,
-	unruh@physics.ubc.ca, linux-kernel@vger.kernel.org,
-	martin@lucina.net
-Subject: Re: [PATCH 0/3] PCI: Fix detection of read-only BARs
-Message-ID: <20141111033154.GA28161@google.com>
-References: <20141030175430.22238.47671.stgit@amt.stowe>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: Benjamin Herrenschmidt <benh@au1.ibm.com>,
+	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, Donald Dutile <ddutile@redhat.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [PATCH V9 03/18] PCI: Add weak pcibios_iov_resource_size()
+ interface
+Message-ID: <20141119042601.GB23467@google.com>
+References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1414942894-17034-4-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20141119011243.GA23467@google.com>
+ <1416363332.5704.18.camel@au1.ibm.com>
+ <20141119032100.GA7105@richard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141030175430.22238.47671.stgit@amt.stowe>
+In-Reply-To: <20141119032100.GA7105@richard>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 30, 2014 at 11:54:31AM -0600, Myron Stowe wrote:
-> While non-conformant, PCI devices having read-only (r/o) BARs - registers
-> that when read return fixed, non-zero, values regardless of whether or
-> not their being sized - occasionally turn up.  Pre-git commit 1307ef662199
-> [1] was the initial attempt to detect such BARs.  The detection mechanism
-> used however ended up exposing further unexpected behaviors on enough
-> devices that it had to be reverted [2].
+On Wed, Nov 19, 2014 at 11:21:00AM +0800, Wei Yang wrote:
+> On Wed, Nov 19, 2014 at 01:15:32PM +1100, Benjamin Herrenschmidt wrote:
+> >On Tue, 2014-11-18 at 18:12 -0700, Bjorn Helgaas wrote:
+> >> 
+> >> Can you help me understand this?
+> >> 
+> >> We have previously called sriov_init() on the PF.  There, we sized the VF
+> >> BARs, which are in the PF's SR-IOV Capability (SR-IOV spec sec 3.3.14).
+> >> The size we discover is the amount of space required by a single VF, so
+> >> sriov_init() adjusts PF->resource[PCI_IOV_RESOURCES + i] by multiplying
+> >> that size by PCI_SRIOV_TOTAL_VF, so this PF resource is now big enough to 
+> >> hold the VF BAR[i] areas for all the possible VFs.
+> >
+> >So I'll let Richard (Wei) answer on the details but I'll just chime in
+> >about the "big picture". This isn't about changing the spacing between VFs
+> >which is handled by the system page size.
+> >
+> >This is about the way we create MMIO windows from the CPU to the VF BARs.
+> >
+> >Basically, we have a (limited) set of 64-bit windows we can create that
+> >are divided in equal sized segments (256 of them), each segment assigned
+> >in HW to one of our Partitionable Endpoints (aka domain).
+> >
+> >So even if we only ever create 16 VFs for a device, we need to use an
+> >entire of these windows, which will use 256*VF_size and thus allocate
+> >that much space. Also the window has to be naturally aligned.
+> >
+> >We can then assign the VF BAR to a spot inside that window that corresponds
+> >to the range of PEs that we have assigned to that device (which typically
+> >isn't going to be the beginning of the window).
+> >
 > 
-> A subsequent solution, which is still currently in use, was put in place
-> with pre-git commit 2c79a80ab7b7 ("[PCI] Correctly size hardwired empty
-> BARs").  This solution's logic detects r/o BARs via the following (see
-> 'pci_size()'):
->         /* base == maxbase can be valid only if the BAR has
->            already been programmed with all 1s.  */
->         if (base == maxbase && ((base | size) & mask) != mask)
->                 return 0;
+> Bjorn & Ben,
 > 
-> Later, commit 6ac665c63dca ("PCI: rewrite PCI BAR reading code") was
-> introduced, re-factoring PCI's core BAR sizing logic.  The commit altered
-> __pci_read_base's local variable 'l', stripping off its lower,
-> non-addressing related bits, prior to being passed in as the 'base'
-> parameter to pci_size().  This masking broke the r/o BAR detection logic's
-> first comparison check for r/o BARs that have any of their lower order
-> bits, bits that are not part of a BARs "base address" field, set.  For
-> such cases, the 'base == maxbase' comparison check will no longer ever be
-> "true".
+> Let me try to explain it. Thanks for Ben's explanation, it would be helpful. We
+> are not trying to change the space between VFs.
 > 
-> This series restores the r/o BAR detection logic so that it will once
-> again catch, and ignore, such occurrences as have been encountered to
-> date:
->   - AGP aperture BAR of AMD-7xx host bridges; if the AGP window
->     disabled, this BAR is read-only and read as 0x00000008 [1]
->   - BAR0-4 of ALi IDE controllers can be non-zero and read-only [1]
->   - Intel Sandy Bridge - Thermal Management Controller [8086:0103];
->     BAR 0 returning 0xfed98004 [3]
->   - Intel Xeon E5 v3/Core i7 Power Control Unit [8086:2fc0];
->     Bar 0 returning 0x00001a [4]
-> 
-> 
-> [1] From Thomas Gleixner's "Linux kernel history" repository:
->     https://git.kernel.org/cgit/linux/kernel/git/tglx/history.git/commit/drivers/pci/probe.c?id=1307ef6621991f1c4bc3cec1b5a4ebd6fd3d66b9
->     pre-git commit 1307ef662199  "PCI: probing read-only Bars"
-> [2] Pre-git commit 182d090b9dfe  "Undo due to weird behaviour on various
->     boxes"
-> [3] https://bugzilla.kernel.org/show_bug.cgi?id=43331
-> [4] https://bugzilla.kernel.org/show_bug.cgi?id=85991
-> 
-> 
-> Myron Stowe (3):
->       PCI: Restore detection of read-only BARs
->       PCI: Re-factor __pci_read_base
->       PCI: Add a informational printk for invalid BARs
+> As mentioned by Ben, we use some HW to map the MMIO space to PE. 
 
-I applied all three of these to pci/enumeration for v3.19.  It's great to
-get this long-standing problem fixed and the code cleaned up a bit.
+We need some documentation with pictures about what a PE is.  I did find
+this:
+
+https://events.linuxfoundation.org/images/stories/slides/lfcs2013_yang.pdf
+
+which looks like a good start, although there's not quite enough text for
+me to understand, and it doesn't have much about MMIO space.
+
+> But the HW
+> must map 256 segments with the same size. This will lead a situation like
+> this.
+> 
+>    +------+------+        +------+------+------+------+
+>    |VF#0  |VF#1  |   ...  |      |VF#N-1|PF#A  |PF#B  |
+>    +------+------+        +------+------+------+------+
+> 
+> Suppose N = 254 and the HW map these 256 segments to their corresponding PE#.
+
+I guess these 256 segments are regions of CPU physical address space, and
+they are being mapped to bus address space?  Is there some relationship
+between a PE and part of the bus address space?
+
+> Then it introduces one problem, the PF#A and PF#B have been already assigned
+> to some PE#. We can't map one MMIO range to two different PE#.
+> 
+> What we have done is to "Expand the IOV BAR" to fit the whole HW 256 segments.
+> By doing so, the MMIO range will look like this.
+> 
+>    +------+------+        +------+------+------+------+------+------+
+>    |VF#0  |VF#1  |   ...  |      |VF#N-1|blank |blank |PF#A  |PF#B  |
+>    +------+------+        +------+------+------+------+------+------+
+> 
+> We do some tricky to "Expand" the IOV BAR, so that make sure there would not
+> be some overlap between VF's PE and PF's PE.
+
+The language here is tricky.  You're not actually *expanding* the IOV BAR.
+The IOV BAR is a hardware thing and its size is determined by normal BAR
+sizing and the number of VFs.  What you're doing is reserving additional
+space for that BAR, and the additional space will be unused.  That's all
+fine; we just need a way to describe it accurately.
+
+> Then this will leads to the IOV BAR size change from:
+>    
+>    IOV BAR size = (VF BAR aperture size) * VF_number
+> 
+>  to:
+>    
+>    IOV BAR size = (VF BAR aperture size) * 256
+> 
+> This is the reason we need a platform dependent method to get the VF BAR size.
+> Otherwise the VF BAR size would be not correct.
+> 
+> Now let's take a look at your example again.
+> 
+>   PF SR-IOV Capability
+>     TotalVFs = 4
+>     NumVFs = 4
+>     System Page Size = 4KB
+>     VF BAR0 = [mem 0x00000000-0x00000fff] (4KB at address 0)
+> 
+>   PF  pci_dev->resource[7] = [mem 0x00000000-0x00003fff] (16KB)
+>   VF1 pci_dev->resource[0] = [mem 0x00000000-0x00000fff]
+>   VF2 pci_dev->resource[0] = [mem 0x00001000-0x00001fff]
+>   VF3 pci_dev->resource[0] = [mem 0x00002000-0x00002fff]
+>   VF4 pci_dev->resource[0] = [mem 0x00003000-0x00003fff]
+> 
+> The difference after our expanding is the IOV BAR size is 256*4KB instead of
+> 16KB. So it will look like this:
+> 
+>   PF  pci_dev->resource[7] = [mem 0x00000000-0x000fffff] (1024KB)
+
+Is the idea that you want this resource to be big enough to cover all 256
+segments?  I think I'm OK with increasing the size of the PF resources to
+prevent overlap.  That part shouldn't be too ugly.
+
+>   VF1 pci_dev->resource[0] = [mem 0x00000000-0x00000fff]
+>   VF2 pci_dev->resource[0] = [mem 0x00001000-0x00001fff]
+>   VF3 pci_dev->resource[0] = [mem 0x00002000-0x00002fff]
+>   VF4 pci_dev->resource[0] = [mem 0x00003000-0x00003fff]
+>   ...
+>   and 252 4KB space leave not used.
+> 
+> So the start address and the size of VF will not change, but the PF's IOV BAR
+> will be expanded.
+
+I'm really dubious about this change to use pci_iov_resource_size().  I
+think you might be doing that because if you increase the PF resource size,
+dividing that increased size by total_VFs will give you garbage.  E.g., in
+the example above, you would compute "size = 1024KB / 4", which would make
+the VF BARs appear to be 256KB instead of 4KB as they should be.
+
+I think it would be better to solve that problem by decoupling the PF
+resource size and the VF BAR size.  For example, we could keep track of the
+VF BAR size explicitly in struct pci_sriov, instead of computing it from
+the PF resource size and total_VFs.  This would keep the VF BAR size
+completely platform-independent.
 
 Bjorn
