@@ -1,184 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from dliviu.plus.com ([80.229.23.120]:60537 "EHLO smtp.dudau.co.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755837AbaKSQhX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Nov 2014 11:37:23 -0500
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by smtp.dudau.co.uk (Postfix) with SMTP id F3A7310067F
-	for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2014 16:29:21 +0000 (GMT)
-Date: Wed, 19 Nov 2014 16:29:14 +0000
-From: Liviu Dudau <liviu@dudau.co.uk>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"huxinwei@huawei.com" <huxinwei@huawei.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Wuyun <wuyun.wu@huawei.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [RFC PATCH 07/16] PCI: Separate pci_host_bridge creation out of
- pci_create_root_bus()
-Message-ID: <20141119162914.GB9162@bart.dudau.co.uk>
-References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
- <1416219710-26088-8-git-send-email-wangyijing@huawei.com>
- <2507218.mHliopJb05@wuerfel>
- <546B041A.4060403@huawei.com>
- <20141118144819.GK12037@e106497-lin.cambridge.arm.com>
- <546BFF74.4030101@huawei.com>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:33208 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754105AbaKSDVI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 22:21:08 -0500
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 19 Nov 2014 13:21:06 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 852932BB0073
+	for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2014 14:21:03 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAJ3KeFQ34144446
+	for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2014 14:20:40 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAJ3L1vT007436
+	for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2014 14:21:02 +1100
+Date: Wed, 19 Nov 2014 11:21:00 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Benjamin Herrenschmidt <benh@au1.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, Donald Dutile <ddutile@redhat.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [PATCH V9 03/18] PCI: Add weak pcibios_iov_resource_size()
+ interface
+Message-ID: <20141119032100.GA7105@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1414942894-17034-4-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20141119011243.GA23467@google.com>
+ <1416363332.5704.18.camel@au1.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <546BFF74.4030101@huawei.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1416363332.5704.18.camel@au1.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 19, 2014 at 10:24:52AM +0800, Yijing Wang wrote:
-> >> We need, some platforms pass NULL pointer as host bridge parent.
-> > 
-> > Yijing,
-> > 
-> > May I suggest a different approach here? Rather than having to pass an opaque
-> > pointer that gets converted by the host bridge driver back to the private
-> > structure, what about promoting a new style of usage, that is similar to the
-> > way device drivers work? Lets try to promote the embedding of the generic
-> > pci_host_bridge structure in the host bridge specific structure! Then we can
-> > access the private data doing container_of().
-> > 
-> > Something like this:
-> > 
-> > struct pci_controller {
-> > 	struct pci_host_bridge bridge;
-> > 	/* private host bridge data here */
-> > 	.....
-> > };
-> > 
-> > #define PCI_CONTROLLER(bus)	({
-> > 	struct pci_host_bridge *hb = to_pci_host_bridge(bus->bridge); \
-> > 	container_of(hb, struct pci_controller, bridge); })
-> > 
-> > 
-> > Then we can retrieve the host bridge structure from everywhere we have a device.
-> 
-> Hi Liviu, it looks good to me, because this change will involve lots platforms,
-> I would think more about it. Thanks for your suggestion very much! :)
+On Wed, Nov 19, 2014 at 01:15:32PM +1100, Benjamin Herrenschmidt wrote:
+>On Tue, 2014-11-18 at 18:12 -0700, Bjorn Helgaas wrote:
+>> 
+>> Can you help me understand this?
+>> 
+>> We have previously called sriov_init() on the PF.  There, we sized the VF
+>> BARs, which are in the PF's SR-IOV Capability (SR-IOV spec sec 3.3.14).
+>> The size we discover is the amount of space required by a single VF, so
+>> sriov_init() adjusts PF->resource[PCI_IOV_RESOURCES + i] by multiplying
+>> that size by PCI_SRIOV_TOTAL_VF, so this PF resource is now big enough to 
+>> hold the VF BAR[i] areas for all the possible VFs.
+>
+>So I'll let Richard (Wei) answer on the details but I'll just chime in
+>about the "big picture". This isn't about changing the spacing between VFs
+>which is handled by the system page size.
+>
+>This is about the way we create MMIO windows from the CPU to the VF BARs.
+>
+>Basically, we have a (limited) set of 64-bit windows we can create that
+>are divided in equal sized segments (256 of them), each segment assigned
+>in HW to one of our Partitionable Endpoints (aka domain).
+>
+>So even if we only ever create 16 VFs for a device, we need to use an
+>entire of these windows, which will use 256*VF_size and thus allocate
+>that much space. Also the window has to be naturally aligned.
+>
+>We can then assign the VF BAR to a spot inside that window that corresponds
+>to the range of PEs that we have assigned to that device (which typically
+>isn't going to be the beginning of the window).
+>
 
-Given that I also look at this area maybe we should join forces and divide the problem?
+Bjorn & Ben,
 
-Best regards,
-Liviu
+Let me try to explain it. Thanks for Ben's explanation, it would be helpful. We
+are not trying to change the space between VFs.
 
-> 
-> 
-> Thanks!
-> Yijing.
-> 
-> > 
-> > Best regards,
-> > Liviu
-> > 
-> >>
-> >>>
-> >>>> +	host = kzalloc(sizeof(*host), GFP_KERNEL);
-> >>>> +	if (!host)
-> >>>> +		return NULL;
-> >>>
-> >>> devm_kzalloc maybe?
-> >>
-> >> I don't know much detail about devm_kzalloc(), but we have no pci host driver
-> >> here, and I found no devm_kzalloc() uses in core PCI code before.
-> >>
-> >>>
-> >>>> +	if (!resources) {
-> >>>> +		/* Use default IO/MEM/BUS resources*/
-> >>>> +		pci_add_resource(&host->windows, &ioport_resource);
-> >>>> +		pci_add_resource(&host->windows, &iomem_resource);
-> >>>> +		pci_add_resource(&host->windows, &busn_resource);
-> >>>> +	} else {
-> >>>> +		list_for_each_entry_safe(window, n, resources, list)
-> >>>> +			list_move_tail(&window->list, &host->windows);
-> >>>> +	}
-> >>>
-> >>> I think we should assume that the correct resources are passed. You
-> >>> could add a wrapper around this function to convert old platforms
-> >>> though.
-> >>
-> >> OK, I will move these code out of pci_create_host_bridge, and add a wrapper
-> >> to setup the default resources.
-> >>
-> >>>
-> >>>> +EXPORT_SYMBOL(pci_create_host_bridge);
-> >>>
-> >>> EXPORT_SYMBOL_GPL() maybe?
-> >>
-> >> OK, will update it.
-> >>
-> >>>
-> >>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> >>>> index 8b11b38..daa7f40 100644
-> >>>> --- a/include/linux/pci.h
-> >>>> +++ b/include/linux/pci.h
-> >>>> @@ -402,7 +402,12 @@ struct pci_host_bridge_window {
-> >>>>  struct pci_host_bridge {
-> >>>>  	struct device dev;
-> >>>>  	struct pci_bus *bus;		/* root bus */
-> >>>> +	struct list_head list;
-> >>>>  	struct list_head windows;	/* pci_host_bridge_windows */
-> >>>> +	int busnum;
-> >>>
-> >>> The busnum should already be implied through the bus resource.
-> >>
-> >> Yes, I will consider remove it and introduce a helper function to get the root bus number, thanks!
-> >>
-> >> Thanks!
-> >> Yijing.
-> >>
-> >>>
-> >>> 	Arnd
-> >>>
-> >>> .
-> >>>
-> >>
-> >>
-> >> -- 
-> >> Thanks!
-> >> Yijing
-> >>
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>
-> > 
-> 
-> 
-> -- 
-> Thanks!
-> Yijing
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+As mentioned by Ben, we use some HW to map the MMIO space to PE. But the HW
+must map 256 segments with the same size. This will lead a situation like
+this.
+
+   +------+------+        +------+------+------+------+
+   |VF#0  |VF#1  |   ...  |      |VF#N-1|PF#A  |PF#B  |
+   +------+------+        +------+------+------+------+
+
+Suppose N = 254 and the HW map these 256 segments to their corresponding PE#.
+Then it introduces one problem, the PF#A and PF#B have been already assigned
+to some PE#. We can't map one MMIO range to two different PE#.
+
+What we have done is to "Expand the IOV BAR" to fit the whole HW 256 segments.
+By doing so, the MMIO range will look like this.
+
+   +------+------+        +------+------+------+------+------+------+
+   |VF#0  |VF#1  |   ...  |      |VF#N-1|blank |blank |PF#A  |PF#B  |
+   +------+------+        +------+------+------+------+------+------+
+
+We do some tricky to "Expand" the IOV BAR, so that make sure there would not
+be some overlap between VF's PE and PF's PE.
+
+Then this will leads to the IOV BAR size change from:
+   
+   IOV BAR size = (VF BAR aperture size) * VF_number
+
+ to:
+   
+   IOV BAR size = (VF BAR aperture size) * 256
+
+This is the reason we need a platform dependent method to get the VF BAR size.
+Otherwise the VF BAR size would be not correct.
+
+Now let's take a look at your example again.
+
+  PF SR-IOV Capability
+    TotalVFs = 4
+    NumVFs = 4
+    System Page Size = 4KB
+    VF BAR0 = [mem 0x00000000-0x00000fff] (4KB at address 0)
+
+  PF  pci_dev->resource[7] = [mem 0x00000000-0x00003fff] (16KB)
+  VF1 pci_dev->resource[0] = [mem 0x00000000-0x00000fff]
+  VF2 pci_dev->resource[0] = [mem 0x00001000-0x00001fff]
+  VF3 pci_dev->resource[0] = [mem 0x00002000-0x00002fff]
+  VF4 pci_dev->resource[0] = [mem 0x00003000-0x00003fff]
+
+The difference after our expanding is the IOV BAR size is 256*4KB instead of
+16KB. So it will look like this:
+
+  PF  pci_dev->resource[7] = [mem 0x00000000-0x000fffff] (1024KB)
+  VF1 pci_dev->resource[0] = [mem 0x00000000-0x00000fff]
+  VF2 pci_dev->resource[0] = [mem 0x00001000-0x00001fff]
+  VF3 pci_dev->resource[0] = [mem 0x00002000-0x00002fff]
+  VF4 pci_dev->resource[0] = [mem 0x00003000-0x00003fff]
+  ...
+  and 252 4KB space leave not used.
+
+So the start address and the size of VF will not change, but the PF's IOV BAR
+will be expanded.
+
+>Cheers,
+>Ben.
+>
 
 -- 
--------------------
-   .oooO
-   (   )
-    \ (  Oooo.
-     \_) (   )
-          ) /
-         (_/
-
- One small step
-   for me ...
+Richard Yang
+Help you, Help me
 
