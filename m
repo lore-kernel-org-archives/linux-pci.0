@@ -1,78 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:11085 "EHLO
+Received: from szxga01-in.huawei.com ([119.145.14.64]:11876 "EHLO
 	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751027AbaKFEzZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 23:55:25 -0500
-Message-ID: <545AFF01.8000502@huawei.com>
-Date: Thu, 6 Nov 2014 12:54:25 +0800
+	with ESMTP id S1754226AbaKSGwH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 01:52:07 -0500
 From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Alexander Gordeev <agordeev@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"Tony Luck" <tony.luck@intel.com>, Joerg Roedel <joro@8bytes.org>,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [Patch Part2 v4 21/31] PCI/MSI: enhance PCI MSI core to support
- hierarchy irqdomain
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com> <1415102525-9898-22-git-send-email-jiang.liu@linux.intel.com> <20141105230952.GH6168@google.com> <545AD5B3.60009@huawei.com> <CAErSpo5PNAQ40-AQZiz_RTU0JKnSAVXO2Wz=XPQ7aMWjm-iaNA@mail.gmail.com>
-In-Reply-To: <CAErSpo5PNAQ40-AQZiz_RTU0JKnSAVXO2Wz=XPQ7aMWjm-iaNA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	Liviu Dudau <liviu@dudau.co.uk>, Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 4/5] PCI: Remove pci_scan_bus() and pci_scan_bus_parented()
+Date: Wed, 19 Nov 2014 15:32:48 +0800
+Message-ID: <1416382369-13587-5-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1416382369-13587-1-git-send-email-wangyijing@huawei.com>
+References: <1416382369-13587-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/11/6 12:10, Bjorn Helgaas wrote:
-> On Wed, Nov 5, 2014 at 6:58 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> 
->>>> +{
->>>> +    return (irq_hw_number_t)msidesc->msi_attrib.entry_nr |
->>>> +            PCI_DEVID(pdev->bus->number, pdev->devfn) << 11 |
->>>> +            (pci_domain_nr(pdev->bus) & 0xFFFFFFFF) << 27;
->>>
->>> Where does this bit layout come from?  Is this defined in the spec
->>> somewhere?  A reference would help.
->>
->> Currently, more and more Non-PCI device use MSI(or similar MSI mechanism), like DMAR fault irq
->> and HPET FSB irq. And we have to add additional code to support the MSI capability.
->> So I hope we can decouple MSI code and PCI code, then we can unify all MSI(or Message Based interrupt)
->> in one framework.
-> 
-> Was that supposed to answer my question?  If so, I didn't understand
-> how it explains where the bit layout came from.
+Clean out pci_scan_bus() and pci_scan_bus_parented().
 
-No, that's just my concern. Because this function uses the pci device id,
-but more and more Non-PCI devices use MSI.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/probe.c |   38 --------------------------------------
+ include/linux/pci.h |    3 ---
+ 2 files changed, 0 insertions(+), 41 deletions(-)
 
-> 
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
-
-
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index a8d90d4..79775b5 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2107,44 +2107,6 @@ struct pci_bus *pci_scan_bus_simple(struct device *parent,
+ }
+ EXPORT_SYMBOL(pci_scan_bus_simple);
+ 
+-/* Deprecated; use pci_scan_root_bus() instead */
+-struct pci_bus *pci_scan_bus_parented(struct device *parent,
+-		int bus, struct pci_ops *ops, void *sysdata)
+-{
+-	LIST_HEAD(resources);
+-	struct pci_bus *b;
+-
+-	pci_add_resource(&resources, &ioport_resource);
+-	pci_add_resource(&resources, &iomem_resource);
+-	pci_add_resource(&resources, &busn_resource);
+-	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
+-	if (b)
+-		pci_scan_child_bus(b);
+-	else
+-		pci_free_resource_list(&resources);
+-	return b;
+-}
+-EXPORT_SYMBOL(pci_scan_bus_parented);
+-
+-struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
+-					void *sysdata)
+-{
+-	LIST_HEAD(resources);
+-	struct pci_bus *b;
+-
+-	pci_add_resource(&resources, &ioport_resource);
+-	pci_add_resource(&resources, &iomem_resource);
+-	pci_add_resource(&resources, &busn_resource);
+-	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
+-	if (b) {
+-		pci_scan_child_bus(b);
+-	} else {
+-		pci_free_resource_list(&resources);
+-	}
+-	return b;
+-}
+-EXPORT_SYMBOL(pci_scan_bus);
+-
+ /**
+  * pci_rescan_bus_bridge_resize - scan a PCI bus for devices.
+  * @bridge: PCI bridge for the bus to scan
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index befefbd..9ebc908 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -767,11 +767,8 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+ void pcibios_scan_specific_bus(int busn);
+ struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
+-struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
+-				      struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_scan_bus_simple(struct device *parent, int bus,
+ 				      struct pci_ops *ops, void *sysdata);
+-struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 				    struct pci_ops *ops, void *sysdata,
+ 				    struct list_head *resources);
 -- 
-Thanks!
-Yijing
+1.7.1
 
