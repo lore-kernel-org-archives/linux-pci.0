@@ -1,89 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:64459 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932327AbaKMQFO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 11:05:14 -0500
-MIME-Version: 1.0
-In-Reply-To: <1415631509.20340.5.camel@pengutronix.de>
-References: <1415287400-30426-1-git-send-email-l.stach@pengutronix.de>
- <CAL_JsqKfV3aPuYxK2E8tS1fDjhpJFknqv1nHP+9NYHAfs_owYg@mail.gmail.com> <1415631509.20340.5.camel@pengutronix.de>
-From: Rob Herring <robherring2@gmail.com>
-Date: Thu, 13 Nov 2014 10:04:51 -0600
-Message-ID: <CAL_Jsq+oygs12ih0SttbGJYyDTZR3f8-w6egNQuQ+_zwiNxxRg@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: add missing DT binding for linux,pci-domain property
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:47556 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756487AbaKTWoX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 20 Nov 2014 17:44:23 -0500
+Message-ID: <1416523323.2280.10.camel@jtkirshe-mobl>
+Subject: Re: [linux-nics] [PATCH 0/4] move pci_assivned_vfs() check (while
+ disabling VFs) to pci sub-system
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Sathya Perla <sathya.perla@emulex.com>, linux.nics@intel.com,
+	shahed.shaikh@qlogic.com, linux-pci@vger.kernel.org,
+	ddutile@redhat.com, ariel.elior@qlogic.com, netdev@vger.kernel.org
+Date: Thu, 20 Nov 2014 14:42:03 -0800
+In-Reply-To: <20141120222127.GB7987@google.com>
+References: <1415620410-4937-1-git-send-email-sathya.perla@emulex.com>
+	 <20141120222127.GB7987@google.com>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-LM2zDDCz+zrlHt6u3p2n"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 10, 2014 at 8:58 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> Am Donnerstag, den 06.11.2014, 13:49 -0600 schrieb Rob Herring:
->> On Thu, Nov 6, 2014 at 9:23 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
->> > This property was added by 41e5c0f81d3e
->> > (of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr())
->> > without the required binding documentation. As this property
->> > will be supported by a number of host bridge drivers going forward,
->> > add it to the common PCI binding doc.
->> >
->> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
->> > ---
->> > This is a non-critical fix, but may still qualify for 3.18-rc as
->> > the property was added in this release cycle.
->>
->> Agreed.
->>
->> Acked-by: Rob Herring <robh@kernel.org>
->>
->
-> So how should we proceed here? Are you going to pick it up or should
-> Bjorn route this through the PCI tree?
 
-I believe Bjorn said he would pick this up since he merged the rest.
+--=-LM2zDDCz+zrlHt6u3p2n
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Rob
+On Thu, 2014-11-20 at 15:21 -0700, Bjorn Helgaas wrote:
+> [+cc Jeff]
+>=20
+> On Mon, Nov 10, 2014 at 05:23:26PM +0530, Sathya Perla wrote:
+> > A user must not be allowed to disable VFs while they are already assign=
+ed to
+> > a guest. This check is being made in each individual driver that implem=
+ents
+> > the sriov_configure PCI method.
+> > This patch-set fixes this code duplication by moving this check from
+> > drivers to the sriov_nuvfs_store() routine just before invoking
+> > sriov_configure() when num_vfs is equal to 0.
+> >=20
+> > Vasundhara Volam (4):
+> >   pci: move pci_assivned_vfs() check while disabling VFs to pci
+> >     sub-system
+> >   bnx2x: remove pci_assigned_vfs() check while disabling VFs
+> >   i40e: remove pci_assigned_vfs() check while disabling VFs
+> >   qlcnic: remove pci_assigned_vfs() check while disabling VFs
+> >=20
+> >  drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c  |    2 +-
+> >  drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c |    7 +------
+> >  .../net/ethernet/qlogic/qlcnic/qlcnic_sriov_pf.c   |   10 ----------
+> >  drivers/pci/pci-sysfs.c                            |    5 +++++
+> >  4 files changed, 7 insertions(+), 17 deletions(-)
+>=20
+> I'm dropping these for the reasons Don & Alex outlined -- they don't fix
+> the problem for VFIO, so this amounts to shuffling around code that's kno=
+wn
+> to be broken, which seems more confusing than worthwhile.
+>=20
+> Jeff, if I were you I would drop the i40e patch.  I don't think it makes
+> sense to remove the check from i40e before adding it to the PCI core.
+>=20
 
->
->> >
->> > v2:
->> > - emphasize that the property must be present and unique systemwide
->> >   if used
->> > ---
->> >  Documentation/devicetree/bindings/pci/pci.txt | 11 +++++++++++
->> >  1 file changed, 11 insertions(+)
->> >
->> > diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
->> > index 41aeed38926d..68c364e2f5e5 100644
->> > --- a/Documentation/devicetree/bindings/pci/pci.txt
->> > +++ b/Documentation/devicetree/bindings/pci/pci.txt
->> > @@ -7,3 +7,14 @@ And for the interrupt mapping part:
->> >
->> >  Open Firmware Recommended Practice: Interrupt Mapping
->> >  http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
->> > +
->> > +Additionally to the properties specified in the above standards a host bridge
->> > +driver implementation may support the following properties:
->> > +
->> > +- linux,pci-domain:
->> > +   If present this property assigns a fixed PCI domain number to a host bridge,
->> > +   otherwise an unstable (across boots) unique number will be assigned.
->> > +   It is required to either not set this property at all or set it for all
->> > +   host bridges in the system, otherwise potentially conflicting domain numbers
->> > +   may be assigned to root buses behind different host bridges. The domain
->> > +   number for each host bridge in the system must be unique.
->> > --
->> > 2.1.1
->> >
->
-> --
-> Pengutronix e.K.             | Lucas Stach                 |
-> Industrial Linux Solutions   | http://www.pengutronix.de/  |
->
+Thanks for the heads up, I will drop the i40e patch as well.
+
+--=-LM2zDDCz+zrlHt6u3p2n
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCgAGBQJUbm47AAoJEOVv75VaS+3OHcUP/2X24f1hN/0+7xJlUhJteuFM
+j0R/dWDkR5l5jF6ZOidncfmx634d6Js410lOqrXW6Kw2nCNSWy8ZqkIUMrZUHY7v
+X5xW5uQG3fOzElpi5EG/MvbzGHK+5AfWVTgHUmRFk/DOXCSAhlgPYi8iDHIlDtoo
+ObHtUKi93homIuYb3pdY1Fy8tNg1DQ3onUy/uLpD3Bo6dvNErogFjvj6XQUjG9iM
+jwZ4IQCZuAt/M6XWhSGMrly8BmkVfyotvF3VJJGsucnvJuW+lNHqALj8yWlWe/DL
+kKAW2y91OhGSbhIwi+mbXdyFzNCqlaQ+wii+79k1hAIOs+8UGqm4CQUVtoebY8gs
+7gTKbCQvk6A6DTM8HTiYzCPvIDB86M5m4r9eGxF2OfFLD+B79s/r3SZkD422zA/V
+eU/Xj9Y2ZEIDgr81oLQvQYrJ1MylOpgxHLkEBvh7uzPxwjpzZBP1kCx2UWcZ2vh2
+kWVro3+ZmZCY1ODGqn25wBlRonqw+LyW3YhODQ6WNHdU5xd4dcDsjjTFSxQhs5Qk
+nhN7bS9AGUOuHOrYQa6C6ZeuIENIccIsaskjLQ0IOHWlxyYGMmzOG7d/AZoxt+V5
+h6t4u5Fk0hesumV7dQr/0tjaiwkrTqBHPeJrPAjuoEoACHC3PvVjBmaUwfcSzC6s
+1nkDIqKpmaUMtoIdhHDE
+=gJNr
+-----END PGP SIGNATURE-----
+
+--=-LM2zDDCz+zrlHt6u3p2n--
+
