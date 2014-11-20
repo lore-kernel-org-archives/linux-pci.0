@@ -1,87 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:25785 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754294AbaKHSPr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 8 Nov 2014 13:15:47 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
-Subject: [Patch Part3 v3 22/38] x86, irq: Kill irq_cfg.irq_remapped
-Date: Sun,  9 Nov 2014 02:13:22 +0800
-Message-Id: <1415470418-10874-23-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:34332 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757222AbaKTWyI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Nov 2014 17:54:08 -0500
+Message-ID: <546E7120.5080505@gmail.com>
+Date: Thu, 20 Nov 2014 14:54:24 -0800
+From: Rajat Jain <rajatxjain@gmail.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+CC: Rajat Jain <rajatjain@juniper.net>,
+	Guenter Roeck <groeck@juniper.net>,
+	Rajat Jain <rajatxjain@gmail.com>
+Subject: [PATCH v2] PCI: pciehp: Check link state before accessing device
+ during removal
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now there is no user of irq_cfg.irq_remapped, so kill it.
+While removing a card, we can't assume the presence to mean that the
+access to card is OK. That is because the cause of removal may be a
+link down event, and the card may still be physically present. Thus,
+instead of presence, use the link state to decide whether or not it is
+OK to access the card devices.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Here are the problem symptoms:
+During the removal of a card due to link down, sometimes the following
+error is seen (because pciehp_unconfigure_device() reads 0xFF from
+bridge control register as the link is down, which cause it to assume
+that the VGA bit is set):
+
+pciehp 0000:21:05.0:pcie24: pcie_isr: intr_loc 100
+pciehp 0000:21:05.0:pcie24: Data Link Layer State change
+pciehp 0000:21:05.0:pcie24: slot(5): Link Down event
+pciehp 0000:21:05.0:pcie24: Disabling domain:bus:device=0000:60:00
+pciehp 0000:21:05.0:pcie24: pciehp_unconfigure_device: domain:bus:dev = 0000:60:00
+pciehp 0000:21:05.0:pcie24: Cannot remove display device 0000:60:00.0
+
+Ofcourse, when the link comes back up, the device addition fails too:
+
+pciehp 0000:21:05.0:pcie24: pcie_isr: intr_loc 100
+pciehp 0000:21:05.0:pcie24: Data Link Layer State change
+pciehp 0000:21:05.0:pcie24: pciehp_check_link_active: lnk_status = 6011
+pciehp 0000:21:05.0:pcie24: slot(5): Link Up event
+pciehp 0000:21:05.0:pcie24: Enabling domain:bus:device=0000:60:00
+pciehp 0000:21:05.0:pcie24: pciehp_check_link_active: lnk_status = 6011
+pciehp 0000:21:05.0:pcie24: pciehp_check_link_status: lnk_status = 6011
+pciehp 0000:21:05.0:pcie24: Device 0000:60:00.0 already exists at 0000:60:00, cannot hot-add
+pciehp 0000:21:05.0:pcie24: Cannot add device at 0000:60:00
+
+The problem is not seen with this patch applied. The device removal and
+insertion works as expected.
+
+Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+Signed-off-by: Guenter Roeck <groeck@juniper.net>
 ---
- arch/x86/include/asm/hw_irq.h       |    1 -
- drivers/iommu/amd_iommu.c           |    1 -
- drivers/iommu/intel_irq_remapping.c |    2 --
- 3 files changed, 4 deletions(-)
+v2: Use the already initialized "ctrl" instead of "p_slot->ctrl"
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index a007dae5feaf..7ad26bb42e57 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -191,7 +191,6 @@ struct irq_cfg {
- 	u8			vector;
- 	u8			move_in_progress : 1;
- #ifdef CONFIG_IRQ_REMAP
--	u8			remapped : 1;
- 	union {
- 		struct irq_2_iommu irq_2_iommu;
- 		struct irq_2_irte  irq_2_irte;
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 704c18e3eb63..2f76656a88ce 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -4129,7 +4129,6 @@ static void irq_remapping_prepare_irte(struct amd_ir_data *data,
- 	struct msi_msg *msg = &data->msi_entry;
- 	struct IO_APIC_route_entry *entry;
- 
--	irq_cfg->remapped = 1;
- 	data->irq_2_irte.devid = devid;
- 	data->irq_2_irte.index = index + sub_handle;
- 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 0040d7899285..5e3e529e8d88 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -67,7 +67,6 @@ static int alloc_irte(struct intel_iommu *iommu, int irq,
- 		      struct irq_2_iommu *irq_iommu, u16 count)
+ drivers/pci/hotplug/pciehp_pci.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index 9e69403..911f85b 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -77,7 +77,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
  {
- 	struct ir_table *table = iommu->ir_table;
--	struct irq_cfg *cfg = irq_cfg(irq);
- 	unsigned int mask = 0;
- 	unsigned long flags;
- 	int index;
-@@ -94,7 +93,6 @@ static int alloc_irte(struct intel_iommu *iommu, int irq,
- 	if (index < 0) {
- 		pr_warn("IR%d: can't allocate an IRTE\n", iommu->seq_id);
- 	} else {
--		cfg->remapped = 1;
- 		irq_iommu->iommu = iommu;
- 		irq_iommu->irte_index =  index;
- 		irq_iommu->sub_handle = 0;
+ 	int rc = 0;
+ 	u8 bctl = 0;
+-	u8 presence = 0;
++	bool link_active = false;
+ 	struct pci_dev *dev, *temp;
+ 	struct pci_bus *parent = p_slot->ctrl->pcie->port->subordinate;
+ 	u16 command;
+@@ -85,7 +85,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+ 
+ 	ctrl_dbg(ctrl, "%s: domain:bus:dev = %04x:%02x:00\n",
+ 		 __func__, pci_domain_nr(parent), parent->number);
+-	pciehp_get_adapter_status(p_slot, &presence);
++	link_active = pciehp_check_link_active(ctrl);
+ 
+ 	pci_lock_rescan_remove();
+ 
+@@ -98,7 +98,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+ 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+ 					 bus_list) {
+ 		pci_dev_get(dev);
+-		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && presence) {
++		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && link_active) {
+ 			pci_read_config_byte(dev, PCI_BRIDGE_CONTROL, &bctl);
+ 			if (bctl & PCI_BRIDGE_CTL_VGA) {
+ 				ctrl_err(ctrl,
+@@ -114,7 +114,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+ 		 * Ensure that no new Requests will be generated from
+ 		 * the device.
+ 		 */
+-		if (presence) {
++		if (link_active) {
+ 			pci_read_config_word(dev, PCI_COMMAND, &command);
+ 			command &= ~(PCI_COMMAND_MASTER | PCI_COMMAND_SERR);
+ 			command |= PCI_COMMAND_INTX_DISABLE;
 -- 
-1.7.10.4
+1.7.9.5
 
