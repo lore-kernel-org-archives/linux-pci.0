@@ -1,96 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:59410 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752126AbaKLDYz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 22:24:55 -0500
-Received: from epcpsbgr4.samsung.com
- (u144.gpu120.samsung.co.kr [203.254.230.144])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0NEW00LBWPHHUW30@mailout3.samsung.com> for
- linux-pci@vger.kernel.org; Wed, 12 Nov 2014 12:24:53 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
-Subject: [PATCH] PCI: exynos: Remove unnecessary return statement
-Date: Wed, 12 Nov 2014 12:25:38 +0900
-Message-id: <002901cffe28$544504b0$fccf0e10$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:40206 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750752AbaKTFlF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Nov 2014 00:41:05 -0500
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 20 Nov 2014 15:41:03 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 98D212CE8060
+	for <linux-pci@vger.kernel.org>; Thu, 20 Nov 2014 16:41:01 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAK5eaZw36307160
+	for <linux-pci@vger.kernel.org>; Thu, 20 Nov 2014 16:40:36 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAK5f0EQ003275
+	for <linux-pci@vger.kernel.org>; Thu, 20 Nov 2014 16:41:01 +1100
+Date: Thu, 20 Nov 2014 13:40:58 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Benjamin Herrenschmidt <benh@au1.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, Donald Dutile <ddutile@redhat.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [PATCH V9 03/18] PCI: Add weak pcibios_iov_resource_size()
+ interface
+Message-ID: <20141120054058.GB8562@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1414942894-17034-4-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20141119011243.GA23467@google.com>
+ <1416363332.5704.18.camel@au1.ibm.com>
+ <20141119032100.GA7105@richard>
+ <20141119042601.GB23467@google.com>
+ <20141119092740.GA12872@richard>
+ <20141119172350.GC23467@google.com>
+ <1416430300.5704.35.camel@au1.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1416430300.5704.35.camel@au1.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch fixes the following checkpatch warning.
+On Thu, Nov 20, 2014 at 07:51:40AM +1100, Benjamin Herrenschmidt wrote:
+>On Wed, 2014-11-19 at 10:23 -0700, Bjorn Helgaas wrote:
+>> 
+>> Yes, I've read that many times.  What's missing is the connection between a
+>> PE and the things in the PCI specs (buses, devices, functions, MMIO address
+>> space, DMA, MSI, etc.)  Presumably the PE structure imposes constraints on
+>> how the core uses the standard PCI elements, but we don't really have a
+>> clear description of those constraints yet.
+>
+>Right, a "PE" is a HW concept in fact in our bridges, that essentially is
+>a shared isolation state between DMA, MMIO, MSIs, PCIe error messages,...
+>for a given "domain" or set of PCI functions.
+>
+>The techniques of how the HW resources are mapped to PE and associated
+>constraints are slightly different from one generation of our chips to
+>the next. In general, P7 follows an architecture known as "IODA" and P8
+>"IODA2". I'm trying to get that spec made available via OpenPower but
+>that hasn't happened yet.
+>
+>In this case we mostly care about IODA2 (P8), so I'll give a quick
+>description here. Wei, feel free to copy/paste that into a bit of doco
+>to throw into Documentation/powerpc/ along with your next spin of the patch.
+>
 
-  WARNING: void function return statements are not generally useful
+Got it.
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- drivers/pci/host/pci-exynos.c |    8 --------
- 1 file changed, 8 deletions(-)
+I will add more description in powerpc directory.
 
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index c5d0ca3..41ab139 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -312,7 +312,6 @@ static void exynos_pcie_assert_reset(struct pcie_port *pp)
- 	if (exynos_pcie->reset_gpio >= 0)
- 		devm_gpio_request_one(pp->dev, exynos_pcie->reset_gpio,
- 				GPIOF_OUT_INIT_HIGH, "RESET");
--	return;
- }
- 
- static int exynos_pcie_establish_link(struct pcie_port *pp)
-@@ -388,7 +387,6 @@ static void exynos_pcie_clear_irq_pulse(struct pcie_port *pp)
- 
- 	val = exynos_elb_readl(exynos_pcie, PCIE_IRQ_PULSE);
- 	exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_PULSE);
--	return;
- }
- 
- static void exynos_pcie_enable_irq_pulse(struct pcie_port *pp)
-@@ -400,7 +398,6 @@ static void exynos_pcie_enable_irq_pulse(struct pcie_port *pp)
- 	val = IRQ_INTA_ASSERT | IRQ_INTB_ASSERT |
- 		IRQ_INTC_ASSERT | IRQ_INTD_ASSERT,
- 	exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_EN_PULSE);
--	return;
- }
- 
- static irqreturn_t exynos_pcie_irq_handler(int irq, void *arg)
-@@ -429,7 +426,6 @@ static void exynos_pcie_msi_init(struct pcie_port *pp)
- 	val = exynos_elb_readl(exynos_pcie, PCIE_IRQ_EN_LEVEL);
- 	val |= IRQ_MSI_ENABLE;
- 	exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_EN_LEVEL);
--	return;
- }
- 
- static void exynos_pcie_enable_interrupts(struct pcie_port *pp)
-@@ -438,8 +434,6 @@ static void exynos_pcie_enable_interrupts(struct pcie_port *pp)
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
- 		exynos_pcie_msi_init(pp);
--
--	return;
- }
- 
- static inline void exynos_pcie_readl_rc(struct pcie_port *pp,
-@@ -448,7 +442,6 @@ static inline void exynos_pcie_readl_rc(struct pcie_port *pp,
- 	exynos_pcie_sideband_dbi_r_mode(pp, true);
- 	*val = readl(dbi_base);
- 	exynos_pcie_sideband_dbi_r_mode(pp, false);
--	return;
- }
- 
- static inline void exynos_pcie_writel_rc(struct pcie_port *pp,
-@@ -457,7 +450,6 @@ static inline void exynos_pcie_writel_rc(struct pcie_port *pp,
- 	exynos_pcie_sideband_dbi_w_mode(pp, true);
- 	writel(val, dbi_base);
- 	exynos_pcie_sideband_dbi_w_mode(pp, false);
--	return;
- }
- 
- static int exynos_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+
 -- 
-1.7.9.5
-
+Richard Yang
+Help you, Help me
 
