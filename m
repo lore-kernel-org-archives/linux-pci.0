@@ -1,57 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from numascale.com ([213.162.240.84]:55131 "EHLO numascale.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751855AbaKFKdu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 6 Nov 2014 05:33:50 -0500
-Message-ID: <545B4E84.7050707@numascale.com>
-Date: Thu, 06 Nov 2014 18:33:40 +0800
-From: Daniel J Blueman <daniel@numascale.com>
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:58776 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756099AbaKTWdH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Nov 2014 17:33:07 -0500
+Message-ID: <546E6C32.6090909@gmail.com>
+Date: Thu, 20 Nov 2014 14:33:22 -0800
+From: Rajat Jain <rajatxjain@gmail.com>
 MIME-Version: 1.0
-To: Borislav Petkov <bp@alien8.de>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Steffen Persvold <sp@numascale.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] x86: Drop redundant memory-block sizing code
-References: <ojh5M-xh-17@gated-at.bofh.it> <1415249414-20888-1-git-send-email-daniel@numascale.com> <20141106094007.GA4849@pd.tnic>
-In-Reply-To: <20141106094007.GA4849@pd.tnic>
-Content-Type: text/plain; charset=utf-8; format=flowed
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+CC: Rajat Jain <rajatjain@juniper.net>,
+	Guenter Roeck <groeck@juniper.net>,
+	Rajat Jain <rajatxjain@gmail.com>
+Subject: [PATCH] PCI: pciehp: Check link state before accessing device during
+ removal
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/06/2014 05:40 PM, Borislav Petkov wrote:
-> On Thu, Nov 06, 2014 at 12:50:14PM +0800, Daniel J Blueman wrote:
->> Drop the unused code from selecting a fixed memory block size of 2GB
->> on large-memory x86-64 systems.
->>
->> Signed-off-by: Daniel J Blueman <daniel@numascale.com>
->
-> This commit message is seriously lacking an explanation why? Why is it
-> unused, why is it ok on systems with mem < 64g, what is the problem it
-> solves, ...
->
-> Just ask yourself this when you write commit messages: would anyone else
-> be able to understand what this commit was improving when anyone reads
-> that commit message months, maybe years from now.
+While removing a card, we can't assume the presence to mean that the
+access to card is OK. That is because the cause of removal may be a
+link down event, and the card may still be physically present. Thus,
+instead of presence, use the link state to decide whether or not it is
+OK to access the card devices.
 
-Yes, true. I am incorrectly assuming that someone is looking at the 
-patch in-context, but perhaps better to write assuming the code isn't 
-seen (or at least understood).
+Here are the problem symptoms:
+During the removal of a card due to link down, sometimes the following
+error is seen (because pciehp_unconfigure_device() reads 0xFF from
+bridge control register as the link is down, which cause it to assume
+that the VGA bit is set):
 
-How is this?
+pciehp 0000:21:05.0:pcie24: pcie_isr: intr_loc 100
+pciehp 0000:21:05.0:pcie24: Data Link Layer State change
+pciehp 0000:21:05.0:pcie24: slot(5): Link Down event
+pciehp 0000:21:05.0:pcie24: Disabling domain:bus:device=0000:60:00
+pciehp 0000:21:05.0:pcie24: pciehp_unconfigure_device: domain:bus:dev = 0000:60:00
+pciehp 0000:21:05.0:pcie24: Cannot remove display device 0000:60:00.0
 
-As the first check for 64GB or larger memory returns a 2GB memory block 
-size in that case, the following check for less than 64GB will always 
-evaluate true, leading to unreachable code.
+Ofcourse, when the link comes back up, the device addition fails too:
 
-Remove the second and unnecessary condition and the code in the 
-remainder of the function, as it therefore can't be reached.
+pciehp 0000:21:05.0:pcie24: pcie_isr: intr_loc 100
+pciehp 0000:21:05.0:pcie24: Data Link Layer State change
+pciehp 0000:21:05.0:pcie24: pciehp_check_link_active: lnk_status = 6011
+pciehp 0000:21:05.0:pcie24: slot(5): Link Up event
+pciehp 0000:21:05.0:pcie24: Enabling domain:bus:device=0000:60:00
+pciehp 0000:21:05.0:pcie24: pciehp_check_link_active: lnk_status = 6011
+pciehp 0000:21:05.0:pcie24: pciehp_check_link_status: lnk_status = 6011
+pciehp 0000:21:05.0:pcie24: Device 0000:60:00.0 already exists at 0000:60:00, cannot hot-add
+pciehp 0000:21:05.0:pcie24: Cannot add device at 0000:60:00
 
-Thanks,
-   Daniel
+The problem is not seen with this patch applied. The device removal and
+insertion works as expected.
+
+Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+Signed-off-by: Guenter Roeck <groeck@juniper.net>
+---
+ drivers/pci/hotplug/pciehp_pci.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index 9e69403..8572af6 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -77,7 +77,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+ {
+ 	int rc = 0;
+ 	u8 bctl = 0;
+-	u8 presence = 0;
++	bool link_active = false;
+ 	struct pci_dev *dev, *temp;
+ 	struct pci_bus *parent = p_slot->ctrl->pcie->port->subordinate;
+ 	u16 command;
+@@ -85,7 +85,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+ 
+ 	ctrl_dbg(ctrl, "%s: domain:bus:dev = %04x:%02x:00\n",
+ 		 __func__, pci_domain_nr(parent), parent->number);
+-	pciehp_get_adapter_status(p_slot, &presence);
++	link_active = pciehp_check_link_active(p_slot->ctrl);
+ 
+ 	pci_lock_rescan_remove();
+ 
+@@ -98,7 +98,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+ 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+ 					 bus_list) {
+ 		pci_dev_get(dev);
+-		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && presence) {
++		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && link_active) {
+ 			pci_read_config_byte(dev, PCI_BRIDGE_CONTROL, &bctl);
+ 			if (bctl & PCI_BRIDGE_CTL_VGA) {
+ 				ctrl_err(ctrl,
+@@ -114,7 +114,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+ 		 * Ensure that no new Requests will be generated from
+ 		 * the device.
+ 		 */
+-		if (presence) {
++		if (link_active) {
+ 			pci_read_config_word(dev, PCI_COMMAND, &command);
+ 			command &= ~(PCI_COMMAND_MASTER | PCI_COMMAND_SERR);
+ 			command |= PCI_COMMAND_INTX_DISABLE;
 -- 
-Daniel J Blueman
-Principal Software Engineer, Numascale
+1.7.9.5
+
