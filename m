@@ -1,43 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 251.110.2.81.in-addr.arpa ([81.2.110.251]:43388 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750901AbaKXJRr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Nov 2014 04:17:47 -0500
-Date: Mon, 24 Nov 2014 09:17:29 +0000
-From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Jamet, Michael" <michael.jamet@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Levy, Amir (Jer)" <amir.jer.levy@intel.com>,
-	"Alloun, Dan" <dan.alloun@intel.com>,
-	Rafael Wysocki <rjw@rjwysocki.net>,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH] pci: support Thunderbolt requirements for I/O
- resources.
-Message-ID: <20141124091729.3de7ae7b@lxorguk.ukuu.org.uk>
-In-Reply-To: <CAErSpo5z41ZOL3xUwwSZ8UE_KGmCDOUmFQ3CY_QwF7JVhU1-EQ@mail.gmail.com>
-References: <1415847123-15558-1-git-send-email-michael.jamet@intel.com>
-	<CAErSpo7Z5x=U3vSnxrFpwYUDrUrnrrBCe1F9_GQNYqWWQFWNpQ@mail.gmail.com>
-	<BC567D27D6B7384F84318942321624DE16179E60@hasmsx109.ger.corp.intel.com>
-	<CAErSpo5z41ZOL3xUwwSZ8UE_KGmCDOUmFQ3CY_QwF7JVhU1-EQ@mail.gmail.com>
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:35407 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754559AbaKTQby (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Nov 2014 11:31:54 -0500
+Message-ID: <546E1771.4030201@arm.com>
+Date: Thu, 20 Nov 2014 16:31:45 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yijing Wang <wangyijing@huawei.com>
+CC: Thomas Gleixner <tglx@linutronix.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, linux-pci@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>
+Subject: Removal of bus->msi assignment breaks MSI with stacked domains
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > This was also discussed internally and the only way to identify Thunderbolt devices is to check the device IDs.
-> > As you said, this will require us to maintain and keep the list up-to-date as we deliver new devices.
-> 
-> I don't really see how this can work.  You're asking me to put changes
-> based on a secret spec into generic code that is used on every machine
-> with PCI.  I have no way to maintain something like that.
+Bjorn, Yijing,
 
-> 
-> This seems like a major screw up in the design and documentation of Thunderbolt.
+I've just realized that patch c167caf8d174 (PCI/MSI: Remove useless
+bus->msi assignment) completely breaks MSI on arm64 when using the new
+MSI stacked domain:
 
-See
-https://developer.apple.com/library/mac/documentation/HardwareDrivers/Conceptual/ThunderboltDevGuide/ThunderboltDevGuide.pdf
+This patch relies on architectures to implement either
+pcibios_msi_controller() or arch_setup_msi_irq(). It turns out that with
+stacked domains, none of this is actually necessary, as long as you can
+access to the msi_controller.
 
-page 10 for one of the brief public notes on the not relying on I/O space.
+And everything was fine until this patch came around (and managed to
+test on a system where the PCI devices are not directly attached to the
+root bus). Of course, everything now breaks, as we cannot get to the MSI
+controller (which contains the domain we allocate the MSIs from).
 
+In short, this patch breaks an important feature on which arm64 relies,
+and I believe this patch should be reverted ASAP.
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
