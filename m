@@ -1,210 +1,93 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM list <linux-pm@vger.kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Kevin Hilman <khilman@kernel.org>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [Replacement][PATCH 1/4] PM: Merge the SET*_RUNTIME_PM_OPS() macros
-Date: Thu, 27 Nov 2014 23:05:41 +0100
-Message-ID: <1740704.VN27cDdEAu@vostro.rjw.lan>
-In-Reply-To: <3484329.phAPviVnbd@vostro.rjw.lan>
-References: <37310416.jZXoh5nfSC@vostro.rjw.lan> <3484329.phAPviVnbd@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qa0-f48.google.com ([209.85.216.48]:62645 "EHLO
+	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756600AbaKTXaW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Nov 2014 18:30:22 -0500
+Received: by mail-qa0-f48.google.com with SMTP id v10so2724517qac.35
+        for <linux-pci@vger.kernel.org>; Thu, 20 Nov 2014 15:30:22 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <alpine.DEB.2.11.1411202355060.6439@nanos>
+References: <546E1771.4030201@arm.com> <20141120215353.GA7987@google.com> <alpine.DEB.2.11.1411202355060.6439@nanos>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 20 Nov 2014 16:30:01 -0700
+Message-ID: <CAErSpo5UOUnPbsvAJX4kCeuKnPVLyRfq6k0FJPpS2W-5ALwisQ@mail.gmail.com>
+Subject: Re: Removal of bus->msi assignment breaks MSI with stacked domains
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Thu, Nov 20, 2014 at 4:10 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
+> On Thu, 20 Nov 2014, Bjorn Helgaas wrote:
+>> On Thu, Nov 20, 2014 at 04:31:45PM +0000, Marc Zyngier wrote:
+>> > Bjorn, Yijing,
+>> >
+>> > I've just realized that patch c167caf8d174 (PCI/MSI: Remove useless
+>> > bus->msi assignment) completely breaks MSI on arm64 when using the new
+>> > MSI stacked domain:
+>> >
+>> > This patch relies on architectures to implement either
+>> > pcibios_msi_controller() or arch_setup_msi_irq(). It turns out that with
+>> > stacked domains, none of this is actually necessary, as long as you can
+>> > access to the msi_controller.
+>> >
+>> > And everything was fine until this patch came around (and managed to
+>> > test on a system where the PCI devices are not directly attached to the
+>> > root bus). Of course, everything now breaks, as we cannot get to the MSI
+>> > controller (which contains the domain we allocate the MSIs from).
+>> >
+>> > In short, this patch breaks an important feature on which arm64 relies,
+>> > and I believe this patch should be reverted ASAP.
+>>
+>> I'm happy to revert it from pci/msi, but I think Thomas has already pulled
+>> it into his branch, so he'd have to drop it, too.
+>>
+>> Thomas, let me know if you want to do that.  I suppose we could add a new
+>> patch to add it back, but that would leave bisection broken for the
+>> interval between c167caf8d174 and the patch that adds it back.
+>
+> Fortunately my irq/irqdomain branch is not immutable yet. So we have
+> no problem at that point. I can rebase on your branch until tomorrow
+> night. Or just rebase on mainline and we sort out the merge conflicts
+> later, i.e. delegate them to Linus so his job of pulling stuff gets
+> not completely boring.
+>
+> What I'm more worried about is whether this intended change is going
+> to inflict a problem on Jiangs intention to deduce the MSI irq domain
+> from the device, which we really need for making DMAR work w/o going
+> through loops and hoops.
+>
+> I have limited knowledge about the actual scope of iommu (DMAR) units
+> versus device/bus/host-controllers, so I would appreciate a proper
+> explanation for that from you or Jiang or both.
+>
+> My guts feeling tells me that anything less granular than the bus
+> level is wrong and according to my limited knowledge Intel even has
+> DMARs which are assigned to a single device it's even more wrong. So
+> the proper change would be not to push it from bus to something above
+> the bus, but instead make it a per device property.
 
-The SET_PM_RUNTIME_PM_OPS() and SET_RUNTIME_PM_OPS() macros are
-identical except that one of them is not empty for CONFIG_PM set,
-while the other one is not empty for CONFIG_PM_RUNTIME set,
-respectively.
+I'm not an expert, so hopefully Jiang and Marc will clarify this.
 
-However, after commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if
-PM_SLEEP is selected) PM_RUNTIME is always set if PM is set, so one
-of these macros is now redundant.
+My understanding is that Intel VT-d can do MSI remapping on a
+per-function basis, so I agree that pci_msi_controller() should
+probably take a pci_dev instead of a pci_bus.  I think Yijing's series
+only has one caller, which has the pci_dev, so that should be an easy
+change.
 
-For this reason, replace SET_PM_RUNTIME_PM_OPS() with
-SET_RUNTIME_PM_OPS() everywhere and redefine the SET_PM_RUNTIME_PM_OPS
-symbol as SET_RUNTIME_PM_OPS in case new code is starting to use the
-macro being removed here.
+Marc, does c167caf8d174 break arm64 by itself?  Or does the breakage
+happen later on, after adding more stacked domain stuff?  If the
+former, we should definitely revert c167caf8d174 to preserve
+bisectability, independent of how we fix the pci_msi_controller()
+interface.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
-
-It turns out that some new drivers are starting to use SET_PM_RUNTIME_PM_OPS,
-so add a #define mapping it onto SET_RUNTIME_PM_OPS for them (we'll fix that
-up when things settle).
-
----
- drivers/amba/bus.c                |    2 +-
- drivers/dma/ste_dma40.c           |    2 +-
- drivers/gpio/gpio-zynq.c          |    2 +-
- drivers/i2c/busses/i2c-hix5hd2.c  |    2 +-
- drivers/i2c/busses/i2c-nomadik.c  |    2 +-
- drivers/mmc/host/mmci.c           |    2 +-
- drivers/mmc/host/sh_mobile_sdhi.c |    2 +-
- drivers/mmc/host/tmio_mmc.c       |    2 +-
- drivers/spi/spi-pl022.c           |    2 +-
- include/linux/pm.h                |   11 ++---------
- 10 files changed, 11 insertions(+), 18 deletions(-)
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-Index: linux-pm/drivers/amba/bus.c
-===================================================================
---- linux-pm.orig/drivers/amba/bus.c
-+++ linux-pm/drivers/amba/bus.c
-@@ -124,7 +124,7 @@ static const struct dev_pm_ops amba_pm =
- 	.thaw		= pm_generic_thaw,
- 	.poweroff	= pm_generic_poweroff,
- 	.restore	= pm_generic_restore,
--	SET_PM_RUNTIME_PM_OPS(
-+	SET_RUNTIME_PM_OPS(
- 		amba_pm_runtime_suspend,
- 		amba_pm_runtime_resume,
- 		NULL
-Index: linux-pm/drivers/dma/ste_dma40.c
-===================================================================
---- linux-pm.orig/drivers/dma/ste_dma40.c
-+++ linux-pm/drivers/dma/ste_dma40.c
-@@ -3051,7 +3051,7 @@ static int dma40_runtime_resume(struct d
- 
- static const struct dev_pm_ops dma40_pm_ops = {
- 	SET_LATE_SYSTEM_SLEEP_PM_OPS(dma40_suspend, dma40_resume)
--	SET_PM_RUNTIME_PM_OPS(dma40_runtime_suspend,
-+	SET_RUNTIME_PM_OPS(dma40_runtime_suspend,
- 				dma40_runtime_resume,
- 				NULL)
- };
-Index: linux-pm/drivers/gpio/gpio-zynq.c
-===================================================================
---- linux-pm.orig/drivers/gpio/gpio-zynq.c
-+++ linux-pm/drivers/gpio/gpio-zynq.c
-@@ -578,7 +578,7 @@ static void zynq_gpio_free(struct gpio_c
- 
- static const struct dev_pm_ops zynq_gpio_dev_pm_ops = {
- 	SET_SYSTEM_SLEEP_PM_OPS(zynq_gpio_suspend, zynq_gpio_resume)
--	SET_PM_RUNTIME_PM_OPS(zynq_gpio_runtime_suspend,
-+	SET_RUNTIME_PM_OPS(zynq_gpio_runtime_suspend,
- 			zynq_gpio_runtime_resume, NULL)
- };
- 
-Index: linux-pm/drivers/i2c/busses/i2c-hix5hd2.c
-===================================================================
---- linux-pm.orig/drivers/i2c/busses/i2c-hix5hd2.c
-+++ linux-pm/drivers/i2c/busses/i2c-hix5hd2.c
-@@ -528,7 +528,7 @@ static int hix5hd2_i2c_runtime_resume(st
- #endif
- 
- static const struct dev_pm_ops hix5hd2_i2c_pm_ops = {
--	SET_PM_RUNTIME_PM_OPS(hix5hd2_i2c_runtime_suspend,
-+	SET_RUNTIME_PM_OPS(hix5hd2_i2c_runtime_suspend,
- 			      hix5hd2_i2c_runtime_resume,
- 			      NULL)
- };
-Index: linux-pm/drivers/i2c/busses/i2c-nomadik.c
-===================================================================
---- linux-pm.orig/drivers/i2c/busses/i2c-nomadik.c
-+++ linux-pm/drivers/i2c/busses/i2c-nomadik.c
-@@ -932,7 +932,7 @@ static int nmk_i2c_runtime_resume(struct
- 
- static const struct dev_pm_ops nmk_i2c_pm = {
- 	SET_LATE_SYSTEM_SLEEP_PM_OPS(nmk_i2c_suspend_late, nmk_i2c_resume_early)
--	SET_PM_RUNTIME_PM_OPS(nmk_i2c_runtime_suspend,
-+	SET_RUNTIME_PM_OPS(nmk_i2c_runtime_suspend,
- 			nmk_i2c_runtime_resume,
- 			NULL)
- };
-Index: linux-pm/drivers/mmc/host/mmci.c
-===================================================================
---- linux-pm.orig/drivers/mmc/host/mmci.c
-+++ linux-pm/drivers/mmc/host/mmci.c
-@@ -1843,7 +1843,7 @@ static int mmci_runtime_resume(struct de
- static const struct dev_pm_ops mmci_dev_pm_ops = {
- 	SET_SYSTEM_SLEEP_PM_OPS(pm_runtime_force_suspend,
- 				pm_runtime_force_resume)
--	SET_PM_RUNTIME_PM_OPS(mmci_runtime_suspend, mmci_runtime_resume, NULL)
-+	SET_RUNTIME_PM_OPS(mmci_runtime_suspend, mmci_runtime_resume, NULL)
- };
- 
- static struct amba_id mmci_ids[] = {
-Index: linux-pm/drivers/mmc/host/sh_mobile_sdhi.c
-===================================================================
---- linux-pm.orig/drivers/mmc/host/sh_mobile_sdhi.c
-+++ linux-pm/drivers/mmc/host/sh_mobile_sdhi.c
-@@ -375,7 +375,7 @@ static int sh_mobile_sdhi_remove(struct
- static const struct dev_pm_ops tmio_mmc_dev_pm_ops = {
- 	SET_SYSTEM_SLEEP_PM_OPS(pm_runtime_force_suspend,
- 			pm_runtime_force_resume)
--	SET_PM_RUNTIME_PM_OPS(tmio_mmc_host_runtime_suspend,
-+	SET_RUNTIME_PM_OPS(tmio_mmc_host_runtime_suspend,
- 			tmio_mmc_host_runtime_resume,
- 			NULL)
- };
-Index: linux-pm/drivers/mmc/host/tmio_mmc.c
-===================================================================
---- linux-pm.orig/drivers/mmc/host/tmio_mmc.c
-+++ linux-pm/drivers/mmc/host/tmio_mmc.c
-@@ -135,7 +135,7 @@ static int tmio_mmc_remove(struct platfo
- 
- static const struct dev_pm_ops tmio_mmc_dev_pm_ops = {
- 	SET_SYSTEM_SLEEP_PM_OPS(tmio_mmc_suspend, tmio_mmc_resume)
--	SET_PM_RUNTIME_PM_OPS(tmio_mmc_host_runtime_suspend,
-+	SET_RUNTIME_PM_OPS(tmio_mmc_host_runtime_suspend,
- 			tmio_mmc_host_runtime_resume,
- 			NULL)
- };
-Index: linux-pm/drivers/spi/spi-pl022.c
-===================================================================
---- linux-pm.orig/drivers/spi/spi-pl022.c
-+++ linux-pm/drivers/spi/spi-pl022.c
-@@ -2377,7 +2377,7 @@ static int pl022_runtime_resume(struct d
- 
- static const struct dev_pm_ops pl022_dev_pm_ops = {
- 	SET_SYSTEM_SLEEP_PM_OPS(pl022_suspend, pl022_resume)
--	SET_PM_RUNTIME_PM_OPS(pl022_runtime_suspend, pl022_runtime_resume, NULL)
-+	SET_RUNTIME_PM_OPS(pl022_runtime_suspend, pl022_runtime_resume, NULL)
- };
- 
- static struct vendor_data vendor_arm = {
-Index: linux-pm/include/linux/pm.h
-===================================================================
---- linux-pm.orig/include/linux/pm.h
-+++ linux-pm/include/linux/pm.h
-@@ -342,7 +342,7 @@ struct dev_pm_ops {
- #define SET_LATE_SYSTEM_SLEEP_PM_OPS(suspend_fn, resume_fn)
- #endif
- 
--#ifdef CONFIG_PM_RUNTIME
-+#ifdef CONFIG_PM
- #define SET_RUNTIME_PM_OPS(suspend_fn, resume_fn, idle_fn) \
- 	.runtime_suspend = suspend_fn, \
- 	.runtime_resume = resume_fn, \
-@@ -351,14 +351,7 @@ struct dev_pm_ops {
- #define SET_RUNTIME_PM_OPS(suspend_fn, resume_fn, idle_fn)
- #endif
- 
--#ifdef CONFIG_PM
--#define SET_PM_RUNTIME_PM_OPS(suspend_fn, resume_fn, idle_fn) \
--	.runtime_suspend = suspend_fn, \
--	.runtime_resume = resume_fn, \
--	.runtime_idle = idle_fn,
--#else
--#define SET_PM_RUNTIME_PM_OPS(suspend_fn, resume_fn, idle_fn)
--#endif
-+#define SET_PM_RUNTIME_PM_OPS	SET_RUNTIME_PM_OPS
- 
- /*
-  * Use this if you want to use the same suspend and resume callbacks for suspend
-
+Bjorn
