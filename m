@@ -1,99 +1,167 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:57270 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753305AbaKRLbR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 06:31:17 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Kevin Hilman <khilman@linaro.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH] PCI: fixup __pci_read_base() after refactoring
-Date: Tue, 18 Nov 2014 12:31:11 +0100
-Message-Id: <1416310271-4423-1-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <20141118105542.457d7863@free-electrons.com>
-References: <20141118105542.457d7863@free-electrons.com>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:59072 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757429AbaKTWy4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Nov 2014 17:54:56 -0500
+Received: by mail-ig0-f171.google.com with SMTP id uq10so5639717igb.10
+        for <linux-pci@vger.kernel.org>; Thu, 20 Nov 2014 14:54:55 -0800 (PST)
+Date: Thu, 20 Nov 2014 15:54:49 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>
+Subject: Re: [RFC PATCH v2] drivers: pci: move PCI domain assignment to
+ generic PCI code
+Message-ID: <20141120225449.GD7987@google.com>
+References: <1415637706-2195-1-git-send-email-lorenzo.pieralisi@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1415637706-2195-1-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In commit 7ea945f0bb49 ("PCI: Shrink decoding-disabled window while
-sizing BARs"), Myron Stowe refactored the code of __pci_read_base() in
-order to reduce the amount of time spent with decoding disabled.
+On Mon, Nov 10, 2014 at 04:41:46PM +0000, Lorenzo Pieralisi wrote:
+> The current logic used for PCI domain assignment in arm64
+> pci_bus_assign_domain_nr() is flawed in that, depending on the host
+> controllers configuration for a platform and the respective initialization
+> sequence, core code may end up allocating PCI domain numbers from both DT and
+> the core code generic domain counter, which would result in PCI domain
+> allocation aliases/errors.
+> 
+> This patch fixes the logic behind the PCI domain number assignment and
+> moves the resulting code to generic PCI core code so that the same domain
+> allocation logic is used on all platforms selecting
+> 
+> CONFIG_PCI_DOMAINS_GENERIC
+> 
+> instead of resorting to an arch specific implementation that might end up
+> duplicating the PCI domain assignment logic wrongly.
+> 
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Liviu Dudau <liviu.dudau@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: Catalin Marinas <catalin.marinas@arm.com>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-However, contrary to what was said in the commit log, the commit does
-introduce some functional change: the pci_size() function that used to
-be called *before* the BAR size check is done is now called *after*
-the BAR size check is done.
+Applied with Liviu and Arnd's acks to pci/domain for v3.19, thanks.
 
-This causes some failures on certain platforms (namely ARM Marvell EBU
-platforms, equipped for example with a PCIe SATA card, or a PCIe USB3
-XHCI controller):
+It doesn't matter whether I'm in the to: or cc: list.  The important thing
+is that it appears on the linux-pci list, because I use patchwork as my
+to-do list, and patchwork only vacuums up stuff from linux-pci.
 
-pci 0000:03:00.0: reg 0x10: can't handle BAR larger than 4GB (size 0xfffffffffff00000)
-
-This problem didn't exist before this commit, due to pci_size() being
-called before doing the PCI BAR size check. Therefore, this commit
-fixes the problem by restoring the initial order of the operation, by
-calling pci_size() before doing the PCI BAR size check.
-
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Fixes: 7ea945f0bb49 ("PCI: Shrink decoding-disabled window while sizing BARs")
----
-Note: this fix has been tested to work correctly for me, and the PCI
-messages I get are now identical to the ones I was getting with
-3.18-rc5. However, please review my patch carefully, as I must admit I
-do not fully understand all the implications of the change as well as
-the code in __pci_read_base().
-
-Applies on top of pci/next
-
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/probe.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index db16678..6168ca1 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -246,6 +246,14 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 	if (!sz64)
- 		goto fail;
- 
-+	sz64 = pci_size(l64, sz64, mask64);
-+
-+	if (!sz64) {
-+		dev_info(&dev->dev, "%sreg 0x%x: invalid BAR (can't size)\n",
-+			 FW_BUG, pos);
-+		goto fail;
-+	}
-+
- 	if (res->flags & IORESOURCE_MEM_64) {
- 		if ((sizeof(dma_addr_t) < 8 || sizeof(resource_size_t) < 8) &&
- 		    sz64 > 0x100000000ULL) {
-@@ -268,14 +276,6 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 		}
- 	}
- 
--	sz64 = pci_size(l64, sz64, mask64);
--
--	if (!sz64) {
--		dev_info(&dev->dev, "%sreg 0x%x: invalid BAR (can't size)\n",
--			 FW_BUG, pos);
--		goto fail;
--	}
--
- 	region.start = l64;
- 	region.end = l64 + sz64;
- 
--- 
-2.1.0
-
+> ---
+> v1 => v2:
+> 
+> - Moved generic pci_bus_assign_domain_nr() code to PCI core instead of
+>   adding an OF layer API
+> - Updated commit log and code comments
+> 
+>  arch/arm64/kernel/pci.c | 22 ----------------------
+>  drivers/pci/pci.c       | 50 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 50 insertions(+), 22 deletions(-)
+> 
+> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> index ce5836c..6f93c24 100644
+> --- a/arch/arm64/kernel/pci.c
+> +++ b/arch/arm64/kernel/pci.c
+> @@ -46,25 +46,3 @@ int pcibios_add_device(struct pci_dev *dev)
+>  
+>  	return 0;
+>  }
+> -
+> -
+> -#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> -static bool dt_domain_found = false;
+> -
+> -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> -{
+> -	int domain = of_get_pci_domain_nr(parent->of_node);
+> -
+> -	if (domain >= 0) {
+> -		dt_domain_found = true;
+> -	} else if (dt_domain_found == true) {
+> -		dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
+> -			parent->of_node->full_name);
+> -		return;
+> -	} else {
+> -		domain = pci_get_new_domain_nr();
+> -	}
+> -
+> -	bus->domain_nr = domain;
+> -}
+> -#endif
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 625a4ac..2279414 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -10,6 +10,8 @@
+>  #include <linux/kernel.h>
+>  #include <linux/delay.h>
+>  #include <linux/init.h>
+> +#include <linux/of.h>
+> +#include <linux/of_pci.h>
+>  #include <linux/pci.h>
+>  #include <linux/pm.h>
+>  #include <linux/slab.h>
+> @@ -4447,6 +4449,54 @@ int pci_get_new_domain_nr(void)
+>  {
+>  	return atomic_inc_return(&__domain_nr);
+>  }
+> +
+> +#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> +
+> +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> +{
+> +	static int use_dt_domains = -1;
+> +	int domain = of_get_pci_domain_nr(parent->of_node);
+> +
+> +	/*
+> +	 * Check DT domain and use_dt_domains values.
+> +	 *
+> +	 * If DT domain property is valid (domain >= 0) and
+> +	 * use_dt_domains != 0, the DT assignment is valid since this means
+> +	 * we have not previously allocated a domain number by using
+> +	 * pci_get_new_domain_nr(); we should also update use_dt_domains to
+> +	 * 1, to indicate that we have just assigned a domain number from
+> +	 * DT.
+> +	 *
+> +	 * If DT domain property value is not valid (ie domain < 0), and we
+> +	 * have not previously assigned a domain number from DT
+> +	 * (use_dt_domains != 1) we should assign a domain number by
+> +	 * using the:
+> +	 *
+> +	 * pci_get_new_domain_nr()
+> +	 *
+> +	 * API and update the use_dt_domains value to keep track of method we
+> +	 * are using to assign domain numbers (use_dt_domains = 0).
+> +	 *
+> +	 * All other combinations imply we have a platform that is trying
+> +	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
+> +	 * which is a recipe for domain mishandling and it is prevented by
+> +	 * invalidating the domain value (domain = -1) and printing a
+> +	 * corresponding error.
+> +	 */
+> +	if (domain >= 0 && use_dt_domains) {
+> +		use_dt_domains = 1;
+> +	} else if (domain < 0 && use_dt_domains != 1) {
+> +		use_dt_domains = 0;
+> +		domain = pci_get_new_domain_nr();
+> +	} else {
+> +		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
+> +			parent->of_node->full_name);
+> +		domain = -1;
+> +	}
+> +
+> +	bus->domain_nr = domain;
+> +}
+> +#endif
+>  #endif
+>  
+>  /**
+> -- 
+> 2.1.2
+> 
