@@ -1,96 +1,78 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 5 Nov 2014 15:10:01 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiri Kosina <trivial@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [Patch Part2 v4 18/31] PCI/MSI, trivial: Fix minor syntax issues
- according to coding styles
-Message-ID: <20141105221001.GD6168@google.com>
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
- <1415102525-9898-19-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:58360 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751007AbaKTLyy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Nov 2014 06:54:54 -0500
+Received: by mail-wi0-f179.google.com with SMTP id ex7so5070609wid.6
+        for <linux-pci@vger.kernel.org>; Thu, 20 Nov 2014 03:54:53 -0800 (PST)
+Message-ID: <546DD688.60705@linaro.org>
+Date: Thu, 20 Nov 2014 12:54:48 +0100
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415102525-9898-19-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
+CC: Liviu Dudau <liviu@dudau.co.uk>, Tony Luck <tony.luck@intel.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Suravee.Suthikulpanit@amd.com,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-ia64@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Wuyun <wuyun.wu@huawei.com>, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [RFC PATCH 00/16] Refine PCI host bridge scan interfaces
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com> <1463511.o4kE8TX3Bd@wuerfel>
+In-Reply-To: <1463511.o4kE8TX3Bd@wuerfel>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 04, 2014 at 08:01:52PM +0800, Jiang Liu wrote:
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+On 17.11.2014 15:13, Arnd Bergmann wrote:
+> On Monday 17 November 2014 18:21:34 Yijing Wang wrote:
+>> This series is based Linux 3.18-rc1 and Lorenzo Pieralisi's
+>> arm PCI domain cleanup patches, link:
+>> https://patchwork.ozlabs.org/patch/407585/
+>>
+>> Current pci scan interfaces like pci_scan_root_bus() and directly
+>> call pci_create_root_bus()/pci_scan_child_bus() lack flexiblity.
+>> Some platform infos like PCI domain and msi_chip have to be
+>> associated to PCI bus by some arch specific function.
+>> We want to make a generic pci_host_bridge, and make it hold
+>> the platform infos or hook. Then we could eliminate the lots
+>> of arch pci_domain_nr, also we could associate some platform
+>> ops something like pci_get_msi_chip(struct pci_dev *dev)
+>> with pci_host_bridge to avoid introduce arch weak functions.
+>>
+>> This RFC version not for all platforms, just applied the new
+>> scan interface in x86/arm/powerpc/ia64, I will refresh other
+>> platforms after the core pci scan interfaces are ok.
+>
+> I think overall this is a good direction to take, in particular
+> moving more things into struct pci_host_bridge so we can
+> slim down the architecture specific code.
+>
+> I don't particularly like the way you use the 'pci_host_info'
+> to pass callback pointers and some of the generic information.
+> This duplicates some of the issues we are currently trying
+> to untangle in the arm32 code to make drivers easier to share
+> between architectures.
+>
+> As a general approach, I'd rather see generic helper functions
+> being exported by the PCI core that a driver may or may not
+> call.
+> The way you split the interface between things that happen
+> before scanning the buses (pci_create_host_bridge) and
+> the actual scanning (__pci_create_root_bus, pci_scan_child_bus)
+> seems very helpful and I think we can expand that concept further:
+>
+> - The normal pci_create_host_bridge() function can contain
+>    all of the DT scanning functions (finding bus/mem/io resources,
+>    finding the msi-parent), while drivers that don't depend on DT
+>    for this information can call the same function and fill the
+>    same things after they have the pci_host_bridge pointer.
 
-Needs a changelog, even if it's similar to the topic.
+How about finding PCI domain number (in the DT way) within 
+pci_create_host_bridge() too ?
 
-Speaking of the topic, please run "git log --oneline drivers/pci/msi.c" and
-make yours look similar to the others.  This doesn't really fix a syntax
-issue; the existing code is syntactically correct.  It's only a style
-issue.
-
-I'd say something like:
-
-  PCI/MSI: Remove unnecessary braces around single statements
-
-  Per Documentation/CodingStyle, don't use braces around single statements.
-
-> ---
->  drivers/pci/msi.c |    9 +++------
->  1 file changed, 3 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 9fab30af0e75..fb2ccb536324 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -244,9 +244,8 @@ void default_restore_msi_irqs(struct pci_dev *dev)
->  {
->  	struct msi_desc *entry;
->  
-> -	list_for_each_entry(entry, &dev->msi_list, list) {
-> +	list_for_each_entry(entry, &dev->msi_list, list)
->  		default_restore_msi_irq(dev, entry->irq);
-> -	}
->  }
->  
->  void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
-> @@ -451,9 +450,8 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
->  				PCI_MSIX_FLAGS_ENABLE | PCI_MSIX_FLAGS_MASKALL);
->  
->  	arch_restore_msi_irqs(dev);
-> -	list_for_each_entry(entry, &dev->msi_list, list) {
-> +	list_for_each_entry(entry, &dev->msi_list, list)
->  		msix_mask_irq(entry, entry->masked);
-> -	}
->  
->  	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
->  }
-> @@ -497,9 +495,8 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
->  	int count = 0;
->  
->  	/* Determine how many msi entries we have */
-> -	list_for_each_entry(entry, &pdev->msi_list, list) {
-> +	list_for_each_entry(entry, &pdev->msi_list, list)
->  		++num_msi;
-> -	}
->  	if (!num_msi)
->  		return 0;
->  
-> -- 
-> 1.7.10.4
-> 
+Tomasz
