@@ -1,42 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from jabberwock.ucw.cz ([46.255.230.98]:43644 "EHLO
-	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758848AbaKAPcN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Nov 2014 11:32:13 -0400
-Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [89.239.2.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
-	by jabberwock.ucw.cz (Postfix) with ESMTPS id 1A9471C0146
-	for <linux-pci@vger.kernel.org>; Sat,  1 Nov 2014 16:22:31 +0100 (CET)
-Date: Sat, 1 Nov 2014 16:22:30 +0100
-From: Martin Mares <mj@ucw.cz>
-To: Thomas Renninger <trenn@suse.de>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] lspci: Show device name as exported by BIOS (sysfs label
- attribute) (V2)
-Message-ID: <mj+md-20141101.152159.17702.albireo@ucw.cz>
-References: <1390856419-35985-1-git-send-email-trenn@suse.de>
- <1390895462-60699-1-git-send-email-trenn@suse.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 20 Nov 2014 15:26:50 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	catalin.marinas@arm.com, will.deacon@arm.com,
+	lorenzo.pieralisi@arm.com, wangyijing@huawei.com,
+	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
+	linaro-acpi@lists.linaro.org, linux-pci@vger.kernel.org,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [PATCH 6/6] pci, acpi: Share ACPI PCI config space accessors.
+Message-ID: <20141120222650.GC7987@google.com>
+References: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org>
+ <1416413091-13452-7-git-send-email-tomasz.nowicki@linaro.org>
+ <2360791.Aj7tQ0nCJ3@wuerfel>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1390895462-60699-1-git-send-email-trenn@suse.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <2360791.Aj7tQ0nCJ3@wuerfel>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi!
+On Wed, Nov 19, 2014 at 05:19:20PM +0100, Arnd Bergmann wrote:
+> On Wednesday 19 November 2014 17:04:51 Tomasz Nowicki wrote:
+> > +/*
+> > + * raw_pci_read/write - ACPI PCI config space accessors.
+> > + *
+> > + * ACPI spec defines MMCFG as the way we can access PCI config space,
+> > + * so let MMCFG be default (__weak).
+> > + *
+> > + * If platform needs more fancy stuff, should provides its own implementation.
+> > + */
+> > +int __weak raw_pci_read(unsigned int domain, unsigned int bus,
+> > +                       unsigned int devfn, int reg, int len, u32 *val)
+> > +{
+> > +       return pci_mmcfg_read(domain, bus, devfn, reg, len, val);
+> > +}
+> > +
+> > +int __weak raw_pci_write(unsigned int domain, unsigned int bus,
+> > +                        unsigned int devfn, int reg, int len, u32 val)
+> > +{
+> > +       return pci_mmcfg_write(domain, bus, devfn, reg, len, val);
+> > +}
+> > +
+> > 
+> 
+> I think it would be better to avoid __weak functions here, as they tend
+> to be hard to follow when trying to understand the code.
 
-> The Device name of a PCI or PCI Express device under OS may be exported via
-> ACPI _DSM function with function index 7.
-> This allows to connect a described PCI device in the platform documentation
-> or as labeled on the chassis with PCI devices shown via lspci.
-> The kernel already exports this string through sysfs under a PCI device through
-> the "label" sysfs attribute.
+That's interesting.  I would have said exactly the opposite -- I think the
+extra Kconfiggery is harder to follow than weak/strong functions :)
 
-Thanks, applied. (With minor changes, like using OBJBUFSIZE instead of
-a hard-coded constant 1024.)
+But consistency is better than my personal opinion.  Is there a consensus
+that we should use the Kconfig strategy instead of __weak?
 
-				Have a nice fortnight
--- 
-Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
-Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
-Got mole problems? Call Avogadro, 602-1023!
+> How about using a Kconfig symbol like this:
+> 
+> #ifdef CONFIG_ARCH_RAW_PCI_READWRITE
+> int raw_pci_read(unsigned int domain, unsigned int bus, unsigned int devfn,
+>                  int reg, int len, u32 *val);
+> int raw_pci_write(unsigned int domain, unsigned int bus, unsigned int devfn,
+>                   int reg, int len, u32 val);
+> #else
+> static inline int raw_pci_read(unsigned int domain, unsigned int bus,
+> 	                       unsigned int devfn, int reg, int len, u32 *val)
+> {
+> 	return pci_mmcfg_read(domain, bus, devfn, reg, len, val);
+> }
+> 
+> static inline int raw_pci_write(unsigned int domain, unsigned int bus,
+>              		                unsigned int devfn, int reg, int len, u32 val)
+> {
+>        return pci_mmcfg_write(domain, bus, devfn, reg, len, val);
+> }
+> #endif
