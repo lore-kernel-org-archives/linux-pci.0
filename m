@@ -1,82 +1,54 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v6 26/27] x86, irq: Implement irq_chip.irq_write_msi_msg for MSI/DMAR/HPET irq_chips
-Date: Tue, 25 Nov 2014 13:53:35 +0800
-Message-Id: <1416894816-23245-27-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:64521 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756236AbaKTXLi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Nov 2014 18:11:38 -0500
+Received: by mail-ie0-f171.google.com with SMTP id rl12so3837360iec.30
+        for <linux-pci@vger.kernel.org>; Thu, 20 Nov 2014 15:11:38 -0800 (PST)
+Date: Thu, 20 Nov 2014 16:11:35 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: Fix device node for virtual bus
+Message-ID: <20141120231135.GE7987@google.com>
+References: <1415760163-12517-1-git-send-email-gwshan@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1415760163-12517-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement irq_chip.irq_write_msi_msg for MSI/DMAR/HPET irq_chips, they
-will be used to share common code later.
+On Wed, Nov 12, 2014 at 01:42:43PM +1100, Gavin Shan wrote:
+> pci_set_bus_of_node() sets virtual PCI bus's device node to PHB's
+> device node wrongly. The patch fixes the issue.
+> 
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/msi.c |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
+Applied to pci/misc for v3.19, thanks!
 
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 15429aa112fe..f5b899514634 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -192,6 +192,11 @@ dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 	return ret;
- }
- 
-+static void dmar_msi_write_msg(struct irq_data *data, struct msi_msg *msg)
-+{
-+	dmar_msi_write(data->irq, msg);
-+}
-+
- static struct irq_chip dmar_msi_controller = {
- 	.name			= "DMAR-MSI",
- 	.irq_unmask		= dmar_msi_unmask,
-@@ -200,6 +205,7 @@ static struct irq_chip dmar_msi_controller = {
- 	.irq_set_affinity	= dmar_msi_set_affinity,
- 	.irq_retrigger		= irq_chip_retrigger_hierarchy,
- 	.irq_compose_msi_msg	= irq_msi_compose_msg,
-+	.irq_write_msi_msg	= dmar_msi_write_msg,
- 	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
- 
-@@ -322,6 +328,11 @@ static int hpet_msi_set_affinity(struct irq_data *data,
- 	return ret;
- }
- 
-+static void hpet_msi_write_msg(struct irq_data *data, struct msi_msg *msg)
-+{
-+	hpet_msi_write(data->handler_data, msg);
-+}
-+
- static struct irq_chip hpet_msi_controller = {
- 	.name = "HPET-MSI",
- 	.irq_unmask = hpet_msi_unmask,
-@@ -330,6 +341,7 @@ static struct irq_chip hpet_msi_controller = {
- 	.irq_set_affinity = hpet_msi_set_affinity,
- 	.irq_retrigger = irq_chip_retrigger_hierarchy,
- 	.irq_compose_msi_msg = irq_msi_compose_msg,
-+	.irq_write_msi_msg = hpet_msi_write_msg,
- 	.flags = IRQCHIP_SKIP_SET_WAKE,
- };
- 
--- 
-1.7.10.4
+Thanks for explaining this to me.  It seems obvious now that I look at the
+code.
 
+> ---
+>  drivers/pci/of.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+> index f092993..7b2256b 100644
+> --- a/drivers/pci/of.c
+> +++ b/drivers/pci/of.c
+> @@ -31,9 +31,9 @@ void pci_release_of_node(struct pci_dev *dev)
+>  
+>  void pci_set_bus_of_node(struct pci_bus *bus)
+>  {
+> -	if (bus->self == NULL)
+> +	if (pci_is_root_bus(bus))
+>  		bus->dev.of_node = pcibios_get_phb_of_node(bus);
+> -	else
+> +	else if (bus->self)
+>  		bus->dev.of_node = of_node_get(bus->self->dev.of_node);
+>  }
+>  
+> -- 
+> 1.8.3.2
+> 
