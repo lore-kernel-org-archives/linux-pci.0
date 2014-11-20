@@ -1,110 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f54.google.com ([209.85.192.54]:59177 "EHLO
-	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755002AbaKROXC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 09:23:02 -0500
-Received: by mail-qg0-f54.google.com with SMTP id q107so849399qgd.27
-        for <linux-pci@vger.kernel.org>; Tue, 18 Nov 2014 06:23:01 -0800 (PST)
+Received: from szxga03-in.huawei.com ([119.145.14.66]:12813 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755145AbaKTByT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 20:54:19 -0500
+Message-ID: <546D49AC.4020207@huawei.com>
+Date: Thu, 20 Nov 2014 09:53:48 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <bug-88451-41252@https.bugzilla.kernel.org/>
-References: <bug-88451-41252@https.bugzilla.kernel.org/>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 18 Nov 2014 07:22:40 -0700
-Message-ID: <CAErSpo5LgFPz9uUyg6+QchHbNP4G5R6xiYDqfYZp5wyBK-RagA@mail.gmail.com>
-Subject: Re: [Bug 88451] New: PCI devices missing - including USB controller.
- Boot fail
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: Roland Kletzing <devzero@web.de>
-Content-Type: text/plain; charset=UTF-8
+To: Arnd Bergmann <arnd@arndb.de>,
+	<linux-arm-kernel@lists.infradead.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	"Tony Luck" <tony.luck@intel.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-pci@vger.kernel.org>, <x86@kernel.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	<linux-ia64@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH 3/5] PCI: Use pci_scan_bus_simple() in simple scene.
+References: <1416382369-13587-1-git-send-email-wangyijing@huawei.com> <1416382369-13587-4-git-send-email-wangyijing@huawei.com> <3577231.2krnYe8yCU@wuerfel>
+In-Reply-To: <3577231.2krnYe8yCU@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
+On 2014/11/19 20:28, Arnd Bergmann wrote:
+> On Wednesday 19 November 2014 15:32:47 Yijing Wang wrote:
+>> Use pci_scan_bus_simple() to scan pci buses with
+>> the default IO/MEM/BUS resources. Use it instead
+>> of pci_scan_bus() and pci_scan_bus_parented().
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>>
+> 
+> I think we should replace pci_scan_bus_parented() with something better
+> by making the xen code use pci_scan_root_bus() (see below for a draft
+> patch). After that we no longer need the 'parent' argument here and we
+> can just keep using the pci_scan_bus() function for the legacy users,
+> or rename it if that helps.
 
-Hi Roland,
+It make sense to me, and we could rename pci_scan_bus() to pci_scan_bus_legacy().
+Thanks, I will add this to my series,
 
-Thanks for the report!
 
-On Tue, Nov 18, 2014 at 5:08 AM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=88451
->
->             Bug ID: 88451
->            Summary: PCI devices missing - including USB controller. Boot
->                     fail
->            Product: Drivers
->            Version: 2.5
->     Kernel Version: 3.17 3.18rc4
->           Hardware: i386
->                 OS: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: PCI
->           Assignee: drivers_pci@kernel-bugs.osdl.org
->           Reporter: devzero@web.de
->         Regression: No
->
-> Created attachment 157971
->   --> https://bugzilla.kernel.org/attachment.cgi?id=157971&action=edit
-> dmesg from working kernel
->
-> While stock debian kernel 3.2.0-4-486 and kernel 3.2.63 showed no problems,
-> 3.17+ fails.
->
-> Apparently, all PCI devices except 0000:00:00.0 and 0000:00:12.2 are suddenly
-> missing, including USB controller - and thus boot from USB fails.
->
-> I have taken a look at git and there seems to be a lot of PCI code rework
-> between 3.2.63 and 3.17+, which may be an explanation
+> 
+> 	Arnd
+> 
+> 
+> 8<---
+> 
+> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> index 116ca3746adb..45a4843a608a 100644
+> --- a/drivers/pci/xen-pcifront.c
+> +++ b/drivers/pci/xen-pcifront.c
+> @@ -448,6 +448,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+>  	struct pci_bus *b;
+>  	struct pcifront_sd *sd = NULL;
+>  	struct pci_bus_entry *bus_entry = NULL;
+> +	LIST_HEAD(resources);
+>  	int err = 0;
+>  
+>  #ifndef CONFIG_PCI_DOMAINS
+> @@ -470,17 +471,20 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+>  		err = -ENOMEM;
+>  		goto err_out;
+>  	}
+> +	pci_add_resource(&resources, &ioport_resource);
+> +	pci_add_resource(&resources, &iomem_resource);
+>  	pcifront_init_sd(sd, domain, bus, pdev);
+>  
+>  	pci_lock_rescan_remove();
+>  
+> -	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
+> -				  &pcifront_bus_ops, sd);
+> +	b = pci_scan_root_bus(&pdev->xdev->dev, bus, &pcifront_bus_ops, sd,
+> +			      &resources);
+>  	if (!b) {
+>  		dev_err(&pdev->xdev->dev,
+>  			"Error creating PCI Frontend Bus!\n");
+>  		err = -ENOMEM;
+>  		pci_unlock_rescan_remove();
+> +		pci_free_resource_list(&resources);
+>  		goto err_out;
+>  	}
+>  
+> 
+> 
+> .
+> 
 
-Yeah, there have definitely been a lot of changes since 3.2.63 :)  I
-can't think of an obvious suspect, though.
 
-> So, i`m curious what`s the problem and how to fix it. Too many pci bootparams
-> to try all of them :(
+-- 
+Thanks!
+Yijing
 
-Wow, very impressive screenshot console log of the failing kernel!
-Thanks for all the work to put that together.
-
-I notice that you're using "acpi=off" on both kernels.  Is that to
-work around some problem?  Do you know whether it's still needed in
-v3.17?
-
-Can you boot with "ignore_loglevel"?  Some of the PCI probing output
-is at KERN_DEBUG, which makes it into dmesg, but not normally to the
-console.  The useful part is the stuff that looks like this:
-
-  [    0.111587] pci 0000:00:00.0: [1078:0001] type 0 class 0x000600
-  [    0.111927] pci 0000:00:0f.0: [100b:0020] type 0 class 0x000200
-  [    0.112886] pci 0000:00:12.0: [1078:0100] type 0 class 0x000601
-  [    0.113494] pci 0000:00:12.1: [1078:0101] type 0 class 0x000680
-  ...
-
-I can tell from other driver printks that in v3.17, we did find these devices:
-
-  [ 4.12] 00:12.2
-  [ 4.44] 00:12.4
-  [ 5.73] 00:0f.0
-  [16.54] 00:12.3
-
-so my suspicion is that the PCI core actually does enumerate all the
-devices, but for some reason ohci_hcd isn't claiming 00:13.0.
-
-Bjorn
-
-> This is an older geode gx1 board (still have multiple around). for their age,
-> they are quite power efficient (<6W) and i have some ideas to turn them into
-> something useful.
->
-> lspci
-> 00:00.0 Host bridge: Cyrix Corporation PCI Master
-> 00:0f.0 Ethernet controller: National Semiconductor Corporation DP83815
-> (MacPhyter) Ethernet Controller
-> 00:12.0 ISA bridge: Cyrix Corporation 5530 Legacy [Kahlua] (rev 30)
-> 00:12.1 Bridge: Cyrix Corporation 5530 SMI [Kahlua]
-> 00:12.2 IDE interface: Cyrix Corporation 5530 IDE [Kahlua]
-> 00:12.3 Multimedia audio controller: Cyrix Corporation 5530 Audio [Kahlua]
-> 00:12.4 VGA compatible controller: Cyrix Corporation 5530 Video [Kahlua]
-> 00:13.0 USB controller: Compaq Computer Corporation ZFMicro Chipset USB (rev
-> 06)
