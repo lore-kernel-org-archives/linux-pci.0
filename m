@@ -1,90 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:47556 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756487AbaKTWoX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 20 Nov 2014 17:44:23 -0500
-Message-ID: <1416523323.2280.10.camel@jtkirshe-mobl>
-Subject: Re: [linux-nics] [PATCH 0/4] move pci_assivned_vfs() check (while
- disabling VFs) to pci sub-system
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Sathya Perla <sathya.perla@emulex.com>, linux.nics@intel.com,
-	shahed.shaikh@qlogic.com, linux-pci@vger.kernel.org,
-	ddutile@redhat.com, ariel.elior@qlogic.com, netdev@vger.kernel.org
-Date: Thu, 20 Nov 2014 14:42:03 -0800
-In-Reply-To: <20141120222127.GB7987@google.com>
-References: <1415620410-4937-1-git-send-email-sathya.perla@emulex.com>
-	 <20141120222127.GB7987@google.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-LM2zDDCz+zrlHt6u3p2n"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH 2/3] PCI/x86: Add arch_supports_multivector_msi() hook
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, tglx@linutronix.de, mingo@redhat.com,
+	hpa@zytor.com, joro@8bytes.org, iommu@lists.linux-foundation.org
+Date: Fri, 21 Nov 2014 15:08:40 -0700
+Message-ID: <20141121220839.31095.64245.stgit@gimli.home>
+In-Reply-To: <20141121213752.31095.30735.stgit@gimli.home>
+References: <20141121213752.31095.30735.stgit@gimli.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+x86 does support multivector MSI, but only when using interrupt
+remapping.  Extend x86_msi_ops to add an optional callback for
+this and assume unsupported when not present.
 
---=-LM2zDDCz+zrlHt6u3p2n
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
 
-On Thu, 2014-11-20 at 15:21 -0700, Bjorn Helgaas wrote:
-> [+cc Jeff]
->=20
-> On Mon, Nov 10, 2014 at 05:23:26PM +0530, Sathya Perla wrote:
-> > A user must not be allowed to disable VFs while they are already assign=
-ed to
-> > a guest. This check is being made in each individual driver that implem=
-ents
-> > the sriov_configure PCI method.
-> > This patch-set fixes this code duplication by moving this check from
-> > drivers to the sriov_nuvfs_store() routine just before invoking
-> > sriov_configure() when num_vfs is equal to 0.
-> >=20
-> > Vasundhara Volam (4):
-> >   pci: move pci_assivned_vfs() check while disabling VFs to pci
-> >     sub-system
-> >   bnx2x: remove pci_assigned_vfs() check while disabling VFs
-> >   i40e: remove pci_assigned_vfs() check while disabling VFs
-> >   qlcnic: remove pci_assigned_vfs() check while disabling VFs
-> >=20
-> >  drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c  |    2 +-
-> >  drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c |    7 +------
-> >  .../net/ethernet/qlogic/qlcnic/qlcnic_sriov_pf.c   |   10 ----------
-> >  drivers/pci/pci-sysfs.c                            |    5 +++++
-> >  4 files changed, 7 insertions(+), 17 deletions(-)
->=20
-> I'm dropping these for the reasons Don & Alex outlined -- they don't fix
-> the problem for VFIO, so this amounts to shuffling around code that's kno=
-wn
-> to be broken, which seems more confusing than worthwhile.
->=20
-> Jeff, if I were you I would drop the i40e patch.  I don't think it makes
-> sense to remove the check from i40e before adding it to the PCI core.
->=20
+ arch/x86/include/asm/x86_init.h |    1 +
+ arch/x86/kernel/x86_init.c      |    6 ++++++
+ drivers/iommu/irq_remapping.c   |    6 ++++++
+ 3 files changed, 13 insertions(+)
 
-Thanks for the heads up, I will drop the i40e patch as well.
-
---=-LM2zDDCz+zrlHt6u3p2n
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCgAGBQJUbm47AAoJEOVv75VaS+3OHcUP/2X24f1hN/0+7xJlUhJteuFM
-j0R/dWDkR5l5jF6ZOidncfmx634d6Js410lOqrXW6Kw2nCNSWy8ZqkIUMrZUHY7v
-X5xW5uQG3fOzElpi5EG/MvbzGHK+5AfWVTgHUmRFk/DOXCSAhlgPYi8iDHIlDtoo
-ObHtUKi93homIuYb3pdY1Fy8tNg1DQ3onUy/uLpD3Bo6dvNErogFjvj6XQUjG9iM
-jwZ4IQCZuAt/M6XWhSGMrly8BmkVfyotvF3VJJGsucnvJuW+lNHqALj8yWlWe/DL
-kKAW2y91OhGSbhIwi+mbXdyFzNCqlaQ+wii+79k1hAIOs+8UGqm4CQUVtoebY8gs
-7gTKbCQvk6A6DTM8HTiYzCPvIDB86M5m4r9eGxF2OfFLD+B79s/r3SZkD422zA/V
-eU/Xj9Y2ZEIDgr81oLQvQYrJ1MylOpgxHLkEBvh7uzPxwjpzZBP1kCx2UWcZ2vh2
-kWVro3+ZmZCY1ODGqn25wBlRonqw+LyW3YhODQ6WNHdU5xd4dcDsjjTFSxQhs5Qk
-nhN7bS9AGUOuHOrYQa6C6ZeuIENIccIsaskjLQ0IOHWlxyYGMmzOG7d/AZoxt+V5
-h6t4u5Fk0hesumV7dQr/0tjaiwkrTqBHPeJrPAjuoEoACHC3PvVjBmaUwfcSzC6s
-1nkDIqKpmaUMtoIdhHDE
-=gJNr
------END PGP SIGNATURE-----
-
---=-LM2zDDCz+zrlHt6u3p2n--
+diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+index e45e4da..28951c6 100644
+--- a/arch/x86/include/asm/x86_init.h
++++ b/arch/x86/include/asm/x86_init.h
+@@ -185,6 +185,7 @@ struct x86_msi_ops {
+ 	int  (*setup_hpet_msi)(unsigned int irq, unsigned int id);
+ 	u32 (*msi_mask_irq)(struct msi_desc *desc, u32 mask, u32 flag);
+ 	u32 (*msix_mask_irq)(struct msi_desc *desc, u32 flag);
++	bool (*supports_multivector)(struct pci_dev *dev);
+ };
+ 
+ struct IO_APIC_route_entry;
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index e48b674..d917410 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -148,6 +148,12 @@ u32 arch_msix_mask_irq(struct msi_desc *desc, u32 flag)
+ {
+ 	return x86_msi.msix_mask_irq(desc, flag);
+ }
++bool arch_supports_multivector_msi(struct pci_dev *dev)
++{
++	if (x86_msi.supports_multivector)
++		return x86_msi.supports_multivector(dev);
++	return false;
++}
+ #endif
+ 
+ struct x86_io_apic_ops x86_io_apic_ops = {
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 74a1767..4310bfb 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -160,6 +160,11 @@ static void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
+ 	io_apic_eoi(apic, pin);
+ }
+ 
++static bool remapped_supports_multivector(struct pci_dev *dev)
++{
++	return true;
++}
++
+ static void __init irq_remapping_modify_x86_ops(void)
+ {
+ 	x86_io_apic_ops.disable		= irq_remapping_disable_io_apic;
+@@ -169,6 +174,7 @@ static void __init irq_remapping_modify_x86_ops(void)
+ 	x86_msi.setup_msi_irqs		= irq_remapping_setup_msi_irqs;
+ 	x86_msi.setup_hpet_msi		= setup_hpet_msi_remapped;
+ 	x86_msi.compose_msi_msg		= compose_remapped_msi_msg;
++	x86_msi.supports_multivector	= remapped_supports_multivector;
+ }
+ 
+ static __init int setup_nointremap(char *str)
 
