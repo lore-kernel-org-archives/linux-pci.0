@@ -1,85 +1,69 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 6 Nov 2014 11:30:47 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Alexander Gordeev <agordeev@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	x86@kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	LAK <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [Patch Part2 v4 21/31] PCI/MSI: enhance PCI MSI core to support
- hierarchy irqdomain
-In-Reply-To: <alpine.DEB.2.11.1411061023400.24960@nanos>
-Message-ID: <alpine.DEB.2.11.1411061110550.24960@nanos>
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com> <1415102525-9898-22-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1411061023400.24960@nanos>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:41078 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756956AbaKUBW6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Nov 2014 20:22:58 -0500
+Message-ID: <546E93DC.8010902@huawei.com>
+Date: Fri, 21 Nov 2014 09:22:36 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Thomas Gleixner <tglx@linutronix.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Will Deacon <will.deacon@arm.com>,
+	"Catalin Marinas" <catalin.marinas@arm.com>
+Subject: Re: Removal of bus->msi assignment breaks MSI with stacked domains
+References: <546E1771.4030201@arm.com>
+In-Reply-To: <546E1771.4030201@arm.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 6 Nov 2014, Thomas Gleixner wrote:
-> On Tue, 4 Nov 2014, Jiang Liu wrote:
-> > +#ifdef	CONFIG_PCI_MSI_IRQ_DOMAIN
-> > +static inline irq_hw_number_t
-> > +msi_get_hwirq(struct pci_dev *pdev, struct msi_desc *msidesc)
-> > +{
-> > +	return (irq_hw_number_t)msidesc->msi_attrib.entry_nr |
-> > +		PCI_DEVID(pdev->bus->number, pdev->devfn) << 11 |
-> > +		(pci_domain_nr(pdev->bus) & 0xFFFFFFFF) << 27;
-> > +}
-> > +
-> > +static int msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
-> > +			    unsigned int nr_irqs, void *arg)
-> > +{
-> > +	int i, ret;
-> > +	irq_hw_number_t hwirq = arch_msi_irq_domain_get_hwirq(arg);
-> > +
-> > +	if (irq_find_mapping(domain, hwirq) > 0)
-> > +		return -EEXIST;
-> > +
-> > +	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
-> > +	if (ret >= 0)
-> > +		for (i = 0; i < nr_irqs; i++) {
-> > +			irq_domain_set_hwirq_and_chip(domain, virq + i,
-> > +					hwirq + i, &msi_chip, (void *)(long)i);
+On 2014/11/21 0:31, Marc Zyngier wrote:
+> Bjorn, Yijing,
 > 
-> I think msi_chip being a global unique thing is problematic. It does
-> not allow multi platform kernels to select a chip at boot time and it
-> does not allow per domain chip implementations when you have multiple
-> msi domains. Aside of that msi_chip is a pretty bad name for a global.
-> 
-> The solution is rather simple and msi is wide spread enough to justify
-> that.
-> 
-> struct irqdomain_msi_data {
->        struct irq_chip       *irq_chip;
-> };
-> 
-> We make that a struct so we can accomodate for other special things
-> which might be domain rather than architecture specific. One
-> obvious use case would be to hold the arch_msi_irq_domain_get/set_hwirq
-> callbacks.
+> I've just realized that patch c167caf8d174 (PCI/MSI: Remove useless
+> bus->msi assignment) completely breaks MSI on arm64 when using the new
+> MSI stacked domain:
 
-That needs to hand in the domain as an argument as well.
+Sorry, this is my first part to refactor MSI related code, now
+how to get pci msi_controller depends arch functions(pcibios_msi_controller() or
+arch_setup_msi_irq()), we are working on generic pci_host_bridge, after that,
+we could eventually eliminate MSI arch functions and find pci dev 's msi controller
+by pci_host_bridge->get_msi_controller().
 
-Thanks,
+Marc, could you tell me what pci host driver in your test platform ?
 
-	tglx
+> 
+> This patch relies on architectures to implement either
+> pcibios_msi_controller() or arch_setup_msi_irq(). It turns out that with
+> stacked domains, none of this is actually necessary, as long as you can
+> access to the msi_controller.
+> 
+> And everything was fine until this patch came around (and managed to
+> test on a system where the PCI devices are not directly attached to the
+> root bus). Of course, everything now breaks, as we cannot get to the MSI
+> controller (which contains the domain we allocate the MSIs from).
+> 
+> In short, this patch breaks an important feature on which arm64 relies,
+> and I believe this patch should be reverted ASAP.
+
+Bjorn, could you help to revert this patch ?
+
+
+> 
+> Thanks,
+> 
+> 	M.
+> 
+
+
+-- 
+Thanks!
+Yijing
+
