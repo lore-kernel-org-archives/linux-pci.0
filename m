@@ -1,75 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: <suravee.suthikulpanit@amd.com>
-To: <bhelgaas@google.com>
-CC: <liviu.dudau@arm.com>, <lorenzo.pieralisi@arm.com>,
-	<will.deacon@arm.com>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH 2/2] PCI: generic: Add set_msi_parent callback
-Date: Mon, 10 Nov 2014 13:24:40 -0600
-Message-ID: <1415647480-3320-3-git-send-email-suravee.suthikulpanit@amd.com>
-In-Reply-To: <1415647480-3320-1-git-send-email-suravee.suthikulpanit@amd.com>
-References: <1415647480-3320-1-git-send-email-suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:34051 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752485AbaKUWSD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 17:18:03 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux@eikelenboom.it
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: [PATCH v4 6/7] PCI: Expose pci_load_saved_state for public consumption.
+Date: Fri, 21 Nov 2014 17:17:50 -0500
+Message-Id: <1416608271-18931-7-git-send-email-konrad.wilk@oracle.com>
+In-Reply-To: <1416608271-18931-1-git-send-email-konrad.wilk@oracle.com>
+References: <1416608271-18931-1-git-send-email-konrad.wilk@oracle.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+We have the pci_load_and_free_saved_state, and pci_store_saved_state
+but are missing the functionality to just load the state
+multiple times in the PCI device without having to free/save
+the state.
 
-This patch implement set_msi_parent callback for PCI generic host controller.
+This patch makes it possible to use this function.
 
-Cc: Bjorn Helgass <bhelgaas@google.com>
-Cc: Liviu Dudau <liviu.dudau@arm.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
 ---
- drivers/pci/host/pci-host-generic.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ drivers/pci/pci.c   | 5 +++--
+ include/linux/pci.h | 2 ++
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 036ab1b..f9bb97a 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -42,6 +42,7 @@ struct gen_pci {
- 	struct pci_host_bridge			host;
- 	struct gen_pci_cfg_windows		cfg;
- 	struct list_head			resources;
-+	struct msi_chip				*mchip;
- };
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 625a4ac..f00a9d6 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1142,8 +1142,8 @@ EXPORT_SYMBOL_GPL(pci_store_saved_state);
+  * @dev: PCI device that we're dealing with
+  * @state: Saved state returned from pci_store_saved_state()
+  */
+-static int pci_load_saved_state(struct pci_dev *dev,
+-				struct pci_saved_state *state)
++int pci_load_saved_state(struct pci_dev *dev,
++			 struct pci_saved_state *state)
+ {
+ 	struct pci_cap_saved_data *cap;
  
- #ifdef CONFIG_ARM
-@@ -128,9 +129,19 @@ static int gen_pci_config_write(struct pci_bus *bus, unsigned int devfn,
- 	return PCIBIOS_SUCCESSFUL;
+@@ -1171,6 +1171,7 @@ static int pci_load_saved_state(struct pci_dev *dev,
+ 	dev->state_saved = true;
+ 	return 0;
  }
++EXPORT_SYMBOL_GPL(pci_load_saved_state);
  
-+static int gen_pci_set_msi_parent(struct pci_bus *bus)
-+{
-+	struct gen_pci *pci = bus_to_gen_pci(bus);
-+
-+	bus->msi = pci->mchip;
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
- static struct pci_ops gen_pci_ops = {
- 	.read	= gen_pci_config_read,
- 	.write	= gen_pci_config_write,
-+	.set_msi_parent = gen_pci_set_msi_parent,
- };
- 
- static const struct of_device_id gen_pci_of_match[] = {
-@@ -313,6 +324,9 @@ static int gen_pci_probe(struct platform_device *pdev)
- 		return err;
- 	}
- 
-+	pci->mchip = of_pci_find_msi_chip_by_node(of_parse_phandle(np,
-+						  "msi-parent", 0));
-+
- #ifdef CONFIG_ARM
- 	pci_common_init_dev(dev, &hw);
- #else
+ /**
+  * pci_load_and_free_saved_state - Reload the save state pointed to by state,
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5be8db4..08088cb1 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1003,6 +1003,8 @@ void __iomem __must_check *pci_platform_rom(struct pci_dev *pdev, size_t *size);
+ int pci_save_state(struct pci_dev *dev);
+ void pci_restore_state(struct pci_dev *dev);
+ struct pci_saved_state *pci_store_saved_state(struct pci_dev *dev);
++int pci_load_saved_state(struct pci_dev *dev,
++			 struct pci_saved_state *state);
+ int pci_load_and_free_saved_state(struct pci_dev *dev,
+ 				  struct pci_saved_state **state);
+ struct pci_cap_saved_state *pci_find_saved_cap(struct pci_dev *dev, char cap);
 -- 
 1.9.3
 
