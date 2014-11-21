@@ -1,71 +1,207 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50043 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751514AbaKUSYL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 21 Nov 2014 13:24:11 -0500
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH 1/4] PCI: Allow device quirks to exclude D3->D0 PM reset
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Alex Williamson <alex.williamson@redhat.com>
-Date: Fri, 21 Nov 2014 11:24:08 -0700
-Message-ID: <20141121182408.26669.23377.stgit@gimli.home>
-In-Reply-To: <20141121180322.26669.65689.stgit@gimli.home>
-References: <20141121180322.26669.65689.stgit@gimli.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from userp1040.oracle.com ([156.151.31.81]:19976 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752560AbaKUWSD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 17:18:03 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux@eikelenboom.it
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: [PATCH v4 1/7] xen/pciback: Don't deadlock when unbinding.
+Date: Fri, 21 Nov 2014 17:17:45 -0500
+Message-Id: <1416608271-18931-2-git-send-email-konrad.wilk@oracle.com>
+In-Reply-To: <1416608271-18931-1-git-send-email-konrad.wilk@oracle.com>
+References: <1416608271-18931-1-git-send-email-konrad.wilk@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI PM spec indicates that when No_Soft_Reset is clear
-(NoSoftRst-) that the device performs an internal reset when
-transitioning From D3hot to D0.  Configuration context is lost and
-the device requires a full reinitialization sequence.
+As commit 0a9fd0152929db372ff61b0d6c280fdd34ae8bdb
+'xen/pciback: Document the entry points for 'pcistub_put_pci_dev''
+explained there are four entry points in this function.
+Two of them are when the user fiddles in the SysFS to
+unbind a device which might be in use by a guest or not.
 
-Unfortunately the definition of "internal reset", beyond the
-application of the configuration context, is largely left to the
-interpretation of the specific device.  For some devices, setting
-NoSoftRst- appears arbitrary and no obvious "internal reset" occurs
-on D3hot to D0 transition.
+Both 'unbind' states will cause a deadlock as the the PCI lock has
+already been taken, which then pci_device_reset tries to take.
 
-We still need to honor the PCI specification and restore PCI config
-context in the event that we do a PM reset, so we don't cache and
-modify the PCI_PM_CTRL_NO_SOFT_RESET bit for the device, but for
-interfaces where the intention is to reset the device, like
-pci_reset_function(), we need a mechanism to flag that PM reset
-doesn't perform any significant "internal reset" of the device.
+We can simplify this by requiring that all callers of
+pcistub_put_pci_dev MUST hold the device lock. And then
+we can just call the lockless version of pci_device_reset.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+To make it even simpler we will modify xen_pcibk_release_pci_dev
+to quality whether it should take a lock or not - as it ends
+up calling xen_pcibk_release_pci_dev and needs to hold the lock.
+
+Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
 ---
+ drivers/xen/xen-pciback/passthrough.c | 14 +++++++++++---
+ drivers/xen/xen-pciback/pci_stub.c    | 12 ++++++------
+ drivers/xen/xen-pciback/pciback.h     |  7 ++++---
+ drivers/xen/xen-pciback/vpci.c        | 14 +++++++++++---
+ drivers/xen/xen-pciback/xenbus.c      |  2 +-
+ 5 files changed, 33 insertions(+), 16 deletions(-)
 
- drivers/pci/pci.c   |    2 +-
- include/linux/pci.h |    2 ++
- 2 files changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 625a4ac..ba54a5a 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3206,7 +3206,7 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+diff --git a/drivers/xen/xen-pciback/passthrough.c b/drivers/xen/xen-pciback/passthrough.c
+index 828dddc..f16a30e 100644
+--- a/drivers/xen/xen-pciback/passthrough.c
++++ b/drivers/xen/xen-pciback/passthrough.c
+@@ -69,7 +69,7 @@ static int __xen_pcibk_add_pci_dev(struct xen_pcibk_device *pdev,
+ }
+ 
+ static void __xen_pcibk_release_pci_dev(struct xen_pcibk_device *pdev,
+-					struct pci_dev *dev)
++					struct pci_dev *dev, bool lock)
  {
- 	u16 csr;
+ 	struct passthrough_dev_data *dev_data = pdev->pci_dev_data;
+ 	struct pci_dev_entry *dev_entry, *t;
+@@ -87,8 +87,13 @@ static void __xen_pcibk_release_pci_dev(struct xen_pcibk_device *pdev,
  
--	if (!dev->pm_cap)
-+	if (!dev->pm_cap || dev->dev_flags & PCI_DEV_FLAGS_NO_PM_RESET)
- 		return -ENOTTY;
+ 	mutex_unlock(&dev_data->lock);
  
- 	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &csr);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5be8db4..aea347d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -175,6 +175,8 @@ enum pci_dev_flags {
- 	PCI_DEV_FLAGS_DMA_ALIAS_DEVFN = (__force pci_dev_flags_t) (1 << 4),
- 	/* Use a PCIe-to-PCI bridge alias even if !pci_is_pcie */
- 	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) (1 << 5),
-+	/* Do not use PM reset even if device advertises NoSoftRst- */
-+	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 6),
- };
+-	if (found_dev)
++	if (found_dev) {
++		if (lock)
++			device_lock(&found_dev->dev);
+ 		pcistub_put_pci_dev(found_dev);
++		if (lock)
++			device_unlock(&found_dev->dev);
++	}
+ }
  
- enum pci_irq_reroute_variant {
+ static int __xen_pcibk_init_devices(struct xen_pcibk_device *pdev)
+@@ -156,8 +161,11 @@ static void __xen_pcibk_release_devices(struct xen_pcibk_device *pdev)
+ 	struct pci_dev_entry *dev_entry, *t;
+ 
+ 	list_for_each_entry_safe(dev_entry, t, &dev_data->dev_list, list) {
++		struct pci_dev *dev = dev_entry->dev;
+ 		list_del(&dev_entry->list);
+-		pcistub_put_pci_dev(dev_entry->dev);
++		device_lock(&dev->dev);
++		pcistub_put_pci_dev(dev);
++		device_unlock(&dev->dev);
+ 		kfree(dev_entry);
+ 	}
+ 
+diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+index 017069a..9cbe1a3 100644
+--- a/drivers/xen/xen-pciback/pci_stub.c
++++ b/drivers/xen/xen-pciback/pci_stub.c
+@@ -250,6 +250,8 @@ struct pci_dev *pcistub_get_pci_dev(struct xen_pcibk_device *pdev,
+  *  - 'echo BDF > unbind' with a guest still using it. See pcistub_remove
+  *
+  *  As such we have to be careful.
++ *
++ *  To make this easier, the caller has to hold the device lock.
+  */
+ void pcistub_put_pci_dev(struct pci_dev *dev)
+ {
+@@ -276,11 +278,8 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
+ 	/* Cleanup our device
+ 	 * (so it's ready for the next domain)
+ 	 */
+-
+-	/* This is OK - we are running from workqueue context
+-	 * and want to inhibit the user from fiddling with 'reset'
+-	 */
+-	pci_reset_function(dev);
++	lockdep_assert_held(&dev->dev.mutex);
++	__pci_reset_function_locked(dev);
+ 	pci_restore_state(dev);
+ 
+ 	/* This disables the device. */
+@@ -567,7 +566,8 @@ static void pcistub_remove(struct pci_dev *dev)
+ 			/* N.B. This ends up calling pcistub_put_pci_dev which ends up
+ 			 * doing the FLR. */
+ 			xen_pcibk_release_pci_dev(found_psdev->pdev,
+-						found_psdev->dev);
++						found_psdev->dev,
++						false /* caller holds the lock. */);
+ 		}
+ 
+ 		spin_lock_irqsave(&pcistub_devices_lock, flags);
+diff --git a/drivers/xen/xen-pciback/pciback.h b/drivers/xen/xen-pciback/pciback.h
+index f72af87..58e38d5 100644
+--- a/drivers/xen/xen-pciback/pciback.h
++++ b/drivers/xen/xen-pciback/pciback.h
+@@ -99,7 +99,8 @@ struct xen_pcibk_backend {
+ 		    unsigned int *domain, unsigned int *bus,
+ 		    unsigned int *devfn);
+ 	int (*publish)(struct xen_pcibk_device *pdev, publish_pci_root_cb cb);
+-	void (*release)(struct xen_pcibk_device *pdev, struct pci_dev *dev);
++	void (*release)(struct xen_pcibk_device *pdev, struct pci_dev *dev,
++                        bool lock);
+ 	int (*add)(struct xen_pcibk_device *pdev, struct pci_dev *dev,
+ 		   int devid, publish_pci_dev_cb publish_cb);
+ 	struct pci_dev *(*get)(struct xen_pcibk_device *pdev,
+@@ -122,10 +123,10 @@ static inline int xen_pcibk_add_pci_dev(struct xen_pcibk_device *pdev,
+ }
+ 
+ static inline void xen_pcibk_release_pci_dev(struct xen_pcibk_device *pdev,
+-					     struct pci_dev *dev)
++					     struct pci_dev *dev, bool lock)
+ {
+ 	if (xen_pcibk_backend && xen_pcibk_backend->release)
+-		return xen_pcibk_backend->release(pdev, dev);
++		return xen_pcibk_backend->release(pdev, dev, lock);
+ }
+ 
+ static inline struct pci_dev *
+diff --git a/drivers/xen/xen-pciback/vpci.c b/drivers/xen/xen-pciback/vpci.c
+index 51afff9..c99f8bb 100644
+--- a/drivers/xen/xen-pciback/vpci.c
++++ b/drivers/xen/xen-pciback/vpci.c
+@@ -145,7 +145,7 @@ out:
+ }
+ 
+ static void __xen_pcibk_release_pci_dev(struct xen_pcibk_device *pdev,
+-					struct pci_dev *dev)
++					struct pci_dev *dev, bool lock)
+ {
+ 	int slot;
+ 	struct vpci_dev_data *vpci_dev = pdev->pci_dev_data;
+@@ -169,8 +169,13 @@ static void __xen_pcibk_release_pci_dev(struct xen_pcibk_device *pdev,
+ out:
+ 	mutex_unlock(&vpci_dev->lock);
+ 
+-	if (found_dev)
++	if (found_dev) {
++		if (lock)
++			device_lock(&found_dev->dev);
+ 		pcistub_put_pci_dev(found_dev);
++		if (lock)
++			device_unlock(&found_dev->dev);
++	}
+ }
+ 
+ static int __xen_pcibk_init_devices(struct xen_pcibk_device *pdev)
+@@ -208,8 +213,11 @@ static void __xen_pcibk_release_devices(struct xen_pcibk_device *pdev)
+ 		struct pci_dev_entry *e, *tmp;
+ 		list_for_each_entry_safe(e, tmp, &vpci_dev->dev_list[slot],
+ 					 list) {
++			struct pci_dev *dev = e->dev;
+ 			list_del(&e->list);
+-			pcistub_put_pci_dev(e->dev);
++			device_lock(&dev->dev);
++			pcistub_put_pci_dev(dev);
++			device_unlock(&dev->dev);
+ 			kfree(e);
+ 		}
+ 	}
+diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
+index ad8d30c..eeee499 100644
+--- a/drivers/xen/xen-pciback/xenbus.c
++++ b/drivers/xen/xen-pciback/xenbus.c
+@@ -291,7 +291,7 @@ static int xen_pcibk_remove_device(struct xen_pcibk_device *pdev,
+ 
+ 	/* N.B. This ends up calling pcistub_put_pci_dev which ends up
+ 	 * doing the FLR. */
+-	xen_pcibk_release_pci_dev(pdev, dev);
++	xen_pcibk_release_pci_dev(pdev, dev, true /* use the lock. */);
+ 
+ out:
+ 	return err;
+-- 
+1.9.3
 
