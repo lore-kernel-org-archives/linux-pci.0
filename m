@@ -1,82 +1,113 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH 2/3] PCI/x86: Add arch_supports_multivector_msi() hook
-To: bhelgaas@google.com
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:65206 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932486AbaKURUV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 12:20:21 -0500
+Received: by mail-ig0-f171.google.com with SMTP id uq10so6964610igb.4
+        for <linux-pci@vger.kernel.org>; Fri, 21 Nov 2014 09:20:21 -0800 (PST)
+Date: Fri, 21 Nov 2014 10:20:18 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>, g@google.com
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, tglx@linutronix.de, mingo@redhat.com,
-	hpa@zytor.com, joro@8bytes.org, iommu@lists.linux-foundation.org
-Date: Fri, 21 Nov 2014 15:08:40 -0700
-Message-ID: <20141121220839.31095.64245.stgit@gimli.home>
-In-Reply-To: <20141121213752.31095.30735.stgit@gimli.home>
-References: <20141121213752.31095.30735.stgit@gimli.home>
+	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Subject: Re: [PATCH 00/10] Save MSI chip in pci_sys_data
+Message-ID: <20141121172018.GA6578@google.com>
+References: <1414396127-30023-1-git-send-email-wangyijing@huawei.com>
+ <20141112042359.GK28161@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141112042359.GK28161@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-x86 does support multivector MSI, but only when using interrupt
-remapping.  Extend x86_msi_ops to add an optional callback for
-this and assume unsupported when not present.
+[+cc Marc]
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
+On Tue, Nov 11, 2014 at 09:23:59PM -0700, Bjorn Helgaas wrote:
+> On Mon, Oct 27, 2014 at 03:48:37PM +0800, Yijing Wang wrote:
+> > Now PCI host bridge drivers in arm associate MSI chip and
+> > PCI bus by adding .add_bus(), and assign MSI chip pointer
+> > to every PCI bus. Associating MSI chip and every PCI bus
+> > is not necessary. All PCI busses under same PCI host brdige
+> > share the same MSI chip. So saving MSI chip in pci_sys_data
+> > is a better solution, it make PCI host bridge drivers clean.
+> > Because we still need to provide arch spec pcibios_msi_controller()
+> > to extract MSI controller pointer, a better solution is to
+> > refactor PCI host bridge, make a generic pci_host_bridge, and
+> > save common info like PCI domain number, MSI chip, resources
+> > in it. We will do that work in another series as soon.
+> > 
+> > To Bjorn: Because struct msi_chip defined in struct hw_pci and pci_sys_data
+> > is under the #ifdef CONFIG_PCI_MSI, if we use if(IS_ENABLED(CONFIG_PCI_MSI))
+> > in PCI host bridge drivers, it will cause build errors when the CONFIG_PCI_MSI
+> > is off. So I keep #ifdef CONFIG_PCI_MSI in this series.
+> > 
+> > Yijing Wang (10):
+> >   MSI: Rename msi_chip to msi_controller for better readability
+> >   PCI/MSI: Introduce weak pcibios_msi_controller()
+> >   arm/MSI: Save MSI controller in pci_sys_data
+> >   PCI: tegra: Save MSI controller in pci_sys_data
+> >   PCI: designware: Save MSI controller in pci_sys_data
+> >   PCI: rcar: Save MSI controller in pci_sys_data
+> >   PCI: mvebu: Save MSI controller in pci_sys_data
+> >   PCI: xilinx: Save MSI controller in pci_sys_data
+> >   arm/PCI: Clean unused pcibios_add_bus() and pcibios_remove_bus()
+> >   PCI/MSI: Remove useless bus->msi assignment
+> > 
+> >  arch/arm/include/asm/mach/pci.h     |   10 +++++---
+> >  arch/arm/kernel/bios32.c            |   28 ++++++++++--------------
+> >  drivers/irqchip/irq-armada-370-xp.c |   22 +++++++++---------
+> >  drivers/of/of_pci.c                 |   40 +++++++++++++++++-----------------
+> >  drivers/pci/host/pci-keystone-dw.c  |    4 +-
+> >  drivers/pci/host/pci-keystone.h     |    2 +-
+> >  drivers/pci/host/pci-mvebu.c        |   14 ++++-------
+> >  drivers/pci/host/pci-tegra.c        |   37 +++++++++++++-------------------
+> >  drivers/pci/host/pcie-designware.c  |   25 +++++++--------------
+> >  drivers/pci/host/pcie-designware.h  |    2 +-
+> >  drivers/pci/host/pcie-rcar.c        |   37 +++++++++++++-------------------
+> >  drivers/pci/host/pcie-xilinx.c      |   27 +++++++----------------
+> >  drivers/pci/msi.c                   |   22 ++++++++++++++-----
+> >  drivers/pci/probe.c                 |    1 -
+> >  include/linux/msi.h                 |    6 ++--
+> >  include/linux/of_pci.h              |   14 ++++++------
+> >  include/linux/pci.h                 |    2 +-
+> >  17 files changed, 132 insertions(+), 161 deletions(-)
+> > 
+> 
+> Applied to pci/msi for v3.19, thanks.
 
- arch/x86/include/asm/x86_init.h |    1 +
- arch/x86/kernel/x86_init.c      |    6 ++++++
- drivers/iommu/irq_remapping.c   |    6 ++++++
- 3 files changed, 13 insertions(+)
+I reworked this series slightly to:
 
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index e45e4da..28951c6 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -185,6 +185,7 @@ struct x86_msi_ops {
- 	int  (*setup_hpet_msi)(unsigned int irq, unsigned int id);
- 	u32 (*msi_mask_irq)(struct msi_desc *desc, u32 mask, u32 flag);
- 	u32 (*msix_mask_irq)(struct msi_desc *desc, u32 flag);
-+	bool (*supports_multivector)(struct pci_dev *dev);
- };
- 
- struct IO_APIC_route_entry;
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index e48b674..d917410 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -148,6 +148,12 @@ u32 arch_msix_mask_irq(struct msi_desc *desc, u32 flag)
- {
- 	return x86_msi.msix_mask_irq(desc, flag);
- }
-+bool arch_supports_multivector_msi(struct pci_dev *dev)
-+{
-+	if (x86_msi.supports_multivector)
-+		return x86_msi.supports_multivector(dev);
-+	return false;
-+}
- #endif
- 
- struct x86_io_apic_ops x86_io_apic_ops = {
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 74a1767..4310bfb 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -160,6 +160,11 @@ static void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
- 	io_apic_eoi(apic, pin);
- }
- 
-+static bool remapped_supports_multivector(struct pci_dev *dev)
-+{
-+	return true;
-+}
-+
- static void __init irq_remapping_modify_x86_ops(void)
- {
- 	x86_io_apic_ops.disable		= irq_remapping_disable_io_apic;
-@@ -169,6 +174,7 @@ static void __init irq_remapping_modify_x86_ops(void)
- 	x86_msi.setup_msi_irqs		= irq_remapping_setup_msi_irqs;
- 	x86_msi.setup_hpet_msi		= setup_hpet_msi_remapped;
- 	x86_msi.compose_msi_msg		= compose_remapped_msi_msg;
-+	x86_msi.supports_multivector	= remapped_supports_multivector;
- }
- 
- static __init int setup_nointremap(char *str)
+  - Change pci_msi_controller() and pcibios_msi_controller() from taking a
+    pci_bus * to taking a pci_dev *.  This is so the interface allows
+    per-device MSI controllers.  I don't think there's any reason to assume
+    all devices on a bus have to have the same controller.
 
+  - Drop the last patch ("PCI/MSI: Remove useless bus->msi assignment")
+    because it broke Marc's follow-on patches.
+
+I updated pci/msi, but I haven't put it in my "next" branch yet because I
+want confirmation from Fengguang's autobuilder that I didn't break
+anything.
+
+Current status of my tree:
+
+    6cf00af0ae15 [1] pci/msi (contains this rework)
+    149792795d2b [2] next (does *not* contain this rework)
+
+Thomas, if pci/msi looks good to you, feel free to pull it into your tree.
+The only change you should need to make is to change the parameters to
+pci_msi_controller() and pcibios_msi_controller().
+
+Just FYI, I'm leaving on vacation for a week, so I won't be able to fix any
+issues until Dec 1.
+
+Bjorn
+
+[1] https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=next&id=6cf00af0ae15
+[2] https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=next&id=149792795d2b
