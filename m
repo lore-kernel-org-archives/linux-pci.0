@@ -1,71 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 11 Nov 2014 21:23:59 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>, g@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH 00/10] Save MSI chip in pci_sys_data
-Message-ID: <20141112042359.GK28161@google.com>
-References: <1414396127-30023-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:27156 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756779AbaKUCtM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 20 Nov 2014 21:49:12 -0500
+Message-ID: <546EA823.8030401@linux.intel.com>
+Date: Fri, 21 Nov 2014 10:49:07 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1414396127-30023-1-git-send-email-wangyijing@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Thomas Gleixner <tglx@linutronix.de>
+CC: marc.zyngier@arm.com, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] irqdomain: Fix NULL pointer dererence in irq_domain_free_irqs_parent
+References: <1416531745-24661-1-git-send-email-suravee.suthikulpanit@amd.com> <alpine.DEB.2.11.1411210219370.6439@nanos> <546E9E8E.5000303@amd.com>
+In-Reply-To: <546E9E8E.5000303@amd.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 27, 2014 at 03:48:37PM +0800, Yijing Wang wrote:
-> Now PCI host bridge drivers in arm associate MSI chip and
-> PCI bus by adding .add_bus(), and assign MSI chip pointer
-> to every PCI bus. Associating MSI chip and every PCI bus
-> is not necessary. All PCI busses under same PCI host brdige
-> share the same MSI chip. So saving MSI chip in pci_sys_data
-> is a better solution, it make PCI host bridge drivers clean.
-> Because we still need to provide arch spec pcibios_msi_controller()
-> to extract MSI controller pointer, a better solution is to
-> refactor PCI host bridge, make a generic pci_host_bridge, and
-> save common info like PCI domain number, MSI chip, resources
-> in it. We will do that work in another series as soon.
-> 
-> To Bjorn: Because struct msi_chip defined in struct hw_pci and pci_sys_data
-> is under the #ifdef CONFIG_PCI_MSI, if we use if(IS_ENABLED(CONFIG_PCI_MSI))
-> in PCI host bridge drivers, it will cause build errors when the CONFIG_PCI_MSI
-> is off. So I keep #ifdef CONFIG_PCI_MSI in this series.
-> 
-> Yijing Wang (10):
->   MSI: Rename msi_chip to msi_controller for better readability
->   PCI/MSI: Introduce weak pcibios_msi_controller()
->   arm/MSI: Save MSI controller in pci_sys_data
->   PCI: tegra: Save MSI controller in pci_sys_data
->   PCI: designware: Save MSI controller in pci_sys_data
->   PCI: rcar: Save MSI controller in pci_sys_data
->   PCI: mvebu: Save MSI controller in pci_sys_data
->   PCI: xilinx: Save MSI controller in pci_sys_data
->   arm/PCI: Clean unused pcibios_add_bus() and pcibios_remove_bus()
->   PCI/MSI: Remove useless bus->msi assignment
-> 
->  arch/arm/include/asm/mach/pci.h     |   10 +++++---
->  arch/arm/kernel/bios32.c            |   28 ++++++++++--------------
->  drivers/irqchip/irq-armada-370-xp.c |   22 +++++++++---------
->  drivers/of/of_pci.c                 |   40 +++++++++++++++++-----------------
->  drivers/pci/host/pci-keystone-dw.c  |    4 +-
->  drivers/pci/host/pci-keystone.h     |    2 +-
->  drivers/pci/host/pci-mvebu.c        |   14 ++++-------
->  drivers/pci/host/pci-tegra.c        |   37 +++++++++++++-------------------
->  drivers/pci/host/pcie-designware.c  |   25 +++++++--------------
->  drivers/pci/host/pcie-designware.h  |    2 +-
->  drivers/pci/host/pcie-rcar.c        |   37 +++++++++++++-------------------
->  drivers/pci/host/pcie-xilinx.c      |   27 +++++++----------------
->  drivers/pci/msi.c                   |   22 ++++++++++++++-----
->  drivers/pci/probe.c                 |    1 -
->  include/linux/msi.h                 |    6 ++--
->  include/linux/of_pci.h              |   14 ++++++------
->  include/linux/pci.h                 |    2 +-
->  17 files changed, 132 insertions(+), 161 deletions(-)
-> 
 
-Applied to pci/msi for v3.19, thanks.
+
+On 2014/11/21 10:08, Suravee Suthikulpanit wrote:
+> On 11/20/2014 07:32 PM, Thomas Gleixner wrote:
+>> On Thu, 20 Nov 2014, suravee.suthikulpanit@amd.com wrote:
+>>> This patch checks if the parent domain is NULL before recursively
+>>> freeing
+>>> irqs in the parent domains.
+>>
+>> Which is nonsense, because if the thing has not been allocated in the
+>> first place, then it cannot explode in the free path magically, except
+>> there is a missing check in the allocation path error handling.
+>>
+>> And that's obviously not the case simply because this originates from:
+>>> [<fffffe0000449278>] pci_disable_msix+0x40/0x50
+>>
+> 
+> Thomas,
+> 
+> In this case, I have the following irq domain hierarchy:
+> 
+> [GIC] -- [GICv2m] -- [MSI]
+> 
+> which recursively calling the freeing function:
+> 
+> In GIC domain, it currently defines the struct irq_domain_ops.free() with :
+>   --> irq_domain_free_irqs_top()
+>     |--> irq_domain_free_irqs_common()
+>       |--> irq_domain_free_irq_parent()
+>         |--> irq_domain_free_irqs_recursive()
+> 
+> and there is no check before passing the NULL domain->parent into the
+> irq_domain_free_irqs_recursive(), which causes the error.
+> 
+> Since the GIC is the top most domain, it does not have parent domain.
+> So, I'm not sure what is missing from the allocation path error
+> handling, as you mentioned.
+Hi Thomas,
+	We have had a discussion about this issue in another thread.
+Originally irq_domain_free_irqs_common() is designed to be used by
+irqdomains with parent. But there are desires to reuse it to support
+irqdomains without parent too for code reduction.
+So I suggest to change irq_domain_free_irqs_common() instead of
+irq_domain_free_irqs_parent() because caller of
+irq_domain_free_irqs_parent() should guarantee current domain do have
+a parent.
+I'm preparing a patch for this:)
+Regards!
+Gerry
+> 
+> Thanks,
+> 
+> Suravee
