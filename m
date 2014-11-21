@@ -1,82 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:53795 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752973AbaKJMvv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Nov 2014 07:51:51 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [RFC PATCH] drivers: of: move PCI domain assignment to generic OF code
-Date: Mon, 10 Nov 2014 13:51:19 +0100
-Message-ID: <1459907.RIyEjnM4cg@wuerfel>
-In-Reply-To: <1415622368-14612-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1415622368-14612-1-git-send-email-lorenzo.pieralisi@arm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH 4/4] PCI: quirk Atheros AR93xx to avoid bus reset
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Alex Williamson <alex.williamson@redhat.com>
+Date: Fri, 21 Nov 2014 11:24:27 -0700
+Message-ID: <20141121182427.26669.82417.stgit@gimli.home>
+In-Reply-To: <20141121180322.26669.65689.stgit@gimli.home>
+References: <20141121180322.26669.65689.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 10 November 2014 12:26:08 Lorenzo Pieralisi wrote:
-> ---
->  arch/arm64/kernel/pci.c | 14 +++--------
->  drivers/of/of_pci.c     | 66 +++++++++++++++++++++++++++++++++++++++++++++++--
->  include/linux/of_pci.h  |  7 +++---
->  3 files changed, 71 insertions(+), 16 deletions(-)
-> 
-> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> index ce5836c..5e21c1c 100644
-> --- a/arch/arm64/kernel/pci.c
-> +++ b/arch/arm64/kernel/pci.c
-> @@ -49,20 +49,14 @@ int pcibios_add_device(struct pci_dev *dev)
->  
->  
->  #ifdef CONFIG_PCI_DOMAINS_GENERIC
-> -static bool dt_domain_found = false;
->  
->  void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
->  {
-> -	int domain = of_get_pci_domain_nr(parent->of_node);
-> +	int domain = of_assign_pci_domain_nr(parent->of_node);
->  
-> -	if (domain >= 0) {
-> -		dt_domain_found = true;
-> -	} else if (dt_domain_found == true) {
-> -		dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
-> -			parent->of_node->full_name);
-> -		return;
-> -	} else {
-> -		domain = pci_get_new_domain_nr();
-> +	if (domain < 0) {
-> +		dev_err(parent, "PCI domain assignment failed\n");
-> +		domain = -1;
->  	}
->  
->  	bus->domain_nr = domain;
+Reports against the TL-WDN4800 card indicate that PCI bus reset of
+this Atheros device cause system lock-ups and resets.  I've also
+been able to confirm this behavior on multiple systems.  The device
+never returns from reset and attempts to access config space of the
+device after reset result in hangs.  Blacklist bus reset for the
+device to avoid this issue.
 
-Is there a need to still keep this in architecture specific code? Why
-not move it to drivers/pci and let other firmware infrastructure
-hook in there directly.
+Reported-by: Andreas Hartmann <andihartmann@freenet.de>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Tested-by: Andreas Hartmann <andihartmann@freenet.de>
+---
 
->  {
-> @@ -45,10 +45,9 @@ of_pci_parse_bus_range(struct device_node *node, struct resource *res)
->  	return -EINVAL;
->  }
->  
-> -static inline int
-> -of_get_pci_domain_nr(struct device_node *node)
-> +static inline int of_assign_pci_domain_nr(struct device_node *node)
->  {
-> -	return -1;
-> +	return pci_get_new_domain_nr();
->  }
->  #endif
+ drivers/pci/quirks.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-This gets a bit tricky otherwise once we add ACPI in the mix, with all
-combinations of OF and ACPI at compile time and at runtime.
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 561e10d..ebbd5b4 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3029,6 +3029,20 @@ static void quirk_no_pm_reset(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_ATI, PCI_ANY_ID,
+ 			       PCI_CLASS_DISPLAY_VGA, 8, quirk_no_pm_reset);
+ 
++static void quirk_no_bus_reset(struct pci_dev *dev)
++{
++	dev->dev_flags |= PCI_DEV_FLAGS_NO_BUS_RESET;
++}
++
++/*
++ * Atheros AR93xx chips do not behave after a bus reset.  The device will
++ * throw a Link Down error on AER capable system and regardless of AER,
++ * config space of the device is never accessible again and typically
++ * causes the system to hang or reset when access is attempted.
++ * http://www.spinics.net/lists/linux-pci/msg34797.html
++ */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0030, quirk_no_bus_reset);
++
+ #ifdef CONFIG_ACPI
+ /*
+  * Apple: Shutdown Cactus Ridge Thunderbolt controller.
 
-	Arnd
