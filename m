@@ -1,35 +1,71 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	catalin.marinas@arm.com, will.deacon@arm.com, bhelgaas@google.com,
-	Liviu.Dudau@arm.com, tglx@linutronix.de, mingo@redhat.com,
-	hpa@zytor.com, rjw@rjwysocki.net, linaro-acpi@lists.linaro.org,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [RFC PATCH 2/4] x86, acpi, pci: Isolate new PCI mmconfig entry insertion.
-Date: Fri, 07 Nov 2014 15:09:10 +0100
-Message-ID: <1927317.6tJuq4S5Om@wuerfel>
-In-Reply-To: <1415366876-30811-3-git-send-email-tomasz.nowicki@linaro.org>
-References: <1415366876-30811-1-git-send-email-tomasz.nowicki@linaro.org> <1415366876-30811-3-git-send-email-tomasz.nowicki@linaro.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:50043 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751514AbaKUSYL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 21 Nov 2014 13:24:11 -0500
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH 1/4] PCI: Allow device quirks to exclude D3->D0 PM reset
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Alex Williamson <alex.williamson@redhat.com>
+Date: Fri, 21 Nov 2014 11:24:08 -0700
+Message-ID: <20141121182408.26669.23377.stgit@gimli.home>
+In-Reply-To: <20141121180322.26669.65689.stgit@gimli.home>
+References: <20141121180322.26669.65689.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 07 November 2014 14:27:54 Tomasz Nowicki wrote:
-> Add special pci_mmcfg_insert_lock mutex since pci_mmcfg_lock was moved
-> to common file. No functional changes.
-> 
-> Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-> 
+The PCI PM spec indicates that when No_Soft_Reset is clear
+(NoSoftRst-) that the device performs an internal reset when
+transitioning From D3hot to D0.  Configuration context is lost and
+the device requires a full reinitialization sequence.
 
-What is the new lock protecting against? You no longer have a mutual
-exclusion with the other code, which looks like it is a functional
-change, and also incorrect.
+Unfortunately the definition of "internal reset", beyond the
+application of the configuration context, is largely left to the
+interpretation of the specific device.  For some devices, setting
+NoSoftRst- appears arbitrary and no obvious "internal reset" occurs
+on D3hot to D0 transition.
 
-It also sounds like the code was broken after the first patch and
-you need this one to make it compile again. You can't do that, and
-instead need to change the locking rules first.
+We still need to honor the PCI specification and restore PCI config
+context in the event that we do a PM reset, so we don't cache and
+modify the PCI_PM_CTRL_NO_SOFT_RESET bit for the device, but for
+interfaces where the intention is to reset the device, like
+pci_reset_function(), we need a mechanism to flag that PM reset
+doesn't perform any significant "internal reset" of the device.
 
-	Arnd
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+
+ drivers/pci/pci.c   |    2 +-
+ include/linux/pci.h |    2 ++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 625a4ac..ba54a5a 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3206,7 +3206,7 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+ {
+ 	u16 csr;
+ 
+-	if (!dev->pm_cap)
++	if (!dev->pm_cap || dev->dev_flags & PCI_DEV_FLAGS_NO_PM_RESET)
+ 		return -ENOTTY;
+ 
+ 	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &csr);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5be8db4..aea347d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -175,6 +175,8 @@ enum pci_dev_flags {
+ 	PCI_DEV_FLAGS_DMA_ALIAS_DEVFN = (__force pci_dev_flags_t) (1 << 4),
+ 	/* Use a PCIe-to-PCI bridge alias even if !pci_is_pcie */
+ 	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) (1 << 5),
++	/* Do not use PM reset even if device advertises NoSoftRst- */
++	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 6),
+ };
+ 
+ enum pci_irq_reroute_variant {
+
