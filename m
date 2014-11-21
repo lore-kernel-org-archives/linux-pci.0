@@ -1,55 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp2.tech.numericable.fr ([82.216.111.38]:53425 "EHLO
-	smtp2.tech.numericable.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751261AbaKFVCx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 16:02:53 -0500
-Message-ID: <545BE1EA.5020808@laposte.net>
-Date: Thu, 06 Nov 2014 22:02:34 +0100
-From: Barto <mister.freeman@laposte.net>
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:36299 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758418AbaKUKLS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 05:11:18 -0500
+Message-ID: <546F0FB6.3050404@arm.com>
+Date: Fri, 21 Nov 2014 10:11:02 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Liu, Chuansheng" <chuansheng.liu@intel.com>
-CC: "Lu, Aaron" <aaron.lu@intel.com>,
-	"Tejun Heo (tj@kernel.org)" <tj@kernel.org>,
-	Rafael Wysocki <rjw@rjwysocki.net>,
+To: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Thomas Gleixner <tglx@linutronix.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Do not enable async suspend for JMicron chips
-References: <1415151063-2530-1-git-send-email-chuansheng.liu@intel.com> <CAErSpo6cWP2ngErLVzqASkeQOLsB7JjgCC8UuA-S=Lz=AJyf6Q@mail.gmail.com> <545A7087.3050802@laposte.net> <CAErSpo4fvoeP9Gab1ZDg=ofjH+aqxGD09nLDTF1ZERnH=yEPxw@mail.gmail.com> <27240C0AC20F114CBF8149A2696CBE4A01EB7713@SHSMSX101.ccr.corp.intel.com> <CAErSpo4py1GdxczyzgLxjbgmfGEQ6o+He=7wxuVS0BM-Oyd6_w@mail.gmail.com> <27240C0AC20F114CBF8149A2696CBE4A01EB7B96@SHSMSX101.ccr.corp.intel.com> <545B08DF.2090608@intel.com> <27240C0AC20F114CBF8149A2696CBE4A01EB7CC3@SHSMSX101.ccr.corp.intel.com> <CAErSpo6ugBFdempQGqXUfO4Pt=SVHyDSH3t=awngDdjXhcrk+w@mail.gmail.com>
-In-Reply-To: <CAErSpo6ugBFdempQGqXUfO4Pt=SVHyDSH3t=awngDdjXhcrk+w@mail.gmail.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>
+Subject: Re: Removal of bus->msi assignment breaks MSI with stacked domains
+References: <546E1771.4030201@arm.com> <546E93DC.8010902@huawei.com>
+In-Reply-To: <546E93DC.8010902@huawei.com>
 Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-> The idea of a quirk is to work around a defect in a device.  What is
-> the defect in this case?  It seems there are two devices involved,
-> e.g. (from https://bugzilla.kernel.org/show_bug.cgi?id=81551):
+On 21/11/14 01:22, Yijing Wang wrote:
+> On 2014/11/21 0:31, Marc Zyngier wrote:
+>> Bjorn, Yijing,
+>>
+>> I've just realized that patch c167caf8d174 (PCI/MSI: Remove useless
+>> bus->msi assignment) completely breaks MSI on arm64 when using the new
+>> MSI stacked domain:
 > 
->   02:00.0 JMicron Technology Corp. JMB363 SATA/IDE Controller
->   02:00.1 JMicron Technology Corp. JMB363 SATA/IDE Controller
+> Sorry, this is my first part to refactor MSI related code, now
+> how to get pci msi_controller depends arch functions(pcibios_msi_controller() or
+> arch_setup_msi_irq()), we are working on generic pci_host_bridge, after that,
+> we could eventually eliminate MSI arch functions and find pci dev 's msi controller
+> by pci_host_bridge->get_msi_controller().
 > 
+> Marc, could you tell me what pci host driver in your test platform ?
 
-in my case I don't have exactly the same lines in dmesg,
+I'm using pci-host-generic (with a couple of patches to help it fit the
+new "generic pci" infrastructure).
 
-my JMicron JMB363/368 seems to have a different design, it's not exactly
-identical to JMB363 SATA/IDE Controller, in dmesg I can read this :
+This lives at:
+git://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git
+irq/arm64-pci
 
-dmesg | grep micron
+Thanks,
 
-[    0.860659] pata_jmicron 0000:03:00.1: enabling device (0000 -> 0001)
-[    0.866760] scsi0 : pata_jmicron
-[    0.870045] scsi1 : pata_jmicron
-
-lspci :
-
-lspci | grep JMicron
-
-03:00.0 SATA controller: JMicron Technology Corp. JMB363 SATA/IDE
-Controller (rev 10)
-03:00.1 IDE interface: JMicron Technology Corp. JMB368 IDE controller
-(rev 10)
-
-
-
-
+	M.
+-- 
+Jazz is not dead. It just smells funny...
