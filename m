@@ -1,38 +1,70 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <545CDA87.2040701@linaro.org>
-Date: Fri, 07 Nov 2014 15:43:19 +0100
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from www.linutronix.de ([62.245.132.108]:56074 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750734AbaKUKtP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 05:49:15 -0500
+Date: Fri, 21 Nov 2014 11:49:05 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Marc Zyngier <marc.zyngier@arm.com>
+cc: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@kernel.org>,
+	Arjan van de Ven <arjan@infradead.org>,
+	David Woodhouse <dwmw2@infradead.org>
+Subject: Re: Removal of bus->msi assignment breaks MSI with stacked domains
+In-Reply-To: <546F140B.1050607@arm.com>
+Message-ID: <alpine.DEB.2.11.1411211142051.6439@nanos>
+References: <546E1771.4030201@arm.com> <546E93DC.8010902@huawei.com> <alpine.DEB.2.11.1411210233250.6439@nanos> <546F140B.1050607@arm.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
-CC: catalin.marinas@arm.com, will.deacon@arm.com, bhelgaas@google.com,
-	Liviu.Dudau@arm.com, tglx@linutronix.de, mingo@redhat.com,
-	hpa@zytor.com, rjw@rjwysocki.net, linaro-acpi@lists.linaro.org,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [RFC PATCH 2/4] x86, acpi, pci: Isolate new PCI mmconfig entry
- insertion.
-References: <1415366876-30811-1-git-send-email-tomasz.nowicki@linaro.org> <1415366876-30811-3-git-send-email-tomasz.nowicki@linaro.org> <1927317.6tJuq4S5Om@wuerfel>
-In-Reply-To: <1927317.6tJuq4S5Om@wuerfel>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07.11.2014 15:09, Arnd Bergmann wrote:
-> On Friday 07 November 2014 14:27:54 Tomasz Nowicki wrote:
->> Add special pci_mmcfg_insert_lock mutex since pci_mmcfg_lock was moved
->> to common file. No functional changes.
->>
->> Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
->>
->
-> What is the new lock protecting against? You no longer have a mutual
-> exclusion with the other code, which looks like it is a functional
-> change, and also incorrect.
->
-> It also sounds like the code was broken after the first patch and
-> you need this one to make it compile again. You can't do that, and
-> instead need to change the locking rules first.
+Marc,
 
-Oh, that's right! Sorry I will take a look again.
+On Fri, 21 Nov 2014, Marc Zyngier wrote:
+> On 21/11/14 01:46, Thomas Gleixner wrote:
+> > So the real question is:
+> > 
+> >    What is the association level requirement to properly identify the
+> >    irqdomain for a specific device on any given architecture with and
+> >    without IOMMU, interrupt redirection etc.
+> > 
+> > To be honest: I don't know.
+> > 
+> > My gut feeling tells me that it's at the device level, but I really
+> > leave that decision to the experts in that field.
+> 
+> Given the above requirement (single device associated to DMAR), I can
+> see two possibilities:
+> - we represent DMAR as a single PCI bus: feels a bit artificial
+> - we move the MSI domain to the device, as you suggested.
+> 
+> The second one seems a lot more attractive to me.
 
-Tomasz
+And that's very useful if you want to support MSI on non PCI
+devices.
+
+> Also, it is not clear to me what is the advantage of getting rid of the
+> MSI controller. By doing so, we loose an important part of the topology
+> information (the irq domain is another level of abstraction).
+
+That was probably my misunderstanding of the msi controller. I had the
+impression it's just there to expose the MSI properties of a device,
+i.e. a magic wrapper which can be replaced by the MSI irqdomain work.
+
+If that handles other information as well, then it's probably a
+misnomer to begin with.
+
+Thanks,
+
+	tglx
+
+
