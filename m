@@ -1,59 +1,84 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part3 v3 17/38] x86: Clean up unused forward declarations in x86_init.h
-Date: Sun,  9 Nov 2014 02:13:17 +0800
-Message-Id: <1415470418-10874-18-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1on0113.outbound.protection.outlook.com ([157.56.110.113]:53888
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756487AbaKUDHE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 20 Nov 2014 22:07:04 -0500
+Message-ID: <546EAC4E.9050808@amd.com>
+Date: Thu, 20 Nov 2014 21:06:54 -0600
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+MIME-Version: 1.0
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>
+CC: <marc.zyngier@arm.com>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] irqdomain: Fix NULL pointer dererence in irq_domain_free_irqs_parent
+References: <1416531745-24661-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <alpine.DEB.2.11.1411210219370.6439@nanos> <546E9E8E.5000303@amd.com>
+ <546EA823.8030401@linux.intel.com>
+In-Reply-To: <546EA823.8030401@linux.intel.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/x86_init.h |    6 ------
- 1 file changed, 6 deletions(-)
 
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index fa6b1b5128ee..3755cd2bbb94 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -171,7 +171,6 @@ struct x86_platform_ops {
- };
- 
- struct pci_dev;
--struct msi_msg;
- struct msi_desc;
- 
- struct x86_msi_ops {
-@@ -183,11 +182,6 @@ struct x86_msi_ops {
- 	u32 (*msix_mask_irq)(struct msi_desc *desc, u32 flag);
- };
- 
--struct IO_APIC_route_entry;
--struct io_apic_irq_attr;
--struct irq_data;
--struct cpumask;
--
- struct x86_io_apic_ops {
- 	void		(*init)   (void);
- 	unsigned int	(*read)   (unsigned int apic, unsigned int reg);
--- 
-1.7.10.4
 
+On 11/20/2014 08:49 PM, Jiang Liu wrote:
+>
+>
+> On 2014/11/21 10:08, Suravee Suthikulpanit wrote:
+>> On 11/20/2014 07:32 PM, Thomas Gleixner wrote:
+>>> On Thu, 20 Nov 2014, suravee.suthikulpanit@amd.com wrote:
+>>>> This patch checks if the parent domain is NULL before recursively
+>>>> freeing
+>>>> irqs in the parent domains.
+>>>
+>>> Which is nonsense, because if the thing has not been allocated in the
+>>> first place, then it cannot explode in the free path magically, except
+>>> there is a missing check in the allocation path error handling.
+>>>
+>>> And that's obviously not the case simply because this originates from:
+>>>> [<fffffe0000449278>] pci_disable_msix+0x40/0x50
+>>>
+>>
+>> Thomas,
+>>
+>> In this case, I have the following irq domain hierarchy:
+>>
+>> [GIC] -- [GICv2m] -- [MSI]
+>>
+>> which recursively calling the freeing function:
+>>
+>> In GIC domain, it currently defines the struct irq_domain_ops.free() with :
+>>    --> irq_domain_free_irqs_top()
+>>      |--> irq_domain_free_irqs_common()
+>>        |--> irq_domain_free_irq_parent()
+>>          |--> irq_domain_free_irqs_recursive()
+>>
+>> and there is no check before passing the NULL domain->parent into the
+>> irq_domain_free_irqs_recursive(), which causes the error.
+>>
+>> Since the GIC is the top most domain, it does not have parent domain.
+>> So, I'm not sure what is missing from the allocation path error
+>> handling, as you mentioned.
+> Hi Thomas,
+> 	We have had a discussion about this issue in another thread.
+> Originally irq_domain_free_irqs_common() is designed to be used by
+> irqdomains with parent. But there are desires to reuse it to support
+> irqdomains without parent too for code reduction.
+> So I suggest to change irq_domain_free_irqs_common() instead of
+> irq_domain_free_irqs_parent() because caller of
+> irq_domain_free_irqs_parent() should guarantee current domain do have
+> a parent.
+> I'm preparing a patch for this:)
+> Regards!
+> Gerry
+
+Thanks Gerry and Thomas.
+
+Suravee
+
+>>
+>> Thanks,
+>>
+>> Suravee
