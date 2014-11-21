@@ -1,79 +1,139 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:56732 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753843AbaKRKRd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 05:17:33 -0500
-Received: by mail-wg0-f51.google.com with SMTP id k14so7882049wgh.24
-        for <linux-pci@vger.kernel.org>; Tue, 18 Nov 2014 02:17:32 -0800 (PST)
-Message-ID: <546B1CA6.1030300@linaro.org>
-Date: Tue, 18 Nov 2014 11:17:10 +0100
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:36427 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758214AbaKUL3y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 06:29:54 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Krzysztof Halasa <khalasa@piap.pl>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v3 1/2] arm: cns3xxx: pci: remove artificial dependency on pci_sys_data domain
+Date: Fri, 21 Nov 2014 11:29:25 +0000
+Message-Id: <1416569367-29409-2-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1416569367-29409-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1416569367-29409-1-git-send-email-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>, linaro-acpi@lists.linaro.org
-CC: linux-arm-kernel@lists.infradead.org, rjw@rjwysocki.net,
-	linux-pci@vger.kernel.org, catalin.marinas@arm.com, x86@kernel.org,
-	Liviu.Dudau@arm.com, linux-kernel@vger.kernel.org,
-	will.deacon@arm.com, linux-acpi@vger.kernel.org, mingo@redhat.com,
-	hpa@zytor.com, bhelgaas@google.com, tglx@linutronix.de
-Subject: Re: [Linaro-acpi] [RFC PATCH 4/4] arm64, acpi, pci: Provide arch-specific
- calls for PCI host bridge dirver (PNP0A03).
-References: <1415366876-30811-1-git-send-email-tomasz.nowicki@linaro.org> <4474363.kMvYSLl2Ev@wuerfel> <54660D44.9020406@linaro.org> <2009440.GJsvyI3SUN@wuerfel>
-In-Reply-To: <2009440.GJsvyI3SUN@wuerfel>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 14.11.2014 15:53, Arnd Bergmann wrote:
-> On Friday 14 November 2014 15:10:12 Tomasz Nowicki wrote:
->> On 07.11.2014 15:24, Arnd Bergmann wrote:
->>> On Friday 07 November 2014 14:27:56 Tomasz Nowicki wrote:
->>>>
->>>>    #ifdef CONFIG_PCI
->>>> +struct pci_controller {
->>>> +	struct acpi_device *companion;
->>>> +	int segment;
->>>> +	int node;		/* nearest node with memory or NUMA_NO_NODE for global allocation */
->>>> +};
->>>> +
->>>> +#define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
->>>> +
->>>
->>> Don't use busdev->sysdata in architecture specific code, it belongs to the
->>> host bridge driver with the new model. For ACPI you don't have a host bridge
->>> driver, but it's better to keep these separate.
->>>
->>> The segment is always the same as the domain number, so just use that.
->>> The node and companion members here can get added to struct pci_host_bridge.
->>
->> The reason why I put segment field to struct pci_controller is to
->> initialize domain_nr of struct pci_bus being in pci_create_root_bus(),
->> domain_nr can be used later on though. Correct me I am wrong.
->>
->> Honestly I do not see the way to create root bus without e.g.
->> sysdata.segment here.
->
-> See the patches that Liviu and Lorenzo have been posting recently. This
-> should be straightforward in 3.19.
+On cns3xxx platforms the PCI controller probing code relies on an
+artificial dependency on the domain number to look-up the internal
+data structures.
 
-Hi Arnd,
+This patch reworks the host controller control data structure and
+adds a domain equivalent field named port in it so that the dependency on
+pci_sys_data domain field can be eventually removed.
 
-I have been looking into patch (if that what you meant) :
-[RFC PATCH v2] drivers: pci: move PCI domain assignment to generic PCI code
+Acked-by: Krzysztof Hałasa <khalasa@piap.pl>
+Cc: Krzysztof Halasa <khalasa@piap.pl>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+[lp: added commit log, removed pci_sys_data domain references]
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+---
+ arch/arm/mach-cns3xxx/pcie.c | 40 +++++++++++++++++-----------------------
+ 1 file changed, 17 insertions(+), 23 deletions(-)
 
-This is not enough for me since it gets domain number from its OF parent 
-or just uses sequential increased domain number. In my case, I do not 
-have parent so I need to get segment from ACPI node which is not 
-available there.
-
-On the other hand, patch set posted by Wang Yijing:
-[RFC PATCH 00/16] Refine PCI host bridge scan interfaces
-tends to solve that issue.
-
-What would be the best way for this patch, keep busdev->sysdata usage 
-and rebase once Wang Yijing patch set will be accepted?
-
-Regards,
-Tomasz
-
-
+diff --git a/arch/arm/mach-cns3xxx/pcie.c b/arch/arm/mach-cns3xxx/pcie.c
+index 45d6bd0..f6bf9f6 100644
+--- a/arch/arm/mach-cns3xxx/pcie.c
++++ b/arch/arm/mach-cns3xxx/pcie.c
+@@ -30,18 +30,15 @@ struct cns3xxx_pcie {
+ 	unsigned int irqs[2];
+ 	struct resource res_io;
+ 	struct resource res_mem;
+-	struct hw_pci hw_pci;
+-
++	int port;
+ 	bool linked;
+ };
+ 
+-static struct cns3xxx_pcie cns3xxx_pcie[]; /* forward decl. */
+-
+ static struct cns3xxx_pcie *sysdata_to_cnspci(void *sysdata)
+ {
+ 	struct pci_sys_data *root = sysdata;
+ 
+-	return &cns3xxx_pcie[root->domain];
++	return root->private_data;
+ }
+ 
+ static struct cns3xxx_pcie *pdev_to_cnspci(const struct pci_dev *dev)
+@@ -192,13 +189,7 @@ static struct cns3xxx_pcie cns3xxx_pcie[] = {
+ 			.flags = IORESOURCE_MEM,
+ 		},
+ 		.irqs = { IRQ_CNS3XXX_PCIE0_RC, IRQ_CNS3XXX_PCIE0_DEVICE, },
+-		.hw_pci = {
+-			.domain = 0,
+-			.nr_controllers = 1,
+-			.ops = &cns3xxx_pcie_ops,
+-			.setup = cns3xxx_pci_setup,
+-			.map_irq = cns3xxx_pcie_map_irq,
+-		},
++		.port = 0,
+ 	},
+ 	[1] = {
+ 		.host_regs = (void __iomem *)CNS3XXX_PCIE1_HOST_BASE_VIRT,
+@@ -217,19 +208,13 @@ static struct cns3xxx_pcie cns3xxx_pcie[] = {
+ 			.flags = IORESOURCE_MEM,
+ 		},
+ 		.irqs = { IRQ_CNS3XXX_PCIE1_RC, IRQ_CNS3XXX_PCIE1_DEVICE, },
+-		.hw_pci = {
+-			.domain = 1,
+-			.nr_controllers = 1,
+-			.ops = &cns3xxx_pcie_ops,
+-			.setup = cns3xxx_pci_setup,
+-			.map_irq = cns3xxx_pcie_map_irq,
+-		},
++		.port = 1,
+ 	},
+ };
+ 
+ static void __init cns3xxx_pcie_check_link(struct cns3xxx_pcie *cnspci)
+ {
+-	int port = cnspci->hw_pci.domain;
++	int port = cnspci->port;
+ 	u32 reg;
+ 	unsigned long time;
+ 
+@@ -260,9 +245,9 @@ static void __init cns3xxx_pcie_check_link(struct cns3xxx_pcie *cnspci)
+ 
+ static void __init cns3xxx_pcie_hw_init(struct cns3xxx_pcie *cnspci)
+ {
+-	int port = cnspci->hw_pci.domain;
++	int port = cnspci->port;
+ 	struct pci_sys_data sd = {
+-		.domain = port,
++		.private_data = cnspci,
+ 	};
+ 	struct pci_bus bus = {
+ 		.number = 0,
+@@ -323,6 +308,14 @@ static int cns3xxx_pcie_abort_handler(unsigned long addr, unsigned int fsr,
+ void __init cns3xxx_pcie_init_late(void)
+ {
+ 	int i;
++	void *private_data;
++	struct hw_pci hw_pci = {
++	       .nr_controllers = 1,
++	       .ops = &cns3xxx_pcie_ops,
++	       .setup = cns3xxx_pci_setup,
++	       .map_irq = cns3xxx_pcie_map_irq,
++	       .private_data = &private_data,
++	};
+ 
+ 	pcibios_min_io = 0;
+ 	pcibios_min_mem = 0;
+@@ -335,7 +328,8 @@ void __init cns3xxx_pcie_init_late(void)
+ 		cns3xxx_pwr_soft_rst(0x1 << PM_SOFT_RST_REG_OFFST_PCIE(i));
+ 		cns3xxx_pcie_check_link(&cns3xxx_pcie[i]);
+ 		cns3xxx_pcie_hw_init(&cns3xxx_pcie[i]);
+-		pci_common_init(&cns3xxx_pcie[i].hw_pci);
++		private_data = &cns3xxx_pcie[i];
++		pci_common_init(&hw_pci);
+ 	}
+ 
+ 	pci_assign_unassigned_resources();
+-- 
+2.1.2
 
