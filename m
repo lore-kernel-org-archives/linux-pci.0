@@ -1,268 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:37069 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752448AbaKYFyy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 25 Nov 2014 00:54:54 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:36287 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755211AbaKUKAz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 05:00:55 -0500
+Message-ID: <546F0D43.4020307@arm.com>
+Date: Fri, 21 Nov 2014 10:00:35 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
+MIME-Version: 1.0
+To: Yijing Wang <wangyijing@huawei.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v6 20/27] x86, irq: Use hierarchy irqdomain to manage DMAR interrupts
-Date: Tue, 25 Nov 2014 13:53:29 +0800
-Message-Id: <1416894816-23245-21-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>
+Subject: Re: Removal of bus->msi assignment breaks MSI with stacked domains
+References: <546E1771.4030201@arm.com> <20141120215353.GA7987@google.com> <alpine.DEB.2.11.1411202355060.6439@nanos> <546E9B60.9070706@huawei.com>
+In-Reply-To: <546E9B60.9070706@huawei.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance DMAR code to support hierarchy irqdomain, it helps to make
-the architecture more clear.
+Yijing,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/hw_irq.h |    7 ++
- arch/x86/kernel/apic/msi.c    |  153 ++++++++++++++++++++++++++---------------
- 2 files changed, 103 insertions(+), 57 deletions(-)
+On 21/11/14 01:54, Yijing Wang wrote:
+>>> Thomas, let me know if you want to do that.  I suppose we could add a new
+>>> patch to add it back, but that would leave bisection broken for the
+>>> interval between c167caf8d174 and the patch that adds it back.
+>>
+>> Fortunately my irq/irqdomain branch is not immutable yet. So we have
+>> no problem at that point. I can rebase on your branch until tomorrow
+>> night. Or just rebase on mainline and we sort out the merge conflicts
+>> later, i.e. delegate them to Linus so his job of pulling stuff gets
+>> not completely boring.
+> 
+> Hi Thomas, sorry for my introducing the broken.
+> 
+>>
+>> What I'm more worried about is whether this intended change is going
+>> to inflict a problem on Jiangs intention to deduce the MSI irq domain
+>> from the device, which we really need for making DMAR work w/o going
+>> through loops and hoops.
+>>
+>> I have limited knowledge about the actual scope of iommu (DMAR) units
+>> versus device/bus/host-controllers, so I would appreciate a proper
+>> explanation for that from you or Jiang or both.
+> 
+> In my personal opinion, if it's not necessary, we should not put stuff
+> into pci_dev or pci_bus. If we plan to save msi_controller in pci_bus or
+> pci_dev.
+> I have a proposal, I would be appreciated if you could give some comments.
+> First we refactor pci_host_bridge to make a generic
+> pci_host_bridge, then we could save pci domain in it to eliminate
+> arch specific functions. I aslo wanted to save msi_controller as
+> pci domain, but now Jiang refactor hierarchy irq domain, and
+> pci devices under the same pci host bridge may need to associate
+> to different msi_controllers.
+> 
+> So I want to associate a msi_controller finding ops with generic pci_host_bridge,
+> then every pci device could find its msi_controller/irq_domain by a
+> common function
+> 
+> E.g
+> 
+> struct msi_controller *pci_msi_controller(struct pci_dev *pdev)
+> {
+> 	struct msi_controller *ctrl;
+> 	struct pci_host_bridge *host = find_pci_host_bridge(pdev->bus);
+> 	if (host && host->pci_get_msi_controller)
+> 		ctrl = pci_host_bridge->pci_get_msi_controller(struct pci_dev *pdev);
+> 
+> 	return ctrl;	
+> }
+> 
+> If I miss something, please let me know, thanks.
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 270c432971f8..29f1dc162a24 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -122,6 +122,7 @@ enum irq_alloc_type {
- 	X86_IRQ_ALLOC_TYPE_HPET,
- 	X86_IRQ_ALLOC_TYPE_MSI,
- 	X86_IRQ_ALLOC_TYPE_MSIX,
-+	X86_IRQ_ALLOC_TYPE_DMAR,
- };
- 
- struct irq_alloc_info {
-@@ -154,6 +155,12 @@ struct irq_alloc_info {
- 			struct IO_APIC_route_entry *ioapic_entry;
- 		};
- #endif
-+#ifdef	CONFIG_DMAR_TABLE
-+		struct {
-+			int		dmar_id;
-+			void		*dmar_data;
-+		};
-+#endif
- 	};
- };
- 
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 695c82bbd682..a24b803b199a 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -25,32 +25,6 @@
- 
- static struct irq_domain *msi_default_domain;
- 
--static void native_compose_msi_msg(struct irq_cfg *cfg, struct msi_msg *msg)
--{
--	msg->address_hi = MSI_ADDR_BASE_HI;
--
--	if (x2apic_enabled())
--		msg->address_hi |= MSI_ADDR_EXT_DEST_ID(cfg->dest_apicid);
--
--	msg->address_lo =
--		MSI_ADDR_BASE_LO |
--		((apic->irq_dest_mode == 0) ?
--			MSI_ADDR_DEST_MODE_PHYSICAL :
--			MSI_ADDR_DEST_MODE_LOGICAL) |
--		((apic->irq_delivery_mode != dest_LowestPrio) ?
--			MSI_ADDR_REDIRECTION_CPU :
--			MSI_ADDR_REDIRECTION_LOWPRI) |
--		MSI_ADDR_DEST_ID(cfg->dest_apicid);
--
--	msg->data =
--		MSI_DATA_TRIGGER_EDGE |
--		MSI_DATA_LEVEL_ASSERT |
--		((apic->irq_delivery_mode != dest_LowestPrio) ?
--			MSI_DATA_DELIVERY_FIXED :
--			MSI_DATA_DELIVERY_LOWPRI) |
--		MSI_DATA_VECTOR(cfg->vector);
--}
--
- static void irq_msi_compose_msg(struct irq_data *data, struct msi_msg *msg)
- {
- 	struct irq_cfg *cfg = irqd_cfg(data);
-@@ -87,6 +61,9 @@ static void msi_update_msg(struct msi_msg *msg, struct irq_data *irq_data)
- 	msg->data |= MSI_DATA_VECTOR(cfg->vector);
- 	msg->address_lo &= ~MSI_ADDR_DEST_ID_MASK;
- 	msg->address_lo |= MSI_ADDR_DEST_ID(cfg->dest_apicid);
-+	if (x2apic_enabled())
-+		msg->address_hi = MSI_ADDR_BASE_HI |
-+				  MSI_ADDR_EXT_DEST_ID(cfg->dest_apicid);
- }
- 
- /*
-@@ -196,59 +173,121 @@ static int
- dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 		      bool force)
- {
--	struct irq_cfg *cfg = irqd_cfg(data);
--	unsigned int dest, irq = data->irq;
-+	struct irq_data *parent = data->parent_data;
- 	struct msi_msg msg;
- 	int ret;
- 
--	ret = apic_set_affinity(data, mask, &dest);
--	if (ret)
--		return ret;
--
--	dmar_msi_read(irq, &msg);
--
--	msg.data &= ~MSI_DATA_VECTOR_MASK;
--	msg.data |= MSI_DATA_VECTOR(cfg->vector);
--	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
--	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
--	msg.address_hi = MSI_ADDR_BASE_HI | MSI_ADDR_EXT_DEST_ID(dest);
--
--	dmar_msi_write(irq, &msg);
-+	ret = parent->chip->irq_set_affinity(parent, mask, force);
-+	if (ret >= 0) {
-+		dmar_msi_read(data->irq, &msg);
-+		msi_update_msg(&msg, data);
-+		dmar_msi_write(data->irq, &msg);
-+	}
- 
--	return IRQ_SET_MASK_OK_NOCOPY;
-+	return ret;
- }
- 
--static struct irq_chip dmar_msi_type = {
-+static struct irq_chip dmar_msi_controller = {
- 	.name			= "DMAR_MSI",
- 	.irq_unmask		= dmar_msi_unmask,
- 	.irq_mask		= dmar_msi_mask,
--	.irq_ack		= apic_ack_edge,
-+	.irq_ack		= irq_chip_ack_parent,
- 	.irq_set_affinity	= dmar_msi_set_affinity,
--	.irq_retrigger		= apic_retrigger_irq,
-+	.irq_retrigger		= irq_chip_retrigger_hierarchy,
-+	.irq_compose_msi_msg	= irq_msi_compose_msg,
- 	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
- 
--int dmar_alloc_hwirq(int id, int node, void *arg)
-+static int dmar_domain_alloc(struct irq_domain *domain, unsigned int virq,
-+			     unsigned int nr_irqs, void *arg)
-+{
-+	struct irq_alloc_info *info = arg;
-+	int ret;
-+
-+	if (nr_irqs > 1 || !info || info->type != X86_IRQ_ALLOC_TYPE_DMAR)
-+		return -EINVAL;
-+	if (irq_find_mapping(domain, info->dmar_id)) {
-+		pr_warn("IRQ for DMAR%d already exists.\n", info->dmar_id);
-+		return -EEXIST;
-+	}
-+
-+	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
-+	if (ret >= 0) {
-+		irq_domain_set_hwirq_and_chip(domain, virq, info->dmar_id,
-+					      &dmar_msi_controller, NULL);
-+		irq_set_handler_data(virq, info->dmar_data);
-+		__irq_set_handler(virq, handle_edge_irq, 0, "edge");
-+	}
-+
-+	return ret;
-+}
-+
-+static void dmar_domain_free(struct irq_domain *domain, unsigned int virq,
-+			     unsigned int nr_irqs)
-+{
-+	BUG_ON(nr_irqs > 1);
-+	irq_domain_free_irqs_top(domain, virq, nr_irqs);
-+}
-+
-+static void dmar_domain_activate(struct irq_domain *domain,
-+				 struct irq_data *irq_data)
- {
--	int irq;
- 	struct msi_msg msg;
- 
--	irq = irq_domain_alloc_irqs(NULL, 1, node, NULL);
--	if (irq > 0) {
--		irq_set_handler_data(irq, arg);
--		irq_set_chip_and_handler_name(irq, &dmar_msi_type,
--					      handle_edge_irq, "edge");
--		native_compose_msi_msg(irq_cfg(irq), &msg);
--		dmar_msi_write(irq, &msg);
-+	BUG_ON(irq_chip_compose_msi_msg(irq_data, &msg));
-+	dmar_msi_write(irq_data->irq, &msg);
-+}
-+
-+static void dmar_domain_deactivate(struct irq_domain *domain,
-+				   struct irq_data *irq_data)
-+{
-+	struct msi_msg msg;
-+
-+	memset(&msg, 0, sizeof(msg));
-+	dmar_msi_write(irq_data->irq, &msg);
-+}
-+
-+static struct irq_domain_ops dmar_domain_ops = {
-+	.alloc = dmar_domain_alloc,
-+	.free = dmar_domain_free,
-+	.activate = dmar_domain_activate,
-+	.deactivate = dmar_domain_deactivate,
-+};
-+
-+static struct irq_domain *dmar_get_irq_domain(void)
-+{
-+	static struct irq_domain *dmar_domain;
-+	static DEFINE_MUTEX(dmar_lock);
-+
-+	mutex_lock(&dmar_lock);
-+	if (dmar_domain == NULL) {
-+		dmar_domain = irq_domain_add_tree(NULL, &dmar_domain_ops, NULL);
-+		if (dmar_domain)
-+			dmar_domain->parent = x86_vector_domain;
- 	}
-+	mutex_unlock(&dmar_lock);
-+
-+	return dmar_domain;
-+}
-+
-+int dmar_alloc_hwirq(int id, int node, void *arg)
-+{
-+	struct irq_domain *domain = dmar_get_irq_domain();
-+	struct irq_alloc_info info;
-+
-+	if (!domain)
-+		return -1;
-+
-+	init_irq_alloc_info(&info, NULL);
-+	info.type = X86_IRQ_ALLOC_TYPE_DMAR;
-+	info.dmar_id = id;
-+	info.dmar_data = arg;
- 
--	return irq;
-+	return irq_domain_alloc_irqs(domain, 1, node, &info);
- }
- 
- void dmar_free_hwirq(int irq)
- {
--	irq_set_handler_data(irq, NULL);
--	irq_set_handler(irq, NULL);
- 	irq_domain_free_irqs(irq, 1);
- }
- #endif
+That feels slightly convoluted for something that should be a very
+simple operation. Does this mean you're trying to represent a situation
+where:
+- a single host bridge has multiple MSI controllers,
+- this bridge serves multiple busses,
+- devices on the same bus can talk to different MSI controllers?
+
+That would be the only case where the current way we pass the
+msi_controller around wouldn't work.
+
+If that's what you're trying to do, I can see how this work, but I'd
+suggest you put that infrastructure in place before tearing down the
+existing one. This means being having support at the host-bridge level
+and reasonable defaults for the non-complicated case where bus->msi is
+exactly what you want.
+
+Thanks,
+
+	M.
 -- 
-1.7.10.4
-
+Jazz is not dead. It just smells funny...
