@@ -1,118 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:53029 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752045AbaKBPmX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Nov 2014 10:42:23 -0500
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 3 Nov 2014 01:42:21 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id B3E153578048
-	for <linux-pci@vger.kernel.org>; Mon,  3 Nov 2014 02:42:18 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sA2Fg6eX40173636
-	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:42:07 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sA2FgHMk028512
-	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:42:18 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V9 17/18] powerpc/powernv: Expanding IOV BAR, with m64_per_iov supported
-Date: Sun,  2 Nov 2014 23:41:33 +0800
-Message-Id: <1414942894-17034-18-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:54316 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751514AbaKUSYZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 21 Nov 2014 13:24:25 -0500
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH 3/4] PCI: Allow device quirks to exclude bus reset
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Alex Williamson <alex.williamson@redhat.com>
+Date: Fri, 21 Nov 2014 11:24:21 -0700
+Message-ID: <20141121182421.26669.85408.stgit@gimli.home>
+In-Reply-To: <20141121180322.26669.65689.stgit@gimli.home>
+References: <20141121180322.26669.65689.stgit@gimli.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-M64 aperture size is limited on PHB3. When the IOV BAR is too big, this will
-exceed the limitation and failed to be assigned.
+Enable a mechanism for devices to quirk that they do not behave when
+doing a PCI bus reset.  We require a modest level of spec compliant
+behavior in order to do a reset, for instance the device should come
+out of reset without throwing errors and PCI config space should be
+accessible after reset.  This is too much to ask for some devices.
 
-This patch introduce a different expanding based on the IOV BAR size:
-
-IOV BAR size is smaller than 64M, expand to total_pe.
-IOV BAR size is bigger than 64M, roundup power2.
-
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- arch/powerpc/include/asm/pci-bridge.h     |    2 ++
- arch/powerpc/platforms/powernv/pci-ioda.c |   31 +++++++++++++++++++++++++++--
- 2 files changed, 31 insertions(+), 2 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 8d8d40a..a336c7a 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -176,6 +176,8 @@ struct pci_dn {
- 	u16     max_vfs;		/* number of VFs IOV BAR expended */
- 	u16     vf_pes;			/* VF PE# under this PF */
- 	int     offset;			/* PE# for the first VF PE */
-+#define M64_PER_IOV 4
-+	int     m64_per_iov;
- #define IODA_INVALID_M64        (-1)
- 	int     m64_wins[PCI_SRIOV_NUM_BARS];
- #endif /* CONFIG_PCI_IOV */
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 649f49d4..a4e78ab 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -2059,6 +2059,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 	int i;
- 	resource_size_t size;
- 	struct pci_dn *pdn;
-+	int mul, total_vfs;
+ drivers/pci/pci.c   |   40 ++++++++++++++++++++++++++++++++++++----
+ include/linux/pci.h |    2 ++
+ 2 files changed, 38 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index ba54a5a..7d6f87e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3280,7 +3280,8 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
+ {
+ 	struct pci_dev *pdev;
  
- 	if (!pdev->is_physfn || pdev->is_added)
- 		return;
-@@ -2069,6 +2070,32 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 	pdn = pci_get_pdn(pdev);
- 	pdn->max_vfs = 0;
+-	if (pci_is_root_bus(dev->bus) || dev->subordinate || !dev->bus->self)
++	if (pci_is_root_bus(dev->bus) || dev->subordinate ||
++	    !dev->bus->self || dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET)
+ 		return -ENOTTY;
  
-+	total_vfs = pci_sriov_get_totalvfs(pdev);
-+	pdn->m64_per_iov = 1;
-+	mul = phb->ioda.total_pe;
+ 	list_for_each_entry(pdev, &dev->bus->devices, bus_list)
+@@ -3314,7 +3315,8 @@ static int pci_dev_reset_slot_function(struct pci_dev *dev, int probe)
+ {
+ 	struct pci_dev *pdev;
+ 
+-	if (dev->subordinate || !dev->slot)
++	if (dev->subordinate || !dev->slot ||
++	    dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET)
+ 		return -ENOTTY;
+ 
+ 	list_for_each_entry(pdev, &dev->bus->devices, bus_list)
+@@ -3566,6 +3568,20 @@ int pci_try_reset_function(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL_GPL(pci_try_reset_function);
+ 
++/* Do any devices on or below this bus prevent a bus reset */
++static bool pci_bus_resetable(struct pci_bus *bus)
++{
++	struct pci_dev *dev;
 +
-+	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
-+		res = &pdev->resource[i];
-+		if (!res->flags || res->parent)
-+			continue;
-+		if (!pnv_pci_is_mem_pref_64(res->flags)) {
-+			dev_warn(&pdev->dev, " non M64 IOV BAR %pR on %s\n",
-+					res, pci_name(pdev));
-+			continue;
-+		}
-+
-+		size = pci_iov_resource_size(pdev, i);
-+
-+		/* bigger than 64M */
-+		if (size > (1 << 26)) {
-+			dev_info(&pdev->dev, "PowerNV: VF BAR[%d] size "
-+					"is bigger than 64M, roundup power2\n", i);
-+			pdn->m64_per_iov = M64_PER_IOV;
-+			mul = __roundup_pow_of_two(total_vfs);
-+			break;
-+		}
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		if (dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET ||
++		    (dev->subordinate && !pci_bus_resetable(dev->subordinate)))
++			return false;
 +	}
 +
- 	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
- 		res = &pdev->resource[i];
- 		if (!res->flags || res->parent)
-@@ -2081,10 +2108,10 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 
- 		dev_dbg(&pdev->dev, " Fixing VF BAR[%d] %pR to\n", i, res);
- 		size = pci_iov_resource_size(pdev, i);
--		res->end = res->start + size * phb->ioda.total_pe - 1;
-+		res->end = res->start + size * mul - 1;
- 		dev_dbg(&pdev->dev, "                       %pR\n", res);
- 	}
--	pdn->max_vfs = phb->ioda.total_pe;
-+	pdn->max_vfs = mul;
++	return true;
++}
++
+ /* Lock devices from the top of the tree down */
+ static void pci_bus_lock(struct pci_bus *bus)
+ {
+@@ -3616,6 +3632,22 @@ unlock:
+ 	return 0;
  }
  
- static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
--- 
-1.7.9.5
++/* Do any devices on or below this slot prevent a bus reset */
++static bool pci_slot_resetable(struct pci_slot *slot)
++{
++	struct pci_dev *dev;
++
++	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
++		if (!dev->slot || dev->slot != slot)
++			continue;
++		if (dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET ||
++		    (dev->subordinate && !pci_bus_resetable(dev->subordinate)))
++			return false;
++	}
++
++	return true;
++}
++
+ /* Lock devices from the top of the tree down */
+ static void pci_slot_lock(struct pci_slot *slot)
+ {
+@@ -3737,7 +3769,7 @@ static int pci_slot_reset(struct pci_slot *slot, int probe)
+ {
+ 	int rc;
+ 
+-	if (!slot)
++	if (!slot || !pci_slot_resetable(slot))
+ 		return -ENOTTY;
+ 
+ 	if (!probe)
+@@ -3829,7 +3861,7 @@ EXPORT_SYMBOL_GPL(pci_try_reset_slot);
+ 
+ static int pci_bus_reset(struct pci_bus *bus, int probe)
+ {
+-	if (!bus->self)
++	if (!bus->self || !pci_bus_resetable(bus))
+ 		return -ENOTTY;
+ 
+ 	if (probe)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index aea347d..c9a8904 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -177,6 +177,8 @@ enum pci_dev_flags {
+ 	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) (1 << 5),
+ 	/* Do not use PM reset even if device advertises NoSoftRst- */
+ 	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 6),
++	/* Do not use bus resets for device */
++	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 7),
+ };
+ 
+ enum pci_irq_reroute_variant {
 
