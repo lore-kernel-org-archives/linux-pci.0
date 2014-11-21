@@ -1,122 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:63230 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753274AbaK0AU0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Nov 2014 19:20:26 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM list <linux-pm@vger.kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Kevin Hilman <khilman@kernel.org>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH 4/4] PCI / PM: Drop CONFIG_PM_RUNTIME from the PCI core
-Date: Thu, 27 Nov 2014 01:40:53 +0100
-Message-ID: <2582138.zUe2QZynBg@vostro.rjw.lan>
-In-Reply-To: <37310416.jZXoh5nfSC@vostro.rjw.lan>
-References: <37310416.jZXoh5nfSC@vostro.rjw.lan>
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:62911 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752189AbaKUL5o (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 06:57:44 -0500
+Message-ID: <546F288D.2040705@gmail.com>
+Date: Fri, 21 Nov 2014 19:57:01 +0800
+From: Yijing Wang <wangyijing0307@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Thomas Gleixner <tglx@linutronix.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>
+Subject: Re: Removal of bus->msi assignment breaks MSI with stacked domains
+References: <546E1771.4030201@arm.com> <546E93DC.8010902@huawei.com> <546F0FB6.3050404@arm.com>
+In-Reply-To: <546F0FB6.3050404@arm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-After commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if PM_SLEEP is
-selected) PM_RUNTIME is always set if PM is set, so quite a few
-#ifdef blocks depending on CONFIG_PM_RUNTIME may now be changed to
-depend on CONFIG_PM.
+在 2014/11/21 18:11, Marc Zyngier 写道:
+> On 21/11/14 01:22, Yijing Wang wrote:
+>> On 2014/11/21 0:31, Marc Zyngier wrote:
+>>> Bjorn, Yijing,
+>>>
+>>> I've just realized that patch c167caf8d174 (PCI/MSI: Remove useless
+>>> bus->msi assignment) completely breaks MSI on arm64 when using the new
+>>> MSI stacked domain:
+>> Sorry, this is my first part to refactor MSI related code, now
+>> how to get pci msi_controller depends arch functions(pcibios_msi_controller() or
+>> arch_setup_msi_irq()), we are working on generic pci_host_bridge, after that,
+>> we could eventually eliminate MSI arch functions and find pci dev 's msi controller
+>> by pci_host_bridge->get_msi_controller().
+>>
+>> Marc, could you tell me what pci host driver in your test platform ?
+> I'm using pci-host-generic (with a couple of patches to help it fit the
+> new "generic pci" infrastructure).
+>
+> This lives at:
+> git://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git
+> irq/arm64-pci
 
-Replace CONFIG_PM_RUNTIME with CONFIG_PM in the ACPI core code.
+Thanks, I would have a look at it.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/pci-driver.c |   20 +++++++-------------
- drivers/pci/pci-sysfs.c  |    4 ++--
- drivers/pci/pcie/Kconfig |    2 +-
- 3 files changed, 10 insertions(+), 16 deletions(-)
-
-Index: linux-pm/drivers/pci/pcie/Kconfig
-===================================================================
---- linux-pm.orig/drivers/pci/pcie/Kconfig
-+++ linux-pm/drivers/pci/pcie/Kconfig
-@@ -79,4 +79,4 @@ endchoice
- 
- config PCIE_PME
- 	def_bool y
--	depends on PCIEPORTBUS && PM_RUNTIME
-+	depends on PCIEPORTBUS && PM
-Index: linux-pm/drivers/pci/pci-driver.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-driver.c
-+++ linux-pm/drivers/pci/pci-driver.c
-@@ -1104,7 +1104,7 @@ static int pci_pm_restore(struct device
- 
- #endif /* !CONFIG_HIBERNATE_CALLBACKS */
- 
--#ifdef CONFIG_PM_RUNTIME
-+#ifdef CONFIG_PM
- 
- static int pci_pm_runtime_suspend(struct device *dev)
- {
-@@ -1200,16 +1200,6 @@ static int pci_pm_runtime_idle(struct de
- 	return ret;
- }
- 
--#else /* !CONFIG_PM_RUNTIME */
--
--#define pci_pm_runtime_suspend	NULL
--#define pci_pm_runtime_resume	NULL
--#define pci_pm_runtime_idle	NULL
--
--#endif /* !CONFIG_PM_RUNTIME */
--
--#ifdef CONFIG_PM
--
- static const struct dev_pm_ops pci_dev_pm_ops = {
- 	.prepare = pci_pm_prepare,
- 	.suspend = pci_pm_suspend,
-@@ -1231,11 +1221,15 @@ static const struct dev_pm_ops pci_dev_p
- 
- #define PCI_PM_OPS_PTR	(&pci_dev_pm_ops)
- 
--#else /* !COMFIG_PM_OPS */
-+#else /* !CONFIG_PM */
-+
-+#define pci_pm_runtime_suspend	NULL
-+#define pci_pm_runtime_resume	NULL
-+#define pci_pm_runtime_idle	NULL
- 
- #define PCI_PM_OPS_PTR	NULL
- 
--#endif /* !COMFIG_PM_OPS */
-+#endif /* !CONFIG_PM */
- 
- /**
-  * __pci_register_driver - register a new pci driver
-Index: linux-pm/drivers/pci/pci-sysfs.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-sysfs.c
-+++ linux-pm/drivers/pci/pci-sysfs.c
-@@ -385,7 +385,7 @@ static ssize_t dev_bus_rescan_store(stru
- }
- static DEVICE_ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, dev_bus_rescan_store);
- 
--#if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
-+#if defined(CONFIG_PM) && defined(CONFIG_ACPI)
- static ssize_t d3cold_allowed_store(struct device *dev,
- 				    struct device_attribute *attr,
- 				    const char *buf, size_t count)
-@@ -566,7 +566,7 @@ static struct attribute *pci_dev_attrs[]
- 	&dev_attr_enable.attr,
- 	&dev_attr_broken_parity_status.attr,
- 	&dev_attr_msi_bus.attr,
--#if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
-+#if defined(CONFIG_PM) && defined(CONFIG_ACPI)
- 	&dev_attr_d3cold_allowed.attr,
- #endif
- #ifdef CONFIG_OF
+>
+> Thanks,
+>
+> 	M.
 
