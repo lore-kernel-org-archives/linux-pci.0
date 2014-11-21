@@ -1,101 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:11876 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754226AbaKSGwH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 01:52:07 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	Liviu Dudau <liviu@dudau.co.uk>, Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 4/5] PCI: Remove pci_scan_bus() and pci_scan_bus_parented()
-Date: Wed, 19 Nov 2014 15:32:48 +0800
-Message-ID: <1416382369-13587-5-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1416382369-13587-1-git-send-email-wangyijing@huawei.com>
-References: <1416382369-13587-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 21 Nov 2014 11:08:25 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Myron Stowe <myron.stowe@gmail.com>, rjw@rjwysocki.net,
+	lorenzo.pieralisi@arm.com, linaro-acpi@lists.linaro.org,
+	linux-pci <linux-pci@vger.kernel.org>, catalin.marinas@arm.com,
+	x86 <x86@kernel.org>, will.deacon@arm.com,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Ingo Molnar <mingo@redhat.com>, hanjun.guo@linaro.org,
+	"H. Peter Anvin" <hpa@zytor.com>, wangyijing@huawei.com,
+	Liviu.Dudau@arm.com, Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH 6/6] pci, acpi: Share ACPI PCI config space accessors.
+Message-ID: <20141121180825.GD6578@google.com>
+References: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org>
+ <20141120222650.GC7987@google.com>
+ <CAL-B5D3MqUa-=bzebo12DbZfczss2-MdGwQ8WKTbFH8H2AENXg@mail.gmail.com>
+ <3957412.IooRKpIXjW@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3957412.IooRKpIXjW@wuerfel>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Clean out pci_scan_bus() and pci_scan_bus_parented().
+On Fri, Nov 21, 2014 at 01:24:52PM +0100, Arnd Bergmann wrote:
+> On Thursday 20 November 2014 21:00:17 Myron Stowe wrote:
+> > On Thu, Nov 20, 2014 at 3:26 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > > On Wed, Nov 19, 2014 at 05:19:20PM +0100, Arnd Bergmann wrote:
+> > >> On Wednesday 19 November 2014 17:04:51 Tomasz Nowicki wrote:
+> > >> > +/*
+> > >> > + * raw_pci_read/write - ACPI PCI config space accessors.
+> > >> > + *
+> > >> > + * ACPI spec defines MMCFG as the way we can access PCI config space,
+> > >> > + * so let MMCFG be default (__weak).
+> > >> > + *
+> > >> > + * If platform needs more fancy stuff, should provides its own implementation.
+> > >> > + */
+> > >> > +int __weak raw_pci_read(unsigned int domain, unsigned int bus,
+> > >> > +                       unsigned int devfn, int reg, int len, u32 *val)
+> > >> > +{
+> > >> > +       return pci_mmcfg_read(domain, bus, devfn, reg, len, val);
+> > >> > +}
+> > >> > +
+> > >> > +int __weak raw_pci_write(unsigned int domain, unsigned int bus,
+> > >> > +                        unsigned int devfn, int reg, int len, u32 val)
+> > >> > +{
+> > >> > +       return pci_mmcfg_write(domain, bus, devfn, reg, len, val);
+> > >> > +}
+> > >> > +
+> > >> >
+> > >>
+> > >> I think it would be better to avoid __weak functions here, as they tend
+> > >> to be hard to follow when trying to understand the code.
+> > >
+> > > That's interesting.  I would have said exactly the opposite -- I think the
+> > > extra Kconfiggery is harder to follow than weak/strong functions 
+> > >
+> > > But consistency is better than my personal opinion.  Is there a consensus
+> > > that we should use the Kconfig strategy instead of __weak?
+> > 
+> > I too find weak/strong functions easier to follow than "Kconfiggery" (nice term
+> > invention there).
+> 
+> I don't think there is a universal consensus, but the majority of
+> maintainers seems to avoid them for the same reasons that I think
+> __weak is problematic.
+> 
+> We have some uses of __weak in the core kernel, but there is
+> basically none in drivers outside of PCI, and the most common
+> uses are all providing an empty __weak function that can be
+> overridden with a function that actually does something, unlike
+> the code above.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/probe.c |   38 --------------------------------------
- include/linux/pci.h |    3 ---
- 2 files changed, 0 insertions(+), 41 deletions(-)
+One thing I like better about __weak (when used correctly) is that you have
+exactly one declaration, and the role of each definition (weak default
+implementation or strong override) is obvious from looking at it.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index a8d90d4..79775b5 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2107,44 +2107,6 @@ struct pci_bus *pci_scan_bus_simple(struct device *parent,
- }
- EXPORT_SYMBOL(pci_scan_bus_simple);
- 
--/* Deprecated; use pci_scan_root_bus() instead */
--struct pci_bus *pci_scan_bus_parented(struct device *parent,
--		int bus, struct pci_ops *ops, void *sysdata)
--{
--	LIST_HEAD(resources);
--	struct pci_bus *b;
--
--	pci_add_resource(&resources, &ioport_resource);
--	pci_add_resource(&resources, &iomem_resource);
--	pci_add_resource(&resources, &busn_resource);
--	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
--	if (b)
--		pci_scan_child_bus(b);
--	else
--		pci_free_resource_list(&resources);
--	return b;
--}
--EXPORT_SYMBOL(pci_scan_bus_parented);
--
--struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
--					void *sysdata)
--{
--	LIST_HEAD(resources);
--	struct pci_bus *b;
--
--	pci_add_resource(&resources, &ioport_resource);
--	pci_add_resource(&resources, &iomem_resource);
--	pci_add_resource(&resources, &busn_resource);
--	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
--	if (b) {
--		pci_scan_child_bus(b);
--	} else {
--		pci_free_resource_list(&resources);
--	}
--	return b;
--}
--EXPORT_SYMBOL(pci_scan_bus);
--
- /**
-  * pci_rescan_bus_bridge_resize - scan a PCI bus for devices.
-  * @bridge: PCI bridge for the bus to scan
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index befefbd..9ebc908 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -767,11 +767,8 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
--struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
--				      struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_scan_bus_simple(struct device *parent, int bus,
- 				      struct pci_ops *ops, void *sysdata);
--struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 				    struct pci_ops *ops, void *sysdata,
- 				    struct list_head *resources);
--- 
-1.7.1
+In your #ifdef example, the extern declaration and the inline definition
+are never compiled together, so you have to repeat the signature and the
+compiler doesn't enforce that they match.  So you end up with the extern
+and the inline in one file, a #define in an arch header file or Kconfig,
+and an arch definition in a third file.
 
+But it's certainly true that everybody knows how #ifdef works, and the fact
+that __weak on a declaration affects all in-scope definitions is definitely
+a land mine (multiple weak definitions with no strong one is a disaster).
+
+> My pragmatic approach so far has been to advocate __weak for
+> drivers/pci patches but discourage it elsewhere when I review
+> patches, in order to maintain consistency. I also think it
+> would be nice to change the way that PCI handles architecture
+> specific overrides in the process of unifying the host bridge
+> handling.
+> 
+> I wouldn't use Kconfig symbols in most cases though. My preferred
+> choice would be to turn a lot of the __weak symbols into function
+> pointers within a per-hostbridge structure. As an example, we could
+> replace pcibios_add_device() with a pointer in pci_host_bridge->ops
+> that gets set by all the architectures and host drivers that currently
+> override it, and replace the one caller with
+> 
+> 	if (pci_host_bridge->ops->add_device)
+> 		pci_host_bridge->ops->add_device(dev);
+
+I definitely agree with this part, but I think it's orthogonal to the
+__weak question.  In this case, we'd like to support multiple host bridges,
+each with a different flavor of add_device().  We can't do that at all with
+either __weak or #ifdef.
+
+Bjorn
