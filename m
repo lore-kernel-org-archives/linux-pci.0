@@ -1,99 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25997 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753683AbaKRSTE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 13:19:04 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2] PCI: Don't reject 64bit mmio on 32bit/PAE mode
-Date: Tue, 18 Nov 2014 10:19:04 -0800
-Message-Id: <1416334744-16817-1-git-send-email-yinghai@kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:12554 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756487AbaKUC7E (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Nov 2014 21:59:04 -0500
+Message-ID: <546EAA50.8000601@huawei.com>
+Date: Fri, 21 Nov 2014 10:58:24 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Liviu Dudau <liviu@dudau.co.uk>,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-pci@vger.kernel.org>, <x86@kernel.org>,
+	<linux-kernel@vger.kernel.org>, Xinwei Hu <huxinwei@huawei.com>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	<Suravee.Suthikulpanit@amd.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linux-ia64@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Wuyun <wuyun.wu@huawei.com>, <linuxppc-dev@lists.ozlabs.org>
+Subject: Re: [RFC PATCH 00/16] Refine PCI host bridge scan interfaces
+References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com> <1463511.o4kE8TX3Bd@wuerfel> <546DD688.60705@linaro.org> <20141120120850.GD9162@bart.dudau.co.uk> <546DE45C.6010306@linaro.org> <20141120163918.GE9162@bart.dudau.co.uk>
+In-Reply-To: <20141120163918.GE9162@bart.dudau.co.uk>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Aaron reported 32bit/PAE mode, has problem with 64bit resource.
+On 2014/11/21 0:39, Liviu Dudau wrote:
+> On Thu, Nov 20, 2014 at 01:53:48PM +0100, Tomasz Nowicki wrote:
+>> On 20.11.2014 13:08, Liviu Dudau wrote:
+>>> On Thu, Nov 20, 2014 at 12:54:48PM +0100, Tomasz Nowicki wrote:
+>>>> On 17.11.2014 15:13, Arnd Bergmann wrote:
+>>>>> On Monday 17 November 2014 18:21:34 Yijing Wang wrote:
+>>>>>> This series is based Linux 3.18-rc1 and Lorenzo Pieralisi's
+>>>>>> arm PCI domain cleanup patches, link:
+>>>>>> https://patchwork.ozlabs.org/patch/407585/
+>>>>>>
+>>>>>> Current pci scan interfaces like pci_scan_root_bus() and directly
+>>>>>> call pci_create_root_bus()/pci_scan_child_bus() lack flexiblity.
+>>>>>> Some platform infos like PCI domain and msi_chip have to be
+>>>>>> associated to PCI bus by some arch specific function.
+>>>>>> We want to make a generic pci_host_bridge, and make it hold
+>>>>>> the platform infos or hook. Then we could eliminate the lots
+>>>>>> of arch pci_domain_nr, also we could associate some platform
+>>>>>> ops something like pci_get_msi_chip(struct pci_dev *dev)
+>>>>>> with pci_host_bridge to avoid introduce arch weak functions.
+>>>>>>
+>>>>>> This RFC version not for all platforms, just applied the new
+>>>>>> scan interface in x86/arm/powerpc/ia64, I will refresh other
+>>>>>> platforms after the core pci scan interfaces are ok.
+>>>>>
+>>>>> I think overall this is a good direction to take, in particular
+>>>>> moving more things into struct pci_host_bridge so we can
+>>>>> slim down the architecture specific code.
+>>>>>
+>>>>> I don't particularly like the way you use the 'pci_host_info'
+>>>>> to pass callback pointers and some of the generic information.
+>>>>> This duplicates some of the issues we are currently trying
+>>>>> to untangle in the arm32 code to make drivers easier to share
+>>>>> between architectures.
+>>>>>
+>>>>> As a general approach, I'd rather see generic helper functions
+>>>>> being exported by the PCI core that a driver may or may not
+>>>>> call.
+>>>>> The way you split the interface between things that happen
+>>>>> before scanning the buses (pci_create_host_bridge) and
+>>>>> the actual scanning (__pci_create_root_bus, pci_scan_child_bus)
+>>>>> seems very helpful and I think we can expand that concept further:
+>>>>>
+>>>>> - The normal pci_create_host_bridge() function can contain
+>>>>>   all of the DT scanning functions (finding bus/mem/io resources,
+>>>>>   finding the msi-parent), while drivers that don't depend on DT
+>>>>>   for this information can call the same function and fill the
+>>>>>   same things after they have the pci_host_bridge pointer.
+>>>>
+>>>> How about finding PCI domain number (in the DT way) within
+>>>> pci_create_host_bridge() too ?
+>>>
+>>> It is an idea worth pursuing for the 99% of the cases. I would like
+>>> to understand the 1% of the time when we want a domain number to be
+>>> shared between two host bridges or the time when we want more than
+>>> one domain per bridge.
+>> Even though we have shared domain, this should be resolved via DT calls, do
+>> I miss something ?
+> 
+> If we only going to hold one domain number per host bridge, then no, you're
+> not missing anything.
+> 
+>>
+>>>
+>>> Is that possible? Is it useful? Is it already in practice?
+>> This is good question... IMO:
+>> 1. Two host bridges can shared domain number if they are children of the
+>> same parent host bridge.
+>> 2. But I can not find good explanation for more than one domain per bridge.
+> 
+> Splitting a root bus into two or more "segments" ?
 
-[    6.610012] pci 0000:03:00.0: reg 0x10: [mem 0x383fffc00000-0x383fffdfffff 64bit pref]
-[    6.622195] pci 0000:03:00.0: reg 0x20: [mem 0x383fffe04000-0x383fffe07fff 64bit pref]
-[    6.656112] pci 0000:03:00.1: reg 0x10: [mem 0x383fffa00000-0x383fffbfffff 64bit pref]
-[    6.668293] pci 0000:03:00.1: reg 0x20: [mem 0x383fffe00000-0x383fffe03fff 64bit pref]
-[    6.702055] pci 0000:00:02.2: PCI bridge to [bus 03-04]
-[    6.706434] pci 0000:00:02.2:   bridge window [io  0x1000-0x1fff]
-[    6.711783] pci 0000:00:02.2:   bridge window [mem 0x91900000-0x91cfffff]
-[    6.717906] pci 0000:00:02.2: can't handle 64-bit address space for bridge
+It seems impossible.
 
-So the kernel reject 64bit mmio on pci pref bridge that is assigned by
-firmware.
+> 
+> Best regards,
+> Liviu
+> 
+>>
+>> Tomasz
+>>
+>>
+> 
 
-When 32bit PAE is enabled, we could support 64bit mmio.
-but BITS_PER_LONG==64 checking could reject firmware assigned mmio that
-is above 4G. On x86 32bit always has BITS_PER_LONG equal to 32.
 
-We could use CONFIG_ARCH_DMA_ADDR_T_64BIT or dma_addr_t size checking instead.
-Use dma_addr_t size checking to avoid using MARCO.
+-- 
+Thanks!
+Yijing
 
-Also need to change to use dma_addr_t instead of unsigned long
-for base/limit to avoid overflow.
-
--v2: add u64 cast to avoid compiler warning.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=88131
-Reported-by: Aaron Ma <mapengyu@gmail.com>
-Tested-by: Aaron Ma <mapengyu@gmail.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
----
- drivers/pci/probe.c |   22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
-
-Index: linux-2.6/drivers/pci/probe.c
-===================================================================
---- linux-2.6.orig/drivers/pci/probe.c
-+++ linux-2.6/drivers/pci/probe.c
-@@ -406,15 +406,15 @@ static void pci_read_bridge_mmio_pref(st
- {
- 	struct pci_dev *dev = child->self;
- 	u16 mem_base_lo, mem_limit_lo;
--	unsigned long base, limit;
-+	dma_addr_t base, limit;
- 	struct pci_bus_region region;
- 	struct resource *res;
- 
- 	res = child->resource[2];
- 	pci_read_config_word(dev, PCI_PREF_MEMORY_BASE, &mem_base_lo);
- 	pci_read_config_word(dev, PCI_PREF_MEMORY_LIMIT, &mem_limit_lo);
--	base = ((unsigned long) mem_base_lo & PCI_PREF_RANGE_MASK) << 16;
--	limit = ((unsigned long) mem_limit_lo & PCI_PREF_RANGE_MASK) << 16;
-+	base = ((dma_addr_t) mem_base_lo & PCI_PREF_RANGE_MASK) << 16;
-+	limit = ((dma_addr_t) mem_limit_lo & PCI_PREF_RANGE_MASK) << 16;
- 
- 	if ((mem_base_lo & PCI_PREF_RANGE_TYPE_MASK) == PCI_PREF_RANGE_TYPE_64) {
- 		u32 mem_base_hi, mem_limit_hi;
-@@ -428,15 +428,15 @@ static void pci_read_bridge_mmio_pref(st
- 		 * this, just assume they are not being used.
- 		 */
- 		if (mem_base_hi <= mem_limit_hi) {
--#if BITS_PER_LONG == 64
--			base |= ((unsigned long) mem_base_hi) << 32;
--			limit |= ((unsigned long) mem_limit_hi) << 32;
--#else
--			if (mem_base_hi || mem_limit_hi) {
--				dev_err(&dev->dev, "can't handle 64-bit address space for bridge\n");
--				return;
-+			if (sizeof(dma_addr_t) < 8) {
-+				if (mem_base_hi || mem_limit_hi) {
-+					dev_err(&dev->dev, "can't handle 64-bit address space for bridge\n");
-+					return;
-+				}
-+			} else  {
-+				base |= (dma_addr_t)(((u64)mem_base_hi)<<32);
-+				limit |= (dma_addr_t)(((u64)mem_limit_hi)<<32);
- 			}
--#endif
- 		}
- 	}
- 	if (base <= limit) {
