@@ -1,59 +1,91 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <545AD5B3.60009@huawei.com>
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
- <1415102525-9898-22-git-send-email-jiang.liu@linux.intel.com>
- <20141105230952.GH6168@google.com> <545AD5B3.60009@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 5 Nov 2014 21:10:59 -0700
-Message-ID: <CAErSpo5PNAQ40-AQZiz_RTU0JKnSAVXO2Wz=XPQ7aMWjm-iaNA@mail.gmail.com>
-Subject: Re: [Patch Part2 v4 21/31] PCI/MSI: enhance PCI MSI core to support
- hierarchy irqdomain
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+In-Reply-To: <20141120222650.GC7987@google.com>
+References: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org>
+	<1416413091-13452-7-git-send-email-tomasz.nowicki@linaro.org>
+	<2360791.Aj7tQ0nCJ3@wuerfel>
+	<20141120222650.GC7987@google.com>
+Date: Thu, 20 Nov 2014 21:00:17 -0700
+Message-ID: <CAL-B5D3MqUa-=bzebo12DbZfczss2-MdGwQ8WKTbFH8H2AENXg@mail.gmail.com>
+Subject: Re: [PATCH 6/6] pci, acpi: Share ACPI PCI config space accessors.
+From: Myron Stowe <myron.stowe@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	linux-arm-kernel@lists.infradead.org,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	catalin.marinas@arm.com, will.deacon@arm.com,
+	lorenzo.pieralisi@arm.com, wangyijing@huawei.com,
+	hanjun.guo@linaro.org, Liviu.Dudau@arm.com,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Alexander Gordeev <agordeev@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
+	"H. Peter Anvin" <hpa@zytor.com>, rjw@rjwysocki.net,
+	linaro-acpi@lists.linaro.org,
+	linux-pci <linux-pci@vger.kernel.org>, x86 <x86@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 5, 2014 at 6:58 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-
->>> +{
->>> +    return (irq_hw_number_t)msidesc->msi_attrib.entry_nr |
->>> +            PCI_DEVID(pdev->bus->number, pdev->devfn) << 11 |
->>> +            (pci_domain_nr(pdev->bus) & 0xFFFFFFFF) << 27;
+On Thu, Nov 20, 2014 at 3:26 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Nov 19, 2014 at 05:19:20PM +0100, Arnd Bergmann wrote:
+>> On Wednesday 19 November 2014 17:04:51 Tomasz Nowicki wrote:
+>> > +/*
+>> > + * raw_pci_read/write - ACPI PCI config space accessors.
+>> > + *
+>> > + * ACPI spec defines MMCFG as the way we can access PCI config space,
+>> > + * so let MMCFG be default (__weak).
+>> > + *
+>> > + * If platform needs more fancy stuff, should provides its own implementation.
+>> > + */
+>> > +int __weak raw_pci_read(unsigned int domain, unsigned int bus,
+>> > +                       unsigned int devfn, int reg, int len, u32 *val)
+>> > +{
+>> > +       return pci_mmcfg_read(domain, bus, devfn, reg, len, val);
+>> > +}
+>> > +
+>> > +int __weak raw_pci_write(unsigned int domain, unsigned int bus,
+>> > +                        unsigned int devfn, int reg, int len, u32 val)
+>> > +{
+>> > +       return pci_mmcfg_write(domain, bus, devfn, reg, len, val);
+>> > +}
+>> > +
+>> >
 >>
->> Where does this bit layout come from?  Is this defined in the spec
->> somewhere?  A reference would help.
+>> I think it would be better to avoid __weak functions here, as they tend
+>> to be hard to follow when trying to understand the code.
 >
-> Currently, more and more Non-PCI device use MSI(or similar MSI mechanism), like DMAR fault irq
-> and HPET FSB irq. And we have to add additional code to support the MSI capability.
-> So I hope we can decouple MSI code and PCI code, then we can unify all MSI(or Message Based interrupt)
-> in one framework.
+> That's interesting.  I would have said exactly the opposite -- I think the
+> extra Kconfiggery is harder to follow than weak/strong functions :)
+>
+> But consistency is better than my personal opinion.  Is there a consensus
+> that we should use the Kconfig strategy instead of __weak?
 
-Was that supposed to answer my question?  If so, I didn't understand
-how it explains where the bit layout came from.
+I too find weak/strong functions easier to follow than "Kconfiggery" (nice term
+invention there).
 
-Bjorn
+>
+>> How about using a Kconfig symbol like this:
+>>
+>> #ifdef CONFIG_ARCH_RAW_PCI_READWRITE
+>> int raw_pci_read(unsigned int domain, unsigned int bus, unsigned int devfn,
+>>                  int reg, int len, u32 *val);
+>> int raw_pci_write(unsigned int domain, unsigned int bus, unsigned int devfn,
+>>                   int reg, int len, u32 val);
+>> #else
+>> static inline int raw_pci_read(unsigned int domain, unsigned int bus,
+>>                              unsigned int devfn, int reg, int len, u32 *val)
+>> {
+>>       return pci_mmcfg_read(domain, bus, devfn, reg, len, val);
+>> }
+>>
+>> static inline int raw_pci_write(unsigned int domain, unsigned int bus,
+>>                                       unsigned int devfn, int reg, int len, u32 val)
+>> {
+>>        return pci_mmcfg_write(domain, bus, devfn, reg, len, val);
+>> }
+>> #endif
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
