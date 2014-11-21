@@ -1,76 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:52203 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964875AbaKNPyW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 14 Nov 2014 10:54:22 -0500
-Message-ID: <5466259A.7060505@linux.intel.com>
-Date: Fri, 14 Nov 2014 23:54:02 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:3679 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757320AbaKUCJ6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Nov 2014 21:09:58 -0500
+Message-ID: <546E9DF0.5010002@huawei.com>
+Date: Fri, 21 Nov 2014 10:05:36 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Marc Zyngier <marc.zyngier@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [Patch V1 0/6] Refine generic/PCI MSI irqodmian interfaces
-References: <1415879029-20098-1-git-send-email-jiang.liu@linux.intel.com> <54651BE2.9080008@arm.com> <alpine.DEB.2.11.1411132207470.3935@nanos> <5465227E.6000309@arm.com>
-In-Reply-To: <5465227E.6000309@arm.com>
-Content-Type: text/plain; charset=windows-1252
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Will Deacon <will.deacon@arm.com>,
+	"Catalin Marinas" <catalin.marinas@arm.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, "Ingo Molnar" <mingo@kernel.org>,
+	Arjan van de Ven <arjan@infradead.org>,
+	"David Woodhouse" <dwmw2@infradead.org>
+Subject: Re: Removal of bus->msi assignment breaks MSI with stacked domains
+References: <546E1771.4030201@arm.com> <546E93DC.8010902@huawei.com> <alpine.DEB.2.11.1411210233250.6439@nanos>
+In-Reply-To: <alpine.DEB.2.11.1411210233250.6439@nanos>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/11/14 5:28, Marc Zyngier wrote:
-> On 13/11/14 21:11, Thomas Gleixner wrote:
->> On Thu, 13 Nov 2014, Marc Zyngier wrote:
->>> With the new stacked irq domains, it becomes pretty tempting
->>> to allocate an MSI domain per PCI bus, which would remove
->>> the requirement of either relying on arch-specific code, or
->>> a default PCI MSI domain.
+On 2014/11/21 9:46, Thomas Gleixner wrote:
+> On Fri, 21 Nov 2014, Yijing Wang wrote:
+>> On 2014/11/21 0:31, Marc Zyngier wrote:
+>>> Bjorn, Yijing,
+>>>
+>>> I've just realized that patch c167caf8d174 (PCI/MSI: Remove useless
+>>> bus->msi assignment) completely breaks MSI on arm64 when using the new
+>>> MSI stacked domain:
 >>
->> Right. That's what I roughly had in mind. And that would solve the
->> multi-iommu issue on x86 nicely as well. We establish the association
->> at the time where the bus gets populated. So the whole lookup magic
->> simply goes away.
+>> Sorry, this is my first part to refactor MSI related code, now how
+>> to get pci msi_controller depends arch
+>> functions(pcibios_msi_controller() or arch_setup_msi_irq()), we are
+>> working on generic pci_host_bridge, after that, we could eventually
+>> eliminate MSI arch functions and find pci dev 's msi controller by
+>> pci_host_bridge->get_msi_controller().
 > 
-> Great. I've pushed the whole thing out with this patch, the couple
-> of fixes I mentioned earlier, as well as the whole ITS code:
+> The main question is why you think that pci_host_bridge is the proper
+> place to store that information.
 > 
-> git://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git irq/stacked-its-v2
-Hi Marc,
-	I have looked at the code, and found some issues.
-1) With my next version, no need to implemeent its_pci_msi_free()
-anymore. msi_domain_free_irqs() will reset desc->irq to zero
-for all architectures.
+> On x86 we have DMAR units associated to a single device. Each DMAR
+> unit is a seperate MSI irq domain. 
+> 
+> Can you guarantee that the pci_host_bridge is the right point to
+> provide the association of the device to the irq domain?
+> 
+> So the real question is:
+> 
+>    What is the association level requirement to properly identify the
+>    irqdomain for a specific device on any given architecture with and
+>    without IOMMU, interrupt redirection etc.
+> 
+> To be honest: I don't know.
+> 
+> My gut feeling tells me that it's at the device level, but I really
+> leave that decision to the experts in that field.
 
-2) This piece of code in its_msi_prepare() may run into trouble
-for PCI device with both MSI and MSIX capability. I will change
-msi_prepare() prototype to pass in the "nvec" parameter. And you
-may access first_pci_msi_entry()->msi_attrib.is_msix to get
-allocation type if needed.
-	nvec = pci_msix_vec_count(pdev);
-	if (nvec < 0)
-		nvec = pci_msi_vec_count(pdev);
-	if (nvec < 0)
-		return nvec;
+I choose the pci_host_bridge to place the .get_msi_ctrl() ops, because
+I think how to associate pci_dev and msi_controller is platform specific,
+and we could initialize pci_host_bridge in platform pci host drivers to
+avoid call platform specific functions when we scan or setup a pci device.
 
-3) Do we need to increase the default of NUM_MSI_ALLOC_SCRATCHPAD_REGS
-to 4? 2 is a little too limited.
-
-Regards!
-Gerry
+Thanks!
+Yijing.
 
 > 
-> Time to go home.
+> Thanks,
 > 
-> 	M.
+> 	tglx
 > 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
+
