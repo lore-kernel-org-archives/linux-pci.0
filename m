@@ -1,198 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:59062 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753332AbaK0AU1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Nov 2014 19:20:27 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM list <linux-pm@vger.kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Kevin Hilman <khilman@kernel.org>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH 3/4] ACPI / PM: Drop CONFIG_PM_RUNTIME from the ACPI core
-Date: Thu, 27 Nov 2014 01:40:01 +0100
-Message-ID: <2305225.e81AdzJbgi@vostro.rjw.lan>
-In-Reply-To: <37310416.jZXoh5nfSC@vostro.rjw.lan>
-References: <37310416.jZXoh5nfSC@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from aserp1040.oracle.com ([141.146.126.69]:34047 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752437AbaKUWSD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 17:18:03 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux@eikelenboom.it
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: [PATCH v4 7/7] xen/pciback: Restore configuration space when detaching from a guest.
+Date: Fri, 21 Nov 2014 17:17:51 -0500
+Message-Id: <1416608271-18931-8-git-send-email-konrad.wilk@oracle.com>
+In-Reply-To: <1416608271-18931-1-git-send-email-konrad.wilk@oracle.com>
+References: <1416608271-18931-1-git-send-email-konrad.wilk@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+The commit "xen/pciback: Don't deadlock when unbinding." was using
+the version of pci_reset_function which would lock the device lock.
+That is no good as we can dead-lock. As such we swapped to using
+the lock-less version and requiring that the callers
+of 'pcistub_put_pci_dev' take the device lock. And as such
+this bug got exposed.
 
-After commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if PM_SLEEP is
-selected) PM_RUNTIME is always set if PM is set, so quite a few
-#ifdef blocks depending on CONFIG_PM_RUNTIME may now be changed to
-depend on CONFIG_PM.
+Using the lock-less version is  OK, except that we tried to
+use 'pci_restore_state' after the lock-less version of
+__pci_reset_function_locked - which won't work as 'state_saved'
+is set to false. Said 'state_saved' is a toggle boolean that
+is to be used by the sequence of a) pci_save_state/pci_restore_state
+or b) pci_load_and_free_saved_state/pci_restore_state. We don't
+want to use a) as the guest might have messed up the PCI
+configuration space and we want it to revert to the state
+when the PCI device was binded to us. Therefore we pick
+b) to restore the configuration space.
 
-Replace CONFIG_PM_RUNTIME with CONFIG_PM in the ACPI core code.
+We restore from our 'golden' version of PCI configuration space, when an:
+ - Device is unbinded from pciback
+ - Device is detached from a guest.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reported-by:  Sander Eikelenboom <linux@eikelenboom.it>
+Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
 ---
- drivers/acpi/acpi_lpss.c |    4 +---
- drivers/acpi/device_pm.c |    8 ++------
- drivers/acpi/pci_irq.c   |    2 +-
- include/linux/acpi.h     |   26 +++++++++++---------------
- 4 files changed, 15 insertions(+), 25 deletions(-)
+ drivers/xen/xen-pciback/pci_stub.c | 20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
 
-Index: linux-pm/drivers/acpi/acpi_lpss.c
-===================================================================
---- linux-pm.orig/drivers/acpi/acpi_lpss.c
-+++ linux-pm/drivers/acpi/acpi_lpss.c
-@@ -588,7 +588,6 @@ static int acpi_lpss_resume_early(struct
- }
- #endif /* CONFIG_PM_SLEEP */
+diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+index 843a2ba..eb8b58e 100644
+--- a/drivers/xen/xen-pciback/pci_stub.c
++++ b/drivers/xen/xen-pciback/pci_stub.c
+@@ -105,7 +105,7 @@ static void pcistub_device_release(struct kref *kref)
+ 	 */
+ 	__pci_reset_function_locked(dev);
+ 	if (pci_load_and_free_saved_state(dev, &dev_data->pci_saved_state))
+-		dev_dbg(&dev->dev, "Could not reload PCI state\n");
++		dev_info(&dev->dev, "Could not reload PCI state\n");
+ 	else
+ 		pci_restore_state(dev);
  
--#ifdef CONFIG_PM_RUNTIME
- static int acpi_lpss_runtime_suspend(struct device *dev)
+@@ -257,6 +257,8 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
  {
- 	struct lpss_private_data *pdata = acpi_driver_data(ACPI_COMPANION(dev));
-@@ -631,11 +630,11 @@ static int acpi_lpss_runtime_resume(stru
+ 	struct pcistub_device *psdev, *found_psdev = NULL;
+ 	unsigned long flags;
++	struct xen_pcibk_dev_data *dev_data;
++	int ret;
  
- 	return pm_generic_runtime_resume(dev);
- }
--#endif /* CONFIG_PM_RUNTIME */
- #endif /* CONFIG_PM */
+ 	spin_lock_irqsave(&pcistub_devices_lock, flags);
  
- static struct dev_pm_domain acpi_lpss_pm_domain = {
- 	.ops = {
-+#ifdef CONFIG_PM
- #ifdef CONFIG_PM_SLEEP
- 		.prepare = acpi_subsys_prepare,
- 		.complete = acpi_subsys_complete,
-@@ -647,7 +646,6 @@ static struct dev_pm_domain acpi_lpss_pm
- 		.poweroff_late = acpi_lpss_suspend_late,
- 		.restore_early = acpi_lpss_resume_early,
- #endif
--#ifdef CONFIG_PM_RUNTIME
- 		.runtime_suspend = acpi_lpss_runtime_suspend,
- 		.runtime_resume = acpi_lpss_runtime_resume,
- #endif
-Index: linux-pm/drivers/acpi/pci_irq.c
-===================================================================
---- linux-pm.orig/drivers/acpi/pci_irq.c
-+++ linux-pm/drivers/acpi/pci_irq.c
-@@ -484,7 +484,7 @@ void acpi_pci_irq_disable(struct pci_dev
- 	/* Keep IOAPIC pin configuration when suspending */
- 	if (dev->dev.power.is_prepared)
- 		return;
--#ifdef	CONFIG_PM_RUNTIME
-+#ifdef	CONFIG_PM
- 	if (dev->dev.power.runtime_status == RPM_SUSPENDING)
- 		return;
- #endif
-Index: linux-pm/drivers/acpi/device_pm.c
-===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -692,7 +692,6 @@ static int acpi_device_wakeup(struct acp
- 	return 0;
- }
- 
--#ifdef CONFIG_PM_RUNTIME
- /**
-  * acpi_pm_device_run_wake - Enable/disable remote wakeup for given device.
-  * @dev: Device to enable/disable the platform to wake up.
-@@ -714,7 +713,6 @@ int acpi_pm_device_run_wake(struct devic
- 	return acpi_device_wakeup(adev, ACPI_STATE_S0, enable);
- }
- EXPORT_SYMBOL(acpi_pm_device_run_wake);
--#endif /* CONFIG_PM_RUNTIME */
- 
- #ifdef CONFIG_PM_SLEEP
- /**
-@@ -773,7 +771,6 @@ static int acpi_dev_pm_full_power(struct
- 		acpi_device_set_power(adev, ACPI_STATE_D0) : 0;
- }
- 
--#ifdef CONFIG_PM_RUNTIME
- /**
-  * acpi_dev_runtime_suspend - Put device into a low-power state using ACPI.
-  * @dev: Device to put into a low-power state.
-@@ -855,7 +852,6 @@ int acpi_subsys_runtime_resume(struct de
- 	return ret ? ret : pm_generic_runtime_resume(dev);
- }
- EXPORT_SYMBOL_GPL(acpi_subsys_runtime_resume);
--#endif /* CONFIG_PM_RUNTIME */
- 
- #ifdef CONFIG_PM_SLEEP
- /**
-@@ -1023,10 +1019,9 @@ EXPORT_SYMBOL_GPL(acpi_subsys_freeze);
- 
- static struct dev_pm_domain acpi_general_pm_domain = {
- 	.ops = {
--#ifdef CONFIG_PM_RUNTIME
-+#ifdef CONFIG_PM
- 		.runtime_suspend = acpi_subsys_runtime_suspend,
- 		.runtime_resume = acpi_subsys_runtime_resume,
--#endif
- #ifdef CONFIG_PM_SLEEP
- 		.prepare = acpi_subsys_prepare,
- 		.complete = acpi_subsys_complete,
-@@ -1038,6 +1033,7 @@ static struct dev_pm_domain acpi_general
- 		.poweroff_late = acpi_subsys_suspend_late,
- 		.restore_early = acpi_subsys_resume_early,
- #endif
-+#endif
- 	},
- };
- 
-Index: linux-pm/include/linux/acpi.h
-===================================================================
---- linux-pm.orig/include/linux/acpi.h
-+++ linux-pm/include/linux/acpi.h
-@@ -567,16 +567,26 @@ static inline void arch_reserve_mem_area
- #define acpi_os_set_prepare_sleep(func, pm1a_ctrl, pm1b_ctrl) do { } while (0)
- #endif
- 
--#if defined(CONFIG_ACPI) && defined(CONFIG_PM_RUNTIME)
-+#if defined(CONFIG_ACPI) && defined(CONFIG_PM)
- int acpi_dev_runtime_suspend(struct device *dev);
- int acpi_dev_runtime_resume(struct device *dev);
- int acpi_subsys_runtime_suspend(struct device *dev);
- int acpi_subsys_runtime_resume(struct device *dev);
-+struct acpi_device *acpi_dev_pm_get_node(struct device *dev);
-+int acpi_dev_pm_attach(struct device *dev, bool power_on);
- #else
- static inline int acpi_dev_runtime_suspend(struct device *dev) { return 0; }
- static inline int acpi_dev_runtime_resume(struct device *dev) { return 0; }
- static inline int acpi_subsys_runtime_suspend(struct device *dev) { return 0; }
- static inline int acpi_subsys_runtime_resume(struct device *dev) { return 0; }
-+static inline struct acpi_device *acpi_dev_pm_get_node(struct device *dev)
-+{
-+	return NULL;
-+}
-+static inline int acpi_dev_pm_attach(struct device *dev, bool power_on)
-+{
-+	return -ENODEV;
-+}
- #endif
- 
- #if defined(CONFIG_ACPI) && defined(CONFIG_PM_SLEEP)
-@@ -599,20 +609,6 @@ static inline int acpi_subsys_suspend(st
- static inline int acpi_subsys_freeze(struct device *dev) { return 0; }
- #endif
- 
--#if defined(CONFIG_ACPI) && defined(CONFIG_PM)
--struct acpi_device *acpi_dev_pm_get_node(struct device *dev);
--int acpi_dev_pm_attach(struct device *dev, bool power_on);
--#else
--static inline struct acpi_device *acpi_dev_pm_get_node(struct device *dev)
--{
--	return NULL;
--}
--static inline int acpi_dev_pm_attach(struct device *dev, bool power_on)
--{
--	return -ENODEV;
--}
--#endif
+@@ -279,9 +281,19 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
+ 	 * (so it's ready for the next domain)
+ 	 */
+ 	device_lock_assert(&dev->dev);
+-	__pci_reset_function_locked(dev);
+-	pci_restore_state(dev);
 -
- #ifdef CONFIG_ACPI
- __printf(3, 4)
- void acpi_handle_printk(const char *level, acpi_handle handle,
++	dev_data = pci_get_drvdata(dev);
++	ret = pci_load_saved_state(dev, dev_data->pci_saved_state);
++	if (ret < 0)
++		dev_warn(&dev->dev, "Could not reload PCI state\n");
++	else {
++		__pci_reset_function_locked(dev);
++		/*
++		 * The usual sequence is pci_save_state & pci_restore_state
++		 * but the guest might have messed the configuration space up.
++		 * Use the initial version (when device was bound to us).
++		 */
++		pci_restore_state(dev);
++	}
+ 	/* This disables the device. */
+ 	xen_pcibk_reset_device(dev);
+ 
+-- 
+1.9.3
 
