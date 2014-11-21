@@ -1,71 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:46447 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753973AbaKMRJ0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 12:09:26 -0500
-Received: by mail-pa0-f45.google.com with SMTP id lf10so15622272pab.4
-        for <linux-pci@vger.kernel.org>; Thu, 13 Nov 2014 09:09:25 -0800 (PST)
-Date: Thu, 13 Nov 2014 10:09:21 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, Liviu Dudau <Liviu.Dudau@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v2] PCI: add missing DT binding for linux,pci-domain
- property
-Message-ID: <20141113170921.GG5064@google.com>
-References: <1415287400-30426-1-git-send-email-l.stach@pengutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415287400-30426-1-git-send-email-l.stach@pengutronix.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:34050 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752502AbaKUWSD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 17:18:03 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux@eikelenboom.it
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: [PATCH v4 2/7] driver core: Provide an wrapper around the mutex to do lockdep warnings
+Date: Fri, 21 Nov 2014 17:17:46 -0500
+Message-Id: <1416608271-18931-3-git-send-email-konrad.wilk@oracle.com>
+In-Reply-To: <1416608271-18931-1-git-send-email-konrad.wilk@oracle.com>
+References: <1416608271-18931-1-git-send-email-konrad.wilk@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 06, 2014 at 04:23:20PM +0100, Lucas Stach wrote:
-> This property was added by 41e5c0f81d3e
-> (of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr())
-> without the required binding documentation. As this property
-> will be supported by a number of host bridge drivers going forward,
-> add it to the common PCI binding doc.
-> 
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+Instead of open-coding it in drivers that want to double check
+that their functions are indeed holding the device lock.
 
-Applied with acks from Liviu and Rob to for-linus for v3.18, thanks a lot
-for working this out!
+Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Suggested-by: David Vrabel <david.vrabel@citrix.com>
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/xen/xen-pciback/pci_stub.c | 2 +-
+ include/linux/device.h             | 5 +++++
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
-> ---
-> This is a non-critical fix, but may still qualify for 3.18-rc as
-> the property was added in this release cycle.
-> 
-> v2:
-> - emphasize that the property must be present and unique systemwide
->   if used
-> ---
->  Documentation/devicetree/bindings/pci/pci.txt | 11 +++++++++++
->  1 file changed, 11 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-> index 41aeed38926d..68c364e2f5e5 100644
-> --- a/Documentation/devicetree/bindings/pci/pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/pci.txt
-> @@ -7,3 +7,14 @@ And for the interrupt mapping part:
->  
->  Open Firmware Recommended Practice: Interrupt Mapping
->  http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
-> +
-> +Additionally to the properties specified in the above standards a host bridge
-> +driver implementation may support the following properties:
-> +
-> +- linux,pci-domain:
-> +   If present this property assigns a fixed PCI domain number to a host bridge,
-> +   otherwise an unstable (across boots) unique number will be assigned.
-> +   It is required to either not set this property at all or set it for all
-> +   host bridges in the system, otherwise potentially conflicting domain numbers
-> +   may be assigned to root buses behind different host bridges. The domain
-> +   number for each host bridge in the system must be unique.
-> -- 
-> 2.1.1
-> 
+diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+index 9cbe1a3..8b77089 100644
+--- a/drivers/xen/xen-pciback/pci_stub.c
++++ b/drivers/xen/xen-pciback/pci_stub.c
+@@ -278,7 +278,7 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
+ 	/* Cleanup our device
+ 	 * (so it's ready for the next domain)
+ 	 */
+-	lockdep_assert_held(&dev->dev.mutex);
++	device_lock_assert(&dev->dev);
+ 	__pci_reset_function_locked(dev);
+ 	pci_restore_state(dev);
+ 
+diff --git a/include/linux/device.h b/include/linux/device.h
+index ce1f2160..41d6a75 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -911,6 +911,11 @@ static inline void device_unlock(struct device *dev)
+ 	mutex_unlock(&dev->mutex);
+ }
+ 
++static inline void device_lock_assert(struct device *dev)
++{
++	lockdep_assert_held(&dev->mutex);
++}
++
+ void driver_init(void);
+ 
+ /*
+-- 
+1.9.3
+
