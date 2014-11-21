@@ -1,60 +1,53 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <546B4278.6000002@linux.intel.com>
-Date: Tue, 18 Nov 2014 20:58:32 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Joerg Roedel <joro@8bytes.org>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [Patch Part3 v3 00/38] Enable hierarchy irqdomian on x86 platforms
-References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com> <20141118105145.GC3762@8bytes.org>
-In-Reply-To: <20141118105145.GC3762@8bytes.org>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:19983 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752577AbaKUWSD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 17:18:03 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux@eikelenboom.it
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: [PATCH v4 3/7] xen/pciback: Include the domain id if removing the device whilst still in use
+Date: Fri, 21 Nov 2014 17:17:47 -0500
+Message-Id: <1416608271-18931-4-git-send-email-konrad.wilk@oracle.com>
+In-Reply-To: <1416608271-18931-1-git-send-email-konrad.wilk@oracle.com>
+References: <1416608271-18931-1-git-send-email-konrad.wilk@oracle.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/11/18 18:51, Joerg Roedel wrote:
-> Hi Jiang,
-> 
-> On Sun, Nov 09, 2014 at 02:13:00AM +0800, Jiang Liu wrote:
->> This is the last part to enable support of hierarchy domain on x86
->> platforms.
->>
->> It first converts IOAPIC to support hierarchy irqdomain, then cleans
->> up all unused code and interfaces. It also introduces a kernel boot
->> parameter to configure CPU vector allocation policies.
->>
->> It's based on my previous patch set at:
->> https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg760868.html
->> And you may access it at:
->> https://github.com/jiangliu/linux.git irqdomain/p3v3
->>
->> It has been tested on Intel 64-bit server and 32-bit laptop. It also
->> passes Fengguang's 0day tests. Helps are welcomed for testing:
->> 1) Intel MID platform
->> 2) Intel CE or OLPC platforms
->>
->> Patch 1-3 kills pre_init_apic_IRQ0().
->> Patch 4-9 convert IOAPIC to use hierarch irqdomain
->> Patch 10-36 clean up code, unused interfaces etc.
->> Patch 37-38 introduces a mechanism to configure CPU vector allocation
->> 	policies.
-> 
-> Did some more testing on my machines and it looks good now, no more boot
-> panics or other anomalies. So feel free to add my
-> 
-> Tested-by: Joerg Roedel <jroedel@suse.de>
-Thanks, Joerg:)
+Cleanup the function a bit - also include the id of the
+domain that is using the device.
+
+Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Reviewed-by: David Vrabel <david.vrabel@citrix.com>
+---
+ drivers/xen/xen-pciback/pci_stub.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+index 8b77089..e5ff09d 100644
+--- a/drivers/xen/xen-pciback/pci_stub.c
++++ b/drivers/xen/xen-pciback/pci_stub.c
+@@ -553,12 +553,14 @@ static void pcistub_remove(struct pci_dev *dev)
+ 	spin_unlock_irqrestore(&pcistub_devices_lock, flags);
+ 
+ 	if (found_psdev) {
+-		dev_dbg(&dev->dev, "found device to remove - in use? %p\n",
+-			found_psdev->pdev);
++		dev_dbg(&dev->dev, "found device to remove %s\n",
++			found_psdev->pdev ? "- in-use" : "");
+ 
+ 		if (found_psdev->pdev) {
+-			pr_warn("****** removing device %s while still in-use! ******\n",
+-			       pci_name(found_psdev->dev));
++			int domid = xen_find_device_domain_owner(dev);
++
++			pr_warn("****** removing device %s while still in-use by domain %d! ******\n",
++			       pci_name(found_psdev->dev), domid);
+ 			pr_warn("****** driver domain may still access this device's i/o resources!\n");
+ 			pr_warn("****** shutdown driver domain before binding device\n");
+ 			pr_warn("****** to other drivers or domains\n");
+-- 
+1.9.3
+
