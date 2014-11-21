@@ -1,212 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:56278 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752217AbaKYFxx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 25 Nov 2014 00:53:53 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:25612 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750863AbaKUTiH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 14:38:07 -0500
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Joerg Roedel <joro@8bytes.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v6 15/27] iommu/vt-d: Clean up unused MSI related code
-Date: Tue, 25 Nov 2014 13:53:24 +0800
-Message-Id: <1416894816-23245-16-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] x86, PCI: support mmio more than 44 bits on 32bit/PAE mode
+Date: Fri, 21 Nov 2014 11:37:56 -0800
+Message-Id: <1416598676-3904-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now MSI interrupt has been converted to new hierarchy irqdomain
-interfaces, so kill legacy MSI related code.
+Aaron reported 32bit/PAE mode, has problem with 64bit resource.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Acked-by: Joerg Roedel <jroedel@suse.de>
+[    6.610012] pci 0000:03:00.0: reg 0x10: [mem 0x383fffc00000-0x383fffdfffff 64bit pref]
+[    6.622195] pci 0000:03:00.0: reg 0x20: [mem 0x383fffe04000-0x383fffe07fff 64bit pref]
+[    6.656112] pci 0000:03:00.1: reg 0x10: [mem 0x383fffa00000-0x383fffbfffff 64bit pref]
+[    6.668293] pci 0000:03:00.1: reg 0x20: [mem 0x383fffe00000-0x383fffe03fff 64bit pref]
+...
+[   12.374143] calling  ixgbe_init_module+0x0/0x51 @ 1
+[   12.378130] ixgbe: Intel(R) 10 Gigabit PCI Express Network Driver - version 3.19.1-k
+[   12.385318] ixgbe: Copyright (c) 1999-2014 Intel Corporation.
+[   12.390578] ixgbe 0000:03:00.0: Adapter removed
+[   12.394247] ixgbe: probe of 0000:03:00.0 failed with error -5
+[   12.399369] ixgbe 0000:03:00.1: Adapter removed
+[   12.403036] ixgbe: probe of 0000:03:00.1 failed with error -5
+[   12.408017] initcall ixgbe_init_module+0x0/0x51 returned 0 after 29200 usecs
+
+root cause: ioremap can not handle mmio range that is more than 44bits on
+32bit PAE mode.
+
+We are using pfn with unsigned long like pfn_pte(), so those 0x383fffc00000 will
+overflow in pfn format with unsigned long (that is 32 bits in 32bit x86 kernel,
+and pfn only can support 44bits).
+
+| static inline pte_t pfn_pte(unsigned long page_nr, pgprot_t pgprot)
+| {
+|        return __pte(((phys_addr_t)page_nr << PAGE_SHIFT) |
+|                     massage_pgprot(pgprot));
+| }
+
+We could limit iomem to 44 bits so we can reject them early from root bus.
+but xhci is not happy with resource allocation (hang...)
+
+Change phys_addr_t for pfn_pte, and add overflow check to skip ram checking,
+as the mmio is too big to be ram.
+At last, don't use PHYSICAL_PAGE_MASK to get aligned phys_addr, that will
+cut off bits above 44bits.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=88131
+Reported-by: Aaron Ma <mapengyu@gmail.com>
+Tested-by: Aaron Ma <mapengyu@gmail.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
 ---
- drivers/iommu/intel_irq_remapping.c |  144 -----------------------------------
- 1 file changed, 144 deletions(-)
+ arch/x86/include/asm/page.h    |    8 ++++++++
+ arch/x86/include/asm/pgtable.h |    4 ++--
+ arch/x86/mm/ioremap.c          |    6 ++++--
+ arch/x86/mm/pat.c              |    3 +++
+ 4 files changed, 17 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index dab8653873f8..cb00d6bcb6ea 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -144,44 +144,6 @@ static int qi_flush_iec(struct intel_iommu *iommu, int index, int mask)
- 	return qi_submit_sync(&desc, iommu);
+Index: linux-2.6/arch/x86/include/asm/page.h
+===================================================================
+--- linux-2.6.orig/arch/x86/include/asm/page.h
++++ linux-2.6/arch/x86/include/asm/page.h
+@@ -15,6 +15,14 @@
+ 
+ #ifndef __ASSEMBLY__
+ 
++static inline int pfn_overflow(dma_addr_t phy_addr)
++{
++	dma_addr_t real_pfn = phy_addr >> PAGE_SHIFT;
++	unsigned long pfn = (unsigned long)real_pfn;
++
++	return pfn != real_pfn;
++}
++
+ struct page;
+ 
+ #include <linux/range.h>
+Index: linux-2.6/arch/x86/include/asm/pgtable.h
+===================================================================
+--- linux-2.6.orig/arch/x86/include/asm/pgtable.h
++++ linux-2.6/arch/x86/include/asm/pgtable.h
+@@ -355,9 +355,9 @@ static inline pgprotval_t massage_pgprot
+ 	return protval;
  }
  
--static int map_irq_to_irte_handle(int irq, u16 *sub_handle)
--{
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
--	unsigned long flags;
--	int index;
--
--	if (!irq_iommu)
--		return -1;
--
--	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
--	*sub_handle = irq_iommu->sub_handle;
--	index = irq_iommu->irte_index;
--	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
--	return index;
--}
--
--static int set_irte_irq(int irq, struct intel_iommu *iommu, u16 index, u16 subhandle)
--{
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
--	struct irq_cfg *cfg = irq_cfg(irq);
--	unsigned long flags;
--
--	if (!irq_iommu)
--		return -1;
--
--	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
--
--	cfg->remapped = 1;
--	irq_iommu->iommu = iommu;
--	irq_iommu->irte_index = index;
--	irq_iommu->sub_handle = subhandle;
--	irq_iommu->irte_mask = 0;
--
--	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
--
--	return 0;
--}
--
- static int modify_irte(struct irq_2_iommu *irq_iommu,
- 		       struct irte *irte_modified)
+-static inline pte_t pfn_pte(unsigned long page_nr, pgprot_t pgprot)
++static inline pte_t pfn_pte(phys_addr_t page_nr, pgprot_t pgprot)
  {
-@@ -1120,108 +1082,6 @@ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 	return 0;
+-	return __pte(((phys_addr_t)page_nr << PAGE_SHIFT) |
++	return __pte((page_nr << PAGE_SHIFT) |
+ 		     massage_pgprot(pgprot));
  }
  
--static void intel_compose_msi_msg(struct pci_dev *pdev,
--				  unsigned int irq, unsigned int dest,
--				  struct msi_msg *msg, u8 hpet_id)
--{
--	struct irq_cfg *cfg;
--	struct irte irte;
--	u16 sub_handle = 0;
--	int ir_index;
--
--	cfg = irq_cfg(irq);
--
--	ir_index = map_irq_to_irte_handle(irq, &sub_handle);
--	BUG_ON(ir_index == -1);
--
--	prepare_irte(&irte, cfg->vector, dest);
--
--	/* Set source-id of interrupt request */
--	if (pdev)
--		set_msi_sid(&irte, pdev);
--	else
--		set_hpet_sid(&irte, hpet_id);
--
--	modify_irte(irq_2_iommu(irq), &irte);
--
--	msg->address_hi = MSI_ADDR_BASE_HI;
--	msg->data = sub_handle;
--	msg->address_lo = MSI_ADDR_BASE_LO | MSI_ADDR_IR_EXT_INT |
--			  MSI_ADDR_IR_SHV |
--			  MSI_ADDR_IR_INDEX1(ir_index) |
--			  MSI_ADDR_IR_INDEX2(ir_index);
--}
--
--/*
-- * Map the PCI dev to the corresponding remapping hardware unit
-- * and allocate 'nvec' consecutive interrupt-remapping table entries
-- * in it.
-- */
--static int intel_msi_alloc_irq(struct pci_dev *dev, int irq, int nvec)
--{
--	struct intel_iommu *iommu;
--	int index;
--
--	down_read(&dmar_global_lock);
--	iommu = map_dev_to_ir(dev);
--	if (!iommu) {
--		printk(KERN_ERR
--		       "Unable to map PCI %s to iommu\n", pci_name(dev));
--		index = -ENOENT;
--	} else {
--		index = alloc_irte(iommu, irq, irq_2_iommu(irq), nvec);
--		if (index < 0) {
--			printk(KERN_ERR
--			       "Unable to allocate %d IRTE for PCI %s\n",
--			       nvec, pci_name(dev));
--			index = -ENOSPC;
--		}
--	}
--	up_read(&dmar_global_lock);
--
--	return index;
--}
--
--static int intel_msi_setup_irq(struct pci_dev *pdev, unsigned int irq,
--			       int index, int sub_handle)
--{
--	struct intel_iommu *iommu;
--	int ret = -ENOENT;
--
--	down_read(&dmar_global_lock);
--	iommu = map_dev_to_ir(pdev);
--	if (iommu) {
--		/*
--		 * setup the mapping between the irq and the IRTE
--		 * base index, the sub_handle pointing to the
--		 * appropriate interrupt remap table entry.
--		 */
--		set_irte_irq(irq, iommu, index, sub_handle);
--		ret = 0;
--	}
--	up_read(&dmar_global_lock);
--
--	return ret;
--}
--
--static int intel_alloc_hpet_msi(unsigned int irq, unsigned int id)
--{
--	int ret = -1;
--	struct intel_iommu *iommu;
--	int index;
--
--	down_read(&dmar_global_lock);
--	iommu = map_hpet_to_ir(id);
--	if (iommu) {
--		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
--		if (index >= 0)
--			ret = 0;
--	}
--	up_read(&dmar_global_lock);
--
--	return ret;
--}
--
- static struct irq_domain *intel_get_ir_irq_domain(struct irq_alloc_info *info)
- {
- 	struct intel_iommu *iommu = NULL;
-@@ -1279,10 +1139,6 @@ struct irq_remap_ops intel_irq_remap_ops = {
- 	.setup_ioapic_entry	= intel_setup_ioapic_entry,
- 	.set_affinity		= intel_ioapic_set_affinity,
- 	.free_irq		= free_irte,
--	.compose_msi_msg	= intel_compose_msi_msg,
--	.msi_alloc_irq		= intel_msi_alloc_irq,
--	.msi_setup_irq		= intel_msi_setup_irq,
--	.alloc_hpet_msi		= intel_alloc_hpet_msi,
- 	.get_ir_irq_domain	= intel_get_ir_irq_domain,
- 	.get_irq_domain		= intel_get_irq_domain,
- };
--- 
-1.7.10.4
-
+Index: linux-2.6/arch/x86/mm/ioremap.c
+===================================================================
+--- linux-2.6.orig/arch/x86/mm/ioremap.c
++++ linux-2.6/arch/x86/mm/ioremap.c
+@@ -122,7 +122,9 @@ static void __iomem *__ioremap_caller(re
+ 	if (ram_region < 0) {
+ 		pfn      = phys_addr >> PAGE_SHIFT;
+ 		last_pfn = last_addr >> PAGE_SHIFT;
+-		if (walk_system_ram_range(pfn, last_pfn - pfn + 1, NULL,
++		/* pfn overflow, don't need to check */
++		if (!pfn_overflow(last_addr) &&
++		    walk_system_ram_range(pfn, last_pfn - pfn + 1, NULL,
+ 					  __ioremap_check_ram) == 1)
+ 			return NULL;
+ 	}
+@@ -130,7 +132,7 @@ static void __iomem *__ioremap_caller(re
+ 	 * Mappings have to be page-aligned
+ 	 */
+ 	offset = phys_addr & ~PAGE_MASK;
+-	phys_addr &= PHYSICAL_PAGE_MASK;
++	phys_addr -= offset;
+ 	size = PAGE_ALIGN(last_addr+1) - phys_addr;
+ 
+ 	retval = reserve_memtype(phys_addr, (u64)phys_addr + size,
+Index: linux-2.6/arch/x86/mm/pat.c
+===================================================================
+--- linux-2.6.orig/arch/x86/mm/pat.c
++++ linux-2.6/arch/x86/mm/pat.c
+@@ -299,6 +299,9 @@ static int pat_pagerange_is_ram(resource
+ 	unsigned long end_pfn = (end + PAGE_SIZE - 1) >> PAGE_SHIFT;
+ 	struct pagerange_state state = {start_pfn, 0, 0};
+ 
++	/* pfn overflow, don't need to check */
++	if (pfn_overflow(end + PAGE_SIZE - 1))
++		return 0;
+ 	/*
+ 	 * For legacy reasons, physical address range in the legacy ISA
+ 	 * region is tracked as non-RAM. This will allow users of
