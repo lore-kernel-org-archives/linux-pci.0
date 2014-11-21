@@ -1,224 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:37287 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750848AbaKXW6t (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Nov 2014 17:58:49 -0500
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 25 Nov 2014 08:58:47 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id D1B722CE806D
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 09:49:28 +1100 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAOMnSwF32440402
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 09:49:28 +1100
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAOMnRx2025591
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 09:49:27 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH 3/8] powerpc/powernv: Export functions to retrieve slot status
-Date: Tue, 25 Nov 2014 09:49:20 +1100
-Message-Id: <1416869365-7671-4-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1416869365-7671-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1416869365-7671-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 2/4] PCI: quirk AMD/ATI VGA cards to avoid PM reset
+Date: Fri, 21 Nov 2014 19:00:32 +0000
+Message-ID: <A3397C8B8B789E45844E7EC5DEAD89D05995CAA6@satlexdag05.amd.com>
+References: <20141121180322.26669.65689.stgit@gimli.home>
+ <20141121182414.26669.48397.stgit@gimli.home>
+In-Reply-To: <20141121182414.26669.48397.stgit@gimli.home>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch exports two functions, which base on corresponding OPAL
-APIs to retrieve PCI slot status:
-
-   pnv_pci_get_power_status()     opal_pci_get_power_status()
-   pnv_pci_get_presence_status()  opal_pci_get_presence_status()
-
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/opal.h                |  6 +++-
- arch/powerpc/include/asm/pnv-pci.h             |  3 ++
- arch/powerpc/platforms/powernv/eeh-ioda.c      | 34 ++---------------------
- arch/powerpc/platforms/powernv/opal-wrappers.S |  2 ++
- arch/powerpc/platforms/powernv/pci.c           | 38 ++++++++++++++++++++++++++
- arch/powerpc/platforms/powernv/pci.h           |  1 +
- 6 files changed, 51 insertions(+), 33 deletions(-)
-
-diff --git a/arch/powerpc/include/asm/opal.h b/arch/powerpc/include/asm/opal.h
-index b59811f..b75be1c 100644
---- a/arch/powerpc/include/asm/opal.h
-+++ b/arch/powerpc/include/asm/opal.h
-@@ -153,6 +153,8 @@ struct opal_sg_list {
- #define OPAL_HANDLE_HMI				98
- #define OPAL_REGISTER_DUMP_REGION		101
- #define OPAL_UNREGISTER_DUMP_REGION		102
-+#define OPAL_PCI_GET_POWER_STATUS		110
-+#define OPAL_PCI_GET_PRESENCE_STATUS		111
- 
- #ifndef __ASSEMBLY__
- 
-@@ -905,7 +907,7 @@ int64_t opal_get_epow_status(__be64 *status);
- int64_t opal_set_system_attention_led(uint8_t led_action);
- int64_t opal_pci_next_error(uint64_t phb_id, __be64 *first_frozen_pe,
- 			    __be16 *pci_error_type, __be16 *severity);
--int64_t opal_pci_poll(uint64_t id);
-+int64_t opal_pci_poll(uint64_t id, uint8_t *val);
- int64_t opal_return_cpu(void);
- int64_t opal_check_token(uint64_t token);
- int64_t opal_reinit_cpus(uint64_t flags);
-@@ -946,6 +948,8 @@ int64_t opal_handle_hmi(void);
- int64_t opal_register_dump_region(uint32_t id, uint64_t start, uint64_t end);
- int64_t opal_unregister_dump_region(uint32_t id);
- int64_t opal_pci_set_phb_cxl_mode(uint64_t phb_id, uint64_t mode, uint64_t pe_number);
-+int64_t opal_pci_get_power_status(uint64_t id, uint8_t *status);
-+int64_t opal_pci_get_presence_status(uint64_t id, uint8_t *status);
- 
- /* Internal functions */
- extern int early_init_dt_scan_opal(unsigned long node, const char *uname,
-diff --git a/arch/powerpc/include/asm/pnv-pci.h b/arch/powerpc/include/asm/pnv-pci.h
-index f09a22f..527d97a 100644
---- a/arch/powerpc/include/asm/pnv-pci.h
-+++ b/arch/powerpc/include/asm/pnv-pci.h
-@@ -13,6 +13,9 @@
- #include <linux/pci.h>
- #include <misc/cxl.h>
- 
-+extern int pnv_pci_get_power_status(unsigned int index, unsigned char *status);
-+extern int pnv_pci_get_presence_status(unsigned int index, unsigned char *status);
-+
- int pnv_phb_to_cxl(struct pci_dev *dev);
- int pnv_cxl_ioda_msi_setup(struct pci_dev *dev, unsigned int hwirq,
- 			   unsigned int virq);
-diff --git a/arch/powerpc/platforms/powernv/eeh-ioda.c b/arch/powerpc/platforms/powernv/eeh-ioda.c
-index 4bf2fb5..fb66c74 100644
---- a/arch/powerpc/platforms/powernv/eeh-ioda.c
-+++ b/arch/powerpc/platforms/powernv/eeh-ioda.c
-@@ -490,24 +490,6 @@ static int ioda_eeh_get_state(struct eeh_pe *pe)
- 	return ioda_eeh_get_pe_state(pe);
- }
- 
--static s64 ioda_eeh_phb_poll(uint64_t id)
--{
--	s64 rc = OPAL_HARDWARE;
--
--	while (1) {
--		rc = opal_pci_poll(id);
--		if (rc <= 0)
--			break;
--
--		if (system_state < SYSTEM_RUNNING)
--			udelay(1000 * rc);
--		else
--			msleep(rc);
--	}
--
--	return rc;
--}
--
- int ioda_eeh_phb_reset(struct pci_controller *hose, int option)
- {
- 	struct pnv_phb *phb = hose->private_data;
-@@ -542,13 +524,7 @@ int ioda_eeh_phb_reset(struct pci_controller *hose, int option)
- 	 * need the PCI bus settlement delay.
- 	 */
- 	rc = opal_pci_reset(phb->opal_id, reset_scope);
--	if (rc > 0)
--		rc = ioda_eeh_phb_poll(phb->opal_id);
--
--	if (rc != OPAL_SUCCESS)
--		return -EIO;
--
--	return 0;
-+	return pnv_pci_poll(phb->opal_id, rc, NULL);
- }
- 
- static int __ioda_eeh_bridge_reset(struct pci_dev *dev, int option)
-@@ -641,13 +617,7 @@ static int ioda_eeh_bridge_reset(struct pci_dev *dev, int option)
- 	phb = hose->private_data;
- 	id |= ((phb->opal_id << 16) | (dev->bus->number << 8) | (dev->devfn));
- 	rc = opal_pci_reset(id, reset_scope);
--	if (rc > 0)
--		rc = ioda_eeh_phb_poll(id);
--
--	if (rc != OPAL_SUCCESS)
--		return -EIO;
--
--	return 0;
-+	return pnv_pci_poll(id, rc, NULL);
- }
- 
- static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
-diff --git a/arch/powerpc/platforms/powernv/opal-wrappers.S b/arch/powerpc/platforms/powernv/opal-wrappers.S
-index b6474a1..b2c15ff 100644
---- a/arch/powerpc/platforms/powernv/opal-wrappers.S
-+++ b/arch/powerpc/platforms/powernv/opal-wrappers.S
-@@ -249,3 +249,5 @@ OPAL_CALL(opal_handle_hmi,			OPAL_HANDLE_HMI);
- OPAL_CALL(opal_register_dump_region,		OPAL_REGISTER_DUMP_REGION);
- OPAL_CALL(opal_unregister_dump_region,		OPAL_UNREGISTER_DUMP_REGION);
- OPAL_CALL(opal_pci_set_phb_cxl_mode,		OPAL_PCI_SET_PHB_CXL_MODE);
-+OPAL_CALL(opal_pci_get_power_status,		OPAL_PCI_GET_POWER_STATUS);
-+OPAL_CALL(opal_pci_get_presence_status,		OPAL_PCI_GET_PRESENCE_STATUS);
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index b2187d0..f5bae4f 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -45,6 +45,44 @@
- #define cfg_dbg(fmt...)	do { } while(0)
- //#define cfg_dbg(fmt...)	printk(fmt)
- 
-+int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval)
-+{
-+	while (rval > 0) {
-+		rval = opal_pci_poll(id, pval);
-+		if (rval <= 0)
-+			break;
-+
-+		if (system_state < SYSTEM_RUNNING)
-+			udelay(1000 * rval);
-+		else
-+			msleep(rval);
-+	}
-+
-+	return rval ? -EIO : 0;
-+}
-+
-+int pnv_pci_get_power_status(unsigned int index, unsigned char *status)
-+{
-+	uint64_t id = (0x1ul << 63);
-+	long rc;
-+
-+	id |= index;
-+	rc = opal_pci_get_power_status(id, status);
-+	return pnv_pci_poll(id, rc, status);
-+}
-+EXPORT_SYMBOL_GPL(pnv_pci_get_power_status);
-+
-+int pnv_pci_get_presence_status(unsigned int index, unsigned char *status)
-+{
-+	uint64_t id = (0x1ul << 63);
-+	long rc;
-+
-+	id |= index;
-+	rc = opal_pci_get_presence_status(id, status);
-+	return pnv_pci_poll(id, rc, status);
-+}
-+EXPORT_SYMBOL_GPL(pnv_pci_get_presence_status);
-+
- #ifdef CONFIG_PCI_MSI
- static int pnv_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
- {
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 6c02ff8..396fe02 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -217,6 +217,7 @@ extern struct pci_ops pnv_pci_ops;
- extern struct pnv_eeh_ops ioda_eeh_ops;
- #endif
- 
-+int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval);
- void pnv_pci_dump_phb_diag_data(struct pci_controller *hose,
- 				unsigned char *log_buff);
- int pnv_pci_cfg_read(struct device_node *dn,
--- 
-1.8.3.2
-
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBBbGV4IFdpbGxpYW1zb24gW21h
+aWx0bzphbGV4LndpbGxpYW1zb25AcmVkaGF0LmNvbV0NCj4gU2VudDogRnJpZGF5LCBOb3ZlbWJl
+ciAyMSwgMjAxNCAxOjI0IFBNDQo+IFRvOiBiaGVsZ2Fhc0Bnb29nbGUuY29tDQo+IENjOiBsaW51
+eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBBbGV4
+DQo+IFdpbGxpYW1zb247IERldWNoZXIsIEFsZXhhbmRlcg0KPiBTdWJqZWN0OiBbUEFUQ0ggMi80
+XSBQQ0k6IHF1aXJrIEFNRC9BVEkgVkdBIGNhcmRzIHRvIGF2b2lkIFBNIHJlc2V0DQo+IA0KPiBT
+b21lIEFNRC9BVEkgR1BVcyByZXBvcnQgdGhhdCB0aGV5IHN1cHBvcnQgUE0gcmVzZXQgKE5vU29m
+dFJzdC0pIGJ1dA0KPiBpbml0aWF0aW5nIHN1Y2ggYSByZXNldCBoYXMgbm8gYXBwYXJlbnQgYWZm
+ZWN0IG9uIHRoZSBkZXZpY2UuICBUaGUNCj4gbW9uaXRvciByZW1haW5zIHN5bmMnZCwgdGhlIGZy
+YW1lYnVmZmVyIGNvbnRlbnRzIGFyZSByZXRhaW5lZCwgZXRjLg0KPiBDYWxsZXJzIG9mIHBjaV9y
+ZXNldF9mdW5jdGlvbigpIGRvbid0IG5lY2Vzc2FyaWx5IGhhdmUgYSB3YXkgdG8NCj4gdmFsaWRh
+dGUgd2hldGhlciBhIHJlc2V0IHdhcyBlZmZlY3RpdmUsIHNvIHdlIHJlYWxseSB3YW50IHRvIGF2
+b2lkDQo+IG1ha2luZyB1c2Ugb2YgYSBrbm93biBub24tZWZmZWN0aXZlIHJlc2V0LiAgUmV0dXJu
+aW5nIGFuIGVycm9yIGluDQo+IHN1Y2ggY2FzZXMgYXBwZWFycyB0byBiZSB0aGUgYmV0dGVyIG9w
+dGlvbi4gIEZvciB1c2VycyBsaWtlIHZmaW8tcGNpLA0KPiB0aGlzIGFsbG93cyB0aGUgZHJpdmVy
+IHRvIGVzY2FsYXRlIHRvIHRoZSBidXMgcmVzZXQgaW50ZXJmYWNlcy4NCj4gDQo+IElmIGEgZGV2
+aWNlIGxpdmVzIG9uIHRoZSByb290IGJ1cywgdGhlcmUncyByZWFsbHkgbm8gZnVydGhlcg0KPiBl
+c2NhbGF0aW9uIHBhdGgsIHNvIHdlIGV4ZW1wdCBQTSByZXNldCBhcyBwb3RlbnRpYWxseSBiZXR0
+ZXIgdGhhbg0KPiBub3RoaW5nLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogQWxleCBXaWxsaWFtc29u
+IDxhbGV4LndpbGxpYW1zb25AcmVkaGF0LmNvbT4NCj4gQ2M6IEFsZXggRGV1Y2hlciA8YWxleGFu
+ZGVyLmRldWNoZXJAYW1kLmNvbT4NCg0KQWNrZWQtYnk6IEFsZXggRGV1Y2hlciA8YWxleGFuZGVy
+LmRldWNoZXJAYW1kLmNvbT4NCg0KPiAtLS0NCj4gDQo+ICBkcml2ZXJzL3BjaS9xdWlya3MuYyB8
+ICAgMjEgKysrKysrKysrKysrKysrKysrKysrDQo+ICAxIGZpbGUgY2hhbmdlZCwgMjEgaW5zZXJ0
+aW9ucygrKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL3F1aXJrcy5jIGIvZHJpdmVy
+cy9wY2kvcXVpcmtzLmMNCj4gaW5kZXggOTBhY2IzMi4uNTYxZTEwZCAxMDA2NDQNCj4gLS0tIGEv
+ZHJpdmVycy9wY2kvcXVpcmtzLmMNCj4gKysrIGIvZHJpdmVycy9wY2kvcXVpcmtzLmMNCj4gQEAg
+LTMwMDgsNiArMzAwOCwyNyBAQA0KPiBERUNMQVJFX1BDSV9GSVhVUF9IRUFERVIoUENJX1ZFTkRP
+Ul9JRF9SRUFMVEVLLCAweDgxNjksDQo+ICBERUNMQVJFX1BDSV9GSVhVUF9IRUFERVIoUENJX1ZF
+TkRPUl9JRF9NRUxMQU5PWCwgUENJX0FOWV9JRCwNCj4gIAkJCSBxdWlya19icm9rZW5faW50eF9t
+YXNraW5nKTsNCj4gDQo+ICtzdGF0aWMgdm9pZCBxdWlya19ub19wbV9yZXNldChzdHJ1Y3QgcGNp
+X2RldiAqZGV2KQ0KPiArew0KPiArCS8qDQo+ICsJICogQSBub24tZWZmZWN0aXZlIFBNIHJlc2V0
+IG1heSBiZSBiZXR0ZXIgdGhhbiBub3RoaW5nDQo+ICsJICogaWYgd2UgY2FuJ3QgZG8gYSBidXMg
+cmVzZXQNCj4gKwkgKi8NCj4gKwlpZiAoIXBjaV9pc19yb290X2J1cyhkZXYtPmJ1cykpDQo+ICsJ
+CWRldi0+ZGV2X2ZsYWdzIHw9IFBDSV9ERVZfRkxBR1NfTk9fUE1fUkVTRVQ7DQo+ICt9DQo+ICsN
+Cj4gKy8qDQo+ICsgKiBTb21lIEFNRC9BVEkgR1BVUyAoSEQ4NTcwIC0gT2xhbmQpIHJlcG9ydCBz
+dXBwb3J0aW5nIFBNIHJlc2V0IHZpYQ0KPiBEMy0+RDANCj4gKyAqIHRyYW5zaXRpb24gKE5vU29m
+dFJzdC0pLiAgVGhpcyByZXNldCBtZWNoYW5pbXMgc2VlbXMgdG8gaGF2ZSBubyBlZmZlY3QNCj4g
+KyAqIHdoYXRzb2V2ZXIgb24gdGhlIGRldmljZSwgZXZlbiByZXRhaW5pbmcgdGhlIGZyYW1lYnVm
+ZmVyIGNvbnRlbnRzIGFuZA0KPiArICogbW9uaXRvciBzeW5jLiAgQWR2ZXJ0aXNpbmcgdGhpcyBz
+dXBwb3J0IG1ha2VzIG90aGVyIGxheWVycywgbGlrZSBWRklPDQo+ICsgKiBhc3N1bWUgcGNpX3Jl
+c2V0X2Z1bmN0aW9uKCkgaXMgdmlhYmxlIGZvciB0aGlzIGRldmljZS4gIE1hcmsgaXQgYXMNCj4g
+KyAqIHVuYXZhaWxhYmxlIHRvIHNraXAgaXQgd2hlbiB0ZXN0aW5nIHJlc2V0IG1ldGhvZHMuDQo+
+ICsgKi8NCj4gK0RFQ0xBUkVfUENJX0ZJWFVQX0NMQVNTX0hFQURFUihQQ0lfVkVORE9SX0lEX0FU
+SSwgUENJX0FOWV9JRCwNCj4gKwkJCSAgICAgICBQQ0lfQ0xBU1NfRElTUExBWV9WR0EsIDgsDQo+
+IHF1aXJrX25vX3BtX3Jlc2V0KTsNCj4gKw0KPiAgI2lmZGVmIENPTkZJR19BQ1BJDQo+ICAvKg0K
+PiAgICogQXBwbGU6IFNodXRkb3duIENhY3R1cyBSaWRnZSBUaHVuZGVyYm9sdCBjb250cm9sbGVy
+Lg0KDQo=
