@@ -1,213 +1,142 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:30597 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757348AbaKUDql (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Nov 2014 22:46:41 -0500
+Message-ID: <546EB597.20806@huawei.com>
+Date: Fri, 21 Nov 2014 11:46:31 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Jiang Liu <jiang.liu@linux.intel.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v4 24/31] iommu/vt-d: Clean up unused MSI related code
-Date: Tue,  4 Nov 2014 20:01:58 +0800
-Message-Id: <1415102525-9898-25-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Marc Zyngier <marc.zyngier@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>
+Subject: Re: Removal of bus->msi assignment breaks MSI with stacked domains
+References: <546E1771.4030201@arm.com> <20141120215353.GA7987@google.com> <alpine.DEB.2.11.1411202355060.6439@nanos> <546E9B60.9070706@huawei.com> <546EA2AB.9080609@linux.intel.com>
+In-Reply-To: <546EA2AB.9080609@linux.intel.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now MSI interrupt has been converted to new hierarchy irqdomain
-interfaces, so kill legacy MSI related code.
+On 2014/11/21 10:25, Jiang Liu wrote:
+> On 2014/11/21 9:54, Yijing Wang wrote:
+>>>> Thomas, let me know if you want to do that.  I suppose we could add a new
+>>>> patch to add it back, but that would leave bisection broken for the
+>>>> interval between c167caf8d174 and the patch that adds it back.
+>>>
+>>> Fortunately my irq/irqdomain branch is not immutable yet. So we have
+>>> no problem at that point. I can rebase on your branch until tomorrow
+>>> night. Or just rebase on mainline and we sort out the merge conflicts
+>>> later, i.e. delegate them to Linus so his job of pulling stuff gets
+>>> not completely boring.
+>>
+>> Hi Thomas, sorry for my introducing the broken.
+>>
+>>>
+>>> What I'm more worried about is whether this intended change is going
+>>> to inflict a problem on Jiangs intention to deduce the MSI irq domain
+>>> from the device, which we really need for making DMAR work w/o going
+>>> through loops and hoops.
+>>>
+>>> I have limited knowledge about the actual scope of iommu (DMAR) units
+>>> versus device/bus/host-controllers, so I would appreciate a proper
+>>> explanation for that from you or Jiang or both.
+>>
+>> In my personal opinion, if it's not necessary, we should not put stuff
+>> into pci_dev or pci_bus. If we plan to save msi_controller in pci_bus or
+>> pci_dev.
+>> I have a proposal, I would be appreciated if you could give some comments.
+>> First we refactor pci_host_bridge to make a generic
+>> pci_host_bridge, then we could save pci domain in it to eliminate
+>> arch specific functions. I aslo wanted to save msi_controller as
+>> pci domain, but now Jiang refactor hierarchy irq domain, and
+>> pci devices under the same pci host bridge may need to associate
+>> to different msi_controllers.
+>>
+>> So I want to associate a msi_controller finding ops with generic pci_host_bridge,
+>> then every pci device could find its msi_controller/irq_domain by a
+>> common function
+>>
+>> E.g
+>>
+>> struct msi_controller *pci_msi_controller(struct pci_dev *pdev)
+>> {
+>> 	struct msi_controller *ctrl;
+>> 	struct pci_host_bridge *host = find_pci_host_bridge(pdev->bus);
+>> 	if (host && host->pci_get_msi_controller)
+>> 		ctrl = pci_host_bridge->pci_get_msi_controller(struct pci_dev *pdev);
+>>
+>> 	return ctrl;	
+>> }
+> Hi Yijing,
+> 	This may be a little overhead for x86 because we could get
+> irqdomain from pci_dev itself through:
+> 	pci_dev->dev.archdata.iommu->ir_msi_domain.
+> 	This doesn't work currently because pci_dev->dev.archdata.iommu
+> is set on the first dma mapping request, but we have a plan to set it
+> when creating PCI devices so we don't need to search the iommu list
+> at runtime.
+> 	Even the whole msi_controller concept may be killed for x86.
+> Actually I'm trying to convert all MSI arch code to use hierarchy
+> irqdomain, then we don't need arch_setup_msi_irqs() and
+> msi_controller.setup_irq() and related anymore. But the issue is
+> that it affects too many architectures and may cause slightly code
+> size increase.
+> 	If we could convert all PCI MSI code to use hierarchy irqdomain,
+> then the suggested interface is:
+> 	struct irq_domain *pci_get_msi_irqdomain(struct pci_dev *pdev);
+> Thoughts?
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel_irq_remapping.c |  144 -----------------------------------
- 1 file changed, 144 deletions(-)
+So the final solution depends the MSI refactoring work progress.
+		   (glue layer)
+I prefer pci_dev->msi_controller->(msi irq hierarchy domain)/(normal msi irq allocation code).
+If we want to eliminate msi_controller, we must force all PCI MSI code to use hierarchy
+irq domain. I doubt whether it is worth to do.
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 88196ca55e29..cbaad087a872 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -145,44 +145,6 @@ static int qi_flush_iec(struct intel_iommu *iommu, int index, int mask)
- 	return qi_submit_sync(&desc, iommu);
- }
- 
--static int map_irq_to_irte_handle(int irq, u16 *sub_handle)
--{
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
--	unsigned long flags;
--	int index;
--
--	if (!irq_iommu)
--		return -1;
--
--	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
--	*sub_handle = irq_iommu->sub_handle;
--	index = irq_iommu->irte_index;
--	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
--	return index;
--}
--
--static int set_irte_irq(int irq, struct intel_iommu *iommu, u16 index, u16 subhandle)
--{
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
--	struct irq_cfg *cfg = irq_cfg(irq);
--	unsigned long flags;
--
--	if (!irq_iommu)
--		return -1;
--
--	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
--
--	cfg->remapped = 1;
--	irq_iommu->iommu = iommu;
--	irq_iommu->irte_index = index;
--	irq_iommu->sub_handle = subhandle;
--	irq_iommu->irte_mask = 0;
--
--	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
--
--	return 0;
--}
--
- static int modify_irte(struct irq_2_iommu *irq_iommu,
- 		       struct irte *irte_modified)
- {
-@@ -1070,108 +1032,6 @@ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 	return 0;
- }
- 
--static void intel_compose_msi_msg(struct pci_dev *pdev,
--				  unsigned int irq, unsigned int dest,
--				  struct msi_msg *msg, u8 hpet_id)
--{
--	struct irq_cfg *cfg;
--	struct irte irte;
--	u16 sub_handle = 0;
--	int ir_index;
--
--	cfg = irq_cfg(irq);
--
--	ir_index = map_irq_to_irte_handle(irq, &sub_handle);
--	BUG_ON(ir_index == -1);
--
--	prepare_irte(&irte, cfg->vector, dest);
--
--	/* Set source-id of interrupt request */
--	if (pdev)
--		set_msi_sid(&irte, pdev);
--	else
--		set_hpet_sid(&irte, hpet_id);
--
--	modify_irte(irq_2_iommu(irq), &irte);
--
--	msg->address_hi = MSI_ADDR_BASE_HI;
--	msg->data = sub_handle;
--	msg->address_lo = MSI_ADDR_BASE_LO | MSI_ADDR_IR_EXT_INT |
--			  MSI_ADDR_IR_SHV |
--			  MSI_ADDR_IR_INDEX1(ir_index) |
--			  MSI_ADDR_IR_INDEX2(ir_index);
--}
--
--/*
-- * Map the PCI dev to the corresponding remapping hardware unit
-- * and allocate 'nvec' consecutive interrupt-remapping table entries
-- * in it.
-- */
--static int intel_msi_alloc_irq(struct pci_dev *dev, int irq, int nvec)
--{
--	struct intel_iommu *iommu;
--	int index;
--
--	down_read(&dmar_global_lock);
--	iommu = map_dev_to_ir(dev);
--	if (!iommu) {
--		printk(KERN_ERR
--		       "Unable to map PCI %s to iommu\n", pci_name(dev));
--		index = -ENOENT;
--	} else {
--		index = alloc_irte(iommu, irq, irq_2_iommu(irq), nvec);
--		if (index < 0) {
--			printk(KERN_ERR
--			       "Unable to allocate %d IRTE for PCI %s\n",
--			       nvec, pci_name(dev));
--			index = -ENOSPC;
--		}
--	}
--	up_read(&dmar_global_lock);
--
--	return index;
--}
--
--static int intel_msi_setup_irq(struct pci_dev *pdev, unsigned int irq,
--			       int index, int sub_handle)
--{
--	struct intel_iommu *iommu;
--	int ret = -ENOENT;
--
--	down_read(&dmar_global_lock);
--	iommu = map_dev_to_ir(pdev);
--	if (iommu) {
--		/*
--		 * setup the mapping between the irq and the IRTE
--		 * base index, the sub_handle pointing to the
--		 * appropriate interrupt remap table entry.
--		 */
--		set_irte_irq(irq, iommu, index, sub_handle);
--		ret = 0;
--	}
--	up_read(&dmar_global_lock);
--
--	return ret;
--}
--
--static int intel_alloc_hpet_msi(unsigned int irq, unsigned int id)
--{
--	int ret = -1;
--	struct intel_iommu *iommu;
--	int index;
--
--	down_read(&dmar_global_lock);
--	iommu = map_hpet_to_ir(id);
--	if (iommu) {
--		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
--		if (index >= 0)
--			ret = 0;
--	}
--	up_read(&dmar_global_lock);
--
--	return ret;
--}
--
- static struct irq_domain *intel_get_ir_irq_domain(struct irq_alloc_info *info)
- {
- 	struct intel_iommu *iommu = NULL;
-@@ -1229,10 +1089,6 @@ struct irq_remap_ops intel_irq_remap_ops = {
- 	.setup_ioapic_entry	= intel_setup_ioapic_entry,
- 	.set_affinity		= intel_ioapic_set_affinity,
- 	.free_irq		= free_irte,
--	.compose_msi_msg	= intel_compose_msi_msg,
--	.msi_alloc_irq		= intel_msi_alloc_irq,
--	.msi_setup_irq		= intel_msi_setup_irq,
--	.alloc_hpet_msi		= intel_alloc_hpet_msi,
- 	.get_ir_irq_domain	= intel_get_ir_irq_domain,
- 	.get_irq_domain		= intel_get_irq_domain,
- };
+Thanks!
+Yijing.
+
+> Regards!
+> Gerry
+>>
+>> If I miss something, please let me know, thanks.
+>>
+>> Thanks!
+>> Yijing.
+>>
+>>
+>>>
+>>> My guts feeling tells me that anything less granular than the bus
+>>> level is wrong and according to my limited knowledge Intel even has
+>>> DMARs which are assigned to a single device it's even more wrong. So
+>>> the proper change would be not to push it from bus to something above
+>>> the bus, but instead make it a per device property.
+>>>
+>>> But my knowledge there is limited, so I rely on the PCI/architecture
+>>> experts to sort that out.
+>>>
+>>> Let me know ASAP.
+>>>
+>>> Thanks,
+>>>
+>>> 	tglx
+>>>
+>>> .
+>>>
+>>
+>>
+> 
+> .
+> 
+
+
 -- 
-1.7.10.4
+Thanks!
+Yijing
 
