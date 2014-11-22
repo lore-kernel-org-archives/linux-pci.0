@@ -1,98 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:35078 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751026AbaKYJ2L (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Nov 2014 04:28:11 -0500
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 25 Nov 2014 19:28:06 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 43D452BB0068
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 20:28:04 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAP9S0oN39387216
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 20:28:00 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAP9S3sv021497
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 20:28:03 +1100
-Date: Tue, 25 Nov 2014 17:28:01 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH V9 08/18] powrepc/pci: Refactor pci_dn
-Message-ID: <20141125092801.GA3931@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1414942894-17034-9-git-send-email-weiyang@linux.vnet.ibm.com>
- <20141119233024.GF23467@google.com>
- <20141120072057.GC8562@richard>
- <20141120190541.GA5110@google.com>
- <20141121000411.GA19858@shangw>
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:41985 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752382AbaKVENu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 23:13:50 -0500
+Message-ID: <54700D52.9050109@gmail.com>
+Date: Sat, 22 Nov 2014 12:13:06 +0800
+From: Yijing Wang <wangyijing0307@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141121000411.GA19858@shangw>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yijing Wang <wangyijing@huawei.com>
+CC: Thomas Gleixner <tglx@linutronix.de>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, linux-pci@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>
+Subject: Re: Removal of bus->msi assignment breaks MSI with stacked domains
+References: <546E1771.4030201@arm.com> <20141120215353.GA7987@google.com> <alpine.DEB.2.11.1411202355060.6439@nanos> <546E9B60.9070706@huawei.com> <20141121173110.GB6578@google.com>
+In-Reply-To: <20141121173110.GB6578@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 21, 2014 at 11:04:11AM +1100, Gavin Shan wrote:
->>> 2.4 The potential problem for [Patch 08/18]
->>> ===============================================================================
->>> According to the SPEC, the offset/stride will change after each
->>> sriov_enable(). This means the bus/devfn will change after each
->>> sriov_enable().
->>> 
->>> My current thought is to fix it up in virtfn_add(). If the total VF number
->>> will not change, we could create those pci_dn at the beginning and fix the
->>> bus/devfn at each time the VF is truely created.
+
+在 2014/11/22 1:31, Bjorn Helgaas 写道:
+> On Fri, Nov 21, 2014 at 09:54:40AM +0800, Yijing Wang wrote:
+>>>> Thomas, let me know if you want to do that.  I suppose we could add a new
+>>>> patch to add it back, but that would leave bisection broken for the
+>>>> interval between c167caf8d174 and the patch that adds it back.
+>>> Fortunately my irq/irqdomain branch is not immutable yet. So we have
+>>> no problem at that point. I can rebase on your branch until tomorrow
+>>> night. Or just rebase on mainline and we sort out the merge conflicts
+>>> later, i.e. delegate them to Linus so his job of pulling stuff gets
+>>> not completely boring.
+>> Hi Thomas, sorry for my introducing the broken.
 >>
->>By "fix it up," I assume you mean call an arch function that does the
->>pci_pdn setup you need.
+>>> What I'm more worried about is whether this intended change is going
+>>> to inflict a problem on Jiangs intention to deduce the MSI irq domain
+>>> from the device, which we really need for making DMAR work w/o going
+>>> through loops and hoops.
+>>>
+>>> I have limited knowledge about the actual scope of iommu (DMAR) units
+>>> versus device/bus/host-controllers, so I would appreciate a proper
+>>> explanation for that from you or Jiang or both.
+>> In my personal opinion, if it's not necessary, we should not put stuff
+>> into pci_dev or pci_bus. If we plan to save msi_controller in pci_bus or
+>> pci_dev.
+>> I have a proposal, I would be appreciated if you could give some comments.
+>> First we refactor pci_host_bridge to make a generic
+>> pci_host_bridge, then we could save pci domain in it to eliminate
+>> arch specific functions. I aslo wanted to save msi_controller as
+>> pci domain, but now Jiang refactor hierarchy irq domain, and
+>> pci devices under the same pci host bridge may need to associate
+>> to different msi_controllers.
+> I think this is getting ahead of ourselves.  Let's make small steps.
+>
+> We currently have the msi_controller pointer in struct pci_bus.  That was
+> there even before your series.  Your series added pci_msi_controller(),
+> and I reworked it so it looks like this:
+>
+>      static struct msi_controller *pci_msi_controller(struct pci_dev *dev)
+>      {
+> 	   struct msi_controller *msi_ctrl = dev->bus->msi;
+>
+> 	   if (msi_ctrl)
+> 		   return msi_ctrl;
+>
+> 	   return pcibios_msi_controller(dev);
+>      }
+>
+> So now your series basically just removes the ARM add_bus() and
+> remove_bus() methods and gets the MSI controller info from the ARM
+> pci_sys_data struct instead of from pci_bus.  Of course, that assumes that
+> on ARM, all devices under a host bridge have the same MSI controller.  That
+> seems like an unwarranted assumption, but if you want to do it for ARM,
+> that's fine with me.
+
+Agree, we could use pci_msi_controller() to find msi_controller for 
+pci_dev before a
+better common way found.
+
+>
+>> So I want to associate a msi_controller finding ops with generic pci_host_bridge,
+>> then every pci device could find its msi_controller/irq_domain by a
+>> common function
 >>
->>It sounds reasonable to do this either in virtfn_add()/virtfn_remove() or
->>at the points where we write PCI_SRIOV_CTRL_VFE, i.e., in sriov_init(),
->>sriov_enable(), sriov_disable(), and sriov_restore_state().  From a
->>hardware point of view, the VFs exist whenever PCI_SRIOV_CTRL_VFE is set,
->>so it might be nice to have this setup connected to that.
+>> E.g
 >>
->
->Yes, Both ways can fix the issue. For couple reasons, I want add weak
->pcibios_virtfn_add(), which is called in virtfn_add() if you agree.
->
->- PCI_SRIOV_CTRL_VFE might be set somewhere except the functions you pointed.
->  Set/clear PCI_SRIOV_CTRL_VFE will invoke background work to check pci_dn
->  and add/remove accordingly. It would be overhead which we can avoid.
->- We plan to support EEH for VFs in future. virtfn_add() way matches with
->  current EEH implementation better. EEH device and PE are created based
->  on (struct pci_dev), and EEH devices and PE can be destroied in time in
->  pcibios_release_device(), which is invoked by virtfn_remove(). So we only
->  need one weak function. In contrast, we have to create EEH device and PE
->  for VFs a bit early before any VFs are instantiated, and destroy them a
->  bit late after all VFs are offline.
->
-
-Bjorn,
-
-Since my mail box got some problem in the last few days, I am not sure you
-agree with Gavin's proposal or not?
-
-And if you agree to enumerate the maximum VF bus range, I will add this logic
-in the next versin.
-
->Thanks,
->Gavin
->
->>Bjorn
+>> struct msi_controller *pci_msi_controller(struct pci_dev *pdev)
+>> {
+>> 	struct msi_controller *ctrl;
+>> 	struct pci_host_bridge *host = find_pci_host_bridge(pdev->bus);
+>> 	if (host && host->pci_get_msi_controller)
+>> 		ctrl = pci_host_bridge->pci_get_msi_controller(struct pci_dev *pdev);
 >>
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> 	return ctrl;	
+>> }
+> You can do this for ARM if you want (and your series already accomplishes
+> the same effect, though implemented differently).  But I don't think this
+> is appropriate for the PCI core.
 
--- 
-Richard Yang
-Help you, Help me
+OK. We need a better solution, not only for arm, also need to consider 
+arm64 and
+other platforms.
+
+>
+> For anybody who is on this thread but not the original, I reworked the
+> series slightly, see [1].
+>
+> Bjorn
+>
+> [1] http://lkml.kernel.org/r/20141121172018.GA6578@google.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
