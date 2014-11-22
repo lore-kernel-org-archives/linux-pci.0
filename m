@@ -1,78 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:40206 "EHLO
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:42527 "EHLO
 	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750752AbaKTFlF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Nov 2014 00:41:05 -0500
+	with ESMTP id S1752561AbaKVCwr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Nov 2014 21:52:47 -0500
 Received: from /spool/local
 	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 20 Nov 2014 15:41:03 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 98D212CE8060
-	for <linux-pci@vger.kernel.org>; Thu, 20 Nov 2014 16:41:01 +1100 (EST)
+	Sat, 22 Nov 2014 12:52:45 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 96A0E3578053
+	for <linux-pci@vger.kernel.org>; Sat, 22 Nov 2014 13:52:42 +1100 (EST)
 Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAK5eaZw36307160
-	for <linux-pci@vger.kernel.org>; Thu, 20 Nov 2014 16:40:36 +1100
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAM2qguT24641770
+	for <linux-pci@vger.kernel.org>; Sat, 22 Nov 2014 13:52:42 +1100
 Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAK5f0EQ003275
-	for <linux-pci@vger.kernel.org>; Thu, 20 Nov 2014 16:41:01 +1100
-Date: Thu, 20 Nov 2014 13:40:58 +0800
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAM2qffx031234
+	for <linux-pci@vger.kernel.org>; Sat, 22 Nov 2014 13:52:42 +1100
 From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Benjamin Herrenschmidt <benh@au1.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, Donald Dutile <ddutile@redhat.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH V9 03/18] PCI: Add weak pcibios_iov_resource_size()
- interface
-Message-ID: <20141120054058.GB8562@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1414942894-17034-4-git-send-email-weiyang@linux.vnet.ibm.com>
- <20141119011243.GA23467@google.com>
- <1416363332.5704.18.camel@au1.ibm.com>
- <20141119032100.GA7105@richard>
- <20141119042601.GB23467@google.com>
- <20141119092740.GA12872@richard>
- <20141119172350.GC23467@google.com>
- <1416430300.5704.35.camel@au1.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1416430300.5704.35.camel@au1.ibm.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH] PCI: Refresh offset/stride after NumVFs is written
+Date: Sat, 22 Nov 2014 10:52:39 +0800
+Message-Id: <1416624759-13543-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 20, 2014 at 07:51:40AM +1100, Benjamin Herrenschmidt wrote:
->On Wed, 2014-11-19 at 10:23 -0700, Bjorn Helgaas wrote:
->> 
->> Yes, I've read that many times.  What's missing is the connection between a
->> PE and the things in the PCI specs (buses, devices, functions, MMIO address
->> space, DMA, MSI, etc.)  Presumably the PE structure imposes constraints on
->> how the core uses the standard PCI elements, but we don't really have a
->> clear description of those constraints yet.
->
->Right, a "PE" is a HW concept in fact in our bridges, that essentially is
->a shared isolation state between DMA, MMIO, MSIs, PCIe error messages,...
->for a given "domain" or set of PCI functions.
->
->The techniques of how the HW resources are mapped to PE and associated
->constraints are slightly different from one generation of our chips to
->the next. In general, P7 follows an architecture known as "IODA" and P8
->"IODA2". I'm trying to get that spec made available via OpenPower but
->that hasn't happened yet.
->
->In this case we mostly care about IODA2 (P8), so I'll give a quick
->description here. Wei, feel free to copy/paste that into a bit of doco
->to throw into Documentation/powerpc/ along with your next spin of the patch.
->
+According to SR-IOV spec sec 3.3.9, 3.3.10, the NumVFs setting change will
+affect the offset and stride. Current implementation doesn't refresh the
+offset/stride cached in pci_sriov structure.
 
-Got it.
+This patch introduces a wrapper pci_iov_set_numvfs(), which refresh these two
+value after NumVFs is written.
 
-I will add more description in powerpc directory.
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/iov.c |   17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
 
-
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 4d109c0..c7010c5 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -31,6 +31,15 @@ static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
+ 		dev->sriov->stride * id) & 0xff;
+ }
+ 
++static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
++{
++	struct pci_sriov *iov = dev->sriov;
++
++	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
++	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &iov->offset);
++	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &iov->stride);
++}
++
+ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+ {
+ 	struct pci_bus *child;
+@@ -243,7 +252,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 			return rc;
+ 	}
+ 
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
++	pci_iov_set_numvfs(dev, nr_virtfn);
+ 	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
+ 	pci_cfg_access_lock(dev);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+@@ -272,7 +281,7 @@ failed:
+ 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+ 	pci_cfg_access_lock(dev);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
++	pci_iov_set_numvfs(dev, 0);
+ 	ssleep(1);
+ 	pci_cfg_access_unlock(dev);
+ 
+@@ -303,7 +312,7 @@ static void sriov_disable(struct pci_dev *dev)
+ 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
+ 
+ 	iov->num_VFs = 0;
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
++	pci_iov_set_numvfs(dev, 0);
+ }
+ 
+ static int sriov_init(struct pci_dev *dev, int pos)
+@@ -439,7 +448,7 @@ static void sriov_restore_state(struct pci_dev *dev)
+ 		pci_update_resource(dev, i);
+ 
+ 	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, iov->num_VFs);
++	pci_iov_set_numvfs(dev, iov->num_VFs);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+ 	if (iov->ctrl & PCI_SRIOV_CTRL_VFE)
+ 		msleep(100);
 -- 
-Richard Yang
-Help you, Help me
+1.7.9.5
 
