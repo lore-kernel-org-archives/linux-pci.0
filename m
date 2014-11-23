@@ -1,116 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:57090 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751057AbaKQK5y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 05:57:54 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Suravee.Suthikulpanit@amd.com, linux-ia64@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Wuyun <wuyun.wu@huawei.com>, linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFC PATCH 07/16] PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
-Date: Mon, 17 Nov 2014 11:56:36 +0100
-Message-ID: <2507218.mHliopJb05@wuerfel>
-In-Reply-To: <1416219710-26088-8-git-send-email-wangyijing@huawei.com>
-References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com> <1416219710-26088-8-git-send-email-wangyijing@huawei.com>
+Received: from www.linutronix.de ([62.245.132.108]:33964 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750733AbaKWKeN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 23 Nov 2014 05:34:13 -0500
+Date: Sun, 23 Nov 2014 11:33:31 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+cc: Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [Patch irqdomain: Enhance irq_domain_free_irqs_common() to
+ support parentless irqdomain
+In-Reply-To: <1416540206-18103-1-git-send-email-jiang.liu@linux.intel.com>
+Message-ID: <alpine.DEB.2.11.1411231132160.6439@nanos>
+References: <1416540206-18103-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 17 November 2014 18:21:41 Yijing Wang wrote:
-> There are some common PCI infos like domain, msi_controller, these
-> infos are saved in arch PCI sysdata, and lots arch specific functions
-> like pci_domain_nr() and pcibios_msi_controller() required.
-> We could separate pci_host_bridge creation out of pci_create_root_bus(),
-> then we could put the common infos in, then we could eliminate
-> the arch specifc functions.
+On Fri, 21 Nov 2014, Jiang Liu wrote:
+
+> Originally irq_domain_free_irqs_common() is designed to be used by
+> irqdomains with parent. But there are desires to reuse for parentless
+> irqdomains for code reduction.
+> So check domain->parent before invoking irq_domain_free_irqs_parent().
 > 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 > ---
->  drivers/pci/host-bridge.c |   99 +++++++++++++++++++++++++++++++++
->  drivers/pci/probe.c       |  134 ++++++++++++++++----------------------------
->  include/linux/pci.h       |   11 +++-
->  3 files changed, 158 insertions(+), 86 deletions(-)
+> Hi Thomas,
+> 	This patch applies to tip/irq/irqdomain, it helps to reduce code
+> size on ARM. Seems we still have chance to merge it into tip/irq/irqdomain:)
+> Regards!
+> Gerry
+> ---
+>  kernel/irq/irqdomain.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> index 0e5f3c9..e31604f 100644
-> --- a/drivers/pci/host-bridge.c
-> +++ b/drivers/pci/host-bridge.c
-> @@ -8,6 +8,105 @@
->  
->  #include "pci.h"
->  
-> +LIST_HEAD(pci_host_bridge_list);
-> +DECLARE_RWSEM(pci_host_bridge_sem);
+> diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+> index 029acf11efed..0449d2869e17 100644
+> --- a/kernel/irq/irqdomain.c
+> +++ b/kernel/irq/irqdomain.c
+> @@ -975,7 +975,8 @@ void irq_domain_free_irqs_common(struct irq_domain *domain, unsigned int virq,
+>  		if (irq_data)
+>  			irq_domain_reset_irq_data(irq_data);
+>  	}
+> -	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
+> +	if (domain->parent)
+> +		irq_domain_free_irqs_parent(domain, virq, nr_irqs);
 
-Unless the pci_host_bridge_sem is accessed thousands of times per second,
-it's normally better to use a simple mutex instead.
+irq_domain_free_irqs_parent()
+{
+	if (domain->parent && domain->parent->ops->free)
+	   	...
+}
 
-> +static struct resource busn_resource = {
-> +	.name	= "PCI busn",
-> +	.start	= 0,
-> +	.end	= 255,
-> +	.flags	= IORESOURCE_BUS,
-> +};
+So the above is redundant and does not change anything.
 
-I think it would be better to require callers to pass the bus resource
-down to the function.
+Thanks,
 
-> +struct pci_host_bridge *pci_create_host_bridge(
-> +		struct device *parent, u32 db, 
-> +		struct pci_ops *ops, void *sysdata, 
-> +		struct list_head *resources)
-> +{
-
-Do we still need to pass the 'sysdata' in here? If we are guaranteed to
-have a device pointer, we should always be able to get the driver
-private data from dev_get_drvdata(host->dev->parent).
-
-> +	host = kzalloc(sizeof(*host), GFP_KERNEL);
-> +	if (!host)
-> +		return NULL;
-
-devm_kzalloc maybe?
-
-> +	if (!resources) {
-> +		/* Use default IO/MEM/BUS resources*/
-> +		pci_add_resource(&host->windows, &ioport_resource);
-> +		pci_add_resource(&host->windows, &iomem_resource);
-> +		pci_add_resource(&host->windows, &busn_resource);
-> +	} else {
-> +		list_for_each_entry_safe(window, n, resources, list)
-> +			list_move_tail(&window->list, &host->windows);
-> +	}
-
-I think we should assume that the correct resources are passed. You
-could add a wrapper around this function to convert old platforms
-though.
-
-> +EXPORT_SYMBOL(pci_create_host_bridge);
-
-EXPORT_SYMBOL_GPL() maybe?
-
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 8b11b38..daa7f40 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -402,7 +402,12 @@ struct pci_host_bridge_window {
->  struct pci_host_bridge {
->  	struct device dev;
->  	struct pci_bus *bus;		/* root bus */
-> +	struct list_head list;
->  	struct list_head windows;	/* pci_host_bridge_windows */
-> +	int busnum;
-
-The busnum should already be implied through the bus resource.
-
-	Arnd
+	tglx
