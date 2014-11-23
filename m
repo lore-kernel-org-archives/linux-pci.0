@@ -1,56 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH 4/4] PCI: quirk Atheros AR93xx to avoid bus reset
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Alex Williamson <alex.williamson@redhat.com>
-Date: Fri, 21 Nov 2014 11:24:27 -0700
-Message-ID: <20141121182427.26669.82417.stgit@gimli.home>
-In-Reply-To: <20141121180322.26669.65689.stgit@gimli.home>
-References: <20141121180322.26669.65689.stgit@gimli.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:10068 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751175AbaKWN2a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 23 Nov 2014 08:28:30 -0500
+Message-ID: <5471E0F9.7080003@linux.intel.com>
+Date: Sun, 23 Nov 2014 21:28:25 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [Patch irqdomain: Enhance irq_domain_free_irqs_common() to support
+ parentless irqdomain
+References: <1416540206-18103-1-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1411231132160.6439@nanos> <alpine.DEB.2.11.1411231135190.6439@nanos>
+In-Reply-To: <alpine.DEB.2.11.1411231135190.6439@nanos>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Reports against the TL-WDN4800 card indicate that PCI bus reset of
-this Atheros device cause system lock-ups and resets.  I've also
-been able to confirm this behavior on multiple systems.  The device
-never returns from reset and attempts to access config space of the
-device after reset result in hangs.  Blacklist bus reset for the
-device to avoid this issue.
+On 2014/11/23 18:36, Thomas Gleixner wrote:
+> On Sun, 23 Nov 2014, Thomas Gleixner wrote:
+> 
+>> On Fri, 21 Nov 2014, Jiang Liu wrote:
+>>
+>>> Originally irq_domain_free_irqs_common() is designed to be used by
+>>> irqdomains with parent. But there are desires to reuse for parentless
+>>> irqdomains for code reduction.
+>>> So check domain->parent before invoking irq_domain_free_irqs_parent().
+>>>
+>>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>>> ---
+>>> Hi Thomas,
+>>> 	This patch applies to tip/irq/irqdomain, it helps to reduce code
+>>> size on ARM. Seems we still have chance to merge it into tip/irq/irqdomain:)
+>>> Regards!
+>>> Gerry
+>>> ---
+>>>  kernel/irq/irqdomain.c |    3 ++-
+>>>  1 file changed, 2 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+>>> index 029acf11efed..0449d2869e17 100644
+>>> --- a/kernel/irq/irqdomain.c
+>>> +++ b/kernel/irq/irqdomain.c
+>>> @@ -975,7 +975,8 @@ void irq_domain_free_irqs_common(struct irq_domain *domain, unsigned int virq,
+>>>  		if (irq_data)
+>>>  			irq_domain_reset_irq_data(irq_data);
+>>>  	}
+>>> -	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
+>>> +	if (domain->parent)
+>>> +		irq_domain_free_irqs_parent(domain, virq, nr_irqs);
+>>
+>> irq_domain_free_irqs_parent()
+>> {
+>> 	if (domain->parent && domain->parent->ops->free)
+>> 	   	...
+>> }
+>>
+>> So the above is redundant and does not change anything.
+> 
+> Except that this function gets replaced later in the series and drops
+> the parent check.
+> 
+> Though we should not put the conditionals on the call sites. We want
+> the functions handle it.
+> 
+> /me goes fixing.
+Thanks, Thomas!
 
-Reported-by: Andreas Hartmann <andihartmann@freenet.de>
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Tested-by: Andreas Hartmann <andihartmann@freenet.de>
----
-
- drivers/pci/quirks.c |   14 ++++++++++++++
- 1 file changed, 14 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 561e10d..ebbd5b4 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3029,6 +3029,20 @@ static void quirk_no_pm_reset(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_ATI, PCI_ANY_ID,
- 			       PCI_CLASS_DISPLAY_VGA, 8, quirk_no_pm_reset);
- 
-+static void quirk_no_bus_reset(struct pci_dev *dev)
-+{
-+	dev->dev_flags |= PCI_DEV_FLAGS_NO_BUS_RESET;
-+}
-+
-+/*
-+ * Atheros AR93xx chips do not behave after a bus reset.  The device will
-+ * throw a Link Down error on AER capable system and regardless of AER,
-+ * config space of the device is never accessible again and typically
-+ * causes the system to hang or reset when access is attempted.
-+ * http://www.spinics.net/lists/linux-pci/msg34797.html
-+ */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0030, quirk_no_bus_reset);
-+
- #ifdef CONFIG_ACPI
- /*
-  * Apple: Shutdown Cactus Ridge Thunderbolt controller.
-
+> 
+> Thanks,
+> 
+> 	tglx
+> 
