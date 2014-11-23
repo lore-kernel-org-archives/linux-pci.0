@@ -1,131 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f54.google.com ([209.85.192.54]:53582 "EHLO
-	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750914AbaKEXbj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 18:31:39 -0500
-Received: by mail-qg0-f54.google.com with SMTP id q108so174555qgd.13
-        for <linux-pci@vger.kernel.org>; Wed, 05 Nov 2014 15:31:38 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sun, 23 Nov 2014 21:20:21 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Alex Williamson <alex.williamson@redhat.com>
+cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, x86@kernel.org, mingo@redhat.com,
+	hpa@zytor.com, joro@8bytes.org, iommu@lists.linux-foundation.org
+Subject: Re: [PATCH 1/3] PCI/MSI: Initial hook for archs to declare multivector
+ MSI support
+In-Reply-To: <20141121220833.31095.12371.stgit@gimli.home>
+Message-ID: <alpine.DEB.2.11.1411232109140.6439@nanos>
+References: <20141121213752.31095.30735.stgit@gimli.home> <20141121220833.31095.12371.stgit@gimli.home>
 MIME-Version: 1.0
-In-Reply-To: <544AD7CF.5020006@gmail.com>
-References: <469h2cuyy0a5y5fn77uh3y1b.1413332405802@email.android.com>
- <20141015210355.GB6579@laptop.dumpdata.com> <544AD7CF.5020006@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 5 Nov 2014 16:31:17 -0700
-Message-ID: <CAErSpo78mX9Q8HDsOFMhzNTjtGqD1aiTTrWH-zwGUEo24EF9CA@mail.gmail.com>
-Subject: Re: [PATCH next] xen: pcifront: Process failure for pcifront_(re)scan_root()
-To: Chen Gang <gang.chen.5i5j@gmail.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci again]
+On Fri, 21 Nov 2014, Alex Williamson wrote:
+> For the most part multivector MSI is not supported and drivers and
+> hardware wanting multiple vectors opt for MSI-X instead.  It seems
+> though that having the ability to query the arch/platform code to
+> determine whether allocating multiple MSI vectors will ever succeed
+> is a useful thing.  For instance, vfio-pci can use this to determine
+> whether to expose multiple MSI vectors to the user.  If we know we
+> cannot ever support more than one vector, we have a better shot at
+> the userspace driver working, especially if it's a guest OS, if we
+> only expose one vector as being available in the interface.
+> 
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
+> 
+>  drivers/pci/msi.c   |    5 +++++
+>  include/linux/msi.h |    1 +
+>  2 files changed, 6 insertions(+)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 9fab30a..36b503a 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -79,6 +79,11 @@ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+>  	return 0;
+>  }
+>  
+> +bool __weak arch_supports_multivector_msi(struct pci_dev *dev)
 
-On Fri, Oct 24, 2014 at 4:50 PM, Chen Gang <gang.chen.5i5j@gmail.com> wrote:
-> On 10/16/14 5:03, Konrad Rzeszutek Wilk wrote:
->> On Wed, Oct 15, 2014 at 08:20:06AM +0800, Chen Gang wrote:
->>>
->>> At least for me, what you said sound OK.
->>
->> Let me review it - next week.
->
-> Please help check this patch, when you have time.
+Please not another weak arch function. We are in the process to reduce
+them not to extend them.
 
-linux-pci got dropped from the cc list, which makes it harder for me
-to track this in patchwork.
+arch_supports is pretty much wrong here anyway. We are moving away
+from arch MSI dependencies simply because it's not a arch property per
+se.
 
-But I'm waiting for Konrad to either ack this or just take it
-directly.  Here's my ack if you want it:
+Multi MSI is a property of the underlying interrupt controllers and
+there might be several MSI interrupt domains on a given system. They
+can or cannot support multi MSI.
 
-Acked-by: Bjorn Helgas <bhelgaas@google.com>
+The current x86 implementation is a tangled maze and Jiang is in the
+process to distangle it completely. Until thats done x86 is not going
+to add new ad hoc interfaces.
 
->>> Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>
->>>> On Mon, Oct 06, 2014 at 11:04:45AM +0800, Chen Gang wrote:
->>>>> When pcifront_rescan_root() or pcifront_scan_root() fails, need return
->>>>> error code, neither set XenbusStateConnected state, just like the other
->>>>> areas have done.
->>>>>
->>>>> For pcifront_rescan_root(), it will return error code ("num_roots = 0;",
->>>>> skip xenbus_switch_state return value).
->>>>>
->>>>> For pcifront_scan_root(), it will return 0 ("num_roots = 0;", set 0 by
->>>>> the return value of xenbus_switch_state, which always return 0, at
->>>>> present).
->>>>
->>>> The changelog is somewhat confusing because it talks about the patch hunks
->>>> in reverse order (the pcifront_scan_root() change is first in the patch,
->>>> but the changelog mentions pcifront_rescan_root() first).  I *think* this
->>>> means:
->>>>
->>>>  When pcifront_try_connect() finds no PCI roots, it falls back to calling
->>>>  pcifront_scan_root() for 0000:00.  If that fails, it used to switch to
->>>>  XenbusStateConnected and return success (because xenbus_switch_state()
->>>>  currently always succeeds).
->>>>
->>>>  If pcifront_scan_root() fails, leave the XenbusState unchanged and
->>>>  return an error code.
->>>>
->>>>  Similarly, pcifront_attach_devices() falls back to calling
->>>>  pcifront_rescan_root() for 0000:00.  If that fails, it used to
->>>>  switch to XenbusStateConnected and return an error code.
->>>>
->>>>  If pcifront_rescan_root() fails, leave the XenbusState unchanged and
->>>>  return the error code.
->>>>
->>>> The "num_roots" part doesn't seem relevant to me.
->>>>
->>>>> Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
->>>>
->>>> Konrad, if you want to take this, feel free.  Otherwise, if you ack it and
->>>> you think my changelog understanding makes sense, I can pick it up.
->>>>
->>>> It does seem odd that pcifront_attach_devices() ignores the
->>>> xenbus_switch_state() return value while pcifront_try_connect() does not.
->>>> But many other callers also ignore the return value, so maybe that's OK.
->>>>
->>>> Bjorn
->>>>
->>>>> ---
->>>>>  drivers/pci/xen-pcifront.c | 10 ++++++++++
->>>>>  1 file changed, 10 insertions(+)
->>>>>
->>>>> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
->>>>> index 53df39a..d78d884 100644
->>>>> --- a/drivers/pci/xen-pcifront.c
->>>>> +++ b/drivers/pci/xen-pcifront.c
->>>>> @@ -866,6 +866,11 @@ static int pcifront_try_connect(struct pcifront_device *pdev)
->>>>>            xenbus_dev_error(pdev->xdev, err,
->>>>>                             "No PCI Roots found, trying 0000:00");
->>>>>            err = pcifront_scan_root(pdev, 0, 0);
->>>>> +          if (err) {
->>>>> +                  xenbus_dev_fatal(pdev->xdev, err,
->>>>> +                                   "Error scanning PCI root 0000:00");
->>>>> +                  goto out;
->>>>> +          }
->>>>>            num_roots = 0;
->>>>>    } else if (err != 1) {
->>>>>            if (err == 0)
->>>>> @@ -947,6 +952,11 @@ static int pcifront_attach_devices(struct pcifront_device *pdev)
->>>>>            xenbus_dev_error(pdev->xdev, err,
->>>>>                             "No PCI Roots found, trying 0000:00");
->>>>>            err = pcifront_rescan_root(pdev, 0, 0);
->>>>> +          if (err) {
->>>>> +                  xenbus_dev_fatal(pdev->xdev, err,
->>>>> +                                   "Error scanning PCI root 0000:00");
->>>>> +                  goto out;
->>>>> +          }
->>>>>            num_roots = 0;
->>>>>    } else if (err != 1) {
->>>>>            if (err == 0)
->>>>> --
->>>>> 1.9.3
->
-> --
-> Chen Gang
->
-> Open, share, and attitude like air, water, and life which God blessed
+Once we converted everything over to the new hierarchical irqdomains
+we can add such an interface to the code, but for now I'm not
+accepting anything like that into x86 msi related code.
+
+Thanks,
+
+	tglx
+
+
+
