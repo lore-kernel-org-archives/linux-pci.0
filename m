@@ -1,54 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cmexedge1.emulex.com ([138.239.224.99]:50288 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752161AbaKJLv7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Nov 2014 06:51:59 -0500
-From: Sathya Perla <sathya.perla@emulex.com>
-To: <linux-pci@vger.kernel.org>, <netdev@vger.kernel.org>
-CC: <ariel.elior@qlogic.com>, <linux.nics@intel.com>,
-	<shahed.shaikh@qlogic.com>, <ddutile@redhat.com>
-Subject: [PATCH 4/4] qlcnic: remove pci_assigned_vfs() check while disabling VFs
-Date: Mon, 10 Nov 2014 17:23:30 +0530
-Message-ID: <1415620410-4937-5-git-send-email-sathya.perla@emulex.com>
-In-Reply-To: <1415620410-4937-1-git-send-email-sathya.perla@emulex.com>
-References: <1415620410-4937-1-git-send-email-sathya.perla@emulex.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from gate.crashing.org ([63.228.1.57]:54107 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750736AbaKXFJK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 24 Nov 2014 00:09:10 -0500
+Message-ID: <1416805719.4998.15.camel@kernel.crashing.org>
+Subject: linuxppc-dev list <linuxppc-dev@ozlabs.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Michael Ellerman <mpe@ellerman.id.au>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Alex Deucher <alexdeucher@gmail.com>,
+	Takashi Iwai <tiwai@suse.de>
+Date: Mon, 24 Nov 2014 16:08:39 +1100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Vasundhara Volam <vasundhara.volam@emulex.com>
+Hi Linus !
 
-The pci_assigned_vfs() check (while disabling VFs) is being moved to the
-pci-sysfs.c file and will be done before invoking sriov_configure().
+This series fix a nasty issue with radeon adapters on powerpc servers,
+it's all CC'ed stable and has the relevant maintainers ack's/reviews.
 
-Signed-off-by: Vasundhara Volam <vasundhara.volam@emulex.com>
-Signed-off-by: Sathya Perla <sathya.perla@emulex.com>
----
- .../net/ethernet/qlogic/qlcnic/qlcnic_sriov_pf.c   |   10 ----------
- 1 files changed, 0 insertions(+), 10 deletions(-)
+Basically, some (radeon) adapters have issues with MSI addresses above
+1T (only support 40-bits). We had powerpc specific quirk but it only
+listed a specific revision of an adapter that we shipped with our
+machines and didn't properly handle the audio function which some distros
+enable nowadays.
 
-diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_sriov_pf.c b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_sriov_pf.c
-index a29538b..9802914 100644
---- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_sriov_pf.c
-+++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_sriov_pf.c
-@@ -465,16 +465,6 @@ static int qlcnic_pci_sriov_disable(struct qlcnic_adapter *adapter)
- {
- 	struct net_device *netdev = adapter->netdev;
- 
--	if (pci_vfs_assigned(adapter->pdev)) {
--		netdev_err(adapter->netdev,
--			   "SR-IOV VFs belonging to port %d are assigned to VMs. SR-IOV can not be disabled on this port\n",
--			   adapter->portnum);
--		netdev_info(adapter->netdev,
--			    "Please detach SR-IOV VFs belonging to port %d from VMs, and then try to disable SR-IOV on this port\n",
--			    adapter->portnum);
--		return -EPERM;
--	}
--
- 	qlcnic_sriov_pf_disable(adapter);
- 
- 	rtnl_lock();
--- 
-1.7.1
+So we made the quirk generic and fixed both the graphic and audio drivers
+properly to use it.
+
+Without that, ppc64 server machines will crash at boot with a radeon adapter.
+
+Note: This has been brewing for a while, it just needed a last respin which
+got delayed due to us moving ozlabs to a new location in town and other such
+things taking priority.
+
+Cheers,
+Ben.
+
+The following changes since commit 5d01410fe4d92081f349b013a2e7a95429e4f2c9:
+
+  Linux 3.18-rc6 (2014-11-23 15:25:20 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/benh/powerpc.git 
+
+for you to fetch changes up to 31345e1a071e4e5f2fa8b6be5ca7d1cbce20cfca:
+
+  powerpc/pci: Remove unused force_32bit_msi quirk (2014-11-24 14:36:02 +1100)
+
+----------------------------------------------------------------
+Benjamin Herrenschmidt (6):
+      PCI/MSI: Add device flag indicating that 64-bit MSIs don't work
+      gpu/radeon: Set flag to indicate broken 64-bit MSI
+      sound/radeon: Move 64-bit MSI quirk from arch to driver
+      powerpc/powernv: Honor the generic "no_64bit_msi" flag
+      powerpc/pseries: Honor the generic "no_64bit_msi" flag
+      powerpc/pci: Remove unused force_32bit_msi quirk
+
+Takashi Iwai (1):
+      ALSA: hda - Limit 40bit DMA for AMD HDMI controllers
+
+ arch/powerpc/include/asm/pci-bridge.h     |  2 --
+ arch/powerpc/kernel/pci_64.c              | 10 ----------
+ arch/powerpc/platforms/powernv/pci-ioda.c |  3 +--
+ arch/powerpc/platforms/powernv/pci.c      |  3 +--
+ arch/powerpc/platforms/pseries/msi.c      |  2 +-
+ drivers/gpu/drm/radeon/radeon_irq_kms.c   | 10 ++++++++++
+ drivers/pci/msi.c                         | 26 ++++++++++++++++++++++++++
+ include/linux/pci.h                       |  1 +
+ sound/pci/hda/hda_intel.c                 | 24 +++++++++++++++++++-----
+ sound/pci/hda/hda_priv.h                  |  1 +
+ 10 files changed, 60 insertions(+), 22 deletions(-)
+
 
