@@ -1,73 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:56779 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752227AbaKLMcb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 07:32:31 -0500
-Date: Wed, 12 Nov 2014 12:32:32 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Ming Lei <ming.lei@canonical.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	alvise rigo <a.rigo@virtualopensystems.com>
-Subject: Re: [PATCH] pci: generic host: make it more generic
-Message-ID: <20141112123232.GE6759@red-moon>
-References: <1415702040-2790-1-git-send-email-ming.lei@canonical.com>
- <20141111122901.GA4419@red-moon>
- <CACVXFVNAc9axtESmo1zGZ3GMquTzjzWR3jx-b3tbhhLfQDDRcg@mail.gmail.com>
- <20141111182418.GA5507@red-moon>
- <CACVXFVPzo2qNGa5DWESS3TXor=u82_SxHb+xzrBCRXtcQxq4Cg@mail.gmail.com>
- <20141112095846.GA6759@red-moon>
- <CACVXFVNn=mDuJ9h3wavvo=H29hzFNisKAYEoF0OiFgm4wVAaLw@mail.gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Myron Stowe <myron.stowe@gmail.com>, rjw@rjwysocki.net,
+	lorenzo.pieralisi@arm.com, linaro-acpi@lists.linaro.org,
+	linux-pci <linux-pci@vger.kernel.org>, catalin.marinas@arm.com,
+	x86 <x86@kernel.org>, will.deacon@arm.com,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Ingo Molnar <mingo@redhat.com>, hanjun.guo@linaro.org,
+	"H. Peter Anvin" <hpa@zytor.com>, wangyijing@huawei.com,
+	Liviu.Dudau@arm.com, Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH 6/6] pci, acpi: Share ACPI PCI config space accessors.
+Date: Mon, 24 Nov 2014 11:41:28 +0100
+Message-ID: <2178540.dTppAIY2rE@wuerfel>
+In-Reply-To: <20141121180825.GD6578@google.com>
+References: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org> <3957412.IooRKpIXjW@wuerfel> <20141121180825.GD6578@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACVXFVNn=mDuJ9h3wavvo=H29hzFNisKAYEoF0OiFgm4wVAaLw@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 12, 2014 at 10:51:31AM +0000, Ming Lei wrote:
-> On Wed, Nov 12, 2014 at 5:58 PM, Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> > On Wed, Nov 12, 2014 at 02:12:12AM +0000, Ming Lei wrote:
-> >> On Wed, Nov 12, 2014 at 2:24 AM, Lorenzo Pieralisi
-> >> <lorenzo.pieralisi@arm.com> wrote:
-> >> > On Tue, Nov 11, 2014 at 02:02:20PM +0000, Ming Lei wrote:
-> >> >
-> >> > [...]
-> >> >
-> >> >> > http://lists.infradead.org/pipermail/linux-arm-kernel/2014-October/296535.html
-> >> >> >
-> >> >> > Patch above is already queued and applies most of the changes you have posted
-> >> >> > above.
-> >> >>
-> >> >> I should have looked at list first before writing the patch, :-(
-> >> >>
-> >> >> Could you make it more generic so that other ARCHs(at least ARM64)
-> >> >> can benefit from it too?
-> >> >
-> >> > That's our current goal, we are carrying out clean-ups to remove arch
-> >> > dependency and move code to the generic layer PCI layer.
-> >>
-> >> OK, I am glad to test them after you post them out.
-> >>
-> >> At least, the 'struct gen_pci' pointer can be put in driver data
-> >> of the platform_device now, which may remove dependency on
-> >> pci_sysdata in this driver.  But ARCH's pcibios code still may
-> >> access 'pci_sysdata', do you have patches or solution to handle
-> >> this issue?
-> >
-> > I will consider adding struct gen_pci pointer as platform device
-> > driver data, we are working on removing pci_sys_data dependency in the ARM
-> > pcibios backend, and I do not think we are far from achieving that.
+On Friday 21 November 2014 11:08:25 Bjorn Helgaas wrote:
+> On Fri, Nov 21, 2014 at 01:24:52PM +0100, Arnd Bergmann wrote:
+> > On Thursday 20 November 2014 21:00:17 Myron Stowe wrote:
+> > > On Thu, Nov 20, 2014 at 3:26 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+> > > > That's interesting.  I would have said exactly the opposite -- I think the
+> > > > extra Kconfiggery is harder to follow than weak/strong functions 
+> > > >
+> > > > But consistency is better than my personal opinion.  Is there a consensus
+> > > > that we should use the Kconfig strategy instead of __weak?
+> > > 
+> > > I too find weak/strong functions easier to follow than "Kconfiggery" (nice term
+> > > invention there).
+> > 
+> > I don't think there is a universal consensus, but the majority of
+> > maintainers seems to avoid them for the same reasons that I think
+> > __weak is problematic.
+> > 
+> > We have some uses of __weak in the core kernel, but there is
+> > basically none in drivers outside of PCI, and the most common
+> > uses are all providing an empty __weak function that can be
+> > overridden with a function that actually does something, unlike
+> > the code above.
 > 
-> Other ARCHs has sort of pcibios backend too, so that said it still
-> depends on ARM or ARM64, doesn't it?
+> One thing I like better about __weak (when used correctly) is that you have
+> exactly one declaration, and the role of each definition (weak default
+> implementation or strong override) is obvious from looking at it.
 
-Yes, so ? If you think there is a way to make this host controller work
-on all arches you fancy using it on with no arch dependency in a proper
-way step up to the plate and post the code, we will duly review it.
+Right.
 
-Thanks,
-Lorenzo
+> In your #ifdef example, the extern declaration and the inline definition
+> are never compiled together, so you have to repeat the signature and the
+> compiler doesn't enforce that they match.  So you end up with the extern
+> and the inline in one file, a #define in an arch header file or Kconfig,
+> and an arch definition in a third file.
+> 
+> But it's certainly true that everybody knows how #ifdef works, and the fact
+> that __weak on a declaration affects all in-scope definitions is definitely
+> a land mine (multiple weak definitions with no strong one is a disaster).
+> 
+> > My pragmatic approach so far has been to advocate __weak for
+> > drivers/pci patches but discourage it elsewhere when I review
+> > patches, in order to maintain consistency. I also think it
+> > would be nice to change the way that PCI handles architecture
+> > specific overrides in the process of unifying the host bridge
+> > handling.
+> > 
+> > I wouldn't use Kconfig symbols in most cases though. My preferred
+> > choice would be to turn a lot of the __weak symbols into function
+> > pointers within a per-hostbridge structure. As an example, we could
+> > replace pcibios_add_device() with a pointer in pci_host_bridge->ops
+> > that gets set by all the architectures and host drivers that currently
+> > override it, and replace the one caller with
+> > 
+> > 	if (pci_host_bridge->ops->add_device)
+> > 		pci_host_bridge->ops->add_device(dev);
+> 
+> I definitely agree with this part, but I think it's orthogonal to the
+> __weak question.  In this case, we'd like to support multiple host bridges,
+> each with a different flavor of add_device().  We can't do that at all with
+> either __weak or #ifdef.
+
+What we currently have though is a a __weak definition of add_device,
+which some architectures override, and some of them (ARM in particular)
+by implementing their own abstraction. I suspect for the majority of
+what we currently define as __weak functions, we could use a similar
+approach and kill off the global symbols entirely.
+
+	Arnd
