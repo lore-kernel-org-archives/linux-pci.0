@@ -1,94 +1,316 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "H. Peter Anvin" <hpa@linux.intel.com>
-Subject: [Patch v8 02/18] x86, intel-mid: Create IRQs for APB timers and RTC timers
-Date: Sun,  2 Nov 2014 14:04:17 +0800
-Message-Id: <1414908273-7552-3-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1414908273-7552-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1414908273-7552-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp04.in.ibm.com ([122.248.162.4]:42730 "EHLO
+	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750755AbaKXWtc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Nov 2014 17:49:32 -0500
+Received: from /spool/local
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 25 Nov 2014 04:19:29 +0530
+Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id C809C1258053
+	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 04:19:40 +0530 (IST)
+Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
+	by d28relay04.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAOMo3A745613144
+	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 04:20:03 +0530
+Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
+	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAOMnSTN007520
+	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 04:19:28 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH 5/8] PCI/hotplug/rpa: Create PCI slot properly
+Date: Tue, 25 Nov 2014 09:49:22 +1100
+Message-Id: <1416869365-7671-6-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1416869365-7671-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1416869365-7671-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Intel MID platforms has no legacy interrupts, so no IRQ descriptors
-preallocated. We need to call mp_map_gsi_to_irq() to create IRQ
-descriptors for APB timers and RTC timers, otherwise it may cause
-invalid memory access as:
-[    0.116839] BUG: unable to handle kernel NULL pointer dereference at
-0000003a
-[    0.123803] IP: [<c1071c0e>] setup_irq+0xf/0x4d
+When loading rpaphp.ko on a P7 box, I didn't see any PCI slots
+created under /sys/bus/pci/slots as expected. It seems that the
+RPA PCI slot stuff has been broken for long time. The driver
+doesn't use the properties of PCI device-tree nodes properly to
+populate PCI slots: device-tree node property "ibm,my-drc-index"
+is the identifier of hotpluggable PCI slot. The (direct or indirect)
+parent device-tree node should have properties associated with the
+"ibm,my-drc-index", which are "ibm,drc-indexes","ibm,drc-names",
+"ibm,drc-types", "ibm,drc-power-domains".
 
-Tested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: H. Peter Anvin <hpa@linux.intel.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: David Cohen <david.a.cohen@linux.intel.com>
-Cc: <stable@vger.kernel.org> # 3.17
-Link: http://lkml.kernel.org/r/1414387308-27148-3-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+The patch parses above device-tree node properties to create PCI
+slots properly. One PCI slot is created for PCI device-tree node,
+which has meaningful "ibm,my-drc-index".
+
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- arch/x86/kernel/apb_timer.c       |    2 --
- arch/x86/platform/intel-mid/sfi.c |    2 ++
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/hotplug/rpaphp.h      |   2 +-
+ drivers/pci/hotplug/rpaphp_core.c | 205 ++++++++++++++------------------------
+ 2 files changed, 74 insertions(+), 133 deletions(-)
 
-diff --git a/arch/x86/kernel/apb_timer.c b/arch/x86/kernel/apb_timer.c
-index 5972b108f15a..b708738d016e 100644
---- a/arch/x86/kernel/apb_timer.c
-+++ b/arch/x86/kernel/apb_timer.c
-@@ -185,8 +185,6 @@ static void apbt_setup_irq(struct apbt_dev *adev)
+diff --git a/drivers/pci/hotplug/rpaphp.h b/drivers/pci/hotplug/rpaphp.h
+index b2593e8..39ddbdf 100644
+--- a/drivers/pci/hotplug/rpaphp.h
++++ b/drivers/pci/hotplug/rpaphp.h
+@@ -92,7 +92,7 @@ int rpaphp_get_sensor_state(struct slot *slot, int *state);
+ /* rpaphp_core.c */
+ int rpaphp_add_slot(struct device_node *dn);
+ int rpaphp_get_drc_props(struct device_node *dn, int *drc_index,
+-		char **drc_name, char **drc_type, int *drc_power_domain);
++		char **drc_name, char **drc_type, int *drc_power);
  
- 	irq_modify_status(adev->irq, 0, IRQ_MOVE_PCNTXT);
- 	irq_set_affinity(adev->irq, cpumask_of(adev->cpu));
--	/* APB timer irqs are set up as mp_irqs, timer is edge type */
--	__irq_set_handler(adev->irq, handle_edge_irq, 0, "edge");
+ /* rpaphp_slot.c */
+ void dealloc_slot_struct(struct slot *slot);
+diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
+index ff800df..a639c5c 100644
+--- a/drivers/pci/hotplug/rpaphp_core.c
++++ b/drivers/pci/hotplug/rpaphp_core.c
+@@ -165,119 +165,76 @@ static enum pci_bus_speed get_max_bus_speed(struct slot *slot)
+ 	return speed;
  }
  
- /* Should be called with per cpu */
-diff --git a/arch/x86/platform/intel-mid/sfi.c b/arch/x86/platform/intel-mid/sfi.c
-index 3c53a90fdb18..c14ad34776c4 100644
---- a/arch/x86/platform/intel-mid/sfi.c
-+++ b/arch/x86/platform/intel-mid/sfi.c
-@@ -106,6 +106,7 @@ int __init sfi_parse_mtmr(struct sfi_table_header *table)
- 			mp_irq.dstapic = MP_APIC_ALL;
- 			mp_irq.dstirq = pentry->irq;
- 			mp_save_irq(&mp_irq);
-+			mp_map_gsi_to_irq(pentry->irq, IOAPIC_MAP_ALLOC);
- 	}
+-static int get_children_props(struct device_node *dn, const int **drc_indexes,
+-		const int **drc_names, const int **drc_types,
+-		const int **drc_power_domains)
++static int parse_drc_props(struct device_node *dn, u32 drc_index,
++			   char **drc_name, char **drc_type, u32 *drc_power)
+ {
+-	const int *indexes, *names, *types, *domains;
++	const u32 *indexes, *names, *types, *domains;
++	char *name, *type;
++	struct device_node *parent = dn;
++	u32 i;
++
++	while ((parent = of_get_parent(parent))) {
++		indexes = of_get_property(parent, "ibm,drc-indexes", NULL);
++		names   = of_get_property(parent, "ibm,drc-names", NULL);
++		types   = of_get_property(parent, "ibm,drc-types", NULL);
++		domains = of_get_property(parent, "ibm,drc-power-domains", NULL);
++
++		if (!indexes || !names || !types || !domains) {
++			of_node_put(parent);
++			continue;
++		}
  
- 	return 0;
-@@ -176,6 +177,7 @@ int __init sfi_parse_mrtc(struct sfi_table_header *table)
- 		mp_irq.dstapic = MP_APIC_ALL;
- 		mp_irq.dstirq = pentry->irq;
- 		mp_save_irq(&mp_irq);
-+		mp_map_gsi_to_irq(pentry->irq, IOAPIC_MAP_ALLOC);
- 	}
- 	return 0;
+-	indexes = of_get_property(dn, "ibm,drc-indexes", NULL);
+-	names = of_get_property(dn, "ibm,drc-names", NULL);
+-	types = of_get_property(dn, "ibm,drc-types", NULL);
+-	domains = of_get_property(dn, "ibm,drc-power-domains", NULL);
++		name = (char *)&names[1];
++		type = (char *)&types[1];
++		for (i = 0; i < be32_to_cpu(indexes[0]); i++) {
++			if (be32_to_cpu(indexes[i + 1]) != drc_index) {
++				name += (strlen(name) + 1);
++				type += (strlen(type) + 1);
++				continue;
++			}
+ 
+-	/* Slot does not have dynamically-removable children */
+-	if (!indexes || !names || !types || !domains)
+-		return -EINVAL;
++			/* Matched index */
++			if (drc_name)
++				*drc_name = name;
++			if (drc_type)
++				*drc_type = type;
++			if (drc_power)
++				*drc_power = be32_to_cpu(domains[i + 1]);
++
++			of_node_put(parent);
++			return 0;
++		}
+ 
+-	if (drc_indexes)
+-		*drc_indexes = indexes;
+-	/* &drc_names[1] contains NULL terminated slot names */
+-	if (drc_names)
+-		*drc_names = names;
+-	/* &drc_types[1] contains NULL terminated slot types */
+-	if (drc_types)
+-		*drc_types = types;
+-	if (drc_power_domains)
+-		*drc_power_domains = domains;
++		/* Next level parent */
++		of_node_put(parent);
++	}
+ 
+-	return 0;
++	return -ENODEV;
  }
+ 
+-/* To get the DRC props describing the current node, first obtain it's
++/*
++ * To get the DRC props describing the current node, first obtain it's
+  * my-drc-index property.  Next obtain the DRC list from it's parent.  Use
+  * the my-drc-index for correlation, and obtain the requested properties.
+  */
+ int rpaphp_get_drc_props(struct device_node *dn, int *drc_index,
+-		char **drc_name, char **drc_type, int *drc_power_domain)
++			 char **drc_name, char **drc_type, int *drc_power)
+ {
+-	const int *indexes, *names;
+-	const int *types, *domains;
+-	const unsigned int *my_index;
+-	char *name_tmp, *type_tmp;
+-	int i, rc;
++	const u32 *my_index;
+ 
++	/* Check if node is capable of hotplug */
+ 	my_index = of_get_property(dn, "ibm,my-drc-index", NULL);
+-	/* Node isn't DLPAR/hotplug capable */
+ 	if (!my_index)
+ 		return -EINVAL;
++	if (drc_index)
++		*drc_index = be32_to_cpu(*my_index);
+ 
+-	rc = get_children_props(dn->parent, &indexes, &names, &types, &domains);
+-	if (rc < 0)
+-		return -EINVAL;
+-
+-	name_tmp = (char *) &names[1];
+-	type_tmp = (char *) &types[1];
+-
+-	/* Iterate through parent properties, looking for my-drc-index */
+-	for (i = 0; i < be32_to_cpu(indexes[0]); i++) {
+-		if ((unsigned int) indexes[i + 1] == *my_index) {
+-			if (drc_name)
+-				*drc_name = name_tmp;
+-			if (drc_type)
+-				*drc_type = type_tmp;
+-			if (drc_index)
+-				*drc_index = be32_to_cpu(*my_index);
+-			if (drc_power_domain)
+-				*drc_power_domain = be32_to_cpu(domains[i+1]);
+-			return 0;
+-		}
+-		name_tmp += (strlen(name_tmp) + 1);
+-		type_tmp += (strlen(type_tmp) + 1);
+-	}
+-
+-	return -EINVAL;
++	return parse_drc_props(dn, be32_to_cpu(*my_index),
++			       drc_name, drc_type, drc_power);
+ }
+ EXPORT_SYMBOL_GPL(rpaphp_get_drc_props);
+ 
+ /**
+- * is_php_dn() - return true if this is a hotpluggable pci slot, else false
+- * @dn: target &device_node
+- * @indexes: passed to get_children_props()
+- * @names: passed to get_children_props()
+- * @types: returned from get_children_props()
+- * @power_domains:
+- *
+- * This routine will return true only if the device node is
+- * a hotpluggable slot. This routine will return false
+- * for built-in pci slots (even when the built-in slots are
+- * dlparable.)
+- */
+-static bool is_php_dn(struct device_node *dn,
+-		      const int **indexes, const int **names,
+-		      const int **types, const int **power_domains)
+-{
+-	const int *drc_types;
+-	const char *drc_type_str;
+-	char *endptr;
+-	unsigned long val;
+-	int rc;
+-
+-	rc = get_children_props(dn, indexes, names, &drc_types, power_domains);
+-	if (rc < 0)
+-		return false;
+-
+-	/* PCI Hotplug nodes have an integer for drc_type */
+-	drc_type_str = (char *)&drc_types[1];
+-	val = simple_strtoul(drc_type_str, &endptr, 10);
+-	if (endptr == drc_type_str)
+-		return false;
+-
+-	*types = drc_types;
+-	return true;
+-}
+-
+-/**
+  * rpaphp_add_slot -- declare a hotplug slot to the hotplug subsystem.
+  * @dn: device node of slot
+  *
+@@ -295,52 +252,36 @@ static bool is_php_dn(struct device_node *dn,
+  */
+ int rpaphp_add_slot(struct device_node *dn)
+ {
++	char *name, *type, *endptr;
++	int index, power_domain;
+ 	struct slot *slot;
+-	int retval = 0;
+-	int i;
+-	const int *indexes, *names, *types, *power_domains;
+-	char *name, *type;
+-
+-	if (!dn->name || strcmp(dn->name, "pci"))
+-		return 0;
++	int val, ret;
+ 
+-	/* If this is not a hotplug slot, return without doing anything. */
+-	if (!is_php_dn(dn, &indexes, &names, &types, &power_domains))
+-		return 0;
+-
+-	dbg("Entry %s: dn->full_name=%s\n", __func__, dn->full_name);
+-
+-	/* register PCI devices */
+-	name = (char *) &names[1];
+-	type = (char *) &types[1];
+-	for (i = 0; i < be32_to_cpu(indexes[0]); i++) {
+-		int index;
+-
+-		index = be32_to_cpu(indexes[i + 1]);
+-		slot = alloc_slot_struct(dn, index, name,
+-					 be32_to_cpu(power_domains[i + 1]));
+-		if (!slot)
+-			return -ENOMEM;
+-
+-		slot->type = simple_strtoul(type, NULL, 10);
+-
+-		dbg("Found drc-index:0x%x drc-name:%s drc-type:%s\n",
+-				index, name, type);
++	/* Get and parse the hotplug properties */
++	ret = rpaphp_get_drc_props(dn, &index, &name, &type, &power_domain);
++	if (ret)
++		return ret;
+ 
+-		retval = rpaphp_enable_slot(slot);
+-		if (!retval)
+-			retval = rpaphp_register_slot(slot);
++	/* PCI Hotplug nodes have an integer for drc_type */
++	val = simple_strtoul(type, &endptr, 10);
++	if (endptr == type)
++		return -EINVAL;
+ 
+-		if (retval)
+-			dealloc_slot_struct(slot);
++	slot = alloc_slot_struct(dn, index, name, power_domain);
++	if (!slot)
++		return -ENOMEM;
+ 
+-		name += strlen(name) + 1;
+-		type += strlen(type) + 1;
+-	}
+-	dbg("%s - Exit: rc[%d]\n", __func__, retval);
++	slot->type = val;
++	ret = rpaphp_enable_slot(slot);
++	if (!ret)
++		ret = rpaphp_register_slot(slot);
++	if (ret)
++		goto fail;
+ 
+-	/* XXX FIXME: reports a failure only if last entry in loop failed */
+-	return retval;
++	return 0;
++fail:
++	dealloc_slot_struct(slot);
++	return ret;
+ }
+ EXPORT_SYMBOL_GPL(rpaphp_add_slot);
+ 
 -- 
-1.7.10.4
+1.8.3.2
 
