@@ -1,127 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from dliviu.plus.com ([80.229.23.120]:38893 "EHLO smtp.dudau.co.uk"
+Received: from mx1.redhat.com ([209.132.183.28]:51665 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754913AbaKTQj0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 20 Nov 2014 11:39:26 -0500
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by smtp.dudau.co.uk (Postfix) with SMTP id 1D341100677
-	for <linux-pci@vger.kernel.org>; Thu, 20 Nov 2014 16:39:24 +0000 (GMT)
-Date: Thu, 20 Nov 2014 16:39:18 +0000
-From: Liviu Dudau <liviu@dudau.co.uk>
-To: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-kernel@lists.infradead.org,
-	Tony Luck <tony.luck@intel.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Suravee.Suthikulpanit@amd.com,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-ia64@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Wuyun <wuyun.wu@huawei.com>, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [RFC PATCH 00/16] Refine PCI host bridge scan interfaces
-Message-ID: <20141120163918.GE9162@bart.dudau.co.uk>
-References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
- <1463511.o4kE8TX3Bd@wuerfel>
- <546DD688.60705@linaro.org>
- <20141120120850.GD9162@bart.dudau.co.uk>
- <546DE45C.6010306@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <546DE45C.6010306@linaro.org>
+	id S1751316AbaKXVpi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 24 Nov 2014 16:45:38 -0500
+Message-ID: <1416865524.11825.89.camel@bling.home>
+Subject: Re: [PATCH 1/3] PCI/MSI: Initial hook for archs to declare
+ multivector MSI support
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, x86@kernel.org, mingo@redhat.com,
+	hpa@zytor.com, joro@8bytes.org, iommu@lists.linux-foundation.org
+Date: Mon, 24 Nov 2014 14:45:24 -0700
+In-Reply-To: <alpine.DEB.2.11.1411232109140.6439@nanos>
+References: <20141121213752.31095.30735.stgit@gimli.home>
+	 <20141121220833.31095.12371.stgit@gimli.home>
+	 <alpine.DEB.2.11.1411232109140.6439@nanos>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 20, 2014 at 01:53:48PM +0100, Tomasz Nowicki wrote:
-> On 20.11.2014 13:08, Liviu Dudau wrote:
-> >On Thu, Nov 20, 2014 at 12:54:48PM +0100, Tomasz Nowicki wrote:
-> >>On 17.11.2014 15:13, Arnd Bergmann wrote:
-> >>>On Monday 17 November 2014 18:21:34 Yijing Wang wrote:
-> >>>>This series is based Linux 3.18-rc1 and Lorenzo Pieralisi's
-> >>>>arm PCI domain cleanup patches, link:
-> >>>>https://patchwork.ozlabs.org/patch/407585/
-> >>>>
-> >>>>Current pci scan interfaces like pci_scan_root_bus() and directly
-> >>>>call pci_create_root_bus()/pci_scan_child_bus() lack flexiblity.
-> >>>>Some platform infos like PCI domain and msi_chip have to be
-> >>>>associated to PCI bus by some arch specific function.
-> >>>>We want to make a generic pci_host_bridge, and make it hold
-> >>>>the platform infos or hook. Then we could eliminate the lots
-> >>>>of arch pci_domain_nr, also we could associate some platform
-> >>>>ops something like pci_get_msi_chip(struct pci_dev *dev)
-> >>>>with pci_host_bridge to avoid introduce arch weak functions.
-> >>>>
-> >>>>This RFC version not for all platforms, just applied the new
-> >>>>scan interface in x86/arm/powerpc/ia64, I will refresh other
-> >>>>platforms after the core pci scan interfaces are ok.
-> >>>
-> >>>I think overall this is a good direction to take, in particular
-> >>>moving more things into struct pci_host_bridge so we can
-> >>>slim down the architecture specific code.
-> >>>
-> >>>I don't particularly like the way you use the 'pci_host_info'
-> >>>to pass callback pointers and some of the generic information.
-> >>>This duplicates some of the issues we are currently trying
-> >>>to untangle in the arm32 code to make drivers easier to share
-> >>>between architectures.
-> >>>
-> >>>As a general approach, I'd rather see generic helper functions
-> >>>being exported by the PCI core that a driver may or may not
-> >>>call.
-> >>>The way you split the interface between things that happen
-> >>>before scanning the buses (pci_create_host_bridge) and
-> >>>the actual scanning (__pci_create_root_bus, pci_scan_child_bus)
-> >>>seems very helpful and I think we can expand that concept further:
-> >>>
-> >>>- The normal pci_create_host_bridge() function can contain
-> >>>   all of the DT scanning functions (finding bus/mem/io resources,
-> >>>   finding the msi-parent), while drivers that don't depend on DT
-> >>>   for this information can call the same function and fill the
-> >>>   same things after they have the pci_host_bridge pointer.
-> >>
-> >>How about finding PCI domain number (in the DT way) within
-> >>pci_create_host_bridge() too ?
-> >
-> >It is an idea worth pursuing for the 99% of the cases. I would like
-> >to understand the 1% of the time when we want a domain number to be
-> >shared between two host bridges or the time when we want more than
-> >one domain per bridge.
-> Even though we have shared domain, this should be resolved via DT calls, do
-> I miss something ?
-
-If we only going to hold one domain number per host bridge, then no, you're
-not missing anything.
-
+On Sun, 2014-11-23 at 21:20 +0100, Thomas Gleixner wrote:
+> On Fri, 21 Nov 2014, Alex Williamson wrote:
+> > For the most part multivector MSI is not supported and drivers and
+> > hardware wanting multiple vectors opt for MSI-X instead.  It seems
+> > though that having the ability to query the arch/platform code to
+> > determine whether allocating multiple MSI vectors will ever succeed
+> > is a useful thing.  For instance, vfio-pci can use this to determine
+> > whether to expose multiple MSI vectors to the user.  If we know we
+> > cannot ever support more than one vector, we have a better shot at
+> > the userspace driver working, especially if it's a guest OS, if we
+> > only expose one vector as being available in the interface.
+> > 
+> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > ---
+> > 
+> >  drivers/pci/msi.c   |    5 +++++
+> >  include/linux/msi.h |    1 +
+> >  2 files changed, 6 insertions(+)
+> > 
+> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> > index 9fab30a..36b503a 100644
+> > --- a/drivers/pci/msi.c
+> > +++ b/drivers/pci/msi.c
+> > @@ -79,6 +79,11 @@ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+> >  	return 0;
+> >  }
+> >  
+> > +bool __weak arch_supports_multivector_msi(struct pci_dev *dev)
 > 
-> >
-> >Is that possible? Is it useful? Is it already in practice?
-> This is good question... IMO:
-> 1. Two host bridges can shared domain number if they are children of the
-> same parent host bridge.
-> 2. But I can not find good explanation for more than one domain per bridge.
-
-Splitting a root bus into two or more "segments" ?
-
-Best regards,
-Liviu
-
+> Please not another weak arch function. We are in the process to reduce
+> them not to extend them.
 > 
-> Tomasz
+> arch_supports is pretty much wrong here anyway. We are moving away
+> from arch MSI dependencies simply because it's not a arch property per
+> se.
 > 
+> Multi MSI is a property of the underlying interrupt controllers and
+> there might be several MSI interrupt domains on a given system. They
+> can or cannot support multi MSI.
 > 
+> The current x86 implementation is a tangled maze and Jiang is in the
+> process to distangle it completely. Until thats done x86 is not going
+> to add new ad hoc interfaces.
+> 
+> Once we converted everything over to the new hierarchical irqdomains
+> we can add such an interface to the code, but for now I'm not
+> accepting anything like that into x86 msi related code.
 
--- 
--------------------
-   .oooO
-   (   )
-    \ (  Oooo.
-     \_) (   )
-          ) /
-         (_/
+Ok, I guess I can do some ugliness with associating the IOMMU IRQ
+remapping capability with multivector MSI support within an #ifdef x86
+block.  Gross, but I think that's as accurate as I can get w/o a hook
+through the MSI code.  Is there any target for the refactoring you
+mention?  Thanks,
 
- One small step
-   for me ...
+Alex
+
 
