@@ -1,50 +1,126 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:44939 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753409AbaKLUT0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 15:19:26 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAHp75VcZ0XjcFxjrSgr5-XnWZZa-eZfPH_Fa1Hzb=f+qtE3z9w@mail.gmail.com>
-References: <1415847123-15558-1-git-send-email-michael.jamet@intel.com>
- <CAErSpo7Z5x=U3vSnxrFpwYUDrUrnrrBCe1F9_GQNYqWWQFWNpQ@mail.gmail.com> <CAHp75VcZ0XjcFxjrSgr5-XnWZZa-eZfPH_Fa1Hzb=f+qtE3z9w@mail.gmail.com>
-From: Andreas Noever <andreas.noever@gmail.com>
-Date: Wed, 12 Nov 2014 21:19:05 +0100
-Message-ID: <CAMxnaaXOa_GAFwK+tUrO8DBjENqdd9uaQHKqEMm+i4754Ch3gQ@mail.gmail.com>
-Subject: Re: [PATCH] pci: support Thunderbolt requirements for I/O resources.
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Jamet <michael.jamet@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	amir.jer.levy@intel.com, dan.alloun@intel.com,
-	Rafael Wysocki <rjw@rjwysocki.net>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [Patch Part3 v4 36/38] ACPI, irq, x86: Kill private function mp_register_gsi()/ mp_unregister_gsi()
+Date: Tue, 25 Nov 2014 15:50:00 +0800
+Message-Id: <1416901802-24211-37-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 12, 2014 at 7:30 PM, Andy Shevchenko
-<andy.shevchenko@gmail.com> wrote:
-> On Wed, Nov 12, 2014 at 7:29 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->
-> []
->
->>> To prevent this, we detect a chain contains a Thunderbolt
->>> device by checking the Thunderbolt PCI device id.
->>
->> I'm really not happy about checking a list of device IDs to identify
->> Thunderbolt devices.  Surely there's a better way, because a list like
->> this has to be updated regularly.
->
-> I recently proposed internally to use quirks (pci_fixup_early) for
-> that, but apparently Michael didn't have time to answer. It might be
-> he can just comment here since the patch already public.
+Function mp_register_gsi() is only called once, so fold it into caller
+acpi_register_gsi_ioapic(). Do the same for mp_unregister_gsi().
 
-In any case: this will interfere with thunderbolt hotplug on Apple
-systems, where we do not have BIOS support and have to handle hotplug
-events and assign resources ourselves. So please add a DMI check for
-Apple (the reverse of what we do in
-http://lxr.free-electrons.com/source/drivers/thunderbolt/nhi.c?v=3.17#L664
-).
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Tested-by: Joerg Roedel <jroedel@suse.de>
+---
+ arch/x86/kernel/acpi/boot.c |   57 ++++++++++++++-----------------------------
+ 1 file changed, 18 insertions(+), 39 deletions(-)
 
-Thanks,
-Andreas
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 509a48f49fc7..e54a8d72ae6e 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -400,42 +400,6 @@ static int mp_config_acpi_gsi(struct device *dev, u32 gsi, int trigger,
+ 	return 0;
+ }
+ 
+-static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
+-			   int polarity)
+-{
+-	int irq, node;
+-	struct irq_alloc_info info;
+-
+-	if (acpi_irq_model != ACPI_IRQ_MODEL_IOAPIC)
+-		return gsi;
+-
+-	trigger = trigger == ACPI_EDGE_SENSITIVE ? 0 : 1;
+-	polarity = polarity == ACPI_ACTIVE_HIGH ? 0 : 1;
+-	node = dev ? dev_to_node(dev) : NUMA_NO_NODE;
+-	ioapic_set_alloc_attr(&info, node, trigger, polarity);
+-	irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC, &info);
+-	if (irq < 0)
+-		return irq;
+-
+-	/* Don't set up the ACPI SCI because it's already set up */
+-	if (enable_update_mptable && acpi_gbl_FADT.sci_interrupt != gsi)
+-		mp_config_acpi_gsi(dev, gsi, trigger, polarity);
+-
+-	return irq;
+-}
+-
+-static void mp_unregister_gsi(u32 gsi)
+-{
+-	int irq;
+-
+-	if (acpi_irq_model != ACPI_IRQ_MODEL_IOAPIC)
+-		return;
+-
+-	irq = mp_map_gsi_to_irq(gsi, 0, NULL);
+-	if (irq > 0)
+-		mp_unmap_irq(irq);
+-}
+-
+ static struct irq_domain_ops acpi_irqdomain_ops = {
+ 	.alloc = mp_irqdomain_alloc,
+ 	.free = mp_irqdomain_free,
+@@ -657,10 +621,21 @@ static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
+ 				    int trigger, int polarity)
+ {
+ 	int irq = gsi;
+-
+ #ifdef CONFIG_X86_IO_APIC
++	int node;
++	struct irq_alloc_info info;
++
++	node = dev ? dev_to_node(dev) : NUMA_NO_NODE;
++	trigger = trigger == ACPI_EDGE_SENSITIVE ? 0 : 1;
++	polarity = polarity == ACPI_ACTIVE_HIGH ? 0 : 1;
++	ioapic_set_alloc_attr(&info, node, trigger, polarity);
++
+ 	mutex_lock(&acpi_ioapic_lock);
+-	irq = mp_register_gsi(dev, gsi, trigger, polarity);
++	irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC, &info);
++	/* Don't set up the ACPI SCI because it's already set up */
++	if (irq >= 0 && enable_update_mptable &&
++	    acpi_gbl_FADT.sci_interrupt != gsi)
++		mp_config_acpi_gsi(dev, gsi, trigger, polarity);
+ 	mutex_unlock(&acpi_ioapic_lock);
+ #endif
+ 
+@@ -670,8 +645,12 @@ static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
+ static void acpi_unregister_gsi_ioapic(u32 gsi)
+ {
+ #ifdef CONFIG_X86_IO_APIC
++	int irq;
++
+ 	mutex_lock(&acpi_ioapic_lock);
+-	mp_unregister_gsi(gsi);
++	irq = mp_map_gsi_to_irq(gsi, 0, NULL);
++	if (irq > 0)
++		mp_unmap_irq(irq);
+ 	mutex_unlock(&acpi_ioapic_lock);
+ #endif
+ }
+-- 
+1.7.10.4
+
