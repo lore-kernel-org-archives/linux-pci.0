@@ -1,422 +1,280 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:57067 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751612AbaKBPmB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Nov 2014 10:42:01 -0500
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 3 Nov 2014 01:41:59 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 0AC263578047
-	for <linux-pci@vger.kernel.org>; Mon,  3 Nov 2014 02:41:58 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sA2FfkvT37159092
-	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:41:46 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sA2Ffu18028234
-	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:41:57 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH V9 08/18] powrepc/pci: Refactor pci_dn
-Date: Sun,  2 Nov 2014 23:41:24 +0800
-Message-Id: <1414942894-17034-9-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mga01.intel.com ([192.55.52.88]:35032 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752432AbaKYHr5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 25 Nov 2014 02:47:57 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part3 v4 05/38] x86, irq: Implement callbacks to enable hierarchy irqdomain on IOAPICs
+Date: Tue, 25 Nov 2014 15:49:29 +0800
+Message-Id: <1416901802-24211-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Implement required callbacks to prepare for enabling hierarchy irqdomain
+on IOAPICs. Later we will clean up IOAPIC code a lot by using hierarchy
+irqdomain framework.
 
-pci_dn is the extension of PCI device node and it's created from
-device node. Unfortunately, VFs that are enabled dynamically by
-PF's driver and they don't have corresponding device nodes, and
-pci_dn. The patch refactors pci_dn to support VFs:
-
-   * pci_dn is organized as a hierarchy tree. VF's pci_dn is put
-     to the child list of pci_dn of PF's bridge. pci_dn of other
-     device put to the child list of pci_dn of its upstream bridge.
-
-   * VF's pci_dn is expected to be created dynamically when applying
-     final fixup to PF. VF's pci_dn will be destroyed when releasing
-     PF's pci_dev instance. pci_dn of other device is still created
-     from device node as before.
-
-   * For one particular PCI device (VF or not), its pci_dn can be
-     found from pdev->dev.archdata.firmware_data, PCI_DN(devnode),
-     or parent's list. The fast path (fetching pci_dn through PCI
-     device instance) is populated during early fixup time.
-
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Tested-by: Joerg Roedel <jroedel@suse.de>
 ---
- arch/powerpc/include/asm/device.h     |    3 +
- arch/powerpc/include/asm/pci-bridge.h |   14 +-
- arch/powerpc/kernel/pci-hotplug.c     |    3 +
- arch/powerpc/kernel/pci_dn.c          |  246 ++++++++++++++++++++++++++++++++-
- 4 files changed, 261 insertions(+), 5 deletions(-)
+ arch/x86/include/asm/io_apic.h |   10 +++
+ arch/x86/kernel/apic/io_apic.c |  159 +++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 166 insertions(+), 3 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/device.h b/arch/powerpc/include/asm/device.h
-index 38faede..29992cd 100644
---- a/arch/powerpc/include/asm/device.h
-+++ b/arch/powerpc/include/asm/device.h
-@@ -34,6 +34,9 @@ struct dev_archdata {
- #ifdef CONFIG_SWIOTLB
- 	dma_addr_t		max_direct_dma_addr;
- #endif
-+#ifdef CONFIG_PPC64
-+	void			*firmware_data;
-+#endif
- #ifdef CONFIG_EEH
- 	struct eeh_dev		*edev;
- #endif
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 4ca90a3..757d7bb 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -89,6 +89,7 @@ struct pci_controller {
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index cdda8ed7592f..073b9c76abcb 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -96,6 +96,7 @@ struct IR_IO_APIC_route_entry {
+ } __attribute__ ((packed));
  
- #ifdef CONFIG_PPC64
- 	unsigned long buid;
-+	void *firmware_data;
- #endif	/* CONFIG_PPC64 */
+ struct irq_alloc_info;
++struct irq_data;
  
- 	void *private_data;
-@@ -150,9 +151,13 @@ static inline int isa_vaddr_is_ioport(void __iomem *address)
- struct iommu_table;
+ #define IOAPIC_AUTO     -1
+ #define IOAPIC_EDGE     0
+@@ -206,6 +207,15 @@ extern int mp_ioapic_registered(u32 gsi_base);
+ extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 			    irq_hw_number_t hwirq);
+ extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
++extern int mp_irqdomain_alloc(struct irq_domain *domain, unsigned int virq,
++			      unsigned int nr_irqs, void *arg);
++extern void mp_irqdomain_free(struct irq_domain *domain, unsigned int virq,
++			      unsigned int nr_irqs);
++extern void mp_irqdomain_activate(struct irq_domain *domain,
++				  struct irq_data *irq_data);
++extern void mp_irqdomain_deactivate(struct irq_domain *domain,
++				    struct irq_data *irq_data);
++extern int mp_irqdomain_ioapic_idx(struct irq_domain *domain);
+ extern void ioapic_set_alloc_attr(struct irq_alloc_info *info,
+ 				  int node, int trigger, int polarity);
+ extern int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 8b3b8560ebda..e465171bcbf3 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -78,6 +78,13 @@ static DEFINE_MUTEX(ioapic_mutex);
+ static unsigned int ioapic_dynirq_base;
+ static int ioapic_initialized;
  
- struct pci_dn {
-+	int     flags;
-+#define PCI_DN_FLAG_IOV_VF     0x01
++struct mp_chip_data {
++	struct IO_APIC_route_entry entry;
++	int trigger;
++	int polarity;
++	bool isa_irq;
++};
 +
- 	int	busno;			/* pci bus number */
- 	int	devfn;			/* pci device and function number */
+ struct mp_pin_info {
+ 	int trigger;
+ 	int polarity;
+@@ -949,11 +956,28 @@ void ioapic_set_alloc_attr(struct irq_alloc_info *info, int node,
+ 	info->ioapic_valid = 1;
+ }
  
-+	struct  pci_dn *parent;
- 	struct  pci_controller *phb;	/* for pci devices */
- 	struct	iommu_table *iommu_table;	/* for phb's or bridges */
- 	struct	device_node *node;	/* back-pointer to the device_node */
-@@ -169,14 +174,19 @@ struct pci_dn {
- #ifdef CONFIG_PPC_POWERNV
- 	int	pe_number;
- #endif
-+	struct list_head child_list;
-+	struct list_head list;
- };
- 
- /* Get the pointer to a device_node's pci_dn */
- #define PCI_DN(dn)	((struct pci_dn *) (dn)->data)
- 
-+extern struct pci_dn *pci_get_pdn_by_devfn(struct pci_bus *bus,
-+					   int devfn);
- extern struct pci_dn *pci_get_pdn(struct pci_dev *pdev);
--
--extern void * update_dn_pci_info(struct device_node *dn, void *data);
-+extern struct pci_dn *add_dev_pci_info(struct pci_dev *pdev);
-+extern void remove_dev_pci_info(struct pci_dev *pdev);
-+extern void *update_dn_pci_info(struct device_node *dn, void *data);
- 
- static inline int pci_device_from_OF_node(struct device_node *np,
- 					  u8 *bus, u8 *devfn)
-diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
-index 5b78917..af60efe 100644
---- a/arch/powerpc/kernel/pci-hotplug.c
-+++ b/arch/powerpc/kernel/pci-hotplug.c
-@@ -30,6 +30,9 @@
- void pcibios_release_device(struct pci_dev *dev)
++static void mp_register_handler(unsigned int irq, unsigned long trigger)
++{
++	irq_flow_handler_t hdl;
++	bool fasteoi;
++
++	if (trigger) {
++		irq_set_status_flags(irq, IRQ_LEVEL);
++		fasteoi = true;
++	} else {
++		irq_clear_status_flags(irq, IRQ_LEVEL);
++		fasteoi = false;
++	}
++
++	hdl = fasteoi ? handle_fasteoi_irq : handle_edge_irq;
++	__irq_set_handler(irq, hdl, 0, fasteoi ? "fasteoi" : "edge");
++}
++
+ static int alloc_irq_from_domain(struct irq_domain *domain, u32 gsi, int pin,
+ 				 struct irq_alloc_info *info)
  {
- 	eeh_remove_device(dev);
-+
-+	/* Release firmware data */
-+	remove_dev_pci_info(dev);
- }
+ 	int irq = -1;
+-	int ioapic = (int)(long)domain->host_data;
++	int ioapic = mp_irqdomain_ioapic_idx(domain);
+ 	int type = ioapics[ioapic].irqdomain_cfg.type;
  
- /**
-diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index 1f61fab..fa966ae 100644
---- a/arch/powerpc/kernel/pci_dn.c
-+++ b/arch/powerpc/kernel/pci_dn.c
-@@ -32,12 +32,222 @@
- #include <asm/ppc-pci.h>
- #include <asm/firmware.h>
- 
-+/*
-+ * The function is used to find the firmware data of one
-+ * specific PCI device, which is attached to the indicated
-+ * PCI bus. For VFs, their firmware data is linked to that
-+ * one of PF's bridge. For other devices, their firmware
-+ * data is linked to that of their bridge.
-+ */
-+static struct pci_dn *pci_bus_to_pdn(struct pci_bus *bus)
-+{
-+	struct pci_bus *pbus;
-+	struct device_node *dn;
-+	struct pci_dn *pdn;
-+
-+	/*
-+	 * We probably have virtual bus which doesn't
-+	 * have associated bridge.
-+	 */
-+	pbus = bus;
-+	while (pbus) {
-+		if (pci_is_root_bus(pbus) || pbus->self)
-+			break;
-+
-+		pbus = pbus->parent;
-+	}
-+
-+	/*
-+	 * Except virtual bus, all PCI buses should
-+	 * have device nodes.
-+	 */
-+	dn = pci_bus_to_OF_node(pbus);
-+	pdn = dn ? PCI_DN(dn) : NULL;
-+
-+	return pdn;
-+}
-+
-+struct pci_dn *pci_get_pdn_by_devfn(struct pci_bus *bus,
-+				    int devfn)
-+{
-+	struct device_node *dn = NULL;
-+	struct pci_dn *parent, *pdn;
-+	struct pci_dev *pdev = NULL;
-+
-+	/* Fast path: fetch from PCI device */
-+	list_for_each_entry(pdev, &bus->devices, bus_list) {
-+		if (pdev->devfn == devfn) {
-+			if (pdev->dev.archdata.firmware_data)
-+				return pdev->dev.archdata.firmware_data;
-+
-+			dn = pci_device_to_OF_node(pdev);
-+			break;
-+		}
-+	}
-+
-+	/* Fast path: fetch from device node */
-+	pdn = dn ? PCI_DN(dn) : NULL;
-+	if (pdn)
-+		return pdn;
-+
-+	/* Slow path: fetch from firmware data hierarchy */
-+	parent = pci_bus_to_pdn(bus);
-+	if (!parent)
-+		return NULL;
-+
-+	list_for_each_entry(pdn, &parent->child_list, list) {
-+		if (pdn->busno == bus->number &&
-+                    pdn->devfn == devfn)
-+                        return pdn;
-+        }
-+
-+	return NULL;
-+}
-+
- struct pci_dn *pci_get_pdn(struct pci_dev *pdev)
+ 	switch (type) {
+@@ -3026,7 +3050,7 @@ static inline void set_io_apic_irq_attr(struct io_apic_irq_attr *irq_attr,
+ int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 		     irq_hw_number_t hwirq)
  {
--	struct device_node *dn = pci_device_to_OF_node(pdev);
--	if (!dn)
-+	struct device_node *dn;
-+	struct pci_dn *parent, *pdn;
-+
-+	/* Search device directly */
-+	if (pdev->dev.archdata.firmware_data)
-+		return pdev->dev.archdata.firmware_data;
-+
-+	/* Check device node */
-+	dn = pci_device_to_OF_node(pdev);
-+	pdn = dn ? PCI_DN(dn) : NULL;
-+	if (pdn)
-+		return pdn;
-+
-+	/*
-+	 * VFs don't have device nodes. We hook their
-+	 * firmware data to PF's bridge.
-+	 */
-+	parent = pci_bus_to_pdn(pdev->bus);
-+	if (!parent)
- 		return NULL;
--	return PCI_DN(dn);
-+
-+	list_for_each_entry(pdn, &parent->child_list, list) {
-+		if (pdn->busno == pdev->bus->number &&
-+		    pdn->devfn == pdev->devfn)
-+			return pdn;
-+	}
-+
-+	return NULL;
-+}
-+
-+static struct pci_dn *add_one_dev_pci_info(struct pci_dn *parent,
-+					   struct pci_dev *pdev,
-+					   int busno, int devfn)
-+{
-+	struct pci_dn *pdn;
-+
-+	/* Except PHB, we always have parent firmware data */
-+	if (!parent)
-+		return NULL;
-+
-+	pdn = kzalloc(sizeof(*pdn), GFP_KERNEL);
-+	if (!pdn) {
-+		pr_warn("%s: Out of memory !\n", __func__);
-+		return NULL;
-+	}
-+
-+	pdn->phb = parent->phb;
-+	pdn->parent = parent;
-+	pdn->busno = busno;
-+	pdn->devfn = devfn;
-+#ifdef CONFIG_PPC_POWERNV
-+	pdn->pe_number = IODA_INVALID_PE;
-+#endif
-+	INIT_LIST_HEAD(&pdn->child_list);
-+	INIT_LIST_HEAD(&pdn->list);
-+	list_add_tail(&pdn->list, &parent->child_list);
-+
-+	/*
-+	 * If we already have PCI device instance, lets
-+	 * bind them.
-+	 */
-+	if (pdev)
-+		pdev->dev.archdata.firmware_data = pdn;
-+
-+	return pdn;
-+}
-+
-+struct pci_dn *add_dev_pci_info(struct pci_dev *pdev)
-+{
-+#ifdef CONFIG_PCI_IOV
-+	struct pci_dn *parent, *pdn;
-+	int i;
-+
-+	/* Only support IOV for now */
-+	if (!pdev->is_physfn)
-+		return pci_get_pdn(pdev);
-+
-+	/* Check if VFs have been populated */
-+	pdn = pci_get_pdn(pdev);
-+	if (!pdn || (pdn->flags & PCI_DN_FLAG_IOV_VF))
-+		return NULL;
-+
-+	pdn->flags |= PCI_DN_FLAG_IOV_VF;
-+	parent = pci_bus_to_pdn(pdev->bus);
-+	if (!parent)
-+		return NULL;
-+
-+	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
-+		pdn = add_one_dev_pci_info(parent, NULL,
-+					   pci_iov_virtfn_bus(pdev, i),
-+					   pci_iov_virtfn_devfn(pdev, i));
-+		if (!pdn) {
-+			pr_warn("%s: Cannot create firmware data "
-+				"for VF#%d of %s\n",
-+				__func__, i, pci_name(pdev));
-+			return NULL;
-+		}
-+	}
-+#endif
-+
-+	return pci_get_pdn(pdev);
-+}
-+
-+void remove_dev_pci_info(struct pci_dev *pdev)
-+{
-+#ifdef CONFIG_PCI_IOV
-+	struct pci_dn *parent;
-+	struct pci_dn *pdn, *tmp;
-+	int i;
-+
-+	/* Only support IOV PF for now */
-+	if (!pdev->is_physfn)
-+		return;
-+
-+	/* Check if VFs have been populated */
-+	pdn = pci_get_pdn(pdev);
-+	if (!pdn || !(pdn->flags & PCI_DN_FLAG_IOV_VF))
-+		return;
-+
-+	pdn->flags &= ~PCI_DN_FLAG_IOV_VF;
-+	parent = pci_bus_to_pdn(pdev->bus);
-+	if (!parent)
-+		return;
-+
-+	/*
-+	 * We might introduce flag to pci_dn in future
-+	 * so that we can release VF's firmware data in
-+	 * a batch mode.
-+	 */
-+	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
-+		list_for_each_entry_safe(pdn, tmp,
-+			&parent->child_list, list) {
-+			if (pdn->busno != pci_iov_virtfn_bus(pdev, i) ||
-+			    pdn->devfn != pci_iov_virtfn_devfn(pdev, i))
-+				continue;
-+
-+			if (!list_empty(&pdn->list))
-+				list_del(&pdn->list);
-+			kfree(pdn);
-+		}
-+	}
-+#endif
+-	int ioapic = (int)(long)domain->host_data;
++	int ioapic = mp_irqdomain_ioapic_idx(domain);
+ 	struct mp_pin_info *info = mp_pin_info(ioapic, hwirq);
+ 	struct io_apic_irq_attr attr;
+ 
+@@ -3064,7 +3088,7 @@ void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq)
+ {
+ 	struct irq_data *data = irq_get_irq_data(virq);
+ 	struct irq_cfg *cfg = irq_cfg(virq);
+-	int ioapic = (int)(long)domain->host_data;
++	int ioapic = mp_irqdomain_ioapic_idx(domain);
+ 	int pin = (int)data->hwirq;
+ 
+ 	ioapic_mask_entry(ioapic, pin);
+@@ -3073,6 +3097,130 @@ void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq)
+ 	arch_teardown_hwirq(virq);
  }
  
- /*
-@@ -49,6 +259,7 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
- 	struct pci_controller *phb = data;
- 	const __be32 *type = of_get_property(dn, "ibm,pci-config-space-type", NULL);
- 	const __be32 *regs;
-+	struct device_node *parent;
- 	struct pci_dn *pdn;
- 
- 	pdn = zalloc_maybe_bootmem(sizeof(*pdn), GFP_KERNEL);
-@@ -70,6 +281,15 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
- 	}
- 
- 	pdn->pci_ext_config_space = (type && of_read_number(type, 1) == 1);
-+
-+	/* Attach to parent node */
-+	INIT_LIST_HEAD(&pdn->child_list);
-+	INIT_LIST_HEAD(&pdn->list);
-+	parent = of_get_parent(dn);
-+	pdn->parent = parent ? PCI_DN(parent) : NULL;
-+	if (pdn->parent)
-+		list_add_tail(&pdn->list, &pdn->parent->child_list);
-+
- 	return NULL;
- }
- 
-@@ -150,6 +370,7 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
- 	if (pdn) {
- 		pdn->devfn = pdn->busno = -1;
- 		pdn->phb = phb;
-+		phb->firmware_data = pdn;
- 	}
- 
- 	/* Update dn->phb ptrs for new phb and children devices */
-@@ -173,3 +394,22 @@ void __init pci_devs_phb_init(void)
- 	list_for_each_entry_safe(phb, tmp, &hose_list, list_node)
- 		pci_devs_phb_init_dynamic(phb);
- }
-+
-+static void pci_dev_pdn_create(struct pci_dev *pdev)
++static void mp_irqdomain_get_attr(u32 gsi, struct mp_chip_data *data,
++				 struct irq_alloc_info *info)
 +{
-+	add_dev_pci_info(pdev);
++	if (info && info->ioapic_valid) {
++		data->trigger = info->ioapic_trigger;
++		data->polarity = info->ioapic_polarity;
++	} else if (acpi_get_override_irq(gsi, &data->trigger,
++					 &data->polarity) < 0) {
++		/* PCI interrupts are always polarity one level triggered. */
++		data->trigger = 1;
++		data->polarity = 1;
++	}
 +}
-+DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pci_dev_pdn_create);
 +
-+static void pci_dev_pdn_setup(struct pci_dev *pdev)
++static void mp_setup_entry(struct irq_cfg *cfg, struct mp_chip_data *data,
++			   struct IO_APIC_route_entry *entry)
 +{
-+	struct pci_dn *pdn;
-+
-+	if (pdev->dev.archdata.firmware_data)
-+		return;
-+
-+	/* Setup the fast path */
-+	pdn = pci_get_pdn(pdev);
-+	pdev->dev.archdata.firmware_data = pdn;
++	memset(entry, 0, sizeof(*entry));
++	entry->delivery_mode = apic->irq_delivery_mode;
++	entry->dest_mode     = apic->irq_dest_mode;
++	entry->dest	     = cfg->dest_apicid;
++	entry->vector	     = cfg->vector;
++	entry->mask	     = 0;	/* enable IRQ */
++	entry->trigger	     = data->trigger;
++	entry->polarity	     = data->polarity;
++	/*
++	 * Mask level triggered irqs.
++	 * Use IRQ_DELAYED_DISABLE for edge triggered irqs.
++	 */
++	if (data->trigger)
++		entry->mask = 1;
 +}
-+DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, pci_dev_pdn_setup);
++
++int mp_irqdomain_alloc(struct irq_domain *domain, unsigned int virq,
++		       unsigned int nr_irqs, void *arg)
++{
++	int ret, ioapic, pin;
++	struct irq_cfg *cfg;
++	struct irq_data *irq_data;
++	struct mp_chip_data *data;
++	struct irq_alloc_info *info = arg;
++
++	if (!info || nr_irqs > 1)
++		return -EINVAL;
++	irq_data = irq_domain_get_irq_data(domain, virq);
++	if (!irq_data)
++		return -EINVAL;
++
++	ioapic = mp_irqdomain_ioapic_idx(domain);
++	pin = info->ioapic_pin;
++	if (irq_find_mapping(domain, (irq_hw_number_t)pin) > 0)
++		return -EEXIST;
++
++	data = kzalloc(sizeof(*data), GFP_KERNEL);
++	if (!data)
++		return -ENOMEM;
++
++	info->ioapic_entry = &data->entry;
++	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, info);
++	if (ret < 0) {
++		kfree(data);
++		return ret;
++	}
++
++	irq_data->hwirq = info->ioapic_pin;
++	irq_data->chip = &ioapic_chip;
++	irq_data->chip_data = data;
++	mp_irqdomain_get_attr(mp_pin_to_gsi(ioapic, pin), data, info);
++
++	cfg = irqd_cfg(irq_data);
++	add_pin_to_irq_node(cfg, info->ioapic_node, ioapic, pin);
++	if (info->ioapic_entry)
++		mp_setup_entry(cfg, data, info->ioapic_entry);
++	mp_register_handler(virq, data->trigger);
++	if (virq < nr_legacy_irqs())
++		legacy_pic->mask(virq);
++
++	apic_printk(APIC_VERBOSE, KERN_DEBUG
++		    "IOAPIC[%d]: Set routing entry (%d-%d -> 0x%x -> IRQ %d Mode:%i Active:%i Dest:%d)\n",
++		    ioapic, mpc_ioapic_id(ioapic), pin, cfg->vector,
++		    virq, data->trigger, data->polarity, cfg->dest_apicid);
++
++	return 0;
++}
++
++void mp_irqdomain_free(struct irq_domain *domain, unsigned int virq,
++		       unsigned int nr_irqs)
++{
++	struct irq_cfg *cfg = irq_cfg(virq);
++	struct irq_data *irq_data;
++
++	BUG_ON(nr_irqs != 1);
++	irq_data = irq_domain_get_irq_data(domain, virq);
++	if (irq_data && irq_data->chip_data) {
++		__remove_pin_from_irq(cfg, mp_irqdomain_ioapic_idx(domain),
++				      (int)irq_data->hwirq);
++		WARN_ON(!list_empty(&cfg->irq_2_pin));
++		kfree(irq_data->chip_data);
++	}
++	irq_domain_free_irqs_top(domain, virq, nr_irqs);
++}
++
++void mp_irqdomain_activate(struct irq_domain *domain,
++			   struct irq_data *irq_data)
++{
++	unsigned long flags;
++	struct irq_pin_list *entry;
++	struct mp_chip_data *data = irq_data->chip_data;
++	struct irq_cfg *cfg = irqd_cfg(irq_data);
++
++	raw_spin_lock_irqsave(&ioapic_lock, flags);
++	for_each_irq_pin(entry, cfg->irq_2_pin)
++		__ioapic_write_entry(entry->apic, entry->pin, data->entry);
++	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
++}
++
++void mp_irqdomain_deactivate(struct irq_domain *domain,
++			     struct irq_data *irq_data)
++{
++	/* It won't be called for IRQ with multiple IOAPIC pins associated */
++	ioapic_mask_entry(mp_irqdomain_ioapic_idx(domain),
++			  (int)irq_data->hwirq);
++}
++
+ int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node)
+ {
+ 	int ret = 0;
+@@ -3101,3 +3249,8 @@ int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node)
+ 
+ 	return ret;
+ }
++
++int mp_irqdomain_ioapic_idx(struct irq_domain *domain)
++{
++	return (int)(long)domain->host_data;
++}
 -- 
-1.7.9.5
+1.7.10.4
 
