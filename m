@@ -1,92 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part3 v3 31/38] x86, irq: Change functions only used in vector.c as static
-Date: Sun,  9 Nov 2014 02:13:31 +0800
-Message-Id: <1415470418-10874-32-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415470418-10874-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp05.in.ibm.com ([122.248.162.5]:56795 "EHLO
+	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750891AbaKYX5e (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Nov 2014 18:57:34 -0500
+Received: from /spool/local
+	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 26 Nov 2014 05:27:31 +0530
+Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 631DE125804B
+	for <linux-pci@vger.kernel.org>; Wed, 26 Nov 2014 05:27:40 +0530 (IST)
+Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
+	by d28relay04.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAPNw1ih66584648
+	for <linux-pci@vger.kernel.org>; Wed, 26 Nov 2014 05:28:02 +0530
+Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
+	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAPNvPQK026797
+	for <linux-pci@vger.kernel.org>; Wed, 26 Nov 2014 05:27:25 +0530
+Date: Wed, 26 Nov 2014 10:57:24 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au
+Subject: Re: [PATCH 2/8] powerpc/pci: Don't scan empty slot
+Message-ID: <20141125235724.GA20556@shangw>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1416869365-7671-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1416869365-7671-3-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1416956282.5089.4.camel@kernel.crashing.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1416956282.5089.4.camel@kernel.crashing.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function {assign|clear}_irq_vector() and apic_retrigger_irq() are only
-used in file vector.c, so change them as static.
+On Wed, Nov 26, 2014 at 09:58:02AM +1100, Benjamin Herrenschmidt wrote:
+>On Tue, 2014-11-25 at 09:49 +1100, Gavin Shan wrote:
+>> In hotplug case, function pcibios_add_pci_devices() is called to
+>> rescan the specified PCI bus, which possibly doesn't have any child
+>> devices. Access to the PCI bus's child device node will cause kernel
+>> crash without exception. The patch adds two more conditions to avoid
+>> the kernel crash.
+>> 
+>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> ---
+>>  arch/powerpc/kernel/pci-hotplug.c | 5 +++--
+>>  1 file changed, 3 insertions(+), 2 deletions(-)
+>> 
+>> diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+>> index 6e2b4e3..ea5513b 100644
+>> --- a/arch/powerpc/kernel/pci-hotplug.c
+>> +++ b/arch/powerpc/kernel/pci-hotplug.c
+>> @@ -105,7 +105,7 @@ EXPORT_SYMBOL_GPL(pcibios_remove_pci_devices);
+>>   * is how this routine differs from other, similar pcibios
+>>   * routines.)
+>>   */
+>> -void pcibios_add_pci_devices(struct pci_bus * bus)
+>> +void pcibios_add_pci_devices(struct pci_bus *bus)
+>
+>Unrelated whitespace change
+>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/hw_irq.h |    3 ---
- arch/x86/kernel/apic/vector.c |    7 ++++---
- 2 files changed, 4 insertions(+), 6 deletions(-)
+I'll remove this change out of the patch.
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 00d6143affe7..dee2069d7c19 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -186,8 +186,6 @@ extern struct irq_cfg *irq_cfg(unsigned int irq);
- extern struct irq_cfg *irqd_cfg(struct irq_data *irq_data);
- extern void lock_vector_lock(void);
- extern void unlock_vector_lock(void);
--extern int assign_irq_vector(int, struct irq_cfg *, const struct cpumask *);
--extern void clear_irq_vector(int irq, struct irq_cfg *cfg);
- extern void setup_vector_irq(int cpu);
- #ifdef CONFIG_SMP
- extern void send_cleanup_vector(struct irq_cfg *);
-@@ -197,7 +195,6 @@ static inline void send_cleanup_vector(struct irq_cfg *c) { }
- static inline void irq_complete_move(struct irq_cfg *c) { }
- #endif
- 
--extern int apic_retrigger_irq(struct irq_data *data);
- extern void apic_ack_edge(struct irq_data *data);
- extern int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 			     unsigned int *dest_id);
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 6df30d713f67..4fa940aa24c1 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -185,7 +185,8 @@ next:
- 	return err;
- }
- 
--int assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
-+static int assign_irq_vector(int irq, struct irq_cfg *cfg,
-+			     const struct cpumask *mask)
- {
- 	int err;
- 	unsigned long flags;
-@@ -196,7 +197,7 @@ int assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
- 	return err;
- }
- 
--void clear_irq_vector(int irq, struct irq_cfg *cfg)
-+static void clear_irq_vector(int irq, struct irq_cfg *cfg)
- {
- 	int cpu, vector;
- 	unsigned long flags;
-@@ -441,7 +442,7 @@ void setup_vector_irq(int cpu)
- 	__setup_vector_irq(cpu);
- }
- 
--int apic_retrigger_irq(struct irq_data *data)
-+static int apic_retrigger_irq(struct irq_data *data)
- {
- 	struct irq_cfg *cfg = irqd_cfg(data);
- 	unsigned long flags;
--- 
-1.7.10.4
+Thanks,
+Gavin
+
+>>  {
+>>  	int slotno, mode, pass, max;
+>>  	struct pci_dev *dev;
+>> @@ -120,7 +120,8 @@ void pcibios_add_pci_devices(struct pci_bus * bus)
+>>  	if (mode == PCI_PROBE_DEVTREE) {
+>>  		/* use ofdt-based probe */
+>>  		of_rescan_bus(dn, bus);
+>> -	} else if (mode == PCI_PROBE_NORMAL) {
+>> +	} else if (mode == PCI_PROBE_NORMAL &&
+>> +		   dn->child && PCI_DN(dn->child)) {
+>>  		/*
+>>  		 * Use legacy probe. In the partial hotplug case, we
+>>  		 * probably have grandchildren devices unplugged. So
+>
+>
 
