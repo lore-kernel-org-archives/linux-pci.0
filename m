@@ -1,217 +1,574 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0119.outbound.protection.outlook.com ([157.56.111.119]:53018
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750859AbaKKFGm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 11 Nov 2014 00:06:42 -0500
-From: Minghuan Lian <Minghuan.Lian@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	"Minghuan Lian" <Minghuan.Lian@freescale.com>
-Subject: [PATCH v2] PCI: designware: Add support 4 ATUs assignment
-Date: Tue, 11 Nov 2014 13:07:24 +0800
-Message-ID: <1415682444-24911-1-git-send-email-Minghuan.Lian@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga14.intel.com ([192.55.52.115]:11065 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752611AbaKYHy4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 25 Nov 2014 02:54:56 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part3 v4 34/38] x86, irq: Move private data in struct irq_cfg into dedicated data structure
+Date: Tue, 25 Nov 2014 15:49:58 +0800
+Message-Id: <1416901802-24211-35-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, pcie-designware.c only supports two ATUs, ATU0 is used
-for CFG0 and MEM, ATU1 is used for CFG1 and IO. There is a conflict
-when MEM and CFG0 are accessed simultaneously. The patch adds
-'num-atus' property to PCIe dts node to describe the number of
-PCIe controller's ATUs. If num_atus is bigger than or equal to 4,
-we will change ATUs assignment: ATU0 for CFG0, ATU1 for CFG1,
-ATU2 for MEM, ATU3 for IO.
+Several fields in struct irq_cfg are private to vector.c, so move it
+into dedicated data structure. This helps to hide implementation
+details.
 
-Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Tested-by: Joerg Roedel <jroedel@suse.de>
 ---
-change log:
-v1-v2:
-1. add the default value to property num-atus description
-2. Use atu_idx[] instead of single values
-3. initialize num_atus to 2
+ arch/x86/include/asm/hw_irq.h |    3 -
+ arch/x86/kernel/apic/vector.c |  221 ++++++++++++++++++++++-------------------
+ 2 files changed, 119 insertions(+), 105 deletions(-)
 
- .../devicetree/bindings/pci/designware-pcie.txt    |  1 +
- drivers/pci/host/pcie-designware.c                 | 53 ++++++++++++++++------
- drivers/pci/host/pcie-designware.h                 |  9 ++++
- 3 files changed, 50 insertions(+), 13 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-index 9f4faa8..64d0533 100644
---- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-@@ -26,3 +26,4 @@ Optional properties:
- - bus-range: PCI bus numbers covered (it is recommended for new devicetrees to
-   specify this property, to keep backwards compatibility a range of 0x00-0xff
-   is assumed if not present)
-+- num-atus: number of ATUs. The default value is 2 if not present.
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index dfed00a..46a609d 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -48,6 +48,8 @@
- #define PCIE_ATU_VIEWPORT		0x900
- #define PCIE_ATU_REGION_INBOUND		(0x1 << 31)
- #define PCIE_ATU_REGION_OUTBOUND	(0x0 << 31)
-+#define PCIE_ATU_REGION_INDEX3		(0x3 << 0)
-+#define PCIE_ATU_REGION_INDEX2		(0x2 << 0)
- #define PCIE_ATU_REGION_INDEX1		(0x1 << 0)
- #define PCIE_ATU_REGION_INDEX0		(0x0 << 0)
- #define PCIE_ATU_CR1			0x904
-@@ -346,7 +348,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 	struct of_pci_range range;
- 	struct of_pci_range_parser parser;
- 	struct resource *cfg_res;
--	u32 val, na, ns;
-+	u32 num_atus = 2, val, na, ns;
- 	const __be32 *addrp;
- 	int i, index, ret;
- 
-@@ -486,6 +488,19 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 		}
- 	}
- 
-+	of_property_read_u32(np, "num-atus", &num_atus);
-+	if (num_atus >= 4) {
-+		pp->atu_idx[ATU_TYPE_CFG0] = PCIE_ATU_REGION_INDEX0;
-+		pp->atu_idx[ATU_TYPE_CFG1] = PCIE_ATU_REGION_INDEX1;
-+		pp->atu_idx[ATU_TYPE_MEM] = PCIE_ATU_REGION_INDEX2;
-+		pp->atu_idx[ATU_TYPE_IO] = PCIE_ATU_REGION_INDEX3;
-+	} else {
-+		pp->atu_idx[ATU_TYPE_CFG0] = PCIE_ATU_REGION_INDEX0;
-+		pp->atu_idx[ATU_TYPE_MEM] = PCIE_ATU_REGION_INDEX0;
-+		pp->atu_idx[ATU_TYPE_CFG1] = PCIE_ATU_REGION_INDEX1;
-+		pp->atu_idx[ATU_TYPE_IO] = PCIE_ATU_REGION_INDEX1;
-+	}
-+
- 	if (pp->ops->host_init)
- 		pp->ops->host_init(pp);
- 
-@@ -511,8 +526,9 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 
- static void dw_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)
- {
--	/* Program viewport 0 : OUTBOUND : CFG0 */
--	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
-+	/* Program viewport : OUTBOUND : CFG0 */
-+	dw_pcie_writel_rc(pp,
-+			  PCIE_ATU_REGION_OUTBOUND | pp->atu_idx[ATU_TYPE_CFG0],
- 			  PCIE_ATU_VIEWPORT);
- 	dw_pcie_writel_rc(pp, pp->cfg0_mod_base, PCIE_ATU_LOWER_BASE);
- 	dw_pcie_writel_rc(pp, (pp->cfg0_mod_base >> 32), PCIE_ATU_UPPER_BASE);
-@@ -526,8 +542,9 @@ static void dw_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)
- 
- static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
- {
--	/* Program viewport 1 : OUTBOUND : CFG1 */
--	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
-+	/* Program viewport : OUTBOUND : CFG1 */
-+	dw_pcie_writel_rc(pp,
-+			  PCIE_ATU_REGION_OUTBOUND | pp->atu_idx[ATU_TYPE_CFG1],
- 			  PCIE_ATU_VIEWPORT);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
- 	dw_pcie_writel_rc(pp, pp->cfg1_mod_base, PCIE_ATU_LOWER_BASE);
-@@ -541,8 +558,9 @@ static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
- 
- static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
- {
--	/* Program viewport 0 : OUTBOUND : MEM */
--	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
-+	/* Program viewport : OUTBOUND : MEM */
-+	dw_pcie_writel_rc(pp,
-+			  PCIE_ATU_REGION_OUTBOUND | pp->atu_idx[ATU_TYPE_MEM],
- 			  PCIE_ATU_VIEWPORT);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, PCIE_ATU_CR1);
- 	dw_pcie_writel_rc(pp, pp->mem_mod_base, PCIE_ATU_LOWER_BASE);
-@@ -557,8 +575,9 @@ static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
- 
- static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
- {
--	/* Program viewport 1 : OUTBOUND : IO */
--	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
-+	/* Program viewport : OUTBOUND : IO */
-+	dw_pcie_writel_rc(pp,
-+			  PCIE_ATU_REGION_OUTBOUND | pp->atu_idx[ATU_TYPE_IO],
- 			  PCIE_ATU_VIEWPORT);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_IO, PCIE_ATU_CR1);
- 	dw_pcie_writel_rc(pp, pp->io_mod_base, PCIE_ATU_LOWER_BASE);
-@@ -585,12 +604,14 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 		dw_pcie_prog_viewport_cfg0(pp, busdev);
- 		ret = dw_pcie_cfg_read(pp->va_cfg0_base + address, where, size,
- 				val);
--		dw_pcie_prog_viewport_mem_outbound(pp);
-+		if (pp->atu_idx[ATU_TYPE_MEM] == pp->atu_idx[ATU_TYPE_CFG0])
-+			dw_pcie_prog_viewport_mem_outbound(pp);
- 	} else {
- 		dw_pcie_prog_viewport_cfg1(pp, busdev);
- 		ret = dw_pcie_cfg_read(pp->va_cfg1_base + address, where, size,
- 				val);
--		dw_pcie_prog_viewport_io_outbound(pp);
-+		if (pp->atu_idx[ATU_TYPE_IO] == pp->atu_idx[ATU_TYPE_CFG1])
-+			dw_pcie_prog_viewport_io_outbound(pp);
- 	}
- 
- 	return ret;
-@@ -610,12 +631,14 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 		dw_pcie_prog_viewport_cfg0(pp, busdev);
- 		ret = dw_pcie_cfg_write(pp->va_cfg0_base + address, where, size,
- 				val);
--		dw_pcie_prog_viewport_mem_outbound(pp);
-+		if (pp->atu_idx[ATU_TYPE_MEM] == pp->atu_idx[ATU_TYPE_CFG0])
-+			dw_pcie_prog_viewport_mem_outbound(pp);
- 	} else {
- 		dw_pcie_prog_viewport_cfg1(pp, busdev);
- 		ret = dw_pcie_cfg_write(pp->va_cfg1_base + address, where, size,
- 				val);
--		dw_pcie_prog_viewport_io_outbound(pp);
-+		if (pp->atu_idx[ATU_TYPE_IO] == pp->atu_idx[ATU_TYPE_CFG1])
-+			dw_pcie_prog_viewport_io_outbound(pp);
- 	}
- 
- 	return ret;
-@@ -770,6 +793,10 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	u32 membase;
- 	u32 memlimit;
- 
-+	/* set ATUs setting for MEM and IO */
-+	dw_pcie_prog_viewport_mem_outbound(pp);
-+	dw_pcie_prog_viewport_io_outbound(pp);
-+
- 	/* set the number of lanes */
- 	dw_pcie_readl_rc(pp, PCIE_PORT_LINK_CONTROL, &val);
- 	val &= ~PORT_LINK_MODE_MASK;
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index c625675..37604f9 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -22,6 +22,14 @@
- #define MAX_MSI_IRQS			32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
- 
-+enum ATU_TYPE {
-+	ATU_TYPE_CFG0,
-+	ATU_TYPE_CFG1,
-+	ATU_TYPE_MEM,
-+	ATU_TYPE_IO,
-+	ATU_TYPE_MAX
-+};
-+
- struct pcie_port {
- 	struct device		*dev;
- 	u8			root_bus_nr;
-@@ -53,6 +61,7 @@ struct pcie_port {
- 	struct irq_domain	*irq_domain;
- 	unsigned long		msi_data;
- 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
-+	u8			atu_idx[ATU_TYPE_MAX];
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 330445236484..e7ae6eb84934 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -171,11 +171,8 @@ enum {
  };
  
- struct pcie_host_ops {
+ struct irq_cfg {
+-	cpumask_var_t		domain;
+-	cpumask_var_t		old_domain;
+ 	unsigned int		dest_apicid;
+ 	u8			vector;
+-	u8			move_in_progress : 1;
+ };
+ 
+ extern struct irq_domain *x86_vector_domain;
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index a5ce2eef0528..0e7c39beefed 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -21,11 +21,18 @@
+ #include <asm/desc.h>
+ #include <asm/irq_remapping.h>
+ 
++struct apic_chip_data {
++	struct irq_cfg		cfg;
++	cpumask_var_t		domain;
++	cpumask_var_t		old_domain;
++	u8			move_in_progress : 1;
++};
++
+ struct irq_domain *x86_vector_domain;
+ static DEFINE_RAW_SPINLOCK(vector_lock);
+ static struct irq_chip lapic_controller;
+ #ifdef	CONFIG_X86_IO_APIC
+-static struct irq_cfg *legacy_irq_cfgs[NR_IRQS_LEGACY];
++static struct apic_chip_data *legacy_irq_data[NR_IRQS_LEGACY];
+ #endif
+ 
+ void lock_vector_lock(void)
+@@ -41,12 +48,7 @@ void unlock_vector_lock(void)
+ 	raw_spin_unlock(&vector_lock);
+ }
+ 
+-struct irq_cfg *irq_cfg(unsigned int irq)
+-{
+-	return irqd_cfg(irq_get_irq_data(irq));
+-}
+-
+-struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
++static struct apic_chip_data *apic_chip_data(struct irq_data *irq_data)
+ {
+ 	if (!irq_data)
+ 		return NULL;
+@@ -57,36 +59,48 @@ struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
+ 	return irq_data->chip_data;
+ }
+ 
+-static struct irq_cfg *alloc_irq_cfg(int node)
++struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
++{
++	struct apic_chip_data *data = apic_chip_data(irq_data);
++
++	return data ? &data->cfg : NULL;
++}
++
++struct irq_cfg *irq_cfg(unsigned int irq)
+ {
+-	struct irq_cfg *cfg;
++	return irqd_cfg(irq_get_irq_data(irq));
++}
+ 
+-	cfg = kzalloc_node(sizeof(*cfg), GFP_KERNEL, node);
+-	if (!cfg)
++static struct apic_chip_data *alloc_apic_chip_data(int node)
++{
++	struct apic_chip_data *data;
++
++	data = kzalloc_node(sizeof(*data), GFP_KERNEL, node);
++	if (!data)
+ 		return NULL;
+-	if (!zalloc_cpumask_var_node(&cfg->domain, GFP_KERNEL, node))
+-		goto out_cfg;
+-	if (!zalloc_cpumask_var_node(&cfg->old_domain, GFP_KERNEL, node))
++	if (!zalloc_cpumask_var_node(&data->domain, GFP_KERNEL, node))
++		goto out_data;
++	if (!zalloc_cpumask_var_node(&data->old_domain, GFP_KERNEL, node))
+ 		goto out_domain;
+-	return cfg;
++	return data;
+ out_domain:
+-	free_cpumask_var(cfg->domain);
+-out_cfg:
+-	kfree(cfg);
++	free_cpumask_var(data->domain);
++out_data:
++	kfree(data);
+ 	return NULL;
+ }
+ 
+-static void free_irq_cfg(struct irq_cfg *cfg)
++static void free_apic_chip_data(struct apic_chip_data *data)
+ {
+-	if (cfg) {
+-		free_cpumask_var(cfg->domain);
+-		free_cpumask_var(cfg->old_domain);
+-		kfree(cfg);
++	if (data) {
++		free_cpumask_var(data->domain);
++		free_cpumask_var(data->old_domain);
++		kfree(data);
+ 	}
+ }
+ 
+-static int
+-__assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
++static int __assign_irq_vector(int irq, struct apic_chip_data *d,
++			       const struct cpumask *mask)
+ {
+ 	/*
+ 	 * NOTE! The local APIC isn't very good at handling
+@@ -104,7 +118,7 @@ __assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
+ 	int cpu, err;
+ 	cpumask_var_t tmp_mask;
+ 
+-	if (cfg->move_in_progress)
++	if (d->move_in_progress)
+ 		return -EBUSY;
+ 
+ 	if (!alloc_cpumask_var(&tmp_mask, GFP_ATOMIC))
+@@ -112,26 +126,26 @@ __assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
+ 
+ 	/* Only try and allocate irqs on cpus that are present */
+ 	err = -ENOSPC;
+-	cpumask_clear(cfg->old_domain);
++	cpumask_clear(d->old_domain);
+ 	cpu = cpumask_first_and(mask, cpu_online_mask);
+ 	while (cpu < nr_cpu_ids) {
+ 		int new_cpu, vector, offset;
+ 
+ 		apic->vector_allocation_domain(cpu, tmp_mask, mask);
+ 
+-		if (cpumask_subset(tmp_mask, cfg->domain)) {
++		if (cpumask_subset(tmp_mask, d->domain)) {
+ 			err = 0;
+-			if (cpumask_equal(tmp_mask, cfg->domain))
++			if (cpumask_equal(tmp_mask, d->domain))
+ 				break;
+ 			/*
+ 			 * New cpumask using the vector is a proper subset of
+ 			 * the current in use mask. So cleanup the vector
+ 			 * allocation for the members that are not used anymore.
+ 			 */
+-			cpumask_andnot(cfg->old_domain, cfg->domain, tmp_mask);
+-			cfg->move_in_progress =
+-			   cpumask_intersects(cfg->old_domain, cpu_online_mask);
+-			cpumask_and(cfg->domain, cfg->domain, tmp_mask);
++			cpumask_andnot(d->old_domain, d->domain, tmp_mask);
++			d->move_in_progress =
++			   cpumask_intersects(d->old_domain, cpu_online_mask);
++			cpumask_and(d->domain, d->domain, tmp_mask);
+ 			break;
+ 		}
+ 
+@@ -145,8 +159,8 @@ next:
+ 		}
+ 
+ 		if (unlikely(current_vector == vector)) {
+-			cpumask_or(cfg->old_domain, cfg->old_domain, tmp_mask);
+-			cpumask_andnot(tmp_mask, mask, cfg->old_domain);
++			cpumask_or(d->old_domain, d->old_domain, tmp_mask);
++			cpumask_andnot(tmp_mask, mask, d->old_domain);
+ 			cpu = cpumask_first_and(tmp_mask, cpu_online_mask);
+ 			continue;
+ 		}
+@@ -162,15 +176,15 @@ next:
+ 		/* Found one! */
+ 		current_vector = vector;
+ 		current_offset = offset;
+-		if (cfg->vector) {
+-			cpumask_copy(cfg->old_domain, cfg->domain);
+-			cfg->move_in_progress =
+-			   cpumask_intersects(cfg->old_domain, cpu_online_mask);
++		if (d->cfg.vector) {
++			cpumask_copy(d->old_domain, d->domain);
++			d->move_in_progress =
++			   cpumask_intersects(d->old_domain, cpu_online_mask);
+ 		}
+ 		for_each_cpu_and(new_cpu, tmp_mask, cpu_online_mask)
+ 			per_cpu(vector_irq, new_cpu)[vector] = irq;
+-		cfg->vector = vector;
+-		cpumask_copy(cfg->domain, tmp_mask);
++		d->cfg.vector = vector;
++		cpumask_copy(d->domain, tmp_mask);
+ 		err = 0;
+ 		break;
+ 	}
+@@ -178,46 +192,46 @@ next:
+ 
+ 	if (!err) {
+ 		/* cache destination APIC IDs into cfg->dest_apicid */
+-		err = apic->cpu_mask_to_apicid_and(mask, cfg->domain,
+-						   &cfg->dest_apicid);
++		err = apic->cpu_mask_to_apicid_and(mask, d->domain,
++						   &d->cfg.dest_apicid);
+ 	}
+ 
+ 	return err;
+ }
+ 
+-static int assign_irq_vector(int irq, struct irq_cfg *cfg,
++static int assign_irq_vector(int irq, struct apic_chip_data *data,
+ 			     const struct cpumask *mask)
+ {
+ 	int err;
+ 	unsigned long flags;
+ 
+ 	raw_spin_lock_irqsave(&vector_lock, flags);
+-	err = __assign_irq_vector(irq, cfg, mask);
++	err = __assign_irq_vector(irq, data, mask);
+ 	raw_spin_unlock_irqrestore(&vector_lock, flags);
+ 	return err;
+ }
+ 
+-static void clear_irq_vector(int irq, struct irq_cfg *cfg)
++static void clear_irq_vector(int irq, struct apic_chip_data *data)
+ {
+ 	int cpu, vector;
+ 	unsigned long flags;
+ 
+ 	raw_spin_lock_irqsave(&vector_lock, flags);
+-	BUG_ON(!cfg->vector);
++	BUG_ON(!data->cfg.vector);
+ 
+-	vector = cfg->vector;
+-	for_each_cpu_and(cpu, cfg->domain, cpu_online_mask)
++	vector = data->cfg.vector;
++	for_each_cpu_and(cpu, data->domain, cpu_online_mask)
+ 		per_cpu(vector_irq, cpu)[vector] = VECTOR_UNDEFINED;
+ 
+-	cfg->vector = 0;
+-	cpumask_clear(cfg->domain);
++	data->cfg.vector = 0;
++	cpumask_clear(data->domain);
+ 
+-	if (likely(!cfg->move_in_progress)) {
++	if (likely(!data->move_in_progress)) {
+ 		raw_spin_unlock_irqrestore(&vector_lock, flags);
+ 		return;
+ 	}
+ 
+-	for_each_cpu_and(cpu, cfg->old_domain, cpu_online_mask) {
++	for_each_cpu_and(cpu, data->old_domain, cpu_online_mask) {
+ 		for (vector = FIRST_EXTERNAL_VECTOR; vector < NR_VECTORS;
+ 		     vector++) {
+ 			if (per_cpu(vector_irq, cpu)[vector] != irq)
+@@ -226,7 +240,7 @@ static void clear_irq_vector(int irq, struct irq_cfg *cfg)
+ 			break;
+ 		}
+ 	}
+-	cfg->move_in_progress = 0;
++	data->move_in_progress = 0;
+ 	raw_spin_unlock_irqrestore(&vector_lock, flags);
+ }
+ 
+@@ -261,10 +275,10 @@ static void x86_vector_free_irqs(struct irq_domain *domain,
+ 		irq_data = irq_domain_get_irq_data(x86_vector_domain, virq + i);
+ 		if (irq_data && irq_data->chip_data) {
+ 			clear_irq_vector(virq + i, irq_data->chip_data);
+-			free_irq_cfg(irq_data->chip_data);
++			free_apic_chip_data(irq_data->chip_data);
+ #ifdef	CONFIG_X86_IO_APIC
+ 			if (virq + i < nr_legacy_irqs())
+-				legacy_irq_cfgs[virq + i] = NULL;
++				legacy_irq_data[virq + i] = NULL;
+ #endif
+ 			irq_domain_reset_irq_data(irq_data);
+ 		}
+@@ -275,7 +289,7 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
+ 				 unsigned int nr_irqs, void *arg)
+ {
+ 	int i, err;
+-	struct irq_cfg *cfg;
++	struct apic_chip_data *data;
+ 	struct irq_data *irq_data;
+ 	const struct cpumask *mask;
+ 	struct irq_alloc_info *info = arg;
+@@ -292,20 +306,20 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
+ 		irq_data = irq_domain_get_irq_data(domain, virq + i);
+ 		BUG_ON(!irq_data);
+ #ifdef	CONFIG_X86_IO_APIC
+-		if (virq + i < nr_legacy_irqs() && legacy_irq_cfgs[virq + i])
+-			cfg = legacy_irq_cfgs[virq + i];
++		if (virq + i < nr_legacy_irqs() && legacy_irq_data[virq + i])
++			data = legacy_irq_data[virq + i];
+ 		else
+ #endif
+-			cfg = alloc_irq_cfg(irq_data->node);
+-		if (!cfg) {
++			data = alloc_apic_chip_data(irq_data->node);
++		if (!data) {
+ 			err = -ENOMEM;
+ 			goto error;
+ 		}
+ 
+ 		irq_data->chip = &lapic_controller;
+-		irq_data->chip_data = cfg;
++		irq_data->chip_data = data;
+ 		irq_data->hwirq = virq + i;
+-		err = assign_irq_vector(virq, cfg, mask);
++		err = assign_irq_vector(virq, data, mask);
+ 		if (err)
+ 			goto error;
+ 	}
+@@ -349,22 +363,22 @@ int __init arch_probe_nr_irqs(void)
+ static void init_legacy_irqs(void)
+ {
+ 	int i, node = cpu_to_node(0);
+-	struct irq_cfg *cfg;
++	struct apic_chip_data *data;
+ 
+ 	/*
+ 	 * For legacy IRQ's, start with assigning irq0 to irq15 to
+ 	 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
+ 	 */
+ 	for (i = 0; i < nr_legacy_irqs(); i++) {
+-		cfg = legacy_irq_cfgs[i] = alloc_irq_cfg(node);
+-		BUG_ON(!cfg);
++		data = legacy_irq_data[i] = alloc_apic_chip_data(node);
++		BUG_ON(!data);
+ 		/*
+ 		 * For legacy IRQ's, start with assigning irq0 to irq15 to
+ 		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
+ 		 */
+-		cfg->vector = IRQ0_VECTOR + i;
+-		cpumask_setall(cfg->domain);
+-		irq_set_chip_data(i, cfg);
++		data->cfg.vector = IRQ0_VECTOR + i;
++		cpumask_setall(data->domain);
++		irq_set_chip_data(i, data);
+ 	}
+ }
+ #else
+@@ -390,7 +404,7 @@ static void __setup_vector_irq(int cpu)
+ {
+ 	/* Initialize vector_irq on a new cpu */
+ 	int irq, vector;
+-	struct irq_cfg *cfg;
++	struct apic_chip_data *data;
+ 
+ 	/*
+ 	 * vector_lock will make sure that we don't run into irq vector
+@@ -400,13 +414,13 @@ static void __setup_vector_irq(int cpu)
+ 	raw_spin_lock(&vector_lock);
+ 	/* Mark the inuse vectors */
+ 	for_each_active_irq(irq) {
+-		cfg = irq_cfg(irq);
+-		if (!cfg)
++		data = apic_chip_data(irq_get_irq_data(irq));
++		if (!data)
+ 			continue;
+ 
+-		if (!cpumask_test_cpu(cpu, cfg->domain))
++		if (!cpumask_test_cpu(cpu, data->domain))
+ 			continue;
+-		vector = cfg->vector;
++		vector = data->cfg.vector;
+ 		per_cpu(vector_irq, cpu)[vector] = irq;
+ 	}
+ 	/* Mark the free vectors */
+@@ -415,8 +429,8 @@ static void __setup_vector_irq(int cpu)
+ 		if (irq <= VECTOR_UNDEFINED)
+ 			continue;
+ 
+-		cfg = irq_cfg(irq);
+-		if (!cpumask_test_cpu(cpu, cfg->domain))
++		data = apic_chip_data(irq_get_irq_data(irq));
++		if (!cpumask_test_cpu(cpu, data->domain))
+ 			per_cpu(vector_irq, cpu)[vector] = VECTOR_UNDEFINED;
+ 	}
+ 	raw_spin_unlock(&vector_lock);
+@@ -442,15 +456,15 @@ void setup_vector_irq(int cpu)
+ 	__setup_vector_irq(cpu);
+ }
+ 
+-static int apic_retrigger_irq(struct irq_data *data)
++static int apic_retrigger_irq(struct irq_data *irq_data)
+ {
+-	struct irq_cfg *cfg = irqd_cfg(data);
++	struct apic_chip_data *data = apic_chip_data(irq_data);
+ 	unsigned long flags;
+ 	int cpu;
+ 
+ 	raw_spin_lock_irqsave(&vector_lock, flags);
+-	cpu = cpumask_first_and(cfg->domain, cpu_online_mask);
+-	apic->send_IPI_mask(cpumask_of(cpu), cfg->vector);
++	cpu = cpumask_first_and(data->domain, cpu_online_mask);
++	apic->send_IPI_mask(cpumask_of(cpu), data->cfg.vector);
+ 	raw_spin_unlock_irqrestore(&vector_lock, flags);
+ 
+ 	return 1;
+@@ -468,7 +482,7 @@ static int apic_set_affinity(struct irq_data *irq_data,
+ {
+ 	int err;
+ 	int irq = irq_data->irq;
+-	struct irq_cfg *cfg = irq_data->chip_data;
++	struct apic_chip_data *data = irq_data->chip_data;
+ 
+ 	if (!config_enabled(CONFIG_SMP))
+ 		return -EPERM;
+@@ -476,11 +490,11 @@ static int apic_set_affinity(struct irq_data *irq_data,
+ 	if (!cpumask_intersects(dest, cpu_online_mask))
+ 		return -EINVAL;
+ 
+-	err = assign_irq_vector(irq, cfg, dest);
++	err = assign_irq_vector(irq, data, dest);
+ 	if (err) {
+ 		struct irq_data *top = irq_get_irq_data(irq);
+ 
+-		if (assign_irq_vector(irq, cfg, top->affinity))
++		if (assign_irq_vector(irq, data, top->affinity))
+ 			pr_err("Failed to recover vector for irq %d\n", irq);
+ 		return err;
+ 	}
+@@ -495,28 +509,31 @@ static struct irq_chip lapic_controller = {
+ };
+ 
+ #ifdef CONFIG_SMP
+-static void __send_cleanup_vector(struct irq_cfg *cfg)
++static void __send_cleanup_vector(struct apic_chip_data *data)
+ {
+ 	cpumask_var_t cleanup_mask;
+ 
+ 	if (unlikely(!alloc_cpumask_var(&cleanup_mask, GFP_ATOMIC))) {
+ 		unsigned int i;
+ 
+-		for_each_cpu_and(i, cfg->old_domain, cpu_online_mask)
++		for_each_cpu_and(i, data->old_domain, cpu_online_mask)
+ 			apic->send_IPI_mask(cpumask_of(i),
+ 					    IRQ_MOVE_CLEANUP_VECTOR);
+ 	} else {
+-		cpumask_and(cleanup_mask, cfg->old_domain, cpu_online_mask);
++		cpumask_and(cleanup_mask, data->old_domain, cpu_online_mask);
+ 		apic->send_IPI_mask(cleanup_mask, IRQ_MOVE_CLEANUP_VECTOR);
+ 		free_cpumask_var(cleanup_mask);
+ 	}
+-	cfg->move_in_progress = 0;
++	data->move_in_progress = 0;
+ }
+ 
+ void send_cleanup_vector(struct irq_cfg *cfg)
+ {
+-	if (cfg->move_in_progress)
+-		__send_cleanup_vector(cfg);
++	struct apic_chip_data *data;
++
++	data = container_of(cfg, struct apic_chip_data, cfg);
++	if (data->move_in_progress)
++		__send_cleanup_vector(data);
+ }
+ 
+ asmlinkage __visible void smp_irq_move_cleanup_interrupt(void)
+@@ -532,7 +549,7 @@ asmlinkage __visible void smp_irq_move_cleanup_interrupt(void)
+ 		int irq;
+ 		unsigned int irr;
+ 		struct irq_desc *desc;
+-		struct irq_cfg *cfg;
++		struct apic_chip_data *data;
+ 
+ 		irq = __this_cpu_read(vector_irq[vector]);
+ 
+@@ -543,8 +560,8 @@ asmlinkage __visible void smp_irq_move_cleanup_interrupt(void)
+ 		if (!desc)
+ 			continue;
+ 
+-		cfg = irq_cfg(irq);
+-		if (!cfg)
++		data = apic_chip_data(&desc->irq_data);
++		if (!data)
+ 			continue;
+ 
+ 		raw_spin_lock(&desc->lock);
+@@ -553,10 +570,11 @@ asmlinkage __visible void smp_irq_move_cleanup_interrupt(void)
+ 		 * Check if the irq migration is in progress. If so, we
+ 		 * haven't received the cleanup request yet for this irq.
+ 		 */
+-		if (cfg->move_in_progress)
++		if (data->move_in_progress)
+ 			goto unlock;
+ 
+-		if (vector == cfg->vector && cpumask_test_cpu(me, cfg->domain))
++		if (vector == data->cfg.vector &&
++		    cpumask_test_cpu(me, data->domain))
+ 			goto unlock;
+ 
+ 		irr = apic_read(APIC_IRR + (vector / 32 * 0x10));
+@@ -582,14 +600,15 @@ unlock:
+ static void __irq_complete_move(struct irq_cfg *cfg, unsigned vector)
+ {
+ 	unsigned me;
++	struct apic_chip_data *data;
+ 
+-	if (likely(!cfg->move_in_progress))
++	data = container_of(cfg, struct apic_chip_data, cfg);
++	if (likely(!data->move_in_progress))
+ 		return;
+ 
+ 	me = smp_processor_id();
+-
+-	if (vector == cfg->vector && cpumask_test_cpu(me, cfg->domain))
+-		__send_cleanup_vector(cfg);
++	if (vector == data->cfg.vector && cpumask_test_cpu(me, data->domain))
++		__send_cleanup_vector(data);
+ }
+ 
+ void irq_complete_move(struct irq_cfg *cfg)
+@@ -601,10 +620,8 @@ void irq_force_complete_move(int irq)
+ {
+ 	struct irq_cfg *cfg = irq_cfg(irq);
+ 
+-	if (!cfg)
+-		return;
+-
+-	__irq_complete_move(cfg, cfg->vector);
++	if (cfg)
++		__irq_complete_move(cfg, cfg->vector);
+ }
+ #endif
+ 
 -- 
-1.9.1
+1.7.10.4
 
