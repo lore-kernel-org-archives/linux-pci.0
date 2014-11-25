@@ -1,4 +1,8 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:42568 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752348AbaKYFyW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 25 Nov 2014 00:54:22 -0500
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
@@ -8,167 +12,312 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, x86@kernel.org,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>
 Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [RFC Part4 v1 09/17] x86, irq: Simplify MSI/DMAR/HPET implementation by using common code
-Date: Sun,  9 Nov 2014 23:10:31 +0800
-Message-Id: <1415545839-28263-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415545839-28263-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
+Subject: [Patch Part2 v6 17/27] x86: irq_remapping: Clean up unused MSI related code
+Date: Tue, 25 Nov 2014 13:53:26 +0800
+Message-Id: <1416894816-23245-18-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use common code to simplify MSI/DMAR/HPET driver implementation.
+Now MSI interrupt has been converted to new hierarchy irqdomain
+interfaces, so kill legacy MSI related code and interfaces.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/kernel/apic/msi.c |   81 ++++----------------------------------------
- 1 file changed, 6 insertions(+), 75 deletions(-)
+ arch/x86/include/asm/irq_remapping.h |   13 ---
+ arch/x86/include/asm/pci.h           |    5 --
+ arch/x86/kernel/x86_init.c           |    2 -
+ drivers/iommu/irq_remapping.c        |  151 ----------------------------------
+ drivers/iommu/irq_remapping.h        |   14 ----
+ 5 files changed, 185 deletions(-)
 
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 842d71699912..f625c2f21377 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -140,23 +140,6 @@ struct irq_domain *arch_create_msi_irq_domain(struct irq_domain *parent)
+diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
+index 3b11f5a3e092..9c39650acbdd 100644
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -50,10 +50,6 @@ extern int setup_ioapic_remapped_entry(int irq,
+ 				       int vector,
+ 				       struct io_apic_irq_attr *attr);
+ extern void free_remapped_irq(int irq);
+-extern void compose_remapped_msi_msg(struct pci_dev *pdev,
+-				     unsigned int irq, unsigned int dest,
+-				     struct msi_msg *msg, u8 hpet_id);
+-extern int setup_hpet_msi_remapped(unsigned int irq, unsigned int id);
+ extern void panic_if_irq_remap(const char *msg);
+ extern bool setup_remapped_irq(int irq,
+ 			       struct irq_cfg *cfg,
+@@ -95,15 +91,6 @@ static inline int setup_ioapic_remapped_entry(int irq,
+ 	return -ENODEV;
+ }
+ static inline void free_remapped_irq(int irq) { }
+-static inline void compose_remapped_msi_msg(struct pci_dev *pdev,
+-					    unsigned int irq, unsigned int dest,
+-					    struct msi_msg *msg, u8 hpet_id)
+-{
+-}
+-static inline int setup_hpet_msi_remapped(unsigned int irq, unsigned int id)
+-{
+-	return -ENODEV;
+-}
+ 
+ static inline void panic_if_irq_remap(const char *msg)
+ {
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 4e370a5d8117..d8c80ff32e8c 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -96,15 +96,10 @@ extern void pci_iommu_alloc(void);
+ #ifdef CONFIG_PCI_MSI
+ /* implemented in arch/x86/kernel/apic/io_apic. */
+ struct msi_desc;
+-void native_compose_msi_msg(struct pci_dev *pdev, unsigned int irq,
+-			    unsigned int dest, struct msi_msg *msg, u8 hpet_id);
+ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+ void native_teardown_msi_irq(unsigned int irq);
+ void native_restore_msi_irqs(struct pci_dev *dev);
+-int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+-		  unsigned int irq_base, unsigned int irq_offset);
+ #else
+-#define native_compose_msi_msg		NULL
+ #define native_setup_msi_irqs		NULL
+ #define native_teardown_msi_irq		NULL
  #endif
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index 234b0722de53..b094d691f2fe 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -111,11 +111,9 @@ EXPORT_SYMBOL_GPL(x86_platform);
+ #if defined(CONFIG_PCI_MSI)
+ struct x86_msi_ops x86_msi = {
+ 	.setup_msi_irqs		= native_setup_msi_irqs,
+-	.compose_msi_msg	= native_compose_msi_msg,
+ 	.teardown_msi_irq	= native_teardown_msi_irq,
+ 	.teardown_msi_irqs	= default_teardown_msi_irqs,
+ 	.restore_msi_irqs	= default_restore_msi_irqs,
+-	.setup_hpet_msi		= default_setup_hpet_msi,
+ };
  
- #ifdef CONFIG_DMAR_TABLE
--static int
--dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
--		      bool force)
+ /* MSI arch specific hooks */
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 6ec0099a16d1..7ece17eb92f1 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -26,9 +26,6 @@ int no_x2apic_optout;
+ 
+ static struct irq_remap_ops *remap_ops;
+ 
+-static int msi_alloc_remapped_irq(struct pci_dev *pdev, int irq, int nvec);
+-static int msi_setup_remapped_irq(struct pci_dev *pdev, unsigned int irq,
+-				  int index, int sub_handle);
+ static int set_remapped_irq_affinity(struct irq_data *data,
+ 				     const struct cpumask *mask,
+ 				     bool force);
+@@ -51,109 +48,6 @@ static void irq_remapping_disable_io_apic(void)
+ 		disconnect_bsp_APIC(0);
+ }
+ 
+-#ifndef CONFIG_GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
+-static unsigned int irq_alloc_hwirqs(int cnt, int node)
 -{
--	struct irq_data *parent = data->parent_data;
--	struct msi_msg msg;
--	int ret;
+-	return irq_domain_alloc_irqs(NULL, -1, cnt, node, NULL);
+-}
 -
--	ret = parent->chip->irq_set_affinity(parent, mask, force);
--	if (ret >= 0) {
--		irq_chip_compose_msi_msg(data, &msg);
--		dmar_msi_write(data->irq, &msg);
+-static void irq_free_hwirqs(unsigned int from, int cnt)
+-{
+-	irq_domain_free_irqs(from, cnt);
+-}
+-#endif
+-
+-static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
+-{
+-	int ret, sub_handle, nvec_pow2, index = 0;
+-	unsigned int irq;
+-	struct msi_desc *msidesc;
+-
+-	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
+-
+-	irq = irq_alloc_hwirqs(nvec, dev_to_node(&dev->dev));
+-	if (irq == 0)
+-		return -ENOSPC;
+-
+-	nvec_pow2 = __roundup_pow_of_two(nvec);
+-	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
+-		if (!sub_handle) {
+-			index = msi_alloc_remapped_irq(dev, irq, nvec_pow2);
+-			if (index < 0) {
+-				ret = index;
+-				goto error;
+-			}
+-		} else {
+-			ret = msi_setup_remapped_irq(dev, irq + sub_handle,
+-						     index, sub_handle);
+-			if (ret < 0)
+-				goto error;
+-		}
+-		ret = setup_msi_irq(dev, msidesc, irq, sub_handle);
+-		if (ret < 0)
+-			goto error;
 -	}
+-	return 0;
+-
+-error:
+-	irq_free_hwirqs(irq, nvec);
+-
+-	/*
+-	 * Restore altered MSI descriptor fields and prevent just destroyed
+-	 * IRQs from tearing down again in default_teardown_msi_irqs()
+-	 */
+-	msidesc->irq = 0;
 -
 -	return ret;
 -}
 -
- static void dmar_msi_write_msg(struct irq_data *data, struct msi_msg *msg)
- {
- 	dmar_msi_write(data->irq, msg);
-@@ -167,7 +150,7 @@ static struct irq_chip dmar_msi_type = {
- 	.irq_unmask		= dmar_msi_unmask,
- 	.irq_mask		= dmar_msi_mask,
- 	.irq_ack		= irq_chip_ack_parent,
--	.irq_set_affinity	= dmar_msi_set_affinity,
-+	.irq_set_affinity	= msi_domain_set_affinity,
- 	.irq_retrigger		= irq_chip_retrigger_hierarchy,
- 	.irq_compose_msi_msg	= msi_compose_msg,
- 	.irq_write_msi_msg	= dmar_msi_write_msg,
-@@ -205,29 +188,11 @@ static void dmar_domain_free(struct irq_domain *domain, unsigned int virq,
- 	irq_domain_free_irqs_top(domain, virq, nr_irqs);
- }
- 
--static void dmar_domain_activate(struct irq_domain *domain,
--				 struct irq_data *irq_data)
+-static int do_setup_msix_irqs(struct pci_dev *dev, int nvec)
 -{
--	struct msi_msg msg;
+-	int node, ret, sub_handle, index = 0;
+-	struct msi_desc *msidesc;
+-	unsigned int irq;
 -
--	BUG_ON(irq_chip_compose_msi_msg(irq_data, &msg));
--	dmar_msi_write(irq_data->irq, &msg);
--}
+-	node		= dev_to_node(&dev->dev);
+-	sub_handle	= 0;
 -
--static void dmar_domain_deactivate(struct irq_domain *domain,
--				   struct irq_data *irq_data)
--{
--	struct msi_msg msg;
+-	list_for_each_entry(msidesc, &dev->msi_list, list) {
 -
--	memset(&msg, 0, sizeof(msg));
--	dmar_msi_write(irq_data->irq, &msg);
--}
+-		irq = irq_alloc_hwirqs(1, node);
+-		if (irq == 0)
+-			return -1;
 -
- static struct irq_domain_ops dmar_domain_ops = {
- 	.alloc = dmar_domain_alloc,
- 	.free = dmar_domain_free,
--	.activate = dmar_domain_activate,
--	.deactivate = dmar_domain_deactivate,
-+	.activate = msi_domain_activate,
-+	.deactivate = msi_domain_deactivate,
- };
- 
- static struct irq_domain *dmar_get_irq_domain(void)
-@@ -277,22 +242,6 @@ static inline int hpet_dev_id(struct irq_domain *domain)
- 	return (int)(long)domain->host_data;
- }
- 
--static int hpet_msi_set_affinity(struct irq_data *data,
--				 const struct cpumask *mask, bool force)
--{
--	struct irq_data *parent = data->parent_data;
--	struct msi_msg msg;
--	int ret;
+-		if (sub_handle == 0)
+-			ret = index = msi_alloc_remapped_irq(dev, irq, nvec);
+-		else
+-			ret = msi_setup_remapped_irq(dev, irq, index, sub_handle);
 -
--	ret = parent->chip->irq_set_affinity(parent, mask, force);
--	if (ret >= 0 && ret != IRQ_SET_MASK_OK_DONE) {
--		irq_chip_compose_msi_msg(data, &msg);
--		hpet_msi_write(data->handler_data, &msg);
+-		if (ret < 0)
+-			goto error;
+-
+-		ret = setup_msi_irq(dev, msidesc, irq, 0);
+-		if (ret < 0)
+-			goto error;
+-
+-		sub_handle += 1;
+-		irq        += 1;
 -	}
 -
+-	return 0;
+-
+-error:
+-	irq_free_hwirqs(irq, 1);
 -	return ret;
 -}
 -
- static void hpet_msi_write_msg(struct irq_data *data, struct msi_msg *msg)
+-static int irq_remapping_setup_msi_irqs(struct pci_dev *dev,
+-					int nvec, int type)
+-{
+-	if (type == PCI_CAP_ID_MSI)
+-		return do_setup_msi_irqs(dev, nvec);
+-	else
+-		return do_setup_msix_irqs(dev, nvec);
+-}
+-
+ static void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
  {
- 	hpet_msi_write(data->handler_data, msg);
-@@ -303,7 +252,7 @@ static struct irq_chip hpet_msi_type = {
- 	.irq_unmask = hpet_msi_unmask,
- 	.irq_mask = hpet_msi_mask,
- 	.irq_ack = irq_chip_ack_parent,
--	.irq_set_affinity = hpet_msi_set_affinity,
-+	.irq_set_affinity = msi_domain_set_affinity,
- 	.irq_retrigger = irq_chip_retrigger_hierarchy,
- 	.irq_compose_msi_msg = msi_compose_msg,
- 	.irq_write_msi_msg = hpet_msi_write_msg,
-@@ -343,29 +292,11 @@ static void hpet_domain_free(struct irq_domain *domain, unsigned int virq,
- 	irq_domain_free_irqs_top(domain, virq, nr_irqs);
+ 	/*
+@@ -171,8 +65,6 @@ static void __init irq_remapping_modify_x86_ops(void)
+ 	x86_io_apic_ops.set_affinity	= set_remapped_irq_affinity;
+ 	x86_io_apic_ops.setup_entry	= setup_ioapic_remapped_entry;
+ 	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
+-	x86_msi.setup_hpet_msi		= setup_hpet_msi_remapped;
+-	x86_msi.compose_msi_msg		= compose_remapped_msi_msg;
  }
  
--static void hpet_domain_activate(struct irq_domain *domain,
--				struct irq_data *irq_data)
--{
--	struct msi_msg msg;
--
--	BUG_ON(irq_chip_compose_msi_msg(irq_data, &msg));
--	hpet_msi_write(irq_get_handler_data(irq_data->irq), &msg);
--}
--
--static void hpet_domain_deactivate(struct irq_domain *domain,
--				  struct irq_data *irq_data)
--{
--	struct msi_msg msg;
--
--	memset(&msg, 0, sizeof(msg));
--	hpet_msi_write(irq_get_handler_data(irq_data->irq), &msg);
--}
--
- static struct irq_domain_ops hpet_domain_ops = {
- 	.alloc = hpet_domain_alloc,
- 	.free = hpet_domain_free,
--	.activate = hpet_domain_activate,
--	.deactivate = hpet_domain_deactivate,
-+	.activate = msi_domain_activate,
-+	.deactivate = msi_domain_deactivate,
- };
+ static __init int setup_nointremap(char *str)
+@@ -319,49 +211,6 @@ void free_remapped_irq(int irq)
+ 		remap_ops->free_irq(irq);
+ }
  
- struct irq_domain *hpet_create_irq_domain(int hpet_id)
+-void compose_remapped_msi_msg(struct pci_dev *pdev,
+-			      unsigned int irq, unsigned int dest,
+-			      struct msi_msg *msg, u8 hpet_id)
+-{
+-	struct irq_cfg *cfg = irq_cfg(irq);
+-
+-	if (!irq_remapped(cfg))
+-		native_compose_msi_msg(pdev, irq, dest, msg, hpet_id);
+-	else if (remap_ops && remap_ops->compose_msi_msg)
+-		remap_ops->compose_msi_msg(pdev, irq, dest, msg, hpet_id);
+-}
+-
+-static int msi_alloc_remapped_irq(struct pci_dev *pdev, int irq, int nvec)
+-{
+-	if (!remap_ops || !remap_ops->msi_alloc_irq)
+-		return -ENODEV;
+-
+-	return remap_ops->msi_alloc_irq(pdev, irq, nvec);
+-}
+-
+-static int msi_setup_remapped_irq(struct pci_dev *pdev, unsigned int irq,
+-				  int index, int sub_handle)
+-{
+-	if (!remap_ops || !remap_ops->msi_setup_irq)
+-		return -ENODEV;
+-
+-	return remap_ops->msi_setup_irq(pdev, irq, index, sub_handle);
+-}
+-
+-int setup_hpet_msi_remapped(unsigned int irq, unsigned int id)
+-{
+-	int ret;
+-
+-	if (!remap_ops || !remap_ops->alloc_hpet_msi)
+-		return -ENODEV;
+-
+-	ret = remap_ops->alloc_hpet_msi(irq, id);
+-	if (ret)
+-		return -EINVAL;
+-
+-	return default_setup_hpet_msi(irq, id);
+-}
+-
+ void panic_if_irq_remap(const char *msg)
+ {
+ 	if (irq_remapping_enabled)
+diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
+index 8c159d6fac46..95b19a6ef16a 100644
+--- a/drivers/iommu/irq_remapping.h
++++ b/drivers/iommu/irq_remapping.h
+@@ -70,20 +70,6 @@ struct irq_remap_ops {
+ 	/* Free an IRQ */
+ 	int (*free_irq)(int);
+ 
+-	/* Create MSI msg to use for interrupt remapping */
+-	void (*compose_msi_msg)(struct pci_dev *,
+-				unsigned int, unsigned int,
+-				struct msi_msg *, u8);
+-
+-	/* Allocate remapping resources for MSI */
+-	int (*msi_alloc_irq)(struct pci_dev *, int, int);
+-
+-	/* Setup the remapped MSI irq */
+-	int (*msi_setup_irq)(struct pci_dev *, unsigned int, int, int);
+-
+-	/* Setup interrupt remapping for an HPET MSI */
+-	int (*alloc_hpet_msi)(unsigned int, unsigned int);
+-
+ 	/* Get the irqdomain associated the IOMMU device */
+ 	struct irq_domain *(*get_ir_irq_domain)(struct irq_alloc_info *);
+ 
 -- 
 1.7.10.4
 
