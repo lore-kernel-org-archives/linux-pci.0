@@ -1,93 +1,157 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:48621 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751708AbaKFQeR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 11:34:17 -0500
-Message-ID: <545BA301.8000709@arm.com>
-Date: Thu, 06 Nov 2014 16:34:09 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: Thomas Gleixner <tglx@linutronix.de>
-CC: "suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"Harish.Kasiviswanathan@amd.com" <Harish.Kasiviswanathan@amd.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [V10 PATCH 2/2] irqchip: gicv2m: Add supports for ARM GICv2m
- MSI(-X)
-References: <1415052977-26036-1-git-send-email-suravee.suthikulpanit@amd.com> <1415052977-26036-3-git-send-email-suravee.suthikulpanit@amd.com> <5458CE31.3040404@linux.intel.com> <545ABB4C.8010103@amd.com> <545ABF6C.1000308@amd.com> <alpine.DEB.2.11.1411060146050.24960@nanos> <alpine.DEB.2.11.1411061131330.24960@nanos>
-In-Reply-To: <alpine.DEB.2.11.1411061131330.24960@nanos>
-Content-Type: text/plain; charset=WINDOWS-1252
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, Borislav Petkov <bp@alien8.de>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch Part2 v6 00/27] Enable hierarchy irqdomian on x86 platforms
+Date: Tue, 25 Nov 2014 13:53:09 +0800
+Message-Id: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Thomas,
+We plan to restructure x86 interrupt code based on hierarchy irqdomain,
+that is to build irqdomains for CPU vector, interrupt remapping unit,
+IOAPIC, MSI and HPET etc and organize those irqdomains in hierarchy mode.
+Each irqdomain manages corresponding interrupt controller and talks to
+parent interrupt controller through public irqdomain interfaces. We also
+support stacked irq_chip based on hierarchy irqdomain. It will make the
+x86 interrupt architecture much more clear and more easy to maintain
+with hierarchy irqdomain and stacked irq_chip.
 
-On 06/11/14 10:42, Thomas Gleixner wrote:
-> On Thu, 6 Nov 2014, Thomas Gleixner wrote:
->> On Wed, 5 Nov 2014, Suravee Suthikulanit wrote:
->>> On 11/5/2014 6:05 PM, Suravee Suthikulanit wrote:
->>>> - Overall, it seems that msi_domain_alloc() could be quite different
->>>> across architectures. Would it be possible to declare this function as
->>>> weak, and allow arch to override (similar to arch_setup_msi_irq)?
->>>
->>> Actually, declaring "msi_domain_ops" as non-static, and allow other code to
->>> override the .alloc and .free?
->>
->> Why do you want to do that?
-> 
-> I know why. Because you want to spare a level of hierarchy. But thats
-> wrong simply because MSI itself is an interrupt chip at the device
-> level.
-> 
-> [ MSI ] ---> [ GIC-MSI ] ---> [ GIC ]
-> 
-> So the MSI level only cares about the allocation of the virq
-> space. GIC-MSI allocates out of the bitmap which handles the hard
-> wired range of MSI capable GIC interrupts and GIC handles the
-> underlying functionality.
-> 
-> And this makes a lot of sense, if you think about interrupt
-> remapping. If ARM ever grows that you simply insert it into the chain:
-> 
-> [ MSI ] ---> [ Remap] ---> [ GIC-MSI ] ---> [ GIC ]
+This is the second patch set to enable support of hierarchy irqdomain
+on x86 platforms. It's based on tip/x86/apic branch and IOMMU x86/vt-d
+branch at:
+https://git.kernel.org/cgit/linux/kernel/git/joro/iommu.git/ x86/vt-d
 
-I think ARM has reached that stage with the ITS block in GICv3:
-- Each device gets programmed with a set of  "event IDs" ranging from 0
-to N-1, with N being the number of MSI vectors used by the device
-- the ITS uses both the device ID (basically the PCI requester ID) and
-the event ID to parse a set of software-managed tables (think page
-tables for interrupts).
+You may access it at:
+https://github.com/jiangliu/linux.git irqdomain/p2v6
 
-The x86 remapping thing looks quite similar to that, by reading a couple
-of pages from the VT-D document.
+There will aslo be a third patch set to convert IOAPIC driver to support
+hierarchy irqdomain and clean up code.
 
-So the way I understand the layout (and please correct me if I'm wrong,
-which is certainly the case) is that the MSI domain is entirely generic,
-allocates the virq, uses Remap as a parent, and uses
-irq_chip_compose_msi_msg to call into the parent and generate whatever
-goes into the MSI message.
+We have tested this patchset on Intel 32-bit and 64-bit systems. Joerg has
+helped to test it on AMD platforms. It also passes Fengguang's 0day tests.
+Helps are still needed for testings on:
+1) AMD HT_IRQ
+2) UV platform
+3) Intel MID platforms
 
-I'm still struggling a bit to see how the remapping layer can access the
-requester ID. x86 uses the irq_alloc_info to store that (the result of
-an msi_get_hwirq call), but we don't have an equivalent structure on
-arm/arm64.
+Patch 1-7 introduce vector domain to manage CPU vectors and convert
+	PCI MSI/HPET/DMAT etc to use vector domain.
+Patch 8-11 introduce new irq_remapping interfaces to support hierarchy
+	irqdomain.
+Patch 12-14, 19-20, 24-27 convert PCI MSI/HPET/DMAR to use new hierarchy
+	irqdomain framework.
+Patch 15-18 clean up old irq_remapping interfaces to support PCI MSI and
+	HPET interrupts.
+Patch 21-22 convert HT_IRQ and UV platform to use new hierarchy irqdomain.
+Patch 23 normalizes irqchip names on x86 platforms.
 
-I'll try to hack something with my current ITS driver and come back with
-the results.
+V5->V6:
+1) Common hierarchy irqdomian code has been moved into tip/irq/irqdomain
+2) Rebase onto tip/irq/irqdomain and iommu/x86/vt-d
+3) Convert PCI MSI/HPET/DMAR to use the new generic MSI framework
+4) Fix bugs and conflicts when merging with IOMMU hotplug code
+5) More code cleanups
+V4->V5:
+1) Refine PCI MSI interfaces to support hierarchy irqdomain
+2) Fix a bug with dealing multiple MSI interrupts
+3) Improve commit messages
+V3->V4:
+1) Simplify IRQ remapping interfaces
+2) Hide all IRQ remapping logic from MSI/HPET drivers
+3) Move most MSI irqdomain code to public drivers/pci/msi.c so it could
+   be resued
+4) Improve common PCI MSI code
+5) Rebase to tip/x86/apic
+V2->V3:
+1) Fix bugs in handling OF irqdomain
+2) Add documentation
+3) Rebase to v3.18-rc2
+V1->V2
+1) Add hierarchy iredomain support of DMAR IRQ and UV IRQ.
+2) Fix bugs reported by Joe C.
+3) Address all review comments from Thomas
+4) Fix a bug found during tests
+5) Fix errors and warning found by 0day tests
 
-Thanks,
+Jiang Liu (27):
+  x86, irq: Save destination CPU ID in irq_cfg
+  x86, irq: Use hierarchy irqdomain to manage CPU interrupt vectors
+  x86, hpet: Use new irqdomain interfaces to allocate/free IRQ
+  x86, MSI: Use new irqdomain interfaces to allocate/free IRQ
+  x86, uv: Use new irqdomain interfaces to allocate/free IRQ
+  x86, htirq: Use new irqdomain interfaces to allocate/free IRQ
+  x86, dmar: Use new irqdomain interfaces to allocate/free IRQ
+  x86: irq_remapping: Introduce new interfaces to support hierarchy
+    irqdomain
+  iommu/vt-d: Change prototypes to prepare for enabling hierarchy
+    irqdomain
+  iommu/vt-d: Enhance Intel IR driver to suppport hierarchy irqdomain
+  iommu/amd: Enhance AMD IR driver to suppport hierarchy irqdomain
+  x86, hpet: Enhance HPET IRQ to support hierarchy irqdomain
+  x86, PCI, MSI: Use hierarchy irqdomain to manage MSI interrupts
+  x86, irq: Directly call native_compose_msi_msg() for DMAR IRQ
+  iommu/vt-d: Clean up unused MSI related code
+  iommu/amd: Clean up unused MSI related code
+  x86: irq_remapping: Clean up unused MSI related code
+  x86, irq: Clean up unused MSI related code and interfaces
+  iommu/vt-d: Refine the interfaces to create IRQ for DMAR unit
+  x86, irq: Use hierarchy irqdomain to manage DMAR interrupts
+  x86, htirq: Use hierarchy irqdomain to manage Hypertransport
+    interrupts
+  x86, uv: Use hierarchy irqdomain to manage UV interrupts
+  x86, irq: Normalize x86 irq_chip name
+  x86, PCI/MSI: Simplify the way to deal with remapped MSI interrupts
+  PCI/MSI: Replace msi_update_msg() with irq_chip_compose_msi_msg()
+  x86, irq: Implement irq_chip.irq_write_msi_msg for MSI/DMAR/HPET
+    irq_chips
+  x86, irq: Simplify MSI/DMAR/HPET implementation by using common code
 
-	M.
+ arch/ia64/include/asm/irq_remapping.h |    2 -
+ arch/ia64/kernel/msi_ia64.c           |   30 ++-
+ arch/x86/Kconfig                      |    4 +-
+ arch/x86/include/asm/hpet.h           |   16 +-
+ arch/x86/include/asm/hw_irq.h         |   91 +++++++
+ arch/x86/include/asm/irq_remapping.h  |   47 ++--
+ arch/x86/include/asm/msi.h            |    7 +
+ arch/x86/include/asm/pci.h            |    5 -
+ arch/x86/include/asm/x86_init.h       |    4 -
+ arch/x86/kernel/apic/htirq.c          |  173 +++++++++----
+ arch/x86/kernel/apic/io_apic.c        |    3 -
+ arch/x86/kernel/apic/msi.c            |  420 +++++++++++++++++-------------
+ arch/x86/kernel/apic/vector.c         |  165 +++++++++++-
+ arch/x86/kernel/hpet.c                |   57 ++---
+ arch/x86/kernel/x86_init.c            |    2 -
+ arch/x86/platform/uv/uv_irq.c         |  298 ++++++++--------------
+ drivers/iommu/amd_iommu.c             |  378 ++++++++++++++++++++-------
+ drivers/iommu/amd_iommu_init.c        |    4 +
+ drivers/iommu/amd_iommu_proto.h       |    9 +
+ drivers/iommu/amd_iommu_types.h       |    5 +
+ drivers/iommu/dmar.c                  |   19 +-
+ drivers/iommu/intel_irq_remapping.c   |  453 +++++++++++++++++++++++----------
+ drivers/iommu/irq_remapping.c         |  191 ++++----------
+ drivers/iommu/irq_remapping.h         |   20 +-
+ drivers/pci/htirq.c                   |   48 +---
+ include/linux/dmar.h                  |    3 +-
+ include/linux/htirq.h                 |   22 +-
+ include/linux/intel-iommu.h           |    4 +
+ 28 files changed, 1523 insertions(+), 957 deletions(-)
+ create mode 100644 arch/x86/include/asm/msi.h
+
 -- 
-Jazz is not dead. It just smells funny...
+1.7.10.4
 
