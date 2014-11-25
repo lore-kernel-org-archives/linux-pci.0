@@ -1,51 +1,91 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 5 Nov 2014 12:17:36 +0100
-From: Joerg Roedel <joro@8bytes.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jon Mason <jdmason@kudzu.us>,
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: Kernel NULL pointer deref in pci_get_hp_params with v3.18-rc3
-Message-ID: <20141105111736.GK10744@8bytes.org>
-References: <20141104162251.GF10744@8bytes.org>
- <CAErSpo4Zx8hNjJdHvJeLzj_wAJSa6WCDuJ0XYymK-QU_i+MECg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4Zx8hNjJdHvJeLzj_wAJSa6WCDuJ0XYymK-QU_i+MECg@mail.gmail.com>
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Jonathan Corbet <corbet@lwn.net>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	Daniel J Blueman <daniel@numascale.com>,
+	linux-doc@vger.kernel.org
+Subject: [Patch Part3 v4 38/38] x86, irq: Add kernel parameter vector_alloc to set CPU vector allocation policy
+Date: Tue, 25 Nov 2014 15:50:02 +0800
+Message-Id: <1416901802-24211-39-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Parameter vector_alloc should be set to an integer with:
+bit 0:	enable allocating CPU vector from CPUs on device local node.
+	That's to allocate from cpumask_of_node(irq_data->node).
+bit 1: enable the default policy, which is to allocate from
+       apic->target_cpus().
 
-On Tue, Nov 04, 2014 at 11:38:09AM -0700, Bjorn Helgaas wrote:
-> [+cc Yinghai]
-> 
-> On Tue, Nov 4, 2014 at 9:22 AM, Joerg Roedel <joro@8bytes.org> wrote:
-> > Hi,
-> >
-> > booting v3.18-rc3 (havn't tested earlier -rcs on this box) on a Xeon box
-> > with a Neterion 10GBit card (vxge driver) I see the following NULL
-> > pointer deref in dmesg:
-> >
-> > [    7.221747] vxge: Copyright(c) 2002-2010 Exar Corp.
-> > [    7.221749] vxge: Driver version: 2.5.3.22640-k
-> > [    7.324070] pci 0000:07:00.1: [17d5:5833] type 00 class 0x020000
-> > [    7.324144] BUG: unable to handle kernel NULL pointer dereference at 00000000000002d8
-> > [    7.324162] IP: [<ffffffff8136733b>] pci_get_hp_params+0x2b/0x620
-> 
-> I think this is the same problem Yinghai posted a patch for:
-> http://lkml.kernel.org/r/1414621570-20777-1-git-send-email-yinghai@kernel.org
-> 
-> I broke things with 6cd33649fa83, and I'd like to try a different fix
-> than Yinghai's, so I guess I should get busy :)  Thanks for the
-> reminder.
+When allocating vectors, it tries all enabled policies from lower bit
+position to higher bit position.
 
-Okay, let me know if there is any patch for me to test :)
+This option could be use to optimize interrupt distribution on large
+system such as NumaChip etc.
 
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Daniel J Blueman <daniel@numascale.com>
+---
+ Documentation/kernel-parameters.txt |    6 ++++++
+ arch/x86/kernel/apic/vector.c       |   11 +++++++++++
+ 2 files changed, 17 insertions(+)
 
-	Joerg
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 4c81a860cc2b..a175c5016954 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -3709,6 +3709,12 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 	vector=		[IA-64,SMP]
+ 			vector=percpu: enable percpu vector domain
+ 
++	vector_alloc=	[x86,SMP]
++			vector_alloc=policy: policy is a bitmap, bit 0
++			for allocating CPU vector from CPUs on device local
++			node; bit 1 for the default policy to allocating from
++			apic->target_cpus(). All higher bits are reserved.
++
+ 	video=		[FB] Frame buffer configuration
+ 			See Documentation/fb/modedb.txt.
+ 
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 16de8906ee1e..1158843551c7 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -79,6 +79,17 @@ void set_vector_alloc_policy(unsigned int policy)
+ 		x86_vector_alloc_policy = policy | X86_VECTOR_POL_CALLER;
+ }
+ 
++static int __init apic_parse_vector_policy(char *str)
++{
++	int policy;
++
++	if (get_option(&str, &policy) == 1)
++		set_vector_alloc_policy(policy);
++
++	return 1;
++}
++__setup("vector_alloc=", apic_parse_vector_policy);
++
+ static struct apic_chip_data *alloc_apic_chip_data(int node)
+ {
+ 	struct apic_chip_data *data;
+-- 
+1.7.10.4
 
