@@ -1,89 +1,370 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:54313 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752983AbaKESBs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 13:01:48 -0500
-Received: by mail-qc0-f174.google.com with SMTP id r5so981950qcx.5
-        for <linux-pci@vger.kernel.org>; Wed, 05 Nov 2014 10:01:47 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1415151063-2530-1-git-send-email-chuansheng.liu@intel.com>
-References: <1415151063-2530-1-git-send-email-chuansheng.liu@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 5 Nov 2014 11:01:15 -0700
-Message-ID: <CAErSpo6cWP2ngErLVzqASkeQOLsB7JjgCC8UuA-S=Lz=AJyf6Q@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Do not enable async suspend for JMicron chips
-To: Chuansheng Liu <chuansheng.liu@intel.com>
-Cc: Aaron Lu <aaron.lu@intel.com>, Tejun Heo <tj@kernel.org>,
-	Rafael Wysocki <rjw@rjwysocki.net>, mister.freeman@laposte.net,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Prarit Bhargava <prarit@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part2 v6 02/27] x86, irq: Use hierarchy irqdomain to manage CPU interrupt vectors
+Date: Tue, 25 Nov 2014 13:53:11 +0800
+Message-Id: <1416894816-23245-3-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 4, 2014 at 6:31 PM, Chuansheng Liu <chuansheng.liu@intel.com> wrote:
-> The JMicron chip 361/363/368 contains one SATA controller and
-> one PATA controller, they are brother-relation ship in PCI tree,
-> but for powering on these both controller, we must follow the
-> sequence one by one, otherwise one of them can not be powered on
-> successfully.
+Abstract CPU local APIC as an interrupt controller and create an
+irqdomain for it to manage CPU interrupt vectors. It's the base to
+enable hierarchy irqdomain on x86 systems. Eventually we will build
+a irqdomain hierarchy as below:
+IOAPIC domain-------|
+MSI/MSI-x domain------> [Inerrupt Remapping domain] -> CPU vector domain
+HPET_IRQ domain_____|                                         ^
+DMAR domain---------------------------------------------------|
+HT_IRQ domain-------------------------------------------------|
 
-This should mention what's broken and what problem a user would see.
-This changelog sounds a lot like the one for e6b7e41cdd8c, so I don't
-know if this is for a new, related problem, or what.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/Kconfig               |    3 +-
+ arch/x86/include/asm/hw_irq.h  |   17 +++++
+ arch/x86/kernel/apic/io_apic.c |    3 -
+ arch/x86/kernel/apic/vector.c  |  156 ++++++++++++++++++++++++++++++++++++----
+ 4 files changed, 161 insertions(+), 18 deletions(-)
 
-> So here we disable the async suspend method for Jmicron chip.
->
-> Bug link:
-> https://bugzilla.kernel.org/show_bug.cgi?id=81551
-> https://bugzilla.kernel.org/show_bug.cgi?id=84861
->
-> And we can revert the below commit after this patch is applied:
-> e6b7e41(ata: Disabling the async PM for JMicron chip 363/361)
->
-> Cc: stable@vger.kernel.org # 3.15+
-> Acked-by: Aaron Lu <aaron.lu@intel.com>
-> Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-> ---
->  drivers/pci/pci.c |   12 +++++++++++-
->  1 file changed, 11 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 625a4ac..53128f0 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2046,7 +2046,17 @@ void pci_pm_init(struct pci_dev *dev)
->         pm_runtime_forbid(&dev->dev);
->         pm_runtime_set_active(&dev->dev);
->         pm_runtime_enable(&dev->dev);
-> -       device_enable_async_suspend(&dev->dev);
-> +
-> +       /*
-> +        * The JMicron chip 361/363/368 contains one SATA controller and
-> +        * one PATA controller, they are brother-relation ship in PCI tree,
-> +        * but for powering on these both controller, we must follow the
-> +        * sequence one by one, otherwise one of them can not be powered on
-> +        * successfully, so here we disable the async suspend method for
-> +        * Jmicron chip.
-> +        */
-> +       if (dev->vendor != PCI_VENDOR_ID_JMICRON)
-> +               device_enable_async_suspend(&dev->dev);
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 8e3175ba7f4c..14385ebfd560 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -456,7 +456,6 @@ config X86_INTEL_CE
+ 	select X86_REBOOTFIXUPS
+ 	select OF
+ 	select OF_EARLY_FLATTREE
+-	select IRQ_DOMAIN
+ 	---help---
+ 	  Select for the Intel CE media processor (CE4100) SOC.
+ 	  This option compiles in support for the CE4100 SOC for settop
+@@ -883,11 +882,11 @@ config X86_LOCAL_APIC
+ 	def_bool y
+ 	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_APIC || PCI_MSI
+ 	select GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
++	select IRQ_DOMAIN_HIERARCHY
+ 
+ config X86_IO_APIC
+ 	def_bool X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_IOAPIC
+ 	depends on X86_LOCAL_APIC
+-	select IRQ_DOMAIN
+ 
+ config X86_REROUTE_FOR_BROKEN_BOOT_IRQS
+ 	bool "Reroute for broken boot IRQs"
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index b988ddf7434b..eb7692c9ab93 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -112,6 +112,17 @@ struct irq_2_irte {
+ 
+ #ifdef	CONFIG_X86_LOCAL_APIC
+ struct irq_data;
++struct irq_domain;
++
++struct irq_alloc_info {
++	u32			flags;
++	const struct cpumask	*mask;	/* CPU mask for vector allocation */
++};
++
++enum {
++	/* Allocate contigious CPU vectors */
++	X86_IRQ_ALLOC_CONTIGOUS_VECTORS		= 0x1,
++};
+ 
+ struct irq_cfg {
+ 	cpumask_var_t		domain;
+@@ -135,6 +146,12 @@ struct irq_cfg {
+ 	};
+ };
+ 
++extern struct irq_domain *x86_vector_domain;
++
++extern void init_irq_alloc_info(struct irq_alloc_info *info,
++				const struct cpumask *mask);
++extern void copy_irq_alloc_info(struct irq_alloc_info *dst,
++				struct irq_alloc_info *src);
+ extern struct irq_cfg *irq_cfg(unsigned int irq);
+ extern struct irq_cfg *irqd_cfg(struct irq_data *irq_data);
+ extern struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 3f5f60406ab1..51936be8ab13 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -2353,9 +2353,6 @@ static int mp_irqdomain_create(int ioapic)
+ 		ioapic_dynirq_base = max(ioapic_dynirq_base,
+ 					 gsi_cfg->gsi_end + 1);
+ 
+-	if (gsi_cfg->gsi_base == 0)
+-		irq_set_default_host(ip->irqdomain);
+-
+ 	return 0;
+ }
+ 
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index c724ef6b218c..f8340c72546f 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -3,6 +3,8 @@
+  *
+  * Copyright (C) 1997, 1998, 1999, 2000, 2009 Ingo Molnar, Hajnalka Szabo
+  *	Moved from arch/x86/kernel/apic/io_apic.c.
++ * Jiang Liu <jiang.liu@linux.intel.com>
++ *	Enable support of hierarchy irqdomain
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -19,7 +21,9 @@
+ #include <asm/desc.h>
+ #include <asm/irq_remapping.h>
+ 
++struct irq_domain *x86_vector_domain;
+ static DEFINE_RAW_SPINLOCK(vector_lock);
++static struct irq_chip lapic_controller;
+ 
+ void lock_vector_lock(void)
+ {
+@@ -36,15 +40,21 @@ void unlock_vector_lock(void)
+ 
+ struct irq_cfg *irq_cfg(unsigned int irq)
+ {
+-	return irq_get_chip_data(irq);
++	return irqd_cfg(irq_get_irq_data(irq));
+ }
+ 
+ struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
+ {
++	if (!irq_data)
++		return NULL;
++
++	while (irq_data->parent_data)
++		irq_data = irq_data->parent_data;
++
+ 	return irq_data->chip_data;
+ }
+ 
+-static struct irq_cfg *alloc_irq_cfg(unsigned int irq, int node)
++static struct irq_cfg *alloc_irq_cfg(int node)
+ {
+ 	struct irq_cfg *cfg;
+ 
+@@ -79,7 +89,7 @@ struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node)
+ 			return cfg;
+ 	}
+ 
+-	cfg = alloc_irq_cfg(at, node);
++	cfg = alloc_irq_cfg(node);
+ 	if (cfg)
+ 		irq_set_chip_data(at, cfg);
+ 	else
+@@ -87,14 +97,13 @@ struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node)
+ 	return cfg;
+ }
+ 
+-static void free_irq_cfg(unsigned int at, struct irq_cfg *cfg)
++static void free_irq_cfg(struct irq_cfg *cfg)
+ {
+-	if (!cfg)
+-		return;
+-	irq_set_chip_data(at, NULL);
+-	free_cpumask_var(cfg->domain);
+-	free_cpumask_var(cfg->old_domain);
+-	kfree(cfg);
++	if (cfg) {
++		free_cpumask_var(cfg->domain);
++		free_cpumask_var(cfg->old_domain);
++		kfree(cfg);
++	}
+ }
+ 
+ static int
+@@ -241,6 +250,90 @@ void clear_irq_vector(int irq, struct irq_cfg *cfg)
+ 	raw_spin_unlock_irqrestore(&vector_lock, flags);
+ }
+ 
++void init_irq_alloc_info(struct irq_alloc_info *info,
++			 const struct cpumask *mask)
++{
++	memset(info, 0, sizeof(*info));
++	info->mask = mask;
++}
++
++void copy_irq_alloc_info(struct irq_alloc_info *dst, struct irq_alloc_info *src)
++{
++	if (src)
++		*dst = *src;
++	else
++		memset(dst, 0, sizeof(*dst));
++}
++
++static inline const struct cpumask *
++irq_alloc_info_get_mask(struct irq_alloc_info *info)
++{
++	return (!info || !info->mask) ? apic->target_cpus() : info->mask;
++}
++
++static void x86_vector_free_irqs(struct irq_domain *domain,
++				 unsigned int virq, unsigned int nr_irqs)
++{
++	int i;
++	struct irq_data *irq_data;
++
++	for (i = 0; i < nr_irqs; i++) {
++		irq_data = irq_domain_get_irq_data(x86_vector_domain, virq + i);
++		if (irq_data && irq_data->chip_data) {
++			free_remapped_irq(virq);
++			clear_irq_vector(virq + i, irq_data->chip_data);
++			free_irq_cfg(irq_data->chip_data);
++			irq_domain_reset_irq_data(irq_data);
++		}
++	}
++}
++
++static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
++				 unsigned int nr_irqs, void *arg)
++{
++	int i, err;
++	struct irq_cfg *cfg;
++	struct irq_data *irq_data;
++	const struct cpumask *mask;
++	struct irq_alloc_info *info = arg;
++
++	if (disable_apic)
++		return -ENXIO;
++
++	/* Currently vector allocator can't guarantee contigious allocations */
++	if ((info->flags & X86_IRQ_ALLOC_CONTIGOUS_VECTORS) && nr_irqs > 1)
++		return -ENOSYS;
++
++	mask = irq_alloc_info_get_mask(info);
++	for (i = 0; i < nr_irqs; i++) {
++		irq_data = irq_domain_get_irq_data(domain, virq + i);
++		BUG_ON(!irq_data);
++		cfg = alloc_irq_cfg(irq_data->node);
++		if (!cfg) {
++			err = -ENOMEM;
++			goto error;
++		}
++
++		irq_data->chip = &lapic_controller;
++		irq_data->chip_data = cfg;
++		irq_data->hwirq = virq + i;
++		err = assign_irq_vector(virq, cfg, mask);
++		if (err)
++			goto error;
++	}
++
++	return 0;
++
++error:
++	x86_vector_free_irqs(domain, virq, i + 1);
++	return err;
++}
++
++static struct irq_domain_ops x86_vector_domain_ops = {
++	.alloc = x86_vector_alloc_irqs,
++	.free = x86_vector_free_irqs,
++};
++
+ int __init arch_probe_nr_irqs(void)
+ {
+ 	int nr;
+@@ -266,6 +359,11 @@ int __init arch_probe_nr_irqs(void)
+ 
+ int __init arch_early_irq_init(void)
+ {
++	x86_vector_domain = irq_domain_add_tree(NULL, &x86_vector_domain_ops,
++						NULL);
++	BUG_ON(x86_vector_domain == NULL);
++	irq_set_default_host(x86_vector_domain);
++
+ 	return arch_early_ioapic_init();
+ }
+ 
+@@ -380,6 +478,37 @@ int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 	return 0;
+ }
+ 
++static int vector_set_affinity(struct irq_data *irq_data,
++			       const struct cpumask *dest, bool force)
++{
++	int err;
++	int irq = irq_data->irq;
++	struct irq_cfg *cfg = irq_data->chip_data;
++
++	if (!config_enabled(CONFIG_SMP))
++		return -EPERM;
++
++	if (!cpumask_intersects(dest, cpu_online_mask))
++		return -EINVAL;
++
++	err = assign_irq_vector(irq, cfg, dest);
++	if (err) {
++		struct irq_data *top = irq_get_irq_data(irq);
++
++		if (assign_irq_vector(irq, cfg, top->affinity))
++			pr_err("Failed to recover vector for irq %d\n", irq);
++		return err;
++	}
++
++	return IRQ_SET_MASK_OK;
++}
++
++static struct irq_chip lapic_controller = {
++	.irq_ack		= apic_ack_edge,
++	.irq_set_affinity	= vector_set_affinity,
++	.irq_retrigger		= apic_retrigger_irq,
++};
++
+ #ifdef CONFIG_SMP
+ void send_cleanup_vector(struct irq_cfg *cfg)
+ {
+@@ -497,7 +626,7 @@ int arch_setup_hwirq(unsigned int irq, int node)
+ 	unsigned long flags;
+ 	int ret;
+ 
+-	cfg = alloc_irq_cfg(irq, node);
++	cfg = alloc_irq_cfg(node);
+ 	if (!cfg)
+ 		return -ENOMEM;
+ 
+@@ -508,7 +637,7 @@ int arch_setup_hwirq(unsigned int irq, int node)
+ 	if (!ret)
+ 		irq_set_chip_data(irq, cfg);
+ 	else
+-		free_irq_cfg(irq, cfg);
++		free_irq_cfg(cfg);
+ 	return ret;
+ }
+ 
+@@ -518,7 +647,8 @@ void arch_teardown_hwirq(unsigned int irq)
+ 
+ 	free_remapped_irq(irq);
+ 	clear_irq_vector(irq, cfg);
+-	free_irq_cfg(irq, cfg);
++	irq_set_chip_data(irq, NULL);
++	free_irq_cfg(cfg);
+ }
+ 
+ static void __init print_APIC_field(int base)
+-- 
+1.7.10.4
 
-I don't like littering the core PCI code with vendor tests like this.
-This would be the only one, except for an ancient DECchip 21050 bridge
-erratum.
-
-And why would we want a test for *all* JMicron devices here, when you
-claim the problem only affects a few specific ones?
-
-And what's the story with the e6b7e41cdd8c ("ata: Disabling the async
-PM for JMicron chip 363/361") connection?  Is something broken even
-with e6b7e41cdd8c, and this is a better fix?  Or is this simply a
-different way of fixing the same problem?
-
->         dev->wakeup_prepared = false;
->
->         dev->pm_cap = 0;
-> --
-> 1.7.9.5
->
