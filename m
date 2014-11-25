@@ -1,117 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:38218 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754527AbaKROYA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 09:24:00 -0500
-Date: Tue, 18 Nov 2014 14:23:54 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"huxinwei@huawei.com" <huxinwei@huawei.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Wuyun <wuyun.wu@huawei.com>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	Yijing Wang <wangyijing0307@gmail.com>
-Subject: Re: [RFC PATCH 01/16] PCI: Enhance pci_scan_root_bus() to support
- default IO/MEM resources
-Message-ID: <20141118142354.GH12037@e106497-lin.cambridge.arm.com>
-References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
- <2732970.7HG94QvVBv@wuerfel>
- <546AF8D7.9010103@huawei.com>
- <2447172.ADYWdCTnMP@wuerfel>
- <546B317E.4090800@huawei.com>
-MIME-Version: 1.0
-In-Reply-To: <546B317E.4090800@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part3 v4 03/38] x86, irq: Kill unused pre_init_apic_IRQ0()
+Date: Tue, 25 Nov 2014 15:49:27 +0800
+Message-Id: <1416901802-24211-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 18, 2014 at 11:46:06AM +0000, Yijing Wang wrote:
-> On 2014/11/18 17:36, Arnd Bergmann wrote:
-> > On Tuesday 18 November 2014 15:44:23 Yijing Wang wrote:
-> >> On 2014/11/17 18:08, Arnd Bergmann wrote:
-> >>> On Monday 17 November 2014 18:21:35 Yijing Wang wrote:
-> >>>> -       list_for_each_entry(window, resources, list)
-> >>>> -               if (window->res->flags & IORESOURCE_BUS) {
-> >>>> -                       found = true;
-> >>>> -                       break;
-> >>>> -               }
-> >>>> +       if (!resources) {
-> >>>> +               pci_add_resource(&default_res, &ioport_resource);
-> >>>> +               pci_add_resource(&default_res, &iomem_resource);
-> >>>> +               pci_add_resource(&default_res, &busn_resource);
-> >>>> +       } else {
-> >>>>
-> >>>
-> >>> Isn't it almost always wrong to do this? You are adding all of the
-> >>> I/O ports and memory to the host bridge, which will prevent you from
-> >>> adding another host bridge, and the iomem_resource normally
-> >>> includes a lot of addresses that are not accessible by the PCI host.
-> >>
-> >> Hi Arnd, pci host bridge windows are the ranges allow child devices to setup
-> >> from. Add all of IO/MEM here just a limit to child devices, no request for these
-> >> resources, so it won't hurt another host bridge. Some platforms have no dts or ACPI
-> >> report host bridge resources, in this case, we directly assign ioport/iomem_resources
-> >> as the root resources of PCI devices.
-> > 
-> > But it would be wrong to allow hosts to allocate a device BAR that is not
-> > visible through the host bridge. I think we need to keep these separate
-> > from the general case: if you call any of the modern interfaces you have
-> > to provide the resources and a device. I notice that there is only one
-> > caller of pci_scan_bus_parented(), we should probably change that over to
-> > pci_scan_root_bus() or your new interface and remove the old one, but
-> > keep pci_scan_bus() as the only entry point for all of the legacy users
-> > that do not know about the resources.
-> 
-> Ok, I will move this out of the generic interface.
+Now there's no user of pre_init_apic_IRQ0(), so kill it.
 
-My suggestion would actually be to trigger a warning/error if you detect that the resources
-are missing. That way we can force the drivers to clean up.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Tested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h |    1 -
+ arch/x86/kernel/apic/io_apic.c |   17 -----------------
+ 2 files changed, 18 deletions(-)
 
-Best regards,
-Liviu
-
-> 
-> Thanks!
-> Yijing.
-> 
-> > 
-> > 	Arnd
-> > 
-> > .
-> > 
-> 
-> 
-> -- 
-> Thanks!
-> Yijing
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index bf006cce9418..3207143f0a44 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -204,7 +204,6 @@ extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 			    irq_hw_number_t hwirq);
+ extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
+ extern int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node);
+-extern void __init pre_init_apic_IRQ0(void);
+ 
+ extern void mp_save_irq(struct mpc_intsrc *m);
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 51936be8ab13..919afe772347 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3088,20 +3088,3 @@ int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node)
+ 
+ 	return ret;
+ }
+-
+-/* Enable IOAPIC early just for system timer */
+-void __init pre_init_apic_IRQ0(void)
+-{
+-	struct io_apic_irq_attr attr = { 0, 0, 0, 0 };
+-
+-	printk(KERN_INFO "Early APIC setup for system timer0\n");
+-#ifndef CONFIG_SMP
+-	physid_set_mask_of_physid(boot_cpu_physical_apicid,
+-					 &phys_cpu_present_map);
+-#endif
+-	setup_local_APIC();
+-
+-	io_apic_setup_irq_pin(0, 0, &attr);
+-	irq_set_chip_and_handler_name(0, &ioapic_chip, handle_edge_irq,
+-				      "edge");
+-}
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.7.10.4
 
