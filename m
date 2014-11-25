@@ -1,74 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:59741 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753547AbaKDOP2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Nov 2014 09:15:28 -0500
-Date: Tue, 4 Nov 2014 14:15:20 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+Received: from mga01.intel.com ([192.55.52.88]:62347 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752252AbaKYHrM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 25 Nov 2014 02:47:12 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Martin Wilck <martin.wilck@ts.fujitsu.com>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH RFC v2 0/2] Fix procfs PCI resources mmap
-Message-ID: <20141104141520.GA8802@e102568-lin.cambridge.arm.com>
-References: <1414168089-8130-1-git-send-email-lorenzo.pieralisi@arm.com>
-MIME-Version: 1.0
-In-Reply-To: <1414168089-8130-1-git-send-email-lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=WINDOWS-1252
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiri Kosina <trivial@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	David Cohen <david.a.cohen@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "H. Peter Anvin" <hpa@linux.intel.com>
+Subject: [Patch Part3 v4 02/38] x86, intel-mid, trivial: Refine code syntax for sfi_parse_mtmr()
+Date: Tue, 25 Nov 2014 15:49:26 +0800
+Message-Id: <1416901802-24211-3-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 24, 2014 at 05:28:04PM +0100, Lorenzo Pieralisi wrote:
-> The way PCI memory resources are exported to user space through procfs
-> is not uniform across architectures. In particular, some architectures
-> (ie SPARC) export the resource PCI bus address to user space, whereas
-> others (ARM, PowerPC, Microblaze) export the resource CPU physical address.
-> This convention should be followed when it comes to passing the pgoff
-> values to the mmap syscall to map the resource in question.
-> 
-> Consequently, the checks applied to the offset passed to the mmap syscall
-> (in pci_mmap_fits()) are to be interpreted differently on different
-> architectures, and in particular they should match the values exported to
-> user space through the pci_resource_to_user() conversion function.
-> 
-> This patch series addresses two issues. First patch applies the
-> pci_resource_to_user() filter to the PCI resource that is being
-> mapped in order to carry out a proper check against the pgoff passed
-> from user space. Second patch fixes the way the pgoff is handled in
-> the ARM pci_mmap_page_range() implementation.
+Correctly indent code in function sfi_parse_mtmr().
 
-I appreciate it is hardly number one priority and by no means urgent,
-but I would like to get some comments if possible on patch 1 since patch
-2, that is a fix for ARM, relies on the approach we go for in order to
-fix the pci_mmap_fits() behaviour (patch 1).
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Tested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ arch/x86/platform/intel-mid/sfi.c |   20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-Comments welcome.
-
-Thanks,
-Lorenzo
-
-> 
-> v1 posting:
-> 
-> http://marc.info/?l=linux-kernel&m=141337461318554&w=2
-> 
-> v1 => v2
-> - Reworded commit log as per RMK comments
-> 
-> Lorenzo Pieralisi (2):
->   drivers: pci: fix pci_mmap_fits() implementation for procfs mmap
->   arm: kernel: fix pci_mmap_page_range() offset calculation
-> 
->  arch/arm/kernel/bios32.c | 10 ++--------
->  drivers/pci/pci-sysfs.c  | 13 ++++++++-----
->  2 files changed, 10 insertions(+), 13 deletions(-)
-> 
-> -- 
-> 2.1.2
-> 
-> 
+diff --git a/arch/x86/platform/intel-mid/sfi.c b/arch/x86/platform/intel-mid/sfi.c
+index aa59f88868f8..9a16749935d4 100644
+--- a/arch/x86/platform/intel-mid/sfi.c
++++ b/arch/x86/platform/intel-mid/sfi.c
+@@ -95,16 +95,16 @@ int __init sfi_parse_mtmr(struct sfi_table_header *table)
+ 		pr_debug("timer[%d]: paddr = 0x%08x, freq = %dHz, irq = %d\n",
+ 			totallen, (u32)pentry->phys_addr,
+ 			pentry->freq_hz, pentry->irq);
+-			mp_irq.type = MP_INTSRC;
+-			mp_irq.irqtype = mp_INT;
+-/* triggering mode edge bit 2-3, active high polarity bit 0-1 */
+-			mp_irq.irqflag = 5;
+-			mp_irq.srcbus = MP_BUS_ISA;
+-			mp_irq.srcbusirq = pentry->irq;	/* IRQ */
+-			mp_irq.dstapic = MP_APIC_ALL;
+-			mp_irq.dstirq = pentry->irq;
+-			mp_save_irq(&mp_irq);
+-			mp_map_gsi_to_irq(pentry->irq, IOAPIC_MAP_ALLOC);
++		mp_irq.type = MP_INTSRC;
++		mp_irq.irqtype = mp_INT;
++		/* triggering mode edge bit 2-3, active high polarity bit 0-1 */
++		mp_irq.irqflag = 5;
++		mp_irq.srcbus = MP_BUS_ISA;
++		mp_irq.srcbusirq = pentry->irq;	/* IRQ */
++		mp_irq.dstapic = MP_APIC_ALL;
++		mp_irq.dstirq = pentry->irq;
++		mp_save_irq(&mp_irq);
++		mp_map_gsi_to_irq(pentry->irq, IOAPIC_MAP_ALLOC);
+ 	}
+ 
+ 	return 0;
+-- 
+1.7.10.4
 
