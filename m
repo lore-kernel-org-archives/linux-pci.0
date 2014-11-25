@@ -1,86 +1,82 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 13 Nov 2014 10:26:25 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: Apply _HPX link control for all supported pcie
- device
-Message-ID: <20141113172625.GH5064@google.com>
-References: <1415736586-16044-1-git-send-email-yinghai@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415736586-16044-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part2 v6 25/27] PCI/MSI: Replace msi_update_msg() with irq_chip_compose_msi_msg()
+Date: Tue, 25 Nov 2014 13:53:34 +0800
+Message-Id: <1416894816-23245-26-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 11, 2014 at 12:09:46PM -0800, Yinghai Lu wrote:
-> With commit 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
-> and following commits, we apply _HPX for pci devices.
-> 
-> that is called via pci_scan_slot
-> 			==>pci_scan_single_device
-> 				==>pci_device_add
-> 					==>pci_configure_device
-> 						==>program_hpp_type2
-> and dev->subordinate is not allocated yet.
-> 
-> So that link control setup get skipped.
-> 
-> Acoording to ACPI spec, there is no requirement that need to be set to pcie
-> root port or downstream port.
-> 
-> We could just change to pcie_cap_has_lnkctl to cover all pcie devices with
-> link control cap.
-> 
-> -v2: Do not move pcie_cap_has_lnkctl() out of pci/access.c according to Bjorn.
-> 
-> Fixes: 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Function irq_chip_compose_msi_msg() can achieve the same goal as
+msi_update_msg(), so kill msi_update_msg().
 
-Applied to for-linus for v3.18, thanks!
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/msi.c |   19 ++-----------------
+ 1 file changed, 2 insertions(+), 17 deletions(-)
 
-> ---
->  drivers/pci/access.c |    2 +-
->  drivers/pci/pci.h    |    2 ++
->  drivers/pci/probe.c  |    2 +-
->  3 files changed, 4 insertions(+), 2 deletions(-)
-> 
-> Index: linux-2.6/drivers/pci/probe.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/probe.c
-> +++ linux-2.6/drivers/pci/probe.c
-> @@ -1323,7 +1323,7 @@ static void program_hpp_type2(struct pci
->  			~hpp->pci_exp_devctl_and, hpp->pci_exp_devctl_or);
->  
->  	/* Initialize Link Control Register */
-> -	if (dev->subordinate)
-> +	if (pcie_cap_has_lnkctl(dev))
->  		pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
->  			~hpp->pci_exp_lnkctl_and, hpp->pci_exp_lnkctl_or);
->  
-> Index: linux-2.6/drivers/pci/pci.h
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/pci.h
-> +++ linux-2.6/drivers/pci/pci.h
-> @@ -6,6 +6,8 @@
->  
->  extern const unsigned char pcie_link_speed[];
->  
-> +bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
-> +
->  /* Functions internal to the PCI core code */
->  
->  int pci_create_sysfs_dev_files(struct pci_dev *pdev);
-> Index: linux-2.6/drivers/pci/access.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/access.c
-> +++ linux-2.6/drivers/pci/access.c
-> @@ -444,7 +444,7 @@ static inline int pcie_cap_version(const
->  	return pcie_caps_reg(dev) & PCI_EXP_FLAGS_VERS;
->  }
->  
-> -static inline bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
-> +bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
->  {
->  	int type = pci_pcie_type(dev);
->  
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 8e8f2435f25e..15429aa112fe 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -53,19 +53,6 @@ static void irq_msi_compose_msg(struct irq_data *data, struct msi_msg *msg)
+ 		MSI_DATA_VECTOR(cfg->vector);
+ }
+ 
+-static void msi_update_msg(struct msi_msg *msg, struct irq_data *irq_data)
+-{
+-	struct irq_cfg *cfg = irqd_cfg(irq_data);
+-
+-	msg->data &= ~MSI_DATA_VECTOR_MASK;
+-	msg->data |= MSI_DATA_VECTOR(cfg->vector);
+-	msg->address_lo &= ~MSI_ADDR_DEST_ID_MASK;
+-	msg->address_lo |= MSI_ADDR_DEST_ID(cfg->dest_apicid);
+-	if (x2apic_enabled())
+-		msg->address_hi = MSI_ADDR_BASE_HI |
+-				  MSI_ADDR_EXT_DEST_ID(cfg->dest_apicid);
+-}
+-
+ /*
+  * IRQ Chip for MSI PCI/PCI-X/PCI-Express Devices,
+  * which implement the MSI or MSI-X Capability Structure.
+@@ -198,8 +185,7 @@ dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 
+ 	ret = parent->chip->irq_set_affinity(parent, mask, force);
+ 	if (ret >= 0) {
+-		dmar_msi_read(data->irq, &msg);
+-		msi_update_msg(&msg, data);
++		irq_chip_compose_msi_msg(data, &msg);
+ 		dmar_msi_write(data->irq, &msg);
+ 	}
+ 
+@@ -329,8 +315,7 @@ static int hpet_msi_set_affinity(struct irq_data *data,
+ 
+ 	ret = parent->chip->irq_set_affinity(parent, mask, force);
+ 	if (ret >= 0 && ret != IRQ_SET_MASK_OK_DONE) {
+-		hpet_msi_read(data->handler_data, &msg);
+-		msi_update_msg(&msg, data);
++		irq_chip_compose_msi_msg(data, &msg);
+ 		hpet_msi_write(data->handler_data, &msg);
+ 	}
+ 
+-- 
+1.7.10.4
+
