@@ -1,149 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:40216 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751244AbaKEUW4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 15:22:56 -0500
-Received: by mail-ie0-f173.google.com with SMTP id tr6so1514784ieb.4
-        for <linux-pci@vger.kernel.org>; Wed, 05 Nov 2014 12:22:55 -0800 (PST)
-Date: Wed, 5 Nov 2014 13:22:52 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	linux-acpi@vger.kernel.org, Chao Zhou <chao.zhou@intel.com>,
-	Joerg Roedel <joro@8bytes.org>
-Subject: Re: [PATCH] PCI: fix sriov enabling with virtual bus
-Message-ID: <20141105202252.GB6168@google.com>
-References: <1414621570-20777-1-git-send-email-yinghai@kernel.org>
- <20141030170913.GA6982@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20141030170913.GA6982@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part3 v4 07/38] x86, irq: Simplify the way to print IOAPIC entry
+Date: Tue, 25 Nov 2014 15:49:31 +0800
+Message-Id: <1416901802-24211-8-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Chao, Joerg]
+Simplify the way to print IOAPIC entry content, so we could kill
+native_io_apic_print_entries(), intel_ir_io_apic_print_entries()
+and x86_io_apic_ops.print_entries() later.
 
-On Thu, Oct 30, 2014 at 11:09:13AM -0600, Bjorn Helgaas wrote:
-> [+cc Rafael, linux-acpi]
-> 
-> On Wed, Oct 29, 2014 at 03:26:10PM -0700, Yinghai Lu wrote:
-> > While enabling sriov for intel igb device got:
-> > 
-> > sca05-0a81fda5:~ # echo 7 > /sys/bus/pci/devices/0000\:09\:00.0/sriov_numvfs 
-> > [  729.612191] pci 0000:0a:10.0: [8086:1520] type 00 class 0x020000
-> > [  729.619002] BUG: unable to handle kernel NULL pointer dereference at 00000000000000e8
-> > [  729.627767] IP: [<ffffffff815901cb>] pci_get_hp_params+0x5b/0x640
-> > [  729.634593] PGD 0 
-> > [  729.636844] Oops: 0000 [#1] SMP 
-> > [  729.640466] Modules linked in:
-> > ...
-> > [  729.795268] Call Trace:
-> > [  729.798007]  [<ffffffff81ea0843>] ? pci_mmcfg_read+0x123/0x140
-> > [  729.804519]  [<ffffffff81ea0770>] ? pci_mmcfg_read+0x50/0x140
-> > [  729.810942]  [<ffffffff815692a3>] pci_configure_device+0x33/0x350
-> > [  729.817744]  [<ffffffff8156aba4>] pci_device_add+0x24/0x160
-> > [  729.823965]  [<ffffffff8158f3bb>] pci_enable_sriov+0x4db/0x7d0
-> > [  729.830486]  [<ffffffff81b63f54>] ? igb_pci_enable_sriov+0xe4/0x200
-> > [  729.837481]  [<ffffffff81b63f7f>] igb_pci_enable_sriov+0x10f/0x200
-> > [  729.844386]  [<ffffffff8155129c>] ? _kstrtoull+0x2c/0x80
-> > [  729.850315]  [<ffffffff81b640a5>] igb_pci_sriov_configure+0x35/0x40
-> > [  729.857318]  [<ffffffff815752b5>] sriov_numvfs_store+0xe5/0x140
-> > [  729.863934]  [<ffffffff817e1f88>] dev_attr_store+0x18/0x30
-> > [  729.870063]  [<ffffffff812624d8>] sysfs_kf_write+0x48/0x60
-> > [  729.876186]  [<ffffffff812617ef>] ? kernfs_fop_write+0xaf/0x170
-> > [  729.882797]  [<ffffffff81261827>] kernfs_fop_write+0xe7/0x170
-> > [  729.889222]  [<ffffffff811ef66b>] vfs_write+0xcb/0x1c0
-> > [  729.894958]  [<ffffffff811f0019>] SyS_write+0x49/0xb0
-> > ...
-> > [  729.943531] ---[ end trace 7cf0cdb66637665a ]---
-> > 
-> > and pci_get_hp_params+0x5b point to
-> > 0xffffffff815901cb is in pci_get_hp_params (include/linux/device.h:815).
-> > 810	#include <linux/pm_wakeup.h>
-> > 811	
-> > 812	static inline const char *dev_name(const struct device *dev)
-> > 813	{
-> > 814		/* Use the init name until the kobject becomes available */
-> > 815		if (dev->init_name)
-> > 816			return dev->init_name;
-> > 817	
-> > 818		return kobject_name(&dev->kobj);
-> > 
-> > The root cause:
-> > Now pci_configure_device/pci_get_hp_params will be called for every pci_dev,
-> > including VF that is under virtual bus. But virtual bus does not have bridge
-> > set. So we can not refer pbus->self->dev directly.
-> 
-> This raises the question of what the correct behavior should be.  Your
-> patch certainly avoids the NULL pointer dereference.  It does so by making
-> acpi_pci_get_bridge_handle() fail gracefully, which means we will not look
-> for _HPP/_HPX for VF devices.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Tested-by: Joerg Roedel <jroedel@suse.de>
+---
+ arch/x86/kernel/apic/io_apic.c |   30 ++++++++++++++++++++++++++++--
+ 1 file changed, 28 insertions(+), 2 deletions(-)
 
-I think I was mistaken about this.  A VF device might be on a virtual bus.
- And a virtual bus never has a bridge leading to it, i.e., its bus->self
-pointer is NULL.  But I think a virtual bus always has a *parent* bus,
-i.e., for a VF, dev->bus->parent is always valid.  This is because when
-virtfn_add_bus() creates the virtual bus with "pci_add_new_bus(bus, NULL,
-busnr)", the "bus" parameter (which becomes the parent bus of the virtual
-bus) is a valid bus.
-
-So with your patch, I think we *will* actually look for _HPP and _HPX for
-VF devices, because we'll look for the handle of the bridge leading to the
-virtual bus (which will return NULL), then for the handle of the bridge
-leading to the virtual bus' parent bus, etc.
-
-If you agree, Yinghai, I'll apply the patch below (same as what you posted,
-with different changelog and a comment in the code).
-
-The acpi_pci_get_bridge_handle(struct pci_bus *) interface niggles at me a
-little because I don't think there's any concept of an ACPI device for a
-PCI *bus*, so it doesn't seem like a very good fit to say "find the handle
-for this bus".  But that's for later.
-
-Bjorn
-
-
-
-commit 32f638fc11db0526c706454d9ab4339d55ac89f3
-Author: Yinghai Lu <yinghai@kernel.org>
-Date:   Thu Oct 30 10:17:25 2014 -0600
-
-    PCI: Don't oops on virtual buses in acpi_pci_get_bridge_handle()
-    
-    acpi_pci_get_bridge_handle() returns the ACPI handle for the bridge device
-    (either a host bridge or a PCI-to-PCI bridge) leading to a PCI bus.  But
-    SR-IOV virtual functions can be on a virtual bus with no bridge leading to
-    it.  Return a NULL acpi_handle in this case instead of trying to
-    dereference the NULL pointer to the bridge.
-    
-    This fixes a NULL pointer dereference oops in pci_get_hp_params() when
-    adding SR-IOV VF devices on virtual buses.
-    
-    [bhelgaas: changelog, add comment in code]
-    Fixes: 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
-    Link: https://bugzilla.kernel.org/show_bug.cgi?id=87591
-    Reported-by: Chao Zhou <chao.zhou@intel.com>
-    Reported-by: Joerg Roedel <joro@8bytes.org>
-    Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index 64dacb7288a6..24c7728ca681 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -41,8 +41,13 @@ static inline acpi_handle acpi_pci_get_bridge_handle(struct pci_bus *pbus)
- 
- 	if (pci_is_root_bus(pbus))
- 		dev = pbus->bridge;
--	else
-+	else {
-+		/* If pbus is a virtual bus, there is no bridge to it */
-+		if (!pbus->self)
-+			return NULL;
-+
- 		dev = &pbus->self->dev;
-+	}
- 
- 	return ACPI_HANDLE(dev);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 74a0e95cfb3d..b2618d48d572 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1424,6 +1424,33 @@ void ioapic_zap_locks(void)
+ 	raw_spin_lock_init(&ioapic_lock);
  }
+ 
++static void io_apic_print_entries(unsigned int apic, unsigned int nr_entries)
++{
++	int i;
++	char buf[256];
++	struct IO_APIC_route_entry entry;
++	struct IR_IO_APIC_route_entry *ir_entry = (void *)&entry;
++
++	printk(KERN_DEBUG "IOAPIC %d:\n", apic);
++	for (i = 0; i <= nr_entries; i++) {
++		entry = ioapic_read_entry(apic, i);
++		snprintf(buf, sizeof(buf),
++			 " pin%02x, %s, %s, %s, V(%02X), IRR(%1d), S(%1d)",
++			 i, entry.mask ? "enabled" : "disabled",
++			 entry.trigger ? "level" : "edge",
++			 entry.polarity ? "high" : "low",
++			 entry.vector, entry.irr, entry.delivery_status);
++		if (ir_entry->format)
++			printk(KERN_DEBUG "%s, remapped, I(%04X),  Z(%X)\n",
++			       buf, (ir_entry->index << 15) | ir_entry->index,
++			       ir_entry->zero);
++		else
++			printk(KERN_DEBUG "%s, %s, D(%02X), M(%1d)\n",
++			       buf, entry.dest_mode ? "logical" : "physical",
++			       entry.dest, entry.delivery_mode);
++	}
++}
++
+ static void __init print_IO_APIC(int ioapic_idx)
+ {
+ 	union IO_APIC_reg_00 reg_00;
+@@ -1477,8 +1504,7 @@ static void __init print_IO_APIC(int ioapic_idx)
+ 	}
+ 
+ 	printk(KERN_DEBUG ".... IRQ redirection table:\n");
+-
+-	x86_io_apic_ops.print_entries(ioapic_idx, reg_01.bits.entries);
++	io_apic_print_entries(ioapic_idx, reg_01.bits.entries);
+ }
+ 
+ void __init print_IO_APICs(void)
+-- 
+1.7.10.4
+
