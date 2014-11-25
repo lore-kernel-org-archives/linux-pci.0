@@ -1,84 +1,171 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cmexedge1.emulex.com ([138.239.224.99]:28138 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751811AbaKMHFC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Nov 2014 02:05:02 -0500
-From: Sathya Perla <Sathya.Perla@Emulex.Com>
-To: Alex Williamson <alex.williamson@redhat.com>,
-	Don Dutile <ddutile@redhat.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"ariel.elior@qlogic.com" <ariel.elior@qlogic.com>,
-	"linux.nics@intel.com" <linux.nics@intel.com>,
-	"shahed.shaikh@qlogic.com" <shahed.shaikh@qlogic.com>
-Subject: RE: [PATCH 0/4] move pci_assivned_vfs() check (while disabling VFs)
- to pci sub-system
-Date: Thu, 13 Nov 2014 07:04:35 +0000
-Message-ID: <CF9D1877D81D214CB0CA0669EFAE020C68CD95E1@CMEXMB1.ad.emulex.com>
-References: <1415620410-4937-1-git-send-email-sathya.perla@emulex.com>
-	 <54625EE8.1050509@redhat.com> <1415738372.16601.335.camel@ul30vt.home>
-In-Reply-To: <1415738372.16601.335.camel@ul30vt.home>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part3 v4 29/38] x86, irq: Use cached IOAPIC entry instead of reading from hardware
+Date: Tue, 25 Nov 2014 15:49:53 +0800
+Message-Id: <1416901802-24211-30-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBBbGV4IFdpbGxpYW1zb24gW21h
-aWx0bzphbGV4LndpbGxpYW1zb25AcmVkaGF0LmNvbV0NCj4gDQo+IE9uIFR1ZSwgMjAxNC0xMS0x
-MSBhdCAxNDowOSAtMDUwMCwgRG9uIER1dGlsZSB3cm90ZToNCj4gPiBPbiAxMS8xMC8yMDE0IDA2
-OjUzIEFNLCBTYXRoeWEgUGVybGEgd3JvdGU6DQo+ID4gPiBBIHVzZXIgbXVzdCBub3QgYmUgYWxs
-b3dlZCB0byBkaXNhYmxlIFZGcyB3aGlsZSB0aGV5IGFyZSBhbHJlYWR5IGFzc2lnbmVkDQo+IHRv
-DQo+ID4gPiBhIGd1ZXN0LiBUaGlzIGNoZWNrIGlzIGJlaW5nIG1hZGUgaW4gZWFjaCBpbmRpdmlk
-dWFsIGRyaXZlciB0aGF0DQo+IGltcGxlbWVudHMNCj4gPiA+IHRoZSBzcmlvdl9jb25maWd1cmUg
-UENJIG1ldGhvZC4NCj4gPiA+IFRoaXMgcGF0Y2gtc2V0IGZpeGVzIHRoaXMgY29kZSBkdXBsaWNh
-dGlvbiBieSBtb3ZpbmcgdGhpcyBjaGVjayBmcm9tDQo+ID4gPiBkcml2ZXJzIHRvIHRoZSBzcmlv
-dl9udXZmc19zdG9yZSgpIHJvdXRpbmUganVzdCBiZWZvcmUgaW52b2tpbmcNCj4gPiA+IHNyaW92
-X2NvbmZpZ3VyZSgpIHdoZW4gbnVtX3ZmcyBpcyBlcXVhbCB0byAwLg0KPiA+ID4NCj4gPiA+IFZh
-c3VuZGhhcmEgVm9sYW0gKDQpOg0KPiA+ID4gICAgcGNpOiBtb3ZlIHBjaV9hc3Npdm5lZF92ZnMo
-KSBjaGVjayB3aGlsZSBkaXNhYmxpbmcgVkZzIHRvIHBjaQ0KPiA+ID4gICAgICBzdWItc3lzdGVt
-DQo+ID4gPiAgICBibngyeDogcmVtb3ZlIHBjaV9hc3NpZ25lZF92ZnMoKSBjaGVjayB3aGlsZSBk
-aXNhYmxpbmcgVkZzDQo+ID4gPiAgICBpNDBlOiByZW1vdmUgcGNpX2Fzc2lnbmVkX3ZmcygpIGNo
-ZWNrIHdoaWxlIGRpc2FibGluZyBWRnMNCj4gPiA+ICAgIHFsY25pYzogcmVtb3ZlIHBjaV9hc3Np
-Z25lZF92ZnMoKSBjaGVjayB3aGlsZSBkaXNhYmxpbmcgVkZzDQo+ID4gPg0KPiA+ID4gICBkcml2
-ZXJzL25ldC9ldGhlcm5ldC9icm9hZGNvbS9ibngyeC9ibngyeF9zcmlvdi5jICB8ICAgIDIgKy0N
-Cj4gPiA+ICAgZHJpdmVycy9uZXQvZXRoZXJuZXQvaW50ZWwvaTQwZS9pNDBlX3ZpcnRjaG5sX3Bm
-LmMgfCAgICA3ICstLS0tLS0NCj4gPiA+ICAgLi4uL25ldC9ldGhlcm5ldC9xbG9naWMvcWxjbmlj
-L3FsY25pY19zcmlvdl9wZi5jICAgfCAgIDEwIC0tLS0tLS0tLS0NCj4gPiA+ICAgZHJpdmVycy9w
-Y2kvcGNpLXN5c2ZzLmMgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgICA1ICsrKysrDQo+
-ID4gPiAgIDQgZmlsZXMgY2hhbmdlZCwgNyBpbnNlcnRpb25zKCspLCAxNyBkZWxldGlvbnMoLSkN
-Cj4gPiA+DQo+ID4gSSBoYXZlIGhhZCBhIHNpZGUgY29udmVyc2F0aW9uIHdpdGggQWxleCBXaWxs
-aWFtc29uLCBWRklPIGF1dGhvci4NCj4gPg0KPiA+IFZGSU8gaXMgdGhlIHVwc3RyZWFtIG1ldGhv
-ZCB0aGF0IGRldmljZS1hc3NpZ25tZW50IGlzIG1hbmFnZWQvaGFuZGxlZA0KPiBvbiBrdm0gbm93
-Lg0KPiA+IEl0IGRvZXMgbm90IHNldCB0aGUgUENJX0RFVl9GTEFHU19BU1NJR05FRCBwY2kgZGV2
-LWZsYWdzLCBhbmQgdGh1cywNCj4gPiB0aGlzIGNoZWNrIHdpbGwgbm90IHdvcmsgd2hlbiBWRklP
-IGlzIHVzZWQuDQo+ID4NCj4gPiBUaGlzIHBhdGNoIHNldCB3aWxsIG9ubHkgd29yayBmb3IgdGhl
-IGZvcm1lciwga3ZtLW1hbmFnZWQsIGRldmljZS0NCj4gYXNzaWdubWVudCBtZXRob2QsDQo+ID4g
-d2hpY2ggaXMgY3VycmVudGx5IGJlaW5nIGRlcHJlY2F0ZWQgaW4gcWVtdSBhcyB3ZWxsLg0KPiA+
-DQo+ID4gU28sIHllcywgaXQgd29ya3MgZm9yIGt2bSBtYW5hZ2VkIGRldmljZS1hc3NpZ25tZW50
-LCBidXQgbm90IHRoZQ0KPiA+IG5ld2VyLCBWRklPLWJhc2VkIGRldmljZS1hc3NpZ25tZW50Lg0K
-PiA+DQo+ID4gTm90ZSwgYWxzbywgdGhhdCB0aGUgcGNpX2Fzc2lnbmVkX3ZmcygpIGNoZWNrIGlu
-IHRoZSBkcml2ZXJzIHdpbGwNCj4gPiBhbHdheXMgcmV0dXJuIDAgd2hlbiBWRklPIGlzIHVzZWQg
-Zm9yIGRldmljZSBhc3NpZ25tZW50LCBzbyBrZWVwaW5nDQo+ID4gdGhlc2UgY2hlY2tzIGluIHRo
-ZSBkcml2ZXJzIGRvZXNuJ3QgZG8gd2hhdCB0aGV5IGltcGx5IGVpdGhlci4NCj4gPg0KPiA+IFNv
-LCB0YWtpbmcgaW4gdGhlIHBhdGNoIHNvbHZlcyBvbGQsIGt2bS1tYW5hZ2VkLCBkZXZpY2UgYXNz
-aWdubWVudCwNCj4gPiBidXQgYSBuZXcgbWV0aG9kIGlzIG5lZWRlZCB3aGVuIFZGSU8gaXMgaW52
-b2x2ZWQuDQo+ID4NCj4gPiAtIERvbg0KPiA+DQo+ID4gcHMgLS0gTm90ZToganVzdCBhZGRpbmcg
-dGhlIGZsYWcgc2V0dGluZyBpbiB2ZmlvLXBjaSBkb2VzIG5vdCBuZWNlc3NhcmlseQ0KPiA+ICAg
-ICAgICBzb2x2ZSB0aGlzIHByb2JsZW0uICBWRklPIGRvZXMgbm90IGtub3cgaWYgYSBkZXZpY2Ug
-aXMgYXNzaWduZWQgdG8gYQ0KPiBndWVzdDsNCj4gPiAgICAgICAgaXQgb25seSBrbm93cyBhIGNh
-bGxlciBvZiB0aGUgaW9jdGwgcmVxdWVzdGluZyB0aGUgZGV2aWNlIHRvIGJlIGFzc2lnbmVkDQo+
-ID4gICAgICAgIHRvIHZmaW8sIGFuZCB0byBiZSBkbWEtbWFwcGVkIGZvciBhIHJlZ2lvbiBvZiBt
-ZW1vcnksIGhhcyBiZWVuDQo+IHJlcXVlc3RlZC4NCj4gPiAgICAgICAgU28sIGEgbmV3IFBGPC0+
-VkYgbWVjaGFuaXNtIG5lZWRzIHRvIGJlIHB1dCBpbiBwbGFjZSB0bw0KPiA+ICAgICAgICBkZXRl
-cm1pbmUgdGhlIGVxdWl2YWxlbnQgaW5mb3JtYXRpb24uDQo+IA0KPiBwcHMgLS0gTm90ZTogdGVz
-dGluZyBwY2lfYXNzaXZuZWRfdmZzKCkgaXMgcmFjeSwgbm90aGluZyBwcmV2ZW50cyB0aGUgZmxh
-Zw0KPiAJYmVpbmcgYWRkZWQgdG8gYSBkZXZpY2UgYmV0d2VlbiB5b3VyIGNoZWNrIGFuZCByZW1v
-dmluZyB0aGUgVkYNCj4gZGV2aWNlLg0KPiAJVGhpcyBpcyBvbmUgb2YgdGhlIHJlYXNvbnMgdGhh
-dCB2ZmlvLXBjaSBkb2Vzbid0IHVzZSBpdCBhbmQgdGhhdCB0aGlzDQo+IAlpbnRlcmZhY2Ugc2hv
-dWxkIGJlIGRpc2NvdXJhZ2VkIGluIHRoZSBrZXJuZWwuDQoNCkFsZXgvRG9uLCBJIGFncmVlIHdp
-dGggdGhlIHBvaW50cyB5b3UndmUgcmFpc2VkLg0KQnV0LCBJJ2QgbGlrZSB0byBrbm93IHdoZXRo
-ZXIgeW91IHRoaW5rIHRoaXMgcGF0Y2gtc2V0IHNob3VsZCBiZSBhY2NlcHRlZCBvciBub3QuDQpF
-dmVuIHRob3VnaCB0aGlzIHBhdGNoLXNldCBkb2Vzbid0IGZpeCBhbnkgb2YgdGhlIHBlbmRpbmcg
-aXNzdWVzIHJhaXNlZCBoZXJlLA0KaXQncyBhIHNtYWxsIHN0ZXAgZm9yd2FyZCBhcyBpdCByZWR1
-Y2VzIHRoZSBudW1iZXIgb2YgaW52b2NhdGlvbnMgb2YgcGNpX2Fzc2lnbmVkX3ZmcygpDQpjaGVj
-ayB3aGljaCBpcyBhIGdvb2QgdGhpbmcuDQoNCnRoYW5rcywNCi1TYXRoeWENCg==
+Use cahced IOAPIC entry instead of reading data from IOAPIC hardware
+registers to improve performance.
+
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Tested-by: Joerg Roedel <jroedel@suse.de>
+---
+ arch/x86/kernel/apic/io_apic.c |   78 +++++++++++-----------------------------
+ 1 file changed, 21 insertions(+), 57 deletions(-)
+
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index a915ee005148..8a6293311ee6 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -69,8 +69,13 @@
+ int acpi_get_override_irq(u32 gsi, int *trigger, int *polarity);
+ 
+ /*
+- *      Is the SiS APIC rmw bug present ?
++ * Is the SiS APIC rmw bug present ?
+  *      -1 = don't know, 0 = no, 1 = yes
++ * When doing a read-modify-write operation on IOAPIC registers, older SiS APIC
++ * requires we rewrite the index register again where the read already set up
++ * the index register.
++ * The code to make use of sis_apic_bug has been removed, but we don't want to
++ * loss this knowledge.
+  */
+ int sis_apic_bug = -1;
+ 
+@@ -290,22 +295,6 @@ static void io_apic_write(unsigned int apic, unsigned int reg,
+ 	writel(value, &io_apic->data);
+ }
+ 
+-/*
+- * Re-write a value: to be used for read-modify-write
+- * cycles where the read already set up the index register.
+- *
+- * Older SiS APIC requires we rewrite the index register
+- */
+-static void io_apic_modify(unsigned int apic, unsigned int reg,
+-			   unsigned int value)
+-{
+-	struct io_apic __iomem *io_apic = io_apic_base(apic);
+-
+-	if (sis_apic_bug)
+-		writel(reg, &io_apic->index);
+-	writel(value, &io_apic->data);
+-}
+-
+ union entry_union {
+ 	struct { u32 w1, w2; };
+ 	struct IO_APIC_route_entry entry;
+@@ -442,29 +431,23 @@ static void __init replace_pin_at_irq_node(struct mp_chip_data *data, int node,
+ 	add_pin_to_irq_node(data, node, newapic, newpin);
+ }
+ 
+-static void __io_apic_modify_irq(struct irq_pin_list *entry,
+-				 int mask_and, int mask_or,
+-				 void (*final)(struct irq_pin_list *entry))
+-{
+-	unsigned int reg, pin;
+-
+-	pin = entry->pin;
+-	reg = io_apic_read(entry->apic, 0x10 + pin * 2);
+-	reg &= mask_and;
+-	reg |= mask_or;
+-	io_apic_modify(entry->apic, 0x10 + pin * 2, reg);
+-	if (final)
+-		final(entry);
+-}
+-
+ static void io_apic_modify_irq(struct mp_chip_data *data,
+ 			       int mask_and, int mask_or,
+ 			       void (*final)(struct irq_pin_list *entry))
+ {
++	union entry_union eu;
+ 	struct irq_pin_list *entry;
+ 
+-	for_each_irq_pin(entry, data->irq_2_pin)
+-		__io_apic_modify_irq(entry, mask_and, mask_or, final);
++	eu.entry = data->entry;
++	eu.w1 &= mask_and;
++	eu.w1 |= mask_or;
++	data->entry = eu.entry;
++
++	for_each_irq_pin(entry, data->irq_2_pin) {
++		io_apic_write(entry->apic, 0x10 + 2 * entry->pin, eu.w1);
++		if (final)
++			final(entry);
++	}
+ }
+ 
+ static void io_apic_sync(struct irq_pin_list *entry)
+@@ -1729,28 +1712,6 @@ static unsigned int startup_ioapic_irq(struct irq_data *data)
+ 	return was_pending;
+ }
+ 
+-static void __target_IO_APIC_irq(unsigned int irq, struct irq_cfg *cfg,
+-				 struct mp_chip_data *data)
+-{
+-	int apic, pin;
+-	struct irq_pin_list *entry;
+-	u8 vector = cfg->vector;
+-	unsigned int dest = SET_APIC_LOGICAL_ID(cfg->dest_apicid);
+-
+-	for_each_irq_pin(entry, data->irq_2_pin) {
+-		unsigned int reg;
+-
+-		apic = entry->apic;
+-		pin = entry->pin;
+-
+-		io_apic_write(apic, 0x11 + pin*2, dest);
+-		reg = io_apic_read(apic, 0x10 + pin*2);
+-		reg &= ~IO_APIC_REDIR_VECTOR_MASK;
+-		reg |= vector;
+-		io_apic_modify(apic, 0x10 + pin*2, reg);
+-	}
+-}
+-
+ atomic_t irq_mis_count;
+ 
+ #ifdef CONFIG_GENERIC_PENDING_IRQ
+@@ -1916,6 +1877,7 @@ static int ioapic_set_affinity(struct irq_data *irq_data,
+ {
+ 	struct irq_data *parent = irq_data->parent_data;
+ 	struct mp_chip_data *data = irq_data->chip_data;
++	struct irq_pin_list *entry;
+ 	struct irq_cfg *cfg;
+ 	unsigned long flags;
+ 	int ret;
+@@ -1926,7 +1888,9 @@ static int ioapic_set_affinity(struct irq_data *irq_data,
+ 		cfg = irqd_cfg(irq_data);
+ 		data->entry.dest = SET_APIC_LOGICAL_ID(cfg->dest_apicid);
+ 		data->entry.vector = cfg->vector;
+-		__target_IO_APIC_irq(irq_data->irq, cfg, irq_data->chip_data);
++		for_each_irq_pin(entry, data->irq_2_pin)
++			__ioapic_write_entry(entry->apic, entry->pin,
++					     data->entry);
+ 	}
+ 	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
+ 
+-- 
+1.7.10.4
+
