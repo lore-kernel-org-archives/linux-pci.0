@@ -1,110 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:49106 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751413AbaKFOSU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 6 Nov 2014 09:18:20 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
 	Jiang Liu <jiang.liu@linux.intel.com>
 Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [Patch Part2 v5 04/31] genirq: Introduce irq_chip.irq_compose_msi_msg() to support stacked irqchip
-Date: Thu,  6 Nov 2014 22:20:17 +0800
-Message-Id: <1415283644-2559-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415283644-2559-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
+Subject: [Patch Part3 v4 23/38] iommu/vt-d: Move struct irq_2_iommu into intel_irq_remapping.c
+Date: Tue, 25 Nov 2014 15:49:47 +0800
+Message-Id: <1416901802-24211-24-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add callback irq_compose_msi_msg to struct irq_chip, which will be used
-to support stacked irqchip.
+Now only intel_irq_remapping.c access irq_2_iommu, so move it from
+hw_irq.h into intel_irq_remapping.c.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Tested-by: Joerg Roedel <jroedel@suse.de>
 ---
- include/linux/irq.h |    5 +++++
- kernel/irq/chip.c   |   17 +++++++++++++++++
- 2 files changed, 22 insertions(+)
+ arch/x86/include/asm/hw_irq.h       |    9 ---------
+ drivers/iommu/intel_irq_remapping.c |    7 +++++++
+ 2 files changed, 7 insertions(+), 9 deletions(-)
 
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index 0adcbbbf2e87..536b7fc6c8f4 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -29,6 +29,7 @@ struct seq_file;
- struct module;
- struct irq_desc;
- struct irq_data;
-+struct msi_msg;
- typedef	void (*irq_flow_handler_t)(unsigned int irq,
- 					    struct irq_desc *desc);
- typedef	void (*irq_preflow_handler_t)(struct irq_data *data);
-@@ -320,6 +321,7 @@ static inline irq_hw_number_t irqd_to_hwirq(struct irq_data *d)
-  *				any other callback related to this irq
-  * @irq_release_resources:	optional to release resources acquired with
-  *				irq_request_resources
-+ * @irq_compose_msi_msg:	optional to compose message content for MSI
-  * @flags:		chip specific flags
-  */
- struct irq_chip {
-@@ -356,6 +358,8 @@ struct irq_chip {
- 	int		(*irq_request_resources)(struct irq_data *data);
- 	void		(*irq_release_resources)(struct irq_data *data);
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 88632ea75fe0..3520f71f168b 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -95,14 +95,6 @@ extern void trace_call_function_single_interrupt(void);
+ #endif /* CONFIG_TRACING */
  
-+	void		(*irq_compose_msi_msg)(struct irq_data *data, struct msi_msg *msg);
-+
- 	unsigned long	flags;
+ #ifdef CONFIG_IRQ_REMAP
+-/* Intel specific interrupt remapping information */
+-struct irq_2_iommu {
+-	struct intel_iommu *iommu;
+-	u16 irte_index;
+-	u16 sub_handle;
+-	u8  irte_mask;
+-};
+-
+ /* AMD specific interrupt remapping information */
+ struct irq_2_irte {
+ 	u16 devid; /* Device ID for IRTE table */
+@@ -194,7 +186,6 @@ struct irq_cfg {
+ 	u8			move_in_progress : 1;
+ #ifdef CONFIG_IRQ_REMAP
+ 	union {
+-		struct irq_2_iommu irq_2_iommu;
+ 		struct irq_2_irte  irq_2_irte;
+ 	};
+ #endif
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index a2a46474c286..acff8493191e 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -32,6 +32,13 @@ struct hpet_scope {
+ 	unsigned int devfn;
  };
  
-@@ -443,6 +447,7 @@ extern void handle_percpu_devid_irq(unsigned int irq, struct irq_desc *desc);
- extern void handle_bad_irq(unsigned int irq, struct irq_desc *desc);
- extern void handle_nested_irq(unsigned int irq);
- 
-+extern int irq_chip_compose_msi_msg(struct irq_data *data, struct msi_msg *msg);
- #ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
- extern void irq_chip_ack_parent(struct irq_data *data);
- extern int irq_chip_retrigger_hierarchy(struct irq_data *data);
-diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index 12f3e72449eb..8f362db17a8a 100644
---- a/kernel/irq/chip.c
-+++ b/kernel/irq/chip.c
-@@ -867,3 +867,20 @@ int irq_chip_retrigger_hierarchy(struct irq_data *data)
- 	return -ENOSYS;
- }
- #endif
++struct irq_2_iommu {
++	struct intel_iommu *iommu;
++	u16 irte_index;
++	u16 sub_handle;
++	u8  irte_mask;
++};
 +
-+int irq_chip_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
-+{
-+	struct irq_data *pos = NULL;
-+
-+#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
-+	for (; data; data = data->parent_data)
-+#endif
-+		if (data->chip && data->chip->irq_compose_msi_msg)
-+			pos = data;
-+	if (!pos)
-+		return -ENOSYS;
-+
-+	pos->chip->irq_compose_msi_msg(pos, msg);
-+
-+	return 0;
-+}
+ struct intel_ir_data {
+ 	struct irq_2_iommu			irq_2_iommu;
+ 	struct irte				irte_entry;
 -- 
 1.7.10.4
 
