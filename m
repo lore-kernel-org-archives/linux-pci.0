@@ -1,82 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f179.google.com ([209.85.216.179]:50077 "EHLO
-	mail-qc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754278AbaKRP6t (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Nov 2014 10:58:49 -0500
-Received: by mail-qc0-f179.google.com with SMTP id c9so7581472qcz.10
-        for <linux-pci@vger.kernel.org>; Tue, 18 Nov 2014 07:58:48 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <BC567D27D6B7384F84318942321624DE16179E60@hasmsx109.ger.corp.intel.com>
-References: <1415847123-15558-1-git-send-email-michael.jamet@intel.com>
- <CAErSpo7Z5x=U3vSnxrFpwYUDrUrnrrBCe1F9_GQNYqWWQFWNpQ@mail.gmail.com> <BC567D27D6B7384F84318942321624DE16179E60@hasmsx109.ger.corp.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 18 Nov 2014 08:58:28 -0700
-Message-ID: <CAErSpo5z41ZOL3xUwwSZ8UE_KGmCDOUmFQ3CY_QwF7JVhU1-EQ@mail.gmail.com>
-Subject: Re: [PATCH] pci: support Thunderbolt requirements for I/O resources.
-To: "Jamet, Michael" <michael.jamet@intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Levy, Amir (Jer)" <amir.jer.levy@intel.com>,
-	"Alloun, Dan" <dan.alloun@intel.com>,
-	Rafael Wysocki <rjw@rjwysocki.net>,
-	Andreas Noever <andreas.noever@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:29012 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751176AbaKYFvE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 25 Nov 2014 00:51:04 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part2 v6 01/27] x86, irq: Save destination CPU ID in irq_cfg
+Date: Tue, 25 Nov 2014 13:53:10 +0800
+Message-Id: <1416894816-23245-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 18, 2014 at 12:57 AM, Jamet, Michael
-<michael.jamet@intel.com> wrote:
->> -----Original Message-----
->> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
->> Sent: Wednesday, November 12, 2014 19:29
->> To: Jamet, Michael
->> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; Levy, Amir
->> (Jer); Alloun, Dan; Rafael Wysocki; Andreas Noever
->> Subject: Re: [PATCH] pci: support Thunderbolt requirements for I/O
->> resources.
->>
->> [+cc Rafael, Andreas]
->>
->> On Wed, Nov 12, 2014 at 7:52 PM, Michael Jamet
->> <michael.jamet@intel.com> wrote:
->> > Every Thunderbolt-based devices or Thunderbolt-connected devices
->> > should not allocate PCI I/O resources per Thunderbolt specs.
->>
->> Please include a pointer to those specs in the changelog.
->>
->
-> Unfortunately these specs are not publically available.
->
->> > On a Thunderbolt PC, BIOS is responsible to allocate IO resources.
->> > Kernel shouldn't allocate the PCI I/O resources as it interferes with
->> > BIOS operation.
->> > Doing this may cause the devices in the Thunderbolt chain not being
->> > detected or added, or worse to stuck the Thunderbolt Host controller.
->>
->> These new kernel/firmware coordination requirements need to be
->> documented.  If they're already part of a PCIe ECN or PCI firmware spec, just
->> provide a pointer.
->>
->
-> Same, this refers to same specs.
->
->> > To prevent this, we detect a chain contains a Thunderbolt device by
->> > checking the Thunderbolt PCI device id.
->>
->> I'm really not happy about checking a list of device IDs to identify
->> Thunderbolt devices.  Surely there's a better way, because a list like this has
->> to be updated regularly.
->>
->> Bjorn
->>
->
-> This was also discussed internally and the only way to identify Thunderbolt devices is to check the device IDs.
-> As you said, this will require us to maintain and keep the list up-to-date as we deliver new devices.
+Cache destination CPU APIC ID into struct irq_cfg when assigning vector
+for interrupt. Upper layer just needs to read the cached APIC ID instead
+of calling apic->cpu_mask_to_apicid_and(), it helps to hide APIC driver
+details from IOAPIC/HPET/MSI drivers..
 
-I don't really see how this can work.  You're asking me to put changes
-based on a secret spec into generic code that is used on every machine
-with PCI.  I have no way to maintain something like that.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/hw_irq.h |    1 +
+ arch/x86/kernel/apic/vector.c |    6 ++++++
+ 2 files changed, 7 insertions(+)
 
-This seems like a major screw up in the design and documentation of Thunderbolt.
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 9662290e0b20..b988ddf7434b 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -116,6 +116,7 @@ struct irq_data;
+ struct irq_cfg {
+ 	cpumask_var_t		domain;
+ 	cpumask_var_t		old_domain;
++	unsigned int		dest_apicid;
+ 	u8			vector;
+ 	u8			move_in_progress : 1;
+ #ifdef CONFIG_IRQ_REMAP
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 6cedd7914581..c724ef6b218c 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -188,6 +188,12 @@ next:
+ 	}
+ 	free_cpumask_var(tmp_mask);
+ 
++	if (!err) {
++		/* cache destination APIC IDs into cfg->dest_apicid */
++		err = apic->cpu_mask_to_apicid_and(mask, cfg->domain,
++						   &cfg->dest_apicid);
++	}
++
+ 	return err;
+ }
+ 
+-- 
+1.7.10.4
 
-Bjorn
