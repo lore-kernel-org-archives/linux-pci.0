@@ -1,48 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:39972 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752856AbaKJQLI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 10 Nov 2014 11:11:08 -0500
-Date: Mon, 10 Nov 2014 17:11:05 +0100
-From: Borislav Petkov <bp@alien8.de>
-To: Daniel J Blueman <daniel@numascale.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Steffen Persvold <sp@numascale.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] x86: Drop redundant memory-block sizing code
-Message-ID: <20141110161105.GF4359@pd.tnic>
-References: <ojh5M-xh-17@gated-at.bofh.it>
- <1415249414-20888-1-git-send-email-daniel@numascale.com>
- <20141106094007.GA4849@pd.tnic>
- <545B4E84.7050707@numascale.com>
- <20141106104034.GB4849@pd.tnic>
- <545B5735.8000401@numascale.com>
- <20141106115636.GA4318@pd.tnic>
- <54607F54.2050707@numascale.com>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:35078 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751026AbaKYJ2L (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Nov 2014 04:28:11 -0500
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 25 Nov 2014 19:28:06 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 43D452BB0068
+	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 20:28:04 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAP9S0oN39387216
+	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 20:28:00 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAP9S3sv021497
+	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 20:28:03 +1100
+Date: Tue, 25 Nov 2014 17:28:01 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH V9 08/18] powrepc/pci: Refactor pci_dn
+Message-ID: <20141125092801.GA3931@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1414942894-17034-9-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20141119233024.GF23467@google.com>
+ <20141120072057.GC8562@richard>
+ <20141120190541.GA5110@google.com>
+ <20141121000411.GA19858@shangw>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <54607F54.2050707@numascale.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141121000411.GA19858@shangw>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 10, 2014 at 05:03:16PM +0800, Daniel J Blueman wrote:
-> Yes, totalram_pages doesn't count the MMIO hole, whereas max_pfn does.
-> 
-> I've made NumaConnect firmware changes that will guarantee max_pfn is always
-> aligned to at least 2GB, so bdee237c0343a5d1a6cf72c7ea68e88338b26e08 "x86:
-> mm: Use 2GB memory block size on large-memory x86-64 systems" can be dropped
-> and Yinghai's approach will give 2GB memory blocks on our systems.
+On Fri, Nov 21, 2014 at 11:04:11AM +1100, Gavin Shan wrote:
+>>> 2.4 The potential problem for [Patch 08/18]
+>>> ===============================================================================
+>>> According to the SPEC, the offset/stride will change after each
+>>> sriov_enable(). This means the bus/devfn will change after each
+>>> sriov_enable().
+>>> 
+>>> My current thought is to fix it up in virtfn_add(). If the total VF number
+>>> will not change, we could create those pci_dn at the beginning and fix the
+>>> bus/devfn at each time the VF is truely created.
+>>
+>>By "fix it up," I assume you mean call an arch function that does the
+>>pci_pdn setup you need.
+>>
+>>It sounds reasonable to do this either in virtfn_add()/virtfn_remove() or
+>>at the points where we write PCI_SRIOV_CTRL_VFE, i.e., in sriov_init(),
+>>sriov_enable(), sriov_disable(), and sriov_restore_state().  From a
+>>hardware point of view, the VFs exist whenever PCI_SRIOV_CTRL_VFE is set,
+>>so it might be nice to have this setup connected to that.
+>>
+>
+>Yes, Both ways can fix the issue. For couple reasons, I want add weak
+>pcibios_virtfn_add(), which is called in virtfn_add() if you agree.
+>
+>- PCI_SRIOV_CTRL_VFE might be set somewhere except the functions you pointed.
+>  Set/clear PCI_SRIOV_CTRL_VFE will invoke background work to check pci_dn
+>  and add/remove accordingly. It would be overhead which we can avoid.
+>- We plan to support EEH for VFs in future. virtfn_add() way matches with
+>  current EEH implementation better. EEH device and PE are created based
+>  on (struct pci_dev), and EEH devices and PE can be destroied in time in
+>  pcibios_release_device(), which is invoked by virtfn_remove(). So we only
+>  need one weak function. In contrast, we have to create EEH device and PE
+>  for VFs a bit early before any VFs are instantiated, and destroy them a
+>  bit late after all VFs are offline.
+>
 
-What about the rest of the systems? I.e., the !numascale ones. This is
-generic code which needs to support all, not only your flavour.
+Bjorn,
+
+Since my mail box got some problem in the last few days, I am not sure you
+agree with Gavin's proposal or not?
+
+And if you agree to enumerate the maximum VF bus range, I will add this logic
+in the next versin.
+
+>Thanks,
+>Gavin
+>
+>>Bjorn
+>>
+>
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 -- 
-Regards/Gruss,
-    Boris.
+Richard Yang
+Help you, Help me
 
-Sent from a fat crate under my desk. Formatting is fine.
---
