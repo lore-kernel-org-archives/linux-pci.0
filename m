@@ -1,142 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp03.in.ibm.com ([122.248.162.3]:33464 "EHLO
-	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750770AbaKYDq7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Nov 2014 22:46:59 -0500
-Received: from /spool/local
-	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 25 Nov 2014 09:16:56 +0530
-Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id EEBDEE0044
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 09:17:15 +0530 (IST)
-Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
-	by d28relay03.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sAP3n4GX67043414
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 09:19:04 +0530
-Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
-	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sAP3krbA023135
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2014 09:16:53 +0530
-Date: Tue, 25 Nov 2014 14:46:52 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Refresh offset/stride after NumVFs is written
-Message-ID: <20141125034651.GA5646@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1416624759-13543-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <20141124230108.GA8765@shangw>
- <20141125031455.GA9070@richard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141125031455.GA9070@richard>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
+Subject: [Patch Part3 v4 24/38] iommu/amd: Move struct irq_2_irte into amd_iommu.c
+Date: Tue, 25 Nov 2014 15:49:48 +0800
+Message-Id: <1416901802-24211-25-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 25, 2014 at 11:14:55AM +0800, Wei Yang wrote:
->On Tue, Nov 25, 2014 at 10:01:08AM +1100, Gavin Shan wrote:
->>On Sat, Nov 22, 2014 at 10:52:39AM +0800, Wei Yang wrote:
->>>According to SR-IOV spec sec 3.3.9, 3.3.10, the NumVFs setting change will
->>>affect the offset and stride. Current implementation doesn't refresh the
->>>offset/stride cached in pci_sriov structure.
->>>
->>>This patch introduces a wrapper pci_iov_set_numvfs(), which refresh these two
->>>value after NumVFs is written.
->>>
->>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>>---
->>> drivers/pci/iov.c |   17 +++++++++++++----
->>> 1 file changed, 13 insertions(+), 4 deletions(-)
->>>
->>>diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->>>index 4d109c0..c7010c5 100644
->>>--- a/drivers/pci/iov.c
->>>+++ b/drivers/pci/iov.c
->>>@@ -31,6 +31,15 @@ static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
->>> 		dev->sriov->stride * id) & 0xff;
->>> }
->>>
->>>+static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
->>>+{
->>>+	struct pci_sriov *iov = dev->sriov;
->>>+
->>>+	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
->>
->>I'm suspecting writing to PCI_SRIOV_NUM_VF would take some time to take
->>effect.
->>
->>>+	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &iov->offset);
->>>+	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &iov->stride);
->>>+}
->>>+
->>> static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
->>> {
->>> 	struct pci_bus *child;
->>>@@ -243,7 +252,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->>> 			return rc;
->>> 	}
->>>
->>>-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
->>>+	pci_iov_set_numvfs(dev, nr_virtfn);
->>> 	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
->>> 	pci_cfg_access_lock(dev);
->>> 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
->>>@@ -272,7 +281,7 @@ failed:
->>> 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
->>> 	pci_cfg_access_lock(dev);
->>> 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
->>>-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
->>>+	pci_iov_set_numvfs(dev, 0);
->>> 	ssleep(1);
->>
->>The 1 second delay here might be for waiting VFs to be ready.
->>
->
->Hmm... so add this ssleep() in pci_iov_set_numvfs() would be better?
->
+Now only amd_iommu.c access irq_2_irte, so move it from hw_irq.h into
+amd_iommu.c.
 
-I was not suggesting to do that. I just raised the concern for you
-to look into.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Tested-by: Joerg Roedel <jroedel@suse.de>
+---
+ arch/x86/include/asm/hw_irq.h |   13 -------------
+ drivers/iommu/amd_iommu.c     |    5 +++++
+ 2 files changed, 5 insertions(+), 13 deletions(-)
 
->>> 	pci_cfg_access_unlock(dev);
->>>
->>>@@ -303,7 +312,7 @@ static void sriov_disable(struct pci_dev *dev)
->>> 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
->>>
->>> 	iov->num_VFs = 0;
->>>-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
->>>+	pci_iov_set_numvfs(dev, 0);
->>> }
->>>
->>> static int sriov_init(struct pci_dev *dev, int pos)
->>>@@ -439,7 +448,7 @@ static void sriov_restore_state(struct pci_dev *dev)
->>> 		pci_update_resource(dev, i);
->>>
->>> 	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
->>>-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, iov->num_VFs);
->>>+	pci_iov_set_numvfs(dev, iov->num_VFs);
->>> 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
->>> 	if (iov->ctrl & PCI_SRIOV_CTRL_VFE)
->>> 		msleep(100);
->>
->>Here's another delay if PCI_SRIOV_CTRL_VFE isn't set previously.
->
->The logic here will not be changed.
->
->>
->>Thanks,
->>Gavin
->>
->>>-- 
->>>1.7.9.5
->>>
->>>--
->>>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>>the body of a message to majordomo@vger.kernel.org
->>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->
->-- 
->Richard Yang
->Help you, Help me
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 3520f71f168b..494d541d2aee 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -94,14 +94,6 @@ extern void trace_call_function_single_interrupt(void);
+ #define trace_kvm_posted_intr_ipi kvm_posted_intr_ipi
+ #endif /* CONFIG_TRACING */
+ 
+-#ifdef CONFIG_IRQ_REMAP
+-/* AMD specific interrupt remapping information */
+-struct irq_2_irte {
+-	u16 devid; /* Device ID for IRTE table */
+-	u16 index; /* Index into IRTE table*/
+-};
+-#endif	/* CONFIG_IRQ_REMAP */
+-
+ struct irq_domain;
+ 
+ #ifdef	CONFIG_X86_LOCAL_APIC
+@@ -184,11 +176,6 @@ struct irq_cfg {
+ 	unsigned int		dest_apicid;
+ 	u8			vector;
+ 	u8			move_in_progress : 1;
+-#ifdef CONFIG_IRQ_REMAP
+-	union {
+-		struct irq_2_irte  irq_2_irte;
+-	};
+-#endif
+ 	union {
+ #ifdef CONFIG_X86_IO_APIC
+ 		struct {
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index cc4ac40ef7d1..2e8bbe5e164d 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -3855,6 +3855,11 @@ union irte {
+ 	} fields;
+ };
+ 
++struct irq_2_irte {
++	u16 devid; /* Device ID for IRTE table */
++	u16 index; /* Index into IRTE table*/
++};
++
+ struct amd_ir_data {
+ 	struct irq_2_irte			irq_2_irte;
+ 	union irte				irte_entry;
+-- 
+1.7.10.4
 
