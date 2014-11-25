@@ -1,53 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:53971 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751999AbaKDLru (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Nov 2014 06:47:50 -0500
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>
-Cc: devicetree@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: [PATCH] PCI: add missing DT binding for linux,pci-domain property
-Date: Tue,  4 Nov 2014 12:47:40 +0100
-Message-Id: <1415101660-26450-1-git-send-email-l.stach@pengutronix.de>
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:38663 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750828AbaKYKDb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Nov 2014 05:03:31 -0500
+Date: Tue, 25 Nov 2014 10:03:26 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"David S. Miller" <davem@davemloft.net>,
+	Michal Simek <monstr@monstr.eu>,
+	Martin Wilck <martin.wilck@ts.fujitsu.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [RFC PATCH v3 1/2] drivers: pci: fix pci_mmap_fits()
+ implementation for procfs mmap
+Message-ID: <20141125100326.GB1849@red-moon>
+References: <1415877558-8906-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1415877558-8906-2-git-send-email-lorenzo.pieralisi@arm.com>
+ <20141121175114.GC6578@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141121175114.GC6578@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This property was added by 41e5c0f81d3e
-(of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr())
-without the required binding documentation. As this property
-will be supported by a number of host bridge drivers going forward,
-add it to the common PCI binding doc.
+On Fri, Nov 21, 2014 at 05:51:14PM +0000, Bjorn Helgaas wrote:
+> On Thu, Nov 13, 2014 at 11:19:15AM +0000, Lorenzo Pieralisi wrote:
+> > The introduction of pci_mmap_fits() in commit:
+> > 
+> > b5ff7df3df9efab511244d5a299fce706c71af48
+> > "Check mapped ranges on sysfs resource files"
+> > 
+> > allowed to check for valid range mappings of PCI resources to user space
+> > when mapping PCI resources through the sysfs filesystem.
+> > 
+> > The mapping of resources through the sysfs expects the offset passed
+> > by the user through the mmap syscall to be 0, and the pgoff is adjusted
+> > by the kernel to memory map the resource to the CPU physical address
+> > corresponding to the PCI resource in question.
+> > 
+> > The usage of procfs mapping of PCI resources (/proc/bus/pci files)
+> > is more controversial in that userspace programs mapping PCI resources
+> > are expected to pass in the mmap offset field either a CPU physical address
+> > or a PCI bar value, depending on the architecture.
+> > 
+> > By the time pci_mmap_fits() was used to check PCI resource ranges for
+> > procfs PCI resources mapping in commit:
+> > 
+> > 9eff02e2042f96fb2aedd02e032eca1c5333d7
+> > "PCI: check mmap range of /proc/bus/pci files too"
+> > 
+> > the procfs interface for mmapping resources to user space broke, since
+> > pci_mmap_fits() expected the offset passed from user space in the mmap
+> > call to be 0, not the CPU physical address or PCI BAR value of the
+> > resource in question.
+> > 
+> > Subsequent attempts at fixing the pci_mmap_fits() implementation failed
+> > to fix the issue (or fixed the issue in some architectures but not for
+> > all of them, ARM and SPARC procfs interface PCI resources mapping stayed
+> > broken throughout) in particular commits:
+> > 
+> > 8c05cd08a7504b855c265263e84af61aabafa329
+> > "PCI: fix offset check for sysfs mmapped files"
+> > 
+> > and
+> > 
+> > 3b519e4ea618b6943a82931630872907f9ac2c2b
+> > "PCI: fix size checks for mmap() on /proc/bus/pci files"
+> > 
+> > fixed procfs PCI resources mapping checks in pci_mmap_fits for some
+> > architectures, but not for architectures like SPARC that expects
+> > the offset value passed from user space through the mmap syscall
+> > (when mapping through procfs) to represent the PCI BAR value of the
+> > resource to be mapped.
+> > 
+> > The reason behind the breakage is the following. The addresses stored
+> > in PCI device resources for memory spaces correspond to CPU physical
+> > addresses, which do not necessarily map 1:1 to PCI bus addresses as
+> > programmed in PCI devices configuration spaces.
+> > 
+> > This implies that the sanity checks carried out in pci_mmap_fits() to
+> > ensure that the user executes an mmap of a "real" pci resource are
+> > erroneous when executed through procfs. Some platforms (ie SPARC)
+> > expect the offset value to be passed in (procfs mapping) to be the
+> > PCI BAR configuration value as read from the PCI device configuration
+> > space, not the fixed-up CPU physical address that is present in PCI
+> > device resources.
+> > 
+> > The required pgoff (offset in mmap syscall) value passed from userspace
+> > is supposed to represent the resource value exported through
+> > /proc/bus/pci/devices when the resource is mmapped though procfs (and 0
+> > when the mapping is carried out through sysfs resource files), which
+> > corresponds to the PCI resource filtered through the pci_resource_to_user()
+> > API.
+> > 
+> > This patch converts the PCI resource to the expected "user visible"
+> > value through pci_resource_to_user() before carrying out sanity checks
+> > in pci_mmap_fits() so that the check is carried out on the resource
+> > values as expected from the userspace mmap API.
+> > 
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> > Cc: Russell King <linux@arm.linux.org.uk>
+> > Cc: David S. Miller <davem@davemloft.net>
+> > Cc: Michal Simek <monstr@monstr.eu>
+> > Cc: Martin Wilck <martin.wilck@ts.fujitsu.com>
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> 
+> Hi Lorenzo,
+> 
+> I think this patch is the right thing to do.  I'm going to try to write
+> patches for microblaze, mips, powerpc, and sparc that implement their
+> pci_resource_to_user() in terms of pcibios_resource_to_bus() (the patches
+> are easy; it's the arguments for correctness that take time).  Then I'll
+> try to convince myself that those arches are currently broken and will be
+> fixed by your patch below.
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
-This is a non-critical fix, but may still qualify for 3.18-rc as
-the property was added in this release cycle.
----
- Documentation/devicetree/bindings/pci/pci.txt | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+I think that in doing that you might end up breaking at least powerpc
+and microblaze proc and sys interfaces, but I agree with the process.
 
-diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-index 41aeed38926d..b754f786ed5e 100644
---- a/Documentation/devicetree/bindings/pci/pci.txt
-+++ b/Documentation/devicetree/bindings/pci/pci.txt
-@@ -7,3 +7,13 @@ And for the interrupt mapping part:
- 
- Open Firmware Recommended Practice: Interrupt Mapping
- http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
-+
-+Additionally to the properties specified in the above standards a host bridge
-+driver implementation may support the following properties:
-+
-+- linux,pci-domain:
-+   If present this property assigns a fixed PCI domain number to a host bridge,
-+   otherwise an unstable (across boots) unique number will be assigned.
-+   It is recommended to either not set this property at all or set it for all
-+   host bridges in the system, otherwise potentially conflicting domain numbers
-+   may be assigned to root buses behind different host bridges.
--- 
-2.1.1
+> But I'll be on vacation all next week, so this will take me some time and
+> it may not make the next merge window.
 
+I understand that, it holds back patch 2, but it is fine since it can
+get in as a fix even if it misses the merge window, as long as you
+agree with the overall approach.
+
+Thank you,
+Lorenzo
