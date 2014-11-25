@@ -1,207 +1,311 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:38760 "EHLO mga09.intel.com"
+Received: from gate.crashing.org ([63.228.1.57]:38314 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752183AbaKQLAz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 17 Nov 2014 06:00:55 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Alexander Gordeev <agordeev@redhat.com>
-Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch V3 8/9] PCI, MSI: Refine irqdomain interfaces to simplify its usage
-Date: Mon, 17 Nov 2014 19:03:21 +0800
-Message-Id: <1416222202-28002-9-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416222202-28002-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416222202-28002-1-git-send-email-jiang.liu@linux.intel.com>
+	id S1750951AbaKYXFO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 25 Nov 2014 18:05:14 -0500
+Message-ID: <1416956697.5089.11.camel@kernel.crashing.org>
+Subject: Re: [PATCH 5/8] PCI/hotplug/rpa: Create PCI slot properly
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	mpe@ellerman.id.au, Nathan Fontenot <nfont@linux.vnet.ibm.com>
+Date: Wed, 26 Nov 2014 10:04:57 +1100
+In-Reply-To: <1416869365-7671-6-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1416869365-7671-1-git-send-email-gwshan@linux.vnet.ibm.com>
+	 <1416869365-7671-6-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Refine irqdomain interfaces to simplify its usage.
+On Tue, 2014-11-25 at 09:49 +1100, Gavin Shan wrote:
+> When loading rpaphp.ko on a P7 box, I didn't see any PCI slots
+> created under /sys/bus/pci/slots as expected. It seems that the
+> RPA PCI slot stuff has been broken for long time. The driver
+> doesn't use the properties of PCI device-tree nodes properly to
+> populate PCI slots: device-tree node property "ibm,my-drc-index"
+> is the identifier of hotpluggable PCI slot. The (direct or indirect)
+> parent device-tree node should have properties associated with the
+> "ibm,my-drc-index", which are "ibm,drc-indexes","ibm,drc-names",
+> "ibm,drc-types", "ibm,drc-power-domains".
+> 
+> The patch parses above device-tree node properties to create PCI
+> slots properly. One PCI slot is created for PCI device-tree node,
+> which has meaningful "ibm,my-drc-index".
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/pci/msi.c   |  121 +++++++++++++++++++++++++++++++++++++++------------
- include/linux/msi.h |   13 +++---
- 2 files changed, 100 insertions(+), 34 deletions(-)
+Nathan, can you review this ?
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 9c53b865cb1b..62f504887c1d 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1099,38 +1099,101 @@ irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
- 		(pci_domain_nr(dev->bus) & 0xFFFFFFFF) << 27;
- }
- 
--int pci_msi_domain_alloc_irqs(struct irq_domain *domain, int type,
--			      struct pci_dev *dev, void *arg)
-+static inline bool pci_msi_desc_is_multi_msi(struct msi_desc *desc)
- {
--	struct msi_domain_info *info = domain->host_data;
--	int node = dev_to_node(&dev->dev);
--	struct msi_desc *desc;
--	int i, virq;
--
--	list_for_each_entry(desc, &dev->msi_list, list) {
--		if (info->ops->calc_hwirq)
--			info->ops->calc_hwirq(info, arg, desc);
--
--		virq = irq_domain_alloc_irqs(domain, desc->nvec_used,
--					     node, arg);
--		if (virq < 0) {
--			/* Special handling for pci_enable_msi_range(). */
--			if (type == PCI_CAP_ID_MSI && desc->nvec_used > 1)
--				return 1;
--			else
--				return -ENOSPC;
--		}
--		for (i = 0; i < desc->nvec_used; i++)
--			irq_set_msi_desc_off(virq, i, desc);
--	}
-+	return !desc->msi_attrib.is_msix && desc->nvec_used > 1;
-+}
-+
-+int pci_msi_domain_check_cap(struct irq_domain *domain,
-+			     struct msi_domain_info *info, struct device *dev)
-+{
-+	struct msi_desc *desc = first_pci_msi_entry(to_pci_dev(dev));
-+
-+	/* Special handling to support pci_enable_msi_range() */
-+	if (pci_msi_desc_is_multi_msi(desc) &&
-+	    !(info->flags & MSI_FLAG_MULTI_PCI_MSI))
-+		return 1;
-+	else if (desc->msi_attrib.is_msix && !(info->flags & MSI_FLAG_PCI_MSIX))
-+		return -ENOTSUPP;
- 
--	list_for_each_entry(desc, &dev->msi_list, list)
--		if (desc->nvec_used == 1)
--			dev_dbg(&dev->dev, "irq %d for MSI/MSI-X\n", virq);
--		else
--			dev_dbg(&dev->dev, "irq [%d-%d] for MSI/MSI-X\n",
--				virq, virq + desc->nvec_used - 1);
-+	return 0;
-+}
-+
-+static int pci_msi_domain_handle_error(msi_alloc_info_t *arg,
-+				       struct msi_desc *desc, int error)
-+{
-+	/* Special handling to support pci_enable_msi_range() */
-+	if (pci_msi_desc_is_multi_msi(desc) && error == -ENOSPC)
-+		return 1;
-+
-+	return error;
-+}
-+
-+#ifndef msi_alloc_info_t
-+static int pci_msi_domain_set_desc(struct msi_alloc_info *arg,
-+				   struct msi_desc *desc)
-+{
-+	arg->desc = desc;
-+	arg->hwirq = pci_msi_domain_calc_hwirq(msi_desc_to_pci_dev(desc),
-+					       desc);
- 
- 	return 0;
- }
-+#else
-+#define pci_msi_domain_set_desc		NULL
-+#endif
-+
-+static struct msi_domain_ops pci_msi_domain_ops_default = {
-+	.set_desc	= pci_msi_domain_set_desc,
-+	.msi_check	= pci_msi_domain_check_cap,
-+	.handle_error	= pci_msi_domain_handle_error,
-+};
-+
-+static void pci_msi_domain_update_dom_ops(struct msi_domain_info *info)
-+{
-+	struct msi_domain_ops *ops = info->ops;
-+
-+	if (ops == NULL) {
-+		info->ops = &pci_msi_domain_ops_default;
-+	} else {
-+		if (ops->set_desc == NULL)
-+			ops->set_desc = pci_msi_domain_set_desc;
-+		if (ops->msi_check == NULL)
-+			ops->msi_check = pci_msi_domain_check_cap;
-+		if (ops->handle_error == NULL)
-+			ops->handle_error = pci_msi_domain_handle_error;
-+	}
-+}
-+
-+static void pci_msi_domain_update_chip_ops(struct msi_domain_info *info)
-+{
-+	struct irq_chip *chip = info->chip;
-+
-+	BUG_ON(!chip);
-+	if (!chip->irq_write_msi_msg)
-+		chip->irq_write_msi_msg = pci_msi_domain_write_msg;
-+}
-+
-+struct irq_domain *pci_msi_create_irq_domain(struct device_node *node,
-+					     struct msi_domain_info *info,
-+					     struct irq_domain *parent)
-+{
-+	if (info->flags & MSI_FLAG_USE_DEF_DOM_OPS)
-+		pci_msi_domain_update_dom_ops(info);
-+	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
-+		pci_msi_domain_update_chip_ops(info);
-+
-+	return msi_create_irq_domain(node, info, parent);
-+}
-+
-+int pci_msi_domain_alloc_irqs(struct irq_domain *domain, struct pci_dev *dev,
-+			      int nvec, int type)
-+{
-+	return msi_domain_alloc_irqs(domain, &dev->dev, nvec);
-+}
-+
-+void pci_msi_domain_free_irqs(struct irq_domain *domain, struct pci_dev *dev)
-+{
-+	msi_domain_free_irqs(domain, &dev->dev);
-+}
- #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 3571b4715c75..eadd47c309a7 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -125,9 +125,6 @@ typedef struct msi_alloc_info msi_alloc_info_t;
- 
- struct msi_domain_ops {
- 	/* Callbacks for msi_create_irq_domain() */
--	void		(*calc_hwirq)(struct msi_domain_info *info,
--				      msi_alloc_info_t *arg,
--				      struct msi_desc *desc);
- 	irq_hw_number_t	(*get_hwirq)(struct msi_domain_info *info,
- 				     msi_alloc_info_t *arg);
- 	int		(*msi_init)(struct irq_domain *domain,
-@@ -189,10 +186,16 @@ struct msi_domain_info *msi_get_domain_info(struct irq_domain *domain);
- 
- #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
- void pci_msi_domain_write_msg(struct irq_data *irq_data, struct msi_msg *msg);
--int pci_msi_domain_alloc_irqs(struct irq_domain *domain, int type,
--			      struct pci_dev *dev, void *arg);
-+struct irq_domain *pci_msi_create_irq_domain(struct device_node *node,
-+					     struct msi_domain_info *info,
-+					     struct irq_domain *parent);
-+int pci_msi_domain_alloc_irqs(struct irq_domain *domain, struct pci_dev *dev,
-+			      int nvec, int type);
-+void pci_msi_domain_free_irqs(struct irq_domain *domain, struct pci_dev *dev);
- irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
- 					  struct msi_desc *desc);
-+int pci_msi_domain_check_cap(struct irq_domain *domain,
-+			     struct msi_domain_info *info, struct device *dev);
- #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
- 
- #endif /* LINUX_MSI_H */
--- 
-1.7.10.4
+Cheers,
+Ben.
+
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>  drivers/pci/hotplug/rpaphp.h      |   2 +-
+>  drivers/pci/hotplug/rpaphp_core.c | 205 ++++++++++++++------------------------
+>  2 files changed, 74 insertions(+), 133 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/rpaphp.h b/drivers/pci/hotplug/rpaphp.h
+> index b2593e8..39ddbdf 100644
+> --- a/drivers/pci/hotplug/rpaphp.h
+> +++ b/drivers/pci/hotplug/rpaphp.h
+> @@ -92,7 +92,7 @@ int rpaphp_get_sensor_state(struct slot *slot, int *state);
+>  /* rpaphp_core.c */
+>  int rpaphp_add_slot(struct device_node *dn);
+>  int rpaphp_get_drc_props(struct device_node *dn, int *drc_index,
+> -		char **drc_name, char **drc_type, int *drc_power_domain);
+> +		char **drc_name, char **drc_type, int *drc_power);
+>  
+>  /* rpaphp_slot.c */
+>  void dealloc_slot_struct(struct slot *slot);
+> diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
+> index ff800df..a639c5c 100644
+> --- a/drivers/pci/hotplug/rpaphp_core.c
+> +++ b/drivers/pci/hotplug/rpaphp_core.c
+> @@ -165,119 +165,76 @@ static enum pci_bus_speed get_max_bus_speed(struct slot *slot)
+>  	return speed;
+>  }
+>  
+> -static int get_children_props(struct device_node *dn, const int **drc_indexes,
+> -		const int **drc_names, const int **drc_types,
+> -		const int **drc_power_domains)
+> +static int parse_drc_props(struct device_node *dn, u32 drc_index,
+> +			   char **drc_name, char **drc_type, u32 *drc_power)
+>  {
+> -	const int *indexes, *names, *types, *domains;
+> +	const u32 *indexes, *names, *types, *domains;
+> +	char *name, *type;
+> +	struct device_node *parent = dn;
+> +	u32 i;
+> +
+> +	while ((parent = of_get_parent(parent))) {
+> +		indexes = of_get_property(parent, "ibm,drc-indexes", NULL);
+> +		names   = of_get_property(parent, "ibm,drc-names", NULL);
+> +		types   = of_get_property(parent, "ibm,drc-types", NULL);
+> +		domains = of_get_property(parent, "ibm,drc-power-domains", NULL);
+> +
+> +		if (!indexes || !names || !types || !domains) {
+> +			of_node_put(parent);
+> +			continue;
+> +		}
+>  
+> -	indexes = of_get_property(dn, "ibm,drc-indexes", NULL);
+> -	names = of_get_property(dn, "ibm,drc-names", NULL);
+> -	types = of_get_property(dn, "ibm,drc-types", NULL);
+> -	domains = of_get_property(dn, "ibm,drc-power-domains", NULL);
+> +		name = (char *)&names[1];
+> +		type = (char *)&types[1];
+> +		for (i = 0; i < be32_to_cpu(indexes[0]); i++) {
+> +			if (be32_to_cpu(indexes[i + 1]) != drc_index) {
+> +				name += (strlen(name) + 1);
+> +				type += (strlen(type) + 1);
+> +				continue;
+> +			}
+>  
+> -	/* Slot does not have dynamically-removable children */
+> -	if (!indexes || !names || !types || !domains)
+> -		return -EINVAL;
+> +			/* Matched index */
+> +			if (drc_name)
+> +				*drc_name = name;
+> +			if (drc_type)
+> +				*drc_type = type;
+> +			if (drc_power)
+> +				*drc_power = be32_to_cpu(domains[i + 1]);
+> +
+> +			of_node_put(parent);
+> +			return 0;
+> +		}
+>  
+> -	if (drc_indexes)
+> -		*drc_indexes = indexes;
+> -	/* &drc_names[1] contains NULL terminated slot names */
+> -	if (drc_names)
+> -		*drc_names = names;
+> -	/* &drc_types[1] contains NULL terminated slot types */
+> -	if (drc_types)
+> -		*drc_types = types;
+> -	if (drc_power_domains)
+> -		*drc_power_domains = domains;
+> +		/* Next level parent */
+> +		of_node_put(parent);
+> +	}
+>  
+> -	return 0;
+> +	return -ENODEV;
+>  }
+>  
+> -/* To get the DRC props describing the current node, first obtain it's
+> +/*
+> + * To get the DRC props describing the current node, first obtain it's
+>   * my-drc-index property.  Next obtain the DRC list from it's parent.  Use
+>   * the my-drc-index for correlation, and obtain the requested properties.
+>   */
+>  int rpaphp_get_drc_props(struct device_node *dn, int *drc_index,
+> -		char **drc_name, char **drc_type, int *drc_power_domain)
+> +			 char **drc_name, char **drc_type, int *drc_power)
+>  {
+> -	const int *indexes, *names;
+> -	const int *types, *domains;
+> -	const unsigned int *my_index;
+> -	char *name_tmp, *type_tmp;
+> -	int i, rc;
+> +	const u32 *my_index;
+>  
+> +	/* Check if node is capable of hotplug */
+>  	my_index = of_get_property(dn, "ibm,my-drc-index", NULL);
+> -	/* Node isn't DLPAR/hotplug capable */
+>  	if (!my_index)
+>  		return -EINVAL;
+> +	if (drc_index)
+> +		*drc_index = be32_to_cpu(*my_index);
+>  
+> -	rc = get_children_props(dn->parent, &indexes, &names, &types, &domains);
+> -	if (rc < 0)
+> -		return -EINVAL;
+> -
+> -	name_tmp = (char *) &names[1];
+> -	type_tmp = (char *) &types[1];
+> -
+> -	/* Iterate through parent properties, looking for my-drc-index */
+> -	for (i = 0; i < be32_to_cpu(indexes[0]); i++) {
+> -		if ((unsigned int) indexes[i + 1] == *my_index) {
+> -			if (drc_name)
+> -				*drc_name = name_tmp;
+> -			if (drc_type)
+> -				*drc_type = type_tmp;
+> -			if (drc_index)
+> -				*drc_index = be32_to_cpu(*my_index);
+> -			if (drc_power_domain)
+> -				*drc_power_domain = be32_to_cpu(domains[i+1]);
+> -			return 0;
+> -		}
+> -		name_tmp += (strlen(name_tmp) + 1);
+> -		type_tmp += (strlen(type_tmp) + 1);
+> -	}
+> -
+> -	return -EINVAL;
+> +	return parse_drc_props(dn, be32_to_cpu(*my_index),
+> +			       drc_name, drc_type, drc_power);
+>  }
+>  EXPORT_SYMBOL_GPL(rpaphp_get_drc_props);
+>  
+>  /**
+> - * is_php_dn() - return true if this is a hotpluggable pci slot, else false
+> - * @dn: target &device_node
+> - * @indexes: passed to get_children_props()
+> - * @names: passed to get_children_props()
+> - * @types: returned from get_children_props()
+> - * @power_domains:
+> - *
+> - * This routine will return true only if the device node is
+> - * a hotpluggable slot. This routine will return false
+> - * for built-in pci slots (even when the built-in slots are
+> - * dlparable.)
+> - */
+> -static bool is_php_dn(struct device_node *dn,
+> -		      const int **indexes, const int **names,
+> -		      const int **types, const int **power_domains)
+> -{
+> -	const int *drc_types;
+> -	const char *drc_type_str;
+> -	char *endptr;
+> -	unsigned long val;
+> -	int rc;
+> -
+> -	rc = get_children_props(dn, indexes, names, &drc_types, power_domains);
+> -	if (rc < 0)
+> -		return false;
+> -
+> -	/* PCI Hotplug nodes have an integer for drc_type */
+> -	drc_type_str = (char *)&drc_types[1];
+> -	val = simple_strtoul(drc_type_str, &endptr, 10);
+> -	if (endptr == drc_type_str)
+> -		return false;
+> -
+> -	*types = drc_types;
+> -	return true;
+> -}
+> -
+> -/**
+>   * rpaphp_add_slot -- declare a hotplug slot to the hotplug subsystem.
+>   * @dn: device node of slot
+>   *
+> @@ -295,52 +252,36 @@ static bool is_php_dn(struct device_node *dn,
+>   */
+>  int rpaphp_add_slot(struct device_node *dn)
+>  {
+> +	char *name, *type, *endptr;
+> +	int index, power_domain;
+>  	struct slot *slot;
+> -	int retval = 0;
+> -	int i;
+> -	const int *indexes, *names, *types, *power_domains;
+> -	char *name, *type;
+> -
+> -	if (!dn->name || strcmp(dn->name, "pci"))
+> -		return 0;
+> +	int val, ret;
+>  
+> -	/* If this is not a hotplug slot, return without doing anything. */
+> -	if (!is_php_dn(dn, &indexes, &names, &types, &power_domains))
+> -		return 0;
+> -
+> -	dbg("Entry %s: dn->full_name=%s\n", __func__, dn->full_name);
+> -
+> -	/* register PCI devices */
+> -	name = (char *) &names[1];
+> -	type = (char *) &types[1];
+> -	for (i = 0; i < be32_to_cpu(indexes[0]); i++) {
+> -		int index;
+> -
+> -		index = be32_to_cpu(indexes[i + 1]);
+> -		slot = alloc_slot_struct(dn, index, name,
+> -					 be32_to_cpu(power_domains[i + 1]));
+> -		if (!slot)
+> -			return -ENOMEM;
+> -
+> -		slot->type = simple_strtoul(type, NULL, 10);
+> -
+> -		dbg("Found drc-index:0x%x drc-name:%s drc-type:%s\n",
+> -				index, name, type);
+> +	/* Get and parse the hotplug properties */
+> +	ret = rpaphp_get_drc_props(dn, &index, &name, &type, &power_domain);
+> +	if (ret)
+> +		return ret;
+>  
+> -		retval = rpaphp_enable_slot(slot);
+> -		if (!retval)
+> -			retval = rpaphp_register_slot(slot);
+> +	/* PCI Hotplug nodes have an integer for drc_type */
+> +	val = simple_strtoul(type, &endptr, 10);
+> +	if (endptr == type)
+> +		return -EINVAL;
+>  
+> -		if (retval)
+> -			dealloc_slot_struct(slot);
+> +	slot = alloc_slot_struct(dn, index, name, power_domain);
+> +	if (!slot)
+> +		return -ENOMEM;
+>  
+> -		name += strlen(name) + 1;
+> -		type += strlen(type) + 1;
+> -	}
+> -	dbg("%s - Exit: rc[%d]\n", __func__, retval);
+> +	slot->type = val;
+> +	ret = rpaphp_enable_slot(slot);
+> +	if (!ret)
+> +		ret = rpaphp_register_slot(slot);
+> +	if (ret)
+> +		goto fail;
+>  
+> -	/* XXX FIXME: reports a failure only if last entry in loop failed */
+> -	return retval;
+> +	return 0;
+> +fail:
+> +	dealloc_slot_struct(slot);
+> +	return ret;
+>  }
+>  EXPORT_SYMBOL_GPL(rpaphp_add_slot);
+>  
+
 
