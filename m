@@ -1,80 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0145.outbound.protection.outlook.com ([65.55.169.145]:15434
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756487AbaKUBCn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 20 Nov 2014 20:02:43 -0500
-From: <suravee.suthikulpanit@amd.com>
-To: <jiang.liu@linux.intel.com>, <tglx@linutronix.de>
-CC: <marc.zyngier@arm.com>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	"Suravee Suthikulpanit" <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH] irqdomain: Fix NULL pointer dererence in irq_domain_free_irqs_parent
-Date: Thu, 20 Nov 2014 19:02:25 -0600
-Message-ID: <1416531745-24661-1-git-send-email-suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga01.intel.com ([192.55.52.88]:63658 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750996AbaKYFvq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 25 Nov 2014 00:51:46 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part2 v6 05/27] x86, uv: Use new irqdomain interfaces to allocate/free IRQ
+Date: Tue, 25 Nov 2014 13:53:14 +0800
+Message-Id: <1416894816-23245-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Use new irqdomain interfaces to allocate/free IRQ, so we could
+kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
 
-This patch checks if the parent domain is NULL before recursively freeing
-irqs in the parent domains.
-
-In this case, GICv2m is freeing irqs in parent (GIC), which calls
-irq_domain_free_irqs_top. This fixes the crash below:
-
-Unble to handle kernel NULL pointer dereference at virtual address 00000018
-pgd = fffffe03c78c0000
-[00000018] *pgd=00000083c8700003, *pud=00000083c8700003, *pmd=00000083c8700003, *pte=0000000000000000
-Internal error: Oops: 96000007 [#1] SMP
-Modules linked in: mlx4_core(-) rtc_efi efivarfs [last unloaded: mlx4_en]
-CPU: 5 PID: 985 Comm: modprobe Not tainted 3.18.0-rc4-marc-v2m+ #223
-task: fffffe03c20c0000 ti: fffffe03c1fb8000 task.ti: fffffe03c1fb8000
-PC is at irq_domain_free_irqs_recursive+0x10/0x84
-LR is at irq_domain_free_irqs_common+0x8c/0xa0
-pc : [<fffffe00000efb2c>] lr : [<fffffe00000f028c>] pstate: 60000145
-sp : fffffe03c1fbb9a0
-x29: fffffe03c1fbb9a0 x28: fffffe03c1fb8000
-x27: fffffe000092f000 x26: fffffe03c10eba00
-...
-Call trace:
-[<fffffe00000efb2c>] irq_domain_free_irqs_recursive+0x10/0x84
-[<fffffe00000f0288>] irq_domain_free_irqs_common+0x88/0xa0
-[<fffffe00000f030c>] irq_domain_free_irqs_top+0x6c/0x84
-[<fffffe00000efb40>] irq_domain_free_irqs_recursive+0x24/0x84
-[<fffffe00000f0954>] irq_domain_free_irqs_parent+0x14/0x20
-[<fffffe000042c4fc>] gicv2m_irq_domain_free+0x48/0x88
-[<fffffe00000efb40>] irq_domain_free_irqs_recursive+0x24/0x84
-[<fffffe00000f0288>] irq_domain_free_irqs_common+0x88/0xa0
-[<fffffe00000f030c>] irq_domain_free_irqs_top+0x6c/0x84
-[<fffffe00000f1a38>] msi_domain_free+0x74/0x8c
-[<fffffe00000efb40>] irq_domain_free_irqs_recursive+0x24/0x84
-[<fffffe00000f0898>] irq_domain_free_irqs+0x110/0x184
-[<fffffe00000f2124>] msi_domain_free_irqs+0x28/0x4c
-[<fffffe0000448194>] free_msi_irqs+0x90/0x1d8
-[<fffffe0000449278>] pci_disable_msix+0x40/0x50
-
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- kernel/irq/irqdomain.c | 3 +++
- 1 file changed, 3 insertions(+)
+ arch/x86/platform/uv/uv_irq.c |   27 +++++++++++----------------
+ 1 file changed, 11 insertions(+), 16 deletions(-)
 
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index 029acf1..4390eb8 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -1166,6 +1166,9 @@ int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
- void irq_domain_free_irqs_parent(struct irq_domain *domain,
- 				 unsigned int irq_base, unsigned int nr_irqs)
+diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
+index 0ce673645432..474912d03f40 100644
+--- a/arch/x86/platform/uv/uv_irq.c
++++ b/arch/x86/platform/uv/uv_irq.c
+@@ -12,6 +12,7 @@
+ #include <linux/rbtree.h>
+ #include <linux/slab.h>
+ #include <linux/irq.h>
++#include <linux/irqdomain.h>
+ 
+ #include <asm/apic.h>
+ #include <asm/uv/uv_irq.h>
+@@ -130,24 +131,14 @@ static int
+ arch_enable_uv_irq(char *irq_name, unsigned int irq, int cpu, int mmr_blade,
+ 		       unsigned long mmr_offset, int limit)
  {
-+	if (!domain->parent)
-+		return;
-+
- 	/* irq_domain_free_irqs_recursive() will call parent's free */
- 	if (!irq_domain_is_auto_recursive(domain))
- 		irq_domain_free_irqs_recursive(domain->parent, irq_base,
+-	const struct cpumask *eligible_cpu = cpumask_of(cpu);
+ 	struct irq_cfg *cfg = irq_cfg(irq);
+ 	unsigned long mmr_value;
+ 	struct uv_IO_APIC_route_entry *entry;
+-	int mmr_pnode, err;
+-	unsigned int dest;
++	int mmr_pnode;
+ 
+ 	BUILD_BUG_ON(sizeof(struct uv_IO_APIC_route_entry) !=
+ 			sizeof(unsigned long));
+ 
+-	err = assign_irq_vector(irq, cfg, eligible_cpu);
+-	if (err != 0)
+-		return err;
+-
+-	err = apic->cpu_mask_to_apicid_and(eligible_cpu, eligible_cpu, &dest);
+-	if (err != 0)
+-		return err;
+-
+ 	if (limit == UV_AFFINITY_CPU)
+ 		irq_set_status_flags(irq, IRQ_NO_BALANCING);
+ 	else
+@@ -164,7 +155,7 @@ arch_enable_uv_irq(char *irq_name, unsigned int irq, int cpu, int mmr_blade,
+ 	entry->polarity		= 0;
+ 	entry->trigger		= 0;
+ 	entry->mask		= 0;
+-	entry->dest		= dest;
++	entry->dest		= cfg->dest_apicid;
+ 
+ 	mmr_pnode = uv_blade_to_pnode(mmr_blade);
+ 	uv_write_global_mmr64(mmr_pnode, mmr_offset, mmr_value);
+@@ -238,9 +229,13 @@ uv_set_irq_affinity(struct irq_data *data, const struct cpumask *mask,
+ int uv_setup_irq(char *irq_name, int cpu, int mmr_blade,
+ 		 unsigned long mmr_offset, int limit)
+ {
+-	int ret, irq = irq_alloc_hwirq(uv_blade_to_memory_nid(mmr_blade));
++	int ret, irq;
++	struct irq_alloc_info info;
+ 
+-	if (!irq)
++	init_irq_alloc_info(&info, cpumask_of(cpu));
++	irq = irq_domain_alloc_irqs(NULL, 1, uv_blade_to_memory_nid(mmr_blade),
++				    &info);
++	if (irq <= 0)
+ 		return -EBUSY;
+ 
+ 	ret = arch_enable_uv_irq(irq_name, irq, cpu, mmr_blade, mmr_offset,
+@@ -248,7 +243,7 @@ int uv_setup_irq(char *irq_name, int cpu, int mmr_blade,
+ 	if (ret == irq)
+ 		uv_set_irq_2_mmr_info(irq, mmr_offset, mmr_blade);
+ 	else
+-		irq_free_hwirq(irq);
++		irq_domain_free_irqs(irq, 1);
+ 
+ 	return ret;
+ }
+@@ -283,6 +278,6 @@ void uv_teardown_irq(unsigned int irq)
+ 			n = n->rb_right;
+ 	}
+ 	spin_unlock_irqrestore(&uv_irq_lock, irqflags);
+-	irq_free_hwirq(irq);
++	irq_domain_free_irqs(irq, 1);
+ }
+ EXPORT_SYMBOL_GPL(uv_teardown_irq);
 -- 
-1.9.3
+1.7.10.4
 
