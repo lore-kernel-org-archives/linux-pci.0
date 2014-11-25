@@ -1,60 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f53.google.com ([209.85.192.53]:51432 "EHLO
-	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753293AbaKLTC3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Nov 2014 14:02:29 -0500
-Received: by mail-qg0-f53.google.com with SMTP id z107so9463402qgd.12
-        for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2014 11:02:29 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20141112052431.GA30530@shangw>
-References: <1415760163-12517-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <CAErSpo7mEo61GP4oxcodKWFFXaaESae96qLiR1RE0CFsahr29g@mail.gmail.com>
- <20141112031118.GA15257@shangw> <CAErSpo5OZxsB-X=tQWbWf3Q-wSvru3-+8_h5456QXZoMYeGKhA@mail.gmail.com>
- <20141112052431.GA30530@shangw>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 12 Nov 2014 12:02:08 -0700
-Message-ID: <CAErSpo6Jx0wp7v9NAVMfj011QgXvPsuutMNHg6da_NFsTp4c5g@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Fix device node for virtual bus
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jan Beulich <JBeulich@suse.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part3 v4 35/38] x86, irq: Refine the way to calculate NR_IRQS
+Date: Tue, 25 Nov 2014 15:49:59 +0800
+Message-Id: <1416901802-24211-36-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 11, 2014 at 10:24 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
-> On Tue, Nov 11, 2014 at 09:08:23PM -0700, Bjorn Helgaas wrote:
->>On Tue, Nov 11, 2014 at 8:11 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
->>> On Tue, Nov 11, 2014 at 07:55:19PM -0700, Bjorn Helgaas wrote:
->>>>On Tue, Nov 11, 2014 at 7:42 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
->>>>> pci_set_bus_of_node() sets virtual PCI bus's device node to PHB's
->>>>> device node wrongly. The patch fixes the issue.
->>>>
->>>>This needs more detail.  How is this bug visible to users?  Is there a
->>>>bug report?  Is this a regression?  Should it be marked for stable?
->>>>
->>>
->>> I don't have opened bug for it. I just found the problem (maybe not
->>> a problem) when reading the code: The original implementation binds
->>> PHB device-tree node with "virtual bus", which doesn't make sense.
->>
->>Does this result in something being wrong in sysfs?  How is this bug
->>visible to users?
->>
->
-> No, I don't think it caused anything wrong in sysfs. So I'm not sure
-> it's a real problem and need the fix. Please judge.
+Now we have made MSI independent of IOAPIC, so we need to refine the
+way to calculate NR_IRQS to support configuration with MSI enabled but
+IOAPIC disabled.
 
-Well, that's not really the way I work.  If somebody proposes a patch,
-I expect the changelog to be an argument for why the patch is needed.
-I'm not disagreeing with your patch; I'm just trying to get you to
-provide the justification for it.  I'm not an OF expert, so it's not
-obvious to me.  I probably could spend some time researching it and
-convince myself, but I would rather have *you* convince me :)
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Tested-by: Joerg Roedel <jroedel@suse.de>
+---
+ arch/x86/include/asm/irq_vectors.h |   18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
 
->>> Yes, I guess it should be marked for stable if you don't object.
+diff --git a/arch/x86/include/asm/irq_vectors.h b/arch/x86/include/asm/irq_vectors.h
+index 666c89ec4bd7..b26cb124a4f1 100644
+--- a/arch/x86/include/asm/irq_vectors.h
++++ b/arch/x86/include/asm/irq_vectors.h
+@@ -155,18 +155,22 @@ static inline int invalid_vm86_irq(int irq)
+  * static arrays.
+  */
+ 
+-#define NR_IRQS_LEGACY			  16
++#define NR_IRQS_LEGACY			16
+ 
+-#define IO_APIC_VECTOR_LIMIT		( 32 * MAX_IO_APICS )
++#define CPU_VECTOR_LIMIT		(64 * NR_CPUS)
++#define IO_APIC_VECTOR_LIMIT		(32 * MAX_IO_APICS)
+ 
+-#ifdef CONFIG_X86_IO_APIC
+-# define CPU_VECTOR_LIMIT		(64 * NR_CPUS)
+-# define NR_IRQS					\
++#if defined(CONFIG_X86_IO_APIC) && defined(CONFIG_PCI_MSI)
++#define NR_IRQS						\
+ 	(CPU_VECTOR_LIMIT > IO_APIC_VECTOR_LIMIT ?	\
+ 		(NR_VECTORS + CPU_VECTOR_LIMIT)  :	\
+ 		(NR_VECTORS + IO_APIC_VECTOR_LIMIT))
+-#else /* !CONFIG_X86_IO_APIC: */
+-# define NR_IRQS			NR_IRQS_LEGACY
++#elif defined(CONFIG_X86_IO_APIC)
++#define	NR_IRQS				(NR_VECTORS + IO_APIC_VECTOR_LIMIT)
++#elif defined(CONFIG_PCI_MSI)
++#define NR_IRQS				(NR_VECTORS + CPU_VECTOR_LIMIT)
++#else
++#define NR_IRQS				NR_IRQS_LEGACY
+ #endif
+ 
+ #endif /* _ASM_X86_IRQ_VECTORS_H */
+-- 
+1.7.10.4
 
-Once we know what the user-visible effect of this change is, it will
-probably be obvious whether it should be marked for stable.  If it
-doesn't really fix anything, it probably should not go to stable.
-
-Bjorn
