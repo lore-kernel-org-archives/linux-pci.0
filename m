@@ -1,388 +1,221 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:56053 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751018AbaKKM3H (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 07:29:07 -0500
-Date: Tue, 11 Nov 2014 12:29:01 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Ming Lei <ming.lei@canonical.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	alvise rigo <a.rigo@virtualopensystems.com>
-Subject: Re: [PATCH] pci: generic host: make it more generic
-Message-ID: <20141111122901.GA4419@red-moon>
-References: <1415702040-2790-1-git-send-email-ming.lei@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415702040-2790-1-git-send-email-ming.lei@canonical.com>
+Received: from gate.crashing.org ([63.228.1.57]:33194 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751061AbaKYXAt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 25 Nov 2014 18:00:49 -0500
+Message-ID: <1416956433.5089.7.camel@kernel.crashing.org>
+Subject: Re: [PATCH 3/8] powerpc/powernv: Export functions to retrieve slot
+ status
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	mpe@ellerman.id.au
+Date: Wed, 26 Nov 2014 10:00:33 +1100
+In-Reply-To: <1416869365-7671-4-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1416869365-7671-1-git-send-email-gwshan@linux.vnet.ibm.com>
+	 <1416869365-7671-4-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 11, 2014 at 10:33:59AM +0000, Ming Lei wrote:
-> This patch converts the generic host controller driver
-> into a more generic one, and basically don't need
-> platform's pcibios support, and use DT based generic
-> APIs to parse resource and remap IO port.
+On Tue, 2014-11-25 at 09:49 +1100, Gavin Shan wrote:
+> The patch exports two functions, which base on corresponding OPAL
+> APIs to retrieve PCI slot status:
 > 
-> This patch has been tested on both ARMv7 and ARMv8
-> VM, and in theroy it should support other ARCHs too.
-
-In theory, yes.
-
-> With this patch, virtio PCI block, network and scsi devices
-> can work well on ARMv7 and ARMv8 VM.
+>    pnv_pci_get_power_status()     opal_pci_get_power_status()
+>    pnv_pci_get_presence_status()  opal_pci_get_presence_status()
 > 
-> QEMU needs below patches for runing the test:
-> 
-> - Rob Herring's "Add generic PCI host device" patches
-> 	http://lists.gnu.org/archive/html/qemu-devel/2014-06/msg03482.html
-> 	http://lists.gnu.org/archive/html/qemu-devel/2014-06/msg03483.html
-> - Alvise Rigo's "Add Generic PCI host device update"
-> 	http://marc.info/?l=qemu-devel&m=140506329920172&w=2
-> 
-> For ARMv8, cpu model of "host" and "cortex-a57" is missed
-> in Alvise Rigo's patchset, otherwise ARM64 VM can't boot.
-> 
-> All these QEMU patches can be found in below tree:
-> 
-> 	http://kernel.ubuntu.com/git?p=ming/qemu.git;a=shortlog;h=refs/heads/arm64-pci-test
-> 
-> Signed-off-by: Ming Lei <ming.lei@canonical.com>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 > ---
->  drivers/pci/host/Kconfig            |    2 +-
->  drivers/pci/host/pci-host-generic.c |  196 +++++++++++------------------------
->  2 files changed, 63 insertions(+), 135 deletions(-)
+>  arch/powerpc/include/asm/opal.h                |  6 +++-
+>  arch/powerpc/include/asm/pnv-pci.h             |  3 ++
+>  arch/powerpc/platforms/powernv/eeh-ioda.c      | 34 ++---------------------
+>  arch/powerpc/platforms/powernv/opal-wrappers.S |  2 ++
+>  arch/powerpc/platforms/powernv/pci.c           | 38 ++++++++++++++++++++++++++
+>  arch/powerpc/platforms/powernv/pci.h           |  1 +
+>  6 files changed, 51 insertions(+), 33 deletions(-)
 > 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 3dc25fa..885034d 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -50,7 +50,7 @@ config PCI_RCAR_GEN2_PCIE
+> diff --git a/arch/powerpc/include/asm/opal.h b/arch/powerpc/include/asm/opal.h
+> index b59811f..b75be1c 100644
+> --- a/arch/powerpc/include/asm/opal.h
+> +++ b/arch/powerpc/include/asm/opal.h
+> @@ -153,6 +153,8 @@ struct opal_sg_list {
+>  #define OPAL_HANDLE_HMI				98
+>  #define OPAL_REGISTER_DUMP_REGION		101
+>  #define OPAL_UNREGISTER_DUMP_REGION		102
+> +#define OPAL_PCI_GET_POWER_STATUS		110
+> +#define OPAL_PCI_GET_PRESENCE_STATUS		111
 >  
->  config PCI_HOST_GENERIC
->  	bool "Generic PCI host controller"
-> -	depends on ARM && OF
-> +	depends on OF
->  	help
->  	  Say Y here if you want to support a simple generic PCI host
->  	  controller, such as the one emulated by kvmtool.
-> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> index 3d2076f..00d0ca3 100644
-> --- a/drivers/pci/host/pci-host-generic.c
-> +++ b/drivers/pci/host/pci-host-generic.c
-> @@ -44,12 +44,14 @@ struct gen_pci {
->  	struct list_head			resources;
->  };
+>  #ifndef __ASSEMBLY__
 >  
-> +/* fake sysdata for cheating ARCH's pcibios code */
-> +static char	gen_sysdata[256];
-
-I take this as a joke and it does not make me laugh.
-
->  static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
->  					     unsigned int devfn,
->  					     int where)
->  {
-> -	struct pci_sys_data *sys = bus->sysdata;
-> -	struct gen_pci *pci = sys->private_data;
-> +	struct gen_pci *pci = dev_get_drvdata(bus->dev.parent->parent);
->  	resource_size_t idx = bus->number - pci->cfg.bus_range.start;
+> @@ -905,7 +907,7 @@ int64_t opal_get_epow_status(__be64 *status);
+>  int64_t opal_set_system_attention_led(uint8_t led_action);
+>  int64_t opal_pci_next_error(uint64_t phb_id, __be64 *first_frozen_pe,
+>  			    __be16 *pci_error_type, __be16 *severity);
+> -int64_t opal_pci_poll(uint64_t id);
+> +int64_t opal_pci_poll(uint64_t id, uint8_t *val);
+>  int64_t opal_return_cpu(void);
+>  int64_t opal_check_token(uint64_t token);
+>  int64_t opal_reinit_cpus(uint64_t flags);
+> @@ -946,6 +948,8 @@ int64_t opal_handle_hmi(void);
+>  int64_t opal_register_dump_region(uint32_t id, uint64_t start, uint64_t end);
+>  int64_t opal_unregister_dump_region(uint32_t id);
+>  int64_t opal_pci_set_phb_cxl_mode(uint64_t phb_id, uint64_t mode, uint64_t pe_number);
+> +int64_t opal_pci_get_power_status(uint64_t id, uint8_t *status);
+> +int64_t opal_pci_get_presence_status(uint64_t id, uint8_t *status);
 >  
->  	return pci->cfg.win[idx] + ((devfn << 8) | where);
-> @@ -64,8 +66,7 @@ static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
->  					      unsigned int devfn,
->  					      int where)
->  {
-> -	struct pci_sys_data *sys = bus->sysdata;
-> -	struct gen_pci *pci = sys->private_data;
-> +	struct gen_pci *pci = dev_get_drvdata(bus->dev.parent->parent);
->  	resource_size_t idx = bus->number - pci->cfg.bus_range.start;
+>  /* Internal functions */
+>  extern int early_init_dt_scan_opal(unsigned long node, const char *uname,
+> diff --git a/arch/powerpc/include/asm/pnv-pci.h b/arch/powerpc/include/asm/pnv-pci.h
+> index f09a22f..527d97a 100644
+> --- a/arch/powerpc/include/asm/pnv-pci.h
+> +++ b/arch/powerpc/include/asm/pnv-pci.h
+> @@ -13,6 +13,9 @@
+>  #include <linux/pci.h>
+>  #include <misc/cxl.h>
 >  
->  	return pci->cfg.win[idx] + ((devfn << 12) | where);
-> @@ -80,8 +81,7 @@ static int gen_pci_config_read(struct pci_bus *bus, unsigned int devfn,
->  				int where, int size, u32 *val)
->  {
->  	void __iomem *addr;
-> -	struct pci_sys_data *sys = bus->sysdata;
-> -	struct gen_pci *pci = sys->private_data;
-> +	struct gen_pci *pci = dev_get_drvdata(bus->dev.parent->parent);
->  
->  	addr = pci->cfg.ops->map_bus(bus, devfn, where);
->  
-> @@ -103,8 +103,7 @@ static int gen_pci_config_write(struct pci_bus *bus, unsigned int devfn,
->  				 int where, int size, u32 val)
->  {
->  	void __iomem *addr;
-> -	struct pci_sys_data *sys = bus->sysdata;
-> -	struct gen_pci *pci = sys->private_data;
-> +	struct gen_pci *pci = dev_get_drvdata(bus->dev.parent->parent);
->  
->  	addr = pci->cfg.ops->map_bus(bus, devfn, where);
->  
-> @@ -138,45 +137,6 @@ static const struct of_device_id gen_pci_of_match[] = {
->  };
->  MODULE_DEVICE_TABLE(of, gen_pci_of_match);
->  
-> -static int gen_pci_calc_io_offset(struct device *dev,
-> -				  struct of_pci_range *range,
-> -				  struct resource *res,
-> -				  resource_size_t *offset)
-> -{
-> -	static atomic_t wins = ATOMIC_INIT(0);
-> -	int err, idx, max_win;
-> -	unsigned int window;
-> -
-> -	if (!PAGE_ALIGNED(range->cpu_addr))
-> -		return -EINVAL;
-> -
-> -	max_win = (IO_SPACE_LIMIT + 1) / SZ_64K;
-> -	idx = atomic_inc_return(&wins);
-> -	if (idx > max_win)
-> -		return -ENOSPC;
-> -
-> -	window = (idx - 1) * SZ_64K;
-> -	err = pci_ioremap_io(window, range->cpu_addr);
-> -	if (err)
-> -		return err;
-> -
-> -	of_pci_range_to_resource(range, dev->of_node, res);
-> -	res->start = window;
-> -	res->end = res->start + range->size - 1;
-> -	*offset = window - range->pci_addr;
-> -	return 0;
-> -}
-> -
-> -static int gen_pci_calc_mem_offset(struct device *dev,
-> -				   struct of_pci_range *range,
-> -				   struct resource *res,
-> -				   resource_size_t *offset)
-> -{
-> -	of_pci_range_to_resource(range, dev->of_node, res);
-> -	*offset = range->cpu_addr - range->pci_addr;
-> -	return 0;
-> -}
-> -
->  static void gen_pci_release_of_pci_ranges(struct gen_pci *pci)
->  {
->  	struct pci_host_bridge_window *win;
-> @@ -187,72 +147,6 @@ static void gen_pci_release_of_pci_ranges(struct gen_pci *pci)
->  	pci_free_resource_list(&pci->resources);
+> +extern int pnv_pci_get_power_status(unsigned int index, unsigned char *status);
+> +extern int pnv_pci_get_presence_status(unsigned int index, unsigned char *status);
+> +
+>  int pnv_phb_to_cxl(struct pci_dev *dev);
+>  int pnv_cxl_ioda_msi_setup(struct pci_dev *dev, unsigned int hwirq,
+>  			   unsigned int virq);
+> diff --git a/arch/powerpc/platforms/powernv/eeh-ioda.c b/arch/powerpc/platforms/powernv/eeh-ioda.c
+> index 4bf2fb5..fb66c74 100644
+> --- a/arch/powerpc/platforms/powernv/eeh-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/eeh-ioda.c
+> @@ -490,24 +490,6 @@ static int ioda_eeh_get_state(struct eeh_pe *pe)
+>  	return ioda_eeh_get_pe_state(pe);
 >  }
 >  
-> -static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
+> -static s64 ioda_eeh_phb_poll(uint64_t id)
 > -{
-> -	struct of_pci_range range;
-> -	struct of_pci_range_parser parser;
-> -	int err, res_valid = 0;
-> -	struct device *dev = pci->host.dev.parent;
-> -	struct device_node *np = dev->of_node;
+> -	s64 rc = OPAL_HARDWARE;
 > -
-> -	if (of_pci_range_parser_init(&parser, np)) {
-> -		dev_err(dev, "missing \"ranges\" property\n");
-> -		return -EINVAL;
-> -	}
-> -
-> -	for_each_of_pci_range(&parser, &range) {
-> -		struct resource *parent, *res;
-> -		resource_size_t offset;
-> -		u32 restype = range.flags & IORESOURCE_TYPE_BITS;
-> -
-> -		res = devm_kmalloc(dev, sizeof(*res), GFP_KERNEL);
-> -		if (!res) {
-> -			err = -ENOMEM;
-> -			goto out_release_res;
-> -		}
-> -
-> -		switch (restype) {
-> -		case IORESOURCE_IO:
-> -			parent = &ioport_resource;
-> -			err = gen_pci_calc_io_offset(dev, &range, res, &offset);
+> -	while (1) {
+> -		rc = opal_pci_poll(id);
+> -		if (rc <= 0)
 > -			break;
-> -		case IORESOURCE_MEM:
-> -			parent = &iomem_resource;
-> -			err = gen_pci_calc_mem_offset(dev, &range, res, &offset);
-> -			res_valid |= !(res->flags & IORESOURCE_PREFETCH || err);
-> -			break;
-> -		default:
-> -			err = -EINVAL;
-> -			continue;
-> -		}
 > -
-> -		if (err) {
-> -			dev_warn(dev,
-> -				 "error %d: failed to add resource [type 0x%x, %lld bytes]\n",
-> -				 err, restype, range.size);
-> -			continue;
-> -		}
-> -
-> -		err = request_resource(parent, res);
-> -		if (err)
-> -			goto out_release_res;
-> -
-> -		pci_add_resource_offset(&pci->resources, res, offset);
+> -		if (system_state < SYSTEM_RUNNING)
+> -			udelay(1000 * rc);
+> -		else
+> -			msleep(rc);
 > -	}
 > -
-> -	if (!res_valid) {
-> -		dev_err(dev, "non-prefetchable memory resource required\n");
-> -		err = -EINVAL;
-> -		goto out_release_res;
-> -	}
-> -
-> -	return 0;
-> -
-> -out_release_res:
-> -	gen_pci_release_of_pci_ranges(pci);
-> -	return err;
+> -	return rc;
 > -}
 > -
->  static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+>  int ioda_eeh_phb_reset(struct pci_controller *hose, int option)
 >  {
->  	int err;
-> @@ -305,16 +199,33 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
->  			return -ENOMEM;
->  	}
->  
-> -	/* Register bus resource */
-> -	pci_add_resource(&pci->resources, bus_range);
->  	return 0;
+>  	struct pnv_phb *phb = hose->private_data;
+> @@ -542,13 +524,7 @@ int ioda_eeh_phb_reset(struct pci_controller *hose, int option)
+>  	 * need the PCI bus settlement delay.
+>  	 */
+>  	rc = opal_pci_reset(phb->opal_id, reset_scope);
+> -	if (rc > 0)
+> -		rc = ioda_eeh_phb_poll(phb->opal_id);
+> -
+> -	if (rc != OPAL_SUCCESS)
+> -		return -EIO;
+> -
+> -	return 0;
+> +	return pnv_pci_poll(phb->opal_id, rc, NULL);
+>  }
+
+Patch does too mutch, the factoring out of pnv_pci_poll should be a
+separate patch.
+
+>  static int __ioda_eeh_bridge_reset(struct pci_dev *dev, int option)
+> @@ -641,13 +617,7 @@ static int ioda_eeh_bridge_reset(struct pci_dev *dev, int option)
+>  	phb = hose->private_data;
+>  	id |= ((phb->opal_id << 16) | (dev->bus->number << 8) | (dev->devfn));
+>  	rc = opal_pci_reset(id, reset_scope);
+> -	if (rc > 0)
+> -		rc = ioda_eeh_phb_poll(id);
+> -
+> -	if (rc != OPAL_SUCCESS)
+> -		return -EIO;
+> -
+> -	return 0;
+> +	return pnv_pci_poll(id, rc, NULL);
 >  }
 >  
-> -static int gen_pci_setup(int nr, struct pci_sys_data *sys)
-> +static int gen_pci_map_ranges(struct list_head *res,
-> +		resource_size_t io_base)
->  {
-> -	struct gen_pci *pci = sys->private_data;
-> -	list_splice_init(&pci->resources, &sys->resources);
-> -	return 1;
-> +	struct pci_host_bridge_window *window;
-> +	int ret;
-> +
-> +	list_for_each_entry(window, res, list) {
-> +		struct resource *res = window->res;
-> +		u64 restype = resource_type(res);
-> +
-> +		switch (restype) {
-> +		case IORESOURCE_IO:
-> +			ret = pci_remap_iospace(res, io_base);
-> +			if (ret < 0)
-> +				return ret;
+>  static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
+> diff --git a/arch/powerpc/platforms/powernv/opal-wrappers.S b/arch/powerpc/platforms/powernv/opal-wrappers.S
+> index b6474a1..b2c15ff 100644
+> --- a/arch/powerpc/platforms/powernv/opal-wrappers.S
+> +++ b/arch/powerpc/platforms/powernv/opal-wrappers.S
+> @@ -249,3 +249,5 @@ OPAL_CALL(opal_handle_hmi,			OPAL_HANDLE_HMI);
+>  OPAL_CALL(opal_register_dump_region,		OPAL_REGISTER_DUMP_REGION);
+>  OPAL_CALL(opal_unregister_dump_region,		OPAL_UNREGISTER_DUMP_REGION);
+>  OPAL_CALL(opal_pci_set_phb_cxl_mode,		OPAL_PCI_SET_PHB_CXL_MODE);
+> +OPAL_CALL(opal_pci_get_power_status,		OPAL_PCI_GET_POWER_STATUS);
+> +OPAL_CALL(opal_pci_get_presence_status,		OPAL_PCI_GET_PRESENCE_STATUS);
+> diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+> index b2187d0..f5bae4f 100644
+> --- a/arch/powerpc/platforms/powernv/pci.c
+> +++ b/arch/powerpc/platforms/powernv/pci.c
+> @@ -45,6 +45,44 @@
+>  #define cfg_dbg(fmt...)	do { } while(0)
+>  //#define cfg_dbg(fmt...)	printk(fmt)
+>  
+> +int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval)
+> +{
+> +	while (rval > 0) {
+> +		rval = opal_pci_poll(id, pval);
+> +		if (rval <= 0)
 > +			break;
-> +		case IORESOURCE_MEM:
-> +		case IORESOURCE_BUS:
-> +			break;
-> +		default:
-> +			return -EINVAL;
-> +		}
+> +
+> +		if (system_state < SYSTEM_RUNNING)
+> +			udelay(1000 * rval);
+> +		else
+> +			msleep(rval);
 > +	}
-> +	return 0;
->  }
-
-http://lists.infradead.org/pipermail/linux-arm-kernel/2014-October/296535.html
-
-Patch above is already queued and applies most of the changes you have posted
-above.
-
->  static int gen_pci_probe(struct platform_device *pdev)
-> @@ -325,14 +236,11 @@ static int gen_pci_probe(struct platform_device *pdev)
->  	const int *prop;
->  	struct device *dev = &pdev->dev;
->  	struct device_node *np = dev->of_node;
-> +	resource_size_t iobase = 0;
->  	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-> -	struct hw_pci hw = {
-> -		.nr_controllers	= 1,
-> -		.private_data	= (void **)&pci,
-> -		.setup		= gen_pci_setup,
-> -		.map_irq	= of_irq_parse_and_map_pci,
-> -		.ops		= &gen_pci_ops,
-> -	};
-> +	struct pci_bus *bus;
-> +	struct pci_dev *pci_dev = NULL;
-> +	bool probe_only = false;
->  
->  	if (!pci)
->  		return -ENOMEM;
-> @@ -346,9 +254,9 @@ static int gen_pci_probe(struct platform_device *pdev)
->  	prop = of_get_property(of_chosen, "linux,pci-probe-only", NULL);
->  	if (prop) {
->  		if (*prop)
-> -			pci_add_flags(PCI_PROBE_ONLY);
-> +			probe_only = true;
->  		else
-> -			pci_clear_flags(PCI_PROBE_ONLY);
-> +			probe_only = false;
->  	}
-
-How can this possibly work ? If firmware assigns resources, they
-should not be enabled, and this is done in pcibios code by checking
-the PCI_PROBE_ONLY flag (pcibios_enable_device()).
-Now you are removing the flag, how can pcibios_enable_device() work on
-platforms that are PROBE_ONLY ? I do not see any additional patch, so I
-am confused.
-
->  
->  	of_id = of_match_node(gen_pci_of_match, np);
-> @@ -357,20 +265,40 @@ static int gen_pci_probe(struct platform_device *pdev)
->  	INIT_LIST_HEAD(&pci->host.windows);
->  	INIT_LIST_HEAD(&pci->resources);
->  
-> -	/* Parse our PCI ranges and request their resources */
-> -	err = gen_pci_parse_request_of_pci_ranges(pci);
-> +	err = of_pci_get_host_bridge_resources(np, 0, 0xff,
-> +			&pci->resources, &iobase);
->  	if (err)
->  		return err;
->  
->  	/* Parse and map our Configuration Space windows */
->  	err = gen_pci_parse_map_cfg_windows(pci);
-> -	if (err) {
-> -		gen_pci_release_of_pci_ranges(pci);
-> -		return err;
-> +	if (err)
-> +		goto fail;
 > +
-> +	err = gen_pci_map_ranges(&pci->resources, iobase);
-> +	if (err)
-> +		goto fail;
+> +	return rval ? -EIO : 0;
+> +}
+
+Do we need the udelay case still nowadays ? When do we call this early
+enough that msleep won't work ?
+
+> +int pnv_pci_get_power_status(unsigned int index, unsigned char *status)
+> +{
+> +	uint64_t id = (0x1ul << 63);
+> +	long rc;
 > +
-> +	err = -ENOMEM;
-> +	platform_set_drvdata(pdev, pci);
-> +	bus = pci_scan_root_bus(dev, 0, &gen_pci_ops, gen_sysdata,
-> +				&pci->resources);
-> +	if (!bus)
-> +		goto fail;
+> +	id |= index;
+> +	rc = opal_pci_get_power_status(id, status);
+> +	return pnv_pci_poll(id, rc, status);
+> +}
+> +EXPORT_SYMBOL_GPL(pnv_pci_get_power_status);
 > +
-> +	for_each_pci_dev(pci_dev)
-> +		pci_dev->irq = of_irq_parse_and_map_pci(pci_dev, 0, 0);
+> +int pnv_pci_get_presence_status(unsigned int index, unsigned char *status)
+> +{
+> +	uint64_t id = (0x1ul << 63);
+> +	long rc;
 > +
-> +	if (!probe_only) {
-> +		pci_bus_size_bridges(bus);
-> +		pci_bus_assign_resources(bus);
-> +		pci_bus_add_devices(bus);
->  	}
+> +	id |= index;
+> +	rc = opal_pci_get_presence_status(id, status);
+> +	return pnv_pci_poll(id, rc, status);
+> +}
+> +EXPORT_SYMBOL_GPL(pnv_pci_get_presence_status);
+> +
+>  #ifdef CONFIG_PCI_MSI
+>  static int pnv_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+>  {
+> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+> index 6c02ff8..396fe02 100644
+> --- a/arch/powerpc/platforms/powernv/pci.h
+> +++ b/arch/powerpc/platforms/powernv/pci.h
+> @@ -217,6 +217,7 @@ extern struct pci_ops pnv_pci_ops;
+>  extern struct pnv_eeh_ops ioda_eeh_ops;
+>  #endif
+>  
+> +int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval);
+>  void pnv_pci_dump_phb_diag_data(struct pci_controller *hose,
+>  				unsigned char *log_buff);
+>  int pnv_pci_cfg_read(struct device_node *dn,
 
-Do you realize that pci_scan_root_bus() already calls pci_bus_add_devices() ?
-On top of that:
 
-+	if (!probe_only) {
-+		pci_bus_size_bridges(bus);
-+		pci_bus_assign_resources(bus);
-+		pci_bus_add_devices(bus);
-
-Should be called in pci_scan_root_bus() before pci_bus_add_devices(), if
-things are working for you at the moment it is out of sheer chance (and
-unfortunately that's the case for other host controllers IMO).
-
-I am working on adding the code above to pci_scan_root_bus() implementation
-this is a generic issue that we need to solve, there are already patches
-on the list to remove the dependency on pci_sys_data (I mean properly)
-and move the code to generic pci_scan_root_bus() implementation.
-
-Overall, we are already working to achieve what this patch is trying to
-achieve, I will keep you posted.
-
-Thanks,
-Lorenzo
