@@ -1,216 +1,183 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:52177 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751231AbaKHTrv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 8 Nov 2014 14:47:51 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-pci@vger.kernel.org,
-	zajec5@gmail.com, florian@openwrt.org
-Subject: Re: [RFC] PCI: BCM5301X: add PCIe2 driver for BCM5301X SoCs
-Date: Sat, 08 Nov 2014 20:47:34 +0100
-Message-ID: <1756974.RYWuW6FYtL@wuerfel>
-In-Reply-To: <1415470392-28229-1-git-send-email-hauke@hauke-m.de>
-References: <1415470392-28229-1-git-send-email-hauke@hauke-m.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
+Subject: [Patch Part3 v4 14/38] x86, irq: Kill x86_io_apic_ops.set_affinity and related interfaces
+Date: Tue, 25 Nov 2014 15:49:38 +0800
+Message-Id: <1416901802-24211-15-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday 08 November 2014 19:13:12 Hauke Mehrtens wrote:
+Now there is no user of x86_io_apic_ops.set_affinity anymore, so kill
+it.
 
-> diff --git a/drivers/pci/host/pci-host-bcm5301x.c b/drivers/pci/host/pci-host-bcm5301x.c
-> new file mode 100644
-> index 0000000..8b7ba62
-> --- /dev/null
-> +++ b/drivers/pci/host/pci-host-bcm5301x.c
-> @@ -0,0 +1,483 @@
-> +/*
-> + * Northstar PCI-Express driver
-> + * Only supports Root-Complex (RC) mode
-> + *
-> + * Notes:
-> + * PCI Domains are being used to identify the PCIe port 1:1.
-> + *
-> + * Only MEM access is supported, PAX does not support IO.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Tested-by: Joerg Roedel <jroedel@suse.de>
+---
+ arch/x86/include/asm/io_apic.h  |    4 ----
+ arch/x86/include/asm/x86_init.h |    3 ---
+ arch/x86/kernel/apic/io_apic.c  |   25 +------------------------
+ arch/x86/kernel/x86_init.c      |    1 -
+ drivers/iommu/irq_remapping.c   |   16 ----------------
+ 5 files changed, 1 insertion(+), 48 deletions(-)
 
-What is PAX?
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 0c66c4759987..5fba350fec1f 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -222,9 +222,6 @@ extern unsigned int native_io_apic_read(unsigned int apic, unsigned int reg);
+ extern void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int val);
+ extern void native_io_apic_modify(unsigned int apic, unsigned int reg, unsigned int val);
+ extern void native_disable_io_apic(void);
+-extern int native_ioapic_set_affinity(struct irq_data *,
+-				      const struct cpumask *,
+-				      bool);
+ 
+ static inline unsigned int io_apic_read(unsigned int apic, unsigned int reg)
+ {
+@@ -285,7 +282,6 @@ static inline void disable_ioapic_support(void) { }
+ #define native_io_apic_write		NULL
+ #define native_io_apic_modify		NULL
+ #define native_disable_io_apic		NULL
+-#define native_ioapic_set_affinity	NULL
+ #define native_eoi_ioapic_pin		NULL
+ #endif
+ 
+diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+index 0c690574efae..f9f83cfabcaa 100644
+--- a/arch/x86/include/asm/x86_init.h
++++ b/arch/x86/include/asm/x86_init.h
+@@ -191,9 +191,6 @@ struct x86_io_apic_ops {
+ 	void		(*write)  (unsigned int apic, unsigned int reg, unsigned int value);
+ 	void		(*modify) (unsigned int apic, unsigned int reg, unsigned int value);
+ 	void		(*disable)(void);
+-	int		(*set_affinity)(struct irq_data *data,
+-					const struct cpumask *mask,
+-					bool force);
+ 	void		(*eoi_ioapic_pin)(int apic, int pin, int vector);
+ };
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index c862f8299a3f..26fa504b57f6 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1777,29 +1777,6 @@ static void __target_IO_APIC_irq(unsigned int irq, unsigned int dest, struct irq
+ 	}
+ }
+ 
+-int native_ioapic_set_affinity(struct irq_data *data,
+-			       const struct cpumask *mask,
+-			       bool force)
+-{
+-	unsigned int dest, irq = data->irq;
+-	unsigned long flags;
+-	int ret;
+-
+-	if (!config_enabled(CONFIG_SMP))
+-		return -EPERM;
+-
+-	raw_spin_lock_irqsave(&ioapic_lock, flags);
+-	ret = apic_set_affinity(data, mask, &dest);
+-	if (!ret) {
+-		/* Only the high 8 bits are valid. */
+-		dest = SET_APIC_LOGICAL_ID(dest);
+-		__target_IO_APIC_irq(irq, dest, irqd_cfg(data));
+-		ret = IRQ_SET_MASK_OK_NOCOPY;
+-	}
+-	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
+-	return ret;
+-}
+-
+ atomic_t irq_mis_count;
+ 
+ #ifdef CONFIG_GENERIC_PENDING_IRQ
+@@ -2676,7 +2653,7 @@ void __init setup_ioapic_dest(void)
+ 		else
+ 			mask = apic->target_cpus();
+ 
+-		x86_io_apic_ops.set_affinity(idata, mask, false);
++		irq_set_affinity(irq, mask);
+ 	}
+ 
+ }
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index 066cdaa6503e..f7e8eab3a7c4 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -144,6 +144,5 @@ struct x86_io_apic_ops x86_io_apic_ops = {
+ 	.write			= native_io_apic_write,
+ 	.modify			= native_io_apic_modify,
+ 	.disable		= native_disable_io_apic,
+-	.set_affinity		= native_ioapic_set_affinity,
+ 	.eoi_ioapic_pin		= native_eoi_ioapic_pin,
+ };
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 5768652eea57..13243ac9040f 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -26,10 +26,6 @@ int no_x2apic_optout;
+ 
+ static struct irq_remap_ops *remap_ops;
+ 
+-static int set_remapped_irq_affinity(struct irq_data *data,
+-				     const struct cpumask *mask,
+-				     bool force);
+-
+ static bool irq_remapped(struct irq_cfg *cfg)
+ {
+ 	return (cfg->remapped == 1);
+@@ -62,7 +58,6 @@ static void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
+ static void __init irq_remapping_modify_x86_ops(void)
+ {
+ 	x86_io_apic_ops.disable		= irq_remapping_disable_io_apic;
+-	x86_io_apic_ops.set_affinity	= set_remapped_irq_affinity;
+ 	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
+ }
+ 
+@@ -177,16 +172,6 @@ int __init irq_remap_enable_fault_handling(void)
+ 	return remap_ops->enable_faulting();
+ }
+ 
+-static int set_remapped_irq_affinity(struct irq_data *data,
+-				     const struct cpumask *mask, bool force)
+-{
+-	if (!config_enabled(CONFIG_SMP) || !remap_ops ||
+-	    !remap_ops->set_affinity)
+-		return 0;
+-
+-	return remap_ops->set_affinity(data, mask, force);
+-}
+-
+ void free_remapped_irq(int irq)
+ {
+ 	struct irq_cfg *cfg = irq_cfg(irq);
+@@ -238,7 +223,6 @@ void irq_remap_modify_chip_defaults(struct irq_chip *chip)
+ 	chip->irq_print_chip = ir_print_prefix;
+ 	chip->irq_ack = ir_ack_apic_edge;
+ 	chip->irq_eoi = ir_ack_apic_level;
+-	chip->irq_set_affinity = x86_io_apic_ops.set_affinity;
+ }
+ 
+ bool setup_remapped_irq(int irq, struct irq_cfg *cfg, struct irq_chip *chip)
+-- 
+1.7.10.4
 
-> +static int bcma_pcie2_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
-> +{
-> +	struct pci_sys_data *sys = pdev->sysdata;
-> +	struct bcma_device *bdev = sys->private_data;
-> +
-> +	/*
-> +	 * Every PCIe controller has 5 IRQ number and the last one is
-> +	 * triggered every time, use that one
-> +	 */
-> +	if (bdev && bdev->dev.of_node)
-> +		return irq_of_parse_and_map(bdev->dev.of_node, 4);
-> +
-> +	return bdev->irq;
-> +}
-
-If you have an OF device node for the PCI host, you don't need this,
-there should already be an interrupt-map property that correctly
-maps this into the interrupt domain of the bcma bus, so you can use
-the default of_irq_parse_and_map_pci function.
-
-> +static u32 bcma_pcie2_cfg_base(struct bcma_device *bdev, int busno,
-> +			       unsigned int devfn, int where)
-> +{
-> +	int slot = PCI_SLOT(devfn);
-> +	int fn = PCI_FUNC(devfn);
-> +	u32 addr_reg;
-> +
-> +	if (busno == 0) {
-> +		if (slot >= 1)
-> +			return 0;
-> +		bcma_write32(bdev, BCMA_CORE_PCIE2_CONFIGINDADDR,
-> +			     where & 0xffc);
-> +		return BCMA_CORE_PCIE2_CONFIGINDDATA;
-> +	}
-> +	if (fn > 1)
-> +		return 0;
-> +	addr_reg = (busno & 0xff) << 20 | (slot << 15) | (fn << 12) |
-> +		   (where & 0xffc) | (1 & 0x3);
-> +
-> +	bcma_write32(bdev, BCMA_CORE_PCIE2_CFG_ADDR, addr_reg);
-> +	return BCMA_CORE_PCIE2_CFG_DATA;
-> +}
-
-The normal buses seem to be ECAM compliant, I wonder if we can have the
-code to access those shared between this driver, pci-host-generic.c and
-the ACPI PCI implementation.
-
-The root bus is unfortunately not compliant, which for some reason
-is common on a lot of controllers.
-
-> +static u32 bcma_pcie2_read_config(struct bcma_device *bdev, int busno,
-> +				  unsigned int devfn, int where, int size)
-> +{
-> +	u32 base;
-> +	u32 data_reg;
-> +	u32 mask;
-> +	int shift;
-> +
-> +	base = bcma_pcie2_cfg_base(bdev, busno, devfn, where);
-> +
-> +	if (!base)
-> +		return ~0UL;
-> +
-> +	data_reg = bcma_read32(bdev, base);
-> +
-> +	/* NS: CLASS field is R/O, and set to wrong 0x200 value */
-> +	if (busno == 0 && devfn == 0) {
-> +		/*
-> +		 * RC's class is 0x0280, but Linux PCI driver needs 0x604
-> +		 * for a PCIe bridge. So we must fixup the class code
-> +		 * to 0x604 here.
-> +		 */
-> +		if ((where & 0xffc) == PCI_CLASS_REVISION) {
-> +			data_reg &= 0xff;
-> +			data_reg |= 0x604 << 16;
-> +		}
-> +	}
-> +	/* HEADER_TYPE=00 indicates the port in EP mode */
-> +
-> +	if (size == 4)
-> +		return data_reg;
-> +
-> +	mask = (1 << (size * 8)) - 1;
-> +	shift = (where % 4) * 8;
-> +	return (data_reg >> shift) & mask;
-> +}
-
-Interesting. 0x0280 is PCI_CLASS_NETWORK_OTHER, I guess this is the
-same PCI core that is used on broadcom network adapters in endpoint
-mode, and when someone tweaked the core to do root complex mode,
-they forgot to fix this.
-
-Which code depends on this? I think I've seem something similar in
-other host drivers, so maybe we can change the core code instead.
-
-> +
-> +static u8 bcma_pcie2_read_config8(struct bcma_device *bdev, int busno,
-> +				  unsigned int devfn, int where)
-> +{
-> +	return bcma_pcie2_read_config(bdev, busno, devfn, where, 1);
-> +}
-> +
-> +static u16 bcma_pcie2_read_config16(struct bcma_device *bdev, int busno,
-> +				    unsigned int devfn, int where)
-> +{
-> +	return bcma_pcie2_read_config(bdev, busno, devfn, where, 2);
-> +}
-> +
-> +static u32 bcma_pcie2_read_config32(struct bcma_device *bdev, int busno,
-> +				    unsigned int devfn, int where)
-> +{
-> +	return bcma_pcie2_read_config(bdev, busno, devfn, where, 4);
-> +}
-
-These all seem to be relatively pointless, I'd just open-code the
-bcma_pcie2_read_config call in the calling function.
-
-> +
-> +/*
-> + * Initializte the PCIe controller
-> + */
-> +static void bcma_pcie2_hw_init(struct bcma_device *bdev)
-> +{
-> +	u32 tmp32;
-> +	u16 tmp16;
-> +
-> +	/* Change MPS and MRRS to 512 */
-> +	tmp16 = bcma_pcie2_read_config16(bdev, 0, 0, 0x4d4);
-> +	tmp16 &= ~7;
-> +	tmp16 |= 2;
-> +	bcma_pcie2_write_config16(bdev, 0, 0, 0x4d4, tmp16);
-> +
-> +	tmp32 = bcma_pcie2_read_config32(bdev, 0, 0, 0xb4);
-> +	tmp32 &= ~((7 << 12) | (7 << 5));
-> +	tmp32 |= (2 << 12) | (2 << 5);
-> +	bcma_pcie2_write_config32(bdev, 0, 0, 0xb4, tmp32);
-> +
-> +	/*
-> +	 * Turn-on Root-Complex (RC) mode, from reset default of EP
-> +	 * The mode is set by straps, can be overwritten via DMU
-> +	 * register <cru_straps_control> bit 5, "1" means RC
-> +	 */
-> +
-> +	/* Send a downstream reset */
-> +	bcma_write32(bdev, BCMA_CORE_PCIE2_CLK_CONTROL,
-> +		     PCIE2_CLKC_RST_OE | PCIE2_CLKC_RST);
-> +	udelay(250);
-> +	bcma_write32(bdev, BCMA_CORE_PCIE2_CLK_CONTROL, PCIE2_CLKC_RST_OE);
-> +	mdelay(250);
-> +
-> +	/* TBD: take care of PM, check we're on */
-> +}
-
-Can you turn the two delays into msleep()? Wasting 250ms of CPU time is
-really nasty.
-
-> +	/*
-> +	 * Inbound address translation setup
-> +	 * Northstar only maps up to 128 MiB inbound, DRAM could be up to 1 GiB.
-> +	 *
-> +	 * For now allow access to entire DRAM, assuming it is less than 128MiB,
-> +	 * otherwise DMA bouncing mechanism may be required.
-> +	 * Also consider DMA mask to limit DMA physical address
-> +	 */
-> +	/* 64-bit LE regs, write low word, high is 0 at reset */
-> +	bcma_write32(bdev, BCMA_CORE_PCIE2_FUNC0_IMAP1, PHYS_OFFSET | 0x1);
-> +	bcma_write32(bdev, BCMA_CORE_PCIE2_IARR1_LOWER,
-> +			   PHYS_OFFSET | ((SZ_128M >> 20) & 0xff));
-
-Maybe I should bully you into enabling swiotlb on arm32 ;-)
-
-Do you have any machines with more than 128MB of RAM that use this?
-
-According to wikidevi.com [http://tinyurl.com/pdtw2h4], most machines
-with bcm4708/81/9 have 256MB or 512MB. I think it shouldn't be too hard
-to get swiotlb to work on arm32, given that we already use it on arm64.
-
-	Arnd
