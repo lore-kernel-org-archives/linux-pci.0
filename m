@@ -1,64 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:36162 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751083AbaKFFhx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Nov 2014 00:37:53 -0500
-Received: from epcpsbgr3.samsung.com
- (u143.gpu120.samsung.co.kr [203.254.230.143])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0NEL008SORMWTUD0@mailout2.samsung.com> for
- linux-pci@vger.kernel.org; Thu, 06 Nov 2014 14:37:45 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, 'Mohit Kumar' <mohit.kumar@st.com>,
-	'Viresh Kumar' <viresh.kumar@linaro.org>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-Subject: [PATCH] PCI: spear: Add __init annotation to spear13xx_add_pcie_port()
-Date: Thu, 06 Nov 2014 14:38:18 +0900
-Message-id: <001f01cff983$deb4da20$9c1e8e60$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part3 v4 26/38] x86, irq: Kill struct io_apic_irq_attr
+Date: Tue, 25 Nov 2014 15:49:50 +0800
+Message-Id: <1416901802-24211-27-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add __init annotation to spear13xx_add_pcie_port(), because
-the spear13xx_add_pcie_port() is called only by spear13xx_pcie_probe()
-that was already marked as __init. Also, this patch fixes
-section mismatch warning.
+Now there's no user of struct io_apic_irq_attr anymore, so kill it.
 
-WARNING: drivers/pci/host/built-in.o(.text.unlikely+0x94): Section mismatch in reference from the function spear13xx_add_pcie_port()
-to the function .init.text:dw_pcie_host_init()
-The function spear13xx_add_pcie_port() references
-the function __init dw_pcie_host_init().
-This is often because spear13xx_add_pcie_port lacks a __init
-annotation or the annotation of dw_pcie_host_init is wrong.
-
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Tested-by: Joerg Roedel <jroedel@suse.de>
 ---
-This patch is based on the submitted patch "[PATCH V2] PCI:
-spear: Add spear13xx before add_pcie_port/pcie_initt".
+ arch/x86/include/asm/io_apic.h |    7 -------
+ arch/x86/kernel/apic/io_apic.c |   10 ----------
+ 2 files changed, 17 deletions(-)
 
- drivers/pci/host/pcie-spear13xx.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index 63f869f..60f43cd 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -269,8 +269,8 @@ static struct pcie_host_ops spear13xx_pcie_host_ops = {
- 	.host_init = spear13xx_pcie_host_init,
- };
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 3b54f0f9cbb7..1597c77725f9 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -157,13 +157,6 @@ extern int restore_ioapic_entries(void);
+ extern void setup_ioapic_ids_from_mpc(void);
+ extern void setup_ioapic_ids_from_mpc_nocheck(void);
  
--static int spear13xx_add_pcie_port(struct pcie_port *pp,
--				   struct platform_device *pdev)
-+static int __init spear13xx_add_pcie_port(struct pcie_port *pp,
-+					 struct platform_device *pdev)
+-struct io_apic_irq_attr {
+-	int ioapic;
+-	int ioapic_pin;
+-	int trigger;
+-	int polarity;
+-};
+-
+ enum ioapic_domain_type {
+ 	IOAPIC_DOMAIN_INVALID,
+ 	IOAPIC_DOMAIN_LEGACY,
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 69aa3b04448b..f0ef5832f527 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -2949,16 +2949,6 @@ int mp_ioapic_registered(u32 gsi_base)
+ 	return 0;
+ }
+ 
+-static inline void set_io_apic_irq_attr(struct io_apic_irq_attr *irq_attr,
+-					int ioapic, int ioapic_pin,
+-					int trigger, int polarity)
+-{
+-	irq_attr->ioapic	= ioapic;
+-	irq_attr->ioapic_pin	= ioapic_pin;
+-	irq_attr->trigger	= trigger;
+-	irq_attr->polarity	= polarity;
+-}
+-
+ static void mp_irqdomain_get_attr(u32 gsi, struct mp_chip_data *data,
+ 				  struct irq_alloc_info *info)
  {
- 	struct device *dev = &pdev->dev;
- 	int ret;
 -- 
-1.7.9.5
-
+1.7.10.4
 
