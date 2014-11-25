@@ -1,106 +1,138 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bn0106.outbound.protection.outlook.com ([157.56.110.106]:1356
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751880AbaKKTSA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 11 Nov 2014 14:18:00 -0500
-From: <suravee.suthikulpanit@amd.com>
-To: <bhelgaas@google.com>
-CC: <liviu.dudau@arm.com>, <lorenzo.pieralisi@arm.com>,
-	<will.deacon@arm.com>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH V2 2/2] PCI: generic: Add msi_parent DT binding
-Date: Tue, 11 Nov 2014 13:17:34 -0600
-Message-ID: <1415733454-24322-3-git-send-email-suravee.suthikulpanit@amd.com>
-In-Reply-To: <1415733454-24322-1-git-send-email-suravee.suthikulpanit@amd.com>
-References: <1415733454-24322-1-git-send-email-suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part2 v6 06/27] x86, htirq: Use new irqdomain interfaces to allocate/free IRQ
+Date: Tue, 25 Nov 2014 13:53:15 +0800
+Message-Id: <1416894816-23245-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Use new irqdomain interfaces to allocate/free IRQ for HTIRQ, so we could
+kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
 
-This patch introduces a new DT binding, msi-parent, which can
-be used to specify MSI-parent phandle for a particular PCI
-generic host controller.
+This patch changes the interfaces between arch independent PCI driver
+and arch specific code. Currently HT_IRQ is only enabled on x86, so it
+shouldn't break other architectures.
 
-Also, it implements and registers set_msi_parent callback.
-
-Cc: Bjorn Helgass <bhelgaas@google.com>
-Cc: Liviu Dudau <liviu.dudau@arm.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- Documentation/devicetree/bindings/pci/host-generic-pci.txt |  3 +++
- drivers/pci/host/pci-host-generic.c                        | 13 +++++++++++++
- 2 files changed, 16 insertions(+)
+ arch/x86/kernel/apic/htirq.c |   26 +++++++++++++-------------
+ drivers/pci/htirq.c          |    7 +++----
+ include/linux/htirq.h        |    2 ++
+ 3 files changed, 18 insertions(+), 17 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.txt b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-index cf3e205..6996af7 100644
---- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-@@ -36,6 +36,8 @@ Properties of the host controller node:
- - reg            : The Configuration Space base address and size, as accessed
-                    from the parent bus.
- 
-+- msi-parent     : Specify the phandle of the corresponded MSI controller
-+                   for this PCI host controller.
- 
- Properties of the /chosen node:
- 
-@@ -77,6 +79,7 @@ pci {
-     device_type = "pci";
-     #address-cells = <3>;
-     #size-cells = <2>;
-+    msi-parent = <&msictrl0>;
-     bus-range = <0x0 0x1>;
- 
-     // CPU_PHYSICAL(2)  SIZE(2)
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 1895907..c4fbcda 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -42,6 +42,7 @@ struct gen_pci {
- 	struct pci_host_bridge			host;
- 	struct gen_pci_cfg_windows		cfg;
- 	struct list_head			resources;
-+	struct msi_chip				*mchip;
+diff --git a/arch/x86/kernel/apic/htirq.c b/arch/x86/kernel/apic/htirq.c
+index 816f36e979ad..b307ee7a7148 100644
+--- a/arch/x86/kernel/apic/htirq.c
++++ b/arch/x86/kernel/apic/htirq.c
+@@ -14,6 +14,7 @@
+ #include <linux/device.h>
+ #include <linux/pci.h>
+ #include <linux/htirq.h>
++#include <linux/irqdomain.h>
+ #include <asm/hw_irq.h>
+ #include <asm/apic.h>
+ #include <asm/hypertransport.h>
+@@ -61,31 +62,30 @@ static struct irq_chip ht_irq_chip = {
+ 	.flags			= IRQCHIP_SKIP_SET_WAKE,
  };
  
- static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
-@@ -122,9 +123,19 @@ static int gen_pci_config_write(struct pci_bus *bus, unsigned int devfn,
- 	return PCIBIOS_SUCCESSFUL;
- }
- 
-+static int gen_pci_set_msi_parent(struct pci_bus *bus)
++int arch_alloc_ht_irq(struct pci_dev *dev)
 +{
-+	struct gen_pci *pci = bus_to_gen_pci(bus);
-+
-+	bus->msi = pci->mchip;
-+
-+	return PCIBIOS_SUCCESSFUL;
++	return irq_domain_alloc_irqs(NULL, 1, dev_to_node(&dev->dev), NULL);
 +}
 +
- static struct pci_ops gen_pci_ops = {
- 	.read	= gen_pci_config_read,
- 	.write	= gen_pci_config_write,
-+	.set_msi_parent = gen_pci_set_msi_parent,
- };
++void arch_free_ht_irq(int irq)
++{
++	irq_domain_free_irqs(irq, 1);
++}
++
+ int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
+ {
+ 	struct irq_cfg *cfg;
+ 	struct ht_irq_msg msg;
+-	unsigned dest;
+-	int err;
  
- static const struct of_device_id gen_pci_of_match[] = {
-@@ -303,6 +314,8 @@ static int gen_pci_probe(struct platform_device *pdev)
- 		return err;
+ 	if (disable_apic)
+ 		return -ENXIO;
+ 
+ 	cfg = irq_cfg(irq);
+-	err = assign_irq_vector(irq, cfg, apic->target_cpus());
+-	if (err)
+-		return err;
+-
+-	err = apic->cpu_mask_to_apicid_and(cfg->domain,
+-					   apic->target_cpus(), &dest);
+-	if (err)
+-		return err;
+-
+-	msg.address_hi = HT_IRQ_HIGH_DEST_ID(dest);
++	msg.address_hi = HT_IRQ_HIGH_DEST_ID(cfg->dest_apicid);
+ 
+ 	msg.address_lo =
+ 		HT_IRQ_LOW_BASE |
+-		HT_IRQ_LOW_DEST_ID(dest) |
++		HT_IRQ_LOW_DEST_ID(cfg->dest_apicid) |
+ 		HT_IRQ_LOW_VECTOR(cfg->vector) |
+ 		((apic->irq_dest_mode == 0) ?
+ 			HT_IRQ_LOW_DM_PHYSICAL :
+diff --git a/drivers/pci/htirq.c b/drivers/pci/htirq.c
+index a94dd2c4183a..ceb0ebeb7b5f 100644
+--- a/drivers/pci/htirq.c
++++ b/drivers/pci/htirq.c
+@@ -117,8 +117,8 @@ int __ht_create_irq(struct pci_dev *dev, int idx, ht_irq_update_t *update)
+ 	cfg->msg.address_lo = 0xffffffff;
+ 	cfg->msg.address_hi = 0xffffffff;
+ 
+-	irq = irq_alloc_hwirq(dev_to_node(&dev->dev));
+-	if (!irq) {
++	irq = arch_alloc_ht_irq(dev);
++	if (irq <= 0) {
+ 		kfree(cfg);
+ 		return -EBUSY;
  	}
- 
-+	pci->mchip = of_pci_find_msi_chip_by_node(of_parse_phandle(np,
-+						  "msi-parent", 0));
- 	pci_common_init_dev(dev, &hw);
- 	return 0;
+@@ -163,8 +163,7 @@ void ht_destroy_irq(unsigned int irq)
+ 	cfg = irq_get_handler_data(irq);
+ 	irq_set_chip(irq, NULL);
+ 	irq_set_handler_data(irq, NULL);
+-	irq_free_hwirq(irq);
+-
++	arch_free_ht_irq(irq);
+ 	kfree(cfg);
  }
+ EXPORT_SYMBOL(ht_destroy_irq);
+diff --git a/include/linux/htirq.h b/include/linux/htirq.h
+index 70a1dbbf2093..5caa51b7b95c 100644
+--- a/include/linux/htirq.h
++++ b/include/linux/htirq.h
+@@ -15,6 +15,8 @@ void unmask_ht_irq(struct irq_data *data);
+ 
+ /* The arch hook for getting things started */
+ int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev);
++int arch_alloc_ht_irq(struct pci_dev *dev);
++void arch_free_ht_irq(int irq);
+ 
+ /* For drivers of buggy hardware */
+ typedef void (ht_irq_update_t)(struct pci_dev *dev, int irq,
 -- 
-1.9.3
+1.7.10.4
 
