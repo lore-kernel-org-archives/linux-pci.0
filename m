@@ -1,205 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:61452 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754495AbaKOOWA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 15 Nov 2014 09:22:00 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Borislav Petkov <bp@alien8.de>,
 	"H. Peter Anvin" <hpa@zytor.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Alexander Gordeev <agordeev@redhat.com>
-Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch V2 8/9] PCI, MSI: Refine irqdomain interfaces to simplify its usage
-Date: Sat, 15 Nov 2014 22:24:06 +0800
-Message-Id: <1416061447-9472-9-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416061447-9472-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part3 v4 32/38] x86, irq: Kill function apic_set_affinity()
+Date: Tue, 25 Nov 2014 15:49:56 +0800
+Message-Id: <1416901802-24211-33-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Refine irqdomain interfaces to simplify its usage.
+Now there's no user of apic_set_affinity(), so kill it.
+Also rename vector_set_affinity() to apic_set_affinity() for consistency.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Tested-by: Joerg Roedel <jroedel@suse.de>
 ---
- drivers/pci/msi.c   |  119 ++++++++++++++++++++++++++++++++++++++-------------
- include/linux/msi.h |   13 +++---
- 2 files changed, 98 insertions(+), 34 deletions(-)
+ arch/x86/include/asm/hw_irq.h |    2 --
+ arch/x86/kernel/apic/vector.c |   40 +++-------------------------------------
+ 2 files changed, 3 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 9c53b865cb1b..1dd5d93bd4b8 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1099,38 +1099,99 @@ irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
- 		(pci_domain_nr(dev->bus) & 0xFFFFFFFF) << 27;
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index ea9aebc65ff6..330445236484 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -198,8 +198,6 @@ static inline void irq_complete_move(struct irq_cfg *c) { }
+ #endif
+ 
+ extern void apic_ack_edge(struct irq_data *data);
+-extern int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+-			     unsigned int *dest_id);
+ #else	/*  CONFIG_X86_LOCAL_APIC */
+ static inline void lock_vector_lock(void) {}
+ static inline void unlock_vector_lock(void) {}
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index fba4958b6139..436a3400d9ac 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -463,42 +463,8 @@ void apic_ack_edge(struct irq_data *data)
+ 	ack_APIC_irq();
  }
  
--int pci_msi_domain_alloc_irqs(struct irq_domain *domain, int type,
--			      struct pci_dev *dev, void *arg)
-+static inline bool pci_msi_desc_is_multi_msi(struct msi_desc *desc)
- {
--	struct msi_domain_info *info = domain->host_data;
--	int node = dev_to_node(&dev->dev);
--	struct msi_desc *desc;
--	int i, virq;
+-/*
+- * Either sets data->affinity to a valid value, and returns
+- * ->cpu_mask_to_apicid of that in dest_id, or returns -1 and
+- * leaves data->affinity untouched.
+- */
+-int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+-		      unsigned int *dest_id)
+-{
+-	struct irq_cfg *cfg = irqd_cfg(data);
+-	unsigned int irq = data->irq;
+-	int err;
 -
--	list_for_each_entry(desc, &dev->msi_list, list) {
--		if (info->ops->calc_hwirq)
--			info->ops->calc_hwirq(info, arg, desc);
+-	if (!config_enabled(CONFIG_SMP))
+-		return -EPERM;
 -
--		virq = irq_domain_alloc_irqs(domain, desc->nvec_used,
--					     node, arg);
--		if (virq < 0) {
--			/* Special handling for pci_enable_msi_range(). */
--			if (type == PCI_CAP_ID_MSI && desc->nvec_used > 1)
--				return 1;
--			else
--				return -ENOSPC;
--		}
--		for (i = 0; i < desc->nvec_used; i++)
--			irq_set_msi_desc_off(virq, i, desc);
+-	if (!cpumask_intersects(mask, cpu_online_mask))
+-		return -EINVAL;
+-
+-	err = assign_irq_vector(irq, cfg, mask);
+-	if (err)
+-		return err;
+-
+-	err = apic->cpu_mask_to_apicid_and(mask, cfg->domain, dest_id);
+-	if (err) {
+-		if (assign_irq_vector(irq, cfg, data->affinity))
+-			pr_err("Failed to recover vector for irq %d\n", irq);
+-		return err;
 -	}
-+	return !desc->msi_attrib.is_msix && desc->nvec_used > 1;
-+}
+-
+-	cpumask_copy(data->affinity, mask);
+-
+-	return 0;
+-}
+-
+-static int vector_set_affinity(struct irq_data *irq_data,
+-			       const struct cpumask *dest, bool force)
++static int apic_set_affinity(struct irq_data *irq_data,
++			     const struct cpumask *dest, bool force)
+ {
+ 	int err;
+ 	int irq = irq_data->irq;
+@@ -524,7 +490,7 @@ static int vector_set_affinity(struct irq_data *irq_data,
  
--	list_for_each_entry(desc, &dev->msi_list, list)
--		if (desc->nvec_used == 1)
--			dev_dbg(&dev->dev, "irq %d for MSI/MSI-X\n", virq);
--		else
--			dev_dbg(&dev->dev, "irq [%d-%d] for MSI/MSI-X\n",
--				virq, virq + desc->nvec_used - 1);
-+int pci_msi_domain_check_cap(struct irq_domain *domain,
-+			     struct msi_domain_info *info, struct device *dev)
-+{
-+	struct msi_desc *desc = first_pci_msi_entry(to_pci_dev(dev));
-+
-+	/* Special handling to support pci_enable_msi_range() */
-+	if (pci_msi_desc_is_multi_msi(desc) &&
-+	    !(info->flags & MSI_FLAG_MULTI_PCI_MSI))
-+		return 1;
-+	else if (desc->msi_attrib.is_msix && !(info->flags & MSI_FLAG_PCI_MSIX))
-+		return -ENOTSUPP;
+ static struct irq_chip lapic_controller = {
+ 	.irq_ack		= apic_ack_edge,
+-	.irq_set_affinity	= vector_set_affinity,
++	.irq_set_affinity	= apic_set_affinity,
+ 	.irq_retrigger		= apic_retrigger_irq,
+ };
  
- 	return 0;
- }
-+
-+static int pci_msi_domain_handle_error(struct irq_domain *domain,
-+				       struct msi_desc *desc, int error)
-+{
-+	/* Special handling to support pci_enable_msi_range() */
-+	if (pci_msi_desc_is_multi_msi(desc) && error == -ENOSPC)
-+		return 1;
-+
-+	return error;
-+}
-+
-+#ifndef msi_alloc_info_t
-+static void pci_msi_domain_set_desc(struct msi_alloc_info *arg,
-+				    struct msi_desc *desc)
-+{
-+	arg->desc = desc;
-+	arg->hwirq = pci_msi_domain_calc_hwirq(msi_desc_to_pci_dev(desc),
-+					       desc);
-+}
-+#else
-+#define pci_msi_domain_set_desc		NULL
-+#endif
-+
-+static struct msi_domain_ops pci_msi_domain_ops_default = {
-+	.set_desc	= pci_msi_domain_set_desc,
-+	.msi_check	= pci_msi_domain_check_cap,
-+	.handle_error	= pci_msi_domain_handle_error,
-+};
-+
-+static void pci_msi_domain_update_dom_ops(struct msi_domain_info *info)
-+{
-+	struct msi_domain_ops *ops = info->ops;
-+
-+	if (ops == NULL) {
-+		info->ops = &pci_msi_domain_ops_default;
-+	} else {
-+		if (ops->set_desc == NULL)
-+			ops->set_desc = pci_msi_domain_set_desc;
-+		if (ops->msi_check == NULL)
-+			ops->msi_check = pci_msi_domain_check_cap;
-+		if (ops->handle_error == NULL)
-+			ops->handle_error = pci_msi_domain_handle_error;
-+	}
-+}
-+
-+static void pci_msi_domain_update_chip_ops(struct msi_domain_info *info)
-+{
-+	struct irq_chip *chip = info->chip;
-+
-+	BUG_ON(!chip);
-+	if (!chip->irq_write_msi_msg)
-+		chip->irq_write_msi_msg = pci_msi_domain_write_msg;
-+}
-+
-+struct irq_domain *pci_msi_create_irq_domain(struct device_node *node,
-+					     struct msi_domain_info *info,
-+					     struct irq_domain *parent)
-+{
-+	if (info->flags & MSI_FLAG_USE_DEF_DOM_OPS)
-+		pci_msi_domain_update_dom_ops(info);
-+	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
-+		pci_msi_domain_update_chip_ops(info);
-+
-+	return msi_create_irq_domain(node, info, parent);
-+}
-+
-+int pci_msi_domain_alloc_irqs(struct irq_domain *domain, struct pci_dev *dev,
-+			      int nvec, int type)
-+{
-+	return msi_domain_alloc_irqs(domain, &dev->dev, nvec);
-+}
-+
-+void pci_msi_domain_free_irqs(struct irq_domain *domain, struct pci_dev *dev)
-+{
-+	msi_domain_free_irqs(domain, &dev->dev);
-+}
- #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 96ee8c3b98cc..0463e361fef8 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -125,9 +125,6 @@ typedef struct msi_alloc_info msi_alloc_info_t;
- 
- struct msi_domain_ops {
- 	/* Callbacks for msi_create_irq_domain() */
--	void		(*calc_hwirq)(struct msi_domain_info *info,
--				      msi_alloc_info_t *arg,
--				      struct msi_desc *desc);
- 	irq_hw_number_t	(*get_hwirq)(struct msi_domain_info *info,
- 				     msi_alloc_info_t *arg);
- 	int		(*msi_init)(struct irq_domain *domain,
-@@ -189,10 +186,16 @@ struct msi_domain_info *msi_get_domain_info(struct irq_domain *domain);
- 
- #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
- void pci_msi_domain_write_msg(struct irq_data *irq_data, struct msi_msg *msg);
--int pci_msi_domain_alloc_irqs(struct irq_domain *domain, int type,
--			      struct pci_dev *dev, void *arg);
-+struct irq_domain *pci_msi_create_irq_domain(struct device_node *node,
-+					     struct msi_domain_info *info,
-+					     struct irq_domain *parent);
-+int pci_msi_domain_alloc_irqs(struct irq_domain *domain, struct pci_dev *dev,
-+			      int nvec, int type);
-+void pci_msi_domain_free_irqs(struct irq_domain *domain, struct pci_dev *dev);
- irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
- 					  struct msi_desc *desc);
-+int pci_msi_domain_check_cap(struct irq_domain *domain,
-+			     struct msi_domain_info *info, struct device *dev);
- #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
- 
- #endif /* LINUX_MSI_H */
 -- 
 1.7.10.4
 
