@@ -1,117 +1,268 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f50.google.com ([209.85.216.50]:50741 "EHLO
-	mail-qa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751499AbaKQXcZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 18:32:25 -0500
-Received: by mail-qa0-f50.google.com with SMTP id w8so5969487qac.23
-        for <linux-pci@vger.kernel.org>; Mon, 17 Nov 2014 15:32:25 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <BF3270C86E8B1349A26C34E4EC1C44CB3E87A6A7@CMEXMB1.ad.emulex.com>
-References: <1f6d7b6c-7189-4fe3-926b-42609724cab9@CMEXHTCAS2.ad.emulex.com>
- <20141023154054.GA7137@google.com> <BF3270C86E8B1349A26C34E4EC1C44CB3E860095@CMEXMB1.ad.emulex.com>
- <CAErSpo7_9xxtBmHOCgxsHeVLbKUeMVhLF6Q9OyFkz11EZbtJCA@mail.gmail.com>
- <BF3270C86E8B1349A26C34E4EC1C44CB3E862DC6@CMEXMB1.ad.emulex.com>
- <CAErSpo7KKka6-nHWnVbqVW3hx-E=4x6cEjeEGEAWz32za6xCGQ@mail.gmail.com> <BF3270C86E8B1349A26C34E4EC1C44CB3E87A6A7@CMEXMB1.ad.emulex.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 17 Nov 2014 16:32:04 -0700
-Message-ID: <CAErSpo5xx2QAN1rZqnknAX7xF+5SjpGvEvvVWGuqF_bTh5xRhA@mail.gmail.com>
-Subject: Re: [PATCH v1] pci: Limit VPD length of Emulex adapters to the actual
- length supported.
-To: Venkat Duvvuru <VenkatKumar.Duvvuru@emulex.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Anish Bhatt <anish@chelsio.com>,
-	Hariprasad Shenai <hariprasad@chelsio.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:37069 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752448AbaKYFyy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 25 Nov 2014 00:54:54 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part2 v6 20/27] x86, irq: Use hierarchy irqdomain to manage DMAR interrupts
+Date: Tue, 25 Nov 2014 13:53:29 +0800
+Message-Id: <1416894816-23245-21-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Anish, Hariprasad (cxgb4 maintainers/contributors)]
+Enhance DMAR code to support hierarchy irqdomain, it helps to make
+the architecture more clear.
 
-Anish, Hariprasad, here's the problem:
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/hw_irq.h |    7 ++
+ arch/x86/kernel/apic/msi.c    |  153 ++++++++++++++++++++++++++---------------
+ 2 files changed, 103 insertions(+), 57 deletions(-)
 
-  - pci_read_vpd() currently tries to read as much data as the caller
-asks for (up to the 32K limit imposed by the PCI_VPD_PCI22_SIZE in
-pci_vpd_pci22_init()) .  It does not look at the data, so it doesn't
-stop if it sees an End Tag.
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 270c432971f8..29f1dc162a24 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -122,6 +122,7 @@ enum irq_alloc_type {
+ 	X86_IRQ_ALLOC_TYPE_HPET,
+ 	X86_IRQ_ALLOC_TYPE_MSI,
+ 	X86_IRQ_ALLOC_TYPE_MSIX,
++	X86_IRQ_ALLOC_TYPE_DMAR,
+ };
+ 
+ struct irq_alloc_info {
+@@ -154,6 +155,12 @@ struct irq_alloc_info {
+ 			struct IO_APIC_route_entry *ioapic_entry;
+ 		};
+ #endif
++#ifdef	CONFIG_DMAR_TABLE
++		struct {
++			int		dmar_id;
++			void		*dmar_data;
++		};
++#endif
+ 	};
+ };
+ 
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 695c82bbd682..a24b803b199a 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -25,32 +25,6 @@
+ 
+ static struct irq_domain *msi_default_domain;
+ 
+-static void native_compose_msi_msg(struct irq_cfg *cfg, struct msi_msg *msg)
+-{
+-	msg->address_hi = MSI_ADDR_BASE_HI;
+-
+-	if (x2apic_enabled())
+-		msg->address_hi |= MSI_ADDR_EXT_DEST_ID(cfg->dest_apicid);
+-
+-	msg->address_lo =
+-		MSI_ADDR_BASE_LO |
+-		((apic->irq_dest_mode == 0) ?
+-			MSI_ADDR_DEST_MODE_PHYSICAL :
+-			MSI_ADDR_DEST_MODE_LOGICAL) |
+-		((apic->irq_delivery_mode != dest_LowestPrio) ?
+-			MSI_ADDR_REDIRECTION_CPU :
+-			MSI_ADDR_REDIRECTION_LOWPRI) |
+-		MSI_ADDR_DEST_ID(cfg->dest_apicid);
+-
+-	msg->data =
+-		MSI_DATA_TRIGGER_EDGE |
+-		MSI_DATA_LEVEL_ASSERT |
+-		((apic->irq_delivery_mode != dest_LowestPrio) ?
+-			MSI_DATA_DELIVERY_FIXED :
+-			MSI_DATA_DELIVERY_LOWPRI) |
+-		MSI_DATA_VECTOR(cfg->vector);
+-}
+-
+ static void irq_msi_compose_msg(struct irq_data *data, struct msi_msg *msg)
+ {
+ 	struct irq_cfg *cfg = irqd_cfg(data);
+@@ -87,6 +61,9 @@ static void msi_update_msg(struct msi_msg *msg, struct irq_data *irq_data)
+ 	msg->data |= MSI_DATA_VECTOR(cfg->vector);
+ 	msg->address_lo &= ~MSI_ADDR_DEST_ID_MASK;
+ 	msg->address_lo |= MSI_ADDR_DEST_ID(cfg->dest_apicid);
++	if (x2apic_enabled())
++		msg->address_hi = MSI_ADDR_BASE_HI |
++				  MSI_ADDR_EXT_DEST_ID(cfg->dest_apicid);
+ }
+ 
+ /*
+@@ -196,59 +173,121 @@ static int
+ dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 		      bool force)
+ {
+-	struct irq_cfg *cfg = irqd_cfg(data);
+-	unsigned int dest, irq = data->irq;
++	struct irq_data *parent = data->parent_data;
+ 	struct msi_msg msg;
+ 	int ret;
+ 
+-	ret = apic_set_affinity(data, mask, &dest);
+-	if (ret)
+-		return ret;
+-
+-	dmar_msi_read(irq, &msg);
+-
+-	msg.data &= ~MSI_DATA_VECTOR_MASK;
+-	msg.data |= MSI_DATA_VECTOR(cfg->vector);
+-	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
+-	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
+-	msg.address_hi = MSI_ADDR_BASE_HI | MSI_ADDR_EXT_DEST_ID(dest);
+-
+-	dmar_msi_write(irq, &msg);
++	ret = parent->chip->irq_set_affinity(parent, mask, force);
++	if (ret >= 0) {
++		dmar_msi_read(data->irq, &msg);
++		msi_update_msg(&msg, data);
++		dmar_msi_write(data->irq, &msg);
++	}
+ 
+-	return IRQ_SET_MASK_OK_NOCOPY;
++	return ret;
+ }
+ 
+-static struct irq_chip dmar_msi_type = {
++static struct irq_chip dmar_msi_controller = {
+ 	.name			= "DMAR_MSI",
+ 	.irq_unmask		= dmar_msi_unmask,
+ 	.irq_mask		= dmar_msi_mask,
+-	.irq_ack		= apic_ack_edge,
++	.irq_ack		= irq_chip_ack_parent,
+ 	.irq_set_affinity	= dmar_msi_set_affinity,
+-	.irq_retrigger		= apic_retrigger_irq,
++	.irq_retrigger		= irq_chip_retrigger_hierarchy,
++	.irq_compose_msi_msg	= irq_msi_compose_msg,
+ 	.flags			= IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
+-int dmar_alloc_hwirq(int id, int node, void *arg)
++static int dmar_domain_alloc(struct irq_domain *domain, unsigned int virq,
++			     unsigned int nr_irqs, void *arg)
++{
++	struct irq_alloc_info *info = arg;
++	int ret;
++
++	if (nr_irqs > 1 || !info || info->type != X86_IRQ_ALLOC_TYPE_DMAR)
++		return -EINVAL;
++	if (irq_find_mapping(domain, info->dmar_id)) {
++		pr_warn("IRQ for DMAR%d already exists.\n", info->dmar_id);
++		return -EEXIST;
++	}
++
++	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
++	if (ret >= 0) {
++		irq_domain_set_hwirq_and_chip(domain, virq, info->dmar_id,
++					      &dmar_msi_controller, NULL);
++		irq_set_handler_data(virq, info->dmar_data);
++		__irq_set_handler(virq, handle_edge_irq, 0, "edge");
++	}
++
++	return ret;
++}
++
++static void dmar_domain_free(struct irq_domain *domain, unsigned int virq,
++			     unsigned int nr_irqs)
++{
++	BUG_ON(nr_irqs > 1);
++	irq_domain_free_irqs_top(domain, virq, nr_irqs);
++}
++
++static void dmar_domain_activate(struct irq_domain *domain,
++				 struct irq_data *irq_data)
+ {
+-	int irq;
+ 	struct msi_msg msg;
+ 
+-	irq = irq_domain_alloc_irqs(NULL, 1, node, NULL);
+-	if (irq > 0) {
+-		irq_set_handler_data(irq, arg);
+-		irq_set_chip_and_handler_name(irq, &dmar_msi_type,
+-					      handle_edge_irq, "edge");
+-		native_compose_msi_msg(irq_cfg(irq), &msg);
+-		dmar_msi_write(irq, &msg);
++	BUG_ON(irq_chip_compose_msi_msg(irq_data, &msg));
++	dmar_msi_write(irq_data->irq, &msg);
++}
++
++static void dmar_domain_deactivate(struct irq_domain *domain,
++				   struct irq_data *irq_data)
++{
++	struct msi_msg msg;
++
++	memset(&msg, 0, sizeof(msg));
++	dmar_msi_write(irq_data->irq, &msg);
++}
++
++static struct irq_domain_ops dmar_domain_ops = {
++	.alloc = dmar_domain_alloc,
++	.free = dmar_domain_free,
++	.activate = dmar_domain_activate,
++	.deactivate = dmar_domain_deactivate,
++};
++
++static struct irq_domain *dmar_get_irq_domain(void)
++{
++	static struct irq_domain *dmar_domain;
++	static DEFINE_MUTEX(dmar_lock);
++
++	mutex_lock(&dmar_lock);
++	if (dmar_domain == NULL) {
++		dmar_domain = irq_domain_add_tree(NULL, &dmar_domain_ops, NULL);
++		if (dmar_domain)
++			dmar_domain->parent = x86_vector_domain;
+ 	}
++	mutex_unlock(&dmar_lock);
++
++	return dmar_domain;
++}
++
++int dmar_alloc_hwirq(int id, int node, void *arg)
++{
++	struct irq_domain *domain = dmar_get_irq_domain();
++	struct irq_alloc_info info;
++
++	if (!domain)
++		return -1;
++
++	init_irq_alloc_info(&info, NULL);
++	info.type = X86_IRQ_ALLOC_TYPE_DMAR;
++	info.dmar_id = id;
++	info.dmar_data = arg;
+ 
+-	return irq;
++	return irq_domain_alloc_irqs(domain, 1, node, &info);
+ }
+ 
+ void dmar_free_hwirq(int irq)
+ {
+-	irq_set_handler_data(irq, NULL);
+-	irq_set_handler(irq, NULL);
+ 	irq_domain_free_irqs(irq, 1);
+ }
+ #endif
+-- 
+1.7.10.4
 
-  - Some devices have buggy firmware that can't handle 32K worth of
-VPD reads.  But their VPD data is in the format laid out by the spec
-(PCI r3.0, sec I.1), and it does have an End Tag.
-
-The proposal is to make pci_read_vpd() interpret the data into tagged
-items (only when it starts reading at offset 0), and make it stop if
-it encounters an End Tag.
-
-On Mon, Nov 17, 2014 at 8:12 AM, Venkat Duvvuru
-<VenkatKumar.Duvvuru@emulex.com> wrote:
-> Sorry for a delayed response.
->
->> -----Original Message-----
->> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
->> Sent: Tuesday, November 04, 2014 11:05 PM
->> To: Venkat Duvvuru
->> Cc: linux-pci@vger.kernel.org
->> Subject: Re: [PATCH v1] pci: Limit VPD length of Emulex adapters to the
->> actual length supported.
->>
->> > In this case when the host reads 32k space, the adapter gets around 8K
->> interrupts and sometimes gets overwhelmed with the interrupt storm. This
->> could cause the adapter to stop functioning properly.
->> > Limiting the VPD read to 1K causes only 256 interrupts (on the adapter) and
->> the problem never seems to occur.
->> > This has been the main motivation behind my patch.
->> > I do agree that the timeout could still occur even when reading the 1K
->> implemented space, but I feel it's highly improbable.
->>
->> OK.  I would guess that something like
->>
->>   while /bin/true; do
->>     cat /sys/devices/pci0000:00/0000:00:00.0/vpd
->>   done
->>
->> could still overwhelm the adapter, even with the 1K limit in place.
-> Correct.
->
->>
->> > As an alternative solution, would you be open to a fix in PCI -core to stop
->> reading after the End-tag is detected?  (This logic is used by pci-utility (ls-
->> vpd.c) while reading VPD data.)
->> > I now feel that this is the *right* solution than my pci-quirks patch.
->>
->> That's a possibility, and if we were implementing VPD support from
->> scratch, I'd probably do it that way.
->>
->> My only concern with changing now is that it could break existing
->> users for devices where the VPD content doesn't have the structure
->> specified by the spec.  There aren't *too* many users of
->> pci_read_vpd() in the tree, so it might be feasible to just ask the
->> bnx2x, tg3, cxgb4, sky2, and efx folks whether they think it's safe.
->>
->> I took a quick look at those drivers, and it actually looks like most
->> of them look for the tag structure, e.g., by using pci_vpd_find_tag()
->> or doing something similar.  So maybe it actually would be safe to do
->> this.  Maybe you could have a more thorough look at them and see if
->> you agree?
-> If the devices doesn't follow the spec for the VPD contents, pci-core may endup requesting 32k data which probably will not break existing users.
-
-The case I'm worried about is a device that doesn't follow the VPD
-format spec, but its VPD contents include data that matches an End
-Tag.  If we make pci_read_vpd() stop when it sees an End Tag, we may
-stop reading data prematurely.
-
-> I looked into all the pci_read_vpd users (drivers) and they seem to be doing pci_find_vpd_tag or pci_vpd_find_info_keyword to find a specific tag/keyword and not all the tags/keywords.
-
-I agree, with one exception:  I am concerned about eeprom_rd_phys() in
-cxgb4.  In that case, we use the VPD data to implement the
-ethtool_ops.get_eeprom() method, and that path doesn't look at the
-actual data at all, so I have no idea what the format might be.
-
-Maybe Hariprasad or Anish can comment on this?
-
-> A safer approach probably is to look for the end tag in pci_read_vpd, if offset is "zero" because some drivers are doing "pci_read_vpd" with a non-zero offset.
-
-Yes, I think you can only look for the End Tag if you start reading at
-offset zero.  If we start reading somewhere in the middle, we'll be
-out of sync and may interpret data as an End Tag.
-
-Bjorn
