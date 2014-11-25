@@ -1,124 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:62640 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751352AbaKKSRe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Nov 2014 13:17:34 -0500
-Received: by mail-ig0-f173.google.com with SMTP id r10so1484743igi.0
-        for <linux-pci@vger.kernel.org>; Tue, 11 Nov 2014 10:17:34 -0800 (PST)
-Date: Tue, 11 Nov 2014 11:17:29 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: Remove fixed parameter in pci_iov_resource_bar()
-Message-ID: <20141111181729.GG28161@google.com>
-References: <20141111150450.15401.41753.stgit@amt.stowe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141111150450.15401.41753.stgit@amt.stowe>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part2 v6 23/27] x86, irq: Normalize x86 irq_chip name
+Date: Tue, 25 Nov 2014 13:53:32 +0800
+Message-Id: <1416894816-23245-24-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416894816-23245-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 11, 2014 at 08:04:50AM -0700, Myron Stowe wrote:
-> pci_iov_resource_bar() always sets its 'pci_bar_type' parameter to
-> 'pci_bar_unknown'.  Drop the parameter and just use 'pci_bar_unknown'
-> directly in the callers.
-> 
-> No functional change intended.
-> 
-> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
-> Cc: Chris Wright <chrisw@sous-sol.org>
-> Cc: Yu Zhao <yuzhao@google.com>
+Some irq_chip names use underscore, others use hyphen. So normalize them
+to use hythen as separator.
 
-I replaced the v1 patch with this one to fix the build error:
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/msi.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-drivers/pci/pci.c:4184:9: error: too few arguments to function 'pci_iov_resource_bar'
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index a24b803b199a..2bf13484fbfd 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -188,7 +188,7 @@ dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ }
+ 
+ static struct irq_chip dmar_msi_controller = {
+-	.name			= "DMAR_MSI",
++	.name			= "DMAR-MSI",
+ 	.irq_unmask		= dmar_msi_unmask,
+ 	.irq_mask		= dmar_msi_mask,
+ 	.irq_ack		= irq_chip_ack_parent,
+@@ -319,7 +319,7 @@ static int hpet_msi_set_affinity(struct irq_data *data,
+ }
+ 
+ static struct irq_chip hpet_msi_controller = {
+-	.name = "HPET_MSI",
++	.name = "HPET-MSI",
+ 	.irq_unmask = hpet_msi_unmask,
+ 	.irq_mask = hpet_msi_mask,
+ 	.irq_ack = irq_chip_ack_parent,
+-- 
+1.7.10.4
 
-Thanks!
-
-> ---
->  drivers/pci/iov.c |   11 +++--------
->  drivers/pci/pci.c |    3 ++-
->  drivers/pci/pci.h |    6 ++----
->  3 files changed, 7 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 4d109c0..4b3a4ea 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -479,20 +479,16 @@ void pci_iov_release(struct pci_dev *dev)
->   * pci_iov_resource_bar - get position of the SR-IOV BAR
->   * @dev: the PCI device
->   * @resno: the resource number
-> - * @type: the BAR type to be filled in
->   *
->   * Returns position of the BAR encapsulated in the SR-IOV capability.
->   */
-> -int pci_iov_resource_bar(struct pci_dev *dev, int resno,
-> -			 enum pci_bar_type *type)
-> +int pci_iov_resource_bar(struct pci_dev *dev, int resno)
->  {
->  	if (resno < PCI_IOV_RESOURCES || resno > PCI_IOV_RESOURCE_END)
->  		return 0;
->  
->  	BUG_ON(!dev->is_physfn);
->  
-> -	*type = pci_bar_unknown;
-> -
->  	return dev->sriov->pos + PCI_SRIOV_BAR +
->  		4 * (resno - PCI_IOV_RESOURCES);
->  }
-> @@ -510,13 +506,12 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno,
->  resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
->  {
->  	struct resource tmp;
-> -	enum pci_bar_type type;
-> -	int reg = pci_iov_resource_bar(dev, resno, &type);
-> +	int reg = pci_iov_resource_bar(dev, resno);
->  
->  	if (!reg)
->  		return 0;
->  
-> -	 __pci_read_base(dev, type, &tmp, reg);
-> +	 __pci_read_base(dev, pci_bar_unknown, &tmp, reg);
->  	return resource_alignment(&tmp);
->  }
->  
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 625a4ac..7bf2465 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4180,7 +4180,8 @@ int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type)
->  		return dev->rom_base_reg;
->  	} else if (resno < PCI_BRIDGE_RESOURCES) {
->  		/* device specific resource */
-> -		reg = pci_iov_resource_bar(dev, resno, type);
-> +		*type = pci_bar_unknown;
-> +		reg = pci_iov_resource_bar(dev, resno);
->  		if (reg)
->  			return reg;
->  	}
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 0601890..a0905a0 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -251,8 +251,7 @@ static inline void pci_restore_ats_state(struct pci_dev *dev)
->  #ifdef CONFIG_PCI_IOV
->  int pci_iov_init(struct pci_dev *dev);
->  void pci_iov_release(struct pci_dev *dev);
-> -int pci_iov_resource_bar(struct pci_dev *dev, int resno,
-> -			 enum pci_bar_type *type);
-> +int pci_iov_resource_bar(struct pci_dev *dev, int resno);
->  resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno);
->  void pci_restore_iov_state(struct pci_dev *dev);
->  int pci_iov_bus_range(struct pci_bus *bus);
-> @@ -266,8 +265,7 @@ static inline void pci_iov_release(struct pci_dev *dev)
->  
->  {
->  }
-> -static inline int pci_iov_resource_bar(struct pci_dev *dev, int resno,
-> -				       enum pci_bar_type *type)
-> +static inline int pci_iov_resource_bar(struct pci_dev *dev, int resno)
->  {
->  	return 0;
->  }
-> 
