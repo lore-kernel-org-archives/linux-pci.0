@@ -1,205 +1,139 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <545B5ED7.7090901@huawei.com>
-Date: Thu, 6 Nov 2014 19:43:19 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:43818 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752887AbaKYHwk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 25 Nov 2014 02:52:40 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>, <x86@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>
-CC: Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [Patch Part2 v4 13/31] x86: irq_remapping: Introduce new interfaces
- to support hierarchy irqdomain
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com> <1415102525-9898-14-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415102525-9898-14-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-acpi-owner@vger.kernel.org
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part3 v4 27/38] x86, irq: Kill x86_io_apic_ops.write and x86_io_apic_ops.modify
+Date: Tue, 25 Nov 2014 15:49:51 +0800
+Message-Id: <1416901802-24211-28-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> +
-> +enum irq_alloc_type {
-> +	X86_IRQ_ALLOC_TYPE_IOAPIC = 1,
-> +	X86_IRQ_ALLOC_TYPE_HPET,
-> +	X86_IRQ_ALLOC_TYPE_MSI,
-> +	X86_IRQ_ALLOC_TYPE_MSIX,
-> +};
+x86_io_apic_ops.write is always set to native_io_apic_write(),
+and nobody overrides it. So get rid of the indirection by changing
+native_io_apic_write() as io_apic_write() and killing
+x86_io_apic_ops.write.
 
-Hi Gerry, why not to use X86_IRQ_ALLOC_TYPE_MSI to represent both MSI and MSI-X type?
-There are some differences to process MSI and MSI-X in irq remapping domain ?
+Do the same for x86_io_apic_ops.modify and native_io_apic_modify().
 
->  
-> +extern struct irq_domain *irq_remapping_get_ir_irq_domain(
-> +				struct irq_alloc_info *info);
-> +extern struct irq_domain *irq_remapping_get_irq_domain(
-> +				struct irq_alloc_info *info);
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Tested-by: Joerg Roedel <jroedel@suse.de>
+---
+ arch/x86/include/asm/io_apic.h  |   13 -------------
+ arch/x86/include/asm/x86_init.h |    2 --
+ arch/x86/kernel/apic/io_apic.c  |    6 ++++--
+ arch/x86/kernel/x86_init.c      |    2 --
+ 4 files changed, 4 insertions(+), 19 deletions(-)
 
-The two functions are too similar, and both get irq_domain by irq_alloc_info, possible to merge them ?
-
-> +extern void irq_remapping_print_chip(struct irq_data *data, struct seq_file *p);
-> +
-> +/*
-> + * Create MSI/MSIx irqdomain for interrupt remapping device, use @parent as
-> + * parent irqdomain.
-> + */
-> +static inline struct irq_domain *
-> +arch_create_msi_irq_domain(struct irq_domain *parent)
-> +{
-> +	return NULL;
-> +}
-> +
-> +/* Get parent irqdomain for interrupt remapping irqdomain */
-> +static inline struct irq_domain *arch_get_ir_parent_domain(void)
-> +{
-> +	return x86_vector_domain;
-> +}
-> +
->  #else  /* CONFIG_IRQ_REMAP */
->  
->  static inline void setup_irq_remapping_ops(void) { }
-> @@ -101,6 +126,20 @@ static inline bool setup_remapped_irq(int irq,
->  {
->  	return false;
->  }
-> +
-> +static inline struct irq_domain *
-> +irq_remapping_get_ir_irq_domain(struct irq_alloc_info *info)
-> +{
-> +	return NULL;
-> +}
-> +
-> +static inline struct irq_domain *
-> +irq_remapping_get_irq_domain(struct irq_alloc_info *info)
-> +{
-> +	return NULL;
-> +}
-> +
-> +#define	irq_remapping_print_chip	NULL
->  #endif /* CONFIG_IRQ_REMAP */
->  
->  extern int dmar_alloc_hwirq(void);
-> diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-> index 63886bafed9f..176ff4372b7d 100644
-> --- a/drivers/iommu/irq_remapping.c
-> +++ b/drivers/iommu/irq_remapping.c
-> @@ -377,7 +377,7 @@ void panic_if_irq_remap(const char *msg)
->  		panic(msg);
->  }
->  
-> -static void ir_ack_apic_edge(struct irq_data *data)
-> +void ir_ack_apic_edge(struct irq_data *data)
->  {
->  	ack_APIC_irq();
->  }
-> @@ -388,6 +388,19 @@ static void ir_ack_apic_level(struct irq_data *data)
->  	eoi_ioapic_irq(data->irq, irqd_cfg(data));
->  }
->  
-> +void irq_remapping_print_chip(struct irq_data *data, struct seq_file *p)
-> +{
-> +	/*
-> +	 * Assume interrupt is remapped if the parent irqdomain isn't the
-> +	 * vector domain, which is true for MSI, HPET and IOAPIC on x86
-> +	 * platforms.
-> +	 */
-> +	if (data->domain && data->domain->parent != arch_get_ir_parent_domain())
-> +		seq_printf(p, " IR-%s", data->chip->name);
-> +	else
-> +		seq_printf(p, " %s", data->chip->name);
-> +}
-> +
->  static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
->  {
->  	seq_printf(p, " IR-%s", data->chip->name);
-> @@ -409,3 +422,36 @@ bool setup_remapped_irq(int irq, struct irq_cfg *cfg, struct irq_chip *chip)
->  	irq_remap_modify_chip_defaults(chip);
->  	return true;
->  }
-> +
-> +/**
-> + * irq_remapping_get_ir_irq_domain - Get the irqdomain associated the IOMMU
-> + *				     device serving @info
-> + * @info: interrupt allocation information, used to find the IOMMU device
-> + *
-> + * It's used to get parent irqdomain for HPET and IOAPIC domains.
-> + * Returns pointer to IRQ domain, or NULL on failure.
-> + */
-> +struct irq_domain *
-> +irq_remapping_get_ir_irq_domain(struct irq_alloc_info *info)
-> +{
-> +	if (!remap_ops || !remap_ops->get_ir_irq_domain)
-> +		return NULL;
-> +
-> +	return remap_ops->get_ir_irq_domain(info);
-> +}
-> +
-> +/**
-> + * irq_remapping_get_irq_domain - Get the irqdomain serving the MSI interrupt
-> + * @info: interrupt allocation information, used to find the IOMMU device
-> + *
-> + * It's used to get irqdomain for MSI/MSIx interrupt allocation.
-> + * Returns pointer to IRQ domain, or NULL on failure.
-> + */
-> +struct irq_domain *
-> +irq_remapping_get_irq_domain(struct irq_alloc_info *info)
-> +{
-> +	if (!remap_ops || !remap_ops->get_irq_domain)
-> +		return NULL;
-> +
-> +	return remap_ops->get_irq_domain(info);
-> +}
-> diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
-> index fde250f86e60..8c159d6fac46 100644
-> --- a/drivers/iommu/irq_remapping.h
-> +++ b/drivers/iommu/irq_remapping.h
-> @@ -30,6 +30,8 @@ struct irq_data;
->  struct cpumask;
->  struct pci_dev;
->  struct msi_msg;
-> +struct irq_domain;
-> +struct irq_alloc_info;
->  
->  extern int disable_irq_remap;
->  extern int irq_remap_broken;
-> @@ -81,11 +83,19 @@ struct irq_remap_ops {
->  
->  	/* Setup interrupt remapping for an HPET MSI */
->  	int (*alloc_hpet_msi)(unsigned int, unsigned int);
-> +
-> +	/* Get the irqdomain associated the IOMMU device */
-> +	struct irq_domain *(*get_ir_irq_domain)(struct irq_alloc_info *);
-> +
-> +	/* Get the MSI irqdomain associated with the IOMMU device */
-> +	struct irq_domain *(*get_irq_domain)(struct irq_alloc_info *);
->  };
->  
->  extern struct irq_remap_ops intel_irq_remap_ops;
->  extern struct irq_remap_ops amd_iommu_irq_ops;
->  
-> +extern void ir_ack_apic_edge(struct irq_data *data);
-> +
->  #else  /* CONFIG_IRQ_REMAP */
->  
->  #define irq_remapping_enabled 0
-> 
-
-
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 1597c77725f9..21578af00243 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -208,8 +208,6 @@ extern void disable_ioapic_support(void);
+ 
+ extern void __init native_io_apic_init_mappings(void);
+ extern unsigned int native_io_apic_read(unsigned int apic, unsigned int reg);
+-extern void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int val);
+-extern void native_io_apic_modify(unsigned int apic, unsigned int reg, unsigned int val);
+ extern void native_disable_io_apic(void);
+ 
+ static inline unsigned int io_apic_read(unsigned int apic, unsigned int reg)
+@@ -217,15 +215,6 @@ static inline unsigned int io_apic_read(unsigned int apic, unsigned int reg)
+ 	return x86_io_apic_ops.read(apic, reg);
+ }
+ 
+-static inline void io_apic_write(unsigned int apic, unsigned int reg, unsigned int value)
+-{
+-	x86_io_apic_ops.write(apic, reg, value);
+-}
+-static inline void io_apic_modify(unsigned int apic, unsigned int reg, unsigned int value)
+-{
+-	x86_io_apic_ops.modify(apic, reg, value);
+-}
+-
+ extern void setup_IO_APIC(void);
+ extern void enable_IO_APIC(void);
+ extern void disable_IO_APIC(void);
+@@ -266,8 +255,6 @@ static inline void mp_save_irq(struct mpc_intsrc *m) { };
+ static inline void disable_ioapic_support(void) { }
+ #define native_io_apic_init_mappings	NULL
+ #define native_io_apic_read		NULL
+-#define native_io_apic_write		NULL
+-#define native_io_apic_modify		NULL
+ #define native_disable_io_apic		NULL
+ #endif
+ 
+diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+index 09d4dab9302f..844b37d55a44 100644
+--- a/arch/x86/include/asm/x86_init.h
++++ b/arch/x86/include/asm/x86_init.h
+@@ -182,8 +182,6 @@ struct x86_msi_ops {
+ struct x86_io_apic_ops {
+ 	void		(*init)   (void);
+ 	unsigned int	(*read)   (unsigned int apic, unsigned int reg);
+-	void		(*write)  (unsigned int apic, unsigned int reg, unsigned int value);
+-	void		(*modify) (unsigned int apic, unsigned int reg, unsigned int value);
+ 	void		(*disable)(void);
+ };
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index f0ef5832f527..7a3679e43b67 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -277,7 +277,8 @@ unsigned int native_io_apic_read(unsigned int apic, unsigned int reg)
+ 	return readl(&io_apic->data);
+ }
+ 
+-void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int value)
++static void io_apic_write(unsigned int apic, unsigned int reg,
++			  unsigned int value)
+ {
+ 	struct io_apic __iomem *io_apic = io_apic_base(apic);
+ 
+@@ -291,7 +292,8 @@ void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int valu
+  *
+  * Older SiS APIC requires we rewrite the index register
+  */
+-void native_io_apic_modify(unsigned int apic, unsigned int reg, unsigned int value)
++static void io_apic_modify(unsigned int apic, unsigned int reg,
++			   unsigned int value)
+ {
+ 	struct io_apic __iomem *io_apic = io_apic_base(apic);
+ 
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index f612dc018fb6..633f07845099 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -141,7 +141,5 @@ void arch_restore_msi_irqs(struct pci_dev *dev)
+ struct x86_io_apic_ops x86_io_apic_ops = {
+ 	.init			= native_io_apic_init_mappings,
+ 	.read			= native_io_apic_read,
+-	.write			= native_io_apic_write,
+-	.modify			= native_io_apic_modify,
+ 	.disable		= native_disable_io_apic,
+ };
 -- 
-Thanks!
-Yijing
+1.7.10.4
 
