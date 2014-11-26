@@ -1,146 +1,342 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37336 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750931AbaKFDJY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Nov 2014 22:09:24 -0500
-Date: Wed, 5 Nov 2014 22:09:16 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Chen Gang <gang.chen.5i5j@gmail.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH next] xen: pcifront: Process failure for
- pcifront_(re)scan_root()
-Message-ID: <20141106030916.GA4186@laptop.dumpdata.com>
-References: <469h2cuyy0a5y5fn77uh3y1b.1413332405802@email.android.com>
- <20141015210355.GB6579@laptop.dumpdata.com>
- <544AD7CF.5020006@gmail.com>
- <CAErSpo78mX9Q8HDsOFMhzNTjtGqD1aiTTrWH-zwGUEo24EF9CA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo78mX9Q8HDsOFMhzNTjtGqD1aiTTrWH-zwGUEo24EF9CA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
+Subject: [Patch Part3 v4] x86, PCI, MSI: Use hierarchy irqdomain to manage MSI interrupts
+Date: Wed, 26 Nov 2014 10:22:23 +0800
+Message-Id: <1416968570-5826-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 05, 2014 at 04:31:17PM -0700, Bjorn Helgaas wrote:
-> [+cc linux-pci again]
-> 
-> On Fri, Oct 24, 2014 at 4:50 PM, Chen Gang <gang.chen.5i5j@gmail.com> wrote:
-> > On 10/16/14 5:03, Konrad Rzeszutek Wilk wrote:
-> >> On Wed, Oct 15, 2014 at 08:20:06AM +0800, Chen Gang wrote:
-> >>>
-> >>> At least for me, what you said sound OK.
-> >>
-> >> Let me review it - next week.
-> >
-> > Please help check this patch, when you have time.
-> 
-> linux-pci got dropped from the cc list, which makes it harder for me
-> to track this in patchwork.
-> 
-> But I'm waiting for Konrad to either ack this or just take it
-> directly.  Here's my ack if you want it:
-> 
-> Acked-by: Bjorn Helgas <bhelgaas@google.com>
+Enhance MSI code to support hierarchy irqdomain, it helps to make
+the architecture more clear.
 
-Reviewed-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+Hi Thomas,
+	Sorry, my branch hasn't been updated to the latest tip/x86/apic
+branch. With this patch rebased, all following patches should apply
+cleanly without conflicts.
+Regards!
+Gerry
+---
+ arch/x86/Kconfig                     |    1 +
+ arch/x86/include/asm/hw_irq.h        |    9 ++-
+ arch/x86/include/asm/irq_remapping.h |    6 +-
+ arch/x86/include/asm/msi.h           |    7 ++
+ arch/x86/kernel/apic/msi.c           |  141 ++++++++++++++++++----------------
+ arch/x86/kernel/apic/vector.c        |    2 +
+ drivers/iommu/irq_remapping.c        |    1 -
+ 7 files changed, 94 insertions(+), 73 deletions(-)
+ create mode 100644 arch/x86/include/asm/msi.h
 
-Bjorn, if you would like to pick it up that would be good!
-> 
-> >>> Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >>>
-> >>>> On Mon, Oct 06, 2014 at 11:04:45AM +0800, Chen Gang wrote:
-> >>>>> When pcifront_rescan_root() or pcifront_scan_root() fails, need return
-> >>>>> error code, neither set XenbusStateConnected state, just like the other
-> >>>>> areas have done.
-> >>>>>
-> >>>>> For pcifront_rescan_root(), it will return error code ("num_roots = 0;",
-> >>>>> skip xenbus_switch_state return value).
-> >>>>>
-> >>>>> For pcifront_scan_root(), it will return 0 ("num_roots = 0;", set 0 by
-> >>>>> the return value of xenbus_switch_state, which always return 0, at
-> >>>>> present).
-> >>>>
-> >>>> The changelog is somewhat confusing because it talks about the patch hunks
-> >>>> in reverse order (the pcifront_scan_root() change is first in the patch,
-> >>>> but the changelog mentions pcifront_rescan_root() first).  I *think* this
-> >>>> means:
-> >>>>
-> >>>>  When pcifront_try_connect() finds no PCI roots, it falls back to calling
-> >>>>  pcifront_scan_root() for 0000:00.  If that fails, it used to switch to
-> >>>>  XenbusStateConnected and return success (because xenbus_switch_state()
-> >>>>  currently always succeeds).
-> >>>>
-> >>>>  If pcifront_scan_root() fails, leave the XenbusState unchanged and
-> >>>>  return an error code.
-> >>>>
-> >>>>  Similarly, pcifront_attach_devices() falls back to calling
-> >>>>  pcifront_rescan_root() for 0000:00.  If that fails, it used to
-> >>>>  switch to XenbusStateConnected and return an error code.
-> >>>>
-> >>>>  If pcifront_rescan_root() fails, leave the XenbusState unchanged and
-> >>>>  return the error code.
-> >>>>
-> >>>> The "num_roots" part doesn't seem relevant to me.
-> >>>>
-> >>>>> Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
-> >>>>
-> >>>> Konrad, if you want to take this, feel free.  Otherwise, if you ack it and
-> >>>> you think my changelog understanding makes sense, I can pick it up.
-> >>>>
-> >>>> It does seem odd that pcifront_attach_devices() ignores the
-> >>>> xenbus_switch_state() return value while pcifront_try_connect() does not.
-> >>>> But many other callers also ignore the return value, so maybe that's OK.
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 14385ebfd560..e05be74d713d 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -883,6 +883,7 @@ config X86_LOCAL_APIC
+ 	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_APIC || PCI_MSI
+ 	select GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
+ 	select IRQ_DOMAIN_HIERARCHY
++	select PCI_MSI_IRQ_DOMAIN if PCI_MSI
+ 
+ config X86_IO_APIC
+ 	def_bool X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_IOAPIC
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index bd7881c5a57a..270c432971f8 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -110,9 +110,10 @@ struct irq_2_irte {
+ };
+ #endif	/* CONFIG_IRQ_REMAP */
+ 
++struct irq_domain;
++
+ #ifdef	CONFIG_X86_LOCAL_APIC
+ struct irq_data;
+-struct irq_domain;
+ struct pci_dev;
+ struct msi_desc;
+ 
+@@ -214,6 +215,12 @@ static inline void lock_vector_lock(void) {}
+ static inline void unlock_vector_lock(void) {}
+ #endif	/* CONFIG_X86_LOCAL_APIC */
+ 
++#ifdef	CONFIG_PCI_MSI
++extern void arch_init_msi_domain(struct irq_domain *domain);
++#else
++static inline void arch_init_msi_domain(struct irq_domain *domain) { }
++#endif
++
+ /* Statistics */
+ extern atomic_t irq_err_count;
+ extern atomic_t irq_mis_count;
+diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
+index 3421f10456d8..3b11f5a3e092 100644
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -68,11 +68,7 @@ irq_remapping_get_irq_domain(struct irq_alloc_info *info);
+ extern void irq_remapping_print_chip(struct irq_data *data, struct seq_file *p);
+ 
+ /* Create PCI MSI/MSIx irqdomain, use @parent as the parent irqdomain. */
+-static inline struct irq_domain *
+-arch_create_msi_irq_domain(struct irq_domain *parent)
+-{
+-	return NULL;
+-}
++extern struct irq_domain *arch_create_msi_irq_domain(struct irq_domain *parent);
+ 
+ /* Get parent irqdomain for interrupt remapping irqdomain */
+ static inline struct irq_domain *arch_get_ir_parent_domain(void)
+diff --git a/arch/x86/include/asm/msi.h b/arch/x86/include/asm/msi.h
+new file mode 100644
+index 000000000000..93724cc62177
+--- /dev/null
++++ b/arch/x86/include/asm/msi.h
+@@ -0,0 +1,7 @@
++#ifndef _ASM_X86_MSI_H
++#define _ASM_X86_MSI_H
++#include <asm/hw_irq.h>
++
++typedef struct irq_alloc_info msi_alloc_info_t;
++
++#endif /* _ASM_X86_MSI_H */
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 10d9ae8f2166..e82ab7973477 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -3,6 +3,8 @@
+  *
+  * Copyright (C) 1997, 1998, 1999, 2000, 2009 Ingo Molnar, Hajnalka Szabo
+  *	Moved from arch/x86/kernel/apic/io_apic.c.
++ * Jiang Liu <jiang.liu@linux.intel.com>
++ *	Convert to hierarchy irqdomain
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -21,6 +23,8 @@
+ #include <asm/apic.h>
+ #include <asm/irq_remapping.h>
+ 
++static struct irq_domain *msi_default_domain;
++
+ void native_compose_msi_msg(struct pci_dev *pdev,
+ 			    unsigned int irq, unsigned int dest,
+ 			    struct msi_msg *msg, u8 hpet_id)
+@@ -114,102 +118,107 @@ static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq,
+ 	return 0;
+ }
+ 
+-static int
+-msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+-{
+-	struct irq_cfg *cfg = irqd_cfg(data);
+-	struct msi_msg msg;
+-	unsigned int dest;
+-	int ret;
+-
+-	ret = apic_set_affinity(data, mask, &dest);
+-	if (ret)
+-		return ret;
+-
+-	__get_cached_msi_msg(data->msi_desc, &msg);
+-
+-	msg.data &= ~MSI_DATA_VECTOR_MASK;
+-	msg.data |= MSI_DATA_VECTOR(cfg->vector);
+-	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
+-	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
+-
+-	__pci_write_msi_msg(data->msi_desc, &msg);
+-
+-	return IRQ_SET_MASK_OK_NOCOPY;
+-}
+-
+ /*
+  * IRQ Chip for MSI PCI/PCI-X/PCI-Express Devices,
+  * which implement the MSI or MSI-X Capability Structure.
+  */
+-static struct irq_chip msi_chip = {
++static struct irq_chip pci_msi_controller = {
+ 	.name			= "PCI-MSI",
+ 	.irq_unmask		= pci_msi_unmask_irq,
+ 	.irq_mask		= pci_msi_mask_irq,
+-	.irq_ack		= apic_ack_edge,
+-	.irq_set_affinity	= msi_set_affinity,
+-	.irq_retrigger		= apic_retrigger_irq,
++	.irq_ack		= irq_chip_ack_parent,
++	.irq_set_affinity	= msi_domain_set_affinity,
++	.irq_retrigger		= irq_chip_retrigger_hierarchy,
++	.irq_print_chip		= irq_remapping_print_chip,
++	.irq_compose_msi_msg	= irq_msi_compose_msg,
++	.irq_write_msi_msg	= pci_msi_domain_write_msg,
+ 	.flags			= IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
+-int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+-		  unsigned int irq_base, unsigned int irq_offset)
++int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ {
+-	struct irq_chip *chip = &msi_chip;
+-	struct msi_msg msg;
+-	unsigned int irq = irq_base + irq_offset;
+-	int ret;
++	struct irq_domain *domain;
++	struct irq_alloc_info info;
+ 
+-	ret = msi_compose_msg(dev, irq, &msg, -1);
+-	if (ret < 0)
+-		return ret;
++	init_irq_alloc_info(&info, NULL);
++	info.type = X86_IRQ_ALLOC_TYPE_MSI;
++	info.msi_dev = dev;
+ 
+-	irq_set_msi_desc_off(irq_base, irq_offset, msidesc);
++	domain = irq_remapping_get_irq_domain(&info);
++	if (domain == NULL)
++		domain = msi_default_domain;
++	if (domain == NULL)
++		return -ENOSYS;
+ 
+-	/*
+-	 * MSI-X message is written per-IRQ, the offset is always 0.
+-	 * MSI message denotes a contiguous group of IRQs, written for 0th IRQ.
+-	 */
+-	if (!irq_offset)
+-		pci_write_msi_msg(irq, &msg);
++	return pci_msi_domain_alloc_irqs(domain, dev, nvec, type);
++}
+ 
+-	setup_remapped_irq(irq, irq_cfg(irq), chip);
++void native_teardown_msi_irq(unsigned int irq)
++{
++	irq_domain_free_irqs(irq, 1);
++}
+ 
+-	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
++static irq_hw_number_t pci_msi_get_hwirq(struct msi_domain_info *info,
++					 msi_alloc_info_t *arg)
++{
++	return arg->msi_hwirq;
++}
+ 
+-	dev_dbg(&dev->dev, "irq %d for MSI/MSI-X\n", irq);
++static int pci_msi_prepare(struct irq_domain *domain, struct device *dev,
++			   int nvec, msi_alloc_info_t *arg)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	struct msi_desc *desc = first_pci_msi_entry(pdev);
++
++	init_irq_alloc_info(arg, NULL);
++	arg->msi_dev = pdev;
++	if (desc->msi_attrib.is_msix) {
++		arg->type = X86_IRQ_ALLOC_TYPE_MSIX;
++	} else {
++		arg->type = X86_IRQ_ALLOC_TYPE_MSI;
++		arg->flags |= X86_IRQ_ALLOC_CONTIGOUS_VECTORS;
++	}
+ 
+ 	return 0;
+ }
+ 
+-int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++static void pci_msi_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc)
+ {
+-	struct msi_desc *msidesc;
+-	int irq, ret;
++	arg->msi_hwirq = pci_msi_domain_calc_hwirq(arg->msi_dev, desc);
++}
+ 
+-	/* Multiple MSI vectors only supported with interrupt remapping */
+-	if (type == PCI_CAP_ID_MSI && nvec > 1)
+-		return 1;
++static struct msi_domain_ops pci_msi_domain_ops = {
++	.get_hwirq	= pci_msi_get_hwirq,
++	.msi_prepare	= pci_msi_prepare,
++	.set_desc	= pci_msi_set_desc,
++};
+ 
+-	list_for_each_entry(msidesc, &dev->msi_list, list) {
+-		irq = irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
+-		if (irq <= 0)
+-			return -ENOSPC;
++static struct msi_domain_info pci_msi_domain_info = {
++	.flags		= MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
++			  MSI_FLAG_MULTI_PCI_MSI | MSI_FLAG_PCI_MSIX,
++	.ops		= &pci_msi_domain_ops,
++	.chip		= &pci_msi_controller,
++	.handler	= handle_edge_irq,
++	.handler_name	= "edge",
++};
+ 
+-		ret = setup_msi_irq(dev, msidesc, irq, 0);
+-		if (ret < 0) {
+-			irq_domain_free_irqs(irq, 1);
+-			return ret;
+-		}
++void arch_init_msi_domain(struct irq_domain *parent)
++{
++	if (disable_apic)
++		return;
+ 
+-	}
+-	return 0;
++	msi_default_domain = pci_msi_create_irq_domain(NULL,
++					&pci_msi_domain_info, parent);
++	if (!msi_default_domain)
++		pr_warn("failed to initialize irqdomain for MSI/MSI-x.\n");
+ }
+ 
+-void native_teardown_msi_irq(unsigned int irq)
++#ifdef CONFIG_IRQ_REMAP
++struct irq_domain *arch_create_msi_irq_domain(struct irq_domain *parent)
+ {
+-	irq_domain_free_irqs(irq, 1);
++	return msi_create_irq_domain(NULL, &pci_msi_domain_info, parent);
+ }
++#endif
+ 
+ #ifdef CONFIG_DMAR_TABLE
+ static int
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index f8340c72546f..e971c87f7858 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -364,6 +364,8 @@ int __init arch_early_irq_init(void)
+ 	BUG_ON(x86_vector_domain == NULL);
+ 	irq_set_default_host(x86_vector_domain);
+ 
++	arch_init_msi_domain(x86_vector_domain);
++
+ 	return arch_early_ioapic_init();
+ }
+ 
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 04ea5212cc28..6ec0099a16d1 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -171,7 +171,6 @@ static void __init irq_remapping_modify_x86_ops(void)
+ 	x86_io_apic_ops.set_affinity	= set_remapped_irq_affinity;
+ 	x86_io_apic_ops.setup_entry	= setup_ioapic_remapped_entry;
+ 	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
+-	x86_msi.setup_msi_irqs		= irq_remapping_setup_msi_irqs;
+ 	x86_msi.setup_hpet_msi		= setup_hpet_msi_remapped;
+ 	x86_msi.compose_msi_msg		= compose_remapped_msi_msg;
+ }
+-- 
+1.7.10.4
 
-It is OK. We had an discussion about making the xenbus_switch_state an
-void. The reason being that if the state change fails we call xenbus_switch_fatal
-(which does not return anything) - which then sets the state to XenbusStateClosing.
-
-But for some drivers it makes sense to know about this failure so that
-they can deallocate their resources. So ignoring ret is OK if the driver
-is OK handling its deallocation in a different way.
-
-> >>>>
-> >>>> Bjorn
-> >>>>
-> >>>>> ---
-> >>>>>  drivers/pci/xen-pcifront.c | 10 ++++++++++
-> >>>>>  1 file changed, 10 insertions(+)
-> >>>>>
-> >>>>> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-> >>>>> index 53df39a..d78d884 100644
-> >>>>> --- a/drivers/pci/xen-pcifront.c
-> >>>>> +++ b/drivers/pci/xen-pcifront.c
-> >>>>> @@ -866,6 +866,11 @@ static int pcifront_try_connect(struct pcifront_device *pdev)
-> >>>>>            xenbus_dev_error(pdev->xdev, err,
-> >>>>>                             "No PCI Roots found, trying 0000:00");
-> >>>>>            err = pcifront_scan_root(pdev, 0, 0);
-> >>>>> +          if (err) {
-> >>>>> +                  xenbus_dev_fatal(pdev->xdev, err,
-> >>>>> +                                   "Error scanning PCI root 0000:00");
-> >>>>> +                  goto out;
-> >>>>> +          }
-> >>>>>            num_roots = 0;
-> >>>>>    } else if (err != 1) {
-> >>>>>            if (err == 0)
-> >>>>> @@ -947,6 +952,11 @@ static int pcifront_attach_devices(struct pcifront_device *pdev)
-> >>>>>            xenbus_dev_error(pdev->xdev, err,
-> >>>>>                             "No PCI Roots found, trying 0000:00");
-> >>>>>            err = pcifront_rescan_root(pdev, 0, 0);
-> >>>>> +          if (err) {
-> >>>>> +                  xenbus_dev_fatal(pdev->xdev, err,
-> >>>>> +                                   "Error scanning PCI root 0000:00");
-> >>>>> +                  goto out;
-> >>>>> +          }
-> >>>>>            num_roots = 0;
-> >>>>>    } else if (err != 1) {
-> >>>>>            if (err == 0)
-> >>>>> --
-> >>>>> 1.9.3
-> >
-> > --
-> > Chen Gang
-> >
-> > Open, share, and attitude like air, water, and life which God blessed
