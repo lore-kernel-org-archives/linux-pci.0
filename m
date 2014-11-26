@@ -1,53 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 1 Nov 2014 18:51:59 +0100
-From: Martin Mares <mj@ucw.cz>
-To: Tom Gundersen <teg@jklm.no>
-Cc: linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	Kay Sievers <kay@vrfy.org>
-Subject: udev/hwdb support in pciutils (Re: [PATCH RESEND][pciutils] libpci:
- pci_id_lookup - add udev/hwdb support)
-Message-ID: <mj+md-20141101.174026.23374.albireo@ucw.cz>
-References: <CAG-2HqXsEBB_nxUF4gza-eTsUjmysYR7iPEjJPUFyR1rC2KGMg@mail.gmail.com>
- <CAPXgP12MLL_Z5gyrCndQLRT6SR_TJi9xHp1HkHMX1ahwnxx3yw@mail.gmail.com>
- <mj+md-20131215.091609.28546.nikam@ucw.cz>
- <CAPXgP10+1WtX8_xN+QSHvKws01hbKhP3FN95sXk9EtezdSPtqg@mail.gmail.com>
- <mj+md-20131215.110132.29802.nikam@ucw.cz>
- <CAG-2HqUGcBB1-YUvLZpqm1EZ69OSksa+iGcCEqVWxYsehDqx8Q@mail.gmail.com>
- <CAG-2HqWYZtTMNRvLwWRy-5_5yb=EasiWzpL2xc0_42SyP=bg1w@mail.gmail.com>
- <CAG-2HqVS1avGdvi6SFc1dq0sCzcA4z5sZUBH4WhpNN87tZrnxA@mail.gmail.com>
- <mj+md-20140212.194230.3341.nikam@ucw.cz>
- <CAG-2HqUN3Ftdd=3XSe-et3pgXy71Fu9DbMqREQDycwL4kD9Paw@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:34542 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750994AbaKZUSH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Nov 2014 15:18:07 -0500
+Date: Wed, 26 Nov 2014 21:18:03 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org
+Subject: Re: [PATCH] PCI: tegra: Use physical range for I/O mapping
+Message-ID: <20141126201758.GA19624@mithrandir>
+References: <1417018897-3965-1-git-send-email-thierry.reding@gmail.com>
+ <3072281.UjpXkitFjL@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAG-2HqUN3Ftdd=3XSe-et3pgXy71Fu9DbMqREQDycwL4kD9Paw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="tThc/1wpZn/ma/RB"
+In-Reply-To: <3072281.UjpXkitFjL@wuerfel>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tom!
 
-The support for hwdb has finally landed in mainline pciutils.
+--tThc/1wpZn/ma/RB
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I have modified your patch to bring it closer to the rest of device
-naming logic. Namely:
+On Wed, Nov 26, 2014 at 05:55:05PM +0100, Arnd Bergmann wrote:
+> On Wednesday 26 November 2014 17:21:37 Thierry Reding wrote:
+> > -
+> > +       pci_add_resource_offset(&sys->resources, &pcie->pio, sys->io_of=
+fset);
+> >         pci_add_resource_offset(&sys->resources, &pcie->mem, sys->mem_o=
+ffset);
+> >         pci_add_resource_offset(&sys->resources, &pcie->prefetch,
+> >                                 sys->mem_offset);
+> >=20
+>=20
+> You don't set sys->io_offset anywhere, which is a bug if you have multiple
+> instances of the PCI host in one system. In my draft patch, I was setting
+> both io_offset and mem_offset for consistency, and while mem_offset would
+> in practice be always zero (as discussed on IRC), the io_offset in fact h=
+as
+> a realistic chance of being nonzero and you should definitely set it.
 
-  •  The interface to HWDB now lives in a separate source file
-     lib/names-hwdb.c. It is called from the main entry point
-     to the name resolver (lib/names.c).
+I was going to do that in a follow-up patch since it isn't needed to fix
+this particular regression.
 
-  •  Resolved names are cached in the hash table and they participate
-     in the system of priorities. They have lower priority than pci.ids,
-     but higher than remote lookups via DNS. (Therefore if a distro
-     decides not to ship pci.ids, hwdb is used exclusively for all
-     local lookups.)
+Thierry
 
-  •  There is a flag to suppress the use of HWDB (PCI_LOOKUP_NO_HWDB)
-     and also a configuration parameter for the same (hwdb.disable).
+--tThc/1wpZn/ma/RB
+Content-Type: application/pgp-signature
 
-Aside of the README, everything should be ready for a public release.
-Could you please verify that it still works for you?
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-				Have a nice fortnight
--- 
-Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
-Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
-Uncle Ed's Rule of Thumb:  Never use your thumb for a rule.
+iQIcBAEBAgAGBQJUdjV2AAoJEN0jrNd/PrOh4HcQAIHxZaSEQrjRSmM6BPUQjOVQ
+zqCx1nrm+CLRMoIOewZjPbBPJa59JvXCJm63FSpQJRpNXae4/sxB5ZtbIuXlCYr3
+ovpTFxESkZujWkBxuLGDjslJyYBKkCI3P2qBiUcMzgM5zFWa2PTPZrpn4JcsGVsy
+ubIoIg3qFUWNHJVX3HJgqryw5D9nFKK4wgcTX23gdZZ8yp4Xh7l7Mp4LoIbC03GT
+ooIXqtGFOES7xzdG8LSkpYbAqe+Kw9WrarLkyFug2evVQJX6o8N56vKRrX30uE4w
+sZMJYK15mOEiNkjOorO5XJJgLAxw3xxxzf43T48a3LvnThJgj+qxH7vKGO7itZoM
+RUEYP6pO5up3HV0AxbO2eiqwiJiWPBnuDgp6LXOQ5DgrJFfnIN5thQQER1DD9hZx
+Ib5yixwavvVC4Il1j2Ngql86X2aVhRkV4eqeoO5C+YfPWTj5R6lgysJnqlKsQhGP
++L0SnSLGT4h8G9nIy0y/5uGAmkegk+/zuFnOKOERtVq44Ifggs5VIjVGIGnQ7Bor
+U++3HS0bTQ9N90PFQmZ+UEDWLl/i5PxjFyrUheISRs+rhlrXf4wIF2/91mgVNIii
+08WovZwPc1G5dZb9R1JkNVj/dI2vyawsbMoJlO30eDIXL0rGyIxAaMYtPysqj4+l
+FJTbUphYQmp8yoQj2BE4
+=WHKu
+-----END PGP SIGNATURE-----
+
+--tThc/1wpZn/ma/RB--
