@@ -1,86 +1,45 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [Patch Part2 v4 05/31] genirq: Add IRQ_SET_MASK_OK_DONE to support stacked irqchip
-Date: Tue,  4 Nov 2014 20:01:39 +0800
-Message-Id: <1415102525-9898-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1415102525-9898-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.131]:62540 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752593AbaKZUaL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Nov 2014 15:30:11 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org
+Subject: Re: [PATCH] PCI: tegra: Use physical range for I/O mapping
+Date: Wed, 26 Nov 2014 21:30:04 +0100
+Message-ID: <2943259.8mh79BAhne@wuerfel>
+In-Reply-To: <20141126201758.GA19624@mithrandir>
+References: <1417018897-3965-1-git-send-email-thierry.reding@gmail.com> <3072281.UjpXkitFjL@wuerfel> <20141126201758.GA19624@mithrandir>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add IRQ_SET_MASK_OK_DONE in addition to IRQ_SET_MASK_OK and
-IRQ_SET_MASK_OK_NOCOPY to support stacked irqchip. IRQ_SET_MASK_OK_DONE
-is the same as IRQ_SET_MASK_OK to irq core. To stacked irqchip, it means
-that ascendant irqchips have done all the work and no more handling
-needed in descendant irqchips.
+On Wednesday 26 November 2014 21:18:03 Thierry Reding wrote:
+> On Wed, Nov 26, 2014 at 05:55:05PM +0100, Arnd Bergmann wrote:
+> > On Wednesday 26 November 2014 17:21:37 Thierry Reding wrote:
+> > > -
+> > > +       pci_add_resource_offset(&sys->resources, &pcie->pio, sys->io_offset);
+> > >         pci_add_resource_offset(&sys->resources, &pcie->mem, sys->mem_offset);
+> > >         pci_add_resource_offset(&sys->resources, &pcie->prefetch,
+> > >                                 sys->mem_offset);
+> > > 
+> > 
+> > You don't set sys->io_offset anywhere, which is a bug if you have multiple
+> > instances of the PCI host in one system. In my draft patch, I was setting
+> > both io_offset and mem_offset for consistency, and while mem_offset would
+> > in practice be always zero (as discussed on IRC), the io_offset in fact has
+> > a realistic chance of being nonzero and you should definitely set it.
+> 
+> I was going to do that in a follow-up patch since it isn't needed to fix
+> this particular regression.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- include/linux/irq.h |    4 ++++
- kernel/irq/manage.c |    2 ++
- 2 files changed, 6 insertions(+)
+Makes sense, but then I think you can do the request_resource() and
+pci_add_resource_offset() additions in the same follow-up patch as well,
+and only change the computation in the regression fix.
 
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index 536b7fc6c8f4..041edd6dc409 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -114,10 +114,14 @@ enum {
-  *
-  * IRQ_SET_MASK_OK	- OK, core updates irq_data.affinity
-  * IRQ_SET_MASK_NOCPY	- OK, chip did update irq_data.affinity
-+ * IRQ_SET_MASK_OK_DONE	- Same as IRQ_SET_MASK_OK for core. Special code to
-+ *			  support stacked irqchips, which indicates skipping
-+ *			  all descendent irqchips.
-  */
- enum {
- 	IRQ_SET_MASK_OK = 0,
- 	IRQ_SET_MASK_OK_NOCOPY,
-+	IRQ_SET_MASK_OK_DONE,
- };
- 
- struct msi_desc;
-diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
-index 0a9104b4608b..80692373abd6 100644
---- a/kernel/irq/manage.c
-+++ b/kernel/irq/manage.c
-@@ -183,6 +183,7 @@ int irq_do_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 	ret = chip->irq_set_affinity(data, mask, force);
- 	switch (ret) {
- 	case IRQ_SET_MASK_OK:
-+	case IRQ_SET_MASK_OK_DONE:
- 		cpumask_copy(data->affinity, mask);
- 	case IRQ_SET_MASK_OK_NOCOPY:
- 		irq_set_thread_affinity(desc);
-@@ -600,6 +601,7 @@ int __irq_set_trigger(struct irq_desc *desc, unsigned int irq,
- 
- 	switch (ret) {
- 	case IRQ_SET_MASK_OK:
-+	case IRQ_SET_MASK_OK_DONE:
- 		irqd_clear(&desc->irq_data, IRQD_TRIGGER_MASK);
- 		irqd_set(&desc->irq_data, flags);
- 
--- 
-1.7.10.4
-
+	Arnd
