@@ -1,91 +1,70 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Jonathan Corbet <corbet@lwn.net>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	Daniel J Blueman <daniel@numascale.com>,
-	linux-doc@vger.kernel.org
-Subject: [Patch Part3 v4 38/38] x86, irq: Add kernel parameter vector_alloc to set CPU vector allocation policy
-Date: Tue, 25 Nov 2014 15:50:02 +0800
-Message-Id: <1416901802-24211-39-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:61038 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750821AbaK0Qba (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Nov 2014 11:31:30 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: Linux PM list <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kevin Hilman <khilman@kernel.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH 0/4] PM: Use CONFIG_PM instead of CONFIG_PM_RUNTIME in core code
+Date: Thu, 27 Nov 2014 17:52:46 +0100
+Message-ID: <2907778.ZNoNjGGGYl@vostro.rjw.lan>
+In-Reply-To: <CAPDyKFox8bXyFT0861Tc8YY5HLyq5uPVGkfN0G4fXDKqQynkYQ@mail.gmail.com>
+References: <37310416.jZXoh5nfSC@vostro.rjw.lan> <CAPDyKFox8bXyFT0861Tc8YY5HLyq5uPVGkfN0G4fXDKqQynkYQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Parameter vector_alloc should be set to an integer with:
-bit 0:	enable allocating CPU vector from CPUs on device local node.
-	That's to allocate from cpumask_of_node(irq_data->node).
-bit 1: enable the default policy, which is to allocate from
-       apic->target_cpus().
+On Thursday, November 27, 2014 09:57:33 AM Ulf Hansson wrote:
+> On 27 November 2014 at 01:37, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > Hi,
+> >
+> > After commit b2b49ccbdd54 "PM: Kconfig: Set PM_RUNTIME if PM_SLEEP is
+> > selected" (currently in Linux next) CONFIG_PM_RUNTIME is set whenever
+> > CONFIG_PM is set, so CONFIG_PM can be used in #ifdefs instead of
+> > CONFIG_PM_RUNTIME which simplifies things in quite a few cases.
+> >
+> > For this reason, the following patches modify some core code to use
+> > CONFIG_PM instead of CONFIG_PM_RUNTIME.
+> >
+> > [1/4] Drop a macro which is redundant after the above commit.
+> > [2/4] Use PM instead of PM_RUNTIME in the core device PM code.
+> > [3/4] Use PM instead of PM_RUNTIME in the ACPI core.
+> > [4/4] Use PM instead of PM_RUNTIME in the PCI core.
+> >
+> > They build for me for all of the relevant combinations of options (on x86),
+> > but more testing (on the other architectures) would be welcome.
+> 
+> I really like the looks of this patchset!
+> 
+> Noticed that you have applied it for your bleeding edge branch, I
+> suppose that means you will get some "free" testing in linux-next?
+> 
+> Anyway, I have tested it for ux500 (including the genpd support for
+> it, available in linux-next). It works nicely!
+> 
+> I have also tested the two Kconfig options; CONFIG_PM_SLEEP (which
+> selects CONFIG_PM_RUNTIME) and for CONFIG_PM_RUNTIME (with
+> CONFIG_PM_SLEEP unset).
+> 
+> That brings me to a raise a question; why do we need to keep these two
+> configurations options? Couldn't we also have CONFIG_PM_RUNTIME to
+> select CONFIG_PM_SLEEP, that will further simplify things?
 
-When allocating vectors, it tries all enabled policies from lower bit
-position to higher bit position.
+My plan is different.  I'm going to eliminate PM_RUNTIME from the code
+and then replace it with PM as a selectable option.  Then, PM_SLEEP will
+select PM (directly) and PM_RUNTIME can be entirely dropped.
 
-This option could be use to optimize interrupt distribution on large
-system such as NumaChip etc.
+So in the end we'll have one Kconfig option less, which is a win IMO.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Daniel J Blueman <daniel@numascale.com>
----
- Documentation/kernel-parameters.txt |    6 ++++++
- arch/x86/kernel/apic/vector.c       |   11 +++++++++++
- 2 files changed, 17 insertions(+)
-
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 4c81a860cc2b..a175c5016954 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -3709,6 +3709,12 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 	vector=		[IA-64,SMP]
- 			vector=percpu: enable percpu vector domain
- 
-+	vector_alloc=	[x86,SMP]
-+			vector_alloc=policy: policy is a bitmap, bit 0
-+			for allocating CPU vector from CPUs on device local
-+			node; bit 1 for the default policy to allocating from
-+			apic->target_cpus(). All higher bits are reserved.
-+
- 	video=		[FB] Frame buffer configuration
- 			See Documentation/fb/modedb.txt.
- 
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 16de8906ee1e..1158843551c7 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -79,6 +79,17 @@ void set_vector_alloc_policy(unsigned int policy)
- 		x86_vector_alloc_policy = policy | X86_VECTOR_POL_CALLER;
- }
- 
-+static int __init apic_parse_vector_policy(char *str)
-+{
-+	int policy;
-+
-+	if (get_option(&str, &policy) == 1)
-+		set_vector_alloc_policy(policy);
-+
-+	return 1;
-+}
-+__setup("vector_alloc=", apic_parse_vector_policy);
-+
- static struct apic_chip_data *alloc_apic_chip_data(int node)
- {
- 	struct apic_chip_data *data;
 -- 
-1.7.10.4
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
