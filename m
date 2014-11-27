@@ -1,159 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:57043 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751132AbaKBPlr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Nov 2014 10:41:47 -0500
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 3 Nov 2014 01:41:45 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id E5DAB2BB0023
-	for <linux-pci@vger.kernel.org>; Mon,  3 Nov 2014 02:41:41 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sA2FheqB8192134
-	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:43:40 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sA2FfeCw028013
-	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:41:41 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V9 01/18] PCI/IOV: Export interface for retrieve VF's BDF
-Date: Sun,  2 Nov 2014 23:41:17 +0800
-Message-Id: <1414942894-17034-2-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAPDyKFox8bXyFT0861Tc8YY5HLyq5uPVGkfN0G4fXDKqQynkYQ@mail.gmail.com>
+References: <37310416.jZXoh5nfSC@vostro.rjw.lan>
+	<CAPDyKFox8bXyFT0861Tc8YY5HLyq5uPVGkfN0G4fXDKqQynkYQ@mail.gmail.com>
+Date: Thu, 27 Nov 2014 10:20:03 +0100
+Message-ID: <CAPDyKFqrpysnZcV-JwoSrEddmQUMfj9uYvmbVLNL7-fRQyTYFQ@mail.gmail.com>
+Subject: Re: [PATCH 0/4] PM: Use CONFIG_PM instead of CONFIG_PM_RUNTIME in
+ core code
+From: Ulf Hansson <ulf.hansson@linaro.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PM list <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kevin Hilman <khilman@kernel.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When implementing the SR-IOV on PowerNV platform, some resource reservation is
-needed for VFs which don't exist at the bootup stage. To do the match between
-resources and VFs, the code need to get the VF's BDF in advance.
+On 27 November 2014 at 09:57, Ulf Hansson <ulf.hansson@linaro.org> wrote:
+> On 27 November 2014 at 01:37, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>> Hi,
+>>
+>> After commit b2b49ccbdd54 "PM: Kconfig: Set PM_RUNTIME if PM_SLEEP is
+>> selected" (currently in Linux next) CONFIG_PM_RUNTIME is set whenever
+>> CONFIG_PM is set, so CONFIG_PM can be used in #ifdefs instead of
+>> CONFIG_PM_RUNTIME which simplifies things in quite a few cases.
+>>
+>> For this reason, the following patches modify some core code to use
+>> CONFIG_PM instead of CONFIG_PM_RUNTIME.
+>>
+>> [1/4] Drop a macro which is redundant after the above commit.
+>> [2/4] Use PM instead of PM_RUNTIME in the core device PM code.
+>> [3/4] Use PM instead of PM_RUNTIME in the ACPI core.
+>> [4/4] Use PM instead of PM_RUNTIME in the PCI core.
+>>
+>> They build for me for all of the relevant combinations of options (on x86),
+>> but more testing (on the other architectures) would be welcome.
+>
+> I really like the looks of this patchset!
+>
+> Noticed that you have applied it for your bleeding edge branch, I
+> suppose that means you will get some "free" testing in linux-next?
+>
+> Anyway, I have tested it for ux500 (including the genpd support for
+> it, available in linux-next). It works nicely!
+>
+> I have also tested the two Kconfig options; CONFIG_PM_SLEEP (which
+> selects CONFIG_PM_RUNTIME) and for CONFIG_PM_RUNTIME (with
+> CONFIG_PM_SLEEP unset).
+>
+> That brings me to a raise a question; why do we need to keep these two
+> configurations options? Couldn't we also have CONFIG_PM_RUNTIME to
+> select CONFIG_PM_SLEEP, that will further simplify things?
+>
 
-In this patch, it exports the interface to retrieve VF's BDF:
-   * Make the virtfn_bus as an interface
-   * Make the virtfn_devfn as an interface
-   * Rename them with more specific name
-   * Code cleanup in pci_sriov_resource_alignment()
+I had look at it. Do you think the below approach could work?
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- drivers/pci/iov.c   |   22 +++++++++++++---------
- include/linux/pci.h |   11 +++++++++++
- 2 files changed, 24 insertions(+), 9 deletions(-)
+I guess the questions is if there are some configurations that use
+CONFIG_PM_RUNTIME but not CONFIG_PM_SLEEP. And if so, should we care?
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 4d109c0..5e8091b 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -19,14 +19,18 @@
- 
- #define VIRTFN_ID_LEN	16
- 
--static inline u8 virtfn_bus(struct pci_dev *dev, int id)
-+int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
- {
-+	if (!dev->is_physfn)
-+		return -EINVAL;
- 	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
- 				    dev->sriov->stride * id) >> 8);
- }
- 
--static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
-+int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
- {
-+	if (!dev->is_physfn)
-+		return -EINVAL;
- 	return (dev->devfn + dev->sriov->offset +
- 		dev->sriov->stride * id) & 0xff;
- }
-@@ -69,7 +73,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	struct pci_bus *bus;
- 
- 	mutex_lock(&iov->dev->sriov->lock);
--	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
-+	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
- 	if (!bus)
- 		goto failed;
- 
-@@ -77,7 +81,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	if (!virtfn)
- 		goto failed0;
- 
--	virtfn->devfn = virtfn_devfn(dev, id);
-+	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
- 	virtfn->vendor = dev->vendor;
- 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
- 	pci_setup_device(virtfn);
-@@ -140,8 +144,8 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
- 	struct pci_sriov *iov = dev->sriov;
- 
- 	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
--					     virtfn_bus(dev, id),
--					     virtfn_devfn(dev, id));
-+					     pci_iov_virtfn_bus(dev, id),
-+					     pci_iov_virtfn_devfn(dev, id));
- 	if (!virtfn)
- 		return;
- 
-@@ -216,7 +220,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	iov->offset = offset;
- 	iov->stride = stride;
- 
--	if (virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
-+	if (pci_iov_virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
- 		dev_err(&dev->dev, "SR-IOV: bus number out of range\n");
- 		return -ENOMEM;
- 	}
-@@ -516,7 +520,7 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
- 	if (!reg)
- 		return 0;
- 
--	 __pci_read_base(dev, type, &tmp, reg);
-+	__pci_read_base(dev, type, &tmp, reg);
- 	return resource_alignment(&tmp);
- }
- 
-@@ -546,7 +550,7 @@ int pci_iov_bus_range(struct pci_bus *bus)
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		if (!dev->is_physfn)
- 			continue;
--		busnr = virtfn_bus(dev, dev->sriov->total_VFs - 1);
-+		busnr = pci_iov_virtfn_bus(dev, dev->sriov->total_VFs - 1);
- 		if (busnr > max)
- 			max = busnr;
- 	}
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5be8db4..3ed7c66 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1654,6 +1654,9 @@ int pci_ext_cfg_avail(void);
- void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
- 
- #ifdef CONFIG_PCI_IOV
-+int pci_iov_virtfn_bus(struct pci_dev *dev, int id);
-+int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
-+
- int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
- void pci_disable_sriov(struct pci_dev *dev);
- int pci_num_vf(struct pci_dev *dev);
-@@ -1661,6 +1664,14 @@ int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
- int pci_sriov_get_totalvfs(struct pci_dev *dev);
- #else
-+static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
-+{
-+	return -ENOSYS;
-+}
-+static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
-+{
-+	return -ENOSYS;
-+}
- static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
- { return -ENODEV; }
- static inline void pci_disable_sriov(struct pci_dev *dev) { }
--- 
-1.7.9.5
+diff --git a/kernel/power/Kconfig b/kernel/power/Kconfig
+index 6e7708c..425f83a 100644
+--- a/kernel/power/Kconfig
++++ b/kernel/power/Kconfig
+@@ -94,7 +94,6 @@ config PM_STD_PARTITION
+ config PM_SLEEP
+        def_bool y
+        depends on SUSPEND || HIBERNATE_CALLBACKS
+-       select PM_RUNTIME
 
+ config PM_SLEEP_SMP
+        def_bool y
+@@ -131,21 +130,12 @@ config PM_WAKELOCKS_GC
+        default y
+
+ config PM_RUNTIME
+-       bool "Run-time PM core functionality"
+-       ---help---
+-         Enable functionality allowing I/O devices to be put into energy-saving
+-         (low power) states at run time (or autosuspended) after a specified
+-         period of inactivity and woken up in response to a hardware-generated
+-         wake-up event or a driver's request.
+-
+-         Hardware support is generally required for this functionality to work
+-         and the bus type drivers of the buses the devices are on are
+-         responsible for the actual handling of the autosuspend requests and
+-         wake-up events.
++       def_bool y
++       depends on PM_SLEEP
+
+ config PM
+        def_bool y
+-       depends on PM_SLEEP || PM_RUNTIME
++       depends on PM_SLEEP
+
+
+Kind regards
+Uffe
