@@ -1,49 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:53682 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751826AbaKQKJI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 05:09:08 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	Suravee.Suthikulpanit@amd.com,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linux-ia64@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Wuyun <wuyun.wu@huawei.com>, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [RFC PATCH 01/16] PCI: Enhance pci_scan_root_bus() to support default IO/MEM resources
-Date: Mon, 17 Nov 2014 11:08:34 +0100
-Message-ID: <2732970.7HG94QvVBv@wuerfel>
-In-Reply-To: <1416219710-26088-2-git-send-email-wangyijing@huawei.com>
-References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com> <1416219710-26088-2-git-send-email-wangyijing@huawei.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:43346 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752211AbaK0KOR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Nov 2014 05:14:17 -0500
+Received: from mail-oi0-f52.google.com ([209.85.218.52])
+	by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_ARCFOUR_SHA1:16)
+	(Exim 4.71)
+	(envelope-from <ming.lei@canonical.com>)
+	id 1Xtw5X-0007Nw-6u
+	for linux-pci@vger.kernel.org; Thu, 27 Nov 2014 10:14:15 +0000
+Received: by mail-oi0-f52.google.com with SMTP id h136so3246019oig.39
+        for <linux-pci@vger.kernel.org>; Thu, 27 Nov 2014 02:14:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <2081877.zLc8dS8vkP@wuerfel>
+References: <1417066891-16789-1-git-send-email-ming.lei@canonical.com>
+	<2081877.zLc8dS8vkP@wuerfel>
+Date: Thu, 27 Nov 2014 18:14:14 +0800
+Message-ID: <CACVXFVN=M6VX31QWVzFj8MwBskjc5aYe3zJmcM1OG9xj-Y_WOA@mail.gmail.com>
+Subject: Re: [RFC PATCH] ARM64: PCI: inherit root controller's dma-coherent
+From: Ming Lei <ming.lei@canonical.com>
+To: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Jon Masters <jcm@redhat.com>,
+	Dann Frazier <dann.frazier@canonical.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 17 November 2014 18:21:35 Yijing Wang wrote:
-> -       list_for_each_entry(window, resources, list)
-> -               if (window->res->flags & IORESOURCE_BUS) {
-> -                       found = true;
-> -                       break;
-> -               }
-> +       if (!resources) {
-> +               pci_add_resource(&default_res, &ioport_resource);
-> +               pci_add_resource(&default_res, &iomem_resource);
-> +               pci_add_resource(&default_res, &busn_resource);
-> +       } else {
-> 
+On Thu, Nov 27, 2014 at 5:03 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+>
+> Regarding the pcibios_add_device() function, I'd rather see the existing
+> code moved into the PCI core and the function removed, since it also
+> is not architecture specific. We should be able to delete the entire
+> arm64/pci.c file eventually.
 
-Isn't it almost always wrong to do this? You are adding all of the
-I/O ports and memory to the host bridge, which will prevent you from
-adding another host bridge, and the iomem_resource normally
-includes a lot of addresses that are not accessible by the PCI host.
+I totally agree.
 
-	Arnd
+Looks pcibios_*() are misused by ARCHs, which should have been
+designed for addressing ARCH pcibios things, now these functions
+are just a hook for ARCH code.
+
+Specifically pci host controller driver can't be arch independent
+at all because of ARCH's pcibios_*() implementation and
+the specific data type defined by ARCH code.
+
+Thanks,
+Ming Lei
