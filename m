@@ -1,168 +1,228 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:56282 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751998AbaKBPmK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Nov 2014 10:42:10 -0500
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 3 Nov 2014 01:42:08 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id E625B2BB0047
-	for <linux-pci@vger.kernel.org>; Mon,  3 Nov 2014 02:42:04 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sA2FfrYO41484390
-	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:41:53 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sA2Fg3hh028341
-	for <linux-pci@vger.kernel.org>; Mon, 3 Nov 2014 02:42:04 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V9 11/18] powerpc/powernv: Allocate pe->iommu_table dynamically
-Date: Sun,  2 Nov 2014 23:41:27 +0800
-Message-Id: <1414942894-17034-12-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1414942894-17034-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:60054 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751046AbaK0VpT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Nov 2014 16:45:19 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM list <linux-pm@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kevin Hilman <khilman@kernel.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [Update][PATCH 3/4] ACPI / PM: Drop CONFIG_PM_RUNTIME from the ACPI core
+Date: Thu, 27 Nov 2014 23:06:35 +0100
+Message-ID: <1861012.tSNCe7tbeK@vostro.rjw.lan>
+In-Reply-To: <2305225.e81AdzJbgi@vostro.rjw.lan>
+References: <37310416.jZXoh5nfSC@vostro.rjw.lan> <2305225.e81AdzJbgi@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current iommu_table of a PE is a static field. This will have a problem when
-iommu_free_table is called.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Subject: ACPI / PM: Drop CONFIG_PM_RUNTIME from the ACPI core
 
-This patch allocate iommu_table dynamically.
+After commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if PM_SLEEP is
+selected) PM_RUNTIME is always set if PM is set, so quite a few
+#ifdef blocks depending on CONFIG_PM_RUNTIME may now be changed to
+depend on CONFIG_PM.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Replace CONFIG_PM_RUNTIME with CONFIG_PM in the ACPI core code.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- arch/powerpc/include/asm/iommu.h          |    3 +++
- arch/powerpc/platforms/powernv/pci-ioda.c |   26 ++++++++++++++------------
- arch/powerpc/platforms/powernv/pci.h      |    2 +-
- 3 files changed, 18 insertions(+), 13 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/iommu.h b/arch/powerpc/include/asm/iommu.h
-index 42632c7..0fedacb 100644
---- a/arch/powerpc/include/asm/iommu.h
-+++ b/arch/powerpc/include/asm/iommu.h
-@@ -78,6 +78,9 @@ struct iommu_table {
- 	struct iommu_group *it_group;
+I missed include/acpi/acpi_bus.h in the previous version.
+
+---
+ drivers/acpi/acpi_lpss.c |    4 +---
+ drivers/acpi/device_pm.c |    8 ++------
+ drivers/acpi/pci_irq.c   |    2 +-
+ include/acpi/acpi_bus.h  |    6 +-----
+ include/linux/acpi.h     |   26 +++++++++++---------------
+ 5 files changed, 16 insertions(+), 30 deletions(-)
+
+Index: linux-pm/drivers/acpi/acpi_lpss.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/acpi_lpss.c
++++ linux-pm/drivers/acpi/acpi_lpss.c
+@@ -588,7 +588,6 @@ static int acpi_lpss_resume_early(struct
+ }
+ #endif /* CONFIG_PM_SLEEP */
+ 
+-#ifdef CONFIG_PM_RUNTIME
+ static int acpi_lpss_runtime_suspend(struct device *dev)
+ {
+ 	struct lpss_private_data *pdata = acpi_driver_data(ACPI_COMPANION(dev));
+@@ -631,11 +630,11 @@ static int acpi_lpss_runtime_resume(stru
+ 
+ 	return pm_generic_runtime_resume(dev);
+ }
+-#endif /* CONFIG_PM_RUNTIME */
+ #endif /* CONFIG_PM */
+ 
+ static struct dev_pm_domain acpi_lpss_pm_domain = {
+ 	.ops = {
++#ifdef CONFIG_PM
+ #ifdef CONFIG_PM_SLEEP
+ 		.prepare = acpi_subsys_prepare,
+ 		.complete = acpi_subsys_complete,
+@@ -647,7 +646,6 @@ static struct dev_pm_domain acpi_lpss_pm
+ 		.poweroff_late = acpi_lpss_suspend_late,
+ 		.restore_early = acpi_lpss_resume_early,
  #endif
- 	void (*set_bypass)(struct iommu_table *tbl, bool enable);
-+#ifdef CONFIG_PPC_POWERNV
-+	void           *data;
+-#ifdef CONFIG_PM_RUNTIME
+ 		.runtime_suspend = acpi_lpss_runtime_suspend,
+ 		.runtime_resume = acpi_lpss_runtime_resume,
+ #endif
+Index: linux-pm/drivers/acpi/pci_irq.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/pci_irq.c
++++ linux-pm/drivers/acpi/pci_irq.c
+@@ -484,7 +484,7 @@ void acpi_pci_irq_disable(struct pci_dev
+ 	/* Keep IOAPIC pin configuration when suspending */
+ 	if (dev->dev.power.is_prepared)
+ 		return;
+-#ifdef	CONFIG_PM_RUNTIME
++#ifdef	CONFIG_PM
+ 	if (dev->dev.power.runtime_status == RPM_SUSPENDING)
+ 		return;
+ #endif
+Index: linux-pm/drivers/acpi/device_pm.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/device_pm.c
++++ linux-pm/drivers/acpi/device_pm.c
+@@ -692,7 +692,6 @@ static int acpi_device_wakeup(struct acp
+ 	return 0;
+ }
+ 
+-#ifdef CONFIG_PM_RUNTIME
+ /**
+  * acpi_pm_device_run_wake - Enable/disable remote wakeup for given device.
+  * @dev: Device to enable/disable the platform to wake up.
+@@ -714,7 +713,6 @@ int acpi_pm_device_run_wake(struct devic
+ 	return acpi_device_wakeup(adev, ACPI_STATE_S0, enable);
+ }
+ EXPORT_SYMBOL(acpi_pm_device_run_wake);
+-#endif /* CONFIG_PM_RUNTIME */
+ 
+ #ifdef CONFIG_PM_SLEEP
+ /**
+@@ -773,7 +771,6 @@ static int acpi_dev_pm_full_power(struct
+ 		acpi_device_set_power(adev, ACPI_STATE_D0) : 0;
+ }
+ 
+-#ifdef CONFIG_PM_RUNTIME
+ /**
+  * acpi_dev_runtime_suspend - Put device into a low-power state using ACPI.
+  * @dev: Device to put into a low-power state.
+@@ -855,7 +852,6 @@ int acpi_subsys_runtime_resume(struct de
+ 	return ret ? ret : pm_generic_runtime_resume(dev);
+ }
+ EXPORT_SYMBOL_GPL(acpi_subsys_runtime_resume);
+-#endif /* CONFIG_PM_RUNTIME */
+ 
+ #ifdef CONFIG_PM_SLEEP
+ /**
+@@ -1023,10 +1019,9 @@ EXPORT_SYMBOL_GPL(acpi_subsys_freeze);
+ 
+ static struct dev_pm_domain acpi_general_pm_domain = {
+ 	.ops = {
+-#ifdef CONFIG_PM_RUNTIME
++#ifdef CONFIG_PM
+ 		.runtime_suspend = acpi_subsys_runtime_suspend,
+ 		.runtime_resume = acpi_subsys_runtime_resume,
+-#endif
+ #ifdef CONFIG_PM_SLEEP
+ 		.prepare = acpi_subsys_prepare,
+ 		.complete = acpi_subsys_complete,
+@@ -1038,6 +1033,7 @@ static struct dev_pm_domain acpi_general
+ 		.poweroff_late = acpi_subsys_suspend_late,
+ 		.restore_early = acpi_subsys_resume_early,
+ #endif
 +#endif
+ 	},
  };
  
- /* Pure 2^n version of get_order */
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index df49dc6..6d35ed9 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -785,6 +785,10 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, int all)
- 		return;
- 	}
+Index: linux-pm/include/linux/acpi.h
+===================================================================
+--- linux-pm.orig/include/linux/acpi.h
++++ linux-pm/include/linux/acpi.h
+@@ -567,16 +567,26 @@ static inline void arch_reserve_mem_area
+ #define acpi_os_set_prepare_sleep(func, pm1a_ctrl, pm1b_ctrl) do { } while (0)
+ #endif
  
-+	pe->tce32_table = kzalloc_node(sizeof(struct iommu_table),
-+			GFP_KERNEL, hose->node);
-+	pe->tce32_table->data = pe;
-+
- 	/* Associate it with all child devices */
- 	pnv_ioda_setup_same_PE(bus, pe);
+-#if defined(CONFIG_ACPI) && defined(CONFIG_PM_RUNTIME)
++#if defined(CONFIG_ACPI) && defined(CONFIG_PM)
+ int acpi_dev_runtime_suspend(struct device *dev);
+ int acpi_dev_runtime_resume(struct device *dev);
+ int acpi_subsys_runtime_suspend(struct device *dev);
+ int acpi_subsys_runtime_resume(struct device *dev);
++struct acpi_device *acpi_dev_pm_get_node(struct device *dev);
++int acpi_dev_pm_attach(struct device *dev, bool power_on);
+ #else
+ static inline int acpi_dev_runtime_suspend(struct device *dev) { return 0; }
+ static inline int acpi_dev_runtime_resume(struct device *dev) { return 0; }
+ static inline int acpi_subsys_runtime_suspend(struct device *dev) { return 0; }
+ static inline int acpi_subsys_runtime_resume(struct device *dev) { return 0; }
++static inline struct acpi_device *acpi_dev_pm_get_node(struct device *dev)
++{
++	return NULL;
++}
++static inline int acpi_dev_pm_attach(struct device *dev, bool power_on)
++{
++	return -ENODEV;
++}
+ #endif
  
-@@ -858,7 +862,7 @@ static void pnv_pci_ioda_dma_dev_setup(struct pnv_phb *phb, struct pci_dev *pdev
+ #if defined(CONFIG_ACPI) && defined(CONFIG_PM_SLEEP)
+@@ -599,20 +609,6 @@ static inline int acpi_subsys_suspend(st
+ static inline int acpi_subsys_freeze(struct device *dev) { return 0; }
+ #endif
  
- 	pe = &phb->ioda.pe_array[pdn->pe_number];
- 	WARN_ON(get_dma_ops(&pdev->dev) != &dma_iommu_ops);
--	set_iommu_table_base_and_group(&pdev->dev, &pe->tce32_table);
-+	set_iommu_table_base_and_group(&pdev->dev, pe->tce32_table);
+-#if defined(CONFIG_ACPI) && defined(CONFIG_PM)
+-struct acpi_device *acpi_dev_pm_get_node(struct device *dev);
+-int acpi_dev_pm_attach(struct device *dev, bool power_on);
+-#else
+-static inline struct acpi_device *acpi_dev_pm_get_node(struct device *dev)
+-{
+-	return NULL;
+-}
+-static inline int acpi_dev_pm_attach(struct device *dev, bool power_on)
+-{
+-	return -ENODEV;
+-}
+-#endif
+-
+ #ifdef CONFIG_ACPI
+ __printf(3, 4)
+ void acpi_handle_printk(const char *level, acpi_handle handle,
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -544,6 +544,7 @@ acpi_status acpi_add_pm_notifier(struct
+ 				 void (*work_func)(struct work_struct *work));
+ acpi_status acpi_remove_pm_notifier(struct acpi_device *adev);
+ int acpi_pm_device_sleep_state(struct device *, int *, int);
++int acpi_pm_device_run_wake(struct device *, bool);
+ #else
+ static inline acpi_status acpi_add_pm_notifier(struct acpi_device *adev,
+ 					       struct device *dev,
+@@ -563,11 +564,6 @@ static inline int acpi_pm_device_sleep_s
+ 	return (m >= ACPI_STATE_D0 && m <= ACPI_STATE_D3_COLD) ?
+ 		m : ACPI_STATE_D0;
  }
- 
- static int pnv_pci_ioda_dma_set_mask(struct pnv_phb *phb,
-@@ -885,7 +889,7 @@ static int pnv_pci_ioda_dma_set_mask(struct pnv_phb *phb,
- 	} else {
- 		dev_info(&pdev->dev, "Using 32-bit DMA via iommu\n");
- 		set_dma_ops(&pdev->dev, &dma_iommu_ops);
--		set_iommu_table_base(&pdev->dev, &pe->tce32_table);
-+		set_iommu_table_base(&pdev->dev, pe->tce32_table);
- 	}
- 	*pdev->dev.dma_mask = dma_mask;
- 	return 0;
-@@ -922,9 +926,9 @@ static void pnv_ioda_setup_bus_dma(struct pnv_ioda_pe *pe,
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		if (add_to_iommu_group)
- 			set_iommu_table_base_and_group(&dev->dev,
--						       &pe->tce32_table);
-+						       pe->tce32_table);
- 		else
--			set_iommu_table_base(&dev->dev, &pe->tce32_table);
-+			set_iommu_table_base(&dev->dev, pe->tce32_table);
- 
- 		if (dev->subordinate)
- 			pnv_ioda_setup_bus_dma(pe, dev->subordinate,
-@@ -1014,8 +1018,7 @@ static void pnv_pci_ioda2_tce_invalidate(struct pnv_ioda_pe *pe,
- void pnv_pci_ioda_tce_invalidate(struct iommu_table *tbl,
- 				 __be64 *startp, __be64 *endp, bool rm)
+-#endif
+-
+-#ifdef CONFIG_PM_RUNTIME
+-int acpi_pm_device_run_wake(struct device *, bool);
+-#else
+ static inline int acpi_pm_device_run_wake(struct device *dev, bool enable)
  {
--	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
--					      tce32_table);
-+	struct pnv_ioda_pe *pe = tbl->data;
- 	struct pnv_phb *phb = pe->phb;
- 
- 	if (phb->type == PNV_PHB_IODA1)
-@@ -1081,7 +1084,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
- 	}
- 
- 	/* Setup linux iommu table */
--	tbl = &pe->tce32_table;
-+	tbl = pe->tce32_table;
- 	pnv_pci_setup_iommu_table(tbl, addr, TCE32_TABLE_SIZE * segs,
- 				  base << 28, IOMMU_PAGE_SHIFT_4K);
- 
-@@ -1119,8 +1122,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
- 
- static void pnv_pci_ioda2_set_bypass(struct iommu_table *tbl, bool enable)
- {
--	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
--					      tce32_table);
-+	struct pnv_ioda_pe *pe = tbl->data;
- 	uint16_t window_id = (pe->pe_number << 1 ) + 1;
- 	int64_t rc;
- 
-@@ -1165,10 +1167,10 @@ static void pnv_pci_ioda2_setup_bypass_pe(struct pnv_phb *phb,
- 	pe->tce_bypass_base = 1ull << 59;
- 
- 	/* Install set_bypass callback for VFIO */
--	pe->tce32_table.set_bypass = pnv_pci_ioda2_set_bypass;
-+	pe->tce32_table->set_bypass = pnv_pci_ioda2_set_bypass;
- 
- 	/* Enable bypass by default */
--	pnv_pci_ioda2_set_bypass(&pe->tce32_table, true);
-+	pnv_pci_ioda2_set_bypass(pe->tce32_table, true);
- }
- 
- static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
-@@ -1216,7 +1218,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
- 	}
- 
- 	/* Setup linux iommu table */
--	tbl = &pe->tce32_table;
-+	tbl = pe->tce32_table;
- 	pnv_pci_setup_iommu_table(tbl, addr, tce_table_size, 0,
- 			IOMMU_PAGE_SHIFT_4K);
- 
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 9dc4143..0f24a14 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -53,7 +53,7 @@ struct pnv_ioda_pe {
- 	/* "Base" iommu table, ie, 4K TCEs, 32-bit DMA */
- 	int			tce32_seg;
- 	int			tce32_segcount;
--	struct iommu_table	tce32_table;
-+	struct iommu_table	*tce32_table;
- 	phys_addr_t		tce_inval_reg_phys;
- 
- 	/* 64-bit TCE bypass region */
--- 
-1.7.9.5
+ 	return -ENODEV;
 
