@@ -1,111 +1,196 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:42945 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751298AbaKKDgt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Nov 2014 22:36:49 -0500
-Received: by mail-ig0-f182.google.com with SMTP id hn18so293750igb.9
-        for <linux-pci@vger.kernel.org>; Mon, 10 Nov 2014 19:36:49 -0800 (PST)
-Date: Mon, 10 Nov 2014 20:36:44 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: linux-pci@vger.kernel.org, chrisw@sous-sol.org, ddutile@redhat.com,
-	linux-kernel@vger.kernel.org, yuzhao@google.com
-Subject: Re: [PATCH] PCI: Remove fixed parameter in pci_iov_resource_bar()
-Message-ID: <20141111033644.GB28161@google.com>
-References: <20141030212816.9654.73990.stgit@amt.stowe>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM list <linux-pm@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kevin Hilman <khilman@kernel.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH 1/4] PM: Drop the SET_PM_RUNTIME_PM_OPS() macro
+Date: Thu, 27 Nov 2014 01:38 +0100
+Message-ID: <3484329.phAPviVnbd@vostro.rjw.lan>
+In-Reply-To: <37310416.jZXoh5nfSC@vostro.rjw.lan>
+References: <37310416.jZXoh5nfSC@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141030212816.9654.73990.stgit@amt.stowe>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 30, 2014 at 03:28:17PM -0600, Myron Stowe wrote:
-> pci_iov_resource_bar() always sets its 'pci_bar_type' parameter to
-> 'pci_bar_unknown'.  Drop the parameter and just use 'pci_bar_unknown'
-> directly in the callers.
-> 
-> No functional change intended.
-> 
-> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
-> Cc: Chris Wright <chrisw@sous-sol.org>
-> Cc: Yu Zhao <yuzhao@google.com>
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Applied to pci/enumeration for v3.19, thanks!
+The SET_PM_RUNTIME_PM_OPS() and SET_RUNTIME_PM_OPS() macros are
+identical except that one of them is not empty for CONFIG_PM set,
+while the other one is not empty for CONFIG_PM_RUNTIME set,
+respectively.
 
-> ---
->  drivers/pci/iov.c |   11 +++--------
->  drivers/pci/pci.c |    3 ++-
->  drivers/pci/pci.h |    3 +--
->  3 files changed, 6 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 4d109c0..4b3a4ea 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -479,20 +479,16 @@ void pci_iov_release(struct pci_dev *dev)
->   * pci_iov_resource_bar - get position of the SR-IOV BAR
->   * @dev: the PCI device
->   * @resno: the resource number
-> - * @type: the BAR type to be filled in
->   *
->   * Returns position of the BAR encapsulated in the SR-IOV capability.
->   */
-> -int pci_iov_resource_bar(struct pci_dev *dev, int resno,
-> -			 enum pci_bar_type *type)
-> +int pci_iov_resource_bar(struct pci_dev *dev, int resno)
->  {
->  	if (resno < PCI_IOV_RESOURCES || resno > PCI_IOV_RESOURCE_END)
->  		return 0;
->  
->  	BUG_ON(!dev->is_physfn);
->  
-> -	*type = pci_bar_unknown;
-> -
->  	return dev->sriov->pos + PCI_SRIOV_BAR +
->  		4 * (resno - PCI_IOV_RESOURCES);
->  }
-> @@ -510,13 +506,12 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno,
->  resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
->  {
->  	struct resource tmp;
-> -	enum pci_bar_type type;
-> -	int reg = pci_iov_resource_bar(dev, resno, &type);
-> +	int reg = pci_iov_resource_bar(dev, resno);
->  
->  	if (!reg)
->  		return 0;
->  
-> -	 __pci_read_base(dev, type, &tmp, reg);
-> +	 __pci_read_base(dev, pci_bar_unknown, &tmp, reg);
->  	return resource_alignment(&tmp);
->  }
->  
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 625a4ac..7bf2465 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4180,7 +4180,8 @@ int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type)
->  		return dev->rom_base_reg;
->  	} else if (resno < PCI_BRIDGE_RESOURCES) {
->  		/* device specific resource */
-> -		reg = pci_iov_resource_bar(dev, resno, type);
-> +		*type = pci_bar_unknown;
-> +		reg = pci_iov_resource_bar(dev, resno);
->  		if (reg)
->  			return reg;
->  	}
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 0601890..e0b5f17 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -251,8 +251,7 @@ static inline void pci_restore_ats_state(struct pci_dev *dev)
->  #ifdef CONFIG_PCI_IOV
->  int pci_iov_init(struct pci_dev *dev);
->  void pci_iov_release(struct pci_dev *dev);
-> -int pci_iov_resource_bar(struct pci_dev *dev, int resno,
-> -			 enum pci_bar_type *type);
-> +int pci_iov_resource_bar(struct pci_dev *dev, int resno);
->  resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno);
->  void pci_restore_iov_state(struct pci_dev *dev);
->  int pci_iov_bus_range(struct pci_bus *bus);
-> 
+However, after commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if
+PM_SLEEP is selected) PM_RUNTIME is always set if PM is set, so one
+of these macros is now redundant.
+
+For this reason, drop SET_PM_RUNTIME_PM_OPS() and replace it with
+SET_RUNTIME_PM_OPS() everywhere.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/amba/bus.c                |    2 +-
+ drivers/dma/ste_dma40.c           |    2 +-
+ drivers/gpio/gpio-zynq.c          |    2 +-
+ drivers/i2c/busses/i2c-hix5hd2.c  |    2 +-
+ drivers/i2c/busses/i2c-nomadik.c  |    2 +-
+ drivers/mmc/host/mmci.c           |    2 +-
+ drivers/mmc/host/sh_mobile_sdhi.c |    2 +-
+ drivers/mmc/host/tmio_mmc.c       |    2 +-
+ drivers/spi/spi-pl022.c           |    2 +-
+ include/linux/pm.h                |   11 +----------
+ 10 files changed, 10 insertions(+), 19 deletions(-)
+
+Index: linux-pm/drivers/amba/bus.c
+===================================================================
+--- linux-pm.orig/drivers/amba/bus.c
++++ linux-pm/drivers/amba/bus.c
+@@ -124,7 +124,7 @@ static const struct dev_pm_ops amba_pm =
+ 	.thaw		= pm_generic_thaw,
+ 	.poweroff	= pm_generic_poweroff,
+ 	.restore	= pm_generic_restore,
+-	SET_PM_RUNTIME_PM_OPS(
++	SET_RUNTIME_PM_OPS(
+ 		amba_pm_runtime_suspend,
+ 		amba_pm_runtime_resume,
+ 		NULL
+Index: linux-pm/drivers/dma/ste_dma40.c
+===================================================================
+--- linux-pm.orig/drivers/dma/ste_dma40.c
++++ linux-pm/drivers/dma/ste_dma40.c
+@@ -3051,7 +3051,7 @@ static int dma40_runtime_resume(struct d
+ 
+ static const struct dev_pm_ops dma40_pm_ops = {
+ 	SET_LATE_SYSTEM_SLEEP_PM_OPS(dma40_suspend, dma40_resume)
+-	SET_PM_RUNTIME_PM_OPS(dma40_runtime_suspend,
++	SET_RUNTIME_PM_OPS(dma40_runtime_suspend,
+ 				dma40_runtime_resume,
+ 				NULL)
+ };
+Index: linux-pm/drivers/gpio/gpio-zynq.c
+===================================================================
+--- linux-pm.orig/drivers/gpio/gpio-zynq.c
++++ linux-pm/drivers/gpio/gpio-zynq.c
+@@ -578,7 +578,7 @@ static void zynq_gpio_free(struct gpio_c
+ 
+ static const struct dev_pm_ops zynq_gpio_dev_pm_ops = {
+ 	SET_SYSTEM_SLEEP_PM_OPS(zynq_gpio_suspend, zynq_gpio_resume)
+-	SET_PM_RUNTIME_PM_OPS(zynq_gpio_runtime_suspend,
++	SET_RUNTIME_PM_OPS(zynq_gpio_runtime_suspend,
+ 			zynq_gpio_runtime_resume, NULL)
+ };
+ 
+Index: linux-pm/drivers/i2c/busses/i2c-hix5hd2.c
+===================================================================
+--- linux-pm.orig/drivers/i2c/busses/i2c-hix5hd2.c
++++ linux-pm/drivers/i2c/busses/i2c-hix5hd2.c
+@@ -528,7 +528,7 @@ static int hix5hd2_i2c_runtime_resume(st
+ #endif
+ 
+ static const struct dev_pm_ops hix5hd2_i2c_pm_ops = {
+-	SET_PM_RUNTIME_PM_OPS(hix5hd2_i2c_runtime_suspend,
++	SET_RUNTIME_PM_OPS(hix5hd2_i2c_runtime_suspend,
+ 			      hix5hd2_i2c_runtime_resume,
+ 			      NULL)
+ };
+Index: linux-pm/drivers/i2c/busses/i2c-nomadik.c
+===================================================================
+--- linux-pm.orig/drivers/i2c/busses/i2c-nomadik.c
++++ linux-pm/drivers/i2c/busses/i2c-nomadik.c
+@@ -932,7 +932,7 @@ static int nmk_i2c_runtime_resume(struct
+ 
+ static const struct dev_pm_ops nmk_i2c_pm = {
+ 	SET_LATE_SYSTEM_SLEEP_PM_OPS(nmk_i2c_suspend_late, nmk_i2c_resume_early)
+-	SET_PM_RUNTIME_PM_OPS(nmk_i2c_runtime_suspend,
++	SET_RUNTIME_PM_OPS(nmk_i2c_runtime_suspend,
+ 			nmk_i2c_runtime_resume,
+ 			NULL)
+ };
+Index: linux-pm/drivers/mmc/host/mmci.c
+===================================================================
+--- linux-pm.orig/drivers/mmc/host/mmci.c
++++ linux-pm/drivers/mmc/host/mmci.c
+@@ -1843,7 +1843,7 @@ static int mmci_runtime_resume(struct de
+ static const struct dev_pm_ops mmci_dev_pm_ops = {
+ 	SET_SYSTEM_SLEEP_PM_OPS(pm_runtime_force_suspend,
+ 				pm_runtime_force_resume)
+-	SET_PM_RUNTIME_PM_OPS(mmci_runtime_suspend, mmci_runtime_resume, NULL)
++	SET_RUNTIME_PM_OPS(mmci_runtime_suspend, mmci_runtime_resume, NULL)
+ };
+ 
+ static struct amba_id mmci_ids[] = {
+Index: linux-pm/drivers/mmc/host/sh_mobile_sdhi.c
+===================================================================
+--- linux-pm.orig/drivers/mmc/host/sh_mobile_sdhi.c
++++ linux-pm/drivers/mmc/host/sh_mobile_sdhi.c
+@@ -375,7 +375,7 @@ static int sh_mobile_sdhi_remove(struct
+ static const struct dev_pm_ops tmio_mmc_dev_pm_ops = {
+ 	SET_SYSTEM_SLEEP_PM_OPS(pm_runtime_force_suspend,
+ 			pm_runtime_force_resume)
+-	SET_PM_RUNTIME_PM_OPS(tmio_mmc_host_runtime_suspend,
++	SET_RUNTIME_PM_OPS(tmio_mmc_host_runtime_suspend,
+ 			tmio_mmc_host_runtime_resume,
+ 			NULL)
+ };
+Index: linux-pm/drivers/mmc/host/tmio_mmc.c
+===================================================================
+--- linux-pm.orig/drivers/mmc/host/tmio_mmc.c
++++ linux-pm/drivers/mmc/host/tmio_mmc.c
+@@ -135,7 +135,7 @@ static int tmio_mmc_remove(struct platfo
+ 
+ static const struct dev_pm_ops tmio_mmc_dev_pm_ops = {
+ 	SET_SYSTEM_SLEEP_PM_OPS(tmio_mmc_suspend, tmio_mmc_resume)
+-	SET_PM_RUNTIME_PM_OPS(tmio_mmc_host_runtime_suspend,
++	SET_RUNTIME_PM_OPS(tmio_mmc_host_runtime_suspend,
+ 			tmio_mmc_host_runtime_resume,
+ 			NULL)
+ };
+Index: linux-pm/drivers/spi/spi-pl022.c
+===================================================================
+--- linux-pm.orig/drivers/spi/spi-pl022.c
++++ linux-pm/drivers/spi/spi-pl022.c
+@@ -2377,7 +2377,7 @@ static int pl022_runtime_resume(struct d
+ 
+ static const struct dev_pm_ops pl022_dev_pm_ops = {
+ 	SET_SYSTEM_SLEEP_PM_OPS(pl022_suspend, pl022_resume)
+-	SET_PM_RUNTIME_PM_OPS(pl022_runtime_suspend, pl022_runtime_resume, NULL)
++	SET_RUNTIME_PM_OPS(pl022_runtime_suspend, pl022_runtime_resume, NULL)
+ };
+ 
+ static struct vendor_data vendor_arm = {
+Index: linux-pm/include/linux/pm.h
+===================================================================
+--- linux-pm.orig/include/linux/pm.h
++++ linux-pm/include/linux/pm.h
+@@ -342,7 +342,7 @@ struct dev_pm_ops {
+ #define SET_LATE_SYSTEM_SLEEP_PM_OPS(suspend_fn, resume_fn)
+ #endif
+ 
+-#ifdef CONFIG_PM_RUNTIME
++#ifdef CONFIG_PM
+ #define SET_RUNTIME_PM_OPS(suspend_fn, resume_fn, idle_fn) \
+ 	.runtime_suspend = suspend_fn, \
+ 	.runtime_resume = resume_fn, \
+@@ -351,15 +351,6 @@ struct dev_pm_ops {
+ #define SET_RUNTIME_PM_OPS(suspend_fn, resume_fn, idle_fn)
+ #endif
+ 
+-#ifdef CONFIG_PM
+-#define SET_PM_RUNTIME_PM_OPS(suspend_fn, resume_fn, idle_fn) \
+-	.runtime_suspend = suspend_fn, \
+-	.runtime_resume = resume_fn, \
+-	.runtime_idle = idle_fn,
+-#else
+-#define SET_PM_RUNTIME_PM_OPS(suspend_fn, resume_fn, idle_fn)
+-#endif
+-
+ /*
+  * Use this if you want to use the same suspend and resume callbacks for suspend
+  * to RAM and hibernation.
+
