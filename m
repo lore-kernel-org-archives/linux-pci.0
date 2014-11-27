@@ -1,97 +1,123 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:63797 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751257AbaKTMxx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Nov 2014 07:53:53 -0500
-Received: by mail-wi0-f178.google.com with SMTP id hi2so5223052wib.17
-        for <linux-pci@vger.kernel.org>; Thu, 20 Nov 2014 04:53:52 -0800 (PST)
-Message-ID: <546DE45C.6010306@linaro.org>
-Date: Thu, 20 Nov 2014 13:53:48 +0100
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-MIME-Version: 1.0
-To: Liviu Dudau <liviu@dudau.co.uk>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-kernel@lists.infradead.org,
-	Tony Luck <tony.luck@intel.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, Xinwei Hu <huxinwei@huawei.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM list <linux-pm@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Suravee.Suthikulpanit@amd.com,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-ia64@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Wuyun <wuyun.wu@huawei.com>, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [RFC PATCH 00/16] Refine PCI host bridge scan interfaces
-References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com> <1463511.o4kE8TX3Bd@wuerfel> <546DD688.60705@linaro.org> <20141120120850.GD9162@bart.dudau.co.uk>
-In-Reply-To: <20141120120850.GD9162@bart.dudau.co.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+	Kevin Hilman <khilman@kernel.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [Update][PATCH 4/4] PCI / PM: Drop CONFIG_PM_RUNTIME from the PCI core
+Date: Thu, 27 Nov 2014 23:41:42 +0100
+Message-ID: <1665071.LpcEGj9O01@vostro.rjw.lan>
+In-Reply-To: <2582138.zUe2QZynBg@vostro.rjw.lan>
+References: <37310416.jZXoh5nfSC@vostro.rjw.lan> <2582138.zUe2QZynBg@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20.11.2014 13:08, Liviu Dudau wrote:
-> On Thu, Nov 20, 2014 at 12:54:48PM +0100, Tomasz Nowicki wrote:
->> On 17.11.2014 15:13, Arnd Bergmann wrote:
->>> On Monday 17 November 2014 18:21:34 Yijing Wang wrote:
->>>> This series is based Linux 3.18-rc1 and Lorenzo Pieralisi's
->>>> arm PCI domain cleanup patches, link:
->>>> https://patchwork.ozlabs.org/patch/407585/
->>>>
->>>> Current pci scan interfaces like pci_scan_root_bus() and directly
->>>> call pci_create_root_bus()/pci_scan_child_bus() lack flexiblity.
->>>> Some platform infos like PCI domain and msi_chip have to be
->>>> associated to PCI bus by some arch specific function.
->>>> We want to make a generic pci_host_bridge, and make it hold
->>>> the platform infos or hook. Then we could eliminate the lots
->>>> of arch pci_domain_nr, also we could associate some platform
->>>> ops something like pci_get_msi_chip(struct pci_dev *dev)
->>>> with pci_host_bridge to avoid introduce arch weak functions.
->>>>
->>>> This RFC version not for all platforms, just applied the new
->>>> scan interface in x86/arm/powerpc/ia64, I will refresh other
->>>> platforms after the core pci scan interfaces are ok.
->>>
->>> I think overall this is a good direction to take, in particular
->>> moving more things into struct pci_host_bridge so we can
->>> slim down the architecture specific code.
->>>
->>> I don't particularly like the way you use the 'pci_host_info'
->>> to pass callback pointers and some of the generic information.
->>> This duplicates some of the issues we are currently trying
->>> to untangle in the arm32 code to make drivers easier to share
->>> between architectures.
->>>
->>> As a general approach, I'd rather see generic helper functions
->>> being exported by the PCI core that a driver may or may not
->>> call.
->>> The way you split the interface between things that happen
->>> before scanning the buses (pci_create_host_bridge) and
->>> the actual scanning (__pci_create_root_bus, pci_scan_child_bus)
->>> seems very helpful and I think we can expand that concept further:
->>>
->>> - The normal pci_create_host_bridge() function can contain
->>>    all of the DT scanning functions (finding bus/mem/io resources,
->>>    finding the msi-parent), while drivers that don't depend on DT
->>>    for this information can call the same function and fill the
->>>    same things after they have the pci_host_bridge pointer.
->>
->> How about finding PCI domain number (in the DT way) within
->> pci_create_host_bridge() too ?
->
-> It is an idea worth pursuing for the 99% of the cases. I would like
-> to understand the 1% of the time when we want a domain number to be
-> shared between two host bridges or the time when we want more than
-> one domain per bridge.
-Even though we have shared domain, this should be resolved via DT calls, 
-do I miss something ?
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Subject: PCI / PM: Drop CONFIG_PM_RUNTIME from the PCI core
 
->
-> Is that possible? Is it useful? Is it already in practice?
-This is good question... IMO:
-1. Two host bridges can shared domain number if they are children of the 
-same parent host bridge.
-2. But I can not find good explanation for more than one domain per bridge.
+After commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if PM_SLEEP is
+selected) PM_RUNTIME is always set if PM is set, so quite a few
+#ifdef blocks depending on CONFIG_PM_RUNTIME may now be changed to
+depend on CONFIG_PM.
 
-Tomasz
+Replace CONFIG_PM_RUNTIME with CONFIG_PM in the PCI core code.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+
+Changelog fixup.
+
+---
+ drivers/pci/pci-driver.c |   20 +++++++-------------
+ drivers/pci/pci-sysfs.c  |    4 ++--
+ drivers/pci/pcie/Kconfig |    2 +-
+ 3 files changed, 10 insertions(+), 16 deletions(-)
+
+Index: linux-pm/drivers/pci/pcie/Kconfig
+===================================================================
+--- linux-pm.orig/drivers/pci/pcie/Kconfig
++++ linux-pm/drivers/pci/pcie/Kconfig
+@@ -79,4 +79,4 @@ endchoice
+ 
+ config PCIE_PME
+ 	def_bool y
+-	depends on PCIEPORTBUS && PM_RUNTIME
++	depends on PCIEPORTBUS && PM
+Index: linux-pm/drivers/pci/pci-driver.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-driver.c
++++ linux-pm/drivers/pci/pci-driver.c
+@@ -1104,7 +1104,7 @@ static int pci_pm_restore(struct device
+ 
+ #endif /* !CONFIG_HIBERNATE_CALLBACKS */
+ 
+-#ifdef CONFIG_PM_RUNTIME
++#ifdef CONFIG_PM
+ 
+ static int pci_pm_runtime_suspend(struct device *dev)
+ {
+@@ -1200,16 +1200,6 @@ static int pci_pm_runtime_idle(struct de
+ 	return ret;
+ }
+ 
+-#else /* !CONFIG_PM_RUNTIME */
+-
+-#define pci_pm_runtime_suspend	NULL
+-#define pci_pm_runtime_resume	NULL
+-#define pci_pm_runtime_idle	NULL
+-
+-#endif /* !CONFIG_PM_RUNTIME */
+-
+-#ifdef CONFIG_PM
+-
+ static const struct dev_pm_ops pci_dev_pm_ops = {
+ 	.prepare = pci_pm_prepare,
+ 	.suspend = pci_pm_suspend,
+@@ -1231,11 +1221,15 @@ static const struct dev_pm_ops pci_dev_p
+ 
+ #define PCI_PM_OPS_PTR	(&pci_dev_pm_ops)
+ 
+-#else /* !COMFIG_PM_OPS */
++#else /* !CONFIG_PM */
++
++#define pci_pm_runtime_suspend	NULL
++#define pci_pm_runtime_resume	NULL
++#define pci_pm_runtime_idle	NULL
+ 
+ #define PCI_PM_OPS_PTR	NULL
+ 
+-#endif /* !COMFIG_PM_OPS */
++#endif /* !CONFIG_PM */
+ 
+ /**
+  * __pci_register_driver - register a new pci driver
+Index: linux-pm/drivers/pci/pci-sysfs.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-sysfs.c
++++ linux-pm/drivers/pci/pci-sysfs.c
+@@ -385,7 +385,7 @@ static ssize_t dev_bus_rescan_store(stru
+ }
+ static DEVICE_ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, dev_bus_rescan_store);
+ 
+-#if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
++#if defined(CONFIG_PM) && defined(CONFIG_ACPI)
+ static ssize_t d3cold_allowed_store(struct device *dev,
+ 				    struct device_attribute *attr,
+ 				    const char *buf, size_t count)
+@@ -566,7 +566,7 @@ static struct attribute *pci_dev_attrs[]
+ 	&dev_attr_enable.attr,
+ 	&dev_attr_broken_parity_status.attr,
+ 	&dev_attr_msi_bus.attr,
+-#if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
++#if defined(CONFIG_PM) && defined(CONFIG_ACPI)
+ 	&dev_attr_d3cold_allowed.attr,
+ #endif
+ #ifdef CONFIG_OF
 
