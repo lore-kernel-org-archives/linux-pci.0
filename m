@@ -1,154 +1,198 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:28888 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752086AbaKQJk5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Nov 2014 04:40:57 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, Tony Luck <tony.luck@intel.com>,
-	<linux-ia64@vger.kernel.org>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	<Suravee.Suthikulpanit@amd.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [RFC PATCH 16/16] powerpc/PCI: Use pci_scan_host_bridge() to scan PCI bus
-Date: Mon, 17 Nov 2014 18:21:50 +0800
-Message-ID: <1416219710-26088-17-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
-References: <1416219710-26088-1-git-send-email-wangyijing@huawei.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:59062 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753332AbaK0AU1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Nov 2014 19:20:27 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM list <linux-pm@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kevin Hilman <khilman@kernel.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH 3/4] ACPI / PM: Drop CONFIG_PM_RUNTIME from the ACPI core
+Date: Thu, 27 Nov 2014 01:40:01 +0100
+Message-ID: <2305225.e81AdzJbgi@vostro.rjw.lan>
+In-Reply-To: <37310416.jZXoh5nfSC@vostro.rjw.lan>
+References: <37310416.jZXoh5nfSC@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/powerpc/kernel/pci-common.c |   81 ++++++++++++++++++++++---------------
- 1 files changed, 48 insertions(+), 33 deletions(-)
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index e5dad9a..5b0f078 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1578,54 +1578,69 @@ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
- 	return of_node_get(hose->dn);
+After commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if PM_SLEEP is
+selected) PM_RUNTIME is always set if PM is set, so quite a few
+#ifdef blocks depending on CONFIG_PM_RUNTIME may now be changed to
+depend on CONFIG_PM.
+
+Replace CONFIG_PM_RUNTIME with CONFIG_PM in the ACPI core code.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/acpi_lpss.c |    4 +---
+ drivers/acpi/device_pm.c |    8 ++------
+ drivers/acpi/pci_irq.c   |    2 +-
+ include/linux/acpi.h     |   26 +++++++++++---------------
+ 4 files changed, 15 insertions(+), 25 deletions(-)
+
+Index: linux-pm/drivers/acpi/acpi_lpss.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/acpi_lpss.c
++++ linux-pm/drivers/acpi/acpi_lpss.c
+@@ -588,7 +588,6 @@ static int acpi_lpss_resume_early(struct
  }
+ #endif /* CONFIG_PM_SLEEP */
  
--/**
-- * pci_scan_phb - Given a pci_controller, setup and scan the PCI bus
-- * @hose: Pointer to the PCI host controller instance structure
-- */
--void pcibios_scan_phb(struct pci_controller *hose)
-+static int pcibios_host_init_res(struct pci_host_bridge *host,
-+		struct pci_host_info *info)
+-#ifdef CONFIG_PM_RUNTIME
+ static int acpi_lpss_runtime_suspend(struct device *dev)
  {
--	LIST_HEAD(resources);
--	struct pci_bus *bus;
--	struct device_node *node = hose->dn;
--	int mode;
--
--	pr_debug("PCI: Scanning PHB %s\n", of_node_full_name(node));
-+	struct pci_controller *hose = info->arg;
+ 	struct lpss_private_data *pdata = acpi_driver_data(ACPI_COMPANION(dev));
+@@ -631,11 +630,11 @@ static int acpi_lpss_runtime_resume(stru
  
- 	/* Get some IO space for the new PHB */
- 	pcibios_setup_phb_io_space(hose);
--
- 	/* Wire up PHB bus resources */
--	pcibios_setup_phb_resources(hose, &resources);
-+	pcibios_setup_phb_resources(hose, &host->windows);
- 
- 	hose->busn.start = hose->first_busno;
- 	hose->busn.end	 = hose->last_busno;
- 	hose->busn.flags = IORESOURCE_BUS;
--	pci_add_resource(&resources, &hose->busn);
-+	pci_add_resource(&host->windows, &hose->busn);
-+	return 0;
-+}
- 
--	/* Create an empty bus for the toplevel */
--	bus = pci_create_root_bus(hose->parent, hose->first_busno,
--				  hose->ops, hose, &resources);
--	if (bus == NULL) {
--		pr_err("Failed to create bus for PCI domain %04x\n",
--			hose->global_number);
--		pci_free_resource_list(&resources);
--		return;
--	}
--	hose->bus = bus;
-+static void pcibios_of_scan_bus(struct pci_host_bridge *host)
-+{
-+	int mode;
-+	int max;
- 
- 	/* Get probe mode and perform scan */
- 	mode = PCI_PROBE_NORMAL;
--	if (node && ppc_md.pci_probe_mode)
--		mode = ppc_md.pci_probe_mode(bus);
-+	if (host->node && ppc_md.pci_probe_mode)
-+		mode = ppc_md.pci_probe_mode(host->bus);
- 	pr_debug("    probe mode: %d\n", mode);
- 	if (mode == PCI_PROBE_DEVTREE)
--		of_scan_bus(node, bus);
--
-+		of_scan_bus(host->node, host->bus);
-+	
- 	if (mode == PCI_PROBE_NORMAL) {
--		pci_bus_update_busn_res_end(bus, 255);
--		hose->last_busno = pci_scan_child_bus(bus);
--		pci_bus_update_busn_res_end(bus, hose->last_busno);
-+		pci_bus_update_busn_res_end(host->bus, 255);
-+		max = pci_scan_child_bus(host->bus);
-+		pci_bus_update_busn_res_end(host->bus, max);
-+	}
-+}
-+/**
-+ * pci_scan_phb - Given a pci_controller, setup and scan the PCI bus
-+ * @hose: Pointer to the PCI host controller instance structure
-+ */
-+void pcibios_scan_phb(struct pci_controller *hose)
-+{
-+	struct pci_host_bridge *host;
-+	struct pci_host_info info;
-+
-+	pr_debug("PCI: Scanning PHB %s\n", of_node_full_name(hose->dn));
-+
-+	init_pci_host_info(&info);
-+	info.arg = hose;
-+	info.node = hose->dn;
-+	info.init_res = pcibios_host_init_res;
-+	info.of_scan_bus = pcibios_of_scan_bus;
-+	/* Create an empty bus for the toplevel */
-+	host = pci_scan_host_bridge(hose->parent, 
-+			PCI_DOMBUS(hose->global_number,hose->first_busno),
-+				  hose->ops, &info);
-+	if (host == NULL) {
-+		pr_err("Failed to create bus for PCI domain %04x\n",
-+			hose->global_number);
-+		return;
- 	}
-+	hose->bus = host->bus;
-+	hose->last_busno = host->bus->busn_res.end;
- 
- 	/* Platform gets a chance to do some global fixups before
- 	 * we proceed to resource allocation
-@@ -1634,9 +1649,9 @@ void pcibios_scan_phb(struct pci_controller *hose)
- 		ppc_md.pcibios_fixup_phb(hose);
- 
- 	/* Configure PCI Express settings */
--	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
-+	if (!pci_has_flag(PCI_PROBE_ONLY)) {
- 		struct pci_bus *child;
--		list_for_each_entry(child, &bus->children, node)
-+		list_for_each_entry(child, &host->bus->children, node)
- 			pcie_bus_configure_settings(child);
- 	}
+ 	return pm_generic_runtime_resume(dev);
  }
--- 
-1.7.1
+-#endif /* CONFIG_PM_RUNTIME */
+ #endif /* CONFIG_PM */
+ 
+ static struct dev_pm_domain acpi_lpss_pm_domain = {
+ 	.ops = {
++#ifdef CONFIG_PM
+ #ifdef CONFIG_PM_SLEEP
+ 		.prepare = acpi_subsys_prepare,
+ 		.complete = acpi_subsys_complete,
+@@ -647,7 +646,6 @@ static struct dev_pm_domain acpi_lpss_pm
+ 		.poweroff_late = acpi_lpss_suspend_late,
+ 		.restore_early = acpi_lpss_resume_early,
+ #endif
+-#ifdef CONFIG_PM_RUNTIME
+ 		.runtime_suspend = acpi_lpss_runtime_suspend,
+ 		.runtime_resume = acpi_lpss_runtime_resume,
+ #endif
+Index: linux-pm/drivers/acpi/pci_irq.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/pci_irq.c
++++ linux-pm/drivers/acpi/pci_irq.c
+@@ -484,7 +484,7 @@ void acpi_pci_irq_disable(struct pci_dev
+ 	/* Keep IOAPIC pin configuration when suspending */
+ 	if (dev->dev.power.is_prepared)
+ 		return;
+-#ifdef	CONFIG_PM_RUNTIME
++#ifdef	CONFIG_PM
+ 	if (dev->dev.power.runtime_status == RPM_SUSPENDING)
+ 		return;
+ #endif
+Index: linux-pm/drivers/acpi/device_pm.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/device_pm.c
++++ linux-pm/drivers/acpi/device_pm.c
+@@ -692,7 +692,6 @@ static int acpi_device_wakeup(struct acp
+ 	return 0;
+ }
+ 
+-#ifdef CONFIG_PM_RUNTIME
+ /**
+  * acpi_pm_device_run_wake - Enable/disable remote wakeup for given device.
+  * @dev: Device to enable/disable the platform to wake up.
+@@ -714,7 +713,6 @@ int acpi_pm_device_run_wake(struct devic
+ 	return acpi_device_wakeup(adev, ACPI_STATE_S0, enable);
+ }
+ EXPORT_SYMBOL(acpi_pm_device_run_wake);
+-#endif /* CONFIG_PM_RUNTIME */
+ 
+ #ifdef CONFIG_PM_SLEEP
+ /**
+@@ -773,7 +771,6 @@ static int acpi_dev_pm_full_power(struct
+ 		acpi_device_set_power(adev, ACPI_STATE_D0) : 0;
+ }
+ 
+-#ifdef CONFIG_PM_RUNTIME
+ /**
+  * acpi_dev_runtime_suspend - Put device into a low-power state using ACPI.
+  * @dev: Device to put into a low-power state.
+@@ -855,7 +852,6 @@ int acpi_subsys_runtime_resume(struct de
+ 	return ret ? ret : pm_generic_runtime_resume(dev);
+ }
+ EXPORT_SYMBOL_GPL(acpi_subsys_runtime_resume);
+-#endif /* CONFIG_PM_RUNTIME */
+ 
+ #ifdef CONFIG_PM_SLEEP
+ /**
+@@ -1023,10 +1019,9 @@ EXPORT_SYMBOL_GPL(acpi_subsys_freeze);
+ 
+ static struct dev_pm_domain acpi_general_pm_domain = {
+ 	.ops = {
+-#ifdef CONFIG_PM_RUNTIME
++#ifdef CONFIG_PM
+ 		.runtime_suspend = acpi_subsys_runtime_suspend,
+ 		.runtime_resume = acpi_subsys_runtime_resume,
+-#endif
+ #ifdef CONFIG_PM_SLEEP
+ 		.prepare = acpi_subsys_prepare,
+ 		.complete = acpi_subsys_complete,
+@@ -1038,6 +1033,7 @@ static struct dev_pm_domain acpi_general
+ 		.poweroff_late = acpi_subsys_suspend_late,
+ 		.restore_early = acpi_subsys_resume_early,
+ #endif
++#endif
+ 	},
+ };
+ 
+Index: linux-pm/include/linux/acpi.h
+===================================================================
+--- linux-pm.orig/include/linux/acpi.h
++++ linux-pm/include/linux/acpi.h
+@@ -567,16 +567,26 @@ static inline void arch_reserve_mem_area
+ #define acpi_os_set_prepare_sleep(func, pm1a_ctrl, pm1b_ctrl) do { } while (0)
+ #endif
+ 
+-#if defined(CONFIG_ACPI) && defined(CONFIG_PM_RUNTIME)
++#if defined(CONFIG_ACPI) && defined(CONFIG_PM)
+ int acpi_dev_runtime_suspend(struct device *dev);
+ int acpi_dev_runtime_resume(struct device *dev);
+ int acpi_subsys_runtime_suspend(struct device *dev);
+ int acpi_subsys_runtime_resume(struct device *dev);
++struct acpi_device *acpi_dev_pm_get_node(struct device *dev);
++int acpi_dev_pm_attach(struct device *dev, bool power_on);
+ #else
+ static inline int acpi_dev_runtime_suspend(struct device *dev) { return 0; }
+ static inline int acpi_dev_runtime_resume(struct device *dev) { return 0; }
+ static inline int acpi_subsys_runtime_suspend(struct device *dev) { return 0; }
+ static inline int acpi_subsys_runtime_resume(struct device *dev) { return 0; }
++static inline struct acpi_device *acpi_dev_pm_get_node(struct device *dev)
++{
++	return NULL;
++}
++static inline int acpi_dev_pm_attach(struct device *dev, bool power_on)
++{
++	return -ENODEV;
++}
+ #endif
+ 
+ #if defined(CONFIG_ACPI) && defined(CONFIG_PM_SLEEP)
+@@ -599,20 +609,6 @@ static inline int acpi_subsys_suspend(st
+ static inline int acpi_subsys_freeze(struct device *dev) { return 0; }
+ #endif
+ 
+-#if defined(CONFIG_ACPI) && defined(CONFIG_PM)
+-struct acpi_device *acpi_dev_pm_get_node(struct device *dev);
+-int acpi_dev_pm_attach(struct device *dev, bool power_on);
+-#else
+-static inline struct acpi_device *acpi_dev_pm_get_node(struct device *dev)
+-{
+-	return NULL;
+-}
+-static inline int acpi_dev_pm_attach(struct device *dev, bool power_on)
+-{
+-	return -ENODEV;
+-}
+-#endif
+-
+ #ifdef CONFIG_ACPI
+ __printf(3, 4)
+ void acpi_handle_printk(const char *level, acpi_handle handle,
 
