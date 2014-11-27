@@ -1,68 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:52501 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932319AbaKSQFn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 11:05:43 -0500
-Received: by mail-wi0-f180.google.com with SMTP id n3so2430983wiv.1
-        for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2014 08:05:42 -0800 (PST)
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-To: catalin.marinas@arm.com, will.deacon@arm.com, bhelgaas@google.com,
-	lorenzo.pieralisi@arm.com, wangyijing@huawei.com, arnd@arndb.de,
-	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Subject: [PATCH 6/6] pci, acpi: Share ACPI PCI config space accessors.
-Date: Wed, 19 Nov 2014 17:04:51 +0100
-Message-Id: <1416413091-13452-7-git-send-email-tomasz.nowicki@linaro.org>
-In-Reply-To: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org>
-References: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM list <linux-pm@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kevin Hilman <khilman@kernel.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH 0/4] PM: Use CONFIG_PM instead of CONFIG_PM_RUNTIME in core code
+Date: Thu, 27 Nov 2014 01:37:13 +0100
+Message-ID: <37310416.jZXoh5nfSC@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-MMCFG can be used perfectly for all architectures which support ACPI.
-ACPI mandates MMCFG to describe PCI config space ranges which means
-we should use MMCONFIG accessors by default.
+Hi,
 
-Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
----
- drivers/acpi/mmconfig.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+After commit b2b49ccbdd54 "PM: Kconfig: Set PM_RUNTIME if PM_SLEEP is
+selected" (currently in Linux next) CONFIG_PM_RUNTIME is set whenever
+CONFIG_PM is set, so CONFIG_PM can be used in #ifdefs instead of
+CONFIG_PM_RUNTIME which simplifies things in quite a few cases.
 
-diff --git a/drivers/acpi/mmconfig.c b/drivers/acpi/mmconfig.c
-index c0ad05f..c9c6e05 100644
---- a/drivers/acpi/mmconfig.c
-+++ b/drivers/acpi/mmconfig.c
-@@ -23,6 +23,26 @@ static DEFINE_MUTEX(pci_mmcfg_lock);
- 
- LIST_HEAD(pci_mmcfg_list);
- 
-+/*
-+ * raw_pci_read/write - ACPI PCI config space accessors.
-+ *
-+ * ACPI spec defines MMCFG as the way we can access PCI config space,
-+ * so let MMCFG be default (__weak).
-+ *
-+ * If platform needs more fancy stuff, should provides its own implementation.
-+ */
-+int __weak raw_pci_read(unsigned int domain, unsigned int bus,
-+			unsigned int devfn, int reg, int len, u32 *val)
-+{
-+	return pci_mmcfg_read(domain, bus, devfn, reg, len, val);
-+}
-+
-+int __weak raw_pci_write(unsigned int domain, unsigned int bus,
-+			 unsigned int devfn, int reg, int len, u32 val)
-+{
-+	return pci_mmcfg_write(domain, bus, devfn, reg, len, val);
-+}
-+
- static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus,
- 				  unsigned int devfn)
- {
+For this reason, the following patches modify some core code to use
+CONFIG_PM instead of CONFIG_PM_RUNTIME.
+
+[1/4] Drop a macro which is redundant after the above commit.
+[2/4] Use PM instead of PM_RUNTIME in the core device PM code.
+[3/4] Use PM instead of PM_RUNTIME in the ACPI core.
+[4/4] Use PM instead of PM_RUNTIME in the PCI core.
+
+They build for me for all of the relevant combinations of options (on x86),
+but more testing (on the other architectures) would be welcome.
+
+Thanks!
+
 -- 
-1.9.1
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
