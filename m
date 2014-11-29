@@ -1,80 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:64518 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753988AbaKSM3Q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Nov 2014 07:29:16 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Yijing Wang <wangyijing@huawei.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM list <linux-pm@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	linux-ia64@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [PATCH 3/5] PCI: Use pci_scan_bus_simple() in simple scene.
-Date: Wed, 19 Nov 2014 13:28:50 +0100
-Message-ID: <3577231.2krnYe8yCU@wuerfel>
-In-Reply-To: <1416382369-13587-4-git-send-email-wangyijing@huawei.com>
-References: <1416382369-13587-1-git-send-email-wangyijing@huawei.com> <1416382369-13587-4-git-send-email-wangyijing@huawei.com>
+	Kevin Hilman <khilman@kernel.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [Replacement][PATCH 1/4] PM: Merge the SET*_RUNTIME_PM_OPS() macros
+Date: Sat, 29 Nov 2014 01:52:32 +0100
+Message-ID: <1551552.1uQKV96bxc@vostro.rjw.lan>
+In-Reply-To: <1740704.VN27cDdEAu@vostro.rjw.lan>
+References: <37310416.jZXoh5nfSC@vostro.rjw.lan> <3484329.phAPviVnbd@vostro.rjw.lan> <1740704.VN27cDdEAu@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 19 November 2014 15:32:47 Yijing Wang wrote:
-> Use pci_scan_bus_simple() to scan pci buses with
-> the default IO/MEM/BUS resources. Use it instead
-> of pci_scan_bus() and pci_scan_bus_parented().
+On Thursday, November 27, 2014 11:05:41 PM Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> The SET_PM_RUNTIME_PM_OPS() and SET_RUNTIME_PM_OPS() macros are
+> identical except that one of them is not empty for CONFIG_PM set,
+> while the other one is not empty for CONFIG_PM_RUNTIME set,
+> respectively.
 > 
+> However, after commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if
+> PM_SLEEP is selected) PM_RUNTIME is always set if PM is set, so one
+> of these macros is now redundant.
+> 
+> For this reason, replace SET_PM_RUNTIME_PM_OPS() with
+> SET_RUNTIME_PM_OPS() everywhere and redefine the SET_PM_RUNTIME_PM_OPS
+> symbol as SET_RUNTIME_PM_OPS in case new code is starting to use the
+> macro being removed here.
 
-I think we should replace pci_scan_bus_parented() with something better
-by making the xen code use pci_scan_root_bus() (see below for a draft
-patch). After that we no longer need the 'parent' argument here and we
-can just keep using the pci_scan_bus() function for the legacy users,
-or rename it if that helps.
+It turns out that I need to defer this one, because it breaks builds for
+CONFIG_PM selected without CONFIG_PM_SLEEP or CONFIG_PM_RUNTIME (which is
+arguably invalid, but some defconfigs evidently do that).
 
-	Arnd
+I need to fix those defconfigs first.
 
 
-8<---
-
-diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-index 116ca3746adb..45a4843a608a 100644
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -448,6 +448,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
- 	struct pci_bus *b;
- 	struct pcifront_sd *sd = NULL;
- 	struct pci_bus_entry *bus_entry = NULL;
-+	LIST_HEAD(resources);
- 	int err = 0;
- 
- #ifndef CONFIG_PCI_DOMAINS
-@@ -470,17 +471,20 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
- 		err = -ENOMEM;
- 		goto err_out;
- 	}
-+	pci_add_resource(&resources, &ioport_resource);
-+	pci_add_resource(&resources, &iomem_resource);
- 	pcifront_init_sd(sd, domain, bus, pdev);
- 
- 	pci_lock_rescan_remove();
- 
--	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
--				  &pcifront_bus_ops, sd);
-+	b = pci_scan_root_bus(&pdev->xdev->dev, bus, &pcifront_bus_ops, sd,
-+			      &resources);
- 	if (!b) {
- 		dev_err(&pdev->xdev->dev,
- 			"Error creating PCI Frontend Bus!\n");
- 		err = -ENOMEM;
- 		pci_unlock_rescan_remove();
-+		pci_free_resource_list(&resources);
- 		goto err_out;
- 	}
- 
-
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
