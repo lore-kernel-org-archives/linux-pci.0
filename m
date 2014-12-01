@@ -1,135 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:49395 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752052AbaLSKdM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Dec 2014 05:33:12 -0500
-Message-ID: <1418985179.2558.3.camel@pengutronix.de>
-Subject: Re: [PATCH 2/2] ARM: dts: imx6q: add Novena board
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Sean Cross <xobs@kosagi.com>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Shawn Guo <shawn.guo@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	devicetree@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	linux-pci@vger.kernel.org, bunnie@kosagi.com
-Date: Fri, 19 Dec 2014 11:32:59 +0100
-In-Reply-To: <1418976617-833-3-git-send-email-xobs@kosagi.com>
-References: <1418976617-833-1-git-send-email-xobs@kosagi.com>
-	 <1418976617-833-3-git-send-email-xobs@kosagi.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from numascale.com ([213.162.240.84]:38210 "EHLO numascale.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753411AbaLATQJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 1 Dec 2014 14:16:09 -0500
+Message-ID: <547CBE68.1040704@numascale.com>
+Date: Mon, 01 Dec 2014 14:15:52 -0500
+From: Daniel J Blueman <daniel@numascale.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Jonathan Corbet <corbet@lwn.net>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
+Subject: Re: [Patch Part3 v4 38/38] x86, irq: Add kernel parameter vector_alloc
+ to set CPU vector allocation policy
+References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com> <1416901802-24211-39-git-send-email-jiang.liu@linux.intel.com> <CAErSpo7-GezRLKe4hTAm=KhYHUw6zggi+4LRXjh25K-f+_hAng@mail.gmail.com>
+In-Reply-To: <CAErSpo7-GezRLKe4hTAm=KhYHUw6zggi+4LRXjh25K-f+_hAng@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Freitag, den 19.12.2014, 16:10 +0800 schrieb Sean Cross:
-> Novena is an open-hardware laptop/desktop/bare board.
-> 
-> See http://www.kosagi.com/w/index.php?title=Novena_Main_Page
-> 
-> This device tree contains additional nodes for FPGA support.
-> 
+On 12/01/2014 01:49 PM, Bjorn Helgaas wrote:
+> On Tue, Nov 25, 2014 at 12:50 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+>> Parameter vector_alloc should be set to an integer with:
+>> bit 0:  enable allocating CPU vector from CPUs on device local node.
+>>          That's to allocate from cpumask_of_node(irq_data->node).
+>> bit 1: enable the default policy, which is to allocate from
+>>         apic->target_cpus().
+>>
+>> When allocating vectors, it tries all enabled policies from lower bit
+>> position to higher bit position.
+>>
+>> This option could be use to optimize interrupt distribution on large
+>> system such as NumaChip etc.
+>
+> Why can't we figure this out automatically?  Having a kernel parameter
+> is a pain in the neck for users.
 
-I only skimmed the DT for now.
+For the Numachip case, it would be sufficient to add a call to 
+set_vector_alloc_policy in the APIC driver, as this will always be 
+preferred for local MSI handling.
 
-There are lots of occurrences of the "kosagi" vendor prefix, which is is
-not documented right now. Please add it to
-Documentation/devicetree/bindings/vendor-prefixes.txt first.
+I'll follow up with a patch in the next day or so; further support for 
+other systems can be added later as and when tested.
 
-> Signed-off-by: Sean Cross <xobs@kosagi.com>
-> ---
->  arch/arm/boot/dts/Makefile         |   1 +
->  arch/arm/boot/dts/imx6q-novena.dts | 893 +++++++++++++++++++++++++++++++++++++
->  2 files changed, 894 insertions(+)
->  create mode 100644 arch/arm/boot/dts/imx6q-novena.dts
-> 
-> diff --git a/arch/arm/boot/dts/Makefile b/arch/arm/boot/dts/Makefile
-> index 38c89ca..b2b4770 100644
-> --- a/arch/arm/boot/dts/Makefile
-> +++ b/arch/arm/boot/dts/Makefile
-> @@ -234,6 +234,7 @@ dtb-$(CONFIG_ARCH_MXC) += \
->  	imx6q-gw552x.dtb \
->  	imx6q-hummingboard.dtb \
->  	imx6q-nitrogen6x.dtb \
-> +	imx6q-novena.dtb \
->  	imx6q-phytec-pbab01.dtb \
->  	imx6q-rex-pro.dtb \
->  	imx6q-sabreauto.dtb \
-> diff --git a/arch/arm/boot/dts/imx6q-novena.dts b/arch/arm/boot/dts/imx6q-novena.dts
-> new file mode 100644
-> index 0000000..143b3bd
-> --- /dev/null
-> +++ b/arch/arm/boot/dts/imx6q-novena.dts
-> @@ -0,0 +1,893 @@
-
-[...]
-
-> +	fpga@1 {
-> +		compatible = "kosagi,novena-fpga";
-
-This is missing a proper binding documentation.
-> +
-> +		spi-max-frequency = <30000000>;
-> +		reg = <1>;
-> +
-> +		pinctrl-names = "default", "state-eim", "state-gpio";
-> +		pinctrl-0 = <&pinctrl_fpga_gpio>;
-> +		pinctrl-1 = <&pinctrl_fpga_eim>;
-> +		pinctrl-2 = <&pinctrl_fpga_gpio>;
-> +		clocks = <&clks IMX6QDL_CLK_LVDS2_SEL>, <&clks IMX6QDL_CLK_LVDS2_GATE>, <&clks IMX6QDL_CLK_ENET_REF>, <&clks IMX6QDL_CLK_EIM_SLOW>;
-> +		clock-names = "lvds", "lvds-switch", "lvds-parent", "eim-slow";
-> +		reset-switch = <&gpio1 17 GPIO_ACTIVE_HIGH>;
-> +		power-switch = <&gpio5 7 GPIO_ACTIVE_HIGH>;
-
-Custom property names without vendor namespacing. Also I don't know what
-they should do without the binding.
-
-> +
-> +		kosagi,weim-cs0-timing = <0x31910BBF 0x00001000 0x09014000
-> +					  0x00000000 0x09080800 0x00000000>;
-> +		kosagi,weim-cs1-timing = <0x81910CBF 0x00001000 0x07001000
-> +					  0x00000200 0x02040400 0x00000000>;
-> +		kosagi,weim-cs-mapping = <2>;
-> +	};
-> +};
-> +
-
-[...]
-
-> +&ldb {
-> +	fsl,dual-channel;
-> +	status = "okay";
-> +	lvds-channel@0 {
-> +		fsl,data-mapping = "jeida";
-> +		fsl,data-width = <24>;
-> +		status = "okay";
-> +		display-timings {
-> +			1920x1080p60 {
-> +				clock-frequency = <148500000>;
-> +				hactive = <1920>;
-> +				vactive = <1080>;
-> +				hback-porch = <148>;
-> +				hfront-porch = <88>;
-> +				hsync-len = <44>;
-> +				vback-porch = <36>;
-> +				vfront-porch = <4>;
-> +				vsync-len = <5>;
-> +				hsync-active = <1>;
-> +				vsync-active = <1>;
-> +			};
-> +		};
-
-Please don't use this for new devicetrees. Add a proper panel driver
-instead. Looks like this panel can be represented with the simple-panel
-driver.
-
-Regards,
-Lucas
-
+>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>> Cc: Daniel J Blueman <daniel@numascale.com>
+>> ---
+>>   Documentation/kernel-parameters.txt |    6 ++++++
+>>   arch/x86/kernel/apic/vector.c       |   11 +++++++++++
+>>   2 files changed, 17 insertions(+)
+>>
+>> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+>> index 4c81a860cc2b..a175c5016954 100644
+>> --- a/Documentation/kernel-parameters.txt
+>> +++ b/Documentation/kernel-parameters.txt
+>> @@ -3709,6 +3709,12 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+>>          vector=         [IA-64,SMP]
+>>                          vector=percpu: enable percpu vector domain
+>>
+>> +       vector_alloc=   [x86,SMP]
+>> +                       vector_alloc=policy: policy is a bitmap, bit 0
+>> +                       for allocating CPU vector from CPUs on device local
+>> +                       node; bit 1 for the default policy to allocating from
+>> +                       apic->target_cpus(). All higher bits are reserved.
+>> +
+>>          video=          [FB] Frame buffer configuration
+>>                          See Documentation/fb/modedb.txt.
+>>
+>> diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+>> index 16de8906ee1e..1158843551c7 100644
+>> --- a/arch/x86/kernel/apic/vector.c
+>> +++ b/arch/x86/kernel/apic/vector.c
+>> @@ -79,6 +79,17 @@ void set_vector_alloc_policy(unsigned int policy)
+>>                  x86_vector_alloc_policy = policy | X86_VECTOR_POL_CALLER;
+>>   }
+>>
+>> +static int __init apic_parse_vector_policy(char *str)
+>> +{
+>> +       int policy;
+>> +
+>> +       if (get_option(&str, &policy) == 1)
+>> +               set_vector_alloc_policy(policy);
+>> +
+>> +       return 1;
+>> +}
+>> +__setup("vector_alloc=", apic_parse_vector_policy);
+>> +
+>>   static struct apic_chip_data *alloc_apic_chip_data(int node)
+>>   {
+>>          struct apic_chip_data *data;
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
-
+Daniel J Blueman
+Principal Software Engineer, Numascale
