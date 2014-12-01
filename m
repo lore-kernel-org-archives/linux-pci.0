@@ -1,51 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:44911 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750928AbaLVFsx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 00:48:53 -0500
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 22 Dec 2014 15:48:51 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 977CC2BB005E
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:48:49 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sBM5mnMq39714970
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:48:49 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sBM5mmOp012717
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:48:49 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH 0/2] PCI/IOV: fix on offset/stride based on NumVFs change
-Date: Mon, 22 Dec 2014 13:48:44 +0800
-Message-Id: <1419227326-12083-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1665071.LpcEGj9O01@vostro.rjw.lan>
+References: <37310416.jZXoh5nfSC@vostro.rjw.lan> <2582138.zUe2QZynBg@vostro.rjw.lan>
+ <1665071.LpcEGj9O01@vostro.rjw.lan>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 1 Dec 2014 15:51:04 -0700
+Message-ID: <CAErSpo7taxQy=TNoe0eJ6oBpJxdmPNZtJ+Cuy8KxFvoWFLHCKA@mail.gmail.com>
+Subject: Re: [Update][PATCH 4/4] PCI / PM: Drop CONFIG_PM_RUNTIME from the PCI core
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PM list <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Kevin Hilman <khilman@kernel.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Per SRIOV SPEC sec 3.3.9, 3.3.10, offset/stride may change when NumVFs is
-written. While current kernel doesn't update offset/stride with the change of
-NumVFs.
+On Thu, Nov 27, 2014 at 3:41 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Subject: PCI / PM: Drop CONFIG_PM_RUNTIME from the PCI core
+>
+> After commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if PM_SLEEP is
+> selected) PM_RUNTIME is always set if PM is set, so quite a few
+> #ifdef blocks depending on CONFIG_PM_RUNTIME may now be changed to
+> depend on CONFIG_PM.
+>
+> Replace CONFIG_PM_RUNTIME with CONFIG_PM in the PCI core code.
+>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-This property will also affect the iov bus range in enumeration.
+I acked this on IRC, and I think Rafael plans to merge this via his
+tree, but for the archives:
 
-This patch set consists of two patches:
-1. Update the offset/stride with NumVFs change
-2. Calculate VF bus range on each possilbe NumVFs
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Code based on 3.19-rc1 and tested on x86 and powernv platform.
-Bus range doesn't chage on current hardware.
-
-Wei Yang (2):
-  PCI: Refresh offset/stride after NumVFs is written
-  PCI: Calculate the VF bus range on each possible NumVFs
-
- drivers/pci/iov.c |   54 +++++++++++++++++++++++++++++++++++++++++++++--------
- drivers/pci/pci.h |    1 +
- 2 files changed, 47 insertions(+), 8 deletions(-)
-
--- 
-1.7.9.5
-
+> ---
+>
+> Changelog fixup.
+>
+> ---
+>  drivers/pci/pci-driver.c |   20 +++++++-------------
+>  drivers/pci/pci-sysfs.c  |    4 ++--
+>  drivers/pci/pcie/Kconfig |    2 +-
+>  3 files changed, 10 insertions(+), 16 deletions(-)
+>
+> Index: linux-pm/drivers/pci/pcie/Kconfig
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/pcie/Kconfig
+> +++ linux-pm/drivers/pci/pcie/Kconfig
+> @@ -79,4 +79,4 @@ endchoice
+>
+>  config PCIE_PME
+>         def_bool y
+> -       depends on PCIEPORTBUS && PM_RUNTIME
+> +       depends on PCIEPORTBUS && PM
+> Index: linux-pm/drivers/pci/pci-driver.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/pci-driver.c
+> +++ linux-pm/drivers/pci/pci-driver.c
+> @@ -1104,7 +1104,7 @@ static int pci_pm_restore(struct device
+>
+>  #endif /* !CONFIG_HIBERNATE_CALLBACKS */
+>
+> -#ifdef CONFIG_PM_RUNTIME
+> +#ifdef CONFIG_PM
+>
+>  static int pci_pm_runtime_suspend(struct device *dev)
+>  {
+> @@ -1200,16 +1200,6 @@ static int pci_pm_runtime_idle(struct de
+>         return ret;
+>  }
+>
+> -#else /* !CONFIG_PM_RUNTIME */
+> -
+> -#define pci_pm_runtime_suspend NULL
+> -#define pci_pm_runtime_resume  NULL
+> -#define pci_pm_runtime_idle    NULL
+> -
+> -#endif /* !CONFIG_PM_RUNTIME */
+> -
+> -#ifdef CONFIG_PM
+> -
+>  static const struct dev_pm_ops pci_dev_pm_ops = {
+>         .prepare = pci_pm_prepare,
+>         .suspend = pci_pm_suspend,
+> @@ -1231,11 +1221,15 @@ static const struct dev_pm_ops pci_dev_p
+>
+>  #define PCI_PM_OPS_PTR (&pci_dev_pm_ops)
+>
+> -#else /* !COMFIG_PM_OPS */
+> +#else /* !CONFIG_PM */
+> +
+> +#define pci_pm_runtime_suspend NULL
+> +#define pci_pm_runtime_resume  NULL
+> +#define pci_pm_runtime_idle    NULL
+>
+>  #define PCI_PM_OPS_PTR NULL
+>
+> -#endif /* !COMFIG_PM_OPS */
+> +#endif /* !CONFIG_PM */
+>
+>  /**
+>   * __pci_register_driver - register a new pci driver
+> Index: linux-pm/drivers/pci/pci-sysfs.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/pci-sysfs.c
+> +++ linux-pm/drivers/pci/pci-sysfs.c
+> @@ -385,7 +385,7 @@ static ssize_t dev_bus_rescan_store(stru
+>  }
+>  static DEVICE_ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, dev_bus_rescan_store);
+>
+> -#if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
+> +#if defined(CONFIG_PM) && defined(CONFIG_ACPI)
+>  static ssize_t d3cold_allowed_store(struct device *dev,
+>                                     struct device_attribute *attr,
+>                                     const char *buf, size_t count)
+> @@ -566,7 +566,7 @@ static struct attribute *pci_dev_attrs[]
+>         &dev_attr_enable.attr,
+>         &dev_attr_broken_parity_status.attr,
+>         &dev_attr_msi_bus.attr,
+> -#if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
+> +#if defined(CONFIG_PM) && defined(CONFIG_ACPI)
+>         &dev_attr_d3cold_allowed.attr,
+>  #endif
+>  #ifdef CONFIG_OF
+>
