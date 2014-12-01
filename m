@@ -1,46 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cmexedge1.emulex.com ([138.239.224.99]:50288 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750933AbaKJLv6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Nov 2014 06:51:58 -0500
-From: Sathya Perla <sathya.perla@emulex.com>
-To: <linux-pci@vger.kernel.org>, <netdev@vger.kernel.org>
-CC: <ariel.elior@qlogic.com>, <linux.nics@intel.com>,
-	<shahed.shaikh@qlogic.com>, <ddutile@redhat.com>
-Subject: [PATCH 2/4] bnx2x: remove pci_assigned_vfs() check while disabling VFs
-Date: Mon, 10 Nov 2014 17:23:28 +0530
-Message-ID: <1415620410-4937-3-git-send-email-sathya.perla@emulex.com>
-In-Reply-To: <1415620410-4937-1-git-send-email-sathya.perla@emulex.com>
-References: <1415620410-4937-1-git-send-email-sathya.perla@emulex.com>
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:51668 "EHLO
+	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752546AbaLAGc2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Dec 2014 01:32:28 -0500
+Message-ID: <547C0B4A.4060303@hp.com>
+Date: Mon, 01 Dec 2014 14:31:38 +0800
+From: "Li, ZhenHua" <zhen-hual@hp.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Joerg Roedel <joro@8bytes.org>
+CC: Takao Indoh <indou.takao@jp.fujitsu.com>, bhe@redhat.com,
+	dwmw2@infradead.org, vgoyal@redhat.com, dyoung@redhat.com,
+	iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com
+Subject: Re: [PATCH 0/5] iommu/vt-d: Fix crash dump failure caused by legacy
+ DMA/IO
+References: <1413878659-1383-1-git-send-email-zhen-hual@hp.com> <20141022100525.GD9060@dhcp-16-116.nay.redhat.com> <545ACF66.9050509@jp.fujitsu.com> <545AD061.4000102@hp.com> <545AD353.8060207@jp.fujitsu.com> <545AD8D3.90709@hp.com> <545B2885.8070009@jp.fujitsu.com> <545B2C07.1070701@hp.com> <5465A0E0.4020001@hp.com> <20141117133858.GA31920@8bytes.org>
+In-Reply-To: <20141117133858.GA31920@8bytes.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Vasundhara Volam <vasundhara.volam@emulex.com>
+Joerg,
 
-The pci_assigned_vfs() check (while disabling VFs) is being moved to the
-pci-sysfs.c file and will be done before invoking sriov_configure().
+After I implement these two steps, there comes a new fault:
 
-Signed-off-by: Vasundhara Volam <vasundhara.volam@emulex.com>
-Signed-off-by: Sathya Perla <sathya.perla@emulex.com>
----
- drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+[1.594890] dmar: DRHD: handling fault status reg 2
+[1.594894] dmar: INTR-REMAP: Request device [[41:00.0] fault index 4d
+[1.594894] INTR-REMAP:[fault reason 34] Present field in the IRTE entry
+is clear
 
-diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c
-index c88b20a..e90a10b 100644
---- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c
-+++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c
-@@ -2481,7 +2481,7 @@ int bnx2x_sriov_configure(struct pci_dev *dev, int num_vfs_param)
- 	bp->requested_nr_virtfn = num_vfs_param;
- 	if (num_vfs_param == 0) {
- 		bnx2x_set_pf_tx_switching(bp, false);
--		bnx2x_disable_sriov(bp);
-+		pci_disable_sriov(bp->pdev);
- 		return 0;
- 	} else {
- 		return bnx2x_enable_sriov(bp);
--- 
-1.7.1
+It is caused by similar reason, so I will fix it like fixing the DMAR
+faults: Do NOT disable and re-enable the interrupt remapping, try to
+use data from old kernel.
+
+
+Thanks
+Zhenhua
+
+On 11/17/2014 09:38 PM, Joerg Roedel wrote:
+> On Fri, Nov 14, 2014 at 02:27:44PM +0800, Li, ZhenHua wrote:
+>> I am working following  your directions:
+>>
+>> 1.  If the VT-d driver finds the IOMMU enabled, it reuses its root entry
+>> table, and do NOT disable-enable iommu. Other data will be copied.
+>>
+>> 2. When a device driver issues the first dma_map command for a
+>> device, we assign a new and empty page-table, thus removing all
+>> mappings from the old kernel for the device.
+>>
+>> Please let me know if I get something wrong.
+>
+> Yes, this sounds right. Happily waiting for patches :)
+>
+>
+> 	Joerg
+>
 
