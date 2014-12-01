@@ -1,64 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f54.google.com ([209.85.216.54]:56131 "EHLO
-	mail-qa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751889AbaLISVc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 13:21:32 -0500
-Received: by mail-qa0-f54.google.com with SMTP id i13so789555qae.41
-        for <linux-pci@vger.kernel.org>; Tue, 09 Dec 2014 10:21:32 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <547C77E0.5060607@citrix.com>
+Date: Mon, 1 Dec 2014 14:14:56 +0000
+From: David Vrabel <david.vrabel@citrix.com>
 MIME-Version: 1.0
-In-Reply-To: <20141209075619.GA23327@richard>
-References: <1418075552-26495-1-git-send-email-yinghai@kernel.org>
- <1418079372.13358.9.camel@kernel.crashing.org> <CAE9FiQX-vMu5+Kr09ngr95WvtoZTUSL5R2+NiVFeiN6q-BXLLg@mail.gmail.com>
- <20141209001119.GA24661@shangw> <20141209022601.GA16207@richard>
- <CAE9FiQWz=vdR=QSkoEs5XjUxg_y4vJgnChQAc1-U_9xzfQpknQ@mail.gmail.com> <20141209075619.GA23327@richard>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 9 Dec 2014 11:21:11 -0700
-Message-ID: <CAErSpo5Wj1GScsj6=_=Vv73NSh3D-SCfhEdeK6VOY1AicVUN3Q@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Clear bridge MEM_64 flag if one child does not
- support it
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	=?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>,
-	Alexey Voronkov <zermond@gmail.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+	<linux@eikelenboom.it>
+Subject: Re: [Xen-devel] [PATCH v4 7/7] xen/pciback: Restore configuration
+ space when detaching from a guest.
+References: <1416608271-18931-1-git-send-email-konrad.wilk@oracle.com> <1416608271-18931-8-git-send-email-konrad.wilk@oracle.com>
+In-Reply-To: <1416608271-18931-8-git-send-email-konrad.wilk@oracle.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 9, 2014 at 12:56 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+On 21/11/14 22:17, Konrad Rzeszutek Wilk wrote:
+> The commit "xen/pciback: Don't deadlock when unbinding." was using
+> the version of pci_reset_function which would lock the device lock.
+> That is no good as we can dead-lock. As such we swapped to using
+> the lock-less version and requiring that the callers
+> of 'pcistub_put_pci_dev' take the device lock. And as such
+> this bug got exposed.
+> 
+> Using the lock-less version is  OK, except that we tried to
+> use 'pci_restore_state' after the lock-less version of
+> __pci_reset_function_locked - which won't work as 'state_saved'
+> is set to false. Said 'state_saved' is a toggle boolean that
+> is to be used by the sequence of a) pci_save_state/pci_restore_state
+> or b) pci_load_and_free_saved_state/pci_restore_state. We don't
+> want to use a) as the guest might have messed up the PCI
+> configuration space and we want it to revert to the state
+> when the PCI device was binded to us. Therefore we pick
+> b) to restore the configuration space.
+> 
+> We restore from our 'golden' version of PCI configuration space, when an:
+>  - Device is unbinded from pciback
+>  - Device is detached from a guest.
+> 
+> Reported-by:  Sander Eikelenboom <linux@eikelenboom.it>
+> Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> ---
+>  drivers/xen/xen-pciback/pci_stub.c | 20 ++++++++++++++++----
+>  1 file changed, 16 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+> index 843a2ba..eb8b58e 100644
+> --- a/drivers/xen/xen-pciback/pci_stub.c
+> +++ b/drivers/xen/xen-pciback/pci_stub.c
+> @@ -105,7 +105,7 @@ static void pcistub_device_release(struct kref *kref)
+>  	 */
+>  	__pci_reset_function_locked(dev);
+>  	if (pci_load_and_free_saved_state(dev, &dev_data->pci_saved_state))
+> -		dev_dbg(&dev->dev, "Could not reload PCI state\n");
+> +		dev_info(&dev->dev, "Could not reload PCI state\n");
 
-> As you mentioned in another thread, "5b28541552ef is taking the wrong
-> approach". (http://www.spinics.net/lists/linux-pci/msg37374.html) Maybe I
-> don't catch it clearly. Put a 32bit prefetchable resource in a 32bit
-> non-prefetchable bridge window is a bad idea?
+Why dev_info when...
 
-A 32-bit prefetchable resource *can* be put in a 32-bit
-non-prefetchable window, but the device won't perform as well as it
-would if the resource were in a prefetchable window.
+> @@ -279,9 +281,19 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
+>  	 * (so it's ready for the next domain)
+>  	 */
+>  	device_lock_assert(&dev->dev);
+> -	__pci_reset_function_locked(dev);
+> -	pci_restore_state(dev);
+> -
+> +	dev_data = pci_get_drvdata(dev);
+> +	ret = pci_load_saved_state(dev, dev_data->pci_saved_state);
+> +	if (ret < 0)
+> +		dev_warn(&dev->dev, "Could not reload PCI state\n");
 
-What I object to is the fact that we put a 32-bit prefetchable
-resource in the non-prefetchable window and leave the 64-bit
-prefetchable window unused.  This gives up performance for no benefit.
+... this one is dev_warn?
 
-> But in my mind, if the bridge
-> prefetchable window is 64bit, we can't put a 32bit prefetchable resource in
-> it.
+> +	else {
+> +		__pci_reset_function_locked(dev);
 
-If the window is programmed to be above 4GB, of course we can't put a
-32-bit resource in it.  My point is that if the bridge *supports* a
-64-bit prefetchable window, we can decide where to place it.  If we
-put the window below 4GB, we can put a 32-bit prefetchable resource in
-it.
+I think the reset should always be attempted regardless of whether the
+correct state was loaded or not.
 
-I think maybe you're thinking of "64-bit window" as "a window
-programmed to be above 4GB."  I'm using "64-bit window" to mean "a
-window that supports 64-bit addressing," i.e., one where
-PCI_PREF_BASE_UPPER32 and PCI_PREF_LIMIT_UPPER32 are implemented.
-That's analogous to the way we talk about 64-bit BARs.  A 64-bit BAR
-is still a 64-bit BAR even if it is currently programmed to be below
-4GB.
-
-Bjorn
+David
