@@ -1,159 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:48174 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753222AbaLGUIt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 7 Dec 2014 15:08:49 -0500
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id sB7K8GmM026779
-	for <linux-pci@vger.kernel.org>; Sun, 7 Dec 2014 12:08:49 -0800
-Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1r3vjkhe4y-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Sun, 07 Dec 2014 12:08:49 -0800
-Content-Type: multipart/mixed;
-	boundary="_000_B5657A6538887040AD3A81F1008BEC63BA669Bavmb3qlogicorg_"
-From: Yuval Mintz <Yuval.Mintz@qlogic.com>
-To: Eli Cohen <eli@dev.mellanox.co.il>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"ogerlitz@mellanox.com" <ogerlitz@mellanox.com>,
-	"yevgenyp@mellanox.com" <yevgenyp@mellanox.com>,
-	Donald Dutile <ddutile@redhat.com>
-Subject: RE: [PATCH RFC] pci: Control whether VFs are probed on
- pci_enable_sriov
-Date: Sun, 7 Dec 2014 20:08:47 +0000
-Message-ID: <B5657A6538887040AD3A81F1008BEC63BA669B@avmb3.qlogic.org>
-References: <1417957693-24979-1-git-send-email-eli@mellanox.com>
- <B5657A6538887040AD3A81F1008BEC63BA6616@avmb3.qlogic.org>,<20141207184242.GA24790@mtldesk30>
-In-Reply-To: <20141207184242.GA24790@mtldesk30>
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:39338 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754233AbaLBBBo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Dec 2014 20:01:44 -0500
+Received: by mail-pa0-f49.google.com with SMTP id eu11so12226248pac.36
+        for <linux-pci@vger.kernel.org>; Mon, 01 Dec 2014 17:01:44 -0800 (PST)
+From: Kevin Hilman <khilman@kernel.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PM list <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH 0/4] PM: Use CONFIG_PM instead of CONFIG_PM_RUNTIME in core code
+References: <37310416.jZXoh5nfSC@vostro.rjw.lan>
+Date: Mon, 01 Dec 2014 17:01:40 -0800
+In-Reply-To: <37310416.jZXoh5nfSC@vostro.rjw.lan> (Rafael J. Wysocki's message
+	of "Thu, 27 Nov 2014 01:37:13 +0100")
+Message-ID: <7hd28250gb.fsf@deeprootsystems.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---_000_B5657A6538887040AD3A81F1008BEC63BA669Bavmb3qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+"Rafael J. Wysocki" <rjw@rjwysocki.net> writes:
 
->>>Use a parameter to pci_enable_sriov to control that policy, and modify=
-=0A=
->>>all current callers such that they retain the same functionality.=0A=
->> =0A=
->> What's the end-game here? How eventually would this be controlled?=0A=
-=0A=
->You can probe any VF at the hypervisor through sysfs files=0A=
->(bind/unbind). You can also pass them through to a VM. Nothing=0A=
->changes.=0A=
-=0A=
-If you're not planning on adding a logic to set this, why do we need to=0A=
-add a parameter to pci_enable_sriov() - given that all callers use the=0A=
-exact same logic?=0A=
-[And I don't really think we'd want different devices to behave differently=
-=0A=
-by default; That would be confusing for users.]=0A=
-=0A=
->>>Use a one shot flag on struct pci_device which is cleared after the=0A=
->>>first probe is ignored so subsequent attempts go through.=0A=
->>=0A=
->> Does a one-shot flag suffice? E.g., consider assigning a VF to VM and=0A=
->> than shutting down the VM. Assuming this feature is disabled,=0A=
->> the VF didn't appear on the hypervisor prior to the assignment but=0A=
->> will appear after its shutdown.=0A=
-=0A=
->Sorry, I don't follow you here. Please clarify.=0A=
-=0A=
->To be clear, the functionality proposed here is really one shot. It=0A=
->just prevents calling probe once; besides that nothing changes.=0A=
-=0A=
-What I meant is that device is unbinded after initial probe,=0A=
-But in the scenario I've stated above, the VF will become binded once=0A=
-it's returned to the hypervisor.=0A=
-Now, I understand that what you're trying to achieve - but my question=0A=
-is whether what you're REALLY trying to achieve is the ability to have VFs=
-=0A=
-which would only be binded to VMs and never to hypervisor [by default]?=
+> Hi,
+>
+> After commit b2b49ccbdd54 "PM: Kconfig: Set PM_RUNTIME if PM_SLEEP is
+> selected" (currently in Linux next) CONFIG_PM_RUNTIME is set whenever
+> CONFIG_PM is set, so CONFIG_PM can be used in #ifdefs instead of
+> CONFIG_PM_RUNTIME which simplifies things in quite a few cases.
+>
+> For this reason, the following patches modify some core code to use
+> CONFIG_PM instead of CONFIG_PM_RUNTIME.
+>
+> [1/4] Drop a macro which is redundant after the above commit.
+> [2/4] Use PM instead of PM_RUNTIME in the core device PM code.
+> [3/4] Use PM instead of PM_RUNTIME in the ACPI core.
+> [4/4] Use PM instead of PM_RUNTIME in the PCI core.
+>
+> They build for me for all of the relevant combinations of options (on x86),
+> but more testing (on the other architectures) would be welcome.
 
---_000_B5657A6538887040AD3A81F1008BEC63BA669Bavmb3qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
+Acked-by: Kevin Hilman <khilman@linaro.org>
 
-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
-AAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEAAABoAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAWQB1
-AHYAYQBsACAATQBpAG4AdAB6AAAAUwBNAFQAUAAAAFkAdQB2AGEAbAAuAE0AaQBuAHQAegBAAHEA
-bABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAAC4AAABZAHUAdgBhAGwALgBNAGkAbgB0AHoAQABx
-AGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAOVfAQAAADYAAABzAGkAcAA6AHkAdQB2AGEAbAAuAG0A
-aQBuAHQAegBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AGgwBAAAAGAAAAFkAdQB2AGEAbAAg
-AE0AaQBuAHQAegAAAB8AHwwBAAAALgAAAFkAdQB2AGEAbAAuAE0AaQBuAHQAegBAAHEAbABvAGcA
-aQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIBGQwBAAAAaAAAAAAAAACB
-Kx+kvqMQGZ1uAN0BD1QCAAAAgFkAdQB2AGEAbAAgAE0AaQBuAHQAegAAAFMATQBUAFAAAABZAHUA
-dgBhAGwALgBNAGkAbgB0AHoAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwABXQEAAAAuAAAAWQB1
-AHYAYQBsAC4ATQBpAG4AdAB6AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwD4PwEAAAAYAAAA
-WQB1AHYAYQBsACAATQBpAG4AdAB6AAAAHwAjQAEAAAAuAAAAWQB1AHYAYQBsAC4ATQBpAG4AdAB6
-AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEA
-AABoAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAWQB1AHYAYQBsACAATQBpAG4AdAB6AAAAUwBN
-AFQAUAAAAFkAdQB2AGEAbAAuAE0AaQBuAHQAegBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAld
-AQAAAC4AAABZAHUAdgBhAGwALgBNAGkAbgB0AHoAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAf
-ADFAAQAAAAIAAAAAAAAACwBAOgEAAAAfADBAAQAAAAIAAAAAAAAAHwAaAAEAAAASAAAASQBQAE0A
-LgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAAARR4pT3tVT
-QZoi0I+pgH7RAwAXAAEAAABAADkAgLHbm1kS0AFAAAgwVw4XnFkS0AELACkAAAAAAAsAAIAIIAYA
-AAAAAMAAAAAAAABGAAAAABSFAAABAAAACwAjAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAe
-AAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsA
-AIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEAAACQAAAAUgBFADoAIABbAFAAQQBU
-AEMASAAgAFIARgBDAF0AIABwAGMAaQA6ACAAQwBvAG4AdAByAG8AbAAgAHcAaABlAHQAaABlAHIA
-IABWAEYAcwAgAGEAcgBlACAAcAByAG8AYgBlAGQAIABvAG4AIABwAGMAaQBfAGUAbgBhAGIAbABl
-AF8AcwByAGkAbwB2AAAAHwA9AAEAAAAKAAAAUgBFADoAIAAAAAAAAwA2AAAAAAADAC4AAAAAAB8A
-QhABAAAARgAAADwAMgAwADEANAAxADIAMAA3ADEAOAA0ADIANAAyAC4ARwBBADIANAA3ADkAMABA
-AG0AdABsAGQAZQBzAGsAMwAwAD4AAAAAAAIBcQABAAAAJQAAAAEB0BIe8FnK9rvzDLZOtkLjaGZ5
-ysCchFqigYAAomiA//+Pt7UAAAAfAHAAAQAAAIgAAABbAFAAQQBUAEMASAAgAFIARgBDAF0AIABw
-AGMAaQA6ACAAQwBvAG4AdAByAG8AbAAgAHcAaABlAHQAaABlAHIAIABWAEYAcwAgAGEAcgBlACAA
-cAByAG8AYgBlAGQAIABvAG4AIABwAGMAaQBfAGUAbgBhAGIAbABlAF8AcwByAGkAbwB2AAAAHwA1
-EAEAAAB0AAAAPABCADUANgA1ADcAQQA2ADUAMwA4ADgAOAA3ADAANAAwAEEARAAzAEEAOAAxAEYA
-MQAwADAAOABCAEUAQwA2ADMAQgBBADYANgA5AEIAQABhAHYAbQBiADMALgBxAGwAbwBnAGkAYwAu
-AG8AcgBnAD4AAAAfADkQAQAAACQBAAA8ADEANAAxADcAOQA1ADcANgA5ADMALQAyADQAOQA3ADkA
-LQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AZQBsAGkAQABtAGUAbABsAGEAbgBv
-AHgALgBjAG8AbQA+ACAAPABCADUANgA1ADcAQQA2ADUAMwA4ADgAOAA3ADAANAAwAEEARAAzAEEA
-OAAxAEYAMQAwADAAOABCAEUAQwA2ADMAQgBBADYANgAxADYAQABhAHYAbQBiADMALgBxAGwAbwBn
-AGkAYwAuAG8AcgBnAD4ALAA8ADIAMAAxADQAMQAyADAANwAxADgANAAyADQAMgAuAEcAQQAyADQA
-NwA5ADAAQABtAHQAbABkAGUAcwBrADMAMAA+AAAAAwDeP59OAABAAAcwqxeIf1gS0AEDACYAAAAA
-AAIBRwABAAAALgAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjMtMTQxMjA3MjAwODQ3Wi02MzIw
-NgAAAAIBFDABAAAADAAAAP0AAABMtqlCPgAAAB8A+j8BAAAAGAAAAFkAdQB2AGEAbAAgAE0AaQBu
-AHQAegAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEA
-cwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAA
-AHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAYAAAAWwAxADAALgAxAC4A
-NAAuADEAMABdAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAGQAaQBzAGMAbABhAGkAbQBl
-AHIAAAAAAAEAAAAOAAAAYgB5AHAAYQBzAHMAAAAAAJtb
+I gave this a quick boot test on all the OMAP boards I have, and it's
+booting fine. As soon as this hits linux-next, it will be boot tested on
+a pile of different ARM platforms, and will let you know what happens.
 
---_000_B5657A6538887040AD3A81F1008BEC63BA669Bavmb3qlogicorg_--
+Kevin
