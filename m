@@ -1,60 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:51005 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751880AbaLHPOd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 8 Dec 2014 10:14:33 -0500
-Message-ID: <5485C03D.1020309@ti.com>
-Date: Mon, 8 Dec 2014 10:14:05 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-CC: <kernel-janitors@vger.kernel.org>, <linux@rasmusvillemoes.dk>,
-	<joe@perches.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/20] PCI: keystone: fix misspelling of current function
- in string
-References: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr> <1417980062-25151-3-git-send-email-Julia.Lawall@lip6.fr>
-In-Reply-To: <1417980062-25151-3-git-send-email-Julia.Lawall@lip6.fr>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from mail.emea.novell.com ([130.57.118.101]:56036 "EHLO
+	mail.emea.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752896AbaLBPKD convert rfc822-to-8bit (ORCPT
+	<rfc822;groupwise-linux-pci@vger.kernel.org:5:2>);
+	Tue, 2 Dec 2014 10:10:03 -0500
+Message-Id: <547DD64602000078000C2DC0@mail.emea.novell.com>
+Date: Tue, 02 Dec 2014 15:09:58 +0000
+From: "Jan Beulich" <jbeulich@suse.com>
+To: <konrad.wilk@oracle.com>
+Cc: <linux@eikelenboom.it>, <bhelgaas@google.com>,
+	<xen-devel@lists.xenproject.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: [Xen-devel] [PATCH v4] Fixes for PCI backend for 3.19
+References: <1416608271-18931-1-git-send-email-konrad.wilk@oracle.com>
+ <547D9E13020000780004C0B3@mail.emea.novell.com>
+ <20141202150514.GC27869@laptop.dumpdata.com>
+In-Reply-To: <20141202150514.GC27869@laptop.dumpdata.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/07/2014 02:20 PM, Julia Lawall wrote:
-> Replace a misspelled function name by %s and then __func__.
+>>> Konrad Rzeszutek Wilk <konrad.wilk@oracle.com> 12/02/14 4:05 PM >>>
+>On Tue, Dec 02, 2014 at 10:10:11AM +0000, Jan Beulich wrote:
+>> >>> On 21.11.14 at 23:17, <konrad.wilk@oracle.com> wrote:
+>> > Konrad Rzeszutek Wilk (7):
+>> >       xen/pciback: Don't deadlock when unbinding.
+>> >       driver core: Provide an wrapper around the mutex to do lockdep warnings
+>> >       xen/pciback: Include the domain id if removing the device whilst still in use
+>> >       xen/pciback: Print out the domain owning the device.
+>> >       xen/pciback: Remove tons of dereferences
+>> >       PCI: Expose pci_load_saved_state for public consumption.
+>> >       xen/pciback: Restore configuration space when detaching from a guest.
+>> 
+>> So my "xen-pciback: drop SR-IOV VFs when PF driver unloads" isn't
+>> among them, nor is there any alternative. What's the status of that
+>> patch (or the problem that prompted its creation)?
 >
-> The function name contains pcie, not pci as in the string.
->
-> This was done using Coccinelle, including the use of Levenshtein distance,
-> as proposed by Rasmus Villemoes.
->
-> Signed-off-by: Julia Lawall<Julia.Lawall@lip6.fr>
->
-> ---
-> The semantic patch is difficult to summarize, but is available in the cover
-> letter of this patch series.
->
->   drivers/pci/host/pci-keystone.c |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-> index 78f79e3..e2f600e 100644
-> --- a/drivers/pci/host/pci-keystone.c
-> +++ b/drivers/pci/host/pci-keystone.c
-> @@ -119,7 +119,7 @@ static void ks_pcie_msi_irq_handler(unsigned int irq, struct irq_desc *desc)
->   	struct pcie_port *pp =&ks_pcie->pp;
->   	struct irq_chip *chip = irq_desc_get_chip(desc);
->
-> -	dev_dbg(pp->dev, "ks_pci_msi_irq_handler, irq %d\n", irq);
-> +	dev_dbg(pp->dev, "%s, irq %d\n", __func__, irq);
->
->   	/*
->   	 * The chained irq handler installation would have replaced normal
->
+>Oh, I've it in my queue. Um, here is what I did to it - I hadn't
+>yet tested it - hence the reason it is not on that list.
 
-Acked-By: Murali Karicheri <m-karicheri2@ti.com>
+Yeah, if you like it better that way, it looks okay to me now.
 
--- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+Jan
+
