@@ -1,46 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:59507 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751066AbaLQGOR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Dec 2014 01:14:17 -0500
-Message-ID: <54911F32.1070909@huawei.com>
-Date: Wed, 17 Dec 2014 14:14:10 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: ratheesh kannoth <ratheesh.ksz@gmail.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: sysfs-pci remove
-References: <CAGZFCEG-J=Qore8nWvWLe6m-bm59Mx+M=HdcaOBVNODm9beokQ@mail.gmail.com>	<5490D5CB.5010200@huawei.com>	<CAGZFCEFOiY+VmTVKOnPwDaKUKogUX9gkXtHuMATL3btw4kz2JQ@mail.gmail.com>	<549119A9.4010406@huawei.com> <CAGZFCEGF2Do4Kus+T_yg6-A1wNSXKr-RBm3eSC6Wuw02OMWTOQ@mail.gmail.com>
-In-Reply-To: <CAGZFCEGF2Do4Kus+T_yg6-A1wNSXKr-RBm3eSC6Wuw02OMWTOQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-la0-f47.google.com ([209.85.215.47]:39527 "EHLO
+	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753928AbaLBQfJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Dec 2014 11:35:09 -0500
+From: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH] PCI: Generate uppercase hex for modalias var in uevent
+Date: Tue,  2 Dec 2014 17:35:04 +0100
+Message-Id: <1417538104-27341-1-git-send-email-ricardo.ribalda@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/12/17 14:08, ratheesh kannoth wrote:
-> On Wed, Dec 17, 2014 at 11:20 AM, Yijing Wang <wangyijing@huawei.com> wrote:
->> If the device 06:0.0 was removed by "echo 1 > /sys/.../0000:6:0.0/remove",
->> you could not see lspci info for this device anymore.
->> Do you really remove the device ?
-> 
-> Oh , my bad. I did not remove the device. I did an unbind
-> 
->  echo -n "0000:06:00.0" > /sys/bus/pci/drivers/enic/unbind0
-> 
-> Unbind wont remove it from /proc/iomem ? I thought enic pci driver is
-> the one is calling ioremap on those memory ?
+Some implementations of modprobe fail to load the driver for a PCI device
+automatically because the "interface" part of the modalias from the kernel
+is lowercase, and the modalias from file2alias is uppercase.
 
-Unbind won't release PCI device bar resource, resources in /proc/iomem is the
-physical address resource(added by request_resource()), if you iounmap the bar resource,
-it won't change anything in /proc/iomem.
+The "interface" is the low-order byte of the Class Code, defined in PCI
+r3.0, Appendix D.  Most interface types defined in the spec do not use
+alpha characters, so they won't be affected.  For example, 00h, 01h, 10h,
+20h, etc. are unaffected.
 
-> 
-> Thanks,
-> Ratheesh
-> 
-> 
+Print the "interface" byte of the Class Code in uppercase hex, as we
+already do for the Vendor ID, Device ID, Class, etc.
 
+Commit 89ec3dcf17fd ("PCI: Generate uppercase hex for modalias
+interface class") fixed only half of the problem. Some udev
+implementations relays on the uevent file and not in the modalias file.
 
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Fixes: d1ded203adf1 ("PCI: add MODALIAS to hotplug event for pci devices")
+Signed-off-by: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
+---
+
+Modified line is >80 char, but I believe that it is better than breaking
+the string or indent it bad.
+
+ drivers/pci/pci-driver.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 2b3c894..b720e78 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -1389,7 +1389,7 @@ static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
+ 	if (add_uevent_var(env, "PCI_SLOT_NAME=%s", pci_name(pdev)))
+ 		return -ENOMEM;
+ 
+-	if (add_uevent_var(env, "MODALIAS=pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02x",
++	if (add_uevent_var(env, "MODALIAS=pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02X",
+ 			   pdev->vendor, pdev->device,
+ 			   pdev->subsystem_vendor, pdev->subsystem_device,
+ 			   (u8)(pdev->class >> 16), (u8)(pdev->class >> 8),
 -- 
-Thanks!
-Yijing
+2.1.3
 
