@@ -1,91 +1,160 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25898 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753061AbaLAWI0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Dec 2014 17:08:26 -0500
-Date: Mon, 1 Dec 2014 16:59:27 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: David Vrabel <david.vrabel@citrix.com>
-Cc: xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux@eikelenboom.it
-Subject: Re: [Xen-devel] [PATCH v4 7/7] xen/pciback: Restore configuration
- space when detaching from a guest.
-Message-ID: <20141201215927.GH24289@laptop.dumpdata.com>
-References: <1416608271-18931-1-git-send-email-konrad.wilk@oracle.com>
- <1416608271-18931-8-git-send-email-konrad.wilk@oracle.com>
- <547C77E0.5060607@citrix.com>
+Received: from mail-qc0-f178.google.com ([209.85.216.178]:53546 "EHLO
+	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753315AbaLBACQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Dec 2014 19:02:16 -0500
+Received: by mail-qc0-f178.google.com with SMTP id b13so9710377qcw.9
+        for <linux-pci@vger.kernel.org>; Mon, 01 Dec 2014 16:02:15 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <547C77E0.5060607@citrix.com>
+In-Reply-To: <1417078449-9556-1-git-send-email-thierry.reding@gmail.com>
+References: <1417078449-9556-1-git-send-email-thierry.reding@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 1 Dec 2014 17:01:53 -0700
+Message-ID: <CAErSpo4XDv6Yn475eU7xyPoT6c2P9mckD-tmGtqCXcB1XYYRMw@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: tegra: Use physical range for I/O mapping
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <liviu.dudau@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 01, 2014 at 02:14:56PM +0000, David Vrabel wrote:
-> On 21/11/14 22:17, Konrad Rzeszutek Wilk wrote:
-> > The commit "xen/pciback: Don't deadlock when unbinding." was using
-> > the version of pci_reset_function which would lock the device lock.
-> > That is no good as we can dead-lock. As such we swapped to using
-> > the lock-less version and requiring that the callers
-> > of 'pcistub_put_pci_dev' take the device lock. And as such
-> > this bug got exposed.
-> > 
-> > Using the lock-less version is  OK, except that we tried to
-> > use 'pci_restore_state' after the lock-less version of
-> > __pci_reset_function_locked - which won't work as 'state_saved'
-> > is set to false. Said 'state_saved' is a toggle boolean that
-> > is to be used by the sequence of a) pci_save_state/pci_restore_state
-> > or b) pci_load_and_free_saved_state/pci_restore_state. We don't
-> > want to use a) as the guest might have messed up the PCI
-> > configuration space and we want it to revert to the state
-> > when the PCI device was binded to us. Therefore we pick
-> > b) to restore the configuration space.
-> > 
-> > We restore from our 'golden' version of PCI configuration space, when an:
-> >  - Device is unbinded from pciback
-> >  - Device is detached from a guest.
-> > 
-> > Reported-by:  Sander Eikelenboom <linux@eikelenboom.it>
-> > Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> > ---
-> >  drivers/xen/xen-pciback/pci_stub.c | 20 ++++++++++++++++----
-> >  1 file changed, 16 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
-> > index 843a2ba..eb8b58e 100644
-> > --- a/drivers/xen/xen-pciback/pci_stub.c
-> > +++ b/drivers/xen/xen-pciback/pci_stub.c
-> > @@ -105,7 +105,7 @@ static void pcistub_device_release(struct kref *kref)
-> >  	 */
-> >  	__pci_reset_function_locked(dev);
-> >  	if (pci_load_and_free_saved_state(dev, &dev_data->pci_saved_state))
-> > -		dev_dbg(&dev->dev, "Could not reload PCI state\n");
-> > +		dev_info(&dev->dev, "Could not reload PCI state\n");
-> 
-> Why dev_info when...
-> 
-> > @@ -279,9 +281,19 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
-> >  	 * (so it's ready for the next domain)
-> >  	 */
-> >  	device_lock_assert(&dev->dev);
-> > -	__pci_reset_function_locked(dev);
-> > -	pci_restore_state(dev);
-> > -
-> > +	dev_data = pci_get_drvdata(dev);
-> > +	ret = pci_load_saved_state(dev, dev_data->pci_saved_state);
-> > +	if (ret < 0)
-> > +		dev_warn(&dev->dev, "Could not reload PCI state\n");
-> 
-> ... this one is dev_warn?
+On Thu, Nov 27, 2014 at 1:54 AM, Thierry Reding
+<thierry.reding@gmail.com> wrote:
+> From: Thierry Reding <treding@nvidia.com>
+>
+> Commit 0b0b0893d49b ("of/pci: Fix the conversion of IO ranges into IO
+> resources") changed how I/O resources are parsed from DT. Rather than
+> containing the physical address of the I/O region, the addresses will
+> now be in I/O address space.
+>
+> On Tegra the union of all ranges is used to expose a top-level memory-
+> mapped resource for the PCI host bridge. This helps to make /proc/iomem
+> more readable.
+>
+> Combining both of the above, the union would now include the I/O space
+> region. This causes a regression on Tegra20, where the physical base
+> address of the PCIe controller (and therefore of the union) is located
+> at physical address 0x80000000. Since I/O space starts at 0, the union
+> will now include all of system RAM which starts at 0x00000000.
+>
+> This commit fixes this by keeping two copies of the I/O range: one that
+> represents the range in the CPU's physical address space, the other for
+> the range in the I/O address space. This allows the translation setup
+> within the driver to reuse the physical addresses. The code registering
+> the I/O region with the PCI core uses both ranges to establish the
+> mapping.
+>
+> Fixes: 0b0b0893d49b ("of/pci: Fix the conversion of IO ranges into IO resources")
+> Reported-by: Marc Zyngier <marc.zyngier@arm.com>
+> Suggested-by: Arnd Bergmann <arnd@arndb.de>
+> Signed-off-by: Thierry Reding <treding@nvidia.com>
 
-Should be the same, dev_info I think?
-> 
-> > +	else {
-> > +		__pci_reset_function_locked(dev);
-> 
-> I think the reset should always be attempted regardless of whether the
-> correct state was loaded or not.
+Applied to for-linus for v3.18 with:
 
-/me nods. Will redo it as such.
-> 
-> David
+  Tested-by: Marc Zyngier <marc.zyngier@arm.com>
+  Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+
+Thanks!
+
+> ---
+> Marc, any chance of getting a Tested-by from you on this? I think you
+> said you were seeing this on Harmony and I'm pretty sure this should fix
+> the issue for you as well.
+>
+> Bjorn, this fixes a regression on Tegra20 (it's hidden on later Tegra
+> generations because the PCIe controller has moved to the first 1 GiB of
+> physical address space) that was introduced in 3.18-rc1, so it would be
+> good to get this in before the final 3.18 release.
+>
+> Changes in v2:
+> - remove cleanup not essential to fix the regression (will be part of a
+>   follow-up patch)
+>
+>  drivers/pci/host/pci-tegra.c | 28 ++++++++++++++++++++--------
+>  1 file changed, 20 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index 3d43874319be..19bb19c7db4a 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -276,6 +276,7 @@ struct tegra_pcie {
+>
+>         struct resource all;
+>         struct resource io;
+> +       struct resource pio;
+>         struct resource mem;
+>         struct resource prefetch;
+>         struct resource busn;
+> @@ -658,7 +659,6 @@ static int tegra_pcie_setup(int nr, struct pci_sys_data *sys)
+>  {
+>         struct tegra_pcie *pcie = sys_to_pcie(sys);
+>         int err;
+> -       phys_addr_t io_start;
+>
+>         err = devm_request_resource(pcie->dev, &pcie->all, &pcie->mem);
+>         if (err < 0)
+> @@ -668,14 +668,12 @@ static int tegra_pcie_setup(int nr, struct pci_sys_data *sys)
+>         if (err)
+>                 return err;
+>
+> -       io_start = pci_pio_to_address(pcie->io.start);
+> -
+>         pci_add_resource_offset(&sys->resources, &pcie->mem, sys->mem_offset);
+>         pci_add_resource_offset(&sys->resources, &pcie->prefetch,
+>                                 sys->mem_offset);
+>         pci_add_resource(&sys->resources, &pcie->busn);
+>
+> -       pci_ioremap_io(nr * SZ_64K, io_start);
+> +       pci_ioremap_io(pcie->pio.start, pcie->io.start);
+>
+>         return 1;
+>  }
+> @@ -786,7 +784,6 @@ static irqreturn_t tegra_pcie_isr(int irq, void *arg)
+>  static void tegra_pcie_setup_translations(struct tegra_pcie *pcie)
+>  {
+>         u32 fpci_bar, size, axi_address;
+> -       phys_addr_t io_start = pci_pio_to_address(pcie->io.start);
+>
+>         /* Bar 0: type 1 extended configuration space */
+>         fpci_bar = 0xfe100000;
+> @@ -799,7 +796,7 @@ static void tegra_pcie_setup_translations(struct tegra_pcie *pcie)
+>         /* Bar 1: downstream IO bar */
+>         fpci_bar = 0xfdfc0000;
+>         size = resource_size(&pcie->io);
+> -       axi_address = io_start;
+> +       axi_address = pcie->io.start;
+>         afi_writel(pcie, axi_address, AFI_AXI_BAR1_START);
+>         afi_writel(pcie, size >> 12, AFI_AXI_BAR1_SZ);
+>         afi_writel(pcie, fpci_bar, AFI_FPCI_BAR1);
+> @@ -1690,8 +1687,23 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+>
+>                 switch (res.flags & IORESOURCE_TYPE_BITS) {
+>                 case IORESOURCE_IO:
+> -                       memcpy(&pcie->io, &res, sizeof(res));
+> -                       pcie->io.name = np->full_name;
+> +                       memcpy(&pcie->pio, &res, sizeof(res));
+> +                       pcie->pio.name = np->full_name;
+> +
+> +                       /*
+> +                        * The Tegra PCIe host bridge uses this to program the
+> +                        * mapping of the I/O space to the physical address,
+> +                        * so we override the .start and .end fields here that
+> +                        * of_pci_range_to_resource() converted to I/O space.
+> +                        * We also set the IORESOURCE_MEM type to clarify that
+> +                        * the resource is in the physical memory space.
+> +                        */
+> +                       pcie->io.start = range.cpu_addr;
+> +                       pcie->io.end = range.cpu_addr + range.size - 1;
+> +                       pcie->io.flags = IORESOURCE_MEM;
+> +                       pcie->io.name = "I/O";
+> +
+> +                       memcpy(&res, &pcie->io, sizeof(res));
+>                         break;
+>
+>                 case IORESOURCE_MEM:
+> --
+> 2.1.3
+>
