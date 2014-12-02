@@ -1,101 +1,176 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:49116 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751003AbaLTUdN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 20 Dec 2014 15:33:13 -0500
-From: Prashant Sreedharan <prashant@broadcom.com>
-To: <davem@davemloft.net>
-CC: <netdev@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<nholland@tisys.org>, <marcelo.leitner@gmail.com>,
-	<bhelgaas@google.com>, <rajatxjain@gmail.com>,
-	Prashant Sreedharan <prashant@broadcom.com>,
-	Michael Chan <mchan@broadcom.com>
-Subject: [PATCH net]tg3: tg3_disable_ints using uninitialized mailbox value to disable interrupts
-Date: Sat, 20 Dec 2014 12:16:17 -0800
-Message-ID: <1419106577-12891-1-git-send-email-prashant@broadcom.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 1 Dec 2014 17:21:46 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
+Subject: Re: [Patch Part3 v4 18/38] x86: irq_remapping: Clean up unsued code
+Message-ID: <20141202002146.GA5825@google.com>
+References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
+ <1416901802-24211-19-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1416901802-24211-19-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During driver load in tg3_init_one, if the driver detects DMA activity before
-intializing the chip tg3_halt is called. As part of tg3_halt interrupts are
-disabled using routine tg3_disable_ints. This routine was using mailbox value
-which was not initialized (default value is 0). As a result driver was writing
-0x00000001 to pci config space register 0, which is the vendor id / device id.
+s/unsued/unused/ in subject (here and other patches).
 
-This driver bug was exposed because of the commit a7877b17a667 (PCI: Check only
-the Vendor ID to identify Configuration Request Retry). Also this issue is only
-seen in older generation chipsets like 5722 because config space write to offset
-0 from driver is possible. The newer generation chips ignore writes to offset 0.
-Also without commit a7877b17a667, for these older chips when a GRC reset is
-issued the Bootcode would reprogram the vendor id/device id, which is the reason
-this bug was masked earlier.
+"Clean up" is slightly ambiguous; it could mean either "make better" or
+"remove."  "Remove unused code" would be less ambiguous.
 
-Fixed by initializing the interrupt mailbox registers before calling tg3_halt.
-
-Please queue for -stable.
-
-Reported-by: Nils Holland <nholland@tisys.org>
-Reported-by: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
-Signed-off-by: Prashant Sreedharan <prashant@broadcom.com>
-Signed-off-by: Michael Chan <mchan@broadcom.com>
----
- drivers/net/ethernet/broadcom/tg3.c |   34 +++++++++++++++++-----------------
- 1 files changed, 17 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/net/ethernet/broadcom/tg3.c b/drivers/net/ethernet/broadcom/tg3.c
-index bb48a61..553dcd8 100644
---- a/drivers/net/ethernet/broadcom/tg3.c
-+++ b/drivers/net/ethernet/broadcom/tg3.c
-@@ -17800,23 +17800,6 @@ static int tg3_init_one(struct pci_dev *pdev,
- 		goto err_out_apeunmap;
- 	}
- 
--	/*
--	 * Reset chip in case UNDI or EFI driver did not shutdown
--	 * DMA self test will enable WDMAC and we'll see (spurious)
--	 * pending DMA on the PCI bus at that point.
--	 */
--	if ((tr32(HOSTCC_MODE) & HOSTCC_MODE_ENABLE) ||
--	    (tr32(WDMAC_MODE) & WDMAC_MODE_ENABLE)) {
--		tw32(MEMARB_MODE, MEMARB_MODE_ENABLE);
--		tg3_halt(tp, RESET_KIND_SHUTDOWN, 1);
--	}
--
--	err = tg3_test_dma(tp);
--	if (err) {
--		dev_err(&pdev->dev, "DMA engine test failed, aborting\n");
--		goto err_out_apeunmap;
--	}
--
- 	intmbx = MAILBOX_INTERRUPT_0 + TG3_64BIT_REG_LOW;
- 	rcvmbx = MAILBOX_RCVRET_CON_IDX_0 + TG3_64BIT_REG_LOW;
- 	sndmbx = MAILBOX_SNDHOST_PROD_IDX_0 + TG3_64BIT_REG_LOW;
-@@ -17861,6 +17844,23 @@ static int tg3_init_one(struct pci_dev *pdev,
- 			sndmbx += 0xc;
- 	}
- 
-+	/*
-+	 * Reset chip in case UNDI or EFI driver did not shutdown
-+	 * DMA self test will enable WDMAC and we'll see (spurious)
-+	 * pending DMA on the PCI bus at that point.
-+	 */
-+	if ((tr32(HOSTCC_MODE) & HOSTCC_MODE_ENABLE) ||
-+	    (tr32(WDMAC_MODE) & WDMAC_MODE_ENABLE)) {
-+		tw32(MEMARB_MODE, MEMARB_MODE_ENABLE);
-+		tg3_halt(tp, RESET_KIND_SHUTDOWN, 1);
-+	}
-+
-+	err = tg3_test_dma(tp);
-+	if (err) {
-+		dev_err(&pdev->dev, "DMA engine test failed, aborting\n");
-+		goto err_out_apeunmap;
-+	}
-+
- 	tg3_init_coal(tp);
- 
- 	pci_set_drvdata(pdev, dev);
--- 
-1.7.1
-
+On Tue, Nov 25, 2014 at 03:49:42PM +0800, Jiang Liu wrote:
+> Now we have converted to hierarchy irqdomain, so clean up unused code.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> Tested-by: Joerg Roedel <jroedel@suse.de>
+> ---
+>  arch/x86/include/asm/irq_remapping.h |   23 ----------------------
+>  arch/x86/kernel/apic/vector.c        |    1 -
+>  drivers/iommu/irq_remapping.c        |   36 ----------------------------------
+>  3 files changed, 60 deletions(-)
+> 
+> diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
+> index de8470b6f36a..6ba243126b3b 100644
+> --- a/arch/x86/include/asm/irq_remapping.h
+> +++ b/arch/x86/include/asm/irq_remapping.h
+> @@ -26,12 +26,7 @@
+>  #include <asm/hw_irq.h>
+>  #include <asm/io_apic.h>
+>  
+> -struct IO_APIC_route_entry;
+> -struct io_apic_irq_attr;
+> -struct irq_chip;
+>  struct msi_msg;
+> -struct pci_dev;
+> -struct irq_cfg;
+>  struct irq_alloc_info;
+>  
+>  #ifdef CONFIG_IRQ_REMAP
+> @@ -44,13 +39,7 @@ extern int irq_remapping_enable(void);
+>  extern void irq_remapping_disable(void);
+>  extern int irq_remapping_reenable(int);
+>  extern int irq_remap_enable_fault_handling(void);
+> -extern void free_remapped_irq(int irq);
+>  extern void panic_if_irq_remap(const char *msg);
+> -extern bool setup_remapped_irq(int irq,
+> -			       struct irq_cfg *cfg,
+> -			       struct irq_chip *chip);
+> -
+> -void irq_remap_modify_chip_defaults(struct irq_chip *chip);
+>  
+>  extern struct irq_domain *
+>  irq_remapping_get_ir_irq_domain( struct irq_alloc_info *info);
+> @@ -77,23 +66,11 @@ static inline int irq_remapping_enable(void) { return -ENODEV; }
+>  static inline void irq_remapping_disable(void) { }
+>  static inline int irq_remapping_reenable(int eim) { return -ENODEV; }
+>  static inline int irq_remap_enable_fault_handling(void) { return -ENODEV; }
+> -static inline void free_remapped_irq(int irq) { }
+>  
+>  static inline void panic_if_irq_remap(const char *msg)
+>  {
+>  }
+>  
+> -static inline void irq_remap_modify_chip_defaults(struct irq_chip *chip)
+> -{
+> -}
+> -
+> -static inline bool setup_remapped_irq(int irq,
+> -				      struct irq_cfg *cfg,
+> -				      struct irq_chip *chip)
+> -{
+> -	return false;
+> -}
+> -
+>  static inline struct irq_domain *
+>  irq_remapping_get_ir_irq_domain(struct irq_alloc_info *info)
+>  {
+> diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+> index 31dc4a871673..ca30365507a0 100644
+> --- a/arch/x86/kernel/apic/vector.c
+> +++ b/arch/x86/kernel/apic/vector.c
+> @@ -283,7 +283,6 @@ static void x86_vector_free_irqs(struct irq_domain *domain,
+>  	for (i = 0; i < nr_irqs; i++) {
+>  		irq_data = irq_domain_get_irq_data(x86_vector_domain, virq + i);
+>  		if (irq_data && irq_data->chip_data) {
+> -			free_remapped_irq(virq);
+>  			clear_irq_vector(virq + i, irq_data->chip_data);
+>  			free_irq_cfg(irq_data->chip_data);
+>  #ifdef	CONFIG_X86_IO_APIC
+> diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+> index d175d6911821..3c3da04da8c5 100644
+> --- a/drivers/iommu/irq_remapping.c
+> +++ b/drivers/iommu/irq_remapping.c
+> @@ -26,11 +26,6 @@ int no_x2apic_optout;
+>  
+>  static struct irq_remap_ops *remap_ops;
+>  
+> -static bool irq_remapped(struct irq_cfg *cfg)
+> -{
+> -	return (cfg->remapped == 1);
+> -}
+> -
+>  static void irq_remapping_disable_io_apic(void)
+>  {
+>  	/*
+> @@ -160,17 +155,6 @@ int __init irq_remap_enable_fault_handling(void)
+>  	return remap_ops->enable_faulting();
+>  }
+>  
+> -void free_remapped_irq(int irq)
+> -{
+> -	struct irq_cfg *cfg = irq_cfg(irq);
+> -
+> -	if (!remap_ops || !remap_ops->free_irq)
+> -		return;
+> -
+> -	if (irq_remapped(cfg))
+> -		remap_ops->free_irq(irq);
+> -}
+> -
+>  void panic_if_irq_remap(const char *msg)
+>  {
+>  	if (irq_remapping_enabled)
+> @@ -195,26 +179,6 @@ void irq_remapping_print_chip(struct irq_data *data, struct seq_file *p)
+>  		seq_printf(p, " %s", data->chip->name);
+>  }
+>  
+> -static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
+> -{
+> -	seq_printf(p, " IR-%s", data->chip->name);
+> -}
+> -
+> -void irq_remap_modify_chip_defaults(struct irq_chip *chip)
+> -{
+> -	chip->irq_print_chip = ir_print_prefix;
+> -	chip->irq_ack = ir_ack_apic_edge;
+> -}
+> -
+> -bool setup_remapped_irq(int irq, struct irq_cfg *cfg, struct irq_chip *chip)
+> -{
+> -	if (!irq_remapped(cfg))
+> -		return false;
+> -	irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
+> -	irq_remap_modify_chip_defaults(chip);
+> -	return true;
+> -}
+> -
+>  /**
+>   * irq_remapping_get_ir_irq_domain - Get the irqdomain associated with the IOMMU
+>   *				     device serving request @info
+> -- 
+> 1.7.10.4
+> 
