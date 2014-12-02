@@ -1,52 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:63877 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755738AbaLJLcJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Dec 2014 06:32:09 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Ray Jui <rjui@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Christian Daudt <bcm@fixthebug.org>,
-	Matt Porter <mporter@linaro.org>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Scott Branden <sbranden@broadcom.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	bcm-kernel-feedback-list@broadcom.com, devicetree@vger.kernel.org,
-	hauke@hauke-m.de
-Subject: Re: [PATCH 2/4] PCI: iproc: Add Broadcom iProc PCIe driver
-Date: Wed, 10 Dec 2014 12:31:38 +0100
-Message-ID: <9707535.Y78sV0TgX4@wuerfel>
-In-Reply-To: <1418169871-19232-3-git-send-email-rjui@broadcom.com>
-References: <1418169871-19232-3-git-send-email-rjui@broadcom.com>
+Received: from mail-qa0-f51.google.com ([209.85.216.51]:61642 "EHLO
+	mail-qa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932199AbaLBUN2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Dec 2014 15:13:28 -0500
+Received: by mail-qa0-f51.google.com with SMTP id k15so9180363qaq.38
+        for <linux-pci@vger.kernel.org>; Tue, 02 Dec 2014 12:13:27 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAHH3p5L5bX+9PfZCFHAYmyAS9+kg9CpdQWnAy7WZLCNBm+RYSA@mail.gmail.com>
+References: <CAHH3p5L5bX+9PfZCFHAYmyAS9+kg9CpdQWnAy7WZLCNBm+RYSA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 2 Dec 2014 13:13:07 -0700
+Message-ID: <CAErSpo6U9Zpw1Dd79yFmEksEdHSmqDJe517JsLUSN79P9iEJRA@mail.gmail.com>
+Subject: Re: PCIE card link up w/ or w/o device connected
+To: shiv prakash Agarwal <chhotu.shiv@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	Rajat Jain <rajatxjain@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 09 December 2014 16:04:29 Ray Jui wrote:
-> Add initial version of the Broadcom iProc PCIe driver. This driver
-> has been tested on NSP and Cygnus and is expected to work on all iProc
-> family of SoCs that deploys the same PCIe host controller
-> 
-> The driver also supports MSI
-> 
-> Signed-off-by: Ray Jui <rjui@broadcom.com>
-> Reviewed-by: Scott Branden <sbranden@broadcom.com>
+[+cc Pratyush, Yinghai, Alex, Rajat]
 
-The driver looks suspiciously like the one that Hauke already submitted a
-while ago for bcm53xx. Please come up with a merged driver that works for
-both.
+On Wed, Nov 26, 2014 at 7:57 AM, shiv prakash Agarwal
+<chhotu.shiv@gmail.com> wrote:
+> Hi All,
+>
+> Is anybody aware of any pcie card which gets detected by root port i.e
+> link is up only when any device is connected to card? For example:
+> PCIE USB3 card link is up only when a usb3 device is connected to it.
+>
+> Is it possible at least? Or card link will always be up whether any
+> device is connected to it or not?
 
-Are you sure that iProc isn't based on the BCMA bus infrastructure after
-all? Even the physical address of your PCI host falls into the address
-range that is used for the internal BCMA bus on the other chips!
+Yes, I think that's possible.  This is similar to the situation Rajat
+has where the link state of a device can be controlled by some
+external entity: e48f1b67f668 ("PCI: pciehp: Use link change
+notifications for hot-plug and removal").
 
-	Arnd
+Bjorn
