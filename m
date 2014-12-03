@@ -1,46 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f52.google.com ([209.85.192.52]:41013 "EHLO
-	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751307AbaLRCjK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Dec 2014 21:39:10 -0500
-MIME-Version: 1.0
-In-Reply-To: <54920597.6090305@ti.com>
-References: <54907884.2040502@ti.com>
-	<5491ACE6.4070108@ti.com>
-	<CAErSpo4hwMPOYBDZTu_fgKaUDYZ4h+jVpz5EigpErOgo6xO8mQ@mail.gmail.com>
-	<54920529.4080007@ti.com>
-	<54920597.6090305@ti.com>
-Date: Thu, 18 Dec 2014 10:39:08 +0800
-Message-ID: <CANeU7Q=85c8ehgCitG-Ujrr5O78V1yq9o=abJ8pwBBs0JOWAEg@mail.gmail.com>
-Subject: Re: How to fix CHECK warning: testing a 'safe expression' ?
-From: Christopher Li <sparse@chrisli.org>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from aserp1040.oracle.com ([141.146.126.69]:33290 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751186AbaLCVlG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Dec 2014 16:41:06 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: [PATCH v5 6/9] PCI: Expose pci_load_saved_state for public consumption.
+Date: Wed,  3 Dec 2014 16:40:31 -0500
+Message-Id: <1417642834-20350-7-git-send-email-konrad.wilk@oracle.com>
+In-Reply-To: <1417642834-20350-1-git-send-email-konrad.wilk@oracle.com>
+References: <1417642834-20350-1-git-send-email-konrad.wilk@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 18, 2014 at 6:37 AM, Murali Karicheri <m-karicheri2@ti.com> wrote:
->         if (!ks_pcie) {
->                 dev_err(dev, "no memory for keystone pcie\n");
->                 return -ENOMEM;
->         }
->         pp = &ks_pcie->pp;
->
->         /* initialize SerDes Phy if present */
->         phy = devm_phy_get(dev, "pcie-phy");
-> ===>    if (!IS_ERR_OR_NULL(phy)) {
->                 ret = phy_init(phy);
->                 if (ret < 0)
->                         return ret;
->
+We have the pci_load_and_free_saved_state, and pci_store_saved_state
+but are missing the functionality to just load the state
+multiple times in the PCI device without having to free/save
+the state.
 
-Hi,
+This patch makes it possible to use this function.
 
-Do you have a smaller stand alone test case which I can reproduce with sparse?
+CC: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+---
+ drivers/pci/pci.c   | 5 +++--
+ include/linux/pci.h | 2 ++
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-Thanks
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 625a4ac..f00a9d6 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1142,8 +1142,8 @@ EXPORT_SYMBOL_GPL(pci_store_saved_state);
+  * @dev: PCI device that we're dealing with
+  * @state: Saved state returned from pci_store_saved_state()
+  */
+-static int pci_load_saved_state(struct pci_dev *dev,
+-				struct pci_saved_state *state)
++int pci_load_saved_state(struct pci_dev *dev,
++			 struct pci_saved_state *state)
+ {
+ 	struct pci_cap_saved_data *cap;
+ 
+@@ -1171,6 +1171,7 @@ static int pci_load_saved_state(struct pci_dev *dev,
+ 	dev->state_saved = true;
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(pci_load_saved_state);
+ 
+ /**
+  * pci_load_and_free_saved_state - Reload the save state pointed to by state,
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5be8db4..08088cb1 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1003,6 +1003,8 @@ void __iomem __must_check *pci_platform_rom(struct pci_dev *pdev, size_t *size);
+ int pci_save_state(struct pci_dev *dev);
+ void pci_restore_state(struct pci_dev *dev);
+ struct pci_saved_state *pci_store_saved_state(struct pci_dev *dev);
++int pci_load_saved_state(struct pci_dev *dev,
++			 struct pci_saved_state *state);
+ int pci_load_and_free_saved_state(struct pci_dev *dev,
+ 				  struct pci_saved_state **state);
+ struct pci_cap_saved_state *pci_find_saved_cap(struct pci_dev *dev, char cap);
+-- 
+1.9.3
 
-Chris
