@@ -1,118 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f169.google.com ([209.85.216.169]:61795 "EHLO
-	mail-qc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751125AbaLRUeI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Dec 2014 15:34:08 -0500
-Message-ID: <54933A36.7010000@gmail.com>
-Date: Thu, 18 Dec 2014 18:33:58 -0200
-From: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:32218 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750730AbaLCUa6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Dec 2014 15:30:58 -0500
+Date: Wed, 3 Dec 2014 10:52:08 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Cc: xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux@eikelenboom.it
+Subject: Re: [Xen-devel] [PATCH v4 7/7] xen/pciback: Restore configuration
+ space when detaching from a guest.
+Message-ID: <20141203155208.GC3081@laptop.dumpdata.com>
+References: <1416608271-18931-1-git-send-email-konrad.wilk@oracle.com>
+ <1416608271-18931-8-git-send-email-konrad.wilk@oracle.com>
+ <547E4736.5000303@oracle.com>
 MIME-Version: 1.0
-To: Prashant Sreedharan <prashant@broadcom.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Michael Chan <mchan@broadcom.com>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Nils Holland <nholland@tisys.org>,
-	David Miller <davem@davemloft.net>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rafael Wysocki <rjw@rjwysocki.net>
-Subject: Re: [bisected] tg3 broken in 3.18.0?
-References: <20141213210251.GA12812@teela.fritz.box> <548EF90A.5070607@gmail.com> <CAA93t1qyZE-9tw8pg1KG6g4iyy0QMW=iass5w=6ZGMTMu+vi_A@mail.gmail.com> <CAErSpo5dqQE7nZ6zf2odgpHBWA3ZpTjhbgQKnY8YxQW+a+298w@mail.gmail.com> <1418750141.4248.3.camel@LTIRV-MCHAN1.corp.ad.broadcom.com> <54907300.9050902@gmail.com> <1418759684.4248.12.camel@LTIRV-MCHAN1.corp.ad.broadcom.com> <CAErSpo7sqZS+-4LHo3wbo-pa73mcP_3d0Z37U0tfnASaxp-D_g@mail.gmail.com> <1418930889.3433.8.camel@prashant> <54933491.7020204@gmail.com>
-In-Reply-To: <54933491.7020204@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <547E4736.5000303@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 18-12-2014 18:09, Marcelo Ricardo Leitner wrote:
-> On 18-12-2014 17:28, Prashant Sreedharan wrote:
->> On Thu, 2014-12-18 at 12:15 -0700, Bjorn Helgaas wrote:
->>> On Tue, Dec 16, 2014 at 12:54 PM, Michael Chan <mchan@broadcom.com> wrote:
->>>> On Tue, 2014-12-16 at 15:59 -0200, Marcelo Ricardo Leitner wrote:
->>>>> It's a
->>>>> 02:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5722
->>>>> Gigabit Ethernet PCI Express
->>>>> over here
->>>>>
->>>>> I put a WARN_ON(1) after those printks, and this is what I got:
->>>>>
->>>>> [    1.550640] pci 0000:02:00.0: 1st 1 1
->>>>> [    1.550643] pci 0000:02:00.0: crs_timeout: 0
->>>>> [    1.550645] ------------[ cut here ]------------
->>>>> [    1.550651] WARNING: CPU: 6 PID: 364 at drivers/pci/probe.c:1445 pci_bus_read_dev_vendor_id+0x1d4/0x1e0()
->>>>> [    1.550652] Modules linked in: i915(+) raid0 i2c_algo_bit drm_kms_helper drm e1000e(+) tg3(+) ptp pps_core video
->>>>> [    1.550660] CPU: 6 PID: 364 Comm: systemd-udevd Not tainted 3.18.0-rc6+ #8
->>>>> [    1.550661] Hardware name: Dell Inc. OptiPlex 9010/03K80F, BIOS A15 08/12/2013
->>>>> [    1.550662]  0000000000000000 000000004de2d8dc ffff8807eabdf948 ffffffff8173db46
->>>>> [    1.550665]  0000000000000000 0000000000000000 ffff8807eabdf988 ffffffff81094d41
->>>>> [    1.550667]  ffff8807eabdf968 ffff8807f1e27000 0000000000000000 0000000000000000
->>>>> [    1.550669] Call Trace:
->>>>> [    1.550675]  [<ffffffff8173db46>] dump_stack+0x46/0x58
->>>>> [    1.550679]  [<ffffffff81094d41>] warn_slowpath_common+0x81/0xa0
->>>>> [    1.550681]  [<ffffffff81094e5a>] warn_slowpath_null+0x1a/0x20
->>>>> [    1.550683]  [<ffffffff813b2864>] pci_bus_read_dev_vendor_id+0x1d4/0x1e0
->>>>> [    1.550687]  [<ffffffff813b7c3e>] pci_device_is_present+0x2e/0x50
->>>>> [    1.550693]  [<ffffffffa003364f>] tg3_chip_reset+0x2f/0x940 [tg3]
->>>>> [    1.550697]  [<ffffffffa0033f9f>] tg3_halt+0x3f/0x1e0 [tg3]
->>>>> [    1.550701]  [<ffffffffa0044f83>] tg3_init_one+0xb83/0x1a40 [tg3]
->>>>
->>>> So does it work if you use a non-zero crs_timeout?  The driver has
->>>> called tg3_halt() which may affect configuration read responses.  I need
->>>> to check with the hardware team to see if the 5722 will return CRS in
->>>> this scenario.
->>>
->>> Any updates from the hardware team?
->>>
->>> This is a pretty serious regression, but as far as I can tell, it is
->>> not a PCI bug.  The device should respond to a config read of vendor
->>> ID.  If the driver does something that make the read return CRS
->>> status, I think the driver is responsible for doing whatever delay or
->>> other fixup is required.
->>>
->>> I'm inclined to reassign this bug to the tg3 driver unless you think
->>> the PCI core is doing something wrong here.
->>>
->>> Bjorn
->>
->> We were not able to reproduce this issue, could you please check what is
->> the value of reg 0x70, before the pci_device_is_present call is made ?
->> if bit 15 is set config access will be retried.
->>
->> --- a/drivers/net/ethernet/broadcom/tg3.c
->> +++ b/drivers/net/ethernet/broadcom/tg3.c
->> @@ -9025,6 +9025,7 @@ static int tg3_chip_reset(struct tg3 *tp)
->>           void (*write_op)(struct tg3 *, u32, u32);
->>           int i, err;
->>
->> +       printk(KERN_ERR "config state: %x\n", tr32(TG3PCI_PCISTATE));
->>           if (!pci_device_is_present(tp->pdev))
->>                   return -ENODEV;
->>
->
-> With that PCI patch applied and my debugs, without the timeout hack (so crs_timeout=0):
->
-> [    1.545554] config state: 12b2
-> [    1.548636] pci 0000:02:00.0: 1st 1 1
-> [    1.548637] pci 0000:02:00.0: crs_timeout: 0
-> [    1.548783] tg3 0000:02:00.0 eth0: Tigon3 [partno(BCM95722) rev a200] (PCI Express) MAC address 00:0a:f7:2b:9b:39
-> [    1.548785] tg3 0000:02:00.0 eth0: attached PHY is 5722/5756 (10/100/1000Base-T Ethernet) (WireSpeed[1], EEE[0])
-> [    1.548786] tg3 0000:02:00.0 eth0: RXcsums[1] LinkChgREG[0] MIirq[0] ASF[0] TSOcap[1]
-> [    1.548787] tg3 0000:02:00.0 eth0: dma_rwctrl[76180000] dma_mask[64-bit]
-> [    1.554389] tg3 0000:02:00.0 p1p1: renamed from eth0
-> ...
->
-> That's the only time your printk got printed.
+On Tue, Dec 02, 2014 at 06:11:50PM -0500, Boris Ostrovsky wrote:
+> On 11/21/2014 05:17 PM, Konrad Rzeszutek Wilk wrote:
+> >The commit "xen/pciback: Don't deadlock when unbinding." was using
+> >the version of pci_reset_function which would lock the device lock.
+> >That is no good as we can dead-lock. As such we swapped to using
+> >the lock-less version and requiring that the callers
+> >of 'pcistub_put_pci_dev' take the device lock. And as such
+> >this bug got exposed.
+> >
+> >Using the lock-less version is  OK, except that we tried to
+> >use 'pci_restore_state' after the lock-less version of
+> >__pci_reset_function_locked - which won't work as 'state_saved'
+> >is set to false. Said 'state_saved' is a toggle boolean that
+> >is to be used by the sequence of a) pci_save_state/pci_restore_state
+> >or b) pci_load_and_free_saved_state/pci_restore_state. We don't
+> >want to use a) as the guest might have messed up the PCI
+> >configuration space and we want it to revert to the state
+> >when the PCI device was binded to us. Therefore we pick
+> >b) to restore the configuration space.
+> 
+> 
+> Doesn't this all mean that patch 1/7 broke pcistub_put_pci_dev()?
 
-My bad, I forgot I had configured the system to not bring that iface up 
-anymore.. when doing so, just like Nils had too:
+It fixed it (there was a deadlock there).
 
-[ 1743.678714] tg3 0000:02:00.0: irq 32 for MSI/MSI-X
-[ 1745.554039] tg3 0000:02:00.0 p1p1: No firmware running
-[ 1745.554724] config state: 12b2
-[ 1745.557822] pci 0000:02:00.0: 1st 1 1
-[ 1745.557827] pci 0000:02:00.0: crs_timeout: 0
-[ 1745.559383] config state: 12b2
-[ 1745.562470] pci 0000:02:00.0: 1st 1 1
-[ 1745.562471] pci 0000:02:00.0: crs_timeout: 0
+But the fix to the dead-lock exposed this bug.
 
-   Marcelo
+One could say that 1/7 broke it because it never worked in the
+first place, but now that it works (thanks to #1)  - it did not
+work right?
 
+Squashing the patches together is a bit too much I fear.
+
+> 
+> -boris
+> 
+> 
+> >
+> >We restore from our 'golden' version of PCI configuration space, when an:
+> >  - Device is unbinded from pciback
+> >  - Device is detached from a guest.
+> >
+> >Reported-by:  Sander Eikelenboom <linux@eikelenboom.it>
+> >Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> >---
+> >  drivers/xen/xen-pciback/pci_stub.c | 20 ++++++++++++++++----
+> >  1 file changed, 16 insertions(+), 4 deletions(-)
+> >
+> >diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+> >index 843a2ba..eb8b58e 100644
+> >--- a/drivers/xen/xen-pciback/pci_stub.c
+> >+++ b/drivers/xen/xen-pciback/pci_stub.c
+> >@@ -105,7 +105,7 @@ static void pcistub_device_release(struct kref *kref)
+> >  	 */
+> >  	__pci_reset_function_locked(dev);
+> >  	if (pci_load_and_free_saved_state(dev, &dev_data->pci_saved_state))
+> >-		dev_dbg(&dev->dev, "Could not reload PCI state\n");
+> >+		dev_info(&dev->dev, "Could not reload PCI state\n");
+> >  	else
+> >  		pci_restore_state(dev);
+> >@@ -257,6 +257,8 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
+> >  {
+> >  	struct pcistub_device *psdev, *found_psdev = NULL;
+> >  	unsigned long flags;
+> >+	struct xen_pcibk_dev_data *dev_data;
+> >+	int ret;
+> >  	spin_lock_irqsave(&pcistub_devices_lock, flags);
+> >@@ -279,9 +281,19 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
+> >  	 * (so it's ready for the next domain)
+> >  	 */
+> >  	device_lock_assert(&dev->dev);
+> >-	__pci_reset_function_locked(dev);
+> >-	pci_restore_state(dev);
+> >-
+> >+	dev_data = pci_get_drvdata(dev);
+> >+	ret = pci_load_saved_state(dev, dev_data->pci_saved_state);
+> >+	if (ret < 0)
+> >+		dev_warn(&dev->dev, "Could not reload PCI state\n");
+> >+	else {
+> >+		__pci_reset_function_locked(dev);
+> >+		/*
+> >+		 * The usual sequence is pci_save_state & pci_restore_state
+> >+		 * but the guest might have messed the configuration space up.
+> >+		 * Use the initial version (when device was bound to us).
+> >+		 */
+> >+		pci_restore_state(dev);
+> >+	}
+> >  	/* This disables the device. */
+> >  	xen_pcibk_reset_device(dev);
+> 
