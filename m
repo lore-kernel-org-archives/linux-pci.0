@@ -1,108 +1,120 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH 2/6] PCI/MSI: add hooks to populate the msi_domain field
-Date: Mon,  8 Dec 2014 20:12:19 +0000
-Message-Id: <1418069543-21969-3-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com>
-References: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:33593 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752193AbaLCVlL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Dec 2014 16:41:11 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com
+Cc: Jan Beulich <JBeulich@suse.com>, Jan Beulich <jbeulich@suse.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: [PATCH v5 8/9] xen-pciback: drop SR-IOV VFs when PF driver unloads
+Date: Wed,  3 Dec 2014 16:40:33 -0500
+Message-Id: <1417642834-20350-9-git-send-email-konrad.wilk@oracle.com>
+In-Reply-To: <1417642834-20350-1-git-send-email-konrad.wilk@oracle.com>
+References: <1417642834-20350-1-git-send-email-konrad.wilk@oracle.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order to be able to populate the device msi_domain field,
-add the necesary hooks to propagate the PHB msi_domain across
-secondary busses to devices.
+From: Jan Beulich <JBeulich@suse.com>
 
-So far, nobody populates the initial msi_domain.
+When a PF driver unloads, it may find it necessary to leave the VFs
+around simply because of pciback having marked them as assigned to a
+guest. Utilize a suitable notification to let go of the VFs, thus
+allowing the PF to go back into the state it was before its driver
+loaded (which in particular allows the driver to be loaded again with
+it being able to create the VFs anew, but which also allows to then
+pass through the PF instead of the VFs).
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+Don't do this however for any VFs currently in active use by a guest.
+
+Signed-off-by: Jan Beulich <jbeulich@suse.com>
+[v2: Removed the switch statement, moved it about]
+[v3: Redid it a bit differently]
+Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
 ---
- drivers/pci/probe.c | 24 ++++++++++++++++++++++++
- include/linux/pci.h |  1 +
- 2 files changed, 25 insertions(+)
+ drivers/xen/xen-pciback/pci_stub.c | 54 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 54 insertions(+)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index c8ca98c..d1009a2 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -670,6 +670,20 @@ static void pci_set_bus_speed(struct pci_bus *bus)
- 	}
- }
+diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+index 8580e53..cc3cbb4 100644
+--- a/drivers/xen/xen-pciback/pci_stub.c
++++ b/drivers/xen/xen-pciback/pci_stub.c
+@@ -1518,6 +1518,53 @@ parse_error:
+ fs_initcall(pcistub_init);
+ #endif
  
-+void __weak pcibios_set_phb_msi_domain(struct pci_bus *bus)
++#ifdef CONFIG_PCI_IOV
++static struct pcistub_device *find_vfs(const struct pci_dev *pdev)
 +{
++	struct pcistub_device *psdev = NULL;
++	unsigned long flags;
++	bool found = false;
++
++	spin_lock_irqsave(&pcistub_devices_lock, flags);
++	list_for_each_entry(psdev, &pcistub_devices, dev_list) {
++		if (!psdev->pdev && psdev->dev != pdev
++		    && pci_physfn(psdev->dev) == pdev) {
++			found = true;
++			break;
++		}
++	}
++	spin_unlock_irqrestore(&pcistub_devices_lock, flags);
++	if (found)
++		return psdev;
++	return NULL;
 +}
 +
-+static void pci_set_bus_msi_domain(struct pci_bus *bus)
++static int pci_stub_notifier(struct notifier_block *nb,
++			     unsigned long action, void *data)
 +{
-+	struct pci_dev *bridge = bus->self;
++	struct device *dev = data;
++	const struct pci_dev *pdev = to_pci_dev(dev);
 +
-+	if (!bridge)
-+		pcibios_set_phb_msi_domain(bus);
++	if (action != BUS_NOTIFY_UNBIND_DRIVER)
++		return NOTIFY_DONE;
++
++	if (!pdev->is_physfn)
++		return NOTIFY_DONE;
++
++	for (;;) {
++		struct pcistub_device *psdev = find_vfs(pdev);
++		if (!psdev)
++			break;
++		device_release_driver(&psdev->dev->dev);
++	}
++	return NOTIFY_DONE;
++}
++
++static struct notifier_block pci_stub_nb = {
++	.notifier_call = pci_stub_notifier,
++};
++#endif
++
+ static int __init xen_pcibk_init(void)
+ {
+ 	int err;
+@@ -1539,12 +1586,19 @@ static int __init xen_pcibk_init(void)
+ 	err = xen_pcibk_xenbus_register();
+ 	if (err)
+ 		pcistub_exit();
++#ifdef CONFIG_PCI_IOV
 +	else
-+		dev_set_msi_domain(&bus->dev, dev_get_msi_domain(&bridge->dev));
-+}
-+
- static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 					   struct pci_dev *bridge, int busnr)
- {
-@@ -723,6 +737,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	bridge->subordinate = child;
++		bus_register_notifier(&pci_bus_type, &pci_stub_nb);
++#endif
  
- add_dev:
-+	pci_set_bus_msi_domain(child);
- 	ret = device_register(&child->dev);
- 	WARN_ON(ret < 0);
- 
-@@ -1517,6 +1532,11 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	pci_enable_acs(dev);
+ 	return err;
  }
  
-+static void pci_set_msi_domain(struct pci_dev *dev)
-+{
-+	dev_set_msi_domain(&dev->dev, dev_get_msi_domain(&dev->bus->dev));
-+}
-+
- void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ static void __exit xen_pcibk_cleanup(void)
  {
- 	int ret;
-@@ -1546,6 +1566,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	/* Initialize various capabilities */
- 	pci_init_capabilities(dev);
- 
-+	/* Setup MSI irq domain */
-+	pci_set_msi_domain(dev);
-+
- 	/*
- 	 * Add the device to our list of discovered devices
- 	 * and the bus list for fixup functions, etc.
-@@ -1947,6 +1970,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	b->bridge = get_device(&bridge->dev);
- 	device_enable_async_suspend(b->bridge);
- 	pci_set_bus_of_node(b);
-+	pci_set_bus_msi_domain(b);
- 
- 	if (!parent)
- 		set_dev_node(b->bridge, pcibus_to_node(b));
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a523cee..3266764 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1637,6 +1637,7 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
- int pcibios_add_device(struct pci_dev *dev);
- void pcibios_release_device(struct pci_dev *dev);
- void pcibios_penalize_isa_irq(int irq, int active);
-+void pcibios_set_phb_msi_domain(struct pci_bus *bus);
- 
- #ifdef CONFIG_HIBERNATE_CALLBACKS
- extern struct dev_pm_ops pcibios_pm_ops;
++#ifdef CONFIG_PCI_IOV
++	bus_unregister_notifier(&pci_bus_type, &pci_stub_nb);
++#endif
+ 	xen_pcibk_xenbus_unregister();
+ 	pcistub_exit();
+ }
 -- 
-2.1.3
+1.9.3
 
