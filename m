@@ -1,127 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:40655 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750764AbaLLCek (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Dec 2014 21:34:40 -0500
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	"Ian Campbell" <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Christian Daudt <bcm@fixthebug.org>,
-	Matt Porter <mporter@linaro.org>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-CC: Lucas Stach <l.stach@pengutronix.de>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
-Subject: [PATCH v2 1/4] pci: iProc: define Broadcom iProc PCIe binding
-Date: Thu, 11 Dec 2014 18:36:54 -0800
-Message-ID: <1418351817-14898-2-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1418351817-14898-1-git-send-email-rjui@broadcom.com>
-References: <Ray Jui <rjui@broadcom.com>
- <1418351817-14898-1-git-send-email-rjui@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from userp1040.oracle.com ([156.151.31.81]:33527 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751349AbaLCVlG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Dec 2014 16:41:06 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: [PATCH v5 5/9] xen/pciback: Remove tons of dereferences
+Date: Wed,  3 Dec 2014 16:40:30 -0500
+Message-Id: <1417642834-20350-6-git-send-email-konrad.wilk@oracle.com>
+In-Reply-To: <1417642834-20350-1-git-send-email-konrad.wilk@oracle.com>
+References: <1417642834-20350-1-git-send-email-konrad.wilk@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Document the PCIe device tree binding for Broadcom iProc family of SoCs
+A little cleanup. No functional difference.
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Reviewed-by: Scott Branden <sbranden@broadcom.com>
+Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
 ---
- .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |   74 ++++++++++++++++++++
- 1 file changed, 74 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+ drivers/xen/xen-pciback/pci_stub.c | 20 +++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-new file mode 100644
-index 0000000..040bc0f
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-@@ -0,0 +1,74 @@
-+* Broadcom iProc PCIe controller
-+
-+Required properties:
-+- compatible: Must be "brcm,iproc-pcie"
-+- reg: base address and length of the PCIe controller and the MDIO interface
-+  that controls the PCIe PHY
-+- #interrupt-cells: set to <1>
-+- interrupts: interrupt IDs
-+- interrupt-map-mask and interrupt-map, standard PCI properties to define the
-+  mapping of the PCIe interface to interrupt numbers
-+- bus-range: PCI bus numbers covered
-+- #address-cells: set to <3>
-+- #size-cells: set to <2>
-+- device_type: set to "pci"
-+- ranges: ranges for the PCI memory and I/O regions
-+- phy-addr: MDC/MDIO adddress of the PCIe PHY
-+- have-msi-inten-reg: Required for legacy iProc PCIe controllers that need the
-+  MSI interrupt enable register to be set explicitly
-+
-+The Broadcom iProc PCie driver adapts the multi-domain structure, i.e., each
-+interface has its own domain and therefore has its own device node
-+Example:
-+
-+SoC specific DT Entry:
-+
-+	pcie0: pcie@18012000 {
-+		compatible = "brcm,iproc-pcie";
-+		reg = <0x18012000 0x1000>,
-+			<0x18002000 0x1000>;
-+
-+		#interrupt-cells = <1>;
-+		interrupts = <GIC_SPI 96 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 97 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 98 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 99 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 100 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 101 IRQ_TYPE_NONE>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic GIC_SPI 100 IRQ_TYPE_NONE>;
-+
-+		bus-range = <0x00 0xFF>;
-+
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x81000000 0 0	  0x28000000 0 0x00010000   /* downstream I/O */
-+			  0x82000000 0 0x20000000 0x20000000 0 0x04000000>; /* non-prefetchable memory */
-+		phy-addr = <5>;
-+	};
-+
-+	pcie1: pcie@18013000 {
-+		compatible = "brcm,iproc-pcie";
-+		reg = <0x18013000 0x1000>,
-+			<0x18002000 0x1000>;
-+
-+		#interrupt-cells = <1>;
-+		interrupts = <GIC_SPI 102 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 103 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 104 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 105 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 106 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 107 IRQ_TYPE_NONE>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic GIC_SPI 106 IRQ_TYPE_NONE>;
-+
-+		bus-range = <0x00 0xFF>;
-+
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x81000000 0 0	  0x48000000 0 0x00010000   /* downstream I/O */
-+			  0x82000000 0 0x40000000 0x40000000 0 0x04000000>; /* non-prefetchable memory */
-+		phy-addr = <6>;
-+	};
+diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+index e5ff09d..843a2ba 100644
+--- a/drivers/xen/xen-pciback/pci_stub.c
++++ b/drivers/xen/xen-pciback/pci_stub.c
+@@ -631,10 +631,12 @@ static pci_ers_result_t common_process(struct pcistub_device *psdev,
+ {
+ 	pci_ers_result_t res = result;
+ 	struct xen_pcie_aer_op *aer_op;
++	struct xen_pcibk_device *pdev = psdev->pdev;
++	struct xen_pci_sharedinfo *sh_info = pdev->sh_info;
+ 	int ret;
+ 
+ 	/*with PV AER drivers*/
+-	aer_op = &(psdev->pdev->sh_info->aer_op);
++	aer_op = &(sh_info->aer_op);
+ 	aer_op->cmd = aer_cmd ;
+ 	/*useful for error_detected callback*/
+ 	aer_op->err = state;
+@@ -655,36 +657,36 @@ static pci_ers_result_t common_process(struct pcistub_device *psdev,
+ 	* this flag to judge whether we need to check pci-front give aer
+ 	* service ack signal
+ 	*/
+-	set_bit(_PCIB_op_pending, (unsigned long *)&psdev->pdev->flags);
++	set_bit(_PCIB_op_pending, (unsigned long *)&pdev->flags);
+ 
+ 	/*It is possible that a pcifront conf_read_write ops request invokes
+ 	* the callback which cause the spurious execution of wake_up.
+ 	* Yet it is harmless and better than a spinlock here
+ 	*/
+ 	set_bit(_XEN_PCIB_active,
+-		(unsigned long *)&psdev->pdev->sh_info->flags);
++		(unsigned long *)&sh_info->flags);
+ 	wmb();
+-	notify_remote_via_irq(psdev->pdev->evtchn_irq);
++	notify_remote_via_irq(pdev->evtchn_irq);
+ 
+ 	ret = wait_event_timeout(xen_pcibk_aer_wait_queue,
+ 				 !(test_bit(_XEN_PCIB_active, (unsigned long *)
+-				 &psdev->pdev->sh_info->flags)), 300*HZ);
++				 &sh_info->flags)), 300*HZ);
+ 
+ 	if (!ret) {
+ 		if (test_bit(_XEN_PCIB_active,
+-			(unsigned long *)&psdev->pdev->sh_info->flags)) {
++			(unsigned long *)&sh_info->flags)) {
+ 			dev_err(&psdev->dev->dev,
+ 				"pcifront aer process not responding!\n");
+ 			clear_bit(_XEN_PCIB_active,
+-			  (unsigned long *)&psdev->pdev->sh_info->flags);
++			  (unsigned long *)&sh_info->flags);
+ 			aer_op->err = PCI_ERS_RESULT_NONE;
+ 			return res;
+ 		}
+ 	}
+-	clear_bit(_PCIB_op_pending, (unsigned long *)&psdev->pdev->flags);
++	clear_bit(_PCIB_op_pending, (unsigned long *)&pdev->flags);
+ 
+ 	if (test_bit(_XEN_PCIF_active,
+-		(unsigned long *)&psdev->pdev->sh_info->flags)) {
++		(unsigned long *)&sh_info->flags)) {
+ 		dev_dbg(&psdev->dev->dev,
+ 			"schedule pci_conf service in " DRV_NAME "\n");
+ 		xen_pcibk_test_and_schedule_op(psdev->pdev);
 -- 
-1.7.9.5
+1.9.3
 
