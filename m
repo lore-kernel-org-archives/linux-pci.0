@@ -1,92 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:34670 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932414AbaLJSS7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Dec 2014 13:18:59 -0500
-MIME-Version: 1.0
-In-Reply-To: <20141210143428.GB12497@richard>
-References: <1418160871-5605-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo5tZU=zBKNDt2UtUE_AMG3zzrdq2CX2A4ZL7tdLELXgqA@mail.gmail.com>
-	<CAE9FiQWLaNSsFTWEpWRFR4xTd0hKOwENdQR7N6T=K65VM+vDQg@mail.gmail.com>
-	<20141210141537.GA9298@richard>
-	<20141210143428.GB12497@richard>
-Date: Wed, 10 Dec 2014 10:18:58 -0800
-Message-ID: <CAE9FiQVDkWSrm0Z9N+zW=Pb2gL6CW9EBj7CcOfKD=1uizRqP6Q@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Clear all bridge res MEM_64 if host bridge has non mem64
-From: Yinghai Lu <yinghai@kernel.org>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	=?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>,
-	Alexey Voronkov <zermond@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from e28smtp08.in.ibm.com ([122.248.162.8]:39096 "EHLO
+	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752550AbaLDFy6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Dec 2014 00:54:58 -0500
+Received: from /spool/local
+	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 4 Dec 2014 11:24:55 +0530
+Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 5AF7B394005C
+	for <linux-pci@vger.kernel.org>; Thu,  4 Dec 2014 11:24:53 +0530 (IST)
+Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
+	by d28relay02.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sB45t6hW46006440
+	for <linux-pci@vger.kernel.org>; Thu, 4 Dec 2014 11:25:06 +0530
+Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
+	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sB45spkp016967
+	for <linux-pci@vger.kernel.org>; Thu, 4 Dec 2014 11:24:52 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH 3/5] powerpc/powernv: Introduce pnv_pci_poll()
+Date: Thu,  4 Dec 2014 16:54:46 +1100
+Message-Id: <1417672488-27341-4-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1417672488-27341-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1417672488-27341-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 10, 2014 at 6:34 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
-> My mutt hang, in case the mail isn't sent out, I resend it.
->
-> On Wed, Dec 10, 2014 at 10:15:37PM +0800, Wei Yang wrote:
->>On Tue, Dec 09, 2014 at 03:13:49PM -0800, Yinghai Lu wrote:
->>>On Tue, Dec 9, 2014 at 1:53 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>> On Tue, Dec 9, 2014 at 2:34 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>>>> +       list_for_each_entry(window, &bridge->windows, list) {
->>>>> +               res = window->res;
->>>>> +               if (resource_type(res) == IORESOURCE_MEM ||
->>>>> +                   res->end > 0xffffffff) {
->>>>> +                       bridge->has_mem64_res = true;
->>>>
->>>> This is an interesting idea, but I think you're checking CPU addresses
->>>> here, and you need to check PCI bus addresses.
->>>
->>>Looks like those IBM platforms have res > 4g, but pci bus address < 4g.
->>>If we check pci bus address, and then we would break those platforms.
->>>
->
-> Hi, Yinghai
->
-> I did some test with patch on my machine. It looks good.
->
-> While as Bjorn mentioned, I think we could change it a little. The pci space
-> on our machine is like this:
->
->         cpu address                               pci address
->   MEM   0x00003ff280000000..0x00003ff2fffeffff -> 0x00000000 8000 0000
->   MEM64 0x00003d5000000000..0x00003d5fffffffff -> 0x00003d50 0000 0000
+We might not get some PCI slot information (e.g. power status)
+immediately by OPAL API. Instead, opal_pci_poll() need to be called
+for the required information.
 
+The patch introduces pnv_pci_poll(), which bases on original
+ioda_eeh_poll(), to cover the above case
 
->
-> Each root bridge has two MMIO window. From this output we could see the pci
-> address for 64-bit window is above 4G.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/eeh-ioda.c | 28 ++--------------------------
+ arch/powerpc/platforms/powernv/pci.c      | 19 +++++++++++++++++++
+ arch/powerpc/platforms/powernv/pci.h      |  1 +
+ 3 files changed, 22 insertions(+), 26 deletions(-)
 
->
-> I did a little change on your code, like this
->
->         list_for_each_entry(window, &bridge->windows, list) {
->                 res = window->res;
->                 if (resource_type(res) == IORESOURCE_MEM ||
-> -                   res->end > 0xffffffff) {
-> +                   (res->end - window->offset) > 0xffffffff) {
->                         bridge->has_mem64_res = true;
->                         break;
->                 }
->         }
+diff --git a/arch/powerpc/platforms/powernv/eeh-ioda.c b/arch/powerpc/platforms/powernv/eeh-ioda.c
+index cf38781..21fa033 100644
+--- a/arch/powerpc/platforms/powernv/eeh-ioda.c
++++ b/arch/powerpc/platforms/powernv/eeh-ioda.c
+@@ -490,24 +490,6 @@ static int ioda_eeh_get_state(struct eeh_pe *pe)
+ 	return ioda_eeh_get_pe_state(pe);
+ }
+ 
+-static s64 ioda_eeh_poll(uint64_t id)
+-{
+-	s64 rc = OPAL_HARDWARE;
+-
+-	while (1) {
+-		rc = opal_pci_poll(id, NULL);
+-		if (rc <= 0)
+-			break;
+-
+-		if (system_state < SYSTEM_RUNNING)
+-			udelay(1000 * rc);
+-		else
+-			msleep(rc);
+-	}
+-
+-	return rc;
+-}
+-
+ int ioda_eeh_phb_reset(struct pci_controller *hose, int option)
+ {
+ 	struct pnv_phb *phb = hose->private_data;
+@@ -536,10 +518,7 @@ int ioda_eeh_phb_reset(struct pci_controller *hose, int option)
+ 
+ 	/* Issue reset and poll until it's completed */
+ 	rc = opal_pci_reset(phb->opal_id, scope, OPAL_ASSERT_RESET);
+-	if (rc > 0)
+-		rc = ioda_eeh_poll(phb->opal_id);
+-
+-	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
++	return pnv_pci_poll(phb->opal_id, rc, NULL);
+ }
+ 
+ static int __ioda_eeh_bridge_reset(struct pci_dev *dev, int option)
+@@ -630,10 +609,7 @@ static int ioda_eeh_bridge_reset(struct pci_dev *dev, int option)
+ 	phb = hose->private_data;
+ 	id |= (dev->bus->number << 24) | (dev->devfn << 16) | phb->opal_id;
+ 	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
+-	if (rc > 0)
+-		ioda_eeh_poll(id);
+-
+-	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
++	return pnv_pci_poll(id, rc, NULL);
+ }
+ 
+ static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index 4b20f2c..6dc8ea9 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -45,6 +45,25 @@
+ #define cfg_dbg(fmt...)	do { } while(0)
+ //#define cfg_dbg(fmt...)	printk(fmt)
+ 
++int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval)
++{
++	while (rval > 0) {
++		rval = opal_pci_poll(id, pval);
++		if (rval == OPAL_SUCCESS && pval)
++			rval = opal_pci_poll(id, pval);
++
++		if (rval <= 0)
++			break;
++
++		if (system_state < SYSTEM_RUNNING)
++			udelay(1000 * rval);
++		else
++			msleep(rval);
++	}
++
++	return rval ? -EIO : 0;
++}
++
+ #ifdef CONFIG_PCI_MSI
+ static int pnv_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+ {
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index 6c02ff8..396fe02 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -217,6 +217,7 @@ extern struct pci_ops pnv_pci_ops;
+ extern struct pnv_eeh_ops ioda_eeh_ops;
+ #endif
+ 
++int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval);
+ void pnv_pci_dump_phb_diag_data(struct pci_controller *hose,
+ 				unsigned char *log_buff);
+ int pnv_pci_cfg_read(struct device_node *dn,
+-- 
+1.8.3.2
 
-good, then we should change to compare region end.
-
->
-> This also works on my machine.
->
-> One more question, with this patch, do we still need previous patch for
-> Marek's problem?
-
-Only need this to make Marek's working.
-
-but does not help on Zermond's
-
-Thanks
-
-Yinghai
