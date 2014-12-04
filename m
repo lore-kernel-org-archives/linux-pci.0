@@ -1,115 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17102 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753229AbaLIVfD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 16:35:03 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	=?UTF-8?q?Marek=20Kord=C3=ADk?= <kordikmarek@gmail.com>,
-	Alexey Voronkov <zermond@gmail.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH] PCI: Clear all bridge res MEM_64 if host bridge has non mem64
-Date: Tue,  9 Dec 2014 13:34:31 -0800
-Message-Id: <1418160871-5605-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <2647870.gu06V1GGvo@vostro.rjw.lan>
+References: <37310416.jZXoh5nfSC@vostro.rjw.lan>
+	<3484329.phAPviVnbd@vostro.rjw.lan>
+	<CAPDyKFoZmCYYNAGfNzwwEj=jk9wrfCKoxqQ4p=KStADSK1suCg@mail.gmail.com>
+	<2647870.gu06V1GGvo@vostro.rjw.lan>
+Date: Thu, 4 Dec 2014 11:04:20 +0100
+Message-ID: <CAPDyKFr_WEbeHLY9Q03PxpMnOwVAaj1PN28pvU6d-WoO+ocAgA@mail.gmail.com>
+Subject: Re: [PATCH 1/4] PM: Drop the SET_PM_RUNTIME_PM_OPS() macro
+From: Ulf Hansson <ulf.hansson@linaro.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PM list <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kevin Hilman <khilman@kernel.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So we could use bridge 64bit mem pref for children mem pref instead of
-forcing them into bridge mem.
+On 3 December 2014 at 23:51, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> On Wednesday, December 03, 2014 03:15:49 PM Ulf Hansson wrote:
+>> On 27 November 2014 at 01:38, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>> >
+>> > The SET_PM_RUNTIME_PM_OPS() and SET_RUNTIME_PM_OPS() macros are
+>> > identical except that one of them is not empty for CONFIG_PM set,
+>> > while the other one is not empty for CONFIG_PM_RUNTIME set,
+>> > respectively.
+>> >
+>> > However, after commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if
+>> > PM_SLEEP is selected) PM_RUNTIME is always set if PM is set, so one
+>> > of these macros is now redundant.
+>> >
+>> > For this reason, drop SET_PM_RUNTIME_PM_OPS() and replace it with
+>> > SET_RUNTIME_PM_OPS() everywhere.
+>>
+>> Hi Rafael,
+>>
+>> Apparently, I have queued an mmc patch in my mmc tree, which means one
+>> mmc driver starts using the SET_PM_RUNTIME_PM_OPS macro. It should
+>> cause a build error in linux-next with @subject patch.
+>>
+>> I have shared that patch through an immutable branch, I have also
+>> checked potential conflicts and it shouldn't be any problems to pull
+>> that in to your tree. Then you can fix $subject patch by also
+>> converting the mmc driver to use SET_RUNTIME_PM_OPS macro.
+>>
+>> The branch is available at:
+>> git://git.linaro.org/people/ulf.hansson/mmc.git mmc_for_linux_pm
+>
+> Thanks for letting me know!
+>
+> What about adding the following line to the $subject patch instead:
+>
+> #define SET_PM_RUNTIME_PM_OPS   SET_RUNTIME_PM_OPS
+>
+> and fixing things up when all has been merged?
 
-Could help Marek's system as his system is using _CRS, and all mem res is under
-4G.
+That's an option.
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491
-Reported-by: Marek Kordik <kordikmarek@gmail.com>
-Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources")
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+On the other hand we will have a window of new users of
+SET_PM_RUNTIME_PM_OPS, during the next release cycle. Or are you
+saying that we should send fixes for the rc which takes care of the
+removal of it?
 
----
- drivers/pci/host-bridge.c |    7 +++++++
- drivers/pci/pci.h         |    1 +
- drivers/pci/probe.c       |    9 +++++++++
- drivers/pci/setup-bus.c   |    3 +++
- include/linux/pci.h       |    1 +
- 5 files changed, 21 insertions(+)
+Kind regards
+Uffe
 
-Index: linux-2.6/drivers/pci/host-bridge.c
-===================================================================
---- linux-2.6.orig/drivers/pci/host-bridge.c
-+++ linux-2.6/drivers/pci/host-bridge.c
-@@ -31,6 +31,13 @@ void pci_set_host_bridge_release(struct
- 	bridge->release_data = release_data;
- }
- 
-+bool pcibios_host_bridge_has_mem64_res(struct pci_bus *bus)
-+{
-+	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
-+
-+	return bridge->has_mem64_res;
-+}
-+
- void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
- 			     struct resource *res)
- {
-Index: linux-2.6/drivers/pci/pci.h
-===================================================================
---- linux-2.6.orig/drivers/pci/pci.h
-+++ linux-2.6/drivers/pci/pci.h
-@@ -196,6 +196,7 @@ enum pci_bar_type {
- 	pci_bar_mem64,		/* A 64-bit memory BAR */
- };
- 
-+bool pcibios_host_bridge_has_mem64_res(struct pci_bus *bus);
- bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
- 				int crs_timeout);
- int pci_setup_device(struct pci_dev *dev);
-Index: linux-2.6/drivers/pci/probe.c
-===================================================================
---- linux-2.6.orig/drivers/pci/probe.c
-+++ linux-2.6/drivers/pci/probe.c
-@@ -1980,6 +1980,15 @@ struct pci_bus *pci_create_root_bus(stru
- 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
- 	}
- 
-+	list_for_each_entry(window, &bridge->windows, list) {
-+		res = window->res;
-+		if (resource_type(res) == IORESOURCE_MEM ||
-+		    res->end > 0xffffffff) {
-+			bridge->has_mem64_res = true;
-+			break;
-+		}
-+	}
-+
- 	down_write(&pci_bus_sem);
- 	list_add_tail(&b->node, &pci_root_buses);
- 	up_write(&pci_bus_sem);
-Index: linux-2.6/include/linux/pci.h
-===================================================================
---- linux-2.6.orig/include/linux/pci.h
-+++ linux-2.6/include/linux/pci.h
-@@ -407,6 +407,7 @@ struct pci_host_bridge {
- 	struct list_head windows;	/* pci_host_bridge_windows */
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
-+	bool has_mem64_res;
- };
- 
- #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
-Index: linux-2.6/drivers/pci/setup-bus.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-bus.c
-+++ linux-2.6/drivers/pci/setup-bus.c
-@@ -693,6 +693,9 @@ static void pci_bridge_check_ranges(stru
- 		}
- 	}
- 
-+        if (!pcibios_host_bridge_has_mem64_res(bus))
-+                b_res[2].flags &= ~IORESOURCE_MEM_64;
-+
- 	/* double check if bridge does support 64 bit pref */
- 	if (b_res[2].flags & IORESOURCE_MEM_64) {
- 		u32 mem_base_hi, tmp;
+>
+>
+> --
+> I speak only for myself.
+> Rafael J. Wysocki, Intel Open Source Technology Center.
