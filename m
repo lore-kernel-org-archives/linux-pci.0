@@ -1,66 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:62877 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751663AbaLDWG1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Dec 2014 17:06:27 -0500
-Received: by mail-ie0-f172.google.com with SMTP id tr6so16866384ieb.3
-        for <linux-pci@vger.kernel.org>; Thu, 04 Dec 2014 14:06:26 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20141204173411.GA5949@google.com>
-References: <CAErSpo6UvY10MNidAOFf4Fptv+wL-NsX6JMaU8OvSP6ywWEebQ@mail.gmail.com>
-	<CAErSpo63uZeo1feoPjjXpdH43nsbcWh63kpBmxCnckPd0t9yrg@mail.gmail.com>
-	<CAE9FiQWV-rKdvSeV-ivME-64QtzCX2Te5DfOVtzr0an=6eOCMA@mail.gmail.com>
-	<20141204173411.GA5949@google.com>
-Date: Thu, 4 Dec 2014 14:06:26 -0800
-Message-ID: <CAE9FiQVyBmo+XwDgO97wwe+6TN4+q_cvnBLCuhTM8Fu_e_V5RQ@mail.gmail.com>
-Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
- GPU init
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alexey Voronkov <zermond@gmail.com>,
-	David Airlie <airlied@linux.ie>,
-	Saifi Khan <saifi.khan@datasynergy.org>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	=?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from e28smtp05.in.ibm.com ([122.248.162.5]:56106 "EHLO
+	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752525AbaLDFy6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Dec 2014 00:54:58 -0500
+Received: from /spool/local
+	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 4 Dec 2014 11:24:56 +0530
+Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 69211E005A
+	for <linux-pci@vger.kernel.org>; Thu,  4 Dec 2014 11:25:22 +0530 (IST)
+Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
+	by d28relay03.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sB45v0EO56885482
+	for <linux-pci@vger.kernel.org>; Thu, 4 Dec 2014 11:27:00 +0530
+Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
+	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sB45soEM004660
+	for <linux-pci@vger.kernel.org>; Thu, 4 Dec 2014 11:24:51 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v2 0/5] PCI Hotplug Driver for PowerPC PowerNV
+Date: Thu,  4 Dec 2014 16:54:43 +1100
+Message-Id: <1417672488-27341-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 4, 2014 at 9:34 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Wed, Dec 03, 2014 at 05:44:26PM -0800, Yinghai Lu wrote:
->> On Wed, Dec 3, 2014 at 4:51 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> > I think another way to fix the bug 74151 problem would have been to
->> > put the ROMs in the non-prefetchable window and the 64-bit BARs in the
->> > 64-bit prefetchable window.
->>
->> I thought we did that way already.
->
-> Can you point me to the code that does this?  I don't see anything in
-> pbus_size_mem() that treats ROMs differently.
+The series of patches depends on the OPAL firmware changes. If the firmware
+doesn't have the changes, PCI hotplug slots won't be populated properly.
+Other than that, no more problems found.
 
-Current code:
-1. when bridge does not support 64bit mmio pref, ROM bar will be
-allocated to bridge mmio pref
-2. when bridge does support 64bit mmio pref, ROM BAR will be allocated
-to bridge mmio.
+A new driver "powernv-php.ko" is introduced by the patchset to support
+PCI hotplug for PowerNV platform. The device tree is scanned when the
+driver is loaded. If any PCI device node is equipped with property "ibm,
+slot-pluggable" and "ibm,reset-by-firmware", it's regarded as hotpluggable
+slot and the driver creates/registers slot for it. After that, the sysfs
+entries can be used to operate the slot.
 
-so you want to change case 1 to bridge to mmio pref?
+PATCH[1-4]: Necessary code changes to PPC PCI subsystem in order to
+            support PCI slots for PPC PowerNV platform.
+PATCH[5]  : powernv-php driver to support PCI hotplug for PowerNV
+            platform.
 
->
-> I'm considering reverting 5b28541552ef (assuming that would fix this radeon
-> regression) because I think the radeon problem is worse than the 74151
-> problem and I think we can solve 74151 in a different way.
->
-> Guo, Ben, this would affect you!  It's too late to revert 5b28541552ef for
-> v3.18, but we really need to work on this for v3.19.
->
-> FOr 85491 (the radeon problem), we might be able to work around it by
-> fixing the bridge window, but I'm not sure we could even get that done
-> before v3.18.  I'll work on that today.
+Testing
+=======
+# cat /proc/cpuinfo | grep -i powernv
+platform        : PowerNV
+machine         : PowerNV 8286-41A
 
-shrink bridge mmio pref range instead of reject it?
+# pwd
+/sys/bus/pci/slots
+# ls
+C10  C11  C12  C14  C15  C6  C7  C8  C9
 
-Yinghai
+# lspci -s 0003::.
+0003:00:00.0 PCI bridge: IBM Device 03dc
+0003:01:00.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:01.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:08.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:09.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:10.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:11.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:03:00.0 USB controller: Texas Instruments TUSB73x0 SuperSpeed USB 3.0 xHCI Host Controller (rev 02)
+0003:09:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+0003:09:00.1 Ethernet controller: Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+0003:09:00.2 Ethernet controller: Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+0003:09:00.3 Ethernet controller: Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+0003:0f:00.0 Network controller: Mellanox Technologies MT27500 Family [ConnectX-3]
+# pwd
+/sys/bus/pci/slots/C10
+# cat address
+0003:09:00
+# cat cur_bus_speed
+5.0 GT/s PCIe
+# cat max_bus_speed
+8.0 GT/s PCIe
+# cat power
+1
+# echo 0 > power
+# lspci -s 0003::.
+0003:00:00.0 PCI bridge: IBM Device 03dc
+0003:01:00.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:01.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:08.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:09.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:10.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:11.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:03:00.0 USB controller: Texas Instruments TUSB73x0 SuperSpeed USB 3.0 xHCI Host Controller (rev 02)
+0003:0f:00.0 Network controller: Mellanox Technologies MT27500 Family [ConnectX-3]
+# echo 1 > power
+# lspci -s 0003::.
+0003:00:00.0 PCI bridge: IBM Device 03dc
+0003:01:00.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:01.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:08.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:09.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:10.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:11.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:03:00.0 USB controller: Texas Instruments TUSB73x0 SuperSpeed USB 3.0 xHCI Host Controller (rev 02)
+0003:09:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+0003:09:00.1 Ethernet controller: Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+0003:09:00.2 Ethernet controller: Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+0003:09:00.3 Ethernet controller: Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+0003:0f:00.0 Network controller: Mellanox Technologies MT27500 Family [ConnectX-3]
+
+Changelog
+=========
+v1 -> v2:
+        * Separate powernv-php driver to support PCI hotplug for
+	  PowerNV platform.
+	* Check if the OPAL API supported by firmware before calling
+          into it, which is necessary for back-compability.
+        * Separate patch for factoring pnv_pci_poll().
+
+Gavin Shan (5):
+  powerpc/pci: Move pcibios_find_pci_bus() around
+  powerpc/pci: Don't scan empty slot
+  powerpc/powernv: Introduce pnv_pci_poll()
+  powerpc/powernv: Functions to retrieve PCI slot status
+  PCI/hotplug: PowerPC PowerNV PCI hotplug driver
+
+ arch/powerpc/include/asm/opal.h                |   4 +
+ arch/powerpc/include/asm/pnv-pci.h             |   3 +
+ arch/powerpc/kernel/pci-hotplug.c              |  39 ++-
+ arch/powerpc/platforms/powernv/eeh-ioda.c      |  28 +-
+ arch/powerpc/platforms/powernv/opal-wrappers.S |   2 +
+ arch/powerpc/platforms/powernv/pci.c           |  43 +++
+ arch/powerpc/platforms/powernv/pci.h           |   1 +
+ arch/powerpc/platforms/pseries/pci_dlpar.c     |  32 ---
+ drivers/pci/hotplug/Kconfig                    |  12 +
+ drivers/pci/hotplug/Makefile                   |   4 +
+ drivers/pci/hotplug/powernv_php.c              | 126 ++++++++
+ drivers/pci/hotplug/powernv_php.h              |  70 +++++
+ drivers/pci/hotplug/powernv_php_slot.c         | 382 +++++++++++++++++++++++++
+ 13 files changed, 687 insertions(+), 59 deletions(-)
+ create mode 100644 drivers/pci/hotplug/powernv_php.c
+ create mode 100644 drivers/pci/hotplug/powernv_php.h
+ create mode 100644 drivers/pci/hotplug/powernv_php_slot.c
+
+Thanks,
+Gavin
+
