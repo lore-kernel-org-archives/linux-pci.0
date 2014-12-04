@@ -1,112 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:43313 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754215AbaLVJQq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 04:16:46 -0500
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>
-Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
-	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>
-Subject: [PATCH 03/10] iommu/vt-d: Add domain-id functions
-Date: Mon, 22 Dec 2014 17:15:22 +0800
-Message-Id: <1419239729-26529-4-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1419239729-26529-1-git-send-email-zhen-hual@hp.com>
-References: <1419239729-26529-1-git-send-email-zhen-hual@hp.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:41981 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932709AbaLDWr3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Dec 2014 17:47:29 -0500
+Date: Thu, 4 Dec 2014 14:47:28 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Generate uppercase hex for modalias var in uevent
+Message-ID: <20141204224728.GA26134@kroah.com>
+References: <1417538104-27341-1-git-send-email-ricardo.ribalda@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1417538104-27341-1-git-send-email-ricardo.ribalda@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Interfaces for when a new domain in the crashdump kernel needs some
-values from the panicked kernel's context entries.
+On Tue, Dec 02, 2014 at 05:35:04PM +0100, Ricardo Ribalda Delgado wrote:
+> Some implementations of modprobe fail to load the driver for a PCI device
+> automatically because the "interface" part of the modalias from the kernel
+> is lowercase, and the modalias from file2alias is uppercase.
+> 
+> The "interface" is the low-order byte of the Class Code, defined in PCI
+> r3.0, Appendix D.  Most interface types defined in the spec do not use
+> alpha characters, so they won't be affected.  For example, 00h, 01h, 10h,
+> 20h, etc. are unaffected.
+> 
+> Print the "interface" byte of the Class Code in uppercase hex, as we
+> already do for the Vendor ID, Device ID, Class, etc.
+> 
+> Commit 89ec3dcf17fd ("PCI: Generate uppercase hex for modalias
+> interface class") fixed only half of the problem. Some udev
+> implementations relays on the uevent file and not in the modalias file.
+> 
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Fixes: d1ded203adf1 ("PCI: add MODALIAS to hotplug event for pci devices")
+> Signed-off-by: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
+> ---
+> 
+> Modified line is >80 char, but I believe that it is better than breaking
+> the string or indent it bad.
 
-Signed-off-by: Bill Sumner <billsumnerlinux@gmail.com>
----
- drivers/iommu/intel-iommu.c | 62 +++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 62 insertions(+)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 5ce2850..c0bebd6 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -381,6 +381,13 @@ struct domain_values_entry {
- 					   2 == 1GiB, 3 == 512GiB, 4 == 1TiB */
- };
- 
-+static struct domain_values_entry *intel_iommu_did_to_domain_values_entry(
-+		int did, struct intel_iommu *iommu);
-+
-+static int intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu);
-+
-+static int device_to_domain_id(struct intel_iommu *iommu, u8 bus, u8 devfn);
-+
- #endif /* CONFIG_CRASH_DUMP */
- 
- /*
-@@ -4832,3 +4839,58 @@ static void __init check_tylersburg_isoch(void)
- 	printk(KERN_WARNING "DMAR: Recommended TLB entries for ISOCH unit is 16; your BIOS set %d\n",
- 	       vtisochctrl);
- }
-+
-+#ifdef CONFIG_CRASH_DUMP
-+
-+/*
-+ * Interfaces for when a new domain in the crashdump kernel needs some
-+ * values from the panicked kernel's context entries
-+ *
-+ */
-+static struct domain_values_entry *intel_iommu_did_to_domain_values_entry(
-+		int did, struct intel_iommu *iommu)
-+{
-+	struct domain_values_entry *dve;	/* iterator */
-+
-+	list_for_each_entry(dve, &domain_values_list[iommu->seq_id], link)
-+		if (dve->did == did)
-+			return dve;
-+	return NULL;
-+}
-+
-+/* Mark domain-id's from old kernel as in-use on this iommu so that a new
-+ * domain-id is allocated in the case where there is a device in the new kernel
-+ * that was not in the old kernel -- and therefore a new domain-id is needed.
-+ */
-+static int intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu)
-+{
-+	struct domain_values_entry *dve;	/* iterator */
-+
-+	pr_info("IOMMU:%d Domain ids from panicked kernel:\n", iommu->seq_id);
-+
-+	list_for_each_entry(dve, &domain_values_list[iommu->seq_id], link) {
-+		set_bit(dve->did, iommu->domain_ids);
-+		pr_info("DID did:%d(0x%4.4x)\n", dve->did, dve->did);
-+	}
-+
-+	pr_info("----------------------------------------\n");
-+	return 0;
-+}
-+
-+static int device_to_domain_id(struct intel_iommu *iommu, u8 bus, u8 devfn)
-+{
-+	int did = -1;			/* domain-id returned */
-+	struct root_entry *root;
-+	struct context_entry *context;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&iommu->lock, flags);
-+	root = &iommu->root_entry[bus];
-+	context = get_context_addr_from_root(root);
-+	if (context && context_present(context+devfn))
-+		did = context_domain_id(context+devfn);
-+	spin_unlock_irqrestore(&iommu->lock, flags);
-+	return did;
-+}
-+
-+#endif /* CONFIG_CRASH_DUMP */
--- 
-2.0.0-rc0
-
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
