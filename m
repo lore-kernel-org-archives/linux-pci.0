@@ -1,105 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:43903 "EHLO mail1.g1.pair.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752281AbaLSISj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 19 Dec 2014 03:18:39 -0500
-From: Sean Cross <xobs@kosagi.com>
-To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Shawn Guo <shawn.guo@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	devicetree@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	linux-pci@vger.kernel.org
-Cc: bunnie@kosagi.com, Sean Cross <xobs@kosagi.com>
-Subject: [PATCH 1/2] PCI: imx6: Add power-supply support
-Date: Fri, 19 Dec 2014 16:10:16 +0800
-Message-Id: <1418976617-833-2-git-send-email-xobs@kosagi.com>
-In-Reply-To: <1418976617-833-1-git-send-email-xobs@kosagi.com>
-References: <1418976617-833-1-git-send-email-xobs@kosagi.com>
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:62351 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751124AbaLDBiI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Dec 2014 20:38:08 -0500
+Received: by mail-ie0-f175.google.com with SMTP id x19so9949646ier.34
+        for <linux-pci@vger.kernel.org>; Wed, 03 Dec 2014 17:38:07 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo6UvY10MNidAOFf4Fptv+wL-NsX6JMaU8OvSP6ywWEebQ@mail.gmail.com>
+References: <CAErSpo6UvY10MNidAOFf4Fptv+wL-NsX6JMaU8OvSP6ywWEebQ@mail.gmail.com>
+Date: Wed, 3 Dec 2014 17:38:07 -0800
+Message-ID: <CAE9FiQW1OPP_no1orE+rUHQnmsVY3beUtbS8YdkXBhABVbdfLA@mail.gmail.com>
+Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
+ GPU init
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	zermond@gmail.com, David Airlie <airlied@linux.ie>,
+	saifi.khan@datasynergy.org, Alex Deucher <alexdeucher@gmail.com>,
+	kordikmarek@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some PCIe ports gate power to the slot.  In order to prevent system lockup,
-these boards must enable power to the slot before attempting communication
-over the PCI bus.
+On Wed, Dec 3, 2014 at 2:15 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> There's a bugzilla for this, so this email is to make the bugzilla
+> more discoverable and to have a more public discussion about it.
+>
+>   https://bugzilla.kernel.org/show_bug.cgi?id=85491
+>
+> I think this regression is caused by 5b28541552ef ("PCI: Restrict
+> 64-bit prefetchable bridge windows to 64-bit resources").  These dmesg
+> fragments are from v3.16, which doesn't work:
+>
+>     pci_bus 0000:00: root bus resource [mem 0xc0000000-0xffffffff]
+>
+>     pci 0000:00:01.0: PCI bridge to [bus 01]
+>     pci 0000:00:01.0:   bridge window [io  0x8000-0xafff]
+>     pci 0000:00:01.0:   bridge window [mem 0xfdf00000-0xfdffffff]
+>     pci 0000:00:01.0:   bridge window [mem 0xbdf00000-0xddefffff 64bit
+> pref]  <-- outside host bridge window
+>
+>     pci 0000:01:00.0: reg 0x10: [mem 0xc0000000-0xcfffffff pref]
+>     pci 0000:01:00.0: reg 0x14: [io  0xa000-0xa0ff]
+>     pci 0000:01:00.0: reg 0x18: [mem 0xfdff0000-0xfdffffff]
+>     pci 0000:01:00.0: reg 0x30: [mem 0xfdfc0000-0xfdfdffff pref]
+>
+>     pci 0000:00:01.0: can't claim BAR 15 [mem 0xbdf00000-0xddefffff
+> 64bit pref]: no compatible bridge window
+>     pci 0000:01:00.0: can't claim BAR 0 [mem 0xc0000000-0xcfffffff
+> pref]: no compatible bridge window
 
-Signed-off-by: Sean Cross <xobs@kosagi.com>
----
- .../devicetree/bindings/pci/fsl,imx6q-pcie.txt       |  3 +++
- drivers/pci/host/pci-imx6.c                          | 20 +++++++++++++++++++-
- 2 files changed, 22 insertions(+), 1 deletion(-)
+Looks like we wrong type checking from parent resource searching.
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index 6fbba53..fe912bd 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -13,6 +13,9 @@ Required properties:
- - clock-names: Must include the following additional entries:
- 	- "pcie_phy"
- 
-+Optional properties:
-+- power-supply: A regulator that controls power to the port
-+
- Example:
- 
- 	pcie@0x01000000 {
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 69202d1..9c2140e 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -22,6 +22,7 @@
- #include <linux/pci.h>
- #include <linux/platform_device.h>
- #include <linux/regmap.h>
-+#include <linux/regulator/consumer.h>
- #include <linux/resource.h>
- #include <linux/signal.h>
- #include <linux/types.h>
-@@ -39,6 +40,7 @@ struct imx6_pcie {
- 	struct pcie_port	pp;
- 	struct regmap		*iomuxc_gpr;
- 	void __iomem		*mem_base;
-+	struct regulator	*power_reg;
- };
- 
- /* PCIe Root Complex registers (memory-mapped) */
-@@ -588,6 +590,19 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 		}
- 	}
- 
-+	/* Fetch power supply */
-+	imx6_pcie->power_reg = devm_regulator_get(&pdev->dev, "power");
-+	if (IS_ERR(imx6_pcie->power_reg))
-+		imx6_pcie->power_reg = 0;
-+
-+	if (imx6_pcie->power_reg) {
-+		ret = regulator_enable(imx6_pcie->power_reg);
-+		if (ret) {
-+			dev_err(&pdev->dev, "Unable to enable power regulator");
-+			return ret;
-+		}
-+	}
-+
- 	/* Fetch clocks */
- 	imx6_pcie->pcie_phy = devm_clk_get(&pdev->dev, "pcie_phy");
- 	if (IS_ERR(imx6_pcie->pcie_phy)) {
-@@ -619,8 +634,11 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 	}
- 
- 	ret = imx6_add_pcie_port(pp, pdev);
--	if (ret < 0)
-+	if (ret < 0) {
-+		if (imx6_pcie->power_reg)
-+			regulator_disable(imx6_pcie->power_reg);
- 		return ret;
-+	}
- 
- 	platform_set_drvdata(pdev, imx6_pcie);
- 	return 0;
--- 
-2.1.3
-
+Yinghai
