@@ -1,57 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:54653 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752863AbaLJAC0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 19:02:26 -0500
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	"Ian Campbell" <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Christian Daudt <bcm@fixthebug.org>,
-	Matt Porter <mporter@linaro.org>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>
-CC: Scott Branden <sbranden@broadcom.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
-Subject: [PATCH 3/4] ARM: mach-bcm: Enable PCIe support for iProc
-Date: Tue, 9 Dec 2014 16:04:30 -0800
-Message-ID: <1418169871-19232-4-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1418169871-19232-1-git-send-email-rjui@broadcom.com>
-References: <Ray Jui <rjui@broadcom.com>
- <1418169871-19232-1-git-send-email-rjui@broadcom.com>
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:41558 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753381AbaLDWYh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Dec 2014 17:24:37 -0500
+Received: by mail-ig0-f179.google.com with SMTP id r2so15514909igi.6
+        for <linux-pci@vger.kernel.org>; Thu, 04 Dec 2014 14:24:36 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20141204163741.GD3168@google.com>
+References: <CAErSpo6UvY10MNidAOFf4Fptv+wL-NsX6JMaU8OvSP6ywWEebQ@mail.gmail.com>
+	<CAE9FiQXqqg-KYi3aEVvCm=hfjN3mx_7J8uQ61hVJFVLNe+U=Zg@mail.gmail.com>
+	<20141204163741.GD3168@google.com>
+Date: Thu, 4 Dec 2014 14:24:36 -0800
+Message-ID: <CAE9FiQXe-jedCr-DUat3Ujay1Q=jUX9B_qLJRfhia-QVB_RW4w@mail.gmail.com>
+Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
+ GPU init
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alexey Voronkov <zermond@gmail.com>,
+	David Airlie <airlied@linux.ie>,
+	Saifi Khan <saifi.khan@datasynergy.org>,
+	Alex Deucher <alexdeucher@gmail.com>,
+	=?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enable PCIe driver support for Broadcom iProc family of SoCs by
-selecting PCIE_IPROC
+On Thu, Dec 4, 2014 at 8:37 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> pci=realloc should workaround the problem, as it would take control of
+>> the bridge mmio BAR, and allocate more range for mmio pref under it.
+>
+> I don't think pci=realloc is the answer because
+>
+>   1) It's a poor user experience.  We should be able to handle this
+>      automatically, without asking the user to do anything.
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Reviewed-by: Scott Branden <sbranden@broadcom.com>
----
- arch/arm/mach-bcm/Kconfig |    1 +
- 1 file changed, 1 insertion(+)
+we can detect that when bridge support 64bit mmio pref, and reject
+child device pref that only
+support mmio pref non-b64bit.
 
-diff --git a/arch/arm/mach-bcm/Kconfig b/arch/arm/mach-bcm/Kconfig
-index aaeec78..a13a0b2 100644
---- a/arch/arm/mach-bcm/Kconfig
-+++ b/arch/arm/mach-bcm/Kconfig
-@@ -19,6 +19,7 @@ config ARCH_BCM_IPROC
- 	select ARCH_REQUIRE_GPIOLIB
- 	select ARM_AMBA
- 	select PINCTRL
-+	select PCIE_IPROC
- 	help
- 	  This enables support for systems based on Broadcom IPROC architected SoCs.
- 	  The IPROC complex contains one or more ARM CPUs along with common
--- 
-1.7.9.5
+>
+>   2) It puts the radeon framebuffer in the non-prefetchable window, and we
+>      should be able to keep it in the prefetchable window.
 
+clear bridge 64bit flags if all children does not support that?
+
+even that slot supports hotplug.
+
+Yinghai
