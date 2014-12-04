@@ -1,87 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:51476 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751147AbaLRTLr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Dec 2014 14:11:47 -0500
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thierry Reding <thierry.reding@gmail.com>
-Cc: Alexandre Courbot <gnurou@gmail.com>, linux-tegra@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 2/2] PCI: tegra: apply relaxed ordering fixup only on Tegra
-Date: Thu, 18 Dec 2014 20:11:43 +0100
-Message-Id: <1418929903-8506-2-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1418929903-8506-1-git-send-email-l.stach@pengutronix.de>
-References: <1418929903-8506-1-git-send-email-l.stach@pengutronix.de>
+Received: from smtp.citrix.com ([66.165.176.89]:24280 "EHLO SMTP.CITRIX.COM"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754338AbaLDObP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Dec 2014 09:31:15 -0500
+Message-ID: <5480702F.2060004@citrix.com>
+Date: Thu, 4 Dec 2014 14:31:11 +0000
+From: David Vrabel <david.vrabel@citrix.com>
+MIME-Version: 1.0
+To: Sander Eikelenboom <linux@eikelenboom.it>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	<linux-kernel@vger.kernel.org>, <xen-devel@lists.xenproject.org>
+Subject: Re: [Xen-devel] [PATCH v5 9/9] xen/pciback: Implement PCI reset slot
+ or bus with 'do_flr' SysFS attribute
+References: <201412041206.sB4C6XVQ009497@userz7022.oracle.com> <5480528F.8010106@citrix.com> <1107877503.20141204141054@eikelenboom.it> <548064EA.8090905@citrix.com> <308719815.20141204150909@eikelenboom.it>
+In-Reply-To: <308719815.20141204150909@eikelenboom.it>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The fixup to enable relaxed ordering on all PCI devices was
-executed unconditionally if the Tegra PCI host driver was
-built into the kernel. This doesn't play nice with a
-multiplatform kernel executed on other platforms which
-may not need this fixup.
+On 04/12/14 14:09, Sander Eikelenboom wrote:
+> 
+> Thursday, December 4, 2014, 2:43:06 PM, you wrote:
+> 
+>> On 04/12/14 13:10, Sander Eikelenboom wrote:
+>>>
+>>> Thursday, December 4, 2014, 1:24:47 PM, you wrote:
+>>>
+>>>> On 04/12/14 12:06, Konrad Rzeszutek Wilk wrote:
+>>>>>
+>>>>> On Dec 4, 2014 6:30 AM, David Vrabel <david.vrabel@citrix.com> wrote:
+>>>>>>
+>>>>>> On 03/12/14 21:40, Konrad Rzeszutek Wilk wrote: 
+>>>>>>>
+>>>>>>> Instead of doing all this complex dance, we depend on the toolstack 
+>>>>>>> doing the right thing. As such implement the 'do_flr' SysFS attribute 
+>>>>>>> which 'xl' uses when a device is detached or attached from/to a guest. 
+>>>>>>> It bypasses the need to worry about the PCI lock. 
+>>>>>>
+>>>>>> No.  Get pciback to add its own "reset" sysfs file (as I have repeatedly 
+>>>>>> proposed). 
+>>>>>>
+>>>>>
+>>>>> Which does not work as the kobj will complain (as there is already an 'reset' associated with the PCI device).
+>>>
+>>>> It is only needed if the core won't provide one.
+>>>
+>>>> +static int pcistub_try_create_reset_file(struct pci_dev *pci)
+>>>> +{
+>>>> +       struct xen_pcibk_dev_data *dev_data = pci_get_drvdata(pci);
+>>>> +       struct device *dev = &pci->dev;
+>>>> +       int ret;
+>>>> +
+>>>> +       /* Already have a per-function reset? */
+>>>> +       if (pci_probe_reset_function(pci) == 0)
+>>>> +               return 0;
+>>>> +
+>>>> +       ret = device_create_file(dev, &dev_attr_reset);
+>>>> +       if (ret < 0)
+>>>> +               return ret;
+>>> +       dev_data->>created_reset_file = true;
+>>>> +       return 0;
+>>>> +}
+>>>
+>>> Wouldn't the "core-reset-sysfs-file" be still wired to the end up calling 
+>>> "pci.c:__pci_dev_reset" ?
+>>>
+>>> The problem with that function is that from my testing it seems that the 
+>>> first option "pci_dev_specific_reset" always seems to return succes, so all the
+>>> other options are skipped (flr, pm, slot, bus). However the device it self is 
+>>> not properly reset enough (perhaps the pci_dev_specific_reset is good enough for 
+>>> none virtualization purposes and it's probably the least intrusive. For 
+>>> virtualization however it would be nice to be sure it resets properly, or have a 
+>>> way to force a specific reset routine.)
+> 
+>> Then you need work with the maintainer for those specific devices or
+>> drivers to fix their specific reset function.
+> 
+>> I'm not adding stuff to pciback to workaround broken quirks.
+> 
+> OK that's a pretty clear message there, so if one wants to use pci and vga
+> passthrough one should better use KVM and vfio-pci.
 
-Make sure to only apply the fixup if the root port is
-a Tegra.
+Have you (or anyone else) ever raised the problem with the broken reset
+quirk for certain devices with the relevant maintainer?
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
-v2:
-- split out PCI hierarchy walk
-- separate code from data by moving PCI IDs into own structure
----
- drivers/pci/host/pci-tegra.c | 34 +++++++++++++++++++++++++++++++++-
- 1 file changed, 33 insertions(+), 1 deletion(-)
+> vfio-pci has:
+> - logic to do the try-slot-bus-reset logic
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 333a57afacc4..b77f417e1a3c 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -635,10 +635,42 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0bf1, tegra_pcie_fixup_class);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1c, tegra_pcie_fixup_class);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1d, tegra_pcie_fixup_class);
- 
-+static const struct pci_device_id tegra_rootport_ids[] = {
-+	{
-+		/* Tegra20 4 lane root port */
-+		.vendor = PCI_VENDOR_ID_NVIDIA, .device = 0x0bf0,
-+		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID
-+	}, {
-+		/* Tegra20 2 lane root port */
-+		.vendor = PCI_VENDOR_ID_NVIDIA, .device = 0x0bf1,
-+		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID
-+	}, {
-+		/* Tegra30 4 lane root port */
-+		.vendor = PCI_VENDOR_ID_NVIDIA, .device = 0x0e1c,
-+		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID
-+	}, {
-+		/* Tegra30 2 lane root port */
-+		.vendor = PCI_VENDOR_ID_NVIDIA, .device = 0x0e1d,
-+		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID
-+	}, {
-+		/* Tegra124 4 lane root port */
-+		.vendor = PCI_VENDOR_ID_NVIDIA, .device = 0x0e12,
-+		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID
-+	}, {
-+		/* Tegra124 1 lane root port */
-+		.vendor = PCI_VENDOR_ID_NVIDIA, .device = 0x0e13,
-+		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID
-+	}, {
-+		/* sentinel */
-+	}
-+};
-+
- /* Tegra PCIE requires relaxed ordering */
- static void tegra_pcie_relax_enable(struct pci_dev *dev)
- {
--	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_RELAX_EN);
-+	if (pci_match_id(tegra_rootport_ids, pci_get_rootport(dev)))
-+		pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
-+					 PCI_EXP_DEVCTL_RELAX_EN);
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, tegra_pcie_relax_enable);
- 
--- 
-2.1.3
+Just because vfio-pci fixed it incorrectly doesn't mean pciback has to
+as well.
+
+It makes no sense for both pciback and vfio-pci to workaround problems
+with pci_function_reset() in different ways -- it should be fixed in the
+core PCI code so both can benefit and make use of the same code.
+
+David
 
