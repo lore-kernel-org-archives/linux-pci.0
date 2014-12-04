@@ -1,43 +1,203 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f51.google.com ([209.85.216.51]:61642 "EHLO
-	mail-qa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932199AbaLBUN2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Dec 2014 15:13:28 -0500
-Received: by mail-qa0-f51.google.com with SMTP id k15so9180363qaq.38
-        for <linux-pci@vger.kernel.org>; Tue, 02 Dec 2014 12:13:27 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAHH3p5L5bX+9PfZCFHAYmyAS9+kg9CpdQWnAy7WZLCNBm+RYSA@mail.gmail.com>
-References: <CAHH3p5L5bX+9PfZCFHAYmyAS9+kg9CpdQWnAy7WZLCNBm+RYSA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 2 Dec 2014 13:13:07 -0700
-Message-ID: <CAErSpo6U9Zpw1Dd79yFmEksEdHSmqDJe517JsLUSN79P9iEJRA@mail.gmail.com>
-Subject: Re: PCIE card link up w/ or w/o device connected
-To: shiv prakash Agarwal <chhotu.shiv@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	Rajat Jain <rajatxjain@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:45511 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752992AbaLDKhI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Dec 2014 05:37:08 -0500
+Received: by mail-wi0-f180.google.com with SMTP id n3so27333127wiv.7
+        for <linux-pci@vger.kernel.org>; Thu, 04 Dec 2014 02:37:05 -0800 (PST)
+From: Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [RFC PATCH v2] drivers: pci: move PCI domain assignment
+ =?iso-8859-1?Q?to=0D?= generic PCI code
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>, bhelgaas@google.com
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+In-Reply-To: <20141119093948.GA8751@red-moon>
+References: <1415637706-2195-1-git-send-email-lorenzo.pieralisi@arm.com>
+	<546C5FF2.5090903@huawei.com> <20141119093948.GA8751@red-moon>
+Date: Thu, 04 Dec 2014 10:36:59 +0000
+Message-Id: <20141204103659.34A77C40992@trevor.secretlab.ca>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Pratyush, Yinghai, Alex, Rajat]
+On Wed, 19 Nov 2014 09:39:48 +0000
+, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+ wrote:
+> On Wed, Nov 19, 2014 at 09:16:34AM +0000, Yijing Wang wrote:
+> > Hi Lorenzo,
+> >    You should send this to Bjorn instead of cc. Other, why put the OF related
+> > function in PCI core. Why not move it in drivers/of/of_pci.c ?
+> 
+> I did, you missed v1, and the problem is that with ACPI forthcoming we
+> do not want to have domain assignment scattered in different places,
+> but part of core code (ie a single function that prevents mixed
+> initialization from DT/counter and so on).
 
-On Wed, Nov 26, 2014 at 7:57 AM, shiv prakash Agarwal
-<chhotu.shiv@gmail.com> wrote:
-> Hi All,
->
-> Is anybody aware of any pcie card which gets detected by root port i.e
-> link is up only when any device is connected to card? For example:
-> PCIE USB3 card link is up only when a usb3 device is connected to it.
->
-> Is it possible at least? Or card link will always be up whether any
-> device is connected to it or not?
+Bus specific OF code has generally been moving into the individual
+subsystems. SPI and I2C are the prime examples. It's easier to
+coordinate with the generic subsystem code when it lives in the same
+place. The PCI code still lives in drivers/of/ simply because nobody has
+been motivated enough to refactor it.
 
-Yes, I think that's possible.  This is similar to the situation Rajat
-has where the link state of a device can be controlled by some
-external entity: e48f1b67f668 ("PCI: pciehp: Use link change
-notifications for hot-plug and removal").
+> 
+> Bjorn, are you fine with this patch ? Do you want me to resend it as
+> part of the ARM 32 PCI domain refactoring [1] ? [1] depends on this
+> patch going in first.
+> 
+> Thanks,
+> Lorenzo
+> 
+> [1] http://www.spinics.net/lists/arm-kernel/msg375423.html
+> 
+> > On 2014/11/11 0:41, Lorenzo Pieralisi wrote:
+> > > The current logic used for PCI domain assignment in arm64
+> > > pci_bus_assign_domain_nr() is flawed in that, depending on the host
+> > > controllers configuration for a platform and the respective initialization
+> > > sequence, core code may end up allocating PCI domain numbers from both DT and
+> > > the core code generic domain counter, which would result in PCI domain
+> > > allocation aliases/errors.
+> > > 
+> > > This patch fixes the logic behind the PCI domain number assignment and
+> > > moves the resulting code to generic PCI core code so that the same domain
+> > > allocation logic is used on all platforms selecting
+> > > 
+> > > CONFIG_PCI_DOMAINS_GENERIC
+> > > 
+> > > instead of resorting to an arch specific implementation that might end up
+> > > duplicating the PCI domain assignment logic wrongly.
+> > > 
+> > > Cc: Arnd Bergmann <arnd@arndb.de>
+> > > Cc: Liviu Dudau <liviu.dudau@arm.com>
+> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > Cc: Rob Herring <robh+dt@kernel.org>
+> > > Cc: Catalin Marinas <catalin.marinas@arm.com>
+> > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > > ---
+> > > v1 => v2:
+> > > 
+> > > - Moved generic pci_bus_assign_domain_nr() code to PCI core instead of
+> > >   adding an OF layer API
+> > > - Updated commit log and code comments
+> > > 
+> > >  arch/arm64/kernel/pci.c | 22 ----------------------
+> > >  drivers/pci/pci.c       | 50 +++++++++++++++++++++++++++++++++++++++++++++++++
+> > >  2 files changed, 50 insertions(+), 22 deletions(-)
+> > > 
+> > > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> > > index ce5836c..6f93c24 100644
+> > > --- a/arch/arm64/kernel/pci.c
+> > > +++ b/arch/arm64/kernel/pci.c
+> > > @@ -46,25 +46,3 @@ int pcibios_add_device(struct pci_dev *dev)
+> > >  
+> > >  	return 0;
+> > >  }
+> > > -
+> > > -
+> > > -#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> > > -static bool dt_domain_found = false;
+> > > -
+> > > -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> > > -{
+> > > -	int domain = of_get_pci_domain_nr(parent->of_node);
+> > > -
+> > > -	if (domain >= 0) {
+> > > -		dt_domain_found = true;
+> > > -	} else if (dt_domain_found == true) {
+> > > -		dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
+> > > -			parent->of_node->full_name);
+> > > -		return;
+> > > -	} else {
+> > > -		domain = pci_get_new_domain_nr();
+> > > -	}
+> > > -
+> > > -	bus->domain_nr = domain;
+> > > -}
+> > > -#endif
+> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > index 625a4ac..2279414 100644
+> > > --- a/drivers/pci/pci.c
+> > > +++ b/drivers/pci/pci.c
+> > > @@ -10,6 +10,8 @@
+> > >  #include <linux/kernel.h>
+> > >  #include <linux/delay.h>
+> > >  #include <linux/init.h>
+> > > +#include <linux/of.h>
+> > > +#include <linux/of_pci.h>
+> > >  #include <linux/pci.h>
+> > >  #include <linux/pm.h>
+> > >  #include <linux/slab.h>
+> > > @@ -4447,6 +4449,54 @@ int pci_get_new_domain_nr(void)
+> > >  {
+> > >  	return atomic_inc_return(&__domain_nr);
+> > >  }
+> > > +
+> > > +#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> > > +
+> > > +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> > > +{
+> > > +	static int use_dt_domains = -1;
+> > > +	int domain = of_get_pci_domain_nr(parent->of_node);
+> > > +
+> > > +	/*
+> > > +	 * Check DT domain and use_dt_domains values.
+> > > +	 *
+> > > +	 * If DT domain property is valid (domain >= 0) and
+> > > +	 * use_dt_domains != 0, the DT assignment is valid since this means
+> > > +	 * we have not previously allocated a domain number by using
+> > > +	 * pci_get_new_domain_nr(); we should also update use_dt_domains to
+> > > +	 * 1, to indicate that we have just assigned a domain number from
+> > > +	 * DT.
+> > > +	 *
+> > > +	 * If DT domain property value is not valid (ie domain < 0), and we
+> > > +	 * have not previously assigned a domain number from DT
+> > > +	 * (use_dt_domains != 1) we should assign a domain number by
+> > > +	 * using the:
+> > > +	 *
+> > > +	 * pci_get_new_domain_nr()
+> > > +	 *
+> > > +	 * API and update the use_dt_domains value to keep track of method we
+> > > +	 * are using to assign domain numbers (use_dt_domains = 0).
+> > > +	 *
+> > > +	 * All other combinations imply we have a platform that is trying
+> > > +	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
+> > > +	 * which is a recipe for domain mishandling and it is prevented by
+> > > +	 * invalidating the domain value (domain = -1) and printing a
+> > > +	 * corresponding error.
+> > > +	 */
+> > > +	if (domain >= 0 && use_dt_domains) {
+> > > +		use_dt_domains = 1;
+> > > +	} else if (domain < 0 && use_dt_domains != 1) {
+> > > +		use_dt_domains = 0;
+> > > +		domain = pci_get_new_domain_nr();
+> > > +	} else {
+> > > +		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
+> > > +			parent->of_node->full_name);
+> > > +		domain = -1;
+> > > +	}
+> > > +
+> > > +	bus->domain_nr = domain;
+> > > +}
+> > > +#endif
+> > >  #endif
+> > >  
+> > >  /**
+> > > 
+> > 
+> > 
+> > -- 
+> > Thanks!
+> > Yijing
+> > 
+> > 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
 
-Bjorn
