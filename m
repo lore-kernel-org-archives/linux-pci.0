@@ -1,120 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:25572 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932754AbaLJUkk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Dec 2014 15:40:40 -0500
-Message-ID: <5488AFC6.3000209@broadcom.com>
-Date: Wed, 10 Dec 2014 12:40:38 -0800
-From: Ray Jui <rjui@broadcom.com>
-MIME-Version: 1.0
-To: Hauke Mehrtens <hauke@hauke-m.de>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Scott Branden <sbranden@broadcom.com>
-CC: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Rob Herring" <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Christian Daudt <bcm@fixthebug.org>,
-	Matt Porter <mporter@linaro.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH 2/4] PCI: iproc: Add Broadcom iProc PCIe driver
-References: <1418169871-19232-3-git-send-email-rjui@broadcom.com> <9707535.Y78sV0TgX4@wuerfel> <54887901.8070501@broadcom.com> <CAGVrzcbZ_f43Vf1mu2XErVi_Jehjggh2TREyrSs84ntSm98yvg@mail.gmail.com> <5488AC64.9010306@hauke-m.de>
-In-Reply-To: <5488AC64.9010306@hauke-m.de>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:44392 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753681AbaLDPjT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Dec 2014 10:39:19 -0500
+Message-ID: <1417707546.15750.100.camel@bling.home>
+Subject: Re: [Xen-devel] [PATCH v5 9/9] xen/pciback: Implement PCI reset
+ slot or bus with 'do_flr' SysFS attribute
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Sander Eikelenboom <linux@eikelenboom.it>
+Cc: David Vrabel <david.vrabel@citrix.com>, bhelgaas@google.com,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	linux-pci@vger.kernel.org,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org
+Date: Thu, 04 Dec 2014 08:39:06 -0700
+In-Reply-To: <1578910783.20141204155025@eikelenboom.it>
+References: <201412041206.sB4C6XVQ009497@userz7022.oracle.com>
+	 <5480528F.8010106@citrix.com> <1107877503.20141204141054@eikelenboom.it>
+	 <548064EA.8090905@citrix.com> <308719815.20141204150909@eikelenboom.it>
+	 <5480702F.2060004@citrix.com> <1578910783.20141204155025@eikelenboom.it>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, 2014-12-04 at 15:50 +0100, Sander Eikelenboom wrote:
+> Thursday, December 4, 2014, 3:31:11 PM, you wrote:
+> 
+> > On 04/12/14 14:09, Sander Eikelenboom wrote:
+> >> 
+> >> Thursday, December 4, 2014, 2:43:06 PM, you wrote:
+> >> 
+> >>> On 04/12/14 13:10, Sander Eikelenboom wrote:
+> >>>>
+> >>>> Thursday, December 4, 2014, 1:24:47 PM, you wrote:
+> >>>>
+> >>>>> On 04/12/14 12:06, Konrad Rzeszutek Wilk wrote:
+> >>>>>>
+> >>>>>> On Dec 4, 2014 6:30 AM, David Vrabel <david.vrabel@citrix.com> wrote:
+> >>>>>>>
+> >>>>>>> On 03/12/14 21:40, Konrad Rzeszutek Wilk wrote: 
+> >>>>>>>>
+> >>>>>>>> Instead of doing all this complex dance, we depend on the toolstack 
+> >>>>>>>> doing the right thing. As such implement the 'do_flr' SysFS attribute 
+> >>>>>>>> which 'xl' uses when a device is detached or attached from/to a guest. 
+> >>>>>>>> It bypasses the need to worry about the PCI lock. 
+> >>>>>>>
+> >>>>>>> No.  Get pciback to add its own "reset" sysfs file (as I have repeatedly 
+> >>>>>>> proposed). 
+> >>>>>>>
+> >>>>>>
+> >>>>>> Which does not work as the kobj will complain (as there is already an 'reset' associated with the PCI device).
+> >>>>
+> >>>>> It is only needed if the core won't provide one.
+> >>>>
+> >>>>> +static int pcistub_try_create_reset_file(struct pci_dev *pci)
+> >>>>> +{
+> >>>>> +       struct xen_pcibk_dev_data *dev_data = pci_get_drvdata(pci);
+> >>>>> +       struct device *dev = &pci->dev;
+> >>>>> +       int ret;
+> >>>>> +
+> >>>>> +       /* Already have a per-function reset? */
+> >>>>> +       if (pci_probe_reset_function(pci) == 0)
+> >>>>> +               return 0;
+> >>>>> +
+> >>>>> +       ret = device_create_file(dev, &dev_attr_reset);
+> >>>>> +       if (ret < 0)
+> >>>>> +               return ret;
+> >>>> +       dev_data->>created_reset_file = true;
+> >>>>> +       return 0;
+> >>>>> +}
+> >>>>
+> >>>> Wouldn't the "core-reset-sysfs-file" be still wired to the end up calling 
+> >>>> "pci.c:__pci_dev_reset" ?
+> >>>>
+> >>>> The problem with that function is that from my testing it seems that the 
+> >>>> first option "pci_dev_specific_reset" always seems to return succes, so all the
+> >>>> other options are skipped (flr, pm, slot, bus). However the device it self is 
+> >>>> not properly reset enough (perhaps the pci_dev_specific_reset is good enough for 
+> >>>> none virtualization purposes and it's probably the least intrusive. For 
+> >>>> virtualization however it would be nice to be sure it resets properly, or have a 
+> >>>> way to force a specific reset routine.)
+> >> 
+> >>> Then you need work with the maintainer for those specific devices or
+> >>> drivers to fix their specific reset function.
+> >> 
+> >>> I'm not adding stuff to pciback to workaround broken quirks.
+> >> 
+> >> OK that's a pretty clear message there, so if one wants to use pci and vga
+> >> passthrough one should better use KVM and vfio-pci.
+> 
+> > Have you (or anyone else) ever raised the problem with the broken reset
+> > quirk for certain devices with the relevant maintainer?
+> 
+> >> vfio-pci has:
+> >> - logic to do the try-slot-bus-reset logic
+> 
+> > Just because vfio-pci fixed it incorrectly doesn't mean pciback has to
+> > as well.
+> 
+> Depends on what you call an "incorrect fix" .. it fixes a quirk .. 
+> you can say that's incorrect, but then you would have to remove 50% of
+> the kernel and Xen code as well.
+> 
+> (i do in general agree it's better to strive for a generic solution though,
+> that's exactly why i brought up that that function doesn't seem to work perfect
+> for virtualization purposes) 
+> 
+> > It makes no sense for both pciback and vfio-pci to workaround problems
+> > with pci_function_reset() in different ways -- it should be fixed in the
+> > core PCI code so both can benefit and make use of the same code.
+> 
+> Well perhaps Bjorn knows why the order of resets and skipping the rest as
+> implemented in "pci.c:__pci_dev_reset" was implemented in that way ?
+> 
+> Especially what is the expectation about pci_dev_specific_reset doing a proper 
+> reset for say a vga-card:
+> - i know it doesn't work on a radeon card (doesn't blank screen, on next guest 
+>   boot reports it's already posted, powermanagement doesn't work).
+> - while with a slot/bus reset, that all just works fine, screen blanks 
+>   immediately and everything else also works.
+> 
+> Added Alex as well since he added this workaround for KVM/vfio-pci, perhaps he knows why
+> he introduced the workaround in vfio-pci instead of trying to fix it in core pci 
+> code ?
 
+I don't know what workaround you're talking about.  As devices are
+released from the user, vfio-pci attempts to reset them.  If
+pci_reset_function() returns success we mark the device clean, otherwise
+it gets marked dirty.  Each time a device is released, if there are
+dirty devices we test whether we can try a bus/slot reset to clean them.
+In the case of assigning a GPU this typically means that the GPU or
+audio function come through first, there's no reset mechanism so it gets
+marked dirty, the next device comes through and we manage to try a bus
+reset.  vfio-pci does not have any device specific resets, all
+functionality is added to the PCI-core, thank-you-very-much.  I even
+posted a generic PCI quirk patch recently that marks AMD VGA PM reset as
+bad so that pci_reset_function() won't claim that worked.  All VGA
+access quirks are done in QEMU, the kernel doesn't have any business in
+remapping config space over MMIO regions or trapping other config space
+backdoors.
 
-On 12/10/2014 12:26 PM, Hauke Mehrtens wrote:
-> On 12/10/2014 07:46 PM, Florian Fainelli wrote:
->> 2014-12-10 8:46 GMT-08:00 Scott Branden <sbranden@broadcom.com>:
->>> On 14-12-10 03:31 AM, Arnd Bergmann wrote:
->>>>
->>>> On Tuesday 09 December 2014 16:04:29 Ray Jui wrote:
->>>>>
->>>>> Add initial version of the Broadcom iProc PCIe driver. This driver
->>>>> has been tested on NSP and Cygnus and is expected to work on all iProc
->>>>> family of SoCs that deploys the same PCIe host controller
->>>>>
->>>>> The driver also supports MSI
->>>>>
->>>>> Signed-off-by: Ray Jui <rjui@broadcom.com>
->>>>> Reviewed-by: Scott Branden <sbranden@broadcom.com>
->>>>
->>>>
->>>> The driver looks suspiciously like the one that Hauke already submitted a
->>>> while ago for bcm53xx. Please come up with a merged driver that works for
->>>> both.
->>>
->>> Could you please be a little more specific.  What driver did "Hauke already
->>> submitted"?  I do not see any driver in the kernel you are talking about.
->>
->> https://www.marc.info/?l=linux-pci&m=141547043110684&w=2
->
-> Yes it also looks similar to me. Your code also contains the same
-> comments as the driver used on Northstar (BCM5301X).Your driver has
-> some more features, but I just have access to the consumer SoC Northstar
-> where the PCIe controller is only used to connect some Broadcom Wifi
-> chips to the SoC. I do not know If this controller does not have these
-> features or the driver I used as a reference does not implement them.
->
-Right, I wrote this driver based on some old Broadcom internal PCIe 
-driver from a 3.6 kernel and might have copied some of the comments 
-(especially in the check link function). The 3.6 driver is probably what 
-you received?
+I have never heard of problems with the dev specific reset claiming to
+work and not doing anything, there are only a few of these, it should be
+easy to debug.
 
-> When I find some time I will try this driver on a Northstar device. I
-> think your driver is more advanced then the one I send to the mailing list.
->
-Please do that. I tested this driver on Cygnus and one of my colleagues 
-helped to test it on North Star Plus. We do expect the same driver to 
-work on NorthStar as well.
+I didn't read the original patch, but the title alone of this patch is
+quite confusing.  FLR is specifically a function-level-reset, so one
+would expect 'do_flr' to be function specific.  The pci-sysfs 'reset'
+attribute is already function specific.  If pci_reset_function() isn't
+doing the job and we need to use bus/slot reset, it's clearly not an
+FLR.  Thanks,
 
-> When you want to stay with pure device tree I will send a patch adding
-> additional support for registering to bcma.
->
-What exactly is bcma? I guess I'll need to look into it in more details 
-myself.
+Alex
 
-> Does your SoC also have a third PCIe controller which shares the PHY
-> with the USB 3 controller?
-No. Cygnus has only two PCIe controllers, each has its own dedicated PHY.
-
->
-> Why is this stuff in the iproc_pcie_check_link() function needed? I
-> think it is strange that the controller driver has to check if the
-> device is there and set the correct speed. When we do not check if the
-> card is there on BCM5301X the device stops working.
->
-I need to check with our ASIC engineer on this. In theory we should be 
-able to support hot plug eventually, but maybe not in the initial 
-version of this driver.
-
->>>> Are you sure that iProc isn't based on the BCMA bus infrastructure after
->>>> all? Even the physical address of your PCI host falls into the address
->>>> range that is used for the internal BCMA bus on the other chips!
->>>
->>> BCMA seems to be for MIPS architectures.  It seems to be quite specific to
->>> those architectures using BCMA.  I see no use of it in bcm53xx code?
->>
->> BCMA lives in its own directory in drivers/bcma/ and is not specific
->> to MIPS actually. Older BCM47xx/BCM53xx MIPS-based SoCs traditionally
->> started with a discoverable Silicon Sonics Backplane (drivers/ssb) and
->> progressively migrated to BCMA (drivers/bcma), both subsystems offer a
->> very similar bus/device/driver abstraction and discovery mechanism.
->
-> With mainline kernel 3.18 you can boot Linux on a BCM5301X SoC and bcma
-> will find all the cores.
->
-> Hauke
->
