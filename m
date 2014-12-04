@@ -1,48 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:44535 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751813AbaLXWMW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Dec 2014 17:12:22 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux@arm.linux.org.uk>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <arnd@arndb.de>,
-	<will.deacon@arm.com>, <grant.likely@linaro.org>,
-	<robh+dt@kernel.org>, <devicetree@vger.kernel.org>,
-	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>
-Subject: [PATCH v2 0/2] PCI: get DMA configuration from parent device
-Date: Wed, 24 Dec 2014 17:11:37 -0500
-Message-ID: <1419459099-6667-1-git-send-email-m-karicheri2@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.emea.novell.com ([130.57.118.101]:50495 "EHLO
+	mail.emea.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753490AbaLDLgg convert rfc822-to-8bit (ORCPT
+	<rfc822;groupwise-linux-pci@vger.kernel.org:5:2>);
+	Thu, 4 Dec 2014 06:36:36 -0500
+Message-Id: <54805552020000780004CAD4@mail.emea.novell.com>
+Date: Thu, 04 Dec 2014 11:36:34 +0000
+From: "Jan Beulich" <JBeulich@suse.com>
+To: "David Vrabel" <david.vrabel@citrix.com>
+Cc: <bhelgaas@google.com>, <xen-devel@lists.xenproject.org>,
+	<boris.ostrovsky@oracle.com>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v5 8/9] xen-pciback: drop SR-IOV VFs when PF driver
+ unloads
+References: <1417642834-20350-1-git-send-email-konrad.wilk@oracle.com>
+ <1417642834-20350-9-git-send-email-konrad.wilk@oracle.com>
+ <5480407F.7070402@citrix.com>
+In-Reply-To: <5480407F.7070402@citrix.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI devices on Keystone doesn't have correct dma_pfn_offset set. This patch
-add capability to set the dma configuration such as dma-mask, dma_pfn_offset,
-and dma ops etc using the information from DT. The prior RFCs and discussions
-are available at [1] and [2] below.
+>>> On 04.12.14 at 12:07, <david.vrabel@citrix.com> wrote:
+> On 03/12/14 21:40, Konrad Rzeszutek Wilk wrote:
+>> From: Jan Beulich <JBeulich@suse.com>
+>> 
+>> When a PF driver unloads, it may find it necessary to leave the VFs
+>> around simply because of pciback having marked them as assigned to a
+>> guest. Utilize a suitable notification to let go of the VFs, thus
+>> allowing the PF to go back into the state it was before its driver
+>> loaded (which in particular allows the driver to be loaded again with
+>> it being able to create the VFs anew, but which also allows to then
+>> pass through the PF instead of the VFs).
+>> 
+>> Don't do this however for any VFs currently in active use by a guest.
+>> 
+>> Signed-off-by: Jan Beulich <jbeulich@suse.com>
+>> [v2: Removed the switch statement, moved it about]
+>> [v3: Redid it a bit differently]
+> 
+> Jan, are you happy with Konrad's change now?
 
-[2] : https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg790244.html
-[1] : http://www.gossamer-threads.com/lists/linux/kernel/2024591
+Yes: http://lists.xenproject.org/archives/html/xen-devel/2014-12/msg00267.html
 
-Change history:
-	v2 - update size to coherent_dma_mask + 1 if dma-range info is missing
-	   - also check the np for null.
-	v1 - updates based on the comments against initial RFC.
-	   - Added a helper function to get the OF node of the parent
-	   - Added an API in of_pci.c to update DMA configuration of the pci
-	     device.
-
-Murali Karicheri (2):
-  of/pci: add of_pci_dma_configure() update dma configuration
-  PCI: update dma configuration from DT
-
- drivers/of/of_pci.c    |   73 ++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/probe.c    |    2 ++
- include/linux/of_pci.h |   12 ++++++++
- 3 files changed, 87 insertions(+)
-
--- 
-1.7.9.5
+Jan
 
