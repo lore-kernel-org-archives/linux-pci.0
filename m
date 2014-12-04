@@ -1,70 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:47593 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758352AbaLKAG6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Dec 2014 19:06:58 -0500
-Received: by mail-ig0-f170.google.com with SMTP id r2so8639686igi.3
-        for <linux-pci@vger.kernel.org>; Wed, 10 Dec 2014 16:06:57 -0800 (PST)
-Date: Wed, 10 Dec 2014 17:06:54 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: Scott Murray <scott@spiteful.org>, linux-pci@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [PATCH 1/1] PCI: hotplug: Deletion of an unnecessary check
- before the function call "pci_dev_put"
-Message-ID: <20141211000654.GB22886@google.com>
-References: <530C5E18.1020800@users.sourceforge.net>
- <alpine.DEB.2.10.1402251014170.2080@hadrien>
- <530CD2C4.4050903@users.sourceforge.net>
- <alpine.DEB.2.10.1402251840450.7035@hadrien>
- <530CF8FF.8080600@users.sourceforge.net>
- <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
- <530DD06F.4090703@users.sourceforge.net>
- <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
- <5317A59D.4@users.sourceforge.net>
- <546E1B21.2070206@users.sourceforge.net>
+Received: from vserver.eikelenboom.it ([84.200.39.61]:38685 "EHLO
+	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751322AbaLDNQt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Dec 2014 08:16:49 -0500
+Date: Thu, 4 Dec 2014 14:10:54 +0100
+From: Sander Eikelenboom <linux@eikelenboom.it>
+Message-ID: <1107877503.20141204141054@eikelenboom.it>
+To: David Vrabel <david.vrabel@citrix.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	bhelgaas@google.com, <linux-pci@vger.kernel.org>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	<linux-kernel@vger.kernel.org>, <xen-devel@lists.xenproject.org>
+Subject: Re: [Xen-devel] [PATCH v5 9/9] xen/pciback: Implement PCI reset slot or bus with 'do_flr' SysFS attribute
+In-Reply-To: <5480528F.8010106@citrix.com>
+References: <201412041206.sB4C6XVQ009497@userz7022.oracle.com> <5480528F.8010106@citrix.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <546E1B21.2070206@users.sourceforge.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 20, 2014 at 05:47:29PM +0100, SF Markus Elfring wrote:
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Thu, 20 Nov 2014 17:42:23 +0100
-> 
-> The pci_dev_put() function tests whether its argument is NULL and then
-> returns immediately. Thus the test around the call is not needed.
-> 
-> This issue was detected by using the Coccinelle software.
-> 
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 
-Applied to next-pci/misc for v3.19, thanks.  This branch will be rebased
-when v3.19-rc1 is released.
+Thursday, December 4, 2014, 1:24:47 PM, you wrote:
 
-Bjorn
+> On 04/12/14 12:06, Konrad Rzeszutek Wilk wrote:
+>> 
+>> On Dec 4, 2014 6:30 AM, David Vrabel <david.vrabel@citrix.com> wrote:
+>>>
+>>> On 03/12/14 21:40, Konrad Rzeszutek Wilk wrote: 
+>>>>
+>>>> Instead of doing all this complex dance, we depend on the toolstack 
+>>>> doing the right thing. As such implement the 'do_flr' SysFS attribute 
+>>>> which 'xl' uses when a device is detached or attached from/to a guest. 
+>>>> It bypasses the need to worry about the PCI lock. 
+>>>
+>>> No.  Get pciback to add its own "reset" sysfs file (as I have repeatedly 
+>>> proposed). 
+>>>
+>> 
+>> Which does not work as the kobj will complain (as there is already an 'reset' associated with the PCI device).
 
-> ---
->  drivers/pci/hotplug/cpci_hotplug_core.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/cpci_hotplug_core.c b/drivers/pci/hotplug/cpci_hotplug_core.c
-> index e09cf78..82c969b 100644
-> --- a/drivers/pci/hotplug/cpci_hotplug_core.c
-> +++ b/drivers/pci/hotplug/cpci_hotplug_core.c
-> @@ -211,8 +211,7 @@ static void release_slot(struct hotplug_slot *hotplug_slot)
->  
->  	kfree(slot->hotplug_slot->info);
->  	kfree(slot->hotplug_slot);
-> -	if (slot->dev)
-> -		pci_dev_put(slot->dev);
-> +	pci_dev_put(slot->dev);
->  	kfree(slot);
->  }
->  
-> -- 
-> 2.1.3
-> 
+> It is only needed if the core won't provide one.
+
+> +static int pcistub_try_create_reset_file(struct pci_dev *pci)
+> +{
+> +       struct xen_pcibk_dev_data *dev_data = pci_get_drvdata(pci);
+> +       struct device *dev = &pci->dev;
+> +       int ret;
+> +
+> +       /* Already have a per-function reset? */
+> +       if (pci_probe_reset_function(pci) == 0)
+> +               return 0;
+> +
+> +       ret = device_create_file(dev, &dev_attr_reset);
+> +       if (ret < 0)
+> +               return ret;
++       dev_data->>created_reset_file = true;
+> +       return 0;
+> +}
+
+Wouldn't the "core-reset-sysfs-file" be still wired to the end up calling 
+"pci.c:__pci_dev_reset" ?
+
+The problem with that function is that from my testing it seems that the 
+first option "pci_dev_specific_reset" always seems to return succes, so all the
+other options are skipped (flr, pm, slot, bus). However the device it self is 
+not properly reset enough (perhaps the pci_dev_specific_reset is good enough for 
+none virtualization purposes and it's probably the least intrusive. For 
+virtualization however it would be nice to be sure it resets properly, or have a 
+way to force a specific reset routine.) 
+
+So it's the ordering and skipping of the other resets that seems to make
+this workaround necessary in the first place.
+
+> David
+
+
+
+
+
