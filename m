@@ -1,70 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:25662 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934379AbaLLQ4V (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Dec 2014 11:56:21 -0500
-Message-ID: <548B1E33.4090806@broadcom.com>
-Date: Fri, 12 Dec 2014 08:56:19 -0800
-From: Ray Jui <rjui@broadcom.com>
+Received: from smtp02.citrix.com ([66.165.176.63]:18525 "EHLO
+	SMTP02.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753925AbaLDNnL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Dec 2014 08:43:11 -0500
+Message-ID: <548064EA.8090905@citrix.com>
+Date: Thu, 4 Dec 2014 13:43:06 +0000
+From: David Vrabel <david.vrabel@citrix.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	"Ian Campbell" <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Christian Daudt <bcm@fixthebug.org>,
-	Matt Porter <mporter@linaro.org>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>
-Subject: Re: [PATCH v2 3/4] ARM: mach-bcm: Enable PCIe support for iProc
-References: <1418351817-14898-4-git-send-email-rjui@broadcom.com> <3173848.p74DGitYxH@wuerfel>
-In-Reply-To: <3173848.p74DGitYxH@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: Sander Eikelenboom <linux@eikelenboom.it>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	<linux-kernel@vger.kernel.org>, <xen-devel@lists.xenproject.org>
+Subject: Re: [Xen-devel] [PATCH v5 9/9] xen/pciback: Implement PCI reset slot
+ or bus with 'do_flr' SysFS attribute
+References: <201412041206.sB4C6XVQ009497@userz7022.oracle.com> <5480528F.8010106@citrix.com> <1107877503.20141204141054@eikelenboom.it>
+In-Reply-To: <1107877503.20141204141054@eikelenboom.it>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 04/12/14 13:10, Sander Eikelenboom wrote:
+> 
+> Thursday, December 4, 2014, 1:24:47 PM, you wrote:
+> 
+>> On 04/12/14 12:06, Konrad Rzeszutek Wilk wrote:
+>>>
+>>> On Dec 4, 2014 6:30 AM, David Vrabel <david.vrabel@citrix.com> wrote:
+>>>>
+>>>> On 03/12/14 21:40, Konrad Rzeszutek Wilk wrote: 
+>>>>>
+>>>>> Instead of doing all this complex dance, we depend on the toolstack 
+>>>>> doing the right thing. As such implement the 'do_flr' SysFS attribute 
+>>>>> which 'xl' uses when a device is detached or attached from/to a guest. 
+>>>>> It bypasses the need to worry about the PCI lock. 
+>>>>
+>>>> No.  Get pciback to add its own "reset" sysfs file (as I have repeatedly 
+>>>> proposed). 
+>>>>
+>>>
+>>> Which does not work as the kobj will complain (as there is already an 'reset' associated with the PCI device).
+> 
+>> It is only needed if the core won't provide one.
+> 
+>> +static int pcistub_try_create_reset_file(struct pci_dev *pci)
+>> +{
+>> +       struct xen_pcibk_dev_data *dev_data = pci_get_drvdata(pci);
+>> +       struct device *dev = &pci->dev;
+>> +       int ret;
+>> +
+>> +       /* Already have a per-function reset? */
+>> +       if (pci_probe_reset_function(pci) == 0)
+>> +               return 0;
+>> +
+>> +       ret = device_create_file(dev, &dev_attr_reset);
+>> +       if (ret < 0)
+>> +               return ret;
+> +       dev_data->>created_reset_file = true;
+>> +       return 0;
+>> +}
+> 
+> Wouldn't the "core-reset-sysfs-file" be still wired to the end up calling 
+> "pci.c:__pci_dev_reset" ?
+> 
+> The problem with that function is that from my testing it seems that the 
+> first option "pci_dev_specific_reset" always seems to return succes, so all the
+> other options are skipped (flr, pm, slot, bus). However the device it self is 
+> not properly reset enough (perhaps the pci_dev_specific_reset is good enough for 
+> none virtualization purposes and it's probably the least intrusive. For 
+> virtualization however it would be nice to be sure it resets properly, or have a 
+> way to force a specific reset routine.)
 
+Then you need work with the maintainer for those specific devices or
+drivers to fix their specific reset function.
 
-On 12/12/2014 4:15 AM, Arnd Bergmann wrote:
-> On Thursday 11 December 2014 18:36:56 Ray Jui wrote:
->> Enable PCIe driver support for Broadcom iProc family of SoCs by
->> selecting PCIE_IPROC
->>
->> Signed-off-by: Ray Jui <rjui@broadcom.com>
->> Reviewed-by: Scott Branden <sbranden@broadcom.com>
->> ---
->>   arch/arm/mach-bcm/Kconfig |    1 +
->>   1 file changed, 1 insertion(+)
->>
->> diff --git a/arch/arm/mach-bcm/Kconfig b/arch/arm/mach-bcm/Kconfig
->> index aaeec78..a13a0b2 100644
->> --- a/arch/arm/mach-bcm/Kconfig
->> +++ b/arch/arm/mach-bcm/Kconfig
->> @@ -19,6 +19,7 @@ config ARCH_BCM_IPROC
->>   	select ARCH_REQUIRE_GPIOLIB
->>   	select ARM_AMBA
->>   	select PINCTRL
->> +	select PCIE_IPROC
->>   	help
->>   	  This enables support for systems based on Broadcom IPROC architected SoCs.
->>   	  The IPROC complex contains one or more ARM CPUs along with common
->>
->
-> No, just enable it in multi_v7_defconfig and bcm_defconfig.
->
-> 	Arnd
->
-Or can I simply have the PCIE_IPROC default to y in 
-drivers/pci/host/Kconfig? Note PCIE_IPROC depends on ARCH_BCM_IPROC. By 
-defaulting it to y, it will be automatically enabled for all iProc 
-family of SoCs.
+I'm not adding stuff to pciback to workaround broken quirks.
+
+David
