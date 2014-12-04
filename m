@@ -1,63 +1,82 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Ulf Hansson <ulf.hansson@linaro.org>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Kevin Hilman <khilman@kernel.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 1/4] PM: Drop the SET_PM_RUNTIME_PM_OPS() macro
-Date: Wed, 03 Dec 2014 23:51:44 +0100
-Message-ID: <2647870.gu06V1GGvo@vostro.rjw.lan>
-In-Reply-To: <CAPDyKFoZmCYYNAGfNzwwEj=jk9wrfCKoxqQ4p=KStADSK1suCg@mail.gmail.com>
-References: <37310416.jZXoh5nfSC@vostro.rjw.lan> <3484329.phAPviVnbd@vostro.rjw.lan> <CAPDyKFoZmCYYNAGfNzwwEj=jk9wrfCKoxqQ4p=KStADSK1suCg@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qc0-f181.google.com ([209.85.216.181]:40802 "EHLO
+	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751914AbaLDAvt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Dec 2014 19:51:49 -0500
+Received: by mail-qc0-f181.google.com with SMTP id m20so12178881qcx.12
+        for <linux-pci@vger.kernel.org>; Wed, 03 Dec 2014 16:51:49 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <CAErSpo6UvY10MNidAOFf4Fptv+wL-NsX6JMaU8OvSP6ywWEebQ@mail.gmail.com>
+References: <CAErSpo6UvY10MNidAOFf4Fptv+wL-NsX6JMaU8OvSP6ywWEebQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 3 Dec 2014 17:51:28 -0700
+Message-ID: <CAErSpo63uZeo1feoPjjXpdH43nsbcWh63kpBmxCnckPd0t9yrg@mail.gmail.com>
+Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
+ GPU init
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	zermond@gmail.com, David Airlie <airlied@linux.ie>,
+	Yinghai Lu <yinghai@kernel.org>, saifi.khan@datasynergy.org,
+	Alex Deucher <alexdeucher@gmail.com>, kordikmarek@gmail.com
+Cc: Guo Chao <yan@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, December 03, 2014 03:15:49 PM Ulf Hansson wrote:
-> On 27 November 2014 at 01:38, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >
-> > The SET_PM_RUNTIME_PM_OPS() and SET_RUNTIME_PM_OPS() macros are
-> > identical except that one of them is not empty for CONFIG_PM set,
-> > while the other one is not empty for CONFIG_PM_RUNTIME set,
-> > respectively.
-> >
-> > However, after commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if
-> > PM_SLEEP is selected) PM_RUNTIME is always set if PM is set, so one
-> > of these macros is now redundant.
-> >
-> > For this reason, drop SET_PM_RUNTIME_PM_OPS() and replace it with
-> > SET_RUNTIME_PM_OPS() everywhere.
-> 
-> Hi Rafael,
-> 
-> Apparently, I have queued an mmc patch in my mmc tree, which means one
-> mmc driver starts using the SET_PM_RUNTIME_PM_OPS macro. It should
-> cause a build error in linux-next with @subject patch.
-> 
-> I have shared that patch through an immutable branch, I have also
-> checked potential conflicts and it shouldn't be any problems to pull
-> that in to your tree. Then you can fix $subject patch by also
-> converting the mmc driver to use SET_RUNTIME_PM_OPS macro.
-> 
-> The branch is available at:
-> git://git.linaro.org/people/ulf.hansson/mmc.git mmc_for_linux_pm
+[+cc Guo, Ben]
 
-Thanks for letting me know!
+On Wed, Dec 3, 2014 at 3:15 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> There's a bugzilla for this, so this email is to make the bugzilla
+> more discoverable and to have a more public discussion about it.
+>
+>   https://bugzilla.kernel.org/show_bug.cgi?id=85491
+>
+> I think this regression is caused by 5b28541552ef ("PCI: Restrict
+> 64-bit prefetchable bridge windows to 64-bit resources").
+> ...
 
-What about adding the following line to the $subject patch instead:
+> In v3.16 (which does contain 5b28541552ef), when pbus_size_mem() sizes
+> the 64-bit prefetchable window, it only looks for downstream 64-bit
+> resources.  Since the radeon at 01:00.0 has none, we size the window
+> to 0 + 0x200000 (the 0x200000 part is pci_hotplug_mem_size, to
+> accommodate future hot-added devices).
+> ...
 
-#define SET_PM_RUNTIME_PM_OPS	SET_RUNTIME_PM_OPS
+> I don't know what the best fix is, but I think it's probably too
+> aggressive to *never* use a 64-bit prefetchable window for downstream
+> 32-bit prefetchable resources.  This configuration from BIOS should
+> just work without us changing anything (although we probably should
+> trim the window to start at 0xc0000000, which would still work).
+>
+> In this case, I think we certainly want the radeon BAR 0 in the
+> prefetchable window.  In general, it seems wrong that a device with
+> 32-bit BARs will work fine below a bridge with a 32-bit prefetchable
+> window, but it won't work (or will work slower) below a bridge with a
+> 64-bit prefetchable window.  A more capable bridge should make things
+> work *better*, not worse.
 
-and fixing things up when all has been merged?
+5b28541552ef was added to fix https://bugzilla.kernel.org/show_bug.cgi?id=74151
 
+In that case, there was a bridge with a 64-bit prefetchable window,
+and downstream devices had 64-bit prefetchable BARs as well as
+prefetchable 32-bit ROMs:
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+    pci 0006:00:00.0: PCI bridge to [bus 01]
+    pci 0006:00:00.0:   bridge window [mem 0x3d24800000000-0x3d248007fffff]
+    pci 0006:00:00.0:   bridge window [mem
+0x3d24008000000-0x3d2400fffffff 64bit pref]
+
+    pci 0006:01:00.0: reg 0x10: [mem 0x3d2400e000000-0x3d2400e007fff 64bit pref]
+    pci 0006:01:00.0: reg 0x20: [mem 0x3d2400e030000-0x3d2400e030fff 64bit pref]
+    pci 0006:01:00.0: reg 0x30: [mem 0x00000000-0x0007ffff pref]
+
+The problem was that we used to put all the prefetchable BARs in the
+prefetchable window, which meant we had to put the window below 4GB
+because the ROM BAR is only 32 bits.  But there wasn't enough space
+below 4GB for all the other 64-bit BARs.
+
+I think another way to fix the bug 74151 problem would have been to
+put the ROMs in the non-prefetchable window and the 64-bit BARs in the
+64-bit prefetchable window.
+
+Bjorn
