@@ -1,73 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:54545 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751108AbaLVXII (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 18:08:08 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, grant.likely@linaro.org,
-	robh+dt@kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, will.deacon@arm.com
-Subject: Re: [RFC v1 PATCH 1/2] of/pci: add of_pci_dma_configure() update dma configuration
-Date: Tue, 23 Dec 2014 00:07:57 +0100
-Message-ID: <5090769.jqAkiDgYu7@wuerfel>
-In-Reply-To: <1723662.JYr5muIJha@wuerfel>
-References: <1418940425-2017-1-git-send-email-m-karicheri2@ti.com> <54989DDE.3060409@ti.com> <1723662.JYr5muIJha@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:40346 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753056AbaLDFzv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Dec 2014 00:55:51 -0500
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 4 Dec 2014 15:55:50 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id D41EE2CE8077
+	for <linux-pci@vger.kernel.org>; Thu,  4 Dec 2014 16:55:47 +1100 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sB45tdKh32047150
+	for <linux-pci@vger.kernel.org>; Thu, 4 Dec 2014 16:55:47 +1100
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sB45tEwN014827
+	for <linux-pci@vger.kernel.org>; Thu, 4 Dec 2014 16:55:15 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH 4/5] powerpc/powernv: Functions to retrieve PCI slot status
+Date: Thu,  4 Dec 2014 16:54:47 +1100
+Message-Id: <1417672488-27341-5-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1417672488-27341-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1417672488-27341-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 22 December 2014 23:44:52 Arnd Bergmann wrote:
-> On Monday 22 December 2014 17:40:30 Murali Karicheri wrote:
-> > On 12/22/2014 05:24 PM, Arnd Bergmann wrote:
-> > > On Monday 22 December 2014 16:40:43 Murali Karicheri wrote:
-> > >>>> +++ b/arch/arm/mm/dma-mapping.c
-> > >>>> @@ -2052,9 +2052,10 @@ void arch_setup_dma_ops(struct device *dev, u64
-> > >>>> dma_base, u64 size,
-> > >>>>                            struct iommu_ops *iommu, bool coherent)
-> > >>>>     {
-> > >>>>            struct dma_map_ops *dma_ops;
-> > >>>> +       u64 temp_size = min((*(dev->dma_mask) + 1), size);
-> > >>>>
-> > >>>>            dev->archdata.dma_coherent = coherent;
-> > >>>> -       if (arm_setup_iommu_dma_ops(dev, dma_base, size, iommu))
-> > >>>> +       if (arm_setup_iommu_dma_ops(dev, dma_base, temp_size, iommu))
-> > >>>>
-> > >>>> If you agree, I will post v1 of the patch with these updates. Let me
-> > >>>> know. I did some basic tests on Keystone with these changes and it works
-> > >>>> fine.
-> > >>>
-> > >>> It's not exactly what I meant. My main point was that we need to limit
-> > >>> dev->dma_mask to (size-1) here, but you are not touching that.
-> > >>
-> > >> if you mean overriding the dev->dma_mask to min((*dev->dma_mask),
-> > >> size-1), then I am getting the error "Coherent DMA mask 0x7fffffff (pfn
-> > >> 0x780000-0x800000) covers a smaller range of system memory than the DMA
-> > >> zone pfn 0x0-0x880000) when the devices on Keystone tries to set the dma
-> > >> mask. Something wrong and I need to look into the code.
-> > >
-> > > Right, it sounds like the offset was applied incorrectly at some point.
-> > >
-> > > What are the DMA zone size and the phys-offset?
-> > 2G and 0x8_0000_0000. This limit the usable DMA size to 2G on Keystone, 
-> > I believe you shouldn't be limiting the dma mask to size-1 in this case, 
-> > right? The DT setup the dma-range to have a size of 2G (0x80000000).
-> 
-> No, the problem is something else: the pfn range that we calculate for the
-> coherent DMA mask should have been 0x800000-0x880000, not 0x780000-0x800000,
-> so we would exactly match the ZONE_DMA.
+The patch exports two functions, which base on corresponding OPAL
+APIs to retrieve PCI slot status. Those functions are going to be
+used by PCI hotplug module in subsequent patches:
 
-I gave it some more thought, and concluded that the size that gets passed
-down is not really the right value to be compared to a mask if the dma-capable
-area starts at a nonzero bus address.
+   pnv_pci_get_power_status()     opal_pci_get_power_status()
+   pnv_pci_get_presence_status()  opal_pci_get_presence_status()
 
-In your case, bus addresses 0x80000000-0xffffffff are valid for DMA, so
-the mask must be 0xffffffff to forbid any DMA to addresses larger than
-0x100000000, not 0x7fffffff which would not be enough to cover any RAM.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/opal.h                |  4 ++++
+ arch/powerpc/include/asm/pnv-pci.h             |  3 +++
+ arch/powerpc/platforms/powernv/opal-wrappers.S |  2 ++
+ arch/powerpc/platforms/powernv/pci.c           | 24 ++++++++++++++++++++++++
+ 4 files changed, 33 insertions(+)
 
-I guess the dma_mask should be 'min((*dev->dma_mask), dma_base + size - 1)'
-here.
+diff --git a/arch/powerpc/include/asm/opal.h b/arch/powerpc/include/asm/opal.h
+index edd1993..c17fe80 100644
+--- a/arch/powerpc/include/asm/opal.h
++++ b/arch/powerpc/include/asm/opal.h
+@@ -154,6 +154,8 @@ struct opal_sg_list {
+ #define OPAL_HANDLE_HMI				98
+ #define OPAL_REGISTER_DUMP_REGION		101
+ #define OPAL_UNREGISTER_DUMP_REGION		102
++#define OPAL_PCI_GET_POWER_STATUS		110
++#define OPAL_PCI_GET_PRESENCE_STATUS		111
+ 
+ #ifndef __ASSEMBLY__
+ 
+@@ -958,6 +960,8 @@ int64_t opal_handle_hmi(void);
+ int64_t opal_register_dump_region(uint32_t id, uint64_t start, uint64_t end);
+ int64_t opal_unregister_dump_region(uint32_t id);
+ int64_t opal_pci_set_phb_cxl_mode(uint64_t phb_id, uint64_t mode, uint64_t pe_number);
++int64_t opal_pci_get_power_status(uint64_t id, uint8_t *status);
++int64_t opal_pci_get_presence_status(uint64_t id, uint8_t *status);
+ 
+ /* Internal functions */
+ extern int early_init_dt_scan_opal(unsigned long node, const char *uname,
+diff --git a/arch/powerpc/include/asm/pnv-pci.h b/arch/powerpc/include/asm/pnv-pci.h
+index f09a22f..fc73f72 100644
+--- a/arch/powerpc/include/asm/pnv-pci.h
++++ b/arch/powerpc/include/asm/pnv-pci.h
+@@ -13,6 +13,9 @@
+ #include <linux/pci.h>
+ #include <misc/cxl.h>
+ 
++extern int pnv_pci_get_power_status(uint64_t id, uint8_t *status);
++extern int pnv_pci_get_presence_status(uint64_t id, uint8_t *status);
++
+ int pnv_phb_to_cxl(struct pci_dev *dev);
+ int pnv_cxl_ioda_msi_setup(struct pci_dev *dev, unsigned int hwirq,
+ 			   unsigned int virq);
+diff --git a/arch/powerpc/platforms/powernv/opal-wrappers.S b/arch/powerpc/platforms/powernv/opal-wrappers.S
+index feb549a..bc5be98 100644
+--- a/arch/powerpc/platforms/powernv/opal-wrappers.S
++++ b/arch/powerpc/platforms/powernv/opal-wrappers.S
+@@ -250,3 +250,5 @@ OPAL_CALL(opal_handle_hmi,			OPAL_HANDLE_HMI);
+ OPAL_CALL(opal_register_dump_region,		OPAL_REGISTER_DUMP_REGION);
+ OPAL_CALL(opal_unregister_dump_region,		OPAL_UNREGISTER_DUMP_REGION);
+ OPAL_CALL(opal_pci_set_phb_cxl_mode,		OPAL_PCI_SET_PHB_CXL_MODE);
++OPAL_CALL(opal_pci_get_power_status,		OPAL_PCI_GET_POWER_STATUS);
++OPAL_CALL(opal_pci_get_presence_status,		OPAL_PCI_GET_PRESENCE_STATUS);
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index 6dc8ea9..d3af9e5 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -64,6 +64,30 @@ int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval)
+ 	return rval ? -EIO : 0;
+ }
+ 
++int pnv_pci_get_power_status(uint64_t id, uint8_t *status)
++{
++	long rc;
++
++	if (!opal_check_token(OPAL_PCI_GET_POWER_STATUS))
++		return -ENXIO;
++
++	rc = opal_pci_get_power_status(id, status);
++	return pnv_pci_poll(id, rc, status);
++}
++EXPORT_SYMBOL_GPL(pnv_pci_get_power_status);
++
++int pnv_pci_get_presence_status(uint64_t id, uint8_t *status)
++{
++	long rc;
++
++	if (!opal_check_token(OPAL_PCI_GET_PRESENCE_STATUS))
++		return -ENXIO;
++
++	rc = opal_pci_get_presence_status(id, status);
++	return pnv_pci_poll(id, rc, status);
++}
++EXPORT_SYMBOL_GPL(pnv_pci_get_presence_status);
++
+ #ifdef CONFIG_PCI_MSI
+ static int pnv_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+ {
+-- 
+1.8.3.2
 
-	Arnd
