@@ -1,63 +1,288 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:6916 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751786AbaLPTyd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Dec 2014 14:54:33 -0500
-Subject: Re: [bisected] tg3 broken in 3.18.0?
-From: Michael Chan <mchan@broadcom.com>
-To: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Nils Holland <nholland@tisys.org>,
-	David Miller <davem@davemloft.net>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rafael Wysocki <rjw@rjwysocki.net>,
-	"Prashant Sreedharan" <prashant@broadcom.com>
-In-Reply-To: <54907300.9050902@gmail.com>
-References: <20141213210251.GA12812@teela.fritz.box>
-	 <548EF90A.5070607@gmail.com>
-	 <CAA93t1qyZE-9tw8pg1KG6g4iyy0QMW=iass5w=6ZGMTMu+vi_A@mail.gmail.com>
-	 <CAErSpo5dqQE7nZ6zf2odgpHBWA3ZpTjhbgQKnY8YxQW+a+298w@mail.gmail.com>
-	 <1418750141.4248.3.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
-	 <54907300.9050902@gmail.com>
-Content-Type: text/plain; charset="cp1252"
-Date: Tue, 16 Dec 2014 11:54:44 -0800
-Message-ID: <1418759684.4248.12.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
+Received: from smtp02.citrix.com ([66.165.176.63]:3501 "EHLO SMTP02.CITRIX.COM"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753248AbaLDMZY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Dec 2014 07:25:24 -0500
+Message-ID: <5480528F.8010106@citrix.com>
+Date: Thu, 4 Dec 2014 12:24:47 +0000
+From: David Vrabel <david.vrabel@citrix.com>
 MIME-Version: 1.0
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>
+CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	<linux-kernel@vger.kernel.org>, <xen-devel@lists.xenproject.org>
+Subject: Re: [Xen-devel] [PATCH v5 9/9] xen/pciback: Implement PCI reset slot
+ or bus with 'do_flr' SysFS attribute
+References: <201412041206.sB4C6XVQ009497@userz7022.oracle.com>
+In-Reply-To: <201412041206.sB4C6XVQ009497@userz7022.oracle.com>
+Content-Type: multipart/mixed;
+	boundary="------------040006050709030007030805"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2014-12-16 at 15:59 -0200, Marcelo Ricardo Leitner wrote:
-> It's a 
-> 02:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5722
-> Gigabit Ethernet PCI Express
-> over here
-> 
-> I put a WARN_ON(1) after those printks, and this is what I got:
-> 
-> [    1.550640] pci 0000:02:00.0: 1st 1 1
-> [    1.550643] pci 0000:02:00.0: crs_timeout: 0
-> [    1.550645] ------------[ cut here ]------------
-> [    1.550651] WARNING: CPU: 6 PID: 364 at drivers/pci/probe.c:1445 pci_bus_read_dev_vendor_id+0x1d4/0x1e0()
-> [    1.550652] Modules linked in: i915(+) raid0 i2c_algo_bit drm_kms_helper drm e1000e(+) tg3(+) ptp pps_core video
-> [    1.550660] CPU: 6 PID: 364 Comm: systemd-udevd Not tainted 3.18.0-rc6+ #8
-> [    1.550661] Hardware name: Dell Inc. OptiPlex 9010/03K80F, BIOS A15 08/12/2013
-> [    1.550662]  0000000000000000 000000004de2d8dc ffff8807eabdf948 ffffffff8173db46
-> [    1.550665]  0000000000000000 0000000000000000 ffff8807eabdf988 ffffffff81094d41
-> [    1.550667]  ffff8807eabdf968 ffff8807f1e27000 0000000000000000 0000000000000000
-> [    1.550669] Call Trace:
-> [    1.550675]  [<ffffffff8173db46>] dump_stack+0x46/0x58
-> [    1.550679]  [<ffffffff81094d41>] warn_slowpath_common+0x81/0xa0
-> [    1.550681]  [<ffffffff81094e5a>] warn_slowpath_null+0x1a/0x20
-> [    1.550683]  [<ffffffff813b2864>] pci_bus_read_dev_vendor_id+0x1d4/0x1e0
-> [    1.550687]  [<ffffffff813b7c3e>] pci_device_is_present+0x2e/0x50
-> [    1.550693]  [<ffffffffa003364f>] tg3_chip_reset+0x2f/0x940 [tg3]
-> [    1.550697]  [<ffffffffa0033f9f>] tg3_halt+0x3f/0x1e0 [tg3]
-> [    1.550701]  [<ffffffffa0044f83>] tg3_init_one+0xb83/0x1a40 [tg3] 
+--------------040006050709030007030805
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-So does it work if you use a non-zero crs_timeout?  The driver has
-called tg3_halt() which may affect configuration read responses.  I need
-to check with the hardware team to see if the 5722 will return CRS in
-this scenario.
+On 04/12/14 12:06, Konrad Rzeszutek Wilk wrote:
+> 
+> On Dec 4, 2014 6:30 AM, David Vrabel <david.vrabel@citrix.com> wrote:
+>>
+>> On 03/12/14 21:40, Konrad Rzeszutek Wilk wrote: 
+>>>
+>>> Instead of doing all this complex dance, we depend on the toolstack 
+>>> doing the right thing. As such implement the 'do_flr' SysFS attribute 
+>>> which 'xl' uses when a device is detached or attached from/to a guest. 
+>>> It bypasses the need to worry about the PCI lock. 
+>>
+>> No.  Get pciback to add its own "reset" sysfs file (as I have repeatedly 
+>> proposed). 
+>>
+> 
+> Which does not work as the kobj will complain (as there is already an 'reset' associated with the PCI device).
 
+It is only needed if the core won't provide one.
+
++static int pcistub_try_create_reset_file(struct pci_dev *pci)
++{
++       struct xen_pcibk_dev_data *dev_data = pci_get_drvdata(pci);
++       struct device *dev = &pci->dev;
++       int ret;
++
++       /* Already have a per-function reset? */
++       if (pci_probe_reset_function(pci) == 0)
++               return 0;
++
++       ret = device_create_file(dev, &dev_attr_reset);
++       if (ret < 0)
++               return ret;
++       dev_data->created_reset_file = true;
++       return 0;
++}
+
+David
+
+
+
+--------------040006050709030007030805
+Content-Type: text/x-diff;
+	name="0002-xen-pciback-provide-a-reset-sysfs-file-to-try-harder.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename*0="0002-xen-pciback-provide-a-reset-sysfs-file-to-try-harder.pa";
+	filename*1="tch"
+
+>From e65a814106bc9994ec47b5317f7cdc975270d27f Mon Sep 17 00:00:00 2001
+From: David Vrabel <david.vrabel@citrix.com>
+Date: Thu, 10 Jul 2014 13:09:25 +0100
+Subject: [PATCH 2/2] xen-pciback: provide a "reset" sysfs file to try harder
+ at an SBR
+
+The standard implementation of pci_reset_function() does not try an
+SBR if there are other sibling devices.  This is a common
+configuration for multi-function devices (e.g., GPUs with a HDMI audio
+device function).
+
+If all the functions are co-assigned to the same domain at the same
+time, then it is safe to perform an SBR to reset all functions at the
+same time.
+
+Add a "reset" sysfs file with the same interface as the standard one
+(i.e., write 1 to reset) that will try an SBR if all sibling devices
+are unbound or bound to pciback.
+
+Note that this is weaker than the requirement for functions to be
+simultaneously co-assigned, but the toolstack is expected to ensure
+this.
+
+Signed-off-by: David Vrabel <david.vrabel@citrix.com>
+diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+index 4e8ba38..d6c29aa 100644
+--- a/drivers/xen/xen-pciback/pci_stub.c
++++ b/drivers/xen/xen-pciback/pci_stub.c
+@@ -14,6 +14,7 @@
+ #include <linux/wait.h>
+ #include <linux/sched.h>
+ #include <linux/atomic.h>
++#include <linux/delay.h>
+ #include <xen/events.h>
+ #include <asm/xen/pci.h>
+ #include <asm/xen/hypervisor.h>
+@@ -60,6 +61,114 @@ static LIST_HEAD(pcistub_devices);
+ static int initialize_devices;
+ static LIST_HEAD(seized_devices);
+ 
++/*
++ * pci_reset_function() will only work if there is a mechanism to
++ * reset that single function (e.g., FLR or a D-state transition).
++ * For PCI hardware that has two or more functions but no per-function
++ * reset, we can do a bus reset iff all the functions are co-assigned
++ * to the same domain.
++ *
++ * If a function has no per-function reset mechanism the 'reset' sysfs
++ * file that the toolstack uses to reset a function prior to assigning
++ * the device will be missing.  In this case, pciback adds its own
++ * which will try a bus reset.
++ *
++ * Note: pciback does not check for co-assigment before doing a bus
++ * reset, only that the devices are bound to pciback.  The toolstack
++ * is assumed to have done the right thing.
++ */
++static int __pcistub_reset_function(struct pci_dev *dev)
++{
++	struct pci_dev *pdev;
++	u16 ctrl;
++	int ret;
++
++	ret = __pci_reset_function_locked(dev);
++	if (ret == 0)
++		return 0;
++
++	if (pci_is_root_bus(dev->bus) || dev->subordinate || !dev->bus->self)
++		return -ENOTTY;
++
++	list_for_each_entry(pdev, &dev->bus->devices, bus_list) {
++		if (pdev != dev && (!pdev->driver
++				    || strcmp(pdev->driver->name, "pciback")))
++			return -ENOTTY;
++		pci_save_state(pdev);
++	}
++
++	pci_read_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, &ctrl);
++	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
++	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
++	msleep(200);
++
++	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
++	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
++	msleep(200);
++
++	list_for_each_entry(pdev, &dev->bus->devices, bus_list)
++		pci_restore_state(pdev);
++
++	return 0;
++}
++
++static int pcistub_reset_function(struct pci_dev *dev)
++{
++	int ret;
++
++	device_lock(&dev->dev);
++	ret = __pcistub_reset_function(dev);
++	device_unlock(&dev->dev);
++
++	return ret;
++}
++
++static ssize_t pcistub_reset_store(struct device *dev,
++				   struct device_attribute *attr,
++				   const char *buf, size_t count)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	unsigned long val;
++	ssize_t result = strict_strtoul(buf, 0, &val);
++
++	if (result < 0)
++		return result;
++
++	if (val != 1)
++		return -EINVAL;
++
++	result = pcistub_reset_function(pdev);
++	if (result < 0)
++		return result;
++	return count;
++}
++static DEVICE_ATTR(reset, 0200, NULL, pcistub_reset_store);
++
++static int pcistub_try_create_reset_file(struct pci_dev *pci)
++{
++	struct xen_pcibk_dev_data *dev_data = pci_get_drvdata(pci);
++	struct device *dev = &pci->dev;
++	int ret;
++
++	/* Already have a per-function reset? */
++	if (pci_probe_reset_function(pci) == 0)
++		return 0;
++
++	ret = device_create_file(dev, &dev_attr_reset);
++	if (ret < 0)
++		return ret;
++	dev_data->created_reset_file = true;
++	return 0;
++}
++
++static void pcistub_remove_reset_file(struct pci_dev *pci)
++{
++	struct xen_pcibk_dev_data *dev_data = pci_get_drvdata(pci);
++
++	if (dev_data && dev_data->created_reset_file)
++		device_remove_file(&pci->dev, &dev_attr_reset);
++}
++
+ static struct pcistub_device *pcistub_device_alloc(struct pci_dev *dev)
+ {
+ 	struct pcistub_device *psdev;
+@@ -100,7 +209,8 @@ static void pcistub_device_release(struct kref *kref)
+ 	/* Call the reset function which does not take lock as this
+ 	 * is called from "unbind" which takes a device_lock mutex.
+ 	 */
+-	__pci_reset_function_locked(dev);
++	__pcistub_reset_function(psdev->dev);
++
+ 	if (pci_load_and_free_saved_state(dev, &dev_data->pci_saved_state))
+ 		dev_dbg(&dev->dev, "Could not reload PCI state\n");
+ 	else
+@@ -268,7 +378,7 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
+ 	/* This is OK - we are running from workqueue context
+ 	 * and want to inhibit the user from fiddling with 'reset'
+ 	 */
+-	pci_reset_function(dev);
++	pcistub_reset_function(dev);
+ 	pci_restore_state(psdev->dev);
+ 
+ 	/* This disables the device. */
+@@ -392,7 +502,7 @@ static int pcistub_init_device(struct pci_dev *dev)
+ 		dev_err(&dev->dev, "Could not store PCI conf saved state!\n");
+ 	else {
+ 		dev_dbg(&dev->dev, "resetting (FLR, D3, etc) the device\n");
+-		__pci_reset_function_locked(dev);
++		__pcistub_reset_function(dev);
+ 		pci_restore_state(dev);
+ 	}
+ 	/* Now disable the device (this also ensures some private device
+@@ -401,6 +511,10 @@ static int pcistub_init_device(struct pci_dev *dev)
+ 	dev_dbg(&dev->dev, "reset device\n");
+ 	xen_pcibk_reset_device(dev);
+ 
++	err = pcistub_try_create_reset_file(dev);
++	if (err < 0)
++		goto config_release;
++
+ 	dev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
+ 	return 0;
+ 
+@@ -526,6 +640,8 @@ static void pcistub_remove(struct pci_dev *dev)
+ 
+ 	dev_dbg(&dev->dev, "removing\n");
+ 
++	pcistub_remove_reset_file(dev);
++
+ 	spin_lock_irqsave(&pcistub_devices_lock, flags);
+ 
+ 	xen_pcibk_config_quirk_release(dev);
+diff --git a/drivers/xen/xen-pciback/pciback.h b/drivers/xen/xen-pciback/pciback.h
+index f72af87..708ade9 100644
+--- a/drivers/xen/xen-pciback/pciback.h
++++ b/drivers/xen/xen-pciback/pciback.h
+@@ -42,6 +42,7 @@ struct xen_pcibk_device {
+ struct xen_pcibk_dev_data {
+ 	struct list_head config_fields;
+ 	struct pci_saved_state *pci_saved_state;
++	bool created_reset_file;
+ 	unsigned int permissive:1;
+ 	unsigned int warned_on_write:1;
+ 	unsigned int enable_intx:1;
+
+--------------040006050709030007030805--
