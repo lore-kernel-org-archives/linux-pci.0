@@ -1,60 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:53103 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750859AbaLLC00 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Dec 2014 21:26:26 -0500
-Message-ID: <548A521B.5020705@hp.com>
-Date: Fri, 12 Dec 2014 10:25:31 +0800
-From: "Li, ZhenHua" <zhen-hual@hp.com>
-MIME-Version: 1.0
-To: Baoquan He <bhe@redhat.com>
-CC: Joerg Roedel <joro@8bytes.org>,
-	Takao Indoh <indou.takao@jp.fujitsu.com>, dwmw2@infradead.org,
-	vgoyal@redhat.com, dyoung@redhat.com,
-	iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com
-Subject: Re: [PATCH 0/5] iommu/vt-d: Fix crash dump failure caused by legacy
- DMA/IO
-References: <1413878659-1383-1-git-send-email-zhen-hual@hp.com> <20141022100525.GD9060@dhcp-16-116.nay.redhat.com> <545ACF66.9050509@jp.fujitsu.com> <545AD061.4000102@hp.com> <545AD353.8060207@jp.fujitsu.com> <545AD8D3.90709@hp.com> <545B2885.8070009@jp.fujitsu.com> <545B2C07.1070701@hp.com> <5465A0E0.4020001@hp.com> <20141117133858.GA31920@8bytes.org> <20141210084652.GA25091@dhcp-16-105.nay.redhat.com>
-In-Reply-To: <20141210084652.GA25091@dhcp-16-105.nay.redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:58912 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751754AbaLEHf3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 5 Dec 2014 02:35:29 -0500
+From: Chuansheng Liu <chuansheng.liu@intel.com>
+To: bhelgaas@google.com, rjw@rjwysocki.net, mister.freeman@laposte.net,
+	aaron.lu@intel.com, tj@kernel.org, chuansheng.liu@intel.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, stable@vger.kernel.org
+Subject: [PATCH] PCI: Add disabling pm async quirk for JMicron chips
+Date: Fri,  5 Dec 2014 15:17:37 +0800
+Message-Id: <1417763857-11993-1-git-send-email-chuansheng.liu@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sorry I have no plan yet.
-Could you send me your logs on your AMD system?
+Some history from
+commit e6b7e41cdd8c ("ata: Disabling the async PM for JMicron chip 363/361")
+==
+Since v3.15, the PM feature of async noirq
+commit 76569faa62c4 ("PM / sleep: Asynchronous threads for resume_noirq") is introduced.
 
-Thanks
-Zhenhua
-On 12/10/2014 04:46 PM, Baoquan He wrote:
-> Hi Joerg, ZhenHua,
->
-> This issue happens on AMD iommu too, do you have any plans or
-> thoughts on that?
->
-> Thanks
-> Baoquan
->
-> On 11/17/14 at 02:38pm, Joerg Roedel wrote:
->> On Fri, Nov 14, 2014 at 02:27:44PM +0800, Li, ZhenHua wrote:
->>> I am working following  your directions:
->>>
->>> 1.  If the VT-d driver finds the IOMMU enabled, it reuses its root entry
->>> table, and do NOT disable-enable iommu. Other data will be copied.
->>>
->>> 2. When a device driver issues the first dma_map command for a
->>> device, we assign a new and empty page-table, thus removing all
->>> mappings from the old kernel for the device.
->>>
->>> Please let me know if I get something wrong.
->>
->> Yes, this sounds right. Happily waiting for patches :)
->>
->>
->> 	Joerg
->>
+Then Jay hit one system resuming issue that one of the JMicron controller
+can not be powered up successfully.
+
+His device tree is like below:
+                 +-1c.4-[02]--+-00.0  JMicron Technology Corp. JMB363 SATA/IDE Controller
+                 |            \-00.1  JMicron Technology Corp. JMB363 SATA/IDE Controller
+
+After investigation, we found the the Micron chip 363 included
+one SATA controller(0000:02:00.0) and one PATA controller(0000:02:00.1),
+these two controllers do not have parent-children relationship,
+but the PATA controller only can be powered on after the SATA controller
+has finished the powering on.
+
+If we enabled the async noirq(), then the below error is hit during noirq
+phase:
+pata_jmicron 0000:02:00.1: Refused to change power state, currently in D3
+Here for JMicron chip 363/361, we need forcedly to disable the async method.
+
+Bug detail: https://bugzilla.kernel.org/show_bug.cgi?id=81551
+==
+
+After that, Barto reported the same issue, but his Jmicron chip is JMB368,
+so it can not be covered by
+commit e6b7e41cdd8c ("ata: Disabling the async PM for JMicron chip 363/361").
+
+Bug link:
+https://bugzilla.kernel.org/show_bug.cgi?id=84861
+
+Here we think Jmicron chips have the same issue as describled in
+commit e6b7e41cdd8c ("ata: Disabling the async PM for JMicron chip 363/361"),
+
+so here add one quirk to disable the JMicron chips' PM async feature.
+
+Cc: stable@vger.kernel.org # 3.15+
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+---
+ drivers/pci/quirks.c |   17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 90acb32..1963080 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1501,6 +1501,21 @@ static void quirk_jmicron_ata(struct pci_dev *pdev)
+ 	pci_read_config_dword(pdev, PCI_CLASS_REVISION, &class);
+ 	pdev->class = class >> 8;
+ }
++
++/*
++ * For JMicron chips, we need to disable the async_suspend method, otherwise
++ * they will hit the power-on issue when doing device resume, add one quirk
++ * solution to disable the async_suspend method.
++ */
++static void pci_async_suspend_fixup(struct pci_dev *pdev)
++{
++	    /*
++		 * disabling the async_suspend method for JMicron chips to
++		 * avoid device resuming issue.
++		 */
++	    device_disable_async_suspend(&pdev->dev);
++}
++
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB360, quirk_jmicron_ata);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB361, quirk_jmicron_ata);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB362, quirk_jmicron_ata);
+@@ -1519,6 +1534,8 @@ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB3
+ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB366, quirk_jmicron_ata);
+ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB368, quirk_jmicron_ata);
+ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB369, quirk_jmicron_ata);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_JMICRON, PCI_ANY_ID,
++		pci_async_suspend_fixup);
+ 
+ #endif
+ 
+-- 
+1.7.9.5
 
