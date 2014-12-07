@@ -1,218 +1,361 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <549D0459.4080202@hp.com>
-Date: Fri, 26 Dec 2014 14:46:49 +0800
-From: "Li, ZhenHua" <zhen-hual@hp.com>
-MIME-Version: 1.0
-To: Takao Indoh <indou.takao@jp.fujitsu.com>
-CC: dwmw2@infradead.org, bhe@redhat.com, joro@8bytes.org,
-	vgoyal@redhat.com, dyoung@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com
-Subject: Re: [PATCH 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-References: <1419239729-26529-1-git-send-email-zhen-hual@hp.com> <549CEE8F.2090209@jp.fujitsu.com>
-In-Reply-To: <549CEE8F.2090209@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-2022-JP
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:42879 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752648AbaLGNI2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 7 Dec 2014 08:08:28 -0500
+Received: by mail-wg0-f51.google.com with SMTP id k14so4215590wgh.24
+        for <linux-pci@vger.kernel.org>; Sun, 07 Dec 2014 05:08:17 -0800 (PST)
+From: Eli Cohen <eli@dev.mellanox.co.il>
+To: bhelgaas@google.com, davem@davemloft.net
+Cc: linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+	ogerlitz@mellanox.com, yevgenyp@mellanox.com,
+	Eli Cohen <eli@mellanox.com>,
+	Donald Dutile <ddutile@redhat.com>
+Subject: [PATCH RFC] pci: Control whether VFs are probed on pci_enable_sriov
+Date: Sun,  7 Dec 2014 15:08:13 +0200
+Message-Id: <1417957693-24979-1-git-send-email-eli@mellanox.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Takao Indoh,
+Sometimes it is not desirable to probe the virtual fuctions right away,
+but rather leave the decision to the host's administrator.
 
-Thank you very much for your testing. I will add your update in next
-version.
-Also I think a flush for __iommu_update_old_root_entry is also necessary.
+This can save host side resource usage by VF instances which would be
+eventually probed to VMs.
 
-Currently I have no idea about your fault, does it happen before or
-during its loading? Could you send me your full kernel log as an
-attachment?
+Use a parameter to pci_enable_sriov to control that policy, and modify
+all current callers such that they retain the same functionality.
 
-Regards and Merry Christmas.
-Zhenhua
+Use a one shot flag on struct pci_device which is cleared after the
+first probe is ignored so subsequent attempts go through.
 
-On 12/26/2014 01:13 PM, Takao Indoh wrote:
-> Hi Zhen-Hua,
->
-> I tested your patch and found two problems.
->
-> [1]
-> Kenel panic occurs during 2nd kernel boot.
->
-> ..TIMER: vector=0x30 apic1=0 pin1=2 apic2=-1 pin2=-1
-> Kernel panic - not syncing: timer doesn't work through Interrupt-remapped IO-APIC
-> CPU: 0 PID: 1 Comm: swapper/0 Not tainted 3.18.0 #25
-> Hardware name: FUJITSU-SV PRIMERGY BX920 S2/D3030, BIOS 080015 Rev.3D81.3030 02/10/2012
->  0000000000000002 ffff880036167d08 ffffffff815b1c6a 0000000000000000
->  ffffffff817f7670 ffff880036167d88 ffffffff815b19f1 0000000000000008
->  ffff880036167d98 ffff880036167d38 ffffffff810a5d2f ffff880036167d98
-> Call Trace:
->  [<ffffffff815b1c6a>] dump_stack+0x48/0x5e
->  [<ffffffff815b19f1>] panic+0xbb/0x1fa
->  [<ffffffff810a5d2f>] ? vprintk_default+0x1f/0x30
->  [<ffffffff814c6a6c>] panic_if_irq_remap+0x1c/0x20
->  [<ffffffff81b53985>] check_timer+0x1e7/0x5ed
->  [<ffffffff8129bd9d>] ? radix_tree_lookup+0xd/0x10
->  [<ffffffff81b5413b>] setup_IO_APIC+0x261/0x292
->  [<ffffffff81b50302>] native_smp_prepare_cpus+0x214/0x25d
->  [<ffffffff81b41c65>] kernel_init_freeable+0x1dc/0x28c
->  [<ffffffff815aaf00>] ? rest_init+0x80/0x80
->  [<ffffffff815aaf0e>] kernel_init+0xe/0xf0
->  [<ffffffff815b5d2c>] ret_from_fork+0x7c/0xb0
->  [<ffffffff815aaf00>] ? rest_init+0x80/0x80
-> ---[ end Kernel panic - not syncing: timer doesn't work through Interrupt-remapped IO-APIC
->
->
-> This panic seems to be related to unflushed cache. I confirmed this
-> problem was fixed by the following patch.
->
-> --- a/drivers/iommu/intel_irq_remapping.c
-> +++ b/drivers/iommu/intel_irq_remapping.c
-> @@ -200,8 +200,13 @@ static int modify_irte(int irq, struct irte *irte_modified)
->  	set_64bit(&irte->high, irte_modified->high);
->  
->  #ifdef CONFIG_CRASH_DUMP
-> -	if (is_kdump_kernel())
-> +	if (is_kdump_kernel()) {
->  		__iommu_update_old_irte(iommu, index);
-> +		__iommu_flush_cache(iommu,
-> +			iommu->ir_table->base_old_virt +
-> +			index * sizeof(struct irte),
-> +			sizeof(struct irte));
-> +	}
->  #endif
->  	__iommu_flush_cache(iommu, irte, sizeof(*irte));
->  
->
-> [2]
-> Some DMAR error messages are still found in 2nd kernel boot.
->
-> dmar: DRHD: handling fault status reg 2
-> dmar: DMAR:[DMA Write] Request device [01:00.0] fault addr ffded000
-> DMAR:[fault reason 01] Present bit in root entry is clear
->
-> I confiremd your commit 1a2262 was already applied. Any idea?
->
-> Thanks,
-> Takao Indoh
->
->
-> On 2014/12/22 18:15, Li, Zhen-Hua wrote:
->> This patchset is an update of Bill Sumner's patchset, implements a fix for:
->> If a kernel boots with intel_iommu=on on a system that supports intel vt-d,
->> when a panic happens, the kdump kernel will boot with these faults:
->>
->>      dmar: DRHD: handling fault status reg 102
->>      dmar: DMAR:[DMA Read] Request device [01:00.0] fault addr fff80000
->>      DMAR:[fault reason 01] Present bit in root entry is clear
->>
->>      dmar: DRHD: handling fault status reg 2
->>      dmar: INTR-REMAP: Request device [[61:00.0] fault index 42
->>      INTR-REMAP:[fault reason 34] Present field in the IRTE entry is clear
->>
->> On some system, the interrupt remapping fault will also happen even if the
->> intel_iommu is not set to on, because the interrupt remapping will be enabled
->> when x2apic is needed by the system.
->>
->> The cause of the DMA fault is described in Bill's original version, and the
->> INTR-Remap fault is caused by a similar reason. In short, the initialization
->> of vt-d drivers causes the in-flight DMA and interrupt requests get wrong
->> response.
->>
->> To fix this problem, we modifies the behaviors of the intel vt-d in the
->> crashdump kernel:
->>
->> For DMA Remapping:
->> 1. To accept the vt-d hardware in an active state,
->> 2. Do not disable and re-enable the translation, keep it enabled.
->> 3. Use the old root entry table, do not rewrite the RTA register.
->> 4. Malloc and use new context entry table and page table, copy data from the
->>     old ones that used by the old kernel.
->> 5. to use different portions of the iova address ranges for the device drivers
->>     in the crashdump kernel than the iova ranges that were in-use at the time
->>     of the panic.
->> 6. After device driver is loaded, when it issues the first dma_map command,
->>     free the dmar_domain structure for this device, and generate a new one, so
->>     that the device can be assigned a new and empty page table.
->> 7. When a new context entry table is generated, we also save its address to
->>     the old root entry table.
->>
->> For Interrupt Remapping:
->> 1. To accept the vt-d hardware in an active state,
->> 2. Do not disable and re-enable the interrupt remapping, keep it enabled.
->> 3. Use the old interrupt remapping table, do not rewrite the IRTA register.
->> 4. When ioapic entry is setup, the interrupt remapping table is changed, and
->>     the updated data will be stored to the old interrupt remapping table.
->>
->> Advantages of this approach:
->> 1. All manipulation of the IO-device is done by the Linux device-driver
->>     for that device.
->> 2. This approach behaves in a manner very similar to operation without an
->>     active iommu.
->> 3. Any activity between the IO-device and its RMRR areas is handled by the
->>     device-driver in the same manner as during a non-kdump boot.
->> 4. If an IO-device has no driver in the kdump kernel, it is simply left alone.
->>     This supports the practice of creating a special kdump kernel without
->>     drivers for any devices that are not required for taking a crashdump.
->> 5. Minimal code-changes among the existing mainline intel vt-d code.
->>
->> Summary of changes in this patch set:
->> 1. Added some useful function for root entry table in code intel-iommu.c
->> 2. Added new members to struct root_entry and struct irte;
->> 3. Functions to load old root entry table to iommu->root_entry from the memory
->>     of old kernel.
->> 4. Functions to malloc new context entry table and page table and copy the data
->>     from the old ones to the malloced new ones.
->> 5. Functions to enable support for DMA remapping in kdump kernel.
->> 6. Functions to load old irte data from the old kernel to the kdump kernel.
->> 7. Some code changes that support other behaviours that have been listed.
->> 8. In the new functions, use physical address as "unsigned long" type, not
->>     pointers.
->>
->> Original version by Bill Sumner:
->>      https://lkml.org/lkml/2014/1/10/518
->>      https://lkml.org/lkml/2014/4/15/716
->>      https://lkml.org/lkml/2014/4/24/836
->>
->> Zhenhua's last of Bill's patchset:
->>      https://lkml.org/lkml/2014/10/21/134
->>      https://lkml.org/lkml/2014/12/15/121
->>
->> Changed in this version:
->> 1. Do not disable and re-enable traslation and interrupt remapping.
->> 2. Use old root entry table.
->> 3. Use old interrupt remapping table.
->> 4. Use "unsigned long" as physical address.
->> 5. Use intel_unmap to unmap the old dma;
->>
->> This patchset should be applied with this one together:
->>      https://lkml.org/lkml/2014/11/5/43
->>      x86/iommu: fix incorrect bit operations in setting values
->>
->> Bill Sumner (5):
->>    iommu/vt-d: Update iommu_attach_domain() and its callers
->>    iommu/vt-d: Items required for kdump
->>    iommu/vt-d: data types and functions used for kdump
->>    iommu/vt-d: Add domain-id functions
->>    iommu/vt-d: enable kdump support in iommu module
->>
->> Li, Zhen-Hua (10):
->>    iommu/vt-d: Update iommu_attach_domain() and its callers
->>    iommu/vt-d: Items required for kdump
->>    iommu/vt-d: Add domain-id functions
->>    iommu/vt-d: functions to copy data from old mem
->>    iommu/vt-d: Add functions to load and save old re
->>    iommu/vt-d: datatypes and functions used for kdump
->>    iommu/vt-d: enable kdump support in iommu module
->>    iommu/vtd: assign new page table for dma_map
->>    iommu/vt-d: Copy functions for irte
->>    iommu/vt-d: Use old irte in kdump kernel
->>
->>   drivers/iommu/intel-iommu.c         | 1050 +++++++++++++++++++++++++++++++++--
->>   drivers/iommu/intel_irq_remapping.c |   99 +++-
->>   include/linux/intel-iommu.h         |   18 +
->>   3 files changed, 1123 insertions(+), 44 deletions(-)
->>
->
+Cc: Donald Dutile <ddutile@redhat.com>
+Signed-off-by: Eli Cohen <eli@mellanox.com>
+---
+This approach is used by the mlx5 driver SRIOV implementation, so
+sending this to get feedback from the PCI and networking folks.
+
+ drivers/misc/genwqe/card_base.c                      |  2 +-
+ drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c    |  2 +-
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c      |  2 +-
+ drivers/net/ethernet/cisco/enic/enic_main.c          |  2 +-
+ drivers/net/ethernet/emulex/benet/be_main.c          |  2 +-
+ drivers/net/ethernet/intel/fm10k/fm10k_iov.c         |  2 +-
+ drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c   |  2 +-
+ drivers/net/ethernet/intel/igb/igb_main.c            |  2 +-
+ drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c       |  4 ++--
+ drivers/net/ethernet/mellanox/mlx4/main.c            |  2 +-
+ drivers/net/ethernet/neterion/vxge/vxge-main.c       |  2 +-
+ drivers/net/ethernet/qlogic/qlcnic/qlcnic_sriov_pf.c |  2 +-
+ drivers/net/ethernet/sfc/siena_sriov.c               |  2 +-
+ drivers/pci/iov.c                                    | 12 +++++++-----
+ drivers/pci/pci-driver.c                             | 11 ++++++++---
+ drivers/scsi/lpfc/lpfc_init.c                        |  2 +-
+ include/linux/pci.h                                  |  5 +++--
+ 17 files changed, 33 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/misc/genwqe/card_base.c b/drivers/misc/genwqe/card_base.c
+index 4cf8f82cfca2..69253ca17506 100644
+--- a/drivers/misc/genwqe/card_base.c
++++ b/drivers/misc/genwqe/card_base.c
+@@ -1325,7 +1325,7 @@ static int genwqe_sriov_configure(struct pci_dev *dev, int numvfs)
+ 
+ 	if (numvfs > 0) {
+ 		genwqe_setup_vf_jtimer(cd);
+-		rc = pci_enable_sriov(dev, numvfs);
++		rc = pci_enable_sriov(dev, numvfs, 1);
+ 		if (rc < 0)
+ 			return rc;
+ 		return numvfs;
+diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c
+index c88b20af87df..773b20224a47 100644
+--- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c
++++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c
+@@ -2570,7 +2570,7 @@ int bnx2x_enable_sriov(struct bnx2x *bp)
+ 	if (rc)
+ 		return rc;
+ 
+-	rc = pci_enable_sriov(bp->pdev, req_vfs);
++	rc = pci_enable_sriov(bp->pdev, req_vfs, 1);
+ 	if (rc) {
+ 		BNX2X_ERR("pci_enable_sriov failed with %d\n", rc);
+ 		return rc;
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+index 3aea82bb9039..6e8afbfd3eba 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+@@ -6597,7 +6597,7 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ sriov:
+ #ifdef CONFIG_PCI_IOV
+ 	if (func < ARRAY_SIZE(num_vf) && num_vf[func] > 0)
+-		if (pci_enable_sriov(pdev, num_vf[func]) == 0)
++		if (pci_enable_sriov(pdev, num_vf[func], 1) == 0)
+ 			dev_info(&pdev->dev,
+ 				 "instantiated %u virtual functions\n",
+ 				 num_vf[func]);
+diff --git a/drivers/net/ethernet/cisco/enic/enic_main.c b/drivers/net/ethernet/cisco/enic/enic_main.c
+index 86ee350e57f0..8a8b1d86f18a 100644
+--- a/drivers/net/ethernet/cisco/enic/enic_main.c
++++ b/drivers/net/ethernet/cisco/enic/enic_main.c
+@@ -2421,7 +2421,7 @@ static int enic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		pci_read_config_word(pdev, pos + PCI_SRIOV_TOTAL_VF,
+ 			&enic->num_vfs);
+ 		if (enic->num_vfs) {
+-			err = pci_enable_sriov(pdev, enic->num_vfs);
++			err = pci_enable_sriov(pdev, enic->num_vfs, 1);
+ 			if (err) {
+ 				dev_err(dev, "SRIOV enable failed, aborting."
+ 					" pci_enable_sriov() returned %d\n",
+diff --git a/drivers/net/ethernet/emulex/benet/be_main.c b/drivers/net/ethernet/emulex/benet/be_main.c
+index dc77ec2bdafd..a96491777ac4 100644
+--- a/drivers/net/ethernet/emulex/benet/be_main.c
++++ b/drivers/net/ethernet/emulex/benet/be_main.c
+@@ -3274,7 +3274,7 @@ static int be_vf_setup(struct be_adapter *adapter)
+ 	}
+ 
+ 	if (!old_vfs) {
+-		status = pci_enable_sriov(adapter->pdev, adapter->num_vfs);
++		status = pci_enable_sriov(adapter->pdev, adapter->num_vfs, 1);
+ 		if (status) {
+ 			dev_err(dev, "SRIOV enable failed\n");
+ 			adapter->num_vfs = 0;
+diff --git a/drivers/net/ethernet/intel/fm10k/fm10k_iov.c b/drivers/net/ethernet/intel/fm10k/fm10k_iov.c
+index 060190864238..04a3dc5acc28 100644
+--- a/drivers/net/ethernet/intel/fm10k/fm10k_iov.c
++++ b/drivers/net/ethernet/intel/fm10k/fm10k_iov.c
+@@ -408,7 +408,7 @@ int fm10k_iov_configure(struct pci_dev *pdev, int num_vfs)
+ 		 */
+ 		fm10k_disable_aer_comp_abort(pdev);
+ 
+-		err = pci_enable_sriov(pdev, num_vfs);
++		err = pci_enable_sriov(pdev, num_vfs, 1);
+ 		if (err) {
+ 			dev_err(&pdev->dev,
+ 				"Enable PCI SR-IOV failed: %d\n", err);
+diff --git a/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c b/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
+index 668d860275d6..fe56e09725f2 100644
+--- a/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
++++ b/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
+@@ -852,7 +852,7 @@ int i40e_alloc_vfs(struct i40e_pf *pf, u16 num_alloc_vfs)
+ 
+ 	/* Check to see if we're just allocating resources for extant VFs */
+ 	if (pci_num_vf(pf->pdev) != num_alloc_vfs) {
+-		ret = pci_enable_sriov(pf->pdev, num_alloc_vfs);
++		ret = pci_enable_sriov(pf->pdev, num_alloc_vfs, 1);
+ 		if (ret) {
+ 			dev_err(&pf->pdev->dev,
+ 				"Failed to enable SR-IOV, error %d.\n", ret);
+diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
+index 3c0221620c9d..da01326ef550 100644
+--- a/drivers/net/ethernet/intel/igb/igb_main.c
++++ b/drivers/net/ethernet/intel/igb/igb_main.c
+@@ -2742,7 +2742,7 @@ static int igb_enable_sriov(struct pci_dev *pdev, int num_vfs)
+ 
+ 	/* only call pci_enable_sriov() if no VFs are allocated already */
+ 	if (!old_vfs) {
+-		err = pci_enable_sriov(pdev, adapter->vfs_allocated_count);
++		err = pci_enable_sriov(pdev, adapter->vfs_allocated_count, 1);
+ 		if (err)
+ 			goto err_out;
+ 	}
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
+index 04eee7c7b653..74b33483a0d1 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
+@@ -149,7 +149,7 @@ void ixgbe_enable_sriov(struct ixgbe_adapter *adapter)
+ 		 */
+ 		adapter->num_vfs = min_t(unsigned int, adapter->num_vfs, IXGBE_MAX_VFS_DRV_LIMIT);
+ 
+-		err = pci_enable_sriov(adapter->pdev, adapter->num_vfs);
++		err = pci_enable_sriov(adapter->pdev, adapter->num_vfs, 1);
+ 		if (err) {
+ 			e_err(probe, "Failed to enable PCI sriov: %d\n", err);
+ 			adapter->num_vfs = 0;
+@@ -270,7 +270,7 @@ static int ixgbe_pci_sriov_enable(struct pci_dev *dev, int num_vfs)
+ 	for (i = 0; i < adapter->num_vfs; i++)
+ 		ixgbe_vf_configuration(dev, (i | 0x10000000));
+ 
+-	err = pci_enable_sriov(dev, num_vfs);
++	err = pci_enable_sriov(dev, num_vfs, 1);
+ 	if (err) {
+ 		e_dev_warn("Failed to enable PCI sriov: %d\n", err);
+ 		return err;
+diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
+index 3044f9e623cb..ae38b556ec13 100644
+--- a/drivers/net/ethernet/mellanox/mlx4/main.c
++++ b/drivers/net/ethernet/mellanox/mlx4/main.c
+@@ -2350,7 +2350,7 @@ static u64 mlx4_enable_sriov(struct mlx4_dev *dev, struct pci_dev *pdev,
+ 					 existing_vfs, total_vfs);
+ 		} else {
+ 			mlx4_warn(dev, "Enabling SR-IOV with %d VFs\n", total_vfs);
+-			err = pci_enable_sriov(pdev, total_vfs);
++			err = pci_enable_sriov(pdev, total_vfs, 1);
+ 		}
+ 		if (err) {
+ 			mlx4_err(dev, "Failed to enable SR-IOV, continuing without SR-IOV (err = %d)\n",
+diff --git a/drivers/net/ethernet/neterion/vxge/vxge-main.c b/drivers/net/ethernet/neterion/vxge/vxge-main.c
+index cc0485e3c621..c341e73fc68c 100644
+--- a/drivers/net/ethernet/neterion/vxge/vxge-main.c
++++ b/drivers/net/ethernet/neterion/vxge/vxge-main.c
+@@ -4495,7 +4495,7 @@ vxge_probe(struct pci_dev *pdev, const struct pci_device_id *pre)
+ 	/* Enable SRIOV mode, if firmware has SRIOV support and if it is a PF */
+ 	if (is_sriov(function_mode) && !is_sriov_initialized(pdev) &&
+ 	   (ll_config->intr_type != INTA)) {
+-		ret = pci_enable_sriov(pdev, num_vfs);
++		ret = pci_enable_sriov(pdev, num_vfs, 1);
+ 		if (ret)
+ 			vxge_debug_ll_config(VXGE_ERR,
+ 				"Failed in enabling SRIOV mode: %d\n", ret);
+diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_sriov_pf.c b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_sriov_pf.c
+index a29538b86edf..b483705a1ef1 100644
+--- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_sriov_pf.c
++++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_sriov_pf.c
+@@ -570,7 +570,7 @@ static int qlcnic_sriov_pf_enable(struct qlcnic_adapter *adapter, int num_vfs)
+ 	if (!qlcnic_sriov_enable_check(adapter))
+ 		return 0;
+ 
+-	err = pci_enable_sriov(adapter->pdev, num_vfs);
++	err = pci_enable_sriov(adapter->pdev, num_vfs, 1);
+ 	if (err)
+ 		qlcnic_sriov_pf_cleanup(adapter);
+ 
+diff --git a/drivers/net/ethernet/sfc/siena_sriov.c b/drivers/net/ethernet/sfc/siena_sriov.c
+index a8bbbad68a88..6804ed04cfcd 100644
+--- a/drivers/net/ethernet/sfc/siena_sriov.c
++++ b/drivers/net/ethernet/sfc/siena_sriov.c
+@@ -1332,7 +1332,7 @@ int efx_siena_sriov_init(struct efx_nic *efx)
+ 
+ 	/* At this point we must be ready to accept VFDI requests */
+ 
+-	rc = pci_enable_sriov(efx->pci_dev, efx->vf_count);
++	rc = pci_enable_sriov(efx->pci_dev, efx->vf_count, 1);
+ 	if (rc)
+ 		goto fail_pci;
+ 
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 4d109c07294a..f6aba5beea78 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -57,7 +57,7 @@ static void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
+ 		pci_remove_bus(virtbus);
+ }
+ 
+-static int virtfn_add(struct pci_dev *dev, int id, int reset)
++static int virtfn_add(struct pci_dev *dev, int id, int reset, int probe)
+ {
+ 	int i;
+ 	int rc = -ENOMEM;
+@@ -85,6 +85,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	virtfn->physfn = pci_dev_get(dev);
+ 	virtfn->is_virtfn = 1;
+ 	virtfn->multifunction = 0;
++	virtfn->probe_vf = probe;
+ 
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+ 		res = dev->resource + PCI_IOV_RESOURCES + i;
+@@ -170,7 +171,7 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+ 	pci_dev_put(dev);
+ }
+ 
+-static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
++static int sriov_enable(struct pci_dev *dev, int nr_virtfn, int probe_vfs)
+ {
+ 	int rc;
+ 	int i, j;
+@@ -255,7 +256,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 		initial = nr_virtfn;
+ 
+ 	for (i = 0; i < initial; i++) {
+-		rc = virtfn_add(dev, i, 0);
++		rc = virtfn_add(dev, i, 0, probe_vfs);
+ 		if (rc)
+ 			goto failed;
+ 	}
+@@ -558,17 +559,18 @@ int pci_iov_bus_range(struct pci_bus *bus)
+  * pci_enable_sriov - enable the SR-IOV capability
+  * @dev: the PCI device
+  * @nr_virtfn: number of virtual functions to enable
++ * @probe_vfs: in zero, don't probe new VFs, otherwise probe if suitable driver available
+  *
+  * Returns 0 on success, or negative on failure.
+  */
+-int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
++int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn, int probe_vfs)
+ {
+ 	might_sleep();
+ 
+ 	if (!dev->is_physfn)
+ 		return -ENOSYS;
+ 
+-	return sriov_enable(dev, nr_virtfn);
++	return sriov_enable(dev, nr_virtfn, probe_vfs);
+ }
+ EXPORT_SYMBOL_GPL(pci_enable_sriov);
+ 
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 2b3c89425bb5..d5b93339b8a4 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -397,9 +397,14 @@ static int pci_device_probe(struct device *dev)
+ 	drv = to_pci_driver(dev->driver);
+ 	pci_dev = to_pci_dev(dev);
+ 	pci_dev_get(pci_dev);
+-	error = __pci_device_probe(drv, pci_dev);
+-	if (error)
+-		pci_dev_put(pci_dev);
++	if (!pci_dev->is_virtfn || pci_dev->probe_vf) {
++		error = __pci_device_probe(drv, pci_dev);
++		if (error)
++			pci_dev_put(pci_dev);
++	}
++	/* one shot blocking of probe */
++	if (pci_dev->is_virtfn && !pci_dev->probe_vf)
++		pci_dev->probe_vf = 1;
+ 
+ 	return error;
+ }
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 0b2c53af85c7..2f81f471b8f3 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -4797,7 +4797,7 @@ lpfc_sli_probe_sriov_nr_virtfn(struct lpfc_hba *phba, int nr_vfn)
+ 		return -EINVAL;
+ 	}
+ 
+-	rc = pci_enable_sriov(pdev, nr_vfn);
++	rc = pci_enable_sriov(pdev, nr_vfn, 1);
+ 	if (rc) {
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
+ 				"2806 Failed to enable sriov on this device "
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 4c8ac5fcc224..beb2640ba18d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -373,6 +373,7 @@ struct pci_dev {
+ 	phys_addr_t rom; /* Physical address of ROM if it's not from the BAR */
+ 	size_t romlen; /* Length of ROM if it's not from the BAR */
+ 	char *driver_override; /* Driver name to force a match */
++	int probe_vf; /* probe this device */
+ };
+ 
+ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
+@@ -1655,14 +1656,14 @@ int pci_ext_cfg_avail(void);
+ void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
+ 
+ #ifdef CONFIG_PCI_IOV
+-int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
++int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn, int probe_vfs);
+ void pci_disable_sriov(struct pci_dev *dev);
+ int pci_num_vf(struct pci_dev *dev);
+ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+ int pci_sriov_get_totalvfs(struct pci_dev *dev);
+ #else
+-static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
++static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn, int nr_virt_probe)
+ { return -ENODEV; }
+ static inline void pci_disable_sriov(struct pci_dev *dev) { }
+ static inline int pci_num_vf(struct pci_dev *dev) { return 0; }
+-- 
+2.1.3
 
