@@ -1,67 +1,205 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx07-00178001.pphosted.com ([62.209.51.94]:33973 "EHLO
-	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751449AbaLQKgV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Dec 2014 05:36:21 -0500
-From: Gabriel FERNANDEZ <gabriel.fernandez@st.com>
-To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Gabriel Fernandez <gabriel.fernandez@linaro.org>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Magnus Damm <damm@opensource.se>,
-	Will Deacon <will.deacon@arm.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Srikanth Thokala <sthokal@xilinx.com>
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
-	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
-Subject: [PATCH 0/5] PCI: st: provide support for dw pcie
-Date: Wed, 17 Dec 2014 11:34:41 +0100
-Message-Id: <1418812486-12394-1-git-send-email-gabriel.fernandez@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: linux-wireless@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux@rasmusvillemoes.dk,
+	joe@perches.com, devel@driverdev.osuosl.org,
+	linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	intel-gfx@lists.freedesktop.org, linux-mtd@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+	linux-usb@vger.kernel.org
+Subject: [PATCH 0/20] fix misspelling of current function in string
+Date: Sun,  7 Dec 2014 20:20:42 +0100
+Message-Id: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch-set introduces a STMicroelectronics PCIe controler.
-It's based on designware PCIe driver.
+These patches replace what appears to be a reference to the name of the
+current function but is misspelled in some way by either the name of the
+function itself, or by %s and then __func__ in an argument list.
 
-Gabriel Fernandez (5):
-  ARM: STi: Kconfig update for PCIe support
-  PCI: st: Add Device Tree bindings for sti pcie
-  PCI: st: Provide support for the sti PCIe controller
-  PCI: designware: Add setup bus-related to pcie_host_ops
-  PCI: st: disable IO support
+// <smpl>
+// sudo apt-get install python-pip
+// sudo pip install python-Levenshtein
+// spatch requires the argument --in-place
 
- Documentation/devicetree/bindings/pci/st-pcie.txt |  53 ++
- arch/arm/mach-sti/Kconfig                         |   2 +
- drivers/pci/host/Kconfig                          |   5 +
- drivers/pci/host/Makefile                         |   1 +
- drivers/pci/host/pci-st.c                         | 736 ++++++++++++++++++++++
- drivers/pci/host/pcie-designware.c                |   3 +
- drivers/pci/host/pcie-designware.h                |   1 +
- 7 files changed, 801 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
- create mode 100644 drivers/pci/host/pci-st.c
+virtual after_start
 
--- 
-1.9.1
+@initialize:ocaml@
+@@
+
+let extensible_functions = ref ([] : string list)
+let restarted = ref false
+
+let restart _ =
+  restarted := true;
+  let it = new iteration() in
+  it#add_virtual_rule After_start;
+  Printf.eprintf "restarting\n";
+  it#register()
+
+@initialize:python@
+@@
+import re
+from Levenshtein import distance
+mindist = 1 // 1 to find only misspellings
+maxdist = 2
+ignore_leading = True
+
+// ---------------------------------------------------------------------
+
+@r0@
+constant char [] c;
+identifier f;
+@@
+
+f(...,c,...)
+
+@script:ocaml@
+c << r0.c;
+f << r0.f;
+@@
+
+(if not !restarted then restart());
+match Str.split_delim (Str.regexp "%") c with
+  _::_::_ ->
+    if not (List.mem f !extensible_functions)
+    then extensible_functions := f :: !extensible_functions
+| _ -> ()
+
+// ---------------------------------------------------------------------
+
+@r depends on after_start@
+constant char [] c;
+position p;
+identifier f;
+@@
+
+f(...,c@p,...)
+
+@script:python flt@
+c << r.c;
+p << r.p;
+matched;
+@@
+
+func = p[0].current_element
+wpattern = "[a-zA-Z_][a-zA-Z0-9_]*"
+if ignore_leading:
+   func = func.strip("_")
+   wpattern = "[a-zA-Z][a-zA-Z0-9_]*"
+lf = len(func)
+cocci.include_match(False)
+// ignore extremely short function names
+if lf > 3:
+   words = [w for w in re.findall(wpattern, c) if abs(len(w) - lf) <= maxdist]
+   for w in words:
+       d = distance(w, func) 
+       if mindist <= d and d <= maxdist:
+          coccinelle.matched = w
+          cocci.include_match(True)
+     	  //print "%s:%d:%s():%d: %s" % (p[0].file, int(p[0].line), func, d, c)
+	  break
+
+@script:ocaml r2@
+c << r.c;
+f << r.f;
+matched << flt.matched;
+fixed;
+@@
+
+let pieces = Str.split_delim (Str.regexp_string matched) c in
+match pieces with
+  [before;after] ->
+    let preceeding =
+      List.length(Str.split (Str.regexp_string "%") before) > 1 in
+    if preceeding
+    then Coccilib.include_match false
+    else
+      if List.mem f !extensible_functions
+      then fixed := before ^ "%s" ^ after
+      else Coccilib.include_match false
+| _ -> Coccilib.include_match false
+
+@changed1@
+constant char [] r.c;
+identifier r2.fixed;
+position r.p;
+identifier r.f;
+@@
+
+f(...,
+-c@p
++fixed,__func__
+ ,...)
+
+// -------------------------------------------------------------------
+
+@s depends on after_start@
+constant char [] c;
+position p;
+identifier f;
+@@
+
+f(...,c@p,...)
+
+@script:python flt2@
+c << s.c;
+p << s.p;
+matched;
+@@
+
+func = p[0].current_element
+wpattern = "[a-zA-Z_][a-zA-Z0-9_]*"
+if ignore_leading:
+   func = func.strip("_")
+   wpattern = "[a-zA-Z][a-zA-Z0-9_]*"
+lf = len(func)
+cocci.include_match(False)
+// ignore extremely short function names
+if lf > 3:
+   words = [w for w in re.findall(wpattern, c) if abs(len(w) - lf) <= maxdist]
+   for w in words:
+       d = distance(w, func) 
+       if mindist <= d and d <= maxdist:
+          coccinelle.matched = w
+          cocci.include_match(True)
+     	  //print "%s:%d:%s():%d: %s" % (p[0].file, int(p[0].line), func, d, c)
+	  break
+
+@script:ocaml s2@
+c << s.c;
+f << s.f;
+p << s.p;
+matched << flt2.matched;
+fixed;
+@@
+
+let ce = (List.hd p).current_element in
+let pieces = Str.split_delim (Str.regexp_string matched) c in
+match pieces with
+  [before;after] ->
+    let preceeding =
+      List.length(Str.split (Str.regexp_string "%") before) > 1 in
+    if preceeding
+    then Coccilib.include_match false
+    else
+      if List.mem f !extensible_functions
+      then Coccilib.include_match false
+      else fixed := before ^ ce ^ after
+| _ -> Coccilib.include_match false
+
+@changed2@
+constant char [] s.c;
+identifier s2.fixed;
+position s.p;
+identifier s.f;
+@@
+
+f(...,
+-c@p
++fixed
+ ,...)
+// </smpl>
 
