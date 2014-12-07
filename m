@@ -1,103 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:38145 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933071AbaLBXKR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Dec 2014 18:10:17 -0500
-Message-ID: <547E4736.5000303@oracle.com>
-Date: Tue, 02 Dec 2014 18:11:50 -0500
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:43895 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751052AbaLGRFK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 7 Dec 2014 12:05:10 -0500
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id sB7H3Ycp003071
+	for <linux-pci@vger.kernel.org>; Sun, 7 Dec 2014 09:05:09 -0800
+Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1r3vjkh981-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Sun, 07 Dec 2014 09:05:09 -0800
+Content-Type: multipart/mixed;
+	boundary="_000_B5657A6538887040AD3A81F1008BEC63BA6616avmb3qlogicorg_"
+From: Yuval Mintz <Yuval.Mintz@qlogic.com>
+To: Eli Cohen <eli@dev.mellanox.co.il>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>
+CC: linux-pci <linux-pci@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"ogerlitz@mellanox.com" <ogerlitz@mellanox.com>,
+	"yevgenyp@mellanox.com" <yevgenyp@mellanox.com>,
+	Eli Cohen <eli@mellanox.com>,
+	Donald Dutile <ddutile@redhat.com>
+Subject: RE: [PATCH RFC] pci: Control whether VFs are probed on
+ pci_enable_sriov
+Date: Sun, 7 Dec 2014 17:05:06 +0000
+Message-ID: <B5657A6538887040AD3A81F1008BEC63BA6616@avmb3.qlogic.org>
+References: <1417957693-24979-1-git-send-email-eli@mellanox.com>
+In-Reply-To: <1417957693-24979-1-git-send-email-eli@mellanox.com>
 MIME-Version: 1.0
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux@eikelenboom.it
-Subject: Re: [Xen-devel] [PATCH v4 7/7] xen/pciback: Restore configuration
- space when detaching from a guest.
-References: <1416608271-18931-1-git-send-email-konrad.wilk@oracle.com> <1416608271-18931-8-git-send-email-konrad.wilk@oracle.com>
-In-Reply-To: <1416608271-18931-8-git-send-email-konrad.wilk@oracle.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/21/2014 05:17 PM, Konrad Rzeszutek Wilk wrote:
-> The commit "xen/pciback: Don't deadlock when unbinding." was using
-> the version of pci_reset_function which would lock the device lock.
-> That is no good as we can dead-lock. As such we swapped to using
-> the lock-less version and requiring that the callers
-> of 'pcistub_put_pci_dev' take the device lock. And as such
-> this bug got exposed.
->
-> Using the lock-less version is  OK, except that we tried to
-> use 'pci_restore_state' after the lock-less version of
-> __pci_reset_function_locked - which won't work as 'state_saved'
-> is set to false. Said 'state_saved' is a toggle boolean that
-> is to be used by the sequence of a) pci_save_state/pci_restore_state
-> or b) pci_load_and_free_saved_state/pci_restore_state. We don't
-> want to use a) as the guest might have messed up the PCI
-> configuration space and we want it to revert to the state
-> when the PCI device was binded to us. Therefore we pick
-> b) to restore the configuration space.
+--_000_B5657A6538887040AD3A81F1008BEC63BA6616avmb3qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
+=0A=
+>This can save host side resource usage by VF instances which would be=0A=
+>eventually probed to VMs.=0A=
+=0A=
+>Use a parameter to pci_enable_sriov to control that policy, and modify=0A=
+>all current callers such that they retain the same functionality.=0A=
+=0A=
+What's the end-game here? How eventually would this be controlled?=0A=
+=0A=
+>Use a one shot flag on struct pci_device which is cleared after the=0A=
+>first probe is ignored so subsequent attempts go through.=0A=
+=0A=
+Does a one-shot flag suffice? E.g., consider assigning a VF to VM and=0A=
+than shutting down the VM. Assuming this feature is disabled,=0A=
+the VF didn't appear on the hypervisor prior to the assignment but=0A=
+will appear after its shutdown.=0A=
 
-Doesn't this all mean that patch 1/7 broke pcistub_put_pci_dev()?
+--_000_B5657A6538887040AD3A81F1008BEC63BA6616avmb3qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
 
--boris
+eJ8+IkhBAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADMxMEYzRTA4
+N0IyNzAxNDU5MjYwQ0JBMDAzQjY2QjY3AO0GAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HDAAHABEA
+BQAGAAAAFAEBIIADAA4AAADeBwwABwARAAUABgAAABQBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABAEgAAABSRTogW1BBVENIIFJGQ10gcGNpOiBDb250cm9sIHdoZXRoZXIg
+VkZzIGFyZSBwcm9iZWQgb24gcGNpX2VuYWJsZV9zcmlvdgCWGAEDkAYA+AwAADYAAAACAX8AAQAA
+ADoAAAA8QjU2NTdBNjUzODg4NzA0MEFEM0E4MUYxMDA4QkVDNjNCQTY2MTZAYXZtYjMucWxvZ2lj
+Lm9yZz4AAAALAB8OAQAAAAIBCRABAAAAHQMAABkDAABKBAAATFpGdcu2hVBhAApmYmlkBAAAY2PA
+cGcxMjUyAP4DQ/B0ZXh0AfcCpAPjAgAEY2gKwHNldDAg7wdtAoMAUBFNMgqABrQCgJZ9CoAIyDsJ
+YjE5DsC/CcMWcgoyFnECgBViKgmwcwnwBJBhdAWyDlADYHOibwGAIEV4EcFuGDBdBlJ2BJAXtgIQ
+cgDAdH0IUG4aMRAgBcAFoBtkZJogA1IgECIXslx2CJDkd2sLgGQ1HVME8AdADRdwMApxF/Jia21r
+BnMBkAAgIEJNX0LgRUdJTn0K/AHxC/KKbAuAZQqAPlRoBACTG9ADkXNhGjAgaBkQdwVAAJABACAJ
+cBkgCHBjDRngdSKgGdFieSBWbEYgC4AfYW4j8AQgdy8iIBHAJXAIYGwcYGJlrSGWZRowAjB1B0Bs
+JJA+cANgJkAcYBiQJKBNc5YuIZUhllUSACBhJ4AdCsBhB4AboigBcGNpTl8J8AGgHnBfcwUQb7Z2
+J/Ib4XQDYAMgdBHQzQVAcAbwDlB5LCmQHcD2IARhBpB5IZYnQRvQCHA/CXACMCJRJ1AEkAQgc3X3
+JbEsUyxQZSSQCXABkAuArzASIpEHgBxwdSUwdCtgUyrgIaB0eShtVyxhJ8cEIDDiCfBkLWcxMjAw
+4QlwPyBIbwfgJukl5J8sUCIxJkArxh5wZD8of18pggIgMQEi8AVAZgtgZ/84kSKQLAAvkCyBKqEB
+AB1gvyPxJYQiMh5wCsAcUWEBgOcqMjAwIZZmaRHwLIEnovE7ImlnbgWwHFEZIC9xemISAHEKUC7R
+GIAQIG07BTAEIGcoECxQA2B1Z7JoKG1EbweROIMtOOgPL4ABIDqRNLBFLmcu7y0AG+EjQgXAYQQQ
+PeELgP85YCmgJLEoAy0SIZUsUSKB7Gh1AkBEkmQ04DDEKDDILiBBBBB1bUSSNiN+ZjuAJyAJcDsi
+DeEq8mQeLEW3R3EkwA3gZG4nOT8hcHA7gTlyMOJoef9LYBogBAAFsSeQK2AqQzDi90Q0B4Au0WJG
+kCGVA/AuUf9LRTvkMhAvYUaBRwIoZhVCAVGQAAAAHwBCAAEAAAAYAAAAWQB1AHYAYQBsACAATQBp
+AG4AdAB6AAAAHwBlAAEAAAAuAAAAWQB1AHYAYQBsAC4ATQBpAG4AdAB6AEAAcQBsAG8AZwBpAGMA
+LgBjAG8AbQAAAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEAAABoAAAAAAAAAIErH6S+
+oxAZnW4A3QEPVAIAAACAWQB1AHYAYQBsACAATQBpAG4AdAB6AAAAUwBNAFQAUAAAAFkAdQB2AGEA
+bAAuAE0AaQBuAHQAegBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAAC4AAABZAHUAdgBh
+AGwALgBNAGkAbgB0AHoAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAOVfAQAAADYAAABzAGkA
+cAA6AHkAdQB2AGEAbAAuAG0AaQBuAHQAegBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AGgwB
+AAAAGAAAAFkAdQB2AGEAbAAgAE0AaQBuAHQAegAAAB8AHwwBAAAALgAAAFkAdQB2AGEAbAAuAE0A
+aQBuAHQAegBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAA
+AAIBGQwBAAAAaAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFkAdQB2AGEAbAAgAE0AaQBuAHQA
+egAAAFMATQBUAFAAAABZAHUAdgBhAGwALgBNAGkAbgB0AHoAQABxAGwAbwBnAGkAYwAuAGMAbwBt
+AAAAHwABXQEAAAAuAAAAWQB1AHYAYQBsAC4ATQBpAG4AdAB6AEAAcQBsAG8AZwBpAGMALgBjAG8A
+bQAAAAAAHwD4PwEAAAAYAAAAWQB1AHYAYQBsACAATQBpAG4AdAB6AAAAHwAjQAEAAAAuAAAAWQB1
+AHYAYQBsAC4ATQBpAG4AdAB6AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAiQAEAAAAKAAAA
+UwBNAFQAUAAAAAAAAgH5PwEAAABoAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAWQB1AHYAYQBs
+ACAATQBpAG4AdAB6AAAAUwBNAFQAUAAAAFkAdQB2AGEAbAAuAE0AaQBuAHQAegBAAHEAbABvAGcA
+aQBjAC4AYwBvAG0AAAAfAAldAQAAAC4AAABZAHUAdgBhAGwALgBNAGkAbgB0AHoAQABxAGwAbwBn
+AGkAYwAuAGMAbwBtAAAAAAAfADFAAQAAAAIAAAAAAAAACwBAOgEAAAAfADBAAQAAAAIAAAAAAAAA
+HwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9P+QEAAAC
+AQswAQAAABAAAAAxDz4IeycBRZJgy6ADtmtnAwAXAAEAAABAADkAAI3U8j8S0AFAAAgwZX9B8z8S
+0AELACkAAAAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSFAAABAAAACwAjAAAAAAAfAACAhgMC
+AAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAA
+DAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEAAACQ
+AAAAUgBFADoAIABbAFAAQQBUAEMASAAgAFIARgBDAF0AIABwAGMAaQA6ACAAQwBvAG4AdAByAG8A
+bAAgAHcAaABlAHQAaABlAHIAIABWAEYAcwAgAGEAcgBlACAAcAByAG8AYgBlAGQAIABvAG4AIABw
+AGMAaQBfAGUAbgBhAGIAbABlAF8AcwByAGkAbwB2AAAAHwA9AAEAAAAKAAAAUgBFADoAIAAAAAAA
+AwA2AAAAAAADAC4AAAAAAB8AQhABAAAAagAAADwAMQA0ADEANwA5ADUANwA2ADkAMwAtADIANAA5
+ADcAOQAtADEALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBlAGwAaQBAAG0AZQBsAGwA
+YQBuAG8AeAAuAGMAbwBtAD4AAAAAAAIBcQABAAAAGwAAAAEB0BIe8FnK9rvzDLZOtkLjaGZ5ysCc
+hFqigQAfAHAAAQAAAIgAAABbAFAAQQBUAEMASAAgAFIARgBDAF0AIABwAGMAaQA6ACAAQwBvAG4A
+dAByAG8AbAAgAHcAaABlAHQAaABlAHIAIABWAEYAcwAgAGEAcgBlACAAcAByAG8AYgBlAGQAIABv
+AG4AIABwAGMAaQBfAGUAbgBhAGIAbABlAF8AcwByAGkAbwB2AAAAHwA1EAEAAAB0AAAAPABCADUA
+NgA1ADcAQQA2ADUAMwA4ADgAOAA3ADAANAAwAEEARAAzAEEAOAAxAEYAMQAwADAAOABCAEUAQwA2
+ADMAQgBBADYANgAxADYAQABhAHYAbQBiADMALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AAAAfADkQ
+AQAAAGoAAAA8ADEANAAxADcAOQA1ADcANgA5ADMALQAyADQAOQA3ADkALQAxAC0AZwBpAHQALQBz
+AGUAbgBkAC0AZQBtAGEAaQBsAC0AZQBsAGkAQABtAGUAbABsAGEAbgBvAHgALgBjAG8AbQA+AAAA
+AAADAN4/n04AAEAABzCTzypwPxLQAQMAJgAAAAAAAgFHAAEAAAAuAAAAYz1VUzthPSA7cD1RTG9n
+aWM7bD1BVk1CMy0xNDEyMDcxNzA1MDZaLTYzMjAwAAAAAgEUMAEAAAAMAAAAaAAAANOMi5Y+AAAA
+HwD6PwEAAAAYAAAAWQB1AHYAYQBsACAATQBpAG4AdAB6AAAAAwANNP0/AAAfAACAhgMCAAAAAADA
+AAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAA
+AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAt
+AGkAcAAAAAAAAQAAABgAAABbADEAMAAuADEALgA0AC4AMQAwAF0AAAAfAACAhgMCAAAAAADAAAAA
+AAAARgEAAAAWAAAAZABpAHMAYwBsAGEAaQBtAGUAcgAAAAAAAQAAAA4AAABiAHkAcABhAHMAcwAA
+AAAAiXU=
 
-
->
-> We restore from our 'golden' version of PCI configuration space, when an:
->   - Device is unbinded from pciback
->   - Device is detached from a guest.
->
-> Reported-by:  Sander Eikelenboom <linux@eikelenboom.it>
-> Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> ---
->   drivers/xen/xen-pciback/pci_stub.c | 20 ++++++++++++++++----
->   1 file changed, 16 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
-> index 843a2ba..eb8b58e 100644
-> --- a/drivers/xen/xen-pciback/pci_stub.c
-> +++ b/drivers/xen/xen-pciback/pci_stub.c
-> @@ -105,7 +105,7 @@ static void pcistub_device_release(struct kref *kref)
->   	 */
->   	__pci_reset_function_locked(dev);
->   	if (pci_load_and_free_saved_state(dev, &dev_data->pci_saved_state))
-> -		dev_dbg(&dev->dev, "Could not reload PCI state\n");
-> +		dev_info(&dev->dev, "Could not reload PCI state\n");
->   	else
->   		pci_restore_state(dev);
->   
-> @@ -257,6 +257,8 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
->   {
->   	struct pcistub_device *psdev, *found_psdev = NULL;
->   	unsigned long flags;
-> +	struct xen_pcibk_dev_data *dev_data;
-> +	int ret;
->   
->   	spin_lock_irqsave(&pcistub_devices_lock, flags);
->   
-> @@ -279,9 +281,19 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
->   	 * (so it's ready for the next domain)
->   	 */
->   	device_lock_assert(&dev->dev);
-> -	__pci_reset_function_locked(dev);
-> -	pci_restore_state(dev);
-> -
-> +	dev_data = pci_get_drvdata(dev);
-> +	ret = pci_load_saved_state(dev, dev_data->pci_saved_state);
-> +	if (ret < 0)
-> +		dev_warn(&dev->dev, "Could not reload PCI state\n");
-> +	else {
-> +		__pci_reset_function_locked(dev);
-> +		/*
-> +		 * The usual sequence is pci_save_state & pci_restore_state
-> +		 * but the guest might have messed the configuration space up.
-> +		 * Use the initial version (when device was bound to us).
-> +		 */
-> +		pci_restore_state(dev);
-> +	}
->   	/* This disables the device. */
->   	xen_pcibk_reset_device(dev);
->   
-
+--_000_B5657A6538887040AD3A81F1008BEC63BA6616avmb3qlogicorg_--
