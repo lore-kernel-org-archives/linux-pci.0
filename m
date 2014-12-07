@@ -1,65 +1,48 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Murali Karicheri <m-karicheri2@ti.com>, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, will.deacon@arm.com,
-	linux-kernel@vger.kernel.org, grant.likely@linaro.org,
-	robh+dt@kernel.org, bhelgaas@google.com,
-	Russell King <rmk@arm.linux.org.uk>
-Subject: Re: [RFC v1 PATCH 1/2] of/pci: add of_pci_dma_configure() update dma configuration
-Date: Tue, 23 Dec 2014 23:42:29 +0100
-Message-ID: <4513569.xuD4xkPOuC@wuerfel>
-In-Reply-To: <5499A96D.4010704@ti.com>
-References: <1418940425-2017-1-git-send-email-m-karicheri2@ti.com> <5090769.jqAkiDgYu7@wuerfel> <5499A96D.4010704@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:5006 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753349AbaLGT0o (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 7 Dec 2014 14:26:44 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: kernel-janitors@vger.kernel.org, linux@rasmusvillemoes.dk,
+	joe@perches.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 3/20] PCI: fix misspelling of current function in string
+Date: Sun,  7 Dec 2014 20:20:45 +0100
+Message-Id: <1417980062-25151-4-git-send-email-Julia.Lawall@lip6.fr>
+In-Reply-To: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 23 December 2014 12:42:05 Murali Karicheri wrote:
-> > here.
-> 
-> Arnd,
-> 
-> I guess so. Besides we need to keep the default coherent dma mask to 
-> 32bit 0xffffffffull as well to work on Keystone and also in sync with 
-> current defaults used in pci_device_add() so that we don't break this 
-> behavior.
-> 
-> Here is the summary of changes need to make on top of my existing patch.
-> 
-> 1. of_dma_configure() - change size = dev->coherent_dma_mask to size = 
-> dev->coherent_dma_mask + 1. This is a new patch to fix existing code.
+Replace a misspelled function name by %s and then __func__.
 
-ok
+The function name begins with pci, not cpci.
 
-> 2. Do the above change to of_pci_dma_configure() as well.
+This was done using Coccinelle, including the use of Levenshtein distance,
+as proposed by Rasmus Villemoes.
 
-ok
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
-> 3. in arch_setup_dma_ops() update the DMA mask to min((*dev->dma_mask), 
-> dma_base + size - 1) as
-> 
-> 
-> diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
-> index c17f6a9..88b4769 100644
-> --- a/arch/arm/mm/dma-mapping.c
-> +++ b/arch/arm/mm/dma-mapping.c
-> @@ -2053,8 +2053,13 @@ void arch_setup_dma_ops(struct device *dev, u64 
-> dma_base, u64 size,
->   {
->          struct dma_map_ops *dma_ops;
-> 
-> +
-> +       *dev->dma_mask = min((*dev->dma_mask), (dma_base + size - 1));
-> 
-> I have tested this on keystone and it works fine with rootfs on PCI SATA 
-> harddisk. I will be doing more tests with this change. If you are in 
-> agreement with the above changes, I will re-spin the patch to accomodate 
-> them and send v1 of the same.
+---
+The semantic patch is difficult to summarize, but is available in the cover
+letter of this patch series.
 
-Ok, sounds good. I noticed that you did not put Russell into the Cc list
-for the emails. Please do so when you send it again, as he may have some
-additional comments.
+ drivers/pci/hotplug/pci_hotplug_core.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-	Arnd
+diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
+index 56d8486..d3f8330 100644
+--- a/drivers/pci/hotplug/pci_hotplug_core.c
++++ b/drivers/pci/hotplug/pci_hotplug_core.c
+@@ -532,7 +532,7 @@ static int __init pci_hotplug_init(void)
+ 
+ 	result = cpci_hotplug_init(debug);
+ 	if (result) {
+-		err("cpci_hotplug_init with error %d\n", result);
++		err("%s with error %d\n", __func__, result);
+ 		return result;
+ 	}
+ 
+
