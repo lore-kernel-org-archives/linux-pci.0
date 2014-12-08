@@ -1,80 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from vserver.eikelenboom.it ([84.200.39.61]:38685 "EHLO
-	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751322AbaLDNQt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Dec 2014 08:16:49 -0500
-Date: Thu, 4 Dec 2014 14:10:54 +0100
-From: Sander Eikelenboom <linux@eikelenboom.it>
-Message-ID: <1107877503.20141204141054@eikelenboom.it>
-To: David Vrabel <david.vrabel@citrix.com>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	bhelgaas@google.com, <linux-pci@vger.kernel.org>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	<linux-kernel@vger.kernel.org>, <xen-devel@lists.xenproject.org>
-Subject: Re: [Xen-devel] [PATCH v5 9/9] xen/pciback: Implement PCI reset slot or bus with 'do_flr' SysFS attribute
-In-Reply-To: <5480528F.8010106@citrix.com>
-References: <201412041206.sB4C6XVQ009497@userz7022.oracle.com> <5480528F.8010106@citrix.com>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:63095 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752432AbaLHTZ1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Dec 2014 14:25:27 -0500
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id sB8JNmf8025205
+	for <linux-pci@vger.kernel.org>; Mon, 8 Dec 2014 11:25:26 -0800
+Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1r3vjkjjjh-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 08 Dec 2014 11:25:26 -0800
+Content-Type: multipart/mixed;
+	boundary="_000_B5657A6538887040AD3A81F1008BEC63BA7746avmb3qlogicorg_"
+From: Yuval Mintz <Yuval.Mintz@qlogic.com>
+To: Eli Cohen <eli@dev.mellanox.co.il>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"ogerlitz@mellanox.com" <ogerlitz@mellanox.com>,
+	"yevgenyp@mellanox.com" <yevgenyp@mellanox.com>,
+	Donald Dutile <ddutile@redhat.com>
+Subject: RE: [PATCH RFC] pci: Control whether VFs are probed on
+ pci_enable_sriov
+Date: Mon, 8 Dec 2014 19:25:24 +0000
+Message-ID: <B5657A6538887040AD3A81F1008BEC63BA7746@avmb3.qlogic.org>
+References: <1417957693-24979-1-git-send-email-eli@mellanox.com>
+ <B5657A6538887040AD3A81F1008BEC63BA6616@avmb3.qlogic.org>
+ <20141207184242.GA24790@mtldesk30>
+ <B5657A6538887040AD3A81F1008BEC63BA669B@avmb3.qlogic.org>,<20141208191032.GC24790@mtldesk30>
+In-Reply-To: <20141208191032.GC24790@mtldesk30>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+--_000_B5657A6538887040AD3A81F1008BEC63BA7746avmb3qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Thursday, December 4, 2014, 1:24:47 PM, you wrote:
+>>>> What's the end-game here? How eventually would this be controlled?=0A=
+>>>You can probe any VF at the hypervisor through sysfs files=0A=
+=0A=
+>>>(bind/unbind). You can also pass them through to a VM. Nothing=0A=
+>>>changes.=0A=
+=0A=
+>> If you're not planning on adding a logic to set this, why do we need to=
+=0A=
+>> add a parameter to pci_enable_sriov() - given that all callers use the=
+=0A=
+>> exact same logic?=0A=
+>> [And I don't really think we'd want different devices to behave differen=
+tly=0A=
+>> by default; That would be confusing for users.]=0A=
+=0A=
+>Currently the kerenl will call probe for any device for which there is=0A=
+>a supporting driver and I did not want to change that.=0A=
+=0A=
+But what's next? How will this feature be activated?=0A=
+=0A=
+Adding a parameter to pci_enable_sriov() might give developers the false=0A=
+impression they can change behavior by passing `0' to this function; =0A=
+But that shouldn't be the method to control this - we should have uniform =
+=0A=
+control of the feature across different drivers, e.g., by an additional sys=
+fs node.=
 
-> On 04/12/14 12:06, Konrad Rzeszutek Wilk wrote:
->> 
->> On Dec 4, 2014 6:30 AM, David Vrabel <david.vrabel@citrix.com> wrote:
->>>
->>> On 03/12/14 21:40, Konrad Rzeszutek Wilk wrote: 
->>>>
->>>> Instead of doing all this complex dance, we depend on the toolstack 
->>>> doing the right thing. As such implement the 'do_flr' SysFS attribute 
->>>> which 'xl' uses when a device is detached or attached from/to a guest. 
->>>> It bypasses the need to worry about the PCI lock. 
->>>
->>> No.  Get pciback to add its own "reset" sysfs file (as I have repeatedly 
->>> proposed). 
->>>
->> 
->> Which does not work as the kobj will complain (as there is already an 'reset' associated with the PCI device).
+--_000_B5657A6538887040AD3A81F1008BEC63BA7746avmb3qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
 
-> It is only needed if the core won't provide one.
+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
+AAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBZAHUAdgBhAGwAIABNAGkAbgB0AHoAAABTAE0AVABQ
+AAAAWQB1AHYAYQBsAC4ATQBpAG4AdAB6AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAA
+LgAAAFkAdQB2AGEAbAAuAE0AaQBuAHQAegBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8A+D8B
+AAAAGAAAAFkAdQB2AGEAbAAgAE0AaQBuAHQAegAAAB8AI0ABAAAALgAAAFkAdQB2AGEAbAAuAE0A
+aQBuAHQAegBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAA
+AAIB+T8BAAAAaAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFkAdQB2AGEAbAAgAE0AaQBuAHQA
+egAAAFMATQBUAFAAAABZAHUAdgBhAGwALgBNAGkAbgB0AHoAQABxAGwAbwBnAGkAYwAuAGMAbwBt
+AAAAHwAJXQEAAAAuAAAAWQB1AHYAYQBsAC4ATQBpAG4AdAB6AEAAcQBsAG8AZwBpAGMALgBjAG8A
+bQAAAAAAHwAxQAEAAAACAAAAAAAAAAsAQDoBAAAAHwAwQAEAAAACAAAAAAAAAB8AGgABAAAAEgAA
+AEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAA
+lPobW8ch8kS8fUU3T9xpcwMAFwABAAAAQAA5AAAqw7YcE9ABQAAIMOd9OLccE9ABCwApAAAAAAAL
+AACACCAGAAAAAADAAAAAAAAARgAAAAAUhQAAAQAAAAsAIwAAAAAAHwAAgIYDAgAAAAAAwAAAAAAA
+AEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBV
+AFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAkAAAAFIARQA6ACAA
+WwBQAEEAVABDAEgAIABSAEYAQwBdACAAcABjAGkAOgAgAEMAbwBuAHQAcgBvAGwAIAB3AGgAZQB0
+AGgAZQByACAAVgBGAHMAIABhAHIAZQAgAHAAcgBvAGIAZQBkACAAbwBuACAAcABjAGkAXwBlAG4A
+YQBiAGwAZQBfAHMAcgBpAG8AdgAAAB8APQABAAAACgAAAFIARQA6ACAAAAAAAAMANgAAAAAAAwAu
+AAAAAAAfAEIQAQAAAEYAAAA8ADIAMAAxADQAMQAyADAAOAAxADkAMQAwADMAMgAuAEcAQwAyADQA
+NwA5ADAAQABtAHQAbABkAGUAcwBrADMAMAA+AAAAAAACAXEAAQAAAC8AAAABAdASHvBZyva78wy2
+TrZC42hmecrAnIRaooGAAKJogP//j7e1gAIKYwD//3wMtgAfAHAAAQAAAIgAAABbAFAAQQBUAEMA
+SAAgAFIARgBDAF0AIABwAGMAaQA6ACAAQwBvAG4AdAByAG8AbAAgAHcAaABlAHQAaABlAHIAIABW
+AEYAcwAgAGEAcgBlACAAcAByAG8AYgBlAGQAIABvAG4AIABwAGMAaQBfAGUAbgBhAGIAbABlAF8A
+cwByAGkAbwB2AAAAHwA1EAEAAAB0AAAAPABCADUANgA1ADcAQQA2ADUAMwA4ADgAOAA3ADAANAAw
+AEEARAAzAEEAOAAxAEYAMQAwADAAOABCAEUAQwA2ADMAQgBBADcANwA0ADYAQABhAHYAbQBiADMA
+LgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AAAAfADkQAQAAAN4BAAA8ADEANAAxADcAOQA1ADcANgA5
+ADMALQAyADQAOQA3ADkALQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AZQBsAGkA
+QABtAGUAbABsAGEAbgBvAHgALgBjAG8AbQA+ACAAPABCADUANgA1ADcAQQA2ADUAMwA4ADgAOAA3
+ADAANAAwAEEARAAzAEEAOAAxAEYAMQAwADAAOABCAEUAQwA2ADMAQgBBADYANgAxADYAQABhAHYA
+bQBiADMALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AIAA8ADIAMAAxADQAMQAyADAANwAxADgANAAy
+ADQAMgAuAEcAQQAyADQANwA5ADAAQABtAHQAbABkAGUAcwBrADMAMAA+ACAAPABCADUANgA1ADcA
+QQA2ADUAMwA4ADgAOAA3ADAANAAwAEEARAAzAEEAOAAxAEYAMQAwADAAOABCAEUAQwA2ADMAQgBB
+ADYANgA5AEIAQABhAHYAbQBiADMALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4ALAA8ADIAMAAxADQA
+MQAyADAAOAAxADkAMQAwADMAMgAuAEcAQwAyADQANwA5ADAAQABtAHQAbABkAGUAcwBrADMAMAA+
+AAAAAAADAN4/n04AAEAABzAR5B+3GxPQAQMAJgAAAAAAAgFHAAEAAAAuAAAAYz1VUzthPSA7cD1R
+TG9naWM7bD1BVk1CMy0xNDEyMDgxOTI1MjRaLTYzNzUzAAAAAgEUMAEAAAAMAAAAngAAANFaviI+
+AAAAHwD6PwEAAAAYAAAAWQB1AHYAYQBsACAATQBpAG4AdAB6AAAAAwANNP0/AAAfAACAhgMCAAAA
+AADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAA
+AAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4A
+ZwAtAGkAcAAAAAAAAQAAABgAAABbADEAMAAuADEALgA0AC4AMQAwAF0AAAAfAACAhgMCAAAAAADA
+AAAAAAAARgEAAAAWAAAAZABpAHMAYwBsAGEAaQBtAGUAcgAAAAAAAQAAAA4AAABiAHkAcABhAHMA
+cwAAAAAAMuY=
 
-> +static int pcistub_try_create_reset_file(struct pci_dev *pci)
-> +{
-> +       struct xen_pcibk_dev_data *dev_data = pci_get_drvdata(pci);
-> +       struct device *dev = &pci->dev;
-> +       int ret;
-> +
-> +       /* Already have a per-function reset? */
-> +       if (pci_probe_reset_function(pci) == 0)
-> +               return 0;
-> +
-> +       ret = device_create_file(dev, &dev_attr_reset);
-> +       if (ret < 0)
-> +               return ret;
-+       dev_data->>created_reset_file = true;
-> +       return 0;
-> +}
-
-Wouldn't the "core-reset-sysfs-file" be still wired to the end up calling 
-"pci.c:__pci_dev_reset" ?
-
-The problem with that function is that from my testing it seems that the 
-first option "pci_dev_specific_reset" always seems to return succes, so all the
-other options are skipped (flr, pm, slot, bus). However the device it self is 
-not properly reset enough (perhaps the pci_dev_specific_reset is good enough for 
-none virtualization purposes and it's probably the least intrusive. For 
-virtualization however it would be nice to be sure it resets properly, or have a 
-way to force a specific reset routine.) 
-
-So it's the ordering and skipping of the other resets that seems to make
-this workaround necessary in the first place.
-
-> David
-
-
-
-
-
+--_000_B5657A6538887040AD3A81F1008BEC63BA7746avmb3qlogicorg_--
