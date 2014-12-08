@@ -1,60 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ns.mm-sol.com ([37.157.136.199]:33593 "EHLO extserv.mm-sol.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030596AbaLLRQu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 12 Dec 2014 12:16:50 -0500
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
-To: Rob Herring <robh+dt@kernel.org>,
-	Kumar Gala <galak@codeaurora.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, Stanimir Varbanov <svarbanov@mm-sol.com>
-Subject: [PATCH 0/5] Qualcomm PCIe and PCIe/PHY drivers
-Date: Fri, 12 Dec 2014 19:13:56 +0200
-Message-Id: <1418404441-5518-1-git-send-email-svarbanov@mm-sol.com>
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:46909 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752519AbaLHTKg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Dec 2014 14:10:36 -0500
+Received: by mail-wi0-f170.google.com with SMTP id bs8so8021704wib.1
+        for <linux-pci@vger.kernel.org>; Mon, 08 Dec 2014 11:10:35 -0800 (PST)
+From: Eli Cohen <eli@dev.mellanox.co.il>
+Date: Mon, 8 Dec 2014 21:10:32 +0200
+To: Yuval Mintz <Yuval.Mintz@qlogic.com>
+Cc: Eli Cohen <eli@dev.mellanox.co.il>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"ogerlitz@mellanox.com" <ogerlitz@mellanox.com>,
+	"yevgenyp@mellanox.com" <yevgenyp@mellanox.com>,
+	Donald Dutile <ddutile@redhat.com>
+Subject: Re: [PATCH RFC] pci: Control whether VFs are probed on
+ pci_enable_sriov
+Message-ID: <20141208191032.GC24790@mtldesk30>
+References: <1417957693-24979-1-git-send-email-eli@mellanox.com>
+ <B5657A6538887040AD3A81F1008BEC63BA6616@avmb3.qlogic.org>
+ <20141207184242.GA24790@mtldesk30>
+ <B5657A6538887040AD3A81F1008BEC63BA669B@avmb3.qlogic.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <B5657A6538887040AD3A81F1008BEC63BA669B@avmb3.qlogic.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset introduces a Qualcomm PCIe root complex driver for
-Snapdragon 805 (APQ8084). It also adds a PCIe PHY driver in generic
-phy framework. The PCIe hardware use Designware IP core plus
-Qualcomm application specific hw.
+On Sun, Dec 07, 2014 at 08:08:47PM +0000, Yuval Mintz wrote:
+> >>>Use a parameter to pci_enable_sriov to control that policy, and modify
+> >>>all current callers such that they retain the same functionality.
+> >> 
+> >> What's the end-game here? How eventually would this be controlled?
+> 
+> >You can probe any VF at the hypervisor through sysfs files
+> >(bind/unbind). You can also pass them through to a VM. Nothing
+> >changes.
+> 
+> If you're not planning on adding a logic to set this, why do we need to
+> add a parameter to pci_enable_sriov() - given that all callers use the
+> exact same logic?
+> [And I don't really think we'd want different devices to behave differently
+> by default; That would be confusing for users.]
+> 
+Currently the kerenl will call probe for any device for which there is
+a supporting driver and I did not want to change that.
 
-The first two patches add a PHY driver binding document and the 
-PHY driver. Patches 3/5 and 4/5 add PCIe DT document and the driver.
-Last 5/5 adds APQ8084 in mach-qcom as next multiplatform Qualcomm
-SoC.
+> >>>Use a one shot flag on struct pci_device which is cleared after the
+> >>>first probe is ignored so subsequent attempts go through.
+> >>
+> >> Does a one-shot flag suffice? E.g., consider assigning a VF to VM and
+> >> than shutting down the VM. Assuming this feature is disabled,
+> >> the VF didn't appear on the hypervisor prior to the assignment but
+> >> will appear after its shutdown.
+> 
+> >Sorry, I don't follow you here. Please clarify.
+> 
+> >To be clear, the functionality proposed here is really one shot. It
+> >just prevents calling probe once; besides that nothing changes.
+> 
+> What I meant is that device is unbinded after initial probe,
+> But in the scenario I've stated above, the VF will become binded once
+> it's returned to the hypervisor.
+> Now, I understand that what you're trying to achieve - but my question
+> is whether what you're REALLY trying to achieve is the ability to have VFs
+> which would only be binded to VMs and never to hypervisor [by default]?
 
-Comments are welcome!
-
-regards,
-Stan
-
-Stanimir Varbanov (5):
-  DT: phy: qcom: Add PCIe PHY devicetree bindings
-  phy: qcom: Add Qualcomm PCIe PHY
-  DT: PCI: qcom: Document PCIe devicetree bindings
-  PCI: qcom: Add Qualcomm PCIe controller driver
-  ARM: qcom: Add Qualcomm APQ8084 SoC
-
- .../devicetree/bindings/pci/qcom,pcie.txt          |  159 ++++++++
- .../devicetree/bindings/phy/qcom-pcie-phy.txt      |   62 +++
- arch/arm/mach-qcom/Kconfig                         |    7 +
- drivers/pci/host/Kconfig                           |    9 +
- drivers/pci/host/Makefile                          |    1 +
- drivers/pci/host/pcie-qcom.c                       |  415 ++++++++++++++++++++
- drivers/phy/Kconfig                                |    7 +
- drivers/phy/Makefile                               |    1 +
- drivers/phy/phy-qcom-pcie.c                        |  311 +++++++++++++++
- 9 files changed, 972 insertions(+), 0 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie.txt
- create mode 100644 Documentation/devicetree/bindings/phy/qcom-pcie-phy.txt
- create mode 100644 drivers/pci/host/pcie-qcom.c
- create mode 100644 drivers/phy/phy-qcom-pcie.c
-
+No this was not my intention. I guess any driver that wishes to
+achieve the same functionality can simply ignore the N first probes after
+the call to pci_enable_sriov() where N is the number of VFs it
+created.
