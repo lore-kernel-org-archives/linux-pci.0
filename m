@@ -1,81 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:42978 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754920AbaLDWZi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Dec 2014 17:25:38 -0500
-Received: by mail-ig0-f170.google.com with SMTP id r2so20571836igi.1
-        for <linux-pci@vger.kernel.org>; Thu, 04 Dec 2014 14:25:37 -0800 (PST)
-Date: Thu, 4 Dec 2014 15:25:34 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alexey Voronkov <zermond@gmail.com>,
-	David Airlie <airlied@linux.ie>,
-	Saifi Khan <saifi.khan@datasynergy.org>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Marek =?iso-8859-1?Q?Kord=EDk?= <kordikmarek@gmail.com>
-Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
- GPU init
-Message-ID: <20141204222534.GA2911@google.com>
-References: <CAErSpo6UvY10MNidAOFf4Fptv+wL-NsX6JMaU8OvSP6ywWEebQ@mail.gmail.com>
- <CAE9FiQW1OPP_no1orE+rUHQnmsVY3beUtbS8YdkXBhABVbdfLA@mail.gmail.com>
- <CAE9FiQUP6v=bGxkTXuyYf6mO1reQcD2gLjrr2nDHNYDBQ8ubug@mail.gmail.com>
- <20141204161506.GA2501@google.com>
- <CAE9FiQUfO0-6fn-xrE=aCzouoXDxa1ziN=EkBw2L01Ve-Wi-EQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQUfO0-6fn-xrE=aCzouoXDxa1ziN=EkBw2L01Ve-Wi-EQ@mail.gmail.com>
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:46532 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754622AbaLHUMd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Dec 2014 15:12:33 -0500
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH 1/6] device core: Introduce per-device MSI domain pointer
+Date: Mon,  8 Dec 2014 20:12:18 +0000
+Message-Id: <1418069543-21969-2-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com>
+References: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 04, 2014 at 02:15:14PM -0800, Yinghai Lu wrote:
-> On Thu, Dec 4, 2014 at 8:15 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > On Wed, Dec 03, 2014 at 05:41:32PM -0800, Yinghai Lu wrote:
-> >> On Wed, Dec 3, 2014 at 5:38 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> >> > On Wed, Dec 3, 2014 at 2:15 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >> >> There's a bugzilla for this, so this email is to make the bugzilla
-> >> >> more discoverable and to have a more public discussion about it.
-> >> >>
-> >> >>   https://bugzilla.kernel.org/show_bug.cgi?id=85491
-> >> >>
-> >> >> I think this regression is caused by 5b28541552ef ("PCI: Restrict
-> >> >> 64-bit prefetchable bridge windows to 64-bit resources").  These dmesg
-> >> >> fragments are from v3.16, which doesn't work:
-> >> >>
-> >> >>     pci_bus 0000:00: root bus resource [mem 0xc0000000-0xffffffff]
-> >> >>
-> >> >>     pci 0000:00:01.0: PCI bridge to [bus 01]
-> >> >>     pci 0000:00:01.0:   bridge window [io  0x8000-0xafff]
-> >> >>     pci 0000:00:01.0:   bridge window [mem 0xfdf00000-0xfdffffff]
-> >> >>     pci 0000:00:01.0:   bridge window [mem 0xbdf00000-0xddefffff 64bit
-> >> >> pref]  <-- outside host bridge window
-> >> >>
-> >> >>     pci 0000:01:00.0: reg 0x10: [mem 0xc0000000-0xcfffffff pref]
-> >> >>     pci 0000:01:00.0: reg 0x14: [io  0xa000-0xa0ff]
-> >> >>     pci 0000:01:00.0: reg 0x18: [mem 0xfdff0000-0xfdffffff]
-> >> >>     pci 0000:01:00.0: reg 0x30: [mem 0xfdfc0000-0xfdfdffff pref]
-> >> >>
-> >> >>     pci 0000:00:01.0: can't claim BAR 15 [mem 0xbdf00000-0xddefffff
-> >> >> 64bit pref]: no compatible bridge window
-> >> >>     pci 0000:01:00.0: can't claim BAR 0 [mem 0xc0000000-0xcfffffff
-> >> >> pref]: no compatible bridge window
-> >> >
-> >> > Looks like we wrong type checking from parent resource searching.
-> >
-> > I don't understand what you're trying to say, but I don't think the "no
-> > compatible bridge window" problem is related to resource types.  I think
-> > it's because the 00:01.0 window at [mem 0xbdf00000-0xddefffff] starts
-> > before the [mem 0xc0000000-0xffffffff] host bridge window.
-> 
-> on this system _CRS is not used.
+As MSI-type features are creeping into non-PCI devices, it is
+starting to make sense to give our struct device some form of
+support for this, by allowing a pointer to an MSI irq domain to
+be set/retrieved.
 
-Oh, sorry, I didn't notice that Zermond's system doesn't use _CRS.  I had
-been looking at the logs from Marek, and we *do* use _CRS there.  On
-Zermond's machine we do still have the e820 code that figures out this:
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ include/linux/device.h | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-  e820: [mem 0xc0000000-0xfedfffff] available for PCI devices
+diff --git a/include/linux/device.h b/include/linux/device.h
+index ce1f2160..f3aaaf6 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -690,6 +690,7 @@ struct acpi_dev_node {
+  * 		along with subsystem-level and driver-level callbacks.
+  * @pins:	For device pin management.
+  *		See Documentation/pinctrl.txt for details.
++ * @msi_domain: The generic MSI domain this device is using.
+  * @numa_node:	NUMA node this device is close to.
+  * @dma_mask:	Dma mask (if dma'ble device).
+  * @coherent_dma_mask: Like dma_mask, but for alloc_coherent mapping as not all
+@@ -750,6 +751,9 @@ struct device {
+ 	struct dev_pm_info	power;
+ 	struct dev_pm_domain	*pm_domain;
+ 
++#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
++	struct irq_domain	*msi_domain; /* MSI domain device uses */
++#endif
+ #ifdef CONFIG_PINCTRL
+ 	struct dev_pin_info	*pins;
+ #endif
+@@ -837,6 +841,22 @@ static inline void set_dev_node(struct device *dev, int node)
+ }
+ #endif
+ 
++static inline struct irq_domain *dev_get_msi_domain(const struct device *dev)
++{
++#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
++	return dev->msi_domain;
++#else
++	return NULL;
++#endif
++}
++
++static inline void dev_set_msi_domain(struct device *dev, struct irq_domain *d)
++{
++#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
++	dev->msi_domain = d;
++#endif
++}
++
+ static inline void *dev_get_drvdata(const struct device *dev)
+ {
+ 	return dev->driver_data;
+-- 
+2.1.3
 
-I think we could at least clamp the default host bridge window
-([mem 0x00000000-0xfffffffff]) to that.
-
-Bjorn
