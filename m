@@ -1,36 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:59708 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751107AbaLRX0H (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Dec 2014 18:26:07 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Mohit Kumar <mohit.kumar@st.com>
-Subject: Re: [PATCH v3 0/2] arm: pcibios: remove pci_sys_data domain
-Date: Fri, 19 Dec 2014 00:25:17 +0100
-Message-ID: <14802556.IUBqXXJ43p@wuerfel>
-In-Reply-To: <54935F7A.7000206@ti.com>
-References: <1416569367-29409-1-git-send-email-lorenzo.pieralisi@arm.com> <54935F7A.7000206@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH 2/6] PCI/MSI: add hooks to populate the msi_domain field
+Date: Mon,  8 Dec 2014 20:12:19 +0000
+Message-Id: <1418069543-21969-3-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com>
+References: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 18 December 2014 18:12:58 Murali Karicheri wrote:
-> 
-> I am assuming this is transparent to the user drivers of designware core 
-> such as pci-keystone as CONFIG_PCI_DOMAINS_GENERIC is enabled by default 
-> by ARM. Is this true ?
+In order to be able to populate the device msi_domain field,
+add the necesary hooks to propagate the PHB msi_domain across
+secondary busses to devices.
 
-One difference is that you can now specify the domain number in DT,
-but if you don't do that, it should behave exactly as befor.
+So far, nobody populates the initial msi_domain.
 
-	Arnd
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/pci/probe.c | 24 ++++++++++++++++++++++++
+ include/linux/pci.h |  1 +
+ 2 files changed, 25 insertions(+)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index c8ca98c..d1009a2 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -670,6 +670,20 @@ static void pci_set_bus_speed(struct pci_bus *bus)
+ 	}
+ }
+ 
++void __weak pcibios_set_phb_msi_domain(struct pci_bus *bus)
++{
++}
++
++static void pci_set_bus_msi_domain(struct pci_bus *bus)
++{
++	struct pci_dev *bridge = bus->self;
++
++	if (!bridge)
++		pcibios_set_phb_msi_domain(bus);
++	else
++		dev_set_msi_domain(&bus->dev, dev_get_msi_domain(&bridge->dev));
++}
++
+ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 					   struct pci_dev *bridge, int busnr)
+ {
+@@ -723,6 +737,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	bridge->subordinate = child;
+ 
+ add_dev:
++	pci_set_bus_msi_domain(child);
+ 	ret = device_register(&child->dev);
+ 	WARN_ON(ret < 0);
+ 
+@@ -1517,6 +1532,11 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	pci_enable_acs(dev);
+ }
+ 
++static void pci_set_msi_domain(struct pci_dev *dev)
++{
++	dev_set_msi_domain(&dev->dev, dev_get_msi_domain(&dev->bus->dev));
++}
++
+ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ {
+ 	int ret;
+@@ -1546,6 +1566,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	/* Initialize various capabilities */
+ 	pci_init_capabilities(dev);
+ 
++	/* Setup MSI irq domain */
++	pci_set_msi_domain(dev);
++
+ 	/*
+ 	 * Add the device to our list of discovered devices
+ 	 * and the bus list for fixup functions, etc.
+@@ -1947,6 +1970,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	b->bridge = get_device(&bridge->dev);
+ 	device_enable_async_suspend(b->bridge);
+ 	pci_set_bus_of_node(b);
++	pci_set_bus_msi_domain(b);
+ 
+ 	if (!parent)
+ 		set_dev_node(b->bridge, pcibus_to_node(b));
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index a523cee..3266764 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1637,6 +1637,7 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+ int pcibios_add_device(struct pci_dev *dev);
+ void pcibios_release_device(struct pci_dev *dev);
+ void pcibios_penalize_isa_irq(int irq, int active);
++void pcibios_set_phb_msi_domain(struct pci_bus *bus);
+ 
+ #ifdef CONFIG_HIBERNATE_CALLBACKS
+ extern struct dev_pm_ops pcibios_pm_ops;
+-- 
+2.1.3
+
