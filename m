@@ -1,83 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:53585 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756257AbaLIMYn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 07:24:43 -0500
-Message-ID: <5486EA00.6080901@huawei.com>
-Date: Tue, 9 Dec 2014 20:24:32 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
-Subject: Re: [PATCH 2/6] PCI/MSI: add hooks to populate the msi_domain field
-References: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com> <1418069543-21969-3-git-send-email-marc.zyngier@arm.com> <5486585B.40000@huawei.com> <5486C8BA.8030608@arm.com> <5486E3BF.70703@huawei.com> <5486E747.4010804@arm.com>
-In-Reply-To: <5486E747.4010804@arm.com>
+Received: from gate.crashing.org ([63.228.1.57]:35200 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752838AbaLHXAR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 8 Dec 2014 18:00:17 -0500
+Message-ID: <1418079603.13358.12.camel@kernel.crashing.org>
+Subject: Re: [PATCH] PCI: Clear bridge MEM_64 flag if one child does not
+ support it
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Marek =?ISO-8859-1?Q?Kord=EDk?= <kordikmarek@gmail.com>,
+	zermond@gmail.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Tue, 09 Dec 2014 10:00:03 +1100
+In-Reply-To: <1418079372.13358.9.camel@kernel.crashing.org>
+References: <1418075552-26495-1-git-send-email-yinghai@kernel.org>
+	 <1418079372.13358.9.camel@kernel.crashing.org>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> Well, this is not supposed to be a perfect solution yet, but instead a
->>> basis for discussion. What I'd like to find out is:
->>>
->>> - What is the minimum granularity for associating a device with its MSI
->>> domain in existing platforms?
->>
->> PCI device, after Gerry's msi irq domain patchset which now in linux-next,
->> in x86, we will find msi irq domain by pci_dev.
+On Tue, 2014-12-09 at 09:56 +1100, Benjamin Herrenschmidt wrote:
+> On Mon, 2014-12-08 at 13:52 -0800, Yinghai Lu wrote:
+> > 2. or scan the children resource other than ROM to clear bridge MEM_64
+> >    for mmio pref.
+> > 
+> > The patch is using second way so will keep child mmio pref into bridge
+> > mmio pref range.
 > 
-> Are you *really* associating the MSI domain on a per pci-device basis?
-> That is, you have devices on the same PCI bus talking to different MSI hw?
-
-Yes.
-
+> That means that having a single ROM BAR that is 32-bit and prefetchable
+> will downgrade the entire window to 32-bit ? That's not going to work
+> either.
 > 
->> I generally agree your first patch which associate basic device with msi irq domain.
->>
->>> - What topology data structures do you use to find out what MSI
->>> controller a device should be matched with?
->>
->> Now only arm and arm64 use msi controller to setup/teardown msi irqs,
->> in arm, now msi controller saved in pci_sys_data, and for arm64, it seems
->> to be saved in pci_bus. For a more common method to find msi controller/irq domain,
->> I prefer pci_dev/device.
+> I have GPUs with 16G BARs for example... suddenly they don't fit
+> anaymore because we downgraded the window to 32 bit because somewhere
+> there's a 32-bit pref resource ?
 > 
-> Forget about msi_controller, the whole goal of this series is to make it
-> obsolete. On your x86 platform, what how do you identify which MSI
-> domain should be associated with a given PCI device? Surely you must
-> have a set of data structures or ACPI tables which give you that
-> information.
+> That will break more than it fixes...
 
-Yes, by ACPI DMAR table.
+I think an option would be to keep track of whether the PCI host bridge
+can do 64-bit pref above 4G.
 
-> 
->>> - What in-tree platform already has this requirements?
->>
->> As mentioned above, x86 does.
-> 
-> Let me rephrase that in a non-ambiguous manner: can you point me to a
-> file implementing this in mainline?
+If it can't then we know 64-bit pref is always fair game for 32-bit
+resources and we can thus downgrade all the bridges 64-pref to 32-perf.
 
-Please refer to arch/x86/kernel/apic/msi.c  native_setup_msi_irqs()  in linux-next tree.
+If it can, then we probably do need to leave it there do real 64-bit
+pref, and shoot anything that is 32-bit only down the non-pref windows.
 
-Thanks!
-Yijing.
+We *could* try to be smart and scan first to check if anything under the
+bridge actually has large/64-bit BARs but that's going to be a heuristic
+at best and isn't going to do any good with hotplug.
 
-> 
-> Thanks,
-> 
-> 	M.
-> 
+I tend to think that treating anything 32-bit pref as non-pref is in
+fact the best solution unless we know that the platform doesn't do
+>32-bit pref anyway in which case we leave them alone.
 
+Ben.
 
--- 
-Thanks!
-Yijing
 
