@@ -1,109 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:53327 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967625AbaLLMTP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Dec 2014 07:19:15 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Ray Jui <rjui@broadcom.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Christian Daudt <bcm@fixthebug.org>,
-	Matt Porter <mporter@linaro.org>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Hauke Mehrtens <hauke@hauke-m.de>, devicetree@vger.kernel.org,
-	Scott Branden <sbranden@broadcom.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com,
-	Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: [PATCH v2 1/4] pci: iProc: define Broadcom iProc PCIe binding
-Date: Fri, 12 Dec 2014 13:14:58 +0100
-Message-ID: <3375037.6pjWmlOLA3@wuerfel>
-In-Reply-To: <1418351817-14898-2-git-send-email-rjui@broadcom.com>
-References: <1418351817-14898-2-git-send-email-rjui@broadcom.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:20673 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755489AbaLHQER (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Dec 2014 11:04:17 -0500
+Date: Mon, 8 Dec 2014 11:04:02 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: David Vrabel <david.vrabel@citrix.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org
+Subject: Re: [Xen-devel] [PATCH v5 9/9] xen/pciback: Implement PCI reset slot
+ or bus with 'do_flr' SysFS attribute
+Message-ID: <20141208160402.GF7745@laptop.dumpdata.com>
+References: <5480528F.8010106@citrix.com>
+ <1107877503.20141204141054@eikelenboom.it>
+ <548064EA.8090905@citrix.com>
+ <308719815.20141204150909@eikelenboom.it>
+ <5480702F.2060004@citrix.com>
+ <1578910783.20141204155025@eikelenboom.it>
+ <1417707546.15750.100.camel@bling.home>
+ <54818929.5000008@citrix.com>
+ <20141205172250.GA2895@laptop.dumpdata.com>
+ <54857F91.3020002@citrix.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54857F91.3020002@citrix.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 11 December 2014 18:36:54 Ray Jui wrote:
-> index 0000000..040bc0f
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-> @@ -0,0 +1,74 @@
-> +* Broadcom iProc PCIe controller
-> +
-> +Required properties:
-> +- compatible: Must be "brcm,iproc-pcie"
-> +- reg: base address and length of the PCIe controller and the MDIO interface
-> +  that controls the PCIe PHY
-> +- #interrupt-cells: set to <1>
-> +- interrupts: interrupt IDs
-
-How many, and what are they?
-
-> +- interrupt-map-mask and interrupt-map, standard PCI properties to define the
-> +  mapping of the PCIe interface to interrupt numbers
-> +- bus-range: PCI bus numbers covered
-> +- #address-cells: set to <3>
-> +- #size-cells: set to <2>
-> +- device_type: set to "pci"
-> +- ranges: ranges for the PCI memory and I/O regions
-> +- phy-addr: MDC/MDIO adddress of the PCIe PHY
-
-It looks like the phy controller is separate from the PCI controller,
-and you even list the same register range for both PHYs. Better make
-that a separate driver and put the phy address into the "phys" reference.
-
-> +- have-msi-inten-reg: Required for legacy iProc PCIe controllers that need the
-> +  MSI interrupt enable register to be set explicitly
-> +
-> +The Broadcom iProc PCie driver adapts the multi-domain structure, i.e., each
-> +interface has its own domain and therefore has its own device node
-> +Example:
-> +
-> +SoC specific DT Entry:
-> +
-> +       pcie0: pcie@18012000 {
-> +               compatible = "brcm,iproc-pcie";
-> +               reg = <0x18012000 0x1000>,
-> +                       <0x18002000 0x1000>;
-
-I guess the addresses should be relative to the BCMA bus, and this node
-get moved under that. Please see Hauke's patch series, we've discussed
-this in great length already.
-
-> +               #interrupt-cells = <1>;
-> +               interrupts = <GIC_SPI 96 IRQ_TYPE_NONE>,
-> +                            <GIC_SPI 97 IRQ_TYPE_NONE>,
-> +                            <GIC_SPI 98 IRQ_TYPE_NONE>,
-> +                            <GIC_SPI 99 IRQ_TYPE_NONE>,
-> +                            <GIC_SPI 100 IRQ_TYPE_NONE>,
-> +                            <GIC_SPI 101 IRQ_TYPE_NONE>;
-
-
-
-> +               interrupt-map-mask = <0 0 0 0>;
-> +               interrupt-map = <0 0 0 0 &gic GIC_SPI 100 IRQ_TYPE_NONE>;
-
-This interrupt is also listed in the "interrupts" above, which is
-probably a mistake, unless the IRQ line is shared between all PCI
-devices and the PCI host itself.
-
-> +               bus-range = <0x00 0xFF>;
-> +
-> +               #address-cells = >;
-> +               #size-cells = <2>;
-> +               device_type = "pci";
-> +               ranges = <0x81000000 0 0          0x28000000 0 0x00010000   /* downstream I/O */
-> +                         0x82000000 0 0x20000000 0x20000000 0 0x04000000>; /* non-prefetchable memory */
-> +               phy-addr = <5>;
-> +       };
+On Mon, Dec 08, 2014 at 10:38:09AM +0000, David Vrabel wrote:
+> On 05/12/14 17:22, Konrad Rzeszutek Wilk wrote:
+> > On Fri, Dec 05, 2014 at 10:30:01AM +0000, David Vrabel wrote:
+> >> On 04/12/14 15:39, Alex Williamson wrote:
+> >>>
+> >>> I don't know what workaround you're talking about.  As devices are
+> >>> released from the user, vfio-pci attempts to reset them.  If
+> >>> pci_reset_function() returns success we mark the device clean, otherwise
+> >>> it gets marked dirty.  Each time a device is released, if there are
+> >>> dirty devices we test whether we can try a bus/slot reset to clean them.
+> >>> In the case of assigning a GPU this typically means that the GPU or
+> >>> audio function come through first, there's no reset mechanism so it gets
+> >>> marked dirty, the next device comes through and we manage to try a bus
+> >>> reset.  vfio-pci does not have any device specific resets, all
+> >>> functionality is added to the PCI-core, thank-you-very-much.  I even
+> >>> posted a generic PCI quirk patch recently that marks AMD VGA PM reset as
+> >>> bad so that pci_reset_function() won't claim that worked.  All VGA
+> >>> access quirks are done in QEMU, the kernel doesn't have any business in
+> >>> remapping config space over MMIO regions or trapping other config space
+> >>> backdoors.
+> >>
+> >> Thanks for the info Alex, I hadn't got around to actually looking and
+> >> the vfio-pci code and was just going to what Sander said.
+> >>
+> >> We probably do need to have a more in depth look at now PCI devices and
+> >> handled by both the toolstack and pciback but in the short term I would
+> >> like a simple solution that does not extend the ABI.
+> > 
+> > Could you enumerate the 'simple solution' then please? I am having
+> > a frustrating time figuring out what it is that you are proposing.
 > 
+> I've posted it repeatedly.
 
-	Arnd
+Are you referring to http://lists.xenproject.org/archives/html/xen-devel/2014-07/msg01270.html
+which is still waiting for your feedback?
+
