@@ -1,55 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:39338 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754233AbaLBBBo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Dec 2014 20:01:44 -0500
-Received: by mail-pa0-f49.google.com with SMTP id eu11so12226248pac.36
-        for <linux-pci@vger.kernel.org>; Mon, 01 Dec 2014 17:01:44 -0800 (PST)
-From: Kevin Hilman <khilman@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 0/4] PM: Use CONFIG_PM instead of CONFIG_PM_RUNTIME in core code
-References: <37310416.jZXoh5nfSC@vostro.rjw.lan>
-Date: Mon, 01 Dec 2014 17:01:40 -0800
-In-Reply-To: <37310416.jZXoh5nfSC@vostro.rjw.lan> (Rafael J. Wysocki's message
-	of "Thu, 27 Nov 2014 01:37:13 +0100")
-Message-ID: <7hd28250gb.fsf@deeprootsystems.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from gate.crashing.org ([63.228.1.57]:41940 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751405AbaLHVie (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 8 Dec 2014 16:38:34 -0500
+Message-ID: <1418074683.13358.1.camel@kernel.crashing.org>
+Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
+ GPU init
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alexey Voronkov <zermond@gmail.com>,
+	David Airlie <airlied@linux.ie>,
+	Saifi Khan <saifi.khan@datasynergy.org>,
+	Alex Deucher <alexdeucher@gmail.com>,
+	Marek =?ISO-8859-1?Q?Kord=EDk?= <kordikmarek@gmail.com>,
+	Richard Yang <weiyang@linux.vnet.ibm.com>
+Date: Tue, 09 Dec 2014 08:38:03 +1100
+In-Reply-To: <CAErSpo69c6jXOp+nw2sTSU4vgqGufUQNUEGK4_2+6p-qpyE0vQ@mail.gmail.com>
+References: <CAErSpo6UvY10MNidAOFf4Fptv+wL-NsX6JMaU8OvSP6ywWEebQ@mail.gmail.com>
+	 <CAErSpo63uZeo1feoPjjXpdH43nsbcWh63kpBmxCnckPd0t9yrg@mail.gmail.com>
+	 <CAE9FiQWV-rKdvSeV-ivME-64QtzCX2Te5DfOVtzr0an=6eOCMA@mail.gmail.com>
+	 <20141204173411.GA5949@google.com>
+	 <CAE9FiQVyBmo+XwDgO97wwe+6TN4+q_cvnBLCuhTM8Fu_e_V5RQ@mail.gmail.com>
+	 <1417777177.4741.69.camel@kernel.crashing.org>
+	 <20141208004735.GA15508@shangw>
+	 <CAErSpo69c6jXOp+nw2sTSU4vgqGufUQNUEGK4_2+6p-qpyE0vQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-"Rafael J. Wysocki" <rjw@rjwysocki.net> writes:
+On Mon, 2014-12-08 at 14:04 -0700, Bjorn Helgaas wrote:
+> 
+> However, I think 5b28541552ef is taking the wrong approach.  Consider
+> a device that, like this Radeon, has a 32-bit prefetchable BAR.  If
+> the upstream bridge has a 32-bit prefetchable window, things work as
+> expected -- we put the prefetchable BAR in the prefetchable window.
+> But if the bridge has a 64-bit prefetchable window, we put that same
+> BAR in a 32-bit non-prefetchable window.
 
-> Hi,
->
-> After commit b2b49ccbdd54 "PM: Kconfig: Set PM_RUNTIME if PM_SLEEP is
-> selected" (currently in Linux next) CONFIG_PM_RUNTIME is set whenever
-> CONFIG_PM is set, so CONFIG_PM can be used in #ifdefs instead of
-> CONFIG_PM_RUNTIME which simplifies things in quite a few cases.
->
-> For this reason, the following patches modify some core code to use
-> CONFIG_PM instead of CONFIG_PM_RUNTIME.
->
-> [1/4] Drop a macro which is redundant after the above commit.
-> [2/4] Use PM instead of PM_RUNTIME in the core device PM code.
-> [3/4] Use PM instead of PM_RUNTIME in the ACPI core.
-> [4/4] Use PM instead of PM_RUNTIME in the PCI core.
->
-> They build for me for all of the relevant combinations of options (on x86),
-> but more testing (on the other architectures) would be welcome.
+Well, that's expected, unless the 64-bit prefetchable window happens to
+be fully enclosed in 32-bit space ... So maybe the approach is to check
+that this is the case and "downgrade" such 64-bit prefetchable BARs to
+32-bit ...
 
-Acked-by: Kevin Hilman <khilman@linaro.org>
+Cheers,
+Ben.
 
-I gave this a quick boot test on all the OMAP boards I have, and it's
-booting fine. As soon as this hits linux-next, it will be boot tested on
-a pile of different ARM platforms, and will let you know what happens.
 
-Kevin
+> So we upgraded the system with a better bridge, i.e., it supports a
+> full 64-bit window instead of just a 32-bit window, and the system
+> performs WORSE.  That's what I think is fundamentally broken.
+> 
+> > Looking at bug#85491 and the logs from Marek, BIOS didn't configure
+> windows
+> > and BARs for PCI bridge and adapters properly, which forces the
+> kernel to
+> > reassign those BARs/windows failing to be claimed previously. If I'm
+> correct,
+> > we need a way to reassign the bridge's non-prefetchable window and
+> with it,
+> > find_free_bus_resource() needn't check on "!r->parent".
+> 
+> It's true that the BIOS didn't configure things correctly.  But we
+> can't use that as an excuse; the kernel should be able to configure
+> things correctly itself because there are plenty of machines where the
+> BIOS never configures things.
+
+
