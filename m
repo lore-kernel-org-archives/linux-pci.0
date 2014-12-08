@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:46530 "EHLO
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:46567 "EHLO
 	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751405AbaLHUMc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Dec 2014 15:12:32 -0500
+	with ESMTP id S1754688AbaLHUMj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Dec 2014 15:12:39 -0500
 From: Marc Zyngier <marc.zyngier@arm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
@@ -12,65 +12,98 @@ Cc: <linux-arm-kernel@lists.infradead.org>,
 	Will Deacon <Will.Deacon@arm.com>,
 	Yijing Wang <wangyijing@huawei.com>,
 	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH 0/6] Introducing per-device MSI domain
-Date: Mon,  8 Dec 2014 20:12:17 +0000
-Message-Id: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com>
+Subject: [PATCH 5/6] irqchip: GICv2m: Get rid of struct msi_controller
+Date: Mon,  8 Dec 2014 20:12:22 +0000
+Message-Id: <1418069543-21969-6-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com>
+References: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-MSI-like interrupts are starting to creep out of the PCI world, and
-can now be seen into a number of "platform"-type busses. The MSI
-domain patches recognise that fact, and start providing a way to
-implement this.
+GICv2m only uses the msi_controller structure as a way to match
+the PHB with its MSI HW, and thus the msi_domain. But now that
+we can directly associate an msi_domain with a device, there is
+no use keeping this msi_controller around.
 
-Another problem we have to solve is to identify which MSI domain a
-device is "connected" to. Currently, PCI gets away with a mixture of
-arch-specific callbacks, and a msi_controller structure that can
-optionally carry a pointer to an MSI domain. As we add new bus types
-and start dealing with topologies that do not map to what PCI does,
-this doesn't scale anymore.
+Just remove all traces of msi_controller from the driver.
 
-This patch series tries to address some of it by providing a basic
-link between 'struct device' and an MSI domain. It also adds (yet
-another) way for PCI to propagate the domain pointer through the PCI
-device hierarchy, provides a method for OF to kickstart the
-propagation process, and finally allows the PCI/MSI layer to use that
-information. Hopefully this can serve as a model to implement support
-for different but types.
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/irqchip/irq-gic-v2m.c | 26 +++++++++-----------------
+ 1 file changed, 9 insertions(+), 17 deletions(-)
 
-Additionally, the last two patches use all the above to remove any
-trace of the msi_controller structure from the two GIC interrupt
-controllers we use on arm64, so that they solely rely on the above
-infrastructure.
-
-This has been tested on arm64 with GICv2m (AMD Seattle) and GICv3 ITS
-(FVP model).
-
-Patches are on top of 3.18-rc7 + tip/irq/irq-domain-arm, and available at:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git irq/msi_domain
-
-As always, comments most welcome.
-
-	M.
-
-Marc Zyngier (6):
-  device core: Introduce per-device MSI domain pointer
-  PCI/MSI: add hooks to populate the msi_domain field
-  PCI/MSI: of: add support for OF-provided msi_domain
-  PCI/MSI: Let pci_msi_get_domain use struct device's msi_domain
-  irqchip: GICv2m: Get rid of struct msi_controller
-  irqchip: gicv3-its: Get rid of struct msi_controller
-
- drivers/irqchip/irq-gic-v2m.c    | 26 +++++++++-----------------
- drivers/irqchip/irq-gic-v3-its.c | 29 ++++++++++++-----------------
- drivers/pci/msi.c                |  3 ++-
- drivers/pci/of.c                 | 15 +++++++++++++++
- drivers/pci/probe.c              | 25 +++++++++++++++++++++++++
- include/linux/device.h           | 20 ++++++++++++++++++++
- include/linux/pci.h              |  3 +++
- 7 files changed, 86 insertions(+), 35 deletions(-)
-
+diff --git a/drivers/irqchip/irq-gic-v2m.c b/drivers/irqchip/irq-gic-v2m.c
+index fdf7065..a76b802 100644
+--- a/drivers/irqchip/irq-gic-v2m.c
++++ b/drivers/irqchip/irq-gic-v2m.c
+@@ -45,7 +45,6 @@
+ 
+ struct v2m_data {
+ 	spinlock_t msi_cnt_lock;
+-	struct msi_controller mchip;
+ 	struct resource res;	/* GICv2m resource */
+ 	void __iomem *base;	/* GICv2m virt address */
+ 	u32 spi_start;		/* The SPI number that MSIs start */
+@@ -218,6 +217,7 @@ static int __init gicv2m_init_one(struct device_node *node,
+ {
+ 	int ret;
+ 	struct v2m_data *v2m;
++	struct irq_domain *inner_domain;
+ 
+ 	v2m = kzalloc(sizeof(struct v2m_data), GFP_KERNEL);
+ 	if (!v2m) {
+@@ -261,19 +261,17 @@ static int __init gicv2m_init_one(struct device_node *node,
+ 		goto err_iounmap;
+ 	}
+ 
+-	v2m->domain = irq_domain_add_tree(NULL, &gicv2m_domain_ops, v2m);
+-	if (!v2m->domain) {
++	inner_domain = irq_domain_add_tree(NULL, &gicv2m_domain_ops, v2m);
++	if (!inner_domain) {
+ 		pr_err("Failed to create GICv2m domain\n");
+ 		ret = -ENOMEM;
+ 		goto err_free_bm;
+ 	}
+ 
+-	v2m->domain->parent = parent;
+-	v2m->mchip.of_node = node;
+-	v2m->mchip.domain = pci_msi_create_irq_domain(node,
+-						      &gicv2m_msi_domain_info,
+-						      v2m->domain);
+-	if (!v2m->mchip.domain) {
++	inner_domain->parent = parent;
++	v2m->domain = pci_msi_create_irq_domain(node, &gicv2m_msi_domain_info,
++						inner_domain);
++	if (!v2m->domain) {
+ 		pr_err("Failed to create MSI domain\n");
+ 		ret = -ENOMEM;
+ 		goto err_free_domains;
+@@ -281,12 +279,6 @@ static int __init gicv2m_init_one(struct device_node *node,
+ 
+ 	spin_lock_init(&v2m->msi_cnt_lock);
+ 
+-	ret = of_pci_msi_chip_add(&v2m->mchip);
+-	if (ret) {
+-		pr_err("Failed to add msi_chip.\n");
+-		goto err_free_domains;
+-	}
+-
+ 	pr_info("Node %s: range[%#lx:%#lx], SPI[%d:%d]\n", node->name,
+ 		(unsigned long)v2m->res.start, (unsigned long)v2m->res.end,
+ 		v2m->spi_start, (v2m->spi_start + v2m->nr_spis));
+@@ -294,10 +286,10 @@ static int __init gicv2m_init_one(struct device_node *node,
+ 	return 0;
+ 
+ err_free_domains:
+-	if (v2m->mchip.domain)
+-		irq_domain_remove(v2m->mchip.domain);
+ 	if (v2m->domain)
+ 		irq_domain_remove(v2m->domain);
++	if (inner_domain)
++		irq_domain_remove(inner_domain);
+ err_free_bm:
+ 	kfree(v2m->bm);
+ err_iounmap:
 -- 
 2.1.3
 
