@@ -1,146 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:35829 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756608AbaLJOQB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Dec 2014 09:16:01 -0500
-Message-ID: <1418220955.7616.9.camel@pengutronix.de>
-Subject: Re: [PATCH 1/2] PCI: tegra: apply relaxed ordering fixup only on
- Tegra
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Alexandre Courbot <gnurou@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-Date: Wed, 10 Dec 2014 15:15:55 +0100
-In-Reply-To: <20141210141130.GG23558@ulmo.nvidia.com>
-References: <1415907457-3147-1-git-send-email-l.stach@pengutronix.de>
-	 <1415907457-3147-2-git-send-email-l.stach@pengutronix.de>
-	 <CAAVeFu+sYnhMEmDSPvinbP-BQQnqAu6rpEVgaLx25Y3UtGVUwQ@mail.gmail.com>
-	 <1418120897.2741.1.camel@pengutronix.de>
-	 <20141210121339.GA23558@ulmo.nvidia.com>
-	 <1418214220.7616.7.camel@pengutronix.de>
-	 <20141210141130.GG23558@ulmo.nvidia.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pd0-f180.google.com ([209.85.192.180]:56085 "EHLO
+	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751039AbaLHGPc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Dec 2014 01:15:32 -0500
+MIME-Version: 1.0
+Reply-To: rajatxjain@gmail.com
+In-Reply-To: <546E7120.5080505@gmail.com>
+References: <546E7120.5080505@gmail.com>
+Date: Sun, 7 Dec 2014 22:15:31 -0800
+Message-ID: <CAA93t1pXvbeDnbdEf2PeUe6nKBHp9qQ+6Sf57F08d_78SzSjtQ@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: pciehp: Check link state before accessing device
+ during removal
+From: Rajat Jain <rajatxjain@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Cc: Rajat Jain <rajatjain@juniper.net>,
+	Guenter Roeck <groeck@juniper.net>,
+	Rajat Jain <rajatxjain@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Mittwoch, den 10.12.2014, 15:11 +0100 schrieb Thierry Reding:
-> On Wed, Dec 10, 2014 at 01:23:40PM +0100, Lucas Stach wrote:
-> > Am Mittwoch, den 10.12.2014, 13:13 +0100 schrieb Thierry Reding:
-> > > On Tue, Dec 09, 2014 at 11:28:17AM +0100, Lucas Stach wrote:
-> > > > Am Dienstag, den 09.12.2014, 12:23 +0900 schrieb Alexandre Courbot:
-> > > > > Hi Lucas,
-> > > > > 
-> > > > > Apologies for taking so long to come back to this. The patch looks ok
-> > > > > to me, just a minor comment about the Tegra PCI detection:
-> > > > > 
-> > > > > On Fri, Nov 14, 2014 at 4:37 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> > > > > > The fixup to enable relaxed ordering on all PCI devices was
-> > > > > > executed unconditionally if the Tegra PCI host driver was
-> > > > > > built into the kernel. This doesn't play nice with a
-> > > > > > multiplatform kernel executed on other platforms which
-> > > > > > may not need this fixup.
-> > > > > >
-> > > > > > Make sure to only apply the fixup if the root port is
-> > > > > > a Tegra.
-> > > > > >
-> > > > > > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> > > > > > ---
-> > > > > >  drivers/pci/host/pci-tegra.c | 26 +++++++++++++++++++++++++-
-> > > > > >  1 file changed, 25 insertions(+), 1 deletion(-)
-> > > > > >
-> > > > > > diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> > > > > > index 3d43874319be..d5a14f22ebb8 100644
-> > > > > > --- a/drivers/pci/host/pci-tegra.c
-> > > > > > +++ b/drivers/pci/host/pci-tegra.c
-> > > > > > @@ -647,10 +647,34 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0bf1, tegra_pcie_fixup_class);
-> > > > > >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1c, tegra_pcie_fixup_class);
-> > > > > >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1d, tegra_pcie_fixup_class);
-> > > > > >
-> > > > > > +static int tegra_pcie_root_is_tegra(struct pci_dev *dev)
-> > > > > > +{
-> > > > > > +       struct pci_bus *bus = dev->bus;
-> > > > > > +       struct pci_dev *root_bridge;
-> > > > > > +
-> > > > > > +       /* walk up the PCIe hierarchy to the first level below the root bus */
-> > > > > > +       while (bus->parent && bus->parent->self)
-> > > > > > +               bus = bus->parent;
-> > > > > > +
-> > > > > > +       /*
-> > > > > > +        * If there is no bridge on the bus the passed device is the root
-> > > > > > +        * bridge itself.
-> > > > > > +        */
-> > > > > > +       root_bridge = bus->self ? bus->self : dev;
-> > > > > > +       if (root_bridge->vendor == PCI_VENDOR_ID_NVIDIA &&
-> > > > > > +           (root_bridge->device == 0x0bf0 || root_bridge->device == 0x0bf1 ||
-> > > > > > +            root_bridge->device == 0x0e1c || root_bridge->device == 0x0e1d ||
-> > > > > > +            root_bridge->device == 0x0e12 || root_bridge->device == 0x0e13))
-> > > > > > +               return 1;
-> > > > > 
-> > > > > I am not very familiar with PCI so sorry if these are stupid
-> > > > > questions, but where do these device IDs come from? Are they needed at
-> > > > > all, e.g. can't you just test against root_bridge->vendor ==
-> > > > > PCI_VENDOR_ID_NVIDIA to detect a NVIDIA root? Is the list susceptible
-> > > > > to increase as new chips get released? If that's the case, how can we
-> > > > > make sure we won't forget to update it?
-> > > > > 
-> > > > 
-> > > > The device IDs are assigned by NVIDIA HW for the different Tegra PCI
-> > > > generation/link width combinations. Note that the K1 TRM is wrong as it
-> > > > still lists the T30 device IDs, instead of the ones used on K1.
-> > > > 
-> > > > While we technically could test only against vendor==nvidia I don't
-> > > > think it is entirely safe. As this is a PCI fixup it will get executed
-> > > > on every device running a kernel including this PCI host bridge driver. 
-> > > > 
-> > > > So only testing for the vendor assumes that every ARM device with a PCI
-> > > > host bridge built by NVIDIA will be a Tegra. Do you think this is a
-> > > > reasonable assertion? I'm on the fence here.
-> > > >  
-> > > > > If you need to test against the device ID, it might be more legible
-> > > > > (and easier to update) if you use a switch case, e.g:
-> > > > > 
-> > > > >     if (root_bridge->vendor != PCI_VENDOR_ID_NVIDIA)
-> > > > >         return 0;
-> > > > >     switch (root_bridge->device) {
-> > > > >     case 0x0bf0:
-> > > > >     case 0x0bf1:
-> > > > >     case 0x0e1c:
-> > > > >     case 0x0e1d:
-> > > > >     case 0x0e12:
-> > > > >     case 0x0e12:
-> > > > >         return 1;
-> > > > >     default:
-> > > > >         return 0;
-> > > > >     }
-> > > > > 
-> > > > Right, this looks nicer and easier to extend. I'll have to think about
-> > > > if we need the device IDs at all and respin accordingly.
-> > > 
-> > > I think using the device ID is fine. If nothing else it'll at least
-> > > document the various device IDs. Perhaps you could extend this patch
-> > > with comments as to which device ID maps to which SoC. Or better yet
-> > > add them to include/linux/pci_ids.h with names matching the SoC.
-> > > 
-> > The IDs used by the Tegra root ports are not shared between multiple
-> > drivers, so no way for them to go into that file.
-> 
-> Since when has that been a requirement? Randomly grepping for a couple
-> of the IDs defined in that file they are either not used at all or in a
-> single driver.
-> 
-It's stated right in the header of that file and I've seen quite a few
-occasions where this rule has been enforced. If there are entries in
-there that are only used by a single driver that's either legacy entries
-or bad review.
+Hello Bjorn,
 
-Regards,
-Lucas
+Just checking if you got a chance to look at this.
 
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+Thanks,
 
+Rajat
+
+
+On Thu, Nov 20, 2014 at 2:54 PM, Rajat Jain <rajatxjain@gmail.com> wrote:
+> While removing a card, we can't assume the presence to mean that the
+> access to card is OK. That is because the cause of removal may be a
+> link down event, and the card may still be physically present. Thus,
+> instead of presence, use the link state to decide whether or not it is
+> OK to access the card devices.
+>
+> Here are the problem symptoms:
+> During the removal of a card due to link down, sometimes the following
+> error is seen (because pciehp_unconfigure_device() reads 0xFF from
+> bridge control register as the link is down, which cause it to assume
+> that the VGA bit is set):
+>
+> pciehp 0000:21:05.0:pcie24: pcie_isr: intr_loc 100
+> pciehp 0000:21:05.0:pcie24: Data Link Layer State change
+> pciehp 0000:21:05.0:pcie24: slot(5): Link Down event
+> pciehp 0000:21:05.0:pcie24: Disabling domain:bus:device=0000:60:00
+> pciehp 0000:21:05.0:pcie24: pciehp_unconfigure_device: domain:bus:dev = 0000:60:00
+> pciehp 0000:21:05.0:pcie24: Cannot remove display device 0000:60:00.0
+>
+> Ofcourse, when the link comes back up, the device addition fails too:
+>
+> pciehp 0000:21:05.0:pcie24: pcie_isr: intr_loc 100
+> pciehp 0000:21:05.0:pcie24: Data Link Layer State change
+> pciehp 0000:21:05.0:pcie24: pciehp_check_link_active: lnk_status = 6011
+> pciehp 0000:21:05.0:pcie24: slot(5): Link Up event
+> pciehp 0000:21:05.0:pcie24: Enabling domain:bus:device=0000:60:00
+> pciehp 0000:21:05.0:pcie24: pciehp_check_link_active: lnk_status = 6011
+> pciehp 0000:21:05.0:pcie24: pciehp_check_link_status: lnk_status = 6011
+> pciehp 0000:21:05.0:pcie24: Device 0000:60:00.0 already exists at 0000:60:00, cannot hot-add
+> pciehp 0000:21:05.0:pcie24: Cannot add device at 0000:60:00
+>
+> The problem is not seen with this patch applied. The device removal and
+> insertion works as expected.
+>
+> Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+> Signed-off-by: Guenter Roeck <groeck@juniper.net>
+> ---
+> v2: Use the already initialized "ctrl" instead of "p_slot->ctrl"
+>
+>  drivers/pci/hotplug/pciehp_pci.c |    8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+> index 9e69403..911f85b 100644
+> --- a/drivers/pci/hotplug/pciehp_pci.c
+> +++ b/drivers/pci/hotplug/pciehp_pci.c
+> @@ -77,7 +77,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+>  {
+>         int rc = 0;
+>         u8 bctl = 0;
+> -       u8 presence = 0;
+> +       bool link_active = false;
+>         struct pci_dev *dev, *temp;
+>         struct pci_bus *parent = p_slot->ctrl->pcie->port->subordinate;
+>         u16 command;
+> @@ -85,7 +85,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+>
+>         ctrl_dbg(ctrl, "%s: domain:bus:dev = %04x:%02x:00\n",
+>                  __func__, pci_domain_nr(parent), parent->number);
+> -       pciehp_get_adapter_status(p_slot, &presence);
+> +       link_active = pciehp_check_link_active(ctrl);
+>
+>         pci_lock_rescan_remove();
+>
+> @@ -98,7 +98,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+>         list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+>                                          bus_list) {
+>                 pci_dev_get(dev);
+> -               if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && presence) {
+> +               if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && link_active) {
+>                         pci_read_config_byte(dev, PCI_BRIDGE_CONTROL, &bctl);
+>                         if (bctl & PCI_BRIDGE_CTL_VGA) {
+>                                 ctrl_err(ctrl,
+> @@ -114,7 +114,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+>                  * Ensure that no new Requests will be generated from
+>                  * the device.
+>                  */
+> -               if (presence) {
+> +               if (link_active) {
+>                         pci_read_config_word(dev, PCI_COMMAND, &command);
+>                         command &= ~(PCI_COMMAND_MASTER | PCI_COMMAND_SERR);
+>                         command |= PCI_COMMAND_INTX_DISABLE;
+> --
+> 1.7.9.5
+>
