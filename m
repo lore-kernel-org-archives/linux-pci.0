@@ -1,121 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:54110 "EHLO mga02.intel.com"
+Received: from smtp.citrix.com ([66.165.176.89]:51437 "EHLO SMTP.CITRIX.COM"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932145AbaLIM6D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 9 Dec 2014 07:58:03 -0500
-Message-ID: <5486F1D7.9090401@linux.intel.com>
-Date: Tue, 09 Dec 2014 20:57:59 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+	id S1752982AbaLHKiM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 8 Dec 2014 05:38:12 -0500
+Message-ID: <54857F91.3020002@citrix.com>
+Date: Mon, 8 Dec 2014 10:38:09 +0000
+From: David Vrabel <david.vrabel@citrix.com>
 MIME-Version: 1.0
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>
-CC: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Will Deacon <Will.Deacon@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: Re: [PATCH 2/6] PCI/MSI: add hooks to populate the msi_domain field
-References: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com> <1418069543-21969-3-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1418069543-21969-3-git-send-email-marc.zyngier@arm.com>
-Content-Type: text/plain; charset=windows-1252
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	<linux-kernel@vger.kernel.org>, <xen-devel@lists.xenproject.org>
+Subject: Re: [Xen-devel] [PATCH v5 9/9] xen/pciback: Implement PCI reset slot
+ or bus with 'do_flr' SysFS attribute
+References: <201412041206.sB4C6XVQ009497@userz7022.oracle.com> <5480528F.8010106@citrix.com> <1107877503.20141204141054@eikelenboom.it> <548064EA.8090905@citrix.com> <308719815.20141204150909@eikelenboom.it> <5480702F.2060004@citrix.com> <1578910783.20141204155025@eikelenboom.it> <1417707546.15750.100.camel@bling.home> <54818929.5000008@citrix.com> <20141205172250.GA2895@laptop.dumpdata.com>
+In-Reply-To: <20141205172250.GA2895@laptop.dumpdata.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 05/12/14 17:22, Konrad Rzeszutek Wilk wrote:
+> On Fri, Dec 05, 2014 at 10:30:01AM +0000, David Vrabel wrote:
+>> On 04/12/14 15:39, Alex Williamson wrote:
+>>>
+>>> I don't know what workaround you're talking about.  As devices are
+>>> released from the user, vfio-pci attempts to reset them.  If
+>>> pci_reset_function() returns success we mark the device clean, otherwise
+>>> it gets marked dirty.  Each time a device is released, if there are
+>>> dirty devices we test whether we can try a bus/slot reset to clean them.
+>>> In the case of assigning a GPU this typically means that the GPU or
+>>> audio function come through first, there's no reset mechanism so it gets
+>>> marked dirty, the next device comes through and we manage to try a bus
+>>> reset.  vfio-pci does not have any device specific resets, all
+>>> functionality is added to the PCI-core, thank-you-very-much.  I even
+>>> posted a generic PCI quirk patch recently that marks AMD VGA PM reset as
+>>> bad so that pci_reset_function() won't claim that worked.  All VGA
+>>> access quirks are done in QEMU, the kernel doesn't have any business in
+>>> remapping config space over MMIO regions or trapping other config space
+>>> backdoors.
+>>
+>> Thanks for the info Alex, I hadn't got around to actually looking and
+>> the vfio-pci code and was just going to what Sander said.
+>>
+>> We probably do need to have a more in depth look at now PCI devices and
+>> handled by both the toolstack and pciback but in the short term I would
+>> like a simple solution that does not extend the ABI.
+> 
+> Could you enumerate the 'simple solution' then please? I am having
+> a frustrating time figuring out what it is that you are proposing.
 
+I've posted it repeatedly.
 
-On 2014/12/9 4:12, Marc Zyngier wrote:
-> In order to be able to populate the device msi_domain field,
-> add the necesary hooks to propagate the PHB msi_domain across
-> secondary busses to devices.
-> 
-> So far, nobody populates the initial msi_domain.
-> 
-> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
-> ---
->  drivers/pci/probe.c | 24 ++++++++++++++++++++++++
->  include/linux/pci.h |  1 +
->  2 files changed, 25 insertions(+)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index c8ca98c..d1009a2 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -670,6 +670,20 @@ static void pci_set_bus_speed(struct pci_bus *bus)
->  	}
->  }
->  
-> +void __weak pcibios_set_phb_msi_domain(struct pci_bus *bus)
-> +{
-> +}
-> +
-> +static void pci_set_bus_msi_domain(struct pci_bus *bus)
-> +{
-> +	struct pci_dev *bridge = bus->self;
-> +
-> +	if (!bridge)
-> +		pcibios_set_phb_msi_domain(bus);
-> +	else
-> +		dev_set_msi_domain(&bus->dev, dev_get_msi_domain(&bridge->dev));
-> +}
-> +
->  static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->  					   struct pci_dev *bridge, int busnr)
->  {
-> @@ -723,6 +737,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->  	bridge->subordinate = child;
->  
->  add_dev:
-> +	pci_set_bus_msi_domain(child);
->  	ret = device_register(&child->dev);
->  	WARN_ON(ret < 0);
->  
-> @@ -1517,6 +1532,11 @@ static void pci_init_capabilities(struct pci_dev *dev)
->  	pci_enable_acs(dev);
->  }
->  
-> +static void pci_set_msi_domain(struct pci_dev *dev)
-> +{
-> +	dev_set_msi_domain(&dev->dev, dev_get_msi_domain(&dev->bus->dev));
-> +}
-> +
-Hi Marc,
-	The default implementation of pci_set_msi_domain() conflicts
-with interrupt mapping based on x86 Intel VT-d:(
-	If pci_set_msi_domain() is weak, thing gets perfect.
-Regards!
-Gerry
-
->  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->  {
->  	int ret;
-> @@ -1546,6 +1566,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->  	/* Initialize various capabilities */
->  	pci_init_capabilities(dev);
->  
-> +	/* Setup MSI irq domain */
-> +	pci_set_msi_domain(dev);
-> +
->  	/*
->  	 * Add the device to our list of discovered devices
->  	 * and the bus list for fixup functions, etc.
-> @@ -1947,6 +1970,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->  	b->bridge = get_device(&bridge->dev);
->  	device_enable_async_suspend(b->bridge);
->  	pci_set_bus_of_node(b);
-> +	pci_set_bus_msi_domain(b);
->  
->  	if (!parent)
->  		set_dev_node(b->bridge, pcibus_to_node(b));
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index a523cee..3266764 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1637,6 +1637,7 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
->  int pcibios_add_device(struct pci_dev *dev);
->  void pcibios_release_device(struct pci_dev *dev);
->  void pcibios_penalize_isa_irq(int irq, int active);
-> +void pcibios_set_phb_msi_domain(struct pci_bus *bus);
->  
->  #ifdef CONFIG_HIBERNATE_CALLBACKS
->  extern struct dev_pm_ops pcibios_pm_ops;
-> 
+David
