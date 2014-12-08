@@ -1,120 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f180.google.com ([209.85.192.180]:56085 "EHLO
-	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751039AbaLHGPc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Dec 2014 01:15:32 -0500
+Received: from mail-qa0-f44.google.com ([209.85.216.44]:60325 "EHLO
+	mail-qa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751009AbaLHVqV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Dec 2014 16:46:21 -0500
+Received: by mail-qa0-f44.google.com with SMTP id i13so3937489qae.17
+        for <linux-pci@vger.kernel.org>; Mon, 08 Dec 2014 13:46:20 -0800 (PST)
 MIME-Version: 1.0
-Reply-To: rajatxjain@gmail.com
-In-Reply-To: <546E7120.5080505@gmail.com>
-References: <546E7120.5080505@gmail.com>
-Date: Sun, 7 Dec 2014 22:15:31 -0800
-Message-ID: <CAA93t1pXvbeDnbdEf2PeUe6nKBHp9qQ+6Sf57F08d_78SzSjtQ@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: pciehp: Check link state before accessing device
- during removal
-From: Rajat Jain <rajatxjain@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: Rajat Jain <rajatjain@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatxjain@gmail.com>
+In-Reply-To: <1418074683.13358.1.camel@kernel.crashing.org>
+References: <CAErSpo6UvY10MNidAOFf4Fptv+wL-NsX6JMaU8OvSP6ywWEebQ@mail.gmail.com>
+ <CAErSpo63uZeo1feoPjjXpdH43nsbcWh63kpBmxCnckPd0t9yrg@mail.gmail.com>
+ <CAE9FiQWV-rKdvSeV-ivME-64QtzCX2Te5DfOVtzr0an=6eOCMA@mail.gmail.com>
+ <20141204173411.GA5949@google.com> <CAE9FiQVyBmo+XwDgO97wwe+6TN4+q_cvnBLCuhTM8Fu_e_V5RQ@mail.gmail.com>
+ <1417777177.4741.69.camel@kernel.crashing.org> <20141208004735.GA15508@shangw>
+ <CAErSpo69c6jXOp+nw2sTSU4vgqGufUQNUEGK4_2+6p-qpyE0vQ@mail.gmail.com> <1418074683.13358.1.camel@kernel.crashing.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 8 Dec 2014 14:46:00 -0700
+Message-ID: <CAErSpo7pMAL5i2aPGV3u5F178bHeQTtjASckKs9NaUbEGaxv3Q@mail.gmail.com>
+Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
+ GPU init
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alexey Voronkov <zermond@gmail.com>,
+	David Airlie <airlied@linux.ie>,
+	Alex Deucher <alexdeucher@gmail.com>,
+	=?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>,
+	Richard Yang <weiyang@linux.vnet.ibm.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
+[-cc Saifi (bouncing)]
 
-Just checking if you got a chance to look at this.
+On Mon, Dec 8, 2014 at 2:38 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Mon, 2014-12-08 at 14:04 -0700, Bjorn Helgaas wrote:
+>>
+>> However, I think 5b28541552ef is taking the wrong approach.  Consider
+>> a device that, like this Radeon, has a 32-bit prefetchable BAR.  If
+>> the upstream bridge has a 32-bit prefetchable window, things work as
+>> expected -- we put the prefetchable BAR in the prefetchable window.
+>> But if the bridge has a 64-bit prefetchable window, we put that same
+>> BAR in a 32-bit non-prefetchable window.
+>
+> Well, that's expected, unless the 64-bit prefetchable window happens to
+> be fully enclosed in 32-bit space ... So maybe the approach is to check
+> that this is the case and "downgrade" such 64-bit prefetchable BARs to
+> 32-bit ...
 
-Thanks,
+Yeah, I didn't word that very clearly.  I meant that after
+5b28541552ef, that 64-bit window is wasted unless there's a 64-bit BAR
+below it; we can't even place the window below 4GB and use it for
+32-bit prefetchable BARs.
 
-Rajat
-
-
-On Thu, Nov 20, 2014 at 2:54 PM, Rajat Jain <rajatxjain@gmail.com> wrote:
-> While removing a card, we can't assume the presence to mean that the
-> access to card is OK. That is because the cause of removal may be a
-> link down event, and the card may still be physically present. Thus,
-> instead of presence, use the link state to decide whether or not it is
-> OK to access the card devices.
+>> So we upgraded the system with a better bridge, i.e., it supports a
+>> full 64-bit window instead of just a 32-bit window, and the system
+>> performs WORSE.  That's what I think is fundamentally broken.
+>>
+>> > Looking at bug#85491 and the logs from Marek, BIOS didn't configure
+>> windows
+>> > and BARs for PCI bridge and adapters properly, which forces the
+>> kernel to
+>> > reassign those BARs/windows failing to be claimed previously. If I'm
+>> correct,
+>> > we need a way to reassign the bridge's non-prefetchable window and
+>> with it,
+>> > find_free_bus_resource() needn't check on "!r->parent".
+>>
+>> It's true that the BIOS didn't configure things correctly.  But we
+>> can't use that as an excuse; the kernel should be able to configure
+>> things correctly itself because there are plenty of machines where the
+>> BIOS never configures things.
 >
-> Here are the problem symptoms:
-> During the removal of a card due to link down, sometimes the following
-> error is seen (because pciehp_unconfigure_device() reads 0xFF from
-> bridge control register as the link is down, which cause it to assume
-> that the VGA bit is set):
->
-> pciehp 0000:21:05.0:pcie24: pcie_isr: intr_loc 100
-> pciehp 0000:21:05.0:pcie24: Data Link Layer State change
-> pciehp 0000:21:05.0:pcie24: slot(5): Link Down event
-> pciehp 0000:21:05.0:pcie24: Disabling domain:bus:device=0000:60:00
-> pciehp 0000:21:05.0:pcie24: pciehp_unconfigure_device: domain:bus:dev = 0000:60:00
-> pciehp 0000:21:05.0:pcie24: Cannot remove display device 0000:60:00.0
->
-> Ofcourse, when the link comes back up, the device addition fails too:
->
-> pciehp 0000:21:05.0:pcie24: pcie_isr: intr_loc 100
-> pciehp 0000:21:05.0:pcie24: Data Link Layer State change
-> pciehp 0000:21:05.0:pcie24: pciehp_check_link_active: lnk_status = 6011
-> pciehp 0000:21:05.0:pcie24: slot(5): Link Up event
-> pciehp 0000:21:05.0:pcie24: Enabling domain:bus:device=0000:60:00
-> pciehp 0000:21:05.0:pcie24: pciehp_check_link_active: lnk_status = 6011
-> pciehp 0000:21:05.0:pcie24: pciehp_check_link_status: lnk_status = 6011
-> pciehp 0000:21:05.0:pcie24: Device 0000:60:00.0 already exists at 0000:60:00, cannot hot-add
-> pciehp 0000:21:05.0:pcie24: Cannot add device at 0000:60:00
->
-> The problem is not seen with this patch applied. The device removal and
-> insertion works as expected.
->
-> Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-> Signed-off-by: Guenter Roeck <groeck@juniper.net>
-> ---
-> v2: Use the already initialized "ctrl" instead of "p_slot->ctrl"
->
->  drivers/pci/hotplug/pciehp_pci.c |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-> index 9e69403..911f85b 100644
-> --- a/drivers/pci/hotplug/pciehp_pci.c
-> +++ b/drivers/pci/hotplug/pciehp_pci.c
-> @@ -77,7 +77,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
->  {
->         int rc = 0;
->         u8 bctl = 0;
-> -       u8 presence = 0;
-> +       bool link_active = false;
->         struct pci_dev *dev, *temp;
->         struct pci_bus *parent = p_slot->ctrl->pcie->port->subordinate;
->         u16 command;
-> @@ -85,7 +85,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
->
->         ctrl_dbg(ctrl, "%s: domain:bus:dev = %04x:%02x:00\n",
->                  __func__, pci_domain_nr(parent), parent->number);
-> -       pciehp_get_adapter_status(p_slot, &presence);
-> +       link_active = pciehp_check_link_active(ctrl);
->
->         pci_lock_rescan_remove();
->
-> @@ -98,7 +98,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
->         list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
->                                          bus_list) {
->                 pci_dev_get(dev);
-> -               if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && presence) {
-> +               if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && link_active) {
->                         pci_read_config_byte(dev, PCI_BRIDGE_CONTROL, &bctl);
->                         if (bctl & PCI_BRIDGE_CTL_VGA) {
->                                 ctrl_err(ctrl,
-> @@ -114,7 +114,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
->                  * Ensure that no new Requests will be generated from
->                  * the device.
->                  */
-> -               if (presence) {
-> +               if (link_active) {
->                         pci_read_config_word(dev, PCI_COMMAND, &command);
->                         command &= ~(PCI_COMMAND_MASTER | PCI_COMMAND_SERR);
->                         command |= PCI_COMMAND_INTX_DISABLE;
-> --
-> 1.7.9.5
 >
