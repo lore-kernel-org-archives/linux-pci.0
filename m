@@ -1,83 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:51526 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751608AbaLRWaH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Dec 2014 17:30:07 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, grant.likely@linaro.org,
-	robh+dt@kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, will.deacon@arm.com
-Subject: Re: [RFC v1 PATCH 1/2] of/pci: add of_pci_dma_configure() update dma configuration
-Date: Thu, 18 Dec 2014 23:29:25 +0100
-Message-ID: <21520995.3ITgVmVTeV@wuerfel>
-In-Reply-To: <1418940425-2017-2-git-send-email-m-karicheri2@ti.com>
-References: <1418940425-2017-1-git-send-email-m-karicheri2@ti.com> <1418940425-2017-2-git-send-email-m-karicheri2@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:34655 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755617AbaLIK2Y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 05:28:24 -0500
+Message-ID: <1418120897.2741.1.camel@pengutronix.de>
+Subject: Re: [PATCH 1/2] PCI: tegra: apply relaxed ordering fixup only on
+ Tegra
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Alexandre Courbot <gnurou@gmail.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Date: Tue, 09 Dec 2014 11:28:17 +0100
+In-Reply-To: <CAAVeFu+sYnhMEmDSPvinbP-BQQnqAu6rpEVgaLx25Y3UtGVUwQ@mail.gmail.com>
+References: <1415907457-3147-1-git-send-email-l.stach@pengutronix.de>
+	 <1415907457-3147-2-git-send-email-l.stach@pengutronix.de>
+	 <CAAVeFu+sYnhMEmDSPvinbP-BQQnqAu6rpEVgaLx25Y3UtGVUwQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 18 December 2014 17:07:04 Murali Karicheri wrote:
-> Add of_pci_dma_configure() to allow updating the dma configuration
-> of the pci device using the configuration from the parent of
-> the root bridge device.
+Am Dienstag, den 09.12.2014, 12:23 +0900 schrieb Alexandre Courbot:
+> Hi Lucas,
 > 
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+> Apologies for taking so long to come back to this. The patch looks ok
+> to me, just a minor comment about the Tegra PCI detection:
+> 
+> On Fri, Nov 14, 2014 at 4:37 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> > The fixup to enable relaxed ordering on all PCI devices was
+> > executed unconditionally if the Tegra PCI host driver was
+> > built into the kernel. This doesn't play nice with a
+> > multiplatform kernel executed on other platforms which
+> > may not need this fixup.
+> >
+> > Make sure to only apply the fixup if the root port is
+> > a Tegra.
+> >
+> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> > ---
+> >  drivers/pci/host/pci-tegra.c | 26 +++++++++++++++++++++++++-
+> >  1 file changed, 25 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> > index 3d43874319be..d5a14f22ebb8 100644
+> > --- a/drivers/pci/host/pci-tegra.c
+> > +++ b/drivers/pci/host/pci-tegra.c
+> > @@ -647,10 +647,34 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0bf1, tegra_pcie_fixup_class);
+> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1c, tegra_pcie_fixup_class);
+> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1d, tegra_pcie_fixup_class);
+> >
+> > +static int tegra_pcie_root_is_tegra(struct pci_dev *dev)
+> > +{
+> > +       struct pci_bus *bus = dev->bus;
+> > +       struct pci_dev *root_bridge;
+> > +
+> > +       /* walk up the PCIe hierarchy to the first level below the root bus */
+> > +       while (bus->parent && bus->parent->self)
+> > +               bus = bus->parent;
+> > +
+> > +       /*
+> > +        * If there is no bridge on the bus the passed device is the root
+> > +        * bridge itself.
+> > +        */
+> > +       root_bridge = bus->self ? bus->self : dev;
+> > +       if (root_bridge->vendor == PCI_VENDOR_ID_NVIDIA &&
+> > +           (root_bridge->device == 0x0bf0 || root_bridge->device == 0x0bf1 ||
+> > +            root_bridge->device == 0x0e1c || root_bridge->device == 0x0e1d ||
+> > +            root_bridge->device == 0x0e12 || root_bridge->device == 0x0e13))
+> > +               return 1;
+> 
+> I am not very familiar with PCI so sorry if these are stupid
+> questions, but where do these device IDs come from? Are they needed at
+> all, e.g. can't you just test against root_bridge->vendor ==
+> PCI_VENDOR_ID_NVIDIA to detect a NVIDIA root? Is the list susceptible
+> to increase as new chips get released? If that's the case, how can we
+> make sure we won't forget to update it?
+> 
 
-Much better!
+The device IDs are assigned by NVIDIA HW for the different Tegra PCI
+generation/link width combinations. Note that the K1 TRM is wrong as it
+still lists the T30 device IDs, instead of the ones used on K1.
 
-There is one detail that we should get right from the start here,
-which is currently wrong in the platform device code, but I have so
-far not dared change it:
+While we technically could test only against vendor==nvidia I don't
+think it is entirely safe. As this is a PCI fixup it will get executed
+on every device running a kernel including this PCI host bridge driver. 
 
-> +	/*
-> +	 * Set default dma-mask to 32 bit. Drivers are expected to setup
-> +	 * the correct supported dma_mask.
-> +	 */
-> +	dev->coherent_dma_mask = DMA_BIT_MASK(32);
+So only testing for the vendor assumes that every ARM device with a PCI
+host bridge built by NVIDIA will be a Tegra. Do you think this is a
+reasonable assertion? I'm on the fence here.
+ 
+> If you need to test against the device ID, it might be more legible
+> (and easier to update) if you use a switch case, e.g:
+> 
+>     if (root_bridge->vendor != PCI_VENDOR_ID_NVIDIA)
+>         return 0;
+>     switch (root_bridge->device) {
+>     case 0x0bf0:
+>     case 0x0bf1:
+>     case 0x0e1c:
+>     case 0x0e1d:
+>     case 0x0e12:
+>     case 0x0e12:
+>         return 1;
+>     default:
+>         return 0;
+>     }
+> 
+Right, this looks nicer and easier to extend. I'll have to think about
+if we need the device IDs at all and respin accordingly.
 
-The 32-bit mask is indeed correct as the default for almost all cases,
-and we must not set it larger than DMA_BIT_MASK(32). There is one
-corner case though, which happens on some shmobile machines that have
-a 31-bit mask on the PCI host, and I think we should use that as the
-default.
+> Otherwise I have not noticed any problem using this patch.
+> 
+> Tested-by: Alexandre Courbot <acourbot@nvidia.com>
 
-> +	/*
-> +	 * Set it to coherent_dma_mask by default if the architecture
-> +	 * code has not set it.
-> +	 */
-> +	if (!dev->dma_mask)
-> +		dev->dma_mask = &dev->coherent_dma_mask;
-> +
-> +	ret = of_dma_get_range(parent_np, &dma_addr, &paddr, &size);
-> +	if (ret < 0) {
-> +		dma_addr = offset = 0;
-> +		size = dev->coherent_dma_mask;
+Thanks,
+Lucas
 
-Can you check one thing here? I believe the size argument as returned
-from of_dma_get_range is inclusive (e.g. 0x100000000), while the coherent
-mask by definition is exlusive (e.g. 0xffffffff), so the size needs to
-be adapted here. I haven't checked all the code here though, so I may
-be wrong.
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
-> +	} else {
-> +		offset = PFN_DOWN(paddr - dma_addr);
-> +		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", dev->dma_pfn_offset);
-> +	}
-> +	dev->dma_pfn_offset = offset;
-> +
-> +	coherent = of_dma_is_coherent(parent_np);
-> +	dev_dbg(dev, "device is%sdma coherent\n",
-> +		coherent ? " " : " not ");
-> +
-> +	arch_setup_dma_ops(dev, dma_addr, size, NULL, coherent);
-
-Basically, I would use limit the size argument we pass into
-arch_setup_dma_ops to the minimum of 'size' and 'dma_mask' here,
-after converting into the same format. We should make sure we do the
-same thing for platform_device as well, so it might be better to do
-it inside of arch_setup_dma_ops instead.
-
-	Arnd
