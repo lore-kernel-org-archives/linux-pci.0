@@ -1,72 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:41940 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751405AbaLHVie (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 8 Dec 2014 16:38:34 -0500
-Message-ID: <1418074683.13358.1.camel@kernel.crashing.org>
-Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
- GPU init
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
+Received: from mail-qc0-f173.google.com ([209.85.216.173]:54228 "EHLO
+	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751537AbaLIVxm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 16:53:42 -0500
+Received: by mail-qc0-f173.google.com with SMTP id i17so1211942qcy.32
+        for <linux-pci@vger.kernel.org>; Tue, 09 Dec 2014 13:53:41 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1418160871-5605-1-git-send-email-yinghai@kernel.org>
+References: <1418160871-5605-1-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 9 Dec 2014 14:53:20 -0700
+Message-ID: <CAErSpo5tZU=zBKNDt2UtUE_AMG3zzrdq2CX2A4ZL7tdLELXgqA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Clear all bridge res MEM_64 if host bridge has non mem64
+To: Yinghai Lu <yinghai@kernel.org>
 Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	=?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>,
 	Alexey Voronkov <zermond@gmail.com>,
-	David Airlie <airlied@linux.ie>,
-	Saifi Khan <saifi.khan@datasynergy.org>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Marek =?ISO-8859-1?Q?Kord=EDk?= <kordikmarek@gmail.com>,
-	Richard Yang <weiyang@linux.vnet.ibm.com>
-Date: Tue, 09 Dec 2014 08:38:03 +1100
-In-Reply-To: <CAErSpo69c6jXOp+nw2sTSU4vgqGufUQNUEGK4_2+6p-qpyE0vQ@mail.gmail.com>
-References: <CAErSpo6UvY10MNidAOFf4Fptv+wL-NsX6JMaU8OvSP6ywWEebQ@mail.gmail.com>
-	 <CAErSpo63uZeo1feoPjjXpdH43nsbcWh63kpBmxCnckPd0t9yrg@mail.gmail.com>
-	 <CAE9FiQWV-rKdvSeV-ivME-64QtzCX2Te5DfOVtzr0an=6eOCMA@mail.gmail.com>
-	 <20141204173411.GA5949@google.com>
-	 <CAE9FiQVyBmo+XwDgO97wwe+6TN4+q_cvnBLCuhTM8Fu_e_V5RQ@mail.gmail.com>
-	 <1417777177.4741.69.camel@kernel.crashing.org>
-	 <20141208004735.GA15508@shangw>
-	 <CAErSpo69c6jXOp+nw2sTSU4vgqGufUQNUEGK4_2+6p-qpyE0vQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2014-12-08 at 14:04 -0700, Bjorn Helgaas wrote:
-> 
-> However, I think 5b28541552ef is taking the wrong approach.  Consider
-> a device that, like this Radeon, has a 32-bit prefetchable BAR.  If
-> the upstream bridge has a 32-bit prefetchable window, things work as
-> expected -- we put the prefetchable BAR in the prefetchable window.
-> But if the bridge has a 64-bit prefetchable window, we put that same
-> BAR in a 32-bit non-prefetchable window.
+On Tue, Dec 9, 2014 at 2:34 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> So we could use bridge 64bit mem pref for children mem pref instead of
+> forcing them into bridge mem.
+>
+> Could help Marek's system as his system is using _CRS, and all mem res is under
+> 4G.
+>
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491
+> Reported-by: Marek Kordik <kordikmarek@gmail.com>
+> Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources")
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>
+> ---
+>  drivers/pci/host-bridge.c |    7 +++++++
+>  drivers/pci/pci.h         |    1 +
+>  drivers/pci/probe.c       |    9 +++++++++
+>  drivers/pci/setup-bus.c   |    3 +++
+>  include/linux/pci.h       |    1 +
+>  5 files changed, 21 insertions(+)
+>
+> Index: linux-2.6/drivers/pci/host-bridge.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/host-bridge.c
+> +++ linux-2.6/drivers/pci/host-bridge.c
+> @@ -31,6 +31,13 @@ void pci_set_host_bridge_release(struct
+>         bridge->release_data = release_data;
+>  }
+>
+> +bool pcibios_host_bridge_has_mem64_res(struct pci_bus *bus)
+> +{
+> +       struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+> +
+> +       return bridge->has_mem64_res;
+> +}
+> +
+>  void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
+>                              struct resource *res)
+>  {
+> Index: linux-2.6/drivers/pci/pci.h
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/pci.h
+> +++ linux-2.6/drivers/pci/pci.h
+> @@ -196,6 +196,7 @@ enum pci_bar_type {
+>         pci_bar_mem64,          /* A 64-bit memory BAR */
+>  };
+>
+> +bool pcibios_host_bridge_has_mem64_res(struct pci_bus *bus);
+>  bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+>                                 int crs_timeout);
+>  int pci_setup_device(struct pci_dev *dev);
+> Index: linux-2.6/drivers/pci/probe.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/probe.c
+> +++ linux-2.6/drivers/pci/probe.c
+> @@ -1980,6 +1980,15 @@ struct pci_bus *pci_create_root_bus(stru
+>                 dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
+>         }
+>
+> +       list_for_each_entry(window, &bridge->windows, list) {
+> +               res = window->res;
+> +               if (resource_type(res) == IORESOURCE_MEM ||
+> +                   res->end > 0xffffffff) {
+> +                       bridge->has_mem64_res = true;
 
-Well, that's expected, unless the 64-bit prefetchable window happens to
-be fully enclosed in 32-bit space ... So maybe the approach is to check
-that this is the case and "downgrade" such 64-bit prefetchable BARs to
-32-bit ...
+This is an interesting idea, but I think you're checking CPU addresses
+here, and you need to check PCI bus addresses.
 
-Cheers,
-Ben.
-
-
-> So we upgraded the system with a better bridge, i.e., it supports a
-> full 64-bit window instead of just a 32-bit window, and the system
-> performs WORSE.  That's what I think is fundamentally broken.
-> 
-> > Looking at bug#85491 and the logs from Marek, BIOS didn't configure
-> windows
-> > and BARs for PCI bridge and adapters properly, which forces the
-> kernel to
-> > reassign those BARs/windows failing to be claimed previously. If I'm
-> correct,
-> > we need a way to reassign the bridge's non-prefetchable window and
-> with it,
-> > find_free_bus_resource() needn't check on "!r->parent".
-> 
-> It's true that the BIOS didn't configure things correctly.  But we
-> can't use that as an excuse; the kernel should be able to configure
-> things correctly itself because there are plenty of machines where the
-> BIOS never configures things.
-
-
+Bjorn
