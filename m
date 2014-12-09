@@ -1,57 +1,174 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:45326 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932288AbaLDQhp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Dec 2014 11:37:45 -0500
-Received: by mail-pa0-f51.google.com with SMTP id ey11so18427259pad.10
-        for <linux-pci@vger.kernel.org>; Thu, 04 Dec 2014 08:37:45 -0800 (PST)
-Date: Thu, 4 Dec 2014 09:37:41 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alexey Voronkov <zermond@gmail.com>,
-	David Airlie <airlied@linux.ie>,
-	Saifi Khan <saifi.khan@datasynergy.org>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Marek =?iso-8859-1?Q?Kord=EDk?= <kordikmarek@gmail.com>
-Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
- GPU init
-Message-ID: <20141204163741.GD3168@google.com>
-References: <CAErSpo6UvY10MNidAOFf4Fptv+wL-NsX6JMaU8OvSP6ywWEebQ@mail.gmail.com>
- <CAE9FiQXqqg-KYi3aEVvCm=hfjN3mx_7J8uQ61hVJFVLNe+U=Zg@mail.gmail.com>
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:47055 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757211AbaLIO7x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 09:59:53 -0500
+Message-ID: <54870E56.7000909@arm.com>
+Date: Tue, 09 Dec 2014 14:59:34 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQXqqg-KYi3aEVvCm=hfjN3mx_7J8uQ61hVJFVLNe+U=Zg@mail.gmail.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
+Subject: Re: [PATCH 2/6] PCI/MSI: add hooks to populate the msi_domain field
+References: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com> <1418069543-21969-3-git-send-email-marc.zyngier@arm.com> <5486585B.40000@huawei.com> <5486C8BA.8030608@arm.com> <5486E3BF.70703@huawei.com> <5486E747.4010804@arm.com> <5486EF4E.5020704@linux.intel.com> <5487012B.4040505@arm.com> <54870302.5050703@linux.intel.com> <548706E9.8080701@arm.com> <548708CC.5000405@linux.intel.com>
+In-Reply-To: <548708CC.5000405@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 03, 2014 at 06:01:33PM -0800, Yinghai Lu wrote:
-> On Wed, Dec 3, 2014 at 2:15 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > In v3.16 (which does contain 5b28541552ef), when pbus_size_mem() sizes
-> > the 64-bit prefetchable window, it only looks for downstream 64-bit
-> > resources.  Since the radeon at 01:00.0 has none, we size the window
-> > to 0 + 0x200000 (the 0x200000 part is pci_hotplug_mem_size, to
-> > accommodate future hot-added devices).
-> >
-> > But that's not big enough to hold the radeon BAR 0 [mem
-> > 0xc0000000-0xcfffffff pref], so BAR 0 remains unassigned, so
-> > pci_enable_device() should fail, and radeon doesn't work.
-> >
-> > I don't know what the best fix is, but I think it's probably too
-> > aggressive to *never* use a 64-bit prefetchable window for downstream
-> > 32-bit prefetchable resources.  This configuration from BIOS should
-> > just work without us changing anything (although we probably should
-> > trim the window to start at 0xc0000000, which would still work).
+On 09/12/14 14:35, Jiang Liu wrote:
+> On 2014/12/9 22:27, Marc Zyngier wrote:
+>> On 09/12/14 14:11, Jiang Liu wrote:
+>>> On 2014/12/9 22:03, Marc Zyngier wrote:
+>>>> Hi Gerry,
+>>>>
+>>>> On 09/12/14 12:47, Jiang Liu wrote:
+>>>>> On 2014/12/9 20:12, Marc Zyngier wrote:
+>>>>>> Yijing,
+>>>>>>
+>>>>>> On 09/12/14 11:57, Yijing Wang wrote:
+>>>>>>>>>> +void __weak pcibios_set_phb_msi_domain(struct pci_bus *bus)
+>>>>>>>>>> +{
+>>>>>>>>>> +}
+>>>>>>>>>> +
+>>>>>>>>>> +static void pci_set_bus_msi_domain(struct pci_bus *bus)
+>>>>>>>>>> +{
+>>>>>>>>>> +	struct pci_dev *bridge = bus->self;
+>>>>>>>>>> +
+>>>>>>>>>> +	if (!bridge)
+>>>>>>>>>> +		pcibios_set_phb_msi_domain(bus);
+>>>>>>>>>> +	else
+>>>>>>>>>> +		dev_set_msi_domain(&bus->dev, dev_get_msi_domain(&bridge->dev));
+>>>>>>>>>> +}
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>> Hi Marc, we can not assume pci devices under same phb share the same msi irq domain,
+>>>>>>>>> now in x86, pci devices under the same phb may associate different msi irq domain.
+>>>>>>>
+>>>>>>> Hi Marc,
+>>>>>>>
+>>>>>>>>
+>>>>>>>> Well, this is not supposed to be a perfect solution yet, but instead a
+>>>>>>>> basis for discussion. What I'd like to find out is:
+>>>>>>>>
+>>>>>>>> - What is the minimum granularity for associating a device with its MSI
+>>>>>>>> domain in existing platforms?
+>>>>>>>
+>>>>>>> PCI device, after Gerry's msi irq domain patchset which now in linux-next,
+>>>>>>> in x86, we will find msi irq domain by pci_dev.
+>>>>>>
+>>>>>> Are you *really* associating the MSI domain on a per pci-device basis?
+>>>>>> That is, you have devices on the same PCI bus talking to different MSI hw?
+>>>>> Hi Marc,
+>>>>> 	This is a little wild:(
+>>>>> 	On x86 platform with Intel VT-d(not the case for AMD-v),
+>>>>> interrupt remapping is tight to DMA remapping (IOMMU) unit.
+>>>>> For most common cases, IOMMU unit manages PCI bus and its sub-hierarchy.
+>>>>> But it may also manage a specific PCI device. This is typically used to
+>>>>> provide QoS for audio device by using dedicated IOMMU unit to avoid
+>>>>> resource contention on DMA remapping tables. BIOS uses ACPI table to
+>>>>> report PCI bus/device to IOMMU unit mapping relationship. (To be honest,
+>>>>> I have no really experience with such a hardware platform yet, just for
+>>>>> theoretical analysis)
+>>>>> 	On the other hand, we now support hierarchy irqdomain. So to
+>>>>> support per-PCI IOMMU unit case, we need maintain irqdomain at PCI
+>>>>> device level.
+>>>>> 	This piece of code from your [4/6] is flexible enough, which
+>>>>> retrieves msi_domain from PCI device, then fallback to PCI bus,
+>>>>> then fallback to platform specific method.
+>>>>> 	domain = dev_get_msi_domain(&dev->dev);
+>>>>> 	if (!domain && dev->bus->msi)
+>>>>>  		domain = dev->bus->msi->domain;
+>>>>>  	if (!domain)
+>>>>>  		domain = arch_get_pci_msi_domain(dev);
+>>>>
+>>>> OK. But what I'd really like to see is a way to setup the
+>>>> device<->domain binding as early as possible, without having to use more
+>>>> conditional code in pci_msi_get_domain.
+>>>>
+>>>> IOW, can we do something similar to what pci_set_bus_msi_domain and
+>>>> pci_set_msi_domain do in this patch?
+>>> Hi Marc,
+>>> 	I have checked x86 code, we could set pci_dev->msi_domain
+>>> when creating PCI devices, just need to find some hook points
+>>> into PCI core next step. If arch code doesn't set pci_dev->msi_domain,
+>>> PCI MSI core may provide a default way to set pci_dev->msi_domain.
+>>> This may make the implementation simpler, I guess:)
+>>
+>> Right. So following your earlier suggestion, I could make
+>> pci_set_msi_domain a weak symbol and let arch code override this.
+>>
+>> My preference would have been to have arch code to create a set of
+>> arch-independent data structures describing the topology, and use that
+>> for everything, but maybe that's a bit ambitious for a start.
+>>
+>> I'll rework the series to make the symbols weak.
+> Hi Marc,
+> 	I think we may not need the weak symbol at all. With following
+> draft patch, the PCI MSI core may simply do:
+> 	if (pci_dev->dev.msi_domain == NULL)
+> 		dev_set_msi_domain(&dev->dev,
+> 			 dev_get_msi_domain(&dev->bus->dev));
+> -----------------------------------------------------------------------
+> Note: the patch won't pass compilation, just to show the key idea:)
 > 
-> pci=realloc should workaround the problem, as it would take control of
-> the bridge mmio BAR, and allocate more range for mmio pref under it.
+> diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+> index da163da5fdee..8147d25d4349 100644
+> --- a/arch/x86/kernel/apic/msi.c
+> +++ b/arch/x86/kernel/apic/msi.c
+> @@ -67,6 +67,23 @@ static struct irq_chip pci_msi_controller = {
+>         .flags                  = IRQCHIP_SKIP_SET_WAKE,
+>  };
+> 
+> +struct irq_domain *x86_get_pci_msi_domain(struct pci_dev *dev)
+> +{
+> +       struct irq_domain *domain;
+> +       struct irq_alloc_info info;
+> +
+> +       init_irq_alloc_info(&info, NULL);
+> +       info.type = X86_IRQ_ALLOC_TYPE_MSI;
+> +       info.msi_dev = dev;
+> +       domain = irq_remapping_get_irq_domain(&info);
+> +       if (domain == NULL)
+> +               domain = msi_default_domain;
+> +       if (domain == NULL)
+> +               domain = ERR_PTR(-ENOSYS);
+> +
+> +       return domain;
+> +}
+> +
+>  int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+>  {
+>         struct irq_domain *domain;
+> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+> index 7b20bccf3648..a26f30a8bb8f 100644
+> --- a/arch/x86/pci/common.c
+> +++ b/arch/x86/pci/common.c
+> @@ -652,6 +652,9 @@ int pcibios_add_device(struct pci_dev *dev)
+>                 pa_data = data->next;
+>                 iounmap(data);
+>         }
+> +
+> +       dev->dev.msi_domain = x86_get_pci_msi_domain(dev);
+> +
+>         return 0;
+>  }
 
-I don't think pci=realloc is the answer because
+Right. So you set the msi_domain using the pcibios_add_device callback.
+That will require some minimal surgery (the call to pci_set_msi_domain
+happens before the pcibios call, so it needs to be relocated after), but
+that seems like a sensible solution to me.
 
-  1) It's a poor user experience.  We should be able to handle this
-     automatically, without asking the user to do anything.
+Thanks!
 
-  2) It puts the radeon framebuffer in the non-prefetchable window, and we
-     should be able to keep it in the prefetchable window.
-
-Bjorn
+	M.
+-- 
+Jazz is not dead. It just smells funny...
