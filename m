@@ -1,122 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:46574 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754954AbaLHUMp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Dec 2014 15:12:45 -0500
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH 6/6] irqchip: gicv3-its: Get rid of struct msi_controller
-Date: Mon,  8 Dec 2014 20:12:23 +0000
-Message-Id: <1418069543-21969-7-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com>
-References: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com>
+Received: from e28smtp01.in.ibm.com ([122.248.162.1]:58239 "EHLO
+	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750998AbaLIAL0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Dec 2014 19:11:26 -0500
+Received: from /spool/local
+	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 9 Dec 2014 05:41:23 +0530
+Date: Tue, 9 Dec 2014 11:11:19 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Yinghai Lu <yinghai@kernel.org>, weiyang@linux.vnet.ibm.com
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Marek =?iso-8859-1?Q?Kord=EDk?= <kordikmarek@gmail.com>,
+	Alexey Voronkov <zermond@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	weiyang@linux.vnet.ibm.com
+Subject: Re: [PATCH] PCI: Clear bridge MEM_64 flag if one child does not
+ support it
+Message-ID: <20141209001119.GA24661@shangw>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1418075552-26495-1-git-send-email-yinghai@kernel.org>
+ <1418079372.13358.9.camel@kernel.crashing.org>
+ <CAE9FiQX-vMu5+Kr09ngr95WvtoZTUSL5R2+NiVFeiN6q-BXLLg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQX-vMu5+Kr09ngr95WvtoZTUSL5R2+NiVFeiN6q-BXLLg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The GICv3 ITS only uses the msi_controller structure as a way
-to match the PHB with its MSI HW, and thus the msi_domain.
-But now that we can directly associate an msi_domain with a device,
-there is no use keeping this msi_controller around.
+On Mon, Dec 08, 2014 at 03:59:54PM -0800, Yinghai Lu wrote:
+>On Mon, Dec 8, 2014 at 2:56 PM, Benjamin Herrenschmidt
+><benh@kernel.crashing.org> wrote:
+>> On Mon, 2014-12-08 at 13:52 -0800, Yinghai Lu wrote:
+>>> 2. or scan the children resource other than ROM to clear bridge MEM_64
+>>>    for mmio pref.
+>>>
+>>> The patch is using second way so will keep child mmio pref into bridge
+>>> mmio pref range.
+>>
+>> That means that having a single ROM BAR that is 32-bit and prefetchable
+>> will downgrade the entire window to 32-bit ? That's not going to work
+>> either.
+>
+>the ROM BAR get skipped during the checking.
+>
+>+                       if (i != PCI_ROM_RESOURCE)
+>+                               mem64_mask &= r->flags & IORESOURCE_MEM_64;
+>+               }
+>
+>>
+>> I have GPUs with 16G BARs for example... suddenly they don't fit
+>> anaymore because we downgraded the window to 32 bit because somewhere
+>> there's a 32-bit pref resource ?
+>>
+>> That will break more than it fixes...
+>
+>Please check if this patch break your platform. I tried on my setup on
+>x86. and it is still
+>working on 64 bit resource allocation.
+>
 
-Just remove all traces of msi_controller from the driver.
+I'm going to give it a spin and Richard, could you please apply Yinghai's
+patch to see if your SRIOV code can work properly?
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/irqchip/irq-gic-v3-its.c | 29 ++++++++++++-----------------
- 1 file changed, 12 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-index e9d1615..5523241 100644
---- a/drivers/irqchip/irq-gic-v3-its.c
-+++ b/drivers/irqchip/irq-gic-v3-its.c
-@@ -60,7 +60,6 @@ struct its_collection {
- struct its_node {
- 	raw_spinlock_t		lock;
- 	struct list_head	entry;
--	struct msi_controller	msi_chip;
- 	struct irq_domain	*domain;
- 	void __iomem		*base;
- 	unsigned long		phys_base;
-@@ -875,7 +874,7 @@ retry_baser:
- 
- 		if (val != tmp) {
- 			pr_err("ITS: %s: GITS_BASER%d doesn't stick: %lx %lx\n",
--			       its->msi_chip.of_node->full_name, i,
-+			       its->domain->of_node->full_name, i,
- 			       (unsigned long) val, (unsigned long) tmp);
- 			err = -ENXIO;
- 			goto out_free;
-@@ -1237,6 +1236,7 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
- 	struct resource res;
- 	struct its_node *its;
- 	void __iomem *its_base;
-+	struct irq_domain *inner_domain = NULL;
- 	u32 val;
- 	u64 baser, tmp;
- 	int err;
-@@ -1273,7 +1273,6 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
- 	INIT_LIST_HEAD(&its->its_device_list);
- 	its->base = its_base;
- 	its->phys_base = res.start;
--	its->msi_chip.of_node = node;
- 	its->ite_size = ((readl_relaxed(its_base + GITS_TYPER) >> 4) & 0xf) + 1;
- 
- 	its->cmd_base = kzalloc(ITS_CMD_QUEUE_SZ, GFP_KERNEL);
-@@ -1307,26 +1306,22 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
- 		its->flags |= ITS_FLAGS_CMDQ_NEEDS_FLUSHING;
- 	}
- 
--	if (of_property_read_bool(its->msi_chip.of_node, "msi-controller")) {
--		its->domain = irq_domain_add_tree(NULL, &its_domain_ops, its);
--		if (!its->domain) {
-+	if (of_property_read_bool(node, "msi-controller")) {
-+		inner_domain = irq_domain_add_tree(NULL, &its_domain_ops, its);
-+		if (!inner_domain) {
- 			err = -ENOMEM;
- 			goto out_free_tables;
- 		}
- 
--		its->domain->parent = parent;
-+		inner_domain->parent = parent;
- 
--		its->msi_chip.domain = pci_msi_create_irq_domain(node,
--								 &its_pci_msi_domain_info,
--								 its->domain);
--		if (!its->msi_chip.domain) {
-+		its->domain = pci_msi_create_irq_domain(node,
-+							&its_pci_msi_domain_info,
-+							inner_domain);
-+		if (!its->domain) {
- 			err = -ENOMEM;
- 			goto out_free_domains;
- 		}
--
--		err = of_pci_msi_chip_add(&its->msi_chip);
--		if (err)
--			goto out_free_domains;
- 	}
- 
- 	spin_lock(&its_lock);
-@@ -1336,10 +1331,10 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
- 	return 0;
- 
- out_free_domains:
--	if (its->msi_chip.domain)
--		irq_domain_remove(its->msi_chip.domain);
- 	if (its->domain)
- 		irq_domain_remove(its->domain);
-+	if (inner_domain)
-+		irq_domain_remove(inner_domain);
- out_free_tables:
- 	its_free_tables(its);
- out_free_cmd:
--- 
-2.1.3
+Thanks,
+Gavin
 
