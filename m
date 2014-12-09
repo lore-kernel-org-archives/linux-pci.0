@@ -1,151 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0129.outbound.protection.outlook.com ([65.55.169.129]:25185
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758801AbaLKVR1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Dec 2014 16:17:27 -0500
-Date: Thu, 11 Dec 2014 12:45:15 -0800
-From: Guenter Roeck <groeck@juniper.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Rajat Jain <rajatxjain@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rajat Jain <rajatjain@juniper.net>
-Subject: Re: [PATCH v2] PCI: pciehp: Check link state before accessing device
- during removal
-Message-ID: <20141211204515.GA4472@svl-evodev-groeck.juniper.net>
-References: <546E7120.5080505@gmail.com>
- <20141211002630.GC22886@google.com>
- <20141211163831.GA2845@svl-evodev-groeck.juniper.net>
- <CAErSpo62wQ6g74wNYYumgbAVJ3Mneu_dmWOhLBE6NWqQTXsvVQ@mail.gmail.com>
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:43528 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750849AbaLIGnn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 01:43:43 -0500
+Received: by mail-wi0-f169.google.com with SMTP id r20so9110303wiv.2
+        for <linux-pci@vger.kernel.org>; Mon, 08 Dec 2014 22:43:42 -0800 (PST)
+From: Eli Cohen <eli@dev.mellanox.co.il>
+Date: Tue, 9 Dec 2014 08:43:39 +0200
+To: Yuval Mintz <Yuval.Mintz@qlogic.com>
+Cc: Eli Cohen <eli@dev.mellanox.co.il>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"ogerlitz@mellanox.com" <ogerlitz@mellanox.com>,
+	"yevgenyp@mellanox.com" <yevgenyp@mellanox.com>,
+	Donald Dutile <ddutile@redhat.com>
+Subject: Re: [PATCH RFC] pci: Control whether VFs are probed on
+ pci_enable_sriov
+Message-ID: <20141209064339.GA1806@mtldesk30>
+References: <1417957693-24979-1-git-send-email-eli@mellanox.com>
+ <B5657A6538887040AD3A81F1008BEC63BA6616@avmb3.qlogic.org>
+ <20141207184242.GA24790@mtldesk30>
+ <B5657A6538887040AD3A81F1008BEC63BA669B@avmb3.qlogic.org>
+ <20141208191032.GC24790@mtldesk30>
+ <B5657A6538887040AD3A81F1008BEC63BA7746@avmb3.qlogic.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CAErSpo62wQ6g74wNYYumgbAVJ3Mneu_dmWOhLBE6NWqQTXsvVQ@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <B5657A6538887040AD3A81F1008BEC63BA7746@avmb3.qlogic.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 11, 2014 at 01:26:47PM -0700, Bjorn Helgaas wrote:
-> On Thu, Dec 11, 2014 at 9:38 AM, Guenter Roeck <groeck@juniper.net> wrote:
-> > On Wed, Dec 10, 2014 at 05:26:30PM -0700, Bjorn Helgaas wrote:
-> >> On Thu, Nov 20, 2014 at 02:54:24PM -0800, Rajat Jain wrote:
-> >> > While removing a card, we can't assume the presence to mean that the
-> >> > access to card is OK. That is because the cause of removal may be a
-> >> > link down event, and the card may still be physically present. Thus,
-> >> > instead of presence, use the link state to decide whether or not it is
-> >> > OK to access the card devices.
-> >> >
-> >> > Here are the problem symptoms:
-> >> > During the removal of a card due to link down, sometimes the following
-> >> > error is seen (because pciehp_unconfigure_device() reads 0xFF from
-> >> > bridge control register as the link is down, which cause it to assume
-> >> > that the VGA bit is set):
-> >> >
-> >> > pciehp 0000:21:05.0:pcie24: pcie_isr: intr_loc 100
-> >> > pciehp 0000:21:05.0:pcie24: Data Link Layer State change
-> >> > pciehp 0000:21:05.0:pcie24: slot(5): Link Down event
-> >> > pciehp 0000:21:05.0:pcie24: Disabling domain:bus:device=0000:60:00
-> >> > pciehp 0000:21:05.0:pcie24: pciehp_unconfigure_device: domain:bus:dev = 0000:60:00
-> >> > pciehp 0000:21:05.0:pcie24: Cannot remove display device 0000:60:00.0
-> >> >
-> >> > Ofcourse, when the link comes back up, the device addition fails too:
-> >> >
-> >> > pciehp 0000:21:05.0:pcie24: pcie_isr: intr_loc 100
-> >> > pciehp 0000:21:05.0:pcie24: Data Link Layer State change
-> >> > pciehp 0000:21:05.0:pcie24: pciehp_check_link_active: lnk_status = 6011
-> >> > pciehp 0000:21:05.0:pcie24: slot(5): Link Up event
-> >> > pciehp 0000:21:05.0:pcie24: Enabling domain:bus:device=0000:60:00
-> >> > pciehp 0000:21:05.0:pcie24: pciehp_check_link_active: lnk_status = 6011
-> >> > pciehp 0000:21:05.0:pcie24: pciehp_check_link_status: lnk_status = 6011
-> >> > pciehp 0000:21:05.0:pcie24: Device 0000:60:00.0 already exists at 0000:60:00, cannot hot-add
-> >> > pciehp 0000:21:05.0:pcie24: Cannot add device at 0000:60:00
-> >> >
-> >> > The problem is not seen with this patch applied. The device removal and
-> >> > insertion works as expected.
-> >> >
-> >> > Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-> >> > Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-> >> > Signed-off-by: Guenter Roeck <groeck@juniper.net>
-> >> > ---
-> >> > v2: Use the already initialized "ctrl" instead of "p_slot->ctrl"
-> >> >
-> >> >  drivers/pci/hotplug/pciehp_pci.c |    8 ++++----
-> >> >  1 file changed, 4 insertions(+), 4 deletions(-)
-> >> >
-> >> > diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-> >> > index 9e69403..911f85b 100644
-> >> > --- a/drivers/pci/hotplug/pciehp_pci.c
-> >> > +++ b/drivers/pci/hotplug/pciehp_pci.c
-> >> > @@ -77,7 +77,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
-> >> >  {
-> >> >     int rc = 0;
-> >> >     u8 bctl = 0;
-> >> > -   u8 presence = 0;
-> >> > +   bool link_active = false;
-> >> >     struct pci_dev *dev, *temp;
-> >> >     struct pci_bus *parent = p_slot->ctrl->pcie->port->subordinate;
-> >> >     u16 command;
-> >> > @@ -85,7 +85,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
-> >> >
-> >> >     ctrl_dbg(ctrl, "%s: domain:bus:dev = %04x:%02x:00\n",
-> >> >              __func__, pci_domain_nr(parent), parent->number);
-> >> > -   pciehp_get_adapter_status(p_slot, &presence);
-> >> > +   link_active = pciehp_check_link_active(ctrl);
-> >> >
-> >> >     pci_lock_rescan_remove();
-> >> >
-> >> > @@ -98,7 +98,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
-> >> >     list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
-> >> >                                      bus_list) {
-> >> >             pci_dev_get(dev);
-> >> > -           if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && presence) {
-> >> > +           if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && link_active) {
-> >> >                     pci_read_config_byte(dev, PCI_BRIDGE_CONTROL, &bctl);
-> >> >                     if (bctl & PCI_BRIDGE_CTL_VGA) {
-> >> >                             ctrl_err(ctrl,
-> >>
-> >> Why do we even have this code to check for VGA devices?  I looked (briefly)
-> >> and couldn't find anything in the spec that prohibits removal of VGA
-> >> devices.
-> >>
-> > For my part I don't know. I only know that I had to integrate the patch into
-> > our images since I hit the problem repeatedly. Usually I wait with integrating
-> > Rajat's patches until you accept them, but this one was too disruptive.
-> >
-> > I would argue that while the patch may not be perfect, at least it improves
-> > the situation substantially.
+On Mon, Dec 08, 2014 at 07:25:24PM +0000, Yuval Mintz wrote:
 > 
-> I don't think removing the VGA checks is the way to fix the problem
-> you're seeing.  But I do want to investigate this code since we're in
-> the area.
+> >Currently the kerenl will call probe for any device for which there is
+> >a supporting driver and I did not want to change that.
 > 
-I agree. Removing the VGA check would attempt to fix something that
-isn't known to be broken, and might have undesirable side effects.
+> But what's next? How will this feature be activated?
+> 
+> Adding a parameter to pci_enable_sriov() might give developers the false
+> impression they can change behavior by passing `0' to this function; 
+> But that shouldn't be the method to control this - we should have uniform 
+> control of the feature across different drivers, e.g., by an additional sysfs node.
 
-> >> If we do need it (and it looks like most or all hotplug drivers copied it),
-> >> isn't there still a race?  Can't we have the following sequence?
-> >>
-> >>   - pciehp_check_link_active()                # returns true
-> >>   - Link goes down
-> >>   - pci_read_config_byte()            # fails because link is down
-> >>
-> > I would guess so. Question is how to address it. Read the configuration byte
-> > first, then check if the link is down ? Check if link is still up after reading
-> > the configuration byte ? Add a note that there may be a potential race condition
-> > and do nothing until it is actually seen ?
-> 
-> I think we should just read PCI_BRIDGE_CONTROL and look for a 0xff
-> value.  That's not a legal value for the register, so if we see it, it
-> should be pretty safe to assume the link is down or the device is not
-> present at all.
-> 
-Something like
-	if (bctl != 0xff && (bctl & PCI_BRIDGE_CTL_VGA)) {
-in addition to Rajat's changes ?
+I was planning on using this on mlx5 SRIOV support which is not
+available upstream yet. So this could be a driver developer's decision
+how to use this. I think adding another sysfs entry to control this
+behavior is unnecessary since the administrator has the freedom to
+later do any bidnings he wishes to do.
 
-I think it would be good to keep the change Rajat proposed, ie to check
-the link state instead of presence. Question then is if you'd want a new
-revision of Rajat's patch or another patch on top of it with the bctl
-related change.
+Keeping things as they are today is not so "nice". I mean, I could
+fail probe for VFs to avoid them from being initialized at the
+hypervisor but there are other questions: which error should I return
+and how can I be sure how the bus driver will refer to such failures.
 
-Thanks,
-Guenter
+So, maybe the solution I suggested is not the best one but do we agree
+that this needs to be addressed this way or another?
