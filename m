@@ -1,90 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Gabriel FERNANDEZ <gabriel.fernandez@st.com>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Gabriel Fernandez <gabriel.fernandez@linaro.org>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Magnus Damm <damm@opensource.se>,
-	Will Deacon <will.deacon@arm.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Srikanth Thokala <sthokal@xilinx.com>,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
-	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH 2/5] PCI: st: Add Device Tree bindings for sti pcie
-Date: Wed, 17 Dec 2014 23:01:27 +0100
-Message-ID: <2165161.8vJctS1yVa@wuerfel>
-In-Reply-To: <1418812486-12394-3-git-send-email-gabriel.fernandez@linaro.org>
-References: <1418812486-12394-1-git-send-email-gabriel.fernandez@linaro.org> <1418812486-12394-3-git-send-email-gabriel.fernandez@linaro.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:50766 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755617AbaLIL6K (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 06:58:10 -0500
+Message-ID: <5486E3BF.70703@huawei.com>
+Date: Tue, 9 Dec 2014 19:57:51 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
+Subject: Re: [PATCH 2/6] PCI/MSI: add hooks to populate the msi_domain field
+References: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com> <1418069543-21969-3-git-send-email-marc.zyngier@arm.com> <5486585B.40000@huawei.com> <5486C8BA.8030608@arm.com>
+In-Reply-To: <5486C8BA.8030608@arm.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 17 December 2014 11:34:43 Gabriel FERNANDEZ wrote:
-> sti pcie is built around a Synopsis Designware PCIe IP.
+>>> +void __weak pcibios_set_phb_msi_domain(struct pci_bus *bus)
+>>> +{
+>>> +}
+>>> +
+>>> +static void pci_set_bus_msi_domain(struct pci_bus *bus)
+>>> +{
+>>> +	struct pci_dev *bridge = bus->self;
+>>> +
+>>> +	if (!bridge)
+>>> +		pcibios_set_phb_msi_domain(bus);
+>>> +	else
+>>> +		dev_set_msi_domain(&bus->dev, dev_get_msi_domain(&bridge->dev));
+>>> +}
+>>
+>>
+>> Hi Marc, we can not assume pci devices under same phb share the same msi irq domain,
+>> now in x86, pci devices under the same phb may associate different msi irq domain.
+
+Hi Marc,
+
 > 
-> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
-> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-> ---
->  Documentation/devicetree/bindings/pci/st-pcie.txt | 53 +++++++++++++++++++++++
->  1 file changed, 53 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
+> Well, this is not supposed to be a perfect solution yet, but instead a
+> basis for discussion. What I'd like to find out is:
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/st-pcie.txt b/Documentation/devicetree/bindings/pci/st-pcie.txt
-> new file mode 100644
-> index 0000000..bd3488f
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/st-pcie.txt
-> @@ -0,0 +1,53 @@
-> +STMicroelectronics STi PCIe controller
-> +
-> +This PCIe host controller is based on the Synopsis Designware PCIe IP
-> +and thus inherits all the common properties defined in designware-pcie.txt.
-> +
-> +Required properties:
-> + - compatible: "st,stih407-pcie"
-> + - reg: base address and length of the pcie controller, mem-window address
-> +   and length available to the controller.
-> + - interrupts: A list of interrupt outputs of the controller.
-> + - interrupt-names: Must include the following entries:
-> +   "msi": STi interrupt that is asserted when an MSI is received
+> - What is the minimum granularity for associating a device with its MSI
+> domain in existing platforms?
 
-You should specify that only one interrupt may be present.
-If you extend the binding, you will need to describe what the
-second one is as well.
+PCI device, after Gerry's msi irq domain patchset which now in linux-next,
+in x86, we will find msi irq domain by pci_dev.
 
-> + - st,syscfg : should be a phandle of the syscfg node. Also contains syscfg
-> +   offset for IP configuration.
-> + - resets, reset-names: the power-down and soft-reset lines of PCIe IP.
-> +   Associated names must be "powerdown" and "softreset".
-> + - phys, phy-names: the phandle for the PHY device.
-> +   Associated name must be "pcie_phy"
+I generally agree your first patch which associate basic device with msi irq domain.
 
-Names should not have underscores in them in general. "pcie-phy" would
-be fine, but just "pcie" seems good enough, unless there are existing
-drivers that have established a specific naming.
+> - What topology data structures do you use to find out what MSI
+> controller a device should be matched with?
+
+Now only arm and arm64 use msi controller to setup/teardown msi irqs,
+in arm, now msi controller saved in pci_sys_data, and for arm64, it seems
+to be saved in pci_bus. For a more common method to find msi controller/irq domain,
+I prefer pci_dev/device.
+
+> - What in-tree platform already has this requirements?
+
+As mentioned above, x86 does.
 
 
-	Arnd
+Thanks!
+Yijing.
+
+
+
+
+> 
+> Thanks,
+> 
+> 	M.
+> 
+
+
+-- 
+Thanks!
+Yijing
 
