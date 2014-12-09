@@ -1,186 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:6999 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750988AbaLIHHb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 02:07:31 -0500
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id sB973Yl3011831
-	for <linux-pci@vger.kernel.org>; Mon, 8 Dec 2014 23:07:29 -0800
-Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1r3vjkk51d-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 08 Dec 2014 23:07:29 -0800
-Content-Type: multipart/mixed;
-	boundary="_000_B5657A6538887040AD3A81F1008BEC63BA78EDavmb3qlogicorg_"
-From: Yuval Mintz <Yuval.Mintz@qlogic.com>
-To: Eli Cohen <eli@dev.mellanox.co.il>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"ogerlitz@mellanox.com" <ogerlitz@mellanox.com>,
-	"yevgenyp@mellanox.com" <yevgenyp@mellanox.com>,
-	Donald Dutile <ddutile@redhat.com>
-Subject: RE: [PATCH RFC] pci: Control whether VFs are probed on
- pci_enable_sriov
-Date: Tue, 9 Dec 2014 07:07:27 +0000
-Message-ID: <B5657A6538887040AD3A81F1008BEC63BA78ED@avmb3.qlogic.org>
-References: <1417957693-24979-1-git-send-email-eli@mellanox.com>
- <B5657A6538887040AD3A81F1008BEC63BA6616@avmb3.qlogic.org>
- <20141207184242.GA24790@mtldesk30>
- <B5657A6538887040AD3A81F1008BEC63BA669B@avmb3.qlogic.org>
- <20141208191032.GC24790@mtldesk30>
- <B5657A6538887040AD3A81F1008BEC63BA7746@avmb3.qlogic.org>
- <20141209064339.GA1806@mtldesk30>
-In-Reply-To: <20141209064339.GA1806@mtldesk30>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:61232 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755261AbaLIBik (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Dec 2014 20:38:40 -0500
 MIME-Version: 1.0
+In-Reply-To: <20141209010803.GA30604@shangw>
+References: <1418075552-26495-1-git-send-email-yinghai@kernel.org>
+	<1418079372.13358.9.camel@kernel.crashing.org>
+	<CAE9FiQX-vMu5+Kr09ngr95WvtoZTUSL5R2+NiVFeiN6q-BXLLg@mail.gmail.com>
+	<20141209010803.GA30604@shangw>
+Date: Mon, 8 Dec 2014 17:38:35 -0800
+Message-ID: <CAE9FiQWAF6hxwPoH6Gb_KczJ9-B=Aya9bJG2mz3nrSdGF7_NVg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Clear bridge MEM_64 flag if one child does not
+ support it
+From: Yinghai Lu <yinghai@kernel.org>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	=?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>,
+	Alexey Voronkov <zermond@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---_000_B5657A6538887040AD3A81F1008BEC63BA78EDavmb3qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On Mon, Dec 8, 2014 at 5:08 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+> On Mon, Dec 08, 2014 at 03:59:54PM -0800, Yinghai Lu wrote:
+>
+> Yinghai, With the patch, the Power8 machine boots up and have resources
+> assigned properly: 64-bits pref BARs are covered by 64-bits pref windows
+> and left memory BARs are covered by 32-bits non-pref windows. Note that
+> I didn't find an 32-bits-pref BAR on the system.
+>
+> For SRIOV case, Richard still need test.
 
-> > >Currently the kerenl will call probe for any device for which there
-> > >is a supporting driver and I did not want to change that.
-> >
-> > But what's next? How will this feature be activated?
-> >
-> > Adding a parameter to pci_enable_sriov() might give developers the
-> > false impression they can change behavior by passing `0' to this
-> > function; But that shouldn't be the method to control this - we should
-> > have uniform control of the feature across different drivers, e.g., by =
-an
-> additional sysfs node.
->=20
-> I was planning on using this on mlx5 SRIOV support which is not available
-> upstream yet. So this could be a driver developer's decision how to use t=
-his.
+Good, Thanks for the testing.
 
-I think it shouldn't - from user perspective, you can't have such fundament=
-al
-difference between different drivers - that enabling sriov on one device wo=
-uld
-create VFs in the hypervisors and another one won't.
-
-> I think adding another sysfs entry to control this behavior is unnecessar=
-y since the
-> administrator has the freedom to later do any bidnings he wishes to do.
->=20
-> Keeping things as they are today is not so "nice". I mean, I could fail p=
-robe for
-> VFs to avoid them from being initialized at the hypervisor but there are =
-other
-> questions: which error should I return and how can I be sure how the bus =
-driver
-> will refer to such failures.
-
-Again - you could say that this is solely in your drivers decision-making-a=
-rea,
-but failing the VF probe would lead to the same difference between drivers =
-I've
-stated before.
-
-> So, maybe the solution I suggested is not the best one but do we agree th=
-at this
-> needs to be addressed this way or another?
-
-All-in-all, I agree. But I think the solution should be user-controlled and=
- not driver-based.
-
---_000_B5657A6538887040AD3A81F1008BEC63BA78EDavmb3qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-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
-ZQABAAAALgAAAFkAdQB2AGEAbAAuAE0AaQBuAHQAegBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAA
-AB8AZAABAAAACgAAAFMATQBUAFAAAAAAAAIBQQABAAAAaAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QC
-AAAAgFkAdQB2AGEAbAAgAE0AaQBuAHQAegAAAFMATQBUAFAAAABZAHUAdgBhAGwALgBNAGkAbgB0
-AHoAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwACXQEAAAAuAAAAWQB1AHYAYQBsAC4ATQBpAG4A
-dAB6AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwDlXwEAAAA2AAAAcwBpAHAAOgB5AHUAdgBh
-AGwALgBtAGkAbgB0AHoAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfABoMAQAAABgAAABZAHUA
-dgBhAGwAIABNAGkAbgB0AHoAAAAfAB8MAQAAAC4AAABZAHUAdgBhAGwALgBNAGkAbgB0AHoAQABx
-AGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAB4MAQAAAAoAAABTAE0AVABQAAAAAAACARkMAQAAAGgA
-AAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBZAHUAdgBhAGwAIABNAGkAbgB0AHoAAABTAE0AVABQ
-AAAAWQB1AHYAYQBsAC4ATQBpAG4AdAB6AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAA
-LgAAAFkAdQB2AGEAbAAuAE0AaQBuAHQAegBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8A+D8B
-AAAAGAAAAFkAdQB2AGEAbAAgAE0AaQBuAHQAegAAAB8AI0ABAAAALgAAAFkAdQB2AGEAbAAuAE0A
-aQBuAHQAegBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAA
-AAIB+T8BAAAAaAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFkAdQB2AGEAbAAgAE0AaQBuAHQA
-egAAAFMATQBUAFAAAABZAHUAdgBhAGwALgBNAGkAbgB0AHoAQABxAGwAbwBnAGkAYwAuAGMAbwBt
-AAAAHwAJXQEAAAAuAAAAWQB1AHYAYQBsAC4ATQBpAG4AdAB6AEAAcQBsAG8AZwBpAGMALgBjAG8A
-bQAAAAAAHwAxQAEAAAACAAAAAAAAAAsAQDoBAAAAHwAwQAEAAAACAAAAAAAAAB8AGgABAAAAEgAA
-AEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAA
-CZAgLuyJYk+5/CNge+IWnwMAFwABAAAAQAA5AIDhBsp+E9ABQAAIMHKrjsp+E9ABCwApAAAAAAAL
-ACMAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAAB4AAABhAGMAYwBlAHAAdABsAGEAbgBnAHUA
-YQBnAGUAAAAAAAEAAAAMAAAAZQBuAC0AVQBTAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAABoUA
-AAAAAAAfADcAAQAAAJAAAABSAEUAOgAgAFsAUABBAFQAQwBIACAAUgBGAEMAXQAgAHAAYwBpADoA
-IABDAG8AbgB0AHIAbwBsACAAdwBoAGUAdABoAGUAcgAgAFYARgBzACAAYQByAGUAIABwAHIAbwBi
-AGUAZAAgAG8AbgAgAHAAYwBpAF8AZQBuAGEAYgBsAGUAXwBzAHIAaQBvAHYAAAAfAD0AAQAAAAoA
-AABSAEUAOgAgAAAAAAADADYAAAAAAAMALgAAAAAAHwBCEAEAAABEAAAAPAAyADAAMQA0ADEAMgAw
-ADkAMAA2ADQAMwAzADkALgBHAEEAMQA4ADAANgBAAG0AdABsAGQAZQBzAGsAMwAwAD4AAAACAXEA
-AQAAADkAAAABAdASHvBZyva78wy2TrZC42hmecrAnIRaooGAAKJogP//j7e1gAIKYwD//3wMtoAB
-RZyA//9/cPAAAAAfAHAAAQAAAIgAAABbAFAAQQBUAEMASAAgAFIARgBDAF0AIABwAGMAaQA6ACAA
-QwBvAG4AdAByAG8AbAAgAHcAaABlAHQAaABlAHIAIABWAEYAcwAgAGEAcgBlACAAcAByAG8AYgBl
-AGQAIABvAG4AIABwAGMAaQBfAGUAbgBhAGIAbABlAF8AcwByAGkAbwB2AAAAHwA1EAEAAAB0AAAA
-PABCADUANgA1ADcAQQA2ADUAMwA4ADgAOAA3ADAANAAwAEEARAAzAEEAOAAxAEYAMQAwADAAOABC
-AEUAQwA2ADMAQgBBADcAOABFAEQAQABhAHYAbQBiADMALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4A
-AAAfADkQAQAAAJYCAAA8ADEANAAxADcAOQA1ADcANgA5ADMALQAyADQAOQA3ADkALQAxAC0AZwBp
-AHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AZQBsAGkAQABtAGUAbABsAGEAbgBvAHgALgBjAG8A
-bQA+ACAAPABCADUANgA1ADcAQQA2ADUAMwA4ADgAOAA3ADAANAAwAEEARAAzAEEAOAAxAEYAMQAw
-ADAAOABCAEUAQwA2ADMAQgBBADYANgAxADYAQABhAHYAbQBiADMALgBxAGwAbwBnAGkAYwAuAG8A
-cgBnAD4AIAA8ADIAMAAxADQAMQAyADAANwAxADgANAAyADQAMgAuAEcAQQAyADQANwA5ADAAQABt
-AHQAbABkAGUAcwBrADMAMAA+ACAAPABCADUANgA1ADcAQQA2ADUAMwA4ADgAOAA3ADAANAAwAEEA
-RAAzAEEAOAAxAEYAMQAwADAAOABCAEUAQwA2ADMAQgBBADYANgA5AEIAQABhAHYAbQBiADMALgBx
-AGwAbwBnAGkAYwAuAG8AcgBnAD4AIAA8ADIAMAAxADQAMQAyADAAOAAxADkAMQAwADMAMgAuAEcA
-QwAyADQANwA5ADAAQABtAHQAbABkAGUAcwBrADMAMAA+ACAAPABCADUANgA1ADcAQQA2ADUAMwA4
-ADgAOAA3ADAANAAwAEEARAAzAEEAOAAxAEYAMQAwADAAOABCAEUAQwA2ADMAQgBBADcANwA0ADYA
-QABhAHYAbQBiADMALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AIAA8ADIAMAAxADQAMQAyADAAOQAw
-ADYANAAzADMAOQAuAEcAQQAxADgAMAA2AEAAbQB0AGwAZABlAHMAawAzADAAPgAAAAAAAwDeP59O
-AAALAACACCAGAAAAAADAAAAAAAAARgAAAAADhQAAAAAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAA
-AAGFAAAAAAAAAwCAEP////9AAAcw9w22yX4T0AELAAIAAQAAAAMAJgAAAAAACwArAAAAAAACAUcA
-AQAAAC4AAABjPVVTO2E9IDtwPVFMb2dpYztsPUFWTUIzLTE0MTIwOTA3MDcyN1otNjQxOTMAAAAC
-ARAwAQAAAEYAAAAAAAAALHC8DzpSeUOdPcB5n1RnwgcAtWV6ZTiIcECtOoHxAIvsYwAAAKUvZQAA
-d4+uWSm0k0KOsVIxlmyuFACRrpLnigAAAAAfAPo/AQAAABgAAABZAHUAdgBhAGwAIABNAGkAbgB0
-AHoAAAADAAlZAQAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAABCFAAAAAAAACwAAgAggBgAAAAAA
-wAAAAAAAAEYAAAAADoUAAAAAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAAYhQAAAAAAAAsAAIAI
-IAYAAAAAAMAAAAAAAABGAAAAAIKFAAAAAAAAHwAAgAggBgAAAAAAwAAAAAAAAEYAAAAA2IUAAAEA
-AAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAAAABGAQAA
-ACAAAAB4AC0AbQBzAC0AaABhAHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIA
-AAAAAMAAAAAAAABGAQAAACIAAAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAAB
-AAAAGAAAAFsAMQAwAC4AMQAuADQALgAxADAAXQAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYA
-AABkAGkAcwBjAGwAYQBpAG0AZQByAAAAAAABAAAADgAAAGIAeQBwAGEAcwBzAAAAAACk0g==
-
---_000_B5657A6538887040AD3A81F1008BEC63BA78EDavmb3qlogicorg_--
+Yinghai
