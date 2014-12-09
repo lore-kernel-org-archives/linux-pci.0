@@ -1,79 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp02.citrix.com ([66.165.176.63]:18525 "EHLO
-	SMTP02.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753925AbaLDNnL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Dec 2014 08:43:11 -0500
-Message-ID: <548064EA.8090905@citrix.com>
-Date: Thu, 4 Dec 2014 13:43:06 +0000
-From: David Vrabel <david.vrabel@citrix.com>
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:52970 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751822AbaLISHF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 13:07:05 -0500
+Message-ID: <54873A45.3050009@gmail.com>
+Date: Tue, 09 Dec 2014 19:07:01 +0100
+From: =?UTF-8?B?TWFyZWsgS29yZMOtaw==?= <kordikmarek@gmail.com>
 MIME-Version: 1.0
-To: Sander Eikelenboom <linux@eikelenboom.it>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	<linux-kernel@vger.kernel.org>, <xen-devel@lists.xenproject.org>
-Subject: Re: [Xen-devel] [PATCH v5 9/9] xen/pciback: Implement PCI reset slot
- or bus with 'do_flr' SysFS attribute
-References: <201412041206.sB4C6XVQ009497@userz7022.oracle.com> <5480528F.8010106@citrix.com> <1107877503.20141204141054@eikelenboom.it>
-In-Reply-To: <1107877503.20141204141054@eikelenboom.it>
-Content-Type: text/plain; charset="windows-1252"
+To: Yinghai Lu <yinghai@kernel.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Alexey Voronkov <zermond@gmail.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Clear bridge MEM_64 flag if one child does not support
+ it
+References: <1418075552-26495-1-git-send-email-yinghai@kernel.org>	<1418079372.13358.9.camel@kernel.crashing.org>	<CAE9FiQX-vMu5+Kr09ngr95WvtoZTUSL5R2+NiVFeiN6q-BXLLg@mail.gmail.com>	<20141209001119.GA24661@shangw>	<20141209022601.GA16207@richard> <CAE9FiQWz=vdR=QSkoEs5XjUxg_y4vJgnChQAc1-U_9xzfQpknQ@mail.gmail.com>
+In-Reply-To: <CAE9FiQWz=vdR=QSkoEs5XjUxg_y4vJgnChQAc1-U_9xzfQpknQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/12/14 13:10, Sander Eikelenboom wrote:
-> 
-> Thursday, December 4, 2014, 1:24:47 PM, you wrote:
-> 
->> On 04/12/14 12:06, Konrad Rzeszutek Wilk wrote:
+On 12/09/2014 08:20 AM, Yinghai Lu wrote:
+> On Mon, Dec 8, 2014 at 6:26 PM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+>> On Tue, Dec 09, 2014 at 11:11:19AM +1100, Gavin Shan wrote:
 >>>
->>> On Dec 4, 2014 6:30 AM, David Vrabel <david.vrabel@citrix.com> wrote:
->>>>
->>>> On 03/12/14 21:40, Konrad Rzeszutek Wilk wrote: 
->>>>>
->>>>> Instead of doing all this complex dance, we depend on the toolstack 
->>>>> doing the right thing. As such implement the 'do_flr' SysFS attribute 
->>>>> which 'xl' uses when a device is detached or attached from/to a guest. 
->>>>> It bypasses the need to worry about the PCI lock. 
->>>>
->>>> No.  Get pciback to add its own "reset" sysfs file (as I have repeatedly 
->>>> proposed). 
->>>>
+>>> I'm going to give it a spin and Richard, could you please apply Yinghai's
+>>> patch to see if your SRIOV code can work properly?
 >>>
->>> Which does not work as the kobj will complain (as there is already an 'reset' associated with the PCI device).
-> 
->> It is only needed if the core won't provide one.
-> 
->> +static int pcistub_try_create_reset_file(struct pci_dev *pci)
->> +{
->> +       struct xen_pcibk_dev_data *dev_data = pci_get_drvdata(pci);
->> +       struct device *dev = &pci->dev;
->> +       int ret;
->> +
->> +       /* Already have a per-function reset? */
->> +       if (pci_probe_reset_function(pci) == 0)
->> +               return 0;
->> +
->> +       ret = device_create_file(dev, &dev_attr_reset);
->> +       if (ret < 0)
->> +               return ret;
-> +       dev_data->>created_reset_file = true;
->> +       return 0;
->> +}
-> 
-> Wouldn't the "core-reset-sysfs-file" be still wired to the end up calling 
-> "pci.c:__pci_dev_reset" ?
-> 
-> The problem with that function is that from my testing it seems that the 
-> first option "pci_dev_specific_reset" always seems to return succes, so all the
-> other options are skipped (flr, pm, slot, bus). However the device it self is 
-> not properly reset enough (perhaps the pci_dev_specific_reset is good enough for 
-> none virtualization purposes and it's probably the least intrusive. For 
-> virtualization however it would be nice to be sure it resets properly, or have a 
-> way to force a specific reset routine.)
+>>
+>> I did a quick test on my machine. This patch doesn't affect the MMIO
+>> allocation on out platform, so SRIOV works fine.
+>>
+>> I will spend more time to read the patch to get more understanding about the
+>> problem.
+>
+> Hi Marek,
+>
+> Can you boot following branch with "debug ignore_loglevel pci=realloc"
+> on your setup?
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+> for-pci-allocate-fit-3.18
+>
+> it has
+> 8f74af9: PCI, x86: Allocate mmio near end of free range
+> 1ff91c1: PCI: Don't allocate small resource in big free space.
+> 108b43b: resources: Add allocate_resource_fit()
+> b6a22f0: resources: Make find_resource could return just fit resource
+> cf50e16: resources: Split out __allocate_resource()
+>
+> on top the v3.18, and it will allocate resource in fit way.
+>
+> Thanks
+>
+> Yinghai
+>
+Hi Yinghai,
 
-Then you need work with the maintainer for those specific devices or
-drivers to fix their specific reset function.
+I have built and booted your branch and it works well. Do you want me to 
+attach some logs?
+(I am new here and I have read http://www.tux.org/lkml/ and I don't want 
+to break some rules for attachment size)
 
-I'm not adding stuff to pciback to workaround broken quirks.
-
-David
+Marek
