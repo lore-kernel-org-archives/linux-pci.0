@@ -1,126 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:43895 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751052AbaLGRFK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 7 Dec 2014 12:05:10 -0500
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id sB7H3Ycp003071
-	for <linux-pci@vger.kernel.org>; Sun, 7 Dec 2014 09:05:09 -0800
-Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1r3vjkh981-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Sun, 07 Dec 2014 09:05:09 -0800
-Content-Type: multipart/mixed;
-	boundary="_000_B5657A6538887040AD3A81F1008BEC63BA6616avmb3qlogicorg_"
-From: Yuval Mintz <Yuval.Mintz@qlogic.com>
-To: Eli Cohen <eli@dev.mellanox.co.il>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>
-CC: linux-pci <linux-pci@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"ogerlitz@mellanox.com" <ogerlitz@mellanox.com>,
-	"yevgenyp@mellanox.com" <yevgenyp@mellanox.com>,
-	Eli Cohen <eli@mellanox.com>,
-	Donald Dutile <ddutile@redhat.com>
-Subject: RE: [PATCH RFC] pci: Control whether VFs are probed on
- pci_enable_sriov
-Date: Sun, 7 Dec 2014 17:05:06 +0000
-Message-ID: <B5657A6538887040AD3A81F1008BEC63BA6616@avmb3.qlogic.org>
-References: <1417957693-24979-1-git-send-email-eli@mellanox.com>
-In-Reply-To: <1417957693-24979-1-git-send-email-eli@mellanox.com>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:46260 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755206AbaLIAVf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Dec 2014 19:21:35 -0500
+Received: by mail-ie0-f181.google.com with SMTP id tp5so5581995ieb.12
+        for <linux-pci@vger.kernel.org>; Mon, 08 Dec 2014 16:21:34 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <20141208233855.GA15713@shangw>
+References: <CAErSpo6UvY10MNidAOFf4Fptv+wL-NsX6JMaU8OvSP6ywWEebQ@mail.gmail.com>
+	<CAErSpo63uZeo1feoPjjXpdH43nsbcWh63kpBmxCnckPd0t9yrg@mail.gmail.com>
+	<CAE9FiQWV-rKdvSeV-ivME-64QtzCX2Te5DfOVtzr0an=6eOCMA@mail.gmail.com>
+	<20141204173411.GA5949@google.com>
+	<CAE9FiQVyBmo+XwDgO97wwe+6TN4+q_cvnBLCuhTM8Fu_e_V5RQ@mail.gmail.com>
+	<1417777177.4741.69.camel@kernel.crashing.org>
+	<20141208004735.GA15508@shangw>
+	<CAErSpo69c6jXOp+nw2sTSU4vgqGufUQNUEGK4_2+6p-qpyE0vQ@mail.gmail.com>
+	<1418074683.13358.1.camel@kernel.crashing.org>
+	<CAErSpo7pMAL5i2aPGV3u5F178bHeQTtjASckKs9NaUbEGaxv3Q@mail.gmail.com>
+	<20141208233855.GA15713@shangw>
+Date: Mon, 8 Dec 2014 16:21:34 -0800
+Message-ID: <CAE9FiQXj-vX8TE-8Es83FmJAKDKD_dMNbQkmsaNPyy_nVEag8w@mail.gmail.com>
+Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
+ GPU init
+From: Yinghai Lu <yinghai@kernel.org>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alexey Voronkov <zermond@gmail.com>,
+	David Airlie <airlied@linux.ie>,
+	Alex Deucher <alexdeucher@gmail.com>,
+	=?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>,
+	Richard Yang <weiyang@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---_000_B5657A6538887040AD3A81F1008BEC63BA6616avmb3qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On Mon, Dec 8, 2014 at 3:38 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+> On Mon, Dec 08, 2014 at 02:46:00PM -0700, Bjorn Helgaas wrote:
+>>Yeah, I didn't word that very clearly.  I meant that after
+>>5b28541552ef, that 64-bit window is wasted unless there's a 64-bit BAR
+>>below it; we can't even place the window below 4GB and use it for
+>>32-bit prefetchable BARs.
+>>
+>
+> Yes, I agree. It's why I suggested to return error from pbus_size_mem()
+> to indicate the case: 64-bits prefetchable window isn't used and it's
+> still available to be used by child 32-bits prefetchable BARs. Please
+> take a look on the attached draft patch, which helps to explain the idea
+> only.
 
-=0A=
->This can save host side resource usage by VF instances which would be=0A=
->eventually probed to VMs.=0A=
-=0A=
->Use a parameter to pci_enable_sriov to control that policy, and modify=0A=
->all current callers such that they retain the same functionality.=0A=
-=0A=
-What's the end-game here? How eventually would this be controlled?=0A=
-=0A=
->Use a one shot flag on struct pci_device which is cleared after the=0A=
->first probe is ignored so subsequent attempts go through.=0A=
-=0A=
-Does a one-shot flag suffice? E.g., consider assigning a VF to VM and=0A=
-than shutting down the VM. Assuming this feature is disabled,=0A=
-the VF didn't appear on the hypervisor prior to the assignment but=0A=
-will appear after its shutdown.=0A=
-
---_000_B5657A6538887040AD3A81F1008BEC63BA6616avmb3qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-eJ8+IkhBAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADMxMEYzRTA4
-N0IyNzAxNDU5MjYwQ0JBMDAzQjY2QjY3AO0GAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HDAAHABEA
-BQAGAAAAFAEBIIADAA4AAADeBwwABwARAAUABgAAABQBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAEgAAABSRTogW1BBVENIIFJGQ10gcGNpOiBDb250cm9sIHdoZXRoZXIg
-VkZzIGFyZSBwcm9iZWQgb24gcGNpX2VuYWJsZV9zcmlvdgCWGAEDkAYA+AwAADYAAAACAX8AAQAA
-ADoAAAA8QjU2NTdBNjUzODg4NzA0MEFEM0E4MUYxMDA4QkVDNjNCQTY2MTZAYXZtYjMucWxvZ2lj
-Lm9yZz4AAAALAB8OAQAAAAIBCRABAAAAHQMAABkDAABKBAAATFpGdcu2hVBhAApmYmlkBAAAY2PA
-cGcxMjUyAP4DQ/B0ZXh0AfcCpAPjAgAEY2gKwHNldDAg7wdtAoMAUBFNMgqABrQCgJZ9CoAIyDsJ
-YjE5DsC/CcMWcgoyFnECgBViKgmwcwnwBJBhdAWyDlADYHOibwGAIEV4EcFuGDBdBlJ2BJAXtgIQ
-cgDAdH0IUG4aMRAgBcAFoBtkZJogA1IgECIXslx2CJDkd2sLgGQ1HVME8AdADRdwMApxF/Jia21r
-BnMBkAAgIEJNX0LgRUdJTn0K/AHxC/KKbAuAZQqAPlRoBACTG9ADkXNhGjAgaBkQdwVAAJABACAJ
-cBkgCHBjDRngdSKgGdFieSBWbEYgC4AfYW4j8AQgdy8iIBHAJXAIYGwcYGJlrSGWZRowAjB1B0Bs
-JJA+cANgJkAcYBiQJKBNc5YuIZUhllUSACBhJ4AdCsBhB4AboigBcGNpTl8J8AGgHnBfcwUQb7Z2
-J/Ib4XQDYAMgdBHQzQVAcAbwDlB5LCmQHcD2IARhBpB5IZYnQRvQCHA/CXACMCJRJ1AEkAQgc3X3
-JbEsUyxQZSSQCXABkAuArzASIpEHgBxwdSUwdCtgUyrgIaB0eShtVyxhJ8cEIDDiCfBkLWcxMjAw
-4QlwPyBIbwfgJukl5J8sUCIxJkArxh5wZD8of18pggIgMQEi8AVAZgtgZ/84kSKQLAAvkCyBKqEB
-AB1gvyPxJYQiMh5wCsAcUWEBgOcqMjAwIZZmaRHwLIEnovE7ImlnbgWwHFEZIC9xemISAHEKUC7R
-GIAQIG07BTAEIGcoECxQA2B1Z7JoKG1EbweROIMtOOgPL4ABIDqRNLBFLmcu7y0AG+EjQgXAYQQQ
-PeELgP85YCmgJLEoAy0SIZUsUSKB7Gh1AkBEkmQ04DDEKDDILiBBBBB1bUSSNiN+ZjuAJyAJcDsi
-DeEq8mQeLEW3R3EkwA3gZG4nOT8hcHA7gTlyMOJoef9LYBogBAAFsSeQK2AqQzDi90Q0B4Au0WJG
-kCGVA/AuUf9LRTvkMhAvYUaBRwIoZhVCAVGQAAAAHwBCAAEAAAAYAAAAWQB1AHYAYQBsACAATQBp
-AG4AdAB6AAAAHwBlAAEAAAAuAAAAWQB1AHYAYQBsAC4ATQBpAG4AdAB6AEAAcQBsAG8AZwBpAGMA
-LgBjAG8AbQAAAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEAAABoAAAAAAAAAIErH6S+
-oxAZnW4A3QEPVAIAAACAWQB1AHYAYQBsACAATQBpAG4AdAB6AAAAUwBNAFQAUAAAAFkAdQB2AGEA
-bAAuAE0AaQBuAHQAegBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAAC4AAABZAHUAdgBh
-AGwALgBNAGkAbgB0AHoAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAOVfAQAAADYAAABzAGkA
-cAA6AHkAdQB2AGEAbAAuAG0AaQBuAHQAegBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AGgwB
-AAAAGAAAAFkAdQB2AGEAbAAgAE0AaQBuAHQAegAAAB8AHwwBAAAALgAAAFkAdQB2AGEAbAAuAE0A
-aQBuAHQAegBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAA
-AAIBGQwBAAAAaAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFkAdQB2AGEAbAAgAE0AaQBuAHQA
-egAAAFMATQBUAFAAAABZAHUAdgBhAGwALgBNAGkAbgB0AHoAQABxAGwAbwBnAGkAYwAuAGMAbwBt
-AAAAHwABXQEAAAAuAAAAWQB1AHYAYQBsAC4ATQBpAG4AdAB6AEAAcQBsAG8AZwBpAGMALgBjAG8A
-bQAAAAAAHwD4PwEAAAAYAAAAWQB1AHYAYQBsACAATQBpAG4AdAB6AAAAHwAjQAEAAAAuAAAAWQB1
-AHYAYQBsAC4ATQBpAG4AdAB6AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAiQAEAAAAKAAAA
-UwBNAFQAUAAAAAAAAgH5PwEAAABoAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAWQB1AHYAYQBs
-ACAATQBpAG4AdAB6AAAAUwBNAFQAUAAAAFkAdQB2AGEAbAAuAE0AaQBuAHQAegBAAHEAbABvAGcA
-aQBjAC4AYwBvAG0AAAAfAAldAQAAAC4AAABZAHUAdgBhAGwALgBNAGkAbgB0AHoAQABxAGwAbwBn
-AGkAYwAuAGMAbwBtAAAAAAAfADFAAQAAAAIAAAAAAAAACwBAOgEAAAAfADBAAQAAAAIAAAAAAAAA
-HwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9P+QEAAAC
-AQswAQAAABAAAAAxDz4IeycBRZJgy6ADtmtnAwAXAAEAAABAADkAAI3U8j8S0AFAAAgwZX9B8z8S
-0AELACkAAAAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSFAAABAAAACwAjAAAAAAAfAACAhgMC
-AAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAA
-DAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEAAACQ
-AAAAUgBFADoAIABbAFAAQQBUAEMASAAgAFIARgBDAF0AIABwAGMAaQA6ACAAQwBvAG4AdAByAG8A
-bAAgAHcAaABlAHQAaABlAHIAIABWAEYAcwAgAGEAcgBlACAAcAByAG8AYgBlAGQAIABvAG4AIABw
-AGMAaQBfAGUAbgBhAGIAbABlAF8AcwByAGkAbwB2AAAAHwA9AAEAAAAKAAAAUgBFADoAIAAAAAAA
-AwA2AAAAAAADAC4AAAAAAB8AQhABAAAAagAAADwAMQA0ADEANwA5ADUANwA2ADkAMwAtADIANAA5
-ADcAOQAtADEALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBlAGwAaQBAAG0AZQBsAGwA
-YQBuAG8AeAAuAGMAbwBtAD4AAAAAAAIBcQABAAAAGwAAAAEB0BIe8FnK9rvzDLZOtkLjaGZ5ysCc
-hFqigQAfAHAAAQAAAIgAAABbAFAAQQBUAEMASAAgAFIARgBDAF0AIABwAGMAaQA6ACAAQwBvAG4A
-dAByAG8AbAAgAHcAaABlAHQAaABlAHIAIABWAEYAcwAgAGEAcgBlACAAcAByAG8AYgBlAGQAIABv
-AG4AIABwAGMAaQBfAGUAbgBhAGIAbABlAF8AcwByAGkAbwB2AAAAHwA1EAEAAAB0AAAAPABCADUA
-NgA1ADcAQQA2ADUAMwA4ADgAOAA3ADAANAAwAEEARAAzAEEAOAAxAEYAMQAwADAAOABCAEUAQwA2
-ADMAQgBBADYANgAxADYAQABhAHYAbQBiADMALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AAAAfADkQ
-AQAAAGoAAAA8ADEANAAxADcAOQA1ADcANgA5ADMALQAyADQAOQA3ADkALQAxAC0AZwBpAHQALQBz
-AGUAbgBkAC0AZQBtAGEAaQBsAC0AZQBsAGkAQABtAGUAbABsAGEAbgBvAHgALgBjAG8AbQA+AAAA
-AAADAN4/n04AAEAABzCTzypwPxLQAQMAJgAAAAAAAgFHAAEAAAAuAAAAYz1VUzthPSA7cD1RTG9n
-aWM7bD1BVk1CMy0xNDEyMDcxNzA1MDZaLTYzMjAwAAAAAgEUMAEAAAAMAAAAaAAAANOMi5Y+AAAA
-HwD6PwEAAAAYAAAAWQB1AHYAYQBsACAATQBpAG4AdAB6AAAAAwANNP0/AAAfAACAhgMCAAAAAADA
-AAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAA
-AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAt
-AGkAcAAAAAAAAQAAABgAAABbADEAMAAuADEALgA0AC4AMQAwAF0AAAAfAACAhgMCAAAAAADAAAAA
-AAAARgEAAAAWAAAAZABpAHMAYwBsAGEAaQBtAGUAcgAAAAAAAQAAAA4AAABiAHkAcABhAHMAcwAA
-AAAAiXU=
-
---_000_B5657A6538887040AD3A81F1008BEC63BA6616avmb3qlogicorg_--
+That would not help. The 00:01.0 on Zermond's system support hotplug. so mem
+pref will be used for 64bit pref.
