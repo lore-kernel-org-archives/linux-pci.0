@@ -1,137 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g2t2354.austin.hp.com ([15.217.128.53]:48776 "EHLO
-	g2t2354.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751412AbaLOJyG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Dec 2014 04:54:06 -0500
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>, <billsumnerlinux@gmail.com>,
-	<zhen-hual@hp.com>
-Cc: <iommu@lists.linux-foundation.org>, <kexec@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>
-Subject: [PATCH 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-Date: Mon, 15 Dec 2014 17:52:56 +0800
-Message-Id: <1418637186-9988-1-git-send-email-zhen-hual@hp.com>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:37770 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754688AbaLIAJb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Dec 2014 19:09:31 -0500
+MIME-Version: 1.0
+In-Reply-To: <1418079603.13358.12.camel@kernel.crashing.org>
+References: <1418075552-26495-1-git-send-email-yinghai@kernel.org>
+	<1418079372.13358.9.camel@kernel.crashing.org>
+	<1418079603.13358.12.camel@kernel.crashing.org>
+Date: Mon, 8 Dec 2014 16:09:30 -0800
+Message-ID: <CAE9FiQUhwMOKEXi8mVY_rMGEAmYr13m+Gr5id+rYTC0EiwEHgw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Clear bridge MEM_64 flag if one child does not
+ support it
+From: Yinghai Lu <yinghai@kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	=?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>,
+	Alexey Voronkov <zermond@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset is an update of Bill Sumner's patchset, implements a fix for:
-If a kernel boots with intel_iommu=on on a system that supports intel vt-d, 
-when a panic happens, the kdump kernel will boot with these faults:
+On Mon, Dec 8, 2014 at 3:00 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
 
-    dmar: DRHD: handling fault status reg 102
-    dmar: DMAR:[DMA Read] Request device [01:00.0] fault addr fff80000
-    DMAR:[fault reason 01] Present bit in root entry is clear
+>
+> I think an option would be to keep track of whether the PCI host bridge
+> can do 64-bit pref above 4G.
 
-    dmar: DRHD: handling fault status reg 2
-    dmar: INTR-REMAP: Request device [[61:00.0] fault index 42
-    INTR-REMAP:[fault reason 34] Present field in the IRTE entry is clear
+Yes, that could be enhancement.
 
-On some system, the interrupt remapping fault will also happen even if the 
-intel_iommu is not set to on, because the interrupt remapping will be enabled 
-when x2apic is needed by the system.
+That should fix the problem Marek's
 
-The cause of the DMA fault is described in Bill's original version, and the 
-INTR-Remap fault is caused by a similar reason. In short, the initialization 
-of vt-d drivers causes the in-flight DMA and interrupt requests get wrong 
-response.
+But not on Zermond's, as his system is not using _CRS.
 
-To fix this problem, we modifies the behaviors of the intel vt-d in the 
-crashdump kernel:
+Or we can enforce new rule that no _CRS then only use under 4G ?
 
-For DMA Remapping:
-1. To accept the vt-d hardware in an active state,
-2. Do not disable and re-enable the translation, keep it enabled.
-3. Use the old root entry table, do not rewrite the RTA register.
-4. Malloc and use new context entry table and page table, copy data from the 
-   old ones that used by the old kernel.
-5. to use different portions of the iova address ranges for the device drivers
-   in the crashdump kernel than the iova ranges that were in-use at the time
-   of the panic.  
-6. After device driver is loaded, when it issues the first dma_map command, 
-   free the dmar_domain structure for this device, and generate a new one, so 
-   that the device can be assigned a new and empty page table. 
-7. When a new context entry table is generated, we also save its address to 
-   the old root entry table.
+>
+> If it can't then we know 64-bit pref is always fair game for 32-bit
+> resources and we can thus downgrade all the bridges 64-pref to 32-perf.
+>
+> If it can, then we probably do need to leave it there do real 64-bit
+> pref, and shoot anything that is 32-bit only down the non-pref windows.
+>
+> We *could* try to be smart and scan first to check if anything under the
+> bridge actually has large/64-bit BARs but that's going to be a heuristic
+> at best and isn't going to do any good with hotplug.
+>
+> I tend to think that treating anything 32-bit pref as non-pref is in
+> fact the best solution unless we know that the platform doesn't do
+>>32-bit pref anyway in which case we leave them alone.
 
-For Interrupt Remapping:
-1. To accept the vt-d hardware in an active state,
-2. Do not disable and re-enable the interrupt remapping, keep it enabled.
-3. Use the old interrupt remapping table, do not rewrite the IRTA register.
-4. When ioapic entry is setup, the interrupt remapping table is changed, and 
-   the updated data will be stored to the old interrupt remapping table.
+Yes, but will need to enable pci=realloc automatically, so we can take
+back control
+of bridge mmio bar.
 
-Advantages of this approach:
-1. All manipulation of the IO-device is done by the Linux device-driver
-   for that device.
-2. This approach behaves in a manner very similar to operation without an
-   active iommu.
-3. Any activity between the IO-device and its RMRR areas is handled by the
-   device-driver in the same manner as during a non-kdump boot.
-4. If an IO-device has no driver in the kdump kernel, it is simply left alone.
-   This supports the practice of creating a special kdump kernel without
-   drivers for any devices that are not required for taking a crashdump. 
-5. Minimal code-changes among the existing mainline intel vt-d code.
+Thanks
 
-Summary of changes in this patch set:
-1. Added some useful function for root entry table in code intel-iommu.c
-2. Added new members to struct root_entry and struct irte;
-3. Functions to load old root entry table to iommu->root_entry from the memory 
-   of old kernel.
-4. Functions to malloc new context entry table and page table and copy the data
-   from the old ones to the malloced new ones.
-5. Functions to enable support for DMA remapping in kdump kernel.
-6. Functions to load old irte data from the old kernel to the kdump kernel.
-7. Some code changes that support other behaviours that have been listed.
-8. In the new functions, use physical address as "unsigned long" type, not 
-   pointers.
-
-Original version by Bill Sumner:
-        https://lkml.org/lkml/2014/1/10/518
-        https://lkml.org/lkml/2014/4/15/716
-        https://lkml.org/lkml/2014/4/24/836
-
-Zhenhua's last of Bill's patchset:
-        https://lkml.org/lkml/2014/10/21/134
-
-Changed in this version:
-1. Do not disable and re-enable traslation and interrupt remapping. 
-2. Use old root entry table.
-3. Use old interrupt remapping table.
-
-This patchset should be applied with this one together:
-	https://lkml.org/lkml/2014/11/5/43
-	x86/iommu: fix incorrect bit operations in setting values
-
-Bill Sumner (5):
-  iommu/vt-d: Update iommu_attach_domain() and its callers
-  iommu/vt-d: Items required for kdump
-  iommu/vt-d: data types and functions used for kdump
-  iommu/vt-d: Add domain-id functions
-  iommu/vt-d: enable kdump support in iommu module
-
-Li, Zhen-Hua (10):
-  iommu/vt-d: Update iommu_attach_domain() and its callers
-  iommu/vt-d: Items required for kdump
-  iommu/vt-d: Add domain-id functions
-  iommu/vt-d: functions to copy data from old mem
-  iommu/vt-d: Add functions to load and save old re
-  iommu/vt-d: datatypes and functions used for kdump
-  iommu/vt-d: enable kdump support in iommu module
-  iommu/vtd: assign new page table for dma_map
-  iommu/vt-d: Copy functions for irte
-  iommu/vt-d: Use old irte in kdump kernel
-
- drivers/iommu/intel-iommu.c         | 1023 +++++++++++++++++++++++++++++++++--
- drivers/iommu/intel_irq_remapping.c |   99 +++-
- include/linux/intel-iommu.h         |   18 +
- 3 files changed, 1097 insertions(+), 43 deletions(-)
-
--- 
-2.0.0-rc0
-
+Yinghai
