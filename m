@@ -1,214 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:39377 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751501AbaLWVlL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Dec 2014 16:41:11 -0500
-Received: by mail-ig0-f175.google.com with SMTP id h15so6101171igd.2
-        for <linux-pci@vger.kernel.org>; Tue, 23 Dec 2014 13:41:10 -0800 (PST)
-Date: Tue, 23 Dec 2014 14:41:06 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Marek =?iso-8859-1?Q?Kord=EDk?= <kordikmarek@gmail.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alexey Voronkov <zermond@gmail.com>,
-	David Airlie <airlied@linux.ie>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Richard Yang <weiyang@linux.vnet.ibm.com>
-Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
- GPU init
-Message-ID: <20141223214106.GA27291@google.com>
-References: <CAErSpo69c6jXOp+nw2sTSU4vgqGufUQNUEGK4_2+6p-qpyE0vQ@mail.gmail.com>
- <1418074683.13358.1.camel@kernel.crashing.org>
- <CAErSpo7pMAL5i2aPGV3u5F178bHeQTtjASckKs9NaUbEGaxv3Q@mail.gmail.com>
- <20141208233855.GA15713@shangw>
- <CAE9FiQXj-vX8TE-8Es83FmJAKDKD_dMNbQkmsaNPyy_nVEag8w@mail.gmail.com>
- <20141220002306.GB30834@google.com>
- <CAE9FiQUU4OoxpV3MNyFdjtmS1nRfD=ziYDDnUmsGy5qj8U3vLg@mail.gmail.com>
- <CAErSpo7JAcLa_2gNkOG+oSHb1cbBXdEa-TVW0=amBptRB8-fNA@mail.gmail.com>
- <CAE9FiQV6nxeMcLQ6YBR_c5tNGGjiKgL+Z4vcGpK21j-14V8SKw@mail.gmail.com>
- <CAE9FiQVggbU5u__0z8p33J9hQ39CtQ-vpQbZyjG-LO9aqN05Lw@mail.gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:54110 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932145AbaLIM6D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Dec 2014 07:58:03 -0500
+Message-ID: <5486F1D7.9090401@linux.intel.com>
+Date: Tue, 09 Dec 2014 20:57:59 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQVggbU5u__0z8p33J9hQ39CtQ-vpQbZyjG-LO9aqN05Lw@mail.gmail.com>
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>
+CC: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Will Deacon <Will.Deacon@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: Re: [PATCH 2/6] PCI/MSI: add hooks to populate the msi_domain field
+References: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com> <1418069543-21969-3-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1418069543-21969-3-git-send-email-marc.zyngier@arm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 22, 2014 at 05:53:55PM -0800, Yinghai Lu wrote:
-> On Fri, Dec 19, 2014 at 5:33 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > On Fri, Dec 19, 2014 at 4:56 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >>
-> >> Marek's case is a little easier because his system is using _CRS.  We
-> >> should be able to notice that the Root Port window overlaps the host
-> >> bridge window, but isn't contained by it.  In that case, if we merely
-> >> trim the Root Port window so it fits, everything will just work.
-> >
-> > Ok, will check that Monday.
-> 
-> Please check attached patch that clip bridge resource.
-> 
-> Marek, can you give it a try on top of v3.18?
-> 
-> Thanks
-> 
-> Yinghai
 
-> Subject: [RFC PATCH] PCI, x86: clip firmware assigned pci bridges under hostbridge
+
+On 2014/12/9 4:12, Marc Zyngier wrote:
+> In order to be able to populate the device msi_domain field,
+> add the necesary hooks to propagate the PHB msi_domain across
+> secondary busses to devices.
 > 
-> Some bios put range that is not fully coverred by root bus resources.
-> Try to clip them and update them in pci bridge bars.
+> So far, nobody populates the initial msi_domain.
 > 
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491
-> Reported-by: Marek Kordik <kordikmarek@gmail.com>
-> Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources")
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> 
+> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 > ---
->  arch/x86/pci/i386.c       |   43 +++++++++++++++++++++++++++++++------------
->  drivers/pci/host-bridge.c |   31 +++++++++++++++++++++++++++++++
->  include/linux/pci.h       |    2 ++
->  3 files changed, 64 insertions(+), 12 deletions(-)
+>  drivers/pci/probe.c | 24 ++++++++++++++++++++++++
+>  include/linux/pci.h |  1 +
+>  2 files changed, 25 insertions(+)
 > 
-> Index: linux-2.6/arch/x86/pci/i386.c
-> ===================================================================
-> --- linux-2.6.orig/arch/x86/pci/i386.c
-> +++ linux-2.6/arch/x86/pci/i386.c
-> @@ -205,10 +205,11 @@ EXPORT_SYMBOL(pcibios_align_resource);
->   *	    as well.
->   */
->  
-> -static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
-> +static bool pcibios_allocate_bridge_resources(struct pci_dev *dev)
->  {
->  	int idx;
->  	struct resource *r;
-> +	bool changed = false;
->  
->  	for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
->  		r = &dev->resource[idx];
-> @@ -216,17 +217,31 @@ static void pcibios_allocate_bridge_reso
->  			continue;
->  		if (r->parent)	/* Already allocated */
->  			continue;
-> -		if (!r->start || pci_claim_resource(dev, idx) < 0) {
-> -			/*
-> -			 * Something is wrong with the region.
-> -			 * Invalidate the resource to prevent
-> -			 * child resource allocations in this
-> -			 * range.
-> -			 */
-> -			r->start = r->end = 0;
-> -			r->flags = 0;
-> +		if (!r->start)
-> +			goto clear;
-> +		if (pci_claim_resource(dev, idx) < 0) {
-> +			/* try again after clip for pci bridge*/
-> +			if ((dev->class >> 8) == PCI_CLASS_BRIDGE_PCI &&
-> +			    pcibios_resource_clip_in_host_bridge(dev->bus, r)) {
-
-Can you do this so it clips to any upstream bridge, whether it's a host
-bridge or a PCI-to-PCI bridge?  It doesn't seem like this has to be
-specific to host bridge windows -- any device below a PCI-to-PCI bridge has
-to use address space forwarded by that upstream bridge.
-
-I wish this were in generic code.  There's nothing architecture-specific
-about the problem, but this patch only fixes things on x86.  Can you make a
-similar change in the corresponding code for other arches, as well?
-
-> +				changed = true;
-> +				if (pci_claim_resource(dev, idx) >= 0)
-> +					continue;
-> +			}
-> +			goto clear;
->  		}
-> +		continue;
-> +clear:
-> +		/*
-> +		 * Something is wrong with the region.
-> +		 * Invalidate the resource to prevent
-> +		 * child resource allocations in this
-> +		 * range.
-> +		 */
-> +		r->start = r->end = 0;
-> +		r->flags = 0;
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index c8ca98c..d1009a2 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -670,6 +670,20 @@ static void pci_set_bus_speed(struct pci_bus *bus)
 >  	}
-> +
-> +	return changed;
 >  }
 >  
->  static void pcibios_allocate_bus_resources(struct pci_bus *bus)
-> @@ -234,8 +249,12 @@ static void pcibios_allocate_bus_resourc
->  	struct pci_bus *child;
->  
->  	/* Depth-First Search on bus tree */
-> -	if (bus->self)
-> -		pcibios_allocate_bridge_resources(bus->self);
-> +	if (bus->self) {
-> +		bool changed = pcibios_allocate_bridge_resources(bus->self);
-> +
-> +		if (changed)
-> +			pci_setup_bridge(bus);
-> +	}
->  	list_for_each_entry(child, &bus->children, node)
->  		pcibios_allocate_bus_resources(child);
->  }
-> Index: linux-2.6/drivers/pci/host-bridge.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/host-bridge.c
-> +++ linux-2.6/drivers/pci/host-bridge.c
-> @@ -31,6 +31,37 @@ void pci_set_host_bridge_release(struct
->  	bridge->release_data = release_data;
->  }
->  
-> +bool pcibios_resource_clip_in_host_bridge(struct pci_bus *bus,
-> +					  struct resource *res)
+> +void __weak pcibios_set_phb_msi_domain(struct pci_bus *bus)
 > +{
-> +	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
-> +	struct pci_host_bridge_window *window;
-> +	resource_size_t start, end;
-> +
-> +	list_for_each_entry(window, &bridge->windows, list) {
-> +		if (resource_type(res) != resource_type(window->res))
-> +			continue;
-> +
-> +		start = max(window->res->start, res->start);
-> +		end = min(window->res->end, res->end);
-> +
-> +		/* no overlap ? */
-> +		if (start > end)
-> +			continue;
-> +
-> +		if (res->start == start && res->end == end)
-> +			return false;
-> +
-> +		/* changed */
-> +		res->start = start;
-> +		res->end = end;
-
-I think it'd be useful to emit a diagnostic here so there's a clue in dmesg
-about what's going on.
-
-> +		return true;
-> +	}
-> +
-> +	return false;
 > +}
 > +
->  void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
->  			     struct resource *res)
+> +static void pci_set_bus_msi_domain(struct pci_bus *bus)
+> +{
+> +	struct pci_dev *bridge = bus->self;
+> +
+> +	if (!bridge)
+> +		pcibios_set_phb_msi_domain(bus);
+> +	else
+> +		dev_set_msi_domain(&bus->dev, dev_get_msi_domain(&bridge->dev));
+> +}
+> +
+>  static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>  					   struct pci_dev *bridge, int busnr)
 >  {
-> Index: linux-2.6/include/linux/pci.h
-> ===================================================================
-> --- linux-2.6.orig/include/linux/pci.h
-> +++ linux-2.6/include/linux/pci.h
-> @@ -762,6 +762,8 @@ void pci_fixup_cardbus(struct pci_bus *)
+> @@ -723,6 +737,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>  	bridge->subordinate = child;
 >  
->  /* Generic PCI functions used internally */
+>  add_dev:
+> +	pci_set_bus_msi_domain(child);
+>  	ret = device_register(&child->dev);
+>  	WARN_ON(ret < 0);
 >  
-> +bool pcibios_resource_clip_in_host_bridge(struct pci_bus *bus,
-> +					  struct resource *res);
->  void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
->  			     struct resource *res);
->  void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+> @@ -1517,6 +1532,11 @@ static void pci_init_capabilities(struct pci_dev *dev)
+>  	pci_enable_acs(dev);
+>  }
+>  
+> +static void pci_set_msi_domain(struct pci_dev *dev)
+> +{
+> +	dev_set_msi_domain(&dev->dev, dev_get_msi_domain(&dev->bus->dev));
+> +}
+> +
+Hi Marc,
+	The default implementation of pci_set_msi_domain() conflicts
+with interrupt mapping based on x86 Intel VT-d:(
+	If pci_set_msi_domain() is weak, thing gets perfect.
+Regards!
+Gerry
 
+>  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>  {
+>  	int ret;
+> @@ -1546,6 +1566,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>  	/* Initialize various capabilities */
+>  	pci_init_capabilities(dev);
+>  
+> +	/* Setup MSI irq domain */
+> +	pci_set_msi_domain(dev);
+> +
+>  	/*
+>  	 * Add the device to our list of discovered devices
+>  	 * and the bus list for fixup functions, etc.
+> @@ -1947,6 +1970,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  	b->bridge = get_device(&bridge->dev);
+>  	device_enable_async_suspend(b->bridge);
+>  	pci_set_bus_of_node(b);
+> +	pci_set_bus_msi_domain(b);
+>  
+>  	if (!parent)
+>  		set_dev_node(b->bridge, pcibus_to_node(b));
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index a523cee..3266764 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1637,6 +1637,7 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+>  int pcibios_add_device(struct pci_dev *dev);
+>  void pcibios_release_device(struct pci_dev *dev);
+>  void pcibios_penalize_isa_irq(int irq, int active);
+> +void pcibios_set_phb_msi_domain(struct pci_bus *bus);
+>  
+>  #ifdef CONFIG_HIBERNATE_CALLBACKS
+>  extern struct dev_pm_ops pcibios_pm_ops;
+> 
