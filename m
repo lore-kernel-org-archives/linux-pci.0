@@ -1,119 +1,165 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f179.google.com ([209.85.216.179]:39642 "EHLO
-	mail-qc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932531AbaLAXsM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Dec 2014 18:48:12 -0500
-Received: by mail-qc0-f179.google.com with SMTP id c9so8415354qcz.24
-        for <linux-pci@vger.kernel.org>; Mon, 01 Dec 2014 15:48:11 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <548708CC.5000405@linux.intel.com>
+Date: Tue, 09 Dec 2014 22:35:56 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <547CFD93.5000702@linux.intel.com>
-References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com>
- <1416901802-24211-39-git-send-email-jiang.liu@linux.intel.com>
- <CAErSpo7-GezRLKe4hTAm=KhYHUw6zggi+4LRXjh25K-f+_hAng@mail.gmail.com> <547CFD93.5000702@linux.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 1 Dec 2014 16:47:51 -0700
-Message-ID: <CAErSpo6kppuFjDHL45n8k+2RMQFgGV4QPGqzW7-_4jEfihp2XA@mail.gmail.com>
-Subject: Re: [Patch Part3 v4 38/38] x86, irq: Add kernel parameter
- vector_alloc to set CPU vector allocation policy
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Daniel J Blueman <daniel@numascale.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
+Subject: Re: [PATCH 2/6] PCI/MSI: add hooks to populate the msi_domain field
+References: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com> <1418069543-21969-3-git-send-email-marc.zyngier@arm.com> <5486585B.40000@huawei.com> <5486C8BA.8030608@arm.com> <5486E3BF.70703@huawei.com> <5486E747.4010804@arm.com> <5486EF4E.5020704@linux.intel.com> <5487012B.4040505@arm.com> <54870302.5050703@linux.intel.com> <548706E9.8080701@arm.com>
+In-Reply-To: <548706E9.8080701@arm.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 1, 2014 at 4:45 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->
->
-> On 2014/12/2 2:49, Bjorn Helgaas wrote:
->> On Tue, Nov 25, 2014 at 12:50 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->>> Parameter vector_alloc should be set to an integer with:
->>> bit 0:  enable allocating CPU vector from CPUs on device local node.
->>>         That's to allocate from cpumask_of_node(irq_data->node).
->>> bit 1: enable the default policy, which is to allocate from
->>>        apic->target_cpus().
+On 2014/12/9 22:27, Marc Zyngier wrote:
+> On 09/12/14 14:11, Jiang Liu wrote:
+>> On 2014/12/9 22:03, Marc Zyngier wrote:
+>>> Hi Gerry,
 >>>
->>> When allocating vectors, it tries all enabled policies from lower bit
->>> position to higher bit position.
+>>> On 09/12/14 12:47, Jiang Liu wrote:
+>>>> On 2014/12/9 20:12, Marc Zyngier wrote:
+>>>>> Yijing,
+>>>>>
+>>>>> On 09/12/14 11:57, Yijing Wang wrote:
+>>>>>>>>> +void __weak pcibios_set_phb_msi_domain(struct pci_bus *bus)
+>>>>>>>>> +{
+>>>>>>>>> +}
+>>>>>>>>> +
+>>>>>>>>> +static void pci_set_bus_msi_domain(struct pci_bus *bus)
+>>>>>>>>> +{
+>>>>>>>>> +	struct pci_dev *bridge = bus->self;
+>>>>>>>>> +
+>>>>>>>>> +	if (!bridge)
+>>>>>>>>> +		pcibios_set_phb_msi_domain(bus);
+>>>>>>>>> +	else
+>>>>>>>>> +		dev_set_msi_domain(&bus->dev, dev_get_msi_domain(&bridge->dev));
+>>>>>>>>> +}
+>>>>>>>>
+>>>>>>>>
+>>>>>>>> Hi Marc, we can not assume pci devices under same phb share the same msi irq domain,
+>>>>>>>> now in x86, pci devices under the same phb may associate different msi irq domain.
+>>>>>>
+>>>>>> Hi Marc,
+>>>>>>
+>>>>>>>
+>>>>>>> Well, this is not supposed to be a perfect solution yet, but instead a
+>>>>>>> basis for discussion. What I'd like to find out is:
+>>>>>>>
+>>>>>>> - What is the minimum granularity for associating a device with its MSI
+>>>>>>> domain in existing platforms?
+>>>>>>
+>>>>>> PCI device, after Gerry's msi irq domain patchset which now in linux-next,
+>>>>>> in x86, we will find msi irq domain by pci_dev.
+>>>>>
+>>>>> Are you *really* associating the MSI domain on a per pci-device basis?
+>>>>> That is, you have devices on the same PCI bus talking to different MSI hw?
+>>>> Hi Marc,
+>>>> 	This is a little wild:(
+>>>> 	On x86 platform with Intel VT-d(not the case for AMD-v),
+>>>> interrupt remapping is tight to DMA remapping (IOMMU) unit.
+>>>> For most common cases, IOMMU unit manages PCI bus and its sub-hierarchy.
+>>>> But it may also manage a specific PCI device. This is typically used to
+>>>> provide QoS for audio device by using dedicated IOMMU unit to avoid
+>>>> resource contention on DMA remapping tables. BIOS uses ACPI table to
+>>>> report PCI bus/device to IOMMU unit mapping relationship. (To be honest,
+>>>> I have no really experience with such a hardware platform yet, just for
+>>>> theoretical analysis)
+>>>> 	On the other hand, we now support hierarchy irqdomain. So to
+>>>> support per-PCI IOMMU unit case, we need maintain irqdomain at PCI
+>>>> device level.
+>>>> 	This piece of code from your [4/6] is flexible enough, which
+>>>> retrieves msi_domain from PCI device, then fallback to PCI bus,
+>>>> then fallback to platform specific method.
+>>>> 	domain = dev_get_msi_domain(&dev->dev);
+>>>> 	if (!domain && dev->bus->msi)
+>>>>  		domain = dev->bus->msi->domain;
+>>>>  	if (!domain)
+>>>>  		domain = arch_get_pci_msi_domain(dev);
 >>>
->>> This option could be use to optimize interrupt distribution on large
->>> system such as NumaChip etc.
->>
->> Why can't we figure this out automatically?  Having a kernel parameter
->> is a pain in the neck for users.
-> Hi Bjorn,
->         I'm thinking of automatically turning on local vector
-> allocation if any host bridge has an assigned(valid) NUMA node id.
-> By this way, user doesn't need to specify the kernel parameter for most
-> cases. How about this solution?
+>>> OK. But what I'd really like to see is a way to setup the
+>>> device<->domain binding as early as possible, without having to use more
+>>> conditional code in pci_msi_get_domain.
+>>>
+>>> IOW, can we do something similar to what pci_set_bus_msi_domain and
+>>> pci_set_msi_domain do in this patch?
+>> Hi Marc,
+>> 	I have checked x86 code, we could set pci_dev->msi_domain
+>> when creating PCI devices, just need to find some hook points
+>> into PCI core next step. If arch code doesn't set pci_dev->msi_domain,
+>> PCI MSI core may provide a default way to set pci_dev->msi_domain.
+>> This may make the implementation simpler, I guess:)
+> 
+> Right. So following your earlier suggestion, I could make
+> pci_set_msi_domain a weak symbol and let arch code override this.
+> 
+> My preference would have been to have arch code to create a set of
+> arch-independent data structures describing the topology, and use that
+> for everything, but maybe that's a bit ambitious for a start.
+> 
+> I'll rework the series to make the symbols weak.
+Hi Marc,
+	I think we may not need the weak symbol at all. With following
+draft patch, the PCI MSI core may simply do:
+	if (pci_dev->dev.msi_domain == NULL)
+		dev_set_msi_domain(&dev->dev,
+			 dev_get_msi_domain(&dev->bus->dev));
+-----------------------------------------------------------------------
+Note: the patch won't pass compilation, just to show the key idea:)
 
-I'm not an IRQ person, but your idea sounds like figuring this out
-automatically, and I'm in favor of that :)
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index da163da5fdee..8147d25d4349 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -67,6 +67,23 @@ static struct irq_chip pci_msi_controller = {
+        .flags                  = IRQCHIP_SKIP_SET_WAKE,
+ };
 
->>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->>> Cc: Daniel J Blueman <daniel@numascale.com>
->>> ---
->>>  Documentation/kernel-parameters.txt |    6 ++++++
->>>  arch/x86/kernel/apic/vector.c       |   11 +++++++++++
->>>  2 files changed, 17 insertions(+)
->>>
->>> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
->>> index 4c81a860cc2b..a175c5016954 100644
->>> --- a/Documentation/kernel-parameters.txt
->>> +++ b/Documentation/kernel-parameters.txt
->>> @@ -3709,6 +3709,12 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->>>         vector=         [IA-64,SMP]
->>>                         vector=percpu: enable percpu vector domain
->>>
->>> +       vector_alloc=   [x86,SMP]
->>> +                       vector_alloc=policy: policy is a bitmap, bit 0
->>> +                       for allocating CPU vector from CPUs on device local
->>> +                       node; bit 1 for the default policy to allocating from
->>> +                       apic->target_cpus(). All higher bits are reserved.
->>> +
->>>         video=          [FB] Frame buffer configuration
->>>                         See Documentation/fb/modedb.txt.
->>>
->>> diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
->>> index 16de8906ee1e..1158843551c7 100644
->>> --- a/arch/x86/kernel/apic/vector.c
->>> +++ b/arch/x86/kernel/apic/vector.c
->>> @@ -79,6 +79,17 @@ void set_vector_alloc_policy(unsigned int policy)
->>>                 x86_vector_alloc_policy = policy | X86_VECTOR_POL_CALLER;
->>>  }
->>>
->>> +static int __init apic_parse_vector_policy(char *str)
->>> +{
->>> +       int policy;
->>> +
->>> +       if (get_option(&str, &policy) == 1)
->>> +               set_vector_alloc_policy(policy);
->>> +
->>> +       return 1;
->>> +}
->>> +__setup("vector_alloc=", apic_parse_vector_policy);
->>> +
->>>  static struct apic_chip_data *alloc_apic_chip_data(int node)
->>>  {
->>>         struct apic_chip_data *data;
->>> --
->>> 1.7.10.4
->>>
++struct irq_domain *x86_get_pci_msi_domain(struct pci_dev *dev)
++{
++       struct irq_domain *domain;
++       struct irq_alloc_info info;
++
++       init_irq_alloc_info(&info, NULL);
++       info.type = X86_IRQ_ALLOC_TYPE_MSI;
++       info.msi_dev = dev;
++       domain = irq_remapping_get_irq_domain(&info);
++       if (domain == NULL)
++               domain = msi_default_domain;
++       if (domain == NULL)
++               domain = ERR_PTR(-ENOSYS);
++
++       return domain;
++}
++
+ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ {
+        struct irq_domain *domain;
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 7b20bccf3648..a26f30a8bb8f 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -652,6 +652,9 @@ int pcibios_add_device(struct pci_dev *dev)
+                pa_data = data->next;
+                iounmap(data);
+        }
++
++       dev->dev.msi_domain = x86_get_pci_msi_domain(dev);
++
+        return 0;
+ }
+
+
+> 
+> Thanks,
+> 
+> 	M.
+> 
