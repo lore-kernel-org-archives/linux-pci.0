@@ -1,116 +1,124 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Daniel Vetter <daniel.vetter@intel.com>,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	David Airlie <airlied@linux.ie>,
-	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: Re: 3.19-rc1 errors when opening LID
-Date: Fri, 26 Dec 2014 16:12:49 +0100
-Message-ID: <3406993.nnu7vUsHIn@vostro.rjw.lan>
-In-Reply-To: <201412241951.48652@pali>
-References: <201412241951.48652@pali>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:38459 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754688AbaLICD1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Dec 2014 21:03:27 -0500
+Message-ID: <5486585B.40000@huawei.com>
+Date: Tue, 9 Dec 2014 10:03:07 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"Suravee Suthikulpanit" <Suravee.Suthikulpanit@amd.com>
+Subject: Re: [PATCH 2/6] PCI/MSI: add hooks to populate the msi_domain field
+References: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com> <1418069543-21969-3-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1418069543-21969-3-git-send-email-marc.zyngier@arm.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, December 24, 2014 07:51:48 PM Pali Rohár wrote:
+On 2014/12/9 4:12, Marc Zyngier wrote:
+> In order to be able to populate the device msi_domain field,
+> add the necesary hooks to propagate the PHB msi_domain across
+> secondary busses to devices.
 > 
-> --nextPart5943893.pKyMBm5Emp
-> Content-Type: Text/Plain;
->   charset="utf-8"
-> Content-Transfer-Encoding: quoted-printable
+> So far, nobody populates the initial msi_domain.
 > 
-> Hello!
+> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> ---
+>  drivers/pci/probe.c | 24 ++++++++++++++++++++++++
+>  include/linux/pci.h |  1 +
+>  2 files changed, 25 insertions(+)
 > 
-> With new 3.19-rc1 kernel every time when I open LID on my laptop, kernel pr=
-> ints these error lines to dmesg:
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index c8ca98c..d1009a2 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -670,6 +670,20 @@ static void pci_set_bus_speed(struct pci_bus *bus)
+>  	}
+>  }
+>  
+> +void __weak pcibios_set_phb_msi_domain(struct pci_bus *bus)
+> +{
+> +}
+> +
+> +static void pci_set_bus_msi_domain(struct pci_bus *bus)
+> +{
+> +	struct pci_dev *bridge = bus->self;
+> +
+> +	if (!bridge)
+> +		pcibios_set_phb_msi_domain(bus);
+> +	else
+> +		dev_set_msi_domain(&bus->dev, dev_get_msi_domain(&bridge->dev));
+> +}
 
-Does your syste suspend when the lid is closed and resume when it is open?
 
-> [25566.368133] [drm:hsw_unclaimed_reg_detect.isra.6 [i915]] *ERROR* Unclaim=
-> ed register detected. Please use the i915.mmio_debug=3D1 to debug this prob=
-> lem.
-> [25566.368134] [drm:intel_uncore_check_errors [i915]] *ERROR* Unclaimed reg=
-> ister before interrupt
-> [25566.368192] [drm:hsw_unclaimed_reg_detect.isra.6 [i915]] *ERROR* Unclaim=
-> ed register detected. Please use the i915.mmio_debug=3D1 to debug this prob=
-> lem.
-> [25566.368232] [drm:hsw_unclaimed_reg_detect.isra.6 [i915]] *ERROR* Unclaim=
-> ed register detected. Please use the i915.mmio_debug=3D1 to debug this prob=
-> lem.<4>[25568.446011] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2]=
-> =20
-> has bogus alignment
+Hi Marc, we can not assume pci devices under same phb share the same msi irq domain,
+now in x86, pci devices under the same phb may associate different msi irq domain.
 
-The above messages are from i915 and don't seem to be related to ACPI.
-
-> [25568.447018] pci_bus 0000:02: Allocating resources
-> [25568.447055] pci_bus 0000:03: Allocating resources
-> [25568.447135] pci_bus 0000:04: Allocating resources
-> [25568.447168] pci_bus 0000:05: Allocating resources
-> [25568.447195] pci_bus 0000:06: Allocating resources
-> [25568.447228] pci_bus 0000:0e: Allocating resources
-> [25568.447323] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bog=
-> us alignment
-> [25568.447557] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bog=
-> us alignment
-> [25568.447735] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bog=
-> us alignment
-> [25568.447847] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bog=
-> us alignment
-> [25568.448399] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bog=
-> us alignment
-> [25568.448438] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bog=
-> us alignment
-
-The above too.
-
-> [25568.448566] acpi MSFT1111:00: Cannot transition to power state D3cold fo=
-> r parent in (unknown)
-> [25568.448572] acpi INT33C2:00: Cannot transition to non-D0 state from D3
-> [25568.448577] acpi MSFT0002:00: Cannot transition to power state D3cold fo=
-> r parent in (unknown)
-> [25568.448581] acpi ELAN1010:00: Cannot transition to power state D3cold fo=
-> r parent in (unknown)
-> [25568.448587] acpi INT33C3:00: Cannot transition to non-D0 state from D3
-> [25568.448590] acpi INT33C0:00: Cannot transition to non-D0 state from D3
-> [25568.448594] acpi INT33C1:00: Cannot transition to non-D0 state from D3
-> [25568.448598] acpi INT33C4:00: Cannot transition to non-D0 state from D3
-> [25568.448602] acpi INT33C5:00: Cannot transition to non-D0 state from D3
-> [25568.448623] acpi device:41: Cannot transition to power state D3cold for =
-> parent in (unknown)
-> [25568.448627] acpi INT33C6:00: Cannot transition to non-D0 state from D3
-
-All of the above mean that power transitions were not carried out for some
-devices, because they were in unexpected power states to start with.
-
-They are devices on the Intel LPSS as far as I can say (CCing Mika and Andy).
-
-> [25568.448890] pci_bus 0000:01: Allocating resources
-> [25568.448905] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bog=
-> us alignment
-> [25568.449064] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bog=
-> us alignment
-> [25568.449472] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bog=
-> us alignment
+> +
+>  static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>  					   struct pci_dev *bridge, int busnr)
+>  {
+> @@ -723,6 +737,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>  	bridge->subordinate = child;
+>  
+>  add_dev:
+> +	pci_set_bus_msi_domain(child);
+>  	ret = device_register(&child->dev);
+>  	WARN_ON(ret < 0);
+>  
+> @@ -1517,6 +1532,11 @@ static void pci_init_capabilities(struct pci_dev *dev)
+>  	pci_enable_acs(dev);
+>  }
+>  
+> +static void pci_set_msi_domain(struct pci_dev *dev)
+> +{
+> +	dev_set_msi_domain(&dev->dev, dev_get_msi_domain(&dev->bus->dev));
+> +}
+> +
+>  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>  {
+>  	int ret;
+> @@ -1546,6 +1566,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>  	/* Initialize various capabilities */
+>  	pci_init_capabilities(dev);
+>  
+> +	/* Setup MSI irq domain */
+> +	pci_set_msi_domain(dev);
+> +
+>  	/*
+>  	 * Add the device to our list of discovered devices
+>  	 * and the bus list for fixup functions, etc.
+> @@ -1947,6 +1970,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  	b->bridge = get_device(&bridge->dev);
+>  	device_enable_async_suspend(b->bridge);
+>  	pci_set_bus_of_node(b);
+> +	pci_set_bus_msi_domain(b);
+>  
+>  	if (!parent)
+>  		set_dev_node(b->bridge, pcibus_to_node(b));
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index a523cee..3266764 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1637,6 +1637,7 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+>  int pcibios_add_device(struct pci_dev *dev);
+>  void pcibios_release_device(struct pci_dev *dev);
+>  void pcibios_penalize_isa_irq(int irq, int active);
+> +void pcibios_set_phb_msi_domain(struct pci_bus *bus);
+>  
+>  #ifdef CONFIG_HIBERNATE_CALLBACKS
+>  extern struct dev_pm_ops pcibios_pm_ops;
 > 
-> With older kernel (3.13) I do not see these errors, so it is regression.
-
-It only is a regression if it leads to functional problems.  Do you see any?
-
-> Ca=n you look at it? If it is needed, I can provide other logs, ACPI/DSTD dump=
-> s, etc.
-
-It looks like 3.13 didn't try to use some devices that are now used in 3.19-rc1
-and something doesn't work entirely as expected.
 
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Thanks!
+Yijing
+
