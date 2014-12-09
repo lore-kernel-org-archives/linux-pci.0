@@ -1,127 +1,30 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:34442 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753473AbaLVFzL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 00:55:11 -0500
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 22 Dec 2014 15:55:10 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 11F602CE8065
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:55:08 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sBM5t6TJ18546842
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:55:06 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sBM5t7uO021048
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:55:07 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V10 13/17] powerpc/powernv: Implement pcibios_iov_resource_alignment() on powernv
-Date: Mon, 22 Dec 2014 13:54:33 +0800
-Message-Id: <1419227677-12312-14-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:54336 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755486AbaLIDSI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Dec 2014 22:18:08 -0500
+MIME-Version: 1.0
+In-Reply-To: <1415907457-3147-3-git-send-email-l.stach@pengutronix.de>
+References: <1415907457-3147-1-git-send-email-l.stach@pengutronix.de> <1415907457-3147-3-git-send-email-l.stach@pengutronix.de>
+From: Alexandre Courbot <gnurou@gmail.com>
+Date: Tue, 9 Dec 2014 12:17:47 +0900
+Message-ID: <CAAVeFuJ95scnwB9iW_A-uNqVghC4sKfvL2zj=pJJoSze6D4U9Q@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: tegra: remove bogus bridge setup fixup
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Thierry Reding <thierry.reding@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch implements the pcibios_iov_resource_alignment() on powernv
-platform.
+On Fri, Nov 14, 2014 at 4:37 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> The bridge setup is already done by generic code
+> while scanning the buses. Do not duplicate (or potentially
+> alter) this setup as a fixup.
 
-On PowerNV platform, there are 3 cases for the IOV BAR:
-1. initial state, the IOV BAR size is multiple times of VF BAR size
-2. after expanded, the IOV BAR size is expanded to meet the M64 segment size
-3. sizing stage, the IOV BAR is truncated to 0
+Jetson seems to be happy with this change.
 
-pnv_pci_iov_resource_alignment() handle these three cases respectively.
-
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/machdep.h        |    3 +++
- arch/powerpc/kernel/pci-common.c          |   14 ++++++++++++++
- arch/powerpc/platforms/powernv/pci-ioda.c |   20 ++++++++++++++++++++
- 3 files changed, 37 insertions(+)
-
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index 965547c..12e8eb8 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -252,6 +252,9 @@ struct machdep_calls {
- 
- #ifdef CONFIG_PCI_IOV
- 	void (*pcibios_fixup_sriov)(struct pci_bus *bus);
-+	resource_size_t (*pcibios_iov_resource_alignment)(struct pci_dev *,
-+			                                    int resno,
-+							    resource_size_t align);
- #endif /* CONFIG_PCI_IOV */
- 
- 	/* Called to shutdown machine specific hardware not already controlled
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 832b7e1..8751dfb 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -130,6 +130,20 @@ void pcibios_reset_secondary_bus(struct pci_dev *dev)
- 	pci_reset_secondary_bus(dev);
- }
- 
-+#ifdef CONFIG_PCI_IOV
-+resource_size_t pcibios_iov_resource_alignment(struct pci_dev *pdev,
-+						 int resno,
-+						 resource_size_t align)
-+{
-+	if (ppc_md.pcibios_iov_resource_alignment)
-+		return ppc_md.pcibios_iov_resource_alignment(pdev,
-+							       resno,
-+							       align);
-+
-+	return 0;
-+}
-+#endif /* CONFIG_PCI_IOV */
-+
- static resource_size_t pcibios_io_size(const struct pci_controller *hose)
- {
- #ifdef CONFIG_PPC64
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index a9e61fa..512dc48 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1952,6 +1952,25 @@ static resource_size_t pnv_pci_window_alignment(struct pci_bus *bus,
- 	return phb->ioda.io_segsize;
- }
- 
-+#ifdef CONFIG_PCI_IOV
-+static resource_size_t pnv_pci_iov_resource_alignment(struct pci_dev *pdev,
-+							    int resno,
-+							    resource_size_t align)
-+{
-+	struct pci_dn *pdn = pci_get_pdn(pdev);
-+	resource_size_t iov_align;
-+
-+	iov_align = resource_size(&pdev->resource[resno]);
-+	if (iov_align)
-+		return iov_align;
-+
-+	if (pdn->max_vfs)
-+		return pdn->max_vfs * align;
-+
-+	return align;
-+}
-+#endif /* CONFIG_PCI_IOV */
-+
- /* Prevent enabling devices for which we couldn't properly
-  * assign a PE
-  */
-@@ -2154,6 +2173,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
- #ifdef CONFIG_PCI_IOV
- 	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
-+	ppc_md.pcibios_iov_resource_alignment = pnv_pci_iov_resource_alignment;
- #endif /* CONFIG_PCI_IOV */
- 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
- 
--- 
-1.7.9.5
-
+Tested-by: Alexandre Courbot <acourbot@nvidia.com>
