@@ -1,171 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:37105 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751000AbaLYVMs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Dec 2014 16:12:48 -0500
-Received: by mail-ig0-f178.google.com with SMTP id hl2so8263436igb.11
-        for <linux-pci@vger.kernel.org>; Thu, 25 Dec 2014 13:12:48 -0800 (PST)
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:36029 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752342AbaLIWiN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 17:38:13 -0500
+Received: by mail-ie0-f180.google.com with SMTP id rp18so1542083iec.39
+        for <linux-pci@vger.kernel.org>; Tue, 09 Dec 2014 14:38:12 -0800 (PST)
+Date: Tue, 9 Dec 2014 15:38:09 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Dmitry Torokhov <dtor@chromium.org>
+Cc: Murali Karicheri <m-karicheri2@ti.com>,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Wolfram Sang <wsa@the-dreams.de>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: keystone: fix error handling of irq_of_parse_and_map
+Message-ID: <20141209223809.GB6692@google.com>
+References: <20141114221903.GA38539@dtor-ws>
 MIME-Version: 1.0
-In-Reply-To: <549C313A.7090504@gmail.com>
-References: <CAErSpo69c6jXOp+nw2sTSU4vgqGufUQNUEGK4_2+6p-qpyE0vQ@mail.gmail.com>
-	<1418074683.13358.1.camel@kernel.crashing.org>
-	<CAErSpo7pMAL5i2aPGV3u5F178bHeQTtjASckKs9NaUbEGaxv3Q@mail.gmail.com>
-	<20141208233855.GA15713@shangw>
-	<CAE9FiQXj-vX8TE-8Es83FmJAKDKD_dMNbQkmsaNPyy_nVEag8w@mail.gmail.com>
-	<20141220002306.GB30834@google.com>
-	<CAE9FiQUU4OoxpV3MNyFdjtmS1nRfD=ziYDDnUmsGy5qj8U3vLg@mail.gmail.com>
-	<CAErSpo7JAcLa_2gNkOG+oSHb1cbBXdEa-TVW0=amBptRB8-fNA@mail.gmail.com>
-	<CAE9FiQV6nxeMcLQ6YBR_c5tNGGjiKgL+Z4vcGpK21j-14V8SKw@mail.gmail.com>
-	<CAE9FiQVggbU5u__0z8p33J9hQ39CtQ-vpQbZyjG-LO9aqN05Lw@mail.gmail.com>
-	<20141223214106.GA27291@google.com>
-	<CAE9FiQUoA_vz78sEnHtDAmzTJcwL0PdUe9jwLw+H9h3+omq+WA@mail.gmail.com>
-	<549C313A.7090504@gmail.com>
-Date: Thu, 25 Dec 2014 13:12:47 -0800
-Message-ID: <CAE9FiQUihEJeMT98pF-eQTEY9NcvvBCUgWQKXVXwmCZ8=Jy=8Q@mail.gmail.com>
-Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
- GPU init
-From: Yinghai Lu <yinghai@kernel.org>
-To: =?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alexey Voronkov <zermond@gmail.com>,
-	David Airlie <airlied@linux.ie>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Richard Yang <weiyang@linux.vnet.ibm.com>
-Content-Type: multipart/mixed; boundary=001a113f6644baba6a050b10de3a
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141114221903.GA38539@dtor-ws>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---001a113f6644baba6a050b10de3a
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Fri, Nov 14, 2014 at 02:19:03PM -0800, Dmitry Torokhov wrote:
+> Return value of irq_of_parse_and_map() is unsigned int, with 0
+> indicating failure, so testing for negative result never works.
+> 
+> Signed-off-by: Dmitry Torokhov <dtor@chromium.org>
 
-On Thu, Dec 25, 2014 at 7:46 AM, Marek Kord=C3=ADk <kordikmarek@gmail.com> =
-wrote:
-> On 12/24/2014 03:29 AM, Yinghai Lu wrote:
+Applied with Murali's ack to next-pci/host-keystone for v3.19.  This
+branch will be rebased to v3.19-rc1.
 
-> I checked (only) v2 of your patch on versions 3.18.0 and 3.18.1. The resu=
-lt
-> of both versions is that booting stops with kernel panic. I don't how to =
-get
-> the full log (there is nothing in journalctl and dmesg after booting some
-> working kernel - maybe if you can give me some hint what to google) so I
-> will attach photo of screen to the bugzilla issue.
-
-Please check update one.
-
-but i still can not understand why do we need
-
-if (!r)
-   continue;
-
-checking...
-
---001a113f6644baba6a050b10de3a
-Content-Type: text/x-patch; charset=US-ASCII; name="pci_bridge_clip_v3.patch"
-Content-Disposition: attachment; filename="pci_bridge_clip_v3.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_i44mlk2w0
-
-U3ViamVjdDogW1BBVENIIHYzXSBQQ0ksIHg4NjogY2xpcCBmaXJtd2FyZSBhc3NpZ25lZCBwY2kg
-YnJpZGdlcyB1bmRlciBob3N0YnJpZGdlCgpTb21lIGJpb3MgcHV0IHJhbmdlIHRoYXQgaXMgbm90
-IGZ1bGx5IGNvdmVycmVkIGJ5IHJvb3QgYnVzIHJlc291cmNlcy4KVHJ5IHRvIGNsaXAgdGhlbSBh
-bmQgdXBkYXRlIHRoZW0gaW4gcGNpIGJyaWRnZSBiYXJzLgoKLXYyOiBjaGVjayB3aXRoIHVwc3Ry
-ZWFtIGJyaWRnZSBpbnN0ZWFkIG9mIGhvc3QgYnJpZGdlIG9ubHkuCiAgICAgYWxzbyBhZGQgZGVi
-dWcgcHJpbnQgb3V0LgotdjM6IGZpeCBjaGVja2luZyB1bmRlciBwY2lfYnVzX2Zvcl9lYWNoLi4u
-CgpMaW5rOiBodHRwczovL2J1Z3ppbGxhLmtlcm5lbC5vcmcvc2hvd19idWcuY2dpP2lkPTg1NDkx
-ClJlcG9ydGVkLWJ5OiBNYXJlayBLb3JkaWsgPGtvcmRpa21hcmVrQGdtYWlsLmNvbT4KRml4ZXM6
-IDViMjg1NDE1NTJlZiAoIlBDSTogUmVzdHJpY3QgNjQtYml0IHByZWZldGNoYWJsZSBicmlkZ2Ug
-d2luZG93cyB0byA2NC1iaXQgcmVzb3VyY2VzIikKU2lnbmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8
-eWluZ2hhaUBrZXJuZWwub3JnPgoKLS0tCiBhcmNoL3g4Ni9wY2kvaTM4Ni5jIHwgICA4MSArKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0tLS0tCiBkcml2ZXJz
-L3BjaS9idXMuYyAgIHwgICAzNyArKysrKysrKysrKysrKysrKysrKysrKwogaW5jbHVkZS9saW51
-eC9wY2kuaCB8ICAgIDEgCiAzIGZpbGVzIGNoYW5nZWQsIDk3IGluc2VydGlvbnMoKyksIDIyIGRl
-bGV0aW9ucygtKQoKSW5kZXg6IGxpbnV4LTIuNi9hcmNoL3g4Ni9wY2kvaTM4Ni5jCj09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2FyY2gveDg2L3BjaS9pMzg2LmMKKysrIGxpbnV4LTIuNi9h
-cmNoL3g4Ni9wY2kvaTM4Ni5jCkBAIC0yMDUsMjggKzIwNSw0OCBAQCBFWFBPUlRfU1lNQk9MKHBj
-aWJpb3NfYWxpZ25fcmVzb3VyY2UpOwogICoJICAgIGFzIHdlbGwuCiAgKi8KIAotc3RhdGljIHZv
-aWQgcGNpYmlvc19hbGxvY2F0ZV9icmlkZ2VfcmVzb3VyY2VzKHN0cnVjdCBwY2lfZGV2ICpkZXYp
-CitzdGF0aWMgYm9vbCBwY2liaW9zX2FsbG9jYXRlX2JyaWRnZV9yZXNvdXJjZXMoc3RydWN0IHBj
-aV9kZXYgKmRldikKIHsKIAlpbnQgaWR4OwogCXN0cnVjdCByZXNvdXJjZSAqcjsKKwlib29sIGNo
-YW5nZWQgPSBmYWxzZTsKIAogCWZvciAoaWR4ID0gUENJX0JSSURHRV9SRVNPVVJDRVM7IGlkeCA8
-IFBDSV9OVU1fUkVTT1VSQ0VTOyBpZHgrKykgeworCQlpbnQgcmV0OworCiAJCXIgPSAmZGV2LT5y
-ZXNvdXJjZVtpZHhdOwogCQlpZiAoIXItPmZsYWdzKQogCQkJY29udGludWU7CiAJCWlmIChyLT5w
-YXJlbnQpCS8qIEFscmVhZHkgYWxsb2NhdGVkICovCiAJCQljb250aW51ZTsKLQkJaWYgKCFyLT5z
-dGFydCB8fCBwY2lfY2xhaW1fcmVzb3VyY2UoZGV2LCBpZHgpIDwgMCkgewotCQkJLyoKLQkJCSAq
-IFNvbWV0aGluZyBpcyB3cm9uZyB3aXRoIHRoZSByZWdpb24uCi0JCQkgKiBJbnZhbGlkYXRlIHRo
-ZSByZXNvdXJjZSB0byBwcmV2ZW50Ci0JCQkgKiBjaGlsZCByZXNvdXJjZSBhbGxvY2F0aW9ucyBp
-biB0aGlzCi0JCQkgKiByYW5nZS4KLQkJCSAqLwotCQkJci0+c3RhcnQgPSByLT5lbmQgPSAwOwot
-CQkJci0+ZmxhZ3MgPSAwOworCisJCWlmICghci0+c3RhcnQpCisJCQlnb3RvIGNsZWFyOworCisJ
-CXJldCA9IHBjaV9jbGFpbV9yZXNvdXJjZShkZXYsIGlkeCk7CisJCWlmIChyZXQgPj0gMCkKKwkJ
-CWNvbnRpbnVlOworCisJCS8qIHRyeSBhZ2FpbiBhZnRlciBjbGlwIGZvciBwY2kgYnJpZGdlKi8K
-KwkJaWYgKChkZXYtPmNsYXNzID4+IDgpID09IFBDSV9DTEFTU19CUklER0VfUENJICYmCisJCSAg
-ICBwY2lfYnVzX2NsaXBfcmVzb3VyY2UoZGV2LCByKSkgeworCQkJY2hhbmdlZCA9IHRydWU7CisJ
-CQlpZiAocGNpX2NsYWltX3Jlc291cmNlKGRldiwgaWR4KSA+PSAwKQorCQkJCWNvbnRpbnVlOwog
-CQl9CisKK2NsZWFyOgorCQkvKgorCQkgKiBTb21ldGhpbmcgaXMgd3Jvbmcgd2l0aCB0aGUgcmVn
-aW9uLgorCQkgKiBJbnZhbGlkYXRlIHRoZSByZXNvdXJjZSB0byBwcmV2ZW50CisJCSAqIGNoaWxk
-IHJlc291cmNlIGFsbG9jYXRpb25zIGluIHRoaXMKKwkJICogcmFuZ2UuCisJCSAqLworCQlyLT5z
-dGFydCA9IHItPmVuZCA9IDA7CisJCXItPmZsYWdzID0gMDsKIAl9CisKKwlyZXR1cm4gY2hhbmdl
-ZDsKIH0KIAogc3RhdGljIHZvaWQgcGNpYmlvc19hbGxvY2F0ZV9idXNfcmVzb3VyY2VzKHN0cnVj
-dCBwY2lfYnVzICpidXMpCkBAIC0yMzQsOCArMjU0LDEyIEBAIHN0YXRpYyB2b2lkIHBjaWJpb3Nf
-YWxsb2NhdGVfYnVzX3Jlc291cmMKIAlzdHJ1Y3QgcGNpX2J1cyAqY2hpbGQ7CiAKIAkvKiBEZXB0
-aC1GaXJzdCBTZWFyY2ggb24gYnVzIHRyZWUgKi8KLQlpZiAoYnVzLT5zZWxmKQotCQlwY2liaW9z
-X2FsbG9jYXRlX2JyaWRnZV9yZXNvdXJjZXMoYnVzLT5zZWxmKTsKKwlpZiAoYnVzLT5zZWxmKSB7
-CisJCWJvb2wgY2hhbmdlZCA9IHBjaWJpb3NfYWxsb2NhdGVfYnJpZGdlX3Jlc291cmNlcyhidXMt
-PnNlbGYpOworCisJCWlmIChjaGFuZ2VkKQorCQkJcGNpX3NldHVwX2JyaWRnZShidXMpOworCX0K
-IAlsaXN0X2Zvcl9lYWNoX2VudHJ5KGNoaWxkLCAmYnVzLT5jaGlsZHJlbiwgbm9kZSkKIAkJcGNp
-Ymlvc19hbGxvY2F0ZV9idXNfcmVzb3VyY2VzKGNoaWxkKTsKIH0KQEAgLTI3MSwyMSArMjk1LDM0
-IEBAIHN0YXRpYyB2b2lkIHBjaWJpb3NfYWxsb2NhdGVfZGV2X3Jlc291cmMKIAkJCWVsc2UKIAkJ
-CQlkaXNhYmxlZCA9ICEoY29tbWFuZCAmIFBDSV9DT01NQU5EX01FTU9SWSk7CiAJCQlpZiAocGFz
-cyA9PSBkaXNhYmxlZCkgeworCQkJCWludCByZXQ7CisKIAkJCQlkZXZfZGJnKCZkZXYtPmRldiwK
-IAkJCQkJIkJBUiAlZDogcmVzZXJ2aW5nICVwciAoZD0lZCwgcD0lZClcbiIsCiAJCQkJCWlkeCwg
-ciwgZGlzYWJsZWQsIHBhc3MpOwotCQkJCWlmIChwY2lfY2xhaW1fcmVzb3VyY2UoZGV2LCBpZHgp
-IDwgMCkgewotCQkJCQlpZiAoci0+ZmxhZ3MgJiBJT1JFU09VUkNFX1BDSV9GSVhFRCkgewotCQkJ
-CQkJZGV2X2luZm8oJmRldi0+ZGV2LCAiQkFSICVkICVwUiBpcyBpbW1vdmFibGVcbiIsCisKKwkJ
-CQlyZXQgPSBwY2lfY2xhaW1fcmVzb3VyY2UoZGV2LCBpZHgpOworCisJCQkJaWYgKHJldCA+PSAw
-KQorCQkJCQljb250aW51ZTsKKworCQkJCWlmIChyLT5mbGFncyAmIElPUkVTT1VSQ0VfUENJX0ZJ
-WEVEKSB7CisJCQkJCWRldl9pbmZvKCZkZXYtPmRldiwgIkJBUiAlZCAlcFIgaXMgaW1tb3ZhYmxl
-XG4iLAogCQkJCQkJCSBpZHgsIHIpOwotCQkJCQl9IGVsc2UgewotCQkJCQkJLyogV2UnbGwgYXNz
-aWduIGEgbmV3IGFkZHJlc3MgbGF0ZXIgKi8KLQkJCQkJCXBjaWJpb3Nfc2F2ZV9md19hZGRyKGRl
-diwKLQkJCQkJCQkJaWR4LCByLT5zdGFydCk7Ci0JCQkJCQlyLT5lbmQgLT0gci0+c3RhcnQ7Ci0J
-CQkJCQlyLT5zdGFydCA9IDA7Ci0JCQkJCX0KKwkJCQkJY29udGludWU7CisJCQkJfQorCisJCQkJ
-LyogdHJ5IGFnYWluIHdpdGggY2xpcCAqLworCQkJCWlmIChwY2lfYnVzX2NsaXBfcmVzb3VyY2Uo
-ZGV2LCByKSkgeworCQkJCQlwY2lfdXBkYXRlX3Jlc291cmNlKGRldiwgaWR4KTsKKwkJCQkJaWYg
-KHBjaV9jbGFpbV9yZXNvdXJjZShkZXYsIGlkeCkgPj0gMCkKKwkJCQkJCWNvbnRpbnVlOwogCQkJ
-CX0KKworCQkJCS8qIFdlJ2xsIGFzc2lnbiBhIG5ldyBhZGRyZXNzIGxhdGVyICovCisJCQkJcGNp
-Ymlvc19zYXZlX2Z3X2FkZHIoZGV2LCBpZHgsIHItPnN0YXJ0KTsKKwkJCQlyLT5lbmQgLT0gci0+
-c3RhcnQ7CisJCQkJci0+c3RhcnQgPSAwOwogCQkJfQogCQl9CiAJaWYgKCFwYXNzKSB7CkluZGV4
-OiBsaW51eC0yLjYvaW5jbHVkZS9saW51eC9wY2kuaAo9PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYu
-b3JpZy9pbmNsdWRlL2xpbnV4L3BjaS5oCisrKyBsaW51eC0yLjYvaW5jbHVkZS9saW51eC9wY2ku
-aApAQCAtMTA5NCw2ICsxMDk0LDcgQEAgdm9pZCBwY2lfZnJlZV9yZXNvdXJjZV9saXN0KHN0cnVj
-dCBsaXN0Xwogdm9pZCBwY2lfYnVzX2FkZF9yZXNvdXJjZShzdHJ1Y3QgcGNpX2J1cyAqYnVzLCBz
-dHJ1Y3QgcmVzb3VyY2UgKnJlcywgdW5zaWduZWQgaW50IGZsYWdzKTsKIHN0cnVjdCByZXNvdXJj
-ZSAqcGNpX2J1c19yZXNvdXJjZV9uKGNvbnN0IHN0cnVjdCBwY2lfYnVzICpidXMsIGludCBuKTsK
-IHZvaWQgcGNpX2J1c19yZW1vdmVfcmVzb3VyY2VzKHN0cnVjdCBwY2lfYnVzICpidXMpOworYm9v
-bCBwY2lfYnVzX2NsaXBfcmVzb3VyY2Uoc3RydWN0IHBjaV9kZXYgKmRldiwgc3RydWN0IHJlc291
-cmNlICpyZXMpOwogCiAjZGVmaW5lIHBjaV9idXNfZm9yX2VhY2hfcmVzb3VyY2UoYnVzLCByZXMs
-IGkpCQkJCVwKIAlmb3IgKGkgPSAwOwkJCQkJCQlcCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9w
-Y2kvYnVzLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kvYnVzLmMK
-KysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9idXMuYwpAQCAtMjI4LDYgKzIyOCw0MyBAQCBpbnQg
-cGNpX2J1c19hbGxvY19yZXNvdXJjZShzdHJ1Y3QgcGNpX2J1CiB9CiBFWFBPUlRfU1lNQk9MKHBj
-aV9idXNfYWxsb2NfcmVzb3VyY2UpOwogCitib29sIHBjaV9idXNfY2xpcF9yZXNvdXJjZShzdHJ1
-Y3QgcGNpX2RldiAqZGV2LCBzdHJ1Y3QgcmVzb3VyY2UgKnJlcykKK3sKKwlzdHJ1Y3QgcGNpX2J1
-cyAqYnVzID0gZGV2LT5idXM7CisJcmVzb3VyY2Vfc2l6ZV90IHN0YXJ0LCBlbmQ7CisJc3RydWN0
-IHJlc291cmNlIG9yaWdfcmVzID0gKnJlczsKKwlzdHJ1Y3QgcmVzb3VyY2UgKnI7CisJaW50IGk7
-CisKKwlwY2lfYnVzX2Zvcl9lYWNoX3Jlc291cmNlKGJ1cywgciwgaSkgeworCQlpZiAoIXIpCisJ
-CQljb250aW51ZTsKKworCQlpZiAocmVzb3VyY2VfdHlwZShyZXMpICE9IHJlc291cmNlX3R5cGUo
-cikpCisJCQljb250aW51ZTsKKworCQlzdGFydCA9IG1heChyLT5zdGFydCwgcmVzLT5zdGFydCk7
-CisJCWVuZCA9IG1pbihyLT5lbmQsIHJlcy0+ZW5kKTsKKworCQkvKiBubyBvdmVybGFwID8gKi8K
-KwkJaWYgKHN0YXJ0ID4gZW5kKQorCQkJY29udGludWU7CisKKwkJaWYgKHJlcy0+c3RhcnQgPT0g
-c3RhcnQgJiYgcmVzLT5lbmQgPT0gZW5kKQorCQkJcmV0dXJuIGZhbHNlOworCisJCS8qIGNoYW5n
-ZWQgKi8KKwkJcmVzLT5zdGFydCA9IHN0YXJ0OworCQlyZXMtPmVuZCA9IGVuZDsKKwkJZGV2X3By
-aW50ayhLRVJOX0RFQlVHLCAmZGV2LT5kZXYsICIlcFIgPT0+ICVwUlxuIiwKKwkJCQkgJm9yaWdf
-cmVzLCByZXMpOworCisJCXJldHVybiB0cnVlOworCX0KKworCXJldHVybiBmYWxzZTsKK30KKwog
-dm9pZCBfX3dlYWsgcGNpYmlvc19yZXNvdXJjZV9zdXJ2ZXlfYnVzKHN0cnVjdCBwY2lfYnVzICpi
-dXMpIHsgfQogCiAvKioK
---001a113f6644baba6a050b10de3a--
+> ---
+> 
+> Not tested, found by casual code inspection.
+> 
+>  drivers/pci/host/pci-keystone.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+> index 8a27078..f2bd48d 100644
+> --- a/drivers/pci/host/pci-keystone.c
+> +++ b/drivers/pci/host/pci-keystone.c
+> @@ -197,7 +197,7 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+>  	 */
+>  	for (temp = 0; temp < max_host_irqs; temp++) {
+>  		host_irqs[temp] = irq_of_parse_and_map(*np_temp, temp);
+> -		if (host_irqs[temp] < 0)
+> +		if (!host_irqs[temp])
+>  			break;
+>  	}
+>  	if (temp) {
+> -- 
+> 2.1.0.rc2.206.gedb03e5
+> 
+> 
+> -- 
+> Dmitry
