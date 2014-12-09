@@ -1,108 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:53007 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751030AbaLRAJ2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Dec 2014 19:09:28 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Murali Karicheri <m-karicheri2@ti.com>, vinod.koul@intel.com,
-	gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, will.deacon@arm.com,
-	Catalin Marinas <catalin.marinas@arm.com>
-Subject: Re: [RFC PATCH 1/2] common: dma-mapping: introduce dma_get_parent_cfg() helper
-Date: Thu, 18 Dec 2014 01:09:17 +0100
-Message-ID: <2935351.ba8Au9y4fE@wuerfel>
-In-Reply-To: <549210BB.9080603@ti.com>
-References: <1418839344-14393-1-git-send-email-m-karicheri2@ti.com> <1949667.gMcOLHe7Sk@wuerfel> <549210BB.9080603@ti.com>
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:46912 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755999AbaLIMND (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 07:13:03 -0500
+Message-ID: <5486E747.4010804@arm.com>
+Date: Tue, 09 Dec 2014 12:12:55 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
+Subject: Re: [PATCH 2/6] PCI/MSI: add hooks to populate the msi_domain field
+References: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com> <1418069543-21969-3-git-send-email-marc.zyngier@arm.com> <5486585B.40000@huawei.com> <5486C8BA.8030608@arm.com> <5486E3BF.70703@huawei.com>
+In-Reply-To: <5486E3BF.70703@huawei.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 17 December 2014 18:24:43 Murali Karicheri wrote:
-> On 12/17/2014 04:56 PM, Arnd Bergmann wrote:
-> > On Wednesday 17 December 2014 13:02:23 Murali Karicheri wrote:
-> >
-> > What's wrong with using arch_setup_dma_ops() from PCI as suggested
-> > previously?
-> >
+Yijing,
 
-+Will Deacon
-
-> I had originally written a code based on that line as below. But 
-> dma-ranges property is also used by ppc and other architectures in the 
-> pci device DT node. So I wasn't sure how this code impact PCI driver 
-> functionality on those platforms. Hence used a simpler change as all 
-> that is needed for keystone is to get the dma_pfn_offset rightly set in 
-> the pci slave device.
-
-But in your patch, you don't call arch_setup_dma_ops() at all.
-
-> Initially I had a function implemented as below for this in of_pci.c.
+On 09/12/14 11:57, Yijing Wang wrote:
+>>>> +void __weak pcibios_set_phb_msi_domain(struct pci_bus *bus)
+>>>> +{
+>>>> +}
+>>>> +
+>>>> +static void pci_set_bus_msi_domain(struct pci_bus *bus)
+>>>> +{
+>>>> +	struct pci_dev *bridge = bus->self;
+>>>> +
+>>>> +	if (!bridge)
+>>>> +		pcibios_set_phb_msi_domain(bus);
+>>>> +	else
+>>>> +		dev_set_msi_domain(&bus->dev, dev_get_msi_domain(&bridge->dev));
+>>>> +}
+>>>
+>>>
+>>> Hi Marc, we can not assume pci devices under same phb share the same msi irq domain,
+>>> now in x86, pci devices under the same phb may associate different msi irq domain.
 > 
-> + * of_pci_dma_configure - Setup DMA configuration for a pci device
-> + * @dev:       pci device to apply DMA configuration
-> + *
-> + * Try to get devices's DMA configuration from DT and update it
-> + * accordingly. This is a similar to of_dma_configure() for platform
-> + * devices.
-> + *
-> + */
-> +void of_pci_dma_configure(struct pci_dev *dev)
-> +{
-> +       struct device *host_bridge, *parent;
-> +       struct pci_bus *bus = dev->bus;
-> +       u64 dma_addr, paddr, size;
-> +       int ret;
-> +
-> +       while (!pci_is_root_bus(bus))
-> +               bus = bus->parent;
-> +       host_bridge = bus->bridge;
-> +
-> +       parent = host_bridge->parent;
-> +       if (parent->of_node) {
+> Hi Marc,
+> 
+>>
+>> Well, this is not supposed to be a perfect solution yet, but instead a
+>> basis for discussion. What I'd like to find out is:
+>>
+>> - What is the minimum granularity for associating a device with its MSI
+>> domain in existing platforms?
+> 
+> PCI device, after Gerry's msi irq domain patchset which now in linux-next,
+> in x86, we will find msi irq domain by pci_dev.
 
-so far it looks good, although we may want to introduce
-a helper function to get the of_node.
+Are you *really* associating the MSI domain on a per pci-device basis?
+That is, you have devices on the same PCI bus talking to different MSI hw?
 
-> +               /*
-> +                * if dma-coherent property exist, call arch hook to setup
-> +                * dma coherent operations.
-> +                */
-> +               if (of_dma_is_coherent(parent->of_node)) {
-> +                       set_arch_dma_coherent_ops(&dev->dev);
-> +                       dev_info(&dev->dev, "device is dma coherent\n");
-> +               }
+> I generally agree your first patch which associate basic device with msi irq domain.
+> 
+>> - What topology data structures do you use to find out what MSI
+>> controller a device should be matched with?
+> 
+> Now only arm and arm64 use msi controller to setup/teardown msi irqs,
+> in arm, now msi controller saved in pci_sys_data, and for arm64, it seems
+> to be saved in pci_bus. For a more common method to find msi controller/irq domain,
+> I prefer pci_dev/device.
 
-set_arch_dma_coherent_ops no longer exists. Just keep the flag in a
-local variable
+Forget about msi_controller, the whole goal of this series is to make it
+obsolete. On your x86 platform, what how do you identify which MSI
+domain should be associated with a given PCI device? Surely you must
+have a set of data structures or ACPI tables which give you that
+information.
 
-> +               /*
-> +                * if dma-ranges property doesn't exist - just return else
-> +                * setup the dma offset
-> +                */
-> +               ret = of_dma_get_range(parent->of_node, &dma_addr, 
-> &paddr, &size);
-> +               if (ret < 0) {
-> +                       dev_info(&dev->dev, "no dma range information to 
-> setup\n");
-> +                       printk("no dma range information to setup\n");
-> +                       return;
-> +               }
-> +
-> +               /* DMA ranges found. Calculate and set dma_pfn_offset */
-> +               dev->dev.dma_pfn_offset = PFN_DOWN(paddr - dma_addr);
-> +               dev_info(&dev->dev, "dma_pfn_offset(%#08lx)\n", 
-> dev->dev.dma_pfn_offset);
+>> - What in-tree platform already has this requirements?
+> 
+> As mentioned above, x86 does.
 
-Same for the offset and size here, then pass all of the above into
-arch_setup_dma_ops. This is also where we need to hook up the iommu
-support once we decide how to make that work with the ARM SMMU.
+Let me rephrase that in a non-ambiguous manner: can you point me to a
+file implementing this in mainline?
 
-Will, I think we may have a problem on ARM64 now, since we only replaced
-set_arch_dma_coherent_ops on ARM32 but not ARM64. Can you send a fix for
-this? Without that, we don't have any coherent operations on ARM64 any
-more, unless I'm missing something.
+Thanks,
 
-	Arnd
+	M.
+-- 
+Jazz is not dead. It just smells funny...
