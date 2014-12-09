@@ -1,32 +1,36 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21628 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753834AbaLDMGr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Dec 2014 07:06:47 -0500
-Message-Id: <201412041206.sB4C6XVQ009497@userz7022.oracle.com>
-Date: Thu, 04 Dec 2014 07:06:24 -0500
-Subject: Re: [PATCH v5 9/9] xen/pciback: Implement PCI reset slot or bus
- with 'do_flr' SysFS attribute
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: David Vrabel <david.vrabel@citrix.com>
-Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	linux-pci@vger.kernel.org, xen-devel@lists.xenproject.org,
-	linux-kernel@vger.kernel.org, bhelgaas@google.com
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAErSpo5tZU=zBKNDt2UtUE_AMG3zzrdq2CX2A4ZL7tdLELXgqA@mail.gmail.com>
+References: <1418160871-5605-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo5tZU=zBKNDt2UtUE_AMG3zzrdq2CX2A4ZL7tdLELXgqA@mail.gmail.com>
+Date: Tue, 9 Dec 2014 15:13:49 -0800
+Message-ID: <CAE9FiQWLaNSsFTWEpWRFR4xTd0hKOwENdQR7N6T=K65VM+vDQg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Clear all bridge res MEM_64 if host bridge has non mem64
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	=?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>,
+	Alexey Voronkov <zermond@gmail.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Ck9uIERlYyA0LCAyMDE0IDY6MzAgQU0sIERhdmlkIFZyYWJlbCA8ZGF2aWQudnJhYmVsQGNpdHJp
-eC5jb20+IHdyb3RlOgo+Cj4gT24gMDMvMTIvMTQgMjE6NDAsIEtvbnJhZCBSemVzenV0ZWsgV2ls
-ayB3cm90ZTogCj4gPiAKPiA+IEluc3RlYWQgb2YgZG9pbmcgYWxsIHRoaXMgY29tcGxleCBkYW5j
-ZSwgd2UgZGVwZW5kIG9uIHRoZSB0b29sc3RhY2sgCj4gPiBkb2luZyB0aGUgcmlnaHQgdGhpbmcu
-IEFzIHN1Y2ggaW1wbGVtZW50IHRoZSAnZG9fZmxyJyBTeXNGUyBhdHRyaWJ1dGUgCj4gPiB3aGlj
-aCAneGwnIHVzZXMgd2hlbiBhIGRldmljZSBpcyBkZXRhY2hlZCBvciBhdHRhY2hlZCBmcm9tL3Rv
-IGEgZ3Vlc3QuIAo+ID4gSXQgYnlwYXNzZXMgdGhlIG5lZWQgdG8gd29ycnkgYWJvdXQgdGhlIFBD
-SSBsb2NrLiAKPgo+IE5vLsKgIEdldCBwY2liYWNrIHRvIGFkZCBpdHMgb3duICJyZXNldCIgc3lz
-ZnMgZmlsZSAoYXMgSSBoYXZlIHJlcGVhdGVkbHkgCj4gcHJvcG9zZWQpLiAKPgoKV2hpY2ggZG9l
-cyBub3Qgd29yayBhcyB0aGUga29iaiB3aWxsIGNvbXBsYWluIChhcyB0aGVyZSBpcyBhbHJlYWR5
-IGFuICdyZXNldCcgYXNzb2NpYXRlZCB3aXRoIHRoZSBQQ0kgZGV2aWNlKS4KClVubGVzcyB5b3Ug
-bWVhbiBhbiBkaWZmZXJlbnQgbmFtZSAocmVzZXQyKS4KCj4gRGF2aWQgCg==
+On Tue, Dec 9, 2014 at 1:53 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Dec 9, 2014 at 2:34 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> +       list_for_each_entry(window, &bridge->windows, list) {
+>> +               res = window->res;
+>> +               if (resource_type(res) == IORESOURCE_MEM ||
+>> +                   res->end > 0xffffffff) {
+>> +                       bridge->has_mem64_res = true;
+>
+> This is an interesting idea, but I think you're checking CPU addresses
+> here, and you need to check PCI bus addresses.
 
+Looks like those IBM platforms have res > 4g, but pci bus address < 4g.
+If we check pci bus address, and then we would break those platforms.
+
+Yinghai
