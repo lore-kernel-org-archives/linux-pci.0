@@ -1,110 +1,71 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <547CFD93.5000702@linux.intel.com>
-Date: Tue, 02 Dec 2014 07:45:23 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:48743 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751189AbaLIRY2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Dec 2014 12:24:28 -0500
+Message-ID: <5487303E.2010205@redhat.com>
+Date: Tue, 09 Dec 2014 12:24:14 -0500
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Daniel J Blueman <daniel@numascale.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
-Subject: Re: [Patch Part3 v4 38/38] x86, irq: Add kernel parameter vector_alloc
- to set CPU vector allocation policy
-References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com> <1416901802-24211-39-git-send-email-jiang.liu@linux.intel.com> <CAErSpo7-GezRLKe4hTAm=KhYHUw6zggi+4LRXjh25K-f+_hAng@mail.gmail.com>
-In-Reply-To: <CAErSpo7-GezRLKe4hTAm=KhYHUw6zggi+4LRXjh25K-f+_hAng@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+To: Yuval Mintz <Yuval.Mintz@qlogic.com>,
+	Eli Cohen <eli@dev.mellanox.co.il>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"ogerlitz@mellanox.com" <ogerlitz@mellanox.com>,
+	"yevgenyp@mellanox.com" <yevgenyp@mellanox.com>
+Subject: Re: [PATCH RFC] pci: Control whether VFs are probed on pci_enable_sriov
+References: <1417957693-24979-1-git-send-email-eli@mellanox.com> <B5657A6538887040AD3A81F1008BEC63BA6616@avmb3.qlogic.org> <20141207184242.GA24790@mtldesk30> <B5657A6538887040AD3A81F1008BEC63BA669B@avmb3.qlogic.org> <20141208191032.GC24790@mtldesk30> <B5657A6538887040AD3A81F1008BEC63BA7746@avmb3.qlogic.org> <20141209064339.GA1806@mtldesk30> <B5657A6538887040AD3A81F1008BEC63BA78ED@avmb3.qlogic.org>
+In-Reply-To: <B5657A6538887040AD3A81F1008BEC63BA78ED@avmb3.qlogic.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 12/09/2014 02:07 AM, Yuval Mintz wrote:
+>>>> Currently the kerenl will call probe for any device for which there
+>>>> is a supporting driver and I did not want to change that.
+>>>
+>>> But what's next? How will this feature be activated?
+>>>
+>>> Adding a parameter to pci_enable_sriov() might give developers the
+>>> false impression they can change behavior by passing `0' to this
+>>> function; But that shouldn't be the method to control this - we should
+>>> have uniform control of the feature across different drivers, e.g., by an
+>> additional sysfs node.
+>>
+>> I was planning on using this on mlx5 SRIOV support which is not available
+>> upstream yet. So this could be a driver developer's decision how to use this.
+>
+> I think it shouldn't - from user perspective, you can't have such fundamental
+> difference between different drivers - that enabling sriov on one device would
+> create VFs in the hypervisors and another one won't.
+>
+>> I think adding another sysfs entry to control this behavior is unnecessary since the
+>> administrator has the freedom to later do any bidnings he wishes to do.
+>>
+>> Keeping things as they are today is not so "nice". I mean, I could fail probe for
+>> VFs to avoid them from being initialized at the hypervisor but there are other
+>> questions: which error should I return and how can I be sure how the bus driver
+>> will refer to such failures.
+>
+> Again - you could say that this is solely in your drivers decision-making-area,
+> but failing the VF probe would lead to the same difference between drivers I've
+> stated before.
+>
+>> So, maybe the solution I suggested is not the best one but do we agree that this
+>> needs to be addressed this way or another?
+>
+> All-in-all, I agree. But I think the solution should be user-controlled and not driver-based.
+>
+So, I still haven't heard the reasons why the VF driver does not want
+to be configured in the host/hypervisor.  Please expound.  As this solution only
+solves it on the first sriov_enable(), and not subsequent deassign of VFs from VMs.
 
+If the desire is to never have the VF driver running on the host, just
+blacklist the VF driver.  If you use the same driver for both, then
+make a simple VF shell driver (includes the same driver), and have it
+pci-id match the VF only, and blacklist it in modprobe.conf .
+That only wastes some binary space for the dupe'd driver, but it resolves
+this situation in a user-driven manner.
 
-On 2014/12/2 2:49, Bjorn Helgaas wrote:
-> On Tue, Nov 25, 2014 at 12:50 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->> Parameter vector_alloc should be set to an integer with:
->> bit 0:  enable allocating CPU vector from CPUs on device local node.
->>         That's to allocate from cpumask_of_node(irq_data->node).
->> bit 1: enable the default policy, which is to allocate from
->>        apic->target_cpus().
->>
->> When allocating vectors, it tries all enabled policies from lower bit
->> position to higher bit position.
->>
->> This option could be use to optimize interrupt distribution on large
->> system such as NumaChip etc.
-> 
-> Why can't we figure this out automatically?  Having a kernel parameter
-> is a pain in the neck for users.
-Hi Bjorn,
-	I'm thinking of automatically turning on local vector
-allocation if any host bridge has an assigned(valid) NUMA node id.
-By this way, user doesn't need to specify the kernel parameter for most
-cases. How about this solution?
-Thanks!
-Gerry
-
-> 
->> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->> Cc: Daniel J Blueman <daniel@numascale.com>
->> ---
->>  Documentation/kernel-parameters.txt |    6 ++++++
->>  arch/x86/kernel/apic/vector.c       |   11 +++++++++++
->>  2 files changed, 17 insertions(+)
->>
->> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
->> index 4c81a860cc2b..a175c5016954 100644
->> --- a/Documentation/kernel-parameters.txt
->> +++ b/Documentation/kernel-parameters.txt
->> @@ -3709,6 +3709,12 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->>         vector=         [IA-64,SMP]
->>                         vector=percpu: enable percpu vector domain
->>
->> +       vector_alloc=   [x86,SMP]
->> +                       vector_alloc=policy: policy is a bitmap, bit 0
->> +                       for allocating CPU vector from CPUs on device local
->> +                       node; bit 1 for the default policy to allocating from
->> +                       apic->target_cpus(). All higher bits are reserved.
->> +
->>         video=          [FB] Frame buffer configuration
->>                         See Documentation/fb/modedb.txt.
->>
->> diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
->> index 16de8906ee1e..1158843551c7 100644
->> --- a/arch/x86/kernel/apic/vector.c
->> +++ b/arch/x86/kernel/apic/vector.c
->> @@ -79,6 +79,17 @@ void set_vector_alloc_policy(unsigned int policy)
->>                 x86_vector_alloc_policy = policy | X86_VECTOR_POL_CALLER;
->>  }
->>
->> +static int __init apic_parse_vector_policy(char *str)
->> +{
->> +       int policy;
->> +
->> +       if (get_option(&str, &policy) == 1)
->> +               set_vector_alloc_policy(policy);
->> +
->> +       return 1;
->> +}
->> +__setup("vector_alloc=", apic_parse_vector_policy);
->> +
->>  static struct apic_chip_data *alloc_apic_chip_data(int node)
->>  {
->>         struct apic_chip_data *data;
->> --
->> 1.7.10.4
->>
