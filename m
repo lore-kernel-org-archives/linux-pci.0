@@ -1,50 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp02.citrix.com ([66.165.176.63]:46876 "EHLO
-	SMTP02.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750724AbaLEKaL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Dec 2014 05:30:11 -0500
-Message-ID: <54818929.5000008@citrix.com>
-Date: Fri, 5 Dec 2014 10:30:01 +0000
-From: David Vrabel <david.vrabel@citrix.com>
+Received: from mail-qg0-f49.google.com ([209.85.192.49]:56606 "EHLO
+	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752174AbaLISWp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 13:22:45 -0500
+Received: by mail-qg0-f49.google.com with SMTP id a108so851939qge.22
+        for <linux-pci@vger.kernel.org>; Tue, 09 Dec 2014 10:22:44 -0800 (PST)
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>
-CC: <bhelgaas@google.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<linux-pci@vger.kernel.org>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	<linux-kernel@vger.kernel.org>, <xen-devel@lists.xenproject.org>
-Subject: Re: [Xen-devel] [PATCH v5 9/9] xen/pciback: Implement PCI reset slot
- or bus with 'do_flr' SysFS attribute
-References: <201412041206.sB4C6XVQ009497@userz7022.oracle.com>	 <5480528F.8010106@citrix.com> <1107877503.20141204141054@eikelenboom.it>	 <548064EA.8090905@citrix.com> <308719815.20141204150909@eikelenboom.it>	 <5480702F.2060004@citrix.com> <1578910783.20141204155025@eikelenboom.it> <1417707546.15750.100.camel@bling.home>
-In-Reply-To: <1417707546.15750.100.camel@bling.home>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <54873A45.3050009@gmail.com>
+References: <1418075552-26495-1-git-send-email-yinghai@kernel.org>
+ <1418079372.13358.9.camel@kernel.crashing.org> <CAE9FiQX-vMu5+Kr09ngr95WvtoZTUSL5R2+NiVFeiN6q-BXLLg@mail.gmail.com>
+ <20141209001119.GA24661@shangw> <20141209022601.GA16207@richard>
+ <CAE9FiQWz=vdR=QSkoEs5XjUxg_y4vJgnChQAc1-U_9xzfQpknQ@mail.gmail.com> <54873A45.3050009@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 9 Dec 2014 11:22:24 -0700
+Message-ID: <CAErSpo7OXLco+fagqpK00Cc_AGxjEDJO5JDBtr_p92L2tpvs+Q@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Clear bridge MEM_64 flag if one child does not
+ support it
+To: =?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Alexey Voronkov <zermond@gmail.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/12/14 15:39, Alex Williamson wrote:
-> 
-> I don't know what workaround you're talking about.  As devices are
-> released from the user, vfio-pci attempts to reset them.  If
-> pci_reset_function() returns success we mark the device clean, otherwise
-> it gets marked dirty.  Each time a device is released, if there are
-> dirty devices we test whether we can try a bus/slot reset to clean them.
-> In the case of assigning a GPU this typically means that the GPU or
-> audio function come through first, there's no reset mechanism so it gets
-> marked dirty, the next device comes through and we manage to try a bus
-> reset.  vfio-pci does not have any device specific resets, all
-> functionality is added to the PCI-core, thank-you-very-much.  I even
-> posted a generic PCI quirk patch recently that marks AMD VGA PM reset as
-> bad so that pci_reset_function() won't claim that worked.  All VGA
-> access quirks are done in QEMU, the kernel doesn't have any business in
-> remapping config space over MMIO regions or trapping other config space
-> backdoors.
+On Tue, Dec 9, 2014 at 11:07 AM, Marek Kordík <kordikmarek@gmail.com> wrote:
+> On 12/09/2014 08:20 AM, Yinghai Lu wrote:
+>>
+>> On Mon, Dec 8, 2014 at 6:26 PM, Wei Yang <weiyang@linux.vnet.ibm.com>
+>> wrote:
+>>>
+>>> On Tue, Dec 09, 2014 at 11:11:19AM +1100, Gavin Shan wrote:
+>>>>
+>>>>
+>>>> I'm going to give it a spin and Richard, could you please apply
+>>>> Yinghai's
+>>>> patch to see if your SRIOV code can work properly?
+>>>>
+>>>
+>>> I did a quick test on my machine. This patch doesn't affect the MMIO
+>>> allocation on out platform, so SRIOV works fine.
+>>>
+>>> I will spend more time to read the patch to get more understanding about
+>>> the
+>>> problem.
+>>
+>>
+>> Hi Marek,
+>>
+>> Can you boot following branch with "debug ignore_loglevel pci=realloc"
+>> on your setup?
+>>
+>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+>> for-pci-allocate-fit-3.18
+>>
+>> it has
+>> 8f74af9: PCI, x86: Allocate mmio near end of free range
+>> 1ff91c1: PCI: Don't allocate small resource in big free space.
+>> 108b43b: resources: Add allocate_resource_fit()
+>> b6a22f0: resources: Make find_resource could return just fit resource
+>> cf50e16: resources: Split out __allocate_resource()
+>>
+>> on top the v3.18, and it will allocate resource in fit way.
+>>
+>> Thanks
+>>
+>> Yinghai
+>>
+> Hi Yinghai,
+>
+> I have built and booted your branch and it works well. Do you want me to
+> attach some logs?
+> (I am new here and I have read http://www.tux.org/lkml/ and I don't want to
+> break some rules for attachment size)
 
-Thanks for the info Alex, I hadn't got around to actually looking and
-the vfio-pci code and was just going to what Sander said.
+Please attach logs to the bugzilla and make their type "text/plain".
+That's the easiest to browse.
 
-We probably do need to have a more in depth look at now PCI devices and
-handled by both the toolstack and pciback but in the short term I would
-like a simple solution that does not extend the ABI.
-
-David
+Bjorn
