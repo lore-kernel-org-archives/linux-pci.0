@@ -1,43 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:48203 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750731AbaLNFDC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 14 Dec 2014 00:03:02 -0500
-Date: Sat, 13 Dec 2014 19:39:58 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Dennis McLeod <umodjm@gmail.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: PCI BAR sysfs node permissions
-Message-ID: <20141214033958.GA7039@kroah.com>
-References: <CAAzF57Sj4ZL4mw5PAwcrGtE8wQsgc9hBWRNNn0DHg5VsctY6mA@mail.gmail.com>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:37623 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750748AbaLIVjd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 16:39:33 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAAzF57Sj4ZL4mw5PAwcrGtE8wQsgc9hBWRNNn0DHg5VsctY6mA@mail.gmail.com>
+In-Reply-To: <CAE9FiQUhwMOKEXi8mVY_rMGEAmYr13m+Gr5id+rYTC0EiwEHgw@mail.gmail.com>
+References: <1418075552-26495-1-git-send-email-yinghai@kernel.org>
+	<1418079372.13358.9.camel@kernel.crashing.org>
+	<1418079603.13358.12.camel@kernel.crashing.org>
+	<CAE9FiQUhwMOKEXi8mVY_rMGEAmYr13m+Gr5id+rYTC0EiwEHgw@mail.gmail.com>
+Date: Tue, 9 Dec 2014 13:39:32 -0800
+Message-ID: <CAE9FiQV6s9=zK6Yx__3ZWp2SrGydb-2bnsbNDh-xD9ni0ricLQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Clear bridge MEM_64 flag if one child does not
+ support it
+From: Yinghai Lu <yinghai@kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	=?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>,
+	Alexey Voronkov <zermond@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 09, 2014 at 04:22:35PM -0500, Dennis McLeod wrote:
-> need help figuring out how to make this happen. If my pci driver is
-> instructed to open a pci device, I want to change the mode of bar0's
-> sysfs node to o+rw so a user app can mmap it.
-> 
-> In other words, from the driver, perform this:
-> chmod 766 /sys/bus/pci/[slot path]/resource0
-> preferably without a lecture on why I shouldn't .. ;-)
+On Mon, Dec 8, 2014 at 4:09 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Dec 8, 2014 at 3:00 PM, Benjamin Herrenschmidt
+> <benh@kernel.crashing.org> wrote:
+>
+>>
+>> I think an option would be to keep track of whether the PCI host bridge
+>> can do 64-bit pref above 4G.
+>
+> Yes, that could be enhancement.
+>
+> That should fix the problem Marek's
+>
+> But not on Zermond's, as his system is not using _CRS.
+>
 
-Sorry, you will get a lecture if you try to do something as foolish as
-this from within the kernel.
+http://patchwork.ozlabs.org/patch/419295/
 
-If you "really" need this, do it from userspace, with a script you grant
-root permissions to change the mode on the files.
-
-> If I chmod that sysfs node for bar0 as root, i can run a user process
-> (as regular user) that does an mmap of that and can do reads/writes to
-> the bar resource. I would like for my pci driver to do this
-> automatically when it is told to open a device.
-
-Nope, that's a bad idea, and you know that as well.
-
-sorry.
-
-greg k-h
+PCI: Clear all bridge res MEM_64 if host bridge has non mem64
