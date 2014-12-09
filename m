@@ -1,62 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:35200 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752838AbaLHXAR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 8 Dec 2014 18:00:17 -0500
-Message-ID: <1418079603.13358.12.camel@kernel.crashing.org>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:64383 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753808AbaLIXQ0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 18:16:26 -0500
+MIME-Version: 1.0
+In-Reply-To: <54877495.9090102@gmail.com>
+References: <1418075552-26495-1-git-send-email-yinghai@kernel.org>
+	<1418079372.13358.9.camel@kernel.crashing.org>
+	<CAE9FiQX-vMu5+Kr09ngr95WvtoZTUSL5R2+NiVFeiN6q-BXLLg@mail.gmail.com>
+	<20141209001119.GA24661@shangw>
+	<20141209022601.GA16207@richard>
+	<CAE9FiQWz=vdR=QSkoEs5XjUxg_y4vJgnChQAc1-U_9xzfQpknQ@mail.gmail.com>
+	<54873A45.3050009@gmail.com>
+	<CAErSpo7OXLco+fagqpK00Cc_AGxjEDJO5JDBtr_p92L2tpvs+Q@mail.gmail.com>
+	<CAE9FiQWPGLwQsz5HtW7r0Lrk4DMqfhbmk=ohcBWtWqXAN3mEZw@mail.gmail.com>
+	<54877495.9090102@gmail.com>
+Date: Tue, 9 Dec 2014 15:16:25 -0800
+Message-ID: <CAE9FiQXofeVMkGq7r5SqnveSfOcYjmuuSdZB-LAiSXjof2X0Jw@mail.gmail.com>
 Subject: Re: [PATCH] PCI: Clear bridge MEM_64 flag if one child does not
  support it
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Yinghai Lu <yinghai@kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: =?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Alexey Voronkov <zermond@gmail.com>,
 	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Marek =?ISO-8859-1?Q?Kord=EDk?= <kordikmarek@gmail.com>,
-	zermond@gmail.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Tue, 09 Dec 2014 10:00:03 +1100
-In-Reply-To: <1418079372.13358.9.camel@kernel.crashing.org>
-References: <1418075552-26495-1-git-send-email-yinghai@kernel.org>
-	 <1418079372.13358.9.camel@kernel.crashing.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2014-12-09 at 09:56 +1100, Benjamin Herrenschmidt wrote:
-> On Mon, 2014-12-08 at 13:52 -0800, Yinghai Lu wrote:
-> > 2. or scan the children resource other than ROM to clear bridge MEM_64
-> >    for mmio pref.
-> > 
-> > The patch is using second way so will keep child mmio pref into bridge
-> > mmio pref range.
-> 
-> That means that having a single ROM BAR that is 32-bit and prefetchable
-> will downgrade the entire window to 32-bit ? That's not going to work
-> either.
-> 
-> I have GPUs with 16G BARs for example... suddenly they don't fit
-> anaymore because we downgraded the window to 32 bit because somewhere
-> there's a 32-bit pref resource ?
-> 
-> That will break more than it fixes...
+On Tue, Dec 9, 2014 at 2:15 PM, Marek Kordík <kordikmarek@gmail.com> wrote:
+> On 12/09/2014 08:42 PM, Yinghai Lu wrote:
+>>
+>> On Tue, Dec 9, 2014 at 10:22 AM, Bjorn Helgaas <bhelgaas@google.com>
+>> wrote:
+>>>
+>>> On Tue, Dec 9, 2014 at 11:07 AM, Marek Kordík <kordikmarek@gmail.com>
+>>> wrote:
+>>>>
+>>>> I have built and booted your branch and it works well. Do you want me to
+>>>> attach some logs?
+>>>> (I am new here and I have read http://www.tux.org/lkml/ and I don't want
+>>
+>> Can you run some graphics benchmark program to check the performance
+>> between
+>> 1.
+>>
+>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+>>   branch: for-pci-allocate-fit-3.18
+>>
+>> 2.
+>> v 3.18 + clear mmio64 flags when children device does not support it
+>>
+>>
+> I have run Unigine Heaven benchmark on both versions (I tried version 2.
+> with and also without kernel parameters "debug ignore_loglevel pci=realloc")
+> and the performance of each version was the same (70-71 points). I tried to
+> run this benchmark also with kernel 3.15.10 and the result was 67 points.
+> Tomorrow I can try to run some more benchmarks, today I didn't have much
+> time.
 
-I think an option would be to keep track of whether the PCI host bridge
-can do 64-bit pref above 4G.
+so putting  mem pref under bridge mem does not cause performance loss?
 
-If it can't then we know 64-bit pref is always fair game for 32-bit
-resources and we can thus downgrade all the bridges 64-pref to 32-perf.
+Thanks
 
-If it can, then we probably do need to leave it there do real 64-bit
-pref, and shoot anything that is 32-bit only down the non-pref windows.
-
-We *could* try to be smart and scan first to check if anything under the
-bridge actually has large/64-bit BARs but that's going to be a heuristic
-at best and isn't going to do any good with hotplug.
-
-I tend to think that treating anything 32-bit pref as non-pref is in
-fact the best solution unless we know that the platform doesn't do
->32-bit pref anyway in which case we leave them alone.
-
-Ben.
-
-
+Yinghai
