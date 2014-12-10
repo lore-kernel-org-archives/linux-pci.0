@@ -1,144 +1,126 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:34345 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751583AbaLVFy6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 00:54:58 -0500
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 22 Dec 2014 15:54:56 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 72E6B2BB005B
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:53 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sBM5srRk38142094
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:53 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sBM5sqBD020526
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:53 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V10 04/17] PCI: Store VF BAR size in pci_sriov
-Date: Mon, 22 Dec 2014 13:54:24 +0800
-Message-Id: <1419227677-12312-5-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 11 Dec 2014 09:30:12 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Marek =?iso-8859-1?Q?Kord=EDk?= <kordikmarek@gmail.com>,
+	Alexey Voronkov <zermond@gmail.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Clear all bridge res MEM_64 if host bridge has non
+ mem64
+Message-ID: <20141210223012.GA11234@shangw>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1418160871-5605-1-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1418160871-5605-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently we don't store the VF BAR size, and each time we calculate the size
-by dividing the PF's IOV BAR size by total_VFs.
+On Tue, Dec 09, 2014 at 01:34:31PM -0800, Yinghai Lu wrote:
+>So we could use bridge 64bit mem pref for children mem pref instead of
+>forcing them into bridge mem.
+>
+>Could help Marek's system as his system is using _CRS, and all mem res is under
+>4G.
+>
+>Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491
+>Reported-by: Marek Kordik <kordikmarek@gmail.com>
+>Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources")
+>Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>
+>---
+> drivers/pci/host-bridge.c |    7 +++++++
+> drivers/pci/pci.h         |    1 +
+> drivers/pci/probe.c       |    9 +++++++++
+> drivers/pci/setup-bus.c   |    3 +++
+> include/linux/pci.h       |    1 +
+> 5 files changed, 21 insertions(+)
+>
+>Index: linux-2.6/drivers/pci/host-bridge.c
+>===================================================================
+>--- linux-2.6.orig/drivers/pci/host-bridge.c
+>+++ linux-2.6/drivers/pci/host-bridge.c
+>@@ -31,6 +31,13 @@ void pci_set_host_bridge_release(struct
+> 	bridge->release_data = release_data;
+> }
+>
+>+bool pcibios_host_bridge_has_mem64_res(struct pci_bus *bus)
+>+{
+>+	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+>+
+>+	return bridge->has_mem64_res;
+>+}
+>+
+> void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
+> 			     struct resource *res)
+> {
+>Index: linux-2.6/drivers/pci/pci.h
+>===================================================================
+>--- linux-2.6.orig/drivers/pci/pci.h
+>+++ linux-2.6/drivers/pci/pci.h
+>@@ -196,6 +196,7 @@ enum pci_bar_type {
+> 	pci_bar_mem64,		/* A 64-bit memory BAR */
+> };
+>
+>+bool pcibios_host_bridge_has_mem64_res(struct pci_bus *bus);
+> bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+> 				int crs_timeout);
+> int pci_setup_device(struct pci_dev *dev);
+>Index: linux-2.6/drivers/pci/probe.c
+>===================================================================
+>--- linux-2.6.orig/drivers/pci/probe.c
+>+++ linux-2.6/drivers/pci/probe.c
+>@@ -1980,6 +1980,15 @@ struct pci_bus *pci_create_root_bus(stru
+> 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
+> 	}
+>
+>+	list_for_each_entry(window, &bridge->windows, list) {
+>+		res = window->res;
+>+		if (resource_type(res) == IORESOURCE_MEM ||
+>+		    res->end > 0xffffffff) {
 
-This patch stores the VF BAR size in pci_sriov and introduces a function to
-retrieve it. Also, it adds a log message to show the total PF's IOV BAR size.
+Should we replace "||" with "&&" ?
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- drivers/pci/iov.c   |   28 ++++++++++++++++++++--------
- drivers/pci/pci.h   |    2 ++
- include/linux/pci.h |    3 +++
- 3 files changed, 25 insertions(+), 8 deletions(-)
+Thanks,
+Gavin
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 554dd64..9a3e16c 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -100,6 +100,14 @@ static void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
- 		pci_remove_bus(virtbus);
- }
- 
-+resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
-+{
-+	if (!dev->is_physfn)
-+		return 0;
-+
-+	return dev->sriov->res[resno - PCI_IOV_RESOURCES];
-+}
-+
- static int virtfn_add(struct pci_dev *dev, int id, int reset)
- {
- 	int i;
-@@ -135,8 +143,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 			continue;
- 		virtfn->resource[i].name = pci_name(virtfn);
- 		virtfn->resource[i].flags = res->flags;
--		size = resource_size(res);
--		do_div(size, iov->total_VFs);
-+		size = pci_iov_resource_size(dev, i + PCI_IOV_RESOURCES);
- 		virtfn->resource[i].start = res->start + size * id;
- 		virtfn->resource[i].end = virtfn->resource[i].start + size - 1;
- 		rc = request_resource(res, &virtfn->resource[i]);
-@@ -419,6 +426,12 @@ found:
- 	pgsz &= ~(pgsz - 1);
- 	pci_write_config_dword(dev, pos + PCI_SRIOV_SYS_PGSIZE, pgsz);
- 
-+	iov = kzalloc(sizeof(*iov), GFP_KERNEL);
-+	if (!iov) {
-+		rc = -ENOMEM;
-+		goto failed;
-+	}
-+
- 	nres = 0;
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = dev->resource + PCI_IOV_RESOURCES + i;
-@@ -430,16 +443,15 @@ found:
- 			rc = -EIO;
- 			goto failed;
- 		}
-+		iov->res[res - dev->resource - PCI_IOV_RESOURCES] =
-+			resource_size(res);
- 		res->end = res->start + resource_size(res) * total - 1;
-+		dev_info(&dev->dev, "VF BAR%ld: %pR (for %d VFs)",
-+				res - dev->resource - PCI_IOV_RESOURCES,
-+				res, total);
- 		nres++;
- 	}
- 
--	iov = kzalloc(sizeof(*iov), GFP_KERNEL);
--	if (!iov) {
--		rc = -ENOMEM;
--		goto failed;
--	}
--
- 	iov->pos = pos;
- 	iov->nres = nres;
- 	iov->ctrl = ctrl;
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 94faf97..b1c9fdd 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -241,6 +241,8 @@ struct pci_sriov {
- 	struct pci_dev *dev;	/* lowest numbered PF */
- 	struct pci_dev *self;	/* this PF */
- 	struct mutex lock;	/* lock for VF bus */
-+	resource_size_t res[PCI_SRIOV_NUM_BARS];
-+				/* VF BAR size */
- };
- 
- #ifdef CONFIG_PCI_ATS
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ae7a7ea..f0b5f87 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1670,6 +1670,7 @@ int pci_num_vf(struct pci_dev *dev);
- int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
- int pci_sriov_get_totalvfs(struct pci_dev *dev);
-+resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
- #else
- static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
- {
-@@ -1689,6 +1690,8 @@ static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
- { return 0; }
- static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
- { return 0; }
-+static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
-+{ return 0; }
- #endif
- 
- #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
--- 
-1.7.9.5
+>+			bridge->has_mem64_res = true;
+>+			break;
+>+		}
+>+	}
+>+
+> 	down_write(&pci_bus_sem);
+> 	list_add_tail(&b->node, &pci_root_buses);
+> 	up_write(&pci_bus_sem);
+>Index: linux-2.6/include/linux/pci.h
+>===================================================================
+>--- linux-2.6.orig/include/linux/pci.h
+>+++ linux-2.6/include/linux/pci.h
+>@@ -407,6 +407,7 @@ struct pci_host_bridge {
+> 	struct list_head windows;	/* pci_host_bridge_windows */
+> 	void (*release_fn)(struct pci_host_bridge *);
+> 	void *release_data;
+>+	bool has_mem64_res;
+> };
+>
+> #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
+>Index: linux-2.6/drivers/pci/setup-bus.c
+>===================================================================
+>--- linux-2.6.orig/drivers/pci/setup-bus.c
+>+++ linux-2.6/drivers/pci/setup-bus.c
+>@@ -693,6 +693,9 @@ static void pci_bridge_check_ranges(stru
+> 		}
+> 	}
+>
+>+        if (!pcibios_host_bridge_has_mem64_res(bus))
+>+                b_res[2].flags &= ~IORESOURCE_MEM_64;
+>+
+> 	/* double check if bridge does support 64 bit pref */
+> 	if (b_res[2].flags & IORESOURCE_MEM_64) {
+> 		u32 mem_base_hi, tmp;
+>
 
