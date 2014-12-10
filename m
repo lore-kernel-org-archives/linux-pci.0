@@ -1,127 +1,168 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0112.outbound.protection.outlook.com ([207.46.100.112]:5408
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932236AbaLBRQA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Dec 2014 12:16:00 -0500
-From: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yu Zhao <yuzhao@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: RE: Architectural question regarding IOV support in Linux 3.13.4
-Date: Tue, 2 Dec 2014 16:42:19 +0000
-Message-ID: <B756807489D6244883AC0B799A6EEC1514C68E79@storexdag03.amd.com>
-References: <B756807489D6244883AC0B799A6EEC15EAB2E8@storexdag02.amd.com>
- <CAErSpo4OkgGrrZ9anAJ2vSZJDYikv4WC6hjt4T2-mMXpGA=w6A@mail.gmail.com>
- <1393020186.9111.91.camel@ul30vt.home>
- <CAOUHufai=eoR+tgVB5Zdp6veCQgY=pHDSAESZ5cLOjPTw-R8CQ@mail.gmail.com>
- <B756807489D6244883AC0B799A6EEC15EB26C6@storexdag02.amd.com>
- <CAErSpo7tyzujCqvsQcns1wX+j5jM1=Xo9TiCC+5-h67uXqbGSg@mail.gmail.com>
-In-Reply-To: <CAErSpo7tyzujCqvsQcns1wX+j5jM1=Xo9TiCC+5-h67uXqbGSg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:56632 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752471AbaLJMNr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Dec 2014 07:13:47 -0500
+Date: Wed, 10 Dec 2014 13:13:41 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Alexandre Courbot <gnurou@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/2] PCI: tegra: apply relaxed ordering fixup only on
+ Tegra
+Message-ID: <20141210121339.GA23558@ulmo.nvidia.com>
+References: <1415907457-3147-1-git-send-email-l.stach@pengutronix.de>
+ <1415907457-3147-2-git-send-email-l.stach@pengutronix.de>
+ <CAAVeFu+sYnhMEmDSPvinbP-BQQnqAu6rpEVgaLx25Y3UtGVUwQ@mail.gmail.com>
+ <1418120897.2741.1.camel@pengutronix.de>
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="BOKacYhQ+x31HxR3"
+In-Reply-To: <1418120897.2741.1.camel@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpvcm4gSGVsZ2FhcyBb
-bWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+IFNlbnQ6IE1vbmRheSwgRmVicnVhcnkgMjQs
-IDIwMTQgMzo1MiBQTQ0KPiBUbzogWnl0YXJ1aywgS2VsbHkNCj4gQ2M6IFl1IFpoYW87IGxpbnV4
-LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IEFsZXggV2lsbGlhbXNvbg0KPiBTdWJqZWN0OiBSZTogQXJj
-aGl0ZWN0dXJhbCBxdWVzdGlvbiByZWdhcmRpbmcgSU9WIHN1cHBvcnQgaW4gTGludXggMy4xMy40
-DQo+IA0KPiBPbiBNb24sIEZlYiAyNCwgMjAxNCBhdCAxMjoyMiBQTSwgWnl0YXJ1aywgS2VsbHkg
-PEtlbGx5Llp5dGFydWtAYW1kLmNvbT4NCj4gd3JvdGU6DQo+ID4NCj4gPj5PbiBGcmksIEZlYiAy
-MSwgMjAxNCBhdCAyOjAzIFBNLCBBbGV4IFdpbGxpYW1zb24NCj4gPGFsZXgud2lsbGlhbXNvbkBy
-ZWRoYXQuY29tPiB3cm90ZToNCj4gPj5PbiBGcmksIDIwMTQtMDItMjEgYXQgMTQ6MTEgLTA3MDAs
-IEJqb3JuIEhlbGdhYXMgd3JvdGU6DQo+ID4+PiBbK2NjIEFsZXgsIFl1XQ0KPiA+Pj4NCj4gPj4+
-IE9uIEZyaSwgRmViIDIxLCAyMDE0IGF0IDEwOjQ1IEFNLCBaeXRhcnVrLCBLZWxseSA8S2VsbHku
-Wnl0YXJ1a0BhbWQuY29tPg0KPiB3cm90ZToNCj4gPj4+ID4NCj4gPj4+ID4gSSBhbSB3b3JraW5n
-IHdpdGggU1ItSU9WIGFuZCBJIGhhdmUgYSBxdWVzdGlvbiByZWdhcmRpbmcgdGhlDQo+ID4+PiA+
-IGZ1bmN0aW9uDQo+ID4+PiA+IHNyaW92X2luaXQoKSBpbiAuLi9kcml2ZXJzL3BjaS9pb3YuYyAo
-bGludXggdmVyc2lvbnMgMy40LjkgYW5kDQo+ID4+PiA+IDMuMTMuNCkNCj4gPj4+ID4NCj4gPj4+
-ID4gSW4gc3Jpb3ZfaW5pdCgpIHRoZSBjb2RlIGZpcnN0IGNoZWNrcyB3aGV0aGVyIHRoZSBQRiBp
-cyBhIFJvb3QNCj4gPj4+ID4gY29tcGxleCAgZW5kcG9pbnQgKDB4OSkgb3IgYW4gRXhwcmVzcyBF
-bmRwb2ludCAoMHgwKSBhcyBzaG93biBpbg0KPiA+Pj4gPiB0aGUgY29kZSAgc25pcHBldCBiZWxv
-dy4gIElmIGl0IGlzIG5laXRoZXIgaXQgcmV0dXJucyB0aGUgTm8gZGV2aWNlIGVycm9yLg0KPiA+
-Pj4gPg0KPiA+Pj4gPiBzdGF0aWMgaW50IHNyaW92X2luaXQoc3RydWN0IHBjaV9kZXYgKmRldiwg
-aW50IHBvcykgew0KPiA+Pj4gPiAgICAgICAgICBpbnQgaTsNCj4gPj4+ID4gICAgICAgICAgaW50
-IHJjOw0KPiA+Pj4gPiAgICAgICAgICBpbnQgbnJlczsNCj4gPj4+ID4gICAgICAgICAgdTMyIHBn
-c3o7DQo+ID4+PiA+ICAgICAgICAgIHUxNiBjdHJsLCB0b3RhbCwgb2Zmc2V0LCBzdHJpZGU7DQo+
-ID4+PiA+ICAgICAgICAgIHN0cnVjdCBwY2lfc3Jpb3YgKmlvdjsNCj4gPj4+ID4gICAgICAgICAg
-c3RydWN0IHJlc291cmNlICpyZXM7DQo+ID4+PiA+ICAgICAgICAgIHN0cnVjdCBwY2lfZGV2ICpw
-ZGV2Ow0KPiA+Pj4gPg0KPiA+Pj4gPiAgICAgICAgaWYgKHBjaV9wY2llX3R5cGUoZGV2KSAhPSBQ
-Q0lfRVhQX1RZUEVfUkNfRU5EICYmDQo+ID4+PiA+ICAgICAgICAgICAgICBwY2lfcGNpZV90eXBl
-KGRldikgIT0gUENJX0VYUF9UWVBFX0VORFBPSU5UKQ0KPiA+Pj4gPiAgICAgICAgICAgICAgICAg
-IHJldHVybiAtRU5PREVWOw0KPiA+Pj4gPg0KPiA+Pj4gPiBNeSBxdWVzdGlvbiBpcyB3aHkgUENJ
-X0VYUF9UWVBFX0xFR19FTkQgKDB4MSkgaXMgb21pdHRlZCBhcyBiZWluZw0KPiA+Pj4gPiBhICB2
-YWxpZCBlbmRwb2ludC4gIEJ5IGV4Y2x1ZGluZyBMZWdhY3kgZW5kcG9pbnRzIGl0IGZhaWxzDQo+
-ID4+PiA+IGVuYWJsaW5nICBTUi1JT1Ygb24gYSBWR0EgUEYuDQo+ID4+PiA+DQo+ID4+PiA+IElz
-IHRoZXJlIGEgZGVzaWduL3NwZWNpZmljYXRpb24gcmVhc29uIHdoeSBsZWdhY3kgd2FzIGV4Y2x1
-ZGVkIG9yDQo+ID4+PiA+IHdhcyAgaXQganVzdCBhbiBhc3N1bXB0aW9uIHRoYXQgVkdBIHdvdWxk
-IG5ldmVyIHN1cHBvcnQgU1ItSU9WPw0KPiA+Pj4gPg0KPiA+Pj4gPiBJZiB0aGVyZSBpcyBubyB2
-YWxpZCByZWFzb24gdG8gZXhjbHVkZSBQQ0lfRVhQX1RZUEVfTEVHX0VORCwgSQ0KPiA+Pj4gPiB3
-b3VsZCAgbGlrZSB0byBkaXNjdXNzIGhhdmluZyBpdCBpbmNsdWRlZCBhcyBhIHZhbGlkIGVuZHBv
-aW50IGZvciBTUi1JT1YuDQo+ID4+Pg0KPiA+Pj4gR29vZCBxdWVzdGlvbi4gIEl0IGxvb2tzIGxp
-a2UgaXQncyBiZWVuIHRoYXQgd2F5IHNpbmNlIHRoZSBiZWdpbm5pbmcNCj4gPj4+IFsxXSwgYnV0
-IEkgZG9uJ3Qga25vdyB3aHkuICBJIGRvbid0IHNlZSBhbnkgcmVzdHJpY3Rpb24gaW4gdGhlIHNw
-ZWMNCj4gPj4+IGFib3V0IFNSLUlPViBhbmQgbGVnYWN5IGVuZHBvaW50cy4NCj4gPj4+DQo+ID4+
-PiBJIGFsc28gZG9uJ3Qga25vdyB3aGV0aGVyIFZHQSBpcyBhbiBpc3N1ZS4gIFRoZXJlIGFyZSBz
-b21lIGxlZ2FjeQ0KPiA+Pj4gYWRkcmVzc2luZyBpc3N1ZXMgZm9yIFttZW0gMHhhMDAwMC0weGJm
-ZmZmXSBhbmQgW2lvIDB4M2IwLTB4M2JiXSBhbmQNCj4gPj4+IFtpbyAweDNjMC0weDNkZl0uICBG
-b3IgZXhhbXBsZSwgd2hlbiBhIGJyaWRnZSBoYXMgaXRzIFZHQSBFbmFibGUgYml0DQo+ID4+PiBz
-ZXQsIGl0IHBvc2l0aXZlbHkgZGVjb2RlcyBbbWVtIDB4YTAwMDAtMHhiZmZmZl0gZXZlbiBpZiB0
-aGF0IHJhbmdlDQo+ID4+PiBpc24ndCBpbmNsdWRlZCBpbiBvbmUgb2YgdGhlIGJyaWRnZSB3aW5k
-b3dzLiAgSSBkb24ndCBrbm93IHdoZXRoZXIgYQ0KPiA+Pj4gVkdBIGRldmljZSBpcyBzaW1pbGFy
-bHkgYWxsb3dlZCB0byBkZWNvZGUgdGhhdCByYW5nZSBldmVuIGlmIGl0J3MNCj4gPj4+IG5vdCBp
-biBhIEJBUi4gIElmIGl0IGlzLCBJIGNvdWxkIGltYWdpbmUgaXNzdWVzIGlmIGVuYWJsaW5nIFNS
-LUlPVg0KPiA+Pj4gY3JlYXRlZCBzZXZlcmFsIFZHQSBWRnMuDQo+ID4+VkZzIGNhbm5vdCBzdXBw
-b3J0IEkvTyBwb3J0IHNwYWNlIGJ5IGRlZmluaXRpb24sIHNvIEkgZG9uJ3QgdGhpbmsgYQ0KPiA+
-PiJWR0EgVkYiIGNvdWxkIGFjdHVhbGx5IGV4aXN0LiAgVGhlcmUgd291bGQgYmUgbm90aGluZyB3
-cm9uZyB3aXRoIGENCj4gPj5ub24tVkdBIEdQVSBWRiB0aG91Z2guICBJIGFsc28gZG9uJ3Qgc2Vl
-IGhvdyB0aGUgZGlmZmVyZW5jZXMgaW4gTGVnYWN5DQo+ID4+RW5kcG9pbnQgcnVsZXMgdmVyc3Vz
-IGEgc3RhbmRhcmQgRW5kcG9pbnQgd291bGQgcHJlY2x1ZGUgc3VwcG9ydGluZw0KPiA+PlNSLUlP
-Vi4gIEkgZG9uJ3QgdGhpbmsgdGhlIFNSLUlPViBzcGVjIG1ha2VzIGFueSBkZW1hbmRzIG9uIHdo
-ZXRoZXINCj4gPj50aGUgUEYgcmVxdWlyZXMgSS9PIHBvcnQgcmVzb3VyY2VzLCB3aGljaCBJIGFz
-c3VtZSBpcyB0aGUgbWFpbiByZWFzb24NCj4gPj5mb3IgdGhpcyB0byBjYWxsIGl0c2VsZiBMZWdh
-Y3kuICBJJ2QgZ3Vlc3MgaXQgd2FzIGxpa2VseSBqdXN0IGFuDQo+ID4+b3ZlcnNpZ2h0IGFuZCB3
-ZSBzaG91bGQgYWRkIGxlZ2FjeSBlbmRwb2ludHMgKG9yIHJlbW92ZSB0aGUgdGVzdA0KPiA+PmFs
-dG9nZXRoZXIgYW5kIHRydXN0IHRoYXQgaWYgYSBkZXZpY2UgaGFzIGFuIFNSLUlPViBjYXBhYmls
-aXR5LCB3ZQ0KPiA+PnNob3VsZCBpbml0aWFsaXplIGl0KS4gIFRoYW5rcywNCj4gPj4NCj4gPj5B
-bGV4DQo+ID4+DQo+ID4+SSBhZ3JlZS4gSSB2YWd1ZWx5IHJlbWVtYmVyIHRoZXJlIHdhcyBzb21l
-IHJlYXNvbiB0aGF0IGV4Y2x1ZGVzIGxlZ2FjeQ0KPiA+PmVuZHBvaW50cyBmcm9tIHVzaW5nIFNS
-LUlPVi4gQnV0IGFmdGVyIGEgcXVpY2sgbG9vayBhdCB0aGUgbGF0ZXN0DQo+ID4+c3BlY3MsIEkg
-ZGlkbid0IGZpbmQgYW55Lg0KPiA+Pg0KPiA+IE9ubHkgTGVnYWN5IEVuZHBvaW50cyBjYW4gY2xh
-aW0gSS9PLiAgVkZzIGFyZSBub3QgYWxsb3dlZCB0byBjbGFpbSBJL08uDQo+ID4gVkdBIGRldmlj
-ZXMgY2xhaW0gSS9PLg0KPiA+DQo+ID4gVGhlIFNSLUlPViBzcGVjIDEuMSBzZWN0aW9uIDMuNC4x
-LjYgc3RhdGVzIOKAnFRoZSBDbGFzcyBDb2RlIHJlZ2lzdGVyIGlzDQo+ID4gcmVhZC1vbmx5IGFu
-ZCBpcyB1c2VkIHRvIGlkZW50aWZ5IHRoZSBnZW5lcmljIGZ1bmN0aW9uIG9mIHRoZSBkZXZpY2UN
-Cj4gPiBhbmQsIGluIHNvbWUgY2FzZXMsIGEgc3BlY2lmaWMgcmVnaXN0ZXIgbGV2ZWwgcHJvZ3Jh
-bW1pbmcgaW50ZXJmYWNlLg0KPiA+IFRoZSBmaWVsZCBpbiB0aGUgUEYgYW5kIGFzc29jaWF0ZWQg
-VkZzIG11c3QgcmV0dXJuIHRoZSBzYW1lIHZhbHVlIHdoZW4gcmVhZC7igJ0NCj4gPg0KPiA+IElm
-IHRoZSBQRiBpcyBhIFZHQSBkZXZpY2UgdGhlbiBieSB0aGUgZGVmaW5pdGlvbiBpbiB0aGUgU1It
-SU9WIHNwZWMNCj4gPiB0aGUgY2xhc3MgY29kZSBvZiB0aGUgVkYgd291bGQgYWxzbyBpbmRpY2F0
-ZSBpdCBhcyBhIFZHQSBkZXZpY2UsIGllDQo+ID4gU3ViY2xhc3MgMHgwID0gVkdBLCBzdWJjbGFz
-cyAweDgwID0gT1RIRVJfRElTUExBWV9DT05UUk9MTEVSLg0KPiA+DQo+ID4gSWRlYWxseSB3ZSB3
-b3VsZCB3YW50IHRvIGhhdmUgdGhlIFBGIHN1Yi1jbGFzcyBhcyAweDAgYW5kIHRoZSBWRg0KPiA+
-IHN1YmNsYXNzIGFzIDB4ODAgQnV0IHRoZSBzcGVjIGRvZXNuJ3Qgc3VwcG9ydCB0aGlzLg0KPiA+
-DQo+ID4gT25lIHNwZWN1bGF0aW9uIGFzIHRvIHdoeSBMZWdhY3kgZW5kcG9pbnRzIHdlcmUgb21p
-dHRlZCBtaWdodCBiZSB0aGUNCj4gPiBhc3N1bXB0aW9uIHRoYXQgZG9pbmcgc28gd291bGQgYWxs
-b3cgVkdBIFZGcyB0byBiZSBjcmVhdGVkLg0KPiA+DQo+ID4gSXQgaXMgbm90IHJlYXNvbmFibGUg
-dG8gcHJldmVudCBhIFZHQSBQRiBmcm9tIGVuYWJsaW5nIFNSLUlPViBhcyB0aGlzDQo+ID4gaXMg
-YSByZWFsIHdvcmxkIHBvc3NpYmlsaXR5LiAgV2UgbWlnaHQgbmVlZCB0byBhZGQgbW9yZSBjb2Rl
-IGVsc2V3aGVyZQ0KPiA+IGhvd2V2ZXIgdG8gcHJldmVudCBhIFZGIGZyb20gYmVjb21pbmcgYSBW
-R0EgZGV2aWNlIG91dHNpZGUgb2YgcGFzc2luZyBpdA0KPiB0aHJvdWdoIHRvIGEgZ3Vlc3QgVk0u
-DQo+IA0KPiBDYW4geW91IHRyeSBvdXQgWXUncyBwYXRjaCBhbmQgc2VlIHdoYXQgaGFwcGVucz8g
-IElmIHlvdSBkbyB0dXJuIG9uIFNSLUlPViBvbg0KPiB0aGlzIGRldmljZSwgaXQgd291bGQgYmUg
-aW50ZXJlc3RpbmcgdG8gc2VlIHRoZSBjb21wbGV0ZSBkbWVzZyBsb2cgYW5kICJsc3BjaSAtdnYi
-DQo+IG91dHB1dCB0byBzZWUgd2hhdCB3ZSBkbyB3aXRoIGl0Lg0KPiANCj4gQmpvcm4NCg0KQmpv
-cm4sDQpJIGFtIHJlc3VycmVjdGluZyB0aGlzIHRocmVhZCBhcyBJIGhhdmUgYmVlbiBsb29raW5n
-IHRocm91Z2ggdGhlIDMuMTggc291cmNlIGNvZGUgYW5kIGRvbid0IHNlZSBhbnkgc3VwcG9ydCBm
-b3IgUENJX0VYUF9UWVBFX0xFR19FTkQgZm9yIFNSSU9WLiAgRm9yIGRldmljZXMgdGhhdCBtdXN0
-IHJlbWFpbiBkZWZpbmVkIGFzIExlZ2FjeSBlbmRwb2ludHMgd2Ugc3RpbGwgbmVlZCB0byBiZSBh
-YmxlIHRvIGVuYWJsZSBTUklPVi4NCg0KRG8geW91IGhhdmUgYW55IGNvbmNlcm5zIG9uIGFkZGlu
-ZyB0aGUgbGVnYWN5IHN1cHBvcnQgdG8gc3Jpb3ZfaW5pdCgpIGFzIHNob3duIGJlbG93Pw0KDQoJ
-aWYgKChkZXYtPnBjaWVfdHlwZSAhPSBQQ0lfRVhQX1RZUEVfUkNfRU5EKSAmJg0KCSAgICAoZGV2
-LT5wY2llX3R5cGUgIT0gUENJX0VYUF9UWVBFX0VORFBPSU5UKSAmJg0KICAgICAgICAgICAgICAg
-ICAgKGRldi0+cGNpZV90eXBlICE9IFBDSV9FWFBfVFlQRV9MRUdfRU5EKSkNCgl7DQoJCXJldHVy
-biAtRU5PREVWOw0KCX0NCg0KVGhhbmtzLA0KS2VsbHkNCg==
+
+--BOKacYhQ+x31HxR3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, Dec 09, 2014 at 11:28:17AM +0100, Lucas Stach wrote:
+> Am Dienstag, den 09.12.2014, 12:23 +0900 schrieb Alexandre Courbot:
+> > Hi Lucas,
+> >=20
+> > Apologies for taking so long to come back to this. The patch looks ok
+> > to me, just a minor comment about the Tegra PCI detection:
+> >=20
+> > On Fri, Nov 14, 2014 at 4:37 AM, Lucas Stach <l.stach@pengutronix.de> w=
+rote:
+> > > The fixup to enable relaxed ordering on all PCI devices was
+> > > executed unconditionally if the Tegra PCI host driver was
+> > > built into the kernel. This doesn't play nice with a
+> > > multiplatform kernel executed on other platforms which
+> > > may not need this fixup.
+> > >
+> > > Make sure to only apply the fixup if the root port is
+> > > a Tegra.
+> > >
+> > > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> > > ---
+> > >  drivers/pci/host/pci-tegra.c | 26 +++++++++++++++++++++++++-
+> > >  1 file changed, 25 insertions(+), 1 deletion(-)
+> > >
+> > > diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegr=
+a.c
+> > > index 3d43874319be..d5a14f22ebb8 100644
+> > > --- a/drivers/pci/host/pci-tegra.c
+> > > +++ b/drivers/pci/host/pci-tegra.c
+> > > @@ -647,10 +647,34 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0=
+x0bf1, tegra_pcie_fixup_class);
+> > >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1c, tegra_pcie_fix=
+up_class);
+> > >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1d, tegra_pcie_fix=
+up_class);
+> > >
+> > > +static int tegra_pcie_root_is_tegra(struct pci_dev *dev)
+> > > +{
+> > > +       struct pci_bus *bus =3D dev->bus;
+> > > +       struct pci_dev *root_bridge;
+> > > +
+> > > +       /* walk up the PCIe hierarchy to the first level below the ro=
+ot bus */
+> > > +       while (bus->parent && bus->parent->self)
+> > > +               bus =3D bus->parent;
+> > > +
+> > > +       /*
+> > > +        * If there is no bridge on the bus the passed device is the =
+root
+> > > +        * bridge itself.
+> > > +        */
+> > > +       root_bridge =3D bus->self ? bus->self : dev;
+> > > +       if (root_bridge->vendor =3D=3D PCI_VENDOR_ID_NVIDIA &&
+> > > +           (root_bridge->device =3D=3D 0x0bf0 || root_bridge->device=
+ =3D=3D 0x0bf1 ||
+> > > +            root_bridge->device =3D=3D 0x0e1c || root_bridge->device=
+ =3D=3D 0x0e1d ||
+> > > +            root_bridge->device =3D=3D 0x0e12 || root_bridge->device=
+ =3D=3D 0x0e13))
+> > > +               return 1;
+> >=20
+> > I am not very familiar with PCI so sorry if these are stupid
+> > questions, but where do these device IDs come from? Are they needed at
+> > all, e.g. can't you just test against root_bridge->vendor =3D=3D
+> > PCI_VENDOR_ID_NVIDIA to detect a NVIDIA root? Is the list susceptible
+> > to increase as new chips get released? If that's the case, how can we
+> > make sure we won't forget to update it?
+> >=20
+>=20
+> The device IDs are assigned by NVIDIA HW for the different Tegra PCI
+> generation/link width combinations. Note that the K1 TRM is wrong as it
+> still lists the T30 device IDs, instead of the ones used on K1.
+>=20
+> While we technically could test only against vendor=3D=3Dnvidia I don't
+> think it is entirely safe. As this is a PCI fixup it will get executed
+> on every device running a kernel including this PCI host bridge driver.=
+=20
+>=20
+> So only testing for the vendor assumes that every ARM device with a PCI
+> host bridge built by NVIDIA will be a Tegra. Do you think this is a
+> reasonable assertion? I'm on the fence here.
+> =20
+> > If you need to test against the device ID, it might be more legible
+> > (and easier to update) if you use a switch case, e.g:
+> >=20
+> >     if (root_bridge->vendor !=3D PCI_VENDOR_ID_NVIDIA)
+> >         return 0;
+> >     switch (root_bridge->device) {
+> >     case 0x0bf0:
+> >     case 0x0bf1:
+> >     case 0x0e1c:
+> >     case 0x0e1d:
+> >     case 0x0e12:
+> >     case 0x0e12:
+> >         return 1;
+> >     default:
+> >         return 0;
+> >     }
+> >=20
+> Right, this looks nicer and easier to extend. I'll have to think about
+> if we need the device IDs at all and respin accordingly.
+
+I think using the device ID is fine. If nothing else it'll at least
+document the various device IDs. Perhaps you could extend this patch
+with comments as to which device ID maps to which SoC. Or better yet
+add them to include/linux/pci_ids.h with names matching the SoC.
+
+Also I'm wondering if perhaps it'd be better yet to add these as a table
+of struct pci_device_id:s and use pci_match_id() to avoid the switch
+here. Granted, the table will be bigger in size because of the unused
+fields, but it'd more clearly separate the data and code.
+
+Thierry
+
+--BOKacYhQ+x31HxR3
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJUiDjzAAoJEN0jrNd/PrOhC4gP/jFdUlfX8dyg0EPR8SHwAurD
+QlgWXWZPeiPOQBJi4P5T9+jgXJMQwxXSQKRBnuJigb+W2iwZPaO6O0jbj47MOZYJ
+hOR9GTfLq7+WeRi+nR7tT+vjhhJqaVmXGUJaFac5AFETVuHAS0g45/Mx+asoVh5O
+kbouZF9yYHBTftU8Gdv30OCHapqvFmNriegk/T6Xjp1GhYsmflfBpwtuYWotQfea
+P1mmiF7W5K3/ejalsCE777VwhSIoqhjuGainRkV7C8Fqfrg/lgAeFVAbBihyX470
+OEltr13HCFcVuerM1q3W9muxsmpBNooAnzkPfwoEiai4Fhfp9gTeeg9OyLtQo26f
+aSZDErIWM4rJ9TJ2cYK9pMZpCn8s2gFNhICP0Okdo+8My4+CMRedkk/f9q7ODp93
+TKns68EGr+vvMjCs2iJjh2RO2XUcdmJ4TydqxcL5fIWlPA0XY8N8dQhuZ8Ztggcq
++uvG1y/AKHcQ9QSPfA2eq6c4yyMYNUGqx5Ka8pY4JYzivqn1Z092pWQ7p++P+1/S
+TJGIUap+JQPmUi5AS/JbUDOaoRLuUdA/wTDAg4FQc0KOTcepm0yb5irUA1bi5MoY
+bLNf86uAn/KA349g/FF/VNQg74QTDh27rgFnpjrJZcre4ma1/pfU9DnNNn14oQq+
+lgD65vGrmyPED2RXAwK7
+=rmYv
+-----END PGP SIGNATURE-----
+
+--BOKacYhQ+x31HxR3--
