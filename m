@@ -1,59 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp07.in.ibm.com ([122.248.162.7]:57207 "EHLO
-	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752486AbaLDFy5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Dec 2014 00:54:57 -0500
-Received: from /spool/local
-	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 4 Dec 2014 11:24:54 +0530
-Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id B90FDE0056
-	for <linux-pci@vger.kernel.org>; Thu,  4 Dec 2014 11:25:22 +0530 (IST)
-Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
-	by d28relay05.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sB45tTXK2490828
-	for <linux-pci@vger.kernel.org>; Thu, 4 Dec 2014 11:25:29 +0530
-Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
-	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sB45spa5004683
-	for <linux-pci@vger.kernel.org>; Thu, 4 Dec 2014 11:24:52 +0530
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH 2/5] powerpc/pci: Don't scan empty slot
-Date: Thu,  4 Dec 2014 16:54:45 +1100
-Message-Id: <1417672488-27341-3-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1417672488-27341-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1417672488-27341-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:25572 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932754AbaLJUkk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Dec 2014 15:40:40 -0500
+Message-ID: <5488AFC6.3000209@broadcom.com>
+Date: Wed, 10 Dec 2014 12:40:38 -0800
+From: Ray Jui <rjui@broadcom.com>
+MIME-Version: 1.0
+To: Hauke Mehrtens <hauke@hauke-m.de>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Scott Branden <sbranden@broadcom.com>
+CC: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rob Herring" <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"Kumar Gala" <galak@codeaurora.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Christian Daudt <bcm@fixthebug.org>,
+	Matt Porter <mporter@linaro.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH 2/4] PCI: iproc: Add Broadcom iProc PCIe driver
+References: <1418169871-19232-3-git-send-email-rjui@broadcom.com> <9707535.Y78sV0TgX4@wuerfel> <54887901.8070501@broadcom.com> <CAGVrzcbZ_f43Vf1mu2XErVi_Jehjggh2TREyrSs84ntSm98yvg@mail.gmail.com> <5488AC64.9010306@hauke-m.de>
+In-Reply-To: <5488AC64.9010306@hauke-m.de>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In hotplug case, function pcibios_add_pci_devices() is called to
-rescan the specified PCI bus, which possibly doesn't have any child
-devices. Access to the PCI bus's child device node will cause kernel
-crash without exception. The patch adds conditions to skip scanning
-the PCI bus, which doesn't have any child devices, to avoid the kernel
-crash.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/kernel/pci-hotplug.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
-index 6e2b4e3..270a26d 100644
---- a/arch/powerpc/kernel/pci-hotplug.c
-+++ b/arch/powerpc/kernel/pci-hotplug.c
-@@ -120,7 +120,8 @@ void pcibios_add_pci_devices(struct pci_bus * bus)
- 	if (mode == PCI_PROBE_DEVTREE) {
- 		/* use ofdt-based probe */
- 		of_rescan_bus(dn, bus);
--	} else if (mode == PCI_PROBE_NORMAL) {
-+	} else if (mode == PCI_PROBE_NORMAL &&
-+		   dn->child && PCI_DN(dn->child)) {
- 		/*
- 		 * Use legacy probe. In the partial hotplug case, we
- 		 * probably have grandchildren devices unplugged. So
--- 
-1.8.3.2
+On 12/10/2014 12:26 PM, Hauke Mehrtens wrote:
+> On 12/10/2014 07:46 PM, Florian Fainelli wrote:
+>> 2014-12-10 8:46 GMT-08:00 Scott Branden <sbranden@broadcom.com>:
+>>> On 14-12-10 03:31 AM, Arnd Bergmann wrote:
+>>>>
+>>>> On Tuesday 09 December 2014 16:04:29 Ray Jui wrote:
+>>>>>
+>>>>> Add initial version of the Broadcom iProc PCIe driver. This driver
+>>>>> has been tested on NSP and Cygnus and is expected to work on all iProc
+>>>>> family of SoCs that deploys the same PCIe host controller
+>>>>>
+>>>>> The driver also supports MSI
+>>>>>
+>>>>> Signed-off-by: Ray Jui <rjui@broadcom.com>
+>>>>> Reviewed-by: Scott Branden <sbranden@broadcom.com>
+>>>>
+>>>>
+>>>> The driver looks suspiciously like the one that Hauke already submitted a
+>>>> while ago for bcm53xx. Please come up with a merged driver that works for
+>>>> both.
+>>>
+>>> Could you please be a little more specific.  What driver did "Hauke already
+>>> submitted"?  I do not see any driver in the kernel you are talking about.
+>>
+>> https://www.marc.info/?l=linux-pci&m=141547043110684&w=2
+>
+> Yes it also looks similar to me. Your code also contains the same
+> comments as the driver used on Northstar (BCM5301X).Your driver has
+> some more features, but I just have access to the consumer SoC Northstar
+> where the PCIe controller is only used to connect some Broadcom Wifi
+> chips to the SoC. I do not know If this controller does not have these
+> features or the driver I used as a reference does not implement them.
+>
+Right, I wrote this driver based on some old Broadcom internal PCIe 
+driver from a 3.6 kernel and might have copied some of the comments 
+(especially in the check link function). The 3.6 driver is probably what 
+you received?
 
+> When I find some time I will try this driver on a Northstar device. I
+> think your driver is more advanced then the one I send to the mailing list.
+>
+Please do that. I tested this driver on Cygnus and one of my colleagues 
+helped to test it on North Star Plus. We do expect the same driver to 
+work on NorthStar as well.
+
+> When you want to stay with pure device tree I will send a patch adding
+> additional support for registering to bcma.
+>
+What exactly is bcma? I guess I'll need to look into it in more details 
+myself.
+
+> Does your SoC also have a third PCIe controller which shares the PHY
+> with the USB 3 controller?
+No. Cygnus has only two PCIe controllers, each has its own dedicated PHY.
+
+>
+> Why is this stuff in the iproc_pcie_check_link() function needed? I
+> think it is strange that the controller driver has to check if the
+> device is there and set the correct speed. When we do not check if the
+> card is there on BCM5301X the device stops working.
+>
+I need to check with our ASIC engineer on this. In theory we should be 
+able to support hot plug eventually, but maybe not in the initial 
+version of this driver.
+
+>>>> Are you sure that iProc isn't based on the BCMA bus infrastructure after
+>>>> all? Even the physical address of your PCI host falls into the address
+>>>> range that is used for the internal BCMA bus on the other chips!
+>>>
+>>> BCMA seems to be for MIPS architectures.  It seems to be quite specific to
+>>> those architectures using BCMA.  I see no use of it in bcm53xx code?
+>>
+>> BCMA lives in its own directory in drivers/bcma/ and is not specific
+>> to MIPS actually. Older BCM47xx/BCM53xx MIPS-based SoCs traditionally
+>> started with a discoverable Silicon Sonics Backplane (drivers/ssb) and
+>> progressively migrated to BCMA (drivers/bcma), both subsystems offer a
+>> very similar bus/device/driver abstraction and discovery mechanism.
+>
+> With mainline kernel 3.18 you can boot Linux on a BCM5301X SoC and bcma
+> will find all the cores.
+>
+> Hauke
+>
