@@ -1,266 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:54671 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753184AbaLVFzI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 00:55:08 -0500
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 22 Dec 2014 15:55:05 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 546833578065
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:55:03 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sBM5t3SV37486662
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:55:03 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sBM5t2H3020812
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:55:02 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V10 10/17] powerpc/powernv: Use pci_dn in PCI config accessor
-Date: Mon, 22 Dec 2014 13:54:30 +0800
-Message-Id: <1419227677-12312-11-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from hauke-m.de ([5.39.93.123]:49514 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932821AbaLJU0Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 10 Dec 2014 15:26:16 -0500
+Message-ID: <5488AC64.9010306@hauke-m.de>
+Date: Wed, 10 Dec 2014 21:26:12 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Florian Fainelli <f.fainelli@gmail.com>,
+	Scott Branden <sbranden@broadcom.com>
+CC: Arnd Bergmann <arnd@arndb.de>, Ray Jui <rjui@broadcom.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Christian Daudt <bcm@fixthebug.org>,
+	Matt Porter <mporter@linaro.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH 2/4] PCI: iproc: Add Broadcom iProc PCIe driver
+References: <1418169871-19232-3-git-send-email-rjui@broadcom.com> <9707535.Y78sV0TgX4@wuerfel> <54887901.8070501@broadcom.com> <CAGVrzcbZ_f43Vf1mu2XErVi_Jehjggh2TREyrSs84ntSm98yvg@mail.gmail.com>
+In-Reply-To: <CAGVrzcbZ_f43Vf1mu2XErVi_Jehjggh2TREyrSs84ntSm98yvg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI config accessors rely on device node. Unfortunately, VFs
-don't have corresponding device nodes. So we have to switch to
-pci_dn for PCI config access.
+On 12/10/2014 07:46 PM, Florian Fainelli wrote:
+> 2014-12-10 8:46 GMT-08:00 Scott Branden <sbranden@broadcom.com>:
+>> On 14-12-10 03:31 AM, Arnd Bergmann wrote:
+>>>
+>>> On Tuesday 09 December 2014 16:04:29 Ray Jui wrote:
+>>>>
+>>>> Add initial version of the Broadcom iProc PCIe driver. This driver
+>>>> has been tested on NSP and Cygnus and is expected to work on all iProc
+>>>> family of SoCs that deploys the same PCIe host controller
+>>>>
+>>>> The driver also supports MSI
+>>>>
+>>>> Signed-off-by: Ray Jui <rjui@broadcom.com>
+>>>> Reviewed-by: Scott Branden <sbranden@broadcom.com>
+>>>
+>>>
+>>> The driver looks suspiciously like the one that Hauke already submitted a
+>>> while ago for bcm53xx. Please come up with a merged driver that works for
+>>> both.
+>>
+>> Could you please be a little more specific.  What driver did "Hauke already
+>> submitted"?  I do not see any driver in the kernel you are talking about.
+> 
+> https://www.marc.info/?l=linux-pci&m=141547043110684&w=2
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/eeh-powernv.c |   14 +++++-
- arch/powerpc/platforms/powernv/pci.c         |   69 ++++++++++----------------
- arch/powerpc/platforms/powernv/pci.h         |    4 +-
- 3 files changed, 40 insertions(+), 47 deletions(-)
+Yes it also looks similar to me. Your code also contains the same
+comments as the driver used on Northstar (BCM5301X). Your driver has
+some more features, but I just have access to the consumer SoC Northstar
+where the PCIe controller is only used to connect some Broadcom Wifi
+chips to the SoC. I do not know If this controller does not have these
+features or the driver I used as a reference does not implement them.
 
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 1d19e79..c63b6c1 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -419,21 +419,31 @@ static inline bool powernv_eeh_cfg_blocked(struct device_node *dn)
- static int powernv_eeh_read_config(struct device_node *dn,
- 				   int where, int size, u32 *val)
- {
-+	struct pci_dn *pdn = PCI_DN(dn);
-+
-+	if (!pdn)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
- 	if (powernv_eeh_cfg_blocked(dn)) {
- 		*val = 0xFFFFFFFF;
- 		return PCIBIOS_SET_FAILED;
- 	}
- 
--	return pnv_pci_cfg_read(dn, where, size, val);
-+	return pnv_pci_cfg_read(pdn, where, size, val);
- }
- 
- static int powernv_eeh_write_config(struct device_node *dn,
- 				    int where, int size, u32 val)
- {
-+	struct pci_dn *pdn = PCI_DN(dn);
-+
-+	if (!pdn)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
- 	if (powernv_eeh_cfg_blocked(dn))
- 		return PCIBIOS_SET_FAILED;
- 
--	return pnv_pci_cfg_write(dn, where, size, val);
-+	return pnv_pci_cfg_write(pdn, where, size, val);
- }
- 
- /**
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index 4945e87..b7d4b9d 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -366,9 +366,9 @@ static void pnv_pci_handle_eeh_config(struct pnv_phb *phb, u32 pe_no)
- 	spin_unlock_irqrestore(&phb->lock, flags);
- }
- 
--static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
--				     struct device_node *dn)
-+static void pnv_pci_config_check_eeh(struct pci_dn *pdn)
- {
-+	struct pnv_phb *phb = pdn->phb->private_data;
- 	u8	fstate;
- 	__be16	pcierr;
- 	int	pe_no;
-@@ -379,7 +379,7 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
- 	 * setup that yet. So all ER errors should be mapped to
- 	 * reserved PE.
- 	 */
--	pe_no = PCI_DN(dn)->pe_number;
-+	pe_no = pdn->pe_number;
- 	if (pe_no == IODA_INVALID_PE) {
- 		if (phb->type == PNV_PHB_P5IOC2)
- 			pe_no = 0;
-@@ -407,8 +407,7 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
- 	}
- 
- 	cfg_dbg(" -> EEH check, bdfn=%04x PE#%d fstate=%x\n",
--		(PCI_DN(dn)->busno << 8) | (PCI_DN(dn)->devfn),
--		pe_no, fstate);
-+		(pdn->busno << 8) | (pdn->devfn), pe_no, fstate);
- 
- 	/* Clear the frozen state if applicable */
- 	if (fstate == OPAL_EEH_STOPPED_MMIO_FREEZE ||
-@@ -425,10 +424,9 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
- 	}
- }
- 
--int pnv_pci_cfg_read(struct device_node *dn,
-+int pnv_pci_cfg_read(struct pci_dn *pdn,
- 		     int where, int size, u32 *val)
- {
--	struct pci_dn *pdn = PCI_DN(dn);
- 	struct pnv_phb *phb = pdn->phb->private_data;
- 	u32 bdfn = (pdn->busno << 8) | pdn->devfn;
- 	s64 rc;
-@@ -462,10 +460,9 @@ int pnv_pci_cfg_read(struct device_node *dn,
- 	return PCIBIOS_SUCCESSFUL;
- }
- 
--int pnv_pci_cfg_write(struct device_node *dn,
-+int pnv_pci_cfg_write(struct pci_dn *pdn,
- 		      int where, int size, u32 val)
- {
--	struct pci_dn *pdn = PCI_DN(dn);
- 	struct pnv_phb *phb = pdn->phb->private_data;
- 	u32 bdfn = (pdn->busno << 8) | pdn->devfn;
- 
-@@ -489,18 +486,17 @@ int pnv_pci_cfg_write(struct device_node *dn,
- }
- 
- #if CONFIG_EEH
--static bool pnv_pci_cfg_check(struct pci_controller *hose,
--			      struct device_node *dn)
-+static bool pnv_pci_cfg_check(struct pci_dn *pdn)
- {
- 	struct eeh_dev *edev = NULL;
--	struct pnv_phb *phb = hose->private_data;
-+	struct pnv_phb *phb = pdn->phb->private_data;
- 
- 	/* EEH not enabled ? */
- 	if (!(phb->flags & PNV_PHB_FLAG_EEH))
- 		return true;
- 
- 	/* PE reset or device removed ? */
--	edev = of_node_to_eeh_dev(dn);
-+	edev = pdn->edev;
- 	if (edev) {
- 		if (edev->pe &&
- 		    (edev->pe->state & EEH_PE_CFG_BLOCKED))
-@@ -513,8 +509,7 @@ static bool pnv_pci_cfg_check(struct pci_controller *hose,
- 	return true;
- }
- #else
--static inline pnv_pci_cfg_check(struct pci_controller *hose,
--				struct device_node *dn)
-+static inline pnv_pci_cfg_check(struct pci_dn *pdn)
- {
- 	return true;
- }
-@@ -524,32 +519,26 @@ static int pnv_pci_read_config(struct pci_bus *bus,
- 			       unsigned int devfn,
- 			       int where, int size, u32 *val)
- {
--	struct device_node *dn, *busdn = pci_bus_to_OF_node(bus);
- 	struct pci_dn *pdn;
- 	struct pnv_phb *phb;
--	bool found = false;
- 	int ret;
- 
- 	*val = 0xFFFFFFFF;
--	for (dn = busdn->child; dn; dn = dn->sibling) {
--		pdn = PCI_DN(dn);
--		if (pdn && pdn->devfn == devfn) {
--			phb = pdn->phb->private_data;
--			found = true;
--			break;
--		}
--	}
-+	pdn = pci_get_pdn_by_devfn(bus, devfn);
-+	if (!pdn)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
- 
--	if (!found || !pnv_pci_cfg_check(pdn->phb, dn))
-+	if (!pnv_pci_cfg_check(pdn))
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
--	ret = pnv_pci_cfg_read(dn, where, size, val);
--	if (phb->flags & PNV_PHB_FLAG_EEH) {
-+	ret = pnv_pci_cfg_read(pdn, where, size, val);
-+	phb = pdn->phb->private_data;
-+	if (phb->flags & PNV_PHB_FLAG_EEH && pdn->edev) {
- 		if (*val == EEH_IO_ERROR_VALUE(size) &&
--		    eeh_dev_check_failure(of_node_to_eeh_dev(dn)))
-+		    eeh_dev_check_failure(pdn->edev))
-                         return PCIBIOS_DEVICE_NOT_FOUND;
- 	} else {
--		pnv_pci_config_check_eeh(phb, dn);
-+		pnv_pci_config_check_eeh(pdn);
- 	}
- 
- 	return ret;
-@@ -559,27 +548,21 @@ static int pnv_pci_write_config(struct pci_bus *bus,
- 				unsigned int devfn,
- 				int where, int size, u32 val)
- {
--	struct device_node *dn, *busdn = pci_bus_to_OF_node(bus);
- 	struct pci_dn *pdn;
- 	struct pnv_phb *phb;
--	bool found = false;
- 	int ret;
- 
--	for (dn = busdn->child; dn; dn = dn->sibling) {
--		pdn = PCI_DN(dn);
--		if (pdn && pdn->devfn == devfn) {
--			phb = pdn->phb->private_data;
--			found = true;
--			break;
--		}
--	}
-+	pdn = pci_get_pdn_by_devfn(bus, devfn);
-+	if (!pdn)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
- 
--	if (!found || !pnv_pci_cfg_check(pdn->phb, dn))
-+	if (!pnv_pci_cfg_check(pdn))
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
--	ret = pnv_pci_cfg_write(dn, where, size, val);
-+	ret = pnv_pci_cfg_write(pdn, where, size, val);
-+	phb = pdn->phb->private_data;
- 	if (!(phb->flags & PNV_PHB_FLAG_EEH))
--		pnv_pci_config_check_eeh(phb, dn);
-+		pnv_pci_config_check_eeh(pdn);
- 
- 	return ret;
- }
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 6c02ff8..e5b75b2 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -219,9 +219,9 @@ extern struct pnv_eeh_ops ioda_eeh_ops;
- 
- void pnv_pci_dump_phb_diag_data(struct pci_controller *hose,
- 				unsigned char *log_buff);
--int pnv_pci_cfg_read(struct device_node *dn,
-+int pnv_pci_cfg_read(struct pci_dn *pdn,
- 		     int where, int size, u32 *val);
--int pnv_pci_cfg_write(struct device_node *dn,
-+int pnv_pci_cfg_write(struct pci_dn *pdn,
- 		      int where, int size, u32 val);
- extern void pnv_pci_setup_iommu_table(struct iommu_table *tbl,
- 				      void *tce_mem, u64 tce_size,
--- 
-1.7.9.5
+When I find some time I will try this driver on a Northstar device. I
+think your driver is more advanced then the one I send to the mailing list.
 
+When you want to stay with pure device tree I will send a patch adding
+additional support for registering to bcma.
+
+Does your SoC also have a third PCIe controller which shares the PHY
+with the USB 3 controller?
+
+Why is this stuff in the iproc_pcie_check_link() function needed? I
+think it is strange that the controller driver has to check if the
+device is there and set the correct speed. When we do not check if the
+card is there on BCM5301X the device stops working.
+
+>>> Are you sure that iProc isn't based on the BCMA bus infrastructure after
+>>> all? Even the physical address of your PCI host falls into the address
+>>> range that is used for the internal BCMA bus on the other chips!
+>>
+>> BCMA seems to be for MIPS architectures.  It seems to be quite specific to
+>> those architectures using BCMA.  I see no use of it in bcm53xx code?
+> 
+> BCMA lives in its own directory in drivers/bcma/ and is not specific
+> to MIPS actually. Older BCM47xx/BCM53xx MIPS-based SoCs traditionally
+> started with a discoverable Silicon Sonics Backplane (drivers/ssb) and
+> progressively migrated to BCMA (drivers/bcma), both subsystems offer a
+> very similar bus/device/driver abstraction and discovery mechanism.
+
+With mainline kernel 3.18 you can boot Linux on a BCM5301X SoC and bcma
+will find all the cores.
+
+Hauke
