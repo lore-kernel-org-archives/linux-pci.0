@@ -1,65 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:48447 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751066AbaLQFup (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Dec 2014 00:50:45 -0500
-Message-ID: <549119A9.4010406@huawei.com>
-Date: Wed, 17 Dec 2014 13:50:33 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:52480 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757505AbaLJOej (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Dec 2014 09:34:39 -0500
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 11 Dec 2014 00:34:37 +1000
+Date: Wed, 10 Dec 2014 22:34:28 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Marek =?iso-8859-1?Q?Kord=EDk?= <kordikmarek@gmail.com>,
+	Alexey Voronkov <zermond@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Clear all bridge res MEM_64 if host bridge has non
+ mem64
+Message-ID: <20141210143428.GB12497@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1418160871-5605-1-git-send-email-yinghai@kernel.org>
+ <CAErSpo5tZU=zBKNDt2UtUE_AMG3zzrdq2CX2A4ZL7tdLELXgqA@mail.gmail.com>
+ <CAE9FiQWLaNSsFTWEpWRFR4xTd0hKOwENdQR7N6T=K65VM+vDQg@mail.gmail.com>
+ <20141210141537.GA9298@richard>
 MIME-Version: 1.0
-To: ratheesh kannoth <ratheesh.ksz@gmail.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: sysfs-pci remove
-References: <CAGZFCEG-J=Qore8nWvWLe6m-bm59Mx+M=HdcaOBVNODm9beokQ@mail.gmail.com>	<5490D5CB.5010200@huawei.com> <CAGZFCEFOiY+VmTVKOnPwDaKUKogUX9gkXtHuMATL3btw4kz2JQ@mail.gmail.com>
-In-Reply-To: <CAGZFCEFOiY+VmTVKOnPwDaKUKogUX9gkXtHuMATL3btw4kz2JQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141210141537.GA9298@richard>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/12/17 13:21, ratheesh kannoth wrote:
-> I could see the pci resource in /proc/iomem.
-> 
-> But , lspci -s 06:0.0 -vv  shows that there is no kernel mode driver
-> for that interface.
+My mutt hang, in case the mail isn't sent out, I resend it.
 
-If the device 06:0.0 was removed by "echo 1 > /sys/.../0000:6:0.0/remove",
-you could not see lspci info for this device anymore.
-Do you really remove the device ?
+On Wed, Dec 10, 2014 at 10:15:37PM +0800, Wei Yang wrote:
+>On Tue, Dec 09, 2014 at 03:13:49PM -0800, Yinghai Lu wrote:
+>>On Tue, Dec 9, 2014 at 1:53 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> On Tue, Dec 9, 2014 at 2:34 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>> +       list_for_each_entry(window, &bridge->windows, list) {
+>>>> +               res = window->res;
+>>>> +               if (resource_type(res) == IORESOURCE_MEM ||
+>>>> +                   res->end > 0xffffffff) {
+>>>> +                       bridge->has_mem64_res = true;
+>>>
+>>> This is an interesting idea, but I think you're checking CPU addresses
+>>> here, and you need to check PCI bus addresses.
+>>
+>>Looks like those IBM platforms have res > 4g, but pci bus address < 4g.
+>>If we check pci bus address, and then we would break those platforms.
+>>
 
-> 
-> 
-> On Wed, Dec 17, 2014 at 6:30 AM, Yijing Wang <wangyijing@huawei.com> wrote:
->> On 2014/12/17 1:51, ratheesh kannoth wrote:
->>> Hi list,
->>>
->>> https://www.kernel.org/doc/Documentation/filesystems/sysfs-pci.txt
->>> talks about "remove" entry.
->>> The 'remove' file is used to remove the PCI device, by writing a non-zero
->>> integer to the file.  if i remove the device , will the bar resource
->>> map still appear on /proc/iomem ?
->>
->> Of course not.
->>
->>>
->>>
->>> -Ratheesh
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>>
->>
->>
->> --
->> Thanks!
->> Yijing
->>
-> 
-> 
+Hi, Yinghai
 
+I did some test with patch on my machine. It looks good.
+
+While as Bjorn mentioned, I think we could change it a little. The pci space
+on our machine is like this:
+
+        cpu address                               pci address
+  MEM   0x00003ff280000000..0x00003ff2fffeffff -> 0x00000000 8000 0000
+  MEM64 0x00003d5000000000..0x00003d5fffffffff -> 0x00003d50 0000 0000
+
+Each root bridge has two MMIO window. From this output we could see the pci
+address for 64-bit window is above 4G.
+
+I did a little change on your code, like this
+
+        list_for_each_entry(window, &bridge->windows, list) {
+                res = window->res;
+                if (resource_type(res) == IORESOURCE_MEM ||
+-                   res->end > 0xffffffff) {
++                   (res->end - window->offset) > 0xffffffff) {
+                        bridge->has_mem64_res = true;
+                        break;
+                }
+        }
+
+This also works on my machine.
+
+One more question, with this patch, do we still need previous patch for
+Marek's problem?
+
+>>Yinghai
+>
+>-- 
+>Richard Yang
+>Help you, Help me
 
 -- 
-Thanks!
-Yijing
+Richard Yang
+Help you, Help me
 
