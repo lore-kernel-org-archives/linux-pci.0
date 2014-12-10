@@ -1,123 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0122.outbound.protection.outlook.com ([65.55.169.122]:47561
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753663AbaLKRMk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Dec 2014 12:12:40 -0500
-Date: Thu, 11 Dec 2014 08:38:31 -0800
-From: Guenter Roeck <groeck@juniper.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Rajat Jain <rajatxjain@gmail.com>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Rajat Jain <rajatjain@juniper.net>
-Subject: Re: [PATCH v2] PCI: pciehp: Check link state before accessing device
- during removal
-Message-ID: <20141211163831.GA2845@svl-evodev-groeck.juniper.net>
-References: <546E7120.5080505@gmail.com>
- <20141211002630.GC22886@google.com>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:28287 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758128AbaLJQrH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Dec 2014 11:47:07 -0500
+Message-ID: <54887901.8070501@broadcom.com>
+Date: Wed, 10 Dec 2014 08:46:57 -0800
+From: Scott Branden <sbranden@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20141211002630.GC22886@google.com>
+To: Arnd Bergmann <arnd@arndb.de>, Ray Jui <rjui@broadcom.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	"Ian Campbell" <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Christian Daudt <bcm@fixthebug.org>,
+	Matt Porter <mporter@linaro.org>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<devicetree@vger.kernel.org>, <hauke@hauke-m.de>
+Subject: Re: [PATCH 2/4] PCI: iproc: Add Broadcom iProc PCIe driver
+References: <1418169871-19232-3-git-send-email-rjui@broadcom.com> <9707535.Y78sV0TgX4@wuerfel>
+In-Reply-To: <9707535.Y78sV0TgX4@wuerfel>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 10, 2014 at 05:26:30PM -0700, Bjorn Helgaas wrote:
-> On Thu, Nov 20, 2014 at 02:54:24PM -0800, Rajat Jain wrote:
-> > While removing a card, we can't assume the presence to mean that the
-> > access to card is OK. That is because the cause of removal may be a
-> > link down event, and the card may still be physically present. Thus,
-> > instead of presence, use the link state to decide whether or not it is
-> > OK to access the card devices.
-> > 
-> > Here are the problem symptoms:
-> > During the removal of a card due to link down, sometimes the following
-> > error is seen (because pciehp_unconfigure_device() reads 0xFF from
-> > bridge control register as the link is down, which cause it to assume
-> > that the VGA bit is set):
-> > 
-> > pciehp 0000:21:05.0:pcie24: pcie_isr: intr_loc 100
-> > pciehp 0000:21:05.0:pcie24: Data Link Layer State change
-> > pciehp 0000:21:05.0:pcie24: slot(5): Link Down event
-> > pciehp 0000:21:05.0:pcie24: Disabling domain:bus:device=0000:60:00
-> > pciehp 0000:21:05.0:pcie24: pciehp_unconfigure_device: domain:bus:dev = 0000:60:00
-> > pciehp 0000:21:05.0:pcie24: Cannot remove display device 0000:60:00.0
-> > 
-> > Ofcourse, when the link comes back up, the device addition fails too:
-> > 
-> > pciehp 0000:21:05.0:pcie24: pcie_isr: intr_loc 100
-> > pciehp 0000:21:05.0:pcie24: Data Link Layer State change
-> > pciehp 0000:21:05.0:pcie24: pciehp_check_link_active: lnk_status = 6011
-> > pciehp 0000:21:05.0:pcie24: slot(5): Link Up event
-> > pciehp 0000:21:05.0:pcie24: Enabling domain:bus:device=0000:60:00
-> > pciehp 0000:21:05.0:pcie24: pciehp_check_link_active: lnk_status = 6011
-> > pciehp 0000:21:05.0:pcie24: pciehp_check_link_status: lnk_status = 6011
-> > pciehp 0000:21:05.0:pcie24: Device 0000:60:00.0 already exists at 0000:60:00, cannot hot-add
-> > pciehp 0000:21:05.0:pcie24: Cannot add device at 0000:60:00
-> > 
-> > The problem is not seen with this patch applied. The device removal and
-> > insertion works as expected.
-> > 
-> > Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-> > Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-> > Signed-off-by: Guenter Roeck <groeck@juniper.net>
-> > ---
-> > v2: Use the already initialized "ctrl" instead of "p_slot->ctrl"
-> > 
-> >  drivers/pci/hotplug/pciehp_pci.c |    8 ++++----
-> >  1 file changed, 4 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-> > index 9e69403..911f85b 100644
-> > --- a/drivers/pci/hotplug/pciehp_pci.c
-> > +++ b/drivers/pci/hotplug/pciehp_pci.c
-> > @@ -77,7 +77,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
-> >  {
-> >  	int rc = 0;
-> >  	u8 bctl = 0;
-> > -	u8 presence = 0;
-> > +	bool link_active = false;
-> >  	struct pci_dev *dev, *temp;
-> >  	struct pci_bus *parent = p_slot->ctrl->pcie->port->subordinate;
-> >  	u16 command;
-> > @@ -85,7 +85,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
-> >  
-> >  	ctrl_dbg(ctrl, "%s: domain:bus:dev = %04x:%02x:00\n",
-> >  		 __func__, pci_domain_nr(parent), parent->number);
-> > -	pciehp_get_adapter_status(p_slot, &presence);
-> > +	link_active = pciehp_check_link_active(ctrl);
-> >  
-> >  	pci_lock_rescan_remove();
-> >  
-> > @@ -98,7 +98,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
-> >  	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
-> >  					 bus_list) {
-> >  		pci_dev_get(dev);
-> > -		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && presence) {
-> > +		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && link_active) {
-> >  			pci_read_config_byte(dev, PCI_BRIDGE_CONTROL, &bctl);
-> >  			if (bctl & PCI_BRIDGE_CTL_VGA) {
-> >  				ctrl_err(ctrl,
-> 
-> Why do we even have this code to check for VGA devices?  I looked (briefly)
-> and couldn't find anything in the spec that prohibits removal of VGA
-> devices.
-> 
-For my part I don't know. I only know that I had to integrate the patch into
-our images since I hit the problem repeatedly. Usually I wait with integrating
-Rajat's patches until you accept them, but this one was too disruptive.
+On 14-12-10 03:31 AM, Arnd Bergmann wrote:
+> On Tuesday 09 December 2014 16:04:29 Ray Jui wrote:
+>> Add initial version of the Broadcom iProc PCIe driver. This driver
+>> has been tested on NSP and Cygnus and is expected to work on all iProc
+>> family of SoCs that deploys the same PCIe host controller
+>>
+>> The driver also supports MSI
+>>
+>> Signed-off-by: Ray Jui <rjui@broadcom.com>
+>> Reviewed-by: Scott Branden <sbranden@broadcom.com>
+>
+> The driver looks suspiciously like the one that Hauke already submitted a
+> while ago for bcm53xx. Please come up with a merged driver that works for
+> both.
+Could you please be a little more specific.  What driver did "Hauke 
+already submitted"?  I do not see any driver in the kernel you are 
+talking about.
+>
+> Are you sure that iProc isn't based on the BCMA bus infrastructure after
+> all? Even the physical address of your PCI host falls into the address
+> range that is used for the internal BCMA bus on the other chips!
+BCMA seems to be for MIPS architectures.  It seems to be quite specific 
+to those architectures using BCMA.  I see no use of it in bcm53xx code?
+>
+> 	Arnd
+>
 
-I would argue that while the patch may not be perfect, at least it improves
-the situation substantially.
-
-> If we do need it (and it looks like most or all hotplug drivers copied it),
-> isn't there still a race?  Can't we have the following sequence?
-> 
->   - pciehp_check_link_active()		# returns true
->   - Link goes down
->   - pci_read_config_byte()		# fails because link is down
-> 
-I would guess so. Question is how to address it. Read the configuration byte
-first, then check if the link is down ? Check if link is still up after reading
-the configuration byte ? Add a note that there may be a potential race condition
-and do nothing until it is actually seen ?
-
-Guenter
