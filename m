@@ -1,143 +1,240 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:34989 "EHLO
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:39308 "EHLO
 	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751520AbaLHXjE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Dec 2014 18:39:04 -0500
+	with ESMTP id S1752026AbaLJJwZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Dec 2014 04:52:25 -0500
 Received: from /spool/local
 	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 9 Dec 2014 09:39:01 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 7D1243578048
-	for <linux-pci@vger.kernel.org>; Tue,  9 Dec 2014 10:38:58 +1100 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sB8Ncv6h42139718
-	for <linux-pci@vger.kernel.org>; Tue, 9 Dec 2014 10:38:58 +1100
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sB8NcuDV018539
-	for <linux-pci@vger.kernel.org>; Tue, 9 Dec 2014 10:38:57 +1100
-Date: Tue, 9 Dec 2014 10:38:55 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 10 Dec 2014 19:52:22 +1000
+Date: Wed, 10 Dec 2014 17:42:53 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
 	Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alexey Voronkov <zermond@gmail.com>,
-	David Airlie <airlied@linux.ie>,
-	Alex Deucher <alexdeucher@gmail.com>,
 	Marek =?iso-8859-1?Q?Kord=EDk?= <kordikmarek@gmail.com>,
-	Richard Yang <weiyang@linux.vnet.ibm.com>
-Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
- GPU init
-Message-ID: <20141208233855.GA15713@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <CAErSpo6UvY10MNidAOFf4Fptv+wL-NsX6JMaU8OvSP6ywWEebQ@mail.gmail.com>
- <CAErSpo63uZeo1feoPjjXpdH43nsbcWh63kpBmxCnckPd0t9yrg@mail.gmail.com>
- <CAE9FiQWV-rKdvSeV-ivME-64QtzCX2Te5DfOVtzr0an=6eOCMA@mail.gmail.com>
- <20141204173411.GA5949@google.com>
- <CAE9FiQVyBmo+XwDgO97wwe+6TN4+q_cvnBLCuhTM8Fu_e_V5RQ@mail.gmail.com>
- <1417777177.4741.69.camel@kernel.crashing.org>
- <20141208004735.GA15508@shangw>
- <CAErSpo69c6jXOp+nw2sTSU4vgqGufUQNUEGK4_2+6p-qpyE0vQ@mail.gmail.com>
- <1418074683.13358.1.camel@kernel.crashing.org>
- <CAErSpo7pMAL5i2aPGV3u5F178bHeQTtjASckKs9NaUbEGaxv3Q@mail.gmail.com>
+	Alexey Voronkov <zermond@gmail.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Clear bridge MEM_64 flag if one child does not
+ support it
+Message-ID: <20141210094253.GA10445@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1418075552-26495-1-git-send-email-yinghai@kernel.org>
+ <1418079372.13358.9.camel@kernel.crashing.org>
+ <CAE9FiQX-vMu5+Kr09ngr95WvtoZTUSL5R2+NiVFeiN6q-BXLLg@mail.gmail.com>
+ <20141209001119.GA24661@shangw>
+ <20141209022601.GA16207@richard>
+ <CAE9FiQWz=vdR=QSkoEs5XjUxg_y4vJgnChQAc1-U_9xzfQpknQ@mail.gmail.com>
+ <20141209075619.GA23327@richard>
+ <CAErSpo5Wj1GScsj6=_=Vv73NSh3D-SCfhEdeK6VOY1AicVUN3Q@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="YiEDa0DAkWCtVeE4"
-In-Reply-To: <CAErSpo7pMAL5i2aPGV3u5F178bHeQTtjASckKs9NaUbEGaxv3Q@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo5Wj1GScsj6=_=Vv73NSh3D-SCfhEdeK6VOY1AicVUN3Q@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
---YiEDa0DAkWCtVeE4
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Mon, Dec 08, 2014 at 02:46:00PM -0700, Bjorn Helgaas wrote:
->[-cc Saifi (bouncing)]
+On Tue, Dec 09, 2014 at 11:21:11AM -0700, Bjorn Helgaas wrote:
+>On Tue, Dec 9, 2014 at 12:56 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
 >
->On Mon, Dec 8, 2014 at 2:38 PM, Benjamin Herrenschmidt
-><benh@kernel.crashing.org> wrote:
->> On Mon, 2014-12-08 at 14:04 -0700, Bjorn Helgaas wrote:
->>>
->>> However, I think 5b28541552ef is taking the wrong approach.  Consider
->>> a device that, like this Radeon, has a 32-bit prefetchable BAR.  If
->>> the upstream bridge has a 32-bit prefetchable window, things work as
->>> expected -- we put the prefetchable BAR in the prefetchable window.
->>> But if the bridge has a 64-bit prefetchable window, we put that same
->>> BAR in a 32-bit non-prefetchable window.
->>
->> Well, that's expected, unless the 64-bit prefetchable window happens to
->> be fully enclosed in 32-bit space ... So maybe the approach is to check
->> that this is the case and "downgrade" such 64-bit prefetchable BARs to
->> 32-bit ...
+>> As you mentioned in another thread, "5b28541552ef is taking the wrong
+>> approach". (http://www.spinics.net/lists/linux-pci/msg37374.html) Maybe I
+>> don't catch it clearly. Put a 32bit prefetchable resource in a 32bit
+>> non-prefetchable bridge window is a bad idea?
 >
->Yeah, I didn't word that very clearly.  I meant that after
->5b28541552ef, that 64-bit window is wasted unless there's a 64-bit BAR
->below it; we can't even place the window below 4GB and use it for
->32-bit prefetchable BARs.
+>A 32-bit prefetchable resource *can* be put in a 32-bit
+>non-prefetchable window, but the device won't perform as well as it
+>would if the resource were in a prefetchable window.
+>
+>What I object to is the fact that we put a 32-bit prefetchable
+>resource in the non-prefetchable window and leave the 64-bit
+>prefetchable window unused.  This gives up performance for no benefit.
 >
 
-Yes, I agree. It's why I suggested to return error from pbus_size_mem()
-to indicate the case: 64-bits prefetchable window isn't used and it's
-still available to be used by child 32-bits prefetchable BARs. Please
-take a look on the attached draft patch, which helps to explain the idea
-only.
+OK, I get your point. This is really a waste to put a 32-bit prefetchable
+resource in non-prefetchable window and no one use the 64-bit prefetchable
+window. (That's very interesting even no performance lost by doing so as
+mentioned in reply from Marek. Maybe the reason is the most important IO is
+performed in DMA.)
 
-Thanks,
-Gavin
+Below is what's in my mind, if not correct please let me know.
 
---YiEDa0DAkWCtVeE4
-Content-Type: text/x-diff; charset=us-ascii
-Content-Disposition: attachment; filename="0001-PCI-Use-64-bits-pref-window-accomodate-pref-BARs.patch"
+1. Yinghai's patch needs a little modification
 
->From bef332d8e2bfc464da202daa2c9d1415db1f1224 Mon Sep 17 00:00:00 2001
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Date: Tue, 9 Dec 2014 10:21:24 +1100
-Subject: [PATCH] PCI: Use 64-bits pref window accomodate pref BARs
+Now back to Yinghai's patch. If this patch wants to apply this logic it should
+check all prefetchable resource, including M64 and non-M64 
 
-The PCI resource allocation and reassignment has been changed a
-lot by Commit 5b28541552ef ("PCI: Restrict 64-bit prefetchable
-bridge windows to 64-bit resources"): If parent bridge has 64-bits
-prefetchable window, all child 64-bits prefetchable BARs are
-expected to be assigned from the window. The left child BARs are
-going to be allocated from parent non-prefetchable window.
+  if *none* of them has M64 prefetchable resource, then clear the M64 flag in
+  bridge.
 
-If there're no child 64-bits prefetchable BARs, pbus_size_mem()
-should return error so that the 64-bits prefetchable window still
-can be used to accomodate child 32-bits prefetchable BARs.
+But the logic in patch is
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
-v1: Draft patch to explain idea only
----
- drivers/pci/setup-bus.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+  if *any* of them has non-M64 prefetchable resource, then clear the M64 flag 
+  in bridge.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 0482235..7a7778f 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -989,6 +989,16 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		}
- 	}
- 
-+	/*
-+	 * If we don't have unassigned BARs with indicated type, the
-+	 * corresponding window won't be used. However, we might use
-+	 * this window for BARs with other types, e.g. 64-bits pref
-+	 * window for 32-bits pref BARs. Here to return error to
-+	 * indicate the case.
-+	 */
-+	if (!size)
-+		return -ENODEV;
-+
- 	min_align = calculate_mem_align(aligns, max_order);
- 	min_align = max(min_align, window_alignment(bus, b_res->flags));
- 	size0 = calculate_memsize(size, min_size, 0, resource_size(b_res), min_align);
+
+2. Yes, the strategy will improve the performance in some case, but with
+limited case.
+
+Then suppose we use the strategy, clear the M64 flag in bridge when none of
+the child resource need it. 
+
+I imagined this scenario:
+
+                       +--------------+
+                       |B1            |
+                       +------+-------+
+                              |  Bus#1
+            ---+--------------+-------------------+----
+               |  Bus#2                           |  Bus#3
+        +------+------+                    +------+-------+
+        |B2           |                    |B3            |
+        +-------------+                    +--------------+
+	res[1] 32-bit non-pref             res[1] 32-bit non-pref
+	res[2] 64-bit pref                 res[2] 32-bit pref
+
+Suppose we have a PCI sub-tree like this. And suppose all the bus->resource[2]
+is with M64 flag before sizing. (The initial value is retrieved in enumeration
+stage by pci_read_bridge_bases(). This happens before sizing.)
+
+We will first size Bus#2, then Bus#3, at last Bus#1. As shown in the chart,
+    For Bus#2, there is a 64-bit pref, so Bus#2->resource[2] with M64 flag set.
+    For Bus#3, there is no 64-bit pref, so Bus#3->resource[2] with M64 flag
+    cleared.
+    Then up to Bus#1, since there is a 64-bit prefetchable resource, the
+    Bus#1->resource[2] is with M64 flag set.
+
+The final B1's window will look like this:
+
+         +--------------------------------------+
+         | B1                                   |
+         |                                      |
+	 | res[1] 32-bit non-pref               |
+         | +---------+----------+----------+    |
+	 | |B2.res[1]| B3.res[1]| B3.res[2]|    |
+         | +---------+----------+----------+    |
+	 |                                      |
+         | res[2] 64-bit pref                   |
+         | +----------------+                   |
+         | |B2.res[2]       |                   |
+         | +----------------+                   |
+         +--------------------------------------+
+
+>From the performance perspective: 
+
+  B3.res[2] will bring some performance improvement to those devices under it.
+  But from its grand parent's point of view, B3.res[2] still sits under a
+  non-prefetchable window. So the performance improvement will be limited. Hope
+  my understanding is correct.
+  
+  So the best case for the performance improvement is all this PCI tree has no
+  64-bit prefetchable resource.
+
+>From the resource sizing/allocation perspective:
+  
+  B3.res[2] still contribute to the root's non-prefetchable window, once
+  there is a 64-bit prefetchable in the PCI tree. If we don't have enough
+  non-prefetchable window in root, we would fail.
+
+Bjorn, I agree to apply the logic you mentioned to clear the M64 flag when no
+child need it. But the benefits is limited. 
+
+I did a grep on the lspci -vvv output and see there is no 64-bit prefetchable
+BAR in the system.
+
+$ grep Region lspci | grep Me
+	Region 0: Memory at febff400 (32-bit, non-prefetchable) [size=1K]
+	Region 0: Memory at febf8000 (64-bit, non-prefetchable) [size=16K]
+	Region 0: Memory at febff000 (32-bit, non-prefetchable) [size=1K]
+	Region 5: Memory at febff800 (32-bit, non-prefetchable) [size=2K]
+	Region 0: Memory at c0000000 (32-bit, prefetchable) [size=256M]
+	Region 2: Memory at fdff0000 (32-bit, non-prefetchable) [size=64K]
+	Region 0: Memory at fe0c0000 (64-bit, non-prefetchable) [size=256K]
+	Region 0: Memory at fe1fe000 (64-bit, non-prefetchable) [size=8K]
+	Region 0: Memory at feaffc00 (32-bit, non-prefetchable) [size=1K]
+
+I think this is the reason why this patch could help on this case.
+
+3. Not sure why the non-prefetchable window becomes bigger on 3.16
+
+I past the fragment of /proc/iomem from Marek.
+
+3.15 good version
+
+c0000000-ffffffff : PCI Bus 0000:00
+  c0000000-cfffffff : PCI Bus 0000:01
+    c0000000-cfffffff : 0000:01:00.0
+  d0000000-d01fffff : PCI Bus 0000:08
+  ddf00000-dfefffff : PCI Bus 0000:06
+  e0000000-efffffff : PCI MMCONFIG 0000 [bus 00-ff]
+    e0000000-efffffff : pnp 00:0b
+  fdf00000-fdffffff : PCI Bus 0000:01
+    fdfc0000-fdfdffff : 0000:01:00.0
+    fdff0000-fdffffff : 0000:01:00.0
+
+3.16 bad version
+
+c0000000-ffffffff : PCI Bus 0000:00
+  c0000000-c01fffff : PCI Bus 0000:01
+  c0200000-c03fffff : PCI Bus 0000:08
+  ddf00000-dfefffff : PCI Bus 0000:06
+  e0000000-efffffff : PCI MMCONFIG 0000 [bus 00-ff]
+    e0000000-efffffff : pnp 00:07
+  fdf00000-fdffffff : PCI Bus 0000:01
+    fdfc0000-fdfdffff : 0000:01:00.0
+    fdff0000-fdffffff : 0000:01:00.0
+
+On 3.15, one BAR in device 01:00.0 is allocated from c0000000-cffffffff. While
+on 3.16, we need to allocate the same BAR from fdf0000000 range. But we see
+this range keeps the same size as in 3.15. I don't catch the reason for this.
+
+My thoughts is if we could have a bigger range in fdf00000, the non-prefetch
+window in Bus#01, the Graphic card could work too.
+
+>> But in my mind, if the bridge           
+>> prefetchable window is 64bit, we can't put a 32bit prefetchable resource in
+>> it.
+>
+>If the window is programmed to be above 4GB, of course we can't put a
+>32-bit resource in it.  My point is that if the bridge *supports* a
+>64-bit prefetchable window, we can decide where to place it.  If we
+>put the window below 4GB, we can put a 32-bit prefetchable resource in
+>it.
+
+Yes, agree.
+
+If the 64-bit prefetchable window contains some space under 4G, we could put
+some 32-bit prefetchable resource in it. But this would bring more complexity
+to the sizing algorithm. We need a separate value to track the size below 4G
+in 64-bit prefetchable window, then to see who would have the luck to fit in.
+And those can't the ticket would be sit in non-prefetchable window.
+
+>
+>I think maybe you're thinking of "64-bit window" as "a window
+>programmed to be above 4GB."  I'm using "64-bit window" to mean "a
+>window that supports 64-bit addressing," i.e., one where
+>PCI_PREF_BASE_UPPER32 and PCI_PREF_LIMIT_UPPER32 are implemented.
+>That's analogous to the way we talk about 64-bit BARs.  A 64-bit BAR
+>is still a 64-bit BAR even if it is currently programmed to be below
+>4GB.
+
+Thanks for reminding. It makes me more clear.
+
+Let me make my statement more clear.
+
+If the 64-bit window is enabled, like the
+PCI_PREF_BASE_UPPER32/PCI_PREF_BASE_UPPER32 is set. And this address is set
+the M64 flag, which means the range contains space above 4G. In this case, we
+can't put a 32-bit resource in this window.
+
+If my understanding is not correct, please let me know.
+
+>
+>Bjorn
+
 -- 
-1.8.3.2
-
-
---YiEDa0DAkWCtVeE4--
+Richard Yang
+Help you, Help me
 
