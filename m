@@ -1,47 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:50175 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750946AbaLQSCy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Dec 2014 13:02:54 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <gregkh@linuxfoundation.org>, <vinod.koul@intel.com>,
-	<dmaengine@vger.kernel.org>, <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<arnd@arndb.de>, <linux-arm-kernel@lists.infradead.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>
-Subject: [RFC PATCH 0/2] PCI: get DMA configuration from parent device
-Date: Wed, 17 Dec 2014 13:02:22 -0500
-Message-ID: <1418839344-14393-1-git-send-email-m-karicheri2@ti.com>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:54653 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752738AbaLJAC2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 19:02:28 -0500
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	"Ian Campbell" <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Christian Daudt <bcm@fixthebug.org>,
+	Matt Porter <mporter@linaro.org>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>
+CC: Scott Branden <sbranden@broadcom.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
+Subject: [PATCH 4/4] ARM: dts: enable PCIe for Broadcom Cygnus
+Date: Tue, 9 Dec 2014 16:04:31 -0800
+Message-ID: <1418169871-19232-5-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1418169871-19232-1-git-send-email-rjui@broadcom.com>
+References: <Ray Jui <rjui@broadcom.com>
+ <1418169871-19232-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Keystone PCI devices requires the dma_pfn_offset to be set correctly
-so that the PCI devices get the right DMA mask to function. This
-patch adds a helper function to get this configuration from the root
-bridge's parent device. The probe.c code now calls this helper to set
-the default dma configuration if the parent device is dma capable.
+Add PCIe device nodes and its properties in bcm-cygnus.dtsi but keep it
+disabled there. Only enable it in bcm958300k.dts because PCIe interfaces
+are only populated on that board
 
-Typically, dma-ranges are defined in the DT node of the SoC and gets
-updated in the root bridge's parent device structure. My original
-patch for this was at [1] which was NACK-ed and this is an attempt
-to implement a better solution. This may have side effects that I am
-unware of. So sending as a RFC patch to get feedback before sending
-the formal patch. Please review and provide me the comment so that
-I can incorporate the same.
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Scott Branden <sbranden@broadcom.com>
+---
+ arch/arm/boot/dts/bcm-cygnus.dtsi |   43 +++++++++++++++++++++++++++++++++++++
+ arch/arm/boot/dts/bcm958300k.dts  |    8 +++++++
+ 2 files changed, 51 insertions(+)
 
-[1] http://www.gossamer-threads.com/lists/linux/kernel/2024591
-
-Murali Karicheri (2):
-  common: dma-mapping: introduce dma_get_parent_cfg() helper
-  PCI: get device dma configuration from parent
-
- drivers/base/dma-mapping.c  |   18 ++++++++++++++++++
- drivers/pci/probe.c         |   20 +++++++++++++++++---
- include/linux/dma-mapping.h |    3 +++
- 3 files changed, 38 insertions(+), 3 deletions(-)
-
+diff --git a/arch/arm/boot/dts/bcm-cygnus.dtsi b/arch/arm/boot/dts/bcm-cygnus.dtsi
+index 5126f9e..669bb3b 100644
+--- a/arch/arm/boot/dts/bcm-cygnus.dtsi
++++ b/arch/arm/boot/dts/bcm-cygnus.dtsi
+@@ -70,6 +70,49 @@
+ 		};
+ 	};
+ 
++	pcie0: pcie@18012000 {
++		compatible = "brcm,iproc-pcie";
++		reg = <0x18012000 0x1000>,
++			<0x18002000 0x1000>;
++		interrupts = <GIC_SPI 96 IRQ_TYPE_NONE>,
++			     <GIC_SPI 97 IRQ_TYPE_NONE>,
++			     <GIC_SPI 98 IRQ_TYPE_NONE>,
++			     <GIC_SPI 99 IRQ_TYPE_NONE>,
++			     <GIC_SPI 100 IRQ_TYPE_NONE>,
++			     <GIC_SPI 101 IRQ_TYPE_NONE>;
++		bus-range = <0x00 0xFF>;
++
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x81000000 0 0	  0x28000000 0 0x00010000
++			  0x82000000 0 0x20000000 0x20000000 0 0x04000000>;
++		phy-addr = <5>;
++		status = "disabled";
++	};
++
++	pcie1: pcie@18013000 {
++		compatible = "brcm,iproc-pcie";
++		reg = <0x18013000 0x1000>,
++			<0x18002000 0x1000>;
++
++		interrupts = <GIC_SPI 102 IRQ_TYPE_NONE>,
++			     <GIC_SPI 103 IRQ_TYPE_NONE>,
++			     <GIC_SPI 104 IRQ_TYPE_NONE>,
++			     <GIC_SPI 105 IRQ_TYPE_NONE>,
++			     <GIC_SPI 106 IRQ_TYPE_NONE>,
++			     <GIC_SPI 107 IRQ_TYPE_NONE>;
++		bus-range = <0x00 0xFF>;
++
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x81000000 0 0	  0x48000000 0 0x00010000
++			  0x82000000 0 0x40000000 0x40000000 0 0x04000000>;
++		phy-addr = <6>;
++		status = "disabled";
++	};
++
+ 	uart0: serial@18020000 {
+ 		compatible = "snps,dw-apb-uart";
+ 		reg = <0x18020000 0x100>;
+diff --git a/arch/arm/boot/dts/bcm958300k.dts b/arch/arm/boot/dts/bcm958300k.dts
+index f1bb36f..c9eb856 100644
+--- a/arch/arm/boot/dts/bcm958300k.dts
++++ b/arch/arm/boot/dts/bcm958300k.dts
+@@ -47,6 +47,14 @@
+ 		bootargs = "console=ttyS0,115200";
+ 	};
+ 
++	pcie0: pcie@18012000 {
++		status = "okay";
++	};
++
++	pcie1: pcie@18013000 {
++		status = "okay";
++	};
++
+ 	uart3: serial@18023000 {
+ 		status = "okay";
+ 	};
 -- 
 1.7.9.5
 
