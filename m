@@ -1,129 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:40346 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753056AbaLDFzv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Dec 2014 00:55:51 -0500
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 4 Dec 2014 15:55:50 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id D41EE2CE8077
-	for <linux-pci@vger.kernel.org>; Thu,  4 Dec 2014 16:55:47 +1100 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sB45tdKh32047150
-	for <linux-pci@vger.kernel.org>; Thu, 4 Dec 2014 16:55:47 +1100
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sB45tEwN014827
-	for <linux-pci@vger.kernel.org>; Thu, 4 Dec 2014 16:55:15 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH 4/5] powerpc/powernv: Functions to retrieve PCI slot status
-Date: Thu,  4 Dec 2014 16:54:47 +1100
-Message-Id: <1417672488-27341-5-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1417672488-27341-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1417672488-27341-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:61632 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750777AbaLJMQo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Dec 2014 07:16:44 -0500
+Date: Wed, 10 Dec 2014 13:16:39 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI: tegra: remove bogus bridge setup fixup
+Message-ID: <20141210121637.GB23558@ulmo.nvidia.com>
+References: <1415907457-3147-1-git-send-email-l.stach@pengutronix.de>
+ <1415907457-3147-3-git-send-email-l.stach@pengutronix.de>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="3uo+9/B/ebqu+fSQ"
+In-Reply-To: <1415907457-3147-3-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch exports two functions, which base on corresponding OPAL
-APIs to retrieve PCI slot status. Those functions are going to be
-used by PCI hotplug module in subsequent patches:
 
-   pnv_pci_get_power_status()     opal_pci_get_power_status()
-   pnv_pci_get_presence_status()  opal_pci_get_presence_status()
+--3uo+9/B/ebqu+fSQ
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/opal.h                |  4 ++++
- arch/powerpc/include/asm/pnv-pci.h             |  3 +++
- arch/powerpc/platforms/powernv/opal-wrappers.S |  2 ++
- arch/powerpc/platforms/powernv/pci.c           | 24 ++++++++++++++++++++++++
- 4 files changed, 33 insertions(+)
+On Thu, Nov 13, 2014 at 08:37:37PM +0100, Lucas Stach wrote:
+> The bridge setup is already done by generic code
+> while scanning the buses. Do not duplicate (or potentially
+> alter) this setup as a fixup.
+>=20
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> ---
+>  drivers/pci/host/pci-tegra.c | 13 -------------
+>  1 file changed, 13 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/opal.h b/arch/powerpc/include/asm/opal.h
-index edd1993..c17fe80 100644
---- a/arch/powerpc/include/asm/opal.h
-+++ b/arch/powerpc/include/asm/opal.h
-@@ -154,6 +154,8 @@ struct opal_sg_list {
- #define OPAL_HANDLE_HMI				98
- #define OPAL_REGISTER_DUMP_REGION		101
- #define OPAL_UNREGISTER_DUMP_REGION		102
-+#define OPAL_PCI_GET_POWER_STATUS		110
-+#define OPAL_PCI_GET_PRESENCE_STATUS		111
- 
- #ifndef __ASSEMBLY__
- 
-@@ -958,6 +960,8 @@ int64_t opal_handle_hmi(void);
- int64_t opal_register_dump_region(uint32_t id, uint64_t start, uint64_t end);
- int64_t opal_unregister_dump_region(uint32_t id);
- int64_t opal_pci_set_phb_cxl_mode(uint64_t phb_id, uint64_t mode, uint64_t pe_number);
-+int64_t opal_pci_get_power_status(uint64_t id, uint8_t *status);
-+int64_t opal_pci_get_presence_status(uint64_t id, uint8_t *status);
- 
- /* Internal functions */
- extern int early_init_dt_scan_opal(unsigned long node, const char *uname,
-diff --git a/arch/powerpc/include/asm/pnv-pci.h b/arch/powerpc/include/asm/pnv-pci.h
-index f09a22f..fc73f72 100644
---- a/arch/powerpc/include/asm/pnv-pci.h
-+++ b/arch/powerpc/include/asm/pnv-pci.h
-@@ -13,6 +13,9 @@
- #include <linux/pci.h>
- #include <misc/cxl.h>
- 
-+extern int pnv_pci_get_power_status(uint64_t id, uint8_t *status);
-+extern int pnv_pci_get_presence_status(uint64_t id, uint8_t *status);
-+
- int pnv_phb_to_cxl(struct pci_dev *dev);
- int pnv_cxl_ioda_msi_setup(struct pci_dev *dev, unsigned int hwirq,
- 			   unsigned int virq);
-diff --git a/arch/powerpc/platforms/powernv/opal-wrappers.S b/arch/powerpc/platforms/powernv/opal-wrappers.S
-index feb549a..bc5be98 100644
---- a/arch/powerpc/platforms/powernv/opal-wrappers.S
-+++ b/arch/powerpc/platforms/powernv/opal-wrappers.S
-@@ -250,3 +250,5 @@ OPAL_CALL(opal_handle_hmi,			OPAL_HANDLE_HMI);
- OPAL_CALL(opal_register_dump_region,		OPAL_REGISTER_DUMP_REGION);
- OPAL_CALL(opal_unregister_dump_region,		OPAL_UNREGISTER_DUMP_REGION);
- OPAL_CALL(opal_pci_set_phb_cxl_mode,		OPAL_PCI_SET_PHB_CXL_MODE);
-+OPAL_CALL(opal_pci_get_power_status,		OPAL_PCI_GET_POWER_STATUS);
-+OPAL_CALL(opal_pci_get_presence_status,		OPAL_PCI_GET_PRESENCE_STATUS);
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index 6dc8ea9..d3af9e5 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -64,6 +64,30 @@ int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval)
- 	return rval ? -EIO : 0;
- }
- 
-+int pnv_pci_get_power_status(uint64_t id, uint8_t *status)
-+{
-+	long rc;
-+
-+	if (!opal_check_token(OPAL_PCI_GET_POWER_STATUS))
-+		return -ENXIO;
-+
-+	rc = opal_pci_get_power_status(id, status);
-+	return pnv_pci_poll(id, rc, status);
-+}
-+EXPORT_SYMBOL_GPL(pnv_pci_get_power_status);
-+
-+int pnv_pci_get_presence_status(uint64_t id, uint8_t *status)
-+{
-+	long rc;
-+
-+	if (!opal_check_token(OPAL_PCI_GET_PRESENCE_STATUS))
-+		return -ENXIO;
-+
-+	rc = opal_pci_get_presence_status(id, status);
-+	return pnv_pci_poll(id, rc, status);
-+}
-+EXPORT_SYMBOL_GPL(pnv_pci_get_presence_status);
-+
- #ifdef CONFIG_PCI_MSI
- static int pnv_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
- {
--- 
-1.8.3.2
+I've been carrying the same patch locally for a while now, I thought I
+had sent it out long ago, but I can't find any record of that, so I
+probably didn't. Anyway:
 
+Reviewed-by: Thierry Reding <treding@nvidia.com>
+Tested-by: Thierry Reding <treding@nvidia.com>
+Acked-by: Thierry Reding <treding@nvidia.com>
+
+--3uo+9/B/ebqu+fSQ
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJUiDmlAAoJEN0jrNd/PrOhouwQAIuTW9BdJCL8bHG6EmzDBMGk
+gQJLfXuMAaL7Gojlwgfw2eOMC4/dvgaOfEnaibUr71expWYImeoAqo1HZaf6NWmU
+K3nUNiI8GxvS0/VS4hy6boP0CYiG8IV0LRClHq2umx6omGIVera+g059D1D9UgZA
++mHR1HU3N5UKJzZCnNNrblFwMhsjuEp4nqgwerXw5zK397a6ky9MSSoXMFmLa4VM
+HVB1V0I3kcgtLofL2TLX21Nt5xRfJjmMM5c8J4PHDI/dXfl0D4yfBJEPNlrEYwO3
+r/nBKo67Oq2nvNEbVwSjUF7U/xMY0xXpe99ML7tE35tXqcZr3dApyPpoquS/+NWp
+vbI2Ha+iXOWhEftMy4Rs0g52dBKKbrDXACj7wwnZuQuLSgiulbbXk/Su/+RlfXTb
+9WYZLEbca7VYdtTXOco0mSdg4tkBvis4zEfhCJwril6/4Ef4mvWYEo0AYKs/Hxbx
+HucYa/xhleiPSGhAGRrnrSaLrkiqHfM94cLjXUkPf0nBYwGnEmQLGmI/Gm4Lu674
+ydV27JsFtJ7bFVxixtKPyhpHUGgbDZKn/2P8CcEKk4wccBdKFLipIwFhR9NJ30Jy
+qc5qUOkSvtuvTdCcmN2BUTxtnYcGNm5WVXX4BLMGFHfWvceIqP9SYDlEJJ8d4WgJ
+THxCh7Rb4jvCUyk+5lPP
+=aTTh
+-----END PGP SIGNATURE-----
+
+--3uo+9/B/ebqu+fSQ--
