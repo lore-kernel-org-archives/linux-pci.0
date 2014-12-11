@@ -1,96 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:64530 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753561AbaLIWbV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 17:31:21 -0500
-Received: by mail-ie0-f179.google.com with SMTP id rp18so1522014iec.38
-        for <linux-pci@vger.kernel.org>; Tue, 09 Dec 2014 14:31:21 -0800 (PST)
-Date: Tue, 9 Dec 2014 15:31:17 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] PCI: tegra: apply relaxed ordering fixup only on
- Tegra
-Message-ID: <20141209223117.GA6692@google.com>
-References: <1415907457-3147-1-git-send-email-l.stach@pengutronix.de>
- <1415907457-3147-2-git-send-email-l.stach@pengutronix.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 11 Dec 2014 11:56:50 -0800
+From: Guenter Roeck <groeck@juniper.net>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dely Sy <dely.l.sy@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	Kristen Carlson Accardi <kristen.c.accardi@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: Special handling of display/VGA devices in hotplug drivers
+Message-ID: <20141211195650.GA4295@svl-evodev-groeck.juniper.net>
+References: <CAErSpo4iZCUZgqNi-fX+YX=sKV=Ae5z8kn8-++E0Cgft9unmBg@mail.gmail.com>
+ <20141211181136.GA11367@kroah.com>
+ <20141211113243.3f21551e@jbarnes-t420>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415907457-3147-2-git-send-email-l.stach@pengutronix.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20141211113243.3f21551e@jbarnes-t420>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 13, 2014 at 08:37:36PM +0100, Lucas Stach wrote:
-> The fixup to enable relaxed ordering on all PCI devices was
-> executed unconditionally if the Tegra PCI host driver was
-> built into the kernel. This doesn't play nice with a
-> multiplatform kernel executed on other platforms which
-> may not need this fixup.
+On Thu, Dec 11, 2014 at 11:32:43AM -0800, Jesse Barnes wrote:
+> On Thu, 11 Dec 2014 13:11:36 -0500
+> Greg Kroah-Hartman <gregkh@linuxfoundation.org> wrote:
 > 
-> Make sure to only apply the fixup if the root port is
-> a Tegra.
+> > On Thu, Dec 11, 2014 at 10:34:30AM -0700, Bjorn Helgaas wrote:
+> > > It looks like you added the initial pciehp driver [1], which
+> > > includes the following code in pciehp_disable_slot():
+> > > 
+> > > + if (class_code == PCI_BASE_CLASS_DISPLAY) {
+> > > + /* Display/Video adapter (not supported) */
+> > > + rc = REMOVE_NOT_SUPPORTED;
+> > > 
+> > > + /* If it's a bridge, check the VGA Enable bit */
+> > > + if ((header_type & 0x7F) == PCI_HEADER_TYPE_BRIDGE) {
+> > > + rc = pci_bus_read_config_byte (pci_bus, devfn,
+> > > PCI_BRIDGE_CONTROL, &BCR);
+> > > + if (rc)
+> > > + return rc;
+> > > +
+> > > + /* If the VGA Enable bit is set, remove isn't supported */
+> > > + if (BCR & PCI_BRIDGE_CTL_VGA) {
+> > > + rc = REMOVE_NOT_SUPPORTED;
+> > > 
+> > > I'm trying to figure out why VGA devices are handled specially.  I
+> > > can't find anything in the PCI specs that mentions this.  Most of
+> > > the other PCI hotplug drivers have similar code.  Do you remember
+> > > anything about this?
+> > 
+> > The PCI spec said that you were not allowed to hotplug VGA drivers.
+> > The big issue is that POST usually needs to run on those things, and
+> > there is no way to POST a PCI hotplugged device.
+> > 
+> > Does the spec not say that anymore?  I haven't looked in years at
+> > it...
+> > 
+> > Do you want to hot-add a VGA device?  Are these lines causing a
+> > problem with something?
 > 
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> ---
->  drivers/pci/host/pci-tegra.c | 26 +++++++++++++++++++++++++-
->  1 file changed, 25 insertions(+), 1 deletion(-)
+> Yeah, the legacy I/O regions get routed through the bridge with the VGA
+> bit set, and most legacy code probably can't handle that (whether POST,
+> VBIOS, or VGA drivers).
 > 
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 3d43874319be..d5a14f22ebb8 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -647,10 +647,34 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0bf1, tegra_pcie_fixup_class);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1c, tegra_pcie_fixup_class);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1d, tegra_pcie_fixup_class);
->  
-> +static int tegra_pcie_root_is_tegra(struct pci_dev *dev)
-> +{
-> +	struct pci_bus *bus = dev->bus;
-> +	struct pci_dev *root_bridge;
-> +
-> +	/* walk up the PCIe hierarchy to the first level below the root bus */
-> +	while (bus->parent && bus->parent->self)
-> +		bus = bus->parent;
-> +
-> +	/*
-> +	 * If there is no bridge on the bus the passed device is the root
-> +	 * bridge itself.
-> +	 */
-> +	root_bridge = bus->self ? bus->self : dev;
-> +	if (root_bridge->vendor == PCI_VENDOR_ID_NVIDIA &&
-> +	    (root_bridge->device == 0x0bf0 || root_bridge->device == 0x0bf1 ||
-> +	     root_bridge->device == 0x0e1c || root_bridge->device == 0x0e1d ||
-> +	     root_bridge->device == 0x0e12 || root_bridge->device == 0x0e13))
-
-This looks like a good fix.  Can you rework it slightly to:
-
-  - Use "root_port" instead of "root_bridge" to match the spec terminology.
-    When people say "root bridge," they usually mean a host bridge, which
-    is not a PCI device.
-
-  - Is it feasible to factor out the hierarchy traversal into something
-    like a separate pcie_root_port(pci_dev *) interface?  I think that
-    might be useful other places as well.
-
-Bjorn
-
-> +		return 1;
-> +
-> +	return 0;
-> +}
->  /* Tegra PCIE requires relaxed ordering */
->  static void tegra_pcie_relax_enable(struct pci_dev *dev)
->  {
-> -	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_RELAX_EN);
-> +	if (tegra_pcie_root_is_tegra(dev))
-> +		pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
-> +					 PCI_EXP_DEVCTL_RELAX_EN);
->  }
->  DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, tegra_pcie_relax_enable);
->  
-> -- 
-> 2.1.1
+> There is some code for moving the VGA routing around, so that might be
+> an option if you wanted to remove such a bridge.  You'd have to find a
+> VGA device under another bridge, and enable routing to that first, then
+> you could do the remove.
 > 
+
+The problem at hand though is that the current code may mis-detect a device as
+VGA device after it was removed. In that case, reading a configuration register
+returns 0xff, meaning the VGA bit is set, and the kernel refuses to remove it.
+
+See [1] for a description of the problem and its impact.
+
+Guenter
+---
+[1] https://lkml.org/lkml/2014/11/20/714
