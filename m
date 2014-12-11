@@ -1,63 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:40005 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751646AbaKDMVF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Nov 2014 07:21:05 -0500
-Message-ID: <1415103653.4226.1.camel@pengutronix.de>
-Subject: Re: [PATCH] PCI: add missing DT binding for linux,pci-domain
- property
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:15197 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758097AbaLKBhG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Dec 2014 20:37:06 -0500
+Message-ID: <5488F53F.5060805@broadcom.com>
+Date: Wed, 10 Dec 2014 17:37:03 -0800
+From: Ray Jui <rjui@broadcom.com>
+MIME-Version: 1.0
+To: Lucas Stach <l.stach@pengutronix.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
 	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	"Ian Campbell" <ijc+devicetree@hellion.org.uk>,
 	Kumar Gala <galak@codeaurora.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Tue, 04 Nov 2014 13:20:53 +0100
-In-Reply-To: <2606632.6m38glseTk@wuerfel>
-References: <1415101660-26450-1-git-send-email-l.stach@pengutronix.de>
-	 <20141104120052.GE11102@e106497-lin.cambridge.arm.com>
-	 <2606632.6m38glseTk@wuerfel>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Grant Likely <grant.likely@linaro.org>,
+	Christian Daudt <bcm@fixthebug.org>,
+	Matt Porter <mporter@linaro.org>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Scott Branden <sbranden@broadcom.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<devicetree@vger.kernel.org>
+Subject: Re: [PATCH 1/4] pci: iProc: define Broadcom iProc PCIe binding
+References: <Ray Jui <rjui@broadcom.com>	 <1418169871-19232-1-git-send-email-rjui@broadcom.com>	 <1418169871-19232-2-git-send-email-rjui@broadcom.com> <1418207427.7616.5.camel@pengutronix.de>
+In-Reply-To: <1418207427.7616.5.camel@pengutronix.de>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Dienstag, den 04.11.2014, 13:07 +0100 schrieb Arnd Bergmann:
-> On Tuesday 04 November 2014 12:00:52 Liviu Dudau wrote:
-> > 
-> > While the description is potentially correct, what it fails to explain is that the
-> > choice of using the property or generating an unstable (across boots) unique
-> > number is actually the choice of the host bridge driver at the moment. I know that
-> > my earlier implementations were defaulting to the automatic numbering, but that has
-> > been dropped from the final series as Rob Herring was objecting to it.
-> > 
-> > There is still scope to adopt a wide policy here, but for now it should say something
-> > to the tune:
-> > 
-> >    If present this property assigns a fixed PCI domain number to a host bridge,
-> >    otherwise an unstable (across boots) unique number will be assigned.
-> >    If you decide to use the property to assign a fixed PCI domain number to a host
-> >    bridge you have to ensure that all the host bridge drivers present in the system
-> >    follow the same policy. Otherwise, potentially conflicting domain numbers
-> >    may be assigned to root busses behind different host bridges.
-> 
-> But with the latest change to the domain handling, all drivers would implement
-> this. I would just mention that Linux kernels older than 3.19 are probably
-> going to ignore this property.
-> 
-Right, this further complicates the semantics of this property, so I
-would rather leave this out. Host bridge drivers using the generic PCI
-domain code will work as documented and IMHO it's reasonable to enforce
-this behavior for all new drivers.
 
-Regards,
-Lucas
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
+On 12/10/2014 2:30 AM, Lucas Stach wrote:
+>> +Example:
+>> +
+>> +SoC specific DT Entry:
+>> +
+>> +	pcie0: pcie@18012000 {
+>> +		compatible = "brcm,iproc-pcie";
+>> +		reg = <0x18012000 0x1000>,
+>> +			<0x18002000 0x1000>;
+>> +		interrupts = <GIC_SPI 96 IRQ_TYPE_NONE>,
+>> +			     <GIC_SPI 97 IRQ_TYPE_NONE>,
+>> +			     <GIC_SPI 98 IRQ_TYPE_NONE>,
+>> +			     <GIC_SPI 99 IRQ_TYPE_NONE>,
+>> +			     <GIC_SPI 100 IRQ_TYPE_NONE>,
+>> +			     <GIC_SPI 101 IRQ_TYPE_NONE>;
+>
+> This is missing the interrupt-map and interrupt-map-mask for the legacy
+> INTx interrupts. If you add this you don't need to have a special map
+> function in your driver, but can just use the standard
+> of_irq_parse_and_map_pci() function.
+>
+> Regards,
+> Lucas
+>
+Thanks for pointing this out. I will look into this and try it out.
