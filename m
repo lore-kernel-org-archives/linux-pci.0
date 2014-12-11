@@ -1,109 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:16309 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753147AbaLIONb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 9 Dec 2014 09:13:31 -0500
-Message-ID: <54870302.5050703@linux.intel.com>
-Date: Tue, 09 Dec 2014 22:11:14 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:62635 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756360AbaLKTcr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Dec 2014 14:32:47 -0500
+Date: Thu, 11 Dec 2014 11:32:43 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Dely Sy <dely.l.sy@intel.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
-Subject: Re: [PATCH 2/6] PCI/MSI: add hooks to populate the msi_domain field
-References: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com> <1418069543-21969-3-git-send-email-marc.zyngier@arm.com> <5486585B.40000@huawei.com> <5486C8BA.8030608@arm.com> <5486E3BF.70703@huawei.com> <5486E747.4010804@arm.com> <5486EF4E.5020704@linux.intel.com> <5487012B.4040505@arm.com>
-In-Reply-To: <5487012B.4040505@arm.com>
-Content-Type: text/plain; charset=utf-8
+	Rajat Jain <rajatxjain@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>,
+	Kristen Carlson Accardi <kristen.c.accardi@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: Special handling of display/VGA devices in hotplug drivers
+Message-ID: <20141211113243.3f21551e@jbarnes-t420>
+In-Reply-To: <20141211181136.GA11367@kroah.com>
+References: <CAErSpo4iZCUZgqNi-fX+YX=sKV=Ae5z8kn8-++E0Cgft9unmBg@mail.gmail.com>
+	<20141211181136.GA11367@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/12/9 22:03, Marc Zyngier wrote:
-> Hi Gerry,
-> 
-> On 09/12/14 12:47, Jiang Liu wrote:
->> On 2014/12/9 20:12, Marc Zyngier wrote:
->>> Yijing,
->>>
->>> On 09/12/14 11:57, Yijing Wang wrote:
->>>>>>> +void __weak pcibios_set_phb_msi_domain(struct pci_bus *bus)
->>>>>>> +{
->>>>>>> +}
->>>>>>> +
->>>>>>> +static void pci_set_bus_msi_domain(struct pci_bus *bus)
->>>>>>> +{
->>>>>>> +	struct pci_dev *bridge = bus->self;
->>>>>>> +
->>>>>>> +	if (!bridge)
->>>>>>> +		pcibios_set_phb_msi_domain(bus);
->>>>>>> +	else
->>>>>>> +		dev_set_msi_domain(&bus->dev, dev_get_msi_domain(&bridge->dev));
->>>>>>> +}
->>>>>>
->>>>>>
->>>>>> Hi Marc, we can not assume pci devices under same phb share the same msi irq domain,
->>>>>> now in x86, pci devices under the same phb may associate different msi irq domain.
->>>>
->>>> Hi Marc,
->>>>
->>>>>
->>>>> Well, this is not supposed to be a perfect solution yet, but instead a
->>>>> basis for discussion. What I'd like to find out is:
->>>>>
->>>>> - What is the minimum granularity for associating a device with its MSI
->>>>> domain in existing platforms?
->>>>
->>>> PCI device, after Gerry's msi irq domain patchset which now in linux-next,
->>>> in x86, we will find msi irq domain by pci_dev.
->>>
->>> Are you *really* associating the MSI domain on a per pci-device basis?
->>> That is, you have devices on the same PCI bus talking to different MSI hw?
->> Hi Marc,
->> 	This is a little wild:(
->> 	On x86 platform with Intel VT-d(not the case for AMD-v),
->> interrupt remapping is tight to DMA remapping (IOMMU) unit.
->> For most common cases, IOMMU unit manages PCI bus and its sub-hierarchy.
->> But it may also manage a specific PCI device. This is typically used to
->> provide QoS for audio device by using dedicated IOMMU unit to avoid
->> resource contention on DMA remapping tables. BIOS uses ACPI table to
->> report PCI bus/device to IOMMU unit mapping relationship. (To be honest,
->> I have no really experience with such a hardware platform yet, just for
->> theoretical analysis)
->> 	On the other hand, we now support hierarchy irqdomain. So to
->> support per-PCI IOMMU unit case, we need maintain irqdomain at PCI
->> device level.
->> 	This piece of code from your [4/6] is flexible enough, which
->> retrieves msi_domain from PCI device, then fallback to PCI bus,
->> then fallback to platform specific method.
->> 	domain = dev_get_msi_domain(&dev->dev);
->> 	if (!domain && dev->bus->msi)
->>  		domain = dev->bus->msi->domain;
->>  	if (!domain)
->>  		domain = arch_get_pci_msi_domain(dev);
-> 
-> OK. But what I'd really like to see is a way to setup the
-> device<->domain binding as early as possible, without having to use more
-> conditional code in pci_msi_get_domain.
-> 
-> IOW, can we do something similar to what pci_set_bus_msi_domain and
-> pci_set_msi_domain do in this patch?
-Hi Marc,
-	I have checked x86 code, we could set pci_dev->msi_domain
-when creating PCI devices, just need to find some hook points
-into PCI core next step. If arch code doesn't set pci_dev->msi_domain,
-PCI MSI core may provide a default way to set pci_dev->msi_domain.
-This may make the implementation simpler, I guess:)
-Thanks!
-Gerry
+On Thu, 11 Dec 2014 13:11:36 -0500
+Greg Kroah-Hartman <gregkh@linuxfoundation.org> wrote:
 
+> On Thu, Dec 11, 2014 at 10:34:30AM -0700, Bjorn Helgaas wrote:
+> > It looks like you added the initial pciehp driver [1], which
+> > includes the following code in pciehp_disable_slot():
+> > 
+> > + if (class_code == PCI_BASE_CLASS_DISPLAY) {
+> > + /* Display/Video adapter (not supported) */
+> > + rc = REMOVE_NOT_SUPPORTED;
+> > 
+> > + /* If it's a bridge, check the VGA Enable bit */
+> > + if ((header_type & 0x7F) == PCI_HEADER_TYPE_BRIDGE) {
+> > + rc = pci_bus_read_config_byte (pci_bus, devfn,
+> > PCI_BRIDGE_CONTROL, &BCR);
+> > + if (rc)
+> > + return rc;
+> > +
+> > + /* If the VGA Enable bit is set, remove isn't supported */
+> > + if (BCR & PCI_BRIDGE_CTL_VGA) {
+> > + rc = REMOVE_NOT_SUPPORTED;
+> > 
+> > I'm trying to figure out why VGA devices are handled specially.  I
+> > can't find anything in the PCI specs that mentions this.  Most of
+> > the other PCI hotplug drivers have similar code.  Do you remember
+> > anything about this?
 > 
-> Thanks,
+> The PCI spec said that you were not allowed to hotplug VGA drivers.
+> The big issue is that POST usually needs to run on those things, and
+> there is no way to POST a PCI hotplugged device.
 > 
-> 	M.
+> Does the spec not say that anymore?  I haven't looked in years at
+> it...
 > 
+> Do you want to hot-add a VGA device?  Are these lines causing a
+> problem with something?
+
+Yeah, the legacy I/O regions get routed through the bridge with the VGA
+bit set, and most legacy code probably can't handle that (whether POST,
+VBIOS, or VGA drivers).
+
+There is some code for moving the VGA routing around, so that might be
+an option if you wanted to remove such a bridge.  You'd have to find a
+VGA device under another bridge, and enable routing to that first, then
+you could do the remove.
+
+Jesse
