@@ -1,115 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:51989 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752250AbaLSJTk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Dec 2014 04:19:40 -0500
-Date: Fri, 19 Dec 2014 09:19:42 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Mohit Kumar <mohit.kumar@st.com>
-Subject: Re: [PATCH v3 0/2] arm: pcibios: remove pci_sys_data domain
-Message-ID: <20141219091933.GC13641@red-moon>
-References: <1416569367-29409-1-git-send-email-lorenzo.pieralisi@arm.com>
- <54935F7A.7000206@ti.com>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:47593 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758352AbaLKAG6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Dec 2014 19:06:58 -0500
+Received: by mail-ig0-f170.google.com with SMTP id r2so8639686igi.3
+        for <linux-pci@vger.kernel.org>; Wed, 10 Dec 2014 16:06:57 -0800 (PST)
+Date: Wed, 10 Dec 2014 17:06:54 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: Scott Murray <scott@spiteful.org>, linux-pci@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+Subject: Re: [PATCH 1/1] PCI: hotplug: Deletion of an unnecessary check
+ before the function call "pci_dev_put"
+Message-ID: <20141211000654.GB22886@google.com>
+References: <530C5E18.1020800@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251014170.2080@hadrien>
+ <530CD2C4.4050903@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251840450.7035@hadrien>
+ <530CF8FF.8080600@users.sourceforge.net>
+ <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+ <530DD06F.4090703@users.sourceforge.net>
+ <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+ <5317A59D.4@users.sourceforge.net>
+ <546E1B21.2070206@users.sourceforge.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54935F7A.7000206@ti.com>
+In-Reply-To: <546E1B21.2070206@users.sourceforge.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 18, 2014 at 11:12:58PM +0000, Murali Karicheri wrote:
-> On 11/21/2014 06:29 AM, Lorenzo Pieralisi wrote:
-> > This patchset is a v3 of a previous posting:
-> >
-> > http://www.spinics.net/lists/linux-pci/msg36502.html
-> >
-> > v2 =>  v3
-> >
-> > - Rebased on top of this patch dependency
-> >    http://www.spinics.net/lists/linux-pci/msg36631.html
-> >
-> > v1 =>  v2 changelog
-> >
-> > - Removed stale hw_pci domain member
-> > - Reworked pci-mvebu domain handling according to review
-> > - Rebased against 3.18-rc3 and updated the logs
-> > - Dropped RFC status
-> >
-> > Original cover letter:
-> > ----
-> > This patchset is a first RFC stab at removing the dependency on pci_sys_data
-> > domain field on ARM platforms and by replacing it with generic code that
-> > stashes the domain value in the pci_bus control structure, introduced in
-> >
-> > commit 41e5c0f81d3e676d671d96a0a1fafb27abfbd9
-> > ("of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()")
-> >
-> > commit 670ba0c8883b576d0aec28bd7a838358a4be1
-> > ("PCI: Add generic domain handling")
-> >
-> > All the drivers converted (apart from PCIe designware, tested on iMX6SL)
-> > were only compile tested for lack of HW, so along some comments, testing
-> > and verifying that patchset does not break any existing platform are
-> > very appreciated.
-> >
-> > Code in drivers/pci/pci-mvebu.c has been changed to add a domain
-> > number to PCI resources by using the nr value coming from the setup
-> > pcibios32 callback, which may not be correct and should be considered
-> > a temporary solution waiting for review comments.
-> >
-> > The patchset removes entirely the pci_sys_data.domain field, since its
-> > usage is removed at the same time in the respective host controllers
-> > and ARM is made to select the configuration option
-> > CONFIG_PCI_DOMAINS_GENERIC by default, which compiles a domain_nr in the
-> > pci_bus structure so that the pci_domain_nr() look-up can rely on it.
-> >
-> Lorenzo,
+On Thu, Nov 20, 2014 at 05:47:29PM +0100, SF Markus Elfring wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Thu, 20 Nov 2014 17:42:23 +0100
 > 
-> I am assuming this is transparent to the user drivers of designware core 
-> such as pci-keystone as CONFIG_PCI_DOMAINS_GENERIC is enabled by default 
-> by ARM. Is this true ?
+> The pci_dev_put() function tests whether its argument is NULL and then
+> returns immediately. Thus the test around the call is not needed.
+> 
+> This issue was detected by using the Coccinelle software.
+> 
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 
-See Arnd's reply. Testing and relative tag very appreciated if you have
-time.
+Applied to next-pci/misc for v3.19, thanks.  This branch will be rebased
+when v3.19-rc1 is released.
 
-Thank you !
-Lorenzo
+Bjorn
 
+> ---
+>  drivers/pci/hotplug/cpci_hotplug_core.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 > 
-> Murali
-> 
-> >
-> > Lorenzo Pieralisi (2):
-> >    arm: cns3xxx: pci: remove artificial dependency on pci_sys_data domain
-> >    arm: pcibios: move to generic PCI domains
-> >
-> >   arch/arm/Kconfig                   |  3 +++
-> >   arch/arm/include/asm/mach/pci.h    |  6 ------
-> >   arch/arm/include/asm/pci.h         |  7 -------
-> >   arch/arm/kernel/bios32.c           |  3 ---
-> >   arch/arm/mach-cns3xxx/pcie.c       | 40 ++++++++++++++++----------------------
-> >   drivers/pci/host/pci-mvebu.c       | 15 ++------------
-> >   drivers/pci/host/pcie-designware.c |  3 ---
-> >   drivers/pci/host/pcie-rcar.c       |  3 ---
-> >   8 files changed, 22 insertions(+), 58 deletions(-)
-> >
-> 
-> 
+> diff --git a/drivers/pci/hotplug/cpci_hotplug_core.c b/drivers/pci/hotplug/cpci_hotplug_core.c
+> index e09cf78..82c969b 100644
+> --- a/drivers/pci/hotplug/cpci_hotplug_core.c
+> +++ b/drivers/pci/hotplug/cpci_hotplug_core.c
+> @@ -211,8 +211,7 @@ static void release_slot(struct hotplug_slot *hotplug_slot)
+>  
+>  	kfree(slot->hotplug_slot->info);
+>  	kfree(slot->hotplug_slot);
+> -	if (slot->dev)
+> -		pci_dev_put(slot->dev);
+> +	pci_dev_put(slot->dev);
+>  	kfree(slot);
+>  }
+>  
 > -- 
-> Murali Karicheri
-> Linux Kernel, Texas Instruments
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 2.1.3
 > 
