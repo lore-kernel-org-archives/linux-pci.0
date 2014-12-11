@@ -1,168 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:56632 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752471AbaLJMNr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Dec 2014 07:13:47 -0500
-Date: Wed, 10 Dec 2014 13:13:41 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Alexandre Courbot <gnurou@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] PCI: tegra: apply relaxed ordering fixup only on
- Tegra
-Message-ID: <20141210121339.GA23558@ulmo.nvidia.com>
-References: <1415907457-3147-1-git-send-email-l.stach@pengutronix.de>
- <1415907457-3147-2-git-send-email-l.stach@pengutronix.de>
- <CAAVeFu+sYnhMEmDSPvinbP-BQQnqAu6rpEVgaLx25Y3UtGVUwQ@mail.gmail.com>
- <1418120897.2741.1.camel@pengutronix.de>
+Received: from mail-bl2on0129.outbound.protection.outlook.com ([65.55.169.129]:25185
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1758801AbaLKVR1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Dec 2014 16:17:27 -0500
+Date: Thu, 11 Dec 2014 12:45:15 -0800
+From: Guenter Roeck <groeck@juniper.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Rajat Jain <rajatxjain@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rajat Jain <rajatjain@juniper.net>
+Subject: Re: [PATCH v2] PCI: pciehp: Check link state before accessing device
+ during removal
+Message-ID: <20141211204515.GA4472@svl-evodev-groeck.juniper.net>
+References: <546E7120.5080505@gmail.com>
+ <20141211002630.GC22886@google.com>
+ <20141211163831.GA2845@svl-evodev-groeck.juniper.net>
+ <CAErSpo62wQ6g74wNYYumgbAVJ3Mneu_dmWOhLBE6NWqQTXsvVQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="BOKacYhQ+x31HxR3"
-In-Reply-To: <1418120897.2741.1.camel@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAErSpo62wQ6g74wNYYumgbAVJ3Mneu_dmWOhLBE6NWqQTXsvVQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Dec 11, 2014 at 01:26:47PM -0700, Bjorn Helgaas wrote:
+> On Thu, Dec 11, 2014 at 9:38 AM, Guenter Roeck <groeck@juniper.net> wrote:
+> > On Wed, Dec 10, 2014 at 05:26:30PM -0700, Bjorn Helgaas wrote:
+> >> On Thu, Nov 20, 2014 at 02:54:24PM -0800, Rajat Jain wrote:
+> >> > While removing a card, we can't assume the presence to mean that the
+> >> > access to card is OK. That is because the cause of removal may be a
+> >> > link down event, and the card may still be physically present. Thus,
+> >> > instead of presence, use the link state to decide whether or not it is
+> >> > OK to access the card devices.
+> >> >
+> >> > Here are the problem symptoms:
+> >> > During the removal of a card due to link down, sometimes the following
+> >> > error is seen (because pciehp_unconfigure_device() reads 0xFF from
+> >> > bridge control register as the link is down, which cause it to assume
+> >> > that the VGA bit is set):
+> >> >
+> >> > pciehp 0000:21:05.0:pcie24: pcie_isr: intr_loc 100
+> >> > pciehp 0000:21:05.0:pcie24: Data Link Layer State change
+> >> > pciehp 0000:21:05.0:pcie24: slot(5): Link Down event
+> >> > pciehp 0000:21:05.0:pcie24: Disabling domain:bus:device=0000:60:00
+> >> > pciehp 0000:21:05.0:pcie24: pciehp_unconfigure_device: domain:bus:dev = 0000:60:00
+> >> > pciehp 0000:21:05.0:pcie24: Cannot remove display device 0000:60:00.0
+> >> >
+> >> > Ofcourse, when the link comes back up, the device addition fails too:
+> >> >
+> >> > pciehp 0000:21:05.0:pcie24: pcie_isr: intr_loc 100
+> >> > pciehp 0000:21:05.0:pcie24: Data Link Layer State change
+> >> > pciehp 0000:21:05.0:pcie24: pciehp_check_link_active: lnk_status = 6011
+> >> > pciehp 0000:21:05.0:pcie24: slot(5): Link Up event
+> >> > pciehp 0000:21:05.0:pcie24: Enabling domain:bus:device=0000:60:00
+> >> > pciehp 0000:21:05.0:pcie24: pciehp_check_link_active: lnk_status = 6011
+> >> > pciehp 0000:21:05.0:pcie24: pciehp_check_link_status: lnk_status = 6011
+> >> > pciehp 0000:21:05.0:pcie24: Device 0000:60:00.0 already exists at 0000:60:00, cannot hot-add
+> >> > pciehp 0000:21:05.0:pcie24: Cannot add device at 0000:60:00
+> >> >
+> >> > The problem is not seen with this patch applied. The device removal and
+> >> > insertion works as expected.
+> >> >
+> >> > Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+> >> > Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+> >> > Signed-off-by: Guenter Roeck <groeck@juniper.net>
+> >> > ---
+> >> > v2: Use the already initialized "ctrl" instead of "p_slot->ctrl"
+> >> >
+> >> >  drivers/pci/hotplug/pciehp_pci.c |    8 ++++----
+> >> >  1 file changed, 4 insertions(+), 4 deletions(-)
+> >> >
+> >> > diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+> >> > index 9e69403..911f85b 100644
+> >> > --- a/drivers/pci/hotplug/pciehp_pci.c
+> >> > +++ b/drivers/pci/hotplug/pciehp_pci.c
+> >> > @@ -77,7 +77,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+> >> >  {
+> >> >     int rc = 0;
+> >> >     u8 bctl = 0;
+> >> > -   u8 presence = 0;
+> >> > +   bool link_active = false;
+> >> >     struct pci_dev *dev, *temp;
+> >> >     struct pci_bus *parent = p_slot->ctrl->pcie->port->subordinate;
+> >> >     u16 command;
+> >> > @@ -85,7 +85,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+> >> >
+> >> >     ctrl_dbg(ctrl, "%s: domain:bus:dev = %04x:%02x:00\n",
+> >> >              __func__, pci_domain_nr(parent), parent->number);
+> >> > -   pciehp_get_adapter_status(p_slot, &presence);
+> >> > +   link_active = pciehp_check_link_active(ctrl);
+> >> >
+> >> >     pci_lock_rescan_remove();
+> >> >
+> >> > @@ -98,7 +98,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+> >> >     list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+> >> >                                      bus_list) {
+> >> >             pci_dev_get(dev);
+> >> > -           if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && presence) {
+> >> > +           if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && link_active) {
+> >> >                     pci_read_config_byte(dev, PCI_BRIDGE_CONTROL, &bctl);
+> >> >                     if (bctl & PCI_BRIDGE_CTL_VGA) {
+> >> >                             ctrl_err(ctrl,
+> >>
+> >> Why do we even have this code to check for VGA devices?  I looked (briefly)
+> >> and couldn't find anything in the spec that prohibits removal of VGA
+> >> devices.
+> >>
+> > For my part I don't know. I only know that I had to integrate the patch into
+> > our images since I hit the problem repeatedly. Usually I wait with integrating
+> > Rajat's patches until you accept them, but this one was too disruptive.
+> >
+> > I would argue that while the patch may not be perfect, at least it improves
+> > the situation substantially.
+> 
+> I don't think removing the VGA checks is the way to fix the problem
+> you're seeing.  But I do want to investigate this code since we're in
+> the area.
+> 
+I agree. Removing the VGA check would attempt to fix something that
+isn't known to be broken, and might have undesirable side effects.
 
---BOKacYhQ+x31HxR3
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> >> If we do need it (and it looks like most or all hotplug drivers copied it),
+> >> isn't there still a race?  Can't we have the following sequence?
+> >>
+> >>   - pciehp_check_link_active()                # returns true
+> >>   - Link goes down
+> >>   - pci_read_config_byte()            # fails because link is down
+> >>
+> > I would guess so. Question is how to address it. Read the configuration byte
+> > first, then check if the link is down ? Check if link is still up after reading
+> > the configuration byte ? Add a note that there may be a potential race condition
+> > and do nothing until it is actually seen ?
+> 
+> I think we should just read PCI_BRIDGE_CONTROL and look for a 0xff
+> value.  That's not a legal value for the register, so if we see it, it
+> should be pretty safe to assume the link is down or the device is not
+> present at all.
+> 
+Something like
+	if (bctl != 0xff && (bctl & PCI_BRIDGE_CTL_VGA)) {
+in addition to Rajat's changes ?
 
-On Tue, Dec 09, 2014 at 11:28:17AM +0100, Lucas Stach wrote:
-> Am Dienstag, den 09.12.2014, 12:23 +0900 schrieb Alexandre Courbot:
-> > Hi Lucas,
-> >=20
-> > Apologies for taking so long to come back to this. The patch looks ok
-> > to me, just a minor comment about the Tegra PCI detection:
-> >=20
-> > On Fri, Nov 14, 2014 at 4:37 AM, Lucas Stach <l.stach@pengutronix.de> w=
-rote:
-> > > The fixup to enable relaxed ordering on all PCI devices was
-> > > executed unconditionally if the Tegra PCI host driver was
-> > > built into the kernel. This doesn't play nice with a
-> > > multiplatform kernel executed on other platforms which
-> > > may not need this fixup.
-> > >
-> > > Make sure to only apply the fixup if the root port is
-> > > a Tegra.
-> > >
-> > > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> > > ---
-> > >  drivers/pci/host/pci-tegra.c | 26 +++++++++++++++++++++++++-
-> > >  1 file changed, 25 insertions(+), 1 deletion(-)
-> > >
-> > > diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegr=
-a.c
-> > > index 3d43874319be..d5a14f22ebb8 100644
-> > > --- a/drivers/pci/host/pci-tegra.c
-> > > +++ b/drivers/pci/host/pci-tegra.c
-> > > @@ -647,10 +647,34 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0=
-x0bf1, tegra_pcie_fixup_class);
-> > >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1c, tegra_pcie_fix=
-up_class);
-> > >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1d, tegra_pcie_fix=
-up_class);
-> > >
-> > > +static int tegra_pcie_root_is_tegra(struct pci_dev *dev)
-> > > +{
-> > > +       struct pci_bus *bus =3D dev->bus;
-> > > +       struct pci_dev *root_bridge;
-> > > +
-> > > +       /* walk up the PCIe hierarchy to the first level below the ro=
-ot bus */
-> > > +       while (bus->parent && bus->parent->self)
-> > > +               bus =3D bus->parent;
-> > > +
-> > > +       /*
-> > > +        * If there is no bridge on the bus the passed device is the =
-root
-> > > +        * bridge itself.
-> > > +        */
-> > > +       root_bridge =3D bus->self ? bus->self : dev;
-> > > +       if (root_bridge->vendor =3D=3D PCI_VENDOR_ID_NVIDIA &&
-> > > +           (root_bridge->device =3D=3D 0x0bf0 || root_bridge->device=
- =3D=3D 0x0bf1 ||
-> > > +            root_bridge->device =3D=3D 0x0e1c || root_bridge->device=
- =3D=3D 0x0e1d ||
-> > > +            root_bridge->device =3D=3D 0x0e12 || root_bridge->device=
- =3D=3D 0x0e13))
-> > > +               return 1;
-> >=20
-> > I am not very familiar with PCI so sorry if these are stupid
-> > questions, but where do these device IDs come from? Are they needed at
-> > all, e.g. can't you just test against root_bridge->vendor =3D=3D
-> > PCI_VENDOR_ID_NVIDIA to detect a NVIDIA root? Is the list susceptible
-> > to increase as new chips get released? If that's the case, how can we
-> > make sure we won't forget to update it?
-> >=20
->=20
-> The device IDs are assigned by NVIDIA HW for the different Tegra PCI
-> generation/link width combinations. Note that the K1 TRM is wrong as it
-> still lists the T30 device IDs, instead of the ones used on K1.
->=20
-> While we technically could test only against vendor=3D=3Dnvidia I don't
-> think it is entirely safe. As this is a PCI fixup it will get executed
-> on every device running a kernel including this PCI host bridge driver.=
-=20
->=20
-> So only testing for the vendor assumes that every ARM device with a PCI
-> host bridge built by NVIDIA will be a Tegra. Do you think this is a
-> reasonable assertion? I'm on the fence here.
-> =20
-> > If you need to test against the device ID, it might be more legible
-> > (and easier to update) if you use a switch case, e.g:
-> >=20
-> >     if (root_bridge->vendor !=3D PCI_VENDOR_ID_NVIDIA)
-> >         return 0;
-> >     switch (root_bridge->device) {
-> >     case 0x0bf0:
-> >     case 0x0bf1:
-> >     case 0x0e1c:
-> >     case 0x0e1d:
-> >     case 0x0e12:
-> >     case 0x0e12:
-> >         return 1;
-> >     default:
-> >         return 0;
-> >     }
-> >=20
-> Right, this looks nicer and easier to extend. I'll have to think about
-> if we need the device IDs at all and respin accordingly.
+I think it would be good to keep the change Rajat proposed, ie to check
+the link state instead of presence. Question then is if you'd want a new
+revision of Rajat's patch or another patch on top of it with the bctl
+related change.
 
-I think using the device ID is fine. If nothing else it'll at least
-document the various device IDs. Perhaps you could extend this patch
-with comments as to which device ID maps to which SoC. Or better yet
-add them to include/linux/pci_ids.h with names matching the SoC.
-
-Also I'm wondering if perhaps it'd be better yet to add these as a table
-of struct pci_device_id:s and use pci_match_id() to avoid the switch
-here. Granted, the table will be bigger in size because of the unused
-fields, but it'd more clearly separate the data and code.
-
-Thierry
-
---BOKacYhQ+x31HxR3
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBAgAGBQJUiDjzAAoJEN0jrNd/PrOhC4gP/jFdUlfX8dyg0EPR8SHwAurD
-QlgWXWZPeiPOQBJi4P5T9+jgXJMQwxXSQKRBnuJigb+W2iwZPaO6O0jbj47MOZYJ
-hOR9GTfLq7+WeRi+nR7tT+vjhhJqaVmXGUJaFac5AFETVuHAS0g45/Mx+asoVh5O
-kbouZF9yYHBTftU8Gdv30OCHapqvFmNriegk/T6Xjp1GhYsmflfBpwtuYWotQfea
-P1mmiF7W5K3/ejalsCE777VwhSIoqhjuGainRkV7C8Fqfrg/lgAeFVAbBihyX470
-OEltr13HCFcVuerM1q3W9muxsmpBNooAnzkPfwoEiai4Fhfp9gTeeg9OyLtQo26f
-aSZDErIWM4rJ9TJ2cYK9pMZpCn8s2gFNhICP0Okdo+8My4+CMRedkk/f9q7ODp93
-TKns68EGr+vvMjCs2iJjh2RO2XUcdmJ4TydqxcL5fIWlPA0XY8N8dQhuZ8Ztggcq
-+uvG1y/AKHcQ9QSPfA2eq6c4yyMYNUGqx5Ka8pY4JYzivqn1Z092pWQ7p++P+1/S
-TJGIUap+JQPmUi5AS/JbUDOaoRLuUdA/wTDAg4FQc0KOTcepm0yb5irUA1bi5MoY
-bLNf86uAn/KA349g/FF/VNQg74QTDh27rgFnpjrJZcre4ma1/pfU9DnNNn14oQq+
-lgD65vGrmyPED2RXAwK7
-=rmYv
------END PGP SIGNATURE-----
-
---BOKacYhQ+x31HxR3--
+Thanks,
+Guenter
