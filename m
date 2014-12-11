@@ -1,48 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:63455 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750840AbaLPJyp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Dec 2014 04:54:45 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	devicetree@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
-	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Kumar Gala <galak@codeaurora.org>,
-	Grant Likely <grant.likely@linaro.org>
-Subject: Re: [PATCH 4/5] PCI: qcom: Add Qualcomm PCIe controller driver
-Date: Tue, 16 Dec 2014 10:54:29 +0100
-Message-ID: <4673431.OTm9MABNvH@wuerfel>
-In-Reply-To: <548FFEB0.9080604@mm-sol.com>
-References: <1418404441-5518-1-git-send-email-svarbanov@mm-sol.com> <2577563.x0mEZJNVDQ@wuerfel> <548FFEB0.9080604@mm-sol.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:44690 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751419AbaLKSLi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Dec 2014 13:11:38 -0500
+Date: Thu, 11 Dec 2014 13:11:36 -0500
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dely Sy <dely.l.sy@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Kristen Carlson Accardi <kristen.c.accardi@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: Special handling of display/VGA devices in hotplug drivers
+Message-ID: <20141211181136.GA11367@kroah.com>
+References: <CAErSpo4iZCUZgqNi-fX+YX=sKV=Ae5z8kn8-++E0Cgft9unmBg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo4iZCUZgqNi-fX+YX=sKV=Ae5z8kn8-++E0Cgft9unmBg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 16 December 2014 11:43:12 Stanimir Varbanov wrote:
-
-> >> +static int __init qcom_pcie_probe(struct platform_device *pdev)
-> >> +{
-> > 
-> > I think it's a bug to mark this function as __init. It breaks
-> > deferred probing and detaching/reattaching the device trough sysfs.
-> > 
+On Thu, Dec 11, 2014 at 10:34:30AM -0700, Bjorn Helgaas wrote:
+> It looks like you added the initial pciehp driver [1], which includes
+> the following code in pciehp_disable_slot():
 > 
-> My bad, I have tried to avoid mismatch section warnings came up from
-> dw_pcie_host_init() which is annotated as __init. Do you think we need
-> to remove __init from dw_pcie_host_init() declaration and fix the
-> drivers accordingly?
+> + if (class_code == PCI_BASE_CLASS_DISPLAY) {
+> + /* Display/Video adapter (not supported) */
+> + rc = REMOVE_NOT_SUPPORTED;
+> 
+> + /* If it's a bridge, check the VGA Enable bit */
+> + if ((header_type & 0x7F) == PCI_HEADER_TYPE_BRIDGE) {
+> + rc = pci_bus_read_config_byte (pci_bus, devfn, PCI_BRIDGE_CONTROL, &BCR);
+> + if (rc)
+> + return rc;
+> +
+> + /* If the VGA Enable bit is set, remove isn't supported */
+> + if (BCR & PCI_BRIDGE_CTL_VGA) {
+> + rc = REMOVE_NOT_SUPPORTED;
+> 
+> I'm trying to figure out why VGA devices are handled specially.  I
+> can't find anything in the PCI specs that mentions this.  Most of the
+> other PCI hotplug drivers have similar code.  Do you remember anything
+> about this?
 
-Yes, that's probably best. Initially, it was ok because all front-ends
-of the dw-pcie driver were using module_platform_probe(), but that
-is not the case any more, so now at least keystone, layerscape and
-spear13xx are broken, and I think it's safer to change dw_pcie_host_init
-than to rely on everyone using module_platform_probe() correctly.
+The PCI spec said that you were not allowed to hotplug VGA drivers.  The
+big issue is that POST usually needs to run on those things, and there
+is no way to POST a PCI hotplugged device.
 
-	Arnd
+Does the spec not say that anymore?  I haven't looked in years at it...
+
+Do you want to hot-add a VGA device?  Are these lines causing a problem
+with something?
+
+thanks,
+
+greg k-h
