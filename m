@@ -1,109 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f47.google.com ([209.85.216.47]:55208 "EHLO
-	mail-qa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751231AbaLPQUw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Dec 2014 11:20:52 -0500
-Received: by mail-qa0-f47.google.com with SMTP id s7so9858709qap.34
-        for <linux-pci@vger.kernel.org>; Tue, 16 Dec 2014 08:20:52 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAA93t1qyZE-9tw8pg1KG6g4iyy0QMW=iass5w=6ZGMTMu+vi_A@mail.gmail.com>
-References: <20141213210251.GA12812@teela.fritz.box> <548EF90A.5070607@gmail.com>
- <CAA93t1qyZE-9tw8pg1KG6g4iyy0QMW=iass5w=6ZGMTMu+vi_A@mail.gmail.com>
+In-Reply-To: <20141211113243.3f21551e@jbarnes-t420>
+References: <CAErSpo4iZCUZgqNi-fX+YX=sKV=Ae5z8kn8-++E0Cgft9unmBg@mail.gmail.com>
+ <20141211181136.GA11367@kroah.com> <20141211113243.3f21551e@jbarnes-t420>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 16 Dec 2014 09:20:31 -0700
-Message-ID: <CAErSpo5dqQE7nZ6zf2odgpHBWA3ZpTjhbgQKnY8YxQW+a+298w@mail.gmail.com>
-Subject: Re: [bisected] tg3 broken in 3.18.0?
-To: Rajat Jain <rajatxjain@gmail.com>
-Cc: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>,
-	Nils Holland <nholland@tisys.org>,
-	David Miller <davem@davemloft.net>,
-	netdev <netdev@vger.kernel.org>,
+Date: Thu, 11 Dec 2014 15:07:34 -0700
+Message-ID: <CAErSpo4V8tYE+yHvQ+Se=tQHWAKafk89SmVTjeCVRzbA-VtQbg@mail.gmail.com>
+Subject: Re: Special handling of display/VGA devices in hotplug drivers
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Dely Sy <dely.l.sy@intel.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rafael Wysocki <rjw@rjwysocki.net>,
-	Prashant Sreedharan <prashant@broadcom.com>,
-	Michael Chan <mchan@broadcom.com>
+	Rajat Jain <rajatxjain@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>,
+	Kristen Carlson Accardi <kristen.c.accardi@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Praveen Kalamegham <praveen@nextio.com>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael, Prashant, Michael]
+[+cc Praveen]
 
-On Tue, Dec 16, 2014 at 9:04 AM, Rajat Jain <rajatxjain@gmail.com> wrote:
-> Hello All,
+On Thu, Dec 11, 2014 at 12:32 PM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
+> On Thu, 11 Dec 2014 13:11:36 -0500
+> Greg Kroah-Hartman <gregkh@linuxfoundation.org> wrote:
 >
-> Apologies for jumping in late, but for some reason I do not see the
-> original mail in my inbox. However I am taking a look at the mails as
-> sent on linux-pci (and I will keep an eye out for the bug report that
-> Bjorn asked for).
->
->
+>> On Thu, Dec 11, 2014 at 10:34:30AM -0700, Bjorn Helgaas wrote:
+>> > It looks like you added the initial pciehp driver [1], which
+>> > includes the following code in pciehp_disable_slot():
+>> >
+>> > + if (class_code == PCI_BASE_CLASS_DISPLAY) {
+>> > + /* Display/Video adapter (not supported) */
+>> > + rc = REMOVE_NOT_SUPPORTED;
+>> >
+>> > + /* If it's a bridge, check the VGA Enable bit */
+>> > + if ((header_type & 0x7F) == PCI_HEADER_TYPE_BRIDGE) {
+>> > + rc = pci_bus_read_config_byte (pci_bus, devfn,
+>> > PCI_BRIDGE_CONTROL, &BCR);
+>> > + if (rc)
+>> > + return rc;
+>> > +
+>> > + /* If the VGA Enable bit is set, remove isn't supported */
+>> > + if (BCR & PCI_BRIDGE_CTL_VGA) {
+>> > + rc = REMOVE_NOT_SUPPORTED;
+>> >
+>> > I'm trying to figure out why VGA devices are handled specially.  I
+>> > can't find anything in the PCI specs that mentions this.  Most of
+>> > the other PCI hotplug drivers have similar code.  Do you remember
+>> > anything about this?
 >>
->> I'm getting, with commit 89665a6a71408796565bfd29cfa6a7877b17a667:
->>
->> $ grep 'pci 0000:02' tg3.bad
->> [    0.190733] pci 0000:02:00.0: 1st 165a14e4 14e4
->> [    0.190736] pci 0000:02:00.0: 1st 165a14e4 14e4
->> [    0.190810] pci 0000:02:00.0: [14e4:165a] type 00 class 0x020000
->> [    0.190885] pci 0000:02:00.0: reg 0x10: [mem 0xf7c40000-0xf7c4ffff 64bit]
->> [    0.191048] pci 0000:02:00.0: reg 0x30: [mem 0xf7c00000-0xf7c3ffff pref]
->> [    0.191382] pci 0000:02:00.0: PME# supported from D3hot D3cold
->> [    0.191438] pci 0000:02:00.0: System wakeup disabled by ACPI
->> [    1.561555] pci 0000:02:00.0: 1st 1 1
->> [    1.561558] pci 0000:02:00.0: crs_timeout: 0
->> [   20.412021] pci 0000:02:00.0: 1st 1 1
->> [   20.412022] pci 0000:02:00.0: crs_timeout: 0
->> [   20.413596] pci 0000:02:00.0: 1st 1 1
->> [   20.413598] pci 0000:02:00.0: crs_timeout: 0
->>
->> And without it:
->>
->> $ grep 'pci 0000:02' tg3.good
->> [    0.190734] pci 0000:02:00.0: 1st 165a14e4 14e4
->> [    0.190738] pci 0000:02:00.0: 1st 165a14e4 14e4
->> [    0.190811] pci 0000:02:00.0: [14e4:165a] type 00 class 0x020000
->> [    0.190884] pci 0000:02:00.0: reg 0x10: [mem 0xf7c40000-0xf7c4ffff 64bit]
->> [    0.191047] pci 0000:02:00.0: reg 0x30: [mem 0xf7c00000-0xf7c3ffff pref]
->> [    0.191380] pci 0000:02:00.0: PME# supported from D3hot D3cold
->> [    0.191439] pci 0000:02:00.0: System wakeup disabled by ACPI
->> [    1.576778] pci 0000:02:00.0: 1st 1 1
->> [   19.068517] pci 0000:02:00.0: 1st 165a14e4 14e4
->>
->
-> It seems that in the first 2 attempts that were made to probe the
-> device are all OK and return regular device ID and vendor ID for TG3
-> (CRS does not have a role to play). However, later attempts return a
-> CRS.
->
-> 1) May I ask if you are using acpihp or pciehp? I assume pciehp?
->
-> 2) Can you please also send dmesg output while passing
-> pciehp.pciehp_debug=1? In the fail case, do you see a message
-> indicating the pciehp gave up since it got CRS for a long time
-> (something like "pci 0000:02:00.0 id reading try 50 times with
-> interval 20 ms to get ffff0001")?
->
-> 3) Currently the pciehp passes "0" for the argument "crs_timeout" to
-> pci_bus_read_dev_vendor_id(). Can you please try increasing it to, say
-> 30 seconds (30 * 1000). (For comparison data, acpihp uses the value
-> 60*1000 i.e. 60 seconds today) and run the fail case once again?
+>> The PCI spec said that you were not allowed to hotplug VGA drivers.
+>> The big issue is that POST usually needs to run on those things, and
+>> there is no way to POST a PCI hotplugged device.
 
-Using zero for the timeout seems bogus to me.  But I doubt pciehp is
-involved in this situation.
+I don't think this is a problem any more, is it?  I think X can
+execute option ROMs, and if we assign the guest to a VM, the guest
+BIOS can also do it.
 
-I think we're in this path:
+> Yeah, the legacy I/O regions get routed through the bridge with the VGA
+> bit set, and most legacy code probably can't handle that (whether POST,
+> VBIOS, or VGA drivers).
+>
+> There is some code for moving the VGA routing around, so that might be
+> an option if you wanted to remove such a bridge.  You'd have to find a
+> VGA device under another bridge, and enable routing to that first, then
+> you could do the remove.
 
-    tg3_init_hw
-      tg3_reset_hw
-        tg3_disable_ints
-        tg3_stop_fw
-        tg3_write_sig_pre_reset
-        tg3_chip_reset
-          pci_device_is_present
-            pci_bus_read_dev_vendor_id
+The legacy code thing does seem like an issue.  Since ac81860ea073, we
+don't actually fail when removing a VGA device; we only fail when
+removing a bridge with VGA routing enabled.  Maybe that should be
+tweaked so we fail when removing either a bridge or a VGA device to
+which the legacy ranges are currently routed.  Then we could still
+remove secondary VGA devices like the computational GPUs that
+motivated ac81860ea073.
 
-and in this case pci_device_is_present() also passes a timeout of zero
-to pci_bus_read_dev_vendor_id().  My guess is that tg3 is resetting
-the device, so it's not too surprising that the config read returns
-CRS status immediately afterward.
+Failing in pciehp_unconfigure_device() makes sense if the user pressed
+the attention button to request removal.  But if the bridge was
+surprise-removed, e.g., user pulled out an ExpressCard, the bridge is
+already gone, and failing just means we can't clean things up, so
+we're going to leave drivers bound to the bridge and downstream
+devices.
 
 Bjorn
