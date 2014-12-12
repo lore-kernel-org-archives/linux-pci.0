@@ -1,159 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:34272 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751024AbaLVFys (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 00:54:48 -0500
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 22 Dec 2014 15:54:46 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 0E8E63578064
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:46 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sBM5sjFr42336276
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:45 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sBM5sjFf020281
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:45 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V10 01/17] PCI/IOV: Export interface for retrieve VF's BDF
-Date: Mon, 22 Dec 2014 13:54:21 +0800
-Message-Id: <1419227677-12312-2-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:43428 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759598AbaLLCey (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Dec 2014 21:34:54 -0500
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	"Ian Campbell" <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Christian Daudt <bcm@fixthebug.org>,
+	Matt Porter <mporter@linaro.org>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+CC: Lucas Stach <l.stach@pengutronix.de>,
+	Scott Branden <sbranden@broadcom.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
+Subject: [PATCH v2 3/4] ARM: mach-bcm: Enable PCIe support for iProc
+Date: Thu, 11 Dec 2014 18:36:56 -0800
+Message-ID: <1418351817-14898-4-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1418351817-14898-1-git-send-email-rjui@broadcom.com>
+References: <Ray Jui <rjui@broadcom.com>
+ <1418351817-14898-1-git-send-email-rjui@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When implementing the SR-IOV on PowerNV platform, some resource reservation is
-needed for VFs which don't exist at the bootup stage. To do the match between
-resources and VFs, the code need to get the VF's BDF in advance.
+Enable PCIe driver support for Broadcom iProc family of SoCs by
+selecting PCIE_IPROC
 
-In this patch, it exports the interface to retrieve VF's BDF:
-   * Make the virtfn_bus as an interface
-   * Make the virtfn_devfn as an interface
-   * Rename them with more specific name
-   * Code cleanup in pci_sriov_resource_alignment()
-
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Scott Branden <sbranden@broadcom.com>
 ---
- drivers/pci/iov.c   |   22 +++++++++++++---------
- include/linux/pci.h |   11 +++++++++++
- 2 files changed, 24 insertions(+), 9 deletions(-)
+ arch/arm/mach-bcm/Kconfig |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index ea3a82c..e76d1a0 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -19,14 +19,18 @@
- 
- #define VIRTFN_ID_LEN	16
- 
--static inline u8 virtfn_bus(struct pci_dev *dev, int id)
-+int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
- {
-+	if (!dev->is_physfn)
-+		return -EINVAL;
- 	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
- 				    dev->sriov->stride * id) >> 8);
- }
- 
--static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
-+int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
- {
-+	if (!dev->is_physfn)
-+		return -EINVAL;
- 	return (dev->devfn + dev->sriov->offset +
- 		dev->sriov->stride * id) & 0xff;
- }
-@@ -62,7 +66,7 @@ static inline void pci_iov_max_bus_range(struct pci_dev *dev)
- 
- 	for ( ; total >= 0; total--) {
- 		pci_iov_set_numvfs(dev, total);
--		busnr = virtfn_bus(dev, iov->total_VFs - 1);
-+		busnr = pci_iov_virtfn_bus(dev, iov->total_VFs - 1);
- 		if (busnr > max)
- 			max = busnr;
- 	}
-@@ -108,7 +112,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	struct pci_bus *bus;
- 
- 	mutex_lock(&iov->dev->sriov->lock);
--	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
-+	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
- 	if (!bus)
- 		goto failed;
- 
-@@ -116,7 +120,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	if (!virtfn)
- 		goto failed0;
- 
--	virtfn->devfn = virtfn_devfn(dev, id);
-+	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
- 	virtfn->vendor = dev->vendor;
- 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
- 	pci_setup_device(virtfn);
-@@ -179,8 +183,8 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
- 	struct pci_sriov *iov = dev->sriov;
- 
- 	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
--					     virtfn_bus(dev, id),
--					     virtfn_devfn(dev, id));
-+					     pci_iov_virtfn_bus(dev, id),
-+					     pci_iov_virtfn_devfn(dev, id));
- 	if (!virtfn)
- 		return;
- 
-@@ -255,7 +259,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	iov->offset = offset;
- 	iov->stride = stride;
- 
--	if (virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
-+	if (pci_iov_virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
- 		dev_err(&dev->dev, "SR-IOV: bus number out of range\n");
- 		return -ENOMEM;
- 	}
-@@ -551,7 +555,7 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
- 	if (!reg)
- 		return 0;
- 
--	 __pci_read_base(dev, pci_bar_unknown, &tmp, reg);
-+	__pci_read_base(dev, pci_bar_unknown, &tmp, reg);
- 	return resource_alignment(&tmp);
- }
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 360a966..74ef944 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1658,6 +1658,9 @@ int pci_ext_cfg_avail(void);
- void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
- 
- #ifdef CONFIG_PCI_IOV
-+int pci_iov_virtfn_bus(struct pci_dev *dev, int id);
-+int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
-+
- int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
- void pci_disable_sriov(struct pci_dev *dev);
- int pci_num_vf(struct pci_dev *dev);
-@@ -1665,6 +1668,14 @@ int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
- int pci_sriov_get_totalvfs(struct pci_dev *dev);
- #else
-+static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
-+{
-+	return -ENOSYS;
-+}
-+static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
-+{
-+	return -ENOSYS;
-+}
- static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
- { return -ENODEV; }
- static inline void pci_disable_sriov(struct pci_dev *dev) { }
+diff --git a/arch/arm/mach-bcm/Kconfig b/arch/arm/mach-bcm/Kconfig
+index aaeec78..a13a0b2 100644
+--- a/arch/arm/mach-bcm/Kconfig
++++ b/arch/arm/mach-bcm/Kconfig
+@@ -19,6 +19,7 @@ config ARCH_BCM_IPROC
+ 	select ARCH_REQUIRE_GPIOLIB
+ 	select ARM_AMBA
+ 	select PINCTRL
++	select PCIE_IPROC
+ 	help
+ 	  This enables support for systems based on Broadcom IPROC architected SoCs.
+ 	  The IPROC complex contains one or more ARM CPUs along with common
 -- 
 1.7.9.5
 
