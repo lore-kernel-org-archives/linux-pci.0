@@ -1,61 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:54655 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752883AbaLVFzC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 00:55:02 -0500
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 22 Dec 2014 15:55:00 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 8A8992CE8050
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:58 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sBM5swd437683376
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:58 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sBM5svRG020637
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:58 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V10 07/17] powerpc/pci: Don't unset pci resources for VFs
-Date: Mon, 22 Dec 2014 13:54:27 +0800
-Message-Id: <1419227677-12312-8-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mout.kundenserver.de ([212.227.126.131]:52469 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030752AbaLLRPU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Dec 2014 12:15:20 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Ray Jui <rjui@broadcom.com>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Christian Daudt <bcm@fixthebug.org>,
+	Matt Porter <mporter@linaro.org>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Hauke Mehrtens <hauke@hauke-m.de>, devicetree@vger.kernel.org,
+	Scott Branden <sbranden@broadcom.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	Lucas Stach <l.stach@pengutronix.de>
+Subject: Re: [PATCH v2 1/4] pci: iProc: define Broadcom iProc PCIe binding
+Date: Fri, 12 Dec 2014 18:14:32 +0100
+Message-ID: <3907917.zNo7yttzkh@wuerfel>
+In-Reply-To: <548B1D98.6030400@broadcom.com>
+References: <1418351817-14898-2-git-send-email-rjui@broadcom.com> <3375037.6pjWmlOLA3@wuerfel> <548B1D98.6030400@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If we're going to reassign resources with flag PCI_REASSIGN_ALL_RSRC, all
-resources will be cleaned out during device header fixup time and then get
-reassigned by PCI core. However, the VF resources won't be reassigned and
-thus, we shouldn't clean them out.
+On Friday 12 December 2014 08:53:44 Ray Jui wrote:
+> 
+> On 12/12/2014 4:14 AM, Arnd Bergmann wrote:
+> > On Thursday 11 December 2014 18:36:54 Ray Jui wrote:
+> >> index 0000000..040bc0f
+> >> --- /dev/null
+> >> +++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+> >> @@ -0,0 +1,74 @@
+> >> +* Broadcom iProc PCIe controller
+> >> +
+> >> +Required properties:
+> >> +- compatible: Must be "brcm,iproc-pcie"
+> >> +- reg: base address and length of the PCIe controller and the MDIO interface
+> >> +  that controls the PCIe PHY
+> >> +- #interrupt-cells: set to <1>
+> >> +- interrupts: interrupt IDs
+> >
+> > How many, and what are they?
+> >
+> Different iProc SoCs might have different number of interrupts. I'll 
+> elaborate more on the next patch.
 
-This patch adds a condition. If the pci_dev is a VF, skip the resource
-unset process.
+Ok.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- arch/powerpc/kernel/pci-common.c |    4 ++++
- 1 file changed, 4 insertions(+)
+> >> +- interrupt-map-mask and interrupt-map, standard PCI properties to define the
+> >> +  mapping of the PCIe interface to interrupt numbers
+> >> +- bus-range: PCI bus numbers covered
+> >> +- #address-cells: set to <3>
+> >> +- #size-cells: set to <2>
+> >> +- device_type: set to "pci"
+> >> +- ranges: ranges for the PCI memory and I/O regions
+> >> +- phy-addr: MDC/MDIO adddress of the PCIe PHY
+> >
+> > It looks like the phy controller is separate from the PCI controller,
+> > and you even list the same register range for both PHYs. Better make
+> > that a separate driver and put the phy address into the "phys" reference.
+> >
+> Okay. In this case, I need to create a separate PHY driver under the 
+> drivers/phy directory and have the PCIe host driver reference it through 
+> the standard PHY API.
 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 37d512d..889f743 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -788,6 +788,10 @@ static void pcibios_fixup_resources(struct pci_dev *dev)
- 		       pci_name(dev));
- 		return;
- 	}
-+
-+	if (dev->is_virtfn)
-+		return;
-+
- 	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
- 		struct resource *res = dev->resource + i;
- 		struct pci_bus_region reg;
--- 
-1.7.9.5
+Yes, that is what I meant. In particular, that has the advantage of letting
+you reuse the two drivers separately if some new SoC comes up that uses
+one but not the other. A lot of PHY implementations can support multiple
+protocols (e.g. pcie and usb3), but I don't know if yours does.
 
+> >> +- have-msi-inten-reg: Required for legacy iProc PCIe controllers that need the
+> >> +  MSI interrupt enable register to be set explicitly
+> >> +
+> >> +The Broadcom iProc PCie driver adapts the multi-domain structure, i.e., each
+> >> +interface has its own domain and therefore has its own device node
+> >> +Example:
+> >> +
+> >> +SoC specific DT Entry:
+> >> +
+> >> +       pcie0: pcie@18012000 {
+> >> +               compatible = "brcm,iproc-pcie";
+> >> +               reg = <0x18012000 0x1000>,
+> >> +                       <0x18002000 0x1000>;
+> >
+> > I guess the addresses should be relative to the BCMA bus, and this node
+> > get moved under that. Please see Hauke's patch series, we've discussed
+> > this in great length already.
+> >
+> 
+> As Arend van Spriel pointed out in the previous discussion:
+> 
+> BCMA core is the bus driver for discoverable ARM AXI interconnect. Apart 
+> from that it also provides drivers for some cores. For the chips to be 
+> discoverable it needs additional IP logic.
+> 
+> Not all iProc family of SoCs have the additional IP logic and for those 
+> which don't, they cannot use the BCMA bus.
+
+Ok, but the one from your example almost certainly does because the
+addresses are exactly the same ones as on bcm53xx.
+
+The same problem likely occurs on other peripherals, not just PCI,
+so we will have to come up with a way to have a common driver for
+bcma_bus and platform_bus for USB, SPI, brcmsmac, and likely others
+too.
+
+> >> +               #interrupt-cells = <1>;
+> >> +               interrupts = <GIC_SPI 96 IRQ_TYPE_NONE>,
+> >> +                            <GIC_SPI 97 IRQ_TYPE_NONE>,
+> >> +                            <GIC_SPI 98 IRQ_TYPE_NONE>,
+> >> +                            <GIC_SPI 99 IRQ_TYPE_NONE>,
+> >> +                            <GIC_SPI 100 IRQ_TYPE_NONE>,
+> >> +                            <GIC_SPI 101 IRQ_TYPE_NONE>;
+> >
+> >
+> >
+> >> +               interrupt-map-mask = <0 0 0 0>;
+> >> +               interrupt-map = <0 0 0 0 &gic GIC_SPI 100 IRQ_TYPE_NONE>;
+> >
+> > This interrupt is also listed in the "interrupts" above, which is
+> > probably a mistake, unless the IRQ line is shared between all PCI
+> > devices and the PCI host itself.
+> >
+> interrupts are for MSI interrupt support and interrupt-map is for legacy 
+> INTx support. To my best knowledge, MSI and INTx cannot be used at the 
+> same time. "nvidia,tegra20-pcie.txt" and "rcar-pci.txt" have similar 
+> configurations.
+
+Linux drivers will absolutely use MSI and legacy interrupts together, because
+some drivers don't support MSI and others enable it unconditionally.
+
+In both your examples (tegra and rcar), the interrupts that share the same
+number are auxiliary and are correctly used with IRQF_SHARED, so that works.
+If a device MSI just maps to a host IRQ however, you wouldn't be able to
+use IRQF_SHARED.
+
+	Arnd
