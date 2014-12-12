@@ -1,132 +1,201 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:54308 "EHLO bear.ext.ti.com"
+Received: from ns.mm-sol.com ([37.157.136.199]:33728 "EHLO extserv.mm-sol.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754621AbaLVRqr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Dec 2014 12:46:47 -0500
-Message-ID: <549858E4.4050500@ti.com>
-Date: Mon, 22 Dec 2014 12:46:12 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <grant.likely@linaro.org>,
-	<robh+dt@kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <will.deacon@arm.com>
-Subject: Re: [RFC v1 PATCH 1/2] of/pci: add of_pci_dma_configure() update
- dma configuration
-References: <1418940425-2017-1-git-send-email-m-karicheri2@ti.com> <1418940425-2017-2-git-send-email-m-karicheri2@ti.com> <21520995.3ITgVmVTeV@wuerfel>
-In-Reply-To: <21520995.3ITgVmVTeV@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	id S1030596AbaLLRRz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 12 Dec 2014 12:17:55 -0500
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
+To: Rob Herring <robh+dt@kernel.org>,
+	Kumar Gala <galak@codeaurora.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, Stanimir Varbanov <svarbanov@mm-sol.com>
+Subject: [PATCH 3/5] DT: PCI: qcom: Document PCIe devicetree bindings
+Date: Fri, 12 Dec 2014 19:13:59 +0200
+Message-Id: <1418404441-5518-4-git-send-email-svarbanov@mm-sol.com>
+In-Reply-To: <1418404441-5518-1-git-send-email-svarbanov@mm-sol.com>
+References: <1418404441-5518-1-git-send-email-svarbanov@mm-sol.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/18/2014 05:29 PM, Arnd Bergmann wrote:
-> On Thursday 18 December 2014 17:07:04 Murali Karicheri wrote:
->> Add of_pci_dma_configure() to allow updating the dma configuration
->> of the pci device using the configuration from the parent of
->> the root bridge device.
->>
->> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
->
-> Much better!
->
-> There is one detail that we should get right from the start here,
-> which is currently wrong in the platform device code, but I have so
-> far not dared change it:
->
->> +	/*
->> +	 * Set default dma-mask to 32 bit. Drivers are expected to setup
->> +	 * the correct supported dma_mask.
->> +	 */
->> +	dev->coherent_dma_mask = DMA_BIT_MASK(32);
->
-> The 32-bit mask is indeed correct as the default for almost all cases,
-> and we must not set it larger than DMA_BIT_MASK(32). There is one
-> corner case though, which happens on some shmobile machines that have
-> a 31-bit mask on the PCI host, and I think we should use that as the
-> default.
->
->> +	/*
->> +	 * Set it to coherent_dma_mask by default if the architecture
->> +	 * code has not set it.
->> +	 */
->> +	if (!dev->dma_mask)
->> +		dev->dma_mask =&dev->coherent_dma_mask;
->> +
->> +	ret = of_dma_get_range(parent_np,&dma_addr,&paddr,&size);
->> +	if (ret<  0) {
->> +		dma_addr = offset = 0;
->> +		size = dev->coherent_dma_mask;
->
-> Can you check one thing here? I believe the size argument as returned
-> from of_dma_get_range is inclusive (e.g. 0x100000000), while the coherent
-> mask by definition is exlusive (e.g. 0xffffffff), so the size needs to
-> be adapted here. I haven't checked all the code here though, so I may
-> be wrong.
+Document Qualcomm PCIe driver devicetree bindings.
 
-size returned by of_dma_get_range() is inclusive as you indicated. Fromt 
-the grep of dma-ranges in arch/arm/boot/dts, I see
+Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+---
+ .../devicetree/bindings/pci/qcom,pcie.txt          |  159 ++++++++++++++++++++
+ 1 files changed, 159 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie.txt
 
-arch/arm/boot/dts/keystone.dtsi:		dma-ranges = <0x80000000 0x8 
-0x00000000 0x80000000>;
-arch/arm/boot/dts/keystone.dtsi:			dma-ranges;
-arch/arm/boot/dts/r8a7790.dtsi:		dma-ranges = <0x42000000 0 0x40000000 0 
-0x40000000 0 0x80000000
-arch/arm/boot/dts/integratorap.dts:	dma-ranges = <0x80000000 0x0 
-0x80000000>;
-arch/arm/boot/dts/r8a7791.dtsi:		dma-ranges = <0x42000000 0 0x40000000 0 
-0x40000000 0 0x80000000
-
-So I guess I need to change the code to
-
- >> +	ret = of_dma_get_range(parent_np,&dma_addr,&paddr,&size);
- >> +	if (ret<  0) {
- >> +		dma_addr = offset = 0;
- >> +		size = dev->coherent_dma_mask + 1;
-
->
->> +	} else {
->> +		offset = PFN_DOWN(paddr - dma_addr);
->> +		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", dev->dma_pfn_offset);
->> +	}
->> +	dev->dma_pfn_offset = offset;
->> +
->> +	coherent = of_dma_is_coherent(parent_np);
->> +	dev_dbg(dev, "device is%sdma coherent\n",
->> +		coherent ? " " : " not ");
->> +
->> +	arch_setup_dma_ops(dev, dma_addr, size, NULL, coherent);
->
-> Basically, I would use limit the size argument we pass into
-> arch_setup_dma_ops to the minimum of 'size' and 'dma_mask' here,
-> after converting into the same format. We should make sure we do the
-> same thing for platform_device as well, so it might be better to do
-> it inside of arch_setup_dma_ops instead.
-
-Do you think following changes will work?
-
-+++ b/arch/arm/mm/dma-mapping.c
-@@ -2052,9 +2052,10 @@ void arch_setup_dma_ops(struct device *dev, u64 
-dma_base, u64 size,
-                         struct iommu_ops *iommu, bool coherent)
-  {
-         struct dma_map_ops *dma_ops;
-+       u64 temp_size = min((*(dev->dma_mask) + 1), size);
-
-         dev->archdata.dma_coherent = coherent;
--       if (arm_setup_iommu_dma_ops(dev, dma_base, size, iommu))
-+       if (arm_setup_iommu_dma_ops(dev, dma_base, temp_size, iommu))
-
-If you agree, I will post v1 of the patch with these updates. Let me 
-know. I did some basic tests on Keystone with these changes and it works 
-fine.
-
-Murali
-
->
-> 	Arnd
-
-
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+new file mode 100644
+index 0000000..2331144
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+@@ -0,0 +1,159 @@
++* Qualcomm PCI express root complex
++
++- compatible:
++	Usage: required
++	Value type: <stringlist>
++	Definition: Value shall include "qcom,pcie"
++
++- reg:
++	Usage: required
++	Value type: <prop-encoded-array>
++	Definition: Four register ranges as listed in the reg-names property
++
++- reg-names:
++	Usage: required
++	Value type: <stringlist>
++	Definition: Must include the following entries
++		- "parf"   Qualcomm specific registers
++		- "dbi"    Designware PCIe registers
++		- "elbi"   External local bus interface registers
++		- "config" PCIe configuration space
++
++- device_type:
++	Usage: required
++	Value type: <string>
++	Definition: Should be "pci". As specified in designware-pcie.txt
++
++- #address-cells:
++	Usage: required
++	Value type: <u32>
++	Definition: Should be set to 3. As specified in designware-pcie.txt
++
++- #size-cells:
++	Usage: required
++	Value type: <u32>
++	Definition: Should be set 2. As specified in designware-pcie.txt
++
++- ranges:
++	Usage: required
++	Value type: <prop-encoded-array>
++	Definition: As specified in designware-pcie.txt
++
++- interrupts:
++	Usage: required
++	Value type: <prop-encoded-array>
++	Definition: MSI interrupt
++
++- interrupt-names:
++	Usage: required
++	Value type: <stringlist>
++	Definition: Should contain "msi"
++
++- #interrupt-cells:
++	Usage: required
++	Value type: <u32>
++	Definition: Should be 1. As specified in designware-pcie.txt
++
++- interrupt-map-mask:
++	Usage: required
++	Value type: <prop-encoded-array>
++	Definition: As specified in designware-pcie.txt
++
++- interrupt-map:
++	Usage: required
++	Value type: <prop-encoded-array>
++	Definition: As specified in designware-pcie.txt
++
++- clocks:
++	Usage: required
++	Value type: <prop-encoded-array>
++	Definition: Four clocks as listed in clock-names property
++
++- clock-names:
++	Usage: required
++	Value type: <stringlist>
++	Definition: Must include the following entries
++		- "aux"        auxiliary (AUX) clock
++		- "iface"      configuration AHB clock
++		- "bus_master" master AXI clock
++		- "bus_slave"  slave AXI clock
++
++- resets:
++	Usage: required
++	Value type: <phandle>
++	Definition: List of phandle and reset specifier pairs as listed
++		    in reset-names property
++
++- reset-names:
++	Usage: required
++	Value type: <stringlist>
++	Definition: Should contain the following entries
++		- "core" core reset
++
++- <name>-supply:
++	Usage: required
++	Value type: <phandle>
++	Definition: List of phandles to the supply regulators
++		- "vdd_pc" collapsing and restoring power to peripheral
++- gpios:
++	Usage: optional
++	Value type: <phandle>
++	Definition: List of phandle and gpio specifier. Should include
++		    - "perst"  PCIe endpoint reset signal line
++		    - "pewake" PCIe endpoint wake signal line
++
++- pinctrl-0:
++	Usage: required
++	Value type: <phandle>
++	Definition: List of phandles pointing at a pin(s) configuration
++
++- pinctrl-names
++	Usage: required
++	Value type: <stringlist>
++	Definition: List of names of pinctrl-0 state
++
++* Example
++
++	pcie0@fc520000 {
++		compatible = "qcom,pcie";
++		reg = <0xfc520000 0x2000>,
++		      <0xff000000 0x1000>,
++		      <0xff001000 0x1000>,
++		      <0xff002000 0x2000>;
++		reg-names = "parf", "dbi", "elbi", "config";
++		device_type = "pci";
++		linux,pci-domain = <0>;
++		bus-range = <0x00 0xff>;
++		num-lanes = <1>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		ranges = <0x81000000 0 0          0xff200000 0 0x00100000   /* I/O */
++			  0x82000000 0 0x00300000 0xff300000 0 0x00d00000>; /* Memory */
++		interrupts = <0 243 0>;
++		interrupt-names = "msi";
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0x7>;
++		interrupt-map = <0 0 0 1 &intc 0 244 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
++				<0 0 0 2 &intc 0 245 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
++				<0 0 0 3 &intc 0 247 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
++				<0 0 0 4 &intc 0 248 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
++
++		clocks = <&gcc GCC_PCIE_0_AUX_CLK>,
++			 <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
++			 <&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
++			 <&gcc GCC_PCIE_0_SLV_AXI_CLK>;
++		clock-names = "aux", "iface", "master_bus", "slave_bus";
++
++		resets = <&gcc GCC_PCIE_0_BCR>;
++		reset-names = "core";
++
++		vdd_pc-supply = <&gdsc_pcie0>;
++
++		phys = <&pciephy0>;
++		phy-names = "pciephy";
++
++		gpios = <&tlmm 70 0>;	/* perst */
++
++		pinctrl-0 = <&pcie0_pins_default>;
++		pinctrl-names = "default";
++	};
 -- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+1.7.0.4
+
