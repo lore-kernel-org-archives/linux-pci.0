@@ -1,83 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46578 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751890AbaLWCzW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Dec 2014 21:55:22 -0500
-Message-ID: <5498D97A.8030105@redhat.com>
-Date: Tue, 23 Dec 2014 08:24:50 +0530
-From: Pratyush Anand <panand@redhat.com>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:28003 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030303AbaLLRJ0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Dec 2014 12:09:26 -0500
+Message-ID: <548B2144.4070408@broadcom.com>
+Date: Fri, 12 Dec 2014 09:09:24 -0800
+From: Ray Jui <rjui@broadcom.com>
 MIME-Version: 1.0
 To: Arnd Bergmann <arnd@arndb.de>
-CC: mohit.kumar@st.com, jg1.han@samsung.com, l.stach@pengutronix.de,
-	shawn.guo@freescale.com, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, Kishon Vijay Abraham I <kishon@ti.com>,
-	Sean Cross <xobs@kosagi.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>
-Subject: Re: [PATCH] PCIe: Designware: Do not allow config space through ranges
-References: <7dcdee69eb7db8336829e6085d736a3ac7e68ad4.1419229126.git.panand@redhat.com> <5459567.EisgEvQXh9@wuerfel>
-In-Reply-To: <5459567.EisgEvQXh9@wuerfel>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	"Ian Campbell" <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Christian Daudt <bcm@fixthebug.org>,
+	Matt Porter <mporter@linaro.org>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Scott Branden <sbranden@broadcom.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<devicetree@vger.kernel.org>
+Subject: Re: [PATCH v2 3/4] ARM: mach-bcm: Enable PCIe support for iProc
+References: <1418351817-14898-4-git-send-email-rjui@broadcom.com> <3173848.p74DGitYxH@wuerfel> <548B1E33.4090806@broadcom.com> <2928443.nLu7V1bDNK@wuerfel>
+In-Reply-To: <2928443.nLu7V1bDNK@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
 
-On Monday 22 December 2014 02:00 PM, Arnd Bergmann wrote:
-> On Monday 22 December 2014 12:09:04 Pratyush Anand wrote:
->> Config space is need to be allocated using reg property. This patch
->> removes possibility of config space allocation through ranges property.
->>
->> To: Mohit Kumar <mohit.kumar@st.com>
->> To: Jingo Han <jg1.han@samsung.com>
->> To: Lucas Stach <l.stach@pengutronix.de>
->> To: Shawn Guo <shawn.guo@freescale.com>
->> Cc: linux-pci@vger.kernel.org
->> Cc: devicetree@vger.kernel.org
->> Signed-off-by: Pratyush Anand <panand@redhat.com>
->> ---
->>   arch/arm/boot/dts/imx6qdl.dtsi     |  3 +--
->>   arch/arm/boot/dts/imx6sx.dtsi      |  8 ++++----
+On 12/12/2014 9:02 AM, Arnd Bergmann wrote:
+> On Friday 12 December 2014 08:56:19 Ray Jui wrote:
+>>>>
+>>>> diff --git a/arch/arm/mach-bcm/Kconfig b/arch/arm/mach-bcm/Kconfig
+>>>> index aaeec78..a13a0b2 100644
+>>>> --- a/arch/arm/mach-bcm/Kconfig
+>>>> +++ b/arch/arm/mach-bcm/Kconfig
+>>>> @@ -19,6 +19,7 @@ config ARCH_BCM_IPROC
+>>>>       select ARCH_REQUIRE_GPIOLIB
+>>>>       select ARM_AMBA
+>>>>       select PINCTRL
+>>>> +    select PCIE_IPROC
+>>>>       help
+>>>>         This enables support for systems based on Broadcom IPROC architected SoCs.
+>>>>         The IPROC complex contains one or more ARM CPUs along with common
+>>>>
+>>>
+>>> No, just enable it in multi_v7_defconfig and bcm_defconfig.
+>>>
+>>>        Arnd
+>>>
+>> Or can I simply have the PCIE_IPROC default to y in
+>> drivers/pci/host/Kconfig? Note PCIE_IPROC depends on ARCH_BCM_IPROC. By
+>> defaulting it to y, it will be automatically enabled for all iProc
+>> family of SoCs.
 >
-> changing the DT files is probably ok.
+> I still think it's best not to turn it on automatically. The convention
+> for device drivers is to make them all optional.
 >
->> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
->> index df781cdf13c1..0b22b42e1ff9 100644
->> --- a/drivers/pci/host/pcie-designware.c
->> +++ b/drivers/pci/host/pcie-designware.c
->> @@ -409,19 +409,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->>   			pp->mem_mod_base = of_read_number(parser.range -
->>   							  parser.np + na, ns);
->>   		}
->> -		if (restype == 0) {
->> -			of_pci_range_to_resource(&range, np, &pp->cfg);
->> -			pp->cfg0_size = resource_size(&pp->cfg)/2;
->> -			pp->cfg1_size = resource_size(&pp->cfg)/2;
->> -			pp->cfg0_base = pp->cfg.start;
->> -			pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
->> -
->> -			/* Find the untranslated configuration space address */
->> -			pp->cfg0_mod_base = of_read_number(parser.range -
->> -							   parser.np + na, ns);
->> -			pp->cfg1_mod_base = pp->cfg0_mod_base +
->> -					    pp->cfg0_size;
->> -		}
->>   	}
+> What you can do however is to add
 >
-> Since we've allowed this for so long, it may be better to leave this
-> in for compatibility with old dts files. It would however be good to
-> print a warning message. We could also limit it to those machines that
-> are known to have been used with this property in the past.
-
-I think, only imx6 is using "config from ranges", for which I made the 
-change in this patch. Modification need to be tested and acked by IMX6 
-maintainers.
-I do not see any other driver using it. However, I have kept all 
-designware user in CC here.
-
-~Pratyush
-
-
+> 	depends on ARCH_BCM_IPROC || COMPILE_TEST
+>
+> to the driver to do the reverse and not let the driver be turned on
+> unless IPROC is selected or you are just testing the build.
+> A lot of distros just turn on all drivers, so this way you wouldn't
+> accidentally enable it for a kernel that doesn't support IPROC.
 >
 > 	Arnd
 >
+Okay I'll do that. Thanks.
