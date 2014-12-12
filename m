@@ -1,120 +1,225 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.citrix.com ([66.165.176.89]:20999 "EHLO SMTP.CITRIX.COM"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753585AbaLDLIY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Dec 2014 06:08:24 -0500
-Message-ID: <5480407F.7070402@citrix.com>
-Date: Thu, 4 Dec 2014 11:07:43 +0000
-From: David Vrabel <david.vrabel@citrix.com>
+Received: from mout.kundenserver.de ([212.227.17.24]:57365 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S967609AbaLLMaK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Dec 2014 07:30:10 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Ray Jui <rjui@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Christian Daudt <bcm@fixthebug.org>,
+	Matt Porter <mporter@linaro.org>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Scott Branden <sbranden@broadcom.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	bcm-kernel-feedback-list@broadcom.com, devicetree@vger.kernel.org,
+	hauke@hauke-m.de
+Subject: Re: [PATCH v2 2/4] PCI: iproc: Add Broadcom iProc PCIe driver
+Date: Fri, 12 Dec 2014 13:29:20 +0100
+Message-ID: <2190666.DfrpWiLTCc@wuerfel>
+In-Reply-To: <1418351817-14898-3-git-send-email-rjui@broadcom.com>
+References: <1418351817-14898-3-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <xen-devel@lists.xenproject.org>,
-	<boris.ostrovsky@oracle.com>
-CC: Jan Beulich <JBeulich@suse.com>
-Subject: Re: [PATCH v5 8/9] xen-pciback: drop SR-IOV VFs when PF driver unloads
-References: <1417642834-20350-1-git-send-email-konrad.wilk@oracle.com> <1417642834-20350-9-git-send-email-konrad.wilk@oracle.com>
-In-Reply-To: <1417642834-20350-9-git-send-email-konrad.wilk@oracle.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/12/14 21:40, Konrad Rzeszutek Wilk wrote:
-> From: Jan Beulich <JBeulich@suse.com>
-> 
-> When a PF driver unloads, it may find it necessary to leave the VFs
-> around simply because of pciback having marked them as assigned to a
-> guest. Utilize a suitable notification to let go of the VFs, thus
-> allowing the PF to go back into the state it was before its driver
-> loaded (which in particular allows the driver to be loaded again with
-> it being able to create the VFs anew, but which also allows to then
-> pass through the PF instead of the VFs).
-> 
-> Don't do this however for any VFs currently in active use by a guest.
-> 
-> Signed-off-by: Jan Beulich <jbeulich@suse.com>
-> [v2: Removed the switch statement, moved it about]
-> [v3: Redid it a bit differently]
+On Thursday 11 December 2014 18:36:55 Ray Jui wrote:
+> Add initial version of the Broadcom iProc PCIe driver. This driver
+> has been tested on NSP and Cygnus and is expected to work on all iProc
+> family of SoCs that deploys the same PCIe host controller
+>
+> The driver also supports MSI
 
-Jan, are you happy with Konrad's change now?
+Overall, I'm not convinced it's worth continuing this driver. While it
+supports more features, Hauke's version seemed much cleaner, and I'd
+rather see his driver merged and have you add the additional features.
 
-David
+Why did you drop him from Cc again?
 
-> --- a/drivers/xen/xen-pciback/pci_stub.c
-> +++ b/drivers/xen/xen-pciback/pci_stub.c
-> @@ -1518,6 +1518,53 @@ parse_error:
->  fs_initcall(pcistub_init);
->  #endif
->  
-> +#ifdef CONFIG_PCI_IOV
-> +static struct pcistub_device *find_vfs(const struct pci_dev *pdev)
-> +{
-> +	struct pcistub_device *psdev = NULL;
-> +	unsigned long flags;
-> +	bool found = false;
 > +
-> +	spin_lock_irqsave(&pcistub_devices_lock, flags);
-> +	list_for_each_entry(psdev, &pcistub_devices, dev_list) {
-> +		if (!psdev->pdev && psdev->dev != pdev
-> +		    && pci_physfn(psdev->dev) == pdev) {
-> +			found = true;
+> +#define MII_MGMT_CTRL_OFFSET         0x000
+> +#define MII_MGMT_CTRL_MDCDIV_SHIFT   0
+> +#define MII_MGMT_CTRL_PRE_SHIFT      7
+> +#define MII_MGMT_CTRL_BUSY_SHIFT     8
+> +#define MII_MGMT_CTRL_EXT_SHIFT      9
+> +#define MII_MGMT_CTRL_BTP_SHIFT      10
+
+As mentioned, better move all the MII handling to a separate driver.
+
+> +struct iproc_pcie;
+> +
+> +/**
+> + * iProc MSI
+> + * @pcie: pointer to the iProc PCIe data structure
+> + * @irq_in_use: bitmap of MSI IRQs that are in use
+> + * @domain: MSI IRQ domain
+> + * @chip: MSI controller
+> + * @eq_page: memory page to store the iProc MSI event queue
+> + * @msi_page: memory page for MSI posted writes
+> + */
+> +struct iproc_msi {
+> +	struct iproc_pcie *pcie;
+> +	DECLARE_BITMAP(irq_in_use, MAX_IRQS);
+> +	struct irq_domain *domain;
+> +	struct msi_controller chip;
+> +	unsigned long eq_page;
+> +	unsigned long msi_page;
+> +};
+
+Same for MSI. I would assume that you will eventually have
+chips with this PCI core and a GICv2m or GICv3, so it would
+be better to reference the MSI controller through an msi-parent
+reference that can be replaced with a reference to the GIC.
+
+> +
+> +	u32 phy_addr;
+
+struct phy *phy;
+
+> +	int irqs[MAX_IRQS];
+
+Please name these irqs individually according to what they do.
+The MSI IRQ should of course be moved to the MSI driver.
+
+> +	struct iproc_msi msi;
+> +};
+> +
+> +static inline int mdio_wait_idle(struct iproc_pcie *pcie)
+> +{
+> +	int timeout = MDIO_TIMEOUT_USEC;
+> +
+> +	while (readl(pcie->mii + MII_MGMT_CTRL_OFFSET) &
+> +			(1 << MII_MGMT_CTRL_BUSY_SHIFT)) {
+> +		udelay(1);
+> +		if (timeout-- <= 0)
+> +			return -EBUSY;
+> +	}
+> +	return 0;
+> +}
+
+Better use ktime_get()/ktime_add_ns()/ktime_before() loop here
+to do an accurate timeout.
+
+> +static void iproc_pcie_reset(struct iproc_pcie *pcie)
+> +{
+> +	u32 val;
+> +
+> +	/* send a downstream reset */
+> +	val = EP_MODE_SURVIVE_PERST | RC_PCIE_RST_OUTPUT;
+> +	writel(val, pcie->reg + CLK_CONTROL_OFFSET);
+> +	udelay(250);
+> +	val &= ~EP_MODE_SURVIVE_PERST;
+> +	writel(val, pcie->reg + CLK_CONTROL_OFFSET);
+> +	mdelay(250);
+> +}
+
+250ms delay is not acceptable. Please find a way to call this function
+from a context in which you can sleep.
+
+> +static int iproc_pcie_check_link(struct iproc_pcie *pcie)
+> +{
+> +	int ret;
+> +	u8 nlw;
+> +	u16 pos, tmp16;
+> +	u32 val;
+> +	struct pci_sys_data sys;
+> +	struct pci_bus bus;
+> +
+> +	val = readl(pcie->reg + PCIE_LINK_STATUS_OFFSET);
+> +	dev_dbg(pcie->dev, "link status: 0x%08x\n", val);
+> +
+> +	val = readl(pcie->reg + STRAP_STATUS_OFFSET);
+> +	dev_dbg(pcie->dev, "strap status: 0x%08x\n", val);
+> +
+> +	memset(&sys, 0, sizeof(sys));
+> +	memset(&bus, 0, sizeof(bus));
+> +
+> +	bus.number = 0;
+> +	bus.ops = &iproc_pcie_ops;
+> +	bus.sysdata = &sys;
+> +	sys.private_data = pcie;
+> +
+> +	ret = iproc_pci_read_conf(&bus, 0, PCI_HEADER_TYPE, 1, &val);
+> +	if (ret != PCIBIOS_SUCCESSFUL || val != PCI_HEADER_TYPE_BRIDGE) {
+> +		dev_err(pcie->dev, "in EP mode, val=0x08%x\n", val);
+> +		return -EFAULT;
+> +	}
+
+Remove the fake pci_bus hack and just read the config space directly.
+
+> +	if (nlw == 0) {
+> +		/* try GEN 1 link speed */
+> +#define PCI_LINK_STATUS_CTRL_2_OFFSET 0xDC
+> +#define PCI_TARGET_LINK_SPEED_MASK    0xF
+> +#define PCI_TARGET_LINK_SPEED_GEN2    0x2
+> +#define PCI_TARGET_LINK_SPEED_GEN1    0x1
+> +		pci_bus_read_config_dword(&bus, 0,
+> +				PCI_LINK_STATUS_CTRL_2_OFFSET, &val);
+> +		if ((val & PCI_TARGET_LINK_SPEED_MASK) ==
+> +				PCI_TARGET_LINK_SPEED_GEN2) {
+> +			val &= ~PCI_TARGET_LINK_SPEED_MASK;
+> +			val |= PCI_TARGET_LINK_SPEED_GEN1;
+> +			pci_bus_write_config_dword(&bus, 0,
+> +					PCI_LINK_STATUS_CTRL_2_OFFSET, val);
+> +			pci_bus_read_config_dword(&bus, 0,
+> +					PCI_LINK_STATUS_CTRL_2_OFFSET, &val);
+> +			mdelay(100);
+
+Too much delay.
+
+> +static struct hw_pci hw;
+
+Put this on the stack.
+
+> +
+> +	/* Get the PCI memory ranges from DT */
+> +	for_each_of_pci_range(&parser, &range) {
+> +		of_pci_range_to_resource(&range, np, &res);
+> +
+> +		switch (res.flags & IORESOURCE_TYPE_BITS) {
+> +		case IORESOURCE_IO:
+> +			memcpy(&pcie->io, &res, sizeof(res));
+> +			pcie->io.name = "I/O";
+> +			break;
+> +
+> +		case IORESOURCE_MEM:
+> +			memcpy(&pcie->mem, &res, sizeof(res));
+> +			pcie->mem.name = "MEM";
 > +			break;
 > +		}
 > +	}
-> +	spin_unlock_irqrestore(&pcistub_devices_lock, flags);
-> +	if (found)
-> +		return psdev;
-> +	return NULL;
-> +}
-> +
-> +static int pci_stub_notifier(struct notifier_block *nb,
-> +			     unsigned long action, void *data)
-> +{
-> +	struct device *dev = data;
-> +	const struct pci_dev *pdev = to_pci_dev(dev);
-> +
-> +	if (action != BUS_NOTIFY_UNBIND_DRIVER)
-> +		return NOTIFY_DONE;
-> +
-> +	if (!pdev->is_physfn)
-> +		return NOTIFY_DONE;
-> +
-> +	for (;;) {
-> +		struct pcistub_device *psdev = find_vfs(pdev);
-> +		if (!psdev)
-> +			break;
-> +		device_release_driver(&psdev->dev->dev);
-> +	}
-> +	return NOTIFY_DONE;
-> +}
-> +
-> +static struct notifier_block pci_stub_nb = {
-> +	.notifier_call = pci_stub_notifier,
-> +};
-> +#endif
-> +
->  static int __init xen_pcibk_init(void)
->  {
->  	int err;
-> @@ -1539,12 +1586,19 @@ static int __init xen_pcibk_init(void)
->  	err = xen_pcibk_xenbus_register();
->  	if (err)
->  		pcistub_exit();
-> +#ifdef CONFIG_PCI_IOV
-> +	else
-> +		bus_register_notifier(&pci_bus_type, &pci_stub_nb);
-> +#endif
->  
->  	return err;
->  }
->  
->  static void __exit xen_pcibk_cleanup(void)
->  {
-> +#ifdef CONFIG_PCI_IOV
-> +	bus_unregister_notifier(&pci_bus_type, &pci_stub_nb);
-> +#endif
->  	xen_pcibk_xenbus_unregister();
->  	pcistub_exit();
->  }
-> 
 
+I think you need to request all the resources here, including the physical
+I/O space window.
+
+> +static struct platform_driver iproc_pcie_driver = {
+> +	.driver = {
+> +		.owner = THIS_MODULE,
+> +		.name = "iproc-pcie",
+> +		.of_match_table =
+> +		   of_match_ptr(iproc_pcie_of_match_table),
+> +	},
+> +};
+
+Make this a bcma_driver.
+
+> +static int __init iproc_pcie_init(void)
+> +{
+> +	return platform_driver_probe(&iproc_pcie_driver,
+> +			iproc_pcie_probe);
+> +}
+> +subsys_initcall(iproc_pcie_init);
+
+module_init()? Doesn't seem necessary to have this early.
+
+	Arnd
