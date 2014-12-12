@@ -1,100 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.citrix.com ([66.165.176.89]:24280 "EHLO SMTP.CITRIX.COM"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754338AbaLDObP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Dec 2014 09:31:15 -0500
-Message-ID: <5480702F.2060004@citrix.com>
-Date: Thu, 4 Dec 2014 14:31:11 +0000
-From: David Vrabel <david.vrabel@citrix.com>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:40655 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750764AbaLLCeg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Dec 2014 21:34:36 -0500
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	"Ian Campbell" <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Christian Daudt <bcm@fixthebug.org>,
+	Matt Porter <mporter@linaro.org>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+CC: Lucas Stach <l.stach@pengutronix.de>,
+	Scott Branden <sbranden@broadcom.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
+Subject: [PATCH v2 0/4] Add PCIe support to Broadcom iProc
+Date: Thu, 11 Dec 2014 18:36:53 -0800
+Message-ID: <1418351817-14898-1-git-send-email-rjui@broadcom.com>
+In-Reply-To: <Ray Jui <rjui@broadcom.com>
+References: <Ray Jui <rjui@broadcom.com>
 MIME-Version: 1.0
-To: Sander Eikelenboom <linux@eikelenboom.it>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	<linux-kernel@vger.kernel.org>, <xen-devel@lists.xenproject.org>
-Subject: Re: [Xen-devel] [PATCH v5 9/9] xen/pciback: Implement PCI reset slot
- or bus with 'do_flr' SysFS attribute
-References: <201412041206.sB4C6XVQ009497@userz7022.oracle.com> <5480528F.8010106@citrix.com> <1107877503.20141204141054@eikelenboom.it> <548064EA.8090905@citrix.com> <308719815.20141204150909@eikelenboom.it>
-In-Reply-To: <308719815.20141204150909@eikelenboom.it>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/12/14 14:09, Sander Eikelenboom wrote:
-> 
-> Thursday, December 4, 2014, 2:43:06 PM, you wrote:
-> 
->> On 04/12/14 13:10, Sander Eikelenboom wrote:
->>>
->>> Thursday, December 4, 2014, 1:24:47 PM, you wrote:
->>>
->>>> On 04/12/14 12:06, Konrad Rzeszutek Wilk wrote:
->>>>>
->>>>> On Dec 4, 2014 6:30 AM, David Vrabel <david.vrabel@citrix.com> wrote:
->>>>>>
->>>>>> On 03/12/14 21:40, Konrad Rzeszutek Wilk wrote: 
->>>>>>>
->>>>>>> Instead of doing all this complex dance, we depend on the toolstack 
->>>>>>> doing the right thing. As such implement the 'do_flr' SysFS attribute 
->>>>>>> which 'xl' uses when a device is detached or attached from/to a guest. 
->>>>>>> It bypasses the need to worry about the PCI lock. 
->>>>>>
->>>>>> No.  Get pciback to add its own "reset" sysfs file (as I have repeatedly 
->>>>>> proposed). 
->>>>>>
->>>>>
->>>>> Which does not work as the kobj will complain (as there is already an 'reset' associated with the PCI device).
->>>
->>>> It is only needed if the core won't provide one.
->>>
->>>> +static int pcistub_try_create_reset_file(struct pci_dev *pci)
->>>> +{
->>>> +       struct xen_pcibk_dev_data *dev_data = pci_get_drvdata(pci);
->>>> +       struct device *dev = &pci->dev;
->>>> +       int ret;
->>>> +
->>>> +       /* Already have a per-function reset? */
->>>> +       if (pci_probe_reset_function(pci) == 0)
->>>> +               return 0;
->>>> +
->>>> +       ret = device_create_file(dev, &dev_attr_reset);
->>>> +       if (ret < 0)
->>>> +               return ret;
->>> +       dev_data->>created_reset_file = true;
->>>> +       return 0;
->>>> +}
->>>
->>> Wouldn't the "core-reset-sysfs-file" be still wired to the end up calling 
->>> "pci.c:__pci_dev_reset" ?
->>>
->>> The problem with that function is that from my testing it seems that the 
->>> first option "pci_dev_specific_reset" always seems to return succes, so all the
->>> other options are skipped (flr, pm, slot, bus). However the device it self is 
->>> not properly reset enough (perhaps the pci_dev_specific_reset is good enough for 
->>> none virtualization purposes and it's probably the least intrusive. For 
->>> virtualization however it would be nice to be sure it resets properly, or have a 
->>> way to force a specific reset routine.)
-> 
->> Then you need work with the maintainer for those specific devices or
->> drivers to fix their specific reset function.
-> 
->> I'm not adding stuff to pciback to workaround broken quirks.
-> 
-> OK that's a pretty clear message there, so if one wants to use pci and vga
-> passthrough one should better use KVM and vfio-pci.
+This patchset contains the initial PCIe support for Broadcom iProc family of
+SoCs. This driver has been validated with Cygnus and NSP and is expected to
+work on other iProc family of SoCs that deploy the same PCIe controller
 
-Have you (or anyone else) ever raised the problem with the broken reset
-quirk for certain devices with the relevant maintainer?
+Changes from v1:
+ - Add standard PCI interrupt DT properties "#interrupt-cells",
+   "interrupt-map-mask" and "interrupt-map" so legacy INTx interrupts can be
+   supported by using standard PCI OF IRQ parsing function
+ - Get rid of custom IRQ mapping function in the driver. Use
+   of_irq_parse_and_map_pci instead
 
-> vfio-pci has:
-> - logic to do the try-slot-bus-reset logic
+Ray Jui (4):
+  pci: iProc: define Broadcom iProc PCIe binding
+  PCI: iproc: Add Broadcom iProc PCIe driver
+  ARM: mach-bcm: Enable PCIe support for iProc
+  ARM: dts: enable PCIe for Broadcom Cygnus
 
-Just because vfio-pci fixed it incorrectly doesn't mean pciback has to
-as well.
+ .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |   74 ++
+ arch/arm/boot/dts/bcm-cygnus.dtsi                  |   52 ++
+ arch/arm/boot/dts/bcm958300k.dts                   |    8 +
+ arch/arm/mach-bcm/Kconfig                          |    1 +
+ drivers/pci/host/Kconfig                           |    9 +
+ drivers/pci/host/Makefile                          |    1 +
+ drivers/pci/host/pcie-iproc.c                      |  888 ++++++++++++++++++++
+ 7 files changed, 1033 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+ create mode 100644 drivers/pci/host/pcie-iproc.c
 
-It makes no sense for both pciback and vfio-pci to workaround problems
-with pci_function_reset() in different ways -- it should be fixed in the
-core PCI code so both can benefit and make use of the same code.
-
-David
+-- 
+1.7.9.5
 
