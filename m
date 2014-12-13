@@ -1,89 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ns.mm-sol.com ([37.157.136.199]:48003 "EHLO extserv.mm-sol.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750862AbaLPJnV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 16 Dec 2014 04:43:21 -0500
-Message-ID: <548FFEB0.9080604@mm-sol.com>
-Date: Tue, 16 Dec 2014 11:43:12 +0200
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
-MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Rob Herring <robh+dt@kernel.org>,
-	Kumar Gala <galak@codeaurora.org>,
+Received: from mout.kundenserver.de ([212.227.17.10]:57550 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752813AbaLMTsB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 13 Dec 2014 14:48:01 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Arend van Spriel <arend@broadcom.com>,
 	Mark Rutland <mark.rutland@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
+	devicetree@vger.kernel.org,
+	Florian Fainelli <f.fainelli@gmail.com>,
 	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 4/5] PCI: qcom: Add Qualcomm PCIe controller driver
-References: <1418404441-5518-1-git-send-email-svarbanov@mm-sol.com> <1418404441-5518-5-git-send-email-svarbanov@mm-sol.com> <2577563.x0mEZJNVDQ@wuerfel>
-In-Reply-To: <2577563.x0mEZJNVDQ@wuerfel>
-Content-Type: text/plain; charset=ISO-8859-1
+	Scott Branden <sbranden@broadcom.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Ray Jui <rjui@broadcom.com>,
+	Christian Daudt <bcm@fixthebug.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Matt Porter <mporter@linaro.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	bcm-kernel-feedback-list@broadcom.com,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Kumar Gala <galak@codeaurora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lucas Stach <l.stach@pengutronix.de>
+Subject: Re: [PATCH v2 1/4] pci: iProc: define Broadcom iProc PCIe binding
+Date: Sat, 13 Dec 2014 20:46:42 +0100
+Message-ID: <3383252.Ad6Qf0H2fa@wuerfel>
+In-Reply-To: <548C0F80.2090300@broadcom.com>
+References: <1418351817-14898-2-git-send-email-rjui@broadcom.com> <3907917.zNo7yttzkh@wuerfel> <548C0F80.2090300@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
+On Saturday 13 December 2014 11:05:52 Arend van Spriel wrote:
+> 
+> Makes sense. I think that is what Hauke meant by "adding
+> additional support for registering to bcma". So the discovery info is a 
+> piece of read-only memory in the chip. Its address is stored in the 
+> chipcommon core register space. BCMA parses that memory blob resulting 
+> in a list of cores which register address info. We could add DT support 
+> in BCMA matching the compatible string and register a core for it.
 
-Thanks for the comments!
+Ah, interesting idea. That would mirror what we do for drivers/amba,
+I like the idea.
 
-On 12/12/2014 07:30 PM, Arnd Bergmann wrote:
-> On Friday 12 December 2014 19:14:00 Stanimir Varbanov wrote:
->> The PCIe driver reuse the Designware common code for host
->> and MSI initialization, and also program the Qualcomm
->> application specific registers.
->>
->> Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
-> 
-> Looks nice!
-> 
->> +static int
->> +qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size, u32 *val)
->> +{
->> +	if (where == PCI_CLASS_REVISION && size == 4) {
->> +		*val = readl(pp->dbi_base + PCI_CLASS_REVISION);
->> +		*val &= ~(0xffff << 16);
->> +		*val |= PCI_CLASS_BRIDGE_PCI << 16;
->> +		return PCIBIOS_SUCCESSFUL;
->> +	}
->> +
->> +	return dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where,
->> +				size, val);
->> +}
-> 
-> Could you add a comment here to explain what this is for?
+> However, apart from the discovery info a "discoverable ARM AXI" chip has 
+> a register space per core that provides common procedures like 
+> enable/disable, reset, core status, which are implemented in BCMA. I am 
+> not seeing that register space in the DT examples so I guess this IP 
+> block is not there for iProc chips.
 
-Sure I will add a comment. The issue is that the pci device class is not
-reported correctly from the register.
+I wouldn't draw conclusions from the absence of some node. Maybe these
+registers are present but just not used by the original BSP.
 
-> 
->> +static int __init qcom_pcie_probe(struct platform_device *pdev)
->> +{
-> 
-> I think it's a bug to mark this function as __init. It breaks
-> deferred probing and detaching/reattaching the device trough sysfs.
-> 
-
-My bad, I have tried to avoid mismatch section warnings came up from
-dw_pcie_host_init() which is annotated as __init. Do you think we need
-to remove __init from dw_pcie_host_init() declaration and fix the
-drivers accordingly?
-
-> After you fix that, you can remove the __refdata below.
-> 
->> +static struct platform_driver __refdata qcom_pcie_driver = {
->> +	.probe = qcom_pcie_probe,
->> +	.remove = qcom_pcie_remove,
->> +	.driver = {
->> +		.name = "qcom-pcie",
->> +		.of_match_table = qcom_pcie_match,
->> +	},
->> +};
-> 
-> 	Arnd
-> 
-
-regards,
-Stan
+	Arnd
