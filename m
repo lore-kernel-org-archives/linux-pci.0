@@ -1,33 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:38931 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751158AbaLSBiu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 18 Dec 2014 20:38:50 -0500
-From: Rusty Russell <rusty@rustcorp.com.au>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, <benh@kernel.crashing.org>
-Subject: Adding an ops to struct pci_host_bridge?
-Date: Fri, 19 Dec 2014 11:19:20 +1030
-Message-ID: <878ui4tqen.fsf@rustcorp.com.au>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:48203 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750731AbaLNFDC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 14 Dec 2014 00:03:02 -0500
+Date: Sat, 13 Dec 2014 19:39:58 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Dennis McLeod <umodjm@gmail.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: PCI BAR sysfs node permissions
+Message-ID: <20141214033958.GA7039@kroah.com>
+References: <CAAzF57Sj4ZL4mw5PAwcrGtE8wQsgc9hBWRNNn0DHg5VsctY6mA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAAzF57Sj4ZL4mw5PAwcrGtE8wQsgc9hBWRNNn0DHg5VsctY6mA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Tue, Dec 09, 2014 at 04:22:35PM -0500, Dennis McLeod wrote:
+> need help figuring out how to make this happen. If my pci driver is
+> instructed to open a pci device, I want to change the mode of bar0's
+> sysfs node to o+rw so a user app can mmap it.
+> 
+> In other words, from the driver, perform this:
+> chmod 766 /sys/bus/pci/[slot path]/resource0
+> preferably without a lecture on why I shouldn't .. ;-)
 
-        On powerpc, we have a possibly-programmable device (CXL) which
-we're making look a lot like a PCI bus containing devices.  Rather than
-hacking "if (is_really_cxl(dev))" into every powerpc pcibios_* routine,
-Ben Herrenschmidt suggested moving from pcibios_* to an ops structure
-inside pci_host_bridge.
+Sorry, you will get a lecture if you try to do something as foolish as
+this from within the kernel.
 
-        In transition, it'd be up to the arch (ie. powerpc) to call
-find_pci_host_bridge(dev->bus)->ops->xxx from their pcibios_ functions,
-but if there's general interest other archs could start doing it too.
+If you "really" need this, do it from userspace, with a script you grant
+root permissions to change the mode on the files.
 
-If this seems like a nice idea, we can discuss which pcibios_ functions
-make sense to place into ops.
+> If I chmod that sysfs node for bar0 as root, i can run a user process
+> (as regular user) that does an mmap of that and can do reads/writes to
+> the bar resource. I would like for my pci driver to do this
+> automatically when it is told to open a device.
 
-Thanks,
-Rusty.
+Nope, that's a bad idea, and you know that as well.
+
+sorry.
+
+greg k-h
