@@ -1,93 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:52480 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757505AbaLJOej (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Dec 2014 09:34:39 -0500
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 11 Dec 2014 00:34:37 +1000
-Date: Wed, 10 Dec 2014 22:34:28 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Marek =?iso-8859-1?Q?Kord=EDk?= <kordikmarek@gmail.com>,
-	Alexey Voronkov <zermond@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Clear all bridge res MEM_64 if host bridge has non
- mem64
-Message-ID: <20141210143428.GB12497@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1418160871-5605-1-git-send-email-yinghai@kernel.org>
- <CAErSpo5tZU=zBKNDt2UtUE_AMG3zzrdq2CX2A4ZL7tdLELXgqA@mail.gmail.com>
- <CAE9FiQWLaNSsFTWEpWRFR4xTd0hKOwENdQR7N6T=K65VM+vDQg@mail.gmail.com>
- <20141210141537.GA9298@richard>
+Received: from mout.kundenserver.de ([212.227.126.187]:64660 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750931AbaLNQad (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 14 Dec 2014 11:30:33 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Mark Rutland <mark.rutland@arm.com>,
+	devicetree@vger.kernel.org,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Scott Branden <sbranden@broadcom.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Ray Jui <rjui@broadcom.com>,
+	Christian Daudt <bcm@fixthebug.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Matt Porter <mporter@linaro.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	bcm-kernel-feedback-list@broadcom.com,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Kumar Gala <galak@codeaurora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: [PATCH v2 1/4] pci: iProc: define Broadcom iProc PCIe binding
+Date: Sun, 14 Dec 2014 17:29:25 +0100
+Message-ID: <3622321.f8bfUffhzH@wuerfel>
+In-Reply-To: <548D5CD1.10801@broadcom.com>
+References: <1418351817-14898-2-git-send-email-rjui@broadcom.com> <3383252.Ad6Qf0H2fa@wuerfel> <548D5CD1.10801@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141210141537.GA9298@richard>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-My mutt hang, in case the mail isn't sent out, I resend it.
+On Sunday 14 December 2014 10:48:01 Arend van Spriel wrote:
+> On 12/13/14 20:46, Arnd Bergmann wrote:
+> > On Saturday 13 December 2014 11:05:52 Arend van Spriel wrote:
+> >>
+> >> Makes sense. I think that is what Hauke meant by "adding
+> >> additional support for registering to bcma". So the discovery info is a
+> >> piece of read-only memory in the chip. Its address is stored in the
+> >> chipcommon core register space. BCMA parses that memory blob resulting
+> >> in a list of cores which register address info. We could add DT support
+> >> in BCMA matching the compatible string and register a core for it.
+> >
+> > Ah, interesting idea. That would mirror what we do for drivers/amba,
+> > I like the idea.
+> 
+> + Rafal
+> 
+> Let's explore this. Although I don't have the iProc hardware to verify it.
+> 
 
-On Wed, Dec 10, 2014 at 10:15:37PM +0800, Wei Yang wrote:
->On Tue, Dec 09, 2014 at 03:13:49PM -0800, Yinghai Lu wrote:
->>On Tue, Dec 9, 2014 at 1:53 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> On Tue, Dec 9, 2014 at 2:34 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>>> +       list_for_each_entry(window, &bridge->windows, list) {
->>>> +               res = window->res;
->>>> +               if (resource_type(res) == IORESOURCE_MEM ||
->>>> +                   res->end > 0xffffffff) {
->>>> +                       bridge->has_mem64_res = true;
->>>
->>> This is an interesting idea, but I think you're checking CPU addresses
->>> here, and you need to check PCI bus addresses.
->>
->>Looks like those IBM platforms have res > 4g, but pci bus address < 4g.
->>If we check pci bus address, and then we would break those platforms.
->>
+If we can make this work nicely, you won't even need iProc hardware,
+but instead provide all the data for the bcma devices on an older
+machine through DT and get the probing to work with that. For AMBA,
+we actually allow mixing amba and platform devices on the same parent.
+You could do this here as well, but it would be simpler to have a
+a special bcma device node as the parent that does the probing, in order
+to avoid adding bcma specific code to drivers/of/platform.c
 
-Hi, Yinghai
-
-I did some test with patch on my machine. It looks good.
-
-While as Bjorn mentioned, I think we could change it a little. The pci space
-on our machine is like this:
-
-        cpu address                               pci address
-  MEM   0x00003ff280000000..0x00003ff2fffeffff -> 0x00000000 8000 0000
-  MEM64 0x00003d5000000000..0x00003d5fffffffff -> 0x00003d50 0000 0000
-
-Each root bridge has two MMIO window. From this output we could see the pci
-address for 64-bit window is above 4G.
-
-I did a little change on your code, like this
-
-        list_for_each_entry(window, &bridge->windows, list) {
-                res = window->res;
-                if (resource_type(res) == IORESOURCE_MEM ||
--                   res->end > 0xffffffff) {
-+                   (res->end - window->offset) > 0xffffffff) {
-                        bridge->has_mem64_res = true;
-                        break;
-                }
-        }
-
-This also works on my machine.
-
-One more question, with this patch, do we still need previous patch for
-Marek's problem?
-
->>Yinghai
->
->-- 
->Richard Yang
->Help you, Help me
-
--- 
-Richard Yang
-Help you, Help me
-
+	Arnd
