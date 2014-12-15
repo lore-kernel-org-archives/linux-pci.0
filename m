@@ -1,113 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:54653 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752738AbaLJACV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 19:02:21 -0500
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	"Ian Campbell" <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Christian Daudt <bcm@fixthebug.org>,
-	Matt Porter <mporter@linaro.org>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>
-CC: Scott Branden <sbranden@broadcom.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
-Subject: [PATCH 1/4] pci: iProc: define Broadcom iProc PCIe binding
-Date: Tue, 9 Dec 2014 16:04:28 -0800
-Message-ID: <1418169871-19232-2-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1418169871-19232-1-git-send-email-rjui@broadcom.com>
-References: <Ray Jui <rjui@broadcom.com>
- <1418169871-19232-1-git-send-email-rjui@broadcom.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 15 Dec 2014 17:13:23 +0800
+From: Baoquan He <bhe@redhat.com>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: "Li, ZhenHua" <zhen-hual@hp.com>, alex.williamson@redhat.com,
+	Takao Indoh <indou.takao@jp.fujitsu.com>, tom.vaden@hp.com,
+	dyoung@redhat.com, kexec@lists.infradead.org,
+	linux-kernel@vger.kernel.org, lisa.mitchell@hp.com,
+	jerry.hoemann@hp.com, iommu@lists.linux-foundation.org,
+	ddutile@redhat.com, doug.hatch@hp.com,
+	ishii.hironobu@jp.fujitsu.com, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, li.zhang6@hp.com, dwmw2@infradead.org,
+	vgoyal@redhat.com
+Subject: Re: [PATCH 0/5] iommu/vt-d: Fix crash dump failure caused by legacy
+ DMA/IO
+Message-ID: <20141215091323.GA12150@dhcp-16-116.nay.redhat.com>
+References: <545AD061.4000102@hp.com>
+ <545AD353.8060207@jp.fujitsu.com>
+ <545AD8D3.90709@hp.com>
+ <545B2885.8070009@jp.fujitsu.com>
+ <545B2C07.1070701@hp.com>
+ <5465A0E0.4020001@hp.com>
+ <20141117133858.GA31920@8bytes.org>
+ <20141210084652.GA25091@dhcp-16-105.nay.redhat.com>
+ <548A521B.5020705@hp.com>
+ <20141212161102.GC24292@8bytes.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141212161102.GC24292@8bytes.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Document the PCIe device tree binding for Broadcom iProc family of SoCs
+On 12/12/14 at 05:11pm, Joerg Roedel wrote:
+> On Fri, Dec 12, 2014 at 10:25:31AM +0800, Li, ZhenHua wrote:
+> > Sorry I have no plan yet.
+> > Could you send me your logs on your AMD system?
+> 
+> > On 12/10/2014 04:46 PM, Baoquan He wrote:
+> > >This issue happens on AMD iommu too, do you have any plans or
+> > >thoughts on that?
+> 
+> I think the best approach for now is to get a prove-of-concept on the
+> VT-d driver. If it works there the way we expect, we can implement the
+> same handling in the AMD driver. But I see no reason to hold back the
+> VT-d patches until it is also fixed for AMD systems.
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Reviewed-by: Scott Branden <sbranden@broadcom.com>
----
- .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |   62 ++++++++++++++++++++
- 1 file changed, 62 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+Yes, I agree with you. Just raise this issue to upstream. 
 
-diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-new file mode 100644
-index 0000000..2467628
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-@@ -0,0 +1,62 @@
-+* Broadcom iProc PCIe controller
-+
-+Required properties:
-+- compatible: Must be "brcm,iproc-pcie"
-+- reg: base address and length of the PCIe controller and the MDIO interface
-+  that controls the PCIe PHY
-+- interrupts: interrupt IDs
-+- bus-range: PCI bus numbers covered
-+- #address-cells: set to <3>
-+- #size-cells: set to <2>
-+- device_type: set to "pci"
-+- ranges: ranges for the PCI memory and I/O regions
-+- phy-addr: MDC/MDIO adddress of the PCIe PHY
-+- have-msi-inten-reg: Required for legacy iProc PCIe controllers that need the
-+  MSI interrupt enable register to be set explicitly
-+
-+The Broadcom iProc PCie driver adapts the multi-domain structure, i.e., each
-+interface has its own domain and therefore has its own device node
-+Example:
-+
-+SoC specific DT Entry:
-+
-+	pcie0: pcie@18012000 {
-+		compatible = "brcm,iproc-pcie";
-+		reg = <0x18012000 0x1000>,
-+			<0x18002000 0x1000>;
-+		interrupts = <GIC_SPI 96 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 97 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 98 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 99 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 100 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 101 IRQ_TYPE_NONE>;
-+		bus-range = <0x00 0xFF>;
-+
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x81000000 0 0	  0x28000000 0 0x00010000   /* downstream I/O */
-+			  0x82000000 0 0x20000000 0x20000000 0 0x04000000>; /* non-prefetchable memory */
-+		phy-addr = <5>;
-+	};
-+
-+	pcie1: pcie@18013000 {
-+		compatible = "brcm,iproc-pcie";
-+		reg = <0x18013000 0x1000>,
-+			<0x18002000 0x1000>;
-+
-+		interrupts = <GIC_SPI 102 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 103 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 104 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 105 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 106 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 107 IRQ_TYPE_NONE>;
-+		bus-range = <0x00 0xFF>;
-+
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x81000000 0 0	  0x48000000 0 0x00010000   /* downstream I/O */
-+			  0x82000000 0 0x40000000 0x40000000 0 0x04000000>; /* non-prefetchable memory */
-+		phy-addr = <6>;
-+	};
--- 
-1.7.9.5
+Thanks, Joerg.
 
