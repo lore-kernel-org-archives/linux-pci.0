@@ -1,63 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f177.google.com ([209.85.216.177]:32863 "EHLO
-	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755211AbaLVTuz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 14:50:55 -0500
-Received: by mail-qc0-f177.google.com with SMTP id x3so3801702qcv.36
-        for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 11:50:55 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20141222081743.GA5961@richard>
-References: <CAE9FiQVyBmo+XwDgO97wwe+6TN4+q_cvnBLCuhTM8Fu_e_V5RQ@mail.gmail.com>
- <1417777177.4741.69.camel@kernel.crashing.org> <20141208004735.GA15508@shangw>
- <CAErSpo69c6jXOp+nw2sTSU4vgqGufUQNUEGK4_2+6p-qpyE0vQ@mail.gmail.com>
- <1418074683.13358.1.camel@kernel.crashing.org> <CAErSpo7pMAL5i2aPGV3u5F178bHeQTtjASckKs9NaUbEGaxv3Q@mail.gmail.com>
- <20141208233855.GA15713@shangw> <CAE9FiQXj-vX8TE-8Es83FmJAKDKD_dMNbQkmsaNPyy_nVEag8w@mail.gmail.com>
- <20141220002306.GB30834@google.com> <CAE9FiQUU4OoxpV3MNyFdjtmS1nRfD=ziYDDnUmsGy5qj8U3vLg@mail.gmail.com>
- <20141222081743.GA5961@richard>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 22 Dec 2014 12:50:34 -0700
-Message-ID: <CAErSpo693zHPwpUPdKcXVUoKh4-8j4=u8ra=55FGZ0tKstQHGw@mail.gmail.com>
-Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
- GPU init
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alexey Voronkov <zermond@gmail.com>,
-	David Airlie <airlied@linux.ie>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	=?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:55966 "EHLO
+	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752168AbaLOJyr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Dec 2014 04:54:47 -0500
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>, <billsumnerlinux@gmail.com>,
+	<zhen-hual@hp.com>
+Cc: <iommu@lists.linux-foundation.org>, <kexec@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>
+Subject: [PATCH 08/10] iommu/vtd: assign new page table for dma_map
+Date: Mon, 15 Dec 2014 17:53:04 +0800
+Message-Id: <1418637186-9988-9-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1418637186-9988-1-git-send-email-zhen-hual@hp.com>
+References: <1418637186-9988-1-git-send-email-zhen-hual@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 22, 2014 at 1:17 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
-> On Fri, Dec 19, 2014 at 04:34:57PM -0800, Yinghai Lu wrote:
->>On Fri, Dec 19, 2014 at 4:23 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> On Mon, Dec 08, 2014 at 04:21:34PM -0800, Yinghai Lu wrote:
->>>
->>> I don't see any patches that resolve the regression (bug 85491) yet.  If we
->>> don't figure something out, I'm going to have to revert 5b28541552ef.
->>
->>As you don't like idea to clear the MEM64 bit in resource ...
->>
->>After this merging window, I would like to post 5 patches in
->>
->>https://git.kernel.org/cgit/linux/kernel/git/yinghai/linux-yinghai.git/log/?h=for-pci-allocate-fit-3.18
->>that will make those two systems works with "pci=realloc".
->>
->>We could have another patch that enable pci=realloc when VGA bar get
->>rejected at the first point.
->>
->>The point is there is no performance difference between two solutions according
->>to Marek's test.
->
-> One quick question.
->
-> The patch in http://www.spinics.net/lists/linux-pci/msg37377.html doesn't use
-> "pci=realloc" as it mentioned. And seem worked on Marek's machine.
->
-> We wouldn't take it into consideration?
+When a device driver issues the first dma_map command for a
+device, we assign a new and empty page-table, thus removing all
+mappings from the old kernel for the device.
 
-Nope.  https://lkml.org/lkml/2014/12/19/392
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+---
+ drivers/iommu/intel-iommu.c | 27 ++++++++++++++++++++-------
+ 1 file changed, 20 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 4837ce5..f11a9b1 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -3200,15 +3200,28 @@ static struct dmar_domain *__get_valid_domain_for_dev(struct device *dev)
+ 	}
+ 
+ 	/* make sure context mapping is ok */
+-	if (unlikely(!domain_context_mapped(dev))) {
+-		ret = domain_context_mapping(domain, dev, CONTEXT_TT_MULTI_LEVEL);
+-		if (ret) {
+-			printk(KERN_ERR "Domain context map for %s failed",
+-			       dev_name(dev));
+-			return NULL;
+-		}
++	if (likely(domain_context_mapped(dev))) {
++#ifdef CONFIG_CRASH_DUMP
++		if (is_kdump_kernel()) {
++			domain_exit(domain);
++			domain = get_domain_for_dev(dev,
++				DEFAULT_DOMAIN_ADDRESS_WIDTH);
++			if (!domain) {
++				pr_err("Allocating domain for %s failed",
++				       dev_name(dev));
++				return NULL;
++			}
++		} else
++#endif
++			return domain;
+ 	}
+ 
++	ret = domain_context_mapping(domain, dev, CONTEXT_TT_MULTI_LEVEL);
++	if (ret) {
++		pr_err("Domain context map for %s failed",
++		       dev_name(dev));
++		return NULL;
++	}
+ 	return domain;
+ }
+ 
+-- 
+2.0.0-rc0
+
