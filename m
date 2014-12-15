@@ -1,82 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:34079 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751098AbaLRRp3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 18 Dec 2014 12:45:29 -0500
-Message-ID: <549312BB.40400@ti.com>
-Date: Thu, 18 Dec 2014 12:45:31 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Christopher Li <sparse@chrisli.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: How to fix CHECK warning: testing a 'safe expression' ?
-References: <54907884.2040502@ti.com> <5491ACE6.4070108@ti.com> <CAErSpo4hwMPOYBDZTu_fgKaUDYZ4h+jVpz5EigpErOgo6xO8mQ@mail.gmail.com> <54920529.4080007@ti.com> <54920597.6090305@ti.com> <CANeU7Q=85c8ehgCitG-Ujrr5O78V1yq9o=abJ8pwBBs0JOWAEg@mail.gmail.com>
-In-Reply-To: <CANeU7Q=85c8ehgCitG-Ujrr5O78V1yq9o=abJ8pwBBs0JOWAEg@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:55967 "EHLO
+	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752234AbaLOJyw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Dec 2014 04:54:52 -0500
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>, <billsumnerlinux@gmail.com>,
+	<zhen-hual@hp.com>
+Cc: <iommu@lists.linux-foundation.org>, <kexec@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>
+Subject: [PATCH 09/10] iommu/vt-d: Copy functions for irte
+Date: Mon, 15 Dec 2014 17:53:05 +0800
+Message-Id: <1418637186-9988-10-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1418637186-9988-1-git-send-email-zhen-hual@hp.com>
+References: <1418637186-9988-1-git-send-email-zhen-hual@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/17/2014 09:39 PM, Christopher Li wrote:
-> On Thu, Dec 18, 2014 at 6:37 AM, Murali Karicheri<m-karicheri2@ti.com>  wrote:
->>          if (!ks_pcie) {
->>                  dev_err(dev, "no memory for keystone pcie\n");
->>                  return -ENOMEM;
->>          }
->>          pp =&ks_pcie->pp;
->>
->>          /* initialize SerDes Phy if present */
->>          phy = devm_phy_get(dev, "pcie-phy");
->> ===>     if (!IS_ERR_OR_NULL(phy)) {
->>                  ret = phy_init(phy);
->>                  if (ret<  0)
->>                          return ret;
->>
->
-> Hi,
->
-> Do you have a smaller stand alone test case which I can reproduce with sparse?
->
-> Thanks
->
-> Chris
-Thanks Chris for responding.
+Functions to copy the irte data from the old kernel into the kdump kernel.
 
-You could add this piece of code for testing
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+---
+ drivers/iommu/intel_irq_remapping.c | 57 +++++++++++++++++++++++++++++++++++++
+ include/linux/intel-iommu.h         |  4 +++
+ 2 files changed, 61 insertions(+)
 
-struct foo {
-	int x;
-	int y;
-};
-
-static struct foo *func1(struct device *dev)
-{
-	struct foo *fp;
-
-	fp = devm_kzalloc(dev, sizeof(*fp), GFP_KERNEL);
-	if (fp == NULL)
-		return ERR_PTR(-ENOMEM);
-	return fp;
-}
-
-And in one of your module in kernel add
-
-	struct foo *fp;
-
-	if (IS_ERR_OR_NULL(fp))
-		return -ENOMEM;
-
-and do
-
-make C=2 CF="-D__CHECK_ENDIAN__" CHECK=sparse
-
-You will see the CHECK warning against your module as
-
-include/linux/err.h:40:16: warning: testing a 'safe expression'
-
-Hope this helps.
-
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 27541d4..090ba32 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -8,6 +8,7 @@
+ #include <linux/irq.h>
+ #include <linux/intel-iommu.h>
+ #include <linux/acpi.h>
++#include <linux/crash_dump.h>
+ #include <asm/io_apic.h>
+ #include <asm/smp.h>
+ #include <asm/cpu.h>
+@@ -17,6 +18,11 @@
+ 
+ #include "irq_remapping.h"
+ 
++#ifdef CONFIG_CRASH_DUMP
++static int __iommu_load_old_irte(struct intel_iommu *iommu);
++static int __iommu_update_old_irte(struct intel_iommu *iommu, int index);
++#endif /* CONFIG_CRASH_DUMP */
++
+ struct ioapic_scope {
+ 	struct intel_iommu *iommu;
+ 	unsigned int id;
+@@ -1296,3 +1302,54 @@ int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
+ 
+ 	return ret;
+ }
++
++#ifdef CONFIG_CRASH_DUMP
++
++static int __iommu_load_old_irte(struct intel_iommu *iommu)
++{
++	if ((!iommu)
++		|| (!iommu->ir_table)
++		|| (!iommu->ir_table->base)
++		|| (!iommu->ir_table->base_old_phys)
++		|| (!iommu->ir_table->base_old_virt))
++		return -1;
++
++	memcpy(iommu->ir_table->base,
++		iommu->ir_table->base_old_virt,
++		INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
++
++	return 0;
++}
++
++static int __iommu_update_old_irte(struct intel_iommu *iommu, int index)
++{
++	int start;
++	unsigned long size;
++	void __iomem *to;
++	void *from;
++
++	if ((!iommu)
++		|| (!iommu->ir_table)
++		|| (!iommu->ir_table->base)
++		|| (!iommu->ir_table->base_old_phys)
++		|| (!iommu->ir_table->base_old_virt))
++		return -1;
++
++	if (index < -1 || index >= INTR_REMAP_TABLE_ENTRIES)
++		return -1;
++
++	if (index == -1) {
++		start = 0;
++		size = INTR_REMAP_TABLE_ENTRIES * sizeof(struct irte);
++	} else {
++		start = index * sizeof(struct irte);
++		size = sizeof(struct irte);
++	}
++
++	to = iommu->ir_table->base_old_virt;
++	from = iommu->ir_table->base;
++	memcpy(to + start, from + start, size);
++
++	return 0;
++}
++#endif /* CONFIG_CRASH_DUMP */
+diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+index 8e29b97..76c6ea5 100644
+--- a/include/linux/intel-iommu.h
++++ b/include/linux/intel-iommu.h
+@@ -290,6 +290,10 @@ struct q_inval {
+ struct ir_table {
+ 	struct irte *base;
+ 	unsigned long *bitmap;
++#ifdef CONFIG_CRASH_DUMP
++	void __iomem *base_old_virt;
++	unsigned long base_old_phys;
++#endif
+ };
+ #endif
+ 
 -- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+2.0.0-rc0
+
