@@ -1,82 +1,271 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f181.google.com ([209.85.216.181]:40802 "EHLO
-	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751914AbaLDAvt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Dec 2014 19:51:49 -0500
-Received: by mail-qc0-f181.google.com with SMTP id m20so12178881qcx.12
-        for <linux-pci@vger.kernel.org>; Wed, 03 Dec 2014 16:51:49 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo6UvY10MNidAOFf4Fptv+wL-NsX6JMaU8OvSP6ywWEebQ@mail.gmail.com>
-References: <CAErSpo6UvY10MNidAOFf4Fptv+wL-NsX6JMaU8OvSP6ywWEebQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 3 Dec 2014 17:51:28 -0700
-Message-ID: <CAErSpo63uZeo1feoPjjXpdH43nsbcWh63kpBmxCnckPd0t9yrg@mail.gmail.com>
-Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
- GPU init
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	zermond@gmail.com, David Airlie <airlied@linux.ie>,
-	Yinghai Lu <yinghai@kernel.org>, saifi.khan@datasynergy.org,
-	Alex Deucher <alexdeucher@gmail.com>, kordikmarek@gmail.com
-Cc: Guo Chao <yan@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from g2t2354.austin.hp.com ([15.217.128.53]:48917 "EHLO
+	g2t2354.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752168AbaLOJyl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Dec 2014 04:54:41 -0500
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>, <billsumnerlinux@gmail.com>,
+	<zhen-hual@hp.com>
+Cc: <iommu@lists.linux-foundation.org>, <kexec@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>
+Subject: [PATCH 07/10] iommu/vt-d: enable kdump support in iommu module
+Date: Mon, 15 Dec 2014 17:53:03 +0800
+Message-Id: <1418637186-9988-8-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1418637186-9988-1-git-send-email-zhen-hual@hp.com>
+References: <1418637186-9988-1-git-send-email-zhen-hual@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Guo, Ben]
+Modify the operation of the following functions when called during crash dump:
+ device_to_domain_id
+ get_domain_for_dev
+ init_dmars
+ intel_iommu_init
 
-On Wed, Dec 3, 2014 at 3:15 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> There's a bugzilla for this, so this email is to make the bugzilla
-> more discoverable and to have a more public discussion about it.
->
->   https://bugzilla.kernel.org/show_bug.cgi?id=85491
->
-> I think this regression is caused by 5b28541552ef ("PCI: Restrict
-> 64-bit prefetchable bridge windows to 64-bit resources").
-> ...
+Bill Sumner:
+	Original version.
 
-> In v3.16 (which does contain 5b28541552ef), when pbus_size_mem() sizes
-> the 64-bit prefetchable window, it only looks for downstream 64-bit
-> resources.  Since the radeon at 01:00.0 has none, we size the window
-> to 0 + 0x200000 (the 0x200000 part is pci_hotplug_mem_size, to
-> accommodate future hot-added devices).
-> ...
+Zhenhua:
+	Minor change, change some function name, add spin_lock_irqsave.
 
-> I don't know what the best fix is, but I think it's probably too
-> aggressive to *never* use a 64-bit prefetchable window for downstream
-> 32-bit prefetchable resources.  This configuration from BIOS should
-> just work without us changing anything (although we probably should
-> trim the window to start at 0xc0000000, which would still work).
->
-> In this case, I think we certainly want the radeon BAR 0 in the
-> prefetchable window.  In general, it seems wrong that a device with
-> 32-bit BARs will work fine below a bridge with a 32-bit prefetchable
-> window, but it won't work (or will work slower) below a bridge with a
-> 64-bit prefetchable window.  A more capable bridge should make things
-> work *better*, not worse.
+Signed-off-by: Bill Sumner <billsumnerlinux@gmail.com>
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+---
+ drivers/iommu/intel-iommu.c | 142 ++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 125 insertions(+), 17 deletions(-)
 
-5b28541552ef was added to fix https://bugzilla.kernel.org/show_bug.cgi?id=74151
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 9b2f725..4837ce5 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -907,6 +907,11 @@ static struct context_entry * device_to_context_entry(struct intel_iommu *iommu,
+ 		set_root_value(root, phy_addr);
+ 		set_root_present(root);
+ 		__iommu_flush_cache(iommu, root, sizeof(*root));
++
++#ifdef CONFIG_CRASH_DUMP
++		if (is_kdump_kernel())
++			__iommu_update_old_root_entry(iommu, bus);
++#endif
+ 	}
+ 	spin_unlock_irqrestore(&iommu->lock, flags);
+ 	return &context[devfn];
+@@ -958,7 +963,8 @@ static void free_context_table(struct intel_iommu *iommu)
+ 
+ 	spin_lock_irqsave(&iommu->lock, flags);
+ 	if (!iommu->root_entry) {
+-		goto out;
++		spin_unlock_irqrestore(&iommu->lock, flags);
++		return;
+ 	}
+ 	for (i = 0; i < ROOT_ENTRY_NR; i++) {
+ 		root = &iommu->root_entry[i];
+@@ -966,10 +972,26 @@ static void free_context_table(struct intel_iommu *iommu)
+ 		if (context)
+ 			free_pgtable_page(context);
+ 	}
+-	free_pgtable_page(iommu->root_entry);
+-	iommu->root_entry = NULL;
+-out:
++
++#ifdef CONFIG_CRASH_DUMP
++	if (is_kdump_kernel()) {
++		iommu->root_entry_old_phys = 0;
++		root = iommu->root_entry;
++		iommu->root_entry = NULL;
++	} else {
++#endif
++		free_pgtable_page(iommu->root_entry);
++		iommu->root_entry = NULL;
++#ifdef CONFIG_CRASH_DUMP
++	}
++#endif
++
+ 	spin_unlock_irqrestore(&iommu->lock, flags);
++
++#ifdef CONFIG_CRASH_DUMP
++	if (is_kdump_kernel())
++		iounmap(root);
++#endif
+ }
+ 
+ static struct dma_pte *pfn_to_dma_pte(struct dmar_domain *domain,
+@@ -2381,6 +2403,9 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
+ 	unsigned long flags;
+ 	u8 bus, devfn;
+ 	int did = -1;   /* Default to "no domain_id supplied" */
++#ifdef CONFIG_CRASH_DUMP
++	struct domain_values_entry *dve = NULL;
++#endif /* CONFIG_CRASH_DUMP */
+ 
+ 	domain = find_domain(dev);
+ 	if (domain)
+@@ -2414,6 +2439,24 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
+ 	domain = alloc_domain(0);
+ 	if (!domain)
+ 		return NULL;
++
++#ifdef CONFIG_CRASH_DUMP
++	if (is_kdump_kernel()) {
++		/*
++		 * if this device had a did in the old kernel
++		 * use its values instead of generating new ones
++		 */
++		did = device_to_domain_id(iommu, bus, devfn);
++		if (did > 0 || (did == 0 && !cap_caching_mode(iommu->cap)))
++			dve = intel_iommu_did_to_domain_values_entry(did,
++								iommu);
++		if (dve)
++			gaw = dve->gaw;
++		else
++			did = -1;
++	}
++#endif /* CONFIG_CRASH_DUMP */
++
+ 	domain->id = iommu_attach_domain(domain, iommu, did);
+ 	if (domain->id < 0) {
+ 		free_domain_mem(domain);
+@@ -2425,6 +2468,18 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
+ 		return NULL;
+ 	}
+ 
++#ifdef CONFIG_CRASH_DUMP
++	if (is_kdump_kernel() && dve) {
++
++		if (domain->pgd)
++			free_pgtable_page(domain->pgd);
++
++		domain->pgd = dve->pgd;
++
++		copy_reserved_iova(&dve->iovad, &domain->iovad);
++	}
++#endif /* CONFIG_CRASH_DUMP */
++
+ 	/* register PCI DMA alias device */
+ 	if (dev_is_pci(dev)) {
+ 		tmp = dmar_insert_dev_info(iommu, PCI_BUS_NUM(dma_alias),
+@@ -2948,14 +3003,35 @@ static int __init init_dmars(void)
+ 		if (ret)
+ 			goto free_iommu;
+ 
+-		/*
+-		 * TBD:
+-		 * we could share the same root & context tables
+-		 * among all IOMMU's. Need to Split it later.
+-		 */
+-		ret = iommu_alloc_root_entry(iommu);
+-		if (ret)
+-			goto free_iommu;
++#ifdef CONFIG_CRASH_DUMP
++		if (is_kdump_kernel()) {
++			pr_info("IOMMU Copying translate tables from panicked kernel\n");
++			ret = intel_iommu_copy_translation_tables(drhd,
++					g_num_of_iommus);
++			if (ret) {
++				pr_err("IOMMU: Copy translate tables failed\n");
++
++				/* Best to stop trying */
++				goto free_iommu;
++			}
++			pr_info("IOMMU: root_cache:0x%12.12llx phys:0x%12.12llx\n",
++				(u64)iommu->root_entry,
++				(u64)iommu->root_entry_old_phys);
++			intel_iommu_get_dids_from_old_kernel(iommu);
++		} else {
++#endif /* CONFIG_CRASH_DUMP */
++			/*
++			 * TBD:
++			 * we could share the same root & context tables
++			 * among all IOMMU's. Need to Split it later.
++			 */
++			ret = iommu_alloc_root_entry(iommu);
++			if (ret)
++				goto free_iommu;
++#ifdef CONFIG_CRASH_DUMP
++		}
++#endif
++
+ 		if (!ecap_pass_through(iommu->ecap))
+ 			hw_pass_through = 0;
+ 	}
+@@ -2972,6 +3048,16 @@ static int __init init_dmars(void)
+ 
+ 	check_tylersburg_isoch();
+ 
++#ifdef CONFIG_CRASH_DUMP
++	/*
++	 * In the crashdump kernel: Skip setting-up new domains for
++	 * si, rmrr, and the isa bus on the expectation that these
++	 * translations were copied from the old kernel.
++	 */
++	if (is_kdump_kernel())
++		goto skip_new_domains_for_si_rmrr_isa;
++#endif /* CONFIG_CRASH_DUMP */
++
+ 	/*
+ 	 * If pass through is not set or not enabled, setup context entries for
+ 	 * identity mappings for rmrr, gfx, and isa and may fall back to static
+@@ -3012,6 +3098,10 @@ static int __init init_dmars(void)
+ 
+ 	iommu_prepare_isa();
+ 
++#ifdef CONFIG_CRASH_DUMP
++skip_new_domains_for_si_rmrr_isa:;
++#endif /* CONFIG_CRASH_DUMP */
++
+ 	/*
+ 	 * for each drhd
+ 	 *   enable fault log
+@@ -3040,7 +3130,15 @@ static int __init init_dmars(void)
+ 
+ 		iommu->flush.flush_context(iommu, 0, 0, 0, DMA_CCMD_GLOBAL_INVL);
+ 		iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
+-		iommu_enable_translation(iommu);
++
++#ifdef CONFIG_CRASH_DUMP
++		if (is_kdump_kernel()) {
++			if (!(iommu->gcmd & DMA_GCMD_TE))
++				iommu_enable_translation(iommu);
++		} else
++#endif
++			iommu_enable_translation(iommu);
++
+ 		iommu_disable_protect_mem_regions(iommu);
+ 	}
+ 
+@@ -4351,12 +4449,22 @@ int __init intel_iommu_init(void)
+ 		goto out_free_dmar;
+ 	}
+ 
++#ifdef CONFIG_CRASH_DUMP
+ 	/*
+-	 * Disable translation if already enabled prior to OS handover.
++	 * If (This is the crash kernel)
++	 *    Set: copy iommu translate tables from old kernel
++	 *    Skip disabling the iommu hardware translations
+ 	 */
+-	for_each_active_iommu(iommu, drhd)
+-		if (iommu->gcmd & DMA_GCMD_TE)
+-			iommu_disable_translation(iommu);
++	if (is_kdump_kernel()) {
++		pr_info("IOMMU Skip disabling iommu hardware translations\n");
++	} else
++#endif /* CONFIG_CRASH_DUMP */
++		/*
++		 * Disable translation if already enabled prior to OS handover.
++		 */
++		for_each_active_iommu(iommu, drhd)
++			if (iommu->gcmd & DMA_GCMD_TE)
++				iommu_disable_translation(iommu);
+ 
+ 	if (dmar_dev_scope_init() < 0) {
+ 		if (force_on)
+-- 
+2.0.0-rc0
 
-In that case, there was a bridge with a 64-bit prefetchable window,
-and downstream devices had 64-bit prefetchable BARs as well as
-prefetchable 32-bit ROMs:
-
-    pci 0006:00:00.0: PCI bridge to [bus 01]
-    pci 0006:00:00.0:   bridge window [mem 0x3d24800000000-0x3d248007fffff]
-    pci 0006:00:00.0:   bridge window [mem
-0x3d24008000000-0x3d2400fffffff 64bit pref]
-
-    pci 0006:01:00.0: reg 0x10: [mem 0x3d2400e000000-0x3d2400e007fff 64bit pref]
-    pci 0006:01:00.0: reg 0x20: [mem 0x3d2400e030000-0x3d2400e030fff 64bit pref]
-    pci 0006:01:00.0: reg 0x30: [mem 0x00000000-0x0007ffff pref]
-
-The problem was that we used to put all the prefetchable BARs in the
-prefetchable window, which meant we had to put the window below 4GB
-because the ROM BAR is only 32 bits.  But there wasn't enough space
-below 4GB for all the other 64-bit BARs.
-
-I think another way to fix the bug 74151 problem would have been to
-put the ROMs in the non-prefetchable window and the 64-bit BARs in the
-64-bit prefetchable window.
-
-Bjorn
