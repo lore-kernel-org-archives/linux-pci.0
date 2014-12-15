@@ -1,110 +1,112 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5486EF4E.5020704@linux.intel.com>
-Date: Tue, 09 Dec 2014 20:47:10 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
-Subject: Re: [PATCH 2/6] PCI/MSI: add hooks to populate the msi_domain field
-References: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com> <1418069543-21969-3-git-send-email-marc.zyngier@arm.com> <5486585B.40000@huawei.com> <5486C8BA.8030608@arm.com> <5486E3BF.70703@huawei.com> <5486E747.4010804@arm.com>
-In-Reply-To: <5486E747.4010804@arm.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:41832 "EHLO
+	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751894AbaLOJyU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Dec 2014 04:54:20 -0500
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>, <billsumnerlinux@gmail.com>,
+	<zhen-hual@hp.com>
+Cc: <iommu@lists.linux-foundation.org>, <kexec@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>
+Subject: [PATCH 03/10] iommu/vt-d: Add domain-id functions
+Date: Mon, 15 Dec 2014 17:52:59 +0800
+Message-Id: <1418637186-9988-4-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1418637186-9988-1-git-send-email-zhen-hual@hp.com>
+References: <1418637186-9988-1-git-send-email-zhen-hual@hp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/12/9 20:12, Marc Zyngier wrote:
-> Yijing,
-> 
-> On 09/12/14 11:57, Yijing Wang wrote:
->>>>> +void __weak pcibios_set_phb_msi_domain(struct pci_bus *bus)
->>>>> +{
->>>>> +}
->>>>> +
->>>>> +static void pci_set_bus_msi_domain(struct pci_bus *bus)
->>>>> +{
->>>>> +	struct pci_dev *bridge = bus->self;
->>>>> +
->>>>> +	if (!bridge)
->>>>> +		pcibios_set_phb_msi_domain(bus);
->>>>> +	else
->>>>> +		dev_set_msi_domain(&bus->dev, dev_get_msi_domain(&bridge->dev));
->>>>> +}
->>>>
->>>>
->>>> Hi Marc, we can not assume pci devices under same phb share the same msi irq domain,
->>>> now in x86, pci devices under the same phb may associate different msi irq domain.
->>
->> Hi Marc,
->>
->>>
->>> Well, this is not supposed to be a perfect solution yet, but instead a
->>> basis for discussion. What I'd like to find out is:
->>>
->>> - What is the minimum granularity for associating a device with its MSI
->>> domain in existing platforms?
->>
->> PCI device, after Gerry's msi irq domain patchset which now in linux-next,
->> in x86, we will find msi irq domain by pci_dev.
-> 
-> Are you *really* associating the MSI domain on a per pci-device basis?
-> That is, you have devices on the same PCI bus talking to different MSI hw?
-Hi Marc,
-	This is a little wild:(
-	On x86 platform with Intel VT-d(not the case for AMD-v),
-interrupt remapping is tight to DMA remapping (IOMMU) unit.
-For most common cases, IOMMU unit manages PCI bus and its sub-hierarchy.
-But it may also manage a specific PCI device. This is typically used to
-provide QoS for audio device by using dedicated IOMMU unit to avoid
-resource contention on DMA remapping tables. BIOS uses ACPI table to
-report PCI bus/device to IOMMU unit mapping relationship. (To be honest,
-I have no really experience with such a hardware platform yet, just for
-theoretical analysis)
-	On the other hand, we now support hierarchy irqdomain. So to
-support per-PCI IOMMU unit case, we need maintain irqdomain at PCI
-device level.
-	This piece of code from your [4/6] is flexible enough, which
-retrieves msi_domain from PCI device, then fallback to PCI bus,
-then fallback to platform specific method.
-	domain = dev_get_msi_domain(&dev->dev);
-	if (!domain && dev->bus->msi)
- 		domain = dev->bus->msi->domain;
- 	if (!domain)
- 		domain = arch_get_pci_msi_domain(dev);
-Thanks!
-Gerry
-> 
->> I generally agree your first patch which associate basic device with msi irq domain.
->>
->>> - What topology data structures do you use to find out what MSI
->>> controller a device should be matched with?
->>
->> Now only arm and arm64 use msi controller to setup/teardown msi irqs,
->> in arm, now msi controller saved in pci_sys_data, and for arm64, it seems
->> to be saved in pci_bus. For a more common method to find msi controller/irq domain,
->> I prefer pci_dev/device.
-> 
-> Forget about msi_controller, the whole goal of this series is to make it
-> obsolete. On your x86 platform, what how do you identify which MSI
-> domain should be associated with a given PCI device? Surely you must
-> have a set of data structures or ACPI tables which give you that
-> information.
-> 
->>> - What in-tree platform already has this requirements?
->>
->> As mentioned above, x86 does.
-> 
-> Let me rephrase that in a non-ambiguous manner: can you point me to a
-> file implementing this in mainline?
-> 
-> Thanks,
-> 
-> 	M.
-> 
+Interfaces for when a new domain in the crashdump kernel needs some
+values from the panicked kernel's context entries.
+
+Signed-off-by: Bill Sumner <billsumnerlinux@gmail.com>
+---
+ drivers/iommu/intel-iommu.c | 62 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 62 insertions(+)
+
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 5ce2850..c0bebd6 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -381,6 +381,13 @@ struct domain_values_entry {
+ 					   2 == 1GiB, 3 == 512GiB, 4 == 1TiB */
+ };
+ 
++static struct domain_values_entry *intel_iommu_did_to_domain_values_entry(
++		int did, struct intel_iommu *iommu);
++
++static int intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu);
++
++static int device_to_domain_id(struct intel_iommu *iommu, u8 bus, u8 devfn);
++
+ #endif /* CONFIG_CRASH_DUMP */
+ 
+ /*
+@@ -4832,3 +4839,58 @@ static void __init check_tylersburg_isoch(void)
+ 	printk(KERN_WARNING "DMAR: Recommended TLB entries for ISOCH unit is 16; your BIOS set %d\n",
+ 	       vtisochctrl);
+ }
++
++#ifdef CONFIG_CRASH_DUMP
++
++/*
++ * Interfaces for when a new domain in the crashdump kernel needs some
++ * values from the panicked kernel's context entries
++ *
++ */
++static struct domain_values_entry *intel_iommu_did_to_domain_values_entry(
++		int did, struct intel_iommu *iommu)
++{
++	struct domain_values_entry *dve;	/* iterator */
++
++	list_for_each_entry(dve, &domain_values_list[iommu->seq_id], link)
++		if (dve->did == did)
++			return dve;
++	return NULL;
++}
++
++/* Mark domain-id's from old kernel as in-use on this iommu so that a new
++ * domain-id is allocated in the case where there is a device in the new kernel
++ * that was not in the old kernel -- and therefore a new domain-id is needed.
++ */
++static int intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu)
++{
++	struct domain_values_entry *dve;	/* iterator */
++
++	pr_info("IOMMU:%d Domain ids from panicked kernel:\n", iommu->seq_id);
++
++	list_for_each_entry(dve, &domain_values_list[iommu->seq_id], link) {
++		set_bit(dve->did, iommu->domain_ids);
++		pr_info("DID did:%d(0x%4.4x)\n", dve->did, dve->did);
++	}
++
++	pr_info("----------------------------------------\n");
++	return 0;
++}
++
++static int device_to_domain_id(struct intel_iommu *iommu, u8 bus, u8 devfn)
++{
++	int did = -1;			/* domain-id returned */
++	struct root_entry *root;
++	struct context_entry *context;
++	unsigned long flags;
++
++	spin_lock_irqsave(&iommu->lock, flags);
++	root = &iommu->root_entry[bus];
++	context = get_context_addr_from_root(root);
++	if (context && context_present(context+devfn))
++		did = context_domain_id(context+devfn);
++	spin_unlock_irqrestore(&iommu->lock, flags);
++	return did;
++}
++
++#endif /* CONFIG_CRASH_DUMP */
+-- 
+2.0.0-rc0
+
