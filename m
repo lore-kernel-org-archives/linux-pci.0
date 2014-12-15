@@ -1,83 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:36419 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751006AbaLPQEh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Dec 2014 11:04:37 -0500
+Received: from mout.kundenserver.de ([212.227.17.10]:54891 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750915AbaLOVhy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Dec 2014 16:37:54 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Ray Jui <rjui@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Christian Daudt <bcm@fixthebug.org>,
+	Matt Porter <mporter@linaro.org>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Scott Branden <sbranden@broadcom.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	bcm-kernel-feedback-list@broadcom.com, devicetree@vger.kernel.org
+Subject: Re: [PATCH v2 2/4] PCI: iproc: Add Broadcom iProc PCIe driver
+Date: Mon, 15 Dec 2014 22:37:19 +0100
+Message-ID: <2242033.mU3KpyO3Rt@wuerfel>
+In-Reply-To: <548F338F.9030203@broadcom.com>
+References: <1418351817-14898-3-git-send-email-rjui@broadcom.com> <1790462.K12S5vem48@wuerfel> <548F338F.9030203@broadcom.com>
 MIME-Version: 1.0
-Reply-To: rajatxjain@gmail.com
-In-Reply-To: <548EF90A.5070607@gmail.com>
-References: <20141213210251.GA12812@teela.fritz.box>
-	<548EF90A.5070607@gmail.com>
-Date: Tue, 16 Dec 2014 08:04:36 -0800
-Message-ID: <CAA93t1qyZE-9tw8pg1KG6g4iyy0QMW=iass5w=6ZGMTMu+vi_A@mail.gmail.com>
-Subject: Re: [bisected] tg3 broken in 3.18.0?
-From: Rajat Jain <rajatxjain@gmail.com>
-To: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
-Cc: Nils Holland <nholland@tisys.org>,
-	David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello All,
+On Monday 15 December 2014 11:16:31 Ray Jui wrote:
+> On 12/12/2014 9:21 AM, Arnd Bergmann wrote:
+> > On Friday 12 December 2014 09:08:48 Ray Jui wrote:
+> > One way to solve this would be by turning the driver into a library
+> > the same way as the pcie-dw driver, and have separate front-ends
+> > for it for platform_device and bcma_device.
+> >
+> I'm fine with this solution, i.e., to introduce a common pcie-iproc core 
+> driver (just like pcie-designware) and have different front-ends 
+> depending on the device/bus type. If we end up deciding to go with this 
+> solution, I need to discuss with Hauke to come up with a plan to 
+> collaborate.
 
-Apologies for jumping in late, but for some reason I do not see the
-original mail in my inbox. However I am taking a look at the mails as
-sent on linux-pci (and I will keep an eye out for the bug report that
-Bjorn asked for).
+Ok
 
+> But before we choose to go with that route, may I ask, what is the 
+> purpose of tying a PCIe host driver to BCMA? What benefit does BCMA give 
+> us? If we have a generic platform based PCIe driver that can work on all 
+> iProc SoCs + BCM4708 and BCM5301X with all HW specific configurations 
+> taken care of by device tree, why do we still need to use BCMA?
+> 
+> I thought all a BCMA device here does is to auto-instantiate based on 
+> some register readings?
 
->
-> I'm getting, with commit 89665a6a71408796565bfd29cfa6a7877b17a667:
->
-> $ grep 'pci 0000:02' tg3.bad
-> [    0.190733] pci 0000:02:00.0: 1st 165a14e4 14e4
-> [    0.190736] pci 0000:02:00.0: 1st 165a14e4 14e4
-> [    0.190810] pci 0000:02:00.0: [14e4:165a] type 00 class 0x020000
-> [    0.190885] pci 0000:02:00.0: reg 0x10: [mem 0xf7c40000-0xf7c4ffff 64bit]
-> [    0.191048] pci 0000:02:00.0: reg 0x30: [mem 0xf7c00000-0xf7c3ffff pref]
-> [    0.191382] pci 0000:02:00.0: PME# supported from D3hot D3cold
-> [    0.191438] pci 0000:02:00.0: System wakeup disabled by ACPI
-> [    1.561555] pci 0000:02:00.0: 1st 1 1
-> [    1.561558] pci 0000:02:00.0: crs_timeout: 0
-> [   20.412021] pci 0000:02:00.0: 1st 1 1
-> [   20.412022] pci 0000:02:00.0: crs_timeout: 0
-> [   20.413596] pci 0000:02:00.0: 1st 1 1
-> [   20.413598] pci 0000:02:00.0: crs_timeout: 0
->
-> And without it:
->
-> $ grep 'pci 0000:02' tg3.good
-> [    0.190734] pci 0000:02:00.0: 1st 165a14e4 14e4
-> [    0.190738] pci 0000:02:00.0: 1st 165a14e4 14e4
-> [    0.190811] pci 0000:02:00.0: [14e4:165a] type 00 class 0x020000
-> [    0.190884] pci 0000:02:00.0: reg 0x10: [mem 0xf7c40000-0xf7c4ffff 64bit]
-> [    0.191047] pci 0000:02:00.0: reg 0x30: [mem 0xf7c00000-0xf7c3ffff pref]
-> [    0.191380] pci 0000:02:00.0: PME# supported from D3hot D3cold
-> [    0.191439] pci 0000:02:00.0: System wakeup disabled by ACPI
-> [    1.576778] pci 0000:02:00.0: 1st 1 1
-> [   19.068517] pci 0000:02:00.0: 1st 165a14e4 14e4
->
+Basically, DT is a hack that we only need for nondiscoverable buses.
+As BCMA is (mostly) discoverable, we should use that, just like we do
+for things like PCI and USB. There are clearly some limitations to 
+BCMA as well, e.g. on bcm4708 we don't have proper IRQ numbers in
+the device list and we need to work around that using DT, but overall
+it still seems to have more upsides than downsides to use it.
 
-It seems that in the first 2 attempts that were made to probe the
-device are all OK and return regular device ID and vendor ID for TG3
-(CRS does not have a role to play). However, later attempts return a
-CRS.
+It's also good to point other SoC makers to Broadcom as a good example
+for how to do things they claim are impossible to do.
 
-1) May I ask if you are using acpihp or pciehp? I assume pciehp?
-
-2) Can you please also send dmesg output while passing
-pciehp.pciehp_debug=1? In the fail case, do you see a message
-indicating the pciehp gave up since it got CRS for a long time
-(something like "pci 0000:02:00.0 id reading try 50 times with
-interval 20 ms to get ffff0001")?
-
-3) Currently the pciehp passes "0" for the argument "crs_timeout" to
-pci_bus_read_dev_vendor_id(). Can you please try increasing it to, say
-30 seconds (30 * 1000). (For comparison data, acpihp uses the value
-60*1000 i.e. 60 seconds today) and run the fail case once again?
-
-Thanks a lot in advance for the debugging help ;-)
-
-Rajat
+	Arnd
