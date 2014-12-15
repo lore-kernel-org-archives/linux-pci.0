@@ -1,47 +1,180 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:41981 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932709AbaLDWr3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Dec 2014 17:47:29 -0500
-Date: Thu, 4 Dec 2014 14:47:28 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Generate uppercase hex for modalias var in uevent
-Message-ID: <20141204224728.GA26134@kroah.com>
-References: <1417538104-27341-1-git-send-email-ricardo.ribalda@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1417538104-27341-1-git-send-email-ricardo.ribalda@gmail.com>
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:55959 "EHLO
+	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751894AbaLOJy0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Dec 2014 04:54:26 -0500
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>, <billsumnerlinux@gmail.com>,
+	<zhen-hual@hp.com>
+Cc: <iommu@lists.linux-foundation.org>, <kexec@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>
+Subject: [PATCH 04/10] iommu/vt-d: functions to copy data from old mem
+Date: Mon, 15 Dec 2014 17:53:00 +0800
+Message-Id: <1418637186-9988-5-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1418637186-9988-1-git-send-email-zhen-hual@hp.com>
+References: <1418637186-9988-1-git-send-email-zhen-hual@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 02, 2014 at 05:35:04PM +0100, Ricardo Ribalda Delgado wrote:
-> Some implementations of modprobe fail to load the driver for a PCI device
-> automatically because the "interface" part of the modalias from the kernel
-> is lowercase, and the modalias from file2alias is uppercase.
-> 
-> The "interface" is the low-order byte of the Class Code, defined in PCI
-> r3.0, Appendix D.  Most interface types defined in the spec do not use
-> alpha characters, so they won't be affected.  For example, 00h, 01h, 10h,
-> 20h, etc. are unaffected.
-> 
-> Print the "interface" byte of the Class Code in uppercase hex, as we
-> already do for the Vendor ID, Device ID, Class, etc.
-> 
-> Commit 89ec3dcf17fd ("PCI: Generate uppercase hex for modalias
-> interface class") fixed only half of the problem. Some udev
-> implementations relays on the uevent file and not in the modalias file.
-> 
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Fixes: d1ded203adf1 ("PCI: add MODALIAS to hotplug event for pci devices")
-> Signed-off-by: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
-> ---
-> 
-> Modified line is >80 char, but I believe that it is better than breaking
-> the string or indent it bad.
+Add some functions to copy the data from old kernel.
+These functions are used to copy context tables and page tables.
 
+To avoid calling iounmap between spin_lock_irqsave and spin_unlock_irqrestore,
+use a link here, store the pointers , and then use iounmap to free them in
+another place.
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+---
+ drivers/iommu/intel-iommu.c | 97 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/intel-iommu.h |  9 +++++
+ 2 files changed, 106 insertions(+)
+
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index c0bebd6..8a7ad72 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -388,6 +388,13 @@ static int intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu);
+ 
+ static int device_to_domain_id(struct intel_iommu *iommu, u8 bus, u8 devfn);
+ 
++struct iommu_remapped_entry {
++	struct list_head list;
++	void __iomem *mem;
++};
++static LIST_HEAD(__iommu_remapped_mem);
++static DEFINE_MUTEX(__iommu_mem_list_lock);
++
+ #endif /* CONFIG_CRASH_DUMP */
+ 
+ /*
+@@ -4843,6 +4850,96 @@ static void __init check_tylersburg_isoch(void)
+ #ifdef CONFIG_CRASH_DUMP
+ 
+ /*
++ * Copy memory from a physically-addressed area into a virtually-addressed area
++ */
++int __iommu_load_from_oldmem(void *to, unsigned long from, unsigned long size)
++{
++	unsigned long pfn;		/* Page Frame Number */
++	size_t csize = (size_t)size;	/* Num(bytes to copy) */
++	unsigned long offset;		/* Lower 12 bits of to */
++	void __iomem *virt_mem;
++	struct iommu_remapped_entry *mapped;
++
++	pfn = from >> VTD_PAGE_SHIFT;
++	offset = from & (~VTD_PAGE_MASK);
++
++	if (page_is_ram(pfn)) {
++		memcpy(to, pfn_to_kaddr(pfn) + offset, csize);
++	} else{
++
++		mapped = kzalloc(sizeof(struct iommu_remapped_entry),
++				GFP_KERNEL);
++		if (!mapped)
++			return -ENOMEM;
++
++		virt_mem = ioremap_cache((unsigned long)from, size);
++		if (!virt_mem) {
++			kfree(mapped);
++			return -ENOMEM;
++		}
++		memcpy(to, virt_mem, size);
++
++		mutex_lock(&__iommu_mem_list_lock);
++		mapped->mem = virt_mem;
++		list_add_tail(&mapped->list, &__iommu_remapped_mem);
++		mutex_unlock(&__iommu_mem_list_lock);
++	}
++	return size;
++}
++
++/*
++ * Copy memory from a virtually-addressed area into a physically-addressed area
++ */
++int __iommu_save_to_oldmem(unsigned long to, void *from, unsigned long size)
++{
++	unsigned long pfn;		/* Page Frame Number */
++	size_t csize = (size_t)size;	/* Num(bytes to copy) */
++	unsigned long offset;		/* Lower 12 bits of to */
++	void __iomem *virt_mem;
++	struct iommu_remapped_entry *mapped;
++
++	pfn = to >> VTD_PAGE_SHIFT;
++	offset = to & (~VTD_PAGE_MASK);
++
++	if (page_is_ram(pfn)) {
++		memcpy(pfn_to_kaddr(pfn) + offset, from, csize);
++	} else{
++		mapped = kzalloc(sizeof(struct iommu_remapped_entry),
++				GFP_KERNEL);
++		if (!mapped)
++			return -ENOMEM;
++
++		virt_mem = ioremap_cache((unsigned long)to, size);
++		if (!virt_mem) {
++			kfree(mapped);
++			return -ENOMEM;
++		}
++		memcpy(virt_mem, from, size);
++		mutex_lock(&__iommu_mem_list_lock);
++		mapped->mem = virt_mem;
++		list_add_tail(&mapped->list, &__iommu_remapped_mem);
++		mutex_unlock(&__iommu_mem_list_lock);
++	}
++	return size;
++}
++
++/*
++ * Free the mapped memory for ioremap;
++ */
++int __iommu_free_mapped_mem(void)
++{
++	struct iommu_remapped_entry *mem_entry, *tmp;
++
++	mutex_lock(&__iommu_mem_list_lock);
++	list_for_each_entry_safe(mem_entry, tmp, &__iommu_remapped_mem, list) {
++		iounmap(mem_entry->mem);
++		list_del(&mem_entry->list);
++		kfree(mem_entry);
++	}
++	mutex_unlock(&__iommu_mem_list_lock);
++	return 0;
++}
++/*
+  * Interfaces for when a new domain in the crashdump kernel needs some
+  * values from the panicked kernel's context entries
+  *
+diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+index a65208a..8ffa523 100644
+--- a/include/linux/intel-iommu.h
++++ b/include/linux/intel-iommu.h
+@@ -26,6 +26,7 @@
+ #include <linux/iova.h>
+ #include <linux/io.h>
+ #include <linux/dma_remapping.h>
++#include <linux/crash_dump.h>
+ #include <asm/cacheflush.h>
+ #include <asm/iommu.h>
+ 
+@@ -368,4 +369,12 @@ extern int dmar_ir_support(void);
+ 
+ extern const struct attribute_group *intel_iommu_groups[];
+ 
++#ifdef CONFIG_CRASH_DUMP
++extern int __iommu_load_from_oldmem(void *to, unsigned long from,
++					unsigned long size);
++extern int __iommu_save_to_oldmem(unsigned long to, void *from,
++					unsigned long size);
++extern int __iommu_free_mapped_mem(void);
++#endif /* CONFIG_CRASH_DUMP */
++
+ #endif
+-- 
+2.0.0-rc0
+
