@@ -1,57 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:43073 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751477AbaLRWHe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 18 Dec 2014 17:07:34 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <grant.likely@linaro.org>,
-	<robh+dt@kernel.org>, <devicetree@vger.kernel.org>,
-	<arnd@arndb.de>, <linux-arm-kernel@lists.infradead.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>
-Subject: [RFC v1 PATCH 2/2] PCI: update dma configuration from DT
-Date: Thu, 18 Dec 2014 17:07:05 -0500
-Message-ID: <1418940425-2017-3-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1418940425-2017-1-git-send-email-m-karicheri2@ti.com>
-References: <1418940425-2017-1-git-send-email-m-karicheri2@ti.com>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:64395 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750818AbaLOX4u (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Dec 2014 18:56:50 -0500
+Received: by mail-ie0-f182.google.com with SMTP id x19so11834124ier.27
+        for <linux-pci@vger.kernel.org>; Mon, 15 Dec 2014 15:56:49 -0800 (PST)
+Date: Mon, 15 Dec 2014 16:56:46 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Krzysztof Halasa <khalasa@piap.pl>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Simon Horman <horms@verge.net.au>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v3 0/2] arm: pcibios: remove pci_sys_data domain
+Message-ID: <20141215235646.GB4374@google.com>
+References: <1416569367-29409-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20141215235248.GA4374@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141215235248.GA4374@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-if there is a DT node available for the root bridge's parent device,
-use the dma configuration from that device node. For example, keystone
-PCI devices would require dma_pfn_offset to be set correctly in the
-device structure of the pci device in order to have the correct dma mask.
-The DT node will have dma-ranges defined for this. This also support using
-the DT property dma-coherent to allow coherent DMA operation by the
-PCI device.
+[+cc Jason, Thomas, Simon -- no wonder there aren't acks from them :)]
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
----
- drivers/pci/probe.c |    2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 23212f8..d7dcd6c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -6,6 +6,7 @@
- #include <linux/delay.h>
- #include <linux/init.h>
- #include <linux/pci.h>
-+#include <linux/of_pci.h>
- #include <linux/pci_hotplug.h>
- #include <linux/slab.h>
- #include <linux/module.h>
-@@ -1520,6 +1521,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	dev->dev.dma_mask = &dev->dma_mask;
- 	dev->dev.dma_parms = &dev->dma_parms;
- 	dev->dev.coherent_dma_mask = 0xffffffffull;
-+	of_pci_dma_configure(dev);
- 
- 	pci_set_dma_max_seg_size(dev, 65536);
- 	pci_set_dma_seg_boundary(dev, 0xffffffff);
--- 
-1.7.9.5
-
+On Mon, Dec 15, 2014 at 04:52:48PM -0700, Bjorn Helgaas wrote:
+> On Fri, Nov 21, 2014 at 11:29:24AM +0000, Lorenzo Pieralisi wrote:
+> > This patchset is a v3 of a previous posting:
+> > 
+> > http://www.spinics.net/lists/linux-pci/msg36502.html
+> > 
+> > v2 => v3
+> > 
+> > - Rebased on top of this patch dependency
+> >   http://www.spinics.net/lists/linux-pci/msg36631.html
+> > 
+> > v1 => v2 changelog
+> > 
+> > - Removed stale hw_pci domain member
+> > - Reworked pci-mvebu domain handling according to review
+> > - Rebased against 3.18-rc3 and updated the logs
+> > - Dropped RFC status
+> > 
+> > Original cover letter:
+> > ----
+> > This patchset is a first RFC stab at removing the dependency on pci_sys_data
+> > domain field on ARM platforms and by replacing it with generic code that
+> > stashes the domain value in the pci_bus control structure, introduced in
+> > 
+> > commit 41e5c0f81d3e676d671d96a0a1fafb27abfbd9
+> > ("of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()")
+> > 
+> > commit 670ba0c8883b576d0aec28bd7a838358a4be1
+> > ("PCI: Add generic domain handling")
+> > 
+> > All the drivers converted (apart from PCIe designware, tested on iMX6SL)
+> > were only compile tested for lack of HW, so along some comments, testing
+> > and verifying that patchset does not break any existing platform are
+> > very appreciated.
+> > 
+> > Code in drivers/pci/pci-mvebu.c has been changed to add a domain
+> > number to PCI resources by using the nr value coming from the setup
+> > pcibios32 callback, which may not be correct and should be considered
+> > a temporary solution waiting for review comments.
+> > 
+> > The patchset removes entirely the pci_sys_data.domain field, since its
+> > usage is removed at the same time in the respective host controllers
+> > and ARM is made to select the configuration option
+> > CONFIG_PCI_DOMAINS_GENERIC by default, which compiles a domain_nr in the
+> > pci_bus structure so that the pci_domain_nr() look-up can rely on it.
+> > 
+> > 
+> > Lorenzo Pieralisi (2):
+> >   arm: cns3xxx: pci: remove artificial dependency on pci_sys_data domain
+> >   arm: pcibios: move to generic PCI domains
+> > 
+> >  arch/arm/Kconfig                   |  3 +++
+> >  arch/arm/include/asm/mach/pci.h    |  6 ------
+> >  arch/arm/include/asm/pci.h         |  7 -------
+> >  arch/arm/kernel/bios32.c           |  3 ---
+> >  arch/arm/mach-cns3xxx/pcie.c       | 40 ++++++++++++++++----------------------
+> >  drivers/pci/host/pci-mvebu.c       | 15 ++------------
+> >  drivers/pci/host/pcie-designware.c |  3 ---
+> >  drivers/pci/host/pcie-rcar.c       |  3 ---
+> >  8 files changed, 22 insertions(+), 58 deletions(-)
+> 
+> I provisionally applied these to my next-pci/domain branch.  This will be
+> rebased after v3.19-rc1.
+> 
+> I'd like to see acks from Thomas and/or Jason for MVEBU, and Simon for
+> R-Car.
