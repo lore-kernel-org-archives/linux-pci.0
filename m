@@ -1,61 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33275 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751093AbaLCVlG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Dec 2014 16:41:06 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: [PATCH v5 2/9] driver core: Provide an wrapper around the mutex to do lockdep warnings
-Date: Wed,  3 Dec 2014 16:40:27 -0500
-Message-Id: <1417642834-20350-3-git-send-email-konrad.wilk@oracle.com>
-In-Reply-To: <1417642834-20350-1-git-send-email-konrad.wilk@oracle.com>
-References: <1417642834-20350-1-git-send-email-konrad.wilk@oracle.com>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:60807 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750942AbaLPRPn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Dec 2014 12:15:43 -0500
+Subject: Re: [bisected] tg3 broken in 3.18.0?
+From: Michael Chan <mchan@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Rajat Jain <rajatxjain@gmail.com>,
+	Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>,
+	Nils Holland <nholland@tisys.org>,
+	David Miller <davem@davemloft.net>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rafael Wysocki <rjw@rjwysocki.net>,
+	Prashant Sreedharan <prashant@broadcom.com>
+In-Reply-To: <CAErSpo5dqQE7nZ6zf2odgpHBWA3ZpTjhbgQKnY8YxQW+a+298w@mail.gmail.com>
+References: <20141213210251.GA12812@teela.fritz.box>
+	 <548EF90A.5070607@gmail.com>
+	 <CAA93t1qyZE-9tw8pg1KG6g4iyy0QMW=iass5w=6ZGMTMu+vi_A@mail.gmail.com>
+	 <CAErSpo5dqQE7nZ6zf2odgpHBWA3ZpTjhbgQKnY8YxQW+a+298w@mail.gmail.com>
+Content-Type: text/plain; charset="cp1252"
+Date: Tue, 16 Dec 2014 09:15:41 -0800
+Message-ID: <1418750141.4248.3.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Instead of open-coding it in drivers that want to double check
-that their functions are indeed holding the device lock.
+On Tue, 2014-12-16 at 09:20 -0700, Bjorn Helgaas wrote:
+> I think we're in this path:
+> 
+>     tg3_init_hw
+>       tg3_reset_hw
+>         tg3_disable_ints
+>         tg3_stop_fw
+>         tg3_write_sig_pre_reset
+>         tg3_chip_reset
+>           pci_device_is_present
+>             pci_bus_read_dev_vendor_id
+> 
+> and in this case pci_device_is_present() also passes a timeout of zero
+> to pci_bus_read_dev_vendor_id().  My guess is that tg3 is resetting
+> the device, so it's not too surprising that the config read returns
+> CRS status immediately afterward.
+> 
+At the point of calling pci_device_is_present(), chip reset hasn't
+started yet, so there should be no problem reading config space.
 
-Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Suggested-by: David Vrabel <david.vrabel@citrix.com>
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- drivers/xen/xen-pciback/pci_stub.c | 2 +-
- include/linux/device.h             | 5 +++++
- 2 files changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
-index 9cbe1a3..8b77089 100644
---- a/drivers/xen/xen-pciback/pci_stub.c
-+++ b/drivers/xen/xen-pciback/pci_stub.c
-@@ -278,7 +278,7 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
- 	/* Cleanup our device
- 	 * (so it's ready for the next domain)
- 	 */
--	lockdep_assert_held(&dev->dev.mutex);
-+	device_lock_assert(&dev->dev);
- 	__pci_reset_function_locked(dev);
- 	pci_restore_state(dev);
- 
-diff --git a/include/linux/device.h b/include/linux/device.h
-index ce1f2160..41d6a75 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -911,6 +911,11 @@ static inline void device_unlock(struct device *dev)
- 	mutex_unlock(&dev->mutex);
- }
- 
-+static inline void device_lock_assert(struct device *dev)
-+{
-+	lockdep_assert_held(&dev->mutex);
-+}
-+
- void driver_init(void);
- 
- /*
--- 
-1.9.3
+In all the newer tg3 chips, chip reset does not reset the PCIE block.
+So I think config space should always be accesible even during reset.
+> 
 
