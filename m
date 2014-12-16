@@ -1,125 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:34655 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755617AbaLIK2Y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 05:28:24 -0500
-Message-ID: <1418120897.2741.1.camel@pengutronix.de>
-Subject: Re: [PATCH 1/2] PCI: tegra: apply relaxed ordering fixup only on
- Tegra
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Alexandre Courbot <gnurou@gmail.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
+Received: from ns.mm-sol.com ([37.157.136.199]:48003 "EHLO extserv.mm-sol.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750862AbaLPJnV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 16 Dec 2014 04:43:21 -0500
+Message-ID: <548FFEB0.9080604@mm-sol.com>
+Date: Tue, 16 Dec 2014 11:43:12 +0200
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Rob Herring <robh+dt@kernel.org>,
+	Kumar Gala <galak@codeaurora.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
 	linux-pci@vger.kernel.org
-Date: Tue, 09 Dec 2014 11:28:17 +0100
-In-Reply-To: <CAAVeFu+sYnhMEmDSPvinbP-BQQnqAu6rpEVgaLx25Y3UtGVUwQ@mail.gmail.com>
-References: <1415907457-3147-1-git-send-email-l.stach@pengutronix.de>
-	 <1415907457-3147-2-git-send-email-l.stach@pengutronix.de>
-	 <CAAVeFu+sYnhMEmDSPvinbP-BQQnqAu6rpEVgaLx25Y3UtGVUwQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Subject: Re: [PATCH 4/5] PCI: qcom: Add Qualcomm PCIe controller driver
+References: <1418404441-5518-1-git-send-email-svarbanov@mm-sol.com> <1418404441-5518-5-git-send-email-svarbanov@mm-sol.com> <2577563.x0mEZJNVDQ@wuerfel>
+In-Reply-To: <2577563.x0mEZJNVDQ@wuerfel>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Dienstag, den 09.12.2014, 12:23 +0900 schrieb Alexandre Courbot:
-> Hi Lucas,
+Hi Arnd,
+
+Thanks for the comments!
+
+On 12/12/2014 07:30 PM, Arnd Bergmann wrote:
+> On Friday 12 December 2014 19:14:00 Stanimir Varbanov wrote:
+>> The PCIe driver reuse the Designware common code for host
+>> and MSI initialization, and also program the Qualcomm
+>> application specific registers.
+>>
+>> Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
 > 
-> Apologies for taking so long to come back to this. The patch looks ok
-> to me, just a minor comment about the Tegra PCI detection:
+> Looks nice!
 > 
-> On Fri, Nov 14, 2014 at 4:37 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> > The fixup to enable relaxed ordering on all PCI devices was
-> > executed unconditionally if the Tegra PCI host driver was
-> > built into the kernel. This doesn't play nice with a
-> > multiplatform kernel executed on other platforms which
-> > may not need this fixup.
-> >
-> > Make sure to only apply the fixup if the root port is
-> > a Tegra.
-> >
-> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> > ---
-> >  drivers/pci/host/pci-tegra.c | 26 +++++++++++++++++++++++++-
-> >  1 file changed, 25 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> > index 3d43874319be..d5a14f22ebb8 100644
-> > --- a/drivers/pci/host/pci-tegra.c
-> > +++ b/drivers/pci/host/pci-tegra.c
-> > @@ -647,10 +647,34 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0bf1, tegra_pcie_fixup_class);
-> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1c, tegra_pcie_fixup_class);
-> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1d, tegra_pcie_fixup_class);
-> >
-> > +static int tegra_pcie_root_is_tegra(struct pci_dev *dev)
-> > +{
-> > +       struct pci_bus *bus = dev->bus;
-> > +       struct pci_dev *root_bridge;
-> > +
-> > +       /* walk up the PCIe hierarchy to the first level below the root bus */
-> > +       while (bus->parent && bus->parent->self)
-> > +               bus = bus->parent;
-> > +
-> > +       /*
-> > +        * If there is no bridge on the bus the passed device is the root
-> > +        * bridge itself.
-> > +        */
-> > +       root_bridge = bus->self ? bus->self : dev;
-> > +       if (root_bridge->vendor == PCI_VENDOR_ID_NVIDIA &&
-> > +           (root_bridge->device == 0x0bf0 || root_bridge->device == 0x0bf1 ||
-> > +            root_bridge->device == 0x0e1c || root_bridge->device == 0x0e1d ||
-> > +            root_bridge->device == 0x0e12 || root_bridge->device == 0x0e13))
-> > +               return 1;
+>> +static int
+>> +qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size, u32 *val)
+>> +{
+>> +	if (where == PCI_CLASS_REVISION && size == 4) {
+>> +		*val = readl(pp->dbi_base + PCI_CLASS_REVISION);
+>> +		*val &= ~(0xffff << 16);
+>> +		*val |= PCI_CLASS_BRIDGE_PCI << 16;
+>> +		return PCIBIOS_SUCCESSFUL;
+>> +	}
+>> +
+>> +	return dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where,
+>> +				size, val);
+>> +}
 > 
-> I am not very familiar with PCI so sorry if these are stupid
-> questions, but where do these device IDs come from? Are they needed at
-> all, e.g. can't you just test against root_bridge->vendor ==
-> PCI_VENDOR_ID_NVIDIA to detect a NVIDIA root? Is the list susceptible
-> to increase as new chips get released? If that's the case, how can we
-> make sure we won't forget to update it?
+> Could you add a comment here to explain what this is for?
+
+Sure I will add a comment. The issue is that the pci device class is not
+reported correctly from the register.
+
+> 
+>> +static int __init qcom_pcie_probe(struct platform_device *pdev)
+>> +{
+> 
+> I think it's a bug to mark this function as __init. It breaks
+> deferred probing and detaching/reattaching the device trough sysfs.
 > 
 
-The device IDs are assigned by NVIDIA HW for the different Tegra PCI
-generation/link width combinations. Note that the K1 TRM is wrong as it
-still lists the T30 device IDs, instead of the ones used on K1.
+My bad, I have tried to avoid mismatch section warnings came up from
+dw_pcie_host_init() which is annotated as __init. Do you think we need
+to remove __init from dw_pcie_host_init() declaration and fix the
+drivers accordingly?
 
-While we technically could test only against vendor==nvidia I don't
-think it is entirely safe. As this is a PCI fixup it will get executed
-on every device running a kernel including this PCI host bridge driver. 
-
-So only testing for the vendor assumes that every ARM device with a PCI
-host bridge built by NVIDIA will be a Tegra. Do you think this is a
-reasonable assertion? I'm on the fence here.
- 
-> If you need to test against the device ID, it might be more legible
-> (and easier to update) if you use a switch case, e.g:
+> After you fix that, you can remove the __refdata below.
 > 
->     if (root_bridge->vendor != PCI_VENDOR_ID_NVIDIA)
->         return 0;
->     switch (root_bridge->device) {
->     case 0x0bf0:
->     case 0x0bf1:
->     case 0x0e1c:
->     case 0x0e1d:
->     case 0x0e12:
->     case 0x0e12:
->         return 1;
->     default:
->         return 0;
->     }
+>> +static struct platform_driver __refdata qcom_pcie_driver = {
+>> +	.probe = qcom_pcie_probe,
+>> +	.remove = qcom_pcie_remove,
+>> +	.driver = {
+>> +		.name = "qcom-pcie",
+>> +		.of_match_table = qcom_pcie_match,
+>> +	},
+>> +};
 > 
-Right, this looks nicer and easier to extend. I'll have to think about
-if we need the device IDs at all and respin accordingly.
-
-> Otherwise I have not noticed any problem using this patch.
+> 	Arnd
 > 
-> Tested-by: Alexandre Courbot <acourbot@nvidia.com>
 
-Thanks,
-Lucas
-
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
-
+regards,
+Stan
