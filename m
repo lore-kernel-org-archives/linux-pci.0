@@ -1,106 +1,141 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:33065 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750928AbaLVFs5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 00:48:57 -0500
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 22 Dec 2014 15:48:54 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 3C3CE2BB005C
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:48:52 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sBM5mpFO37159046
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:48:52 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sBM5mo34012766
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:48:51 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH 1/2] PCI: Refresh offset/stride after NumVFs is written
-Date: Mon, 22 Dec 2014 13:48:45 +0800
-Message-Id: <1419227326-12083-2-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1419227326-12083-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1419227326-12083-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-qc0-f170.google.com ([209.85.216.170]:33020 "EHLO
+	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751246AbaLPSAL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Dec 2014 13:00:11 -0500
+Message-ID: <54907324.4040102@gmail.com>
+Date: Tue, 16 Dec 2014 16:00:04 -0200
+From: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
+MIME-Version: 1.0
+To: rajatxjain@gmail.com
+CC: Nils Holland <nholland@tisys.org>,
+	David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [bisected] tg3 broken in 3.18.0?
+References: <20141213210251.GA12812@teela.fritz.box> <548EF90A.5070607@gmail.com> <CAA93t1qyZE-9tw8pg1KG6g4iyy0QMW=iass5w=6ZGMTMu+vi_A@mail.gmail.com>
+In-Reply-To: <CAA93t1qyZE-9tw8pg1KG6g4iyy0QMW=iass5w=6ZGMTMu+vi_A@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to SR-IOV SPEC sec 3.3.9, 3.3.10, the NumVFs setting change will
-affect the offset and stride. Current implementation doesn't refresh the
-offset/stride cached in pci_sriov structure.
+On 16-12-2014 14:04, Rajat Jain wrote:
+> Hello All,
+>
+> Apologies for jumping in late, but for some reason I do not see the
+> original mail in my inbox. However I am taking a look at the mails as
+> sent on linux-pci (and I will keep an eye out for the bug report that
+> Bjorn asked for).
+>
 
-This patch introduces a wrapper pci_iov_set_numvfs(), which refresh these two
-value after NumVFs is written.
+np!
+Nils would you create that BZ please? As you did all the bisect.. :)
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- drivers/pci/iov.c |   23 +++++++++++++++++++----
- 1 file changed, 19 insertions(+), 4 deletions(-)
+>
+>>
+>> I'm getting, with commit 89665a6a71408796565bfd29cfa6a7877b17a667:
+>>
+>> $ grep 'pci 0000:02' tg3.bad
+>> [    0.190733] pci 0000:02:00.0: 1st 165a14e4 14e4
+>> [    0.190736] pci 0000:02:00.0: 1st 165a14e4 14e4
+>> [    0.190810] pci 0000:02:00.0: [14e4:165a] type 00 class 0x020000
+>> [    0.190885] pci 0000:02:00.0: reg 0x10: [mem 0xf7c40000-0xf7c4ffff 64bit]
+>> [    0.191048] pci 0000:02:00.0: reg 0x30: [mem 0xf7c00000-0xf7c3ffff pref]
+>> [    0.191382] pci 0000:02:00.0: PME# supported from D3hot D3cold
+>> [    0.191438] pci 0000:02:00.0: System wakeup disabled by ACPI
+>> [    1.561555] pci 0000:02:00.0: 1st 1 1
+>> [    1.561558] pci 0000:02:00.0: crs_timeout: 0
+>> [   20.412021] pci 0000:02:00.0: 1st 1 1
+>> [   20.412022] pci 0000:02:00.0: crs_timeout: 0
+>> [   20.413596] pci 0000:02:00.0: 1st 1 1
+>> [   20.413598] pci 0000:02:00.0: crs_timeout: 0
+>>
+>> And without it:
+>>
+>> $ grep 'pci 0000:02' tg3.good
+>> [    0.190734] pci 0000:02:00.0: 1st 165a14e4 14e4
+>> [    0.190738] pci 0000:02:00.0: 1st 165a14e4 14e4
+>> [    0.190811] pci 0000:02:00.0: [14e4:165a] type 00 class 0x020000
+>> [    0.190884] pci 0000:02:00.0: reg 0x10: [mem 0xf7c40000-0xf7c4ffff 64bit]
+>> [    0.191047] pci 0000:02:00.0: reg 0x30: [mem 0xf7c00000-0xf7c3ffff pref]
+>> [    0.191380] pci 0000:02:00.0: PME# supported from D3hot D3cold
+>> [    0.191439] pci 0000:02:00.0: System wakeup disabled by ACPI
+>> [    1.576778] pci 0000:02:00.0: 1st 1 1
+>> [   19.068517] pci 0000:02:00.0: 1st 165a14e4 14e4
+>>
+>
+> It seems that in the first 2 attempts that were made to probe the
+> device are all OK and return regular device ID and vendor ID for TG3
+> (CRS does not have a role to play). However, later attempts return a
+> CRS.
+>
+> 1) May I ask if you are using acpihp or pciehp? I assume pciehp?
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 4b3a4ea..ef0ceaa 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -31,6 +31,21 @@ static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
- 		dev->sriov->stride * id) & 0xff;
- }
- 
-+/**
-+ * Per SRIOV SPEC section 3.3.10 and 3.3.11, VF Stride and VF offset may
-+ * change when NumVFs changes.
-+ *
-+ * This function update the iov->offset and iov->stride when NumVFs is written.
-+ */
-+static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
-+{
-+	struct pci_sriov *iov = dev->sriov;
-+
-+	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
-+	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &iov->offset);
-+	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &iov->stride);
-+}
-+
- static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
- {
- 	struct pci_bus *child;
-@@ -243,7 +258,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 			return rc;
- 	}
- 
--	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
-+	pci_iov_set_numvfs(dev, nr_virtfn);
- 	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
- 	pci_cfg_access_lock(dev);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
-@@ -272,7 +287,7 @@ failed:
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
--	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
-+	pci_iov_set_numvfs(dev, 0);
- 	ssleep(1);
- 	pci_cfg_access_unlock(dev);
- 
-@@ -303,7 +318,7 @@ static void sriov_disable(struct pci_dev *dev)
- 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
- 
- 	iov->num_VFs = 0;
--	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
-+	pci_iov_set_numvfs(dev, 0);
- }
- 
- static int sriov_init(struct pci_dev *dev, int pos)
-@@ -439,7 +454,7 @@ static void sriov_restore_state(struct pci_dev *dev)
- 		pci_update_resource(dev, i);
- 
- 	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
--	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, iov->num_VFs);
-+	pci_iov_set_numvfs(dev, iov->num_VFs);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
- 	if (iov->ctrl & PCI_SRIOV_CTRL_VFE)
- 		msleep(100);
--- 
-1.7.9.5
+Well.. system doesn't support hotplug..
+Chipset is a "Intel Corporation 5 Series/3400 Series", fwiw
+
+> 2) Can you please also send dmesg output while passing
+> pciehp.pciehp_debug=1? In the fail case, do you see a message
+> indicating the pciehp gave up since it got CRS for a long time
+> (something like "pci 0000:02:00.0 id reading try 50 times with
+> interval 20 ms to get ffff0001")?
+
+I did use that option anyway, but it resulted in no new messages.
+
+> 3) Currently the pciehp passes "0" for the argument "crs_timeout" to
+> pci_bus_read_dev_vendor_id(). Can you please try increasing it to, say
+> 30 seconds (30 * 1000). (For comparison data, acpihp uses the value
+> 60*1000 i.e. 60 seconds today) and run the fail case once again?
+>
+> Thanks a lot in advance for the debugging help ;-)
+>
+
+Seems it's not safe to do that with those backtraces..
+I did it, system was very slow to boot, still didn't get the NIC on and 
+got a bunch of "scheduling while atomic" due to that msleep() call.
+
+The first invoke was fine:
+Dec 16 15:40:00 odin kernel: [    0.190711] pci 0000:02:00.0: 1st 
+165a14e4 14e4
+Dec 16 15:40:00 odin kernel: [    0.190717] pci 0000:02:00.0: 1st 
+165a14e4 14e4
+Dec 16 15:40:00 odin kernel: [    0.191091] pci 0000:02:00.0: System 
+wakeup disabled by ACPI
+Dec 16 15:40:00 odin kernel: [    1.576061] pci 0000:02:00.0: 1st 1 1
+Dec 16 15:40:00 odin kernel: [    1.577474] pci 0000:02:00.0: 1 1
+Dec 16 15:40:00 odin kernel: [    1.580487] pci 0000:02:00.0: 1 1
+Dec 16 15:40:00 odin kernel: [    1.585508] pci 0000:02:00.0: 1 1
+Dec 16 15:40:00 odin kernel: [    1.594499] pci 0000:02:00.0: 1 1
+Dec 16 15:40:00 odin kernel: [    1.611499] pci 0000:02:00.0: 1 1
+Dec 16 15:40:00 odin kernel: [    1.644521] pci 0000:02:00.0: 1 1
+Dec 16 15:40:00 odin kernel: [    1.709566] pci 0000:02:00.0: 1 1
+Dec 16 15:40:00 odin kernel: [    1.838654] pci 0000:02:00.0: 1 1
+Dec 16 15:40:00 odin kernel: [    2.095765] pci 0000:02:00.0: 1 1
+Dec 16 15:40:00 odin kernel: [    2.608956] pci 0000:02:00.0: 1 1
+Dec 16 15:40:00 odin kernel: [    3.634443] pci 0000:02:00.0: 1 1
+Dec 16 15:40:00 odin kernel: [    5.684388] pci 0000:02:00.0: 1 1
+Dec 16 15:40:00 odin kernel: [    9.783279] pci 0000:02:00.0: 1 1
+Dec 16 15:40:00 odin kernel: [   17.980060] pci 0000:02:00.0: 1 1
+Dec 16 15:40:00 odin kernel: [   34.372640] pci 0000:02:00.0: not responding
+
+The other two...
+Dec 16 15:40:09 odin kernel: [   54.154688] pci 0000:02:00.0: 1st 1 1
+Dec 16 15:40:09 odin kernel: [   54.154690] BUG: scheduling while 
+atomic: ip/1575/0x00000200
+Dec 16 15:40:09 odin kernel: pci 0000:02:00.0: 1st 1 1
+Dec 16 15:40:09 odin kernel: BUG: scheduling while atomic: 
+ip/1575/0x00000200
+Dec 16 15:40:09 odin kernel: pci 0000:02:00.0: 1 1
+Dec 16 15:40:09 odin kernel: BUG: scheduling while atomic: 
+ip/1575/0x00000200
+(...)
+
+BUG backtraces were very similar to the 2nd and 3rd I posted on the 
+other email, it just pointed to the msleep() call instead of my BUG_ON(1).
+
+I can dig deeper if you think it's worth, but as the 1st call didn't 
+have this issue and it didn't complete either, seems we are good about 
+the test.. right?
+
+Thanks,
+Marcelo
 
