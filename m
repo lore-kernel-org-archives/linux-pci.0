@@ -1,65 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:49907 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751325AbaLQWfY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Dec 2014 17:35:24 -0500
-Message-ID: <54920529.4080007@ti.com>
-Date: Wed, 17 Dec 2014 17:35:21 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:36419 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751006AbaLPQEh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Dec 2014 11:04:37 -0500
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Christopher Li <sparse@chrisli.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: How to fix CHECK warning: testing a 'safe expression' ?
-References: <54907884.2040502@ti.com> <5491ACE6.4070108@ti.com> <CAErSpo4hwMPOYBDZTu_fgKaUDYZ4h+jVpz5EigpErOgo6xO8mQ@mail.gmail.com>
-In-Reply-To: <CAErSpo4hwMPOYBDZTu_fgKaUDYZ4h+jVpz5EigpErOgo6xO8mQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Reply-To: rajatxjain@gmail.com
+In-Reply-To: <548EF90A.5070607@gmail.com>
+References: <20141213210251.GA12812@teela.fritz.box>
+	<548EF90A.5070607@gmail.com>
+Date: Tue, 16 Dec 2014 08:04:36 -0800
+Message-ID: <CAA93t1qyZE-9tw8pg1KG6g4iyy0QMW=iass5w=6ZGMTMu+vi_A@mail.gmail.com>
+Subject: Re: [bisected] tg3 broken in 3.18.0?
+From: Rajat Jain <rajatxjain@gmail.com>
+To: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
+Cc: Nils Holland <nholland@tisys.org>,
+	David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/17/2014 01:49 PM, Bjorn Helgaas wrote:
-> [+cc Christopher, linux-kernel (this doesn't sound like a PCI-specific
-> question)]
+Hello All,
+
+Apologies for jumping in late, but for some reason I do not see the
+original mail in my inbox. However I am taking a look at the mails as
+sent on linux-pci (and I will keep an eye out for the bug report that
+Bjorn asked for).
+
+
 >
-> On Wed, Dec 17, 2014 at 9:18 AM, Murali Karicheri<m-karicheri2@ti.com>  wrote:
->> I am trying to address CHECK warnings in my driver and wondering how to
->> resolve 'warning: testing a 'safe expression' which appears when using
->> IS_ERR_OR_NULL(foo)
->>
->> where foo is defined as
->>
->> struct foo_type *foo;
->>
->> The foo get assigned only NULL or ERR_PTR(error code). So I believe the
->> usage is correct. But then how do I make the CHECK happy of its usage?
->>
->> I have tried a grep to check on the current usage of IS_ERR_OR_NULL() and
->> found 276 of them causes this warning in the v3.18 version of the kernel
->> that I am using
->>
->> $ grep -r "warning: testing a 'safe expression" * | wc -l
->> 276
->>
->> Can someone help me undestand what this means and how to fix the same?
->>
->> I run folling for CHECK
->>
->> make C=2 CF="-D__CHECK_ENDIAN__" CHECK=sparse
+> I'm getting, with commit 89665a6a71408796565bfd29cfa6a7877b17a667:
 >
-> If you can share your actual code or point to it in the tree, you
-> might get more specific help.
+> $ grep 'pci 0000:02' tg3.bad
+> [    0.190733] pci 0000:02:00.0: 1st 165a14e4 14e4
+> [    0.190736] pci 0000:02:00.0: 1st 165a14e4 14e4
+> [    0.190810] pci 0000:02:00.0: [14e4:165a] type 00 class 0x020000
+> [    0.190885] pci 0000:02:00.0: reg 0x10: [mem 0xf7c40000-0xf7c4ffff 64bit]
+> [    0.191048] pci 0000:02:00.0: reg 0x30: [mem 0xf7c00000-0xf7c3ffff pref]
+> [    0.191382] pci 0000:02:00.0: PME# supported from D3hot D3cold
+> [    0.191438] pci 0000:02:00.0: System wakeup disabled by ACPI
+> [    1.561555] pci 0000:02:00.0: 1st 1 1
+> [    1.561558] pci 0000:02:00.0: crs_timeout: 0
+> [   20.412021] pci 0000:02:00.0: 1st 1 1
+> [   20.412022] pci 0000:02:00.0: crs_timeout: 0
+> [   20.413596] pci 0000:02:00.0: 1st 1 1
+> [   20.413598] pci 0000:02:00.0: crs_timeout: 0
 >
-> Bjorn
+> And without it:
+>
+> $ grep 'pci 0000:02' tg3.good
+> [    0.190734] pci 0000:02:00.0: 1st 165a14e4 14e4
+> [    0.190738] pci 0000:02:00.0: 1st 165a14e4 14e4
+> [    0.190811] pci 0000:02:00.0: [14e4:165a] type 00 class 0x020000
+> [    0.190884] pci 0000:02:00.0: reg 0x10: [mem 0xf7c40000-0xf7c4ffff 64bit]
+> [    0.191047] pci 0000:02:00.0: reg 0x30: [mem 0xf7c00000-0xf7c3ffff pref]
+> [    0.191380] pci 0000:02:00.0: PME# supported from D3hot D3cold
+> [    0.191439] pci 0000:02:00.0: System wakeup disabled by ACPI
+> [    1.576778] pci 0000:02:00.0: 1st 1 1
+> [   19.068517] pci 0000:02:00.0: 1st 165a14e4 14e4
+>
 
-For example I get
+It seems that in the first 2 attempts that were made to probe the
+device are all OK and return regular device ID and vendor ID for TG3
+(CRS does not have a role to play). However, later attempts return a
+CRS.
 
-   CHECK   drivers/pci/host/pci-keystone.c
-include/linux/err.h:40:16: warning: testing a 'safe expression'
+1) May I ask if you are using acpihp or pciehp? I assume pciehp?
 
-Actually it is for IS_ERR_OR_NULL() call in the file which is the only
-one call in the file.
+2) Can you please also send dmesg output while passing
+pciehp.pciehp_debug=1? In the fail case, do you see a message
+indicating the pciehp gave up since it got CRS for a long time
+(something like "pci 0000:02:00.0 id reading try 50 times with
+interval 20 ms to get ffff0001")?
 
--- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+3) Currently the pciehp passes "0" for the argument "crs_timeout" to
+pci_bus_read_dev_vendor_id(). Can you please try increasing it to, say
+30 seconds (30 * 1000). (For comparison data, acpihp uses the value
+60*1000 i.e. 60 seconds today) and run the fail case once again?
+
+Thanks a lot in advance for the debugging help ;-)
+
+Rajat
