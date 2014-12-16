@@ -1,428 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:34375 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752057AbaLVFzD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 00:55:03 -0500
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 22 Dec 2014 15:55:01 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id DCC933578057
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:59 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sBM5sx2f39977148
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:59 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sBM5sxD5020672
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:59 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH V10 08/17] powrepc/pci: Refactor pci_dn
-Date: Mon, 22 Dec 2014 13:54:28 +0800
-Message-Id: <1419227677-12312-9-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-qc0-f170.google.com ([209.85.216.170]:48661 "EHLO
+	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750941AbaLPUCu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Dec 2014 15:02:50 -0500
+Message-ID: <54908FE3.7060100@gmail.com>
+Date: Tue, 16 Dec 2014 18:02:43 -0200
+From: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
+MIME-Version: 1.0
+To: Michael Chan <mchan@broadcom.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	Nils Holland <nholland@tisys.org>,
+	David Miller <davem@davemloft.net>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rafael Wysocki <rjw@rjwysocki.net>,
+	Prashant Sreedharan <prashant@broadcom.com>
+Subject: Re: [bisected] tg3 broken in 3.18.0?
+References: <20141213210251.GA12812@teela.fritz.box> <548EF90A.5070607@gmail.com> <CAA93t1qyZE-9tw8pg1KG6g4iyy0QMW=iass5w=6ZGMTMu+vi_A@mail.gmail.com> <CAErSpo5dqQE7nZ6zf2odgpHBWA3ZpTjhbgQKnY8YxQW+a+298w@mail.gmail.com> <1418750141.4248.3.camel@LTIRV-MCHAN1.corp.ad.broadcom.com> <54907300.9050902@gmail.com> <1418759684.4248.12.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
+In-Reply-To: <1418759684.4248.12.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+On 16-12-2014 17:54, Michael Chan wrote:
+> On Tue, 2014-12-16 at 15:59 -0200, Marcelo Ricardo Leitner wrote:
+>> It's a
+>> 02:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5722
+>> Gigabit Ethernet PCI Express
+>> over here
+>>
+>> I put a WARN_ON(1) after those printks, and this is what I got:
+>>
+>> [    1.550640] pci 0000:02:00.0: 1st 1 1
+>> [    1.550643] pci 0000:02:00.0: crs_timeout: 0
+>> [    1.550645] ------------[ cut here ]------------
+>> [    1.550651] WARNING: CPU: 6 PID: 364 at drivers/pci/probe.c:1445 pci_bus_read_dev_vendor_id+0x1d4/0x1e0()
+>> [    1.550652] Modules linked in: i915(+) raid0 i2c_algo_bit drm_kms_helper drm e1000e(+) tg3(+) ptp pps_core video
+>> [    1.550660] CPU: 6 PID: 364 Comm: systemd-udevd Not tainted 3.18.0-rc6+ #8
+>> [    1.550661] Hardware name: Dell Inc. OptiPlex 9010/03K80F, BIOS A15 08/12/2013
+>> [    1.550662]  0000000000000000 000000004de2d8dc ffff8807eabdf948 ffffffff8173db46
+>> [    1.550665]  0000000000000000 0000000000000000 ffff8807eabdf988 ffffffff81094d41
+>> [    1.550667]  ffff8807eabdf968 ffff8807f1e27000 0000000000000000 0000000000000000
+>> [    1.550669] Call Trace:
+>> [    1.550675]  [<ffffffff8173db46>] dump_stack+0x46/0x58
+>> [    1.550679]  [<ffffffff81094d41>] warn_slowpath_common+0x81/0xa0
+>> [    1.550681]  [<ffffffff81094e5a>] warn_slowpath_null+0x1a/0x20
+>> [    1.550683]  [<ffffffff813b2864>] pci_bus_read_dev_vendor_id+0x1d4/0x1e0
+>> [    1.550687]  [<ffffffff813b7c3e>] pci_device_is_present+0x2e/0x50
+>> [    1.550693]  [<ffffffffa003364f>] tg3_chip_reset+0x2f/0x940 [tg3]
+>> [    1.550697]  [<ffffffffa0033f9f>] tg3_halt+0x3f/0x1e0 [tg3]
+>> [    1.550701]  [<ffffffffa0044f83>] tg3_init_one+0xb83/0x1a40 [tg3]
+>
+> So does it work if you use a non-zero crs_timeout?  The driver has
+> called tg3_halt() which may affect configuration read responses.  I need
+> to check with the hardware team to see if the 5722 will return CRS in
+> this scenario.
 
-pci_dn is the extension of PCI device node and it's created from
-device node. Unfortunately, VFs that are enabled dynamically by
-PF's driver and they don't have corresponding device nodes, and
-pci_dn. The patch refactors pci_dn to support VFs:
+Sorry, I replied to the thread that you weren't in yet.
+It didn't..
+http://thread.gmane.org/gmane.linux.network/342566/focus=37932
 
-   * pci_dn is organized as a hierarchy tree. VF's pci_dn is put
-     to the child list of pci_dn of PF's bridge. pci_dn of other
-     device put to the child list of pci_dn of its upstream bridge.
-
-   * VF's pci_dn is expected to be created dynamically when PF
-     enabling VFs. VF's pci_dn will be destroyed when PF disabling
-     VFs. pci_dn of other device is still created from device node
-     as before.
-
-   * For one particular PCI device (VF or not), its pci_dn can be
-     found from pdev->dev.archdata.firmware_data, PCI_DN(devnode),
-     or parent's list. The fast path (fetching pci_dn through PCI
-     device instance) is populated during early fixup time.
-
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/device.h         |    3 +
- arch/powerpc/include/asm/pci-bridge.h     |   14 +-
- arch/powerpc/kernel/pci_dn.c              |  240 ++++++++++++++++++++++++++++-
- arch/powerpc/platforms/powernv/pci-ioda.c |   15 ++
- 4 files changed, 267 insertions(+), 5 deletions(-)
-
-diff --git a/arch/powerpc/include/asm/device.h b/arch/powerpc/include/asm/device.h
-index 38faede..29992cd 100644
---- a/arch/powerpc/include/asm/device.h
-+++ b/arch/powerpc/include/asm/device.h
-@@ -34,6 +34,9 @@ struct dev_archdata {
- #ifdef CONFIG_SWIOTLB
- 	dma_addr_t		max_direct_dma_addr;
- #endif
-+#ifdef CONFIG_PPC64
-+	void			*firmware_data;
-+#endif
- #ifdef CONFIG_EEH
- 	struct eeh_dev		*edev;
- #endif
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 725247b..74efea9 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -89,6 +89,7 @@ struct pci_controller {
- 
- #ifdef CONFIG_PPC64
- 	unsigned long buid;
-+	void *firmware_data;
- #endif	/* CONFIG_PPC64 */
- 
- 	void *private_data;
-@@ -150,9 +151,13 @@ static inline int isa_vaddr_is_ioport(void __iomem *address)
- struct iommu_table;
- 
- struct pci_dn {
-+	int     flags;
-+#define PCI_DN_FLAG_IOV_VF     0x01
-+
- 	int	busno;			/* pci bus number */
- 	int	devfn;			/* pci device and function number */
- 
-+	struct  pci_dn *parent;
- 	struct  pci_controller *phb;	/* for pci devices */
- 	struct	iommu_table *iommu_table;	/* for phb's or bridges */
- 	struct	device_node *node;	/* back-pointer to the device_node */
-@@ -167,14 +172,19 @@ struct pci_dn {
- #ifdef CONFIG_PPC_POWERNV
- 	int	pe_number;
- #endif
-+	struct list_head child_list;
-+	struct list_head list;
- };
- 
- /* Get the pointer to a device_node's pci_dn */
- #define PCI_DN(dn)	((struct pci_dn *) (dn)->data)
- 
-+extern struct pci_dn *pci_get_pdn_by_devfn(struct pci_bus *bus,
-+					   int devfn);
- extern struct pci_dn *pci_get_pdn(struct pci_dev *pdev);
--
--extern void * update_dn_pci_info(struct device_node *dn, void *data);
-+extern struct pci_dn *add_dev_pci_info(struct pci_dev *pdev);
-+extern void remove_dev_pci_info(struct pci_dev *pdev);
-+extern void *update_dn_pci_info(struct device_node *dn, void *data);
- 
- static inline int pci_device_from_OF_node(struct device_node *np,
- 					  u8 *bus, u8 *devfn)
-diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index 1f61fab..c99fb80 100644
---- a/arch/powerpc/kernel/pci_dn.c
-+++ b/arch/powerpc/kernel/pci_dn.c
-@@ -32,12 +32,222 @@
- #include <asm/ppc-pci.h>
- #include <asm/firmware.h>
- 
-+/*
-+ * The function is used to find the firmware data of one
-+ * specific PCI device, which is attached to the indicated
-+ * PCI bus. For VFs, their firmware data is linked to that
-+ * one of PF's bridge. For other devices, their firmware
-+ * data is linked to that of their bridge.
-+ */
-+static struct pci_dn *pci_bus_to_pdn(struct pci_bus *bus)
-+{
-+	struct pci_bus *pbus;
-+	struct device_node *dn;
-+	struct pci_dn *pdn;
-+
-+	/*
-+	 * We probably have virtual bus which doesn't
-+	 * have associated bridge.
-+	 */
-+	pbus = bus;
-+	while (pbus) {
-+		if (pci_is_root_bus(pbus) || pbus->self)
-+			break;
-+
-+		pbus = pbus->parent;
-+	}
-+
-+	/*
-+	 * Except virtual bus, all PCI buses should
-+	 * have device nodes.
-+	 */
-+	dn = pci_bus_to_OF_node(pbus);
-+	pdn = dn ? PCI_DN(dn) : NULL;
-+
-+	return pdn;
-+}
-+
-+struct pci_dn *pci_get_pdn_by_devfn(struct pci_bus *bus,
-+				    int devfn)
-+{
-+	struct device_node *dn = NULL;
-+	struct pci_dn *parent, *pdn;
-+	struct pci_dev *pdev = NULL;
-+
-+	/* Fast path: fetch from PCI device */
-+	list_for_each_entry(pdev, &bus->devices, bus_list) {
-+		if (pdev->devfn == devfn) {
-+			if (pdev->dev.archdata.firmware_data)
-+				return pdev->dev.archdata.firmware_data;
-+
-+			dn = pci_device_to_OF_node(pdev);
-+			break;
-+		}
-+	}
-+
-+	/* Fast path: fetch from device node */
-+	pdn = dn ? PCI_DN(dn) : NULL;
-+	if (pdn)
-+		return pdn;
-+
-+	/* Slow path: fetch from firmware data hierarchy */
-+	parent = pci_bus_to_pdn(bus);
-+	if (!parent)
-+		return NULL;
-+
-+	list_for_each_entry(pdn, &parent->child_list, list) {
-+		if (pdn->busno == bus->number &&
-+                    pdn->devfn == devfn)
-+                        return pdn;
-+        }
-+
-+	return NULL;
-+}
-+
- struct pci_dn *pci_get_pdn(struct pci_dev *pdev)
- {
--	struct device_node *dn = pci_device_to_OF_node(pdev);
--	if (!dn)
-+	struct device_node *dn;
-+	struct pci_dn *parent, *pdn;
-+
-+	/* Search device directly */
-+	if (pdev->dev.archdata.firmware_data)
-+		return pdev->dev.archdata.firmware_data;
-+
-+	/* Check device node */
-+	dn = pci_device_to_OF_node(pdev);
-+	pdn = dn ? PCI_DN(dn) : NULL;
-+	if (pdn)
-+		return pdn;
-+
-+	/*
-+	 * VFs don't have device nodes. We hook their
-+	 * firmware data to PF's bridge.
-+	 */
-+	parent = pci_bus_to_pdn(pdev->bus);
-+	if (!parent)
-+		return NULL;
-+
-+	list_for_each_entry(pdn, &parent->child_list, list) {
-+		if (pdn->busno == pdev->bus->number &&
-+		    pdn->devfn == pdev->devfn)
-+			return pdn;
-+	}
-+
-+	return NULL;
-+}
-+
-+static struct pci_dn *add_one_dev_pci_info(struct pci_dn *parent,
-+					   struct pci_dev *pdev,
-+					   int busno, int devfn)
-+{
-+	struct pci_dn *pdn;
-+
-+	/* Except PHB, we always have parent firmware data */
-+	if (!parent)
-+		return NULL;
-+
-+	pdn = kzalloc(sizeof(*pdn), GFP_KERNEL);
-+	if (!pdn) {
-+		pr_warn("%s: Out of memory !\n", __func__);
-+		return NULL;
-+	}
-+
-+	pdn->phb = parent->phb;
-+	pdn->parent = parent;
-+	pdn->busno = busno;
-+	pdn->devfn = devfn;
-+#ifdef CONFIG_PPC_POWERNV
-+	pdn->pe_number = IODA_INVALID_PE;
-+#endif
-+	INIT_LIST_HEAD(&pdn->child_list);
-+	INIT_LIST_HEAD(&pdn->list);
-+	list_add_tail(&pdn->list, &parent->child_list);
-+
-+	/*
-+	 * If we already have PCI device instance, lets
-+	 * bind them.
-+	 */
-+	if (pdev)
-+		pdev->dev.archdata.firmware_data = pdn;
-+
-+	return pdn;
-+}
-+
-+struct pci_dn *add_dev_pci_info(struct pci_dev *pdev)
-+{
-+#ifdef CONFIG_PCI_IOV
-+	struct pci_dn *parent, *pdn;
-+	int i;
-+
-+	/* Only support IOV for now */
-+	if (!pdev->is_physfn)
-+		return pci_get_pdn(pdev);
-+
-+	/* Check if VFs have been populated */
-+	pdn = pci_get_pdn(pdev);
-+	if (!pdn || (pdn->flags & PCI_DN_FLAG_IOV_VF))
-+		return NULL;
-+
-+	pdn->flags |= PCI_DN_FLAG_IOV_VF;
-+	parent = pci_bus_to_pdn(pdev->bus);
-+	if (!parent)
- 		return NULL;
--	return PCI_DN(dn);
-+
-+	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
-+		pdn = add_one_dev_pci_info(parent, NULL,
-+					   pci_iov_virtfn_bus(pdev, i),
-+					   pci_iov_virtfn_devfn(pdev, i));
-+		if (!pdn) {
-+			pr_warn("%s: Cannot create firmware data "
-+				"for VF#%d of %s\n",
-+				__func__, i, pci_name(pdev));
-+			return NULL;
-+		}
-+	}
-+#endif
-+
-+	return pci_get_pdn(pdev);
-+}
-+
-+void remove_dev_pci_info(struct pci_dev *pdev)
-+{
-+#ifdef CONFIG_PCI_IOV
-+	struct pci_dn *parent;
-+	struct pci_dn *pdn, *tmp;
-+	int i;
-+
-+	/* Only support IOV PF for now */
-+	if (!pdev->is_physfn)
-+		return;
-+
-+	/* Check if VFs have been populated */
-+	pdn = pci_get_pdn(pdev);
-+	if (!pdn || !(pdn->flags & PCI_DN_FLAG_IOV_VF))
-+		return;
-+
-+	pdn->flags &= ~PCI_DN_FLAG_IOV_VF;
-+	parent = pci_bus_to_pdn(pdev->bus);
-+	if (!parent)
-+		return;
-+
-+	/*
-+	 * We might introduce flag to pci_dn in future
-+	 * so that we can release VF's firmware data in
-+	 * a batch mode.
-+	 */
-+	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
-+		list_for_each_entry_safe(pdn, tmp,
-+			&parent->child_list, list) {
-+			if (pdn->busno != pci_iov_virtfn_bus(pdev, i) ||
-+			    pdn->devfn != pci_iov_virtfn_devfn(pdev, i))
-+				continue;
-+
-+			if (!list_empty(&pdn->list))
-+				list_del(&pdn->list);
-+			kfree(pdn);
-+		}
-+	}
-+#endif
- }
- 
- /*
-@@ -49,6 +259,7 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
- 	struct pci_controller *phb = data;
- 	const __be32 *type = of_get_property(dn, "ibm,pci-config-space-type", NULL);
- 	const __be32 *regs;
-+	struct device_node *parent;
- 	struct pci_dn *pdn;
- 
- 	pdn = zalloc_maybe_bootmem(sizeof(*pdn), GFP_KERNEL);
-@@ -70,6 +281,15 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
- 	}
- 
- 	pdn->pci_ext_config_space = (type && of_read_number(type, 1) == 1);
-+
-+	/* Attach to parent node */
-+	INIT_LIST_HEAD(&pdn->child_list);
-+	INIT_LIST_HEAD(&pdn->list);
-+	parent = of_get_parent(dn);
-+	pdn->parent = parent ? PCI_DN(parent) : NULL;
-+	if (pdn->parent)
-+		list_add_tail(&pdn->list, &pdn->parent->child_list);
-+
- 	return NULL;
- }
- 
-@@ -150,6 +370,7 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
- 	if (pdn) {
- 		pdn->devfn = pdn->busno = -1;
- 		pdn->phb = phb;
-+		phb->firmware_data = pdn;
- 	}
- 
- 	/* Update dn->phb ptrs for new phb and children devices */
-@@ -173,3 +394,16 @@ void __init pci_devs_phb_init(void)
- 	list_for_each_entry_safe(phb, tmp, &hose_list, list_node)
- 		pci_devs_phb_init_dynamic(phb);
- }
-+
-+static void pci_dev_pdn_setup(struct pci_dev *pdev)
-+{
-+	struct pci_dn *pdn;
-+
-+	if (pdev->dev.archdata.firmware_data)
-+		return;
-+
-+	/* Setup the fast path */
-+	pdn = pci_get_pdn(pdev);
-+	pdev->dev.archdata.firmware_data = pdn;
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, pci_dev_pdn_setup);
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index fac88ed..9faa5ec 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -949,6 +949,21 @@ static void pnv_pci_ioda_setup_PEs(void)
- 	}
- }
- 
-+#ifdef CONFIG_PCI_IOV
-+int pcibios_sriov_disable(struct pci_dev *pdev)
-+{
-+	/* Release firmware data */
-+	remove_dev_pci_info(pdev);
-+	return 0;
-+}
-+
-+int pcibios_sriov_enable(struct pci_dev *pdev, u16 vf_num)
-+{
-+	add_dev_pci_info(pdev);
-+	return 0;
-+}
-+#endif /* CONFIG_PCI_IOV */
-+
- static void pnv_pci_ioda_dma_dev_setup(struct pnv_phb *phb, struct pci_dev *pdev)
- {
- 	struct pci_dn *pdn = pci_get_pdn(pdev);
--- 
-1.7.9.5
+   Marcelo
 
