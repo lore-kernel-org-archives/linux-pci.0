@@ -1,39 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:60859 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750965AbaLEOpz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Dec 2014 09:45:55 -0500
-Date: Fri, 5 Dec 2014 09:45:44 -0500
-From: Tejun Heo <tj@kernel.org>
-To: Chuansheng Liu <chuansheng.liu@intel.com>
-Cc: bhelgaas@google.com, rjw@rjwysocki.net, mister.freeman@laposte.net,
-	aaron.lu@intel.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] PCI: Add disabling pm async quirk for JMicron chips
-Message-ID: <20141205144544.GH4080@htj.dyndns.org>
-References: <1417763857-11993-1-git-send-email-chuansheng.liu@intel.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:34556 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750818AbaLPAS7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 15 Dec 2014 19:18:59 -0500
+Date: Mon, 15 Dec 2014 17:18:51 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Mohit Kumar <mohit.kumar@st.com>
+Subject: Re: [PATCH v3 2/2] arm: pcibios: move to generic PCI domains
+Message-ID: <20141216001851.GA1991@obsidianresearch.com>
+References: <1416569367-29409-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1416569367-29409-3-git-send-email-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1417763857-11993-1-git-send-email-chuansheng.liu@intel.com>
+In-Reply-To: <1416569367-29409-3-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 05, 2014 at 03:17:37PM +0800, Chuansheng Liu wrote:
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB360, quirk_jmicron_ata);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB361, quirk_jmicron_ata);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB362, quirk_jmicron_ata);
-> @@ -1519,6 +1534,8 @@ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB3
->  DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB366, quirk_jmicron_ata);
->  DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB368, quirk_jmicron_ata);
->  DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB369, quirk_jmicron_ata);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_JMICRON, PCI_ANY_ID,
-> +		pci_async_suspend_fixup);
+On Fri, Nov 21, 2014 at 11:29:26AM +0000, Lorenzo Pieralisi wrote:
 
-Why is this being done through pci quirks?  e6b7e41cdd8 implements the
-same quirk in the respective drivers.  What's the difference here?
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index b1315e1..dc2ed4d 100644
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -101,9 +101,7 @@ struct mvebu_pcie {
+>  	struct mvebu_pcie_port *ports;
+>  	struct msi_chip *msi;
+>  	struct resource io;
+> -	char io_name[30];
+>  	struct resource realio;
+> -	char mem_name[30];
+>  	struct resource mem;
+>  	struct resource busn;
+>  	int nports;
+> @@ -722,18 +720,9 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
+>  {
+>  	struct mvebu_pcie *pcie = sys_to_pcie(sys);
+>  	int i;
+> -	int domain = 0;
+>  
+> -#ifdef CONFIG_PCI_DOMAINS
+> -	domain = sys->domain;
+> -#endif
+> -
+> -	snprintf(pcie->mem_name, sizeof(pcie->mem_name), "PCI MEM %04x",
+> -		 domain);
+> -	pcie->mem.name = pcie->mem_name;
+> -
+> -	snprintf(pcie->io_name, sizeof(pcie->io_name), "PCI I/O %04x", domain);
+> -	pcie->realio.name = pcie->io_name;
+> +	pcie->mem.name = "PCI MEM";
+> +	pcie->realio.name = "PCI I/O";
+>  
+>  	if (request_resource(&iomem_resource, &pcie->mem))
+>  		return 0;
 
-Thanks.
+For the mvebu section:
 
--- 
-tejun
+Reviewed-By: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+
+Jason
