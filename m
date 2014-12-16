@@ -1,66 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:28118 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751479AbaL3IVH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Dec 2014 03:21:07 -0500
-From: Ethan Zhao <ethan.zhao@oracle.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ethan.kernel@gmail.com, Ethan Zhao <ethan.zhao@oracle.com>
-Subject: [PATCH] PCI: export pci device assignment info as read only via sysfs
-Date: Tue, 30 Dec 2014 17:21:47 +0900
-Message-Id: <1419927707-14462-1-git-send-email-ethan.zhao@oracle.com>
+Received: from mail-qa0-f47.google.com ([209.85.216.47]:55208 "EHLO
+	mail-qa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751231AbaLPQUw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Dec 2014 11:20:52 -0500
+Received: by mail-qa0-f47.google.com with SMTP id s7so9858709qap.34
+        for <linux-pci@vger.kernel.org>; Tue, 16 Dec 2014 08:20:52 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAA93t1qyZE-9tw8pg1KG6g4iyy0QMW=iass5w=6ZGMTMu+vi_A@mail.gmail.com>
+References: <20141213210251.GA12812@teela.fritz.box> <548EF90A.5070607@gmail.com>
+ <CAA93t1qyZE-9tw8pg1KG6g4iyy0QMW=iass5w=6ZGMTMu+vi_A@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 16 Dec 2014 09:20:31 -0700
+Message-ID: <CAErSpo5dqQE7nZ6zf2odgpHBWA3ZpTjhbgQKnY8YxQW+a+298w@mail.gmail.com>
+Subject: Re: [bisected] tg3 broken in 3.18.0?
+To: Rajat Jain <rajatxjain@gmail.com>
+Cc: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>,
+	Nils Holland <nholland@tisys.org>,
+	David Miller <davem@davemloft.net>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rafael Wysocki <rjw@rjwysocki.net>,
+	Prashant Sreedharan <prashant@broadcom.com>,
+	Michael Chan <mchan@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch exports assignment flag of PCI device via sysfs, so user
-space application could know if PCI device was assigned to guest OS
-or not via interface as following from viewpoint of host device
-management:
+[+cc Rafael, Prashant, Michael]
 
- PCI device was assigned to guest OS
- $cat /sys/devices/pci0000:00/0000:00:1f.3/assigned
- 1
+On Tue, Dec 16, 2014 at 9:04 AM, Rajat Jain <rajatxjain@gmail.com> wrote:
+> Hello All,
+>
+> Apologies for jumping in late, but for some reason I do not see the
+> original mail in my inbox. However I am taking a look at the mails as
+> sent on linux-pci (and I will keep an eye out for the bug report that
+> Bjorn asked for).
+>
+>
+>>
+>> I'm getting, with commit 89665a6a71408796565bfd29cfa6a7877b17a667:
+>>
+>> $ grep 'pci 0000:02' tg3.bad
+>> [    0.190733] pci 0000:02:00.0: 1st 165a14e4 14e4
+>> [    0.190736] pci 0000:02:00.0: 1st 165a14e4 14e4
+>> [    0.190810] pci 0000:02:00.0: [14e4:165a] type 00 class 0x020000
+>> [    0.190885] pci 0000:02:00.0: reg 0x10: [mem 0xf7c40000-0xf7c4ffff 64bit]
+>> [    0.191048] pci 0000:02:00.0: reg 0x30: [mem 0xf7c00000-0xf7c3ffff pref]
+>> [    0.191382] pci 0000:02:00.0: PME# supported from D3hot D3cold
+>> [    0.191438] pci 0000:02:00.0: System wakeup disabled by ACPI
+>> [    1.561555] pci 0000:02:00.0: 1st 1 1
+>> [    1.561558] pci 0000:02:00.0: crs_timeout: 0
+>> [   20.412021] pci 0000:02:00.0: 1st 1 1
+>> [   20.412022] pci 0000:02:00.0: crs_timeout: 0
+>> [   20.413596] pci 0000:02:00.0: 1st 1 1
+>> [   20.413598] pci 0000:02:00.0: crs_timeout: 0
+>>
+>> And without it:
+>>
+>> $ grep 'pci 0000:02' tg3.good
+>> [    0.190734] pci 0000:02:00.0: 1st 165a14e4 14e4
+>> [    0.190738] pci 0000:02:00.0: 1st 165a14e4 14e4
+>> [    0.190811] pci 0000:02:00.0: [14e4:165a] type 00 class 0x020000
+>> [    0.190884] pci 0000:02:00.0: reg 0x10: [mem 0xf7c40000-0xf7c4ffff 64bit]
+>> [    0.191047] pci 0000:02:00.0: reg 0x30: [mem 0xf7c00000-0xf7c3ffff pref]
+>> [    0.191380] pci 0000:02:00.0: PME# supported from D3hot D3cold
+>> [    0.191439] pci 0000:02:00.0: System wakeup disabled by ACPI
+>> [    1.576778] pci 0000:02:00.0: 1st 1 1
+>> [   19.068517] pci 0000:02:00.0: 1st 165a14e4 14e4
+>>
+>
+> It seems that in the first 2 attempts that were made to probe the
+> device are all OK and return regular device ID and vendor ID for TG3
+> (CRS does not have a role to play). However, later attempts return a
+> CRS.
+>
+> 1) May I ask if you are using acpihp or pciehp? I assume pciehp?
+>
+> 2) Can you please also send dmesg output while passing
+> pciehp.pciehp_debug=1? In the fail case, do you see a message
+> indicating the pciehp gave up since it got CRS for a long time
+> (something like "pci 0000:02:00.0 id reading try 50 times with
+> interval 20 ms to get ffff0001")?
+>
+> 3) Currently the pciehp passes "0" for the argument "crs_timeout" to
+> pci_bus_read_dev_vendor_id(). Can you please try increasing it to, say
+> 30 seconds (30 * 1000). (For comparison data, acpihp uses the value
+> 60*1000 i.e. 60 seconds today) and run the fail case once again?
 
- PCI device isn't assigned to guest OS
- $cat /sys/devices/pci0000:00/0000:00:1f.3/assigned
- 0
+Using zero for the timeout seems bogus to me.  But I doubt pciehp is
+involved in this situation.
 
-Compiled and tested with v3.18.1
+I think we're in this path:
 
-Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
----
- drivers/pci/pci-sysfs.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+    tg3_init_hw
+      tg3_reset_hw
+        tg3_disable_ints
+        tg3_stop_fw
+        tg3_write_sig_pre_reset
+        tg3_chip_reset
+          pci_device_is_present
+            pci_bus_read_dev_vendor_id
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 2c6643f..0ac3780 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -547,6 +547,15 @@ static ssize_t driver_override_show(struct device *dev,
- }
- static DEVICE_ATTR_RW(driver_override);
- 
-+static ssize_t assigned_show(struct device *dev, struct device_attribute *attr,
-+			 char *buf)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	return sprintf(buf, "%d\n", pci_is_dev_assigned(pdev) ? 1 : 0);
-+}
-+static DEVICE_ATTR_RO(assigned);
-+
- static struct attribute *pci_dev_attrs[] = {
- 	&dev_attr_resource.attr,
- 	&dev_attr_vendor.attr,
-@@ -573,6 +582,7 @@ static struct attribute *pci_dev_attrs[] = {
- 	&dev_attr_devspec.attr,
- #endif
- 	&dev_attr_driver_override.attr,
-+	&dev_attr_assigned.attr,
- 	NULL,
- };
- 
--- 
-1.8.3.1
+and in this case pci_device_is_present() also passes a timeout of zero
+to pci_bus_read_dev_vendor_id().  My guess is that tg3 is resetting
+the device, so it's not too surprising that the config read returns
+CRS status immediately afterward.
 
+Bjorn
