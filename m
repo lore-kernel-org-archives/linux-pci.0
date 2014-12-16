@@ -1,69 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:56995 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750747AbaLOTQx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Dec 2014 14:16:53 -0500
-Message-ID: <548F338F.9030203@broadcom.com>
-Date: Mon, 15 Dec 2014 11:16:31 -0800
-From: Ray Jui <rjui@broadcom.com>
+Received: from mail-qc0-f179.google.com ([209.85.216.179]:39467 "EHLO
+	mail-qc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751618AbaLPAgN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Dec 2014 19:36:13 -0500
+Received: by mail-qc0-f179.google.com with SMTP id c9so9375341qcz.38
+        for <linux-pci@vger.kernel.org>; Mon, 15 Dec 2014 16:36:13 -0800 (PST)
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	"Ian Campbell" <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Christian Daudt <bcm@fixthebug.org>,
-	Matt Porter <mporter@linaro.org>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>
-Subject: Re: [PATCH v2 2/4] PCI: iproc: Add Broadcom iProc PCIe driver
-References: <1418351817-14898-3-git-send-email-rjui@broadcom.com> <2190666.DfrpWiLTCc@wuerfel> <548B2120.4080207@broadcom.com> <1790462.K12S5vem48@wuerfel>
-In-Reply-To: <1790462.K12S5vem48@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <20141216000821.GM11285@n2100.arm.linux.org.uk>
+References: <1416569367-29409-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20141215235248.GA4374@google.com> <20141216000821.GM11285@n2100.arm.linux.org.uk>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 15 Dec 2014 17:35:52 -0700
+Message-ID: <CAErSpo7mH1DdJ9t+jb+3gy+gJiM03imfd27A7Sz_VkKovC=rhA@mail.gmail.com>
+Subject: Re: [PATCH v3 0/2] arm: pcibios: remove pci_sys_data domain
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Krzysztof Halasa <khalasa@piap.pl>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Mohit Kumar <mohit.kumar@st.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 12/12/2014 9:21 AM, Arnd Bergmann wrote:
-> On Friday 12 December 2014 09:08:48 Ray Jui wrote:
+On Mon, Dec 15, 2014 at 5:08 PM, Russell King - ARM Linux
+<linux@arm.linux.org.uk> wrote:
+> On Mon, Dec 15, 2014 at 04:52:48PM -0700, Bjorn Helgaas wrote:
+>> I provisionally applied these to my next-pci/domain branch.  This will be
+>> rebased after v3.19-rc1.
 >>
->> On 12/12/2014 4:29 AM, Arnd Bergmann wrote:
->> Doesn't Hauke's driver depends on BCMA? In that case, how does it work
->> on the SoCs that do not have the IP block to support BCMA?
+>> I'd like to see acks from Thomas and/or Jason for MVEBU, and Simon for
+>> R-Car.
 >
-> I hadn't realized that there are some SoCs that are not BCMA based.
-> As the host controller implementation is closely related, we will
-> have to come up with some solution.
+> And you should also have my acked-by for the core ARM code:
 >
-I agree with you that we should have a common PCIe host driver which 
-supports all iProc SoCs, BCM4708, BCM5301X, and some other similar SoCs.
+> Acked-by: Russell King <rmk+kernel@arm.linux.org.uk>
 
-> One way to solve this would be by turning the driver into a library
-> the same way as the pcie-dw driver, and have separate front-ends
-> for it for platform_device and bcma_device.
->
-I'm fine with this solution, i.e., to introduce a common pcie-iproc core 
-driver (just like pcie-designware) and have different front-ends 
-depending on the device/bus type. If we end up deciding to go with this 
-solution, I need to discuss with Hauke to come up with a plan to 
-collaborate.
-
-But before we choose to go with that route, may I ask, what is the 
-purpose of tying a PCIe host driver to BCMA? What benefit does BCMA give 
-us? If we have a generic platform based PCIe driver that can work on all 
-iProc SoCs + BCM4708 and BCM5301X with all HW specific configurations 
-taken care of by device tree, why do we still need to use BCMA?
-
-I thought all a BCMA device here does is to auto-instantiate based on 
-some register readings?
+Right, thanks!  Sorry I didn't notice that.
