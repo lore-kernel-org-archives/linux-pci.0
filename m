@@ -1,49 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.emea.novell.com ([130.57.118.101]:50495 "EHLO
-	mail.emea.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753490AbaLDLgg convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-pci@vger.kernel.org:5:2>);
-	Thu, 4 Dec 2014 06:36:36 -0500
-Message-Id: <54805552020000780004CAD4@mail.emea.novell.com>
-Date: Thu, 04 Dec 2014 11:36:34 +0000
-From: "Jan Beulich" <JBeulich@suse.com>
-To: "David Vrabel" <david.vrabel@citrix.com>
-Cc: <bhelgaas@google.com>, <xen-devel@lists.xenproject.org>,
-	<boris.ostrovsky@oracle.com>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v5 8/9] xen-pciback: drop SR-IOV VFs when PF driver
- unloads
-References: <1417642834-20350-1-git-send-email-konrad.wilk@oracle.com>
- <1417642834-20350-9-git-send-email-konrad.wilk@oracle.com>
- <5480407F.7070402@citrix.com>
-In-Reply-To: <5480407F.7070402@citrix.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mout.kundenserver.de ([212.227.126.131]:63455 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750840AbaLPJyp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Dec 2014 04:54:45 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	devicetree@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
+	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Kumar Gala <galak@codeaurora.org>,
+	Grant Likely <grant.likely@linaro.org>
+Subject: Re: [PATCH 4/5] PCI: qcom: Add Qualcomm PCIe controller driver
+Date: Tue, 16 Dec 2014 10:54:29 +0100
+Message-ID: <4673431.OTm9MABNvH@wuerfel>
+In-Reply-To: <548FFEB0.9080604@mm-sol.com>
+References: <1418404441-5518-1-git-send-email-svarbanov@mm-sol.com> <2577563.x0mEZJNVDQ@wuerfel> <548FFEB0.9080604@mm-sol.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> On 04.12.14 at 12:07, <david.vrabel@citrix.com> wrote:
-> On 03/12/14 21:40, Konrad Rzeszutek Wilk wrote:
->> From: Jan Beulich <JBeulich@suse.com>
->> 
->> When a PF driver unloads, it may find it necessary to leave the VFs
->> around simply because of pciback having marked them as assigned to a
->> guest. Utilize a suitable notification to let go of the VFs, thus
->> allowing the PF to go back into the state it was before its driver
->> loaded (which in particular allows the driver to be loaded again with
->> it being able to create the VFs anew, but which also allows to then
->> pass through the PF instead of the VFs).
->> 
->> Don't do this however for any VFs currently in active use by a guest.
->> 
->> Signed-off-by: Jan Beulich <jbeulich@suse.com>
->> [v2: Removed the switch statement, moved it about]
->> [v3: Redid it a bit differently]
+On Tuesday 16 December 2014 11:43:12 Stanimir Varbanov wrote:
+
+> >> +static int __init qcom_pcie_probe(struct platform_device *pdev)
+> >> +{
+> > 
+> > I think it's a bug to mark this function as __init. It breaks
+> > deferred probing and detaching/reattaching the device trough sysfs.
+> > 
 > 
-> Jan, are you happy with Konrad's change now?
+> My bad, I have tried to avoid mismatch section warnings came up from
+> dw_pcie_host_init() which is annotated as __init. Do you think we need
+> to remove __init from dw_pcie_host_init() declaration and fix the
+> drivers accordingly?
 
-Yes: http://lists.xenproject.org/archives/html/xen-devel/2014-12/msg00267.html
+Yes, that's probably best. Initially, it was ok because all front-ends
+of the dw-pcie driver were using module_platform_probe(), but that
+is not the case any more, so now at least keystone, layerscape and
+spear13xx are broken, and I think it's safer to change dw_pcie_host_init
+than to rely on everyone using module_platform_probe() correctly.
 
-Jan
-
+	Arnd
