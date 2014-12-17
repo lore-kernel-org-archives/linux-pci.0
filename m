@@ -1,51 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:18467 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751488AbaLSTJz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Dec 2014 14:09:55 -0500
-Subject: Re: [bisected] tg3 broken in 3.18.0?
-From: Prashant Sreedharan <prashant@broadcom.com>
-To: <rajatxjain@gmail.com>
-CC: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>,
+Received: from mx07-00178001.pphosted.com ([62.209.51.94]:33969 "EHLO
+	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751159AbaLQKgU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Dec 2014 05:36:20 -0500
+From: Gabriel FERNANDEZ <gabriel.fernandez@st.com>
+To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Nils Holland <nholland@tisys.org>,
-	Michael Chan <mchan@broadcom.com>,
-	David Miller <davem@davemloft.net>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rafael Wysocki <rjw@rjwysocki.net>
-In-Reply-To: <CAA93t1qOUZEmJEcuUNtkDS0M_pafb_1s==9Yqm9-+-+OmJmVuQ@mail.gmail.com>
-References: <20141213210251.GA12812@teela.fritz.box>
-	 <548EF90A.5070607@gmail.com>
-	 <CAA93t1qyZE-9tw8pg1KG6g4iyy0QMW=iass5w=6ZGMTMu+vi_A@mail.gmail.com>
-	 <CAErSpo5dqQE7nZ6zf2odgpHBWA3ZpTjhbgQKnY8YxQW+a+298w@mail.gmail.com>
-	 <1418750141.4248.3.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
-	 <54907300.9050902@gmail.com>
-	 <1418759684.4248.12.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
-	 <CAErSpo7sqZS+-4LHo3wbo-pa73mcP_3d0Z37U0tfnASaxp-D_g@mail.gmail.com>
-	 <1418930889.3433.8.camel@prashant> <20141218202637.GA2930@teela.fritz.box>
-	 <1418955047.3433.27.camel@prashant>
-	 <CAErSpo4UdxwL=wA8cBJ7_DAdTb2xNeg6600qB0=Jdxv80aVmcg@mail.gmail.com>
-	 <54945D79.2070008@gmail.com>
-	 <CAA93t1qOUZEmJEcuUNtkDS0M_pafb_1s==9Yqm9-+-+OmJmVuQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 19 Dec 2014 10:53:48 -0800
-Message-ID: <1419015228.27773.3.camel@prashant>
-MIME-Version: 1.0
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Gabriel Fernandez <gabriel.fernandez@linaro.org>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Magnus Damm <damm@opensource.se>,
+	Will Deacon <will.deacon@arm.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Srikanth Thokala <sthokal@xilinx.com>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
+	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
+Subject: [PATCH 1/5] ARM: STi: Kconfig update for PCIe support
+Date: Wed, 17 Dec 2014 11:34:42 +0100
+Message-Id: <1418812486-12394-2-git-send-email-gabriel.fernandez@linaro.org>
+In-Reply-To: <1418812486-12394-1-git-send-email-gabriel.fernandez@linaro.org>
+References: <1418812486-12394-1-git-send-email-gabriel.fernandez@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2014-12-19 at 10:24 -0800, Rajat Jain wrote:
-> One of the reasons to replace the condition (*l == 0xffff0001) with
-> (*l & 0xffff) == 0x0001) was that some devices apparently returned
-> 0001 for device id to indicate CRS, but returned actual vendor id in
-> the vendor ID field (hence the need to ignore vendor field).
-> 
-> Are we saying that the tg3 device returns 0x0001 for the device ID and
-> yet expects it to be treated as a good value (not CRS)?
-> 
-No it should not be treated as a good value, this commit has
-surfaced/exposed a problem in 5722 chipset which was previously masked. 
+Update Kconfig:
+- MIGHT_HAVE_PCI
+- PCI_DOMAINS
 
+Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+---
+ arch/arm/mach-sti/Kconfig | 2 ++
+ 1 file changed, 2 insertions(+)
 
+diff --git a/arch/arm/mach-sti/Kconfig b/arch/arm/mach-sti/Kconfig
+index 8825bc9..d1e563c 100644
+--- a/arch/arm/mach-sti/Kconfig
++++ b/arch/arm/mach-sti/Kconfig
+@@ -8,6 +8,8 @@ menuconfig ARCH_STI
+ 	select ARCH_HAS_RESET_CONTROLLER
+ 	select HAVE_ARM_SCU if SMP
+ 	select ARCH_REQUIRE_GPIOLIB
++	select PCI_DOMAINS if PCI
++	select MIGHT_HAVE_PCI
+ 	select ARM_ERRATA_754322
+ 	select ARM_ERRATA_764369 if SMP
+ 	select ARM_ERRATA_775420
+-- 
+1.9.1
 
