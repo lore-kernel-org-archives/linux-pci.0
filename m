@@ -1,58 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:12811 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754460AbaLVTHG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Dec 2014 14:07:06 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Keith Busch <keith.busch@intel.com>
-Subject: [PATCH] pci: Use hot-plug capable for testing presence on
-Date: Mon, 22 Dec 2014 12:07:03 -0700
-Message-Id: <1419275223-14602-1-git-send-email-keith.busch@intel.com>
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:64896 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750995AbaLQFVY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Dec 2014 00:21:24 -0500
+Received: by mail-ie0-f173.google.com with SMTP id y20so14220086ier.4
+        for <linux-pci@vger.kernel.org>; Tue, 16 Dec 2014 21:21:23 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <5490D5CB.5010200@huawei.com>
+References: <CAGZFCEG-J=Qore8nWvWLe6m-bm59Mx+M=HdcaOBVNODm9beokQ@mail.gmail.com>
+	<5490D5CB.5010200@huawei.com>
+Date: Wed, 17 Dec 2014 10:51:23 +0530
+Message-ID: <CAGZFCEFOiY+VmTVKOnPwDaKUKogUX9gkXtHuMATL3btw4kz2JQ@mail.gmail.com>
+Subject: Re: sysfs-pci remove
+From: ratheesh kannoth <ratheesh.ksz@gmail.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI-e Base specifically says Hot-Plug Surprise capability is for
-removal only, but pciehp checked this to determine if it should handle a
-slot event on device add. Lots of platform's pcie slots don't advertise
-support for surprise removal, but are perfectly capable of handling
-hot-add, so checking surprise removal is not appropriate.
+I could see the pci resource in /proc/iomem.
 
-This patch checks the Hot-Plug Capable bit in the slot capabilities to
-determine if the detected presence on is a reliable event instead of
-Hot-Plug Surprise.
+But , lspci -s 06:0.0 -vv  shows that there is no kernel mode driver
+for that interface.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/hotplug/pciehp.h      |    1 +
- drivers/pci/hotplug/pciehp_ctrl.c |    2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index b115219..b91eefb 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -126,6 +126,7 @@ struct controller {
- #define ATTN_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_AIP)
- #define PWR_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_PIP)
- #define HP_SUPR_RM(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPS)
-+#define HP_CAP(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPC)
- #define EMI(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_EIP)
- #define NO_CMD_CMPL(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_NCCS)
- #define PSN(ctrl)		(((ctrl)->slot_cap & PCI_EXP_SLTCAP_PSN) >> 19)
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index ff32e85..996c313 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -532,7 +532,7 @@ static void interrupt_event_handler(struct work_struct *work)
- 		pciehp_green_led_off(p_slot);
- 		break;
- 	case INT_PRESENCE_ON:
--		if (!HP_SUPR_RM(ctrl))
-+		if (!HP_CAP(ctrl))
- 			break;
- 		ctrl_dbg(ctrl, "Surprise Insertion\n");
- 		handle_surprise_event(p_slot);
--- 
-1.7.10.4
-
+On Wed, Dec 17, 2014 at 6:30 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+> On 2014/12/17 1:51, ratheesh kannoth wrote:
+>> Hi list,
+>>
+>> https://www.kernel.org/doc/Documentation/filesystems/sysfs-pci.txt
+>> talks about "remove" entry.
+>> The 'remove' file is used to remove the PCI device, by writing a non-zero
+>> integer to the file.  if i remove the device , will the bar resource
+>> map still appear on /proc/iomem ?
+>
+> Of course not.
+>
+>>
+>>
+>> -Ratheesh
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>
+>
+>
+> --
+> Thanks!
+> Yijing
+>
