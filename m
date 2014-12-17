@@ -1,92 +1,241 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:57316 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751310AbaLOXww (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Dec 2014 18:52:52 -0500
-Received: by mail-ie0-f182.google.com with SMTP id x19so12026894ier.13
-        for <linux-pci@vger.kernel.org>; Mon, 15 Dec 2014 15:52:52 -0800 (PST)
-Date: Mon, 15 Dec 2014 16:52:48 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
+Received: from mout.kundenserver.de ([212.227.17.24]:54251 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750790AbaLQWPk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Dec 2014 17:15:40 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
 	Russell King <linux@arm.linux.org.uk>,
-	Mohit Kumar <mohit.kumar@st.com>
-Subject: Re: [PATCH v3 0/2] arm: pcibios: remove pci_sys_data domain
-Message-ID: <20141215235248.GA4374@google.com>
-References: <1416569367-29409-1-git-send-email-lorenzo.pieralisi@arm.com>
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Gabriel Fernandez <gabriel.fernandez@linaro.org>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Magnus Damm <damm@opensource.se>,
+	Will Deacon <will.deacon@arm.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Srikanth Thokala <sthokal@xilinx.com>,
+	devicetree@vger.kernel.org, kernel@stlinux.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Lee Jones <lee.jones@linaro.org>
+Subject: Re: [PATCH 3/5] PCI: st: Provide support for the sti PCIe controller
+Date: Wed, 17 Dec 2014 23:14:51 +0100
+Message-ID: <8467440.C7CR1EqfOe@wuerfel>
+In-Reply-To: <1418812486-12394-4-git-send-email-gabriel.fernandez@linaro.org>
+References: <1418812486-12394-1-git-send-email-gabriel.fernandez@linaro.org> <1418812486-12394-4-git-send-email-gabriel.fernandez@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1416569367-29409-1-git-send-email-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 21, 2014 at 11:29:24AM +0000, Lorenzo Pieralisi wrote:
-> This patchset is a v3 of a previous posting:
+On Wednesday 17 December 2014 11:34:44 Gabriel FERNANDEZ wrote:
+> sti pcie is built around a Synopsis Designware PCIe IP.
 > 
-> http://www.spinics.net/lists/linux-pci/msg36502.html
+> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+> ---
+>  drivers/pci/host/Kconfig  |   5 +
+>  drivers/pci/host/Makefile |   1 +
+>  drivers/pci/host/pci-st.c | 713 ++++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 719 insertions(+)
+>  create mode 100644 drivers/pci/host/pci-st.c
 > 
-> v2 => v3
-> 
-> - Rebased on top of this patch dependency
->   http://www.spinics.net/lists/linux-pci/msg36631.html
-> 
-> v1 => v2 changelog
-> 
-> - Removed stale hw_pci domain member
-> - Reworked pci-mvebu domain handling according to review
-> - Rebased against 3.18-rc3 and updated the logs
-> - Dropped RFC status
-> 
-> Original cover letter:
-> ----
-> This patchset is a first RFC stab at removing the dependency on pci_sys_data
-> domain field on ARM platforms and by replacing it with generic code that
-> stashes the domain value in the pci_bus control structure, introduced in
-> 
-> commit 41e5c0f81d3e676d671d96a0a1fafb27abfbd9
-> ("of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()")
-> 
-> commit 670ba0c8883b576d0aec28bd7a838358a4be1
-> ("PCI: Add generic domain handling")
-> 
-> All the drivers converted (apart from PCIe designware, tested on iMX6SL)
-> were only compile tested for lack of HW, so along some comments, testing
-> and verifying that patchset does not break any existing platform are
-> very appreciated.
-> 
-> Code in drivers/pci/pci-mvebu.c has been changed to add a domain
-> number to PCI resources by using the nr value coming from the setup
-> pcibios32 callback, which may not be correct and should be considered
-> a temporary solution waiting for review comments.
-> 
-> The patchset removes entirely the pci_sys_data.domain field, since its
-> usage is removed at the same time in the respective host controllers
-> and ARM is made to select the configuration option
-> CONFIG_PCI_DOMAINS_GENERIC by default, which compiles a domain_nr in the
-> pci_bus structure so that the pci_domain_nr() look-up can rely on it.
-> 
-> 
-> Lorenzo Pieralisi (2):
->   arm: cns3xxx: pci: remove artificial dependency on pci_sys_data domain
->   arm: pcibios: move to generic PCI domains
-> 
->  arch/arm/Kconfig                   |  3 +++
->  arch/arm/include/asm/mach/pci.h    |  6 ------
->  arch/arm/include/asm/pci.h         |  7 -------
->  arch/arm/kernel/bios32.c           |  3 ---
->  arch/arm/mach-cns3xxx/pcie.c       | 40 ++++++++++++++++----------------------
->  drivers/pci/host/pci-mvebu.c       | 15 ++------------
->  drivers/pci/host/pcie-designware.c |  3 ---
->  drivers/pci/host/pcie-rcar.c       |  3 ---
->  8 files changed, 22 insertions(+), 58 deletions(-)
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index c4b6568..999d2b9 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -102,4 +102,9 @@ config PCI_LAYERSCAPE
+>  	help
+>  	  Say Y here if you want PCIe controller support on Layerscape SoCs.
+>  
+> +config PCI_ST
+> +	bool "ST STiH41x PCIe controller"
+> +	depends on ARCH_STI
+> +	select PCIE_DW
 
-I provisionally applied these to my next-pci/domain branch.  This will be
-rebased after v3.19-rc1.
+I'd use 'depends on ARCH_STI || (ARM && COMPILE_TEST)' to enable
+building this on other platforms for test purposes.
 
-I'd like to see acks from Thomas and/or Jason for MVEBU, and Simon for
-R-Car.
+> +
+> +#define to_st_pcie(x)	container_of(x, struct st_pcie, pp)
+> +
+> +/**
+> + * struct st_pcie_ops - SOC dependent data
+> + * @init: reference to controller power & reset init routine
+> + * @enable_ltssm: reference to controller link enable routine
+> + * @disable_ltssm:  reference to controller link disable routine
+> + * @phy_auto: flag when phy automatically configured
+> + */
+> +struct st_pcie_ops {
+> +	int (*init)(struct pcie_port *pp);
+> +	int (*enable_ltssm)(struct pcie_port *pp);
+> +	int (*disable_ltssm)(struct pcie_port *pp);
+> +	bool phy_auto;
+> +};
+
+It would be better not to invent another level of indirection. Try
+turning this around so you have a driver that binds to the specific
+SoC compatible string for the PCIe port while calling into a common
+library module for things that are shared.
+
+> +/*
+> + * On ARM platforms, we actually get a bus error returned when the PCIe IP
+> + * returns a UR or CRS instead of an OK.
+> + */
+> +static int st_pcie_abort_handler(unsigned long addr, unsigned int fsr,
+> +				 struct pt_regs *regs)
+> +{
+> +	return 0;
+> +}
+
+You should check that it's actually PCI that caused the abort. Don't
+just ignore a hard error condition.
+
+Usually there are registers in the PCI core that let you identify what
+happened.
+
+> +static int st_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+> +				 unsigned int devfn, int where, int size,
+> +				 u32 *val)
+> +{
+> +	u32 data;
+> +	u32 bdf;
+> +	struct st_pcie *pcie = to_st_pcie(pp);
+> +	int is_root_bus = pci_is_root_bus(bus);
+> +	int retry_count = 0;
+> +	int ret;
+> +	void __iomem *addr;
+> +
+> +	/*
+> +	 * Prerequisite
+> +	 * PCI express devices will respond to all config type 0 cycles, since
+> +	 * they are point to point links. Thus to avoid probing for multiple
+> +	 * devices on the root, dw-pcie already check for us if it is on the
+> +	 * root bus / other slots. Also, dw-pcie checks for the link being up
+> +	 * as we will hang if we issue a config request and the link is down.
+> +	 * A switch will reject requests for slots it knows do not exist.
+> +	 */
+> +	bdf = bdf_num(bus->number, devfn, is_root_bus);
+> +	addr = pcie->config_area + config_addr(where,
+> +			bus->parent->number == pp->root_bus_nr);
+> +retry:
+> +	/* Set the config packet devfn */
+> +	writel_relaxed(bdf, pp->dbi_base + FUNC0_BDF_NUM);
+> +	readl_relaxed(pp->dbi_base + FUNC0_BDF_NUM);
+> +
+> +	ret = dw_pcie_cfg_read(addr, where, size, &data);
+> +
+> +	/*
+> +	 * This is intended to help with when we are probing the bus. The
+> +	 * problem is that the wrapper logic doesn't have any way to
+> +	 * interrogate if the configuration request failed or not.
+> +	 * On the ARM we actually get a real bus error.
+> +	 *
+> +	 * Unfortunately this means it is impossible to tell the difference
+> +	 * between when a device doesn't exist (the switch will return a UR
+> +	 * completion) or the device does exist but isn't yet ready to accept
+> +	 * configuration requests (the device will return a CRS completion)
+> +	 *
+> +	 * The result of this is that we will miss devices when probing.
+> +	 *
+> +	 * So if we are trying to read the dev/vendor id on devfn 0 and we
+> +	 * appear to get zero back, then we retry the request.  We know that
+> +	 * zero can never be a valid device/vendor id. The specification says
+> +	 * we must retry for up to a second before we decide the device is
+> +	 * dead. If we are still dead then we assume there is nothing there and
+> +	 * return ~0
+> +	 *
+> +	 * The downside of this is that we incur a delay of 1s for every pci
+> +	 * express link that doesn't have a device connected.
+> +	 */
+> +	if (((where & ~3) == 0) && devfn == 0 && (data == 0 || data == ~0)) {
+> +		if (retry_count++ < 1000) {
+> +			mdelay(1);
+> +			goto retry;
+> +		} else {
+> +			*val = ~0;
+> +			return PCIBIOS_DEVICE_NOT_FOUND;
+> +		}
+> +	}
+> +
+> +	*val = data;
+> +	return ret;
+> +}
+
+A busy-loop is extremely nasty. If this is only during the initial bus
+scan, could you use an msleep instead?
+
+Also, it sounds like the error you get is actually the fault that you
+are catching above. If this is correct, then use the fault handler to
+communicate this to the probe function.
+
+> +
+> +static void st_pcie_board_reset(struct pcie_port *pp)
+> +{
+> +	struct st_pcie *pcie = to_st_pcie(pp);
+> +
+> +	if (!gpio_is_valid(pcie->reset_gpio))
+> +		return;
+> +
+> +	if (gpio_direction_output(pcie->reset_gpio, 0)) {
+> +		dev_err(pp->dev, "Cannot set PERST# (gpio %u) to output\n",
+> +			pcie->reset_gpio);
+> +		return;
+> +	}
+> +
+> +	/* From PCIe spec */
+> +	usleep_range(1000, 2000);
+> +	gpio_direction_output(pcie->reset_gpio, 1);
+> +
+> +	/*
+> +	 * PCIe specification states that you should not issue any config
+> +	 * requests until 100ms after asserting reset, so we enforce that here
+> +	 */
+> +	usleep_range(100000, 150000);
+> +}
+
+This seems hardly performance critical, just use msleep(2) and
+msleep(100) instead of the usleep_range().
+
+> +static void st_msi_init_one(struct pcie_port *pp)
+> +{
+> +	struct st_pcie *pcie = to_st_pcie(pp);
+> +
+> +	/*
+> +	 * Set the magic address the hardware responds to. This has to be in
+> +	 * the range the PCI controller can write to.
+> +	 */
+> +	dw_pcie_msi_init(pp);
+> +
+> +	if ((virt_to_phys((void *)pp->msi_data) < pcie->lmi->start) ||
+> +	    (virt_to_phys((void *)pp->msi_data) > pcie->lmi->end))
+> +		dev_err(pp->dev, "MSI addr miss-configured\n");
+> +}
+
+Why do you call virt_to_phys() here? Isn't msi_data a physical address?
+
+> +static int __init st_pcie_probe(struct platform_device *pdev)
+
+I'd suggest removing the __init here, as discussed in the review for
+the qualcomm driver.
+
+	Arnd
