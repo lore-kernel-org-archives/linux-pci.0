@@ -1,79 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:39433 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932240AbaLDQPM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Dec 2014 11:15:12 -0500
-Received: by mail-pd0-f171.google.com with SMTP id y13so17995868pdi.2
-        for <linux-pci@vger.kernel.org>; Thu, 04 Dec 2014 08:15:11 -0800 (PST)
-Date: Thu, 4 Dec 2014 09:15:06 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	zermond@gmail.com, David Airlie <airlied@linux.ie>,
-	saifi.khan@datasynergy.org, Alex Deucher <alexdeucher@gmail.com>,
-	kordikmarek@gmail.com
-Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
- GPU init
-Message-ID: <20141204161506.GA2501@google.com>
-References: <CAErSpo6UvY10MNidAOFf4Fptv+wL-NsX6JMaU8OvSP6ywWEebQ@mail.gmail.com>
- <CAE9FiQW1OPP_no1orE+rUHQnmsVY3beUtbS8YdkXBhABVbdfLA@mail.gmail.com>
- <CAE9FiQUP6v=bGxkTXuyYf6mO1reQcD2gLjrr2nDHNYDBQ8ubug@mail.gmail.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:50175 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750946AbaLQSCy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Dec 2014 13:02:54 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <gregkh@linuxfoundation.org>, <vinod.koul@intel.com>,
+	<dmaengine@vger.kernel.org>, <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<arnd@arndb.de>, <linux-arm-kernel@lists.infradead.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>
+Subject: [RFC PATCH 0/2] PCI: get DMA configuration from parent device
+Date: Wed, 17 Dec 2014 13:02:22 -0500
+Message-ID: <1418839344-14393-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQUP6v=bGxkTXuyYf6mO1reQcD2gLjrr2nDHNYDBQ8ubug@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 03, 2014 at 05:41:32PM -0800, Yinghai Lu wrote:
-> On Wed, Dec 3, 2014 at 5:38 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > On Wed, Dec 3, 2014 at 2:15 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >> There's a bugzilla for this, so this email is to make the bugzilla
-> >> more discoverable and to have a more public discussion about it.
-> >>
-> >>   https://bugzilla.kernel.org/show_bug.cgi?id=85491
-> >>
-> >> I think this regression is caused by 5b28541552ef ("PCI: Restrict
-> >> 64-bit prefetchable bridge windows to 64-bit resources").  These dmesg
-> >> fragments are from v3.16, which doesn't work:
-> >>
-> >>     pci_bus 0000:00: root bus resource [mem 0xc0000000-0xffffffff]
-> >>
-> >>     pci 0000:00:01.0: PCI bridge to [bus 01]
-> >>     pci 0000:00:01.0:   bridge window [io  0x8000-0xafff]
-> >>     pci 0000:00:01.0:   bridge window [mem 0xfdf00000-0xfdffffff]
-> >>     pci 0000:00:01.0:   bridge window [mem 0xbdf00000-0xddefffff 64bit
-> >> pref]  <-- outside host bridge window
-> >>
-> >>     pci 0000:01:00.0: reg 0x10: [mem 0xc0000000-0xcfffffff pref]
-> >>     pci 0000:01:00.0: reg 0x14: [io  0xa000-0xa0ff]
-> >>     pci 0000:01:00.0: reg 0x18: [mem 0xfdff0000-0xfdffffff]
-> >>     pci 0000:01:00.0: reg 0x30: [mem 0xfdfc0000-0xfdfdffff pref]
-> >>
-> >>     pci 0000:00:01.0: can't claim BAR 15 [mem 0xbdf00000-0xddefffff
-> >> 64bit pref]: no compatible bridge window
-> >>     pci 0000:01:00.0: can't claim BAR 0 [mem 0xc0000000-0xcfffffff
-> >> pref]: no compatible bridge window
-> >
-> > Looks like we wrong type checking from parent resource searching.
+Keystone PCI devices requires the dma_pfn_offset to be set correctly
+so that the PCI devices get the right DMA mask to function. This
+patch adds a helper function to get this configuration from the root
+bridge's parent device. The probe.c code now calls this helper to set
+the default dma configuration if the parent device is dma capable.
 
-I don't understand what you're trying to say, but I don't think the "no
-compatible bridge window" problem is related to resource types.  I think
-it's because the 00:01.0 window at [mem 0xbdf00000-0xddefffff] starts
-before the [mem 0xc0000000-0xffffffff] host bridge window.
+Typically, dma-ranges are defined in the DT node of the SoC and gets
+updated in the root bridge's parent device structure. My original
+patch for this was at [1] which was NACK-ed and this is an attempt
+to implement a better solution. This may have side effects that I am
+unware of. So sending as a RFC patch to get feedback before sending
+the formal patch. Please review and provide me the comment so that
+I can incorporate the same.
 
-> oh, no, the BIOS is crazy...
-> 
-> [    0.158601] pci 0000:00:01.0: address space collision: [mem
-> 0xbdf00000-0xddefffff 64bit pref] conflicts with System RAM [mem
-> 0x00100000-0xbff9ffff]
-> 
-> mmio is overlapping with ram range....
+[1] http://www.gossamer-threads.com/lists/linux/kernel/2024591
 
-I agree, it certainly looks like the BIOS programmed the 00:01.0 window
-incorrectly.  But I think we should just clip it so it starts at 0xc0000000
-instead of 0xbdf00000.
+Murali Karicheri (2):
+  common: dma-mapping: introduce dma_get_parent_cfg() helper
+  PCI: get device dma configuration from parent
 
-There's no reason we should depend on correct PCI configuration from the
-BIOS.
+ drivers/base/dma-mapping.c  |   18 ++++++++++++++++++
+ drivers/pci/probe.c         |   20 +++++++++++++++++---
+ include/linux/dma-mapping.h |    3 +++
+ 3 files changed, 38 insertions(+), 3 deletions(-)
 
-Bjorn
+-- 
+1.7.9.5
+
