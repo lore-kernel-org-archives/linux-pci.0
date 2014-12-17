@@ -1,70 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:64383 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753808AbaLIXQ0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 18:16:26 -0500
+Received: from szxga03-in.huawei.com ([119.145.14.66]:48447 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751066AbaLQFup (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Dec 2014 00:50:45 -0500
+Message-ID: <549119A9.4010406@huawei.com>
+Date: Wed, 17 Dec 2014 13:50:33 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <54877495.9090102@gmail.com>
-References: <1418075552-26495-1-git-send-email-yinghai@kernel.org>
-	<1418079372.13358.9.camel@kernel.crashing.org>
-	<CAE9FiQX-vMu5+Kr09ngr95WvtoZTUSL5R2+NiVFeiN6q-BXLLg@mail.gmail.com>
-	<20141209001119.GA24661@shangw>
-	<20141209022601.GA16207@richard>
-	<CAE9FiQWz=vdR=QSkoEs5XjUxg_y4vJgnChQAc1-U_9xzfQpknQ@mail.gmail.com>
-	<54873A45.3050009@gmail.com>
-	<CAErSpo7OXLco+fagqpK00Cc_AGxjEDJO5JDBtr_p92L2tpvs+Q@mail.gmail.com>
-	<CAE9FiQWPGLwQsz5HtW7r0Lrk4DMqfhbmk=ohcBWtWqXAN3mEZw@mail.gmail.com>
-	<54877495.9090102@gmail.com>
-Date: Tue, 9 Dec 2014 15:16:25 -0800
-Message-ID: <CAE9FiQXofeVMkGq7r5SqnveSfOcYjmuuSdZB-LAiSXjof2X0Jw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Clear bridge MEM_64 flag if one child does not
- support it
-From: Yinghai Lu <yinghai@kernel.org>
-To: =?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Alexey Voronkov <zermond@gmail.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: ratheesh kannoth <ratheesh.ksz@gmail.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: sysfs-pci remove
+References: <CAGZFCEG-J=Qore8nWvWLe6m-bm59Mx+M=HdcaOBVNODm9beokQ@mail.gmail.com>	<5490D5CB.5010200@huawei.com> <CAGZFCEFOiY+VmTVKOnPwDaKUKogUX9gkXtHuMATL3btw4kz2JQ@mail.gmail.com>
+In-Reply-To: <CAGZFCEFOiY+VmTVKOnPwDaKUKogUX9gkXtHuMATL3btw4kz2JQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 9, 2014 at 2:15 PM, Marek Kordík <kordikmarek@gmail.com> wrote:
-> On 12/09/2014 08:42 PM, Yinghai Lu wrote:
->>
->> On Tue, Dec 9, 2014 at 10:22 AM, Bjorn Helgaas <bhelgaas@google.com>
->> wrote:
+On 2014/12/17 13:21, ratheesh kannoth wrote:
+> I could see the pci resource in /proc/iomem.
+> 
+> But , lspci -s 06:0.0 -vv  shows that there is no kernel mode driver
+> for that interface.
+
+If the device 06:0.0 was removed by "echo 1 > /sys/.../0000:6:0.0/remove",
+you could not see lspci info for this device anymore.
+Do you really remove the device ?
+
+> 
+> 
+> On Wed, Dec 17, 2014 at 6:30 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+>> On 2014/12/17 1:51, ratheesh kannoth wrote:
+>>> Hi list,
 >>>
->>> On Tue, Dec 9, 2014 at 11:07 AM, Marek Kordík <kordikmarek@gmail.com>
->>> wrote:
->>>>
->>>> I have built and booted your branch and it works well. Do you want me to
->>>> attach some logs?
->>>> (I am new here and I have read http://www.tux.org/lkml/ and I don't want
+>>> https://www.kernel.org/doc/Documentation/filesystems/sysfs-pci.txt
+>>> talks about "remove" entry.
+>>> The 'remove' file is used to remove the PCI device, by writing a non-zero
+>>> integer to the file.  if i remove the device , will the bar resource
+>>> map still appear on /proc/iomem ?
 >>
->> Can you run some graphics benchmark program to check the performance
->> between
->> 1.
+>> Of course not.
 >>
->> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
->>   branch: for-pci-allocate-fit-3.18
+>>>
+>>>
+>>> -Ratheesh
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>>
 >>
->> 2.
->> v 3.18 + clear mmio64 flags when children device does not support it
 >>
+>> --
+>> Thanks!
+>> Yijing
 >>
-> I have run Unigine Heaven benchmark on both versions (I tried version 2.
-> with and also without kernel parameters "debug ignore_loglevel pci=realloc")
-> and the performance of each version was the same (70-71 points). I tried to
-> run this benchmark also with kernel 3.15.10 and the result was 67 points.
-> Tomorrow I can try to run some more benchmarks, today I didn't have much
-> time.
+> 
+> 
 
-so putting  mem pref under bridge mem does not cause performance loss?
 
-Thanks
+-- 
+Thanks!
+Yijing
 
-Yinghai
