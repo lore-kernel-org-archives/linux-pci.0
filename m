@@ -1,53 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:64223 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751531AbaLXU34 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Dec 2014 15:29:56 -0500
-Received: by mail-ig0-f179.google.com with SMTP id r2so7367047igi.12
-        for <linux-pci@vger.kernel.org>; Wed, 24 Dec 2014 12:29:56 -0800 (PST)
+Received: from devils.ext.ti.com ([198.47.26.153]:50174 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750790AbaLQSCx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Dec 2014 13:02:53 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <gregkh@linuxfoundation.org>, <vinod.koul@intel.com>,
+	<dmaengine@vger.kernel.org>, <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<arnd@arndb.de>, <linux-arm-kernel@lists.infradead.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>
+Subject: [RFC PATCH 1/2] common: dma-mapping: introduce dma_get_parent_cfg() helper
+Date: Wed, 17 Dec 2014 13:02:23 -0500
+Message-ID: <1418839344-14393-2-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1418839344-14393-1-git-send-email-m-karicheri2@ti.com>
+References: <1418839344-14393-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20141224172646.GA19561@google.com>
-References: <CAErSpo7pMAL5i2aPGV3u5F178bHeQTtjASckKs9NaUbEGaxv3Q@mail.gmail.com>
-	<20141208233855.GA15713@shangw>
-	<CAE9FiQXj-vX8TE-8Es83FmJAKDKD_dMNbQkmsaNPyy_nVEag8w@mail.gmail.com>
-	<20141220002306.GB30834@google.com>
-	<CAE9FiQUU4OoxpV3MNyFdjtmS1nRfD=ziYDDnUmsGy5qj8U3vLg@mail.gmail.com>
-	<CAErSpo7JAcLa_2gNkOG+oSHb1cbBXdEa-TVW0=amBptRB8-fNA@mail.gmail.com>
-	<CAE9FiQV6nxeMcLQ6YBR_c5tNGGjiKgL+Z4vcGpK21j-14V8SKw@mail.gmail.com>
-	<CAE9FiQVggbU5u__0z8p33J9hQ39CtQ-vpQbZyjG-LO9aqN05Lw@mail.gmail.com>
-	<20141223214106.GA27291@google.com>
-	<CAE9FiQUoA_vz78sEnHtDAmzTJcwL0PdUe9jwLw+H9h3+omq+WA@mail.gmail.com>
-	<20141224172646.GA19561@google.com>
-Date: Wed, 24 Dec 2014 12:29:55 -0800
-Message-ID: <CAE9FiQUCKVZN0rbvkBWTB_2w+=OrQFRWNkEbNCzH1j+hctqGFg@mail.gmail.com>
-Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
- GPU init
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: =?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alexey Voronkov <zermond@gmail.com>,
-	David Airlie <airlied@linux.ie>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Richard Yang <weiyang@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 24, 2014 at 9:26 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Dec 23, 2014 at 06:29:20PM -0800, Yinghai Lu wrote:
->
-> OK, how about if we test it on x86, and if it works, you fix the other
-> arches, and then I'll apply it for all arches at the same time?
+Now, in Kernel, parent device's DMA parameters has to be applied to
+the child as is - to enable DMA support for the device. Usually this
+is happened in places where parent device manually instantiates child
+device such as in drivers/pci/probe.c (pci_device_add() for example).
 
-Good to me.
+Now DMA configuration is represented in device data structure not only
+by DMA mask and DMA params, it also includes dma_pfn_offset at least.
+Hence introduce common dma_get_parent_cfg() helper to apply dma
+configuration from parent to child, and use __weak to allow arch to
+override it if needed.
 
->
-> We are trying to fix a regression, but I don't think there's any reason to
-> make the arches diverge for a relatively trivial change like this.
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+---
+ drivers/base/dma-mapping.c  |   18 ++++++++++++++++++
+ include/linux/dma-mapping.h |    3 +++
+ 2 files changed, 21 insertions(+)
 
-Sure.
+diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
+index 9e8bbdd..5322426 100644
+--- a/drivers/base/dma-mapping.c
++++ b/drivers/base/dma-mapping.c
+@@ -339,3 +339,21 @@ void dma_common_free_remap(void *cpu_addr, size_t size, unsigned long vm_flags)
+ 	vunmap(cpu_addr);
+ }
+ #endif
++
++int __weak dma_get_parent_cfg(struct device *dev, struct device *parent)
++{
++	struct device *temp = parent;
++
++	if (!temp)
++		temp = dev->parent;
++
++	if (temp && is_device_dma_capable(temp)) {
++		dev->dma_mask	= temp->dma_mask;
++		dev->coherent_dma_mask = temp->coherent_dma_mask;
++		dev->dma_parms	= temp->dma_parms;
++		dev->dma_pfn_offset = temp->dma_pfn_offset;
++		return 0;
++	}
++	return -EINVAL;
++}
++EXPORT_SYMBOL(dma_get_parent_cfg);
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+index d5d3881..eb080d6 100644
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -127,6 +127,9 @@ static inline int dma_coerce_mask_and_coherent(struct device *dev, u64 mask)
+ 	return dma_set_mask_and_coherent(dev, mask);
+ }
+ 
++extern int __weak dma_get_parent_cfg(struct device *dev,
++					struct device *parent);
++
+ extern u64 dma_get_required_mask(struct device *dev);
+ 
+ #ifndef set_arch_dma_coherent_ops
+-- 
+1.7.9.5
 
-Yinghai
