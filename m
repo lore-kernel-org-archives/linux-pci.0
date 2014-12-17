@@ -1,40 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:61232 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755261AbaLIBik (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Dec 2014 20:38:40 -0500
-MIME-Version: 1.0
-In-Reply-To: <20141209010803.GA30604@shangw>
-References: <1418075552-26495-1-git-send-email-yinghai@kernel.org>
-	<1418079372.13358.9.camel@kernel.crashing.org>
-	<CAE9FiQX-vMu5+Kr09ngr95WvtoZTUSL5R2+NiVFeiN6q-BXLLg@mail.gmail.com>
-	<20141209010803.GA30604@shangw>
-Date: Mon, 8 Dec 2014 17:38:35 -0800
-Message-ID: <CAE9FiQWAF6hxwPoH6Gb_KczJ9-B=Aya9bJG2mz3nrSdGF7_NVg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Clear bridge MEM_64 flag if one child does not
- support it
-From: Yinghai Lu <yinghai@kernel.org>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Received: from mx07-00178001.pphosted.com ([62.209.51.94]:46336 "EHLO
+	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751514AbaLQKgV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Dec 2014 05:36:21 -0500
+From: Gabriel FERNANDEZ <gabriel.fernandez@st.com>
+To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	=?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>,
-	Alexey Voronkov <zermond@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Gabriel Fernandez <gabriel.fernandez@linaro.org>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Magnus Damm <damm@opensource.se>,
+	Will Deacon <will.deacon@arm.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Srikanth Thokala <sthokal@xilinx.com>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
+	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
+Subject: [PATCH 2/5] PCI: st: Add Device Tree bindings for sti pcie
+Date: Wed, 17 Dec 2014 11:34:43 +0100
+Message-Id: <1418812486-12394-3-git-send-email-gabriel.fernandez@linaro.org>
+In-Reply-To: <1418812486-12394-1-git-send-email-gabriel.fernandez@linaro.org>
+References: <1418812486-12394-1-git-send-email-gabriel.fernandez@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 8, 2014 at 5:08 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
-> On Mon, Dec 08, 2014 at 03:59:54PM -0800, Yinghai Lu wrote:
->
-> Yinghai, With the patch, the Power8 machine boots up and have resources
-> assigned properly: 64-bits pref BARs are covered by 64-bits pref windows
-> and left memory BARs are covered by 32-bits non-pref windows. Note that
-> I didn't find an 32-bits-pref BAR on the system.
->
-> For SRIOV case, Richard still need test.
+sti pcie is built around a Synopsis Designware PCIe IP.
 
-Good, Thanks for the testing.
+Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+---
+ Documentation/devicetree/bindings/pci/st-pcie.txt | 53 +++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
 
-Yinghai
+diff --git a/Documentation/devicetree/bindings/pci/st-pcie.txt b/Documentation/devicetree/bindings/pci/st-pcie.txt
+new file mode 100644
+index 0000000..bd3488f
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/st-pcie.txt
+@@ -0,0 +1,53 @@
++STMicroelectronics STi PCIe controller
++
++This PCIe host controller is based on the Synopsis Designware PCIe IP
++and thus inherits all the common properties defined in designware-pcie.txt.
++
++Required properties:
++ - compatible: "st,stih407-pcie"
++ - reg: base address and length of the pcie controller, mem-window address
++   and length available to the controller.
++ - interrupts: A list of interrupt outputs of the controller.
++ - interrupt-names: Must include the following entries:
++   "msi": STi interrupt that is asserted when an MSI is received
++ - st,syscfg : should be a phandle of the syscfg node. Also contains syscfg
++   offset for IP configuration.
++ - resets, reset-names: the power-down and soft-reset lines of PCIe IP.
++   Associated names must be "powerdown" and "softreset".
++ - phys, phy-names: the phandle for the PHY device.
++   Associated name must be "pcie_phy"
++
++Optional properties:
++ - reset-gpio: a GPIO spec to define which pin is connected to the bus reset.
++
++Example:
++
++pcie0: pcie@9b00000 {
++	compatible = "st,stih407-pcie", "snps,dw-pcie";
++	device_type = "pci";
++	reg = <0x09b00000 0x4000>,	/* dbi cntrl registers */
++	      <0x2fff0000 0x00010000>,	/* configuration space */
++	      <0x40000000 0x80000000>;	/* lmi mem window */
++	reg-names = "dbi", "config", "mem-window";
++	st,syscfg = <&syscfg_core 0xd8 0xe0>;
++	#address-cells = <3>;
++	#size-cells = <2>;
++	ranges = <0x00000800 0 0x2fff0000 0x2fff0000 0 0x00010000   /* configuration space */
++		  0x82000000 0 0x20000000 0x20000000 0 0x0FFF0000>; /* non-prefetchable memory */
++	num-lanes = <1>;
++	interrupts = <GIC_SPI 164 IRQ_TYPE_LEVEL_HIGH>;
++	interrupt-names = "msi";
++	#interrupt-cells = <1>;
++	interrupt-map-mask = <0 0 0 7>;
++	interrupt-map = <0 0 0 1 &intc GIC_SPI 160 IRQ_TYPE_LEVEL_HIGH>, /* INT A */
++			<0 0 0 2 &intc GIC_SPI 161 IRQ_TYPE_LEVEL_HIGH>, /* INT B */
++			<0 0 0 3 &intc GIC_SPI 162 IRQ_TYPE_LEVEL_HIGH>, /* INT C */
++			<0 0 0 4 &intc GIC_SPI 163 IRQ_TYPE_LEVEL_HIGH>; /* INT D */
++
++	resets = <&powerdown STIH407_PCIE0_POWERDOWN>,
++		 <&softreset STIH407_PCIE0_SOFTRESET>;
++	reset-names = "powerdown",
++		      "softreset";
++	phys = <&phy_port0 PHY_TYPE_PCIE>;
++	phy-names = "pcie_phy";
++};
+-- 
+1.9.1
+
