@@ -1,76 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f180.google.com ([209.85.216.180]:62407 "EHLO
-	mail-qc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751577AbaL1BXK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 27 Dec 2014 20:23:10 -0500
-Received: by mail-qc0-f180.google.com with SMTP id i8so8490619qcq.11
-        for <linux-pci@vger.kernel.org>; Sat, 27 Dec 2014 17:23:09 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20141227103655.GA27544@e102568-lin.cambridge.arm.com>
-References: <1415637706-2195-1-git-send-email-lorenzo.pieralisi@arm.com>
- <20141120225449.GD7987@google.com> <20141227103655.GA27544@e102568-lin.cambridge.arm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 27 Dec 2014 18:22:49 -0700
-Message-ID: <CAErSpo6KA2jbs_aqXYRHjcxAnuXhxzGH2P=xv4udJWeRvve78A@mail.gmail.com>
-Subject: Re: [RFC PATCH v2] drivers: pci: move PCI domain assignment to
- generic PCI code
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
+Received: from mout.kundenserver.de ([212.227.126.187]:57105 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751470AbaLQWRW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Dec 2014 17:17:22 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Gabriel FERNANDEZ <gabriel.fernandez@st.com>
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Gabriel Fernandez <gabriel.fernandez@linaro.org>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Magnus Damm <damm@opensource.se>,
+	Will Deacon <will.deacon@arm.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
 	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>
-Content-Type: text/plain; charset=UTF-8
+	Srikanth Thokala <sthokal@xilinx.com>,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
+	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
+Subject: Re: [PATCH 4/5] PCI: designware: Add setup bus-related to pcie_host_ops
+Date: Wed, 17 Dec 2014 23:16:12 +0100
+Message-ID: <1507589.aeTeyNn1QF@wuerfel>
+In-Reply-To: <1418812486-12394-5-git-send-email-gabriel.fernandez@linaro.org>
+References: <1418812486-12394-1-git-send-email-gabriel.fernandez@linaro.org> <1418812486-12394-5-git-send-email-gabriel.fernandez@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Dec 27, 2014 at 3:36 AM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> Hi Bjorn,
->
-> On Thu, Nov 20, 2014 at 10:54:49PM +0000, Bjorn Helgaas wrote:
->> On Mon, Nov 10, 2014 at 04:41:46PM +0000, Lorenzo Pieralisi wrote:
->> > The current logic used for PCI domain assignment in arm64
->> > pci_bus_assign_domain_nr() is flawed in that, depending on the host
->> > controllers configuration for a platform and the respective initialization
->> > sequence, core code may end up allocating PCI domain numbers from both DT and
->> > the core code generic domain counter, which would result in PCI domain
->> > allocation aliases/errors.
->> >
->> > This patch fixes the logic behind the PCI domain number assignment and
->> > moves the resulting code to generic PCI core code so that the same domain
->> > allocation logic is used on all platforms selecting
->> >
->> > CONFIG_PCI_DOMAINS_GENERIC
->> >
->> > instead of resorting to an arch specific implementation that might end up
->> > duplicating the PCI domain assignment logic wrongly.
->> >
->> > Cc: Arnd Bergmann <arnd@arndb.de>
->> > Cc: Liviu Dudau <liviu.dudau@arm.com>
->> > Cc: Bjorn Helgaas <bhelgaas@google.com>
->> > Cc: Rob Herring <robh+dt@kernel.org>
->> > Cc: Catalin Marinas <catalin.marinas@arm.com>
->> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->>
->> Applied with Liviu and Arnd's acks to pci/domain for v3.19, thanks.
->>
->> It doesn't matter whether I'm in the to: or cc: list.  The important thing
->> is that it appears on the linux-pci list, because I use patchwork as my
->> to-do list, and patchwork only vacuums up stuff from linux-pci.
->
-> This patch has not been merged last cycle and it is a prerequisite for
-> the ARM pcibios domain code removal patchset you merged in your pci/domain
-> branch. Please consider pulling it there so that the ARM pcibios domain
-> removal patchset can be based correctly on top of this patch, at the
-> moment it can't compile (see kbuild test report).
+On Wednesday 17 December 2014 11:34:45 Gabriel FERNANDEZ wrote:
+> ST sti SoCs PCIe IPs are built around DesignWare IP Core.
+> But in these SoCs PCIe IP doesn't support IO.
+> 
+> To support this, add setup_bus() to pcie_host_ops.
+> 
+> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
 
-Huh, I can't remember why I didn't merge that for v3.19.  Maybe I just
-missed it by mistake.
+The dw-pcie driver should be able to tell whether the device has
+an I/O space or not, and do the right thing based on that. Don't
+add an implementation specific callback for that.
 
-Anyway, I picked that patch into pci/domain for another try.
-
-Bjorn
+	Arnd
