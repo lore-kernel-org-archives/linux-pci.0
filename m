@@ -1,92 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:33527 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751349AbaLCVlG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Dec 2014 16:41:06 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: [PATCH v5 5/9] xen/pciback: Remove tons of dereferences
-Date: Wed,  3 Dec 2014 16:40:30 -0500
-Message-Id: <1417642834-20350-6-git-send-email-konrad.wilk@oracle.com>
-In-Reply-To: <1417642834-20350-1-git-send-email-konrad.wilk@oracle.com>
-References: <1417642834-20350-1-git-send-email-konrad.wilk@oracle.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:36168 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751095AbaLQQSo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 17 Dec 2014 11:18:44 -0500
+Received: from dlelxv90.itg.ti.com ([172.17.2.17])
+	by arroyo.ext.ti.com (8.13.7/8.13.7) with ESMTP id sBHGIhpL017234
+	for <linux-pci@vger.kernel.org>; Wed, 17 Dec 2014 10:18:43 -0600
+Received: from DLEE71.ent.ti.com (dlee71.ent.ti.com [157.170.170.114])
+	by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id sBHGIhI5009385
+	for <linux-pci@vger.kernel.org>; Wed, 17 Dec 2014 10:18:43 -0600
+Received: from [158.218.104.233] (ileax41-snat.itg.ti.com [10.172.224.153])	by
+ dflp33.itg.ti.com (8.14.3/8.13.8) with ESMTP id sBHGIhxS019527	for
+ <linux-pci@vger.kernel.org>; Wed, 17 Dec 2014 10:18:43 -0600
+Message-ID: <5491ACE6.4070108@ti.com>
+Date: Wed, 17 Dec 2014 11:18:46 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: How to fix CHECK warning: testing a 'safe expression' ?
+References: <54907884.2040502@ti.com>
+In-Reply-To: <54907884.2040502@ti.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A little cleanup. No functional difference.
+I am trying to address CHECK warnings in my driver and wondering how to 
+resolve 'warning: testing a 'safe expression' which appears when using
+IS_ERR_OR_NULL(foo)
 
-Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
----
- drivers/xen/xen-pciback/pci_stub.c | 20 +++++++++++---------
- 1 file changed, 11 insertions(+), 9 deletions(-)
+where foo is defined as
 
-diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
-index e5ff09d..843a2ba 100644
---- a/drivers/xen/xen-pciback/pci_stub.c
-+++ b/drivers/xen/xen-pciback/pci_stub.c
-@@ -631,10 +631,12 @@ static pci_ers_result_t common_process(struct pcistub_device *psdev,
- {
- 	pci_ers_result_t res = result;
- 	struct xen_pcie_aer_op *aer_op;
-+	struct xen_pcibk_device *pdev = psdev->pdev;
-+	struct xen_pci_sharedinfo *sh_info = pdev->sh_info;
- 	int ret;
- 
- 	/*with PV AER drivers*/
--	aer_op = &(psdev->pdev->sh_info->aer_op);
-+	aer_op = &(sh_info->aer_op);
- 	aer_op->cmd = aer_cmd ;
- 	/*useful for error_detected callback*/
- 	aer_op->err = state;
-@@ -655,36 +657,36 @@ static pci_ers_result_t common_process(struct pcistub_device *psdev,
- 	* this flag to judge whether we need to check pci-front give aer
- 	* service ack signal
- 	*/
--	set_bit(_PCIB_op_pending, (unsigned long *)&psdev->pdev->flags);
-+	set_bit(_PCIB_op_pending, (unsigned long *)&pdev->flags);
- 
- 	/*It is possible that a pcifront conf_read_write ops request invokes
- 	* the callback which cause the spurious execution of wake_up.
- 	* Yet it is harmless and better than a spinlock here
- 	*/
- 	set_bit(_XEN_PCIB_active,
--		(unsigned long *)&psdev->pdev->sh_info->flags);
-+		(unsigned long *)&sh_info->flags);
- 	wmb();
--	notify_remote_via_irq(psdev->pdev->evtchn_irq);
-+	notify_remote_via_irq(pdev->evtchn_irq);
- 
- 	ret = wait_event_timeout(xen_pcibk_aer_wait_queue,
- 				 !(test_bit(_XEN_PCIB_active, (unsigned long *)
--				 &psdev->pdev->sh_info->flags)), 300*HZ);
-+				 &sh_info->flags)), 300*HZ);
- 
- 	if (!ret) {
- 		if (test_bit(_XEN_PCIB_active,
--			(unsigned long *)&psdev->pdev->sh_info->flags)) {
-+			(unsigned long *)&sh_info->flags)) {
- 			dev_err(&psdev->dev->dev,
- 				"pcifront aer process not responding!\n");
- 			clear_bit(_XEN_PCIB_active,
--			  (unsigned long *)&psdev->pdev->sh_info->flags);
-+			  (unsigned long *)&sh_info->flags);
- 			aer_op->err = PCI_ERS_RESULT_NONE;
- 			return res;
- 		}
- 	}
--	clear_bit(_PCIB_op_pending, (unsigned long *)&psdev->pdev->flags);
-+	clear_bit(_PCIB_op_pending, (unsigned long *)&pdev->flags);
- 
- 	if (test_bit(_XEN_PCIF_active,
--		(unsigned long *)&psdev->pdev->sh_info->flags)) {
-+		(unsigned long *)&sh_info->flags)) {
- 		dev_dbg(&psdev->dev->dev,
- 			"schedule pci_conf service in " DRV_NAME "\n");
- 		xen_pcibk_test_and_schedule_op(psdev->pdev);
+struct foo_type *foo;
+
+The foo get assigned only NULL or ERR_PTR(error code). So I believe the
+usage is correct. But then how do I make the CHECK happy of its usage?
+
+I have tried a grep to check on the current usage of IS_ERR_OR_NULL() 
+and found 276 of them causes this warning in the v3.18 version of the 
+kernel that I am using
+
+$ grep -r "warning: testing a 'safe expression" * | wc -l
+276
+
+Can someone help me undestand what this means and how to fix the same?
+
+I run folling for CHECK
+
+make C=2 CF="-D__CHECK_ENDIAN__" CHECK=sparse
+
+Thanks in advance for your suggestions.
 -- 
-1.9.3
-
+Murali Karicheri
+Linux Kernel, Texas Instruments
+--
+To unsubscribe from this list: send the line "unsubscribe netdev" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
