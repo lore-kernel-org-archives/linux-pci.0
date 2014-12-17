@@ -1,146 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:51720 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752054AbaLWBx4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 20:53:56 -0500
-Received: by mail-ig0-f176.google.com with SMTP id l13so5182029iga.9
-        for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 17:53:55 -0800 (PST)
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:51102 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751066AbaLQGI2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Dec 2014 01:08:28 -0500
+Received: by mail-ig0-f179.google.com with SMTP id r2so8392858igi.6
+        for <linux-pci@vger.kernel.org>; Tue, 16 Dec 2014 22:08:27 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQV6nxeMcLQ6YBR_c5tNGGjiKgL+Z4vcGpK21j-14V8SKw@mail.gmail.com>
-References: <CAE9FiQWV-rKdvSeV-ivME-64QtzCX2Te5DfOVtzr0an=6eOCMA@mail.gmail.com>
-	<20141204173411.GA5949@google.com>
-	<CAE9FiQVyBmo+XwDgO97wwe+6TN4+q_cvnBLCuhTM8Fu_e_V5RQ@mail.gmail.com>
-	<1417777177.4741.69.camel@kernel.crashing.org>
-	<20141208004735.GA15508@shangw>
-	<CAErSpo69c6jXOp+nw2sTSU4vgqGufUQNUEGK4_2+6p-qpyE0vQ@mail.gmail.com>
-	<1418074683.13358.1.camel@kernel.crashing.org>
-	<CAErSpo7pMAL5i2aPGV3u5F178bHeQTtjASckKs9NaUbEGaxv3Q@mail.gmail.com>
-	<20141208233855.GA15713@shangw>
-	<CAE9FiQXj-vX8TE-8Es83FmJAKDKD_dMNbQkmsaNPyy_nVEag8w@mail.gmail.com>
-	<20141220002306.GB30834@google.com>
-	<CAE9FiQUU4OoxpV3MNyFdjtmS1nRfD=ziYDDnUmsGy5qj8U3vLg@mail.gmail.com>
-	<CAErSpo7JAcLa_2gNkOG+oSHb1cbBXdEa-TVW0=amBptRB8-fNA@mail.gmail.com>
-	<CAE9FiQV6nxeMcLQ6YBR_c5tNGGjiKgL+Z4vcGpK21j-14V8SKw@mail.gmail.com>
-Date: Mon, 22 Dec 2014 17:53:55 -0800
-Message-ID: <CAE9FiQVggbU5u__0z8p33J9hQ39CtQ-vpQbZyjG-LO9aqN05Lw@mail.gmail.com>
-Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
- GPU init
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	=?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alexey Voronkov <zermond@gmail.com>,
-	David Airlie <airlied@linux.ie>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Richard Yang <weiyang@linux.vnet.ibm.com>
-Content-Type: multipart/mixed; boundary=047d7b2e0b599ba0ec050ad872b0
+In-Reply-To: <549119A9.4010406@huawei.com>
+References: <CAGZFCEG-J=Qore8nWvWLe6m-bm59Mx+M=HdcaOBVNODm9beokQ@mail.gmail.com>
+	<5490D5CB.5010200@huawei.com>
+	<CAGZFCEFOiY+VmTVKOnPwDaKUKogUX9gkXtHuMATL3btw4kz2JQ@mail.gmail.com>
+	<549119A9.4010406@huawei.com>
+Date: Wed, 17 Dec 2014 11:38:27 +0530
+Message-ID: <CAGZFCEGF2Do4Kus+T_yg6-A1wNSXKr-RBm3eSC6Wuw02OMWTOQ@mail.gmail.com>
+Subject: Re: sysfs-pci remove
+From: ratheesh kannoth <ratheesh.ksz@gmail.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---047d7b2e0b599ba0ec050ad872b0
-Content-Type: text/plain; charset=UTF-8
+On Wed, Dec 17, 2014 at 11:20 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+> If the device 06:0.0 was removed by "echo 1 > /sys/.../0000:6:0.0/remove",
+> you could not see lspci info for this device anymore.
+> Do you really remove the device ?
 
-On Fri, Dec 19, 2014 at 5:33 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Fri, Dec 19, 2014 at 4:56 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->> Marek's case is a little easier because his system is using _CRS.  We
->> should be able to notice that the Root Port window overlaps the host
->> bridge window, but isn't contained by it.  In that case, if we merely
->> trim the Root Port window so it fits, everything will just work.
->
-> Ok, will check that Monday.
+Oh , my bad. I did not remove the device. I did an unbind
 
-Please check attached patch that clip bridge resource.
+ echo -n "0000:06:00.0" > /sys/bus/pci/drivers/enic/unbind0
 
-Marek, can you give it a try on top of v3.18?
+Unbind wont remove it from /proc/iomem ? I thought enic pci driver is
+the one is calling ioremap on those memory ?
 
-Thanks
-
-Yinghai
-
---047d7b2e0b599ba0ec050ad872b0
-Content-Type: text/x-patch; charset=US-ASCII; name="pci_bridge_clip.patch"
-Content-Disposition: attachment; filename="pci_bridge_clip.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_i40mc3zf0
-
-U3ViamVjdDogW1JGQyBQQVRDSF0gUENJLCB4ODY6IGNsaXAgZmlybXdhcmUgYXNzaWduZWQgcGNp
-IGJyaWRnZXMgdW5kZXIgaG9zdGJyaWRnZQoKU29tZSBiaW9zIHB1dCByYW5nZSB0aGF0IGlzIG5v
-dCBmdWxseSBjb3ZlcnJlZCBieSByb290IGJ1cyByZXNvdXJjZXMuClRyeSB0byBjbGlwIHRoZW0g
-YW5kIHVwZGF0ZSB0aGVtIGluIHBjaSBicmlkZ2UgYmFycy4KCkxpbms6IGh0dHBzOi8vYnVnemls
-bGEua2VybmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9ODU0OTEKUmVwb3J0ZWQtYnk6IE1hcmVrIEtv
-cmRpayA8a29yZGlrbWFyZWtAZ21haWwuY29tPgpGaXhlczogNWIyODU0MTU1MmVmICgiUENJOiBS
-ZXN0cmljdCA2NC1iaXQgcHJlZmV0Y2hhYmxlIGJyaWRnZSB3aW5kb3dzIHRvIDY0LWJpdCByZXNv
-dXJjZXMiKQpTaWduZWQtb2ZmLWJ5OiBZaW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+Cgot
-LS0KIGFyY2gveDg2L3BjaS9pMzg2LmMgICAgICAgfCAgIDQzICsrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKystLS0tLS0tLS0tLS0KIGRyaXZlcnMvcGNpL2hvc3QtYnJpZGdlLmMgfCAgIDMx
-ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysKIGluY2x1ZGUvbGludXgvcGNpLmggICAg
-ICAgfCAgICAyICsrCiAzIGZpbGVzIGNoYW5nZWQsIDY0IGluc2VydGlvbnMoKyksIDEyIGRlbGV0
-aW9ucygtKQoKSW5kZXg6IGxpbnV4LTIuNi9hcmNoL3g4Ni9wY2kvaTM4Ni5jCj09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0K
-LS0tIGxpbnV4LTIuNi5vcmlnL2FyY2gveDg2L3BjaS9pMzg2LmMKKysrIGxpbnV4LTIuNi9hcmNo
-L3g4Ni9wY2kvaTM4Ni5jCkBAIC0yMDUsMTAgKzIwNSwxMSBAQCBFWFBPUlRfU1lNQk9MKHBjaWJp
-b3NfYWxpZ25fcmVzb3VyY2UpOwogICoJICAgIGFzIHdlbGwuCiAgKi8KIAotc3RhdGljIHZvaWQg
-cGNpYmlvc19hbGxvY2F0ZV9icmlkZ2VfcmVzb3VyY2VzKHN0cnVjdCBwY2lfZGV2ICpkZXYpCitz
-dGF0aWMgYm9vbCBwY2liaW9zX2FsbG9jYXRlX2JyaWRnZV9yZXNvdXJjZXMoc3RydWN0IHBjaV9k
-ZXYgKmRldikKIHsKIAlpbnQgaWR4OwogCXN0cnVjdCByZXNvdXJjZSAqcjsKKwlib29sIGNoYW5n
-ZWQgPSBmYWxzZTsKIAogCWZvciAoaWR4ID0gUENJX0JSSURHRV9SRVNPVVJDRVM7IGlkeCA8IFBD
-SV9OVU1fUkVTT1VSQ0VTOyBpZHgrKykgewogCQlyID0gJmRldi0+cmVzb3VyY2VbaWR4XTsKQEAg
-LTIxNiwxNyArMjE3LDMxIEBAIHN0YXRpYyB2b2lkIHBjaWJpb3NfYWxsb2NhdGVfYnJpZGdlX3Jl
-c28KIAkJCWNvbnRpbnVlOwogCQlpZiAoci0+cGFyZW50KQkvKiBBbHJlYWR5IGFsbG9jYXRlZCAq
-LwogCQkJY29udGludWU7Ci0JCWlmICghci0+c3RhcnQgfHwgcGNpX2NsYWltX3Jlc291cmNlKGRl
-diwgaWR4KSA8IDApIHsKLQkJCS8qCi0JCQkgKiBTb21ldGhpbmcgaXMgd3Jvbmcgd2l0aCB0aGUg
-cmVnaW9uLgotCQkJICogSW52YWxpZGF0ZSB0aGUgcmVzb3VyY2UgdG8gcHJldmVudAotCQkJICog
-Y2hpbGQgcmVzb3VyY2UgYWxsb2NhdGlvbnMgaW4gdGhpcwotCQkJICogcmFuZ2UuCi0JCQkgKi8K
-LQkJCXItPnN0YXJ0ID0gci0+ZW5kID0gMDsKLQkJCXItPmZsYWdzID0gMDsKKwkJaWYgKCFyLT5z
-dGFydCkKKwkJCWdvdG8gY2xlYXI7CisJCWlmIChwY2lfY2xhaW1fcmVzb3VyY2UoZGV2LCBpZHgp
-IDwgMCkgeworCQkJLyogdHJ5IGFnYWluIGFmdGVyIGNsaXAgZm9yIHBjaSBicmlkZ2UqLworCQkJ
-aWYgKChkZXYtPmNsYXNzID4+IDgpID09IFBDSV9DTEFTU19CUklER0VfUENJICYmCisJCQkgICAg
-cGNpYmlvc19yZXNvdXJjZV9jbGlwX2luX2hvc3RfYnJpZGdlKGRldi0+YnVzLCByKSkgeworCQkJ
-CWNoYW5nZWQgPSB0cnVlOworCQkJCWlmIChwY2lfY2xhaW1fcmVzb3VyY2UoZGV2LCBpZHgpID49
-IDApCisJCQkJCWNvbnRpbnVlOworCQkJfQorCQkJZ290byBjbGVhcjsKIAkJfQorCQljb250aW51
-ZTsKK2NsZWFyOgorCQkvKgorCQkgKiBTb21ldGhpbmcgaXMgd3Jvbmcgd2l0aCB0aGUgcmVnaW9u
-LgorCQkgKiBJbnZhbGlkYXRlIHRoZSByZXNvdXJjZSB0byBwcmV2ZW50CisJCSAqIGNoaWxkIHJl
-c291cmNlIGFsbG9jYXRpb25zIGluIHRoaXMKKwkJICogcmFuZ2UuCisJCSAqLworCQlyLT5zdGFy
-dCA9IHItPmVuZCA9IDA7CisJCXItPmZsYWdzID0gMDsKIAl9CisKKwlyZXR1cm4gY2hhbmdlZDsK
-IH0KIAogc3RhdGljIHZvaWQgcGNpYmlvc19hbGxvY2F0ZV9idXNfcmVzb3VyY2VzKHN0cnVjdCBw
-Y2lfYnVzICpidXMpCkBAIC0yMzQsOCArMjQ5LDEyIEBAIHN0YXRpYyB2b2lkIHBjaWJpb3NfYWxs
-b2NhdGVfYnVzX3Jlc291cmMKIAlzdHJ1Y3QgcGNpX2J1cyAqY2hpbGQ7CiAKIAkvKiBEZXB0aC1G
-aXJzdCBTZWFyY2ggb24gYnVzIHRyZWUgKi8KLQlpZiAoYnVzLT5zZWxmKQotCQlwY2liaW9zX2Fs
-bG9jYXRlX2JyaWRnZV9yZXNvdXJjZXMoYnVzLT5zZWxmKTsKKwlpZiAoYnVzLT5zZWxmKSB7CisJ
-CWJvb2wgY2hhbmdlZCA9IHBjaWJpb3NfYWxsb2NhdGVfYnJpZGdlX3Jlc291cmNlcyhidXMtPnNl
-bGYpOworCisJCWlmIChjaGFuZ2VkKQorCQkJcGNpX3NldHVwX2JyaWRnZShidXMpOworCX0KIAls
-aXN0X2Zvcl9lYWNoX2VudHJ5KGNoaWxkLCAmYnVzLT5jaGlsZHJlbiwgbm9kZSkKIAkJcGNpYmlv
-c19hbGxvY2F0ZV9idXNfcmVzb3VyY2VzKGNoaWxkKTsKIH0KSW5kZXg6IGxpbnV4LTIuNi9kcml2
-ZXJzL3BjaS9ob3N0LWJyaWRnZS5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZl
-cnMvcGNpL2hvc3QtYnJpZGdlLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9ob3N0LWJyaWRn
-ZS5jCkBAIC0zMSw2ICszMSwzNyBAQCB2b2lkIHBjaV9zZXRfaG9zdF9icmlkZ2VfcmVsZWFzZShz
-dHJ1Y3QKIAlicmlkZ2UtPnJlbGVhc2VfZGF0YSA9IHJlbGVhc2VfZGF0YTsKIH0KIAorYm9vbCBw
-Y2liaW9zX3Jlc291cmNlX2NsaXBfaW5faG9zdF9icmlkZ2Uoc3RydWN0IHBjaV9idXMgKmJ1cywK
-KwkJCQkJICBzdHJ1Y3QgcmVzb3VyY2UgKnJlcykKK3sKKwlzdHJ1Y3QgcGNpX2hvc3RfYnJpZGdl
-ICpicmlkZ2UgPSBmaW5kX3BjaV9ob3N0X2JyaWRnZShidXMpOworCXN0cnVjdCBwY2lfaG9zdF9i
-cmlkZ2Vfd2luZG93ICp3aW5kb3c7CisJcmVzb3VyY2Vfc2l6ZV90IHN0YXJ0LCBlbmQ7CisKKwls
-aXN0X2Zvcl9lYWNoX2VudHJ5KHdpbmRvdywgJmJyaWRnZS0+d2luZG93cywgbGlzdCkgeworCQlp
-ZiAocmVzb3VyY2VfdHlwZShyZXMpICE9IHJlc291cmNlX3R5cGUod2luZG93LT5yZXMpKQorCQkJ
-Y29udGludWU7CisKKwkJc3RhcnQgPSBtYXgod2luZG93LT5yZXMtPnN0YXJ0LCByZXMtPnN0YXJ0
-KTsKKwkJZW5kID0gbWluKHdpbmRvdy0+cmVzLT5lbmQsIHJlcy0+ZW5kKTsKKworCQkvKiBubyBv
-dmVybGFwID8gKi8KKwkJaWYgKHN0YXJ0ID4gZW5kKQorCQkJY29udGludWU7CisKKwkJaWYgKHJl
-cy0+c3RhcnQgPT0gc3RhcnQgJiYgcmVzLT5lbmQgPT0gZW5kKQorCQkJcmV0dXJuIGZhbHNlOwor
-CisJCS8qIGNoYW5nZWQgKi8KKwkJcmVzLT5zdGFydCA9IHN0YXJ0OworCQlyZXMtPmVuZCA9IGVu
-ZDsKKworCQlyZXR1cm4gdHJ1ZTsKKwl9CisKKwlyZXR1cm4gZmFsc2U7Cit9CisKIHZvaWQgcGNp
-Ymlvc19yZXNvdXJjZV90b19idXMoc3RydWN0IHBjaV9idXMgKmJ1cywgc3RydWN0IHBjaV9idXNf
-cmVnaW9uICpyZWdpb24sCiAJCQkgICAgIHN0cnVjdCByZXNvdXJjZSAqcmVzKQogewpJbmRleDog
-bGludXgtMi42L2luY2x1ZGUvbGludXgvcGNpLmgKPT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9y
-aWcvaW5jbHVkZS9saW51eC9wY2kuaAorKysgbGludXgtMi42L2luY2x1ZGUvbGludXgvcGNpLmgK
-QEAgLTc2Miw2ICs3NjIsOCBAQCB2b2lkIHBjaV9maXh1cF9jYXJkYnVzKHN0cnVjdCBwY2lfYnVz
-ICopCiAKIC8qIEdlbmVyaWMgUENJIGZ1bmN0aW9ucyB1c2VkIGludGVybmFsbHkgKi8KIAorYm9v
-bCBwY2liaW9zX3Jlc291cmNlX2NsaXBfaW5faG9zdF9icmlkZ2Uoc3RydWN0IHBjaV9idXMgKmJ1
-cywKKwkJCQkJICBzdHJ1Y3QgcmVzb3VyY2UgKnJlcyk7CiB2b2lkIHBjaWJpb3NfcmVzb3VyY2Vf
-dG9fYnVzKHN0cnVjdCBwY2lfYnVzICpidXMsIHN0cnVjdCBwY2lfYnVzX3JlZ2lvbiAqcmVnaW9u
-LAogCQkJICAgICBzdHJ1Y3QgcmVzb3VyY2UgKnJlcyk7CiB2b2lkIHBjaWJpb3NfYnVzX3RvX3Jl
-c291cmNlKHN0cnVjdCBwY2lfYnVzICpidXMsIHN0cnVjdCByZXNvdXJjZSAqcmVzLAo=
---047d7b2e0b599ba0ec050ad872b0--
+Thanks,
+Ratheesh
