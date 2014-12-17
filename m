@@ -1,99 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:64395 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750818AbaLOX4u (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Dec 2014 18:56:50 -0500
-Received: by mail-ie0-f182.google.com with SMTP id x19so11834124ier.27
-        for <linux-pci@vger.kernel.org>; Mon, 15 Dec 2014 15:56:49 -0800 (PST)
-Date: Mon, 15 Dec 2014 16:56:46 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Simon Horman <horms@verge.net.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v3 0/2] arm: pcibios: remove pci_sys_data domain
-Message-ID: <20141215235646.GB4374@google.com>
-References: <1416569367-29409-1-git-send-email-lorenzo.pieralisi@arm.com>
- <20141215235248.GA4374@google.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:44494 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750981AbaLQWhK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 17 Dec 2014 17:37:10 -0500
+Message-ID: <54920597.6090305@ti.com>
+Date: Wed, 17 Dec 2014 17:37:11 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141215235248.GA4374@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Christopher Li <sparse@chrisli.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: How to fix CHECK warning: testing a 'safe expression' ?
+References: <54907884.2040502@ti.com> <5491ACE6.4070108@ti.com> <CAErSpo4hwMPOYBDZTu_fgKaUDYZ4h+jVpz5EigpErOgo6xO8mQ@mail.gmail.com> <54920529.4080007@ti.com>
+In-Reply-To: <54920529.4080007@ti.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Jason, Thomas, Simon -- no wonder there aren't acks from them :)]
+On 12/17/2014 05:35 PM, Murali Karicheri wrote:
+> On 12/17/2014 01:49 PM, Bjorn Helgaas wrote:
+>> [+cc Christopher, linux-kernel (this doesn't sound like a PCI-specific
+>> question)]
+>>
+>> On Wed, Dec 17, 2014 at 9:18 AM, Murali Karicheri<m-karicheri2@ti.com>
+>> wrote:
+>>> I am trying to address CHECK warnings in my driver and wondering how to
+>>> resolve 'warning: testing a 'safe expression' which appears when using
+>>> IS_ERR_OR_NULL(foo)
+>>>
+>>> where foo is defined as
+>>>
+>>> struct foo_type *foo;
+>>>
+>>> The foo get assigned only NULL or ERR_PTR(error code). So I believe the
+>>> usage is correct. But then how do I make the CHECK happy of its usage?
+>>>
+>>> I have tried a grep to check on the current usage of IS_ERR_OR_NULL()
+>>> and
+>>> found 276 of them causes this warning in the v3.18 version of the kernel
+>>> that I am using
+>>>
+>>> $ grep -r "warning: testing a 'safe expression" * | wc -l
+>>> 276
+>>>
+>>> Can someone help me undestand what this means and how to fix the same?
+>>>
+>>> I run folling for CHECK
+>>>
+>>> make C=2 CF="-D__CHECK_ENDIAN__" CHECK=sparse
+>>
+>> If you can share your actual code or point to it in the tree, you
+>> might get more specific help.
+>>
+>> Bjorn
+>
+> For example I get
+>
+> CHECK drivers/pci/host/pci-keystone.c
+> include/linux/err.h:40:16: warning: testing a 'safe expression'
+>
+> Actually it is for IS_ERR_OR_NULL() call in the file which is the only
+> one call in the file.
+>
+Here is the code snippet for your convenience
 
-On Mon, Dec 15, 2014 at 04:52:48PM -0700, Bjorn Helgaas wrote:
-> On Fri, Nov 21, 2014 at 11:29:24AM +0000, Lorenzo Pieralisi wrote:
-> > This patchset is a v3 of a previous posting:
-> > 
-> > http://www.spinics.net/lists/linux-pci/msg36502.html
-> > 
-> > v2 => v3
-> > 
-> > - Rebased on top of this patch dependency
-> >   http://www.spinics.net/lists/linux-pci/msg36631.html
-> > 
-> > v1 => v2 changelog
-> > 
-> > - Removed stale hw_pci domain member
-> > - Reworked pci-mvebu domain handling according to review
-> > - Rebased against 3.18-rc3 and updated the logs
-> > - Dropped RFC status
-> > 
-> > Original cover letter:
-> > ----
-> > This patchset is a first RFC stab at removing the dependency on pci_sys_data
-> > domain field on ARM platforms and by replacing it with generic code that
-> > stashes the domain value in the pci_bus control structure, introduced in
-> > 
-> > commit 41e5c0f81d3e676d671d96a0a1fafb27abfbd9
-> > ("of/pci: Add pci_get_new_domain_nr() and of_get_pci_domain_nr()")
-> > 
-> > commit 670ba0c8883b576d0aec28bd7a838358a4be1
-> > ("PCI: Add generic domain handling")
-> > 
-> > All the drivers converted (apart from PCIe designware, tested on iMX6SL)
-> > were only compile tested for lack of HW, so along some comments, testing
-> > and verifying that patchset does not break any existing platform are
-> > very appreciated.
-> > 
-> > Code in drivers/pci/pci-mvebu.c has been changed to add a domain
-> > number to PCI resources by using the nr value coming from the setup
-> > pcibios32 callback, which may not be correct and should be considered
-> > a temporary solution waiting for review comments.
-> > 
-> > The patchset removes entirely the pci_sys_data.domain field, since its
-> > usage is removed at the same time in the respective host controllers
-> > and ARM is made to select the configuration option
-> > CONFIG_PCI_DOMAINS_GENERIC by default, which compiles a domain_nr in the
-> > pci_bus structure so that the pci_domain_nr() look-up can rely on it.
-> > 
-> > 
-> > Lorenzo Pieralisi (2):
-> >   arm: cns3xxx: pci: remove artificial dependency on pci_sys_data domain
-> >   arm: pcibios: move to generic PCI domains
-> > 
-> >  arch/arm/Kconfig                   |  3 +++
-> >  arch/arm/include/asm/mach/pci.h    |  6 ------
-> >  arch/arm/include/asm/pci.h         |  7 -------
-> >  arch/arm/kernel/bios32.c           |  3 ---
-> >  arch/arm/mach-cns3xxx/pcie.c       | 40 ++++++++++++++++----------------------
-> >  drivers/pci/host/pci-mvebu.c       | 15 ++------------
-> >  drivers/pci/host/pcie-designware.c |  3 ---
-> >  drivers/pci/host/pcie-rcar.c       |  3 ---
-> >  8 files changed, 22 insertions(+), 58 deletions(-)
-> 
-> I provisionally applied these to my next-pci/domain branch.  This will be
-> rebased after v3.19-rc1.
-> 
-> I'd like to see acks from Thomas and/or Jason for MVEBU, and Simon for
-> R-Car.
+	struct device *dev = &pdev->dev;
+	struct keystone_pcie *ks_pcie;
+	struct pcie_port *pp;
+	struct resource *res;
+	void __iomem *reg_p;
+	struct phy *phy;
+	int ret = 0;
+
+	ks_pcie = devm_kzalloc(&pdev->dev, sizeof(*ks_pcie),
+				GFP_KERNEL);
+	if (!ks_pcie) {
+		dev_err(dev, "no memory for keystone pcie\n");
+		return -ENOMEM;
+	}
+	pp = &ks_pcie->pp;
+
+	/* initialize SerDes Phy if present */
+	phy = devm_phy_get(dev, "pcie-phy");
+===>    if (!IS_ERR_OR_NULL(phy)) {
+		ret = phy_init(phy);
+		if (ret < 0)
+			return ret;
+	}
+
+
+
+-- 
+Murali Karicheri
+Linux Kernel, Texas Instruments
