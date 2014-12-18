@@ -1,129 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:36940 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754373AbaLVJRS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 04:17:18 -0500
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>
-Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
-	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>
-Subject: [PATCH 09/10] iommu/vt-d: Copy functions for irte
-Date: Mon, 22 Dec 2014 17:15:28 +0800
-Message-Id: <1419239729-26529-10-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1419239729-26529-1-git-send-email-zhen-hual@hp.com>
-References: <1419239729-26529-1-git-send-email-zhen-hual@hp.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:43073 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751477AbaLRWHe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 18 Dec 2014 17:07:34 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <grant.likely@linaro.org>,
+	<robh+dt@kernel.org>, <devicetree@vger.kernel.org>,
+	<arnd@arndb.de>, <linux-arm-kernel@lists.infradead.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>
+Subject: [RFC v1 PATCH 2/2] PCI: update dma configuration from DT
+Date: Thu, 18 Dec 2014 17:07:05 -0500
+Message-ID: <1418940425-2017-3-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1418940425-2017-1-git-send-email-m-karicheri2@ti.com>
+References: <1418940425-2017-1-git-send-email-m-karicheri2@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Functions to copy the irte data from the old kernel into the kdump kernel.
+if there is a DT node available for the root bridge's parent device,
+use the dma configuration from that device node. For example, keystone
+PCI devices would require dma_pfn_offset to be set correctly in the
+device structure of the pci device in order to have the correct dma mask.
+The DT node will have dma-ranges defined for this. This also support using
+the DT property dma-coherent to allow coherent DMA operation by the
+PCI device.
 
-Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
 ---
- drivers/iommu/intel_irq_remapping.c | 57 +++++++++++++++++++++++++++++++++++++
- include/linux/intel-iommu.h         |  4 +++
- 2 files changed, 61 insertions(+)
+ drivers/pci/probe.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index a55b207..13f2034 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -8,6 +8,7 @@
- #include <linux/irq.h>
- #include <linux/intel-iommu.h>
- #include <linux/acpi.h>
-+#include <linux/crash_dump.h>
- #include <asm/io_apic.h>
- #include <asm/smp.h>
- #include <asm/cpu.h>
-@@ -17,6 +18,11 @@
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 23212f8..d7dcd6c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -6,6 +6,7 @@
+ #include <linux/delay.h>
+ #include <linux/init.h>
+ #include <linux/pci.h>
++#include <linux/of_pci.h>
+ #include <linux/pci_hotplug.h>
+ #include <linux/slab.h>
+ #include <linux/module.h>
+@@ -1520,6 +1521,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	dev->dev.dma_mask = &dev->dma_mask;
+ 	dev->dev.dma_parms = &dev->dma_parms;
+ 	dev->dev.coherent_dma_mask = 0xffffffffull;
++	of_pci_dma_configure(dev);
  
- #include "irq_remapping.h"
- 
-+#ifdef CONFIG_CRASH_DUMP
-+static int __iommu_load_old_irte(struct intel_iommu *iommu);
-+static int __iommu_update_old_irte(struct intel_iommu *iommu, int index);
-+#endif /* CONFIG_CRASH_DUMP */
-+
- struct ioapic_scope {
- 	struct intel_iommu *iommu;
- 	unsigned int id;
-@@ -1296,3 +1302,54 @@ int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
- 
- 	return ret;
- }
-+
-+#ifdef CONFIG_CRASH_DUMP
-+
-+static int __iommu_load_old_irte(struct intel_iommu *iommu)
-+{
-+	if ((!iommu)
-+		|| (!iommu->ir_table)
-+		|| (!iommu->ir_table->base)
-+		|| (!iommu->ir_table->base_old_phys)
-+		|| (!iommu->ir_table->base_old_virt))
-+		return -1;
-+
-+	memcpy(iommu->ir_table->base,
-+		iommu->ir_table->base_old_virt,
-+		INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
-+
-+	return 0;
-+}
-+
-+static int __iommu_update_old_irte(struct intel_iommu *iommu, int index)
-+{
-+	int start;
-+	unsigned long size;
-+	void __iomem *to;
-+	void *from;
-+
-+	if ((!iommu)
-+		|| (!iommu->ir_table)
-+		|| (!iommu->ir_table->base)
-+		|| (!iommu->ir_table->base_old_phys)
-+		|| (!iommu->ir_table->base_old_virt))
-+		return -1;
-+
-+	if (index < -1 || index >= INTR_REMAP_TABLE_ENTRIES)
-+		return -1;
-+
-+	if (index == -1) {
-+		start = 0;
-+		size = INTR_REMAP_TABLE_ENTRIES * sizeof(struct irte);
-+	} else {
-+		start = index * sizeof(struct irte);
-+		size = sizeof(struct irte);
-+	}
-+
-+	to = iommu->ir_table->base_old_virt;
-+	from = iommu->ir_table->base;
-+	memcpy(to + start, from + start, size);
-+
-+	return 0;
-+}
-+#endif /* CONFIG_CRASH_DUMP */
-diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
-index 8e29b97..76c6ea5 100644
---- a/include/linux/intel-iommu.h
-+++ b/include/linux/intel-iommu.h
-@@ -290,6 +290,10 @@ struct q_inval {
- struct ir_table {
- 	struct irte *base;
- 	unsigned long *bitmap;
-+#ifdef CONFIG_CRASH_DUMP
-+	void __iomem *base_old_virt;
-+	unsigned long base_old_phys;
-+#endif
- };
- #endif
- 
+ 	pci_set_dma_max_seg_size(dev, 65536);
+ 	pci_set_dma_seg_boundary(dev, 0xffffffff);
 -- 
-2.0.0-rc0
+1.7.9.5
 
