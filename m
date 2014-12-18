@@ -1,57 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:57550 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752813AbaLMTsB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 13 Dec 2014 14:48:01 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	devicetree@vger.kernel.org,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Scott Branden <sbranden@broadcom.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Ray Jui <rjui@broadcom.com>,
-	Christian Daudt <bcm@fixthebug.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Matt Porter <mporter@linaro.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	bcm-kernel-feedback-list@broadcom.com,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Kumar Gala <galak@codeaurora.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: [PATCH v2 1/4] pci: iProc: define Broadcom iProc PCIe binding
-Date: Sat, 13 Dec 2014 20:46:42 +0100
-Message-ID: <3383252.Ad6Qf0H2fa@wuerfel>
-In-Reply-To: <548C0F80.2090300@broadcom.com>
-References: <1418351817-14898-2-git-send-email-rjui@broadcom.com> <3907917.zNo7yttzkh@wuerfel> <548C0F80.2090300@broadcom.com>
+Received: from mail-qg0-f52.google.com ([209.85.192.52]:41013 "EHLO
+	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751307AbaLRCjK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Dec 2014 21:39:10 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <54920597.6090305@ti.com>
+References: <54907884.2040502@ti.com>
+	<5491ACE6.4070108@ti.com>
+	<CAErSpo4hwMPOYBDZTu_fgKaUDYZ4h+jVpz5EigpErOgo6xO8mQ@mail.gmail.com>
+	<54920529.4080007@ti.com>
+	<54920597.6090305@ti.com>
+Date: Thu, 18 Dec 2014 10:39:08 +0800
+Message-ID: <CANeU7Q=85c8ehgCitG-Ujrr5O78V1yq9o=abJ8pwBBs0JOWAEg@mail.gmail.com>
+Subject: Re: How to fix CHECK warning: testing a 'safe expression' ?
+From: Christopher Li <sparse@chrisli.org>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday 13 December 2014 11:05:52 Arend van Spriel wrote:
-> 
-> Makes sense. I think that is what Hauke meant by "adding
-> additional support for registering to bcma". So the discovery info is a 
-> piece of read-only memory in the chip. Its address is stored in the 
-> chipcommon core register space. BCMA parses that memory blob resulting 
-> in a list of cores which register address info. We could add DT support 
-> in BCMA matching the compatible string and register a core for it.
+On Thu, Dec 18, 2014 at 6:37 AM, Murali Karicheri <m-karicheri2@ti.com> wrote:
+>         if (!ks_pcie) {
+>                 dev_err(dev, "no memory for keystone pcie\n");
+>                 return -ENOMEM;
+>         }
+>         pp = &ks_pcie->pp;
+>
+>         /* initialize SerDes Phy if present */
+>         phy = devm_phy_get(dev, "pcie-phy");
+> ===>    if (!IS_ERR_OR_NULL(phy)) {
+>                 ret = phy_init(phy);
+>                 if (ret < 0)
+>                         return ret;
+>
 
-Ah, interesting idea. That would mirror what we do for drivers/amba,
-I like the idea.
+Hi,
 
-> However, apart from the discovery info a "discoverable ARM AXI" chip has 
-> a register space per core that provides common procedures like 
-> enable/disable, reset, core status, which are implemented in BCMA. I am 
-> not seeing that register space in the DT examples so I guess this IP 
-> block is not there for iProc chips.
+Do you have a smaller stand alone test case which I can reproduce with sparse?
 
-I wouldn't draw conclusions from the absence of some node. Maybe these
-registers are present but just not used by the original BSP.
+Thanks
 
-	Arnd
+Chris
