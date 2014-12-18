@@ -1,122 +1,82 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1418207427.7616.5.camel@pengutronix.de>
-Subject: Re: [PATCH 1/4] pci: iProc: define Broadcom iProc PCIe binding
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Ray Jui <rjui@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Christian Daudt <bcm@fixthebug.org>,
-	Matt Porter <mporter@linaro.org>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Scott Branden <sbranden@broadcom.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	bcm-kernel-feedback-list@broadcom.com, devicetree@vger.kernel.org
-Date: Wed, 10 Dec 2014 11:30:27 +0100
-In-Reply-To: <1418169871-19232-2-git-send-email-rjui@broadcom.com>
-References: <Ray Jui <rjui@broadcom.com>
-	 <1418169871-19232-1-git-send-email-rjui@broadcom.com>
-	 <1418169871-19232-2-git-send-email-rjui@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bear.ext.ti.com ([192.94.94.41]:34079 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751098AbaLRRp3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 18 Dec 2014 12:45:29 -0500
+Message-ID: <549312BB.40400@ti.com>
+Date: Thu, 18 Dec 2014 12:45:31 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Christopher Li <sparse@chrisli.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: How to fix CHECK warning: testing a 'safe expression' ?
+References: <54907884.2040502@ti.com> <5491ACE6.4070108@ti.com> <CAErSpo4hwMPOYBDZTu_fgKaUDYZ4h+jVpz5EigpErOgo6xO8mQ@mail.gmail.com> <54920529.4080007@ti.com> <54920597.6090305@ti.com> <CANeU7Q=85c8ehgCitG-Ujrr5O78V1yq9o=abJ8pwBBs0JOWAEg@mail.gmail.com>
+In-Reply-To: <CANeU7Q=85c8ehgCitG-Ujrr5O78V1yq9o=abJ8pwBBs0JOWAEg@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Dienstag, den 09.12.2014, 16:04 -0800 schrieb Ray Jui:
-> Document the PCIe device tree binding for Broadcom iProc family of SoCs
-> 
-> Signed-off-by: Ray Jui <rjui@broadcom.com>
-> Reviewed-by: Scott Branden <sbranden@broadcom.com>
-> ---
->  .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |   62 ++++++++++++++++++++
->  1 file changed, 62 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-> new file mode 100644
-> index 0000000..2467628
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-> @@ -0,0 +1,62 @@
-> +* Broadcom iProc PCIe controller
-> +
-> +Required properties:
-> +- compatible: Must be "brcm,iproc-pcie"
-> +- reg: base address and length of the PCIe controller and the MDIO interface
-> +  that controls the PCIe PHY
-> +- interrupts: interrupt IDs
-> +- bus-range: PCI bus numbers covered
-> +- #address-cells: set to <3>
-> +- #size-cells: set to <2>
-> +- device_type: set to "pci"
-> +- ranges: ranges for the PCI memory and I/O regions
-> +- phy-addr: MDC/MDIO adddress of the PCIe PHY
-> +- have-msi-inten-reg: Required for legacy iProc PCIe controllers that need the
-> +  MSI interrupt enable register to be set explicitly
-> +
-> +The Broadcom iProc PCie driver adapts the multi-domain structure, i.e., each
-> +interface has its own domain and therefore has its own device node
-> +Example:
-> +
-> +SoC specific DT Entry:
-> +
-> +	pcie0: pcie@18012000 {
-> +		compatible = "brcm,iproc-pcie";
-> +		reg = <0x18012000 0x1000>,
-> +			<0x18002000 0x1000>;
-> +		interrupts = <GIC_SPI 96 IRQ_TYPE_NONE>,
-> +			     <GIC_SPI 97 IRQ_TYPE_NONE>,
-> +			     <GIC_SPI 98 IRQ_TYPE_NONE>,
-> +			     <GIC_SPI 99 IRQ_TYPE_NONE>,
-> +			     <GIC_SPI 100 IRQ_TYPE_NONE>,
-> +			     <GIC_SPI 101 IRQ_TYPE_NONE>;
+On 12/17/2014 09:39 PM, Christopher Li wrote:
+> On Thu, Dec 18, 2014 at 6:37 AM, Murali Karicheri<m-karicheri2@ti.com>  wrote:
+>>          if (!ks_pcie) {
+>>                  dev_err(dev, "no memory for keystone pcie\n");
+>>                  return -ENOMEM;
+>>          }
+>>          pp =&ks_pcie->pp;
+>>
+>>          /* initialize SerDes Phy if present */
+>>          phy = devm_phy_get(dev, "pcie-phy");
+>> ===>     if (!IS_ERR_OR_NULL(phy)) {
+>>                  ret = phy_init(phy);
+>>                  if (ret<  0)
+>>                          return ret;
+>>
+>
+> Hi,
+>
+> Do you have a smaller stand alone test case which I can reproduce with sparse?
+>
+> Thanks
+>
+> Chris
+Thanks Chris for responding.
 
-This is missing the interrupt-map and interrupt-map-mask for the legacy
-INTx interrupts. If you add this you don't need to have a special map
-function in your driver, but can just use the standard
-of_irq_parse_and_map_pci() function.
+You could add this piece of code for testing
 
-Regards,
-Lucas
+struct foo {
+	int x;
+	int y;
+};
 
-> +		bus-range = <0x00 0xFF>;
-> +
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		device_type = "pci";
-> +		ranges = <0x81000000 0 0	  0x28000000 0 0x00010000   /* downstream I/O */
-> +			  0x82000000 0 0x20000000 0x20000000 0 0x04000000>; /* non-prefetchable memory */
-> +		phy-addr = <5>;
-> +	};
-> +
-> +	pcie1: pcie@18013000 {
-> +		compatible = "brcm,iproc-pcie";
-> +		reg = <0x18013000 0x1000>,
-> +			<0x18002000 0x1000>;
-> +
-> +		interrupts = <GIC_SPI 102 IRQ_TYPE_NONE>,
-> +			     <GIC_SPI 103 IRQ_TYPE_NONE>,
-> +			     <GIC_SPI 104 IRQ_TYPE_NONE>,
-> +			     <GIC_SPI 105 IRQ_TYPE_NONE>,
-> +			     <GIC_SPI 106 IRQ_TYPE_NONE>,
-> +			     <GIC_SPI 107 IRQ_TYPE_NONE>;
-> +		bus-range = <0x00 0xFF>;
-> +
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		device_type = "pci";
-> +		ranges = <0x81000000 0 0	  0x48000000 0 0x00010000   /* downstream I/O */
-> +			  0x82000000 0 0x40000000 0x40000000 0 0x04000000>; /* non-prefetchable memory */
-> +		phy-addr = <6>;
-> +	};
+static struct foo *func1(struct device *dev)
+{
+	struct foo *fp;
+
+	fp = devm_kzalloc(dev, sizeof(*fp), GFP_KERNEL);
+	if (fp == NULL)
+		return ERR_PTR(-ENOMEM);
+	return fp;
+}
+
+And in one of your module in kernel add
+
+	struct foo *fp;
+
+	if (IS_ERR_OR_NULL(fp))
+		return -ENOMEM;
+
+and do
+
+make C=2 CF="-D__CHECK_ENDIAN__" CHECK=sparse
+
+You will see the CHECK warning against your module as
+
+include/linux/err.h:40:16: warning: testing a 'safe expression'
+
+Hope this helps.
 
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
-
+Murali Karicheri
+Linux Kernel, Texas Instruments
