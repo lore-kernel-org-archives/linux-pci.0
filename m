@@ -1,105 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:34473 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751121AbaLIH40 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 02:56:26 -0500
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 9 Dec 2014 17:56:24 +1000
-Date: Tue, 9 Dec 2014 15:56:19 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Marek =?iso-8859-1?Q?Kord=EDk?= <kordikmarek@gmail.com>,
-	Alexey Voronkov <zermond@gmail.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Clear bridge MEM_64 flag if one child does not
- support it
-Message-ID: <20141209075619.GA23327@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1418075552-26495-1-git-send-email-yinghai@kernel.org>
- <1418079372.13358.9.camel@kernel.crashing.org>
- <CAE9FiQX-vMu5+Kr09ngr95WvtoZTUSL5R2+NiVFeiN6q-BXLLg@mail.gmail.com>
- <20141209001119.GA24661@shangw>
- <20141209022601.GA16207@richard>
- <CAE9FiQWz=vdR=QSkoEs5XjUxg_y4vJgnChQAc1-U_9xzfQpknQ@mail.gmail.com>
+Received: from mout.kundenserver.de ([212.227.126.187]:53007 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751030AbaLRAJ2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Dec 2014 19:09:28 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Murali Karicheri <m-karicheri2@ti.com>, vinod.koul@intel.com,
+	gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, will.deacon@arm.com,
+	Catalin Marinas <catalin.marinas@arm.com>
+Subject: Re: [RFC PATCH 1/2] common: dma-mapping: introduce dma_get_parent_cfg() helper
+Date: Thu, 18 Dec 2014 01:09:17 +0100
+Message-ID: <2935351.ba8Au9y4fE@wuerfel>
+In-Reply-To: <549210BB.9080603@ti.com>
+References: <1418839344-14393-1-git-send-email-m-karicheri2@ti.com> <1949667.gMcOLHe7Sk@wuerfel> <549210BB.9080603@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQWz=vdR=QSkoEs5XjUxg_y4vJgnChQAc1-U_9xzfQpknQ@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 08, 2014 at 11:20:59PM -0800, Yinghai Lu wrote:
->On Mon, Dec 8, 2014 at 6:26 PM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
->> On Tue, Dec 09, 2014 at 11:11:19AM +1100, Gavin Shan wrote:
->>>
->>>I'm going to give it a spin and Richard, could you please apply Yinghai's
->>>patch to see if your SRIOV code can work properly?
->>>
->>
->> I did a quick test on my machine. This patch doesn't affect the MMIO
->> allocation on out platform, so SRIOV works fine.
->>
->> I will spend more time to read the patch to get more understanding about the
->> problem.
->
->Hi Marek,
->
->Can you boot following branch with "debug ignore_loglevel pci=realloc"
->on your setup?
->
->git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
->for-pci-allocate-fit-3.18
->
->it has
->8f74af9: PCI, x86: Allocate mmio near end of free range
->1ff91c1: PCI: Don't allocate small resource in big free space.
->108b43b: resources: Add allocate_resource_fit()
->b6a22f0: resources: Make find_resource could return just fit resource
->cf50e16: resources: Split out __allocate_resource()
->
->on top the v3.18, and it will allocate resource in fit way.
+On Wednesday 17 December 2014 18:24:43 Murali Karicheri wrote:
+> On 12/17/2014 04:56 PM, Arnd Bergmann wrote:
+> > On Wednesday 17 December 2014 13:02:23 Murali Karicheri wrote:
+> >
+> > What's wrong with using arch_setup_dma_ops() from PCI as suggested
+> > previously?
+> >
 
-Hi, Yinghai
++Will Deacon
 
-Just spent some time to understand the problem and your patch.
+> I had originally written a code based on that line as below. But 
+> dma-ranges property is also used by ppc and other architectures in the 
+> pci device DT node. So I wasn't sure how this code impact PCI driver 
+> functionality on those platforms. Hence used a simpler change as all 
+> that is needed for keystone is to get the dma_pfn_offset rightly set in 
+> the pci slave device.
 
-Two comments to this patch:
-1. realloc_head is not necessary here
-2. In case we have two MEM BAR under a bus, one is MEM64|PREF and one is PREF,
-after this patch, the MEM64 flag will be cleared, right? If so, this may fall
-back to the same situation in bug 74151.
+But in your patch, you don't call arch_setup_dma_ops() at all.
 
-I am looking at the bugzilla and try to understand the root cause for this
-allocation failure. Currently I don't get the reason. In my mind, the resource
-will be sized in the non-pref bridge window. But seems not. I have asked more
-info in the bugzilla, so that I could understand the problem. (Yeah, maybe I
-am not that smart, if one of you would help me understand the problem, I am
-happy to offer you a cup of coffee :-) )
+> Initially I had a function implemented as below for this in of_pci.c.
+> 
+> + * of_pci_dma_configure - Setup DMA configuration for a pci device
+> + * @dev:       pci device to apply DMA configuration
+> + *
+> + * Try to get devices's DMA configuration from DT and update it
+> + * accordingly. This is a similar to of_dma_configure() for platform
+> + * devices.
+> + *
+> + */
+> +void of_pci_dma_configure(struct pci_dev *dev)
+> +{
+> +       struct device *host_bridge, *parent;
+> +       struct pci_bus *bus = dev->bus;
+> +       u64 dma_addr, paddr, size;
+> +       int ret;
+> +
+> +       while (!pci_is_root_bus(bus))
+> +               bus = bus->parent;
+> +       host_bridge = bus->bridge;
+> +
+> +       parent = host_bridge->parent;
+> +       if (parent->of_node) {
 
-Bjorin,
+so far it looks good, although we may want to introduce
+a helper function to get the of_node.
 
-As you mentioned in another thread, "5b28541552ef is taking the wrong
-approach". (http://www.spinics.net/lists/linux-pci/msg37374.html) Maybe I
-don't catch it clearly. Put a 32bit prefetchable resource in a 32bit
-non-prefetchable bridge window is a bad idea? But in my mind, if the bridge
-prefetchable window is 64bit, we can't put a 32bit prefetchable resource in
-it.
+> +               /*
+> +                * if dma-coherent property exist, call arch hook to setup
+> +                * dma coherent operations.
+> +                */
+> +               if (of_dma_is_coherent(parent->of_node)) {
+> +                       set_arch_dma_coherent_ops(&dev->dev);
+> +                       dev_info(&dev->dev, "device is dma coherent\n");
+> +               }
 
-I am trying to catch up with the updates of the bug, if I missed something
-just let me know.
+set_arch_dma_coherent_ops no longer exists. Just keep the flag in a
+local variable
 
->
->Thanks
->
->Yinghai
+> +               /*
+> +                * if dma-ranges property doesn't exist - just return else
+> +                * setup the dma offset
+> +                */
+> +               ret = of_dma_get_range(parent->of_node, &dma_addr, 
+> &paddr, &size);
+> +               if (ret < 0) {
+> +                       dev_info(&dev->dev, "no dma range information to 
+> setup\n");
+> +                       printk("no dma range information to setup\n");
+> +                       return;
+> +               }
+> +
+> +               /* DMA ranges found. Calculate and set dma_pfn_offset */
+> +               dev->dev.dma_pfn_offset = PFN_DOWN(paddr - dma_addr);
+> +               dev_info(&dev->dev, "dma_pfn_offset(%#08lx)\n", 
+> dev->dev.dma_pfn_offset);
 
--- 
-Richard Yang
-Help you, Help me
+Same for the offset and size here, then pass all of the above into
+arch_setup_dma_ops. This is also where we need to hook up the iommu
+support once we decide how to make that work with the ARM SMMU.
 
+Will, I think we may have a problem on ARM64 now, since we only replaced
+set_arch_dma_coherent_ops on ARM32 but not ARM64. Can you send a fix for
+this? Without that, we don't have any coherent operations on ARM64 any
+more, unless I'm missing something.
+
+	Arnd
