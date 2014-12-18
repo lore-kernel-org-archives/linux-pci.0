@@ -1,80 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:6789 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751352AbaLPA2Z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Dec 2014 19:28:25 -0500
-Message-ID: <548F7CA7.8070600@broadcom.com>
-Date: Mon, 15 Dec 2014 16:28:23 -0800
-From: Ray Jui <rjui@broadcom.com>
-MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	"Ian Campbell" <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Christian Daudt <bcm@fixthebug.org>,
-	Matt Porter <mporter@linaro.org>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>
-Subject: Re: [PATCH v2 2/4] PCI: iproc: Add Broadcom iProc PCIe driver
-References: <1418351817-14898-3-git-send-email-rjui@broadcom.com> <1790462.K12S5vem48@wuerfel> <548F338F.9030203@broadcom.com> <2242033.mU3KpyO3Rt@wuerfel>
-In-Reply-To: <2242033.mU3KpyO3Rt@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:51475 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751163AbaLRTLr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Dec 2014 14:11:47 -0500
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Cc: Alexandre Courbot <gnurou@gmail.com>, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 1/2] PCI: add helper function to find root port for device
+Date: Thu, 18 Dec 2014 20:11:42 +0100
+Message-Id: <1418929903-8506-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This adds a simple way to get the root port a given device
+is connected to.
 
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+---
+v2: new patch in v2
+---
+ drivers/pci/search.c | 20 ++++++++++++++++++++
+ include/linux/pci.h  |  1 +
+ 2 files changed, 21 insertions(+)
 
-On 12/15/2014 1:37 PM, Arnd Bergmann wrote:
-> On Monday 15 December 2014 11:16:31 Ray Jui wrote:
->> On 12/12/2014 9:21 AM, Arnd Bergmann wrote:
->>> On Friday 12 December 2014 09:08:48 Ray Jui wrote:
->>> One way to solve this would be by turning the driver into a library
->>> the same way as the pcie-dw driver, and have separate front-ends
->>> for it for platform_device and bcma_device.
->>>
->> I'm fine with this solution, i.e., to introduce a common pcie-iproc core
->> driver (just like pcie-designware) and have different front-ends
->> depending on the device/bus type. If we end up deciding to go with this
->> solution, I need to discuss with Hauke to come up with a plan to
->> collaborate.
->
-> Ok
->
->> But before we choose to go with that route, may I ask, what is the
->> purpose of tying a PCIe host driver to BCMA? What benefit does BCMA give
->> us? If we have a generic platform based PCIe driver that can work on all
->> iProc SoCs + BCM4708 and BCM5301X with all HW specific configurations
->> taken care of by device tree, why do we still need to use BCMA?
->>
->> I thought all a BCMA device here does is to auto-instantiate based on
->> some register readings?
->
-> Basically, DT is a hack that we only need for nondiscoverable buses.
-> As BCMA is (mostly) discoverable, we should use that, just like we do
-> for things like PCI and USB. There are clearly some limitations to
-> BCMA as well, e.g. on bcm4708 we don't have proper IRQ numbers in
-> the device list and we need to work around that using DT, but overall
-> it still seems to have more upsides than downsides to use it.
->
-> It's also good to point other SoC makers to Broadcom as a good example
-> for how to do things they claim are impossible to do.
->
-> 	Arnd
->
-Okay. Fair enough. Let's go with your proposal to create a generic 
-driver pcie-iproc to be used by both bcma and platform bus. I'll 
-initiate another email thread with you, Hauke, Scott, and me. We can 
-discuss how to collaborate on that email thread.
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index a81f413083e4..c3ae1c52c7cf 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -385,3 +385,23 @@ int pci_dev_present(const struct pci_device_id *ids)
+ 	return 0;
+ }
+ EXPORT_SYMBOL(pci_dev_present);
++
++/**
++ * pci_get_rootport - Returns the root port the given device is connected to.
++ * @dev: PCI device for which the root port should be found.
++ */
++struct pci_dev *pci_get_rootport(struct pci_dev *dev)
++{
++	struct pci_bus *bus = dev->bus;
++
++	/* If there is no bridge on the bus the passed device is a root port. */
++	if (!bus->self)
++		return dev;
++
++	/* Walk up the PCI hierarchy to the first level below the root. */
++	while (bus->parent && bus->parent->self)
++		bus = bus->parent;
++
++	return bus->self;
++}
++EXPORT_SYMBOL(pci_get_rootport);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 4c8ac5fcc224..05442db50cad 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -843,6 +843,7 @@ static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
+ }
+ struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from);
+ int pci_dev_present(const struct pci_device_id *ids);
++struct pci_dev *pci_get_rootport(struct pci_dev *dev);
+ 
+ int pci_bus_read_config_byte(struct pci_bus *bus, unsigned int devfn,
+ 			     int where, u8 *val);
+-- 
+2.1.3
 
-Thanks.
