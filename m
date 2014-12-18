@@ -1,62 +1,130 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linaro-acpi@lists.linaro.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>, rjw@rjwysocki.net,
-	linux-pci@vger.kernel.org, catalin.marinas@arm.com, x86@kernel.org,
-	will.deacon@arm.com, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, mingo@redhat.com, hpa@zytor.com,
-	wangyijing@huawei.com, Liviu.Dudau@arm.com, tglx@linutronix.de,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [Linaro-acpi] [PATCH 2/6] x86, acpi, pci: Move arch-agnostic MMCFG code out of arch/x86/ directory
-Date: Fri, 12 Dec 2014 15:55:23 +0100
-Message-ID: <67564550.9h6b3Ng1Fi@wuerfel>
-In-Reply-To: <20141210235500.GA22886@google.com>
-References: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org> <1416413091-13452-3-git-send-email-tomasz.nowicki@linaro.org> <20141210235500.GA22886@google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bear.ext.ti.com ([192.94.94.41]:36720 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751078AbaLRTCx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 18 Dec 2014 14:02:53 -0500
+Message-ID: <549324B9.2030506@ti.com>
+Date: Thu, 18 Dec 2014 14:02:17 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <linux-arm-kernel@lists.infradead.org>, <vinod.koul@intel.com>,
+	<gregkh@linuxfoundation.org>, <linux-kernel@vger.kernel.org>,
+	<dmaengine@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<bhelgaas@google.com>, <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>
+Subject: Re: [RFC PATCH 1/2] common: dma-mapping: introduce dma_get_parent_cfg()
+ helper
+References: <1418839344-14393-1-git-send-email-m-karicheri2@ti.com> <1949667.gMcOLHe7Sk@wuerfel> <549210BB.9080603@ti.com> <2935351.ba8Au9y4fE@wuerfel>
+In-Reply-To: <2935351.ba8Au9y4fE@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 10 December 2014 16:55:00 Bjorn Helgaas wrote:
-> On Wed, Nov 19, 2014 at 05:04:47PM +0100, Tomasz Nowicki wrote:
-> > MMCFG table seems to be architecture independent and it makes sense
-> > to share common code across all architectures. The ones that may need
-> > architectural specific actions have default prototype (__weak).
-> > 
-> > Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-> > Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-> > ---
-> >  arch/x86/include/asm/pci_x86.h |  29 -----
-> >  arch/x86/pci/acpi.c            |   1 +
-> >  arch/x86/pci/init.c            |   1 +
-> >  arch/x86/pci/mmconfig-shared.c | 200 +---------------------------------
-> >  arch/x86/pci/mmconfig_32.c     |   1 +
-> >  arch/x86/pci/mmconfig_64.c     |   1 +
-> >  drivers/acpi/Makefile          |   1 +
-> >  drivers/acpi/bus.c             |   1 +
-> >  drivers/acpi/mmconfig.c        | 242 +++++++++++++++++++++++++++++++++++++++++
-> >  include/linux/mmconfig.h       |  58 ++++++++++
-> >  include/linux/pci.h            |   8 --
-> >  11 files changed, 308 insertions(+), 235 deletions(-)
-> >  create mode 100644 drivers/acpi/mmconfig.c
-> >  create mode 100644 include/linux/mmconfig.h
-> > ... 
-> 
-> Much of the code you're moving to drivers/acpi/mmconfig.c is not actually
-> ACPI-specific and would have to be duplicated for a non-ACPI architecture
-> that supports ECAM.  Could that code be moved somewhere like
-> drivers/pci/ecam.c, where it could be shared?
+On 12/17/2014 07:09 PM, Arnd Bergmann wrote:
+> On Wednesday 17 December 2014 18:24:43 Murali Karicheri wrote:
+>> On 12/17/2014 04:56 PM, Arnd Bergmann wrote:
+>>> On Wednesday 17 December 2014 13:02:23 Murali Karicheri wrote:
+>>>
+>>> What's wrong with using arch_setup_dma_ops() from PCI as suggested
+>>> previously?
+>>>
+>
+> +Will Deacon
+>
+>> I had originally written a code based on that line as below. But
+>> dma-ranges property is also used by ppc and other architectures in the
+>> pci device DT node. So I wasn't sure how this code impact PCI driver
+>> functionality on those platforms. Hence used a simpler change as all
+>> that is needed for keystone is to get the dma_pfn_offset rightly set in
+>> the pci slave device.
+>
+> But in your patch, you don't call arch_setup_dma_ops() at all.
+>
+>> Initially I had a function implemented as below for this in of_pci.c.
+>>
+>> + * of_pci_dma_configure - Setup DMA configuration for a pci device
+>> + * @dev:       pci device to apply DMA configuration
+>> + *
+>> + * Try to get devices's DMA configuration from DT and update it
+>> + * accordingly. This is a similar to of_dma_configure() for platform
+>> + * devices.
+>> + *
+>> + */
+>> +void of_pci_dma_configure(struct pci_dev *dev)
+>> +{
+>> +       struct device *host_bridge, *parent;
+>> +       struct pci_bus *bus = dev->bus;
+>> +       u64 dma_addr, paddr, size;
+>> +       int ret;
+>> +
+>> +       while (!pci_is_root_bus(bus))
+>> +               bus = bus->parent;
+>> +       host_bridge = bus->bridge;
+>> +
+>> +       parent = host_bridge->parent;
+>> +       if (parent->of_node) {
+>
+> so far it looks good, although we may want to introduce
+> a helper function to get the of_node.
 
-We have an implementation of ECAM in drivers/pci/host/pci-host-generic.c,
-which today is ARM32 specific but should be migrated to the new generic
-infrastructure we are adding for ARM64, after which that driver becomes
-very simple.
+Will add
 
-I suppose we could either make it use drivers/pci/ecam.c then, or have
-the config space code from pci-host-generic be shared between ACPI and
-DT based platforms. The former approach is probably nicer in the long
-run, and it allows sharing with other drivers that use ECAM but are not
-completely generic otherwise.
+>
+>> +               /*
+>> +                * if dma-coherent property exist, call arch hook to setup
+>> +                * dma coherent operations.
+>> +                */
+>> +               if (of_dma_is_coherent(parent->of_node)) {
+>> +                       set_arch_dma_coherent_ops(&dev->dev);
+>> +                       dev_info(&dev->dev, "device is dma coherent\n");
+>> +               }
+>
+> set_arch_dma_coherent_ops no longer exists. Just keep the flag in a
+> local variable
 
-	Arnd
+Ok.
+
+>
+>> +               /*
+>> +                * if dma-ranges property doesn't exist - just return else
+>> +                * setup the dma offset
+>> +                */
+>> +               ret = of_dma_get_range(parent->of_node,&dma_addr,
+>> &paddr,&size);
+>> +               if (ret<  0) {
+>> +                       dev_info(&dev->dev, "no dma range information to
+>> setup\n");
+>> +                       printk("no dma range information to setup\n");
+>> +                       return;
+>> +               }
+>> +
+>> +               /* DMA ranges found. Calculate and set dma_pfn_offset */
+>> +               dev->dev.dma_pfn_offset = PFN_DOWN(paddr - dma_addr);
+>> +               dev_info(&dev->dev, "dma_pfn_offset(%#08lx)\n",
+>> dev->dev.dma_pfn_offset);
+>
+> Same for the offset and size here, then pass all of the above into
+> arch_setup_dma_ops. This is also where we need to hook up the iommu
+> support once we decide how to make that work with the ARM SMMU.
+
+Ok. I will make this similar to of_dma_configure() that can be called 
+from pci/probe.c
+
+Murali
+>
+> Will, I think we may have a problem on ARM64 now, since we only replaced
+> set_arch_dma_coherent_ops on ARM32 but not ARM64. Can you send a fix for
+> this? Without that, we don't have any coherent operations on ARM64 any
+> more, unless I'm missing something.
+>
+> 	Arnd
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+-- 
+Murali Karicheri
+Linux Kernel, Texas Instruments
