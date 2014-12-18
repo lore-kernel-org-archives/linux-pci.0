@@ -1,104 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:46159 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751583AbaLVFyz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 00:54:55 -0500
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 22 Dec 2014 15:54:53 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id BA4E03578057
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:50 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sBM5sojT39321602
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:50 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sBM5snjv020428
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:50 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V10 03/17] PCI: Add weak pcibios_iov_resource_alignment() interface
-Date: Mon, 22 Dec 2014 13:54:23 +0800
-Message-Id: <1419227677-12312-4-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Gabriel FERNANDEZ' <gabriel.fernandez@st.com>
+Cc: 'Arnd Bergmann' <arnd@arndb.de>,
+	'Rob Herring' <robh+dt@kernel.org>,
+	'Pawel Moll' <pawel.moll@arm.com>,
+	'Mark Rutland' <mark.rutland@arm.com>,
+	'Ian Campbell' <ijc+devicetree@hellion.org.uk>,
+	'Kumar Gala' <galak@codeaurora.org>,
+	'Srinivas Kandagatla' <srinivas.kandagatla@gmail.com>,
+	'Maxime Coquelin' <maxime.coquelin@st.com>,
+	'Patrice Chotard' <patrice.chotard@st.com>,
+	'Russell King' <linux@arm.linux.org.uk>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Mohit Kumar' <mohit.kumar@st.com>,
+	'Grant Likely' <grant.likely@linaro.org>,
+	'Gabriel Fernandez' <gabriel.fernandez@linaro.org>,
+	'Fabrice Gasnier' <fabrice.gasnier@st.com>,
+	'Viresh Kumar' <viresh.kumar@linaro.org>,
+	'Thierry Reding' <treding@nvidia.com>,
+	'Minghuan Lian' <Minghuan.Lian@freescale.com>,
+	'Magnus Damm' <damm@opensource.se>,
+	'Will Deacon' <will.deacon@arm.com>,
+	'Tanmay Inamdar' <tinamdar@apm.com>,
+	'Murali Karicheri' <m-karicheri2@ti.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Sachin Kamat' <sachin.kamat@samsung.com>,
+	'Andrew Lunn' <andrew@lunn.ch>,
+	'Liviu Dudau' <Liviu.Dudau@arm.com>,
+	'Srikanth Thokala' <sthokal@xilinx.com>,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
+	linux-pci@vger.kernel.org, 'Lee Jones' <lee.jones@linaro.org>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1418812486-12394-1-git-send-email-gabriel.fernandez@linaro.org>
+ <1418812486-12394-5-git-send-email-gabriel.fernandez@linaro.org>
+ <1507589.aeTeyNn1QF@wuerfel>
+In-reply-to: <1507589.aeTeyNn1QF@wuerfel>
+Subject: Re: [PATCH 4/5] PCI: designware: Add setup bus-related to pcie_host_ops
+Date: Thu, 18 Dec 2014 13:58:27 +0900
+Message-id: <000e01d01a7f$47592e20$d60b8a60$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The alignment of PF's IOV BAR is designed to be the individual size of a VF's
-BAR size. This works fine for many platforms, but on PowerNV platform it needs
-some change.
+On Thursday, December 18, 2014 7:16 AM, Arnd Bergmann wrote:
+> On Wednesday 17 December 2014 11:34:45 Gabriel FERNANDEZ wrote:
+> > ST sti SoCs PCIe IPs are built around DesignWare IP Core.
+> > But in these SoCs PCIe IP doesn't support IO.
 
-The original alignment works, since at sizing and assigning stage the
-requirement is from an individual VF's BAR size instead of the PF's IOV BAR.
-This is the reason for the original code to just retrieve the individual
-VF BAR size as the alignment.
+Hi Gabriel,
 
-On PowerNV platform, it is required to align the whole PF IOV BAR to a hardware
-segment. Based on this fact, the alignment of PF's IOV BAR should be
-calculated seperately.
+I cannot understand how ST sti SoCs PCIe IP does not support I/O.
+As far as I know, it cannot be selected by the 'parameter'.
+Then, H/W engineers dropped out the I/O control logic?
 
-This patch introduces a weak pcibios_iov_resource_alignment() interface, which
-gives platform a chance to implement specific method to calculate the PF's IOV
-BAR alignment.
+> >
+> > To support this, add setup_bus() to pcie_host_ops.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- drivers/pci/iov.c   |   11 ++++++++++-
- include/linux/pci.h |    3 +++
- 2 files changed, 13 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 5437fad0..554dd64 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -556,6 +556,12 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
- 		4 * (resno - PCI_IOV_RESOURCES);
- }
- 
-+resource_size_t __weak pcibios_iov_resource_alignment(struct pci_dev *dev,
-+		int resno, resource_size_t align)
-+{
-+	return align;
-+}
-+
- /**
-  * pci_sriov_resource_alignment - get resource alignment for VF BAR
-  * @dev: the PCI device
-@@ -570,12 +576,15 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
- {
- 	struct resource tmp;
- 	int reg = pci_iov_resource_bar(dev, resno);
-+	resource_size_t align;
- 
- 	if (!reg)
- 		return 0;
- 
- 	__pci_read_base(dev, pci_bar_unknown, &tmp, reg);
--	return resource_alignment(&tmp);
-+	align = resource_alignment(&tmp);
-+
-+	return pcibios_iov_resource_alignment(dev, resno, align);
- }
- 
- /**
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 74ef944..ae7a7ea 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1163,6 +1163,9 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus);
- void pci_setup_bridge(struct pci_bus *bus);
- resource_size_t pcibios_window_alignment(struct pci_bus *bus,
- 					 unsigned long type);
-+resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev,
-+						 int resno,
-+						 resource_size_t align);
- 
- #define PCI_VGA_STATE_CHANGE_BRIDGE (1 << 0)
- #define PCI_VGA_STATE_CHANGE_DECODES (1 << 1)
--- 
-1.7.9.5
+> >
+> > Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+> > Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+> 
+> The dw-pcie driver should be able to tell whether the device has
+> an I/O space or not, and do the right thing based on that. Don't
+> add an implementation specific callback for that.
+
+I agree with Arnd's opinion.
+
+In addition, I have one more question.
+Then, if a device that requires I/O region is connected to
+PCIe slot of ST sti SoCs PCIe, what will happen?
+It just prints error messages?
+
+Best regards,
+Jingoo Han
+
+> 
+> 	Arnd
 
