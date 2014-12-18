@@ -1,58 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:41647 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752450AbaLYPqH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Dec 2014 10:46:07 -0500
-Received: by mail-wi0-f179.google.com with SMTP id ex7so15709130wid.0
-        for <linux-pci@vger.kernel.org>; Thu, 25 Dec 2014 07:46:05 -0800 (PST)
-Message-ID: <549C313A.7090504@gmail.com>
-Date: Thu, 25 Dec 2014 16:46:02 +0100
-From: =?windows-1252?Q?Marek_Kord=EDk?= <kordikmarek@gmail.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alexey Voronkov <zermond@gmail.com>,
-	David Airlie <airlied@linux.ie>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Richard Yang <weiyang@linux.vnet.ibm.com>
-Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
- GPU init
-References: <CAErSpo69c6jXOp+nw2sTSU4vgqGufUQNUEGK4_2+6p-qpyE0vQ@mail.gmail.com>	<1418074683.13358.1.camel@kernel.crashing.org>	<CAErSpo7pMAL5i2aPGV3u5F178bHeQTtjASckKs9NaUbEGaxv3Q@mail.gmail.com>	<20141208233855.GA15713@shangw>	<CAE9FiQXj-vX8TE-8Es83FmJAKDKD_dMNbQkmsaNPyy_nVEag8w@mail.gmail.com>	<20141220002306.GB30834@google.com>	<CAE9FiQUU4OoxpV3MNyFdjtmS1nRfD=ziYDDnUmsGy5qj8U3vLg@mail.gmail.com>	<CAErSpo7JAcLa_2gNkOG+oSHb1cbBXdEa-TVW0=amBptRB8-fNA@mail.gmail.com>	<CAE9FiQV6nxeMcLQ6YBR_c5tNGGjiKgL+Z4vcGpK21j-14V8SKw@mail.gmail.com>	<CAE9FiQVggbU5u__0z8p33J9hQ39CtQ-vpQbZyjG-LO9aqN05Lw@mail.gmail.com>	<20141223214106.GA27291@google.com> <CAE9FiQUoA_vz78sEnHtDAmzTJcwL0PdUe9jwLw+H9h3+omq+WA@mail.gmail.com>
-In-Reply-To: <CAE9FiQUoA_vz78sEnHtDAmzTJcwL0PdUe9jwLw+H9h3+omq+WA@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:51476 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751147AbaLRTLr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Dec 2014 14:11:47 -0500
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thierry Reding <thierry.reding@gmail.com>
+Cc: Alexandre Courbot <gnurou@gmail.com>, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 2/2] PCI: tegra: apply relaxed ordering fixup only on Tegra
+Date: Thu, 18 Dec 2014 20:11:43 +0100
+Message-Id: <1418929903-8506-2-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1418929903-8506-1-git-send-email-l.stach@pengutronix.de>
+References: <1418929903-8506-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/24/2014 03:29 AM, Yinghai Lu wrote:
-> On Tue, Dec 23, 2014 at 1:41 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->
->>
->> Can you do this so it clips to any upstream bridge, whether it's a host
->> bridge or a PCI-to-PCI bridge?  It doesn't seem like this has to be
->> specific to host bridge windows -- any device below a PCI-to-PCI bridge has
->> to use address space forwarded by that upstream bridge.
->
-> ok, please check attached v2.
->
->>
->> I wish this were in generic code.  There's nothing architecture-specific
->> about the problem, but this patch only fixes things on x86.  Can you make a
->> similar change in the corresponding code for other arches, as well?
->
-> ok, later after x86.
->
-> Thanks
->
-> Yinghai
->
+The fixup to enable relaxed ordering on all PCI devices was
+executed unconditionally if the Tegra PCI host driver was
+built into the kernel. This doesn't play nice with a
+multiplatform kernel executed on other platforms which
+may not need this fixup.
 
-I checked (only) v2 of your patch on versions 3.18.0 and 3.18.1. The 
-result of both versions is that booting stops with kernel panic. I don't 
-how to get the full log (there is nothing in journalctl and dmesg after 
-booting some working kernel - maybe if you can give me some hint what to 
-google) so I will attach photo of screen to the bugzilla issue.
+Make sure to only apply the fixup if the root port is
+a Tegra.
 
-Marek
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+---
+v2:
+- split out PCI hierarchy walk
+- separate code from data by moving PCI IDs into own structure
+---
+ drivers/pci/host/pci-tegra.c | 34 +++++++++++++++++++++++++++++++++-
+ 1 file changed, 33 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 333a57afacc4..b77f417e1a3c 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -635,10 +635,42 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0bf1, tegra_pcie_fixup_class);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1c, tegra_pcie_fixup_class);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1d, tegra_pcie_fixup_class);
+ 
++static const struct pci_device_id tegra_rootport_ids[] = {
++	{
++		/* Tegra20 4 lane root port */
++		.vendor = PCI_VENDOR_ID_NVIDIA, .device = 0x0bf0,
++		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID
++	}, {
++		/* Tegra20 2 lane root port */
++		.vendor = PCI_VENDOR_ID_NVIDIA, .device = 0x0bf1,
++		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID
++	}, {
++		/* Tegra30 4 lane root port */
++		.vendor = PCI_VENDOR_ID_NVIDIA, .device = 0x0e1c,
++		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID
++	}, {
++		/* Tegra30 2 lane root port */
++		.vendor = PCI_VENDOR_ID_NVIDIA, .device = 0x0e1d,
++		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID
++	}, {
++		/* Tegra124 4 lane root port */
++		.vendor = PCI_VENDOR_ID_NVIDIA, .device = 0x0e12,
++		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID
++	}, {
++		/* Tegra124 1 lane root port */
++		.vendor = PCI_VENDOR_ID_NVIDIA, .device = 0x0e13,
++		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID
++	}, {
++		/* sentinel */
++	}
++};
++
+ /* Tegra PCIE requires relaxed ordering */
+ static void tegra_pcie_relax_enable(struct pci_dev *dev)
+ {
+-	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_RELAX_EN);
++	if (pci_match_id(tegra_rootport_ids, pci_get_rootport(dev)))
++		pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
++					 PCI_EXP_DEVCTL_RELAX_EN);
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, tegra_pcie_relax_enable);
+ 
+-- 
+2.1.3
+
