@@ -1,67 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f41.google.com ([209.85.216.41]:45062 "EHLO
-	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751304AbaLYTzs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Dec 2014 14:55:48 -0500
-Received: by mail-qa0-f41.google.com with SMTP id s7so6564506qap.0
-        for <linux-pci@vger.kernel.org>; Thu, 25 Dec 2014 11:55:48 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <bug-90311-41252@https.bugzilla.kernel.org/>
-References: <bug-90311-41252@https.bugzilla.kernel.org/>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 25 Dec 2014 12:55:27 -0700
-Message-ID: <CAErSpo7rtsQfqkMCRy7u+Tn_iCEPN5HbMQdz1hQTOvUt=67CkQ@mail.gmail.com>
-Subject: Re: [Bug 90311] New: Hibernate failure with intel_iommu
-To: thomas.lindroth@gmail.com
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail1.g1.pair.com ([66.39.3.162]:43903 "EHLO mail1.g1.pair.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752281AbaLSISj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 19 Dec 2014 03:18:39 -0500
+From: Sean Cross <xobs@kosagi.com>
+To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Shawn Guo <shawn.guo@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	devicetree@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	linux-pci@vger.kernel.org
+Cc: bunnie@kosagi.com, Sean Cross <xobs@kosagi.com>
+Subject: [PATCH 1/2] PCI: imx6: Add power-supply support
+Date: Fri, 19 Dec 2014 16:10:16 +0800
+Message-Id: <1418976617-833-2-git-send-email-xobs@kosagi.com>
+In-Reply-To: <1418976617-833-1-git-send-email-xobs@kosagi.com>
+References: <1418976617-833-1-git-send-email-xobs@kosagi.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Alex, linux-pci, iommu]
+Some PCIe ports gate power to the slot.  In order to prevent system lockup,
+these boards must enable power to the slot before attempting communication
+over the PCI bus.
 
-On Thu, Dec 25, 2014 at 12:13 PM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=90311
->
->             Bug ID: 90311
->            Summary: Hibernate failure with intel_iommu
->            Product: Drivers
->            Version: 2.5
->     Kernel Version: 3.18.1
->           Hardware: x86-64
->                 OS: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: PCI
->           Assignee: drivers_pci@kernel-bugs.osdl.org
->           Reporter: thomas.lindroth@gmail.com
->         Regression: No
->
-> Created attachment 161811
->   --> https://bugzilla.kernel.org/attachment.cgi?id=161811&action=edit
-> dmesg with iommu on
->
-> Enabling intel_iommu=on causes uswsusp s2disk to fail. Hibernate always works
-> fine without iommu and as far as I can tell everything works fine with iommu on
-> without hibernating. With intel_iommu set to on I can enter hibernate but the
-> system doesn't come back properly. By that I mean the kernel can't read from
-> swap and everything freezes. I can still switch between virtual terminals, view
-> the system log and use magic sysrq to reboot. The system log is spammed with
-> error messages from the scsi subsystem. http://i.imgur.com/ToFd8NM.jpg sdb
-> contains root and swap.
->
-> I'm guessing the iommu mapping isn't setup properly after resume so the disk
-> controller can't do DMA anymore. I have made sure the kernel command line
-> contains intel_iommu=on before and after suspend. I have one of the bad marvell
-> 88SE9172 controllers but the swap is not connected to it (bug #42679).
->
-> I'm running a gentoo system with kernel 3.18.1 on a Gigabyte Z97X-Gaming G1
-> mobo with bios F7 (latest). Finding the problem might be difficult and I don't
-> know what kind of information to provide. I can give you any debug output
-> needed and apply debug patches if needed.
+Signed-off-by: Sean Cross <xobs@kosagi.com>
+---
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt       |  3 +++
+ drivers/pci/host/pci-imx6.c                          | 20 +++++++++++++++++++-
+ 2 files changed, 22 insertions(+), 1 deletion(-)
 
-Is this a regression?  If so, what was the most recent working kernel?
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+index 6fbba53..fe912bd 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+@@ -13,6 +13,9 @@ Required properties:
+ - clock-names: Must include the following additional entries:
+ 	- "pcie_phy"
+ 
++Optional properties:
++- power-supply: A regulator that controls power to the port
++
+ Example:
+ 
+ 	pcie@0x01000000 {
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 69202d1..9c2140e 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -22,6 +22,7 @@
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
+ #include <linux/regmap.h>
++#include <linux/regulator/consumer.h>
+ #include <linux/resource.h>
+ #include <linux/signal.h>
+ #include <linux/types.h>
+@@ -39,6 +40,7 @@ struct imx6_pcie {
+ 	struct pcie_port	pp;
+ 	struct regmap		*iomuxc_gpr;
+ 	void __iomem		*mem_base;
++	struct regulator	*power_reg;
+ };
+ 
+ /* PCIe Root Complex registers (memory-mapped) */
+@@ -588,6 +590,19 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
++	/* Fetch power supply */
++	imx6_pcie->power_reg = devm_regulator_get(&pdev->dev, "power");
++	if (IS_ERR(imx6_pcie->power_reg))
++		imx6_pcie->power_reg = 0;
++
++	if (imx6_pcie->power_reg) {
++		ret = regulator_enable(imx6_pcie->power_reg);
++		if (ret) {
++			dev_err(&pdev->dev, "Unable to enable power regulator");
++			return ret;
++		}
++	}
++
+ 	/* Fetch clocks */
+ 	imx6_pcie->pcie_phy = devm_clk_get(&pdev->dev, "pcie_phy");
+ 	if (IS_ERR(imx6_pcie->pcie_phy)) {
+@@ -619,8 +634,11 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	ret = imx6_add_pcie_port(pp, pdev);
+-	if (ret < 0)
++	if (ret < 0) {
++		if (imx6_pcie->power_reg)
++			regulator_disable(imx6_pcie->power_reg);
+ 		return ret;
++	}
+ 
+ 	platform_set_drvdata(pdev, imx6_pcie);
+ 	return 0;
+-- 
+2.1.3
+
