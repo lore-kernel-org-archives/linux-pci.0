@@ -1,89 +1,166 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f181.google.com ([209.85.216.181]:39006 "EHLO
-	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751334AbaLCWPy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Dec 2014 17:15:54 -0500
-Received: by mail-qc0-f181.google.com with SMTP id m20so11733698qcx.40
-        for <linux-pci@vger.kernel.org>; Wed, 03 Dec 2014 14:15:53 -0800 (PST)
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:37223 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751165AbaLSSYN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Dec 2014 13:24:13 -0500
 MIME-Version: 1.0
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 3 Dec 2014 15:15:32 -0700
-Message-ID: <CAErSpo6UvY10MNidAOFf4Fptv+wL-NsX6JMaU8OvSP6ywWEebQ@mail.gmail.com>
-Subject: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during GPU init
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	zermond@gmail.com, David Airlie <airlied@linux.ie>,
-	Yinghai Lu <yinghai@kernel.org>, saifi.khan@datasynergy.org,
-	Alex Deucher <alexdeucher@gmail.com>, kordikmarek@gmail.com
+Reply-To: rajatxjain@gmail.com
+In-Reply-To: <54945D79.2070008@gmail.com>
+References: <20141213210251.GA12812@teela.fritz.box>
+	<548EF90A.5070607@gmail.com>
+	<CAA93t1qyZE-9tw8pg1KG6g4iyy0QMW=iass5w=6ZGMTMu+vi_A@mail.gmail.com>
+	<CAErSpo5dqQE7nZ6zf2odgpHBWA3ZpTjhbgQKnY8YxQW+a+298w@mail.gmail.com>
+	<1418750141.4248.3.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
+	<54907300.9050902@gmail.com>
+	<1418759684.4248.12.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
+	<CAErSpo7sqZS+-4LHo3wbo-pa73mcP_3d0Z37U0tfnASaxp-D_g@mail.gmail.com>
+	<1418930889.3433.8.camel@prashant>
+	<20141218202637.GA2930@teela.fritz.box>
+	<1418955047.3433.27.camel@prashant>
+	<CAErSpo4UdxwL=wA8cBJ7_DAdTb2xNeg6600qB0=Jdxv80aVmcg@mail.gmail.com>
+	<54945D79.2070008@gmail.com>
+Date: Fri, 19 Dec 2014 10:24:13 -0800
+Message-ID: <CAA93t1qOUZEmJEcuUNtkDS0M_pafb_1s==9Yqm9-+-+OmJmVuQ@mail.gmail.com>
+Subject: Re: [bisected] tg3 broken in 3.18.0?
+From: Rajat Jain <rajatxjain@gmail.com>
+To: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Prashant Sreedharan <prashant@broadcom.com>,
+	Nils Holland <nholland@tisys.org>,
+	Michael Chan <mchan@broadcom.com>,
+	David Miller <davem@davemloft.net>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rafael Wysocki <rjw@rjwysocki.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There's a bugzilla for this, so this email is to make the bugzilla
-more discoverable and to have a more public discussion about it.
+One of the reasons to replace the condition (*l == 0xffff0001) with
+(*l & 0xffff) == 0x0001) was that some devices apparently returned
+0001 for device id to indicate CRS, but returned actual vendor id in
+the vendor ID field (hence the need to ignore vendor field).
 
-  https://bugzilla.kernel.org/show_bug.cgi?id=85491
+Are we saying that the tg3 device returns 0x0001 for the device ID and
+yet expects it to be treated as a good value (not CRS)?
 
-I think this regression is caused by 5b28541552ef ("PCI: Restrict
-64-bit prefetchable bridge windows to 64-bit resources").  These dmesg
-fragments are from v3.16, which doesn't work:
+Thanks,
 
-    pci_bus 0000:00: root bus resource [mem 0xc0000000-0xffffffff]
+Rajat
 
-    pci 0000:00:01.0: PCI bridge to [bus 01]
-    pci 0000:00:01.0:   bridge window [io  0x8000-0xafff]
-    pci 0000:00:01.0:   bridge window [mem 0xfdf00000-0xfdffffff]
-    pci 0000:00:01.0:   bridge window [mem 0xbdf00000-0xddefffff 64bit
-pref]  <-- outside host bridge window
-
-    pci 0000:01:00.0: reg 0x10: [mem 0xc0000000-0xcfffffff pref]
-    pci 0000:01:00.0: reg 0x14: [io  0xa000-0xa0ff]
-    pci 0000:01:00.0: reg 0x18: [mem 0xfdff0000-0xfdffffff]
-    pci 0000:01:00.0: reg 0x30: [mem 0xfdfc0000-0xfdfdffff pref]
-
-    pci 0000:00:01.0: can't claim BAR 15 [mem 0xbdf00000-0xddefffff
-64bit pref]: no compatible bridge window
-    pci 0000:01:00.0: can't claim BAR 0 [mem 0xc0000000-0xcfffffff
-pref]: no compatible bridge window
-
-    pci 0000:00:01.0: bridge window [mem 0x00100000-0x000fffff 64bit
-pref] to [bus 01] add_size 200000
-    pci 0000:00:01.0: res[15]=[mem 0x00100000-0x000fffff 64bit pref]
-get_res_add_size add_size 200000  <-- size == 0
-    pci 0000:00:01.0: BAR 15: assigned [mem 0xc0000000-0xc01fffff 64bit pref]
-    pci 0000:00:01.0: PCI bridge to [bus 01]
-    pci 0000:00:01.0:   bridge window [io  0x8000-0xafff]
-    pci 0000:00:01.0:   bridge window [mem 0xfdf00000-0xfdffffff]
-    pci 0000:00:01.0:   bridge window [mem 0xc0000000-0xc01fffff 64bit pref]
-
-The initial 00:01.0 64bit pref window is interesting because it
-doesn't fit in the host bridge window.  Probably a BIOS bug, but we
-should be able to deal with it.  In v3.15 (which doesn't contain
-5b28541552ef), we assign [mem 0xc0000000-0xcfffffff pref] to that
-window and the radeon works.  (There are some error messages related
-to this assignment, so the dmesg *looks* like it failed, but I think
-it must have worked.)
-
-In v3.16 (which does contain 5b28541552ef), when pbus_size_mem() sizes
-the 64-bit prefetchable window, it only looks for downstream 64-bit
-resources.  Since the radeon at 01:00.0 has none, we size the window
-to 0 + 0x200000 (the 0x200000 part is pci_hotplug_mem_size, to
-accommodate future hot-added devices).
-
-But that's not big enough to hold the radeon BAR 0 [mem
-0xc0000000-0xcfffffff pref], so BAR 0 remains unassigned, so
-pci_enable_device() should fail, and radeon doesn't work.
-
-I don't know what the best fix is, but I think it's probably too
-aggressive to *never* use a 64-bit prefetchable window for downstream
-32-bit prefetchable resources.  This configuration from BIOS should
-just work without us changing anything (although we probably should
-trim the window to start at 0xc0000000, which would still work).
-
-In this case, I think we certainly want the radeon BAR 0 in the
-prefetchable window.  In general, it seems wrong that a device with
-32-bit BARs will work fine below a bridge with a 32-bit prefetchable
-window, but it won't work (or will work slower) below a bridge with a
-64-bit prefetchable window.  A more capable bridge should make things
-work *better*, not worse.
-
-Bjorn
+On Fri, Dec 19, 2014 at 9:16 AM, Marcelo Ricardo Leitner
+<marcelo.leitner@gmail.com> wrote:
+> On 19-12-2014 15:09, Bjorn Helgaas wrote:
+>>
+>> On Thu, Dec 18, 2014 at 7:10 PM, Prashant Sreedharan
+>> <prashant@broadcom.com> wrote:
+>>>
+>>> On Thu, 2014-12-18 at 21:26 +0100, Nils Holland wrote:
+>>>>
+>>>> On Thu, Dec 18, 2014 at 11:28:09AM -0800, Prashant Sreedharan wrote:
+>>>>>
+>>>>> On Thu, 2014-12-18 at 12:15 -0700, Bjorn Helgaas wrote:
+>>>>>>
+>>>>>>
+>>>>>> Any updates from the hardware team?
+>>>>>>
+>>>>>> This is a pretty serious regression, but as far as I can tell, it is
+>>>>>> not a PCI bug.  The device should respond to a config read of vendor
+>>>>>> ID.  If the driver does something that make the read return CRS
+>>>>>> status, I think the driver is responsible for doing whatever delay or
+>>>>>> other fixup is required.
+>>>>>>
+>>>>>> I'm inclined to reassign this bug to the tg3 driver unless you think
+>>>>>> the PCI core is doing something wrong here.
+>>>>>>
+>>>>>> Bjorn
+>>>>>
+>>>>>
+>>>>> We were not able to reproduce this issue, could you please check what
+>>>>> is
+>>>>> the value of reg 0x70, before the pci_device_is_present call is made ?
+>>>>> if bit 15 is set config access will be retried.
+>>>>>
+>>>>> --- a/drivers/net/ethernet/broadcom/tg3.c
+>>>>> +++ b/drivers/net/ethernet/broadcom/tg3.c
+>>>>> @@ -9025,6 +9025,7 @@ static int tg3_chip_reset(struct tg3 *tp)
+>>>>>          void (*write_op)(struct tg3 *, u32, u32);
+>>>>>          int i, err;
+>>>>>
+>>>>> +       printk(KERN_ERR "config state: %x\n", tr32(TG3PCI_PCISTATE));
+>>>>>          if (!pci_device_is_present(tp->pdev))
+>>>>>                  return -ENODEV;
+>>>>
+>>>>
+>>>> No problem, I gave this a try and here is what I get:
+>>>>
+>>>> [    2.185190] libphy: tg3 mdio bus: probed
+>>>> [    2.229357] tsc: Refined TSC clocksource calibration: 2399.999 MHz
+>>>> [    2.244993] config state: 1292
+>>>> [    2.247136] tg3 0000:02:00.0 eth0: Tigon3 [partno(BCM57780) rev
+>>>> 57780001]
+>>>>          (PCI Express) MAC address 00:19:99:ce:13:a6
+>>>> [    2.249279] tg3 0000:02:00.0 eth0: attached PHY driver [Broadcom
+>>>> BCM57780]
+>>>>          (mii_bus:phy_addr=200:01)
+>>>> [    2.251460] tg3 0000:02:00.0 eth0: RXcsums[1] LinkChgREG[0]
+>>>>          MIirq[0] ASF[0] TSOcap[1]
+>>>> [    2.253672] tg3 0000:02:00.0 eth0: dma_rwctrl[76180000]
+>>>> dma_mask[64-bit]
+>>>> [...]
+>>>> [   12.204692] tg3 0000:02:00.0
+>>>>          enp2s0: No firmware running
+>>>> [   12.206653] config state: 1292
+>>>> [   12.208655] config state: 1292
+>>>>
+>>>> That's all of the three times the new debugging line gets hit when I
+>>>> boot my system using the supplied diagnostic patch.
+>>>>
+>>>> Hope that helps - of course, I'd gladly test any further
+>>>> (diagnostic) patches if required! Also, if I can provide any
+>>>> additional information that might be of value, just ask:-)
+>>>>
+>>> Nils/Marcelo thanks for inputs, since reg 0x70 bit 15 is clear it
+>>> indicates the chip is not setting the config retry bit. We were hoping
+>>> this bit is causing the config access to return CRS but looks like it is
+>>> not.
+>>>
+>>> Btw after forcing the error path (tg3_init_one -> tg3_halt) in the
+>>> driver now we are able to reproduce the problem on 5722 in house. We are
+>>> working with the HW team to narrow this down.
+>>>
+>>> Also it is not clear to me how reverting commit cfa6a7877b17a667 fixes
+>>> the problem.
+>>
+>>
+>> The full commit is 89665a6a71408796565bfd29cfa6a7877b17a667, and git
+>> works with any unique *prefix* of that.  The current convention is to
+>> use the first 12 characters (I have "[core] abbrev = 12" in my
+>> .git/config).  Unfortunately, suffixes don't work at all.
+>>
+>> Anyway, here's why I think 89665a6a7140 makes a difference.  We're in this
+>> path:
+>>
+>>    pci_device_is_present
+>>      pci_bus_read_dev_vendor_id(..., crs_timeout = 0)
+>>        pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l)
+>>
+>> and for some reason the chip returns 0x00010001 for that 32-bit read.
+>
+>
+> Actually it returns just 0x00000001, but yeah, that's my understanding too.
+>
+>   Marcelo
+>
+>
+>> Before 89665a6a7140, we compared all 32 bits with "*l == 0xffff0001".
+>> This is false, so pci_bus_read_dev_vendor_id() returns true, which
+>> means pci_device_is_present() is also true.
+>>
+>> After 89665a6a7140, we compare only the low 16 bits with ((*l &
+>> 0xffff) == 0x0001), which is true, so pci_bus_read_dev_vendor_id()
+>> returns false, and pci_device_is_present() is false.
+>>
+>> Bjorn
+>>
+>
