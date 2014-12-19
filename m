@@ -1,81 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:49621 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753106AbaLDV1N (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Dec 2014 16:27:13 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Ulf Hansson <ulf.hansson@linaro.org>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:49395 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752052AbaLSKdM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Dec 2014 05:33:12 -0500
+Message-ID: <1418985179.2558.3.camel@pengutronix.de>
+Subject: Re: [PATCH 2/2] ARM: dts: imx6q: add Novena board
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Sean Cross <xobs@kosagi.com>
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Shawn Guo <shawn.guo@freescale.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Kevin Hilman <khilman@kernel.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 1/4] PM: Drop the SET_PM_RUNTIME_PM_OPS() macro
-Date: Thu, 04 Dec 2014 22:48:39 +0100
-Message-ID: <1530433.CAWltEaXXx@vostro.rjw.lan>
-In-Reply-To: <CAPDyKFr_WEbeHLY9Q03PxpMnOwVAaj1PN28pvU6d-WoO+ocAgA@mail.gmail.com>
-References: <37310416.jZXoh5nfSC@vostro.rjw.lan> <2647870.gu06V1GGvo@vostro.rjw.lan> <CAPDyKFr_WEbeHLY9Q03PxpMnOwVAaj1PN28pvU6d-WoO+ocAgA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	devicetree@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	linux-pci@vger.kernel.org, bunnie@kosagi.com
+Date: Fri, 19 Dec 2014 11:32:59 +0100
+In-Reply-To: <1418976617-833-3-git-send-email-xobs@kosagi.com>
+References: <1418976617-833-1-git-send-email-xobs@kosagi.com>
+	 <1418976617-833-3-git-send-email-xobs@kosagi.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, December 04, 2014 11:04:20 AM Ulf Hansson wrote:
-> On 3 December 2014 at 23:51, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > On Wednesday, December 03, 2014 03:15:49 PM Ulf Hansson wrote:
-> >> On 27 November 2014 at 01:38, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> >> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >> >
-> >> > The SET_PM_RUNTIME_PM_OPS() and SET_RUNTIME_PM_OPS() macros are
-> >> > identical except that one of them is not empty for CONFIG_PM set,
-> >> > while the other one is not empty for CONFIG_PM_RUNTIME set,
-> >> > respectively.
-> >> >
-> >> > However, after commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if
-> >> > PM_SLEEP is selected) PM_RUNTIME is always set if PM is set, so one
-> >> > of these macros is now redundant.
-> >> >
-> >> > For this reason, drop SET_PM_RUNTIME_PM_OPS() and replace it with
-> >> > SET_RUNTIME_PM_OPS() everywhere.
-> >>
-> >> Hi Rafael,
-> >>
-> >> Apparently, I have queued an mmc patch in my mmc tree, which means one
-> >> mmc driver starts using the SET_PM_RUNTIME_PM_OPS macro. It should
-> >> cause a build error in linux-next with @subject patch.
-> >>
-> >> I have shared that patch through an immutable branch, I have also
-> >> checked potential conflicts and it shouldn't be any problems to pull
-> >> that in to your tree. Then you can fix $subject patch by also
-> >> converting the mmc driver to use SET_RUNTIME_PM_OPS macro.
-> >>
-> >> The branch is available at:
-> >> git://git.linaro.org/people/ulf.hansson/mmc.git mmc_for_linux_pm
-> >
-> > Thanks for letting me know!
-> >
-> > What about adding the following line to the $subject patch instead:
-> >
-> > #define SET_PM_RUNTIME_PM_OPS   SET_RUNTIME_PM_OPS
-> >
-> > and fixing things up when all has been merged?
+Am Freitag, den 19.12.2014, 16:10 +0800 schrieb Sean Cross:
+> Novena is an open-hardware laptop/desktop/bare board.
 > 
-> That's an option.
+> See http://www.kosagi.com/w/index.php?title=Novena_Main_Page
 > 
-> On the other hand we will have a window of new users of
-> SET_PM_RUNTIME_PM_OPS, during the next release cycle. Or are you
-> saying that we should send fixes for the rc which takes care of the
-> removal of it?
+> This device tree contains additional nodes for FPGA support.
+> 
 
-That is my plan.
+I only skimmed the DT for now.
 
-It is quite usual for new users of stuff being reworked to appear at the
-same time and that can always be addressed by doing a second round of
-replacements after the merge window.
+There are lots of occurrences of the "kosagi" vendor prefix, which is is
+not documented right now. Please add it to
+Documentation/devicetree/bindings/vendor-prefixes.txt first.
+
+> Signed-off-by: Sean Cross <xobs@kosagi.com>
+> ---
+>  arch/arm/boot/dts/Makefile         |   1 +
+>  arch/arm/boot/dts/imx6q-novena.dts | 893 +++++++++++++++++++++++++++++++++++++
+>  2 files changed, 894 insertions(+)
+>  create mode 100644 arch/arm/boot/dts/imx6q-novena.dts
+> 
+> diff --git a/arch/arm/boot/dts/Makefile b/arch/arm/boot/dts/Makefile
+> index 38c89ca..b2b4770 100644
+> --- a/arch/arm/boot/dts/Makefile
+> +++ b/arch/arm/boot/dts/Makefile
+> @@ -234,6 +234,7 @@ dtb-$(CONFIG_ARCH_MXC) += \
+>  	imx6q-gw552x.dtb \
+>  	imx6q-hummingboard.dtb \
+>  	imx6q-nitrogen6x.dtb \
+> +	imx6q-novena.dtb \
+>  	imx6q-phytec-pbab01.dtb \
+>  	imx6q-rex-pro.dtb \
+>  	imx6q-sabreauto.dtb \
+> diff --git a/arch/arm/boot/dts/imx6q-novena.dts b/arch/arm/boot/dts/imx6q-novena.dts
+> new file mode 100644
+> index 0000000..143b3bd
+> --- /dev/null
+> +++ b/arch/arm/boot/dts/imx6q-novena.dts
+> @@ -0,0 +1,893 @@
+
+[...]
+
+> +	fpga@1 {
+> +		compatible = "kosagi,novena-fpga";
+
+This is missing a proper binding documentation.
+> +
+> +		spi-max-frequency = <30000000>;
+> +		reg = <1>;
+> +
+> +		pinctrl-names = "default", "state-eim", "state-gpio";
+> +		pinctrl-0 = <&pinctrl_fpga_gpio>;
+> +		pinctrl-1 = <&pinctrl_fpga_eim>;
+> +		pinctrl-2 = <&pinctrl_fpga_gpio>;
+> +		clocks = <&clks IMX6QDL_CLK_LVDS2_SEL>, <&clks IMX6QDL_CLK_LVDS2_GATE>, <&clks IMX6QDL_CLK_ENET_REF>, <&clks IMX6QDL_CLK_EIM_SLOW>;
+> +		clock-names = "lvds", "lvds-switch", "lvds-parent", "eim-slow";
+> +		reset-switch = <&gpio1 17 GPIO_ACTIVE_HIGH>;
+> +		power-switch = <&gpio5 7 GPIO_ACTIVE_HIGH>;
+
+Custom property names without vendor namespacing. Also I don't know what
+they should do without the binding.
+
+> +
+> +		kosagi,weim-cs0-timing = <0x31910BBF 0x00001000 0x09014000
+> +					  0x00000000 0x09080800 0x00000000>;
+> +		kosagi,weim-cs1-timing = <0x81910CBF 0x00001000 0x07001000
+> +					  0x00000200 0x02040400 0x00000000>;
+> +		kosagi,weim-cs-mapping = <2>;
+> +	};
+> +};
+> +
+
+[...]
+
+> +&ldb {
+> +	fsl,dual-channel;
+> +	status = "okay";
+> +	lvds-channel@0 {
+> +		fsl,data-mapping = "jeida";
+> +		fsl,data-width = <24>;
+> +		status = "okay";
+> +		display-timings {
+> +			1920x1080p60 {
+> +				clock-frequency = <148500000>;
+> +				hactive = <1920>;
+> +				vactive = <1080>;
+> +				hback-porch = <148>;
+> +				hfront-porch = <88>;
+> +				hsync-len = <44>;
+> +				vback-porch = <36>;
+> +				vfront-porch = <4>;
+> +				vsync-len = <5>;
+> +				hsync-active = <1>;
+> +				vsync-active = <1>;
+> +			};
+> +		};
+
+Please don't use this for new devicetrees. Add a proper panel driver
+instead. Looks like this panel can be represented with the simple-panel
+driver.
+
+Regards,
+Lucas
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
+
