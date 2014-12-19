@@ -1,65 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f43.google.com ([209.85.192.43]:43716 "EHLO
-	mail-qg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933310AbaLKVA1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Dec 2014 16:00:27 -0500
-Received: by mail-qg0-f43.google.com with SMTP id i50so4459606qgf.16
-        for <linux-pci@vger.kernel.org>; Thu, 11 Dec 2014 13:00:26 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20141211204515.GA4472@svl-evodev-groeck.juniper.net>
-References: <546E7120.5080505@gmail.com> <20141211002630.GC22886@google.com>
- <20141211163831.GA2845@svl-evodev-groeck.juniper.net> <CAErSpo62wQ6g74wNYYumgbAVJ3Mneu_dmWOhLBE6NWqQTXsvVQ@mail.gmail.com>
- <20141211204515.GA4472@svl-evodev-groeck.juniper.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 11 Dec 2014 14:00:06 -0700
-Message-ID: <CAErSpo4WAbb=n+cNARRgKWPhbn6LZqwL-htB_Uv2OWB9BwTXpw@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: pciehp: Check link state before accessing device
- during removal
-To: Guenter Roeck <groeck@juniper.net>
-Cc: Rajat Jain <rajatxjain@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:18467 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751488AbaLSTJz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Dec 2014 14:09:55 -0500
+Subject: Re: [bisected] tg3 broken in 3.18.0?
+From: Prashant Sreedharan <prashant@broadcom.com>
+To: <rajatxjain@gmail.com>
+CC: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Nils Holland <nholland@tisys.org>,
+	Michael Chan <mchan@broadcom.com>,
+	David Miller <davem@davemloft.net>,
+	netdev <netdev@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rajat Jain <rajatjain@juniper.net>
-Content-Type: text/plain; charset=UTF-8
+	Rafael Wysocki <rjw@rjwysocki.net>
+In-Reply-To: <CAA93t1qOUZEmJEcuUNtkDS0M_pafb_1s==9Yqm9-+-+OmJmVuQ@mail.gmail.com>
+References: <20141213210251.GA12812@teela.fritz.box>
+	 <548EF90A.5070607@gmail.com>
+	 <CAA93t1qyZE-9tw8pg1KG6g4iyy0QMW=iass5w=6ZGMTMu+vi_A@mail.gmail.com>
+	 <CAErSpo5dqQE7nZ6zf2odgpHBWA3ZpTjhbgQKnY8YxQW+a+298w@mail.gmail.com>
+	 <1418750141.4248.3.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
+	 <54907300.9050902@gmail.com>
+	 <1418759684.4248.12.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
+	 <CAErSpo7sqZS+-4LHo3wbo-pa73mcP_3d0Z37U0tfnASaxp-D_g@mail.gmail.com>
+	 <1418930889.3433.8.camel@prashant> <20141218202637.GA2930@teela.fritz.box>
+	 <1418955047.3433.27.camel@prashant>
+	 <CAErSpo4UdxwL=wA8cBJ7_DAdTb2xNeg6600qB0=Jdxv80aVmcg@mail.gmail.com>
+	 <54945D79.2070008@gmail.com>
+	 <CAA93t1qOUZEmJEcuUNtkDS0M_pafb_1s==9Yqm9-+-+OmJmVuQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 19 Dec 2014 10:53:48 -0800
+Message-ID: <1419015228.27773.3.camel@prashant>
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 11, 2014 at 1:45 PM, Guenter Roeck <groeck@juniper.net> wrote:
-> On Thu, Dec 11, 2014 at 01:26:47PM -0700, Bjorn Helgaas wrote:
->> On Thu, Dec 11, 2014 at 9:38 AM, Guenter Roeck <groeck@juniper.net> wrote:
->> > On Wed, Dec 10, 2014 at 05:26:30PM -0700, Bjorn Helgaas wrote:
->> >> On Thu, Nov 20, 2014 at 02:54:24PM -0800, Rajat Jain wrote:
+On Fri, 2014-12-19 at 10:24 -0800, Rajat Jain wrote:
+> One of the reasons to replace the condition (*l == 0xffff0001) with
+> (*l & 0xffff) == 0x0001) was that some devices apparently returned
+> 0001 for device id to indicate CRS, but returned actual vendor id in
+> the vendor ID field (hence the need to ignore vendor field).
+> 
+> Are we saying that the tg3 device returns 0x0001 for the device ID and
+> yet expects it to be treated as a good value (not CRS)?
+> 
+No it should not be treated as a good value, this commit has
+surfaced/exposed a problem in 5722 chipset which was previously masked. 
 
->> >> If we do need it (and it looks like most or all hotplug drivers copied it),
->> >> isn't there still a race?  Can't we have the following sequence?
->> >>
->> >>   - pciehp_check_link_active()                # returns true
->> >>   - Link goes down
->> >>   - pci_read_config_byte()            # fails because link is down
->> >>
->> > I would guess so. Question is how to address it. Read the configuration byte
->> > first, then check if the link is down ? Check if link is still up after reading
->> > the configuration byte ? Add a note that there may be a potential race condition
->> > and do nothing until it is actually seen ?
->>
->> I think we should just read PCI_BRIDGE_CONTROL and look for a 0xff
->> value.  That's not a legal value for the register, so if we see it, it
->> should be pretty safe to assume the link is down or the device is not
->> present at all.
->>
-> Something like
->         if (bctl != 0xff && (bctl & PCI_BRIDGE_CTL_VGA)) {
-> in addition to Rajat's changes ?
->
-> I think it would be good to keep the change Rajat proposed, ie to check
-> the link state instead of presence. Question then is if you'd want a new
-> revision of Rajat's patch or another patch on top of it with the bctl
-> related change.
 
-Why do we need the link state or the presence check?  It seems like
-those are sort of a 90% solution, and doing them provides the illusion
-of value but without real value.  If we think that checking for 0xff
-is a 100% solution, we should rely on that and not bother with
-anything else.
 
-Bjorn
