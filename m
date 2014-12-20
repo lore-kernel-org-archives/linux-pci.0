@@ -1,203 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:45511 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752992AbaLDKhI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Dec 2014 05:37:08 -0500
-Received: by mail-wi0-f180.google.com with SMTP id n3so27333127wiv.7
-        for <linux-pci@vger.kernel.org>; Thu, 04 Dec 2014 02:37:05 -0800 (PST)
-From: Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [RFC PATCH v2] drivers: pci: move PCI domain assignment
- =?iso-8859-1?Q?to=0D?= generic PCI code
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>, bhelgaas@google.com
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-In-Reply-To: <20141119093948.GA8751@red-moon>
-References: <1415637706-2195-1-git-send-email-lorenzo.pieralisi@arm.com>
-	<546C5FF2.5090903@huawei.com> <20141119093948.GA8751@red-moon>
-Date: Thu, 04 Dec 2014 10:36:59 +0000
-Message-Id: <20141204103659.34A77C40992@trevor.secretlab.ca>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:49116 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751003AbaLTUdN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 20 Dec 2014 15:33:13 -0500
+From: Prashant Sreedharan <prashant@broadcom.com>
+To: <davem@davemloft.net>
+CC: <netdev@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<nholland@tisys.org>, <marcelo.leitner@gmail.com>,
+	<bhelgaas@google.com>, <rajatxjain@gmail.com>,
+	Prashant Sreedharan <prashant@broadcom.com>,
+	Michael Chan <mchan@broadcom.com>
+Subject: [PATCH net]tg3: tg3_disable_ints using uninitialized mailbox value to disable interrupts
+Date: Sat, 20 Dec 2014 12:16:17 -0800
+Message-ID: <1419106577-12891-1-git-send-email-prashant@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 19 Nov 2014 09:39:48 +0000
-, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
- wrote:
-> On Wed, Nov 19, 2014 at 09:16:34AM +0000, Yijing Wang wrote:
-> > Hi Lorenzo,
-> >    You should send this to Bjorn instead of cc. Other, why put the OF related
-> > function in PCI core. Why not move it in drivers/of/of_pci.c ?
-> 
-> I did, you missed v1, and the problem is that with ACPI forthcoming we
-> do not want to have domain assignment scattered in different places,
-> but part of core code (ie a single function that prevents mixed
-> initialization from DT/counter and so on).
+During driver load in tg3_init_one, if the driver detects DMA activity before
+intializing the chip tg3_halt is called. As part of tg3_halt interrupts are
+disabled using routine tg3_disable_ints. This routine was using mailbox value
+which was not initialized (default value is 0). As a result driver was writing
+0x00000001 to pci config space register 0, which is the vendor id / device id.
 
-Bus specific OF code has generally been moving into the individual
-subsystems. SPI and I2C are the prime examples. It's easier to
-coordinate with the generic subsystem code when it lives in the same
-place. The PCI code still lives in drivers/of/ simply because nobody has
-been motivated enough to refactor it.
+This driver bug was exposed because of the commit a7877b17a667 (PCI: Check only
+the Vendor ID to identify Configuration Request Retry). Also this issue is only
+seen in older generation chipsets like 5722 because config space write to offset
+0 from driver is possible. The newer generation chips ignore writes to offset 0.
+Also without commit a7877b17a667, for these older chips when a GRC reset is
+issued the Bootcode would reprogram the vendor id/device id, which is the reason
+this bug was masked earlier.
 
-> 
-> Bjorn, are you fine with this patch ? Do you want me to resend it as
-> part of the ARM 32 PCI domain refactoring [1] ? [1] depends on this
-> patch going in first.
-> 
-> Thanks,
-> Lorenzo
-> 
-> [1] http://www.spinics.net/lists/arm-kernel/msg375423.html
-> 
-> > On 2014/11/11 0:41, Lorenzo Pieralisi wrote:
-> > > The current logic used for PCI domain assignment in arm64
-> > > pci_bus_assign_domain_nr() is flawed in that, depending on the host
-> > > controllers configuration for a platform and the respective initialization
-> > > sequence, core code may end up allocating PCI domain numbers from both DT and
-> > > the core code generic domain counter, which would result in PCI domain
-> > > allocation aliases/errors.
-> > > 
-> > > This patch fixes the logic behind the PCI domain number assignment and
-> > > moves the resulting code to generic PCI core code so that the same domain
-> > > allocation logic is used on all platforms selecting
-> > > 
-> > > CONFIG_PCI_DOMAINS_GENERIC
-> > > 
-> > > instead of resorting to an arch specific implementation that might end up
-> > > duplicating the PCI domain assignment logic wrongly.
-> > > 
-> > > Cc: Arnd Bergmann <arnd@arndb.de>
-> > > Cc: Liviu Dudau <liviu.dudau@arm.com>
-> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > > Cc: Rob Herring <robh+dt@kernel.org>
-> > > Cc: Catalin Marinas <catalin.marinas@arm.com>
-> > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > > ---
-> > > v1 => v2:
-> > > 
-> > > - Moved generic pci_bus_assign_domain_nr() code to PCI core instead of
-> > >   adding an OF layer API
-> > > - Updated commit log and code comments
-> > > 
-> > >  arch/arm64/kernel/pci.c | 22 ----------------------
-> > >  drivers/pci/pci.c       | 50 +++++++++++++++++++++++++++++++++++++++++++++++++
-> > >  2 files changed, 50 insertions(+), 22 deletions(-)
-> > > 
-> > > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> > > index ce5836c..6f93c24 100644
-> > > --- a/arch/arm64/kernel/pci.c
-> > > +++ b/arch/arm64/kernel/pci.c
-> > > @@ -46,25 +46,3 @@ int pcibios_add_device(struct pci_dev *dev)
-> > >  
-> > >  	return 0;
-> > >  }
-> > > -
-> > > -
-> > > -#ifdef CONFIG_PCI_DOMAINS_GENERIC
-> > > -static bool dt_domain_found = false;
-> > > -
-> > > -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> > > -{
-> > > -	int domain = of_get_pci_domain_nr(parent->of_node);
-> > > -
-> > > -	if (domain >= 0) {
-> > > -		dt_domain_found = true;
-> > > -	} else if (dt_domain_found == true) {
-> > > -		dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
-> > > -			parent->of_node->full_name);
-> > > -		return;
-> > > -	} else {
-> > > -		domain = pci_get_new_domain_nr();
-> > > -	}
-> > > -
-> > > -	bus->domain_nr = domain;
-> > > -}
-> > > -#endif
-> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > index 625a4ac..2279414 100644
-> > > --- a/drivers/pci/pci.c
-> > > +++ b/drivers/pci/pci.c
-> > > @@ -10,6 +10,8 @@
-> > >  #include <linux/kernel.h>
-> > >  #include <linux/delay.h>
-> > >  #include <linux/init.h>
-> > > +#include <linux/of.h>
-> > > +#include <linux/of_pci.h>
-> > >  #include <linux/pci.h>
-> > >  #include <linux/pm.h>
-> > >  #include <linux/slab.h>
-> > > @@ -4447,6 +4449,54 @@ int pci_get_new_domain_nr(void)
-> > >  {
-> > >  	return atomic_inc_return(&__domain_nr);
-> > >  }
-> > > +
-> > > +#ifdef CONFIG_PCI_DOMAINS_GENERIC
-> > > +
-> > > +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> > > +{
-> > > +	static int use_dt_domains = -1;
-> > > +	int domain = of_get_pci_domain_nr(parent->of_node);
-> > > +
-> > > +	/*
-> > > +	 * Check DT domain and use_dt_domains values.
-> > > +	 *
-> > > +	 * If DT domain property is valid (domain >= 0) and
-> > > +	 * use_dt_domains != 0, the DT assignment is valid since this means
-> > > +	 * we have not previously allocated a domain number by using
-> > > +	 * pci_get_new_domain_nr(); we should also update use_dt_domains to
-> > > +	 * 1, to indicate that we have just assigned a domain number from
-> > > +	 * DT.
-> > > +	 *
-> > > +	 * If DT domain property value is not valid (ie domain < 0), and we
-> > > +	 * have not previously assigned a domain number from DT
-> > > +	 * (use_dt_domains != 1) we should assign a domain number by
-> > > +	 * using the:
-> > > +	 *
-> > > +	 * pci_get_new_domain_nr()
-> > > +	 *
-> > > +	 * API and update the use_dt_domains value to keep track of method we
-> > > +	 * are using to assign domain numbers (use_dt_domains = 0).
-> > > +	 *
-> > > +	 * All other combinations imply we have a platform that is trying
-> > > +	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
-> > > +	 * which is a recipe for domain mishandling and it is prevented by
-> > > +	 * invalidating the domain value (domain = -1) and printing a
-> > > +	 * corresponding error.
-> > > +	 */
-> > > +	if (domain >= 0 && use_dt_domains) {
-> > > +		use_dt_domains = 1;
-> > > +	} else if (domain < 0 && use_dt_domains != 1) {
-> > > +		use_dt_domains = 0;
-> > > +		domain = pci_get_new_domain_nr();
-> > > +	} else {
-> > > +		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
-> > > +			parent->of_node->full_name);
-> > > +		domain = -1;
-> > > +	}
-> > > +
-> > > +	bus->domain_nr = domain;
-> > > +}
-> > > +#endif
-> > >  #endif
-> > >  
-> > >  /**
-> > > 
-> > 
-> > 
-> > -- 
-> > Thanks!
-> > Yijing
-> > 
-> > 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Fixed by initializing the interrupt mailbox registers before calling tg3_halt.
+
+Please queue for -stable.
+
+Reported-by: Nils Holland <nholland@tisys.org>
+Reported-by: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
+Signed-off-by: Prashant Sreedharan <prashant@broadcom.com>
+Signed-off-by: Michael Chan <mchan@broadcom.com>
+---
+ drivers/net/ethernet/broadcom/tg3.c |   34 +++++++++++++++++-----------------
+ 1 files changed, 17 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/ethernet/broadcom/tg3.c b/drivers/net/ethernet/broadcom/tg3.c
+index bb48a61..553dcd8 100644
+--- a/drivers/net/ethernet/broadcom/tg3.c
++++ b/drivers/net/ethernet/broadcom/tg3.c
+@@ -17800,23 +17800,6 @@ static int tg3_init_one(struct pci_dev *pdev,
+ 		goto err_out_apeunmap;
+ 	}
+ 
+-	/*
+-	 * Reset chip in case UNDI or EFI driver did not shutdown
+-	 * DMA self test will enable WDMAC and we'll see (spurious)
+-	 * pending DMA on the PCI bus at that point.
+-	 */
+-	if ((tr32(HOSTCC_MODE) & HOSTCC_MODE_ENABLE) ||
+-	    (tr32(WDMAC_MODE) & WDMAC_MODE_ENABLE)) {
+-		tw32(MEMARB_MODE, MEMARB_MODE_ENABLE);
+-		tg3_halt(tp, RESET_KIND_SHUTDOWN, 1);
+-	}
+-
+-	err = tg3_test_dma(tp);
+-	if (err) {
+-		dev_err(&pdev->dev, "DMA engine test failed, aborting\n");
+-		goto err_out_apeunmap;
+-	}
+-
+ 	intmbx = MAILBOX_INTERRUPT_0 + TG3_64BIT_REG_LOW;
+ 	rcvmbx = MAILBOX_RCVRET_CON_IDX_0 + TG3_64BIT_REG_LOW;
+ 	sndmbx = MAILBOX_SNDHOST_PROD_IDX_0 + TG3_64BIT_REG_LOW;
+@@ -17861,6 +17844,23 @@ static int tg3_init_one(struct pci_dev *pdev,
+ 			sndmbx += 0xc;
+ 	}
+ 
++	/*
++	 * Reset chip in case UNDI or EFI driver did not shutdown
++	 * DMA self test will enable WDMAC and we'll see (spurious)
++	 * pending DMA on the PCI bus at that point.
++	 */
++	if ((tr32(HOSTCC_MODE) & HOSTCC_MODE_ENABLE) ||
++	    (tr32(WDMAC_MODE) & WDMAC_MODE_ENABLE)) {
++		tw32(MEMARB_MODE, MEMARB_MODE_ENABLE);
++		tg3_halt(tp, RESET_KIND_SHUTDOWN, 1);
++	}
++
++	err = tg3_test_dma(tp);
++	if (err) {
++		dev_err(&pdev->dev, "DMA engine test failed, aborting\n");
++		goto err_out_apeunmap;
++	}
++
+ 	tg3_init_coal(tp);
+ 
+ 	pci_set_drvdata(pdev, dev);
+-- 
+1.7.1
 
