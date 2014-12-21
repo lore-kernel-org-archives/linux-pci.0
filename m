@@ -1,174 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:54693 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753184AbaLVFzL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 00:55:11 -0500
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 22 Dec 2014 15:55:09 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 61B9F3578064
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:55:06 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sBM5t6Md34537524
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:55:06 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sBM5t5Db020995
-	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:55:06 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V10 12/17] powerpc/powernv: Reserve additional space for IOV BAR according to the number of total_pe
-Date: Mon, 22 Dec 2014 13:54:32 +0800
-Message-Id: <1419227677-12312-13-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from hygieia.santi-shop.eu ([78.46.175.2]:33474 "EHLO
+	hygieia.santi-shop.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753394AbaLUMcX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 21 Dec 2014 07:32:23 -0500
+Date: Sun, 21 Dec 2014 13:32:09 +0100
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, petrihodju@yahoo.com
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Anibal Francisco Martinez Cortina <linuxkid.zeuz@gmail.com>,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [Bug 86121] New: Regression: NVIDIA backlight not working after
+ latest vgaarb change
+Message-ID: <20141221133209.538ed590@neptune.home>
+In-Reply-To: <CAErSpo4uKuxaqNPb20MXmFPFXHvJthEVuaQqJ0LdnpX29hiekA@mail.gmail.com>
+References: <bug-86121-41252@https.bugzilla.kernel.org/>
+	<CAErSpo5SvnNb7KteHPtr+_XZK3RJYfBNZOR_2cnxbBkF3x+tKA@mail.gmail.com>
+	<CAErSpo4uKuxaqNPb20MXmFPFXHvJthEVuaQqJ0LdnpX29hiekA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On PHB3, PF IOV BAR will be covered by M64 BAR to have better PE isolation.
-Mostly the total_pe number is different from the total_VFs, which will lead to
-a conflict between MMIO space and the PE number.
+On Wed, 17 December 2014 Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Petri]
+> 
+> On Mon, Oct 13, 2014 at 9:47 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Sun, Oct 12, 2014 at 8:55 AM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
+> >> https://bugzilla.kernel.org/show_bug.cgi?id=86121
+> >>
+> >>             Bug ID: 86121
+> >>            Summary: Regression: NVIDIA backlight not working after latest
+> >>                     vgaarb change
+> >>            Product: Drivers
+> >>            Version: 2.5
+> >>     Kernel Version: 3.16.5
+> >>           Hardware: x86-64
+> >>                 OS: Linux
+> >>               Tree: Mainline
+> >>             Status: NEW
+> >>           Severity: normal
+> >>           Priority: P1
+> >>          Component: PCI
+> >>           Assignee: drivers_pci@kernel-bugs.osdl.org
+> >>           Reporter: petrihodju@yahoo.com
+> >>         Regression: No
+> >>
+> >> Created attachment 153311
+> >>   --> https://bugzilla.kernel.org/attachment.cgi?id=153311&action=edit
+> >> kernel boot logs & config
+> >>
+> >> I have experienced a regression in backlight control with NVIDIA binary blob
+> >> driver and kernel 3.16.5. I did a bisect between 3.16.4 and 3.16.5 and found
+> >> out that the regression happens with commit "ce027dac vgaarb: Don't default
+> >> exclusively to first video device with mem+io"
+> >>
+> >> I have attached kernel boot log with working backlight (commit 7babfd7f) and
+> >> non-working one (commit ce027dac) plus the config used.
+> >>
+> >> I'm running Ubuntu 14.10
+> 
+> Ping for status update?  There are some more comments in the bugzilla,
+> but the most recent one is from Oct 25.
+> 
+> This is a regression, so I'd like to make some progress on it.
 
-For example, total_VFs is 128 and total_pe is 256, then the second half of M64
-BAR space will be part of other PCI device, which may already belongs to other
-PEs.
+I'm hoping for more details on how it triggers, e.g. if "BIOS"-configured
+boot GPU has some effect or when it starts failing (e.g. with/without proprietary
+nvidia driver, or versus nouveau).
+>From ACPI code there is nothing that catches my attention tough.
 
-This patch reserve additional space for the PF IOV BAR, which is total_pe
-number of VF's BAR size. By doing so, it prevents the conflict.
+On the other hand, for Apple systems GPU switching should probably not include
+any kind of VGA arbitration switching as VGA is not used at all there...
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/machdep.h        |    4 ++
- arch/powerpc/include/asm/pci-bridge.h     |    3 ++
- arch/powerpc/kernel/pci-common.c          |    5 +++
- arch/powerpc/platforms/powernv/pci-ioda.c |   59 +++++++++++++++++++++++++++++
- 4 files changed, 71 insertions(+)
-
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index c8175a3..965547c 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -250,6 +250,10 @@ struct machdep_calls {
- 	/* Reset the secondary bus of bridge */
- 	void  (*pcibios_reset_secondary_bus)(struct pci_dev *dev);
- 
-+#ifdef CONFIG_PCI_IOV
-+	void (*pcibios_fixup_sriov)(struct pci_bus *bus);
-+#endif /* CONFIG_PCI_IOV */
-+
- 	/* Called to shutdown machine specific hardware not already controlled
- 	 * by other drivers.
- 	 */
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 93126cb..08c092e 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -170,6 +170,9 @@ struct pci_dn {
- #define IODA_INVALID_PE		(-1)
- #ifdef CONFIG_PPC_POWERNV
- 	int	pe_number;
-+#ifdef CONFIG_PCI_IOV
-+	u16     max_vfs;		/* number of VFs IOV BAR expended */
-+#endif /* CONFIG_PCI_IOV */
- #endif
- 	struct list_head child_list;
- 	struct list_head list;
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 889f743..832b7e1 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1636,6 +1636,11 @@ void pcibios_scan_phb(struct pci_controller *hose)
- 	if (ppc_md.pcibios_fixup_phb)
- 		ppc_md.pcibios_fixup_phb(hose);
- 
-+#ifdef CONFIG_PCI_IOV
-+	if (ppc_md.pcibios_fixup_sriov)
-+		ppc_md.pcibios_fixup_sriov(bus);
-+#endif /* CONFIG_PCI_IOV */
-+
- 	/* Configure PCI Express settings */
- 	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
- 		struct pci_bus *child;
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index be0c31a..a9e61fa 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1720,6 +1720,62 @@ static void pnv_pci_init_ioda_msis(struct pnv_phb *phb)
- static void pnv_pci_init_ioda_msis(struct pnv_phb *phb) { }
- #endif /* CONFIG_PCI_MSI */
- 
-+#ifdef CONFIG_PCI_IOV
-+static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
-+{
-+	struct pci_controller *hose;
-+	struct pnv_phb *phb;
-+	struct resource *res;
-+	int i;
-+	resource_size_t size;
-+	struct pci_dn *pdn;
-+
-+	if (!pdev->is_physfn || pdev->is_added)
-+		return;
-+
-+	hose = pci_bus_to_host(pdev->bus);
-+	phb = hose->private_data;
-+
-+	pdn = pci_get_pdn(pdev);
-+	pdn->max_vfs = 0;
-+
-+	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
-+		res = &pdev->resource[i];
-+		if (!res->flags || res->parent)
-+			continue;
-+		if (!pnv_pci_is_mem_pref_64(res->flags)) {
-+			dev_warn(&pdev->dev, " Skipping expanding IOV BAR %pR on %s\n",
-+				 res, pci_name(pdev));
-+			continue;
-+		}
-+
-+		dev_dbg(&pdev->dev, " Fixing VF BAR[%d] %pR to\n", i, res);
-+		size = pci_iov_resource_size(pdev, i);
-+		res->end = res->start + size * phb->ioda.total_pe - 1;
-+		dev_dbg(&pdev->dev, "                       %pR\n", res);
-+		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
-+				i - PCI_IOV_RESOURCES,
-+				res, phb->ioda.total_pe);
-+	}
-+	pdn->max_vfs = phb->ioda.total_pe;
-+}
-+
-+static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
-+{
-+	struct pci_dev *pdev;
-+	struct pci_bus *b;
-+
-+	list_for_each_entry(pdev, &bus->devices, bus_list) {
-+		b = pdev->subordinate;
-+
-+		if (b)
-+			pnv_pci_ioda_fixup_sriov(b);
-+
-+		pnv_pci_ioda_fixup_iov_resources(pdev);
-+	}
-+}
-+#endif /* CONFIG_PCI_IOV */
-+
- /*
-  * This function is supposed to be called on basis of PE from top
-  * to bottom style. So the the I/O or MMIO segment assigned to
-@@ -2096,6 +2152,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
- 	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
- 	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
-+#ifdef CONFIG_PCI_IOV
-+	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
-+#endif /* CONFIG_PCI_IOV */
- 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
- 
- 	/* Reset IODA tables to a clean state */
--- 
-1.7.9.5
-
+Bruno
