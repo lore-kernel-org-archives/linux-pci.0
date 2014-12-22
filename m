@@ -1,128 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from celine.tisys.org ([85.25.117.166]:45591 "EHLO celine.tisys.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753997AbaLMVJl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 13 Dec 2014 16:09:41 -0500
-Date: Sat, 13 Dec 2014 22:02:51 +0100
-From: Nils Holland <nholland@tisys.org>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-pci@vger.kernel.org,
-	rajatxjain@gmail.com
-Subject: Re: [bisected] tg3 broken in 3.18.0?
-Message-ID: <20141213210251.GA12812@teela.fritz.box>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:54608 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751476AbaLVFyx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 00:54:53 -0500
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 22 Dec 2014 15:54:50 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id D50043578069
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:47 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sBM5slqj36241640
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:47 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sBM5sk0p020326
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:47 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V10 02/17] PCI/IOV: add VF enable/disable hook
+Date: Mon, 22 Dec 2014 13:54:22 +0800
+Message-Id: <1419227677-12312-3-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-rajatxjain@gmail.com
-Bcc: 
-Subject: Re: [bisected] tg3 broken in 3.18.0?
-Reply-To: 
-In-Reply-To: <20141212.201831.186234837340644301.davem@davemloft.net>
+VFs are dynamically created/released when driver enable them. On some
+platforms, like PowerNV, special resources are necessary to enable VFs.
 
-On Fri, Dec 12, 2014 at 08:18:31PM -0500, David Miller wrote:
-> From: Nils Holland <nholland@tisys.org>
-> Date: Sat, 13 Dec 2014 02:14:08 +0100
-> 
-> > 
-> > My bisect exercise suggests that the following commit is the culprit:
-> > 
-> > 89665a6a71408796565bfd29cfa6a7877b17a667 (PCI: Check only the Vendor
-> > ID to identify Configuration Request Retry)
-> 
-> You definitely need to bring this up with the author of that change
-> and the relevent list for the PCI subsystem and/or linux-kernel.
+This patch adds two hooks for platform initialization before creating the VFs.
 
-I've now already sent an inquiry to Rajat Jain, the author of the
-patch in question, and this message here is now also CC'd to
-linux-pci@.
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/iov.c |   19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-With this message, I'd like to add one last result of investigation
-I've done today, in the hope that it will aid the folks with more
-knowledge to go after the issue.
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index e76d1a0..5437fad0 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -213,6 +213,11 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+ 	pci_dev_put(dev);
+ }
+ 
++int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 vf_num)
++{
++       return 0;
++}
++
+ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ {
+ 	int rc;
+@@ -223,6 +228,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	struct pci_dev *pdev;
+ 	struct pci_sriov *iov = dev->sriov;
+ 	int bars = 0;
++	int retval;
+ 
+ 	if (!nr_virtfn)
+ 		return 0;
+@@ -297,6 +303,12 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	if (nr_virtfn < initial)
+ 		initial = nr_virtfn;
+ 
++	if ((retval = pcibios_sriov_enable(dev, initial))) {
++		dev_err(&dev->dev, "Failure %d from pcibios_sriov_setup()\n",
++			retval);
++		return retval;
++	}
++
+ 	for (i = 0; i < initial; i++) {
+ 		rc = virtfn_add(dev, i, 0);
+ 		if (rc)
+@@ -325,6 +337,11 @@ failed:
+ 	return rc;
+ }
+ 
++int __weak pcibios_sriov_disable(struct pci_dev *pdev)
++{
++       return 0;
++}
++
+ static void sriov_disable(struct pci_dev *dev)
+ {
+ 	int i;
+@@ -336,6 +353,8 @@ static void sriov_disable(struct pci_dev *dev)
+ 	for (i = 0; i < iov->num_VFs; i++)
+ 		virtfn_remove(dev, i, 0);
+ 
++	pcibios_sriov_disable(dev);
++
+ 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+ 	pci_cfg_access_lock(dev);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+-- 
+1.7.9.5
 
-Basically, I've added a little debug output to tg3.c in the function
-tg3_poll_fw(), as that function contained the code that would print
-out the "No firmware running" line that was visible in dmesg on those
-kernels where tg3 would not work for me. So, I basically had this:
-
-static int tg3_poll_fw(struct tg3 *tp)
-{
-        int i;
-        u32 val;
-
-        netdev_info(tp->dev, "XX: Boom!\n");
-        [...]
-}
-
-Now, I was looking through dmesg searching for occurances of this
-debug output, using a standard 3.18.0 kernel (where my tg3 doesn't
-work) as well as using a 3.18.0 kernel with
-89665a6a71408796565bfd29cfa6a7877b17a667 reverted (where my tg3
-works). Here's the results:
-
-[standard 3.18.0 (=problematic)]:
-[    2.197653] libphy: tg3 mdio bus: probed
-[    2.257488] tg3 0000:02:00.0 eth0:
-        Tigon3 [partno(BCM57780) rev 57780001] (PCI Express) MAC address
-        00:19:99:ce:13:a6
-[    2.259589] tg3 0000:02:00.0 eth0:
-        attached PHY driver [Broadcom BCM57780] (mii_bus:phy_addr=200:01)
-[    2.261740] tg3 0000:02:00.0 eth0:
-        RXcsums[1] LinkChgREG[0] MIirq[0] ASF[0] TSOcap[1]
-[    2.263912] tg3 0000:02:00.0 eth0:
-        dma_rwctrl[76180000] dma_mask[64-bit]
-[...]
-[   10.028002] tg3 0000:02:00.0: irq 25 for MSI/MSI-X
-[   10.028247] tg3 0000:02:00.0 enp2s0: XX: Boom!
-[   12.157034] tg3 0000:02:00.0 enp2s0: No firmware running
-
-
-[3.18.0 without above mentioned patch, 3.17.3 is the same, both result
-in a working tg3]:
-[    1.397167] libphy: tg3 mdio bus: probed
-[    1.456473] tg3 0000:02:00.0
-        (unnamed net_device) (uninitialized): XX: Boom!
-[    1.464987] tg3 0000:02:00.0 eth0:
-        Tigon3 [partno(BCM57780) rev 57780001] (PCI Express) MAC address
-        00:19:99:ce:13:a6
-[    1.467118] tg3 0000:02:00.0 eth0:
-        attached PHY driver [Broadcom BCM57780] (mii_bus:phy_addr=200:01)
-[    1.469311] tg3 0000:02:00.0 eth0:
-        RXcsums[1] LinkChgREG[0] MIirq[0] ASF[0] TSOcap[1]
-[    1.471500] tg3 0000:02:00.0 eth0:
-        dma_rwctrl[76180000] dma_mask[64-bit]
-[...]
-[    9.631629] tg3 0000:02:00.0: irq 25 for MSI/MSI-X
-[    9.631962] tg3 0000:02:00.0 enp2s0: XX: Boom!
-[    9.634339] tg3 0000:02:00.0 enp2s0: XX: Boom!
-[    9.642741] IPv6:
-        ADDRCONF(NETDEV_UP): enp2s0: link is not ready
-[   10.479636] tg3 0000:02:00.0
-        enp2s0: Link is down
-[   11.484498] tg3 0000:02:00.0
-        enp2s0: Link is up at 100 Mbps, full duplex
-
-As can be seen, there are two tg3-related sections in my dmesg in both
-the working and non-working scenarios: At about 1 - 2 secs, the card
-seems to begin initializing, and at about 9 - 10 seconds it is (or
-should be) ready to establish a network connection.
-
-My debug section, or tg3.c's tg3_poll_fw(), seems to be called thrice
-in the working situation: The first hit occurs at 1.456473 where the tg3
-device is still reported as "(unnamed net_device) (uninitialized)".
-Then, the section gets hit twice again at around 9.63 - at this point
-the driver already reports the card as initialized / by its real name.
-
-In the non-working situation, the debug sections seems to be hit only
-once, at 10.028247. At this point, the tg3 is already reported as
-initialized - just like when it's hit the second and third time in the
-working situation.
-
-Bottom line is that commit 89665a6a71408796565bfd29cfa6a7877b17a667
-really makes a difference regarding the way the tg3 card is
-initialized, which seems to cause the problem.
-
-Greetings,
-Nils
