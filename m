@@ -1,59 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:44690 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751419AbaLKSLi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Dec 2014 13:11:38 -0500
-Date: Thu, 11 Dec 2014 13:11:36 -0500
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Dely Sy <dely.l.sy@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Kristen Carlson Accardi <kristen.c.accardi@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: Special handling of display/VGA devices in hotplug drivers
-Message-ID: <20141211181136.GA11367@kroah.com>
-References: <CAErSpo4iZCUZgqNi-fX+YX=sKV=Ae5z8kn8-++E0Cgft9unmBg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4iZCUZgqNi-fX+YX=sKV=Ae5z8kn8-++E0Cgft9unmBg@mail.gmail.com>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:46159 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751583AbaLVFyz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 00:54:55 -0500
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 22 Dec 2014 15:54:53 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id BA4E03578057
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:50 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sBM5sojT39321602
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:50 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sBM5snjv020428
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:50 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V10 03/17] PCI: Add weak pcibios_iov_resource_alignment() interface
+Date: Mon, 22 Dec 2014 13:54:23 +0800
+Message-Id: <1419227677-12312-4-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 11, 2014 at 10:34:30AM -0700, Bjorn Helgaas wrote:
-> It looks like you added the initial pciehp driver [1], which includes
-> the following code in pciehp_disable_slot():
-> 
-> + if (class_code == PCI_BASE_CLASS_DISPLAY) {
-> + /* Display/Video adapter (not supported) */
-> + rc = REMOVE_NOT_SUPPORTED;
-> 
-> + /* If it's a bridge, check the VGA Enable bit */
-> + if ((header_type & 0x7F) == PCI_HEADER_TYPE_BRIDGE) {
-> + rc = pci_bus_read_config_byte (pci_bus, devfn, PCI_BRIDGE_CONTROL, &BCR);
-> + if (rc)
-> + return rc;
-> +
-> + /* If the VGA Enable bit is set, remove isn't supported */
-> + if (BCR & PCI_BRIDGE_CTL_VGA) {
-> + rc = REMOVE_NOT_SUPPORTED;
-> 
-> I'm trying to figure out why VGA devices are handled specially.  I
-> can't find anything in the PCI specs that mentions this.  Most of the
-> other PCI hotplug drivers have similar code.  Do you remember anything
-> about this?
+The alignment of PF's IOV BAR is designed to be the individual size of a VF's
+BAR size. This works fine for many platforms, but on PowerNV platform it needs
+some change.
 
-The PCI spec said that you were not allowed to hotplug VGA drivers.  The
-big issue is that POST usually needs to run on those things, and there
-is no way to POST a PCI hotplugged device.
+The original alignment works, since at sizing and assigning stage the
+requirement is from an individual VF's BAR size instead of the PF's IOV BAR.
+This is the reason for the original code to just retrieve the individual
+VF BAR size as the alignment.
 
-Does the spec not say that anymore?  I haven't looked in years at it...
+On PowerNV platform, it is required to align the whole PF IOV BAR to a hardware
+segment. Based on this fact, the alignment of PF's IOV BAR should be
+calculated seperately.
 
-Do you want to hot-add a VGA device?  Are these lines causing a problem
-with something?
+This patch introduces a weak pcibios_iov_resource_alignment() interface, which
+gives platform a chance to implement specific method to calculate the PF's IOV
+BAR alignment.
 
-thanks,
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/iov.c   |   11 ++++++++++-
+ include/linux/pci.h |    3 +++
+ 2 files changed, 13 insertions(+), 1 deletion(-)
 
-greg k-h
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 5437fad0..554dd64 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -556,6 +556,12 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
+ 		4 * (resno - PCI_IOV_RESOURCES);
+ }
+ 
++resource_size_t __weak pcibios_iov_resource_alignment(struct pci_dev *dev,
++		int resno, resource_size_t align)
++{
++	return align;
++}
++
+ /**
+  * pci_sriov_resource_alignment - get resource alignment for VF BAR
+  * @dev: the PCI device
+@@ -570,12 +576,15 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
+ {
+ 	struct resource tmp;
+ 	int reg = pci_iov_resource_bar(dev, resno);
++	resource_size_t align;
+ 
+ 	if (!reg)
+ 		return 0;
+ 
+ 	__pci_read_base(dev, pci_bar_unknown, &tmp, reg);
+-	return resource_alignment(&tmp);
++	align = resource_alignment(&tmp);
++
++	return pcibios_iov_resource_alignment(dev, resno, align);
+ }
+ 
+ /**
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 74ef944..ae7a7ea 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1163,6 +1163,9 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus);
+ void pci_setup_bridge(struct pci_bus *bus);
+ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+ 					 unsigned long type);
++resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev,
++						 int resno,
++						 resource_size_t align);
+ 
+ #define PCI_VGA_STATE_CHANGE_BRIDGE (1 << 0)
+ #define PCI_VGA_STATE_CHANGE_DECODES (1 << 1)
+-- 
+1.7.9.5
+
