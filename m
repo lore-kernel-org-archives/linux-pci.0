@@ -1,60 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:15197 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758097AbaLKBhG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Dec 2014 20:37:06 -0500
-Message-ID: <5488F53F.5060805@broadcom.com>
-Date: Wed, 10 Dec 2014 17:37:03 -0800
-From: Ray Jui <rjui@broadcom.com>
-MIME-Version: 1.0
-To: Lucas Stach <l.stach@pengutronix.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	"Ian Campbell" <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Christian Daudt <bcm@fixthebug.org>,
-	Matt Porter <mporter@linaro.org>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>
-Subject: Re: [PATCH 1/4] pci: iProc: define Broadcom iProc PCIe binding
-References: <Ray Jui <rjui@broadcom.com>	 <1418169871-19232-1-git-send-email-rjui@broadcom.com>	 <1418169871-19232-2-git-send-email-rjui@broadcom.com> <1418207427.7616.5.camel@pengutronix.de>
-In-Reply-To: <1418207427.7616.5.camel@pengutronix.de>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:34345 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751583AbaLVFy6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 00:54:58 -0500
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 22 Dec 2014 15:54:56 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 72E6B2BB005B
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:53 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sBM5srRk38142094
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:53 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sBM5sqBD020526
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:53 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V10 04/17] PCI: Store VF BAR size in pci_sriov
+Date: Mon, 22 Dec 2014 13:54:24 +0800
+Message-Id: <1419227677-12312-5-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Currently we don't store the VF BAR size, and each time we calculate the size
+by dividing the PF's IOV BAR size by total_VFs.
 
+This patch stores the VF BAR size in pci_sriov and introduces a function to
+retrieve it. Also, it adds a log message to show the total PF's IOV BAR size.
 
-On 12/10/2014 2:30 AM, Lucas Stach wrote:
->> +Example:
->> +
->> +SoC specific DT Entry:
->> +
->> +	pcie0: pcie@18012000 {
->> +		compatible = "brcm,iproc-pcie";
->> +		reg = <0x18012000 0x1000>,
->> +			<0x18002000 0x1000>;
->> +		interrupts = <GIC_SPI 96 IRQ_TYPE_NONE>,
->> +			     <GIC_SPI 97 IRQ_TYPE_NONE>,
->> +			     <GIC_SPI 98 IRQ_TYPE_NONE>,
->> +			     <GIC_SPI 99 IRQ_TYPE_NONE>,
->> +			     <GIC_SPI 100 IRQ_TYPE_NONE>,
->> +			     <GIC_SPI 101 IRQ_TYPE_NONE>;
->
-> This is missing the interrupt-map and interrupt-map-mask for the legacy
-> INTx interrupts. If you add this you don't need to have a special map
-> function in your driver, but can just use the standard
-> of_irq_parse_and_map_pci() function.
->
-> Regards,
-> Lucas
->
-Thanks for pointing this out. I will look into this and try it out.
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/iov.c   |   28 ++++++++++++++++++++--------
+ drivers/pci/pci.h   |    2 ++
+ include/linux/pci.h |    3 +++
+ 3 files changed, 25 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 554dd64..9a3e16c 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -100,6 +100,14 @@ static void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
+ 		pci_remove_bus(virtbus);
+ }
+ 
++resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
++{
++	if (!dev->is_physfn)
++		return 0;
++
++	return dev->sriov->res[resno - PCI_IOV_RESOURCES];
++}
++
+ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ {
+ 	int i;
+@@ -135,8 +143,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 			continue;
+ 		virtfn->resource[i].name = pci_name(virtfn);
+ 		virtfn->resource[i].flags = res->flags;
+-		size = resource_size(res);
+-		do_div(size, iov->total_VFs);
++		size = pci_iov_resource_size(dev, i + PCI_IOV_RESOURCES);
+ 		virtfn->resource[i].start = res->start + size * id;
+ 		virtfn->resource[i].end = virtfn->resource[i].start + size - 1;
+ 		rc = request_resource(res, &virtfn->resource[i]);
+@@ -419,6 +426,12 @@ found:
+ 	pgsz &= ~(pgsz - 1);
+ 	pci_write_config_dword(dev, pos + PCI_SRIOV_SYS_PGSIZE, pgsz);
+ 
++	iov = kzalloc(sizeof(*iov), GFP_KERNEL);
++	if (!iov) {
++		rc = -ENOMEM;
++		goto failed;
++	}
++
+ 	nres = 0;
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+ 		res = dev->resource + PCI_IOV_RESOURCES + i;
+@@ -430,16 +443,15 @@ found:
+ 			rc = -EIO;
+ 			goto failed;
+ 		}
++		iov->res[res - dev->resource - PCI_IOV_RESOURCES] =
++			resource_size(res);
+ 		res->end = res->start + resource_size(res) * total - 1;
++		dev_info(&dev->dev, "VF BAR%ld: %pR (for %d VFs)",
++				res - dev->resource - PCI_IOV_RESOURCES,
++				res, total);
+ 		nres++;
+ 	}
+ 
+-	iov = kzalloc(sizeof(*iov), GFP_KERNEL);
+-	if (!iov) {
+-		rc = -ENOMEM;
+-		goto failed;
+-	}
+-
+ 	iov->pos = pos;
+ 	iov->nres = nres;
+ 	iov->ctrl = ctrl;
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 94faf97..b1c9fdd 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -241,6 +241,8 @@ struct pci_sriov {
+ 	struct pci_dev *dev;	/* lowest numbered PF */
+ 	struct pci_dev *self;	/* this PF */
+ 	struct mutex lock;	/* lock for VF bus */
++	resource_size_t res[PCI_SRIOV_NUM_BARS];
++				/* VF BAR size */
+ };
+ 
+ #ifdef CONFIG_PCI_ATS
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index ae7a7ea..f0b5f87 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1670,6 +1670,7 @@ int pci_num_vf(struct pci_dev *dev);
+ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+ int pci_sriov_get_totalvfs(struct pci_dev *dev);
++resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
+ #else
+ static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
+ {
+@@ -1689,6 +1690,8 @@ static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+ { return 0; }
+ static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
+ { return 0; }
++static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
++{ return 0; }
+ #endif
+ 
+ #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
+-- 
+1.7.9.5
+
