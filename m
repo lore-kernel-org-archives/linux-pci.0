@@ -1,93 +1,168 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33303 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751834AbaLCVlH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Dec 2014 16:41:07 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: [PATCH v5 7/9] xen/pciback: Restore configuration space when detaching from a guest.
-Date: Wed,  3 Dec 2014 16:40:32 -0500
-Message-Id: <1417642834-20350-8-git-send-email-konrad.wilk@oracle.com>
-In-Reply-To: <1417642834-20350-1-git-send-email-konrad.wilk@oracle.com>
-References: <1417642834-20350-1-git-send-email-konrad.wilk@oracle.com>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:56227 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750928AbaLVGCh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 01:02:37 -0500
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 22 Dec 2014 16:02:36 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 351602BB005B
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:55:05 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sBM5t4Km27721806
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:55:05 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sBM5t30H020897
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:55:04 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V10 11/17] powerpc/powernv: Allocate pe->iommu_table dynamically
+Date: Mon, 22 Dec 2014 13:54:31 +0800
+Message-Id: <1419227677-12312-12-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The commit "xen/pciback: Don't deadlock when unbinding." was using
-the version of pci_reset_function which would lock the device lock.
-That is no good as we can dead-lock. As such we swapped to using
-the lock-less version and requiring that the callers
-of 'pcistub_put_pci_dev' take the device lock. And as such
-this bug got exposed.
+Current iommu_table of a PE is a static field. This will have a problem when
+iommu_free_table is called.
 
-Using the lock-less version is  OK, except that we tried to
-use 'pci_restore_state' after the lock-less version of
-__pci_reset_function_locked - which won't work as 'state_saved'
-is set to false. Said 'state_saved' is a toggle boolean that
-is to be used by the sequence of a) pci_save_state/pci_restore_state
-or b) pci_load_and_free_saved_state/pci_restore_state. We don't
-want to use a) as the guest might have messed up the PCI
-configuration space and we want it to revert to the state
-when the PCI device was binded to us. Therefore we pick
-b) to restore the configuration space.
+This patch allocate iommu_table dynamically.
 
-We restore from our 'golden' version of PCI configuration space, when an:
- - Device is unbinded from pciback
- - Device is detached from a guest.
-
-Reported-by:  Sander Eikelenboom <linux@eikelenboom.it>
-Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
-v2: Always FLR reset
----
- drivers/xen/xen-pciback/pci_stub.c | 16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
+ arch/powerpc/include/asm/iommu.h          |    3 +++
+ arch/powerpc/platforms/powernv/pci-ioda.c |   26 ++++++++++++++------------
+ arch/powerpc/platforms/powernv/pci.h      |    2 +-
+ 3 files changed, 18 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
-index 843a2ba..8580e53 100644
---- a/drivers/xen/xen-pciback/pci_stub.c
-+++ b/drivers/xen/xen-pciback/pci_stub.c
-@@ -105,7 +105,7 @@ static void pcistub_device_release(struct kref *kref)
- 	 */
- 	__pci_reset_function_locked(dev);
- 	if (pci_load_and_free_saved_state(dev, &dev_data->pci_saved_state))
--		dev_dbg(&dev->dev, "Could not reload PCI state\n");
-+		dev_info(&dev->dev, "Could not reload PCI state\n");
- 	else
- 		pci_restore_state(dev);
+diff --git a/arch/powerpc/include/asm/iommu.h b/arch/powerpc/include/asm/iommu.h
+index 9cfa370..5574eeb 100644
+--- a/arch/powerpc/include/asm/iommu.h
++++ b/arch/powerpc/include/asm/iommu.h
+@@ -78,6 +78,9 @@ struct iommu_table {
+ 	struct iommu_group *it_group;
+ #endif
+ 	void (*set_bypass)(struct iommu_table *tbl, bool enable);
++#ifdef CONFIG_PPC_POWERNV
++	void           *data;
++#endif
+ };
  
-@@ -257,6 +257,8 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
+ /* Pure 2^n version of get_order */
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 42b168f..be0c31a 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -890,6 +890,10 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, int all)
+ 		return;
+ 	}
+ 
++	pe->tce32_table = kzalloc_node(sizeof(struct iommu_table),
++			GFP_KERNEL, hose->node);
++	pe->tce32_table->data = pe;
++
+ 	/* Associate it with all child devices */
+ 	pnv_ioda_setup_same_PE(bus, pe);
+ 
+@@ -978,7 +982,7 @@ static void pnv_pci_ioda_dma_dev_setup(struct pnv_phb *phb, struct pci_dev *pdev
+ 
+ 	pe = &phb->ioda.pe_array[pdn->pe_number];
+ 	WARN_ON(get_dma_ops(&pdev->dev) != &dma_iommu_ops);
+-	set_iommu_table_base_and_group(&pdev->dev, &pe->tce32_table);
++	set_iommu_table_base_and_group(&pdev->dev, pe->tce32_table);
+ }
+ 
+ static int pnv_pci_ioda_dma_set_mask(struct pnv_phb *phb,
+@@ -1005,7 +1009,7 @@ static int pnv_pci_ioda_dma_set_mask(struct pnv_phb *phb,
+ 	} else {
+ 		dev_info(&pdev->dev, "Using 32-bit DMA via iommu\n");
+ 		set_dma_ops(&pdev->dev, &dma_iommu_ops);
+-		set_iommu_table_base(&pdev->dev, &pe->tce32_table);
++		set_iommu_table_base(&pdev->dev, pe->tce32_table);
+ 	}
+ 	*pdev->dev.dma_mask = dma_mask;
+ 	return 0;
+@@ -1042,9 +1046,9 @@ static void pnv_ioda_setup_bus_dma(struct pnv_ioda_pe *pe,
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		if (add_to_iommu_group)
+ 			set_iommu_table_base_and_group(&dev->dev,
+-						       &pe->tce32_table);
++						       pe->tce32_table);
+ 		else
+-			set_iommu_table_base(&dev->dev, &pe->tce32_table);
++			set_iommu_table_base(&dev->dev, pe->tce32_table);
+ 
+ 		if (dev->subordinate)
+ 			pnv_ioda_setup_bus_dma(pe, dev->subordinate,
+@@ -1134,8 +1138,7 @@ static void pnv_pci_ioda2_tce_invalidate(struct pnv_ioda_pe *pe,
+ void pnv_pci_ioda_tce_invalidate(struct iommu_table *tbl,
+ 				 __be64 *startp, __be64 *endp, bool rm)
  {
- 	struct pcistub_device *psdev, *found_psdev = NULL;
- 	unsigned long flags;
-+	struct xen_pcibk_dev_data *dev_data;
-+	int ret;
+-	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
+-					      tce32_table);
++	struct pnv_ioda_pe *pe = tbl->data;
+ 	struct pnv_phb *phb = pe->phb;
  
- 	spin_lock_irqsave(&pcistub_devices_lock, flags);
+ 	if (phb->type == PNV_PHB_IODA1)
+@@ -1201,7 +1204,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+ 	}
  
-@@ -280,8 +282,18 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
- 	 */
- 	device_lock_assert(&dev->dev);
- 	__pci_reset_function_locked(dev);
--	pci_restore_state(dev);
+ 	/* Setup linux iommu table */
+-	tbl = &pe->tce32_table;
++	tbl = pe->tce32_table;
+ 	pnv_pci_setup_iommu_table(tbl, addr, TCE32_TABLE_SIZE * segs,
+ 				  base << 28, IOMMU_PAGE_SHIFT_4K);
  
-+	dev_data = pci_get_drvdata(dev);
-+	ret = pci_load_saved_state(dev, dev_data->pci_saved_state);
-+	if (!ret) {
-+		/*
-+		 * The usual sequence is pci_save_state & pci_restore_state
-+		 * but the guest might have messed the configuration space up.
-+		 * Use the initial version (when device was bound to us).
-+		 */
-+		pci_restore_state(dev);
-+	} else
-+		dev_info(&dev->dev, "Could not reload PCI state\n");
- 	/* This disables the device. */
- 	xen_pcibk_reset_device(dev);
+@@ -1239,8 +1242,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
  
+ static void pnv_pci_ioda2_set_bypass(struct iommu_table *tbl, bool enable)
+ {
+-	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
+-					      tce32_table);
++	struct pnv_ioda_pe *pe = tbl->data;
+ 	uint16_t window_id = (pe->pe_number << 1 ) + 1;
+ 	int64_t rc;
+ 
+@@ -1285,10 +1287,10 @@ static void pnv_pci_ioda2_setup_bypass_pe(struct pnv_phb *phb,
+ 	pe->tce_bypass_base = 1ull << 59;
+ 
+ 	/* Install set_bypass callback for VFIO */
+-	pe->tce32_table.set_bypass = pnv_pci_ioda2_set_bypass;
++	pe->tce32_table->set_bypass = pnv_pci_ioda2_set_bypass;
+ 
+ 	/* Enable bypass by default */
+-	pnv_pci_ioda2_set_bypass(&pe->tce32_table, true);
++	pnv_pci_ioda2_set_bypass(pe->tce32_table, true);
+ }
+ 
+ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+@@ -1336,7 +1338,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+ 	}
+ 
+ 	/* Setup linux iommu table */
+-	tbl = &pe->tce32_table;
++	tbl = pe->tce32_table;
+ 	pnv_pci_setup_iommu_table(tbl, addr, tce_table_size, 0,
+ 			IOMMU_PAGE_SHIFT_4K);
+ 
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index e5b75b2..7317777 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -53,7 +53,7 @@ struct pnv_ioda_pe {
+ 	/* "Base" iommu table, ie, 4K TCEs, 32-bit DMA */
+ 	int			tce32_seg;
+ 	int			tce32_segcount;
+-	struct iommu_table	tce32_table;
++	struct iommu_table	*tce32_table;
+ 	phys_addr_t		tce_inval_reg_phys;
+ 
+ 	/* 64-bit TCE bypass region */
 -- 
-1.9.3
+1.7.9.5
 
