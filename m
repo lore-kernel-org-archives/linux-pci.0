@@ -1,90 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from celine.tisys.org ([85.25.117.166]:59847 "EHLO celine.tisys.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751125AbaLRU0m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 18 Dec 2014 15:26:42 -0500
-Date: Thu, 18 Dec 2014 21:26:38 +0100
-From: Nils Holland <nholland@tisys.org>
-To: Prashant Sreedharan <prashant@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>,
-	Michael Chan <mchan@broadcom.com>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	David Miller <davem@davemloft.net>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rafael Wysocki <rjw@rjwysocki.net>
-Subject: Re: [bisected] tg3 broken in 3.18.0?
-Message-ID: <20141218202637.GA2930@teela.fritz.box>
-References: <20141213210251.GA12812@teela.fritz.box>
- <548EF90A.5070607@gmail.com>
- <CAA93t1qyZE-9tw8pg1KG6g4iyy0QMW=iass5w=6ZGMTMu+vi_A@mail.gmail.com>
- <CAErSpo5dqQE7nZ6zf2odgpHBWA3ZpTjhbgQKnY8YxQW+a+298w@mail.gmail.com>
- <1418750141.4248.3.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
- <54907300.9050902@gmail.com>
- <1418759684.4248.12.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
- <CAErSpo7sqZS+-4LHo3wbo-pa73mcP_3d0Z37U0tfnASaxp-D_g@mail.gmail.com>
- <1418930889.3433.8.camel@prashant>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1418930889.3433.8.camel@prashant>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:44911 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750928AbaLVFsx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 00:48:53 -0500
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 22 Dec 2014 15:48:51 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 977CC2BB005E
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:48:49 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sBM5mnMq39714970
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:48:49 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sBM5mmOp012717
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:48:49 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH 0/2] PCI/IOV: fix on offset/stride based on NumVFs change
+Date: Mon, 22 Dec 2014 13:48:44 +0800
+Message-Id: <1419227326-12083-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 18, 2014 at 11:28:09AM -0800, Prashant Sreedharan wrote:
-> On Thu, 2014-12-18 at 12:15 -0700, Bjorn Helgaas wrote:
-> > 
-> > Any updates from the hardware team?
-> > 
-> > This is a pretty serious regression, but as far as I can tell, it is
-> > not a PCI bug.  The device should respond to a config read of vendor
-> > ID.  If the driver does something that make the read return CRS
-> > status, I think the driver is responsible for doing whatever delay or
-> > other fixup is required.
-> > 
-> > I'm inclined to reassign this bug to the tg3 driver unless you think
-> > the PCI core is doing something wrong here.
-> > 
-> > Bjorn
-> 
-> We were not able to reproduce this issue, could you please check what is
-> the value of reg 0x70, before the pci_device_is_present call is made ?
-> if bit 15 is set config access will be retried.
-> 
-> --- a/drivers/net/ethernet/broadcom/tg3.c
-> +++ b/drivers/net/ethernet/broadcom/tg3.c
-> @@ -9025,6 +9025,7 @@ static int tg3_chip_reset(struct tg3 *tp)
->         void (*write_op)(struct tg3 *, u32, u32);
->         int i, err;
->  
-> +       printk(KERN_ERR "config state: %x\n", tr32(TG3PCI_PCISTATE));
->         if (!pci_device_is_present(tp->pdev))
->                 return -ENODEV;
+Per SRIOV SPEC sec 3.3.9, 3.3.10, offset/stride may change when NumVFs is
+written. While current kernel doesn't update offset/stride with the change of
+NumVFs.
 
-No problem, I gave this a try and here is what I get:
+This property will also affect the iov bus range in enumeration.
 
-[    2.185190] libphy: tg3 mdio bus: probed
-[    2.229357] tsc: Refined TSC clocksource calibration: 2399.999 MHz
-[    2.244993] config state: 1292
-[    2.247136] tg3 0000:02:00.0 eth0: Tigon3 [partno(BCM57780) rev 57780001]
-        (PCI Express) MAC address 00:19:99:ce:13:a6
-[    2.249279] tg3 0000:02:00.0 eth0: attached PHY driver [Broadcom BCM57780]
-        (mii_bus:phy_addr=200:01)
-[    2.251460] tg3 0000:02:00.0 eth0: RXcsums[1] LinkChgREG[0]
-        MIirq[0] ASF[0] TSOcap[1]
-[    2.253672] tg3 0000:02:00.0 eth0: dma_rwctrl[76180000] dma_mask[64-bit]
-[...]
-[   12.204692] tg3 0000:02:00.0
-        enp2s0: No firmware running
-[   12.206653] config state: 1292
-[   12.208655] config state: 1292
+This patch set consists of two patches:
+1. Update the offset/stride with NumVFs change
+2. Calculate VF bus range on each possilbe NumVFs
 
-That's all of the three times the new debugging line gets hit when I
-boot my system using the supplied diagnostic patch.
+Code based on 3.19-rc1 and tested on x86 and powernv platform.
+Bus range doesn't chage on current hardware.
 
-Hope that helps - of course, I'd gladly test any further
-(diagnostic) patches if required! Also, if I can provide any
-additional information that might be of value, just ask:-)
+Wei Yang (2):
+  PCI: Refresh offset/stride after NumVFs is written
+  PCI: Calculate the VF bus range on each possible NumVFs
 
-Greetings,
-Nils
+ drivers/pci/iov.c |   54 +++++++++++++++++++++++++++++++++++++++++++++--------
+ drivers/pci/pci.h |    1 +
+ 2 files changed, 47 insertions(+), 8 deletions(-)
+
+-- 
+1.7.9.5
+
