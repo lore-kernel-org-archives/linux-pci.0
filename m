@@ -1,137 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:5553 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933082AbaLLQxr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Dec 2014 11:53:47 -0500
-Message-ID: <548B1D98.6030400@broadcom.com>
-Date: Fri, 12 Dec 2014 08:53:44 -0800
-From: Ray Jui <rjui@broadcom.com>
-MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>,
-	<linux-arm-kernel@lists.infradead.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	"Ian Campbell" <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Christian Daudt <bcm@fixthebug.org>,
-	Matt Porter <mporter@linaro.org>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	<devicetree@vger.kernel.org>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: [PATCH v2 1/4] pci: iProc: define Broadcom iProc PCIe binding
-References: <1418351817-14898-2-git-send-email-rjui@broadcom.com> <3375037.6pjWmlOLA3@wuerfel>
-In-Reply-To: <3375037.6pjWmlOLA3@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:54740 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753794AbaLVFzS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 00:55:18 -0500
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 22 Dec 2014 15:55:16 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id E84EC2BB0066
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:55:12 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sBM5tCgb35324146
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:55:12 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sBM5tCcQ021266
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:55:12 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V10 16/17] powerpc/powernv: Reserve additional space for IOV BAR, with m64_per_iov supported
+Date: Mon, 22 Dec 2014 13:54:36 +0800
+Message-Id: <1419227677-12312-17-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+M64 aperture size is limited on PHB3. When the IOV BAR is too big, this will
+exceed the limitation and failed to be assigned.
 
+This patch introduce a different mechanism based on the IOV BAR size:
 
-On 12/12/2014 4:14 AM, Arnd Bergmann wrote:
-> On Thursday 11 December 2014 18:36:54 Ray Jui wrote:
->> index 0000000..040bc0f
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
->> @@ -0,0 +1,74 @@
->> +* Broadcom iProc PCIe controller
->> +
->> +Required properties:
->> +- compatible: Must be "brcm,iproc-pcie"
->> +- reg: base address and length of the PCIe controller and the MDIO interface
->> +  that controls the PCIe PHY
->> +- #interrupt-cells: set to <1>
->> +- interrupts: interrupt IDs
->
-> How many, and what are they?
->
-Different iProc SoCs might have different number of interrupts. I'll 
-elaborate more on the next patch.
+IOV BAR size is smaller than 64M, expand to total_pe.
+IOV BAR size is bigger than 64M, roundup power2.
 
->> +- interrupt-map-mask and interrupt-map, standard PCI properties to define the
->> +  mapping of the PCIe interface to interrupt numbers
->> +- bus-range: PCI bus numbers covered
->> +- #address-cells: set to <3>
->> +- #size-cells: set to <2>
->> +- device_type: set to "pci"
->> +- ranges: ranges for the PCI memory and I/O regions
->> +- phy-addr: MDC/MDIO adddress of the PCIe PHY
->
-> It looks like the phy controller is separate from the PCI controller,
-> and you even list the same register range for both PHYs. Better make
-> that a separate driver and put the phy address into the "phys" reference.
->
-Okay. In this case, I need to create a separate PHY driver under the 
-drivers/phy directory and have the PCIe host driver reference it through 
-the standard PHY API.
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h     |    2 ++
+ arch/powerpc/platforms/powernv/pci-ioda.c |   33 ++++++++++++++++++++++++++---
+ 2 files changed, 32 insertions(+), 3 deletions(-)
 
->> +- have-msi-inten-reg: Required for legacy iProc PCIe controllers that need the
->> +  MSI interrupt enable register to be set explicitly
->> +
->> +The Broadcom iProc PCie driver adapts the multi-domain structure, i.e., each
->> +interface has its own domain and therefore has its own device node
->> +Example:
->> +
->> +SoC specific DT Entry:
->> +
->> +       pcie0: pcie@18012000 {
->> +               compatible = "brcm,iproc-pcie";
->> +               reg = <0x18012000 0x1000>,
->> +                       <0x18002000 0x1000>;
->
-> I guess the addresses should be relative to the BCMA bus, and this node
-> get moved under that. Please see Hauke's patch series, we've discussed
-> this in great length already.
->
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 0c9c260..538dbb5 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -174,6 +174,8 @@ struct pci_dn {
+ 	u16     max_vfs;		/* number of VFs IOV BAR expended */
+ 	u16     vf_pes;			/* VF PE# under this PF */
+ 	int     offset;			/* PE# for the first VF PE */
++#define M64_PER_IOV 4
++	int     m64_per_iov;
+ #define IODA_INVALID_M64        (-1)
+ 	int     m64_wins[PCI_SRIOV_NUM_BARS];
+ #endif /* CONFIG_PCI_IOV */
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index be0c43c..d738397 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -2180,6 +2180,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 	int i;
+ 	resource_size_t size;
+ 	struct pci_dn *pdn;
++	int mul, total_vfs;
+ 
+ 	if (!pdev->is_physfn || pdev->is_added)
+ 		return;
+@@ -2190,6 +2191,32 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 	pdn = pci_get_pdn(pdev);
+ 	pdn->max_vfs = 0;
+ 
++	total_vfs = pci_sriov_get_totalvfs(pdev);
++	pdn->m64_per_iov = 1;
++	mul = phb->ioda.total_pe;
++
++	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
++		res = &pdev->resource[i];
++		if (!res->flags || res->parent)
++			continue;
++		if (!pnv_pci_is_mem_pref_64(res->flags)) {
++			dev_warn(&pdev->dev, " non M64 IOV BAR %pR on %s\n",
++					res, pci_name(pdev));
++			continue;
++		}
++
++		size = pci_iov_resource_size(pdev, i);
++
++		/* bigger than 64M */
++		if (size > (1 << 26)) {
++			dev_info(&pdev->dev, "PowerNV: VF BAR[%d] size "
++					"is bigger than 64M, roundup power2\n", i);
++			pdn->m64_per_iov = M64_PER_IOV;
++			mul = __roundup_pow_of_two(total_vfs);
++			break;
++		}
++	}
++
+ 	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
+ 		res = &pdev->resource[i];
+ 		if (!res->flags || res->parent)
+@@ -2202,13 +2229,13 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 
+ 		dev_dbg(&pdev->dev, " Fixing VF BAR[%d] %pR to\n", i, res);
+ 		size = pci_iov_resource_size(pdev, i);
+-		res->end = res->start + size * phb->ioda.total_pe - 1;
++		res->end = res->start + size * mul - 1;
+ 		dev_dbg(&pdev->dev, "                       %pR\n", res);
+ 		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
+ 				i - PCI_IOV_RESOURCES,
+-				res, phb->ioda.total_pe);
++				res, mul);
+ 	}
+-	pdn->max_vfs = phb->ioda.total_pe;
++	pdn->max_vfs = mul;
+ }
+ 
+ static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
+-- 
+1.7.9.5
 
-As Arend van Spriel pointed out in the previous discussion:
-
-BCMA core is the bus driver for discoverable ARM AXI interconnect. Apart 
-from that it also provides drivers for some cores. For the chips to be 
-discoverable it needs additional IP logic.
-
-Not all iProc family of SoCs have the additional IP logic and for those 
-which don't, they cannot use the BCMA bus.
-
->> +               #interrupt-cells = <1>;
->> +               interrupts = <GIC_SPI 96 IRQ_TYPE_NONE>,
->> +                            <GIC_SPI 97 IRQ_TYPE_NONE>,
->> +                            <GIC_SPI 98 IRQ_TYPE_NONE>,
->> +                            <GIC_SPI 99 IRQ_TYPE_NONE>,
->> +                            <GIC_SPI 100 IRQ_TYPE_NONE>,
->> +                            <GIC_SPI 101 IRQ_TYPE_NONE>;
->
->
->
->> +               interrupt-map-mask = <0 0 0 0>;
->> +               interrupt-map = <0 0 0 0 &gic GIC_SPI 100 IRQ_TYPE_NONE>;
->
-> This interrupt is also listed in the "interrupts" above, which is
-> probably a mistake, unless the IRQ line is shared between all PCI
-> devices and the PCI host itself.
->
-interrupts are for MSI interrupt support and interrupt-map is for legacy 
-INTx support. To my best knowledge, MSI and INTx cannot be used at the 
-same time. "nvidia,tegra20-pcie.txt" and "rcar-pci.txt" have similar 
-configurations.
-
->> +               bus-range = <0x00 0xFF>;
->> +
->> +               #address-cells = >;
->> +               #size-cells = <2>;
->> +               device_type = "pci";
->> +               ranges = <0x81000000 0 0          0x28000000 0 0x00010000   /* downstream I/O */
->> +                         0x82000000 0 0x20000000 0x20000000 0 0x04000000>; /* non-prefetchable memory */
->> +               phy-addr = <5>;
->> +       };
->>
->
-> 	Arnd
->
