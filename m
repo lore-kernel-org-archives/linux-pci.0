@@ -1,65 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:40655 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750764AbaLLCeg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Dec 2014 21:34:36 -0500
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	"Ian Campbell" <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Christian Daudt <bcm@fixthebug.org>,
-	Matt Porter <mporter@linaro.org>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-CC: Lucas Stach <l.stach@pengutronix.de>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
-Subject: [PATCH v2 0/4] Add PCIe support to Broadcom iProc
-Date: Thu, 11 Dec 2014 18:36:53 -0800
-Message-ID: <1418351817-14898-1-git-send-email-rjui@broadcom.com>
-In-Reply-To: <Ray Jui <rjui@broadcom.com>
-References: <Ray Jui <rjui@broadcom.com>
+Received: from mail-vc0-f169.google.com ([209.85.220.169]:50737 "EHLO
+	mail-vc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754345AbaLVOGd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 09:06:33 -0500
+Message-ID: <54982561.2080200@gmail.com>
+Date: Mon, 22 Dec 2014 12:06:25 -0200
+From: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Nils Holland <nholland@tisys.org>,
+	Prashant Sreedharan <prashant@broadcom.com>
+CC: davem@davemloft.net, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com,
+	rajatxjain@gmail.com, Michael Chan <mchan@broadcom.com>
+Subject: Re: [PATCH net]tg3: tg3_disable_ints using uninitialized mailbox
+ value to disable interrupts
+References: <1419106577-12891-1-git-send-email-prashant@broadcom.com> <20141220221606.GA2591@teela.fritz.box>
+In-Reply-To: <20141220221606.GA2591@teela.fritz.box>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset contains the initial PCIe support for Broadcom iProc family of
-SoCs. This driver has been validated with Cygnus and NSP and is expected to
-work on other iProc family of SoCs that deploy the same PCIe controller
+On 20-12-2014 20:16, Nils Holland wrote:
+> On Sat, Dec 20, 2014 at 12:16:17PM -0800, Prashant Sreedharan wrote:
+>>
+>> This driver bug was exposed because of the commit a7877b17a667 (PCI: Check only
+>> the Vendor ID to identify Configuration Request Retry). Also this issue is only
+>> seen in older generation chipsets like 5722 because config space write to offset
+>> 0 from driver is possible.
+>>
+>> Fixed by initializing the interrupt mailbox registers before calling tg3_halt.
+>>
+>> Please queue for -stable.
+>
+> I gave this patch a try and can confirm what was to be expected: It
+> fixes the issue and the network interface is once again working
+> properly on my system. Thus, I guess the issue is adequately solved.
+>
+> Thanks to everyone involved, especially to Marcelo for additional
+> debugging and the guys at Broadcom for the quick fix!
+>
+> Greetings,
+> Nils
 
-Changes from v1:
- - Add standard PCI interrupt DT properties "#interrupt-cells",
-   "interrupt-map-mask" and "interrupt-map" so legacy INTx interrupts can be
-   supported by using standard PCI OF IRQ parsing function
- - Get rid of custom IRQ mapping function in the driver. Use
-   of_irq_parse_and_map_pci instead
+Same here, it works again.
 
-Ray Jui (4):
-  pci: iProc: define Broadcom iProc PCIe binding
-  PCI: iproc: Add Broadcom iProc PCIe driver
-  ARM: mach-bcm: Enable PCIe support for iProc
-  ARM: dts: enable PCIe for Broadcom Cygnus
-
- .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |   74 ++
- arch/arm/boot/dts/bcm-cygnus.dtsi                  |   52 ++
- arch/arm/boot/dts/bcm958300k.dts                   |    8 +
- arch/arm/mach-bcm/Kconfig                          |    1 +
- drivers/pci/host/Kconfig                           |    9 +
- drivers/pci/host/Makefile                          |    1 +
- drivers/pci/host/pcie-iproc.c                      |  888 ++++++++++++++++++++
- 7 files changed, 1033 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
- create mode 100644 drivers/pci/host/pcie-iproc.c
-
--- 
-1.7.9.5
-
+Thanks!
+Marcelo
