@@ -1,71 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp01.in.ibm.com ([122.248.162.1]:58239 "EHLO
-	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750998AbaLIAL0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Dec 2014 19:11:26 -0500
-Received: from /spool/local
-	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 9 Dec 2014 05:41:23 +0530
-Date: Tue, 9 Dec 2014 11:11:19 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>, weiyang@linux.vnet.ibm.com
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Marek =?iso-8859-1?Q?Kord=EDk?= <kordikmarek@gmail.com>,
-	Alexey Voronkov <zermond@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	weiyang@linux.vnet.ibm.com
-Subject: Re: [PATCH] PCI: Clear bridge MEM_64 flag if one child does not
- support it
-Message-ID: <20141209001119.GA24661@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1418075552-26495-1-git-send-email-yinghai@kernel.org>
- <1418079372.13358.9.camel@kernel.crashing.org>
- <CAE9FiQX-vMu5+Kr09ngr95WvtoZTUSL5R2+NiVFeiN6q-BXLLg@mail.gmail.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:54308 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754621AbaLVRqr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 22 Dec 2014 12:46:47 -0500
+Message-ID: <549858E4.4050500@ti.com>
+Date: Mon, 22 Dec 2014 12:46:12 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQX-vMu5+Kr09ngr95WvtoZTUSL5R2+NiVFeiN6q-BXLLg@mail.gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <grant.likely@linaro.org>,
+	<robh+dt@kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <will.deacon@arm.com>
+Subject: Re: [RFC v1 PATCH 1/2] of/pci: add of_pci_dma_configure() update
+ dma configuration
+References: <1418940425-2017-1-git-send-email-m-karicheri2@ti.com> <1418940425-2017-2-git-send-email-m-karicheri2@ti.com> <21520995.3ITgVmVTeV@wuerfel>
+In-Reply-To: <21520995.3ITgVmVTeV@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 08, 2014 at 03:59:54PM -0800, Yinghai Lu wrote:
->On Mon, Dec 8, 2014 at 2:56 PM, Benjamin Herrenschmidt
-><benh@kernel.crashing.org> wrote:
->> On Mon, 2014-12-08 at 13:52 -0800, Yinghai Lu wrote:
->>> 2. or scan the children resource other than ROM to clear bridge MEM_64
->>>    for mmio pref.
->>>
->>> The patch is using second way so will keep child mmio pref into bridge
->>> mmio pref range.
+On 12/18/2014 05:29 PM, Arnd Bergmann wrote:
+> On Thursday 18 December 2014 17:07:04 Murali Karicheri wrote:
+>> Add of_pci_dma_configure() to allow updating the dma configuration
+>> of the pci device using the configuration from the parent of
+>> the root bridge device.
 >>
->> That means that having a single ROM BAR that is 32-bit and prefetchable
->> will downgrade the entire window to 32-bit ? That's not going to work
->> either.
+>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
 >
->the ROM BAR get skipped during the checking.
+> Much better!
 >
->+                       if (i != PCI_ROM_RESOURCE)
->+                               mem64_mask &= r->flags & IORESOURCE_MEM_64;
->+               }
+> There is one detail that we should get right from the start here,
+> which is currently wrong in the platform device code, but I have so
+> far not dared change it:
 >
->>
->> I have GPUs with 16G BARs for example... suddenly they don't fit
->> anaymore because we downgraded the window to 32 bit because somewhere
->> there's a 32-bit pref resource ?
->>
->> That will break more than it fixes...
+>> +	/*
+>> +	 * Set default dma-mask to 32 bit. Drivers are expected to setup
+>> +	 * the correct supported dma_mask.
+>> +	 */
+>> +	dev->coherent_dma_mask = DMA_BIT_MASK(32);
 >
->Please check if this patch break your platform. I tried on my setup on
->x86. and it is still
->working on 64 bit resource allocation.
+> The 32-bit mask is indeed correct as the default for almost all cases,
+> and we must not set it larger than DMA_BIT_MASK(32). There is one
+> corner case though, which happens on some shmobile machines that have
+> a 31-bit mask on the PCI host, and I think we should use that as the
+> default.
 >
+>> +	/*
+>> +	 * Set it to coherent_dma_mask by default if the architecture
+>> +	 * code has not set it.
+>> +	 */
+>> +	if (!dev->dma_mask)
+>> +		dev->dma_mask =&dev->coherent_dma_mask;
+>> +
+>> +	ret = of_dma_get_range(parent_np,&dma_addr,&paddr,&size);
+>> +	if (ret<  0) {
+>> +		dma_addr = offset = 0;
+>> +		size = dev->coherent_dma_mask;
+>
+> Can you check one thing here? I believe the size argument as returned
+> from of_dma_get_range is inclusive (e.g. 0x100000000), while the coherent
+> mask by definition is exlusive (e.g. 0xffffffff), so the size needs to
+> be adapted here. I haven't checked all the code here though, so I may
+> be wrong.
 
-I'm going to give it a spin and Richard, could you please apply Yinghai's
-patch to see if your SRIOV code can work properly?
+size returned by of_dma_get_range() is inclusive as you indicated. Fromt 
+the grep of dma-ranges in arch/arm/boot/dts, I see
 
-Thanks,
-Gavin
+arch/arm/boot/dts/keystone.dtsi:		dma-ranges = <0x80000000 0x8 
+0x00000000 0x80000000>;
+arch/arm/boot/dts/keystone.dtsi:			dma-ranges;
+arch/arm/boot/dts/r8a7790.dtsi:		dma-ranges = <0x42000000 0 0x40000000 0 
+0x40000000 0 0x80000000
+arch/arm/boot/dts/integratorap.dts:	dma-ranges = <0x80000000 0x0 
+0x80000000>;
+arch/arm/boot/dts/r8a7791.dtsi:		dma-ranges = <0x42000000 0 0x40000000 0 
+0x40000000 0 0x80000000
 
+So I guess I need to change the code to
+
+ >> +	ret = of_dma_get_range(parent_np,&dma_addr,&paddr,&size);
+ >> +	if (ret<  0) {
+ >> +		dma_addr = offset = 0;
+ >> +		size = dev->coherent_dma_mask + 1;
+
+>
+>> +	} else {
+>> +		offset = PFN_DOWN(paddr - dma_addr);
+>> +		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", dev->dma_pfn_offset);
+>> +	}
+>> +	dev->dma_pfn_offset = offset;
+>> +
+>> +	coherent = of_dma_is_coherent(parent_np);
+>> +	dev_dbg(dev, "device is%sdma coherent\n",
+>> +		coherent ? " " : " not ");
+>> +
+>> +	arch_setup_dma_ops(dev, dma_addr, size, NULL, coherent);
+>
+> Basically, I would use limit the size argument we pass into
+> arch_setup_dma_ops to the minimum of 'size' and 'dma_mask' here,
+> after converting into the same format. We should make sure we do the
+> same thing for platform_device as well, so it might be better to do
+> it inside of arch_setup_dma_ops instead.
+
+Do you think following changes will work?
+
++++ b/arch/arm/mm/dma-mapping.c
+@@ -2052,9 +2052,10 @@ void arch_setup_dma_ops(struct device *dev, u64 
+dma_base, u64 size,
+                         struct iommu_ops *iommu, bool coherent)
+  {
+         struct dma_map_ops *dma_ops;
++       u64 temp_size = min((*(dev->dma_mask) + 1), size);
+
+         dev->archdata.dma_coherent = coherent;
+-       if (arm_setup_iommu_dma_ops(dev, dma_base, size, iommu))
++       if (arm_setup_iommu_dma_ops(dev, dma_base, temp_size, iommu))
+
+If you agree, I will post v1 of the patch with these updates. Let me 
+know. I did some basic tests on Keystone with these changes and it works 
+fine.
+
+Murali
+
+>
+> 	Arnd
+
+
+-- 
+Murali Karicheri
+Linux Kernel, Texas Instruments
