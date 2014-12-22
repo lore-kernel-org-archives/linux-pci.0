@@ -1,174 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:47055 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757211AbaLIO7x (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 09:59:53 -0500
-Message-ID: <54870E56.7000909@arm.com>
-Date: Tue, 09 Dec 2014 14:59:34 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
+Received: from mout.kundenserver.de ([212.227.126.187]:62578 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754938AbaLVToC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 14:44:02 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, grant.likely@linaro.org,
+	robh+dt@kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, will.deacon@arm.com
+Subject: Re: [RFC v1 PATCH 1/2] of/pci: add of_pci_dma_configure() update dma configuration
+Date: Mon, 22 Dec 2014 20:43:24 +0100
+Message-ID: <11285984.OK9CqQGmjZ@wuerfel>
+In-Reply-To: <549858E4.4050500@ti.com>
+References: <1418940425-2017-1-git-send-email-m-karicheri2@ti.com> <21520995.3ITgVmVTeV@wuerfel> <549858E4.4050500@ti.com>
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
-Subject: Re: [PATCH 2/6] PCI/MSI: add hooks to populate the msi_domain field
-References: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com> <1418069543-21969-3-git-send-email-marc.zyngier@arm.com> <5486585B.40000@huawei.com> <5486C8BA.8030608@arm.com> <5486E3BF.70703@huawei.com> <5486E747.4010804@arm.com> <5486EF4E.5020704@linux.intel.com> <5487012B.4040505@arm.com> <54870302.5050703@linux.intel.com> <548706E9.8080701@arm.com> <548708CC.5000405@linux.intel.com>
-In-Reply-To: <548708CC.5000405@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/12/14 14:35, Jiang Liu wrote:
-> On 2014/12/9 22:27, Marc Zyngier wrote:
->> On 09/12/14 14:11, Jiang Liu wrote:
->>> On 2014/12/9 22:03, Marc Zyngier wrote:
->>>> Hi Gerry,
->>>>
->>>> On 09/12/14 12:47, Jiang Liu wrote:
->>>>> On 2014/12/9 20:12, Marc Zyngier wrote:
->>>>>> Yijing,
->>>>>>
->>>>>> On 09/12/14 11:57, Yijing Wang wrote:
->>>>>>>>>> +void __weak pcibios_set_phb_msi_domain(struct pci_bus *bus)
->>>>>>>>>> +{
->>>>>>>>>> +}
->>>>>>>>>> +
->>>>>>>>>> +static void pci_set_bus_msi_domain(struct pci_bus *bus)
->>>>>>>>>> +{
->>>>>>>>>> +	struct pci_dev *bridge = bus->self;
->>>>>>>>>> +
->>>>>>>>>> +	if (!bridge)
->>>>>>>>>> +		pcibios_set_phb_msi_domain(bus);
->>>>>>>>>> +	else
->>>>>>>>>> +		dev_set_msi_domain(&bus->dev, dev_get_msi_domain(&bridge->dev));
->>>>>>>>>> +}
->>>>>>>>>
->>>>>>>>>
->>>>>>>>> Hi Marc, we can not assume pci devices under same phb share the same msi irq domain,
->>>>>>>>> now in x86, pci devices under the same phb may associate different msi irq domain.
->>>>>>>
->>>>>>> Hi Marc,
->>>>>>>
->>>>>>>>
->>>>>>>> Well, this is not supposed to be a perfect solution yet, but instead a
->>>>>>>> basis for discussion. What I'd like to find out is:
->>>>>>>>
->>>>>>>> - What is the minimum granularity for associating a device with its MSI
->>>>>>>> domain in existing platforms?
->>>>>>>
->>>>>>> PCI device, after Gerry's msi irq domain patchset which now in linux-next,
->>>>>>> in x86, we will find msi irq domain by pci_dev.
->>>>>>
->>>>>> Are you *really* associating the MSI domain on a per pci-device basis?
->>>>>> That is, you have devices on the same PCI bus talking to different MSI hw?
->>>>> Hi Marc,
->>>>> 	This is a little wild:(
->>>>> 	On x86 platform with Intel VT-d(not the case for AMD-v),
->>>>> interrupt remapping is tight to DMA remapping (IOMMU) unit.
->>>>> For most common cases, IOMMU unit manages PCI bus and its sub-hierarchy.
->>>>> But it may also manage a specific PCI device. This is typically used to
->>>>> provide QoS for audio device by using dedicated IOMMU unit to avoid
->>>>> resource contention on DMA remapping tables. BIOS uses ACPI table to
->>>>> report PCI bus/device to IOMMU unit mapping relationship. (To be honest,
->>>>> I have no really experience with such a hardware platform yet, just for
->>>>> theoretical analysis)
->>>>> 	On the other hand, we now support hierarchy irqdomain. So to
->>>>> support per-PCI IOMMU unit case, we need maintain irqdomain at PCI
->>>>> device level.
->>>>> 	This piece of code from your [4/6] is flexible enough, which
->>>>> retrieves msi_domain from PCI device, then fallback to PCI bus,
->>>>> then fallback to platform specific method.
->>>>> 	domain = dev_get_msi_domain(&dev->dev);
->>>>> 	if (!domain && dev->bus->msi)
->>>>>  		domain = dev->bus->msi->domain;
->>>>>  	if (!domain)
->>>>>  		domain = arch_get_pci_msi_domain(dev);
->>>>
->>>> OK. But what I'd really like to see is a way to setup the
->>>> device<->domain binding as early as possible, without having to use more
->>>> conditional code in pci_msi_get_domain.
->>>>
->>>> IOW, can we do something similar to what pci_set_bus_msi_domain and
->>>> pci_set_msi_domain do in this patch?
->>> Hi Marc,
->>> 	I have checked x86 code, we could set pci_dev->msi_domain
->>> when creating PCI devices, just need to find some hook points
->>> into PCI core next step. If arch code doesn't set pci_dev->msi_domain,
->>> PCI MSI core may provide a default way to set pci_dev->msi_domain.
->>> This may make the implementation simpler, I guess:)
->>
->> Right. So following your earlier suggestion, I could make
->> pci_set_msi_domain a weak symbol and let arch code override this.
->>
->> My preference would have been to have arch code to create a set of
->> arch-independent data structures describing the topology, and use that
->> for everything, but maybe that's a bit ambitious for a start.
->>
->> I'll rework the series to make the symbols weak.
-> Hi Marc,
-> 	I think we may not need the weak symbol at all. With following
-> draft patch, the PCI MSI core may simply do:
-> 	if (pci_dev->dev.msi_domain == NULL)
-> 		dev_set_msi_domain(&dev->dev,
-> 			 dev_get_msi_domain(&dev->bus->dev));
-> -----------------------------------------------------------------------
-> Note: the patch won't pass compilation, just to show the key idea:)
+On Monday 22 December 2014 12:46:12 Murali Karicheri wrote:
+> On 12/18/2014 05:29 PM, Arnd Bergmann wrote:
+> > On Thursday 18 December 2014 17:07:04 Murali Karicheri wrote:
+> >> Add of_pci_dma_configure() to allow updating the dma configuration
+> >> of the pci device using the configuration from the parent of
+> >> the root bridge device.
+> >> +	/*
+> >> +	 * Set it to coherent_dma_mask by default if the architecture
+> >> +	 * code has not set it.
+> >> +	 */
+> >> +	if (!dev->dma_mask)
+> >> +		dev->dma_mask =&dev->coherent_dma_mask;
+> >> +
+> >> +	ret = of_dma_get_range(parent_np,&dma_addr,&paddr,&size);
+> >> +	if (ret<  0) {
+> >> +		dma_addr = offset = 0;
+> >> +		size = dev->coherent_dma_mask;
+> >
+> > Can you check one thing here? I believe the size argument as returned
+> > from of_dma_get_range is inclusive (e.g. 0x100000000), while the coherent
+> > mask by definition is exlusive (e.g. 0xffffffff), so the size needs to
+> > be adapted here. I haven't checked all the code here though, so I may
+> > be wrong.
 > 
-> diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-> index da163da5fdee..8147d25d4349 100644
-> --- a/arch/x86/kernel/apic/msi.c
-> +++ b/arch/x86/kernel/apic/msi.c
-> @@ -67,6 +67,23 @@ static struct irq_chip pci_msi_controller = {
->         .flags                  = IRQCHIP_SKIP_SET_WAKE,
->  };
+> size returned by of_dma_get_range() is inclusive as you indicated. Fromt 
+> the grep of dma-ranges in arch/arm/boot/dts, I see
 > 
-> +struct irq_domain *x86_get_pci_msi_domain(struct pci_dev *dev)
-> +{
-> +       struct irq_domain *domain;
-> +       struct irq_alloc_info info;
-> +
-> +       init_irq_alloc_info(&info, NULL);
-> +       info.type = X86_IRQ_ALLOC_TYPE_MSI;
-> +       info.msi_dev = dev;
-> +       domain = irq_remapping_get_irq_domain(&info);
-> +       if (domain == NULL)
-> +               domain = msi_default_domain;
-> +       if (domain == NULL)
-> +               domain = ERR_PTR(-ENOSYS);
-> +
-> +       return domain;
-> +}
-> +
->  int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->  {
->         struct irq_domain *domain;
-> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-> index 7b20bccf3648..a26f30a8bb8f 100644
-> --- a/arch/x86/pci/common.c
-> +++ b/arch/x86/pci/common.c
-> @@ -652,6 +652,9 @@ int pcibios_add_device(struct pci_dev *dev)
->                 pa_data = data->next;
->                 iounmap(data);
->         }
-> +
-> +       dev->dev.msi_domain = x86_get_pci_msi_domain(dev);
-> +
->         return 0;
->  }
+> arch/arm/boot/dts/keystone.dtsi:		dma-ranges = <0x80000000 0x8 
+> 0x00000000 0x80000000>;
+> arch/arm/boot/dts/keystone.dtsi:			dma-ranges;
+> arch/arm/boot/dts/r8a7790.dtsi:		dma-ranges = <0x42000000 0 0x40000000 0 
+> 0x40000000 0 0x80000000
+> arch/arm/boot/dts/integratorap.dts:	dma-ranges = <0x80000000 0x0 
+> 0x80000000>;
+> arch/arm/boot/dts/r8a7791.dtsi:		dma-ranges = <0x42000000 0 0x40000000 0 
+> 0x40000000 0 0x80000000
+> 
+> So I guess I need to change the code to
+> 
+>  >> +	ret = of_dma_get_range(parent_np,&dma_addr,&paddr,&size);
+>  >> +	if (ret<  0) {
+>  >> +		dma_addr = offset = 0;
+>  >> +		size = dev->coherent_dma_mask + 1;
 
-Right. So you set the msi_domain using the pcibios_add_device callback.
-That will require some minimal surgery (the call to pci_set_msi_domain
-happens before the pcibios call, so it needs to be relocated after), but
-that seems like a sensible solution to me.
+Right.
 
-Thanks!
+> >> +	} else {
+> >> +		offset = PFN_DOWN(paddr - dma_addr);
+> >> +		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", dev->dma_pfn_offset);
+> >> +	}
+> >> +	dev->dma_pfn_offset = offset;
+> >> +
+> >> +	coherent = of_dma_is_coherent(parent_np);
+> >> +	dev_dbg(dev, "device is%sdma coherent\n",
+> >> +		coherent ? " " : " not ");
+> >> +
+> >> +	arch_setup_dma_ops(dev, dma_addr, size, NULL, coherent);
+> >
+> > Basically, I would use limit the size argument we pass into
+> > arch_setup_dma_ops to the minimum of 'size' and 'dma_mask' here,
+> > after converting into the same format. We should make sure we do the
+> > same thing for platform_device as well, so it might be better to do
+> > it inside of arch_setup_dma_ops instead.
+> 
+> Do you think following changes will work?
+> 
+> +++ b/arch/arm/mm/dma-mapping.c
+> @@ -2052,9 +2052,10 @@ void arch_setup_dma_ops(struct device *dev, u64 
+> dma_base, u64 size,
+>                          struct iommu_ops *iommu, bool coherent)
+>   {
+>          struct dma_map_ops *dma_ops;
+> +       u64 temp_size = min((*(dev->dma_mask) + 1), size);
+> 
+>          dev->archdata.dma_coherent = coherent;
+> -       if (arm_setup_iommu_dma_ops(dev, dma_base, size, iommu))
+> +       if (arm_setup_iommu_dma_ops(dev, dma_base, temp_size, iommu))
+> 
+> If you agree, I will post v1 of the patch with these updates. Let me 
+> know. I did some basic tests on Keystone with these changes and it works 
+> fine.
 
-	M.
--- 
-Jazz is not dead. It just smells funny...
+It's not exactly what I meant. My main point was that we need to limit
+dev->dma_mask to (size-1) here, but you are not touching that. We can
+either change the two functions in which we first assign the dma_mask
+(platform and pci bus), or set it again in arch_setup_dma_ops (on each
+architecture implementing it), either way would work. Someone else
+might have a stronger opinion on that matter.
+
+For arm_setup_iommu_dma_ops, passing the original size is probably
+best.
+
+	Arnd
