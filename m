@@ -1,96 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51384 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751884AbaLVXi2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Dec 2014 18:38:28 -0500
-Message-ID: <1419291504.30005.5.camel@bling.home>
-Subject: Re: [PATCH] vfio-pci: Fix the check on pci device type in
- vfio_pci_probe()
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org
-Date: Mon, 22 Dec 2014 16:38:24 -0700
-In-Reply-To: <20141222061226.GA12537@richard>
-References: <1418001738-7010-1-git-send-email-weiyang@linux.vnet.ibm.com>
-	 <20141222061226.GA12537@richard>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:43762 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754169AbaLVJRN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 04:17:13 -0500
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>
+Subject: [PATCH 08/10] iommu/vtd: assign new page table for dma_map
+Date: Mon, 22 Dec 2014 17:15:27 +0800
+Message-Id: <1419239729-26529-9-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1419239729-26529-1-git-send-email-zhen-hual@hp.com>
+References: <1419239729-26529-1-git-send-email-zhen-hual@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2014-12-22 at 14:12 +0800, Wei Yang wrote:
-> Alex,
-> 
-> Does it look good to you?
+When a device driver issues the first dma_map command for a
+device, we assign a new and empty page-table, thus removing all
+mappings from the old kernel for the device.
 
-Well, mixing changes to a subsystem and a driver in a single patch is
-surely going to slow down acceptance because neither Bjorn or I know who
-is going to grab it.  I'd probably want to mark the vfio-pci change for
-stable, which would be a lot easier to do if it was just a 4-line
-correction to the existing code rather than extending the pci-core
-interface for a single, trivial user.  Thanks,
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+---
+ drivers/iommu/intel-iommu.c | 56 ++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 48 insertions(+), 8 deletions(-)
 
-Alex
-
-On Mon, Dec 08, 2014 at 09:22:18AM +0800, Wei Yang wrote:
-> >Current vfio-pci just supports normal pci device, so vfio_pci_probe() will
-> >return if the pci device is not a normal device. While current code makes a
-> >mistake. PCI_HEADER_TYPE is the offset in configuration space of the device
-> >type, but we use this value to mask the type value.
-> >
-> >This patch adds a function to check whether the pci device is a normal type
-> >and use it in vfio_pci_probe().
-> >
-> >Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> >---
-> > drivers/vfio/pci/vfio_pci.c |    4 +---
-> > include/linux/pci.h         |   11 +++++++++++
-> > 2 files changed, 12 insertions(+), 3 deletions(-)
-> >
-> >diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> >index 9558da3..f82bf62 100644
-> >--- a/drivers/vfio/pci/vfio_pci.c
-> >+++ b/drivers/vfio/pci/vfio_pci.c
-> >@@ -839,13 +839,11 @@ static const struct vfio_device_ops vfio_pci_ops = {
-> >
-> > static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-> > {
-> >-	u8 type;
-> > 	struct vfio_pci_device *vdev;
-> > 	struct iommu_group *group;
-> > 	int ret;
-> >
-> >-	pci_read_config_byte(pdev, PCI_HEADER_TYPE, &type);
-> >-	if ((type & PCI_HEADER_TYPE) != PCI_HEADER_TYPE_NORMAL)
-> >+	if (!pci_is_normal(pdev))
-> > 		return -EINVAL;
-> >
-> > 	group = iommu_group_get(&pdev->dev);
-> >diff --git a/include/linux/pci.h b/include/linux/pci.h
-> >index 48d1f98..2027f66 100644
-> >--- a/include/linux/pci.h
-> >+++ b/include/linux/pci.h
-> >@@ -519,6 +519,17 @@ static inline bool pci_is_bridge(struct pci_dev *dev)
-> > 		dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
-> > }
-> >
-> >+/**
-> >+ * pci_is_normal - check if the PCI device is a normal device
-> >+ * @dev: PCI device
-> >+ *
-> >+ * Return true if the PCI device is a normal device
-> >+ */
-> >+static inline bool pci_is_normal(struct pci_dev *dev)
-> >+{
-> >+	return dev->hdr_type == PCI_HEADER_TYPE_NORMAL;
-> >+}
-> >+
-> > static inline struct pci_dev *pci_upstream_bridge(struct pci_dev *dev)
-> > {
-> > 	dev = pci_physfn(dev);
-> >-- 
-> >1.7.9.5
-> 
-
-
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 4efed7c..7f8b546 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -44,6 +44,7 @@
+ #include <asm/irq_remapping.h>
+ #include <asm/cacheflush.h>
+ #include <asm/iommu.h>
++#include <linux/dma-mapping.h>
+ 
+ #include "irq_remapping.h"
+ 
+@@ -455,6 +456,8 @@ static int copy_root_entry_table(struct intel_iommu *iommu, void *ppap);
+ static int intel_iommu_load_translation_tables(struct dmar_drhd_unit *drhd,
+ 		int g_num_of_iommus);
+ 
++static void unmap_device_dma(struct dmar_domain *domain, struct device *dev);
++
+ #endif /* CONFIG_CRASH_DUMP */
+ 
+ /*
+@@ -3199,14 +3202,30 @@ static struct dmar_domain *__get_valid_domain_for_dev(struct device *dev)
+ 		return NULL;
+ 	}
+ 
+-	/* make sure context mapping is ok */
+-	if (unlikely(!domain_context_mapped(dev))) {
+-		ret = domain_context_mapping(domain, dev, CONTEXT_TT_MULTI_LEVEL);
+-		if (ret) {
+-			printk(KERN_ERR "Domain context map for %s failed",
+-			       dev_name(dev));
+-			return NULL;
+-		}
++	/* if in kdump kernel, we need to unmap the mapped dma pages,
++	 * detach this device first.
++	 */
++	if (likely(domain_context_mapped(dev))) {
++#ifdef CONFIG_CRASH_DUMP
++		if (is_kdump_kernel()) {
++			unmap_device_dma(domain, dev);
++			domain = get_domain_for_dev(dev,
++				DEFAULT_DOMAIN_ADDRESS_WIDTH);
++			if (!domain) {
++				pr_err("Allocating domain for %s failed",
++				       dev_name(dev));
++				return NULL;
++			}
++		} else
++#endif
++			return domain;
++	}
++
++	ret = domain_context_mapping(domain, dev, CONTEXT_TT_MULTI_LEVEL);
++	if (ret) {
++		pr_err("Domain context map for %s failed",
++		       dev_name(dev));
++		return NULL;
+ 	}
+ 
+ 	return domain;
+@@ -5687,4 +5706,25 @@ static int intel_iommu_load_translation_tables(struct dmar_drhd_unit *drhd,
+ 	return 0;
+ }
+ 
++static void unmap_device_dma(struct dmar_domain *domain, struct device *dev)
++{
++	struct intel_iommu *iommu;
++	struct context_entry *ce;
++	struct iova *iova;
++	u8 bus, devfn;
++	phys_addr_t phys_addr;
++	dma_addr_t dev_addr;
++
++	iommu = device_to_iommu(dev, &bus, &devfn);
++	ce = device_to_context_entry(iommu, bus, devfn);
++	phys_addr = context_address_root(ce) << VTD_PAGE_SHIFT;
++	dev_addr = phys_to_dma(dev, phys_addr);
++
++	iova = find_iova(&domain->iovad, IOVA_PFN(dev_addr));
++	if (iova)
++		intel_unmap(dev, dev_addr);
++
++	domain_remove_one_dev_info(domain, dev);
++}
++
+ #endif /* CONFIG_CRASH_DUMP */
+-- 
+2.0.0-rc0
 
