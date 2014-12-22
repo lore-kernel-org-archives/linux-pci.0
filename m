@@ -1,142 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:54770 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753971AbaLVJQh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 04:16:37 -0500
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>
-Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
-	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>
-Subject: [PATCH 01/10] iommu/vt-d: Update iommu_attach_domain() and its callers
-Date: Mon, 22 Dec 2014 17:15:20 +0800
-Message-Id: <1419239729-26529-2-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1419239729-26529-1-git-send-email-zhen-hual@hp.com>
-References: <1419239729-26529-1-git-send-email-zhen-hual@hp.com>
+Received: from mout.kundenserver.de ([212.227.126.187]:62626 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750928AbaLVIae (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 03:30:34 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Pratyush Anand <panand@redhat.com>
+Cc: mohit.kumar@st.com, jg1.han@samsung.com, l.stach@pengutronix.de,
+	shawn.guo@freescale.com, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH] PCIe: Designware: Do not allow config space through ranges
+Date: Mon, 22 Dec 2014 09:30:13 +0100
+Message-ID: <5459567.EisgEvQXh9@wuerfel>
+In-Reply-To: <7dcdee69eb7db8336829e6085d736a3ac7e68ad4.1419229126.git.panand@redhat.com>
+References: <7dcdee69eb7db8336829e6085d736a3ac7e68ad4.1419229126.git.panand@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Allow specification of the domain-id for the new domain.
-This patch only adds the 'did' parameter to iommu_attach_domain()
-and modifies all of its callers to specify the default value of -1
-which says "no did specified, allocate a new one".
+On Monday 22 December 2014 12:09:04 Pratyush Anand wrote:
+> Config space is need to be allocated using reg property. This patch
+> removes possibility of config space allocation through ranges property.
+> 
+> To: Mohit Kumar <mohit.kumar@st.com>
+> To: Jingo Han <jg1.han@samsung.com>
+> To: Lucas Stach <l.stach@pengutronix.de>
+> To: Shawn Guo <shawn.guo@freescale.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: devicetree@vger.kernel.org
+> Signed-off-by: Pratyush Anand <panand@redhat.com>
+> ---
+>  arch/arm/boot/dts/imx6qdl.dtsi     |  3 +--
+>  arch/arm/boot/dts/imx6sx.dtsi      |  8 ++++----
 
-This is no functional change from current behaviour -- just enables
-a functional change to be made in a later patch.
+changing the DT files is probably ok.
 
-Bill Sumner:
-    Original version.
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index df781cdf13c1..0b22b42e1ff9 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -409,19 +409,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>  			pp->mem_mod_base = of_read_number(parser.range -
+>  							  parser.np + na, ns);
+>  		}
+> -		if (restype == 0) {
+> -			of_pci_range_to_resource(&range, np, &pp->cfg);
+> -			pp->cfg0_size = resource_size(&pp->cfg)/2;
+> -			pp->cfg1_size = resource_size(&pp->cfg)/2;
+> -			pp->cfg0_base = pp->cfg.start;
+> -			pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
+> -
+> -			/* Find the untranslated configuration space address */
+> -			pp->cfg0_mod_base = of_read_number(parser.range -
+> -							   parser.np + na, ns);
+> -			pp->cfg1_mod_base = pp->cfg0_mod_base +
+> -					    pp->cfg0_size;
+> -		}
+>  	}
 
-Li, Zhenhua:
-    Minor change, add change to function __iommu_attach_domain.
+Since we've allowed this for so long, it may be better to leave this
+in for compatibility with old dts files. It would however be good to
+print a warning message. We could also limit it to those machines that
+are known to have been used with this property in the past.
 
-Signed-off-by: Bill Sumner <billsumnerlinux@gmail.com>
-Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
----
- drivers/iommu/intel-iommu.c | 34 ++++++++++++++++++++--------------
- 1 file changed, 20 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 1232336..2dc6250 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1534,31 +1534,36 @@ static struct dmar_domain *alloc_domain(int flags)
- }
- 
- static int __iommu_attach_domain(struct dmar_domain *domain,
--				 struct intel_iommu *iommu)
-+				 struct intel_iommu *iommu,
-+				 int domain_number)
- {
- 	int num;
- 	unsigned long ndomains;
- 
- 	ndomains = cap_ndoms(iommu->cap);
--	num = find_first_zero_bit(iommu->domain_ids, ndomains);
--	if (num < ndomains) {
--		set_bit(num, iommu->domain_ids);
--		iommu->domains[num] = domain;
--	} else {
--		num = -ENOSPC;
--	}
-+	if (domain_number < 0) {
-+		num = find_first_zero_bit(iommu->domain_ids, ndomains);
-+		if (num < ndomains) {
-+			set_bit(num, iommu->domain_ids);
-+			iommu->domains[num] = domain;
-+		} else {
-+			num = -ENOSPC;
-+		}
-+	} else
-+		num = domain_number;
- 
- 	return num;
- }
- 
- static int iommu_attach_domain(struct dmar_domain *domain,
--			       struct intel_iommu *iommu)
-+			       struct intel_iommu *iommu,
-+			       int domain_number)
- {
- 	int num;
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&iommu->lock, flags);
--	num = __iommu_attach_domain(domain, iommu);
-+	num = __iommu_attach_domain(domain, iommu, domain_number);
- 	spin_unlock_irqrestore(&iommu->lock, flags);
- 	if (num < 0)
- 		pr_err("IOMMU: no free domain ids\n");
-@@ -1577,7 +1582,7 @@ static int iommu_attach_vm_domain(struct dmar_domain *domain,
- 		if (iommu->domains[num] == domain)
- 			return num;
- 
--	return __iommu_attach_domain(domain, iommu);
-+	return __iommu_attach_domain(domain, iommu, -1);
- }
- 
- static void iommu_detach_domain(struct dmar_domain *domain,
-@@ -2231,6 +2236,7 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 	u16 dma_alias;
- 	unsigned long flags;
- 	u8 bus, devfn;
-+	int did = -1;   /* Default to "no domain_id supplied" */
- 
- 	domain = find_domain(dev);
- 	if (domain)
-@@ -2264,7 +2270,7 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 	domain = alloc_domain(0);
- 	if (!domain)
- 		return NULL;
--	domain->id = iommu_attach_domain(domain, iommu);
-+	domain->id = iommu_attach_domain(domain, iommu, did);
- 	if (domain->id < 0) {
- 		free_domain_mem(domain);
- 		return NULL;
-@@ -2442,7 +2448,7 @@ static int __init si_domain_init(int hw)
- 		return -EFAULT;
- 
- 	for_each_active_iommu(iommu, drhd) {
--		ret = iommu_attach_domain(si_domain, iommu);
-+		ret = iommu_attach_domain(si_domain, iommu, -1);
- 		if (ret < 0) {
- 			domain_exit(si_domain);
- 			return -EFAULT;
-@@ -3866,7 +3872,7 @@ static int intel_iommu_add(struct dmar_drhd_unit *dmaru)
- 	iommu_enable_translation(iommu);
- 
- 	if (si_domain) {
--		ret = iommu_attach_domain(si_domain, iommu);
-+		ret = iommu_attach_domain(si_domain, iommu, -1);
- 		if (ret < 0 || si_domain->id != ret)
- 			goto disable_iommu;
- 		domain_attach_iommu(si_domain, iommu);
--- 
-2.0.0-rc0
-
+	Arnd
