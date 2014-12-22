@@ -1,85 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:54511 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752261AbaLIC0K (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Dec 2014 21:26:10 -0500
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:33065 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750928AbaLVFs5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 00:48:57 -0500
 Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 9 Dec 2014 12:26:07 +1000
-Date: Tue, 9 Dec 2014 10:26:01 +0800
+	Mon, 22 Dec 2014 15:48:54 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 3C3CE2BB005C
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:48:52 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sBM5mpFO37159046
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:48:52 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sBM5mo34012766
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:48:51 +1100
 From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>, weiyang@linux.vnet.ibm.com,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marek =?iso-8859-1?Q?Kord=EDk?= <kordikmarek@gmail.com>,
-	Alexey Voronkov <zermond@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Clear bridge MEM_64 flag if one child does not
- support it
-Message-ID: <20141209022601.GA16207@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1418075552-26495-1-git-send-email-yinghai@kernel.org>
- <1418079372.13358.9.camel@kernel.crashing.org>
- <CAE9FiQX-vMu5+Kr09ngr95WvtoZTUSL5R2+NiVFeiN6q-BXLLg@mail.gmail.com>
- <20141209001119.GA24661@shangw>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141209001119.GA24661@shangw>
+To: bhelgaas@google.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH 1/2] PCI: Refresh offset/stride after NumVFs is written
+Date: Mon, 22 Dec 2014 13:48:45 +0800
+Message-Id: <1419227326-12083-2-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1419227326-12083-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1419227326-12083-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 09, 2014 at 11:11:19AM +1100, Gavin Shan wrote:
->On Mon, Dec 08, 2014 at 03:59:54PM -0800, Yinghai Lu wrote:
->>On Mon, Dec 8, 2014 at 2:56 PM, Benjamin Herrenschmidt
->><benh@kernel.crashing.org> wrote:
->>> On Mon, 2014-12-08 at 13:52 -0800, Yinghai Lu wrote:
->>>> 2. or scan the children resource other than ROM to clear bridge MEM_64
->>>>    for mmio pref.
->>>>
->>>> The patch is using second way so will keep child mmio pref into bridge
->>>> mmio pref range.
->>>
->>> That means that having a single ROM BAR that is 32-bit and prefetchable
->>> will downgrade the entire window to 32-bit ? That's not going to work
->>> either.
->>
->>the ROM BAR get skipped during the checking.
->>
->>+                       if (i != PCI_ROM_RESOURCE)
->>+                               mem64_mask &= r->flags & IORESOURCE_MEM_64;
->>+               }
->>
->>>
->>> I have GPUs with 16G BARs for example... suddenly they don't fit
->>> anaymore because we downgraded the window to 32 bit because somewhere
->>> there's a 32-bit pref resource ?
->>>
->>> That will break more than it fixes...
->>
->>Please check if this patch break your platform. I tried on my setup on
->>x86. and it is still
->>working on 64 bit resource allocation.
->>
->
->I'm going to give it a spin and Richard, could you please apply Yinghai's
->patch to see if your SRIOV code can work properly?
->
+According to SR-IOV SPEC sec 3.3.9, 3.3.10, the NumVFs setting change will
+affect the offset and stride. Current implementation doesn't refresh the
+offset/stride cached in pci_sriov structure.
 
-Yinghai & Gavin,
+This patch introduces a wrapper pci_iov_set_numvfs(), which refresh these two
+value after NumVFs is written.
 
-I did a quick test on my machine. This patch doesn't affect the MMIO
-allocation on out platform, so SRIOV works fine.
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/iov.c |   23 +++++++++++++++++++----
+ 1 file changed, 19 insertions(+), 4 deletions(-)
 
-I will spend more time to read the patch to get more understanding about the
-problem.
-
->Thanks,
->Gavin
-
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 4b3a4ea..ef0ceaa 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -31,6 +31,21 @@ static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
+ 		dev->sriov->stride * id) & 0xff;
+ }
+ 
++/**
++ * Per SRIOV SPEC section 3.3.10 and 3.3.11, VF Stride and VF offset may
++ * change when NumVFs changes.
++ *
++ * This function update the iov->offset and iov->stride when NumVFs is written.
++ */
++static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
++{
++	struct pci_sriov *iov = dev->sriov;
++
++	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
++	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &iov->offset);
++	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &iov->stride);
++}
++
+ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+ {
+ 	struct pci_bus *child;
+@@ -243,7 +258,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 			return rc;
+ 	}
+ 
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
++	pci_iov_set_numvfs(dev, nr_virtfn);
+ 	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
+ 	pci_cfg_access_lock(dev);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+@@ -272,7 +287,7 @@ failed:
+ 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+ 	pci_cfg_access_lock(dev);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
++	pci_iov_set_numvfs(dev, 0);
+ 	ssleep(1);
+ 	pci_cfg_access_unlock(dev);
+ 
+@@ -303,7 +318,7 @@ static void sriov_disable(struct pci_dev *dev)
+ 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
+ 
+ 	iov->num_VFs = 0;
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
++	pci_iov_set_numvfs(dev, 0);
+ }
+ 
+ static int sriov_init(struct pci_dev *dev, int pos)
+@@ -439,7 +454,7 @@ static void sriov_restore_state(struct pci_dev *dev)
+ 		pci_update_resource(dev, i);
+ 
+ 	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, iov->num_VFs);
++	pci_iov_set_numvfs(dev, iov->num_VFs);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+ 	if (iov->ctrl & PCI_SRIOV_CTRL_VFE)
+ 		msleep(100);
 -- 
-Richard Yang
-Help you, Help me
+1.7.9.5
 
