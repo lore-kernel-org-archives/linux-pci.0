@@ -1,166 +1,180 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:37223 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751165AbaLSSYN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Dec 2014 13:24:13 -0500
-MIME-Version: 1.0
-Reply-To: rajatxjain@gmail.com
-In-Reply-To: <54945D79.2070008@gmail.com>
-References: <20141213210251.GA12812@teela.fritz.box>
-	<548EF90A.5070607@gmail.com>
-	<CAA93t1qyZE-9tw8pg1KG6g4iyy0QMW=iass5w=6ZGMTMu+vi_A@mail.gmail.com>
-	<CAErSpo5dqQE7nZ6zf2odgpHBWA3ZpTjhbgQKnY8YxQW+a+298w@mail.gmail.com>
-	<1418750141.4248.3.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
-	<54907300.9050902@gmail.com>
-	<1418759684.4248.12.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
-	<CAErSpo7sqZS+-4LHo3wbo-pa73mcP_3d0Z37U0tfnASaxp-D_g@mail.gmail.com>
-	<1418930889.3433.8.camel@prashant>
-	<20141218202637.GA2930@teela.fritz.box>
-	<1418955047.3433.27.camel@prashant>
-	<CAErSpo4UdxwL=wA8cBJ7_DAdTb2xNeg6600qB0=Jdxv80aVmcg@mail.gmail.com>
-	<54945D79.2070008@gmail.com>
-Date: Fri, 19 Dec 2014 10:24:13 -0800
-Message-ID: <CAA93t1qOUZEmJEcuUNtkDS0M_pafb_1s==9Yqm9-+-+OmJmVuQ@mail.gmail.com>
-Subject: Re: [bisected] tg3 broken in 3.18.0?
-From: Rajat Jain <rajatxjain@gmail.com>
-To: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Prashant Sreedharan <prashant@broadcom.com>,
-	Nils Holland <nholland@tisys.org>,
-	Michael Chan <mchan@broadcom.com>,
-	David Miller <davem@davemloft.net>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rafael Wysocki <rjw@rjwysocki.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:36788 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754248AbaLVJQv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 04:16:51 -0500
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>
+Subject: [PATCH 04/10] iommu/vt-d: functions to copy data from old mem
+Date: Mon, 22 Dec 2014 17:15:23 +0800
+Message-Id: <1419239729-26529-5-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1419239729-26529-1-git-send-email-zhen-hual@hp.com>
+References: <1419239729-26529-1-git-send-email-zhen-hual@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-One of the reasons to replace the condition (*l == 0xffff0001) with
-(*l & 0xffff) == 0x0001) was that some devices apparently returned
-0001 for device id to indicate CRS, but returned actual vendor id in
-the vendor ID field (hence the need to ignore vendor field).
+Add some functions to copy the data from old kernel.
+These functions are used to copy context tables and page tables.
 
-Are we saying that the tg3 device returns 0x0001 for the device ID and
-yet expects it to be treated as a good value (not CRS)?
+To avoid calling iounmap between spin_lock_irqsave and spin_unlock_irqrestore,
+use a link here, store the pointers , and then use iounmap to free them in
+another place.
 
-Thanks,
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+---
+ drivers/iommu/intel-iommu.c | 97 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/intel-iommu.h |  9 +++++
+ 2 files changed, 106 insertions(+)
 
-Rajat
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index c0bebd6..8a7ad72 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -388,6 +388,13 @@ static int intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu);
+ 
+ static int device_to_domain_id(struct intel_iommu *iommu, u8 bus, u8 devfn);
+ 
++struct iommu_remapped_entry {
++	struct list_head list;
++	void __iomem *mem;
++};
++static LIST_HEAD(__iommu_remapped_mem);
++static DEFINE_MUTEX(__iommu_mem_list_lock);
++
+ #endif /* CONFIG_CRASH_DUMP */
+ 
+ /*
+@@ -4843,6 +4850,96 @@ static void __init check_tylersburg_isoch(void)
+ #ifdef CONFIG_CRASH_DUMP
+ 
+ /*
++ * Copy memory from a physically-addressed area into a virtually-addressed area
++ */
++int __iommu_load_from_oldmem(void *to, unsigned long from, unsigned long size)
++{
++	unsigned long pfn;		/* Page Frame Number */
++	size_t csize = (size_t)size;	/* Num(bytes to copy) */
++	unsigned long offset;		/* Lower 12 bits of to */
++	void __iomem *virt_mem;
++	struct iommu_remapped_entry *mapped;
++
++	pfn = from >> VTD_PAGE_SHIFT;
++	offset = from & (~VTD_PAGE_MASK);
++
++	if (page_is_ram(pfn)) {
++		memcpy(to, pfn_to_kaddr(pfn) + offset, csize);
++	} else{
++
++		mapped = kzalloc(sizeof(struct iommu_remapped_entry),
++				GFP_KERNEL);
++		if (!mapped)
++			return -ENOMEM;
++
++		virt_mem = ioremap_cache((unsigned long)from, size);
++		if (!virt_mem) {
++			kfree(mapped);
++			return -ENOMEM;
++		}
++		memcpy(to, virt_mem, size);
++
++		mutex_lock(&__iommu_mem_list_lock);
++		mapped->mem = virt_mem;
++		list_add_tail(&mapped->list, &__iommu_remapped_mem);
++		mutex_unlock(&__iommu_mem_list_lock);
++	}
++	return size;
++}
++
++/*
++ * Copy memory from a virtually-addressed area into a physically-addressed area
++ */
++int __iommu_save_to_oldmem(unsigned long to, void *from, unsigned long size)
++{
++	unsigned long pfn;		/* Page Frame Number */
++	size_t csize = (size_t)size;	/* Num(bytes to copy) */
++	unsigned long offset;		/* Lower 12 bits of to */
++	void __iomem *virt_mem;
++	struct iommu_remapped_entry *mapped;
++
++	pfn = to >> VTD_PAGE_SHIFT;
++	offset = to & (~VTD_PAGE_MASK);
++
++	if (page_is_ram(pfn)) {
++		memcpy(pfn_to_kaddr(pfn) + offset, from, csize);
++	} else{
++		mapped = kzalloc(sizeof(struct iommu_remapped_entry),
++				GFP_KERNEL);
++		if (!mapped)
++			return -ENOMEM;
++
++		virt_mem = ioremap_cache((unsigned long)to, size);
++		if (!virt_mem) {
++			kfree(mapped);
++			return -ENOMEM;
++		}
++		memcpy(virt_mem, from, size);
++		mutex_lock(&__iommu_mem_list_lock);
++		mapped->mem = virt_mem;
++		list_add_tail(&mapped->list, &__iommu_remapped_mem);
++		mutex_unlock(&__iommu_mem_list_lock);
++	}
++	return size;
++}
++
++/*
++ * Free the mapped memory for ioremap;
++ */
++int __iommu_free_mapped_mem(void)
++{
++	struct iommu_remapped_entry *mem_entry, *tmp;
++
++	mutex_lock(&__iommu_mem_list_lock);
++	list_for_each_entry_safe(mem_entry, tmp, &__iommu_remapped_mem, list) {
++		iounmap(mem_entry->mem);
++		list_del(&mem_entry->list);
++		kfree(mem_entry);
++	}
++	mutex_unlock(&__iommu_mem_list_lock);
++	return 0;
++}
++/*
+  * Interfaces for when a new domain in the crashdump kernel needs some
+  * values from the panicked kernel's context entries
+  *
+diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+index a65208a..8ffa523 100644
+--- a/include/linux/intel-iommu.h
++++ b/include/linux/intel-iommu.h
+@@ -26,6 +26,7 @@
+ #include <linux/iova.h>
+ #include <linux/io.h>
+ #include <linux/dma_remapping.h>
++#include <linux/crash_dump.h>
+ #include <asm/cacheflush.h>
+ #include <asm/iommu.h>
+ 
+@@ -368,4 +369,12 @@ extern int dmar_ir_support(void);
+ 
+ extern const struct attribute_group *intel_iommu_groups[];
+ 
++#ifdef CONFIG_CRASH_DUMP
++extern int __iommu_load_from_oldmem(void *to, unsigned long from,
++					unsigned long size);
++extern int __iommu_save_to_oldmem(unsigned long to, void *from,
++					unsigned long size);
++extern int __iommu_free_mapped_mem(void);
++#endif /* CONFIG_CRASH_DUMP */
++
+ #endif
+-- 
+2.0.0-rc0
 
-On Fri, Dec 19, 2014 at 9:16 AM, Marcelo Ricardo Leitner
-<marcelo.leitner@gmail.com> wrote:
-> On 19-12-2014 15:09, Bjorn Helgaas wrote:
->>
->> On Thu, Dec 18, 2014 at 7:10 PM, Prashant Sreedharan
->> <prashant@broadcom.com> wrote:
->>>
->>> On Thu, 2014-12-18 at 21:26 +0100, Nils Holland wrote:
->>>>
->>>> On Thu, Dec 18, 2014 at 11:28:09AM -0800, Prashant Sreedharan wrote:
->>>>>
->>>>> On Thu, 2014-12-18 at 12:15 -0700, Bjorn Helgaas wrote:
->>>>>>
->>>>>>
->>>>>> Any updates from the hardware team?
->>>>>>
->>>>>> This is a pretty serious regression, but as far as I can tell, it is
->>>>>> not a PCI bug.  The device should respond to a config read of vendor
->>>>>> ID.  If the driver does something that make the read return CRS
->>>>>> status, I think the driver is responsible for doing whatever delay or
->>>>>> other fixup is required.
->>>>>>
->>>>>> I'm inclined to reassign this bug to the tg3 driver unless you think
->>>>>> the PCI core is doing something wrong here.
->>>>>>
->>>>>> Bjorn
->>>>>
->>>>>
->>>>> We were not able to reproduce this issue, could you please check what
->>>>> is
->>>>> the value of reg 0x70, before the pci_device_is_present call is made ?
->>>>> if bit 15 is set config access will be retried.
->>>>>
->>>>> --- a/drivers/net/ethernet/broadcom/tg3.c
->>>>> +++ b/drivers/net/ethernet/broadcom/tg3.c
->>>>> @@ -9025,6 +9025,7 @@ static int tg3_chip_reset(struct tg3 *tp)
->>>>>          void (*write_op)(struct tg3 *, u32, u32);
->>>>>          int i, err;
->>>>>
->>>>> +       printk(KERN_ERR "config state: %x\n", tr32(TG3PCI_PCISTATE));
->>>>>          if (!pci_device_is_present(tp->pdev))
->>>>>                  return -ENODEV;
->>>>
->>>>
->>>> No problem, I gave this a try and here is what I get:
->>>>
->>>> [    2.185190] libphy: tg3 mdio bus: probed
->>>> [    2.229357] tsc: Refined TSC clocksource calibration: 2399.999 MHz
->>>> [    2.244993] config state: 1292
->>>> [    2.247136] tg3 0000:02:00.0 eth0: Tigon3 [partno(BCM57780) rev
->>>> 57780001]
->>>>          (PCI Express) MAC address 00:19:99:ce:13:a6
->>>> [    2.249279] tg3 0000:02:00.0 eth0: attached PHY driver [Broadcom
->>>> BCM57780]
->>>>          (mii_bus:phy_addr=200:01)
->>>> [    2.251460] tg3 0000:02:00.0 eth0: RXcsums[1] LinkChgREG[0]
->>>>          MIirq[0] ASF[0] TSOcap[1]
->>>> [    2.253672] tg3 0000:02:00.0 eth0: dma_rwctrl[76180000]
->>>> dma_mask[64-bit]
->>>> [...]
->>>> [   12.204692] tg3 0000:02:00.0
->>>>          enp2s0: No firmware running
->>>> [   12.206653] config state: 1292
->>>> [   12.208655] config state: 1292
->>>>
->>>> That's all of the three times the new debugging line gets hit when I
->>>> boot my system using the supplied diagnostic patch.
->>>>
->>>> Hope that helps - of course, I'd gladly test any further
->>>> (diagnostic) patches if required! Also, if I can provide any
->>>> additional information that might be of value, just ask:-)
->>>>
->>> Nils/Marcelo thanks for inputs, since reg 0x70 bit 15 is clear it
->>> indicates the chip is not setting the config retry bit. We were hoping
->>> this bit is causing the config access to return CRS but looks like it is
->>> not.
->>>
->>> Btw after forcing the error path (tg3_init_one -> tg3_halt) in the
->>> driver now we are able to reproduce the problem on 5722 in house. We are
->>> working with the HW team to narrow this down.
->>>
->>> Also it is not clear to me how reverting commit cfa6a7877b17a667 fixes
->>> the problem.
->>
->>
->> The full commit is 89665a6a71408796565bfd29cfa6a7877b17a667, and git
->> works with any unique *prefix* of that.  The current convention is to
->> use the first 12 characters (I have "[core] abbrev = 12" in my
->> .git/config).  Unfortunately, suffixes don't work at all.
->>
->> Anyway, here's why I think 89665a6a7140 makes a difference.  We're in this
->> path:
->>
->>    pci_device_is_present
->>      pci_bus_read_dev_vendor_id(..., crs_timeout = 0)
->>        pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l)
->>
->> and for some reason the chip returns 0x00010001 for that 32-bit read.
->
->
-> Actually it returns just 0x00000001, but yeah, that's my understanding too.
->
->   Marcelo
->
->
->> Before 89665a6a7140, we compared all 32 bits with "*l == 0xffff0001".
->> This is false, so pci_bus_read_dev_vendor_id() returns true, which
->> means pci_device_is_present() is also true.
->>
->> After 89665a6a7140, we compare only the low 16 bits with ((*l &
->> 0xffff) == 0x0001), which is true, so pci_bus_read_dev_vendor_id()
->> returns false, and pci_device_is_present() is false.
->>
->> Bjorn
->>
->
