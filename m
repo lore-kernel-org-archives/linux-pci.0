@@ -1,76 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:55966 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752168AbaLOJyr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Dec 2014 04:54:47 -0500
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>, <billsumnerlinux@gmail.com>,
-	<zhen-hual@hp.com>
-Cc: <iommu@lists.linux-foundation.org>, <kexec@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>
-Subject: [PATCH 08/10] iommu/vtd: assign new page table for dma_map
-Date: Mon, 15 Dec 2014 17:53:04 +0800
-Message-Id: <1418637186-9988-9-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1418637186-9988-1-git-send-email-zhen-hual@hp.com>
-References: <1418637186-9988-1-git-send-email-zhen-hual@hp.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:54852 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754781AbaLVVlV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 22 Dec 2014 16:41:21 -0500
+Message-ID: <54988FDB.8000108@ti.com>
+Date: Mon, 22 Dec 2014 16:40:43 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <grant.likely@linaro.org>,
+	<robh+dt@kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <will.deacon@arm.com>
+Subject: Re: [RFC v1 PATCH 1/2] of/pci: add of_pci_dma_configure() update
+ dma configuration
+References: <1418940425-2017-1-git-send-email-m-karicheri2@ti.com> <21520995.3ITgVmVTeV@wuerfel> <549858E4.4050500@ti.com> <11285984.OK9CqQGmjZ@wuerfel>
+In-Reply-To: <11285984.OK9CqQGmjZ@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When a device driver issues the first dma_map command for a
-device, we assign a new and empty page-table, thus removing all
-mappings from the old kernel for the device.
+On 12/22/2014 02:43 PM, Arnd Bergmann wrote:
+> On Monday 22 December 2014 12:46:12 Murali Karicheri wrote:
+>> On 12/18/2014 05:29 PM, Arnd Bergmann wrote:
+>>> On Thursday 18 December 2014 17:07:04 Murali Karicheri wrote:
+>>>> Add of_pci_dma_configure() to allow updating the dma configuration
+>>>> of the pci device using the configuration from the parent of
+>>>> the root bridge device.
+>>>> +	/*
+>>>> +	 * Set it to coherent_dma_mask by default if the architecture
+>>>> +	 * code has not set it.
+>>>> +	 */
+>>>> +	if (!dev->dma_mask)
+>>>> +		dev->dma_mask =&dev->coherent_dma_mask;
+>>>> +
+>>>> +	ret = of_dma_get_range(parent_np,&dma_addr,&paddr,&size);
+>>>> +	if (ret<   0) {
+>>>> +		dma_addr = offset = 0;
+>>>> +		size = dev->coherent_dma_mask;
+>>>
+>>> Can you check one thing here? I believe the size argument as returned
+>>> from of_dma_get_range is inclusive (e.g. 0x100000000), while the coherent
+>>> mask by definition is exlusive (e.g. 0xffffffff), so the size needs to
+>>> be adapted here. I haven't checked all the code here though, so I may
+>>> be wrong.
+>>
+>> size returned by of_dma_get_range() is inclusive as you indicated. Fromt
+>> the grep of dma-ranges in arch/arm/boot/dts, I see
+>>
+>> arch/arm/boot/dts/keystone.dtsi:		dma-ranges =<0x80000000 0x8
+>> 0x00000000 0x80000000>;
+>> arch/arm/boot/dts/keystone.dtsi:			dma-ranges;
+>> arch/arm/boot/dts/r8a7790.dtsi:		dma-ranges =<0x42000000 0 0x40000000 0
+>> 0x40000000 0 0x80000000
+>> arch/arm/boot/dts/integratorap.dts:	dma-ranges =<0x80000000 0x0
+>> 0x80000000>;
+>> arch/arm/boot/dts/r8a7791.dtsi:		dma-ranges =<0x42000000 0 0x40000000 0
+>> 0x40000000 0 0x80000000
+>>
+>> So I guess I need to change the code to
+>>
+>>   >>  +	ret = of_dma_get_range(parent_np,&dma_addr,&paddr,&size);
+>>   >>  +	if (ret<   0) {
+>>   >>  +		dma_addr = offset = 0;
+>>   >>  +		size = dev->coherent_dma_mask + 1;
+>
+> Right.
+>
+>>>> +	} else {
+>>>> +		offset = PFN_DOWN(paddr - dma_addr);
+>>>> +		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", dev->dma_pfn_offset);
+>>>> +	}
+>>>> +	dev->dma_pfn_offset = offset;
+>>>> +
+>>>> +	coherent = of_dma_is_coherent(parent_np);
+>>>> +	dev_dbg(dev, "device is%sdma coherent\n",
+>>>> +		coherent ? " " : " not ");
+>>>> +
+>>>> +	arch_setup_dma_ops(dev, dma_addr, size, NULL, coherent);
+>>>
+>>> Basically, I would use limit the size argument we pass into
+>>> arch_setup_dma_ops to the minimum of 'size' and 'dma_mask' here,
+>>> after converting into the same format. We should make sure we do the
+>>> same thing for platform_device as well, so it might be better to do
+>>> it inside of arch_setup_dma_ops instead.
+>>
+>> Do you think following changes will work?
+>>
+>> +++ b/arch/arm/mm/dma-mapping.c
+>> @@ -2052,9 +2052,10 @@ void arch_setup_dma_ops(struct device *dev, u64
+>> dma_base, u64 size,
+>>                           struct iommu_ops *iommu, bool coherent)
+>>    {
+>>           struct dma_map_ops *dma_ops;
+>> +       u64 temp_size = min((*(dev->dma_mask) + 1), size);
+>>
+>>           dev->archdata.dma_coherent = coherent;
+>> -       if (arm_setup_iommu_dma_ops(dev, dma_base, size, iommu))
+>> +       if (arm_setup_iommu_dma_ops(dev, dma_base, temp_size, iommu))
+>>
+>> If you agree, I will post v1 of the patch with these updates. Let me
+>> know. I did some basic tests on Keystone with these changes and it works
+>> fine.
+>
+> It's not exactly what I meant. My main point was that we need to limit
+> dev->dma_mask to (size-1) here, but you are not touching that.
 
-Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
----
- drivers/iommu/intel-iommu.c | 27 ++++++++++++++++++++-------
- 1 file changed, 20 insertions(+), 7 deletions(-)
+if you mean overriding the dev->dma_mask to min((*dev->dma_mask), 
+size-1), then I am getting the error "Coherent DMA mask 0x7fffffff (pfn 
+0x780000-0x800000) covers a smaller range of system memory than the DMA 
+zone pfn 0x0-0x880000) when the devices on Keystone tries to set the dma 
+mask. Something wrong and I need to look into the code.
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 4837ce5..f11a9b1 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -3200,15 +3200,28 @@ static struct dmar_domain *__get_valid_domain_for_dev(struct device *dev)
- 	}
- 
- 	/* make sure context mapping is ok */
--	if (unlikely(!domain_context_mapped(dev))) {
--		ret = domain_context_mapping(domain, dev, CONTEXT_TT_MULTI_LEVEL);
--		if (ret) {
--			printk(KERN_ERR "Domain context map for %s failed",
--			       dev_name(dev));
--			return NULL;
--		}
-+	if (likely(domain_context_mapped(dev))) {
-+#ifdef CONFIG_CRASH_DUMP
-+		if (is_kdump_kernel()) {
-+			domain_exit(domain);
-+			domain = get_domain_for_dev(dev,
-+				DEFAULT_DOMAIN_ADDRESS_WIDTH);
-+			if (!domain) {
-+				pr_err("Allocating domain for %s failed",
-+				       dev_name(dev));
-+				return NULL;
-+			}
-+		} else
-+#endif
-+			return domain;
- 	}
- 
-+	ret = domain_context_mapping(domain, dev, CONTEXT_TT_MULTI_LEVEL);
-+	if (ret) {
-+		pr_err("Domain context map for %s failed",
-+		       dev_name(dev));
-+		return NULL;
-+	}
- 	return domain;
- }
- 
+> either change the two functions in which we first assign the dma_mask
+> (platform and pci bus), or set it again in arch_setup_dma_ops (on each
+> architecture implementing it), either way would work. Someone else
+> might have a stronger opinion on that matter.
+>
+> For arm_setup_iommu_dma_ops, passing the original size is probably
+> best.
+>
+> 	Arnd
+
+
 -- 
-2.0.0-rc0
-
+Murali Karicheri
+Linux Kernel, Texas Instruments
