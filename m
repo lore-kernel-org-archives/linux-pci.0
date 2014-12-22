@@ -1,141 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f170.google.com ([209.85.216.170]:33020 "EHLO
-	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751246AbaLPSAL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Dec 2014 13:00:11 -0500
-Message-ID: <54907324.4040102@gmail.com>
-Date: Tue, 16 Dec 2014 16:00:04 -0200
-From: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
+Received: from mout.kundenserver.de ([212.227.126.187]:54347 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753853AbaLVWY5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 17:24:57 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, grant.likely@linaro.org,
+	robh+dt@kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, will.deacon@arm.com
+Subject: Re: [RFC v1 PATCH 1/2] of/pci: add of_pci_dma_configure() update dma configuration
+Date: Mon, 22 Dec 2014 23:24:33 +0100
+Message-ID: <2285493.QXo0OxClZ5@wuerfel>
+In-Reply-To: <54988FDB.8000108@ti.com>
+References: <1418940425-2017-1-git-send-email-m-karicheri2@ti.com> <11285984.OK9CqQGmjZ@wuerfel> <54988FDB.8000108@ti.com>
 MIME-Version: 1.0
-To: rajatxjain@gmail.com
-CC: Nils Holland <nholland@tisys.org>,
-	David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [bisected] tg3 broken in 3.18.0?
-References: <20141213210251.GA12812@teela.fritz.box> <548EF90A.5070607@gmail.com> <CAA93t1qyZE-9tw8pg1KG6g4iyy0QMW=iass5w=6ZGMTMu+vi_A@mail.gmail.com>
-In-Reply-To: <CAA93t1qyZE-9tw8pg1KG6g4iyy0QMW=iass5w=6ZGMTMu+vi_A@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 16-12-2014 14:04, Rajat Jain wrote:
-> Hello All,
->
-> Apologies for jumping in late, but for some reason I do not see the
-> original mail in my inbox. However I am taking a look at the mails as
-> sent on linux-pci (and I will keep an eye out for the bug report that
-> Bjorn asked for).
->
+On Monday 22 December 2014 16:40:43 Murali Karicheri wrote:
+> >> +++ b/arch/arm/mm/dma-mapping.c
+> >> @@ -2052,9 +2052,10 @@ void arch_setup_dma_ops(struct device *dev, u64
+> >> dma_base, u64 size,
+> >>                           struct iommu_ops *iommu, bool coherent)
+> >>    {
+> >>           struct dma_map_ops *dma_ops;
+> >> +       u64 temp_size = min((*(dev->dma_mask) + 1), size);
+> >>
+> >>           dev->archdata.dma_coherent = coherent;
+> >> -       if (arm_setup_iommu_dma_ops(dev, dma_base, size, iommu))
+> >> +       if (arm_setup_iommu_dma_ops(dev, dma_base, temp_size, iommu))
+> >>
+> >> If you agree, I will post v1 of the patch with these updates. Let me
+> >> know. I did some basic tests on Keystone with these changes and it works
+> >> fine.
+> >
+> > It's not exactly what I meant. My main point was that we need to limit
+> > dev->dma_mask to (size-1) here, but you are not touching that.
+> 
+> if you mean overriding the dev->dma_mask to min((*dev->dma_mask), 
+> size-1), then I am getting the error "Coherent DMA mask 0x7fffffff (pfn 
+> 0x780000-0x800000) covers a smaller range of system memory than the DMA 
+> zone pfn 0x0-0x880000) when the devices on Keystone tries to set the dma 
+> mask. Something wrong and I need to look into the code.
 
-np!
-Nils would you create that BZ please? As you did all the bisect.. :)
+Right, it sounds like the offset was applied incorrectly at some point.
 
->
->>
->> I'm getting, with commit 89665a6a71408796565bfd29cfa6a7877b17a667:
->>
->> $ grep 'pci 0000:02' tg3.bad
->> [    0.190733] pci 0000:02:00.0: 1st 165a14e4 14e4
->> [    0.190736] pci 0000:02:00.0: 1st 165a14e4 14e4
->> [    0.190810] pci 0000:02:00.0: [14e4:165a] type 00 class 0x020000
->> [    0.190885] pci 0000:02:00.0: reg 0x10: [mem 0xf7c40000-0xf7c4ffff 64bit]
->> [    0.191048] pci 0000:02:00.0: reg 0x30: [mem 0xf7c00000-0xf7c3ffff pref]
->> [    0.191382] pci 0000:02:00.0: PME# supported from D3hot D3cold
->> [    0.191438] pci 0000:02:00.0: System wakeup disabled by ACPI
->> [    1.561555] pci 0000:02:00.0: 1st 1 1
->> [    1.561558] pci 0000:02:00.0: crs_timeout: 0
->> [   20.412021] pci 0000:02:00.0: 1st 1 1
->> [   20.412022] pci 0000:02:00.0: crs_timeout: 0
->> [   20.413596] pci 0000:02:00.0: 1st 1 1
->> [   20.413598] pci 0000:02:00.0: crs_timeout: 0
->>
->> And without it:
->>
->> $ grep 'pci 0000:02' tg3.good
->> [    0.190734] pci 0000:02:00.0: 1st 165a14e4 14e4
->> [    0.190738] pci 0000:02:00.0: 1st 165a14e4 14e4
->> [    0.190811] pci 0000:02:00.0: [14e4:165a] type 00 class 0x020000
->> [    0.190884] pci 0000:02:00.0: reg 0x10: [mem 0xf7c40000-0xf7c4ffff 64bit]
->> [    0.191047] pci 0000:02:00.0: reg 0x30: [mem 0xf7c00000-0xf7c3ffff pref]
->> [    0.191380] pci 0000:02:00.0: PME# supported from D3hot D3cold
->> [    0.191439] pci 0000:02:00.0: System wakeup disabled by ACPI
->> [    1.576778] pci 0000:02:00.0: 1st 1 1
->> [   19.068517] pci 0000:02:00.0: 1st 165a14e4 14e4
->>
->
-> It seems that in the first 2 attempts that were made to probe the
-> device are all OK and return regular device ID and vendor ID for TG3
-> (CRS does not have a role to play). However, later attempts return a
-> CRS.
->
-> 1) May I ask if you are using acpihp or pciehp? I assume pciehp?
+What are the DMA zone size and the phys-offset?
 
-Well.. system doesn't support hotplug..
-Chipset is a "Intel Corporation 5 Series/3400 Series", fwiw
-
-> 2) Can you please also send dmesg output while passing
-> pciehp.pciehp_debug=1? In the fail case, do you see a message
-> indicating the pciehp gave up since it got CRS for a long time
-> (something like "pci 0000:02:00.0 id reading try 50 times with
-> interval 20 ms to get ffff0001")?
-
-I did use that option anyway, but it resulted in no new messages.
-
-> 3) Currently the pciehp passes "0" for the argument "crs_timeout" to
-> pci_bus_read_dev_vendor_id(). Can you please try increasing it to, say
-> 30 seconds (30 * 1000). (For comparison data, acpihp uses the value
-> 60*1000 i.e. 60 seconds today) and run the fail case once again?
->
-> Thanks a lot in advance for the debugging help ;-)
->
-
-Seems it's not safe to do that with those backtraces..
-I did it, system was very slow to boot, still didn't get the NIC on and 
-got a bunch of "scheduling while atomic" due to that msleep() call.
-
-The first invoke was fine:
-Dec 16 15:40:00 odin kernel: [    0.190711] pci 0000:02:00.0: 1st 
-165a14e4 14e4
-Dec 16 15:40:00 odin kernel: [    0.190717] pci 0000:02:00.0: 1st 
-165a14e4 14e4
-Dec 16 15:40:00 odin kernel: [    0.191091] pci 0000:02:00.0: System 
-wakeup disabled by ACPI
-Dec 16 15:40:00 odin kernel: [    1.576061] pci 0000:02:00.0: 1st 1 1
-Dec 16 15:40:00 odin kernel: [    1.577474] pci 0000:02:00.0: 1 1
-Dec 16 15:40:00 odin kernel: [    1.580487] pci 0000:02:00.0: 1 1
-Dec 16 15:40:00 odin kernel: [    1.585508] pci 0000:02:00.0: 1 1
-Dec 16 15:40:00 odin kernel: [    1.594499] pci 0000:02:00.0: 1 1
-Dec 16 15:40:00 odin kernel: [    1.611499] pci 0000:02:00.0: 1 1
-Dec 16 15:40:00 odin kernel: [    1.644521] pci 0000:02:00.0: 1 1
-Dec 16 15:40:00 odin kernel: [    1.709566] pci 0000:02:00.0: 1 1
-Dec 16 15:40:00 odin kernel: [    1.838654] pci 0000:02:00.0: 1 1
-Dec 16 15:40:00 odin kernel: [    2.095765] pci 0000:02:00.0: 1 1
-Dec 16 15:40:00 odin kernel: [    2.608956] pci 0000:02:00.0: 1 1
-Dec 16 15:40:00 odin kernel: [    3.634443] pci 0000:02:00.0: 1 1
-Dec 16 15:40:00 odin kernel: [    5.684388] pci 0000:02:00.0: 1 1
-Dec 16 15:40:00 odin kernel: [    9.783279] pci 0000:02:00.0: 1 1
-Dec 16 15:40:00 odin kernel: [   17.980060] pci 0000:02:00.0: 1 1
-Dec 16 15:40:00 odin kernel: [   34.372640] pci 0000:02:00.0: not responding
-
-The other two...
-Dec 16 15:40:09 odin kernel: [   54.154688] pci 0000:02:00.0: 1st 1 1
-Dec 16 15:40:09 odin kernel: [   54.154690] BUG: scheduling while 
-atomic: ip/1575/0x00000200
-Dec 16 15:40:09 odin kernel: pci 0000:02:00.0: 1st 1 1
-Dec 16 15:40:09 odin kernel: BUG: scheduling while atomic: 
-ip/1575/0x00000200
-Dec 16 15:40:09 odin kernel: pci 0000:02:00.0: 1 1
-Dec 16 15:40:09 odin kernel: BUG: scheduling while atomic: 
-ip/1575/0x00000200
-(...)
-
-BUG backtraces were very similar to the 2nd and 3rd I posted on the 
-other email, it just pointed to the msleep() call instead of my BUG_ON(1).
-
-I can dig deeper if you think it's worth, but as the 1st call didn't 
-have this issue and it didn't complete either, seems we are good about 
-the test.. right?
-
-Thanks,
-Marcelo
-
+	Arnd
