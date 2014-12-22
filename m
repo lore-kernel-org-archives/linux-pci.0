@@ -1,105 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f43.google.com ([209.85.216.43]:45248 "EHLO
-	mail-qa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754075AbaLAStc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Dec 2014 13:49:32 -0500
-Received: by mail-qa0-f43.google.com with SMTP id bm13so7561949qab.2
-        for <linux-pci@vger.kernel.org>; Mon, 01 Dec 2014 10:49:31 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1416901802-24211-39-git-send-email-jiang.liu@linux.intel.com>
-References: <1416901802-24211-1-git-send-email-jiang.liu@linux.intel.com> <1416901802-24211-39-git-send-email-jiang.liu@linux.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 1 Dec 2014 11:49:11 -0700
-Message-ID: <CAErSpo7-GezRLKe4hTAm=KhYHUw6zggi+4LRXjh25K-f+_hAng@mail.gmail.com>
-Subject: Re: [Patch Part3 v4 38/38] x86, irq: Add kernel parameter
- vector_alloc to set CPU vector allocation policy
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Daniel J Blueman <daniel@numascale.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:34397 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752057AbaLVFzG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 00:55:06 -0500
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 22 Dec 2014 15:55:04 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id B3ACB3578063
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:55:01 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sBM5t1eV29687904
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:55:01 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sBM5t0SP020733
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:55:01 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V10 09/17] powerpc/pci: remove pci_dn->pcidev field
+Date: Mon, 22 Dec 2014 13:54:29 +0800
+Message-Id: <1419227677-12312-10-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 25, 2014 at 12:50 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> Parameter vector_alloc should be set to an integer with:
-> bit 0:  enable allocating CPU vector from CPUs on device local node.
->         That's to allocate from cpumask_of_node(irq_data->node).
-> bit 1: enable the default policy, which is to allocate from
->        apic->target_cpus().
->
-> When allocating vectors, it tries all enabled policies from lower bit
-> position to higher bit position.
->
-> This option could be use to optimize interrupt distribution on large
-> system such as NumaChip etc.
+The field pci_dn->pcidev is assigned but not used.
 
-Why can't we figure this out automatically?  Having a kernel parameter
-is a pain in the neck for users.
+This patch removes this field.
 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> Cc: Daniel J Blueman <daniel@numascale.com>
-> ---
->  Documentation/kernel-parameters.txt |    6 ++++++
->  arch/x86/kernel/apic/vector.c       |   11 +++++++++++
->  2 files changed, 17 insertions(+)
->
-> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-> index 4c81a860cc2b..a175c5016954 100644
-> --- a/Documentation/kernel-parameters.txt
-> +++ b/Documentation/kernel-parameters.txt
-> @@ -3709,6 +3709,12 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->         vector=         [IA-64,SMP]
->                         vector=percpu: enable percpu vector domain
->
-> +       vector_alloc=   [x86,SMP]
-> +                       vector_alloc=policy: policy is a bitmap, bit 0
-> +                       for allocating CPU vector from CPUs on device local
-> +                       node; bit 1 for the default policy to allocating from
-> +                       apic->target_cpus(). All higher bits are reserved.
-> +
->         video=          [FB] Frame buffer configuration
->                         See Documentation/fb/modedb.txt.
->
-> diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-> index 16de8906ee1e..1158843551c7 100644
-> --- a/arch/x86/kernel/apic/vector.c
-> +++ b/arch/x86/kernel/apic/vector.c
-> @@ -79,6 +79,17 @@ void set_vector_alloc_policy(unsigned int policy)
->                 x86_vector_alloc_policy = policy | X86_VECTOR_POL_CALLER;
->  }
->
-> +static int __init apic_parse_vector_policy(char *str)
-> +{
-> +       int policy;
-> +
-> +       if (get_option(&str, &policy) == 1)
-> +               set_vector_alloc_policy(policy);
-> +
-> +       return 1;
-> +}
-> +__setup("vector_alloc=", apic_parse_vector_policy);
-> +
->  static struct apic_chip_data *alloc_apic_chip_data(int node)
->  {
->         struct apic_chip_data *data;
-> --
-> 1.7.10.4
->
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h     |    1 -
+ arch/powerpc/platforms/powernv/pci-ioda.c |    1 -
+ 2 files changed, 2 deletions(-)
+
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 74efea9..93126cb 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -164,7 +164,6 @@ struct pci_dn {
+ 
+ 	int	pci_ext_config_space;	/* for pci devices */
+ 
+-	struct	pci_dev *pcidev;	/* back-pointer to the pci device */
+ #ifdef CONFIG_EEH
+ 	struct eeh_dev *edev;		/* eeh device */
+ #endif
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 9faa5ec..42b168f 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -832,7 +832,6 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
+ 				pci_name(dev));
+ 			continue;
+ 		}
+-		pdn->pcidev = dev;
+ 		pdn->pe_number = pe->pe_number;
+ 		pe->dma_weight += pnv_ioda_dma_weight(dev);
+ 		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
+-- 
+1.7.9.5
+
