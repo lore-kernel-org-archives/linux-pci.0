@@ -1,71 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33290 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751186AbaLCVlG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Dec 2014 16:41:06 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: [PATCH v5 6/9] PCI: Expose pci_load_saved_state for public consumption.
-Date: Wed,  3 Dec 2014 16:40:31 -0500
-Message-Id: <1417642834-20350-7-git-send-email-konrad.wilk@oracle.com>
-In-Reply-To: <1417642834-20350-1-git-send-email-konrad.wilk@oracle.com>
-References: <1417642834-20350-1-git-send-email-konrad.wilk@oracle.com>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:54655 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752883AbaLVFzC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 00:55:02 -0500
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 22 Dec 2014 15:55:00 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 8A8992CE8050
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:58 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sBM5swd437683376
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:58 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sBM5svRG020637
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:54:58 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V10 07/17] powerpc/pci: Don't unset pci resources for VFs
+Date: Mon, 22 Dec 2014 13:54:27 +0800
+Message-Id: <1419227677-12312-8-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We have the pci_load_and_free_saved_state, and pci_store_saved_state
-but are missing the functionality to just load the state
-multiple times in the PCI device without having to free/save
-the state.
+If we're going to reassign resources with flag PCI_REASSIGN_ALL_RSRC, all
+resources will be cleaned out during device header fixup time and then get
+reassigned by PCI core. However, the VF resources won't be reassigned and
+thus, we shouldn't clean them out.
 
-This patch makes it possible to use this function.
+This patch adds a condition. If the pci_dev is a VF, skip the resource
+unset process.
 
-CC: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
- drivers/pci/pci.c   | 5 +++--
- include/linux/pci.h | 2 ++
- 2 files changed, 5 insertions(+), 2 deletions(-)
+ arch/powerpc/kernel/pci-common.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 625a4ac..f00a9d6 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1142,8 +1142,8 @@ EXPORT_SYMBOL_GPL(pci_store_saved_state);
-  * @dev: PCI device that we're dealing with
-  * @state: Saved state returned from pci_store_saved_state()
-  */
--static int pci_load_saved_state(struct pci_dev *dev,
--				struct pci_saved_state *state)
-+int pci_load_saved_state(struct pci_dev *dev,
-+			 struct pci_saved_state *state)
- {
- 	struct pci_cap_saved_data *cap;
- 
-@@ -1171,6 +1171,7 @@ static int pci_load_saved_state(struct pci_dev *dev,
- 	dev->state_saved = true;
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(pci_load_saved_state);
- 
- /**
-  * pci_load_and_free_saved_state - Reload the save state pointed to by state,
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5be8db4..08088cb1 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1003,6 +1003,8 @@ void __iomem __must_check *pci_platform_rom(struct pci_dev *pdev, size_t *size);
- int pci_save_state(struct pci_dev *dev);
- void pci_restore_state(struct pci_dev *dev);
- struct pci_saved_state *pci_store_saved_state(struct pci_dev *dev);
-+int pci_load_saved_state(struct pci_dev *dev,
-+			 struct pci_saved_state *state);
- int pci_load_and_free_saved_state(struct pci_dev *dev,
- 				  struct pci_saved_state **state);
- struct pci_cap_saved_state *pci_find_saved_cap(struct pci_dev *dev, char cap);
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 37d512d..889f743 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -788,6 +788,10 @@ static void pcibios_fixup_resources(struct pci_dev *dev)
+ 		       pci_name(dev));
+ 		return;
+ 	}
++
++	if (dev->is_virtfn)
++		return;
++
+ 	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+ 		struct resource *res = dev->resource + i;
+ 		struct pci_bus_region reg;
 -- 
-1.9.3
+1.7.9.5
 
