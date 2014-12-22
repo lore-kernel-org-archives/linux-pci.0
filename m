@@ -1,65 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f170.google.com ([209.85.216.170]:48661 "EHLO
-	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750941AbaLPUCu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Dec 2014 15:02:50 -0500
-Message-ID: <54908FE3.7060100@gmail.com>
-Date: Tue, 16 Dec 2014 18:02:43 -0200
-From: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
-MIME-Version: 1.0
-To: Michael Chan <mchan@broadcom.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Nils Holland <nholland@tisys.org>,
-	David Miller <davem@davemloft.net>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rafael Wysocki <rjw@rjwysocki.net>,
-	Prashant Sreedharan <prashant@broadcom.com>
-Subject: Re: [bisected] tg3 broken in 3.18.0?
-References: <20141213210251.GA12812@teela.fritz.box> <548EF90A.5070607@gmail.com> <CAA93t1qyZE-9tw8pg1KG6g4iyy0QMW=iass5w=6ZGMTMu+vi_A@mail.gmail.com> <CAErSpo5dqQE7nZ6zf2odgpHBWA3ZpTjhbgQKnY8YxQW+a+298w@mail.gmail.com> <1418750141.4248.3.camel@LTIRV-MCHAN1.corp.ad.broadcom.com> <54907300.9050902@gmail.com> <1418759684.4248.12.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
-In-Reply-To: <1418759684.4248.12.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:46236 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753184AbaLVFzM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 00:55:12 -0500
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 22 Dec 2014 15:55:11 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id B2A8A2CE8050
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:55:09 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sBM5t74c36831330
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:55:07 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sBM5t83a021104
+	for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 16:55:09 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V10 14/17] powerpc/powernv: Shift VF resource with an offset
+Date: Mon, 22 Dec 2014 13:54:34 +0800
+Message-Id: <1419227677-12312-15-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 16-12-2014 17:54, Michael Chan wrote:
-> On Tue, 2014-12-16 at 15:59 -0200, Marcelo Ricardo Leitner wrote:
->> It's a
->> 02:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5722
->> Gigabit Ethernet PCI Express
->> over here
->>
->> I put a WARN_ON(1) after those printks, and this is what I got:
->>
->> [    1.550640] pci 0000:02:00.0: 1st 1 1
->> [    1.550643] pci 0000:02:00.0: crs_timeout: 0
->> [    1.550645] ------------[ cut here ]------------
->> [    1.550651] WARNING: CPU: 6 PID: 364 at drivers/pci/probe.c:1445 pci_bus_read_dev_vendor_id+0x1d4/0x1e0()
->> [    1.550652] Modules linked in: i915(+) raid0 i2c_algo_bit drm_kms_helper drm e1000e(+) tg3(+) ptp pps_core video
->> [    1.550660] CPU: 6 PID: 364 Comm: systemd-udevd Not tainted 3.18.0-rc6+ #8
->> [    1.550661] Hardware name: Dell Inc. OptiPlex 9010/03K80F, BIOS A15 08/12/2013
->> [    1.550662]  0000000000000000 000000004de2d8dc ffff8807eabdf948 ffffffff8173db46
->> [    1.550665]  0000000000000000 0000000000000000 ffff8807eabdf988 ffffffff81094d41
->> [    1.550667]  ffff8807eabdf968 ffff8807f1e27000 0000000000000000 0000000000000000
->> [    1.550669] Call Trace:
->> [    1.550675]  [<ffffffff8173db46>] dump_stack+0x46/0x58
->> [    1.550679]  [<ffffffff81094d41>] warn_slowpath_common+0x81/0xa0
->> [    1.550681]  [<ffffffff81094e5a>] warn_slowpath_null+0x1a/0x20
->> [    1.550683]  [<ffffffff813b2864>] pci_bus_read_dev_vendor_id+0x1d4/0x1e0
->> [    1.550687]  [<ffffffff813b7c3e>] pci_device_is_present+0x2e/0x50
->> [    1.550693]  [<ffffffffa003364f>] tg3_chip_reset+0x2f/0x940 [tg3]
->> [    1.550697]  [<ffffffffa0033f9f>] tg3_halt+0x3f/0x1e0 [tg3]
->> [    1.550701]  [<ffffffffa0044f83>] tg3_init_one+0xb83/0x1a40 [tg3]
->
-> So does it work if you use a non-zero crs_timeout?  The driver has
-> called tg3_halt() which may affect configuration read responses.  I need
-> to check with the hardware team to see if the 5722 will return CRS in
-> this scenario.
+On PowrNV platform, resource position in M64 implies the PE# the resource
+belongs to. In some particular case, adjustment of a resource is necessary to
+locate it to a correct position in M64.
 
-Sorry, I replied to the thread that you weren't in yet.
-It didn't..
-http://thread.gmane.org/gmane.linux.network/342566/focus=37932
+This patch introduces a function to shift the 'real' PF IOV BAR address
+according to an offset.
 
-   Marcelo
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c |   31 +++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
+
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 512dc48..f5aa1ef 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -14,6 +14,7 @@
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
+ #include <linux/crash_dump.h>
++#include <linux/pci_regs.h>
+ #include <linux/debugfs.h>
+ #include <linux/delay.h>
+ #include <linux/string.h>
+@@ -749,6 +750,36 @@ static unsigned int pnv_ioda_dma_weight(struct pci_dev *dev)
+ 	return 10;
+ }
+ 
++#ifdef CONFIG_PCI_IOV
++static void pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
++{
++	struct pci_dn *pdn = pci_get_pdn(dev);
++	int i;
++	struct resource *res;
++	resource_size_t size;
++
++	if (!dev->is_physfn)
++		return;
++
++	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
++		res = &dev->resource[i];
++		if (!res->flags || !res->parent)
++			continue;
++
++		if (!pnv_pci_is_mem_pref_64(res->flags))
++			continue;
++
++		dev_info(&dev->dev, " Shifting VF BAR %pR to\n", res);
++		size = pci_iov_resource_size(dev, i);
++		res->start += size*offset;
++
++		dev_info(&dev->dev, "                 %pR\n", res);
++		pci_update_resource(dev, i);
++	}
++	pdn->max_vfs -= offset;
++}
++#endif /* CONFIG_PCI_IOV */
++
+ #if 0
+ static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
+ {
+-- 
+1.7.9.5
 
