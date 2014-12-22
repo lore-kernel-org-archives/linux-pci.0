@@ -1,52 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:49468 "EHLO theia.8bytes.org"
+Received: from mx1.redhat.com ([209.132.183.28]:51384 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753280AbaLAMda (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 1 Dec 2014 07:33:30 -0500
-Date: Mon, 1 Dec 2014 13:33:27 +0100
-From: Joerg Roedel <joro@8bytes.org>
-To: "Li, ZhenHua" <zhen-hual@hp.com>
-Cc: Takao Indoh <indou.takao@jp.fujitsu.com>, bhe@redhat.com,
-	dwmw2@infradead.org, vgoyal@redhat.com, dyoung@redhat.com,
-	iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com
-Subject: Re: [PATCH 0/5] iommu/vt-d: Fix crash dump failure caused by legacy
- DMA/IO
-Message-ID: <20141201123327.GJ3762@8bytes.org>
-References: <20141022100525.GD9060@dhcp-16-116.nay.redhat.com>
- <545ACF66.9050509@jp.fujitsu.com>
- <545AD061.4000102@hp.com>
- <545AD353.8060207@jp.fujitsu.com>
- <545AD8D3.90709@hp.com>
- <545B2885.8070009@jp.fujitsu.com>
- <545B2C07.1070701@hp.com>
- <5465A0E0.4020001@hp.com>
- <20141117133858.GA31920@8bytes.org>
- <547C0B4A.4060303@hp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <547C0B4A.4060303@hp.com>
+	id S1751884AbaLVXi2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 22 Dec 2014 18:38:28 -0500
+Message-ID: <1419291504.30005.5.camel@bling.home>
+Subject: Re: [PATCH] vfio-pci: Fix the check on pci device type in
+ vfio_pci_probe()
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org
+Date: Mon, 22 Dec 2014 16:38:24 -0700
+In-Reply-To: <20141222061226.GA12537@richard>
+References: <1418001738-7010-1-git-send-email-weiyang@linux.vnet.ibm.com>
+	 <20141222061226.GA12537@richard>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 01, 2014 at 02:31:38PM +0800, Li, ZhenHua wrote:
-> After I implement these two steps, there comes a new fault:
+On Mon, 2014-12-22 at 14:12 +0800, Wei Yang wrote:
+> Alex,
 > 
-> [1.594890] dmar: DRHD: handling fault status reg 2
-> [1.594894] dmar: INTR-REMAP: Request device [[41:00.0] fault index 4d
-> [1.594894] INTR-REMAP:[fault reason 34] Present field in the IRTE entry
-> is clear
+> Does it look good to you?
+
+Well, mixing changes to a subsystem and a driver in a single patch is
+surely going to slow down acceptance because neither Bjorn or I know who
+is going to grab it.  I'd probably want to mark the vfio-pci change for
+stable, which would be a lot easier to do if it was just a 4-line
+correction to the existing code rather than extending the pci-core
+interface for a single, trivial user.  Thanks,
+
+Alex
+
+On Mon, Dec 08, 2014 at 09:22:18AM +0800, Wei Yang wrote:
+> >Current vfio-pci just supports normal pci device, so vfio_pci_probe() will
+> >return if the pci device is not a normal device. While current code makes a
+> >mistake. PCI_HEADER_TYPE is the offset in configuration space of the device
+> >type, but we use this value to mask the type value.
+> >
+> >This patch adds a function to check whether the pci device is a normal type
+> >and use it in vfio_pci_probe().
+> >
+> >Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> >---
+> > drivers/vfio/pci/vfio_pci.c |    4 +---
+> > include/linux/pci.h         |   11 +++++++++++
+> > 2 files changed, 12 insertions(+), 3 deletions(-)
+> >
+> >diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+> >index 9558da3..f82bf62 100644
+> >--- a/drivers/vfio/pci/vfio_pci.c
+> >+++ b/drivers/vfio/pci/vfio_pci.c
+> >@@ -839,13 +839,11 @@ static const struct vfio_device_ops vfio_pci_ops = {
+> >
+> > static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+> > {
+> >-	u8 type;
+> > 	struct vfio_pci_device *vdev;
+> > 	struct iommu_group *group;
+> > 	int ret;
+> >
+> >-	pci_read_config_byte(pdev, PCI_HEADER_TYPE, &type);
+> >-	if ((type & PCI_HEADER_TYPE) != PCI_HEADER_TYPE_NORMAL)
+> >+	if (!pci_is_normal(pdev))
+> > 		return -EINVAL;
+> >
+> > 	group = iommu_group_get(&pdev->dev);
+> >diff --git a/include/linux/pci.h b/include/linux/pci.h
+> >index 48d1f98..2027f66 100644
+> >--- a/include/linux/pci.h
+> >+++ b/include/linux/pci.h
+> >@@ -519,6 +519,17 @@ static inline bool pci_is_bridge(struct pci_dev *dev)
+> > 		dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
+> > }
+> >
+> >+/**
+> >+ * pci_is_normal - check if the PCI device is a normal device
+> >+ * @dev: PCI device
+> >+ *
+> >+ * Return true if the PCI device is a normal device
+> >+ */
+> >+static inline bool pci_is_normal(struct pci_dev *dev)
+> >+{
+> >+	return dev->hdr_type == PCI_HEADER_TYPE_NORMAL;
+> >+}
+> >+
+> > static inline struct pci_dev *pci_upstream_bridge(struct pci_dev *dev)
+> > {
+> > 	dev = pci_physfn(dev);
+> >-- 
+> >1.7.9.5
 > 
-> It is caused by similar reason, so I will fix it like fixing the DMAR
-> faults: Do NOT disable and re-enable the interrupt remapping, try to
-> use data from old kernel.
-
-Yes, that sounds right, thanks. Looking forward to your patches.
 
 
-	Joerg
 
