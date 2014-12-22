@@ -1,56 +1,141 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.citrix.com ([66.165.176.89]:51437 "EHLO SMTP.CITRIX.COM"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752982AbaLHKiM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 8 Dec 2014 05:38:12 -0500
-Message-ID: <54857F91.3020002@citrix.com>
-Date: Mon, 8 Dec 2014 10:38:09 +0000
-From: David Vrabel <david.vrabel@citrix.com>
-MIME-Version: 1.0
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	<linux-kernel@vger.kernel.org>, <xen-devel@lists.xenproject.org>
-Subject: Re: [Xen-devel] [PATCH v5 9/9] xen/pciback: Implement PCI reset slot
- or bus with 'do_flr' SysFS attribute
-References: <201412041206.sB4C6XVQ009497@userz7022.oracle.com> <5480528F.8010106@citrix.com> <1107877503.20141204141054@eikelenboom.it> <548064EA.8090905@citrix.com> <308719815.20141204150909@eikelenboom.it> <5480702F.2060004@citrix.com> <1578910783.20141204155025@eikelenboom.it> <1417707546.15750.100.camel@bling.home> <54818929.5000008@citrix.com> <20141205172250.GA2895@laptop.dumpdata.com>
-In-Reply-To: <20141205172250.GA2895@laptop.dumpdata.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>
+Subject: [PATCH 02/10] iommu/vt-d: Items required for kdump
+Date: Mon, 22 Dec 2014 17:15:21 +0800
+Message-Id: <1419239729-26529-3-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1419239729-26529-1-git-send-email-zhen-hual@hp.com>
+References: <1419239729-26529-1-git-send-email-zhen-hual@hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/12/14 17:22, Konrad Rzeszutek Wilk wrote:
-> On Fri, Dec 05, 2014 at 10:30:01AM +0000, David Vrabel wrote:
->> On 04/12/14 15:39, Alex Williamson wrote:
->>>
->>> I don't know what workaround you're talking about.  As devices are
->>> released from the user, vfio-pci attempts to reset them.  If
->>> pci_reset_function() returns success we mark the device clean, otherwise
->>> it gets marked dirty.  Each time a device is released, if there are
->>> dirty devices we test whether we can try a bus/slot reset to clean them.
->>> In the case of assigning a GPU this typically means that the GPU or
->>> audio function come through first, there's no reset mechanism so it gets
->>> marked dirty, the next device comes through and we manage to try a bus
->>> reset.  vfio-pci does not have any device specific resets, all
->>> functionality is added to the PCI-core, thank-you-very-much.  I even
->>> posted a generic PCI quirk patch recently that marks AMD VGA PM reset as
->>> bad so that pci_reset_function() won't claim that worked.  All VGA
->>> access quirks are done in QEMU, the kernel doesn't have any business in
->>> remapping config space over MMIO regions or trapping other config space
->>> backdoors.
->>
->> Thanks for the info Alex, I hadn't got around to actually looking and
->> the vfio-pci code and was just going to what Sander said.
->>
->> We probably do need to have a more in depth look at now PCI devices and
->> handled by both the toolstack and pciback but in the short term I would
->> like a simple solution that does not extend the ABI.
-> 
-> Could you enumerate the 'simple solution' then please? I am having
-> a frustrating time figuring out what it is that you are proposing.
+Add structure type domain_values_entry used for kdump;
+Add context entry functions needed for kdump.
 
-I've posted it repeatedly.
+Bill Sumner:
+    Original version;
 
-David
+Li, Zhenhua:
+    Changed the name of new functions, make them consistent with current
+    context get/set functions.
+
+Signed-off-by: Bill Sumner <billsumnerlinux@gmail.com>
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+---
+ drivers/iommu/intel-iommu.c | 70 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 70 insertions(+)
+
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 2dc6250..5ce2850 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -40,6 +40,7 @@
+ #include <linux/pci-ats.h>
+ #include <linux/memblock.h>
+ #include <linux/dma-contiguous.h>
++#include <linux/crash_dump.h>
+ #include <asm/irq_remapping.h>
+ #include <asm/cacheflush.h>
+ #include <asm/iommu.h>
+@@ -208,6 +209,12 @@ get_context_addr_from_root(struct root_entry *root)
+ 		NULL);
+ }
+ 
++static inline unsigned long
++get_context_phys_from_root(struct root_entry *root)
++{
++	return  root_present(root) ? (root->val & VTD_PAGE_MASK) : 0;
++}
++
+ /*
+  * low 64 bits:
+  * 0: present
+@@ -228,6 +235,32 @@ static inline bool context_present(struct context_entry *context)
+ {
+ 	return (context->lo & 1);
+ }
++
++static inline int context_fault_enable(struct context_entry *c)
++{
++	return((c->lo >> 1) & 0x1);
++}
++
++static inline int context_translation_type(struct context_entry *c)
++{
++	return((c->lo >> 2) & 0x3);
++}
++
++static inline u64 context_address_root(struct context_entry *c)
++{
++	return((c->lo >> VTD_PAGE_SHIFT));
++}
++
++static inline int context_address_width(struct context_entry *c)
++{
++	return((c->hi >> 0) & 0x7);
++}
++
++static inline int context_domain_id(struct context_entry *c)
++{
++	return((c->hi >> 8) & 0xffff);
++}
++
+ static inline void context_set_present(struct context_entry *context)
+ {
+ 	context->lo |= 1;
+@@ -313,6 +346,43 @@ static inline int first_pte_in_page(struct dma_pte *pte)
+ 	return !((unsigned long)pte & ~VTD_PAGE_MASK);
+ }
+ 
++
++#ifdef CONFIG_CRASH_DUMP
++
++/*
++ * Fix Crashdump failure caused by leftover DMA through a hardware IOMMU
++ *
++ * Fixes the crashdump kernel to deal with an active iommu and legacy
++ * DMA from the (old) panicked kernel in a manner similar to how legacy
++ * DMA is handled when no hardware iommu was in use by the old kernel --
++ * allow the legacy DMA to continue into its current buffers.
++ *
++ * In the crashdump kernel, this code:
++ * 1. skips disabling the IOMMU's translating of IO Virtual Addresses (IOVA).
++ * 2. Do not re-enable IOMMU's translating.
++ * 3. In kdump kernel, use the old root entry table.
++ * 4. Leaves the current translations in-place so that legacy DMA will
++ *    continue to use its current buffers.
++ * 5. Allocates to the device drivers in the crashdump kernel
++ *    portions of the iova address ranges that are different
++ *    from the iova address ranges that were being used by the old kernel
++ *    at the time of the panic.
++ *
++ */
++
++struct domain_values_entry {
++	struct list_head link;		/* link entries into a list */
++	struct iova_domain iovad;	/* iova's that belong to this domain */
++	struct dma_pte	*pgd;		/* virtual address */
++	int    did;			/* domain id */
++	int    gaw;			/* max guest address width */
++	int    iommu_superpage;		/* Level of superpages supported:
++					   0 == 4KiB (no superpages), 1 == 2MiB,
++					   2 == 1GiB, 3 == 512GiB, 4 == 1TiB */
++};
++
++#endif /* CONFIG_CRASH_DUMP */
++
+ /*
+  * This domain is a statically identity mapping domain.
+  *	1. This domain creats a static 1:1 mapping to all usable memory.
+-- 
+2.0.0-rc0
+
