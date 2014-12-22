@@ -1,54 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:64896 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750995AbaLQFVY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Dec 2014 00:21:24 -0500
-Received: by mail-ie0-f173.google.com with SMTP id y20so14220086ier.4
-        for <linux-pci@vger.kernel.org>; Tue, 16 Dec 2014 21:21:23 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <5490D5CB.5010200@huawei.com>
-References: <CAGZFCEG-J=Qore8nWvWLe6m-bm59Mx+M=HdcaOBVNODm9beokQ@mail.gmail.com>
-	<5490D5CB.5010200@huawei.com>
-Date: Wed, 17 Dec 2014 10:51:23 +0530
-Message-ID: <CAGZFCEFOiY+VmTVKOnPwDaKUKogUX9gkXtHuMATL3btw4kz2JQ@mail.gmail.com>
-Subject: Re: sysfs-pci remove
-From: ratheesh kannoth <ratheesh.ksz@gmail.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail1.g1.pair.com ([66.39.3.162]:47241 "EHLO mail1.g1.pair.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754095AbaLVIcs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 22 Dec 2014 03:32:48 -0500
+From: Sean Cross <xobs@kosagi.com>
+To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Shawn Guo <shawn.guo@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	devicetree@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	linux-pci@vger.kernel.org
+Cc: bunnie@kosagi.com, Sean Cross <xobs@kosagi.com>
+Subject: [PATCH v2 3/4] PCI: imx6: Add power-supply support
+Date: Mon, 22 Dec 2014 16:32:06 +0800
+Message-Id: <1419237127-21763-4-git-send-email-xobs@kosagi.com>
+In-Reply-To: <1419237127-21763-1-git-send-email-xobs@kosagi.com>
+References: <1419237127-21763-1-git-send-email-xobs@kosagi.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I could see the pci resource in /proc/iomem.
+Some PCIe ports gate power to the slot.  In order to prevent system lockup,
+these boards must enable power to the slot before attempting communication
+over the PCI bus.
 
-But , lspci -s 06:0.0 -vv  shows that there is no kernel mode driver
-for that interface.
+Signed-off-by: Sean Cross <xobs@kosagi.com>
+---
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  3 +++
+ drivers/pci/host/pci-imx6.c                        | 27 ++++++++++++++++++++++
+ 2 files changed, 30 insertions(+)
 
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+index 6fbba53..a806b68 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+@@ -13,6 +13,9 @@ Required properties:
+ - clock-names: Must include the following additional entries:
+ 	- "pcie_phy"
+ 
++Optional properties:
++- bus-supply: A regulator that controls power to the entire bus
++
+ Example:
+ 
+ 	pcie@0x01000000 {
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 69202d1..8e4f957 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -22,6 +22,7 @@
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
+ #include <linux/regmap.h>
++#include <linux/regulator/consumer.h>
+ #include <linux/resource.h>
+ #include <linux/signal.h>
+ #include <linux/types.h>
+@@ -39,6 +40,7 @@ struct imx6_pcie {
+ 	struct pcie_port	pp;
+ 	struct regmap		*iomuxc_gpr;
+ 	void __iomem		*mem_base;
++	struct regulator	*bus_supply;
+ };
+ 
+ /* PCIe Root Complex registers (memory-mapped) */
+@@ -523,6 +525,7 @@ static struct pcie_host_ops imx6_pcie_host_ops = {
+ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+ 			struct platform_device *pdev)
+ {
++	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+ 	int ret;
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+@@ -544,9 +547,22 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+ 	pp->root_bus_nr = -1;
+ 	pp->ops = &imx6_pcie_host_ops;
+ 
++	if (imx6_pcie->bus_supply) {
++		ret = regulator_enable(imx6_pcie->bus_supply);
++		if (ret) {
++			dev_err(pp->dev,
++				"unable to enable bus supply: %d\n", ret);
++			return ret;
++		}
++	}
++
+ 	ret = dw_pcie_host_init(pp);
+ 	if (ret) {
+ 		dev_err(&pdev->dev, "failed to initialize host\n");
++
++		if (imx6_pcie->bus_supply)
++			regulator_disable(imx6_pcie->bus_supply);
++
+ 		return ret;
+ 	}
+ 
+@@ -588,6 +604,17 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
++	/* Fetch bus supply */
++	imx6_pcie->bus_supply = devm_regulator_get_optional(&pdev->dev, "bus");
++	if (IS_ERR(imx6_pcie->bus_supply)) {
++		ret = PTR_ERR(imx6_pcie->bus_supply);
++		if (ret == -EPROBE_DEFER)
++			return ret;
++
++		dev_err(&pdev->dev, "unable to get bus-supply\n");
++		return ret;
++	}
++
+ 	/* Fetch clocks */
+ 	imx6_pcie->pcie_phy = devm_clk_get(&pdev->dev, "pcie_phy");
+ 	if (IS_ERR(imx6_pcie->pcie_phy)) {
+-- 
+2.1.3
 
-On Wed, Dec 17, 2014 at 6:30 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> On 2014/12/17 1:51, ratheesh kannoth wrote:
->> Hi list,
->>
->> https://www.kernel.org/doc/Documentation/filesystems/sysfs-pci.txt
->> talks about "remove" entry.
->> The 'remove' file is used to remove the PCI device, by writing a non-zero
->> integer to the file.  if i remove the device , will the bar resource
->> map still appear on /proc/iomem ?
->
-> Of course not.
->
->>
->>
->> -Ratheesh
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
->
->
-> --
-> Thanks!
-> Yijing
->
