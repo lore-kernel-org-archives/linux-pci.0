@@ -1,187 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from vserver.eikelenboom.it ([84.200.39.61]:39974 "EHLO
-	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932236AbaLDQ0F (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Dec 2014 11:26:05 -0500
-Date: Thu, 4 Dec 2014 17:25:58 +0100
-From: Sander Eikelenboom <linux@eikelenboom.it>
-Message-ID: <779770151.20141204172558@eikelenboom.it>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:47925 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752030AbaLWBQb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 20:16:31 -0500
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 23 Dec 2014 11:16:28 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 827612CE805A
+	for <linux-pci@vger.kernel.org>; Tue, 23 Dec 2014 12:16:25 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sBN1GOKS30605338
+	for <linux-pci@vger.kernel.org>; Tue, 23 Dec 2014 12:16:25 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sBN1GNJb018001
+	for <linux-pci@vger.kernel.org>; Tue, 23 Dec 2014 12:16:24 +1100
+Date: Tue, 23 Dec 2014 09:16:22 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
 To: Alex Williamson <alex.williamson@redhat.com>
-CC: David Vrabel <david.vrabel@citrix.com>, bhelgaas@google.com,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<linux-pci@vger.kernel.org>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	<linux-kernel@vger.kernel.org>, <xen-devel@lists.xenproject.org>
-Subject: Re: [Xen-devel] [PATCH v5 9/9] xen/pciback: Implement PCI reset slot or bus with 'do_flr' SysFS attribute
-In-Reply-To: <1417707546.15750.100.camel@bling.home>
-References: <201412041206.sB4C6XVQ009497@userz7022.oracle.com> <5480528F.8010106@citrix.com> <1107877503.20141204141054@eikelenboom.it> <548064EA.8090905@citrix.com> <308719815.20141204150909@eikelenboom.it> <5480702F.2060004@citrix.com> <1578910783.20141204155025@eikelenboom.it> <1417707546.15750.100.camel@bling.home>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] vfio-pci: Fix the check on pci device type in
+ vfio_pci_probe()
+Message-ID: <20141223011622.GA6035@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1418001738-7010-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20141222061226.GA12537@richard>
+ <1419291504.30005.5.camel@bling.home>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1419291504.30005.5.camel@bling.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-Thursday, December 4, 2014, 4:39:06 PM, you wrote:
-
-> On Thu, 2014-12-04 at 15:50 +0100, Sander Eikelenboom wrote:
->> Thursday, December 4, 2014, 3:31:11 PM, you wrote:
+On Mon, Dec 22, 2014 at 04:38:24PM -0700, Alex Williamson wrote:
+>On Mon, 2014-12-22 at 14:12 +0800, Wei Yang wrote:
+>> Alex,
 >> 
->> > On 04/12/14 14:09, Sander Eikelenboom wrote:
->> >> 
->> >> Thursday, December 4, 2014, 2:43:06 PM, you wrote:
->> >> 
->> >>> On 04/12/14 13:10, Sander Eikelenboom wrote:
->> >>>>
->> >>>> Thursday, December 4, 2014, 1:24:47 PM, you wrote:
->> >>>>
->> >>>>> On 04/12/14 12:06, Konrad Rzeszutek Wilk wrote:
->> >>>>>>
->> >>>>>> On Dec 4, 2014 6:30 AM, David Vrabel <david.vrabel@citrix.com> wrote:
->> >>>>>>>
->> >>>>>>> On 03/12/14 21:40, Konrad Rzeszutek Wilk wrote: 
->> >>>>>>>>
->> >>>>>>>> Instead of doing all this complex dance, we depend on the toolstack 
->> >>>>>>>> doing the right thing. As such implement the 'do_flr' SysFS attribute 
->> >>>>>>>> which 'xl' uses when a device is detached or attached from/to a guest. 
->> >>>>>>>> It bypasses the need to worry about the PCI lock. 
->> >>>>>>>
->> >>>>>>> No.  Get pciback to add its own "reset" sysfs file (as I have repeatedly 
->> >>>>>>> proposed). 
->> >>>>>>>
->> >>>>>>
->> >>>>>> Which does not work as the kobj will complain (as there is already an 'reset' associated with the PCI device).
->> >>>>
->> >>>>> It is only needed if the core won't provide one.
->> >>>>
->> >>>>> +static int pcistub_try_create_reset_file(struct pci_dev *pci)
->> >>>>> +{
->> >>>>> +       struct xen_pcibk_dev_data *dev_data = pci_get_drvdata(pci);
->> >>>>> +       struct device *dev = &pci->dev;
->> >>>>> +       int ret;
->> >>>>> +
->> >>>>> +       /* Already have a per-function reset? */
->> >>>>> +       if (pci_probe_reset_function(pci) == 0)
->> >>>>> +               return 0;
->> >>>>> +
->> >>>>> +       ret = device_create_file(dev, &dev_attr_reset);
->> >>>>> +       if (ret < 0)
->> >>>>> +               return ret;
->> >>>> +       dev_data->>created_reset_file = true;
->> >>>>> +       return 0;
->> >>>>> +}
->> >>>>
->> >>>> Wouldn't the "core-reset-sysfs-file" be still wired to the end up calling 
->> >>>> "pci.c:__pci_dev_reset" ?
->> >>>>
->> >>>> The problem with that function is that from my testing it seems that the 
->> >>>> first option "pci_dev_specific_reset" always seems to return succes, so all the
->> >>>> other options are skipped (flr, pm, slot, bus). However the device it self is 
->> >>>> not properly reset enough (perhaps the pci_dev_specific_reset is good enough for 
->> >>>> none virtualization purposes and it's probably the least intrusive. For 
->> >>>> virtualization however it would be nice to be sure it resets properly, or have a 
->> >>>> way to force a specific reset routine.)
->> >> 
->> >>> Then you need work with the maintainer for those specific devices or
->> >>> drivers to fix their specific reset function.
->> >> 
->> >>> I'm not adding stuff to pciback to workaround broken quirks.
->> >> 
->> >> OK that's a pretty clear message there, so if one wants to use pci and vga
->> >> passthrough one should better use KVM and vfio-pci.
+>> Does it look good to you?
+>
+>Well, mixing changes to a subsystem and a driver in a single patch is
+>surely going to slow down acceptance because neither Bjorn or I know who
+>is going to grab it.  I'd probably want to mark the vfio-pci change for
+>stable, which would be a lot easier to do if it was just a 4-line
+>correction to the existing code rather than extending the pci-core
+>interface for a single, trivial user.  Thanks,
+>
+>Alex
+
+Hi,
+
+I got your concern.
+
+The reason I introduce a helper to check the pci device type is in my mind we
+will try our best to hide those pci detailed information from outside. The
+easiest way to fix it is to check the pci_dev->hdr_type field, but this will
+export some internal information from pci core to vfio-pci.
+
+I will first make a 4-line change to fix this error. If Bjorn like the idea of
+the helper, I will make up another one.
+
+>
+>On Mon, Dec 08, 2014 at 09:22:18AM +0800, Wei Yang wrote:
+>> >Current vfio-pci just supports normal pci device, so vfio_pci_probe() will
+>> >return if the pci device is not a normal device. While current code makes a
+>> >mistake. PCI_HEADER_TYPE is the offset in configuration space of the device
+>> >type, but we use this value to mask the type value.
+>> >
+>> >This patch adds a function to check whether the pci device is a normal type
+>> >and use it in vfio_pci_probe().
+>> >
+>> >Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> >---
+>> > drivers/vfio/pci/vfio_pci.c |    4 +---
+>> > include/linux/pci.h         |   11 +++++++++++
+>> > 2 files changed, 12 insertions(+), 3 deletions(-)
+>> >
+>> >diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+>> >index 9558da3..f82bf62 100644
+>> >--- a/drivers/vfio/pci/vfio_pci.c
+>> >+++ b/drivers/vfio/pci/vfio_pci.c
+>> >@@ -839,13 +839,11 @@ static const struct vfio_device_ops vfio_pci_ops = {
+>> >
+>> > static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>> > {
+>> >-	u8 type;
+>> > 	struct vfio_pci_device *vdev;
+>> > 	struct iommu_group *group;
+>> > 	int ret;
+>> >
+>> >-	pci_read_config_byte(pdev, PCI_HEADER_TYPE, &type);
+>> >-	if ((type & PCI_HEADER_TYPE) != PCI_HEADER_TYPE_NORMAL)
+>> >+	if (!pci_is_normal(pdev))
+>> > 		return -EINVAL;
+>> >
+>> > 	group = iommu_group_get(&pdev->dev);
+>> >diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> >index 48d1f98..2027f66 100644
+>> >--- a/include/linux/pci.h
+>> >+++ b/include/linux/pci.h
+>> >@@ -519,6 +519,17 @@ static inline bool pci_is_bridge(struct pci_dev *dev)
+>> > 		dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
+>> > }
+>> >
+>> >+/**
+>> >+ * pci_is_normal - check if the PCI device is a normal device
+>> >+ * @dev: PCI device
+>> >+ *
+>> >+ * Return true if the PCI device is a normal device
+>> >+ */
+>> >+static inline bool pci_is_normal(struct pci_dev *dev)
+>> >+{
+>> >+	return dev->hdr_type == PCI_HEADER_TYPE_NORMAL;
+>> >+}
+>> >+
+>> > static inline struct pci_dev *pci_upstream_bridge(struct pci_dev *dev)
+>> > {
+>> > 	dev = pci_physfn(dev);
+>> >-- 
+>> >1.7.9.5
 >> 
->> > Have you (or anyone else) ever raised the problem with the broken reset
->> > quirk for certain devices with the relevant maintainer?
->> 
->> >> vfio-pci has:
->> >> - logic to do the try-slot-bus-reset logic
->> 
->> > Just because vfio-pci fixed it incorrectly doesn't mean pciback has to
->> > as well.
->> 
->> Depends on what you call an "incorrect fix" .. it fixes a quirk .. 
->> you can say that's incorrect, but then you would have to remove 50% of
->> the kernel and Xen code as well.
->> 
->> (i do in general agree it's better to strive for a generic solution though,
->> that's exactly why i brought up that that function doesn't seem to work perfect
->> for virtualization purposes) 
->> 
->> > It makes no sense for both pciback and vfio-pci to workaround problems
->> > with pci_function_reset() in different ways -- it should be fixed in the
->> > core PCI code so both can benefit and make use of the same code.
->> 
->> Well perhaps Bjorn knows why the order of resets and skipping the rest as
->> implemented in "pci.c:__pci_dev_reset" was implemented in that way ?
->> 
->> Especially what is the expectation about pci_dev_specific_reset doing a proper 
->> reset for say a vga-card:
->> - i know it doesn't work on a radeon card (doesn't blank screen, on next guest 
->>   boot reports it's already posted, powermanagement doesn't work).
->> - while with a slot/bus reset, that all just works fine, screen blanks 
->>   immediately and everything else also works.
->> 
->> Added Alex as well since he added this workaround for KVM/vfio-pci, perhaps he knows why
->> he introduced the workaround in vfio-pci instead of trying to fix it in core pci 
->> code ?
+>
+>
 
-> I don't know what workaround you're talking about.  As devices are
-> released from the user, vfio-pci attempts to reset them.  If
-> pci_reset_function() returns success we mark the device clean, otherwise
-> it gets marked dirty.  Each time a device is released, if there are
-> dirty devices we test whether we can try a bus/slot reset to clean them.
-> In the case of assigning a GPU this typically means that the GPU or
-> audio function come through first, there's no reset mechanism so it gets
-> marked dirty, the next device comes through and we manage to try a bus
-> reset.  vfio-pci does not have any device specific resets, all
-> functionality is added to the PCI-core, thank-you-very-much.  I even
-> posted a generic PCI quirk patch recently that marks AMD VGA PM reset as
-> bad so that pci_reset_function() won't claim that worked.  All VGA
-> access quirks are done in QEMU, the kernel doesn't have any business in
-> remapping config space over MMIO regions or trapping other config space
-> backdoors.
-
-Thanks for your insightful reply!
-
-With "workaround" I was trying to refer to "vfio_pci_try_bus_reset()" which
-implements how to reset the devices, it indeed uses function you introduced in
-pci core code (with a solution for locking issues Konrad also seems to have 
-ran into: 
-http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=61cf16d8bd38c3dc52033ea75d5b1f8368514a17
-
-David seems to be arguing the whole "vfio_pci_try_bus_reset()" should be not 
-needed and just doing calling "pci_reset_function()" (directly or by
-echo "1" > /sys/bus/pci/devices/BDF/reset shoud always magically do the
-right thing. 
-(Which in my opinion seems the contradict with the mere existence
-of "vfio_pci_try_bus_reset()" (i don't think you would have implemented it 
-when you would have deemed it unnecessary)) 
-
-> I have never heard of problems with the dev specific reset claiming to
-> work and not doing anything, there are only a few of these, it should be
-> easy to debug.
-
-> I didn't read the original patch, but the title alone of this patch is
-> quite confusing.  FLR is specifically a function-level-reset, so one
-> would expect 'do_flr' to be function specific.  The pci-sysfs 'reset'
-> attribute is already function specific.  If pci_reset_function() isn't
-> doing the job and we need to use bus/slot reset, it's clearly not an
-> FLR.  Thanks,
-> Alex
-
-The name "do_flr" is coming from the Xen xl toolstack which historically has 
-code that tries to reset devices using a echo "BDF" > /sys/bus/pci/drivers/pciback/do_flr
-
-But the name "do_flr" and the debug messages indeed are incorrect (it's not 
-doing a flr nor a D3/PM reset), confusing and should not be used.
-
-And as you seem to have solved the locking issue for vfio-pci, it is probably 
-possible for xen-pciback to do the same. Instead of letting xen-pciback
-work around the locking problem by deferring to the xl toolstack the resetting
-logic could be kept into xen-pciback it self. 
-That would also mean that the sysfs attribute would be unnecessary and make 
-the naming issue moot.
-
---
-Sander
-
+-- 
+Richard Yang
+Help you, Help me
 
