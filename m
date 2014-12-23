@@ -1,63 +1,120 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:37770 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754688AbaLIAJb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Dec 2014 19:09:31 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5499A96D.4010704@ti.com>
+Date: Tue, 23 Dec 2014 12:42:05 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <1418079603.13358.12.camel@kernel.crashing.org>
-References: <1418075552-26495-1-git-send-email-yinghai@kernel.org>
-	<1418079372.13358.9.camel@kernel.crashing.org>
-	<1418079603.13358.12.camel@kernel.crashing.org>
-Date: Mon, 8 Dec 2014 16:09:30 -0800
-Message-ID: <CAE9FiQUhwMOKEXi8mVY_rMGEAmYr13m+Gr5id+rYTC0EiwEHgw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Clear bridge MEM_64 flag if one child does not
- support it
-From: Yinghai Lu <yinghai@kernel.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	=?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>,
-	Alexey Voronkov <zermond@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <grant.likely@linaro.org>,
+	<robh+dt@kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <will.deacon@arm.com>
+Subject: Re: [RFC v1 PATCH 1/2] of/pci: add of_pci_dma_configure() update
+ dma configuration
+References: <1418940425-2017-1-git-send-email-m-karicheri2@ti.com> <54989DDE.3060409@ti.com> <1723662.JYr5muIJha@wuerfel> <5090769.jqAkiDgYu7@wuerfel>
+In-Reply-To: <5090769.jqAkiDgYu7@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 8, 2014 at 3:00 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
+On 12/22/2014 06:07 PM, Arnd Bergmann wrote:
+> On Monday 22 December 2014 23:44:52 Arnd Bergmann wrote:
+>> On Monday 22 December 2014 17:40:30 Murali Karicheri wrote:
+>>> On 12/22/2014 05:24 PM, Arnd Bergmann wrote:
+>>>> On Monday 22 December 2014 16:40:43 Murali Karicheri wrote:
+>>>>>>> +++ b/arch/arm/mm/dma-mapping.c
+>>>>>>> @@ -2052,9 +2052,10 @@ void arch_setup_dma_ops(struct device *dev, u64
+>>>>>>> dma_base, u64 size,
+>>>>>>>                             struct iommu_ops *iommu, bool coherent)
+>>>>>>>      {
+>>>>>>>             struct dma_map_ops *dma_ops;
+>>>>>>> +       u64 temp_size = min((*(dev->dma_mask) + 1), size);
+>>>>>>>
+>>>>>>>             dev->archdata.dma_coherent = coherent;
+>>>>>>> -       if (arm_setup_iommu_dma_ops(dev, dma_base, size, iommu))
+>>>>>>> +       if (arm_setup_iommu_dma_ops(dev, dma_base, temp_size, iommu))
+>>>>>>>
+>>>>>>> If you agree, I will post v1 of the patch with these updates. Let me
+>>>>>>> know. I did some basic tests on Keystone with these changes and it works
+>>>>>>> fine.
+>>>>>>
+>>>>>> It's not exactly what I meant. My main point was that we need to limit
+>>>>>> dev->dma_mask to (size-1) here, but you are not touching that.
+>>>>>
+>>>>> if you mean overriding the dev->dma_mask to min((*dev->dma_mask),
+>>>>> size-1), then I am getting the error "Coherent DMA mask 0x7fffffff (pfn
+>>>>> 0x780000-0x800000) covers a smaller range of system memory than the DMA
+>>>>> zone pfn 0x0-0x880000) when the devices on Keystone tries to set the dma
+>>>>> mask. Something wrong and I need to look into the code.
+>>>>
+>>>> Right, it sounds like the offset was applied incorrectly at some point.
+>>>>
+>>>> What are the DMA zone size and the phys-offset?
+>>> 2G and 0x8_0000_0000. This limit the usable DMA size to 2G on Keystone,
+>>> I believe you shouldn't be limiting the dma mask to size-1 in this case,
+>>> right? The DT setup the dma-range to have a size of 2G (0x80000000).
+>>
+>> No, the problem is something else: the pfn range that we calculate for the
+>> coherent DMA mask should have been 0x800000-0x880000, not 0x780000-0x800000,
+>> so we would exactly match the ZONE_DMA.
+>
+> I gave it some more thought, and concluded that the size that gets passed
+> down is not really the right value to be compared to a mask if the dma-capable
+> area starts at a nonzero bus address.
+>
+> In your case, bus addresses 0x80000000-0xffffffff are valid for DMA, so
+> the mask must be 0xffffffff to forbid any DMA to addresses larger than
+> 0x100000000, not 0x7fffffff which would not be enough to cover any RAM.
+>
+> I guess the dma_mask should be 'min((*dev->dma_mask), dma_base + size - 1)'
+> here.
+
+Arnd,
+
+I guess so. Besides we need to keep the default coherent dma mask to 
+32bit 0xffffffffull as well to work on Keystone and also in sync with 
+current defaults used in pci_device_add() so that we don't break this 
+behavior.
+
+Here is the summary of changes need to make on top of my existing patch.
+
+1. of_dma_configure() - change size = dev->coherent_dma_mask to size = 
+dev->coherent_dma_mask + 1. This is a new patch to fix existing code.
+
+2. Do the above change to of_pci_dma_configure() as well.
+
+3. in arch_setup_dma_ops() update the DMA mask to min((*dev->dma_mask), 
+dma_base + size - 1) as
+
+
+diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
+index c17f6a9..88b4769 100644
+--- a/arch/arm/mm/dma-mapping.c
++++ b/arch/arm/mm/dma-mapping.c
+@@ -2053,8 +2053,13 @@ void arch_setup_dma_ops(struct device *dev, u64 
+dma_base, u64 size,
+  {
+         struct dma_map_ops *dma_ops;
+
++
++       *dev->dma_mask = min((*dev->dma_mask), (dma_base + size - 1));
+
+I have tested this on keystone and it works fine with rootfs on PCI SATA 
+harddisk. I will be doing more tests with this change. If you are in 
+agreement with the above changes, I will re-spin the patch to accomodate 
+them and send v1 of the same.
+
+Regards,
+
+Murali
 
 >
-> I think an option would be to keep track of whether the PCI host bridge
-> can do 64-bit pref above 4G.
+> 	Arnd
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Yes, that could be enhancement.
 
-That should fix the problem Marek's
-
-But not on Zermond's, as his system is not using _CRS.
-
-Or we can enforce new rule that no _CRS then only use under 4G ?
-
->
-> If it can't then we know 64-bit pref is always fair game for 32-bit
-> resources and we can thus downgrade all the bridges 64-pref to 32-perf.
->
-> If it can, then we probably do need to leave it there do real 64-bit
-> pref, and shoot anything that is 32-bit only down the non-pref windows.
->
-> We *could* try to be smart and scan first to check if anything under the
-> bridge actually has large/64-bit BARs but that's going to be a heuristic
-> at best and isn't going to do any good with hotplug.
->
-> I tend to think that treating anything 32-bit pref as non-pref is in
-> fact the best solution unless we know that the platform doesn't do
->>32-bit pref anyway in which case we leave them alone.
-
-Yes, but will need to enable pci=realloc automatically, so we can take
-back control
-of bridge mmio bar.
-
-Thanks
-
-Yinghai
+-- 
+Murali Karicheri
+Linux Kernel, Texas Instruments
