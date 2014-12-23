@@ -1,77 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hygieia.santi-shop.eu ([78.46.175.2]:33474 "EHLO
-	hygieia.santi-shop.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753394AbaLUMcX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 21 Dec 2014 07:32:23 -0500
-Date: Sun, 21 Dec 2014 13:32:09 +0100
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, petrihodju@yahoo.com
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Anibal Francisco Martinez Cortina <linuxkid.zeuz@gmail.com>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [Bug 86121] New: Regression: NVIDIA backlight not working after
- latest vgaarb change
-Message-ID: <20141221133209.538ed590@neptune.home>
-In-Reply-To: <CAErSpo4uKuxaqNPb20MXmFPFXHvJthEVuaQqJ0LdnpX29hiekA@mail.gmail.com>
-References: <bug-86121-41252@https.bugzilla.kernel.org/>
-	<CAErSpo5SvnNb7KteHPtr+_XZK3RJYfBNZOR_2cnxbBkF3x+tKA@mail.gmail.com>
-	<CAErSpo4uKuxaqNPb20MXmFPFXHvJthEVuaQqJ0LdnpX29hiekA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:46061 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753899AbaLWC62 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 21:58:28 -0500
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 23 Dec 2014 12:58:25 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: alex.williamson@redhat.com, bhelgaas@google.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V2] vfio-pci: Fix the check on pci device type in vfio_pci_probe()
+Date: Tue, 23 Dec 2014 10:58:07 +0800
+Message-Id: <1419303487-9077-1-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <20141223011622.GA6035@richard>
+References: <20141223011622.GA6035@richard>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 17 December 2014 Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc Petri]
-> 
-> On Mon, Oct 13, 2014 at 9:47 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > On Sun, Oct 12, 2014 at 8:55 AM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
-> >> https://bugzilla.kernel.org/show_bug.cgi?id=86121
-> >>
-> >>             Bug ID: 86121
-> >>            Summary: Regression: NVIDIA backlight not working after latest
-> >>                     vgaarb change
-> >>            Product: Drivers
-> >>            Version: 2.5
-> >>     Kernel Version: 3.16.5
-> >>           Hardware: x86-64
-> >>                 OS: Linux
-> >>               Tree: Mainline
-> >>             Status: NEW
-> >>           Severity: normal
-> >>           Priority: P1
-> >>          Component: PCI
-> >>           Assignee: drivers_pci@kernel-bugs.osdl.org
-> >>           Reporter: petrihodju@yahoo.com
-> >>         Regression: No
-> >>
-> >> Created attachment 153311
-> >>   --> https://bugzilla.kernel.org/attachment.cgi?id=153311&action=edit
-> >> kernel boot logs & config
-> >>
-> >> I have experienced a regression in backlight control with NVIDIA binary blob
-> >> driver and kernel 3.16.5. I did a bisect between 3.16.4 and 3.16.5 and found
-> >> out that the regression happens with commit "ce027dac vgaarb: Don't default
-> >> exclusively to first video device with mem+io"
-> >>
-> >> I have attached kernel boot log with working backlight (commit 7babfd7f) and
-> >> non-working one (commit ce027dac) plus the config used.
-> >>
-> >> I'm running Ubuntu 14.10
-> 
-> Ping for status update?  There are some more comments in the bugzilla,
-> but the most recent one is from Oct 25.
-> 
-> This is a regression, so I'd like to make some progress on it.
+Current vfio-pci just supports normal pci device, so vfio_pci_probe() will
+return if the pci device is not a normal device. While current code makes a
+mistake. PCI_HEADER_TYPE is the offset in configuration space of the device
+type, but we use this value to mask the type value.
 
-I'm hoping for more details on how it triggers, e.g. if "BIOS"-configured
-boot GPU has some effect or when it starts failing (e.g. with/without proprietary
-nvidia driver, or versus nouveau).
->From ACPI code there is nothing that catches my attention tough.
+This patch fixs this by do the check directly on the pci_dev->hdr_type.
 
-On the other hand, for Apple systems GPU switching should probably not include
-any kind of VGA arbitration switching as VGA is not used at all there...
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 
-Bruno
+V2:
+   * Fix the problem by checking pci_dev->hdr_type
+
+---
+ drivers/vfio/pci/vfio_pci.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 9558da3..2f8a055 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -839,13 +839,11 @@ static const struct vfio_device_ops vfio_pci_ops = {
+ 
+ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+-	u8 type;
+ 	struct vfio_pci_device *vdev;
+ 	struct iommu_group *group;
+ 	int ret;
+ 
+-	pci_read_config_byte(pdev, PCI_HEADER_TYPE, &type);
+-	if ((type & PCI_HEADER_TYPE) != PCI_HEADER_TYPE_NORMAL)
++	if (pdev->hdr_type != PCI_HEADER_TYPE_NORMAL)
+ 		return -EINVAL;
+ 
+ 	group = iommu_group_get(&pdev->dev);
+-- 
+1.7.9.5
+
