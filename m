@@ -1,66 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:62626 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750928AbaLVIae (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 03:30:34 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Arnd Bergmann <arnd@arndb.de>
-To: Pratyush Anand <panand@redhat.com>
-Cc: mohit.kumar@st.com, jg1.han@samsung.com, l.stach@pengutronix.de,
-	shawn.guo@freescale.com, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH] PCIe: Designware: Do not allow config space through ranges
-Date: Mon, 22 Dec 2014 09:30:13 +0100
-Message-ID: <5459567.EisgEvQXh9@wuerfel>
-In-Reply-To: <7dcdee69eb7db8336829e6085d736a3ac7e68ad4.1419229126.git.panand@redhat.com>
-References: <7dcdee69eb7db8336829e6085d736a3ac7e68ad4.1419229126.git.panand@redhat.com>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Murali Karicheri <m-karicheri2@ti.com>, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, grant.likely@linaro.org,
+	robh+dt@kernel.org, bhelgaas@google.com,
+	Russell King <rmk@arm.linux.org.uk>
+Subject: Re: [RFC v1 PATCH 1/2] of/pci: add of_pci_dma_configure() update dma configuration
+Date: Tue, 23 Dec 2014 23:42:29 +0100
+Message-ID: <4513569.xuD4xkPOuC@wuerfel>
+In-Reply-To: <5499A96D.4010704@ti.com>
+References: <1418940425-2017-1-git-send-email-m-karicheri2@ti.com> <5090769.jqAkiDgYu7@wuerfel> <5499A96D.4010704@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 22 December 2014 12:09:04 Pratyush Anand wrote:
-> Config space is need to be allocated using reg property. This patch
-> removes possibility of config space allocation through ranges property.
+On Tuesday 23 December 2014 12:42:05 Murali Karicheri wrote:
+> > here.
 > 
-> To: Mohit Kumar <mohit.kumar@st.com>
-> To: Jingo Han <jg1.han@samsung.com>
-> To: Lucas Stach <l.stach@pengutronix.de>
-> To: Shawn Guo <shawn.guo@freescale.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: devicetree@vger.kernel.org
-> Signed-off-by: Pratyush Anand <panand@redhat.com>
-> ---
->  arch/arm/boot/dts/imx6qdl.dtsi     |  3 +--
->  arch/arm/boot/dts/imx6sx.dtsi      |  8 ++++----
+> Arnd,
+> 
+> I guess so. Besides we need to keep the default coherent dma mask to 
+> 32bit 0xffffffffull as well to work on Keystone and also in sync with 
+> current defaults used in pci_device_add() so that we don't break this 
+> behavior.
+> 
+> Here is the summary of changes need to make on top of my existing patch.
+> 
+> 1. of_dma_configure() - change size = dev->coherent_dma_mask to size = 
+> dev->coherent_dma_mask + 1. This is a new patch to fix existing code.
 
-changing the DT files is probably ok.
+ok
 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index df781cdf13c1..0b22b42e1ff9 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -409,19 +409,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  			pp->mem_mod_base = of_read_number(parser.range -
->  							  parser.np + na, ns);
->  		}
-> -		if (restype == 0) {
-> -			of_pci_range_to_resource(&range, np, &pp->cfg);
-> -			pp->cfg0_size = resource_size(&pp->cfg)/2;
-> -			pp->cfg1_size = resource_size(&pp->cfg)/2;
-> -			pp->cfg0_base = pp->cfg.start;
-> -			pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
-> -
-> -			/* Find the untranslated configuration space address */
-> -			pp->cfg0_mod_base = of_read_number(parser.range -
-> -							   parser.np + na, ns);
-> -			pp->cfg1_mod_base = pp->cfg0_mod_base +
-> -					    pp->cfg0_size;
-> -		}
->  	}
+> 2. Do the above change to of_pci_dma_configure() as well.
 
-Since we've allowed this for so long, it may be better to leave this
-in for compatibility with old dts files. It would however be good to
-print a warning message. We could also limit it to those machines that
-are known to have been used with this property in the past.
+ok
+
+> 3. in arch_setup_dma_ops() update the DMA mask to min((*dev->dma_mask), 
+> dma_base + size - 1) as
+> 
+> 
+> diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
+> index c17f6a9..88b4769 100644
+> --- a/arch/arm/mm/dma-mapping.c
+> +++ b/arch/arm/mm/dma-mapping.c
+> @@ -2053,8 +2053,13 @@ void arch_setup_dma_ops(struct device *dev, u64 
+> dma_base, u64 size,
+>   {
+>          struct dma_map_ops *dma_ops;
+> 
+> +
+> +       *dev->dma_mask = min((*dev->dma_mask), (dma_base + size - 1));
+> 
+> I have tested this on keystone and it works fine with rootfs on PCI SATA 
+> harddisk. I will be doing more tests with this change. If you are in 
+> agreement with the above changes, I will re-spin the patch to accomodate 
+> them and send v1 of the same.
+
+Ok, sounds good. I noticed that you did not put Russell into the Cc list
+for the emails. Please do so when you send it again, as he may have some
+additional comments.
 
 	Arnd
