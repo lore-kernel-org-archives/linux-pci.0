@@ -1,60 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f47.google.com ([209.85.215.47]:39527 "EHLO
-	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753928AbaLBQfJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Dec 2014 11:35:09 -0500
-From: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH] PCI: Generate uppercase hex for modalias var in uevent
-Date: Tue,  2 Dec 2014 17:35:04 +0100
-Message-Id: <1417538104-27341-1-git-send-email-ricardo.ribalda@gmail.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:55952 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751499AbaLWW4H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 23 Dec 2014 17:56:07 -0500
+Message-ID: <5499F2DA.2090407@ti.com>
+Date: Tue, 23 Dec 2014 17:55:22 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<will.deacon@arm.com>, <linux-kernel@vger.kernel.org>,
+	<grant.likely@linaro.org>, <robh+dt@kernel.org>,
+	<bhelgaas@google.com>, Russell King <rmk@arm.linux.org.uk>
+Subject: Re: [RFC v1 PATCH 1/2] of/pci: add of_pci_dma_configure() update
+ dma configuration
+References: <1418940425-2017-1-git-send-email-m-karicheri2@ti.com> <5090769.jqAkiDgYu7@wuerfel> <5499A96D.4010704@ti.com> <4513569.xuD4xkPOuC@wuerfel>
+In-Reply-To: <4513569.xuD4xkPOuC@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some implementations of modprobe fail to load the driver for a PCI device
-automatically because the "interface" part of the modalias from the kernel
-is lowercase, and the modalias from file2alias is uppercase.
+On 12/23/2014 05:42 PM, Arnd Bergmann wrote:
+> On Tuesday 23 December 2014 12:42:05 Murali Karicheri wrote:
+>>> here.
+>>
+>> Arnd,
+>>
+>> I guess so. Besides we need to keep the default coherent dma mask to
+>> 32bit 0xffffffffull as well to work on Keystone and also in sync with
+>> current defaults used in pci_device_add() so that we don't break this
+>> behavior.
+>>
+>> Here is the summary of changes need to make on top of my existing patch.
+>>
+>> 1. of_dma_configure() - change size = dev->coherent_dma_mask to size =
+>> dev->coherent_dma_mask + 1. This is a new patch to fix existing code.
+>
+> ok
+>
+>> 2. Do the above change to of_pci_dma_configure() as well.
+>
+> ok
+>
+>> 3. in arch_setup_dma_ops() update the DMA mask to min((*dev->dma_mask),
+>> dma_base + size - 1) as
+>>
+>>
+>> diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
+>> index c17f6a9..88b4769 100644
+>> --- a/arch/arm/mm/dma-mapping.c
+>> +++ b/arch/arm/mm/dma-mapping.c
+>> @@ -2053,8 +2053,13 @@ void arch_setup_dma_ops(struct device *dev, u64
+>> dma_base, u64 size,
+>>    {
+>>           struct dma_map_ops *dma_ops;
+>>
+>> +
+>> +       *dev->dma_mask = min((*dev->dma_mask), (dma_base + size - 1));
+>>
+>> I have tested this on keystone and it works fine with rootfs on PCI SATA
+>> harddisk. I will be doing more tests with this change. If you are in
+>> agreement with the above changes, I will re-spin the patch to accomodate
+>> them and send v1 of the same.
+>
+> Ok, sounds good. I noticed that you did not put Russell into the Cc list
+> for the emails. Please do so when you send it again, as he may have some
+> additional comments.
+Ok. Will do.
 
-The "interface" is the low-order byte of the Class Code, defined in PCI
-r3.0, Appendix D.  Most interface types defined in the spec do not use
-alpha characters, so they won't be affected.  For example, 00h, 01h, 10h,
-20h, etc. are unaffected.
+Murali
+>
+> 	Arnd
 
-Print the "interface" byte of the Class Code in uppercase hex, as we
-already do for the Vendor ID, Device ID, Class, etc.
 
-Commit 89ec3dcf17fd ("PCI: Generate uppercase hex for modalias
-interface class") fixed only half of the problem. Some udev
-implementations relays on the uevent file and not in the modalias file.
-
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Fixes: d1ded203adf1 ("PCI: add MODALIAS to hotplug event for pci devices")
-Signed-off-by: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
----
-
-Modified line is >80 char, but I believe that it is better than breaking
-the string or indent it bad.
-
- drivers/pci/pci-driver.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 2b3c894..b720e78 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -1389,7 +1389,7 @@ static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
- 	if (add_uevent_var(env, "PCI_SLOT_NAME=%s", pci_name(pdev)))
- 		return -ENOMEM;
- 
--	if (add_uevent_var(env, "MODALIAS=pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02x",
-+	if (add_uevent_var(env, "MODALIAS=pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02X",
- 			   pdev->vendor, pdev->device,
- 			   pdev->subsystem_vendor, pdev->subsystem_device,
- 			   (u8)(pdev->class >> 16), (u8)(pdev->class >> 8),
 -- 
-2.1.3
-
+Murali Karicheri
+Linux Kernel, Texas Instruments
