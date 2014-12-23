@@ -1,266 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:59896 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751302AbaLXR0u (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Dec 2014 12:26:50 -0500
-Received: by mail-ig0-f179.google.com with SMTP id r2so7220336igi.12
-        for <linux-pci@vger.kernel.org>; Wed, 24 Dec 2014 09:26:50 -0800 (PST)
-Date: Wed, 24 Dec 2014 10:26:46 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Marek =?iso-8859-1?Q?Kord=EDk?= <kordikmarek@gmail.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:51720 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752054AbaLWBx4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Dec 2014 20:53:56 -0500
+Received: by mail-ig0-f176.google.com with SMTP id l13so5182029iga.9
+        for <linux-pci@vger.kernel.org>; Mon, 22 Dec 2014 17:53:55 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQV6nxeMcLQ6YBR_c5tNGGjiKgL+Z4vcGpK21j-14V8SKw@mail.gmail.com>
+References: <CAE9FiQWV-rKdvSeV-ivME-64QtzCX2Te5DfOVtzr0an=6eOCMA@mail.gmail.com>
+	<20141204173411.GA5949@google.com>
+	<CAE9FiQVyBmo+XwDgO97wwe+6TN4+q_cvnBLCuhTM8Fu_e_V5RQ@mail.gmail.com>
+	<1417777177.4741.69.camel@kernel.crashing.org>
+	<20141208004735.GA15508@shangw>
+	<CAErSpo69c6jXOp+nw2sTSU4vgqGufUQNUEGK4_2+6p-qpyE0vQ@mail.gmail.com>
+	<1418074683.13358.1.camel@kernel.crashing.org>
+	<CAErSpo7pMAL5i2aPGV3u5F178bHeQTtjASckKs9NaUbEGaxv3Q@mail.gmail.com>
+	<20141208233855.GA15713@shangw>
+	<CAE9FiQXj-vX8TE-8Es83FmJAKDKD_dMNbQkmsaNPyy_nVEag8w@mail.gmail.com>
+	<20141220002306.GB30834@google.com>
+	<CAE9FiQUU4OoxpV3MNyFdjtmS1nRfD=ziYDDnUmsGy5qj8U3vLg@mail.gmail.com>
+	<CAErSpo7JAcLa_2gNkOG+oSHb1cbBXdEa-TVW0=amBptRB8-fNA@mail.gmail.com>
+	<CAE9FiQV6nxeMcLQ6YBR_c5tNGGjiKgL+Z4vcGpK21j-14V8SKw@mail.gmail.com>
+Date: Mon, 22 Dec 2014 17:53:55 -0800
+Message-ID: <CAE9FiQVggbU5u__0z8p33J9hQ39CtQ-vpQbZyjG-LO9aqN05Lw@mail.gmail.com>
+Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
+ GPU init
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	=?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Alexey Voronkov <zermond@gmail.com>,
 	David Airlie <airlied@linux.ie>,
 	Alex Deucher <alexdeucher@gmail.com>,
 	Richard Yang <weiyang@linux.vnet.ibm.com>
-Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
- GPU init
-Message-ID: <20141224172646.GA19561@google.com>
-References: <CAErSpo7pMAL5i2aPGV3u5F178bHeQTtjASckKs9NaUbEGaxv3Q@mail.gmail.com>
- <20141208233855.GA15713@shangw>
- <CAE9FiQXj-vX8TE-8Es83FmJAKDKD_dMNbQkmsaNPyy_nVEag8w@mail.gmail.com>
- <20141220002306.GB30834@google.com>
- <CAE9FiQUU4OoxpV3MNyFdjtmS1nRfD=ziYDDnUmsGy5qj8U3vLg@mail.gmail.com>
- <CAErSpo7JAcLa_2gNkOG+oSHb1cbBXdEa-TVW0=amBptRB8-fNA@mail.gmail.com>
- <CAE9FiQV6nxeMcLQ6YBR_c5tNGGjiKgL+Z4vcGpK21j-14V8SKw@mail.gmail.com>
- <CAE9FiQVggbU5u__0z8p33J9hQ39CtQ-vpQbZyjG-LO9aqN05Lw@mail.gmail.com>
- <20141223214106.GA27291@google.com>
- <CAE9FiQUoA_vz78sEnHtDAmzTJcwL0PdUe9jwLw+H9h3+omq+WA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQUoA_vz78sEnHtDAmzTJcwL0PdUe9jwLw+H9h3+omq+WA@mail.gmail.com>
+Content-Type: multipart/mixed; boundary=047d7b2e0b599ba0ec050ad872b0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 23, 2014 at 06:29:20PM -0800, Yinghai Lu wrote:
-> On Tue, Dec 23, 2014 at 1:41 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> 
-> >
-> > Can you do this so it clips to any upstream bridge, whether it's a host
-> > bridge or a PCI-to-PCI bridge?  It doesn't seem like this has to be
-> > specific to host bridge windows -- any device below a PCI-to-PCI bridge has
-> > to use address space forwarded by that upstream bridge.
-> 
-> ok, please check attached v2.
-> 
-> >
-> > I wish this were in generic code.  There's nothing architecture-specific
-> > about the problem, but this patch only fixes things on x86.  Can you make a
-> > similar change in the corresponding code for other arches, as well?
-> 
-> ok, later after x86.
+--047d7b2e0b599ba0ec050ad872b0
+Content-Type: text/plain; charset=UTF-8
 
-OK, how about if we test it on x86, and if it works, you fix the other
-arches, and then I'll apply it for all arches at the same time?
+On Fri, Dec 19, 2014 at 5:33 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Fri, Dec 19, 2014 at 4:56 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>
+>> Marek's case is a little easier because his system is using _CRS.  We
+>> should be able to notice that the Root Port window overlaps the host
+>> bridge window, but isn't contained by it.  In that case, if we merely
+>> trim the Root Port window so it fits, everything will just work.
+>
+> Ok, will check that Monday.
 
-We are trying to fix a regression, but I don't think there's any reason to
-make the arches diverge for a relatively trivial change like this.
+Please check attached patch that clip bridge resource.
 
-> Thanks
-> 
-> Yinghai
+Marek, can you give it a try on top of v3.18?
 
-> Subject: [RFC PATCH -v2] PCI, x86: clip firmware assigned pci bridges under hostbridge
-> 
-> Some bios put range that is not fully coverred by root bus resources.
-> Try to clip them and update them in pci bridge bars.
-> 
-> -v2: check with upstream bridge instead of host bridge only.
->      also add debug print out.
-> 
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491
-> Reported-by: Marek Kordik <kordikmarek@gmail.com>
-> Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources")
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> 
-> ---
->  arch/x86/pci/i386.c |   81 +++++++++++++++++++++++++++++++++++++---------------
->  drivers/pci/bus.c   |   35 ++++++++++++++++++++++
->  include/linux/pci.h |    1 
->  3 files changed, 95 insertions(+), 22 deletions(-)
-> 
-> Index: linux-2.6/arch/x86/pci/i386.c
-> ===================================================================
-> --- linux-2.6.orig/arch/x86/pci/i386.c
-> +++ linux-2.6/arch/x86/pci/i386.c
-> @@ -205,28 +205,48 @@ EXPORT_SYMBOL(pcibios_align_resource);
->   *	    as well.
->   */
->  
-> -static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
-> +static bool pcibios_allocate_bridge_resources(struct pci_dev *dev)
->  {
->  	int idx;
->  	struct resource *r;
-> +	bool changed = false;
->  
->  	for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
-> +		int ret;
-> +
->  		r = &dev->resource[idx];
->  		if (!r->flags)
->  			continue;
->  		if (r->parent)	/* Already allocated */
->  			continue;
-> -		if (!r->start || pci_claim_resource(dev, idx) < 0) {
-> -			/*
-> -			 * Something is wrong with the region.
-> -			 * Invalidate the resource to prevent
-> -			 * child resource allocations in this
-> -			 * range.
-> -			 */
-> -			r->start = r->end = 0;
-> -			r->flags = 0;
-> +
-> +		if (!r->start)
-> +			goto clear;
-> +
-> +		ret = pci_claim_resource(dev, idx);
-> +		if (ret >= 0)
-> +			continue;
-> +
-> +		/* try again after clip for pci bridge*/
-> +		if ((dev->class >> 8) == PCI_CLASS_BRIDGE_PCI &&
-> +		    pci_bus_clip_resource(dev, r)) {
-> +			changed = true;
-> +			if (pci_claim_resource(dev, idx) >= 0)
-> +				continue;
->  		}
-> +
-> +clear:
-> +		/*
-> +		 * Something is wrong with the region.
-> +		 * Invalidate the resource to prevent
-> +		 * child resource allocations in this
-> +		 * range.
-> +		 */
-> +		r->start = r->end = 0;
-> +		r->flags = 0;
->  	}
-> +
-> +	return changed;
->  }
->  
->  static void pcibios_allocate_bus_resources(struct pci_bus *bus)
-> @@ -234,8 +254,12 @@ static void pcibios_allocate_bus_resourc
->  	struct pci_bus *child;
->  
->  	/* Depth-First Search on bus tree */
-> -	if (bus->self)
-> -		pcibios_allocate_bridge_resources(bus->self);
-> +	if (bus->self) {
-> +		bool changed = pcibios_allocate_bridge_resources(bus->self);
-> +
-> +		if (changed)
-> +			pci_setup_bridge(bus);
-> +	}
->  	list_for_each_entry(child, &bus->children, node)
->  		pcibios_allocate_bus_resources(child);
->  }
-> @@ -271,21 +295,34 @@ static void pcibios_allocate_dev_resourc
->  			else
->  				disabled = !(command & PCI_COMMAND_MEMORY);
->  			if (pass == disabled) {
-> +				int ret;
-> +
->  				dev_dbg(&dev->dev,
->  					"BAR %d: reserving %pr (d=%d, p=%d)\n",
->  					idx, r, disabled, pass);
-> -				if (pci_claim_resource(dev, idx) < 0) {
-> -					if (r->flags & IORESOURCE_PCI_FIXED) {
-> -						dev_info(&dev->dev, "BAR %d %pR is immovable\n",
-> +
-> +				ret = pci_claim_resource(dev, idx);
-> +
-> +				if (ret >= 0)
-> +					continue;
-> +
-> +				if (r->flags & IORESOURCE_PCI_FIXED) {
-> +					dev_info(&dev->dev, "BAR %d %pR is immovable\n",
->  							 idx, r);
-> -					} else {
-> -						/* We'll assign a new address later */
-> -						pcibios_save_fw_addr(dev,
-> -								idx, r->start);
-> -						r->end -= r->start;
-> -						r->start = 0;
-> -					}
-> +					continue;
-> +				}
-> +
-> +				/* try again with clip */
-> +				if (pci_bus_clip_resource(dev, r)) {
-> +					pci_update_resource(dev, idx);
-> +					if (pci_claim_resource(dev, idx) >= 0)
-> +						continue;
->  				}
-> +
-> +				/* We'll assign a new address later */
-> +				pcibios_save_fw_addr(dev, idx, r->start);
-> +				r->end -= r->start;
-> +				r->start = 0;
->  			}
->  		}
->  	if (!pass) {
-> Index: linux-2.6/include/linux/pci.h
-> ===================================================================
-> --- linux-2.6.orig/include/linux/pci.h
-> +++ linux-2.6/include/linux/pci.h
-> @@ -1094,6 +1094,7 @@ void pci_free_resource_list(struct list_
->  void pci_bus_add_resource(struct pci_bus *bus, struct resource *res, unsigned int flags);
->  struct resource *pci_bus_resource_n(const struct pci_bus *bus, int n);
->  void pci_bus_remove_resources(struct pci_bus *bus);
-> +bool pci_bus_clip_resource(struct pci_dev *dev, struct resource *res);
->  
->  #define pci_bus_for_each_resource(bus, res, i)				\
->  	for (i = 0;							\
-> Index: linux-2.6/drivers/pci/bus.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/bus.c
-> +++ linux-2.6/drivers/pci/bus.c
-> @@ -228,6 +228,41 @@ int pci_bus_alloc_resource(struct pci_bu
->  }
->  EXPORT_SYMBOL(pci_bus_alloc_resource);
->  
-> +bool pci_bus_clip_resource(struct pci_dev *dev, struct resource *res)
-> +{
-> +	struct pci_bus *bus = dev->bus;
-> +	resource_size_t start, end;
-> +	struct resource orig_res = *res;
-> +	struct resource *r;
-> +	int i;
-> +
-> +	pci_bus_for_each_resource(bus, r, i) {
-> +
-> +		if (resource_type(res) != resource_type(r))
-> +			continue;
-> +
-> +		start = max(r->start, res->start);
-> +		end = min(r->end, res->end);
-> +
-> +		/* no overlap ? */
-> +		if (start > end)
-> +			continue;
-> +
-> +		if (res->start == start && res->end == end)
-> +			return false;
-> +
-> +		/* changed */
-> +		res->start = start;
-> +		res->end = end;
-> +		dev_printk(KERN_DEBUG, &dev->dev, "%pR ==> %pR\n",
-> +				 &orig_res, res);
-> +
-> +		return true;
-> +	}
-> +
-> +	return false;
-> +}
-> +
->  void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
->  
->  /**
+Thanks
 
+Yinghai
+
+--047d7b2e0b599ba0ec050ad872b0
+Content-Type: text/x-patch; charset=US-ASCII; name="pci_bridge_clip.patch"
+Content-Disposition: attachment; filename="pci_bridge_clip.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_i40mc3zf0
+
+U3ViamVjdDogW1JGQyBQQVRDSF0gUENJLCB4ODY6IGNsaXAgZmlybXdhcmUgYXNzaWduZWQgcGNp
+IGJyaWRnZXMgdW5kZXIgaG9zdGJyaWRnZQoKU29tZSBiaW9zIHB1dCByYW5nZSB0aGF0IGlzIG5v
+dCBmdWxseSBjb3ZlcnJlZCBieSByb290IGJ1cyByZXNvdXJjZXMuClRyeSB0byBjbGlwIHRoZW0g
+YW5kIHVwZGF0ZSB0aGVtIGluIHBjaSBicmlkZ2UgYmFycy4KCkxpbms6IGh0dHBzOi8vYnVnemls
+bGEua2VybmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9ODU0OTEKUmVwb3J0ZWQtYnk6IE1hcmVrIEtv
+cmRpayA8a29yZGlrbWFyZWtAZ21haWwuY29tPgpGaXhlczogNWIyODU0MTU1MmVmICgiUENJOiBS
+ZXN0cmljdCA2NC1iaXQgcHJlZmV0Y2hhYmxlIGJyaWRnZSB3aW5kb3dzIHRvIDY0LWJpdCByZXNv
+dXJjZXMiKQpTaWduZWQtb2ZmLWJ5OiBZaW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+Cgot
+LS0KIGFyY2gveDg2L3BjaS9pMzg2LmMgICAgICAgfCAgIDQzICsrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKystLS0tLS0tLS0tLS0KIGRyaXZlcnMvcGNpL2hvc3QtYnJpZGdlLmMgfCAgIDMx
+ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysKIGluY2x1ZGUvbGludXgvcGNpLmggICAg
+ICAgfCAgICAyICsrCiAzIGZpbGVzIGNoYW5nZWQsIDY0IGluc2VydGlvbnMoKyksIDEyIGRlbGV0
+aW9ucygtKQoKSW5kZXg6IGxpbnV4LTIuNi9hcmNoL3g4Ni9wY2kvaTM4Ni5jCj09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0K
+LS0tIGxpbnV4LTIuNi5vcmlnL2FyY2gveDg2L3BjaS9pMzg2LmMKKysrIGxpbnV4LTIuNi9hcmNo
+L3g4Ni9wY2kvaTM4Ni5jCkBAIC0yMDUsMTAgKzIwNSwxMSBAQCBFWFBPUlRfU1lNQk9MKHBjaWJp
+b3NfYWxpZ25fcmVzb3VyY2UpOwogICoJICAgIGFzIHdlbGwuCiAgKi8KIAotc3RhdGljIHZvaWQg
+cGNpYmlvc19hbGxvY2F0ZV9icmlkZ2VfcmVzb3VyY2VzKHN0cnVjdCBwY2lfZGV2ICpkZXYpCitz
+dGF0aWMgYm9vbCBwY2liaW9zX2FsbG9jYXRlX2JyaWRnZV9yZXNvdXJjZXMoc3RydWN0IHBjaV9k
+ZXYgKmRldikKIHsKIAlpbnQgaWR4OwogCXN0cnVjdCByZXNvdXJjZSAqcjsKKwlib29sIGNoYW5n
+ZWQgPSBmYWxzZTsKIAogCWZvciAoaWR4ID0gUENJX0JSSURHRV9SRVNPVVJDRVM7IGlkeCA8IFBD
+SV9OVU1fUkVTT1VSQ0VTOyBpZHgrKykgewogCQlyID0gJmRldi0+cmVzb3VyY2VbaWR4XTsKQEAg
+LTIxNiwxNyArMjE3LDMxIEBAIHN0YXRpYyB2b2lkIHBjaWJpb3NfYWxsb2NhdGVfYnJpZGdlX3Jl
+c28KIAkJCWNvbnRpbnVlOwogCQlpZiAoci0+cGFyZW50KQkvKiBBbHJlYWR5IGFsbG9jYXRlZCAq
+LwogCQkJY29udGludWU7Ci0JCWlmICghci0+c3RhcnQgfHwgcGNpX2NsYWltX3Jlc291cmNlKGRl
+diwgaWR4KSA8IDApIHsKLQkJCS8qCi0JCQkgKiBTb21ldGhpbmcgaXMgd3Jvbmcgd2l0aCB0aGUg
+cmVnaW9uLgotCQkJICogSW52YWxpZGF0ZSB0aGUgcmVzb3VyY2UgdG8gcHJldmVudAotCQkJICog
+Y2hpbGQgcmVzb3VyY2UgYWxsb2NhdGlvbnMgaW4gdGhpcwotCQkJICogcmFuZ2UuCi0JCQkgKi8K
+LQkJCXItPnN0YXJ0ID0gci0+ZW5kID0gMDsKLQkJCXItPmZsYWdzID0gMDsKKwkJaWYgKCFyLT5z
+dGFydCkKKwkJCWdvdG8gY2xlYXI7CisJCWlmIChwY2lfY2xhaW1fcmVzb3VyY2UoZGV2LCBpZHgp
+IDwgMCkgeworCQkJLyogdHJ5IGFnYWluIGFmdGVyIGNsaXAgZm9yIHBjaSBicmlkZ2UqLworCQkJ
+aWYgKChkZXYtPmNsYXNzID4+IDgpID09IFBDSV9DTEFTU19CUklER0VfUENJICYmCisJCQkgICAg
+cGNpYmlvc19yZXNvdXJjZV9jbGlwX2luX2hvc3RfYnJpZGdlKGRldi0+YnVzLCByKSkgeworCQkJ
+CWNoYW5nZWQgPSB0cnVlOworCQkJCWlmIChwY2lfY2xhaW1fcmVzb3VyY2UoZGV2LCBpZHgpID49
+IDApCisJCQkJCWNvbnRpbnVlOworCQkJfQorCQkJZ290byBjbGVhcjsKIAkJfQorCQljb250aW51
+ZTsKK2NsZWFyOgorCQkvKgorCQkgKiBTb21ldGhpbmcgaXMgd3Jvbmcgd2l0aCB0aGUgcmVnaW9u
+LgorCQkgKiBJbnZhbGlkYXRlIHRoZSByZXNvdXJjZSB0byBwcmV2ZW50CisJCSAqIGNoaWxkIHJl
+c291cmNlIGFsbG9jYXRpb25zIGluIHRoaXMKKwkJICogcmFuZ2UuCisJCSAqLworCQlyLT5zdGFy
+dCA9IHItPmVuZCA9IDA7CisJCXItPmZsYWdzID0gMDsKIAl9CisKKwlyZXR1cm4gY2hhbmdlZDsK
+IH0KIAogc3RhdGljIHZvaWQgcGNpYmlvc19hbGxvY2F0ZV9idXNfcmVzb3VyY2VzKHN0cnVjdCBw
+Y2lfYnVzICpidXMpCkBAIC0yMzQsOCArMjQ5LDEyIEBAIHN0YXRpYyB2b2lkIHBjaWJpb3NfYWxs
+b2NhdGVfYnVzX3Jlc291cmMKIAlzdHJ1Y3QgcGNpX2J1cyAqY2hpbGQ7CiAKIAkvKiBEZXB0aC1G
+aXJzdCBTZWFyY2ggb24gYnVzIHRyZWUgKi8KLQlpZiAoYnVzLT5zZWxmKQotCQlwY2liaW9zX2Fs
+bG9jYXRlX2JyaWRnZV9yZXNvdXJjZXMoYnVzLT5zZWxmKTsKKwlpZiAoYnVzLT5zZWxmKSB7CisJ
+CWJvb2wgY2hhbmdlZCA9IHBjaWJpb3NfYWxsb2NhdGVfYnJpZGdlX3Jlc291cmNlcyhidXMtPnNl
+bGYpOworCisJCWlmIChjaGFuZ2VkKQorCQkJcGNpX3NldHVwX2JyaWRnZShidXMpOworCX0KIAls
+aXN0X2Zvcl9lYWNoX2VudHJ5KGNoaWxkLCAmYnVzLT5jaGlsZHJlbiwgbm9kZSkKIAkJcGNpYmlv
+c19hbGxvY2F0ZV9idXNfcmVzb3VyY2VzKGNoaWxkKTsKIH0KSW5kZXg6IGxpbnV4LTIuNi9kcml2
+ZXJzL3BjaS9ob3N0LWJyaWRnZS5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZl
+cnMvcGNpL2hvc3QtYnJpZGdlLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9ob3N0LWJyaWRn
+ZS5jCkBAIC0zMSw2ICszMSwzNyBAQCB2b2lkIHBjaV9zZXRfaG9zdF9icmlkZ2VfcmVsZWFzZShz
+dHJ1Y3QKIAlicmlkZ2UtPnJlbGVhc2VfZGF0YSA9IHJlbGVhc2VfZGF0YTsKIH0KIAorYm9vbCBw
+Y2liaW9zX3Jlc291cmNlX2NsaXBfaW5faG9zdF9icmlkZ2Uoc3RydWN0IHBjaV9idXMgKmJ1cywK
+KwkJCQkJICBzdHJ1Y3QgcmVzb3VyY2UgKnJlcykKK3sKKwlzdHJ1Y3QgcGNpX2hvc3RfYnJpZGdl
+ICpicmlkZ2UgPSBmaW5kX3BjaV9ob3N0X2JyaWRnZShidXMpOworCXN0cnVjdCBwY2lfaG9zdF9i
+cmlkZ2Vfd2luZG93ICp3aW5kb3c7CisJcmVzb3VyY2Vfc2l6ZV90IHN0YXJ0LCBlbmQ7CisKKwls
+aXN0X2Zvcl9lYWNoX2VudHJ5KHdpbmRvdywgJmJyaWRnZS0+d2luZG93cywgbGlzdCkgeworCQlp
+ZiAocmVzb3VyY2VfdHlwZShyZXMpICE9IHJlc291cmNlX3R5cGUod2luZG93LT5yZXMpKQorCQkJ
+Y29udGludWU7CisKKwkJc3RhcnQgPSBtYXgod2luZG93LT5yZXMtPnN0YXJ0LCByZXMtPnN0YXJ0
+KTsKKwkJZW5kID0gbWluKHdpbmRvdy0+cmVzLT5lbmQsIHJlcy0+ZW5kKTsKKworCQkvKiBubyBv
+dmVybGFwID8gKi8KKwkJaWYgKHN0YXJ0ID4gZW5kKQorCQkJY29udGludWU7CisKKwkJaWYgKHJl
+cy0+c3RhcnQgPT0gc3RhcnQgJiYgcmVzLT5lbmQgPT0gZW5kKQorCQkJcmV0dXJuIGZhbHNlOwor
+CisJCS8qIGNoYW5nZWQgKi8KKwkJcmVzLT5zdGFydCA9IHN0YXJ0OworCQlyZXMtPmVuZCA9IGVu
+ZDsKKworCQlyZXR1cm4gdHJ1ZTsKKwl9CisKKwlyZXR1cm4gZmFsc2U7Cit9CisKIHZvaWQgcGNp
+Ymlvc19yZXNvdXJjZV90b19idXMoc3RydWN0IHBjaV9idXMgKmJ1cywgc3RydWN0IHBjaV9idXNf
+cmVnaW9uICpyZWdpb24sCiAJCQkgICAgIHN0cnVjdCByZXNvdXJjZSAqcmVzKQogewpJbmRleDog
+bGludXgtMi42L2luY2x1ZGUvbGludXgvcGNpLmgKPT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9y
+aWcvaW5jbHVkZS9saW51eC9wY2kuaAorKysgbGludXgtMi42L2luY2x1ZGUvbGludXgvcGNpLmgK
+QEAgLTc2Miw2ICs3NjIsOCBAQCB2b2lkIHBjaV9maXh1cF9jYXJkYnVzKHN0cnVjdCBwY2lfYnVz
+ICopCiAKIC8qIEdlbmVyaWMgUENJIGZ1bmN0aW9ucyB1c2VkIGludGVybmFsbHkgKi8KIAorYm9v
+bCBwY2liaW9zX3Jlc291cmNlX2NsaXBfaW5faG9zdF9icmlkZ2Uoc3RydWN0IHBjaV9idXMgKmJ1
+cywKKwkJCQkJICBzdHJ1Y3QgcmVzb3VyY2UgKnJlcyk7CiB2b2lkIHBjaWJpb3NfcmVzb3VyY2Vf
+dG9fYnVzKHN0cnVjdCBwY2lfYnVzICpidXMsIHN0cnVjdCBwY2lfYnVzX3JlZ2lvbiAqcmVnaW9u
+LAogCQkJICAgICBzdHJ1Y3QgcmVzb3VyY2UgKnJlcyk7CiB2b2lkIHBjaWJpb3NfYnVzX3RvX3Jl
+c291cmNlKHN0cnVjdCBwY2lfYnVzICpidXMsIHN0cnVjdCByZXNvdXJjZSAqcmVzLAo=
+--047d7b2e0b599ba0ec050ad872b0--
