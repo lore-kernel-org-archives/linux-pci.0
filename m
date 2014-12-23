@@ -1,69 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:54891 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750915AbaLOVhy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Dec 2014 16:37:54 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Ray Jui <rjui@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Christian Daudt <bcm@fixthebug.org>,
-	Matt Porter <mporter@linaro.org>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Scott Branden <sbranden@broadcom.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	bcm-kernel-feedback-list@broadcom.com, devicetree@vger.kernel.org
-Subject: Re: [PATCH v2 2/4] PCI: iproc: Add Broadcom iProc PCIe driver
-Date: Mon, 15 Dec 2014 22:37:19 +0100
-Message-ID: <2242033.mU3KpyO3Rt@wuerfel>
-In-Reply-To: <548F338F.9030203@broadcom.com>
-References: <1418351817-14898-3-git-send-email-rjui@broadcom.com> <1790462.K12S5vem48@wuerfel> <548F338F.9030203@broadcom.com>
+Received: from mx1.redhat.com ([209.132.183.28]:46578 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751890AbaLWCzW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 22 Dec 2014 21:55:22 -0500
+Message-ID: <5498D97A.8030105@redhat.com>
+Date: Tue, 23 Dec 2014 08:24:50 +0530
+From: Pratyush Anand <panand@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Arnd Bergmann <arnd@arndb.de>
+CC: mohit.kumar@st.com, jg1.han@samsung.com, l.stach@pengutronix.de,
+	shawn.guo@freescale.com, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, Kishon Vijay Abraham I <kishon@ti.com>,
+	Sean Cross <xobs@kosagi.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>
+Subject: Re: [PATCH] PCIe: Designware: Do not allow config space through ranges
+References: <7dcdee69eb7db8336829e6085d736a3ac7e68ad4.1419229126.git.panand@redhat.com> <5459567.EisgEvQXh9@wuerfel>
+In-Reply-To: <5459567.EisgEvQXh9@wuerfel>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 15 December 2014 11:16:31 Ray Jui wrote:
-> On 12/12/2014 9:21 AM, Arnd Bergmann wrote:
-> > On Friday 12 December 2014 09:08:48 Ray Jui wrote:
-> > One way to solve this would be by turning the driver into a library
-> > the same way as the pcie-dw driver, and have separate front-ends
-> > for it for platform_device and bcma_device.
-> >
-> I'm fine with this solution, i.e., to introduce a common pcie-iproc core 
-> driver (just like pcie-designware) and have different front-ends 
-> depending on the device/bus type. If we end up deciding to go with this 
-> solution, I need to discuss with Hauke to come up with a plan to 
-> collaborate.
 
-Ok
 
-> But before we choose to go with that route, may I ask, what is the 
-> purpose of tying a PCIe host driver to BCMA? What benefit does BCMA give 
-> us? If we have a generic platform based PCIe driver that can work on all 
-> iProc SoCs + BCM4708 and BCM5301X with all HW specific configurations 
-> taken care of by device tree, why do we still need to use BCMA?
-> 
-> I thought all a BCMA device here does is to auto-instantiate based on 
-> some register readings?
+On Monday 22 December 2014 02:00 PM, Arnd Bergmann wrote:
+> On Monday 22 December 2014 12:09:04 Pratyush Anand wrote:
+>> Config space is need to be allocated using reg property. This patch
+>> removes possibility of config space allocation through ranges property.
+>>
+>> To: Mohit Kumar <mohit.kumar@st.com>
+>> To: Jingo Han <jg1.han@samsung.com>
+>> To: Lucas Stach <l.stach@pengutronix.de>
+>> To: Shawn Guo <shawn.guo@freescale.com>
+>> Cc: linux-pci@vger.kernel.org
+>> Cc: devicetree@vger.kernel.org
+>> Signed-off-by: Pratyush Anand <panand@redhat.com>
+>> ---
+>>   arch/arm/boot/dts/imx6qdl.dtsi     |  3 +--
+>>   arch/arm/boot/dts/imx6sx.dtsi      |  8 ++++----
+>
+> changing the DT files is probably ok.
+>
+>> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+>> index df781cdf13c1..0b22b42e1ff9 100644
+>> --- a/drivers/pci/host/pcie-designware.c
+>> +++ b/drivers/pci/host/pcie-designware.c
+>> @@ -409,19 +409,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>>   			pp->mem_mod_base = of_read_number(parser.range -
+>>   							  parser.np + na, ns);
+>>   		}
+>> -		if (restype == 0) {
+>> -			of_pci_range_to_resource(&range, np, &pp->cfg);
+>> -			pp->cfg0_size = resource_size(&pp->cfg)/2;
+>> -			pp->cfg1_size = resource_size(&pp->cfg)/2;
+>> -			pp->cfg0_base = pp->cfg.start;
+>> -			pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
+>> -
+>> -			/* Find the untranslated configuration space address */
+>> -			pp->cfg0_mod_base = of_read_number(parser.range -
+>> -							   parser.np + na, ns);
+>> -			pp->cfg1_mod_base = pp->cfg0_mod_base +
+>> -					    pp->cfg0_size;
+>> -		}
+>>   	}
+>
+> Since we've allowed this for so long, it may be better to leave this
+> in for compatibility with old dts files. It would however be good to
+> print a warning message. We could also limit it to those machines that
+> are known to have been used with this property in the past.
 
-Basically, DT is a hack that we only need for nondiscoverable buses.
-As BCMA is (mostly) discoverable, we should use that, just like we do
-for things like PCI and USB. There are clearly some limitations to 
-BCMA as well, e.g. on bcm4708 we don't have proper IRQ numbers in
-the device list and we need to work around that using DT, but overall
-it still seems to have more upsides than downsides to use it.
+I think, only imx6 is using "config from ranges", for which I made the 
+change in this patch. Modification need to be tested and acked by IMX6 
+maintainers.
+I do not see any other driver using it. However, I have kept all 
+designware user in CC here.
 
-It's also good to point other SoC makers to Broadcom as a good example
-for how to do things they claim are impossible to do.
+~Pratyush
 
-	Arnd
+
+>
+> 	Arnd
+>
