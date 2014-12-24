@@ -1,58 +1,149 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:36168 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751095AbaLQQSo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Dec 2014 11:18:44 -0500
-Received: from dlelxv90.itg.ti.com ([172.17.2.17])
-	by arroyo.ext.ti.com (8.13.7/8.13.7) with ESMTP id sBHGIhpL017234
-	for <linux-pci@vger.kernel.org>; Wed, 17 Dec 2014 10:18:43 -0600
-Received: from DLEE71.ent.ti.com (dlee71.ent.ti.com [157.170.170.114])
-	by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id sBHGIhI5009385
-	for <linux-pci@vger.kernel.org>; Wed, 17 Dec 2014 10:18:43 -0600
-Received: from [158.218.104.233] (ileax41-snat.itg.ti.com [10.172.224.153])	by
- dflp33.itg.ti.com (8.14.3/8.13.8) with ESMTP id sBHGIhxS019527	for
- <linux-pci@vger.kernel.org>; Wed, 17 Dec 2014 10:18:43 -0600
-Message-ID: <5491ACE6.4070108@ti.com>
-Date: Wed, 17 Dec 2014 11:18:46 -0500
+Received: from devils.ext.ti.com ([198.47.26.153]:43038 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751858AbaLXWMX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Dec 2014 17:12:23 -0500
 From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux@arm.linux.org.uk>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <arnd@arndb.de>,
+	<will.deacon@arm.com>, <grant.likely@linaro.org>,
+	<robh+dt@kernel.org>, <devicetree@vger.kernel.org>,
+	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>
+Subject: [PATCH v2 1/2] of/pci: add of_pci_dma_configure() update dma configuration
+Date: Wed, 24 Dec 2014 17:11:38 -0500
+Message-ID: <1419459099-6667-2-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1419459099-6667-1-git-send-email-m-karicheri2@ti.com>
+References: <1419459099-6667-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: How to fix CHECK warning: testing a 'safe expression' ?
-References: <54907884.2040502@ti.com>
-In-Reply-To: <54907884.2040502@ti.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I am trying to address CHECK warnings in my driver and wondering how to 
-resolve 'warning: testing a 'safe expression' which appears when using
-IS_ERR_OR_NULL(foo)
+Add of_pci_dma_configure() to allow updating the dma configuration
+of the pci device using the configuration from DT of the parent of
+the root bridge device.
 
-where foo is defined as
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+---
+ drivers/of/of_pci.c    |   73 ++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/of_pci.h |   12 ++++++++
+ 2 files changed, 85 insertions(+)
 
-struct foo_type *foo;
-
-The foo get assigned only NULL or ERR_PTR(error code). So I believe the
-usage is correct. But then how do I make the CHECK happy of its usage?
-
-I have tried a grep to check on the current usage of IS_ERR_OR_NULL() 
-and found 276 of them causes this warning in the v3.18 version of the 
-kernel that I am using
-
-$ grep -r "warning: testing a 'safe expression" * | wc -l
-276
-
-Can someone help me undestand what this means and how to fix the same?
-
-I run folling for CHECK
-
-make C=2 CF="-D__CHECK_ENDIAN__" CHECK=sparse
-
-Thanks in advance for your suggestions.
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 88471d3..6d43f59 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -229,6 +229,79 @@ parse_failed:
+ 	return err;
+ }
+ EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
++
++/**
++ * of_get_pci_root_bridge_parent - Helper function to get the OF node of
++ *		the root bridge's parent
++ * @dev: ptr to pci_dev struct of the pci device
++ *
++ * This function will traverse the bus up to the root bus starting with
++ * the child and return the of node ptr to bridge device's parent device.
++ */
++struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev)
++{
++	struct pci_bus *bus = dev->bus;
++	struct device *bridge;
++
++	while (!pci_is_root_bus(bus))
++		bus = bus->parent;
++	bridge = bus->bridge;
++
++	return bridge->parent->of_node;
++}
++EXPORT_SYMBOL_GPL(of_get_pci_root_bridge_parent);
++
++/**
++ * of_pci_dma_configure - Setup DMA configuration
++ * @dev: ptr to pci_dev struct of the pci device
++ *
++ * Try to get PCI devices's DMA configuration from DT and update it
++ * accordingly. This is similar to of_dma_configure() in of/platform.c
++ */
++void of_pci_dma_configure(struct pci_dev *pci_dev)
++{
++	struct device *dev = &pci_dev->dev;
++	u64 dma_addr, paddr, size;
++	struct device_node *parent_np;
++	unsigned long offset;
++	bool coherent;
++	int ret;
++
++	parent_np = of_get_pci_root_bridge_parent(pci_dev);
++
++	if (parent_np) {
++		/*
++		 * Set default dma-mask to 32 bit. Drivers are expected to setup
++		 * the correct supported dma_mask.
++		 */
++		dev->coherent_dma_mask = DMA_BIT_MASK(32);
++
++		/*
++		 * Set it to coherent_dma_mask by default if the architecture
++		 * code has not set it.
++		 */
++		if (!dev->dma_mask)
++			dev->dma_mask = &dev->coherent_dma_mask;
++
++		ret = of_dma_get_range(parent_np, &dma_addr, &paddr, &size);
++		if (ret < 0) {
++			dma_addr = offset = 0;
++			size = dev->coherent_dma_mask + 1;
++		} else {
++			offset = PFN_DOWN(paddr - dma_addr);
++			dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
++		}
++		dev->dma_pfn_offset = offset;
++
++		coherent = of_dma_is_coherent(parent_np);
++		dev_dbg(dev, "device is%sdma coherent\n",
++			coherent ? " " : " not ");
++
++		arch_setup_dma_ops(dev, dma_addr, size, NULL, coherent);
++	}
++}
++EXPORT_SYMBOL_GPL(of_pci_dma_configure);
++
+ #endif /* CONFIG_OF_ADDRESS */
+ 
+ #ifdef CONFIG_PCI_MSI
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index ce0e5ab..0465a2a 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -16,6 +16,8 @@ int of_pci_get_devfn(struct device_node *np);
+ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+ int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+ int of_get_pci_domain_nr(struct device_node *node);
++struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev);
++void of_pci_dma_configure(struct pci_dev *pci_dev);
+ #else
+ static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
+ {
+@@ -50,6 +52,16 @@ of_get_pci_domain_nr(struct device_node *node)
+ {
+ 	return -1;
+ }
++
++static inline struct device_node
++*of_get_pci_root_bridge_parent(struct pci_dev *dev)
++{
++	return NULL;
++}
++
++static inline void of_pci_dma_configure(struct pci_dev *pci_dev)
++{
++}
+ #endif
+ 
+ #if defined(CONFIG_OF_ADDRESS)
 -- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
---
-To unsubscribe from this list: send the line "unsubscribe netdev" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+1.7.9.5
+
