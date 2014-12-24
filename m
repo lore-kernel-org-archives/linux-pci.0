@@ -1,71 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:62635 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756360AbaLKTcr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Dec 2014 14:32:47 -0500
-Date: Thu, 11 Dec 2014 11:32:43 -0800
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Dely Sy <dely.l.sy@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>,
-	Kristen Carlson Accardi <kristen.c.accardi@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: Special handling of display/VGA devices in hotplug drivers
-Message-ID: <20141211113243.3f21551e@jbarnes-t420>
-In-Reply-To: <20141211181136.GA11367@kroah.com>
-References: <CAErSpo4iZCUZgqNi-fX+YX=sKV=Ae5z8kn8-++E0Cgft9unmBg@mail.gmail.com>
-	<20141211181136.GA11367@kroah.com>
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:64223 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751531AbaLXU34 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Dec 2014 15:29:56 -0500
+Received: by mail-ig0-f179.google.com with SMTP id r2so7367047igi.12
+        for <linux-pci@vger.kernel.org>; Wed, 24 Dec 2014 12:29:56 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20141224172646.GA19561@google.com>
+References: <CAErSpo7pMAL5i2aPGV3u5F178bHeQTtjASckKs9NaUbEGaxv3Q@mail.gmail.com>
+	<20141208233855.GA15713@shangw>
+	<CAE9FiQXj-vX8TE-8Es83FmJAKDKD_dMNbQkmsaNPyy_nVEag8w@mail.gmail.com>
+	<20141220002306.GB30834@google.com>
+	<CAE9FiQUU4OoxpV3MNyFdjtmS1nRfD=ziYDDnUmsGy5qj8U3vLg@mail.gmail.com>
+	<CAErSpo7JAcLa_2gNkOG+oSHb1cbBXdEa-TVW0=amBptRB8-fNA@mail.gmail.com>
+	<CAE9FiQV6nxeMcLQ6YBR_c5tNGGjiKgL+Z4vcGpK21j-14V8SKw@mail.gmail.com>
+	<CAE9FiQVggbU5u__0z8p33J9hQ39CtQ-vpQbZyjG-LO9aqN05Lw@mail.gmail.com>
+	<20141223214106.GA27291@google.com>
+	<CAE9FiQUoA_vz78sEnHtDAmzTJcwL0PdUe9jwLw+H9h3+omq+WA@mail.gmail.com>
+	<20141224172646.GA19561@google.com>
+Date: Wed, 24 Dec 2014 12:29:55 -0800
+Message-ID: <CAE9FiQUCKVZN0rbvkBWTB_2w+=OrQFRWNkEbNCzH1j+hctqGFg@mail.gmail.com>
+Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
+ GPU init
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: =?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alexey Voronkov <zermond@gmail.com>,
+	David Airlie <airlied@linux.ie>,
+	Alex Deucher <alexdeucher@gmail.com>,
+	Richard Yang <weiyang@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 11 Dec 2014 13:11:36 -0500
-Greg Kroah-Hartman <gregkh@linuxfoundation.org> wrote:
+On Wed, Dec 24, 2014 at 9:26 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Dec 23, 2014 at 06:29:20PM -0800, Yinghai Lu wrote:
+>
+> OK, how about if we test it on x86, and if it works, you fix the other
+> arches, and then I'll apply it for all arches at the same time?
 
-> On Thu, Dec 11, 2014 at 10:34:30AM -0700, Bjorn Helgaas wrote:
-> > It looks like you added the initial pciehp driver [1], which
-> > includes the following code in pciehp_disable_slot():
-> > 
-> > + if (class_code == PCI_BASE_CLASS_DISPLAY) {
-> > + /* Display/Video adapter (not supported) */
-> > + rc = REMOVE_NOT_SUPPORTED;
-> > 
-> > + /* If it's a bridge, check the VGA Enable bit */
-> > + if ((header_type & 0x7F) == PCI_HEADER_TYPE_BRIDGE) {
-> > + rc = pci_bus_read_config_byte (pci_bus, devfn,
-> > PCI_BRIDGE_CONTROL, &BCR);
-> > + if (rc)
-> > + return rc;
-> > +
-> > + /* If the VGA Enable bit is set, remove isn't supported */
-> > + if (BCR & PCI_BRIDGE_CTL_VGA) {
-> > + rc = REMOVE_NOT_SUPPORTED;
-> > 
-> > I'm trying to figure out why VGA devices are handled specially.  I
-> > can't find anything in the PCI specs that mentions this.  Most of
-> > the other PCI hotplug drivers have similar code.  Do you remember
-> > anything about this?
-> 
-> The PCI spec said that you were not allowed to hotplug VGA drivers.
-> The big issue is that POST usually needs to run on those things, and
-> there is no way to POST a PCI hotplugged device.
-> 
-> Does the spec not say that anymore?  I haven't looked in years at
-> it...
-> 
-> Do you want to hot-add a VGA device?  Are these lines causing a
-> problem with something?
+Good to me.
 
-Yeah, the legacy I/O regions get routed through the bridge with the VGA
-bit set, and most legacy code probably can't handle that (whether POST,
-VBIOS, or VGA drivers).
+>
+> We are trying to fix a regression, but I don't think there's any reason to
+> make the arches diverge for a relatively trivial change like this.
 
-There is some code for moving the VGA routing around, so that might be
-an option if you wanted to remove such a bridge.  You'd have to find a
-VGA device under another bridge, and enable routing to that first, then
-you could do the remove.
+Sure.
 
-Jesse
+Yinghai
