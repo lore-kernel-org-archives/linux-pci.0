@@ -1,57 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:43087 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752640AbaLIWPx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 17:15:53 -0500
-Message-ID: <54877495.9090102@gmail.com>
-Date: Tue, 09 Dec 2014 23:15:49 +0100
-From: =?UTF-8?B?TWFyZWsgS29yZMOtaw==?= <kordikmarek@gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Daniel Vetter <daniel.vetter@intel.com>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	David Airlie <airlied@linux.ie>,
+	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	linux-kernel@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: 3.19-rc1 errors when opening LID
+Date: Wed, 24 Dec 2014 19:51:48 +0100
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Alexey Voronkov <zermond@gmail.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Clear bridge MEM_64 flag if one child does not support
- it
-References: <1418075552-26495-1-git-send-email-yinghai@kernel.org>	<1418079372.13358.9.camel@kernel.crashing.org>	<CAE9FiQX-vMu5+Kr09ngr95WvtoZTUSL5R2+NiVFeiN6q-BXLLg@mail.gmail.com>	<20141209001119.GA24661@shangw>	<20141209022601.GA16207@richard>	<CAE9FiQWz=vdR=QSkoEs5XjUxg_y4vJgnChQAc1-U_9xzfQpknQ@mail.gmail.com>	<54873A45.3050009@gmail.com>	<CAErSpo7OXLco+fagqpK00Cc_AGxjEDJO5JDBtr_p92L2tpvs+Q@mail.gmail.com> <CAE9FiQWPGLwQsz5HtW7r0Lrk4DMqfhbmk=ohcBWtWqXAN3mEZw@mail.gmail.com>
-In-Reply-To: <CAE9FiQWPGLwQsz5HtW7r0Lrk4DMqfhbmk=ohcBWtWqXAN3mEZw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: multipart/signed;
+  boundary="nextPart5943893.pKyMBm5Emp";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201412241951.48652@pali>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/09/2014 08:42 PM, Yinghai Lu wrote:
-> On Tue, Dec 9, 2014 at 10:22 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Tue, Dec 9, 2014 at 11:07 AM, Marek Kordík <kordikmarek@gmail.com> wrote:
->>> I have built and booted your branch and it works well. Do you want me to
->>> attach some logs?
->>> (I am new here and I have read http://www.tux.org/lkml/ and I don't want to
->>> break some rules for attachment size)
->
-> Hi Marek,
->
-> Can you run some graphics benchmark program to check the performance
-> between
-> 1.
->
-> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
->   branch: for-pci-allocate-fit-3.18
->
-> 2.
-> v 3.18 + clear mmio64 flags when children device does not support it
->
-> Thanks
->
-> Yinghai
->
-I have run Unigine Heaven benchmark on both versions (I tried version 2. 
-with and also without kernel parameters "debug ignore_loglevel 
-pci=realloc") and the performance of each version was the same (70-71 
-points). I tried to run this benchmark also with kernel 3.15.10 and the 
-result was 67 points. Tomorrow I can try to run some more benchmarks, 
-today I didn't have much time.
+--nextPart5943893.pKyMBm5Emp
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-Marek
+Hello!
+
+With new 3.19-rc1 kernel every time when I open LID on my laptop, kernel pr=
+ints these error lines to dmesg:
+
+[25566.368133] [drm:hsw_unclaimed_reg_detect.isra.6 [i915]] *ERROR* Unclaim=
+ed register detected. Please use the i915.mmio_debug=3D1 to debug this prob=
+lem.
+[25566.368134] [drm:intel_uncore_check_errors [i915]] *ERROR* Unclaimed reg=
+ister before interrupt
+[25566.368192] [drm:hsw_unclaimed_reg_detect.isra.6 [i915]] *ERROR* Unclaim=
+ed register detected. Please use the i915.mmio_debug=3D1 to debug this prob=
+lem.
+[25566.368232] [drm:hsw_unclaimed_reg_detect.isra.6 [i915]] *ERROR* Unclaim=
+ed register detected. Please use the i915.mmio_debug=3D1 to debug this prob=
+lem.<4>[25568.446011] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2]=
+=20
+has bogus alignment
+[25568.447018] pci_bus 0000:02: Allocating resources
+[25568.447055] pci_bus 0000:03: Allocating resources
+[25568.447135] pci_bus 0000:04: Allocating resources
+[25568.447168] pci_bus 0000:05: Allocating resources
+[25568.447195] pci_bus 0000:06: Allocating resources
+[25568.447228] pci_bus 0000:0e: Allocating resources
+[25568.447323] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bog=
+us alignment
+[25568.447557] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bog=
+us alignment
+[25568.447735] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bog=
+us alignment
+[25568.447847] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bog=
+us alignment
+[25568.448399] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bog=
+us alignment
+[25568.448438] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bog=
+us alignment
+[25568.448566] acpi MSFT1111:00: Cannot transition to power state D3cold fo=
+r parent in (unknown)
+[25568.448572] acpi INT33C2:00: Cannot transition to non-D0 state from D3
+[25568.448577] acpi MSFT0002:00: Cannot transition to power state D3cold fo=
+r parent in (unknown)
+[25568.448581] acpi ELAN1010:00: Cannot transition to power state D3cold fo=
+r parent in (unknown)
+[25568.448587] acpi INT33C3:00: Cannot transition to non-D0 state from D3
+[25568.448590] acpi INT33C0:00: Cannot transition to non-D0 state from D3
+[25568.448594] acpi INT33C1:00: Cannot transition to non-D0 state from D3
+[25568.448598] acpi INT33C4:00: Cannot transition to non-D0 state from D3
+[25568.448602] acpi INT33C5:00: Cannot transition to non-D0 state from D3
+[25568.448623] acpi device:41: Cannot transition to power state D3cold for =
+parent in (unknown)
+[25568.448627] acpi INT33C6:00: Cannot transition to non-D0 state from D3
+[25568.448890] pci_bus 0000:01: Allocating resources
+[25568.448905] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bog=
+us alignment
+[25568.449064] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bog=
+us alignment
+[25568.449472] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bog=
+us alignment
+
+With older kernel (3.13) I do not see these errors, so it is regression. Ca=
+n you look at it? If it is needed, I can provide other logs, ACPI/DSTD dump=
+s, etc.
+
+=2D-=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
+
+--nextPart5943893.pKyMBm5Emp
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAlSbC0QACgkQi/DJPQPkQ1L9KACgzMwbQF94zSRALCAR+HrQfdYB
+zTwAnRpeZ4/yZhjkv9C1K49F3qrRXRw7
+=5Mtp
+-----END PGP SIGNATURE-----
+
+--nextPart5943893.pKyMBm5Emp--
