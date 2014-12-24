@@ -1,41 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:56674 "EHLO mail1.g1.pair.com"
+Received: from bear.ext.ti.com ([192.94.94.41]:44535 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752284AbaLSISj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 19 Dec 2014 03:18:39 -0500
-From: Sean Cross <xobs@kosagi.com>
-To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Shawn Guo <shawn.guo@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	devicetree@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	linux-pci@vger.kernel.org
-Cc: bunnie@kosagi.com, Sean Cross <xobs@kosagi.com>
-Subject: [PATCH 0/2] Add support for kosagi novena
-Date: Fri, 19 Dec 2014 16:10:15 +0800
-Message-Id: <1418976617-833-1-git-send-email-xobs@kosagi.com>
+	id S1751813AbaLXWMW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Dec 2014 17:12:22 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux@arm.linux.org.uk>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <arnd@arndb.de>,
+	<will.deacon@arm.com>, <grant.likely@linaro.org>,
+	<robh+dt@kernel.org>, <devicetree@vger.kernel.org>,
+	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>
+Subject: [PATCH v2 0/2] PCI: get DMA configuration from parent device
+Date: Wed, 24 Dec 2014 17:11:37 -0500
+Message-ID: <1419459099-6667-1-git-send-email-m-karicheri2@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kosagi Novena mainboard contains an i.MX6, along with a PCI Express slot.
-This patchset adds regulator support to the PCI Express slot, and adds
-device tree support for the Novena mainboard.
+PCI devices on Keystone doesn't have correct dma_pfn_offset set. This patch
+add capability to set the dma configuration such as dma-mask, dma_pfn_offset,
+and dma ops etc using the information from DT. The prior RFCs and discussions
+are available at [1] and [2] below.
 
-Sean Cross (2):
-  PCI: imx6: Add power-supply support
-  ARM: dts: imx6q: add Novena board
+[2] : https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg790244.html
+[1] : http://www.gossamer-threads.com/lists/linux/kernel/2024591
 
- .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |   3 +
- arch/arm/boot/dts/Makefile                         |   1 +
- arch/arm/boot/dts/imx6q-novena.dts                 | 893 +++++++++++++++++++++
- drivers/pci/host/pci-imx6.c                        |  20 +-
- 4 files changed, 916 insertions(+), 1 deletion(-)
- create mode 100644 arch/arm/boot/dts/imx6q-novena.dts
+Change history:
+	v2 - update size to coherent_dma_mask + 1 if dma-range info is missing
+	   - also check the np for null.
+	v1 - updates based on the comments against initial RFC.
+	   - Added a helper function to get the OF node of the parent
+	   - Added an API in of_pci.c to update DMA configuration of the pci
+	     device.
+
+Murali Karicheri (2):
+  of/pci: add of_pci_dma_configure() update dma configuration
+  PCI: update dma configuration from DT
+
+ drivers/of/of_pci.c    |   73 ++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/probe.c    |    2 ++
+ include/linux/of_pci.h |   12 ++++++++
+ 3 files changed, 87 insertions(+)
 
 -- 
-2.1.3
+1.7.9.5
 
