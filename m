@@ -1,142 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:41823 "EHLO
-	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751894AbaLOJyK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Dec 2014 04:54:10 -0500
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>, <billsumnerlinux@gmail.com>,
-	<zhen-hual@hp.com>
-Cc: <iommu@lists.linux-foundation.org>, <kexec@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>
-Subject: [PATCH 01/10] iommu/vt-d: Update iommu_attach_domain() and its callers
-Date: Mon, 15 Dec 2014 17:52:57 +0800
-Message-Id: <1418637186-9988-2-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1418637186-9988-1-git-send-email-zhen-hual@hp.com>
-References: <1418637186-9988-1-git-send-email-zhen-hual@hp.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:48349 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751086AbaLXP6X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Dec 2014 10:58:23 -0500
+Message-ID: <549AE273.1040407@ti.com>
+Date: Wed, 24 Dec 2014 10:57:39 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<will.deacon@arm.com>, <linux-kernel@vger.kernel.org>,
+	<grant.likely@linaro.org>, <robh+dt@kernel.org>,
+	<bhelgaas@google.com>, Russell King <rmk@arm.linux.org.uk>
+Subject: Re: [RFC v1 PATCH 1/2] of/pci: add of_pci_dma_configure() update
+ dma configuration
+References: <1418940425-2017-1-git-send-email-m-karicheri2@ti.com> <5090769.jqAkiDgYu7@wuerfel> <5499A96D.4010704@ti.com> <4513569.xuD4xkPOuC@wuerfel>
+In-Reply-To: <4513569.xuD4xkPOuC@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Allow specification of the domain-id for the new domain.
-This patch only adds the 'did' parameter to iommu_attach_domain()
-and modifies all of its callers to specify the default value of -1
-which says "no did specified, allocate a new one".
+On 12/23/2014 05:42 PM, Arnd Bergmann wrote:
+> On Tuesday 23 December 2014 12:42:05 Murali Karicheri wrote:
+>>> here.
+>>
+>> Arnd,
+>>
+>> I guess so. Besides we need to keep the default coherent dma mask to
+>> 32bit 0xffffffffull as well to work on Keystone and also in sync with
+>> current defaults used in pci_device_add() so that we don't break this
+>> behavior.
+>>
+>> Here is the summary of changes need to make on top of my existing patch.
+>>
+>> 1. of_dma_configure() - change size = dev->coherent_dma_mask to size =
+>> dev->coherent_dma_mask + 1. This is a new patch to fix existing code.
+>
+> ok
+>
+>> 2. Do the above change to of_pci_dma_configure() as well.
+>
+> ok
+>
+>> 3. in arch_setup_dma_ops() update the DMA mask to min((*dev->dma_mask),
+>> dma_base + size - 1) as
+>>
+>>
+>> diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
+>> index c17f6a9..88b4769 100644
+>> --- a/arch/arm/mm/dma-mapping.c
+>> +++ b/arch/arm/mm/dma-mapping.c
+>> @@ -2053,8 +2053,13 @@ void arch_setup_dma_ops(struct device *dev, u64
+>> dma_base, u64 size,
+>>    {
+>>           struct dma_map_ops *dma_ops;
+>>
+>> +
+>> +       *dev->dma_mask = min((*dev->dma_mask), (dma_base + size - 1));
+>>
+>> I have tested this on keystone and it works fine with rootfs on PCI SATA
+>> harddisk. I will be doing more tests with this change. If you are in
+>> agreement with the above changes, I will re-spin the patch to accomodate
+>> them and send v1 of the same.
+>
+> Ok, sounds good. I noticed that you did not put Russell into the Cc list
+> for the emails. Please do so when you send it again, as he may have some
+> additional comments.
+>
+> 	Arnd
+Arnd,
 
-This is no functional change from current behaviour -- just enables
-a functional change to be made in a later patch.
+Can I add "Reviewed-by: Arnd Bergmann <arnd@arndb.de>" when I send the 
+v2 of the patch? I want to send this today. So please respond.
 
-Bill Sumner:
-    Original version.
-
-Li, Zhenhua:
-    Minor change, add change to function __iommu_attach_domain.
-
-Signed-off-by: Bill Sumner <billsumnerlinux@gmail.com>
-Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
----
- drivers/iommu/intel-iommu.c | 34 ++++++++++++++++++++--------------
- 1 file changed, 20 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 1232336..2dc6250 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1534,31 +1534,36 @@ static struct dmar_domain *alloc_domain(int flags)
- }
- 
- static int __iommu_attach_domain(struct dmar_domain *domain,
--				 struct intel_iommu *iommu)
-+				 struct intel_iommu *iommu,
-+				 int domain_number)
- {
- 	int num;
- 	unsigned long ndomains;
- 
- 	ndomains = cap_ndoms(iommu->cap);
--	num = find_first_zero_bit(iommu->domain_ids, ndomains);
--	if (num < ndomains) {
--		set_bit(num, iommu->domain_ids);
--		iommu->domains[num] = domain;
--	} else {
--		num = -ENOSPC;
--	}
-+	if (domain_number < 0) {
-+		num = find_first_zero_bit(iommu->domain_ids, ndomains);
-+		if (num < ndomains) {
-+			set_bit(num, iommu->domain_ids);
-+			iommu->domains[num] = domain;
-+		} else {
-+			num = -ENOSPC;
-+		}
-+	} else
-+		num = domain_number;
- 
- 	return num;
- }
- 
- static int iommu_attach_domain(struct dmar_domain *domain,
--			       struct intel_iommu *iommu)
-+			       struct intel_iommu *iommu,
-+			       int domain_number)
- {
- 	int num;
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&iommu->lock, flags);
--	num = __iommu_attach_domain(domain, iommu);
-+	num = __iommu_attach_domain(domain, iommu, domain_number);
- 	spin_unlock_irqrestore(&iommu->lock, flags);
- 	if (num < 0)
- 		pr_err("IOMMU: no free domain ids\n");
-@@ -1577,7 +1582,7 @@ static int iommu_attach_vm_domain(struct dmar_domain *domain,
- 		if (iommu->domains[num] == domain)
- 			return num;
- 
--	return __iommu_attach_domain(domain, iommu);
-+	return __iommu_attach_domain(domain, iommu, -1);
- }
- 
- static void iommu_detach_domain(struct dmar_domain *domain,
-@@ -2231,6 +2236,7 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 	u16 dma_alias;
- 	unsigned long flags;
- 	u8 bus, devfn;
-+	int did = -1;   /* Default to "no domain_id supplied" */
- 
- 	domain = find_domain(dev);
- 	if (domain)
-@@ -2264,7 +2270,7 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 	domain = alloc_domain(0);
- 	if (!domain)
- 		return NULL;
--	domain->id = iommu_attach_domain(domain, iommu);
-+	domain->id = iommu_attach_domain(domain, iommu, did);
- 	if (domain->id < 0) {
- 		free_domain_mem(domain);
- 		return NULL;
-@@ -2442,7 +2448,7 @@ static int __init si_domain_init(int hw)
- 		return -EFAULT;
- 
- 	for_each_active_iommu(iommu, drhd) {
--		ret = iommu_attach_domain(si_domain, iommu);
-+		ret = iommu_attach_domain(si_domain, iommu, -1);
- 		if (ret < 0) {
- 			domain_exit(si_domain);
- 			return -EFAULT;
-@@ -3866,7 +3872,7 @@ static int intel_iommu_add(struct dmar_drhd_unit *dmaru)
- 	iommu_enable_translation(iommu);
- 
- 	if (si_domain) {
--		ret = iommu_attach_domain(si_domain, iommu);
-+		ret = iommu_attach_domain(si_domain, iommu, -1);
- 		if (ret < 0 || si_domain->id != ret)
- 			goto disable_iommu;
- 		domain_attach_iommu(si_domain, iommu);
 -- 
-2.0.0-rc0
-
+Murali Karicheri
+Linux Kernel, Texas Instruments
