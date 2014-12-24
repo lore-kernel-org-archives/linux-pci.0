@@ -1,131 +1,167 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:18928 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750764AbaLLCe7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Dec 2014 21:34:59 -0500
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	"Ian Campbell" <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Christian Daudt <bcm@fixthebug.org>,
-	Matt Porter <mporter@linaro.org>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-CC: Lucas Stach <l.stach@pengutronix.de>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
-Subject: [PATCH v2 4/4] ARM: dts: enable PCIe for Broadcom Cygnus
-Date: Thu, 11 Dec 2014 18:36:57 -0800
-Message-ID: <1418351817-14898-5-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1418351817-14898-1-git-send-email-rjui@broadcom.com>
-References: <Ray Jui <rjui@broadcom.com>
- <1418351817-14898-1-git-send-email-rjui@broadcom.com>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:36874 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750896AbaLXC3V (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Dec 2014 21:29:21 -0500
+Received: by mail-ig0-f182.google.com with SMTP id hn15so6419255igb.9
+        for <linux-pci@vger.kernel.org>; Tue, 23 Dec 2014 18:29:21 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20141223214106.GA27291@google.com>
+References: <CAErSpo69c6jXOp+nw2sTSU4vgqGufUQNUEGK4_2+6p-qpyE0vQ@mail.gmail.com>
+	<1418074683.13358.1.camel@kernel.crashing.org>
+	<CAErSpo7pMAL5i2aPGV3u5F178bHeQTtjASckKs9NaUbEGaxv3Q@mail.gmail.com>
+	<20141208233855.GA15713@shangw>
+	<CAE9FiQXj-vX8TE-8Es83FmJAKDKD_dMNbQkmsaNPyy_nVEag8w@mail.gmail.com>
+	<20141220002306.GB30834@google.com>
+	<CAE9FiQUU4OoxpV3MNyFdjtmS1nRfD=ziYDDnUmsGy5qj8U3vLg@mail.gmail.com>
+	<CAErSpo7JAcLa_2gNkOG+oSHb1cbBXdEa-TVW0=amBptRB8-fNA@mail.gmail.com>
+	<CAE9FiQV6nxeMcLQ6YBR_c5tNGGjiKgL+Z4vcGpK21j-14V8SKw@mail.gmail.com>
+	<CAE9FiQVggbU5u__0z8p33J9hQ39CtQ-vpQbZyjG-LO9aqN05Lw@mail.gmail.com>
+	<20141223214106.GA27291@google.com>
+Date: Tue, 23 Dec 2014 18:29:20 -0800
+Message-ID: <CAE9FiQUoA_vz78sEnHtDAmzTJcwL0PdUe9jwLw+H9h3+omq+WA@mail.gmail.com>
+Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
+ GPU init
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: =?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alexey Voronkov <zermond@gmail.com>,
+	David Airlie <airlied@linux.ie>,
+	Alex Deucher <alexdeucher@gmail.com>,
+	Richard Yang <weiyang@linux.vnet.ibm.com>
+Content-Type: multipart/mixed; boundary=001a113f66442303f3050aed0f49
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add PCIe device nodes and its properties in bcm-cygnus.dtsi but keep it
-disabled there. Only enable it in bcm958300k.dts because PCIe interfaces
-are only populated on that board
+--001a113f66442303f3050aed0f49
+Content-Type: text/plain; charset=UTF-8
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Reviewed-by: Scott Branden <sbranden@broadcom.com>
----
- arch/arm/boot/dts/bcm-cygnus.dtsi |   52 +++++++++++++++++++++++++++++++++++++
- arch/arm/boot/dts/bcm958300k.dts  |    8 ++++++
- 2 files changed, 60 insertions(+)
+On Tue, Dec 23, 2014 at 1:41 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-diff --git a/arch/arm/boot/dts/bcm-cygnus.dtsi b/arch/arm/boot/dts/bcm-cygnus.dtsi
-index 5126f9e..07938f9 100644
---- a/arch/arm/boot/dts/bcm-cygnus.dtsi
-+++ b/arch/arm/boot/dts/bcm-cygnus.dtsi
-@@ -70,6 +70,58 @@
- 		};
- 	};
- 
-+	pcie0: pcie@18012000 {
-+		compatible = "brcm,iproc-pcie";
-+		reg = <0x18012000 0x1000>,
-+			<0x18002000 0x1000>;
-+
-+		#interrupt-cells = <1>;
-+		interrupts = <GIC_SPI 96 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 97 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 98 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 99 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 100 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 101 IRQ_TYPE_NONE>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic GIC_SPI 100 IRQ_TYPE_NONE>;
-+
-+		bus-range = <0x00 0xFF>;
-+
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x81000000 0 0	  0x28000000 0 0x00010000
-+			  0x82000000 0 0x20000000 0x20000000 0 0x04000000>;
-+		phy-addr = <5>;
-+		status = "disabled";
-+	};
-+
-+	pcie1: pcie@18013000 {
-+		compatible = "brcm,iproc-pcie";
-+		reg = <0x18013000 0x1000>,
-+			<0x18002000 0x1000>;
-+
-+		#interrupt-cells = <1>;
-+		interrupts = <GIC_SPI 102 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 103 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 104 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 105 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 106 IRQ_TYPE_NONE>,
-+			     <GIC_SPI 107 IRQ_TYPE_NONE>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic GIC_SPI 106 IRQ_TYPE_NONE>;
-+
-+		bus-range = <0x00 0xFF>;
-+
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x81000000 0 0	  0x48000000 0 0x00010000
-+			  0x82000000 0 0x40000000 0x40000000 0 0x04000000>;
-+		phy-addr = <6>;
-+		status = "disabled";
-+	};
-+
- 	uart0: serial@18020000 {
- 		compatible = "snps,dw-apb-uart";
- 		reg = <0x18020000 0x100>;
-diff --git a/arch/arm/boot/dts/bcm958300k.dts b/arch/arm/boot/dts/bcm958300k.dts
-index f1bb36f..c9eb856 100644
---- a/arch/arm/boot/dts/bcm958300k.dts
-+++ b/arch/arm/boot/dts/bcm958300k.dts
-@@ -47,6 +47,14 @@
- 		bootargs = "console=ttyS0,115200";
- 	};
- 
-+	pcie0: pcie@18012000 {
-+		status = "okay";
-+	};
-+
-+	pcie1: pcie@18013000 {
-+		status = "okay";
-+	};
-+
- 	uart3: serial@18023000 {
- 		status = "okay";
- 	};
--- 
-1.7.9.5
+>
+> Can you do this so it clips to any upstream bridge, whether it's a host
+> bridge or a PCI-to-PCI bridge?  It doesn't seem like this has to be
+> specific to host bridge windows -- any device below a PCI-to-PCI bridge has
+> to use address space forwarded by that upstream bridge.
 
+ok, please check attached v2.
+
+>
+> I wish this were in generic code.  There's nothing architecture-specific
+> about the problem, but this patch only fixes things on x86.  Can you make a
+> similar change in the corresponding code for other arches, as well?
+
+ok, later after x86.
+
+Thanks
+
+Yinghai
+
+--001a113f66442303f3050aed0f49
+Content-Type: text/x-patch; charset=US-ASCII; name="pci_bridge_clip_v2.patch"
+Content-Disposition: attachment; filename="pci_bridge_clip_v2.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_i4231z0f0
+
+U3ViamVjdDogW1JGQyBQQVRDSCAtdjJdIFBDSSwgeDg2OiBjbGlwIGZpcm13YXJlIGFzc2lnbmVk
+IHBjaSBicmlkZ2VzIHVuZGVyIGhvc3RicmlkZ2UKClNvbWUgYmlvcyBwdXQgcmFuZ2UgdGhhdCBp
+cyBub3QgZnVsbHkgY292ZXJyZWQgYnkgcm9vdCBidXMgcmVzb3VyY2VzLgpUcnkgdG8gY2xpcCB0
+aGVtIGFuZCB1cGRhdGUgdGhlbSBpbiBwY2kgYnJpZGdlIGJhcnMuCgotdjI6IGNoZWNrIHdpdGgg
+dXBzdHJlYW0gYnJpZGdlIGluc3RlYWQgb2YgaG9zdCBicmlkZ2Ugb25seS4KICAgICBhbHNvIGFk
+ZCBkZWJ1ZyBwcmludCBvdXQuCgpMaW5rOiBodHRwczovL2J1Z3ppbGxhLmtlcm5lbC5vcmcvc2hv
+d19idWcuY2dpP2lkPTg1NDkxClJlcG9ydGVkLWJ5OiBNYXJlayBLb3JkaWsgPGtvcmRpa21hcmVr
+QGdtYWlsLmNvbT4KRml4ZXM6IDViMjg1NDE1NTJlZiAoIlBDSTogUmVzdHJpY3QgNjQtYml0IHBy
+ZWZldGNoYWJsZSBicmlkZ2Ugd2luZG93cyB0byA2NC1iaXQgcmVzb3VyY2VzIikKU2lnbmVkLW9m
+Zi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgoKLS0tCiBhcmNoL3g4Ni9wY2kv
+aTM4Ni5jIHwgICA4MSArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0tLS0t
+LS0tLS0tLS0tCiBkcml2ZXJzL3BjaS9idXMuYyAgIHwgICAzNSArKysrKysrKysrKysrKysrKysr
+KysrCiBpbmNsdWRlL2xpbnV4L3BjaS5oIHwgICAgMSAKIDMgZmlsZXMgY2hhbmdlZCwgOTUgaW5z
+ZXJ0aW9ucygrKSwgMjIgZGVsZXRpb25zKC0pCgpJbmRleDogbGludXgtMi42L2FyY2gveDg2L3Bj
+aS9pMzg2LmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvYXJjaC94ODYvcGNpL2kzODYu
+YworKysgbGludXgtMi42L2FyY2gveDg2L3BjaS9pMzg2LmMKQEAgLTIwNSwyOCArMjA1LDQ4IEBA
+IEVYUE9SVF9TWU1CT0wocGNpYmlvc19hbGlnbl9yZXNvdXJjZSk7CiAgKgkgICAgYXMgd2VsbC4K
+ICAqLwogCi1zdGF0aWMgdm9pZCBwY2liaW9zX2FsbG9jYXRlX2JyaWRnZV9yZXNvdXJjZXMoc3Ry
+dWN0IHBjaV9kZXYgKmRldikKK3N0YXRpYyBib29sIHBjaWJpb3NfYWxsb2NhdGVfYnJpZGdlX3Jl
+c291cmNlcyhzdHJ1Y3QgcGNpX2RldiAqZGV2KQogewogCWludCBpZHg7CiAJc3RydWN0IHJlc291
+cmNlICpyOworCWJvb2wgY2hhbmdlZCA9IGZhbHNlOwogCiAJZm9yIChpZHggPSBQQ0lfQlJJREdF
+X1JFU09VUkNFUzsgaWR4IDwgUENJX05VTV9SRVNPVVJDRVM7IGlkeCsrKSB7CisJCWludCByZXQ7
+CisKIAkJciA9ICZkZXYtPnJlc291cmNlW2lkeF07CiAJCWlmICghci0+ZmxhZ3MpCiAJCQljb250
+aW51ZTsKIAkJaWYgKHItPnBhcmVudCkJLyogQWxyZWFkeSBhbGxvY2F0ZWQgKi8KIAkJCWNvbnRp
+bnVlOwotCQlpZiAoIXItPnN0YXJ0IHx8IHBjaV9jbGFpbV9yZXNvdXJjZShkZXYsIGlkeCkgPCAw
+KSB7Ci0JCQkvKgotCQkJICogU29tZXRoaW5nIGlzIHdyb25nIHdpdGggdGhlIHJlZ2lvbi4KLQkJ
+CSAqIEludmFsaWRhdGUgdGhlIHJlc291cmNlIHRvIHByZXZlbnQKLQkJCSAqIGNoaWxkIHJlc291
+cmNlIGFsbG9jYXRpb25zIGluIHRoaXMKLQkJCSAqIHJhbmdlLgotCQkJICovCi0JCQlyLT5zdGFy
+dCA9IHItPmVuZCA9IDA7Ci0JCQlyLT5mbGFncyA9IDA7CisKKwkJaWYgKCFyLT5zdGFydCkKKwkJ
+CWdvdG8gY2xlYXI7CisKKwkJcmV0ID0gcGNpX2NsYWltX3Jlc291cmNlKGRldiwgaWR4KTsKKwkJ
+aWYgKHJldCA+PSAwKQorCQkJY29udGludWU7CisKKwkJLyogdHJ5IGFnYWluIGFmdGVyIGNsaXAg
+Zm9yIHBjaSBicmlkZ2UqLworCQlpZiAoKGRldi0+Y2xhc3MgPj4gOCkgPT0gUENJX0NMQVNTX0JS
+SURHRV9QQ0kgJiYKKwkJICAgIHBjaV9idXNfY2xpcF9yZXNvdXJjZShkZXYsIHIpKSB7CisJCQlj
+aGFuZ2VkID0gdHJ1ZTsKKwkJCWlmIChwY2lfY2xhaW1fcmVzb3VyY2UoZGV2LCBpZHgpID49IDAp
+CisJCQkJY29udGludWU7CiAJCX0KKworY2xlYXI6CisJCS8qCisJCSAqIFNvbWV0aGluZyBpcyB3
+cm9uZyB3aXRoIHRoZSByZWdpb24uCisJCSAqIEludmFsaWRhdGUgdGhlIHJlc291cmNlIHRvIHBy
+ZXZlbnQKKwkJICogY2hpbGQgcmVzb3VyY2UgYWxsb2NhdGlvbnMgaW4gdGhpcworCQkgKiByYW5n
+ZS4KKwkJICovCisJCXItPnN0YXJ0ID0gci0+ZW5kID0gMDsKKwkJci0+ZmxhZ3MgPSAwOwogCX0K
+KworCXJldHVybiBjaGFuZ2VkOwogfQogCiBzdGF0aWMgdm9pZCBwY2liaW9zX2FsbG9jYXRlX2J1
+c19yZXNvdXJjZXMoc3RydWN0IHBjaV9idXMgKmJ1cykKQEAgLTIzNCw4ICsyNTQsMTIgQEAgc3Rh
+dGljIHZvaWQgcGNpYmlvc19hbGxvY2F0ZV9idXNfcmVzb3VyYwogCXN0cnVjdCBwY2lfYnVzICpj
+aGlsZDsKIAogCS8qIERlcHRoLUZpcnN0IFNlYXJjaCBvbiBidXMgdHJlZSAqLwotCWlmIChidXMt
+PnNlbGYpCi0JCXBjaWJpb3NfYWxsb2NhdGVfYnJpZGdlX3Jlc291cmNlcyhidXMtPnNlbGYpOwor
+CWlmIChidXMtPnNlbGYpIHsKKwkJYm9vbCBjaGFuZ2VkID0gcGNpYmlvc19hbGxvY2F0ZV9icmlk
+Z2VfcmVzb3VyY2VzKGJ1cy0+c2VsZik7CisKKwkJaWYgKGNoYW5nZWQpCisJCQlwY2lfc2V0dXBf
+YnJpZGdlKGJ1cyk7CisJfQogCWxpc3RfZm9yX2VhY2hfZW50cnkoY2hpbGQsICZidXMtPmNoaWxk
+cmVuLCBub2RlKQogCQlwY2liaW9zX2FsbG9jYXRlX2J1c19yZXNvdXJjZXMoY2hpbGQpOwogfQpA
+QCAtMjcxLDIxICsyOTUsMzQgQEAgc3RhdGljIHZvaWQgcGNpYmlvc19hbGxvY2F0ZV9kZXZfcmVz
+b3VyYwogCQkJZWxzZQogCQkJCWRpc2FibGVkID0gIShjb21tYW5kICYgUENJX0NPTU1BTkRfTUVN
+T1JZKTsKIAkJCWlmIChwYXNzID09IGRpc2FibGVkKSB7CisJCQkJaW50IHJldDsKKwogCQkJCWRl
+dl9kYmcoJmRldi0+ZGV2LAogCQkJCQkiQkFSICVkOiByZXNlcnZpbmcgJXByIChkPSVkLCBwPSVk
+KVxuIiwKIAkJCQkJaWR4LCByLCBkaXNhYmxlZCwgcGFzcyk7Ci0JCQkJaWYgKHBjaV9jbGFpbV9y
+ZXNvdXJjZShkZXYsIGlkeCkgPCAwKSB7Ci0JCQkJCWlmIChyLT5mbGFncyAmIElPUkVTT1VSQ0Vf
+UENJX0ZJWEVEKSB7Ci0JCQkJCQlkZXZfaW5mbygmZGV2LT5kZXYsICJCQVIgJWQgJXBSIGlzIGlt
+bW92YWJsZVxuIiwKKworCQkJCXJldCA9IHBjaV9jbGFpbV9yZXNvdXJjZShkZXYsIGlkeCk7CisK
+KwkJCQlpZiAocmV0ID49IDApCisJCQkJCWNvbnRpbnVlOworCisJCQkJaWYgKHItPmZsYWdzICYg
+SU9SRVNPVVJDRV9QQ0lfRklYRUQpIHsKKwkJCQkJZGV2X2luZm8oJmRldi0+ZGV2LCAiQkFSICVk
+ICVwUiBpcyBpbW1vdmFibGVcbiIsCiAJCQkJCQkJIGlkeCwgcik7Ci0JCQkJCX0gZWxzZSB7Ci0J
+CQkJCQkvKiBXZSdsbCBhc3NpZ24gYSBuZXcgYWRkcmVzcyBsYXRlciAqLwotCQkJCQkJcGNpYmlv
+c19zYXZlX2Z3X2FkZHIoZGV2LAotCQkJCQkJCQlpZHgsIHItPnN0YXJ0KTsKLQkJCQkJCXItPmVu
+ZCAtPSByLT5zdGFydDsKLQkJCQkJCXItPnN0YXJ0ID0gMDsKLQkJCQkJfQorCQkJCQljb250aW51
+ZTsKKwkJCQl9CisKKwkJCQkvKiB0cnkgYWdhaW4gd2l0aCBjbGlwICovCisJCQkJaWYgKHBjaV9i
+dXNfY2xpcF9yZXNvdXJjZShkZXYsIHIpKSB7CisJCQkJCXBjaV91cGRhdGVfcmVzb3VyY2UoZGV2
+LCBpZHgpOworCQkJCQlpZiAocGNpX2NsYWltX3Jlc291cmNlKGRldiwgaWR4KSA+PSAwKQorCQkJ
+CQkJY29udGludWU7CiAJCQkJfQorCisJCQkJLyogV2UnbGwgYXNzaWduIGEgbmV3IGFkZHJlc3Mg
+bGF0ZXIgKi8KKwkJCQlwY2liaW9zX3NhdmVfZndfYWRkcihkZXYsIGlkeCwgci0+c3RhcnQpOwor
+CQkJCXItPmVuZCAtPSByLT5zdGFydDsKKwkJCQlyLT5zdGFydCA9IDA7CiAJCQl9CiAJCX0KIAlp
+ZiAoIXBhc3MpIHsKSW5kZXg6IGxpbnV4LTIuNi9pbmNsdWRlL2xpbnV4L3BjaS5oCj09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2luY2x1ZGUvbGludXgvcGNpLmgKKysrIGxpbnV4LTIuNi9p
+bmNsdWRlL2xpbnV4L3BjaS5oCkBAIC0xMDk0LDYgKzEwOTQsNyBAQCB2b2lkIHBjaV9mcmVlX3Jl
+c291cmNlX2xpc3Qoc3RydWN0IGxpc3RfCiB2b2lkIHBjaV9idXNfYWRkX3Jlc291cmNlKHN0cnVj
+dCBwY2lfYnVzICpidXMsIHN0cnVjdCByZXNvdXJjZSAqcmVzLCB1bnNpZ25lZCBpbnQgZmxhZ3Mp
+Owogc3RydWN0IHJlc291cmNlICpwY2lfYnVzX3Jlc291cmNlX24oY29uc3Qgc3RydWN0IHBjaV9i
+dXMgKmJ1cywgaW50IG4pOwogdm9pZCBwY2lfYnVzX3JlbW92ZV9yZXNvdXJjZXMoc3RydWN0IHBj
+aV9idXMgKmJ1cyk7Citib29sIHBjaV9idXNfY2xpcF9yZXNvdXJjZShzdHJ1Y3QgcGNpX2RldiAq
+ZGV2LCBzdHJ1Y3QgcmVzb3VyY2UgKnJlcyk7CiAKICNkZWZpbmUgcGNpX2J1c19mb3JfZWFjaF9y
+ZXNvdXJjZShidXMsIHJlcywgaSkJCQkJXAogCWZvciAoaSA9IDA7CQkJCQkJCVwKSW5kZXg6IGxp
+bnV4LTIuNi9kcml2ZXJzL3BjaS9idXMuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9k
+cml2ZXJzL3BjaS9idXMuYworKysgbGludXgtMi42L2RyaXZlcnMvcGNpL2J1cy5jCkBAIC0yMjgs
+NiArMjI4LDQxIEBAIGludCBwY2lfYnVzX2FsbG9jX3Jlc291cmNlKHN0cnVjdCBwY2lfYnUKIH0K
+IEVYUE9SVF9TWU1CT0wocGNpX2J1c19hbGxvY19yZXNvdXJjZSk7CiAKK2Jvb2wgcGNpX2J1c19j
+bGlwX3Jlc291cmNlKHN0cnVjdCBwY2lfZGV2ICpkZXYsIHN0cnVjdCByZXNvdXJjZSAqcmVzKQor
+eworCXN0cnVjdCBwY2lfYnVzICpidXMgPSBkZXYtPmJ1czsKKwlyZXNvdXJjZV9zaXplX3Qgc3Rh
+cnQsIGVuZDsKKwlzdHJ1Y3QgcmVzb3VyY2Ugb3JpZ19yZXMgPSAqcmVzOworCXN0cnVjdCByZXNv
+dXJjZSAqcjsKKwlpbnQgaTsKKworCXBjaV9idXNfZm9yX2VhY2hfcmVzb3VyY2UoYnVzLCByLCBp
+KSB7CisKKwkJaWYgKHJlc291cmNlX3R5cGUocmVzKSAhPSByZXNvdXJjZV90eXBlKHIpKQorCQkJ
+Y29udGludWU7CisKKwkJc3RhcnQgPSBtYXgoci0+c3RhcnQsIHJlcy0+c3RhcnQpOworCQllbmQg
+PSBtaW4oci0+ZW5kLCByZXMtPmVuZCk7CisKKwkJLyogbm8gb3ZlcmxhcCA/ICovCisJCWlmIChz
+dGFydCA+IGVuZCkKKwkJCWNvbnRpbnVlOworCisJCWlmIChyZXMtPnN0YXJ0ID09IHN0YXJ0ICYm
+IHJlcy0+ZW5kID09IGVuZCkKKwkJCXJldHVybiBmYWxzZTsKKworCQkvKiBjaGFuZ2VkICovCisJ
+CXJlcy0+c3RhcnQgPSBzdGFydDsKKwkJcmVzLT5lbmQgPSBlbmQ7CisJCWRldl9wcmludGsoS0VS
+Tl9ERUJVRywgJmRldi0+ZGV2LCAiJXBSID09PiAlcFJcbiIsCisJCQkJICZvcmlnX3JlcywgcmVz
+KTsKKworCQlyZXR1cm4gdHJ1ZTsKKwl9CisKKwlyZXR1cm4gZmFsc2U7Cit9CisKIHZvaWQgX193
+ZWFrIHBjaWJpb3NfcmVzb3VyY2Vfc3VydmV5X2J1cyhzdHJ1Y3QgcGNpX2J1cyAqYnVzKSB7IH0K
+IAogLyoqCg==
+--001a113f66442303f3050aed0f49--
