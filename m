@@ -1,85 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qa0-f41.google.com ([209.85.216.41]:45062 "EHLO
+	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751304AbaLYTzs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Dec 2014 14:55:48 -0500
+Received: by mail-qa0-f41.google.com with SMTP id s7so6564506qap.0
+        for <linux-pci@vger.kernel.org>; Thu, 25 Dec 2014 11:55:48 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20141211113243.3f21551e@jbarnes-t420>
-References: <CAErSpo4iZCUZgqNi-fX+YX=sKV=Ae5z8kn8-++E0Cgft9unmBg@mail.gmail.com>
- <20141211181136.GA11367@kroah.com> <20141211113243.3f21551e@jbarnes-t420>
+In-Reply-To: <bug-90311-41252@https.bugzilla.kernel.org/>
+References: <bug-90311-41252@https.bugzilla.kernel.org/>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 11 Dec 2014 15:07:34 -0700
-Message-ID: <CAErSpo4V8tYE+yHvQ+Se=tQHWAKafk89SmVTjeCVRzbA-VtQbg@mail.gmail.com>
-Subject: Re: Special handling of display/VGA devices in hotplug drivers
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Dely Sy <dely.l.sy@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>,
-	Kristen Carlson Accardi <kristen.c.accardi@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Praveen Kalamegham <praveen@nextio.com>
+Date: Thu, 25 Dec 2014 12:55:27 -0700
+Message-ID: <CAErSpo7rtsQfqkMCRy7u+Tn_iCEPN5HbMQdz1hQTOvUt=67CkQ@mail.gmail.com>
+Subject: Re: [Bug 90311] New: Hibernate failure with intel_iommu
+To: thomas.lindroth@gmail.com
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Praveen]
+[+cc Alex, linux-pci, iommu]
 
-On Thu, Dec 11, 2014 at 12:32 PM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
-> On Thu, 11 Dec 2014 13:11:36 -0500
-> Greg Kroah-Hartman <gregkh@linuxfoundation.org> wrote:
+On Thu, Dec 25, 2014 at 12:13 PM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=90311
 >
->> On Thu, Dec 11, 2014 at 10:34:30AM -0700, Bjorn Helgaas wrote:
->> > It looks like you added the initial pciehp driver [1], which
->> > includes the following code in pciehp_disable_slot():
->> >
->> > + if (class_code == PCI_BASE_CLASS_DISPLAY) {
->> > + /* Display/Video adapter (not supported) */
->> > + rc = REMOVE_NOT_SUPPORTED;
->> >
->> > + /* If it's a bridge, check the VGA Enable bit */
->> > + if ((header_type & 0x7F) == PCI_HEADER_TYPE_BRIDGE) {
->> > + rc = pci_bus_read_config_byte (pci_bus, devfn,
->> > PCI_BRIDGE_CONTROL, &BCR);
->> > + if (rc)
->> > + return rc;
->> > +
->> > + /* If the VGA Enable bit is set, remove isn't supported */
->> > + if (BCR & PCI_BRIDGE_CTL_VGA) {
->> > + rc = REMOVE_NOT_SUPPORTED;
->> >
->> > I'm trying to figure out why VGA devices are handled specially.  I
->> > can't find anything in the PCI specs that mentions this.  Most of
->> > the other PCI hotplug drivers have similar code.  Do you remember
->> > anything about this?
->>
->> The PCI spec said that you were not allowed to hotplug VGA drivers.
->> The big issue is that POST usually needs to run on those things, and
->> there is no way to POST a PCI hotplugged device.
-
-I don't think this is a problem any more, is it?  I think X can
-execute option ROMs, and if we assign the guest to a VM, the guest
-BIOS can also do it.
-
-> Yeah, the legacy I/O regions get routed through the bridge with the VGA
-> bit set, and most legacy code probably can't handle that (whether POST,
-> VBIOS, or VGA drivers).
+>             Bug ID: 90311
+>            Summary: Hibernate failure with intel_iommu
+>            Product: Drivers
+>            Version: 2.5
+>     Kernel Version: 3.18.1
+>           Hardware: x86-64
+>                 OS: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: PCI
+>           Assignee: drivers_pci@kernel-bugs.osdl.org
+>           Reporter: thomas.lindroth@gmail.com
+>         Regression: No
 >
-> There is some code for moving the VGA routing around, so that might be
-> an option if you wanted to remove such a bridge.  You'd have to find a
-> VGA device under another bridge, and enable routing to that first, then
-> you could do the remove.
+> Created attachment 161811
+>   --> https://bugzilla.kernel.org/attachment.cgi?id=161811&action=edit
+> dmesg with iommu on
+>
+> Enabling intel_iommu=on causes uswsusp s2disk to fail. Hibernate always works
+> fine without iommu and as far as I can tell everything works fine with iommu on
+> without hibernating. With intel_iommu set to on I can enter hibernate but the
+> system doesn't come back properly. By that I mean the kernel can't read from
+> swap and everything freezes. I can still switch between virtual terminals, view
+> the system log and use magic sysrq to reboot. The system log is spammed with
+> error messages from the scsi subsystem. http://i.imgur.com/ToFd8NM.jpg sdb
+> contains root and swap.
+>
+> I'm guessing the iommu mapping isn't setup properly after resume so the disk
+> controller can't do DMA anymore. I have made sure the kernel command line
+> contains intel_iommu=on before and after suspend. I have one of the bad marvell
+> 88SE9172 controllers but the swap is not connected to it (bug #42679).
+>
+> I'm running a gentoo system with kernel 3.18.1 on a Gigabyte Z97X-Gaming G1
+> mobo with bios F7 (latest). Finding the problem might be difficult and I don't
+> know what kind of information to provide. I can give you any debug output
+> needed and apply debug patches if needed.
 
-The legacy code thing does seem like an issue.  Since ac81860ea073, we
-don't actually fail when removing a VGA device; we only fail when
-removing a bridge with VGA routing enabled.  Maybe that should be
-tweaked so we fail when removing either a bridge or a VGA device to
-which the legacy ranges are currently routed.  Then we could still
-remove secondary VGA devices like the computational GPUs that
-motivated ac81860ea073.
-
-Failing in pciehp_unconfigure_device() makes sense if the user pressed
-the attention button to request removal.  But if the bridge was
-surprise-removed, e.g., user pulled out an ExpressCard, the bridge is
-already gone, and failing just means we can't clean things up, so
-we're going to leave drivers bound to the bridge and downstream
-devices.
-
-Bjorn
+Is this a regression?  If so, what was the most recent working kernel?
