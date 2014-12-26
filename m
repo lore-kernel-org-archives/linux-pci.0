@@ -1,99 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:58912 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751754AbaLEHf3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Dec 2014 02:35:29 -0500
-From: Chuansheng Liu <chuansheng.liu@intel.com>
-To: bhelgaas@google.com, rjw@rjwysocki.net, mister.freeman@laposte.net,
-	aaron.lu@intel.com, tj@kernel.org, chuansheng.liu@intel.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, stable@vger.kernel.org
-Subject: [PATCH] PCI: Add disabling pm async quirk for JMicron chips
-Date: Fri,  5 Dec 2014 15:17:37 +0800
-Message-Id: <1417763857-11993-1-git-send-email-chuansheng.liu@intel.com>
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:61378 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751359AbaLZTdp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Dec 2014 14:33:45 -0500
+MIME-Version: 1.0
+In-Reply-To: <1419459099-6667-2-git-send-email-m-karicheri2@ti.com>
+References: <1419459099-6667-1-git-send-email-m-karicheri2@ti.com> <1419459099-6667-2-git-send-email-m-karicheri2@ti.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Fri, 26 Dec 2014 13:33:23 -0600
+Message-ID: <CAL_JsqJtVnP_5zAiUvMwL00JQV0mjw-R_hEkxiv13ZuNrQ8nAA@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] of/pci: add of_pci_dma_configure() update dma configuration
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Will Deacon <will.deacon@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some history from
-commit e6b7e41cdd8c ("ata: Disabling the async PM for JMicron chip 363/361")
-==
-Since v3.15, the PM feature of async noirq
-commit 76569faa62c4 ("PM / sleep: Asynchronous threads for resume_noirq") is introduced.
+On Wed, Dec 24, 2014 at 4:11 PM, Murali Karicheri <m-karicheri2@ti.com> wrote:
+> Add of_pci_dma_configure() to allow updating the dma configuration
+> of the pci device using the configuration from DT of the parent of
+> the root bridge device.
+>
+> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+> ---
+>  drivers/of/of_pci.c    |   73 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/of_pci.h |   12 ++++++++
+>  2 files changed, 85 insertions(+)
+>
+> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> index 88471d3..6d43f59 100644
+> --- a/drivers/of/of_pci.c
+> +++ b/drivers/of/of_pci.c
+> @@ -229,6 +229,79 @@ parse_failed:
+>         return err;
+>  }
+>  EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
+> +
+> +/**
+> + * of_get_pci_root_bridge_parent - Helper function to get the OF node of
+> + *             the root bridge's parent
 
-Then Jay hit one system resuming issue that one of the JMicron controller
-can not be powered up successfully.
+I believe this has to be a one line description for DocBook.
 
-His device tree is like below:
-                 +-1c.4-[02]--+-00.0  JMicron Technology Corp. JMB363 SATA/IDE Controller
-                 |            \-00.1  JMicron Technology Corp. JMB363 SATA/IDE Controller
+> + * @dev: ptr to pci_dev struct of the pci device
+> + *
+> + * This function will traverse the bus up to the root bus starting with
+> + * the child and return the of node ptr to bridge device's parent device.
+> + */
+> +struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev)
+> +{
+> +       struct pci_bus *bus = dev->bus;
+> +       struct device *bridge;
+> +
+> +       while (!pci_is_root_bus(bus))
+> +               bus = bus->parent;
+> +       bridge = bus->bridge;
+> +
+> +       return bridge->parent->of_node;
+> +}
+> +EXPORT_SYMBOL_GPL(of_get_pci_root_bridge_parent);
+> +
+> +/**
+> + * of_pci_dma_configure - Setup DMA configuration
+> + * @dev: ptr to pci_dev struct of the pci device
+> + *
+> + * Try to get PCI devices's DMA configuration from DT and update it
+> + * accordingly. This is similar to of_dma_configure() in of/platform.c
+> + */
+> +void of_pci_dma_configure(struct pci_dev *pci_dev)
+> +{
+> +       struct device *dev = &pci_dev->dev;
+> +       u64 dma_addr, paddr, size;
+> +       struct device_node *parent_np;
+> +       unsigned long offset;
+> +       bool coherent;
+> +       int ret;
+> +
+> +       parent_np = of_get_pci_root_bridge_parent(pci_dev);
+> +
+> +       if (parent_np) {
 
-After investigation, we found the the Micron chip 363 included
-one SATA controller(0000:02:00.0) and one PATA controller(0000:02:00.1),
-these two controllers do not have parent-children relationship,
-but the PATA controller only can be powered on after the SATA controller
-has finished the powering on.
+Save a level of indentation and do:
 
-If we enabled the async noirq(), then the below error is hit during noirq
-phase:
-pata_jmicron 0000:02:00.1: Refused to change power state, currently in D3
-Here for JMicron chip 363/361, we need forcedly to disable the async method.
+if (!parent_np)
+  return;
 
-Bug detail: https://bugzilla.kernel.org/show_bug.cgi?id=81551
-==
+> +               /*
+> +                * Set default dma-mask to 32 bit. Drivers are expected to setup
+> +                * the correct supported dma_mask.
+> +                */
+> +               dev->coherent_dma_mask = DMA_BIT_MASK(32);
+> +
+> +               /*
+> +                * Set it to coherent_dma_mask by default if the architecture
+> +                * code has not set it.
+> +                */
+> +               if (!dev->dma_mask)
+> +                       dev->dma_mask = &dev->coherent_dma_mask;
+> +
+> +               ret = of_dma_get_range(parent_np, &dma_addr, &paddr, &size);
+> +               if (ret < 0) {
+> +                       dma_addr = offset = 0;
+> +                       size = dev->coherent_dma_mask + 1;
+> +               } else {
+> +                       offset = PFN_DOWN(paddr - dma_addr);
+> +                       dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+> +               }
+> +               dev->dma_pfn_offset = offset;
+> +
+> +               coherent = of_dma_is_coherent(parent_np);
+> +               dev_dbg(dev, "device is%sdma coherent\n",
+> +                       coherent ? " " : " not ");
+> +
+> +               arch_setup_dma_ops(dev, dma_addr, size, NULL, coherent);
 
-After that, Barto reported the same issue, but his Jmicron chip is JMB368,
-so it can not be covered by
-commit e6b7e41cdd8c ("ata: Disabling the async PM for JMicron chip 363/361").
+This is the same code as of_dma_configure. The only difference I see
+is which node ptr is passed to of_dma_get_range. You need to make that
+a function param of of_dma_configure.
 
-Bug link:
-https://bugzilla.kernel.org/show_bug.cgi?id=84861
+of_dma_configure also has iommu handling now. You will probably need
+something similar for PCI in that you setup an iommu based on the root
+bus DT properties.
 
-Here we think Jmicron chips have the same issue as describled in
-commit e6b7e41cdd8c ("ata: Disabling the async PM for JMicron chip 363/361"),
-
-so here add one quirk to disable the JMicron chips' PM async feature.
-
-Cc: stable@vger.kernel.org # 3.15+
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
----
- drivers/pci/quirks.c |   17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 90acb32..1963080 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1501,6 +1501,21 @@ static void quirk_jmicron_ata(struct pci_dev *pdev)
- 	pci_read_config_dword(pdev, PCI_CLASS_REVISION, &class);
- 	pdev->class = class >> 8;
- }
-+
-+/*
-+ * For JMicron chips, we need to disable the async_suspend method, otherwise
-+ * they will hit the power-on issue when doing device resume, add one quirk
-+ * solution to disable the async_suspend method.
-+ */
-+static void pci_async_suspend_fixup(struct pci_dev *pdev)
-+{
-+	    /*
-+		 * disabling the async_suspend method for JMicron chips to
-+		 * avoid device resuming issue.
-+		 */
-+	    device_disable_async_suspend(&pdev->dev);
-+}
-+
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB360, quirk_jmicron_ata);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB361, quirk_jmicron_ata);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB362, quirk_jmicron_ata);
-@@ -1519,6 +1534,8 @@ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB3
- DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB366, quirk_jmicron_ata);
- DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB368, quirk_jmicron_ata);
- DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB369, quirk_jmicron_ata);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_JMICRON, PCI_ANY_ID,
-+		pci_async_suspend_fixup);
- 
- #endif
- 
--- 
-1.7.9.5
-
+Rob
