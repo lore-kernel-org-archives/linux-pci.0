@@ -1,45 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:37623 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750748AbaLIVjd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Dec 2014 16:39:33 -0500
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:56721 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751002AbaLZPw7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Dec 2014 10:52:59 -0500
+From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: 3.19-rc1 errors when opening LID
+Date: Fri, 26 Dec 2014 16:52:53 +0100
+Cc: Daniel Vetter <daniel.vetter@intel.com>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	David Airlie <airlied@linux.ie>,
+	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
+	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+References: <201412241951.48652@pali> <3406993.nnu7vUsHIn@vostro.rjw.lan>
+In-Reply-To: <3406993.nnu7vUsHIn@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUhwMOKEXi8mVY_rMGEAmYr13m+Gr5id+rYTC0EiwEHgw@mail.gmail.com>
-References: <1418075552-26495-1-git-send-email-yinghai@kernel.org>
-	<1418079372.13358.9.camel@kernel.crashing.org>
-	<1418079603.13358.12.camel@kernel.crashing.org>
-	<CAE9FiQUhwMOKEXi8mVY_rMGEAmYr13m+Gr5id+rYTC0EiwEHgw@mail.gmail.com>
-Date: Tue, 9 Dec 2014 13:39:32 -0800
-Message-ID: <CAE9FiQV6s9=zK6Yx__3ZWp2SrGydb-2bnsbNDh-xD9ni0ricLQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Clear bridge MEM_64 flag if one child does not
- support it
-From: Yinghai Lu <yinghai@kernel.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	=?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>,
-	Alexey Voronkov <zermond@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed;
+  boundary="nextPart2803232.V5hP08oaOP";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201412261652.54112@pali>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 8, 2014 at 4:09 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Mon, Dec 8, 2014 at 3:00 PM, Benjamin Herrenschmidt
-> <benh@kernel.crashing.org> wrote:
->
->>
->> I think an option would be to keep track of whether the PCI host bridge
->> can do 64-bit pref above 4G.
->
-> Yes, that could be enhancement.
->
-> That should fix the problem Marek's
->
-> But not on Zermond's, as his system is not using _CRS.
->
+--nextPart2803232.V5hP08oaOP
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-http://patchwork.ozlabs.org/patch/419295/
+On Friday 26 December 2014 16:12:49 Rafael J. Wysocki wrote:
+> On Wednesday, December 24, 2014 07:51:48 PM Pali Roh=C3=A1r wrote:
+> > --nextPart5943893.pKyMBm5Emp
+> > Content-Type: Text/Plain;
+> >=20
+> >   charset=3D"utf-8"
+> >=20
+> > Content-Transfer-Encoding: quoted-printable
+> >=20
+> > Hello!
+> >=20
+> > With new 3.19-rc1 kernel every time when I open LID on my
+> > laptop, kernel pr=3D
+>=20
+> > ints these error lines to dmesg:
+> Does your syste suspend when the lid is closed and resume when
+> it is open?
+>=20
 
-PCI: Clear all bridge res MEM_64 if host bridge has non mem64
+No, I disabled all autosuspend and autohibernate settings. When I=20
+close LID system is running.
+
+>=20
+> > [25568.448566] acpi MSFT1111:00: Cannot transition to power
+> > state D3cold fo=3D r parent in (unknown)
+> > [25568.448572] acpi INT33C2:00: Cannot transition to non-D0
+> > state from D3 [25568.448577] acpi MSFT0002:00: Cannot
+> > transition to power state D3cold fo=3D r parent in (unknown)
+> > [25568.448581] acpi ELAN1010:00: Cannot transition to power
+> > state D3cold fo=3D r parent in (unknown)
+> > [25568.448587] acpi INT33C3:00: Cannot transition to non-D0
+> > state from D3 [25568.448590] acpi INT33C0:00: Cannot
+> > transition to non-D0 state from D3 [25568.448594] acpi
+> > INT33C1:00: Cannot transition to non-D0 state from D3
+> > [25568.448598] acpi INT33C4:00: Cannot transition to non-D0
+> > state from D3 [25568.448602] acpi INT33C5:00: Cannot
+> > transition to non-D0 state from D3 [25568.448623] acpi
+> > device:41: Cannot transition to power state D3cold for =3D
+> > parent in (unknown)
+> > [25568.448627] acpi INT33C6:00: Cannot transition to non-D0
+> > state from D3
+>=20
+> All of the above mean that power transitions were not carried
+> out for some devices, because they were in unexpected power
+> states to start with.
+>=20
+> They are devices on the Intel LPSS as far as I can say (CCing
+> Mika and Andy).
+>=20
+
+Just to note: all above acpi devices do not exist in 3.13 kernel,=20
+at least I do not see them in /sys/bus/acpi/.
+
+> > [25568.448890] pci_bus 0000:01: Allocating resources
+> > [25568.448905] i915 0000:00:02.0: BAR 6: [??? 0x00000000
+> > flags 0x2] has bog=3D us alignment
+> > [25568.449064] i915 0000:00:02.0: BAR 6: [??? 0x00000000
+> > flags 0x2] has bog=3D us alignment
+> > [25568.449472] i915 0000:00:02.0: BAR 6: [??? 0x00000000
+> > flags 0x2] has bog=3D us alignment
+> >=20
+> > With older kernel (3.13) I do not see these errors, so it is
+> > regression.
+>=20
+> It only is a regression if it leads to functional problems.=20
+> Do you see any?
+>=20
+
+Ok. I do not see functional problems, but I see above messages in=20
+dmesg log every time when I open LID.
+
+> > Ca=3Dn you look at it? If it is needed, I can provide other
+> > logs, ACPI/DSTD dump=3D s, etc.
+>=20
+> It looks like 3.13 didn't try to use some devices that are now
+> used in 3.19-rc1 and something doesn't work entirely as
+> expected.
+
+=2D-=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
+
+--nextPart2803232.V5hP08oaOP
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAlSdhFYACgkQi/DJPQPkQ1IcRgCfZ1PB+47+ZP/JBFnXrH8crdYe
+eN8An2gTl3SxG/HthbWXi4ElZwy7Jc23
+=zisQ
+-----END PGP SIGNATURE-----
+
+--nextPart2803232.V5hP08oaOP--
