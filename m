@@ -1,161 +1,183 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bbn0104.outbound.protection.outlook.com ([157.56.111.104]:29756
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933240AbaLBV0V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Dec 2014 16:26:21 -0500
-From: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
+Received: from service87.mimecast.com ([91.220.42.44]:55329 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751359AbaL0KhE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 27 Dec 2014 05:37:04 -0500
+Date: Sat, 27 Dec 2014 10:36:55 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yu Zhao <yuzhao@google.com>,
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: RE: Architectural question regarding IOV support in Linux 3.13.4
-Date: Tue, 2 Dec 2014 21:11:26 +0000
-Message-ID: <B756807489D6244883AC0B799A6EEC1514C6A32D@storexdag03.amd.com>
-References: <B756807489D6244883AC0B799A6EEC15EAB2E8@storexdag02.amd.com>
- <CAErSpo4OkgGrrZ9anAJ2vSZJDYikv4WC6hjt4T2-mMXpGA=w6A@mail.gmail.com>
- <1393020186.9111.91.camel@ul30vt.home>
- <CAOUHufai=eoR+tgVB5Zdp6veCQgY=pHDSAESZ5cLOjPTw-R8CQ@mail.gmail.com>
- <B756807489D6244883AC0B799A6EEC15EB26C6@storexdag02.amd.com>
- <CAErSpo7tyzujCqvsQcns1wX+j5jM1=Xo9TiCC+5-h67uXqbGSg@mail.gmail.com>
- <B756807489D6244883AC0B799A6EEC1514C68E79@storexdag03.amd.com>
- <CAErSpo5Y9MpkiC8iRSR4_Hx6mtp0YXRZizYfPBZj0nJ6p7hdKA@mail.gmail.com>
-In-Reply-To: <CAErSpo5Y9MpkiC8iRSR4_Hx6mtp0YXRZizYfPBZj0nJ6p7hdKA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>
+Subject: Re: [RFC PATCH v2] drivers: pci: move PCI domain assignment to
+ generic PCI code
+Message-ID: <20141227103655.GA27544@e102568-lin.cambridge.arm.com>
+References: <1415637706-2195-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20141120225449.GD7987@google.com>
 MIME-Version: 1.0
+In-Reply-To: <20141120225449.GD7987@google.com>
+Content-Type: text/plain; charset=WINDOWS-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4LXBjaS1vd25lckB2
-Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1wY2ktDQo+IG93bmVyQHZnZXIua2VybmVsLm9y
-Z10gT24gQmVoYWxmIE9mIEJqb3JuIEhlbGdhYXMNCj4gU2VudDogVHVlc2RheSwgRGVjZW1iZXIg
-MDIsIDIwMTQgNDowMiBQTQ0KPiBUbzogWnl0YXJ1aywgS2VsbHkNCj4gQ2M6IFl1IFpoYW87IGxp
-bnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IEFsZXggV2lsbGlhbXNvbg0KPiBTdWJqZWN0OiBSZTog
-QXJjaGl0ZWN0dXJhbCBxdWVzdGlvbiByZWdhcmRpbmcgSU9WIHN1cHBvcnQgaW4gTGludXggMy4x
-My40DQo+IA0KPiBPbiBUdWUsIERlYyAyLCAyMDE0IGF0IDk6NDIgQU0sIFp5dGFydWssIEtlbGx5
-IDxLZWxseS5aeXRhcnVrQGFtZC5jb20+DQo+IHdyb3RlOg0KPiA+DQo+ID4NCj4gPj4gLS0tLS1P
-cmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPj4gRnJvbTogQmpvcm4gSGVsZ2FhcyBbbWFpbHRvOmJo
-ZWxnYWFzQGdvb2dsZS5jb21dDQo+ID4+IFNlbnQ6IE1vbmRheSwgRmVicnVhcnkgMjQsIDIwMTQg
-Mzo1MiBQTQ0KPiA+PiBUbzogWnl0YXJ1aywgS2VsbHkNCj4gPj4gQ2M6IFl1IFpoYW87IGxpbnV4
-LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IEFsZXggV2lsbGlhbXNvbg0KPiA+PiBTdWJqZWN0OiBSZTog
-QXJjaGl0ZWN0dXJhbCBxdWVzdGlvbiByZWdhcmRpbmcgSU9WIHN1cHBvcnQgaW4gTGludXgNCj4g
-Pj4gMy4xMy40DQo+ID4+DQo+ID4+IE9uIE1vbiwgRmViIDI0LCAyMDE0IGF0IDEyOjIyIFBNLCBa
-eXRhcnVrLCBLZWxseQ0KPiA+PiA8S2VsbHkuWnl0YXJ1a0BhbWQuY29tPg0KPiA+PiB3cm90ZToN
-Cj4gPj4gPg0KPiA+PiA+Pk9uIEZyaSwgRmViIDIxLCAyMDE0IGF0IDI6MDMgUE0sIEFsZXggV2ls
-bGlhbXNvbg0KPiA+PiA8YWxleC53aWxsaWFtc29uQHJlZGhhdC5jb20+IHdyb3RlOg0KPiA+PiA+
-Pk9uIEZyaSwgMjAxNC0wMi0yMSBhdCAxNDoxMSAtMDcwMCwgQmpvcm4gSGVsZ2FhcyB3cm90ZToN
-Cj4gPj4gPj4+IFsrY2MgQWxleCwgWXVdDQo+ID4+ID4+Pg0KPiA+PiA+Pj4gT24gRnJpLCBGZWIg
-MjEsIDIwMTQgYXQgMTA6NDUgQU0sIFp5dGFydWssIEtlbGx5DQo+ID4+ID4+PiA8S2VsbHkuWnl0
-YXJ1a0BhbWQuY29tPg0KPiA+PiB3cm90ZToNCj4gPj4gPj4+ID4NCj4gPj4gPj4+ID4gSSBhbSB3
-b3JraW5nIHdpdGggU1ItSU9WIGFuZCBJIGhhdmUgYSBxdWVzdGlvbiByZWdhcmRpbmcgdGhlDQo+
-ID4+ID4+PiA+IGZ1bmN0aW9uDQo+ID4+ID4+PiA+IHNyaW92X2luaXQoKSBpbiAuLi9kcml2ZXJz
-L3BjaS9pb3YuYyAobGludXggdmVyc2lvbnMgMy40LjkgYW5kDQo+ID4+ID4+PiA+IDMuMTMuNCkN
-Cj4gPj4gPj4+ID4NCj4gPj4gPj4+ID4gSW4gc3Jpb3ZfaW5pdCgpIHRoZSBjb2RlIGZpcnN0IGNo
-ZWNrcyB3aGV0aGVyIHRoZSBQRiBpcyBhIFJvb3QNCj4gPj4gPj4+ID4gY29tcGxleCAgZW5kcG9p
-bnQgKDB4OSkgb3IgYW4gRXhwcmVzcyBFbmRwb2ludCAoMHgwKSBhcyBzaG93bg0KPiA+PiA+Pj4g
-PiBpbiB0aGUgY29kZSAgc25pcHBldCBiZWxvdy4gIElmIGl0IGlzIG5laXRoZXIgaXQgcmV0dXJu
-cyB0aGUgTm8gZGV2aWNlIGVycm9yLg0KPiA+PiA+Pj4gPg0KPiA+PiA+Pj4gPiBzdGF0aWMgaW50
-IHNyaW92X2luaXQoc3RydWN0IHBjaV9kZXYgKmRldiwgaW50IHBvcykgew0KPiA+PiA+Pj4gPiAg
-ICAgICAgICBpbnQgaTsNCj4gPj4gPj4+ID4gICAgICAgICAgaW50IHJjOw0KPiA+PiA+Pj4gPiAg
-ICAgICAgICBpbnQgbnJlczsNCj4gPj4gPj4+ID4gICAgICAgICAgdTMyIHBnc3o7DQo+ID4+ID4+
-PiA+ICAgICAgICAgIHUxNiBjdHJsLCB0b3RhbCwgb2Zmc2V0LCBzdHJpZGU7DQo+ID4+ID4+PiA+
-ICAgICAgICAgIHN0cnVjdCBwY2lfc3Jpb3YgKmlvdjsNCj4gPj4gPj4+ID4gICAgICAgICAgc3Ry
-dWN0IHJlc291cmNlICpyZXM7DQo+ID4+ID4+PiA+ICAgICAgICAgIHN0cnVjdCBwY2lfZGV2ICpw
-ZGV2Ow0KPiA+PiA+Pj4gPg0KPiA+PiA+Pj4gPiAgICAgICAgaWYgKHBjaV9wY2llX3R5cGUoZGV2
-KSAhPSBQQ0lfRVhQX1RZUEVfUkNfRU5EICYmDQo+ID4+ID4+PiA+ICAgICAgICAgICAgICBwY2lf
-cGNpZV90eXBlKGRldikgIT0gUENJX0VYUF9UWVBFX0VORFBPSU5UKQ0KPiA+PiA+Pj4gPiAgICAg
-ICAgICAgICAgICAgIHJldHVybiAtRU5PREVWOw0KPiA+PiA+Pj4gPg0KPiA+PiA+Pj4gPiBNeSBx
-dWVzdGlvbiBpcyB3aHkgUENJX0VYUF9UWVBFX0xFR19FTkQgKDB4MSkgaXMgb21pdHRlZCBhcw0K
-PiA+PiA+Pj4gPiBiZWluZyBhICB2YWxpZCBlbmRwb2ludC4gIEJ5IGV4Y2x1ZGluZyBMZWdhY3kg
-ZW5kcG9pbnRzIGl0DQo+ID4+ID4+PiA+IGZhaWxzIGVuYWJsaW5nICBTUi1JT1Ygb24gYSBWR0Eg
-UEYuDQo+ID4+ID4+PiA+DQo+ID4+ID4+PiA+IElzIHRoZXJlIGEgZGVzaWduL3NwZWNpZmljYXRp
-b24gcmVhc29uIHdoeSBsZWdhY3kgd2FzIGV4Y2x1ZGVkDQo+ID4+ID4+PiA+IG9yIHdhcyAgaXQg
-anVzdCBhbiBhc3N1bXB0aW9uIHRoYXQgVkdBIHdvdWxkIG5ldmVyIHN1cHBvcnQgU1ItSU9WPw0K
-PiA+PiA+Pj4gPg0KPiA+PiA+Pj4gPiBJZiB0aGVyZSBpcyBubyB2YWxpZCByZWFzb24gdG8gZXhj
-bHVkZSBQQ0lfRVhQX1RZUEVfTEVHX0VORCwgSQ0KPiA+PiA+Pj4gPiB3b3VsZCAgbGlrZSB0byBk
-aXNjdXNzIGhhdmluZyBpdCBpbmNsdWRlZCBhcyBhIHZhbGlkIGVuZHBvaW50IGZvciBTUi1JT1Yu
-DQo+ID4+ID4+Pg0KPiA+PiA+Pj4gR29vZCBxdWVzdGlvbi4gIEl0IGxvb2tzIGxpa2UgaXQncyBi
-ZWVuIHRoYXQgd2F5IHNpbmNlIHRoZQ0KPiA+PiA+Pj4gYmVnaW5uaW5nIFsxXSwgYnV0IEkgZG9u
-J3Qga25vdyB3aHkuICBJIGRvbid0IHNlZSBhbnkgcmVzdHJpY3Rpb24NCj4gPj4gPj4+IGluIHRo
-ZSBzcGVjIGFib3V0IFNSLUlPViBhbmQgbGVnYWN5IGVuZHBvaW50cy4NCj4gPj4gPj4+DQo+ID4+
-ID4+PiBJIGFsc28gZG9uJ3Qga25vdyB3aGV0aGVyIFZHQSBpcyBhbiBpc3N1ZS4gIFRoZXJlIGFy
-ZSBzb21lIGxlZ2FjeQ0KPiA+PiA+Pj4gYWRkcmVzc2luZyBpc3N1ZXMgZm9yIFttZW0gMHhhMDAw
-MC0weGJmZmZmXSBhbmQgW2lvIDB4M2IwLTB4M2JiXQ0KPiA+PiA+Pj4gYW5kIFtpbyAweDNjMC0w
-eDNkZl0uICBGb3IgZXhhbXBsZSwgd2hlbiBhIGJyaWRnZSBoYXMgaXRzIFZHQQ0KPiA+PiA+Pj4g
-RW5hYmxlIGJpdCBzZXQsIGl0IHBvc2l0aXZlbHkgZGVjb2RlcyBbbWVtIDB4YTAwMDAtMHhiZmZm
-Zl0gZXZlbg0KPiA+PiA+Pj4gaWYgdGhhdCByYW5nZSBpc24ndCBpbmNsdWRlZCBpbiBvbmUgb2Yg
-dGhlIGJyaWRnZSB3aW5kb3dzLiAgSQ0KPiA+PiA+Pj4gZG9uJ3Qga25vdyB3aGV0aGVyIGEgVkdB
-IGRldmljZSBpcyBzaW1pbGFybHkgYWxsb3dlZCB0byBkZWNvZGUNCj4gPj4gPj4+IHRoYXQgcmFu
-Z2UgZXZlbiBpZiBpdCdzIG5vdCBpbiBhIEJBUi4gIElmIGl0IGlzLCBJIGNvdWxkIGltYWdpbmUN
-Cj4gPj4gPj4+IGlzc3VlcyBpZiBlbmFibGluZyBTUi1JT1YgY3JlYXRlZCBzZXZlcmFsIFZHQSBW
-RnMuDQo+ID4+ID4+VkZzIGNhbm5vdCBzdXBwb3J0IEkvTyBwb3J0IHNwYWNlIGJ5IGRlZmluaXRp
-b24sIHNvIEkgZG9uJ3QgdGhpbmsgYQ0KPiA+PiA+PiJWR0EgVkYiIGNvdWxkIGFjdHVhbGx5IGV4
-aXN0LiAgVGhlcmUgd291bGQgYmUgbm90aGluZyB3cm9uZyB3aXRoIGENCj4gPj4gPj5ub24tVkdB
-IEdQVSBWRiB0aG91Z2guICBJIGFsc28gZG9uJ3Qgc2VlIGhvdyB0aGUgZGlmZmVyZW5jZXMgaW4N
-Cj4gPj4gPj5MZWdhY3kgRW5kcG9pbnQgcnVsZXMgdmVyc3VzIGEgc3RhbmRhcmQgRW5kcG9pbnQg
-d291bGQgcHJlY2x1ZGUNCj4gPj4gPj5zdXBwb3J0aW5nIFNSLUlPVi4gIEkgZG9uJ3QgdGhpbmsg
-dGhlIFNSLUlPViBzcGVjIG1ha2VzIGFueSBkZW1hbmRzDQo+ID4+ID4+b24gd2hldGhlciB0aGUg
-UEYgcmVxdWlyZXMgSS9PIHBvcnQgcmVzb3VyY2VzLCB3aGljaCBJIGFzc3VtZSBpcw0KPiA+PiA+
-PnRoZSBtYWluIHJlYXNvbiBmb3IgdGhpcyB0byBjYWxsIGl0c2VsZiBMZWdhY3kuICBJJ2QgZ3Vl
-c3MgaXQgd2FzDQo+ID4+ID4+bGlrZWx5IGp1c3QgYW4gb3ZlcnNpZ2h0IGFuZCB3ZSBzaG91bGQg
-YWRkIGxlZ2FjeSBlbmRwb2ludHMgKG9yDQo+ID4+ID4+cmVtb3ZlIHRoZSB0ZXN0IGFsdG9nZXRo
-ZXIgYW5kIHRydXN0IHRoYXQgaWYgYSBkZXZpY2UgaGFzIGFuIFNSLUlPVg0KPiA+PiA+PmNhcGFi
-aWxpdHksIHdlIHNob3VsZCBpbml0aWFsaXplIGl0KS4gIFRoYW5rcywNCj4gPj4gPj4NCj4gPj4g
-Pj5BbGV4DQo+ID4+ID4+DQo+ID4+ID4+SSBhZ3JlZS4gSSB2YWd1ZWx5IHJlbWVtYmVyIHRoZXJl
-IHdhcyBzb21lIHJlYXNvbiB0aGF0IGV4Y2x1ZGVzDQo+ID4+ID4+bGVnYWN5IGVuZHBvaW50cyBm
-cm9tIHVzaW5nIFNSLUlPVi4gQnV0IGFmdGVyIGEgcXVpY2sgbG9vayBhdCB0aGUNCj4gPj4gPj5s
-YXRlc3Qgc3BlY3MsIEkgZGlkbid0IGZpbmQgYW55Lg0KPiA+PiA+Pg0KPiA+PiA+IE9ubHkgTGVn
-YWN5IEVuZHBvaW50cyBjYW4gY2xhaW0gSS9PLiAgVkZzIGFyZSBub3QgYWxsb3dlZCB0byBjbGFp
-bSBJL08uDQo+ID4+ID4gVkdBIGRldmljZXMgY2xhaW0gSS9PLg0KPiA+PiA+DQo+ID4+ID4gVGhl
-IFNSLUlPViBzcGVjIDEuMSBzZWN0aW9uIDMuNC4xLjYgc3RhdGVzIOKAnFRoZSBDbGFzcyBDb2Rl
-IHJlZ2lzdGVyDQo+ID4+ID4gaXMgcmVhZC1vbmx5IGFuZCBpcyB1c2VkIHRvIGlkZW50aWZ5IHRo
-ZSBnZW5lcmljIGZ1bmN0aW9uIG9mIHRoZQ0KPiA+PiA+IGRldmljZSBhbmQsIGluIHNvbWUgY2Fz
-ZXMsIGEgc3BlY2lmaWMgcmVnaXN0ZXIgbGV2ZWwgcHJvZ3JhbW1pbmcgaW50ZXJmYWNlLg0KPiA+
-PiA+IFRoZSBmaWVsZCBpbiB0aGUgUEYgYW5kIGFzc29jaWF0ZWQgVkZzIG11c3QgcmV0dXJuIHRo
-ZSBzYW1lIHZhbHVlIHdoZW4NCj4gcmVhZC7igJ0NCj4gPj4gPg0KPiA+PiA+IElmIHRoZSBQRiBp
-cyBhIFZHQSBkZXZpY2UgdGhlbiBieSB0aGUgZGVmaW5pdGlvbiBpbiB0aGUgU1ItSU9WIHNwZWMN
-Cj4gPj4gPiB0aGUgY2xhc3MgY29kZSBvZiB0aGUgVkYgd291bGQgYWxzbyBpbmRpY2F0ZSBpdCBh
-cyBhIFZHQSBkZXZpY2UsIGllDQo+ID4+ID4gU3ViY2xhc3MgMHgwID0gVkdBLCBzdWJjbGFzcyAw
-eDgwID0gT1RIRVJfRElTUExBWV9DT05UUk9MTEVSLg0KPiA+PiA+DQo+ID4+ID4gSWRlYWxseSB3
-ZSB3b3VsZCB3YW50IHRvIGhhdmUgdGhlIFBGIHN1Yi1jbGFzcyBhcyAweDAgYW5kIHRoZSBWRg0K
-PiA+PiA+IHN1YmNsYXNzIGFzIDB4ODAgQnV0IHRoZSBzcGVjIGRvZXNuJ3Qgc3VwcG9ydCB0aGlz
-Lg0KPiA+PiA+DQo+ID4+ID4gT25lIHNwZWN1bGF0aW9uIGFzIHRvIHdoeSBMZWdhY3kgZW5kcG9p
-bnRzIHdlcmUgb21pdHRlZCBtaWdodCBiZQ0KPiA+PiA+IHRoZSBhc3N1bXB0aW9uIHRoYXQgZG9p
-bmcgc28gd291bGQgYWxsb3cgVkdBIFZGcyB0byBiZSBjcmVhdGVkLg0KPiA+PiA+DQo+ID4+ID4g
-SXQgaXMgbm90IHJlYXNvbmFibGUgdG8gcHJldmVudCBhIFZHQSBQRiBmcm9tIGVuYWJsaW5nIFNS
-LUlPViBhcw0KPiA+PiA+IHRoaXMgaXMgYSByZWFsIHdvcmxkIHBvc3NpYmlsaXR5LiAgV2UgbWln
-aHQgbmVlZCB0byBhZGQgbW9yZSBjb2RlDQo+ID4+ID4gZWxzZXdoZXJlIGhvd2V2ZXIgdG8gcHJl
-dmVudCBhIFZGIGZyb20gYmVjb21pbmcgYSBWR0EgZGV2aWNlDQo+ID4+ID4gb3V0c2lkZSBvZiBw
-YXNzaW5nIGl0DQo+ID4+IHRocm91Z2ggdG8gYSBndWVzdCBWTS4NCj4gPj4NCj4gPj4gQ2FuIHlv
-dSB0cnkgb3V0IFl1J3MgcGF0Y2ggYW5kIHNlZSB3aGF0IGhhcHBlbnM/ICBJZiB5b3UgZG8gdHVy
-biBvbg0KPiA+PiBTUi1JT1Ygb24gdGhpcyBkZXZpY2UsIGl0IHdvdWxkIGJlIGludGVyZXN0aW5n
-IHRvIHNlZSB0aGUgY29tcGxldGUgZG1lc2cgbG9nDQo+IGFuZCAibHNwY2kgLXZ2Ig0KPiA+PiBv
-dXRwdXQgdG8gc2VlIHdoYXQgd2UgZG8gd2l0aCBpdC4NCj4gPj4NCj4gPj4gQmpvcm4NCj4gPg0K
-PiA+IEJqb3JuLA0KPiA+IEkgYW0gcmVzdXJyZWN0aW5nIHRoaXMgdGhyZWFkIGFzIEkgaGF2ZSBi
-ZWVuIGxvb2tpbmcgdGhyb3VnaCB0aGUgMy4xOCBzb3VyY2UNCj4gY29kZSBhbmQgZG9uJ3Qgc2Vl
-IGFueSBzdXBwb3J0IGZvciBQQ0lfRVhQX1RZUEVfTEVHX0VORCBmb3IgU1JJT1YuICBGb3INCj4g
-ZGV2aWNlcyB0aGF0IG11c3QgcmVtYWluIGRlZmluZWQgYXMgTGVnYWN5IGVuZHBvaW50cyB3ZSBz
-dGlsbCBuZWVkIHRvIGJlIGFibGUgdG8NCj4gZW5hYmxlIFNSSU9WLg0KPiANCj4gTG9va2luZyBi
-YWNrLCBJIHNlZSB0aGF0IFl1IFpoYW8gZGlkIGF0dGFjaCBhIHBhdGNoIGVhcmxpZXIgaW4gdGhl
-IHRocmVhZC4gIEFyZSB5b3UNCj4gYXNraW5nIG1lIHRvIGFwcGx5IHRoYXQgb25lPyAgSSBkb24n
-dCByZW1lbWJlciB3aHkgSSBkcm9wcGVkIGl0IGZyb20gbXkgcXVldWU7DQo+IG1heWJlIGl0IHdh
-cyBiZWNhdXNlIEkgd2FzIHdhaXRpbmcgZm9yIHlvdSB0byB0ZXN0IGl0Lg0KPiANCj4gRGlkIHlv
-dSB0ZXN0IGl0PyAgV2hhdCB3ZXJlIHRoZSByZXN1bHRzIChjb21wbGV0ZSBkbWVzZyBsb2cgYW5k
-IGxzcGNpIC12dg0KPiBvdXRwdXQpPyAgVGhlcmUgd2FzIGFsc28gc29tZSBmb2xsb3ctb24gZGlz
-Y3Vzc2lvbiB0aGF0IEkgd291bGQgbmVlZCB0bw0KPiBldmFsdWF0ZSBiZWZvcmUgYXBwbHlpbmcg
-aXQuDQo+IA0KPiBCam9ybg0KDQpJIGxvc3QgdGhlIG9yaWdpbmFsIHBhdGNoIGJ1dCBpdCB3YXMg
-c2ltcGxlIGVub3VnaCB0aGF0IEkgY29kZWQgaXQgbXlzZWxmIChvbmUgbGluZSBjaGFuZ2UpIGxv
-Y2FsbHkuICBJIGhhdmUgYmVlbiB0ZXN0aW5nIHdpdGggaXQgZm9yIHNldmVyYWwgbW9udGhzIG5v
-dyBhbmQgaGF2ZSBubyBpc3N1ZXMgd2l0aCBpdC4gIEluIGZhY3QgbXkgdGVzdGluZyByZXF1aXJl
-cyBpdCB0byBiZSBwcmVzZW50IGluIG9yZGVyIHRvIHN1Y2NlZWQsIGl0IHdpbGwgZmFpbCBpZiBp
-dCBpcyBub3QgcHJlc2VudC4NCg0KVGhhbmtzLA0KS2VsbHkNCj4gDQo+ID4gRG8geW91IGhhdmUg
-YW55IGNvbmNlcm5zIG9uIGFkZGluZyB0aGUgbGVnYWN5IHN1cHBvcnQgdG8gc3Jpb3ZfaW5pdCgp
-IGFzDQo+IHNob3duIGJlbG93Pw0KPiA+DQo+ID4gICAgICAgICBpZiAoKGRldi0+cGNpZV90eXBl
-ICE9IFBDSV9FWFBfVFlQRV9SQ19FTkQpICYmDQo+ID4gICAgICAgICAgICAgKGRldi0+cGNpZV90
-eXBlICE9IFBDSV9FWFBfVFlQRV9FTkRQT0lOVCkgJiYNCj4gPiAgICAgICAgICAgICAgICAgICAo
-ZGV2LT5wY2llX3R5cGUgIT0gUENJX0VYUF9UWVBFX0xFR19FTkQpKQ0KPiA+ICAgICAgICAgew0K
-PiA+ICAgICAgICAgICAgICAgICByZXR1cm4gLUVOT0RFVjsNCj4gPiAgICAgICAgIH0NCj4gPg0K
-PiA+IFRoYW5rcywNCj4gPiBLZWxseQ0KPiAtLQ0KPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMg
-bGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtcGNpIiBpbiB0aGUgYm9keSBv
-Zg0KPiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZyBNb3JlIG1ham9yZG9t
-byBpbmZvIGF0DQo+IGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
+Hi Bjorn,
+
+On Thu, Nov 20, 2014 at 10:54:49PM +0000, Bjorn Helgaas wrote:
+> On Mon, Nov 10, 2014 at 04:41:46PM +0000, Lorenzo Pieralisi wrote:
+> > The current logic used for PCI domain assignment in arm64
+> > pci_bus_assign_domain_nr() is flawed in that, depending on the host
+> > controllers configuration for a platform and the respective initialization
+> > sequence, core code may end up allocating PCI domain numbers from both DT and
+> > the core code generic domain counter, which would result in PCI domain
+> > allocation aliases/errors.
+> > 
+> > This patch fixes the logic behind the PCI domain number assignment and
+> > moves the resulting code to generic PCI core code so that the same domain
+> > allocation logic is used on all platforms selecting
+> > 
+> > CONFIG_PCI_DOMAINS_GENERIC
+> > 
+> > instead of resorting to an arch specific implementation that might end up
+> > duplicating the PCI domain assignment logic wrongly.
+> > 
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: Liviu Dudau <liviu.dudau@arm.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Rob Herring <robh+dt@kernel.org>
+> > Cc: Catalin Marinas <catalin.marinas@arm.com>
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> 
+> Applied with Liviu and Arnd's acks to pci/domain for v3.19, thanks.
+> 
+> It doesn't matter whether I'm in the to: or cc: list.  The important thing
+> is that it appears on the linux-pci list, because I use patchwork as my
+> to-do list, and patchwork only vacuums up stuff from linux-pci.
+
+This patch has not been merged last cycle and it is a prerequisite for
+the ARM pcibios domain code removal patchset you merged in your pci/domain
+branch. Please consider pulling it there so that the ARM pcibios domain
+removal patchset can be based correctly on top of this patch, at the
+moment it can't compile (see kbuild test report).
+
+Thanks,
+Lorenzo
+
+> > ---
+> > v1 => v2:
+> > 
+> > - Moved generic pci_bus_assign_domain_nr() code to PCI core instead of
+> >   adding an OF layer API
+> > - Updated commit log and code comments
+> > 
+> >  arch/arm64/kernel/pci.c | 22 ----------------------
+> >  drivers/pci/pci.c       | 50 +++++++++++++++++++++++++++++++++++++++++++++++++
+> >  2 files changed, 50 insertions(+), 22 deletions(-)
+> > 
+> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> > index ce5836c..6f93c24 100644
+> > --- a/arch/arm64/kernel/pci.c
+> > +++ b/arch/arm64/kernel/pci.c
+> > @@ -46,25 +46,3 @@ int pcibios_add_device(struct pci_dev *dev)
+> >  
+> >  	return 0;
+> >  }
+> > -
+> > -
+> > -#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> > -static bool dt_domain_found = false;
+> > -
+> > -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> > -{
+> > -	int domain = of_get_pci_domain_nr(parent->of_node);
+> > -
+> > -	if (domain >= 0) {
+> > -		dt_domain_found = true;
+> > -	} else if (dt_domain_found == true) {
+> > -		dev_err(parent, "Node %s is missing \"linux,pci-domain\" property in DT\n",
+> > -			parent->of_node->full_name);
+> > -		return;
+> > -	} else {
+> > -		domain = pci_get_new_domain_nr();
+> > -	}
+> > -
+> > -	bus->domain_nr = domain;
+> > -}
+> > -#endif
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index 625a4ac..2279414 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -10,6 +10,8 @@
+> >  #include <linux/kernel.h>
+> >  #include <linux/delay.h>
+> >  #include <linux/init.h>
+> > +#include <linux/of.h>
+> > +#include <linux/of_pci.h>
+> >  #include <linux/pci.h>
+> >  #include <linux/pm.h>
+> >  #include <linux/slab.h>
+> > @@ -4447,6 +4449,54 @@ int pci_get_new_domain_nr(void)
+> >  {
+> >  	return atomic_inc_return(&__domain_nr);
+> >  }
+> > +
+> > +#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> > +
+> > +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> > +{
+> > +	static int use_dt_domains = -1;
+> > +	int domain = of_get_pci_domain_nr(parent->of_node);
+> > +
+> > +	/*
+> > +	 * Check DT domain and use_dt_domains values.
+> > +	 *
+> > +	 * If DT domain property is valid (domain >= 0) and
+> > +	 * use_dt_domains != 0, the DT assignment is valid since this means
+> > +	 * we have not previously allocated a domain number by using
+> > +	 * pci_get_new_domain_nr(); we should also update use_dt_domains to
+> > +	 * 1, to indicate that we have just assigned a domain number from
+> > +	 * DT.
+> > +	 *
+> > +	 * If DT domain property value is not valid (ie domain < 0), and we
+> > +	 * have not previously assigned a domain number from DT
+> > +	 * (use_dt_domains != 1) we should assign a domain number by
+> > +	 * using the:
+> > +	 *
+> > +	 * pci_get_new_domain_nr()
+> > +	 *
+> > +	 * API and update the use_dt_domains value to keep track of method we
+> > +	 * are using to assign domain numbers (use_dt_domains = 0).
+> > +	 *
+> > +	 * All other combinations imply we have a platform that is trying
+> > +	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
+> > +	 * which is a recipe for domain mishandling and it is prevented by
+> > +	 * invalidating the domain value (domain = -1) and printing a
+> > +	 * corresponding error.
+> > +	 */
+> > +	if (domain >= 0 && use_dt_domains) {
+> > +		use_dt_domains = 1;
+> > +	} else if (domain < 0 && use_dt_domains != 1) {
+> > +		use_dt_domains = 0;
+> > +		domain = pci_get_new_domain_nr();
+> > +	} else {
+> > +		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
+> > +			parent->of_node->full_name);
+> > +		domain = -1;
+> > +	}
+> > +
+> > +	bus->domain_nr = domain;
+> > +}
+> > +#endif
+> >  #endif
+> >  
+> >  /**
+> > -- 
+> > 2.1.2
+> > 
+> 
+
