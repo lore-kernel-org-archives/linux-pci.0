@@ -1,142 +1,380 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp08.in.ibm.com ([122.248.162.8]:39096 "EHLO
-	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752550AbaLDFy6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Dec 2014 00:54:58 -0500
-Received: from /spool/local
-	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 4 Dec 2014 11:24:55 +0530
-Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
-	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 5AF7B394005C
-	for <linux-pci@vger.kernel.org>; Thu,  4 Dec 2014 11:24:53 +0530 (IST)
-Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
-	by d28relay02.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sB45t6hW46006440
-	for <linux-pci@vger.kernel.org>; Thu, 4 Dec 2014 11:25:06 +0530
-Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
-	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sB45spkp016967
-	for <linux-pci@vger.kernel.org>; Thu, 4 Dec 2014 11:24:52 +0530
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH 3/5] powerpc/powernv: Introduce pnv_pci_poll()
-Date: Thu,  4 Dec 2014 16:54:46 +1100
-Message-Id: <1417672488-27341-4-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1417672488-27341-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1417672488-27341-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:55990 "EHLO
+	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751814AbaL3T3D (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Dec 2014 14:29:03 -0500
+From: Rob Herring <robherring2@gmail.com>
+To: linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
+Cc: Russell King <linux@arm.linux.org.uk>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Peter Maydell <peter.maydell@linaro.org>, arm@kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH 4/9] pci: add DT based ARM Versatile PCI host driver
+Date: Tue, 30 Dec 2014 13:28:33 -0600
+Message-Id: <1419967718-26909-5-git-send-email-robherring2@gmail.com>
+In-Reply-To: <1419967718-26909-1-git-send-email-robherring2@gmail.com>
+References: <1419967718-26909-1-git-send-email-robherring2@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We might not get some PCI slot information (e.g. power status)
-immediately by OPAL API. Instead, opal_pci_poll() need to be called
-for the required information.
+From: Rob Herring <robh@kernel.org>
 
-The patch introduces pnv_pci_poll(), which bases on original
-ioda_eeh_poll(), to cover the above case
+This converts the Versatile PCI host code to a platform driver using
+the commom DT parsing and setup. The driver uses only an empty ARM
+pci_sys_data struct and does not use pci_common_init_dev init function.
+The old host code will be removed in a subsequent commit when Versatile
+is completely converted to DT.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+I've tested this on QEMU with the sym53c8xx driver in both i/o and
+memory mapped modes.
+
+Signed-off-by: Rob Herring <robh@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Linus Walleij <linus.walleij@linaro.org>
+Cc: Peter Maydell <peter.maydell@linaro.org>
 ---
- arch/powerpc/platforms/powernv/eeh-ioda.c | 28 ++--------------------------
- arch/powerpc/platforms/powernv/pci.c      | 19 +++++++++++++++++++
- arch/powerpc/platforms/powernv/pci.h      |  1 +
- 3 files changed, 22 insertions(+), 26 deletions(-)
+ drivers/pci/host/Kconfig         |   4 +
+ drivers/pci/host/Makefile        |   1 +
+ drivers/pci/host/pci-versatile.c | 305 +++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 310 insertions(+)
+ create mode 100644 drivers/pci/host/pci-versatile.c
 
-diff --git a/arch/powerpc/platforms/powernv/eeh-ioda.c b/arch/powerpc/platforms/powernv/eeh-ioda.c
-index cf38781..21fa033 100644
---- a/arch/powerpc/platforms/powernv/eeh-ioda.c
-+++ b/arch/powerpc/platforms/powernv/eeh-ioda.c
-@@ -490,24 +490,6 @@ static int ioda_eeh_get_state(struct eeh_pe *pe)
- 	return ioda_eeh_get_pe_state(pe);
- }
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index c4b6568..7b892a9 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -102,4 +102,8 @@ config PCI_LAYERSCAPE
+ 	help
+ 	  Say Y here if you want PCIe controller support on Layerscape SoCs.
  
--static s64 ioda_eeh_poll(uint64_t id)
--{
--	s64 rc = OPAL_HARDWARE;
--
--	while (1) {
--		rc = opal_pci_poll(id, NULL);
--		if (rc <= 0)
--			break;
--
--		if (system_state < SYSTEM_RUNNING)
--			udelay(1000 * rc);
--		else
--			msleep(rc);
--	}
--
--	return rc;
--}
--
- int ioda_eeh_phb_reset(struct pci_controller *hose, int option)
- {
- 	struct pnv_phb *phb = hose->private_data;
-@@ -536,10 +518,7 @@ int ioda_eeh_phb_reset(struct pci_controller *hose, int option)
- 
- 	/* Issue reset and poll until it's completed */
- 	rc = opal_pci_reset(phb->opal_id, scope, OPAL_ASSERT_RESET);
--	if (rc > 0)
--		rc = ioda_eeh_poll(phb->opal_id);
--
--	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
-+	return pnv_pci_poll(phb->opal_id, rc, NULL);
- }
- 
- static int __ioda_eeh_bridge_reset(struct pci_dev *dev, int option)
-@@ -630,10 +609,7 @@ static int ioda_eeh_bridge_reset(struct pci_dev *dev, int option)
- 	phb = hose->private_data;
- 	id |= (dev->bus->number << 24) | (dev->devfn << 16) | phb->opal_id;
- 	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
--	if (rc > 0)
--		ioda_eeh_poll(id);
--
--	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
-+	return pnv_pci_poll(id, rc, NULL);
- }
- 
- static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index 4b20f2c..6dc8ea9 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -45,6 +45,25 @@
- #define cfg_dbg(fmt...)	do { } while(0)
- //#define cfg_dbg(fmt...)	printk(fmt)
- 
-+int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval)
++config PCI_VERSATILE
++	bool "ARM Versatile PB PCI controller"
++	depends on ARCH_VERSATILE
++
+ endmenu
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 44c2699..e61d91c 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -12,3 +12,4 @@ obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
+ obj-$(CONFIG_PCIE_XILINX) += pcie-xilinx.o
+ obj-$(CONFIG_PCI_XGENE) += pci-xgene.o
+ obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
++obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
+diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/host/pci-versatile.c
+new file mode 100644
+index 0000000..a3e7bc5
+--- /dev/null
++++ b/drivers/pci/host/pci-versatile.c
+@@ -0,0 +1,305 @@
++/*
++ * Copyright 2004 Koninklijke Philips Electronics NV
++ *
++ * Conversion to platform driver and DT:
++ * Copyright 2014 Linaro Ltd.
++ *
++ * This software is licensed under the terms of the GNU General Public
++ * License version 2, as published by the Free Software Foundation, and
++ * may be copied, distributed, and modified under those terms.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * 14/04/2005 Initial version, colin.king@philips.com
++ */
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of_address.h>
++#include <linux/of_pci.h>
++#include <linux/of_platform.h>
++#include <linux/pci.h>
++#include <linux/platform_device.h>
++
++static void __iomem *versatile_pci_base;
++static void __iomem *versatile_cfg_base[2];
++
++#define PCI_IMAP(m)		(versatile_pci_base + ((m) * 4))
++#define PCI_SMAP(m)		(versatile_pci_base + 0x14 + ((m) * 4))
++#define PCI_SELFID		(versatile_pci_base + 0xc)
++
++#define VP_PCI_DEVICE_ID		0x030010ee
++#define VP_PCI_CLASS_ID			0x0b400000
++
++static u32 pci_slot_ignore;
++
++static int __init versatile_pci_slot_ignore(char *str)
 +{
-+	while (rval > 0) {
-+		rval = opal_pci_poll(id, pval);
-+		if (rval == OPAL_SUCCESS && pval)
-+			rval = opal_pci_poll(id, pval);
++	int retval;
++	int slot;
 +
-+		if (rval <= 0)
-+			break;
-+
-+		if (system_state < SYSTEM_RUNNING)
-+			udelay(1000 * rval);
++	while ((retval = get_option(&str, &slot))) {
++		if ((slot < 0) || (slot > 31))
++			pr_err("Illegal slot value: %d\n", slot);
 +		else
-+			msleep(rval);
++			pci_slot_ignore |= (1 << slot);
 +	}
++	return 1;
++}
++__setup("pci_slot_ignore=", versatile_pci_slot_ignore);
 +
-+	return rval ? -EIO : 0;
++
++static void __iomem *__pci_addr(struct pci_bus *bus,
++				unsigned int devfn, int offset)
++{
++	unsigned int busnr = bus->number;
++
++	/*
++	 * Trap out illegal values
++	 */
++	BUG_ON(offset > 255);
++	BUG_ON(busnr > 255);
++	BUG_ON(devfn > 255);
++
++	return versatile_cfg_base[1] + ((busnr << 16) |
++		(PCI_SLOT(devfn) << 11) | (PCI_FUNC(devfn) << 8) | offset);
 +}
 +
- #ifdef CONFIG_PCI_MSI
- static int pnv_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
- {
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 6c02ff8..396fe02 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -217,6 +217,7 @@ extern struct pci_ops pnv_pci_ops;
- extern struct pnv_eeh_ops ioda_eeh_ops;
- #endif
- 
-+int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval);
- void pnv_pci_dump_phb_diag_data(struct pci_controller *hose,
- 				unsigned char *log_buff);
- int pnv_pci_cfg_read(struct device_node *dn,
++static int versatile_read_config(struct pci_bus *bus, unsigned int devfn,
++				 int where, int size, u32 *val)
++{
++	void __iomem *addr = __pci_addr(bus, devfn, where & ~3);
++	u32 v;
++	int slot = PCI_SLOT(devfn);
++
++	if (pci_slot_ignore & (1 << slot)) {
++		/* Ignore this slot */
++		v = (1 << (8 * size)) - 1;
++	} else {
++		switch (size) {
++		case 1:
++			v = readl(addr);
++			if (where & 2)
++				v >>= 16;
++			if (where & 1)
++				v >>= 8;
++			v &= 0xff;
++			break;
++
++		case 2:
++			v = readl(addr);
++			if (where & 2)
++				v >>= 16;
++			v &= 0xffff;
++			break;
++
++		default:
++			v = readl(addr);
++			break;
++		}
++	}
++
++	*val = v;
++	return PCIBIOS_SUCCESSFUL;
++}
++
++static int versatile_write_config(struct pci_bus *bus, unsigned int devfn,
++				  int where, int size, u32 val)
++{
++	void __iomem *addr = __pci_addr(bus, devfn, where);
++	int slot = PCI_SLOT(devfn);
++
++	if (pci_slot_ignore & (1 << slot))
++		return PCIBIOS_SUCCESSFUL;
++
++	switch (size) {
++	case 1:
++		writeb((u8)val, addr);
++		break;
++
++	case 2:
++		writew((u16)val, addr);
++		break;
++
++	case 4:
++		writel(val, addr);
++		break;
++	}
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++static struct pci_ops pci_versatile_ops = {
++	.read	= versatile_read_config,
++	.write	= versatile_write_config,
++};
++
++static int versatile_pci_parse_request_of_pci_ranges(struct device *dev,
++						     struct list_head *res)
++{
++	int err, mem = 1, res_valid = 0;
++	struct device_node *np = dev->of_node;
++	resource_size_t iobase;
++	struct pci_host_bridge_window *win;
++
++	err = of_pci_get_host_bridge_resources(np, 0, 0xff, res, &iobase);
++	if (err)
++		return err;
++
++	list_for_each_entry(win, res, list) {
++		struct resource *parent, *res = win->res;
++
++		switch (resource_type(res)) {
++		case IORESOURCE_IO:
++			parent = &ioport_resource;
++			err = pci_remap_iospace(res, iobase);
++			if (err) {
++				dev_warn(dev, "error %d: failed to map resource %pR\n",
++					 err, res);
++				continue;
++			}
++			break;
++		case IORESOURCE_MEM:
++			parent = &iomem_resource;
++			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
++
++			writel(res->start >> 28, PCI_IMAP(mem));
++			writel(PHYS_OFFSET >> 28, PCI_SMAP(mem));
++			mem++;
++
++			break;
++		case IORESOURCE_BUS:
++		default:
++			continue;
++		}
++
++		err = devm_request_resource(dev, parent, res);
++		if (err)
++			goto out_release_res;
++	}
++
++	if (!res_valid) {
++		dev_err(dev, "non-prefetchable memory resource required\n");
++		err = -EINVAL;
++		goto out_release_res;
++	}
++
++	return 0;
++
++out_release_res:
++	pci_free_resource_list(res);
++	return err;
++}
++
++/* Unused, temporary to satisfy ARM arch code */
++struct pci_sys_data sys;
++
++static int versatile_pci_probe(struct platform_device *pdev)
++{
++	struct resource *res;
++	int ret, i, myslot = -1;
++	u32 val;
++	void __iomem *local_pci_cfg_base;
++	struct pci_bus *bus;
++	LIST_HEAD(pci_res);
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!res)
++		return -ENODEV;
++	versatile_pci_base = devm_ioremap_resource(&pdev->dev, res);
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++	if (!res)
++		return -ENODEV;
++	versatile_cfg_base[0] = devm_ioremap_resource(&pdev->dev, res);
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
++	if (!res)
++		return -ENODEV;
++	versatile_cfg_base[1] = devm_ioremap_resource(&pdev->dev, res);
++
++	ret = versatile_pci_parse_request_of_pci_ranges(&pdev->dev, &pci_res);
++	if (ret)
++		return ret;
++
++	/*
++	 *  We need to discover the PCI core first to configure itself
++	 *  before the main PCI probing is performed
++	 */
++	for (i = 0; i < 32; i++) {
++		if ((readl(versatile_cfg_base[0] + (i << 11) + PCI_VENDOR_ID) == VP_PCI_DEVICE_ID) &&
++		    (readl(versatile_cfg_base[0] + (i << 11) + PCI_CLASS_REVISION) == VP_PCI_CLASS_ID)) {
++			myslot = i;
++			break;
++		}
++	}
++	if (myslot == -1) {
++		dev_err(&pdev->dev, "Cannot find PCI core!\n");
++		return -EIO;
++	}
++	/*
++	 * Do not to map Versatile FPGA PCI device into memory space
++	 */
++	pci_slot_ignore |= (1 << myslot);
++
++	dev_info(&pdev->dev, "PCI core found (slot %d)\n", myslot);
++
++	writel(myslot, PCI_SELFID);
++	local_pci_cfg_base = versatile_cfg_base[1] + (myslot << 11);
++
++	val = readl(local_pci_cfg_base + PCI_COMMAND);
++	val |= PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER | PCI_COMMAND_INVALIDATE;
++	writel(val, local_pci_cfg_base + PCI_COMMAND);
++
++	/*
++	 * Configure the PCI inbound memory windows to be 1:1 mapped to SDRAM
++	 */
++	writel(PHYS_OFFSET, local_pci_cfg_base + PCI_BASE_ADDRESS_0);
++	writel(PHYS_OFFSET, local_pci_cfg_base + PCI_BASE_ADDRESS_1);
++	writel(PHYS_OFFSET, local_pci_cfg_base + PCI_BASE_ADDRESS_2);
++
++	/*
++	 * For many years the kernel and QEMU were symbiotically buggy
++	 * in that they both assumed the same broken IRQ mapping.
++	 * QEMU therefore attempts to auto-detect old broken kernels
++	 * so that they still work on newer QEMU as they did on old
++	 * QEMU. Since we now use the correct (ie matching-hardware)
++	 * IRQ mapping we write a definitely different value to a
++	 * PCI_INTERRUPT_LINE register to tell QEMU that we expect
++	 * real hardware behaviour and it need not be backwards
++	 * compatible for us. This write is harmless on real hardware.
++	 */
++	writel(0, versatile_cfg_base[0] + PCI_INTERRUPT_LINE);
++
++	pci_add_flags(PCI_ENABLE_PROC_DOMAINS);
++	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
++
++	bus = pci_scan_root_bus(&pdev->dev, 0, &pci_versatile_ops, &sys, &pci_res);
++	if (!bus)
++		return -ENOMEM;
++
++	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
++	pci_assign_unassigned_bus_resources(bus);
++
++	return 0;
++}
++
++static const struct of_device_id versatile_pci_of_match[] = {
++	{ .compatible = "arm,versatile-pci", },
++	{ },
++};
++MODULE_DEVICE_TABLE(of, versatile_pci_of_match);
++
++static struct platform_driver versatile_pci_driver = {
++	.driver = {
++		.name = "versatile-pci",
++		.of_match_table = versatile_pci_of_match,
++	},
++	.probe = versatile_pci_probe,
++};
++module_platform_driver(versatile_pci_driver);
++
++MODULE_DESCRIPTION("Versatile PCI driver");
++MODULE_LICENSE("GPLv2");
 -- 
-1.8.3.2
+2.1.0
 
