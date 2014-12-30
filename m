@@ -1,69 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:61632 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750777AbaLJMQo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Dec 2014 07:16:44 -0500
-Date: Wed, 10 Dec 2014 13:16:39 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI: tegra: remove bogus bridge setup fixup
-Message-ID: <20141210121637.GB23558@ulmo.nvidia.com>
-References: <1415907457-3147-1-git-send-email-l.stach@pengutronix.de>
- <1415907457-3147-3-git-send-email-l.stach@pengutronix.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 30 Dec 2014 10:20:21 +0100
+From: Andreas Mohr <andi@lisas.de>
+To: Ethan Zhao <ethan.zhao@oracle.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ethan.kernel@gmail.com,
+	Ethan Zhao <ethan.zhao@oracle.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] PCI: export pci device assignment info as read only via
+ sysfs
+Message-ID: <20141230092021.GA8458@rhlx01.hs-esslingen.de>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="3uo+9/B/ebqu+fSQ"
-In-Reply-To: <1415907457-3147-3-git-send-email-l.stach@pengutronix.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1419927707-14462-1-git-send-email-ethan.zhao@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi,
 
---3uo+9/B/ebqu+fSQ
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Ethan Zhao wrote:
+> This patch exports assignment flag of PCI device via sysfs, so user
+> space application could know if PCI device was assigned to guest OS
+> or not via interface as following from viewpoint of host device
+> management:
+> 
+>  PCI device was assigned to guest OS
+>  $cat /sys/devices/pci0000:00/0000:00:1f.3/assigned
+>  1
+>  PCI device isn't assigned to guest OS
+>  $cat /sys/devices/pci0000:00/0000:00:1f.3/assigned
+>  0
 
-On Thu, Nov 13, 2014 at 08:37:37PM +0100, Lucas Stach wrote:
-> The bridge setup is already done by generic code
-> while scanning the buses. Do not duplicate (or potentially
-> alter) this setup as a fixup.
->=20
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> ---
->  drivers/pci/host/pci-tegra.c | 13 -------------
->  1 file changed, 13 deletions(-)
+For such a sysfs API (and similar cases in general!),
+do we actually want this relatively simple interface of
+"assigned" false/true?
+Or should it rather be something like an "ownership" attribute
+which could then indicate interface-fixed(!) string values
+such as "system"/"vm_guest"/FUTURE_EXTENSION_POSSIBILITY?
 
-I've been carrying the same patch locally for a while now, I thought I
-had sent it out long ago, but I can't find any record of that, so I
-probably didn't. Anyway:
+IOW, "assigned" is quite a bit less flexible (and quite possibly even less
+usability-suitable from a naming POV - "assigned"...??)
+but of course simpler (which may or may not pose an advantage from an
+interface versioning/evolution POV).
 
-Reviewed-by: Thierry Reding <treding@nvidia.com>
-Tested-by: Thierry Reding <treding@nvidia.com>
-Acked-by: Thierry Reding <treding@nvidia.com>
+To further clarify things, this "assigned" interface as-is
+can merely tell apart
+the "device is occupied" vs. "device is not occupied" cases
+yet it could easily provide exact ownership details instead.
+And I'm also wondering whether or not it's good
+to have it directly/symmetrically named "assigned"
+due to it currently(!!) being based internally
+on an equally-named pci_is_dev_assigned() API.
 
---3uo+9/B/ebqu+fSQ
-Content-Type: application/pgp-signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+I should probably read up on sysfs item design hints/guidelines
+which I'd trust to be accurately explained in a Documentation/ file ;)
+Hmm, seems Documentation/sysfs-rules.txt has only one closing remark
+which seems relevant:
+====
+  Userspace applications can, however, expect the format and contents of
+  the attribute files to remain consistent in the absence of a version
+  attribute change in the context of a given attribute.
+====
+This would be fulfilled by both the current and my suggested variant
+of this interface, AFAICS.
 
-iQIcBAEBAgAGBQJUiDmlAAoJEN0jrNd/PrOhouwQAIuTW9BdJCL8bHG6EmzDBMGk
-gQJLfXuMAaL7Gojlwgfw2eOMC4/dvgaOfEnaibUr71expWYImeoAqo1HZaf6NWmU
-K3nUNiI8GxvS0/VS4hy6boP0CYiG8IV0LRClHq2umx6omGIVera+g059D1D9UgZA
-+mHR1HU3N5UKJzZCnNNrblFwMhsjuEp4nqgwerXw5zK397a6ky9MSSoXMFmLa4VM
-HVB1V0I3kcgtLofL2TLX21Nt5xRfJjmMM5c8J4PHDI/dXfl0D4yfBJEPNlrEYwO3
-r/nBKo67Oq2nvNEbVwSjUF7U/xMY0xXpe99ML7tE35tXqcZr3dApyPpoquS/+NWp
-vbI2Ha+iXOWhEftMy4Rs0g52dBKKbrDXACj7wwnZuQuLSgiulbbXk/Su/+RlfXTb
-9WYZLEbca7VYdtTXOco0mSdg4tkBvis4zEfhCJwril6/4Ef4mvWYEo0AYKs/Hxbx
-HucYa/xhleiPSGhAGRrnrSaLrkiqHfM94cLjXUkPf0nBYwGnEmQLGmI/Gm4Lu674
-ydV27JsFtJ7bFVxixtKPyhpHUGgbDZKn/2P8CcEKk4wccBdKFLipIwFhR9NJ30Jy
-qc5qUOkSvtuvTdCcmN2BUTxtnYcGNm5WVXX4BLMGFHfWvceIqP9SYDlEJJ8d4WgJ
-THxCh7Rb4jvCUyk+5lPP
-=aTTh
------END PGP SIGNATURE-----
+Thanks,
 
---3uo+9/B/ebqu+fSQ--
+Andreas Mohr
