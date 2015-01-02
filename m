@@ -1,106 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:40984 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752863AbbAPDr1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jan 2015 22:47:27 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Yijing Wang <wangyijing0307@gmail.com>
-Subject: [PATCH 14/28] PCI/IA64: Refine pci_acpi_scan_root() with generic pci_host_bridge
-Date: Fri, 16 Jan 2015 09:44:12 +0800
-Message-ID: <1421372666-12288-15-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
-References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <54A6E0DE.6090309@amd.com>
+Date: Fri, 2 Jan 2015 12:18:06 -0600
+From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"Catalin Marinas" <Catalin.Marinas@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>
+Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <2148776.X8NPqiYA6S@wuerfel>
+ <20141023091309.GF25302@e106497-lin.cambridge.arm.com>
+ <2355100.WsW1DXh57P@wuerfel> <54A1AC5C.7000903@amd.com>
+ <20150102115533.GA25573@red-moon>
+In-Reply-To: <20150102115533.GA25573@red-moon>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yijing Wang <wangyijing0307@gmail.com>
+On 1/2/2015 5:55 AM, Lorenzo Pieralisi wrote:
+> Hi Suravee,
+>
+> On Mon, Dec 29, 2014 at 07:32:44PM +0000, Suravee Suthikulpanit wrote:
+>> >Hi,
+>> >
+>> >I am not sure if this thread is still alive. I'm trying to see what I
+>> >can do to help clean up/convert to make the PCI GHC also works for arm64
+>> >w/ zero or minimal ifdefs.
+>> >
+>> >Please let me know if someone is already working on this. I noticed that
+>> >Lorenzo's patches has already been in 3.19-rc1, and in Bjorn's
+>> >pci/domain branch. Otherwise, I'll try to continue the work based on the
+>> >sample patch from Arnd here.
+> If I am not mistaken, the only bit missing to remove pci_sys_data (and so
+> having a generic host controller driver that works on ARM32/64) is generic
+> MSI management.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/ia64/pci/pci.c |   34 ++++++++++++++++++----------------
- 1 files changed, 18 insertions(+), 16 deletions(-)
+Lorenzo,
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index e457015..7736c02 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -420,6 +420,18 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
- 	return 0;
- }
- 
-+static int pci_host_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	struct pci_sysdata *sd = dev_get_drvdata(&bridge->dev);
-+
-+	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
-+	return 0;
-+}
-+
-+static struct pci_host_bridge_ops phb_ops = {
-+	.phb_prepare = pci_host_bridge_prepare,
-+};
-+
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- {
- 	struct acpi_device *device = root->device;
-@@ -428,7 +440,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	struct pci_controller *controller;
- 	struct pci_root_info *info = NULL;
- 	int busnum = root->secondary.start;
--	struct pci_bus *pbus;
-+	struct pci_host_bridge *host;
- 	int ret;
- 
- 	controller = alloc_pci_controller(domain);
-@@ -465,26 +477,16 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	 * should handle the case here, but it appears that IA64 hasn't
- 	 * such quirk. So we just ignore the case now.
- 	 */
--	pbus = pci_create_root_bus(NULL, PCI_DOMBUS(domain, bus), 
--			&pci_root_ops, controller, &info->resources);
--	if (!pbus) {
-+	host = pci_scan_root_bridge(NULL, PCI_DOMBUS(domain, bus),
-+			&pci_root_ops, controller, &info->resources, &phb_ops);
-+	if (!host) {
- 		pci_free_resource_list(&info->resources);
- 		__release_pci_root_info(info);
- 		return NULL;
- 	}
- 
--	pci_set_host_bridge_release(to_pci_host_bridge(pbus->bridge),
--			release_pci_root_info, info);
--	pci_scan_child_bus(pbus);
--	return pbus;
--}
--
--int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
--{
--	struct pci_controller *controller = bridge->bus->sysdata;
--
--	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
--	return 0;
-+	pci_set_host_bridge_release(host, release_pci_root_info, info);
-+	return host->bus;
- }
- 
- static int is_valid_resource(struct pci_dev *dev, int idx)
--- 
-1.7.1
+Do you mean to remove pci_sys_data from pci-host-generic.c or removing 
+it completely? I assume the former case.
+
+So, looking at the current code in the pci-host-generic.c, my 
+understanding is that the:
+     *gen_pci = pci_bus->sysdata->private_data
+will be changed to:
+     *gen_pci = pci_bus->sysdata
+
+Then, we can simply just call pci_scan_root_bus() directly since we no 
+longer need to declare hw_pci for calling pci_common_init_dev().
+
+> I know for certain Marc is working on it, and the solution is WIP,
+> I think we should prevent adding more churn to pci_sys_data, since
+> I managed to remove most of the dependencies (domain, mem_offset).
+
+Thanks for cleaning up the domain and mem_offset.
+
+I saw Marc's irq/msi_domain patch series 
+(http://git.kernel.org/cgit/linux/kernel/git/maz/arm-platforms.git/log/?h=irq/msi_domain). 
+
+
+My understanding is that deals with associating the newly introduced 
+msi_domain to each device, which replaces the need for pci_bus->msi and 
+hw_pci->msi_ctrl when configure with CONFIG_PCI_MSI_IRQ_DOMAIN (not sure 
+if this would be the plan for all arm32).  For ARM32, if not define 
+CONFIG_PCI_MSI_IRQ_DOMAIN, it would still fall back to using the 
+[pci_sys_data|hw_pci]->msi_ctrl.
+
+However, I noticed that the hw_pci->msi_controller is not even used for 
+the pci-host-generic. So, this should not be blocking the work to free 
+pci-host-generic from pci_sys_data and hw_pci, as the MSI stuff can go 
+in separately. Am I missing something?
+
+> So to sum it up, to have a generic host controller driver for ARM32/64
+> we just need to work out how to handle the MSI data, patches will be
+> on the lists shortly to handle that, please review.
+>
+> Thanks,
+> Lorenzo
+>
+
+Thanks for the update and the summary. I'll help review/test the MSI 
+patch once posted.
+
+Thanks,
+
+Suravee
 
