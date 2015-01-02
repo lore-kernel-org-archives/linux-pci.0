@@ -1,189 +1,185 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:40926 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751930AbbAPDr0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jan 2015 22:47:26 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
+Received: from mout.kundenserver.de ([212.227.126.187]:60807 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752067AbbABUwu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jan 2015 15:52:50 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Rob Herring <robherring2@gmail.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH 11/28] PCI: Introduce pci_host_bridge_ops to setup host bridge
-Date: Fri, 16 Jan 2015 09:44:09 +0800
-Message-ID: <1421372666-12288-12-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
-References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Peter Maydell <peter.maydell@linaro.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	"arm@kernel.org" <arm@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 4/9] pci: add DT based ARM Versatile PCI host driver
+Date: Fri, 02 Jan 2015 21:52:42 +0100
+Message-ID: <5205206.j8Q9x4GQsU@wuerfel>
+In-Reply-To: <CAL_JsqJbUHkr0zXYKTvS0WPGs7mNqkppsn4i0LuWz5Wv12Unmw@mail.gmail.com>
+References: <1419967718-26909-1-git-send-email-robherring2@gmail.com> <2308474.mrIrUSfiTv@wuerfel> <CAL_JsqJbUHkr0zXYKTvS0WPGs7mNqkppsn4i0LuWz5Wv12Unmw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have weak functions like pcibios_root_bridge_prepare()
-to setup pci host bridge, We could introduce pci_host_bridge_ops
-which contain host bridge specific ops to setup pci_host_bridge.
-Then host bridge driver could add pci_host_bridge_ops hooks
-intead of weak function to setup pci_host_bridge.
-This patch add following pci_host_bridge_ops hooks:
+On Friday 02 January 2015 12:14:43 Rob Herring wrote:
+> On Tue, Dec 30, 2014 at 3:58 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > On Tuesday 30 December 2014 13:28:33 Rob Herring wrote:
+> >> From: Rob Herring <robh@kernel.org>
+> >>
+> >> This converts the Versatile PCI host code to a platform driver using
+> >> the commom DT parsing and setup. The driver uses only an empty ARM
+> >> pci_sys_data struct and does not use pci_common_init_dev init function.
+> >> The old host code will be removed in a subsequent commit when Versatile
+> >> is completely converted to DT.
+> >>
+> >> I've tested this on QEMU with the sym53c8xx driver in both i/o and
+> >> memory mapped modes.
+> >
+> > Ah, this is quite clever, I think you tried to explain to me what you
+> > did with the pci_sys_data before, but I didn't get it then.
+> >
+> >> +
+> >> +static void __iomem *__pci_addr(struct pci_bus *bus,
+> >> +                             unsigned int devfn, int offset)
+> >> +{
+> >> +     unsigned int busnr = bus->number;
+> >> +
+> >> +     /*
+> >> +      * Trap out illegal values
+> >> +      */
+> >> +     BUG_ON(offset > 255);
+> >> +     BUG_ON(busnr > 255);
+> >> +     BUG_ON(devfn > 255);
+> >
+> > Isn't an offset>255 something that can be triggered by a non-broken
+> > driver or even user space?
+> 
+> I don't know. I just copied what the old driver did. Are these checks
+> even host controller specific?
 
-pci_host_bridge_ops {
-	/* set root bus speed, some platform need this like powerpc */
-	void (*phb_set_root_bus_speed)(struct pci_host_bridge *host);
-	/* setup pci_host_bridge before pci_host_bridge be added to driver core */
-	int (*phb_prepare)(struct pci_host_bridge *host);
-	/* probe whether pci_host_bridge scan mode is of mode */
-	void (*phb_probe_mode)(struct pci_host_bridge *);
-	/* platform specific of scan hook to scan pci device */
-	void (*phb_of_scan_bus)(struct pci_host_bridge *);
-}
+A busnr or devfn larger than 255 would be a serious bug on any host
+controller, those just don't exist. A BUG_ON check here is not a problem,
+but if we want to have it, I'd prefer to put it into the core code.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/host-bridge.c |   12 ++++++++++--
- drivers/pci/probe.c       |   19 ++++++++++++++-----
- include/linux/pci.h       |   16 ++++++++++++++--
- 3 files changed, 38 insertions(+), 9 deletions(-)
+offset values between 256 and 4095 can be valid on some devices, but
+apparently this host controller does not support them.
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 0b6ba5c..ccbf168 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -23,8 +23,8 @@ static void pci_release_host_bridge_dev(struct device *dev)
- }
- 
- struct pci_host_bridge *pci_create_host_bridge(
--		struct device *parent, u32 db, 
--		struct list_head *resources, void *sysdata)
-+		struct device *parent, u32 db, struct list_head *resources,
-+		void *sysdata, struct pci_host_bridge_ops *ops)
- {
- 	int error;
- 	int bus = PCI_BUSNUM(db);
-@@ -56,6 +56,7 @@ struct pci_host_bridge *pci_create_host_bridge(
- 		}
- 	mutex_unlock(&phb_mutex);
- 
-+	host->ops = ops;
- 	host->dev.parent = parent;
- 	INIT_LIST_HEAD(&host->windows);
- 	host->dev.release = pci_release_host_bridge_dev;
-@@ -63,6 +64,13 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	dev_set_name(&host->dev, "pci%04x:%02x", host->domain, 
- 			host->busnum);
- 
-+	if (host->ops && host->ops->phb_prepare) {
-+		error = host->ops->phb_prepare(host);
-+		if(error) {
-+			kfree(host);
-+			return NULL;
-+		}
-+	}
- 	error = device_register(&host->dev);
- 	if (error) {
- 		put_device(&host->dev);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 98a8d97..5f748ed 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1888,6 +1888,8 @@ static struct pci_bus *__pci_create_root_bus(
- 
- 	bridge->bus = b;
- 	b->bridge = get_device(&bridge->dev);
-+	if (bridge->ops && bridge->ops->phb_set_root_bus_speed)
-+		bridge->ops->phb_set_root_bus_speed(bridge);
- 	error = pcibios_root_bridge_prepare(bridge);
- 	if (error)
- 		goto err_out;
-@@ -1953,7 +1955,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
- {
- 	struct pci_host_bridge *host;
- 
--	host = pci_create_host_bridge(parent, db, resources, sysdata);
-+	host = pci_create_host_bridge(parent, db, resources, sysdata, NULL);
- 	if (!host)
- 		return NULL;
- 	
-@@ -2051,10 +2053,17 @@ static struct pci_bus *__pci_scan_root_bus(
- 		pci_bus_insert_busn_res(b, host->busnum, 255);
- 	}
- 
--	max = pci_scan_child_bus(b);
-+	if (host->ops && host->ops->phb_probe_mode)
-+		host->ops->phb_probe_mode(host);
- 
--	if (!found)
--		pci_bus_update_busn_res_end(b, max);
-+	if (host->of_scan) {
-+		if (host->ops &&host->ops->phb_of_scan_bus)
-+			host->ops->phb_of_scan_bus(host);
-+	} else {
-+		max = pci_scan_child_bus(b);
-+		if (!found)
-+			pci_bus_update_busn_res_end(b, max);
-+	}
- 
- 	return b;
- }
-@@ -2064,7 +2073,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
- {
- 	struct pci_host_bridge *host;
- 
--	host = pci_create_host_bridge(parent, db, resources, sysdata);
-+	host = pci_create_host_bridge(parent, db, resources, sysdata, NULL);
- 	if (!host)
- 		return NULL;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 3ee8436..c06b95d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -401,13 +401,25 @@ struct pci_host_bridge_window {
- 	resource_size_t offset;		/* bus address + offset = CPU address */
- };
- 
-+struct pci_host_bridge;
-+struct pci_host_bridge_ops {
-+	void (*phb_set_root_bus_speed)(struct pci_host_bridge *host);
-+	int (*phb_prepare)(struct pci_host_bridge *host);
-+	/* Override domain number by host specific .phv_assign_domain_nr()  */
-+	void (*phb_assign_domain_nr)(struct pci_host_bridge *);
-+	void (*phb_probe_mode)(struct pci_host_bridge *);
-+	void (*phb_of_scan_bus)(struct pci_host_bridge *);
-+};
-+
- struct pci_host_bridge {
- 	u16	domain;
- 	u16 busnum;
-+	bool of_scan;
- 	struct device dev;
- 	struct pci_bus *bus;		/* root bus */
- 	struct list_head list;
- 	struct list_head windows;	/* pci_host_bridge_windows */
-+	struct pci_host_bridge_ops *ops;
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
- };
-@@ -419,8 +431,8 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
- 
- int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
- struct pci_host_bridge *pci_create_host_bridge(
--		struct device *parent, u32 dombus, 
--		struct list_head *resources, void *sysdata);
-+		struct device *parent, u32 dombus, struct list_head *resources,
-+		void *sysdata, struct pci_host_bridge_ops *ops);
- /*
-  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
-  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
--- 
-1.7.1
+> > Maybe just return PCIBIOS_BAD_REGISTER_NUMBER in this case?
+> 
+> Perhaps. We could probably simplify the config space read/write
+> functions and just provide the PCI core a bus/devfn/offset to config
+> address translation function. That would not work in all cases, but
+> propably most that have memory mapped config space.
 
+Actually, thinking about this some more, the implementation seems to
+be "CAM" compliant, and we could share the confic space accessors with
+the ones from drivers/pci/host/pci-host-generic.c.
+
+> >> +static int versatile_pci_parse_request_of_pci_ranges(struct device *dev,
+> >> +                                                  struct list_head *res)
+> >> +{
+> >> +     int err, mem = 1, res_valid = 0;
+> >> +     struct device_node *np = dev->of_node;
+> >> +     resource_size_t iobase;
+> >> +     struct pci_host_bridge_window *win;
+> >> +
+> >> +     err = of_pci_get_host_bridge_resources(np, 0, 0xff, res, &iobase);
+> >> +     if (err)
+> >> +             return err;
+> >> +
+> >> +     list_for_each_entry(win, res, list) {
+> >> +             struct resource *parent, *res = win->res;
+> >> +
+> >> +             switch (resource_type(res)) {
+> >> +             case IORESOURCE_IO:
+> >> +                     parent = &ioport_resource;
+> >> +                     err = pci_remap_iospace(res, iobase);
+> >> +                     if (err) {
+> >> +                             dev_warn(dev, "error %d: failed to map resource %pR\n",
+> >> +                                      err, res);
+> >> +                             continue;
+> >> +                     }
+> >> +                     break;
+> >> +             case IORESOURCE_MEM:
+> >> +                     parent = &iomem_resource;
+> >> +                     res_valid |= !(res->flags & IORESOURCE_PREFETCH);
+> >> +
+> >> +                     writel(res->start >> 28, PCI_IMAP(mem));
+> >> +                     writel(PHYS_OFFSET >> 28, PCI_SMAP(mem));
+> >> +                     mem++;
+> >> +
+> >> +                     break;
+> >> +             case IORESOURCE_BUS:
+> >> +             default:
+> >> +                     continue;
+> >> +             }
+> >> +
+> >> +             err = devm_request_resource(dev, parent, res);
+> >> +             if (err)
+> >> +                     goto out_release_res;
+> >> +     }
+> >
+> > I wonder if we should also request the physical resource for the I/O space
+> > window to have it show up in /proc/iomem. We are rather inconsistent in this
+> > regard between drivers.
+> 
+> It's a little complicated now because we don't have that as a struct
+> resource any more. We could reconstruct it from iobase and the i/o
+> resource size.
+
+
+
+> >> +     pci_add_flags(PCI_ENABLE_PROC_DOMAINS);
+> >> +     pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
+> >> +
+> >> +     bus = pci_scan_root_bus(&pdev->dev, 0, &pci_versatile_ops, &sys, &pci_res);
+> >> +     if (!bus)
+> >> +             return -ENOMEM;
+> >> +
+> >> +     pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+> >> +     pci_assign_unassigned_bus_resources(bus);
+> >> +
+> >> +     return 0;
+> >
+> > One general question, mainly for Bjorn: pci_scan_root_bus adds all the devices
+> > at the Linux driver level by calling pci_bus_add_devices(), but then we call
+> > pci_fixup_irqs and pci_assign_unassigned_bus_resources after that, which will
+> > change the devices again. Is this how it's meant to work? How do we ensure
+> > that we have the correct irq number and resources by the time we enter the
+> > probe() function of the PCI device driver that gets bound to a device here?
+> 
+> I'm a bit puzzled myself. I think that the devices are not probed
+> until after pci_assign_unassigned_bus_resources. It certainly doesn't
+> work without that call. Really, I think of_irq_parse_and_map_pci
+> should be the default if no one else has set the device's irq (and the
+> host has a device node of course).
+> 
+> It also seems to be a bit of random set of pci functions that are
+> called here. It would be nice to simplify this chunk of code.
+
+Yes, and we recently had some attempts at creating a better interface posted
+on the mailing list, not sure what the latest status on it is. I think we
+want to end up with a two-stage interface along the lines of:
+
+	/* allocate a pci_host_bridge, scan DT, set default operations, map
+	   I/O space if necessary, request all resources ... */
+	phb = pci_host_bridge_create(parent, ..., sizeof(struct my_pci_private));
+	if (IS_ERR(phb))
+		return PTR_ERR(phb);
+
+	/* any host specific customization */
+	phb->bus->ops = my_pci_ops; /* for nonstandard config space access */
+	phb->foo = my_pci_foo; /* some other optional function pointers, replacing pcibios_* */
+	my_pci = &phb->priv; /* extra allocated data */
+	my_pci->clk = devm_clk_get(parent, "pci");
+	my_pci->regs = devm_ioremap_resource(parent, platform_get_resource(pdev,
+							IORESOURCE_MEM, 0);
+	
+	/* scan everything */
+	return pci_scan_child_bus_and_add_devices(phb->bus);
+
+
+	Arnd
