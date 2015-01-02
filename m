@@ -1,139 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:15059 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752352AbbA2D43 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jan 2015 22:56:29 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <boris.ostrovsky@oracle.com>,
-	<yinghai@kernel.org>, <xen-devel@lists.xenproject.org>,
-	<konrad.wilk@oracle.com>, <david.vrabel@citrix.com>,
-	<alex.williamson@redhat.com>, <kvm@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v3] PCI: Add guard to avoid mapping a invalid msix base address
-Date: Thu, 29 Jan 2015 11:54:43 +0800
-Message-ID: <1422503683-19709-1-git-send-email-wangyijing@huawei.com>
+Received: from mout.kundenserver.de ([212.227.126.131]:63541 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751888AbbABVJm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jan 2015 16:09:42 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>
+Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
+Date: Fri, 02 Jan 2015 22:09:33 +0100
+Message-ID: <30239600.UAZhntKiNS@wuerfel>
+In-Reply-To: <54A6E0DE.6090309@amd.com>
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com> <20150102115533.GA25573@red-moon> <54A6E0DE.6090309@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sometimes, a pci bridge device BAR was not assigned
-properly. After we call pci_bus_assign_resources(), the
-resource of the BAR would be reseted. So if we try to
-enable msix for this device, it will map a invalid
-resource as the msix base address, and a warning call trace
-will report.
+On Friday 02 January 2015 12:18:06 Suravee Suthikulanit wrote:
+> On 1/2/2015 5:55 AM, Lorenzo Pieralisi wrote:
+> > Hi Suravee,
+> >
+> > On Mon, Dec 29, 2014 at 07:32:44PM +0000, Suravee Suthikulpanit wrote:
+> >> >Hi,
+> >> >
+> >> >I am not sure if this thread is still alive. I'm trying to see what I
+> >> >can do to help clean up/convert to make the PCI GHC also works for arm64
+> >> >w/ zero or minimal ifdefs.
+> >> >
+> >> >Please let me know if someone is already working on this. I noticed that
+> >> >Lorenzo's patches has already been in 3.19-rc1, and in Bjorn's
+> >> >pci/domain branch. Otherwise, I'll try to continue the work based on the
+> >> >sample patch from Arnd here.
+> > If I am not mistaken, the only bit missing to remove pci_sys_data (and so
+> > having a generic host controller driver that works on ARM32/64) is generic
+> > MSI management.
+> 
+> Lorenzo,
+> 
+> Do you mean to remove pci_sys_data from pci-host-generic.c or removing 
+> it completely? I assume the former case.
 
-pci_bus_assign_resources()
-	__pci_bus_assign_resources()
-		pbus_assign_resources_sorted()
-			__assign_resources_sorted()
-				assign_requested_resources_sorted()
-					pci_assign_resource() -->fail
-					reset_resource()	-->res->start/end/flags = 0
+Something inbetween: We should be able to remove pci_sys_data and
+pci_common_init_dev from all drivers in drivers/pci/host/, but keep them
+for all drivers in arch/arm/*/pci.c
 
-pcie_port_device_register()
-	init_service_irqs()
-		pcie_port_enable_msix()
-			...
-				msix_capability_init()
-					msix_map_region()
-						phys_addr = pci_resource_start(dev, bir) + table_offset;
-If BAR(index=bir) was not assign properly, pci_resource_start(dev, bir)
-here would return 0, so phys_addr is a invalid physical
-address of msix.
+> So, looking at the current code in the pci-host-generic.c, my 
+> understanding is that the:
+>      *gen_pci = pci_bus->sysdata->private_data
+> will be changed to:
+>      *gen_pci = pci_bus->sysdata
+> 
+> Then, we can simply just call pci_scan_root_bus() directly since we no 
+> longer need to declare hw_pci for calling pci_common_init_dev().
 
-[   43.094087] ------------[ cut here ]------------
-[   43.097418] WARNING: CPU: 1 PID: 1800 at arch/arm64/mm/ioremap.c:58 __ioremap_caller+0xd4/0xe8()
-...
-[   43.121694] CPU: 1 PID: 1800 Comm: insmod Tainted: G           O  3.16.0 #5
-[   43.127374] Call trace:
-[   43.128522] [<ffffffc0000891d4>] dump_backtrace+0x0/0x130
-[   43.132637] [<ffffffc000089314>] show_stack+0x10/0x1c
-[   43.136402] [<ffffffc0004db040>] dump_stack+0x74/0x94
-[   43.140166] [<ffffffc0000986f8>] warn_slowpath_common+0x8c/0xb4
-[   43.144804] [<ffffffc0000987e4>] warn_slowpath_null+0x14/0x20
-[   43.149266] [<ffffffc000095474>] __ioremap_caller+0xd0/0xe8
-[   43.153555] [<ffffffc000095498>] __ioremap+0xc/0x18
-[   43.157145] [<ffffffc0002cc62c>] pci_enable_msix+0x238/0x44c
-[   43.161521] [<ffffffc0002cc874>] pci_enable_msix_range+0x34/0x80
-[   43.166243] [<ffffffc0002c946c>] pcie_port_device_register+0x104/0x480
-[   43.171491] [<ffffffc0002c99f8>] pcie_portdrv_probe+0x38/0xa0
-[   43.175952] [<ffffffc0002bd6c8>] pci_device_probe+0x78/0xd4
-[   43.180238] [<ffffffc00030e68c>] really_probe+0x6c/0x22c
-[   43.184265] [<ffffffc00030e8a8>] __device_attach+0x5c/0x6c
-[   43.188466] [<ffffffc00030cb68>] bus_for_each_drv+0x50/0x94
-[   43.192755] [<ffffffc00030e5fc>] device_attach+0x9c/0xc0
-[   43.196780] [<ffffffc0002b4c54>] pci_bus_add_device+0x38/0x80
-[   43.201243] [<ffffffc0002b5064>] pci_bus_add_devices+0x4c/0xd4
-[   43.205791] [<ffffffc000093d70>] pci_common_init+0x274/0x378
-[   43.210170] [<ffffffbff18e4b8c>] $x+0xb8c/0xc88 [pcie]
-[   43.214024] [<ffffffc00031013c>] platform_drv_probe+0x20/0x58
-[   43.218483] [<ffffffc00030e6e4>] really_probe+0xc4/0x22c
-[   43.222510] [<ffffffc00030e958>] __driver_attach+0xa0/0xa8
-[   43.226708] [<ffffffc00030cab0>] bus_for_each_dev+0x54/0x98
-[   43.231000] [<ffffffc00030e234>] driver_attach+0x1c/0x28
-[   43.235024] [<ffffffc00030deb0>] bus_add_driver+0x14c/0x204
-[   43.239309] [<ffffffc00030f038>] driver_register+0x64/0x130
-[   43.243598] [<ffffffc000310110>] __platform_driver_register+0x5c/0x68
-[   43.248757] [<ffffffc0003101b4>] platform_driver_probe+0x28/0xac
-[   43.253485] [<ffffffbff18e4cb8>] pcie_init+0x30/0x3c [pcie]
-[   43.258293] [<ffffffc0000815dc>] do_one_initcall+0x88/0x19c
-[   43.262585] [<ffffffc0000f6b74>] load_module+0xc2c/0xf2c
-[   43.266609] [<ffffffc0000f6fd0>] SyS_finit_module+0x78/0x88
-[   43.270897] ---[ end trace ea5eb60837afb5aa ]---
+Right.
 
-Reported-by: Zhang Jukuo <zhangjukuo@huawei.com>
-Tested-by: Zhang Jukuo <zhangjukuo@huawei.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/x86/pci/xen.c |    4 ++++
- drivers/pci/msi.c  |    5 +++++
- 2 files changed, 9 insertions(+), 0 deletions(-)
+> > I know for certain Marc is working on it, and the solution is WIP,
+> > I think we should prevent adding more churn to pci_sys_data, since
+> > I managed to remove most of the dependencies (domain, mem_offset).
+> 
+> Thanks for cleaning up the domain and mem_offset.
+> 
+> I saw Marc's irq/msi_domain patch series 
+> (http://git.kernel.org/cgit/linux/kernel/git/maz/arm-platforms.git/log/?h=irq/msi_domain). 
+> 
+> 
+> My understanding is that deals with associating the newly introduced 
+> msi_domain to each device, which replaces the need for pci_bus->msi and 
+> hw_pci->msi_ctrl when configure with CONFIG_PCI_MSI_IRQ_DOMAIN (not sure 
+> if this would be the plan for all arm32).  For ARM32, if not define 
+> CONFIG_PCI_MSI_IRQ_DOMAIN, it would still fall back to using the 
+> [pci_sys_data|hw_pci]->msi_ctrl.
 
-diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-index c489ef2..34fc418 100644
---- a/arch/x86/pci/xen.c
-+++ b/arch/x86/pci/xen.c
-@@ -298,12 +298,16 @@ static int xen_initdom_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 			map_irq.entry_nr = nvec;
- 		} else if (type == PCI_CAP_ID_MSIX) {
- 			int pos;
-+			unsigned long flags;
- 			u32 table_offset, bir;
- 
- 			pos = dev->msix_cap;
- 			pci_read_config_dword(dev, pos + PCI_MSIX_TABLE,
- 					      &table_offset);
- 			bir = (u8)(table_offset & PCI_MSIX_TABLE_BIR);
-+			flags = pci_resource_flags(dev, bir);
-+			if (!flags || (flags & IORESOURCE_UNSET))
-+				return -EINVAL;
- 
- 			map_irq.table_base = pci_resource_start(dev, bir);
- 			map_irq.entry_nr = msidesc->msi_attrib.entry_nr;
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index fd60806..c3e7dfc 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -694,11 +694,16 @@ static void __iomem *msix_map_region(struct pci_dev *dev, unsigned nr_entries)
- {
- 	resource_size_t phys_addr;
- 	u32 table_offset;
-+	unsigned long flags;
- 	u8 bir;
- 
- 	pci_read_config_dword(dev, dev->msix_cap + PCI_MSIX_TABLE,
- 			      &table_offset);
- 	bir = (u8)(table_offset & PCI_MSIX_TABLE_BIR);
-+	flags = pci_resource_flags(dev, bir);
-+	if (!flags || (flags & IORESOURCE_UNSET))
-+		return NULL;
-+
- 	table_offset &= PCI_MSIX_TABLE_OFFSET;
- 	phys_addr = pci_resource_start(dev, bir) + table_offset;
- 
--- 
-1.7.1
+For all I can tell, we have two cases on ARM regarding MSI:
 
+- arch/arm/mach-iop13xx/pci.c uses its own
+  arch_setup_msi_irq/arch_teardown_msi_irq implementation and does not
+  use pci_bus->msi.
+
+- everything else that supports MSI has a modern driver with multiplatform
+  support and uses msi_controller. If any platform wants to support GICv2m,
+  we have to use CONFIG_PCI_MSI_IRQ_DOMAIN for all of them, and that
+  seems like the best way forward.
+
+	Arnd
