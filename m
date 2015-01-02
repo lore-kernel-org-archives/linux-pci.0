@@ -1,77 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:32974 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753862AbbA0LMg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Jan 2015 06:12:36 -0500
-Message-ID: <54C772A0.2000203@arm.com>
-Date: Tue, 27 Jan 2015 11:12:32 +0000
-From: Robin Murphy <robin.murphy@arm.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:46339 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752030AbbABVMq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jan 2015 16:12:46 -0500
+Message-ID: <54A709A5.1000801@ti.com>
+Date: Fri, 2 Jan 2015 16:12:05 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-To: Murali Karicheri <m-karicheri2@ti.com>,
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Rob Herring <robherring2@gmail.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
 	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Subject: Re: [PATCH v4 6/6] arm: dma-mapping: updates to limit dma_mask and
- iommu mapping size
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com> <1422052359-12384-7-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1422052359-12384-7-git-send-email-m-karicheri2@ti.com>
-Content-Type: text/plain; charset=WINDOWS-1252; format=flowed
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 1/2] of/pci: add of_pci_dma_configure() update dma
+ configuration
+References: <1419459099-6667-1-git-send-email-m-karicheri2@ti.com> <CAL_JsqJtVnP_5zAiUvMwL00JQV0mjw-R_hEkxiv13ZuNrQ8nAA@mail.gmail.com> <54A6D375.6050604@ti.com> <1450683.bjnXzaM6nd@wuerfel>
+In-Reply-To: <1450683.bjnXzaM6nd@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Murali,
-
-On 23/01/15 22:32, Murali Karicheri wrote:
-> Limit the dma_mask to minimum of dma_mask and dma_base + size - 1.
+On 01/02/2015 03:57 PM, Arnd Bergmann wrote:
+> On Friday 02 January 2015 12:20:53 Murali Karicheri wrote:
+>> Initially I had the same idea to re-use the existing function
+>> of_dma_configure() for this. I wanted to defer this until we have an
+>> agreement on the changes required for the subject functionality. My
+>> quick review of the code suggestio this would require additional API
+>> changes as below. I did a quick test of the changes and it works for
+>> Keystone, but need to be reviewed by everyone as I touch the IOMMU
+>> functionality here and I don't have a platform with IOMMU. Need test by
+>> someone to make sure I don't break anything.
+>>
+>> Here are the changes required to implement this suggestion.
+>>
+>> 1. Move the of_dma_configure() to drivers/of/device.c (include the API
+>> in of_device.h) and make it global (using proper EXPORT macro).
+>> Otherwise, we will have to include of_platform.h in drivers/of/of_pci.c
+>> assuming the prototype is defined in of_platform.h which doesn't look
+>> appropriate to me. Would require following additional include files in
+>> drivers/of/device.c as well.
+>>
+>> +#include<linux/of_address.h>
+>> +#include<linux/of_iommu.h>
+>> +#include<linux/dma-mapping.h>
 >
-> Also arm_iommu_create_mapping() has size parameter of size_t and
-> arm_setup_iommu_dma_ops() can take a value higher than that. So
-> limit the size to SIZE_MAX.
+> Yes, sounds good.
 >
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-> ---
->   arch/arm/mm/dma-mapping.c |   10 ++++++++++
->   1 file changed, 10 insertions(+)
+>> 2. drivers/iommu/of_iommu.c. This is needed so that of_iommu_configure()
+>> can take confuguration from the root bus DT as you have suggested.
+>>
+>> -struct iommu_ops *of_iommu_configure(struct device *dev)
+>> +struct iommu_ops *of_iommu_configure(struct device *dev, struct
+>> device_node *node)
+>>    {
+>>           struct of_phandle_args iommu_spec;
+>>           struct device_node *np;
+>> @@ -145,7 +145,7 @@ struct iommu_ops *of_iommu_configure(struct device *dev)
+>>            * See the `Notes:' section of
+>>            * Documentation/devicetree/bindings/iommu/iommu.txt
+>>            */
+>> -       while (!of_parse_phandle_with_args(dev->of_node, "iommus",
+>> +       while (!of_parse_phandle_with_args(node, "iommus",
+>>                                              "#iommu-cells", idx,
+>>                                              &iommu_spec)) {
 >
-> diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
-> index 7864797..a1f9030 100644
-> --- a/arch/arm/mm/dma-mapping.c
-> +++ b/arch/arm/mm/dma-mapping.c
-> @@ -2004,6 +2004,13 @@ static bool arm_setup_iommu_dma_ops(struct device *dev, u64 dma_base, u64 size,
->   	if (!iommu)
->   		return false;
+> Right.
 >
-> +	/*
-> +	 * currently arm_iommu_create_mapping() takes a max of size_t
-> +	 * for size param. So check this limit for now.
-> +	 */
-> +	if (size > SIZE_MAX)
-> +		return false;
-> +
->   	mapping = arm_iommu_create_mapping(dev->bus, dma_base, size);
->   	if (IS_ERR(mapping)) {
->   		pr_warn("Failed to create %llu-byte IOMMU mapping for device %s\n",
-> @@ -2053,6 +2060,9 @@ void arch_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
->   {
->   	struct dma_map_ops *dma_ops;
+>> 3. drivers/of/of_pci.c. The existing function (added in this patch) will
+>> make call to of_dma_configure() as
+>>
+>> parent_np = of_get_pci_root_bridge_parent(pci_dev);
+>> of_dma_configure(dev, parent_np);
 >
-> +	/* limit dma_mask to the lower of the two values */
-> +	*dev->dma_mask = min((*dev->dma_mask), (dma_base + size - 1));
-> +
+> With dev =&pci_dev->dev, I assume?
 
-Is there any reason not to do this in of_dma_configure? It seems like 
-something everyone could benefit from - I'd cooked up a dodgy workaround 
-for the same issue in my arm64 IOMMU code, but handling it generically 
-in common code would be much nicer.
+Yes
 
-Robin.
-
->   	dev->archdata.dma_coherent = coherent;
->   	if (arm_setup_iommu_dma_ops(dev, dma_base, size, iommu))
->   		dma_ops = arm_get_iommu_dma_map_ops(coherent);
 >
+>> 4. drivers/of/platform.c. Add a wrapper function
+>> of_platform_dma_configure() that calls of_dma_configure() as
+>> of_dma_configure(dev, dev->of_node). All existing calls converted to
+>> this wrapper.
+>
+> There are only two callers, I don't think we need a wrapper for it,
+> just change the calling conventions along with step 2.
+
+Ok. That is what Rob's comment as well.
+
+>
+>> If the above looks good, I can post v3 of the patch with these changes.
+>
+> With that one minor change, sounds perfect to me. The same can also
+> be used by other bus types if we ever need it.
+>
+> 	Arnd
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
+-- 
+Murali Karicheri
+Linux Kernel, Texas Instruments
