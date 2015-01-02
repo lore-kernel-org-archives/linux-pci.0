@@ -1,86 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from utopia.booyaka.com ([74.50.51.50]:43393 "EHLO
-	utopia.booyaka.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755402AbbA2RIo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jan 2015 12:08:44 -0500
-Date: Thu, 29 Jan 2015 17:08:43 +0000 (UTC)
-From: Paul Walmsley <paul@pwsan.com>
-To: Rob Herring <robherring2@gmail.com>
-cc: Mark Rutland <mark.rutland@arm.com>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Stephen Warren <swarren@wwwdotorg.org>,
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:40269 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752120AbbABUqN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jan 2015 15:46:13 -0500
+MIME-Version: 1.0
+In-Reply-To: <54A6D375.6050604@ti.com>
+References: <1419459099-6667-1-git-send-email-m-karicheri2@ti.com>
+ <1419459099-6667-2-git-send-email-m-karicheri2@ti.com> <CAL_JsqJtVnP_5zAiUvMwL00JQV0mjw-R_hEkxiv13ZuNrQ8nAA@mail.gmail.com>
+ <54A6D375.6050604@ti.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Fri, 2 Jan 2015 14:45:50 -0600
+Message-ID: <CAL_Jsq+krOUA3BPvMCdaOBhALoi+pzWbw3YndXqR8x52OJogZg@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] of/pci: add of_pci_dma_configure() update dma configuration
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
 	Rob Herring <robh+dt@kernel.org>,
 	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
-Subject: Re: [PATCH 02/24] Documentation: DT bindings: add more chip compatible
- strings for Tegra PCIe
-In-Reply-To: <CAL_JsqLE+W+T5YqzdB+DkdBE+HsgySX0yJHzn1y43QDfw4GA9A@mail.gmail.com>
-Message-ID: <alpine.DEB.2.02.1501291707350.16475@utopia.booyaka.com>
-References: <20150128234935.20644.89300.stgit@dusk.lan> <20150128234937.20644.9400.stgit@dusk.lan> <CAL_JsqKMm=r+57ShskgbtNqnCGF1yKYDSJJFQ7o05keNzh5z+g@mail.gmail.com> <alpine.DEB.2.02.1501291543030.16475@utopia.booyaka.com>
- <CAL_JsqLE+W+T5YqzdB+DkdBE+HsgySX0yJHzn1y43QDfw4GA9A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rob
+On Fri, Jan 2, 2015 at 11:20 AM, Murali Karicheri <m-karicheri2@ti.com> wrote:
+> Rob,
+>
+> See my response below. Arnd and Will, please review this as well.
+>
+> On 12/26/2014 02:33 PM, Rob Herring wrote:
+>>
+>> On Wed, Dec 24, 2014 at 4:11 PM, Murali Karicheri<m-karicheri2@ti.com>
+>> wrote:
+>>>
+>>> Add of_pci_dma_configure() to allow updating the dma configuration
+>>> of the pci device using the configuration from DT of the parent of
+>>> the root bridge device.
+>>>
+>>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+>>> ---
+>>>   drivers/of/of_pci.c    |   73
+>>> ++++++++++++++++++++++++++++++++++++++++++++++++
+>>>   include/linux/of_pci.h |   12 ++++++++
+>>>   2 files changed, 85 insertions(+)
+>>>
 
-On Thu, 29 Jan 2015, Rob Herring wrote:
+[...]
 
-> On Thu, Jan 29, 2015 at 9:45 AM, Paul Walmsley <paul@pwsan.com> wrote:
-> > On Thu, 29 Jan 2015, Rob Herring wrote:
-> >
-> >> On Wed, Jan 28, 2015 at 5:49 PM, Paul Walmsley <paul@pwsan.com> wrote:
-> >> >
-> >> > Add compatible strings for the PCIe IP blocks present on several Tegra
-> >> > chips.  The primary objective here is to avoid checkpatch warnings,
-> >> > per:
-> >> >
-> 
-> [...]
-> 
-> >> > +  - "nvidia,tegra132-pcie" (not yet matched in the driver)
-> >> > +  - "nvidia,tegra210-pcie" (not yet matched in the driver)
-> >>
-> >> Whether the driver matches or not is irrelevant to the binding and may
-> >> change over time. Does this mean the driver matches on something else
-> >> or Tegra132 is not yet supported in the driver?
-> >
-> > It means that the driver currently matches on one of the first three
-> > strings that don't carry that annotation.
-> >
-> >> If the former, what is important is what are the valid combinations of
-> >> compatible properties and that is not captured here. In other words,
-> >> what is the fallback compatible string for each chip?
-> >
-> > The intention was to try to be helpful: to document that anyone adding a
-> > "nvidia,tegra132-pcie" compatible string would also need to add one of the
-> > other strings as a fallback.  Would you like that to be documented in a
-> > different way, or removed?
-> 
-> Then you should say something like 'must contain "nvidia,tegra20-pcie"
-> and one of: ...'
-> 
-> You can also use nvidia,<chip>-pcie if you want. checkpatch will check
-> for that pattern too. Then your documentation can be something like:
-> 
-> Must contain '"nvidia,<chip>-pcie", "nvidia,tegra20-pcie"' where
-> <chip> is tegra30, tegra132, ...
-> 
-> We don't enforce that the <chip> part is documented ATM and not likely
-> until we have a schema if ever.
+>>> +               coherent = of_dma_is_coherent(parent_np);
+>>> +               dev_dbg(dev, "device is%sdma coherent\n",
+>>> +                       coherent ? " " : " not ");
+>>> +
+>>> +               arch_setup_dma_ops(dev, dma_addr, size, NULL, coherent);
+>>
+>>
+>> This is the same code as of_dma_configure. The only difference I see
+>> is which node ptr is passed to of_dma_get_range. You need to make that
+>> a function param of of_dma_configure.
+>>
+>> of_dma_configure also has iommu handling now. You will probably need
+>> something similar for PCI in that you setup an iommu based on the root
+>> bus DT properties.
+>>
+> Initially I had the same idea to re-use the existing function
+> of_dma_configure() for this. I wanted to defer this until we have an
+> agreement on the changes required for the subject functionality. My quick
+> review of the code suggestio this would require additional API changes as
+> below. I did a quick test of the changes and it works for Keystone, but need
+> to be reviewed by everyone as I touch the IOMMU functionality here and I
+> don't have a platform with IOMMU. Need test by someone to make sure I don't
+> break anything.
 
-OK, thanks for the explanation.
+The IOMMU changes look trivial. We may want to address the comment in
+of_iommu_configure about parent nodes. We should be sure these changes
+work with how we would do searching parent nodes.
 
-So would it be acceptable to you to skip the attempt to document which 
-strings are actually supported by the current driver, and to simply use 
-the <chip> wildcard?
+> Here are the changes required to implement this suggestion.
+>
+> 1. Move the of_dma_configure() to drivers/of/device.c (include the API in
+> of_device.h) and make it global (using proper EXPORT macro). Otherwise, we
+> will have to include of_platform.h in drivers/of/of_pci.c assuming the
+> prototype is defined in of_platform.h which doesn't look appropriate to me.
+> Would require following additional include files in drivers/of/device.c as
+> well.
+>
+> +#include <linux/of_address.h>
+> +#include <linux/of_iommu.h>
+> +#include <linux/dma-mapping.h>
 
+Okay.
 
-- Paul
+> 2. drivers/iommu/of_iommu.c. This is needed so that of_iommu_configure() can
+> take confuguration from the root bus DT as you have suggested.
+>
+> -struct iommu_ops *of_iommu_configure(struct device *dev)
+> +struct iommu_ops *of_iommu_configure(struct device *dev, struct device_node
+> *node)
+>  {
+>         struct of_phandle_args iommu_spec;
+>         struct device_node *np;
+> @@ -145,7 +145,7 @@ struct iommu_ops *of_iommu_configure(struct device *dev)
+>          * See the `Notes:' section of
+>          * Documentation/devicetree/bindings/iommu/iommu.txt
+>          */
+> -       while (!of_parse_phandle_with_args(dev->of_node, "iommus",
+> +       while (!of_parse_phandle_with_args(node, "iommus",
+>                                            "#iommu-cells", idx,
+>                                            &iommu_spec)) {
+>
+
+Seems safe enough.
+
+> 3. drivers/of/of_pci.c. The existing function (added in this patch) will
+> make call to of_dma_configure() as
+>
+> parent_np = of_get_pci_root_bridge_parent(pci_dev);
+> of_dma_configure(dev, parent_np);
+
+Okay.
+
+> 4. drivers/of/platform.c. Add a wrapper function of_platform_dma_configure()
+> that calls of_dma_configure() as
+> of_dma_configure(dev, dev->of_node). All existing calls converted to this
+> wrapper.
+
+There's only a few callers of of_dma_configure, so I don't think this
+is necessary. The only thing platform bus specific is who is calling
+the function.
+
+Rob
