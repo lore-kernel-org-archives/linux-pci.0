@@ -1,92 +1,92 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jan Beulich <JBeulich@suse.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v4 27/33] x86/irq: Refine the way to calculate NR_IRQS
-Date: Tue, 20 Jan 2015 13:51:47 +0800
-Message-Id: <1421733113-15704-28-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.10]:62446 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751422AbbACVhb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 3 Jan 2015 16:37:31 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Rob Herring <robherring2@gmail.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 1/2] of/pci: add of_pci_dma_configure() update dma configuration
+Date: Sat, 03 Jan 2015 22:37:09 +0100
+Message-ID: <2019516.ehiuEv0rdL@wuerfel>
+In-Reply-To: <54A71CD1.4070107@ti.com>
+References: <1419459099-6667-1-git-send-email-m-karicheri2@ti.com> <CAL_Jsq+krOUA3BPvMCdaOBhALoi+pzWbw3YndXqR8x52OJogZg@mail.gmail.com> <54A71CD1.4070107@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have made MSI independent of IOAPIC, so we need to refine the
-way to calculate NR_IRQS to support configuration with MSI enabled but
-IOAPIC disabled.
+On Friday 02 January 2015 17:33:53 Murali Karicheri wrote:
+> 
+> I have no experience with IOMMU and may not offer much help here as I 
+> originally wrote above. Will Deacon has added this API and probably able 
+> to offer some help in this discussion.
+> 
+> Will Deacon,
+> 
+> Any comment?
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Jan Beulich <JBeulich@suse.com>
-Link: http://lkml.kernel.org/r/1416901802-24211-36-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/include/asm/irq_vectors.h |   18 +++++++++++-------
- 1 file changed, 11 insertions(+), 7 deletions(-)
+It's complicated :(
 
-diff --git a/arch/x86/include/asm/irq_vectors.h b/arch/x86/include/asm/irq_vectors.h
-index 666c89ec4bd7..b26cb124a4f1 100644
---- a/arch/x86/include/asm/irq_vectors.h
-+++ b/arch/x86/include/asm/irq_vectors.h
-@@ -155,18 +155,22 @@ static inline int invalid_vm86_irq(int irq)
-  * static arrays.
-  */
- 
--#define NR_IRQS_LEGACY			  16
-+#define NR_IRQS_LEGACY			16
- 
--#define IO_APIC_VECTOR_LIMIT		( 32 * MAX_IO_APICS )
-+#define CPU_VECTOR_LIMIT		(64 * NR_CPUS)
-+#define IO_APIC_VECTOR_LIMIT		(32 * MAX_IO_APICS)
- 
--#ifdef CONFIG_X86_IO_APIC
--# define CPU_VECTOR_LIMIT		(64 * NR_CPUS)
--# define NR_IRQS					\
-+#if defined(CONFIG_X86_IO_APIC) && defined(CONFIG_PCI_MSI)
-+#define NR_IRQS						\
- 	(CPU_VECTOR_LIMIT > IO_APIC_VECTOR_LIMIT ?	\
- 		(NR_VECTORS + CPU_VECTOR_LIMIT)  :	\
- 		(NR_VECTORS + IO_APIC_VECTOR_LIMIT))
--#else /* !CONFIG_X86_IO_APIC: */
--# define NR_IRQS			NR_IRQS_LEGACY
-+#elif defined(CONFIG_X86_IO_APIC)
-+#define	NR_IRQS				(NR_VECTORS + IO_APIC_VECTOR_LIMIT)
-+#elif defined(CONFIG_PCI_MSI)
-+#define NR_IRQS				(NR_VECTORS + CPU_VECTOR_LIMIT)
-+#else
-+#define NR_IRQS				NR_IRQS_LEGACY
- #endif
- 
- #endif /* _ASM_X86_IRQ_VECTORS_H */
--- 
-1.7.10.4
+> Looking at the iommu documentation and of_iommu.c, I get a feeling that 
+> this API is not really used at present as there are no callers of 
+> of_iommu_set_ops() and I assume this is a WIP.
 
+Right, but we have patches for some iommu drivers based on this API,
+and we should migrate all of them eventually.
+
+> I believe the way it is 
+> expected to work is to have the iommu driver of the master IOMMU devices 
+> call of_iommu_set_ops(). The device node of this master IOMMU device is 
+> specified as a phandle in the OF node of the device (various bus devices 
+> such as platform, PCI etc). This allow to retrieve the iommu ops though 
+> the of_iommu_configure() API and use it in arch_setup_dma_ops(). So my 
+> gut feeling is that for PCI devices, as there are no DT node, the root 
+> bus node may specify iommus phandle to IOMMU master OF nodes.
+
+Yes, but we also need to pass a PCI device specific identifier along
+with the root bus node, because some iommu drivers take the PCI
+bus/device/function number into account for creating per-function
+i/o page tables.
+
+> W.r.t your comment "We may want to address the comment in
+> of_iommu_configure about parent nodes. We should be sure these changes 
+> work with how we would do searching parent nodes",
+> 
+> I believe, the parent node search itself should work the same way in the 
+> case of PCI as with platform bus case. PCI's case, we are providing the 
+> OF node of the root bus host bridge. Why should this be any different in 
+> terms of search?
+> 
+> I see a potential issue with dma-ranges as described in the notes below.
+> As noted below the usage of dma-range for iommu is to be determined. For 
+> keystone, the of_iommu_configure() always return false as we don't use 
+> the iommu. But don't know if this has any consequences for other 
+> platforms. Or I got your questions wrong. Any help here from others on 
+> the list?
+> 
+> ========================================================================
+> One possible extension to the above is to use an "iommus" property along 
+> with a "dma-ranges" property in a bus device node (such as PCI host 
+> bridges). This can be useful to describe how children on the bus relate 
+> to the IOMMU if they are not explicitly listed in the device tree (e.g. 
+> PCI devices). However, the requirements of that use-case haven't been 
+> fully determined yet. Implementing this is therefore not recommended 
+> without further discussion and extension of this binding.
+> =========================================================================
+
+This probably won't ever apply to PCI devices, so let's ignore it for now.
+For the moment (and for PCI), we should assume that we either configure
+an iommu directly or we use dma-ranges if no iommu is in use.
+
+	Arnd
