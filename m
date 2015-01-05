@@ -1,135 +1,106 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:40879 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753789AbbAEUHj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 5 Jan 2015 15:07:39 -0500
+Message-ID: <54AAEEE1.7020607@ti.com>
+Date: Mon, 5 Jan 2015 15:06:57 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Rob Herring <robherring2@gmail.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Len Brown <lenb@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [Patch v2 04/22] ACPI: Use the length check for io resources as well
-Date: Wed, 28 Jan 2015 18:57:22 +0800
-Message-Id: <1422442660-455-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 1/2] of/pci: add of_pci_dma_configure() update dma
+ configuration
+References: <1419459099-6667-1-git-send-email-m-karicheri2@ti.com> <CAL_Jsq+krOUA3BPvMCdaOBhALoi+pzWbw3YndXqR8x52OJogZg@mail.gmail.com> <54A71CD1.4070107@ti.com> <2019516.ehiuEv0rdL@wuerfel>
+In-Reply-To: <2019516.ehiuEv0rdL@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+On 01/03/2015 04:37 PM, Arnd Bergmann wrote:
+> On Friday 02 January 2015 17:33:53 Murali Karicheri wrote:
+>>
+>> I have no experience with IOMMU and may not offer much help here as I
+>> originally wrote above. Will Deacon has added this API and probably able
+>> to offer some help in this discussion.
+>>
+>> Will Deacon,
+>>
+>> Any comment?
+>
+> It's complicated :(
+>
+>> Looking at the iommu documentation and of_iommu.c, I get a feeling that
+>> this API is not really used at present as there are no callers of
+>> of_iommu_set_ops() and I assume this is a WIP.
+>
+> Right, but we have patches for some iommu drivers based on this API,
+> and we should migrate all of them eventually.
+>
+>> I believe the way it is
+>> expected to work is to have the iommu driver of the master IOMMU devices
+>> call of_iommu_set_ops(). The device node of this master IOMMU device is
+>> specified as a phandle in the OF node of the device (various bus devices
+>> such as platform, PCI etc). This allow to retrieve the iommu ops though
+>> the of_iommu_configure() API and use it in arch_setup_dma_ops(). So my
+>> gut feeling is that for PCI devices, as there are no DT node, the root
+>> bus node may specify iommus phandle to IOMMU master OF nodes.
+>
+> Yes, but we also need to pass a PCI device specific identifier along
+> with the root bus node, because some iommu drivers take the PCI
+> bus/device/function number into account for creating per-function
+> i/o page tables.
+>
+>> W.r.t your comment "We may want to address the comment in
+>> of_iommu_configure about parent nodes. We should be sure these changes
+>> work with how we would do searching parent nodes",
+>>
+>> I believe, the parent node search itself should work the same way in the
+>> case of PCI as with platform bus case. PCI's case, we are providing the
+>> OF node of the root bus host bridge. Why should this be any different in
+>> terms of search?
+>>
+>> I see a potential issue with dma-ranges as described in the notes below.
+>> As noted below the usage of dma-range for iommu is to be determined. For
+>> keystone, the of_iommu_configure() always return false as we don't use
+>> the iommu. But don't know if this has any consequences for other
+>> platforms. Or I got your questions wrong. Any help here from others on
+>> the list?
+>>
+>> ========================================================================
+>> One possible extension to the above is to use an "iommus" property along
+>> with a "dma-ranges" property in a bus device node (such as PCI host
+>> bridges). This can be useful to describe how children on the bus relate
+>> to the IOMMU if they are not explicitly listed in the device tree (e.g.
+>> PCI devices). However, the requirements of that use-case haven't been
+>> fully determined yet. Implementing this is therefore not recommended
+>> without further discussion and extension of this binding.
+>> =========================================================================
+>
+> This probably won't ever apply to PCI devices, so let's ignore it for now.
+> For the moment (and for PCI), we should assume that we either configure
+> an iommu directly or we use dma-ranges if no iommu is in use.
+>
+Thanks Arnd,
 
-Also apply length check to IO resources.
+I will post v3 of the patch with what is agreed before in my response 
+and I understand there is no additional change required based on this 
+particular discussion about iommu. Right?
 
-[Jiang] Remove enforcement that resource starting address must be
-non-zero.
+Murali
+> 	Arnd
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/resource.c |   44 +++++++++++++++++++-------------------------
- 1 file changed, 19 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 3e7d9f6eb875..16d291c60277 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -117,31 +117,30 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
- }
- EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
- 
--static unsigned int acpi_dev_ioresource_flags(u64 start, u64 end, u8 io_decode,
--					      bool window)
-+static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
-+				      u8 io_decode, bool window)
- {
--	int flags = IORESOURCE_IO;
-+	res->flags = IORESOURCE_IO;
- 
--	if (io_decode == ACPI_DECODE_16)
--		flags |= IORESOURCE_IO_16BIT_ADDR;
-+	if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
-+		res->flags |= IORESOURCE_DISABLED;
- 
--	if (start > end || end >= 0x10003)
--		flags |= IORESOURCE_DISABLED;
-+	if (res->end >= 0x10003)
-+		res->flags |= IORESOURCE_DISABLED;
- 
--	if (window)
--		flags |= IORESOURCE_WINDOW;
-+	if (io_decode == ACPI_DECODE_16)
-+		res->flags |= IORESOURCE_IO_16BIT_ADDR;
- 
--	return flags;
-+	if (window)
-+		res->flags |= IORESOURCE_WINDOW;
- }
- 
- static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
- 				    u8 io_decode)
- {
--	u64 end = start + len - 1;
--
- 	res->start = start;
--	res->end = end;
--	res->flags = acpi_dev_ioresource_flags(start, end, io_decode, false);
-+	res->end = start + len - 1;
-+	acpi_dev_ioresource_flags(res, len, io_decode, false);
- }
- 
- /**
-@@ -161,16 +160,12 @@ bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res)
- 	switch (ares->type) {
- 	case ACPI_RESOURCE_TYPE_IO:
- 		io = &ares->data.io;
--		if (!io->minimum && !io->address_length)
--			return false;
- 		acpi_dev_get_ioresource(res, io->minimum,
- 					io->address_length,
- 					io->io_decode);
- 		break;
- 	case ACPI_RESOURCE_TYPE_FIXED_IO:
- 		fixed_io = &ares->data.fixed_io;
--		if (!fixed_io->address && !fixed_io->address_length)
--			return false;
- 		acpi_dev_get_ioresource(res, fixed_io->address,
- 					fixed_io->address_length,
- 					ACPI_DECODE_10);
-@@ -178,7 +173,8 @@ bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res)
- 	default:
- 		return false;
- 	}
--	return true;
-+
-+	return !(res->flags & IORESOURCE_DISABLED);
- }
- EXPORT_SYMBOL_GPL(acpi_dev_resource_io);
- 
-@@ -216,9 +212,8 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
- 	case ACPI_IO_RANGE:
- 		io_decode = addr.address.granularity == 0xfff ?
- 				ACPI_DECODE_10 : ACPI_DECODE_16;
--		res->flags = acpi_dev_ioresource_flags(addr.address.minimum,
--						       addr.address.maximum,
--						       io_decode, window);
-+		acpi_dev_ioresource_flags(res, addr.address.address_length,
-+					  io_decode, window);
- 		break;
- 	case ACPI_BUS_NUMBER_RANGE:
- 		res->flags = IORESOURCE_BUS;
-@@ -266,9 +261,8 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
- 	case ACPI_IO_RANGE:
- 		io_decode = ext_addr->address.granularity == 0xfff ?
- 				ACPI_DECODE_10 : ACPI_DECODE_16;
--		res->flags = acpi_dev_ioresource_flags(ext_addr->address.minimum,
--						       ext_addr->address.maximum,
--						       io_decode, window);
-+		acpi_dev_ioresource_flags(res, ext_addr->address.address_length,
-+					  io_decode, window);
- 		break;
- 	case ACPI_BUS_NUMBER_RANGE:
- 		res->flags = IORESOURCE_BUS;
 -- 
-1.7.10.4
-
+Murali Karicheri
+Linux Kernel, Texas Instruments
