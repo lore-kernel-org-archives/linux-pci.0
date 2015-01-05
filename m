@@ -1,83 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:45944 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751312AbbAPKpM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Jan 2015 05:45:12 -0500
-Message-ID: <1421405098.4015.4.camel@pengutronix.de>
-Subject: Re: [PATCH v2 0/4] Add support for kosagi novena
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Sean Cross <xobs@kosagi.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Shawn Guo <shawn.guo@freescale.com>,
-	devicetree@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	linux-pci@vger.kernel.org, bunnie@kosagi.com
-Date: Fri, 16 Jan 2015 11:44:58 +0100
-In-Reply-To: <54B8EA1C.7070700@kosagi.com>
-References: <1419237127-21763-1-git-send-email-xobs@kosagi.com>
-	 <20150116004615.GF29776@google.com> <54B8EA1C.7070700@kosagi.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:35649 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754383AbbAEW3K (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Jan 2015 17:29:10 -0500
+MIME-Version: 1.0
+In-Reply-To: <1758416.ZHsvLP471N@wuerfel>
+References: <1420424374-32412-1-git-send-email-robh@kernel.org>
+ <2224125.SvyFyDvrch@wuerfel> <CAL_JsqLGh-e2epUdtK07xM_2nwrRO_qcebD-zdCQjRGh9xnsAw@mail.gmail.com>
+ <1758416.ZHsvLP471N@wuerfel>
+From: Rob Herring <robh@kernel.org>
+Date: Mon, 5 Jan 2015 16:28:48 -0600
+Message-ID: <CAL_JsqLOJSjE6MUgFe8Biz+MhdGUiZD+kAOWYTvnF1G5saa2wA@mail.gmail.com>
+Subject: Re: [PATCH] pci: introduce common pci config space accessors
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Will Deacon <will.deacon@arm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Freitag, den 16.01.2015, 18:38 +0800 schrieb Sean Cross:
-> On 16/01/2015 08:46, Bjorn Helgaas wrote:
-> > On Mon, Dec 22, 2014 at 04:32:03PM +0800, Sean Cross wrote:
-> >> The Kosagi Novena mainboard contains an i.MX6, along with a PCI Express slot.
-> >> This patchset adds regulator support to the PCI Express slot, and adds
-> >> device tree support for the Novena mainboard.
-> >>
-> >> Changes since v1:
-> >>     - Add 'kosagi' to vendor prefixes
-> >>     - Add LCD panel to simple-panel
-> >>     - Renamed power-supply to bus-supply
-> >>     - Replaced devm_regulator_get() with devm_regulator_get_optional()
-> >>     - Moved regulator_enable to imx6_add_pcie_port()
-> >>     - Removed fpga@1 from spi definition in dts -- will use overlays instead
-> >>
-> >> Sean Cross (4):
-> >>   drm/panel: simple: Add Innolux N133HSE panel support
-> >>   devicetree: bindings: Add vendor prefix for Kosagi
-> >>   PCI: imx6: Add power-supply support
-> > I guess we're waiting on a response to Arnd's question about making this
-> > more generic, so I'm dropping these from my queue pending that.
-> >
-> > Then we need a strategy for merging it since it crosses PCI/ARM/GPU.
-> > Please propose a strategy; it looks like the PCI part doesn't technically
-> > depend on the preceeding patches, but it's fine with me if you want to keep
-> > it all together.
-> >
-> The PCI part was there because without it, the system hard-locks during
-> boot without it.
-> 
-> However, I'm not sure that the power-supply is the correct approach,
-> because I can still see lockups even with the switch in place. I still
-> haven't found out the root cause of that problem.
-> 
-> One workaround is to simply enable that GPIO in the bootloader and leave
-> it on permanently.  Doing this mimics behavior on other platforms where
-> PCIe is permanently powered up, and since the patches are decoupled the
-> PCI patch can be applied at a later time.
-> 
-> I'd prefer to drop the PCI patch for now.  Would you like me to submit a
-> v3 with simply the drm/panel and devicetree patches?
-> 
-Please keep the PCIe supply regulator in your DT, but just mark it
-always-on.
-I looked into moving the bus-supply into the common designware driver,
-but that needs some more work. I'll send out a series for this in the
-next days. We can then always hook up the regulator properly after this
-is done.
+On Mon, Jan 5, 2015 at 2:01 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Monday 05 January 2015 08:46:09 Rob Herring wrote:
+>>
+>> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> >> index 360a966..e7fd519 100644
+>> >> --- a/include/linux/pci.h
+>> >> +++ b/include/linux/pci.h
+>> >> @@ -560,6 +560,7 @@ static inline int pcibios_err_to_errno(int err)
+>> >>  /* Low-level architecture-dependent routines */
+>> >>
+>> >>  struct pci_ops {
+>> >> +     void __iomem *(*map_bus)(struct pci_bus *bus, unsigned int devfn, int where);
+>> >>       int (*read)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
+>> >>       int (*write)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
+>> >>  };
+>> >
+>> > In various other contexts, we have recently discussed adding new callbacks
+>> > to struct pci_host_bridge, or an operations structure below it. I don't see
+>> > a strong reason for one place or the other, but maybe someone else does.
+>> > If we put it into pci_host_bridge_ops, the first argument would need to
+>> > be the pci_host_bridge pointer of course.
+>>
+>> I think it makes sense to keep map_bus together with read/write. Given
+>> they are all host specific functions being part of pci_host_bridge
+>> would make some sense. However, that would be a pretty painful change
+>> across the tree (Have you seen how many PCI host implementations MIPS
+>> has?).
+>
+> We could go wild and do both: if the bus has pci_ops, we use those,
+> otherwise we fall back to the map_bus/read/write from pci_host_bridge_ops.
 
-Please wait a bit until sending V3, I want to have another look at the
-V2 novena DT.
+True. I'll leave it for Bjorn to weigh in.
 
-Regards,
-Lucas
+>> > For the common map_bus implementations, it would also be nice to put them
+>> > into the same file as your new access functions, but then we need a common
+>> > location to store at least one __iomem pointer. I guess that place could
+>> > either be struct pci_host_bridge or struct pci_bus. In theory, struct pci_ops
+>> > would work too, but then we could no longer mark it 'const' in host bridge
+>> > drivers.
+>> >
+>> > If we have a common set of map_bus functions, we can even export the
+>> > pci_ops structures from drivers/pci/access.c:
+>> >
+>> > const struct pci_ops pci_generic_ecam_ops = {
+>> >         .map_bus        = ecam_map_bus,
+>> >         .read           = pci_generic_config_read,
+>> >         .write          = pci_generic_config_write,
+>> > };
+>> > EXPORT_SYMBOL_GPL(pci_generic_ecam_ops);
+>> >
+>> > That could of course be done in a follow-up patch, it doesn't have to be
+>> > part of your patch, but it would be good to be prepared.
+>>
+>> Right, this is what I had in mind for CAM/ECAM. I didn't go this far
+>> because a lot of the map_bus functions do various checks to prevent
+>> certain accesses. Of what I've found, I think only generic host and
+>> Xilinx drivers could be converted to a generic ECAM map_bus. Others
+>> check bus number and/or device number or link-up status or have a
+>> fixup for certain registers, for example. I'm not sure how much of it
+>> is unnecessary or could be common.
+>
+> How do you want to deal with the overrides? I don't see a way to
+> do that in map_bus (with the current definition) if the idea is that
+> for certain registers we return hardcoded values instead of accessing
+> mmio registers.
 
+It is not done in map_bus unless you want all FFs by returning NULL,
+but by simply by wrapping the generic call with a host specific read
+or write function. Here's one example that modifies one field in a
+register. This means you can do any pre or post processing you need.
+Even the crazy stuff Integrator PCI does.
+
+static int cns3xxx_pci_read_config(struct pci_bus *bus, unsigned int devfn,
+                                   int where, int size, u32 *val)
+{
+        u32 mask = (0x1ull << (size * 8)) - 1;
+        int shift = (where % 4) * 8;
+
+        ret = pci_generic_config_read32(bus, devfn, where, size, val);
+
+        if (ret == PCIBIOS_SUCCESSFUL && bus->number == 0 && devfn == 0 &&
+            (where & 0xffc) == PCI_CLASS_REVISION)
+                /*
+                 * RC's class is 0xb, but Linux PCI driver needs 0x604
+                 * for a PCIe bridge. So we must fixup the class code
+                 * to 0x604 here.
+                 */
+                *val = ((*val << shift) & 0xff) | (0x604 << 16)) >>
+shift) & mask;
+
+        return ret;
+}
+
+Rob
