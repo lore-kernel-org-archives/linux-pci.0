@@ -1,85 +1,182 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:3006 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754208AbbAUCct (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 21:32:49 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	<linux-tegra@vger.kernel.org>
-Subject: [PATCH v2 24/30] PCI/tegra: Remove redundant tegra_pcie_scan_bus()
-Date: Wed, 21 Jan 2015 08:30:19 +0800
-Message-ID: <1421800225-26230-25-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
-References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:38543 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752986AbbAECT7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 Jan 2015 21:19:59 -0500
+From: Rob Herring <robh@kernel.org>
+To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Will Deacon <will.deacon@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh@kernel.org>
+Subject: [PATCH] pci: introduce common pci config space accessors
+Date: Sun,  4 Jan 2015 20:19:34 -0600
+Message-Id: <1420424374-32412-1-git-send-email-robh@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now pci_scan_root_bus() is almost simliar to
-pci_create_root_bus() + pci_scan_child_bus().
-So we could use common pci_scan_root_bus() in
-pci_common_init_dev() to scan pci busses.
-tegra_pcie_scan_bus() is redundant, remove it.
+Many PCI controllers' configuration space accesses are memory mapped
+varying only in address calculation and access checks. There are 2 main
+access methods: a decoded address space such as ECAM or a single address
+and data register similar to x86. This implementation can support both
+cases as well as be used in cases that need additional pre or post access
+handling.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Thierry Reding <thierry.reding@gmail.com>
-CC: linux-tegra@vger.kernel.org
+A new pci_ops member map_bus is introduced which can do access checks and
+any necessary setup. It returns the address to use for the configuration
+space access. The access types supported are 32-bit only accesses or
+correct byte, word, or dword sized accesses.
+
+Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/host/pci-tegra.c |   16 ----------------
- 1 files changed, 0 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 6f9c29f..baed0c5 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -679,21 +679,6 @@ static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
- 	return irq;
- }
- 
--static struct pci_bus *tegra_pcie_scan_bus(int nr, struct pci_sys_data *sys)
--{
--	struct tegra_pcie *pcie = sys_to_pcie(sys);
--	struct pci_bus *bus;
--
--	bus = pci_create_root_bus(pcie->dev, sys->busnr, &tegra_pcie_ops, sys,
--				  &sys->resources);
--	if (!bus)
--		return NULL;
--
--	pci_scan_child_bus(bus);
--
--	return bus;
--}
--
- static irqreturn_t tegra_pcie_isr(int irq, void *arg)
- {
- 	const char *err_msg[] = {
-@@ -1880,7 +1865,6 @@ static int tegra_pcie_enable(struct tegra_pcie *pcie)
- 	hw.private_data = (void **)&pcie;
- 	hw.setup = tegra_pcie_setup;
- 	hw.map_irq = tegra_pcie_map_irq;
--	hw.scan = tegra_pcie_scan_bus;
- 	hw.ops = &tegra_pcie_ops;
- 
- 	pci_common_init_dev(pcie->dev, &hw);
--- 
-1.7.1
+I've converted a few drivers already. I'll send patches for them after
+some feedback on this. Most already have some function similar to what is
+needed for map_bus, so the conversion is pretty simple. This certainly
+isn't a complete list of possible users. The diffstat so far looks like
+this:
+
+ arch/arm/mach-cns3xxx/pcie.c          |  46 +++-------------------
+ arch/arm/mach-integrator/pci_v3.c     |  61 +++---------------------------
+ arch/arm/mach-ks8695/pci.c            |  75 +++---------------------------------
+ arch/arm/mach-sa1100/pci-nanoengine.c |  94 ++++-----------------------------------------
+ arch/powerpc/platforms/powermac/pci.c | 206 +++++++++++++++++++--------------------------------------------------------------------------------
+ arch/powerpc/sysdev/fsl_pci.c         |  46 ++--------------------
+ drivers/pci/host/pci-host-generic.c   |  51 ++-----------------------
+ drivers/pci/host/pci-rcar-gen2.c      |  51 ++-----------------------
+ drivers/pci/host/pci-tegra.c          |  55 ++-------------------------
+ drivers/pci/host/pci-xgene.c          | 150 +++++-------------------------------------------------------------------
+ drivers/pci/host/pcie-xilinx.c        |  88 +++++-------------------------------------
+ 11 files changed, 93 insertions(+), 830 deletions(-)
+
+Rob
+
+ drivers/pci/access.c | 83 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h  | 11 +++++++
+ 2 files changed, 94 insertions(+)
+
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 49dd766..9a29f7a 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -67,6 +67,89 @@ EXPORT_SYMBOL(pci_bus_write_config_byte);
+ EXPORT_SYMBOL(pci_bus_write_config_word);
+ EXPORT_SYMBOL(pci_bus_write_config_dword);
+
++int pci_generic_config_read(struct pci_bus *bus, unsigned int devfn,
++			    int where, int size, u32 *val)
++{
++	void __iomem *addr;
++
++	addr = bus->ops->map_bus(bus, devfn, where);
++	if (!addr) {
++		*val = ~0;
++		return PCIBIOS_DEVICE_NOT_FOUND;
++	}
++
++	if (size == 1)
++		*val = readb(addr);
++	else if (size == 2)
++		*val = readw(addr);
++	else
++		*val = readl(addr);
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++int pci_generic_config_write(struct pci_bus *bus, unsigned int devfn,
++			     int where, int size, u32 val)
++{
++	void __iomem *addr;
++
++	addr = bus->ops->map_bus(bus, devfn, where);
++	if (!addr)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	if (size == 1)
++		writeb(val, addr);
++	else if (size == 2)
++		writew(val, addr);
++	else
++		writel(val, addr);
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++int pci_generic_config_read32(struct pci_bus *bus, unsigned int devfn,
++			      int where, int size, u32 *val)
++{
++	void __iomem *addr;
++
++	addr = bus->ops->map_bus(bus, devfn, where & ~0x3);
++	if (!addr) {
++		*val = ~0;
++		return PCIBIOS_DEVICE_NOT_FOUND;
++	}
++
++	*val = readl(addr);
++
++	if (size <= 2)
++		*val = (*val >> (8 * (where & 3))) & ((1 << (size * 8)) - 1);
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++int pci_generic_config_write32(struct pci_bus *bus, unsigned int devfn,
++			       int where, int size, u32 val)
++{
++	void __iomem *addr;
++	u32 mask, tmp;
++
++	addr = bus->ops->map_bus(bus, devfn, where & ~0x3);
++	if (!addr)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	if (size == 4) {
++		writel(val, addr);
++		return PCIBIOS_SUCCESSFUL;
++	} else {
++		mask = ~(((1 << (size * 8)) - 1) << ((where & 0x3) * 8));
++	}
++
++	tmp = readl(addr) & mask;
++	tmp |= val << ((where & 0x3) * 8);
++	writel(tmp, addr);
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
+ /**
+  * pci_bus_set_ops - Set raw operations of pci bus
+  * @bus:	pci bus struct
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 360a966..e7fd519 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -560,6 +560,7 @@ static inline int pcibios_err_to_errno(int err)
+ /* Low-level architecture-dependent routines */
+
+ struct pci_ops {
++	void __iomem *(*map_bus)(struct pci_bus *bus, unsigned int devfn, int where);
+ 	int (*read)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
+ 	int (*write)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
+ };
+@@ -857,6 +858,16 @@ int pci_bus_write_config_word(struct pci_bus *bus, unsigned int devfn,
+ 			      int where, u16 val);
+ int pci_bus_write_config_dword(struct pci_bus *bus, unsigned int devfn,
+ 			       int where, u32 val);
++
++int pci_generic_config_read(struct pci_bus *bus, unsigned int devfn,
++			    int where, int size, u32 *val);
++int pci_generic_config_write(struct pci_bus *bus, unsigned int devfn,
++			    int where, int size, u32 val);
++int pci_generic_config_read32(struct pci_bus *bus, unsigned int devfn,
++			      int where, int size, u32 *val);
++int pci_generic_config_write32(struct pci_bus *bus, unsigned int devfn,
++			       int where, int size, u32 val);
++
+ struct pci_ops *pci_bus_set_ops(struct pci_bus *bus, struct pci_ops *ops);
+
+ static inline int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val)
+--
+2.1.0
 
