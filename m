@@ -1,58 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:45719 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751520AbbABA1c (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Jan 2015 19:27:32 -0500
-From: Sasha Levin <sasha.levin@oracle.com>
-To: linux-kernel@vger.kernel.org
-Cc: gregkh@linuxfoundation.org, Sasha Levin <sasha.levin@oracle.com>,
+Received: from mout.kundenserver.de ([212.227.126.130]:56518 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753270AbbAEPbX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Jan 2015 10:31:23 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Sean Cross <xobs@kosagi.com>
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Shawn Guo <shawn.guo@freescale.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM)
-Subject: [PATCH] PCI/sysfs: off by two and memory corruption in driver_override parameter
-Date: Thu,  1 Jan 2015 19:27:12 -0500
-Message-Id: <1420158432-645-1-git-send-email-sasha.levin@oracle.com>
+	devicetree@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	linux-pci@vger.kernel.org, bunnie@kosagi.com
+Subject: Re: [PATCH v2 3/4] PCI: imx6: Add power-supply support
+Date: Mon, 05 Jan 2015 16:31:04 +0100
+Message-ID: <1760521.28f6F6lDZm@wuerfel>
+In-Reply-To: <1419237127-21763-4-git-send-email-xobs@kosagi.com>
+References: <1419237127-21763-1-git-send-email-xobs@kosagi.com> <1419237127-21763-4-git-send-email-xobs@kosagi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are two different issues fixed here:
+On Monday 22 December 2014 16:32:06 Sean Cross wrote:
+> Some PCIe ports gate power to the slot.  In order to prevent system lockup,
+> these boards must enable power to the slot before attempting communication
+> over the PCI bus.
+> 
+> Signed-off-by: Sean Cross <xobs@kosagi.com>
 
- - On nun-NULL terminated input a random byte of memory would get flipped
-from '\n' to '\0'.
- - When printing the driver_override parameter when it is 4095 and 4094 bytes
-long the printing code would access invalid memory.
+Could this be moved to the common pcie-designware driver? It doesn't seem
+to be imx6 specific and other drivers might need the same thing.
 
-Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
----
- drivers/pci/pci-sysfs.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index aa012fb..be6b2b1 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -521,17 +521,17 @@ static ssize_t driver_override_store(struct device *dev,
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	char *driver_override, *old = pdev->driver_override, *cp;
- 
--	if (count > PATH_MAX)
-+	/* We need to keep extra room for a newline */
-+	if (count >= (PATH_MAX - 1))
- 		return -EINVAL;
- 
- 	driver_override = kstrndup(buf, count, GFP_KERNEL);
- 	if (!driver_override)
- 		return -ENOMEM;
- 
--	cp = strchr(driver_override, '\n');
--	if (cp)
--		*cp = '\0';
--
-+	driver_override[count] = '\0';
-+	if (driver_override[count - 1] == '\n')
-+		driver_override[count - 1] = 0;
- 	if (strlen(driver_override)) {
- 		pdev->driver_override = driver_override;
- 	} else {
--- 
-1.7.10.4
-
+	Arnd
