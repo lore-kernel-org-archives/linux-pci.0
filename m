@@ -1,41 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:45866 "EHLO
-	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750848AbbAMSFF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Jan 2015 13:05:05 -0500
-Received: by mail-oi0-f45.google.com with SMTP id x69so3551916oia.4
-        for <linux-pci@vger.kernel.org>; Tue, 13 Jan 2015 10:05:05 -0800 (PST)
-Date: Tue, 13 Jan 2015 11:05:02 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH V10 00/17] Enable SRIOV on Power8
-Message-ID: <20150113180502.GC2776@google.com>
-References: <1419227677-12312-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <20141222060522.GA12285@richard>
+Received: from mout.kundenserver.de ([212.227.126.130]:59324 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752619AbbAEW0y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Jan 2015 17:26:54 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Rob Herring <robherring2@gmail.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 1/2] of/pci: add of_pci_dma_configure() update dma configuration
+Date: Mon, 05 Jan 2015 23:26:15 +0100
+Message-ID: <1671700.LL29F8Iz6R@wuerfel>
+In-Reply-To: <54AAEEE1.7020607@ti.com>
+References: <1419459099-6667-1-git-send-email-m-karicheri2@ti.com> <2019516.ehiuEv0rdL@wuerfel> <54AAEEE1.7020607@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141222060522.GA12285@richard>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 22, 2014 at 02:05:22PM +0800, Wei Yang wrote:
-> Bjorn,
-> 
-> This patch set is tested on 3.19-rc1 and with the offset/stride update patch.
-> 
-> I see your comment on the MEM64 issue, so if that is reverted, this
-> patch set will not work. While I think we can work in parallel, I sent it here
-> for more comment and to see whether I understand your previous comments
-> correctly.
-> 
-> I will work with Yinghai to find a way to fix the bug 85491, hope linux kernel
-> could handle both cases.
+On Monday 05 January 2015 15:06:57 Murali Karicheri wrote:
+> On 01/03/2015 04:37 PM, Arnd Bergmann wrote:
+> > Yes, but we also need to pass a PCI device specific identifier along
+> > with the root bus node, because some iommu drivers take the PCI
+> > bus/device/function number into account for creating per-function
+> > i/o page tables.
 
-OK.  The autobuilder found some minor issues, so I'll look for a v11
-posting that fixes those.  Please pick up the changelogs from my
-pci/virtualization branch because I rewrapped them so they fit in 80
-columns when shown by "git log".
+> ...
 
-Bjorn
+> I will post v3 of the patch with what is agreed before in my response 
+> and I understand there is no additional change required based on this 
+> particular discussion about iommu. Right?
+
+Actually regarding the bit I wrote above, it might be helpful to pass
+the PCI_DEVID() into both of_iommu_configure and of_dma_configure.
+
+While this may or may not be sufficient, I think there is no question
+about it being needed for the ARM SMMU with PCI, so we may as well add
+it at the point when you touch the same lines already. In the platform
+bus case, just pass zero here.
+
+	Arnd
