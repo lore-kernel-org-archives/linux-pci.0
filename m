@@ -1,92 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:56501 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753031AbbA0VBF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 Jan 2015 16:01:05 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
+Received: from mout.kundenserver.de ([212.227.126.131]:56750 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751227AbbAEJQK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Jan 2015 04:16:10 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Rob Herring <robh@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH v5 0/8] PCI: get DMA configuration from parent device
-Date: Tue, 27 Jan 2015 15:59:57 -0500
-Message-ID: <1422392405-32196-1-git-send-email-m-karicheri2@ti.com>
+	Will Deacon <will.deacon@arm.com>
+Subject: Re: [PATCH] pci: introduce common pci config space accessors
+Date: Mon, 05 Jan 2015 10:16:06 +0100
+Message-ID: <2224125.SvyFyDvrch@wuerfel>
+In-Reply-To: <1420424374-32412-1-git-send-email-robh@kernel.org>
+References: <1420424374-32412-1-git-send-email-robh@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI devices on Keystone doesn't have correct dma_pfn_offset set. This patch
-add capability to set the dma configuration such as dma-mask, dma_pfn_offset,
-and dma ops etc using the information from DT. The prior RFCs and discussions
-are available at [1] and [2] below.
+On Sunday 04 January 2015 20:19:34 Rob Herring wrote:
+> Many PCI controllers' configuration space accesses are memory mapped
+> varying only in address calculation and access checks. There are 2 main
+> access methods: a decoded address space such as ECAM or a single address
+> and data register similar to x86. This implementation can support both
+> cases as well as be used in cases that need additional pre or post access
+> handling.
+> 
+> A new pci_ops member map_bus is introduced which can do access checks and
+> any necessary setup. It returns the address to use for the configuration
+> space access. The access types supported are 32-bit only accesses or
+> correct byte, word, or dword sized accesses.
+> 
+> Signed-off-by: Rob Herring <robh@kernel.org>
 
-[2] : https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg790244.html
-[1] : http://www.gossamer-threads.com/lists/linux/kernel/2024591
+I think this looks very nice, and I don't mind using it as-is, but I'd
+like to put up some variations for discussions so we get the best
+implementation -- we should try not to change it again soon if someone
+comes up with a slightly better way later ;-)
 
-Change history:
-	v5 - moved the dma_mask update in device from ARM specific API to
-	     of_dma_configure to allow this across other architecture as well
-	   - improved sanity check for DT dma-range size in of_dma_configure()
-	   - moved API to get parent bridge device to PCI (host-bridge.c)
-	v4 - moved size adjustments in of_iommu_configure() to a separate patch
-	   - consistent node name comment from Rob
-	   - patch 6 added for dma_mask adjustment and iommu mapping size
-	     limiting.
-	v3 - addressed comments to re-use of_dma_configure() for PCI
-	   - To help re-use, change of_iommu_configure() function argument
-		- Move of_dma_configure to of/device.c
-		- Limit the of_iommu_configure to non pci devices
-	v2 - update size to coherent_dma_mask + 1 if dma-range info is missing
-	   - also check the np for null.
-	v1 - updates based on the comments against initial RFC.
-	   - Added a helper function to get the OF node of the parent
-	   - Added an API in of_pci.c to update DMA configuration of the pci
-	     device.
+> I've converted a few drivers already. I'll send patches for them after
+> some feedback on this. Most already have some function similar to what is
+> needed for map_bus, so the conversion is pretty simple. This certainly
+> isn't a complete list of possible users. The diffstat so far looks like
+> this:
+> 
+>  arch/arm/mach-cns3xxx/pcie.c          |  46 +++-------------------
+>  arch/arm/mach-integrator/pci_v3.c     |  61 +++---------------------------
+>  arch/arm/mach-ks8695/pci.c            |  75 +++---------------------------------
+>  arch/arm/mach-sa1100/pci-nanoengine.c |  94 ++++-----------------------------------------
+>  arch/powerpc/platforms/powermac/pci.c | 206 +++++++++++++++++++--------------------------------------------------------------------------------
+>  arch/powerpc/sysdev/fsl_pci.c         |  46 ++--------------------
+>  drivers/pci/host/pci-host-generic.c   |  51 ++-----------------------
+>  drivers/pci/host/pci-rcar-gen2.c      |  51 ++-----------------------
+>  drivers/pci/host/pci-tegra.c          |  55 ++-------------------------
+>  drivers/pci/host/pci-xgene.c          | 150 +++++-------------------------------------------------------------------
+>  drivers/pci/host/pcie-xilinx.c        |  88 +++++-------------------------------------
+>  11 files changed, 93 insertions(+), 830 deletions(-)
 
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Awesome!
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Murali Karicheri <m-karicheri2@ti.com>
+> +int pci_generic_config_read(struct pci_bus *bus, unsigned int devfn,
+> +			    int where, int size, u32 *val)
+> +{
+> +	void __iomem *addr;
+> +
+> +	addr = bus->ops->map_bus(bus, devfn, where);
+> +	if (!addr) {
+> +		*val = ~0;
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +	}
+> +
+> +	if (size == 1)
+> +		*val = readb(addr);
+> +	else if (size == 2)
+> +		*val = readw(addr);
+> +	else
+> +		*val = readl(addr);
+> +
+> +	return PCIBIOS_SUCCESSFUL;
+> +}
 
-Murali Karicheri (8):
-  of: iommu: add ptr to OF node arg to of_iommu_configure()
-  of: move of_dma_configure() to device.c to help re-use
-  of: fix size when dma-range is not used
-  PCI: add helper functions pci_get[put]_host_bridge_device()
-  of/pci: add of_pci_dma_configure() update dma configuration
-  PCI: update dma configuration from DT
-  arm: dma-mapping: limit iommu mapping size
-  of: limit dma_mask of the device based on dma-range size
+PCI host controller drivers can be loadable modules these days, so
+the functions clearly need to be exported.
 
- arch/arm/mm/dma-mapping.c |    7 +++++
- drivers/iommu/of_iommu.c  |   10 +++++--
- drivers/of/device.c       |   69 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/of/of_pci.c       |   19 +++++++++++++
- drivers/of/platform.c     |   58 ++-----------------------------------
- drivers/pci/host-bridge.c |   14 +++++++++
- drivers/pci/probe.c       |    2 ++
- include/linux/of_device.h |    2 ++
- include/linux/of_iommu.h  |    6 ++--
- include/linux/of_pci.h    |    5 ++++
- include/linux/pci.h       |    3 ++
- 11 files changed, 135 insertions(+), 60 deletions(-)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 360a966..e7fd519 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -560,6 +560,7 @@ static inline int pcibios_err_to_errno(int err)
+>  /* Low-level architecture-dependent routines */
+> 
+>  struct pci_ops {
+> +	void __iomem *(*map_bus)(struct pci_bus *bus, unsigned int devfn, int where);
+>  	int (*read)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
+>  	int (*write)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
+>  };
 
--- 
-1.7.9.5
+In various other contexts, we have recently discussed adding new callbacks
+to struct pci_host_bridge, or an operations structure below it. I don't see
+a strong reason for one place or the other, but maybe someone else does.
+If we put it into pci_host_bridge_ops, the first argument would need to
+be the pci_host_bridge pointer of course.
 
+For the common map_bus implementations, it would also be nice to put them
+into the same file as your new access functions, but then we need a common
+location to store at least one __iomem pointer. I guess that place could
+either be struct pci_host_bridge or struct pci_bus. In theory, struct pci_ops
+would work too, but then we could no longer mark it 'const' in host bridge
+drivers.
+
+If we have a common set of map_bus functions, we can even export the
+pci_ops structures from drivers/pci/access.c:
+
+const struct pci_ops pci_generic_ecam_ops = {
+	.map_bus	= ecam_map_bus,
+	.read		= pci_generic_config_read,
+	.write		= pci_generic_config_write,
+};
+EXPORT_SYMBOL_GPL(pci_generic_ecam_ops);
+
+That could of course be done in a follow-up patch, it doesn't have to be
+part of your patch, but it would be good to be prepared.
+
+	Arnd
