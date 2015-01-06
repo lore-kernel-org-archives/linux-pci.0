@@ -1,102 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:57951 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753249AbbAHQGf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jan 2015 11:06:35 -0500
-Date: Thu, 8 Jan 2015 16:06:26 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: "joro@8bytes.org" <joro@8bytes.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"arnd@arndb.de" <arnd@arndb.de>
-Subject: Re: [PATCH v3 3/4] of/pci: add of_pci_dma_configure() update dma
- configuration
-Message-ID: <20150108160626.GN11583@arm.com>
-References: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com>
- <1420656594-8908-4-git-send-email-m-karicheri2@ti.com>
+Received: from mout.kundenserver.de ([212.227.126.187]:56680 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756550AbbAFTex (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jan 2015 14:34:53 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Duc Dang <dhdang@apm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, Feng Kan <fkan@apm.com>,
+	linux-pci@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
+	Loc Ho <lho@apm.com>
+Subject: Re: [PATCH 3/4] documentation: dts: Add the device tree binding for APM X-Gene v1 PCIe MSI device tree node.
+Date: Tue, 06 Jan 2015 20:34:50 +0100
+Message-ID: <1715051.BWgXSpP5LC@wuerfel>
+In-Reply-To: <33cd03155176a77c673eee4a4598e677a3a9b8b4.1420499393.git.dhdang@apm.com>
+References: <cover.1420499393.git.dhdang@apm.com> <33cd03155176a77c673eee4a4598e677a3a9b8b4.1420499393.git.dhdang@apm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1420656594-8908-4-git-send-email-m-karicheri2@ti.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 07, 2015 at 06:49:53PM +0000, Murali Karicheri wrote:
-> Add of_pci_dma_configure() to allow updating the dma configuration
-> of the pci device using the configuration from DT of the parent of
-> the root bridge device.
-> 
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-> ---
->  drivers/of/of_pci.c    |   39 +++++++++++++++++++++++++++++++++++++++
->  include/linux/of_pci.h |   12 ++++++++++++
->  2 files changed, 51 insertions(+)
-> 
-> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-> index 88471d3..34878c9 100644
-> --- a/drivers/of/of_pci.c
-> +++ b/drivers/of/of_pci.c
-> @@ -2,6 +2,7 @@
->  #include <linux/export.h>
->  #include <linux/of.h>
->  #include <linux/of_address.h>
-> +#include <linux/of_device.h>
->  #include <linux/of_pci.h>
->  #include <linux/slab.h>
->  
-> @@ -229,6 +230,44 @@ parse_failed:
->  	return err;
->  }
->  EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
+On Tuesday 06 January 2015 08:15:43 Duc Dang wrote:
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+> @@ -0,0 +1,34 @@
+> +* AppliedMicro X-Gene PCIe MSI interface
 > +
-> +/**
-> + * of_get_pci_root_bridge_parent - get the OF node of the root bridge's parent
-> + * @dev: ptr to pci_dev struct of the pci device
-> + *
-> + * This function will traverse the bus up to the root bus starting with
-> + * the child and return the OF node ptr to root bridge device's parent device.
-> + */
-> +struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev)
-> +{
-> +	struct pci_bus *bus = dev->bus;
-> +	struct device *bridge;
+> +Required properties:
 > +
-> +	while (!pci_is_root_bus(bus))
-> +		bus = bus->parent;
-> +	bridge = bus->bridge;
+> +- compatible: should contain "apm,xgene-pcie-msi" or "apm,xgene-storm-pcie-msi"
+> +       to identify the core.
+> +- reg: A list of physical base address and length for each set of controller
+> +       registers.
+> +- interrupts: A list of interrupt outputs of the controller.
 > +
-> +	return bridge->parent->of_node;
-> +}
-> +EXPORT_SYMBOL_GPL(of_get_pci_root_bridge_parent);
+> +Examples:
 > +
-> +/**
-> + * of_pci_dma_configure - Setup DMA configuration
-> + * @dev: ptr to pci_dev struct of the pci device
-> + *
-> + * Function to update PCI devices's DMA configuration using the same
-> + * info from the OF node of root host bridge's parent.
-> + */
-> +void of_pci_dma_configure(struct pci_dev *pci_dev)
-> +{
-> +	struct device *dev = &pci_dev->dev;
-> +	struct device_node *parent_np;
+> +SoC DTSI:
 > +
-> +	parent_np = of_get_pci_root_bridge_parent(pci_dev);
-> +	of_dma_configure(dev, parent_np);
-> +}
-> +EXPORT_SYMBOL_GPL(of_pci_dma_configure);
+> +       msi@79000000 {
+> +            compatible = "apm,xgene-storm-pcie-msi", "apm,xgene-pcie-msi";
+> +            reg = <0x00 0x79000000 0x0 0x900000>;
+> +            interrupts = <  0x0 0x10 0x4
+> +                    0x0 0x11 0x4
+> +                    0x0 0x12 0x4
+> +                    0x0 0x13 0x4
+> +                    0x0 0x14 0x4
+> +                    0x0 0x15 0x4
+> +                    0x0 0x16 0x4
+> +                    0x0 0x17 0x4
+> +                    0x0 0x18 0x4
+> +                    0x0 0x19 0x4
+> +                    0x0 0x1a 0x4
+> +                    0x0 0x1b 0x4
+> +                    0x0 0x1c 0x4
+> +                    0x0 0x1d 0x4
+> +                    0x0 0x1e 0x4
+> +                    0x0 0x1f 0x4>;
+> +       };
 
-Whilst I think this is the right overall structure, I think this function
-should determine the set of DMA aliases for the device and pass that through
-to the IOMMU (as mentioned in my reply to the cover letter). Then we just
-need to work out what we're doing for groups.
+I think the example should contain the pci controller with the respective
+msi-parent property.
 
-Will
+	Arnd
