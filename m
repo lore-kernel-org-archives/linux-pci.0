@@ -1,113 +1,55 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from exprod5og125.obsmtp.com ([64.18.0.245]:33800 "HELO
+	exprod5og125.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751076AbbAFQXh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jan 2015 11:23:37 -0500
+Received: by mail-pd0-f173.google.com with SMTP id ft15so30676265pdb.4
+        for <linux-pci@vger.kernel.org>; Tue, 06 Jan 2015 08:23:36 -0800 (PST)
+From: Duc Dang <dhdang@apm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v4 07/33] x86/irq: Kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
-Date: Tue, 20 Jan 2015 13:51:27 +0800
-Message-Id: <1421733113-15704-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Tanmay Inamdar <tinamdar@apm.com>, Loc Ho <lho@apm.com>,
+	Feng Kan <fkan@apm.com>, Duc Dang <dhdang@apm.com>
+Subject: [PATCH 4/4] PCI: X-Gene: Add the MAINTAINERS entry for APM X-Gene v1 PCIe MSI driver
+Date: Tue,  6 Jan 2015 08:15:44 -0800
+Message-Id: <9fd7f3ec58431a0fcba3600a0325920c86bc69fa.1420499393.git.dhdang@apm.com>
+In-Reply-To: <cover.1420499393.git.dhdang@apm.com>
+References: <cover.1420499393.git.dhdang@apm.com>
+In-Reply-To: <cover.1420499393.git.dhdang@apm.com>
+References: <cover.1420499393.git.dhdang@apm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There's no user of irq_alloc_hwirqs(), irq_alloc_hwirq(), irq_free_hwirqs()
-and irq_free_hwirq() anymore, so kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ and
-related code.
+This patch adds information of maintainers for APM X-Gene v1 PCIe
+MSI/MSIX termination driver
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Link: http://lkml.kernel.org/r/1416901802-24211-17-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+Signed-off-by: Duc Dang <dhdang@apm.com>
 ---
- arch/x86/Kconfig              |    1 -
- arch/x86/kernel/apic/vector.c |   34 ----------------------------------
- 2 files changed, 35 deletions(-)
+ MAINTAINERS | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 89a530a5836e..66513678ad11 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -882,7 +882,6 @@ config X86_UP_IOAPIC
- config X86_LOCAL_APIC
- 	def_bool y
- 	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_APIC || PCI_MSI
--	select GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
- 	select IRQ_DOMAIN_HIERARCHY
- 	select PCI_MSI_IRQ_DOMAIN if PCI_MSI
+diff --git a/MAINTAINERS b/MAINTAINERS
+index ddb9ac8..283f09a 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7303,6 +7303,14 @@ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pci/host/*spear*
  
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 4b8fad9aa685..31dc4a871673 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -660,40 +660,6 @@ void irq_force_complete_move(int irq)
- }
- #endif
- 
--/*
-- * Dynamic irq allocate and deallocation. Should be replaced by irq domains!
-- */
--int arch_setup_hwirq(unsigned int irq, int node)
--{
--	struct irq_cfg *cfg;
--	unsigned long flags;
--	int ret;
--
--	cfg = alloc_irq_cfg(node);
--	if (!cfg)
--		return -ENOMEM;
--
--	raw_spin_lock_irqsave(&vector_lock, flags);
--	ret = __assign_irq_vector(irq, cfg, apic->target_cpus());
--	raw_spin_unlock_irqrestore(&vector_lock, flags);
--
--	if (!ret)
--		irq_set_chip_data(irq, cfg);
--	else
--		free_irq_cfg(cfg);
--	return ret;
--}
--
--void arch_teardown_hwirq(unsigned int irq)
--{
--	struct irq_cfg *cfg = irq_cfg(irq);
--
--	free_remapped_irq(irq);
--	clear_irq_vector(irq, cfg);
--	irq_set_chip_data(irq, NULL);
--	free_irq_cfg(cfg);
--}
--
- static void __init print_APIC_field(int base)
- {
- 	int i;
++PCI MSI DRIVER FOR APPLIEDMICRO XGENE
++M:	Duc Dang <dhdang@apm.com>
++L:	linux-pci@vger.kernel.org
++L:	linux-arm-kernel@lists.infradead.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
++F:	drivers/pci/host/pci-xgene-msi.c
++
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
+ L:	linux-pcmcia@lists.infradead.org
 -- 
-1.7.10.4
+1.9.1
 
