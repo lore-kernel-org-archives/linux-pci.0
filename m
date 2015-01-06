@@ -1,45 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:50318 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750824AbbASQ7a (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jan 2015 11:59:30 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>
-Subject: Re: [RFC PATCH 0/3] drivers: port PCIe designware to new DT parsing API
-Date: Mon, 19 Jan 2015 17:59 +0100
-Message-ID: <1539153.bO1tVUM2dB@wuerfel>
-In-Reply-To: <CAL_JsqLYg9vhFVmf=O4YLPfboj-dyoCR0H5dzBbMC3PeAEOwhQ@mail.gmail.com>
-References: <1420644571-18928-1-git-send-email-lorenzo.pieralisi@arm.com> <CAL_JsqLYg9vhFVmf=O4YLPfboj-dyoCR0H5dzBbMC3PeAEOwhQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from exprod5og105.obsmtp.com ([64.18.0.180]:46920 "HELO
+	exprod5og105.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751076AbbAFQYJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jan 2015 11:24:09 -0500
+Received: by mail-pd0-f179.google.com with SMTP id fp1so30810562pdb.10
+        for <linux-pci@vger.kernel.org>; Tue, 06 Jan 2015 08:24:08 -0800 (PST)
+From: Duc Dang <dhdang@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Tanmay Inamdar <tinamdar@apm.com>, Loc Ho <lho@apm.com>,
+	Feng Kan <fkan@apm.com>, Duc Dang <dhdang@apm.com>
+Subject: [PATCH 2/4] arm64: dts: Add the device tree entry for the APM X-Gene PCIe MSI node.
+Date: Tue,  6 Jan 2015 08:15:42 -0800
+Message-Id: <62ab7c42fb400d38eae837b9e090d39b6cc95932.1420499393.git.dhdang@apm.com>
+In-Reply-To: <cover.1420499393.git.dhdang@apm.com>
+References: <cover.1420499393.git.dhdang@apm.com>
+In-Reply-To: <cover.1420499393.git.dhdang@apm.com>
+References: <cover.1420499393.git.dhdang@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 19 January 2015 10:40:39 Rob Herring wrote:
-> 
-> I don't really like exposing ranges to host drivers. We've worked to
-> not do that. So perhaps we need to rethink the API. I think we need to
-> provide each range as a pair of resources which are the CPU address
-> and PCI address. Perhaps an iterator is kind of pointless here. We do
-> different things for each one. Are there cases with more than a single
-> i/o space, non-prefetch memory and prefetch memory range? Perhaps we
-> should just get the i/o and memory resources as separate calls. Just
-> tossing out some ideas here.
+There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
 
-Nice idea, that could be similar to platform_get_resource().
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+Signed-off-by: Duc Dang <dhdang@apm.com>
+---
+ arch/arm64/boot/dts/apm/apm-storm.dtsi | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
-We probably also need the distinction between CPU address and (parent)
-bus address here. In most drivers they are the same, but we actually
-need to program the latter one into the PCI host bridge registers.
+diff --git a/arch/arm64/boot/dts/apm/apm-storm.dtsi b/arch/arm64/boot/dts/apm/apm-storm.dtsi
+index f1ad9c2..70ba721 100644
+--- a/arch/arm64/boot/dts/apm/apm-storm.dtsi
++++ b/arch/arm64/boot/dts/apm/apm-storm.dtsi
+@@ -469,6 +469,27 @@
+ 			clocks = <&pcie4clk 0>;
+ 		};
+ 
++		msi: msi@79000000 {
++			compatible = "apm,xgene-storm-pcie-msi", "apm,xgene-pcie-msi";
++			reg = <0x00 0x79000000 0x0 0x900000>;
++			interrupts = <  0x0 0x10 0x4
++					0x0 0x11 0x4
++					0x0 0x12 0x4
++					0x0 0x13 0x4
++					0x0 0x14 0x4
++					0x0 0x15 0x4
++					0x0 0x16 0x4
++					0x0 0x17 0x4
++					0x0 0x18 0x4
++					0x0 0x19 0x4
++					0x0 0x1a 0x4
++					0x0 0x1b 0x4
++					0x0 0x1c 0x4
++					0x0 0x1d 0x4
++					0x0 0x1e 0x4
++					0x0 0x1f 0x4>;
++		};
++
+ 		serial0: serial@1c020000 {
+ 			status = "disabled";
+ 			device_type = "serial";
+-- 
+1.9.1
 
-	Arnd
