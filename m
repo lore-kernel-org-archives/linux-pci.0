@@ -1,71 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:61110 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751866AbbAHWRl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jan 2015 17:17:41 -0500
-Date: Thu, 8 Jan 2015 14:17:36 -0800
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: keystone: fix incorrect annotations on probe and remove
-Message-ID: <20150108221736.GA39839@dtor-ws>
+Received: from mout.kundenserver.de ([212.227.17.24]:53848 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754838AbbAGVSs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jan 2015 16:18:48 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Murali Karicheri <m-karicheri2@ti.com>, joro@8bytes.org,
+	grant.likely@linaro.org, robh+dt@kernel.org,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, will.deacon@arm.com,
+	linux@arm.linux.org.uk
+Subject: Re: [PATCH v3 0/4] PCI: get DMA configuration from parent device
+Date: Wed, 07 Jan 2015 22:18:35 +0100
+Message-ID: <4057859.4ynbgz66iN@wuerfel>
+In-Reply-To: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com>
+References: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Even though platform bus is not hot-pluggable, devices on it can be unbound
-from the driver and bound back to it via sysfs, so we should not be using
-__init annotations on probe() and __exit annotations on remove() methods.
+On Wednesday 07 January 2015 13:49:50 Murali Karicheri wrote:
+> PCI devices on Keystone doesn't have correct dma_pfn_offset set. This patch
+> add capability to set the dma configuration such as dma-mask, dma_pfn_offset,
+> and dma ops etc using the information from DT. The prior RFCs and discussions
+> are available at [1] and [2] below.
+> 
+> [2] : https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg790244.html
+> [1] : http://www.gossamer-threads.com/lists/linux/kernel/2024591
 
-Signed-off-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
----
+Looks all good to me in this version, I'm just unsure about one thing:
 
-Not tested, found by casual code inspection.
+>                - Limit the of_iommu_configure to non pci devices
 
- drivers/pci/host/pci-keystone.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+My last recommendation was to pass the b/d/f number into
+of_pci_dma_configure to handle this correctly. What was your
+reason for not doing it in the end?
 
-diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-index 1b893bc..7b84e1d 100644
---- a/drivers/pci/host/pci-keystone.c
-+++ b/drivers/pci/host/pci-keystone.c
-@@ -332,7 +332,7 @@ static const struct of_device_id ks_pcie_of_match[] = {
- };
- MODULE_DEVICE_TABLE(of, ks_pcie_of_match);
- 
--static int __exit ks_pcie_remove(struct platform_device *pdev)
-+static int ks_pcie_remove(struct platform_device *pdev)
- {
- 	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
- 
-@@ -341,7 +341,7 @@ static int __exit ks_pcie_remove(struct platform_device *pdev)
- 	return 0;
- }
- 
--static int __init ks_pcie_probe(struct platform_device *pdev)
-+static int ks_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
- 	struct keystone_pcie *ks_pcie;
-@@ -398,9 +398,9 @@ fail_clk:
- 	return ret;
- }
- 
--static struct platform_driver ks_pcie_driver __refdata = {
-+static struct platform_driver ks_pcie_driver = {
- 	.probe  = ks_pcie_probe,
--	.remove = __exit_p(ks_pcie_remove),
-+	.remove = ks_pcie_remove,
- 	.driver = {
- 		.name	= "keystone-pcie",
- 		.owner	= THIS_MODULE,
--- 
-2.2.0.rc0.207.ga3a616c
+We will likely have to change this again if we take your current version,
+but that can be a follow-up patch. I believe AMD requires it to use
+PCI on their their Seattle platform.
 
-
--- 
-Dmitry
+	Arnd
