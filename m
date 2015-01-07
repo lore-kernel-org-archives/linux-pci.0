@@ -1,104 +1,173 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:20537 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753854AbbAGGLT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 7 Jan 2015 01:11:19 -0500
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
+To: Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Sander Eikelenboom <linux@eikelenboom.it>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
 	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v4 15/33] irq_remapping/amd: Move struct irq_2_irte into amd_iommu.c
-Date: Tue, 20 Jan 2015 13:51:35 +0800
-Message-Id: <1421733113-15704-16-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jan Beulich <JBeulich@suse.com>,
+	David Rientjes <rientjes@google.com>,
+	HATAYAMA Daisuke <d.hatayama@jp.fujitsu.com>,
+	Richard Weinberger <richard@nod.at>,
+	Oren Twaig <oren@scalemp.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Ingo Molnar <mingo@kernel.org>, xen-devel@lists.xenproject.org
+Subject: [Bugfix] x86/apic: Fix xen IRQ allocation failure caused by commit b81975eade8c
+Date: Wed,  7 Jan 2015 14:13:49 +0800
+Message-Id: <1420611244-25624-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now only amd_iommu.c access irq_2_irte, so move it from hw_irq.h into
-amd_iommu.c.
+Commit b81975eade8c ("x86, irq: Clean up irqdomain transition code")
+breaks xen IRQ allocation because xen_smp_prepare_cpus() doesn't invoke
+setup_IO_APIC(), so no irqdomains created for IOAPICs and
+mp_map_pin_to_irq() fails at the very beginning.
+
+Enhance xen_smp_prepare_cpus() to call setup_IO_APIC() to initialize
+irqdomain for IOAPICs.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Reported-and-tested-by: Sander Eikelenboom <linux@eikelenboom.it>
 Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: iommu@lists.linux-foundation.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Joerg Roedel <joro@8bytes.org>
-Link: http://lkml.kernel.org/r/1416901802-24211-25-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
 ---
- arch/x86/include/asm/hw_irq.h |   13 -------------
- drivers/iommu/amd_iommu.c     |    5 +++++
- 2 files changed, 5 insertions(+), 13 deletions(-)
+Hi all,
+	This patch should be backported to v3.17, but there are
+conflicts. So I will send backported patch to 3.17/3.18 stable tree
+once this patch has been merged into mainstream kernel.
+Thanks!
+Gerry
+---
+ arch/x86/include/asm/io_apic.h       |    2 +-
+ arch/x86/include/asm/smpboot_hooks.h |    5 ++---
+ arch/x86/kernel/apic/apic.c          |    5 ++---
+ arch/x86/kernel/apic/io_apic.c       |   32 +++++++++++++++-----------------
+ arch/x86/xen/smp.c                   |    3 +++
+ 5 files changed, 23 insertions(+), 24 deletions(-)
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 3520f71f168b..494d541d2aee 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -94,14 +94,6 @@ extern void trace_call_function_single_interrupt(void);
- #define trace_kvm_posted_intr_ipi kvm_posted_intr_ipi
- #endif /* CONFIG_TRACING */
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index bf006cce9418..72a1298658bb 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -237,7 +237,7 @@ static inline void io_apic_modify(unsigned int apic, unsigned int reg, unsigned
  
--#ifdef CONFIG_IRQ_REMAP
--/* AMD specific interrupt remapping information */
--struct irq_2_irte {
--	u16 devid; /* Device ID for IRTE table */
--	u16 index; /* Index into IRTE table*/
--};
--#endif	/* CONFIG_IRQ_REMAP */
--
- struct irq_domain;
+ extern void io_apic_eoi(unsigned int apic, unsigned int vector);
  
- #ifdef	CONFIG_X86_LOCAL_APIC
-@@ -184,11 +176,6 @@ struct irq_cfg {
- 	unsigned int		dest_apicid;
- 	u8			vector;
- 	u8			move_in_progress : 1;
--#ifdef CONFIG_IRQ_REMAP
--	union {
--		struct irq_2_irte  irq_2_irte;
--	};
--#endif
- 	union {
+-extern void setup_IO_APIC(void);
++extern void setup_IO_APIC(bool xen_smp);
+ extern void enable_IO_APIC(void);
+ extern void disable_IO_APIC(void);
+ extern void setup_ioapic_dest(void);
+diff --git a/arch/x86/include/asm/smpboot_hooks.h b/arch/x86/include/asm/smpboot_hooks.h
+index 0da7409f0bec..e47df710a588 100644
+--- a/arch/x86/include/asm/smpboot_hooks.h
++++ b/arch/x86/include/asm/smpboot_hooks.h
+@@ -53,10 +53,9 @@ static inline void __init smpboot_setup_io_apic(void)
+ 	 * go and set it up:
+ 	 */
+ 	if (!skip_ioapic_setup && nr_ioapics)
+-		setup_IO_APIC();
+-	else {
++		setup_IO_APIC(false);
++	else
+ 		nr_ioapics = 0;
+-	}
+ #endif
+ }
+ 
+diff --git a/arch/x86/kernel/apic/apic.c b/arch/x86/kernel/apic/apic.c
+index 29b5b18afa27..71b8a6cb7f0e 100644
+--- a/arch/x86/kernel/apic/apic.c
++++ b/arch/x86/kernel/apic/apic.c
+@@ -1913,10 +1913,9 @@ int __init APIC_init_uniprocessor(void)
+ 
  #ifdef CONFIG_X86_IO_APIC
- 		struct {
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 8792db50ffbd..f24bb128b28c 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -3858,6 +3858,11 @@ union irte {
- 	} fields;
- };
+ 	if (smp_found_config && !skip_ioapic_setup && nr_ioapics)
+-		setup_IO_APIC();
+-	else {
++		setup_IO_APIC(false);
++	else
+ 		nr_ioapics = 0;
+-	}
+ #endif
  
-+struct irq_2_irte {
-+	u16 devid; /* Device ID for IRTE table */
-+	u16 index; /* Index into IRTE table*/
-+};
+ 	x86_init.timers.setup_percpu_clockev();
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 3f5f60406ab1..13cddc75e4c0 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -2369,31 +2369,29 @@ static void ioapic_destroy_irqdomain(int idx)
+ 	ioapics[idx].pin_info = NULL;
+ }
+ 
+-void __init setup_IO_APIC(void)
++void __init setup_IO_APIC(bool xen_smp)
+ {
+ 	int ioapic;
+ 
+-	/*
+-	 * calling enable_IO_APIC() is moved to setup_local_APIC for BP
+-	 */
+-	io_apic_irqs = nr_legacy_irqs() ? ~PIC_IRQS : ~0UL;
++	if (!xen_smp) {
++		apic_printk(APIC_VERBOSE, "ENABLING IO-APIC IRQs\n");
++		io_apic_irqs = nr_legacy_irqs() ? ~PIC_IRQS : ~0UL;
 +
- struct amd_ir_data {
- 	struct irq_2_irte			irq_2_irte;
- 	union irte				irte_entry;
++		/* Set up IO-APIC IRQ routing. */
++		x86_init.mpparse.setup_ioapic_ids();
++		sync_Arb_IDs();
++	}
+ 
+-	apic_printk(APIC_VERBOSE, "ENABLING IO-APIC IRQs\n");
+ 	for_each_ioapic(ioapic)
+ 		BUG_ON(mp_irqdomain_create(ioapic));
+-
+-	/*
+-         * Set up IO-APIC IRQ routing.
+-         */
+-	x86_init.mpparse.setup_ioapic_ids();
+-
+-	sync_Arb_IDs();
+ 	setup_IO_APIC_irqs();
+-	init_IO_APIC_traps();
+-	if (nr_legacy_irqs())
+-		check_timer();
+-
+ 	ioapic_initialized = 1;
++
++	if (!xen_smp) {
++		init_IO_APIC_traps();
++		if (nr_legacy_irqs())
++			check_timer();
++	}
+ }
+ 
+ /*
+diff --git a/arch/x86/xen/smp.c b/arch/x86/xen/smp.c
+index 4c071aeb8417..7eb0283901fa 100644
+--- a/arch/x86/xen/smp.c
++++ b/arch/x86/xen/smp.c
+@@ -326,7 +326,10 @@ static void __init xen_smp_prepare_cpus(unsigned int max_cpus)
+ 
+ 		xen_raw_printk(m);
+ 		panic(m);
++	} else {
++		setup_IO_APIC(true);
+ 	}
++
+ 	xen_init_lock_cpu(0);
+ 
+ 	smp_store_boot_cpu_info();
 -- 
 1.7.10.4
 
