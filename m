@@ -1,216 +1,108 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <joro@8bytes.org>, <grant.likely@linaro.org>, <robh+dt@kernel.org>,
+	<iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <will.deacon@arm.com>,
+	<linux@arm.linux.org.uk>, <arnd@arndb.de>
+CC: Murali Karicheri <m-karicheri2@ti.com>
+Subject: [PATCH v3 1/4] of: iommu: add ptr to OF node arg to of_iommu_configure()
+Date: Wed, 7 Jan 2015 13:49:51 -0500
+Message-ID: <1420656594-8908-2-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com>
+References: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <3e56be94135c911d80f52df1ea7f32c71f50d8fd.1422261662.git.lv.zheng@intel.com>
-References: <cover.1422261662.git.lv.zheng@intel.com>
-	<3e56be94135c911d80f52df1ea7f32c71f50d8fd.1422261662.git.lv.zheng@intel.com>
-Date: Mon, 26 Jan 2015 13:56:38 +0200
-Message-ID: <CAE1zot+uoy5fVBgaVBNMC-L2+7-19k+3y_p6PrKb1KuF8vmuPA@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/2] ACPI: Introduce acpi_unload_parent_table() usages
- in Linux kernel.
-From: Octavian Purdila <octavian.purdila@intel.com>
-To: Lv Zheng <lv.zheng@intel.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Len Brown <len.brown@intel.com>, Lv Zheng <zetalog@gmail.com>,
-	lkml <linux-kernel@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>, linux-pci@vger.kernel.org,
-	linux-ia64@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 26, 2015 at 10:58 AM, Lv Zheng <lv.zheng@intel.com> wrote:
-> ACPICA has implemented acpi_unload_parent_table() which can exactly replace
-> the acpi_get_id()/acpi_unload_table_id() implemented in Linux kernel.  The
-> acpi_unload_parent_table() has been unit tested in ACPICA simulation
-> environment.
->
-> This patch can also help to reduce the source code differences between
-> Linux and ACPICA.
->
-> Signed-off-by: Lv Zheng <lv.zheng@intel.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Octavian Purdila <octavian.purdila@intel.com>
-> Cc: Tony Luck <tony.luck@intel.com>
-> Cc: Fenghua Yu <fenghua.yu@intel.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-ia64@vger.kernel.org
+Function of_iommu_configure() is called from of_dma_configure() to
+setup iommu ops using DT property. This API is currently used for
+platform devices for which DMA configuration (including iommu ops)
+may come from device's parent. To extend this functionality for PCI
+devices, this API need to take a parent node ptr as an argument
+instead of assuming device's parent. This is needed since for PCI, the
+dma configuration may be defined in the DT node of the root bus bridge's
+parent device. Currently only dma-range is used for PCI and iommu is not
+supported. So return error if the device is PCI.
 
-I can confirm that acpi_unload_parent_table() works on my DLN2 setup.
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+---
+ drivers/iommu/of_iommu.c |   10 ++++++++--
+ drivers/of/platform.c    |    2 +-
+ include/linux/of_iommu.h |    6 ++++--
+ 3 files changed, 13 insertions(+), 5 deletions(-)
 
-Tested-by: Octavian Purdila <octavian.purdila@intel.com>
+diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+index af1dc6a..396bc77 100644
+--- a/drivers/iommu/of_iommu.c
++++ b/drivers/iommu/of_iommu.c
+@@ -133,19 +133,25 @@ struct iommu_ops *of_iommu_get_ops(struct device_node *np)
+ 	return ops;
+ }
+ 
+-struct iommu_ops *of_iommu_configure(struct device *dev)
++struct iommu_ops *of_iommu_configure(struct device *dev,
++				     struct device_node *node)
+ {
+ 	struct of_phandle_args iommu_spec;
+ 	struct device_node *np;
+ 	struct iommu_ops *ops = NULL;
+ 	int idx = 0;
+ 
++	if (dev_is_pci(dev)) {
++		dev_err(dev, "iommu is currently not supported for PCI\n");
++		return NULL;
++	}
++
+ 	/*
+ 	 * We don't currently walk up the tree looking for a parent IOMMU.
+ 	 * See the `Notes:' section of
+ 	 * Documentation/devicetree/bindings/iommu/iommu.txt
+ 	 */
+-	while (!of_parse_phandle_with_args(dev->of_node, "iommus",
++	while (!of_parse_phandle_with_args(node, "iommus",
+ 					   "#iommu-cells", idx,
+ 					   &iommu_spec)) {
+ 		np = iommu_spec.np;
+diff --git a/drivers/of/platform.c b/drivers/of/platform.c
+index a54ec10..7675b79 100644
+--- a/drivers/of/platform.c
++++ b/drivers/of/platform.c
+@@ -196,7 +196,7 @@ static void of_dma_configure(struct device *dev)
+ 	dev_dbg(dev, "device is%sdma coherent\n",
+ 		coherent ? " " : " not ");
+ 
+-	iommu = of_iommu_configure(dev);
++	iommu = of_iommu_configure(dev, dev->of_node);
+ 	dev_dbg(dev, "device is%sbehind an iommu\n",
+ 		iommu ? " " : " not ");
+ 
+diff --git a/include/linux/of_iommu.h b/include/linux/of_iommu.h
+index 16c7554..3258cbb 100644
+--- a/include/linux/of_iommu.h
++++ b/include/linux/of_iommu.h
+@@ -12,7 +12,8 @@ extern int of_get_dma_window(struct device_node *dn, const char *prefix,
+ 			     size_t *size);
+ 
+ extern void of_iommu_init(void);
+-extern struct iommu_ops *of_iommu_configure(struct device *dev);
++extern struct iommu_ops *of_iommu_configure(struct device *dev,
++					struct device_node *np);
+ 
+ #else
+ 
+@@ -24,7 +25,8 @@ static inline int of_get_dma_window(struct device_node *dn, const char *prefix,
+ }
+ 
+ static inline void of_iommu_init(void) { }
+-static inline struct iommu_ops *of_iommu_configure(struct device *dev)
++static inline struct iommu_ops *of_iommu_configure(struct device *dev,
++					 struct device_node *np)
+ {
+ 	return NULL;
+ }
+-- 
+1.7.9.5
 
-
-> diff --git a/drivers/acpi/acpica/nsxfobj.c b/drivers/acpi/acpica/nsxfobj.c
-> index dae9401..51a8329 100644
-> --- a/drivers/acpi/acpica/nsxfobj.c
-> +++ b/drivers/acpi/acpica/nsxfobj.c
-> @@ -53,50 +53,6 @@ ACPI_MODULE_NAME("nsxfobj")
->
->  /*******************************************************************************
->   *
-> - * FUNCTION:    acpi_get_id
-> - *
-> - * PARAMETERS:  Handle          - Handle of object whose id is desired
-> - *              ret_id          - Where the id will be placed
-> - *
-> - * RETURN:      Status
-> - *
-> - * DESCRIPTION: This routine returns the owner id associated with a handle
-> - *
-> - ******************************************************************************/
-> -acpi_status acpi_get_id(acpi_handle handle, acpi_owner_id * ret_id)
-> -{
-> -       struct acpi_namespace_node *node;
-> -       acpi_status status;
-> -
-> -       /* Parameter Validation */
-> -
-> -       if (!ret_id) {
-> -               return (AE_BAD_PARAMETER);
-> -       }
-> -
-> -       status = acpi_ut_acquire_mutex(ACPI_MTX_NAMESPACE);
-> -       if (ACPI_FAILURE(status)) {
-> -               return (status);
-> -       }
-> -
-> -       /* Convert and validate the handle */
-> -
-> -       node = acpi_ns_validate_handle(handle);
-> -       if (!node) {
-> -               (void)acpi_ut_release_mutex(ACPI_MTX_NAMESPACE);
-> -               return (AE_BAD_PARAMETER);
-> -       }
-> -
-> -       *ret_id = node->owner_id;
-> -
-> -       status = acpi_ut_release_mutex(ACPI_MTX_NAMESPACE);
-> -       return (status);
-> -}
-> -
-> -ACPI_EXPORT_SYMBOL(acpi_get_id)
-> -
-> -/*******************************************************************************
-> - *
->   * FUNCTION:    acpi_get_type
->   *
->   * PARAMETERS:  handle          - Handle of object whose type is desired
-> diff --git a/drivers/acpi/acpica/tbxface.c b/drivers/acpi/acpica/tbxface.c
-> index 9520ae1..0f9dd80 100644
-> --- a/drivers/acpi/acpica/tbxface.c
-> +++ b/drivers/acpi/acpica/tbxface.c
-> @@ -265,52 +265,6 @@ ACPI_EXPORT_SYMBOL(acpi_get_table_header)
->
->  /*******************************************************************************
->   *
-> - * FUNCTION:    acpi_unload_table_id
-> - *
-> - * PARAMETERS:  id            - Owner ID of the table to be removed.
-> - *
-> - * RETURN:      Status
-> - *
-> - * DESCRIPTION: This routine is used to force the unload of a table (by id)
-> - *
-> - ******************************************************************************/
-> -acpi_status acpi_unload_table_id(acpi_owner_id id)
-> -{
-> -       int i;
-> -       acpi_status status = AE_NOT_EXIST;
-> -
-> -       ACPI_FUNCTION_TRACE(acpi_unload_table_id);
-> -
-> -       status = acpi_ut_acquire_mutex(ACPI_MTX_INTERPRETER);
-> -       if (ACPI_FAILURE(status)) {
-> -               return_ACPI_STATUS(status);
-> -       }
-> -
-> -       /* Find table in the global table list */
-> -       for (i = 0; i < acpi_gbl_root_table_list.current_table_count; ++i) {
-> -               if (id != acpi_gbl_root_table_list.tables[i].owner_id) {
-> -                       continue;
-> -               }
-> -               /*
-> -                * Delete all namespace objects owned by this table. Note that these
-> -                * objects can appear anywhere in the namespace by virtue of the AML
-> -                * "Scope" operator. Thus, we need to track ownership by an ID, not
-> -                * simply a position within the hierarchy
-> -                */
-> -               acpi_tb_delete_namespace_by_owner(i);
-> -               status = acpi_tb_release_owner_id(i);
-> -               acpi_tb_set_table_loaded_flag(i, FALSE);
-> -               break;
-> -       }
-> -
-> -       (void)acpi_ut_release_mutex(ACPI_MTX_INTERPRETER);
-> -       return_ACPI_STATUS(status);
-> -}
-> -
-> -ACPI_EXPORT_SYMBOL(acpi_unload_table_id)
-> -
-> -/*******************************************************************************
-> - *
->   * FUNCTION:    acpi_get_table_with_size
->   *
->   * PARAMETERS:  signature           - ACPI signature of needed table
-> diff --git a/drivers/pci/hotplug/sgi_hotplug.c b/drivers/pci/hotplug/sgi_hotplug.c
-> index bada2099..c32fb78 100644
-> --- a/drivers/pci/hotplug/sgi_hotplug.c
-> +++ b/drivers/pci/hotplug/sgi_hotplug.c
-> @@ -475,7 +475,7 @@ static int disable_slot(struct hotplug_slot *bss_hotplug_slot)
->         struct slot *slot = bss_hotplug_slot->private;
->         struct pci_dev *dev, *temp;
->         int rc;
-> -       acpi_owner_id ssdt_id = 0;
-> +       acpi_handle ssdt_hdl = NULL;
->
->         /* Acquire update access to the bus */
->         mutex_lock(&sn_hotplug_mutex);
-> @@ -522,7 +522,7 @@ static int disable_slot(struct hotplug_slot *bss_hotplug_slot)
->                         if (ACPI_SUCCESS(ret) &&
->                             (adr>>16) == (slot->device_num + 1)) {
->                                 /* retain the owner id */
-> -                               acpi_get_id(chandle, &ssdt_id);
-> +                               ssdt_hdl = chandle;
->
->                                 ret = acpi_bus_get_device(chandle,
->                                                           &device);
-> @@ -547,12 +547,13 @@ static int disable_slot(struct hotplug_slot *bss_hotplug_slot)
->         pci_unlock_rescan_remove();
->
->         /* Remove the SSDT for the slot from the ACPI namespace */
-> -       if (SN_ACPI_BASE_SUPPORT() && ssdt_id) {
-> +       if (SN_ACPI_BASE_SUPPORT() && ssdt_hdl) {
->                 acpi_status ret;
-> -               ret = acpi_unload_table_id(ssdt_id);
-> +               ret = acpi_unload_parent_table(ssdt_hdl);
->                 if (ACPI_FAILURE(ret)) {
-> -                       printk(KERN_ERR "%s: acpi_unload_table_id failed (0x%x) for id %d\n",
-> -                              __func__, ret, ssdt_id);
-> +                       acpi_handle_err(ssdt_hdl,
-> +                                       "%s: acpi_unload_parent_table failed (0x%x)\n",
-> +                                       __func__, ret);
->                         /* try to continue on */
->                 }
->         }
-> diff --git a/include/acpi/acpixf.h b/include/acpi/acpixf.h
-> index 5ba7846..5dd21bc 100644
-> --- a/include/acpi/acpixf.h
-> +++ b/include/acpi/acpixf.h
-> @@ -891,12 +891,6 @@ ACPI_APP_DEPENDENT_RETURN_VOID(ACPI_PRINTF_LIKE(1)
->  ACPI_GLOBAL(u8, acpi_gbl_permanent_mmap);
->
->  ACPI_EXTERNAL_RETURN_STATUS(acpi_status
-> -                           acpi_get_id(acpi_handle object,
-> -                                       acpi_owner_id * out_type))
-> -
-> -ACPI_EXTERNAL_RETURN_STATUS(acpi_status acpi_unload_table_id(acpi_owner_id id))
-> -
-> -ACPI_EXTERNAL_RETURN_STATUS(acpi_status
->                             acpi_get_table_with_size(acpi_string signature,
->                                                      u32 instance,
->                                                      struct acpi_table_header
-> --
-> 1.7.10
->
