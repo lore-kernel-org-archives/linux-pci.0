@@ -1,71 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:28104 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753468AbbAOWRY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Jan 2015 17:17:24 -0500
-Date: Thu, 15 Jan 2015 22:17:23 +0000 (UTC)
-From: Keith Busch <keith.busch@intel.com>
-To: Keith Busch <keith.busch@intel.com>
-cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci: Use hot-plug capable for testing presence on
-In-Reply-To: <1419275223-14602-1-git-send-email-keith.busch@intel.com>
-Message-ID: <alpine.LNX.2.00.1501152203360.4026@localhost.lm.intel.com>
-References: <1419275223-14602-1-git-send-email-keith.busch@intel.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:27500 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756139AbbAGEGH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jan 2015 23:06:07 -0500
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v7 03/10] iommu/vt-d: Add domain-id functions
+Date: Wed,  7 Jan 2015 12:04:27 +0800
+Message-Id: <1420603474-4235-4-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1420603474-4235-1-git-send-email-zhen-hual@hp.com>
+References: <1420603474-4235-1-git-send-email-zhen-hual@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Any thoughts on this? I've read old threads on the pci lists regarding
-the HPS slot capability usage being wrong for hot-add, but it didn't
-seem like it was closed.
+Interfaces for when a new domain in the crashdump kernel needs some
+values from the panicked kernel's context entries.
 
-Right now there are customers reporting hot-add doesn't work on Linux
-for this reason, and I'm struggling to come up with a rebuttal to the
-other OS developers claiming superiority over Linux for PCI-e hotplug
-on popular platforms.
+Signed-off-by: Bill Sumner <billsumnerlinux@gmail.com>
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+---
+ drivers/iommu/intel-iommu.c | 62 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 62 insertions(+)
 
-On Mon, 22 Dec 2014, Keith Busch wrote:
-> The PCI-e Base specifically says Hot-Plug Surprise capability is for
-> removal only, but pciehp checked this to determine if it should handle a
-> slot event on device add. Lots of platform's pcie slots don't advertise
-> support for surprise removal, but are perfectly capable of handling
-> hot-add, so checking surprise removal is not appropriate.
->
-> This patch checks the Hot-Plug Capable bit in the slot capabilities to
-> determine if the detected presence on is a reliable event instead of
-> Hot-Plug Surprise.
->
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> ---
-> drivers/pci/hotplug/pciehp.h      |    1 +
-> drivers/pci/hotplug/pciehp_ctrl.c |    2 +-
-> 2 files changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-> index b115219..b91eefb 100644
-> --- a/drivers/pci/hotplug/pciehp.h
-> +++ b/drivers/pci/hotplug/pciehp.h
-> @@ -126,6 +126,7 @@ struct controller {
-> #define ATTN_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_AIP)
-> #define PWR_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_PIP)
-> #define HP_SUPR_RM(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPS)
-> +#define HP_CAP(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPC)
-> #define EMI(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_EIP)
-> #define NO_CMD_CMPL(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_NCCS)
-> #define PSN(ctrl)		(((ctrl)->slot_cap & PCI_EXP_SLTCAP_PSN) >> 19)
-> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-> index ff32e85..996c313 100644
-> --- a/drivers/pci/hotplug/pciehp_ctrl.c
-> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
-> @@ -532,7 +532,7 @@ static void interrupt_event_handler(struct work_struct *work)
-> 		pciehp_green_led_off(p_slot);
-> 		break;
-> 	case INT_PRESENCE_ON:
-> -		if (!HP_SUPR_RM(ctrl))
-> +		if (!HP_CAP(ctrl))
-> 			break;
-> 		ctrl_dbg(ctrl, "Surprise Insertion\n");
-> 		handle_surprise_event(p_slot);
-> -- 
-> 1.7.10.4
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 5ce2850..c0bebd6 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -381,6 +381,13 @@ struct domain_values_entry {
+ 					   2 == 1GiB, 3 == 512GiB, 4 == 1TiB */
+ };
+ 
++static struct domain_values_entry *intel_iommu_did_to_domain_values_entry(
++		int did, struct intel_iommu *iommu);
++
++static int intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu);
++
++static int device_to_domain_id(struct intel_iommu *iommu, u8 bus, u8 devfn);
++
+ #endif /* CONFIG_CRASH_DUMP */
+ 
+ /*
+@@ -4832,3 +4839,58 @@ static void __init check_tylersburg_isoch(void)
+ 	printk(KERN_WARNING "DMAR: Recommended TLB entries for ISOCH unit is 16; your BIOS set %d\n",
+ 	       vtisochctrl);
+ }
++
++#ifdef CONFIG_CRASH_DUMP
++
++/*
++ * Interfaces for when a new domain in the crashdump kernel needs some
++ * values from the panicked kernel's context entries
++ *
++ */
++static struct domain_values_entry *intel_iommu_did_to_domain_values_entry(
++		int did, struct intel_iommu *iommu)
++{
++	struct domain_values_entry *dve;	/* iterator */
++
++	list_for_each_entry(dve, &domain_values_list[iommu->seq_id], link)
++		if (dve->did == did)
++			return dve;
++	return NULL;
++}
++
++/* Mark domain-id's from old kernel as in-use on this iommu so that a new
++ * domain-id is allocated in the case where there is a device in the new kernel
++ * that was not in the old kernel -- and therefore a new domain-id is needed.
++ */
++static int intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu)
++{
++	struct domain_values_entry *dve;	/* iterator */
++
++	pr_info("IOMMU:%d Domain ids from panicked kernel:\n", iommu->seq_id);
++
++	list_for_each_entry(dve, &domain_values_list[iommu->seq_id], link) {
++		set_bit(dve->did, iommu->domain_ids);
++		pr_info("DID did:%d(0x%4.4x)\n", dve->did, dve->did);
++	}
++
++	pr_info("----------------------------------------\n");
++	return 0;
++}
++
++static int device_to_domain_id(struct intel_iommu *iommu, u8 bus, u8 devfn)
++{
++	int did = -1;			/* domain-id returned */
++	struct root_entry *root;
++	struct context_entry *context;
++	unsigned long flags;
++
++	spin_lock_irqsave(&iommu->lock, flags);
++	root = &iommu->root_entry[bus];
++	context = get_context_addr_from_root(root);
++	if (context && context_present(context+devfn))
++		did = context_domain_id(context+devfn);
++	spin_unlock_irqrestore(&iommu->lock, flags);
++	return did;
++}
++
++#endif /* CONFIG_CRASH_DUMP */
+-- 
+2.0.0-rc0
+
