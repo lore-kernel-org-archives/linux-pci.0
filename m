@@ -1,51 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:63451 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755490AbbAZRGT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 12:06:19 -0500
-Received: by mail-wi0-f176.google.com with SMTP id em10so11479559wid.3
-        for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2015 09:06:18 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Chris Metcalf <cmetcalf@ezchip.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 3/5] tile: use PCI define for max read request size
-Date: Mon, 26 Jan 2015 18:06:12 +0100
-Message-Id: <1422291972-12412-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1422291922-12324-1-git-send-email-zajec5@gmail.com>
-References: <1422291922-12324-1-git-send-email-zajec5@gmail.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:58923 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754518AbbAGSur (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jan 2015 13:50:47 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <joro@8bytes.org>, <grant.likely@linaro.org>, <robh+dt@kernel.org>,
+	<iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <will.deacon@arm.com>,
+	<linux@arm.linux.org.uk>, <arnd@arndb.de>
+CC: Murali Karicheri <m-karicheri2@ti.com>
+Subject: [PATCH v3 3/4] of/pci: add of_pci_dma_configure() update dma configuration
+Date: Wed, 7 Jan 2015 13:49:53 -0500
+Message-ID: <1420656594-8908-4-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com>
+References: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- arch/tile/kernel/pci.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Add of_pci_dma_configure() to allow updating the dma configuration
+of the pci device using the configuration from DT of the parent of
+the root bridge device.
 
-diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
-index f70c789..325df47 100644
---- a/arch/tile/kernel/pci.c
-+++ b/arch/tile/kernel/pci.c
-@@ -245,7 +245,7 @@ static void fixup_read_and_payload_sizes(void)
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+---
+ drivers/of/of_pci.c    |   39 +++++++++++++++++++++++++++++++++++++++
+ include/linux/of_pci.h |   12 ++++++++++++
+ 2 files changed, 51 insertions(+)
+
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 88471d3..34878c9 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -2,6 +2,7 @@
+ #include <linux/export.h>
+ #include <linux/of.h>
+ #include <linux/of_address.h>
++#include <linux/of_device.h>
+ #include <linux/of_pci.h>
+ #include <linux/slab.h>
+ 
+@@ -229,6 +230,44 @@ parse_failed:
+ 	return err;
+ }
+ EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
++
++/**
++ * of_get_pci_root_bridge_parent - get the OF node of the root bridge's parent
++ * @dev: ptr to pci_dev struct of the pci device
++ *
++ * This function will traverse the bus up to the root bus starting with
++ * the child and return the OF node ptr to root bridge device's parent device.
++ */
++struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev)
++{
++	struct pci_bus *bus = dev->bus;
++	struct device *bridge;
++
++	while (!pci_is_root_bus(bus))
++		bus = bus->parent;
++	bridge = bus->bridge;
++
++	return bridge->parent->of_node;
++}
++EXPORT_SYMBOL_GPL(of_get_pci_root_bridge_parent);
++
++/**
++ * of_pci_dma_configure - Setup DMA configuration
++ * @dev: ptr to pci_dev struct of the pci device
++ *
++ * Function to update PCI devices's DMA configuration using the same
++ * info from the OF node of root host bridge's parent.
++ */
++void of_pci_dma_configure(struct pci_dev *pci_dev)
++{
++	struct device *dev = &pci_dev->dev;
++	struct device_node *parent_np;
++
++	parent_np = of_get_pci_root_bridge_parent(pci_dev);
++	of_dma_configure(dev, parent_np);
++}
++EXPORT_SYMBOL_GPL(of_pci_dma_configure);
++
+ #endif /* CONFIG_OF_ADDRESS */
+ 
+ #ifdef CONFIG_PCI_MSI
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index ce0e5ab..0465a2a 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -16,6 +16,8 @@ int of_pci_get_devfn(struct device_node *np);
+ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+ int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+ int of_get_pci_domain_nr(struct device_node *node);
++struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev);
++void of_pci_dma_configure(struct pci_dev *pci_dev);
+ #else
+ static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
  {
- 	struct pci_dev *dev = NULL;
- 	int smallest_max_payload = 0x1; /* Tile maxes out at 256 bytes. */
--	int max_read_size = 0x2; /* Limit to 512 byte reads. */
-+	int max_read_size = PCI_EXP_DEVCTL_READRQ_512B;
- 	u16 new_values;
+@@ -50,6 +52,16 @@ of_get_pci_domain_nr(struct device_node *node)
+ {
+ 	return -1;
+ }
++
++static inline struct device_node
++*of_get_pci_root_bridge_parent(struct pci_dev *dev)
++{
++	return NULL;
++}
++
++static inline void of_pci_dma_configure(struct pci_dev *pci_dev)
++{
++}
+ #endif
  
- 	/* Scan for the smallest maximum payload size. */
-@@ -258,7 +258,7 @@ static void fixup_read_and_payload_sizes(void)
- 	}
- 
- 	/* Now, set the max_payload_size for all devices to that value. */
--	new_values = (max_read_size << 12) | (smallest_max_payload << 5);
-+	new_values = max_read_size | (smallest_max_payload << 5);
- 	for_each_pci_dev(dev)
- 		pcie_capability_clear_and_set_word(dev, PCI_EXP_DEVCTL,
- 				PCI_EXP_DEVCTL_PAYLOAD | PCI_EXP_DEVCTL_READRQ,
+ #if defined(CONFIG_OF_ADDRESS)
 -- 
-1.8.4.5
+1.7.9.5
 
