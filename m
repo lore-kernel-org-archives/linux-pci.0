@@ -1,128 +1,214 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:52419 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753245AbbAOC2j (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 21:28:39 -0500
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 15 Jan 2015 12:28:37 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 0C3BA2CE8054
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:35 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t0F2SYwg18481270
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:35 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t0F2SY97020081
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:34 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V11 13/17] powerpc/powernv: Implement pcibios_iov_resource_alignment() on powernv
-Date: Thu, 15 Jan 2015 10:28:03 +0800
-Message-Id: <1421288887-7765-14-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <20150113180502.GC2776@google.com>
- <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:36955 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750720AbbAGFDa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 7 Jan 2015 00:03:30 -0500
+Date: Wed, 7 Jan 2015 13:02:47 +0800
+From: Baoquan He <bhe@redhat.com>
+To: "Li, ZhenHua" <zhen-hual@hp.com>
+Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, joro@8bytes.org,
+	vgoyal@redhat.com, dyoung@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v7 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
+Message-ID: <20150107050247.GA16050@dhcp-16-116.nay.redhat.com>
+References: <1420603474-4235-1-git-send-email-zhen-hual@hp.com>
+ <54ACB1E9.9070904@hp.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54ACB1E9.9070904@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch implements the pcibios_iov_resource_alignment() on powernv
-platform.
+On 01/07/15 at 12:11pm, Li, ZhenHua wrote:
+> Many thanks to Takao Indoh and Baoquan He, for your testing on more
+> different systems.
+> 
+> The calling of flush functions are added to this version.
+> 
+> The usage of __iommu_flush_cache function :
+> 1. Fixes a dump on Takao's system.
+> 2. Reduces the count of faults on Baoquan's system.
 
-On PowerNV platform, there are 3 cases for the IOV BAR:
-1. initial state, the IOV BAR size is multiple times of VF BAR size
-2. after expanded, the IOV BAR size is expanded to meet the M64 segment size
-3. sizing stage, the IOV BAR is truncated to 0
+I am testing the version you sent to me yesterday afternoon. Is that
+different with this patchset? I found your patchset man reserve a big
+contiguous memory region under 896M, this will cause the crashkernel
+reservation failed when I set crashkernel=320M. The reason I increase
+the crashkerenl reservation to 320M is 256M is not enough and cause OOM
+when that patchset is tested.
 
-pnv_pci_iov_resource_alignment() handle these three cases respectively.
+I am checking what happened.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/machdep.h        |    3 +++
- arch/powerpc/kernel/pci-common.c          |   14 ++++++++++++++
- arch/powerpc/platforms/powernv/pci-ioda.c |   20 ++++++++++++++++++++
- 3 files changed, 37 insertions(+)
 
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index 965547c..12e8eb8 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -252,6 +252,9 @@ struct machdep_calls {
- 
- #ifdef CONFIG_PCI_IOV
- 	void (*pcibios_fixup_sriov)(struct pci_bus *bus);
-+	resource_size_t (*pcibios_iov_resource_alignment)(struct pci_dev *,
-+			                                    int resno,
-+							    resource_size_t align);
- #endif /* CONFIG_PCI_IOV */
- 
- 	/* Called to shutdown machine specific hardware not already controlled
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 832b7e1..8751dfb 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -130,6 +130,20 @@ void pcibios_reset_secondary_bus(struct pci_dev *dev)
- 	pci_reset_secondary_bus(dev);
- }
- 
-+#ifdef CONFIG_PCI_IOV
-+resource_size_t pcibios_iov_resource_alignment(struct pci_dev *pdev,
-+						 int resno,
-+						 resource_size_t align)
-+{
-+	if (ppc_md.pcibios_iov_resource_alignment)
-+		return ppc_md.pcibios_iov_resource_alignment(pdev,
-+							       resno,
-+							       align);
-+
-+	return 0;
-+}
-+#endif /* CONFIG_PCI_IOV */
-+
- static resource_size_t pcibios_io_size(const struct pci_controller *hose)
- {
- #ifdef CONFIG_PPC64
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 6704fdf..8bad2b0 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1953,6 +1953,25 @@ static resource_size_t pnv_pci_window_alignment(struct pci_bus *bus,
- 	return phb->ioda.io_segsize;
- }
- 
-+#ifdef CONFIG_PCI_IOV
-+static resource_size_t pnv_pci_iov_resource_alignment(struct pci_dev *pdev,
-+							    int resno,
-+							    resource_size_t align)
-+{
-+	struct pci_dn *pdn = pci_get_pdn(pdev);
-+	resource_size_t iov_align;
-+
-+	iov_align = resource_size(&pdev->resource[resno]);
-+	if (iov_align)
-+		return iov_align;
-+
-+	if (pdn->max_vfs)
-+		return pdn->max_vfs * align;
-+
-+	return align;
-+}
-+#endif /* CONFIG_PCI_IOV */
-+
- /* Prevent enabling devices for which we couldn't properly
-  * assign a PE
-  */
-@@ -2155,6 +2174,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
- #ifdef CONFIG_PCI_IOV
- 	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
-+	ppc_md.pcibios_iov_resource_alignment = pnv_pci_iov_resource_alignment;
- #endif /* CONFIG_PCI_IOV */
- 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
- 
--- 
-1.7.9.5
+Thanks
+Baoquan
 
+> 
+> Regards
+> Zhenhua
+> 
+> On 01/07/2015 12:04 PM, Li, Zhen-Hua wrote:
+> >This patchset is an update of Bill Sumner's patchset, implements a fix for:
+> >If a kernel boots with intel_iommu=on on a system that supports intel vt-d,
+> >when a panic happens, the kdump kernel will boot with these faults:
+> >
+> >     dmar: DRHD: handling fault status reg 102
+> >     dmar: DMAR:[DMA Read] Request device [01:00.0] fault addr fff80000
+> >     DMAR:[fault reason 01] Present bit in root entry is clear
+> >
+> >     dmar: DRHD: handling fault status reg 2
+> >     dmar: INTR-REMAP: Request device [[61:00.0] fault index 42
+> >     INTR-REMAP:[fault reason 34] Present field in the IRTE entry is clear
+> >
+> >On some system, the interrupt remapping fault will also happen even if the
+> >intel_iommu is not set to on, because the interrupt remapping will be enabled
+> >when x2apic is needed by the system.
+> >
+> >The cause of the DMA fault is described in Bill's original version, and the
+> >INTR-Remap fault is caused by a similar reason. In short, the initialization
+> >of vt-d drivers causes the in-flight DMA and interrupt requests get wrong
+> >response.
+> >
+> >To fix this problem, we modifies the behaviors of the intel vt-d in the
+> >crashdump kernel:
+> >
+> >For DMA Remapping:
+> >1. To accept the vt-d hardware in an active state,
+> >2. Do not disable and re-enable the translation, keep it enabled.
+> >3. Use the old root entry table, do not rewrite the RTA register.
+> >4. Malloc and use new context entry table and page table, copy data from the
+> >    old ones that used by the old kernel.
+> >5. to use different portions of the iova address ranges for the device drivers
+> >    in the crashdump kernel than the iova ranges that were in-use at the time
+> >    of the panic.
+> >6. After device driver is loaded, when it issues the first dma_map command,
+> >    free the dmar_domain structure for this device, and generate a new one, so
+> >    that the device can be assigned a new and empty page table.
+> >7. When a new context entry table is generated, we also save its address to
+> >    the old root entry table.
+> >
+> >For Interrupt Remapping:
+> >1. To accept the vt-d hardware in an active state,
+> >2. Do not disable and re-enable the interrupt remapping, keep it enabled.
+> >3. Use the old interrupt remapping table, do not rewrite the IRTA register.
+> >4. When ioapic entry is setup, the interrupt remapping table is changed, and
+> >    the updated data will be stored to the old interrupt remapping table.
+> >
+> >Advantages of this approach:
+> >1. All manipulation of the IO-device is done by the Linux device-driver
+> >    for that device.
+> >2. This approach behaves in a manner very similar to operation without an
+> >    active iommu.
+> >3. Any activity between the IO-device and its RMRR areas is handled by the
+> >    device-driver in the same manner as during a non-kdump boot.
+> >4. If an IO-device has no driver in the kdump kernel, it is simply left alone.
+> >    This supports the practice of creating a special kdump kernel without
+> >    drivers for any devices that are not required for taking a crashdump.
+> >5. Minimal code-changes among the existing mainline intel vt-d code.
+> >
+> >Summary of changes in this patch set:
+> >1. Added some useful function for root entry table in code intel-iommu.c
+> >2. Added new members to struct root_entry and struct irte;
+> >3. Functions to load old root entry table to iommu->root_entry from the memory
+> >    of old kernel.
+> >4. Functions to malloc new context entry table and page table and copy the data
+> >    from the old ones to the malloced new ones.
+> >5. Functions to enable support for DMA remapping in kdump kernel.
+> >6. Functions to load old irte data from the old kernel to the kdump kernel.
+> >7. Some code changes that support other behaviours that have been listed.
+> >8. In the new functions, use physical address as "unsigned long" type, not
+> >    pointers.
+> >
+> >Original version by Bill Sumner:
+> >     https://lkml.org/lkml/2014/1/10/518
+> >     https://lkml.org/lkml/2014/4/15/716
+> >     https://lkml.org/lkml/2014/4/24/836
+> >
+> >Zhenhua's updates:
+> >     https://lkml.org/lkml/2014/10/21/134
+> >     https://lkml.org/lkml/2014/12/15/121
+> >     https://lkml.org/lkml/2014/12/22/53
+> >
+> >Changelog[v7]:
+> >     1. Use __iommu_flush_cache to flush the data to hardware.
+> >
+> >Changelog[v6]:
+> >     1. Use "unsigned long" as type of physical address.
+> >     2. Use new function unmap_device_dma to unmap the old dma.
+> >     3. Some small incorrect bits order for aw shift.
+> >
+> >Changelog[v5]:
+> >     1. Do not disable and re-enable traslation and interrupt remapping.
+> >     2. Use old root entry table.
+> >     3. Use old interrupt remapping table.
+> >     4. New functions to copy data from old kernel, and save to old kernel mem.
+> >     5. New functions to save updated root entry table and irte table.
+> >     6. Use intel_unmap to unmap the old dma;
+> >     7. Allocate new pages while driver is being loaded.
+> >
+> >Changelog[v4]:
+> >     1. Cut off the patches that move some defines and functions to new files.
+> >     2. Reduce the numbers of patches to five, make it more easier to read.
+> >     3. Changed the name of functions, make them consistent with current context
+> >        get/set functions.
+> >     4. Add change to function __iommu_attach_domain.
+> >
+> >Changelog[v3]:
+> >     1. Commented-out "#define DEBUG 1" to eliminate debug messages.
+> >     2. Updated the comments about changes in each version.
+> >     3. Fixed: one-line added to Copy-Translations patch to initialize the iovad
+> >           struct as recommended by Baoquan He [bhe@redhat.com]
+> >           init_iova_domain(&domain->iovad, DMA_32BIT_PFN);
+> >
+> >Changelog[v2]:
+> >     The following series implements a fix for:
+> >     A kdump problem about DMA that has been discussed for a long time. That is,
+> >     when a kernel panics and boots into the kdump kernel, DMA started by the
+> >     panicked kernel is not stopped before the kdump kernel is booted and the
+> >     kdump kernel disables the IOMMU while this DMA continues.  This causes the
+> >     IOMMU to stop translating the DMA addresses as IOVAs and begin to treat
+> >     them as physical memory addresses -- which causes the DMA to either:
+> >         (1) generate DMAR errors or
+> >         (2) generate PCI SERR errors or
+> >         (3) transfer data to or from incorrect areas of memory. Often this
+> >             causes the dump to fail.
+> >
+> >Changelog[v1]:
+> >     The original version.
+> >
+> >Changed in this version:
+> >1. Do not disable and re-enable traslation and interrupt remapping.
+> >2. Use old root entry table.
+> >3. Use old interrupt remapping table.
+> >4. Use "unsigned long" as physical address.
+> >5. Use intel_unmap to unmap the old dma;
+> >
+> >Baoquan He <bhe@redhat.com> helps testing this patchset.
+> >
+> >   iommu/vt-d: Update iommu_attach_domain() and its callers
+> >   iommu/vt-d: Items required for kdump
+> >   iommu/vt-d: Add domain-id functions
+> >   iommu/vt-d: functions to copy data from old mem
+> >   iommu/vt-d: Add functions to load and save old re
+> >   iommu/vt-d: datatypes and functions used for kdump
+> >   iommu/vt-d: enable kdump support in iommu module
+> >   iommu/vt-d: assign new page table for dma_map
+> >   iommu/vt-d: Copy functions for irte
+> >   iommu/vt-d: Use old irte in kdump kernel
+> >
+> >Signed-off-by: Bill Sumner <billsumnerlinux@gmail.com>
+> >Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+> >Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+> >Tested-by: Baoquan He <bhe@redhat.com>
+> >---
+> >  drivers/iommu/intel-iommu.c         | 1050 +++++++++++++++++++++++++++++++++--
+> >  drivers/iommu/intel_irq_remapping.c |  104 +++-
+> >  include/linux/intel-iommu.h         |   18 +
+> >  3 files changed, 1130 insertions(+), 42 deletions(-)
+> >
+> 
