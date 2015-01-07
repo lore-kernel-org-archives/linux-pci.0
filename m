@@ -1,125 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:3345 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754327AbbAUCc6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 21:32:58 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+Received: from aserp1040.oracle.com ([141.146.126.69]:51385 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751784AbbAGOwZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jan 2015 09:52:25 -0500
+Date: Wed, 7 Jan 2015 09:50:50 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Jan Beulich <JBeulich@suse.com>,
+	David Rientjes <rientjes@google.com>,
+	HATAYAMA Daisuke <d.hatayama@jp.fujitsu.com>,
+	Richard Weinberger <richard@nod.at>,
+	Oren Twaig <oren@scalemp.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Prarit Bhargava <prarit@redhat.com>,
 	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v2 27/30] PCI: Rename __pci_create_root_bus() to pci_create_root_bus()
-Date: Wed, 21 Jan 2015 08:30:22 +0800
-Message-ID: <1421800225-26230-28-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
-References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Ingo Molnar <mingo@kernel.org>, xen-devel@lists.xenproject.org
+Subject: Re: [Bugfix] x86/apic: Fix xen IRQ allocation failure caused by
+ commit b81975eade8c
+Message-ID: <20150107145050.GC30457@l.oracle.com>
+References: <1420611244-25624-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1420611244-25624-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now no one use pci_create_root_bus(), we could remove it
-and rename __pci_create_root_bus() to pci_create_root_bus().
+On Wed, Jan 07, 2015 at 02:13:49PM +0800, Jiang Liu wrote:
+> Commit b81975eade8c ("x86, irq: Clean up irqdomain transition code")
+> breaks xen IRQ allocation because xen_smp_prepare_cpus() doesn't invoke
+> setup_IO_APIC(), so no irqdomains created for IOAPICs and
+> mp_map_pin_to_irq() fails at the very beginning.
+> --- a/arch/x86/kernel/apic/io_apic.c
+> +++ b/arch/x86/kernel/apic/io_apic.c
+> @@ -2369,31 +2369,29 @@ static void ioapic_destroy_irqdomain(int idx)
+>  	ioapics[idx].pin_info = NULL;
+>  }
+>  
+> -void __init setup_IO_APIC(void)
+> +void __init setup_IO_APIC(bool xen_smp)
+>  {
+>  	int ioapic;
+>  
+> -	/*
+> -	 * calling enable_IO_APIC() is moved to setup_local_APIC for BP
+> -	 */
+> -	io_apic_irqs = nr_legacy_irqs() ? ~PIC_IRQS : ~0UL;
+> +	if (!xen_smp) {
+> +		apic_printk(APIC_VERBOSE, "ENABLING IO-APIC IRQs\n");
+> +		io_apic_irqs = nr_legacy_irqs() ? ~PIC_IRQS : ~0UL;
+> +
+> +		/* Set up IO-APIC IRQ routing. */
+> +		x86_init.mpparse.setup_ioapic_ids();
+> +		sync_Arb_IDs();
+> +	}
 
-Signed-off-by: wangyijing@huawei.com
----
- drivers/pci/probe.c |   27 ++++++++-------------------
- include/linux/pci.h |    3 ---
- 2 files changed, 8 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 79b5aca..70e28d9 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1852,7 +1852,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
- {
- }
- 
--static struct pci_bus *__pci_create_root_bus(
-+static struct pci_bus *pci_create_root_bus(
- 		struct pci_host_bridge *bridge, struct pci_ops *ops)
- {
- 	int error;
-@@ -1935,18 +1935,6 @@ err_out:
- 	return NULL;
- }
- 
--struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
--		struct pci_ops *ops, void *sysdata, struct list_head *resources)
--{
--	struct pci_host_bridge *host;
--
--	host = pci_create_host_bridge(parent, db, resources, sysdata, NULL);
--	if (!host)
--		return NULL;
--	
--	return __pci_create_root_bus(host, ops);
--}
--
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
- {
- 	struct resource *res = &b->busn_res;
-@@ -2025,7 +2013,7 @@ static struct pci_bus *__pci_scan_root_bus(
- 			break;
- 		}
- 
--	b = __pci_create_root_bus(host, ops);
-+	b = pci_create_root_bus(host, ops);
- 	if (!b) {
- 		pci_free_host_bridge(host);
- 		return NULL;
-@@ -2087,18 +2075,19 @@ struct pci_bus *pci_scan_bus_legacy(u32 db, struct pci_ops *ops,
- 					void *sysdata)
- {
- 	LIST_HEAD(resources);
--	struct pci_bus *b;
-+	struct pci_host_bridge *host;
- 
- 	pci_add_resource(&resources, &ioport_resource);
- 	pci_add_resource(&resources, &iomem_resource);
- 	pci_add_resource(&resources, &busn_resource);
--	b = pci_create_root_bus(NULL, db, ops, sysdata, &resources);
--	if (b) {
--		pci_scan_child_bus(b);
-+	host = pci_create_host_bridge(NULL, db, sysdata, &resources, NULL);
-+	if (host) {
-+		__pci_scan_root_bus(host, ops);
-+		return host->bus;
- 	} else {
- 		pci_free_resource_list(&resources);
- 	}
--	return b;
-+	return NULL;
- }
- EXPORT_SYMBOL(pci_scan_bus_legacy);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 4c4c9e4..4d9d471 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -781,9 +781,6 @@ void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
- struct pci_bus *pci_scan_bus_legacy(u32 dombus, struct pci_ops *ops, void *sysdata);
--struct pci_bus *pci_create_root_bus(struct device *parent, u32 dombus,
--				    struct pci_ops *ops, void *sysdata,
--				    struct list_head *resources);
- void pci_free_host_bridge(struct pci_host_bridge *host);
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
- int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
--- 
-1.7.1
+Is there a specific reason that this cannot run in all cases?
 
+What I am asking is why are we doing a special case here? The description
+at the top implied that we were just missing an call to
+setup_IO_APIC.. 
+
+>  
+> -	apic_printk(APIC_VERBOSE, "ENABLING IO-APIC IRQs\n");
+>  	for_each_ioapic(ioapic)
+>  		BUG_ON(mp_irqdomain_create(ioapic));
+> -
+> -	/*
+> -         * Set up IO-APIC IRQ routing.
+> -         */
+> -	x86_init.mpparse.setup_ioapic_ids();
+> -
+> -	sync_Arb_IDs();
+>  	setup_IO_APIC_irqs();
+> -	init_IO_APIC_traps();
+> -	if (nr_legacy_irqs())
+> -		check_timer();
+> -
+>  	ioapic_initialized = 1;
+> +
+> +	if (!xen_smp) {
+> +		init_IO_APIC_traps();
+> +		if (nr_legacy_irqs())
+> +			check_timer();
+> +	}
+>  }
+>  
+>  /*
+> diff --git a/arch/x86/xen/smp.c b/arch/x86/xen/smp.c
+> index 4c071aeb8417..7eb0283901fa 100644
+> --- a/arch/x86/xen/smp.c
+> +++ b/arch/x86/xen/smp.c
+> @@ -326,7 +326,10 @@ static void __init xen_smp_prepare_cpus(unsigned int max_cpus)
+>  
+>  		xen_raw_printk(m);
+>  		panic(m);
+> +	} else {
+> +		setup_IO_APIC(true);
+>  	}
+> +
+>  	xen_init_lock_cpu(0);
+>  
+>  	smp_store_boot_cpu_info();
+> -- 
+> 1.7.10.4
+> 
