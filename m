@@ -1,106 +1,134 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [RFC Patch 16/19] ACPI: Introduce helper function acpi_dev_filter_resource_type()
-Date: Thu,  8 Jan 2015 10:33:03 +0800
-Message-Id: <1420684386-5975-17-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:51015 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757123AbbAGEGS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jan 2015 23:06:18 -0500
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v7 05/10] iommu/vt-d: Add functions to load and save old re
+Date: Wed,  7 Jan 2015 12:04:29 +0800
+Message-Id: <1420603474-4235-6-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1420603474-4235-1-git-send-email-zhen-hual@hp.com>
+References: <1420603474-4235-1-git-send-email-zhen-hual@hp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce helper function acpi_dev_filter_resource_type(), which may
-be used by acpi_dev_get_resources() to filer out resource based on
-resource type.
+Add functions to load root entry table from old kernel, and to save updated
+root entry table.
+Add two member in struct intel_iommu, to store the RTA in old kernel, and
+the mapped virt address of it.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+We use the old RTA in dump kernel, and when the iommu->root_entry is used as
+a cache in kdump kernel, its phys address will not be save to RTA register,
+but when its data is changed, we will save the new data to old root entry table.
+
+Li, Zhen-hua:
+    The functions and logics.
+
+Takao Indoh:
+    Add __iommu_flush_cache.
+
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
 ---
- drivers/acpi/resource.c |   54 +++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/acpi.h    |    1 +
- 2 files changed, 55 insertions(+)
+ drivers/iommu/intel-iommu.c | 53 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/intel-iommu.h |  5 +++++
+ 2 files changed, 58 insertions(+)
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 54204ac94f8e..8ea7c26d6915 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -570,3 +570,57 @@ int acpi_dev_get_resources(struct acpi_device *adev, struct list_head *list,
- 	return c.count;
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 8a7ad72..f3059b8 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -388,6 +388,10 @@ static int intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu);
+ 
+ static int device_to_domain_id(struct intel_iommu *iommu, u8 bus, u8 devfn);
+ 
++static void __iommu_load_old_root_entry(struct intel_iommu *iommu);
++
++static void __iommu_update_old_root_entry(struct intel_iommu *iommu, int index);
++
+ struct iommu_remapped_entry {
+ 	struct list_head list;
+ 	void __iomem *mem;
+@@ -4990,4 +4994,53 @@ static int device_to_domain_id(struct intel_iommu *iommu, u8 bus, u8 devfn)
+ 	return did;
  }
- EXPORT_SYMBOL_GPL(acpi_dev_get_resources);
-+
-+/**
-+ * acpi_dev_filter_resource_type - Filter ACPI resource according to resource
-+ *				   types
-+ * @ares: Input ACPI resource object.
-+ * @arg: Valid resource types of IORESOURCE_XXX
-+ *
-+ * This is a hepler function to support acpi_dev_get_resources(), which filters
-+ * ACPI resource objects according to resource types.
+ 
++/*
++ * Load the old root entry table to new root entry table.
 + */
-+int acpi_dev_filter_resource_type(struct acpi_resource *ares, void *arg)
++static void __iommu_load_old_root_entry(struct intel_iommu *iommu)
 +{
-+	unsigned long type = 0, types = (unsigned long)arg;
++	if ((!iommu)
++		|| (!iommu->root_entry)
++		|| (!iommu->root_entry_old_virt)
++		|| (!iommu->root_entry_old_phys))
++		return;
++	memcpy(iommu->root_entry, iommu->root_entry_old_virt, PAGE_SIZE);
 +
-+	switch (ares->type) {
-+	case ACPI_RESOURCE_TYPE_MEMORY24:
-+	case ACPI_RESOURCE_TYPE_MEMORY32:
-+	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
-+		type = IORESOURCE_MEM;
-+		break;
-+	case ACPI_RESOURCE_TYPE_IO:
-+	case ACPI_RESOURCE_TYPE_FIXED_IO:
-+		type = IORESOURCE_IO;
-+		break;
-+	case ACPI_RESOURCE_TYPE_IRQ:
-+	case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
-+		type = IORESOURCE_IRQ;
-+		break;
-+	case ACPI_RESOURCE_TYPE_DMA:
-+	case ACPI_RESOURCE_TYPE_FIXED_DMA:
-+		type = IORESOURCE_DMA;
-+		break;
-+	case ACPI_RESOURCE_TYPE_GENERIC_REGISTER:
-+		type = IORESOURCE_REG;
-+		break;
-+	case ACPI_RESOURCE_TYPE_ADDRESS16:
-+	case ACPI_RESOURCE_TYPE_ADDRESS32:
-+	case ACPI_RESOURCE_TYPE_ADDRESS64:
-+	case ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64:
-+		if (ares->data.address.resource_type == ACPI_MEMORY_RANGE)
-+			type = IORESOURCE_MEM;
-+		else if (ares->data.address.resource_type == ACPI_IO_RANGE)
-+			type = IORESOURCE_IO;
-+		else if (ares->data.address.resource_type ==
-+			 ACPI_BUS_NUMBER_RANGE)
-+			type = IORESOURCE_BUS;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	return (type & types) ? 0 : 1;
++	__iommu_flush_cache(iommu, iommu->root_entry, PAGE_SIZE);
 +}
-+EXPORT_SYMBOL_GPL(acpi_dev_filter_resource_type);
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index fea78e772450..1df4a0211ae5 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -307,6 +307,7 @@ void acpi_dev_free_resource_list(struct list_head *list);
- int acpi_dev_get_resources(struct acpi_device *adev, struct list_head *list,
- 			   int (*preproc)(struct acpi_resource *, void *),
- 			   void *preproc_data);
-+int acpi_dev_filter_resource_type(struct acpi_resource *ares, void *arg);
++
++/*
++ * When the data in new root entry table is changed, this function
++ * must be called to save the updated data to old root entry table.
++ */
++static void __iommu_update_old_root_entry(struct intel_iommu *iommu, int index)
++{
++	u8 start;
++	unsigned long size;
++	void __iomem *to;
++	void *from;
++
++	if ((!iommu)
++		|| (!iommu->root_entry)
++		|| (!iommu->root_entry_old_virt)
++		|| (!iommu->root_entry_old_phys))
++		return;
++
++	if (index < -1 || index >= ROOT_ENTRY_NR)
++		return;
++
++	if (index == -1) {
++		start = 0;
++		size = ROOT_ENTRY_NR * sizeof(struct root_entry);
++	} else {
++		start = index * sizeof(struct root_entry);
++		size = sizeof(struct root_entry);
++	}
++	to = iommu->root_entry_old_virt;
++	from = iommu->root_entry;
++	memcpy(to + start, from + start, size);
++
++	__iommu_flush_cache(iommu, to + start, size);
++}
++
+ #endif /* CONFIG_CRASH_DUMP */
+diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+index 8ffa523..8e29b97 100644
+--- a/include/linux/intel-iommu.h
++++ b/include/linux/intel-iommu.h
+@@ -329,6 +329,11 @@ struct intel_iommu {
+ 	spinlock_t	lock; /* protect context, domain ids */
+ 	struct root_entry *root_entry; /* virtual address */
  
- int acpi_check_resource_conflict(const struct resource *res);
- 
++#ifdef CONFIG_CRASH_DUMP
++	void __iomem *root_entry_old_virt; /* mapped from old root entry */
++	unsigned long root_entry_old_phys; /* root entry in old kernel */
++#endif
++
+ 	struct iommu_flush flush;
+ #endif
+ 	struct q_inval  *qi;            /* Queued invalidation info */
 -- 
-1.7.10.4
+2.0.0-rc0
 
