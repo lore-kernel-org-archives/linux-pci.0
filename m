@@ -1,88 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:10694 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751200AbbASDTb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 18 Jan 2015 22:19:31 -0500
-Message-ID: <54BC772E.6020103@huawei.com>
-Date: Mon, 19 Jan 2015 11:17:02 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:47893 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752112AbbAGSuq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 7 Jan 2015 13:50:46 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <joro@8bytes.org>, <grant.likely@linaro.org>, <robh+dt@kernel.org>,
+	<iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <will.deacon@arm.com>,
+	<linux@arm.linux.org.uk>, <arnd@arndb.de>
+CC: Murali Karicheri <m-karicheri2@ti.com>
+Subject: [PATCH v3 0/4] PCI: get DMA configuration from parent device
+Date: Wed, 7 Jan 2015 13:49:50 -0500
+Message-ID: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>,
-	<linux-arm-kernel@lists.infradead.org>
-CC: Liviu Dudau <liviu@dudau.co.uk>, Tony Luck <tony.luck@intel.com>,
-	"Russell King" <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-pci@vger.kernel.org>, <x86@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	<linux-m68k@lists.linux-m68k.org>,
-	"Geert Uytterhoeven" <geert@linux-m68k.org>,
-	<linux-alpha@vger.kernel.org>, <linux-ia64@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH 18/28] PCI/sparc: Use pci_scan_root_bridge() for simplicity
-References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <1421372666-12288-19-git-send-email-wangyijing@huawei.com> <2658988.B0VmbMPdJ9@wuerfel>
-In-Reply-To: <2658988.B0VmbMPdJ9@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/1/16 18:01, Arnd Bergmann wrote:
-> On Friday 16 January 2015 09:44:16 Yijing Wang wrote:
->> +static void pci_host_bridge_probe_mode(
->> +               struct pci_host_bridge *host)
->> +{
->> +       host->of_scan = true;
->> +}
->>
-> 
-> I probably missed something here, but where does host->of_scan
-> get used?
-> 
+PCI devices on Keystone doesn't have correct dma_pfn_offset set. This patch
+add capability to set the dma configuration such as dma-mask, dma_pfn_offset,
+and dma ops etc using the information from DT. The prior RFCs and discussions
+are available at [1] and [2] below.
 
-It is used in __pci_scan_root_bus() to detect whether of scan bus is needed in patch 11.
+[2] : https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg790244.html
+[1] : http://www.gossamer-threads.com/lists/linux/kernel/2024591
 
+Change history:
+	v3 - addressed comments to re-use of_dma_configure() for PCI
+	   - To help re-use, change of_iommu_configure() function argument
+		- Move of_dma_configure to of/device.c
+		- Limit the of_iommu_configure to non pci devices
+	v2 - update size to coherent_dma_mask + 1 if dma-range info is missing
+	   - also check the np for null.
+	v1 - updates based on the comments against initial RFC.
+	   - Added a helper function to get the OF node of the parent
+	   - Added an API in of_pci.c to update DMA configuration of the pci
+	     device.
 
-@@ -2051,10 +2053,17 @@ static struct pci_bus *__pci_scan_root_bus(
- 		pci_bus_insert_busn_res(b, host->busnum, 255);
- 	}
+Murali Karicheri (4):
+  of: iommu: add ptr to OF node arg to of_iommu_configure()
+  of: move of_dma_configure() to device,c to help re-use
+  of/pci: add of_pci_dma_configure() update dma configuration
+  PCI: update dma configuration from DT
 
--	max = pci_scan_child_bus(b);
-+	if (host->ops && host->ops->phb_probe_mode)
-+		host->ops->phb_probe_mode(host);
-
--	if (!found)
--		pci_bus_update_busn_res_end(b, max);
-+	if (host->of_scan) {
-+		if (host->ops &&host->ops->phb_of_scan_bus)
-+			host->ops->phb_of_scan_bus(host);
-+	} else {
-+		max = pci_scan_child_bus(b);
-+		if (!found)
-+			pci_bus_update_busn_res_end(b, max);
-+	}
-
- 	return b;
-
-Thanks!
-Yijing.
-
-
-> 	Arnd
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-> 
-> .
-> 
-
+ drivers/iommu/of_iommu.c  |   10 ++++++--
+ drivers/of/device.c       |   58 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/of/of_pci.c       |   39 ++++++++++++++++++++++++++++++
+ drivers/of/platform.c     |   58 ++-------------------------------------------
+ drivers/pci/probe.c       |    2 ++
+ include/linux/of_device.h |    2 ++
+ include/linux/of_iommu.h  |    6 +++--
+ include/linux/of_pci.h    |   12 ++++++++++
+ 8 files changed, 127 insertions(+), 60 deletions(-)
 
 -- 
-Thanks!
-Yijing
+1.7.9.5
 
