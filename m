@@ -1,109 +1,145 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [RFC Patch 15/19] ACPI: Add field offset to struct resource_list_entry
-Date: Wed, 21 Jan 2015 01:53:57 +0100
-Message-ID: <1524434.hGg7sZaCUr@vostro.rjw.lan>
-In-Reply-To: <1420684386-5975-16-git-send-email-jiang.liu@linux.intel.com>
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-16-git-send-email-jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:50909 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755917AbbAGEGC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jan 2015 23:06:02 -0500
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v7 02/10] iommu/vt-d: Items required for kdump
+Date: Wed,  7 Jan 2015 12:04:26 +0800
+Message-Id: <1420603474-4235-3-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1420603474-4235-1-git-send-email-zhen-hual@hp.com>
+References: <1420603474-4235-1-git-send-email-zhen-hual@hp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 08, 2015 10:33:02 AM Jiang Liu wrote:
-> Add field offset to struct resource_list_entry to host address space
-> translation offset so it could be used to represent bridge resources.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  drivers/acpi/resource.c |   13 ++++++++-----
->  include/linux/acpi.h    |    1 +
->  2 files changed, 9 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-> index 16d334a1ee25..54204ac94f8e 100644
-> --- a/drivers/acpi/resource.c
-> +++ b/drivers/acpi/resource.c
-> @@ -462,7 +462,8 @@ struct res_proc_context {
->  };
->  
->  static acpi_status acpi_dev_new_resource_entry(struct resource *r,
-> -					       struct res_proc_context *c)
-> +					       struct res_proc_context *c,
-> +					       resource_size_t offset)
->  {
->  	struct resource_list_entry *rentry;
->  
-> @@ -472,6 +473,7 @@ static acpi_status acpi_dev_new_resource_entry(struct resource *r,
->  		return AE_NO_MEMORY;
->  	}
->  	rentry->res = *r;
-> +	rentry->offset = offset;
->  	list_add_tail(&rentry->node, c->list);
->  	c->count++;
->  	return AE_OK;
-> @@ -480,6 +482,7 @@ static acpi_status acpi_dev_new_resource_entry(struct resource *r,
->  static acpi_status acpi_dev_process_resource(struct acpi_resource *ares,
->  					     void *context)
->  {
-> +	resource_size_t offset = 0;
->  	struct res_proc_context *c = context;
->  	struct resource r;
->  	int i;
-> @@ -500,14 +503,14 @@ static acpi_status acpi_dev_process_resource(struct acpi_resource *ares,
->  
->  	if (acpi_dev_resource_memory(ares, &r)
->  	    || acpi_dev_resource_io(ares, &r)
-> -	    || acpi_dev_resource_address_space(ares, &r, NULL)
-> -	    || acpi_dev_resource_ext_address_space(ares, &r, NULL))
-> -		return acpi_dev_new_resource_entry(&r, c);
-> +	    || acpi_dev_resource_address_space(ares, &r, &offset)
-> +	    || acpi_dev_resource_ext_address_space(ares, &r, &offset))
-> +		return acpi_dev_new_resource_entry(&r, c, offset);
->  
->  	for (i = 0; acpi_dev_resource_interrupt(ares, i, &r); i++) {
->  		acpi_status status;
->  
-> -		status = acpi_dev_new_resource_entry(&r, c);
-> +		status = acpi_dev_new_resource_entry(&r, c, 0);
->  		if (ACPI_FAILURE(status))
->  			return status;
->  	}
-> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-> index bde8119f5897..fea78e772450 100644
-> --- a/include/linux/acpi.h
-> +++ b/include/linux/acpi.h
-> @@ -300,6 +300,7 @@ bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
->  struct resource_list_entry {
->  	struct list_head node;
->  	struct resource res;
-> +	resource_size_t offset;
+Add structure type domain_values_entry used for kdump;
+Add context entry functions needed for kdump.
 
-Well, so instead of adding the offset thing here and there, wouldn't it be
-cleaner to introduce something like
+Bill Sumner:
+    Original version;
 
-	struct ext_resource {
-		sturct resource res;
-		resource_size_t offset;
-	};
+Li, Zhenhua:
+    Changed the name of new functions, make them consistent with current
+    context get/set functions.
 
-and use struct ext_resource instead of struct resource where an offset is needed?
+Signed-off-by: Bill Sumner <billsumnerlinux@gmail.com>
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+---
+ drivers/iommu/intel-iommu.c | 70 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 70 insertions(+)
 
-Just a thought ...
-
->  };
->  
->  void acpi_dev_free_resource_list(struct list_head *list);
-> 
-
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 2dc6250..5ce2850 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -40,6 +40,7 @@
+ #include <linux/pci-ats.h>
+ #include <linux/memblock.h>
+ #include <linux/dma-contiguous.h>
++#include <linux/crash_dump.h>
+ #include <asm/irq_remapping.h>
+ #include <asm/cacheflush.h>
+ #include <asm/iommu.h>
+@@ -208,6 +209,12 @@ get_context_addr_from_root(struct root_entry *root)
+ 		NULL);
+ }
+ 
++static inline unsigned long
++get_context_phys_from_root(struct root_entry *root)
++{
++	return  root_present(root) ? (root->val & VTD_PAGE_MASK) : 0;
++}
++
+ /*
+  * low 64 bits:
+  * 0: present
+@@ -228,6 +235,32 @@ static inline bool context_present(struct context_entry *context)
+ {
+ 	return (context->lo & 1);
+ }
++
++static inline int context_fault_enable(struct context_entry *c)
++{
++	return((c->lo >> 1) & 0x1);
++}
++
++static inline int context_translation_type(struct context_entry *c)
++{
++	return((c->lo >> 2) & 0x3);
++}
++
++static inline u64 context_address_root(struct context_entry *c)
++{
++	return((c->lo >> VTD_PAGE_SHIFT));
++}
++
++static inline int context_address_width(struct context_entry *c)
++{
++	return((c->hi >> 0) & 0x7);
++}
++
++static inline int context_domain_id(struct context_entry *c)
++{
++	return((c->hi >> 8) & 0xffff);
++}
++
+ static inline void context_set_present(struct context_entry *context)
+ {
+ 	context->lo |= 1;
+@@ -313,6 +346,43 @@ static inline int first_pte_in_page(struct dma_pte *pte)
+ 	return !((unsigned long)pte & ~VTD_PAGE_MASK);
+ }
+ 
++
++#ifdef CONFIG_CRASH_DUMP
++
++/*
++ * Fix Crashdump failure caused by leftover DMA through a hardware IOMMU
++ *
++ * Fixes the crashdump kernel to deal with an active iommu and legacy
++ * DMA from the (old) panicked kernel in a manner similar to how legacy
++ * DMA is handled when no hardware iommu was in use by the old kernel --
++ * allow the legacy DMA to continue into its current buffers.
++ *
++ * In the crashdump kernel, this code:
++ * 1. skips disabling the IOMMU's translating of IO Virtual Addresses (IOVA).
++ * 2. Do not re-enable IOMMU's translating.
++ * 3. In kdump kernel, use the old root entry table.
++ * 4. Leaves the current translations in-place so that legacy DMA will
++ *    continue to use its current buffers.
++ * 5. Allocates to the device drivers in the crashdump kernel
++ *    portions of the iova address ranges that are different
++ *    from the iova address ranges that were being used by the old kernel
++ *    at the time of the panic.
++ *
++ */
++
++struct domain_values_entry {
++	struct list_head link;		/* link entries into a list */
++	struct iova_domain iovad;	/* iova's that belong to this domain */
++	struct dma_pte	*pgd;		/* virtual address */
++	int    did;			/* domain id */
++	int    gaw;			/* max guest address width */
++	int    iommu_superpage;		/* Level of superpages supported:
++					   0 == 4KiB (no superpages), 1 == 2MiB,
++					   2 == 1GiB, 3 == 512GiB, 4 == 1TiB */
++};
++
++#endif /* CONFIG_CRASH_DUMP */
++
+ /*
+  * This domain is a statically identity mapping domain.
+  *	1. This domain creats a static 1:1 mapping to all usable memory.
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+2.0.0-rc0
+
