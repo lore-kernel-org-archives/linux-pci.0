@@ -1,95 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:56808 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751460AbbASIph (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jan 2015 03:45:37 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-m68k@lists.linux-m68k.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	linux-alpha@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-ia64@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [PATCH 18/28] PCI/sparc: Use pci_scan_root_bridge() for simplicity
-Date: Mon, 19 Jan 2015 09:44:31 +0100
-Message-ID: <7748275.Tf0dzsPZdA@wuerfel>
-In-Reply-To: <54BC772E.6020103@huawei.com>
-References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <2658988.B0VmbMPdJ9@wuerfel> <54BC772E.6020103@huawei.com>
+Received: from mail-qc0-f181.google.com ([209.85.216.181]:51207 "EHLO
+	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751991AbbAGXIc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jan 2015 18:08:32 -0500
+Received: by mail-qc0-f181.google.com with SMTP id m20so1706393qcx.12
+        for <linux-pci@vger.kernel.org>; Wed, 07 Jan 2015 15:08:32 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <54ADBBCF.8020206@ti.com>
+References: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com> <54ADBBCF.8020206@ti.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 7 Jan 2015 17:08:11 -0600
+Message-ID: <CAErSpo46UAn9ckbzrgzAoQbu2D=oyOOL_rO24NWEg_iDLSuCLA@mail.gmail.com>
+Subject: Re: [PATCH v3 0/4] PCI: get DMA configuration from parent device
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 19 January 2015 11:17:02 Yijing Wang wrote:
-> On 2015/1/16 18:01, Arnd Bergmann wrote:
-> > On Friday 16 January 2015 09:44:16 Yijing Wang wrote:
-> >> +static void pci_host_bridge_probe_mode(
-> >> +               struct pci_host_bridge *host)
-> >> +{
-> >> +       host->of_scan = true;
-> >> +}
-> >>
-> > 
-> > I probably missed something here, but where does host->of_scan
-> > get used?
-> > 
-> 
-> It is used in __pci_scan_root_bus() to detect whether of scan bus is needed in patch 11.
+On Wed, Jan 7, 2015 at 5:05 PM, Murali Karicheri <m-karicheri2@ti.com> wrote:
+> On 01/07/2015 01:49 PM, Murali Karicheri wrote:
+>>
+>> PCI devices on Keystone doesn't have correct dma_pfn_offset set. This
+>> patch
+>> add capability to set the dma configuration such as dma-mask,
+>> dma_pfn_offset,
+>> and dma ops etc using the information from DT. The prior RFCs and
+>> discussions
+>> are available at [1] and [2] below.
+>>
+>> [2] :
+>> https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg790244.html
+>> [1] : http://www.gossamer-threads.com/lists/linux/kernel/2024591
+>>
+>> Change history:
+>>         v3 - addressed comments to re-use of_dma_configure() for PCI
+>>            - To help re-use, change of_iommu_configure() function argument
+>>                 - Move of_dma_configure to of/device.c
+>>                 - Limit the of_iommu_configure to non pci devices
+>>         v2 - update size to coherent_dma_mask + 1 if dma-range info is
+>> missing
+>>            - also check the np for null.
+>>         v1 - updates based on the comments against initial RFC.
+>>            - Added a helper function to get the OF node of the parent
+>>            - Added an API in of_pci.c to update DMA configuration of the
+>> pci
+>>              device.
+>>
+>> Murali Karicheri (4):
+>>    of: iommu: add ptr to OF node arg to of_iommu_configure()
+>>    of: move of_dma_configure() to device,c to help re-use
+>>    of/pci: add of_pci_dma_configure() update dma configuration
+>>    PCI: update dma configuration from DT
+>>
+>>   drivers/iommu/of_iommu.c  |   10 ++++++--
+>>   drivers/of/device.c       |   58
+>> +++++++++++++++++++++++++++++++++++++++++++++
+>>   drivers/of/of_pci.c       |   39 ++++++++++++++++++++++++++++++
+>>   drivers/of/platform.c     |   58
+>> ++-------------------------------------------
+>>   drivers/pci/probe.c       |    2 ++
+>>   include/linux/of_device.h |    2 ++
+>>   include/linux/of_iommu.h  |    6 +++--
+>>   include/linux/of_pci.h    |   12 ++++++++++
+>>   8 files changed, 127 insertions(+), 60 deletions(-)
+>>
+> Bjorn,
+>
+> Could you review this series from the PCI subsystem point of view?
 
-Ok, I see it now.
+Will do, it's in my patchwork queue.  I'm just returning after a
+couple weeks of vacation, during which I moved across the country, so
+it will take me a bit to catch up.
 
-> @@ -2051,10 +2053,17 @@ static struct pci_bus *__pci_scan_root_bus(
->  		pci_bus_insert_busn_res(b, host->busnum, 255);
->  	}
-> 
-> -	max = pci_scan_child_bus(b);
-> +	if (host->ops && host->ops->phb_probe_mode)
-> +		host->ops->phb_probe_mode(host);
-> 
-> -	if (!found)
-> -		pci_bus_update_busn_res_end(b, max);
-> +	if (host->of_scan) {
-> +		if (host->ops &&host->ops->phb_of_scan_bus)
-> +			host->ops->phb_of_scan_bus(host);
-> +	} else {
-> +		max = pci_scan_child_bus(b);
-> +		if (!found)
-> +			pci_bus_update_busn_res_end(b, max);
-> +	}
-> 
-
-I think we can simplify this based on the knowledge that this code
-will remain powerpc specific. How about removing the phb_probe_mode()
-callback and replacing it with just a phb_scan_bus() callback that
-will always get set on sparc, and do this on powerpc:
-
-+static void pci_host_bridge_of_scan_bus(struct pci_host_bridge *host)
-+{
-+       int mode = PCI_PROBE_NORMAL;
-+       struct pci_bus *bus = host->bus;
-+       struct pci_controller *hose = dev_get_drvdata(&host->dev);
-+
-+       /* Get probe mode and perform scan */
-+       if (hose->dn && ppc_md.pci_probe_mode)
-+               mode = ppc_md.pci_probe_mode(bus);
-+
-+       pr_debug("    probe mode: %d\n", mode);
-+       if (mode == PCI_PROBE_DEVTREE) {
-+               of_scan_bus(host->dn, bus);
-+		return max; // XXX need to get this from somewhere
-+	}
-+	return pci_scan_child_bus(b);
-+}
-
-Would that work?
-
-	Arnd
+Bjorn
