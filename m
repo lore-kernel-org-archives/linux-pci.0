@@ -1,59 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0140.outbound.protection.outlook.com ([207.46.100.140]:40244
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751932AbbATHNz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 02:13:55 -0500
-From: "Richard.Zhu@freescale.com" <Richard.Zhu@freescale.com>
-To: Lucas Stach <l.stach@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH] MAINTAINERS: fix Richard Zhu's mail address
-Date: Tue, 20 Jan 2015 05:42:26 +0000
-Message-ID: <DM2PR0301MB0862D40DA7564099DE26CAE0F74B0@DM2PR0301MB0862.namprd03.prod.outlook.com>
-References: <1421662651-22962-1-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1421662651-22962-1-git-send-email-l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:33429 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752055AbbAGXa0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jan 2015 18:30:26 -0500
 MIME-Version: 1.0
+In-Reply-To: <1420656594-8908-2-git-send-email-m-karicheri2@ti.com>
+References: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com> <1420656594-8908-2-git-send-email-m-karicheri2@ti.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Wed, 7 Jan 2015 17:30:04 -0600
+Message-ID: <CAL_JsqJ5tDQb+SzzhGQTs48tSG=T_QZu3LW5TDyugxFw1V7LoA@mail.gmail.com>
+Subject: Re: [PATCH v3 1/4] of: iommu: add ptr to OF node arg to of_iommu_configure()
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Linux IOMMU <iommu@lists.linux-foundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lucas:
-Thanks.
-Acked-by: Richard Zhu <Richard.Zhu@freescale.com>
-
-Best Regards
-Richard Zhu
-Linux BSP team
-
-
-> -----Original Message-----
-> From: Lucas Stach [mailto:l.stach@pengutronix.de]
-> Sent: Monday, January 19, 2015 6:18 PM
-> To: Zhu Richard-R65037; Bjorn Helgaas
-> Cc: linux-pci@vger.kernel.org
-> Subject: [PATCH] MAINTAINERS: fix Richard Zhu's mail address
-> 
-> The old cryptic address bounces, fix it by using a properly working one.
-> 
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+On Wed, Jan 7, 2015 at 12:49 PM, Murali Karicheri <m-karicheri2@ti.com> wrote:
+> Function of_iommu_configure() is called from of_dma_configure() to
+> setup iommu ops using DT property. This API is currently used for
+> platform devices for which DMA configuration (including iommu ops)
+> may come from device's parent. To extend this functionality for PCI
+> devices, this API need to take a parent node ptr as an argument
+> instead of assuming device's parent. This is needed since for PCI, the
+> dma configuration may be defined in the DT node of the root bus bridge's
+> parent device. Currently only dma-range is used for PCI and iommu is not
+> supported. So return error if the device is PCI.
+>
+> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
 > ---
->  MAINTAINERS | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 2fa385321245..b0a01320c755 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -7239,7 +7239,7 @@ S:	Maintained
->  F:	drivers/pci/host/*layerscape*
-> 
->  PCI DRIVER FOR IMX6
-> -M:	Richard Zhu <r65037@freescale.com>
-> +M:	Richard Zhu <Richard.Zhu@freescale.com>
->  M:	Lucas Stach <l.stach@pengutronix.de>
->  L:	linux-pci@vger.kernel.org
->  L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
-> --
-> 2.1.4
+>  drivers/iommu/of_iommu.c |   10 ++++++++--
+>  drivers/of/platform.c    |    2 +-
+>  include/linux/of_iommu.h |    6 ++++--
+>  3 files changed, 13 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+> index af1dc6a..396bc77 100644
+> --- a/drivers/iommu/of_iommu.c
+> +++ b/drivers/iommu/of_iommu.c
+> @@ -133,19 +133,25 @@ struct iommu_ops *of_iommu_get_ops(struct device_node *np)
+>         return ops;
+>  }
+>
+> -struct iommu_ops *of_iommu_configure(struct device *dev)
+> +struct iommu_ops *of_iommu_configure(struct device *dev,
+> +                                    struct device_node *node)
 
+You use node here, but np in the declaration. However...
+
+>  {
+>         struct of_phandle_args iommu_spec;
+>         struct device_node *np;
+
+We also have np here. I would suggest we rename this to iommu_node or
+iommu_np to be clear which one this is for.
+
+>         struct iommu_ops *ops = NULL;
+>         int idx = 0;
+>
+> +       if (dev_is_pci(dev)) {
+> +               dev_err(dev, "iommu is currently not supported for PCI\n");
+> +               return NULL;
+> +       }
+> +
+>         /*
+>          * We don't currently walk up the tree looking for a parent IOMMU.
+>          * See the `Notes:' section of
+>          * Documentation/devicetree/bindings/iommu/iommu.txt
+>          */
+> -       while (!of_parse_phandle_with_args(dev->of_node, "iommus",
+> +       while (!of_parse_phandle_with_args(node, "iommus",
+>                                            "#iommu-cells", idx,
+>                                            &iommu_spec)) {
+>                 np = iommu_spec.np;
+> diff --git a/drivers/of/platform.c b/drivers/of/platform.c
+> index a54ec10..7675b79 100644
+> --- a/drivers/of/platform.c
+> +++ b/drivers/of/platform.c
+> @@ -196,7 +196,7 @@ static void of_dma_configure(struct device *dev)
+>         dev_dbg(dev, "device is%sdma coherent\n",
+>                 coherent ? " " : " not ");
+>
+> -       iommu = of_iommu_configure(dev);
+> +       iommu = of_iommu_configure(dev, dev->of_node);
+>         dev_dbg(dev, "device is%sbehind an iommu\n",
+>                 iommu ? " " : " not ");
+>
+> diff --git a/include/linux/of_iommu.h b/include/linux/of_iommu.h
+> index 16c7554..3258cbb 100644
+> --- a/include/linux/of_iommu.h
+> +++ b/include/linux/of_iommu.h
+> @@ -12,7 +12,8 @@ extern int of_get_dma_window(struct device_node *dn, const char *prefix,
+>                              size_t *size);
+>
+>  extern void of_iommu_init(void);
+> -extern struct iommu_ops *of_iommu_configure(struct device *dev);
+> +extern struct iommu_ops *of_iommu_configure(struct device *dev,
+> +                                       struct device_node *np);
+>
+>  #else
+>
+> @@ -24,7 +25,8 @@ static inline int of_get_dma_window(struct device_node *dn, const char *prefix,
+>  }
+>
+>  static inline void of_iommu_init(void) { }
+> -static inline struct iommu_ops *of_iommu_configure(struct device *dev)
+> +static inline struct iommu_ops *of_iommu_configure(struct device *dev,
+> +                                        struct device_node *np)
+>  {
+>         return NULL;
+>  }
+> --
+> 1.7.9.5
+>
