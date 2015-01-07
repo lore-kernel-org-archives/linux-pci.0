@@ -1,166 +1,62 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part1 v7 35/38] x86/irq: Refine the way to allocate irq_cfg for legacy IRQs
-Date: Tue, 20 Jan 2015 11:08:38 +0800
-Message-Id: <1421723321-8386-36-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from devils.ext.ti.com ([198.47.26.153]:58924 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754555AbbAGSur (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jan 2015 13:50:47 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <joro@8bytes.org>, <grant.likely@linaro.org>, <robh+dt@kernel.org>,
+	<iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <will.deacon@arm.com>,
+	<linux@arm.linux.org.uk>, <arnd@arndb.de>
+CC: Murali Karicheri <m-karicheri2@ti.com>
+Subject: [PATCH v3 4/4] PCI: update dma configuration from DT
+Date: Wed, 7 Jan 2015 13:49:54 -0500
+Message-ID: <1420656594-8908-5-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com>
+References: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To support legacy ISA IRQs, we need to preallocate irq_cfg structures
-for legacy ISA IRQs. Refine the way to allocate irq_cfg for legacy ISA
-IRQs, so it's more friend to hierarchy irqdomain implementation.
+If there is a DT node available for the root bridge's parent device,
+use the dma configuration from that device node. For example, keystone
+PCI devices would require dma_pfn_offset to be set correctly in the
+device structure of the pci device in order to have the correct dma mask.
+The DT node will have dma-ranges defined for this. Also support using
+the DT property dma-coherent to allow coherent DMA operation by the
+PCI device.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Grant Likely <grant.likely@linaro.org>
-Link: http://lkml.kernel.org/r/1416901802-24211-7-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
+This patch use the new helper function of_pci_dma_configure() to update
+the device dma configuration.
+
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
 ---
- arch/x86/kernel/apic/io_apic.c |   13 +------------
- arch/x86/kernel/apic/vector.c  |   42 +++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 42 insertions(+), 13 deletions(-)
+ drivers/pci/probe.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 3406dbec1570..16d4ba3ac844 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -254,8 +254,7 @@ static void free_ioapic_saved_registers(int idx)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 23212f8..d7dcd6c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -6,6 +6,7 @@
+ #include <linux/delay.h>
+ #include <linux/init.h>
+ #include <linux/pci.h>
++#include <linux/of_pci.h>
+ #include <linux/pci_hotplug.h>
+ #include <linux/slab.h>
+ #include <linux/module.h>
+@@ -1520,6 +1521,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	dev->dev.dma_mask = &dev->dma_mask;
+ 	dev->dev.dma_parms = &dev->dma_parms;
+ 	dev->dev.coherent_dma_mask = 0xffffffffull;
++	of_pci_dma_configure(dev);
  
- int __init arch_early_ioapic_init(void)
- {
--	struct irq_cfg *cfg;
--	int i, node = cpu_to_node(0);
-+	int i;
- 
- 	if (!nr_legacy_irqs())
- 		io_apic_irqs = ~0UL;
-@@ -263,16 +262,6 @@ int __init arch_early_ioapic_init(void)
- 	for_each_ioapic(i)
- 		alloc_ioapic_saved_registers(i);
- 
--	/*
--	 * For legacy IRQ's, start with assigning irq0 to irq15 to
--	 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
--	 */
--	for (i = 0; i < nr_legacy_irqs(); i++) {
--		cfg = alloc_irq_and_cfg_at(i, node);
--		cfg->vector = IRQ0_VECTOR + i;
--		cpumask_setall(cfg->domain);
--	}
--
- 	return 0;
- }
- 
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 609db1910fd3..4b8fad9aa685 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -24,6 +24,9 @@
- struct irq_domain *x86_vector_domain;
- static DEFINE_RAW_SPINLOCK(vector_lock);
- static struct irq_chip lapic_controller;
-+#ifdef	CONFIG_X86_IO_APIC
-+static struct irq_cfg *legacy_irq_cfgs[NR_IRQS_LEGACY];
-+#endif
- 
- void lock_vector_lock(void)
- {
-@@ -283,6 +286,10 @@ static void x86_vector_free_irqs(struct irq_domain *domain,
- 			free_remapped_irq(virq);
- 			clear_irq_vector(virq + i, irq_data->chip_data);
- 			free_irq_cfg(irq_data->chip_data);
-+#ifdef	CONFIG_X86_IO_APIC
-+			if (virq + i < nr_legacy_irqs())
-+				legacy_irq_cfgs[virq + i] = NULL;
-+#endif
- 			irq_domain_reset_irq_data(irq_data);
- 		}
- 	}
-@@ -308,7 +315,12 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
- 	for (i = 0; i < nr_irqs; i++) {
- 		irq_data = irq_domain_get_irq_data(domain, virq + i);
- 		BUG_ON(!irq_data);
--		cfg = alloc_irq_cfg(irq_data->node);
-+#ifdef	CONFIG_X86_IO_APIC
-+		if (virq + i < nr_legacy_irqs() && legacy_irq_cfgs[virq + i])
-+			cfg = legacy_irq_cfgs[virq + i];
-+		else
-+#endif
-+			cfg = alloc_irq_cfg(irq_data->node);
- 		if (!cfg) {
- 			err = -ENOMEM;
- 			goto error;
-@@ -357,8 +369,36 @@ int __init arch_probe_nr_irqs(void)
- 	return nr_legacy_irqs();
- }
- 
-+#ifdef	CONFIG_X86_IO_APIC
-+static void init_legacy_irqs(void)
-+{
-+	int i, node = cpu_to_node(0);
-+	struct irq_cfg *cfg;
-+
-+	/*
-+	 * For legacy IRQ's, start with assigning irq0 to irq15 to
-+	 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
-+	 */
-+	for (i = 0; i < nr_legacy_irqs(); i++) {
-+		cfg = legacy_irq_cfgs[i] = alloc_irq_cfg(node);
-+		BUG_ON(!cfg);
-+		/*
-+		 * For legacy IRQ's, start with assigning irq0 to irq15 to
-+		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
-+		 */
-+		cfg->vector = IRQ0_VECTOR + i;
-+		cpumask_setall(cfg->domain);
-+		irq_set_chip_data(i, cfg);
-+	}
-+}
-+#else
-+static void init_legacy_irqs(void) { }
-+#endif
-+
- int __init arch_early_irq_init(void)
- {
-+	init_legacy_irqs();
-+
- 	x86_vector_domain = irq_domain_add_tree(NULL, &x86_vector_domain_ops,
- 						NULL);
- 	BUG_ON(x86_vector_domain == NULL);
+ 	pci_set_dma_max_seg_size(dev, 65536);
+ 	pci_set_dma_seg_boundary(dev, 0xffffffff);
 -- 
-1.7.10.4
+1.7.9.5
 
