@@ -1,89 +1,188 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiri Kosina <trivial@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "H. Peter Anvin" <hpa@linux.intel.com>
-Subject: [Patch Part1 v7 30/38] x86/intel-mid, trivial: Refine code syntax for sfi_parse_mtmr()
-Date: Tue, 20 Jan 2015 11:08:33 +0800
-Message-Id: <1421723321-8386-31-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:27522 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757031AbbAGEGN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jan 2015 23:06:13 -0500
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v7 04/10] iommu/vt-d: functions to copy data from old mem
+Date: Wed,  7 Jan 2015 12:04:28 +0800
+Message-Id: <1420603474-4235-5-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1420603474-4235-1-git-send-email-zhen-hual@hp.com>
+References: <1420603474-4235-1-git-send-email-zhen-hual@hp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Correctly indent code in function sfi_parse_mtmr().
+Add some functions to copy the data from old kernel.
+These functions are used to copy context tables and page tables.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: H. Peter Anvin <hpa@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Jiri Kosina <trivial@kernel.org>
-Cc: David Cohen <david.a.cohen@linux.intel.com>
-Link: http://lkml.kernel.org/r/1416901802-24211-3-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To avoid calling iounmap between spin_lock_irqsave and spin_unlock_irqrestore,
+use a link here, store the pointers , and then use iounmap to free them in
+another place.
+
+Li, Zhen-hua:
+    The functions and logics.
+
+Takao Indoh:
+    Check if pfn is ram:
+        if (page_is_ram(pfn))
+
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
 ---
- arch/x86/platform/intel-mid/sfi.c |   20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ drivers/iommu/intel-iommu.c | 97 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/intel-iommu.h |  9 +++++
+ 2 files changed, 106 insertions(+)
 
-diff --git a/arch/x86/platform/intel-mid/sfi.c b/arch/x86/platform/intel-mid/sfi.c
-index aa59f88868f8..9a16749935d4 100644
---- a/arch/x86/platform/intel-mid/sfi.c
-+++ b/arch/x86/platform/intel-mid/sfi.c
-@@ -95,16 +95,16 @@ int __init sfi_parse_mtmr(struct sfi_table_header *table)
- 		pr_debug("timer[%d]: paddr = 0x%08x, freq = %dHz, irq = %d\n",
- 			totallen, (u32)pentry->phys_addr,
- 			pentry->freq_hz, pentry->irq);
--			mp_irq.type = MP_INTSRC;
--			mp_irq.irqtype = mp_INT;
--/* triggering mode edge bit 2-3, active high polarity bit 0-1 */
--			mp_irq.irqflag = 5;
--			mp_irq.srcbus = MP_BUS_ISA;
--			mp_irq.srcbusirq = pentry->irq;	/* IRQ */
--			mp_irq.dstapic = MP_APIC_ALL;
--			mp_irq.dstirq = pentry->irq;
--			mp_save_irq(&mp_irq);
--			mp_map_gsi_to_irq(pentry->irq, IOAPIC_MAP_ALLOC);
-+		mp_irq.type = MP_INTSRC;
-+		mp_irq.irqtype = mp_INT;
-+		/* triggering mode edge bit 2-3, active high polarity bit 0-1 */
-+		mp_irq.irqflag = 5;
-+		mp_irq.srcbus = MP_BUS_ISA;
-+		mp_irq.srcbusirq = pentry->irq;	/* IRQ */
-+		mp_irq.dstapic = MP_APIC_ALL;
-+		mp_irq.dstirq = pentry->irq;
-+		mp_save_irq(&mp_irq);
-+		mp_map_gsi_to_irq(pentry->irq, IOAPIC_MAP_ALLOC);
- 	}
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index c0bebd6..8a7ad72 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -388,6 +388,13 @@ static int intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu);
  
- 	return 0;
+ static int device_to_domain_id(struct intel_iommu *iommu, u8 bus, u8 devfn);
+ 
++struct iommu_remapped_entry {
++	struct list_head list;
++	void __iomem *mem;
++};
++static LIST_HEAD(__iommu_remapped_mem);
++static DEFINE_MUTEX(__iommu_mem_list_lock);
++
+ #endif /* CONFIG_CRASH_DUMP */
+ 
+ /*
+@@ -4843,6 +4850,96 @@ static void __init check_tylersburg_isoch(void)
+ #ifdef CONFIG_CRASH_DUMP
+ 
+ /*
++ * Copy memory from a physically-addressed area into a virtually-addressed area
++ */
++int __iommu_load_from_oldmem(void *to, unsigned long from, unsigned long size)
++{
++	unsigned long pfn;		/* Page Frame Number */
++	size_t csize = (size_t)size;	/* Num(bytes to copy) */
++	unsigned long offset;		/* Lower 12 bits of to */
++	void __iomem *virt_mem;
++	struct iommu_remapped_entry *mapped;
++
++	pfn = from >> VTD_PAGE_SHIFT;
++	offset = from & (~VTD_PAGE_MASK);
++
++	if (page_is_ram(pfn)) {
++		memcpy(to, pfn_to_kaddr(pfn) + offset, csize);
++	} else{
++
++		mapped = kzalloc(sizeof(struct iommu_remapped_entry),
++				GFP_KERNEL);
++		if (!mapped)
++			return -ENOMEM;
++
++		virt_mem = ioremap_cache((unsigned long)from, size);
++		if (!virt_mem) {
++			kfree(mapped);
++			return -ENOMEM;
++		}
++		memcpy(to, virt_mem, size);
++
++		mutex_lock(&__iommu_mem_list_lock);
++		mapped->mem = virt_mem;
++		list_add_tail(&mapped->list, &__iommu_remapped_mem);
++		mutex_unlock(&__iommu_mem_list_lock);
++	}
++	return size;
++}
++
++/*
++ * Copy memory from a virtually-addressed area into a physically-addressed area
++ */
++int __iommu_save_to_oldmem(unsigned long to, void *from, unsigned long size)
++{
++	unsigned long pfn;		/* Page Frame Number */
++	size_t csize = (size_t)size;	/* Num(bytes to copy) */
++	unsigned long offset;		/* Lower 12 bits of to */
++	void __iomem *virt_mem;
++	struct iommu_remapped_entry *mapped;
++
++	pfn = to >> VTD_PAGE_SHIFT;
++	offset = to & (~VTD_PAGE_MASK);
++
++	if (page_is_ram(pfn)) {
++		memcpy(pfn_to_kaddr(pfn) + offset, from, csize);
++	} else{
++		mapped = kzalloc(sizeof(struct iommu_remapped_entry),
++				GFP_KERNEL);
++		if (!mapped)
++			return -ENOMEM;
++
++		virt_mem = ioremap_cache((unsigned long)to, size);
++		if (!virt_mem) {
++			kfree(mapped);
++			return -ENOMEM;
++		}
++		memcpy(virt_mem, from, size);
++		mutex_lock(&__iommu_mem_list_lock);
++		mapped->mem = virt_mem;
++		list_add_tail(&mapped->list, &__iommu_remapped_mem);
++		mutex_unlock(&__iommu_mem_list_lock);
++	}
++	return size;
++}
++
++/*
++ * Free the mapped memory for ioremap;
++ */
++int __iommu_free_mapped_mem(void)
++{
++	struct iommu_remapped_entry *mem_entry, *tmp;
++
++	mutex_lock(&__iommu_mem_list_lock);
++	list_for_each_entry_safe(mem_entry, tmp, &__iommu_remapped_mem, list) {
++		iounmap(mem_entry->mem);
++		list_del(&mem_entry->list);
++		kfree(mem_entry);
++	}
++	mutex_unlock(&__iommu_mem_list_lock);
++	return 0;
++}
++/*
+  * Interfaces for when a new domain in the crashdump kernel needs some
+  * values from the panicked kernel's context entries
+  *
+diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+index a65208a..8ffa523 100644
+--- a/include/linux/intel-iommu.h
++++ b/include/linux/intel-iommu.h
+@@ -26,6 +26,7 @@
+ #include <linux/iova.h>
+ #include <linux/io.h>
+ #include <linux/dma_remapping.h>
++#include <linux/crash_dump.h>
+ #include <asm/cacheflush.h>
+ #include <asm/iommu.h>
+ 
+@@ -368,4 +369,12 @@ extern int dmar_ir_support(void);
+ 
+ extern const struct attribute_group *intel_iommu_groups[];
+ 
++#ifdef CONFIG_CRASH_DUMP
++extern int __iommu_load_from_oldmem(void *to, unsigned long from,
++					unsigned long size);
++extern int __iommu_save_to_oldmem(unsigned long to, void *from,
++					unsigned long size);
++extern int __iommu_free_mapped_mem(void);
++#endif /* CONFIG_CRASH_DUMP */
++
+ #endif
 -- 
-1.7.10.4
+2.0.0-rc0
 
