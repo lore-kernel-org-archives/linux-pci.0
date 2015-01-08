@@ -1,53 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Rob Herring <robh@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:27186 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755576AbbAHCab (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 7 Jan 2015 21:30:31 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 07/16] ARM: integrator: convert PCI to use generic config accesses
-Date: Sat, 10 Jan 2015 22:53:06 +0100
-Message-ID: <4938579.0KIk3QtTCP@wuerfel>
-In-Reply-To: <CACRpkdbwKN9LenqrWeu4WykhdZOGAdxpC_BYr2cYpc2_cn5GfA@mail.gmail.com>
-References: <1420857290-8373-1-git-send-email-robh@kernel.org> <1420857290-8373-8-git-send-email-robh@kernel.org> <CACRpkdbwKN9LenqrWeu4WykhdZOGAdxpC_BYr2cYpc2_cn5GfA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [RFC Patch 04/19] ACPI: Let the parser return false for disabled resources
+Date: Thu,  8 Jan 2015 10:32:51 +0800
+Message-Id: <1420684386-5975-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday 10 January 2015 22:40:22 Linus Walleij wrote:
-> >  static int v3_read_config(struct pci_bus *bus, unsigned int devfn, int where,
-> >                           int size, u32 *val)
-> >  {
-> > -       addr = v3_open_config_window(bus, devfn, where);
-> > +       int ret = pci_generic_config_read(bus, devfn, where, size, val);
-> >         v3_close_config_window();
-> > +       return ret;
-> >  }
-> >
-> >  static int v3_write_config(struct pci_bus *bus, unsigned int devfn, int where,
-> >                            int size, u32 val)
-> >  {
-> > +       int ret = pci_generic_config_write(bus, devfn, where, size, val);
-> >         v3_close_config_window();
-> > -       raw_spin_unlock_irqrestore(&v3_lock, flags);
-> > +       return ret;
-> >  }
-> >
-> >  static struct pci_ops pci_v3_ops = {
-> > +       .map_bus = v3_open_config_window,
-> >         .read   = v3_read_config,
-> >         .write  = v3_write_config,
-> 
-> So .map_bus is called before every .read/.write operation I take it.
-> 
-> Wouldn't it be proper to call the v3_close_config_window() from a
-> matching .unmap_bus() callback for symmetry?
+From: Thomas Gleixner <tglx@linutronix.de>
 
-It would be nicer for integrator but useless for anything else, so
-I'd vote for leaving it the way Rob posted.
+If the parser disables a resource during parsing, let it return false,
+so the calling code does not need to implement further checks.
 
-	Arnd
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/resource.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index c0578c05e2c2..deb70a839f80 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -219,10 +219,10 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+ 		res->flags = IORESOURCE_BUS;
+ 		break;
+ 	default:
+-		res->flags = 0;
++		return false;
+ 	}
+ 
+-	return true;
++	return !(res->flags & IORESOURCE_DISABLED);
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_address_space);
+ 
+@@ -267,10 +267,10 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
+ 		res->flags = IORESOURCE_BUS;
+ 		break;
+ 	default:
+-		res->flags = 0;
++		return false;
+ 	}
+ 
+-	return true;
++	return !(res->flags & IORESOURCE_DISABLED);
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_ext_address_space);
+ 
+-- 
+1.7.10.4
+
