@@ -1,182 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:38543 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752986AbbAECT7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 Jan 2015 21:19:59 -0500
-From: Rob Herring <robh@kernel.org>
-To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Will Deacon <will.deacon@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh@kernel.org>
-Subject: [PATCH] pci: introduce common pci config space accessors
-Date: Sun,  4 Jan 2015 20:19:34 -0600
-Message-Id: <1420424374-32412-1-git-send-email-robh@kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:39197 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755086AbbAHTaZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 Jan 2015 14:30:25 -0500
+Message-ID: <1420745423.25367.77.camel@redhat.com>
+Subject: Re: [PATCH 4/4] PCI: quirk Atheros AR93xx to avoid bus reset
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 08 Jan 2015 12:30:23 -0700
+In-Reply-To: <20150108160733.GA6575@google.com>
+References: <20141121180322.26669.65689.stgit@gimli.home>
+	 <20141121182427.26669.82417.stgit@gimli.home>
+	 <20150108160733.GA6575@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Many PCI controllers' configuration space accesses are memory mapped
-varying only in address calculation and access checks. There are 2 main
-access methods: a decoded address space such as ECAM or a single address
-and data register similar to x86. This implementation can support both
-cases as well as be used in cases that need additional pre or post access
-handling.
+On Thu, 2015-01-08 at 09:07 -0700, Bjorn Helgaas wrote:
+> On Fri, Nov 21, 2014 at 11:24:27AM -0700, Alex Williamson wrote:
+> > Reports against the TL-WDN4800 card indicate that PCI bus reset of
+> > this Atheros device cause system lock-ups and resets.  I've also
+> > been able to confirm this behavior on multiple systems.  The device
+> > never returns from reset and attempts to access config space of the
+> > device after reset result in hangs.  Blacklist bus reset for the
+> > device to avoid this issue.
+> > 
+> > Reported-by: Andreas Hartmann <andihartmann@freenet.de>
+> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > Tested-by: Andreas Hartmann <andihartmann@freenet.de>
+> 
+> If I understand correctly, these two (patches 3 & 4) fix a v3.14 regression
+> caused by 425c1b223dac ("PCI: Add Virtual Channel to save/restore support").
+> 
+> If so, these should go to for-linus for v3.19.  What about patches 1 & 2?
+> Do they fix a regression?  Is there a pointer to a bugzilla or problem
+> report about that issue?
+> 
+> I don't understand the connection between 425c1b223dac and
+> PCI_DEV_FLAGS_NO_BUS_RESET, because 425c1b223dac doesn't seem to do any
+> resets.  Is that the wrong commit, or can you outline the connection for
+> me?
 
-A new pci_ops member map_bus is introduced which can do access checks and
-any necessary setup. It returns the address to use for the configuration
-space access. The access types supported are 32-bit only accesses or
-correct byte, word, or dword sized accesses.
+TBH, I don't have a lot of faith in associating this to 425c1b223dac,
+I'm not sure how Andreas' bisect landed there.  IME, this device cannot,
+and has never been able to handle a bus reset.  A simple setpci
+experiment on the commandline can confirm this.  What I think happened
+is that with the PCI bus reset infrastructure we added, we switched QEMU
+to prefer PCI bus resets over things like PM D3hot->D0 resets.  So it's
+just more prolific use of bus resets by userspace.
 
-Signed-off-by: Rob Herring <robh@kernel.org>
----
+There's also no regression in 1 & 2, PM reset has never done anything
+useful on those devices.  Thanks,
 
-I've converted a few drivers already. I'll send patches for them after
-some feedback on this. Most already have some function similar to what is
-needed for map_bus, so the conversion is pretty simple. This certainly
-isn't a complete list of possible users. The diffstat so far looks like
-this:
+Alex
 
- arch/arm/mach-cns3xxx/pcie.c          |  46 +++-------------------
- arch/arm/mach-integrator/pci_v3.c     |  61 +++---------------------------
- arch/arm/mach-ks8695/pci.c            |  75 +++---------------------------------
- arch/arm/mach-sa1100/pci-nanoengine.c |  94 ++++-----------------------------------------
- arch/powerpc/platforms/powermac/pci.c | 206 +++++++++++++++++++--------------------------------------------------------------------------------
- arch/powerpc/sysdev/fsl_pci.c         |  46 ++--------------------
- drivers/pci/host/pci-host-generic.c   |  51 ++-----------------------
- drivers/pci/host/pci-rcar-gen2.c      |  51 ++-----------------------
- drivers/pci/host/pci-tegra.c          |  55 ++-------------------------
- drivers/pci/host/pci-xgene.c          | 150 +++++-------------------------------------------------------------------
- drivers/pci/host/pcie-xilinx.c        |  88 +++++-------------------------------------
- 11 files changed, 93 insertions(+), 830 deletions(-)
+> > ---
+> > 
+> >  drivers/pci/quirks.c |   14 ++++++++++++++
+> >  1 file changed, 14 insertions(+)
+> > 
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index 561e10d..ebbd5b4 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -3029,6 +3029,20 @@ static void quirk_no_pm_reset(struct pci_dev *dev)
+> >  DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_ATI, PCI_ANY_ID,
+> >  			       PCI_CLASS_DISPLAY_VGA, 8, quirk_no_pm_reset);
+> >  
+> > +static void quirk_no_bus_reset(struct pci_dev *dev)
+> > +{
+> > +	dev->dev_flags |= PCI_DEV_FLAGS_NO_BUS_RESET;
+> > +}
+> > +
+> > +/*
+> > + * Atheros AR93xx chips do not behave after a bus reset.  The device will
+> > + * throw a Link Down error on AER capable system and regardless of AER,
+> > + * config space of the device is never accessible again and typically
+> > + * causes the system to hang or reset when access is attempted.
+> > + * http://www.spinics.net/lists/linux-pci/msg34797.html
+> > + */
+> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0030, quirk_no_bus_reset);
+> > +
+> >  #ifdef CONFIG_ACPI
+> >  /*
+> >   * Apple: Shutdown Cactus Ridge Thunderbolt controller.
+> > 
 
-Rob
 
- drivers/pci/access.c | 83 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h  | 11 +++++++
- 2 files changed, 94 insertions(+)
-
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 49dd766..9a29f7a 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -67,6 +67,89 @@ EXPORT_SYMBOL(pci_bus_write_config_byte);
- EXPORT_SYMBOL(pci_bus_write_config_word);
- EXPORT_SYMBOL(pci_bus_write_config_dword);
-
-+int pci_generic_config_read(struct pci_bus *bus, unsigned int devfn,
-+			    int where, int size, u32 *val)
-+{
-+	void __iomem *addr;
-+
-+	addr = bus->ops->map_bus(bus, devfn, where);
-+	if (!addr) {
-+		*val = ~0;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	if (size == 1)
-+		*val = readb(addr);
-+	else if (size == 2)
-+		*val = readw(addr);
-+	else
-+		*val = readl(addr);
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+int pci_generic_config_write(struct pci_bus *bus, unsigned int devfn,
-+			     int where, int size, u32 val)
-+{
-+	void __iomem *addr;
-+
-+	addr = bus->ops->map_bus(bus, devfn, where);
-+	if (!addr)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	if (size == 1)
-+		writeb(val, addr);
-+	else if (size == 2)
-+		writew(val, addr);
-+	else
-+		writel(val, addr);
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+int pci_generic_config_read32(struct pci_bus *bus, unsigned int devfn,
-+			      int where, int size, u32 *val)
-+{
-+	void __iomem *addr;
-+
-+	addr = bus->ops->map_bus(bus, devfn, where & ~0x3);
-+	if (!addr) {
-+		*val = ~0;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	*val = readl(addr);
-+
-+	if (size <= 2)
-+		*val = (*val >> (8 * (where & 3))) & ((1 << (size * 8)) - 1);
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+int pci_generic_config_write32(struct pci_bus *bus, unsigned int devfn,
-+			       int where, int size, u32 val)
-+{
-+	void __iomem *addr;
-+	u32 mask, tmp;
-+
-+	addr = bus->ops->map_bus(bus, devfn, where & ~0x3);
-+	if (!addr)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	if (size == 4) {
-+		writel(val, addr);
-+		return PCIBIOS_SUCCESSFUL;
-+	} else {
-+		mask = ~(((1 << (size * 8)) - 1) << ((where & 0x3) * 8));
-+	}
-+
-+	tmp = readl(addr) & mask;
-+	tmp |= val << ((where & 0x3) * 8);
-+	writel(tmp, addr);
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
- /**
-  * pci_bus_set_ops - Set raw operations of pci bus
-  * @bus:	pci bus struct
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 360a966..e7fd519 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -560,6 +560,7 @@ static inline int pcibios_err_to_errno(int err)
- /* Low-level architecture-dependent routines */
-
- struct pci_ops {
-+	void __iomem *(*map_bus)(struct pci_bus *bus, unsigned int devfn, int where);
- 	int (*read)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
- 	int (*write)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
- };
-@@ -857,6 +858,16 @@ int pci_bus_write_config_word(struct pci_bus *bus, unsigned int devfn,
- 			      int where, u16 val);
- int pci_bus_write_config_dword(struct pci_bus *bus, unsigned int devfn,
- 			       int where, u32 val);
-+
-+int pci_generic_config_read(struct pci_bus *bus, unsigned int devfn,
-+			    int where, int size, u32 *val);
-+int pci_generic_config_write(struct pci_bus *bus, unsigned int devfn,
-+			    int where, int size, u32 val);
-+int pci_generic_config_read32(struct pci_bus *bus, unsigned int devfn,
-+			      int where, int size, u32 *val);
-+int pci_generic_config_write32(struct pci_bus *bus, unsigned int devfn,
-+			       int where, int size, u32 val);
-+
- struct pci_ops *pci_bus_set_ops(struct pci_bus *bus, struct pci_ops *ops);
-
- static inline int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val)
---
-2.1.0
 
