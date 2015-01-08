@@ -1,463 +1,427 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Russ Anderson <rja@sgi.com>
-Subject: [Patch Part1 v7 22/38] x86/uv: Use hierarchy irqdomain to manage UV interrupts
-Date: Tue, 20 Jan 2015 11:08:25 +0800
-Message-Id: <1421723321-8386-23-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Borislav Petkov <bp@alien8.de>, Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC Patch 19/19] x86/PCI/ACPI: Use common ACPI resource interfaces to simplify implementation
+Date: Thu,  8 Jan 2015 10:33:06 +0800
+Message-Id: <1420684386-5975-20-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance UV code to support hierarchy irqdomain, it helps to make
-the architecture more clear.
+Use common ACPI resource discovery interfaces to simplify PCI host bridge
+resource enumeration.
 
-We should construct hwirq based on mmr_blade and mmr_offset, but
-mmr_offset is type of unsigned long, it may exceed the range of
-irq_hw_number_t. So help about the way to construct hwirq based
-on mmr_blade and mmr_offset is welcomed!
-
-Folded a patch from Dimitri Sivanich <sivanich@sgi.com> to fix a bug
-on UV platforms, please refer to:
-http://lkml.org/lkml/2014/12/16/351
+It also fixes the issue discovered by Thomas that function setup_resource()
+incorrectly validates IO port resources against iomem_resource.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Dimitri Sivanich <sivanich@sgi.com>
-Cc: Russ Anderson <rja@sgi.com>
-Link: http://lkml.kernel.org/r/1416894816-23245-23-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- arch/x86/include/asm/hw_irq.h |    9 ++
- arch/x86/platform/uv/uv_irq.c |  290 ++++++++++++++++-------------------------
- 2 files changed, 119 insertions(+), 180 deletions(-)
+ arch/x86/pci/acpi.c |  297 ++++++++++++++++-----------------------------------
+ 1 file changed, 95 insertions(+), 202 deletions(-)
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 46dec7e37829..bbf90fe2a224 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -123,6 +123,7 @@ enum irq_alloc_type {
- 	X86_IRQ_ALLOC_TYPE_MSI,
- 	X86_IRQ_ALLOC_TYPE_MSIX,
- 	X86_IRQ_ALLOC_TYPE_DMAR,
-+	X86_IRQ_ALLOC_TYPE_UV,
- };
- 
- struct irq_alloc_info {
-@@ -169,6 +170,14 @@ struct irq_alloc_info {
- 			void		*ht_update;
- 		};
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index cfd1b132b8e3..749266c8c671 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -10,9 +10,6 @@
+ struct pci_root_info {
+ 	struct acpi_device *bridge;
+ 	char name[16];
+-	unsigned int res_num;
+-	struct resource *res;
+-	resource_size_t *res_offset;
+ 	struct pci_sysdata sd;
+ #ifdef	CONFIG_PCI_MMCONFIG
+ 	bool mcfg_added;
+@@ -218,130 +215,44 @@ static void teardown_mcfg_map(struct pci_root_info *info)
+ }
  #endif
-+#ifdef	CONFIG_X86_UV
-+		struct {
-+			int		uv_limit;
-+			int		uv_blade;
-+			unsigned long	uv_offset;
-+			char		*uv_name;
-+		};
-+#endif
- 	};
- };
  
-diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
-index 474912d03f40..54af6e388a12 100644
---- a/arch/x86/platform/uv/uv_irq.c
-+++ b/arch/x86/platform/uv/uv_irq.c
-@@ -19,17 +19,31 @@
- #include <asm/uv/uv_hub.h>
+-static acpi_status resource_to_addr(struct acpi_resource *resource,
+-				    struct acpi_resource_address64 *addr)
+-{
+-	acpi_status status;
+-	struct acpi_resource_memory24 *memory24;
+-	struct acpi_resource_memory32 *memory32;
+-	struct acpi_resource_fixed_memory32 *fixed_memory32;
+-
+-	memset(addr, 0, sizeof(*addr));
+-	switch (resource->type) {
+-	case ACPI_RESOURCE_TYPE_MEMORY24:
+-		memory24 = &resource->data.memory24;
+-		addr->resource_type = ACPI_MEMORY_RANGE;
+-		addr->minimum = memory24->minimum;
+-		addr->address_length = memory24->address_length;
+-		addr->maximum = addr->minimum + addr->address_length - 1;
+-		return AE_OK;
+-	case ACPI_RESOURCE_TYPE_MEMORY32:
+-		memory32 = &resource->data.memory32;
+-		addr->resource_type = ACPI_MEMORY_RANGE;
+-		addr->minimum = memory32->minimum;
+-		addr->address_length = memory32->address_length;
+-		addr->maximum = addr->minimum + addr->address_length - 1;
+-		return AE_OK;
+-	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
+-		fixed_memory32 = &resource->data.fixed_memory32;
+-		addr->resource_type = ACPI_MEMORY_RANGE;
+-		addr->minimum = fixed_memory32->address;
+-		addr->address_length = fixed_memory32->address_length;
+-		addr->maximum = addr->minimum + addr->address_length - 1;
+-		return AE_OK;
+-	case ACPI_RESOURCE_TYPE_ADDRESS16:
+-	case ACPI_RESOURCE_TYPE_ADDRESS32:
+-	case ACPI_RESOURCE_TYPE_ADDRESS64:
+-		status = acpi_resource_to_address64(resource, addr);
+-		if (ACPI_SUCCESS(status) &&
+-		    (addr->resource_type == ACPI_MEMORY_RANGE ||
+-		    addr->resource_type == ACPI_IO_RANGE) &&
+-		    addr->address_length > 0) {
+-			return AE_OK;
+-		}
+-		break;
+-	}
+-	return AE_ERROR;
+-}
+-
+-static acpi_status count_resource(struct acpi_resource *acpi_res, void *data)
++static void validate_resources(struct device *dev, struct list_head *crs_res,
++			       unsigned long type)
+ {
+-	struct pci_root_info *info = data;
+-	struct acpi_resource_address64 addr;
+-	acpi_status status;
+-
+-	status = resource_to_addr(acpi_res, &addr);
+-	if (ACPI_SUCCESS(status))
+-		info->res_num++;
+-	return AE_OK;
+-}
+-
+-static acpi_status setup_resource(struct acpi_resource *acpi_res, void *data)
+-{
+-	struct pci_root_info *info = data;
+-	struct resource *res;
+-	struct acpi_resource_address64 addr;
+-	acpi_status status;
+-	unsigned long flags;
+-	u64 start, orig_end, end;
+-
+-	status = resource_to_addr(acpi_res, &addr);
+-	if (!ACPI_SUCCESS(status))
+-		return AE_OK;
+-
+-	if (addr.resource_type == ACPI_MEMORY_RANGE) {
+-		flags = IORESOURCE_MEM;
+-		if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
+-			flags |= IORESOURCE_PREFETCH;
+-	} else if (addr.resource_type == ACPI_IO_RANGE) {
+-		flags = IORESOURCE_IO;
+-	} else
+-		return AE_OK;
+-
+-	start = addr.minimum + addr.translation_offset;
+-	orig_end = end = addr.maximum + addr.translation_offset;
+-
+-	/* Exclude non-addressable range or non-addressable portion of range */
+-	end = min(end, (u64)iomem_resource.end);
+-	if (end <= start) {
+-		dev_info(&info->bridge->dev,
+-			"host bridge window [%#llx-%#llx] "
+-			"(ignored, not CPU addressable)\n", start, orig_end);
+-		return AE_OK;
+-	} else if (orig_end != end) {
+-		dev_info(&info->bridge->dev,
+-			"host bridge window [%#llx-%#llx] "
+-			"([%#llx-%#llx] ignored, not CPU addressable)\n", 
+-			start, orig_end, end + 1, orig_end);
+-	}
++	LIST_HEAD(list);
++	struct resource *res1, *res2, *root = NULL;
++	struct resource_list_entry *tmp, *entry, *entry2;
  
- /* MMR offset and pnode of hub sourcing interrupts for a given irq */
--struct uv_irq_2_mmr_pnode{
--	struct rb_node		list;
-+struct uv_irq_2_mmr_pnode {
- 	unsigned long		offset;
- 	int			pnode;
--	int			irq;
- };
+-	res = &info->res[info->res_num];
+-	res->name = info->name;
+-	res->flags = flags;
+-	res->start = start;
+-	res->end = end;
+-	info->res_offset[info->res_num] = addr.translation_offset;
+-	info->res_num++;
++	BUG_ON((type & (IORESOURCE_MEM | IORESOURCE_IO)) == 0);
++	root = (type & IORESOURCE_MEM) ? &iomem_resource : &ioport_resource;
  
--static DEFINE_SPINLOCK(uv_irq_lock);
--static struct rb_root		uv_irq_root;
-+static void uv_program_mmr(struct irq_cfg *cfg, struct uv_irq_2_mmr_pnode *info)
-+{
-+	unsigned long mmr_value;
-+	struct uv_IO_APIC_route_entry *entry;
+-	if (!pci_use_crs)
+-		dev_printk(KERN_DEBUG, &info->bridge->dev,
+-			   "host bridge window %pR (ignored)\n", res);
++	list_splice_init(crs_res, &list);
++	resource_list_for_each_entry_safe(entry, tmp, &list) {
++		bool free = false;
++		resource_size_t end;
+ 
+-	return AE_OK;
+-}
+-
+-static void coalesce_windows(struct pci_root_info *info, unsigned long type)
+-{
+-	int i, j;
+-	struct resource *res1, *res2;
+-
+-	for (i = 0; i < info->res_num; i++) {
+-		res1 = &info->res[i];
++		res1 = entry->res;
+ 		if (!(res1->flags & type))
+-			continue;
++			goto next;
 +
-+	BUILD_BUG_ON(sizeof(struct uv_IO_APIC_route_entry) !=
-+		     sizeof(unsigned long));
++		/* Exclude non-addressable range or non-addressable portion */
++		end = min(res1->end, root->end);
++		if (end <= res1->start) {
++			dev_info(dev, "host bridge window [%#llx-%#llx] (ignored, not CPU addressable)\n",
++				 (unsigned long long)res1->start,
++				 (unsigned long long)res1->end);
++			free = true;
++			goto next;
++		} else if (res1->end != end) {
++			dev_info(dev, "host bridge window [%#llx-%#llx] ([%#llx-%#llx] ignored, not CPU addressable)\n",
++				 (unsigned long long)res1->start,
++				 (unsigned long long)res1->end,
++				 (unsigned long long)end + 1,
++				 (unsigned long long)res1->end);
++			res1->end = end;
++		}
+ 
+-		for (j = i + 1; j < info->res_num; j++) {
+-			res2 = &info->res[j];
++		resource_list_for_each_entry(entry2, crs_res) {
++			res2 = entry2->res;
+ 			if (!(res2->flags & type))
+ 				continue;
+ 
+@@ -353,118 +264,93 @@ static void coalesce_windows(struct pci_root_info *info, unsigned long type)
+ 			if (resource_overlaps(res1, res2)) {
+ 				res2->start = min(res1->start, res2->start);
+ 				res2->end = max(res1->end, res2->end);
+-				dev_info(&info->bridge->dev,
+-					 "host bridge window expanded to %pR; %pR ignored\n",
++				dev_info(dev, "host bridge window expanded to %pR; %pR ignored\n",
+ 					 res2, res1);
+-				res1->flags = 0;
++				free = true;
++				goto next;
+ 			}
+ 		}
 +
-+	mmr_value = 0;
-+	entry = (struct uv_IO_APIC_route_entry *)&mmr_value;
-+	entry->vector		= cfg->vector;
-+	entry->delivery_mode	= apic->irq_delivery_mode;
-+	entry->dest_mode	= apic->irq_dest_mode;
-+	entry->polarity		= 0;
-+	entry->trigger		= 0;
-+	entry->mask		= 0;
-+	entry->dest		= cfg->dest_apicid;
- 
--static int uv_set_irq_affinity(struct irq_data *, const struct cpumask *, bool);
-+	uv_write_global_mmr64(info->pnode, info->offset, mmr_value);
-+}
- 
- static void uv_noop(struct irq_data *data) { }
- 
-@@ -38,6 +52,24 @@ static void uv_ack_apic(struct irq_data *data)
- 	ack_APIC_irq();
++next:
++		resource_list_delete(entry);
++		if (free)
++			resource_list_free(entry);
++		else
++			resource_list_insert(crs_res, entry, true);
+ 	}
  }
  
-+static int
-+uv_set_irq_affinity(struct irq_data *data, const struct cpumask *mask,
-+		    bool force)
-+{
-+	struct irq_data *parent = data->parent_data;
-+	struct irq_cfg *cfg = irqd_cfg(data);
-+	int ret;
-+
-+	ret = parent->chip->irq_set_affinity(parent, mask, force);
-+	if (ret >= 0) {
-+		uv_program_mmr(cfg, data->chip_data);
-+		if (cfg->move_in_progress)
-+			send_cleanup_vector(cfg);
-+	}
-+
-+	return ret;
-+}
-+
- static struct irq_chip uv_irq_chip = {
- 	.name			= "UV-CORE",
- 	.irq_mask		= uv_noop,
-@@ -46,179 +78,99 @@ static struct irq_chip uv_irq_chip = {
- 	.irq_set_affinity	= uv_set_irq_affinity,
- };
- 
--/*
-- * Add offset and pnode information of the hub sourcing interrupts to the
-- * rb tree for a specific irq.
-- */
--static int uv_set_irq_2_mmr_info(int irq, unsigned long offset, unsigned blade)
-+static int uv_domain_alloc(struct irq_domain *domain, unsigned int virq,
-+			   unsigned int nr_irqs, void *arg)
+ static void add_resources(struct pci_root_info *info,
+-			  struct list_head *resources)
++			  struct list_head *resources,
++			  struct list_head *crs_res)
  {
--	struct rb_node **link = &uv_irq_root.rb_node;
--	struct rb_node *parent = NULL;
--	struct uv_irq_2_mmr_pnode *n;
--	struct uv_irq_2_mmr_pnode *e;
--	unsigned long irqflags;
+-	int i;
+-	struct resource *res, *root, *conflict;
 -
--	n = kmalloc_node(sizeof(struct uv_irq_2_mmr_pnode), GFP_KERNEL,
--				uv_blade_to_memory_nid(blade));
--	if (!n)
-+	struct uv_irq_2_mmr_pnode *chip_data;
-+	struct irq_alloc_info *info = arg;
-+	struct irq_data *irq_data = irq_domain_get_irq_data(domain, virq);
-+	int ret;
-+
-+	if (nr_irqs > 1 || !info || info->type != X86_IRQ_ALLOC_TYPE_UV)
-+		return -EINVAL;
-+
-+	chip_data = kmalloc_node(sizeof(*chip_data), GFP_KERNEL,
-+				 irq_data->node);
-+	if (!chip_data)
- 		return -ENOMEM;
+-	coalesce_windows(info, IORESOURCE_MEM);
+-	coalesce_windows(info, IORESOURCE_IO);
++	struct resource_list_entry *entry, *tmp;
++	struct resource *res, *conflict, *root = NULL;
  
--	n->irq = irq;
--	n->offset = offset;
--	n->pnode = uv_blade_to_pnode(blade);
--	spin_lock_irqsave(&uv_irq_lock, irqflags);
--	/* Find the right place in the rbtree: */
--	while (*link) {
--		parent = *link;
--		e = rb_entry(parent, struct uv_irq_2_mmr_pnode, list);
--
--		if (unlikely(irq == e->irq)) {
--			/* irq entry exists */
--			e->pnode = uv_blade_to_pnode(blade);
--			e->offset = offset;
--			spin_unlock_irqrestore(&uv_irq_lock, irqflags);
--			kfree(n);
--			return 0;
--		}
--
--		if (irq < e->irq)
--			link = &(*link)->rb_left;
-+	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
-+	if (ret >= 0) {
-+		if (info->uv_limit == UV_AFFINITY_CPU)
-+			irq_set_status_flags(virq, IRQ_NO_BALANCING);
+-	for (i = 0; i < info->res_num; i++) {
+-		res = &info->res[i];
++	validate_resources(&info->bridge->dev, crs_res, IORESOURCE_MEM);
++	validate_resources(&info->bridge->dev, crs_res, IORESOURCE_IO);
+ 
++	resource_list_for_each_entry_safe(entry, tmp, crs_res) {
++		res = entry->res;
+ 		if (res->flags & IORESOURCE_MEM)
+ 			root = &iomem_resource;
+ 		else if (res->flags & IORESOURCE_IO)
+ 			root = &ioport_resource;
  		else
--			link = &(*link)->rb_right;
-+			irq_set_status_flags(virq, IRQ_MOVE_PCNTXT);
-+
-+		chip_data->pnode = uv_blade_to_pnode(info->uv_blade);
-+		chip_data->offset = info->uv_offset;
-+		irq_domain_set_info(domain, virq, virq, &uv_irq_chip, chip_data,
-+				    handle_percpu_irq, NULL, info->uv_name);
-+	} else {
-+		kfree(chip_data);
+-			continue;
++			BUG_ON(res);
+ 
+ 		conflict = insert_resource_conflict(root, res);
+-		if (conflict)
++		if (conflict) {
+ 			dev_info(&info->bridge->dev,
+ 				 "ignoring host bridge window %pR (conflicts with %s %pR)\n",
+ 				 res, conflict->name, conflict);
+-		else
+-			pci_add_resource_offset(resources, res,
+-					info->res_offset[i]);
++			resource_list_delete(entry);
++			resource_list_free(entry);
++		}
+ 	}
+-}
+ 
+-static void free_pci_root_info_res(struct pci_root_info *info)
+-{
+-	kfree(info->res);
+-	info->res = NULL;
+-	kfree(info->res_offset);
+-	info->res_offset = NULL;
+-	info->res_num = 0;
++	list_splice_tail(crs_res, resources);
+ }
+ 
+-static void __release_pci_root_info(struct pci_root_info *info)
++static void release_pci_root_info(struct pci_host_bridge *bridge)
+ {
+-	int i;
+ 	struct resource *res;
++	struct resource_list_entry *entry;
++	struct pci_root_info *info = bridge->release_data;
+ 
+-	for (i = 0; i < info->res_num; i++) {
+-		res = &info->res[i];
+-
+-		if (!res->parent)
+-			continue;
+-
+-		if (!(res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
+-			continue;
+-
+-		release_resource(res);
++	resource_list_for_each_entry(entry, &bridge->windows) {
++		res = entry->res;
++		if (res->parent &&
++		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
++			release_resource(res);
  	}
  
--	/* Insert the node into the rbtree. */
--	rb_link_node(&n->list, parent, link);
--	rb_insert_color(&n->list, &uv_irq_root);
+-	free_pci_root_info_res(info);
 -
--	spin_unlock_irqrestore(&uv_irq_lock, irqflags);
--	return 0;
-+	return ret;
+ 	teardown_mcfg_map(info);
+-
+ 	kfree(info);
  }
  
--/* Retrieve offset and pnode information from the rb tree for a specific irq */
--int uv_irq_2_mmr_info(int irq, unsigned long *offset, int *pnode)
-+static void uv_domain_free(struct irq_domain *domain, unsigned int virq,
-+			   unsigned int nr_irqs)
- {
--	struct uv_irq_2_mmr_pnode *e;
--	struct rb_node *n;
--	unsigned long irqflags;
--
--	spin_lock_irqsave(&uv_irq_lock, irqflags);
--	n = uv_irq_root.rb_node;
--	while (n) {
--		e = rb_entry(n, struct uv_irq_2_mmr_pnode, list);
--
--		if (e->irq == irq) {
--			*offset = e->offset;
--			*pnode = e->pnode;
--			spin_unlock_irqrestore(&uv_irq_lock, irqflags);
--			return 0;
--		}
--
--		if (irq < e->irq)
--			n = n->rb_left;
--		else
--			n = n->rb_right;
--	}
--	spin_unlock_irqrestore(&uv_irq_lock, irqflags);
--	return -1;
-+	struct irq_data *irq_data = irq_domain_get_irq_data(domain, virq);
-+
-+	BUG_ON(nr_irqs != 1);
-+	kfree(irq_data->chip_data);
-+	irq_clear_status_flags(virq, IRQ_MOVE_PCNTXT);
-+	irq_clear_status_flags(virq, IRQ_NO_BALANCING);
-+	irq_domain_free_irqs_top(domain, virq, nr_irqs);
- }
- 
- /*
-  * Re-target the irq to the specified CPU and enable the specified MMR located
-  * on the specified blade to allow the sending of MSIs to the specified CPU.
-  */
--static int
--arch_enable_uv_irq(char *irq_name, unsigned int irq, int cpu, int mmr_blade,
--		       unsigned long mmr_offset, int limit)
-+static void uv_domain_activate(struct irq_domain *domain,
-+			       struct irq_data *irq_data)
- {
--	struct irq_cfg *cfg = irq_cfg(irq);
--	unsigned long mmr_value;
--	struct uv_IO_APIC_route_entry *entry;
--	int mmr_pnode;
--
--	BUILD_BUG_ON(sizeof(struct uv_IO_APIC_route_entry) !=
--			sizeof(unsigned long));
--
--	if (limit == UV_AFFINITY_CPU)
--		irq_set_status_flags(irq, IRQ_NO_BALANCING);
--	else
--		irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
--
--	irq_set_chip_and_handler_name(irq, &uv_irq_chip, handle_percpu_irq,
--				      irq_name);
--
--	mmr_value = 0;
--	entry = (struct uv_IO_APIC_route_entry *)&mmr_value;
--	entry->vector		= cfg->vector;
--	entry->delivery_mode	= apic->irq_delivery_mode;
--	entry->dest_mode	= apic->irq_dest_mode;
--	entry->polarity		= 0;
--	entry->trigger		= 0;
--	entry->mask		= 0;
--	entry->dest		= cfg->dest_apicid;
--
--	mmr_pnode = uv_blade_to_pnode(mmr_blade);
--	uv_write_global_mmr64(mmr_pnode, mmr_offset, mmr_value);
--
--	if (cfg->move_in_progress)
--		send_cleanup_vector(cfg);
--
--	return irq;
-+	uv_program_mmr(irqd_cfg(irq_data), irq_data->chip_data);
- }
- 
- /*
-  * Disable the specified MMR located on the specified blade so that MSIs are
-  * longer allowed to be sent.
-  */
--static void arch_disable_uv_irq(int mmr_pnode, unsigned long mmr_offset)
-+static void uv_domain_deactivate(struct irq_domain *domain,
-+				 struct irq_data *irq_data)
- {
- 	unsigned long mmr_value;
- 	struct uv_IO_APIC_route_entry *entry;
- 
--	BUILD_BUG_ON(sizeof(struct uv_IO_APIC_route_entry) !=
--			sizeof(unsigned long));
--
- 	mmr_value = 0;
- 	entry = (struct uv_IO_APIC_route_entry *)&mmr_value;
- 	entry->mask = 1;
--
--	uv_write_global_mmr64(mmr_pnode, mmr_offset, mmr_value);
-+	uv_program_mmr(irqd_cfg(irq_data), irq_data->chip_data);
- }
- 
--static int
--uv_set_irq_affinity(struct irq_data *data, const struct cpumask *mask,
--		    bool force)
+-static void release_pci_root_info(struct pci_host_bridge *bridge)
 -{
--	struct irq_cfg *cfg = irqd_cfg(data);
--	unsigned int dest;
--	unsigned long mmr_value, mmr_offset;
--	struct uv_IO_APIC_route_entry *entry;
--	int mmr_pnode;
+-	struct pci_root_info *info = bridge->release_data;
 -
--	if (apic_set_affinity(data, mask, &dest))
--		return -1;
+-	__release_pci_root_info(info);
+-}
 -
--	mmr_value = 0;
--	entry = (struct uv_IO_APIC_route_entry *)&mmr_value;
--
--	entry->vector		= cfg->vector;
--	entry->delivery_mode	= apic->irq_delivery_mode;
--	entry->dest_mode	= apic->irq_dest_mode;
--	entry->polarity		= 0;
--	entry->trigger		= 0;
--	entry->mask		= 0;
--	entry->dest		= dest;
--
--	/* Get previously stored MMR and pnode of hub sourcing interrupts */
--	if (uv_irq_2_mmr_info(data->irq, &mmr_offset, &mmr_pnode))
--		return -1;
--
--	uv_write_global_mmr64(mmr_pnode, mmr_offset, mmr_value);
-+static struct irq_domain_ops uv_domain_ops = {
-+	.alloc = uv_domain_alloc,
-+	.free = uv_domain_free,
-+	.activate = uv_domain_activate,
-+	.deactivate = uv_domain_deactivate,
-+};
- 
--	if (cfg->move_in_progress)
--		send_cleanup_vector(cfg);
-+static struct irq_domain *uv_get_irq_domain(void)
-+{
-+	static struct irq_domain *uv_domain;
-+	static DEFINE_MUTEX(uv_lock);
-+
-+	mutex_lock(&uv_lock);
-+	if (uv_domain == NULL) {
-+		uv_domain = irq_domain_add_tree(NULL, &uv_domain_ops, NULL);
-+		if (uv_domain)
-+			uv_domain->parent = x86_vector_domain;
-+	}
-+	mutex_unlock(&uv_lock);
- 
--	return IRQ_SET_MASK_OK_NOCOPY;
-+	return uv_domain;
- }
- 
- /*
-@@ -229,23 +181,21 @@ uv_set_irq_affinity(struct irq_data *data, const struct cpumask *mask,
- int uv_setup_irq(char *irq_name, int cpu, int mmr_blade,
- 		 unsigned long mmr_offset, int limit)
+ static void probe_pci_root_info(struct pci_root_info *info,
+ 				struct acpi_device *device,
+-				int busnum, int domain)
++				int busnum, int domain,
++				struct list_head *list)
  {
--	int ret, irq;
- 	struct irq_alloc_info info;
-+	struct irq_domain *domain = uv_get_irq_domain();
+-	size_t size;
++	int ret;
++	struct resource_list_entry *entry;
  
--	init_irq_alloc_info(&info, cpumask_of(cpu));
--	irq = irq_domain_alloc_irqs(NULL, 1, uv_blade_to_memory_nid(mmr_blade),
--				    &info);
--	if (irq <= 0)
--		return -EBUSY;
+ 	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
+ 	info->bridge = device;
 -
--	ret = arch_enable_uv_irq(irq_name, irq, cpu, mmr_blade, mmr_offset,
--		limit);
--	if (ret == irq)
--		uv_set_irq_2_mmr_info(irq, mmr_offset, mmr_blade);
--	else
--		irq_domain_free_irqs(irq, 1);
-+	if (!domain)
-+		return -ENOMEM;
- 
--	return ret;
-+	init_irq_alloc_info(&info, cpumask_of(cpu));
-+	info.type = X86_IRQ_ALLOC_TYPE_UV;
-+	info.uv_limit = limit;
-+	info.uv_blade = mmr_blade;
-+	info.uv_offset = mmr_offset;
-+	info.uv_name = irq_name;
-+
-+	return irq_domain_alloc_irqs(domain, 1,
-+				     uv_blade_to_memory_nid(mmr_blade), &info);
- }
- EXPORT_SYMBOL_GPL(uv_setup_irq);
- 
-@@ -258,26 +208,6 @@ EXPORT_SYMBOL_GPL(uv_setup_irq);
-  */
- void uv_teardown_irq(unsigned int irq)
- {
--	struct uv_irq_2_mmr_pnode *e;
--	struct rb_node *n;
--	unsigned long irqflags;
+-	info->res_num = 0;
+-	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
+-				info);
+-	if (!info->res_num)
+-		return;
 -
--	spin_lock_irqsave(&uv_irq_lock, irqflags);
--	n = uv_irq_root.rb_node;
--	while (n) {
--		e = rb_entry(n, struct uv_irq_2_mmr_pnode, list);
--		if (e->irq == irq) {
--			arch_disable_uv_irq(e->pnode, e->offset);
--			rb_erase(n, &uv_irq_root);
--			kfree(e);
--			break;
--		}
--		if (irq < e->irq)
--			n = n->rb_left;
--		else
--			n = n->rb_right;
+-	size = sizeof(*info->res) * info->res_num;
+-	info->res = kzalloc_node(size, GFP_KERNEL, info->sd.node);
+-	if (!info->res) {
+-		info->res_num = 0;
+-		return;
 -	}
--	spin_unlock_irqrestore(&uv_irq_lock, irqflags);
- 	irq_domain_free_irqs(irq, 1);
+-
+-	size = sizeof(*info->res_offset) * info->res_num;
+-	info->res_num = 0;
+-	info->res_offset = kzalloc_node(size, GFP_KERNEL, info->sd.node);
+-	if (!info->res_offset) {
+-		kfree(info->res);
+-		info->res = NULL;
+-		return;
+-	}
+-
+-	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
+-				info);
++	ret = acpi_dev_get_resources(device, list,
++				     acpi_dev_filter_resource_type,
++				     (void *)(IORESOURCE_IO | IORESOURCE_MEM));
++	if (ret < 0)
++		dev_warn(&device->dev,
++			 "failed to parse _CRS method, error code %d.\n", ret);
++	else if (ret == 0)
++		dev_dbg(&device->dev,
++			"no IO and memory resources present in _CRS.\n");
++	else
++		resource_list_for_each_entry(entry, list)
++			entry->res->name = info->name;
  }
- EXPORT_SYMBOL_GPL(uv_teardown_irq);
+ 
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+@@ -473,6 +359,8 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	struct pci_root_info *info;
+ 	int domain = root->segment;
+ 	int busnum = root->secondary.start;
++	struct resource_list_entry *res_entry;
++	LIST_HEAD(crs_res);
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *bus;
+ 	struct pci_sysdata *sd;
+@@ -520,18 +408,22 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		memcpy(bus->sysdata, sd, sizeof(*sd));
+ 		kfree(info);
+ 	} else {
+-		probe_pci_root_info(info, device, busnum, domain);
+-
+ 		/* insert busn res at first */
+ 		pci_add_resource(&resources,  &root->secondary);
++
+ 		/*
+ 		 * _CRS with no apertures is normal, so only fall back to
+ 		 * defaults or native bridge info if we're ignoring _CRS.
+ 		 */
+-		if (pci_use_crs)
+-			add_resources(info, &resources);
+-		else {
+-			free_pci_root_info_res(info);
++		probe_pci_root_info(info, device, busnum, domain, &crs_res);
++		if (pci_use_crs) {
++			add_resources(info, &resources, &crs_res);
++		} else {
++			resource_list_for_each_entry(res_entry, &crs_res)
++				dev_printk(KERN_DEBUG, &device->dev,
++					   "host bridge window %pR (ignored)\n",
++					   res_entry->res);
++			resource_list_free_list(&crs_res);
+ 			x86_pci_root_bus_resources(busnum, &resources);
+ 		}
+ 
+@@ -546,8 +438,9 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 				to_pci_host_bridge(bus->bridge),
+ 				release_pci_root_info, info);
+ 		} else {
+-			pci_free_resource_list(&resources);
+-			__release_pci_root_info(info);
++			resource_list_free_list(&resources);
++			teardown_mcfg_map(info);
++			kfree(info);
+ 		}
+ 	}
+ 
 -- 
 1.7.10.4
 
