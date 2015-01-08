@@ -1,41 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og106.obsmtp.com ([64.18.0.182]:33019 "HELO
-	exprod5og106.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751831AbbAFQVs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jan 2015 11:21:48 -0500
-Received: by mail-pa0-f42.google.com with SMTP id et14so31223236pad.15
-        for <linux-pci@vger.kernel.org>; Tue, 06 Jan 2015 08:21:48 -0800 (PST)
-From: Duc Dang <dhdang@apm.com>
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:58124 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932418AbbAHRGi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jan 2015 12:06:38 -0500
+From: Marc Zyngier <marc.zyngier@arm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Tanmay Inamdar <tinamdar@apm.com>, Loc Ho <lho@apm.com>,
-	Feng Kan <fkan@apm.com>, Duc Dang <dhdang@apm.com>
-Subject: [PATCH 0/4] PCI: X-Gene: Add APM X-Gene v1 MSI/MSIX termination driver
-Date: Tue,  6 Jan 2015 08:15:40 -0800
-Message-Id: <cover.1420499393.git.dhdang@apm.com>
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH v2 6/8] irqchip: GICv2m: Get rid of struct msi_controller
+Date: Thu,  8 Jan 2015 17:06:10 +0000
+Message-Id: <1420736772-11088-7-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com>
+References: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set adds MSI/MSIX termination driver support for APM X-Gene v1 SoC.
-APM X-Gene v1 SoC supports its own implementation of MSI, which is not compliant
-to GIC V2M specification for MSI Termination.
+GICv2m only uses the msi_controller structure as a way to match
+the PHB with its MSI HW, and thus the msi_domain. But now that
+we can directly associate an msi_domain with a device, there is
+no use keeping this msi_controller around.
 
-There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports. This MSI
-block supports 2688 MSI termination ports coalesced into 16 physical HW IRQ lines 
-and shared across all 5 PCIe ports.
+Just remove all traces of msi_controller from the driver.
 
- .../devicetree/bindings/pci/xgene-pci-msi.txt      |  34 ++
- MAINTAINERS                                        |   8 +
- arch/arm64/boot/dts/apm/apm-storm.dtsi             |  21 ++
- drivers/pci/host/Kconfig                           |   4 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-xgene-msi.c                   | 370 +++++++++++++++++++++
- 6 files changed, 438 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
- create mode 100644 drivers/pci/host/pci-xgene-msi.c
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/irqchip/irq-gic-v2m.c | 26 +++++++++-----------------
+ 1 file changed, 9 insertions(+), 17 deletions(-)
 
+diff --git a/drivers/irqchip/irq-gic-v2m.c b/drivers/irqchip/irq-gic-v2m.c
+index fdf7065..a76b802 100644
+--- a/drivers/irqchip/irq-gic-v2m.c
++++ b/drivers/irqchip/irq-gic-v2m.c
+@@ -45,7 +45,6 @@
+ 
+ struct v2m_data {
+ 	spinlock_t msi_cnt_lock;
+-	struct msi_controller mchip;
+ 	struct resource res;	/* GICv2m resource */
+ 	void __iomem *base;	/* GICv2m virt address */
+ 	u32 spi_start;		/* The SPI number that MSIs start */
+@@ -218,6 +217,7 @@ static int __init gicv2m_init_one(struct device_node *node,
+ {
+ 	int ret;
+ 	struct v2m_data *v2m;
++	struct irq_domain *inner_domain;
+ 
+ 	v2m = kzalloc(sizeof(struct v2m_data), GFP_KERNEL);
+ 	if (!v2m) {
+@@ -261,19 +261,17 @@ static int __init gicv2m_init_one(struct device_node *node,
+ 		goto err_iounmap;
+ 	}
+ 
+-	v2m->domain = irq_domain_add_tree(NULL, &gicv2m_domain_ops, v2m);
+-	if (!v2m->domain) {
++	inner_domain = irq_domain_add_tree(NULL, &gicv2m_domain_ops, v2m);
++	if (!inner_domain) {
+ 		pr_err("Failed to create GICv2m domain\n");
+ 		ret = -ENOMEM;
+ 		goto err_free_bm;
+ 	}
+ 
+-	v2m->domain->parent = parent;
+-	v2m->mchip.of_node = node;
+-	v2m->mchip.domain = pci_msi_create_irq_domain(node,
+-						      &gicv2m_msi_domain_info,
+-						      v2m->domain);
+-	if (!v2m->mchip.domain) {
++	inner_domain->parent = parent;
++	v2m->domain = pci_msi_create_irq_domain(node, &gicv2m_msi_domain_info,
++						inner_domain);
++	if (!v2m->domain) {
+ 		pr_err("Failed to create MSI domain\n");
+ 		ret = -ENOMEM;
+ 		goto err_free_domains;
+@@ -281,12 +279,6 @@ static int __init gicv2m_init_one(struct device_node *node,
+ 
+ 	spin_lock_init(&v2m->msi_cnt_lock);
+ 
+-	ret = of_pci_msi_chip_add(&v2m->mchip);
+-	if (ret) {
+-		pr_err("Failed to add msi_chip.\n");
+-		goto err_free_domains;
+-	}
+-
+ 	pr_info("Node %s: range[%#lx:%#lx], SPI[%d:%d]\n", node->name,
+ 		(unsigned long)v2m->res.start, (unsigned long)v2m->res.end,
+ 		v2m->spi_start, (v2m->spi_start + v2m->nr_spis));
+@@ -294,10 +286,10 @@ static int __init gicv2m_init_one(struct device_node *node,
+ 	return 0;
+ 
+ err_free_domains:
+-	if (v2m->mchip.domain)
+-		irq_domain_remove(v2m->mchip.domain);
+ 	if (v2m->domain)
+ 		irq_domain_remove(v2m->domain);
++	if (inner_domain)
++		irq_domain_remove(inner_domain);
+ err_free_bm:
+ 	kfree(v2m->bm);
+ err_iounmap:
 -- 
-1.9.1
+2.1.4
 
