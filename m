@@ -1,119 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from dliviu.plus.com ([80.229.23.120]:33111 "EHLO smtp.dudau.co.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752361AbbATLbw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 20 Jan 2015 06:31:52 -0500
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by smtp.dudau.co.uk (Postfix) with SMTP id B08D01003B3
-	for <linux-pci@vger.kernel.org>; Tue, 20 Jan 2015 11:25:05 +0000 (GMT)
-Date: Tue, 20 Jan 2015 11:20:32 +0000
-From: Liviu Dudau <liviu@dudau.co.uk>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>
-Subject: Re: [RFC PATCH 1/3] drivers: of: fix resources freeing in
- of_pci_get_host_bridge_resources()
-Message-ID: <20150120112031.GA342@bart.dudau.co.uk>
-References: <1420644571-18928-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1420644571-18928-2-git-send-email-lorenzo.pieralisi@arm.com>
- <20150119183228.GE10762@e106497-lin.cambridge.arm.com>
- <20150120104922.GF5398@red-moon>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20150120104922.GF5398@red-moon>
-Sender: linux-pci-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>, Borislav Petkov <bp@alien8.de>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [RFC Patch 00/19] Improve ACPI resource parsing interfaces and data structures
+Date: Thu,  8 Jan 2015 10:32:47 +0800
+Message-Id: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 20, 2015 at 10:49:22AM +0000, Lorenzo Pieralisi wrote:
-> On Mon, Jan 19, 2015 at 06:32:29PM +0000, Liviu Dudau wrote:
-> 
-> [...]
-> 
-> > > @@ -146,6 +146,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
-> > >  	struct of_pci_range_parser parser;
-> > >  	char range_type[4];
-> > >  	int err;
-> > > +	struct pci_host_bridge_window *window;
-> > >  
-> > >  	if (io_base)
-> > >  		*io_base = (resource_size_t)OF_BAD_ADDR;
-> > > @@ -225,7 +226,10 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
-> > >  conversion_failed:
-> > >  	kfree(res);
-> > >  parse_failed:
-> > > +	list_for_each_entry(window, resources, list)
-> > > +		kfree(window->res);
-> > >  	pci_free_resource_list(resources);
-> > > +	kfree(bus_range);
-> > >  	return err;
-> > >  }
-> > >  EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
-> > 
-> > Hi Lorenzo et all,
-> > 
-> > Here is my personal view and I am happy to hear from others on the desired
-> > behaviour:
-> > 
-> > When I wrote this function what I had in mind was that it will parse as
-> > much as possible from the device tree and return a list of resources that
-> > could be successfully converted. If the entire list of ranges could not
-> > be converted then an error code will be returned, but the caller still
-> > had the list as constructed up to the error. It was the job of the caller
-> > to free the list in either cases, as stated in the comment.
-> 
-> That's what I am questioning. If the function takes an error path, the
-> windows list is freed, so the resource pointers are gone. There is no
-> way the caller can grab those resource pointers and free them.
+During enabling ACPI based IOAPIC hotplug, Thomas noticed some issues
+in ACPI resource parsing interfaces. So this is an effort to improve them.
 
-I stand corrected. Your patch is needed.
+Patch 1-12 improve ACPI resource parsing interfaces and also fixes some
+bugs.
 
-Thanks,
-Liviu
+Patch 13-19 try to share the common data structure resource_list_entry
+between PCI and ACPI. It may also be shared with PNP too.
 
-> 
-> So either way, the function needs patching. Either we do not free the
-> windows list (we remove pci_free_resource_list) or we apply my fix (or
-> we refactor the API which is likely to be what I will do).
-> 
-> Lorenzo
-> 
-> > 
-> > The historical reason why the function was written that way was because at
-> > some moment after parsing I've had an additional step where arches could
-> > cleanup / veto the list and they could return an error value to signal
-> > their discontent. Also I was (am) not sure how lenient we could be with
-> > the device tree not being sane (at least one host bridge binding lists the
-> > config space as a range, which was accepted as broken).
-> > 
-> > So, from that point of view, I would NAK this patch, as the function works
-> > as intended. If others find this mode of operation too convoluted, then
-> > the patch should probably make clear that cleanup only needs to be done on
-> > function returning success.
-> > 
-> > Best regards,
-> > 
-> > > -- 
-> > > 2.2.1
-> > > 
-> > > 
+The patchset is based on v3.19-rc3 and you may get it from:
+https://github.com/jiangliu/linux.git acpires_v1
+
+Jiang Liu (11):
+  ACPI: Fix a bug in parsing ACPI Memroy24 resource
+  ACPI: Normalize return value of resource parser functions
+  ACPI: Set flag IORESOURCE_UNSET for unassigned resources
+  ACPI: Enforce stricter checks for address space descriptors
+  ACPI: Return translation offset when parsing ACPI address space
+    resources
+  ACPI: Translate resource into master side address for bridge window
+    resources
+  ACPI: Add field offset to struct resource_list_entry
+  ACPI: Introduce helper function acpi_dev_filter_resource_type()
+  resources: Move struct resource_list_entry from ACPI into resource
+    core
+  PCI: Use common resource list management code instead of private
+    implementation
+  x86/PCI/ACPI: Use common ACPI resource interfaces to simplify
+    implementation
+
+Thomas Gleixner (8):
+  ACPI: Remove redundant check in function
+    acpi_dev_resource_address_space()
+  ACPI: Implement proper length checks for mem resources
+  ACPI: Use the length check for io resources as well
+  ACPI: Let the parser return false for disabled resources
+  ACPI: Provide union for address_space64 and ext_address_space64
+  ACPI: Unify the parsing of address_space and ext_address_space
+  ACPI: Move the window flag logic to the combined parser
+  ACPI: Add prefetch decoding to the address space parser
+
+ arch/arm/kernel/bios32.c            |    5 +-
+ arch/x86/pci/acpi.c                 |  297 ++++++++++---------------------
+ arch/x86/pci/bus_numa.c             |    4 +-
+ drivers/acpi/acpi_lpss.c            |    6 +-
+ drivers/acpi/acpi_platform.c        |    2 +-
+ drivers/acpi/resource.c             |  333 ++++++++++++++++++++++-------------
+ drivers/dma/acpi-dma.c              |    8 +-
+ drivers/pci/bus.c                   |   18 +-
+ drivers/pci/host-bridge.c           |    8 +-
+ drivers/pci/host/pci-host-generic.c |    4 +-
+ drivers/pci/host/pci-xgene.c        |    4 +-
+ drivers/pci/host/pcie-xilinx.c      |    4 +-
+ drivers/pci/probe.c                 |   10 +-
+ drivers/pnp/pnpacpi/rsparser.c      |    4 +-
+ include/acpi/acrestyp.h             |   49 ++++--
+ include/linux/acpi.h                |   12 +-
+ include/linux/ioport.h              |   25 +++
+ include/linux/pci.h                 |    8 +-
+ kernel/resource.c                   |   48 +++++
+ 19 files changed, 452 insertions(+), 397 deletions(-)
 
 -- 
--------------------
-   .oooO
-   (   )
-    \ (  Oooo.
-     \_) (   )
-          ) /
-         (_/
-
- One small step
-   for me ...
+1.7.10.4
 
