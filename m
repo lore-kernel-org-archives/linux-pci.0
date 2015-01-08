@@ -1,288 +1,92 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:58072 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751568AbbAHRGU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jan 2015 12:06:20 -0500
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Will Deacon <will.deacon@arm.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Srikanth Thokala <sthokal@xilinx.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Russell King <rmk+kernel@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC Patch 18/19] PCI: Use common resource list management code instead of private implementation
-Date: Thu,  8 Jan 2015 10:33:05 +0800
-Message-Id: <1420684386-5975-19-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH v2 0/8] Introducing per-device MSI domain
+Date: Thu,  8 Jan 2015 17:06:04 +0000
+Message-Id: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use common resource list management data structure and interfaces
-instead of private implementation.
+MSI-like interrupts are starting to creep out of the PCI world, and
+can now be seen into a number of "platform"-type busses. The MSI
+domain patches recognise that fact, and start providing a way to
+implement this.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/arm/kernel/bios32.c            |    5 ++---
- arch/x86/pci/bus_numa.c             |    4 ++--
- drivers/pci/bus.c                   |   18 ++++++------------
- drivers/pci/host-bridge.c           |    8 ++++----
- drivers/pci/host/pci-host-generic.c |    4 ++--
- drivers/pci/host/pci-xgene.c        |    4 ++--
- drivers/pci/host/pcie-xilinx.c      |    4 ++--
- drivers/pci/probe.c                 |   10 +++++-----
- include/linux/pci.h                 |    8 +-------
- 9 files changed, 26 insertions(+), 39 deletions(-)
+Another problem we have to solve is to identify which MSI domain a
+device is "connected" to. Currently, PCI gets away with a mixture of
+arch-specific callbacks, and a msi_controller structure that can
+optionally carry a pointer to an MSI domain. As we add new bus types
+and start dealing with topologies that do not map to what PCI does,
+this doesn't scale anymore.
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index a4effd6d8f2f..968b03cb6376 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -422,17 +422,16 @@ static int pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
- static int pcibios_init_resources(int busnr, struct pci_sys_data *sys)
- {
- 	int ret;
--	struct pci_host_bridge_window *window;
-+	struct resource_list_entry *window;
- 
- 	if (list_empty(&sys->resources)) {
- 		pci_add_resource_offset(&sys->resources,
- 			 &iomem_resource, sys->mem_offset);
- 	}
- 
--	list_for_each_entry(window, &sys->resources, list) {
-+	resource_list_for_each_entry(window, &sys->resources)
- 		if (resource_type(window->res) == IORESOURCE_IO)
- 			return 0;
--	}
- 
- 	sys->io_res.start = (busnr * SZ_64K) ?  : pcibios_min_io;
- 	sys->io_res.end = (busnr + 1) * SZ_64K - 1;
-diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
-index f3a2cfc14125..6785af30ed39 100644
---- a/arch/x86/pci/bus_numa.c
-+++ b/arch/x86/pci/bus_numa.c
-@@ -31,7 +31,7 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
- {
- 	struct pci_root_info *info = x86_find_pci_root_info(bus);
- 	struct pci_root_res *root_res;
--	struct pci_host_bridge_window *window;
-+	struct resource_list_entry *window;
- 	bool found = false;
- 
- 	if (!info)
-@@ -41,7 +41,7 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
- 	       bus);
- 
- 	/* already added by acpi ? */
--	list_for_each_entry(window, resources, list)
-+	resource_list_for_each_entry(window, resources)
- 		if (window->res->flags & IORESOURCE_BUS) {
- 			found = true;
- 			break;
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 73aef51a28f0..82bd96b60a0b 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -20,17 +20,16 @@
- void pci_add_resource_offset(struct list_head *resources, struct resource *res,
- 			     resource_size_t offset)
- {
--	struct pci_host_bridge_window *window;
-+	struct resource_list_entry *entry;
- 
--	window = kzalloc(sizeof(struct pci_host_bridge_window), GFP_KERNEL);
--	if (!window) {
-+	entry = resource_list_alloc(res, 0);
-+	if (!entry) {
- 		printk(KERN_ERR "PCI: can't add host bridge window %pR\n", res);
- 		return;
- 	}
- 
--	window->res = res;
--	window->offset = offset;
--	list_add_tail(&window->list, resources);
-+	entry->offset = offset;
-+	resource_list_insert(resources, entry, true);
- }
- EXPORT_SYMBOL(pci_add_resource_offset);
- 
-@@ -42,12 +41,7 @@ EXPORT_SYMBOL(pci_add_resource);
- 
- void pci_free_resource_list(struct list_head *resources)
- {
--	struct pci_host_bridge_window *window, *tmp;
--
--	list_for_each_entry_safe(window, tmp, resources, list) {
--		list_del(&window->list);
--		kfree(window);
--	}
-+	resource_list_free_list(resources);
- }
- EXPORT_SYMBOL(pci_free_resource_list);
- 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 0e5f3c95af5b..3ea13883e6a5 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -35,10 +35,10 @@ void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
- 			     struct resource *res)
- {
- 	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
--	struct pci_host_bridge_window *window;
-+	struct resource_list_entry *window;
- 	resource_size_t offset = 0;
- 
--	list_for_each_entry(window, &bridge->windows, list) {
-+	resource_list_for_each_entry(window, &bridge->windows) {
- 		if (resource_contains(window->res, res)) {
- 			offset = window->offset;
- 			break;
-@@ -60,10 +60,10 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- 			     struct pci_bus_region *region)
- {
- 	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
--	struct pci_host_bridge_window *window;
-+	struct resource_list_entry *window;
- 	resource_size_t offset = 0;
- 
--	list_for_each_entry(window, &bridge->windows, list) {
-+	resource_list_for_each_entry(window, &bridge->windows) {
- 		struct pci_bus_region bus_region;
- 
- 		if (resource_type(res) != resource_type(window->res))
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 6eb1aa75bd37..16d5d6eeb35a 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -149,14 +149,14 @@ static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
- 	struct device *dev = pci->host.dev.parent;
- 	struct device_node *np = dev->of_node;
- 	resource_size_t iobase;
--	struct pci_host_bridge_window *win;
-+	struct resource_list_entry *win;
- 
- 	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources,
- 					       &iobase);
- 	if (err)
- 		return err;
- 
--	list_for_each_entry(win, &pci->resources, list) {
-+	resource_list_for_each_entry(win, &pci->resources) {
- 		struct resource *parent, *res = win->res;
- 
- 		switch (resource_type(res)) {
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-index b1d0596457c5..e335b834f950 100644
---- a/drivers/pci/host/pci-xgene.c
-+++ b/drivers/pci/host/pci-xgene.c
-@@ -401,11 +401,11 @@ static int xgene_pcie_map_ranges(struct xgene_pcie_port *port,
- 				 struct list_head *res,
- 				 resource_size_t io_base)
- {
--	struct pci_host_bridge_window *window;
-+	struct resource_list_entry *window;
- 	struct device *dev = port->dev;
- 	int ret;
- 
--	list_for_each_entry(window, res, list) {
-+	resource_list_for_each_entry(window, res) {
- 		struct resource *res = window->res;
- 		u64 restype = resource_type(res);
- 
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index ef3ebaf9a738..253e993a111f 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -737,7 +737,7 @@ static int xilinx_pcie_parse_and_add_res(struct xilinx_pcie_port *port)
- 	resource_size_t offset;
- 	struct of_pci_range_parser parser;
- 	struct of_pci_range range;
--	struct pci_host_bridge_window *win;
-+	struct resource_list_entry *win;
- 	int err = 0, mem_resno = 0;
- 
- 	/* Get the ranges */
-@@ -807,7 +807,7 @@ static int xilinx_pcie_parse_and_add_res(struct xilinx_pcie_port *port)
- 
- free_resources:
- 	release_child_resources(&iomem_resource);
--	list_for_each_entry(win, &port->resources, list)
-+	resource_list_for_each_entry(win, &port->resources)
- 		devm_kfree(dev, win->res);
- 	pci_free_resource_list(&port->resources);
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 23212f8ae09b..df6a40932aa0 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1895,7 +1895,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	int error;
- 	struct pci_host_bridge *bridge;
- 	struct pci_bus *b, *b2;
--	struct pci_host_bridge_window *window, *n;
-+	struct resource_list_entry *window, *n;
- 	struct resource *res;
- 	resource_size_t offset;
- 	char bus_addr[64];
-@@ -1959,8 +1959,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		printk(KERN_INFO "PCI host bridge to bus %s\n", dev_name(&b->dev));
- 
- 	/* Add initial resources to the bus */
--	list_for_each_entry_safe(window, n, resources, list) {
--		list_move_tail(&window->list, &bridge->windows);
-+	resource_list_for_each_entry_safe(window, n, resources) {
-+		list_move_tail(&window->node, &bridge->windows);
- 		res = window->res;
- 		offset = window->offset;
- 		if (res->flags & IORESOURCE_BUS)
-@@ -2060,12 +2060,12 @@ void pci_bus_release_busn_res(struct pci_bus *b)
- struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
- {
--	struct pci_host_bridge_window *window;
-+	struct resource_list_entry *window;
- 	bool found = false;
- 	struct pci_bus *b;
- 	int max;
- 
--	list_for_each_entry(window, resources, list)
-+	resource_list_for_each_entry(window, resources)
- 		if (window->res->flags & IORESOURCE_BUS) {
- 			found = true;
- 			break;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 360a966a97a5..74afd92c05e8 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -395,16 +395,10 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
- 	return (pdev->error_state != pci_channel_io_normal);
- }
- 
--struct pci_host_bridge_window {
--	struct list_head list;
--	struct resource *res;		/* host bridge aperture (CPU address) */
--	resource_size_t offset;		/* bus address + offset = CPU address */
--};
--
- struct pci_host_bridge {
- 	struct device dev;
- 	struct pci_bus *bus;		/* root bus */
--	struct list_head windows;	/* pci_host_bridge_windows */
-+	struct list_head windows;	/* resource_list_entry */
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
- };
+This patch series tries to address some of it by providing a basic
+link between 'struct device' and an MSI domain. It also adds (yet
+another) way for PCI to propagate the domain pointer through the PCI
+device hierarchy, provides a method for OF to kick-start the
+propagation process, and finally allows the PCI/MSI layer to use that
+information. Hopefully this can serve as a model to implement support
+for different but types.
+
+Additionally, the last three patches use all the above to remove any
+trace of the msi_controller structure from the two GIC interrupt
+controllers we use on arm64, so that they solely rely on the above
+infrastructure. We take this opportunity to also kill the domain
+pointer from the msi_controller structure.
+
+My hope is to eventually kill msi_controller entirely, and only rely
+on the msi_domain contained in the device structure (any help
+welcomed).
+
+This has been tested on arm64 with GICv2m (AMD Seattle) and GICv3 ITS
+(FVP model).
+
+Patches are on top of 3.19-rc3 and available at:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git irq/msi_domain
+
+As always, comments most welcome.
+
+	M.
+
+>From v1:
+
+- Allow arch code to set the MSI domain before we try to do so in core
+  code (which is used as a fallback).
+- Allow the MSI domain to be looked-up by using the PHB node.
+- Remove domain field from msi_controller
+
+[1] https://lkml.org/lkml/2014/12/8/581
+
+Marc Zyngier (8):
+  device core: Introduce per-device MSI domain pointer
+  PCI/MSI: Add hooks to populate the msi_domain field
+  PCI/MSI: of: Add support for OF-provided msi_domain
+  PCI/MSI: of: Allow msi_domain lookup using the PHB node
+  PCI/MSI: Let pci_msi_get_domain use struct device's msi_domain
+  irqchip: GICv2m: Get rid of struct msi_controller
+  irqchip: gicv3-its: Get rid of struct msi_controller
+  PCI/MSI: Drop domain field from msi_controller
+
+ drivers/irqchip/irq-gic-v2m.c    | 26 +++++++++-----------------
+ drivers/irqchip/irq-gic-v3-its.c | 33 ++++++++++++++-------------------
+ drivers/pci/msi.c                |  3 +--
+ drivers/pci/of.c                 | 20 ++++++++++++++++++++
+ drivers/pci/probe.c              | 31 +++++++++++++++++++++++++++++++
+ include/linux/device.h           | 20 ++++++++++++++++++++
+ include/linux/msi.h              |  3 ---
+ include/linux/pci.h              |  3 +++
+ 8 files changed, 98 insertions(+), 41 deletions(-)
+
 -- 
-1.7.10.4
+2.1.4
 
