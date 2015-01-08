@@ -1,285 +1,287 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:32974 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753002AbbATFvc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 20 Jan 2015 00:51:32 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Yinghai Lu <yinghai@kernel.org>,
 	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>,
-	Joerg Roedel <joro@8bytes.org>
+	Russell King <linux@arm.linux.org.uk>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Will Deacon <will.deacon@arm.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Srikanth Thokala <sthokal@xilinx.com>
 Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v4 10/33] irq_remapping/vt-d: Clean up unsued code
-Date: Tue, 20 Jan 2015 13:51:30 +0800
-Message-Id: <1421733113-15704-11-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Russell King <rmk+kernel@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC Patch 18/19] PCI: Use common resource list management code instead of private implementation
+Date: Thu,  8 Jan 2015 10:33:05 +0800
+Message-Id: <1420684386-5975-19-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have converted to hierarchy irqdomain, so clean up unused code.
+Use common resource list management data structure and interfaces
+instead of private implementation.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: iommu@lists.linux-foundation.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Joerg Roedel <joro@8bytes.org>
-Link: http://lkml.kernel.org/r/1416901802-24211-20-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
 ---
- drivers/iommu/intel_irq_remapping.c |  187 +----------------------------------
- 1 file changed, 1 insertion(+), 186 deletions(-)
+ arch/arm/kernel/bios32.c            |    5 ++---
+ arch/x86/pci/bus_numa.c             |    4 ++--
+ drivers/pci/bus.c                   |   18 ++++++------------
+ drivers/pci/host-bridge.c           |    8 ++++----
+ drivers/pci/host/pci-host-generic.c |    4 ++--
+ drivers/pci/host/pci-xgene.c        |    4 ++--
+ drivers/pci/host/pcie-xilinx.c      |    4 ++--
+ drivers/pci/probe.c                 |   10 +++++-----
+ include/linux/pci.h                 |    8 +-------
+ 9 files changed, 26 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 05941118a179..e76e5723ae87 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -63,35 +63,6 @@ static struct irq_domain_ops intel_ir_domain_ops;
- 
- static int __init parse_ioapics_under_ir(void);
- 
--static struct irq_2_iommu *irq_2_iommu(unsigned int irq)
--{
--	struct irq_cfg *cfg = irq_cfg(irq);
--	return cfg ? &cfg->irq_2_iommu : NULL;
--}
--
--static int get_irte(int irq, struct irte *entry)
--{
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
--	unsigned long flags;
--	int index;
--
--	if (!entry || !irq_iommu)
--		return -1;
--
--	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
--
--	if (unlikely(!irq_iommu->iommu)) {
--		raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
--		return -1;
--	}
--
--	index = irq_iommu->irte_index + irq_iommu->sub_handle;
--	*entry = *(irq_iommu->iommu->ir_table->base + index);
--
--	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
--	return 0;
--}
--
- static int alloc_irte(struct intel_iommu *iommu, int irq,
- 		      struct irq_2_iommu *irq_iommu, u16 count)
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index a4effd6d8f2f..968b03cb6376 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -422,17 +422,16 @@ static int pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ static int pcibios_init_resources(int busnr, struct pci_sys_data *sys)
  {
-@@ -229,29 +200,6 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
- 	return qi_flush_iec(iommu, index, irq_iommu->irte_mask);
+ 	int ret;
+-	struct pci_host_bridge_window *window;
++	struct resource_list_entry *window;
+ 
+ 	if (list_empty(&sys->resources)) {
+ 		pci_add_resource_offset(&sys->resources,
+ 			 &iomem_resource, sys->mem_offset);
+ 	}
+ 
+-	list_for_each_entry(window, &sys->resources, list) {
++	resource_list_for_each_entry(window, &sys->resources)
+ 		if (resource_type(window->res) == IORESOURCE_IO)
+ 			return 0;
+-	}
+ 
+ 	sys->io_res.start = (busnr * SZ_64K) ?  : pcibios_min_io;
+ 	sys->io_res.end = (busnr + 1) * SZ_64K - 1;
+diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
+index f3a2cfc14125..6785af30ed39 100644
+--- a/arch/x86/pci/bus_numa.c
++++ b/arch/x86/pci/bus_numa.c
+@@ -31,7 +31,7 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
+ {
+ 	struct pci_root_info *info = x86_find_pci_root_info(bus);
+ 	struct pci_root_res *root_res;
+-	struct pci_host_bridge_window *window;
++	struct resource_list_entry *window;
+ 	bool found = false;
+ 
+ 	if (!info)
+@@ -41,7 +41,7 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
+ 	       bus);
+ 
+ 	/* already added by acpi ? */
+-	list_for_each_entry(window, resources, list)
++	resource_list_for_each_entry(window, resources)
+ 		if (window->res->flags & IORESOURCE_BUS) {
+ 			found = true;
+ 			break;
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 73aef51a28f0..82bd96b60a0b 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -20,17 +20,16 @@
+ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+ 			     resource_size_t offset)
+ {
+-	struct pci_host_bridge_window *window;
++	struct resource_list_entry *entry;
+ 
+-	window = kzalloc(sizeof(struct pci_host_bridge_window), GFP_KERNEL);
+-	if (!window) {
++	entry = resource_list_alloc(res, 0);
++	if (!entry) {
+ 		printk(KERN_ERR "PCI: can't add host bridge window %pR\n", res);
+ 		return;
+ 	}
+ 
+-	window->res = res;
+-	window->offset = offset;
+-	list_add_tail(&window->list, resources);
++	entry->offset = offset;
++	resource_list_insert(resources, entry, true);
+ }
+ EXPORT_SYMBOL(pci_add_resource_offset);
+ 
+@@ -42,12 +41,7 @@ EXPORT_SYMBOL(pci_add_resource);
+ 
+ void pci_free_resource_list(struct list_head *resources)
+ {
+-	struct pci_host_bridge_window *window, *tmp;
+-
+-	list_for_each_entry_safe(window, tmp, resources, list) {
+-		list_del(&window->list);
+-		kfree(window);
+-	}
++	resource_list_free_list(resources);
+ }
+ EXPORT_SYMBOL(pci_free_resource_list);
+ 
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 0e5f3c95af5b..3ea13883e6a5 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -35,10 +35,10 @@ void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
+ 			     struct resource *res)
+ {
+ 	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+-	struct pci_host_bridge_window *window;
++	struct resource_list_entry *window;
+ 	resource_size_t offset = 0;
+ 
+-	list_for_each_entry(window, &bridge->windows, list) {
++	resource_list_for_each_entry(window, &bridge->windows) {
+ 		if (resource_contains(window->res, res)) {
+ 			offset = window->offset;
+ 			break;
+@@ -60,10 +60,10 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+ 			     struct pci_bus_region *region)
+ {
+ 	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+-	struct pci_host_bridge_window *window;
++	struct resource_list_entry *window;
+ 	resource_size_t offset = 0;
+ 
+-	list_for_each_entry(window, &bridge->windows, list) {
++	resource_list_for_each_entry(window, &bridge->windows) {
+ 		struct pci_bus_region bus_region;
+ 
+ 		if (resource_type(res) != resource_type(window->res))
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 6eb1aa75bd37..16d5d6eeb35a 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -149,14 +149,14 @@ static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
+ 	struct device *dev = pci->host.dev.parent;
+ 	struct device_node *np = dev->of_node;
+ 	resource_size_t iobase;
+-	struct pci_host_bridge_window *win;
++	struct resource_list_entry *win;
+ 
+ 	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources,
+ 					       &iobase);
+ 	if (err)
+ 		return err;
+ 
+-	list_for_each_entry(win, &pci->resources, list) {
++	resource_list_for_each_entry(win, &pci->resources) {
+ 		struct resource *parent, *res = win->res;
+ 
+ 		switch (resource_type(res)) {
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index b1d0596457c5..e335b834f950 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -401,11 +401,11 @@ static int xgene_pcie_map_ranges(struct xgene_pcie_port *port,
+ 				 struct list_head *res,
+ 				 resource_size_t io_base)
+ {
+-	struct pci_host_bridge_window *window;
++	struct resource_list_entry *window;
+ 	struct device *dev = port->dev;
+ 	int ret;
+ 
+-	list_for_each_entry(window, res, list) {
++	resource_list_for_each_entry(window, res) {
+ 		struct resource *res = window->res;
+ 		u64 restype = resource_type(res);
+ 
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index ef3ebaf9a738..253e993a111f 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -737,7 +737,7 @@ static int xilinx_pcie_parse_and_add_res(struct xilinx_pcie_port *port)
+ 	resource_size_t offset;
+ 	struct of_pci_range_parser parser;
+ 	struct of_pci_range range;
+-	struct pci_host_bridge_window *win;
++	struct resource_list_entry *win;
+ 	int err = 0, mem_resno = 0;
+ 
+ 	/* Get the ranges */
+@@ -807,7 +807,7 @@ static int xilinx_pcie_parse_and_add_res(struct xilinx_pcie_port *port)
+ 
+ free_resources:
+ 	release_child_resources(&iomem_resource);
+-	list_for_each_entry(win, &port->resources, list)
++	resource_list_for_each_entry(win, &port->resources)
+ 		devm_kfree(dev, win->res);
+ 	pci_free_resource_list(&port->resources);
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 23212f8ae09b..df6a40932aa0 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1895,7 +1895,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	int error;
+ 	struct pci_host_bridge *bridge;
+ 	struct pci_bus *b, *b2;
+-	struct pci_host_bridge_window *window, *n;
++	struct resource_list_entry *window, *n;
+ 	struct resource *res;
+ 	resource_size_t offset;
+ 	char bus_addr[64];
+@@ -1959,8 +1959,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 		printk(KERN_INFO "PCI host bridge to bus %s\n", dev_name(&b->dev));
+ 
+ 	/* Add initial resources to the bus */
+-	list_for_each_entry_safe(window, n, resources, list) {
+-		list_move_tail(&window->list, &bridge->windows);
++	resource_list_for_each_entry_safe(window, n, resources) {
++		list_move_tail(&window->node, &bridge->windows);
+ 		res = window->res;
+ 		offset = window->offset;
+ 		if (res->flags & IORESOURCE_BUS)
+@@ -2060,12 +2060,12 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+ {
+-	struct pci_host_bridge_window *window;
++	struct resource_list_entry *window;
+ 	bool found = false;
+ 	struct pci_bus *b;
+ 	int max;
+ 
+-	list_for_each_entry(window, resources, list)
++	resource_list_for_each_entry(window, resources)
+ 		if (window->res->flags & IORESOURCE_BUS) {
+ 			found = true;
+ 			break;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 360a966a97a5..74afd92c05e8 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -395,16 +395,10 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
+ 	return (pdev->error_state != pci_channel_io_normal);
  }
  
--static int free_irte(int irq)
--{
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
--	unsigned long flags;
--	int rc;
+-struct pci_host_bridge_window {
+-	struct list_head list;
+-	struct resource *res;		/* host bridge aperture (CPU address) */
+-	resource_size_t offset;		/* bus address + offset = CPU address */
+-};
 -
--	if (!irq_iommu || irq_iommu->iommu == NULL)
--		return -1;
--
--	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
--
--	rc = clear_entries(irq_iommu);
--
--	irq_iommu->iommu = NULL;
--	irq_iommu->irte_index = 0;
--	irq_iommu->sub_handle = 0;
--	irq_iommu->irte_mask = 0;
--
--	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
--
--	return rc;
--}
--
- /*
-  * source validation type
-  */
-@@ -932,8 +880,7 @@ error:
- 	return -1;
- }
- 
--static void prepare_irte(struct irte *irte, int vector,
--			 unsigned int dest)
-+static void prepare_irte(struct irte *irte, int vector, unsigned int dest)
- {
- 	memset(irte, 0, sizeof(*irte));
- 
-@@ -953,135 +900,6 @@ static void prepare_irte(struct irte *irte, int vector,
- 	irte->redir_hint = 1;
- }
- 
--static int intel_setup_ioapic_entry(int irq,
--				    struct IO_APIC_route_entry *route_entry,
--				    unsigned int destination, int vector,
--				    struct io_apic_irq_attr *attr)
--{
--	int ioapic_id = mpc_ioapic_id(attr->ioapic);
--	struct intel_iommu *iommu;
--	struct IR_IO_APIC_route_entry *entry;
--	struct irte irte;
--	int index;
--
--	down_read(&dmar_global_lock);
--	iommu = map_ioapic_to_ir(ioapic_id);
--	if (!iommu) {
--		pr_warn("No mapping iommu for ioapic %d\n", ioapic_id);
--		index = -ENODEV;
--	} else {
--		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
--		if (index < 0) {
--			pr_warn("Failed to allocate IRTE for ioapic %d\n",
--				ioapic_id);
--			index = -ENOMEM;
--		}
--	}
--	up_read(&dmar_global_lock);
--	if (index < 0)
--		return index;
--
--	prepare_irte(&irte, vector, destination);
--
--	/* Set source-id of interrupt request */
--	set_ioapic_sid(&irte, ioapic_id);
--
--	modify_irte(irq_2_iommu(irq), &irte);
--
--	apic_printk(APIC_VERBOSE, KERN_DEBUG "IOAPIC[%d]: "
--		"Set IRTE entry (P:%d FPD:%d Dst_Mode:%d "
--		"Redir_hint:%d Trig_Mode:%d Dlvry_Mode:%X "
--		"Avail:%X Vector:%02X Dest:%08X "
--		"SID:%04X SQ:%X SVT:%X)\n",
--		attr->ioapic, irte.present, irte.fpd, irte.dst_mode,
--		irte.redir_hint, irte.trigger_mode, irte.dlvry_mode,
--		irte.avail, irte.vector, irte.dest_id,
--		irte.sid, irte.sq, irte.svt);
--
--	entry = (struct IR_IO_APIC_route_entry *)route_entry;
--	memset(entry, 0, sizeof(*entry));
--
--	entry->index2	= (index >> 15) & 0x1;
--	entry->zero	= 0;
--	entry->format	= 1;
--	entry->index	= (index & 0x7fff);
--	/*
--	 * IO-APIC RTE will be configured with virtual vector.
--	 * irq handler will do the explicit EOI to the io-apic.
--	 */
--	entry->vector	= attr->ioapic_pin;
--	entry->mask	= 0;			/* enable IRQ */
--	entry->trigger	= attr->trigger;
--	entry->polarity	= attr->polarity;
--
--	/* Mask level triggered irqs.
--	 * Use IRQ_DELAYED_DISABLE for edge triggered irqs.
--	 */
--	if (attr->trigger)
--		entry->mask = 1;
--
--	return 0;
--}
--
--/*
-- * Migrate the IO-APIC irq in the presence of intr-remapping.
-- *
-- * For both level and edge triggered, irq migration is a simple atomic
-- * update(of vector and cpu destination) of IRTE and flush the hardware cache.
-- *
-- * For level triggered, we eliminate the io-apic RTE modification (with the
-- * updated vector information), by using a virtual vector (io-apic pin number).
-- * Real vector that is used for interrupting cpu will be coming from
-- * the interrupt-remapping table entry.
-- *
-- * As the migration is a simple atomic update of IRTE, the same mechanism
-- * is used to migrate MSI irq's in the presence of interrupt-remapping.
-- */
--static int
--intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
--			  bool force)
--{
--	struct irq_cfg *cfg = irqd_cfg(data);
--	unsigned int dest, irq = data->irq;
--	struct irte irte;
--	int err;
--
--	if (get_irte(irq, &irte))
--		return -EBUSY;
--
--	err = assign_irq_vector(irq, cfg, mask);
--	if (err)
--		return err;
--
--	err = apic->cpu_mask_to_apicid_and(cfg->domain, mask, &dest);
--	if (err) {
--		if (assign_irq_vector(irq, cfg, data->affinity))
--			pr_err("Failed to recover vector for irq %d\n", irq);
--		return err;
--	}
--
--	irte.vector = cfg->vector;
--	irte.dest_id = IRTE_DEST(dest);
--
--	/*
--	 * Atomically updates the IRTE with the new destination, vector
--	 * and flushes the interrupt entry cache.
--	 */
--	modify_irte(irq_2_iommu(irq), &irte);
--
--	/*
--	 * After this point, all the interrupts will start arriving
--	 * at the new destination. So, time to cleanup the previous
--	 * vector allocation.
--	 */
--	if (cfg->move_in_progress)
--		send_cleanup_vector(cfg);
--
--	cpumask_copy(data->affinity, mask);
--
--	return 0;
--}
--
- static struct irq_domain *intel_get_ir_irq_domain(struct irq_alloc_info *info)
- {
- 	struct intel_iommu *iommu = NULL;
-@@ -1135,9 +953,6 @@ struct irq_remap_ops intel_irq_remap_ops = {
- 	.disable		= disable_irq_remapping,
- 	.reenable		= reenable_irq_remapping,
- 	.enable_faulting	= enable_drhd_fault_handling,
--	.setup_ioapic_entry	= intel_setup_ioapic_entry,
--	.set_affinity		= intel_ioapic_set_affinity,
--	.free_irq		= free_irte,
- 	.get_ir_irq_domain	= intel_get_ir_irq_domain,
- 	.get_irq_domain		= intel_get_irq_domain,
+ struct pci_host_bridge {
+ 	struct device dev;
+ 	struct pci_bus *bus;		/* root bus */
+-	struct list_head windows;	/* pci_host_bridge_windows */
++	struct list_head windows;	/* resource_list_entry */
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
  };
 -- 
 1.7.10.4
