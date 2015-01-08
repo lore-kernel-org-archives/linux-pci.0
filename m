@@ -1,70 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:39661 "EHLO
-	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756336AbbAZXxi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 18:53:38 -0500
-Received: by mail-oi0-f51.google.com with SMTP id x69so9873507oia.10
-        for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2015 15:53:37 -0800 (PST)
-Date: Mon, 26 Jan 2015 17:53:34 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Tony Luck <tony.luck@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Marek Kordik <kordikmarek@gmail.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Andreas Hartmann <andihartmann@freenet.de>,
-	Alexey Voronkov <zermond@gmail.com>,
-	David Airlie <airlied@linux.ie>,
-	Alex Deucher <alexander.deucher@amd.com>
-Subject: Re: [GIT PULL] PCI fixes for v3.19
-Message-ID: <20150126235334.GA11624@google.com>
-References: <20150123203145.GA6691@google.com>
- <CA+8MBbKnT=mE3kev8BRPq0GeTgHx8WVa6o54tJuBX_XXLpHdYQ@mail.gmail.com>
- <CAErSpo7y1wWStjcEOH9xTiM-As8+QeMynZ5ENrL9v3X2PvQCcw@mail.gmail.com>
- <CA+8MBb+bWiX2eayjBQHsvCjTp3t8H9=AviF9AkV6CC--cC_fYQ@mail.gmail.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:49941 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755636AbbAHWrV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 Jan 2015 17:47:21 -0500
+Message-ID: <54AF08C7.2010100@ti.com>
+Date: Thu, 8 Jan 2015 17:46:31 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+8MBb+bWiX2eayjBQHsvCjTp3t8H9=AviF9AkV6CC--cC_fYQ@mail.gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <bhelgaas@google.com>, <linux-arm-kernel@lists.infradead.org>,
+	<joro@8bytes.org>, <grant.likely@linaro.org>, <robh+dt@kernel.org>,
+	<iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<will.deacon@arm.com>, <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v3 0/4] PCI: get DMA configuration from parent device
+References: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com> <54ADBB89.8070503@ti.com> <1934001.D0JfDRp1gF@wuerfel> <2785994.gTZ9chGdKf@wuerfel>
+In-Reply-To: <2785994.gTZ9chGdKf@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 26, 2015 at 01:24:51PM -0800, Tony Luck wrote:
-> On Mon, Jan 26, 2015 at 1:02 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > Sorry for the inconvenience.  Can you collect a complete dmesg log and
-> > "lspci -vv" output, too (from the kernel with the reverted commit)?
-> > That will have more useful information than just /proc/iomem.
-> 
-> Full dmesg, lspci -vv, and bonus .config (CONFIG_PCI_IOV is indeed
-> not set)
+On 01/08/2015 05:27 PM, Arnd Bergmann wrote:
+> On Thursday 08 January 2015 09:56:39 Arnd Bergmann wrote:
+>> There is another interesting case, which is a USB host controller or
+>> something similar behind a PCI bus. These are quite common and also
+>> need to be handled in some form. Let's do just PCI first for now, but
+>> be aware that this will come next. Should we assume that the ID that
+>> is required for a device is either known from the device node, or
+>> that it comes from a PCI device? That means for the USB case, we will
+>> likely need to have some custom logic. There seems to be an implicit
+>> assumption all over the kernel that all devices have the same IOMMU
+>> instance, but we can't really rely on that here.
+>>
+>
+> Update: I've checked the USB implementation and we are lucky because
+> these interactions are all done by the USB host controller, and a
+> USB device is not itself DMA capable. We don't have to do anything
+> for USB.
 
-The ROM part is something we should fix:
+Ok Thanks.
 
-  pci 0000:01:00.1: can't claim BAR 6 [mem 0xfffe0000-0xffffffff pref]: no compatible bridge window
+Murali
+>
+> 	Arnd
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-The ROM BAR is probably disabled, and we shouldn't complain about this if
-it's disabled.  Yinghai?
 
-The stuff on bus 0000:80 looks like at least partly a firmware problem:
-
-  ACPI: PCI Root Bridge [PCI1] (domain 0000 [bus 80-ff])
-  acpi PNP0A08:01: host bridge window [io  0x9000-0xfffe]
-  pci 0000:80:01.0: PCI bridge to [bus 81]
-  pci 0000:80:01.0:   bridge window [io  0xa000-0xafff]
-  pci 0000:80:01.0:   bridge window [mem 0xa0100000-0xa01fffff]
-  pci 0000:80:13.0: reg 0x10: [mem 0xa0220000-0xa0220fff]
-
-ACPI told us about an I/O port aperture, but didn't mention any MMIO
-apertures through the host bridge.  Therefore, we have no MMIO space to
-assign to the devices on [bus 80-ff].
-
-But presumably these devices, e.g., the igb devices at 81:00.0 and 81:00.1
-and the mpt device at 83:00.0, actually DO work, so the PCI1 host bridge
-must actually forward some MMIO space that ACPI didn't tell us about.  I
-think on x86, we would fall back to whatever the firmware left in those
-BARs.  We should probably do the same on x86.
-
-Bjorn
+-- 
+Murali Karicheri
+Linux Kernel, Texas Instruments
