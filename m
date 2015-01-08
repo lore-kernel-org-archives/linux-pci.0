@@ -1,42 +1,177 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f50.google.com ([209.85.192.50]:43728 "EHLO
-	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751103AbbALQ6s (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 11:58:48 -0500
-Received: by mail-qg0-f50.google.com with SMTP id z60so18496277qgd.9
-        for <linux-pci@vger.kernel.org>; Mon, 12 Jan 2015 08:58:47 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAH9N0t9KvhzmZDgD8PD5VBPR-pPhuE8MmBgK9RY8+ZtKyz++pQ@mail.gmail.com>
-References: <CAH9N0t9KvhzmZDgD8PD5VBPR-pPhuE8MmBgK9RY8+ZtKyz++pQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 12 Jan 2015 10:58:25 -0600
-Message-ID: <CAErSpo48mPENuHpES1Q73ep+NKG8x2Zgb+g71do02y7vufbtfQ@mail.gmail.com>
-Subject: Re: Hot add a PCIe device driver upon hotplug event
-To: Paulo Fortuna Carvalho <pricardofc@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [RFC Patch 02/19] ACPI: Implement proper length checks for mem resources
+Date: Thu,  8 Jan 2015 10:32:49 +0800
+Message-Id: <1420684386-5975-3-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 12, 2015 at 5:42 AM, Paulo Fortuna Carvalho
-<pricardofc@gmail.com> wrote:
-> Hello,
-> I want to automatically load/unload a PCIe device driver when a card
-> is inserted/removed from the system. I can see in the system logger
-> with dmesg that the interrupt event is captured and acknowledged by
-> the pciehp hotplug service driver.
-> What I want to do next is that the operating system load/unload the
-> corresponding PCIe device driver for that card.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-When pciehp receives the interrupt, it should enumerate the device,
-and you should see a line in dmesg similar to this (of course, it will
-have different bus/device/function and different vendor/device IDs):
+Check whether the resulting length is the same as the given
+length. Check for start <= end as well.
 
-  pci 0000:00:16.0: [8086:9c3a] type 00 class 0x078000
+We need to hand in the resource for this, so we can apply the flags
+directly.
 
-The PCI core should then add the device using device_add(), and part
-of that is to emit a uevent, which can be read by user-space.
-Generally udev would handle the event and load the appropriate driver.
-I don't know the details of how the user-space side works.
+[Jiang] Remove enforcement that resource starting address must be
+non-zero.
 
-Bjorn
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/resource.c |   61 ++++++++++++++++++++++++++---------------------
+ 1 file changed, 34 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index d4c3d7640715..f20e23d4fb16 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -34,21 +34,37 @@
+ #define valid_IRQ(i) (true)
+ #endif
+ 
+-static unsigned long acpi_dev_memresource_flags(u64 len, u8 write_protect,
+-						bool window)
++static bool acpi_dev_resource_len_valid(u64 start, u64 end, u64 len, bool io)
+ {
+-	unsigned long flags = IORESOURCE_MEM;
++	u64 reslen = end - start + 1;
+ 
+-	if (len == 0)
+-		flags |= IORESOURCE_DISABLED;
++	/*
++	 * CHECKME: len might be required to check versus a minimum
++	 * length as well. 1 for io is fine, but for memory it does
++	 * not make any sense at all.
++	 */
++	if (len && reslen && reslen == len && start <= end)
++		return true;
++
++	pr_info("ACPI: invalid or unassigned resource %s [%016llx - %016llx] length [%016llx]\n",
++		io ? "io" : "mem", start, end, len);
++
++	return false;
++}
++
++static void acpi_dev_memresource_flags(struct resource *res, u64 len,
++				       u8 write_protect, bool window)
++{
++	res->flags = IORESOURCE_MEM;
++
++	if (!acpi_dev_resource_len_valid(res->start, res->end, len, false))
++		res->flags |= IORESOURCE_DISABLED;
+ 
+ 	if (write_protect == ACPI_READ_WRITE_MEMORY)
+-		flags |= IORESOURCE_MEM_WRITEABLE;
++		res->flags |= IORESOURCE_MEM_WRITEABLE;
+ 
+ 	if (window)
+-		flags |= IORESOURCE_WINDOW;
+-
+-	return flags;
++		res->flags |= IORESOURCE_WINDOW;
+ }
+ 
+ static void acpi_dev_get_memresource(struct resource *res, u64 start, u64 len,
+@@ -56,7 +72,7 @@ static void acpi_dev_get_memresource(struct resource *res, u64 start, u64 len,
+ {
+ 	res->start = start;
+ 	res->end = start + len - 1;
+-	res->flags = acpi_dev_memresource_flags(len, write_protect, false);
++	acpi_dev_memresource_flags(res, len, write_protect, false);
+ }
+ 
+ /**
+@@ -77,24 +93,18 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+ 	switch (ares->type) {
+ 	case ACPI_RESOURCE_TYPE_MEMORY24:
+ 		memory24 = &ares->data.memory24;
+-		if (!memory24->minimum && !memory24->address_length)
+-			return false;
+ 		acpi_dev_get_memresource(res, memory24->minimum,
+ 					 memory24->address_length,
+ 					 memory24->write_protect);
+ 		break;
+ 	case ACPI_RESOURCE_TYPE_MEMORY32:
+ 		memory32 = &ares->data.memory32;
+-		if (!memory32->minimum && !memory32->address_length)
+-			return false;
+ 		acpi_dev_get_memresource(res, memory32->minimum,
+ 					 memory32->address_length,
+ 					 memory32->write_protect);
+ 		break;
+ 	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
+ 		fixed_memory32 = &ares->data.fixed_memory32;
+-		if (!fixed_memory32->address && !fixed_memory32->address_length)
+-			return false;
+ 		acpi_dev_get_memresource(res, fixed_memory32->address,
+ 					 fixed_memory32->address_length,
+ 					 fixed_memory32->write_protect);
+@@ -102,7 +112,8 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+ 	default:
+ 		return false;
+ 	}
+-	return true;
++
++	return !(res->flags & IORESOURCE_DISABLED);
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
+ 
+@@ -186,7 +197,6 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+ 	acpi_status status;
+ 	struct acpi_resource_address64 addr;
+ 	bool window;
+-	u64 len;
+ 	u8 io_decode;
+ 
+ 	status = acpi_resource_to_address64(ares, &addr);
+@@ -199,10 +209,9 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+ 
+ 	switch(addr.resource_type) {
+ 	case ACPI_MEMORY_RANGE:
+-		len = addr.maximum - addr.minimum + 1;
+-		res->flags = acpi_dev_memresource_flags(len,
+-						addr.info.mem.write_protect,
+-						window);
++		acpi_dev_memresource_flags(res, addr.address_length,
++					   addr.info.mem.write_protect,
++					   window);
+ 		break;
+ 	case ACPI_IO_RANGE:
+ 		io_decode = addr.granularity == 0xfff ?
+@@ -236,7 +245,6 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
+ {
+ 	struct acpi_resource_extended_address64 *ext_addr;
+ 	bool window;
+-	u64 len;
+ 	u8 io_decode;
+ 
+ 	if (ares->type != ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64)
+@@ -250,10 +258,9 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
+ 
+ 	switch(ext_addr->resource_type) {
+ 	case ACPI_MEMORY_RANGE:
+-		len = ext_addr->maximum - ext_addr->minimum + 1;
+-		res->flags = acpi_dev_memresource_flags(len,
+-					ext_addr->info.mem.write_protect,
+-					window);
++		acpi_dev_memresource_flags(res, ext_addr->address_length,
++					   ext_addr->info.mem.write_protect,
++					   window);
+ 		break;
+ 	case ACPI_IO_RANGE:
+ 		io_decode = ext_addr->granularity == 0xfff ?
+-- 
+1.7.10.4
+
