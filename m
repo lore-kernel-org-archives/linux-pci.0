@@ -1,117 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:58087 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932418AbbAHRGX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jan 2015 12:06:23 -0500
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH v2 2/8] PCI/MSI: Add hooks to populate the msi_domain field
-Date: Thu,  8 Jan 2015 17:06:06 +0000
-Message-Id: <1420736772-11088-3-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com>
-References: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [RFC Patch 01/19] ACPI: Remove redundant check in function acpi_dev_resource_address_space()
+Date: Thu,  8 Jan 2015 10:32:48 +0800
+Message-Id: <1420684386-5975-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order to be able to populate the device msi_domain field,
-add the necesary hooks to propagate the PHB msi_domain across
-secondary busses to devices.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-So far, nobody populates the initial msi_domain.
+The ACPI type is checked in acpi_resource_to_address64() anyway.
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/probe.c | 30 ++++++++++++++++++++++++++++++
- include/linux/pci.h |  1 +
- 2 files changed, 31 insertions(+)
+ drivers/acpi/resource.c |    9 ---------
+ 1 file changed, 9 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 23212f8..977c079 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -660,6 +660,20 @@ static void pci_set_bus_speed(struct pci_bus *bus)
- 	}
- }
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 782a0d15c25f..d4c3d7640715 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -189,15 +189,6 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+ 	u64 len;
+ 	u8 io_decode;
  
-+void __weak pcibios_set_phb_msi_domain(struct pci_bus *bus)
-+{
-+}
-+
-+static void pci_set_bus_msi_domain(struct pci_bus *bus)
-+{
-+	struct pci_dev *bridge = bus->self;
-+
-+	if (!bridge)
-+		pcibios_set_phb_msi_domain(bus);
-+	else
-+		dev_set_msi_domain(&bus->dev, dev_get_msi_domain(&bridge->dev));
-+}
-+
- static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 					   struct pci_dev *bridge, int busnr)
- {
-@@ -713,6 +727,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	bridge->subordinate = child;
- 
- add_dev:
-+	pci_set_bus_msi_domain(child);
- 	ret = device_register(&child->dev);
- 	WARN_ON(ret < 0);
- 
-@@ -1507,6 +1522,17 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	pci_enable_acs(dev);
- }
- 
-+static void pci_set_msi_domain(struct pci_dev *dev)
-+{
-+	/*
-+	 * If no domain has been set through the pcibios callback,
-+	 * inherit the default from the bus device.
-+	 */
-+	if (!dev_get_msi_domain(&dev->dev))
-+		dev_set_msi_domain(&dev->dev,
-+				   dev_get_msi_domain(&dev->bus->dev));
-+}
-+
- void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- {
- 	int ret;
-@@ -1547,6 +1573,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	ret = pcibios_add_device(dev);
- 	WARN_ON(ret < 0);
- 
-+	/* Setup MSI irq domain */
-+	pci_set_msi_domain(dev);
-+
- 	/* Notifier could use PCI capabilities */
- 	dev->match_driver = false;
- 	ret = device_add(&dev->dev);
-@@ -1937,6 +1966,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	b->bridge = get_device(&bridge->dev);
- 	device_enable_async_suspend(b->bridge);
- 	pci_set_bus_of_node(b);
-+	pci_set_bus_msi_domain(b);
- 
- 	if (!parent)
- 		set_dev_node(b->bridge, pcibus_to_node(b));
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 360a966..13c65ab 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1640,6 +1640,7 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
- int pcibios_add_device(struct pci_dev *dev);
- void pcibios_release_device(struct pci_dev *dev);
- void pcibios_penalize_isa_irq(int irq, int active);
-+void pcibios_set_phb_msi_domain(struct pci_bus *bus);
- 
- #ifdef CONFIG_HIBERNATE_CALLBACKS
- extern struct dev_pm_ops pcibios_pm_ops;
+-	switch (ares->type) {
+-	case ACPI_RESOURCE_TYPE_ADDRESS16:
+-	case ACPI_RESOURCE_TYPE_ADDRESS32:
+-	case ACPI_RESOURCE_TYPE_ADDRESS64:
+-		break;
+-	default:
+-		return false;
+-	}
+-
+ 	status = acpi_resource_to_address64(ares, &addr);
+ 	if (ACPI_FAILURE(status))
+ 		return false;
 -- 
-2.1.4
+1.7.10.4
 
