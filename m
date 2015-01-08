@@ -1,115 +1,85 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54BFBF4E.8070302@linux.intel.com>
-Date: Wed, 21 Jan 2015 23:01:34 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:53973 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754100AbbAHPvH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jan 2015 10:51:07 -0500
+Date: Thu, 8 Jan 2015 10:51:06 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
 To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Thomas Gleixner <tglx@linutronix.de>,
+cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [RFC Patch 15/19] ACPI: Add field offset to struct resource_list_entry
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1524434.hGg7sZaCUr@vostro.rjw.lan> <54BF3B24.10209@linux.intel.com> <5866060.ZvSTmUr2GQ@vostro.rjw.lan>
-In-Reply-To: <5866060.ZvSTmUr2GQ@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+	Aaron Lu <aaron.lu@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [RFC][PATCH] PCI / PM: Avoid resuming PCI devices during system
+ suspend
+In-Reply-To: <1460212.bInrzeZle0@vostro.rjw.lan>
+Message-ID: <Pine.LNX.4.44L0.1501081041230.1633-100000@iolanthe.rowland.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/1/21 22:47, Rafael J. Wysocki wrote:
-> On Wednesday, January 21, 2015 01:37:40 PM Jiang Liu wrote:
->> On 2015/1/21 8:53, Rafael J. Wysocki wrote:
->>> On Thursday, January 08, 2015 10:33:02 AM Jiang Liu wrote:
->>>> Add field offset to struct resource_list_entry to host address space
->>>> translation offset so it could be used to represent bridge resources.
->>>>
->>>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->>>> ---
->>>>  drivers/acpi/resource.c |   13 ++++++++-----
->>>>  include/linux/acpi.h    |    1 +
->>>>  2 files changed, 9 insertions(+), 5 deletions(-)
->>>>
->>>> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
->>>> index 16d334a1ee25..54204ac94f8e 100644
->>>> --- a/drivers/acpi/resource.c
->>>> +++ b/drivers/acpi/resource.c
->>>> @@ -462,7 +462,8 @@ struct res_proc_context {
->>>>  };
->>>>  
->>>>  static acpi_status acpi_dev_new_resource_entry(struct resource *r,
->>>> -					       struct res_proc_context *c)
->>>> +					       struct res_proc_context *c,
->>>> +					       resource_size_t offset)
->>>>  {
->>>>  	struct resource_list_entry *rentry;
->>>>  
->>>> @@ -472,6 +473,7 @@ static acpi_status acpi_dev_new_resource_entry(struct resource *r,
->>>>  		return AE_NO_MEMORY;
->>>>  	}
->>>>  	rentry->res = *r;
->>>> +	rentry->offset = offset;
->>>>  	list_add_tail(&rentry->node, c->list);
->>>>  	c->count++;
->>>>  	return AE_OK;
->>>> @@ -480,6 +482,7 @@ static acpi_status acpi_dev_new_resource_entry(struct resource *r,
->>>>  static acpi_status acpi_dev_process_resource(struct acpi_resource *ares,
->>>>  					     void *context)
->>>>  {
->>>> +	resource_size_t offset = 0;
->>>>  	struct res_proc_context *c = context;
->>>>  	struct resource r;
->>>>  	int i;
->>>> @@ -500,14 +503,14 @@ static acpi_status acpi_dev_process_resource(struct acpi_resource *ares,
->>>>  
->>>>  	if (acpi_dev_resource_memory(ares, &r)
->>>>  	    || acpi_dev_resource_io(ares, &r)
->>>> -	    || acpi_dev_resource_address_space(ares, &r, NULL)
->>>> -	    || acpi_dev_resource_ext_address_space(ares, &r, NULL))
->>>> -		return acpi_dev_new_resource_entry(&r, c);
->>>> +	    || acpi_dev_resource_address_space(ares, &r, &offset)
->>>> +	    || acpi_dev_resource_ext_address_space(ares, &r, &offset))
->>>> +		return acpi_dev_new_resource_entry(&r, c, offset);
->>>>  
->>>>  	for (i = 0; acpi_dev_resource_interrupt(ares, i, &r); i++) {
->>>>  		acpi_status status;
->>>>  
->>>> -		status = acpi_dev_new_resource_entry(&r, c);
->>>> +		status = acpi_dev_new_resource_entry(&r, c, 0);
->>>>  		if (ACPI_FAILURE(status))
->>>>  			return status;
->>>>  	}
->>>> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
->>>> index bde8119f5897..fea78e772450 100644
->>>> --- a/include/linux/acpi.h
->>>> +++ b/include/linux/acpi.h
->>>> @@ -300,6 +300,7 @@ bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
->>>>  struct resource_list_entry {
->>>>  	struct list_head node;
->>>>  	struct resource res;
->>>> +	resource_size_t offset;
->>>
->>> Well, so instead of adding the offset thing here and there, wouldn't it be
->>> cleaner to introduce something like
->>>
->>> 	struct ext_resource {
->>> 		sturct resource res;
->>> 		resource_size_t offset;
->>> 	};
->>>
->>> and use struct ext_resource instead of struct resource where an offset is needed?
->>>
->>> Just a thought ...
->> Hi Rafael,
->> 	Following patches will achieve this by sharing struct resource_list_entry.
+On Thu, 8 Jan 2015, Rafael J. Wysocki wrote:
+
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > 
-> Well, yes, they will partially, but that still won't avoid the need to pass
-> offset (or pointers to that) to several functions separately if I'm not
-> mistaken.  Which is kind of ugly.
-Hi Rafael,
-	Sorry, I missed your point with last reply. I have the basic
-idea about how to follow your suggestion now, will do it in next
-version.
-Regards,
-Gerry
+> Commit f25c0ae2b4c4 (ACPI / PM: Avoid resuming devices in ACPI PM
+> domain during system suspend) modified the ACPI PM domain's system
+> suspend callbacks to allow devices attached to it to be left in the
+> runtime-suspended state during system suspend so as to optimize
+> the suspend process.
+> 
+> This was based on the general mechanism introduced by commit
+> aae4518b3124 (PM / sleep: Mechanism to avoid resuming runtime-suspended
+> devices unnecessarily).
+> 
+> Extend that approach to PCI devices by modifying the PCI bus type's
+> ->prepare callback to return 1 for devices that are runtime-suspended
+> when it is being executed and that are in a suitable power state and
+> need not be resumed going forward.
+
+Does this correctly handle PCI devices that aren't included in the ACPI
+tables?  For example, add-on PCI cards?
+
+> +/**
+> + * pci_dev_keep_suspended - Check if the device can stay in the suspended state.
+> + * @dev: Device to check.
+> + *
+> + * Return 'true' if the device is runtime-suspended, it doesn't have to be
+> + * reconfigured for system wakeup and the current power state of it is
+> + * suitable for the upcoming (system) transition.
+> + */
+> +bool pci_dev_keep_suspended(struct pci_dev *dev)
+> +{
+> +	if (!pm_runtime_suspended(&dev->dev) || platform_pci_need_resume(dev))
+> +		return false;
+> +
+> +	return pci_target_state(dev) == dev->current_state;
+> +}
+
+So if platform_pci_need_resume() returns "false", you will try to keep 
+the device suspended.  And platform_pci_need_resume() simply invokes 
+the .need_resume method of the pci_platform_pm structure.
+
+> +static bool acpi_pci_need_resume(struct pci_dev *dev)
+> +{
+> +	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
+> +
+> +	if (!adev || !acpi_device_power_manageable(adev))
+> +		return false;
+
+And this says if the device doesn't appear in ACPI then it doesn't need 
+to be resumed.
+
+But what if it uses PME and it currently has the wrong wakeup setting?  
+Shouldn't this routine start out with
+
+	if (!adev)
+		return true;
+
+?  Or should there maybe be an explicit test for devices using PME?
+
+Alan Stern
+
