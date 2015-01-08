@@ -1,63 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:44750 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754602AbbAZQ2H convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 11:28:07 -0500
-Received: by mail-lb0-f180.google.com with SMTP id b6so8403840lbj.11
-        for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2015 08:28:04 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo4bN0kWP6a6qeU0QCZ23BwC-FJ1RTuaGMvS7zamiVp_Fw@mail.gmail.com>
-References: <1422263957-3148-1-git-send-email-zajec5@gmail.com>
-	<CAErSpo4bN0kWP6a6qeU0QCZ23BwC-FJ1RTuaGMvS7zamiVp_Fw@mail.gmail.com>
-Date: Mon, 26 Jan 2015 17:28:04 +0100
-Message-ID: <CACna6rz8dWYzDzBNV48VHqUYGzbqVneqjiQW5tzs7Nc=_wtX6Q@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Add defines for max read requests sizes
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Robert Moore <robert.moore@intel.com>,
+	Lv Zheng <lv.zheng@intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Len Brown <lenb@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
+	devel@acpica.org
+Subject: [RFC Patch 05/19] ACPI: Provide union for address_space64 and ext_address_space64
+Date: Thu,  8 Jan 2015 10:32:52 +0800
+Message-Id: <1420684386-5975-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 26 January 2015 at 17:01, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Jan 26, 2015 at 3:19 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
->> There are few drivers using magic numbers when operating with PCIe
->> capabilities and PCI_EXP_DEVCTL_READRQ. Define known values to allow
->> cleaning their code a bit.
->>
->> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->> ---
->> Hi,
->>
->> I'm new to the PCI subsystem, so let me know if there is anything wrong with my
->> patch. I hope you find these bits worth defining and that my coding style
->> matches rest of the file.
->> ---
->>  include/uapi/linux/pci_regs.h | 4 ++++
->>  1 file changed, 4 insertions(+)
->>
->> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
->> index 4a1d0cc..efe3443 100644
->> --- a/include/uapi/linux/pci_regs.h
->> +++ b/include/uapi/linux/pci_regs.h
->> @@ -451,6 +451,10 @@
->>  #define  PCI_EXP_DEVCTL_AUX_PME        0x0400  /* Auxiliary Power PM Enable */
->>  #define  PCI_EXP_DEVCTL_NOSNOOP_EN 0x0800  /* Enable No Snoop */
->>  #define  PCI_EXP_DEVCTL_READRQ 0x7000  /* Max_Read_Request_Size */
->> +#define  PCI_EXP_DEVCTL_READRQ_128B  0x0000 /* 128 Bytes */
->> +#define  PCI_EXP_DEVCTL_READRQ_256B  0x1000 /* 256 Bytes */
->> +#define  PCI_EXP_DEVCTL_READRQ_512B  0x2000 /* 512 Bytes */
->> +#define  PCI_EXP_DEVCTL_READRQ_1024B 0x3000 /* 1024 Bytes */
->>  #define  PCI_EXP_DEVCTL_BCR_FLR 0x8000  /* Bridge Configuration Retry / FLR */
->>  #define PCI_EXP_DEVSTA         10      /* Device Status */
->>  #define  PCI_EXP_DEVSTA_CED    0x0001  /* Correctable Error Detected */
->
-> This seems reasonable.  Can you include patches for the drivers to
-> actually use these new symbols?  It's ideal if we can do them at the
-> same time because we try to avoid adding new symbols unless they're
-> going to actually be used.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-Sure, but how to send them? Could the go through your (PCI) tree?
+address_space64 and ext_address_space64 share substracts just at
+different offsets. To unify the parsing functions implement the two
+structs as unions of their substructs, so we can extract the shared
+data.
 
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ include/acpi/acrestyp.h |   49 ++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 36 insertions(+), 13 deletions(-)
+
+diff --git a/include/acpi/acrestyp.h b/include/acpi/acrestyp.h
+index eb760ca0b2e0..307d5b2605c8 100644
+--- a/include/acpi/acrestyp.h
++++ b/include/acpi/acrestyp.h
+@@ -326,23 +326,46 @@ struct acpi_resource_address32 {
+ 	struct acpi_resource_source resource_source;
+ };
+ 
+-struct acpi_resource_address64 {
+-	ACPI_RESOURCE_ADDRESS_COMMON u64 granularity;
+-	u64 minimum;
+-	u64 maximum;
+-	u64 translation_offset;
++#define ACPI_RESOURCE_ADDRESS64_COMMON \
++	u64 granularity;	       \
++	u64 minimum;		       \
++	u64 maximum;		       \
++	u64 translation_offset;	       \
+ 	u64 address_length;
+-	struct acpi_resource_source resource_source;
++
++struct acpi_resource_address64_common {
++ACPI_RESOURCE_ADDRESS64_COMMON};
++
++struct acpi_resource_address64 {
++	union {
++		struct {
++			ACPI_RESOURCE_ADDRESS_COMMON
++			ACPI_RESOURCE_ADDRESS64_COMMON
++			struct acpi_resource_source resource_source;
++		};
++		struct {
++			struct acpi_resource_address base;
++			struct acpi_resource_address64_common addr;
++			struct acpi_resource_source resource_source;
++		} common;
++	};
+ };
+ 
+ struct acpi_resource_extended_address64 {
+-	ACPI_RESOURCE_ADDRESS_COMMON u8 revision_ID;
+-	u64 granularity;
+-	u64 minimum;
+-	u64 maximum;
+-	u64 translation_offset;
+-	u64 address_length;
+-	u64 type_specific;
++	union {
++		struct {
++			ACPI_RESOURCE_ADDRESS_COMMON
++			u8 revision_ID;
++			ACPI_RESOURCE_ADDRESS64_COMMON
++			u64 type_specific;
++		};
++		struct {
++			struct acpi_resource_address base;
++			u8 revision_ID;
++			struct acpi_resource_address64_common addr;
++			u64 type_specific;
++		} common;
++	};
+ };
+ 
+ struct acpi_resource_extended_irq {
 -- 
-Rafał
+1.7.10.4
+
