@@ -1,129 +1,134 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from galahad.ideasonboard.com ([185.26.127.97]:49335 "EHLO
-	galahad.ideasonboard.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752471AbbA1UXx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jan 2015 15:23:53 -0500
-From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-To: Will Deacon <will.deacon@arm.com>
-Cc: Murali Karicheri <m-karicheri2@ti.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
-	Rob Herring <robh+dt@kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v4 1/6] of: iommu: add ptr to OF node arg to of_iommu_configure()
-Date: Wed, 28 Jan 2015 15:15:10 +0200
-Message-ID: <13812499.ICbNgSDOae@avalon>
-In-Reply-To: <20150128122941.GK1569@arm.com>
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com> <3953539.m9NpxSWcJ5@avalon> <20150128122941.GK1569@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [RFC Patch 03/19] ACPI: Use the length check for io resources as well
+Date: Thu,  8 Jan 2015 10:32:50 +0800
+Message-Id: <1420684386-5975-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 28 January 2015 12:29:42 Will Deacon wrote:
-> On Wed, Jan 28, 2015 at 12:23:03PM +0000, Laurent Pinchart wrote:
-> > On Wednesday 28 January 2015 11:33:00 Will Deacon wrote:
-> >> On Mon, Jan 26, 2015 at 06:49:01PM +0000, Murali Karicheri wrote:
-> >>> On 01/25/2015 08:32 AM, Laurent Pinchart wrote:
-> >>>> On Friday 23 January 2015 17:32:34 Murali Karicheri wrote:
-> >>>>> Function of_iommu_configure() is called from of_dma_configure() to
-> >>>>> setup iommu ops using DT property. This API is currently used for
-> >>>>> platform devices for which DMA configuration (including iommu ops)
-> >>>>> may come from device's parent. To extend this functionality for PCI
-> >>>>> devices, this API need to take a parent node ptr as an argument
-> >>>>> instead of assuming device's parent. This is needed since for PCI,
-> >>>>> the dma configuration may be defined in the DT node of the root bus
-> >>>>> bridge's parent device. Currently only dma-range is used for PCI and
-> >>>>> iommu is not supported. So return error if the device is PCI.
-> >>>>> 
-> >>>>> Cc: Joerg Roedel<joro@8bytes.org>
-> >>>>> Cc: Grant Likely<grant.likely@linaro.org>
-> >>>>> Cc: Rob Herring<robh+dt@kernel.org>
-> >>>>> Cc: Bjorn Helgaas<bhelgaas@google.com>
-> >>>>> Cc: Will Deacon<will.deacon@arm.com>
-> >>>>> Cc: Russell King<linux@arm.linux.org.uk>
-> >>>>> Cc: Arnd Bergmann<arnd@arndb.de>
-> >>>>> Cc: Suravee Suthikulpanit<Suravee.Suthikulpanit@amd.com>
-> >>>>> 
-> >>>>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
-> >>>>> ---
-> >>>>> 
-> >>>>>   drivers/iommu/of_iommu.c |   10 ++++++++--
-> >>>>>   drivers/of/platform.c    |    2 +-
-> >>>>>   include/linux/of_iommu.h |    6 ++++--
-> >>>>>   3 files changed, 13 insertions(+), 5 deletions(-)
-> >>>>> 
-> >>>>> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-> >>>>> index af1dc6a..439235b 100644
-> >>>>> --- a/drivers/iommu/of_iommu.c
-> >>>>> +++ b/drivers/iommu/of_iommu.c
-> >>>>> @@ -133,19 +133,25 @@ struct iommu_ops *of_iommu_get_ops(struct
-> >>>>> device_node *np)
-> >>>>>   	return ops;
-> >>>>>  }
-> >>>>> 
-> >>>>> -struct iommu_ops *of_iommu_configure(struct device *dev)
-> >>>>> +struct iommu_ops *of_iommu_configure(struct device *dev,
-> >>>>> +				     struct device_node *iommu_np)
-> >>>>>  {
-> >>>>>   	struct of_phandle_args iommu_spec;
-> >>>>>   	struct device_node *np;
-> >>>>>   	struct iommu_ops *ops = NULL;
-> >>>>>   	int idx = 0;
-> >>>>> 
-> >>>>> +	if (dev_is_pci(dev)) {
-> >>>>> +		dev_err(dev, "iommu is currently not supported for PCI\n");
-> >>>>> +		return NULL;
-> >>>>> +	}
-> >>>>> +
-> >>>>>   	/*
-> >>>>>   	 * We don't currently walk up the tree looking for a parent
-> >>>>>   	 IOMMU.
-> >>>>>   	 * See the `Notes:' section of
-> >>>>>   	 * Documentation/devicetree/bindings/iommu/iommu.txt
-> >>>>>   	 */
-> >>>> 
-> >>>> Wouldn't it be better to fix this rather than passing the device node
-> >>>> pointer to the function ? The solution would be more generic.
-> >>> 
-> >>> Will Deacon (Copied here) is working on this as we alteady discussed
-> >>> in this thread. So it will be addressed by him in another series.
-> >> 
-> >> Well, "working on this" equates to "has it somewhere near the bottom of
-> >> a very long list" :)
-> > 
-> > What's your opinion on this patch then, do you think adding the iommu_np
-> > argument makes sense as a temporary hack, or should we instead walk up the
-> > tree looking for an iommus attribute in parent nodes ? I don't expect that
-> > to be insanely difficult to code.
-> 
-> If walking up the tree is useful, then I think we should do that and update
-> the Documentation to reflect the new behaviour.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-If I understand Murali's patch set right (please correct me if that's not the 
-case) the PCI code walks up the DT nodes hierarchy to the parent node that 
-contains the iommus attribute and passes a pointer to that node to this 
-function. It's thus a PCI-specific solution. As a temporary hack that's OK I 
-suppose, but if implementing it right straight away isn't difficult that would 
-be better.
+Also apply length check to IO resources.
 
-> The only reason that I didn't code that in of_iommu_configure originally is
-> because I didn't want to go against the binding spec for the initial
-> version, especially as we didn't have a reason to look at parent nodes.
-> 
-> The only thing to double-check is that we don't break any existing users
-> of the binding with this change, but I don't think that we do.
+[Jiang] Remove enforcement that resource starting address must be
+non-zero.
 
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/resource.c |   44 +++++++++++++++++++-------------------------
+ 1 file changed, 19 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index f20e23d4fb16..c0578c05e2c2 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -117,31 +117,30 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
+ 
+-static unsigned int acpi_dev_ioresource_flags(u64 start, u64 end, u8 io_decode,
+-					      bool window)
++static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
++				      u8 io_decode, bool window)
+ {
+-	int flags = IORESOURCE_IO;
++	res->flags = IORESOURCE_IO;
+ 
+-	if (io_decode == ACPI_DECODE_16)
+-		flags |= IORESOURCE_IO_16BIT_ADDR;
++	if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
++		res->flags |= IORESOURCE_DISABLED;
+ 
+-	if (start > end || end >= 0x10003)
+-		flags |= IORESOURCE_DISABLED;
++	if (res->end >= 0x10003)
++		res->flags |= IORESOURCE_DISABLED;
+ 
+-	if (window)
+-		flags |= IORESOURCE_WINDOW;
++	if (io_decode == ACPI_DECODE_16)
++		res->flags |= IORESOURCE_IO_16BIT_ADDR;
+ 
+-	return flags;
++	if (window)
++		res->flags |= IORESOURCE_WINDOW;
+ }
+ 
+ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
+ 				    u8 io_decode)
+ {
+-	u64 end = start + len - 1;
+-
+ 	res->start = start;
+-	res->end = end;
+-	res->flags = acpi_dev_ioresource_flags(start, end, io_decode, false);
++	res->end = start + len - 1;
++	acpi_dev_ioresource_flags(res, len, io_decode, false);
+ }
+ 
+ /**
+@@ -161,16 +160,12 @@ bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res)
+ 	switch (ares->type) {
+ 	case ACPI_RESOURCE_TYPE_IO:
+ 		io = &ares->data.io;
+-		if (!io->minimum && !io->address_length)
+-			return false;
+ 		acpi_dev_get_ioresource(res, io->minimum,
+ 					io->address_length,
+ 					io->io_decode);
+ 		break;
+ 	case ACPI_RESOURCE_TYPE_FIXED_IO:
+ 		fixed_io = &ares->data.fixed_io;
+-		if (!fixed_io->address && !fixed_io->address_length)
+-			return false;
+ 		acpi_dev_get_ioresource(res, fixed_io->address,
+ 					fixed_io->address_length,
+ 					ACPI_DECODE_10);
+@@ -178,7 +173,8 @@ bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res)
+ 	default:
+ 		return false;
+ 	}
+-	return true;
++
++	return !(res->flags & IORESOURCE_DISABLED);
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_io);
+ 
+@@ -216,9 +212,8 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+ 	case ACPI_IO_RANGE:
+ 		io_decode = addr.granularity == 0xfff ?
+ 				ACPI_DECODE_10 : ACPI_DECODE_16;
+-		res->flags = acpi_dev_ioresource_flags(addr.minimum,
+-						       addr.maximum,
+-						       io_decode, window);
++		acpi_dev_ioresource_flags(res, addr.address_length,
++					  io_decode, window);
+ 		break;
+ 	case ACPI_BUS_NUMBER_RANGE:
+ 		res->flags = IORESOURCE_BUS;
+@@ -265,9 +260,8 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
+ 	case ACPI_IO_RANGE:
+ 		io_decode = ext_addr->granularity == 0xfff ?
+ 				ACPI_DECODE_10 : ACPI_DECODE_16;
+-		res->flags = acpi_dev_ioresource_flags(ext_addr->minimum,
+-						       ext_addr->maximum,
+-						       io_decode, window);
++		acpi_dev_ioresource_flags(res, ext_addr->address_length,
++					  io_decode, window);
+ 		break;
+ 	case ACPI_BUS_NUMBER_RANGE:
+ 		res->flags = IORESOURCE_BUS;
 -- 
-Regards,
-
-Laurent Pinchart
+1.7.10.4
 
