@@ -1,76 +1,60 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <54C8FE61.1030304@linux.intel.com>
-Date: Wed, 28 Jan 2015 23:21:05 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Message-ID: <54AED9EC.1020703@ti.com>
+Date: Thu, 8 Jan 2015 14:26:36 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Andre Przywara <andre.przywara@arm.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Fix pcibios_update_irq misuse of irq number
-References: <1422456683-797-1-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1422456683-797-1-git-send-email-marc.zyngier@arm.com>
-Content-Type: text/plain; charset=windows-1252
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Rob Herring <robherring2@gmail.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Linux IOMMU <iommu@lists.linux-foundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v3 2/4] of: move of_dma_configure() to device,c to help
+ re-use
+References: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com> <1420656594-8908-3-git-send-email-m-karicheri2@ti.com> <CAL_Jsq+pKeXuGnZV_NYHn6iZgeOs404OPhcUb0FJs=-7j2P1Ug@mail.gmail.com> <3861625.CJ6m15sZMh@wuerfel>
+In-Reply-To: <3861625.CJ6m15sZMh@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 01/08/2015 03:40 AM, Arnd Bergmann wrote:
+> On Wednesday 07 January 2015 17:37:56 Rob Herring wrote:
+>> On Wed, Jan 7, 2015 at 12:49 PM, Murali Karicheri<m-karicheri2@ti.com>  wrote:
+>>
+>>> +       ret = of_dma_get_range(np,&dma_addr,&paddr,&size);
+>>> +       if (ret<  0) {
+>>> +               dma_addr = offset = 0;
+>>> +               size = dev->coherent_dma_mask + 1;
+>>
+>> If coherent_dma_mask is DMA_BIT_MASK(64), then you will overflow and
+>> have a size of 0. There may also be a problem when the mask is only
+>> 32-bit type.
+>
+> The mask is always a 64-bit type, it's not optional. But you are right,
+> the 64-bit mask case is broken, so I guess we have to fix it differently
+> by always passing the smaller value into arch_setup_dma_ops and
+> adapting that function instead.
+Arnd,
+
+What is the smaller value you are referring to in the below code? 
+between *dev->dma_mask and size from DT? But overflow can still happen 
+when size is to be calculated in arch_setup_dma_ops() for Non DT case or 
+when DT size is configured to be equivalent of DMA_BIT_MASK(64) + 1. Can 
+we discuss the code change you have in mind when you get a chance?
+
+Murali
+>
+> 	Arnd
 
 
-On 2015/1/28 22:51, Marc Zyngier wrote:
-> pcibios_update_irq writes an irq number into the config space
-> of a given PCI device, but ignores the fact that this number
-> is a virtual interrupt number, which might be a very different
-> value from what the underlying hardware is using.
-> 
-> The obvious fix is to fetch the HW interrupt number from the
-> corresponding irq_data structure. This is slightly complicated
-> by the fact that this interrupt might be services by a stacked
-> domain.
-> 
-> This has been tested on KVM with kvmtool.
-> 
-> Reported-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Tested-by: Andre Przywara <andre.przywara@arm.com>
-> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
-> ---
->  drivers/pci/setup-irq.c | 12 ++++++++++--
->  1 file changed, 10 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-> index 4e2d595..828cbc9 100644
-> --- a/drivers/pci/setup-irq.c
-> +++ b/drivers/pci/setup-irq.c
-> @@ -15,11 +15,19 @@
->  #include <linux/errno.h>
->  #include <linux/ioport.h>
->  #include <linux/cache.h>
-> +#include <linux/irq.h>
->  
->  void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
->  {
-> -	dev_dbg(&dev->dev, "assigning IRQ %02d\n", irq);
-> -	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
-> +	struct irq_data *d;
-> +
-> +	d = irq_get_irq_data(irq);
-> +#ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
-> +	while (d->parent_data)
-> +		d = d->parent_data;
-> +#endif
-> +	dev_dbg(&dev->dev, "assigning IRQ %02ld\n", d->hwirq);
-> +	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, d->hwirq);
->  }
-Hi Mark,
-	Instead of modifying the common version, how about
-implementing an arch specific version? Arch may have different
-way to determine the irq number. Above implementation doesn't
-work with x86, for example.
-Regards!
-Gerry
-
->  
->  static void pdev_fixup_irq(struct pci_dev *dev,
-> 
+-- 
+Murali Karicheri
+Linux Kernel, Texas Instruments
