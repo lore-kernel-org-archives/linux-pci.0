@@ -1,99 +1,111 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <54C9000C.3040907@ti.com>
-Date: Wed, 28 Jan 2015 10:28:12 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qg0-f49.google.com ([209.85.192.49]:43545 "EHLO
+	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752076AbbAHXLJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jan 2015 18:11:09 -0500
+Received: by mail-qg0-f49.google.com with SMTP id f51so5425874qge.8
+        for <linux-pci@vger.kernel.org>; Thu, 08 Jan 2015 15:11:09 -0800 (PST)
 MIME-Version: 1.0
-To: Robin Murphy <robin.murphy@arm.com>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v5 3/8] of: fix size when dma-range is not used
-References: <1422392405-32196-1-git-send-email-m-karicheri2@ti.com> <1422392405-32196-4-git-send-email-m-karicheri2@ti.com> <54C8C652.8050507@arm.com>
-In-Reply-To: <54C8C652.8050507@arm.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1420745423.25367.77.camel@redhat.com>
+References: <20141121180322.26669.65689.stgit@gimli.home> <20141121182427.26669.82417.stgit@gimli.home>
+ <20150108160733.GA6575@google.com> <1420745423.25367.77.camel@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 8 Jan 2015 17:10:48 -0600
+Message-ID: <CAErSpo7E3-qEwHeeMvKvGmUzPQ6eP7=g0mqUZuBBrdcu_yN95w@mail.gmail.com>
+Subject: Re: [PATCH 4/4] PCI: quirk Atheros AR93xx to avoid bus reset
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/28/2015 06:21 AM, Robin Murphy wrote:
-> Hi Murali,
+On Thu, Jan 8, 2015 at 1:30 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> On Thu, 2015-01-08 at 09:07 -0700, Bjorn Helgaas wrote:
+>> On Fri, Nov 21, 2014 at 11:24:27AM -0700, Alex Williamson wrote:
+>> > Reports against the TL-WDN4800 card indicate that PCI bus reset of
+>> > this Atheros device cause system lock-ups and resets.  I've also
+>> > been able to confirm this behavior on multiple systems.  The device
+>> > never returns from reset and attempts to access config space of the
+>> > device after reset result in hangs.  Blacklist bus reset for the
+>> > device to avoid this issue.
+>> >
+>> > Reported-by: Andreas Hartmann <andihartmann@freenet.de>
+>> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+>> > Tested-by: Andreas Hartmann <andihartmann@freenet.de>
+>>
+>> If I understand correctly, these two (patches 3 & 4) fix a v3.14 regression
+>> caused by 425c1b223dac ("PCI: Add Virtual Channel to save/restore support").
+>>
+>> If so, these should go to for-linus for v3.19.  What about patches 1 & 2?
+>> Do they fix a regression?  Is there a pointer to a bugzilla or problem
+>> report about that issue?
+>>
+>> I don't understand the connection between 425c1b223dac and
+>> PCI_DEV_FLAGS_NO_BUS_RESET, because 425c1b223dac doesn't seem to do any
+>> resets.  Is that the wrong commit, or can you outline the connection for
+>> me?
 >
-> [sorry, missed replying to yesterday's version]
->
-> On 27/01/15 21:00, Murali Karicheri wrote:
->> Fix the dma-range size when the DT attribute is missing. i.e set size to
->> dev->coherent_dma_mask + 1 instead of dev->coherent_dma_mask. Also add
->> code to check invalid values of size configured in DT and log error.
->>
->> Cc: Joerg Roedel <joro@8bytes.org>
->> Cc: Grant Likely <grant.likely@linaro.org>
->> Cc: Rob Herring <robh+dt@kernel.org>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: Will Deacon <will.deacon@arm.com>
->> Cc: Russell King <linux@arm.linux.org.uk>
->> Cc: Arnd Bergmann <arnd@arndb.de>
->> Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->>
->> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
->> ---
->> drivers/of/device.c | 9 ++++++++-
->> 1 file changed, 8 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/of/device.c b/drivers/of/device.c
->> index 2de320d..17504f4 100644
->> --- a/drivers/of/device.c
->> +++ b/drivers/of/device.c
->> @@ -105,12 +105,19 @@ void of_dma_configure(struct device *dev, struct
->> device_node *np)
->> ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
->> if (ret < 0) {
->> dma_addr = offset = 0;
->> - size = dev->coherent_dma_mask;
->> + size = dev->coherent_dma_mask + 1;
->> } else {
->> offset = PFN_DOWN(paddr - dma_addr);
->> dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
->> }
->>
->> + if (is_power_of_2(size + 1))
->> + size = size + 1;
->> + else if (!is_power_of_2(size)) {
->> + dev_err(dev, "invalid size\n");
->> + return;
->> + }
->> +
->
-> Couldn't these checks go into the "else" path above? We don't need to
-> check the non-DT case, because we know we've just set it to something
-> sensible.
-Robin,
+> TBH, I don't have a lot of faith in associating this to 425c1b223dac,
+> I'm not sure how Andreas' bisect landed there.  IME, this device cannot,
+> and has never been able to handle a bus reset.  A simple setpci
+> experiment on the commandline can confirm this.  What I think happened
+> is that with the PCI bus reset infrastructure we added, we switched QEMU
+> to prefer PCI bus resets over things like PM D3hot->D0 resets.  So it's
+> just more prolific use of bus resets by userspace.
 
-Sure it can. I was doing flip/flop on the choice and thought it doesn' 
-matter either way. Please also repond to Catalin's comment if you have 
-any issues so that I can avoid additional spin on this patch.
+Maybe it's not 425c1b223dac, but it seems pretty clear that it really
+is a regression from the user point of view.  I'm sure Andreas was
+using the same user-space for v3.13 and v3.14.
 
-Thanks
+Testing 425c1b223dac^ (the predecessor of 425c1b223dac) and
+425c1b223dac would confirm the bisect results.
 
-Murali
->
-> Robin.
->
->> dev->dma_pfn_offset = offset;
->>
->> coherent = of_dma_is_coherent(np);
->>
->
->
+If it really turns out that 425c1b223dac^ works and 425c1b223dac
+fails, maybe we could learn something interesting by adding debug
+output to the various reset flavors and comparing the output?
 
+> There's also no regression in 1 & 2, PM reset has never done anything
+> useful on those devices.  Thanks,
 
--- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+Since 1 & 2 don't fix a regression, I think what I should do is apply
+3 & 4 to for-linus for v3.19, then apply 1 & 2 on top as v3.20
+material.
+
+Bjorn
+
+>> > ---
+>> >
+>> >  drivers/pci/quirks.c |   14 ++++++++++++++
+>> >  1 file changed, 14 insertions(+)
+>> >
+>> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> > index 561e10d..ebbd5b4 100644
+>> > --- a/drivers/pci/quirks.c
+>> > +++ b/drivers/pci/quirks.c
+>> > @@ -3029,6 +3029,20 @@ static void quirk_no_pm_reset(struct pci_dev *dev)
+>> >  DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_ATI, PCI_ANY_ID,
+>> >                            PCI_CLASS_DISPLAY_VGA, 8, quirk_no_pm_reset);
+>> >
+>> > +static void quirk_no_bus_reset(struct pci_dev *dev)
+>> > +{
+>> > +   dev->dev_flags |= PCI_DEV_FLAGS_NO_BUS_RESET;
+>> > +}
+>> > +
+>> > +/*
+>> > + * Atheros AR93xx chips do not behave after a bus reset.  The device will
+>> > + * throw a Link Down error on AER capable system and regardless of AER,
+>> > + * config space of the device is never accessible again and typically
+>> > + * causes the system to hang or reset when access is attempted.
+>> > + * http://www.spinics.net/lists/linux-pci/msg34797.html
+>> > + */
+>> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0030, quirk_no_bus_reset);
+>> > +
+>> >  #ifdef CONFIG_ACPI
+>> >  /*
+>> >   * Apple: Shutdown Cactus Ridge Thunderbolt controller.
+>> >
+>
+>
+>
