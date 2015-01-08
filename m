@@ -1,73 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:44856 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751478AbbAWXvO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 18:51:14 -0500
-Received: by mail-ob0-f182.google.com with SMTP id gq1so249196obb.13
-        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 15:51:14 -0800 (PST)
-Date: Fri, 23 Jan 2015 17:51:11 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Michel =?iso-8859-1?Q?D=E4nzer?= <michel@daenzer.net>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Federico <federicotg@gmail.com>, dri-devel@lists.freedesktop.org
-Subject: Re: [PATCH v2] pci: Fix infinite loop with ROM image of size 0
-Message-ID: <20150123235111.GX29776@google.com>
-References: <CAFUqUc6JPgSK4tTP7KuJ8TmVLZR6Abaf9uHUTRZA+OJhv8DoBA@mail.gmail.com>
- <1421657600-31561-1-git-send-email-michel@daenzer.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1421657600-31561-1-git-send-email-michel@daenzer.net>
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:58121 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932418AbbAHRGe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jan 2015 12:06:34 -0500
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH v2 3/8] PCI/MSI: of: Add support for OF-provided msi_domain
+Date: Thu,  8 Jan 2015 17:06:07 +0000
+Message-Id: <1420736772-11088-4-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com>
+References: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 19, 2015 at 05:53:20PM +0900, Michel Dänzer wrote:
-> From: Michel Dänzer <michel.daenzer@amd.com>
-> 
-> If the image size would ever read as 0, pci_get_rom_size could keep
-> processing the same image over and over again.
-> 
-> Reported-by: Federico <federicotg@gmail.com>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+In order to populate the PHB msi_domain, use the "msi-parent"
+attribute to lookup a corresponding irq domain. If found,
+this is our MSI domain.
 
-Applied with Alex's ack to pci/resource for v3.20, thanks!
+This gets plugged into the core PCI code.
 
-> ---
-> 
-> v2:
-> * Use unsigned instead of u16 for the local length variable (not sure if
->   the multiplication by 512 could overflow otherwise)
-> * Integrate length condition into while statement
-> * Add stable tag
-> 
->  drivers/pci/rom.c | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
-> index f955edb..eb0ad53 100644
-> --- a/drivers/pci/rom.c
-> +++ b/drivers/pci/rom.c
-> @@ -71,6 +71,7 @@ size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom, size_t size)
->  {
->  	void __iomem *image;
->  	int last_image;
-> +	unsigned length;
->  
->  	image = rom;
->  	do {
-> @@ -93,9 +94,9 @@ size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom, size_t size)
->  		if (readb(pds + 3) != 'R')
->  			break;
->  		last_image = readb(pds + 21) & 0x80;
-> -		/* this length is reliable */
-> -		image += readw(pds + 16) * 512;
-> -	} while (!last_image);
-> +		length = readw(pds + 16);
-> +		image += length * 512;
-> +	} while (length && !last_image);
->  
->  	/* never return a size larger than the PCI resource window */
->  	/* there are known ROMs that get the size wrong */
-> -- 
-> 2.1.4
-> 
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/pci/of.c    | 15 +++++++++++++++
+ drivers/pci/probe.c |  1 +
+ include/linux/pci.h |  2 ++
+ 3 files changed, 18 insertions(+)
+
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index f092993..d8d1274 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -9,6 +9,7 @@
+  * 2 of the License, or (at your option) any later version.
+  */
+ 
++#include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
+ #include <linux/of.h>
+@@ -59,3 +60,17 @@ struct device_node * __weak pcibios_get_phb_of_node(struct pci_bus *bus)
+ 		return of_node_get(bus->bridge->parent->of_node);
+ 	return NULL;
+ }
++
++void pci_set_phb_of_msi_domain(struct pci_bus *bus)
++{
++#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
++	struct device_node *np;
++
++	if (!bus->dev.of_node)
++		return;
++	np = of_parse_phandle(bus->dev.of_node, "msi-parent", 0);
++	if (!np)
++		return;
++	dev_set_msi_domain(&bus->dev, irq_find_host(np));
++#endif
++}
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 977c079..82fbd12 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -662,6 +662,7 @@ static void pci_set_bus_speed(struct pci_bus *bus)
+ 
+ void __weak pcibios_set_phb_msi_domain(struct pci_bus *bus)
+ {
++	pci_set_phb_of_msi_domain(bus);
+ }
+ 
+ static void pci_set_bus_msi_domain(struct pci_bus *bus)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 13c65ab..66c493e 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1828,6 +1828,7 @@ void pci_set_of_node(struct pci_dev *dev);
+ void pci_release_of_node(struct pci_dev *dev);
+ void pci_set_bus_of_node(struct pci_bus *bus);
+ void pci_release_bus_of_node(struct pci_bus *bus);
++void pci_set_phb_of_msi_domain(struct pci_bus *bus);
+ 
+ /* Arch may override this (weak) */
+ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus);
+@@ -1848,6 +1849,7 @@ static inline void pci_set_of_node(struct pci_dev *dev) { }
+ static inline void pci_release_of_node(struct pci_dev *dev) { }
+ static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
+ static inline void pci_release_bus_of_node(struct pci_bus *bus) { }
++static inline void pci_set_phb_of_msi_domain(struct pci_bus *bus) {}
+ #endif  /* CONFIG_OF */
+ 
+ #ifdef CONFIG_EEH
+-- 
+2.1.4
+
