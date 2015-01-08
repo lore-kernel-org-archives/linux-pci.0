@@ -1,134 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:44681 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751774AbbALHIi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 02:08:38 -0500
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>
-Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
-	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
-Subject: [PATCH v8 05/10] iommu/vt-d: Add functions to load and save old re
-Date: Mon, 12 Jan 2015 15:06:23 +0800
-Message-Id: <1421046388-27925-6-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1421046388-27925-1-git-send-email-zhen-hual@hp.com>
-References: <1421046388-27925-1-git-send-email-zhen-hual@hp.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [RFC Patch 15/19] ACPI: Add field offset to struct resource_list_entry
+Date: Thu,  8 Jan 2015 10:33:02 +0800
+Message-Id: <1420684386-5975-16-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add functions to load root entry table from old kernel, and to save updated
-root entry table.
-Add two member in struct intel_iommu, to store the RTA in old kernel, and
-the mapped virt address of it.
+Add field offset to struct resource_list_entry to host address space
+translation offset so it could be used to represent bridge resources.
 
-We use the old RTA in dump kernel, and when the iommu->root_entry is used as
-a cache in kdump kernel, its phys address will not be save to RTA register,
-but when its data is changed, we will save the new data to old root entry table.
-
-Li, Zhen-hua:
-    The functions and logics.
-
-Takao Indoh:
-    Add __iommu_flush_cache.
-
-Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
-Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/iommu/intel-iommu.c | 53 +++++++++++++++++++++++++++++++++++++++++++++
- include/linux/intel-iommu.h |  5 +++++
- 2 files changed, 58 insertions(+)
+ drivers/acpi/resource.c |   13 ++++++++-----
+ include/linux/acpi.h    |    1 +
+ 2 files changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 2335831..5f11f43 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -388,6 +388,10 @@ static int intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu);
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 16d334a1ee25..54204ac94f8e 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -462,7 +462,8 @@ struct res_proc_context {
+ };
  
- static int device_to_domain_id(struct intel_iommu *iommu, u8 bus, u8 devfn);
+ static acpi_status acpi_dev_new_resource_entry(struct resource *r,
+-					       struct res_proc_context *c)
++					       struct res_proc_context *c,
++					       resource_size_t offset)
+ {
+ 	struct resource_list_entry *rentry;
  
-+static void __iommu_load_old_root_entry(struct intel_iommu *iommu);
-+
-+static void __iommu_update_old_root_entry(struct intel_iommu *iommu, int index);
-+
- struct iommu_remapped_entry {
- 	struct list_head list;
- 	void __iomem *mem;
-@@ -4986,4 +4990,53 @@ static int device_to_domain_id(struct intel_iommu *iommu, u8 bus, u8 devfn)
- 	return did;
- }
+@@ -472,6 +473,7 @@ static acpi_status acpi_dev_new_resource_entry(struct resource *r,
+ 		return AE_NO_MEMORY;
+ 	}
+ 	rentry->res = *r;
++	rentry->offset = offset;
+ 	list_add_tail(&rentry->node, c->list);
+ 	c->count++;
+ 	return AE_OK;
+@@ -480,6 +482,7 @@ static acpi_status acpi_dev_new_resource_entry(struct resource *r,
+ static acpi_status acpi_dev_process_resource(struct acpi_resource *ares,
+ 					     void *context)
+ {
++	resource_size_t offset = 0;
+ 	struct res_proc_context *c = context;
+ 	struct resource r;
+ 	int i;
+@@ -500,14 +503,14 @@ static acpi_status acpi_dev_process_resource(struct acpi_resource *ares,
  
-+/*
-+ * Load the old root entry table to new root entry table.
-+ */
-+static void __iommu_load_old_root_entry(struct intel_iommu *iommu)
-+{
-+	if ((!iommu)
-+		|| (!iommu->root_entry)
-+		|| (!iommu->root_entry_old_virt)
-+		|| (!iommu->root_entry_old_phys))
-+		return;
-+	memcpy(iommu->root_entry, iommu->root_entry_old_virt, PAGE_SIZE);
-+
-+	__iommu_flush_cache(iommu, iommu->root_entry, PAGE_SIZE);
-+}
-+
-+/*
-+ * When the data in new root entry table is changed, this function
-+ * must be called to save the updated data to old root entry table.
-+ */
-+static void __iommu_update_old_root_entry(struct intel_iommu *iommu, int index)
-+{
-+	u8 start;
-+	unsigned long size;
-+	void __iomem *to;
-+	void *from;
-+
-+	if ((!iommu)
-+		|| (!iommu->root_entry)
-+		|| (!iommu->root_entry_old_virt)
-+		|| (!iommu->root_entry_old_phys))
-+		return;
-+
-+	if (index < -1 || index >= ROOT_ENTRY_NR)
-+		return;
-+
-+	if (index == -1) {
-+		start = 0;
-+		size = ROOT_ENTRY_NR * sizeof(struct root_entry);
-+	} else {
-+		start = index * sizeof(struct root_entry);
-+		size = sizeof(struct root_entry);
-+	}
-+	to = iommu->root_entry_old_virt;
-+	from = iommu->root_entry;
-+	memcpy(to + start, from + start, size);
-+
-+	__iommu_flush_cache(iommu, to + start, size);
-+}
-+
- #endif /* CONFIG_CRASH_DUMP */
-diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
-index 8ffa523..8e29b97 100644
---- a/include/linux/intel-iommu.h
-+++ b/include/linux/intel-iommu.h
-@@ -329,6 +329,11 @@ struct intel_iommu {
- 	spinlock_t	lock; /* protect context, domain ids */
- 	struct root_entry *root_entry; /* virtual address */
+ 	if (acpi_dev_resource_memory(ares, &r)
+ 	    || acpi_dev_resource_io(ares, &r)
+-	    || acpi_dev_resource_address_space(ares, &r, NULL)
+-	    || acpi_dev_resource_ext_address_space(ares, &r, NULL))
+-		return acpi_dev_new_resource_entry(&r, c);
++	    || acpi_dev_resource_address_space(ares, &r, &offset)
++	    || acpi_dev_resource_ext_address_space(ares, &r, &offset))
++		return acpi_dev_new_resource_entry(&r, c, offset);
  
-+#ifdef CONFIG_CRASH_DUMP
-+	void __iomem *root_entry_old_virt; /* mapped from old root entry */
-+	unsigned long root_entry_old_phys; /* root entry in old kernel */
-+#endif
-+
- 	struct iommu_flush flush;
- #endif
- 	struct q_inval  *qi;            /* Queued invalidation info */
+ 	for (i = 0; acpi_dev_resource_interrupt(ares, i, &r); i++) {
+ 		acpi_status status;
+ 
+-		status = acpi_dev_new_resource_entry(&r, c);
++		status = acpi_dev_new_resource_entry(&r, c, 0);
+ 		if (ACPI_FAILURE(status))
+ 			return status;
+ 	}
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index bde8119f5897..fea78e772450 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -300,6 +300,7 @@ bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
+ struct resource_list_entry {
+ 	struct list_head node;
+ 	struct resource res;
++	resource_size_t offset;
+ };
+ 
+ void acpi_dev_free_resource_list(struct list_head *list);
 -- 
-2.0.0-rc0
+1.7.10.4
 
