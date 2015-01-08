@@ -1,175 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:53214 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753245AbbAOC2g (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 21:28:36 -0500
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 15 Jan 2015 12:28:35 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id E783E2BB0051
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:32 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t0F2SWnr42991726
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:32 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t0F2SVAI020042
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:32 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V11 12/17] powerpc/powernv: Reserve additional space for IOV BAR according to the number of total_pe
-Date: Thu, 15 Jan 2015 10:28:02 +0800
-Message-Id: <1421288887-7765-13-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <20150113180502.GC2776@google.com>
- <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [RFC Patch 09/19] ACPI: Fix a bug in parsing ACPI Memroy24 resource
+Date: Thu,  8 Jan 2015 10:32:56 +0800
+Message-Id: <1420684386-5975-10-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On PHB3, PF IOV BAR will be covered by M64 BAR to have better PE isolation.
-Mostly the total_pe number is different from the total_VFs, which will lead
-to a conflict between MMIO space and the PE number.
+According to ACPI spec 5, section 6.4.3.1 "24-Bit Memory Range Descriptor",
+minimum, maximum and address_length field in struct acpi_resource_memory24
+is in granularity of 256-bytes. So shift 8-bit left to get correct address.
 
-For example, total_VFs is 128 and total_pe is 256, then the second half of
-M64 BAR space will be part of other PCI device, which may already belongs
-to other PEs.
-
-This patch reserve additional space for the PF IOV BAR, which is total_pe
-number of VF's BAR size. By doing so, it prevents the conflict.
-
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/powerpc/include/asm/machdep.h        |    4 ++
- arch/powerpc/include/asm/pci-bridge.h     |    3 ++
- arch/powerpc/kernel/pci-common.c          |    5 +++
- arch/powerpc/platforms/powernv/pci-ioda.c |   59 +++++++++++++++++++++++++++++
- 4 files changed, 71 insertions(+)
+ drivers/acpi/resource.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index c8175a3..965547c 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -250,6 +250,10 @@ struct machdep_calls {
- 	/* Reset the secondary bus of bridge */
- 	void  (*pcibios_reset_secondary_bus)(struct pci_dev *dev);
- 
-+#ifdef CONFIG_PCI_IOV
-+	void (*pcibios_fixup_sriov)(struct pci_bus *bus);
-+#endif /* CONFIG_PCI_IOV */
-+
- 	/* Called to shutdown machine specific hardware not already controlled
- 	 * by other drivers.
- 	 */
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 334e745..b857ec4 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -170,6 +170,9 @@ struct pci_dn {
- #define IODA_INVALID_PE		(-1)
- #ifdef CONFIG_PPC_POWERNV
- 	int	pe_number;
-+#ifdef CONFIG_PCI_IOV
-+	u16     max_vfs;		/* number of VFs IOV BAR expended */
-+#endif /* CONFIG_PCI_IOV */
- #endif
- 	struct list_head child_list;
- 	struct list_head list;
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 889f743..832b7e1 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1636,6 +1636,11 @@ void pcibios_scan_phb(struct pci_controller *hose)
- 	if (ppc_md.pcibios_fixup_phb)
- 		ppc_md.pcibios_fixup_phb(hose);
- 
-+#ifdef CONFIG_PCI_IOV
-+	if (ppc_md.pcibios_fixup_sriov)
-+		ppc_md.pcibios_fixup_sriov(bus);
-+#endif /* CONFIG_PCI_IOV */
-+
- 	/* Configure PCI Express settings */
- 	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
- 		struct pci_bus *child;
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 31335a7..6704fdf 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1721,6 +1721,62 @@ static void pnv_pci_init_ioda_msis(struct pnv_phb *phb)
- static void pnv_pci_init_ioda_msis(struct pnv_phb *phb) { }
- #endif /* CONFIG_PCI_MSI */
- 
-+#ifdef CONFIG_PCI_IOV
-+static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
-+{
-+	struct pci_controller *hose;
-+	struct pnv_phb *phb;
-+	struct resource *res;
-+	int i;
-+	resource_size_t size;
-+	struct pci_dn *pdn;
-+
-+	if (!pdev->is_physfn || pdev->is_added)
-+		return;
-+
-+	hose = pci_bus_to_host(pdev->bus);
-+	phb = hose->private_data;
-+
-+	pdn = pci_get_pdn(pdev);
-+	pdn->max_vfs = 0;
-+
-+	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
-+		res = &pdev->resource[i];
-+		if (!res->flags || res->parent)
-+			continue;
-+		if (!pnv_pci_is_mem_pref_64(res->flags)) {
-+			dev_warn(&pdev->dev, " Skipping expanding IOV BAR %pR on %s\n",
-+				 res, pci_name(pdev));
-+			continue;
-+		}
-+
-+		dev_dbg(&pdev->dev, " Fixing VF BAR[%d] %pR to\n", i, res);
-+		size = pci_iov_resource_size(pdev, i);
-+		res->end = res->start + size * phb->ioda.total_pe - 1;
-+		dev_dbg(&pdev->dev, "                       %pR\n", res);
-+		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
-+				i - PCI_IOV_RESOURCES,
-+				res, phb->ioda.total_pe);
-+	}
-+	pdn->max_vfs = phb->ioda.total_pe;
-+}
-+
-+static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
-+{
-+	struct pci_dev *pdev;
-+	struct pci_bus *b;
-+
-+	list_for_each_entry(pdev, &bus->devices, bus_list) {
-+		b = pdev->subordinate;
-+
-+		if (b)
-+			pnv_pci_ioda_fixup_sriov(b);
-+
-+		pnv_pci_ioda_fixup_iov_resources(pdev);
-+	}
-+}
-+#endif /* CONFIG_PCI_IOV */
-+
- /*
-  * This function is supposed to be called on basis of PE from top
-  * to bottom style. So the the I/O or MMIO segment assigned to
-@@ -2097,6 +2153,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
- 	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
- 	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
-+#ifdef CONFIG_PCI_IOV
-+	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
-+#endif /* CONFIG_PCI_IOV */
- 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
- 
- 	/* Reset IODA tables to a clean state */
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index abe3a29ad802..f4aeef22a9d8 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -90,8 +90,8 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+ 	switch (ares->type) {
+ 	case ACPI_RESOURCE_TYPE_MEMORY24:
+ 		memory24 = &ares->data.memory24;
+-		acpi_dev_get_memresource(res, memory24->minimum,
+-					 memory24->address_length,
++		acpi_dev_get_memresource(res, memory24->minimum << 8,
++					 memory24->address_length << 8,
+ 					 memory24->write_protect);
+ 		break;
+ 	case ACPI_RESOURCE_TYPE_MEMORY32:
 -- 
-1.7.9.5
+1.7.10.4
 
