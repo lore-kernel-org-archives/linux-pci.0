@@ -4,100 +4,250 @@ To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Robert Moore <robert.moore@intel.com>,
-	Lv Zheng <lv.zheng@intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Len Brown <lenb@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Vivek Goyal <vgoyal@redhat.com>,
+	Thierry Reding <treding@nvidia.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Mike Travis <travis@sgi.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	devel@acpica.org
-Subject: [RFC Patch 05/19] ACPI: Provide union for address_space64 and ext_address_space64
-Date: Thu,  8 Jan 2015 10:32:52 +0800
-Message-Id: <1420684386-5975-6-git-send-email-jiang.liu@linux.intel.com>
+	linux-acpi@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [RFC Patch 17/19] resources: Move struct resource_list_entry from ACPI into resource core
+Date: Thu,  8 Jan 2015 10:33:04 +0800
+Message-Id: <1420684386-5975-18-git-send-email-jiang.liu@linux.intel.com>
 In-Reply-To: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
 References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+Currently ACPI, PCI and pnp all implement the same resource list
+management with different data structure. We need to transfer from
+one data structure into another when passing resources from one
+subsystem into another subsystem. Sp move struct resource_list_entry
+from ACPI into resource core, so it could be reused by different
+subystems and avoid the data structure conversion.
 
-address_space64 and ext_address_space64 share substracts just at
-different offsets. To unify the parsing functions implement the two
-structs as unions of their substructs, so we can extract the shared
-data.
-
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- include/acpi/acrestyp.h |   49 ++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 36 insertions(+), 13 deletions(-)
+ drivers/acpi/acpi_lpss.c     |    6 +++---
+ drivers/acpi/acpi_platform.c |    2 +-
+ drivers/acpi/resource.c      |   13 ++++--------
+ drivers/dma/acpi-dma.c       |    8 +++----
+ include/linux/acpi.h         |    6 ------
+ include/linux/ioport.h       |   25 ++++++++++++++++++++++
+ kernel/resource.c            |   48 ++++++++++++++++++++++++++++++++++++++++++
+ 7 files changed, 85 insertions(+), 23 deletions(-)
 
-diff --git a/include/acpi/acrestyp.h b/include/acpi/acrestyp.h
-index eb760ca0b2e0..307d5b2605c8 100644
---- a/include/acpi/acrestyp.h
-+++ b/include/acpi/acrestyp.h
-@@ -326,23 +326,46 @@ struct acpi_resource_address32 {
- 	struct acpi_resource_source resource_source;
- };
+diff --git a/drivers/acpi/acpi_lpss.c b/drivers/acpi/acpi_lpss.c
+index 4f3febf8a589..39b548dba70b 100644
+--- a/drivers/acpi/acpi_lpss.c
++++ b/drivers/acpi/acpi_lpss.c
+@@ -333,12 +333,12 @@ static int acpi_lpss_create_device(struct acpi_device *adev,
+ 		goto err_out;
  
--struct acpi_resource_address64 {
--	ACPI_RESOURCE_ADDRESS_COMMON u64 granularity;
--	u64 minimum;
--	u64 maximum;
--	u64 translation_offset;
-+#define ACPI_RESOURCE_ADDRESS64_COMMON \
-+	u64 granularity;	       \
-+	u64 minimum;		       \
-+	u64 maximum;		       \
-+	u64 translation_offset;	       \
- 	u64 address_length;
--	struct acpi_resource_source resource_source;
+ 	list_for_each_entry(rentry, &resource_list, node)
+-		if (resource_type(&rentry->res) == IORESOURCE_MEM) {
++		if (resource_type(rentry->res) == IORESOURCE_MEM) {
+ 			if (dev_desc->prv_size_override)
+ 				pdata->mmio_size = dev_desc->prv_size_override;
+ 			else
+-				pdata->mmio_size = resource_size(&rentry->res);
+-			pdata->mmio_base = ioremap(rentry->res.start,
++				pdata->mmio_size = resource_size(rentry->res);
++			pdata->mmio_base = ioremap(rentry->res->start,
+ 						   pdata->mmio_size);
+ 			break;
+ 		}
+diff --git a/drivers/acpi/acpi_platform.c b/drivers/acpi/acpi_platform.c
+index 6ba8beb6b9d2..238e32b9cbb0 100644
+--- a/drivers/acpi/acpi_platform.c
++++ b/drivers/acpi/acpi_platform.c
+@@ -71,7 +71,7 @@ struct platform_device *acpi_create_platform_device(struct acpi_device *adev)
+ 		}
+ 		count = 0;
+ 		list_for_each_entry(rentry, &resource_list, node)
+-			resources[count++] = rentry->res;
++			resources[count++] = *rentry->res;
+ 
+ 		acpi_dev_free_resource_list(&resource_list);
+ 	}
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 8ea7c26d6915..c0dc038274d4 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -444,12 +444,7 @@ EXPORT_SYMBOL_GPL(acpi_dev_resource_interrupt);
+  */
+ void acpi_dev_free_resource_list(struct list_head *list)
+ {
+-	struct resource_list_entry *rentry, *re;
+-
+-	list_for_each_entry_safe(rentry, re, list, node) {
+-		list_del(&rentry->node);
+-		kfree(rentry);
+-	}
++	resource_list_free_list(list);
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_free_resource_list);
+ 
+@@ -467,14 +462,14 @@ static acpi_status acpi_dev_new_resource_entry(struct resource *r,
+ {
+ 	struct resource_list_entry *rentry;
+ 
+-	rentry = kmalloc(sizeof(*rentry), GFP_KERNEL);
++	rentry = resource_list_alloc(NULL, 0);
+ 	if (!rentry) {
+ 		c->error = -ENOMEM;
+ 		return AE_NO_MEMORY;
+ 	}
+-	rentry->res = *r;
++	*rentry->res = *r;
+ 	rentry->offset = offset;
+-	list_add_tail(&rentry->node, c->list);
++	resource_list_insert(c->list, rentry, true);
+ 	c->count++;
+ 	return AE_OK;
+ }
+diff --git a/drivers/dma/acpi-dma.c b/drivers/dma/acpi-dma.c
+index de361a156b34..1ce84abe0924 100644
+--- a/drivers/dma/acpi-dma.c
++++ b/drivers/dma/acpi-dma.c
+@@ -56,10 +56,10 @@ static int acpi_dma_parse_resource_group(const struct acpi_csrt_group *grp,
+ 		return 0;
+ 
+ 	list_for_each_entry(rentry, &resource_list, node) {
+-		if (resource_type(&rentry->res) == IORESOURCE_MEM)
+-			mem = rentry->res.start;
+-		else if (resource_type(&rentry->res) == IORESOURCE_IRQ)
+-			irq = rentry->res.start;
++		if (resource_type(rentry->res) == IORESOURCE_MEM)
++			mem = rentry->res->start;
++		else if (resource_type(rentry->res) == IORESOURCE_IRQ)
++			irq = rentry->res->start;
+ 	}
+ 
+ 	acpi_dev_free_resource_list(&resource_list);
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 1df4a0211ae5..6d7f7edca22c 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -297,12 +297,6 @@ unsigned long acpi_dev_irq_flags(u8 triggering, u8 polarity, u8 shareable);
+ bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
+ 				 struct resource *res);
+ 
+-struct resource_list_entry {
+-	struct list_head node;
+-	struct resource res;
+-	resource_size_t offset;
+-};
+-
+ void acpi_dev_free_resource_list(struct list_head *list);
+ int acpi_dev_get_resources(struct acpi_device *adev, struct list_head *list,
+ 			   int (*preproc)(struct acpi_resource *, void *),
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index 2c5250222278..a6f4841ca40c 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -11,6 +11,7 @@
+ #ifndef __ASSEMBLY__
+ #include <linux/compiler.h>
+ #include <linux/types.h>
 +
-+struct acpi_resource_address64_common {
-+ACPI_RESOURCE_ADDRESS64_COMMON};
+ /*
+  * Resources are tree-like, allowing
+  * nesting etc..
+@@ -255,6 +256,30 @@ static inline bool resource_overlaps(struct resource *r1, struct resource *r2)
+        return (r1->start <= r2->end && r1->end >= r2->start);
+ }
+ 
++/*
++ * Common resource list management data structure and interfaces to support
++ * ACPI, PNP and PCI host bridge etc.
++ */
++struct resource_list_entry {
++	struct list_head	node;
++	struct resource		*res;	/* In master (CPU) address space */
++	resource_size_t		offset;	/* Translation offset for bridge */
++	struct resource		__res;	/* Default storage for res */
++};
 +
-+struct acpi_resource_address64 {
-+	union {
-+		struct {
-+			ACPI_RESOURCE_ADDRESS_COMMON
-+			ACPI_RESOURCE_ADDRESS64_COMMON
-+			struct acpi_resource_source resource_source;
-+		};
-+		struct {
-+			struct acpi_resource_address base;
-+			struct acpi_resource_address64_common addr;
-+			struct acpi_resource_source resource_source;
-+		} common;
-+	};
- };
++extern struct resource_list_entry *resource_list_alloc(struct resource *res,
++						       size_t extra_size);
++extern void resource_list_free(struct resource_list_entry *entry);
++extern void resource_list_insert(struct list_head *head,
++				 struct resource_list_entry *entry, bool tail);
++extern void resource_list_delete(struct resource_list_entry *entry);
++extern void resource_list_free_list(struct list_head *head);
++
++#define resource_list_for_each_entry(entry, list)	\
++	list_for_each_entry((entry), (list), node)
++
++#define resource_list_for_each_entry_safe(entry, tmp, list)	\
++	list_for_each_entry_safe((entry), (tmp), (list), node)
  
- struct acpi_resource_extended_address64 {
--	ACPI_RESOURCE_ADDRESS_COMMON u8 revision_ID;
--	u64 granularity;
--	u64 minimum;
--	u64 maximum;
--	u64 translation_offset;
--	u64 address_length;
--	u64 type_specific;
-+	union {
-+		struct {
-+			ACPI_RESOURCE_ADDRESS_COMMON
-+			u8 revision_ID;
-+			ACPI_RESOURCE_ADDRESS64_COMMON
-+			u64 type_specific;
-+		};
-+		struct {
-+			struct acpi_resource_address base;
-+			u8 revision_ID;
-+			struct acpi_resource_address64_common addr;
-+			u64 type_specific;
-+		} common;
-+	};
- };
+ #endif /* __ASSEMBLY__ */
+ #endif	/* _LINUX_IOPORT_H */
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 0bcebffc4e77..414183809383 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -1529,6 +1529,54 @@ int iomem_is_exclusive(u64 addr)
+ 	return err;
+ }
  
- struct acpi_resource_extended_irq {
++struct resource_list_entry *resource_list_alloc(struct resource *res,
++						size_t extra_size)
++{
++	struct resource_list_entry *entry;
++
++	entry = kzalloc(sizeof(*entry) + extra_size, GFP_KERNEL);
++	if (entry) {
++		INIT_LIST_HEAD(&entry->node);
++		entry->res = res ? res : &entry->__res;
++	}
++
++	return entry;
++}
++EXPORT_SYMBOL(resource_list_alloc);
++
++void resource_list_free(struct resource_list_entry *entry)
++{
++	kfree(entry);
++}
++EXPORT_SYMBOL(resource_list_free);
++
++void resource_list_insert(struct list_head *head,
++			  struct resource_list_entry *entry, bool tail)
++{
++	if (tail)
++		list_add_tail(&entry->node, head);
++	else
++		list_add(&entry->node, head);
++}
++EXPORT_SYMBOL(resource_list_insert);
++
++void resource_list_delete(struct resource_list_entry *entry)
++{
++	list_del(&entry->node);
++}
++EXPORT_SYMBOL(resource_list_delete);
++
++void resource_list_free_list(struct list_head *head)
++{
++	struct resource_list_entry *entry, *tmp;
++
++	list_for_each_entry_safe(entry, tmp, head, node) {
++		list_del(&entry->node);
++		resource_list_free(entry);
++	}
++}
++EXPORT_SYMBOL(resource_list_free_list);
++
+ static int __init strict_iomem(char *str)
+ {
+ 	if (strstr(str, "relaxed"))
 -- 
 1.7.10.4
 
