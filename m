@@ -1,73 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:46205 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754234AbbAHQPZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jan 2015 11:15:25 -0500
-Received: by mail-ob0-f177.google.com with SMTP id va2so8582974obc.8
-        for <linux-pci@vger.kernel.org>; Thu, 08 Jan 2015 08:15:24 -0800 (PST)
-Date: Thu, 8 Jan 2015 09:15:21 -0700
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:65060 "EHLO
+	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757864AbbAIRq4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 12:46:56 -0500
+Received: by mail-oi0-f49.google.com with SMTP id a141so12859497oig.8
+        for <linux-pci@vger.kernel.org>; Fri, 09 Jan 2015 09:46:56 -0800 (PST)
+Date: Fri, 9 Jan 2015 10:46:52 -0700
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, tglx@linutronix.de, mingo@redhat.com,
-	hpa@zytor.com, joro@8bytes.org, iommu@lists.linux-foundation.org
-Subject: Re: [PATCH 0/3] PCI/x86: Interface for testing multivector MSI
- support
-Message-ID: <20150108161521.GB6575@google.com>
-References: <20141121213752.31095.30735.stgit@gimli.home>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Chuansheng Liu <chuansheng.liu@intel.com>, rjw@rjwysocki.net,
+	mister.freeman@laposte.net, aaron.lu@intel.com, tj@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] PCI: Add disabling pm async quirk for JMicron chips
+Message-ID: <20150109174652.GE6575@google.com>
+References: <1417763857-11993-1-git-send-email-chuansheng.liu@intel.com>
+ <Pine.LNX.4.44L0.1412051415180.13167-100000@ida.rowland.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141121213752.31095.30735.stgit@gimli.home>
+In-Reply-To: <Pine.LNX.4.44L0.1412051415180.13167-100000@ida.rowland.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 21, 2014 at 03:08:27PM -0700, Alex Williamson wrote:
-> I'd like to make vfio-pci capable of manipulating the device exposed
-> to the user such that if the host can only support a single MSI
-> vector then we hide the fact that the device itself may actually be
-> able to support more.  When we virtualize PCI config space and
-> interrupt setup there's no PCI protocol for the device failing to
-> allocate the number of vectors that it said were available.  If the
-> userspace driver is a guest operating system, it certainly doesn't
-> expect this to fail.  I don't think we can ever guarantee that a
-> multi-vector request will succeed, but we can certainly guarantee
-> that it will fail if the platform doesn't support it.
+On Fri, Dec 05, 2014 at 02:18:40PM -0500, Alan Stern wrote:
+> On Fri, 5 Dec 2014, Chuansheng Liu wrote:
 > 
-> An example device is the Atheros AR93xxx running in a Windows 7 VM.
-> Both the device and the guest OS support multiple MSI vectors.  With
-> interrupt remapping, such that the host supports multivector, the
-> device works well in the guest.  With interrupt remapping disabled,
-> the device is far less reliable because of the mismatch in MSI
-> programming vs driver configuration and often fails.  If vfio-pci
-> can test whether multiple vectors are supported, then we can make it
-> work reliably in both cases by adjusting the exposed MSI capability,
-> like in this patch that would follow this series:
+> > Some history from
+> > commit e6b7e41cdd8c ("ata: Disabling the async PM for JMicron chip 363/361")
+> > ==
+> > Since v3.15, the PM feature of async noirq
+> > commit 76569faa62c4 ("PM / sleep: Asynchronous threads for resume_noirq") is introduced.
+> > 
+> > Then Jay hit one system resuming issue that one of the JMicron controller
+> > can not be powered up successfully.
+> > 
+> > His device tree is like below:
+> >                  +-1c.4-[02]--+-00.0  JMicron Technology Corp. JMB363 SATA/IDE Controller
+> >                  |            \-00.1  JMicron Technology Corp. JMB363 SATA/IDE Controller
+> > 
+> > After investigation, we found the the Micron chip 363 included
+> > one SATA controller(0000:02:00.0) and one PATA controller(0000:02:00.1),
+> > these two controllers do not have parent-children relationship,
+> > but the PATA controller only can be powered on after the SATA controller
+> > has finished the powering on.
+> > 
+> > If we enabled the async noirq(), then the below error is hit during noirq
+> > phase:
+> > pata_jmicron 0000:02:00.1: Refused to change power state, currently in D3
+> > Here for JMicron chip 363/361, we need forcedly to disable the async method.
 > 
-> https://github.com/awilliam/linux-vfio/commit/9ace67515680
+> You know, this is exactly why device_pm_wait_for_dev() exists -- so 
+> that asynchronous power-management operations can wait for other 
+> devices even when there's no parent-child relation.
 > 
-> With this series, only x86 w/ interrupt remapping will advertise
-> support for multiple MSI vectors.  In surveying the code, I couldn't
-> find any other archs that allowed it, but I'll take corrections if
-> that's untrue.  Thanks,
+> You should try to use device_pm_wait_for_dev() instead of disabling 
+> async suspend/resume.
 
-Per Thomas' comments and your possible workaround if we don't have
-pci_msi_supported(), I'm going to ignore these for now.  Let me know if
-you disagree.
+Dropping this patch for now, waiting for a response to Alan's suggestion.
 
 Bjorn
-
-> ---
-> 
-> Alex Williamson (3):
->       PCI: Extend and export pci_msi_supported() for multivector MSI
->       PCI/x86: Add arch_supports_multivector_msi() hook
->       PCI/MSI: Initial hook for archs to declare multivector MSI support
-> 
-> 
->  arch/x86/include/asm/x86_init.h |    1 +
->  arch/x86/kernel/x86_init.c      |    6 ++++++
->  drivers/iommu/irq_remapping.c   |    6 ++++++
->  drivers/pci/msi.c               |   20 +++++++++++++++++---
->  include/linux/msi.h             |    1 +
->  include/linux/pci.h             |    3 +++
->  6 files changed, 34 insertions(+), 3 deletions(-)
