@@ -1,114 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:38145 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750824AbbASPqw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jan 2015 10:46:52 -0500
-Date: Mon, 19 Jan 2015 15:46:40 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Gabriel Fernandez <gabriel.fernandez@linaro.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Magnus Damm <damm@opensource.se>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Srikanth Thokala <sthokal@xilinx.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"kernel@stlinux.com" <kernel@stlinux.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH 4/5] PCI: designware: Add setup bus-related to
- pcie_host_ops
-Message-ID: <20150119154640.GA3845@red-moon>
-References: <1418812486-12394-1-git-send-email-gabriel.fernandez@linaro.org>
- <000e01d01a7f$47592e20$d60b8a60$%han@samsung.com>
- <CAG374jBZCn+V2zjcAwdKEb0COzBT2VES5uiw0gc40mFvoraERA@mail.gmail.com>
- <6696411.b9yjvPTFJo@wuerfel>
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:52758 "EHLO
+	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750976AbbAISXf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 13:23:35 -0500
+Received: by mail-oi0-f46.google.com with SMTP id a3so13047261oib.5
+        for <linux-pci@vger.kernel.org>; Fri, 09 Jan 2015 10:23:34 -0800 (PST)
+Date: Fri, 9 Jan 2015 11:23:31 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Chris J Arges <chris.j.arges@canonical.com>
+Cc: linux-pci@vger.kernel.org,
+	Stephen Hemminger <stephen@networkplumber.org>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/ASPM: use standard parsing functions for sysfs
+ setters
+Message-ID: <20150109182331.GF6575@google.com>
+References: <1417820598-8021-1-git-send-email-chris.j.arges@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <6696411.b9yjvPTFJo@wuerfel>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1417820598-8021-1-git-send-email-chris.j.arges@canonical.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 19, 2015 at 01:54:26PM +0000, Arnd Bergmann wrote:
-> On Monday 19 January 2015 13:38:53 Gabriel Fernandez wrote:
-> > 
-> > On 18 December 2014 at 05:58, Jingoo Han <jg1.han@samsung.com> wrote:
-> > 
-> > > On Thursday, December 18, 2014 7:16 AM, Arnd Bergmann wrote:
-> > > > On Wednesday 17 December 2014 11:34:45 Gabriel FERNANDEZ wrote:
-> > > > > ST sti SoCs PCIe IPs are built around DesignWare IP Core.
-> > > > > But in these SoCs PCIe IP doesn't support IO.
-> > > I cannot understand how ST sti SoCs PCIe IP does not support I/O.
-> > > As far as I know, it cannot be selected by the 'parameter'.
-> > > Then, H/W engineers dropped out the I/O control logic?
-> > >
-> > > > >
-> > > > > To support this, add setup_bus() to pcie_host_ops.
-> > >
-> > >
-> > > > >
-> > > > > Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
-> > > > > Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-> > > >
-> > > > The dw-pcie driver should be able to tell whether the device has
-> > > > an I/O space or not, and do the right thing based on that. Don't
-> > > > add an implementation specific callback for that.
-> > >
-> > > I agree with Arnd's opinion.
-> > >
-> > > In addition, I have one more question.
-> > > Then, if a device that requires I/O region is connected to
-> > > PCIe slot of ST sti SoCs PCIe, what will happen?
-> > > It just prints error messages?
-> > >
-> > >
-> > Arnd i
-> > n other post mention to add an empty I/O space to workaround lack of I/O
-> > port access.
-> > Is it the right thing to do ?
-> > ​
-> > http://lists.infradead.org/pipermail/linux-arm-kernel/2014-November/299623.html
-> > 
+On Fri, Dec 05, 2014 at 05:02:42PM -0600, Chris J Arges wrote:
+> The functions link_state_store, clk_ctl_store had just subtracted ASCII '0' from
+> input which could lead to undesired results. Instead, use linux string functions
+> to safely parse input.
 > 
-> Good question. Given the latest development, I'd feel tempted to
-> try moving the entire pcie-designware driver to use the generic probing
-> that bypassses pci_common_init_dev(). Rob Herring posted a patch
-> for the versatile PCI driver, you could try doing the same thing
-> here, see http://permalink.gmane.org/gmane.linux.kernel.pci/30346.
+> Signed-off-by: Chris J Arges <chris.j.arges@canonical.com>
+
+Applied to pci/misc for v3.20, thanks.
+
+> ---
+>  drivers/pci/pcie/aspm.c | 12 +++++++-----
+>  1 file changed, 7 insertions(+), 5 deletions(-)
 > 
-> I think that would completely avoid this problem, and also help everyone
-> that wants to use this driver on arm64.
-
-I was aiming at that, I started by converting the ranges parsing to the new
-API, with its own unfortunate quirks (ie untranslated CPU addresses,
-that apparently caused deafening silence on the lists :)):
-
-http://lists.infradead.org/pipermail/linux-arm-kernel/2015-January/314008.html
-
-Lorenzo
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index e1e7026..48e1714 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -859,7 +859,10 @@ static ssize_t link_state_store(struct device *dev,
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+>  	struct pcie_link_state *link, *root = pdev->link_state->root;
+> -	u32 val = buf[0] - '0', state = 0;
+> +	u32 state = 0;
+> +	u32 val;
+> +
+> +	kstrtouint(buf, 10, &val);
+>  
+>  	if (aspm_disabled)
+>  		return -EPERM;
+> @@ -900,15 +903,14 @@ static ssize_t clk_ctl_store(struct device *dev,
+>  		size_t n)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+> -	int state;
+> +	bool state;
+>  
+> -	if (n < 1)
+> +	if (strtobool(buf, &state))
+>  		return -EINVAL;
+> -	state = buf[0]-'0';
+>  
+>  	down_read(&pci_bus_sem);
+>  	mutex_lock(&aspm_lock);
+> -	pcie_set_clkpm_nocheck(pdev->link_state, !!state);
+> +	pcie_set_clkpm_nocheck(pdev->link_state, state);
+>  	mutex_unlock(&aspm_lock);
+>  	up_read(&pci_bus_sem);
+>  
+> -- 
+> 1.9.1
+> 
