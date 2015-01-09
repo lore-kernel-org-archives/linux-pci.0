@@ -1,104 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foundry.eraalaska.net ([12.12.105.40]:59900 "EHLO
-	foundry.eraalaska.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755731AbbA2WPl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jan 2015 17:15:41 -0500
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Subject: Re: CentOS/Kernel 3.18.4/Thunderbolt2
-From: Israel Brewster <israel@ravnalaska.net>
-In-Reply-To: <804857E1F29AAC47BF68C404FC60A18465918C08@ORSMSX105.amr.corp.intel.com>
-Date: Thu, 29 Jan 2015 13:15:40 -0900
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:48429 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756452AbbAILZx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 06:25:53 -0500
+Date: Fri, 9 Jan 2015 12:25:50 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Lucas Stach <l.stach@pengutronix.de>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Message-Id: <45063E1F-BF05-4559-988E-3F5DE5812CA5@ravnalaska.net>
-References: <262B8C88-E706-4538-99D8-4E5058BE646D@ravnalaska.net> <CAErSpo7f=qAPiNDAjVgVttJyVQhZmh1bd=9b+_Z7rgmtUUzL3Q@mail.gmail.com> <C6C9B327-6ED0-499F-A2C3-42F705760657@ravnalaska.net> <804857E1F29AAC47BF68C404FC60A18465918C08@ORSMSX105.amr.corp.intel.com>
-To: "Allan, Bruce W" <bruce.w.allan@intel.com>
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] PCI: add helper function to find root port for
+ device
+Message-ID: <20150109112549.GD16465@ulmo>
+References: <1418929903-8506-1-git-send-email-l.stach@pengutronix.de>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="RhUH2Ysw6aD5utA4"
+In-Reply-To: <1418929903-8506-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Jan 29, 2015, at 1:05 PM, Allan, Bruce W <bruce.w.allan@intel.com> wrote:
 
->> -----Original Message-----
->> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
->> owner@vger.kernel.org] On Behalf Of Israel Brewster
->> Sent: Thursday, January 29, 2015 1:21 PM
->> To: Bjorn Helgaas
->> Cc: linux-pci@vger.kernel.org
->> Subject: Re: CentOS/Kernel 3.18.4/Thunderbolt2
->> 
->> On Jan 29, 2015, at 11:05 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> 
->>> On Thu, Jan 29, 2015 at 1:46 PM, Israel Brewster <israel@ravnalaska.net>
->> wrote:
->>>> My company recently purchased and installed a new SuperMicro server
->> with a Thunderbolt 2 (Falcon Ridge) card installed, specifically an AOC-TBT-
->> DSL5320. I then installed CentOS 6, and, since to my understanding
->> thunderbolt support is only in more recent kernels, I went ahead and
->> upgraded the kernel to version 3.18.4 from ElRepo. However, I have not
->> seen any indication yet that Thunderbolt is working - although I may just not
->> be looking in the right place. Over on Google+ Greg Kroah-Hartman
->> indicated that I need the PCI hot plug controller driver enabled, and
->> Matthew Garrett indicated that I specifically need the ACPI PCI hotplug
->> driver rather than the native PCIe hotplug driver. To check, I ran the
->> following command:
->>>> 
->>>> egrep -i HOTPLUG /boot/config-3.18.4-1.el6.elrepo.x86_64
->>>> 
->>>> Which returned the following potentially relevant results:
->>>> 
->>>> CONFIG_ACPI_HOTPLUG_CPU=y
->>>> CONFIG_ACPI_HOTPLUG_MEMORY=y
->>>> CONFIG_HOTPLUG_PCI_PCIE=y
->>>> CONFIG_HOTPLUG_PCI=y
->>>> 
->>>> but also the following:
->>>> 
->>>> # CONFIG_HOTPLUG_PCI_ACPI is not set
->>>> # CONFIG_HOTPLUG_PCI_CPCI is not set
->>>> 
->>>> So perhaps that's the entire problem - that CONFIG_HOTPLUG_PCI_ACPI
->> is not set? If so, what's going to be the easiest solution?
->>> 
->>> Yep, if you need the ACPI PCI hotplug driver,
->> CONFIG_HOTPLUG_PCI_ACPI
->>> should be enabled.  I think you should be able to use "make
->>> menuconfig" to enable it at:
->>> 
->>> Bus options
->>>   Support for PCI Hotplug
->>>     ACPI PCI Hotplug driver
->>> 
->>> I'm not  RedHat/CentOS person, so I don't know the distro details, but
->>> I would try "make install" as a starting point.
->> 
->> Well, I went ahead and downloaded the 3.18.4 source, copied my current
->> config, ran make menuconfig, and enabled that option. Then I ran make
->> rpm, which gave me a RPM that I installed and was able to boot from.
->> However, while I do see the ACPI PCI Hotplug driver loading in the DMESG, I
->> still don't see any indication of the thunderbolt controller or the drive I
->> plugged in.
->> 
->> Is there any chance I'm just being stupid here? That things ARE working, but
->> are identified differently than I am expecting, so I don't see them?
-> 
-> Not necessarily.  Is this a plug-in controller or on the mobo?  If the latter, does your system BIOS show any Thunderbolt security options, and if so, what is it set to?
+--RhUH2Ysw6aD5utA4
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Plug in controller that came with the motherboard, specifically an AOC-TBT-DSL5320. Plugs into PCI slot 6 and has a cable running to the GPIO headers on the motherboard as well. It does have a section in the bios with a number of settings, such as enabled and whether or not to ignore the Option ROM, but I don't see anything about security there.
+On Thu, Dec 18, 2014 at 08:11:42PM +0100, Lucas Stach wrote:
+> This adds a simple way to get the root port a given device
+> is connected to.
+>=20
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> ---
+> v2: new patch in v2
+> ---
+>  drivers/pci/search.c | 20 ++++++++++++++++++++
+>  include/linux/pci.h  |  1 +
+>  2 files changed, 21 insertions(+)
+>=20
+> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+> index a81f413083e4..c3ae1c52c7cf 100644
+> --- a/drivers/pci/search.c
+> +++ b/drivers/pci/search.c
+> @@ -385,3 +385,23 @@ int pci_dev_present(const struct pci_device_id *ids)
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL(pci_dev_present);
+> +
+> +/**
+> + * pci_get_rootport - Returns the root port the given device is connecte=
+d to.
+> + * @dev: PCI device for which the root port should be found.
+> + */
+> +struct pci_dev *pci_get_rootport(struct pci_dev *dev)
 
------------------------------------------------
-Israel Brewster
-Systems Analyst II
-Ravn Alaska
-5245 Airport Industrial Rd
-Fairbanks, AK 99709
-(907) 450-7293
------------------------------------------------
+I think pci_find_root_port() would be slightly more consistent with the
+existing API.
 
+Thierry
 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--RhUH2Ysw6aD5utA4
+Content-Type: application/pgp-signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJUr7q9AAoJEN0jrNd/PrOh1JEP/RVWSfK1mGlJwPBpkqAtWz6g
+7pcULe6Gn/jfBeXPrIgJxaJpGq+coPLYkBXOToB/BAesIiSN6WH6X/CXMe34idNG
+QXmHclXJz5A5BPDn516N+7ts0quc2Uik4PE6ps3AphhWBxn9U/0p0Yz3Ujpg3eHI
+g07IvTVph4V9yefhr21Bux3QGvqSCsQyBIoRiKkApzAgo1gKT+klQ6DWPXXILEmb
+mPagxCK1+9OT01wAgBNT0QE3pEaFZhRkMbwGKfY/crlh6qv0YLnyn5ePOEntdki6
+StDl6Mez6P9LgjcdzGQ8/mUFccajVLtbEYaGcxOzFCQiksQOd2uizVGJVWcx2zvZ
+9V9IHjH0PFUCnFm5OMNSvF12nLxcIExnnkXTrhaESwMrLUEsuHGXU1i0joWSZHva
+gwGdJBDzWdP266dNTBz9gp/+p8GSJjoCXBy40X5P0/55vxKz6UN28gc+Sb1NnzKO
+CoB4iO1AYttAeu4AYIx0/bRe8BjAmshubyLbl9vKPKY1rr/jBAtI0kCoRN+nIYUC
+DIKxtUlgHlWwI9emKbJtQarhDguWkzD6h7pZuKy6hACsFpmbz7+3qwLETyRi76I8
+knytbjuH/iahjrhQSwyCIy47+vDw8ikdOvDFqIsOt4eydsLE3fIjpkYE+ypzu/1T
+l8jpMG6ugN/onu+DRW6h
+=FSrE
+-----END PGP SIGNATURE-----
+
+--RhUH2Ysw6aD5utA4--
