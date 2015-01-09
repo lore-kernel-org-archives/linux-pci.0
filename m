@@ -1,50 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:55997 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751741AbbASOnd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jan 2015 09:43:33 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [RFC Patch 00/19] Improve ACPI resource parsing interfaces and data structures
-Date: Mon, 19 Jan 2015 16:06:06 +0100
-Message-ID: <1650558.f4xRROdpd4@vostro.rjw.lan>
-In-Reply-To: <54BD13F8.2040105@linux.intel.com>
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <2025625.5YhoBnTE03@vostro.rjw.lan> <54BD13F8.2040105@linux.intel.com>
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:33465 "EHLO
+	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752515AbbAISbw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 13:31:52 -0500
+Received: by mail-oi0-f46.google.com with SMTP id a3so13080304oib.5
+        for <linux-pci@vger.kernel.org>; Fri, 09 Jan 2015 10:31:51 -0800 (PST)
+Date: Fri, 9 Jan 2015 11:31:48 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: Murali Karicheri <m-karicheri2@ti.com>,
+	kernel-janitors@vger.kernel.org, linux@rasmusvillemoes.dk,
+	joe@perches.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/20] PCI: keystone: fix misspelling of current function
+ in string
+Message-ID: <20150109183148.GH6575@google.com>
+References: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
+ <1417980062-25151-3-git-send-email-Julia.Lawall@lip6.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1417980062-25151-3-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, January 19, 2015 10:26:00 PM Jiang Liu wrote:
-> On 2015/1/12 6:38, Rafael J. Wysocki wrote:
-> > On Thursday, January 08, 2015 10:32:47 AM Jiang Liu wrote:
-> >> During enabling ACPI based IOAPIC hotplug, Thomas noticed some issues
-> >> in ACPI resource parsing interfaces. So this is an effort to improve them.
-> >>
-> >> Patch 1-12 improve ACPI resource parsing interfaces and also fixes some
-> >> bugs.
-> >>
-> >> Patch 13-19 try to share the common data structure resource_list_entry
-> >> between PCI and ACPI. It may also be shared with PNP too.
-> > 
-> > I've looked at the patches briefly.
-> > 
-> > I like the changes at the general level, but there are some things I'm
-> > potentially concerned about in them.  Need more time to look at them,
-> > I'll do my best to do that this week while at the conference.
-> Hi Rafael,
-> 	Thanks for your time. Any comments about this series?
+On Sun, Dec 07, 2014 at 08:20:44PM +0100, Julia Lawall wrote:
+> Replace a misspelled function name by %s and then __func__.
+> 
+> The function name contains pcie, not pci as in the string.
+> 
+> This was done using Coccinelle, including the use of Levenshtein distance,
+> as proposed by Rasmus Villemoes.
+> 
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
-Please give me some more time.
+Applied with Murali's ack to pci/host-keystone for v3.20, thanks!
 
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+> ---
+> The semantic patch is difficult to summarize, but is available in the cover
+> letter of this patch series.
+> 
+>  drivers/pci/host/pci-keystone.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+> index 78f79e3..e2f600e 100644
+> --- a/drivers/pci/host/pci-keystone.c
+> +++ b/drivers/pci/host/pci-keystone.c
+> @@ -119,7 +119,7 @@ static void ks_pcie_msi_irq_handler(unsigned int irq, struct irq_desc *desc)
+>  	struct pcie_port *pp = &ks_pcie->pp;
+>  	struct irq_chip *chip = irq_desc_get_chip(desc);
+>  
+> -	dev_dbg(pp->dev, "ks_pci_msi_irq_handler, irq %d\n", irq);
+> +	dev_dbg(pp->dev, "%s, irq %d\n", __func__, irq);
+>  
+>  	/*
+>  	 * The chained irq handler installation would have replaced normal
+> 
