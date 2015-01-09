@@ -1,214 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:54374 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752135AbbAaA4L (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Jan 2015 19:56:11 -0500
-Message-ID: <54CC280E.1040004@huawei.com>
-Date: Sat, 31 Jan 2015 08:55:42 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-la0-f53.google.com ([209.85.215.53]:61055 "EHLO
+	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752009AbbAISJR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 13:09:17 -0500
 MIME-Version: 1.0
+In-Reply-To: <20150109172726.GC6575@google.com>
+References: <1417538104-27341-1-git-send-email-ricardo.ribalda@gmail.com> <20150109172726.GC6575@google.com>
+From: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
+Date: Fri, 9 Jan 2015 19:08:55 +0100
+Message-ID: <CAPybu_2rrJ8nYqVPf5B99+3=c4CJxAPe8kM2fmRWjJXHYGBe2g@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Generate uppercase hex for modalias var in uevent
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v2 00/30] Refine PCI scan interfaces and make generic
- pci host bridge
-References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com> <54CB4A96.1080008@huawei.com> <CAErSpo7EdJkxOq6f-1htW7LWDc42bVGqBDirzV6v=u5PxYo4tQ@mail.gmail.com>
-In-Reply-To: <CAErSpo7EdJkxOq6f-1htW7LWDc42bVGqBDirzV6v=u5PxYo4tQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Cc: linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/1/30 23:45, Bjorn Helgaas wrote:
-> On Fri, Jan 30, 2015 at 3:10 AM, Yijing Wang <wangyijing@huawei.com> wrote:
->> Hi Bjorn,
->>    Any comments for this series ?  I'm so sorry to bother you.  :)
-> 
-> It's next in my queue after Wei Yang's powerpc sriov series.  Here's
-> the queue I work from:
-> https://patchwork.ozlabs.org/project/linux-pci/list/?order=date
+Shouldnt this also be backported to stable as Commit 89ec3dcf17fd
+("PCI: Generate uppercase hex for modalias  interface class")?
 
-OK, thanks.
 
-> 
-> Bjorn
-> 
->> On 2015/1/21 8:29, Yijing Wang wrote:
->>> v1->v2:
->>>       Split pci_host_bridge_list into a new patch, remove .phb_probe_mode
->>>       and rework powerpc .phb_of_scan_bus() for simpilicty suggested by
->>>       Arnd. Refresh some patch description log, and add a new patch to fix
->>>       build warning in ia64.
->>>
->>> This series is based on Bjorn's pci-next branch.
->>>
->>> Patch 1-4 ripped out pci_bus_add_devices() from pci scan interfaces
->>> for better pci scan flow.
->>>
->>> Patch 5-11 make a generic pci_host_bridge to hold pci_host_bridge
->>> related informations, and introduce a pci_host_bridge_ops to
->>> support platform host drivers provide its own pci_host_bridge
->>> related operations to setup pci_host_bridge during pci enumeration.
->>>
->>> Patch 12-28 apply the new pci scan interfaces to platform pci host
->>> bridge drivers.
->>>
->>> Now in kernel, we scan pci bus use the following ways:
->>> 1. pci_scan_bus.
->>>       parent = NULL, default io/mem/bus resources
->>>       call pci_bus_add_devices()
->>>
->>> 2. pci_scan_bus_parented() + pci_bus_add_devices()
->>>       default io/mem/bus resources, only used by xen
->>>
->>> 3. pci_scan_root_bus() + pci_bus_add_devices()
->>>
->>> 4. pci_create_root_bus() + pci_scan_child_bus() + pci_bus_add_devices()
->>>
->>> 5. pci_create_root_bus() + xx_of_scan_bus()  +  pci_bus_add_devices()
->>>
->>> And we have a lot of arch specific pci_domain_nr() and other platform
->>> specific weak function like pcibios_root_bridge_prepare().
->>>
->>> After applied this series, we have following scan interfaces:
->>>
->>> 1. pci_scan_bus_legacy()
->>>       parent = NULL, default io/mem/bus resources.
->>>       for legacy pci scan
->>>
->>> 2. pci_scan_root_bus()
->>>       for callers provide its own parent and io/mem/bus resources
->>>       but no platform specific pci_host_bridge operations
->>>
->>> 3. pci_scan_root_bridge()
->>>       for callers provide its own parent and io/mem/bus resources
->>>       and pci_host_bridge_ops.
->>>
->>> Besides, above pci scan interfaces all need addtionally call pci_bus_add_devices()
->>> to set match_driver true and try to attach drivers.
->>>
->>> Also we could eliminate all arch specific pci_domain_nr() after applied this series.
->>>
->>> I tested this series on x86 (with or without ACPI).
->>> Comments and tests are warmly welcome!
->>>
->>> Arnd Bergmann (1):
->>>   xen/PCI: Don't use deprecated function pci_scan_bus_parented()
->>>
->>> Yijing Wang (29):
->>>   PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
->>>   PCI: Rip out pci_bus_add_devices() from pci_scan_root_bus()
->>>   PCI: Remove deprecated pci_scan_bus_parented()
->>>   PCI: Rename pci_scan_bus() to pci_scan_bus_legacy()
->>>   PCI: Combine PCI domain and bus number in u32 arg
->>>   PCI: Pass PCI domain number combined with root bus number
->>>   PCI: Introduce pci_host_assign_domain_nr() to assign domain
->>>   PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
->>>   PCI: Introduce pci_host_bridge_list to manage host bridges
->>>   PCI: Save sysdata in pci_host_bridge drvdata
->>>   PCI: Introduce pci_host_bridge_ops to support host specific
->>>     operations
->>>   PCI: Introduce new scan function pci_scan_root_bridge()
->>>   PCI/x86: Refine pci_acpi_scan_root() with generic pci_host_bridge
->>>   PCI/IA64: Refine pci_acpi_scan_root() with generic pci_host_bridge
->>>   PCI/IA64: Fix the build warning about pci_domain_nr()
->>>   PCI/powerpc: Rename pcibios_root_bridge_prepare()
->>>   PCI/powerpc: Use pci_scan_root_bridge() for simplicity
->>>   PCI: Remove weak pcibios_root_bridge_prepare()
->>>   PCI/sparc: Use pci_scan_root_bridge() for simplicity
->>>   PCI: Introduce pci_bus_child_max_busnr()
->>>   PCI/Parisc: Use pci_scan_root_bus() for simplicity
->>>   PCI/mvebu: Use pci_common_init_dev() to simplify code
->>>   PCI/tegra: Remove redundant tegra_pcie_scan_bus()
->>>   PCI/designware: Use pci_scan_root_bus() for simplicity
->>>   PCI/xgene: Use pci_scan_root_bus() instead of pci_create_root_bus()
->>>   PCI: Rename __pci_create_root_bus() to pci_create_root_bus()
->>>   PCI: Export find_pci_host_bridge()
->>>   PCI: Remove platform specific pci_domain_nr()
->>>   PCI: Remove pci_bus_assign_domain_nr()
->>>
->>>  arch/alpha/include/asm/pci.h             |    2 -
->>>  arch/alpha/kernel/pci.c                  |    7 +-
->>>  arch/alpha/kernel/sys_nautilus.c         |    4 +-
->>>  arch/frv/mb93090-mb00/pci-vdk.c          |    6 +-
->>>  arch/ia64/include/asm/pci.h              |    1 -
->>>  arch/ia64/pci/pci.c                      |   34 +++---
->>>  arch/ia64/sn/kernel/io_acpi_init.c       |    6 +-
->>>  arch/ia64/sn/kernel/io_init.c            |    8 +-
->>>  arch/m68k/coldfire/pci.c                 |    3 +-
->>>  arch/microblaze/pci/pci-common.c         |   17 +--
->>>  arch/mips/include/asm/pci.h              |    2 -
->>>  arch/mips/pci/pci.c                      |    5 +-
->>>  arch/mn10300/unit-asb2305/pci.c          |    5 +-
->>>  arch/powerpc/include/asm/machdep.h       |    2 +-
->>>  arch/powerpc/kernel/pci-common.c         |   77 ++++++------
->>>  arch/powerpc/platforms/pseries/pci.c     |    8 +-
->>>  arch/powerpc/platforms/pseries/pseries.h |    2 +-
->>>  arch/powerpc/platforms/pseries/setup.c   |    2 +-
->>>  arch/s390/pci/pci.c                      |   13 +--
->>>  arch/sh/drivers/pci/pci.c                |    6 +-
->>>  arch/sh/include/asm/pci.h                |    2 -
->>>  arch/sparc/kernel/leon_pci.c             |    1 +
->>>  arch/sparc/kernel/pci.c                  |   50 ++++----
->>>  arch/sparc/kernel/pcic.c                 |    4 +-
->>>  arch/tile/include/asm/pci.h              |    2 -
->>>  arch/tile/kernel/pci.c                   |    6 +-
->>>  arch/tile/kernel/pci_gx.c                |    7 +-
->>>  arch/unicore32/kernel/pci.c              |   13 +--
->>>  arch/x86/include/asm/pci.h               |    6 -
->>>  arch/x86/pci/acpi.c                      |   38 +++---
->>>  arch/x86/pci/common.c                    |    4 +-
->>>  arch/xtensa/kernel/pci.c                 |    2 +
->>>  drivers/parisc/dino.c                    |   11 +--
->>>  drivers/parisc/lba_pci.c                 |    7 +-
->>>  drivers/pci/host-bridge.c                |   90 ++++++++++++++-
->>>  drivers/pci/host/pci-mvebu.c             |   18 +---
->>>  drivers/pci/host/pci-tegra.c             |   16 ---
->>>  drivers/pci/host/pci-xgene.c             |    3 +-
->>>  drivers/pci/host/pcie-designware.c       |    4 +-
->>>  drivers/pci/hotplug/acpiphp_glue.c       |   29 +-----
->>>  drivers/pci/hotplug/ibmphp_core.c        |    6 +-
->>>  drivers/pci/pci.c                        |   42 ++++++-
->>>  drivers/pci/probe.c                      |  196 ++++++++++++------------------
->>>  drivers/pci/xen-pcifront.c               |   11 ++-
->>>  include/linux/pci.h                      |   47 +++++---
->>>  include/uapi/linux/pci.h                 |    3 +
->>>  46 files changed, 424 insertions(+), 404 deletions(-)
->>>
->>>
->>> .
->>>
+Regards!
+
+
+On Fri, Jan 9, 2015 at 6:27 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Dec 02, 2014 at 05:35:04PM +0100, Ricardo Ribalda Delgado wrote:
+>> Some implementations of modprobe fail to load the driver for a PCI device
+>> automatically because the "interface" part of the modalias from the kernel
+>> is lowercase, and the modalias from file2alias is uppercase.
 >>
+>> The "interface" is the low-order byte of the Class Code, defined in PCI
+>> r3.0, Appendix D.  Most interface types defined in the spec do not use
+>> alpha characters, so they won't be affected.  For example, 00h, 01h, 10h,
+>> 20h, etc. are unaffected.
 >>
+>> Print the "interface" byte of the Class Code in uppercase hex, as we
+>> already do for the Vendor ID, Device ID, Class, etc.
+>>
+>> Commit 89ec3dcf17fd ("PCI: Generate uppercase hex for modalias
+>> interface class") fixed only half of the problem. Some udev
+>> implementations relays on the uevent file and not in the modalias file.
+>>
+>> CC: Bjorn Helgaas <bhelgaas@google.com>
+>> CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>> Fixes: d1ded203adf1 ("PCI: add MODALIAS to hotplug event for pci devices")
+>> Signed-off-by: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
+>
+> Applied with Greg's ack to pci/enumeration for v3.20, thanks!
+>
+>> ---
+>>
+>> Modified line is >80 char, but I believe that it is better than breaking
+>> the string or indent it bad.
+>>
+>>  drivers/pci/pci-driver.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+>> index 2b3c894..b720e78 100644
+>> --- a/drivers/pci/pci-driver.c
+>> +++ b/drivers/pci/pci-driver.c
+>> @@ -1389,7 +1389,7 @@ static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
+>>       if (add_uevent_var(env, "PCI_SLOT_NAME=%s", pci_name(pdev)))
+>>               return -ENOMEM;
+>>
+>> -     if (add_uevent_var(env, "MODALIAS=pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02x",
+>> +     if (add_uevent_var(env, "MODALIAS=pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02X",
+>>                          pdev->vendor, pdev->device,
+>>                          pdev->subsystem_vendor, pdev->subsystem_device,
+>>                          (u8)(pdev->class >> 16), (u8)(pdev->class >> 8),
 >> --
->> Thanks!
->> Yijing
+>> 2.1.3
 >>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
+
 
 
 -- 
-Thanks!
-Yijing
-
+Ricardo Ribalda
