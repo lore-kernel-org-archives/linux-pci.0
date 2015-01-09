@@ -1,141 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	linux-ia64@vger.kernel.org
-Subject: [PATCH 05/10] PCI, ia64: clip firmware assigned resource under parent bridge's
-Date: Mon, 12 Jan 2015 11:23:15 -0800
-Message-Id: <1421090600-9750-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1421090600-9750-1-git-send-email-yinghai@kernel.org>
-References: <1421090600-9750-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx5-phx2.redhat.com ([209.132.183.37]:58766 "EHLO
+	mx5-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751023AbbAIBZY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jan 2015 20:25:24 -0500
+Date: Thu, 8 Jan 2015 20:25:19 -0500 (EST)
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.Com>,
+	Ajit Kumar Khaparde <Ajit.Khaparde@Emulex.Com>,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Message-ID: <1257448143.6977594.1420766719306.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20150109003320.GA24054@shangw>
+References: <1420424274-3194-1-git-send-email-gwshan@linux.vnet.ibm.com> <a227414f-6f4b-4656-b65b-ef8d6e68f135@CMEXHTCAS1.ad.emulex.com> <20150109003320.GA24054@shangw>
+Subject: Re: [PATCH] PCI: Mark broken INTx masking for BENET devices
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some bios put range that is not fully coverred by root bus resources.
-Try to clip them and update them in pci bridge bars.
 
-We'd like to fix other arches instead of just x86.
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491
-Reported-by: Marek Kordik <kordikmarek@gmail.com>
-Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources")
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: linux-ia64@vger.kernel.org
----
- arch/ia64/pci/pci.c | 71 +++++++++++++++++++++++++++++++++--------------------
- 1 file changed, 44 insertions(+), 27 deletions(-)
+----- Original Message -----
+> On Thu, Jan 08, 2015 at 11:33:46AM +0000, Venkat Duvvuru wrote:
+> >Hi Gavin,
+> >We tried to reproduce this in our lab but our observation is that we don't
+> >see "interrupt storm" in our system.
+> >Could you please give us the details of the repro scenario?
+> >
+> >A few more details will help us understand the problem better as well.
+> >1. be2net driver version
+> >2. be2net firmware version
+> >3. lspci -vvv output of the card (lspci -d 19a2: -vvv)
+> >4. Is SR-IOV enabled in your card?
+> >
+> 
+> Venkat, On IBM's Power7 box, I passed through following adpater to guest with
+> following
+...
+> 
+> Steps to recreate the issue
+> ===========================
+> 
+> 1. Configure the NIC and ping it from external.
+> 2. Inject EEH error by running following command in host side. After about
+>    20 seconds, I got following message from host side. With the patch applied
+>    to host kernel, I didn't see the warning messages:
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 291a582..a3f9e27 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -487,45 +487,57 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- 	return 0;
- }
- 
--static int is_valid_resource(struct pci_dev *dev, int idx)
-+void pcibios_fixup_device_resources(struct pci_dev *dev)
- {
--	unsigned int i, type_mask = IORESOURCE_IO | IORESOURCE_MEM;
--	struct resource *devr = &dev->resource[idx], *busr;
-+	int idx;
- 
- 	if (!dev->bus)
--		return 0;
-+		return;
- 
--	pci_bus_for_each_resource(dev->bus, busr, i) {
--		if (!busr || ((busr->flags ^ devr->flags) & type_mask))
-+	for (idx = 0; idx < PCI_BRIDGE_RESOURCES; idx++) {
-+		struct resource *r = &dev->resource[idx];
-+
-+		if (!r->flags || r->parent || !r->start)
- 			continue;
--		if ((devr->start) && (devr->start >= busr->start) &&
--				(devr->end <= busr->end))
--			return 1;
-+
-+		if (pci_claim_resource(dev, idx) >= 0)
-+			continue;
-+
-+		/* try again with clip */
-+		if (pci_bus_clip_resource(dev, r)) {
-+			pci_update_resource(dev, idx);
-+			pci_claim_resource(dev, idx);
-+		}
- 	}
--	return 0;
- }
-+EXPORT_SYMBOL_GPL(pcibios_fixup_device_resources);
- 
--static void pcibios_fixup_resources(struct pci_dev *dev, int start, int limit)
-+static bool pcibios_fixup_bridge_resources(struct pci_dev *dev)
- {
--	int i;
-+	int idx;
-+	bool changed = false;
-+
-+	if (!dev->bus)
-+		return changed;
-+
-+	for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
-+		struct resource *r = &dev->resource[idx];
- 
--	for (i = start; i < limit; i++) {
--		if (!dev->resource[i].flags)
-+		if (!r->flags || r->parent || !r->start)
- 			continue;
--		if ((is_valid_resource(dev, i)))
--			pci_claim_resource(dev, i);
--	}
--}
- 
--void pcibios_fixup_device_resources(struct pci_dev *dev)
--{
--	pcibios_fixup_resources(dev, 0, PCI_BRIDGE_RESOURCES);
--}
--EXPORT_SYMBOL_GPL(pcibios_fixup_device_resources);
-+		if (pci_claim_resource(dev, idx) >= 0)
-+			continue;
- 
--static void pcibios_fixup_bridge_resources(struct pci_dev *dev)
--{
--	pcibios_fixup_resources(dev, PCI_BRIDGE_RESOURCES, PCI_NUM_RESOURCES);
-+		/* try again after clip for pci bridge*/
-+		if ((dev->class >> 8) == PCI_CLASS_BRIDGE_PCI &&
-+		    pci_bus_clip_resource(dev, r)) {
-+			changed = true;
-+			pci_claim_resource(dev, idx);
-+		}
-+	}
-+
-+	return changed;
- }
- 
- /*
-@@ -536,9 +548,14 @@ void pcibios_fixup_bus(struct pci_bus *b)
- 	struct pci_dev *dev;
- 
- 	if (b->self) {
-+		bool changed;
-+
- 		pci_read_bridge_bases(b);
--		pcibios_fixup_bridge_resources(b->self);
-+		changed = pcibios_fixup_bridge_resources(b->self);
-+		if (changed)
-+			pci_setup_bridge(b);
- 	}
-+
- 	list_for_each_entry(dev, &b->devices, bus_list)
- 		pcibios_fixup_device_resources(dev);
- 	platform_pci_fixup_bus(b);
--- 
-1.8.4.5
+This seems really dubious and I don't see any justification at all for declaring DisINTx broken for all devices for the vendor.  Typically to call DisINTx broken for a given device, you can just boot the guest with pci=nomsi to force INTx to be used.  If that works, then DisINTx masking works.  If you require EEH injection to to trigger this, then the problem is more likely some containment issue during EEH recovery.  Thanks,
 
+Alex
