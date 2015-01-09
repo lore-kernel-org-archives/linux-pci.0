@@ -1,225 +1,225 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:39296 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752587AbbAIVR3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 16:17:29 -0500
+Date: Fri, 9 Jan 2015 16:15:58 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Jan Beulich <JBeulich@suse.com>,
+	David Rientjes <rientjes@google.com>,
+	HATAYAMA Daisuke <d.hatayama@jp.fujitsu.com>,
+	Richard Weinberger <richard@nod.at>,
+	Oren Twaig <oren@scalemp.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Ingo Molnar <mingo@kernel.org>, xen-devel@lists.xenproject.org
+Subject: Re: [Bugfix] x86/apic: Fix xen IRQ allocation failure caused by
+ commit b81975eade8c
+Message-ID: <20150109211557.GA4751@l.oracle.com>
+References: <1420611244-25624-1-git-send-email-jiang.liu@linux.intel.com>
+ <20150107145050.GC30457@l.oracle.com>
+ <54AD52D0.5050303@linux.intel.com>
+ <20150107154416.GB30955@l.oracle.com>
+ <54AE2576.5020209@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <8541914.sW9yU28g98@vostro.rjw.lan>
-References: <1418746353-3481-2-git-send-email-octavian.purdila@intel.com>
- <0d37f4eecdd2c7e3203fca7adb1c2c03a16a40dd.1421907258.git.lv.zheng@intel.com> <8541914.sW9yU28g98@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 22 Jan 2015 16:43:43 -0600
-Message-ID: <CAErSpo4G9cgoruHbnuHz_6NUV2bkkAprwR6Fce98zXmfvdBGpA@mail.gmail.com>
-Subject: Re: [RFC PATCH] ACPI: Introduce acpi_unload_parent_table() usages in
- Linux kernel.
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Lv Zheng <lv.zheng@intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Len Brown <len.brown@intel.com>, Lv Zheng <zetalog@gmail.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Octavian Purdila <octavian.purdila@intel.com>,
-	Prarit Bhargava <prarit@sgi.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54AE2576.5020209@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 22, 2015 at 4:43 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> On Thursday, January 22, 2015 02:37:49 PM Lv Zheng wrote:
->> ACPICA has implemented acpi_unload_parent_table() which can exactly replace
->> the acpi_get_id()/acpi_unload_table_id() implemented in Linux kernel.  The
->> acpi_unload_parent_table() has been unit tested in ACPICA simulation
->> environment.
->>
->> This patch can also help to reduce the source code differences between
->> Linux and ACPICA.
->
-> Looks OK to me.
->
-> Do you want me to pick it up?
+On Thu, Jan 08, 2015 at 02:36:38PM +0800, Jiang Liu wrote:
+> On 2015/1/7 23:44, Konrad Rzeszutek Wilk wrote:
+> > On Wed, Jan 07, 2015 at 11:37:52PM +0800, Jiang Liu wrote:
+> >> On 2015/1/7 22:50, Konrad Rzeszutek Wilk wrote:
+> >>> On Wed, Jan 07, 2015 at 02:13:49PM +0800, Jiang Liu wrote:
+> >>>> Commit b81975eade8c ("x86, irq: Clean up irqdomain transition code")
+> >>>> breaks xen IRQ allocation because xen_smp_prepare_cpus() doesn't invoke
+> >>>> setup_IO_APIC(), so no irqdomains created for IOAPICs and
+> >>>> mp_map_pin_to_irq() fails at the very beginning.
+> >>>> --- a/arch/x86/kernel/apic/io_apic.c
+> >>>> +++ b/arch/x86/kernel/apic/io_apic.c
+> >>>> @@ -2369,31 +2369,29 @@ static void ioapic_destroy_irqdomain(int idx)
+> >>>>  	ioapics[idx].pin_info = NULL;
+> >>>>  }
+> >>>>  
+> >>>> -void __init setup_IO_APIC(void)
+> >>>> +void __init setup_IO_APIC(bool xen_smp)
+> >>>>  {
+> >>>>  	int ioapic;
+> >>>>  
+> >>>> -	/*
+> >>>> -	 * calling enable_IO_APIC() is moved to setup_local_APIC for BP
+> >>>> -	 */
+> >>>> -	io_apic_irqs = nr_legacy_irqs() ? ~PIC_IRQS : ~0UL;
+> >>>> +	if (!xen_smp) {
+> >>>> +		apic_printk(APIC_VERBOSE, "ENABLING IO-APIC IRQs\n");
+> >>>> +		io_apic_irqs = nr_legacy_irqs() ? ~PIC_IRQS : ~0UL;
+> >>>> +
+> >>>> +		/* Set up IO-APIC IRQ routing. */
+> >>>> +		x86_init.mpparse.setup_ioapic_ids();
+> >>>> +		sync_Arb_IDs();
+> >>>> +	}
+> Hi Konrad,
+> 	Enabling above code for Xen dom0 will cause following warning
+> because it writes a special value to ICR register.
+> [    3.394981] ------------[ cut here ]------------
+> [    3.394985] WARNING: CPU: 0 PID: 1 at arch/x86/xen/enlighten.c:968
+> xen_apic_write+0x15/0x20()
+> [    3.394988] Modules linked in:
+> [    3.394991] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 3.19.0-rc3+ #5
+> [    3.394993] Hardware name: Dell Inc. OptiPlex 9020/0DNKMN, BIOS A03
+> 09/17/2013
+> [    3.394996]  00000000000003c8 ffff88003056bdd8 ffffffff817611bb
+> 00000000000003c8
+> [    3.395000]  0000000000000000 ffff88003056be18 ffffffff8106f4ea
+> 0000000000000008
+> [    3.395004]  ffffffff81fc1120 ffff880030561348 000000000000a108
+> 000000000000a101
+> [    3.395008] Call Trace:
+> [    3.395012]  [<ffffffff817611bb>] dump_stack+0x4f/0x6c
+> [    3.395015]  [<ffffffff8106f4ea>] warn_slowpath_common+0xaa/0xd0
+> [    3.395018]  [<ffffffff8106f525>] warn_slowpath_null+0x15/0x20
+> [    3.395021]  [<ffffffff81003e25>] xen_apic_write+0x15/0x20
+> [    3.395026]  [<ffffffff81ef606b>] sync_Arb_IDs+0x84/0x86
+> [    3.395029]  [<ffffffff81ef7f7a>] setup_IO_APIC+0x7f/0x8e3
+> [    3.395033]  [<ffffffff810b275d>] ? trace_hardirqs_on+0xd/0x10
+> [    3.395036]  [<ffffffff8176858a>] ? _raw_spin_unlock_irqrestore+0x8a/0xa0
+> [    3.395040]  [<ffffffff81ee841b>] xen_smp_prepare_cpus+0x5d/0x184
+> [    3.395044]  [<ffffffff81ee1ba3>] kernel_init_freeable+0x149/0x293
+> [    3.395047]  [<ffffffff81758d49>] ? kernel_init+0x9/0xf0
+> [    3.395049]  [<ffffffff81758d40>] ? rest_init+0xd0/0xd0
+> [    3.395052]  [<ffffffff81758d49>] kernel_init+0x9/0xf0
+> [    3.395054]  [<ffffffff8176887c>] ret_from_fork+0x7c/0xb0
+> [    3.395057]  [<ffffffff81758d40>] ? rest_init+0xd0/0xd0
+> [    3.395066] ---[ end trace 7c4371c8ba33d5d0 ]---
+> 
+> <snit>
+> >>>>  	ioapic_initialized = 1;
+> >>>> +
+> >>>> +	if (!xen_smp) {
+> >>>> +		init_IO_APIC_traps();
+> >>>> +		if (nr_legacy_irqs())
+> >>>> +			check_timer();
+> >>>> +	}
+> >>>>  }
+> And enabling above code causes Xen dom0 reboots.
 
-OK by me if you take it.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Which is due to the 'check_timer' trying to setup its timer and
+failing and then moving under its feet the legacy_pic to the NULL one
+and then hitting panic.
 
->> Signed-off-by: Lv Zheng <lv.zheng@intel.com>
->> Cc: Octavian Purdila <octavian.purdila@intel.com>
->> Cc: Prarit Bhargava <prarit@sgi.com>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: linux-pci@vger.kernel.org
->> Cc: Tony Luck <tony.luck@intel.com>
->> Cc: Fenghua Yu <fenghua.yu@intel.com>
->> Cc: linux-ia64@vger.kernel.org
->> ---
->>  drivers/acpi/acpica/nsxfobj.c     |   44 -------------------------------------
->>  drivers/acpi/acpica/tbxface.c     |   39 --------------------------------
->>  drivers/pci/hotplug/sgi_hotplug.c |   13 ++++++-----
->>  include/acpi/acpixf.h             |    6 -----
->>  4 files changed, 7 insertions(+), 95 deletions(-)
->>
->> diff --git a/drivers/acpi/acpica/nsxfobj.c b/drivers/acpi/acpica/nsxfobj.c
->> index dae9401..51a8329 100644
->> --- a/drivers/acpi/acpica/nsxfobj.c
->> +++ b/drivers/acpi/acpica/nsxfobj.c
->> @@ -53,50 +53,6 @@ ACPI_MODULE_NAME("nsxfobj")
->>
->>  /*******************************************************************************
->>   *
->> - * FUNCTION:    acpi_get_id
->> - *
->> - * PARAMETERS:  Handle          - Handle of object whose id is desired
->> - *              ret_id          - Where the id will be placed
->> - *
->> - * RETURN:      Status
->> - *
->> - * DESCRIPTION: This routine returns the owner id associated with a handle
->> - *
->> - ******************************************************************************/
->> -acpi_status acpi_get_id(acpi_handle handle, acpi_owner_id * ret_id)
->> -{
->> -     struct acpi_namespace_node *node;
->> -     acpi_status status;
->> -
->> -     /* Parameter Validation */
->> -
->> -     if (!ret_id) {
->> -             return (AE_BAD_PARAMETER);
->> -     }
->> -
->> -     status = acpi_ut_acquire_mutex(ACPI_MTX_NAMESPACE);
->> -     if (ACPI_FAILURE(status)) {
->> -             return (status);
->> -     }
->> -
->> -     /* Convert and validate the handle */
->> -
->> -     node = acpi_ns_validate_handle(handle);
->> -     if (!node) {
->> -             (void)acpi_ut_release_mutex(ACPI_MTX_NAMESPACE);
->> -             return (AE_BAD_PARAMETER);
->> -     }
->> -
->> -     *ret_id = node->owner_id;
->> -
->> -     status = acpi_ut_release_mutex(ACPI_MTX_NAMESPACE);
->> -     return (status);
->> -}
->> -
->> -ACPI_EXPORT_SYMBOL(acpi_get_id)
->> -
->> -/*******************************************************************************
->> - *
->>   * FUNCTION:    acpi_get_type
->>   *
->>   * PARAMETERS:  handle          - Handle of object whose type is desired
->> diff --git a/drivers/acpi/acpica/tbxface.c b/drivers/acpi/acpica/tbxface.c
->> index 6482b0d..0f9dd80 100644
->> --- a/drivers/acpi/acpica/tbxface.c
->> +++ b/drivers/acpi/acpica/tbxface.c
->> @@ -265,45 +265,6 @@ ACPI_EXPORT_SYMBOL(acpi_get_table_header)
->>
->>  /*******************************************************************************
->>   *
->> - * FUNCTION:    acpi_unload_table_id
->> - *
->> - * PARAMETERS:  id            - Owner ID of the table to be removed.
->> - *
->> - * RETURN:      Status
->> - *
->> - * DESCRIPTION: This routine is used to force the unload of a table (by id)
->> - *
->> - ******************************************************************************/
->> -acpi_status acpi_unload_table_id(acpi_owner_id id)
->> -{
->> -     int i;
->> -     acpi_status status = AE_NOT_EXIST;
->> -
->> -     ACPI_FUNCTION_TRACE(acpi_unload_table_id);
->> -
->> -     /* Find table in the global table list */
->> -     for (i = 0; i < acpi_gbl_root_table_list.current_table_count; ++i) {
->> -             if (id != acpi_gbl_root_table_list.tables[i].owner_id) {
->> -                     continue;
->> -             }
->> -             /*
->> -              * Delete all namespace objects owned by this table. Note that these
->> -              * objects can appear anywhere in the namespace by virtue of the AML
->> -              * "Scope" operator. Thus, we need to track ownership by an ID, not
->> -              * simply a position within the hierarchy
->> -              */
->> -             acpi_tb_delete_namespace_by_owner(i);
->> -             status = acpi_tb_release_owner_id(i);
->> -             acpi_tb_set_table_loaded_flag(i, FALSE);
->> -             break;
->> -     }
->> -     return_ACPI_STATUS(status);
->> -}
->> -
->> -ACPI_EXPORT_SYMBOL(acpi_unload_table_id)
->> -
->> -/*******************************************************************************
->> - *
->>   * FUNCTION:    acpi_get_table_with_size
->>   *
->>   * PARAMETERS:  signature           - ACPI signature of needed table
->> diff --git a/drivers/pci/hotplug/sgi_hotplug.c b/drivers/pci/hotplug/sgi_hotplug.c
->> index bada2099..c32fb78 100644
->> --- a/drivers/pci/hotplug/sgi_hotplug.c
->> +++ b/drivers/pci/hotplug/sgi_hotplug.c
->> @@ -475,7 +475,7 @@ static int disable_slot(struct hotplug_slot *bss_hotplug_slot)
->>       struct slot *slot = bss_hotplug_slot->private;
->>       struct pci_dev *dev, *temp;
->>       int rc;
->> -     acpi_owner_id ssdt_id = 0;
->> +     acpi_handle ssdt_hdl = NULL;
->>
->>       /* Acquire update access to the bus */
->>       mutex_lock(&sn_hotplug_mutex);
->> @@ -522,7 +522,7 @@ static int disable_slot(struct hotplug_slot *bss_hotplug_slot)
->>                       if (ACPI_SUCCESS(ret) &&
->>                           (adr>>16) == (slot->device_num + 1)) {
->>                               /* retain the owner id */
->> -                             acpi_get_id(chandle, &ssdt_id);
->> +                             ssdt_hdl = chandle;
->>
->>                               ret = acpi_bus_get_device(chandle,
->>                                                         &device);
->> @@ -547,12 +547,13 @@ static int disable_slot(struct hotplug_slot *bss_hotplug_slot)
->>       pci_unlock_rescan_remove();
->>
->>       /* Remove the SSDT for the slot from the ACPI namespace */
->> -     if (SN_ACPI_BASE_SUPPORT() && ssdt_id) {
->> +     if (SN_ACPI_BASE_SUPPORT() && ssdt_hdl) {
->>               acpi_status ret;
->> -             ret = acpi_unload_table_id(ssdt_id);
->> +             ret = acpi_unload_parent_table(ssdt_hdl);
->>               if (ACPI_FAILURE(ret)) {
->> -                     printk(KERN_ERR "%s: acpi_unload_table_id failed (0x%x) for id %d\n",
->> -                            __func__, ret, ssdt_id);
->> +                     acpi_handle_err(ssdt_hdl,
->> +                                     "%s: acpi_unload_parent_table failed (0x%x)\n",
->> +                                     __func__, ret);
->>                       /* try to continue on */
->>               }
->>       }
->> diff --git a/include/acpi/acpixf.h b/include/acpi/acpixf.h
->> index 5ba7846..5dd21bc 100644
->> --- a/include/acpi/acpixf.h
->> +++ b/include/acpi/acpixf.h
->> @@ -891,12 +891,6 @@ ACPI_APP_DEPENDENT_RETURN_VOID(ACPI_PRINTF_LIKE(1)
->>  ACPI_GLOBAL(u8, acpi_gbl_permanent_mmap);
->>
->>  ACPI_EXTERNAL_RETURN_STATUS(acpi_status
->> -                         acpi_get_id(acpi_handle object,
->> -                                     acpi_owner_id * out_type))
->> -
->> -ACPI_EXTERNAL_RETURN_STATUS(acpi_status acpi_unload_table_id(acpi_owner_id id))
->> -
->> -ACPI_EXTERNAL_RETURN_STATUS(acpi_status
->>                           acpi_get_table_with_size(acpi_string signature,
->>                                                    u32 instance,
->>                                                    struct acpi_table_header
->>
->
-> --
-> I speak only for myself.
-> Rafael J. Wysocki, Intel Open Source Technology Center.
+The 'check_timer' has the logic to swap the 'legacy_pic':
+
+2186         legacy_pic->init(1);                                                    
+
+which ends up executing:
+
+317         new_val = inb(PIC_MASTER_IMR);                                          
+318         if (new_val != probe_val) {                                             
+319                 printk(KERN_INFO "Using NULL legacy PIC\n");                    
+320                 legacy_pic = &null_legacy_pic;                                  
+321                 raw_spin_unlock_irqrestore(&i8259A_lock, flags);                
+322                 return;                                                         
+323         }                                         
+
+And the 'legacy_pic' has now be swapped over to the 'null_legacy_pic'
+for which:
+
+2393         if (nr_legacy_irqs())                                                   
+2394                 check_timer();                                                  
+2395                                                                                 
+
+ 70 static inline int nr_legacy_irqs(void)                                          
+ 71 {                                                                               
+ 72         return legacy_pic->nr_legacy_irqs;                                      
+ 73 }                                                                               
+ 74            
+
+would return zero (and not invoke the 'check_timer'), but because
+we do make the check inside the 'check_timer' we continue on.
+
+Perhaps something like this?
+
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 3f5f604..e474389 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -2184,6 +2184,14 @@ static inline void __init check_timer(void)
+ 	 */
+ 	apic_write(APIC_LVT0, APIC_LVT_MASKED | APIC_DM_EXTINT);
+ 	legacy_pic->init(1);
++	/*
++	 * The init swapped out the legacy_pic to point to the NULL one.
++	 * As such we should not even have entered this init routine
++	 * (which depends on ->nr_legacy_irqs having an non-zero value
++	 * and null_legacy_pic has zero.
++	 */
++	if (legacy_pic == null_legacy_pic)
++		goto out;
+ 
+ 	pin1  = find_isa_irq_pin(0, mp_INT);
+ 	apic1 = find_isa_irq_apic(0, mp_INT);
+diff --git a/arch/x86/xen/smp.c b/arch/x86/xen/smp.c
+index 4c071ae..9f404df 100644
+--- a/arch/x86/xen/smp.c
++++ b/arch/x86/xen/smp.c
+@@ -327,6 +327,7 @@ static void __init xen_smp_prepare_cpus(unsigned int max_cpus)
+ 		xen_raw_printk(m);
+ 		panic(m);
+ 	}
++	setup_IO_APIC();
+ 	xen_init_lock_cpu(0);
+ 
+ 	smp_store_boot_cpu_info();
+
+The patch of course ignores the WARN which woudl need something
+else.
+
+> Haven't test HVM and PV kernel yet.
+> So seems we still need special treatment for xen here.
+> Regards!
+> Gerry
+> 
+> >>>>  
+> >>>>  /*
+> >>>> diff --git a/arch/x86/xen/smp.c b/arch/x86/xen/smp.c
+> >>>> index 4c071aeb8417..7eb0283901fa 100644
+> >>>> --- a/arch/x86/xen/smp.c
+> >>>> +++ b/arch/x86/xen/smp.c
+> >>>> @@ -326,7 +326,10 @@ static void __init xen_smp_prepare_cpus(unsigned int max_cpus)
+> >>>>  
+> >>>>  		xen_raw_printk(m);
+> >>>>  		panic(m);
+> >>>> +	} else {
+> >>>> +		setup_IO_APIC(true);
+> >>>>  	}
+> >>>> +
+> >>>>  	xen_init_lock_cpu(0);
+> >>>>  
+> >>>>  	smp_store_boot_cpu_info();
+> >>>> -- 
+> >>>> 1.7.10.4
+> >>>>
+> >>> --
+> >>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> >>> the body of a message to majordomo@vger.kernel.org
+> >>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >>> Please read the FAQ at  http://www.tux.org/lkml/
+> >>>
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Please read the FAQ at  http://www.tux.org/lkml/
+> > 
