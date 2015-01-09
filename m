@@ -1,102 +1,69 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v4 14/33] irq_remapping/vt-d: Move struct irq_2_iommu into intel_irq_remapping.c
-Date: Tue, 20 Jan 2015 13:51:34 +0800
-Message-Id: <1421733113-15704-15-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:64510 "EHLO
+	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751803AbbAIR1a (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 12:27:30 -0500
+Received: by mail-oi0-f46.google.com with SMTP id a3so12819485oib.5
+        for <linux-pci@vger.kernel.org>; Fri, 09 Jan 2015 09:27:29 -0800 (PST)
+Date: Fri, 9 Jan 2015 10:27:26 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] PCI: Generate uppercase hex for modalias var in uevent
+Message-ID: <20150109172726.GC6575@google.com>
+References: <1417538104-27341-1-git-send-email-ricardo.ribalda@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1417538104-27341-1-git-send-email-ricardo.ribalda@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now only intel_irq_remapping.c access irq_2_iommu, so move it from
-hw_irq.h into intel_irq_remapping.c.
+On Tue, Dec 02, 2014 at 05:35:04PM +0100, Ricardo Ribalda Delgado wrote:
+> Some implementations of modprobe fail to load the driver for a PCI device
+> automatically because the "interface" part of the modalias from the kernel
+> is lowercase, and the modalias from file2alias is uppercase.
+> 
+> The "interface" is the low-order byte of the Class Code, defined in PCI
+> r3.0, Appendix D.  Most interface types defined in the spec do not use
+> alpha characters, so they won't be affected.  For example, 00h, 01h, 10h,
+> 20h, etc. are unaffected.
+> 
+> Print the "interface" byte of the Class Code in uppercase hex, as we
+> already do for the Vendor ID, Device ID, Class, etc.
+> 
+> Commit 89ec3dcf17fd ("PCI: Generate uppercase hex for modalias
+> interface class") fixed only half of the problem. Some udev
+> implementations relays on the uevent file and not in the modalias file.
+> 
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Fixes: d1ded203adf1 ("PCI: add MODALIAS to hotplug event for pci devices")
+> Signed-off-by: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: iommu@lists.linux-foundation.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Joerg Roedel <joro@8bytes.org>
-Link: http://lkml.kernel.org/r/1416901802-24211-24-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/include/asm/hw_irq.h       |    9 ---------
- drivers/iommu/intel_irq_remapping.c |    7 +++++++
- 2 files changed, 7 insertions(+), 9 deletions(-)
+Applied with Greg's ack to pci/enumeration for v3.20, thanks!
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 88632ea75fe0..3520f71f168b 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -95,14 +95,6 @@ extern void trace_call_function_single_interrupt(void);
- #endif /* CONFIG_TRACING */
- 
- #ifdef CONFIG_IRQ_REMAP
--/* Intel specific interrupt remapping information */
--struct irq_2_iommu {
--	struct intel_iommu *iommu;
--	u16 irte_index;
--	u16 sub_handle;
--	u8  irte_mask;
--};
--
- /* AMD specific interrupt remapping information */
- struct irq_2_irte {
- 	u16 devid; /* Device ID for IRTE table */
-@@ -194,7 +186,6 @@ struct irq_cfg {
- 	u8			move_in_progress : 1;
- #ifdef CONFIG_IRQ_REMAP
- 	union {
--		struct irq_2_iommu irq_2_iommu;
- 		struct irq_2_irte  irq_2_irte;
- 	};
- #endif
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 21fc899e7c49..8a71ef6af93c 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -32,6 +32,13 @@ struct hpet_scope {
- 	unsigned int devfn;
- };
- 
-+struct irq_2_iommu {
-+	struct intel_iommu *iommu;
-+	u16 irte_index;
-+	u16 sub_handle;
-+	u8  irte_mask;
-+};
-+
- struct intel_ir_data {
- 	struct irq_2_iommu			irq_2_iommu;
- 	struct irte				irte_entry;
--- 
-1.7.10.4
-
+> ---
+> 
+> Modified line is >80 char, but I believe that it is better than breaking
+> the string or indent it bad.
+> 
+>  drivers/pci/pci-driver.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 2b3c894..b720e78 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -1389,7 +1389,7 @@ static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
+>  	if (add_uevent_var(env, "PCI_SLOT_NAME=%s", pci_name(pdev)))
+>  		return -ENOMEM;
+>  
+> -	if (add_uevent_var(env, "MODALIAS=pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02x",
+> +	if (add_uevent_var(env, "MODALIAS=pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02X",
+>  			   pdev->vendor, pdev->device,
+>  			   pdev->subsystem_vendor, pdev->subsystem_device,
+>  			   (u8)(pdev->class >> 16), (u8)(pdev->class >> 8),
+> -- 
+> 2.1.3
+> 
