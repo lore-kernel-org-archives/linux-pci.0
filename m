@@ -1,93 +1,139 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:59447 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751536AbbAWVvD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 16:51:03 -0500
-Received: by mail-ob0-f174.google.com with SMTP id gq1so8540552obb.5
-        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 13:51:02 -0800 (PST)
-Date: Fri, 23 Jan 2015 15:50:58 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, aacraid@adaptec.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: quirks: DMA alias quirk for Adaptec 3405
-Message-ID: <20150123215058.GM29776@google.com>
-References: <20150113182605.15479.9020.stgit@gimli.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150113182605.15479.9020.stgit@gimli.home>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Rob Herring <robh@kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh@kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 07/16] ARM: integrator: convert PCI to use generic config accesses
+Date: Fri,  9 Jan 2015 20:34:41 -0600
+Message-Id: <1420857290-8373-8-git-send-email-robh@kernel.org>
+In-Reply-To: <1420857290-8373-1-git-send-email-robh@kernel.org>
+References: <1420857290-8373-1-git-send-email-robh@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 13, 2015 at 11:26:50AM -0700, Alex Williamson wrote:
-> As noted in the added comment, this device is actually an Intel 80333
-> I/O processor where the exposed device at 0e.0 is actually the address
-> translation unit of the I/O processor and a hidden, private device at
-> 01.0 masters the DMA for the device.  In order to enable the IOMMU, we
-> therefore need to create a fixed alias between the exposed and hidden
-> devfn.
-> 
-> Scenarios like this are potentially likely for any device incorporating
-> this I/O processor, so this little bit of abstraction with the fixed
-> alias table should make future additions trivial.
+Convert the integrator PCI driver to use the generic config access
+functions.
 
-This sounds like the result of some serious debugging :)  Do you have a
-pointer to a bugzilla or some email discussion?  I'd like to make the fix
-discoverable starting with a failure symptom.
+This changes accesses from __raw_readX/__raw_writeX to readX/writeX
+variants. The spinlock is removed because it is unnecessary. The config
+read and write functions are already protected with a spinlock and no
+access can occur during the .pre_init function.
 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>
-> ---
-> 
->  drivers/pci/quirks.c |   37 +++++++++++++++++++++++++++++++++++++
->  1 file changed, 37 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index ed6f89b..19bdb17 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3528,6 +3528,43 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_JMICRON,
->  			 quirk_dma_func1_alias);
->  
->  /*
-> + * Some devices DMA with the wrong devfn, not just the wrong function.
-> + * quirk_fixed_dma_alias() uses this table to create fixed aliass, where
-> + * the alias is "fixed" and independent of the device devfn.
-> + *
-> + * For example, the Adaptec 3405 is a PCIe card making use of an Intel 80333
-> + * I/O processor.  To software, this appears as a straightforward PCIe-to-PCI/X
-> + * bridge with a single device on the subordinate bus.  In reality, the exposed
-> + * device at 0e.0 is the Address Translation Unit (ATU) of the controller that
-> + * provides a bridge to the internal bus of the I/O processor.  The controller
-> + * supports private devices, which can be hidden from PCI config space.  In the
-> + * case of the Adaptec 3405, a private device at 01.0 appears to be the DMA
-> + * engine, which therefore needs to become a DMA alias for the device.
-> + */
-> +static const struct pci_device_id fixed_dma_alias_tbl[] = {
-> +	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x0285,
-> +			 PCI_VENDOR_ID_ADAPTEC2, 0x02bb), /* Adaptec 3405 */
-> +	  .driver_data = PCI_DEVFN(1, 0) },
-> +	{ 0 }
-> +};
-> +
-> +static void quirk_fixed_dma_alias(struct pci_dev *dev)
-> +{
-> +	const struct pci_device_id *id;
-> +
-> +	id = pci_match_id(fixed_dma_alias_tbl, dev);
-> +	if (id) {
-> +		dev->dma_alias_devfn = id->driver_data;
-> +		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
-> +		dev_info(&dev->dev, "Enabling fixed DMA alias to %02x.%d\n",
-> +			 PCI_SLOT(dev->dma_alias_devfn),
-> +			 PCI_FUNC(dev->dma_alias_devfn));
-> +	}
-> +}
-> +
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ADAPTEC2, 0x0285, quirk_fixed_dma_alias);
-> +
-> +/*
->   * A few PCIe-to-PCI bridges fail to expose a PCIe capability, resulting in
->   * using the wrong DMA alias for the device.  Some of these devices can be
->   * used as either forward or reverse bridges, so we need to test whether the
-> 
+Signed-off-by: Rob Herring <robh@kernel.org>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Linus Walleij <linus.walleij@linaro.org>
+Cc: linux-arm-kernel@lists.infradead.org
+---
+ arch/arm/mach-integrator/pci_v3.c | 61 ++++-----------------------------------
+ 1 file changed, 5 insertions(+), 56 deletions(-)
+
+diff --git a/arch/arm/mach-integrator/pci_v3.c b/arch/arm/mach-integrator/pci_v3.c
+index c186a17..dc7782f 100644
+--- a/arch/arm/mach-integrator/pci_v3.c
++++ b/arch/arm/mach-integrator/pci_v3.c
+@@ -356,7 +356,6 @@ static u64 pre_mem_pci_sz;
+  *	 7:2	register number
+  *
+  */
+-static DEFINE_RAW_SPINLOCK(v3_lock);
+ 
+ #undef V3_LB_BASE_PREFETCH
+ #define V3_LB_BASE_PREFETCH 0
+@@ -457,67 +456,21 @@ static void v3_close_config_window(void)
+ static int v3_read_config(struct pci_bus *bus, unsigned int devfn, int where,
+ 			  int size, u32 *val)
+ {
+-	void __iomem *addr;
+-	unsigned long flags;
+-	u32 v;
+-
+-	raw_spin_lock_irqsave(&v3_lock, flags);
+-	addr = v3_open_config_window(bus, devfn, where);
+-
+-	switch (size) {
+-	case 1:
+-		v = __raw_readb(addr);
+-		break;
+-
+-	case 2:
+-		v = __raw_readw(addr);
+-		break;
+-
+-	default:
+-		v = __raw_readl(addr);
+-		break;
+-	}
+-
++	int ret = pci_generic_config_read(bus, devfn, where, size, val);
+ 	v3_close_config_window();
+-	raw_spin_unlock_irqrestore(&v3_lock, flags);
+-
+-	*val = v;
+-	return PCIBIOS_SUCCESSFUL;
++	return ret;
+ }
+ 
+ static int v3_write_config(struct pci_bus *bus, unsigned int devfn, int where,
+ 			   int size, u32 val)
+ {
+-	void __iomem *addr;
+-	unsigned long flags;
+-
+-	raw_spin_lock_irqsave(&v3_lock, flags);
+-	addr = v3_open_config_window(bus, devfn, where);
+-
+-	switch (size) {
+-	case 1:
+-		__raw_writeb((u8)val, addr);
+-		__raw_readb(addr);
+-		break;
+-
+-	case 2:
+-		__raw_writew((u16)val, addr);
+-		__raw_readw(addr);
+-		break;
+-
+-	case 4:
+-		__raw_writel(val, addr);
+-		__raw_readl(addr);
+-		break;
+-	}
+-
++	int ret = pci_generic_config_write(bus, devfn, where, size, val);
+ 	v3_close_config_window();
+-	raw_spin_unlock_irqrestore(&v3_lock, flags);
+-
+-	return PCIBIOS_SUCCESSFUL;
++	return ret;
+ }
+ 
+ static struct pci_ops pci_v3_ops = {
++	.map_bus = v3_open_config_window,
+ 	.read	= v3_read_config,
+ 	.write	= v3_write_config,
+ };
+@@ -672,8 +625,6 @@ static void __init pci_v3_preinit(void)
+ 	hook_fault_code(8, v3_pci_fault, SIGBUS, 0, "external abort on non-linefetch");
+ 	hook_fault_code(10, v3_pci_fault, SIGBUS, 0, "external abort on non-linefetch");
+ 
+-	raw_spin_lock_irqsave(&v3_lock, flags);
+-
+ 	/*
+ 	 * Unlock V3 registers, but only if they were previously locked.
+ 	 */
+@@ -736,8 +687,6 @@ static void __init pci_v3_preinit(void)
+ 	v3_writew(V3_LB_CFG, v3_readw(V3_LB_CFG) | (1 << 10));
+ 	v3_writeb(V3_LB_IMASK, 0x28);
+ 	__raw_writel(3, ap_syscon_base + INTEGRATOR_SC_PCIENABLE_OFFSET);
+-
+-	raw_spin_unlock_irqrestore(&v3_lock, flags);
+ }
+ 
+ static void __init pci_v3_postinit(void)
+-- 
+2.1.0
+
