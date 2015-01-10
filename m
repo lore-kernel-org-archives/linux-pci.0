@@ -1,84 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54899 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752220AbbAMS04 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 13 Jan 2015 13:26:56 -0500
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH] PCI: quirks: DMA alias quirk for Adaptec 3405
-To: linux-pci@vger.kernel.org
-Cc: aacraid@adaptec.com, linux-kernel@vger.kernel.org,
-	bhelgaas@google.com
-Date: Tue, 13 Jan 2015 11:26:50 -0700
-Message-ID: <20150113182605.15479.9020.stgit@gimli.home>
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:45264 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756754AbbAJCf6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 21:35:58 -0500
+From: Rob Herring <robh@kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh@kernel.org>,
+	Michal Simek <michal.simek@xilinx.com>,
+	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 16/16] pci/host: xilinx: convert to use generic config accesses
+Date: Fri,  9 Jan 2015 20:34:50 -0600
+Message-Id: <1420857290-8373-17-git-send-email-robh@kernel.org>
+In-Reply-To: <1420857290-8373-1-git-send-email-robh@kernel.org>
+References: <1420857290-8373-1-git-send-email-robh@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As noted in the added comment, this device is actually an Intel 80333
-I/O processor where the exposed device at 0e.0 is actually the address
-translation unit of the I/O processor and a hidden, private device at
-01.0 masters the DMA for the device.  In order to enable the IOMMU, we
-therefore need to create a fixed alias between the exposed and hidden
-devfn.
+Convert the Xilinx host PCI driver to use the generic config access
+functions.
 
-Scenarios like this are potentially likely for any device incorporating
-this I/O processor, so this little bit of abstraction with the fixed
-alias table should make future additions trivial.
-
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>
+Signed-off-by: Rob Herring <robh@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Michal Simek <michal.simek@xilinx.com>
+Cc: "Sören Brinkmann" <soren.brinkmann@xilinx.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
 ---
+ drivers/pci/host/pcie-xilinx.c | 88 +++++-------------------------------------
+ 1 file changed, 9 insertions(+), 79 deletions(-)
 
- drivers/pci/quirks.c |   37 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index ed6f89b..19bdb17 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3528,6 +3528,43 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_JMICRON,
- 			 quirk_dma_func1_alias);
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index ef3ebaf..f67d036 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -189,7 +189,7 @@ static bool xilinx_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
+ }
  
- /*
-+ * Some devices DMA with the wrong devfn, not just the wrong function.
-+ * quirk_fixed_dma_alias() uses this table to create fixed aliass, where
-+ * the alias is "fixed" and independent of the device devfn.
-+ *
-+ * For example, the Adaptec 3405 is a PCIe card making use of an Intel 80333
-+ * I/O processor.  To software, this appears as a straightforward PCIe-to-PCI/X
-+ * bridge with a single device on the subordinate bus.  In reality, the exposed
-+ * device at 0e.0 is the Address Translation Unit (ATU) of the controller that
-+ * provides a bridge to the internal bus of the I/O processor.  The controller
-+ * supports private devices, which can be hidden from PCI config space.  In the
-+ * case of the Adaptec 3405, a private device at 01.0 appears to be the DMA
-+ * engine, which therefore needs to become a DMA alias for the device.
-+ */
-+static const struct pci_device_id fixed_dma_alias_tbl[] = {
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x0285,
-+			 PCI_VENDOR_ID_ADAPTEC2, 0x02bb), /* Adaptec 3405 */
-+	  .driver_data = PCI_DEVFN(1, 0) },
-+	{ 0 }
-+};
+ /**
+- * xilinx_pcie_config_base - Get configuration base
++ * xilinx_pcie_map_bus - Get configuration base
+  * @bus: PCI Bus structure
+  * @devfn: Device/function
+  * @where: Offset from base
+@@ -197,96 +197,26 @@ static bool xilinx_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
+  * Return: Base address of the configuration space needed to be
+  *	   accessed.
+  */
+-static void __iomem *xilinx_pcie_config_base(struct pci_bus *bus,
+-					     unsigned int devfn, int where)
++static void __iomem *xilinx_pcie_map_bus(struct pci_bus *bus,
++					 unsigned int devfn, int where)
+ {
+ 	struct xilinx_pcie_port *port = sys_to_pcie(bus->sysdata);
+ 	int relbus;
+ 
++	if (!xilinx_pcie_valid_device(bus, devfn))
++		return NULL;
 +
-+static void quirk_fixed_dma_alias(struct pci_dev *dev)
-+{
-+	const struct pci_device_id *id;
-+
-+	id = pci_match_id(fixed_dma_alias_tbl, dev);
-+	if (id) {
-+		dev->dma_alias_devfn = id->driver_data;
-+		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
-+		dev_info(&dev->dev, "Enabling fixed DMA alias to %02x.%d\n",
-+			 PCI_SLOT(dev->dma_alias_devfn),
-+			 PCI_FUNC(dev->dma_alias_devfn));
-+	}
-+}
-+
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ADAPTEC2, 0x0285, quirk_fixed_dma_alias);
-+
-+/*
-  * A few PCIe-to-PCI bridges fail to expose a PCIe capability, resulting in
-  * using the wrong DMA alias for the device.  Some of these devices can be
-  * used as either forward or reverse bridges, so we need to test whether the
+ 	relbus = (bus->number << ECAM_BUS_NUM_SHIFT) |
+ 		 (devfn << ECAM_DEV_NUM_SHIFT);
+ 
+ 	return port->reg_base + relbus + where;
+ }
+ 
+-/**
+- * xilinx_pcie_read_config - Read configuration space
+- * @bus: PCI Bus structure
+- * @devfn: Device/function
+- * @where: Offset from base
+- * @size: Byte/word/dword
+- * @val: Value to be read
+- *
+- * Return: PCIBIOS_SUCCESSFUL on success
+- *	   PCIBIOS_DEVICE_NOT_FOUND on failure
+- */
+-static int xilinx_pcie_read_config(struct pci_bus *bus, unsigned int devfn,
+-				   int where, int size, u32 *val)
+-{
+-	void __iomem *addr;
+-
+-	if (!xilinx_pcie_valid_device(bus, devfn)) {
+-		*val = 0xFFFFFFFF;
+-		return PCIBIOS_DEVICE_NOT_FOUND;
+-	}
+-
+-	addr = xilinx_pcie_config_base(bus, devfn, where);
+-
+-	switch (size) {
+-	case 1:
+-		*val = readb(addr);
+-		break;
+-	case 2:
+-		*val = readw(addr);
+-		break;
+-	default:
+-		*val = readl(addr);
+-		break;
+-	}
+-
+-	return PCIBIOS_SUCCESSFUL;
+-}
+-
+-/**
+- * xilinx_pcie_write_config - Write configuration space
+- * @bus: PCI Bus structure
+- * @devfn: Device/function
+- * @where: Offset from base
+- * @size: Byte/word/dword
+- * @val: Value to be written to device
+- *
+- * Return: PCIBIOS_SUCCESSFUL on success
+- *	   PCIBIOS_DEVICE_NOT_FOUND on failure
+- */
+-static int xilinx_pcie_write_config(struct pci_bus *bus, unsigned int devfn,
+-				    int where, int size, u32 val)
+-{
+-	void __iomem *addr;
+-
+-	if (!xilinx_pcie_valid_device(bus, devfn))
+-		return PCIBIOS_DEVICE_NOT_FOUND;
+-
+-	addr = xilinx_pcie_config_base(bus, devfn, where);
+-
+-	switch (size) {
+-	case 1:
+-		writeb(val, addr);
+-		break;
+-	case 2:
+-		writew(val, addr);
+-		break;
+-	default:
+-		writel(val, addr);
+-		break;
+-	}
+-
+-	return PCIBIOS_SUCCESSFUL;
+-}
+-
+ /* PCIe operations */
+ static struct pci_ops xilinx_pcie_ops = {
+-	.read  = xilinx_pcie_read_config,
+-	.write = xilinx_pcie_write_config,
++	.map_bus = xilinx_pcie_map_bus,
++	.read	= pci_generic_config_read,
++	.write	= pci_generic_config_write,
+ };
+ 
+ /* MSI functions */
+-- 
+2.1.0
 
