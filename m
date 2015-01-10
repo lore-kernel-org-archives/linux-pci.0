@@ -1,67 +1,168 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Rob Herring <robh@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:49914 "EHLO
+	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754437AbbAJCfh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 21:35:37 -0500
+From: Rob Herring <robh@kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <will.deacon@arm.com>
-Subject: Re: [PATCH] pci: introduce common pci config space accessors
-Date: Tue, 06 Jan 2015 21:39:49 +0100
-Message-ID: <29617227.2s0RYsxxN0@wuerfel>
-In-Reply-To: <CAL_JsqLOJSjE6MUgFe8Biz+MhdGUiZD+kAOWYTvnF1G5saa2wA@mail.gmail.com>
-References: <1420424374-32412-1-git-send-email-robh@kernel.org> <1758416.ZHsvLP471N@wuerfel> <CAL_JsqLOJSjE6MUgFe8Biz+MhdGUiZD+kAOWYTvnF1G5saa2wA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+	Rob Herring <robh@kernel.org>
+Subject: [PATCH 05/16] pci: introduce common pci config space accessors
+Date: Fri,  9 Jan 2015 20:34:39 -0600
+Message-Id: <1420857290-8373-6-git-send-email-robh@kernel.org>
+In-Reply-To: <1420857290-8373-1-git-send-email-robh@kernel.org>
+References: <1420857290-8373-1-git-send-email-robh@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 05 January 2015 16:28:48 Rob Herring wrote:
-> On Mon, Jan 5, 2015 at 2:01 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Monday 05 January 2015 08:46:09 Rob Herring wrote:
-> >> Right, this is what I had in mind for CAM/ECAM. I didn't go this far
-> >> because a lot of the map_bus functions do various checks to prevent
-> >> certain accesses. Of what I've found, I think only generic host and
-> >> Xilinx drivers could be converted to a generic ECAM map_bus. Others
-> >> check bus number and/or device number or link-up status or have a
-> >> fixup for certain registers, for example. I'm not sure how much of it
-> >> is unnecessary or could be common.
-> >
-> > How do you want to deal with the overrides? I don't see a way to
-> > do that in map_bus (with the current definition) if the idea is that
-> > for certain registers we return hardcoded values instead of accessing
-> > mmio registers.
-> 
-> It is not done in map_bus unless you want all FFs by returning NULL,
-> but by simply by wrapping the generic call with a host specific read
-> or write function. Here's one example that modifies one field in a
-> register. This means you can do any pre or post processing you need.
-> Even the crazy stuff Integrator PCI does.
-> 
-> static int cns3xxx_pci_read_config(struct pci_bus *bus, unsigned int devfn,
->                                    int where, int size, u32 *val)
-> {
->         u32 mask = (0x1ull << (size * 8)) - 1;
->         int shift = (where % 4) * 8;
-> 
->         ret = pci_generic_config_read32(bus, devfn, where, size, val);
-> 
->         if (ret == PCIBIOS_SUCCESSFUL && bus->number == 0 && devfn == 0 &&
->             (where & 0xffc) == PCI_CLASS_REVISION)
->                 /*
->                  * RC's class is 0xb, but Linux PCI driver needs 0x604
->                  * for a PCIe bridge. So we must fixup the class code
->                  * to 0x604 here.
->                  */
->                 *val = ((*val << shift) & 0xff) | (0x604 << 16)) >>
-> shift) & mask;
-> 
->         return ret;
-> }
+Many PCI controllers' configuration space accesses are memory mapped
+varying only in address calculation and access checks. There are 2 main
+access methods: a decoded address space such as ECAM or a single address
+and data register similar to x86. This implementation can support both
+cases as well as be used in cases that need additional pre or post access
+handling.
 
-Ah, I see. Yes this should work fine. 
+A new pci_ops member map_bus is introduced which can do access checks and
+any necessary setup. It returns the address to use for the configuration
+space access. The access types supported are 32-bit only accesses or
+correct byte, word, or dword sized accesses.
 
-I had no idea about the Integrator craziness. Does that actually work? ;-)
-If I were to write a driver for this hardware, I'd probably give up and
-either not support prefetchable memory space, or not support PIO.
+Signed-off-by: Rob Herring <robh@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/pci/access.c | 87 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h  | 11 +++++++
+ 2 files changed, 98 insertions(+)
 
-	Arnd
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 49dd766..d9b64a1 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -67,6 +67,93 @@ EXPORT_SYMBOL(pci_bus_write_config_byte);
+ EXPORT_SYMBOL(pci_bus_write_config_word);
+ EXPORT_SYMBOL(pci_bus_write_config_dword);
+ 
++int pci_generic_config_read(struct pci_bus *bus, unsigned int devfn,
++			    int where, int size, u32 *val)
++{
++	void __iomem *addr;
++
++	addr = bus->ops->map_bus(bus, devfn, where);
++	if (!addr) {
++		*val = ~0;
++		return PCIBIOS_DEVICE_NOT_FOUND;
++	}
++
++	if (size == 1)
++		*val = readb(addr);
++	else if (size == 2)
++		*val = readw(addr);
++	else
++		*val = readl(addr);
++
++	return PCIBIOS_SUCCESSFUL;
++}
++EXPORT_SYMBOL_GPL(pci_generic_config_read);
++
++int pci_generic_config_write(struct pci_bus *bus, unsigned int devfn,
++			     int where, int size, u32 val)
++{
++	void __iomem *addr;
++
++	addr = bus->ops->map_bus(bus, devfn, where);
++	if (!addr)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	if (size == 1)
++		writeb(val, addr);
++	else if (size == 2)
++		writew(val, addr);
++	else
++		writel(val, addr);
++
++	return PCIBIOS_SUCCESSFUL;
++}
++EXPORT_SYMBOL_GPL(pci_generic_config_write);
++
++int pci_generic_config_read32(struct pci_bus *bus, unsigned int devfn,
++			      int where, int size, u32 *val)
++{
++	void __iomem *addr;
++
++	addr = bus->ops->map_bus(bus, devfn, where & ~0x3);
++	if (!addr) {
++		*val = ~0;
++		return PCIBIOS_DEVICE_NOT_FOUND;
++	}
++
++	*val = readl(addr);
++
++	if (size <= 2)
++		*val = (*val >> (8 * (where & 3))) & ((1 << (size * 8)) - 1);
++
++	return PCIBIOS_SUCCESSFUL;
++}
++EXPORT_SYMBOL_GPL(pci_generic_config_read32);
++
++int pci_generic_config_write32(struct pci_bus *bus, unsigned int devfn,
++			       int where, int size, u32 val)
++{
++	void __iomem *addr;
++	u32 mask, tmp;
++
++	addr = bus->ops->map_bus(bus, devfn, where & ~0x3);
++	if (!addr)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	if (size == 4) {
++		writel(val, addr);
++		return PCIBIOS_SUCCESSFUL;
++	} else {
++		mask = ~(((1 << (size * 8)) - 1) << ((where & 0x3) * 8));
++	}
++
++	tmp = readl(addr) & mask;
++	tmp |= val << ((where & 0x3) * 8);
++	writel(tmp, addr);
++
++	return PCIBIOS_SUCCESSFUL;
++}
++EXPORT_SYMBOL_GPL(pci_generic_config_write32);
++
+ /**
+  * pci_bus_set_ops - Set raw operations of pci bus
+  * @bus:	pci bus struct
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 360a966..e7fd519 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -560,6 +560,7 @@ static inline int pcibios_err_to_errno(int err)
+ /* Low-level architecture-dependent routines */
+ 
+ struct pci_ops {
++	void __iomem *(*map_bus)(struct pci_bus *bus, unsigned int devfn, int where);
+ 	int (*read)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
+ 	int (*write)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
+ };
+@@ -857,6 +858,16 @@ int pci_bus_write_config_word(struct pci_bus *bus, unsigned int devfn,
+ 			      int where, u16 val);
+ int pci_bus_write_config_dword(struct pci_bus *bus, unsigned int devfn,
+ 			       int where, u32 val);
++
++int pci_generic_config_read(struct pci_bus *bus, unsigned int devfn,
++			    int where, int size, u32 *val);
++int pci_generic_config_write(struct pci_bus *bus, unsigned int devfn,
++			    int where, int size, u32 val);
++int pci_generic_config_read32(struct pci_bus *bus, unsigned int devfn,
++			      int where, int size, u32 *val);
++int pci_generic_config_write32(struct pci_bus *bus, unsigned int devfn,
++			       int where, int size, u32 val);
++
+ struct pci_ops *pci_bus_set_ops(struct pci_bus *bus, struct pci_ops *ops);
+ 
+ static inline int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val)
+-- 
+2.1.0
+
