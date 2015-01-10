@@ -1,76 +1,140 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <54B52168.3080600@arm.com>
-Date: Tue, 13 Jan 2015 13:45:12 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:33520 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755118AbbAJCfo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 21:35:44 -0500
+From: Rob Herring <robh@kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
-Subject: Re: [PATCH v2 2/8] PCI/MSI: Add hooks to populate the msi_domain
- field
-References: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com> <1420736772-11088-3-git-send-email-marc.zyngier@arm.com> <54B510BA.7030202@huawei.com>
-In-Reply-To: <54B510BA.7030202@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-kernel-owner@vger.kernel.org
+	Rob Herring <robh@kernel.org>, Greg Ungerer <gerg@uclinux.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 09/16] ARM: ks8695: convert PCI to use generic config accesses
+Date: Fri,  9 Jan 2015 20:34:43 -0600
+Message-Id: <1420857290-8373-10-git-send-email-robh@kernel.org>
+In-Reply-To: <1420857290-8373-1-git-send-email-robh@kernel.org>
+References: <1420857290-8373-1-git-send-email-robh@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13/01/15 12:34, Yijing Wang wrote:
->>  static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->>  					   struct pci_dev *bridge, int busnr)
->>  {
->> @@ -713,6 +727,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->>  	bridge->subordinate = child;
->>  
->>  add_dev:
->> +	pci_set_bus_msi_domain(child);
->>  	ret = device_register(&child->dev);
->>  	WARN_ON(ret < 0);
->>  
->> @@ -1507,6 +1522,17 @@ static void pci_init_capabilities(struct pci_dev *dev)
->>  	pci_enable_acs(dev);
->>  }
->>  
->> +static void pci_set_msi_domain(struct pci_dev *dev)
->> +{
->> +	/*
->> +	 * If no domain has been set through the pcibios callback,
->> +	 * inherit the default from the bus device.
->> +	 */
->> +	if (!dev_get_msi_domain(&dev->dev))
->> +		dev_set_msi_domain(&dev->dev,
->> +				   dev_get_msi_domain(&dev->bus->dev));
->> +}
-> 
-> Hi Marc, now we have two ways to associate the pci_dev and msi_domain, right ?
-> 
-> 1. associate pci_dev and msi_domain in pcibios_add_device() like x86.
-> 
-> 2. Inherit msi_domain from pci_dev->bus.
-> 
-> My question is if all pci devices inherit msi_domain from the pci_bus,
-> so all pci devices under same pci host bridge have the same msi_domain assigned by
-> weak pcibios_set_phb_msi_domain(). So why not save the pci host bridge specific
-> msi_domain in pci_host_bridge. Then pci devices could inherit the msi_domain from
-> its pci host bridge directly, no need to involve pci bus in the assignment.
+Convert the ks8695 PCI driver to use the generic config access functions.
 
-But then, you would end-up maintaining another msi_domain field inside
-the pci_host bridge structure. What do you gain by doing so?
+This changes accesses from __raw_readX/__raw_writeX to readX/writeX
+variants.
 
-With this series, msi_domain has the nice property of always being tied
-to a device (and struct pci_bus always has a device). We always have
-phb->bus->dev.msi_domain within reach, and architecture code can decide
-to override it on a per-device basis.
+Signed-off-by: Rob Herring <robh@kernel.org>
+Cc: Greg Ungerer <gerg@uclinux.org>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: linux-arm-kernel@lists.infradead.org
+---
+ arch/arm/mach-ks8695/pci.c | 77 ++++------------------------------------------
+ 1 file changed, 6 insertions(+), 71 deletions(-)
 
-What else do you need? What am I missing from your proposal?
-
-Thanks,
-
-	M.
+diff --git a/arch/arm/mach-ks8695/pci.c b/arch/arm/mach-ks8695/pci.c
+index bb18193..c1bc4c3 100644
+--- a/arch/arm/mach-ks8695/pci.c
++++ b/arch/arm/mach-ks8695/pci.c
+@@ -38,8 +38,6 @@
+ 
+ 
+ static int pci_dbg;
+-static int pci_cfg_dbg;
+-
+ 
+ static void ks8695_pci_setupconfig(unsigned int bus_nr, unsigned int devfn, unsigned int where)
+ {
+@@ -59,75 +57,11 @@ static void ks8695_pci_setupconfig(unsigned int bus_nr, unsigned int devfn, unsi
+ 	}
+ }
+ 
+-
+-/*
+- * The KS8695 datasheet prohibits anything other than 32bit accesses
+- * to the IO registers, so all our configuration must be done with
+- * 32bit operations, and the correct bit masking and shifting.
+- */
+-
+-static int ks8695_pci_readconfig(struct pci_bus *bus,
+-			unsigned int devfn, int where, int size, u32 *value)
+-{
+-	ks8695_pci_setupconfig(bus->number, devfn, where);
+-
+-	*value = __raw_readl(KS8695_PCI_VA +  KS8695_PBCD);
+-
+-	switch (size) {
+-		case 4:
+-			break;
+-		case 2:
+-			*value = *value >> ((where & 2) * 8);
+-			*value &= 0xffff;
+-			break;
+-		case 1:
+-			*value = *value >> ((where & 3) * 8);
+-			*value &= 0xff;
+-			break;
+-	}
+-
+-	if (pci_cfg_dbg) {
+-		printk("read: %d,%08x,%02x,%d: %08x (%08x)\n",
+-			bus->number, devfn, where, size, *value,
+-			__raw_readl(KS8695_PCI_VA +  KS8695_PBCD));
+-	}
+-
+-	return PCIBIOS_SUCCESSFUL;
+-}
+-
+-static int ks8695_pci_writeconfig(struct pci_bus *bus,
+-			unsigned int devfn, int where, int size, u32 value)
++static void __iomem *ks8695_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
++					int where)
+ {
+-	unsigned long tmp;
+-
+-	if (pci_cfg_dbg) {
+-		printk("write: %d,%08x,%02x,%d: %08x\n",
+-			bus->number, devfn, where, size, value);
+-	}
+-
+ 	ks8695_pci_setupconfig(bus->number, devfn, where);
+-
+-	switch (size) {
+-		case 4:
+-			__raw_writel(value, KS8695_PCI_VA +  KS8695_PBCD);
+-			break;
+-		case 2:
+-			tmp = __raw_readl(KS8695_PCI_VA +  KS8695_PBCD);
+-			tmp &= ~(0xffff << ((where & 2) * 8));
+-			tmp |= value << ((where & 2) * 8);
+-
+-			__raw_writel(tmp, KS8695_PCI_VA +  KS8695_PBCD);
+-			break;
+-		case 1:
+-			tmp = __raw_readl(KS8695_PCI_VA +  KS8695_PBCD);
+-			tmp &= ~(0xff << ((where & 3) * 8));
+-			tmp |= value << ((where & 3) * 8);
+-
+-			__raw_writel(tmp, KS8695_PCI_VA +  KS8695_PBCD);
+-			break;
+-	}
+-
+-	return PCIBIOS_SUCCESSFUL;
++	return KS8695_PCI_VA +  KS8695_PBCD;
+ }
+ 
+ static void ks8695_local_writeconfig(int where, u32 value)
+@@ -137,8 +71,9 @@ static void ks8695_local_writeconfig(int where, u32 value)
+ }
+ 
+ static struct pci_ops ks8695_pci_ops = {
+-	.read	= ks8695_pci_readconfig,
+-	.write	= ks8695_pci_writeconfig,
++	.map_bus = ks8695_pci_map_bus,
++	.read	= pci_generic_config_read32,
++	.write	= pci_generic_config_write32,
+ };
+ 
+ static struct resource pci_mem = {
 -- 
-Jazz is not dead. It just smells funny...
+2.1.0
+
