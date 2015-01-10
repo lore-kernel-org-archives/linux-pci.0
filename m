@@ -1,35 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ni.piap.pl ([195.187.100.4]:42351 "EHLO ni.piap.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752025AbbA2Ght convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jan 2015 01:37:49 -0500
-From: khalasa@piap.pl (Krzysztof =?utf-8?Q?Ha=C5=82asa?=)
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-References: <2000255.rnmr9HfSOg@wuerfel>
-Date: Thu, 29 Jan 2015 07:37:48 +0100
-In-Reply-To: <2000255.rnmr9HfSOg@wuerfel> (Arnd Bergmann's message of "Wed, 28
-	Jan 2015 14:53:07 +0100")
-MIME-Version: 1.0
-Message-ID: <m3y4omw0qr.fsf@t19.piap.pl>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH] ARM: cns3xxx: fix typo in PCI config accessor
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Rob Herring <robh@kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh@kernel.org>,
+	David Howells <dhowells@redhat.com>,
+	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
+	linux-am33-list@redhat.com
+Subject: [PATCH 03/16] mn10300: add struct pci_ops member names to initialization
+Date: Fri,  9 Jan 2015 20:34:37 -0600
+Message-Id: <1420857290-8373-4-git-send-email-robh@kernel.org>
+In-Reply-To: <1420857290-8373-1-git-send-email-robh@kernel.org>
+References: <1420857290-8373-1-git-send-email-robh@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
+Some instances of pci_ops initialization rely on the read/write members'
+location in the struct. This is fragile and may break when adding new
+members to the beginning of the struct.
 
-> The recent patch to convert the cns3xxx PCI code added an
-> extraneous opening bracket, which makes the build fail,
-> so remove this.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 10e2c5540d48 ("ARM: cns3xxx: Convert PCI to use generic config accessors")
-Acked-by: Krzysztof Hałasa <khalasa@piap.pl>
+Signed-off-by: Rob Herring <robh@kernel.org>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
+Cc: linux-am33-list@redhat.com
+---
+ arch/mn10300/unit-asb2305/pci.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
+index 6b4339f..406cbe0 100644
+--- a/arch/mn10300/unit-asb2305/pci.c
++++ b/arch/mn10300/unit-asb2305/pci.c
+@@ -228,8 +228,8 @@ static int pci_ampci_write_config(struct pci_bus *bus, unsigned int devfn,
+ }
+ 
+ static struct pci_ops pci_direct_ampci = {
+-	pci_ampci_read_config,
+-	pci_ampci_write_config,
++	.read = pci_ampci_read_config,
++	.write = pci_ampci_write_config,
+ };
+ 
+ /*
 -- 
-Krzysztof Halasa
+2.1.0
 
-Research Institute for Automation and Measurements PIAP
-Al. Jerozolimskie 202, 02-486 Warsaw, Poland
