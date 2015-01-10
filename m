@@ -1,59 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:52671 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751046AbbAMLwy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 13 Jan 2015 06:52:54 -0500
-Date: Tue, 13 Jan 2015 12:52:53 +0100
-From: Joerg Roedel <joro@8bytes.org>
-To: "Li, ZhenHua" <zhen-hual@hp.com>
-Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	vgoyal@redhat.com, dyoung@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v8 02/10] iommu/vt-d: Items required for kdump
-Message-ID: <20150113115252.GH6343@8bytes.org>
-References: <1421046388-27925-1-git-send-email-zhen-hual@hp.com>
- <1421046388-27925-3-git-send-email-zhen-hual@hp.com>
- <20150112152207.GC6343@8bytes.org>
- <54B4D36D.8030204@hp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54B4D36D.8030204@hp.com>
+Received: from mail-oi0-f48.google.com ([209.85.218.48]:43352 "EHLO
+	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753519AbbAJCf2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 21:35:28 -0500
+From: Rob Herring <robh@kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh@kernel.org>,
+	David Howells <dhowells@redhat.com>
+Subject: [PATCH 01/16] frv: add struct pci_ops member names to initialization
+Date: Fri,  9 Jan 2015 20:34:35 -0600
+Message-Id: <1420857290-8373-2-git-send-email-robh@kernel.org>
+In-Reply-To: <1420857290-8373-1-git-send-email-robh@kernel.org>
+References: <1420857290-8373-1-git-send-email-robh@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 13, 2015 at 04:12:29PM +0800, Li, ZhenHua wrote:
+Some instances of pci_ops initialization rely on the read/write members'
+location in the struct. This is fragile and may break when adding new
+members to the beginning of the struct.
 
-> Current status:
-> 1. Use old root entry table,
-> 2. Copy old context entry tables.
-> 3. Copy old page tables.
-> 4. Allocate new page table when device driver is loading.
-> 
-> I remember the progress we discussed was this. Checking the old mails,
-> founding we did not clearly discuss about the old page tables, only
-> agrred with allocating new page tables when device driver is loading.
-> 
-> To me, both of these two options are fine, copying old page tables, or
-> re-use the old ones. My debugging shows both of them works fine.
-> 
-> If we use the old page tables, the patchset will use less code.
-> Functions copy_page_addr, copy_page_table are no longer needed, and
-> functions copy_context_entry and copy_context_entry_table will be
-> reduced to several lines. The patchset will be much simpler.
+Signed-off-by: Rob Herring <robh@kernel.org>
+Cc: David Howells <dhowells@redhat.com>
+---
+ arch/frv/mb93090-mb00/pci-vdk.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Yes, please do it this way. There is no point in copying the old
-page-tables. We never make changes to them, so they can stay where they
-are.
-
-The problem with the backup region still exists, but it is not
-specific to IOMMUs. This problem and should be addressed seperatly.
-
-
-	Joerg
+diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
+index efa5d65..b073f4d 100644
+--- a/arch/frv/mb93090-mb00/pci-vdk.c
++++ b/arch/frv/mb93090-mb00/pci-vdk.c
+@@ -168,8 +168,8 @@ static int pci_frv_write_config(struct pci_bus *bus, unsigned int devfn, int whe
+ }
+ 
+ static struct pci_ops pci_direct_frv = {
+-	pci_frv_read_config,
+-	pci_frv_write_config,
++	.read = pci_frv_read_config,
++	.write = pci_frv_write_config,
+ };
+ 
+ /*
+-- 
+2.1.0
 
