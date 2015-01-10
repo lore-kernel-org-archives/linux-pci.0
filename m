@@ -1,112 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:12952 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753893AbbAUCcf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 21:32:35 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	"Fenghua Yu" <fenghua.yu@intel.com>
-Subject: [PATCH v2 15/30] PCI/IA64: Refine pci_acpi_scan_root() with generic pci_host_bridge
-Date: Wed, 21 Jan 2015 08:30:10 +0800
-Message-ID: <1421800225-26230-16-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
-References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-oi0-f48.google.com ([209.85.218.48]:56696 "EHLO
+	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755118AbbAJCfv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 21:35:51 -0500
+From: Rob Herring <robh@kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh@kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 12/16] pci/host: generic: convert to use generic config accesses
+Date: Fri,  9 Jan 2015 20:34:46 -0600
+Message-Id: <1420857290-8373-13-git-send-email-robh@kernel.org>
+In-Reply-To: <1420857290-8373-1-git-send-email-robh@kernel.org>
+References: <1420857290-8373-1-git-send-email-robh@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yijing Wang <wangyijing0307@gmail.com>
+Convert the generic host PCI driver to use the generic config access
+functions.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Tony Luck <tony.luck@intel.com>
-CC: Fenghua Yu <fenghua.yu@intel.com>
-CC: linux-ia64@vger.kernel.org
+Signed-off-by: Rob Herring <robh@kernel.org>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
 ---
- arch/ia64/pci/pci.c |   34 ++++++++++++++++++----------------
- 1 files changed, 18 insertions(+), 16 deletions(-)
+ drivers/pci/host/pci-host-generic.c | 51 +++----------------------------------
+ 1 file changed, 3 insertions(+), 48 deletions(-)
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index e457015..b86b318 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -420,6 +420,18 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
- 	return 0;
- }
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 6eb1aa7..925e29e 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -76,55 +76,9 @@ static struct gen_pci_cfg_bus_ops gen_pci_cfg_ecam_bus_ops = {
+ 	.map_bus	= gen_pci_map_cfg_bus_ecam,
+ };
  
-+static int pci_host_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	struct pci_controller *controller = bridge->bus->sysdata;
-+
-+	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
-+	return 0;
-+}
-+
-+static struct pci_host_bridge_ops phb_ops = {
-+	.phb_prepare = pci_host_bridge_prepare,
-+};
-+
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- {
- 	struct acpi_device *device = root->device;
-@@ -428,7 +440,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	struct pci_controller *controller;
- 	struct pci_root_info *info = NULL;
- 	int busnum = root->secondary.start;
--	struct pci_bus *pbus;
-+	struct pci_host_bridge *host;
- 	int ret;
- 
- 	controller = alloc_pci_controller(domain);
-@@ -465,26 +477,16 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	 * should handle the case here, but it appears that IA64 hasn't
- 	 * such quirk. So we just ignore the case now.
- 	 */
--	pbus = pci_create_root_bus(NULL, PCI_DOMBUS(domain, bus), 
--			&pci_root_ops, controller, &info->resources);
--	if (!pbus) {
-+	host = pci_scan_root_bridge(NULL, PCI_DOMBUS(domain, bus),
-+			&pci_root_ops, controller, &info->resources, &phb_ops);
-+	if (!host) {
- 		pci_free_resource_list(&info->resources);
- 		__release_pci_root_info(info);
- 		return NULL;
- 	}
- 
--	pci_set_host_bridge_release(to_pci_host_bridge(pbus->bridge),
--			release_pci_root_info, info);
--	pci_scan_child_bus(pbus);
--	return pbus;
+-static int gen_pci_config_read(struct pci_bus *bus, unsigned int devfn,
+-				int where, int size, u32 *val)
+-{
+-	void __iomem *addr;
+-	struct pci_sys_data *sys = bus->sysdata;
+-	struct gen_pci *pci = sys->private_data;
+-
+-	addr = pci->cfg.ops->map_bus(bus, devfn, where);
+-
+-	switch (size) {
+-	case 1:
+-		*val = readb(addr);
+-		break;
+-	case 2:
+-		*val = readw(addr);
+-		break;
+-	default:
+-		*val = readl(addr);
+-	}
+-
+-	return PCIBIOS_SUCCESSFUL;
 -}
 -
--int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+-static int gen_pci_config_write(struct pci_bus *bus, unsigned int devfn,
+-				 int where, int size, u32 val)
 -{
--	struct pci_controller *controller = bridge->bus->sysdata;
+-	void __iomem *addr;
+-	struct pci_sys_data *sys = bus->sysdata;
+-	struct gen_pci *pci = sys->private_data;
 -
--	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
--	return 0;
-+	pci_set_host_bridge_release(host, release_pci_root_info, info);
-+	return host->bus;
- }
+-	addr = pci->cfg.ops->map_bus(bus, devfn, where);
+-
+-	switch (size) {
+-	case 1:
+-		writeb(val, addr);
+-		break;
+-	case 2:
+-		writew(val, addr);
+-		break;
+-	default:
+-		writel(val, addr);
+-	}
+-
+-	return PCIBIOS_SUCCESSFUL;
+-}
+-
+ static struct pci_ops gen_pci_ops = {
+-	.read	= gen_pci_config_read,
+-	.write	= gen_pci_config_write,
++	.read	= pci_generic_config_read,
++	.write	= pci_generic_config_write,
+ };
  
- static int is_valid_resource(struct pci_dev *dev, int idx)
+ static const struct of_device_id gen_pci_of_match[] = {
+@@ -287,6 +241,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 
+ 	of_id = of_match_node(gen_pci_of_match, np);
+ 	pci->cfg.ops = of_id->data;
++	gen_pci_ops.map_bus = pci->cfg.ops->map_bus;
+ 	pci->host.dev.parent = dev;
+ 	INIT_LIST_HEAD(&pci->host.windows);
+ 	INIT_LIST_HEAD(&pci->resources);
 -- 
-1.7.1
+2.1.0
 
