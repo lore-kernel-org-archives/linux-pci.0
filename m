@@ -1,91 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:39043 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751427AbbAWVeQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 16:34:16 -0500
-Received: by mail-ob0-f182.google.com with SMTP id gq1so9443665obb.13
-        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 13:34:16 -0800 (PST)
-Date: Fri, 23 Jan 2015 15:34:12 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Murali Karicheri <m-karicheri2@ti.com>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Fabio Porcedda <fabio.porcedda@gmail.com>
-Subject: Re: [PATCH] PCI: keystone: fix incorrect annotations on probe and
- remove
-Message-ID: <20150123213412.GK29776@google.com>
-References: <20150108221736.GA39839@dtor-ws>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150108221736.GA39839@dtor-ws>
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:58054 "EHLO
+	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756348AbbAJCfy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 21:35:54 -0500
+From: Rob Herring <robh@kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh@kernel.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-tegra@vger.kernel.org
+Subject: [PATCH 14/16] pci/host: tegra: convert to use generic config accesses
+Date: Fri,  9 Jan 2015 20:34:48 -0600
+Message-Id: <1420857290-8373-15-git-send-email-robh@kernel.org>
+In-Reply-To: <1420857290-8373-1-git-send-email-robh@kernel.org>
+References: <1420857290-8373-1-git-send-email-robh@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Fabio]
+Convert the tegra host PCI driver to use the generic config access
+functions.
 
-On Thu, Jan 08, 2015 at 02:17:36PM -0800, Dmitry Torokhov wrote:
-> Even though platform bus is not hot-pluggable, devices on it can be unbound
-> from the driver and bound back to it via sysfs, so we should not be using
-> __init annotations on probe() and __exit annotations on remove() methods.
+Signed-off-by: Rob Herring <robh@kernel.org>
+Cc: Thierry Reding <thierry.reding@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Alexandre Courbot <gnurou@gmail.com>
+Cc: linux-tegra@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/pci/host/pci-tegra.c | 55 +++-----------------------------------------
+ 1 file changed, 3 insertions(+), 52 deletions(-)
 
-I don't completely understand this problem.  Does this mean there should be
-no __init/__exit annotations in these drivers at all?  If other PCI host
-bridge drivers have the same problem, I'd like to fix them all at once.
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index a800ae9..44fd31b 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -480,59 +480,10 @@ static void __iomem *tegra_pcie_conf_address(struct pci_bus *bus,
+ 	return addr;
+ }
+ 
+-static int tegra_pcie_read_conf(struct pci_bus *bus, unsigned int devfn,
+-				int where, int size, u32 *value)
+-{
+-	void __iomem *addr;
+-
+-	addr = tegra_pcie_conf_address(bus, devfn, where);
+-	if (!addr) {
+-		*value = 0xffffffff;
+-		return PCIBIOS_DEVICE_NOT_FOUND;
+-	}
+-
+-	*value = readl(addr);
+-
+-	if (size == 1)
+-		*value = (*value >> (8 * (where & 3))) & 0xff;
+-	else if (size == 2)
+-		*value = (*value >> (8 * (where & 3))) & 0xffff;
+-
+-	return PCIBIOS_SUCCESSFUL;
+-}
+-
+-static int tegra_pcie_write_conf(struct pci_bus *bus, unsigned int devfn,
+-				 int where, int size, u32 value)
+-{
+-	void __iomem *addr;
+-	u32 mask, tmp;
+-
+-	addr = tegra_pcie_conf_address(bus, devfn, where);
+-	if (!addr)
+-		return PCIBIOS_DEVICE_NOT_FOUND;
+-
+-	if (size == 4) {
+-		writel(value, addr);
+-		return PCIBIOS_SUCCESSFUL;
+-	}
+-
+-	if (size == 2)
+-		mask = ~(0xffff << ((where & 0x3) * 8));
+-	else if (size == 1)
+-		mask = ~(0xff << ((where & 0x3) * 8));
+-	else
+-		return PCIBIOS_BAD_REGISTER_NUMBER;
+-
+-	tmp = readl(addr) & mask;
+-	tmp |= value << ((where & 0x3) * 8);
+-	writel(tmp, addr);
+-
+-	return PCIBIOS_SUCCESSFUL;
+-}
+-
+ static struct pci_ops tegra_pcie_ops = {
+-	.read = tegra_pcie_read_conf,
+-	.write = tegra_pcie_write_conf,
++	.map_bus = tegra_pcie_conf_address,
++	.read = pci_generic_config_read32,
++	.write = pci_generic_config_write32,
+ };
+ 
+ static unsigned long tegra_pcie_port_get_pex_ctrl(struct tegra_pcie_port *port)
+-- 
+2.1.0
 
-For example, after applying this patch, ks_pcie_probe() is non-__init, but
-it calls ks_add_pcie_port(), which is still __init.  I thought that was
-illegal.
-
-I'm not sure about module_platform_driver_probe() either; it generates
-__init and __exit functions.  Should those annotations be removed, too?
-
-> Signed-off-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-> ---
-> 
-> Not tested, found by casual code inspection.
-> 
->  drivers/pci/host/pci-keystone.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-> index 1b893bc..7b84e1d 100644
-> --- a/drivers/pci/host/pci-keystone.c
-> +++ b/drivers/pci/host/pci-keystone.c
-> @@ -332,7 +332,7 @@ static const struct of_device_id ks_pcie_of_match[] = {
->  };
->  MODULE_DEVICE_TABLE(of, ks_pcie_of_match);
->  
-> -static int __exit ks_pcie_remove(struct platform_device *pdev)
-> +static int ks_pcie_remove(struct platform_device *pdev)
->  {
->  	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
->  
-> @@ -341,7 +341,7 @@ static int __exit ks_pcie_remove(struct platform_device *pdev)
->  	return 0;
->  }
->  
-> -static int __init ks_pcie_probe(struct platform_device *pdev)
-> +static int ks_pcie_probe(struct platform_device *pdev)
->  {
->  	struct device *dev = &pdev->dev;
->  	struct keystone_pcie *ks_pcie;
-> @@ -398,9 +398,9 @@ fail_clk:
->  	return ret;
->  }
->  
-> -static struct platform_driver ks_pcie_driver __refdata = {
-> +static struct platform_driver ks_pcie_driver = {
->  	.probe  = ks_pcie_probe,
-> -	.remove = __exit_p(ks_pcie_remove),
-> +	.remove = ks_pcie_remove,
->  	.driver = {
->  		.name	= "keystone-pcie",
->  		.owner	= THIS_MODULE,
-> -- 
-> 2.2.0.rc0.207.ga3a616c
-> 
-> 
-> -- 
-> Dmitry
