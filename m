@@ -1,112 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:46339 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752030AbbABVMq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jan 2015 16:12:46 -0500
-Message-ID: <54A709A5.1000801@ti.com>
-Date: Fri, 2 Jan 2015 16:12:05 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Rob Herring <robherring2@gmail.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:61935 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755170AbbAJCfq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 21:35:46 -0500
+From: Rob Herring <robh@kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 1/2] of/pci: add of_pci_dma_configure() update dma
- configuration
-References: <1419459099-6667-1-git-send-email-m-karicheri2@ti.com> <CAL_JsqJtVnP_5zAiUvMwL00JQV0mjw-R_hEkxiv13ZuNrQ8nAA@mail.gmail.com> <54A6D375.6050604@ti.com> <1450683.bjnXzaM6nd@wuerfel>
-In-Reply-To: <1450683.bjnXzaM6nd@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Rob Herring <robh@kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH 10/16] powerpc: fsl_pci: convert PCI to use generic config accesses
+Date: Fri,  9 Jan 2015 20:34:44 -0600
+Message-Id: <1420857290-8373-11-git-send-email-robh@kernel.org>
+In-Reply-To: <1420857290-8373-1-git-send-email-robh@kernel.org>
+References: <1420857290-8373-1-git-send-email-robh@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/02/2015 03:57 PM, Arnd Bergmann wrote:
-> On Friday 02 January 2015 12:20:53 Murali Karicheri wrote:
->> Initially I had the same idea to re-use the existing function
->> of_dma_configure() for this. I wanted to defer this until we have an
->> agreement on the changes required for the subject functionality. My
->> quick review of the code suggestio this would require additional API
->> changes as below. I did a quick test of the changes and it works for
->> Keystone, but need to be reviewed by everyone as I touch the IOMMU
->> functionality here and I don't have a platform with IOMMU. Need test by
->> someone to make sure I don't break anything.
->>
->> Here are the changes required to implement this suggestion.
->>
->> 1. Move the of_dma_configure() to drivers/of/device.c (include the API
->> in of_device.h) and make it global (using proper EXPORT macro).
->> Otherwise, we will have to include of_platform.h in drivers/of/of_pci.c
->> assuming the prototype is defined in of_platform.h which doesn't look
->> appropriate to me. Would require following additional include files in
->> drivers/of/device.c as well.
->>
->> +#include<linux/of_address.h>
->> +#include<linux/of_iommu.h>
->> +#include<linux/dma-mapping.h>
->
-> Yes, sounds good.
->
->> 2. drivers/iommu/of_iommu.c. This is needed so that of_iommu_configure()
->> can take confuguration from the root bus DT as you have suggested.
->>
->> -struct iommu_ops *of_iommu_configure(struct device *dev)
->> +struct iommu_ops *of_iommu_configure(struct device *dev, struct
->> device_node *node)
->>    {
->>           struct of_phandle_args iommu_spec;
->>           struct device_node *np;
->> @@ -145,7 +145,7 @@ struct iommu_ops *of_iommu_configure(struct device *dev)
->>            * See the `Notes:' section of
->>            * Documentation/devicetree/bindings/iommu/iommu.txt
->>            */
->> -       while (!of_parse_phandle_with_args(dev->of_node, "iommus",
->> +       while (!of_parse_phandle_with_args(node, "iommus",
->>                                              "#iommu-cells", idx,
->>                                              &iommu_spec)) {
->
-> Right.
->
->> 3. drivers/of/of_pci.c. The existing function (added in this patch) will
->> make call to of_dma_configure() as
->>
->> parent_np = of_get_pci_root_bridge_parent(pci_dev);
->> of_dma_configure(dev, parent_np);
->
-> With dev =&pci_dev->dev, I assume?
+Convert the fsl_pci driver to use the generic config access functions.
 
-Yes
+This changes accesses from (in|out)_(8|le16|le32) to readX/writeX
+variants. I believe these should be equivalent for PCI config space
+accesses, but confirmation would be nice.
 
->
->> 4. drivers/of/platform.c. Add a wrapper function
->> of_platform_dma_configure() that calls of_dma_configure() as
->> of_dma_configure(dev, dev->of_node). All existing calls converted to
->> this wrapper.
->
-> There are only two callers, I don't think we need a wrapper for it,
-> just change the calling conventions along with step 2.
+Signed-off-by: Rob Herring <robh@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: linuxppc-dev@lists.ozlabs.org
+---
+ arch/powerpc/sysdev/fsl_pci.c | 46 +++----------------------------------------
+ 1 file changed, 3 insertions(+), 43 deletions(-)
 
-Ok. That is what Rob's comment as well.
-
->
->> If the above looks good, I can post v3 of the patch with these changes.
->
-> With that one minor change, sounds perfect to me. The same can also
-> be used by other bus types if we ever need it.
->
-> 	Arnd
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
+index 6455c1e..271b67e 100644
+--- a/arch/powerpc/sysdev/fsl_pci.c
++++ b/arch/powerpc/sysdev/fsl_pci.c
+@@ -645,61 +645,21 @@ mapped:
+ 	return pcie->cfg_type1 + offset;
+ }
+ 
+-static int mpc83xx_pcie_read_config(struct pci_bus *bus, unsigned int devfn,
+-				    int offset, int len, u32 *val)
+-{
+-	void __iomem *cfg_addr;
+-
+-	cfg_addr = mpc83xx_pcie_remap_cfg(bus, devfn, offset);
+-	if (!cfg_addr)
+-		return PCIBIOS_DEVICE_NOT_FOUND;
+-
+-	switch (len) {
+-	case 1:
+-		*val = in_8(cfg_addr);
+-		break;
+-	case 2:
+-		*val = in_le16(cfg_addr);
+-		break;
+-	default:
+-		*val = in_le32(cfg_addr);
+-		break;
+-	}
+-
+-	return PCIBIOS_SUCCESSFUL;
+-}
+-
+ static int mpc83xx_pcie_write_config(struct pci_bus *bus, unsigned int devfn,
+ 				     int offset, int len, u32 val)
+ {
+ 	struct pci_controller *hose = pci_bus_to_host(bus);
+-	void __iomem *cfg_addr;
+-
+-	cfg_addr = mpc83xx_pcie_remap_cfg(bus, devfn, offset);
+-	if (!cfg_addr)
+-		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+ 	/* PPC_INDIRECT_TYPE_SURPRESS_PRIMARY_BUS */
+ 	if (offset == PCI_PRIMARY_BUS && bus->number == hose->first_busno)
+ 		val &= 0xffffff00;
+ 
+-	switch (len) {
+-	case 1:
+-		out_8(cfg_addr, val);
+-		break;
+-	case 2:
+-		out_le16(cfg_addr, val);
+-		break;
+-	default:
+-		out_le32(cfg_addr, val);
+-		break;
+-	}
+-
+-	return PCIBIOS_SUCCESSFUL;
++	return pci_generic_config_write(bus, devfn, offset, len, val);
+ }
+ 
+ static struct pci_ops mpc83xx_pcie_ops = {
+-	.read = mpc83xx_pcie_read_config,
++	.map_bus = mpc83xx_pcie_remap_cfg,
++	.read = pci_generic_config_read,
+ 	.write = mpc83xx_pcie_write_config,
+ };
+ 
 -- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+2.1.0
+
