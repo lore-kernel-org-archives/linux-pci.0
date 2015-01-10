@@ -1,131 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:25933 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751177AbbATFy2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 20 Jan 2015 00:54:28 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v4 24/33] x86/irq: Kill function apic_set_affinity()
-Date: Tue, 20 Jan 2015 13:51:44 +0800
-Message-Id: <1421733113-15704-25-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:59712 "EHLO
+	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754098AbbAJCfb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 21:35:31 -0500
+From: Rob Herring <robh@kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh@kernel.org>,
+	Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org
+Subject: [PATCH 02/16] mips: add struct pci_ops member names to initialization
+Date: Fri,  9 Jan 2015 20:34:36 -0600
+Message-Id: <1420857290-8373-3-git-send-email-robh@kernel.org>
+In-Reply-To: <1420857290-8373-1-git-send-email-robh@kernel.org>
+References: <1420857290-8373-1-git-send-email-robh@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now there's no user of apic_set_affinity(), so kill it.
-Also rename vector_set_affinity() to apic_set_affinity() for consistency.
+Some instances of pci_ops initialization rely on the read/write members'
+location in the struct. This is fragile and may break when adding new
+members to the beginning of the struct.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Link: http://lkml.kernel.org/r/1416901802-24211-33-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
+Signed-off-by: Rob Herring <robh@kernel.org>
+Cc: Ralf Baechle <ralf@linux-mips.org>
+Cc: linux-mips@linux-mips.org
 ---
- arch/x86/include/asm/hw_irq.h |    2 --
- arch/x86/kernel/apic/vector.c |   40 +++-------------------------------------
- 2 files changed, 3 insertions(+), 39 deletions(-)
+ arch/mips/pci/pci-bcm1480.c |  4 ++--
+ arch/mips/pci/pci-octeon.c  |  4 ++--
+ arch/mips/pci/pcie-octeon.c | 12 ++++++------
+ 3 files changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index ea9aebc65ff6..330445236484 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -198,8 +198,6 @@ static inline void irq_complete_move(struct irq_cfg *c) { }
- #endif
- 
- extern void apic_ack_edge(struct irq_data *data);
--extern int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
--			     unsigned int *dest_id);
- #else	/*  CONFIG_X86_LOCAL_APIC */
- static inline void lock_vector_lock(void) {}
- static inline void unlock_vector_lock(void) {}
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index fba4958b6139..436a3400d9ac 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -463,42 +463,8 @@ void apic_ack_edge(struct irq_data *data)
- 	ack_APIC_irq();
+diff --git a/arch/mips/pci/pci-bcm1480.c b/arch/mips/pci/pci-bcm1480.c
+index 5ec2a7b..f2355e3 100644
+--- a/arch/mips/pci/pci-bcm1480.c
++++ b/arch/mips/pci/pci-bcm1480.c
+@@ -173,8 +173,8 @@ static int bcm1480_pcibios_write(struct pci_bus *bus, unsigned int devfn,
  }
  
--/*
-- * Either sets data->affinity to a valid value, and returns
-- * ->cpu_mask_to_apicid of that in dest_id, or returns -1 and
-- * leaves data->affinity untouched.
-- */
--int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
--		      unsigned int *dest_id)
--{
--	struct irq_cfg *cfg = irqd_cfg(data);
--	unsigned int irq = data->irq;
--	int err;
--
--	if (!config_enabled(CONFIG_SMP))
--		return -EPERM;
--
--	if (!cpumask_intersects(mask, cpu_online_mask))
--		return -EINVAL;
--
--	err = assign_irq_vector(irq, cfg, mask);
--	if (err)
--		return err;
--
--	err = apic->cpu_mask_to_apicid_and(mask, cfg->domain, dest_id);
--	if (err) {
--		if (assign_irq_vector(irq, cfg, data->affinity))
--			pr_err("Failed to recover vector for irq %d\n", irq);
--		return err;
--	}
--
--	cpumask_copy(data->affinity, mask);
--
--	return 0;
--}
--
--static int vector_set_affinity(struct irq_data *irq_data,
--			       const struct cpumask *dest, bool force)
-+static int apic_set_affinity(struct irq_data *irq_data,
-+			     const struct cpumask *dest, bool force)
- {
- 	int err;
- 	int irq = irq_data->irq;
-@@ -524,7 +490,7 @@ static int vector_set_affinity(struct irq_data *irq_data,
- 
- static struct irq_chip lapic_controller = {
- 	.irq_ack		= apic_ack_edge,
--	.irq_set_affinity	= vector_set_affinity,
-+	.irq_set_affinity	= apic_set_affinity,
- 	.irq_retrigger		= apic_retrigger_irq,
+ struct pci_ops bcm1480_pci_ops = {
+-	bcm1480_pcibios_read,
+-	bcm1480_pcibios_write,
++	.read = bcm1480_pcibios_read,
++	.write = bcm1480_pcibios_write,
  };
  
+ static struct resource bcm1480_mem_resource = {
+diff --git a/arch/mips/pci/pci-octeon.c b/arch/mips/pci/pci-octeon.c
+index d07e041..bedb72b 100644
+--- a/arch/mips/pci/pci-octeon.c
++++ b/arch/mips/pci/pci-octeon.c
+@@ -327,8 +327,8 @@ static int octeon_write_config(struct pci_bus *bus, unsigned int devfn,
+ 
+ 
+ static struct pci_ops octeon_pci_ops = {
+-	octeon_read_config,
+-	octeon_write_config,
++	.read = octeon_read_config,
++	.write = octeon_write_config,
+ };
+ 
+ static struct resource octeon_pci_mem_resource = {
+diff --git a/arch/mips/pci/pcie-octeon.c b/arch/mips/pci/pcie-octeon.c
+index 5e36c33..eb4a17b 100644
+--- a/arch/mips/pci/pcie-octeon.c
++++ b/arch/mips/pci/pcie-octeon.c
+@@ -1792,8 +1792,8 @@ static int octeon_dummy_write_config(struct pci_bus *bus, unsigned int devfn,
+ }
+ 
+ static struct pci_ops octeon_pcie0_ops = {
+-	octeon_pcie0_read_config,
+-	octeon_pcie0_write_config,
++	.read = octeon_pcie0_read_config,
++	.write = octeon_pcie0_write_config,
+ };
+ 
+ static struct resource octeon_pcie0_mem_resource = {
+@@ -1813,8 +1813,8 @@ static struct pci_controller octeon_pcie0_controller = {
+ };
+ 
+ static struct pci_ops octeon_pcie1_ops = {
+-	octeon_pcie1_read_config,
+-	octeon_pcie1_write_config,
++	.read = octeon_pcie1_read_config,
++	.write = octeon_pcie1_write_config,
+ };
+ 
+ static struct resource octeon_pcie1_mem_resource = {
+@@ -1834,8 +1834,8 @@ static struct pci_controller octeon_pcie1_controller = {
+ };
+ 
+ static struct pci_ops octeon_dummy_ops = {
+-	octeon_dummy_read_config,
+-	octeon_dummy_write_config,
++	.read = octeon_dummy_read_config,
++	.write = octeon_dummy_write_config,
+ };
+ 
+ static struct resource octeon_dummy_mem_resource = {
 -- 
-1.7.10.4
+2.1.0
 
