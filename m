@@ -1,131 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:55462 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752692AbbA0S4H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 Jan 2015 13:56:07 -0500
-Message-ID: <54C7DF13.20402@ti.com>
-Date: Tue, 27 Jan 2015 13:55:15 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Robin Murphy <robin.murphy@arm.com>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:39129 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756318AbbAJCfw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 21:35:52 -0500
+From: Rob Herring <robh@kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v4 3/6] of: fix size when dma-range is not used
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com> <1422052359-12384-4-git-send-email-m-karicheri2@ti.com> <54C77616.80301@arm.com>
-In-Reply-To: <54C77616.80301@arm.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+	Rob Herring <robh@kernel.org>,
+	Simon Horman <horms@verge.net.au>, linux-sh@vger.kernel.org
+Subject: [PATCH 13/16] pci/host: rcar-gen2: convert to use generic config accesses
+Date: Fri,  9 Jan 2015 20:34:47 -0600
+Message-Id: <1420857290-8373-14-git-send-email-robh@kernel.org>
+In-Reply-To: <1420857290-8373-1-git-send-email-robh@kernel.org>
+References: <1420857290-8373-1-git-send-email-robh@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/27/2015 06:27 AM, Robin Murphy wrote:
-> Hi Murali,
->
-> On 23/01/15 22:32, Murali Karicheri wrote:
->> Fix the dma-range size when the DT attribute is missing. i.e set size to
->> dev->coherent_dma_mask + 1 instead of dev->coherent_dma_mask. To detect
->> overflow when mask is set to max of u64, add a check, log error and
->> return.
->> Some platform use mask format for size in DTS. So add a work around to
->> catch this and fix.
->>
->> Cc: Joerg Roedel <joro@8bytes.org>
->> Cc: Grant Likely <grant.likely@linaro.org>
->> Cc: Rob Herring <robh+dt@kernel.org>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: Will Deacon <will.deacon@arm.com>
->> Cc: Russell King <linux@arm.linux.org.uk>
->> Cc: Arnd Bergmann <arnd@arndb.de>
->> Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->>
->> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
->> ---
->> drivers/of/device.c | 14 +++++++++++++-
->> 1 file changed, 13 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/of/device.c b/drivers/of/device.c
->> index 2de320d..0a5ff54 100644
->> --- a/drivers/of/device.c
->> +++ b/drivers/of/device.c
->> @@ -105,12 +105,24 @@ void of_dma_configure(struct device *dev, struct
->> device_node *np)
->> ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
->> if (ret < 0) {
->> dma_addr = offset = 0;
->> - size = dev->coherent_dma_mask;
->> + size = dev->coherent_dma_mask + 1;
->> } else {
->> offset = PFN_DOWN(paddr - dma_addr);
->> + /*
->> + * Add a work around to treat the size as mask + 1 in case
->> + * it is defined in DT as a mask.
->> + */
->> + if (size & 1)
->> + size = size + 1;
->> dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
->> }
->>
->> + /* if size is 0, we have an overflow of u64 */
->> + if (!size) {
->> + dev_err(dev, "invalid size\n");
->> + return;
->> + }
->> +
->
-> This seems potentially fragile to dodgy DTs given that we might also be
-> using size to make a mask later. Would it make sense to double-up a
-> sanity check as mask-format detection? Something like:
->
-> if is_power_of_2(size)
-> // use size
-> else if is_power_of_2(size + 1)
-> // use size + 1
-> else
-> // cry
-Robin,
+Convert the rcar-gen2 host PCI driver to use the generic config access
+functions.
 
-How about having the logic like this?
+This changes the i/o accessors from io(read|write)X to readX/writeX
+variants which are equivalent on ARM.
 
-	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
-	if (ret < 0) {
-		dma_addr = offset = 0;
-		size = dev->coherent_dma_mask + 1;
-	} else {
-		offset = PFN_DOWN(paddr - dma_addr);
-		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
-	}
+Signed-off-by: Rob Herring <robh@kernel.org>
+Cc: Simon Horman <horms@verge.net.au>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org
+---
+ drivers/pci/host/pci-rcar-gen2.c | 51 +++-------------------------------------
+ 1 file changed, 3 insertions(+), 48 deletions(-)
 
-	if (is_power_of_2(size + 1))
-		size = size + 1;
-	else if (!is_power_of_2(size))
-	{
-		dev_err(dev, "invalid size\n");
-		return;
-	}
-
-Murali
->
->
-> Robin.
->
->> dev->dma_pfn_offset = offset;
->>
->> coherent = of_dma_is_coherent(np);
->>
->
->
-
-
+diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+index d9c042f..dd6b84e 100644
+--- a/drivers/pci/host/pci-rcar-gen2.c
++++ b/drivers/pci/host/pci-rcar-gen2.c
+@@ -131,52 +131,6 @@ static void __iomem *rcar_pci_cfg_base(struct pci_bus *bus, unsigned int devfn,
+ 	return priv->reg + (slot >> 1) * 0x100 + where;
+ }
+ 
+-static int rcar_pci_read_config(struct pci_bus *bus, unsigned int devfn,
+-				int where, int size, u32 *val)
+-{
+-	void __iomem *reg = rcar_pci_cfg_base(bus, devfn, where);
+-
+-	if (!reg)
+-		return PCIBIOS_DEVICE_NOT_FOUND;
+-
+-	switch (size) {
+-	case 1:
+-		*val = ioread8(reg);
+-		break;
+-	case 2:
+-		*val = ioread16(reg);
+-		break;
+-	default:
+-		*val = ioread32(reg);
+-		break;
+-	}
+-
+-	return PCIBIOS_SUCCESSFUL;
+-}
+-
+-static int rcar_pci_write_config(struct pci_bus *bus, unsigned int devfn,
+-				 int where, int size, u32 val)
+-{
+-	void __iomem *reg = rcar_pci_cfg_base(bus, devfn, where);
+-
+-	if (!reg)
+-		return PCIBIOS_DEVICE_NOT_FOUND;
+-
+-	switch (size) {
+-	case 1:
+-		iowrite8(val, reg);
+-		break;
+-	case 2:
+-		iowrite16(val, reg);
+-		break;
+-	default:
+-		iowrite32(val, reg);
+-		break;
+-	}
+-
+-	return PCIBIOS_SUCCESSFUL;
+-}
+-
+ /* PCI interrupt mapping */
+ static int rcar_pci_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+@@ -325,8 +279,9 @@ static int rcar_pci_setup(int nr, struct pci_sys_data *sys)
+ }
+ 
+ static struct pci_ops rcar_pci_ops = {
+-	.read	= rcar_pci_read_config,
+-	.write	= rcar_pci_write_config,
++	.map_bus = rcar_pci_cfg_base,
++	.read	= pci_generic_config_read,
++	.write	= pci_generic_config_write,
+ };
+ 
+ static int rcar_pci_probe(struct platform_device *pdev)
 -- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+2.1.0
+
