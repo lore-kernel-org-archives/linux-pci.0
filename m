@@ -1,40 +1,94 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Yijing Wang <wangyijing@huawei.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-m68k@lists.linux-m68k.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	linux-alpha@vger.kernel.org, linux-ia64@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [PATCH 18/28] PCI/sparc: Use pci_scan_root_bridge() for simplicity
-Date: Fri, 16 Jan 2015 11:01:59 +0100
-Message-ID: <2658988.B0VmbMPdJ9@wuerfel>
-In-Reply-To: <1421372666-12288-19-git-send-email-wangyijing@huawei.com>
-References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <1421372666-12288-19-git-send-email-wangyijing@huawei.com>
+	Borislav Petkov <bp@alien8.de>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [RFC Patch 00/19] Improve ACPI resource parsing interfaces and data structures
+Date: Sun, 11 Jan 2015 23:38:09 +0100
+Message-ID: <2025625.5YhoBnTE03@vostro.rjw.lan>
+In-Reply-To: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 16 January 2015 09:44:16 Yijing Wang wrote:
-> +static void pci_host_bridge_probe_mode(
-> +               struct pci_host_bridge *host)
-> +{
-> +       host->of_scan = true;
-> +}
+On Thursday, January 08, 2015 10:32:47 AM Jiang Liu wrote:
+> During enabling ACPI based IOAPIC hotplug, Thomas noticed some issues
+> in ACPI resource parsing interfaces. So this is an effort to improve them.
+> 
+> Patch 1-12 improve ACPI resource parsing interfaces and also fixes some
+> bugs.
+> 
+> Patch 13-19 try to share the common data structure resource_list_entry
+> between PCI and ACPI. It may also be shared with PNP too.
+
+I've looked at the patches briefly.
+
+I like the changes at the general level, but there are some things I'm
+potentially concerned about in them.  Need more time to look at them,
+I'll do my best to do that this week while at the conference.
+
+> The patchset is based on v3.19-rc3 and you may get it from:
+> https://github.com/jiangliu/linux.git acpires_v1
+> 
+> Jiang Liu (11):
+>   ACPI: Fix a bug in parsing ACPI Memroy24 resource
+>   ACPI: Normalize return value of resource parser functions
+>   ACPI: Set flag IORESOURCE_UNSET for unassigned resources
+>   ACPI: Enforce stricter checks for address space descriptors
+>   ACPI: Return translation offset when parsing ACPI address space
+>     resources
+>   ACPI: Translate resource into master side address for bridge window
+>     resources
+>   ACPI: Add field offset to struct resource_list_entry
+>   ACPI: Introduce helper function acpi_dev_filter_resource_type()
+>   resources: Move struct resource_list_entry from ACPI into resource
+>     core
+>   PCI: Use common resource list management code instead of private
+>     implementation
+>   x86/PCI/ACPI: Use common ACPI resource interfaces to simplify
+>     implementation
+> 
+> Thomas Gleixner (8):
+>   ACPI: Remove redundant check in function
+>     acpi_dev_resource_address_space()
+>   ACPI: Implement proper length checks for mem resources
+>   ACPI: Use the length check for io resources as well
+>   ACPI: Let the parser return false for disabled resources
+>   ACPI: Provide union for address_space64 and ext_address_space64
+>   ACPI: Unify the parsing of address_space and ext_address_space
+>   ACPI: Move the window flag logic to the combined parser
+>   ACPI: Add prefetch decoding to the address space parser
+> 
+>  arch/arm/kernel/bios32.c            |    5 +-
+>  arch/x86/pci/acpi.c                 |  297 ++++++++++---------------------
+>  arch/x86/pci/bus_numa.c             |    4 +-
+>  drivers/acpi/acpi_lpss.c            |    6 +-
+>  drivers/acpi/acpi_platform.c        |    2 +-
+>  drivers/acpi/resource.c             |  333 ++++++++++++++++++++++-------------
+>  drivers/dma/acpi-dma.c              |    8 +-
+>  drivers/pci/bus.c                   |   18 +-
+>  drivers/pci/host-bridge.c           |    8 +-
+>  drivers/pci/host/pci-host-generic.c |    4 +-
+>  drivers/pci/host/pci-xgene.c        |    4 +-
+>  drivers/pci/host/pcie-xilinx.c      |    4 +-
+>  drivers/pci/probe.c                 |   10 +-
+>  drivers/pnp/pnpacpi/rsparser.c      |    4 +-
+>  include/acpi/acrestyp.h             |   49 ++++--
+>  include/linux/acpi.h                |   12 +-
+>  include/linux/ioport.h              |   25 +++
+>  include/linux/pci.h                 |    8 +-
+>  kernel/resource.c                   |   48 +++++
+>  19 files changed, 452 insertions(+), 397 deletions(-)
+> 
 > 
 
-I probably missed something here, but where does host->of_scan
-get used?
-
-	Arnd
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
