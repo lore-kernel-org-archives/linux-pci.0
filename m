@@ -1,93 +1,141 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:59496 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750956AbbAWWrA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 17:47:00 -0500
-Received: by mail-ob0-f177.google.com with SMTP id uy5so74483obc.8
-        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 14:47:00 -0800 (PST)
-Date: Fri, 23 Jan 2015 16:46:52 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, aacraid@adaptec.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: quirks: DMA alias quirk for Adaptec 3405
-Message-ID: <20150123224652.GP29776@google.com>
-References: <20150113182605.15479.9020.stgit@gimli.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150113182605.15479.9020.stgit@gimli.home>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	linux-ia64@vger.kernel.org
+Subject: [PATCH 05/10] PCI, ia64: clip firmware assigned resource under parent bridge's
+Date: Mon, 12 Jan 2015 11:23:15 -0800
+Message-Id: <1421090600-9750-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1421090600-9750-1-git-send-email-yinghai@kernel.org>
+References: <1421090600-9750-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 13, 2015 at 11:26:50AM -0700, Alex Williamson wrote:
-> As noted in the added comment, this device is actually an Intel 80333
-> I/O processor where the exposed device at 0e.0 is actually the address
-> translation unit of the I/O processor and a hidden, private device at
-> 01.0 masters the DMA for the device.  In order to enable the IOMMU, we
-> therefore need to create a fixed alias between the exposed and hidden
-> devfn.
-> 
-> Scenarios like this are potentially likely for any device incorporating
-> this I/O processor, so this little bit of abstraction with the fixed
-> alias table should make future additions trivial.
-> 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>
+Some bios put range that is not fully coverred by root bus resources.
+Try to clip them and update them in pci bridge bars.
 
-I added the symptoms (log messages) to the changelog and applied this to
-pci/virtualization for v3.20, thanks!
+We'd like to fix other arches instead of just x86.
 
-> ---
-> 
->  drivers/pci/quirks.c |   37 +++++++++++++++++++++++++++++++++++++
->  1 file changed, 37 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index ed6f89b..19bdb17 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3528,6 +3528,43 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_JMICRON,
->  			 quirk_dma_func1_alias);
->  
->  /*
-> + * Some devices DMA with the wrong devfn, not just the wrong function.
-> + * quirk_fixed_dma_alias() uses this table to create fixed aliass, where
-> + * the alias is "fixed" and independent of the device devfn.
-> + *
-> + * For example, the Adaptec 3405 is a PCIe card making use of an Intel 80333
-> + * I/O processor.  To software, this appears as a straightforward PCIe-to-PCI/X
-> + * bridge with a single device on the subordinate bus.  In reality, the exposed
-> + * device at 0e.0 is the Address Translation Unit (ATU) of the controller that
-> + * provides a bridge to the internal bus of the I/O processor.  The controller
-> + * supports private devices, which can be hidden from PCI config space.  In the
-> + * case of the Adaptec 3405, a private device at 01.0 appears to be the DMA
-> + * engine, which therefore needs to become a DMA alias for the device.
-> + */
-> +static const struct pci_device_id fixed_dma_alias_tbl[] = {
-> +	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x0285,
-> +			 PCI_VENDOR_ID_ADAPTEC2, 0x02bb), /* Adaptec 3405 */
-> +	  .driver_data = PCI_DEVFN(1, 0) },
-> +	{ 0 }
-> +};
-> +
-> +static void quirk_fixed_dma_alias(struct pci_dev *dev)
-> +{
-> +	const struct pci_device_id *id;
-> +
-> +	id = pci_match_id(fixed_dma_alias_tbl, dev);
-> +	if (id) {
-> +		dev->dma_alias_devfn = id->driver_data;
-> +		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
-> +		dev_info(&dev->dev, "Enabling fixed DMA alias to %02x.%d\n",
-> +			 PCI_SLOT(dev->dma_alias_devfn),
-> +			 PCI_FUNC(dev->dma_alias_devfn));
-> +	}
-> +}
-> +
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ADAPTEC2, 0x0285, quirk_fixed_dma_alias);
-> +
-> +/*
->   * A few PCIe-to-PCI bridges fail to expose a PCIe capability, resulting in
->   * using the wrong DMA alias for the device.  Some of these devices can be
->   * used as either forward or reverse bridges, so we need to test whether the
-> 
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491
+Reported-by: Marek Kordik <kordikmarek@gmail.com>
+Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources")
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: linux-ia64@vger.kernel.org
+---
+ arch/ia64/pci/pci.c | 71 +++++++++++++++++++++++++++++++++--------------------
+ 1 file changed, 44 insertions(+), 27 deletions(-)
+
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index 291a582..a3f9e27 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -487,45 +487,57 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+ 	return 0;
+ }
+ 
+-static int is_valid_resource(struct pci_dev *dev, int idx)
++void pcibios_fixup_device_resources(struct pci_dev *dev)
+ {
+-	unsigned int i, type_mask = IORESOURCE_IO | IORESOURCE_MEM;
+-	struct resource *devr = &dev->resource[idx], *busr;
++	int idx;
+ 
+ 	if (!dev->bus)
+-		return 0;
++		return;
+ 
+-	pci_bus_for_each_resource(dev->bus, busr, i) {
+-		if (!busr || ((busr->flags ^ devr->flags) & type_mask))
++	for (idx = 0; idx < PCI_BRIDGE_RESOURCES; idx++) {
++		struct resource *r = &dev->resource[idx];
++
++		if (!r->flags || r->parent || !r->start)
+ 			continue;
+-		if ((devr->start) && (devr->start >= busr->start) &&
+-				(devr->end <= busr->end))
+-			return 1;
++
++		if (pci_claim_resource(dev, idx) >= 0)
++			continue;
++
++		/* try again with clip */
++		if (pci_bus_clip_resource(dev, r)) {
++			pci_update_resource(dev, idx);
++			pci_claim_resource(dev, idx);
++		}
+ 	}
+-	return 0;
+ }
++EXPORT_SYMBOL_GPL(pcibios_fixup_device_resources);
+ 
+-static void pcibios_fixup_resources(struct pci_dev *dev, int start, int limit)
++static bool pcibios_fixup_bridge_resources(struct pci_dev *dev)
+ {
+-	int i;
++	int idx;
++	bool changed = false;
++
++	if (!dev->bus)
++		return changed;
++
++	for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
++		struct resource *r = &dev->resource[idx];
+ 
+-	for (i = start; i < limit; i++) {
+-		if (!dev->resource[i].flags)
++		if (!r->flags || r->parent || !r->start)
+ 			continue;
+-		if ((is_valid_resource(dev, i)))
+-			pci_claim_resource(dev, i);
+-	}
+-}
+ 
+-void pcibios_fixup_device_resources(struct pci_dev *dev)
+-{
+-	pcibios_fixup_resources(dev, 0, PCI_BRIDGE_RESOURCES);
+-}
+-EXPORT_SYMBOL_GPL(pcibios_fixup_device_resources);
++		if (pci_claim_resource(dev, idx) >= 0)
++			continue;
+ 
+-static void pcibios_fixup_bridge_resources(struct pci_dev *dev)
+-{
+-	pcibios_fixup_resources(dev, PCI_BRIDGE_RESOURCES, PCI_NUM_RESOURCES);
++		/* try again after clip for pci bridge*/
++		if ((dev->class >> 8) == PCI_CLASS_BRIDGE_PCI &&
++		    pci_bus_clip_resource(dev, r)) {
++			changed = true;
++			pci_claim_resource(dev, idx);
++		}
++	}
++
++	return changed;
+ }
+ 
+ /*
+@@ -536,9 +548,14 @@ void pcibios_fixup_bus(struct pci_bus *b)
+ 	struct pci_dev *dev;
+ 
+ 	if (b->self) {
++		bool changed;
++
+ 		pci_read_bridge_bases(b);
+-		pcibios_fixup_bridge_resources(b->self);
++		changed = pcibios_fixup_bridge_resources(b->self);
++		if (changed)
++			pci_setup_bridge(b);
+ 	}
++
+ 	list_for_each_entry(dev, &b->devices, bus_list)
+ 		pcibios_fixup_device_resources(dev);
+ 	platform_pci_fixup_bus(b);
+-- 
+1.8.4.5
+
