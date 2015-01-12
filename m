@@ -1,151 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:39962 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751217AbbABSPq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jan 2015 13:15:46 -0500
+Received: from mail-qc0-f171.google.com ([209.85.216.171]:49657 "EHLO
+	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751819AbbALRlw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 12:41:52 -0500
+Received: by mail-qc0-f171.google.com with SMTP id r5so19229647qcx.2
+        for <linux-pci@vger.kernel.org>; Mon, 12 Jan 2015 09:41:51 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <2308474.mrIrUSfiTv@wuerfel>
-References: <1419967718-26909-1-git-send-email-robherring2@gmail.com>
- <1419967718-26909-5-git-send-email-robherring2@gmail.com> <2308474.mrIrUSfiTv@wuerfel>
-From: Rob Herring <robherring2@gmail.com>
-Date: Fri, 2 Jan 2015 12:14:43 -0600
-Message-ID: <CAL_JsqJbUHkr0zXYKTvS0WPGs7mNqkppsn4i0LuWz5Wv12Unmw@mail.gmail.com>
-Subject: Re: [PATCH 4/9] pci: add DT based ARM Versatile PCI host driver
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Peter Maydell <peter.maydell@linaro.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	"arm@kernel.org" <arm@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
+In-Reply-To: <CAH9N0t-D0rM05E0nSDaDcVSdwnFt142aG=+FH_6c51Hf+nTMCw@mail.gmail.com>
+References: <CAH9N0t9KvhzmZDgD8PD5VBPR-pPhuE8MmBgK9RY8+ZtKyz++pQ@mail.gmail.com>
+ <CAErSpo48mPENuHpES1Q73ep+NKG8x2Zgb+g71do02y7vufbtfQ@mail.gmail.com> <CAH9N0t-D0rM05E0nSDaDcVSdwnFt142aG=+FH_6c51Hf+nTMCw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 12 Jan 2015 11:41:31 -0600
+Message-ID: <CAErSpo5x3_Wpf3v1i+nuMn-Os_QnH5GwGvdNOtmXSHCz3NswrA@mail.gmail.com>
+Subject: Re: Hot add a PCIe device driver upon hotplug event
+To: Paulo Fortuna Carvalho <pricardofc@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 30, 2014 at 3:58 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Tuesday 30 December 2014 13:28:33 Rob Herring wrote:
->> From: Rob Herring <robh@kernel.org>
+On Mon, Jan 12, 2015 at 11:26 AM, Paulo Fortuna Carvalho
+<pricardofc@gmail.com> wrote:
+> Hello Helgas,
+> I cannot see that line in dmesg. I think that something else is missing...
+> Do you know what may cause that not appearing in dmesg? Hotplug Surprise?
+
+Can you just collect the entire dmesg log, so I can see what
+controller is involved and what is happening?
+
+Surprise hotplug should work.  Are you inserting an ExpressCard, or is
+it some other form factor?  Exactly what hardware are you adding, and
+what are you adding it to?
+
+Bjorn
+
+> 2015-01-12 16:58 GMT, Bjorn Helgaas <bhelgaas@google.com>:
+>> On Mon, Jan 12, 2015 at 5:42 AM, Paulo Fortuna Carvalho
+>> <pricardofc@gmail.com> wrote:
+>>> Hello,
+>>> I want to automatically load/unload a PCIe device driver when a card
+>>> is inserted/removed from the system. I can see in the system logger
+>>> with dmesg that the interrupt event is captured and acknowledged by
+>>> the pciehp hotplug service driver.
+>>> What I want to do next is that the operating system load/unload the
+>>> corresponding PCIe device driver for that card.
 >>
->> This converts the Versatile PCI host code to a platform driver using
->> the commom DT parsing and setup. The driver uses only an empty ARM
->> pci_sys_data struct and does not use pci_common_init_dev init function.
->> The old host code will be removed in a subsequent commit when Versatile
->> is completely converted to DT.
+>> When pciehp receives the interrupt, it should enumerate the device,
+>> and you should see a line in dmesg similar to this (of course, it will
+>> have different bus/device/function and different vendor/device IDs):
 >>
->> I've tested this on QEMU with the sym53c8xx driver in both i/o and
->> memory mapped modes.
->
-> Ah, this is quite clever, I think you tried to explain to me what you
-> did with the pci_sys_data before, but I didn't get it then.
->
->> +
->> +static void __iomem *__pci_addr(struct pci_bus *bus,
->> +                             unsigned int devfn, int offset)
->> +{
->> +     unsigned int busnr = bus->number;
->> +
->> +     /*
->> +      * Trap out illegal values
->> +      */
->> +     BUG_ON(offset > 255);
->> +     BUG_ON(busnr > 255);
->> +     BUG_ON(devfn > 255);
->
-> Isn't an offset>255 something that can be triggered by a non-broken
-> driver or even user space?
-
-I don't know. I just copied what the old driver did. Are these checks
-even host controller specific?
-
-> Maybe just return PCIBIOS_BAD_REGISTER_NUMBER in this case?
-
-Perhaps. We could probably simplify the config space read/write
-functions and just provide the PCI core a bus/devfn/offset to config
-address translation function. That would not work in all cases, but
-propably most that have memory mapped config space.
-
->> +static int versatile_pci_parse_request_of_pci_ranges(struct device *dev,
->> +                                                  struct list_head *res)
->> +{
->> +     int err, mem = 1, res_valid = 0;
->> +     struct device_node *np = dev->of_node;
->> +     resource_size_t iobase;
->> +     struct pci_host_bridge_window *win;
->> +
->> +     err = of_pci_get_host_bridge_resources(np, 0, 0xff, res, &iobase);
->> +     if (err)
->> +             return err;
->> +
->> +     list_for_each_entry(win, res, list) {
->> +             struct resource *parent, *res = win->res;
->> +
->> +             switch (resource_type(res)) {
->> +             case IORESOURCE_IO:
->> +                     parent = &ioport_resource;
->> +                     err = pci_remap_iospace(res, iobase);
->> +                     if (err) {
->> +                             dev_warn(dev, "error %d: failed to map resource %pR\n",
->> +                                      err, res);
->> +                             continue;
->> +                     }
->> +                     break;
->> +             case IORESOURCE_MEM:
->> +                     parent = &iomem_resource;
->> +                     res_valid |= !(res->flags & IORESOURCE_PREFETCH);
->> +
->> +                     writel(res->start >> 28, PCI_IMAP(mem));
->> +                     writel(PHYS_OFFSET >> 28, PCI_SMAP(mem));
->> +                     mem++;
->> +
->> +                     break;
->> +             case IORESOURCE_BUS:
->> +             default:
->> +                     continue;
->> +             }
->> +
->> +             err = devm_request_resource(dev, parent, res);
->> +             if (err)
->> +                     goto out_release_res;
->> +     }
->
-> I wonder if we should also request the physical resource for the I/O space
-> window to have it show up in /proc/iomem. We are rather inconsistent in this
-> regard between drivers.
-
-It's a little complicated now because we don't have that as a struct
-resource any more. We could reconstruct it from iobase and the i/o
-resource size.
-
->
->> +     pci_add_flags(PCI_ENABLE_PROC_DOMAINS);
->> +     pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
->> +
->> +     bus = pci_scan_root_bus(&pdev->dev, 0, &pci_versatile_ops, &sys, &pci_res);
->> +     if (!bus)
->> +             return -ENOMEM;
->> +
->> +     pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
->> +     pci_assign_unassigned_bus_resources(bus);
->> +
->> +     return 0;
->
-> One general question, mainly for Bjorn: pci_scan_root_bus adds all the devices
-> at the Linux driver level by calling pci_bus_add_devices(), but then we call
-> pci_fixup_irqs and pci_assign_unassigned_bus_resources after that, which will
-> change the devices again. Is this how it's meant to work? How do we ensure
-> that we have the correct irq number and resources by the time we enter the
-> probe() function of the PCI device driver that gets bound to a device here?
-
-I'm a bit puzzled myself. I think that the devices are not probed
-until after pci_assign_unassigned_bus_resources. It certainly doesn't
-work without that call. Really, I think of_irq_parse_and_map_pci
-should be the default if no one else has set the device's irq (and the
-host has a device node of course).
-
-It also seems to be a bit of random set of pci functions that are
-called here. It would be nice to simplify this chunk of code.
-
-Rob
+>>   pci 0000:00:16.0: [8086:9c3a] type 00 class 0x078000
+>>
+>> The PCI core should then add the device using device_add(), and part
+>> of that is to emit a uevent, which can be read by user-space.
+>> Generally udev would handle the event and load the appropriate driver.
+>> I don't know the details of how the user-space side works.
+>>
+>> Bjorn
+>>
