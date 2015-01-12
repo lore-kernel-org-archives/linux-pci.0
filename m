@@ -1,67 +1,219 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f52.google.com ([209.85.218.52]:36338 "EHLO
-	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932111AbbAOWYZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jan 2015 17:24:25 -0500
-Received: by mail-oi0-f52.google.com with SMTP id a3so14658682oib.11
-        for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 14:24:25 -0800 (PST)
-Date: Thu, 15 Jan 2015 16:24:22 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 00/10] PCI: clip firmware assigned resources
-Message-ID: <20150115222422.GB29776@google.com>
-References: <1421296297-6371-1-git-send-email-yinghai@kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:59106 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752315AbbALJjl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 04:39:41 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [RFC][PATCH] PCI / PM: Avoid resuming PCI devices during system suspend
+Date: Mon, 12 Jan 2015 11:02:03 +0100
+Message-ID: <1654338.pQ8g9cpnmS@vostro.rjw.lan>
+In-Reply-To: <Pine.LNX.4.44L0.1501081041230.1633-100000@iolanthe.rowland.org>
+References: <Pine.LNX.4.44L0.1501081041230.1633-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1421296297-6371-1-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 14, 2015 at 08:31:27PM -0800, Yinghai Lu wrote:
-> During the fix https://bugzilla.kernel.org/show_bug.cgi?id=85491,
-> Bjorn suggest that we should clip the resources instead of just
-> reject them.
+On Thursday, January 08, 2015 10:51:06 AM Alan Stern wrote:
+> On Thu, 8 Jan 2015, Rafael J. Wysocki wrote:
 > 
-> We should only need first two for x86. others for related arches
-> to keep them consistent.
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > 
+> > Commit f25c0ae2b4c4 (ACPI / PM: Avoid resuming devices in ACPI PM
+> > domain during system suspend) modified the ACPI PM domain's system
+> > suspend callbacks to allow devices attached to it to be left in the
+> > runtime-suspended state during system suspend so as to optimize
+> > the suspend process.
+> > 
+> > This was based on the general mechanism introduced by commit
+> > aae4518b3124 (PM / sleep: Mechanism to avoid resuming runtime-suspended
+> > devices unnecessarily).
+> > 
+> > Extend that approach to PCI devices by modifying the PCI bus type's
+> > ->prepare callback to return 1 for devices that are runtime-suspended
+> > when it is being executed and that are in a suitable power state and
+> > need not be resumed going forward.
 > 
-> -v2: only handle bridge resource, and add pci_claim_bridge_resource
-> 	in pci core code.
-> 
-> Thanks
-> 
-> Yinghai
-> 
-> Yinghai Lu (10):
->   PCI: clip firmware assigned resource under parent bridge's
->   PCI, x86: clip firmware assigned resource under parent bridge's
->   PCI, alpha: clip firmware assigned resource under parent bridge's
->   PCI, frv: clip firmware assigned resource under parent bridge's
->   PCI, ia64: clip firmware assigned resource under parent bridge's
->   PCI, microblaze: clip firmware assigned resource under parent bridge's
->   PCI, mn10300: clip firmware assigned resource under parent bridge's
->   PCI, parisc: clip firmware assigned resource under parent bridge's
->   PCI, powerpc: clip firmware assigned resource under parent bridge's
->   PCI, sparc: clip firmware assigned resource under parent bridge's
-> 
->  arch/alpha/kernel/pci.c                 |  8 +++--
->  arch/frv/mb93090-mb00/pci-frv.c         |  2 +-
->  arch/ia64/pci/pci.c                     | 48 +++++++++++++---------------
->  arch/microblaze/pci/pci-common.c        | 13 +++++++-
->  arch/mn10300/unit-asb2305/pci-asb2305.c |  2 +-
->  arch/mn10300/unit-asb2305/pci.c         | 47 +++++++++++++--------------
->  arch/powerpc/kernel/pci-common.c        | 12 ++++++-
->  arch/sparc/kernel/pci.c                 |  5 ++-
->  arch/x86/pci/i386.c                     |  2 +-
->  drivers/parisc/lba_pci.c                |  5 ++-
->  drivers/pci/bus.c                       | 39 +++++++++++++++++++++++
->  drivers/pci/pci.h                       |  1 +
->  drivers/pci/setup-bus.c                 | 56 ++++++++++++++++++++++++++-------
->  include/linux/pci.h                     |  1 +
->  14 files changed, 165 insertions(+), 76 deletions(-)
+> Does this correctly handle PCI devices that aren't included in the ACPI
+> tables?  For example, add-on PCI cards?
 
-Applied to for-linus for v3.19, thanks.  This is significantly different
-from v1, so I didn't add acks and testing info from Helge and Wei.
+Well, it would if it took the case when a device was configured for remote
+wakeup at run time but was not supposed to wakeup the system from sleep into
+account.
 
-Bjorn
+That needs to be checked in pci_dev_keep_suspended() rather than in the platform
+callback to cover all devices.
+
+Updated patch follows.
+
+Rafael
+
+
+---
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Subject: PCI / PM: Avoid resuming PCI devices during system suspend
+
+Commit f25c0ae2b4c4 (ACPI / PM: Avoid resuming devices in ACPI PM
+domain during system suspend) modified the ACPI PM domain's system
+suspend callbacks to allow devices attached to it to be left in the
+runtime-suspended state during system suspend so as to optimize
+the suspend process.
+
+This was based on the general mechanism introduced by commit
+aae4518b3124 (PM / sleep: Mechanism to avoid resuming runtime-suspended
+devices unnecessarily).
+
+Extend that approach to PCI devices by modifying the PCI bus type's
+->prepare callback to return 1 for devices that are runtime-suspended
+when it is being executed and that are in a suitable power state and
+need not be resumed going forward.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/pci-acpi.c   |   12 ++++++++++++
+ drivers/pci/pci-driver.c |   11 ++++++-----
+ drivers/pci/pci.c        |   26 ++++++++++++++++++++++++++
+ drivers/pci/pci.h        |    6 ++++++
+ 4 files changed, 50 insertions(+), 5 deletions(-)
+
+Index: linux-pm/drivers/pci/pci.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci.c
++++ linux-pm/drivers/pci/pci.c
+@@ -521,6 +521,11 @@ static inline int platform_pci_run_wake(
+ 			pci_platform_pm->run_wake(dev, enable) : -ENODEV;
+ }
+ 
++static inline bool platform_pci_need_resume(struct pci_dev *dev)
++{
++	return pci_platform_pm ? pci_platform_pm->need_resume(dev) : false;
++}
++
+ /**
+  * pci_raw_set_power_state - Use PCI PM registers to set the power state of
+  *                           given PCI device
+@@ -1999,6 +2004,27 @@ bool pci_dev_run_wake(struct pci_dev *de
+ }
+ EXPORT_SYMBOL_GPL(pci_dev_run_wake);
+ 
++/**
++ * pci_dev_keep_suspended - Check if the device can stay in the suspended state.
++ * @pci_dev: Device to check.
++ *
++ * Return 'true' if the device is runtime-suspended, it doesn't have to be
++ * reconfigured due to wakeup settings difference between system and runtime
++ * suspend and the current power state of it is suitable for the upcoming
++ * (system) transition.
++ */
++bool pci_dev_keep_suspended(struct pci_dev *pci_dev)
++{
++	struct device *dev = &pci_dev->dev;
++
++	if (!pm_runtime_suspended(dev)
++	    || (device_can_wakeup(dev) && !device_may_wakeup(dev))
++	    || platform_pci_need_resume(pci_dev))
++		return false;
++
++	return pci_target_state(dev) == dev->current_state;
++}
++
+ void pci_config_pm_runtime_get(struct pci_dev *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+Index: linux-pm/drivers/pci/pci.h
+===================================================================
+--- linux-pm.orig/drivers/pci/pci.h
++++ linux-pm/drivers/pci/pci.h
+@@ -50,6 +50,10 @@ int pci_probe_reset_function(struct pci_
+  *		for given device (the device's wake-up capability has to be
+  *		enabled by @sleep_wake for this feature to work)
+  *
++ * @need_resume: returns 'true' if the given device (which is currently
++ *		suspended) needs to be resumed to be configured for system
++ *		wakeup.
++ *
+  * If given platform is generally capable of power managing PCI devices, all of
+  * these callbacks are mandatory.
+  */
+@@ -59,6 +63,7 @@ struct pci_platform_pm_ops {
+ 	pci_power_t (*choose_state)(struct pci_dev *dev);
+ 	int (*sleep_wake)(struct pci_dev *dev, bool enable);
+ 	int (*run_wake)(struct pci_dev *dev, bool enable);
++	bool (*need_resume)(struct pci_dev *dev);
+ };
+ 
+ int pci_set_platform_pm(struct pci_platform_pm_ops *ops);
+@@ -67,6 +72,7 @@ void pci_power_up(struct pci_dev *dev);
+ void pci_disable_enabled_device(struct pci_dev *dev);
+ int pci_finish_runtime_suspend(struct pci_dev *dev);
+ int __pci_pme_wakeup(struct pci_dev *dev, void *ign);
++bool pci_dev_keep_suspended(struct pci_dev *dev);
+ void pci_config_pm_runtime_get(struct pci_dev *dev);
+ void pci_config_pm_runtime_put(struct pci_dev *dev);
+ void pci_pm_init(struct pci_dev *dev);
+Index: linux-pm/drivers/pci/pci-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-acpi.c
++++ linux-pm/drivers/pci/pci-acpi.c
+@@ -501,12 +501,24 @@ static int acpi_pci_run_wake(struct pci_
+ 	return 0;
+ }
+ 
++static bool acpi_pci_need_resume(struct pci_dev *dev)
++{
++	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
++
++	if (!adev || !acpi_device_power_manageable(adev)
++	    || acpi_target_system_state() == ACPI_STATE_S0)
++		return false;
++
++	return !!adev->power.flags.dsw_present;
++}
++
+ static struct pci_platform_pm_ops acpi_pci_platform_pm = {
+ 	.is_manageable = acpi_pci_power_manageable,
+ 	.set_state = acpi_pci_set_power_state,
+ 	.choose_state = acpi_pci_choose_state,
+ 	.sleep_wake = acpi_pci_sleep_wake,
+ 	.run_wake = acpi_pci_run_wake,
++	.need_resume = acpi_pci_need_resume,
+ };
+ 
+ void acpi_pci_add_bus(struct pci_bus *bus)
+Index: linux-pm/drivers/pci/pci-driver.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-driver.c
++++ linux-pm/drivers/pci/pci-driver.c
+@@ -653,7 +653,6 @@ static bool pci_has_legacy_pm_support(st
+ static int pci_pm_prepare(struct device *dev)
+ {
+ 	struct device_driver *drv = dev->driver;
+-	int error = 0;
+ 
+ 	/*
+ 	 * Devices having power.ignore_children set may still be necessary for
+@@ -662,10 +661,12 @@ static int pci_pm_prepare(struct device
+ 	if (dev->power.ignore_children)
+ 		pm_runtime_resume(dev);
+ 
+-	if (drv && drv->pm && drv->pm->prepare)
+-		error = drv->pm->prepare(dev);
+-
+-	return error;
++	if (drv && drv->pm && drv->pm->prepare) {
++		int error = drv->pm->prepare(dev);
++		if (error)
++			return error;
++	}
++	return pci_dev_keep_suspended(to_pci_dev(dev));
+ }
+ 
+ 
+
