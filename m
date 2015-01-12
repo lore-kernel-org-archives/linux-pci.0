@@ -1,124 +1,42 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 26 Jan 2015 18:40:05 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Will Deacon <Will.Deacon@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: Re: [PATCH 2/6] PCI/MSI: add hooks to populate the msi_domain field
-Message-ID: <20150127004005.GC11624@google.com>
-References: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com>
- <1418069543-21969-3-git-send-email-marc.zyngier@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qg0-f50.google.com ([209.85.192.50]:43728 "EHLO
+	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751103AbbALQ6s (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 11:58:48 -0500
+Received: by mail-qg0-f50.google.com with SMTP id z60so18496277qgd.9
+        for <linux-pci@vger.kernel.org>; Mon, 12 Jan 2015 08:58:47 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1418069543-21969-3-git-send-email-marc.zyngier@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAH9N0t9KvhzmZDgD8PD5VBPR-pPhuE8MmBgK9RY8+ZtKyz++pQ@mail.gmail.com>
+References: <CAH9N0t9KvhzmZDgD8PD5VBPR-pPhuE8MmBgK9RY8+ZtKyz++pQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 12 Jan 2015 10:58:25 -0600
+Message-ID: <CAErSpo48mPENuHpES1Q73ep+NKG8x2Zgb+g71do02y7vufbtfQ@mail.gmail.com>
+Subject: Re: Hot add a PCIe device driver upon hotplug event
+To: Paulo Fortuna Carvalho <pricardofc@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 08, 2014 at 08:12:19PM +0000, Marc Zyngier wrote:
-> In order to be able to populate the device msi_domain field,
-> add the necesary hooks to propagate the PHB msi_domain across
-> secondary busses to devices.
-> 
-> So far, nobody populates the initial msi_domain.
-> 
-> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
-> ---
->  drivers/pci/probe.c | 24 ++++++++++++++++++++++++
->  include/linux/pci.h |  1 +
->  2 files changed, 25 insertions(+)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index c8ca98c..d1009a2 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -670,6 +670,20 @@ static void pci_set_bus_speed(struct pci_bus *bus)
->  	}
->  }
->  
-> +void __weak pcibios_set_phb_msi_domain(struct pci_bus *bus)
+On Mon, Jan 12, 2015 at 5:42 AM, Paulo Fortuna Carvalho
+<pricardofc@gmail.com> wrote:
+> Hello,
+> I want to automatically load/unload a PCIe device driver when a card
+> is inserted/removed from the system. I can see in the system logger
+> with dmesg that the interrupt event is captured and acknowledged by
+> the pciehp hotplug service driver.
+> What I want to do next is that the operating system load/unload the
+> corresponding PCIe device driver for that card.
 
-We haven't previously used the "phb" abbreviation in the PCI core, so I'd
-rather not start now.  I'm not really sure how relevant it is anyway --
-maybe the name doesn't need to include a reference to the host bridge at
-all?
+When pciehp receives the interrupt, it should enumerate the device,
+and you should see a line in dmesg similar to this (of course, it will
+have different bus/device/function and different vendor/device IDs):
 
-> +{
-> +}
-> +
-> +static void pci_set_bus_msi_domain(struct pci_bus *bus)
-> +{
-> +	struct pci_dev *bridge = bus->self;
-> +
-> +	if (!bridge)
-> +		pcibios_set_phb_msi_domain(bus);
-> +	else
-> +		dev_set_msi_domain(&bus->dev, dev_get_msi_domain(&bridge->dev));
-> +}
-> +
->  static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->  					   struct pci_dev *bridge, int busnr)
->  {
-> @@ -723,6 +737,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->  	bridge->subordinate = child;
->  
->  add_dev:
-> +	pci_set_bus_msi_domain(child);
->  	ret = device_register(&child->dev);
->  	WARN_ON(ret < 0);
->  
-> @@ -1517,6 +1532,11 @@ static void pci_init_capabilities(struct pci_dev *dev)
->  	pci_enable_acs(dev);
->  }
->  
-> +static void pci_set_msi_domain(struct pci_dev *dev)
-> +{
-> +	dev_set_msi_domain(&dev->dev, dev_get_msi_domain(&dev->bus->dev));
-> +}
-> +
->  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->  {
->  	int ret;
-> @@ -1546,6 +1566,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->  	/* Initialize various capabilities */
->  	pci_init_capabilities(dev);
->  
-> +	/* Setup MSI irq domain */
+  pci 0000:00:16.0: [8086:9c3a] type 00 class 0x078000
 
-This is *really* a nitpick, but "setup" suggests that we're doing more than
-just setting a pointer, i.e., it suggests that we're doing something more
-involved to get it all ready for use.  But here, I think we really are just
-setting a pointer, so I think the comment is pointless since the function
-name already says that.
+The PCI core should then add the device using device_add(), and part
+of that is to emit a uevent, which can be read by user-space.
+Generally udev would handle the event and load the appropriate driver.
+I don't know the details of how the user-space side works.
 
-> +	pci_set_msi_domain(dev);
-> +
->  	/*
->  	 * Add the device to our list of discovered devices
->  	 * and the bus list for fixup functions, etc.
-> @@ -1947,6 +1970,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->  	b->bridge = get_device(&bridge->dev);
->  	device_enable_async_suspend(b->bridge);
->  	pci_set_bus_of_node(b);
-> +	pci_set_bus_msi_domain(b);
->  
->  	if (!parent)
->  		set_dev_node(b->bridge, pcibus_to_node(b));
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index a523cee..3266764 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1637,6 +1637,7 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
->  int pcibios_add_device(struct pci_dev *dev);
->  void pcibios_release_device(struct pci_dev *dev);
->  void pcibios_penalize_isa_irq(int irq, int active);
-> +void pcibios_set_phb_msi_domain(struct pci_bus *bus);
->  
->  #ifdef CONFIG_HIBERNATE_CALLBACKS
->  extern struct dev_pm_ops pcibios_pm_ops;
-> -- 
-> 2.1.3
-> 
+Bjorn
