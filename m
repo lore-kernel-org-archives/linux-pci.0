@@ -1,101 +1,77 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v4 13/33] x86/irq: Kill irq_cfg.irq_remapped
-Date: Tue, 20 Jan 2015 13:51:33 +0800
-Message-Id: <1421733113-15704-14-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+	"David S. Miller" <davem@davemloft.net>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Sam Ravnborg <sam@ravnborg.org>, sparclinux@vger.kernel.org
+Subject: [PATCH 10/10] PCI, sparc: clip firmware assigned resource under parent bridge's
+Date: Mon, 12 Jan 2015 11:23:20 -0800
+Message-Id: <1421090600-9750-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1421090600-9750-1-git-send-email-yinghai@kernel.org>
+References: <1421090600-9750-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now there is no user of irq_cfg.irq_remapped, so kill it.
+Some bios put range that is not fully coverred by root bus resources.
+Try to clip them and update them in pci bridge bars.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: iommu@lists.linux-foundation.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Joerg Roedel <joro@8bytes.org>
-Link: http://lkml.kernel.org/r/1416901802-24211-23-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
+We'd like to fix other arches instead of just x86.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491
+Reported-by: Marek Kordik <kordikmarek@gmail.com>
+Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources")
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: Yijing Wang <wangyijing@huawei.com>
+Cc: Sam Ravnborg <sam@ravnborg.org>
+Cc: sparclinux@vger.kernel.org
 ---
- arch/x86/include/asm/hw_irq.h       |    1 -
- drivers/iommu/amd_iommu.c           |    1 -
- drivers/iommu/intel_irq_remapping.c |    2 --
- 3 files changed, 4 deletions(-)
+ arch/sparc/kernel/pci.c | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index bbf90fe2a224..88632ea75fe0 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -193,7 +193,6 @@ struct irq_cfg {
- 	u8			vector;
- 	u8			move_in_progress : 1;
- #ifdef CONFIG_IRQ_REMAP
--	u8			remapped : 1;
- 	union {
- 		struct irq_2_iommu irq_2_iommu;
- 		struct irq_2_irte  irq_2_irte;
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index c43f5dd66c71..8792db50ffbd 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -4131,7 +4131,6 @@ static void irq_remapping_prepare_irte(struct amd_ir_data *data,
- 	struct msi_msg *msg = &data->msi_entry;
- 	struct IO_APIC_route_entry *entry;
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index b36365f..0e391e5 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -623,6 +623,7 @@ static void pci_claim_bus_resources(struct pci_bus *bus)
+ 	struct pci_dev *dev;
  
--	irq_cfg->remapped = 1;
- 	data->irq_2_irte.devid = devid;
- 	data->irq_2_irte.index = index + sub_handle;
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
++		bool changed = false;
+ 		int i;
  
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index e76e5723ae87..21fc899e7c49 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -67,7 +67,6 @@ static int alloc_irte(struct intel_iommu *iommu, int irq,
- 		      struct irq_2_iommu *irq_iommu, u16 count)
- {
- 	struct ir_table *table = iommu->ir_table;
--	struct irq_cfg *cfg = irq_cfg(irq);
- 	unsigned int mask = 0;
- 	unsigned long flags;
- 	int index;
-@@ -94,7 +93,6 @@ static int alloc_irte(struct intel_iommu *iommu, int irq,
- 	if (index < 0) {
- 		pr_warn("IR%d: can't allocate an IRTE\n", iommu->seq_id);
- 	} else {
--		cfg->remapped = 1;
- 		irq_iommu->iommu = iommu;
- 		irq_iommu->irte_index =  index;
- 		irq_iommu->sub_handle = 0;
+ 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+@@ -639,8 +640,25 @@ static void pci_claim_bus_resources(struct pci_bus *bus)
+ 				       (unsigned long long)r->end,
+ 				       (unsigned int)r->flags);
+ 
+-			pci_claim_resource(dev, i);
++			if (pci_claim_resource(dev, i) >= 0)
++				continue;
++
++			if (dev->subordinate &&
++			    i >= PCI_BRIDGE_RESOURCES &&
++			    i < PCI_NUM_RESOURCES &&
++			    (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI &&
++			    pci_bus_clip_resource(dev, r)) {
++				changed = true;
++				pci_claim_resource(dev, i);
++			} else if (i < PCI_BRIDGE_RESOURCES &&
++				   i != PCI_ROM_RESOURCE &&
++				   pci_bus_clip_resource(dev, r)) {
++					pci_update_resource(dev, i);
++					pci_claim_resource(dev, i);
++			}
+ 		}
++		if (changed)
++			pci_setup_bridge(dev->subordinate);
+ 	}
+ 
+ 	list_for_each_entry(child_bus, &bus->children, node)
 -- 
-1.7.10.4
+1.8.4.5
 
