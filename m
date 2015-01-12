@@ -1,92 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:62446 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751422AbbACVhb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 3 Jan 2015 16:37:31 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Rob Herring <robherring2@gmail.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 1/2] of/pci: add of_pci_dma_configure() update dma configuration
-Date: Sat, 03 Jan 2015 22:37:09 +0100
-Message-ID: <2019516.ehiuEv0rdL@wuerfel>
-In-Reply-To: <54A71CD1.4070107@ti.com>
-References: <1419459099-6667-1-git-send-email-m-karicheri2@ti.com> <CAL_Jsq+krOUA3BPvMCdaOBhALoi+pzWbw3YndXqR8x52OJogZg@mail.gmail.com> <54A71CD1.4070107@ti.com>
+Received: from 8bytes.org ([81.169.241.247]:45869 "EHLO theia.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752835AbbALPWJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 12 Jan 2015 10:22:09 -0500
+Date: Mon, 12 Jan 2015 16:22:08 +0100
+From: Joerg Roedel <joro@8bytes.org>
+To: "Li, Zhen-Hua" <zhen-hual@hp.com>
+Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
+	vgoyal@redhat.com, dyoung@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v8 02/10] iommu/vt-d: Items required for kdump
+Message-ID: <20150112152207.GC6343@8bytes.org>
+References: <1421046388-27925-1-git-send-email-zhen-hual@hp.com>
+ <1421046388-27925-3-git-send-email-zhen-hual@hp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1421046388-27925-3-git-send-email-zhen-hual@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 02 January 2015 17:33:53 Murali Karicheri wrote:
-> 
-> I have no experience with IOMMU and may not offer much help here as I 
-> originally wrote above. Will Deacon has added this API and probably able 
-> to offer some help in this discussion.
-> 
-> Will Deacon,
-> 
-> Any comment?
+On Mon, Jan 12, 2015 at 03:06:20PM +0800, Li, Zhen-Hua wrote:
+> +
+> +#ifdef CONFIG_CRASH_DUMP
+> +
+> +/*
+> + * Fix Crashdump failure caused by leftover DMA through a hardware IOMMU
+> + *
+> + * Fixes the crashdump kernel to deal with an active iommu and legacy
+> + * DMA from the (old) panicked kernel in a manner similar to how legacy
+> + * DMA is handled when no hardware iommu was in use by the old kernel --
+> + * allow the legacy DMA to continue into its current buffers.
+> + *
+> + * In the crashdump kernel, this code:
+> + * 1. skips disabling the IOMMU's translating of IO Virtual Addresses (IOVA).
+> + * 2. Do not re-enable IOMMU's translating.
+> + * 3. In kdump kernel, use the old root entry table.
+> + * 4. Leaves the current translations in-place so that legacy DMA will
+> + *    continue to use its current buffers.
+> + * 5. Allocates to the device drivers in the crashdump kernel
+> + *    portions of the iova address ranges that are different
+> + *    from the iova address ranges that were being used by the old kernel
+> + *    at the time of the panic.
+> + *
+> + */
 
-It's complicated :(
+It looks like you are still copying the io-page-tables from the old
+kernel into the kdump kernel, is that right? With the approach that was
+proposed you only need to copy over the context entries 1-1. They are
+still pointing to the page-tables in the old kernels memory (which is
+just fine).
 
-> Looking at the iommu documentation and of_iommu.c, I get a feeling that 
-> this API is not really used at present as there are no callers of 
-> of_iommu_set_ops() and I assume this is a WIP.
+The root-entry of the old kernel is also re-used, and when the kdump
+kernel starts to use a device, its context entry is updated to point to
+a newly allocated page-table.
 
-Right, but we have patches for some iommu drivers based on this API,
-and we should migrate all of them eventually.
 
-> I believe the way it is 
-> expected to work is to have the iommu driver of the master IOMMU devices 
-> call of_iommu_set_ops(). The device node of this master IOMMU device is 
-> specified as a phandle in the OF node of the device (various bus devices 
-> such as platform, PCI etc). This allow to retrieve the iommu ops though 
-> the of_iommu_configure() API and use it in arch_setup_dma_ops(). So my 
-> gut feeling is that for PCI devices, as there are no DT node, the root 
-> bus node may specify iommus phandle to IOMMU master OF nodes.
+	Joerg
 
-Yes, but we also need to pass a PCI device specific identifier along
-with the root bus node, because some iommu drivers take the PCI
-bus/device/function number into account for creating per-function
-i/o page tables.
-
-> W.r.t your comment "We may want to address the comment in
-> of_iommu_configure about parent nodes. We should be sure these changes 
-> work with how we would do searching parent nodes",
-> 
-> I believe, the parent node search itself should work the same way in the 
-> case of PCI as with platform bus case. PCI's case, we are providing the 
-> OF node of the root bus host bridge. Why should this be any different in 
-> terms of search?
-> 
-> I see a potential issue with dma-ranges as described in the notes below.
-> As noted below the usage of dma-range for iommu is to be determined. For 
-> keystone, the of_iommu_configure() always return false as we don't use 
-> the iommu. But don't know if this has any consequences for other 
-> platforms. Or I got your questions wrong. Any help here from others on 
-> the list?
-> 
-> ========================================================================
-> One possible extension to the above is to use an "iommus" property along 
-> with a "dma-ranges" property in a bus device node (such as PCI host 
-> bridges). This can be useful to describe how children on the bus relate 
-> to the IOMMU if they are not explicitly listed in the device tree (e.g. 
-> PCI devices). However, the requirements of that use-case haven't been 
-> fully determined yet. Implementing this is therefore not recommended 
-> without further discussion and extension of this binding.
-> =========================================================================
-
-This probably won't ever apply to PCI devices, so let's ignore it for now.
-For the moment (and for PCI), we should assume that we either configure
-an iommu directly or we use dma-ranges if no iommu is in use.
-
-	Arnd
