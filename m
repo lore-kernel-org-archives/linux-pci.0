@@ -1,274 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:56088 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754384AbbAUCdF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 21:33:05 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v2 29/30] PCI: Remove platform specific pci_domain_nr()
-Date: Wed, 21 Jan 2015 08:30:24 +0800
-Message-ID: <1421800225-26230-30-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
-References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
+Received: from mout1.freenet.de ([195.4.92.91]:55776 "EHLO mout1.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750860AbbALPXr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 12 Jan 2015 10:23:47 -0500
+Message-ID: <54B3E653.8020900@maya.org>
+Date: Mon, 12 Jan 2015 16:20:51 +0100
+From: Andreas Hartmann <andihartmann@freenet.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Alex Williamson <alex.williamson@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/4] PCI: quirk Atheros AR93xx to avoid bus reset
+References: <20141121180322.26669.65689.stgit@gimli.home>	 <20141121182427.26669.82417.stgit@gimli.home>	 <20150108160733.GA6575@google.com> <1420745423.25367.77.camel@redhat.com>
+In-Reply-To: <1420745423.25367.77.camel@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now pci_host_bridge holds the domain number,
-so we could eliminate all platform specific
-pci_domain_nr().
+Alex Williamson wrote:
+> On Thu, 2015-01-08 at 09:07 -0700, Bjorn Helgaas wrote:
+>> On Fri, Nov 21, 2014 at 11:24:27AM -0700, Alex Williamson wrote:
+>>> Reports against the TL-WDN4800 card indicate that PCI bus reset of
+>>> this Atheros device cause system lock-ups and resets.  I've also
+>>> been able to confirm this behavior on multiple systems.  The device
+>>> never returns from reset and attempts to access config space of the
+>>> device after reset result in hangs.  Blacklist bus reset for the
+>>> device to avoid this issue.
+>>>
+>>> Reported-by: Andreas Hartmann <andihartmann@freenet.de>
+>>> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+>>> Tested-by: Andreas Hartmann <andihartmann@freenet.de>
+>>
+>> If I understand correctly, these two (patches 3 & 4) fix a v3.14 regression
+>> caused by 425c1b223dac ("PCI: Add Virtual Channel to save/restore support").
+>>
+>> If so, these should go to for-linus for v3.19.  What about patches 1 & 2?
+>> Do they fix a regression?  Is there a pointer to a bugzilla or problem
+>> report about that issue?
+>>
+>> I don't understand the connection between 425c1b223dac and
+>> PCI_DEV_FLAGS_NO_BUS_RESET, because 425c1b223dac doesn't seem to do any
+>> resets.  Is that the wrong commit, or can you outline the connection for
+>> me?
+> 
+> TBH, I don't have a lot of faith in associating this to 425c1b223dac,
+> I'm not sure how Andreas' bisect landed there. 
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/alpha/include/asm/pci.h     |    2 --
- arch/ia64/include/asm/pci.h      |    1 -
- arch/microblaze/pci/pci-common.c |   11 -----------
- arch/mips/include/asm/pci.h      |    2 --
- arch/powerpc/kernel/pci-common.c |   11 -----------
- arch/s390/pci/pci.c              |    6 ------
- arch/sh/include/asm/pci.h        |    2 --
- arch/sparc/kernel/pci.c          |   17 -----------------
- arch/tile/include/asm/pci.h      |    2 --
- arch/x86/include/asm/pci.h       |    6 ------
- drivers/pci/pci.c                |    8 ++++++++
- include/linux/pci.h              |    7 ++-----
- 12 files changed, 10 insertions(+), 65 deletions(-)
+Because removing this patch made it working again :-)
 
-diff --git a/arch/alpha/include/asm/pci.h b/arch/alpha/include/asm/pci.h
-index f7f680f..63a9a1e 100644
---- a/arch/alpha/include/asm/pci.h
-+++ b/arch/alpha/include/asm/pci.h
-@@ -95,8 +95,6 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
- 	return channel ? 15 : 14;
- }
- 
--#define pci_domain_nr(bus) ((struct pci_controller *)(bus)->sysdata)->index
--
- static inline int pci_proc_domain(struct pci_bus *bus)
- {
- 	struct pci_controller *hose = bus->sysdata;
-diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-index 52af5ed..1dcea49 100644
---- a/arch/ia64/include/asm/pci.h
-+++ b/arch/ia64/include/asm/pci.h
-@@ -99,7 +99,6 @@ struct pci_controller {
- 
- 
- #define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
--#define pci_domain_nr(busdev)    (PCI_CONTROLLER(busdev)->segment)
- 
- extern struct pci_ops pci_root_ops;
- 
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index 890bd36..81ac523 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -123,17 +123,6 @@ unsigned long pci_address_to_pio(phys_addr_t address)
- }
- EXPORT_SYMBOL_GPL(pci_address_to_pio);
- 
--/*
-- * Return the domain number for this bus.
-- */
--int pci_domain_nr(struct pci_bus *bus)
--{
--	struct pci_controller *hose = pci_bus_to_host(bus);
--
--	return hose->global_number;
--}
--EXPORT_SYMBOL(pci_domain_nr);
--
- /* This routine is meant to be used early during boot, when the
-  * PCI bus numbers have not yet been assigned, and you need to
-  * issue PCI config cycles to an OF device.
-diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
-index 6952962..9546396 100644
---- a/arch/mips/include/asm/pci.h
-+++ b/arch/mips/include/asm/pci.h
-@@ -121,8 +121,6 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
- }
- #endif
- 
--#define pci_domain_nr(bus) ((struct pci_controller *)(bus)->sysdata)->index
--
- static inline int pci_proc_domain(struct pci_bus *bus)
- {
- 	struct pci_controller *hose = bus->sysdata;
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 1f44df9..73860ff 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -181,17 +181,6 @@ unsigned long pci_address_to_pio(phys_addr_t address)
- }
- EXPORT_SYMBOL_GPL(pci_address_to_pio);
- 
--/*
-- * Return the domain number for this bus.
-- */
--int pci_domain_nr(struct pci_bus *bus)
--{
--	struct pci_controller *hose = pci_bus_to_host(bus);
--
--	return hose->global_number;
--}
--EXPORT_SYMBOL(pci_domain_nr);
--
- /* This routine is meant to be used early during boot, when the
-  * PCI bus numbers have not yet been assigned, and you need to
-  * issue PCI config cycles to an OF device.
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index 612decf..8ca02f7 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -101,12 +101,6 @@ static struct zpci_dev *get_zdev_by_bus(struct pci_bus *bus)
- 	return (bus && bus->sysdata) ? (struct zpci_dev *) bus->sysdata : NULL;
- }
- 
--int pci_domain_nr(struct pci_bus *bus)
--{
--	return ((struct zpci_dev *) bus->sysdata)->domain;
--}
--EXPORT_SYMBOL_GPL(pci_domain_nr);
--
- int pci_proc_domain(struct pci_bus *bus)
- {
- 	return pci_domain_nr(bus);
-diff --git a/arch/sh/include/asm/pci.h b/arch/sh/include/asm/pci.h
-index 5b45115..4dc3ad6 100644
---- a/arch/sh/include/asm/pci.h
-+++ b/arch/sh/include/asm/pci.h
-@@ -109,8 +109,6 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
- /* Board-specific fixup routines. */
- int pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin);
- 
--#define pci_domain_nr(bus) ((struct pci_channel *)(bus)->sysdata)->index
--
- static inline int pci_proc_domain(struct pci_bus *bus)
- {
- 	struct pci_channel *hose = bus->sysdata;
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index 0ff5093..babfa57 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -900,23 +900,6 @@ int pcibus_to_node(struct pci_bus *pbus)
- EXPORT_SYMBOL(pcibus_to_node);
- #endif
- 
--/* Return the domain number for this pci bus */
--
--int pci_domain_nr(struct pci_bus *pbus)
--{
--	struct pci_pbm_info *pbm = pbus->sysdata;
--	int ret;
--
--	if (!pbm) {
--		ret = -ENXIO;
--	} else {
--		ret = pbm->index;
--	}
--
--	return ret;
--}
--EXPORT_SYMBOL(pci_domain_nr);
--
- #ifdef CONFIG_PCI_MSI
- int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
- {
-diff --git a/arch/tile/include/asm/pci.h b/arch/tile/include/asm/pci.h
-index dfedd7a..23a726e 100644
---- a/arch/tile/include/asm/pci.h
-+++ b/arch/tile/include/asm/pci.h
-@@ -199,8 +199,6 @@ int __init pcibios_init(void);
- 
- void pcibios_fixup_bus(struct pci_bus *bus);
- 
--#define pci_domain_nr(bus) (((struct pci_controller *)(bus)->sysdata)->index)
--
- /*
-  * This decides whether to display the domain number in /proc.
-  */
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 4e370a5..4fe0458 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -29,12 +29,6 @@ extern int noioapicreroute;
- #ifdef CONFIG_PCI
- 
- #ifdef CONFIG_PCI_DOMAINS
--static inline int pci_domain_nr(struct pci_bus *bus)
--{
--	struct pci_sysdata *sd = bus->sysdata;
--	return sd->domain;
--}
--
- static inline int pci_proc_domain(struct pci_bus *bus)
- {
- 	return pci_domain_nr(bus);
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 06d41b1..0af5ef1 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4465,6 +4465,14 @@ int pci_get_new_domain_nr(void)
- 	return atomic_inc_return(&__domain_nr);
- }
- 
-+int pci_domain_nr(struct pci_bus *bus)
-+{
-+	struct pci_host_bridge *host = find_pci_host_bridge(bus);
-+
-+	return host->domain;
-+}
-+EXPORT_SYMBOL(pci_domain_nr);
-+
- #ifdef CONFIG_PCI_DOMAINS_GENERIC
- static int pci_assign_domain_nr(struct device *dev)
- {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2f6b199..57e7e00 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1310,6 +1310,7 @@ void pci_cfg_access_unlock(struct pci_dev *dev);
- #ifdef CONFIG_PCI_DOMAINS
- extern int pci_domains_supported;
- int pci_get_new_domain_nr(void);
-+int pci_domain_nr(struct pci_bus *bus);
- #else
- enum { pci_domains_supported = 0 };
- static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
-@@ -1323,15 +1324,11 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
-  * domains then this implementation will be used
-  */
- #ifdef CONFIG_PCI_DOMAINS_GENERIC
--static inline int pci_domain_nr(struct pci_bus *bus)
--{
--	return bus->domain_nr;
--}
- void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
- void pci_host_assign_domain_nr(struct pci_host_bridge *host);
- #else
- static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
--					struct device *parent)
-+		                    struct device *parent)
- {
- }
- static inline void pci_host_assign_domain_nr(struct pci_host_bridge *host)
--- 
-1.7.1
+And too:
+http://thread.gmane.org/gmane.linux.kernel.pci/35170/focus=35984
+
+Kernel 2.10. and 2.12. and 2.13. did work fine for me. 2.14 is the first
+kernel, which hangs the machine at startup of the VM. The userland
+(qemu) didn't change in between.
+
+Therefore: from my point of view, it is a regression, because things
+have been working < 2.14.
+
+Besides that: It is undoubted, that there is a problem with resetting
+this card. But the difference between >= 3.14 and < 3.14 is, that < 3.14
+has been working nevertheless. The patch
+425c1b223dac456d00a61fd6b451b6d1cf00d065 obviously changed something
+which I can't say and I don't know off. Therefore, the quirk-patch is
+definitely required, because things work completely fine again w/ this
+patch.
+
+"Working" means for me here: I was able to start (and use) the VM w/o
+crashing the machine and this isn't possible w/ unpatched 2.14+ any
+more. Yes, w/ 2.12, I wasn't able to restart the VM (it then crashed the
+machine), but w/ 2.10 even this was possible.
+
+
+> IME, this device cannot,
+> and has never been able to handle a bus reset.  A simple setpci
+> experiment on the commandline can confirm this.  What I think happened
+> is that with the PCI bus reset infrastructure we added, we switched QEMU
+> to prefer PCI bus resets over things like PM D3hot->D0 resets.  So it's
+> just more prolific use of bus resets by userspace.
+> 
+> There's also no regression in 1 & 2, PM reset has never done anything
+> useful on those devices.  Thanks,
+> 
+> Alex
+> 
+>>> ---
+>>>
+>>>  drivers/pci/quirks.c |   14 ++++++++++++++
+>>>  1 file changed, 14 insertions(+)
+>>>
+>>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>>> index 561e10d..ebbd5b4 100644
+>>> --- a/drivers/pci/quirks.c
+>>> +++ b/drivers/pci/quirks.c
+>>> @@ -3029,6 +3029,20 @@ static void quirk_no_pm_reset(struct pci_dev *dev)
+>>>  DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_ATI, PCI_ANY_ID,
+>>>  			       PCI_CLASS_DISPLAY_VGA, 8, quirk_no_pm_reset);
+>>>  
+>>> +static void quirk_no_bus_reset(struct pci_dev *dev)
+>>> +{
+>>> +	dev->dev_flags |= PCI_DEV_FLAGS_NO_BUS_RESET;
+>>> +}
+>>> +
+>>> +/*
+>>> + * Atheros AR93xx chips do not behave after a bus reset.  The device will
+>>> + * throw a Link Down error on AER capable system and regardless of AER,
+>>> + * config space of the device is never accessible again and typically
+>>> + * causes the system to hang or reset when access is attempted.
+>>> + * http://www.spinics.net/lists/linux-pci/msg34797.html
+>>> + */
+>>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0030, quirk_no_bus_reset);
+>>> +
+>>>  #ifdef CONFIG_ACPI
+>>>  /*
+>>>   * Apple: Shutdown Cactus Ridge Thunderbolt controller.
+>>>
+> 
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
