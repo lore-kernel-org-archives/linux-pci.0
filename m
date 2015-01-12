@@ -1,82 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp104.ord1c.emailsrvr.com ([108.166.43.104]:36393 "EHLO
-	smtp104.ord1c.emailsrvr.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751895AbbA3NME (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Jan 2015 08:12:04 -0500
-Received: from smtp14.relay.ord1c.emailsrvr.com (localhost.localdomain [127.0.0.1])
-	by smtp14.relay.ord1c.emailsrvr.com (SMTP Server) with ESMTP id 583933801B3
-	for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2015 08:04:47 -0500 (EST)
-Received: from smtp14.relay.ord1c.emailsrvr.com (localhost.localdomain [127.0.0.1])
-	by smtp14.relay.ord1c.emailsrvr.com (SMTP Server) with ESMTP id 553F33801B5
-	for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2015 08:04:47 -0500 (EST)
-Received: by smtp14.relay.ord1c.emailsrvr.com (Authenticated sender: markh-AT-compro.net) with ESMTPSA id 307E83801B3
-	for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2015 08:04:47 -0500 (EST)
-Message-ID: <54CB816E.8060700@compro.net>
-Date: Fri, 30 Jan 2015 08:04:46 -0500
-From: Mark Hounschell <markh@compro.net>
-Reply-To: markh@compro.net
+Received: from 8bytes.org ([81.169.241.247]:46328 "EHLO theia.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751608AbbALQGr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 12 Jan 2015 11:06:47 -0500
+Date: Mon, 12 Jan 2015 17:06:46 +0100
+From: Joerg Roedel <joro@8bytes.org>
+To: Vivek Goyal <vgoyal@redhat.com>
+Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>, dwmw2@infradead.org,
+	indou.takao@jp.fujitsu.com, bhe@redhat.com, dyoung@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v8 02/10] iommu/vt-d: Items required for kdump
+Message-ID: <20150112160646.GF6343@8bytes.org>
+References: <1421046388-27925-1-git-send-email-zhen-hual@hp.com>
+ <1421046388-27925-3-git-send-email-zhen-hual@hp.com>
+ <20150112152207.GC6343@8bytes.org>
+ <20150112152919.GA16162@redhat.com>
 MIME-Version: 1.0
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: dma_alloc_coherent - cma - and IOMMU question
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150112152919.GA16162@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sorry for the noise. I've read everything DMA in the kernel Doc dir and 
-searched the web to no avail. So I thought I might get some useful info 
-here.
+On Mon, Jan 12, 2015 at 10:29:19AM -0500, Vivek Goyal wrote:
+> Kdump has the notion of backup region. Where certain parts of old kernels
+> memory can be moved to a different location (first 640K on x86 as of now)
+> and new kernel can make use of this memory now.
+> 
+> So we will have to just make sure that no parts of this old page table
+> fall into backup region.
 
-I'm currently using a 3.18.3 (x86_64) kernel on an AMD platform. I am 
-currently doing 8MB DMAs to and from our device using the in kernel CMA 
-"cma=64M@0-4G" with no problems. This device is not DAC or 
-scatter/gather capable so the in kernel CMA has been great and replaced 
-our old bigphysarea usage.
+Uuh, looks like the 'iommu-with-kdump-issue' isn't complicated enough
+yet ;)
+Sadly, your above statement is true for all hardware-accessible data
+structures in IOMMU code. I think about how we can solve this, is there
+an easy way to allocate memory that is not in any backup region?
 
-We simply use dma_alloc_coherent and pass the dma_addr_t *dma_handle 
-returned from the dma_alloc_coherent function to our device as the 
-"bus/pci" address to use.
-We also use remap_pfn_range on that dma_addr_t *dma_handle returned from 
-  the dma_alloc_coherent function to mmap userland to the buffer. All is 
-good until I enable the IOMMU. I then either get IO_PAGE_FAULTs, the DMA 
-just quietly never completes or the system gets borked.
+Thanks,
 
-[  106.115725] AMD-Vi: Event logged [IO_PAGE_FAULT device=03:00.0 
-domain=0x001b address=0x00000000aa500000 flags=0x0010]
-[  106.115729] AMD-Vi: Event logged [IO_PAGE_FAULT device=03:00.0 
-domain=0x001b address=0x00000000aa500040 flags=0x0010]
-
-Here are the IOMMU settings in my kernel config:
-
-#grep IOMMU .config
-# CONFIG_GART_IOMMU is not set
-# CONFIG_CALGARY_IOMMU is not set
-CONFIG_IOMMU_HELPER=y
-CONFIG_VFIO_IOMMU_TYPE1=m
-CONFIG_IOMMU_API=y
-CONFIG_IOMMU_SUPPORT=y
-CONFIG_AMD_IOMMU=y
-# CONFIG_AMD_IOMMU_STATS is not set
-CONFIG_AMD_IOMMU_V2=m
-CONFIG_INTEL_IOMMU=y
-CONFIG_INTEL_IOMMU_DEFAULT_ON=y
-CONFIG_INTEL_IOMMU_FLOPPY_WA=y
-# CONFIG_IOMMU_STRESS is not set
-
-
- From reading the in kernel doc it would appear that we could in fact, 
-using the IOMMU and the dma_map_sg function, get rid of the CMA 
-requirement and our device could DMA anywhere, even above the 4GB 
-address space limit of our device. But before going through this larger 
-change to our GPL driver, I want to understand if and/or why the 
-dma_alloc_coherent function does not appear to set up the IOMMU for me. 
-Is the IOMMU only supported for "streaming" DMA type and not for 
-"coherent"? I read no reference to this in the kernel doc?
-
-Any hints would be greatly appreciated. Again, sorry for the noise.
-
-Regards
-Mark
-
-
-
+	Joerg
 
