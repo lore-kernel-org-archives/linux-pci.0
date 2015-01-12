@@ -1,72 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:35072 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751678AbbA1U5k (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jan 2015 15:57:40 -0500
-Received: by mail-ie0-f174.google.com with SMTP id vy18so25051721iec.5
-        for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2015 12:57:40 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAL_Jsq+-Tn=nCAVAE8sqPD1_aHBSv4jTdAZxWS4B3cOYaGgdow@mail.gmail.com>
-References: <2000255.rnmr9HfSOg@wuerfel> <20150128151712.GA12050@google.com> <CAL_Jsq+-Tn=nCAVAE8sqPD1_aHBSv4jTdAZxWS4B3cOYaGgdow@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 28 Jan 2015 09:38:32 -0600
-Message-ID: <CAErSpo6ATgUqwjvWjyodV33_6Zi8S6S4Mbgxxv_BMGiOA=Ta8w@mail.gmail.com>
-Subject: Re: [PATCH] ARM: cns3xxx: fix typo in PCI config accessor
-To: Rob Herring <robh@kernel.org>,
-	Wu Fengguang <fengguang.wu@intel.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Krzysztof Halasa <khalasa@piap.pl>,
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:60244 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751465AbbALRvb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 12:51:31 -0500
+Date: Mon, 12 Jan 2015 17:51:25 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Rob Herring <robh@kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 12/16] pci/host: generic: convert to use generic config
+ accesses
+Message-ID: <20150112175125.GM13360@arm.com>
+References: <1420857290-8373-1-git-send-email-robh@kernel.org>
+ <1420857290-8373-13-git-send-email-robh@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1420857290-8373-13-git-send-email-robh@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Fengguang]
+On Sat, Jan 10, 2015 at 02:34:46AM +0000, Rob Herring wrote:
+> Convert the generic host PCI driver to use the generic config access
+> functions.
+> 
+> Signed-off-by: Rob Herring <robh@kernel.org>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org
+> ---
+>  drivers/pci/host/pci-host-generic.c | 51 +++----------------------------------
+>  1 file changed, 3 insertions(+), 48 deletions(-)
 
-On Wed, Jan 28, 2015 at 9:34 AM, Rob Herring <robh@kernel.org> wrote:
-> On Wed, Jan 28, 2015 at 9:17 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Wed, Jan 28, 2015 at 02:53:07PM +0100, Arnd Bergmann wrote:
->>> The recent patch to convert the cns3xxx PCI code added an
->>> extraneous opening bracket, which makes the build fail,
->>> so remove this.
->>>
->>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->>> Fixes: 10e2c5540d48 ("ARM: cns3xxx: Convert PCI to use generic config accessors")
->>> ---
->>>
->>> Hi Bjorn,
->>>
->>> The broken patch just showed up in linux-next. Please apply this one on top,
->>> or fold it into the original patch if you don't mind rebasing.
->>
->> I folded it in, thanks!  I guess Fengguang's autobuilder must not build
->> this config, because I got a success report from it.
->
-> Sorry about this. I had fixed this in my tree, but forgot to send out
-> the update. I've double checked and this was the only fix I had.
->
-> How do you get success reports? I only ever get failures.
+Looks like a fairly straightforward conversion for this driver!
 
-I think Fengguang has it set up so success reports only go to the
-owner of the tree, while failure reports go to the owner + people
-related to the patch, e.g., maybe people in the signed-off-by list?  I
-don't know whether that's configurable, or whether you'd even want to
-see all the success reports from my tree :)
+  Acked-by: Will Deacon <will.deacon@arm.com>
 
-Bjorn
+Will
 
->>> diff --git a/arch/arm/mach-cns3xxx/pcie.c b/arch/arm/mach-cns3xxx/pcie.c
->>> index e41fc339d100..c622c306c390 100644
->>> --- a/arch/arm/mach-cns3xxx/pcie.c
->>> +++ b/arch/arm/mach-cns3xxx/pcie.c
->>> @@ -101,7 +101,7 @@ static int cns3xxx_pci_read_config(struct pci_bus *bus, unsigned int devfn,
->>>                * for a PCIe bridge. So we must fixup the class code
->>>                * to 0x604 here.
->>>                */
->>> -             *val = (((((*val << shift) & 0xff) | (0x604 << 16)) >> shift) & mask;
->>> +             *val = ((((*val << shift) & 0xff) | (0x604 << 16)) >> shift) & mask;
->>>
->>>       return ret;
->>>  }
->>>
+> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> index 6eb1aa7..925e29e 100644
+> --- a/drivers/pci/host/pci-host-generic.c
+> +++ b/drivers/pci/host/pci-host-generic.c
+> @@ -76,55 +76,9 @@ static struct gen_pci_cfg_bus_ops gen_pci_cfg_ecam_bus_ops = {
+>  	.map_bus	= gen_pci_map_cfg_bus_ecam,
+>  };
+>  
+> -static int gen_pci_config_read(struct pci_bus *bus, unsigned int devfn,
+> -				int where, int size, u32 *val)
+> -{
+> -	void __iomem *addr;
+> -	struct pci_sys_data *sys = bus->sysdata;
+> -	struct gen_pci *pci = sys->private_data;
+> -
+> -	addr = pci->cfg.ops->map_bus(bus, devfn, where);
+> -
+> -	switch (size) {
+> -	case 1:
+> -		*val = readb(addr);
+> -		break;
+> -	case 2:
+> -		*val = readw(addr);
+> -		break;
+> -	default:
+> -		*val = readl(addr);
+> -	}
+> -
+> -	return PCIBIOS_SUCCESSFUL;
+> -}
+> -
+> -static int gen_pci_config_write(struct pci_bus *bus, unsigned int devfn,
+> -				 int where, int size, u32 val)
+> -{
+> -	void __iomem *addr;
+> -	struct pci_sys_data *sys = bus->sysdata;
+> -	struct gen_pci *pci = sys->private_data;
+> -
+> -	addr = pci->cfg.ops->map_bus(bus, devfn, where);
+> -
+> -	switch (size) {
+> -	case 1:
+> -		writeb(val, addr);
+> -		break;
+> -	case 2:
+> -		writew(val, addr);
+> -		break;
+> -	default:
+> -		writel(val, addr);
+> -	}
+> -
+> -	return PCIBIOS_SUCCESSFUL;
+> -}
+> -
+>  static struct pci_ops gen_pci_ops = {
+> -	.read	= gen_pci_config_read,
+> -	.write	= gen_pci_config_write,
+> +	.read	= pci_generic_config_read,
+> +	.write	= pci_generic_config_write,
+>  };
+>  
+>  static const struct of_device_id gen_pci_of_match[] = {
+> @@ -287,6 +241,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+>  
+>  	of_id = of_match_node(gen_pci_of_match, np);
+>  	pci->cfg.ops = of_id->data;
+> +	gen_pci_ops.map_bus = pci->cfg.ops->map_bus;
+>  	pci->host.dev.parent = dev;
+>  	INIT_LIST_HEAD(&pci->host.windows);
+>  	INIT_LIST_HEAD(&pci->resources);
+> -- 
+> 2.1.0
+> 
+> 
