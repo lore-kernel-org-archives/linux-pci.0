@@ -1,69 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:52396 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753245AbbAOC2b (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 21:28:31 -0500
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 15 Jan 2015 12:28:29 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 2859B2BB0040
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:27 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t0F2SQ3l29622418
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:27 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t0F2SQb9019893
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:26 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V11 09/17] powerpc/pci: remove pci_dn->pcidev field
-Date: Thu, 15 Jan 2015 10:27:59 +0800
-Message-Id: <1421288887-7765-10-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <20150113180502.GC2776@google.com>
- <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:50261 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751775AbbALP37 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 12 Jan 2015 10:29:59 -0500
+Date: Mon, 12 Jan 2015 10:29:19 -0500
+From: Vivek Goyal <vgoyal@redhat.com>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>, dwmw2@infradead.org,
+	indou.takao@jp.fujitsu.com, bhe@redhat.com, dyoung@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v8 02/10] iommu/vt-d: Items required for kdump
+Message-ID: <20150112152919.GA16162@redhat.com>
+References: <1421046388-27925-1-git-send-email-zhen-hual@hp.com>
+ <1421046388-27925-3-git-send-email-zhen-hual@hp.com>
+ <20150112152207.GC6343@8bytes.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150112152207.GC6343@8bytes.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The field pci_dn->pcidev is assigned but not used.
+On Mon, Jan 12, 2015 at 04:22:08PM +0100, Joerg Roedel wrote:
+> On Mon, Jan 12, 2015 at 03:06:20PM +0800, Li, Zhen-Hua wrote:
+> > +
+> > +#ifdef CONFIG_CRASH_DUMP
+> > +
+> > +/*
+> > + * Fix Crashdump failure caused by leftover DMA through a hardware IOMMU
+> > + *
+> > + * Fixes the crashdump kernel to deal with an active iommu and legacy
+> > + * DMA from the (old) panicked kernel in a manner similar to how legacy
+> > + * DMA is handled when no hardware iommu was in use by the old kernel --
+> > + * allow the legacy DMA to continue into its current buffers.
+> > + *
+> > + * In the crashdump kernel, this code:
+> > + * 1. skips disabling the IOMMU's translating of IO Virtual Addresses (IOVA).
+> > + * 2. Do not re-enable IOMMU's translating.
+> > + * 3. In kdump kernel, use the old root entry table.
+> > + * 4. Leaves the current translations in-place so that legacy DMA will
+> > + *    continue to use its current buffers.
+> > + * 5. Allocates to the device drivers in the crashdump kernel
+> > + *    portions of the iova address ranges that are different
+> > + *    from the iova address ranges that were being used by the old kernel
+> > + *    at the time of the panic.
+> > + *
+> > + */
+> 
+> It looks like you are still copying the io-page-tables from the old
+> kernel into the kdump kernel, is that right? With the approach that was
+> proposed you only need to copy over the context entries 1-1. They are
+> still pointing to the page-tables in the old kernels memory (which is
+> just fine).
 
-This patch removes this field.
+Kdump has the notion of backup region. Where certain parts of old kernels
+memory can be moved to a different location (first 640K on x86 as of now)
+and new kernel can make use of this memory now.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/pci-bridge.h     |    1 -
- arch/powerpc/platforms/powernv/pci-ioda.c |    1 -
- 2 files changed, 2 deletions(-)
+So we will have to just make sure that no parts of this old page table
+fall into backup region.
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index c1b7dd5..334e745 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -164,7 +164,6 @@ struct pci_dn {
- 
- 	int	pci_ext_config_space;	/* for pci devices */
- 
--	struct	pci_dev *pcidev;	/* back-pointer to the pci device */
- #ifdef CONFIG_EEH
- 	struct eeh_dev *edev;		/* eeh device */
- #endif
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 5a8e6b1..665f57c 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -832,7 +832,6 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
- 				pci_name(dev));
- 			continue;
- 		}
--		pdn->pcidev = dev;
- 		pdn->pe_number = pe->pe_number;
- 		pe->dma_weight += pnv_ioda_dma_weight(dev);
- 		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
--- 
-1.7.9.5
-
+Thanks
+Vivek
