@@ -1,38 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:56518 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753270AbbAEPbX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Jan 2015 10:31:23 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Sean Cross <xobs@kosagi.com>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Shawn Guo <shawn.guo@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	devicetree@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	linux-pci@vger.kernel.org, bunnie@kosagi.com
-Subject: Re: [PATCH v2 3/4] PCI: imx6: Add power-supply support
-Date: Mon, 05 Jan 2015 16:31:04 +0100
-Message-ID: <1760521.28f6F6lDZm@wuerfel>
-In-Reply-To: <1419237127-21763-4-git-send-email-xobs@kosagi.com>
-References: <1419237127-21763-1-git-send-email-xobs@kosagi.com> <1419237127-21763-4-git-send-email-xobs@kosagi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from userp1040.oracle.com ([156.151.31.81]:47531 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932266AbbALTXh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 14:23:37 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 00/10] PCI: clip firmware assigned resources
+Date: Mon, 12 Jan 2015 11:23:10 -0800
+Message-Id: <1421090600-9750-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 22 December 2014 16:32:06 Sean Cross wrote:
-> Some PCIe ports gate power to the slot.  In order to prevent system lockup,
-> these boards must enable power to the slot before attempting communication
-> over the PCI bus.
-> 
-> Signed-off-by: Sean Cross <xobs@kosagi.com>
+During the fix https://bugzilla.kernel.org/show_bug.cgi?id=85491,
+Bjorn suggest that we should clip the resources instead of just
+reject them.
 
-Could this be moved to the common pcie-designware driver? It doesn't seem
-to be imx6 specific and other drivers might need the same thing.
+We should only need first two for x86. others for related arches
+to keep them consistent.
 
-	Arnd
+Thanks
+
+Yinghai
+
+
+Yinghai Lu (10):
+  PCI: clip firmware assigned resource under parent bridge's
+  PCI, x86: clip firmware assigned resource under parent bridge's
+  PCI, alpha: clip firmware assigned resource under parent bridge's
+  PCI, frv: clip firmware assigned resource under parent bridge's
+  PCI, ia64: clip firmware assigned resource under parent bridge's
+  PCI, microblaze: clip firmware assigned resource under parent bridge's
+  PCI, mn10300: clip firmware assigned resource under parent bridge's
+  PCI, parisc: clip firmware assigned resource under parent bridge's
+  PCI, powerpc: clip firmware assigned resource under parent bridge's
+  PCI, sparc: clip firmware assigned resource under parent bridge's
+
+ arch/alpha/kernel/pci.c                 | 24 ++++++++++-
+ arch/frv/mb93090-mb00/pci-frv.c         | 33 ++++++++++++---
+ arch/ia64/pci/pci.c                     | 71 +++++++++++++++++++------------
+ arch/microblaze/pci/pci-common.c        | 42 ++++++++++++++++++-
+ arch/mn10300/unit-asb2305/pci-asb2305.c | 61 ++++++++++++++++++---------
+ arch/mn10300/unit-asb2305/pci.c         | 69 ++++++++++++++++++------------
+ arch/powerpc/kernel/pci-common.c        | 43 ++++++++++++++++++-
+ arch/sparc/kernel/pci.c                 | 20 ++++++++-
+ arch/x86/pci/i386.c                     | 74 +++++++++++++++++++++++----------
+ drivers/parisc/lba_pci.c                | 26 +++++++++++-
+ drivers/pci/bus.c                       | 37 +++++++++++++++++
+ include/linux/pci.h                     |  1 +
+ 12 files changed, 394 insertions(+), 107 deletions(-)
+
+-- 
+1.8.4.5
+
