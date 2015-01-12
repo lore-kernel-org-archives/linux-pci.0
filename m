@@ -1,126 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout1.freenet.de ([195.4.92.91]:55776 "EHLO mout1.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750860AbbALPXr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 12 Jan 2015 10:23:47 -0500
-Message-ID: <54B3E653.8020900@maya.org>
-Date: Mon, 12 Jan 2015 16:20:51 +0100
-From: Andreas Hartmann <andihartmann@freenet.de>
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:57256 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752118AbbALKEv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 05:04:51 -0500
+Date: Mon, 12 Jan 2015 11:04:48 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Rob Herring <robh@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 05/16] pci: introduce common pci config space accessors
+Message-ID: <20150112100447.GB27700@ulmo>
+References: <1420857290-8373-1-git-send-email-robh@kernel.org>
+ <1420857290-8373-6-git-send-email-robh@kernel.org>
+ <20150112100131.GA27700@ulmo>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/4] PCI: quirk Atheros AR93xx to avoid bus reset
-References: <20141121180322.26669.65689.stgit@gimli.home>	 <20141121182427.26669.82417.stgit@gimli.home>	 <20150108160733.GA6575@google.com> <1420745423.25367.77.camel@redhat.com>
-In-Reply-To: <1420745423.25367.77.camel@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="MfFXiAuoTsnnDAfZ"
+In-Reply-To: <20150112100131.GA27700@ulmo>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Alex Williamson wrote:
-> On Thu, 2015-01-08 at 09:07 -0700, Bjorn Helgaas wrote:
->> On Fri, Nov 21, 2014 at 11:24:27AM -0700, Alex Williamson wrote:
->>> Reports against the TL-WDN4800 card indicate that PCI bus reset of
->>> this Atheros device cause system lock-ups and resets.  I've also
->>> been able to confirm this behavior on multiple systems.  The device
->>> never returns from reset and attempts to access config space of the
->>> device after reset result in hangs.  Blacklist bus reset for the
->>> device to avoid this issue.
->>>
->>> Reported-by: Andreas Hartmann <andihartmann@freenet.de>
->>> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
->>> Tested-by: Andreas Hartmann <andihartmann@freenet.de>
->>
->> If I understand correctly, these two (patches 3 & 4) fix a v3.14 regression
->> caused by 425c1b223dac ("PCI: Add Virtual Channel to save/restore support").
->>
->> If so, these should go to for-linus for v3.19.  What about patches 1 & 2?
->> Do they fix a regression?  Is there a pointer to a bugzilla or problem
->> report about that issue?
->>
->> I don't understand the connection between 425c1b223dac and
->> PCI_DEV_FLAGS_NO_BUS_RESET, because 425c1b223dac doesn't seem to do any
->> resets.  Is that the wrong commit, or can you outline the connection for
->> me?
-> 
-> TBH, I don't have a lot of faith in associating this to 425c1b223dac,
-> I'm not sure how Andreas' bisect landed there. 
 
-Because removing this patch made it working again :-)
+--MfFXiAuoTsnnDAfZ
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-And too:
-http://thread.gmane.org/gmane.linux.kernel.pci/35170/focus=35984
+On Mon, Jan 12, 2015 at 11:01:33AM +0100, Thierry Reding wrote:
+> On Fri, Jan 09, 2015 at 08:34:39PM -0600, Rob Herring wrote:
+> > Many PCI controllers' configuration space accesses are memory mapped
+> > varying only in address calculation and access checks. There are 2 main
+> > access methods: a decoded address space such as ECAM or a single address
+> > and data register similar to x86. This implementation can support both
+> > cases as well as be used in cases that need additional pre or post acce=
+ss
+> > handling.
+> >=20
+> > A new pci_ops member map_bus is introduced which can do access checks a=
+nd
+> > any necessary setup. It returns the address to use for the configuration
+> > space access. The access types supported are 32-bit only accesses or
+> > correct byte, word, or dword sized accesses.
+> >=20
+> > Signed-off-by: Rob Herring <robh@kernel.org>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: linux-pci@vger.kernel.org
+> > ---
+> >  drivers/pci/access.c | 87 ++++++++++++++++++++++++++++++++++++++++++++=
+++++++++
+> >  include/linux/pci.h  | 11 +++++++
+> >  2 files changed, 98 insertions(+)
+>=20
+> Reviewed-by: Thierry Reding <treding@nvidia.com>
+> Tested-by: Thierry Reding <treding@nvidia.com>
 
-Kernel 2.10. and 2.12. and 2.13. did work fine for me. 2.14 is the first
-kernel, which hangs the machine at startup of the VM. The userland
-(qemu) didn't change in between.
+Although the subject could use the proper casing: "... common PCI ...".
 
-Therefore: from my point of view, it is a regression, because things
-have been working < 2.14.
+Thierry
 
-Besides that: It is undoubted, that there is a problem with resetting
-this card. But the difference between >= 3.14 and < 3.14 is, that < 3.14
-has been working nevertheless. The patch
-425c1b223dac456d00a61fd6b451b6d1cf00d065 obviously changed something
-which I can't say and I don't know off. Therefore, the quirk-patch is
-definitely required, because things work completely fine again w/ this
-patch.
+--MfFXiAuoTsnnDAfZ
+Content-Type: application/pgp-signature
 
-"Working" means for me here: I was able to start (and use) the VM w/o
-crashing the machine and this isn't possible w/ unpatched 2.14+ any
-more. Yes, w/ 2.12, I wasn't able to restart the VM (it then crashed the
-machine), but w/ 2.10 even this was possible.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
+iQIcBAEBAgAGBQJUs5w/AAoJEN0jrNd/PrOhjGAQAKnq4k3R72rUgCE2MHLuAWGs
+gpFxhOw1GiGD63fp1Rpj8fzHKMcobbiNpzCvwKAhHcT1B0gCe7+SDe4+IRbSX1k5
+COHcSPFKsXt+wctZ/gXzphcOAGUk95cGiLSERNObHt30dT16/+O7b1O+10lODql8
+DbjvBWtZCBhEnU7gfL8DVEaUPrT7QBKFH4Kl9gJr0KhIdDbl97zjwZakG8VLv4p1
+v17hhP7okD0CjuWmHa9e3ncnKRRlVylW3y8X4MTyihoLE7QlMLBdrX7j4uL59GRP
+xflHuq18W86v5TcGO0sMBjgwzoG2q+CqBWmCatNJESZqYpzVMA04ZlTZCtoBuvp6
+lkqm2BlRvKqH9HTiovUTzCdhWK8tZOYn7RFchdylqKzKSVoCuc8jdRIBIZSRwdgE
+xrqLLhA/F2+Uv39q6+DvimAjhjhfo6UQeVbhJjOl3xsUbNs2TQT9TKb2zuuZ06Y9
+XIxZSTCnVBrCZ7x4l1L5TSnllkIWX/GDr/QRe3gr+zEi5hoWr3+un50pLDNyDB6S
+f5xPSVEX4gEj6y2HLJZL25NhmJTrNxnHNkM7YEyZ02WydwPiuGo+hwZbvuR4IvLF
+GKIybucnPaZ6XoXPeLpQeP0ngtguSylbTh/16A5KSk0/Cj5VVaD2ea/DdSlmi+es
+L4/h+ATK0wqG8K2+5d1X
+=d94c
+-----END PGP SIGNATURE-----
 
-> IME, this device cannot,
-> and has never been able to handle a bus reset.  A simple setpci
-> experiment on the commandline can confirm this.  What I think happened
-> is that with the PCI bus reset infrastructure we added, we switched QEMU
-> to prefer PCI bus resets over things like PM D3hot->D0 resets.  So it's
-> just more prolific use of bus resets by userspace.
-> 
-> There's also no regression in 1 & 2, PM reset has never done anything
-> useful on those devices.  Thanks,
-> 
-> Alex
-> 
->>> ---
->>>
->>>  drivers/pci/quirks.c |   14 ++++++++++++++
->>>  1 file changed, 14 insertions(+)
->>>
->>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->>> index 561e10d..ebbd5b4 100644
->>> --- a/drivers/pci/quirks.c
->>> +++ b/drivers/pci/quirks.c
->>> @@ -3029,6 +3029,20 @@ static void quirk_no_pm_reset(struct pci_dev *dev)
->>>  DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_ATI, PCI_ANY_ID,
->>>  			       PCI_CLASS_DISPLAY_VGA, 8, quirk_no_pm_reset);
->>>  
->>> +static void quirk_no_bus_reset(struct pci_dev *dev)
->>> +{
->>> +	dev->dev_flags |= PCI_DEV_FLAGS_NO_BUS_RESET;
->>> +}
->>> +
->>> +/*
->>> + * Atheros AR93xx chips do not behave after a bus reset.  The device will
->>> + * throw a Link Down error on AER capable system and regardless of AER,
->>> + * config space of the device is never accessible again and typically
->>> + * causes the system to hang or reset when access is attempted.
->>> + * http://www.spinics.net/lists/linux-pci/msg34797.html
->>> + */
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0030, quirk_no_bus_reset);
->>> +
->>>  #ifdef CONFIG_ACPI
->>>  /*
->>>   * Apple: Shutdown Cactus Ridge Thunderbolt controller.
->>>
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+--MfFXiAuoTsnnDAfZ--
