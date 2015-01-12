@@ -1,68 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f54.google.com ([209.85.218.54]:46839 "EHLO
-	mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753773AbbAPQP4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Jan 2015 11:15:56 -0500
-Received: by mail-oi0-f54.google.com with SMTP id u20so17953497oif.13
-        for <linux-pci@vger.kernel.org>; Fri, 16 Jan 2015 08:15:55 -0800 (PST)
-Date: Fri, 16 Jan 2015 10:15:52 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/4] PCI: Reset exclusions
-Message-ID: <20150116161552.GH29776@google.com>
-References: <20141121180322.26669.65689.stgit@gimli.home>
- <20150116002802.GE29776@google.com>
+Received: from 8bytes.org ([81.169.241.247]:46942 "EHLO theia.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751220AbbALQsG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 12 Jan 2015 11:48:06 -0500
+Date: Mon, 12 Jan 2015 17:48:03 +0100
+From: Joerg Roedel <joro@8bytes.org>
+To: Vivek Goyal <vgoyal@redhat.com>
+Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>, dwmw2@infradead.org,
+	indou.takao@jp.fujitsu.com, bhe@redhat.com, dyoung@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v8 02/10] iommu/vt-d: Items required for kdump
+Message-ID: <20150112164803.GG6343@8bytes.org>
+References: <1421046388-27925-1-git-send-email-zhen-hual@hp.com>
+ <1421046388-27925-3-git-send-email-zhen-hual@hp.com>
+ <20150112152207.GC6343@8bytes.org>
+ <20150112152919.GA16162@redhat.com>
+ <20150112160646.GF6343@8bytes.org>
+ <20150112161538.GB16162@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150116002802.GE29776@google.com>
+In-Reply-To: <20150112161538.GB16162@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 15, 2015 at 06:28:02PM -0600, Bjorn Helgaas wrote:
-> On Fri, Nov 21, 2014 at 11:24:02AM -0700, Alex Williamson wrote:
-> > This is really 2 sets of 2 patches, but they both add bits to
-> > dev_flags so are included together.
+On Mon, Jan 12, 2015 at 11:15:38AM -0500, Vivek Goyal wrote:
+> On Mon, Jan 12, 2015 at 05:06:46PM +0100, Joerg Roedel wrote:
+> > On Mon, Jan 12, 2015 at 10:29:19AM -0500, Vivek Goyal wrote:
+> > > Kdump has the notion of backup region. Where certain parts of old kernels
+> > > memory can be moved to a different location (first 640K on x86 as of now)
+> > > and new kernel can make use of this memory now.
+> > > 
+> > > So we will have to just make sure that no parts of this old page table
+> > > fall into backup region.
 > > 
-> > This fixes two problems we've seen with resets.  The first is for
-> > devices that advertise a PM reset mechanism, but it doesn't appear to
-> > do anything.  We add a quirk and flags bit to indicate the PM reset
-> > mechanism isn't viable.  This happens on some AMD GPUs and causes
-> > vfio-pci to assume the PM reset was successful when it really did
-> > nothing and we should have escalated to a PCI bus reset.  Alex
-> > Deucher confirms that PM reset isn't used by graphics drivers.  The
-> > exclusion here is for users of pci_reset_function(), which mostly
-> > only includes pci-sysfs and drivers like legacy KVM device assignment
-> > and VFIO.
-> > 
-> > The second issue is a problem identified with an Atheros wifi chip
-> > where in performing a bus reset of the device, we not only permanently
-> > lose access to the device, but it introduces host stability issues if
-> > we try to access it.  I've been unsuccessful in finding any way to
-> > make the device behave or in finding anyone with access to hardware
-> > documentation and errata for this device, so it seems like the most
-> > appropriate path is to blacklist bus resets for topologies including
-> > this device.  The second two patches add infrastructure and quirks to
-> > do this.  Thanks,
-> > 
-> > Alex
-> > 
-> > ---
-> > 
-> > Alex Williamson (4):
-> >       PCI: quirk Atheros AR93xx to avoid bus reset
-> >       PCI: Allow device quirks to exclude bus reset
+> > Uuh, looks like the 'iommu-with-kdump-issue' isn't complicated enough
+> > yet ;)
+> > Sadly, your above statement is true for all hardware-accessible data
+> > structures in IOMMU code. I think about how we can solve this, is there
+> > an easy way to allocate memory that is not in any backup region?
 > 
-> I applied these two (above) to for-linus for v3.19, thanks.
+> Hmm..., there does not seem to be any easy way to do this. In fact, as of
+> now, kernel does not even know where is backup region. All these details are
+> managed by user space completely (except for new kexec_file_load() syscall).
 > 
-> >       PCI: quirk AMD/ATI VGA cards to avoid PM reset
-> >       PCI: Allow device quirks to exclude D3->D0 PM reset
+> That means we are left with ugly options now.
+> 
+> - Define per arch kexec backup regions in kernel and export it to user
+>   space and let kexec-tools make use of that deinition (instead of
+>   defining its own). That way memory allocation code in kernel can look
+>   at this backup area and skip it for certain allocations.
 
-And I applied these PM reset patches to pci/virtualization for v3.20 (with
-Alex's ack on the latter), thanks!
+Yes, that makes sense. In fact, I think all allocations for DMA memory
+need to take this into account to avoid potentially serious data
+corruption.
+If any memory for a disk superblock gets allocated in backup memory and
+a kdump happens, the new kernel might zero out that area and the disk
+controler then writes the zeroes to disk instead of the superblock.
 
-> > 
-> >  drivers/pci/pci.c    |   42 +++++++++++++++++++++++++++++++++++++-----
-> >  drivers/pci/quirks.c |   35 +++++++++++++++++++++++++++++++++++
-> >  include/linux/pci.h  |    4 ++++
-> >  3 files changed, 76 insertions(+), 5 deletions(-)
+
+	Joerg
+
