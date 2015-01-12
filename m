@@ -1,129 +1,134 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54BF4911.7030906@linux.intel.com>
-Date: Wed, 21 Jan 2015 14:37:05 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Vivek Goyal <vgoyal@redhat.com>,
-	Thierry Reding <treding@nvidia.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Mike Travis <travis@sgi.com>, Tony Luck <tony.luck@intel.com>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: Re: [RFC Patch 17/19] resources: Move struct resource_list_entry
- from ACPI into resource core
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-18-git-send-email-jiang.liu@linux.intel.com> <3428063.tN1BxOoXSN@vostro.rjw.lan>
-In-Reply-To: <3428063.tN1BxOoXSN@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:57888 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750995AbbALHJZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 02:09:25 -0500
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v8 09/10] iommu/vt-d: Copy functions for irte
+Date: Mon, 12 Jan 2015 15:06:27 +0800
+Message-Id: <1421046388-27925-10-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1421046388-27925-1-git-send-email-zhen-hual@hp.com>
+References: <1421046388-27925-1-git-send-email-zhen-hual@hp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/1/21 9:10, Rafael J. Wysocki wrote:
-> On Thursday, January 08, 2015 10:33:04 AM Jiang Liu wrote:
-<snit>
->> diff --git a/kernel/resource.c b/kernel/resource.c
->> index 0bcebffc4e77..414183809383 100644
->> --- a/kernel/resource.c
->> +++ b/kernel/resource.c
->> @@ -1529,6 +1529,54 @@ int iomem_is_exclusive(u64 addr)
->>  	return err;
->>  }
->>  
->> +struct resource_list_entry *resource_list_alloc(struct resource *res,
->> +						size_t extra_size)
-> 
-> What about create_resource_list_entry()?  Less confusing surely.
-Sure, I will rename it as resource_list_create_entry().
+Functions to copy the irte data from the old kernel into the kdump kernel.
 
-> 
->> +{
->> +	struct resource_list_entry *entry;
->> +
->> +	entry = kzalloc(sizeof(*entry) + extra_size, GFP_KERNEL);
->> +	if (entry) {
->> +		INIT_LIST_HEAD(&entry->node);
->> +		entry->res = res ? res : &entry->__res;
->> +	}
->> +
->> +	return entry;
->> +}
->> +EXPORT_SYMBOL(resource_list_alloc);
->> +
->> +void resource_list_free(struct resource_list_entry *entry)
->> +{
->> +	kfree(entry);
->> +}
->> +EXPORT_SYMBOL(resource_list_free);
-> 
-> Well, I'm not sure I like this.  The name suggests that it would free the
-> entire list and what's wrong with using kfree() directly on "entry" anyway?
-I just want to make interface symmetric. We may also support some type
-of callback when freeing resources in future.
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+---
+ drivers/iommu/intel_irq_remapping.c | 62 +++++++++++++++++++++++++++++++++++++
+ include/linux/intel-iommu.h         |  4 +++
+ 2 files changed, 66 insertions(+)
 
-> 
->> +
->> +void resource_list_insert(struct list_head *head,
->> +			  struct resource_list_entry *entry, bool tail)
-> 
-> I would call this resource_list_add() if anything.
-> 
-> Also it may be better to have two helpers, one for "add" and one for "add_tail"
-> (and perhaps define them as static inline?).
-We can't use inline functions here because that needs pulling list.h
-into ioport.h, then causing building issues to header inclusion order.
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index a55b207..d37fd62 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -8,6 +8,7 @@
+ #include <linux/irq.h>
+ #include <linux/intel-iommu.h>
+ #include <linux/acpi.h>
++#include <linux/crash_dump.h>
+ #include <asm/io_apic.h>
+ #include <asm/smp.h>
+ #include <asm/cpu.h>
+@@ -17,6 +18,11 @@
+ 
+ #include "irq_remapping.h"
+ 
++#ifdef CONFIG_CRASH_DUMP
++static int __iommu_load_old_irte(struct intel_iommu *iommu);
++static int __iommu_update_old_irte(struct intel_iommu *iommu, int index);
++#endif /* CONFIG_CRASH_DUMP */
++
+ struct ioapic_scope {
+ 	struct intel_iommu *iommu;
+ 	unsigned int id;
+@@ -1296,3 +1302,59 @@ int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
+ 
+ 	return ret;
+ }
++
++#ifdef CONFIG_CRASH_DUMP
++
++static int __iommu_load_old_irte(struct intel_iommu *iommu)
++{
++	if ((!iommu)
++		|| (!iommu->ir_table)
++		|| (!iommu->ir_table->base)
++		|| (!iommu->ir_table->base_old_phys)
++		|| (!iommu->ir_table->base_old_virt))
++		return -1;
++
++	memcpy(iommu->ir_table->base,
++		iommu->ir_table->base_old_virt,
++		INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
++
++	__iommu_flush_cache(iommu, iommu->ir_table->base,
++		INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
++
++	return 0;
++}
++
++static int __iommu_update_old_irte(struct intel_iommu *iommu, int index)
++{
++	int start;
++	unsigned long size;
++	void __iomem *to;
++	void *from;
++
++	if ((!iommu)
++		|| (!iommu->ir_table)
++		|| (!iommu->ir_table->base)
++		|| (!iommu->ir_table->base_old_phys)
++		|| (!iommu->ir_table->base_old_virt))
++		return -1;
++
++	if (index < -1 || index >= INTR_REMAP_TABLE_ENTRIES)
++		return -1;
++
++	if (index == -1) {
++		start = 0;
++		size = INTR_REMAP_TABLE_ENTRIES * sizeof(struct irte);
++	} else {
++		start = index * sizeof(struct irte);
++		size = sizeof(struct irte);
++	}
++
++	to = iommu->ir_table->base_old_virt;
++	from = iommu->ir_table->base;
++	memcpy(to + start, from + start, size);
++
++	__iommu_flush_cache(iommu, to + start, size);
++
++	return 0;
++}
++#endif /* CONFIG_CRASH_DUMP */
+diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+index 8e29b97..76c6ea5 100644
+--- a/include/linux/intel-iommu.h
++++ b/include/linux/intel-iommu.h
+@@ -290,6 +290,10 @@ struct q_inval {
+ struct ir_table {
+ 	struct irte *base;
+ 	unsigned long *bitmap;
++#ifdef CONFIG_CRASH_DUMP
++	void __iomem *base_old_virt;
++	unsigned long base_old_phys;
++#endif
+ };
+ #endif
+ 
+-- 
+2.0.0-rc0
 
-> 
-> And why change the ordering between "head" and "entry".  That's alomost
-> guaranteed to confuse people.
-My fault, will change in next version.
-> 
->> +{
->> +	if (tail)
->> +		list_add_tail(&entry->node, head);
->> +	else
->> +		list_add(&entry->node, head);
->> +}
->> +EXPORT_SYMBOL(resource_list_insert);
->> +
->> +void resource_list_delete(struct resource_list_entry *entry)
->> +{
->> +	list_del(&entry->node);
->> +}
->> +EXPORT_SYMBOL(resource_list_delete);
-> 
-> Couldn't this be a static inline)?
-Inline will cause header file inclusion order issue:(
-
-> 
-> Or maybe we can combine the "list_del" with "kfree" in one function?
-There are callers which need separating list_del from kfree,
-so exported two interfaces here. Will add another helper interface
-resource_list_destroy_entry().
-
-Regards!
-Gerry
-> 
->> +
->> +void resource_list_free_list(struct list_head *head)
->> +{
->> +	struct resource_list_entry *entry, *tmp;
->> +
->> +	list_for_each_entry_safe(entry, tmp, head, node) {
->> +		list_del(&entry->node);
->> +		resource_list_free(entry);
->> +	}
->> +}
->> +EXPORT_SYMBOL(resource_list_free_list);
->> +
->>  static int __init strict_iomem(char *str)
->>  {
->>  	if (strstr(str, "relaxed"))
->>
-> 
