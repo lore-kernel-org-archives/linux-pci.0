@@ -1,60 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f171.google.com ([209.85.216.171]:49657 "EHLO
-	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751819AbbALRlw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 12:41:52 -0500
-Received: by mail-qc0-f171.google.com with SMTP id r5so19229647qcx.2
-        for <linux-pci@vger.kernel.org>; Mon, 12 Jan 2015 09:41:51 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAH9N0t-D0rM05E0nSDaDcVSdwnFt142aG=+FH_6c51Hf+nTMCw@mail.gmail.com>
-References: <CAH9N0t9KvhzmZDgD8PD5VBPR-pPhuE8MmBgK9RY8+ZtKyz++pQ@mail.gmail.com>
- <CAErSpo48mPENuHpES1Q73ep+NKG8x2Zgb+g71do02y7vufbtfQ@mail.gmail.com> <CAH9N0t-D0rM05E0nSDaDcVSdwnFt142aG=+FH_6c51Hf+nTMCw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 12 Jan 2015 11:41:31 -0600
-Message-ID: <CAErSpo5x3_Wpf3v1i+nuMn-Os_QnH5GwGvdNOtmXSHCz3NswrA@mail.gmail.com>
-Subject: Re: Hot add a PCIe device driver upon hotplug event
-To: Paulo Fortuna Carvalho <pricardofc@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v8 10/10] iommu/vt-d: Use old irte in kdump kernel
+Date: Mon, 12 Jan 2015 15:06:28 +0800
+Message-Id: <1421046388-27925-11-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1421046388-27925-1-git-send-email-zhen-hual@hp.com>
+References: <1421046388-27925-1-git-send-email-zhen-hual@hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 12, 2015 at 11:26 AM, Paulo Fortuna Carvalho
-<pricardofc@gmail.com> wrote:
-> Hello Helgas,
-> I cannot see that line in dmesg. I think that something else is missing...
-> Do you know what may cause that not appearing in dmesg? Hotplug Surprise?
+Fix the intr-remapping fault.
 
-Can you just collect the entire dmesg log, so I can see what
-controller is involved and what is happening?
+[1.594890] dmar: DRHD: handling fault status reg 2
+[1.594894] dmar: INTR-REMAP: Request device [[41:00.0] fault index 4d
+[1.594894] INTR-REMAP:[fault reason 34] Present field in the IRTE entry
+is clear
 
-Surprise hotplug should work.  Are you inserting an ExpressCard, or is
-it some other form factor?  Exactly what hardware are you adding, and
-what are you adding it to?
+Use old irte in kdump kernel, do not disable and re-enable interrupt
+remapping.
 
-Bjorn
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+---
+ drivers/iommu/intel_irq_remapping.c | 42 ++++++++++++++++++++++++++++++++-----
+ 1 file changed, 37 insertions(+), 5 deletions(-)
 
-> 2015-01-12 16:58 GMT, Bjorn Helgaas <bhelgaas@google.com>:
->> On Mon, Jan 12, 2015 at 5:42 AM, Paulo Fortuna Carvalho
->> <pricardofc@gmail.com> wrote:
->>> Hello,
->>> I want to automatically load/unload a PCIe device driver when a card
->>> is inserted/removed from the system. I can see in the system logger
->>> with dmesg that the interrupt event is captured and acknowledged by
->>> the pciehp hotplug service driver.
->>> What I want to do next is that the operating system load/unload the
->>> corresponding PCIe device driver for that card.
->>
->> When pciehp receives the interrupt, it should enumerate the device,
->> and you should see a line in dmesg similar to this (of course, it will
->> have different bus/device/function and different vendor/device IDs):
->>
->>   pci 0000:00:16.0: [8086:9c3a] type 00 class 0x078000
->>
->> The PCI core should then add the device using device_add(), and part
->> of that is to emit a uevent, which can be read by user-space.
->> Generally udev would handle the event and load the appropriate driver.
->> I don't know the details of how the user-space side works.
->>
->> Bjorn
->>
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index d37fd62..58356cb 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -198,6 +198,11 @@ static int modify_irte(int irq, struct irte *irte_modified)
+ 
+ 	set_64bit(&irte->low, irte_modified->low);
+ 	set_64bit(&irte->high, irte_modified->high);
++
++#ifdef CONFIG_CRASH_DUMP
++	if (is_kdump_kernel())
++		__iommu_update_old_irte(iommu, index);
++#endif
+ 	__iommu_flush_cache(iommu, irte, sizeof(*irte));
+ 
+ 	rc = qi_flush_iec(iommu, index, 0);
+@@ -259,6 +264,11 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
+ 	bitmap_release_region(iommu->ir_table->bitmap, index,
+ 			      irq_iommu->irte_mask);
+ 
++#ifdef CONFIG_CRASH_DUMP
++	if (is_kdump_kernel())
++		__iommu_update_old_irte(iommu, -1);
++#endif
++
+ 	return qi_flush_iec(iommu, index, irq_iommu->irte_mask);
+ }
+ 
+@@ -640,11 +650,20 @@ static int __init intel_enable_irq_remapping(void)
+ 		 */
+ 		dmar_fault(-1, iommu);
+ 
+-		/*
+-		 * Disable intr remapping and queued invalidation, if already
+-		 * enabled prior to OS handover.
+-		 */
+-		iommu_disable_irq_remapping(iommu);
++#ifdef CONFIG_CRASH_DUMP
++		if (is_kdump_kernel()) {
++			/* Do notdisable irq and then re-enable again. */
++		} else {
++#endif
++			/*
++			 * Disable intr remapping and queued invalidation,
++			 * if already enabled prior to OS handover.
++			 */
++			iommu_disable_irq_remapping(iommu);
++
++#ifdef CONFIG_CRASH_DUMP
++		}
++#endif
+ 
+ 		dmar_disable_qi(iommu);
+ 	}
+@@ -687,7 +706,20 @@ static int __init intel_enable_irq_remapping(void)
+ 		if (intel_setup_irq_remapping(iommu))
+ 			goto error;
+ 
++#ifdef CONFIG_CRASH_DUMP
++	if (is_kdump_kernel()) {
++		unsigned long long q;
++
++		q = dmar_readq(iommu->reg + DMAR_IRTA_REG);
++		iommu->ir_table->base_old_phys = q & VTD_PAGE_MASK;
++		iommu->ir_table->base_old_virt = ioremap_cache(
++				iommu->ir_table->base_old_phys,
++				INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
++		__iommu_load_old_irte(iommu);
++	} else
++#endif
+ 		iommu_set_irq_remapping(iommu, eim);
++
+ 		setup = 1;
+ 	}
+ 
+-- 
+2.0.0-rc0
+
