@@ -1,45 +1,152 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:53848 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754838AbbAGVSs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jan 2015 16:18:48 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Murali Karicheri <m-karicheri2@ti.com>, joro@8bytes.org,
-	grant.likely@linaro.org, robh+dt@kernel.org,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, will.deacon@arm.com,
-	linux@arm.linux.org.uk
-Subject: Re: [PATCH v3 0/4] PCI: get DMA configuration from parent device
-Date: Wed, 07 Jan 2015 22:18:35 +0100
-Message-ID: <4057859.4ynbgz66iN@wuerfel>
-In-Reply-To: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com>
-References: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <54B3C02C.10603@uclinux.org>
+Date: Mon, 12 Jan 2015 22:38:04 +1000
+From: Greg Ungerer <gerg@uclinux.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+To: Rob Herring <robh@kernel.org>, linux-kernel@vger.kernel.org
+CC: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 09/16] ARM: ks8695: convert PCI to use generic config
+ accesses
+References: <1420857290-8373-1-git-send-email-robh@kernel.org> <1420857290-8373-10-git-send-email-robh@kernel.org>
+In-Reply-To: <1420857290-8373-10-git-send-email-robh@kernel.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 07 January 2015 13:49:50 Murali Karicheri wrote:
-> PCI devices on Keystone doesn't have correct dma_pfn_offset set. This patch
-> add capability to set the dma configuration such as dma-mask, dma_pfn_offset,
-> and dma ops etc using the information from DT. The prior RFCs and discussions
-> are available at [1] and [2] below.
-> 
-> [2] : https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg790244.html
-> [1] : http://www.gossamer-threads.com/lists/linux/kernel/2024591
+Hi Rob,
 
-Looks all good to me in this version, I'm just unsure about one thing:
+On 10/01/15 12:34, Rob Herring wrote:
+> Convert the ks8695 PCI driver to use the generic config access functions.
+>
+> This changes accesses from __raw_readX/__raw_writeX to readX/writeX
+> variants.
+>
+> Signed-off-by: Rob Herring <robh@kernel.org>
+> Cc: Greg Ungerer <gerg@uclinux.org>
 
->                - Limit the of_iommu_configure to non pci devices
+I wasn't CC'ed on the generic implementation patch ("pci: introduce
+common pci config space accessors"), but I assume this is it:
+https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg800405.html
 
-My last recommendation was to pass the b/d/f number into
-of_pci_dma_configure to handle this correctly. What was your
-reason for not doing it in the end?
+That all looks ok to me. I have not tested it, but:
 
-We will likely have to change this again if we take your current version,
-but that can be a follow-up patch. I believe AMD requires it to use
-PCI on their their Seattle platform.
+Acked-by: Greg Ungerer <gerg@uclinux.org>
 
-	Arnd
+Regards
+Greg
+
+
+> Cc: Russell King <linux@arm.linux.org.uk>
+> Cc: linux-arm-kernel@lists.infradead.org
+> ---
+>   arch/arm/mach-ks8695/pci.c | 77 ++++------------------------------------------
+>   1 file changed, 6 insertions(+), 71 deletions(-)
+>
+> diff --git a/arch/arm/mach-ks8695/pci.c b/arch/arm/mach-ks8695/pci.c
+> index bb18193..c1bc4c3 100644
+> --- a/arch/arm/mach-ks8695/pci.c
+> +++ b/arch/arm/mach-ks8695/pci.c
+> @@ -38,8 +38,6 @@
+>   
+>   
+>   static int pci_dbg;
+> -static int pci_cfg_dbg;
+> -
+>   
+>   static void ks8695_pci_setupconfig(unsigned int bus_nr, unsigned int devfn, unsigned int where)
+>   {
+> @@ -59,75 +57,11 @@ static void ks8695_pci_setupconfig(unsigned int bus_nr, unsigned int devfn, unsi
+>   	}
+>   }
+>   
+> -
+> -/*
+> - * The KS8695 datasheet prohibits anything other than 32bit accesses
+> - * to the IO registers, so all our configuration must be done with
+> - * 32bit operations, and the correct bit masking and shifting.
+> - */
+> -
+> -static int ks8695_pci_readconfig(struct pci_bus *bus,
+> -			unsigned int devfn, int where, int size, u32 *value)
+> -{
+> -	ks8695_pci_setupconfig(bus->number, devfn, where);
+> -
+> -	*value = __raw_readl(KS8695_PCI_VA +  KS8695_PBCD);
+> -
+> -	switch (size) {
+> -		case 4:
+> -			break;
+> -		case 2:
+> -			*value = *value >> ((where & 2) * 8);
+> -			*value &= 0xffff;
+> -			break;
+> -		case 1:
+> -			*value = *value >> ((where & 3) * 8);
+> -			*value &= 0xff;
+> -			break;
+> -	}
+> -
+> -	if (pci_cfg_dbg) {
+> -		printk("read: %d,%08x,%02x,%d: %08x (%08x)\n",
+> -			bus->number, devfn, where, size, *value,
+> -			__raw_readl(KS8695_PCI_VA +  KS8695_PBCD));
+> -	}
+> -
+> -	return PCIBIOS_SUCCESSFUL;
+> -}
+> -
+> -static int ks8695_pci_writeconfig(struct pci_bus *bus,
+> -			unsigned int devfn, int where, int size, u32 value)
+> +static void __iomem *ks8695_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
+> +					int where)
+>   {
+> -	unsigned long tmp;
+> -
+> -	if (pci_cfg_dbg) {
+> -		printk("write: %d,%08x,%02x,%d: %08x\n",
+> -			bus->number, devfn, where, size, value);
+> -	}
+> -
+>   	ks8695_pci_setupconfig(bus->number, devfn, where);
+> -
+> -	switch (size) {
+> -		case 4:
+> -			__raw_writel(value, KS8695_PCI_VA +  KS8695_PBCD);
+> -			break;
+> -		case 2:
+> -			tmp = __raw_readl(KS8695_PCI_VA +  KS8695_PBCD);
+> -			tmp &= ~(0xffff << ((where & 2) * 8));
+> -			tmp |= value << ((where & 2) * 8);
+> -
+> -			__raw_writel(tmp, KS8695_PCI_VA +  KS8695_PBCD);
+> -			break;
+> -		case 1:
+> -			tmp = __raw_readl(KS8695_PCI_VA +  KS8695_PBCD);
+> -			tmp &= ~(0xff << ((where & 3) * 8));
+> -			tmp |= value << ((where & 3) * 8);
+> -
+> -			__raw_writel(tmp, KS8695_PCI_VA +  KS8695_PBCD);
+> -			break;
+> -	}
+> -
+> -	return PCIBIOS_SUCCESSFUL;
+> +	return KS8695_PCI_VA +  KS8695_PBCD;
+>   }
+>   
+>   static void ks8695_local_writeconfig(int where, u32 value)
+> @@ -137,8 +71,9 @@ static void ks8695_local_writeconfig(int where, u32 value)
+>   }
+>   
+>   static struct pci_ops ks8695_pci_ops = {
+> -	.read	= ks8695_pci_readconfig,
+> -	.write	= ks8695_pci_writeconfig,
+> +	.map_bus = ks8695_pci_map_bus,
+> +	.read	= pci_generic_config_read32,
+> +	.write	= pci_generic_config_write32,
+>   };
+>   
+>   static struct resource pci_mem = {
+
