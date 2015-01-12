@@ -1,63 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:27186 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756015AbbAHCbE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 7 Jan 2015 21:31:04 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [RFC Patch 14/19] ACPI: Translate resource into master side address for bridge window resources
-Date: Thu,  8 Jan 2015 10:33:01 +0800
-Message-Id: <1420684386-5975-15-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-qc0-f177.google.com ([209.85.216.177]:32881 "EHLO
+	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751318AbbALWbK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 17:31:10 -0500
+MIME-Version: 1.0
+In-Reply-To: <1421090600-9750-11-git-send-email-yinghai@kernel.org>
+References: <1421090600-9750-1-git-send-email-yinghai@kernel.org>
+	<1421090600-9750-11-git-send-email-yinghai@kernel.org>
+Date: Mon, 12 Jan 2015 23:31:09 +0100
+Message-ID: <CALMQjD91+0o=DjQDV3ydkakrG6X=3RkHoCf-T5=wLbC01WkdEA@mail.gmail.com>
+Subject: Re: [PATCH 10/10] PCI, sparc: clip firmware assigned resource under
+ parent bridge's
+From: Kjetil Oftedal <oftedal@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Sam Ravnborg <sam@ravnborg.org>, sparclinux@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add translation_offset into the result address for bridge window
-resources to form the master side address.
+Hi,
 
-Currently acpi_dev_resource_{ext_}address_space() are only used for
-devices instead of bridges, so it won't break current users. Later
-it will be used to support PCI host bridge drivers.
+Am I missing something or is this just code to get the the resource
+subsystem to accept the bus resources, not caring if the resources are
+actually usable? PCI BARs usually have a given size for a reason?
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/resource.c |   14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+-
+Kjetil Oftedal
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index d3aa56674bd4..16d334a1ee25 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -203,6 +203,20 @@ static bool acpi_decode_space(struct resource *res, resource_size_t *offset,
- 	res->start = addr->minimum;
- 	res->end = addr->maximum;
- 
-+	/*
-+	 * For bridges that translate addresses across the bridge,
-+	 * translation_offset is the offset that must be added to the
-+	 * address on the secondary side to obtain the address on the
-+	 * primary side. Non-bridge devices must list 0 for all Address
-+	 * Translation offset bits.
-+	 */
-+	if (base->producer_consumer == ACPI_PRODUCER) {
-+		res->start += addr->translation_offset;
-+		res->end += addr->translation_offset;
-+	} else if (addr->translation_offset) {
-+		return false;
-+	}
-+
- 	switch(base->resource_type) {
- 	case ACPI_MEMORY_RANGE:
- 		acpi_dev_memresource_flags(res, len, wp);
--- 
-1.7.10.4
 
+On 12/01/2015, Yinghai Lu <yinghai@kernel.org> wrote:
+> Some bios put range that is not fully coverred by root bus resources.
+> Try to clip them and update them in pci bridge bars.
+>
+> We'd like to fix other arches instead of just x86.
+>
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491
+> Reported-by: Marek Kordik <kordikmarek@gmail.com>
+> Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to
+> 64-bit resources")
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
+> Cc: Yijing Wang <wangyijing@huawei.com>
+> Cc: Sam Ravnborg <sam@ravnborg.org>
+> Cc: sparclinux@vger.kernel.org
+> ---
+>  arch/sparc/kernel/pci.c | 20 +++++++++++++++++++-
+>  1 file changed, 19 insertions(+), 1 deletion(-)
+>
+> diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+> index b36365f..0e391e5 100644
+> --- a/arch/sparc/kernel/pci.c
+> +++ b/arch/sparc/kernel/pci.c
+> @@ -623,6 +623,7 @@ static void pci_claim_bus_resources(struct pci_bus
+> *bus)
+>  	struct pci_dev *dev;
+>
+>  	list_for_each_entry(dev, &bus->devices, bus_list) {
+> +		bool changed = false;
+>  		int i;
+>
+>  		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+> @@ -639,8 +640,25 @@ static void pci_claim_bus_resources(struct pci_bus
+> *bus)
+>  				       (unsigned long long)r->end,
+>  				       (unsigned int)r->flags);
+>
+> -			pci_claim_resource(dev, i);
+> +			if (pci_claim_resource(dev, i) >= 0)
+> +				continue;
+> +
+> +			if (dev->subordinate &&
+> +			    i >= PCI_BRIDGE_RESOURCES &&
+> +			    i < PCI_NUM_RESOURCES &&
+> +			    (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI &&
+> +			    pci_bus_clip_resource(dev, r)) {
+> +				changed = true;
+> +				pci_claim_resource(dev, i);
+> +			} else if (i < PCI_BRIDGE_RESOURCES &&
+> +				   i != PCI_ROM_RESOURCE &&
+> +				   pci_bus_clip_resource(dev, r)) {
+> +					pci_update_resource(dev, i);
+> +					pci_claim_resource(dev, i);
+> +			}
+>  		}
+> +		if (changed)
+> +			pci_setup_bridge(dev->subordinate);
+>  	}
+>
+>  	list_for_each_entry(child_bus, &bus->children, node)
+> --
+> 1.8.4.5
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe sparclinux" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
