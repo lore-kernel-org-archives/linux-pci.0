@@ -1,51 +1,53 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.187]:62184 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751569AbbALTqB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 14:46:01 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Duc Dang <dhdang@apm.com>
+Cc: linux-arm-kernel@lists.infradead.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch v2 12/22] ACPI: Enforce stricter checks for address space descriptors
-Date: Wed, 28 Jan 2015 18:57:30 +0800
-Message-Id: <1422442660-455-13-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, Feng Kan <fkan@apm.com>,
+	linux-pci@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
+	Loc Ho <lho@apm.com>
+Subject: Re: [PATCH 1/4] PCI: X-Gene: Add the APM X-Gene v1 PCIe MSI/MSIX termination driver
+Date: Mon, 12 Jan 2015 20:44:50 +0100
+Message-ID: <1678162.2PJ2o1jRen@wuerfel>
+In-Reply-To: <CADaLND=C3AjdZpiMpom7+-Dgwc83NYo5pDjDWo+hrW7VDZ4m3A@mail.gmail.com>
+References: <cover.1420499393.git.dhdang@apm.com> <22570652.F088Afk9OX@wuerfel> <CADaLND=C3AjdZpiMpom7+-Dgwc83NYo5pDjDWo+hrW7VDZ4m3A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enforce stricter checks for address space descriptors according to
-ACPI spec.
+On Monday 12 January 2015 10:53:14 Duc Dang wrote:
+> On Tue, Jan 6, 2015 at 11:33 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > On Tuesday 06 January 2015 08:15:41 Duc Dang wrote:
+> >> X-Gene v1 SOC supports total 2688 MSI/MSIX vectors coalesced into
+> >> 16 HW IRQ lines.
+> >>
+> >> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+> >> Signed-off-by: Duc Dang <dhdang@apm.com>
+> >>
+> >
+> > I might be a little behind the latest development, but why is this
+> > not a struct msi_controller?
+> 
+> X-Gene V1 have a separate MSI block to handle MSI/MSIX and is shared
+> among 5 PCIe ports.
+> So in this driver for this MSI block, we implement X-Gene v1 sepcific
+> arch_teardown_msi_irqs,
+> arch_setup_msi_irqs and not using msi_controller struct.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/resource.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
+I see.
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 5bf73a9f26d9..57891a621b96 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -192,6 +192,15 @@ static bool acpi_decode_space(struct resource *res,
- 	bool wp = addr->info.mem.write_protect;
- 	u64 len = attr->address_length;
- 
-+	/*
-+	 * Filter out invalid descriptor according to ACPI Spec 5.0, section
-+	 * 6.4.3.5 Address Space Resource Descriptors.
-+	 */
-+	if ((addr->min_address_fixed != addr->max_address_fixed && len) ||
-+	    (addr->min_address_fixed && addr->max_address_fixed && !len))
-+		pr_debug("ACPI: Invalid address space min_addr_fix %d, max_addr_fix %d, len %llx\n",
-+			 addr->min_address_fixed, addr->max_address_fixed, len);
-+
- 	res->start = attr->minimum;
- 	res->end = attr->maximum;
- 
--- 
-1.7.10.4
+> Please let me know if this approach needs to be changed to follow
+> other implementations of MSI
+> drivers in latest kernel.
 
+Yes, your approach does not work on distro kernels which will always
+enable multiple targets. You cannot override generic weak functions from
+a device driver.
+
+	Arnd
