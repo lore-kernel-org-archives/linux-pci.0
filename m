@@ -1,388 +1,228 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:48231 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755619AbbALTYr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 14:24:47 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>
-Subject: [Patch Part1 v7 02/38] x86/irq: Use hierarchy irqdomain to manage CPU interrupt vectors
-Date: Tue, 20 Jan 2015 11:08:05 +0800
-Message-Id: <1421723321-8386-3-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	David Howells <dhowells@redhat.com>,
+	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
+	linux-am33-list@redhat.com
+Subject: [PATCH 07/10] PCI, mn10300: clip firmware assigned resource under parent bridge's
+Date: Mon, 12 Jan 2015 11:23:17 -0800
+Message-Id: <1421090600-9750-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1421090600-9750-1-git-send-email-yinghai@kernel.org>
+References: <1421090600-9750-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Abstract CPU local APIC as an interrupt controller and create an
-irqdomain for it to manage CPU interrupt vectors. It's the base to
-enable hierarchy irqdomain on x86 systems. Eventually we will build
-a irqdomain hierarchy as below:
+Some bios put range that is not fully coverred by root bus resources.
+Try to clip them and update them in pci bridge bars.
 
-IOAPIC domain-------|
-MSI/MSI-x domain------> [Inerrupt Remapping domain] -> CPU vector domain
-HPET_IRQ domain_____|                                         ^
-DMAR domain---------------------------------------------------|
-HT_IRQ domain-------------------------------------------------|
+We'd like to fix other arches instead of just x86.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Prarit Bhargava <prarit@redhat.com>
-Link: http://lkml.kernel.org/r/1416894816-23245-3-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491
+Reported-by: Marek Kordik <kordikmarek@gmail.com>
+Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources")
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
+Cc: linux-am33-list@redhat.com
 ---
- arch/x86/Kconfig               |    3 +-
- arch/x86/include/asm/hw_irq.h  |   17 +++++
- arch/x86/kernel/apic/io_apic.c |    3 -
- arch/x86/kernel/apic/vector.c  |  156 ++++++++++++++++++++++++++++++++++++----
- 4 files changed, 161 insertions(+), 18 deletions(-)
+ arch/mn10300/unit-asb2305/pci-asb2305.c | 61 +++++++++++++++++++----------
+ arch/mn10300/unit-asb2305/pci.c         | 69 ++++++++++++++++++++-------------
+ 2 files changed, 84 insertions(+), 46 deletions(-)
 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index ba397bde7948..ff7cad03d7f7 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -457,7 +457,6 @@ config X86_INTEL_CE
- 	select X86_REBOOTFIXUPS
- 	select OF
- 	select OF_EARLY_FLATTREE
--	select IRQ_DOMAIN
- 	---help---
- 	  Select for the Intel CE media processor (CE4100) SOC.
- 	  This option compiles in support for the CE4100 SOC for settop
-@@ -884,11 +883,11 @@ config X86_LOCAL_APIC
- 	def_bool y
- 	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_APIC || PCI_MSI
- 	select GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
-+	select IRQ_DOMAIN_HIERARCHY
- 
- config X86_IO_APIC
- 	def_bool X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_IOAPIC
- 	depends on X86_LOCAL_APIC
--	select IRQ_DOMAIN
- 
- config X86_REROUTE_FOR_BROKEN_BOOT_IRQS
- 	bool "Reroute for broken boot IRQs"
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index b988ddf7434b..eb7692c9ab93 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -112,6 +112,17 @@ struct irq_2_irte {
- 
- #ifdef	CONFIG_X86_LOCAL_APIC
- struct irq_data;
-+struct irq_domain;
+diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.c b/arch/mn10300/unit-asb2305/pci-asb2305.c
+index febb9cd..32ea240 100644
+--- a/arch/mn10300/unit-asb2305/pci-asb2305.c
++++ b/arch/mn10300/unit-asb2305/pci-asb2305.c
+@@ -99,26 +99,40 @@ static void __init pcibios_allocate_bus_resources(struct list_head *bus_list)
+ 	list_for_each_entry(bus, bus_list, node) {
+ 		dev = bus->self;
+ 		if (dev) {
++			bool changed = false;
 +
-+struct irq_alloc_info {
-+	u32			flags;
-+	const struct cpumask	*mask;	/* CPU mask for vector allocation */
-+};
+ 			for (idx = PCI_BRIDGE_RESOURCES;
+ 			     idx < PCI_NUM_RESOURCES;
+ 			     idx++) {
+ 				r = &dev->resource[idx];
+ 				if (!r->flags)
+ 					continue;
+-				if (!r->start ||
+-				    pci_claim_resource(dev, idx) < 0) {
+-					printk(KERN_ERR "PCI:"
+-					       " Cannot allocate resource"
+-					       " region %d of bridge %s\n",
+-					       idx, pci_name(dev));
+-					/* Something is wrong with the region.
+-					 * Invalidate the resource to prevent
+-					 * child resource allocations in this
+-					 * range. */
+-					r->start = r->end = 0;
+-					r->flags = 0;
++				if (!r->start)
++					goto clear;
 +
-+enum {
-+	/* Allocate contigious CPU vectors */
-+	X86_IRQ_ALLOC_CONTIGOUS_VECTORS		= 0x1,
-+};
- 
- struct irq_cfg {
- 	cpumask_var_t		domain;
-@@ -135,6 +146,12 @@ struct irq_cfg {
- 	};
- };
- 
-+extern struct irq_domain *x86_vector_domain;
++				if (pci_claim_resource(dev, idx) >= 0)
++					continue;
 +
-+extern void init_irq_alloc_info(struct irq_alloc_info *info,
-+				const struct cpumask *mask);
-+extern void copy_irq_alloc_info(struct irq_alloc_info *dst,
-+				struct irq_alloc_info *src);
- extern struct irq_cfg *irq_cfg(unsigned int irq);
- extern struct irq_cfg *irqd_cfg(struct irq_data *irq_data);
- extern struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index f4dc2462a1ac..56d532106ef3 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -2356,9 +2356,6 @@ static int mp_irqdomain_create(int ioapic)
- 		ioapic_dynirq_base = max(ioapic_dynirq_base,
- 					 gsi_cfg->gsi_end + 1);
++				/* try again after clip for pci bridge*/
++				if ((dev->class >> 8) == PCI_CLASS_BRIDGE_PCI &&
++				    pci_bus_clip_resource(dev, r)) {
++					changed = true;
++					if (pci_claim_resource(dev, idx) >= 0)
++						continue;
+ 				}
++
++clear:
++				pr_err("PCI: Cannot allocate resource region %d of bridge %s\n",
++				       idx, pci_name(dev));
++				/* Something is wrong with the region.
++				 * Invalidate the resource to prevent
++				 * child resource allocations in this
++				 * range. */
++				r->start = r->end = 0;
++				r->flags = 0;
+ 			}
++			if (changed)
++				pci_setup_bridge(bus);
+ 		}
+ 		pcibios_allocate_bus_resources(&bus->children);
+ 	}
+@@ -148,15 +162,22 @@ static void __init pcibios_allocate_resources(int pass)
+ 				    " (f=%lx, d=%d, p=%d)\n",
+ 				    pci_name(dev), r->start, r->end, r->flags,
+ 				    disabled, pass);
+-				if (pci_claim_resource(dev, idx) < 0) {
+-					printk(KERN_ERR "PCI:"
+-					       " Cannot allocate resource"
+-					       " region %d of device %s\n",
+-					       idx, pci_name(dev));
+-					/* We'll assign a new address later */
+-					r->end -= r->start;
+-					r->start = 0;
++
++				if (pci_claim_resource(dev, idx) >= 0)
++					continue;
++
++				/* try again with clip */
++				if (pci_bus_clip_resource(dev, r)) {
++					pci_update_resource(dev, idx);
++					if (pci_claim_resource(dev, idx) >= 0)
++						continue;
+ 				}
++
++				pr_err("PCI:  Cannot allocate resource region %d of device %s\n",
++					       idx, pci_name(dev));
++				/* We'll assign a new address later */
++				r->end -= r->start;
++				r->start = 0;
+ 			}
+ 		}
+ 		if (!pass) {
+diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
+index 6b4339f..83caf70 100644
+--- a/arch/mn10300/unit-asb2305/pci.c
++++ b/arch/mn10300/unit-asb2305/pci.c
+@@ -281,43 +281,56 @@ static int __init pci_check_direct(void)
+ 	return -ENODEV;
+ }
  
--	if (gsi_cfg->gsi_base == 0)
--		irq_set_default_host(ip->irqdomain);
+-static int is_valid_resource(struct pci_dev *dev, int idx)
++static void pcibios_fixup_device_resources(struct pci_dev *dev)
+ {
+-	unsigned int i, type_mask = IORESOURCE_IO | IORESOURCE_MEM;
+-	struct resource *devr = &dev->resource[idx], *busr;
 -
- 	return 0;
- }
- 
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index c724ef6b218c..f8340c72546f 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -3,6 +3,8 @@
-  *
-  * Copyright (C) 1997, 1998, 1999, 2000, 2009 Ingo Molnar, Hajnalka Szabo
-  *	Moved from arch/x86/kernel/apic/io_apic.c.
-+ * Jiang Liu <jiang.liu@linux.intel.com>
-+ *	Enable support of hierarchy irqdomain
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -19,7 +21,9 @@
- #include <asm/desc.h>
- #include <asm/irq_remapping.h>
- 
-+struct irq_domain *x86_vector_domain;
- static DEFINE_RAW_SPINLOCK(vector_lock);
-+static struct irq_chip lapic_controller;
- 
- void lock_vector_lock(void)
- {
-@@ -36,15 +40,21 @@ void unlock_vector_lock(void)
- 
- struct irq_cfg *irq_cfg(unsigned int irq)
- {
--	return irq_get_chip_data(irq);
-+	return irqd_cfg(irq_get_irq_data(irq));
- }
- 
- struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
- {
-+	if (!irq_data)
-+		return NULL;
+-	if (dev->bus) {
+-		pci_bus_for_each_resource(dev->bus, busr, i) {
+-			if (!busr || (busr->flags ^ devr->flags) & type_mask)
+-				continue;
+-
+-			if (devr->start &&
+-			    devr->start >= busr->start &&
+-			    devr->end <= busr->end)
+-				return 1;
++	int idx;
 +
-+	while (irq_data->parent_data)
-+		irq_data = irq_data->parent_data;
++	if (!dev->bus)
++		return;
 +
- 	return irq_data->chip_data;
++	for (idx = 0; idx < PCI_BRIDGE_RESOURCES; idx++) {
++		struct resource *r = &dev->resource[idx];
++
++		if (!r->flags || r->parent || !r->start)
++			continue;
++
++		if (pci_claim_resource(dev, idx) >= 0)
++			continue;
++
++		/* try again with clip */
++		if (pci_bus_clip_resource(dev, r)) {
++			pci_update_resource(dev, idx);
++			pci_claim_resource(dev, idx);
+ 		}
+ 	}
+-
+-	return 0;
  }
  
--static struct irq_cfg *alloc_irq_cfg(unsigned int irq, int node)
-+static struct irq_cfg *alloc_irq_cfg(int node)
+-static void pcibios_fixup_device_resources(struct pci_dev *dev)
++static bool pcibios_fixup_bridge_resources(struct pci_dev *dev)
  {
- 	struct irq_cfg *cfg;
+-	int limit, i;
++	int idx;
++	bool changed = false;
  
-@@ -79,7 +89,7 @@ struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node)
- 			return cfg;
+-	if (dev->bus->number != 0)
+-		return;
++	if (!dev->bus)
++		return changed;
+ 
+-	limit = (dev->hdr_type == PCI_HEADER_TYPE_NORMAL) ?
+-		PCI_BRIDGE_RESOURCES : PCI_NUM_RESOURCES;
++	for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
++		struct resource *r = &dev->resource[idx];
+ 
+-	for (i = 0; i < limit; i++) {
+-		if (!dev->resource[i].flags)
++		if (!r->flags || r->parent || !r->start)
+ 			continue;
+ 
+-		if (is_valid_resource(dev, i))
+-			pci_claim_resource(dev, i);
++		if (pci_claim_resource(dev, idx) >= 0)
++			continue;
++
++		/* try again after clip for pci bridge*/
++		if ((dev->class >> 8) == PCI_CLASS_BRIDGE_PCI &&
++		    pci_bus_clip_resource(dev, r)) {
++			changed = true;
++			pci_claim_resource(dev, idx);
++		}
+ 	}
++
++	return changed;
+ }
+ 
+ /*
+@@ -329,8 +342,12 @@ void pcibios_fixup_bus(struct pci_bus *bus)
+ 	struct pci_dev *dev;
+ 
+ 	if (bus->self) {
++		bool changed;
++
+ 		pci_read_bridge_bases(bus);
+-		pcibios_fixup_device_resources(bus->self);
++		changed = pcibios_fixup_bridge_resources(bus->self);
++		if (changed)
++			pci_setup_bridge(bus);
  	}
  
--	cfg = alloc_irq_cfg(at, node);
-+	cfg = alloc_irq_cfg(node);
- 	if (cfg)
- 		irq_set_chip_data(at, cfg);
- 	else
-@@ -87,14 +97,13 @@ struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node)
- 	return cfg;
- }
- 
--static void free_irq_cfg(unsigned int at, struct irq_cfg *cfg)
-+static void free_irq_cfg(struct irq_cfg *cfg)
- {
--	if (!cfg)
--		return;
--	irq_set_chip_data(at, NULL);
--	free_cpumask_var(cfg->domain);
--	free_cpumask_var(cfg->old_domain);
--	kfree(cfg);
-+	if (cfg) {
-+		free_cpumask_var(cfg->domain);
-+		free_cpumask_var(cfg->old_domain);
-+		kfree(cfg);
-+	}
- }
- 
- static int
-@@ -241,6 +250,90 @@ void clear_irq_vector(int irq, struct irq_cfg *cfg)
- 	raw_spin_unlock_irqrestore(&vector_lock, flags);
- }
- 
-+void init_irq_alloc_info(struct irq_alloc_info *info,
-+			 const struct cpumask *mask)
-+{
-+	memset(info, 0, sizeof(*info));
-+	info->mask = mask;
-+}
-+
-+void copy_irq_alloc_info(struct irq_alloc_info *dst, struct irq_alloc_info *src)
-+{
-+	if (src)
-+		*dst = *src;
-+	else
-+		memset(dst, 0, sizeof(*dst));
-+}
-+
-+static inline const struct cpumask *
-+irq_alloc_info_get_mask(struct irq_alloc_info *info)
-+{
-+	return (!info || !info->mask) ? apic->target_cpus() : info->mask;
-+}
-+
-+static void x86_vector_free_irqs(struct irq_domain *domain,
-+				 unsigned int virq, unsigned int nr_irqs)
-+{
-+	int i;
-+	struct irq_data *irq_data;
-+
-+	for (i = 0; i < nr_irqs; i++) {
-+		irq_data = irq_domain_get_irq_data(x86_vector_domain, virq + i);
-+		if (irq_data && irq_data->chip_data) {
-+			free_remapped_irq(virq);
-+			clear_irq_vector(virq + i, irq_data->chip_data);
-+			free_irq_cfg(irq_data->chip_data);
-+			irq_domain_reset_irq_data(irq_data);
-+		}
-+	}
-+}
-+
-+static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
-+				 unsigned int nr_irqs, void *arg)
-+{
-+	int i, err;
-+	struct irq_cfg *cfg;
-+	struct irq_data *irq_data;
-+	const struct cpumask *mask;
-+	struct irq_alloc_info *info = arg;
-+
-+	if (disable_apic)
-+		return -ENXIO;
-+
-+	/* Currently vector allocator can't guarantee contigious allocations */
-+	if ((info->flags & X86_IRQ_ALLOC_CONTIGOUS_VECTORS) && nr_irqs > 1)
-+		return -ENOSYS;
-+
-+	mask = irq_alloc_info_get_mask(info);
-+	for (i = 0; i < nr_irqs; i++) {
-+		irq_data = irq_domain_get_irq_data(domain, virq + i);
-+		BUG_ON(!irq_data);
-+		cfg = alloc_irq_cfg(irq_data->node);
-+		if (!cfg) {
-+			err = -ENOMEM;
-+			goto error;
-+		}
-+
-+		irq_data->chip = &lapic_controller;
-+		irq_data->chip_data = cfg;
-+		irq_data->hwirq = virq + i;
-+		err = assign_irq_vector(virq, cfg, mask);
-+		if (err)
-+			goto error;
-+	}
-+
-+	return 0;
-+
-+error:
-+	x86_vector_free_irqs(domain, virq, i + 1);
-+	return err;
-+}
-+
-+static struct irq_domain_ops x86_vector_domain_ops = {
-+	.alloc = x86_vector_alloc_irqs,
-+	.free = x86_vector_free_irqs,
-+};
-+
- int __init arch_probe_nr_irqs(void)
- {
- 	int nr;
-@@ -266,6 +359,11 @@ int __init arch_probe_nr_irqs(void)
- 
- int __init arch_early_irq_init(void)
- {
-+	x86_vector_domain = irq_domain_add_tree(NULL, &x86_vector_domain_ops,
-+						NULL);
-+	BUG_ON(x86_vector_domain == NULL);
-+	irq_set_default_host(x86_vector_domain);
-+
- 	return arch_early_ioapic_init();
- }
- 
-@@ -380,6 +478,37 @@ int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 	return 0;
- }
- 
-+static int vector_set_affinity(struct irq_data *irq_data,
-+			       const struct cpumask *dest, bool force)
-+{
-+	int err;
-+	int irq = irq_data->irq;
-+	struct irq_cfg *cfg = irq_data->chip_data;
-+
-+	if (!config_enabled(CONFIG_SMP))
-+		return -EPERM;
-+
-+	if (!cpumask_intersects(dest, cpu_online_mask))
-+		return -EINVAL;
-+
-+	err = assign_irq_vector(irq, cfg, dest);
-+	if (err) {
-+		struct irq_data *top = irq_get_irq_data(irq);
-+
-+		if (assign_irq_vector(irq, cfg, top->affinity))
-+			pr_err("Failed to recover vector for irq %d\n", irq);
-+		return err;
-+	}
-+
-+	return IRQ_SET_MASK_OK;
-+}
-+
-+static struct irq_chip lapic_controller = {
-+	.irq_ack		= apic_ack_edge,
-+	.irq_set_affinity	= vector_set_affinity,
-+	.irq_retrigger		= apic_retrigger_irq,
-+};
-+
- #ifdef CONFIG_SMP
- void send_cleanup_vector(struct irq_cfg *cfg)
- {
-@@ -497,7 +626,7 @@ int arch_setup_hwirq(unsigned int irq, int node)
- 	unsigned long flags;
- 	int ret;
- 
--	cfg = alloc_irq_cfg(irq, node);
-+	cfg = alloc_irq_cfg(node);
- 	if (!cfg)
- 		return -ENOMEM;
- 
-@@ -508,7 +637,7 @@ int arch_setup_hwirq(unsigned int irq, int node)
- 	if (!ret)
- 		irq_set_chip_data(irq, cfg);
- 	else
--		free_irq_cfg(irq, cfg);
-+		free_irq_cfg(cfg);
- 	return ret;
- }
- 
-@@ -518,7 +647,8 @@ void arch_teardown_hwirq(unsigned int irq)
- 
- 	free_remapped_irq(irq);
- 	clear_irq_vector(irq, cfg);
--	free_irq_cfg(irq, cfg);
-+	irq_set_chip_data(irq, NULL);
-+	free_irq_cfg(cfg);
- }
- 
- static void __init print_APIC_field(int base)
+ 	list_for_each_entry(dev, &bus->devices, bus_list)
 -- 
-1.7.10.4
+1.8.4.5
 
