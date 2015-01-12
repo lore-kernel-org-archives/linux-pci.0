@@ -1,149 +1,264 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:55642 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754083AbbAUCcl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 21:32:41 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v2 10/30] PCI: Introduce pci_host_bridge_list to manage host bridges
-Date: Wed, 21 Jan 2015 08:30:05 +0800
-Message-ID: <1421800225-26230-11-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
-References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v8 07/10] iommu/vt-d: enable kdump support in iommu module
+Date: Mon, 12 Jan 2015 15:06:25 +0800
+Message-Id: <1421046388-27925-8-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1421046388-27925-1-git-send-email-zhen-hual@hp.com>
+References: <1421046388-27925-1-git-send-email-zhen-hual@hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce pci_host_bridge_list to manage pci host
-bridges in system, so we could detect whether
-the host in domain:bus is alreay registered.
-Then we could remove bus alreay exist test in
-__pci_create_root_bus().
+Modify the operation of the following functions when called during crash dump:
+    device_to_domain_id
+    get_domain_for_dev
+    init_dmars
+    intel_iommu_init
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Bill Sumner:
+    Original version.
+
+Zhenhua:
+    Minor change,
+    The name of new calling functions.
+    Do not disable and re-enable TE in kdump kernel.
+
+Signed-off-by: Bill Sumner <billsumnerlinux@gmail.com>
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
 ---
- drivers/pci/host-bridge.c |   24 +++++++++++++++++++++++-
- drivers/pci/probe.c       |    8 +-------
- include/linux/pci.h       |    1 +
- 3 files changed, 25 insertions(+), 8 deletions(-)
+ drivers/iommu/intel-iommu.c | 135 +++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 120 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 8897581..0de21d5 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -8,6 +8,9 @@
- 
- #include "pci.h"
- 
-+static LIST_HEAD(pci_host_bridge_list);
-+static DEFINE_MUTEX(phb_mutex);
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 277b294..324c504 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -907,6 +907,11 @@ static struct context_entry * device_to_context_entry(struct intel_iommu *iommu,
+ 		set_root_value(root, phy_addr);
+ 		set_root_present(root);
+ 		__iommu_flush_cache(iommu, root, sizeof(*root));
 +
- static void pci_release_host_bridge_dev(struct device *dev)
- {
- 	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
-@@ -25,7 +28,7 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	int error;
- 	int bus = PCI_BUSNUM(db);
- 	int domain = PCI_DOMAIN(db);
--	struct pci_host_bridge *host;
-+	struct pci_host_bridge *host, *temp;
- 	struct pci_host_bridge_window *window, *n;
++#ifdef CONFIG_CRASH_DUMP
++		if (is_kdump_kernel())
++			__iommu_update_old_root_entry(iommu, bus);
++#endif
+ 	}
+ 	spin_unlock_irqrestore(&iommu->lock, flags);
+ 	return &context[devfn];
+@@ -958,7 +963,8 @@ static void free_context_table(struct intel_iommu *iommu)
  
- 	host = kzalloc(sizeof(*host), GFP_KERNEL);
-@@ -40,6 +43,18 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	 */
- 	pci_host_assign_domain_nr(host);
+ 	spin_lock_irqsave(&iommu->lock, flags);
+ 	if (!iommu->root_entry) {
+-		goto out;
++		spin_unlock_irqrestore(&iommu->lock, flags);
++		return;
+ 	}
+ 	for (i = 0; i < ROOT_ENTRY_NR; i++) {
+ 		root = &iommu->root_entry[i];
+@@ -966,10 +972,23 @@ static void free_context_table(struct intel_iommu *iommu)
+ 		if (context)
+ 			free_pgtable_page(context);
+ 	}
++
++#ifdef CONFIG_CRASH_DUMP
++	if (is_kdump_kernel()) {
++		iommu->root_entry_old_phys = 0;
++		root = iommu->root_entry_old_virt;
++		iommu->root_entry_old_virt = NULL;
++	}
++#endif
+ 	free_pgtable_page(iommu->root_entry);
+ 	iommu->root_entry = NULL;
+-out:
++
+ 	spin_unlock_irqrestore(&iommu->lock, flags);
++
++#ifdef CONFIG_CRASH_DUMP
++	if (is_kdump_kernel())
++		iounmap(root);
++#endif
+ }
  
-+	mutex_lock(&phb_mutex);
-+	list_for_each_entry(temp, &pci_host_bridge_list, list)
-+		if (temp->domain == host->domain
-+				&& temp->busnum == host->busnum) {
-+			dev_dbg(&host->dev, "pci host bridge pci%04x:%02x exist\n",
-+					host->domain, host->busnum);
-+			mutex_unlock(&phb_mutex);
-+			kfree(host);
-+			return NULL;
+ static struct dma_pte *pfn_to_dma_pte(struct dmar_domain *domain,
+@@ -2381,6 +2400,9 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
+ 	unsigned long flags;
+ 	u8 bus, devfn;
+ 	int did = -1;   /* Default to "no domain_id supplied" */
++#ifdef CONFIG_CRASH_DUMP
++	struct domain_values_entry *dve = NULL;
++#endif /* CONFIG_CRASH_DUMP */
+ 
+ 	domain = find_domain(dev);
+ 	if (domain)
+@@ -2414,6 +2436,24 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
+ 	domain = alloc_domain(0);
+ 	if (!domain)
+ 		return NULL;
++
++#ifdef CONFIG_CRASH_DUMP
++	if (is_kdump_kernel()) {
++		/*
++		 * if this device had a did in the old kernel
++		 * use its values instead of generating new ones
++		 */
++		did = device_to_domain_id(iommu, bus, devfn);
++		if (did > 0 || (did == 0 && !cap_caching_mode(iommu->cap)))
++			dve = intel_iommu_did_to_domain_values_entry(did,
++								iommu);
++		if (dve)
++			gaw = dve->gaw;
++		else
++			did = -1;
++	}
++#endif /* CONFIG_CRASH_DUMP */
++
+ 	domain->id = iommu_attach_domain(domain, iommu, did);
+ 	if (domain->id < 0) {
+ 		free_domain_mem(domain);
+@@ -2425,6 +2465,18 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
+ 		return NULL;
+ 	}
+ 
++#ifdef CONFIG_CRASH_DUMP
++	if (is_kdump_kernel() && dve) {
++
++		if (domain->pgd)
++			free_pgtable_page(domain->pgd);
++
++		domain->pgd = dve->pgd;
++
++		copy_reserved_iova(&dve->iovad, &domain->iovad);
++	}
++#endif /* CONFIG_CRASH_DUMP */
++
+ 	/* register PCI DMA alias device */
+ 	if (dev_is_pci(dev)) {
+ 		tmp = dmar_insert_dev_info(iommu, PCI_BUS_NUM(dma_alias),
+@@ -2948,14 +3000,35 @@ static int __init init_dmars(void)
+ 		if (ret)
+ 			goto free_iommu;
+ 
+-		/*
+-		 * TBD:
+-		 * we could share the same root & context tables
+-		 * among all IOMMU's. Need to Split it later.
+-		 */
+-		ret = iommu_alloc_root_entry(iommu);
+-		if (ret)
+-			goto free_iommu;
++#ifdef CONFIG_CRASH_DUMP
++		if (is_kdump_kernel()) {
++			pr_info("IOMMU Copying translate tables from panicked kernel\n");
++			ret = intel_iommu_load_translation_tables(drhd,
++					g_num_of_iommus);
++			if (ret) {
++				pr_err("IOMMU: Copy translate tables failed\n");
++
++				/* Best to stop trying */
++				goto free_iommu;
++			}
++			pr_info("IOMMU: root_cache:0x%12.12llx phys:0x%12.12llx\n",
++				(u64)iommu->root_entry,
++				(u64)iommu->root_entry_old_phys);
++			intel_iommu_get_dids_from_old_kernel(iommu);
++		} else {
++#endif /* CONFIG_CRASH_DUMP */
++			/*
++			 * TBD:
++			 * we could share the same root & context tables
++			 * among all IOMMU's. Need to Split it later.
++			 */
++			ret = iommu_alloc_root_entry(iommu);
++			if (ret)
++				goto free_iommu;
++#ifdef CONFIG_CRASH_DUMP
 +		}
-+	mutex_unlock(&phb_mutex);
++#endif
 +
- 	host->dev.parent = parent;
- 	INIT_LIST_HEAD(&host->windows);
- 	host->dev.release = pci_release_host_bridge_dev;
-@@ -55,12 +70,19 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	list_for_each_entry_safe(window, n, resources, list)
- 		list_move_tail(&window->list, &host->windows);
+ 		if (!ecap_pass_through(iommu->ecap))
+ 			hw_pass_through = 0;
+ 	}
+@@ -2972,6 +3045,16 @@ static int __init init_dmars(void)
  
-+	mutex_lock(&phb_mutex);
-+	list_add_tail(&host->list, &pci_host_bridge_list);
-+	mutex_unlock(&phb_mutex);
- 	return host;
- }
- EXPORT_SYMBOL(pci_create_host_bridge);
+ 	check_tylersburg_isoch();
  
- void pci_free_host_bridge(struct pci_host_bridge *host)
- {
-+	mutex_lock(&phb_mutex);
-+	list_del(&host->list);
-+	mutex_unlock(&phb_mutex);
++#ifdef CONFIG_CRASH_DUMP
++	/*
++	 * In the crashdump kernel: Skip setting-up new domains for
++	 * si, rmrr, and the isa bus on the expectation that these
++	 * translations were copied from the old kernel.
++	 */
++	if (is_kdump_kernel())
++		goto skip_new_domains_for_si_rmrr_isa;
++#endif /* CONFIG_CRASH_DUMP */
 +
- 	device_unregister(&host->dev);
- }
+ 	/*
+ 	 * If pass through is not set or not enabled, setup context entries for
+ 	 * identity mappings for rmrr, gfx, and isa and may fall back to static
+@@ -3012,6 +3095,10 @@ static int __init init_dmars(void)
  
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8f97872..4015841 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1869,7 +1869,7 @@ static struct pci_bus *__pci_create_root_bus(
- 		void *sysdata)
- {
- 	int error;
--	struct pci_bus *b, *b2;
-+	struct pci_bus *b;
- 	struct pci_host_bridge_window *window;
- 	struct device *parent;
- 	struct resource *res;
-@@ -1886,12 +1886,6 @@ static struct pci_bus *__pci_create_root_bus(
- 	b->ops = ops;
- 	b->number = b->busn_res.start = bridge->busnum;
- 	pci_bus_assign_domain_nr(b, parent);
--	b2 = pci_find_bus(pci_domain_nr(b), b->number);
--	if (b2) {
--		/* If we already got to this bus through a different bridge, ignore it */
--		dev_dbg(&b2->dev, "bus already known\n");
--		goto err_out;
--	}
+ 	iommu_prepare_isa();
  
- 	bridge->bus = b;
- 	b->bridge = get_device(&bridge->dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d991bd2..5ee0033 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -406,6 +406,7 @@ struct pci_host_bridge {
- 	u16 busnum;
- 	struct device dev;
- 	struct pci_bus *bus;		/* root bus */
-+	struct list_head list;
- 	struct list_head windows;	/* pci_host_bridge_windows */
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
++#ifdef CONFIG_CRASH_DUMP
++skip_new_domains_for_si_rmrr_isa:;
++#endif /* CONFIG_CRASH_DUMP */
++
+ 	/*
+ 	 * for each drhd
+ 	 *   enable fault log
+@@ -3040,7 +3127,15 @@ static int __init init_dmars(void)
+ 
+ 		iommu->flush.flush_context(iommu, 0, 0, 0, DMA_CCMD_GLOBAL_INVL);
+ 		iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
+-		iommu_enable_translation(iommu);
++
++#ifdef CONFIG_CRASH_DUMP
++		if (is_kdump_kernel()) {
++			if (!(iommu->gcmd & DMA_GCMD_TE))
++				iommu_enable_translation(iommu);
++		} else
++#endif
++			iommu_enable_translation(iommu);
++
+ 		iommu_disable_protect_mem_regions(iommu);
+ 	}
+ 
+@@ -4343,12 +4438,22 @@ int __init intel_iommu_init(void)
+ 		goto out_free_dmar;
+ 	}
+ 
++#ifdef CONFIG_CRASH_DUMP
+ 	/*
+-	 * Disable translation if already enabled prior to OS handover.
++	 * If (This is the crash kernel)
++	 *    Set: copy iommu translate tables from old kernel
++	 *    Skip disabling the iommu hardware translations
+ 	 */
+-	for_each_active_iommu(iommu, drhd)
+-		if (iommu->gcmd & DMA_GCMD_TE)
+-			iommu_disable_translation(iommu);
++	if (is_kdump_kernel()) {
++		pr_info("IOMMU Skip disabling iommu hardware translations\n");
++	} else
++#endif /* CONFIG_CRASH_DUMP */
++		/*
++		 * Disable translation if already enabled prior to OS handover.
++		 */
++		for_each_active_iommu(iommu, drhd)
++			if (iommu->gcmd & DMA_GCMD_TE)
++				iommu_disable_translation(iommu);
+ 
+ 	if (dmar_dev_scope_init() < 0) {
+ 		if (force_on)
 -- 
-1.7.1
+2.0.0-rc0
 
