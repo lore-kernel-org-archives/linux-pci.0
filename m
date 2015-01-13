@@ -1,70 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <54C1ADE3.9060606@huawei.com>
-Date: Fri, 23 Jan 2015 10:11:47 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-CC: Lior Amsalem <alior@marvell.com>, <linux-ia64@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Nadav Haklai <nadavh@marvell.com>,
-	=?ISO-8859-1?Q?Gregory_Cl=E9ment?=
-	<gregory.clement@free-electrons.com>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	<linux-m68k@lists.linux-m68k.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	"Tony Luck" <tony.luck@intel.com>, <linux-kernel@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	<linux-alpha@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH v2 23/30] PCI/mvebu: Use pci_common_init_dev() to simplify
- code
-References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com> <1421800225-26230-24-git-send-email-wangyijing@huawei.com> <20150122184000.63ba06bb@free-electrons.com>
-In-Reply-To: <20150122184000.63ba06bb@free-electrons.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:35238 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752282AbbAMT5b (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Jan 2015 14:57:31 -0500
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Thierry Reding <thierry.reding@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v3 1/2] PCI: add helper function to find root port for device
+Date: Tue, 13 Jan 2015 20:57:27 +0100
+Message-Id: <1421179048-25370-1-git-send-email-l.stach@pengutronix.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/1/23 1:40, Thomas Petazzoni wrote:
-> Dear Yijing Wang,
-> 
-> On Wed, 21 Jan 2015 08:30:18 +0800, Yijing Wang wrote:
->> Mvebu_pcie_scan_bus() is not necessary, we could use
->> pci_common_init_dev() instead of pci_common_init(),
->> and pass the device pointer as the parent. Then
->> pci_scan_root_bus() will be called to scan the pci busses.
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
->> CC: Jason Cooper <jason@lakedaemon.net>
-> 
-> While I'm fine with the change to pci_common_init_dev(), I am not so
-> sure about the removal of mvebu_pcie_scan_bus(). I vaguely remember
-> that we intentionally did not use the default function for a specific
-> reason. Of course, this was a long time ago, and I don't remember the
-> reason. I would have to take a bit of time to 1/ review the archives of
-> the discussion surrounding the pcie-mvebu driver, and 2/ test your
-> patch to validate it works fine on HW.
+This adds a simple way to get the root port a given device
+is connected to.
 
-Hi Thomas, Thanks for your comments and help to test :)
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+---
+v2: new patch in v2
+v3: rename to pci_find_rootport to fit better with other API
+---
+ drivers/pci/search.c | 20 ++++++++++++++++++++
+ include/linux/pci.h  |  1 +
+ 2 files changed, 21 insertions(+)
 
-> 
-> Thanks!
-> 
-> Thomas
-> 
-
-
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index a20ce7d5e2a7..7254f126096d 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -384,3 +384,23 @@ int pci_dev_present(const struct pci_device_id *ids)
+ 	return 0;
+ }
+ EXPORT_SYMBOL(pci_dev_present);
++
++/**
++ * pci_find_root_port - Returns the root port the given device is connected to.
++ * @dev: PCI device for which the root port should be found.
++ */
++struct pci_dev *pci_find_root_port(struct pci_dev *dev)
++{
++	struct pci_bus *bus = dev->bus;
++
++	/* If there is no bridge on the bus the passed device is a root port. */
++	if (!bus->self)
++		return dev;
++
++	/* Walk up the PCI hierarchy to the first level below the root. */
++	while (bus->parent && bus->parent->self)
++		bus = bus->parent;
++
++	return bus->self;
++}
++EXPORT_SYMBOL(pci_find_root_port);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 360a966a97a5..f4321c5ba653 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -844,6 +844,7 @@ static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
+ }
+ struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from);
+ int pci_dev_present(const struct pci_device_id *ids);
++struct pci_dev *pci_find_root_port(struct pci_dev *dev);
+ 
+ int pci_bus_read_config_byte(struct pci_bus *bus, unsigned int devfn,
+ 			     int where, u8 *val);
 -- 
-Thanks!
-Yijing
+2.1.4
 
