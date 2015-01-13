@@ -1,115 +1,101 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 28 Jan 2015 12:29:42 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Cc: Murali Karicheri <m-karicheri2@ti.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v4 1/6] of: iommu: add ptr to OF node arg to
- of_iommu_configure()
-Message-ID: <20150128122941.GK1569@arm.com>
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
- <54C68C1D.5030605@ti.com>
- <20150128113300.GF1569@arm.com>
- <3953539.m9NpxSWcJ5@avalon>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qc0-f171.google.com ([209.85.216.171]:34075 "EHLO
+	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750976AbbAMRaK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Jan 2015 12:30:10 -0500
+Received: by mail-qc0-f171.google.com with SMTP id r5so3356795qcx.2
+        for <linux-pci@vger.kernel.org>; Tue, 13 Jan 2015 09:30:09 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3953539.m9NpxSWcJ5@avalon>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAH9N0t-EP9p2V3JMht1F_EyK+bOdiiH1krPLrsTMDQ_961damQ@mail.gmail.com>
+References: <CAH9N0t9KvhzmZDgD8PD5VBPR-pPhuE8MmBgK9RY8+ZtKyz++pQ@mail.gmail.com>
+ <CAErSpo48mPENuHpES1Q73ep+NKG8x2Zgb+g71do02y7vufbtfQ@mail.gmail.com>
+ <CAH9N0t-D0rM05E0nSDaDcVSdwnFt142aG=+FH_6c51Hf+nTMCw@mail.gmail.com>
+ <CAErSpo5x3_Wpf3v1i+nuMn-Os_QnH5GwGvdNOtmXSHCz3NswrA@mail.gmail.com> <CAH9N0t-EP9p2V3JMht1F_EyK+bOdiiH1krPLrsTMDQ_961damQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 13 Jan 2015 11:29:48 -0600
+Message-ID: <CAErSpo623=OSQ=eJQWGr5uN8Fi_o+-xVyB1pwd1Yd-4f4BkRyA@mail.gmail.com>
+Subject: Re: Hot add a PCIe device driver upon hotplug event
+To: Paulo Fortuna Carvalho <pricardofc@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 28, 2015 at 12:23:03PM +0000, Laurent Pinchart wrote:
-> On Wednesday 28 January 2015 11:33:00 Will Deacon wrote:
-> > On Mon, Jan 26, 2015 at 06:49:01PM +0000, Murali Karicheri wrote:
-> > > On 01/25/2015 08:32 AM, Laurent Pinchart wrote:
-> > >> On Friday 23 January 2015 17:32:34 Murali Karicheri wrote:
-> > >>> Function of_iommu_configure() is called from of_dma_configure() to
-> > >>> setup iommu ops using DT property. This API is currently used for
-> > >>> platform devices for which DMA configuration (including iommu ops)
-> > >>> may come from device's parent. To extend this functionality for PCI
-> > >>> devices, this API need to take a parent node ptr as an argument
-> > >>> instead of assuming device's parent. This is needed since for PCI, the
-> > >>> dma configuration may be defined in the DT node of the root bus
-> > >>> bridge's parent device. Currently only dma-range is used for PCI and
-> > >>> iommu is not supported. So return error if the device is PCI.
-> > >>> 
-> > >>> Cc: Joerg Roedel<joro@8bytes.org>
-> > >>> Cc: Grant Likely<grant.likely@linaro.org>
-> > >>> Cc: Rob Herring<robh+dt@kernel.org>
-> > >>> Cc: Bjorn Helgaas<bhelgaas@google.com>
-> > >>> Cc: Will Deacon<will.deacon@arm.com>
-> > >>> Cc: Russell King<linux@arm.linux.org.uk>
-> > >>> Cc: Arnd Bergmann<arnd@arndb.de>
-> > >>> Cc: Suravee Suthikulpanit<Suravee.Suthikulpanit@amd.com>
-> > >>> 
-> > >>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
-> > >>> ---
-> > >>> 
-> > >>>   drivers/iommu/of_iommu.c |   10 ++++++++--
-> > >>>   drivers/of/platform.c    |    2 +-
-> > >>>   include/linux/of_iommu.h |    6 ++++--
-> > >>>   3 files changed, 13 insertions(+), 5 deletions(-)
-> > >>> 
-> > >>> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-> > >>> index af1dc6a..439235b 100644
-> > >>> --- a/drivers/iommu/of_iommu.c
-> > >>> +++ b/drivers/iommu/of_iommu.c
-> > >>> @@ -133,19 +133,25 @@ struct iommu_ops *of_iommu_get_ops(struct
-> > >>> device_node *np)
-> > >>>   	return ops;
-> > >>>  }
-> > >>> 
-> > >>> -struct iommu_ops *of_iommu_configure(struct device *dev)
-> > >>> +struct iommu_ops *of_iommu_configure(struct device *dev,
-> > >>> +				     struct device_node *iommu_np)
-> > >>>  {
-> > >>>   	struct of_phandle_args iommu_spec;
-> > >>>   	struct device_node *np;
-> > >>>   	struct iommu_ops *ops = NULL;
-> > >>>   	int idx = 0;
-> > >>> 
-> > >>> +	if (dev_is_pci(dev)) {
-> > >>> +		dev_err(dev, "iommu is currently not supported for PCI\n");
-> > >>> +		return NULL;
-> > >>> +	}
-> > >>> +
-> > >>>   	/*
-> > >>>   	 * We don't currently walk up the tree looking for a parent IOMMU.
-> > >>>   	 * See the `Notes:' section of
-> > >>>   	 * Documentation/devicetree/bindings/iommu/iommu.txt
-> > >>>   	 */
-> > >> 
-> > >> Wouldn't it be better to fix this rather than passing the device node
-> > >> pointer to the function ? The solution would be more generic.
-> > > 
-> > > Will Deacon (Copied here) is working on this as we alteady discussed in
-> > > this thread. So it will be addressed by him in another series.
-> > 
-> > Well, "working on this" equates to "has it somewhere near the bottom of
-> > a very long list" :)
-> 
-> What's your opinion on this patch then, do you think adding the iommu_np 
-> argument makes sense as a temporary hack, or should we instead walk up the 
-> tree looking for an iommus attribute in parent nodes ? I don't expect that to 
-> be insanely difficult to code.
+On Tue, Jan 13, 2015 at 7:03 AM, Paulo Fortuna Carvalho
+<pricardofc@gmail.com> wrote:
+> Hello Bjorn,
+> Im sending a picture of lspci command for yuo t see the pcie switch
+> and endpoints status when i boot the system with everything connected.
+> DPIO cards are the 2 endpoints (6114 is a carrier containing a pcie
+> switch) and 6014 is the DAq card endpoint (both use a FPGA Virtex 6
+> from XILINX).
+> We have in the system an OSS card that is the second PCIe switch in
+> the system hierarchy closest to the root complex that is the chipset
+> in the motherboard and then the processor.
+> The OS is redhat v6.3 and the kernel we are using is 3.0.9 realtime.
 
-If walking up the tree is useful, then I think we should do that and update
-the Documentation to reflect the new behaviour. The only reason that I
-didn't code that in of_iommu_configure originally is because I didn't want
-to go against the binding spec for the initial version, especially as we
-didn't have a reason to look at parent nodes.
+Can you try a more recent kernel?  There have been significant hotplug
+changes since 3.0, and I don't want to spend time debugging issues
+that have already been fixed.  If it turns out that hotplug works as
+you expect in, say, v3.18, then you can figure out whether it's better
+to backport the hotplug fixes, or to update to a newer RT kernel.
 
-The only thing to double-check is that we don't break any existing users
-of the binding with this change, but I don't think that we do.
+Bjorn
 
-Will
+> Im sending also the dmesg information after system boot
+> (dmesg_output1.txt) and after I perform a switch off of the DAq card
+> (6014) handle, switch on and switch off again.
+> As you can see from dmesg_output2.txt the hot-add event is detected by
+> the pciehp on slot (8) bu no further print messages are sent to the
+> system log. At this point hotplug surprise is off. I will turn it on
+> on next test.
+>
+> The PCIe cards (both carrier and DAq) are ATCA with PCIExpress
+> capabilities for Linux PCI device drivers perform required operations.
+>
+> Regards,
+> Paulo.
+>
+>
+> 2015-01-12 17:41 GMT, Bjorn Helgaas <bhelgaas@google.com>:
+>> On Mon, Jan 12, 2015 at 11:26 AM, Paulo Fortuna Carvalho
+>> <pricardofc@gmail.com> wrote:
+>>> Hello Helgas,
+>>> I cannot see that line in dmesg. I think that something else is
+>>> missing...
+>>> Do you know what may cause that not appearing in dmesg? Hotplug Surprise?
+>>
+>> Can you just collect the entire dmesg log, so I can see what
+>> controller is involved and what is happening?
+>>
+>> Surprise hotplug should work.  Are you inserting an ExpressCard, or is
+>> it some other form factor?  Exactly what hardware are you adding, and
+>> what are you adding it to?
+>>
+>> Bjorn
+>>
+>>> 2015-01-12 16:58 GMT, Bjorn Helgaas <bhelgaas@google.com>:
+>>>> On Mon, Jan 12, 2015 at 5:42 AM, Paulo Fortuna Carvalho
+>>>> <pricardofc@gmail.com> wrote:
+>>>>> Hello,
+>>>>> I want to automatically load/unload a PCIe device driver when a card
+>>>>> is inserted/removed from the system. I can see in the system logger
+>>>>> with dmesg that the interrupt event is captured and acknowledged by
+>>>>> the pciehp hotplug service driver.
+>>>>> What I want to do next is that the operating system load/unload the
+>>>>> corresponding PCIe device driver for that card.
+>>>>
+>>>> When pciehp receives the interrupt, it should enumerate the device,
+>>>> and you should see a line in dmesg similar to this (of course, it will
+>>>> have different bus/device/function and different vendor/device IDs):
+>>>>
+>>>>   pci 0000:00:16.0: [8086:9c3a] type 00 class 0x078000
+>>>>
+>>>> The PCI core should then add the device using device_add(), and part
+>>>> of that is to emit a uevent, which can be read by user-space.
+>>>> Generally udev would handle the event and load the appropriate driver.
+>>>> I don't know the details of how the user-space side works.
+>>>>
+>>>> Bjorn
+>>>>
+>>
