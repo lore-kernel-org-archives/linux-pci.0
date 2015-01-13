@@ -1,99 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:58527 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751243AbbAQI2I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 17 Jan 2015 03:28:08 -0500
-Date: Sat, 17 Jan 2015 09:28:06 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Wilmer van der Gaast <kernel@wilmer.gaast.net>,
-	Zhang Rui <rui.zhang@intel.com>, linux-pci@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
-	stern@rowland.harvard.edu, oneukum@suse.de
-Subject: Re: [PATCH] PCI: keep enable status consistent for device without
- driver
-Message-ID: <20150117082806.GA3107@amd>
-References: <1421300208-7087-1-git-send-email-yinghai@kernel.org>
- <20150115235559.GC29776@google.com>
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:58418 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751789AbbAMBaG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 20:30:06 -0500
+Message-ID: <54B474D5.8090500@hp.com>
+Date: Tue, 13 Jan 2015 09:28:53 +0800
+From: "Li, ZhenHua" <zhen-hual@hp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150115235559.GC29776@google.com>
+To: Joerg Roedel <joro@8bytes.org>
+CC: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
+	vgoyal@redhat.com, dyoung@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com, "Li, ZhenHua" <zhen-hual@hp.com>
+Subject: Re: [PATCH v8 01/10] iommu/vt-d: Update iommu_attach_domain() and
+ its callers
+References: <1421046388-27925-1-git-send-email-zhen-hual@hp.com> <1421046388-27925-2-git-send-email-zhen-hual@hp.com> <20150112151855.GB6343@8bytes.org>
+In-Reply-To: <20150112151855.GB6343@8bytes.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu 2015-01-15 17:55:59, Bjorn Helgaas wrote:
-> [+cc Rafael, Pavel, linux-pm]
-> 
-> On Wed, Jan 14, 2015 at 09:36:48PM -0800, Yinghai Lu wrote:
-> > Wilmer reported continuous suspend/resume does not work after
-> > commit 928bea964827 ("PCI: Delay enabling bridges until they're needed").
-> > 
-> > For pci bridge without driver, FW enable it already.
-> > In pci_pm_resume/pci_pm_reenable_device after first resume
-> > will not reenable the device, aka the status is not the same
-> > as that before first suspend.
-> > 
-> > Try to update enable status according to register value before
-> > calling pci_reenable_device, so we will not miss those pm
-> > operation calling for next suspend/resume.
-> > 
-> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=86421
-> > Fixes: 928bea964827 ("PCI: Delay enabling bridges until they're needed")
-> > Reported-by: Wilmer van der Gaast <kernel@wilmer.gaast.net>
-> > Bisected-by: Wilmer van der Gaast <kernel@wilmer.gaast.net>
-> > Tested-by: Wilmer van der Gaast <kernel@wilmer.gaast.net>
-> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> > Cc: Zhang Rui <rui.zhang@intel.com>
-> > CC: stable@vger.kernel.org  # v3.10+
-> 
-> 928bea964827 appeared in v3.12.  Did you mean v3.12+ instead of v3.10+?
-> 
-> I'd really like to get Rafael and Pavel to take a look at this.
-> 
-> > ---
-> >  drivers/pci/pci-driver.c |    9 +++++++++
-> >  1 file changed, 9 insertions(+)
-> > 
-> > Index: linux-2.6/drivers/pci/pci-driver.c
-> > ===================================================================
-> > --- linux-2.6.orig/drivers/pci/pci-driver.c
-> > +++ linux-2.6/drivers/pci/pci-driver.c
-> > @@ -519,8 +519,17 @@ static void pci_pm_set_unknown_state(str
-> >   */
-> >  static int pci_pm_reenable_device(struct pci_dev *pci_dev)
-> >  {
-> > +	u16 cmd;
-> >  	int retval;
-> >  
-> > +	/* update enable_cnt according to cmd register */
-> > +	pci_read_config_word(pci_dev, PCI_COMMAND, &cmd);
-> > +	if (!pci_dev->is_busmaster && (cmd & PCI_COMMAND_MASTER))
-> > +		pci_dev->is_busmaster = true;
-> 
-> 
-> > +	if (!pci_is_enabled(pci_dev) &&
-> > +	    (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)))
-> > +		atomic_inc(&pci_dev->enable_cnt);
-> 
-> This doesn't feel right because we're handling enable_cnt differently here
-> than we do on initial boot.
-> 
-> On initial boot, I don't think we set enable_cnt based on whether firmware
-> left the IO or MEMORY bits set in the command register.  Why should we
-> modify enable_cnt based on the command register during resume?
-> 
-> I could certainly believe we should do something during initial boot, too.
-> It just seems like we should look at the command register in both places or
-> neither place.
-> 
-> I have the same question about is_busmaster above.
+On 01/12/2015 11:18 PM, Joerg Roedel wrote:
+> On Mon, Jan 12, 2015 at 03:06:19PM +0800, Li, Zhen-Hua wrote:
+>> Allow specification of the domain-id for the new domain.
+>> This patch only adds the 'did' parameter to iommu_attach_domain()
+>> and modifies all of its callers to specify the default value of -1
+>> which says "no did specified, allocate a new one".
+>
+> I think its better to keep the old iommu_attach_domain() interface in
+> place and introduce a new function (like iommu_attach_domain_with_id()
+> or something) which has the additional parameter. Then you can rewrite
+> iommu_attach_domain():
+>
+> 	iommu_attach_domai(...)
+> 	{
+> 		return iommu_attach_domain_with_id(..., -1);
+> 	}
+>
+> This way you don't have to update all the callers of
+> iommu_attach_domain() and the interface is more readable.
+>
+>
+> 	Joerg
+>
 
-Yep, that sounds like strange thing to do.
+That's a good way. I will do this in next version.
 
-Adding more cc's.
+Thanks
+Zhenhua
 
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+
