@@ -1,124 +1,63 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Len Brown <lenb@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [Patch v2 07/22] ACPI: Move the window flag logic to the combined parser
-Date: Wed, 28 Jan 2015 18:57:25 +0800
-Message-Id: <1422442660-455-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:33812 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752342AbbAMLnY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 13 Jan 2015 06:43:24 -0500
+Date: Tue, 13 Jan 2015 19:41:08 +0800
+From: Baoquan He <bhe@redhat.com>
+To: Vivek Goyal <vgoyal@redhat.com>
+Cc: Joerg Roedel <joro@8bytes.org>, "Li, Zhen-Hua" <zhen-hual@hp.com>,
+	dwmw2@infradead.org, indou.takao@jp.fujitsu.com, dyoung@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v8 02/10] iommu/vt-d: Items required for kdump
+Message-ID: <20150113114108.GB24543@dhcp-16-105.nay.redhat.com>
+References: <1421046388-27925-1-git-send-email-zhen-hual@hp.com>
+ <1421046388-27925-3-git-send-email-zhen-hual@hp.com>
+ <20150112152207.GC6343@8bytes.org>
+ <20150112152919.GA16162@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150112152919.GA16162@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+On 01/12/15 at 10:29am, Vivek Goyal wrote:
+> On Mon, Jan 12, 2015 at 04:22:08PM +0100, Joerg Roedel wrote:
+> > It looks like you are still copying the io-page-tables from the old
+> > kernel into the kdump kernel, is that right? With the approach that was
+> > proposed you only need to copy over the context entries 1-1. They are
+> > still pointing to the page-tables in the old kernels memory (which is
+> > just fine).
+> 
+> Kdump has the notion of backup region. Where certain parts of old kernels
+> memory can be moved to a different location (first 640K on x86 as of now)
+> and new kernel can make use of this memory now.
 
-Normal memory and io resources have window always set to false. Move
-the flag logic to the unified address space parser.
+Hi Vivek,
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/resource.c |   22 +++++++++-------------
- 1 file changed, 9 insertions(+), 13 deletions(-)
+About backup region I am a bit confusing. Just say x86, we usually copy
+it to a backup region. And this first 640K will be used as a usable
+memory region in 2nd kernel since its content has been copied to backup
+region. And that backup region is taken from crashkernel reserved
+memory and not passed to 2nd kernel as usable memory region.
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 99903d196024..15d17937c431 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -53,7 +53,7 @@ static bool acpi_dev_resource_len_valid(u64 start, u64 end, u64 len, bool io)
- }
- 
- static void acpi_dev_memresource_flags(struct resource *res, u64 len,
--				       u8 write_protect, bool window)
-+				       u8 write_protect)
- {
- 	res->flags = IORESOURCE_MEM;
- 
-@@ -62,9 +62,6 @@ static void acpi_dev_memresource_flags(struct resource *res, u64 len,
- 
- 	if (write_protect == ACPI_READ_WRITE_MEMORY)
- 		res->flags |= IORESOURCE_MEM_WRITEABLE;
--
--	if (window)
--		res->flags |= IORESOURCE_WINDOW;
- }
- 
- static void acpi_dev_get_memresource(struct resource *res, u64 start, u64 len,
-@@ -72,7 +69,7 @@ static void acpi_dev_get_memresource(struct resource *res, u64 start, u64 len,
- {
- 	res->start = start;
- 	res->end = start + len - 1;
--	acpi_dev_memresource_flags(res, len, write_protect, false);
-+	acpi_dev_memresource_flags(res, len, write_protect);
- }
- 
- /**
-@@ -118,7 +115,7 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
- EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
- 
- static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
--				      u8 io_decode, bool window)
-+				      u8 io_decode)
- {
- 	res->flags = IORESOURCE_IO;
- 
-@@ -130,9 +127,6 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
- 
- 	if (io_decode == ACPI_DECODE_16)
- 		res->flags |= IORESOURCE_IO_16BIT_ADDR;
--
--	if (window)
--		res->flags |= IORESOURCE_WINDOW;
- }
- 
- static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
-@@ -140,7 +134,7 @@ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
- {
- 	res->start = start;
- 	res->end = start + len - 1;
--	acpi_dev_ioresource_flags(res, len, io_decode, false);
-+	acpi_dev_ioresource_flags(res, len, io_decode);
- }
- 
- /**
-@@ -183,7 +177,6 @@ static bool acpi_decode_space(struct resource *res,
- 			      struct acpi_address64_attribute *attr)
- {
- 	u8 iodec = attr->granularity == 0xfff ? ACPI_DECODE_10 : ACPI_DECODE_16;
--	bool window = addr->producer_consumer == ACPI_PRODUCER;
- 	bool wp = addr->info.mem.write_protect;
- 	u64 len = attr->address_length;
- 
-@@ -192,10 +185,10 @@ static bool acpi_decode_space(struct resource *res,
- 
- 	switch (addr->resource_type) {
- 	case ACPI_MEMORY_RANGE:
--		acpi_dev_memresource_flags(res, len, wp, window);
-+		acpi_dev_memresource_flags(res, len, wp);
- 		break;
- 	case ACPI_IO_RANGE:
--		acpi_dev_ioresource_flags(res, len, iodec, window);
-+		acpi_dev_ioresource_flags(res, len, iodec);
- 		break;
- 	case ACPI_BUS_NUMBER_RANGE:
- 		res->flags = IORESOURCE_BUS;
-@@ -204,6 +197,9 @@ static bool acpi_decode_space(struct resource *res,
- 		return false;
- 	}
- 
-+	if (addr->producer_consumer == ACPI_PRODUCER)
-+		res->flags |= IORESOURCE_WINDOW;
-+
- 	return !(res->flags & IORESOURCE_DISABLED);
- }
- 
--- 
-1.7.10.4
+Here did you mean the old page table could fall into first 640K memory
+region or that reserved backup region?  Since as I understand the backup
+region is taken from crashkernel memory which is not used by 1st kernel
+process.
 
+Thanks
+Baoquan
+
+> 
+> So we will have to just make sure that no parts of this old page table
+> fall into backup region.
+> 
+> Thanks
+> Vivek
