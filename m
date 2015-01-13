@@ -1,58 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 20 Jan 2015 14:12:42 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pm@vger.kernel.org, xen-devel@lists.xenproject.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [Bugfix v4 1/2] xen/pci: Fix xen IRQ allocation failure caused
- by commit b81975eade8c
-Message-ID: <20150120191242.GC13409@l.oracle.com>
-References: <1421204979-30619-1-git-send-email-jiang.liu@linux.intel.com>
- <1421327077-19894-1-git-send-email-jiang.liu@linux.intel.com>
- <1421327077-19894-2-git-send-email-jiang.liu@linux.intel.com>
- <20150116181318.GA22690@l.oracle.com>
- <54BC8AF4.6010504@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:54899 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752220AbbAMS04 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 13 Jan 2015 13:26:56 -0500
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH] PCI: quirks: DMA alias quirk for Adaptec 3405
+To: linux-pci@vger.kernel.org
+Cc: aacraid@adaptec.com, linux-kernel@vger.kernel.org,
+	bhelgaas@google.com
+Date: Tue, 13 Jan 2015 11:26:50 -0700
+Message-ID: <20150113182605.15479.9020.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54BC8AF4.6010504@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 19, 2015 at 12:41:24PM +0800, Jiang Liu wrote:
-> 
-> On 2015/1/17 2:13, Konrad Rzeszutek Wilk wrote:
-> > On Thu, Jan 15, 2015 at 09:04:35PM +0800, Jiang Liu wrote:
-> <snit>
-> >>
-> >> Note: we need to test this patch on those special AMD systems which
-> >> override normal SCI GSI (9) with strange GSI (20).
-> > 
-> > [    0.000000] DMI: Supermicro X8DTN/X8DTN, BIOS 2.1c       10/28/2011
-> > ..
-> >      0.000000] ACPI: INT_SRC_OVR (bus 0 bus_irq 0 global_irq 2 dfl dfl)
-> > [    0.000000] ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 20 low level)
-> > [    0.000000] ACPI: IRQ0 used by override.
-> > ..
-> >     6.358737] xen: registering gsi 20 triggering 0 polarity 1
-> > [    6.358756] xen: --> pirq=20 -> irq=20 (gsi=20)
-> > ...
-> > -bash-4.1# cat /proc/interrupts |grep acpi
-> >  20:          0          0          0  xen-pirq-ioapic-level  acpi
-> Hi Konrad,
+As noted in the added comment, this device is actually an Intel 80333
+I/O processor where the exposed device at 0e.0 is actually the address
+translation unit of the I/O processor and a hidden, private device at
+01.0 masters the DMA for the device.  In order to enable the IOMMU, we
+therefore need to create a fixed alias between the exposed and hidden
+devfn.
 
-> 	May I assume an Tested-by from you here?
+Scenarios like this are potentially likely for any device incorporating
+this I/O processor, so this little bit of abstraction with the fixed
+alias table should make future additions trivial.
 
-Yes for this particular use case. I hadn't yet tried to push the ACPI buttons
-(this printout was from an server in a basement).
-> Thanks!
-> Gerry
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>
+---
+
+ drivers/pci/quirks.c |   37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index ed6f89b..19bdb17 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3528,6 +3528,43 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_JMICRON,
+ 			 quirk_dma_func1_alias);
+ 
+ /*
++ * Some devices DMA with the wrong devfn, not just the wrong function.
++ * quirk_fixed_dma_alias() uses this table to create fixed aliass, where
++ * the alias is "fixed" and independent of the device devfn.
++ *
++ * For example, the Adaptec 3405 is a PCIe card making use of an Intel 80333
++ * I/O processor.  To software, this appears as a straightforward PCIe-to-PCI/X
++ * bridge with a single device on the subordinate bus.  In reality, the exposed
++ * device at 0e.0 is the Address Translation Unit (ATU) of the controller that
++ * provides a bridge to the internal bus of the I/O processor.  The controller
++ * supports private devices, which can be hidden from PCI config space.  In the
++ * case of the Adaptec 3405, a private device at 01.0 appears to be the DMA
++ * engine, which therefore needs to become a DMA alias for the device.
++ */
++static const struct pci_device_id fixed_dma_alias_tbl[] = {
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x0285,
++			 PCI_VENDOR_ID_ADAPTEC2, 0x02bb), /* Adaptec 3405 */
++	  .driver_data = PCI_DEVFN(1, 0) },
++	{ 0 }
++};
++
++static void quirk_fixed_dma_alias(struct pci_dev *dev)
++{
++	const struct pci_device_id *id;
++
++	id = pci_match_id(fixed_dma_alias_tbl, dev);
++	if (id) {
++		dev->dma_alias_devfn = id->driver_data;
++		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
++		dev_info(&dev->dev, "Enabling fixed DMA alias to %02x.%d\n",
++			 PCI_SLOT(dev->dma_alias_devfn),
++			 PCI_FUNC(dev->dma_alias_devfn));
++	}
++}
++
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ADAPTEC2, 0x0285, quirk_fixed_dma_alias);
++
++/*
+  * A few PCIe-to-PCI bridges fail to expose a PCIe capability, resulting in
+  * using the wrong DMA alias for the device.  Some of these devices can be
+  * used as either forward or reverse bridges, so we need to test whether the
+
