@@ -1,67 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og105.obsmtp.com ([64.18.0.180]:46920 "HELO
-	exprod5og105.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751076AbbAFQYJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jan 2015 11:24:09 -0500
-Received: by mail-pd0-f179.google.com with SMTP id fp1so30810562pdb.10
-        for <linux-pci@vger.kernel.org>; Tue, 06 Jan 2015 08:24:08 -0800 (PST)
-From: Duc Dang <dhdang@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Tanmay Inamdar <tinamdar@apm.com>, Loc Ho <lho@apm.com>,
-	Feng Kan <fkan@apm.com>, Duc Dang <dhdang@apm.com>
-Subject: [PATCH 2/4] arm64: dts: Add the device tree entry for the APM X-Gene PCIe MSI node.
-Date: Tue,  6 Jan 2015 08:15:42 -0800
-Message-Id: <62ab7c42fb400d38eae837b9e090d39b6cc95932.1420499393.git.dhdang@apm.com>
-In-Reply-To: <cover.1420499393.git.dhdang@apm.com>
-References: <cover.1420499393.git.dhdang@apm.com>
-In-Reply-To: <cover.1420499393.git.dhdang@apm.com>
-References: <cover.1420499393.git.dhdang@apm.com>
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:35750 "EHLO
+	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752542AbbAMOr2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Jan 2015 09:47:28 -0500
+Message-ID: <54B52EFF.3070505@st.com>
+Date: Tue, 13 Jan 2015 15:43:11 +0100
+From: Maxime Coquelin <maxime.coquelin@st.com>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, Srikanth Thokala <sthokal@xilinx.com>
+Subject: Re: [PATCH] PCI: xilinx: fix harmless format string warning
+References: <1759235.dcJCuiggea@wuerfel>
+In-Reply-To: <1759235.dcJCuiggea@wuerfel>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
+Hi Arnd,
 
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
-Signed-off-by: Duc Dang <dhdang@apm.com>
----
- arch/arm64/boot/dts/apm/apm-storm.dtsi | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+On 01/13/2015 03:20 PM, Arnd Bergmann wrote:
+> The xilinx pcie driver prints a register value whose type is
+> propagated to the type returned by the GENMASK() macro.
+> Unfortunately, that type has recently changed as the result
+> of a bug fix, so now we get a warning about the type:
+>
+> drivers/pci/host/pcie-xilinx.c: In function 'xilinx_pcie_clear_err_interrupts':
+> drivers/pci/host/pcie-xilinx.c:154:3: warning: format '%d' expects argument of type 'int', but argument 4 has type 'long unsigned int' [-Wformat=]
+>
+> This changes the code so we always print the number as an
+> 'unsigned long' type to avoid the warning. The original code
+> was fine on 32-bit architectures but not on 64-bit. Now it
+> works as expected on both.
+>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Fixes: 00b4d9a1412 ("bitops: Fix shift overflow in GENMASK macros")
+>
+>
 
-diff --git a/arch/arm64/boot/dts/apm/apm-storm.dtsi b/arch/arm64/boot/dts/apm/apm-storm.dtsi
-index f1ad9c2..70ba721 100644
---- a/arch/arm64/boot/dts/apm/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm/apm-storm.dtsi
-@@ -469,6 +469,27 @@
- 			clocks = <&pcie4clk 0>;
- 		};
- 
-+		msi: msi@79000000 {
-+			compatible = "apm,xgene-storm-pcie-msi", "apm,xgene-pcie-msi";
-+			reg = <0x00 0x79000000 0x0 0x900000>;
-+			interrupts = <  0x0 0x10 0x4
-+					0x0 0x11 0x4
-+					0x0 0x12 0x4
-+					0x0 0x13 0x4
-+					0x0 0x14 0x4
-+					0x0 0x15 0x4
-+					0x0 0x16 0x4
-+					0x0 0x17 0x4
-+					0x0 0x18 0x4
-+					0x0 0x19 0x4
-+					0x0 0x1a 0x4
-+					0x0 0x1b 0x4
-+					0x0 0x1c 0x4
-+					0x0 0x1d 0x4
-+					0x0 0x1e 0x4
-+					0x0 0x1f 0x4>;
-+		};
-+
- 		serial0: serial@1c020000 {
- 			status = "disabled";
- 			device_type = "serial";
--- 
-1.9.1
+You can add my:
+Acked-by: Maxime Coquelin <maxime.coquelin@st.com>
 
+Thanks!
+Maxime
