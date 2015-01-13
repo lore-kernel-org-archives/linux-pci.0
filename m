@@ -1,90 +1,179 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from galahad.ideasonboard.com ([185.26.127.97]:50815 "EHLO
-	galahad.ideasonboard.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751534AbbA3AYL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jan 2015 19:24:11 -0500
-From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Will Deacon <will.deacon@arm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v4 1/6] of: iommu: add ptr to OF node arg to of_iommu_configure()
-Date: Fri, 30 Jan 2015 02:24:51 +0200
-Message-ID: <1612981.2C6LXFqAIA@avalon>
-In-Reply-To: <CAL_Jsq+rzwk0Rw5RRKf9oLqXNFFgnJb4UQ_AzpJLxN1Z0rJWMQ@mail.gmail.com>
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com> <5349994.6VHXzPdIxs@avalon> <CAL_Jsq+rzwk0Rw5RRKf9oLqXNFFgnJb4UQ_AzpJLxN1Z0rJWMQ@mail.gmail.com>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:43119 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752831AbbAMDQU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 22:16:20 -0500
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 13 Jan 2015 13:16:18 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 7CDF52CE8054
+	for <linux-pci@vger.kernel.org>; Tue, 13 Jan 2015 14:16:16 +1100 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t0D3GGSL42729646
+	for <linux-pci@vger.kernel.org>; Tue, 13 Jan 2015 14:16:16 +1100
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t0D3GE4L020000
+	for <linux-pci@vger.kernel.org>; Tue, 13 Jan 2015 14:16:15 +1100
+Date: Tue, 13 Jan 2015 14:16:13 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au
+Subject: Re: [PATCH 3/5] powerpc/powernv: Introduce pnv_pci_poll()
+Message-ID: <20150113031613.GA9318@shangw>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1417672488-27341-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1417672488-27341-4-git-send-email-gwshan@linux.vnet.ibm.com>
+ <20150109174304.GD6575@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150109174304.GD6575@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rob,
+On Fri, Jan 09, 2015 at 10:43:04AM -0700, Bjorn Helgaas wrote:
+>On Thu, Dec 04, 2014 at 04:54:46PM +1100, Gavin Shan wrote:
+>> We might not get some PCI slot information (e.g. power status)
+>> immediately by OPAL API. Instead, opal_pci_poll() need to be called
+>> for the required information.
+>> 
+>> The patch introduces pnv_pci_poll(), which bases on original
+>> ioda_eeh_poll(), to cover the above case
+>> 
+>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>
+>Hi Gavin,
+>
+>This patch doesn't apply cleanly on v3.19-rc1.  Can you refresh this
+>series, please?
+>
 
-On Thursday 29 January 2015 10:49:38 Rob Herring wrote:
-> On Wed, Jan 28, 2015 at 5:32 PM, Laurent Pinchart wrote:
-> > On Wednesday 28 January 2015 13:32:19 Will Deacon wrote:
-> >> On Wed, Jan 28, 2015 at 01:15:10PM +0000, Laurent Pinchart wrote:
-> >>> On Wednesday 28 January 2015 12:29:42 Will Deacon wrote:
-> >>>> On Wed, Jan 28, 2015 at 12:23:03PM +0000, Laurent Pinchart wrote:
-> >>>>> On Wednesday 28 January 2015 11:33:00 Will Deacon wrote:
-> >>>>>> On Mon, Jan 26, 2015 at 06:49:01PM +0000, Murali Karicheri wrote:
-> >>>>>> On 01/25/2015 08:32 AM, Laurent Pinchart wrote:
-> >>>>>>>> On Friday 23 January 2015 17:32:34 Murali Karicheri wrote:
-> >>>>>>>>> Function of_iommu_configure() is called from of_dma_configure()
-> >>>>>>>>> to setup iommu ops using DT property. This API is currently used
-> >>>>>>>>> for platform devices for which DMA configuration (including iommu
-> >>>>>>>>> ops) may come from device's parent. To extend this functionality
-> >>>>>>>>> for PCI devices, this API need to take a parent node ptr as an
-> >>>>>>>>> argument instead of assuming device's parent. This is needed since
-> >>>>>>>>> for PCI, the dma configuration may be defined in the DT node of
-> >>>>>>>>> the root bus bridge's parent device. Currently only dma-range is
-> >>>>>>>>> used for PCI and iommu is not supported. So return error if the
-> >>>>>>>>> device is PCI.
-> 
-> [...]
-> 
-> >>> If I understand Murali's patch set right (please correct me if that's
-> >>> not the case) the PCI code walks up the DT nodes hierarchy to the
-> >>> parent node that contains the iommus attribute and passes a pointer to
-> >>> that node to this function. It's thus a PCI-specific solution. As a
-> >>> temporary hack that's OK I suppose, but if implementing it right
-> >>> straight away isn't difficult that would be better.
-> >> 
-> >> It looks to me like the code walks the PCI topology to get the DT node
-> >> for the host controller, and passes *that* to of_dma_configure. That
-> >> sounds like the right thing to do to me, especially since the PCI
-> >> topology is likely not encoded in the device-tree. So actually, it is
-> >> passing the first parent node afaict.
-> > 
-> > Indeed, that's right. I forgot for a moment that we have non-DT devices
-> > ;-)
-> > 
-> > Acked-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-> > 
-> > Murali, nitpicking a bit, shouldn't the iommu_np parameter be renamed ? It
-> > points to the node containing the iommus parameter, not to the iommu node,
-> > so the current name is slightly confusing. A brief kerneldoc above the
-> > function would also help. This can be the subject of a separate patch.
-> 
-> It was more confusing having np and node within the function.
+Bjorn, the patchset depends on PowerPC specific changes as follows. The
+PowerPC specfic changes should go first before you can apply this patchset
+cleanly. Also, all patches depend on the firwmare changes, which is waiting
+for Ben's comments. So I guess it's not urgent to merge it for now.
 
-Agreed.
+PowerPC specific patchs:
 
-How about master_np or iommu_master_np ? The latter might be a bit long.
+https://patchwork.ozlabs.org/patch/417638/
+https://patchwork.ozlabs.org/patch/417637/
+https://patchwork.ozlabs.org/patch/417636/
 
--- 
-Regards,
+Thanks,
+Gavin
 
-Laurent Pinchart
+>Bjorn
+>
+>> ---
+>>  arch/powerpc/platforms/powernv/eeh-ioda.c | 28 ++--------------------------
+>>  arch/powerpc/platforms/powernv/pci.c      | 19 +++++++++++++++++++
+>>  arch/powerpc/platforms/powernv/pci.h      |  1 +
+>>  3 files changed, 22 insertions(+), 26 deletions(-)
+>> 
+>> diff --git a/arch/powerpc/platforms/powernv/eeh-ioda.c b/arch/powerpc/platforms/powernv/eeh-ioda.c
+>> index cf38781..21fa033 100644
+>> --- a/arch/powerpc/platforms/powernv/eeh-ioda.c
+>> +++ b/arch/powerpc/platforms/powernv/eeh-ioda.c
+>> @@ -490,24 +490,6 @@ static int ioda_eeh_get_state(struct eeh_pe *pe)
+>>  	return ioda_eeh_get_pe_state(pe);
+>>  }
+>>  
+>> -static s64 ioda_eeh_poll(uint64_t id)
+>> -{
+>> -	s64 rc = OPAL_HARDWARE;
+>> -
+>> -	while (1) {
+>> -		rc = opal_pci_poll(id, NULL);
+>> -		if (rc <= 0)
+>> -			break;
+>> -
+>> -		if (system_state < SYSTEM_RUNNING)
+>> -			udelay(1000 * rc);
+>> -		else
+>> -			msleep(rc);
+>> -	}
+>> -
+>> -	return rc;
+>> -}
+>> -
+>>  int ioda_eeh_phb_reset(struct pci_controller *hose, int option)
+>>  {
+>>  	struct pnv_phb *phb = hose->private_data;
+>> @@ -536,10 +518,7 @@ int ioda_eeh_phb_reset(struct pci_controller *hose, int option)
+>>  
+>>  	/* Issue reset and poll until it's completed */
+>>  	rc = opal_pci_reset(phb->opal_id, scope, OPAL_ASSERT_RESET);
+>> -	if (rc > 0)
+>> -		rc = ioda_eeh_poll(phb->opal_id);
+>> -
+>> -	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
+>> +	return pnv_pci_poll(phb->opal_id, rc, NULL);
+>>  }
+>>  
+>>  static int __ioda_eeh_bridge_reset(struct pci_dev *dev, int option)
+>> @@ -630,10 +609,7 @@ static int ioda_eeh_bridge_reset(struct pci_dev *dev, int option)
+>>  	phb = hose->private_data;
+>>  	id |= (dev->bus->number << 24) | (dev->devfn << 16) | phb->opal_id;
+>>  	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
+>> -	if (rc > 0)
+>> -		ioda_eeh_poll(id);
+>> -
+>> -	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
+>> +	return pnv_pci_poll(id, rc, NULL);
+>>  }
+>>  
+>>  static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
+>> diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+>> index 4b20f2c..6dc8ea9 100644
+>> --- a/arch/powerpc/platforms/powernv/pci.c
+>> +++ b/arch/powerpc/platforms/powernv/pci.c
+>> @@ -45,6 +45,25 @@
+>>  #define cfg_dbg(fmt...)	do { } while(0)
+>>  //#define cfg_dbg(fmt...)	printk(fmt)
+>>  
+>> +int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval)
+>> +{
+>> +	while (rval > 0) {
+>> +		rval = opal_pci_poll(id, pval);
+>> +		if (rval == OPAL_SUCCESS && pval)
+>> +			rval = opal_pci_poll(id, pval);
+>> +
+>> +		if (rval <= 0)
+>> +			break;
+>> +
+>> +		if (system_state < SYSTEM_RUNNING)
+>> +			udelay(1000 * rval);
+>> +		else
+>> +			msleep(rval);
+>> +	}
+>> +
+>> +	return rval ? -EIO : 0;
+>> +}
+>> +
+>>  #ifdef CONFIG_PCI_MSI
+>>  static int pnv_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+>>  {
+>> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+>> index 6c02ff8..396fe02 100644
+>> --- a/arch/powerpc/platforms/powernv/pci.h
+>> +++ b/arch/powerpc/platforms/powernv/pci.h
+>> @@ -217,6 +217,7 @@ extern struct pci_ops pnv_pci_ops;
+>>  extern struct pnv_eeh_ops ioda_eeh_ops;
+>>  #endif
+>>  
+>> +int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval);
+>>  void pnv_pci_dump_phb_diag_data(struct pci_controller *hose,
+>>  				unsigned char *log_buff);
+>>  int pnv_pci_cfg_read(struct device_node *dn,
+>> -- 
+>> 1.8.3.2
+>> 
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
