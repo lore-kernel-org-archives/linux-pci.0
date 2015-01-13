@@ -1,118 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:60244 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751465AbbALRvb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 12:51:31 -0500
-Date: Mon, 12 Jan 2015 17:51:25 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Rob Herring <robh@kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 12/16] pci/host: generic: convert to use generic config
- accesses
-Message-ID: <20150112175125.GM13360@arm.com>
-References: <1420857290-8373-1-git-send-email-robh@kernel.org>
- <1420857290-8373-13-git-send-email-robh@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <54B52168.3080600@arm.com>
+Date: Tue, 13 Jan 2015 13:45:12 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1420857290-8373-13-git-send-email-robh@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+To: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
+Subject: Re: [PATCH v2 2/8] PCI/MSI: Add hooks to populate the msi_domain
+ field
+References: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com> <1420736772-11088-3-git-send-email-marc.zyngier@arm.com> <54B510BA.7030202@huawei.com>
+In-Reply-To: <54B510BA.7030202@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jan 10, 2015 at 02:34:46AM +0000, Rob Herring wrote:
-> Convert the generic host PCI driver to use the generic config access
-> functions.
+On 13/01/15 12:34, Yijing Wang wrote:
+>>  static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>>  					   struct pci_dev *bridge, int busnr)
+>>  {
+>> @@ -713,6 +727,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>>  	bridge->subordinate = child;
+>>  
+>>  add_dev:
+>> +	pci_set_bus_msi_domain(child);
+>>  	ret = device_register(&child->dev);
+>>  	WARN_ON(ret < 0);
+>>  
+>> @@ -1507,6 +1522,17 @@ static void pci_init_capabilities(struct pci_dev *dev)
+>>  	pci_enable_acs(dev);
+>>  }
+>>  
+>> +static void pci_set_msi_domain(struct pci_dev *dev)
+>> +{
+>> +	/*
+>> +	 * If no domain has been set through the pcibios callback,
+>> +	 * inherit the default from the bus device.
+>> +	 */
+>> +	if (!dev_get_msi_domain(&dev->dev))
+>> +		dev_set_msi_domain(&dev->dev,
+>> +				   dev_get_msi_domain(&dev->bus->dev));
+>> +}
 > 
-> Signed-off-by: Rob Herring <robh@kernel.org>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org
-> ---
->  drivers/pci/host/pci-host-generic.c | 51 +++----------------------------------
->  1 file changed, 3 insertions(+), 48 deletions(-)
-
-Looks like a fairly straightforward conversion for this driver!
-
-  Acked-by: Will Deacon <will.deacon@arm.com>
-
-Will
-
-> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> index 6eb1aa7..925e29e 100644
-> --- a/drivers/pci/host/pci-host-generic.c
-> +++ b/drivers/pci/host/pci-host-generic.c
-> @@ -76,55 +76,9 @@ static struct gen_pci_cfg_bus_ops gen_pci_cfg_ecam_bus_ops = {
->  	.map_bus	= gen_pci_map_cfg_bus_ecam,
->  };
->  
-> -static int gen_pci_config_read(struct pci_bus *bus, unsigned int devfn,
-> -				int where, int size, u32 *val)
-> -{
-> -	void __iomem *addr;
-> -	struct pci_sys_data *sys = bus->sysdata;
-> -	struct gen_pci *pci = sys->private_data;
-> -
-> -	addr = pci->cfg.ops->map_bus(bus, devfn, where);
-> -
-> -	switch (size) {
-> -	case 1:
-> -		*val = readb(addr);
-> -		break;
-> -	case 2:
-> -		*val = readw(addr);
-> -		break;
-> -	default:
-> -		*val = readl(addr);
-> -	}
-> -
-> -	return PCIBIOS_SUCCESSFUL;
-> -}
-> -
-> -static int gen_pci_config_write(struct pci_bus *bus, unsigned int devfn,
-> -				 int where, int size, u32 val)
-> -{
-> -	void __iomem *addr;
-> -	struct pci_sys_data *sys = bus->sysdata;
-> -	struct gen_pci *pci = sys->private_data;
-> -
-> -	addr = pci->cfg.ops->map_bus(bus, devfn, where);
-> -
-> -	switch (size) {
-> -	case 1:
-> -		writeb(val, addr);
-> -		break;
-> -	case 2:
-> -		writew(val, addr);
-> -		break;
-> -	default:
-> -		writel(val, addr);
-> -	}
-> -
-> -	return PCIBIOS_SUCCESSFUL;
-> -}
-> -
->  static struct pci_ops gen_pci_ops = {
-> -	.read	= gen_pci_config_read,
-> -	.write	= gen_pci_config_write,
-> +	.read	= pci_generic_config_read,
-> +	.write	= pci_generic_config_write,
->  };
->  
->  static const struct of_device_id gen_pci_of_match[] = {
-> @@ -287,6 +241,7 @@ static int gen_pci_probe(struct platform_device *pdev)
->  
->  	of_id = of_match_node(gen_pci_of_match, np);
->  	pci->cfg.ops = of_id->data;
-> +	gen_pci_ops.map_bus = pci->cfg.ops->map_bus;
->  	pci->host.dev.parent = dev;
->  	INIT_LIST_HEAD(&pci->host.windows);
->  	INIT_LIST_HEAD(&pci->resources);
-> -- 
-> 2.1.0
+> Hi Marc, now we have two ways to associate the pci_dev and msi_domain, right ?
 > 
+> 1. associate pci_dev and msi_domain in pcibios_add_device() like x86.
 > 
+> 2. Inherit msi_domain from pci_dev->bus.
+> 
+> My question is if all pci devices inherit msi_domain from the pci_bus,
+> so all pci devices under same pci host bridge have the same msi_domain assigned by
+> weak pcibios_set_phb_msi_domain(). So why not save the pci host bridge specific
+> msi_domain in pci_host_bridge. Then pci devices could inherit the msi_domain from
+> its pci host bridge directly, no need to involve pci bus in the assignment.
+
+But then, you would end-up maintaining another msi_domain field inside
+the pci_host bridge structure. What do you gain by doing so?
+
+With this series, msi_domain has the nice property of always being tied
+to a device (and struct pci_bus always has a device). We always have
+phb->bus->dev.msi_domain within reach, and architecture code can decide
+to override it on a per-device basis.
+
+What else do you need? What am I missing from your proposal?
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
