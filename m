@@ -1,39 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f49.google.com ([209.85.215.49]:35734 "EHLO
-	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754461AbbA0RKy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Jan 2015 12:10:54 -0500
-Received: by mail-la0-f49.google.com with SMTP id gf13so14389289lab.8
-        for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2015 09:10:53 -0800 (PST)
+Received: from mail-ig0-f169.google.com ([209.85.213.169]:51162 "EHLO
+	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751085AbbANTRU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 14:17:20 -0500
 MIME-Version: 1.0
-Reply-To: pricardofc@gmail.com
-In-Reply-To: <20150127164724.GC22764@kroah.com>
-References: <CAH9N0t9KvhzmZDgD8PD5VBPR-pPhuE8MmBgK9RY8+ZtKyz++pQ@mail.gmail.com>
-	<CAErSpo48mPENuHpES1Q73ep+NKG8x2Zgb+g71do02y7vufbtfQ@mail.gmail.com>
-	<CAH9N0t8s+kcG_Qok0wpoDz9jzwvPk_QmBK_p-qbACZJjrr+iVQ@mail.gmail.com>
-	<CAErSpo7NK6S8Dk3-FYFV=AVPR8cLRzmAWrBNQ2rke0BRADxAKw@mail.gmail.com>
-	<CAH9N0t-+gog9wNFo7hqhzrWuttrRyf5HjjHciFrDGz1rZUiUfw@mail.gmail.com>
-	<20150122222016.GF13072@google.com>
-	<CAH9N0t_YoRZtPqWwAaNdHNW3m-HOfrCevBZGiOnM+VWGxeFwEQ@mail.gmail.com>
-	<CAErSpo4bRnGkfmzLnGSUnv-aJfmZLtQ_jXhnZo+9Wm=CgHOB3A@mail.gmail.com>
-	<CAH9N0t9o63GLEYyLgW2CThhP8TW3Bc7_RxbP4bdwwcd120-gRw@mail.gmail.com>
-	<20150127164724.GC22764@kroah.com>
-Date: Tue, 27 Jan 2015 17:10:52 +0000
-Message-ID: <CAH9N0t9zOOqx_mwRbQFNmAi8=A3hP1c6eAz+k7z7_hfcXBQ2xg@mail.gmail.com>
-Subject: Re: Hot add a PCIe device driver upon hotplug event
-From: Paulo Fortuna Carvalho <pricardofc@gmail.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20150114165204.GA19925@google.com>
+References: <1421090600-9750-1-git-send-email-yinghai@kernel.org>
+	<1421090600-9750-3-git-send-email-yinghai@kernel.org>
+	<20150114165204.GA19925@google.com>
+Date: Wed, 14 Jan 2015 11:17:19 -0800
+Message-ID: <CAE9FiQU3gVq2BcK-djpjnOn7EtiPLX1Zo_OnNDTqJJmjNY27fw@mail.gmail.com>
+Subject: Re: [PATCH 02/10] PCI, x86: clip firmware assigned resource under
+ parent bridge's
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"the arch/x86 maintainers" <x86@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->Is it possible to cancel somehow the remove procedure if the device is in use? Nope, >you could have physically removed the device, so we can't cancel that :)
+On Wed, Jan 14, 2015 at 8:52 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, Jan 12, 2015 at 11:23:12AM -0800, Yinghai Lu wrote:
 
-ok.
+> There's a lot of duplicated code in these patches.  Is it possible to
+> factor this out a bit, e.g., something like this?
+>
+>   int pci_claim_bridge_resource(struct pci_dev *dev, int i)
+>   {
+>     if ((dev->class >> 8) != PCI_CLASS_BRIDGE_PCI)
+>       return 0;
+>
+>     if (pci_claim_resource(dev, i) == 0)
+>       return 0;         /* claimed the window */
+>
+>     if (!pci_bus_clip_resource(dev, i))
+>       return -EINVAL;   /* clipping didn't change anything */
+>
+>     if (dev->subordinate)
+>       pci_setup_bridge(dev->subordinate);
+>     if (pci_claim_resource(dev, i) == 0)
+>       return 0;         /* claimed a smaller window */
+>
+>     return -EINVAL;
+>   }
 
->When we are using the device and remove occurs the kernel crashes. Then we need to fix the kernel, what driver is crashing, and where?
+ok. will have one in setup_bus.c
 
-The driver of the ATCA acquisition card crashes in a read data
-function through DMA accesses.
+>
+>>  }
+>>
+>>  static void pcibios_allocate_bus_resources(struct pci_bus *bus)
+>> @@ -234,8 +251,12 @@ static void pcibios_allocate_bus_resources(struct pci_bus *bus)
+>>       struct pci_bus *child;
+>>
+>>       /* Depth-First Search on bus tree */
+>> -     if (bus->self)
+>> -             pcibios_allocate_bridge_resources(bus->self);
+>> +     if (bus->self) {
+>> +             bool changed = pcibios_allocate_bridge_resources(bus->self);
+>> +
+>> +             if (changed)
+>> +                     pci_setup_bridge(bus);
+>> +     }
+>>       list_for_each_entry(child, &bus->children, node)
+>>               pcibios_allocate_bus_resources(child);
+>>  }
+>> @@ -274,18 +295,27 @@ static void pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
+>>                               dev_dbg(&dev->dev,
+>>                                       "BAR %d: reserving %pr (d=%d, p=%d)\n",
+>>                                       idx, r, disabled, pass);
+>> -                             if (pci_claim_resource(dev, idx) < 0) {
+>> -                                     if (r->flags & IORESOURCE_PCI_FIXED) {
+>> -                                             dev_info(&dev->dev, "BAR %d %pR is immovable\n",
+>> +
+>> +                             if (pci_claim_resource(dev, idx) >= 0)
+>> +                                     continue;
+>> +
+>> +                             if (r->flags & IORESOURCE_PCI_FIXED) {
+>> +                                     dev_info(&dev->dev, "BAR %d %pR is immovable\n",
+>>                                                        idx, r);
+>> -                                     } else {
+>> -                                             /* We'll assign a new address later */
+>> -                                             pcibios_save_fw_addr(dev,
+>> -                                                             idx, r->start);
+>> -                                             r->end -= r->start;
+>> -                                             r->start = 0;
+>> -                                     }
+>> +                                     continue;
+>> +                             }
+>> +
+>> +                             /* try again with clip */
+>> +                             if (pci_bus_clip_resource(dev, r)) {
+>> +                                     pci_update_resource(dev, idx);
+>> +                                     if (pci_claim_resource(dev, idx) >= 0)
+>> +                                             continue;
+>
+> This hunk doesn't make sense to me.  This only deals with standard BARs and
+> IOV BARS.  It doesn't deal with bridge windows at all.  The sizes of these
+> BARs and IOV BARs are fixed and there's no point in trying to clip them
+> because we can't tell the hardware that the BAR is now smaller.
+>
+> It's different for bridge windows because we can adjust their size.
+
+ok, will drop that.
