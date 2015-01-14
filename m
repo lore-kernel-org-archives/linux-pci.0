@@ -1,62 +1,90 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54BF3881.9000708@linux.intel.com>
-Date: Wed, 21 Jan 2015 13:26:25 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:60121 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753464AbbANR2H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 14 Jan 2015 12:28:07 -0500
+Date: Wed, 14 Jan 2015 19:27:48 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org,
+	virtualization@lists.linux-foundation.org
+Cc: Rusty Russell <rusty@rustcorp.com.au>, cornelia.huck@de.ibm.com,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	trivial@kernel.org, David Howells <dhowells@redhat.com>,
+	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
+	linux-am33-list@redhat.com
+Subject: [PATCH v3 08/16] mn10300: drop dead code
+Message-ID: <1421256142-11512-9-git-send-email-mst@redhat.com>
+References: <1421256142-11512-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [RFC Patch 08/19] ACPI: Add prefetch decoding to the address
- space parser
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-9-git-send-email-jiang.liu@linux.intel.com> <1593565.fJ4zH7YgDd@vostro.rjw.lan>
-In-Reply-To: <1593565.fJ4zH7YgDd@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1421256142-11512-1-git-send-email-mst@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/1/21 8:35, Rafael J. Wysocki wrote:
-> On Thursday, January 08, 2015 10:32:55 AM Jiang Liu wrote:
->> From: Thomas Gleixner <tglx@linutronix.de>
->>
->> Add support of PREFETCH attributre to ACPI address space and extended
->> address space parser.
-> 
-> This potentially enables untested configurations which tends to uncover bugs,
-> so I'm concerned.
-> 
-> What's the possible impact of this?
-Hi Rafael,
-	I have analyzed all call sites related to this change, most
-users just care about resource type(IO, MEM, IRQ etc) and ignore
-the prefetch property. Seems only PCI subsystem cares about PREFETCH.
-Regards,
-Gerry
+pci-iomap.c was (apparently, mistakenly) reintroduced as part of
+commit 83c2dc15ce824450e7044b9f90cd529c25747ae0
+    MN10300: Handle cacheable PCI regions in pci_iomap()
+probably as side-effect of forward-porting the patch
+from an old kernel.
 
-> 
->> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
->> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->> ---
->>  drivers/acpi/resource.c |    3 +++
->>  1 file changed, 3 insertions(+)
->>
->> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
->> index a56a64164410..abe3a29ad802 100644
->> --- a/drivers/acpi/resource.c
->> +++ b/drivers/acpi/resource.c
->> @@ -200,6 +200,9 @@ static bool acpi_decode_space(struct resource *res,
->>  	if (base->producer_consumer == ACPI_PRODUCER)
->>  		res->flags |= IORESOURCE_WINDOW;
->>  
->> +	if (base->info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
->> +		res->flags |= IORESOURCE_PREFETCH;
->> +
->>  	return !(res->flags & IORESOURCE_DISABLED);
->>  }
->>  
->>
-> 
+It's not really needed: the generic pci_iomap does the right thing here.
+
+The new file isn't compiled so it's safe to drop.
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Cc: trivial@kernel.org
+Cc: David Howells <dhowells@redhat.com>
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+---
+
+Can relevant people please ack this for merging through virtio tree?
+
+ arch/mn10300/unit-asb2305/pci-iomap.c | 35 -----------------------------------
+ 1 file changed, 35 deletions(-)
+ delete mode 100644 arch/mn10300/unit-asb2305/pci-iomap.c
+
+diff --git a/arch/mn10300/unit-asb2305/pci-iomap.c b/arch/mn10300/unit-asb2305/pci-iomap.c
+deleted file mode 100644
+index bd65dae..0000000
+--- a/arch/mn10300/unit-asb2305/pci-iomap.c
++++ /dev/null
+@@ -1,35 +0,0 @@
+-/* ASB2305 PCI I/O mapping handler
+- *
+- * Copyright (C) 2007 Red Hat, Inc. All Rights Reserved.
+- * Written by David Howells (dhowells@redhat.com)
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public Licence
+- * as published by the Free Software Foundation; either version
+- * 2 of the Licence, or (at your option) any later version.
+- */
+-#include <linux/pci.h>
+-#include <linux/module.h>
+-
+-/*
+- * Create a virtual mapping cookie for a PCI BAR (memory or IO)
+- */
+-void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long maxlen)
+-{
+-	resource_size_t start = pci_resource_start(dev, bar);
+-	resource_size_t len = pci_resource_len(dev, bar);
+-	unsigned long flags = pci_resource_flags(dev, bar);
+-
+-	if (!len || !start)
+-		return NULL;
+-
+-	if ((flags & IORESOURCE_IO) || (flags & IORESOURCE_MEM)) {
+-		if (flags & IORESOURCE_CACHEABLE && !(flags & IORESOURCE_IO))
+-			return ioremap(start, len);
+-		else
+-			return ioremap_nocache(start, len);
+-	}
+-
+-	return NULL;
+-}
+-EXPORT_SYMBOL(pci_iomap);
+-- 
+MST
+
