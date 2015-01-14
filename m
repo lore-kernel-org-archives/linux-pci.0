@@ -1,106 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:40879 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753789AbbAEUHj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 5 Jan 2015 15:07:39 -0500
-Message-ID: <54AAEEE1.7020607@ti.com>
-Date: Mon, 5 Jan 2015 15:06:57 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 14 Jan 2015 19:27:59 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org,
+	virtualization@lists.linux-foundation.org
+Cc: Rusty Russell <rusty@rustcorp.com.au>, cornelia.huck@de.ibm.com,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	linux390@de.ibm.com, Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Gerald Schaefer <gerald.schaefer@de.ibm.com>,
+	linux-s390@vger.kernel.org
+Subject: [PATCH v3 10/16] s390: add pci_iomap_range
+Message-ID: <1421256142-11512-11-git-send-email-mst@redhat.com>
+References: <1421256142-11512-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Rob Herring <robherring2@gmail.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 1/2] of/pci: add of_pci_dma_configure() update dma
- configuration
-References: <1419459099-6667-1-git-send-email-m-karicheri2@ti.com> <CAL_Jsq+krOUA3BPvMCdaOBhALoi+pzWbw3YndXqR8x52OJogZg@mail.gmail.com> <54A71CD1.4070107@ti.com> <2019516.ehiuEv0rdL@wuerfel>
-In-Reply-To: <2019516.ehiuEv0rdL@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1421256142-11512-1-git-send-email-mst@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/03/2015 04:37 PM, Arnd Bergmann wrote:
-> On Friday 02 January 2015 17:33:53 Murali Karicheri wrote:
->>
->> I have no experience with IOMMU and may not offer much help here as I
->> originally wrote above. Will Deacon has added this API and probably able
->> to offer some help in this discussion.
->>
->> Will Deacon,
->>
->> Any comment?
->
-> It's complicated :(
->
->> Looking at the iommu documentation and of_iommu.c, I get a feeling that
->> this API is not really used at present as there are no callers of
->> of_iommu_set_ops() and I assume this is a WIP.
->
-> Right, but we have patches for some iommu drivers based on this API,
-> and we should migrate all of them eventually.
->
->> I believe the way it is
->> expected to work is to have the iommu driver of the master IOMMU devices
->> call of_iommu_set_ops(). The device node of this master IOMMU device is
->> specified as a phandle in the OF node of the device (various bus devices
->> such as platform, PCI etc). This allow to retrieve the iommu ops though
->> the of_iommu_configure() API and use it in arch_setup_dma_ops(). So my
->> gut feeling is that for PCI devices, as there are no DT node, the root
->> bus node may specify iommus phandle to IOMMU master OF nodes.
->
-> Yes, but we also need to pass a PCI device specific identifier along
-> with the root bus node, because some iommu drivers take the PCI
-> bus/device/function number into account for creating per-function
-> i/o page tables.
->
->> W.r.t your comment "We may want to address the comment in
->> of_iommu_configure about parent nodes. We should be sure these changes
->> work with how we would do searching parent nodes",
->>
->> I believe, the parent node search itself should work the same way in the
->> case of PCI as with platform bus case. PCI's case, we are providing the
->> OF node of the root bus host bridge. Why should this be any different in
->> terms of search?
->>
->> I see a potential issue with dma-ranges as described in the notes below.
->> As noted below the usage of dma-range for iommu is to be determined. For
->> keystone, the of_iommu_configure() always return false as we don't use
->> the iommu. But don't know if this has any consequences for other
->> platforms. Or I got your questions wrong. Any help here from others on
->> the list?
->>
->> ========================================================================
->> One possible extension to the above is to use an "iommus" property along
->> with a "dma-ranges" property in a bus device node (such as PCI host
->> bridges). This can be useful to describe how children on the bus relate
->> to the IOMMU if they are not explicitly listed in the device tree (e.g.
->> PCI devices). However, the requirements of that use-case haven't been
->> fully determined yet. Implementing this is therefore not recommended
->> without further discussion and extension of this binding.
->> =========================================================================
->
-> This probably won't ever apply to PCI devices, so let's ignore it for now.
-> For the moment (and for PCI), we should assume that we either configure
-> an iommu directly or we use dma-ranges if no iommu is in use.
->
-Thanks Arnd,
+Virtio drivers should map the part of the range they need, not
+necessarily all of it.
+To this end, support mapping ranges within BAR on s390.
+Since multiple ranges can now be mapped within a BAR, we keep track of
+the number of mappings created, and only clear out the mapping for a BAR
+when this number reaches 0.
 
-I will post v3 of the patch with what is agreed before in my response 
-and I understand there is no additional change required based on this 
-particular discussion about iommu. Right?
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Tested-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+---
 
-Murali
-> 	Arnd
+Heiko, Martin, can you please ack merging this through the virtio tree?
+This was lightly tested by Sebastian Ott.
 
+ arch/s390/include/asm/pci_io.h |  1 +
+ arch/s390/pci/pci.c            | 34 +++++++++++++++++++++++++++-------
+ 2 files changed, 28 insertions(+), 7 deletions(-)
 
+diff --git a/arch/s390/include/asm/pci_io.h b/arch/s390/include/asm/pci_io.h
+index f664e96..1a9a98d 100644
+--- a/arch/s390/include/asm/pci_io.h
++++ b/arch/s390/include/asm/pci_io.h
+@@ -16,6 +16,7 @@
+ struct zpci_iomap_entry {
+ 	u32 fh;
+ 	u8 bar;
++	u16 count;
+ };
+ 
+ extern struct zpci_iomap_entry *zpci_iomap_start;
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index 3290f11..753a567 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -259,7 +259,10 @@ void __iowrite64_copy(void __iomem *to, const void *from, size_t count)
+ }
+ 
+ /* Create a virtual mapping cookie for a PCI BAR */
+-void __iomem *pci_iomap(struct pci_dev *pdev, int bar, unsigned long max)
++void __iomem *pci_iomap_range(struct pci_dev *pdev,
++			      int bar,
++			      unsigned long offset,
++			      unsigned long max)
+ {
+ 	struct zpci_dev *zdev =	get_zdev(pdev);
+ 	u64 addr;
+@@ -270,14 +273,27 @@ void __iomem *pci_iomap(struct pci_dev *pdev, int bar, unsigned long max)
+ 
+ 	idx = zdev->bars[bar].map_idx;
+ 	spin_lock(&zpci_iomap_lock);
+-	zpci_iomap_start[idx].fh = zdev->fh;
+-	zpci_iomap_start[idx].bar = bar;
++	if (zpci_iomap_start[idx].count++) {
++		BUG_ON(zpci_iomap_start[idx].fh != zdev->fh ||
++		       zpci_iomap_start[idx].bar != bar);
++	} else {
++		zpci_iomap_start[idx].fh = zdev->fh;
++		zpci_iomap_start[idx].bar = bar;
++	}
++	/* Detect overrun */
++	BUG_ON(!zpci_iomap_start[idx].count);
+ 	spin_unlock(&zpci_iomap_lock);
+ 
+ 	addr = ZPCI_IOMAP_ADDR_BASE | ((u64) idx << 48);
+-	return (void __iomem *) addr;
++	return (void __iomem *) addr + offset;
+ }
+-EXPORT_SYMBOL_GPL(pci_iomap);
++EXPORT_SYMBOL_GPL(pci_iomap_range);
++
++void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long maxlen)
++{
++	return pci_iomap_range(dev, bar, 0, maxlen);
++}
++EXPORT_SYMBOL(pci_iomap);
+ 
+ void pci_iounmap(struct pci_dev *pdev, void __iomem *addr)
+ {
+@@ -285,8 +301,12 @@ void pci_iounmap(struct pci_dev *pdev, void __iomem *addr)
+ 
+ 	idx = (((__force u64) addr) & ~ZPCI_IOMAP_ADDR_BASE) >> 48;
+ 	spin_lock(&zpci_iomap_lock);
+-	zpci_iomap_start[idx].fh = 0;
+-	zpci_iomap_start[idx].bar = 0;
++	/* Detect underrun */
++	BUG_ON(!zpci_iomap_start[idx].count);
++	if (!--zpci_iomap_start[idx].count) {
++		zpci_iomap_start[idx].fh = 0;
++		zpci_iomap_start[idx].bar = 0;
++	}
+ 	spin_unlock(&zpci_iomap_lock);
+ }
+ EXPORT_SYMBOL_GPL(pci_iounmap);
 -- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+MST
+
