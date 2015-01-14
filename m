@@ -1,68 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:45527 "EHLO
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:33636 "EHLO
 	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755032AbbA1UsG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jan 2015 15:48:06 -0500
+	with ESMTP id S1750920AbbANKT0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 05:19:26 -0500
+Message-ID: <54B642A6.7040201@arm.com>
+Date: Wed, 14 Jan 2015 10:19:18 +0000
 From: Marc Zyngier <marc.zyngier@arm.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
+MIME-Version: 1.0
+To: "Yun Wu (Abel)" <wuyun.wu@huawei.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Andre Przywara <andre.przywara@arm.com>,
-	<linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: [PATCH] PCI: Fix pcibios_update_irq misuse of irq number
-Date: Wed, 28 Jan 2015 14:51:23 +0000
-Message-Id: <1422456683-797-1-git-send-email-marc.zyngier@arm.com>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
+Subject: Re: [PATCH v2 3/8] PCI/MSI: of: Add support for OF-provided msi_domain
+References: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com> <1420736772-11088-4-git-send-email-marc.zyngier@arm.com> <54B62609.7020002@huawei.com>
+In-Reply-To: <54B62609.7020002@huawei.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pcibios_update_irq writes an irq number into the config space
-of a given PCI device, but ignores the fact that this number
-is a virtual interrupt number, which might be a very different
-value from what the underlying hardware is using.
+Hi Abel,
 
-The obvious fix is to fetch the HW interrupt number from the
-corresponding irq_data structure. This is slightly complicated
-by the fact that this interrupt might be services by a stacked
-domain.
+On 14/01/15 08:17, Yun Wu (Abel) wrote:
+> On 2015/1/9 1:06, Marc Zyngier wrote:
+> 
+>> In order to populate the PHB msi_domain, use the "msi-parent"
+>> attribute to lookup a corresponding irq domain. If found,
+>> this is our MSI domain.
+>>
+>> This gets plugged into the core PCI code.
+>>
+> 
+> Hi Marc,
+> 
+> Since the whole patch series based on the fact that non PCI type
+> buses will use MSI-like interrupts, would it be better if getting
+> this field settled during OF populating?
 
-This has been tested on KVM with kvmtool.
+Are you're thinking of letting random platform devices automagically
+gain an MSI domain as they are discovered by DT? I feel like you looking
+at it the wrong way.
 
-Reported-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Tested-by: Andre Przywara <andre.przywara@arm.com>
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/pci/setup-irq.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+Note that DT discovery doesn't imply a particular bus, and non-PCI
+doesn't mean bus-agnostic. MSI-like interrupts really are a bus
+property, and I'd rather see you implementing support for your favourite
+bus (and do the MSI domain matching there).
 
-diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-index 4e2d595..828cbc9 100644
---- a/drivers/pci/setup-irq.c
-+++ b/drivers/pci/setup-irq.c
-@@ -15,11 +15,19 @@
- #include <linux/errno.h>
- #include <linux/ioport.h>
- #include <linux/cache.h>
-+#include <linux/irq.h>
- 
- void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
- {
--	dev_dbg(&dev->dev, "assigning IRQ %02d\n", irq);
--	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
-+	struct irq_data *d;
-+
-+	d = irq_get_irq_data(irq);
-+#ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
-+	while (d->parent_data)
-+		d = d->parent_data;
-+#endif
-+	dev_dbg(&dev->dev, "assigning IRQ %02ld\n", d->hwirq);
-+	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, d->hwirq);
- }
- 
- static void pdev_fixup_irq(struct pci_dev *dev,
+Thanks,
+
+	M.
 -- 
-2.1.4
-
+Jazz is not dead. It just smells funny...
