@@ -1,152 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:40979 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754265AbbA2PAf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 29 Jan 2015 10:00:35 -0500
-Message-ID: <54CA4AD5.2060307@ti.com>
-Date: Thu, 29 Jan 2015 09:59:33 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-CC: Will Deacon <will.deacon@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v4 1/6] of: iommu: add ptr to OF node arg to of_iommu_configure()
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com> <13812499.ICbNgSDOae@avalon> <20150128133219.GM1569@arm.com> <5349994.6VHXzPdIxs@avalon>
-In-Reply-To: <5349994.6VHXzPdIxs@avalon>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:52419 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753245AbbAOC2j (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 21:28:39 -0500
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 15 Jan 2015 12:28:37 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 0C3BA2CE8054
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:35 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t0F2SYwg18481270
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:35 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t0F2SY97020081
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:34 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V11 13/17] powerpc/powernv: Implement pcibios_iov_resource_alignment() on powernv
+Date: Thu, 15 Jan 2015 10:28:03 +0800
+Message-Id: <1421288887-7765-14-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <20150113180502.GC2776@google.com>
+ <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/28/2015 06:32 PM, Laurent Pinchart wrote:
-> Hi Will,
->
-> On Wednesday 28 January 2015 13:32:19 Will Deacon wrote:
->> On Wed, Jan 28, 2015 at 01:15:10PM +0000, Laurent Pinchart wrote:
->>> On Wednesday 28 January 2015 12:29:42 Will Deacon wrote:
->>>> On Wed, Jan 28, 2015 at 12:23:03PM +0000, Laurent Pinchart wrote:
->>>>> On Wednesday 28 January 2015 11:33:00 Will Deacon wrote:
->>>>>> On Mon, Jan 26, 2015 at 06:49:01PM +0000, Murali Karicheri wrote:
->>>>>>> On 01/25/2015 08:32 AM, Laurent Pinchart wrote:
->>>>>>>> On Friday 23 January 2015 17:32:34 Murali Karicheri wrote:
->>>>>>>>> Function of_iommu_configure() is called from of_dma_configure() to
->>>>>>>>> setup iommu ops using DT property. This API is currently used for
->>>>>>>>> platform devices for which DMA configuration (including iommu ops)
->>>>>>>>> may come from device's parent. To extend this functionality for
->>>>>>>>> PCI devices, this API need to take a parent node ptr as an argument
->>>>>>>>> instead of assuming device's parent. This is needed since for PCI,
->>>>>>>>> the dma configuration may be defined in the DT node of the root
->>>>>>>>> bus bridge's parent device. Currently only dma-range is used for PCI
->>>>>>>>> and iommu is not supported. So return error if the device is PCI.
->>>>>>>>>
->>>>>>>>> Cc: Joerg Roedel<joro@8bytes.org>
->>>>>>>>> Cc: Grant Likely<grant.likely@linaro.org>
->>>>>>>>> Cc: Rob Herring<robh+dt@kernel.org>
->>>>>>>>> Cc: Bjorn Helgaas<bhelgaas@google.com>
->>>>>>>>> Cc: Will Deacon<will.deacon@arm.com>
->>>>>>>>> Cc: Russell King<linux@arm.linux.org.uk>
->>>>>>>>> Cc: Arnd Bergmann<arnd@arndb.de>
->>>>>>>>> Cc: Suravee Suthikulpanit<Suravee.Suthikulpanit@amd.com>
->>>>>>>>>
->>>>>>>>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
->>>>>>>>> ---
->>>>>>>>>
->>>>>>>>>    drivers/iommu/of_iommu.c |   10 ++++++++--
->>>>>>>>>    drivers/of/platform.c    |    2 +-
->>>>>>>>>    include/linux/of_iommu.h |    6 ++++--
->>>>>>>>>    3 files changed, 13 insertions(+), 5 deletions(-)
->>>>>>>>>
->>>>>>>>> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
->>>>>>>>> index af1dc6a..439235b 100644
->>>>>>>>> --- a/drivers/iommu/of_iommu.c
->>>>>>>>> +++ b/drivers/iommu/of_iommu.c
->>>>>>>>> @@ -133,19 +133,25 @@ struct iommu_ops *of_iommu_get_ops(struct
->>>>>>>>> device_node *np)
->>>>>>>>>    	return ops;
->>>>>>>>>   }
->>>>>>>>>
->>>>>>>>> -struct iommu_ops *of_iommu_configure(struct device *dev)
->>>>>>>>> +struct iommu_ops *of_iommu_configure(struct device *dev,
->>>>>>>>> +				     struct device_node *iommu_np)
->>>>>>>>>   {
->>>>>>>>>    	struct of_phandle_args iommu_spec;
->>>>>>>>>    	struct device_node *np;
->>>>>>>>>    	struct iommu_ops *ops = NULL;
->>>>>>>>>    	int idx = 0;
->>>>>>>>>
->>>>>>>>> +	if (dev_is_pci(dev)) {
->>>>>>>>> +		dev_err(dev, "iommu is currently not supported for PCI\n");
->>>>>>>>> +		return NULL;
->>>>>>>>> +	}
->>>>>>>>> +
->>>>>>>>>    	/*
->>>>>>>>>    	 * We don't currently walk up the tree looking for a parent
->>>>>>>>>    	 IOMMU.
->>>>>>>>>    	 * See the `Notes:' section of
->>>>>>>>>    	 * Documentation/devicetree/bindings/iommu/iommu.txt
->>>>>>>>>    	 */
->>>>>>>>
->>>>>>>> Wouldn't it be better to fix this rather than passing the device
->>>>>>>> node pointer to the function ? The solution would be more generic.
->>>>>>>
->>>>>>> Will Deacon (Copied here) is working on this as we alteady discussed
->>>>>>> in this thread. So it will be addressed by him in another series.
->>>>>>
->>>>>> Well, "working on this" equates to "has it somewhere near the bottom
->>>>>> of a very long list" :)
->>>>>
->>>>> What's your opinion on this patch then, do you think adding the
->>>>> iommu_np argument makes sense as a temporary hack, or should we instead
->>>>> walk up the tree looking for an iommus attribute in parent nodes ? I
->>>>> don't expect that to be insanely difficult to code.
->>>>
->>>> If walking up the tree is useful, then I think we should do that and
->>>> update the Documentation to reflect the new behaviour.
->>>
->>> If I understand Murali's patch set right (please correct me if that's not
->>> the case) the PCI code walks up the DT nodes hierarchy to the parent node
->>> that contains the iommus attribute and passes a pointer to that node to
->>> this function. It's thus a PCI-specific solution. As a temporary hack
->>> that's OK I suppose, but if implementing it right straight away isn't
->>> difficult that would be better.
->>
->> It looks to me like the code walks the PCI topology to get the DT node for
->> the host controller, and passes *that* to of_dma_configure. That sounds
->> like the right thing to do to me, especially since the PCI topology is
->> likely not encoded in the device-tree. So actually, it is passing the
->> first parent node afaict.
->
-> Indeed, that's right. I forgot for a moment that we have non-DT devices ;-)
->
-> Acked-by: Laurent Pinchart<laurent.pinchart@ideasonboard.com>
->
-> Murali, nitpicking a bit, shouldn't the iommu_np parameter be renamed ? It
-> points to the node containing the iommus parameter, not to the iommu node, so
-> the current name is slightly confusing. A brief kerneldoc above the function
-> would also help. This can be the subject of a separate patch.
-Probably the doc part can be added by Will. The iommu_np was a 
-suggestion from Rob, if I recollect. Isn't the iommu_np points to the 
-iommu device, and if so, iommu_np make sense.
+This patch implements the pcibios_iov_resource_alignment() on powernv
+platform.
 
-Murali
->
->> The part I'm more interested in is the mapping of RequesterID (PCI dma
->> alias) to IOMMU ID when we transition from the PCI topology to the DT
->> topology. Currently, it seems to be 1:1 on the platforms I have, but I
->> doubt this will always be the case.
->
+On PowerNV platform, there are 3 cases for the IOV BAR:
+1. initial state, the IOV BAR size is multiple times of VF BAR size
+2. after expanded, the IOV BAR size is expanded to meet the M64 segment size
+3. sizing stage, the IOV BAR is truncated to 0
 
+pnv_pci_iov_resource_alignment() handle these three cases respectively.
 
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/machdep.h        |    3 +++
+ arch/powerpc/kernel/pci-common.c          |   14 ++++++++++++++
+ arch/powerpc/platforms/powernv/pci-ioda.c |   20 ++++++++++++++++++++
+ 3 files changed, 37 insertions(+)
+
+diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+index 965547c..12e8eb8 100644
+--- a/arch/powerpc/include/asm/machdep.h
++++ b/arch/powerpc/include/asm/machdep.h
+@@ -252,6 +252,9 @@ struct machdep_calls {
+ 
+ #ifdef CONFIG_PCI_IOV
+ 	void (*pcibios_fixup_sriov)(struct pci_bus *bus);
++	resource_size_t (*pcibios_iov_resource_alignment)(struct pci_dev *,
++			                                    int resno,
++							    resource_size_t align);
+ #endif /* CONFIG_PCI_IOV */
+ 
+ 	/* Called to shutdown machine specific hardware not already controlled
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 832b7e1..8751dfb 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -130,6 +130,20 @@ void pcibios_reset_secondary_bus(struct pci_dev *dev)
+ 	pci_reset_secondary_bus(dev);
+ }
+ 
++#ifdef CONFIG_PCI_IOV
++resource_size_t pcibios_iov_resource_alignment(struct pci_dev *pdev,
++						 int resno,
++						 resource_size_t align)
++{
++	if (ppc_md.pcibios_iov_resource_alignment)
++		return ppc_md.pcibios_iov_resource_alignment(pdev,
++							       resno,
++							       align);
++
++	return 0;
++}
++#endif /* CONFIG_PCI_IOV */
++
+ static resource_size_t pcibios_io_size(const struct pci_controller *hose)
+ {
+ #ifdef CONFIG_PPC64
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 6704fdf..8bad2b0 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1953,6 +1953,25 @@ static resource_size_t pnv_pci_window_alignment(struct pci_bus *bus,
+ 	return phb->ioda.io_segsize;
+ }
+ 
++#ifdef CONFIG_PCI_IOV
++static resource_size_t pnv_pci_iov_resource_alignment(struct pci_dev *pdev,
++							    int resno,
++							    resource_size_t align)
++{
++	struct pci_dn *pdn = pci_get_pdn(pdev);
++	resource_size_t iov_align;
++
++	iov_align = resource_size(&pdev->resource[resno]);
++	if (iov_align)
++		return iov_align;
++
++	if (pdn->max_vfs)
++		return pdn->max_vfs * align;
++
++	return align;
++}
++#endif /* CONFIG_PCI_IOV */
++
+ /* Prevent enabling devices for which we couldn't properly
+  * assign a PE
+  */
+@@ -2155,6 +2174,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
+ #ifdef CONFIG_PCI_IOV
+ 	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
++	ppc_md.pcibios_iov_resource_alignment = pnv_pci_iov_resource_alignment;
+ #endif /* CONFIG_PCI_IOV */
+ 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+ 
 -- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+1.7.9.5
+
