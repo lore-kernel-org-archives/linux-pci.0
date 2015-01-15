@@ -1,113 +1,169 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:41794 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763248AbbA3Vhc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Jan 2015 16:37:32 -0500
-Received: by mail-ie0-f176.google.com with SMTP id at20so6355007iec.7
-        for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2015 13:37:32 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <54CBB062.4040801@nwtrail.com>
-References: <54C81B4E.7060900@nwtrail.com>
-	<CAErSpo6P-gm1xFjLrbKBU+P3zUHY-RGMkhaVpWsK7vDz_wK=YQ@mail.gmail.com>
-	<54CBB062.4040801@nwtrail.com>
-Date: Fri, 30 Jan 2015 13:37:31 -0800
-Message-ID: <CAE9FiQUxD8g4KG9CYe1znb5Lw5skkq=9QSOgkmGUDbhsaDq2Qw@mail.gmail.com>
-Subject: Re: [problem] mpt2sas load fails with LSISAS2008
-From: Yinghai Lu <yinghai@kernel.org>
-To: pjay@nwtrail.com
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=001a1134be8c80f9fd050de56911
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:32924 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753245AbbAOC2e (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 21:28:34 -0500
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 15 Jan 2015 12:28:33 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 9686A2CE804E
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:30 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t0F2SUeL42336476
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:30 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t0F2STMs020007
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:30 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V11 11/17] powerpc/powernv: Allocate pe->iommu_table dynamically
+Date: Thu, 15 Jan 2015 10:28:01 +0800
+Message-Id: <1421288887-7765-12-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <20150113180502.GC2776@google.com>
+ <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---001a1134be8c80f9fd050de56911
-Content-Type: text/plain; charset=UTF-8
+Current iommu_table of a PE is a static field. This will have a problem
+when iommu_free_table is called.
 
-On Fri, Jan 30, 2015 at 8:25 AM, Paul Johnson <pjay@nwtrail.com> wrote:
-> There is a bug report here https://bugzilla.kernel.org/show_bug.cgi?id=92351
->
-> I found mpt2sas is loaded successfully up through 3.4.0 and fails in 3.4.1;
-> in 3.4.1 it will load
-> if pci=realloc=off is added to the command line.
->
-> A file with dmesg output for 3.4.0 3.4.1 and 3.4.1 with pci=realloc=off is
-> attached to the bug report.
+This patch allocate iommu_table dynamically.
 
-ok, when pci realloc is enabled, we do assign the new correct resource
-to the all BAR
-including IOV bars.
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/iommu.h          |    3 +++
+ arch/powerpc/platforms/powernv/pci-ioda.c |   26 ++++++++++++++------------
+ arch/powerpc/platforms/powernv/pci.h      |    2 +-
+ 3 files changed, 18 insertions(+), 13 deletions(-)
 
-[    0.337471] pci 0000:00:03.0: resource 14 [mem
-0xfbd00000-0xfbdfffff] released
-[    0.337474] pci 0000:00:03.0: PCI bridge to [bus 01-01]
-[    0.337482] pci 0000:00:03.0: bridge window [mem
-0x00100000-0x001fffff] to [bus 01-01] add_size 500000
-[    0.337503] pci 0000:00:03.0: res[14]=[mem 0x00100000-0x001fffff]
-get_res_add_size add_size 500000
-[    0.337507] pci 0000:00:03.0: BAR 14: assigned [mem 0xefb00000-0xf00fffff]
-[    0.337517] pci 0000:01:00.0: reg 174: [mem 0xfbd00000-0xfbd03fff 64bit]
-[    0.337525] pci 0000:01:00.0: reg 17c: [mem 0x00000000-0x0003ffff 64bit]
-[    0.337529] pci 0000:01:00.0: res[9]=[mem
-0x00000000-0xffffffffffffffff 64bit] get_res_add_size add_size 400000
-[    0.337533] pci 0000:01:00.0: res[7]=[mem
-0x00000000-0xffffffffffffffff 64bit] get_res_add_size add_size 40000
-[    0.337538] pci 0000:01:00.0: BAR 3: assigned [mem
-0xefb00000-0xefb3ffff 64bit]
-[    0.337550] pci 0000:01:00.0: reg 17c: [mem 0x00000000-0x0003ffff 64bit]
-[    0.337553] pci 0000:01:00.0: BAR 9: assigned [mem
-0xefb40000-0xeff3ffff 64bit]
-[    0.337558] pci 0000:01:00.0: BAR 1: assigned [mem
-0xeff40000-0xeff43fff 64bit]
-[    0.337570] pci 0000:01:00.0: reg 174: [mem 0xfbd00000-0xfbd03fff 64bit]
-[    0.337573] pci 0000:01:00.0: BAR 7: assigned [mem
-0xeff44000-0xeff83fff 64bit]
+diff --git a/arch/powerpc/include/asm/iommu.h b/arch/powerpc/include/asm/iommu.h
+index 9cfa370..5574eeb 100644
+--- a/arch/powerpc/include/asm/iommu.h
++++ b/arch/powerpc/include/asm/iommu.h
+@@ -78,6 +78,9 @@ struct iommu_table {
+ 	struct iommu_group *it_group;
+ #endif
+ 	void (*set_bypass)(struct iommu_table *tbl, bool enable);
++#ifdef CONFIG_PPC_POWERNV
++	void           *data;
++#endif
+ };
+ 
+ /* Pure 2^n version of get_order */
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 665f57c..31335a7 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -890,6 +890,10 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, int all)
+ 		return;
+ 	}
+ 
++	pe->tce32_table = kzalloc_node(sizeof(struct iommu_table),
++			GFP_KERNEL, hose->node);
++	pe->tce32_table->data = pe;
++
+ 	/* Associate it with all child devices */
+ 	pnv_ioda_setup_same_PE(bus, pe);
+ 
+@@ -979,7 +983,7 @@ static void pnv_pci_ioda_dma_dev_setup(struct pnv_phb *phb, struct pci_dev *pdev
+ 
+ 	pe = &phb->ioda.pe_array[pdn->pe_number];
+ 	WARN_ON(get_dma_ops(&pdev->dev) != &dma_iommu_ops);
+-	set_iommu_table_base_and_group(&pdev->dev, &pe->tce32_table);
++	set_iommu_table_base_and_group(&pdev->dev, pe->tce32_table);
+ }
+ 
+ static int pnv_pci_ioda_dma_set_mask(struct pnv_phb *phb,
+@@ -1006,7 +1010,7 @@ static int pnv_pci_ioda_dma_set_mask(struct pnv_phb *phb,
+ 	} else {
+ 		dev_info(&pdev->dev, "Using 32-bit DMA via iommu\n");
+ 		set_dma_ops(&pdev->dev, &dma_iommu_ops);
+-		set_iommu_table_base(&pdev->dev, &pe->tce32_table);
++		set_iommu_table_base(&pdev->dev, pe->tce32_table);
+ 	}
+ 	*pdev->dev.dma_mask = dma_mask;
+ 	return 0;
+@@ -1043,9 +1047,9 @@ static void pnv_ioda_setup_bus_dma(struct pnv_ioda_pe *pe,
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		if (add_to_iommu_group)
+ 			set_iommu_table_base_and_group(&dev->dev,
+-						       &pe->tce32_table);
++						       pe->tce32_table);
+ 		else
+-			set_iommu_table_base(&dev->dev, &pe->tce32_table);
++			set_iommu_table_base(&dev->dev, pe->tce32_table);
+ 
+ 		if (dev->subordinate)
+ 			pnv_ioda_setup_bus_dma(pe, dev->subordinate,
+@@ -1135,8 +1139,7 @@ static void pnv_pci_ioda2_tce_invalidate(struct pnv_ioda_pe *pe,
+ void pnv_pci_ioda_tce_invalidate(struct iommu_table *tbl,
+ 				 __be64 *startp, __be64 *endp, bool rm)
+ {
+-	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
+-					      tce32_table);
++	struct pnv_ioda_pe *pe = tbl->data;
+ 	struct pnv_phb *phb = pe->phb;
+ 
+ 	if (phb->type == PNV_PHB_IODA1)
+@@ -1202,7 +1205,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+ 	}
+ 
+ 	/* Setup linux iommu table */
+-	tbl = &pe->tce32_table;
++	tbl = pe->tce32_table;
+ 	pnv_pci_setup_iommu_table(tbl, addr, TCE32_TABLE_SIZE * segs,
+ 				  base << 28, IOMMU_PAGE_SHIFT_4K);
+ 
+@@ -1240,8 +1243,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+ 
+ static void pnv_pci_ioda2_set_bypass(struct iommu_table *tbl, bool enable)
+ {
+-	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
+-					      tce32_table);
++	struct pnv_ioda_pe *pe = tbl->data;
+ 	uint16_t window_id = (pe->pe_number << 1 ) + 1;
+ 	int64_t rc;
+ 
+@@ -1286,10 +1288,10 @@ static void pnv_pci_ioda2_setup_bypass_pe(struct pnv_phb *phb,
+ 	pe->tce_bypass_base = 1ull << 59;
+ 
+ 	/* Install set_bypass callback for VFIO */
+-	pe->tce32_table.set_bypass = pnv_pci_ioda2_set_bypass;
++	pe->tce32_table->set_bypass = pnv_pci_ioda2_set_bypass;
+ 
+ 	/* Enable bypass by default */
+-	pnv_pci_ioda2_set_bypass(&pe->tce32_table, true);
++	pnv_pci_ioda2_set_bypass(pe->tce32_table, true);
+ }
+ 
+ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+@@ -1337,7 +1339,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+ 	}
+ 
+ 	/* Setup linux iommu table */
+-	tbl = &pe->tce32_table;
++	tbl = pe->tce32_table;
+ 	pnv_pci_setup_iommu_table(tbl, addr, tce_table_size, 0,
+ 			IOMMU_PAGE_SHIFT_4K);
+ 
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index e5b75b2..7317777 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -53,7 +53,7 @@ struct pnv_ioda_pe {
+ 	/* "Base" iommu table, ie, 4K TCEs, 32-bit DMA */
+ 	int			tce32_seg;
+ 	int			tce32_segcount;
+-	struct iommu_table	tce32_table;
++	struct iommu_table	*tce32_table;
+ 	phys_addr_t		tce_inval_reg_phys;
+ 
+ 	/* 64-bit TCE bypass region */
+-- 
+1.7.9.5
 
-but looks like the mpt2 firmware does not like us to change the bar.
-
-[    3.197114] mpt2sas version 12.100.00.00 loaded
-[    3.197206] scsi8 : Fusion MPT SAS Host
-[    3.197517] mpt2sas0: 64 BIT PCI BUS DMA ADDRESSING SUPPORTED,
-total mem (16426944 kB)
-[    3.197584] mpt2sas 0000:01:00.0: irq 46 for MSI/MSI-X
-[    3.197619] mpt2sas0-msix0: PCI-MSI-X enabled: IRQ 46
-[    3.197624] mpt2sas0: iomem(0x00000000eff40000),
-mapped(0xffffc900065c8000), size(16384)
-[    3.197629] mpt2sas0: ioport(0x000000000000ce00), size(256)
-[    3.197659] mpt2sas0: doorbell is in use  (line=3015)
-[    3.197664] mpt2sas0: _base_get_ioc_facts: handshake failed (r=-14)
-[    3.197667] mpt2sas0: sending diag reset !!
-[    3.357230] mpt2sas0: diag reset: FAILED
-[    3.357298] mpt2sas0: failure at
-/home/apw/COD/linux/drivers/scsi/mpt2sas/mpt2sas_scsih.c:8038/_scsih_probe()!
-
-Please try if attached patch could avoid the problem.
-
-Thanks
-
-Yinghai
-
---001a1134be8c80f9fd050de56911
-Content-Type: text/x-patch; charset=US-ASCII; name="reset_lsi_pci_devices.patch"
-Content-Disposition: attachment; filename="reset_lsi_pci_devices.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_i5k3cz0d0
-
-LS0tCiBkcml2ZXJzL3BjaS9zZXR1cC1idXMuYyB8ICAgMTYgKysrKysrKysrKysrKysrKwogMSBm
-aWxlIGNoYW5nZWQsIDE2IGluc2VydGlvbnMoKykKCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9w
-Y2kvc2V0dXAtYnVzLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kv
-c2V0dXAtYnVzLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYwpAQCAtMTY0
-MCw2ICsxNjQwLDIyIEBAIGFnYWluOgogCQkJCQkJIGZhaWxfcmVzLT5mbGFncyAmIHR5cGVfbWFz
-aywKIAkJCQkJCSByZWxfdHlwZSk7CiAKKwkvKiByZXNldCBMU0kgZGV2aWNlICovCisJbGlzdF9m
-b3JfZWFjaF9lbnRyeShmYWlsX3JlcywgJmZhaWxfaGVhZCwgbGlzdCkgeworCQlzdHJ1Y3QgcGNp
-X2RldiAqcGRldjsKKwkJc3RydWN0IHBjaV9idXMgKnBidXMgPSBmYWlsX3Jlcy0+ZGV2LT5idXM7
-CisKKwkJaWYgKHBjaV9pc19yb290X2J1cyhwYnVzKSB8fCAhcGJ1cy0+c2VsZikKKwkJCWNvbnRp
-bnVlOworCisJCS8qIExTSSBkZXZpY2UgZmlybXdhcmUgaXMgbm90IGhhcHB5IHdpdGggY2hhbmdp
-bmcgQkFSIHZhbHVlICovCisJCWxpc3RfZm9yX2VhY2hfZW50cnkocGRldiwgJnBidXMtPmRldmlj
-ZXMsIGJ1c19saXN0KQorCQkJaWYgKHBkZXYtPnZlbmRvciA9PSBQQ0lfVkVORE9SX0lEX0xTSV9M
-T0dJQykgeworCQkJCXBjaV9yZXNldF9zZWNvbmRhcnlfYnVzKHBidXMtPnNlbGYpOworCQkJCWJy
-ZWFrOworCQkJfQorCX0KKwogCS8qIHJlc3RvcmUgc2l6ZSBhbmQgZmxhZ3MgKi8KIAlsaXN0X2Zv
-cl9lYWNoX2VudHJ5KGZhaWxfcmVzLCAmZmFpbF9oZWFkLCBsaXN0KSB7CiAJCXN0cnVjdCByZXNv
-dXJjZSAqcmVzID0gZmFpbF9yZXMtPnJlczsK
---001a1134be8c80f9fd050de56911--
