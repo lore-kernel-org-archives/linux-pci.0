@@ -1,322 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:44514 "EHLO
-	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753475AbbAJCfr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 21:35:47 -0500
-From: Rob Herring <robh@kernel.org>
-To: linux-kernel@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh@kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH 11/16] powerpc: powermac: convert PCI to use generic config accesses
-Date: Fri,  9 Jan 2015 20:34:45 -0600
-Message-Id: <1420857290-8373-12-git-send-email-robh@kernel.org>
-In-Reply-To: <1420857290-8373-1-git-send-email-robh@kernel.org>
-References: <1420857290-8373-1-git-send-email-robh@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org
+Subject: [Bugfix v4 2/2] xen/pci: Simplify x86/pci/xen.c by killing gsi_override related code
+Date: Thu, 15 Jan 2015 21:04:36 +0800
+Message-Id: <1421327077-19894-3-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421327077-19894-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421204979-30619-1-git-send-email-jiang.liu@linux.intel.com>
+ <1421327077-19894-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Convert the powermac PCI driver to use the generic config access functions.
+There's no use of gsi_override related logic anymore, so kill code
+related to gsi_override.
 
-This changes accesses from (in|out)_(8|le16|le32) to readX/writeX
-variants. I believe these should be equivalent for PCI config space
-accesses, but confirmation would be nice.
-
-Signed-off-by: Rob Herring <robh@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: linuxppc-dev@lists.ozlabs.org
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/powerpc/platforms/powermac/pci.c | 209 +++++++---------------------------
- 1 file changed, 39 insertions(+), 170 deletions(-)
+ arch/x86/pci/xen.c |   21 ++++++---------------
+ 1 file changed, 6 insertions(+), 15 deletions(-)
 
-diff --git a/arch/powerpc/platforms/powermac/pci.c b/arch/powerpc/platforms/powermac/pci.c
-index 04702db..f4071a6 100644
---- a/arch/powerpc/platforms/powermac/pci.c
-+++ b/arch/powerpc/platforms/powermac/pci.c
-@@ -133,17 +133,23 @@ static void __init fixup_bus_range(struct device_node *bridge)
- 	|(((unsigned int)(off)) & 0xFCUL) \
- 	|1UL)
- 
--static volatile void __iomem *macrisc_cfg_access(struct pci_controller* hose,
--					       u8 bus, u8 dev_fn, u8 offset)
-+static void __iomem *macrisc_cfg_map_bus(struct pci_bus *bus,
-+					 unsigned int dev_fn,
-+					 int offset)
- {
- 	unsigned int caddr;
-+	struct pci_controller *hose;
- 
--	if (bus == hose->first_busno) {
-+	hose = pci_bus_to_host(bus);
-+	if (hose == NULL)
-+		return NULL;
-+
-+	if (bus->number == hose->first_busno) {
- 		if (dev_fn < (11 << 3))
- 			return NULL;
- 		caddr = MACRISC_CFA0(dev_fn, offset);
- 	} else
--		caddr = MACRISC_CFA1(bus, dev_fn, offset);
-+		caddr = MACRISC_CFA1(bus->number, dev_fn, offset);
- 
- 	/* Uninorth will return garbage if we don't read back the value ! */
- 	do {
-@@ -154,129 +160,46 @@ static volatile void __iomem *macrisc_cfg_access(struct pci_controller* hose,
- 	return hose->cfg_data + offset;
+diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+index 6e5e89c3c644..a73c3bd71243 100644
+--- a/arch/x86/pci/xen.c
++++ b/arch/x86/pci/xen.c
+@@ -59,8 +59,7 @@ static int xen_pcifront_enable_irq(struct pci_dev *dev)
  }
  
--static int macrisc_read_config(struct pci_bus *bus, unsigned int devfn,
--				      int offset, int len, u32 *val)
--{
--	struct pci_controller *hose;
--	volatile void __iomem *addr;
--
--	hose = pci_bus_to_host(bus);
--	if (hose == NULL)
--		return PCIBIOS_DEVICE_NOT_FOUND;
--	if (offset >= 0x100)
--		return  PCIBIOS_BAD_REGISTER_NUMBER;
--	addr = macrisc_cfg_access(hose, bus->number, devfn, offset);
--	if (!addr)
--		return PCIBIOS_DEVICE_NOT_FOUND;
--	/*
--	 * Note: the caller has already checked that offset is
--	 * suitably aligned and that len is 1, 2 or 4.
--	 */
--	switch (len) {
--	case 1:
--		*val = in_8(addr);
--		break;
--	case 2:
--		*val = in_le16(addr);
--		break;
--	default:
--		*val = in_le32(addr);
--		break;
--	}
--	return PCIBIOS_SUCCESSFUL;
--}
--
--static int macrisc_write_config(struct pci_bus *bus, unsigned int devfn,
--				       int offset, int len, u32 val)
--{
--	struct pci_controller *hose;
--	volatile void __iomem *addr;
--
--	hose = pci_bus_to_host(bus);
--	if (hose == NULL)
--		return PCIBIOS_DEVICE_NOT_FOUND;
--	if (offset >= 0x100)
--		return  PCIBIOS_BAD_REGISTER_NUMBER;
--	addr = macrisc_cfg_access(hose, bus->number, devfn, offset);
--	if (!addr)
--		return PCIBIOS_DEVICE_NOT_FOUND;
--	/*
--	 * Note: the caller has already checked that offset is
--	 * suitably aligned and that len is 1, 2 or 4.
--	 */
--	switch (len) {
--	case 1:
--		out_8(addr, val);
--		break;
--	case 2:
--		out_le16(addr, val);
--		break;
--	default:
--		out_le32(addr, val);
--		break;
--	}
--	return PCIBIOS_SUCCESSFUL;
--}
--
- static struct pci_ops macrisc_pci_ops =
+ #ifdef CONFIG_ACPI
+-static int xen_register_pirq(u32 gsi, int gsi_override, int triggering,
+-			     bool set_pirq)
++static int xen_register_pirq(u32 gsi, int triggering, bool set_pirq)
  {
--	.read = macrisc_read_config,
--	.write = macrisc_write_config,
-+	.map_bus = macrisc_cfg_map_bus,
-+	.read = pci_generic_config_read,
-+	.write = pci_generic_config_write,
- };
+ 	int rc, pirq = -1, irq = -1;
+ 	struct physdev_map_pirq map_irq;
+@@ -93,9 +92,6 @@ static int xen_register_pirq(u32 gsi, int gsi_override, int triggering,
+ 		name = "ioapic-level";
+ 	}
  
- #ifdef CONFIG_PPC32
- /*
-  * Verify that a specific (bus, dev_fn) exists on chaos
-  */
--static int chaos_validate_dev(struct pci_bus *bus, int devfn, int offset)
-+static void __iomem *chaos_map_bus(struct pci_bus *bus, unsigned int devfn,
-+				   int offset)
- {
- 	struct device_node *np;
- 	const u32 *vendor, *device;
- 
- 	if (offset >= 0x100)
--		return  PCIBIOS_BAD_REGISTER_NUMBER;
-+		return NULL;
- 	np = of_pci_find_child_device(bus->dev.of_node, devfn);
- 	if (np == NULL)
--		return PCIBIOS_DEVICE_NOT_FOUND;
-+		return NULL;
- 
- 	vendor = of_get_property(np, "vendor-id", NULL);
- 	device = of_get_property(np, "device-id", NULL);
- 	if (vendor == NULL || device == NULL)
--		return PCIBIOS_DEVICE_NOT_FOUND;
-+		return NULL;
- 
- 	if ((*vendor == 0x106b) && (*device == 3) && (offset >= 0x10)
- 	    && (offset != 0x14) && (offset != 0x18) && (offset <= 0x24))
--		return PCIBIOS_BAD_REGISTER_NUMBER;
+-	if (gsi_override >= 0)
+-		gsi = gsi_override;
 -
--	return PCIBIOS_SUCCESSFUL;
--}
-+		return NULL;
+ 	irq = xen_bind_pirq_gsi_to_irq(gsi, map_irq.pirq, shareable, name);
+ 	if (irq < 0)
+ 		goto out;
+@@ -111,12 +107,13 @@ static int acpi_register_gsi_xen_hvm(struct device *dev, u32 gsi,
+ 	if (!xen_hvm_domain())
+ 		return -1;
  
--static int
--chaos_read_config(struct pci_bus *bus, unsigned int devfn, int offset,
--		  int len, u32 *val)
--{
--	int result = chaos_validate_dev(bus, devfn, offset);
--	if (result == PCIBIOS_BAD_REGISTER_NUMBER)
--		*val = ~0U;
--	if (result != PCIBIOS_SUCCESSFUL)
--		return result;
--	return macrisc_read_config(bus, devfn, offset, len, val);
--}
--
--static int
--chaos_write_config(struct pci_bus *bus, unsigned int devfn, int offset,
--		   int len, u32 val)
--{
--	int result = chaos_validate_dev(bus, devfn, offset);
--	if (result != PCIBIOS_SUCCESSFUL)
--		return result;
--	return macrisc_write_config(bus, devfn, offset, len, val);
-+	return macrisc_cfg_map_bus(bus, devfn, offset);
+-	return xen_register_pirq(gsi, -1 /* no GSI override */, trigger,
++	return xen_register_pirq(gsi, trigger,
+ 				 false /* no mapping of GSI to PIRQ */);
  }
  
- static struct pci_ops chaos_pci_ops =
+ #ifdef CONFIG_XEN_DOM0
+-static int xen_register_gsi(u32 gsi, int gsi_override, int triggering, int polarity)
++static int acpi_register_gsi_xen(struct device *dev, u32 gsi,
++				 int triggering, int polarity)
  {
--	.read = chaos_read_config,
--	.write = chaos_write_config,
-+	.map_bus = chaos_map_bus,
-+	.read = pci_generic_config_read,
-+	.write = pci_generic_config_write,
- };
+ 	int rc, irq;
+ 	struct physdev_setup_gsi setup_gsi;
+@@ -127,7 +124,7 @@ static int xen_register_gsi(u32 gsi, int gsi_override, int triggering, int polar
+ 	printk(KERN_DEBUG "xen: registering gsi %u triggering %d polarity %d\n",
+ 			gsi, triggering, polarity);
  
- static void __init setup_chaos(struct pci_controller *hose,
-@@ -471,15 +394,24 @@ static struct pci_ops u3_ht_pci_ops =
- 	 |(((unsigned int)(off)) & 0xfcU)	\
- 	 |1UL)
+-	irq = xen_register_pirq(gsi, gsi_override, triggering, true);
++	irq = xen_register_pirq(gsi, triggering, true);
  
--static volatile void __iomem *u4_pcie_cfg_access(struct pci_controller* hose,
--					u8 bus, u8 dev_fn, int offset)
-+static void __iomem *u4_pcie_cfg_map_bus(struct pci_bus *bus,
-+					 unsigned int dev_fn,
-+					 int offset)
- {
-+	struct pci_controller *hose;
- 	unsigned int caddr;
+ 	setup_gsi.gsi = gsi;
+ 	setup_gsi.triggering = (triggering == ACPI_EDGE_SENSITIVE ? 0 : 1);
+@@ -143,12 +140,6 @@ static int xen_register_gsi(u32 gsi, int gsi_override, int triggering, int polar
  
--	if (bus == hose->first_busno) {
-+	if (offset >= 0x1000)
-+		return NULL;
-+
-+	hose = pci_bus_to_host(bus);
-+	if (!hose)
-+		return NULL;
-+
-+	if (bus->number == hose->first_busno) {
- 		caddr = U4_PCIE_CFA0(dev_fn, offset);
- 	} else
--		caddr = U4_PCIE_CFA1(bus, dev_fn, offset);
-+		caddr = U4_PCIE_CFA1(bus->number, dev_fn, offset);
- 
- 	/* Uninorth will return garbage if we don't read back the value ! */
- 	do {
-@@ -490,74 +422,11 @@ static volatile void __iomem *u4_pcie_cfg_access(struct pci_controller* hose,
- 	return hose->cfg_data + offset;
+ 	return irq;
  }
- 
--static int u4_pcie_read_config(struct pci_bus *bus, unsigned int devfn,
--			       int offset, int len, u32 *val)
+-
+-static int acpi_register_gsi_xen(struct device *dev, u32 gsi,
+-				 int trigger, int polarity)
 -{
--	struct pci_controller *hose;
--	volatile void __iomem *addr;
--
--	hose = pci_bus_to_host(bus);
--	if (hose == NULL)
--		return PCIBIOS_DEVICE_NOT_FOUND;
--	if (offset >= 0x1000)
--		return  PCIBIOS_BAD_REGISTER_NUMBER;
--	addr = u4_pcie_cfg_access(hose, bus->number, devfn, offset);
--	if (!addr)
--		return PCIBIOS_DEVICE_NOT_FOUND;
--	/*
--	 * Note: the caller has already checked that offset is
--	 * suitably aligned and that len is 1, 2 or 4.
--	 */
--	switch (len) {
--	case 1:
--		*val = in_8(addr);
--		break;
--	case 2:
--		*val = in_le16(addr);
--		break;
--	default:
--		*val = in_le32(addr);
--		break;
--	}
--	return PCIBIOS_SUCCESSFUL;
+-	return xen_register_gsi(gsi, -1 /* no GSI override */, trigger, polarity);
 -}
--
--static int u4_pcie_write_config(struct pci_bus *bus, unsigned int devfn,
--				int offset, int len, u32 val)
--{
--	struct pci_controller *hose;
--	volatile void __iomem *addr;
--
--	hose = pci_bus_to_host(bus);
--	if (hose == NULL)
--		return PCIBIOS_DEVICE_NOT_FOUND;
--	if (offset >= 0x1000)
--		return  PCIBIOS_BAD_REGISTER_NUMBER;
--	addr = u4_pcie_cfg_access(hose, bus->number, devfn, offset);
--	if (!addr)
--		return PCIBIOS_DEVICE_NOT_FOUND;
--	/*
--	 * Note: the caller has already checked that offset is
--	 * suitably aligned and that len is 1, 2 or 4.
--	 */
--	switch (len) {
--	case 1:
--		out_8(addr, val);
--		break;
--	case 2:
--		out_le16(addr, val);
--		break;
--	default:
--		out_le32(addr, val);
--		break;
--	}
--	return PCIBIOS_SUCCESSFUL;
--}
--
- static struct pci_ops u4_pcie_pci_ops =
- {
--	.read = u4_pcie_read_config,
--	.write = u4_pcie_write_config,
-+	.map_bus = u4_pcie_cfg_map_bus,
-+	.read = pci_generic_config_read,
-+	.write = pci_generic_config_write,
- };
+ #endif
+ #endif
  
- static void pmac_pci_fixup_u4_of_node(struct pci_dev *dev)
+@@ -489,7 +480,7 @@ int __init pci_xen_initial_domain(void)
+ 		if (acpi_get_override_irq(irq, &trigger, &polarity) == -1)
+ 			continue;
+ 
+-		xen_register_pirq(irq, -1 /* no GSI override */,
++		xen_register_pirq(irq,
+ 			trigger ? ACPI_LEVEL_SENSITIVE : ACPI_EDGE_SENSITIVE,
+ 			true /* Map GSI to PIRQ */);
+ 	}
 -- 
-2.1.0
+1.7.10.4
 
