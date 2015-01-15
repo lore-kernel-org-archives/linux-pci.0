@@ -1,104 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:38856 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754056AbbATKta (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 05:49:30 -0500
-Date: Tue, 20 Jan 2015 10:49:22 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>
-Subject: Re: [RFC PATCH 1/3] drivers: of: fix resources freeing in
- of_pci_get_host_bridge_resources()
-Message-ID: <20150120104922.GF5398@red-moon>
-References: <1420644571-18928-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1420644571-18928-2-git-send-email-lorenzo.pieralisi@arm.com>
- <20150119183228.GE10762@e106497-lin.cambridge.arm.com>
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:36548 "EHLO
+	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752054AbbAOX4E (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jan 2015 18:56:04 -0500
+Received: by mail-oi0-f51.google.com with SMTP id h136so14981060oig.10
+        for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 15:56:02 -0800 (PST)
+Date: Thu, 15 Jan 2015 17:55:59 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Wilmer van der Gaast <kernel@wilmer.gaast.net>,
+	Zhang Rui <rui.zhang@intel.com>, linux-pci@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Pavel Machek <pavel@ucw.cz>, linux-pm@vger.kernel.org
+Subject: Re: [PATCH] PCI: keep enable status consistent for device without
+ driver
+Message-ID: <20150115235559.GC29776@google.com>
+References: <1421300208-7087-1-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20150119183228.GE10762@e106497-lin.cambridge.arm.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1421300208-7087-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 19, 2015 at 06:32:29PM +0000, Liviu Dudau wrote:
+[+cc Rafael, Pavel, linux-pm]
 
-[...]
+On Wed, Jan 14, 2015 at 09:36:48PM -0800, Yinghai Lu wrote:
+> Wilmer reported continuous suspend/resume does not work after
+> commit 928bea964827 ("PCI: Delay enabling bridges until they're needed").
+> 
+> For pci bridge without driver, FW enable it already.
+> In pci_pm_resume/pci_pm_reenable_device after first resume
+> will not reenable the device, aka the status is not the same
+> as that before first suspend.
+> 
+> Try to update enable status according to register value before
+> calling pci_reenable_device, so we will not miss those pm
+> operation calling for next suspend/resume.
+> 
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=86421
+> Fixes: 928bea964827 ("PCI: Delay enabling bridges until they're needed")
+> Reported-by: Wilmer van der Gaast <kernel@wilmer.gaast.net>
+> Bisected-by: Wilmer van der Gaast <kernel@wilmer.gaast.net>
+> Tested-by: Wilmer van der Gaast <kernel@wilmer.gaast.net>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Zhang Rui <rui.zhang@intel.com>
+> CC: stable@vger.kernel.org  # v3.10+
 
-> > @@ -146,6 +146,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
-> >  	struct of_pci_range_parser parser;
-> >  	char range_type[4];
-> >  	int err;
-> > +	struct pci_host_bridge_window *window;
-> >  
-> >  	if (io_base)
-> >  		*io_base = (resource_size_t)OF_BAD_ADDR;
-> > @@ -225,7 +226,10 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
-> >  conversion_failed:
-> >  	kfree(res);
-> >  parse_failed:
-> > +	list_for_each_entry(window, resources, list)
-> > +		kfree(window->res);
-> >  	pci_free_resource_list(resources);
-> > +	kfree(bus_range);
-> >  	return err;
-> >  }
-> >  EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
-> 
-> Hi Lorenzo et all,
-> 
-> Here is my personal view and I am happy to hear from others on the desired
-> behaviour:
-> 
-> When I wrote this function what I had in mind was that it will parse as
-> much as possible from the device tree and return a list of resources that
-> could be successfully converted. If the entire list of ranges could not
-> be converted then an error code will be returned, but the caller still
-> had the list as constructed up to the error. It was the job of the caller
-> to free the list in either cases, as stated in the comment.
+928bea964827 appeared in v3.12.  Did you mean v3.12+ instead of v3.10+?
 
-That's what I am questioning. If the function takes an error path, the
-windows list is freed, so the resource pointers are gone. There is no
-way the caller can grab those resource pointers and free them.
+I'd really like to get Rafael and Pavel to take a look at this.
 
-So either way, the function needs patching. Either we do not free the
-windows list (we remove pci_free_resource_list) or we apply my fix (or
-we refactor the API which is likely to be what I will do).
+> ---
+>  drivers/pci/pci-driver.c |    9 +++++++++
+>  1 file changed, 9 insertions(+)
+> 
+> Index: linux-2.6/drivers/pci/pci-driver.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/pci-driver.c
+> +++ linux-2.6/drivers/pci/pci-driver.c
+> @@ -519,8 +519,17 @@ static void pci_pm_set_unknown_state(str
+>   */
+>  static int pci_pm_reenable_device(struct pci_dev *pci_dev)
+>  {
+> +	u16 cmd;
+>  	int retval;
+>  
+> +	/* update enable_cnt according to cmd register */
+> +	pci_read_config_word(pci_dev, PCI_COMMAND, &cmd);
+> +	if (!pci_dev->is_busmaster && (cmd & PCI_COMMAND_MASTER))
+> +		pci_dev->is_busmaster = true;
 
-Lorenzo
 
-> 
-> The historical reason why the function was written that way was because at
-> some moment after parsing I've had an additional step where arches could
-> cleanup / veto the list and they could return an error value to signal
-> their discontent. Also I was (am) not sure how lenient we could be with
-> the device tree not being sane (at least one host bridge binding lists the
-> config space as a range, which was accepted as broken).
-> 
-> So, from that point of view, I would NAK this patch, as the function works
-> as intended. If others find this mode of operation too convoluted, then
-> the patch should probably make clear that cleanup only needs to be done on
-> function returning success.
-> 
-> Best regards,
-> 
-> > -- 
-> > 2.2.1
-> > 
-> > 
-> 
-> -- 
-> ====================
-> | I would like to |
-> | fix the world,  |
-> | but they're not |
-> | giving me the   |
->  \ source code!  /
->   ---------------
->     ¯\_(ツ)_/¯
+> +	if (!pci_is_enabled(pci_dev) &&
+> +	    (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)))
+> +		atomic_inc(&pci_dev->enable_cnt);
+
+This doesn't feel right because we're handling enable_cnt differently here
+than we do on initial boot.
+
+On initial boot, I don't think we set enable_cnt based on whether firmware
+left the IO or MEMORY bits set in the command register.  Why should we
+modify enable_cnt based on the command register during resume?
+
+I could certainly believe we should do something during initial boot, too.
+It just seems like we should look at the command register in both places or
+neither place.
+
+I have the same question about is_busmaster above.
+
+> +
+>  	/* if the device was enabled before suspend, reenable */
+>  	retval = pci_reenable_device(pci_dev);
+>  	/*
