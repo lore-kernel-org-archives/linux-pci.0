@@ -1,214 +1,353 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v4 30/33] x86,ioapic: Cleanup irq_trigger/polarity()
-Date: Tue, 20 Jan 2015 13:51:50 +0800
-Message-Id: <1421733113-15704-31-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:53922 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752801AbbAOC2q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 21:28:46 -0500
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 15 Jan 2015 12:28:43 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id A6920357804C
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:41 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t0F2SfvK33226798
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:41 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t0F2Se2n020277
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:41 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V11 17/17] powerpc/powernv: Group VF PE when IOV BAR is big on PHB3
+Date: Thu, 15 Jan 2015 10:28:07 +0800
+Message-Id: <1421288887-7765-18-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <20150113180502.GC2776@google.com>
+ <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+When IOV BAR is big, each of it is covered by 4 M64 window. This leads to
+several VF PE sits in one PE in terms of M64.
 
-These functions are full of pointless indentations, useless comments
-and even more useless printks.
+This patch group VF PEs according to the M64 allocation.
 
-Clean them up.
-
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: x86@kernel.org
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
- arch/x86/kernel/apic/io_apic.c |  138 +++++++++++++++-------------------------
- 1 file changed, 50 insertions(+), 88 deletions(-)
+ arch/powerpc/include/asm/pci-bridge.h     |    2 +-
+ arch/powerpc/platforms/powernv/pci-ioda.c |  188 +++++++++++++++++++++++------
+ 2 files changed, 149 insertions(+), 41 deletions(-)
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 6e838d6100c5..32f37445980d 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -798,45 +798,47 @@ static int EISA_ELCR(unsigned int irq)
- static int irq_polarity(int idx)
- {
- 	int bus = mp_irqs[idx].srcbus;
--	int polarity;
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 7156486..ad39a42 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -177,7 +177,7 @@ struct pci_dn {
+ #define M64_PER_IOV 4
+ 	int     m64_per_iov;
+ #define IODA_INVALID_M64        (-1)
+-	int     m64_wins[PCI_SRIOV_NUM_BARS];
++	int     m64_wins[PCI_SRIOV_NUM_BARS][M64_PER_IOV];
+ #endif /* CONFIG_PCI_IOV */
+ #endif
+ 	struct list_head child_list;
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 23ea873..8456ae8 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1093,26 +1093,27 @@ static int pnv_pci_vf_release_m64(struct pci_dev *pdev)
+ 	struct pci_controller *hose;
+ 	struct pnv_phb        *phb;
+ 	struct pci_dn         *pdn;
+-	int                    i;
++	int                    i, j;
  
- 	/*
- 	 * Determine IRQ line polarity (high active or low active):
- 	 */
--	switch (mp_irqs[idx].irqflag & 3)
--	{
--		case 0: /* conforms, ie. bus-type dependent polarity */
--			if (test_bit(bus, mp_bus_not_pci))
--				polarity = default_ISA_polarity(idx);
--			else
--				polarity = default_PCI_polarity(idx);
--			break;
--		case 1: /* high active */
--		{
--			polarity = IOAPIC_POL_HIGH;
--			break;
--		}
--		case 2: /* reserved */
--		{
--			pr_warn("broken BIOS!!\n");
--			polarity = IOAPIC_POL_LOW;
--			break;
--		}
--		case 3: /* low active */
--		{
--			polarity = IOAPIC_POL_LOW;
--			break;
--		}
--		default: /* invalid */
--		{
--			pr_warn("broken BIOS!!\n");
--			polarity = IOAPIC_POL_LOW;
--			break;
--		}
-+	switch (mp_irqs[idx].irqflag & 0x03) {
-+	case 0:
-+		/* conforms to spec, ie. bus-type dependent polarity */
-+		if (test_bit(bus, mp_bus_not_pci))
-+			return default_ISA_polarity(idx);
-+		else
-+			return default_PCI_polarity(idx);
-+	case 1:
-+		return IOAPIC_POL_HIGH;
-+	case 2:
-+		pr_warn("IOAPIC: Invalid polarity: 2, defaulting to low\n");
-+	case 3:
-+	default: /* Pointless default required due to do gcc stupidity */
-+		return IOAPIC_POL_LOW;
- 	}
--	return polarity;
+ 	bus = pdev->bus;
+ 	hose = pci_bus_to_host(bus);
+ 	phb = hose->private_data;
+ 	pdn = pci_get_pdn(pdev);
+ 
+-	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		if (pdn->m64_wins[i] == IODA_INVALID_M64)
+-			continue;
+-		opal_pci_phb_mmio_enable(phb->opal_id,
+-				OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i], 0);
+-		clear_bit(pdn->m64_wins[i], &phb->ioda.m64_bar_alloc);
+-		pdn->m64_wins[i] = IODA_INVALID_M64;
+-	}
++	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++)
++		for (j = 0; j < M64_PER_IOV; j++) {
++			if (pdn->m64_wins[i][j] == IODA_INVALID_M64)
++				continue;
++			opal_pci_phb_mmio_enable(phb->opal_id,
++				OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i][j], 0);
++			clear_bit(pdn->m64_wins[i][j], &phb->ioda.m64_bar_alloc);
++			pdn->m64_wins[i][j] = IODA_INVALID_M64;
++		}
+ 
+ 	return 0;
  }
  
-+#ifdef CONFIG_EISA
-+static int eisa_irq_trigger(int idx, int bus, int trigger)
-+{
-+	switch (mp_bus_id_to_type[bus]) {
-+	case MP_BUS_PCI:
-+	case MP_BUS_ISA:
-+		return trigger;
-+	case MP_BUS_EISA:
-+		return default_EISA_trigger(idx);
-+	}
-+	pr_warn("IOAPIC: Invalid srcbus: %d defaulting to level\n", bus);
-+	return IOAPIC_LEVEL;
-+}
-+#else
-+static inline int eisa_irq_trigger(int idx, int bus, int trigger)
-+{
-+	return trigger;
-+}
-+#endif
+-static int pnv_pci_vf_assign_m64(struct pci_dev *pdev)
++static int pnv_pci_vf_assign_m64(struct pci_dev *pdev, u16 vf_num)
+ {
+ 	struct pci_bus        *bus;
+ 	struct pci_controller *hose;
+@@ -1120,17 +1121,33 @@ static int pnv_pci_vf_assign_m64(struct pci_dev *pdev)
+ 	struct pci_dn         *pdn;
+ 	unsigned int           win;
+ 	struct resource       *res;
+-	int                    i;
++	int                    i, j;
+ 	int64_t                rc;
++	int                    total_vfs;
++	resource_size_t        size, start;
++	int                    pe_num;
++	int                    vf_groups;
++	int                    vf_per_group;
+ 
+ 	bus = pdev->bus;
+ 	hose = pci_bus_to_host(bus);
+ 	phb = hose->private_data;
+ 	pdn = pci_get_pdn(pdev);
++	total_vfs = pci_sriov_get_totalvfs(pdev);
+ 
+ 	/* Initialize the m64_wins to IODA_INVALID_M64 */
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++)
+-		pdn->m64_wins[i] = IODA_INVALID_M64;
++		for (j = 0; j < M64_PER_IOV; j++)
++			pdn->m64_wins[i][j] = IODA_INVALID_M64;
 +
- static int irq_trigger(int idx)
- {
- 	int bus = mp_irqs[idx].srcbus;
-@@ -845,63 +847,23 @@ static int irq_trigger(int idx)
- 	/*
- 	 * Determine IRQ trigger mode (edge or level sensitive):
- 	 */
--	switch ((mp_irqs[idx].irqflag>>2) & 3)
--	{
--		case 0: /* conforms, ie. bus-type dependent */
--			if (test_bit(bus, mp_bus_not_pci))
--				trigger = default_ISA_trigger(idx);
--			else
--				trigger = default_PCI_trigger(idx);
--#ifdef CONFIG_EISA
--			switch (mp_bus_id_to_type[bus]) {
--				case MP_BUS_ISA: /* ISA pin */
--				{
--					/* set before the switch */
--					break;
--				}
--				case MP_BUS_EISA: /* EISA pin */
--				{
--					trigger = default_EISA_trigger(idx);
--					break;
--				}
--				case MP_BUS_PCI: /* PCI pin */
--				{
--					/* set before the switch */
--					break;
--				}
--				default:
--				{
--					pr_warn("broken BIOS!!\n");
--					trigger = IOAPIC_LEVEL;
--					break;
--				}
--			}
--#endif
--			break;
--		case 1: /* edge */
--		{
--			trigger = IOAPIC_EDGE;
--			break;
++	if (pdn->m64_per_iov == M64_PER_IOV) {
++		vf_groups = (vf_num <= M64_PER_IOV) ? vf_num: M64_PER_IOV;
++		vf_per_group = (vf_num <= M64_PER_IOV)? 1:
++			__roundup_pow_of_two(vf_num) / pdn->m64_per_iov;
++	} else {
++		vf_groups = 1;
++		vf_per_group = 1;
++	}
+ 
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+ 		res = pdev->resource + PCI_IOV_RESOURCES + i;
+@@ -1140,33 +1157,61 @@ static int pnv_pci_vf_assign_m64(struct pci_dev *pdev)
+ 		if (!pnv_pci_is_mem_pref_64(res->flags))
+ 			continue;
+ 
+-		do {
+-			win = find_next_zero_bit(&phb->ioda.m64_bar_alloc,
+-					phb->ioda.m64_bar_idx + 1, 0);
+-
+-			if (win >= phb->ioda.m64_bar_idx + 1)
+-				goto m64_failed;
+-		} while (test_and_set_bit(win, &phb->ioda.m64_bar_alloc));
++		for (j = 0; j < vf_groups; j++) {
++			do {
++				win = find_next_zero_bit(&phb->ioda.m64_bar_alloc,
++						phb->ioda.m64_bar_idx + 1, 0);
++
++				if (win >= phb->ioda.m64_bar_idx + 1)
++					goto m64_failed;
++			} while (test_and_set_bit(win, &phb->ioda.m64_bar_alloc));
++
++			pdn->m64_wins[i][j] = win;
++
++			if (pdn->m64_per_iov == M64_PER_IOV) {
++				size = pci_iov_resource_size(pdev,
++								   PCI_IOV_RESOURCES + i);
++				size = size * vf_per_group;
++				start = res->start + size * j;
++			} else {
++				size = resource_size(res);
++				start = res->start;
++			}
+ 
+-		pdn->m64_wins[i] = win;
++			/* Map the M64 here */
++			if (pdn->m64_per_iov == M64_PER_IOV) {
++				pe_num = pdn->offset + j;
++				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
++						pe_num, OPAL_M64_WINDOW_TYPE,
++						pdn->m64_wins[i][j], 0);
++			}
+ 
+-		/* Map the M64 here */
+-		rc = opal_pci_set_phb_mem_window(phb->opal_id,
++			rc = opal_pci_set_phb_mem_window(phb->opal_id,
+ 						 OPAL_M64_WINDOW_TYPE,
+-						 pdn->m64_wins[i],
+-						 res->start,
++						 pdn->m64_wins[i][j],
++						 start,
+ 						 0, /* unused */
+-						 resource_size(res));
+-		if (rc != OPAL_SUCCESS) {
+-			pr_err("Failed to map M64 BAR #%d: %lld\n", win, rc);
+-			goto m64_failed;
 -		}
--		case 2: /* reserved */
--		{
--			pr_warn("broken BIOS!!\n");
--			trigger = IOAPIC_LEVEL;
--			break;
--		}
--		case 3: /* level */
--		{
--			trigger = IOAPIC_LEVEL;
--			break;
--		}
--		default: /* invalid */
--		{
--			pr_warn("broken BIOS!!\n");
--			trigger = IOAPIC_EDGE;
--			break;
--		}
-+	switch ((mp_irqs[idx].irqflag >> 2) & 0x03) {
-+	case 0:
-+		/* conforms to spec, ie. bus-type dependent trigger mode */
-+		if (test_bit(bus, mp_bus_not_pci))
-+			trigger = default_ISA_trigger(idx);
-+		else
-+			trigger = default_PCI_trigger(idx);
-+		/* Take EISA into account */
-+		return eisa_irq_trigger(idx, bus, trigger);
-+	case 1:
-+		return IOAPIC_EDGE;
-+	case 2:
-+		pr_warn("IOAPIC: Invalid trigger mode 2 defaulting to level\n");
-+	case 3:
-+	default: /* Pointless default required due to do gcc stupidity */
-+		return IOAPIC_LEVEL;
++						 size);
+ 
+-		rc = opal_pci_phb_mmio_enable(phb->opal_id,
+-				OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i], 1);
+-		if (rc != OPAL_SUCCESS) {
+-			pr_err("Failed to enable M64 BAR #%d: %llx\n", win, rc);
+-			goto m64_failed;
++
++			if (rc != OPAL_SUCCESS) {
++				pr_err("Failed to set M64 BAR #%d: %lld\n",
++						win, rc);
++				goto m64_failed;
++			}
++
++			if (pdn->m64_per_iov == M64_PER_IOV)
++				rc = opal_pci_phb_mmio_enable(phb->opal_id,
++				     OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i][j], 2);
++			else
++				rc = opal_pci_phb_mmio_enable(phb->opal_id,
++				     OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i][j], 1);
++
++			if (rc != OPAL_SUCCESS) {
++				pr_err("Failed to enable M64 BAR #%d: %llx\n",
++						win, rc);
++				goto m64_failed;
++			}
+ 		}
  	}
--	return trigger;
+ 	return 0;
+@@ -1208,22 +1253,53 @@ static void pnv_pci_ioda2_release_dma_pe(struct pci_dev *dev, struct pnv_ioda_pe
+ 	pe->tce32_table = NULL;
  }
  
- void ioapic_set_alloc_attr(struct irq_alloc_info *info, int node,
+-static void pnv_ioda_release_vf_PE(struct pci_dev *pdev)
++static void pnv_ioda_release_vf_PE(struct pci_dev *pdev, u16 vf_num)
+ {
+ 	struct pci_bus        *bus;
+ 	struct pci_controller *hose;
+ 	struct pnv_phb        *phb;
+ 	struct pnv_ioda_pe    *pe, *pe_n;
+ 	struct pci_dn         *pdn;
++	u16                    vf_index;
++	int64_t                rc;
+ 
+ 	bus = pdev->bus;
+ 	hose = pci_bus_to_host(bus);
+ 	phb = hose->private_data;
++	pdn = pci_get_pdn(pdev);
+ 
+ 	if (!pdev->is_physfn)
+ 		return;
+ 
+-	pdn = pci_get_pdn(pdev);
++	if (pdn->m64_per_iov == M64_PER_IOV && vf_num > M64_PER_IOV) {
++		int   vf_group;
++		int   vf_per_group;
++		int   vf_index1;
++
++		vf_per_group = __roundup_pow_of_two(vf_num) / pdn->m64_per_iov;
++
++		for (vf_group = 0; vf_group < M64_PER_IOV; vf_group++)
++			for (vf_index = vf_group * vf_per_group;
++				vf_index < (vf_group + 1) * vf_per_group &&
++				vf_index < vf_num;
++				vf_index++)
++				for (vf_index1 = vf_group * vf_per_group;
++					vf_index1 < (vf_group + 1) * vf_per_group &&
++					vf_index1 < vf_num;
++					vf_index1++){
++
++					rc = opal_pci_set_peltv(phb->opal_id,
++						pdn->offset + vf_index,
++						pdn->offset + vf_index1,
++						OPAL_REMOVE_PE_FROM_DOMAIN);
++
++					if (rc)
++					    pr_warn("%s: Failed to unlink same"
++						" group PE#%d(%lld)\n", __func__,
++						pdn->offset + vf_index1, rc);
++				}
++	}
++
+ 	list_for_each_entry_safe(pe, pe_n, &phb->ioda.pe_list, list) {
+ 		if (pe->parent_dev != pdev)
+ 			continue;
+@@ -1258,10 +1334,11 @@ void pnv_pci_sriov_disable(struct pci_dev *pdev)
+ 	vf_num = pdn->vf_pes;
+ 
+ 	/* Release VF PEs */
+-	pnv_ioda_release_vf_PE(pdev);
++	pnv_ioda_release_vf_PE(pdev, vf_num);
+ 
+ 	if (phb->type == PNV_PHB_IODA2) {
+-		pnv_pci_vf_resource_shift(pdev, -pdn->offset);
++		if (pdn->m64_per_iov == 1)
++			pnv_pci_vf_resource_shift(pdev, -pdn->offset);
+ 
+ 		/* Release M64 BARs */
+ 		pnv_pci_vf_release_m64(pdev);
+@@ -1285,6 +1362,7 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 vf_num)
+ 	int                    pe_num;
+ 	u16                    vf_index;
+ 	struct pci_dn         *pdn;
++	int64_t                rc;
+ 
+ 	bus = pdev->bus;
+ 	hose = pci_bus_to_host(bus);
+@@ -1332,7 +1410,36 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 vf_num)
+ 		mutex_unlock(&phb->ioda.pe_list_mutex);
+ 
+ 		pnv_pci_ioda2_setup_dma_pe(phb, pe);
++	}
+ 
++	if (pdn->m64_per_iov == M64_PER_IOV && vf_num > M64_PER_IOV) {
++		int   vf_group;
++		int   vf_per_group;
++		int   vf_index1;
++
++		vf_per_group = __roundup_pow_of_two(vf_num) / pdn->m64_per_iov;
++
++		for (vf_group = 0; vf_group < M64_PER_IOV; vf_group++)
++			for (vf_index = vf_group * vf_per_group;
++				vf_index < (vf_group + 1) * vf_per_group &&
++				vf_index < vf_num;
++				vf_index++)
++				for (vf_index1 = vf_group * vf_per_group;
++					vf_index1 < (vf_group + 1) * vf_per_group &&
++					vf_index1 < vf_num;
++					vf_index1++) {
++
++					rc = opal_pci_set_peltv(phb->opal_id,
++						pdn->offset + vf_index,
++						pdn->offset + vf_index1,
++						OPAL_ADD_PE_TO_DOMAIN);
++
++					if (rc)
++					    pr_warn("%s: Failed to link same "
++						"group PE#%d(%lld)\n",
++						__func__,
++						pdn->offset + vf_index1, rc);
++			}
+ 	}
+ }
+ 
+@@ -1366,14 +1473,15 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 vf_num)
+ 		mutex_unlock(&phb->ioda.pe_alloc_mutex);
+ 
+ 		/* Assign M64 BAR accordingly */
+-		ret = pnv_pci_vf_assign_m64(pdev);
++		ret = pnv_pci_vf_assign_m64(pdev, vf_num);
+ 		if (ret) {
+ 			pr_info("No enough M64 resource\n");
+ 			goto m64_failed;
+ 		}
+ 
+ 		/* Do some magic shift */
+-		pnv_pci_vf_resource_shift(pdev, pdn->offset);
++		if (pdn->m64_per_iov == 1)
++			pnv_pci_vf_resource_shift(pdev, pdn->offset);
+ 	}
+ 
+ 	/* Setup VF PEs */
 -- 
-1.7.10.4
+1.7.9.5
 
