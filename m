@@ -1,70 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f54.google.com ([209.85.218.54]:37560 "EHLO
-	mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752185AbbA2BIT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jan 2015 20:08:19 -0500
-Received: by mail-oi0-f54.google.com with SMTP id v63so21924072oia.13
-        for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2015 17:08:18 -0800 (PST)
-Date: Wed, 28 Jan 2015 17:13:02 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>
-Subject: Re: [PATCH] drivers: of: fix resources freeing in
- of_pci_get_host_bridge_resources()
-Message-ID: <20150128231302.GB17623@google.com>
-References: <1422381705-5380-1-git-send-email-lorenzo.pieralisi@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1422381705-5380-1-git-send-email-lorenzo.pieralisi@arm.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:21824 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751363AbbAOEdo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 23:33:44 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Richard Henderson <rth@twiddle.net>,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	Matt Turner <mattst88@gmail.com>, linux-alpha@vger.kernel.org
+Subject: [PATCH v2 03/10] PCI, alpha: clip firmware assigned resource under parent bridge's
+Date: Wed, 14 Jan 2015 20:31:30 -0800
+Message-Id: <1421296297-6371-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1421296297-6371-1-git-send-email-yinghai@kernel.org>
+References: <1421296297-6371-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 27, 2015 at 06:01:45PM +0000, Lorenzo Pieralisi wrote:
-> In the function of_pci_get_host_bridge_resources() if the parsing of
-> ranges fails, previously allocated resources inclusive of bus_range
-> are not freed and are not expected to be freed by the function caller
-> on error return.
-> 
-> This patch fixes the issues by adding code that properly frees resources
-> and bus_range before exiting the function with an error return value.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Acked-by: Liviu Dudau <liviu.dudau@arm.com>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Rob Herring <robh+dt@kernel.org>
+Some bios put range that is not fully coverred by root bus resources.
+Try to clip them and update them in pci bridge bars.
 
-Applied to pci/host-generic for v3.20, thanks!
+We'd like to fix other arches instead of just x86.
 
-> ---
->  drivers/of/of_pci.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-> index 88471d3..60dc36c 100644
-> --- a/drivers/of/of_pci.c
-> +++ b/drivers/of/of_pci.c
-> @@ -140,6 +140,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
->  			unsigned char busno, unsigned char bus_max,
->  			struct list_head *resources, resource_size_t *io_base)
->  {
-> +	struct pci_host_bridge_window *window;
->  	struct resource *res;
->  	struct resource *bus_range;
->  	struct of_pci_range range;
-> @@ -225,7 +226,10 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
->  conversion_failed:
->  	kfree(res);
->  parse_failed:
-> +	list_for_each_entry(window, resources, list)
-> +		kfree(window->res);
->  	pci_free_resource_list(resources);
-> +	kfree(bus_range);
->  	return err;
->  }
->  EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
-> -- 
-> 2.2.1
-> 
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491
+Reported-by: Marek Kordik <kordikmarek@gmail.com>
+Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources")
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Richard Henderson <rth@twiddle.net>
+Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
+Cc: Matt Turner <mattst88@gmail.com>
+Cc: linux-alpha@vger.kernel.org
+---
+ arch/alpha/kernel/pci.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
+index 076c35c..98a1525 100644
+--- a/arch/alpha/kernel/pci.c
++++ b/arch/alpha/kernel/pci.c
+@@ -285,8 +285,12 @@ pcibios_claim_one_bus(struct pci_bus *b)
+ 			if (r->parent || !r->start || !r->flags)
+ 				continue;
+ 			if (pci_has_flag(PCI_PROBE_ONLY) ||
+-			    (r->flags & IORESOURCE_PCI_FIXED))
+-				pci_claim_resource(dev, i);
++			    (r->flags & IORESOURCE_PCI_FIXED)) {
++				if (pci_claim_resource(dev, i) == 0)
++					continue;
++
++				pci_claim_bridge_resource(dev, i);
++			}
+ 		}
+ 	}
+ 
+-- 
+1.8.4.5
+
