@@ -1,64 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:3347 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754354AbbAUCc4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 21:32:56 -0500
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:20375 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753512AbbAOEcf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 23:32:35 -0500
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [PATCH v2 26/30] PCI/xgene: Use pci_scan_root_bus() instead of pci_create_root_bus()
-Date: Wed, 21 Jan 2015 08:30:21 +0800
-Message-ID: <1421800225-26230-27-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
-References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	David Howells <dhowells@redhat.com>,
+	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
+	linux-am33-list@redhat.com
+Subject: [PATCH v2 07/10] PCI, mn10300: clip firmware assigned resource under parent bridge's
+Date: Wed, 14 Jan 2015 20:31:34 -0800
+Message-Id: <1421296297-6371-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1421296297-6371-1-git-send-email-yinghai@kernel.org>
+References: <1421296297-6371-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use pci_scan_root_bus() instead of pci_create_root_bus() +
-pci_scan_child_bus() for simplicity.
+Some bios put range that is not fully coverred by root bus resources.
+Try to clip them and update them in pci bridge bars.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Tanmay Inamdar <tinamdar@apm.com>
+We'd like to fix other arches instead of just x86.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491
+Reported-by: Marek Kordik <kordikmarek@gmail.com>
+Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources")
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
+Cc: linux-am33-list@redhat.com
 ---
- drivers/pci/host/pci-xgene.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ arch/mn10300/unit-asb2305/pci-asb2305.c |  2 +-
+ arch/mn10300/unit-asb2305/pci.c         | 47 +++++++++++++++------------------
+ 2 files changed, 22 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-index b1d0596..7e46a39 100644
---- a/drivers/pci/host/pci-xgene.c
-+++ b/drivers/pci/host/pci-xgene.c
-@@ -631,12 +631,11 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
- 	if (ret)
- 		return ret;
+diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.c b/arch/mn10300/unit-asb2305/pci-asb2305.c
+index febb9cd..b5b036f 100644
+--- a/arch/mn10300/unit-asb2305/pci-asb2305.c
++++ b/arch/mn10300/unit-asb2305/pci-asb2305.c
+@@ -106,7 +106,7 @@ static void __init pcibios_allocate_bus_resources(struct list_head *bus_list)
+ 				if (!r->flags)
+ 					continue;
+ 				if (!r->start ||
+-				    pci_claim_resource(dev, idx) < 0) {
++				    pci_claim_bridge_resource(dev, idx) < 0) {
+ 					printk(KERN_ERR "PCI:"
+ 					       " Cannot allocate resource"
+ 					       " region %d of bridge %s\n",
+diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
+index 6b4339f..471ff39 100644
+--- a/arch/mn10300/unit-asb2305/pci.c
++++ b/arch/mn10300/unit-asb2305/pci.c
+@@ -281,42 +281,37 @@ static int __init pci_check_direct(void)
+ 	return -ENODEV;
+ }
  
--	bus = pci_create_root_bus(&pdev->dev, 0,
-+	bus = pci_scan_root_bus(&pdev->dev, 0,
- 					&xgene_pcie_ops, port, &res);
- 	if (!bus)
- 		return -ENOMEM;
+-static int is_valid_resource(struct pci_dev *dev, int idx)
++static void pcibios_fixup_device_resources(struct pci_dev *dev)
+ {
+-	unsigned int i, type_mask = IORESOURCE_IO | IORESOURCE_MEM;
+-	struct resource *devr = &dev->resource[idx], *busr;
+-
+-	if (dev->bus) {
+-		pci_bus_for_each_resource(dev->bus, busr, i) {
+-			if (!busr || (busr->flags ^ devr->flags) & type_mask)
+-				continue;
+-
+-			if (devr->start &&
+-			    devr->start >= busr->start &&
+-			    devr->end <= busr->end)
+-				return 1;
+-		}
+-	}
++	int idx;
  
--	pci_scan_child_bus(bus);
- 	pci_assign_unassigned_bus_resources(bus);
- 	pci_bus_add_devices(bus);
+-	return 0;
++	if (!dev->bus)
++		return;
++
++	for (idx = 0; idx < PCI_BRIDGE_RESOURCES; idx++) {
++		struct resource *r = &dev->resource[idx];
++
++		if (!r->flags || r->parent || !r->start)
++			continue;
++
++		pci_claim_resource(dev, idx);
++	}
+ }
  
+-static void pcibios_fixup_device_resources(struct pci_dev *dev)
++static void pcibios_fixup_bridge_resources(struct pci_dev *dev)
+ {
+-	int limit, i;
++	int idx;
+ 
+-	if (dev->bus->number != 0)
++	if (!dev->bus)
+ 		return;
+ 
+-	limit = (dev->hdr_type == PCI_HEADER_TYPE_NORMAL) ?
+-		PCI_BRIDGE_RESOURCES : PCI_NUM_RESOURCES;
++	for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
++		struct resource *r = &dev->resource[idx];
+ 
+-	for (i = 0; i < limit; i++) {
+-		if (!dev->resource[i].flags)
++		if (!r->flags || r->parent || !r->start)
+ 			continue;
+ 
+-		if (is_valid_resource(dev, i))
+-			pci_claim_resource(dev, i);
++		pci_claim_bridge_resource(dev, idx);
+ 	}
+ }
+ 
+@@ -330,7 +325,7 @@ void pcibios_fixup_bus(struct pci_bus *bus)
+ 
+ 	if (bus->self) {
+ 		pci_read_bridge_bases(bus);
+-		pcibios_fixup_device_resources(bus->self);
++		pcibios_fixup_bridge_resources(bus->self);
+ 	}
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list)
 -- 
-1.7.1
+1.8.4.5
 
