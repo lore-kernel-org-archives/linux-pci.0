@@ -1,278 +1,267 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Vivek Goyal <vgoyal@redhat.com>,
-	Thierry Reding <treding@nvidia.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Mike Travis <travis@sgi.com>, Tony Luck <tony.luck@intel.com>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: Re: [RFC Patch 17/19] resources: Move struct resource_list_entry from ACPI into resource core
-Date: Wed, 21 Jan 2015 02:10:25 +0100
-Message-ID: <3428063.tN1BxOoXSN@vostro.rjw.lan>
-In-Reply-To: <1420684386-5975-18-git-send-email-jiang.liu@linux.intel.com>
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-18-git-send-email-jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:58515 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753245AbbAOC2c (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 21:28:32 -0500
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 15 Jan 2015 12:28:31 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id E1DFB3578053
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:28 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t0F2SSdf48759010
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:28 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t0F2SSig019969
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:28 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V11 10/17] powerpc/powernv: Use pci_dn in PCI config accessor
+Date: Thu, 15 Jan 2015 10:28:00 +0800
+Message-Id: <1421288887-7765-11-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <20150113180502.GC2776@google.com>
+ <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 08, 2015 10:33:04 AM Jiang Liu wrote:
-> Currently ACPI, PCI and pnp all implement the same resource list
-> management with different data structure. We need to transfer from
-> one data structure into another when passing resources from one
-> subsystem into another subsystem. Sp move struct resource_list_entry
-> from ACPI into resource core, so it could be reused by different
-> subystems and avoid the data structure conversion.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  drivers/acpi/acpi_lpss.c     |    6 +++---
->  drivers/acpi/acpi_platform.c |    2 +-
->  drivers/acpi/resource.c      |   13 ++++--------
->  drivers/dma/acpi-dma.c       |    8 +++----
->  include/linux/acpi.h         |    6 ------
->  include/linux/ioport.h       |   25 ++++++++++++++++++++++
->  kernel/resource.c            |   48 ++++++++++++++++++++++++++++++++++++++++++
->  7 files changed, 85 insertions(+), 23 deletions(-)
-> 
-> diff --git a/drivers/acpi/acpi_lpss.c b/drivers/acpi/acpi_lpss.c
-> index 4f3febf8a589..39b548dba70b 100644
-> --- a/drivers/acpi/acpi_lpss.c
-> +++ b/drivers/acpi/acpi_lpss.c
-> @@ -333,12 +333,12 @@ static int acpi_lpss_create_device(struct acpi_device *adev,
->  		goto err_out;
->  
->  	list_for_each_entry(rentry, &resource_list, node)
-> -		if (resource_type(&rentry->res) == IORESOURCE_MEM) {
-> +		if (resource_type(rentry->res) == IORESOURCE_MEM) {
->  			if (dev_desc->prv_size_override)
->  				pdata->mmio_size = dev_desc->prv_size_override;
->  			else
-> -				pdata->mmio_size = resource_size(&rentry->res);
-> -			pdata->mmio_base = ioremap(rentry->res.start,
-> +				pdata->mmio_size = resource_size(rentry->res);
-> +			pdata->mmio_base = ioremap(rentry->res->start,
->  						   pdata->mmio_size);
->  			break;
->  		}
-> diff --git a/drivers/acpi/acpi_platform.c b/drivers/acpi/acpi_platform.c
-> index 6ba8beb6b9d2..238e32b9cbb0 100644
-> --- a/drivers/acpi/acpi_platform.c
-> +++ b/drivers/acpi/acpi_platform.c
-> @@ -71,7 +71,7 @@ struct platform_device *acpi_create_platform_device(struct acpi_device *adev)
->  		}
->  		count = 0;
->  		list_for_each_entry(rentry, &resource_list, node)
-> -			resources[count++] = rentry->res;
-> +			resources[count++] = *rentry->res;
->  
->  		acpi_dev_free_resource_list(&resource_list);
->  	}
-> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-> index 8ea7c26d6915..c0dc038274d4 100644
-> --- a/drivers/acpi/resource.c
-> +++ b/drivers/acpi/resource.c
-> @@ -444,12 +444,7 @@ EXPORT_SYMBOL_GPL(acpi_dev_resource_interrupt);
->   */
->  void acpi_dev_free_resource_list(struct list_head *list)
->  {
-> -	struct resource_list_entry *rentry, *re;
-> -
-> -	list_for_each_entry_safe(rentry, re, list, node) {
-> -		list_del(&rentry->node);
-> -		kfree(rentry);
-> -	}
-> +	resource_list_free_list(list);
->  }
->  EXPORT_SYMBOL_GPL(acpi_dev_free_resource_list);
->  
-> @@ -467,14 +462,14 @@ static acpi_status acpi_dev_new_resource_entry(struct resource *r,
->  {
->  	struct resource_list_entry *rentry;
->  
-> -	rentry = kmalloc(sizeof(*rentry), GFP_KERNEL);
-> +	rentry = resource_list_alloc(NULL, 0);
->  	if (!rentry) {
->  		c->error = -ENOMEM;
->  		return AE_NO_MEMORY;
->  	}
-> -	rentry->res = *r;
-> +	*rentry->res = *r;
->  	rentry->offset = offset;
-> -	list_add_tail(&rentry->node, c->list);
-> +	resource_list_insert(c->list, rentry, true);
->  	c->count++;
->  	return AE_OK;
->  }
-> diff --git a/drivers/dma/acpi-dma.c b/drivers/dma/acpi-dma.c
-> index de361a156b34..1ce84abe0924 100644
-> --- a/drivers/dma/acpi-dma.c
-> +++ b/drivers/dma/acpi-dma.c
-> @@ -56,10 +56,10 @@ static int acpi_dma_parse_resource_group(const struct acpi_csrt_group *grp,
->  		return 0;
->  
->  	list_for_each_entry(rentry, &resource_list, node) {
-> -		if (resource_type(&rentry->res) == IORESOURCE_MEM)
-> -			mem = rentry->res.start;
-> -		else if (resource_type(&rentry->res) == IORESOURCE_IRQ)
-> -			irq = rentry->res.start;
-> +		if (resource_type(rentry->res) == IORESOURCE_MEM)
-> +			mem = rentry->res->start;
-> +		else if (resource_type(rentry->res) == IORESOURCE_IRQ)
-> +			irq = rentry->res->start;
->  	}
->  
->  	acpi_dev_free_resource_list(&resource_list);
-> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-> index 1df4a0211ae5..6d7f7edca22c 100644
-> --- a/include/linux/acpi.h
-> +++ b/include/linux/acpi.h
-> @@ -297,12 +297,6 @@ unsigned long acpi_dev_irq_flags(u8 triggering, u8 polarity, u8 shareable);
->  bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
->  				 struct resource *res);
->  
-> -struct resource_list_entry {
-> -	struct list_head node;
-> -	struct resource res;
-> -	resource_size_t offset;
-> -};
-> -
->  void acpi_dev_free_resource_list(struct list_head *list);
->  int acpi_dev_get_resources(struct acpi_device *adev, struct list_head *list,
->  			   int (*preproc)(struct acpi_resource *, void *),
-> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-> index 2c5250222278..a6f4841ca40c 100644
-> --- a/include/linux/ioport.h
-> +++ b/include/linux/ioport.h
-> @@ -11,6 +11,7 @@
->  #ifndef __ASSEMBLY__
->  #include <linux/compiler.h>
->  #include <linux/types.h>
-> +
->  /*
->   * Resources are tree-like, allowing
->   * nesting etc..
-> @@ -255,6 +256,30 @@ static inline bool resource_overlaps(struct resource *r1, struct resource *r2)
->         return (r1->start <= r2->end && r1->end >= r2->start);
->  }
->  
-> +/*
-> + * Common resource list management data structure and interfaces to support
-> + * ACPI, PNP and PCI host bridge etc.
-> + */
-> +struct resource_list_entry {
-> +	struct list_head	node;
-> +	struct resource		*res;	/* In master (CPU) address space */
-> +	resource_size_t		offset;	/* Translation offset for bridge */
-> +	struct resource		__res;	/* Default storage for res */
-> +};
-> +
-> +extern struct resource_list_entry *resource_list_alloc(struct resource *res,
-> +						       size_t extra_size);
-> +extern void resource_list_free(struct resource_list_entry *entry);
-> +extern void resource_list_insert(struct list_head *head,
-> +				 struct resource_list_entry *entry, bool tail);
-> +extern void resource_list_delete(struct resource_list_entry *entry);
-> +extern void resource_list_free_list(struct list_head *head);
-> +
-> +#define resource_list_for_each_entry(entry, list)	\
-> +	list_for_each_entry((entry), (list), node)
-> +
-> +#define resource_list_for_each_entry_safe(entry, tmp, list)	\
-> +	list_for_each_entry_safe((entry), (tmp), (list), node)
->  
->  #endif /* __ASSEMBLY__ */
->  #endif	/* _LINUX_IOPORT_H */
-> diff --git a/kernel/resource.c b/kernel/resource.c
-> index 0bcebffc4e77..414183809383 100644
-> --- a/kernel/resource.c
-> +++ b/kernel/resource.c
-> @@ -1529,6 +1529,54 @@ int iomem_is_exclusive(u64 addr)
->  	return err;
->  }
->  
-> +struct resource_list_entry *resource_list_alloc(struct resource *res,
-> +						size_t extra_size)
+The PCI config accessors rely on device node. Unfortunately, VFs
+don't have corresponding device nodes. So we have to switch to
+pci_dn for PCI config access.
 
-What about create_resource_list_entry()?  Less confusing surely.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/eeh-powernv.c |   14 +++++-
+ arch/powerpc/platforms/powernv/pci.c         |   69 ++++++++++----------------
+ arch/powerpc/platforms/powernv/pci.h         |    4 +-
+ 3 files changed, 40 insertions(+), 47 deletions(-)
 
-> +{
-> +	struct resource_list_entry *entry;
-> +
-> +	entry = kzalloc(sizeof(*entry) + extra_size, GFP_KERNEL);
-> +	if (entry) {
-> +		INIT_LIST_HEAD(&entry->node);
-> +		entry->res = res ? res : &entry->__res;
-> +	}
-> +
-> +	return entry;
-> +}
-> +EXPORT_SYMBOL(resource_list_alloc);
-> +
-> +void resource_list_free(struct resource_list_entry *entry)
-> +{
-> +	kfree(entry);
-> +}
-> +EXPORT_SYMBOL(resource_list_free);
-
-Well, I'm not sure I like this.  The name suggests that it would free the
-entire list and what's wrong with using kfree() directly on "entry" anyway?
-
-> +
-> +void resource_list_insert(struct list_head *head,
-> +			  struct resource_list_entry *entry, bool tail)
-
-I would call this resource_list_add() if anything.
-
-Also it may be better to have two helpers, one for "add" and one for "add_tail"
-(and perhaps define them as static inline?).
-
-And why change the ordering between "head" and "entry".  That's alomost
-guaranteed to confuse people.
-
-> +{
-> +	if (tail)
-> +		list_add_tail(&entry->node, head);
-> +	else
-> +		list_add(&entry->node, head);
-> +}
-> +EXPORT_SYMBOL(resource_list_insert);
-> +
-> +void resource_list_delete(struct resource_list_entry *entry)
-> +{
-> +	list_del(&entry->node);
-> +}
-> +EXPORT_SYMBOL(resource_list_delete);
-
-Couldn't this be a static inline)?
-
-Or maybe we can combine the "list_del" with "kfree" in one function?
-
-> +
-> +void resource_list_free_list(struct list_head *head)
-> +{
-> +	struct resource_list_entry *entry, *tmp;
-> +
-> +	list_for_each_entry_safe(entry, tmp, head, node) {
-> +		list_del(&entry->node);
-> +		resource_list_free(entry);
-> +	}
-> +}
-> +EXPORT_SYMBOL(resource_list_free_list);
-> +
->  static int __init strict_iomem(char *str)
->  {
->  	if (strstr(str, "relaxed"))
-> 
-
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 1d19e79..c63b6c1 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -419,21 +419,31 @@ static inline bool powernv_eeh_cfg_blocked(struct device_node *dn)
+ static int powernv_eeh_read_config(struct device_node *dn,
+ 				   int where, int size, u32 *val)
+ {
++	struct pci_dn *pdn = PCI_DN(dn);
++
++	if (!pdn)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
+ 	if (powernv_eeh_cfg_blocked(dn)) {
+ 		*val = 0xFFFFFFFF;
+ 		return PCIBIOS_SET_FAILED;
+ 	}
+ 
+-	return pnv_pci_cfg_read(dn, where, size, val);
++	return pnv_pci_cfg_read(pdn, where, size, val);
+ }
+ 
+ static int powernv_eeh_write_config(struct device_node *dn,
+ 				    int where, int size, u32 val)
+ {
++	struct pci_dn *pdn = PCI_DN(dn);
++
++	if (!pdn)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
+ 	if (powernv_eeh_cfg_blocked(dn))
+ 		return PCIBIOS_SET_FAILED;
+ 
+-	return pnv_pci_cfg_write(dn, where, size, val);
++	return pnv_pci_cfg_write(pdn, where, size, val);
+ }
+ 
+ /**
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index 4945e87..b7d4b9d 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -366,9 +366,9 @@ static void pnv_pci_handle_eeh_config(struct pnv_phb *phb, u32 pe_no)
+ 	spin_unlock_irqrestore(&phb->lock, flags);
+ }
+ 
+-static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
+-				     struct device_node *dn)
++static void pnv_pci_config_check_eeh(struct pci_dn *pdn)
+ {
++	struct pnv_phb *phb = pdn->phb->private_data;
+ 	u8	fstate;
+ 	__be16	pcierr;
+ 	int	pe_no;
+@@ -379,7 +379,7 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
+ 	 * setup that yet. So all ER errors should be mapped to
+ 	 * reserved PE.
+ 	 */
+-	pe_no = PCI_DN(dn)->pe_number;
++	pe_no = pdn->pe_number;
+ 	if (pe_no == IODA_INVALID_PE) {
+ 		if (phb->type == PNV_PHB_P5IOC2)
+ 			pe_no = 0;
+@@ -407,8 +407,7 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
+ 	}
+ 
+ 	cfg_dbg(" -> EEH check, bdfn=%04x PE#%d fstate=%x\n",
+-		(PCI_DN(dn)->busno << 8) | (PCI_DN(dn)->devfn),
+-		pe_no, fstate);
++		(pdn->busno << 8) | (pdn->devfn), pe_no, fstate);
+ 
+ 	/* Clear the frozen state if applicable */
+ 	if (fstate == OPAL_EEH_STOPPED_MMIO_FREEZE ||
+@@ -425,10 +424,9 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
+ 	}
+ }
+ 
+-int pnv_pci_cfg_read(struct device_node *dn,
++int pnv_pci_cfg_read(struct pci_dn *pdn,
+ 		     int where, int size, u32 *val)
+ {
+-	struct pci_dn *pdn = PCI_DN(dn);
+ 	struct pnv_phb *phb = pdn->phb->private_data;
+ 	u32 bdfn = (pdn->busno << 8) | pdn->devfn;
+ 	s64 rc;
+@@ -462,10 +460,9 @@ int pnv_pci_cfg_read(struct device_node *dn,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+-int pnv_pci_cfg_write(struct device_node *dn,
++int pnv_pci_cfg_write(struct pci_dn *pdn,
+ 		      int where, int size, u32 val)
+ {
+-	struct pci_dn *pdn = PCI_DN(dn);
+ 	struct pnv_phb *phb = pdn->phb->private_data;
+ 	u32 bdfn = (pdn->busno << 8) | pdn->devfn;
+ 
+@@ -489,18 +486,17 @@ int pnv_pci_cfg_write(struct device_node *dn,
+ }
+ 
+ #if CONFIG_EEH
+-static bool pnv_pci_cfg_check(struct pci_controller *hose,
+-			      struct device_node *dn)
++static bool pnv_pci_cfg_check(struct pci_dn *pdn)
+ {
+ 	struct eeh_dev *edev = NULL;
+-	struct pnv_phb *phb = hose->private_data;
++	struct pnv_phb *phb = pdn->phb->private_data;
+ 
+ 	/* EEH not enabled ? */
+ 	if (!(phb->flags & PNV_PHB_FLAG_EEH))
+ 		return true;
+ 
+ 	/* PE reset or device removed ? */
+-	edev = of_node_to_eeh_dev(dn);
++	edev = pdn->edev;
+ 	if (edev) {
+ 		if (edev->pe &&
+ 		    (edev->pe->state & EEH_PE_CFG_BLOCKED))
+@@ -513,8 +509,7 @@ static bool pnv_pci_cfg_check(struct pci_controller *hose,
+ 	return true;
+ }
+ #else
+-static inline pnv_pci_cfg_check(struct pci_controller *hose,
+-				struct device_node *dn)
++static inline pnv_pci_cfg_check(struct pci_dn *pdn)
+ {
+ 	return true;
+ }
+@@ -524,32 +519,26 @@ static int pnv_pci_read_config(struct pci_bus *bus,
+ 			       unsigned int devfn,
+ 			       int where, int size, u32 *val)
+ {
+-	struct device_node *dn, *busdn = pci_bus_to_OF_node(bus);
+ 	struct pci_dn *pdn;
+ 	struct pnv_phb *phb;
+-	bool found = false;
+ 	int ret;
+ 
+ 	*val = 0xFFFFFFFF;
+-	for (dn = busdn->child; dn; dn = dn->sibling) {
+-		pdn = PCI_DN(dn);
+-		if (pdn && pdn->devfn == devfn) {
+-			phb = pdn->phb->private_data;
+-			found = true;
+-			break;
+-		}
+-	}
++	pdn = pci_get_pdn_by_devfn(bus, devfn);
++	if (!pdn)
++		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	if (!found || !pnv_pci_cfg_check(pdn->phb, dn))
++	if (!pnv_pci_cfg_check(pdn))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	ret = pnv_pci_cfg_read(dn, where, size, val);
+-	if (phb->flags & PNV_PHB_FLAG_EEH) {
++	ret = pnv_pci_cfg_read(pdn, where, size, val);
++	phb = pdn->phb->private_data;
++	if (phb->flags & PNV_PHB_FLAG_EEH && pdn->edev) {
+ 		if (*val == EEH_IO_ERROR_VALUE(size) &&
+-		    eeh_dev_check_failure(of_node_to_eeh_dev(dn)))
++		    eeh_dev_check_failure(pdn->edev))
+                         return PCIBIOS_DEVICE_NOT_FOUND;
+ 	} else {
+-		pnv_pci_config_check_eeh(phb, dn);
++		pnv_pci_config_check_eeh(pdn);
+ 	}
+ 
+ 	return ret;
+@@ -559,27 +548,21 @@ static int pnv_pci_write_config(struct pci_bus *bus,
+ 				unsigned int devfn,
+ 				int where, int size, u32 val)
+ {
+-	struct device_node *dn, *busdn = pci_bus_to_OF_node(bus);
+ 	struct pci_dn *pdn;
+ 	struct pnv_phb *phb;
+-	bool found = false;
+ 	int ret;
+ 
+-	for (dn = busdn->child; dn; dn = dn->sibling) {
+-		pdn = PCI_DN(dn);
+-		if (pdn && pdn->devfn == devfn) {
+-			phb = pdn->phb->private_data;
+-			found = true;
+-			break;
+-		}
+-	}
++	pdn = pci_get_pdn_by_devfn(bus, devfn);
++	if (!pdn)
++		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	if (!found || !pnv_pci_cfg_check(pdn->phb, dn))
++	if (!pnv_pci_cfg_check(pdn))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	ret = pnv_pci_cfg_write(dn, where, size, val);
++	ret = pnv_pci_cfg_write(pdn, where, size, val);
++	phb = pdn->phb->private_data;
+ 	if (!(phb->flags & PNV_PHB_FLAG_EEH))
+-		pnv_pci_config_check_eeh(phb, dn);
++		pnv_pci_config_check_eeh(pdn);
+ 
+ 	return ret;
+ }
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index 6c02ff8..e5b75b2 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -219,9 +219,9 @@ extern struct pnv_eeh_ops ioda_eeh_ops;
+ 
+ void pnv_pci_dump_phb_diag_data(struct pci_controller *hose,
+ 				unsigned char *log_buff);
+-int pnv_pci_cfg_read(struct device_node *dn,
++int pnv_pci_cfg_read(struct pci_dn *pdn,
+ 		     int where, int size, u32 *val);
+-int pnv_pci_cfg_write(struct device_node *dn,
++int pnv_pci_cfg_write(struct pci_dn *pdn,
+ 		      int where, int size, u32 val);
+ extern void pnv_pci_setup_iommu_table(struct iommu_table *tbl,
+ 				      void *tce_mem, u64 tce_size,
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.9.5
+
