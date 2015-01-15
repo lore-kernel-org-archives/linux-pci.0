@@ -1,57 +1,123 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-m68k@lists.linux-m68k.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	linux-alpha@vger.kernel.org, linux-ia64@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [PATCH 10/28] PCI: Save sysdata in pci_host_bridge drvdata
-Date: Fri, 16 Jan 2015 10:18:59 +0100
-Message-ID: <18973877.BYCS6vtzoq@wuerfel>
-In-Reply-To: <1421372666-12288-11-git-send-email-wangyijing@huawei.com>
-References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <1421372666-12288-11-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:58538 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752801AbbAOC2o (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 21:28:44 -0500
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 15 Jan 2015 12:28:42 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 0D4442CE8040
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:40 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t0F2Sew818022494
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:40 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t0F2SdA0020228
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:39 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V11 16/17] powerpc/powernv: Reserve additional space for IOV BAR, with m64_per_iov supported
+Date: Thu, 15 Jan 2015 10:28:06 +0800
+Message-Id: <1421288887-7765-17-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <20150113180502.GC2776@google.com>
+ <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 16 January 2015 09:44:08 Yijing Wang wrote:
-> @@ -2066,11 +2064,11 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
->  {
->         struct pci_host_bridge *host;
->  
-> -       host = pci_create_host_bridge(parent, db, resources);
-> +       host = pci_create_host_bridge(parent, db, resources, sysdata);
->         if (!host)
->                 return NULL;
->  
-> -       return __pci_scan_root_bus(host, ops, sysdata);
-> +       return __pci_scan_root_bus(host, ops);
->  }
->  EXPORT_SYMBOL(pci_scan_root_bus);
-> 
+M64 aperture size is limited on PHB3. When the IOV BAR is too big, this
+will exceed the limitation and failed to be assigned.
 
-How about keeping the sysdata out of the pci_create_host_bridge interface, and
-refactoring it so that the call sequence becomes
+This patch introduce a different mechanism based on the IOV BAR size:
 
-	host = pci_create_host_bridge(parent, db, resources);
-	host->sysdata = sysdata;
-	__pci_scan_root_bus(host, ops);
+IOV BAR size is smaller than 64M, expand to total_pe.
+IOV BAR size is bigger than 64M, roundup power2.
 
-This way, we can make sysdata completely option. I assume that more of the
-fields we have in sysdata today can get moved into pci_host_bridge
-over time, so a host bridge driver can just assign those members individually
-between pci_create_host_bridge and __pci_scan_root_bus.
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h     |    2 ++
+ arch/powerpc/platforms/powernv/pci-ioda.c |   33 ++++++++++++++++++++++++++---
+ 2 files changed, 32 insertions(+), 3 deletions(-)
 
-	Arnd
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index d61c384..7156486 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -174,6 +174,8 @@ struct pci_dn {
+ 	u16     max_vfs;		/* number of VFs IOV BAR expended */
+ 	u16     vf_pes;			/* VF PE# under this PF */
+ 	int     offset;			/* PE# for the first VF PE */
++#define M64_PER_IOV 4
++	int     m64_per_iov;
+ #define IODA_INVALID_M64        (-1)
+ 	int     m64_wins[PCI_SRIOV_NUM_BARS];
+ #endif /* CONFIG_PCI_IOV */
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 94fe6e1..23ea873 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -2180,6 +2180,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 	int i;
+ 	resource_size_t size;
+ 	struct pci_dn *pdn;
++	int mul, total_vfs;
+ 
+ 	if (!pdev->is_physfn || pdev->is_added)
+ 		return;
+@@ -2190,6 +2191,32 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 	pdn = pci_get_pdn(pdev);
+ 	pdn->max_vfs = 0;
+ 
++	total_vfs = pci_sriov_get_totalvfs(pdev);
++	pdn->m64_per_iov = 1;
++	mul = phb->ioda.total_pe;
++
++	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
++		res = &pdev->resource[i];
++		if (!res->flags || res->parent)
++			continue;
++		if (!pnv_pci_is_mem_pref_64(res->flags)) {
++			dev_warn(&pdev->dev, " non M64 IOV BAR %pR on %s\n",
++					res, pci_name(pdev));
++			continue;
++		}
++
++		size = pci_iov_resource_size(pdev, i);
++
++		/* bigger than 64M */
++		if (size > (1 << 26)) {
++			dev_info(&pdev->dev, "PowerNV: VF BAR[%d] size "
++					"is bigger than 64M, roundup power2\n", i);
++			pdn->m64_per_iov = M64_PER_IOV;
++			mul = __roundup_pow_of_two(total_vfs);
++			break;
++		}
++	}
++
+ 	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
+ 		res = &pdev->resource[i];
+ 		if (!res->flags || res->parent)
+@@ -2202,13 +2229,13 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 
+ 		dev_dbg(&pdev->dev, " Fixing VF BAR[%d] %pR to\n", i, res);
+ 		size = pci_iov_resource_size(pdev, i);
+-		res->end = res->start + size * phb->ioda.total_pe - 1;
++		res->end = res->start + size * mul - 1;
+ 		dev_dbg(&pdev->dev, "                       %pR\n", res);
+ 		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
+ 				i - PCI_IOV_RESOURCES,
+-				res, phb->ioda.total_pe);
++				res, mul);
+ 	}
+-	pdn->max_vfs = phb->ioda.total_pe;
++	pdn->max_vfs = mul;
+ }
+ 
+ static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
+-- 
+1.7.9.5
+
