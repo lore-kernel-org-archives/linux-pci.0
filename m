@@ -1,144 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:55652 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754058AbbAZStx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 26 Jan 2015 13:49:53 -0500
-Message-ID: <54C68C1D.5030605@ti.com>
-Date: Mon, 26 Jan 2015 13:49:01 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Grant Likely <grant.likely@linaro.org>
-Subject: Re: [PATCH v4 1/6] of: iommu: add ptr to OF node arg to of_iommu_configure()
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com> <1422052359-12384-2-git-send-email-m-karicheri2@ti.com> <4711364.TTK5TCBdiy@avalon>
-In-Reply-To: <4711364.TTK5TCBdiy@avalon>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:52396 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753245AbbAOC2b (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 21:28:31 -0500
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 15 Jan 2015 12:28:29 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 2859B2BB0040
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:27 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t0F2SQ3l29622418
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:27 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t0F2SQb9019893
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:26 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V11 09/17] powerpc/pci: remove pci_dn->pcidev field
+Date: Thu, 15 Jan 2015 10:27:59 +0800
+Message-Id: <1421288887-7765-10-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <20150113180502.GC2776@google.com>
+ <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/25/2015 08:32 AM, Laurent Pinchart wrote:
-> Hi Murali,
->
-> Thank you for the patch.
->
-> On Friday 23 January 2015 17:32:34 Murali Karicheri wrote:
->> Function of_iommu_configure() is called from of_dma_configure() to
->> setup iommu ops using DT property. This API is currently used for
->> platform devices for which DMA configuration (including iommu ops)
->> may come from device's parent. To extend this functionality for PCI
->> devices, this API need to take a parent node ptr as an argument
->> instead of assuming device's parent. This is needed since for PCI, the
->> dma configuration may be defined in the DT node of the root bus bridge's
->> parent device. Currently only dma-range is used for PCI and iommu is not
->> supported. So return error if the device is PCI.
->>
->> Cc: Joerg Roedel<joro@8bytes.org>
->> Cc: Grant Likely<grant.likely@linaro.org>
->> Cc: Rob Herring<robh+dt@kernel.org>
->> Cc: Bjorn Helgaas<bhelgaas@google.com>
->> Cc: Will Deacon<will.deacon@arm.com>
->> Cc: Russell King<linux@arm.linux.org.uk>
->> Cc: Arnd Bergmann<arnd@arndb.de>
->> Cc: Suravee Suthikulpanit<Suravee.Suthikulpanit@amd.com>
->>
->> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
->> ---
->>   drivers/iommu/of_iommu.c |   10 ++++++++--
->>   drivers/of/platform.c    |    2 +-
->>   include/linux/of_iommu.h |    6 ++++--
->>   3 files changed, 13 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
->> index af1dc6a..439235b 100644
->> --- a/drivers/iommu/of_iommu.c
->> +++ b/drivers/iommu/of_iommu.c
->> @@ -133,19 +133,25 @@ struct iommu_ops *of_iommu_get_ops(struct device_node
->> *np) return ops;
->>   }
->>
->> -struct iommu_ops *of_iommu_configure(struct device *dev)
->> +struct iommu_ops *of_iommu_configure(struct device *dev,
->> +				     struct device_node *iommu_np)
->>   {
->>   	struct of_phandle_args iommu_spec;
->>   	struct device_node *np;
->>   	struct iommu_ops *ops = NULL;
->>   	int idx = 0;
->>
->> +	if (dev_is_pci(dev)) {
->> +		dev_err(dev, "iommu is currently not supported for PCI\n");
->> +		return NULL;
->> +	}
->> +
->>   	/*
->>   	 * We don't currently walk up the tree looking for a parent IOMMU.
->>   	 * See the `Notes:' section of
->>   	 * Documentation/devicetree/bindings/iommu/iommu.txt
->>   	 */
-> Wouldn't it be better to fix this rather than passing the device node pointer
-> to the function ? The solution would be more generic.
-Laurent,
+The field pci_dn->pcidev is assigned but not used.
 
-Will Deacon (Copied here) is working on this as we alteady discussed in 
-this thread. So it will be
-addressed by him in another series.
+This patch removes this field.
 
-Murali
->
->> -	while (!of_parse_phandle_with_args(dev->of_node, "iommus",
->> +	while (!of_parse_phandle_with_args(iommu_np, "iommus",
->>   					   "#iommu-cells", idx,
->>   					&iommu_spec)) {
->>   		np = iommu_spec.np;
->> diff --git a/drivers/of/platform.c b/drivers/of/platform.c
->> index a54ec10..7675b79 100644
->> --- a/drivers/of/platform.c
->> +++ b/drivers/of/platform.c
->> @@ -196,7 +196,7 @@ static void of_dma_configure(struct device *dev)
->>   	dev_dbg(dev, "device is%sdma coherent\n",
->>   		coherent ? " " : " not ");
->>
->> -	iommu = of_iommu_configure(dev);
->> +	iommu = of_iommu_configure(dev, dev->of_node);
->>   	dev_dbg(dev, "device is%sbehind an iommu\n",
->>   		iommu ? " " : " not ");
->>
->> diff --git a/include/linux/of_iommu.h b/include/linux/of_iommu.h
->> index 16c7554..a97e5bd 100644
->> --- a/include/linux/of_iommu.h
->> +++ b/include/linux/of_iommu.h
->> @@ -12,7 +12,8 @@ extern int of_get_dma_window(struct device_node *dn, const
->> char *prefix, size_t *size);
->>
->>   extern void of_iommu_init(void);
->> -extern struct iommu_ops *of_iommu_configure(struct device *dev);
->> +extern struct iommu_ops *of_iommu_configure(struct device *dev,
->> +					struct device_node *iommu_np);
->>
->>   #else
->>
->> @@ -24,7 +25,8 @@ static inline int of_get_dma_window(struct device_node
->> *dn, const char *prefix, }
->>
->>   static inline void of_iommu_init(void) { }
->> -static inline struct iommu_ops *of_iommu_configure(struct device *dev)
->> +static inline struct iommu_ops *of_iommu_configure(struct device *dev,
->> +					 struct device_node *iommu_np)
->>   {
->>   	return NULL;
->>   }
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h     |    1 -
+ arch/powerpc/platforms/powernv/pci-ioda.c |    1 -
+ 2 files changed, 2 deletions(-)
 
-
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index c1b7dd5..334e745 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -164,7 +164,6 @@ struct pci_dn {
+ 
+ 	int	pci_ext_config_space;	/* for pci devices */
+ 
+-	struct	pci_dev *pcidev;	/* back-pointer to the pci device */
+ #ifdef CONFIG_EEH
+ 	struct eeh_dev *edev;		/* eeh device */
+ #endif
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 5a8e6b1..665f57c 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -832,7 +832,6 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
+ 				pci_name(dev));
+ 			continue;
+ 		}
+-		pdn->pcidev = dev;
+ 		pdn->pe_number = pe->pe_number;
+ 		pe->dma_weight += pnv_ioda_dma_weight(dev);
+ 		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
 -- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+1.7.9.5
 
