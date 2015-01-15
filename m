@@ -1,51 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:58989 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751853AbbAUDWk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 20 Jan 2015 22:22:40 -0500
-From: Rusty Russell <rusty@rustcorp.com.au>
-To: Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org,
-	virtualization@lists.linux-foundation.org,
-	Cornelia Huck <cornelia.huck@de.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	linux390@de.ibm.com, Gerald Schaefer <gerald.schaefer@de.ibm.com>,
-	linux-s390@vger.kernel.org
-Subject: Re: [PATCH v3 10/16] s390: add pci_iomap_range
-In-Reply-To: <alpine.LFD.2.11.1501161051380.1742@denkbrett>
-References: <1421256142-11512-1-git-send-email-mst@redhat.com> <1421256142-11512-11-git-send-email-mst@redhat.com> <alpine.LFD.2.11.1501161051380.1742@denkbrett>
-Date: Wed, 21 Jan 2015 11:13:14 +1030
-Message-ID: <87fvb5arq5.fsf@rustcorp.com.au>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from userp1040.oracle.com ([156.151.31.81]:35670 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750703AbbAOFhN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jan 2015 00:37:13 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wilmer van der Gaast <kernel@wilmer.gaast.net>,
+	Zhang Rui <rui.zhang@intel.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	stable@vger.kernel.org.#.v3.10+
+Subject: [PATCH] PCI: keep enable status consistent for device without driver
+Date: Wed, 14 Jan 2015 21:36:48 -0800
+Message-Id: <1421300208-7087-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sebastian Ott <sebott@linux.vnet.ibm.com> writes:
-> On Wed, 14 Jan 2015, Michael S. Tsirkin wrote:
->>  }
->> -EXPORT_SYMBOL_GPL(pci_iomap);
->> +EXPORT_SYMBOL_GPL(pci_iomap_range);
->> +
->> +void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long maxlen)
->> +{
->> +	return pci_iomap_range(dev, bar, 0, maxlen);
->> +}
->> +EXPORT_SYMBOL(pci_iomap);
->
-> As discussed earlier, could you please leave that as EXPORT_SYMBOL_GPL.
-> If there's a reason to have these interfaces as EXPORT_SYMBOL, we could
-> change all of them in an extra patch.
->
-> With this change integrated you can add
-> Acked-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
+Wilmer reported continuous suspend/resume does not work after
+commit 928bea964827 ("PCI: Delay enabling bridges until they're needed").
 
-OK, I've gone back and rebased virtio-next to fix this (I don't really
-want to think too hard about the legal consequences of having a version
-which isn't EXPORT_SYMBOL_GPL).
+For pci bridge without driver, FW enable it already.
+In pci_pm_resume/pci_pm_reenable_device after first resume
+will not reenable the device, aka the status is not the same
+as that before first suspend.
 
-Thanks,
-Rusty.
+Try to update enable status according to register value before
+calling pci_reenable_device, so we will not miss those pm
+operation calling for next suspend/resume.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=86421
+Fixes: 928bea964827 ("PCI: Delay enabling bridges until they're needed")
+Reported-by: Wilmer van der Gaast <kernel@wilmer.gaast.net>
+Bisected-by: Wilmer van der Gaast <kernel@wilmer.gaast.net>
+Tested-by: Wilmer van der Gaast <kernel@wilmer.gaast.net>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Zhang Rui <rui.zhang@intel.com>
+CC: stable@vger.kernel.org  # v3.10+
+
+---
+ drivers/pci/pci-driver.c |    9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+Index: linux-2.6/drivers/pci/pci-driver.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/pci-driver.c
++++ linux-2.6/drivers/pci/pci-driver.c
+@@ -519,8 +519,17 @@ static void pci_pm_set_unknown_state(str
+  */
+ static int pci_pm_reenable_device(struct pci_dev *pci_dev)
+ {
++	u16 cmd;
+ 	int retval;
+ 
++	/* update enable_cnt according to cmd register */
++	pci_read_config_word(pci_dev, PCI_COMMAND, &cmd);
++	if (!pci_dev->is_busmaster && (cmd & PCI_COMMAND_MASTER))
++		pci_dev->is_busmaster = true;
++	if (!pci_is_enabled(pci_dev) &&
++	    (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)))
++		atomic_inc(&pci_dev->enable_cnt);
++
+ 	/* if the device was enabled before suspend, reenable */
+ 	retval = pci_reenable_device(pci_dev);
+ 	/*
