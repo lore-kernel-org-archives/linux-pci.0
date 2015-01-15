@@ -1,59 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:10916 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751797AbbASDTi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 18 Jan 2015 22:19:38 -0500
-Message-ID: <54BC77B3.6080701@huawei.com>
-Date: Mon, 19 Jan 2015 11:19:15 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-oi0-f50.google.com ([209.85.218.50]:45243 "EHLO
+	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755132AbbAOQTe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jan 2015 11:19:34 -0500
+Received: by mail-oi0-f50.google.com with SMTP id x69so13102511oia.9
+        for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 08:19:34 -0800 (PST)
+Date: Thu, 15 Jan 2015 10:19:31 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	David Howells <dhowells@redhat.com>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>
+Subject: Re: [PATCH v2 04/10] PCI, frv: clip firmware assigned resource under
+ parent bridge's
+Message-ID: <20150115161931.GA7105@google.com>
+References: <1421296297-6371-1-git-send-email-yinghai@kernel.org>
+ <1421296297-6371-5-git-send-email-yinghai@kernel.org>
+ <CAE9FiQXi05_uH-fmPVPJNdm93DHbb26h6vDvsNuQb-KGAT7ung@mail.gmail.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	<linux-pci@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Geert Uytterhoeven" <geert@linux-m68k.org>
-Subject: Re: [PATCH 27/28] PCI: Remove platform specific pci_domain_nr()
-References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <1421372666-12288-28-git-send-email-wangyijing@huawei.com> <1561857.t9qV46uRjC@wuerfel>
-In-Reply-To: <1561857.t9qV46uRjC@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQXi05_uH-fmPVPJNdm93DHbb26h6vDvsNuQb-KGAT7ung@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/1/16 17:44, Arnd Bergmann wrote:
-> On Friday 16 January 2015 09:44:25 Yijing Wang wrote:
->>
->> +int pci_domain_nr(struct pci_bus *bus)
->> +{
->> +       struct pci_host_bridge *host = find_pci_host_bridge(bus);
->> +
->> +       return host->domain;
->> +}
->> +EXPORT_SYMBOL_GPL(pci_domain_nr);
->> +
+On Wed, Jan 14, 2015 at 08:51:22PM -0800, Yinghai Lu wrote:
+> On Wed, Jan 14, 2015 at 8:31 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > Some bios put range that is not fully coverred by root bus resources.
+> > Try to clip them and update them in pci bridge bars.
+> >
+> > We'd like to fix other arches instead of just x86.
+> >
+> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491
+> > Reported-by: Marek Kordik <kordikmarek@gmail.com>
+> > Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources")
+> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> > Cc: David Howells <dhowells@redhat.com>
+> > Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
+> > ---
+> >  arch/frv/mb93090-mb00/pci-frv.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/arch/frv/mb93090-mb00/pci-frv.c b/arch/frv/mb93090-mb00/pci-frv.c
+> > index 67b1d16..9e49c3e 100644
+> > --- a/arch/frv/mb93090-mb00/pci-frv.c
+> > +++ b/arch/frv/mb93090-mb00/pci-frv.c
+> > @@ -94,7 +94,7 @@ static void __init pcibios_allocate_bus_resources(struct list_head *bus_list)
+> >                                 r = &dev->resource[idx];
+> >                                 if (!r->start)
+> >                                         continue;
+> > -                               pci_claim_resource(dev, idx);
+> > +                               pci_claim_bridge_resource(dev, idx)
 > 
-> Since most of the existing functions are exported as EXPORT_SYMBOL
-> rather than EXPORT_SYMBOL_GPL, I think the new version should do
-> the same.
-
-Good catch. Thanks!
-
+> miss ; here.
 > 
-> 	Arnd
-> 
-> .
-> 
+> Please let me know if you can fix it manually.
 
-
--- 
-Thanks!
-Yijing
-
+Fixed, thanks.
