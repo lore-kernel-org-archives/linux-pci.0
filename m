@@ -1,49 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp02.citrix.com ([66.165.176.63]:12292 "EHLO
-	SMTP02.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753150AbbATJzE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 04:55:04 -0500
-Message-ID: <54BE25F3.3030807@citrix.com>
-Date: Tue, 20 Jan 2015 09:54:59 +0000
-From: David Vrabel <david.vrabel@citrix.com>
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:36338 "EHLO
+	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932111AbbAOWYZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jan 2015 17:24:25 -0500
+Received: by mail-oi0-f52.google.com with SMTP id a3so14658682oib.11
+        for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 14:24:25 -0800 (PST)
+Date: Thu, 15 Jan 2015 16:24:22 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 00/10] PCI: clip firmware assigned resources
+Message-ID: <20150115222422.GB29776@google.com>
+References: <1421296297-6371-1-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	"H. Peter Anvin" <hpa@zytor.com>, <x86@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Tony Luck <tony.luck@intel.com>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-	<xen-devel@lists.xenproject.org>
-Subject: Re: [Bugfix 1/3] xen/pci: Kill function xen_setup_acpi_sci()
-References: <1421720467-7709-1-git-send-email-jiang.liu@linux.intel.com> <1421720467-7709-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421720467-7709-2-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1421296297-6371-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20/01/15 02:21, Jiang Liu wrote:
-> Currently Xen Domain0 has special treatment for ACPI SCI interrupt,
-> that is initialize irq for ACPI SCI at early stage in a special way as:
-> xen_init_IRQ()
-> 	->pci_xen_initial_domain()
-> 		->xen_setup_acpi_sci()
-> 			Allocate and initialize irq for ACPI SCI
+On Wed, Jan 14, 2015 at 08:31:27PM -0800, Yinghai Lu wrote:
+> During the fix https://bugzilla.kernel.org/show_bug.cgi?id=85491,
+> Bjorn suggest that we should clip the resources instead of just
+> reject them.
 > 
-> Function xen_setup_acpi_sci() calls acpi_gsi_to_irq() to get an irq
-> number for ACPI SCI. But unfortunately acpi_gsi_to_irq() depends on
-> IOAPIC irqdomains through following path
-> acpi_gsi_to_irq()
-> 	->mp_map_gsi_to_irq()
-> 		->mp_map_pin_to_irq()
-> 			->check IOAPIC irqdomain
+> We should only need first two for x86. others for related arches
+> to keep them consistent.
+> 
+> -v2: only handle bridge resource, and add pci_claim_bridge_resource
+> 	in pci core code.
+> 
+> Thanks
+> 
+> Yinghai
+> 
+> Yinghai Lu (10):
+>   PCI: clip firmware assigned resource under parent bridge's
+>   PCI, x86: clip firmware assigned resource under parent bridge's
+>   PCI, alpha: clip firmware assigned resource under parent bridge's
+>   PCI, frv: clip firmware assigned resource under parent bridge's
+>   PCI, ia64: clip firmware assigned resource under parent bridge's
+>   PCI, microblaze: clip firmware assigned resource under parent bridge's
+>   PCI, mn10300: clip firmware assigned resource under parent bridge's
+>   PCI, parisc: clip firmware assigned resource under parent bridge's
+>   PCI, powerpc: clip firmware assigned resource under parent bridge's
+>   PCI, sparc: clip firmware assigned resource under parent bridge's
+> 
+>  arch/alpha/kernel/pci.c                 |  8 +++--
+>  arch/frv/mb93090-mb00/pci-frv.c         |  2 +-
+>  arch/ia64/pci/pci.c                     | 48 +++++++++++++---------------
+>  arch/microblaze/pci/pci-common.c        | 13 +++++++-
+>  arch/mn10300/unit-asb2305/pci-asb2305.c |  2 +-
+>  arch/mn10300/unit-asb2305/pci.c         | 47 +++++++++++++--------------
+>  arch/powerpc/kernel/pci-common.c        | 12 ++++++-
+>  arch/sparc/kernel/pci.c                 |  5 ++-
+>  arch/x86/pci/i386.c                     |  2 +-
+>  drivers/parisc/lba_pci.c                |  5 ++-
+>  drivers/pci/bus.c                       | 39 +++++++++++++++++++++++
+>  drivers/pci/pci.h                       |  1 +
+>  drivers/pci/setup-bus.c                 | 56 ++++++++++++++++++++++++++-------
+>  include/linux/pci.h                     |  1 +
+>  14 files changed, 165 insertions(+), 76 deletions(-)
 
-Reviewed-by: David Vrabel <david.vrabel@citrix.com>
+Applied to for-linus for v3.19, thanks.  This is significantly different
+from v1, so I didn't add acks and testing info from Helge and Wei.
 
-Thanks.
-
-David
+Bjorn
