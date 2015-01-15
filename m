@@ -1,57 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:48758 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756200AbbAZRGL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 12:06:11 -0500
-Received: by mail-we0-f173.google.com with SMTP id w62so10270468wes.4
-        for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2015 09:06:10 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Matt Porter <mporter@kernel.crashing.org>,
-	Alexandre Bounine <alexandre.bounine@idt.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/5] rapidio/tsi721: use PCI define for max read request size
-Date: Mon, 26 Jan 2015 18:06:02 +0100
-Message-Id: <1422291962-12374-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1422291922-12324-1-git-send-email-zajec5@gmail.com>
-References: <1422291922-12324-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from userp1040.oracle.com ([156.151.31.81]:20478 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751558AbbAOEc7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 23:32:59 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Sam Ravnborg <sam@ravnborg.org>, sparclinux@vger.kernel.org
+Subject: [PATCH v2 10/10] PCI, sparc: clip firmware assigned resource under parent bridge's
+Date: Wed, 14 Jan 2015 20:31:37 -0800
+Message-Id: <1421296297-6371-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1421296297-6371-1-git-send-email-yinghai@kernel.org>
+References: <1421296297-6371-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/rapidio/devices/tsi721.c | 2 +-
- drivers/rapidio/devices/tsi721.h | 2 --
- 2 files changed, 1 insertion(+), 3 deletions(-)
+Some bios put range that is not fully coverred by root bus resources.
+Try to clip them and update them in pci bridge bars.
 
-diff --git a/drivers/rapidio/devices/tsi721.c b/drivers/rapidio/devices/tsi721.c
-index 8bcfecd..eeca70d 100644
---- a/drivers/rapidio/devices/tsi721.c
-+++ b/drivers/rapidio/devices/tsi721.c
-@@ -2430,7 +2430,7 @@ static int tsi721_probe(struct pci_dev *pdev,
- 	pcie_capability_clear_and_set_word(pdev, PCI_EXP_DEVCTL,
- 		PCI_EXP_DEVCTL_READRQ | PCI_EXP_DEVCTL_RELAX_EN |
- 		PCI_EXP_DEVCTL_NOSNOOP_EN,
--		0x2 << MAX_READ_REQUEST_SZ_SHIFT);
-+		PCI_EXP_DEVCTL_READRQ_512B);
+We'd like to fix other arches instead of just x86.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491
+Reported-by: Marek Kordik <kordikmarek@gmail.com>
+Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources")
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: Yijing Wang <wangyijing@huawei.com>
+Cc: Sam Ravnborg <sam@ravnborg.org>
+Cc: sparclinux@vger.kernel.org
+---
+ arch/sparc/kernel/pci.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index b36365f..9ce5afe 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -639,7 +639,10 @@ static void pci_claim_bus_resources(struct pci_bus *bus)
+ 				       (unsigned long long)r->end,
+ 				       (unsigned int)r->flags);
  
- 	/* Adjust PCIe completion timeout. */
- 	pcie_capability_clear_and_set_word(pdev, PCI_EXP_DEVCTL2, 0xf, 0x2);
-diff --git a/drivers/rapidio/devices/tsi721.h b/drivers/rapidio/devices/tsi721.h
-index a7b4268..9d25025 100644
---- a/drivers/rapidio/devices/tsi721.h
-+++ b/drivers/rapidio/devices/tsi721.h
-@@ -72,8 +72,6 @@
- #define TSI721_MSIXPBA_OFFSET	0x2a000
- #define TSI721_PCIECFG_EPCTL	0x400
+-			pci_claim_resource(dev, i);
++			if (pci_claim_resource(dev, i) == 0)
++				continue;
++
++			pci_claim_bridge_resource(dev, i);
+ 		}
+ 	}
  
--#define MAX_READ_REQUEST_SZ_SHIFT	12
--
- /*
-  * Event Management Registers
-  */
 -- 
 1.8.4.5
 
