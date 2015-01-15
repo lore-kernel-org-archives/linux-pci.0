@@ -1,144 +1,162 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:30024 "EHLO mga14.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42620 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752511AbbATFt1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 20 Jan 2015 00:49:27 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v4 02/33] x86/irq: Kill unused struct mp_pin_info
-Date: Tue, 20 Jan 2015 13:51:22 +0800
-Message-Id: <1421733113-15704-3-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+	id S1751618AbbAOHDv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 Jan 2015 02:03:51 -0500
+Date: Thu, 15 Jan 2015 15:01:37 +0800
+From: Baoquan He <bhe@redhat.com>
+To: "Li, ZhenHua" <zhen-hual@hp.com>
+Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, joro@8bytes.org,
+	vgoyal@redhat.com, dyoung@redhat.com, jerry.hoemann@hp.com,
+	tom.vaden@hp.com, rwright@hp.com, linux-pci@vger.kernel.org,
+	kexec@lists.infradead.org, iommu@lists.linux-foundation.org,
+	lisa.mitchell@hp.com, linux-kernel@vger.kernel.org,
+	alex.williamson@redhat.com, ddutile@redhat.com, doug.hatch@hp.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	billsumnerlinux@gmail.com, li.zhang6@hp.com
+Subject: Re: [PATCH v8 06/10] iommu/vt-d: datatypes and functions used for
+ kdump
+Message-ID: <20150115070137.GB2461@dhcp-16-105.nay.redhat.com>
+References: <1421046388-27925-1-git-send-email-zhen-hual@hp.com>
+ <1421046388-27925-7-git-send-email-zhen-hual@hp.com>
+ <20150115032858.GA2461@dhcp-16-105.nay.redhat.com>
+ <54B753EF.30609@hp.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54B753EF.30609@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now nobody makes use of struct mp_pin_info, so kill it.
+On 01/15/15 at 01:45pm, Li, ZhenHua wrote:
+> Hi Baoquan,
+> Thank you very much for your review. But according to the latest
+> discussion, the page tables will not be copied from old kernel. We keep
+> using the old page tables before driver is loaded. So there are many
+> changes in next version;
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Grant Likely <grant.likely@linaro.org>
-Link: http://lkml.kernel.org/r/1416901802-24211-12-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/kernel/apic/io_apic.c |   30 +++---------------------------
- 1 file changed, 3 insertions(+), 27 deletions(-)
+Oh, yes. So please ignore this comment.
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 969c56f09221..eceb2f947975 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -88,13 +88,6 @@ struct mp_chip_data {
- 	bool isa_irq;
- };
- 
--struct mp_pin_info {
--	int trigger;
--	int polarity;
--	int set;
--	u32 count;
--};
--
- static struct ioapic {
- 	/*
- 	 * # of IRQ routing registers
-@@ -110,7 +103,6 @@ static struct ioapic {
- 	struct mp_ioapic_gsi  gsi_config;
- 	struct ioapic_domain_cfg irqdomain_cfg;
- 	struct irq_domain *irqdomain;
--	struct mp_pin_info *pin_info;
- 	struct resource *iomem_res;
- } ioapics[MAX_IO_APICS];
- 
-@@ -161,11 +153,6 @@ static inline int mp_init_irq_at_boot(int ioapic, int irq)
- 	return ioapic == 0 || mp_is_legacy_irq(irq);
- }
- 
--static inline struct mp_pin_info *mp_pin_info(int ioapic_idx, int pin)
--{
--	return ioapics[ioapic_idx].pin_info + pin;
--}
--
- static inline struct irq_domain *mp_ioapic_irqdomain(int ioapic)
- {
- 	return ioapics[ioapic].irqdomain;
-@@ -2430,7 +2417,6 @@ out:
- 
- static int mp_irqdomain_create(int ioapic)
- {
--	size_t size;
- 	struct irq_alloc_info info;
- 	struct irq_domain *parent;
- 	int hwirqs = mp_ioapic_pin_count(ioapic);
-@@ -2438,11 +2424,6 @@ static int mp_irqdomain_create(int ioapic)
- 	struct ioapic_domain_cfg *cfg = &ip->irqdomain_cfg;
- 	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(ioapic);
- 
--	size = sizeof(struct mp_pin_info) * mp_ioapic_pin_count(ioapic);
--	ip->pin_info = kzalloc(size, GFP_KERNEL);
--	if (!ip->pin_info)
--		return -ENOMEM;
--
- 	if (cfg->type == IOAPIC_DOMAIN_INVALID)
- 		return 0;
- 
-@@ -2455,13 +2436,10 @@ static int mp_irqdomain_create(int ioapic)
- 
- 	ip->irqdomain = irq_domain_add_linear(cfg->dev, hwirqs, cfg->ops,
- 					      (void *)(long)ioapic);
--	if (ip->irqdomain) {
--		ip->irqdomain->parent = parent;
--	} else {
--		kfree(ip->pin_info);
--		ip->pin_info = NULL;
-+	if (!ip->irqdomain)
- 		return -ENOMEM;
--	}
-+
-+	ip->irqdomain->parent = parent;
- 
- 	if (cfg->type == IOAPIC_DOMAIN_LEGACY ||
- 	    cfg->type == IOAPIC_DOMAIN_STRICT)
-@@ -2477,8 +2455,6 @@ static void ioapic_destroy_irqdomain(int idx)
- 		irq_domain_remove(ioapics[idx].irqdomain);
- 		ioapics[idx].irqdomain = NULL;
- 	}
--	kfree(ioapics[idx].pin_info);
--	ioapics[idx].pin_info = NULL;
- }
- 
- void __init setup_IO_APIC(void)
--- 
-1.7.10.4
-
+> 
+> See my comments.
+> 
+> On 01/15/2015 11:28 AM, Baoquan He wrote:
+> >On 01/12/15 at 03:06pm, Li, Zhen-Hua wrote:
+> >>+/*
+> >>+ * Interface to the "copy translation tables" set of functions
+> >>+ * from mainline code.
+> >>+ */
+> >>+static int intel_iommu_load_translation_tables(struct dmar_drhd_unit *drhd,
+> >>+		int g_num_of_iommus)
+> >
+> >The argument g_num_of_iommus is the same as the global variable, it's better
+> >to rename it as num_of_iommus. And even it can be removed since you can
+> >just use the global variable g_num_of_iommus in this function.
+> >
+> >Argument drhd can be intel_iommu because no other member variable in
+> >drhd is needed.
+> 
+> This function is no longer used. So forget the parameters.
+> 
+> >
+> >>+{
+> >>+	struct intel_iommu *iommu;	/* Virt(iommu hardware registers) */
+> >>+	unsigned long long q;		/* quadword scratch */
+> >>+	int ret = 0;			/* Integer return code */
+> >>+	int i = 0;			/* Loop index */
+> >>+	unsigned long flags;
+> >>+
+> >>+	/* Structure so copy_page_addr() can accumulate things
+> >>+	 * over multiple calls and returns
+> >>+	 */
+> >>+	struct copy_page_addr_parms ppa_parms = copy_page_addr_parms_init;
+> >>+	struct copy_page_addr_parms *ppap = &ppa_parms;
+> >>+
+> >>+
+> >>+	iommu = drhd->iommu;
+> >>+	q = dmar_readq(iommu->reg + DMAR_RTADDR_REG);
+> >>+	if (!q)
+> >>+		return -1;
+> >>+
+> >>+	/* If (list needs initializing) do it here */
+> >
+> >This initializing should not be here, because it's not only for this
+> >drhd. It should be done in init_dmars().
+> >
+> Yes you are right. Though the variable domain_values_list will not be
+> used in next version, I think I need to check if there are any other
+> similar problems.
+> 
+> >>+	if (!domain_values_list) {
+> >>+		domain_values_list =
+> >>+			 kcalloc(g_num_of_iommus, sizeof(struct list_head),
+> >>+					GFP_KERNEL);
+> >>+
+> >>+		if (!domain_values_list) {
+> >>+			pr_err("Allocation failed for domain_values_list array\n");
+> >>+			return -ENOMEM;
+> >>+		}
+> >>+		for (i = 0; i < g_num_of_iommus; i++)
+> >>+			INIT_LIST_HEAD(&domain_values_list[i]);
+> >>+	}
+> >>+
+> >>+	spin_lock_irqsave(&iommu->lock, flags);
+> >>+
+> >>+	/* Load the root-entry table from the old kernel
+> >>+	 * foreach context_entry_table in root_entry
+> >>+	 *    foreach context_entry in context_entry_table
+> >>+	 *       foreach level-1 page_table_entry in context_entry
+> >>+	 *          foreach level-2 page_table_entry in level 1 page_table_entry
+> >>+	 *             Above pattern continues up to 6 levels of page tables
+> >>+	 *                Sanity-check the entry
+> >>+	 *                Process the bus, devfn, page_address, page_size
+> >>+	 */
+> >>+	if (!iommu->root_entry) {
+> >>+		iommu->root_entry =
+> >>+			(struct root_entry *)alloc_pgtable_page(iommu->node);
+> >>+		if (!iommu->root_entry) {
+> >>+			spin_unlock_irqrestore(&iommu->lock, flags);
+> >>+			return -ENOMEM;
+> >>+		}
+> >>+	}
+> >>+
+> >>+	iommu->root_entry_old_phys = q & VTD_PAGE_MASK;
+> >>+	if (!iommu->root_entry_old_phys) {
+> >>+		pr_err("Could not read old root entry address.");
+> >>+		return -1;
+> >>+	}
+> >>+
+> >>+	iommu->root_entry_old_virt = ioremap_cache(iommu->root_entry_old_phys,
+> >>+						VTD_PAGE_SIZE);
+> >>+	if (!iommu->root_entry_old_virt) {
+> >>+		pr_err("Could not map the old root entry.");
+> >>+		return -ENOMEM;
+> >>+	}
+> >>+
+> >>+	__iommu_load_old_root_entry(iommu);
+> >>+	ret = copy_root_entry_table(iommu, ppap);
+> >>+	__iommu_flush_cache(iommu, iommu->root_entry, PAGE_SIZE);
+> >>+	__iommu_update_old_root_entry(iommu, -1);
+> >>+
+> >>+	spin_unlock_irqrestore(&iommu->lock, flags);
+> >>+
+> >>+	__iommu_free_mapped_mem();
+> >>+
+> >>+	if (ret)
+> >>+		return ret;
+> >>+
+> >>+	ppa_parms.last = 1;
+> >>+	copy_page_addr(0, 0, 0, 0, 0, NULL, ppap);
+> >>+
+> >>+	return 0;
+> >>+}
+> >>+
+> >>  #endif /* CONFIG_CRASH_DUMP */
+> >>--
+> >>2.0.0-rc0
+> >>
+> >>
+> >>_______________________________________________
+> >>kexec mailing list
+> >>kexec@lists.infradead.org
+> >>http://lists.infradead.org/mailman/listinfo/kexec
+> 
