@@ -1,99 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <54C8FFE0.3030007@arm.com>
-References: <1422456683-797-1-git-send-email-marc.zyngier@arm.com>
- <54C8FE61.1030304@linux.intel.com> <54C8FFE0.3030007@arm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 28 Jan 2015 09:43:32 -0600
-Message-ID: <CAErSpo6jOs+MBpAjDxkeVp5AqU1Ln+_-k8Xgb2eqPm3Lv6Udzw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Fix pcibios_update_irq misuse of irq number
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Andre Przywara <Andre.Przywara@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:21385 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751175AbbAOEby (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 23:31:54 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 00/10] PCI: clip firmware assigned resources
+Date: Wed, 14 Jan 2015 20:31:27 -0800
+Message-Id: <1421296297-6371-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 28, 2015 at 9:27 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
-> Hi Gerry,
->
-> On 28/01/15 15:21, Jiang Liu wrote:
->>
->>
->> On 2015/1/28 22:51, Marc Zyngier wrote:
->>> pcibios_update_irq writes an irq number into the config space
->>> of a given PCI device, but ignores the fact that this number
->>> is a virtual interrupt number, which might be a very different
->>> value from what the underlying hardware is using.
->>>
->>> The obvious fix is to fetch the HW interrupt number from the
->>> corresponding irq_data structure. This is slightly complicated
->>> by the fact that this interrupt might be services by a stacked
->>> domain.
->>>
->>> This has been tested on KVM with kvmtool.
->>>
->>> Reported-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->>> Tested-by: Andre Przywara <andre.przywara@arm.com>
->>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
->>> ---
->>>  drivers/pci/setup-irq.c | 12 ++++++++++--
->>>  1 file changed, 10 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
->>> index 4e2d595..828cbc9 100644
->>> --- a/drivers/pci/setup-irq.c
->>> +++ b/drivers/pci/setup-irq.c
->>> @@ -15,11 +15,19 @@
->>>  #include <linux/errno.h>
->>>  #include <linux/ioport.h>
->>>  #include <linux/cache.h>
->>> +#include <linux/irq.h>
->>>
->>>  void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
->>>  {
->>> -    dev_dbg(&dev->dev, "assigning IRQ %02d\n", irq);
->>> -    pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
->>> +    struct irq_data *d;
->>> +
->>> +    d = irq_get_irq_data(irq);
->>> +#ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
->>> +    while (d->parent_data)
->>> +            d = d->parent_data;
->>> +#endif
->>> +    dev_dbg(&dev->dev, "assigning IRQ %02ld\n", d->hwirq);
->>> +    pci_write_config_byte(dev, PCI_INTERRUPT_LINE, d->hwirq);
->>>  }
->> Hi Mark,
->>       Instead of modifying the common version, how about
->> implementing an arch specific version? Arch may have different
->> way to determine the irq number. Above implementation doesn't
->> work with x86, for example.
->
-> If you look at the Makefile, this file is used on:
->
-> obj-$(CONFIG_ALPHA) += setup-irq.o
-> obj-$(CONFIG_ARM) += setup-irq.o
-> obj-$(CONFIG_UNICORE32) += setup-irq.o
-> obj-$(CONFIG_SUPERH) += setup-irq.o
-> obj-$(CONFIG_MIPS) += setup-irq.o
-> obj-$(CONFIG_TILE) += setup-irq.o
-> obj-$(CONFIG_SPARC_LEON) += setup-irq.o
-> obj-$(CONFIG_M68K) += setup-irq.o
->
-> x86 doesn't use that at all.
+During the fix https://bugzilla.kernel.org/show_bug.cgi?id=85491,
+Bjorn suggest that we should clip the resources instead of just
+reject them.
 
-Since you're looking at this, Marc, do you see a nice way to get rid
-of these arch dependencies in the Makefile and unify this a bit?  We
-still have this pci_fixup_irqs() ugliness -- it's not really
-arch-specific at all, but it's called from arch code, and it uses
-for_each_pci_dev(), which obviously only works for things present at
-boot and not for things hot-added later.
+We should only need first two for x86. others for related arches
+to keep them consistent.
 
-Bjorn
+-v2: only handle bridge resource, and add pci_claim_bridge_resource
+	in pci core code.
+
+Thanks
+
+Yinghai
+
+Yinghai Lu (10):
+  PCI: clip firmware assigned resource under parent bridge's
+  PCI, x86: clip firmware assigned resource under parent bridge's
+  PCI, alpha: clip firmware assigned resource under parent bridge's
+  PCI, frv: clip firmware assigned resource under parent bridge's
+  PCI, ia64: clip firmware assigned resource under parent bridge's
+  PCI, microblaze: clip firmware assigned resource under parent bridge's
+  PCI, mn10300: clip firmware assigned resource under parent bridge's
+  PCI, parisc: clip firmware assigned resource under parent bridge's
+  PCI, powerpc: clip firmware assigned resource under parent bridge's
+  PCI, sparc: clip firmware assigned resource under parent bridge's
+
+ arch/alpha/kernel/pci.c                 |  8 +++--
+ arch/frv/mb93090-mb00/pci-frv.c         |  2 +-
+ arch/ia64/pci/pci.c                     | 48 +++++++++++++---------------
+ arch/microblaze/pci/pci-common.c        | 13 +++++++-
+ arch/mn10300/unit-asb2305/pci-asb2305.c |  2 +-
+ arch/mn10300/unit-asb2305/pci.c         | 47 +++++++++++++--------------
+ arch/powerpc/kernel/pci-common.c        | 12 ++++++-
+ arch/sparc/kernel/pci.c                 |  5 ++-
+ arch/x86/pci/i386.c                     |  2 +-
+ drivers/parisc/lba_pci.c                |  5 ++-
+ drivers/pci/bus.c                       | 39 +++++++++++++++++++++++
+ drivers/pci/pci.h                       |  1 +
+ drivers/pci/setup-bus.c                 | 56 ++++++++++++++++++++++++++-------
+ include/linux/pci.h                     |  1 +
+ 14 files changed, 165 insertions(+), 76 deletions(-)
+
+-- 
+1.8.4.5
+
