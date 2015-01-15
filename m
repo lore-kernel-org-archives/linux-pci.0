@@ -1,157 +1,118 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:45264 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756754AbbAJCf6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 21:35:58 -0500
-From: Rob Herring <robh@kernel.org>
-To: linux-kernel@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh@kernel.org>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 16/16] pci/host: xilinx: convert to use generic config accesses
-Date: Fri,  9 Jan 2015 20:34:50 -0600
-Message-Id: <1420857290-8373-17-git-send-email-robh@kernel.org>
-In-Reply-To: <1420857290-8373-1-git-send-email-robh@kernel.org>
-References: <1420857290-8373-1-git-send-email-robh@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 15 Jan 2015 16:15:45 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Kjetil Oftedal <oftedal@gmail.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Sam Ravnborg <sam@ravnborg.org>, sparclinux@vger.kernel.org
+Subject: Re: [PATCH 10/10] PCI, sparc: clip firmware assigned resource under
+ parent bridge's
+Message-ID: <20150115221545.GA29776@google.com>
+References: <1421090600-9750-1-git-send-email-yinghai@kernel.org>
+ <1421090600-9750-11-git-send-email-yinghai@kernel.org>
+ <CALMQjD91+0o=DjQDV3ydkakrG6X=3RkHoCf-T5=wLbC01WkdEA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CALMQjD91+0o=DjQDV3ydkakrG6X=3RkHoCf-T5=wLbC01WkdEA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Convert the Xilinx host PCI driver to use the generic config access
-functions.
+On Mon, Jan 12, 2015 at 11:31:09PM +0100, Kjetil Oftedal wrote:
+> Hi,
+> 
+> Am I missing something or is this just code to get the the resource
+> subsystem to accept the bus resources, not caring if the resources are
+> actually usable? PCI BARs usually have a given size for a reason?
 
-Signed-off-by: Rob Herring <robh@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Michal Simek <michal.simek@xilinx.com>
-Cc: "Sören Brinkmann" <soren.brinkmann@xilinx.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
----
- drivers/pci/host/pcie-xilinx.c | 88 +++++-------------------------------------
- 1 file changed, 9 insertions(+), 79 deletions(-)
+Hi Kjetil,
 
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index ef3ebaf..f67d036 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -189,7 +189,7 @@ static bool xilinx_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
- }
- 
- /**
-- * xilinx_pcie_config_base - Get configuration base
-+ * xilinx_pcie_map_bus - Get configuration base
-  * @bus: PCI Bus structure
-  * @devfn: Device/function
-  * @where: Offset from base
-@@ -197,96 +197,26 @@ static bool xilinx_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
-  * Return: Base address of the configuration space needed to be
-  *	   accessed.
-  */
--static void __iomem *xilinx_pcie_config_base(struct pci_bus *bus,
--					     unsigned int devfn, int where)
-+static void __iomem *xilinx_pcie_map_bus(struct pci_bus *bus,
-+					 unsigned int devfn, int where)
- {
- 	struct xilinx_pcie_port *port = sys_to_pcie(bus->sysdata);
- 	int relbus;
- 
-+	if (!xilinx_pcie_valid_device(bus, devfn))
-+		return NULL;
-+
- 	relbus = (bus->number << ECAM_BUS_NUM_SHIFT) |
- 		 (devfn << ECAM_DEV_NUM_SHIFT);
- 
- 	return port->reg_base + relbus + where;
- }
- 
--/**
-- * xilinx_pcie_read_config - Read configuration space
-- * @bus: PCI Bus structure
-- * @devfn: Device/function
-- * @where: Offset from base
-- * @size: Byte/word/dword
-- * @val: Value to be read
-- *
-- * Return: PCIBIOS_SUCCESSFUL on success
-- *	   PCIBIOS_DEVICE_NOT_FOUND on failure
-- */
--static int xilinx_pcie_read_config(struct pci_bus *bus, unsigned int devfn,
--				   int where, int size, u32 *val)
--{
--	void __iomem *addr;
--
--	if (!xilinx_pcie_valid_device(bus, devfn)) {
--		*val = 0xFFFFFFFF;
--		return PCIBIOS_DEVICE_NOT_FOUND;
--	}
--
--	addr = xilinx_pcie_config_base(bus, devfn, where);
--
--	switch (size) {
--	case 1:
--		*val = readb(addr);
--		break;
--	case 2:
--		*val = readw(addr);
--		break;
--	default:
--		*val = readl(addr);
--		break;
--	}
--
--	return PCIBIOS_SUCCESSFUL;
--}
--
--/**
-- * xilinx_pcie_write_config - Write configuration space
-- * @bus: PCI Bus structure
-- * @devfn: Device/function
-- * @where: Offset from base
-- * @size: Byte/word/dword
-- * @val: Value to be written to device
-- *
-- * Return: PCIBIOS_SUCCESSFUL on success
-- *	   PCIBIOS_DEVICE_NOT_FOUND on failure
-- */
--static int xilinx_pcie_write_config(struct pci_bus *bus, unsigned int devfn,
--				    int where, int size, u32 val)
--{
--	void __iomem *addr;
--
--	if (!xilinx_pcie_valid_device(bus, devfn))
--		return PCIBIOS_DEVICE_NOT_FOUND;
--
--	addr = xilinx_pcie_config_base(bus, devfn, where);
--
--	switch (size) {
--	case 1:
--		writeb(val, addr);
--		break;
--	case 2:
--		writew(val, addr);
--		break;
--	default:
--		writel(val, addr);
--		break;
--	}
--
--	return PCIBIOS_SUCCESSFUL;
--}
--
- /* PCIe operations */
- static struct pci_ops xilinx_pcie_ops = {
--	.read  = xilinx_pcie_read_config,
--	.write = xilinx_pcie_write_config,
-+	.map_bus = xilinx_pcie_map_bus,
-+	.read	= pci_generic_config_read,
-+	.write	= pci_generic_config_write,
- };
- 
- /* MSI functions */
--- 
-2.1.0
+This isn't for regular PCI BARs (Yinghai did apply it to some regular BARs
+in the v1 patches, but I think that was a mistake).  This is for scenarios
+like this:
 
+  pci_bus 0000:00: root bus resource [mem 0xc0000000-0xffffffff]
+  pci 0000:00:01.0:   bridge window [mem 0xbdf00000-0xddefffff 64bit pref]
+  pci 0000:01:00.0: reg 0x10: [mem 0xc0000000-0xcfffffff pref]
+
+The 00:01.0 window is illegal: it starts before the host bridge window, so
+we have to assume the [0xbdf00000-0xbfffffff] region is inaccessible.  We
+can make it legal by clipping it to [mem 0xc0000000-0xddefffff 64bit pref].
+
+Linux should never assign an illegal bridge window like this, but some
+firmware does, and the idea is to make a minimal change (clip the window)
+before resorting to the big hammer of reassigning resources from scratch.
+
+Bjorn
+
+> On 12/01/2015, Yinghai Lu <yinghai@kernel.org> wrote:
+> > Some bios put range that is not fully coverred by root bus resources.
+> > Try to clip them and update them in pci bridge bars.
+> >
+> > We'd like to fix other arches instead of just x86.
+> >
+> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491
+> > Reported-by: Marek Kordik <kordikmarek@gmail.com>
+> > Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to
+> > 64-bit resources")
+> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> > Cc: "David S. Miller" <davem@davemloft.net>
+> > Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
+> > Cc: Yijing Wang <wangyijing@huawei.com>
+> > Cc: Sam Ravnborg <sam@ravnborg.org>
+> > Cc: sparclinux@vger.kernel.org
+> > ---
+> >  arch/sparc/kernel/pci.c | 20 +++++++++++++++++++-
+> >  1 file changed, 19 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+> > index b36365f..0e391e5 100644
+> > --- a/arch/sparc/kernel/pci.c
+> > +++ b/arch/sparc/kernel/pci.c
+> > @@ -623,6 +623,7 @@ static void pci_claim_bus_resources(struct pci_bus
+> > *bus)
+> >  	struct pci_dev *dev;
+> >
+> >  	list_for_each_entry(dev, &bus->devices, bus_list) {
+> > +		bool changed = false;
+> >  		int i;
+> >
+> >  		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+> > @@ -639,8 +640,25 @@ static void pci_claim_bus_resources(struct pci_bus
+> > *bus)
+> >  				       (unsigned long long)r->end,
+> >  				       (unsigned int)r->flags);
+> >
+> > -			pci_claim_resource(dev, i);
+> > +			if (pci_claim_resource(dev, i) >= 0)
+> > +				continue;
+> > +
+> > +			if (dev->subordinate &&
+> > +			    i >= PCI_BRIDGE_RESOURCES &&
+> > +			    i < PCI_NUM_RESOURCES &&
+> > +			    (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI &&
+> > +			    pci_bus_clip_resource(dev, r)) {
+> > +				changed = true;
+> > +				pci_claim_resource(dev, i);
+> > +			} else if (i < PCI_BRIDGE_RESOURCES &&
+> > +				   i != PCI_ROM_RESOURCE &&
+> > +				   pci_bus_clip_resource(dev, r)) {
+> > +					pci_update_resource(dev, i);
+> > +					pci_claim_resource(dev, i);
+> > +			}
+> >  		}
+> > +		if (changed)
+> > +			pci_setup_bridge(dev->subordinate);
+> >  	}
+> >
+> >  	list_for_each_entry(child_bus, &bus->children, node)
+> > --
+> > 1.8.4.5
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe sparclinux" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
