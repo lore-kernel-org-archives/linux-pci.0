@@ -1,51 +1,165 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f46.google.com ([209.85.218.46]:64672 "EHLO
-	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752581AbbAWXSS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 18:18:18 -0500
-Received: by mail-oi0-f46.google.com with SMTP id a141so180342oig.5
-        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 15:18:17 -0800 (PST)
-Date: Fri, 23 Jan 2015 17:18:14 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, donald.d.dugger@intel.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Add Wellsburg (X99) to Intel PCH root port ACS quirk
-Message-ID: <20150123231814.GT29776@google.com>
-References: <20150122181524.1586.14496.stgit@gimli.home>
+Received: from cantor2.suse.de ([195.135.220.15]:47947 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751834AbbAOLK3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 Jan 2015 06:10:29 -0500
+Message-ID: <54B7A021.90101@suse.de>
+Date: Thu, 15 Jan 2015 12:10:25 +0100
+From: Alexander Graf <agraf@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150122181524.1586.14496.stgit@gimli.home>
+To: Ming Lei <ming.lei@canonical.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Will Deacon <will.deacon@arm.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+CC: Rob Herring <robh+dt@kernel.org>,
+	alvise rigo <a.rigo@virtualopensystems.com>
+Subject: Re: [PATCH] pci: generic host: make it more generic
+References: <1415702040-2790-1-git-send-email-ming.lei@canonical.com>
+In-Reply-To: <1415702040-2790-1-git-send-email-ming.lei@canonical.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 22, 2015 at 11:15:43AM -0700, Alex Williamson wrote:
-> Intel has confirmed that the Wellsburg chipset, while not reporting
-> ACS, does provide the proper isolation through the RCBA/BSPR
-> registers, so the same quirk works for this set of device IDs.
+On 11.11.14 11:33, Ming Lei wrote:
+> This patch converts the generic host controller driver
+> into a more generic one, and basically don't need
+> platform's pcibios support, and use DT based generic
+> APIs to parse resource and remap IO port.
 > 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> Cc: Don Dugger <donald.d.dugger@intel.com>
-
-Applied with Don's ack to pci/virtualization for v3.20, thanks!
-
+> This patch has been tested on both ARMv7 and ARMv8
+> VM, and in theroy it should support other ARCHs too.
+> 
+> With this patch, virtio PCI block, network and scsi devices
+> can work well on ARMv7 and ARMv8 VM.
+> 
+> QEMU needs below patches for runing the test:
+> 
+> - Rob Herring's "Add generic PCI host device" patches
+> 	http://lists.gnu.org/archive/html/qemu-devel/2014-06/msg03482.html
+> 	http://lists.gnu.org/archive/html/qemu-devel/2014-06/msg03483.html
+> - Alvise Rigo's "Add Generic PCI host device update"
+> 	http://marc.info/?l=qemu-devel&m=140506329920172&w=2
+> 
+> For ARMv8, cpu model of "host" and "cortex-a57" is missed
+> in Alvise Rigo's patchset, otherwise ARM64 VM can't boot.
+> 
+> All these QEMU patches can be found in below tree:
+> 
+> 	http://kernel.ubuntu.com/git?p=ming/qemu.git;a=shortlog;h=refs/heads/arm64-pci-test
+> 
+> Signed-off-by: Ming Lei <ming.lei@canonical.com>
 > ---
+>  drivers/pci/host/Kconfig            |    2 +-
+>  drivers/pci/host/pci-host-generic.c |  196 +++++++++++------------------------
+>  2 files changed, 63 insertions(+), 135 deletions(-)
 > 
->  drivers/pci/quirks.c |    3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index ed6f89b..2cdb789 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3630,6 +3630,9 @@ static const u16 pci_quirk_intel_pch_acs_ids[] = {
->  	0x9c98, 0x9c99, 0x9c9a, 0x9c9b,
->  	/* Patsburg (X79) PCH */
->  	0x1d10, 0x1d12, 0x1d14, 0x1d16, 0x1d18, 0x1d1a, 0x1d1c, 0x1d1e,
-> +	/* Wellsburg (X99) PCH */
-> +	0x8d10, 0x8d11, 0x8d12, 0x8d13, 0x8d14, 0x8d15, 0x8d16, 0x8d17,
-> +	0x8d18, 0x8d19, 0x8d1a, 0x8d1b, 0x8d1c, 0x8d1d, 0x8d1e,
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index 3dc25fa..885034d 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -50,7 +50,7 @@ config PCI_RCAR_GEN2_PCIE
+>  
+>  config PCI_HOST_GENERIC
+>  	bool "Generic PCI host controller"
+> -	depends on ARM && OF
+> +	depends on OF
+>  	help
+>  	  Say Y here if you want to support a simple generic PCI host
+>  	  controller, such as the one emulated by kvmtool.
+> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> index 3d2076f..00d0ca3 100644
+> --- a/drivers/pci/host/pci-host-generic.c
+> +++ b/drivers/pci/host/pci-host-generic.c
+> @@ -44,12 +44,14 @@ struct gen_pci {
+>  	struct list_head			resources;
 >  };
 >  
->  static bool pci_quirk_intel_pch_acs_match(struct pci_dev *dev)
-> 
+> +/* fake sysdata for cheating ARCH's pcibios code */
+> +static char	gen_sysdata[256];
+> +
+>  static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
+>  					     unsigned int devfn,
+>  					     int where)
+>  {
+> -	struct pci_sys_data *sys = bus->sysdata;
+> -	struct gen_pci *pci = sys->private_data;
+> +	struct gen_pci *pci = dev_get_drvdata(bus->dev.parent->parent);
+
+Just as a heads up, this breaks when you have PCI bridges in between. In
+that case you need something like the ugly patch below on top.
+
+
+Alex
+
+
+diff --git a/drivers/pci/host/pci-host-generic.c
+b/drivers/pci/host/pci-host-generic.c
+index e580296..730a07b 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -47,11 +47,26 @@ struct gen_pci {
+ /* fake sysdata for cheating ARCH's pcibios code */
+ static char	gen_sysdata[256];
+
++static struct gen_pci *gen_pci_get_drvdata(struct pci_bus *bus)
++{
++	struct device *dev = bus->dev.parent->parent;
++	struct gen_pci *pci;
++
++	while (dev) {
++		pci = dev_get_drvdata(dev);
++		if (pci)
++			return pci;
++		dev = dev->parent;
++	}
++
++	return NULL;
++}
++
+ static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
+ 					     unsigned int devfn,
+ 					     int where)
+ {
+-	struct gen_pci *pci = dev_get_drvdata(bus->dev.parent->parent);
++	struct gen_pci *pci = gen_pci_get_drvdata(bus);
+ 	resource_size_t idx = bus->number - pci->cfg.bus_range.start;
+
+ 	return pci->cfg.win[idx] + ((devfn << 8) | where);
+@@ -66,7 +81,7 @@ static void __iomem *gen_pci_map_cfg_bus_ecam(struct
+pci_bus *bus,
+ 					      unsigned int devfn,
+ 					      int where)
+ {
+-	struct gen_pci *pci = dev_get_drvdata(bus->dev.parent->parent);
++	struct gen_pci *pci = gen_pci_get_drvdata(bus);
+ 	resource_size_t idx = bus->number - pci->cfg.bus_range.start;
+
+ 	return pci->cfg.win[idx] + ((devfn << 12) | where);
+@@ -81,7 +96,11 @@ static int gen_pci_config_read(struct pci_bus *bus,
+unsigned int devfn,
+ 				int where, int size, u32 *val)
+ {
+ 	void __iomem *addr;
+-	struct gen_pci *pci = dev_get_drvdata(bus->dev.parent->parent);
++	struct gen_pci *pci = gen_pci_get_drvdata(bus);
++
++	WARN_ON(!pci);
++	if (!pci)
++		return PCIBIOS_DEVICE_NOT_FOUND;
+
+ 	addr = pci->cfg.ops->map_bus(bus, devfn, where);
+
+@@ -103,7 +122,11 @@ static int gen_pci_config_write(struct pci_bus
+*bus, unsigned int devfn,
+ 				 int where, int size, u32 val)
+ {
+ 	void __iomem *addr;
+-	struct gen_pci *pci = dev_get_drvdata(bus->dev.parent->parent);
++	struct gen_pci *pci = gen_pci_get_drvdata(bus);
++
++	WARN_ON(!pci);
++	if (!pci)
++		return PCIBIOS_DEVICE_NOT_FOUND;
+
+ 	addr = pci->cfg.ops->map_bus(bus, devfn, where);
+
