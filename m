@@ -1,253 +1,223 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Vivek Goyal <vgoyal@redhat.com>,
-	Thierry Reding <treding@nvidia.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Mike Travis <travis@sgi.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [RFC Patch 17/19] resources: Move struct resource_list_entry from ACPI into resource core
-Date: Thu,  8 Jan 2015 10:33:04 +0800
-Message-Id: <1420684386-5975-18-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:58499 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751187AbbAOC20 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 21:28:26 -0500
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 15 Jan 2015 12:28:24 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id C116D2CE8040
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:20 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t0F2SKUt18808842
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:20 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t0F2SJEL019705
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:20 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V11 05/17] PCI: Take additional PF's IOV BAR alignment in sizing and assigning
+Date: Thu, 15 Jan 2015 10:27:55 +0800
+Message-Id: <1421288887-7765-6-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <20150113180502.GC2776@google.com>
+ <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently ACPI, PCI and pnp all implement the same resource list
-management with different data structure. We need to transfer from
-one data structure into another when passing resources from one
-subsystem into another subsystem. Sp move struct resource_list_entry
-from ACPI into resource core, so it could be reused by different
-subystems and avoid the data structure conversion.
+At resource sizing/assigning stage, resources are divided into two lists,
+requested list and additional list, while the alignement of the additional
+IOV BAR is not taken into the sizing and assigning procedure.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+This is reasonable in the original implementation, since IOV BAR's
+alignment is mostly the size of a PF BAR alignemt. This means the alignment
+is already taken into consideration. While this rule may be violated on
+some platform, eg.  PowerNV platform.
+
+This patch takes the additional IOV BAR alignment in sizing and assigning
+stage explicitly. When system MMIO space is not enough, the PF's IOV BAR
+alignment will not contribute to the bridge. When system MMIO space is
+enough, the additional alignment will contribute to the bridge.
+
+Also it take advantage of pci_dev_resource::min_align to store this
+additional alignment.
+
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
- drivers/acpi/acpi_lpss.c     |    6 +++---
- drivers/acpi/acpi_platform.c |    2 +-
- drivers/acpi/resource.c      |   13 ++++--------
- drivers/dma/acpi-dma.c       |    8 +++----
- include/linux/acpi.h         |    6 ------
- include/linux/ioport.h       |   25 ++++++++++++++++++++++
- kernel/resource.c            |   48 ++++++++++++++++++++++++++++++++++++++++++
- 7 files changed, 85 insertions(+), 23 deletions(-)
+ drivers/pci/setup-bus.c |   85 +++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 71 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/acpi/acpi_lpss.c b/drivers/acpi/acpi_lpss.c
-index 4f3febf8a589..39b548dba70b 100644
---- a/drivers/acpi/acpi_lpss.c
-+++ b/drivers/acpi/acpi_lpss.c
-@@ -333,12 +333,12 @@ static int acpi_lpss_create_device(struct acpi_device *adev,
- 		goto err_out;
- 
- 	list_for_each_entry(rentry, &resource_list, node)
--		if (resource_type(&rentry->res) == IORESOURCE_MEM) {
-+		if (resource_type(rentry->res) == IORESOURCE_MEM) {
- 			if (dev_desc->prv_size_override)
- 				pdata->mmio_size = dev_desc->prv_size_override;
- 			else
--				pdata->mmio_size = resource_size(&rentry->res);
--			pdata->mmio_base = ioremap(rentry->res.start,
-+				pdata->mmio_size = resource_size(rentry->res);
-+			pdata->mmio_base = ioremap(rentry->res->start,
- 						   pdata->mmio_size);
- 			break;
- 		}
-diff --git a/drivers/acpi/acpi_platform.c b/drivers/acpi/acpi_platform.c
-index 6ba8beb6b9d2..238e32b9cbb0 100644
---- a/drivers/acpi/acpi_platform.c
-+++ b/drivers/acpi/acpi_platform.c
-@@ -71,7 +71,7 @@ struct platform_device *acpi_create_platform_device(struct acpi_device *adev)
- 		}
- 		count = 0;
- 		list_for_each_entry(rentry, &resource_list, node)
--			resources[count++] = rentry->res;
-+			resources[count++] = *rentry->res;
- 
- 		acpi_dev_free_resource_list(&resource_list);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 0482235..08252c7 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -99,8 +99,8 @@ static void remove_from_list(struct list_head *head,
  	}
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 8ea7c26d6915..c0dc038274d4 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -444,12 +444,7 @@ EXPORT_SYMBOL_GPL(acpi_dev_resource_interrupt);
-  */
- void acpi_dev_free_resource_list(struct list_head *list)
+ }
+ 
+-static resource_size_t get_res_add_size(struct list_head *head,
+-					struct resource *res)
++static struct pci_dev_resource *res_to_dev_res(struct list_head *head,
++					       struct resource *res)
  {
--	struct resource_list_entry *rentry, *re;
--
--	list_for_each_entry_safe(rentry, re, list, node) {
--		list_del(&rentry->node);
--		kfree(rentry);
--	}
-+	resource_list_free_list(list);
- }
- EXPORT_SYMBOL_GPL(acpi_dev_free_resource_list);
+ 	struct pci_dev_resource *dev_res;
  
-@@ -467,14 +462,14 @@ static acpi_status acpi_dev_new_resource_entry(struct resource *r,
- {
- 	struct resource_list_entry *rentry;
+@@ -109,17 +109,37 @@ static resource_size_t get_res_add_size(struct list_head *head,
+ 			int idx = res - &dev_res->dev->resource[0];
  
--	rentry = kmalloc(sizeof(*rentry), GFP_KERNEL);
-+	rentry = resource_list_alloc(NULL, 0);
- 	if (!rentry) {
- 		c->error = -ENOMEM;
- 		return AE_NO_MEMORY;
- 	}
--	rentry->res = *r;
-+	*rentry->res = *r;
- 	rentry->offset = offset;
--	list_add_tail(&rentry->node, c->list);
-+	resource_list_insert(c->list, rentry, true);
- 	c->count++;
- 	return AE_OK;
- }
-diff --git a/drivers/dma/acpi-dma.c b/drivers/dma/acpi-dma.c
-index de361a156b34..1ce84abe0924 100644
---- a/drivers/dma/acpi-dma.c
-+++ b/drivers/dma/acpi-dma.c
-@@ -56,10 +56,10 @@ static int acpi_dma_parse_resource_group(const struct acpi_csrt_group *grp,
- 		return 0;
+ 			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+-				 "res[%d]=%pR get_res_add_size add_size %llx\n",
++				 "res[%d]=%pR res_to_dev_res add_size %llx min_align %llx\n",
+ 				 idx, dev_res->res,
+-				 (unsigned long long)dev_res->add_size);
++				 (unsigned long long)dev_res->add_size,
++				 (unsigned long long)dev_res->min_align);
  
- 	list_for_each_entry(rentry, &resource_list, node) {
--		if (resource_type(&rentry->res) == IORESOURCE_MEM)
--			mem = rentry->res.start;
--		else if (resource_type(&rentry->res) == IORESOURCE_IRQ)
--			irq = rentry->res.start;
-+		if (resource_type(rentry->res) == IORESOURCE_MEM)
-+			mem = rentry->res->start;
-+		else if (resource_type(rentry->res) == IORESOURCE_IRQ)
-+			irq = rentry->res->start;
+-			return dev_res->add_size;
++			return dev_res;
+ 		}
  	}
  
- 	acpi_dev_free_resource_list(&resource_list);
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 1df4a0211ae5..6d7f7edca22c 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -297,12 +297,6 @@ unsigned long acpi_dev_irq_flags(u8 triggering, u8 polarity, u8 shareable);
- bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
- 				 struct resource *res);
- 
--struct resource_list_entry {
--	struct list_head node;
--	struct resource res;
--	resource_size_t offset;
--};
--
- void acpi_dev_free_resource_list(struct list_head *list);
- int acpi_dev_get_resources(struct acpi_device *adev, struct list_head *list,
- 			   int (*preproc)(struct acpi_resource *, void *),
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 2c5250222278..a6f4841ca40c 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -11,6 +11,7 @@
- #ifndef __ASSEMBLY__
- #include <linux/compiler.h>
- #include <linux/types.h>
+-	return 0;
++	return NULL;
++}
 +
- /*
-  * Resources are tree-like, allowing
-  * nesting etc..
-@@ -255,6 +256,30 @@ static inline bool resource_overlaps(struct resource *r1, struct resource *r2)
-        return (r1->start <= r2->end && r1->end >= r2->start);
- }
- 
-+/*
-+ * Common resource list management data structure and interfaces to support
-+ * ACPI, PNP and PCI host bridge etc.
-+ */
-+struct resource_list_entry {
-+	struct list_head	node;
-+	struct resource		*res;	/* In master (CPU) address space */
-+	resource_size_t		offset;	/* Translation offset for bridge */
-+	struct resource		__res;	/* Default storage for res */
-+};
-+
-+extern struct resource_list_entry *resource_list_alloc(struct resource *res,
-+						       size_t extra_size);
-+extern void resource_list_free(struct resource_list_entry *entry);
-+extern void resource_list_insert(struct list_head *head,
-+				 struct resource_list_entry *entry, bool tail);
-+extern void resource_list_delete(struct resource_list_entry *entry);
-+extern void resource_list_free_list(struct list_head *head);
-+
-+#define resource_list_for_each_entry(entry, list)	\
-+	list_for_each_entry((entry), (list), node)
-+
-+#define resource_list_for_each_entry_safe(entry, tmp, list)	\
-+	list_for_each_entry_safe((entry), (tmp), (list), node)
- 
- #endif /* __ASSEMBLY__ */
- #endif	/* _LINUX_IOPORT_H */
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 0bcebffc4e77..414183809383 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -1529,6 +1529,54 @@ int iomem_is_exclusive(u64 addr)
- 	return err;
- }
- 
-+struct resource_list_entry *resource_list_alloc(struct resource *res,
-+						size_t extra_size)
++static resource_size_t get_res_add_size(struct list_head *head,
++					struct resource *res)
 +{
-+	struct resource_list_entry *entry;
++	struct pci_dev_resource *dev_res;
 +
-+	entry = kzalloc(sizeof(*entry) + extra_size, GFP_KERNEL);
-+	if (entry) {
-+		INIT_LIST_HEAD(&entry->node);
-+		entry->res = res ? res : &entry->__res;
++	dev_res = res_to_dev_res(head, res);
++	return dev_res ? dev_res->add_size : 0;
++}
++
++static resource_size_t get_res_add_align(struct list_head *head,
++		struct resource *res)
++{
++	struct pci_dev_resource *dev_res;
++
++	dev_res = res_to_dev_res(head, res);
++	return dev_res ? dev_res->min_align : 0;
+ }
+ 
++
+ /* Sort resources by alignment */
+ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ {
+@@ -368,8 +388,9 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+-	struct pci_dev_resource *dev_res, *tmp_res;
++	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
+ 	unsigned long fail_type;
++	resource_size_t add_align, align;
+ 
+ 	/* Check if optional add_size is there */
+ 	if (!realloc_head || list_empty(realloc_head))
+@@ -384,10 +405,38 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
+ 
+ 	/* Update res in head list with add_size in realloc_head list */
+-	list_for_each_entry(dev_res, head, list)
++	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
+ 		dev_res->res->end += get_res_add_size(realloc_head,
+ 							dev_res->res);
+ 
++		/* 
++		 * There are two kinds additional resources in the list:
++		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
++		 * 2. SRIOV resource   -- IORESOURCE_SIZEALIGN
++		 * Here just fix the additional alignment for bridge
++		 */
++		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
++			continue;
++
++		add_align = get_res_add_align(realloc_head, dev_res->res);
++
++		/* Reorder the list by their alignment */
++		if (add_align > dev_res->res->start) {
++			dev_res->res->start = add_align;
++			dev_res->res->end = add_align +
++				            resource_size(dev_res->res);
++
++			list_for_each_entry(dev_res2, head, list) {
++				align = pci_resource_alignment(dev_res2->dev,
++							       dev_res2->res);
++				if (add_align > align)
++					list_move_tail(&dev_res->list,
++						       &dev_res2->list);
++			}
++               }
++
 +	}
 +
-+	return entry;
-+}
-+EXPORT_SYMBOL(resource_list_alloc);
-+
-+void resource_list_free(struct resource_list_entry *entry)
-+{
-+	kfree(entry);
-+}
-+EXPORT_SYMBOL(resource_list_free);
-+
-+void resource_list_insert(struct list_head *head,
-+			  struct resource_list_entry *entry, bool tail)
-+{
-+	if (tail)
-+		list_add_tail(&entry->node, head);
-+	else
-+		list_add(&entry->node, head);
-+}
-+EXPORT_SYMBOL(resource_list_insert);
-+
-+void resource_list_delete(struct resource_list_entry *entry)
-+{
-+	list_del(&entry->node);
-+}
-+EXPORT_SYMBOL(resource_list_delete);
-+
-+void resource_list_free_list(struct list_head *head)
-+{
-+	struct resource_list_entry *entry, *tmp;
-+
-+	list_for_each_entry_safe(entry, tmp, head, node) {
-+		list_del(&entry->node);
-+		resource_list_free(entry);
-+	}
-+}
-+EXPORT_SYMBOL(resource_list_free_list);
-+
- static int __init strict_iomem(char *str)
- {
- 	if (strstr(str, "relaxed"))
+ 	/* Try updated head list with add_size added */
+ 	assign_requested_resources_sorted(head, &local_fail_head);
+ 
+@@ -930,6 +979,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	struct resource *b_res = find_free_bus_resource(bus,
+ 					mask | IORESOURCE_PREFETCH, type);
+ 	resource_size_t children_add_size = 0;
++	resource_size_t children_add_align = 0;
++	resource_size_t add_align = 0;
+ 
+ 	if (!b_res)
+ 		return -ENOSPC;
+@@ -954,6 +1005,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			/* put SRIOV requested res to the optional list */
+ 			if (realloc_head && i >= PCI_IOV_RESOURCES &&
+ 					i <= PCI_IOV_RESOURCE_END) {
++				add_align = max(pci_resource_alignment(dev, r), add_align);
+ 				r->end = r->start - 1;
+ 				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
+ 				children_add_size += r_size;
+@@ -984,19 +1036,23 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			if (order > max_order)
+ 				max_order = order;
+ 
+-			if (realloc_head)
++			if (realloc_head) {
+ 				children_add_size += get_res_add_size(realloc_head, r);
++				children_add_align = get_res_add_align(realloc_head, r);
++				add_align = max(add_align, children_add_align);
++			}
+ 		}
+ 	}
+ 
+ 	min_align = calculate_mem_align(aligns, max_order);
+ 	min_align = max(min_align, window_alignment(bus, b_res->flags));
+ 	size0 = calculate_memsize(size, min_size, 0, resource_size(b_res), min_align);
++	add_align = max(min_align, add_align);
+ 	if (children_add_size > add_size)
+ 		add_size = children_add_size;
+ 	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+ 		calculate_memsize(size, min_size, add_size,
+-				resource_size(b_res), min_align);
++				resource_size(b_res), add_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+ 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
+@@ -1008,10 +1064,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	b_res->end = size0 + min_align - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-		add_to_list(realloc_head, bus->self, b_res, size1-size0, min_align);
+-		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx\n",
+-			   b_res, &bus->busn_res,
+-			   (unsigned long long)size1-size0);
++		add_to_list(realloc_head, bus->self, b_res, size1-size0, add_align);
++		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
++				 "%pR to %pR add_size %llx add_align %llx\n", b_res,
++				 &bus->busn_res, (unsigned long long)size1-size0,
++				 (unsigned long long)add_align);
+ 	}
+ 	return 0;
+ }
 -- 
-1.7.10.4
+1.7.9.5
 
