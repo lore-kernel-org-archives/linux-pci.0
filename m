@@ -1,46 +1,45 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.187]:62418 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750965AbbAPJo4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Jan 2015 04:44:56 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	linux-kernel@vger.kernel.org, Marc Zyngier <marc.zyngier@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [RFC Patch 09/19] ACPI: Fix a bug in parsing ACPI Memroy24 resource
-Date: Thu,  8 Jan 2015 10:32:56 +0800
-Message-Id: <1420684386-5975-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH 27/28] PCI: Remove platform specific pci_domain_nr()
+Date: Fri, 16 Jan 2015 10:44:29 +0100
+Message-ID: <1561857.t9qV46uRjC@wuerfel>
+In-Reply-To: <1421372666-12288-28-git-send-email-wangyijing@huawei.com>
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <1421372666-12288-28-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to ACPI spec 5, section 6.4.3.1 "24-Bit Memory Range Descriptor",
-minimum, maximum and address_length field in struct acpi_resource_memory24
-is in granularity of 256-bytes. So shift 8-bit left to get correct address.
+On Friday 16 January 2015 09:44:25 Yijing Wang wrote:
+> 
+> +int pci_domain_nr(struct pci_bus *bus)
+> +{
+> +       struct pci_host_bridge *host = find_pci_host_bridge(bus);
+> +
+> +       return host->domain;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_domain_nr);
+> +
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/resource.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Since most of the existing functions are exported as EXPORT_SYMBOL
+rather than EXPORT_SYMBOL_GPL, I think the new version should do
+the same.
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index abe3a29ad802..f4aeef22a9d8 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -90,8 +90,8 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
- 	switch (ares->type) {
- 	case ACPI_RESOURCE_TYPE_MEMORY24:
- 		memory24 = &ares->data.memory24;
--		acpi_dev_get_memresource(res, memory24->minimum,
--					 memory24->address_length,
-+		acpi_dev_get_memresource(res, memory24->minimum << 8,
-+					 memory24->address_length << 8,
- 					 memory24->write_protect);
- 		break;
- 	case ACPI_RESOURCE_TYPE_MEMORY32:
--- 
-1.7.10.4
-
+	Arnd
