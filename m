@@ -1,70 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:39834 "EHLO
-	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750898AbbAXAyJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 19:54:09 -0500
-Received: by mail-oi0-f49.google.com with SMTP id a3so406050oib.8
-        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 16:54:08 -0800 (PST)
-Date: Fri, 23 Jan 2015 18:54:04 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Rob Herring <robherring2@gmail.com>
-Cc: linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Peter Maydell <peter.maydell@linaro.org>, arm@kernel.org,
-	Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 4/9] pci: add DT based ARM Versatile PCI host driver
-Message-ID: <20150124005404.GZ29776@google.com>
-References: <1419967718-26909-1-git-send-email-robherring2@gmail.com>
- <1419967718-26909-5-git-send-email-robherring2@gmail.com>
+Received: from [119.145.14.66] ([119.145.14.66]:22876 "EHLO
+	szxga03-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S932548AbbAPDr5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jan 2015 22:47:57 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH 08/28] PCI: Introduce pci_host_assign_domain_nr() to assign domain
+Date: Fri, 16 Jan 2015 09:44:06 +0800
+Message-ID: <1421372666-12288-9-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1419967718-26909-5-git-send-email-robherring2@gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sorry for the late reply; maybe this has already been queued up somewhere,
-so this might be moot.
+Introduce pci_host_assign_domain_nr() to assign domain
+number for pci_host_bridge. Later we will remove
+pci_bus_assign_domain_nr().
 
-I usually capitalize the "PCI" and first letter of the subject, like:
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pci.c   |   47 +++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |    4 ++++
+ 2 files changed, 51 insertions(+), 0 deletions(-)
 
-  PCI: Add DT based ARM Versatile PCI host driver
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index c419554..8b35e8e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4443,6 +4443,53 @@ int pci_get_new_domain_nr(void)
+ }
+ 
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
++void pci_host_assign_domain_nr(struct pci_host_bridge *host)
++{
++	static int use_dt_domains = -1;
++	struct device *parent = host->dev.parent;
++	int domain = of_get_pci_domain_nr(parent->of_node);
++
++	/*
++	 * Check DT domain and use_dt_domains values.
++	 *
++	 * If DT domain property is valid (domain >= 0) and
++	 * use_dt_domains != 0, the DT assignment is valid since this means
++	 * we have not previously allocated a domain number by using
++	 * pci_get_new_domain_nr(); we should also update use_dt_domains to
++	 * 1, to indicate that we have just assigned a domain number from
++	 * DT.
++	 *
++	 * If DT domain property value is not valid (ie domain < 0), and we
++	 * have not previously assigned a domain number from DT
++	 * (use_dt_domains != 1) we should assign a domain number by
++	 * using the:
++	 *
++	 * pci_get_new_domain_nr()
++	 *
++	 * API and update the use_dt_domains value to keep track of method we
++	 * are using to assign domain numbers (use_dt_domains = 0).
++	 *
++	 * All other combinations imply we have a platform that is trying
++	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
++	 * which is a recipe for domain mishandling and it is prevented by
++	 * invalidating the domain value (domain = -1) and printing a
++	 * corresponding error.
++	 */
++	if (domain >= 0 && use_dt_domains) {
++		use_dt_domains = 1;
++	} else if (domain < 0 && use_dt_domains != 1) {
++		use_dt_domains = 0;
++		domain = pci_get_new_domain_nr();
++	} else {
++		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
++			parent->of_node->full_name);
++		domain = -1;
++	}
++
++	host->domain_nr = domain;
++}
++
++
+ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ {
+ 	static int use_dt_domains = -1;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index c771508..1b9c799 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1316,11 +1316,15 @@ static inline int pci_domain_nr(struct pci_bus *bus)
+ 	return bus->domain_nr;
+ }
+ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
++void pci_host_assign_domain_nr(struct pci_host_bridge *host);
+ #else
+ static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
+ 					struct device *parent)
+ {
+ }
++static inline void pci_host_assign_domain_nr(struct pci_host_bridge *host)
++{
++}
+ #endif
+ 
+ /* some architectures require additional setup to direct VGA traffic */
+-- 
+1.7.1
 
-And I try to ask for MAINTAINER updates since these drivers are under
-drivers/pci, but I can't maintain them all myself.
-
-On Tue, Dec 30, 2014 at 01:28:33PM -0600, Rob Herring wrote:
-> From: Rob Herring <robh@kernel.org>
-> 
-> This converts the Versatile PCI host code to a platform driver using
-> the commom DT parsing and setup. The driver uses only an empty ARM
-> pci_sys_data struct and does not use pci_common_init_dev init function.
-> The old host code will be removed in a subsequent commit when Versatile
-> is completely converted to DT.
-> 
-> I've tested this on QEMU with the sym53c8xx driver in both i/o and
-> memory mapped modes.
-> 
-> Signed-off-by: Rob Herring <robh@kernel.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: Russell King <linux@arm.linux.org.uk>
-> Cc: Linus Walleij <linus.walleij@linaro.org>
-> Cc: Peter Maydell <peter.maydell@linaro.org>
-
-Looks fine to me.
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> +++ b/drivers/pci/host/pci-versatile.c
-> ...
-
-> +	/*
-> +	 *  We need to discover the PCI core first to configure itself
-> +	 *  before the main PCI probing is performed
-
-Unusual to have two spaces between the "*" and the comments here.
-
-> +MODULE_LICENSE("GPLv2");
-
-This needs to be "GPL v2" per license_is_gpl_compatible().
