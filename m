@@ -1,185 +1,57 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20150128110523.GC6646@e104818-lin.cambridge.arm.com>
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
- <1422052359-12384-4-git-send-email-m-karicheri2@ti.com> <54C77616.80301@arm.com>
- <54C7DF13.20402@ti.com> <20150128110523.GC6646@e104818-lin.cambridge.arm.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Wed, 28 Jan 2015 09:45:19 -0600
-Message-ID: <CAL_JsqJiCKW0ny=_ueq=A7RH3octpEhN+KZuLZhbNEHusyjcig@mail.gmail.com>
-Subject: Re: [PATCH v4 3/6] of: fix size when dma-range is not used
-To: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Murali Karicheri <m-karicheri2@ti.com>,
-	Robin Murphy <Robin.Murphy@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Yijing Wang <wangyijing@huawei.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-m68k@lists.linux-m68k.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	linux-alpha@vger.kernel.org, linux-ia64@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH 10/28] PCI: Save sysdata in pci_host_bridge drvdata
+Date: Fri, 16 Jan 2015 10:18:59 +0100
+Message-ID: <18973877.BYCS6vtzoq@wuerfel>
+In-Reply-To: <1421372666-12288-11-git-send-email-wangyijing@huawei.com>
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <1421372666-12288-11-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 28, 2015 at 5:05 AM, Catalin Marinas
-<catalin.marinas@arm.com> wrote:
-> On Tue, Jan 27, 2015 at 06:55:15PM +0000, Murali Karicheri wrote:
->> On 01/27/2015 06:27 AM, Robin Murphy wrote:
->> > On 23/01/15 22:32, Murali Karicheri wrote:
->> >> Fix the dma-range size when the DT attribute is missing. i.e set size to
->> >> dev->coherent_dma_mask + 1 instead of dev->coherent_dma_mask. To detect
->> >> overflow when mask is set to max of u64, add a check, log error and
->> >> return.
->> >> Some platform use mask format for size in DTS. So add a work around to
->> >> catch this and fix.
->> >>
->> >> Cc: Joerg Roedel <joro@8bytes.org>
->> >> Cc: Grant Likely <grant.likely@linaro.org>
->> >> Cc: Rob Herring <robh+dt@kernel.org>
->> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> >> Cc: Will Deacon <will.deacon@arm.com>
->> >> Cc: Russell King <linux@arm.linux.org.uk>
->> >> Cc: Arnd Bergmann <arnd@arndb.de>
->> >> Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->> >>
->> >> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
->> >> ---
->> >> drivers/of/device.c | 14 +++++++++++++-
->> >> 1 file changed, 13 insertions(+), 1 deletion(-)
->> >>
->> >> diff --git a/drivers/of/device.c b/drivers/of/device.c
->> >> index 2de320d..0a5ff54 100644
->> >> --- a/drivers/of/device.c
->> >> +++ b/drivers/of/device.c
->> >> @@ -105,12 +105,24 @@ void of_dma_configure(struct device *dev, struct
->> >> device_node *np)
->> >> ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
->> >> if (ret < 0) {
->> >> dma_addr = offset = 0;
->> >> - size = dev->coherent_dma_mask;
->> >> + size = dev->coherent_dma_mask + 1;
->> >> } else {
->> >> offset = PFN_DOWN(paddr - dma_addr);
->> >> + /*
->> >> + * Add a work around to treat the size as mask + 1 in case
->> >> + * it is defined in DT as a mask.
->> >> + */
->> >> + if (size & 1)
->> >> + size = size + 1;
->> >> dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
->> >> }
->> >>
->> >> + /* if size is 0, we have an overflow of u64 */
->> >> + if (!size) {
->> >> + dev_err(dev, "invalid size\n");
->> >> + return;
->> >> + }
->> >> +
->> >
->> > This seems potentially fragile to dodgy DTs given that we might also be
->> > using size to make a mask later. Would it make sense to double-up a
->> > sanity check as mask-format detection? Something like:
->> >
->> > if is_power_of_2(size)
->> > // use size
->> > else if is_power_of_2(size + 1)
->> > // use size + 1
->> > else
->> > // cry
->>
->> How about having the logic like this?
->>
->>       ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
->>       if (ret < 0) {
->>               dma_addr = offset = 0;
->>               size = dev->coherent_dma_mask + 1;
->>       } else {
->>               offset = PFN_DOWN(paddr - dma_addr);
->>               dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
->>       }
->>
->>       if (is_power_of_2(size + 1))
->>               size = size + 1;
->>       else if (!is_power_of_2(size))
->>       {
->>               dev_err(dev, "invalid size\n");
->>               return;
->>       }
->
-> In of_dma_configure(), we currently assume that the default coherent
-> mask is 32-bit. In this thread:
->
-> http://article.gmane.org/gmane.linux.kernel/1835096
->
-> we talked about setting the coherent mask based on size automatically.
-> I'm not sure about the size but I think we can assume is 32-bit mask + 1
-> if it is not specified in the DT. Instead of just assuming a default
-> mask, let's assume a default size and create the mask based on this
-> (untested):
->
-> diff --git a/drivers/of/platform.c b/drivers/of/platform.c
-> index 5b33c6a21807..9ff8d1286b44 100644
-> --- a/drivers/of/platform.c
-> +++ b/drivers/of/platform.c
-> @@ -170,10 +170,10 @@ static void of_dma_configure(struct device *dev)
->         struct iommu_ops *iommu;
->
->         /*
-> -        * Set default dma-mask to 32 bit. Drivers are expected to setup
-> -        * the correct supported dma_mask.
-> +        * Set default size to cover the 32-bit. Drivers are expected to setup
-> +        * the correct size and dma_mask.
->          */
-> -       dev->coherent_dma_mask = DMA_BIT_MASK(32);
-> +       size = 1ULL << 32;
->
->         /*
->          * Set it to coherent_dma_mask by default if the architecture
-> @@ -185,13 +185,24 @@ static void of_dma_configure(struct device *dev)
->         ret = of_dma_get_range(dev->of_node, &dma_addr, &paddr, &size);
->         if (ret < 0) {
->                 dma_addr = offset = 0;
-> -               size = dev->coherent_dma_mask;
+On Friday 16 January 2015 09:44:08 Yijing Wang wrote:
+> @@ -2066,11 +2064,11 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+>  {
+>         struct pci_host_bridge *host;
+>  
+> -       host = pci_create_host_bridge(parent, db, resources);
+> +       host = pci_create_host_bridge(parent, db, resources, sysdata);
+>         if (!host)
+>                 return NULL;
+>  
+> -       return __pci_scan_root_bus(host, ops, sysdata);
+> +       return __pci_scan_root_bus(host, ops);
+>  }
+>  EXPORT_SYMBOL(pci_scan_root_bus);
+> 
 
-Are we assuming dma_addr, paddr and size are not touched on error? If
-so, we can get rid of this clause entirely.
+How about keeping the sysdata out of the pci_create_host_bridge interface, and
+refactoring it so that the call sequence becomes
 
->         } else {
->                 offset = PFN_DOWN(paddr - dma_addr);
->                 dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", dev->dma_pfn_offset);
->         }
->         dev->dma_pfn_offset = offset;
->
-> +       /*
-> +        * Workaround for DTs setting the size to a mask or 0.
-> +        */
-> +       if (is_power_of_2(size + 1))
-> +               size += 1;
+	host = pci_create_host_bridge(parent, db, resources);
+	host->sysdata = sysdata;
+	__pci_scan_root_bus(host, ops);
 
-As I mentioned, I think power of 2 is too restrictive (from a DT
-perspective even though the kernel may require a power of 2 here for
-the mask). Just checking bit0 set should be enough.
+This way, we can make sysdata completely option. I assume that more of the
+fields we have in sysdata today can get moved into pci_host_bridge
+over time, so a host bridge driver can just assign those members individually
+between pci_create_host_bridge and __pci_scan_root_bus.
 
-Also, we need a WARN here so DTs get fixed.
-
-> +
-> +       /*
-> +        * Coherent DMA masks larger than 32-bit must be explicitly set by the
-> +        * driver.
-> +        */
-> +       dev->coherent_dma_mask = min(DMA_BIT_MASK(32), DMA_BIT_MASK(ilog2(size)));
-> +
->         coherent = of_dma_is_coherent(dev->of_node);
->         dev_dbg(dev, "device is%sdma coherent\n",
->                 coherent ? " " : " not ");
->
-> --
-> Catalin
+	Arnd
