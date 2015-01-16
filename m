@@ -1,226 +1,268 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>,
-	Joerg Roedel <joro@8bytes.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part1 v7 15/38] irq_remapping/vt-d: Clean up unused MSI related code
-Date: Tue, 20 Jan 2015 11:08:18 +0800
-Message-Id: <1421723321-8386-16-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH 27/28] PCI: Remove platform specific pci_domain_nr()
+Date: Fri, 16 Jan 2015 09:44:25 +0800
+Message-ID: <1421372666-12288-28-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now MSI interrupt has been converted to new hierarchy irqdomain
-interfaces, so kill legacy MSI related code.
+Now pci_host_bridge holds the domain number,
+so we could eliminate all platform specific
+pci_domain_nr().
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Acked-by: Joerg Roedel <jroedel@suse.de>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: iommu@lists.linux-foundation.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Joerg Roedel <joro@8bytes.org>
-Link: http://lkml.kernel.org/r/1416894816-23245-16-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/iommu/intel_irq_remapping.c |  144 -----------------------------------
- 1 file changed, 144 deletions(-)
+ arch/alpha/include/asm/pci.h     |    2 --
+ arch/ia64/include/asm/pci.h      |    1 -
+ arch/microblaze/pci/pci-common.c |   11 -----------
+ arch/mips/include/asm/pci.h      |    2 --
+ arch/powerpc/kernel/pci-common.c |   11 -----------
+ arch/s390/pci/pci.c              |    6 ------
+ arch/sh/include/asm/pci.h        |    2 --
+ arch/sparc/kernel/pci.c          |   17 -----------------
+ arch/tile/include/asm/pci.h      |    2 --
+ arch/x86/include/asm/pci.h       |    6 ------
+ drivers/pci/pci.c                |    8 ++++++++
+ include/linux/pci.h              |    7 ++-----
+ 12 files changed, 10 insertions(+), 65 deletions(-)
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index f2dbb0d54d17..91c0fc65713d 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -145,44 +145,6 @@ static int qi_flush_iec(struct intel_iommu *iommu, int index, int mask)
- 	return qi_submit_sync(&desc, iommu);
+diff --git a/arch/alpha/include/asm/pci.h b/arch/alpha/include/asm/pci.h
+index f7f680f..63a9a1e 100644
+--- a/arch/alpha/include/asm/pci.h
++++ b/arch/alpha/include/asm/pci.h
+@@ -95,8 +95,6 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ 	return channel ? 15 : 14;
  }
  
--static int map_irq_to_irte_handle(int irq, u16 *sub_handle)
--{
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
--	unsigned long flags;
--	int index;
+-#define pci_domain_nr(bus) ((struct pci_controller *)(bus)->sysdata)->index
 -
--	if (!irq_iommu)
--		return -1;
--
--	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
--	*sub_handle = irq_iommu->sub_handle;
--	index = irq_iommu->irte_index;
--	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
--	return index;
--}
--
--static int set_irte_irq(int irq, struct intel_iommu *iommu, u16 index, u16 subhandle)
--{
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
--	struct irq_cfg *cfg = irq_cfg(irq);
--	unsigned long flags;
--
--	if (!irq_iommu)
--		return -1;
--
--	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
--
--	cfg->remapped = 1;
--	irq_iommu->iommu = iommu;
--	irq_iommu->irte_index = index;
--	irq_iommu->sub_handle = subhandle;
--	irq_iommu->irte_mask = 0;
--
--	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
--
--	return 0;
--}
--
- static int modify_irte(struct irq_2_iommu *irq_iommu,
- 		       struct irte *irte_modified)
+ static inline int pci_proc_domain(struct pci_bus *bus)
  {
-@@ -1127,108 +1089,6 @@ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 	return 0;
- }
+ 	struct pci_controller *hose = bus->sysdata;
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index 52af5ed..1dcea49 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -99,7 +99,6 @@ struct pci_controller {
  
--static void intel_compose_msi_msg(struct pci_dev *pdev,
--				  unsigned int irq, unsigned int dest,
--				  struct msi_msg *msg, u8 hpet_id)
--{
--	struct irq_cfg *cfg;
--	struct irte irte;
--	u16 sub_handle = 0;
--	int ir_index;
--
--	cfg = irq_cfg(irq);
--
--	ir_index = map_irq_to_irte_handle(irq, &sub_handle);
--	BUG_ON(ir_index == -1);
--
--	prepare_irte(&irte, cfg->vector, dest);
--
--	/* Set source-id of interrupt request */
--	if (pdev)
--		set_msi_sid(&irte, pdev);
--	else
--		set_hpet_sid(&irte, hpet_id);
--
--	modify_irte(irq_2_iommu(irq), &irte);
--
--	msg->address_hi = MSI_ADDR_BASE_HI;
--	msg->data = sub_handle;
--	msg->address_lo = MSI_ADDR_BASE_LO | MSI_ADDR_IR_EXT_INT |
--			  MSI_ADDR_IR_SHV |
--			  MSI_ADDR_IR_INDEX1(ir_index) |
--			  MSI_ADDR_IR_INDEX2(ir_index);
--}
--
+ 
+ #define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
+-#define pci_domain_nr(busdev)    (PCI_CONTROLLER(busdev)->segment)
+ 
+ extern struct pci_ops pci_root_ops;
+ 
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index 890bd36..81ac523 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -123,17 +123,6 @@ unsigned long pci_address_to_pio(phys_addr_t address)
+ }
+ EXPORT_SYMBOL_GPL(pci_address_to_pio);
+ 
 -/*
-- * Map the PCI dev to the corresponding remapping hardware unit
-- * and allocate 'nvec' consecutive interrupt-remapping table entries
-- * in it.
+- * Return the domain number for this bus.
 - */
--static int intel_msi_alloc_irq(struct pci_dev *dev, int irq, int nvec)
+-int pci_domain_nr(struct pci_bus *bus)
 -{
--	struct intel_iommu *iommu;
--	int index;
+-	struct pci_controller *hose = pci_bus_to_host(bus);
 -
--	down_read(&dmar_global_lock);
--	iommu = map_dev_to_ir(dev);
--	if (!iommu) {
--		printk(KERN_ERR
--		       "Unable to map PCI %s to iommu\n", pci_name(dev));
--		index = -ENOENT;
--	} else {
--		index = alloc_irte(iommu, irq, irq_2_iommu(irq), nvec);
--		if (index < 0) {
--			printk(KERN_ERR
--			       "Unable to allocate %d IRTE for PCI %s\n",
--			       nvec, pci_name(dev));
--			index = -ENOSPC;
--		}
--	}
--	up_read(&dmar_global_lock);
--
--	return index;
+-	return hose->global_number;
 -}
+-EXPORT_SYMBOL(pci_domain_nr);
 -
--static int intel_msi_setup_irq(struct pci_dev *pdev, unsigned int irq,
--			       int index, int sub_handle)
--{
--	struct intel_iommu *iommu;
--	int ret = -ENOENT;
+ /* This routine is meant to be used early during boot, when the
+  * PCI bus numbers have not yet been assigned, and you need to
+  * issue PCI config cycles to an OF device.
+diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
+index 6952962..9546396 100644
+--- a/arch/mips/include/asm/pci.h
++++ b/arch/mips/include/asm/pci.h
+@@ -121,8 +121,6 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+ }
+ #endif
+ 
+-#define pci_domain_nr(bus) ((struct pci_controller *)(bus)->sysdata)->index
 -
--	down_read(&dmar_global_lock);
--	iommu = map_dev_to_ir(pdev);
--	if (iommu) {
--		/*
--		 * setup the mapping between the irq and the IRTE
--		 * base index, the sub_handle pointing to the
--		 * appropriate interrupt remap table entry.
--		 */
--		set_irte_irq(irq, iommu, index, sub_handle);
--		ret = 0;
--	}
--	up_read(&dmar_global_lock);
--
--	return ret;
--}
--
--static int intel_alloc_hpet_msi(unsigned int irq, unsigned int id)
--{
--	int ret = -1;
--	struct intel_iommu *iommu;
--	int index;
--
--	down_read(&dmar_global_lock);
--	iommu = map_hpet_to_ir(id);
--	if (iommu) {
--		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
--		if (index >= 0)
--			ret = 0;
--	}
--	up_read(&dmar_global_lock);
--
--	return ret;
--}
--
- static struct irq_domain *intel_get_ir_irq_domain(struct irq_alloc_info *info)
+ static inline int pci_proc_domain(struct pci_bus *bus)
  {
- 	struct intel_iommu *iommu = NULL;
-@@ -1285,10 +1145,6 @@ struct irq_remap_ops intel_irq_remap_ops = {
- 	.setup_ioapic_entry	= intel_setup_ioapic_entry,
- 	.set_affinity		= intel_ioapic_set_affinity,
- 	.free_irq		= free_irte,
--	.compose_msi_msg	= intel_compose_msi_msg,
--	.msi_alloc_irq		= intel_msi_alloc_irq,
--	.msi_setup_irq		= intel_msi_setup_irq,
--	.alloc_hpet_msi		= intel_alloc_hpet_msi,
- 	.get_ir_irq_domain	= intel_get_ir_irq_domain,
- 	.get_irq_domain		= intel_get_irq_domain,
- };
+ 	struct pci_controller *hose = bus->sysdata;
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 0c7fb81..a482bd6 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -181,17 +181,6 @@ unsigned long pci_address_to_pio(phys_addr_t address)
+ }
+ EXPORT_SYMBOL_GPL(pci_address_to_pio);
+ 
+-/*
+- * Return the domain number for this bus.
+- */
+-int pci_domain_nr(struct pci_bus *bus)
+-{
+-	struct pci_controller *hose = pci_bus_to_host(bus);
+-
+-	return hose->global_number;
+-}
+-EXPORT_SYMBOL(pci_domain_nr);
+-
+ /* This routine is meant to be used early during boot, when the
+  * PCI bus numbers have not yet been assigned, and you need to
+  * issue PCI config cycles to an OF device.
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index 612decf..8ca02f7 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -101,12 +101,6 @@ static struct zpci_dev *get_zdev_by_bus(struct pci_bus *bus)
+ 	return (bus && bus->sysdata) ? (struct zpci_dev *) bus->sysdata : NULL;
+ }
+ 
+-int pci_domain_nr(struct pci_bus *bus)
+-{
+-	return ((struct zpci_dev *) bus->sysdata)->domain;
+-}
+-EXPORT_SYMBOL_GPL(pci_domain_nr);
+-
+ int pci_proc_domain(struct pci_bus *bus)
+ {
+ 	return pci_domain_nr(bus);
+diff --git a/arch/sh/include/asm/pci.h b/arch/sh/include/asm/pci.h
+index 5b45115..4dc3ad6 100644
+--- a/arch/sh/include/asm/pci.h
++++ b/arch/sh/include/asm/pci.h
+@@ -109,8 +109,6 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+ /* Board-specific fixup routines. */
+ int pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin);
+ 
+-#define pci_domain_nr(bus) ((struct pci_channel *)(bus)->sysdata)->index
+-
+ static inline int pci_proc_domain(struct pci_bus *bus)
+ {
+ 	struct pci_channel *hose = bus->sysdata;
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 42dc21f..519f121 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -906,23 +906,6 @@ int pcibus_to_node(struct pci_bus *pbus)
+ EXPORT_SYMBOL(pcibus_to_node);
+ #endif
+ 
+-/* Return the domain number for this pci bus */
+-
+-int pci_domain_nr(struct pci_bus *pbus)
+-{
+-	struct pci_pbm_info *pbm = pbus->sysdata;
+-	int ret;
+-
+-	if (!pbm) {
+-		ret = -ENXIO;
+-	} else {
+-		ret = pbm->index;
+-	}
+-
+-	return ret;
+-}
+-EXPORT_SYMBOL(pci_domain_nr);
+-
+ #ifdef CONFIG_PCI_MSI
+ int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
+ {
+diff --git a/arch/tile/include/asm/pci.h b/arch/tile/include/asm/pci.h
+index dfedd7a..23a726e 100644
+--- a/arch/tile/include/asm/pci.h
++++ b/arch/tile/include/asm/pci.h
+@@ -199,8 +199,6 @@ int __init pcibios_init(void);
+ 
+ void pcibios_fixup_bus(struct pci_bus *bus);
+ 
+-#define pci_domain_nr(bus) (((struct pci_controller *)(bus)->sysdata)->index)
+-
+ /*
+  * This decides whether to display the domain number in /proc.
+  */
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 4e370a5..4fe0458 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -29,12 +29,6 @@ extern int noioapicreroute;
+ #ifdef CONFIG_PCI
+ 
+ #ifdef CONFIG_PCI_DOMAINS
+-static inline int pci_domain_nr(struct pci_bus *bus)
+-{
+-	struct pci_sysdata *sd = bus->sysdata;
+-	return sd->domain;
+-}
+-
+ static inline int pci_proc_domain(struct pci_bus *bus)
+ {
+ 	return pci_domain_nr(bus);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a05f406..72232d4 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4465,6 +4465,14 @@ int pci_get_new_domain_nr(void)
+ 	return atomic_inc_return(&__domain_nr);
+ }
+ 
++int pci_domain_nr(struct pci_bus *bus)
++{
++	struct pci_host_bridge *host = find_pci_host_bridge(bus);
++
++	return host->domain;
++}
++EXPORT_SYMBOL_GPL(pci_domain_nr);
++
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
+ void pci_host_assign_domain_nr(struct pci_host_bridge *host)
+ {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 3ebee9d..e7ca546 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1314,6 +1314,7 @@ void pci_cfg_access_unlock(struct pci_dev *dev);
+ #ifdef CONFIG_PCI_DOMAINS
+ extern int pci_domains_supported;
+ int pci_get_new_domain_nr(void);
++int pci_domain_nr(struct pci_bus *bus);
+ #else
+ enum { pci_domains_supported = 0 };
+ static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+@@ -1327,15 +1328,11 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+  * domains then this implementation will be used
+  */
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
+-static inline int pci_domain_nr(struct pci_bus *bus)
+-{
+-	return bus->domain_nr;
+-}
+ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
+ void pci_host_assign_domain_nr(struct pci_host_bridge *host);
+ #else
+ static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
+-					struct device *parent)
++		                    struct device *parent)
+ {
+ }
+ static inline void pci_host_assign_domain_nr(struct pci_host_bridge *host)
 -- 
-1.7.10.4
+1.7.1
 
