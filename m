@@ -1,79 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:58081 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932396AbbAHRGW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jan 2015 12:06:22 -0500
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
+Received: from szxga01-in.huawei.com ([119.145.14.64]:40989 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752988AbbAPDr2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jan 2015 22:47:28 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH v2 1/8] device core: Introduce per-device MSI domain pointer
-Date: Thu,  8 Jan 2015 17:06:05 +0000
-Message-Id: <1420736772-11088-2-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com>
-References: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com>
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH 15/28] PCI/powerpc: Rename pcibios_root_bridge_prepare() for better readability
+Date: Fri, 16 Jan 2015 09:44:13 +0800
+Message-ID: <1421372666-12288-16-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As MSI-type features are creeping into non-PCI devices, it is
-starting to make sense to give our struct device some form of
-support for this, by allowing a pointer to an MSI irq domain to
-be set/retrieved.
+Pcibios_root_bridge_prepare() in powerpc is used
+to set root bus speed. So rename it to
+pcibios_set_root_bus_speed() for better readability.
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- include/linux/device.h | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ arch/powerpc/include/asm/machdep.h       |    2 +-
+ arch/powerpc/kernel/pci-common.c         |    4 ++--
+ arch/powerpc/platforms/pseries/pci.c     |    2 +-
+ arch/powerpc/platforms/pseries/pseries.h |    2 +-
+ arch/powerpc/platforms/pseries/setup.c   |    2 +-
+ 5 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/device.h b/include/linux/device.h
-index fb50673..ec4cee5 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -690,6 +690,7 @@ struct acpi_dev_node {
-  * 		along with subsystem-level and driver-level callbacks.
-  * @pins:	For device pin management.
-  *		See Documentation/pinctrl.txt for details.
-+ * @msi_domain: The generic MSI domain this device is using.
-  * @numa_node:	NUMA node this device is close to.
-  * @dma_mask:	Dma mask (if dma'ble device).
-  * @coherent_dma_mask: Like dma_mask, but for alloc_coherent mapping as not all
-@@ -750,6 +751,9 @@ struct device {
- 	struct dev_pm_info	power;
- 	struct dev_pm_domain	*pm_domain;
+diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+index c8175a3..8e7f2a8 100644
+--- a/arch/powerpc/include/asm/machdep.h
++++ b/arch/powerpc/include/asm/machdep.h
+@@ -129,7 +129,7 @@ struct machdep_calls {
+ 	void		(*pcibios_fixup)(void);
+ 	int		(*pci_probe_mode)(struct pci_bus *);
+ 	void		(*pci_irq_fixup)(struct pci_dev *dev);
+-	int		(*pcibios_root_bridge_prepare)(struct pci_host_bridge
++	int		(*pcibios_set_root_bus_speed)(struct pci_host_bridge
+ 				*bridge);
  
-+#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
-+	struct irq_domain	*msi_domain; /* MSI domain device uses */
-+#endif
- #ifdef CONFIG_PINCTRL
- 	struct dev_pin_info	*pins;
- #endif
-@@ -837,6 +841,22 @@ static inline void set_dev_node(struct device *dev, int node)
- }
- #endif
+ 	/* To setup PHBs when using automatic OF platform driver for PCI */
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 927c3dd..2cf941e 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -769,8 +769,8 @@ int pci_proc_domain(struct pci_bus *bus)
  
-+static inline struct irq_domain *dev_get_msi_domain(const struct device *dev)
-+{
-+#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
-+	return dev->msi_domain;
-+#else
-+	return NULL;
-+#endif
-+}
-+
-+static inline void dev_set_msi_domain(struct device *dev, struct irq_domain *d)
-+{
-+#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
-+	dev->msi_domain = d;
-+#endif
-+}
-+
- static inline void *dev_get_drvdata(const struct device *dev)
+ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
  {
- 	return dev->driver_data;
+-	if (ppc_md.pcibios_root_bridge_prepare)
+-		return ppc_md.pcibios_root_bridge_prepare(bridge);
++	if (ppc_md.pcibios_set_root_bus_speed)
++		return ppc_md.pcibios_set_root_bus_speed(bridge);
+ 
+ 	return 0;
+ }
+diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
+index fe16a50..af685d6 100644
+--- a/arch/powerpc/platforms/pseries/pci.c
++++ b/arch/powerpc/platforms/pseries/pci.c
+@@ -110,7 +110,7 @@ static void fixup_winbond_82c105(struct pci_dev* dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
+ 			 fixup_winbond_82c105);
+ 
+-int pseries_root_bridge_prepare(struct pci_host_bridge *bridge)
++int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
+ {
+ 	struct device_node *dn, *pdn;
+ 	struct pci_bus *bus;
+diff --git a/arch/powerpc/platforms/pseries/pseries.h b/arch/powerpc/platforms/pseries/pseries.h
+index 1796c54..5d0be3a 100644
+--- a/arch/powerpc/platforms/pseries/pseries.h
++++ b/arch/powerpc/platforms/pseries/pseries.h
+@@ -63,7 +63,7 @@ extern int dlpar_detach_node(struct device_node *);
+ 
+ /* PCI root bridge prepare function override for pseries */
+ struct pci_host_bridge;
+-int pseries_root_bridge_prepare(struct pci_host_bridge *bridge);
++int pseries_set_root_bus_speed(struct pci_host_bridge *bridge);
+ 
+ unsigned long pseries_memory_block_size(void);
+ 
+diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+index e445b67..b196c0d 100644
+--- a/arch/powerpc/platforms/pseries/setup.c
++++ b/arch/powerpc/platforms/pseries/setup.c
+@@ -496,7 +496,7 @@ static void __init pSeries_setup_arch(void)
+ 		ppc_md.enable_pmcs = power4_enable_pmcs;
+ 	}
+ 
+-	ppc_md.pcibios_root_bridge_prepare = pseries_root_bridge_prepare;
++	ppc_md.pcibios_set_root_bus_speed = pseries_set_root_bus_speed;
+ 
+ 	if (firmware_has_feature(FW_FEATURE_SET_MODE)) {
+ 		long rc;
 -- 
-2.1.4
+1.7.1
 
