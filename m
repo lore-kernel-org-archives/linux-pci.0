@@ -1,120 +1,170 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:55391 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754189AbbA0QoM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Jan 2015 11:44:12 -0500
-Received: by mail-qa0-f53.google.com with SMTP id n4so12188779qaq.12
-        for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2015 08:44:10 -0800 (PST)
+Received: from [119.145.14.66] ([119.145.14.66]:22852 "EHLO
+	szxga03-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S932468AbbAPDr5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jan 2015 22:47:57 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH 06/28] PCI: Combine PCI domain and bus number in u32 arg
+Date: Fri, 16 Jan 2015 09:44:04 +0800
+Message-ID: <1421372666-12288-7-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAH9N0t9o63GLEYyLgW2CThhP8TW3Bc7_RxbP4bdwwcd120-gRw@mail.gmail.com>
-References: <CAH9N0t9KvhzmZDgD8PD5VBPR-pPhuE8MmBgK9RY8+ZtKyz++pQ@mail.gmail.com>
- <CAErSpo48mPENuHpES1Q73ep+NKG8x2Zgb+g71do02y7vufbtfQ@mail.gmail.com>
- <CAH9N0t8s+kcG_Qok0wpoDz9jzwvPk_QmBK_p-qbACZJjrr+iVQ@mail.gmail.com>
- <CAErSpo7NK6S8Dk3-FYFV=AVPR8cLRzmAWrBNQ2rke0BRADxAKw@mail.gmail.com>
- <CAH9N0t-+gog9wNFo7hqhzrWuttrRyf5HjjHciFrDGz1rZUiUfw@mail.gmail.com>
- <20150122222016.GF13072@google.com> <CAH9N0t_YoRZtPqWwAaNdHNW3m-HOfrCevBZGiOnM+VWGxeFwEQ@mail.gmail.com>
- <CAErSpo4bRnGkfmzLnGSUnv-aJfmZLtQ_jXhnZo+9Wm=CgHOB3A@mail.gmail.com> <CAH9N0t9o63GLEYyLgW2CThhP8TW3Bc7_RxbP4bdwwcd120-gRw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 27 Jan 2015 10:43:50 -0600
-Message-ID: <CAErSpo6_qjBQN4JOEBZtkQL_Fxh3V40exRTX-z09s-zBM2DOpQ@mail.gmail.com>
-Subject: Re: Hot add a PCIe device driver upon hotplug event
-To: Paulo Fortuna Carvalho <pricardofc@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 27, 2015 at 10:31 AM, Paulo Fortuna Carvalho
-<pricardofc@gmail.com> wrote:
-> Hello Bjorn,
->
-> Is it possible to cancel somehow the remove procedure if the device is in use?
-> When we are using the device and remove occurs the kernel crashes.
+Currently, we use int type for bus number in
+pci_create_root_bus(), pci_scan_root_bus() and
+pci_scan_bus_legacy. Because PCI bus number
+always <= 255, so we could change the bus number
+argument type to u32, and combine PCI domain and
+bus number in one. Also add a domain member in
+pci_host_bridge to save domain number. Finally,
+we could eliminate lots of the platform specific
+pci_domain_nr() in the last of the series.
 
-As far as I can tell, the only signal the kernel gets from your
-platform is the Presence Detect Changed interrupt that tells us the
-device is already gone.  So there's nothing the kernel can do to
-prevent the removal.  But the kernel *should* detach the driver from
-the now-missing device.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/probe.c      |   16 +++++++++-------
+ include/linux/pci.h      |    7 ++++---
+ include/uapi/linux/pci.h |    3 +++
+ 3 files changed, 16 insertions(+), 10 deletions(-)
 
-If the kernel crashes in this case, it's probably because the driver
-doesn't handle the removal gracefully, and the driver can probably be
-improved to handle that better.  If you post details about the crash,
-we should be able to figure out if there's a PCI core issue or a
-driver issue.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ed894cb..50f58b3 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1889,7 +1889,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+ {
+ }
+ 
+-struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
++struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
+ 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+ {
+ 	int error;
+@@ -1900,6 +1900,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	resource_size_t offset;
+ 	char bus_addr[64];
+ 	char *fmt;
++	u8	bus = PCI_BUSNUM(db);
+ 
+ 	b = pci_alloc_bus(NULL);
+ 	if (!b)
+@@ -1920,6 +1921,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	if (!bridge)
+ 		goto err_out;
+ 
++	bridge->domain = PCI_DOMAIN(db);
+ 	bridge->dev.parent = parent;
+ 	bridge->dev.release = pci_release_host_bridge_dev;
+ 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+@@ -2057,7 +2059,7 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+ 			res, ret ? "can not be" : "is");
+ }
+ 
+-struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
++struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+ 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+ {
+ 	struct pci_host_bridge_window *window;
+@@ -2071,15 +2073,15 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ 			break;
+ 		}
+ 
+-	b = pci_create_root_bus(parent, bus, ops, sysdata, resources);
++	b = pci_create_root_bus(parent, db, ops, sysdata, resources);
+ 	if (!b)
+ 		return NULL;
+ 
+ 	if (!found) {
+ 		dev_info(&b->dev,
+ 		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
+-			bus);
+-		pci_bus_insert_busn_res(b, bus, 255);
++			PCI_BUSNUM(db));
++		pci_bus_insert_busn_res(b, PCI_BUSNUM(db), 255);
+ 	}
+ 
+ 	max = pci_scan_child_bus(b);
+@@ -2091,7 +2093,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ }
+ EXPORT_SYMBOL(pci_scan_root_bus);
+ 
+-struct pci_bus *pci_scan_bus_legacy(int bus, struct pci_ops *ops,
++struct pci_bus *pci_scan_bus_legacy(u32 db, struct pci_ops *ops,
+ 					void *sysdata)
+ {
+ 	LIST_HEAD(resources);
+@@ -2100,7 +2102,7 @@ struct pci_bus *pci_scan_bus_legacy(int bus, struct pci_ops *ops,
+ 	pci_add_resource(&resources, &ioport_resource);
+ 	pci_add_resource(&resources, &iomem_resource);
+ 	pci_add_resource(&resources, &busn_resource);
+-	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
++	b = pci_create_root_bus(NULL, db, ops, sysdata, &resources);
+ 	if (b) {
+ 		pci_scan_child_bus(b);
+ 	} else {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index a6fa2f1..c771508 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -402,6 +402,7 @@ struct pci_host_bridge_window {
+ };
+ 
+ struct pci_host_bridge {
++	u16	domain;
+ 	struct device dev;
+ 	struct pci_bus *bus;		/* root bus */
+ 	struct list_head windows;	/* pci_host_bridge_windows */
+@@ -769,14 +770,14 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+ void pcibios_scan_specific_bus(int busn);
+ struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
+-struct pci_bus *pci_scan_bus_legacy(int bus, struct pci_ops *ops, void *sysdata);
+-struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
++struct pci_bus *pci_scan_bus_legacy(u32 dombus, struct pci_ops *ops, void *sysdata);
++struct pci_bus *pci_create_root_bus(struct device *parent, u32 dombus,
+ 				    struct pci_ops *ops, void *sysdata,
+ 				    struct list_head *resources);
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+ int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+ void pci_bus_release_busn_res(struct pci_bus *b);
+-struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
++struct pci_bus *pci_scan_root_bus(struct device *parent, u32 dombus,
+ 					     struct pci_ops *ops, void *sysdata,
+ 					     struct list_head *resources);
+ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
+diff --git a/include/uapi/linux/pci.h b/include/uapi/linux/pci.h
+index 3c292bc..89c6f15 100644
+--- a/include/uapi/linux/pci.h
++++ b/include/uapi/linux/pci.h
+@@ -30,6 +30,9 @@
+ #define PCI_DEVFN(slot, func)	((((slot) & 0x1f) << 3) | ((func) & 0x07))
+ #define PCI_SLOT(devfn)		(((devfn) >> 3) & 0x1f)
+ #define PCI_FUNC(devfn)		((devfn) & 0x07)
++#define PCI_DOMAIN(db)		((db) >> 16)
++#define PCI_BUSNUM(db)		((db) & 0xffff)
++#define PCI_DOMBUS(domain, bus)		(((domain) << 16) | (bus))
+ 
+ /* Ioctls for /proc/bus/pci/X/Y nodes. */
+ #define PCIIOC_BASE		('P' << 24 | 'C' << 16 | 'I' << 8)
+-- 
+1.7.1
 
-> 2015-01-23 14:36 GMT, Bjorn Helgaas <bhelgaas@google.com>:
->> On Fri, Jan 23, 2015 at 5:35 AM, Paulo Fortuna Carvalho
->> <pricardofc@gmail.com> wrote:
->>> 2015-01-22 22:20 GMT, Bjorn Helgaas:
->>
->>>> In your dmesg log, I see this:
->>>
->>>>   pciehp 0000:07:08.0:pcie24: pcie_isr: intr_loc 8
->>>>   pciehp 0000:07:08.0:pcie24: Presence/Notify input change
->>>>   pciehp 0000:07:08.0:pcie24: Card not present on Slot(8)
->>>>   pciehp 0000:07:08.0:pcie24: pcie_isr: intr_loc 8
->>>>   pciehp 0000:07:08.0:pcie24: Presence/Notify input change
->>>>   pciehp 0000:07:08.0:pcie24: Card present on Slot(8)
->>>
->>>> That means we only saw Presence Detect Changed interrupts: one for card
->>>> removal and another for card insertion.  We didn't see an Attention
->>>> Button
->>>> interrupt at all.
->>>
->>> Yes, thats it. The Presence Detect Change signal is what triggers the
->>> uevent. We dont have an attention button in our ATCA system so we dont
->>> use it.
->>
->> If the only signal you have is Presence Detect, I think you're out of
->> luck, because if Presence Detect State is "false" (see PCIe spec r3.0,
->> sec 7.8.11), the card is already gone and it's too late to do anything
->> with it.  If that's the case, you'd have to look for a software
->> solution, e.g., run a script when you decide to remove the card,
->> before you physically touch the card.
->>
->>>> You can look at the Slot Status directly with "lspci -vvs07:08.0".  If
->>>> you
->>>> do that while removing the device, e.g., run it while the handle is in
->>>> position #1, again in position #2, and again in position #3, you should
->>>> see
->>>> whether there's any signal that could potentially be used to do what you
->>>> need.
->>>
->>> Yes. I will try to see if the handle switch can trigger an uvent
->>> before the remove device procedure from the system occurs. I will let
->>> you know the result.
->>
->> Sec 6.7.3 lists the events pciehp has to work with:
->>
->> - Slot events:
->>   - Attention Button
->>   - Power Fault Detected
->>   - MRL Sensor Changed
->>   - Presence Detect Changed
->> - Command Completed Events (this is internal to the hotplug controller)
->> - Data Link Layer State Changed Events
->>
->> These are really the only inputs to the pciehp driver.  You apparently
->> don't have an Attention Button.  You do have Presence Detect and
->> possibly others, but I don't think they normally (other than an
->> Attention Button) will give you any warning before the card is
->> removed.
->>
->> The only possibility I see is the Power Fault handling (see sec
->> 6.7.1.8).  Depending on the form factor, there is the possibility of
->> independent main and auxiliary power faults.  An auxiliary power fault
->> can be detected and reported without affecting main power.  And it
->> says "For example, one form factor may remove auxiliary power when the
->> MRL for the slot is opened."  If your form factor does that, we might
->> get a Power Fault when the latch is opened, and the card would still
->> have main power and software should still be able to operate it.
->>
->> I don't know how we would distinguish such an auxiliary power fault
->> from a main power fault.  Maybe a form factor spec would talk about
->> that.  Do you have any pointers to something like that?  If we could
->> figure that out, it might be possible to emit a uevent for that case.
->>
->> Bjorn
->>
