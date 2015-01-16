@@ -1,139 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f171.google.com ([209.85.216.171]:39058 "EHLO
-	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751009AbbAWWxW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 17:53:22 -0500
-Received: by mail-qc0-f171.google.com with SMTP id s11so119933qcv.2
-        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 14:53:21 -0800 (PST)
+Received: from [119.145.14.66] ([119.145.14.66]:22629 "EHLO
+	szxga03-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S932492AbbAPDrr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jan 2015 22:47:47 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>
+Subject: [PATCH 03/28] xen/PCI: Don't use deprecated function pci_scan_bus_parented()
+Date: Fri, 16 Jan 2015 09:44:01 +0800
+Message-ID: <1421372666-12288-4-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1422052241.4048.14.camel@redhat.com>
-References: <20150113182605.15479.9020.stgit@gimli.home> <20150123215058.GM29776@google.com>
- <1422052241.4048.14.camel@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 23 Jan 2015 16:53:01 -0600
-Message-ID: <CAErSpo7yzS5p6bH2UrwGi-HA9jg7TLm12eKXNJEwuo65bTw3=Q@mail.gmail.com>
-Subject: Re: [PATCH] PCI: quirks: DMA alias quirk for Adaptec 3405
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	aacraid@adaptec.com,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 23, 2015 at 4:30 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Fri, 2015-01-23 at 15:50 -0600, Bjorn Helgaas wrote:
->> On Tue, Jan 13, 2015 at 11:26:50AM -0700, Alex Williamson wrote:
->> > As noted in the added comment, this device is actually an Intel 80333
->> > I/O processor where the exposed device at 0e.0 is actually the address
->> > translation unit of the I/O processor and a hidden, private device at
->> > 01.0 masters the DMA for the device.  In order to enable the IOMMU, we
->> > therefore need to create a fixed alias between the exposed and hidden
->> > devfn.
->> >
->> > Scenarios like this are potentially likely for any device incorporating
->> > this I/O processor, so this little bit of abstraction with the fixed
->> > alias table should make future additions trivial.
->>
->> This sounds like the result of some serious debugging :)  Do you have a
->> pointer to a bugzilla or some email discussion?  I'd like to make the fix
->> discoverable starting with a failure symptom.
->
-> Sorry, this one comes from a private bugzilla.  The symptom is simply a
-> slew of IOMMU faults when trying to boot the system with the IOMMU
-> enabled.  For example, with the Adaptec 3405 showing up at 02:0e.0 on an
-> Intel system, the log is filled with:
->
-> dmar: DRHD: handling fault status reg 3
-> dmar: DMAR:[DMA Write] Request device [02:01.0] fault addr ffbff000
-> DMAR:[fault reason 02] Present bit in context entry is clear
-> dmar: DRHD: handling fault status reg 3
-> dmar: DMAR:[DMA Write] Request device [02:01.0] fault addr ffbfe000
-> DMAR:[fault reason 02] Present bit in context entry is clear
+From: Arnd Bergmann <arnd@arndb.de>
 
-Huh.  I applied it, but I really prefer to have public bugzillas for
-public fixes.  If you want to keep the proprietary details in a
-private bugzilla and just open a corresponding kernel.org bugzilla
-with the secret things omitted, that would be fine with me.  In fact,
-I'd prefer that, because I'd rather keep references to kernel.org
-bugzillas than to redhat.com ones because then we don't have to depend
-on RedHat's continuing existence or bugzilla maintenance.
+Use pci_scan_root_bus() instead of deprecated function
+pci_scan_bus_parented().
 
-Sometimes the details of the problem are really useful when we get a
-better understanding of the issue later, or when we want to do some
-refactoring, or simply when we want to test a change to the code.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: xen-devel@lists.xenproject.org
+---
+ drivers/pci/xen-pcifront.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
-Bjorn
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index b1ffebe..240ddbc 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -446,6 +446,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 				 unsigned int domain, unsigned int bus)
+ {
+ 	struct pci_bus *b;
++	LIST_HEAD(resources);
+ 	struct pcifront_sd *sd = NULL;
+ 	struct pci_bus_entry *bus_entry = NULL;
+ 	int err = 0;
+@@ -470,17 +471,20 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 		err = -ENOMEM;
+ 		goto err_out;
+ 	}
++	pci_add_resource(&resources, &ioport_resource);
++	pci_add_resource(&resources, &iomem_resource);
+ 	pcifront_init_sd(sd, domain, bus, pdev);
+ 
+ 	pci_lock_rescan_remove();
+ 
+-	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
+-				  &pcifront_bus_ops, sd);
++	b = pci_scan_root_bus(&pdev->xdev->dev, bus,
++				  &pcifront_bus_ops, sd, &resources);
+ 	if (!b) {
+ 		dev_err(&pdev->xdev->dev,
+ 			"Error creating PCI Frontend Bus!\n");
+ 		err = -ENOMEM;
+ 		pci_unlock_rescan_remove();
++		pci_free_resource_list(&resources);
+ 		goto err_out;
+ 	}
+ 
+@@ -488,7 +492,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 
+ 	list_add(&bus_entry->list, &pdev->root_buses);
+ 
+-	/* pci_scan_bus_parented skips devices which do not have a have
++	/* pci_scan_root_bus skips devices which do not have a have
+ 	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
+ 	err = pcifront_scan_bus(pdev, domain, bus, b);
+ 
+-- 
+1.7.1
 
-> As expected, the device is non-functional.  In the log I have there are
-> only DMA write faults and the addresses are all ffbxxxxx, which falls
-> into a reserved memory area on the system and owned by a PNP0c02 device
-> according to iomem.  With the change here the device, of course, works
-> without any issues with VT-d enabled.  Thanks,
->
-> Alex
->
->> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
->> > Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>
->> > ---
->> >
->> >  drivers/pci/quirks.c |   37 +++++++++++++++++++++++++++++++++++++
->> >  1 file changed, 37 insertions(+)
->> >
->> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> > index ed6f89b..19bdb17 100644
->> > --- a/drivers/pci/quirks.c
->> > +++ b/drivers/pci/quirks.c
->> > @@ -3528,6 +3528,43 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_JMICRON,
->> >                      quirk_dma_func1_alias);
->> >
->> >  /*
->> > + * Some devices DMA with the wrong devfn, not just the wrong function.
->> > + * quirk_fixed_dma_alias() uses this table to create fixed aliass, where
->> > + * the alias is "fixed" and independent of the device devfn.
->> > + *
->> > + * For example, the Adaptec 3405 is a PCIe card making use of an Intel 80333
->> > + * I/O processor.  To software, this appears as a straightforward PCIe-to-PCI/X
->> > + * bridge with a single device on the subordinate bus.  In reality, the exposed
->> > + * device at 0e.0 is the Address Translation Unit (ATU) of the controller that
->> > + * provides a bridge to the internal bus of the I/O processor.  The controller
->> > + * supports private devices, which can be hidden from PCI config space.  In the
->> > + * case of the Adaptec 3405, a private device at 01.0 appears to be the DMA
->> > + * engine, which therefore needs to become a DMA alias for the device.
->> > + */
->> > +static const struct pci_device_id fixed_dma_alias_tbl[] = {
->> > +   { PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x0285,
->> > +                    PCI_VENDOR_ID_ADAPTEC2, 0x02bb), /* Adaptec 3405 */
->> > +     .driver_data = PCI_DEVFN(1, 0) },
->> > +   { 0 }
->> > +};
->> > +
->> > +static void quirk_fixed_dma_alias(struct pci_dev *dev)
->> > +{
->> > +   const struct pci_device_id *id;
->> > +
->> > +   id = pci_match_id(fixed_dma_alias_tbl, dev);
->> > +   if (id) {
->> > +           dev->dma_alias_devfn = id->driver_data;
->> > +           dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
->> > +           dev_info(&dev->dev, "Enabling fixed DMA alias to %02x.%d\n",
->> > +                    PCI_SLOT(dev->dma_alias_devfn),
->> > +                    PCI_FUNC(dev->dma_alias_devfn));
->> > +   }
->> > +}
->> > +
->> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ADAPTEC2, 0x0285, quirk_fixed_dma_alias);
->> > +
->> > +/*
->> >   * A few PCIe-to-PCI bridges fail to expose a PCIe capability, resulting in
->> >   * using the wrong DMA alias for the device.  Some of these devices can be
->> >   * used as either forward or reverse bridges, so we need to test whether the
->> >
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->
