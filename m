@@ -1,76 +1,57 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.24]:62211 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752424AbbAPJfv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Jan 2015 04:35:51 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
 	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part1 v7 23/38] x86/irq: Normalize x86 irq_chip name
-Date: Tue, 20 Jan 2015 11:08:26 +0800
-Message-Id: <1421723321-8386-24-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-m68k@lists.linux-m68k.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	linux-alpha@vger.kernel.org, linux-ia64@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH 09/28] PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
+Date: Fri, 16 Jan 2015 10:34:34 +0100
+Message-ID: <11966423.5s0rO0b8cE@wuerfel>
+In-Reply-To: <1421372666-12288-10-git-send-email-wangyijing@huawei.com>
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <1421372666-12288-10-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some irq_chip names use underscore, others use hyphen. So normalize them
-to use hythen as separator.
+On Friday 16 January 2015 09:44:07 Yijing Wang wrote:
+> We want to make a generic pci_host_bridge, then we could
+> place common PCI infos like domain number in it. Ripping
+> out pci_host_bridge creation from pci_create_root_bus()
+> make code more better readability. Further more, we could
+> use the generic pci_host_bridge to hold host bridge specific
+> operations like pcibios_root_bridge_prepare().
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> 
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Link: http://lkml.kernel.org/r/1416894816-23245-24-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- arch/x86/kernel/apic/msi.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I assume this patch is doing the right thing, but the description
+above doesn't really tell me enough to be sure.
 
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index a24b803b199a..2bf13484fbfd 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -188,7 +188,7 @@ dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
- }
- 
- static struct irq_chip dmar_msi_controller = {
--	.name			= "DMAR_MSI",
-+	.name			= "DMAR-MSI",
- 	.irq_unmask		= dmar_msi_unmask,
- 	.irq_mask		= dmar_msi_mask,
- 	.irq_ack		= irq_chip_ack_parent,
-@@ -319,7 +319,7 @@ static int hpet_msi_set_affinity(struct irq_data *data,
- }
- 
- static struct irq_chip hpet_msi_controller = {
--	.name = "HPET_MSI",
-+	.name = "HPET-MSI",
- 	.irq_unmask = hpet_msi_unmask,
- 	.irq_mask = hpet_msi_mask,
- 	.irq_ack = irq_chip_ack_parent,
--- 
-1.7.10.4
+This is supposed to be transparent to the callers, right? If
+so, please mention it explicitly in the text.
 
+Also you don't explain what the list of host bridges is
+used for. Maybe you can split this out into a separate patch
+so you have one patch that just moves code from one file
+to the other but no functional changes, and a second patch
+that exports pci_create_host_bridge and introduces the list,
+with an explanation of what it is used for.
+
+	Arnd
