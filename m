@@ -1,142 +1,157 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-To: Will Deacon <will.deacon@arm.com>
-Cc: Murali Karicheri <m-karicheri2@ti.com>,
-	"linux-arm-kernel@lists.infradead.org"
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
 	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v4 1/6] of: iommu: add ptr to OF node arg to of_iommu_configure()
-Date: Thu, 29 Jan 2015 01:32 +0200
-Message-ID: <5349994.6VHXzPdIxs@avalon>
-In-Reply-To: <20150128133219.GM1569@arm.com>
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com> <13812499.ICbNgSDOae@avalon> <20150128133219.GM1569@arm.com>
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH 00/28] Refine PCI scan interfaces and make generic pci host bridge
+Date: Fri, 16 Jan 2015 09:43:58 +0800
+Message-ID: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Will,
+This series is based on Bjorn's pci-next branch.
 
-On Wednesday 28 January 2015 13:32:19 Will Deacon wrote:
-> On Wed, Jan 28, 2015 at 01:15:10PM +0000, Laurent Pinchart wrote:
-> > On Wednesday 28 January 2015 12:29:42 Will Deacon wrote:
-> >> On Wed, Jan 28, 2015 at 12:23:03PM +0000, Laurent Pinchart wrote:
-> >>> On Wednesday 28 January 2015 11:33:00 Will Deacon wrote:
-> >>>> On Mon, Jan 26, 2015 at 06:49:01PM +0000, Murali Karicheri wrote:
-> >>>>> On 01/25/2015 08:32 AM, Laurent Pinchart wrote:
-> >>>>>> On Friday 23 January 2015 17:32:34 Murali Karicheri wrote:
-> >>>>>>> Function of_iommu_configure() is called from of_dma_configure() to
-> >>>>>>> setup iommu ops using DT property. This API is currently used for
-> >>>>>>> platform devices for which DMA configuration (including iommu ops)
-> >>>>>>> may come from device's parent. To extend this functionality for
-> >>>>>>> PCI devices, this API need to take a parent node ptr as an argument
-> >>>>>>> instead of assuming device's parent. This is needed since for PCI,
-> >>>>>>> the dma configuration may be defined in the DT node of the root
-> >>>>>>> bus bridge's parent device. Currently only dma-range is used for PCI
-> >>>>>>> and iommu is not supported. So return error if the device is PCI.
-> >>>>>>> 
-> >>>>>>> Cc: Joerg Roedel<joro@8bytes.org>
-> >>>>>>> Cc: Grant Likely<grant.likely@linaro.org>
-> >>>>>>> Cc: Rob Herring<robh+dt@kernel.org>
-> >>>>>>> Cc: Bjorn Helgaas<bhelgaas@google.com>
-> >>>>>>> Cc: Will Deacon<will.deacon@arm.com>
-> >>>>>>> Cc: Russell King<linux@arm.linux.org.uk>
-> >>>>>>> Cc: Arnd Bergmann<arnd@arndb.de>
-> >>>>>>> Cc: Suravee Suthikulpanit<Suravee.Suthikulpanit@amd.com>
-> >>>>>>> 
-> >>>>>>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
-> >>>>>>> ---
-> >>>>>>> 
-> >>>>>>>   drivers/iommu/of_iommu.c |   10 ++++++++--
-> >>>>>>>   drivers/of/platform.c    |    2 +-
-> >>>>>>>   include/linux/of_iommu.h |    6 ++++--
-> >>>>>>>   3 files changed, 13 insertions(+), 5 deletions(-)
-> >>>>>>> 
-> >>>>>>> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-> >>>>>>> index af1dc6a..439235b 100644
-> >>>>>>> --- a/drivers/iommu/of_iommu.c
-> >>>>>>> +++ b/drivers/iommu/of_iommu.c
-> >>>>>>> @@ -133,19 +133,25 @@ struct iommu_ops *of_iommu_get_ops(struct
-> >>>>>>> device_node *np)
-> >>>>>>>   	return ops;
-> >>>>>>>  }
-> >>>>>>> 
-> >>>>>>> -struct iommu_ops *of_iommu_configure(struct device *dev)
-> >>>>>>> +struct iommu_ops *of_iommu_configure(struct device *dev,
-> >>>>>>> +				     struct device_node *iommu_np)
-> >>>>>>>  {
-> >>>>>>>   	struct of_phandle_args iommu_spec;
-> >>>>>>>   	struct device_node *np;
-> >>>>>>>   	struct iommu_ops *ops = NULL;
-> >>>>>>>   	int idx = 0;
-> >>>>>>> 
-> >>>>>>> +	if (dev_is_pci(dev)) {
-> >>>>>>> +		dev_err(dev, "iommu is currently not supported for PCI\n");
-> >>>>>>> +		return NULL;
-> >>>>>>> +	}
-> >>>>>>> +
-> >>>>>>>   	/*
-> >>>>>>>   	 * We don't currently walk up the tree looking for a parent
-> >>>>>>>   	 IOMMU.
-> >>>>>>>   	 * See the `Notes:' section of
-> >>>>>>>   	 * Documentation/devicetree/bindings/iommu/iommu.txt
-> >>>>>>>   	 */
-> >>>>>> 
-> >>>>>> Wouldn't it be better to fix this rather than passing the device
-> >>>>>> node pointer to the function ? The solution would be more generic.
-> >>>>> 
-> >>>>> Will Deacon (Copied here) is working on this as we alteady discussed
-> >>>>> in this thread. So it will be addressed by him in another series.
-> >>>> 
-> >>>> Well, "working on this" equates to "has it somewhere near the bottom
-> >>>> of a very long list" :)
-> >>> 
-> >>> What's your opinion on this patch then, do you think adding the
-> >>> iommu_np argument makes sense as a temporary hack, or should we instead
-> >>> walk up the tree looking for an iommus attribute in parent nodes ? I
-> >>> don't expect that to be insanely difficult to code.
-> >> 
-> >> If walking up the tree is useful, then I think we should do that and
-> >> update the Documentation to reflect the new behaviour.
-> > 
-> > If I understand Murali's patch set right (please correct me if that's not
-> > the case) the PCI code walks up the DT nodes hierarchy to the parent node
-> > that contains the iommus attribute and passes a pointer to that node to
-> > this function. It's thus a PCI-specific solution. As a temporary hack
-> > that's OK I suppose, but if implementing it right straight away isn't
-> > difficult that would be better.
-> 
-> It looks to me like the code walks the PCI topology to get the DT node for
-> the host controller, and passes *that* to of_dma_configure. That sounds
-> like the right thing to do to me, especially since the PCI topology is
-> likely not encoded in the device-tree. So actually, it is passing the
-> first parent node afaict.
+Patch 1-4 ripped out pci_bus_add_devices() from pci scan interfaces
+for better pci scan flow.
 
-Indeed, that's right. I forgot for a moment that we have non-DT devices ;-)
+Patch 5-11 make a generic pci_host_bridge to hold pci_host_bridge
+related informations, and introduce a pci_host_bridge_ops to 
+support platform host drivers provide its own pci_host_bridge 
+related operations to setup pci_host_bridge during pci enumeration.
 
-Acked-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Patch 12-28 apply the new pci scan interfaces to platform pci host
+bridge drivers.
 
-Murali, nitpicking a bit, shouldn't the iommu_np parameter be renamed ? It 
-points to the node containing the iommus parameter, not to the iommu node, so 
-the current name is slightly confusing. A brief kerneldoc above the function 
-would also help. This can be the subject of a separate patch.
+Now in kernel, we scan pci bus use the following ways:
+1. pci_scan_bus. 
+   parent = NULL, default io/mem/bus resources
+   call pci_bus_add_devices()
 
-> The part I'm more interested in is the mapping of RequesterID (PCI dma
-> alias) to IOMMU ID when we transition from the PCI topology to the DT
-> topology. Currently, it seems to be 1:1 on the platforms I have, but I
-> doubt this will always be the case.
+2. pci_scan_bus_parented() + pci_bus_add_devices()
+   default io/mem/bus resources, only used by xen
 
--- 
-Regards,
+3. pci_scan_root_bus() + pci_bus_add_devices()
 
-Laurent Pinchart
+4. pci_create_root_bus() + pci_scan_child_bus() + pci_bus_add_devices()
+
+5. pci_create_root_bus() + xx_of_scan_bus()  +  pci_bus_add_devices()
+
+And we have a lot of arch specific pci_domain_nr() and other platform
+specific weak function like pcibios_root_bridge_prepare().
+
+After applied this series, we have following scan interfaces:
+
+1. pci_scan_bus_legacy() 
+   parent = NULL, default io/mem/bus resources.
+   for legacy pci scan
+
+2. pci_scan_root_bus()
+   for callers provide its own parent and io/mem/bus resources
+   but no platform specific pci_host_bridge operations
+
+3. pci_scan_root_bridge()
+   for callers provide its own parent and io/mem/bus resources
+   and pci_host_bridge_ops.
+
+Besides, above pci scan interfaces all need addtionally call pci_bus_add_devices()
+to set match_driver true and try to attach drivers.
+
+Also we could eliminate all arch specific pci_domain_nr() after applied this series.
+
+I tested this series on x86 (with or without ACPI).
+Comments and tests are warmly welcome!
+
+Arnd Bergmann (1):
+  xen/PCI: Don't use deprecated function pci_scan_bus_parented()
+
+Yijing Wang (27):
+  PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
+  PCI: Rip out pci_bus_add_devices() from pci_scan_root_bus()
+  PCI: Remove deprecated pci_scan_bus_parented()
+  PCI: Rename pci_scan_bus() to pci_scan_bus_legacy()
+  PCI: Combine PCI domain and bus number in u32 arg
+  PCI: Pass PCI domain number combined with root bus number
+  PCI: Introduce pci_host_assign_domain_nr() to assign domain
+  PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
+  PCI: Save sysdata in pci_host_bridge drvdata
+  PCI: Introduce pci_host_bridge_ops to setup host bridge
+  PCI: Introduce new scan function pci_scan_root_bridge()
+  PCI/x86: Refine pci_acpi_scan_root() with generic pci_host_bridge
+  PCI/IA64: Refine pci_acpi_scan_root() with generic pci_host_bridge
+  PCI/powerpc: Rename pcibios_root_bridge_prepare() for better
+    readability
+  PCI/powerpc: Use pci_scan_root_bridge() for simplicity
+  PCI: Remove weak pcibios_root_bridge_prepare()
+  PCI/sparc: Use pci_scan_root_bridge() for simplicity
+  PCI: Introduce pci_bus_child_max_busnr()
+  PCI/Parisc: Use pci_scan_root_bus() for simplicity
+  PCI/mvebu: Use pci_common_init_dev() to simplify code
+  PCI/tegra: Remove redundant tegra_pcie_scan_bus()
+  PCI/designware: Use pci_scan_root_bus() for simplicity
+  PCI/xgene: Use pci_scan_root_bus() instead of pci_create_root_bus()
+  PCI: Rename __pci_create_root_bus() to pci_create_root_bus()
+  PCI: Export find_pci_host_bridge()
+  PCI: Remove platform specific pci_domain_nr()
+  PCI: Remove pci_bus_assign_domain_nr()
+
+ arch/alpha/include/asm/pci.h             |    2 -
+ arch/alpha/kernel/pci.c                  |    7 +-
+ arch/alpha/kernel/sys_nautilus.c         |    4 +-
+ arch/frv/mb93090-mb00/pci-vdk.c          |    6 +-
+ arch/ia64/include/asm/pci.h              |    1 -
+ arch/ia64/pci/pci.c                      |   34 +++---
+ arch/ia64/sn/kernel/io_init.c            |    6 +-
+ arch/m68k/coldfire/pci.c                 |    3 +-
+ arch/microblaze/pci/pci-common.c         |   17 +--
+ arch/mips/include/asm/pci.h              |    2 -
+ arch/mips/pci/pci.c                      |    5 +-
+ arch/mn10300/unit-asb2305/pci.c          |    5 +-
+ arch/powerpc/include/asm/machdep.h       |    2 +-
+ arch/powerpc/kernel/pci-common.c         |   73 ++++++-----
+ arch/powerpc/platforms/pseries/pci.c     |    2 +-
+ arch/powerpc/platforms/pseries/pseries.h |    2 +-
+ arch/powerpc/platforms/pseries/setup.c   |    2 +-
+ arch/s390/pci/pci.c                      |   13 +--
+ arch/sh/drivers/pci/pci.c                |    6 +-
+ arch/sh/include/asm/pci.h                |    2 -
+ arch/sparc/kernel/leon_pci.c             |    1 +
+ arch/sparc/kernel/pci.c                  |   48 ++++----
+ arch/sparc/kernel/pcic.c                 |    4 +-
+ arch/tile/include/asm/pci.h              |    2 -
+ arch/tile/kernel/pci.c                   |    6 +-
+ arch/tile/kernel/pci_gx.c                |    7 +-
+ arch/unicore32/kernel/pci.c              |   13 +--
+ arch/x86/include/asm/pci.h               |    6 -
+ arch/x86/pci/acpi.c                      |   38 +++---
+ arch/x86/pci/common.c                    |    4 +-
+ arch/xtensa/kernel/pci.c                 |    2 +
+ drivers/parisc/dino.c                    |   11 +--
+ drivers/parisc/lba_pci.c                 |    6 +-
+ drivers/pci/host-bridge.c                |   90 +++++++++++++-
+ drivers/pci/host/pci-mvebu.c             |   18 +---
+ drivers/pci/host/pci-tegra.c             |   15 ---
+ drivers/pci/host/pci-xgene.c             |    3 +-
+ drivers/pci/host/pcie-designware.c       |    4 +-
+ drivers/pci/hotplug/acpiphp_glue.c       |   29 +----
+ drivers/pci/hotplug/ibmphp_core.c        |    6 +-
+ drivers/pci/pci.c                        |   40 ++++++-
+ drivers/pci/probe.c                      |  198 ++++++++++++------------------
+ drivers/pci/xen-pcifront.c               |   11 ++-
+ include/linux/pci.h                      |   51 +++++---
+ include/uapi/linux/pci.h                 |    3 +
+ 45 files changed, 425 insertions(+), 385 deletions(-)
 
