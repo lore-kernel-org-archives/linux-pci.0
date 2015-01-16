@@ -1,165 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:46071 "EHLO
-	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753587AbbALSny (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 13:43:54 -0500
-Received: by mail-oi0-f45.google.com with SMTP id x69so21831280oia.4
-        for <linux-pci@vger.kernel.org>; Mon, 12 Jan 2015 10:43:54 -0800 (PST)
-Date: Mon, 12 Jan 2015 11:43:49 -0700
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:41135 "EHLO
+	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754157AbbAPALa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jan 2015 19:11:30 -0500
+Received: by mail-oi0-f42.google.com with SMTP id g201so15018456oib.1
+        for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 16:11:30 -0800 (PST)
+Date: Thu, 15 Jan 2015 18:11:25 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gabriel FERNANDEZ <gabriel.fernandez@st.com>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Gabriel Fernandez <gabriel.fernandez@linaro.org>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Magnus Damm <damm@opensource.se>,
-	Will Deacon <will.deacon@arm.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Srikanth Thokala <sthokal@xilinx.com>,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
-	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH 3/5] PCI: st: Provide support for the sti PCIe controller
-Message-ID: <20150112184349.GB2776@google.com>
-References: <1418812486-12394-1-git-send-email-gabriel.fernandez@linaro.org>
- <1418812486-12394-4-git-send-email-gabriel.fernandez@linaro.org>
+To: Sathya Perla <sathya.perla@emulex.com>
+Cc: linux-pci@vger.kernel.org,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH] pci: Add ACS quirk for Emulex NICs
+Message-ID: <20150116001125.GD29776@google.com>
+References: <1421130143-4391-1-git-send-email-sathya.perla@emulex.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1418812486-12394-4-git-send-email-gabriel.fernandez@linaro.org>
+In-Reply-To: <1421130143-4391-1-git-send-email-sathya.perla@emulex.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 17, 2014 at 11:34:44AM +0100, Gabriel FERNANDEZ wrote:
-> sti pcie is built around a Synopsis Designware PCIe IP.
+[+cc Alex]
+
+On Tue, Jan 13, 2015 at 01:22:23AM -0500, Sathya Perla wrote:
+> From: Vasundhara Volam <vasundhara.volam@emulex.com>
 > 
-> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
-> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+> As Skyhawk and BE3-R (both multi-function devices) don't advertise the
+> PCI-ACS capability, the vfio driver places all the functions of these
+> devices in a single IOMMU group. Attaching (via PCI-passthru)two different
+> Skyhawk/BE3-R partitions (nPAR, Flex etc PFs) using vfio, to different
+> guests doesn't work as vfio only allows functions in *different* IOMMU
+> groups to be assigned to different guests.
+> 
+> As peer-to-peer access between PFs in Skyhawk/BE3-R is not possible,
+> we can treat them as "fully isolated" even though the device doesn't
+> advertise ACS. So, this patch adds a PCI quirk for Skyhawk and BE3-R
+> chips to fix this problem.
+> 
+> Signed-off-by: Vasundhara Volam <vasundhara.volam@emulex.com>
+> Signed-off-by: Sathya Perla <sathya.perla@emulex.com>
+
+Applied with Alex's ack to pci/virtualization for v3.20, thanks!
+
 > ---
->  drivers/pci/host/Kconfig  |   5 +
->  drivers/pci/host/Makefile |   1 +
->  drivers/pci/host/pci-st.c | 713 ++++++++++++++++++++++++++++++++++++++++++++++
-
-Hi Gabriel,
-
-Can you add a MAINTAINERS update so I know who should ack changes to this
-driver?
-
->  3 files changed, 719 insertions(+)
->  create mode 100644 drivers/pci/host/pci-st.c
+>  drivers/pci/quirks.c | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index c4b6568..999d2b9 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -102,4 +102,9 @@ config PCI_LAYERSCAPE
->  	help
->  	  Say Y here if you want PCIe controller support on Layerscape SoCs.
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index ed6f89b..3d24629 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3713,6 +3713,8 @@ static const struct pci_dev_acs_enabled {
+>  	{ PCI_VENDOR_ID_INTEL, 0x1551, pci_quirk_mf_endpoint_acs },
+>  	{ PCI_VENDOR_ID_INTEL, 0x1558, pci_quirk_mf_endpoint_acs },
+>  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
+> +	{ 0x19a2, 0x710, pci_quirk_mf_endpoint_acs }, /* Emulex BE3-R */
+> +	{ 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
+>  	{ 0 }
+>  };
 >  
-> +config PCI_ST
-> +	bool "ST STiH41x PCIe controller"
-> +	depends on ARCH_STI
-> +	select PCIE_DW
-
-Please add help text here.
-
-> +static int st_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
-> +				 unsigned int devfn, int where, int size,
-> +				 u32 *val)
-> +{
-> +	u32 data;
-> +	u32 bdf;
-> +	struct st_pcie *pcie = to_st_pcie(pp);
-> +	int is_root_bus = pci_is_root_bus(bus);
-> +	int retry_count = 0;
-> +	int ret;
-> +	void __iomem *addr;
-> +
-> +	/*
-> +	 * Prerequisite
-> +	 * PCI express devices will respond to all config type 0 cycles, since
-> +	 * they are point to point links. Thus to avoid probing for multiple
-> +	 * devices on the root, dw-pcie already check for us if it is on the
-> +	 * root bus / other slots. Also, dw-pcie checks for the link being up
-> +	 * as we will hang if we issue a config request and the link is down.
-> +	 * A switch will reject requests for slots it knows do not exist.
-> +	 */
-> +	bdf = bdf_num(bus->number, devfn, is_root_bus);
-> +	addr = pcie->config_area + config_addr(where,
-> +			bus->parent->number == pp->root_bus_nr);
-> +retry:
-> +	/* Set the config packet devfn */
-> +	writel_relaxed(bdf, pp->dbi_base + FUNC0_BDF_NUM);
-> +	readl_relaxed(pp->dbi_base + FUNC0_BDF_NUM);
-> +
-> +	ret = dw_pcie_cfg_read(addr, where, size, &data);
-> +
-> +	/*
-> +	 * This is intended to help with when we are probing the bus. The
-> +	 * problem is that the wrapper logic doesn't have any way to
-> +	 * interrogate if the configuration request failed or not.
-> +	 * On the ARM we actually get a real bus error.
-> +	 *
-> +	 * Unfortunately this means it is impossible to tell the difference
-> +	 * between when a device doesn't exist (the switch will return a UR
-> +	 * completion) or the device does exist but isn't yet ready to accept
-> +	 * configuration requests (the device will return a CRS completion)
-
-We do have CRS support in the Linux PCI core, so I guess this comment means
-that the ST host bridge doesn't handle CRS correctly?
-
-> +	 *
-> +	 * The result of this is that we will miss devices when probing.
-> +	 *
-> +	 * So if we are trying to read the dev/vendor id on devfn 0 and we
-> +	 * appear to get zero back, then we retry the request.  We know that
-> +	 * zero can never be a valid device/vendor id. The specification says
-> +	 * we must retry for up to a second before we decide the device is
-> +	 * dead. If we are still dead then we assume there is nothing there and
-> +	 * return ~0
-> +	 *
-> +	 * The downside of this is that we incur a delay of 1s for every pci
-> +	 * express link that doesn't have a device connected.
-
-That sounds pretty bad and I assume is a consequence of CRS handling being
-broken in hardware.
-
-> +	 */
-> +	if (((where & ~3) == 0) && devfn == 0 && (data == 0 || data == ~0)) {
-> +		if (retry_count++ < 1000) {
-> +			mdelay(1);
-> +			goto retry;
-> +		} else {
-> +			*val = ~0;
-> +			return PCIBIOS_DEVICE_NOT_FOUND;
-> +		}
-> +	}
-> +
-> +	*val = data;
-> +	return ret;
-> +}
-
-> +MODULE_LICENSE("GPLv2");
-
-See license_is_gpl_compatible().  This string needs to be "GPL v2", not
-"GPLv2" to avoid tainting the kernel.
-
-Bjorn
+> -- 
+> 2.2.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
