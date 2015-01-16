@@ -1,79 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:47901 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752903AbbAJVkY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Jan 2015 16:40:24 -0500
-Received: by mail-ie0-f169.google.com with SMTP id y20so20335073ier.0
-        for <linux-pci@vger.kernel.org>; Sat, 10 Jan 2015 13:40:22 -0800 (PST)
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:36323 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750983AbbAPXPi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Jan 2015 18:15:38 -0500
 MIME-Version: 1.0
-In-Reply-To: <1420857290-8373-8-git-send-email-robh@kernel.org>
-References: <1420857290-8373-1-git-send-email-robh@kernel.org>
-	<1420857290-8373-8-git-send-email-robh@kernel.org>
-Date: Sat, 10 Jan 2015 22:40:22 +0100
-Message-ID: <CACRpkdbwKN9LenqrWeu4WykhdZOGAdxpC_BYr2cYpc2_cn5GfA@mail.gmail.com>
-Subject: Re: [PATCH 07/16] ARM: integrator: convert PCI to use generic config accesses
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Rob Herring <robh@kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
+In-Reply-To: <1421372666-12288-2-git-send-email-wangyijing@huawei.com>
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
+	<1421372666-12288-2-git-send-email-wangyijing@huawei.com>
+Date: Fri, 16 Jan 2015 15:15:37 -0800
+Message-ID: <CAE9FiQUoocCzBKsHL_D4ypH1-DV7XxZMdREX7n=Tz1Kq3kHHeA@mail.gmail.com>
+Subject: Re: [PATCH 01/28] PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
 	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"the arch/x86 maintainers" <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jan 10, 2015 at 3:34 AM, Rob Herring <robh@kernel.org> wrote:
-
-> Convert the integrator PCI driver to use the generic config access
-> functions.
+On Thu, Jan 15, 2015 at 5:43 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> Pci_bus_add_devices() should not be placed in pci_scan_bus().
+> Now pci device will be added to driver core once its
+> creation. All things left in pci_bus_add_devices() are
+> driver attachment and other trivial sysfs things.
+> Pci_scan_bus() should be the function responsible for
+> scanning PCI devices, not including driver attachment.
+> Other, some callers(m68k,unicore32,alpha) of pci_scan_bus()
+> will call pci_bus_size_bridges() and pci_bus_assign_resources()
+> after pci_scan_bus().
 >
-> This changes accesses from __raw_readX/__raw_writeX to readX/writeX
-> variants.
-
-Just as good.
-
-> The spinlock is removed because it is unnecessary. The config
-> read and write functions are already protected with a spinlock and no
-> access can occur during the .pre_init function.
+> E.g.
+> In m68k
+> mcf_pci_init()
+>         pci_scan_bus()
+>                 ...
+>                 pci_bus_add_devices() --- try to attach driver
+>         pci_fixup_irqs()
+>         pci_bus_size_bridges()
+>         pci_bus_assign_resources()
 >
-> Signed-off-by: Rob Herring <robh@kernel.org>
-> Cc: Russell King <linux@arm.linux.org.uk>
-> Cc: Linus Walleij <linus.walleij@linaro.org>
-> Cc: linux-arm-kernel@lists.infradead.org
+> It is not correct, resources should be assigned correctly
+> before attaching driver.
 
-I trust that you do the right thing I guess...
-Acked-by: Linus Walleij <linus.walleij@linaro.org>
+No, at that time pci drivers are loaded yet.
 
->  static int v3_read_config(struct pci_bus *bus, unsigned int devfn, int where,
->                           int size, u32 *val)
->  {
-> -       addr = v3_open_config_window(bus, devfn, where);
-> +       int ret = pci_generic_config_read(bus, devfn, where, size, val);
->         v3_close_config_window();
-> +       return ret;
->  }
->
->  static int v3_write_config(struct pci_bus *bus, unsigned int devfn, int where,
->                            int size, u32 val)
->  {
-> +       int ret = pci_generic_config_write(bus, devfn, where, size, val);
->         v3_close_config_window();
-> -       raw_spin_unlock_irqrestore(&v3_lock, flags);
-> +       return ret;
->  }
->
->  static struct pci_ops pci_v3_ops = {
-> +       .map_bus = v3_open_config_window,
->         .read   = v3_read_config,
->         .write  = v3_write_config,
+Thanks
 
-So .map_bus is called before every .read/.write operation I take it.
-
-Wouldn't it be proper to call the v3_close_config_window() from a
-matching .unmap_bus() callback for symmetry?
-
-Yours,
-Linus Walleij
+Yinghai
