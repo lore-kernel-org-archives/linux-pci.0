@@ -1,153 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:63974 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751667AbbATDHp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 19 Jan 2015 22:07:45 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>,
-	Joerg Roedel <joro@8bytes.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part1 v7 09/38] irq_remapping/vt-d: Change prototypes to prepare for enabling hierarchy irqdomain
-Date: Tue, 20 Jan 2015 11:08:12 +0800
-Message-Id: <1421723321-8386-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-qg0-f44.google.com ([209.85.192.44]:48045 "EHLO
+	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751315AbbAPXpH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Jan 2015 18:45:07 -0500
+Received: by mail-qg0-f44.google.com with SMTP id l89so9951430qgf.3
+        for <linux-pci@vger.kernel.org>; Fri, 16 Jan 2015 15:45:06 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAA93t1r==Ybtz=r-5gB7AiXgsCD4mqN=FwGK8yQSEgSCUT3+5A@mail.gmail.com>
+References: <1419275223-14602-1-git-send-email-keith.busch@intel.com>
+ <20150116203330.GJ29776@google.com> <CAA93t1r==Ybtz=r-5gB7AiXgsCD4mqN=FwGK8yQSEgSCUT3+5A@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 16 Jan 2015 17:44:45 -0600
+Message-ID: <CAErSpo4gskfWZbL_cQFYu-wNseRNZo68qaq7A0hvAbAnZWUAhQ@mail.gmail.com>
+Subject: Re: [PATCH] pci: Use hot-plug capable for testing presence on
+To: Rajat Jain <rajatxjain@gmail.com>
+Cc: Keith Busch <keith.busch@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Prepare for support hierarchy irqdomain by changing function prototypes,
-should be no function changes.
+On Fri, Jan 16, 2015 at 2:50 PM, Rajat Jain <rajatxjain@gmail.com> wrote:
+> Hello,
+>
+>>>
+>>> Signed-off-by: Keith Busch <keith.busch@intel.com>
+>>
+>> This seems reasonable to me, and I applied it to pci/hotplug for v3.20.
+>
+> Yes, I agree.
+>
+>>
+>> Does this fix a bug you've observed?  If so, I'll include details or a
+>> pointer in the changelog.
+>>
+>> 2b3940b60626 ("PCI: pciehp: Remove a non-existent card, regardless of
+>> "surprise" capability") made it so we handle unexpected loss of presence
+>> detect even if the slot doesn't advertise Hot-Plug Surprise.  I suppose we
+>> could make a similar argument that if a card shows up, maybe we should do
+>> something with it regardless of what the slot advertises for Hot-Plug
+>> Capable.
+>
+> Ummm ... may be not. From The PCI Hotplug Spec ver 1.1. section 2.2.2
+> (Hot Insertion)
+>  ==================================================================
+> A slot must be powered down and isolated from the bus before an add-in
+> card can be
+> inserted. The process of making a slot ready for insertion depends
+> upon the particular
+> Platform and operating system. The following general sequence of steps
+> is necessary to
+> insert an add-in card into a slot after it is powered down and ready
+> for insertion:
+>
+> 1. The user inserts the new add-in card.
+> 2. The user notifies the Hot-Plug Service to turn on the slot
+> containing the new add-in
+> card.
+> 3. The Hot-Plug Service issues a Hot-Plug Primitive to the Hot-Plug
+> System Driver to
+> turn on the appropriate slot.
+> ===============================================================
+>
+> Also, I recall I read somewhere in the specs about the need to use the
+> button to initiate hot-plug. This change would make the button
+> useless, no?
+>
+> I'm thinking the user may have reasons to have the card plugged-in,
+> but not have it turned on. The card may be a back-up for example, to
+> be turned on (to enable an alternate path) in case of some other card
+> fails etc. Or may be other application reasons. Thoughts?
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Acked-by: Joerg Roedel <jroedel@suse.de>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: iommu@lists.linux-foundation.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Joerg Roedel <joro@8bytes.org>
-Link: http://lkml.kernel.org/r/1416894816-23245-10-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- drivers/iommu/intel_irq_remapping.c |   22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+If there's an Attention Button, we definitely want to leave the card
+powered off until the user presses the button.  With an Attention
+Button, I think the flow looks like this:
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 14de1ab223c8..d3adaf32b3ec 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -82,10 +82,10 @@ static int get_irte(int irq, struct irte *entry)
- 	return 0;
- }
- 
--static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
-+static int alloc_irte(struct intel_iommu *iommu, int irq,
-+		      struct irq_2_iommu *irq_iommu, u16 count)
- {
- 	struct ir_table *table = iommu->ir_table;
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
- 	struct irq_cfg *cfg = irq_cfg(irq);
- 	unsigned int mask = 0;
- 	unsigned long flags;
-@@ -173,9 +173,9 @@ static int set_irte_irq(int irq, struct intel_iommu *iommu, u16 index, u16 subha
- 	return 0;
- }
- 
--static int modify_irte(int irq, struct irte *irte_modified)
-+static int modify_irte(struct irq_2_iommu *irq_iommu,
-+		       struct irte *irte_modified)
- {
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
- 	struct intel_iommu *iommu;
- 	unsigned long flags;
- 	struct irte *irte;
-@@ -242,7 +242,7 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
- 		return 0;
- 
- 	iommu = irq_iommu->iommu;
--	index = irq_iommu->irte_index + irq_iommu->sub_handle;
-+	index = irq_iommu->irte_index;
- 
- 	start = iommu->ir_table->base + index;
- 	end = start + (1 << irq_iommu->irte_mask);
-@@ -986,7 +986,7 @@ static int intel_setup_ioapic_entry(int irq,
- 		pr_warn("No mapping iommu for ioapic %d\n", ioapic_id);
- 		index = -ENODEV;
- 	} else {
--		index = alloc_irte(iommu, irq, 1);
-+		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
- 		if (index < 0) {
- 			pr_warn("Failed to allocate IRTE for ioapic %d\n",
- 				ioapic_id);
-@@ -1002,7 +1002,7 @@ static int intel_setup_ioapic_entry(int irq,
- 	/* Set source-id of interrupt request */
- 	set_ioapic_sid(&irte, ioapic_id);
- 
--	modify_irte(irq, &irte);
-+	modify_irte(irq_2_iommu(irq), &irte);
- 
- 	apic_printk(APIC_VERBOSE, KERN_DEBUG "IOAPIC[%d]: "
- 		"Set IRTE entry (P:%d FPD:%d Dst_Mode:%d "
-@@ -1089,7 +1089,7 @@ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 	 * Atomically updates the IRTE with the new destination, vector
- 	 * and flushes the interrupt entry cache.
- 	 */
--	modify_irte(irq, &irte);
-+	modify_irte(irq_2_iommu(irq), &irte);
- 
- 	/*
- 	 * After this point, all the interrupts will start arriving
-@@ -1125,7 +1125,7 @@ static void intel_compose_msi_msg(struct pci_dev *pdev,
- 	else
- 		set_hpet_sid(&irte, hpet_id);
- 
--	modify_irte(irq, &irte);
-+	modify_irte(irq_2_iommu(irq), &irte);
- 
- 	msg->address_hi = MSI_ADDR_BASE_HI;
- 	msg->data = sub_handle;
-@@ -1152,7 +1152,7 @@ static int intel_msi_alloc_irq(struct pci_dev *dev, int irq, int nvec)
- 		       "Unable to map PCI %s to iommu\n", pci_name(dev));
- 		index = -ENOENT;
- 	} else {
--		index = alloc_irte(iommu, irq, nvec);
-+		index = alloc_irte(iommu, irq, irq_2_iommu(irq), nvec);
- 		if (index < 0) {
- 			printk(KERN_ERR
- 			       "Unable to allocate %d IRTE for PCI %s\n",
-@@ -1196,7 +1196,7 @@ static int intel_alloc_hpet_msi(unsigned int irq, unsigned int id)
- 	down_read(&dmar_global_lock);
- 	iommu = map_hpet_to_ir(id);
- 	if (iommu) {
--		index = alloc_irte(iommu, irq, 1);
-+		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
- 		if (index >= 0)
- 			ret = 0;
- 	}
--- 
-1.7.10.4
+  - Slot is initially powered off
+  - Slot hardware includes Attention Button
+  - pcie_enable_notification() enables Attention Button interrupt but
+not Presence Detect Changed interrupt
+  - User inserts card
+  - Port may detect card presence (but pciehp hasn't enabled interrupt)
+  - User presses attention button
+  - Port asserts Attention Button interrupt
+  - OS turns on power to slot
 
+If there's no Attention Button, e.g., for an ExpressCard slot or
+Keith's SFF devices, I think it looks like this:
+
+  - Slot is initially powered off
+  - Slot hardware does not include an Attention Button
+  - pcie_enable_notification() enables Presence Detect Changed
+interrupt but not Attention Button interrupt
+  - User inserts card
+  - Port detects card presence and asserts Presence Detect Changed interrupt
+  - ** Here is Keith's change to check Hot-Plug Capable instead of
+Hot-Plug Surprise **
+  - OS turns on power to slot
+
+I *think* it's already superfluous to check Hot-Plug Capable, because
+get_port_device_capability() in portdrv_core.c already checks for
+that, and if it's not set, I don't think pciehp will claim the Port.
+If that's true, then I should drop Keith's patch, and we should just
+remove the HP_SUPR_RM test altogether.
+
+Bjorn
