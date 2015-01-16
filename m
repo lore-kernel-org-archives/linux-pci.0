@@ -1,116 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:57933 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753948AbbAHPy0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jan 2015 10:54:26 -0500
-Date: Thu, 8 Jan 2015 15:54:16 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Murali Karicheri <m-karicheri2@ti.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"joro@8bytes.org" <joro@8bytes.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v3 0/4] PCI: get DMA configuration from parent device
-Message-ID: <20150108155416.GM11583@arm.com>
-References: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com>
- <4057859.4ynbgz66iN@wuerfel>
- <54ADBB89.8070503@ti.com>
- <1934001.D0JfDRp1gF@wuerfel>
+Received: from mout.kundenserver.de ([212.227.17.10]:56236 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751041AbbAPJey (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Jan 2015 04:34:54 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-m68k@lists.linux-m68k.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	linux-alpha@vger.kernel.org, linux-ia64@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH 09/28] PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
+Date: Fri, 16 Jan 2015 10:14:09 +0100
+Message-ID: <6955534.AnUg4xpxEu@wuerfel>
+In-Reply-To: <1421372666-12288-10-git-send-email-wangyijing@huawei.com>
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <1421372666-12288-10-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1934001.D0JfDRp1gF@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 08, 2015 at 08:56:39AM +0000, Arnd Bergmann wrote:
-> On Wednesday 07 January 2015 18:04:41 Murali Karicheri wrote:
-> > On 01/07/2015 04:18 PM, Arnd Bergmann wrote:
-> > > On Wednesday 07 January 2015 13:49:50 Murali Karicheri wrote:
-> > >> PCI devices on Keystone doesn't have correct dma_pfn_offset set. This patch
-> > >> add capability to set the dma configuration such as dma-mask, dma_pfn_offset,
-> > >> and dma ops etc using the information from DT. The prior RFCs and discussions
-> > >> are available at [1] and [2] below.
-> > >>
-> > >> [2] : https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg790244.html
-> > >> [1] : http://www.gossamer-threads.com/lists/linux/kernel/2024591
-> > >
-> > > Looks all good to me in this version, I'm just unsure about one thing:
-> > >
-> > >>                 - Limit the of_iommu_configure to non pci devices
-> > >
-> > > My last recommendation was to pass the b/d/f number into
-> > > of_pci_dma_configure to handle this correctly. What was your
-> > > reason for not doing it in the end?
-> > Arnd,
-> > 
-> > I had responded to this already on the list and reproduced below your 
-> > remark and my response below from that thread.
+On Friday 16 January 2015 09:44:07 Yijing Wang wrote:
+> We want to make a generic pci_host_bridge, then we could
+> place common PCI infos like domain number in it. Ripping
+> out pci_host_bridge creation from pci_create_root_bus()
+> make code more better readability. Further more, we could
+> use the generic pci_host_bridge to hold host bridge specific
+> operations like pcibios_root_bridge_prepare().
 > 
-> Ah right, sorry for missing a reply on that.
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 > 
-> > ---------------cut-------------------------------------------------------
-> >  > Actually regarding the bit I wrote above, it might be helpful to pass
-> >  > the PCI_DEVID() into both of_iommu_configure and of_dma_configure.
-> >  >
-> >  > While this may or may not be sufficient, I think there is no question
-> >  > about it being needed for the ARM SMMU with PCI, so we may as well add
-> >  > it at the point when you touch the same lines already. In the platform
-> >  > bus case, just pass zero here.
-> > 
-> > PCI_DEVID() is defined as
-> > 
-> > #define PCI_DEVID(bus, devfn)  ((((u16)(bus)) << 8) | (devfn))
-> > 
-> > So PCI_DEVID of 0 is a valid PCI DEVID.
-> 
-> I think that is ok: the idea would be that we always just list the
-> first ID of the range and then let the iommu driver add the offset
-> in the appropriate way.
-> 
-> > How about checking if the device is PCI in of_iommu_configure() using 
-> > dev_is_pci(dev) macro and return immediately for PCI? Need to include 
-> > pci.h in this file though.
-> > 
-> > Some of the iommu drivers already include this.
-> 
-> I guess you are right, but the driver can even handle the PCI
-> device correctly without the extra parameter:
-> 
-> 	devid = 0;
-> 	if (dev_is_pci(dev)) {
-> 		struct pci_dev *pdev = to_pci_dev(dev);
-> 		devid = PCI_DEVID(pdev->bus->number, pdev->devfn);
-> 	}
-> 
-> 	streamid += devid;
-> 
-> Other IOMMUs won't even care about the devid, so they will just work.
 
-I started looking at this in more depth for the ARM SMMU at the end of last
-year and the PCI case ends up being remarkably similar to the DT case.
+I assume this patch is doing the right thing, but the description
+above doesn't really tell me enough to be sure.
 
-Although I initially thought we just needed the devid, actually we need to
-walk the PCI topology to find the dma alias for the device. The current
-code for doing that (iommu_group_get_for_pci_dev) only reports the resulting
-IOMMu group, which can actually correspond to *multiple* DMA aliases due
-to ACS restrictions.
+This is supposed to be transparent to the callers, right? If
+so, please mention it explicitly in the text.
 
-I knocked up a couple of patches for dealing with this in the ARM SMMU
-driver, but I'd really like that to be part of core code if possible :)
+Also you don't explain what the list of host bridges is
+used for. Maybe you can split this out into a separate patch
+so you have one patch that just moves code from one file
+to the other but no functional changes, and a second patch
+that exports pci_create_host_bridge and introduces the list,
+with an explanation of what it is used for.
 
-https://git.kernel.org/cgit/linux/kernel/git/will/linux.git/commit/?h=iommu/pgtbl&id=41dc7b9e0ff1a4d79d1dd76619056fc0cfa8b84f
-https://git.kernel.org/cgit/linux/kernel/git/will/linux.git/commit/?h=iommu/pgtbl&id=5503996103138b41520d5eae90dda62abb65f04f
-
-So, I think of_pci_dma_configure should determine the set of aliases for the
-group. What isn't clear to me for the DT *or* the PCI cases is what we
-actually do with the group at the dma-mapping level...
-
-Will
+	Arnd
