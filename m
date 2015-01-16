@@ -1,70 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:35238 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752282AbbAMT5b (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Jan 2015 14:57:31 -0500
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Thierry Reding <thierry.reding@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v3 1/2] PCI: add helper function to find root port for device
-Date: Tue, 13 Jan 2015 20:57:27 +0100
-Message-Id: <1421179048-25370-1-git-send-email-l.stach@pengutronix.de>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:23824 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756032AbbAPDrn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jan 2015 22:47:43 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH 23/28] PCI/designware: Use pci_scan_root_bus() for simplicity
+Date: Fri, 16 Jan 2015 09:44:21 +0800
+Message-ID: <1421372666-12288-24-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This adds a simple way to get the root port a given device
-is connected to.
+Use pci_scan_root_bus() instead of pci_create_root_bus() +
+pci_scan_child_bus() for simplicity.
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
-v2: new patch in v2
-v3: rename to pci_find_rootport to fit better with other API
----
- drivers/pci/search.c | 20 ++++++++++++++++++++
- include/linux/pci.h  |  1 +
- 2 files changed, 21 insertions(+)
+ drivers/pci/host/pcie-designware.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index a20ce7d5e2a7..7254f126096d 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -384,3 +384,23 @@ int pci_dev_present(const struct pci_device_id *ids)
- 	return 0;
- }
- EXPORT_SYMBOL(pci_dev_present);
-+
-+/**
-+ * pci_find_root_port - Returns the root port the given device is connected to.
-+ * @dev: PCI device for which the root port should be found.
-+ */
-+struct pci_dev *pci_find_root_port(struct pci_dev *dev)
-+{
-+	struct pci_bus *bus = dev->bus;
-+
-+	/* If there is no bridge on the bus the passed device is a root port. */
-+	if (!bus->self)
-+		return dev;
-+
-+	/* Walk up the PCI hierarchy to the first level below the root. */
-+	while (bus->parent && bus->parent->self)
-+		bus = bus->parent;
-+
-+	return bus->self;
-+}
-+EXPORT_SYMBOL(pci_find_root_port);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 360a966a97a5..f4321c5ba653 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -844,6 +844,7 @@ static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
- }
- struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from);
- int pci_dev_present(const struct pci_device_id *ids);
-+struct pci_dev *pci_find_root_port(struct pci_dev *dev);
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index eef3111..d37fe27 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -725,13 +725,11 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ 	struct pcie_port *pp = sys_to_pcie(sys);
  
- int pci_bus_read_config_byte(struct pci_bus *bus, unsigned int devfn,
- 			     int where, u8 *val);
+ 	pp->root_bus_nr = sys->busnr;
+-	bus = pci_create_root_bus(pp->dev, sys->busnr,
++	bus = pci_scan_root_bus(pp->dev, sys->busnr,
+ 				  &dw_pcie_ops, sys, &sys->resources);
+ 	if (!bus)
+ 		return NULL;
+ 
+-	pci_scan_child_bus(bus);
+-
+ 	if (bus && pp->ops->scan_bus)
+ 		pp->ops->scan_bus(pp);
+ 
 -- 
-2.1.4
+1.7.1
 
