@@ -1,83 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:22448 "EHLO mail1.g1.pair.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751480AbbAPKif convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Jan 2015 05:38:35 -0500
-Message-ID: <54B8EA1C.7070700@kosagi.com>
-Date: Fri, 16 Jan 2015 18:38:20 +0800
-From: Sean Cross <xobs@kosagi.com>
+Received: from mout.kundenserver.de ([212.227.17.10]:62978 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751315AbbAPJmE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Jan 2015 04:42:04 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-m68k@lists.linux-m68k.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	linux-alpha@vger.kernel.org, linux-ia64@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH 08/28] PCI: Introduce pci_host_assign_domain_nr() to assign domain
+Date: Fri, 16 Jan 2015 10:40:26 +0100
+Message-ID: <3026954.09KG7UaUTi@wuerfel>
+In-Reply-To: <13182982.DnZJMY2KHL@wuerfel>
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <1421372666-12288-9-git-send-email-wangyijing@huawei.com> <13182982.DnZJMY2KHL@wuerfel>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Shawn Guo <shawn.guo@freescale.com>,
-	devicetree@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	linux-pci@vger.kernel.org, bunnie@kosagi.com
-Subject: Re: [PATCH v2 0/4] Add support for kosagi novena
-References: <1419237127-21763-1-git-send-email-xobs@kosagi.com> <20150116004615.GF29776@google.com>
-In-Reply-To: <20150116004615.GF29776@google.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 16/01/2015 08:46, Bjorn Helgaas wrote:
-> On Mon, Dec 22, 2014 at 04:32:03PM +0800, Sean Cross wrote:
->> The Kosagi Novena mainboard contains an i.MX6, along with a PCI Express slot.
->> This patchset adds regulator support to the PCI Express slot, and adds
->> device tree support for the Novena mainboard.
->>
->> Changes since v1:
->>     - Add 'kosagi' to vendor prefixes
->>     - Add LCD panel to simple-panel
->>     - Renamed power-supply to bus-supply
->>     - Replaced devm_regulator_get() with devm_regulator_get_optional()
->>     - Moved regulator_enable to imx6_add_pcie_port()
->>     - Removed fpga@1 from spi definition in dts -- will use overlays instead
->>
->> Sean Cross (4):
->>   drm/panel: simple: Add Innolux N133HSE panel support
->>   devicetree: bindings: Add vendor prefix for Kosagi
->>   PCI: imx6: Add power-supply support
-> I guess we're waiting on a response to Arnd's question about making this
-> more generic, so I'm dropping these from my queue pending that.
+On Friday 16 January 2015 10:08:45 Arnd Bergmann wrote:
+> On Friday 16 January 2015 09:44:06 Yijing Wang wrote:
+> > Introduce pci_host_assign_domain_nr() to assign domain
+> > number for pci_host_bridge. Later we will remove
+> > pci_bus_assign_domain_nr().
+> > 
+> > Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> 
+> I'm confused: the same code is already part of the PCI tree, but with
+> Lorenzo Pieralisi listed as the patch author. The code is good,
+> and I acked it in the past, but one of you is (probably by accident)
+> misattributing the patch.
+> 
+> Assuming that the patch that is already merged in next is the right
+> one, I think you should rebase your series on top of
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git#next
+> 
+> to avoid conflicts like this one.
 >
-> Then we need a strategy for merging it since it crosses PCI/ARM/GPU.
-> Please propose a strategy; it looks like the PCI part doesn't technically
-> depend on the preceeding patches, but it's fine with me if you want to keep
-> it all together.
->
-The PCI part was there because without it, the system hard-locks during
-boot without it.
 
-However, I'm not sure that the power-supply is the correct approach,
-because I can still see lockups even with the switch in place. I still
-haven't found out the root cause of that problem.
+I think I just got confused because the code duplicates most of
+pci_bus_assign_domain_nr(). Maybe this can be done in a better way
+by splitting the existing function into 
 
-One workaround is to simply enable that GPIO in the bootloader and leave
-it on permanently.  Doing this mimics behavior on other platforms where
-PCIe is permanently powered up, and since the patches are decoupled the
-PCI patch can be applied at a later time.
+static int pci_assign_domain_nr(struct device *)
+{
+	... /* most of pci_bus_assign_domain_nr */
 
-I'd prefer to drop the PCI patch for now.  Would you like me to submit a
-v3 with simply the drm/panel and devicetree patches?
+	return domain;
+}
 
->>   ARM: dts: imx6q: add Novena board
->>
->>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |   3 +
->>  .../devicetree/bindings/vendor-prefixes.txt        |   1 +
->>  arch/arm/boot/dts/Makefile                         |   1 +
->>  arch/arm/boot/dts/imx6q-novena.dts                 | 856 +++++++++++++++++++++
->>  drivers/gpu/drm/panel/panel-simple.c               |  26 +
->>  drivers/pci/host/pci-imx6.c                        |  27 +
->>  6 files changed, 914 insertions(+)
->>  create mode 100644 arch/arm/boot/dts/imx6q-novena.dts
->>
->> -- 
->> 2.1.3
->>
+void pci_host_assign_domain_nr(struct pci_host_bridge *host)
+{
+	host->domain = pci_assign_domain_nr(host->dev.parent);
+}
 
-
+void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+{
+	bus->domain_nr = pci_assign_domain_nr(parent);
+}
