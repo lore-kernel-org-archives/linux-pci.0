@@ -1,216 +1,384 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:33259 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755636AbbAZT6S (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 14:58:18 -0500
-MIME-Version: 1.0
-In-Reply-To: <20150123203145.GA6691@google.com>
-References: <20150123203145.GA6691@google.com>
-Date: Mon, 26 Jan 2015 11:58:16 -0800
-Message-ID: <CA+8MBbKnT=mE3kev8BRPq0GeTgHx8WVa6o54tJuBX_XXLpHdYQ@mail.gmail.com>
-Subject: Re: [GIT PULL] PCI fixes for v3.19
-From: Tony Luck <tony.luck@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Marek Kordik <kordikmarek@gmail.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Andreas Hartmann <andihartmann@freenet.de>, zermond@gmail.com,
-	David Airlie <airlied@linux.ie>,
-	Alex Deucher <alexander.deucher@amd.com>
-Content-Type: multipart/mixed; boundary=089e0141a3a232fc57050d938f76
-Sender: linux-pci-owner@vger.kernel.org
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH 09/28] PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
+Date: Fri, 16 Jan 2015 09:44:07 +0800
+Message-ID: <1421372666-12288-10-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---089e0141a3a232fc57050d938f76
-Content-Type: text/plain; charset=UTF-8
+We want to make a generic pci_host_bridge, then we could
+place common PCI infos like domain number in it. Ripping
+out pci_host_bridge creation from pci_create_root_bus()
+make code more better readability. Further more, we could
+use the generic pci_host_bridge to hold host bridge specific
+operations like pcibios_root_bridge_prepare().
 
-I'm seeing these new messages in v3.19-rc6 on ia64:
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/host-bridge.c |   78 +++++++++++++++++++++++++++++
+ drivers/pci/probe.c       |  121 +++++++++++++++++++--------------------------
+ include/linux/pci.h       |    6 ++-
+ 3 files changed, 134 insertions(+), 71 deletions(-)
 
-pci 0000:01:00.0: can't claim BAR 6 [mem 0xfffe0000-0xffffffff pref]:
-no compatible bridge window
-pci 0000:01:00.1: can't claim BAR 6 [mem 0xfffe0000-0xffffffff pref]:
-no compatible bridge window
-pci 0000:03:00.0: can't claim BAR 6 [mem 0xffe00000-0xffffffff pref]:
-no compatible bridge window
-pci 0000:0b:04.0: can't claim BAR 6 [mem 0xfffe0000-0xffffffff pref]:
-no compatible bridge window
-pci 0000:80:13.0: can't claim BAR 0 [mem 0xa0220000-0xa0220fff]: no
-compatible bridge window
-pci 0000:80:16.0: can't claim BAR 0 [mem 0xa0200000-0xa0203fff 64bit]:
-no compatible bridge window
-pci 0000:80:16.1: can't claim BAR 0 [mem 0xa0204000-0xa0207fff 64bit]:
-no compatible bridge window
-pci 0000:80:16.2: can't claim BAR 0 [mem 0xa0208000-0xa020bfff 64bit]:
-no compatible bridge window
-pci 0000:80:16.3: can't claim BAR 0 [mem 0xa020c000-0xa020ffff 64bit]:
-no compatible bridge window
-pci 0000:80:16.4: can't claim BAR 0 [mem 0xa0210000-0xa0213fff 64bit]:
-no compatible bridge window
-pci 0000:80:16.5: can't claim BAR 0 [mem 0xa0214000-0xa0217fff 64bit]:
-no compatible bridge window
-pci 0000:80:16.6: can't claim BAR 0 [mem 0xa0218000-0xa021bfff 64bit]:
-no compatible bridge window
-pci 0000:80:16.7: can't claim BAR 0 [mem 0xa021c000-0xa021ffff 64bit]:
-no compatible bridge window
-pci 0000:80:01.0: can't claim BAR 8 [mem 0xa0100000-0xa01fffff]: no
-compatible bridge window
-pci 0000:81:00.0: can't claim BAR 6 [mem 0xfffe0000-0xffffffff pref]:
-no compatible bridge window
-pci 0000:81:00.1: can't claim BAR 6 [mem 0xfffe0000-0xffffffff pref]:
-no compatible bridge window
-pci 0000:80:05.0: can't claim BAR 8 [mem 0xa0000000-0xa00fffff]: no
-compatible bridge window
-pci 0000:83:00.0: can't claim BAR 6 [mem 0xffe00000-0xffffffff pref]:
-no compatible bridge window
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 0e5f3c9..c9ee582 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -8,6 +8,84 @@
+ 
+ #include "pci.h"
+ 
++static LIST_HEAD(pci_host_bridge_list);
++static DEFINE_MUTEX(phb_mutex);
++
++static void pci_release_host_bridge_dev(struct device *dev)
++{
++	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
++
++	if (bridge->release_fn)
++		bridge->release_fn(bridge);
++
++	pci_free_resource_list(&bridge->windows);
++	kfree(bridge);
++}
++
++struct pci_host_bridge *pci_create_host_bridge(
++		struct device *parent, u32 db, struct list_head *resources)
++{
++	int error;
++	int bus = PCI_BUSNUM(db);
++	int domain = PCI_DOMAIN(db);
++	struct pci_host_bridge *host, *temp;
++	struct pci_host_bridge_window *window, *n;
++
++	host = kzalloc(sizeof(*host), GFP_KERNEL);
++	if (!host)
++		return NULL;
++
++	host->busnum = bus;
++	host->domain = domain;
++	/* If support CONFIG_PCI_DOMAINS_GENERIC, use
++	 * pci_host_assign_domain_nr() to assign domain
++	 * number instead argu u32 db.
++	 */
++	pci_host_assign_domain_nr(host);
++
++	mutex_lock(&phb_mutex);
++	list_for_each_entry(temp, &pci_host_bridge_list, list)
++		if (temp->domain == host->domain
++				&& host->busnum == temp->busnum) {
++			dev_dbg(&host->dev, "pci host bridge pci%04x:%02x exist\n",
++					host->domain, host->busnum);
++			mutex_unlock(&phb_mutex);
++			kfree(host);
++			return NULL;
++		}
++	mutex_unlock(&phb_mutex);
++
++	host->dev.parent = parent;
++	INIT_LIST_HEAD(&host->windows);
++	host->dev.release = pci_release_host_bridge_dev;
++	dev_set_name(&host->dev, "pci%04x:%02x", host->domain,
++			host->busnum);
++
++	error = device_register(&host->dev);
++	if (error) {
++		put_device(&host->dev);
++		return NULL;
++	}
++
++	list_for_each_entry_safe(window, n, resources, list)
++		list_move_tail(&window->list, &host->windows);
++
++	mutex_lock(&phb_mutex);
++	list_add_tail(&host->list, &pci_host_bridge_list);
++	mutex_unlock(&phb_mutex);
++	return host;
++}
++EXPORT_SYMBOL(pci_create_host_bridge);
++
++void pci_free_host_bridge(struct pci_host_bridge *host)
++{
++	mutex_lock(&phb_mutex);
++	list_del(&host->list);
++	mutex_unlock(&phb_mutex);
++
++	device_unregister(&host->dev);
++}
++
+ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+ {
+ 	while (bus->parent)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 50f58b3..2e0b952 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -502,31 +502,6 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
+ 	return b;
+ }
+ 
+-static void pci_release_host_bridge_dev(struct device *dev)
+-{
+-	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
+-
+-	if (bridge->release_fn)
+-		bridge->release_fn(bridge);
+-
+-	pci_free_resource_list(&bridge->windows);
+-
+-	kfree(bridge);
+-}
+-
+-static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+-{
+-	struct pci_host_bridge *bridge;
+-
+-	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
+-	if (!bridge)
+-		return NULL;
+-
+-	INIT_LIST_HEAD(&bridge->windows);
+-	bridge->bus = b;
+-	return bridge;
+-}
+-
+ static const unsigned char pcix_bus_speed[] = {
+ 	PCI_SPEED_UNKNOWN,		/* 0 */
+ 	PCI_SPEED_66MHz_PCIX,		/* 1 */
+@@ -1889,54 +1864,35 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+ {
+ }
+ 
+-struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
+-		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++static struct pci_bus *__pci_create_root_bus(
++		struct pci_host_bridge *bridge, struct pci_ops *ops,
++		void *sysdata)
+ {
+ 	int error;
+-	struct pci_host_bridge *bridge;
+-	struct pci_bus *b, *b2;
+-	struct pci_host_bridge_window *window, *n;
++	struct pci_bus *b;
++	struct pci_host_bridge_window *window;
++	struct device *parent;
+ 	struct resource *res;
+ 	resource_size_t offset;
+ 	char bus_addr[64];
+ 	char *fmt;
+-	u8	bus = PCI_BUSNUM(db);
+ 
++	parent = bridge->dev.parent;
+ 	b = pci_alloc_bus(NULL);
+ 	if (!b)
+ 		return NULL;
+ 
+ 	b->sysdata = sysdata;
+ 	b->ops = ops;
+-	b->number = b->busn_res.start = bus;
++	b->number = b->busn_res.start = bridge->busnum;
+ 	pci_bus_assign_domain_nr(b, parent);
+-	b2 = pci_find_bus(pci_domain_nr(b), bus);
+-	if (b2) {
+-		/* If we already got to this bus through a different bridge, ignore it */
+-		dev_dbg(&b2->dev, "bus already known\n");
+-		goto err_out;
+-	}
+ 
+-	bridge = pci_alloc_host_bridge(b);
+-	if (!bridge)
+-		goto err_out;
+-
+-	bridge->domain = PCI_DOMAIN(db);
+-	bridge->dev.parent = parent;
+-	bridge->dev.release = pci_release_host_bridge_dev;
+-	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
++	bridge->bus = b;
++	b->bridge = get_device(&bridge->dev);
+ 	error = pcibios_root_bridge_prepare(bridge);
+-	if (error) {
+-		kfree(bridge);
++	if (error)
+ 		goto err_out;
+-	}
+ 
+-	error = device_register(&bridge->dev);
+-	if (error) {
+-		put_device(&bridge->dev);
+-		goto err_out;
+-	}
+-	b->bridge = get_device(&bridge->dev);
+ 	device_enable_async_suspend(b->bridge);
+ 	pci_set_bus_of_node(b);
+ 
+@@ -1945,10 +1901,11 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
+ 
+ 	b->dev.class = &pcibus_class;
+ 	b->dev.parent = b->bridge;
+-	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
++	dev_set_name(&b->dev, "%04x:%02x", bridge->domain,
++			bridge->busnum);
+ 	error = device_register(&b->dev);
+ 	if (error)
+-		goto class_dev_reg_err;
++		goto err_out;
+ 
+ 	pcibios_add_bus(b);
+ 
+@@ -1961,12 +1918,11 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
+ 		printk(KERN_INFO "PCI host bridge to bus %s\n", dev_name(&b->dev));
+ 
+ 	/* Add initial resources to the bus */
+-	list_for_each_entry_safe(window, n, resources, list) {
+-		list_move_tail(&window->list, &bridge->windows);
++	list_for_each_entry(window, &bridge->windows, list) {
+ 		res = window->res;
+ 		offset = window->offset;
+ 		if (res->flags & IORESOURCE_BUS)
+-			pci_bus_insert_busn_res(b, bus, res->end);
++			pci_bus_insert_busn_res(b, bridge->busnum, res->end);
+ 		else
+ 			pci_bus_add_resource(b, res, 0);
+ 		if (offset) {
+@@ -1988,14 +1944,23 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
+ 
+ 	return b;
+ 
+-class_dev_reg_err:
+-	put_device(&bridge->dev);
+-	device_unregister(&bridge->dev);
+ err_out:
+ 	kfree(b);
+ 	return NULL;
+ }
+ 
++struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
++		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++{
++	struct pci_host_bridge *host;
++
++	host = pci_create_host_bridge(parent, db, resources);
++	if (!host)
++		return NULL;
++
++	return __pci_create_root_bus(host, ops, sysdata);
++}
++
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+ {
+ 	struct resource *res = &b->busn_res;
+@@ -2059,29 +2024,33 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+ 			res, ret ? "can not be" : "is");
+ }
+ 
+-struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+-		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++static struct pci_bus *__pci_scan_root_bus(
++		struct pci_host_bridge *host, struct pci_ops *ops,
++		void *sysdata)
+ {
++
+ 	struct pci_host_bridge_window *window;
+ 	bool found = false;
+ 	struct pci_bus *b;
+ 	int max;
+ 
+-	list_for_each_entry(window, resources, list)
++	list_for_each_entry(window, &host->windows, list)
+ 		if (window->res->flags & IORESOURCE_BUS) {
+ 			found = true;
+ 			break;
+ 		}
+ 
+-	b = pci_create_root_bus(parent, db, ops, sysdata, resources);
+-	if (!b)
++	b = __pci_create_root_bus(host, ops, sysdata);
++	if (!b) {
++		pci_free_host_bridge(host);
+ 		return NULL;
++	}
+ 
+ 	if (!found) {
+ 		dev_info(&b->dev,
+ 		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
+-			PCI_BUSNUM(db));
+-		pci_bus_insert_busn_res(b, PCI_BUSNUM(db), 255);
++			host->busnum);
++		pci_bus_insert_busn_res(b, host->busnum, 255);
+ 	}
+ 
+ 	max = pci_scan_child_bus(b);
+@@ -2091,6 +2060,18 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+ 
+ 	return b;
+ }
++
++struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
++		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++{
++	struct pci_host_bridge *host;
++
++	host = pci_create_host_bridge(parent, db, resources);
++	if (!host)
++		return NULL;
++
++	return __pci_scan_root_bus(host, ops, sysdata);
++}
+ EXPORT_SYMBOL(pci_scan_root_bus);
+ 
+ struct pci_bus *pci_scan_bus_legacy(u32 db, struct pci_ops *ops,
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1b9c799..5ee0033 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -403,8 +403,10 @@ struct pci_host_bridge_window {
+ 
+ struct pci_host_bridge {
+ 	u16	domain;
++	u16 busnum;
+ 	struct device dev;
+ 	struct pci_bus *bus;		/* root bus */
++	struct list_head list;
+ 	struct list_head windows;	/* pci_host_bridge_windows */
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
+@@ -416,7 +418,8 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+ 		     void *release_data);
+ 
+ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
+-
++struct pci_host_bridge *pci_create_host_bridge(
++		struct device *parent, u32 dombus, struct list_head *resources);
+ /*
+  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
+  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
+@@ -774,6 +777,7 @@ struct pci_bus *pci_scan_bus_legacy(u32 dombus, struct pci_ops *ops, void *sysda
+ struct pci_bus *pci_create_root_bus(struct device *parent, u32 dombus,
+ 				    struct pci_ops *ops, void *sysdata,
+ 				    struct list_head *resources);
++void pci_free_host_bridge(struct pci_host_bridge *host);
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+ int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+ void pci_bus_release_busn_res(struct pci_bus *b);
+-- 
+1.7.1
 
-Bisection pointed to:
-
->       ia64/PCI: Clip bridge windows to fit in upstream windows
-
-and reverting commit ce821ef0333fc1 makes them go away again.
-
-How do I tell whether I really have a bunch of badly configured busses
-that we are just
-now able to detect, or there is something spurious in this patch? Contents of
-/proc/iomem (from the kernel with the reverted patch) attached.
-
--Tony
-
---089e0141a3a232fc57050d938f76
-Content-Type: text/plain; charset=US-ASCII; name="iomem.txt"
-Content-Disposition: attachment; filename="iomem.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_i5ea0u770
-
-MDAwMDAwMDAtMDAwMDBmZmYgOiBTeXN0ZW0gUkFNCjAwMDAxMDAwLTAwMDVmZmZmIDogU3lzdGVt
-IFJBTQowMDA2MDAwMC0wMDA4N2ZmZiA6IFN5c3RlbSBSQU0KMDAwODgwMDAtMDAwOTZmZmYgOiBT
-eXN0ZW0gUkFNCjAwMDk3MDAwLTAwMDk3ZmZmIDogU3lzdGVtIFJBTQowMDA5ODAwMC0wMDA5ZmZm
-ZiA6IFN5c3RlbSBSQU0KMDAwYzAwMDAtMDAwZmZmZmYgOiByZXNlcnZlZAowMDEwMDAwMC0wMDNm
-ZmZmZiA6IFN5c3RlbSBSQU0KMDA0MDAwMDAtMDA0NzFmZmYgOiBTeXN0ZW0gUkFNCjAwNDcyMDAw
-LTAwYmZmZmZmIDogU3lzdGVtIFJBTQowMGMwMDAwMC0wMGZmZmZmZiA6IFN5c3RlbSBSQU0KMDEw
-MDAwMDAtMDNmZmZmZmYgOiBTeXN0ZW0gUkFNCjA0MDAwMDAwLTA1ZTZhZmZmIDogU3lzdGVtIFJB
-TQogIDA0MDAwMDAwLTA0YzM4NzNmIDogS2VybmVsIGNvZGUKICAwNGMzODc0MC0wNTY3NmY4NyA6
-IEtlcm5lbCBkYXRhCiAgMDU2NzZmODgtMDVlNmFmY2YgOiBLZXJuZWwgYnNzCjA1ZTZiMDAwLTNh
-MjQ3ZmZmIDogU3lzdGVtIFJBTQozYTI0ODAwMC0zYTI0OWZmZiA6IHJlc2VydmVkCjNhMjRhMDAw
-LTNhMjZkZmZmIDogcmVzZXJ2ZWQKM2EyNmUwMDAtM2E0ZTlmZmYgOiBTeXN0ZW0gUkFNCjNhNGVh
-MDAwLTNhNGViZmZmIDogQUNQSSBOb24tdm9sYXRpbGUgU3RvcmFnZQozYTRlYzAwMC0zYTRlZmZm
-ZiA6IFN5c3RlbSBSQU0KM2E0ZjAwMDAtM2E1MzdmZmYgOiByZXNlcnZlZAozYTUzODAwMC0zYTU5
-ZGZmZiA6IFN5c3RlbSBSQU0KM2E1OWUwMDAtM2E1YTFmZmYgOiBTeXN0ZW0gUkFNCjNhNWEyMDAw
-LTNhNWViZmZmIDogcmVzZXJ2ZWQKM2E1ZWMwMDAtM2E1ZjNmZmYgOiByZXNlcnZlZAozYTVmNDAw
-MC0zYTZiZGZmZiA6IHJlc2VydmVkCjNhNmJlMDAwLTNhNmJlZmZmIDogU3lzdGVtIFJBTQozYTZi
-ZjAwMC0zYTZlYmZmZiA6IFN5c3RlbSBSQU0KM2E2ZWMwMDAtM2E3M2JmZmYgOiByZXNlcnZlZAoz
-YTczYzAwMC0zYTc0M2ZmZiA6IFN5c3RlbSBSQU0KM2E3NDQwMDAtM2E3NDVmZmYgOiByZXNlcnZl
-ZAozYTc0NjAwMC0zYTc0N2ZmZiA6IFN5c3RlbSBSQU0KM2E3NDgwMDAtM2E3NDlmZmYgOiByZXNl
-cnZlZAozYTc0YTAwMC0zYTc0YmZmZiA6IFN5c3RlbSBSQU0KM2E3NGMwMDAtM2E3NGZmZmYgOiBy
-ZXNlcnZlZAozYTc1MDAwMC0zYTc1OWZmZiA6IHJlc2VydmVkCjNhNzVhMDAwLTNhNzViZmZmIDog
-cmVzZXJ2ZWQKM2E3NWMwMDAtM2E3NzNmZmYgOiByZXNlcnZlZAozYTc3NDAwMC0zYTc3NGZmZiA6
-IFN5c3RlbSBSQU0KM2E3NzUwMDAtM2E4NDVmZmYgOiBTeXN0ZW0gUkFNCjNhODQ2MDAwLTNhODQ3
-ZmZmIDogU3lzdGVtIFJBTQozYTg0ODAwMC0zYTkxM2ZmZiA6IFN5c3RlbSBSQU0KM2E5MTQwMDAt
-M2E5MThmZmYgOiBTeXN0ZW0gUkFNCjNhOTE5MDAwLTNhYjQxZmZmIDogU3lzdGVtIFJBTQozYWI0
-MjAwMC0zYWI0YWZmZiA6IFN5c3RlbSBSQU0KM2FiNGIwMDAtM2FjNGJmZmYgOiBTeXN0ZW0gUkFN
-CjNhYzRjMDAwLTNhYzU3ZmZmIDogcmVzZXJ2ZWQKM2FjNTgwMDAtM2FjNzlmZmYgOiByZXNlcnZl
-ZAozYWM3YTAwMC0zYWNhOWZmZiA6IHJlc2VydmVkCjNhY2FhMDAwLTNhZDBkZmZmIDogU3lzdGVt
-IFJBTQozYWQwZTAwMC0zYWQ1OWZmZiA6IFN5c3RlbSBSQU0KM2FkNWEwMDAtM2FkNmRmZmYgOiBy
-ZXNlcnZlZAozYWQ2ZTAwMC0zYWQ5OWZmZiA6IFN5c3RlbSBSQU0KM2FkOWEwMDAtM2FkOWJmZmYg
-OiByZXNlcnZlZAozYWQ5YzAwMC0zYWRhOWZmZiA6IHJlc2VydmVkCjNhZGFhMDAwLTNhZGFhZmZm
-IDogU3lzdGVtIFJBTQozYWRhYjAwMC0zYWRkMWZmZiA6IFN5c3RlbSBSQU0KM2FkZDIwMDAtM2Fk
-ZTVmZmYgOiByZXNlcnZlZAozYWRlNjAwMC0zYWRmYmZmZiA6IFN5c3RlbSBSQU0KM2FkZmMwMDAt
-M2FlMWJmZmYgOiByZXNlcnZlZAozYWUxYzAwMC0zYWUxZmZmZiA6IFN5c3RlbSBSQU0KM2FlMjAw
-MDAtM2FlM2RmZmYgOiByZXNlcnZlZAozYWUzZTAwMC0zYWU0MGZmZiA6IFN5c3RlbSBSQU0KM2Fl
-NDEwMDAtM2FlNWJmZmYgOiBTeXN0ZW0gUkFNCjNhZTVjMDAwLTNhZTVkZmZmIDogQUNQSSBOb24t
-dm9sYXRpbGUgU3RvcmFnZQozYWU1ZTAwMC0zYWU4MWZmZiA6IFN5c3RlbSBSQU0KM2FlODIwMDAt
-M2FlOWJmZmYgOiByZXNlcnZlZAozYWU5YzAwMC0zYWViN2ZmZiA6IHJlc2VydmVkCjNhZWI4MDAw
-LTNhZWI4ZmZmIDogU3lzdGVtIFJBTQozYWViOTAwMC0zYWViZmZmZiA6IFN5c3RlbSBSQU0KM2Fl
-YzAwMDAtM2FmZjVmZmYgOiByZXNlcnZlZAozYWZmNjAwMC0zYjAwMWZmZiA6IHJlc2VydmVkCjNi
-MDAyMDAwLTNiMDAzZmZmIDogcmVzZXJ2ZWQKM2IwMDQwMDAtM2IwMDVmZmYgOiBTeXN0ZW0gUkFN
-CjNiMDA2MDAwLTNiMDE3ZmZmIDogcmVzZXJ2ZWQKM2IwMTgwMDAtM2IwMTlmZmYgOiBTeXN0ZW0g
-UkFNCjNiMDFhMDAwLTNiMjFiZmZmIDogcmVzZXJ2ZWQKM2IyMWMwMDAtM2IyNjVmZmYgOiByZXNl
-cnZlZAozYjI2NjAwMC0zYjI3MWZmZiA6IFN5c3RlbSBSQU0KM2IyNzIwMDAtM2IyN2ZmZmYgOiBy
-ZXNlcnZlZAozYjI4MDAwMC0zYjJkZmZmZiA6IFN5c3RlbSBSQU0KM2IyZTAwMDAtM2IyZTFmZmYg
-OiByZXNlcnZlZAozYjJlMjAwMC0zYjNhM2ZmZiA6IFN5c3RlbSBSQU0KM2IzYTQwMDAtM2IzYjVm
-ZmYgOiByZXNlcnZlZAozYjNiNjAwMC0zYjNjN2ZmZiA6IFN5c3RlbSBSQU0KM2IzYzgwMDAtM2Iz
-ZDFmZmYgOiBTeXN0ZW0gUkFNCjNiM2QyMDAwLTNiOTM1ZmZmIDogU3lzdGVtIFJBTQozYjkzNjAw
-MC0zYjk1ZmZmZiA6IHJlc2VydmVkCjNiOTYwMDAwLTNiOTY0ZmZmIDogU3lzdGVtIFJBTQozYjk2
-NTAwMC0zYjk4OWZmZiA6IFN5c3RlbSBSQU0KM2I5OGEwMDAtM2I5OTFmZmYgOiByZXNlcnZlZAoz
-Yjk5MjAwMC0zYjlhN2ZmZiA6IFN5c3RlbSBSQU0KM2I5YTgwMDAtM2JiYWZmZmYgOiByZXNlcnZl
-ZAozYmJiMDAwMC0zYmJmZmZmZiA6IHJlc2VydmVkCjNiYzAwMDAwLTNiZWZmZmZmIDogcmVzZXJ2
-ZWQKM2JmMDAwMDAtM2MwZTVmZmYgOiByZXNlcnZlZAozYzBlNjAwMC0zYzBlNmZmZiA6IFN5c3Rl
-bSBSQU0KM2MwZTcwMDAtM2MxNmRmZmYgOiBTeXN0ZW0gUkFNCjNjMTZlMDAwLTNjMTc1ZmZmIDog
-cmVzZXJ2ZWQKM2MxNzYwMDAtM2MyMTdmZmYgOiBTeXN0ZW0gUkFNCjNjMjE4MDAwLTNjMjJkZmZm
-IDogcmVzZXJ2ZWQKM2MyMmUwMDAtM2M2MmRmZmYgOiBTeXN0ZW0gUkFNCjNjNjJlMDAwLTNjNmE5
-ZmZmIDogU3lzdGVtIFJBTQozYzZhYTAwMC0zYzdkZmZmZiA6IFN5c3RlbSBSQU0KM2M3ZTAwMDAt
-M2M3ZTNmZmYgOiByZXNlcnZlZAozYzdlNDAwMC0zYzg1OWZmZiA6IFN5c3RlbSBSQU0KM2M4NWEw
-MDAtM2M4ODhmZmYgOiBTeXN0ZW0gUkFNCjNjODg5MDAwLTNjODk1ZmZmIDogU3lzdGVtIFJBTQoz
-Yzg5NjAwMC0zYzhhMWZmZiA6IHJlc2VydmVkCjNjOGEyMDAwLTNjOGEyZmZmIDogU3lzdGVtIFJB
-TQozYzhhMzAwMC0zYzhiNWZmZiA6IFN5c3RlbSBSQU0KM2M4YjYwMDAtM2M4YzdmZmYgOiBTeXN0
-ZW0gUkFNCjNjOGM4MDAwLTNjOGM5ZmZmIDogU3lzdGVtIFJBTQozYzhjYTAwMC0zYzhkOWZmZiA6
-IHJlc2VydmVkCjNjOGRhMDAwLTNjOGYwZmZmIDogU3lzdGVtIFJBTQozYzhmMTAwMC0zYzhmN2Zm
-ZiA6IFN5c3RlbSBSQU0KM2M4ZjgwMDAtM2NhNGZmZmYgOiBTeXN0ZW0gUkFNCjNjYTUwMDAwLTNj
-YTUzZmZmIDogcmVzZXJ2ZWQKM2NhNTQwMDAtM2NhNTlmZmYgOiBTeXN0ZW0gUkFNCjNjYTVhMDAw
-LTNjYWIxZmZmIDogU3lzdGVtIFJBTQozY2FiMjAwMC0zY2FiM2ZmZiA6IHJlc2VydmVkCjNjYWI0
-MDAwLTNjYzg1ZmZmIDogU3lzdGVtIFJBTQozY2M4NjAwMC0zY2M4N2ZmZiA6IHJlc2VydmVkCjNj
-Yzg4MDAwLTNjZGQ5ZmZmIDogU3lzdGVtIFJBTQozY2RkYTAwMC0zY2RkYmZmZiA6IHJlc2VydmVk
-CjNjZGRjMDAwLTNjZTNiZmZmIDogU3lzdGVtIFJBTQozY2UzYzAwMC0zY2UzZGZmZiA6IHJlc2Vy
-dmVkCjNjZTNlMDAwLTNkODZiZmZmIDogU3lzdGVtIFJBTQozZDg2YzAwMC0zZDg3M2ZmZiA6IFN5
-c3RlbSBSQU0KM2Q4NzQwMDAtM2Q4YWJmZmYgOiBTeXN0ZW0gUkFNCjNkOGFjMDAwLTNkOGI1ZmZm
-IDogU3lzdGVtIFJBTQozZDhiNjAwMC0zZDhkN2ZmZiA6IFN5c3RlbSBSQU0KM2Q4ZDgwMDAtM2Q4
-ZGRmZmYgOiBTeXN0ZW0gUkFNCjNkOGRlMDAwLTNkOWVmZmZmIDogU3lzdGVtIFJBTQozZDlmMDAw
-MC0zZDlmMWZmZiA6IHJlc2VydmVkCjNkOWYyMDAwLTNkYTQxZmZmIDogU3lzdGVtIFJBTQozZGE0
-MjAwMC0zZGE0M2ZmZiA6IHJlc2VydmVkCjNkYTQ0MDAwLTNkYmY2ZmZmIDogU3lzdGVtIFJBTQoz
-ZGJmNzAwMC0zZGJmZGZmZiA6IFN5c3RlbSBSQU0KM2RiZmUwMDAtM2U4MGRmZmYgOiBTeXN0ZW0g
-UkFNCjNlODBlMDAwLTNlODBmZmZmIDogcmVzZXJ2ZWQKM2U4MTAwMDAtM2U4MWRmZmYgOiBTeXN0
-ZW0gUkFNCjNlODFlMDAwLTNlODFmZmZmIDogcmVzZXJ2ZWQKM2U4MjAwMDAtM2U4NDVmZmYgOiBT
-eXN0ZW0gUkFNCjNlODQ2MDAwLTNlOGJiZmZmIDogU3lzdGVtIFJBTQozZThiYzAwMC0zZjhkNmZm
-ZiA6IFN5c3RlbSBSQU0KM2Y4ZDcwMDAtM2ZjZDZmZmYgOiByZXNlcnZlZAozZmNkNzAwMC0zZmNl
-MGZmZiA6IFN5c3RlbSBSQU0KM2ZjZTEwMDAtM2ZkY2VmZmYgOiByZXNlcnZlZAozZmRjZjAwMC0z
-ZmRmMmZmZiA6IFN5c3RlbSBSQU0KM2ZkZjMwMDAtM2ZmZmZmZmYgOiByZXNlcnZlZAo1MDAwMDAw
-MC05ZmZmZmZmZiA6IFBDSSBCdXMgMDAwMDowMAogIDUwMDAwMDAwLTU4MGZmZmZmIDogUENJIEJ1
-cyAwMDAwOjBiCiAgICA1MDAwMDAwMC01N2ZmZmZmZiA6IDAwMDA6MGI6MDQuMAogICAgNTgwMDAw
-MDAtNTgwMGZmZmYgOiAwMDAwOjBiOjA0LjAKICA1ODEwMDAwMC01ODFmZmZmZiA6IFBDSSBCdXMg
-MDAwMDowMwogICAgNTgxMDAwMDAtNTgxMGZmZmYgOiAwMDAwOjAzOjAwLjAKICAgICAgNTgxMDAw
-MDAtNTgxMGZmZmYgOiBtcHQKICAgIDU4MTEwMDAwLTU4MTEzZmZmIDogMDAwMDowMzowMC4wCiAg
-ICAgIDU4MTEwMDAwLTU4MTEzZmZmIDogbXB0CiAgNTgyMDAwMDAtNTgyZmZmZmYgOiBQQ0kgQnVz
-IDAwMDA6MDEKICAgIDU4MjAwMDAwLTU4MjFmZmZmIDogMDAwMDowMTowMC4xCiAgICAgIDU4MjAw
-MDAwLTU4MjFmZmZmIDogaWdiCiAgICA1ODIyMDAwMC01ODIzZmZmZiA6IDAwMDA6MDE6MDAuMQog
-ICAgICA1ODIyMDAwMC01ODIzZmZmZiA6IGlnYgogICAgNTgyNDAwMDAtNTgyNWZmZmYgOiAwMDAw
-OjAxOjAwLjAKICAgICAgNTgyNDAwMDAtNTgyNWZmZmYgOiBpZ2IKICAgIDU4MjYwMDAwLTU4Mjdm
-ZmZmIDogMDAwMDowMTowMC4wCiAgICAgIDU4MjYwMDAwLTU4MjdmZmZmIDogaWdiCiAgICA1ODI4
-MDAwMC01ODI4M2ZmZiA6IDAwMDA6MDE6MDAuMQogICAgICA1ODI4MDAwMC01ODI4M2ZmZiA6IGln
-YgogICAgNTgyODQwMDAtNTgyODdmZmYgOiAwMDAwOjAxOjAwLjAKICAgICAgNTgyODQwMDAtNTgy
-ODdmZmYgOiBpZ2IKICA1ODMwMDAwMC01ODMwM2ZmZiA6IDAwMDA6MDA6MTYuMAogIDU4MzA0MDAw
-LTU4MzA3ZmZmIDogMDAwMDowMDoxNi4xCiAgNTgzMDgwMDAtNTgzMGJmZmYgOiAwMDAwOjAwOjE2
-LjIKICA1ODMwYzAwMC01ODMwZmZmZiA6IDAwMDA6MDA6MTYuMwogIDU4MzEwMDAwLTU4MzEzZmZm
-IDogMDAwMDowMDoxNi40CiAgNTgzMTQwMDAtNTgzMTdmZmYgOiAwMDAwOjAwOjE2LjUKICA1ODMx
-ODAwMC01ODMxYmZmZiA6IDAwMDA6MDA6MTYuNgogIDU4MzFjMDAwLTU4MzFmZmZmIDogMDAwMDow
-MDoxNi43CiAgNTgzMjAwMDAtNTgzMjBmZmYgOiAwMDAwOjAwOjEzLjAKICA1ODMyMTAwMC01ODMy
-MTNmZiA6IDAwMDA6MDA6MWQuNwogICAgNTgzMjEwMDAtNTgzMjEzZmYgOiBlaGNpX2hjZAogIDU4
-MzIxNDAwLTU4MzIxN2ZmIDogMDAwMDowMDoxYS43CiAgICA1ODMyMTQwMC01ODMyMTdmZiA6IGVo
-Y2lfaGNkCiAgNTgzMjE4MDAtNTgzMjE4ZmYgOiAwMDAwOjAwOjFmLjMKYTAwMDAwMDAtYTAwMGZm
-ZmYgOiBtcHQKYTAwMTAwMDAtYTAwMTNmZmYgOiBtcHQKYTAxMDAwMDAtYTAxMWZmZmYgOiBpZ2IK
-YTAxMjAwMDAtYTAxM2ZmZmYgOiBpZ2IKYTAxNDAwMDAtYTAxNWZmZmYgOiBpZ2IKYTAxNjAwMDAt
-YTAxN2ZmZmYgOiBpZ2IKYTAxODAwMDAtYTAxODNmZmYgOiBpZ2IKYTAxODQwMDAtYTAxODdmZmYg
-OiBpZ2IKZmVhMDAwMDAtZmVhMDAwMWYgOiBwbnAgMDA6MDEKZmVjMDAwMDAtZmVjZmZmZmYgOiBQ
-TlAwMDAzOjAwCiAgZmVjNDAwMDAtZmVjN2ZmZmYgOiBQTlAwMDAzOjAxCmZlZDFiMDAwLWZlZDFi
-ZmZmIDogcG5wIDAwOjAxCmZlZDFjMDAwLWZlZDhiZmZlIDogcG5wIDAwOjAxCmZlZTAwMDAwLWZl
-ZWZmZmZmIDogcG5wIDAwOjAxCmZmMDAwMDAwLWZmZmZmZmZmIDogcG5wIDAwOjAxCjEwMDAwMDAw
-MC0zZmZmZmZmZmYgOiBTeXN0ZW0gUkFNCjQ0MDAwMDAwMC00ZmFhZDVmZmYgOiBTeXN0ZW0gUkFN
-CjRmYWFkNjAwMC00ZmFmYTVmZmYgOiBTeXN0ZW0gUkFNCjRmYWZhNjAwMC00ZmIwMGJmZmYgOiBy
-ZXNlcnZlZAo0ZmIwMGMwMDAtNGZiMDVkZmZmIDogU3lzdGVtIFJBTQo0ZmIwNWUwMDAtNGZiMGI5
-ZmZmIDogU3lzdGVtIFJBTQo0ZmIwYmEwMDAtNGZiMGQxZmZmIDogU3lzdGVtIFJBTQo0ZmIwZDIw
-MDAtNGZiMGRiZmZmIDogU3lzdGVtIFJBTQogIDRmYjBkMjAxOC00ZmIwZDQxMTggOiBFRkkgTWVt
-b3J5IE1hcAogIDRmYjBkNjAxOC00ZmIwZDYwNjggOiBCb290IHBhcmFtZXRlcgo0ZmIwZGMwMDAt
-NGZiMGU3ZmZmIDogU3lzdGVtIFJBTQo0ZmIwZTgwMDAtNGZiMGU5ZmZmIDogcmVzZXJ2ZWQKNGZi
-MGVhMDAwLTRmYjBlZmZmZiA6IFN5c3RlbSBSQU0KNGZiMGYwMDAwLTRmYjExM2ZmZiA6IFN5c3Rl
-bSBSQU0KNGZiMTE0MDAwLTRmYjExNWZmZiA6IFN5c3RlbSBSQU0KNGZiMTE2MDAwLTRmYjE1M2Zm
-ZiA6IFN5c3RlbSBSQU0KNGZiMTU0MDAwLTRmYjE1NWZmZiA6IFN5c3RlbSBSQU0KNGZiMTU2MDAw
-LTRmYmZmZmZmZiA6IFN5c3RlbSBSQU0KNGZjMDAwMDAwLTRmZmZmZmZmZiA6IHJlc2VydmVkCjFm
-ZmZmZmMwMDAwMDAtMWZmZmZmYzMzZGNmNyA6IFBDSSBCdXMgMDAwMDowMCBJL08gUG9ydHMgMDAw
-MDAwMDAtMDAwMDBjZjcKMWZmZmZmYzQwMDAwMC0xZmZmZmZlM2ZmZmZmIDogUENJIEJ1cyAwMDAw
-OjAwIEkvTyBQb3J0cyAwMDAwMTAwMC0wMDAwOGZmZgoxZmZmZmZlNDAwMDAwLTFmZmZmZmZmZmZm
-ZmUgOiBQQ0kgQnVzIDAwMDA6ODAgSS9PIFBvcnRzIDAwMDA5MDAwLTAwMDBmZmZlCg==
---089e0141a3a232fc57050d938f76--
