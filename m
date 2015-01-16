@@ -1,243 +1,85 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:47705 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751582AbbAPSN7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Jan 2015 13:13:59 -0500
+Date: Fri, 16 Jan 2015 13:13:18 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Sander Eikelenboom <linux@eikelenboom.it>,
 	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
-	linux-ia64@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part1 v7 19/38] iommu/vt-d: Refine the interfaces to create IRQ for DMAR unit
-Date: Tue, 20 Jan 2015 11:08:22 +0800
-Message-Id: <1421723321-8386-20-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pm@vger.kernel.org, xen-devel@lists.xenproject.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [Bugfix v4 1/2] xen/pci: Fix xen IRQ allocation failure caused
+ by commit b81975eade8c
+Message-ID: <20150116181318.GA22690@l.oracle.com>
+References: <1421204979-30619-1-git-send-email-jiang.liu@linux.intel.com>
+ <1421327077-19894-1-git-send-email-jiang.liu@linux.intel.com>
+ <1421327077-19894-2-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1421327077-19894-2-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Refine the interfaces to create IRQ for DMAR unit. It's a preparation
-for converting DMAR IRQ to hierarchy irqdomain on x86.
+On Thu, Jan 15, 2015 at 09:04:35PM +0800, Jiang Liu wrote:
+> Commit b81975eade8c ("x86, irq: Clean up irqdomain transition code")
+> breaks xen IRQ allocation because xen_smp_prepare_cpus() doesn't invoke
+> setup_IO_APIC(), so no irqdomains created for IOAPICs and
+> mp_map_pin_to_irq() fails at the very beginning.
+> 
+> Currently Xen Domain0 has special treatment for ACPI SCI interrupt,
+> that is initialize irq for ACPI SCI at early stage in a special way as:
+> xen_init_IRQ()
+> 	->pci_xen_initial_domain()
+> 		->xen_setup_acpi_sci()
+> 			Allocate and initialize irq for ACPI SCI
+> 
+> Function xen_setup_acpi_sci() calls acpi_gsi_to_irq() to get an irq
+> number for ACPI SCI. But unfortunately acpi_gsi_to_irq() depends on
+> IOAPIC irqdomains through following path
+> acpi_gsi_to_irq()
+> 	->mp_map_gsi_to_irq()
+> 		->mp_map_pin_to_irq()
+> 			->check IOAPIC irqdomain
+> 
+> For PV domains, it uses Xen event based interrupt manangement and
+> doesn't make uses of native IOAPIC, so no irqdomains created for IOAPIC.
+> This causes Xen domain0 fails to install interrupt handler for ACPI SCI
+> and all ACPI events will be lost. Please refer to:
+> https://lkml.org/lkml/2014/12/19/178
+> 
+> So the fix is to get rid of special treatment for ACPI SCI, just treat
+> ACPI SCI as normal GSI interrupt as:
+> acpi_gsi_to_irq()
+> 	->acpi_register_gsi()
+> 		->acpi_register_gsi_xen()
+> 			->xen_register_gsi()
+> 
+> With above change, there's no need for xen_setup_acpi_sci() anymore.
+> The above change also works with bare metal kernel too.
+> 
+> Note: we need to test this patch on those special AMD systems which
+> override normal SCI GSI (9) with strange GSI (20).
 
-It also moves dmar_alloc_hwirq()/dmar_free_hwirq() from irq_remapping.h
-to dmar.h. They are not irq_remapping specific.
+[    0.000000] DMI: Supermicro X8DTN/X8DTN, BIOS 2.1c       10/28/2011
+..
+     0.000000] ACPI: INT_SRC_OVR (bus 0 bus_irq 0 global_irq 2 dfl dfl)
+[    0.000000] ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 20 low level)
+[    0.000000] ACPI: IRQ0 used by override.
+..
+    6.358737] xen: registering gsi 20 triggering 0 polarity 1
+[    6.358756] xen: --> pirq=20 -> irq=20 (gsi=20)
+...
+-bash-4.1# cat /proc/interrupts |grep acpi
+ 20:          0          0          0  xen-pirq-ioapic-level  acpi
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: iommu@lists.linux-foundation.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Vinod Koul <vinod.koul@intel.com>
-Link: http://lkml.kernel.org/r/1416894816-23245-20-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- arch/ia64/include/asm/irq_remapping.h |    2 --
- arch/ia64/kernel/msi_ia64.c           |   30 +++++++++++++++++++-----------
- arch/x86/include/asm/irq_remapping.h  |    4 ----
- arch/x86/kernel/apic/msi.c            |   24 +++++++++++++-----------
- drivers/iommu/dmar.c                  |   19 +++++--------------
- include/linux/dmar.h                  |    3 ++-
- 6 files changed, 39 insertions(+), 43 deletions(-)
-
-diff --git a/arch/ia64/include/asm/irq_remapping.h b/arch/ia64/include/asm/irq_remapping.h
-index e3b3556e2e1b..a8687b1d8906 100644
---- a/arch/ia64/include/asm/irq_remapping.h
-+++ b/arch/ia64/include/asm/irq_remapping.h
-@@ -1,6 +1,4 @@
- #ifndef __IA64_INTR_REMAPPING_H
- #define __IA64_INTR_REMAPPING_H
- #define irq_remapping_enabled 0
--#define dmar_alloc_hwirq	create_irq
--#define dmar_free_hwirq		destroy_irq
- #endif
-diff --git a/arch/ia64/kernel/msi_ia64.c b/arch/ia64/kernel/msi_ia64.c
-index 8ae36ea177d3..3f6b76135645 100644
---- a/arch/ia64/kernel/msi_ia64.c
-+++ b/arch/ia64/kernel/msi_ia64.c
-@@ -166,7 +166,7 @@ static struct irq_chip dmar_msi_type = {
- 	.irq_retrigger = ia64_msi_retrigger_irq,
- };
- 
--static int
-+static void
- msi_compose_msg(struct pci_dev *pdev, unsigned int irq, struct msi_msg *msg)
- {
- 	struct irq_cfg *cfg = irq_cfg + irq;
-@@ -188,21 +188,29 @@ msi_compose_msg(struct pci_dev *pdev, unsigned int irq, struct msi_msg *msg)
- 		MSI_DATA_LEVEL_ASSERT |
- 		MSI_DATA_DELIVERY_FIXED |
- 		MSI_DATA_VECTOR(cfg->vector);
--	return 0;
- }
- 
--int arch_setup_dmar_msi(unsigned int irq)
-+int dmar_alloc_hwirq(int id, int node, void *arg)
- {
--	int ret;
-+	int irq;
- 	struct msi_msg msg;
- 
--	ret = msi_compose_msg(NULL, irq, &msg);
--	if (ret < 0)
--		return ret;
--	dmar_msi_write(irq, &msg);
--	irq_set_chip_and_handler_name(irq, &dmar_msi_type, handle_edge_irq,
--				      "edge");
--	return 0;
-+	irq = create_irq();
-+	if (irq > 0) {
-+		irq_set_handler_data(irq, arg);
-+		irq_set_chip_and_handler_name(irq, &dmar_msi_type,
-+					      handle_edge_irq, "edge");
-+		msi_compose_msg(NULL, irq, &msg);
-+		dmar_msi_write(irq, &msg);
-+	}
-+
-+	return irq;
-+}
-+
-+void dmar_free_hwirq(int irq)
-+{
-+	irq_set_handler_data(irq, NULL);
-+	destroy_irq(irq);
- }
- #endif /* CONFIG_INTEL_IOMMU */
- 
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index a6d0cca0d08f..79f1a84e6a85 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -117,8 +117,4 @@ irq_remapping_get_irq_domain(struct irq_alloc_info *info)
- 
- #define	irq_remapping_print_chip	NULL
- #endif /* CONFIG_IRQ_REMAP */
--
--extern int dmar_alloc_hwirq(void);
--extern void dmar_free_hwirq(int irq);
--
- #endif /* __X86_IRQ_REMAPPING_H */
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index afaaa1166a7d..695c82bbd682 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -228,25 +228,27 @@ static struct irq_chip dmar_msi_type = {
- 	.flags			= IRQCHIP_SKIP_SET_WAKE,
- };
- 
--int arch_setup_dmar_msi(unsigned int irq)
-+int dmar_alloc_hwirq(int id, int node, void *arg)
- {
-+	int irq;
- 	struct msi_msg msg;
--	struct irq_cfg *cfg = irq_cfg(irq);
- 
--	native_compose_msi_msg(cfg, &msg);
--	dmar_msi_write(irq, &msg);
--	irq_set_chip_and_handler_name(irq, &dmar_msi_type, handle_edge_irq,
--				      "edge");
--	return 0;
--}
-+	irq = irq_domain_alloc_irqs(NULL, 1, node, NULL);
-+	if (irq > 0) {
-+		irq_set_handler_data(irq, arg);
-+		irq_set_chip_and_handler_name(irq, &dmar_msi_type,
-+					      handle_edge_irq, "edge");
-+		native_compose_msi_msg(irq_cfg(irq), &msg);
-+		dmar_msi_write(irq, &msg);
-+	}
- 
--int dmar_alloc_hwirq(void)
--{
--	return irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
-+	return irq;
- }
- 
- void dmar_free_hwirq(int irq)
- {
-+	irq_set_handler_data(irq, NULL);
-+	irq_set_handler(irq, NULL);
- 	irq_domain_free_irqs(irq, 1);
- }
- #endif
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index 9847613085e1..536f2d8ea41a 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -1087,8 +1087,8 @@ static void free_iommu(struct intel_iommu *iommu)
- 
- 	if (iommu->irq) {
- 		free_irq(iommu->irq, iommu);
--		irq_set_handler_data(iommu->irq, NULL);
- 		dmar_free_hwirq(iommu->irq);
-+		iommu->irq = 0;
- 	}
- 
- 	if (iommu->qi) {
-@@ -1642,23 +1642,14 @@ int dmar_set_interrupt(struct intel_iommu *iommu)
- 	if (iommu->irq)
- 		return 0;
- 
--	irq = dmar_alloc_hwirq();
--	if (irq <= 0) {
-+	irq = dmar_alloc_hwirq(iommu->seq_id, iommu->node, iommu);
-+	if (irq > 0) {
-+		iommu->irq = irq;
-+	} else {
- 		pr_err("IOMMU: no free vectors\n");
- 		return -EINVAL;
- 	}
- 
--	irq_set_handler_data(irq, iommu);
--	iommu->irq = irq;
--
--	ret = arch_setup_dmar_msi(irq);
--	if (ret) {
--		irq_set_handler_data(irq, NULL);
--		iommu->irq = 0;
--		dmar_free_hwirq(irq);
--		return ret;
--	}
--
- 	ret = request_irq(irq, dmar_fault, IRQF_NO_THREAD, iommu->name, iommu);
- 	if (ret)
- 		pr_err("IOMMU: can't request irq\n");
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index 30624954dec5..84737565c1fd 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -227,6 +227,7 @@ extern void dmar_msi_read(int irq, struct msi_msg *msg);
- extern void dmar_msi_write(int irq, struct msi_msg *msg);
- extern int dmar_set_interrupt(struct intel_iommu *iommu);
- extern irqreturn_t dmar_fault(int irq, void *dev_id);
--extern int arch_setup_dmar_msi(unsigned int irq);
-+extern int dmar_alloc_hwirq(int id, int node, void *arg);
-+extern void dmar_free_hwirq(int irq);
- 
- #endif /* __DMAR_H__ */
--- 
-1.7.10.4
 
