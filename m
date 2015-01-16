@@ -1,146 +1,50 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	linux-kernel@vger.kernel.org, Marc Zyngier <marc.zyngier@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
-	Joerg Roedel <jroedel@suse.de>
-Subject: [Patch Part1 v7 07/38] x86/dmar: Use new irqdomain interfaces to allocate/free IRQ
-Date: Tue, 20 Jan 2015 11:08:10 +0800
-Message-Id: <1421723321-8386-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH 11/28] PCI: Introduce pci_host_bridge_ops to setup host bridge
+Date: Fri, 16 Jan 2015 10:35:30 +0100
+Message-ID: <3832604.lYie7PXiOd@wuerfel>
+In-Reply-To: <1443278.UW4hQ0rXtr@wuerfel>
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <1421372666-12288-12-git-send-email-wangyijing@huawei.com> <1443278.UW4hQ0rXtr@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new irqdomain interfaces to allocate/free IRQ for DMAR and interrupt
-remapping, so we could kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
+On Friday 16 January 2015 10:23:11 Arnd Bergmann wrote:
+> On Friday 16 January 2015 09:44:09 Yijing Wang wrote:
+> > @@ -2064,7 +2073,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+> >  {
+> >         struct pci_host_bridge *host;
+> >  
+> > -       host = pci_create_host_bridge(parent, db, resources, sysdata);
+> > +       host = pci_create_host_bridge(parent, db, resources, sysdata, NULL);
+> >         if (!host)
+> >                 return NULL;
+> >  
+> > 
+> 
+> Same comment as for patch 10: If we leave this out of the pci_create_host_bridge
+> argument but set it later, þe interface becomes simpler for callers that
+> don't have custom pci_host_bridge_ops.
+> 
+> This would break your phb_prepare() callback, but I assume a host driver
+> can just make a direct function call before entering pci_create_host_bridge
+> for this. Let me know if I'm missing something here.
 
-The private definition of irq_alloc_hwirqs()/irq_free_hwirqs() are
-temporary solution, it will be removed once we have converted interrupt
-remapping driver to use irqdomain framework.
+I've read the later patches now that explain why it's needed, so nevermind
+my comment above.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: iommu@lists.linux-foundation.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Joerg Roedel <joro@8bytes.org>
-Link: http://lkml.kernel.org/r/1416894816-23245-8-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- arch/x86/include/asm/irq_remapping.h |    4 ++--
- arch/x86/kernel/apic/msi.c           |   10 ++++++++++
- drivers/iommu/irq_remapping.c        |   17 +++++++++++++++--
- 3 files changed, 27 insertions(+), 4 deletions(-)
-
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index 6224d316c405..86d897bc15dd 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -99,7 +99,7 @@ static inline bool setup_remapped_irq(int irq,
- }
- #endif /* CONFIG_IRQ_REMAP */
- 
--#define dmar_alloc_hwirq()	irq_alloc_hwirq(-1)
--#define dmar_free_hwirq		irq_free_hwirq
-+extern int dmar_alloc_hwirq(void);
-+extern void dmar_free_hwirq(int irq);
- 
- #endif /* __X86_IRQ_REMAPPING_H */
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 76cc2c902176..9be7d6d8a579 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -223,6 +223,16 @@ int arch_setup_dmar_msi(unsigned int irq)
- 				      "edge");
- 	return 0;
- }
-+
-+int dmar_alloc_hwirq(void)
-+{
-+	return irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
-+}
-+
-+void dmar_free_hwirq(int irq)
-+{
-+	irq_domain_free_irqs(irq, 1);
-+}
- #endif
- 
- /*
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 390079ee1350..5617150fd8fb 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -6,6 +6,7 @@
- #include <linux/msi.h>
- #include <linux/irq.h>
- #include <linux/pci.h>
-+#include <linux/irqdomain.h>
- 
- #include <asm/hw_irq.h>
- #include <asm/irq_remapping.h>
-@@ -49,6 +50,18 @@ static void irq_remapping_disable_io_apic(void)
- 		disconnect_bsp_APIC(0);
- }
- 
-+#ifndef CONFIG_GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
-+static unsigned int irq_alloc_hwirqs(int cnt, int node)
-+{
-+	return irq_domain_alloc_irqs(NULL, -1, cnt, node, NULL);
-+}
-+
-+static void irq_free_hwirqs(unsigned int from, int cnt)
-+{
-+	irq_domain_free_irqs(from, cnt);
-+}
-+#endif
-+
- static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
- {
- 	int ret, sub_handle, nvec_pow2, index = 0;
-@@ -104,7 +117,7 @@ static int do_setup_msix_irqs(struct pci_dev *dev, int nvec)
- 
- 	list_for_each_entry(msidesc, &dev->msi_list, list) {
- 
--		irq = irq_alloc_hwirq(node);
-+		irq = irq_alloc_hwirqs(1, node);
- 		if (irq == 0)
- 			return -1;
- 
-@@ -127,7 +140,7 @@ static int do_setup_msix_irqs(struct pci_dev *dev, int nvec)
- 	return 0;
- 
- error:
--	irq_free_hwirq(irq);
-+	irq_free_hwirqs(irq, 1);
- 	return ret;
- }
- 
--- 
-1.7.10.4
-
+	Arnd
