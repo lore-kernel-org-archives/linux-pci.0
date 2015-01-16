@@ -1,105 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:39341 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753315AbbAJCf1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 21:35:27 -0500
-From: Rob Herring <robh@kernel.org>
-To: linux-kernel@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh@kernel.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Greg Ungerer <gerg@uclinux.org>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Paul Mackerras <paulus@samba.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Simon Horman <horms@verge.net.au>,
-	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Will Deacon <will.deacon@arm.com>,
-	cbe-oss-dev@lists.ozlabs.org, linux-am33-list@redhat.com,
-	linux-arm-kernel@lists.infradead.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux-sh@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: [PATCH 00/16] PCI generic configuration space accessors
-Date: Fri,  9 Jan 2015 20:34:34 -0600
-Message-Id: <1420857290-8373-1-git-send-email-robh@kernel.org>
+Received: from mail-oi0-f54.google.com ([209.85.218.54]:46839 "EHLO
+	mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753773AbbAPQP4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Jan 2015 11:15:56 -0500
+Received: by mail-oi0-f54.google.com with SMTP id u20so17953497oif.13
+        for <linux-pci@vger.kernel.org>; Fri, 16 Jan 2015 08:15:55 -0800 (PST)
+Date: Fri, 16 Jan 2015 10:15:52 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/4] PCI: Reset exclusions
+Message-ID: <20150116161552.GH29776@google.com>
+References: <20141121180322.26669.65689.stgit@gimli.home>
+ <20150116002802.GE29776@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150116002802.GE29776@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series adds common accessor functions for PCI configuration space
-accesses. This supports most PCI hosts with memory mapped configuration
-space like ECAM or hosts with memory mapped address/data registers. ECAM
-is not generically supported by this series, but could be added on top
-of this. While some hosts have standard address decoding which could be 
-common as well, the various checks on bus numbers and device numbers are 
-quite varied. It is unclear how much of that is really necessary or 
-could be common. 
+On Thu, Jan 15, 2015 at 06:28:02PM -0600, Bjorn Helgaas wrote:
+> On Fri, Nov 21, 2014 at 11:24:02AM -0700, Alex Williamson wrote:
+> > This is really 2 sets of 2 patches, but they both add bits to
+> > dev_flags so are included together.
+> > 
+> > This fixes two problems we've seen with resets.  The first is for
+> > devices that advertise a PM reset mechanism, but it doesn't appear to
+> > do anything.  We add a quirk and flags bit to indicate the PM reset
+> > mechanism isn't viable.  This happens on some AMD GPUs and causes
+> > vfio-pci to assume the PM reset was successful when it really did
+> > nothing and we should have escalated to a PCI bus reset.  Alex
+> > Deucher confirms that PM reset isn't used by graphics drivers.  The
+> > exclusion here is for users of pci_reset_function(), which mostly
+> > only includes pci-sysfs and drivers like legacy KVM device assignment
+> > and VFIO.
+> > 
+> > The second issue is a problem identified with an Atheros wifi chip
+> > where in performing a bus reset of the device, we not only permanently
+> > lose access to the device, but it introduces host stability issues if
+> > we try to access it.  I've been unsuccessful in finding any way to
+> > make the device behave or in finding anyone with access to hardware
+> > documentation and errata for this device, so it seems like the most
+> > appropriate path is to blacklist bus resets for topologies including
+> > this device.  The second two patches add infrastructure and quirks to
+> > do this.  Thanks,
+> > 
+> > Alex
+> > 
+> > ---
+> > 
+> > Alex Williamson (4):
+> >       PCI: quirk Atheros AR93xx to avoid bus reset
+> >       PCI: Allow device quirks to exclude bus reset
+> 
+> I applied these two (above) to for-linus for v3.19, thanks.
+> 
+> >       PCI: quirk AMD/ATI VGA cards to avoid PM reset
+> >       PCI: Allow device quirks to exclude D3->D0 PM reset
 
-The first 4 patches are preparatory cleanup. Patch 5 introduces the
-common accessors. The remaining patches convert several PCI host
-controllers. This is in no way a complete list of host controllers. The
-conversion of more hosts should be possible. The Designware controller
-in particular should be able to be converted, but its config space
-accessors are a mess of override-able functions that I've not gotten my
-head around.
+And I applied these PM reset patches to pci/virtualization for v3.20 (with
+Alex's ack on the latter), thanks!
 
-This series is available here [1].
-
-Rob
-
-[1] git://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git pci-config-access
-
-Rob Herring (16):
-  frv: add struct pci_ops member names to initialization
-  mips: add struct pci_ops member names to initialization
-  mn10300: add struct pci_ops member names to initialization
-  powerpc: add struct pci_ops member names to initialization
-  pci: introduce common pci config space accessors
-  ARM: cns3xxx: convert PCI to use generic config accesses
-  ARM: integrator: convert PCI to use generic config accesses
-  ARM: sa1100: convert PCI to use generic config accesses
-  ARM: ks8695: convert PCI to use generic config accesses
-  powerpc: fsl_pci: convert PCI to use generic config accesses
-  powerpc: powermac: convert PCI to use generic config accesses
-  pci/host: generic: convert to use generic config accesses
-  pci/host: rcar-gen2: convert to use generic config accesses
-  pci/host: tegra: convert to use generic config accesses
-  pci/host: xgene: convert to use generic config accesses
-  pci/host: xilinx: convert to use generic config accesses
-
- arch/arm/mach-cns3xxx/pcie.c                   |  52 ++----
- arch/arm/mach-integrator/pci_v3.c              |  61 +-------
- arch/arm/mach-ks8695/pci.c                     |  77 +--------
- arch/arm/mach-sa1100/pci-nanoengine.c          |  94 +----------
- arch/frv/mb93090-mb00/pci-vdk.c                |   4 +-
- arch/mips/pci/pci-bcm1480.c                    |   4 +-
- arch/mips/pci/pci-octeon.c                     |   4 +-
- arch/mips/pci/pcie-octeon.c                    |  12 +-
- arch/mn10300/unit-asb2305/pci.c                |   4 +-
- arch/powerpc/platforms/cell/celleb_scc_pciex.c |   4 +-
- arch/powerpc/platforms/powermac/pci.c          | 209 +++++--------------------
- arch/powerpc/sysdev/fsl_pci.c                  |  46 +-----
- drivers/pci/access.c                           |  87 ++++++++++
- drivers/pci/host/pci-host-generic.c            |  51 +-----
- drivers/pci/host/pci-rcar-gen2.c               |  51 +-----
- drivers/pci/host/pci-tegra.c                   |  55 +------
- drivers/pci/host/pci-xgene.c                   | 150 ++----------------
- drivers/pci/host/pcie-xilinx.c                 |  88 ++---------
- include/linux/pci.h                            |  11 ++
- 19 files changed, 212 insertions(+), 852 deletions(-)
-
--- 
-2.1.0
-
+> > 
+> >  drivers/pci/pci.c    |   42 +++++++++++++++++++++++++++++++++++++-----
+> >  drivers/pci/quirks.c |   35 +++++++++++++++++++++++++++++++++++
+> >  include/linux/pci.h  |    4 ++++
+> >  3 files changed, 76 insertions(+), 5 deletions(-)
