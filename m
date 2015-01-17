@@ -1,54 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:37361 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752105AbbAIUiv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 15:38:51 -0500
-Received: by mail-ie0-f182.google.com with SMTP id x19so16998412ier.13
-        for <linux-pci@vger.kernel.org>; Fri, 09 Jan 2015 12:38:50 -0800 (PST)
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:40931 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751607AbbAQQju (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 17 Jan 2015 11:39:50 -0500
+Received: by mail-lb0-f174.google.com with SMTP id 10so22681074lbg.5
+        for <linux-pci@vger.kernel.org>; Sat, 17 Jan 2015 08:39:49 -0800 (PST)
+Message-ID: <54BA9052.9080904@cogentembedded.com>
+Date: Sat, 17 Jan 2015 19:39:46 +0300
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-In-Reply-To: <20150109184549.GI6575@google.com>
-References: <CAE9FiQXj-vX8TE-8Es83FmJAKDKD_dMNbQkmsaNPyy_nVEag8w@mail.gmail.com>
-	<20141220002306.GB30834@google.com>
-	<CAE9FiQUU4OoxpV3MNyFdjtmS1nRfD=ziYDDnUmsGy5qj8U3vLg@mail.gmail.com>
-	<CAErSpo7JAcLa_2gNkOG+oSHb1cbBXdEa-TVW0=amBptRB8-fNA@mail.gmail.com>
-	<CAE9FiQV6nxeMcLQ6YBR_c5tNGGjiKgL+Z4vcGpK21j-14V8SKw@mail.gmail.com>
-	<CAE9FiQVggbU5u__0z8p33J9hQ39CtQ-vpQbZyjG-LO9aqN05Lw@mail.gmail.com>
-	<20141223214106.GA27291@google.com>
-	<CAE9FiQUoA_vz78sEnHtDAmzTJcwL0PdUe9jwLw+H9h3+omq+WA@mail.gmail.com>
-	<549C313A.7090504@gmail.com>
-	<CAE9FiQUihEJeMT98pF-eQTEY9NcvvBCUgWQKXVXwmCZ8=Jy=8Q@mail.gmail.com>
-	<20150109184549.GI6575@google.com>
-Date: Fri, 9 Jan 2015 12:38:50 -0800
-Message-ID: <CAE9FiQXCv0q0+K1Z54opUDRL2ofRGYsbh5-OYwDXis7pZFa8Kw@mail.gmail.com>
-Subject: Re: Regression: bug 85491: radeon 0000:01:00.0: Fatal error during
- GPU init
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: =?UTF-8?Q?Marek_Kord=C3=ADk?= <kordikmarek@gmail.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alexey Voronkov <zermond@gmail.com>,
-	David Airlie <airlied@linux.ie>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Richard Yang <weiyang@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=UTF-8
+To: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Liviu Dudau <liviu@dudau.co.uk>, Tony Luck <tony.luck@intel.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-m68k@lists.linux-m68k.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	linux-alpha@vger.kernel.org, linux-ia64@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 23/28] PCI/designware: Use pci_scan_root_bus() for simplicity
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <1421372666-12288-24-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1421372666-12288-24-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 9, 2015 at 10:45 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, Dec 25, 2014 at 01:12:47PM -0800, Yinghai Lu wrote:
-> Do we have a patch that fixes the problem on x86?  I see that v2 failed for
-> Marek, and I don't see any test results for v3.
+Hello.
 
+On 1/16/2015 4:44 AM, Yijing Wang wrote:
 
-Yes. v3 works for Marek.
+> Use pci_scan_root_bus() instead of pci_create_root_bus() +
+> pci_scan_child_bus() for simplicity.
 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>   drivers/pci/host/pcie-designware.c |    4 +---
+>   1 files changed, 1 insertions(+), 3 deletions(-)
+
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index eef3111..d37fe27 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -725,13 +725,11 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+>   	struct pcie_port *pp = sys_to_pcie(sys);
 >
-> Also, my intent is for Marek or others to test this and verify that it
-> works on x86, and then you extend the patch to cover all architectures, and
-> then I'll merge them all.  I do not intend to merge the x86 change by
-> itself before the changes to other arches, because if I do that, the other
-> arches will probably never get fixed.
+>   	pp->root_bus_nr = sys->busnr;
+> -	bus = pci_create_root_bus(pp->dev, sys->busnr,
+> +	bus = pci_scan_root_bus(pp->dev, sys->busnr,
+>   				  &dw_pcie_ops, sys, &sys->resources);
 
-Ok, will go over other arch that ...
+    Please realign this line, so that it still starts under 'pp'.
+
+WBR, Sergei
+
