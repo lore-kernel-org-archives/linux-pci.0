@@ -1,106 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:38906 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751545AbbATRR3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 12:17:29 -0500
-MIME-Version: 1.0
-In-Reply-To: <54BC6799.2040907@linux.intel.com>
-References: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com>
-	<1420736772-11088-2-git-send-email-marc.zyngier@arm.com>
-	<CALRxmdDVUoYNg3QC0LdvKmCz9x4nzE9+TDiV9K9OH=Gxk-Cd9w@mail.gmail.com>
-	<54BC6799.2040907@linux.intel.com>
-Date: Tue, 20 Jan 2015 11:17:29 -0600
-Message-ID: <CALRxmdCRGY2Sw+UyHTp5PP4R=v2301LTqpKq0bCEs08SWsh1bg@mail.gmail.com>
-Subject: Re: [PATCH v2 1/8] device core: Introduce per-device MSI domain pointer
-From: Stuart Yoder <b08248@gmail.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Marc Zyngier <marc.zyngier@arm.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Jamet, Michael" <michael.jamet@intel.com>
+To: Andreas Noever <andreas.noever@gmail.com>
+CC: Andy Shevchenko <andy.shevchenko@gmail.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Levy, Amir (Jer)" <amir.jer.levy@intel.com>,
+	"Alloun, Dan" <dan.alloun@intel.com>,
+	Rafael Wysocki <rjw@rjwysocki.net>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: RE: [PATCH] pci: support Thunderbolt requirements for I/O resources.
+Date: Sun, 18 Jan 2015 14:16:26 +0000
+Message-ID: <BC567D27D6B7384F84318942321624DE269180F9@hasmsx109.ger.corp.intel.com>
+References: <1415847123-15558-1-git-send-email-michael.jamet@intel.com>
+ <CAErSpo7Z5x=U3vSnxrFpwYUDrUrnrrBCe1F9_GQNYqWWQFWNpQ@mail.gmail.com>
+ <CAHp75VcZ0XjcFxjrSgr5-XnWZZa-eZfPH_Fa1Hzb=f+qtE3z9w@mail.gmail.com>
+ <CAMxnaaXOa_GAFwK+tUrO8DBjENqdd9uaQHKqEMm+i4754Ch3gQ@mail.gmail.com>
+ <BC567D27D6B7384F84318942321624DE16179F2A@hasmsx109.ger.corp.intel.com>
+ <CAMxnaaV41H-bzw2kp=HXd0aicRJbtNJuNE4aPf=EvQPMKiPQ6g@mail.gmail.com>
+In-Reply-To: <CAMxnaaV41H-bzw2kp=HXd0aicRJbtNJuNE4aPf=EvQPMKiPQ6g@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Gerry,
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBBbmRyZWFzIE5vZXZlciBbbWFp
+bHRvOmFuZHJlYXMubm9ldmVyQGdtYWlsLmNvbV0NCj4gU2VudDogVHVlc2RheSwgTm92ZW1iZXIg
+MTgsIDIwMTQgMTc6NDgNCj4gVG86IEphbWV0LCBNaWNoYWVsDQo+IENjOiBBbmR5IFNoZXZjaGVu
+a287IEJqb3JuIEhlbGdhYXM7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LQ0KPiBr
+ZXJuZWxAdmdlci5rZXJuZWwub3JnOyBMZXZ5LCBBbWlyIChKZXIpOyBBbGxvdW4sIERhbjsgUmFm
+YWVsIFd5c29ja2kNCj4gU3ViamVjdDogUmU6IFtQQVRDSF0gcGNpOiBzdXBwb3J0IFRodW5kZXJi
+b2x0IHJlcXVpcmVtZW50cyBmb3IgSS9PIHJlc291cmNlcy4NCj4gDQo+IE9uIFR1ZSwgTm92IDE4
+LCAyMDE0IGF0IDk6MjAgQU0sIEphbWV0LCBNaWNoYWVsIDxtaWNoYWVsLmphbWV0QGludGVsLmNv
+bT4NCj4gd3JvdGU6DQo+ID4+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4+IEZyb206
+IEFuZHJlYXMgTm9ldmVyIFttYWlsdG86YW5kcmVhcy5ub2V2ZXJAZ21haWwuY29tXQ0KPiA+PiBT
+ZW50OiBXZWRuZXNkYXksIE5vdmVtYmVyIDEyLCAyMDE0IDIyOjE5DQo+ID4+IFRvOiBBbmR5IFNo
+ZXZjaGVua28NCj4gPj4gQ2M6IEJqb3JuIEhlbGdhYXM7IEphbWV0LCBNaWNoYWVsOyBsaW51eC1w
+Y2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC0NCj4gPj4ga2VybmVsQHZnZXIua2VybmVsLm9yZzsg
+TGV2eSwgQW1pciAoSmVyKTsgQWxsb3VuLCBEYW47IFJhZmFlbCBXeXNvY2tpDQo+ID4+IFN1Ympl
+Y3Q6IFJlOiBbUEFUQ0hdIHBjaTogc3VwcG9ydCBUaHVuZGVyYm9sdCByZXF1aXJlbWVudHMgZm9y
+IEkvTw0KPiA+PiByZXNvdXJjZXMuDQo+ID4+DQo+ID4+IE9uIFdlZCwgTm92IDEyLCAyMDE0IGF0
+IDc6MzAgUE0sIEFuZHkgU2hldmNoZW5rbw0KPiA+PiA8YW5keS5zaGV2Y2hlbmtvQGdtYWlsLmNv
+bT4gd3JvdGU6DQo+ID4+ID4gT24gV2VkLCBOb3YgMTIsIDIwMTQgYXQgNzoyOSBQTSwgQmpvcm4g
+SGVsZ2Fhcw0KPiA+PiA+IDxiaGVsZ2Fhc0Bnb29nbGUuY29tPg0KPiA+PiB3cm90ZToNCj4gPj4g
+Pg0KPiA+PiA+IFtdDQo+ID4+ID4NCj4gPj4gPj4+IFRvIHByZXZlbnQgdGhpcywgd2UgZGV0ZWN0
+IGEgY2hhaW4gY29udGFpbnMgYSBUaHVuZGVyYm9sdCBkZXZpY2UNCj4gPj4gPj4+IGJ5IGNoZWNr
+aW5nIHRoZSBUaHVuZGVyYm9sdCBQQ0kgZGV2aWNlIGlkLg0KPiA+PiA+Pg0KPiA+PiA+PiBJJ20g
+cmVhbGx5IG5vdCBoYXBweSBhYm91dCBjaGVja2luZyBhIGxpc3Qgb2YgZGV2aWNlIElEcyB0bw0K
+PiA+PiA+PiBpZGVudGlmeSBUaHVuZGVyYm9sdCBkZXZpY2VzLiAgU3VyZWx5IHRoZXJlJ3MgYSBi
+ZXR0ZXIgd2F5LA0KPiA+PiA+PiBiZWNhdXNlIGEgbGlzdCBsaWtlIHRoaXMgaGFzIHRvIGJlIHVw
+ZGF0ZWQgcmVndWxhcmx5Lg0KPiA+PiA+DQo+ID4+ID4gSSByZWNlbnRseSBwcm9wb3NlZCBpbnRl
+cm5hbGx5IHRvIHVzZSBxdWlya3MgKHBjaV9maXh1cF9lYXJseSkgZm9yDQo+ID4+ID4gdGhhdCwg
+YnV0IGFwcGFyZW50bHkgTWljaGFlbCBkaWRuJ3QgaGF2ZSB0aW1lIHRvIGFuc3dlci4gSXQgbWln
+aHQNCj4gPj4gPiBiZSBoZSBjYW4ganVzdCBjb21tZW50IGhlcmUgc2luY2UgdGhlIHBhdGNoIGFs
+cmVhZHkgcHVibGljLg0KPiA+Pg0KPiA+PiBJbiBhbnkgY2FzZTogdGhpcyB3aWxsIGludGVyZmVy
+ZSB3aXRoIHRodW5kZXJib2x0IGhvdHBsdWcgb24gQXBwbGUNCj4gPj4gc3lzdGVtcywgd2hlcmUg
+d2UgZG8gbm90IGhhdmUgQklPUyBzdXBwb3J0IGFuZCBoYXZlIHRvIGhhbmRsZSBob3RwbHVnDQo+
+ID4+IGV2ZW50cyBhbmQgYXNzaWduIHJlc291cmNlcyBvdXJzZWx2ZXMuIFNvIHBsZWFzZSBhZGQg
+YSBETUkgY2hlY2sgZm9yDQo+ID4+IEFwcGxlICh0aGUgcmV2ZXJzZSBvZiB3aGF0IHdlIGRvIGlu
+DQo+ID4+IGh0dHA6Ly9seHIuZnJlZS0NCj4gPj4gZWxlY3Ryb25zLmNvbS9zb3VyY2UvZHJpdmVy
+cy90aHVuZGVyYm9sdC9uaGkuYz92PTMuMTcjTDY2NA0KPiA+PiApLg0KPiA+Pg0KPiA+PiBUaGFu
+a3MsDQo+ID4+IEFuZHJlYXMNCj4gPg0KPiA+IFRoaXMgaXMgY29ycmVjdCB0aGF0IHRoZSBob3Rw
+bHVnIGhhbmRsaW5nIG1lY2hhbmlzbSBhbmQgaW50ZXJhY3Rpb24gd2l0aA0KPiBCSU9TIGlzIGRp
+ZmZlcmVudC4NCj4gPiBIb3dldmVyLCB0aGlzIHBhdGNoIGFsc28gYXBwbGllcyBmb3IgYW55IGNh
+c2UsIHNpbmNlIHRoZSBJL08gc3BhY2UgaXMNCj4gPiBsaW1pdGVkIGFuZCBuZWVkIHRvIGJlIHBy
+ZXNlcnZlZCwgc28gd2UgbXVzdCBwcmV2ZW50IGFsbG9jYXRpb24gb2YgSS9PDQo+ID4gcmVzb3Vy
+Y2VzIGZyb20gdGhlIGRldmljZXMgYW5kIGF2b2lkaW5nIGV4aGF1c3Rpb24gd2hpbGUgY2hhaW5p
+bmcgdGhlbS4NCj4gDQo+IE5vdyBJIGFtIHNsaWdodGx5IGNvbmZ1c2VkLiBEb2VzIHRoZSBCSU9T
+IChvbiBub24gQXBwbGUgaGFyZHdhcmUpIGxlYXZlIEkvTw0KPiByZXNvdXJjZXMgYWx3YXlzIHVu
+YXNzaWduZWQ/IFlvdXIgZmlyc3QgcG9zdCBzZWVtZWQgdG8gaW1wbHkgdGhhdCBpdCBkb2VzDQo+
+IGFzc2lnbiBzb21lIGFuZCB0aGF0IHdlIHNob3VsZCBub3QgaW50ZXJmZXJlLiBJbiB0aGF0IGNh
+c2Ugd2Ugd291bGQgaGF2ZSB0bw0KPiBhc3NpZ24gdGhlbSBvbiBBcHBsZSBzeXN0ZW1zIG91cnNl
+bHZlcy4gT24gdGhlIG90aGVyIGhhbmQgaWYgbm8gVEIgZGV2aWNlIHVzZXMNCj4gSS9PIHJlc291
+cmNlcyBhbmQgdGhlIEJJT1MgbmV2ZXIgYXNzaWducyB0aGVtLCB0aGVuIHdoeSBkbyBkZXZpY2Vz
+IGZhaWwgaWYgd2UNCj4gZXhoYXVzdCB0aGVtPw0KPiANCj4gQW5kcmVhcw0KDQpDb3JyZWN0LiBU
+aGUgQklPUyBtYXkgcGxheSBhIHJvbGUgaW4gYWxsb2NhdGlvbiBvZiBtZW1vcnkgYW5kIEkvTyAN
+CnJlc291cmNlcyBidXQgbW9zdCBvZiB0aGUgY2FzZSB3aWxsIGxlYXZlIHRoZSBJL08gIHJlc291
+cmNlcyB1bmFzc2lnbmVkLg0KU29tZSBsZWdhY3kgVGh1bmRlcmJvbHQgZGV2aWNlcyBhcmUgZGVz
+aWduZWQgd2l0aCBJL08gQkFScywgc28gdGhleSANCm5lZWQgdG8gYmUgaGFuZGxlZCB3aXRoIGNh
+cmUgYXMgd3JpdHRlbiBpbiB0aGUgb3RoZXIgZW1haWwgdGhyZWFkIHRvIEJqb3JuLg0KDQovTWlj
+aGFlbA0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tCkludGVsIElzcmFlbCAoNzQpIExpbWl0ZWQKClRoaXMgZS1tYWls
+IGFuZCBhbnkgYXR0YWNobWVudHMgbWF5IGNvbnRhaW4gY29uZmlkZW50aWFsIG1hdGVyaWFsIGZv
+cgp0aGUgc29sZSB1c2Ugb2YgdGhlIGludGVuZGVkIHJlY2lwaWVudChzKS4gQW55IHJldmlldyBv
+ciBkaXN0cmlidXRpb24KYnkgb3RoZXJzIGlzIHN0cmljdGx5IHByb2hpYml0ZWQuIElmIHlvdSBh
+cmUgbm90IHRoZSBpbnRlbmRlZApyZWNpcGllbnQsIHBsZWFzZSBjb250YWN0IHRoZSBzZW5kZXIg
+YW5kIGRlbGV0ZSBhbGwgY29waWVzLgo=
 
-So which direction did you take in your patch set--  a) common,
-generic msi_desc, or b)  bus-specific msi_desc like Marc showed
-(mybus_msi_desc)?
-
-Thanks,
-Stuart
-
-On Sun, Jan 18, 2015 at 8:10 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->
->
-> On 2015/1/16 4:35, Stuart Yoder wrote:
->> On Thu, Jan 8, 2015 at 11:06 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
->>> As MSI-type features are creeping into non-PCI devices, it is
->>> starting to make sense to give our struct device some form of
->>> support for this, by allowing a pointer to an MSI irq domain to
->>> be set/retrieved.
->>>
->>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
->>> ---
->>>  include/linux/device.h | 20 ++++++++++++++++++++
->>>  1 file changed, 20 insertions(+)
->>>
->>> diff --git a/include/linux/device.h b/include/linux/device.h
->>> index fb50673..ec4cee5 100644
->>> --- a/include/linux/device.h
->>> +++ b/include/linux/device.h
->>> @@ -690,6 +690,7 @@ struct acpi_dev_node {
->>>   *             along with subsystem-level and driver-level callbacks.
->>>   * @pins:      For device pin management.
->>>   *             See Documentation/pinctrl.txt for details.
->>> + * @msi_domain: The generic MSI domain this device is using.
->>>   * @numa_node: NUMA node this device is close to.
->>>   * @dma_mask:  Dma mask (if dma'ble device).
->>>   * @coherent_dma_mask: Like dma_mask, but for alloc_coherent mapping as not all
->>> @@ -750,6 +751,9 @@ struct device {
->>>         struct dev_pm_info      power;
->>>         struct dev_pm_domain    *pm_domain;
->>>
->>> +#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
->>> +       struct irq_domain       *msi_domain; /* MSI domain device uses */
->>> +#endif
->>
->> This is not a comment on this patch specifically, but a question about other
->> MSI specific fields that might be needed in struct device.
->>
->> Currently the generic MSI domain handling has hardcoded assumptions
->> that devices are PCI-- see the for_each_msi_entry() iterator in msi.h:
->>
->>   #define dev_to_msi_list(dev)            (&to_pci_dev((dev))->msi_list)
->>
->>   #define for_each_msi_entry(desc, dev)   \
->>         list_for_each_entry((desc), dev_to_msi_list((dev)), list)
->>
->> One approach would be to move the msi_list out of pci_dev and put
->> it in struct device, so all devices can have an msi_list.
->>
->> The other approach would be to keep msi_list in a bus specific
->> device struct, and then dev_to_msi_list() would need to be
->> implemented as a bus specific callback of some kind.
->>
->> The above hardcoded PCI assumption isn't going to work.   Wanted to
->> see if there is any advice in which direction to go.
-> Hi Stuart,
->         I already have some a patch set to go that direction waiting
-> send out for review:)
-> Thanks!
-> Gerry
->
->>
->> Thanks,
->> Stuart Yoder
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> Please read the FAQ at  http://www.tux.org/lkml/
->>
