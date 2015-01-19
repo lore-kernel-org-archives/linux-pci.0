@@ -1,55 +1,87 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [RFC Patch 09/19] ACPI: Fix a bug in parsing ACPI Memroy24 resource
-Date: Wed, 21 Jan 2015 01:42:20 +0100
-Message-ID: <1633329.njF7Ian1Kn@vostro.rjw.lan>
-In-Reply-To: <1420684386-5975-10-git-send-email-jiang.liu@linux.intel.com>
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-10-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:58738 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751396AbbASCEb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 18 Jan 2015 21:04:31 -0500
+Message-ID: <54BC6611.9020002@huawei.com>
+Date: Mon, 19 Jan 2015 10:04:01 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	the arch/x86 maintainers <x86@kernel.org>,
+	"Thomas Gleixner" <tglx@linutronix.de>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	<linux-alpha@vger.kernel.org>, <linux-m68k@lists.linux-m68k.org>,
+	Liviu Dudau <liviu@dudau.co.uk>, Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>
+Subject: Re: [PATCH 01/28] PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>	<1421372666-12288-2-git-send-email-wangyijing@huawei.com>	<CAE9FiQUoocCzBKsHL_D4ypH1-DV7XxZMdREX7n=Tz1Kq3kHHeA@mail.gmail.com> <CAE9FiQV97PuDWBZYRxh8R0ADnUFTbo1NO3wAufj97en0yseYSQ@mail.gmail.com>
+In-Reply-To: <CAE9FiQV97PuDWBZYRxh8R0ADnUFTbo1NO3wAufj97en0yseYSQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 08, 2015 10:32:56 AM Jiang Liu wrote:
-> According to ACPI spec 5, section 6.4.3.1 "24-Bit Memory Range Descriptor",
-> minimum, maximum and address_length field in struct acpi_resource_memory24
-> is in granularity of 256-bytes. So shift 8-bit left to get correct address.
+On 2015/1/17 7:16, Yinghai Lu wrote:
+> On Fri, Jan 16, 2015 at 3:15 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Thu, Jan 15, 2015 at 5:43 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>> Pci_bus_add_devices() should not be placed in pci_scan_bus().
+>>> Now pci device will be added to driver core once its
+>>> creation. All things left in pci_bus_add_devices() are
+>>> driver attachment and other trivial sysfs things.
+>>> Pci_scan_bus() should be the function responsible for
+>>> scanning PCI devices, not including driver attachment.
+>>> Other, some callers(m68k,unicore32,alpha) of pci_scan_bus()
+>>> will call pci_bus_size_bridges() and pci_bus_assign_resources()
+>>> after pci_scan_bus().
+>>>
+>>> E.g.
+>>> In m68k
+>>> mcf_pci_init()
+>>>         pci_scan_bus()
+>>>                 ...
+>>>                 pci_bus_add_devices() --- try to attach driver
+>>>         pci_fixup_irqs()
+>>>         pci_bus_size_bridges()
+>>>         pci_bus_assign_resources()
+>>>
+>>> It is not correct, resources should be assigned correctly
+>>> before attaching driver.
+>>
+> No, for booting path, at that time pci drivers are *NOT* loaded yet.
 
-Are you sure about this?
+Hi Yinghai, I knew code flow here would not cause problems, sorry the log
+confused you, I will refresh it. But I think pci_scan_bus()/pci_scan_root_bus()
+which could only be used during system boot up(before module_init) make
+the pci scan logic obscure. Because most callers additionally call
+pci_bus_size_bridges() and pci_bus_assign_resources() later,
+so rip out pci_bus_add_devices() from pci_scan_bus()/pci_scan_root_bus()
+make code have better readability.
 
-I'm reading ACPI 5.1 ATM and (on page 316) it only says about the range length
-being in 256 byte blocks.
+Thanks!
+Yijing.
 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  drivers/acpi/resource.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-> index abe3a29ad802..f4aeef22a9d8 100644
-> --- a/drivers/acpi/resource.c
-> +++ b/drivers/acpi/resource.c
-> @@ -90,8 +90,8 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
->  	switch (ares->type) {
->  	case ACPI_RESOURCE_TYPE_MEMORY24:
->  		memory24 = &ares->data.memory24;
-> -		acpi_dev_get_memresource(res, memory24->minimum,
-> -					 memory24->address_length,
-> +		acpi_dev_get_memresource(res, memory24->minimum << 8,
-> +					 memory24->address_length << 8,
->  					 memory24->write_protect);
->  		break;
->  	case ACPI_RESOURCE_TYPE_MEMORY32:
+> Thanks
 > 
+> Yinghai
+> 
+> .
+> 
+
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Thanks!
+Yijing
+
