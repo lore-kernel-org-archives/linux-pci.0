@@ -1,53 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:54972 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750820AbbAWXW0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 18:22:26 -0500
-Received: by mail-ob0-f178.google.com with SMTP id nt9so186506obb.9
-        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 15:22:26 -0800 (PST)
-Date: Fri, 23 Jan 2015 17:22:23 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Stephen Boyd <sboyd@codeaurora.org>
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>
-Subject: Re: [PATCH] PCI: xgene: Include clk.h instead of clk-private.h
-Message-ID: <20150123232223.GU29776@google.com>
-References: <1421954754-3217-1-git-send-email-sboyd@codeaurora.org>
+Received: from mout.kundenserver.de ([212.227.126.187]:56808 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751460AbbASIph (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jan 2015 03:45:37 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-m68k@lists.linux-m68k.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	linux-alpha@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-ia64@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH 18/28] PCI/sparc: Use pci_scan_root_bridge() for simplicity
+Date: Mon, 19 Jan 2015 09:44:31 +0100
+Message-ID: <7748275.Tf0dzsPZdA@wuerfel>
+In-Reply-To: <54BC772E.6020103@huawei.com>
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <2658988.B0VmbMPdJ9@wuerfel> <54BC772E.6020103@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1421954754-3217-1-git-send-email-sboyd@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 22, 2015 at 11:25:54AM -0800, Stephen Boyd wrote:
-> This driver should be including clk.h as it's a clock consumer,
-> not a clock provider that needs to register clocks early.
+On Monday 19 January 2015 11:17:02 Yijing Wang wrote:
+> On 2015/1/16 18:01, Arnd Bergmann wrote:
+> > On Friday 16 January 2015 09:44:16 Yijing Wang wrote:
+> >> +static void pci_host_bridge_probe_mode(
+> >> +               struct pci_host_bridge *host)
+> >> +{
+> >> +       host->of_scan = true;
+> >> +}
+> >>
+> > 
+> > I probably missed something here, but where does host->of_scan
+> > get used?
+> > 
 > 
-> Cc: Tanmay Inamdar <tinamdar@apm.com>
-> Signed-off-by: Stephen Boyd <sboyd@codeaurora.org>
+> It is used in __pci_scan_root_bus() to detect whether of scan bus is needed in patch 11.
 
-Applied provisionally to pci/host-xgene for v3.20, thanks!
+Ok, I see it now.
 
-I'm hoping for an ack from Tanmay.
-
-> ---
->  drivers/pci/host/pci-xgene.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> @@ -2051,10 +2053,17 @@ static struct pci_bus *__pci_scan_root_bus(
+>  		pci_bus_insert_busn_res(b, host->busnum, 255);
+>  	}
 > 
-> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-> index b1d0596457c5..fdb348d3ccd3 100644
-> --- a/drivers/pci/host/pci-xgene.c
-> +++ b/drivers/pci/host/pci-xgene.c
-> @@ -16,7 +16,7 @@
->   * GNU General Public License for more details.
->   *
->   */
-> -#include <linux/clk-private.h>
-> +#include <linux/clk.h>
->  #include <linux/delay.h>
->  #include <linux/io.h>
->  #include <linux/jiffies.h>
-> -- 
-> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-> a Linux Foundation Collaborative Project
+> -	max = pci_scan_child_bus(b);
+> +	if (host->ops && host->ops->phb_probe_mode)
+> +		host->ops->phb_probe_mode(host);
 > 
+> -	if (!found)
+> -		pci_bus_update_busn_res_end(b, max);
+> +	if (host->of_scan) {
+> +		if (host->ops &&host->ops->phb_of_scan_bus)
+> +			host->ops->phb_of_scan_bus(host);
+> +	} else {
+> +		max = pci_scan_child_bus(b);
+> +		if (!found)
+> +			pci_bus_update_busn_res_end(b, max);
+> +	}
+> 
+
+I think we can simplify this based on the knowledge that this code
+will remain powerpc specific. How about removing the phb_probe_mode()
+callback and replacing it with just a phb_scan_bus() callback that
+will always get set on sparc, and do this on powerpc:
+
++static void pci_host_bridge_of_scan_bus(struct pci_host_bridge *host)
++{
++       int mode = PCI_PROBE_NORMAL;
++       struct pci_bus *bus = host->bus;
++       struct pci_controller *hose = dev_get_drvdata(&host->dev);
++
++       /* Get probe mode and perform scan */
++       if (hose->dn && ppc_md.pci_probe_mode)
++               mode = ppc_md.pci_probe_mode(bus);
++
++       pr_debug("    probe mode: %d\n", mode);
++       if (mode == PCI_PROBE_DEVTREE) {
++               of_scan_bus(host->dn, bus);
++		return max; // XXX need to get this from somewhere
++	}
++	return pci_scan_child_bus(b);
++}
+
+Would that work?
+
+	Arnd
