@@ -1,79 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:43883 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752514AbbA0LeZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Jan 2015 06:34:25 -0500
-Date: Tue, 27 Jan 2015 11:34:16 +0000
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Robin Murphy <robin.murphy@arm.com>
-Cc: Murali Karicheri <m-karicheri2@ti.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Subject: Re: [PATCH v4 6/6] arm: dma-mapping: updates to limit dma_mask and
- iommu mapping size
-Message-ID: <20150127113416.GB3226@e104818-lin.cambridge.arm.com>
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
- <1422052359-12384-7-git-send-email-m-karicheri2@ti.com>
- <54C772A0.2000203@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54C772A0.2000203@arm.com>
+Received: from mga11.intel.com ([192.55.52.93]:33463 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751128AbbASEwx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 18 Jan 2015 23:52:53 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [Bugfix 0/3] Fix regressions in Xen IRQ management
+Date: Mon, 19 Jan 2015 12:55:41 +0800
+Message-Id: <1421643344-17092-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 27, 2015 at 11:12:32AM +0000, Robin Murphy wrote:
-> On 23/01/15 22:32, Murali Karicheri wrote:
-> > Limit the dma_mask to minimum of dma_mask and dma_base + size - 1.
-> >
-> > Also arm_iommu_create_mapping() has size parameter of size_t and
-> > arm_setup_iommu_dma_ops() can take a value higher than that. So
-> > limit the size to SIZE_MAX.
-> >
-> > Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-> > ---
-> >   arch/arm/mm/dma-mapping.c |   10 ++++++++++
-> >   1 file changed, 10 insertions(+)
-> >
-> > diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
-> > index 7864797..a1f9030 100644
-> > --- a/arch/arm/mm/dma-mapping.c
-> > +++ b/arch/arm/mm/dma-mapping.c
-> > @@ -2004,6 +2004,13 @@ static bool arm_setup_iommu_dma_ops(struct device *dev, u64 dma_base, u64 size,
-> >   	if (!iommu)
-> >   		return false;
-> >
-> > +	/*
-> > +	 * currently arm_iommu_create_mapping() takes a max of size_t
-> > +	 * for size param. So check this limit for now.
-> > +	 */
-> > +	if (size > SIZE_MAX)
-> > +		return false;
-> > +
-> >   	mapping = arm_iommu_create_mapping(dev->bus, dma_base, size);
-> >   	if (IS_ERR(mapping)) {
-> >   		pr_warn("Failed to create %llu-byte IOMMU mapping for device %s\n",
-> > @@ -2053,6 +2060,9 @@ void arch_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
-> >   {
-> >   	struct dma_map_ops *dma_ops;
-> >
-> > +	/* limit dma_mask to the lower of the two values */
-> > +	*dev->dma_mask = min((*dev->dma_mask), (dma_base + size - 1));
-> > +
-> 
-> Is there any reason not to do this in of_dma_configure? It seems like 
-> something everyone could benefit from - I'd cooked up a dodgy workaround 
-> for the same issue in my arm64 IOMMU code, but handling it generically 
-> in common code would be much nicer.
+Hi all,
+	Sander reports an Xen pci-passthrough regression caused by
+commit cffe0a2b5a34c95a4dadc9ec7132690a5b0f6687 ("x86, irq: Keep
+balance of IOAPIC pin reference count"). This patch set tries to
+fix it.
 
-I agree. I started something here:
+Patch 1 is a fix for another issue found during fixing the regression.
+Patch 2 is a hotfix for the regression and should be targeted for v3.19.
+Patch 3 is the foundamental fix for the regression and should be targeted
+at v3.20.
 
-http://article.gmane.org/gmane.linux.kernel/1835096
+Hi Sander,
+	Could you please help to test by:
+1) only apply patch 1 and patch 2
+2) and then apply patch 3 ontop of patch 1/2.
+Thanks!
+Gerry
 
-but I don't remember to have got to a clear conclusion.
+Jiang Liu (3):
+  xen/irq, ACPI: Fix regression in xen PCI passthrough caused by
+    cffe0a2b5a34
+  xen/irq: Override ACPI IRQ management callback __acpi_unregister_gsi
+  x86/PCI: Refine the way to release PCI IRQ resources
+
+ arch/x86/include/asm/acpi.h    |    1 +
+ arch/x86/include/asm/pci_x86.h |    2 --
+ arch/x86/pci/common.c          |   30 ++++++++++++++++++++++++++++--
+ arch/x86/pci/intel_mid_pci.c   |    4 ++--
+ arch/x86/pci/irq.c             |   15 +--------------
+ arch/x86/pci/xen.c             |    2 ++
+ drivers/acpi/pci_irq.c         |   10 +---------
+ 7 files changed, 35 insertions(+), 29 deletions(-)
 
 -- 
-Catalin
+1.7.10.4
+
