@@ -1,67 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:23826 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756097AbbAPDrn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jan 2015 22:47:43 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
 	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
+	linux-m68k@lists.linux-m68k.org,
 	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH 26/28] PCI: Export find_pci_host_bridge()
-Date: Fri, 16 Jan 2015 09:44:24 +0800
-Message-ID: <1421372666-12288-27-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
-References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
+	linux-alpha@vger.kernel.org, linux-ia64@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH 08/28] PCI: Introduce pci_host_assign_domain_nr() to assign domain
+Date: Mon, 19 Jan 2015 10:50:30 +0100
+Message-ID: <2124926.gSbG0l1jIy@wuerfel>
+In-Reply-To: <54BC6894.6060500@huawei.com>
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <3026954.09KG7UaUTi@wuerfel> <54BC6894.6060500@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Export find_pci_host_bridge().
+On Monday 19 January 2015 10:14:44 Yijing Wang wrote:
+> >> I'm confused: the same code is already part of the PCI tree, but with
+> >> Lorenzo Pieralisi listed as the patch author. The code is good,
+> >> and I acked it in the past, but one of you is (probably by accident)
+> >> misattributing the patch.
+> >>
+> >> Assuming that the patch that is already merged in next is the right
+> >> one, I think you should rebase your series on top of
+> >>
+> >> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git#next
+> >>
+> >> to avoid conflicts like this one.
+> >>
+> > 
+> > I think I just got confused because the code duplicates most of
+> > pci_bus_assign_domain_nr(). Maybe this can be done in a better way
+> > by splitting the existing function into 
+> > 
+> > static int pci_assign_domain_nr(struct device *)
+> > {
+> >       ... /* most of pci_bus_assign_domain_nr */
+> > 
+> >       return domain;
+> > }
+> > 
+> > void pci_host_assign_domain_nr(struct pci_host_bridge *host)
+> > {
+> >       host->domain = pci_assign_domain_nr(host->dev.parent);
+> > }
+> > 
+> > void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> > {
+> >       bus->domain_nr = pci_assign_domain_nr(parent);
+> > }
+> > 
+> 
+> Hi Arnd,
+>    I kept the almost duplicated pci_host_assign_domain_nr() and
+> pci_bus_assign_domain_nr() here for building happy, because now
+> platform specific pci_domain_nr() still exists which may get domain
+> number from pci_bus. pci_bus_assign_domain_nr() will be removed in
+> the last patch.
+> 
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/host-bridge.c |    2 +-
- include/linux/pci.h       |    1 +
- 2 files changed, 2 insertions(+), 1 deletions(-)
+I'm not sure I get your point: the approach I showed above seems to have
+the same effect, except it doesn't duplicate code temporarily, which
+makes it less error-prone in case your patch gets merged at the
+same time as another patch that modifies pci_bus_assign_domain_nr.
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index ccbf168..74f7572 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -104,7 +104,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
- 	return bus;
- }
- 
--static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
-+struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
- {
- 	struct pci_bus *root_bus = find_pci_root_bus(bus);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 9ddca3b..3ebee9d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -431,6 +431,7 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
- struct pci_host_bridge *pci_create_host_bridge(
- 		struct device *parent, u32 dombus, struct list_head *resources, 
- 		void *sysdata, struct pci_host_bridge_ops *ops);
-+struct pci_host_bridge *find_pci_host_bridge(struct pci_bus* bus);
- /*
-  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
-  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
--- 
-1.7.1
-
+	Arnd
