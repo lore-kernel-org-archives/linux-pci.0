@@ -1,188 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:27522 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757031AbbAGEGN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jan 2015 23:06:13 -0500
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>
-Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
-	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
-Subject: [PATCH v7 04/10] iommu/vt-d: functions to copy data from old mem
-Date: Wed,  7 Jan 2015 12:04:28 +0800
-Message-Id: <1420603474-4235-5-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1420603474-4235-1-git-send-email-zhen-hual@hp.com>
-References: <1420603474-4235-1-git-send-email-zhen-hual@hp.com>
+Received: from smtp02.citrix.com ([66.165.176.63]:15817 "EHLO
+	SMTP02.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750850AbbASOYR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jan 2015 09:24:17 -0500
+Message-ID: <54BD138D.3090403@citrix.com>
+Date: Mon, 19 Jan 2015 14:24:13 +0000
+From: David Vrabel <david.vrabel@citrix.com>
+MIME-Version: 1.0
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	"H. Peter Anvin" <hpa@zytor.com>, <x86@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>
+CC: Tony Luck <tony.luck@intel.com>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>
+Subject: Re: [Bugfix 3/3] x86/PCI: Refine the way to release PCI IRQ resources
+References: <1421643344-17092-1-git-send-email-jiang.liu@linux.intel.com> <1421643344-17092-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421643344-17092-4-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add some functions to copy the data from old kernel.
-These functions are used to copy context tables and page tables.
+On 19/01/15 04:55, Jiang Liu wrote:
+> Some PCI device drivers assume that pci_dev->irq won't change after
+> calling pci_disable_device() and pci_enable_device() during suspend and
+> resume.
+> 
+> Commit c03b3b0738a56cf283b0d05256988d5e3c8bd719 ("x86, irq, mpparse:
+> Release IOAPIC pin when PCI device is disabled") frees PCI IRQ
+> resources when pci_disable_device() is called and reallocate IRQ
+> resources when pci_enable_device() is called again. This breaks
+> above assumption. So commit 3eec595235c1 ("x86, irq, PCI: Keep IRQ
+> assignment for PCI devices during suspend/hibernation") and
+> 9eabc99a635a ("x86, irq, PCI: Keep IRQ assignment for runtime power
+> management") fix the issue by avoiding freeing/reallocating IRQ
+> resources during PCI device suspend/resume. They achieve this by
+> checking dev.power.is_prepared and dev.power.runtime_status.
+> PM maintainer, Rafael, then pointed out that it's really an ugly fix
+> which leaking PM internal state information to IRQ subsystem.
 
-To avoid calling iounmap between spin_lock_irqsave and spin_unlock_irqrestore,
-use a link here, store the pointers , and then use iounmap to free them in
-another place.
+If this only affects pciback, perhaps it would be best to just fix it there?
 
-Li, Zhen-hua:
-    The functions and logics.
+> Recently David Vrabel <david.vrabel@citrix.com> also reports an
+> regression in pciback driver caused by commit cffe0a2b5a34 ("x86, irq:
+> Keep balance of IOAPIC pin reference count"). Please refer to:
 
-Takao Indoh:
-    Check if pfn is ram:
-        if (page_is_ram(pfn))
+Sander reported this regression.
 
-Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
-Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
----
- drivers/iommu/intel-iommu.c | 97 +++++++++++++++++++++++++++++++++++++++++++++
- include/linux/intel-iommu.h |  9 +++++
- 2 files changed, 106 insertions(+)
+> So this patch refine the way to release PCI IRQ resources. Instead of
+> releasing PCI IRQ resources in pci_disable_device()/
+> pcibios_disable_device(), we now release it at driver unbinding
+> notification BUS_NOTIFY_UNBOUND_DRIVER. In other word, we only release
+> PCI IRQ resources when there's no driver bound to the PCI device, and
+> it keeps the assumption that pci_dev->irq won't through multiple
+> invocation of pci_enable_device()/pci_disable_device().
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index c0bebd6..8a7ad72 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -388,6 +388,13 @@ static int intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu);
- 
- static int device_to_domain_id(struct intel_iommu *iommu, u8 bus, u8 devfn);
- 
-+struct iommu_remapped_entry {
-+	struct list_head list;
-+	void __iomem *mem;
-+};
-+static LIST_HEAD(__iommu_remapped_mem);
-+static DEFINE_MUTEX(__iommu_mem_list_lock);
-+
- #endif /* CONFIG_CRASH_DUMP */
- 
- /*
-@@ -4843,6 +4850,96 @@ static void __init check_tylersburg_isoch(void)
- #ifdef CONFIG_CRASH_DUMP
- 
- /*
-+ * Copy memory from a physically-addressed area into a virtually-addressed area
-+ */
-+int __iommu_load_from_oldmem(void *to, unsigned long from, unsigned long size)
-+{
-+	unsigned long pfn;		/* Page Frame Number */
-+	size_t csize = (size_t)size;	/* Num(bytes to copy) */
-+	unsigned long offset;		/* Lower 12 bits of to */
-+	void __iomem *virt_mem;
-+	struct iommu_remapped_entry *mapped;
-+
-+	pfn = from >> VTD_PAGE_SHIFT;
-+	offset = from & (~VTD_PAGE_MASK);
-+
-+	if (page_is_ram(pfn)) {
-+		memcpy(to, pfn_to_kaddr(pfn) + offset, csize);
-+	} else{
-+
-+		mapped = kzalloc(sizeof(struct iommu_remapped_entry),
-+				GFP_KERNEL);
-+		if (!mapped)
-+			return -ENOMEM;
-+
-+		virt_mem = ioremap_cache((unsigned long)from, size);
-+		if (!virt_mem) {
-+			kfree(mapped);
-+			return -ENOMEM;
-+		}
-+		memcpy(to, virt_mem, size);
-+
-+		mutex_lock(&__iommu_mem_list_lock);
-+		mapped->mem = virt_mem;
-+		list_add_tail(&mapped->list, &__iommu_remapped_mem);
-+		mutex_unlock(&__iommu_mem_list_lock);
-+	}
-+	return size;
-+}
-+
-+/*
-+ * Copy memory from a virtually-addressed area into a physically-addressed area
-+ */
-+int __iommu_save_to_oldmem(unsigned long to, void *from, unsigned long size)
-+{
-+	unsigned long pfn;		/* Page Frame Number */
-+	size_t csize = (size_t)size;	/* Num(bytes to copy) */
-+	unsigned long offset;		/* Lower 12 bits of to */
-+	void __iomem *virt_mem;
-+	struct iommu_remapped_entry *mapped;
-+
-+	pfn = to >> VTD_PAGE_SHIFT;
-+	offset = to & (~VTD_PAGE_MASK);
-+
-+	if (page_is_ram(pfn)) {
-+		memcpy(pfn_to_kaddr(pfn) + offset, from, csize);
-+	} else{
-+		mapped = kzalloc(sizeof(struct iommu_remapped_entry),
-+				GFP_KERNEL);
-+		if (!mapped)
-+			return -ENOMEM;
-+
-+		virt_mem = ioremap_cache((unsigned long)to, size);
-+		if (!virt_mem) {
-+			kfree(mapped);
-+			return -ENOMEM;
-+		}
-+		memcpy(virt_mem, from, size);
-+		mutex_lock(&__iommu_mem_list_lock);
-+		mapped->mem = virt_mem;
-+		list_add_tail(&mapped->list, &__iommu_remapped_mem);
-+		mutex_unlock(&__iommu_mem_list_lock);
-+	}
-+	return size;
-+}
-+
-+/*
-+ * Free the mapped memory for ioremap;
-+ */
-+int __iommu_free_mapped_mem(void)
-+{
-+	struct iommu_remapped_entry *mem_entry, *tmp;
-+
-+	mutex_lock(&__iommu_mem_list_lock);
-+	list_for_each_entry_safe(mem_entry, tmp, &__iommu_remapped_mem, list) {
-+		iounmap(mem_entry->mem);
-+		list_del(&mem_entry->list);
-+		kfree(mem_entry);
-+	}
-+	mutex_unlock(&__iommu_mem_list_lock);
-+	return 0;
-+}
-+/*
-  * Interfaces for when a new domain in the crashdump kernel needs some
-  * values from the panicked kernel's context entries
-  *
-diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
-index a65208a..8ffa523 100644
---- a/include/linux/intel-iommu.h
-+++ b/include/linux/intel-iommu.h
-@@ -26,6 +26,7 @@
- #include <linux/iova.h>
- #include <linux/io.h>
- #include <linux/dma_remapping.h>
-+#include <linux/crash_dump.h>
- #include <asm/cacheflush.h>
- #include <asm/iommu.h>
- 
-@@ -368,4 +369,12 @@ extern int dmar_ir_support(void);
- 
- extern const struct attribute_group *intel_iommu_groups[];
- 
-+#ifdef CONFIG_CRASH_DUMP
-+extern int __iommu_load_from_oldmem(void *to, unsigned long from,
-+					unsigned long size);
-+extern int __iommu_save_to_oldmem(unsigned long to, void *from,
-+					unsigned long size);
-+extern int __iommu_free_mapped_mem(void);
-+#endif /* CONFIG_CRASH_DUMP */
-+
- #endif
--- 
-2.0.0-rc0
-
+David
