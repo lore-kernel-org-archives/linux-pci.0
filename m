@@ -1,60 +1,53 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54BF0C71.5080508@linux.intel.com>
-Date: Wed, 21 Jan 2015 10:18:25 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:13310 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751185AbbASEl3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 18 Jan 2015 23:41:29 -0500
+Message-ID: <54BC8AF4.6010504@linux.intel.com>
+Date: Mon, 19 Jan 2015 12:41:24 +0800
 From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Thomas Gleixner <tglx@linutronix.de>,
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [RFC Patch 12/19] ACPI: Enforce stricter checks for address space
- descriptors
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-13-git-send-email-jiang.liu@linux.intel.com> <12267175.FvlCJYWCa5@vostro.rjw.lan>
-In-Reply-To: <12267175.FvlCJYWCa5@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pm@vger.kernel.org, xen-devel@lists.xenproject.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [Bugfix v4 1/2] xen/pci: Fix xen IRQ allocation failure caused
+ by commit b81975eade8c
+References: <1421204979-30619-1-git-send-email-jiang.liu@linux.intel.com> <1421327077-19894-1-git-send-email-jiang.liu@linux.intel.com> <1421327077-19894-2-git-send-email-jiang.liu@linux.intel.com> <20150116181318.GA22690@l.oracle.com>
+In-Reply-To: <20150116181318.GA22690@l.oracle.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/1/21 8:45, Rafael J. Wysocki wrote:
-> On Thursday, January 08, 2015 10:32:59 AM Jiang Liu wrote:
->> Enforce stricter checks for address space descriptors according to
->> ACPI spec.
-> 
-> So is the spec the only reason for doing this?  If so, I'd say don't.
-Hi Rafael,
-	Yes, it's just for spec. I will drop this patch to avoid
-regressions.
-Regards!
-Gerry
 
-> 
->> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->> ---
->>  drivers/acpi/resource.c |    8 ++++++++
->>  1 file changed, 8 insertions(+)
+On 2015/1/17 2:13, Konrad Rzeszutek Wilk wrote:
+> On Thu, Jan 15, 2015 at 09:04:35PM +0800, Jiang Liu wrote:
+<snit>
 >>
->> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
->> index 26b47f1da523..e82149e44347 100644
->> --- a/drivers/acpi/resource.c
->> +++ b/drivers/acpi/resource.c
->> @@ -192,6 +192,14 @@ static bool acpi_decode_space(struct resource *res,
->>  	bool wp = base->info.mem.write_protect;
->>  	u64 len = addr->address_length;
->>  
->> +	/*
->> +	 * Filter out invalid descriptor according to ACPI Spec 5.0, section
->> +	 * 6.4.3.5 Address Space Resource Descriptors.
->> +	 */
->> +	if ((base->min_address_fixed != base->max_address_fixed && len) ||
->> +	    (base->min_address_fixed && base->max_address_fixed && !len))
->> +		return false;
->> +
->>  	res->start = addr->minimum;
->>  	res->end = addr->maximum;
->>  
->>
+>> Note: we need to test this patch on those special AMD systems which
+>> override normal SCI GSI (9) with strange GSI (20).
 > 
+> [    0.000000] DMI: Supermicro X8DTN/X8DTN, BIOS 2.1c       10/28/2011
+> ..
+>      0.000000] ACPI: INT_SRC_OVR (bus 0 bus_irq 0 global_irq 2 dfl dfl)
+> [    0.000000] ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 20 low level)
+> [    0.000000] ACPI: IRQ0 used by override.
+> ..
+>     6.358737] xen: registering gsi 20 triggering 0 polarity 1
+> [    6.358756] xen: --> pirq=20 -> irq=20 (gsi=20)
+> ...
+> -bash-4.1# cat /proc/interrupts |grep acpi
+>  20:          0          0          0  xen-pirq-ioapic-level  acpi
+Hi Konrad,
+	May I assume an Tested-by from you here?
+Thanks!
+Gerry
