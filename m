@@ -1,63 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:52551 "EHLO
-	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752497AbbAPAtl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jan 2015 19:49:41 -0500
-Received: by mail-oi0-f51.google.com with SMTP id h136so15147289oig.10
-        for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 16:49:41 -0800 (PST)
-Date: Thu, 15 Jan 2015 18:49:37 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wolfram Sang <wsa@the-dreams.de>
-Cc: linux-kernel@vger.kernel.org,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Mingkai Hu <mingkai.hu@freescale.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [PATCH 13/28] pci: host: drop owner assignment from
- platform_drivers
-Message-ID: <20150116004937.GG29776@google.com>
-References: <1419196495-9626-1-git-send-email-wsa@the-dreams.de>
- <1419196495-9626-14-git-send-email-wsa@the-dreams.de>
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:61291 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751235AbbASC33 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 18 Jan 2015 21:29:29 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1419196495-9626-14-git-send-email-wsa@the-dreams.de>
+In-Reply-To: <20150115235559.GC29776@google.com>
+References: <1421300208-7087-1-git-send-email-yinghai@kernel.org>
+	<20150115235559.GC29776@google.com>
+Date: Sun, 18 Jan 2015 18:29:27 -0800
+Message-ID: <CAE9FiQUDjmZT2bSMBz6XxE5Vb80bF0=mrCOP0zcHuHOV=voD8A@mail.gmail.com>
+Subject: Re: [PATCH] PCI: keep enable status consistent for device without driver
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wilmer van der Gaast <kernel@wilmer.gaast.net>,
+	Zhang Rui <rui.zhang@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Pavel Machek <pavel@ucw.cz>,
+	Linux PM list <linux-pm@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Julia]
+On Thu, Jan 15, 2015 at 3:55 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Rafael, Pavel, linux-pm]
+>
+> On Wed, Jan 14, 2015 at 09:36:48PM -0800, Yinghai Lu wrote:
+>> Wilmer reported continuous suspend/resume does not work after
+>> commit 928bea964827 ("PCI: Delay enabling bridges until they're needed").
+>>
+>> For pci bridge without driver, FW enable it already.
+>> In pci_pm_resume/pci_pm_reenable_device after first resume
+>> will not reenable the device, aka the status is not the same
+>> as that before first suspend.
+>>
+>> Try to update enable status according to register value before
+>> calling pci_reenable_device, so we will not miss those pm
+>> operation calling for next suspend/resume.
+>>
+>> Link: https://bugzilla.kernel.org/show_bug.cgi?id=86421
+>> Fixes: 928bea964827 ("PCI: Delay enabling bridges until they're needed")
+>> Reported-by: Wilmer van der Gaast <kernel@wilmer.gaast.net>
+>> Bisected-by: Wilmer van der Gaast <kernel@wilmer.gaast.net>
+>> Tested-by: Wilmer van der Gaast <kernel@wilmer.gaast.net>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> Cc: Zhang Rui <rui.zhang@intel.com>
+>> CC: stable@vger.kernel.org  # v3.10+
+>
+> 928bea964827 appeared in v3.12.  Did you mean v3.12+ instead of v3.10+?
 
-On Sun, Dec 21, 2014 at 10:14:34PM +0100, Wolfram Sang wrote:
-> This platform_driver does not need to set an owner, it will be populated by the
-> driver core.
-> 
-> Signed-off-by: Wolfram Sang <wsa@the-dreams.de>
+Yes.
 
-I already applied the equivalent patch from Julia for v3.20, thanks!
-(I know this is my fault because it took me so long to apply Julia's
-patch.)
+get confused that Wilmer can not use 3.10 stable kernel.
 
-> ---
-> Generated with coccinelle. SmPL file is in the introductory msg. The big
-> cleanup was pulled in this merge window. This series catches the bits fallen
-> through. The patches shall go in via the subsystem trees.
-> 
->  drivers/pci/host/pci-layerscape.c | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-> index 6697b1a4d4fa..68c9e5e9b0a8 100644
-> --- a/drivers/pci/host/pci-layerscape.c
-> +++ b/drivers/pci/host/pci-layerscape.c
-> @@ -167,7 +167,6 @@ MODULE_DEVICE_TABLE(of, ls_pcie_of_match);
->  static struct platform_driver ls_pcie_driver = {
->  	.driver = {
->  		.name = "layerscape-pcie",
-> -		.owner = THIS_MODULE,
->  		.of_match_table = ls_pcie_of_match,
->  	},
->  };
-> -- 
-> 2.1.3
-> 
+>
+> I'd really like to get Rafael and Pavel to take a look at this.
+>
+>> ---
+>>  drivers/pci/pci-driver.c |    9 +++++++++
+>>  1 file changed, 9 insertions(+)
+>>
+>> Index: linux-2.6/drivers/pci/pci-driver.c
+>> ===================================================================
+>> --- linux-2.6.orig/drivers/pci/pci-driver.c
+>> +++ linux-2.6/drivers/pci/pci-driver.c
+>> @@ -519,8 +519,17 @@ static void pci_pm_set_unknown_state(str
+>>   */
+>>  static int pci_pm_reenable_device(struct pci_dev *pci_dev)
+>>  {
+>> +     u16 cmd;
+>>       int retval;
+>>
+>> +     /* update enable_cnt according to cmd register */
+>> +     pci_read_config_word(pci_dev, PCI_COMMAND, &cmd);
+>> +     if (!pci_dev->is_busmaster && (cmd & PCI_COMMAND_MASTER))
+>> +             pci_dev->is_busmaster = true;
+>
+>
+>> +     if (!pci_is_enabled(pci_dev) &&
+>> +         (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)))
+>> +             atomic_inc(&pci_dev->enable_cnt);
+>
+> This doesn't feel right because we're handling enable_cnt differently here
+> than we do on initial boot.
+>
+> On initial boot, I don't think we set enable_cnt based on whether firmware
+> left the IO or MEMORY bits set in the command register.  Why should we
+> modify enable_cnt based on the command register during resume?
+>
+> I could certainly believe we should do something during initial boot, too.
+> It just seems like we should look at the command register in both places or
+> neither place.
+>
+
+BIOS set power state correctly, so first suspend/resume will work.
+
+late because setting power state will rely on the enable-cnt, first resume would
+not set the power state related correctly, then second suspend/resume will not
+work anymore.
+
+will check if we can change to:
+check hw status, and then enable the pci device on boot path instead.
+
+Thanks
+
+Yinghai
