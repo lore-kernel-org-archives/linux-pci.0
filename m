@@ -1,54 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:49941 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755636AbbAHWrV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 8 Jan 2015 17:47:21 -0500
-Message-ID: <54AF08C7.2010100@ti.com>
-Date: Thu, 8 Jan 2015 17:46:31 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from darkcity.gna.ch ([195.226.6.51]:54488 "EHLO mail.gna.ch"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751194AbbASI6e (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 19 Jan 2015 03:58:34 -0500
+From: =?UTF-8?q?Michel=20D=C3=A4nzer?= <michel@daenzer.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Federico <federicotg@gmail.com>, dri-devel@lists.freedesktop.org
+Subject: [PATCH v2] pci: Fix infinite loop with ROM image of size 0
+Date: Mon, 19 Jan 2015 17:53:20 +0900
+Message-Id: <1421657600-31561-1-git-send-email-michel@daenzer.net>
+In-Reply-To: <CAFUqUc6JPgSK4tTP7KuJ8TmVLZR6Abaf9uHUTRZA+OJhv8DoBA@mail.gmail.com>
+References: <CAFUqUc6JPgSK4tTP7KuJ8TmVLZR6Abaf9uHUTRZA+OJhv8DoBA@mail.gmail.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: <bhelgaas@google.com>, <linux-arm-kernel@lists.infradead.org>,
-	<joro@8bytes.org>, <grant.likely@linaro.org>, <robh+dt@kernel.org>,
-	<iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<will.deacon@arm.com>, <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v3 0/4] PCI: get DMA configuration from parent device
-References: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com> <54ADBB89.8070503@ti.com> <1934001.D0JfDRp1gF@wuerfel> <2785994.gTZ9chGdKf@wuerfel>
-In-Reply-To: <2785994.gTZ9chGdKf@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/08/2015 05:27 PM, Arnd Bergmann wrote:
-> On Thursday 08 January 2015 09:56:39 Arnd Bergmann wrote:
->> There is another interesting case, which is a USB host controller or
->> something similar behind a PCI bus. These are quite common and also
->> need to be handled in some form. Let's do just PCI first for now, but
->> be aware that this will come next. Should we assume that the ID that
->> is required for a device is either known from the device node, or
->> that it comes from a PCI device? That means for the USB case, we will
->> likely need to have some custom logic. There seems to be an implicit
->> assumption all over the kernel that all devices have the same IOMMU
->> instance, but we can't really rely on that here.
->>
->
-> Update: I've checked the USB implementation and we are lucky because
-> these interactions are all done by the USB host controller, and a
-> USB device is not itself DMA capable. We don't have to do anything
-> for USB.
+From: Michel Dänzer <michel.daenzer@amd.com>
 
-Ok Thanks.
+If the image size would ever read as 0, pci_get_rom_size could keep
+processing the same image over and over again.
 
-Murali
->
-> 	Arnd
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reported-by: Federico <federicotg@gmail.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+---
 
+v2:
+* Use unsigned instead of u16 for the local length variable (not sure if
+  the multiplication by 512 could overflow otherwise)
+* Integrate length condition into while statement
+* Add stable tag
 
+ drivers/pci/rom.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
+index f955edb..eb0ad53 100644
+--- a/drivers/pci/rom.c
++++ b/drivers/pci/rom.c
+@@ -71,6 +71,7 @@ size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom, size_t size)
+ {
+ 	void __iomem *image;
+ 	int last_image;
++	unsigned length;
+ 
+ 	image = rom;
+ 	do {
+@@ -93,9 +94,9 @@ size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom, size_t size)
+ 		if (readb(pds + 3) != 'R')
+ 			break;
+ 		last_image = readb(pds + 21) & 0x80;
+-		/* this length is reliable */
+-		image += readw(pds + 16) * 512;
+-	} while (!last_image);
++		length = readw(pds + 16);
++		image += length * 512;
++	} while (length && !last_image);
+ 
+ 	/* never return a size larger than the PCI resource window */
+ 	/* there are known ROMs that get the size wrong */
 -- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+2.1.4
+
