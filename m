@@ -1,102 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:53863 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751293AbbASK5I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jan 2015 05:57:08 -0500
-Message-ID: <54BCE2DA.1000405@huawei.com>
-Date: Mon, 19 Jan 2015 18:56:26 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:43479 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751545AbbASQlB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jan 2015 11:41:01 -0500
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: <linux-arm-kernel@lists.infradead.org>,
+In-Reply-To: <1420644571-18928-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1420644571-18928-1-git-send-email-lorenzo.pieralisi@arm.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Mon, 19 Jan 2015 10:40:39 -0600
+Message-ID: <CAL_JsqLYg9vhFVmf=O4YLPfboj-dyoCR0H5dzBbMC3PeAEOwhQ@mail.gmail.com>
+Subject: Re: [RFC PATCH 0/3] drivers: port PCIe designware to new DT parsing API
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-pci@vger.kernel.org>, <x86@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<linux-m68k@lists.linux-m68k.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	<linux-alpha@vger.kernel.org>, <linux-ia64@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH 08/28] PCI: Introduce pci_host_assign_domain_nr() to assign
- domain
-References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <3026954.09KG7UaUTi@wuerfel> <54BC6894.6060500@huawei.com> <2124926.gSbG0l1jIy@wuerfel>
-In-Reply-To: <2124926.gSbG0l1jIy@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Rob Herring <robh+dt@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/1/19 17:50, Arnd Bergmann wrote:
-> On Monday 19 January 2015 10:14:44 Yijing Wang wrote:
->>>> I'm confused: the same code is already part of the PCI tree, but with
->>>> Lorenzo Pieralisi listed as the patch author. The code is good,
->>>> and I acked it in the past, but one of you is (probably by accident)
->>>> misattributing the patch.
->>>>
->>>> Assuming that the patch that is already merged in next is the right
->>>> one, I think you should rebase your series on top of
->>>>
->>>> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git#next
->>>>
->>>> to avoid conflicts like this one.
->>>>
->>>
->>> I think I just got confused because the code duplicates most of
->>> pci_bus_assign_domain_nr(). Maybe this can be done in a better way
->>> by splitting the existing function into 
->>>
->>> static int pci_assign_domain_nr(struct device *)
->>> {
->>>       ... /* most of pci_bus_assign_domain_nr */
->>>
->>>       return domain;
->>> }
->>>
->>> void pci_host_assign_domain_nr(struct pci_host_bridge *host)
->>> {
->>>       host->domain = pci_assign_domain_nr(host->dev.parent);
->>> }
->>>
->>> void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
->>> {
->>>       bus->domain_nr = pci_assign_domain_nr(parent);
->>> }
->>>
->>
->> Hi Arnd,
->>    I kept the almost duplicated pci_host_assign_domain_nr() and
->> pci_bus_assign_domain_nr() here for building happy, because now
->> platform specific pci_domain_nr() still exists which may get domain
->> number from pci_bus. pci_bus_assign_domain_nr() will be removed in
->> the last patch.
->>
-> 
-> I'm not sure I get your point: the approach I showed above seems to have
-> the same effect, except it doesn't duplicate code temporarily, which
-> makes it less error-prone in case your patch gets merged at the
-> same time as another patch that modifies pci_bus_assign_domain_nr.
+On Wed, Jan 7, 2015 at 9:29 AM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> The introduction of the DT API:
+>
+> of_pci_get_host_bridge_resources()
+>
+> allows to retrieve PCI resources from the device tree in a generic way.
+>
+> Some PCI host controllers, in addition to standard IO and MEM resources and
+> corresponding CPU addresses, require to retrieve the addresses that are used
+> for bus routing of IO/MEM regions as seen at the bus level corresponding
+> to the bus segment the host controller is sitting on, so that the host
+> controller can programme its inbound/outbound memory regions correctly to
+> respond to bus transactions coming from the CPU on the host controller bus
+> ports.
+>
+> The DT generic layer provides functions that carry out the PCI
+> ranges <-> resources translation from PCI addresses to CPU addresses (as
+> seen at the CPU top level bus, through all required hierarchical bus layers),
+> but there is no generic API to retrieve the PCI range CPU untranslated
+> addresses, so PCI host controllers have to do it in a driver specific way
+> through the DT property parsing methods.
+>
+> This patchset converts the PCIe designware host controller driver to
+> use the API:
+>
+> of_pci_get_host_bridge_resources()
+>
+> in order to retrieve the PCI regions resources. To achieve generality, it
+> also augments the parsing API so that a new DT struct is created out of
+> PCI ranges, that contains the PCI resource and the range parser itself
+> so that it can be passed back to PCI host controllers drivers that
+> can, if needed, use it to parse the CPU untranslated addresses
+> corresponding to the resource in question.
 
-OK, I got it, will update it, thanks!
+I don't really like exposing ranges to host drivers. We've worked to
+not do that. So perhaps we need to rethink the API. I think we need to
+provide each range as a pair of resources which are the CPU address
+and PCI address. Perhaps an iterator is kind of pointless here. We do
+different things for each one. Are there cases with more than a single
+i/o space, non-prefetch memory and prefetch memory range? Perhaps we
+should just get the i/o and memory resources as separate calls. Just
+tossing out some ideas here.
 
+> The first patch in the series is a fix/update for the parsing function:
+>
+> of_pci_get_host_bridge_resources()
 
-Thanks!
-Yijing.
+This one stands on its own and should go to stable perhap? If so, send
+it separately.
 
-> 
-> 	Arnd
-> 
-> .
-> 
+Rob
 
-
--- 
-Thanks!
-Yijing
-
+>
+> It is part of the RFC series since it is a controversial fix to be
+> discussed before getting merged.
+>
+> Patch [2-3] augment the parsing API and convert the PCIe designware
+> driver code.
+>
+> The current API stays unchanged, so that the existing drivers using it
+> do not need patching and changes are limited.
+>
+> Tested on an iMX6 Sabrelite board.
+>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Liviu Dudau <liviu.dudau@arm.com>
+> Cc: Mohit Kumar <mohit.kumar@st.com>
+> Cc: Jingoo Han <jg1.han@samsung.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Rob Herring <robh+dt@kernel.org>
+>
+> Lorenzo Pieralisi (3):
+>   drivers: of: fix resources freeing in
+>     of_pci_get_host_bridge_resources()
+>   drivers: of: of_pci_get_host_bridge_resources() range parsing update
+>   drivers: pci: host: update the pcie designware driver to new range
+>     parsing API
+>
+>  drivers/of/of_pci.c                |  36 +++++++--
+>  drivers/pci/host/pcie-designware.c | 145 +++++++++++++++++--------------------
+>  drivers/pci/host/pcie-designware.h |   5 +-
+>  include/linux/of_address.h         |   5 ++
+>  4 files changed, 104 insertions(+), 87 deletions(-)
+>
+> --
+> 2.2.1
+>
