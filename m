@@ -1,58 +1,950 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:33636 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750920AbbANKT0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 05:19:26 -0500
-Message-ID: <54B642A6.7040201@arm.com>
-Date: Wed, 14 Jan 2015 10:19:18 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: "Yun Wu (Abel)" <wuyun.wu@huawei.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
-Subject: Re: [PATCH v2 3/8] PCI/MSI: of: Add support for OF-provided msi_domain
-References: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com> <1420736772-11088-4-git-send-email-marc.zyngier@arm.com> <54B62609.7020002@huawei.com>
-In-Reply-To: <54B62609.7020002@huawei.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:40230 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751248AbbASKEp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jan 2015 05:04:45 -0500
+Message-ID: <1421661866.3388.10.camel@pengutronix.de>
+Subject: Re: [PATCH v2 4/4] ARM: dts: imx6q: add Novena board
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Sean Cross <xobs@kosagi.com>
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Shawn Guo <shawn.guo@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	devicetree@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	linux-pci@vger.kernel.org, bunnie@kosagi.com
+Date: Mon, 19 Jan 2015 11:04:26 +0100
+In-Reply-To: <1419237127-21763-5-git-send-email-xobs@kosagi.com>
+References: <1419237127-21763-1-git-send-email-xobs@kosagi.com>
+	 <1419237127-21763-5-git-send-email-xobs@kosagi.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Abel,
-
-On 14/01/15 08:17, Yun Wu (Abel) wrote:
-> On 2015/1/9 1:06, Marc Zyngier wrote:
+Am Montag, den 22.12.2014, 16:32 +0800 schrieb Sean Cross:
+> Novena is an open-hardware laptop/desktop/bare board.
 > 
->> In order to populate the PHB msi_domain, use the "msi-parent"
->> attribute to lookup a corresponding irq domain. If found,
->> this is our MSI domain.
->>
->> This gets plugged into the core PCI code.
->>
+> See http://www.kosagi.com/w/index.php?title=Novena_Main_Page
 > 
-> Hi Marc,
+> This device tree contains additional nodes for FPGA support.
 > 
-> Since the whole patch series based on the fact that non PCI type
-> buses will use MSI-like interrupts, would it be better if getting
-> this field settled during OF populating?
+> Signed-off-by: Sean Cross <xobs@kosagi.com>
 
-Are you're thinking of letting random platform devices automagically
-gain an MSI domain as they are discovered by DT? I feel like you looking
-at it the wrong way.
+Some remarks inline. Otherwise looks good to me.
 
-Note that DT discovery doesn't imply a particular bus, and non-PCI
-doesn't mean bus-agnostic. MSI-like interrupts really are a bus
-property, and I'd rather see you implementing support for your favourite
-bus (and do the MSI domain matching there).
+Regards,
+Lucas
 
-Thanks,
+> ---
+>  arch/arm/boot/dts/Makefile         |   1 +
+>  arch/arm/boot/dts/imx6q-novena.dts | 856 +++++++++++++++++++++++++++++++++++++
+>  2 files changed, 857 insertions(+)
+>  create mode 100644 arch/arm/boot/dts/imx6q-novena.dts
+> 
+> diff --git a/arch/arm/boot/dts/Makefile b/arch/arm/boot/dts/Makefile
+> index 38c89ca..b2b4770 100644
+> --- a/arch/arm/boot/dts/Makefile
+> +++ b/arch/arm/boot/dts/Makefile
+> @@ -234,6 +234,7 @@ dtb-$(CONFIG_ARCH_MXC) += \
+>  	imx6q-gw552x.dtb \
+>  	imx6q-hummingboard.dtb \
+>  	imx6q-nitrogen6x.dtb \
+> +	imx6q-novena.dtb \
+>  	imx6q-phytec-pbab01.dtb \
+>  	imx6q-rex-pro.dtb \
+>  	imx6q-sabreauto.dtb \
+> diff --git a/arch/arm/boot/dts/imx6q-novena.dts b/arch/arm/boot/dts/imx6q-novena.dts
+> new file mode 100644
+> index 0000000..d4a3a06
+> --- /dev/null
+> +++ b/arch/arm/boot/dts/imx6q-novena.dts
+> @@ -0,0 +1,856 @@
+> +/*
+> + * Copyright 2014 Sutajio Ko-Usagi PTE LTD
+> + * Copyright 2012 Freescale Semiconductor, Inc.
+> + * Copyright 2011 Linaro Ltd.
+> + *
+> + * The code contained herein is licensed under the GNU General Public
+> + * License. You may obtain a copy of the GNU General Public License
+> + * Version 2 or later at the following locations:
+> + *
+> + * http://www.opensource.org/licenses/gpl-license.html
+> + * http://www.gnu.org/copyleft/gpl.html
+> + */
+> +
+> +/dts-v1/;
+> +#include "imx6q.dtsi"
+> +#include <dt-bindings/gpio/gpio.h>
+> +#include <dt-bindings/input/input.h>
+> +
+> +/ {
+> +	model = "Kosagi Novena Dual/Quad";
+> +	compatible = "kosagi,imx6q-novena", "fsl,imx6q";
+> +
+> +	memory {
+> +		reg = <0x10000000 0xefffffff>;
+> +	};
+> +
+> +	chosen {
+> +		stdout-path = &uart2;
+> +	};
+> +
+> +	regulators {
+> +		compatible = "simple-bus";
+> +
 
-	M.
--- 
-Jazz is not dead. It just smells funny...
+I know it is common practice in many DTs, but this "bus" is completely
+unnecessary and we should stop using this pattern for new DTs. Please
+move those regulators directly into the parent node.
+
+> +		reg_2p5v: 2p5v {
+> +			compatible = "regulator-fixed";
+> +			regulator-name = "2P5V";
+> +			regulator-min-microvolt = <2500000>;
+> +			regulator-max-microvolt = <2500000>;
+> +			regulator-always-on;
+> +		};
+> +
+> +		reg_3p3v: 3p3v {
+> +			compatible = "regulator-fixed";
+> +			regulator-name = "3P3V";
+> +			regulator-min-microvolt = <3300000>;
+> +			regulator-max-microvolt = <3300000>;
+> +			regulator-always-on;
+> +		};
+> +
+> +		reg_usb_otg_vbus: usb_otg_vbus {
+> +			compatible = "regulator-fixed";
+> +			regulator-name = "usb_otg_vbus";
+> +			regulator-min-microvolt = <5000000>;
+> +			regulator-max-microvolt = <5000000>;
+> +			enable-active-high;
+> +		};
+> +
+> +		reg_audio_codec: es8328-regulator {
+> +			compatible = "regulator-fixed";
+> +			regulator-name = "es8328-power";
+> +			regulator-boot-on;
+> +			regulator-min-microvolt = <5000000>;
+> +			regulator-max-microvolt = <5000000>;
+> +			startup-delay-us = <400000>;
+> +			gpio = <&gpio5 17 GPIO_ACTIVE_HIGH>;
+> +			enable-active-high;
+> +		};
+> +
+> +		reg_pcie: pcie-regulator {
+> +			compatible = "regulator-fixed";
+> +			regulator-name = "pcie-bus-power";
+> +			regulator-min-microvolt = <1500000>;
+> +			regulator-max-microvolt = <1500000>;
+> +			gpio = <&gpio7 12 GPIO_ACTIVE_HIGH>;
+> +			enable-active-high;
+> +		};
+> +
+> +		reg_lvds_lcd: lcd-regulator {
+> +			compatible = "regulator-fixed";
+> +			regulator-name = "lcd-lvds-power";
+> +			regulator-min-microvolt = <3300000>;
+> +			regulator-max-microvolt = <3300000>;
+> +			gpio = <&gpio4 15 GPIO_ACTIVE_HIGH>;
+> +			enable-active-high;
+> +		};
+> +
+> +		reg_display: display-regulator {
+> +			compatible = "regulator-fixed";
+> +			regulator-name = "lcd-display-power";
+> +			regulator-min-microvolt = <3300000>;
+> +			regulator-max-microvolt = <3300000>;
+> +			startup-delay-us = <200000>;
+> +			gpio = <&gpio5 28 GPIO_ACTIVE_HIGH>;
+> +			enable-active-high;
+> +		};
+> +
+> +		reg_sata: sata-regulator {
+> +			compatible = "regulator-fixed";
+> +			regulator-name = "sata-power";
+> +			regulator-boot-on;
+> +			regulator-min-microvolt = <3300000>;
+> +			regulator-max-microvolt = <3300000>;
+> +			startup-delay-us = <10000>;
+> +			gpio = <&gpio3 30 GPIO_ACTIVE_HIGH>;
+> +			enable-active-high;
+> +		};
+> +	};
+> +
+> +	gpio-keys {
+> +		compatible = "gpio-keys";
+> +		pinctrl-names = "default";
+> +		pinctrl-0 = <&pinctrl_gpio_keys_novena>;
+> +
+> +		user-button {
+> +			label = "User Button";
+> +			gpios = <&gpio4 14 GPIO_ACTIVE_LOW>;
+> +			linux,code = <KEY_POWER>;
+> +		};
+> +
+> +		lid {
+> +			label = "Lid";
+> +			gpios = <&gpio4 12 GPIO_ACTIVE_LOW>;
+> +			linux,input-type = <5>; /* EV_SW */
+> +			linux,code = <0>; /* SW_LID */
+> +		};
+> +	};
+> +
+> +	leds {
+> +		compatible = "gpio-leds";
+> +		pinctrl-names = "default";
+> +		pinctrl-0 = <&pinctrl_leds_novena>;
+> +
+> +		heartbeat {
+> +			label = "novena:white:panel";
+> +			gpios = <&gpio1 21 GPIO_ACTIVE_HIGH>;
+> +			linux,default-trigger = "default-on";
+> +		};
+> +	};
+> +
+> +	backlight: backlight {
+> +		compatible = "pwm-backlight";
+> +		pwms = <&pwm1 0 10000000>;
+> +
+> +		pinctrl-names = "default";
+> +		pinctrl-0 = <&pinctrl_backlight_novena>;
+> +		power-supply = <&reg_lvds_lcd>;
+> +
+> +		brightness-levels = <0 3 6 12 16 24 32 48 64 96 128 192 255>;
+> +		default-brightness-level = <12>;
+> +	};
+> +
+> +	panel: panel {
+> +		compatible = "innolux,n133hse-ea1", "simple-panel";
+> +		backlight = <&backlight>;
+> +	};
+> +
+> +	sound {
+> +		compatible = "fsl,imx-audio-es8328";
+> +		model = "imx-audio-es8328";
+> +		ssi-controller = <&ssi1>;
+> +		audio-codec = <&codec>;
+> +		audio-amp-supply = <&reg_audio_codec>;
+> +		jack-gpio = <&gpio5 15 GPIO_ACTIVE_HIGH>;
+> +		audio-routing = 
+> +			"Speaker", "LOUT2",
+> +			"Speaker", "ROUT2",
+> +			"Speaker", "audio-amp",
+> +			"Headphone", "ROUT1",
+> +			"Headphone", "LOUT1",
+> +			"LINPUT1", "Mic Jack",
+> +			"RINPUT1", "Mic Jack",
+> +			"Mic Jack", "Mic Bias";
+> +		mux-int-port = <0x1>;
+> +		mux-ext-port = <0x3>;
+> +	};
+> +};
+> +
+> +&audmux {
+> +	pinctrl-names = "default";
+> +	pinctrl-0 = <&pinctrl_audmux_novena>;
+> +	status = "okay";
+> +};
+> +
+> +&fec {
+> +	pinctrl-names = "default";
+> +	pinctrl-0 = <&pinctrl_enet_novena>;
+> +	phy-mode = "rgmii";
+> +	phy-reset-gpios = <&gpio3 23 GPIO_ACTIVE_HIGH>;
+> +	mac-address = [00 00 00 00 00 00];
+> +	rxc-skew-ps = <3000>;
+> +	rxdv-skew-ps = <0>;
+> +	txc-skew-ps = <3000>;
+> +	txen-skew-ps = <0>;
+> +	rxd0-skew-ps = <0>;
+> +	rxd1-skew-ps = <0>;
+> +	rxd2-skew-ps = <0>;
+> +	rxd3-skew-ps = <0>;
+> +	txd0-skew-ps = <3000>;
+> +	txd1-skew-ps = <3000>;
+> +	txd2-skew-ps = <3000>;
+> +	txd3-skew-ps = <3000>;
+> +	status = "okay";
+> +};
+> +
+> +&ecspi3 {
+> +	pinctrl-names = "default";
+> +	pinctrl-0 = <&pinctrl_ecspi3_novena>;
+> +	fsl,spi-num-chipselects = <3>;
+> +	status = "okay";
+> +
+> +	spidev@0 {
+> +		compatible = "spidev";
+> +		spi-max-frequency = <30000000>;
+> +		reg = <0>;
+> +	};
+> +};
+> +
+> +&hdmi {
+> +	pinctrl-names = "default";
+> +	pinctrl-0 = <&pinctrl_hdmi_novena>;
+> +	ddc-i2c-bus = <&i2c2>;
+> +	status = "okay";
+> +};
+> +
+> +&i2c1 {
+> +	pinctrl-names = "default";
+> +	pinctrl-0 = <&pinctrl_i2c1_novena>;
+> +	status = "okay";
+> +
+> +	sbs_battery: bq20z75@0b {
+> +		compatible = "sbs,sbs-battery";
+> +		reg = <0x0b>;
+> +		sbs,i2c-retry-count = <50>;
+> +	};
+> +
+> +	senoko: senoko@20 {
+> +		pinctrl-names = "default";
+> +		pinctrl-0 = <&pinctrl_senoko_novena>;
+> +		compatible = "kosagi,senoko";
+
+This is missing a binding documentation.
+
+> +		reg = <0x20>;
+> +		irq-gpio = <&gpio1 20 GPIO_ACTIVE_HIGH>;
+> +		supplied-to = "sbs-0-000b";
+> +	};
+> +
+> +	stmpe811@44 {
+> +		compatible = "st,stmpe811";
+> +		#address-cells = <1>;
+> +		#size-cells = <0>;
+> +		reg = <0x44>;
+> +		irq-gpio = <&gpio5 13 GPIO_ACTIVE_HIGH>;
+> +		id = <0>;
+> +		blocks = <0x5>;
+> +		irq-trigger = <0x1>;
+> +		pinctrl-names = "default";
+> +		pinctrl-0 = <&pinctrl_stmpe_novena>;
+> +		vio-supply = <&reg_3p3v>;
+> +		vcc-supply = <&reg_3p3v>;
+> +
+> +		stmpe_touchscreen {
+> +			compatible = "st,stmpe-ts";
+> +			ts,sample-time = <4>;
+> +			ts,mod-12b = <1>;
+> +			ts,ref-sel = <0>;
+> +			ts,adc-freq = <1>;
+> +			ts,ave-ctrl = <1>;
+> +			ts,touch-det-delay = <2>;
+> +			ts,settling = <2>;
+> +			ts,fraction-z = <7>;
+> +			ts,i-drive = <1>;
+> +		};
+> +		
+> +	};
+
+This is also missing a binding, but that's not your fault so I won't
+block this patch based on this. Could you make sure to ping the driver
+author about this or fix it in a follow on patch?
+
+> +
+> +	accel: mma8452@1c {
+> +		compatible = "fsl,mma8452";
+> +		reg = <0x1c>;
+> +	};
+> +
+> +	rtc: pcf8523@68 {
+> +		compatible = "nxp,pcf8523";
+> +		reg = <0x68>;
+> +	};
+> +};
+> +
+> +&i2c2 {
+> +	pinctrl-names = "default";
+> +	pinctrl-0 = <&pinctrl_i2c2_novena>;
+> +	status = "okay";
+> +
+> +	pmic: pfuze100@08 {
+> +		compatible = "fsl,pfuze100";
+> +		reg = <0x08>;
+> +
+> +		regulators {
+> +			sw1a_reg: sw1ab {
+> +				regulator-min-microvolt = <300000>;
+> +				regulator-max-microvolt = <1875000>;
+> +				regulator-boot-on;
+> +				regulator-always-on;
+> +				regulator-ramp-delay = <6250>;
+> +			};
+> +
+> +			sw1c_reg: sw1c {
+> +				regulator-min-microvolt = <300000>;
+> +				regulator-max-microvolt = <1875000>;
+> +				regulator-boot-on;
+> +				regulator-always-on;
+> +			};
+> +
+> +			sw2_reg: sw2 {
+> +				regulator-min-microvolt = <800000>;
+> +				regulator-max-microvolt = <3300000>;
+> +				regulator-boot-on;
+> +				regulator-always-on;
+> +			};
+> +
+> +			sw3a_reg: sw3a {
+> +				regulator-min-microvolt = <400000>;
+> +				regulator-max-microvolt = <1975000>;
+> +				regulator-boot-on;
+> +				regulator-always-on;
+> +			};
+> +
+> +			sw3b_reg: sw3b {
+> +				regulator-min-microvolt = <400000>;
+> +				regulator-max-microvolt = <1975000>;
+> +				regulator-boot-on;
+> +				regulator-always-on;
+> +			};
+> +
+> +			sw4_reg: sw4 {
+> +				regulator-min-microvolt = <800000>;
+> +				regulator-max-microvolt = <3300000>;
+> +			};
+> +
+> +			swbst_reg: swbst {
+> +				regulator-min-microvolt = <5000000>;
+> +				regulator-max-microvolt = <5150000>;
+> +				regulator-boot-on;
+> +			};
+> +
+> +			snvs_reg: vsnvs {
+> +				regulator-min-microvolt = <1000000>;
+> +				regulator-max-microvolt = <3000000>;
+> +				regulator-boot-on;
+> +				regulator-always-on;
+> +			};
+> +
+> +			vref_reg: vrefddr {
+> +				regulator-boot-on;
+> +				regulator-always-on;
+> +			};
+> +
+> +			vgen1_reg: vgen1 {
+> +				regulator-min-microvolt = <800000>;
+> +				regulator-max-microvolt = <1550000>;
+> +			};
+> +
+> +			vgen2_reg: vgen2 {
+> +				regulator-min-microvolt = <800000>;
+> +				regulator-max-microvolt = <1550000>;
+> +			};
+> +
+> +			vgen3_reg: vgen3 {
+> +				regulator-min-microvolt = <1800000>;
+> +				regulator-max-microvolt = <3300000>;
+> +			};
+> +
+> +			vgen4_reg: vgen4 {
+> +				regulator-min-microvolt = <1800000>;
+> +				regulator-max-microvolt = <3300000>;
+> +				regulator-always-on;
+> +			};
+> +
+> +			vgen5_reg: vgen5 {
+> +				regulator-min-microvolt = <1800000>;
+> +				regulator-max-microvolt = <3300000>;
+> +				regulator-always-on;
+> +			};
+> +
+> +			vgen6_reg: vgen6 {
+> +				regulator-min-microvolt = <1800000>;
+> +				regulator-max-microvolt = <3300000>;
+> +				regulator-always-on;
+> +			};
+> +		};
+> +	};
+> +};
+> +
+> +&i2c3 {
+> +	pinctrl-names = "default";
+> +	pinctrl-0 = <&pinctrl_i2c3_novena>;
+> +	status = "okay";
+> +
+> +	codec: es8328@11 {
+> +		compatible = "everest,es8328";
+> +		reg = <0x11>;
+> +		DVDD-supply = <&reg_audio_codec>;
+> +		AVDD-supply = <&reg_audio_codec>;
+> +		PVDD-supply = <&reg_audio_codec>;
+> +		HPVDD-supply = <&reg_audio_codec>;
+> +
+> +		pinctrl-names = "default";
+> +		pinctrl-0 = <&pinctrl_sound_novena>;
+> +
+> +		clocks = <&clks IMX6QDL_CLK_CKO1>;
+> +		assigned-clocks = <&clks IMX6QDL_CLK_CKO>, <&clks IMX6QDL_CLK_CKO1_SEL>, <&clks IMX6QDL_CLK_PLL4_AUDIO>, <&clks IMX6QDL_CLK_CKO1>;
+> +		assigned-clock-parents = <&clks IMX6QDL_CLK_CKO1>, <&clks IMX6QDL_CLK_PLL4_AUDIO_DIV>, <&clks IMX6QDL_CLK_OSC>, <&clks IMX6QDL_CLK_CKO1_PODF>;
+> +		assigned-clock-rates = <0 0 722534400 22579200>;
+> +	};
+> +
+> +	eepromoops@56 {
+> +		compatible = "kosagi,eepromoops";
+
+Missing binding.
+
+> +		reg = <0x56>;
+> +	};
+> +
+> +	it6251@5c {
+> +		compatible = "it,it6251";
+
+Missing vendor prefix and binding. Also it seems there is no driver for
+this upstream, so unless you are completely sure about the binding it
+may be better to drop this node until there is a driver using it.
+
+> +		reg = <0x5c>;
+> +		power-supply = <&reg_display>;
+> +	};
+> +};
+> +
+> +&iomuxc {
+> +	pinctrl-names = "default";
+> +	pinctrl-0 = <&pinctrl_hog>;
+> +
+> +	audmux {
+> +		pinctrl_audmux_novena: audmuxgrp-novena {
+> +			fsl,pins = <
+> +				MX6QDL_PAD_CSI0_DAT7__AUD3_RXD  0x80000000
+> +				MX6QDL_PAD_CSI0_DAT4__AUD3_TXC  0x80000000
+> +				MX6QDL_PAD_CSI0_DAT5__AUD3_TXD  0x80000000
+> +				MX6QDL_PAD_CSI0_DAT6__AUD3_TXFS 0x80000000
+> +			>;
+> +		};
+> +	};
+> +
+> +	kpp-keys {
+> +		pinctrl_kpp_novena: kppgrp-novena {
+> +			fsl,pins = <
+> +				/* Front panel button */
+> +				MX6QDL_PAD_KEY_ROW1__KEY_ROW1 0x1b0b1
+> +
+> +				/* Fake column driver, not connected to anything */
+> +				MX6QDL_PAD_KEY_COL1__KEY_COL1 0x1b0b1
+> +			>;
+> +		};
+> +	};	
+> +		
+> +	backlight {
+> +		pinctrl_backlight_novena: backlightgrp-novena {
+> +			fsl,pins = <
+> +				MX6QDL_PAD_DISP0_DAT8__PWM1_OUT   0x1b0b0
+> +				MX6QDL_PAD_CSI0_DAT10__GPIO5_IO28 0x80000000
+> +				MX6QDL_PAD_KEY_ROW4__GPIO4_IO15   0x80000000
+> +			>;
+> +		};
+> +	};
+> +
+> +	ecspi3 {
+> +		pinctrl_ecspi3_novena: ecspi3grp-novena {
+> +			fsl,pins = <
+> +				MX6QDL_PAD_DISP0_DAT2__ECSPI3_MISO 0x100b1
+> +				MX6QDL_PAD_DISP0_DAT1__ECSPI3_MOSI 0x100b1
+> +				MX6QDL_PAD_DISP0_DAT0__ECSPI3_SCLK 0x100b1
+> +			>;
+> +		};
+> +	};
+> +
+> +	enet {
+> +		pinctrl_enet_novena: enetgrp-novena {
+> +			fsl,pins = <
+> +				MX6QDL_PAD_ENET_MDIO__ENET_MDIO       0x1b0b0
+> +				MX6QDL_PAD_ENET_MDC__ENET_MDC         0x1b0b0
+> +				MX6QDL_PAD_RGMII_TXC__RGMII_TXC       0x1b020
+> +				MX6QDL_PAD_RGMII_TD0__RGMII_TD0       0x1b028
+> +				MX6QDL_PAD_RGMII_TD1__RGMII_TD1       0x1b028
+> +				MX6QDL_PAD_RGMII_TD2__RGMII_TD2       0x1b028
+> +				MX6QDL_PAD_RGMII_TD3__RGMII_TD3       0x1b028
+> +				MX6QDL_PAD_RGMII_TX_CTL__RGMII_TX_CTL 0x1b028
+> +				MX6QDL_PAD_ENET_REF_CLK__ENET_TX_CLK  0x1b0b0
+> +				MX6QDL_PAD_RGMII_RXC__RGMII_RXC       0x1b0b0
+> +				MX6QDL_PAD_RGMII_RD0__RGMII_RD0       0x1b0b0
+> +				MX6QDL_PAD_RGMII_RD1__RGMII_RD1       0x1b0b0
+> +				MX6QDL_PAD_RGMII_RD2__RGMII_RD2       0x1b0b0
+> +				MX6QDL_PAD_RGMII_RD3__RGMII_RD3       0x1b0b0
+> +				MX6QDL_PAD_RGMII_RX_CTL__RGMII_RX_CTL 0x1b0b0
+> +				MX6QDL_PAD_GPIO_16__ENET_REF_CLK      0x4001b0a8
+> +
+> +				/* Ethernet reset */
+> +				MX6QDL_PAD_EIM_D23__GPIO3_IO23  0x80000000
+> +			>;
+> +		};
+> +	};
+> +
+> +	gpio_keys {
+> +		pinctrl_gpio_keys_novena: gpiokeysgrp-novena {
+> +			fsl,pins = <
+> +				/* User button */
+> +				MX6QDL_PAD_KEY_COL4__GPIO4_IO14 0x1b0b0
+> +
+> +				/* PCIe Wakeup */
+> +				MX6QDL_PAD_EIM_D22__GPIO3_IO22  0x1f0e0
+> +
+> +				/* Lid switch */
+> +				MX6QDL_PAD_KEY_COL3__GPIO4_IO12 0x1b0b0
+> +			>;
+> +		};
+> +	};
+> +
+> +	hdmi {
+> +		pinctrl_hdmi_novena: hdmigrp-novena {
+> +			fsl,pins = <
+> +				MX6QDL_PAD_KEY_ROW2__HDMI_TX_CEC_LINE 0x1f8b0
+> +				MX6QDL_PAD_EIM_A24__GPIO5_IO04        0x80000000
+> +			>;
+> +		};
+> +	};
+> +
+> +	i2c1 {
+> +		pinctrl_i2c1_novena: i2c1grp-novena {
+> +			fsl,pins = <
+> +				MX6QDL_PAD_EIM_D21__I2C1_SCL 0x4001b8b1
+> +				MX6QDL_PAD_EIM_D28__I2C1_SDA 0x4001b8b1
+> +			>;
+> +		};
+> +	};
+> +
+> +	i2c2 {
+> +		pinctrl_i2c2_novena: i2c2grp-novena {
+> +			fsl,pins = <
+> +				MX6QDL_PAD_EIM_EB2__I2C2_SCL 0x4001b8b1
+> +				MX6QDL_PAD_EIM_D16__I2C2_SDA 0x4001b8b1
+> +			>;
+> +		};
+> +	};
+> +
+> +	i2c3 {
+> +		pinctrl_i2c3_novena: i2c3grp-novena {
+> +			fsl,pins = <
+> +				MX6QDL_PAD_EIM_D17__I2C3_SCL 0x4001b8b1
+> +				MX6QDL_PAD_EIM_D18__I2C3_SDA 0x4001b8b1
+> +			>;
+> +		};
+> +	};
+> +
+> +	leds {
+> +		pinctrl_leds_novena: ledsgrp-novena {
+> +			fsl,pins = <
+> +				MX6QDL_PAD_SD1_DAT3__GPIO1_IO21 0x80000000
+> +			>;
+> +		};
+> +	};
+> +
+> +	fpga {
+> +		pinctrl_fpga_gpio: fpgagpiogrp-novena {
+> +			fsl,pins = <
+> +				/* FPGA power */
+> +				MX6QDL_PAD_SD1_DAT1__GPIO1_IO17 0x80000000
+> +
+> +				/* Reset */
+> +				MX6QDL_PAD_DISP0_DAT13__GPIO5_IO07 0x80000000
+> +
+> +				/* FPGA GPIOs */
+> +				MX6QDL_PAD_EIM_DA0__GPIO3_IO00	0x80000000
+> +				MX6QDL_PAD_EIM_DA1__GPIO3_IO01	0x80000000
+> +				MX6QDL_PAD_EIM_DA2__GPIO3_IO02	0x80000000
+> +				MX6QDL_PAD_EIM_DA3__GPIO3_IO03	0x80000000
+> +				MX6QDL_PAD_EIM_DA4__GPIO3_IO04	0x80000000
+> +				MX6QDL_PAD_EIM_DA5__GPIO3_IO05  0x80000000
+> +				MX6QDL_PAD_EIM_DA6__GPIO3_IO06  0x80000000
+> +				MX6QDL_PAD_EIM_DA7__GPIO3_IO07  0x80000000
+> +				MX6QDL_PAD_EIM_DA8__GPIO3_IO08	0x80000000
+> +				MX6QDL_PAD_EIM_DA9__GPIO3_IO09	0x80000000
+> +				MX6QDL_PAD_EIM_DA10__GPIO3_IO10	0x80000000
+> +				MX6QDL_PAD_EIM_DA11__GPIO3_IO11	0x80000000
+> +				MX6QDL_PAD_EIM_DA12__GPIO3_IO12	0x80000000
+> +				MX6QDL_PAD_EIM_DA13__GPIO3_IO13	0x80000000
+> +				MX6QDL_PAD_EIM_DA14__GPIO3_IO14	0x80000000
+> +				MX6QDL_PAD_EIM_DA15__GPIO3_IO15	0x80000000
+> +				MX6QDL_PAD_EIM_A16__GPIO2_IO22  0x80000000
+> +				MX6QDL_PAD_EIM_A17__GPIO2_IO21  0x80000000
+> +				MX6QDL_PAD_EIM_A18__GPIO2_IO20  0x80000000
+> +				MX6QDL_PAD_EIM_CS0__GPIO2_IO23	0x80000000
+> +				MX6QDL_PAD_EIM_CS1__GPIO2_IO24	0x80000000
+> +				MX6QDL_PAD_EIM_LBA__GPIO2_IO27  0x80000000
+> +				MX6QDL_PAD_EIM_OE__GPIO2_IO25   0x80000000
+> +				MX6QDL_PAD_EIM_RW__GPIO2_IO26   0x80000000
+> +				MX6QDL_PAD_EIM_WAIT__GPIO5_IO00 0x80000000
+> +				MX6QDL_PAD_EIM_BCLK__GPIO6_IO31 0x80000000
+> +			>;
+> +		};
+> +
+> +		pinctrl_fpga_eim: fpgaeimgrp-novena {
+> +			fsl,pins = <
+> +				/* FPGA power */
+> +				MX6QDL_PAD_SD1_DAT1__GPIO1_IO17 0x80000000
+> +
+> +				/* Reset */
+> +				MX6QDL_PAD_DISP0_DAT13__GPIO5_IO07 0x80000000
+> +
+> +				/* FPGA GPIOs */
+> +				MX6QDL_PAD_EIM_DA0__EIM_AD00    0xb0f1
+> +				MX6QDL_PAD_EIM_DA1__EIM_AD01    0xb0f1
+> +				MX6QDL_PAD_EIM_DA2__EIM_AD02    0xb0f1
+> +				MX6QDL_PAD_EIM_DA3__EIM_AD03    0xb0f1
+> +				MX6QDL_PAD_EIM_DA4__EIM_AD04    0xb0f1
+> +				MX6QDL_PAD_EIM_DA5__EIM_AD05    0xb0f1
+> +				MX6QDL_PAD_EIM_DA6__EIM_AD06    0xb0f1
+> +				MX6QDL_PAD_EIM_DA7__EIM_AD07    0xb0f1
+> +				MX6QDL_PAD_EIM_DA8__EIM_AD08    0xb0f1
+> +				MX6QDL_PAD_EIM_DA9__EIM_AD09    0xb0f1
+> +				MX6QDL_PAD_EIM_DA10__EIM_AD10   0xb0f1
+> +				MX6QDL_PAD_EIM_DA11__EIM_AD11   0xb0f1
+> +				MX6QDL_PAD_EIM_DA12__EIM_AD12   0xb0f1
+> +				MX6QDL_PAD_EIM_DA13__EIM_AD13   0xb0f1
+> +				MX6QDL_PAD_EIM_DA14__EIM_AD14   0xb0f1
+> +				MX6QDL_PAD_EIM_DA15__EIM_AD15   0xb0f1
+> +				MX6QDL_PAD_EIM_A16__EIM_ADDR16  0xb0f1
+> +				MX6QDL_PAD_EIM_A17__EIM_ADDR17  0xb0f1
+> +				MX6QDL_PAD_EIM_A18__EIM_ADDR18  0xb0f1
+> +				MX6QDL_PAD_EIM_CS0__EIM_CS0_B   0xb0f1
+> +				MX6QDL_PAD_EIM_CS1__EIM_CS1_B   0xb0f1
+> +				MX6QDL_PAD_EIM_LBA__EIM_LBA_B   0xb0f1
+> +				MX6QDL_PAD_EIM_OE__EIM_OE_B     0xb0f1
+> +				MX6QDL_PAD_EIM_RW__EIM_RW       0xb0f1
+> +				MX6QDL_PAD_EIM_WAIT__EIM_WAIT_B 0xb0f1
+> +				MX6QDL_PAD_EIM_BCLK__EIM_BCLK   0xb0f1
+> +			>;
+> +		};
+> +	};
+> +
+> +	hog {
+> +		pinctrl_hog: hoggrp-novena {
+> +			fsl,pins = <
+> +				/* Peek array power */
+> +				MX6QDL_PAD_EIM_D19__GPIO3_IO19  0x80000000
+> +			>;
+> +		};
+> +	};
+
+What is this used for? If possible please avoid using any hogs.
+
+> +
+> +	pcie {
+> +		pinctrl_pcie_novena: pciegrp-novena {
+> +			fsl,pins = <
+> +				/* Reset */
+> +				MX6QDL_PAD_EIM_D29__GPIO3_IO29  0x80000000
+> +
+> +				/* Power On */
+> +				MX6QDL_PAD_GPIO_17__GPIO7_IO12  0x80000000
+> +
+> +				/* Wifi kill */
+> +				MX6QDL_PAD_EIM_A22__GPIO2_IO16  0x80000000
+> +			>;
+> +		};
+> +	};
+> +
+> +	sata {
+> +		pinctrl_sata_novena: satagrp-novena {
+> +			fsl,pins = <
+> +				MX6QDL_PAD_EIM_D30__GPIO3_IO30  0x80000000
+> +			>;
+> +		};
+> +	};
+> +
+> +	senoko {
+> +		pinctrl_senoko_novena: senokogrp-novena {
+> +			fsl,pins = <
+> +				/* Senoko IRQ line */
+> +				MX6QDL_PAD_SD1_CLK__GPIO1_IO20 0x13048
+> +
+> +				/* Senoko reset line */
+> +				MX6QDL_PAD_CSI0_VSYNC__GPIO5_IO21 0x80000000
+> +			>;
+> +		};
+> +	};
+> +
+> +	sound {
+> +		pinctrl_sound_novena: soundgrp-novena {
+> +			fsl,pins = <
+> +				/* Audio power regulator */
+> +				MX6QDL_PAD_DISP0_DAT23__GPIO5_IO17 0x80000000
+> +
+> +				/* Headphone plug */
+> +				MX6QDL_PAD_DISP0_DAT21__GPIO5_IO15 0x80000000
+> +
+> +				MX6QDL_PAD_GPIO_0__CCM_CLKO1       0x80000000
+> +			>;
+> +		};
+> +	};
+> +
+> +	ts {
+> +		pinctrl_stmpe_novena: stmpegrp-novena {
+> +			fsl,pins = <
+> +				/* Touchscreen interrupt */
+> +				MX6QDL_PAD_DISP0_DAT19__GPIO5_IO13 0x80000000
+> +			>;
+> +		};
+> +	};
+> +
+> +	uart2 {
+> +		pinctrl_uart2_novena: uart2grp-novena {
+> +			fsl,pins = <
+> +				MX6QDL_PAD_EIM_D26__UART2_TX_DATA   0x1b0b1
+> +				MX6QDL_PAD_EIM_D27__UART2_RX_DATA   0x1b0b1
+> +			>;
+> +		};
+> +	};
+> +
+> +	uart3 {
+> +		pinctrl_uart3_novena: uart3grp-novena {
+> +			fsl,pins = <
+> +				MX6QDL_PAD_EIM_D24__UART3_TX_DATA 0x1b0b1
+> +				MX6QDL_PAD_EIM_D25__UART3_RX_DATA 0x1b0b1
+> +			>;
+> +		};
+> +	};
+> +	uart4 {
+> +		pinctrl_uart4_novena: uart4grp-novena {
+> +			fsl,pins = <
+> +				MX6QDL_PAD_CSI0_DAT12__UART4_TX_DATA 0x1b0b1
+> +				MX6QDL_PAD_CSI0_DAT13__UART4_RX_DATA 0x1b0b1
+> +			>;
+> +		};
+> +	};
+> +
+> +	usbotg {
+> +		pinctrl_usbotg_novena: usbotggrp-novena {
+> +			fsl,pins = <
+> +				MX6QDL_PAD_ENET_RX_ER__USB_OTG_ID 0x17059
+> +			>;
+> +		};
+> +	};
+> +
+> +	usdhc2 {
+> +		pinctrl_usdhc2_novena: usdhc2grp-novena {
+> +			fsl,pins = <
+> +				MX6QDL_PAD_SD2_CMD__SD2_CMD    0x17059
+> +				MX6QDL_PAD_SD2_CLK__SD2_CLK    0x10059
+> +				MX6QDL_PAD_SD2_DAT0__SD2_DATA0 0x17059
+> +				MX6QDL_PAD_SD2_DAT1__SD2_DATA1 0x17059
+> +				MX6QDL_PAD_SD2_DAT2__SD2_DATA2 0x17059
+> +				MX6QDL_PAD_SD2_DAT3__SD2_DATA3 0x17059
+> +
+> +				/* Write protect */
+> +				MX6QDL_PAD_GPIO_2__GPIO1_IO02   0x80000000
+> +
+> +				/* Card detect */
+> +				MX6QDL_PAD_GPIO_4__GPIO1_IO04   0x80000000
+> +			>;
+> +		};
+> +	};
+> +
+> +	usdhc3 {
+> +		pinctrl_usdhc3_novena: usdhc3grp-novena {
+> +			fsl,pins = <
+> +				MX6QDL_PAD_SD3_CMD__SD3_CMD    0x17059
+> +				MX6QDL_PAD_SD3_CLK__SD3_CLK    0x10059
+> +				MX6QDL_PAD_SD3_DAT0__SD3_DATA0 0x17059
+> +				MX6QDL_PAD_SD3_DAT1__SD3_DATA1 0x17059
+> +				MX6QDL_PAD_SD3_DAT2__SD3_DATA2 0x17059
+> +				MX6QDL_PAD_SD3_DAT3__SD3_DATA3 0x17059
+> +			>;
+> +		};
+> +	};
+> +};
+> +
+> +&kpp {
+> +	pinctrl-names = "default";
+> +	pinctrl-0 = <&pinctrl_kpp_novena>;
+> +	linux,keymap = <
+> +		MATRIX_KEY(1, 1, KEY_CONFIG)
+> +	>;
+> +	wakeup;
+
+This probably needs a prefix.
+
+> +	status = "okay";
+> +};
+> +
+> +&ldb {
+> +	fsl,dual-channel;
+> +	status = "okay";
+> +	lvds-channel@0 {
+> +		fsl,data-mapping = "jeida";
+> +		fsl,data-width = <24>;
+> +		fsl,panel = <&panel>;
+> +		status = "okay";
+> +	};
+> +};
+> +
+> +&pcie {
+> +	pinctrl-names = "default";
+> +	pinctrl-0 = <&pinctrl_pcie_novena>;
+> +	reset-gpio = <&gpio3 29 GPIO_ACTIVE_HIGH>;
+> +	bus-supply = <&reg_pcie>;
+> +	status = "okay";
+> +};
+> +
+> +&sata {
+> +	target-supply = <&reg_sata>;
+> +	fsl,transmit-level-mV = <1025>;
+> +	fsl,transmit-boost-mdB = <0>;
+> +	fsl,transmit-atten-16ths = <8>;
+> +	status = "okay";
+> +};
+> +
+> +&ssi1 {
+> +	fsl,mode = "i2s-slave";
+> +	status = "okay";
+> +};
+> +
+> +&uart2 {
+> +	pinctrl-names = "default";
+> +	pinctrl-0 = <&pinctrl_uart2_novena>;
+> +	status = "okay";
+> +};
+> +
+> +&uart3 {
+> +	pinctrl-names = "default";
+> +	pinctrl-0 = <&pinctrl_uart3_novena>;
+> +	status = "okay";
+> +};
+> +
+> +&uart4 {
+> +	pinctrl-names = "default";
+> +	pinctrl-0 = <&pinctrl_uart4_novena>;
+> +	status = "okay";
+> +};
+> +
+> +&usbotg {
+> +	vbus-supply = <&reg_usb_otg_vbus>;
+> +	dr_mode = "otg";
+> +	pinctrl-names = "default";
+> +	pinctrl-0 = <&pinctrl_usbotg_novena>;
+> +	disable-over-current;
+> +	status = "okay";
+> +};
+> +
+> +&usbh1 {
+> +	vbus-supply = <&swbst_reg>;
+> +	status = "okay";
+> +};
+> +
+> +&usdhc2 {
+> +	pinctrl-names = "default";
+> +	pinctrl-0 = <&pinctrl_usdhc2_1>;
+> +	pinctrl-0 = <&pinctrl_usdhc2_novena>;
+> +	cd-gpios = <&gpio1 4 GPIO_ACTIVE_HIGH>;
+> +	wp-gpios = <&gpio1 2 GPIO_ACTIVE_HIGH>;
+> +	status = "okay";
+> +};
+> +
+> +&usdhc3 {
+> +	pinctrl-names = "default";
+> +	pinctrl-0 = <&pinctrl_usdhc3_novena>;
+> +	non-removable;
+> +	status = "okay";
+> +};
+
+
