@@ -1,361 +1,270 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <8467440.C7CR1EqfOe@wuerfel>
+References: <1418812486-12394-1-git-send-email-gabriel.fernandez@linaro.org>
+	<1418812486-12394-4-git-send-email-gabriel.fernandez@linaro.org>
+	<8467440.C7CR1EqfOe@wuerfel>
+Date: Mon, 19 Jan 2015 14:08:48 +0100
+Message-ID: <CAG374jDDn9OWZm0=46zmk5MwYbX-orwJ=_k=mR-33dFPFMjdLw@mail.gmail.com>
+Subject: Re: [PATCH 3/5] PCI: st: Provide support for the sti PCIe controller
+From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: [Patch v2 22/22] x86/irq, ACPI: Implement ACPI driver to support IOAPIC hotplug
-Date: Wed, 28 Jan 2015 18:57:40 +0800
-Message-Id: <1422442660-455-23-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Magnus Damm <damm@opensource.se>,
+	Will Deacon <will.deacon@arm.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"kernel@stlinux.com" <kernel@stlinux.com>,
+	linux-pci@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Lee Jones <lee.jones@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enable support of IOAPIC hotplug by:
-1) reintroducing ACPI based IOAPIC driver
-2) enhance pci_root driver to hook hotplug events
+Hi Arnd,
 
-The ACPI IOAPIC driver is always enabled if all of ACPI, PCI and IOAPIC
-are enabled.
+On 17 December 2014 at 23:14, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Wednesday 17 December 2014 11:34:44 Gabriel FERNANDEZ wrote:
+>> sti pcie is built around a Synopsis Designware PCIe IP.
+>>
+>> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+>> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+>> ---
+>>  drivers/pci/host/Kconfig  |   5 +
+>>  drivers/pci/host/Makefile |   1 +
+>>  drivers/pci/host/pci-st.c | 713 ++++++++++++++++++++++++++++++++++++++++++++++
+>>  3 files changed, 719 insertions(+)
+>>  create mode 100644 drivers/pci/host/pci-st.c
+>>
+>> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+>> index c4b6568..999d2b9 100644
+>> --- a/drivers/pci/host/Kconfig
+>> +++ b/drivers/pci/host/Kconfig
+>> @@ -102,4 +102,9 @@ config PCI_LAYERSCAPE
+>>       help
+>>         Say Y here if you want PCIe controller support on Layerscape SoCs.
+>>
+>> +config PCI_ST
+>> +     bool "ST STiH41x PCIe controller"
+>> +     depends on ARCH_STI
+>> +     select PCIE_DW
+>
+> I'd use 'depends on ARCH_STI || (ARM && COMPILE_TEST)' to enable
+> building this on other platforms for test purposes.
+>
+ok
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Len Brown <lenb@kernel.org>
-Link: http://lkml.kernel.org/r/1414387308-27148-19-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- drivers/acpi/Kconfig    |    6 ++
- drivers/acpi/Makefile   |    1 +
- drivers/acpi/internal.h |    7 ++
- drivers/acpi/ioapic.c   |  229 +++++++++++++++++++++++++++++++++++++++++++++++
- drivers/acpi/pci_root.c |    3 +
- 5 files changed, 246 insertions(+)
- create mode 100644 drivers/acpi/ioapic.c
+>> +
+>> +#define to_st_pcie(x)        container_of(x, struct st_pcie, pp)
+>> +
+>> +/**
+>> + * struct st_pcie_ops - SOC dependent data
+>> + * @init: reference to controller power & reset init routine
+>> + * @enable_ltssm: reference to controller link enable routine
+>> + * @disable_ltssm:  reference to controller link disable routine
+>> + * @phy_auto: flag when phy automatically configured
+>> + */
+>> +struct st_pcie_ops {
+>> +     int (*init)(struct pcie_port *pp);
+>> +     int (*enable_ltssm)(struct pcie_port *pp);
+>> +     int (*disable_ltssm)(struct pcie_port *pp);
+>> +     bool phy_auto;
+>> +};
+>
+ok, i will fix it.
 
-diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-index 8951cefb0a96..e6c3ddd92665 100644
---- a/drivers/acpi/Kconfig
-+++ b/drivers/acpi/Kconfig
-@@ -315,6 +315,12 @@ config ACPI_HOTPLUG_MEMORY
- 	  To compile this driver as a module, choose M here:
- 	  the module will be called acpi_memhotplug.
- 
-+config ACPI_HOTPLUG_IOAPIC
-+	bool
-+	depends on PCI
-+	depends on X86_IO_APIC
-+	default y
-+
- config ACPI_SBS
- 	tristate "Smart Battery System"
- 	depends on X86
-diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
-index f74317cc1ca9..e59494c90402 100644
---- a/drivers/acpi/Makefile
-+++ b/drivers/acpi/Makefile
-@@ -70,6 +70,7 @@ obj-$(CONFIG_ACPI_PROCESSOR)	+= processor.o
- obj-y				+= container.o
- obj-$(CONFIG_ACPI_THERMAL)	+= thermal.o
- obj-y				+= acpi_memhotplug.o
-+obj-$(CONFIG_ACPI_HOTPLUG_IOAPIC) += ioapic.o
- obj-$(CONFIG_ACPI_BATTERY)	+= battery.o
- obj-$(CONFIG_ACPI_SBS)		+= sbshc.o
- obj-$(CONFIG_ACPI_SBS)		+= sbs.o
-diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
-index 163e82f536fa..caca2805536d 100644
---- a/drivers/acpi/internal.h
-+++ b/drivers/acpi/internal.h
-@@ -35,6 +35,13 @@ void acpi_int340x_thermal_init(void);
- int acpi_sysfs_init(void);
- void acpi_container_init(void);
- void acpi_memory_hotplug_init(void);
-+#ifdef	CONFIG_ACPI_HOTPLUG_IOAPIC
-+int acpi_ioapic_add(struct acpi_pci_root *root);
-+int acpi_ioapic_remove(struct acpi_pci_root *root);
-+#else
-+static inline int acpi_ioapic_add(struct acpi_pci_root *root) { return 0; }
-+static inline int acpi_ioapic_remove(struct acpi_pci_root *root) { return 0; }
-+#endif
- #ifdef CONFIG_ACPI_DOCK
- void register_dock_dependent_device(struct acpi_device *adev,
- 				    acpi_handle dshandle);
-diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
-new file mode 100644
-index 000000000000..ccdc8db16bb8
---- /dev/null
-+++ b/drivers/acpi/ioapic.c
-@@ -0,0 +1,229 @@
-+/*
-+ * IOAPIC/IOxAPIC/IOSAPIC driver
-+ *
-+ * Copyright (C) 2009 Fujitsu Limited.
-+ * (c) Copyright 2009 Hewlett-Packard Development Company, L.P.
-+ *
-+ * Copyright (C) 2014 Intel Corporation
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * Based on original drivers/pci/ioapic.c
-+ *	Yinghai Lu <yinghai@kernel.org>
-+ *	Jiang Liu <jiang.liu@intel.com>
-+ */
-+
-+/*
-+ * This driver manages I/O APICs added by hotplug after boot.
-+ * We try to claim all I/O APIC devices, but those present at boot were
-+ * registered when we parsed the ACPI MADT.
-+ */
-+
-+#define pr_fmt(fmt) "ACPI : IOAPIC: " fmt
-+
-+#include <linux/slab.h>
-+#include <linux/acpi.h>
-+#include <linux/pci.h>
-+#include <acpi/acpi.h>
-+
-+struct acpi_pci_ioapic {
-+	acpi_handle	root_handle;
-+	acpi_handle	handle;
-+	u32		gsi_base;
-+	struct resource	res;
-+	struct pci_dev	*pdev;
-+	struct list_head list;
-+};
-+
-+static LIST_HEAD(ioapic_list);
-+static DEFINE_MUTEX(ioapic_list_lock);
-+
-+static acpi_status setup_res(struct acpi_resource *acpi_res, void *data)
-+{
-+	struct resource *res = data;
-+	struct resource_win win;
-+
-+	res->flags = 0;
-+	if (acpi_dev_filter_resource_type(acpi_res, IORESOURCE_MEM) == 0)
-+		return AE_OK;
-+
-+	if (!acpi_dev_resource_memory(acpi_res, res)) {
-+		if (acpi_dev_resource_address_space(acpi_res, &win) ||
-+		    acpi_dev_resource_ext_address_space(acpi_res, &win))
-+			*res = win.res;
-+	}
-+	if ((res->flags & IORESOURCE_PREFETCH) ||
-+	    (res->flags & IORESOURCE_DISABLED))
-+		res->flags = 0;
-+
-+	return AE_CTRL_TERMINATE;
-+}
-+
-+static bool acpi_is_ioapic(acpi_handle handle, char **type)
-+{
-+	acpi_status status;
-+	struct acpi_device_info *info;
-+	char *hid = NULL;
-+	bool match = false;
-+
-+	if (!acpi_has_method(handle, "_GSB"))
-+		return false;
-+
-+	status = acpi_get_object_info(handle, &info);
-+	if (ACPI_SUCCESS(status)) {
-+		if (info->valid & ACPI_VALID_HID)
-+			hid = info->hardware_id.string;
-+		if (hid) {
-+			if (strcmp(hid, "ACPI0009") == 0) {
-+				*type = "IOxAPIC";
-+				match = true;
-+			} else if (strcmp(hid, "ACPI000A") == 0) {
-+				*type = "IOAPIC";
-+				match = true;
-+			}
-+		}
-+		kfree(info);
-+	}
-+
-+	return match;
-+}
-+
-+static acpi_status handle_ioapic_add(acpi_handle handle, u32 lvl,
-+				     void *context, void **rv)
-+{
-+	acpi_status status;
-+	unsigned long long gsi_base;
-+	struct acpi_pci_ioapic *ioapic;
-+	struct pci_dev *dev = NULL;
-+	struct resource *res = NULL;
-+	char *type = NULL;
-+
-+	if (!acpi_is_ioapic(handle, &type))
-+		return AE_OK;
-+
-+	mutex_lock(&ioapic_list_lock);
-+	list_for_each_entry(ioapic, &ioapic_list, list)
-+		if (ioapic->handle == handle) {
-+			mutex_unlock(&ioapic_list_lock);
-+			return AE_OK;
-+		}
-+
-+	status = acpi_evaluate_integer(handle, "_GSB", NULL, &gsi_base);
-+	if (ACPI_FAILURE(status)) {
-+		acpi_handle_warn(handle, "failed to evaluate _GSB method\n");
-+		goto exit;
-+	}
-+
-+	ioapic = kzalloc(sizeof(*ioapic), GFP_KERNEL);
-+	if (!ioapic) {
-+		pr_err("cannot allocate memory for new IOAPIC\n");
-+		goto exit;
-+	} else {
-+		ioapic->root_handle = (acpi_handle)context;
-+		ioapic->handle = handle;
-+		ioapic->gsi_base = (u32)gsi_base;
-+		INIT_LIST_HEAD(&ioapic->list);
-+	}
-+
-+	if (acpi_ioapic_registered(handle, (u32)gsi_base))
-+		goto done;
-+
-+	dev = acpi_get_pci_dev(handle);
-+	if (dev && pci_resource_len(dev, 0)) {
-+		if (pci_enable_device(dev) < 0)
-+			goto exit_put;
-+		pci_set_master(dev);
-+		if (pci_request_region(dev, 0, type))
-+			goto exit_disable;
-+		res = &dev->resource[0];
-+		ioapic->pdev = dev;
-+	} else {
-+		pci_dev_put(dev);
-+		dev = NULL;
-+
-+		res = &ioapic->res;
-+		acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, res);
-+		if (res->flags == 0) {
-+			acpi_handle_warn(handle, "failed to get resource\n");
-+			goto exit_free;
-+		} else if (request_resource(&iomem_resource, res)) {
-+			acpi_handle_warn(handle, "failed to insert resource\n");
-+			goto exit_free;
-+		}
-+	}
-+
-+	if (acpi_register_ioapic(handle, res->start, (u32)gsi_base)) {
-+		acpi_handle_warn(handle, "failed to register IOAPIC\n");
-+		goto exit_release;
-+	}
-+done:
-+	list_add(&ioapic->list, &ioapic_list);
-+	mutex_unlock(&ioapic_list_lock);
-+
-+	if (dev)
-+		dev_info(&dev->dev, "%s at %pR, GSI %u\n",
-+			 type, res, (u32)gsi_base);
-+	else
-+		acpi_handle_info(handle, "%s at %pR, GSI %u\n",
-+				 type, res, (u32)gsi_base);
-+
-+	return AE_OK;
-+
-+exit_release:
-+	if (dev)
-+		pci_release_region(dev, 0);
-+	else
-+		release_resource(res);
-+exit_disable:
-+	if (dev)
-+		pci_disable_device(dev);
-+exit_put:
-+	pci_dev_put(dev);
-+exit_free:
-+	kfree(ioapic);
-+exit:
-+	mutex_unlock(&ioapic_list_lock);
-+	*(acpi_status *)rv = AE_ERROR;
-+	return AE_OK;
-+}
-+
-+int acpi_ioapic_add(struct acpi_pci_root *root)
-+{
-+	acpi_status status, retval = AE_OK;
-+
-+	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root->device->handle,
-+				     UINT_MAX, handle_ioapic_add, NULL,
-+				     root->device->handle, (void **)&retval);
-+
-+	return ACPI_SUCCESS(status) && ACPI_SUCCESS(retval) ? 0 : -ENODEV;
-+}
-+
-+int acpi_ioapic_remove(struct acpi_pci_root *root)
-+{
-+	int retval = 0;
-+	struct acpi_pci_ioapic *ioapic, *tmp;
-+
-+	mutex_lock(&ioapic_list_lock);
-+	list_for_each_entry_safe(ioapic, tmp, &ioapic_list, list) {
-+		if (root->device->handle != ioapic->root_handle)
-+			continue;
-+
-+		if (acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base))
-+			retval = -EBUSY;
-+
-+		if (ioapic->pdev) {
-+			pci_release_region(ioapic->pdev, 0);
-+			pci_disable_device(ioapic->pdev);
-+			pci_dev_put(ioapic->pdev);
-+		} else if (ioapic->res.flags && ioapic->res.parent) {
-+			release_resource(&ioapic->res);
-+		}
-+		list_del(&ioapic->list);
-+		kfree(ioapic);
-+	}
-+	mutex_unlock(&ioapic_list_lock);
-+
-+	return retval;
-+}
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index e53e0f659204..68a5f712cd19 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -621,6 +621,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	if (hotadd) {
- 		pcibios_resource_survey_bus(root->bus);
- 		pci_assign_unassigned_root_bus_resources(root->bus);
-+		acpi_ioapic_add(root);
- 	}
- 
- 	pci_lock_rescan_remove();
-@@ -644,6 +645,8 @@ static void acpi_pci_root_remove(struct acpi_device *device)
- 
- 	pci_stop_root_bus(root->bus);
- 
-+	WARN_ON(acpi_ioapic_remove(root));
-+
- 	device_set_run_wake(root->bus->bridge, false);
- 	pci_acpi_remove_bus_pm_notifier(device);
- 
--- 
-1.7.10.4
+> It would be better not to invent another level of indirection. Try
+> turning this around so you have a driver that binds to the specific
+> SoC compatible string for the PCIe port while calling into a common
+> library module for things that are shared.
+>
+>> +/*
+>> + * On ARM platforms, we actually get a bus error returned when the PCIe IP
+>> + * returns a UR or CRS instead of an OK.
+>> + */
+>> +static int st_pcie_abort_handler(unsigned long addr, unsigned int fsr,
+>> +                              struct pt_regs *regs)
+>> +{
+>> +     return 0;
+>> +}
+>
+> You should check that it's actually PCI that caused the abort. Don't
+> just ignore a hard error condition.
+>
+> Usually there are registers in the PCI core that let you identify what
+> happened.
+>
+We return 0 because abort handler is not activated during boot.
 
+>> +static int st_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+>> +                              unsigned int devfn, int where, int size,
+>> +                              u32 *val)
+>> +{
+>> +     u32 data;
+>> +     u32 bdf;
+>> +     struct st_pcie *pcie = to_st_pcie(pp);
+>> +     int is_root_bus = pci_is_root_bus(bus);
+>> +     int retry_count = 0;
+>> +     int ret;
+>> +     void __iomem *addr;
+>> +
+>> +     /*
+>> +      * Prerequisite
+>> +      * PCI express devices will respond to all config type 0 cycles, since
+>> +      * they are point to point links. Thus to avoid probing for multiple
+>> +      * devices on the root, dw-pcie already check for us if it is on the
+>> +      * root bus / other slots. Also, dw-pcie checks for the link being up
+>> +      * as we will hang if we issue a config request and the link is down.
+>> +      * A switch will reject requests for slots it knows do not exist.
+>> +      */
+>> +     bdf = bdf_num(bus->number, devfn, is_root_bus);
+>> +     addr = pcie->config_area + config_addr(where,
+>> +                     bus->parent->number == pp->root_bus_nr);
+>> +retry:
+>> +     /* Set the config packet devfn */
+>> +     writel_relaxed(bdf, pp->dbi_base + FUNC0_BDF_NUM);
+>> +     readl_relaxed(pp->dbi_base + FUNC0_BDF_NUM);
+>> +
+>> +     ret = dw_pcie_cfg_read(addr, where, size, &data);
+>> +
+>> +     /*
+>> +      * This is intended to help with when we are probing the bus. The
+>> +      * problem is that the wrapper logic doesn't have any way to
+>> +      * interrogate if the configuration request failed or not.
+>> +      * On the ARM we actually get a real bus error.
+>> +      *
+>> +      * Unfortunately this means it is impossible to tell the difference
+>> +      * between when a device doesn't exist (the switch will return a UR
+>> +      * completion) or the device does exist but isn't yet ready to accept
+>> +      * configuration requests (the device will return a CRS completion)
+>> +      *
+>> +      * The result of this is that we will miss devices when probing.
+>> +      *
+>> +      * So if we are trying to read the dev/vendor id on devfn 0 and we
+>> +      * appear to get zero back, then we retry the request.  We know that
+>> +      * zero can never be a valid device/vendor id. The specification says
+>> +      * we must retry for up to a second before we decide the device is
+>> +      * dead. If we are still dead then we assume there is nothing there and
+>> +      * return ~0
+>> +      *
+>> +      * The downside of this is that we incur a delay of 1s for every pci
+>> +      * express link that doesn't have a device connected.
+>> +      */
+>> +     if (((where & ~3) == 0) && devfn == 0 && (data == 0 || data == ~0)) {
+>> +             if (retry_count++ < 1000) {
+>> +                     mdelay(1);
+>> +                     goto retry;
+>> +             } else {
+>> +                     *val = ~0;
+>> +                     return PCIBIOS_DEVICE_NOT_FOUND;
+>> +             }
+>> +     }
+>> +
+>> +     *val = data;
+>> +     return ret;
+>> +}
+>
+> A busy-loop is extremely nasty. If this is only during the initial bus
+> scan, could you use an msleep instead?
+>
+yes it's during the initial bus scan.
+But we can't use msleep because we are under raw_spin_lock_irqsave()
+see PCI_OP_READ() macro in drivers/pci/access.c
+
+> Also, it sounds like the error you get is actually the fault that you
+> are catching above. If this is correct, then use the fault handler to
+> communicate this to the probe function.
+>
+Same as above the handler is not activated during the boot and initial bus scan.
+
+
+>> +
+>> +static void st_pcie_board_reset(struct pcie_port *pp)
+>> +{
+>> +     struct st_pcie *pcie = to_st_pcie(pp);
+>> +
+>> +     if (!gpio_is_valid(pcie->reset_gpio))
+>> +             return;
+>> +
+>> +     if (gpio_direction_output(pcie->reset_gpio, 0)) {
+>> +             dev_err(pp->dev, "Cannot set PERST# (gpio %u) to output\n",
+>> +                     pcie->reset_gpio);
+>> +             return;
+>> +     }
+>> +
+>> +     /* From PCIe spec */
+>> +     usleep_range(1000, 2000);
+>> +     gpio_direction_output(pcie->reset_gpio, 1);
+>> +
+>> +     /*
+>> +      * PCIe specification states that you should not issue any config
+>> +      * requests until 100ms after asserting reset, so we enforce that here
+>> +      */
+>> +     usleep_range(100000, 150000);
+>> +}
+>
+> This seems hardly performance critical, just use msleep(2) and
+> msleep(100) instead of the usleep_range().
+>
+
+ok i will fix it.
+
+
+>> +static void st_msi_init_one(struct pcie_port *pp)
+>> +{
+>> +     struct st_pcie *pcie = to_st_pcie(pp);
+>> +
+>> +     /*
+>> +      * Set the magic address the hardware responds to. This has to be in
+>> +      * the range the PCI controller can write to.
+>> +      */
+>> +     dw_pcie_msi_init(pp);
+>> +
+>> +     if ((virt_to_phys((void *)pp->msi_data) < pcie->lmi->start) ||
+>> +         (virt_to_phys((void *)pp->msi_data) > pcie->lmi->end))
+>> +             dev_err(pp->dev, "MSI addr miss-configured\n");
+>> +}
+>
+> Why do you call virt_to_phys() here? Isn't msi_data a physical address?
+>
+msi_data is a virtual address, it's obtained through a
+__get_free_pages() function in dw_pcie_msi_init() procedure.
+
+>> +static int __init st_pcie_probe(struct platform_device *pdev)
+>
+> I'd suggest removing the __init here, as discussed in the review for
+> the qualcomm driver.
+>
+ok
+
+>         Arnd
+
+BR
+
+Gabriel.
