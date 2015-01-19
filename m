@@ -1,57 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:62211 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752424AbbAPJfv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Jan 2015 04:35:51 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-m68k@lists.linux-m68k.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	linux-alpha@vger.kernel.org, linux-ia64@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [PATCH 09/28] PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
-Date: Fri, 16 Jan 2015 10:34:34 +0100
-Message-ID: <11966423.5s0rO0b8cE@wuerfel>
-In-Reply-To: <1421372666-12288-10-git-send-email-wangyijing@huawei.com>
-References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <1421372666-12288-10-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:50502 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751623AbbASKRh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jan 2015 05:17:37 -0500
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Richard Zhu <Richard.Zhu@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Subject: [PATCH] MAINTAINERS: fix Richard Zhu's mail address
+Date: Mon, 19 Jan 2015 11:17:31 +0100
+Message-Id: <1421662651-22962-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 16 January 2015 09:44:07 Yijing Wang wrote:
-> We want to make a generic pci_host_bridge, then we could
-> place common PCI infos like domain number in it. Ripping
-> out pci_host_bridge creation from pci_create_root_bus()
-> make code more better readability. Further more, we could
-> use the generic pci_host_bridge to hold host bridge specific
-> operations like pcibios_root_bridge_prepare().
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> 
+The old cryptic address bounces, fix it by using a properly
+working one.
 
-I assume this patch is doing the right thing, but the description
-above doesn't really tell me enough to be sure.
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+---
+ MAINTAINERS | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-This is supposed to be transparent to the callers, right? If
-so, please mention it explicitly in the text.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 2fa385321245..b0a01320c755 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7239,7 +7239,7 @@ S:	Maintained
+ F:	drivers/pci/host/*layerscape*
+ 
+ PCI DRIVER FOR IMX6
+-M:	Richard Zhu <r65037@freescale.com>
++M:	Richard Zhu <Richard.Zhu@freescale.com>
+ M:	Lucas Stach <l.stach@pengutronix.de>
+ L:	linux-pci@vger.kernel.org
+ L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+-- 
+2.1.4
 
-Also you don't explain what the list of host bridges is
-used for. Maybe you can split this out into a separate patch
-so you have one patch that just moves code from one file
-to the other but no functional changes, and a second patch
-that exports pci_create_host_bridge and introduces the list,
-with an explanation of what it is used for.
-
-	Arnd
