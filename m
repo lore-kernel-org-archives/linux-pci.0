@@ -1,78 +1,49 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54B8624B.1050705@linux.intel.com>
-Date: Fri, 16 Jan 2015 08:58:51 +0800
 From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Thomas Gleixner <tglx@linutronix.de>
-CC: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [RFC Patch 16/19] ACPI: Introduce helper function acpi_dev_filter_resource_type()
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-17-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1501152228560.5526@nanos>
-In-Reply-To: <alpine.DEB.2.11.1501152228560.5526@nanos>
-Content-Type: text/plain; charset=windows-1252
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Bugfix 1/3] xen/irq, ACPI: Fix regression in xen PCI passthrough caused by cffe0a2b5a34
+Date: Mon, 19 Jan 2015 12:55:42 +0800
+Message-Id: <1421643344-17092-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421643344-17092-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421643344-17092-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/1/16 5:30, Thomas Gleixner wrote:
-> On Thu, 8 Jan 2015, Jiang Liu wrote:
-> 
->> Introduce helper function acpi_dev_filter_resource_type(), which may
->> be used by acpi_dev_get_resources() to filer out resource based on
->> resource type.
->>
->> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->> ---
->>  drivers/acpi/resource.c |   54 +++++++++++++++++++++++++++++++++++++++++++++++
->>  include/linux/acpi.h    |    1 +
->>  2 files changed, 55 insertions(+)
->>
->> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
->> index 54204ac94f8e..8ea7c26d6915 100644
->> --- a/drivers/acpi/resource.c
->> +++ b/drivers/acpi/resource.c
->> @@ -570,3 +570,57 @@ int acpi_dev_get_resources(struct acpi_device *adev, struct list_head *list,
->>  	return c.count;
->>  }
->>  EXPORT_SYMBOL_GPL(acpi_dev_get_resources);
->> +
->> +/**
->> + * acpi_dev_filter_resource_type - Filter ACPI resource according to resource
->> + *				   types
->> + * @ares: Input ACPI resource object.
->> + * @arg: Valid resource types of IORESOURCE_XXX
->> + *
->> + * This is a hepler function to support acpi_dev_get_resources(), which filters
->> + * ACPI resource objects according to resource types.
->> + */
->> +int acpi_dev_filter_resource_type(struct acpi_resource *ares, void *arg)
-> 
-> Why is the filter a void pointer instead of an simple unsigned long?
-> That does not make any sense as you convert it to unsigned long right away:
-> 
->> +{
->> +	unsigned long type = 0, types = (unsigned long)arg;
-> 
-> So this should be:
-> 
-> int acpi_dev_filter_resource_type(struct acpi_resource *ares, unsigned long type_mask)
-> 
-> or something like that.
-Hi Thomas,
-	I used void * instead of unsigned long for type_mask so
-acpi_dev_filter_resource_type() could directly used by
-acpi_dev_get_resources(). Otherwise we need to use something like
-acpi_dev_get_resources(..., (void *)acpi_dev_filter_resource_type, ...).
-I will find a way to solve this:)
-Regards!
-Gerry
+Xen pciback driver assumes that pci_dev->irq won't change after calling
+pci_disable_device(). But commit cffe0a2b5a34c95a4dadc9ec7132690a5b0f6687
+("x86, irq: Keep balance of IOAPIC pin reference count") frees irq
+resources and resets pci_dev->irq to zero when pci_disable_device() is
+called.
 
-> 
-> Thanks,
-> 
-> 	tglx
-> 
+So this is a hotfix for 3.19 to avoid resetting pci_dev->irq, and
+another proper fix will be prepared for next merging window.
+
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/pci_irq.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index 5277a0ee5704..b1def411c0b8 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -512,7 +512,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	dev_dbg(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
+ 	if (gsi >= 0) {
+ 		acpi_unregister_gsi(gsi);
+-		dev->irq = 0;
+ 		dev->irq_managed = 0;
+ 	}
+ }
+-- 
+1.7.10.4
+
