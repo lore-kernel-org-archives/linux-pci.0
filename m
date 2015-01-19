@@ -1,137 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:53175 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752563AbbAWWdq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 17:33:46 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <iommu@lists.linux-foundation.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH v4 4/6] of/pci: add of_pci_dma_configure() update dma configuration
-Date: Fri, 23 Jan 2015 17:32:37 -0500
-Message-ID: <1422052359-12384-5-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:39364 "EHLO
+	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751678AbbASNEl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jan 2015 08:04:41 -0500
+Received: by mail-oi0-f52.google.com with SMTP id h136so5195616oig.11
+        for <linux-pci@vger.kernel.org>; Mon, 19 Jan 2015 05:04:39 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <2165161.8vJctS1yVa@wuerfel>
+References: <1418812486-12394-1-git-send-email-gabriel.fernandez@linaro.org>
+	<1418812486-12394-3-git-send-email-gabriel.fernandez@linaro.org>
+	<2165161.8vJctS1yVa@wuerfel>
+Date: Mon, 19 Jan 2015 14:04:39 +0100
+Message-ID: <CAG374jB5fcG2-2WnxkN5U-qOw=xP3A5tnTO04Gcqt3cSRhhKmw@mail.gmail.com>
+Subject: Re: [PATCH 2/5] PCI: st: Add Device Tree bindings for sti pcie
+From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Magnus Damm <damm@opensource.se>,
+	Will Deacon <will.deacon@arm.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Srikanth Thokala <sthokal@xilinx.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"kernel@stlinux.com" <kernel@stlinux.com>,
+	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add of_pci_dma_configure() to allow updating the dma configuration
-of the pci device using the configuration from DT of the parent of
-the root bridge device.
+Hi Arnd,
 
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Thanks for reviewing
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
----
- drivers/of/of_pci.c    |   39 +++++++++++++++++++++++++++++++++++++++
- include/linux/of_pci.h |   12 ++++++++++++
- 2 files changed, 51 insertions(+)
+On 17 December 2014 at 23:01, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Wednesday 17 December 2014 11:34:43 Gabriel FERNANDEZ wrote:
+>> sti pcie is built around a Synopsis Designware PCIe IP.
+>>
+>> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+>> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+>> ---
+>>  Documentation/devicetree/bindings/pci/st-pcie.txt | 53 +++++++++++++++++++++++
+>>  1 file changed, 53 insertions(+)
+>>  create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/st-pcie.txt b/Documentation/devicetree/bindings/pci/st-pcie.txt
+>> new file mode 100644
+>> index 0000000..bd3488f
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/pci/st-pcie.txt
+>> @@ -0,0 +1,53 @@
+>> +STMicroelectronics STi PCIe controller
+>> +
+>> +This PCIe host controller is based on the Synopsis Designware PCIe IP
+>> +and thus inherits all the common properties defined in designware-pcie.txt.
+>> +
+>> +Required properties:
+>> + - compatible: "st,stih407-pcie"
+>> + - reg: base address and length of the pcie controller, mem-window address
+>> +   and length available to the controller.
+>> + - interrupts: A list of interrupt outputs of the controller.
+>> + - interrupt-names: Must include the following entries:
+>> +   "msi": STi interrupt that is asserted when an MSI is received
+>
+> You should specify that only one interrupt may be present.
+> If you extend the binding, you will need to describe what the
+> second one is as well.
+>
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 88471d3..34878c9 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -2,6 +2,7 @@
- #include <linux/export.h>
- #include <linux/of.h>
- #include <linux/of_address.h>
-+#include <linux/of_device.h>
- #include <linux/of_pci.h>
- #include <linux/slab.h>
- 
-@@ -229,6 +230,44 @@ parse_failed:
- 	return err;
- }
- EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
-+
-+/**
-+ * of_get_pci_root_bridge_parent - get the OF node of the root bridge's parent
-+ * @dev: ptr to pci_dev struct of the pci device
-+ *
-+ * This function will traverse the bus up to the root bus starting with
-+ * the child and return the OF node ptr to root bridge device's parent device.
-+ */
-+struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev)
-+{
-+	struct pci_bus *bus = dev->bus;
-+	struct device *bridge;
-+
-+	while (!pci_is_root_bus(bus))
-+		bus = bus->parent;
-+	bridge = bus->bridge;
-+
-+	return bridge->parent->of_node;
-+}
-+EXPORT_SYMBOL_GPL(of_get_pci_root_bridge_parent);
-+
-+/**
-+ * of_pci_dma_configure - Setup DMA configuration
-+ * @dev: ptr to pci_dev struct of the pci device
-+ *
-+ * Function to update PCI devices's DMA configuration using the same
-+ * info from the OF node of root host bridge's parent.
-+ */
-+void of_pci_dma_configure(struct pci_dev *pci_dev)
-+{
-+	struct device *dev = &pci_dev->dev;
-+	struct device_node *parent_np;
-+
-+	parent_np = of_get_pci_root_bridge_parent(pci_dev);
-+	of_dma_configure(dev, parent_np);
-+}
-+EXPORT_SYMBOL_GPL(of_pci_dma_configure);
-+
- #endif /* CONFIG_OF_ADDRESS */
- 
- #ifdef CONFIG_PCI_MSI
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index ce0e5ab..0465a2a 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -16,6 +16,8 @@ int of_pci_get_devfn(struct device_node *np);
- int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
- int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
- int of_get_pci_domain_nr(struct device_node *node);
-+struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev);
-+void of_pci_dma_configure(struct pci_dev *pci_dev);
- #else
- static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
- {
-@@ -50,6 +52,16 @@ of_get_pci_domain_nr(struct device_node *node)
- {
- 	return -1;
- }
-+
-+static inline struct device_node
-+*of_get_pci_root_bridge_parent(struct pci_dev *dev)
-+{
-+	return NULL;
-+}
-+
-+static inline void of_pci_dma_configure(struct pci_dev *pci_dev)
-+{
-+}
- #endif
- 
- #if defined(CONFIG_OF_ADDRESS)
--- 
-1.7.9.5
+ok, i will change into:
+"
+ - interrupts: A list of interrupt outputs of the controller. Must contain an
+  entry for each entry in the interrupt-names property.
 
+>> + - st,syscfg : should be a phandle of the syscfg node. Also contains syscfg
+>> +   offset for IP configuration.
+>> + - resets, reset-names: the power-down and soft-reset lines of PCIe IP.
+>> +   Associated names must be "powerdown" and "softreset".
+>> + - phys, phy-names: the phandle for the PHY device.
+>> +   Associated name must be "pcie_phy"
+>
+> Names should not have underscores in them in general. "pcie-phy" would
+> be fine, but just "pcie" seems good enough, unless there are existing
+> drivers that have established a specific naming.
+>
+
+just "pcie" is fine for me
+
+
+BR
+
+Gabriel
+
+>
+>         Arnd
+>
