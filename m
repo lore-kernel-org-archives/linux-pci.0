@@ -1,68 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:60134 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759721AbbA0VBN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 Jan 2015 16:01:13 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <will.deacon@arm.com>,
+Received: from mout.kundenserver.de ([212.227.126.130]:53630 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751166AbbASMLY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jan 2015 07:11:24 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Tony Luck <tony.luck@intel.com>,
 	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH v5 7/8] arm: dma-mapping: limit iommu mapping size
-Date: Tue, 27 Jan 2015 16:00:04 -0500
-Message-ID: <1422392405-32196-8-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1422392405-32196-1-git-send-email-m-karicheri2@ti.com>
-References: <1422392405-32196-1-git-send-email-m-karicheri2@ti.com>
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-m68k@lists.linux-m68k.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	linux-alpha@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-ia64@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH 10/28] PCI: Save sysdata in pci_host_bridge drvdata
+Date: Mon, 19 Jan 2015 10:52:06 +0100
+Message-ID: <20928659.d8sezC2Vk4@wuerfel>
+In-Reply-To: <54BC7632.1080003@huawei.com>
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <18973877.BYCS6vtzoq@wuerfel> <54BC7632.1080003@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-arm_iommu_create_mapping() has size parameter of size_t and
-arm_setup_iommu_dma_ops() can take a value higher than that
-when this is called from the of code. So limit the size to
-SIZE_MAX.
+On Monday 19 January 2015 11:12:50 Yijing Wang wrote:
+> On 2015/1/16 17:18, Arnd Bergmann wrote:
+> > On Friday 16 January 2015 09:44:08 Yijing Wang wrote:
+> >> @@ -2066,11 +2064,11 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+> >>  {
+> >>         struct pci_host_bridge *host;
+> >>  
+> >> -       host = pci_create_host_bridge(parent, db, resources);
+> >> +       host = pci_create_host_bridge(parent, db, resources, sysdata);
+> >>         if (!host)
+> >>                 return NULL;
+> >>  
+> >> -       return __pci_scan_root_bus(host, ops, sysdata);
+> >> +       return __pci_scan_root_bus(host, ops);
+> >>  }
+> >>  EXPORT_SYMBOL(pci_scan_root_bus);
+> >>
+> > 
+> > How about keeping the sysdata out of the pci_create_host_bridge interface, and
+> > refactoring it so that the call sequence becomes
+> > 
+> >       host = pci_create_host_bridge(parent, db, resources);
+> >       host->sysdata = sysdata;
+> >       __pci_scan_root_bus(host, ops);
+> > 
+> > This way, we can make sysdata completely option. I assume that more of the
+> > fields we have in sysdata today can get moved into pci_host_bridge
+> > over time, so a host bridge driver can just assign those members individually
+> > between pci_create_host_bridge and __pci_scan_root_bus.
+> 
+> I put the sysdata in pci_host_bridge, because some platforms x86/ia64
+> need to call pcibios_root_bridge_prepare() before pci_host_bridge registration
+> in pci_create_host_bridge(), and pcibios_root_bridge_prepare() need the companion
+> acpi device pointer which is stored in sysdata.
+> 
+> I like you idea, but I haven't find a better way yet.
 
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Ok, fair enough. We can always try to find ways for getting rid of
+pcibios_root_bridge_prepare() later, though I suspect as soon as we
+have the callback, it will get used for other things as well ;-)
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
----
- arch/arm/mm/dma-mapping.c |    7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
-index 7864797..496b2c3 100644
---- a/arch/arm/mm/dma-mapping.c
-+++ b/arch/arm/mm/dma-mapping.c
-@@ -2004,6 +2004,13 @@ static bool arm_setup_iommu_dma_ops(struct device *dev, u64 dma_base, u64 size,
- 	if (!iommu)
- 		return false;
- 
-+	/*
-+	 * currently arm_iommu_create_mapping() takes a max of size_t
-+	 * for size param. So check this limit for now.
-+	 */
-+	if (size > SIZE_MAX)
-+		return false;
-+
- 	mapping = arm_iommu_create_mapping(dev->bus, dma_base, size);
- 	if (IS_ERR(mapping)) {
- 		pr_warn("Failed to create %llu-byte IOMMU mapping for device %s\n",
--- 
-1.7.9.5
-
+	Arnd
