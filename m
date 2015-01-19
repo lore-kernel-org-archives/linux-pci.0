@@ -1,134 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:51015 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757123AbbAGEGS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jan 2015 23:06:18 -0500
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>
-Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
-	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
-Subject: [PATCH v7 05/10] iommu/vt-d: Add functions to load and save old re
-Date: Wed,  7 Jan 2015 12:04:29 +0800
-Message-Id: <1420603474-4235-6-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1420603474-4235-1-git-send-email-zhen-hual@hp.com>
-References: <1420603474-4235-1-git-send-email-zhen-hual@hp.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:53863 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751293AbbASK5I (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jan 2015 05:57:08 -0500
+Message-ID: <54BCE2DA.1000405@huawei.com>
+Date: Mon, 19 Jan 2015 18:56:26 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-pci@vger.kernel.org>, <x86@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<linux-m68k@lists.linux-m68k.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	<linux-alpha@vger.kernel.org>, <linux-ia64@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH 08/28] PCI: Introduce pci_host_assign_domain_nr() to assign
+ domain
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <3026954.09KG7UaUTi@wuerfel> <54BC6894.6060500@huawei.com> <2124926.gSbG0l1jIy@wuerfel>
+In-Reply-To: <2124926.gSbG0l1jIy@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add functions to load root entry table from old kernel, and to save updated
-root entry table.
-Add two member in struct intel_iommu, to store the RTA in old kernel, and
-the mapped virt address of it.
+On 2015/1/19 17:50, Arnd Bergmann wrote:
+> On Monday 19 January 2015 10:14:44 Yijing Wang wrote:
+>>>> I'm confused: the same code is already part of the PCI tree, but with
+>>>> Lorenzo Pieralisi listed as the patch author. The code is good,
+>>>> and I acked it in the past, but one of you is (probably by accident)
+>>>> misattributing the patch.
+>>>>
+>>>> Assuming that the patch that is already merged in next is the right
+>>>> one, I think you should rebase your series on top of
+>>>>
+>>>> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git#next
+>>>>
+>>>> to avoid conflicts like this one.
+>>>>
+>>>
+>>> I think I just got confused because the code duplicates most of
+>>> pci_bus_assign_domain_nr(). Maybe this can be done in a better way
+>>> by splitting the existing function into 
+>>>
+>>> static int pci_assign_domain_nr(struct device *)
+>>> {
+>>>       ... /* most of pci_bus_assign_domain_nr */
+>>>
+>>>       return domain;
+>>> }
+>>>
+>>> void pci_host_assign_domain_nr(struct pci_host_bridge *host)
+>>> {
+>>>       host->domain = pci_assign_domain_nr(host->dev.parent);
+>>> }
+>>>
+>>> void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+>>> {
+>>>       bus->domain_nr = pci_assign_domain_nr(parent);
+>>> }
+>>>
+>>
+>> Hi Arnd,
+>>    I kept the almost duplicated pci_host_assign_domain_nr() and
+>> pci_bus_assign_domain_nr() here for building happy, because now
+>> platform specific pci_domain_nr() still exists which may get domain
+>> number from pci_bus. pci_bus_assign_domain_nr() will be removed in
+>> the last patch.
+>>
+> 
+> I'm not sure I get your point: the approach I showed above seems to have
+> the same effect, except it doesn't duplicate code temporarily, which
+> makes it less error-prone in case your patch gets merged at the
+> same time as another patch that modifies pci_bus_assign_domain_nr.
 
-We use the old RTA in dump kernel, and when the iommu->root_entry is used as
-a cache in kdump kernel, its phys address will not be save to RTA register,
-but when its data is changed, we will save the new data to old root entry table.
+OK, I got it, will update it, thanks!
 
-Li, Zhen-hua:
-    The functions and logics.
 
-Takao Indoh:
-    Add __iommu_flush_cache.
+Thanks!
+Yijing.
 
-Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
-Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
----
- drivers/iommu/intel-iommu.c | 53 +++++++++++++++++++++++++++++++++++++++++++++
- include/linux/intel-iommu.h |  5 +++++
- 2 files changed, 58 insertions(+)
+> 
+> 	Arnd
+> 
+> .
+> 
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 8a7ad72..f3059b8 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -388,6 +388,10 @@ static int intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu);
- 
- static int device_to_domain_id(struct intel_iommu *iommu, u8 bus, u8 devfn);
- 
-+static void __iommu_load_old_root_entry(struct intel_iommu *iommu);
-+
-+static void __iommu_update_old_root_entry(struct intel_iommu *iommu, int index);
-+
- struct iommu_remapped_entry {
- 	struct list_head list;
- 	void __iomem *mem;
-@@ -4990,4 +4994,53 @@ static int device_to_domain_id(struct intel_iommu *iommu, u8 bus, u8 devfn)
- 	return did;
- }
- 
-+/*
-+ * Load the old root entry table to new root entry table.
-+ */
-+static void __iommu_load_old_root_entry(struct intel_iommu *iommu)
-+{
-+	if ((!iommu)
-+		|| (!iommu->root_entry)
-+		|| (!iommu->root_entry_old_virt)
-+		|| (!iommu->root_entry_old_phys))
-+		return;
-+	memcpy(iommu->root_entry, iommu->root_entry_old_virt, PAGE_SIZE);
-+
-+	__iommu_flush_cache(iommu, iommu->root_entry, PAGE_SIZE);
-+}
-+
-+/*
-+ * When the data in new root entry table is changed, this function
-+ * must be called to save the updated data to old root entry table.
-+ */
-+static void __iommu_update_old_root_entry(struct intel_iommu *iommu, int index)
-+{
-+	u8 start;
-+	unsigned long size;
-+	void __iomem *to;
-+	void *from;
-+
-+	if ((!iommu)
-+		|| (!iommu->root_entry)
-+		|| (!iommu->root_entry_old_virt)
-+		|| (!iommu->root_entry_old_phys))
-+		return;
-+
-+	if (index < -1 || index >= ROOT_ENTRY_NR)
-+		return;
-+
-+	if (index == -1) {
-+		start = 0;
-+		size = ROOT_ENTRY_NR * sizeof(struct root_entry);
-+	} else {
-+		start = index * sizeof(struct root_entry);
-+		size = sizeof(struct root_entry);
-+	}
-+	to = iommu->root_entry_old_virt;
-+	from = iommu->root_entry;
-+	memcpy(to + start, from + start, size);
-+
-+	__iommu_flush_cache(iommu, to + start, size);
-+}
-+
- #endif /* CONFIG_CRASH_DUMP */
-diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
-index 8ffa523..8e29b97 100644
---- a/include/linux/intel-iommu.h
-+++ b/include/linux/intel-iommu.h
-@@ -329,6 +329,11 @@ struct intel_iommu {
- 	spinlock_t	lock; /* protect context, domain ids */
- 	struct root_entry *root_entry; /* virtual address */
- 
-+#ifdef CONFIG_CRASH_DUMP
-+	void __iomem *root_entry_old_virt; /* mapped from old root entry */
-+	unsigned long root_entry_old_phys; /* root entry in old kernel */
-+#endif
-+
- 	struct iommu_flush flush;
- #endif
- 	struct q_inval  *qi;            /* Queued invalidation info */
+
 -- 
-2.0.0-rc0
+Thanks!
+Yijing
 
