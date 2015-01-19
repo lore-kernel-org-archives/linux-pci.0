@@ -1,98 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <54C8FFE0.3030007@arm.com>
-Date: Wed, 28 Jan 2015 15:27:28 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qc0-f170.google.com ([209.85.216.170]:51854 "EHLO
+	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752086AbbASSs6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jan 2015 13:48:58 -0500
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Andre Przywara <Andre.Przywara@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Fix pcibios_update_irq misuse of irq number
-References: <1422456683-797-1-git-send-email-marc.zyngier@arm.com> <54C8FE61.1030304@linux.intel.com>
-In-Reply-To: <54C8FE61.1030304@linux.intel.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1421657600-31561-1-git-send-email-michel@daenzer.net>
+References: <CAFUqUc6JPgSK4tTP7KuJ8TmVLZR6Abaf9uHUTRZA+OJhv8DoBA@mail.gmail.com>
+	<1421657600-31561-1-git-send-email-michel@daenzer.net>
+Date: Mon, 19 Jan 2015 13:48:57 -0500
+Message-ID: <CADnq5_O7ok+OtHxuPWgu2J-LxhqrJGJ0H9cinWLV8toGcCXdsQ@mail.gmail.com>
+Subject: Re: [PATCH v2] pci: Fix infinite loop with ROM image of size 0
+From: Alex Deucher <alexdeucher@gmail.com>
+To: =?UTF-8?Q?Michel_D=C3=A4nzer?= <michel@daenzer.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Maling list - DRI developers
+	<dri-devel@lists.freedesktop.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gerry,
+On Mon, Jan 19, 2015 at 3:53 AM, Michel Dänzer <michel@daenzer.net> wrote:
+> From: Michel Dänzer <michel.daenzer@amd.com>
+>
+> If the image size would ever read as 0, pci_get_rom_size could keep
+> processing the same image over and over again.
+>
+> Reported-by: Federico <federicotg@gmail.com>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
 
-On 28/01/15 15:21, Jiang Liu wrote:
-> 
-> 
-> On 2015/1/28 22:51, Marc Zyngier wrote:
->> pcibios_update_irq writes an irq number into the config space
->> of a given PCI device, but ignores the fact that this number
->> is a virtual interrupt number, which might be a very different
->> value from what the underlying hardware is using.
->>
->> The obvious fix is to fetch the HW interrupt number from the
->> corresponding irq_data structure. This is slightly complicated
->> by the fact that this interrupt might be services by a stacked
->> domain.
->>
->> This has been tested on KVM with kvmtool.
->>
->> Reported-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> Tested-by: Andre Przywara <andre.przywara@arm.com>
->> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
->> ---
->>  drivers/pci/setup-irq.c | 12 ++++++++++--
->>  1 file changed, 10 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
->> index 4e2d595..828cbc9 100644
->> --- a/drivers/pci/setup-irq.c
->> +++ b/drivers/pci/setup-irq.c
->> @@ -15,11 +15,19 @@
->>  #include <linux/errno.h>
->>  #include <linux/ioport.h>
->>  #include <linux/cache.h>
->> +#include <linux/irq.h>
->>  
->>  void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
->>  {
->> -	dev_dbg(&dev->dev, "assigning IRQ %02d\n", irq);
->> -	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
->> +	struct irq_data *d;
->> +
->> +	d = irq_get_irq_data(irq);
->> +#ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
->> +	while (d->parent_data)
->> +		d = d->parent_data;
->> +#endif
->> +	dev_dbg(&dev->dev, "assigning IRQ %02ld\n", d->hwirq);
->> +	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, d->hwirq);
->>  }
-> Hi Mark,
-> 	Instead of modifying the common version, how about
-> implementing an arch specific version? Arch may have different
-> way to determine the irq number. Above implementation doesn't
-> work with x86, for example.
+Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
 
-If you look at the Makefile, this file is used on:
-
-obj-$(CONFIG_ALPHA) += setup-irq.o
-obj-$(CONFIG_ARM) += setup-irq.o
-obj-$(CONFIG_UNICORE32) += setup-irq.o
-obj-$(CONFIG_SUPERH) += setup-irq.o
-obj-$(CONFIG_MIPS) += setup-irq.o
-obj-$(CONFIG_TILE) += setup-irq.o
-obj-$(CONFIG_SPARC_LEON) += setup-irq.o
-obj-$(CONFIG_M68K) += setup-irq.o
-
-x86 doesn't use that at all.
-
-That aside, do you know any case where this transformation would lead to
-an invalid result? Worse case, irq should be equal to hwirq, shouldn't
-it? Or are you thinking of something else?
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+> ---
+>
+> v2:
+> * Use unsigned instead of u16 for the local length variable (not sure if
+>   the multiplication by 512 could overflow otherwise)
+> * Integrate length condition into while statement
+> * Add stable tag
+>
+>  drivers/pci/rom.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
+> index f955edb..eb0ad53 100644
+> --- a/drivers/pci/rom.c
+> +++ b/drivers/pci/rom.c
+> @@ -71,6 +71,7 @@ size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom, size_t size)
+>  {
+>         void __iomem *image;
+>         int last_image;
+> +       unsigned length;
+>
+>         image = rom;
+>         do {
+> @@ -93,9 +94,9 @@ size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom, size_t size)
+>                 if (readb(pds + 3) != 'R')
+>                         break;
+>                 last_image = readb(pds + 21) & 0x80;
+> -               /* this length is reliable */
+> -               image += readw(pds + 16) * 512;
+> -       } while (!last_image);
+> +               length = readw(pds + 16);
+> +               image += length * 512;
+> +       } while (length && !last_image);
+>
+>         /* never return a size larger than the PCI resource window */
+>         /* there are known ROMs that get the size wrong */
+> --
+> 2.1.4
+>
+> _______________________________________________
+> dri-devel mailing list
+> dri-devel@lists.freedesktop.org
+> http://lists.freedesktop.org/mailman/listinfo/dri-devel
