@@ -1,97 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cmexedge2.emulex.com ([138.239.224.100]:56566 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753567AbbAHLeR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jan 2015 06:34:17 -0500
-From: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.Com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-CC: Ajit Kumar Khaparde <Ajit.Khaparde@Emulex.Com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH] PCI: Mark broken INTx masking for BENET devices
-Date: Thu, 8 Jan 2015 11:33:46 +0000
-Message-ID: <a227414f-6f4b-4656-b65b-ef8d6e68f135@CMEXHTCAS1.ad.emulex.com>
-References: <1420424274-3194-1-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1420424274-3194-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga14.intel.com ([192.55.52.115]:53875 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751179AbbASCKg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 18 Jan 2015 21:10:36 -0500
+Message-ID: <54BC6799.2040907@linux.intel.com>
+Date: Mon, 19 Jan 2015 10:10:33 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
+To: Stuart Yoder <b08248@gmail.com>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: Re: [PATCH v2 1/8] device core: Introduce per-device MSI domain pointer
+References: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com>	<1420736772-11088-2-git-send-email-marc.zyngier@arm.com> <CALRxmdDVUoYNg3QC0LdvKmCz9x4nzE9+TDiV9K9OH=Gxk-Cd9w@mail.gmail.com>
+In-Reply-To: <CALRxmdDVUoYNg3QC0LdvKmCz9x4nzE9+TDiV9K9OH=Gxk-Cd9w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gavin,
-We tried to reproduce this in our lab but our observation is that we don't see "interrupt storm" in our system.
-Could you please give us the details of the repro scenario?
-
-A few more details will help us understand the problem better as well.
-1. be2net driver version
-2. be2net firmware version
-3. lspci -vvv output of the card (lspci -d 19a2: -vvv)
-4. Is SR-IOV enabled in your card?
-
-Thanks,
-Venkat.
 
 
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> owner@vger.kernel.org] On Behalf Of Gavin Shan
-> Sent: Monday, January 05, 2015 7:48 AM
-> To: linux-pci@vger.kernel.org
-> Cc: Ajit Kumar Khaparde; bhelgaas@google.com; Gavin Shan
-> Subject: [PATCH] PCI: Mark broken INTx masking for BENET devices
+On 2015/1/16 4:35, Stuart Yoder wrote:
+> On Thu, Jan 8, 2015 at 11:06 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+>> As MSI-type features are creeping into non-PCI devices, it is
+>> starting to make sense to give our struct device some form of
+>> support for this, by allowing a pointer to an MSI irq domain to
+>> be set/retrieved.
+>>
+>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+>> ---
+>>  include/linux/device.h | 20 ++++++++++++++++++++
+>>  1 file changed, 20 insertions(+)
+>>
+>> diff --git a/include/linux/device.h b/include/linux/device.h
+>> index fb50673..ec4cee5 100644
+>> --- a/include/linux/device.h
+>> +++ b/include/linux/device.h
+>> @@ -690,6 +690,7 @@ struct acpi_dev_node {
+>>   *             along with subsystem-level and driver-level callbacks.
+>>   * @pins:      For device pin management.
+>>   *             See Documentation/pinctrl.txt for details.
+>> + * @msi_domain: The generic MSI domain this device is using.
+>>   * @numa_node: NUMA node this device is close to.
+>>   * @dma_mask:  Dma mask (if dma'ble device).
+>>   * @coherent_dma_mask: Like dma_mask, but for alloc_coherent mapping as not all
+>> @@ -750,6 +751,9 @@ struct device {
+>>         struct dev_pm_info      power;
+>>         struct dev_pm_domain    *pm_domain;
+>>
+>> +#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
+>> +       struct irq_domain       *msi_domain; /* MSI domain device uses */
+>> +#endif
 > 
-> Similar to commit 11e4253 ("PCI: Assume all Mellanox devices have
-> broken INTx masking"), when passing through following PCI device
-> using VFIO infrastructure, interrupt storm are reported. After
-> marking its INTx masking is broken, the interrupt storm isn't
-> raised again:
+> This is not a comment on this patch specifically, but a question about other
+> MSI specific fields that might be needed in struct device.
 > 
->  # lspci -s 0000::.
->  0000:01:00.0 Ethernet controller: Emulex Corporation \
->               OneConnect 10Gb NIC (be3) (rev 02)
->  0000:01:00.1 Ethernet controller: Emulex Corporation \
->               OneConnect 10Gb NIC (be3) (rev 02)
->  # lspci -n -s 0000::.
->  0000:01:00.0 0200: 19a2:0710 (rev 02)
->  0000:01:00.1 0200: 19a2:0710 (rev 02)
+> Currently the generic MSI domain handling has hardcoded assumptions
+> that devices are PCI-- see the for_each_msi_entry() iterator in msi.h:
 > 
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->  drivers/pci/quirks.c    | 2 ++
->  include/linux/pci_ids.h | 2 ++
->  2 files changed, 4 insertions(+)
+>   #define dev_to_msi_list(dev)            (&to_pci_dev((dev))->msi_list)
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index ed6f89b..e823ac0 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3027,6 +3027,8 @@
-> DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8169,
->  			 quirk_broken_intx_masking);
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
->  			 quirk_broken_intx_masking);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BE, PCI_ANY_ID,
-> +			 quirk_broken_intx_masking);
+>   #define for_each_msi_entry(desc, dev)   \
+>         list_for_each_entry((desc), dev_to_msi_list((dev)), list)
 > 
->  #ifdef CONFIG_ACPI
->  /*
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index e63c02a..df70b76 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2481,6 +2481,8 @@
->  #define PCI_DEVICE_ID_KORENIX_JETCARDF2	0x1700
->  #define PCI_DEVICE_ID_KORENIX_JETCARDF3	0x17ff
+> One approach would be to move the msi_list out of pci_dev and put
+> it in struct device, so all devices can have an msi_list.
 > 
-> +#define PCI_VENDOR_ID_BE		0x19a2
-> +
->  #define PCI_VENDOR_ID_QMI		0x1a32
+> The other approach would be to keep msi_list in a bus specific
+> device struct, and then dev_to_msi_list() would need to be
+> implemented as a bus specific callback of some kind.
 > 
->  #define PCI_VENDOR_ID_AZWAVE		0x1a3b
+> The above hardcoded PCI assumption isn't going to work.   Wanted to
+> see if there is any advice in which direction to go.
+Hi Stuart,
+	I already have some a patch set to go that direction waiting
+send out for review:)
+Thanks!
+Gerry
+
+> 
+> Thanks,
+> Stuart Yoder
 > --
-> 1.8.3.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
