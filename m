@@ -1,105 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:42209 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752055AbbAOC2U (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 21:28:20 -0500
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 15 Jan 2015 12:28:18 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 35E3F2CE8040
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:17 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t0F2SG5U35651612
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:17 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t0F2SFML019660
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:16 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V11 03/17] PCI: Add weak pcibios_iov_resource_alignment() interface
-Date: Thu, 15 Jan 2015 10:27:53 +0800
-Message-Id: <1421288887-7765-4-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <20150113180502.GC2776@google.com>
- <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:47495 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751235AbbASCkC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 18 Jan 2015 21:40:02 -0500
+Message-ID: <54BC6E6E.9090200@huawei.com>
+Date: Mon, 19 Jan 2015 10:39:42 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>,
+	<linux-arm-kernel@lists.infradead.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	"Tony Luck" <tony.luck@intel.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	"Marc Zyngier" <marc.zyngier@arm.com>, <linux-pci@vger.kernel.org>,
+	<x86@kernel.org>, <linux-kernel@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<linux-m68k@lists.linux-m68k.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	<linux-alpha@vger.kernel.org>, <linux-ia64@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH 09/28] PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <1421372666-12288-10-git-send-email-wangyijing@huawei.com> <11966423.5s0rO0b8cE@wuerfel>
+In-Reply-To: <11966423.5s0rO0b8cE@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The alignment of PF's IOV BAR is designed to be the individual size of a
-VF's BAR size. This works fine for many platforms, but on PowerNV platform
-it needs some change.
+On 2015/1/16 17:34, Arnd Bergmann wrote:
+> On Friday 16 January 2015 09:44:07 Yijing Wang wrote:
+>> We want to make a generic pci_host_bridge, then we could
+>> place common PCI infos like domain number in it. Ripping
+>> out pci_host_bridge creation from pci_create_root_bus()
+>> make code more better readability. Further more, we could
+>> use the generic pci_host_bridge to hold host bridge specific
+>> operations like pcibios_root_bridge_prepare().
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>>
+> 
+> I assume this patch is doing the right thing, but the description
+> above doesn't really tell me enough to be sure.
+> 
+> This is supposed to be transparent to the callers, right? If
+> so, please mention it explicitly in the text.
 
-The original alignment works, since at sizing and assigning stage the
-requirement is from an individual VF's BAR size instead of the PF's IOV
-BAR.  This is the reason for the original code to just retrieve the
-individual VF BAR size as the alignment.
+Sorry, I will refresh the patch log for better description.
 
-On PowerNV platform, it is required to align the whole PF IOV BAR to a
-hardware segment. Based on this fact, the alignment of PF's IOV BAR should
-be calculated seperately.
+In this series I have no plan to export the pci_create_host_bridge()
+to callers, because I think pci_host_bridge_ops could make callers
+have the ability to setup the platform specific operations. But if this
+is needed, we could introduce another patches to export it.
 
-This patch introduces a weak pcibios_iov_resource_alignment() interface,
-which gives platform a chance to implement specific method to calculate
-the PF's IOV BAR alignment.
+> 
+> Also you don't explain what the list of host bridges is
+> used for. Maybe you can split this out into a separate patch
+> so you have one patch that just moves code from one file
+> to the other but no functional changes, and a second patch
+> that exports pci_create_host_bridge and introduces the list,
+> with an explanation of what it is used for.
+> 
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- drivers/pci/iov.c   |   11 ++++++++++-
- include/linux/pci.h |    3 +++
- 2 files changed, 13 insertions(+), 1 deletion(-)
+pci_host_bridge_list is used to find out whether the pci_host_bridge
+in domain:bus is already existed, I will split the related code
+to another patch, thanks.
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 933d8cc..5f48201 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -556,6 +556,12 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
- 		4 * (resno - PCI_IOV_RESOURCES);
- }
- 
-+resource_size_t __weak pcibios_iov_resource_alignment(struct pci_dev *dev,
-+		int resno, resource_size_t align)
-+{
-+	return align;
-+}
-+
- /**
-  * pci_sriov_resource_alignment - get resource alignment for VF BAR
-  * @dev: the PCI device
-@@ -570,12 +576,15 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
- {
- 	struct resource tmp;
- 	int reg = pci_iov_resource_bar(dev, resno);
-+	resource_size_t align;
- 
- 	if (!reg)
- 		return 0;
- 
- 	__pci_read_base(dev, pci_bar_unknown, &tmp, reg);
--	return resource_alignment(&tmp);
-+	align = resource_alignment(&tmp);
-+
-+	return pcibios_iov_resource_alignment(dev, resno, align);
- }
- 
- /**
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 74ef944..ae7a7ea 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1163,6 +1163,9 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus);
- void pci_setup_bridge(struct pci_bus *bus);
- resource_size_t pcibios_window_alignment(struct pci_bus *bus,
- 					 unsigned long type);
-+resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev,
-+						 int resno,
-+						 resource_size_t align);
- 
- #define PCI_VGA_STATE_CHANGE_BRIDGE (1 << 0)
- #define PCI_VGA_STATE_CHANGE_DECODES (1 << 1)
+
+> 	Arnd
+> 
+> .
+> 
+
+
 -- 
-1.7.9.5
+Thanks!
+Yijing
 
