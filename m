@@ -1,58 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f46.google.com ([209.85.218.46]:33465 "EHLO
-	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752515AbbAISbw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 13:31:52 -0500
-Received: by mail-oi0-f46.google.com with SMTP id a3so13080304oib.5
-        for <linux-pci@vger.kernel.org>; Fri, 09 Jan 2015 10:31:51 -0800 (PST)
-Date: Fri, 9 Jan 2015 11:31:48 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: Murali Karicheri <m-karicheri2@ti.com>,
-	kernel-janitors@vger.kernel.org, linux@rasmusvillemoes.dk,
-	joe@perches.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/20] PCI: keystone: fix misspelling of current function
- in string
-Message-ID: <20150109183148.GH6575@google.com>
-References: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
- <1417980062-25151-3-git-send-email-Julia.Lawall@lip6.fr>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:3118 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751529AbbASCR5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 18 Jan 2015 21:17:57 -0500
+Message-ID: <54BC6894.6060500@huawei.com>
+Date: Mon, 19 Jan 2015 10:14:44 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1417980062-25151-3-git-send-email-Julia.Lawall@lip6.fr>
+To: Arnd Bergmann <arnd@arndb.de>,
+	<linux-arm-kernel@lists.infradead.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	"Tony Luck" <tony.luck@intel.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	"Marc Zyngier" <marc.zyngier@arm.com>, <linux-pci@vger.kernel.org>,
+	<x86@kernel.org>, <linux-kernel@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<linux-m68k@lists.linux-m68k.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	<linux-alpha@vger.kernel.org>, <linux-ia64@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH 08/28] PCI: Introduce pci_host_assign_domain_nr() to assign
+ domain
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <1421372666-12288-9-git-send-email-wangyijing@huawei.com> <13182982.DnZJMY2KHL@wuerfel> <3026954.09KG7UaUTi@wuerfel>
+In-Reply-To: <3026954.09KG7UaUTi@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Dec 07, 2014 at 08:20:44PM +0100, Julia Lawall wrote:
-> Replace a misspelled function name by %s and then __func__.
+>> I'm confused: the same code is already part of the PCI tree, but with
+>> Lorenzo Pieralisi listed as the patch author. The code is good,
+>> and I acked it in the past, but one of you is (probably by accident)
+>> misattributing the patch.
+>>
+>> Assuming that the patch that is already merged in next is the right
+>> one, I think you should rebase your series on top of
+>>
+>> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git#next
+>>
+>> to avoid conflicts like this one.
+>>
 > 
-> The function name contains pcie, not pci as in the string.
+> I think I just got confused because the code duplicates most of
+> pci_bus_assign_domain_nr(). Maybe this can be done in a better way
+> by splitting the existing function into 
 > 
-> This was done using Coccinelle, including the use of Levenshtein distance,
-> as proposed by Rasmus Villemoes.
+> static int pci_assign_domain_nr(struct device *)
+> {
+> 	... /* most of pci_bus_assign_domain_nr */
 > 
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+> 	return domain;
+> }
+> 
+> void pci_host_assign_domain_nr(struct pci_host_bridge *host)
+> {
+> 	host->domain = pci_assign_domain_nr(host->dev.parent);
+> }
+> 
+> void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> {
+> 	bus->domain_nr = pci_assign_domain_nr(parent);
+> }
+> 
 
-Applied with Murali's ack to pci/host-keystone for v3.20, thanks!
+Hi Arnd,
+   I kept the almost duplicated pci_host_assign_domain_nr() and
+pci_bus_assign_domain_nr() here for building happy, because now
+platform specific pci_domain_nr() still exists which may get domain
+number from pci_bus. pci_bus_assign_domain_nr() will be removed in
+the last patch.
 
-> ---
-> The semantic patch is difficult to summarize, but is available in the cover
-> letter of this patch series.
+Thanks!
+Yijing.
+
+> .
 > 
->  drivers/pci/host/pci-keystone.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-> index 78f79e3..e2f600e 100644
-> --- a/drivers/pci/host/pci-keystone.c
-> +++ b/drivers/pci/host/pci-keystone.c
-> @@ -119,7 +119,7 @@ static void ks_pcie_msi_irq_handler(unsigned int irq, struct irq_desc *desc)
->  	struct pcie_port *pp = &ks_pcie->pp;
->  	struct irq_chip *chip = irq_desc_get_chip(desc);
->  
-> -	dev_dbg(pp->dev, "ks_pci_msi_irq_handler, irq %d\n", irq);
-> +	dev_dbg(pp->dev, "%s, irq %d\n", __func__, irq);
->  
->  	/*
->  	 * The chained irq handler installation would have replaced normal
-> 
+
+
+-- 
+Thanks!
+Yijing
+
