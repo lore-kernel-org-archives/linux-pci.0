@@ -1,52 +1,82 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 28 Jan 2015 17:15:04 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Len Brown <lenb@kernel.org>, Tony Luck <tony.luck@intel.com>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [Patch v2 09/22] ACPI: Fix a bug in parsing ACPI Memroy24
- resource
-Message-ID: <20150128231504.GC17623@google.com>
-References: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
- <1422442660-455-10-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:39692 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750788AbbASDNL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 18 Jan 2015 22:13:11 -0500
+Message-ID: <54BC7632.1080003@huawei.com>
+Date: Mon, 19 Jan 2015 11:12:50 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1422442660-455-10-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>,
+	<linux-arm-kernel@lists.infradead.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	"Tony Luck" <tony.luck@intel.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	"Marc Zyngier" <marc.zyngier@arm.com>, <linux-pci@vger.kernel.org>,
+	<x86@kernel.org>, <linux-kernel@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<linux-m68k@lists.linux-m68k.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	<linux-alpha@vger.kernel.org>, <linux-ia64@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH 10/28] PCI: Save sysdata in pci_host_bridge drvdata
+References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <1421372666-12288-11-git-send-email-wangyijing@huawei.com> <18973877.BYCS6vtzoq@wuerfel>
+In-Reply-To: <18973877.BYCS6vtzoq@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-"Memory24", not "Memroy24", in subject.
+On 2015/1/16 17:18, Arnd Bergmann wrote:
+> On Friday 16 January 2015 09:44:08 Yijing Wang wrote:
+>> @@ -2066,11 +2064,11 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+>>  {
+>>         struct pci_host_bridge *host;
+>>  
+>> -       host = pci_create_host_bridge(parent, db, resources);
+>> +       host = pci_create_host_bridge(parent, db, resources, sysdata);
+>>         if (!host)
+>>                 return NULL;
+>>  
+>> -       return __pci_scan_root_bus(host, ops, sysdata);
+>> +       return __pci_scan_root_bus(host, ops);
+>>  }
+>>  EXPORT_SYMBOL(pci_scan_root_bus);
+>>
+> 
+> How about keeping the sysdata out of the pci_create_host_bridge interface, and
+> refactoring it so that the call sequence becomes
+> 
+> 	host = pci_create_host_bridge(parent, db, resources);
+> 	host->sysdata = sysdata;
+> 	__pci_scan_root_bus(host, ops);
+> 
+> This way, we can make sysdata completely option. I assume that more of the
+> fields we have in sysdata today can get moved into pci_host_bridge
+> over time, so a host bridge driver can just assign those members individually
+> between pci_create_host_bridge and __pci_scan_root_bus.
 
-On Wed, Jan 28, 2015 at 06:57:27PM +0800, Jiang Liu wrote:
-> According to ACPI spec 5, section 6.4.3.1 "24-Bit Memory Range Descriptor",
-> minimum, maximum and address_length field in struct acpi_resource_memory24
-> is in granularity of 256-bytes. So shift 8-bit left to get correct address.
+I put the sysdata in pci_host_bridge, because some platforms x86/ia64
+need to call pcibios_root_bridge_prepare() before pci_host_bridge registration
+in pci_create_host_bridge(), and pcibios_root_bridge_prepare() need the companion
+acpi device pointer which is stored in sysdata.
+
+I like you idea, but I haven't find a better way yet.
+
+Thanks!
+Yijing.
+
 > 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  drivers/acpi/resource.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+> 	Arnd
 > 
-> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-> index 7ce00a63f695..5544c6d26f32 100644
-> --- a/drivers/acpi/resource.c
-> +++ b/drivers/acpi/resource.c
-> @@ -90,8 +90,8 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
->  	switch (ares->type) {
->  	case ACPI_RESOURCE_TYPE_MEMORY24:
->  		memory24 = &ares->data.memory24;
-> -		acpi_dev_get_memresource(res, memory24->minimum,
-> -					 memory24->address_length,
-> +		acpi_dev_get_memresource(res, memory24->minimum << 8,
-> +					 memory24->address_length << 8,
->  					 memory24->write_protect);
->  		break;
->  	case ACPI_RESOURCE_TYPE_MEMORY32:
-> -- 
-> 1.7.10.4
+> .
 > 
+
+
+-- 
+Thanks!
+Yijing
+
