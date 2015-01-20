@@ -1,56 +1,171 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f42.google.com ([209.85.218.42]:38872 "EHLO
-	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751950AbbAaO4X (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 31 Jan 2015 09:56:23 -0500
-Received: by mail-oi0-f42.google.com with SMTP id i138so38640631oig.1
-        for <linux-pci@vger.kernel.org>; Sat, 31 Jan 2015 06:56:22 -0800 (PST)
-Date: Sat, 31 Jan 2015 08:56:11 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: matt@masarand.com
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH V3] Delay allocation of PCI device IRQs from boot time
- until bus scan time to fix PCI hotplugging
-Message-ID: <20150131145611.GA23416@google.com>
-References: <1412222866-21068-1-git-send-email-matt@masarand.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1412222866-21068-1-git-send-email-matt@masarand.com>
+Received: from mga03.intel.com ([134.134.136.65]:51467 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751811AbbATDMK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 19 Jan 2015 22:12:10 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "H. Peter Anvin" <hpa@linux.intel.com>,
+	Kuppuswamy Sathyanarayanan
+	<sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [Patch Part1 v7 29/38] x86/intel-mid: Delay initialization of APB timer
+Date: Tue, 20 Jan 2015 11:08:32 +0800
+Message-Id: <1421723321-8386-30-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 02, 2014 at 05:07:28AM +0100, matt@masarand.com wrote:
-> Sorry, the previous submission was damaged by my editor which purged the sign off lines from the patches,
-> this is a fixed version.
-> 
-> pci_fixup_irqs is the current method used in most arches to assign IRQs to
-> PCI devices. This has a number of flaws including it requiring an extra walk
-> of the PCI bus and most importantly not running for devices which are added
-> after boot time, this includes hot-added devices on boards that support this.
-> 
-> This patch set modifies the IRQ mapping and swizzling infrastructure
-> such that functions are registered by the boot code (instead of being
-> run directly by the boot code) and then run later in the enable_device
-> path such that it will apply to all devices and not only those inserted
-> at boot time.
-> 
-> This is cleaner as it unifies how each architecture allocates PCI IRQs as much
-> as possible (some arches were particularly resistant to these changes so some
-> work-arounds have been used or the change disabled completely).
-> 
-> The caveat here is that I have been forced to modify some architecture specific
-> code for various architectures which I cannot test due to not having such boards
-> available. The code seems correct and the changes in most cases are small and
-> trivial however I have not tested all the patches for rare arches.
-> 
-> NEW: Since the last version all changes and suggested bug fixes have been implemented
-> the patch-set has also been rebased onto the latest kernel version to ease merging.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-Hi Matthew,
+MID has no PIC, but depending on the platform it requires the
+abt_timer, which is connected to irq0. The timer is set up at
+late_time_init().
 
-I'm not sure where we are with this.  This has a lot of good fixes that I'd
-like to merge, but I think there were some comments that needed to be
-addressed.  But I might have missed something, so I'm just checking to see
-if I accidentally dropped the ball.
+But, looking at the MID code it seems, that there is no reason to do
+so. The only code which might need the timer working is the TSC
+calibration code, but thats a non issue on MID as that is using its
+own empty calibration function. And check_timer() is not invoked
+either because MID has no PIC and therefor no legacy irqs.
 
-Bjorn
+So if you look at intel_mid_time_init() then you'll see that in the
+ARAT case the timer setup is skipped already. So until the point where
+x86_init.timers.setup_percpu_clockev() is called for the boot cpu
+nothing really needs a timer on MID.
+
+According to the MID code the apbt horror is only used for moorestown.
+Medfield and later use the local apic timer without the apbt nonsense.
+
+The best thing we can do is to drop moorestown support and get rid of
+that apbt nonsense alltogether.
+
+I don't think anyone deeply cares about it not being supported from
+3.18 on. The number of devices which sport a moorestown should be
+pretty limited and the only relevant use case of those is to act as a
+pocket heater with short battery life time. Its pretty pointless to
+update kernels on pocket heaters except for bragging reasons.
+
+If someone at Intel really thinks that we need to keep moorestown
+alive for other than documentary and sentimental reasons, then we can
+move the apbt setup to x86_init.timers.setup_percpu_clockev(). At that
+point the IOAPIC is setup already, so it should just work.
+
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: H. Peter Anvin <hpa@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: David Cohen <david.a.cohen@linux.intel.com>
+Cc: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Link: http://lkml.kernel.org/r/1416901802-24211-2-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ arch/x86/kernel/apb_timer.c             |    4 ----
+ arch/x86/platform/intel-mid/intel-mid.c |   18 +++++++++++++-----
+ arch/x86/platform/intel-mid/sfi.c       |    2 --
+ 3 files changed, 13 insertions(+), 11 deletions(-)
+
+diff --git a/arch/x86/kernel/apb_timer.c b/arch/x86/kernel/apb_timer.c
+index b708738d016e..7cfdc5467922 100644
+--- a/arch/x86/kernel/apb_timer.c
++++ b/arch/x86/kernel/apb_timer.c
+@@ -179,10 +179,6 @@ static int __init apbt_clockevent_register(void)
+ 
+ static void apbt_setup_irq(struct apbt_dev *adev)
+ {
+-	/* timer0 irq has been setup early */
+-	if (adev->irq == 0)
+-		return;
+-
+ 	irq_modify_status(adev->irq, 0, IRQ_MOVE_PCNTXT);
+ 	irq_set_affinity(adev->irq, cpumask_of(adev->cpu));
+ }
+diff --git a/arch/x86/platform/intel-mid/intel-mid.c b/arch/x86/platform/intel-mid/intel-mid.c
+index 1bbedc4b0f88..d8e23a622a33 100644
+--- a/arch/x86/platform/intel-mid/intel-mid.c
++++ b/arch/x86/platform/intel-mid/intel-mid.c
+@@ -81,26 +81,34 @@ static unsigned long __init intel_mid_calibrate_tsc(void)
+ 	return 0;
+ }
+ 
++static void __init intel_mid_setup_bp_timer(void)
++{
++	apbt_time_init();
++	setup_boot_APIC_clock();
++}
++
+ static void __init intel_mid_time_init(void)
+ {
+ 	sfi_table_parse(SFI_SIG_MTMR, NULL, NULL, sfi_parse_mtmr);
++
+ 	switch (intel_mid_timer_options) {
+ 	case INTEL_MID_TIMER_APBT_ONLY:
+ 		break;
+ 	case INTEL_MID_TIMER_LAPIC_APBT:
+-		x86_init.timers.setup_percpu_clockev = setup_boot_APIC_clock;
++		/* Use apbt and local apic */
++		x86_init.timers.setup_percpu_clockev = intel_mid_setup_bp_timer;
+ 		x86_cpuinit.setup_percpu_clockev = setup_secondary_APIC_clock;
+-		break;
++		return;
+ 	default:
+ 		if (!boot_cpu_has(X86_FEATURE_ARAT))
+ 			break;
++		/* Lapic only, no apbt */
+ 		x86_init.timers.setup_percpu_clockev = setup_boot_APIC_clock;
+ 		x86_cpuinit.setup_percpu_clockev = setup_secondary_APIC_clock;
+ 		return;
+ 	}
+-	/* we need at least one APB timer */
+-	pre_init_apic_IRQ0();
+-	apbt_time_init();
++
++	x86_init.timers.setup_percpu_clockev = apbt_time_init;
+ }
+ 
+ static void intel_mid_arch_setup(void)
+diff --git a/arch/x86/platform/intel-mid/sfi.c b/arch/x86/platform/intel-mid/sfi.c
+index c14ad34776c4..aa59f88868f8 100644
+--- a/arch/x86/platform/intel-mid/sfi.c
++++ b/arch/x86/platform/intel-mid/sfi.c
+@@ -95,8 +95,6 @@ int __init sfi_parse_mtmr(struct sfi_table_header *table)
+ 		pr_debug("timer[%d]: paddr = 0x%08x, freq = %dHz, irq = %d\n",
+ 			totallen, (u32)pentry->phys_addr,
+ 			pentry->freq_hz, pentry->irq);
+-			if (!pentry->irq)
+-				continue;
+ 			mp_irq.type = MP_INTSRC;
+ 			mp_irq.irqtype = mp_INT;
+ /* triggering mode edge bit 2-3, active high polarity bit 0-1 */
+-- 
+1.7.10.4
+
