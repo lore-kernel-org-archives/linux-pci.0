@@ -1,80 +1,146 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:61055 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752009AbbAISJR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 13:09:17 -0500
-MIME-Version: 1.0
-In-Reply-To: <20150109172726.GC6575@google.com>
-References: <1417538104-27341-1-git-send-email-ricardo.ribalda@gmail.com> <20150109172726.GC6575@google.com>
-From: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
-Date: Fri, 9 Jan 2015 19:08:55 +0100
-Message-ID: <CAPybu_2rrJ8nYqVPf5B99+3=c4CJxAPe8kM2fmRWjJXHYGBe2g@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Generate uppercase hex for modalias var in uevent
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
+	Joerg Roedel <jroedel@suse.de>
+Subject: [Patch Part1 v7 07/38] x86/dmar: Use new irqdomain interfaces to allocate/free IRQ
+Date: Tue, 20 Jan 2015 11:08:10 +0800
+Message-Id: <1421723321-8386-8-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Shouldnt this also be backported to stable as Commit 89ec3dcf17fd
-("PCI: Generate uppercase hex for modalias  interface class")?
+Use new irqdomain interfaces to allocate/free IRQ for DMAR and interrupt
+remapping, so we could kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
 
+The private definition of irq_alloc_hwirqs()/irq_free_hwirqs() are
+temporary solution, it will be removed once we have converted interrupt
+remapping driver to use irqdomain framework.
 
-Regards!
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: iommu@lists.linux-foundation.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Joerg Roedel <joro@8bytes.org>
+Link: http://lkml.kernel.org/r/1416894816-23245-8-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+---
+ arch/x86/include/asm/irq_remapping.h |    4 ++--
+ arch/x86/kernel/apic/msi.c           |   10 ++++++++++
+ drivers/iommu/irq_remapping.c        |   17 +++++++++++++++--
+ 3 files changed, 27 insertions(+), 4 deletions(-)
 
-
-On Fri, Jan 9, 2015 at 6:27 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Dec 02, 2014 at 05:35:04PM +0100, Ricardo Ribalda Delgado wrote:
->> Some implementations of modprobe fail to load the driver for a PCI device
->> automatically because the "interface" part of the modalias from the kernel
->> is lowercase, and the modalias from file2alias is uppercase.
->>
->> The "interface" is the low-order byte of the Class Code, defined in PCI
->> r3.0, Appendix D.  Most interface types defined in the spec do not use
->> alpha characters, so they won't be affected.  For example, 00h, 01h, 10h,
->> 20h, etc. are unaffected.
->>
->> Print the "interface" byte of the Class Code in uppercase hex, as we
->> already do for the Vendor ID, Device ID, Class, etc.
->>
->> Commit 89ec3dcf17fd ("PCI: Generate uppercase hex for modalias
->> interface class") fixed only half of the problem. Some udev
->> implementations relays on the uevent file and not in the modalias file.
->>
->> CC: Bjorn Helgaas <bhelgaas@google.com>
->> CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->> Fixes: d1ded203adf1 ("PCI: add MODALIAS to hotplug event for pci devices")
->> Signed-off-by: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
->
-> Applied with Greg's ack to pci/enumeration for v3.20, thanks!
->
->> ---
->>
->> Modified line is >80 char, but I believe that it is better than breaking
->> the string or indent it bad.
->>
->>  drivers/pci/pci-driver.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
->> index 2b3c894..b720e78 100644
->> --- a/drivers/pci/pci-driver.c
->> +++ b/drivers/pci/pci-driver.c
->> @@ -1389,7 +1389,7 @@ static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
->>       if (add_uevent_var(env, "PCI_SLOT_NAME=%s", pci_name(pdev)))
->>               return -ENOMEM;
->>
->> -     if (add_uevent_var(env, "MODALIAS=pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02x",
->> +     if (add_uevent_var(env, "MODALIAS=pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02X",
->>                          pdev->vendor, pdev->device,
->>                          pdev->subsystem_vendor, pdev->subsystem_device,
->>                          (u8)(pdev->class >> 16), (u8)(pdev->class >> 8),
->> --
->> 2.1.3
->>
-
-
-
+diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
+index 6224d316c405..86d897bc15dd 100644
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -99,7 +99,7 @@ static inline bool setup_remapped_irq(int irq,
+ }
+ #endif /* CONFIG_IRQ_REMAP */
+ 
+-#define dmar_alloc_hwirq()	irq_alloc_hwirq(-1)
+-#define dmar_free_hwirq		irq_free_hwirq
++extern int dmar_alloc_hwirq(void);
++extern void dmar_free_hwirq(int irq);
+ 
+ #endif /* __X86_IRQ_REMAPPING_H */
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 76cc2c902176..9be7d6d8a579 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -223,6 +223,16 @@ int arch_setup_dmar_msi(unsigned int irq)
+ 				      "edge");
+ 	return 0;
+ }
++
++int dmar_alloc_hwirq(void)
++{
++	return irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
++}
++
++void dmar_free_hwirq(int irq)
++{
++	irq_domain_free_irqs(irq, 1);
++}
+ #endif
+ 
+ /*
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 390079ee1350..5617150fd8fb 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -6,6 +6,7 @@
+ #include <linux/msi.h>
+ #include <linux/irq.h>
+ #include <linux/pci.h>
++#include <linux/irqdomain.h>
+ 
+ #include <asm/hw_irq.h>
+ #include <asm/irq_remapping.h>
+@@ -49,6 +50,18 @@ static void irq_remapping_disable_io_apic(void)
+ 		disconnect_bsp_APIC(0);
+ }
+ 
++#ifndef CONFIG_GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
++static unsigned int irq_alloc_hwirqs(int cnt, int node)
++{
++	return irq_domain_alloc_irqs(NULL, -1, cnt, node, NULL);
++}
++
++static void irq_free_hwirqs(unsigned int from, int cnt)
++{
++	irq_domain_free_irqs(from, cnt);
++}
++#endif
++
+ static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
+ {
+ 	int ret, sub_handle, nvec_pow2, index = 0;
+@@ -104,7 +117,7 @@ static int do_setup_msix_irqs(struct pci_dev *dev, int nvec)
+ 
+ 	list_for_each_entry(msidesc, &dev->msi_list, list) {
+ 
+-		irq = irq_alloc_hwirq(node);
++		irq = irq_alloc_hwirqs(1, node);
+ 		if (irq == 0)
+ 			return -1;
+ 
+@@ -127,7 +140,7 @@ static int do_setup_msix_irqs(struct pci_dev *dev, int nvec)
+ 	return 0;
+ 
+ error:
+-	irq_free_hwirq(irq);
++	irq_free_hwirqs(irq, 1);
+ 	return ret;
+ }
+ 
 -- 
-Ricardo Ribalda
+1.7.10.4
+
