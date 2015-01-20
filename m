@@ -1,46 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:36756 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753897AbbALSUi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 13:20:38 -0500
-Received: by mail-ob0-f176.google.com with SMTP id vb8so23687792obc.7
-        for <linux-pci@vger.kernel.org>; Mon, 12 Jan 2015 10:20:38 -0800 (PST)
-Date: Mon, 12 Jan 2015 11:20:29 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Stanimir Varbanov <svarbanov@mm-sol.com>
-Cc: Rob Herring <robh+dt@kernel.org>,
-	Kumar Gala <galak@codeaurora.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 4/5] PCI: qcom: Add Qualcomm PCIe controller driver
-Message-ID: <20150112182029.GA2776@google.com>
-References: <1418404441-5518-1-git-send-email-svarbanov@mm-sol.com>
- <1418404441-5518-5-git-send-email-svarbanov@mm-sol.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 20 Jan 2015 14:12:42 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pm@vger.kernel.org, xen-devel@lists.xenproject.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [Bugfix v4 1/2] xen/pci: Fix xen IRQ allocation failure caused
+ by commit b81975eade8c
+Message-ID: <20150120191242.GC13409@l.oracle.com>
+References: <1421204979-30619-1-git-send-email-jiang.liu@linux.intel.com>
+ <1421327077-19894-1-git-send-email-jiang.liu@linux.intel.com>
+ <1421327077-19894-2-git-send-email-jiang.liu@linux.intel.com>
+ <20150116181318.GA22690@l.oracle.com>
+ <54BC8AF4.6010504@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1418404441-5518-5-git-send-email-svarbanov@mm-sol.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <54BC8AF4.6010504@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 12, 2014 at 07:14:00PM +0200, Stanimir Varbanov wrote:
-> The PCIe driver reuse the Designware common code for host
-> and MSI initialization, and also program the Qualcomm
-> application specific registers.
+On Mon, Jan 19, 2015 at 12:41:24PM +0800, Jiang Liu wrote:
 > 
-> Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
-> ---
->  drivers/pci/host/Kconfig     |    9 +
->  drivers/pci/host/Makefile    |    1 +
->  drivers/pci/host/pcie-qcom.c |  415 ++++++++++++++++++++++++++++++++++++++++++
+> On 2015/1/17 2:13, Konrad Rzeszutek Wilk wrote:
+> > On Thu, Jan 15, 2015 at 09:04:35PM +0800, Jiang Liu wrote:
+> <snit>
+> >>
+> >> Note: we need to test this patch on those special AMD systems which
+> >> override normal SCI GSI (9) with strange GSI (20).
+> > 
+> > [    0.000000] DMI: Supermicro X8DTN/X8DTN, BIOS 2.1c       10/28/2011
+> > ..
+> >      0.000000] ACPI: INT_SRC_OVR (bus 0 bus_irq 0 global_irq 2 dfl dfl)
+> > [    0.000000] ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 20 low level)
+> > [    0.000000] ACPI: IRQ0 used by override.
+> > ..
+> >     6.358737] xen: registering gsi 20 triggering 0 polarity 1
+> > [    6.358756] xen: --> pirq=20 -> irq=20 (gsi=20)
+> > ...
+> > -bash-4.1# cat /proc/interrupts |grep acpi
+> >  20:          0          0          0  xen-pirq-ioapic-level  acpi
+> Hi Konrad,
 
-Hi Stanimir,
+> 	May I assume an Tested-by from you here?
 
-Can you also add a MAINTAINERS update so I'll know who should ack changes
-to this driver?
-
-Bjorn
+Yes for this particular use case. I hadn't yet tried to push the ACPI buttons
+(this printout was from an server in a basement).
+> Thanks!
+> Gerry
