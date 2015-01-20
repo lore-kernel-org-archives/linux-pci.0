@@ -1,98 +1,148 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:33059 "EHLO
-	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751673AbbAWXII (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 18:08:08 -0500
-Received: by mail-oi0-f48.google.com with SMTP id v63so142023oia.7
-        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 15:08:07 -0800 (PST)
-Date: Fri, 23 Jan 2015 17:08:03 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org,
-	virtualization@lists.linux-foundation.org,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	cornelia.huck@de.ibm.com, linux-pci@vger.kernel.org,
-	trivial@kernel.org, David Howells <dhowells@redhat.com>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
-	linux-am33-list@redhat.com
-Subject: Re: [PATCH v3 08/16] mn10300: drop dead code
-Message-ID: <20150123230803.GR29776@google.com>
-References: <1421256142-11512-1-git-send-email-mst@redhat.com>
- <1421256142-11512-9-git-send-email-mst@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1421256142-11512-9-git-send-email-mst@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v7 37/38] x86/irq: Introduce helper functions to support hierarchy irqdomain for IOAPIC
+Date: Tue, 20 Jan 2015 11:08:40 +0800
+Message-Id: <1421723321-8386-38-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 14, 2015 at 07:27:48PM +0200, Michael S. Tsirkin wrote:
-> pci-iomap.c was (apparently, mistakenly) reintroduced as part of
-> commit 83c2dc15ce824450e7044b9f90cd529c25747ae0
->     MN10300: Handle cacheable PCI regions in pci_iomap()
-> probably as side-effect of forward-porting the patch
-> from an old kernel.
-> 
-> It's not really needed: the generic pci_iomap does the right thing here.
-> 
-> The new file isn't compiled so it's safe to drop.
-> 
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: trivial@kernel.org
-> Cc: David Howells <dhowells@redhat.com>
-> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+Introduce several helper functions, which will be used to enable
+hierarchy irqdomain for IOAPIC.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Grant Likely <grant.likely@linaro.org>
+Link: http://lkml.kernel.org/r/1416901802-24211-9-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Joerg Roedel <jroedel@suse.de>
+---
+ arch/x86/kernel/apic/io_apic.c |   59 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 59 insertions(+)
 
-> ---
-> 
-> Can relevant people please ack this for merging through virtio tree?
-> 
->  arch/mn10300/unit-asb2305/pci-iomap.c | 35 -----------------------------------
->  1 file changed, 35 deletions(-)
->  delete mode 100644 arch/mn10300/unit-asb2305/pci-iomap.c
-> 
-> diff --git a/arch/mn10300/unit-asb2305/pci-iomap.c b/arch/mn10300/unit-asb2305/pci-iomap.c
-> deleted file mode 100644
-> index bd65dae..0000000
-> --- a/arch/mn10300/unit-asb2305/pci-iomap.c
-> +++ /dev/null
-> @@ -1,35 +0,0 @@
-> -/* ASB2305 PCI I/O mapping handler
-> - *
-> - * Copyright (C) 2007 Red Hat, Inc. All Rights Reserved.
-> - * Written by David Howells (dhowells@redhat.com)
-> - *
-> - * This program is free software; you can redistribute it and/or
-> - * modify it under the terms of the GNU General Public Licence
-> - * as published by the Free Software Foundation; either version
-> - * 2 of the Licence, or (at your option) any later version.
-> - */
-> -#include <linux/pci.h>
-> -#include <linux/module.h>
-> -
-> -/*
-> - * Create a virtual mapping cookie for a PCI BAR (memory or IO)
-> - */
-> -void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long maxlen)
-> -{
-> -	resource_size_t start = pci_resource_start(dev, bar);
-> -	resource_size_t len = pci_resource_len(dev, bar);
-> -	unsigned long flags = pci_resource_flags(dev, bar);
-> -
-> -	if (!len || !start)
-> -		return NULL;
-> -
-> -	if ((flags & IORESOURCE_IO) || (flags & IORESOURCE_MEM)) {
-> -		if (flags & IORESOURCE_CACHEABLE && !(flags & IORESOURCE_IO))
-> -			return ioremap(start, len);
-> -		else
-> -			return ioremap_nocache(start, len);
-> -	}
-> -
-> -	return NULL;
-> -}
-> -EXPORT_SYMBOL(pci_iomap);
-> -- 
-> MST
-> 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 3c6609617306..f3447a5dd6e4 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -67,6 +67,8 @@
+ #define for_each_irq_pin(entry, head) \
+ 	list_for_each_entry(entry, &head, list)
+ 
++int acpi_get_override_irq(u32 gsi, int *trigger, int *polarity);
++
+ /*
+  *      Is the SiS APIC rmw bug present ?
+  *      -1 = don't know, 0 = no, 1 = yes
+@@ -82,6 +84,7 @@ struct mp_chip_data {
+ 	struct IO_APIC_route_entry entry;
+ 	int trigger;
+ 	int polarity;
++	u32 count;
+ 	bool isa_irq;
+ };
+ 
+@@ -945,6 +948,42 @@ void ioapic_set_alloc_attr(struct irq_alloc_info *info, int node,
+ 	info->ioapic_valid = 1;
+ }
+ 
++static void ioapic_copy_alloc_attr(struct irq_alloc_info *dst,
++				   struct irq_alloc_info *src,
++				   u32 gsi, int ioapic_idx, int pin)
++{
++	int trigger, polarity;
++
++	copy_irq_alloc_info(dst, src);
++	dst->type = X86_IRQ_ALLOC_TYPE_IOAPIC;
++	dst->ioapic_id = mpc_ioapic_id(ioapic_idx);
++	dst->ioapic_pin = pin;
++	dst->ioapic_valid = 1;
++	if (src && src->ioapic_valid) {
++		dst->ioapic_node = src->ioapic_node;
++		dst->ioapic_trigger = src->ioapic_trigger;
++		dst->ioapic_polarity = src->ioapic_polarity;
++	} else {
++		dst->ioapic_node = NUMA_NO_NODE;
++		if (acpi_get_override_irq(gsi, &trigger, &polarity) >= 0) {
++			dst->ioapic_trigger = trigger;
++			dst->ioapic_polarity = polarity;
++		} else {
++			/*
++			 * PCI interrupts are always polarity one level
++			 * triggered.
++			 */
++			dst->ioapic_trigger = 1;
++			dst->ioapic_polarity = 1;
++		}
++	}
++}
++
++static int ioapic_alloc_attr_node(struct irq_alloc_info *info)
++{
++	return (info && info->ioapic_valid) ? info->ioapic_node : NUMA_NO_NODE;
++}
++
+ static void mp_register_handler(unsigned int irq, unsigned long trigger)
+ {
+ 	irq_flow_handler_t hdl;
+@@ -962,6 +1001,26 @@ static void mp_register_handler(unsigned int irq, unsigned long trigger)
+ 	__irq_set_handler(irq, hdl, 0, fasteoi ? "fasteoi" : "edge");
+ }
+ 
++static bool mp_check_pin_attr(int irq, struct irq_alloc_info *info)
++{
++	struct mp_chip_data *data = irq_get_chip_data(irq);
++
++	/*
++	 * setup_IO_APIC_irqs() programs all legacy IRQs with default trigger
++	 * and polarity attirbutes. So allow the first user to reprogram the
++	 * pin with real trigger and polarity attributes.
++	 */
++	if (irq < nr_legacy_irqs() && data->count == 1) {
++		if (info->ioapic_trigger != data->trigger)
++			mp_register_handler(irq, data->trigger);
++		data->entry.trigger = data->trigger = info->ioapic_trigger;
++		data->entry.polarity = data->polarity = info->ioapic_polarity;
++	}
++
++	return data->trigger == info->ioapic_trigger &&
++	       data->polarity == info->ioapic_polarity;
++}
++
+ static int alloc_irq_from_domain(struct irq_domain *domain, u32 gsi, int pin,
+ 				 struct irq_alloc_info *info)
+ {
+-- 
+1.7.10.4
+
