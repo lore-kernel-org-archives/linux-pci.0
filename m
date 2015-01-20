@@ -1,160 +1,214 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:32901 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752055AbbAOC2S (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 21:28:18 -0500
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 15 Jan 2015 12:28:16 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 31C2F2BB003F
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:14 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t0F2SDUD41877594
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:14 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t0F2SCxg019567
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:13 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V11 01/17] PCI/IOV: Export interface for retrieve VF's BDF
-Date: Thu, 15 Jan 2015 10:27:51 +0800
-Message-Id: <1421288887-7765-2-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <20150113180502.GC2776@google.com>
- <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part2 v4 30/33] x86,ioapic: Cleanup irq_trigger/polarity()
+Date: Tue, 20 Jan 2015 13:51:50 +0800
+Message-Id: <1421733113-15704-31-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When implementing the SR-IOV on PowerNV platform, some resource reservation
-is needed for VFs which don't exist at the bootup stage. To do the match
-between resources and VFs, the code need to get the VF's BDF in advance.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-In this patch, it exports the interface to retrieve VF's BDF:
-   * Make the virtfn_bus as an interface
-   * Make the virtfn_devfn as an interface
-   * Rename them with more specific name
-   * Code cleanup in pci_sriov_resource_alignment()
+These functions are full of pointless indentations, useless comments
+and even more useless printks.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Clean them up.
+
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: x86@kernel.org
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/iov.c   |   22 +++++++++++++---------
- include/linux/pci.h |   11 +++++++++++
- 2 files changed, 24 insertions(+), 9 deletions(-)
+ arch/x86/kernel/apic/io_apic.c |  138 +++++++++++++++-------------------------
+ 1 file changed, 50 insertions(+), 88 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index ea3a82c..e76d1a0 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -19,14 +19,18 @@
- 
- #define VIRTFN_ID_LEN	16
- 
--static inline u8 virtfn_bus(struct pci_dev *dev, int id)
-+int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 6e838d6100c5..32f37445980d 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -798,45 +798,47 @@ static int EISA_ELCR(unsigned int irq)
+ static int irq_polarity(int idx)
  {
-+	if (!dev->is_physfn)
-+		return -EINVAL;
- 	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
- 				    dev->sriov->stride * id) >> 8);
- }
+ 	int bus = mp_irqs[idx].srcbus;
+-	int polarity;
  
--static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
-+int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
- {
-+	if (!dev->is_physfn)
-+		return -EINVAL;
- 	return (dev->devfn + dev->sriov->offset +
- 		dev->sriov->stride * id) & 0xff;
- }
-@@ -62,7 +66,7 @@ static inline void pci_iov_max_bus_range(struct pci_dev *dev)
- 
- 	for ( ; total >= 0; total--) {
- 		pci_iov_set_numvfs(dev, total);
--		busnr = virtfn_bus(dev, iov->total_VFs - 1);
-+		busnr = pci_iov_virtfn_bus(dev, iov->total_VFs - 1);
- 		if (busnr > max)
- 			max = busnr;
+ 	/*
+ 	 * Determine IRQ line polarity (high active or low active):
+ 	 */
+-	switch (mp_irqs[idx].irqflag & 3)
+-	{
+-		case 0: /* conforms, ie. bus-type dependent polarity */
+-			if (test_bit(bus, mp_bus_not_pci))
+-				polarity = default_ISA_polarity(idx);
+-			else
+-				polarity = default_PCI_polarity(idx);
+-			break;
+-		case 1: /* high active */
+-		{
+-			polarity = IOAPIC_POL_HIGH;
+-			break;
+-		}
+-		case 2: /* reserved */
+-		{
+-			pr_warn("broken BIOS!!\n");
+-			polarity = IOAPIC_POL_LOW;
+-			break;
+-		}
+-		case 3: /* low active */
+-		{
+-			polarity = IOAPIC_POL_LOW;
+-			break;
+-		}
+-		default: /* invalid */
+-		{
+-			pr_warn("broken BIOS!!\n");
+-			polarity = IOAPIC_POL_LOW;
+-			break;
+-		}
++	switch (mp_irqs[idx].irqflag & 0x03) {
++	case 0:
++		/* conforms to spec, ie. bus-type dependent polarity */
++		if (test_bit(bus, mp_bus_not_pci))
++			return default_ISA_polarity(idx);
++		else
++			return default_PCI_polarity(idx);
++	case 1:
++		return IOAPIC_POL_HIGH;
++	case 2:
++		pr_warn("IOAPIC: Invalid polarity: 2, defaulting to low\n");
++	case 3:
++	default: /* Pointless default required due to do gcc stupidity */
++		return IOAPIC_POL_LOW;
  	}
-@@ -108,7 +112,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	struct pci_bus *bus;
- 
- 	mutex_lock(&iov->dev->sriov->lock);
--	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
-+	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
- 	if (!bus)
- 		goto failed;
- 
-@@ -116,7 +120,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	if (!virtfn)
- 		goto failed0;
- 
--	virtfn->devfn = virtfn_devfn(dev, id);
-+	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
- 	virtfn->vendor = dev->vendor;
- 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
- 	pci_setup_device(virtfn);
-@@ -179,8 +183,8 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
- 	struct pci_sriov *iov = dev->sriov;
- 
- 	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
--					     virtfn_bus(dev, id),
--					     virtfn_devfn(dev, id));
-+					     pci_iov_virtfn_bus(dev, id),
-+					     pci_iov_virtfn_devfn(dev, id));
- 	if (!virtfn)
- 		return;
- 
-@@ -255,7 +259,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	iov->offset = offset;
- 	iov->stride = stride;
- 
--	if (virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
-+	if (pci_iov_virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
- 		dev_err(&dev->dev, "SR-IOV: bus number out of range\n");
- 		return -ENOMEM;
- 	}
-@@ -551,7 +555,7 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
- 	if (!reg)
- 		return 0;
- 
--	 __pci_read_base(dev, pci_bar_unknown, &tmp, reg);
-+	__pci_read_base(dev, pci_bar_unknown, &tmp, reg);
- 	return resource_alignment(&tmp);
+-	return polarity;
  }
  
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 360a966..74ef944 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1658,6 +1658,9 @@ int pci_ext_cfg_avail(void);
- void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
- 
- #ifdef CONFIG_PCI_IOV
-+int pci_iov_virtfn_bus(struct pci_dev *dev, int id);
-+int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
++#ifdef CONFIG_EISA
++static int eisa_irq_trigger(int idx, int bus, int trigger)
++{
++	switch (mp_bus_id_to_type[bus]) {
++	case MP_BUS_PCI:
++	case MP_BUS_ISA:
++		return trigger;
++	case MP_BUS_EISA:
++		return default_EISA_trigger(idx);
++	}
++	pr_warn("IOAPIC: Invalid srcbus: %d defaulting to level\n", bus);
++	return IOAPIC_LEVEL;
++}
++#else
++static inline int eisa_irq_trigger(int idx, int bus, int trigger)
++{
++	return trigger;
++}
++#endif
 +
- int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
- void pci_disable_sriov(struct pci_dev *dev);
- int pci_num_vf(struct pci_dev *dev);
-@@ -1665,6 +1668,14 @@ int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
- int pci_sriov_get_totalvfs(struct pci_dev *dev);
- #else
-+static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
-+{
-+	return -ENOSYS;
-+}
-+static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
-+{
-+	return -ENOSYS;
-+}
- static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
- { return -ENODEV; }
- static inline void pci_disable_sriov(struct pci_dev *dev) { }
+ static int irq_trigger(int idx)
+ {
+ 	int bus = mp_irqs[idx].srcbus;
+@@ -845,63 +847,23 @@ static int irq_trigger(int idx)
+ 	/*
+ 	 * Determine IRQ trigger mode (edge or level sensitive):
+ 	 */
+-	switch ((mp_irqs[idx].irqflag>>2) & 3)
+-	{
+-		case 0: /* conforms, ie. bus-type dependent */
+-			if (test_bit(bus, mp_bus_not_pci))
+-				trigger = default_ISA_trigger(idx);
+-			else
+-				trigger = default_PCI_trigger(idx);
+-#ifdef CONFIG_EISA
+-			switch (mp_bus_id_to_type[bus]) {
+-				case MP_BUS_ISA: /* ISA pin */
+-				{
+-					/* set before the switch */
+-					break;
+-				}
+-				case MP_BUS_EISA: /* EISA pin */
+-				{
+-					trigger = default_EISA_trigger(idx);
+-					break;
+-				}
+-				case MP_BUS_PCI: /* PCI pin */
+-				{
+-					/* set before the switch */
+-					break;
+-				}
+-				default:
+-				{
+-					pr_warn("broken BIOS!!\n");
+-					trigger = IOAPIC_LEVEL;
+-					break;
+-				}
+-			}
+-#endif
+-			break;
+-		case 1: /* edge */
+-		{
+-			trigger = IOAPIC_EDGE;
+-			break;
+-		}
+-		case 2: /* reserved */
+-		{
+-			pr_warn("broken BIOS!!\n");
+-			trigger = IOAPIC_LEVEL;
+-			break;
+-		}
+-		case 3: /* level */
+-		{
+-			trigger = IOAPIC_LEVEL;
+-			break;
+-		}
+-		default: /* invalid */
+-		{
+-			pr_warn("broken BIOS!!\n");
+-			trigger = IOAPIC_EDGE;
+-			break;
+-		}
++	switch ((mp_irqs[idx].irqflag >> 2) & 0x03) {
++	case 0:
++		/* conforms to spec, ie. bus-type dependent trigger mode */
++		if (test_bit(bus, mp_bus_not_pci))
++			trigger = default_ISA_trigger(idx);
++		else
++			trigger = default_PCI_trigger(idx);
++		/* Take EISA into account */
++		return eisa_irq_trigger(idx, bus, trigger);
++	case 1:
++		return IOAPIC_EDGE;
++	case 2:
++		pr_warn("IOAPIC: Invalid trigger mode 2 defaulting to level\n");
++	case 3:
++	default: /* Pointless default required due to do gcc stupidity */
++		return IOAPIC_LEVEL;
+ 	}
+-	return trigger;
+ }
+ 
+ void ioapic_set_alloc_attr(struct irq_alloc_info *info, int node,
 -- 
-1.7.9.5
+1.7.10.4
 
