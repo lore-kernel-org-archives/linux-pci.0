@@ -1,82 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:2766 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751052AbbANCE2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Jan 2015 21:04:28 -0500
-Message-ID: <54B5CE9E.4030801@huawei.com>
-Date: Wed, 14 Jan 2015 10:04:14 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
 	Jiang Liu <jiang.liu@linux.intel.com>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
-Subject: Re: [PATCH v2 2/8] PCI/MSI: Add hooks to populate the msi_domain
- field
-References: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com> <1420736772-11088-3-git-send-email-marc.zyngier@arm.com> <54B510BA.7030202@huawei.com> <54B52168.3080600@arm.com>
-In-Reply-To: <54B52168.3080600@arm.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
+	iommu@lists.linux-foundation.org
+Subject: [Patch Part1 v7 28/38] irq_remapping: Kill unused function irq_remapping_print_chip()
+Date: Tue, 20 Jan 2015 11:08:31 +0800
+Message-Id: <1421723321-8386-29-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> +static void pci_set_msi_domain(struct pci_dev *dev)
->>> +{
->>> +	/*
->>> +	 * If no domain has been set through the pcibios callback,
->>> +	 * inherit the default from the bus device.
->>> +	 */
->>> +	if (!dev_get_msi_domain(&dev->dev))
->>> +		dev_set_msi_domain(&dev->dev,
->>> +				   dev_get_msi_domain(&dev->bus->dev));
->>> +}
->>
->> Hi Marc, now we have two ways to associate the pci_dev and msi_domain, right ?
->>
->> 1. associate pci_dev and msi_domain in pcibios_add_device() like x86.
->>
->> 2. Inherit msi_domain from pci_dev->bus.
->>
->> My question is if all pci devices inherit msi_domain from the pci_bus,
->> so all pci devices under same pci host bridge have the same msi_domain assigned by
->> weak pcibios_set_phb_msi_domain(). So why not save the pci host bridge specific
->> msi_domain in pci_host_bridge. Then pci devices could inherit the msi_domain from
->> its pci host bridge directly, no need to involve pci bus in the assignment.
-> 
-> But then, you would end-up maintaining another msi_domain field inside
-> the pci_host bridge structure. What do you gain by doing so?
+Now there's no user of irq_remapping_print_chip(), so kill it.
 
-My original thought is holding msi_domain field inside the pci_host_bridge is
-more simple than every bus maintaining the msi_domain, but this proposal has a
-disadvantage that sometimes we must setup for every device. I checked x86 DMAR code,
-and found most DMAR would report PCIe root port device associating the msi_domain, not the EP device.
-So pcibios_add_device could only associate these bridge device msi_domain, and its children
-devices will propagate from their parent bus(get msi_domain from its bridge).
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/irq_remapping.h |    2 --
+ drivers/iommu/irq_remapping.c        |   13 -------------
+ 2 files changed, 15 deletions(-)
 
-So now I agree your idea, please forgive my nagging :)
-
-Thanks!
-Yijing.
-
-> 
-> With this series, msi_domain has the nice property of always being tied
-> to a device (and struct pci_bus always has a device). We always have
-> phb->bus->dev.msi_domain within reach, and architecture code can decide
-> to override it on a per-device basis.
-> 
-> What else do you need? What am I missing from your proposal?
-> 
-> Thanks,
-> 
-> 	M.
-> 
-
-
+diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
+index 79f1a84e6a85..5622a4fc7cd6 100644
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -59,7 +59,6 @@ extern struct irq_domain *
+ irq_remapping_get_ir_irq_domain( struct irq_alloc_info *info);
+ extern struct irq_domain *
+ irq_remapping_get_irq_domain(struct irq_alloc_info *info);
+-extern void irq_remapping_print_chip(struct irq_data *data, struct seq_file *p);
+ 
+ /* Create PCI MSI/MSIx irqdomain, use @parent as the parent irqdomain. */
+ extern struct irq_domain *arch_create_msi_irq_domain(struct irq_domain *parent);
+@@ -115,6 +114,5 @@ irq_remapping_get_irq_domain(struct irq_alloc_info *info)
+ 	return NULL;
+ }
+ 
+-#define	irq_remapping_print_chip	NULL
+ #endif /* CONFIG_IRQ_REMAP */
+ #endif /* __X86_IRQ_REMAPPING_H */
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 3eaa822c30a9..558c804dbe11 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -204,19 +204,6 @@ static void ir_ack_apic_level(struct irq_data *data)
+ 	eoi_ioapic_irq(data->irq, irqd_cfg(data));
+ }
+ 
+-void irq_remapping_print_chip(struct irq_data *data, struct seq_file *p)
+-{
+-	/*
+-	 * Assume interrupt is remapped if the parent irqdomain isn't the
+-	 * vector domain, which is true for MSI, HPET and IOAPIC on x86
+-	 * platforms.
+-	 */
+-	if (data->domain && data->domain->parent != arch_get_ir_parent_domain())
+-		seq_printf(p, " IR-%s", data->chip->name);
+-	else
+-		seq_printf(p, " %s", data->chip->name);
+-}
+-
+ static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
+ {
+ 	seq_printf(p, " IR-%s", data->chip->name);
 -- 
-Thanks!
-Yijing
+1.7.10.4
 
