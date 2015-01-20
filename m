@@ -1,4 +1,4 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
@@ -21,16 +21,17 @@ Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
 	linux-acpi@vger.kernel.org
-Subject: [Patch Part1 v7 05/38] x86/uv: Use new irqdomain interfaces to allocate/free IRQ
-Date: Tue, 20 Jan 2015 11:08:08 +0800
-Message-Id: <1421723321-8386-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [Patch Part2 v4 07/33] x86/irq: Kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
+Date: Tue, 20 Jan 2015 13:51:27 +0800
+Message-Id: <1421733113-15704-8-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new irqdomain interfaces to allocate/free IRQ, so we could
-kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
+There's no user of irq_alloc_hwirqs(), irq_alloc_hwirq(), irq_free_hwirqs()
+and irq_free_hwirq() anymore, so kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ and
+related code.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
@@ -43,92 +44,70 @@ Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
 Cc: Randy Dunlap <rdunlap@infradead.org>
 Cc: Yinghai Lu <yinghai@kernel.org>
 Cc: Borislav Petkov <bp@alien8.de>
-Link: http://lkml.kernel.org/r/1416894816-23245-6-git-send-email-jiang.liu@linux.intel.com
+Link: http://lkml.kernel.org/r/1416901802-24211-17-git-send-email-jiang.liu@linux.intel.com
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- arch/x86/platform/uv/uv_irq.c |   27 +++++++++++----------------
- 1 file changed, 11 insertions(+), 16 deletions(-)
+ arch/x86/Kconfig              |    1 -
+ arch/x86/kernel/apic/vector.c |   34 ----------------------------------
+ 2 files changed, 35 deletions(-)
 
-diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
-index 0ce673645432..474912d03f40 100644
---- a/arch/x86/platform/uv/uv_irq.c
-+++ b/arch/x86/platform/uv/uv_irq.c
-@@ -12,6 +12,7 @@
- #include <linux/rbtree.h>
- #include <linux/slab.h>
- #include <linux/irq.h>
-+#include <linux/irqdomain.h>
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 89a530a5836e..66513678ad11 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -882,7 +882,6 @@ config X86_UP_IOAPIC
+ config X86_LOCAL_APIC
+ 	def_bool y
+ 	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_APIC || PCI_MSI
+-	select GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
+ 	select IRQ_DOMAIN_HIERARCHY
+ 	select PCI_MSI_IRQ_DOMAIN if PCI_MSI
  
- #include <asm/apic.h>
- #include <asm/uv/uv_irq.h>
-@@ -130,24 +131,14 @@ static int
- arch_enable_uv_irq(char *irq_name, unsigned int irq, int cpu, int mmr_blade,
- 		       unsigned long mmr_offset, int limit)
- {
--	const struct cpumask *eligible_cpu = cpumask_of(cpu);
- 	struct irq_cfg *cfg = irq_cfg(irq);
- 	unsigned long mmr_value;
- 	struct uv_IO_APIC_route_entry *entry;
--	int mmr_pnode, err;
--	unsigned int dest;
-+	int mmr_pnode;
- 
- 	BUILD_BUG_ON(sizeof(struct uv_IO_APIC_route_entry) !=
- 			sizeof(unsigned long));
- 
--	err = assign_irq_vector(irq, cfg, eligible_cpu);
--	if (err != 0)
--		return err;
--
--	err = apic->cpu_mask_to_apicid_and(eligible_cpu, eligible_cpu, &dest);
--	if (err != 0)
--		return err;
--
- 	if (limit == UV_AFFINITY_CPU)
- 		irq_set_status_flags(irq, IRQ_NO_BALANCING);
- 	else
-@@ -164,7 +155,7 @@ arch_enable_uv_irq(char *irq_name, unsigned int irq, int cpu, int mmr_blade,
- 	entry->polarity		= 0;
- 	entry->trigger		= 0;
- 	entry->mask		= 0;
--	entry->dest		= dest;
-+	entry->dest		= cfg->dest_apicid;
- 
- 	mmr_pnode = uv_blade_to_pnode(mmr_blade);
- 	uv_write_global_mmr64(mmr_pnode, mmr_offset, mmr_value);
-@@ -238,9 +229,13 @@ uv_set_irq_affinity(struct irq_data *data, const struct cpumask *mask,
- int uv_setup_irq(char *irq_name, int cpu, int mmr_blade,
- 		 unsigned long mmr_offset, int limit)
- {
--	int ret, irq = irq_alloc_hwirq(uv_blade_to_memory_nid(mmr_blade));
-+	int ret, irq;
-+	struct irq_alloc_info info;
- 
--	if (!irq)
-+	init_irq_alloc_info(&info, cpumask_of(cpu));
-+	irq = irq_domain_alloc_irqs(NULL, 1, uv_blade_to_memory_nid(mmr_blade),
-+				    &info);
-+	if (irq <= 0)
- 		return -EBUSY;
- 
- 	ret = arch_enable_uv_irq(irq_name, irq, cpu, mmr_blade, mmr_offset,
-@@ -248,7 +243,7 @@ int uv_setup_irq(char *irq_name, int cpu, int mmr_blade,
- 	if (ret == irq)
- 		uv_set_irq_2_mmr_info(irq, mmr_offset, mmr_blade);
- 	else
--		irq_free_hwirq(irq);
-+		irq_domain_free_irqs(irq, 1);
- 
- 	return ret;
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 4b8fad9aa685..31dc4a871673 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -660,40 +660,6 @@ void irq_force_complete_move(int irq)
  }
-@@ -283,6 +278,6 @@ void uv_teardown_irq(unsigned int irq)
- 			n = n->rb_right;
- 	}
- 	spin_unlock_irqrestore(&uv_irq_lock, irqflags);
--	irq_free_hwirq(irq);
-+	irq_domain_free_irqs(irq, 1);
- }
- EXPORT_SYMBOL_GPL(uv_teardown_irq);
+ #endif
+ 
+-/*
+- * Dynamic irq allocate and deallocation. Should be replaced by irq domains!
+- */
+-int arch_setup_hwirq(unsigned int irq, int node)
+-{
+-	struct irq_cfg *cfg;
+-	unsigned long flags;
+-	int ret;
+-
+-	cfg = alloc_irq_cfg(node);
+-	if (!cfg)
+-		return -ENOMEM;
+-
+-	raw_spin_lock_irqsave(&vector_lock, flags);
+-	ret = __assign_irq_vector(irq, cfg, apic->target_cpus());
+-	raw_spin_unlock_irqrestore(&vector_lock, flags);
+-
+-	if (!ret)
+-		irq_set_chip_data(irq, cfg);
+-	else
+-		free_irq_cfg(cfg);
+-	return ret;
+-}
+-
+-void arch_teardown_hwirq(unsigned int irq)
+-{
+-	struct irq_cfg *cfg = irq_cfg(irq);
+-
+-	free_remapped_irq(irq);
+-	clear_irq_vector(irq, cfg);
+-	irq_set_chip_data(irq, NULL);
+-	free_irq_cfg(cfg);
+-}
+-
+ static void __init print_APIC_field(int base)
+ {
+ 	int i;
 -- 
 1.7.10.4
 
