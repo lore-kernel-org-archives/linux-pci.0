@@ -1,309 +1,339 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:48855 "EHLO
-	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753849AbbAVUdk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Jan 2015 15:33:40 -0500
-Received: by mail-oi0-f45.google.com with SMTP id g201so3326002oib.4
-        for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2015 12:33:40 -0800 (PST)
-Date: Thu, 22 Jan 2015 14:33:36 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 07/16] ARM: integrator: convert PCI to use generic config
- accesses
-Message-ID: <20150122203336.GD13072@google.com>
-References: <1420857290-8373-1-git-send-email-robh@kernel.org>
- <1420857290-8373-8-git-send-email-robh@kernel.org>
- <CACRpkdbwKN9LenqrWeu4WykhdZOGAdxpC_BYr2cYpc2_cn5GfA@mail.gmail.com>
- <4938579.0KIk3QtTCP@wuerfel>
- <CACRpkdZSXWrVudiadVjbhQDS_zQrYttaytW-TUoeFUrc=beD1A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACRpkdZSXWrVudiadVjbhQDS_zQrYttaytW-TUoeFUrc=beD1A@mail.gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:33293 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753557AbbATF4H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 20 Jan 2015 00:56:07 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh@kernel.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org,
+	sfi-devel@simplefirmware.org
+Subject: [Patch Part2 v4 31/33] x86: Cleanup irq_domain ops
+Date: Tue, 20 Jan 2015 13:51:51 +0800
+Message-Id: <1421733113-15704-32-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 12, 2015 at 01:05:12AM +0100, Linus Walleij wrote:
-> On Sat, Jan 10, 2015 at 10:53 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Saturday 10 January 2015 22:40:22 Linus Walleij wrote:
-> >> >  static int v3_read_config(struct pci_bus *bus, unsigned int devfn, int where,
-> >> >                           int size, u32 *val)
-> >> >  {
-> >> > -       addr = v3_open_config_window(bus, devfn, where);
-> >> > +       int ret = pci_generic_config_read(bus, devfn, where, size, val);
-> >> >         v3_close_config_window();
-> >> > +       return ret;
-> >> >  }
-> >> >
-> >> >  static int v3_write_config(struct pci_bus *bus, unsigned int devfn, int where,
-> >> >                            int size, u32 val)
-> >> >  {
-> >> > +       int ret = pci_generic_config_write(bus, devfn, where, size, val);
-> >> >         v3_close_config_window();
-> >> > -       raw_spin_unlock_irqrestore(&v3_lock, flags);
-> >> > +       return ret;
-> >> >  }
-> >> >
-> >> >  static struct pci_ops pci_v3_ops = {
-> >> > +       .map_bus = v3_open_config_window,
-> >> >         .read   = v3_read_config,
-> >> >         .write  = v3_write_config,
-> >>
-> >> So .map_bus is called before every .read/.write operation I take it.
-> >>
-> >> Wouldn't it be proper to call the v3_close_config_window() from a
-> >> matching .unmap_bus() callback for symmetry?
-> >
-> > It would be nicer for integrator but useless for anything else, so
-> > I'd vote for leaving it the way Rob posted.
-> 
-> OK I buy that, throw in a comment about it in the code if there
-> is some time for iterating the patch.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-Would you prefer something like the following instead?  It keeps the
-v3_open/close symmetry, but it does break apart and duplicate some of the
-logic from v3_open_config_window().
+We have 3 identical copies of the ioapic domain ops for acpi, mpparse,
+and sfi. Have a global one in the io_apic code and be done with it.
 
-I can't build or test this.
+To avoid include hell in io_apic.h, create a private irqdomain header
+and include the generic irqdomain header from there.
 
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: x86@kernel.org
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h   |   29 ++---------------------------
+ arch/x86/include/asm/irqdomain.h |   34 ++++++++++++++++++++++++++++++++++
+ arch/x86/kernel/acpi/boot.c      |   13 +++----------
+ arch/x86/kernel/apic/io_apic.c   |    9 ++++++++-
+ arch/x86/kernel/devicetree.c     |   12 ++++++------
+ arch/x86/kernel/mpparse.c        |    9 +--------
+ arch/x86/platform/sfi/sfi.c      |   10 ++--------
+ 7 files changed, 56 insertions(+), 60 deletions(-)
+ create mode 100644 arch/x86/include/asm/irqdomain.h
 
-commit 3e0c269a560968002298d22ac47bde4bd45aea8e
-Author: Rob Herring <robh@kernel.org>
-Date:   Fri Jan 9 20:34:41 2015 -0600
-
-    ARM: integrator: Convert PCI to use generic config accessors
-    
-    Convert the integrator PCI driver to use the generic config access
-    functions.
-    
-    This changes accesses from __raw_readX/__raw_writeX to readX/writeX
-    variants.  The spinlock is removed because it is unnecessary.  The config
-    read and write functions are already protected with a spinlock and no
-    access can occur during the .pre_init function.
-    
-    Signed-off-by: Rob Herring <robh@kernel.org>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Acked-by: Linus Walleij <linus.walleij@linaro.org>
-    CC: Russell King <linux@arm.linux.org.uk>
-    CC: linux-arm-kernel@lists.infradead.org
-
-diff --git a/arch/arm/mach-integrator/pci_v3.c b/arch/arm/mach-integrator/pci_v3.c
-index c186a17c2cff..c1098729cf8a 100644
---- a/arch/arm/mach-integrator/pci_v3.c
-+++ b/arch/arm/mach-integrator/pci_v3.c
-@@ -324,7 +324,7 @@ static u64 pre_mem_pci_sz;
-  * configuration address space, you present the V3 with the following pattern
-  * (which is very nearly a type 1 (except that the lower two bits are 00 and
-  * not 01).   In order for this mapping to work you need to set up one of
-- * the local to PCI aperatures to 16Mbytes in length translating to
-+ * the local to PCI apertures to 16Mbytes in length translating to
-  * PCI configuration space starting at 0x0000.0000.
-  *
-  * PCI configuration cycles look like this:
-@@ -356,15 +356,14 @@ static u64 pre_mem_pci_sz;
-  *	 7:2	register number
-  *
-  */
--static DEFINE_RAW_SPINLOCK(v3_lock);
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index c7aa7cd90d3f..e4fd3cea0fab 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -96,7 +96,7 @@ struct IR_IO_APIC_route_entry {
+ } __attribute__ ((packed));
  
- #undef V3_LB_BASE_PREFETCH
- #define V3_LB_BASE_PREFETCH 0
+ struct irq_alloc_info;
+-struct irq_data;
++struct ioapic_domain_cfg;
  
--static void __iomem *v3_open_config_window(struct pci_bus *bus,
--					   unsigned int devfn, int offset)
-+static void v3_open_config_window(struct pci_bus *bus, unsigned int devfn,
-+				  int offset)
- {
--	unsigned int address, mapaddress, busnr;
-+	unsigned int mapaddress, busnr;
+ #define IOAPIC_AUTO			-1
+ #define IOAPIC_EDGE			0
+@@ -163,23 +163,6 @@ extern int restore_ioapic_entries(void);
+ extern void setup_ioapic_ids_from_mpc(void);
+ extern void setup_ioapic_ids_from_mpc_nocheck(void);
  
- 	busnr = bus->number;
- 
-@@ -381,14 +380,10 @@ static void __iomem *v3_open_config_window(struct pci_bus *bus,
- 		/*
- 		 * local bus segment so need a type 0 config cycle
- 		 *
--		 * build the PCI configuration "address" with one-hot in
--		 * A31-A11
--		 *
- 		 * mapaddress:
- 		 *  3:1 = config cycle (101)
- 		 *  0   = PCI A1 & A0 are 0 (0)
- 		 */
--		address = PCI_FUNC(devfn) << 8;
- 		mapaddress = V3_LB_MAP_TYPE_CONFIG;
- 
- 		if (slot > 12)
-@@ -396,26 +391,15 @@ static void __iomem *v3_open_config_window(struct pci_bus *bus,
- 			 * high order bits are handled by the MAP register
- 			 */
- 			mapaddress |= 1 << (slot - 5);
--		else
--			/*
--			 * low order bits handled directly in the address
--			 */
--			address |= 1 << (slot + 11);
- 	} else {
-         	/*
- 		 * not the local bus segment so need a type 1 config cycle
- 		 *
--		 * address:
--		 *  23:16 = bus number
--		 *  15:11 = slot number (7:3 of devfn)
--		 *  10:8  = func number (2:0 of devfn)
--		 *
- 		 * mapaddress:
- 		 *  3:1 = config cycle (101)
- 		 *  0   = PCI A1 & A0 from host bus (1)
- 		 */
- 		mapaddress = V3_LB_MAP_TYPE_CONFIG | V3_LB_MAP_AD_LOW_EN;
--		address = (busnr << 16) | (devfn << 8);
- 	}
- 
- 	/*
-@@ -432,8 +416,6 @@ static void __iomem *v3_open_config_window(struct pci_bus *bus,
- 	v3_writel(V3_LB_BASE1, v3_addr_to_lb_base(conf_mem.start) |
- 			V3_LB_BASE_ADR_SIZE_16MB | V3_LB_BASE_ENABLE);
- 	v3_writew(V3_LB_MAP1, mapaddress);
+-enum ioapic_domain_type {
+-	IOAPIC_DOMAIN_INVALID,
+-	IOAPIC_DOMAIN_LEGACY,
+-	IOAPIC_DOMAIN_STRICT,
+-	IOAPIC_DOMAIN_DYNAMIC,
+-};
 -
--	return PCI_CONFIG_VADDR + address + offset;
- }
- 
- static void v3_close_config_window(void)
-@@ -454,70 +436,66 @@ static void v3_close_config_window(void)
- 			V3_LB_BASE_ADR_SIZE_256MB | V3_LB_BASE_ENABLE);
- }
- 
--static int v3_read_config(struct pci_bus *bus, unsigned int devfn, int where,
--			  int size, u32 *val)
-+static void __iomem *v3_map_bus(struct pci_bus *bus,
-+					   unsigned int devfn, int offset)
- {
--	void __iomem *addr;
--	unsigned long flags;
--	u32 v;
-+	unsigned int busnr = bus->number;
-+	unsigned int address;
- 
--	raw_spin_lock_irqsave(&v3_lock, flags);
--	addr = v3_open_config_window(bus, devfn, where);
+-struct device_node;
+-struct irq_domain;
+-struct irq_domain_ops;
 -
--	switch (size) {
--	case 1:
--		v = __raw_readb(addr);
--		break;
-+	if (busnr == 0) {
-+		int slot = PCI_SLOT(devfn);
- 
--	case 2:
--		v = __raw_readw(addr);
--		break;
-+		/*
-+		 * build the PCI configuration "address" with function in
-+		 * A10-A8 and device one-hot in A31-A11
-+		 */
-+		address = PCI_FUNC(devfn) << 8;
- 
--	default:
--		v = __raw_readl(addr);
--		break;
-+		/*
-+		 * high order bits are handled by the MAP register;
-+		 * low order bits handled directly in the address
-+		 */
-+		if (slot <= 12)
-+			address |= 1 << (slot + 11);
-+	} else {
-+		/*
-+		 * not the local bus segment so need a type 1 config cycle
-+		 *
-+		 * address:
-+		 *  23:16 = bus number
-+		 *  15:11 = slot number (7:3 of devfn)
-+		 *  10:8  = func number (2:0 of devfn)
-+		 */
-+		address = (busnr << 16) | (devfn << 8);
- 	}
- 
--	v3_close_config_window();
--	raw_spin_unlock_irqrestore(&v3_lock, flags);
-+	return PCI_CONFIG_VADDR + address + offset;
-+}
+-struct ioapic_domain_cfg {
+-	enum ioapic_domain_type		type;
+-	const struct irq_domain_ops	*ops;
+-	struct device_node		*dev;
+-};
+-
+ extern int mp_find_ioapic(u32 gsi);
+ extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
+ extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags,
+@@ -189,15 +172,7 @@ extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 			      struct ioapic_domain_cfg *cfg);
+ extern int mp_unregister_ioapic(u32 gsi_base);
+ extern int mp_ioapic_registered(u32 gsi_base);
+-extern int mp_irqdomain_alloc(struct irq_domain *domain, unsigned int virq,
+-			      unsigned int nr_irqs, void *arg);
+-extern void mp_irqdomain_free(struct irq_domain *domain, unsigned int virq,
+-			      unsigned int nr_irqs);
+-extern void mp_irqdomain_activate(struct irq_domain *domain,
+-				  struct irq_data *irq_data);
+-extern void mp_irqdomain_deactivate(struct irq_domain *domain,
+-				    struct irq_data *irq_data);
+-extern int mp_irqdomain_ioapic_idx(struct irq_domain *domain);
 +
-+static int v3_read_config(struct pci_bus *bus, unsigned int devfn, int where,
-+			  int size, u32 *val)
-+{
-+	int ret;
+ extern void ioapic_set_alloc_attr(struct irq_alloc_info *info,
+ 				  int node, int trigger, int polarity);
  
--	*val = v;
--	return PCIBIOS_SUCCESSFUL;
-+	v3_open_config_window();
-+	ret = pci_generic_config_read(bus, devfn, where, size, val);
-+	v3_close_config_window();
-+	return ret;
+diff --git a/arch/x86/include/asm/irqdomain.h b/arch/x86/include/asm/irqdomain.h
+new file mode 100644
+index 000000000000..fe0d4c6636ec
+--- /dev/null
++++ b/arch/x86/include/asm/irqdomain.h
+@@ -0,0 +1,34 @@
++#ifndef _ASM_IRQDOMAIN_H
++#define _ASM_IRQDOMAIN_H
++
++#include <linux/irqdomain.h>
++
++enum ioapic_domain_type {
++	IOAPIC_DOMAIN_INVALID,
++	IOAPIC_DOMAIN_LEGACY,
++	IOAPIC_DOMAIN_STRICT,
++	IOAPIC_DOMAIN_DYNAMIC,
++};
++
++struct device_node;
++struct irq_data;
++
++struct ioapic_domain_cfg {
++	enum ioapic_domain_type		type;
++	const struct irq_domain_ops	*ops;
++	struct device_node		*dev;
++};
++
++extern const struct irq_domain_ops mp_ioapic_irqdomain_ops;
++
++extern int mp_irqdomain_alloc(struct irq_domain *domain, unsigned int virq,
++			      unsigned int nr_irqs, void *arg);
++extern void mp_irqdomain_free(struct irq_domain *domain, unsigned int virq,
++			      unsigned int nr_irqs);
++extern void mp_irqdomain_activate(struct irq_domain *domain,
++				  struct irq_data *irq_data);
++extern void mp_irqdomain_deactivate(struct irq_domain *domain,
++				    struct irq_data *irq_data);
++extern int mp_irqdomain_ioapic_idx(struct irq_domain *domain);
++
++#endif
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 5d91ceb248f0..581af1a36b21 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -31,12 +31,12 @@
+ #include <linux/module.h>
+ #include <linux/dmi.h>
+ #include <linux/irq.h>
+-#include <linux/irqdomain.h>
+ #include <linux/slab.h>
+ #include <linux/bootmem.h>
+ #include <linux/ioport.h>
+ #include <linux/pci.h>
+ 
++#include <asm/irqdomain.h>
+ #include <asm/pci_x86.h>
+ #include <asm/pgtable.h>
+ #include <asm/io_apic.h>
+@@ -400,20 +400,13 @@ static int mp_config_acpi_gsi(struct device *dev, u32 gsi, int trigger,
+ 	return 0;
  }
  
- static int v3_write_config(struct pci_bus *bus, unsigned int devfn, int where,
- 			   int size, u32 val)
+-static struct irq_domain_ops acpi_irqdomain_ops = {
+-	.alloc = mp_irqdomain_alloc,
+-	.free = mp_irqdomain_free,
+-	.activate = mp_irqdomain_activate,
+-	.deactivate = mp_irqdomain_deactivate,
+-};
+-
+ static int __init
+ acpi_parse_ioapic(struct acpi_subtable_header * header, const unsigned long end)
  {
--	void __iomem *addr;
--	unsigned long flags;
--
--	raw_spin_lock_irqsave(&v3_lock, flags);
--	addr = v3_open_config_window(bus, devfn, where);
--
--	switch (size) {
--	case 1:
--		__raw_writeb((u8)val, addr);
--		__raw_readb(addr);
--		break;
--
--	case 2:
--		__raw_writew((u16)val, addr);
--		__raw_readw(addr);
--		break;
--
--	case 4:
--		__raw_writel(val, addr);
--		__raw_readl(addr);
--		break;
--	}
-+	int ret;
+ 	struct acpi_madt_io_apic *ioapic = NULL;
+ 	struct ioapic_domain_cfg cfg = {
+ 		.type = IOAPIC_DOMAIN_DYNAMIC,
+-		.ops = &acpi_irqdomain_ops,
++		.ops = &mp_ioapic_irqdomain_ops,
+ 	};
  
-+	v3_open_config_window();
-+	ret = pci_generic_config_write(bus, devfn, where, size, val);
- 	v3_close_config_window();
--	raw_spin_unlock_irqrestore(&v3_lock, flags);
--
--	return PCIBIOS_SUCCESSFUL;
-+	return ret;
+ 	ioapic = (struct acpi_madt_io_apic *)header;
+@@ -758,7 +751,7 @@ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base)
+ 	u64 addr;
+ 	struct ioapic_domain_cfg cfg = {
+ 		.type = IOAPIC_DOMAIN_DYNAMIC,
+-		.ops = &acpi_irqdomain_ops,
++		.ops = &mp_ioapic_irqdomain_ops,
+ 	};
+ 
+ 	ioapic_id = acpi_get_ioapic_id(handle, gsi_base, &addr);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 32f37445980d..03fdb945886f 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -41,13 +41,13 @@
+ #include <linux/acpi.h>
+ #include <linux/module.h>
+ #include <linux/syscore_ops.h>
+-#include <linux/irqdomain.h>
+ #include <linux/freezer.h>
+ #include <linux/kthread.h>
+ #include <linux/jiffies.h>	/* time_after() */
+ #include <linux/slab.h>
+ #include <linux/bootmem.h>
+ 
++#include <asm/irqdomain.h>
+ #include <asm/idle.h>
+ #include <asm/io.h>
+ #include <asm/smp.h>
+@@ -2992,3 +2992,10 @@ int mp_irqdomain_ioapic_idx(struct irq_domain *domain)
+ {
+ 	return (int)(long)domain->host_data;
+ }
++
++const struct irq_domain_ops mp_ioapic_irqdomain_ops = {
++	.alloc		= mp_irqdomain_alloc,
++	.free		= mp_irqdomain_free,
++	.activate	= mp_irqdomain_activate,
++	.deactivate	= mp_irqdomain_deactivate,
++};
+diff --git a/arch/x86/kernel/devicetree.c b/arch/x86/kernel/devicetree.c
+index 9ca73a700912..421375b1efd5 100644
+--- a/arch/x86/kernel/devicetree.c
++++ b/arch/x86/kernel/devicetree.c
+@@ -4,7 +4,6 @@
+ #include <linux/bootmem.h>
+ #include <linux/export.h>
+ #include <linux/io.h>
+-#include <linux/irqdomain.h>
+ #include <linux/interrupt.h>
+ #include <linux/list.h>
+ #include <linux/of.h>
+@@ -17,6 +16,7 @@
+ #include <linux/of_pci.h>
+ #include <linux/initrd.h>
+ 
++#include <asm/irqdomain.h>
+ #include <asm/hpet.h>
+ #include <asm/apic.h>
+ #include <asm/pci_x86.h>
+@@ -216,11 +216,11 @@ static int dt_irqdomain_alloc(struct irq_domain *domain, unsigned int virq,
+ 	return mp_irqdomain_alloc(domain, virq, nr_irqs, &tmp);
  }
  
- static struct pci_ops pci_v3_ops = {
-+	.map_bus = v3_map_bus,
- 	.read	= v3_read_config,
- 	.write	= v3_write_config,
+-const struct irq_domain_ops ioapic_irq_domain_ops = {
+-	.alloc = dt_irqdomain_alloc,
+-	.free = mp_irqdomain_free,
+-	.activate = mp_irqdomain_activate,
+-	.deactivate = mp_irqdomain_deactivate,
++static const struct irq_domain_ops ioapic_irq_domain_ops = {
++	.alloc		= dt_irqdomain_alloc,
++	.free		= mp_irqdomain_free,
++	.activate	= mp_irqdomain_activate,
++	.deactivate	= mp_irqdomain_deactivate,
  };
-@@ -672,8 +650,6 @@ static void __init pci_v3_preinit(void)
- 	hook_fault_code(8, v3_pci_fault, SIGBUS, 0, "external abort on non-linefetch");
- 	hook_fault_code(10, v3_pci_fault, SIGBUS, 0, "external abort on non-linefetch");
  
--	raw_spin_lock_irqsave(&v3_lock, flags);
--
- 	/*
- 	 * Unlock V3 registers, but only if they were previously locked.
- 	 */
-@@ -736,8 +712,6 @@ static void __init pci_v3_preinit(void)
- 	v3_writew(V3_LB_CFG, v3_readw(V3_LB_CFG) | (1 << 10));
- 	v3_writeb(V3_LB_IMASK, 0x28);
- 	__raw_writel(3, ap_syscon_base + INTEGRATOR_SC_PCIENABLE_OFFSET);
--
--	raw_spin_unlock_irqrestore(&v3_lock, flags);
+ static void __init dtb_add_ioapic(struct device_node *dn)
+diff --git a/arch/x86/kernel/mpparse.c b/arch/x86/kernel/mpparse.c
+index aa4feee74dbe..30ca7607cbbb 100644
+--- a/arch/x86/kernel/mpparse.c
++++ b/arch/x86/kernel/mpparse.c
+@@ -19,8 +19,8 @@
+ #include <linux/module.h>
+ #include <linux/smp.h>
+ #include <linux/pci.h>
+-#include <linux/irqdomain.h>
+ 
++#include <asm/irqdomain.h>
+ #include <asm/mtrr.h>
+ #include <asm/mpspec.h>
+ #include <asm/pgalloc.h>
+@@ -113,13 +113,6 @@ static void __init MP_bus_info(struct mpc_bus *m)
+ 		pr_warn("Unknown bustype %s - ignoring\n", str);
  }
  
- static void __init pci_v3_postinit(void)
+-static struct irq_domain_ops mp_ioapic_irqdomain_ops = {
+-	.alloc = mp_irqdomain_alloc,
+-	.free = mp_irqdomain_free,
+-	.activate = mp_irqdomain_activate,
+-	.deactivate = mp_irqdomain_deactivate,
+-};
+-
+ static void __init MP_ioapic_info(struct mpc_ioapic *m)
+ {
+ 	struct ioapic_domain_cfg cfg = {
+diff --git a/arch/x86/platform/sfi/sfi.c b/arch/x86/platform/sfi/sfi.c
+index b66b194f9900..6c7111bbd1e9 100644
+--- a/arch/x86/platform/sfi/sfi.c
++++ b/arch/x86/platform/sfi/sfi.c
+@@ -25,8 +25,8 @@
+ #include <linux/init.h>
+ #include <linux/sfi.h>
+ #include <linux/io.h>
+-#include <linux/irqdomain.h>
+ 
++#include <asm/irqdomain.h>
+ #include <asm/io_apic.h>
+ #include <asm/mpspec.h>
+ #include <asm/setup.h>
+@@ -71,12 +71,6 @@ static int __init sfi_parse_cpus(struct sfi_table_header *table)
+ #endif /* CONFIG_X86_LOCAL_APIC */
+ 
+ #ifdef CONFIG_X86_IO_APIC
+-static struct irq_domain_ops sfi_ioapic_irqdomain_ops = {
+-	.alloc = mp_irqdomain_alloc,
+-	.free = mp_irqdomain_free,
+-	.activate = mp_irqdomain_activate,
+-	.deactivate = mp_irqdomain_deactivate,
+-};
+ 
+ static int __init sfi_parse_ioapic(struct sfi_table_header *table)
+ {
+@@ -85,7 +79,7 @@ static int __init sfi_parse_ioapic(struct sfi_table_header *table)
+ 	int i, num;
+ 	struct ioapic_domain_cfg cfg = {
+ 		.type = IOAPIC_DOMAIN_STRICT,
+-		.ops = &sfi_ioapic_irqdomain_ops,
++		.ops = &mp_ioapic_irqdomain_ops,
+ 	};
+ 
+ 	sb = (struct sfi_table_simple *)table;
+-- 
+1.7.10.4
+
