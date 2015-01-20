@@ -1,182 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:44655 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753462AbbA3SHV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 30 Jan 2015 13:07:21 -0500
-Message-ID: <54CBC823.3020905@ti.com>
-Date: Fri, 30 Jan 2015 13:06:27 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Catalin Marinas <catalin.marinas@arm.com>
-CC: Robin Murphy <Robin.Murphy@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v4 3/6] of: fix size when dma-range is not used
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com> <1422052359-12384-4-git-send-email-m-karicheri2@ti.com> <54C77616.80301@arm.com> <54C7DF13.20402@ti.com> <20150128110523.GC6646@e104818-lin.cambridge.arm.com> <54C9068D.8050701@arm.com> <20150128173048.GE31752@e104818-lin.cambridge.arm.com>
-In-Reply-To: <20150128173048.GE31752@e104818-lin.cambridge.arm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v7 25/38] x86/MSI: Replace msi_update_msg() with irq_chip_compose_msi_msg()
+Date: Tue, 20 Jan 2015 11:08:28 +0800
+Message-Id: <1421723321-8386-26-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/28/2015 12:30 PM, Catalin Marinas wrote:
-> On Wed, Jan 28, 2015 at 03:55:57PM +0000, Robin Murphy wrote:
->> On 28/01/15 11:05, Catalin Marinas wrote:
->>> On Tue, Jan 27, 2015 at 06:55:15PM +0000, Murali Karicheri wrote:
->>>> How about having the logic like this?
->>>>
->>>> 	ret = of_dma_get_range(np,&dma_addr,&paddr,&size);
->>>> 	if (ret<  0) {
->>>> 		dma_addr = offset = 0;
->>>> 		size = dev->coherent_dma_mask + 1;
->>>> 	} else {
->>>> 		offset = PFN_DOWN(paddr - dma_addr);
->>>> 		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
->>>> 	}
->>>>
->>>> 	if (is_power_of_2(size + 1))
->>>> 		size = size + 1;
->>>> 	else if (!is_power_of_2(size))
->>>> 	{
->>>> 		dev_err(dev, "invalid size\n");
->>>> 		return;
->>>> 	}
->>>
->>> In of_dma_configure(), we currently assume that the default coherent
->>> mask is 32-bit. In this thread:
->>>
->>> http://article.gmane.org/gmane.linux.kernel/1835096
->>>
->>> we talked about setting the coherent mask based on size automatically.
->>> I'm not sure about the size but I think we can assume is 32-bit mask + 1
->>> if it is not specified in the DT. Instead of just assuming a default
->>> mask, let's assume a default size and create the mask based on this
->>> (untested):
->>>
->>> diff --git a/drivers/of/platform.c b/drivers/of/platform.c
->>> index 5b33c6a21807..9ff8d1286b44 100644
->>> --- a/drivers/of/platform.c
->>> +++ b/drivers/of/platform.c
->>> @@ -170,10 +170,10 @@ static void of_dma_configure(struct device *dev)
->>>    	struct iommu_ops *iommu;
->>>
->>>    	/*
->>> -	 * Set default dma-mask to 32 bit. Drivers are expected to setup
->>> -	 * the correct supported dma_mask.
->>> +	 * Set default size to cover the 32-bit. Drivers are expected to setup
->>> +	 * the correct size and dma_mask.
->>>    	 */
->>> -	dev->coherent_dma_mask = DMA_BIT_MASK(32);
->>> +	size = 1ULL<<  32;
->>>
->>>    	/*
->>>    	 * Set it to coherent_dma_mask by default if the architecture
->>> @@ -185,13 +185,24 @@ static void of_dma_configure(struct device *dev)
->>>    	ret = of_dma_get_range(dev->of_node,&dma_addr,&paddr,&size);
->>>    	if (ret<  0) {
->>>    		dma_addr = offset = 0;
->>> -		size = dev->coherent_dma_mask;
->>>    	} else {
->>>    		offset = PFN_DOWN(paddr - dma_addr);
->>>    		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", dev->dma_pfn_offset);
->>>    	}
->>>    	dev->dma_pfn_offset = offset;
->>>
->>> +	/*
->>> +	 * Workaround for DTs setting the size to a mask or 0.
->>> +	 */
->>> +	if (is_power_of_2(size + 1))
->>> +		size += 1;
->>
->> In fact, since the ilog2 below ends up effectively rounding down, we
->> might as well do away with this check as well and just add 1
->> unconditionally. The only time it makes any difference is when we want
->> it to anyway!
->
-> Well, we could simply ignore the is_power_of_2() check but without
-> incrementing size as we don't know what arch_setup_dma_ops() does with
-> it.
->
-> I think we can remove this check altogether (we leaved without it for a
-> while) but we need to add 1 when calculating the mask:
->
-> 	dev->coherent_dma_mask = min(DMA_BIT_MASK(32),
-> 				     DMA_BIT_MASK(ilog2(size + 1)));
->
-For Keystone, the dma_addr is to be taken care as well to determine the 
-mask. The above will not work.
+Function irq_chip_compose_msi_msg() can achieve the same goal as
+msi_update_msg(), so kill msi_update_msg().
 
-Based on the discussion so far, this is the function I have come up with 
-incorporating the suggestions. Please review this and see if I have 
-missed out any. This works fine on Keystone.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Link: http://lkml.kernel.org/r/1416894816-23245-26-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+---
+ arch/x86/kernel/apic/msi.c |   19 ++-----------------
+ 1 file changed, 2 insertions(+), 17 deletions(-)
 
-void of_dma_configure(struct device *dev, struct device_node *np)
-{
-	u64 dma_addr = 0, paddr, size;
-	int ret;
-	bool coherent;
-	unsigned long offset = 0;
-	struct iommu_ops *iommu;
-
-	/*
-	 * Set default size to cover the 32-bit. Drivers are expected to setup
-	 * the correct size and dma_mask.
-   	 */
-	size = 1ULL << 32;
-
-	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
-	if (!ret) {
-		offset = PFN_DOWN(paddr - dma_addr);
-		if (!size) {
-			dev_err(dev, "Invalid size (%llx)\n",
-				size);
-			return;
-		}
-		if (size & 1) {
-			size = size + 1;
-			dev_warn(dev, "Incorrect usage of size (%llx)\n",
-				 size);
-		}
-		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
-	}
-	dev->dma_pfn_offset = offset;
-
-	/*
-	 * Coherent DMA masks larger than 32-bit must be explicitly set by the
-	 * driver.
-	 */
-	dev->coherent_dma_mask = min(DMA_BIT_MASK(32),
-				     DMA_BIT_MASK(ilog2(dma_addr + size)));
-	/*
-	 * Set dma_mask to coherent_dma_mask by default if the architecture
-	 * code has not set it.
-	 */
-	if (!dev->dma_mask)
-		dev->dma_mask = &dev->coherent_dma_mask;
-
-	coherent = of_dma_is_coherent(np);
-	dev_dbg(dev, "device is%sdma coherent\n",
-		coherent ? " " : " not ");
-
-	iommu = of_iommu_configure(dev, np);
-	dev_dbg(dev, "device is%sbehind an iommu\n",
-		iommu ? " " : " not ");
-
-	arch_setup_dma_ops(dev, dma_addr, size, iommu, coherent);
-}
-
-
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 8e8f2435f25e..15429aa112fe 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -53,19 +53,6 @@ static void irq_msi_compose_msg(struct irq_data *data, struct msi_msg *msg)
+ 		MSI_DATA_VECTOR(cfg->vector);
+ }
+ 
+-static void msi_update_msg(struct msi_msg *msg, struct irq_data *irq_data)
+-{
+-	struct irq_cfg *cfg = irqd_cfg(irq_data);
+-
+-	msg->data &= ~MSI_DATA_VECTOR_MASK;
+-	msg->data |= MSI_DATA_VECTOR(cfg->vector);
+-	msg->address_lo &= ~MSI_ADDR_DEST_ID_MASK;
+-	msg->address_lo |= MSI_ADDR_DEST_ID(cfg->dest_apicid);
+-	if (x2apic_enabled())
+-		msg->address_hi = MSI_ADDR_BASE_HI |
+-				  MSI_ADDR_EXT_DEST_ID(cfg->dest_apicid);
+-}
+-
+ /*
+  * IRQ Chip for MSI PCI/PCI-X/PCI-Express Devices,
+  * which implement the MSI or MSI-X Capability Structure.
+@@ -198,8 +185,7 @@ dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 
+ 	ret = parent->chip->irq_set_affinity(parent, mask, force);
+ 	if (ret >= 0) {
+-		dmar_msi_read(data->irq, &msg);
+-		msi_update_msg(&msg, data);
++		irq_chip_compose_msi_msg(data, &msg);
+ 		dmar_msi_write(data->irq, &msg);
+ 	}
+ 
+@@ -329,8 +315,7 @@ static int hpet_msi_set_affinity(struct irq_data *data,
+ 
+ 	ret = parent->chip->irq_set_affinity(parent, mask, force);
+ 	if (ret >= 0 && ret != IRQ_SET_MASK_OK_DONE) {
+-		hpet_msi_read(data->handler_data, &msg);
+-		msi_update_msg(&msg, data);
++		irq_chip_compose_msi_msg(data, &msg);
+ 		hpet_msi_write(data->handler_data, &msg);
+ 	}
+ 
 -- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+1.7.10.4
+
