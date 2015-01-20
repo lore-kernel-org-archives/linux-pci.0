@@ -1,76 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:35126 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751116AbbA2OqA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jan 2015 09:46:00 -0500
-MIME-Version: 1.0
-In-Reply-To: <20150128234937.20644.9400.stgit@dusk.lan>
-References: <20150128234935.20644.89300.stgit@dusk.lan> <20150128234937.20644.9400.stgit@dusk.lan>
-From: Rob Herring <robherring2@gmail.com>
-Date: Thu, 29 Jan 2015 08:45:37 -0600
-Message-ID: <CAL_JsqKMm=r+57ShskgbtNqnCGF1yKYDSJJFQ7o05keNzh5z+g@mail.gmail.com>
-Subject: Re: [PATCH 02/24] Documentation: DT bindings: add more chip
- compatible strings for Tegra PCIe
-To: Paul Walmsley <paul@pwsan.com>
-Cc: Mark Rutland <mark.rutland@arm.com>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
+Subject: [Patch Part2 v4 14/33] irq_remapping/vt-d: Move struct irq_2_iommu into intel_irq_remapping.c
+Date: Tue, 20 Jan 2015 13:51:34 +0800
+Message-Id: <1421733113-15704-15-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 28, 2015 at 5:49 PM, Paul Walmsley <paul@pwsan.com> wrote:
->
-> Add compatible strings for the PCIe IP blocks present on several Tegra
-> chips.  The primary objective here is to avoid checkpatch warnings,
-> per:
->
-> http://marc.info/?l=linux-tegra&m=142201349727836&w=2
->
-> Signed-off-by: Paul Walmsley <paul@pwsan.com>
-> Cc: Thierry Reding <thierry.reding@gmail.com>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: Pawel Moll <pawel.moll@arm.com>
-> Cc: Mark Rutland <mark.rutland@arm.com>
-> Cc: Ian Campbell <ijc+devicetree@hellion.org.uk>
-> Cc: Kumar Gala <galak@codeaurora.org>
-> Cc: Stephen Warren <swarren@wwwdotorg.org>
-> Cc: Alexandre Courbot <gnurou@gmail.com>
-> Cc: linux-tegra@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Cc: devicetree@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> ---
->  .../bindings/pci/nvidia,tegra20-pcie.txt           |    2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-> index d763e047c6ae..e772884f1c33 100644
-> --- a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-> @@ -5,6 +5,8 @@ Required properties:
->    - "nvidia,tegra20-pcie"
->    - "nvidia,tegra30-pcie"
->    - "nvidia,tegra124-pcie"
-> +  - "nvidia,tegra132-pcie" (not yet matched in the driver)
-> +  - "nvidia,tegra210-pcie" (not yet matched in the driver)
+Now only intel_irq_remapping.c access irq_2_iommu, so move it from
+hw_irq.h into intel_irq_remapping.c.
 
-Whether the driver matches or not is irrelevant to the binding and may
-change over time. Does this mean the driver matches on something else
-or Tegra132 is not yet supported in the driver? If the former, what is
-important is what are the valid combinations of compatible properties
-and that is not captured here. In other words, what is the fallback
-compatible string for each chip?
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: iommu@lists.linux-foundation.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Joerg Roedel <joro@8bytes.org>
+Link: http://lkml.kernel.org/r/1416901802-24211-24-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Joerg Roedel <jroedel@suse.de>
+---
+ arch/x86/include/asm/hw_irq.h       |    9 ---------
+ drivers/iommu/intel_irq_remapping.c |    7 +++++++
+ 2 files changed, 7 insertions(+), 9 deletions(-)
 
-The same comments apply to the rest of the series.
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 88632ea75fe0..3520f71f168b 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -95,14 +95,6 @@ extern void trace_call_function_single_interrupt(void);
+ #endif /* CONFIG_TRACING */
+ 
+ #ifdef CONFIG_IRQ_REMAP
+-/* Intel specific interrupt remapping information */
+-struct irq_2_iommu {
+-	struct intel_iommu *iommu;
+-	u16 irte_index;
+-	u16 sub_handle;
+-	u8  irte_mask;
+-};
+-
+ /* AMD specific interrupt remapping information */
+ struct irq_2_irte {
+ 	u16 devid; /* Device ID for IRTE table */
+@@ -194,7 +186,6 @@ struct irq_cfg {
+ 	u8			move_in_progress : 1;
+ #ifdef CONFIG_IRQ_REMAP
+ 	union {
+-		struct irq_2_iommu irq_2_iommu;
+ 		struct irq_2_irte  irq_2_irte;
+ 	};
+ #endif
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 21fc899e7c49..8a71ef6af93c 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -32,6 +32,13 @@ struct hpet_scope {
+ 	unsigned int devfn;
+ };
+ 
++struct irq_2_iommu {
++	struct intel_iommu *iommu;
++	u16 irte_index;
++	u16 sub_handle;
++	u8  irte_mask;
++};
++
+ struct intel_ir_data {
+ 	struct irq_2_iommu			irq_2_iommu;
+ 	struct irte				irte_entry;
+-- 
+1.7.10.4
 
-Rob
