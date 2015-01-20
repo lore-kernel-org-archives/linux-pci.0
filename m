@@ -1,67 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:50867 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756767AbbA1UXW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 28 Jan 2015 15:23:22 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Len Brown <lenb@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [Patch v2 05/22] ACPI: Let the parser return false for disabled resources
-Date: Wed, 28 Jan 2015 18:57:23 +0800
-Message-Id: <1422442660-455-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v7 31/38] x86/apb_timer: Remove unused function is_apbt_capable()
+Date: Tue, 20 Jan 2015 11:08:34 +0800
+Message-Id: <1421723321-8386-32-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 
-If the parser disables a resource during parsing, let it return false,
-so the calling code does not need to implement further checks.
+Remove the function is_apbt_capable() that is not used anywhere.
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+This was partially found by using a static code analysis program called cppcheck.
+
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/acpi/resource.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ arch/x86/kernel/apb_timer.c |    8 --------
+ 1 file changed, 8 deletions(-)
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 16d291c60277..cdb1a3c4a0b9 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -219,10 +219,10 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
- 		res->flags = IORESOURCE_BUS;
- 		break;
- 	default:
--		res->flags = 0;
-+		return false;
- 	}
- 
--	return true;
-+	return !(res->flags & IORESOURCE_DISABLED);
+diff --git a/arch/x86/kernel/apb_timer.c b/arch/x86/kernel/apb_timer.c
+index 7cfdc5467922..ede92c3364d3 100644
+--- a/arch/x86/kernel/apb_timer.c
++++ b/arch/x86/kernel/apb_timer.c
+@@ -135,14 +135,6 @@ static inline void apbt_clear_mapping(void)
+ 	apbt_virt_address = NULL;
  }
- EXPORT_SYMBOL_GPL(acpi_dev_resource_address_space);
  
-@@ -268,10 +268,10 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
- 		res->flags = IORESOURCE_BUS;
- 		break;
- 	default:
--		res->flags = 0;
-+		return false;
- 	}
- 
--	return true;
-+	return !(res->flags & IORESOURCE_DISABLED);
- }
- EXPORT_SYMBOL_GPL(acpi_dev_resource_ext_address_space);
- 
+-/*
+- * APBT timer interrupt enable / disable
+- */
+-static inline int is_apbt_capable(void)
+-{
+-	return apbt_virt_address ? 1 : 0;
+-}
+-
+ static int __init apbt_clockevent_register(void)
+ {
+ 	struct sfi_timer_table_entry *mtmr;
 -- 
 1.7.10.4
 
