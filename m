@@ -9,7 +9,8 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
 	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>
+	Dimitri Sivanich <sivanich@sgi.com>,
+	Joerg Roedel <joro@8bytes.org>
 Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	David Cohen <david.a.cohen@linux.intel.com>,
@@ -17,130 +18,208 @@ Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	David Vrabel <david.vrabel@citrix.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch Part1 v7 00/38] Convert x86 to hierarchy irqdomain and stacked irqchip
-Date: Tue, 20 Jan 2015 11:08:03 +0800
-Message-Id: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	iommu@lists.linux-foundation.org
+Subject: [Patch Part2 v4 11/33] irq_remapping/amd: Clean up unsued code
+Date: Tue, 20 Jan 2015 13:51:31 +0800
+Message-Id: <1421733113-15704-12-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
-	The generic hierarchy irqdomain and stacked irqchip implementation
-has been merged into v3.19, so this patch set converts x86 interupt
-management to hierarchy irqdomain and stacked irqchip. I will send out
-another following-on patch set to clean up code and interfaces obseleted
-by this patch set.
+Now we have converted to hierarchy irqdomain, so clean up unused code.
 
-	This patch set has been reviewed several times and it missed v3.19
-merging because several got fixed just before the merging window.
-	The main changes since last review are:
-1) Rebased the patch set onto v3.19-rc5.
-2) Merged bugfixes into the patch introducing the bug so it won't break
-   bisecting.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: iommu@lists.linux-foundation.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Joerg Roedel <joro@8bytes.org>
+Link: http://lkml.kernel.org/r/1416901802-24211-21-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Joerg Roedel <jroedel@suse.de>
+---
+ drivers/iommu/amd_iommu.c |  144 ---------------------------------------------
+ 1 file changed, 144 deletions(-)
 
-Hi Thomas,
-	Rafael needs more time to review the patch set to refine ACPI
-resource paring interface, and we are nearing to v3.19-rc6. So it would
-be helpful to move onto the x86 hierarchy irqdomain patch set first, so
-we may catch up with v3.20 merging window.
-Thanks!
-Gerry
-
-Jiang Liu (36):
-  x86/irq: Save destination CPU ID in irq_cfg
-  x86/irq: Use hierarchy irqdomain to manage CPU interrupt vectors
-  x86/hpet: Use new irqdomain interfaces to allocate/free IRQ
-  x86/MSI: Use new irqdomain interfaces to allocate/free IRQ
-  x86/uv: Use new irqdomain interfaces to allocate/free IRQ
-  x86/htirq: Use new irqdomain interfaces to allocate/free IRQ
-  x86/dmar: Use new irqdomain interfaces to allocate/free IRQ
-  irq_remapping: Introduce new interfaces to support hierarchy
-    irqdomain
-  irq_remapping/vt-d: Change prototypes to prepare for enabling
-    hierarchy irqdomain
-  irq_remapping/vt-d: Enhance Intel IR driver to suppport hierarchy
-    irqdomain
-  irq_remapping/amd: Enhance AMD IR driver to suppport hierarchy
-    irqdomain
-  x86/hpet: Enhance HPET IRQ to support hierarchy irqdomain
-  x86/MSI: Use hierarchy irqdomain to manage MSI interrupts
-  x86/irq: Directly call native_compose_msi_msg() for DMAR IRQ
-  irq_remapping/vt-d: Clean up unused MSI related code
-  irq_remapping/amd: Clean up unused MSI related code
-  irq_remapping: Clean up unused MSI related code
-  x86/MSI: Clean up unused MSI related code and interfaces
-  iommu/vt-d: Refine the interfaces to create IRQ for DMAR unit
-  x86/irq: Use hierarchy irqdomain to manage DMAR interrupts
-  x86/htirq: Use hierarchy irqdomain to manage Hypertransport
-    interrupts
-  x86/uv: Use hierarchy irqdomain to manage UV interrupts
-  x86/irq: Normalize x86 irq_chip name
-  x86/MSI: Simplify the way to deal with remapped MSI interrupts
-  x86/MSI: Replace msi_update_msg() with irq_chip_compose_msi_msg()
-  x86/irq: Implement irq_chip.irq_write_msi_msg for MSI/DMAR/HPET
-    irq_chips
-  x86/irq: Simplify MSI/DMAR/HPET implementation by using common code
-  irq_remapping: Kill unused function irq_remapping_print_chip()
-  x86/intel-mid, trivial: Refine code syntax for sfi_parse_mtmr()
-  x86/irq: Kill unused pre_init_apic_IRQ0()
-  x86/irq: Prepare IOAPIC interfaces to support hierarchy irqdomain
-  x86/irq: Implement callbacks to enable hierarchy irqdomain on IOAPICs
-  x86/irq: Refine the way to allocate irq_cfg for legacy IRQs
-  x86/irq: Simplify the way to print IOAPIC entry
-  x86/irq: Introduce helper functions to support hierarchy irqdomain
-    for IOAPIC
-  x86/irq: Convert IOAPIC to use hierarchy irqdomain interfaces
-
-Rickard Strandqvist (1):
-  x86/apb_timer: Remove unused function is_apbt_capable()
-
-Thomas Gleixner (1):
-  x86/intel-mid: Delay initialization of APB timer
-
- arch/ia64/include/asm/irq_remapping.h              |    2 -
- arch/ia64/kernel/msi_ia64.c                        |   30 +-
- arch/x86/Kconfig                                   |    4 +-
- arch/x86/include/asm/hpet.h                        |   16 +-
- arch/x86/include/asm/hw_irq.h                      |   91 +++
- arch/x86/include/asm/io_apic.h                     |   25 +-
- arch/x86/include/asm/irq_remapping.h               |   45 +-
- arch/x86/include/asm/msi.h                         |    7 +
- arch/x86/include/asm/pci.h                         |    5 -
- arch/x86/include/asm/x86_init.h                    |    4 -
- arch/x86/kernel/acpi/boot.c                        |   20 +-
- arch/x86/kernel/apb_timer.c                        |   12 -
- arch/x86/kernel/apic/htirq.c                       |  173 ++++--
- arch/x86/kernel/apic/io_apic.c                     |  600 +++++++++++++++-----
- arch/x86/kernel/apic/msi.c                         |  416 ++++++++------
- arch/x86/kernel/apic/vector.c                      |  205 ++++++-
- arch/x86/kernel/devicetree.c                       |   37 +-
- arch/x86/kernel/hpet.c                             |   57 +-
- arch/x86/kernel/mpparse.c                          |    6 +-
- arch/x86/kernel/x86_init.c                         |    2 -
- arch/x86/pci/intel_mid_pci.c                       |    6 +-
- .../platform/intel-mid/device_libs/platform_wdt.c  |    5 +-
- arch/x86/platform/intel-mid/intel-mid.c            |   18 +-
- arch/x86/platform/intel-mid/sfi.c                  |   30 +-
- arch/x86/platform/sfi/sfi.c                        |    5 +-
- arch/x86/platform/uv/uv_irq.c                      |  299 ++++------
- drivers/iommu/amd_iommu.c                          |  376 +++++++++---
- drivers/iommu/amd_iommu_init.c                     |    4 +
- drivers/iommu/amd_iommu_proto.h                    |    9 +
- drivers/iommu/amd_iommu_types.h                    |    5 +
- drivers/iommu/dmar.c                               |   19 +-
- drivers/iommu/intel_irq_remapping.c                |  451 ++++++++++-----
- drivers/iommu/irq_remapping.c                      |  178 ++----
- drivers/iommu/irq_remapping.h                      |   20 +-
- drivers/pci/htirq.c                                |   48 +-
- include/linux/dmar.h                               |    3 +-
- include/linux/htirq.h                              |   22 +-
- include/linux/intel-iommu.h                        |    4 +
- 38 files changed, 2100 insertions(+), 1159 deletions(-)
- create mode 100644 arch/x86/include/asm/msi.h
-
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index c3efde454220..c43f5dd66c71 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -3999,22 +3999,6 @@ out:
+ 	return index;
+ }
+ 
+-static int get_irte(u16 devid, int index, union irte *irte)
+-{
+-	struct irq_remap_table *table;
+-	unsigned long flags;
+-
+-	table = get_irq_table(devid, false);
+-	if (!table)
+-		return -ENOMEM;
+-
+-	spin_lock_irqsave(&table->lock, flags);
+-	irte->val = table->table[index];
+-	spin_unlock_irqrestore(&table->lock, flags);
+-
+-	return 0;
+-}
+-
+ static int modify_irte(u16 devid, int index, union irte irte)
+ {
+ 	struct irq_remap_table *table;
+@@ -4061,131 +4045,6 @@ static void free_irte(u16 devid, int index)
+ 	iommu_completion_wait(iommu);
+ }
+ 
+-static int setup_ioapic_entry(int irq, struct IO_APIC_route_entry *entry,
+-			      unsigned int destination, int vector,
+-			      struct io_apic_irq_attr *attr)
+-{
+-	struct irq_remap_table *table;
+-	struct irq_2_irte *irte_info;
+-	struct irq_cfg *cfg;
+-	union irte irte;
+-	int ioapic_id;
+-	int index;
+-	int devid;
+-	int ret;
+-
+-	cfg = irq_cfg(irq);
+-	if (!cfg)
+-		return -EINVAL;
+-
+-	irte_info = &cfg->irq_2_irte;
+-	ioapic_id = mpc_ioapic_id(attr->ioapic);
+-	devid     = get_ioapic_devid(ioapic_id);
+-
+-	if (devid < 0)
+-		return devid;
+-
+-	table = get_irq_table(devid, true);
+-	if (table == NULL)
+-		return -ENOMEM;
+-
+-	index = attr->ioapic_pin;
+-
+-	/* Setup IRQ remapping info */
+-	cfg->remapped	      = 1;
+-	irte_info->devid      = devid;
+-	irte_info->index      = index;
+-
+-	/* Setup IRTE for IOMMU */
+-	irte.val		= 0;
+-	irte.fields.vector      = vector;
+-	irte.fields.int_type    = apic->irq_delivery_mode;
+-	irte.fields.destination = destination;
+-	irte.fields.dm          = apic->irq_dest_mode;
+-	irte.fields.valid       = 1;
+-
+-	ret = modify_irte(devid, index, irte);
+-	if (ret)
+-		return ret;
+-
+-	/* Setup IOAPIC entry */
+-	memset(entry, 0, sizeof(*entry));
+-
+-	entry->vector        = index;
+-	entry->mask          = 0;
+-	entry->trigger       = attr->trigger;
+-	entry->polarity      = attr->polarity;
+-
+-	/*
+-	 * Mask level triggered irqs.
+-	 */
+-	if (attr->trigger)
+-		entry->mask = 1;
+-
+-	return 0;
+-}
+-
+-static int set_affinity(struct irq_data *data, const struct cpumask *mask,
+-			bool force)
+-{
+-	struct irq_2_irte *irte_info;
+-	unsigned int dest, irq;
+-	struct irq_cfg *cfg;
+-	union irte irte;
+-	int err;
+-
+-	if (!config_enabled(CONFIG_SMP))
+-		return -1;
+-
+-	cfg       = irqd_cfg(data);
+-	irq       = data->irq;
+-	irte_info = &cfg->irq_2_irte;
+-
+-	if (!cpumask_intersects(mask, cpu_online_mask))
+-		return -EINVAL;
+-
+-	if (get_irte(irte_info->devid, irte_info->index, &irte))
+-		return -EBUSY;
+-
+-	if (assign_irq_vector(irq, cfg, mask))
+-		return -EBUSY;
+-
+-	err = apic->cpu_mask_to_apicid_and(cfg->domain, mask, &dest);
+-	if (err) {
+-		if (assign_irq_vector(irq, cfg, data->affinity))
+-			pr_err("AMD-Vi: Failed to recover vector for irq %d\n", irq);
+-		return err;
+-	}
+-
+-	irte.fields.vector      = cfg->vector;
+-	irte.fields.destination = dest;
+-
+-	modify_irte(irte_info->devid, irte_info->index, irte);
+-
+-	if (cfg->move_in_progress)
+-		send_cleanup_vector(cfg);
+-
+-	cpumask_copy(data->affinity, mask);
+-
+-	return 0;
+-}
+-
+-static int free_irq(int irq)
+-{
+-	struct irq_2_irte *irte_info;
+-	struct irq_cfg *cfg;
+-
+-	cfg = irq_cfg(irq);
+-	if (!cfg)
+-		return -EINVAL;
+-
+-	irte_info = &cfg->irq_2_irte;
+-
+-	free_irte(irte_info->devid, irte_info->index);
+-
+-	return 0;
+-}
+-
+ static int get_devid(struct irq_alloc_info *info)
+ {
+ 	int devid = -1;
+@@ -4258,9 +4117,6 @@ struct irq_remap_ops amd_iommu_irq_ops = {
+ 	.disable		= amd_iommu_disable,
+ 	.reenable		= amd_iommu_reenable,
+ 	.enable_faulting	= amd_iommu_enable_faulting,
+-	.setup_ioapic_entry	= setup_ioapic_entry,
+-	.set_affinity		= set_affinity,
+-	.free_irq		= free_irq,
+ 	.get_ir_irq_domain	= get_ir_irq_domain,
+ 	.get_irq_domain		= get_irq_domain,
+ };
 -- 
 1.7.10.4
 
