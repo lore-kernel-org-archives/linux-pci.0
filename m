@@ -1,147 +1,222 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH 10/28] PCI: Save sysdata in pci_host_bridge drvdata
-Date: Fri, 16 Jan 2015 09:44:08 +0800
-Message-ID: <1421372666-12288-11-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
-References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
+Subject: [Patch Part2 v4 06/33] x86/irq: Kill x86_io_apic_ops.eoi_ioapic_pin and related interfaces
+Date: Tue, 20 Jan 2015 13:51:26 +0800
+Message-Id: <1421733113-15704-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Save platform specific sysdata in pci_host_bridge
-drvdata, host bridge specific operation need to
-access it before the pci bus creation.
+Now there is no user of x86_io_apic_ops.eoi_ioapic_pin anymore, so kill
+it.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: iommu@lists.linux-foundation.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Yijing Wang <wangyijing@huawei.com>
+Cc: Grant Likely <grant.likely@linaro.org>
+Link: http://lkml.kernel.org/r/1416901802-24211-16-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Joerg Roedel <jroedel@suse.de>
 ---
- drivers/pci/host-bridge.c |    4 +++-
- drivers/pci/probe.c       |   18 ++++++++----------
- include/linux/pci.h       |    3 ++-
- 3 files changed, 13 insertions(+), 12 deletions(-)
+ arch/x86/include/asm/io_apic.h  |   12 ------------
+ arch/x86/include/asm/x86_init.h |    1 -
+ arch/x86/kernel/apic/io_apic.c  |   20 ++++----------------
+ arch/x86/kernel/x86_init.c      |    1 -
+ drivers/iommu/irq_remapping.c   |   19 -------------------
+ 5 files changed, 4 insertions(+), 49 deletions(-)
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index c9ee582..0b6ba5c 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -23,7 +23,8 @@ static void pci_release_host_bridge_dev(struct device *dev)
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 0ff68daa9949..3b54f0f9cbb7 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -150,10 +150,6 @@ struct irq_cfg;
+ extern void ioapic_insert_resources(void);
+ extern int arch_early_ioapic_init(void);
+ 
+-extern void eoi_ioapic_irq(unsigned int irq, struct irq_cfg *cfg);
+-
+-extern void native_eoi_ioapic_pin(int apic, int pin, int vector);
+-
+ extern int save_ioapic_entries(void);
+ extern void mask_ioapic_entries(void);
+ extern int restore_ioapic_entries(void);
+@@ -237,8 +233,6 @@ static inline void io_apic_modify(unsigned int apic, unsigned int reg, unsigned
+ 	x86_io_apic_ops.modify(apic, reg, value);
  }
  
- struct pci_host_bridge *pci_create_host_bridge(
--		struct device *parent, u32 db, struct list_head *resources)
-+		struct device *parent, u32 db,
-+		struct list_head *resources, void *sysdata)
- {
- 	int error;
- 	int bus = PCI_BUSNUM(db);
-@@ -58,6 +59,7 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	host->dev.parent = parent;
- 	INIT_LIST_HEAD(&host->windows);
- 	host->dev.release = pci_release_host_bridge_dev;
-+	dev_set_drvdata(&host->dev, sysdata);
- 	dev_set_name(&host->dev, "pci%04x:%02x", host->domain, 
- 			host->busnum);
+-extern void io_apic_eoi(unsigned int apic, unsigned int vector);
+-
+ extern void setup_IO_APIC(void);
+ extern void enable_IO_APIC(void);
+ extern void disable_IO_APIC(void);
+@@ -282,12 +276,6 @@ static inline void disable_ioapic_support(void) { }
+ #define native_io_apic_write		NULL
+ #define native_io_apic_modify		NULL
+ #define native_disable_io_apic		NULL
+-#define native_eoi_ioapic_pin		NULL
+-
+-static inline void setup_IO_APIC(void) { }
+-static inline void enable_IO_APIC(void) { }
+-static inline void setup_ioapic_dest(void) { }
+-
+ #endif
  
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 2e0b952..98a8d97 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1865,8 +1865,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+ #endif /* _ASM_X86_IO_APIC_H */
+diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+index f9f83cfabcaa..4ada3d3a0e86 100644
+--- a/arch/x86/include/asm/x86_init.h
++++ b/arch/x86/include/asm/x86_init.h
+@@ -191,7 +191,6 @@ struct x86_io_apic_ops {
+ 	void		(*write)  (unsigned int apic, unsigned int reg, unsigned int value);
+ 	void		(*modify) (unsigned int apic, unsigned int reg, unsigned int value);
+ 	void		(*disable)(void);
+-	void		(*eoi_ioapic_pin)(int apic, int pin, int vector);
+ };
+ 
+ extern struct x86_init_ops x86_init;
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index fff17afdfe5d..8690334ad40c 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -273,7 +273,7 @@ static __attribute_const__ struct io_apic __iomem *io_apic_base(int idx)
+ 		+ (mpc_ioapic_addr(idx) & ~PAGE_MASK);
  }
  
- static struct pci_bus *__pci_create_root_bus(
--		struct pci_host_bridge *bridge, struct pci_ops *ops,
--		void *sysdata)
-+		struct pci_host_bridge *bridge, struct pci_ops *ops)
+-void io_apic_eoi(unsigned int apic, unsigned int vector)
++static inline void io_apic_eoi(unsigned int apic, unsigned int vector)
  {
- 	int error;
- 	struct pci_bus *b;
-@@ -1882,7 +1881,7 @@ static struct pci_bus *__pci_create_root_bus(
- 	if (!b)
- 		return NULL;
- 
--	b->sysdata = sysdata;
-+	b->sysdata = dev_get_drvdata(&bridge->dev);
- 	b->ops = ops;
- 	b->number = b->busn_res.start = bridge->busnum;
- 	pci_bus_assign_domain_nr(b, parent);
-@@ -1954,11 +1953,11 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
+ 	struct io_apic __iomem *io_apic = io_apic_base(apic);
+ 	writel(vector, &io_apic->eoi);
+@@ -529,7 +529,7 @@ static void unmask_ioapic_irq(struct irq_data *data)
+  * Otherwise, we simulate the EOI message manually by changing the trigger
+  * mode to edge and then back to level, with RTE being masked during this.
+  */
+-void native_eoi_ioapic_pin(int apic, int pin, int vector)
++static void __eoi_ioapic_pin(int apic, int pin, int vector)
  {
- 	struct pci_host_bridge *host;
+ 	if (mpc_ioapic_ver(apic) >= 0x20) {
+ 		io_apic_eoi(apic, vector);
+@@ -560,19 +560,7 @@ void eoi_ioapic_pin(int vector, struct irq_cfg *cfg)
  
--	host = pci_create_host_bridge(parent, db, resources);
-+	host = pci_create_host_bridge(parent, db, resources, sysdata);
- 	if (!host)
- 		return NULL;
- 	
--	return __pci_create_root_bus(host, ops, sysdata);
-+	return __pci_create_root_bus(host, ops);
+ 	raw_spin_lock_irqsave(&ioapic_lock, flags);
+ 	for_each_irq_pin(entry, cfg->irq_2_pin)
+-		native_eoi_ioapic_pin(entry->apic, entry->pin, vector);
+-	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
+-}
+-
+-void eoi_ioapic_irq(unsigned int irq, struct irq_cfg *cfg)
+-{
+-	struct irq_pin_list *entry;
+-	unsigned long flags;
+-
+-	raw_spin_lock_irqsave(&ioapic_lock, flags);
+-	for_each_irq_pin(entry, cfg->irq_2_pin)
+-		x86_io_apic_ops.eoi_ioapic_pin(entry->apic, entry->pin,
+-					       cfg->vector);
++		__eoi_ioapic_pin(entry->apic, entry->pin, vector);
+ 	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
  }
  
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
-@@ -2025,8 +2024,7 @@ void pci_bus_release_busn_res(struct pci_bus *b)
- }
- 
- static struct pci_bus *__pci_scan_root_bus(
--		struct pci_host_bridge *host, struct pci_ops *ops,
--		void *sysdata)
-+		struct pci_host_bridge *host, struct pci_ops *ops)
- {
- 
- 	struct pci_host_bridge_window *window;
-@@ -2040,7 +2038,7 @@ static struct pci_bus *__pci_scan_root_bus(
- 			break;
+@@ -608,7 +596,7 @@ static void clear_IO_APIC_pin(unsigned int apic, unsigned int pin)
+ 			ioapic_write_entry(apic, pin, entry);
  		}
+ 		raw_spin_lock_irqsave(&ioapic_lock, flags);
+-		native_eoi_ioapic_pin(apic, pin, entry.vector);
++		__eoi_ioapic_pin(apic, pin, entry.vector);
+ 		raw_spin_unlock_irqrestore(&ioapic_lock, flags);
+ 	}
  
--	b = __pci_create_root_bus(host, ops, sysdata);
-+	b = __pci_create_root_bus(host, ops);
- 	if (!b) {
- 		pci_free_host_bridge(host);
- 		return NULL;
-@@ -2066,11 +2064,11 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
- {
- 	struct pci_host_bridge *host;
- 
--	host = pci_create_host_bridge(parent, db, resources);
-+	host = pci_create_host_bridge(parent, db, resources, sysdata);
- 	if (!host)
- 		return NULL;
- 
--	return __pci_scan_root_bus(host, ops, sysdata);
-+	return __pci_scan_root_bus(host, ops);
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index f7e8eab3a7c4..f612dc018fb6 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -144,5 +144,4 @@ struct x86_io_apic_ops x86_io_apic_ops = {
+ 	.write			= native_io_apic_write,
+ 	.modify			= native_io_apic_modify,
+ 	.disable		= native_disable_io_apic,
+-	.eoi_ioapic_pin		= native_eoi_ioapic_pin,
+ };
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 7baa54a13921..bca42550b1ad 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -43,21 +43,9 @@ static void irq_remapping_disable_io_apic(void)
+ 		disconnect_bsp_APIC(0);
  }
- EXPORT_SYMBOL(pci_scan_root_bus);
  
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5ee0033..3ee8436 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -419,7 +419,8 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+-static void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
+-{
+-	/*
+-	 * Intr-remapping uses pin number as the virtual vector
+-	 * in the RTE. Actual vector is programmed in
+-	 * intr-remapping table entry. Hence for the io-apic
+-	 * EOI we use the pin number.
+-	 */
+-	io_apic_eoi(apic, pin);
+-}
+-
+ static void __init irq_remapping_modify_x86_ops(void)
+ {
+ 	x86_io_apic_ops.disable		= irq_remapping_disable_io_apic;
+-	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
+ }
  
- int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
- struct pci_host_bridge *pci_create_host_bridge(
--		struct device *parent, u32 dombus, struct list_head *resources);
-+		struct device *parent, u32 dombus,
-+		struct list_head *resources, void *sysdata);
- /*
-  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
-  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
+ static __init int setup_nointremap(char *str)
+@@ -171,12 +159,6 @@ void ir_ack_apic_edge(struct irq_data *data)
+ 	ack_APIC_irq();
+ }
+ 
+-static void ir_ack_apic_level(struct irq_data *data)
+-{
+-	ack_APIC_irq();
+-	eoi_ioapic_irq(data->irq, irqd_cfg(data));
+-}
+-
+ static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
+ {
+ 	seq_printf(p, " IR-%s", data->chip->name);
+@@ -186,7 +168,6 @@ void irq_remap_modify_chip_defaults(struct irq_chip *chip)
+ {
+ 	chip->irq_print_chip = ir_print_prefix;
+ 	chip->irq_ack = ir_ack_apic_edge;
+-	chip->irq_eoi = ir_ack_apic_level;
+ }
+ 
+ bool setup_remapped_irq(int irq, struct irq_cfg *cfg, struct irq_chip *chip)
 -- 
-1.7.1
+1.7.10.4
 
