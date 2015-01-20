@@ -1,66 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from utopia.booyaka.com ([74.50.51.50]:59258 "EHLO
-	utopia.booyaka.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756228AbbA2BjB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jan 2015 20:39:01 -0500
-Subject: [PATCH 02/24] Documentation: DT bindings: add more chip compatible
- strings for Tegra PCIe
-From: Paul Walmsley <paul@pwsan.com>
-Cc: Mark Rutland <mark.rutland@arm.com>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	linux-pci@vger.kernel.org, Stephen Warren <swarren@wwwdotorg.org>,
-	linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-	devicetree@vger.kernel.org,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Kumar Gala <galak@codeaurora.org>, linux-tegra@vger.kernel.org
-Date: Wed, 28 Jan 2015 16:49:37 -0700
-Message-ID: <20150128234937.20644.9400.stgit@dusk.lan>
-In-Reply-To: <20150128234935.20644.89300.stgit@dusk.lan>
-References: <20150128234935.20644.89300.stgit@dusk.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-To: unlisted-recipients:; (no To-header on input)
+Received: from mga03.intel.com ([134.134.136.65]:50004 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752608AbbATCSh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 19 Jan 2015 21:18:37 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Graeme Gregory <graeme.gregory@linaro.org>,
+	Lv Zheng <lv.zheng@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, xen-devel@lists.xenproject.org
+Subject: [Bugfix 3/3] xen/irq: Override ACPI IRQ management callback __acpi_unregister_gsi
+Date: Tue, 20 Jan 2015 10:21:07 +0800
+Message-Id: <1421720467-7709-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421720467-7709-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421720467-7709-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Xen overrides __acpi_register_gsi and leaves __acpi_unregister_gsi as is.
+That means, an IRQ allocated by acpi_register_gsi_xen_hvm() or
+acpi_register_gsi_xen() will be freed by acpi_unregister_gsi_ioapic(),
+which may cause undesired effects. So override __acpi_unregister_gsi to
+NULL for safety.
 
-Add compatible strings for the PCIe IP blocks present on several Tegra
-chips.  The primary objective here is to avoid checkpatch warnings,
-per:
-
-http://marc.info/?l=linux-tegra&m=142201349727836&w=2
-
-Signed-off-by: Paul Walmsley <paul@pwsan.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Pawel Moll <pawel.moll@arm.com>
-Cc: Mark Rutland <mark.rutland@arm.com>
-Cc: Ian Campbell <ijc+devicetree@hellion.org.uk>
-Cc: Kumar Gala <galak@codeaurora.org>
-Cc: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Alexandre Courbot <gnurou@gmail.com>
-Cc: linux-tegra@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: devicetree@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Tested-by: Sander Eikelenboom <linux@eikelenboom.it>
 ---
- .../bindings/pci/nvidia,tegra20-pcie.txt           |    2 ++
- 1 file changed, 2 insertions(+)
+ arch/x86/include/asm/acpi.h |    1 +
+ arch/x86/pci/xen.c          |    2 ++
+ 2 files changed, 3 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-index d763e047c6ae..e772884f1c33 100644
---- a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-@@ -5,6 +5,8 @@ Required properties:
-   - "nvidia,tegra20-pcie"
-   - "nvidia,tegra30-pcie"
-   - "nvidia,tegra124-pcie"
-+  - "nvidia,tegra132-pcie" (not yet matched in the driver)
-+  - "nvidia,tegra210-pcie" (not yet matched in the driver)
- - device_type: Must be "pci"
- - reg: A list of physical base address and length for each set of controller
-   registers. Must contain an entry for each entry in the reg-names property.
-
+diff --git a/arch/x86/include/asm/acpi.h b/arch/x86/include/asm/acpi.h
+index 0ab4f9fd2687..3a45668f6dc3 100644
+--- a/arch/x86/include/asm/acpi.h
++++ b/arch/x86/include/asm/acpi.h
+@@ -50,6 +50,7 @@ void acpi_pic_sci_set_trigger(unsigned int, u16);
+ 
+ extern int (*__acpi_register_gsi)(struct device *dev, u32 gsi,
+ 				  int trigger, int polarity);
++extern void (*__acpi_unregister_gsi)(u32 gsi);
+ 
+ static inline void disable_acpi(void)
+ {
+diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+index 6e5e89c3c644..9098d880c476 100644
+--- a/arch/x86/pci/xen.c
++++ b/arch/x86/pci/xen.c
+@@ -458,6 +458,7 @@ int __init pci_xen_hvm_init(void)
+ 	 * just how GSIs get registered.
+ 	 */
+ 	__acpi_register_gsi = acpi_register_gsi_xen_hvm;
++	__acpi_unregister_gsi = NULL;
+ #endif
+ 
+ #ifdef CONFIG_PCI_MSI
+@@ -482,6 +483,7 @@ int __init pci_xen_initial_domain(void)
+ 	pci_msi_ignore_mask = 1;
+ #endif
+ 	__acpi_register_gsi = acpi_register_gsi_xen;
++	__acpi_unregister_gsi = NULL;
+ 	/* Pre-allocate legacy irqs */
+ 	for (irq = 0; irq < nr_legacy_irqs(); irq++) {
+ 		int trigger, polarity;
+-- 
+1.7.10.4
 
