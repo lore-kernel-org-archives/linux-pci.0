@@ -1,151 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [119.145.14.66] ([119.145.14.66]:22547 "EHLO
-	szxga03-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S932477AbbAPDrq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jan 2015 22:47:46 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH 05/28] PCI: Rename pci_scan_bus() to pci_scan_bus_legacy()
-Date: Fri, 16 Jan 2015 09:44:03 +0800
-Message-ID: <1421372666-12288-6-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
-References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v7 04/38] x86/MSI: Use new irqdomain interfaces to allocate/free IRQ
+Date: Tue, 20 Jan 2015 11:08:07 +0800
+Message-Id: <1421723321-8386-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pci_scan_bus() is called by legacy pci host drivers,
-the legacy host drivers mean they use NUll as parent
-device, use all IO/MEM as default resources. Rename
-pci_scan_bus() to pci_scan_bus_legacy() for better
-readability.
+Use new irqdomain interfaces to allocate/free IRQ for PCI MSI, so we
+could kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Link: http://lkml.kernel.org/r/1416894816-23245-5-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- arch/alpha/kernel/sys_nautilus.c  |    2 +-
- arch/m68k/coldfire/pci.c          |    2 +-
- arch/sparc/kernel/pcic.c          |    2 +-
- arch/unicore32/kernel/pci.c       |    2 +-
- drivers/pci/hotplug/ibmphp_core.c |    2 +-
- drivers/pci/probe.c               |    4 ++--
- include/linux/pci.h               |    2 +-
- 7 files changed, 8 insertions(+), 8 deletions(-)
+ arch/x86/kernel/apic/msi.c |   14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
-diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
-index 4ae4a40..2c864bb 100644
---- a/arch/alpha/kernel/sys_nautilus.c
-+++ b/arch/alpha/kernel/sys_nautilus.c
-@@ -206,7 +206,7 @@ nautilus_init_pci(void)
- 	unsigned long memtop = max_low_pfn << PAGE_SHIFT;
- 
- 	/* Scan our single hose.  */
--	bus = pci_scan_bus(0, alpha_mv.pci_ops, hose);
-+	bus = pci_scan_bus_legacy(0, alpha_mv.pci_ops, hose);
- 	hose->bus = bus;
- 	pcibios_claim_one_bus(bus);
- 
-diff --git a/arch/m68k/coldfire/pci.c b/arch/m68k/coldfire/pci.c
-index d45f087..0ef4dd4 100644
---- a/arch/m68k/coldfire/pci.c
-+++ b/arch/m68k/coldfire/pci.c
-@@ -312,7 +312,7 @@ static int __init mcf_pci_init(void)
- 	set_current_state(TASK_UNINTERRUPTIBLE);
- 	schedule_timeout(msecs_to_jiffies(200));
- 
--	rootbus = pci_scan_bus(0, &mcf_pci_ops, NULL);
-+	rootbus = pci_scan_bus_legacy(0, &mcf_pci_ops, NULL);
- 	rootbus->resource[0] = &mcf_pci_io;
- 	rootbus->resource[1] = &mcf_pci_mem;
- 
-diff --git a/arch/sparc/kernel/pcic.c b/arch/sparc/kernel/pcic.c
-index 7a82fe2..f7edc97 100644
---- a/arch/sparc/kernel/pcic.c
-+++ b/arch/sparc/kernel/pcic.c
-@@ -390,7 +390,7 @@ static void __init pcic_pbm_scan_bus(struct linux_pcic *pcic)
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index d6ba2d660dc5..76cc2c902176 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -14,6 +14,7 @@
+ #include <linux/dmar.h>
+ #include <linux/hpet.h>
+ #include <linux/msi.h>
++#include <linux/irqdomain.h>
+ #include <asm/msidef.h>
+ #include <asm/hpet.h>
+ #include <asm/hw_irq.h>
+@@ -146,23 +147,20 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
  {
- 	struct linux_pbm_info *pbm = &pcic->pbm;
+ 	struct msi_desc *msidesc;
+-	unsigned int irq;
+-	int node, ret;
++	int irq, ret;
  
--	pbm->pci_bus = pci_scan_bus(pbm->pci_first_busno, &pcic_ops, pbm);
-+	pbm->pci_bus = pci_scan_bus_legacy(pbm->pci_first_busno, &pcic_ops, pbm);
- 	if (pbm->pci_bus)
- 		pci_bus_add_devices(pbm->pci_bus);
- #if 0 /* deadwood transplanted from sparc64 */
-diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
-index 3d82024..2e238b4 100644
---- a/arch/unicore32/kernel/pci.c
-+++ b/arch/unicore32/kernel/pci.c
-@@ -258,7 +258,7 @@ static int __init pci_common_init(void)
+ 	/* Multiple MSI vectors only supported with interrupt remapping */
+ 	if (type == PCI_CAP_ID_MSI && nvec > 1)
+ 		return 1;
  
- 	pci_puv3_preinit();
+-	node = dev_to_node(&dev->dev);
+-
+ 	list_for_each_entry(msidesc, &dev->msi_list, list) {
+-		irq = irq_alloc_hwirq(node);
+-		if (!irq)
++		irq = irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
++		if (irq <= 0)
+ 			return -ENOSPC;
  
--	puv3_bus = pci_scan_bus(0, &pci_puv3_ops, NULL);
-+	puv3_bus = pci_scan_bus_legacy(0, &pci_puv3_ops, NULL);
+ 		ret = setup_msi_irq(dev, msidesc, irq, 0);
+ 		if (ret < 0) {
+-			irq_free_hwirq(irq);
++			irq_domain_free_irqs(irq, 1);
+ 			return ret;
+ 		}
  
- 	if (!puv3_bus)
- 		panic("PCI: unable to scan bus!");
-diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
-index 86e3bfd..4ade1b4 100644
---- a/drivers/pci/hotplug/ibmphp_core.c
-+++ b/drivers/pci/hotplug/ibmphp_core.c
-@@ -765,7 +765,7 @@ static u8 bus_structure_fixup(u8 busno)
- 					(l != 0x0000) && (l != 0xffff)) {
- 			debug("%s - Inside bus_structure_fixup()\n",
- 							__func__);
--			b = pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
-+			b = pci_scan_bus_legacy(busno, ibmphp_pci_bus->ops, NULL);
- 			if (b)
- 				pci_bus_add_devices(b);
- 			break;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index e44de73..ed894cb 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2091,7 +2091,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- }
- EXPORT_SYMBOL(pci_scan_root_bus);
+@@ -172,7 +170,7 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
  
--struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
-+struct pci_bus *pci_scan_bus_legacy(int bus, struct pci_ops *ops,
- 					void *sysdata)
+ void native_teardown_msi_irq(unsigned int irq)
  {
- 	LIST_HEAD(resources);
-@@ -2108,7 +2108,7 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
- 	}
- 	return b;
+-	irq_free_hwirq(irq);
++	irq_domain_free_irqs(irq, 1);
  }
--EXPORT_SYMBOL(pci_scan_bus);
-+EXPORT_SYMBOL(pci_scan_bus_legacy);
  
- /**
-  * pci_rescan_bus_bridge_resize - scan a PCI bus for devices.
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 55b2c81..a6fa2f1 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -769,7 +769,7 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
--struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
-+struct pci_bus *pci_scan_bus_legacy(int bus, struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 				    struct pci_ops *ops, void *sysdata,
- 				    struct list_head *resources);
+ #ifdef CONFIG_DMAR_TABLE
 -- 
-1.7.1
+1.7.10.4
 
