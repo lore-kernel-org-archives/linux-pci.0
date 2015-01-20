@@ -1,192 +1,201 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:41243 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752070AbbAUPcm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Jan 2015 10:32:42 -0500
-Received: by mail-ob0-f180.google.com with SMTP id uz6so25004389obc.11
-        for <linux-pci@vger.kernel.org>; Wed, 21 Jan 2015 07:32:42 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20150112184349.GB2776@google.com>
-References: <1418812486-12394-1-git-send-email-gabriel.fernandez@linaro.org>
-	<1418812486-12394-4-git-send-email-gabriel.fernandez@linaro.org>
-	<20150112184349.GB2776@google.com>
-Date: Wed, 21 Jan 2015 16:32:41 +0100
-Message-ID: <CAG374jB6HEUmA3MmB+uY1fxhLPE_4AjgG5z29X=S+rb5vuArtw@mail.gmail.com>
-Subject: Re: [PATCH 3/5] PCI: st: Provide support for the sti PCIe controller
-From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Magnus Damm <damm@opensource.se>,
-	Will Deacon <will.deacon@arm.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Srikanth Thokala <sthokal@xilinx.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"kernel@stlinux.com" <kernel@stlinux.com>,
-	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
+Subject: [Patch Part2 v4 05/33] x86/irq: Kill x86_io_apic_ops.set_affinity and related interfaces
+Date: Tue, 20 Jan 2015 13:51:25 +0800
+Message-Id: <1421733113-15704-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn Helgaas,
+Now there is no user of x86_io_apic_ops.set_affinity anymore, so kill
+it.
 
-On 12 January 2015 at 19:43, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Wed, Dec 17, 2014 at 11:34:44AM +0100, Gabriel FERNANDEZ wrote:
->> sti pcie is built around a Synopsis Designware PCIe IP.
->>
->> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
->> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
->> ---
->>  drivers/pci/host/Kconfig  |   5 +
->>  drivers/pci/host/Makefile |   1 +
->>  drivers/pci/host/pci-st.c | 713 ++++++++++++++++++++++++++++++++++++++++++++++
->
-> Hi Gabriel,
->
-> Can you add a MAINTAINERS update so I know who should ack changes to this
-> driver?
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: iommu@lists.linux-foundation.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Yijing Wang <wangyijing@huawei.com>
+Cc: Grant Likely <grant.likely@linaro.org>
+Link: http://lkml.kernel.org/r/1416901802-24211-15-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Joerg Roedel <jroedel@suse.de>
+---
+ arch/x86/include/asm/io_apic.h  |    4 ----
+ arch/x86/include/asm/x86_init.h |    3 ---
+ arch/x86/kernel/apic/io_apic.c  |   25 +------------------------
+ arch/x86/kernel/x86_init.c      |    1 -
+ drivers/iommu/irq_remapping.c   |   15 ---------------
+ 5 files changed, 1 insertion(+), 47 deletions(-)
 
-yes no problem
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index d2a34e4718d2..0ff68daa9949 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -222,9 +222,6 @@ extern unsigned int native_io_apic_read(unsigned int apic, unsigned int reg);
+ extern void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int val);
+ extern void native_io_apic_modify(unsigned int apic, unsigned int reg, unsigned int val);
+ extern void native_disable_io_apic(void);
+-extern int native_ioapic_set_affinity(struct irq_data *,
+-				      const struct cpumask *,
+-				      bool);
+ 
+ static inline unsigned int io_apic_read(unsigned int apic, unsigned int reg)
+ {
+@@ -285,7 +282,6 @@ static inline void disable_ioapic_support(void) { }
+ #define native_io_apic_write		NULL
+ #define native_io_apic_modify		NULL
+ #define native_disable_io_apic		NULL
+-#define native_ioapic_set_affinity	NULL
+ #define native_eoi_ioapic_pin		NULL
+ 
+ static inline void setup_IO_APIC(void) { }
+diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+index 0c690574efae..f9f83cfabcaa 100644
+--- a/arch/x86/include/asm/x86_init.h
++++ b/arch/x86/include/asm/x86_init.h
+@@ -191,9 +191,6 @@ struct x86_io_apic_ops {
+ 	void		(*write)  (unsigned int apic, unsigned int reg, unsigned int value);
+ 	void		(*modify) (unsigned int apic, unsigned int reg, unsigned int value);
+ 	void		(*disable)(void);
+-	int		(*set_affinity)(struct irq_data *data,
+-					const struct cpumask *mask,
+-					bool force);
+ 	void		(*eoi_ioapic_pin)(int apic, int pin, int vector);
+ };
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 769fcd10f217..fff17afdfe5d 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1785,29 +1785,6 @@ static void __target_IO_APIC_irq(unsigned int irq, unsigned int dest, struct irq
+ 	}
+ }
+ 
+-int native_ioapic_set_affinity(struct irq_data *data,
+-			       const struct cpumask *mask,
+-			       bool force)
+-{
+-	unsigned int dest, irq = data->irq;
+-	unsigned long flags;
+-	int ret;
+-
+-	if (!config_enabled(CONFIG_SMP))
+-		return -EPERM;
+-
+-	raw_spin_lock_irqsave(&ioapic_lock, flags);
+-	ret = apic_set_affinity(data, mask, &dest);
+-	if (!ret) {
+-		/* Only the high 8 bits are valid. */
+-		dest = SET_APIC_LOGICAL_ID(dest);
+-		__target_IO_APIC_irq(irq, dest, irqd_cfg(data));
+-		ret = IRQ_SET_MASK_OK_NOCOPY;
+-	}
+-	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
+-	return ret;
+-}
+-
+ atomic_t irq_mis_count;
+ 
+ #ifdef CONFIG_GENERIC_PENDING_IRQ
+@@ -2684,7 +2661,7 @@ void __init setup_ioapic_dest(void)
+ 		else
+ 			mask = apic->target_cpus();
+ 
+-		x86_io_apic_ops.set_affinity(idata, mask, false);
++		irq_set_affinity(irq, mask);
+ 	}
+ 
+ }
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index 066cdaa6503e..f7e8eab3a7c4 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -144,6 +144,5 @@ struct x86_io_apic_ops x86_io_apic_ops = {
+ 	.write			= native_io_apic_write,
+ 	.modify			= native_io_apic_modify,
+ 	.disable		= native_disable_io_apic,
+-	.set_affinity		= native_ioapic_set_affinity,
+ 	.eoi_ioapic_pin		= native_eoi_ioapic_pin,
+ };
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 5bb1a04c91f5..7baa54a13921 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -25,10 +25,6 @@ int no_x2apic_optout;
+ static int disable_irq_remap;
+ static struct irq_remap_ops *remap_ops;
+ 
+-static int set_remapped_irq_affinity(struct irq_data *data,
+-				     const struct cpumask *mask,
+-				     bool force);
+-
+ static bool irq_remapped(struct irq_cfg *cfg)
+ {
+ 	return (cfg->remapped == 1);
+@@ -61,7 +57,6 @@ static void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
+ static void __init irq_remapping_modify_x86_ops(void)
+ {
+ 	x86_io_apic_ops.disable		= irq_remapping_disable_io_apic;
+-	x86_io_apic_ops.set_affinity	= set_remapped_irq_affinity;
+ 	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
+ }
+ 
+@@ -157,15 +152,6 @@ int __init irq_remap_enable_fault_handling(void)
+ 	return remap_ops->enable_faulting();
+ }
+ 
+-static int set_remapped_irq_affinity(struct irq_data *data,
+-				     const struct cpumask *mask, bool force)
+-{
+-	if (!config_enabled(CONFIG_SMP) || !remap_ops->set_affinity)
+-		return 0;
+-
+-	return remap_ops->set_affinity(data, mask, force);
+-}
+-
+ void free_remapped_irq(int irq)
+ {
+ 	struct irq_cfg *cfg = irq_cfg(irq);
+@@ -201,7 +187,6 @@ void irq_remap_modify_chip_defaults(struct irq_chip *chip)
+ 	chip->irq_print_chip = ir_print_prefix;
+ 	chip->irq_ack = ir_ack_apic_edge;
+ 	chip->irq_eoi = ir_ack_apic_level;
+-	chip->irq_set_affinity = x86_io_apic_ops.set_affinity;
+ }
+ 
+ bool setup_remapped_irq(int irq, struct irq_cfg *cfg, struct irq_chip *chip)
+-- 
+1.7.10.4
 
->
->>  3 files changed, 719 insertions(+)
->>  create mode 100644 drivers/pci/host/pci-st.c
->>
->> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
->> index c4b6568..999d2b9 100644
->> --- a/drivers/pci/host/Kconfig
->> +++ b/drivers/pci/host/Kconfig
->> @@ -102,4 +102,9 @@ config PCI_LAYERSCAPE
->>       help
->>         Say Y here if you want PCIe controller support on Layerscape SoCs.
->>
->> +config PCI_ST
->> +     bool "ST STiH41x PCIe controller"
->> +     depends on ARCH_STI
->> +     select PCIE_DW
->
-> Please add help text here.
->
-
-okay
-
->> +static int st_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
->> +                              unsigned int devfn, int where, int size,
->> +                              u32 *val)
->> +{
->> +     u32 data;
->> +     u32 bdf;
->> +     struct st_pcie *pcie = to_st_pcie(pp);
->> +     int is_root_bus = pci_is_root_bus(bus);
->> +     int retry_count = 0;
->> +     int ret;
->> +     void __iomem *addr;
->> +
->> +     /*
->> +      * Prerequisite
->> +      * PCI express devices will respond to all config type 0 cycles, since
->> +      * they are point to point links. Thus to avoid probing for multiple
->> +      * devices on the root, dw-pcie already check for us if it is on the
->> +      * root bus / other slots. Also, dw-pcie checks for the link being up
->> +      * as we will hang if we issue a config request and the link is down.
->> +      * A switch will reject requests for slots it knows do not exist.
->> +      */
->> +     bdf = bdf_num(bus->number, devfn, is_root_bus);
->> +     addr = pcie->config_area + config_addr(where,
->> +                     bus->parent->number == pp->root_bus_nr);
->> +retry:
->> +     /* Set the config packet devfn */
->> +     writel_relaxed(bdf, pp->dbi_base + FUNC0_BDF_NUM);
->> +     readl_relaxed(pp->dbi_base + FUNC0_BDF_NUM);
->> +
->> +     ret = dw_pcie_cfg_read(addr, where, size, &data);
->> +
->> +     /*
->> +      * This is intended to help with when we are probing the bus. The
->> +      * problem is that the wrapper logic doesn't have any way to
->> +      * interrogate if the configuration request failed or not.
->> +      * On the ARM we actually get a real bus error.
->> +      *
->> +      * Unfortunately this means it is impossible to tell the difference
->> +      * between when a device doesn't exist (the switch will return a UR
->> +      * completion) or the device does exist but isn't yet ready to accept
->> +      * configuration requests (the device will return a CRS completion)
->
-> We do have CRS support in the Linux PCI core, so I guess this comment means
-> that the ST host bridge doesn't handle CRS correctly?
->
-
-yes, it is.
-
->> +      *
->> +      * The result of this is that we will miss devices when probing.
->> +      *
->> +      * So if we are trying to read the dev/vendor id on devfn 0 and we
->> +      * appear to get zero back, then we retry the request.  We know that
->> +      * zero can never be a valid device/vendor id. The specification says
->> +      * we must retry for up to a second before we decide the device is
->> +      * dead. If we are still dead then we assume there is nothing there and
->> +      * return ~0
->> +      *
->> +      * The downside of this is that we incur a delay of 1s for every pci
->> +      * express link that doesn't have a device connected.
->
-> That sounds pretty bad and I assume is a consequence of CRS handling being
-> broken in hardware.
->
->> +      */
->> +     if (((where & ~3) == 0) && devfn == 0 && (data == 0 || data == ~0)) {
->> +             if (retry_count++ < 1000) {
->> +                     mdelay(1);
->> +                     goto retry;
->> +             } else {
->> +                     *val = ~0;
->> +                     return PCIBIOS_DEVICE_NOT_FOUND;
->> +             }
->> +     }
->> +
->> +     *val = data;
->> +     return ret;
->> +}
->
->> +MODULE_LICENSE("GPLv2");
->
-> See license_is_gpl_compatible().  This string needs to be "GPL v2", not
-> "GPLv2" to avoid tainting the kernel.
->
-
-okay
-
-> Bjorn
-
-
-Thanks for reviewing
-
-BR
-
-Gabriel
