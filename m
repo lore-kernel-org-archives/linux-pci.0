@@ -1,79 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:37960 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751186AbbAKWUw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 11 Jan 2015 17:20:52 -0500
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 12 Jan 2015 08:20:50 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id B53BF2BB003F
-	for <linux-pci@vger.kernel.org>; Mon, 12 Jan 2015 09:20:47 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t0BMKlTM46006504
-	for <linux-pci@vger.kernel.org>; Mon, 12 Jan 2015 09:20:47 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t0BMKkWJ002563
-	for <linux-pci@vger.kernel.org>; Mon, 12 Jan 2015 09:20:46 +1100
-Date: Mon, 12 Jan 2015 09:20:44 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.Com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Ajit Kumar Khaparde <Ajit.Khaparde@Emulex.Com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Mark broken INTx masking for BENET devices
-Message-ID: <20150111222044.GA5446@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1420424274-3194-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <a227414f-6f4b-4656-b65b-ef8d6e68f135@CMEXHTCAS1.ad.emulex.com>
- <20150109003320.GA24054@shangw>
- <1257448143.6977594.1420766719306.JavaMail.zimbra@redhat.com>
- <f588414b-dba0-4d83-942b-0e5841f1e89c@CMEXHTCAS1.ad.emulex.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f588414b-dba0-4d83-942b-0e5841f1e89c@CMEXHTCAS1.ad.emulex.com>
+Received: from mga01.intel.com ([192.55.52.88]:25933 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751177AbbATFy2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 20 Jan 2015 00:54:28 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part2 v4 24/33] x86/irq: Kill function apic_set_affinity()
+Date: Tue, 20 Jan 2015 13:51:44 +0800
+Message-Id: <1421733113-15704-25-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 09, 2015 at 07:40:08AM +0000, Venkat Duvvuru wrote:
->> >
->> > Venkat, On IBM's Power7 box, I passed through following adpater to guest
->> with
->> > following
->> ...
->> >
->> > Steps to recreate the issue
->> > ===========================
->> >
->> > 1. Configure the NIC and ping it from external.
->> > 2. Inject EEH error by running following command in host side. After about
->> >    20 seconds, I got following message from host side. With the patch
->> applied
->> >    to host kernel, I didn't see the warning messages:
->> 
->> This seems really dubious and I don't see any justification at all for declaring
->> DisINTx broken for all devices for the vendor.  Typically to call DisINTx broken
->> for a given device, you can just boot the guest with pci=nomsi to force INTx
->> to be used.  If that works, then DisINTx masking works.  If you require EEH
->> injection to to trigger this, then the problem is more likely some containment
->> issue during EEH recovery.  Thanks,
->> 
->> Alex
->Yes I agree with Alex. 
->pci=nomsi is what exactly we did to see if DisINTx is broken or not and DisINTx works fine in our setup.
->I think, we need to analyze this EEH injection scenario further, to root cause the problem.
->We will post you updates on our findings after the analysis.
+Now there's no user of apic_set_affinity(), so kill it.
+Also rename vector_set_affinity() to apic_set_affinity() for consistency.
 
-Thanks for suggestions. I'll do more experiments to locate the EEH. With the older
-QEMU version, I didn't find this issue, so I guess it would be introduced by recent
-QEMU VFIO changes.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Link: http://lkml.kernel.org/r/1416901802-24211-33-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Joerg Roedel <jroedel@suse.de>
+---
+ arch/x86/include/asm/hw_irq.h |    2 --
+ arch/x86/kernel/apic/vector.c |   40 +++-------------------------------------
+ 2 files changed, 3 insertions(+), 39 deletions(-)
 
-Note: pci=nomsi didn't give me usable console from the guest side. I don't know why
-yet. Need some time to investigate.
-
-Thanks,
-Gavin
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index ea9aebc65ff6..330445236484 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -198,8 +198,6 @@ static inline void irq_complete_move(struct irq_cfg *c) { }
+ #endif
+ 
+ extern void apic_ack_edge(struct irq_data *data);
+-extern int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+-			     unsigned int *dest_id);
+ #else	/*  CONFIG_X86_LOCAL_APIC */
+ static inline void lock_vector_lock(void) {}
+ static inline void unlock_vector_lock(void) {}
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index fba4958b6139..436a3400d9ac 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -463,42 +463,8 @@ void apic_ack_edge(struct irq_data *data)
+ 	ack_APIC_irq();
+ }
+ 
+-/*
+- * Either sets data->affinity to a valid value, and returns
+- * ->cpu_mask_to_apicid of that in dest_id, or returns -1 and
+- * leaves data->affinity untouched.
+- */
+-int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+-		      unsigned int *dest_id)
+-{
+-	struct irq_cfg *cfg = irqd_cfg(data);
+-	unsigned int irq = data->irq;
+-	int err;
+-
+-	if (!config_enabled(CONFIG_SMP))
+-		return -EPERM;
+-
+-	if (!cpumask_intersects(mask, cpu_online_mask))
+-		return -EINVAL;
+-
+-	err = assign_irq_vector(irq, cfg, mask);
+-	if (err)
+-		return err;
+-
+-	err = apic->cpu_mask_to_apicid_and(mask, cfg->domain, dest_id);
+-	if (err) {
+-		if (assign_irq_vector(irq, cfg, data->affinity))
+-			pr_err("Failed to recover vector for irq %d\n", irq);
+-		return err;
+-	}
+-
+-	cpumask_copy(data->affinity, mask);
+-
+-	return 0;
+-}
+-
+-static int vector_set_affinity(struct irq_data *irq_data,
+-			       const struct cpumask *dest, bool force)
++static int apic_set_affinity(struct irq_data *irq_data,
++			     const struct cpumask *dest, bool force)
+ {
+ 	int err;
+ 	int irq = irq_data->irq;
+@@ -524,7 +490,7 @@ static int vector_set_affinity(struct irq_data *irq_data,
+ 
+ static struct irq_chip lapic_controller = {
+ 	.irq_ack		= apic_ack_edge,
+-	.irq_set_affinity	= vector_set_affinity,
++	.irq_set_affinity	= apic_set_affinity,
+ 	.irq_retrigger		= apic_retrigger_irq,
+ };
+ 
+-- 
+1.7.10.4
 
