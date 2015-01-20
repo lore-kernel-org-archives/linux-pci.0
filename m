@@ -1,134 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:57888 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750995AbbALHJZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 02:09:25 -0500
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>
-Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
-	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
-Subject: [PATCH v8 09/10] iommu/vt-d: Copy functions for irte
-Date: Mon, 12 Jan 2015 15:06:27 +0800
-Message-Id: <1421046388-27925-10-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1421046388-27925-1-git-send-email-zhen-hual@hp.com>
-References: <1421046388-27925-1-git-send-email-zhen-hual@hp.com>
+Received: from dliviu.plus.com ([80.229.23.120]:33111 "EHLO smtp.dudau.co.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752361AbbATLbw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 20 Jan 2015 06:31:52 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by smtp.dudau.co.uk (Postfix) with SMTP id B08D01003B3
+	for <linux-pci@vger.kernel.org>; Tue, 20 Jan 2015 11:25:05 +0000 (GMT)
+Date: Tue, 20 Jan 2015 11:20:32 +0000
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: Re: [RFC PATCH 1/3] drivers: of: fix resources freeing in
+ of_pci_get_host_bridge_resources()
+Message-ID: <20150120112031.GA342@bart.dudau.co.uk>
+References: <1420644571-18928-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1420644571-18928-2-git-send-email-lorenzo.pieralisi@arm.com>
+ <20150119183228.GE10762@e106497-lin.cambridge.arm.com>
+ <20150120104922.GF5398@red-moon>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20150120104922.GF5398@red-moon>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Functions to copy the irte data from the old kernel into the kdump kernel.
+On Tue, Jan 20, 2015 at 10:49:22AM +0000, Lorenzo Pieralisi wrote:
+> On Mon, Jan 19, 2015 at 06:32:29PM +0000, Liviu Dudau wrote:
+> 
+> [...]
+> 
+> > > @@ -146,6 +146,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+> > >  	struct of_pci_range_parser parser;
+> > >  	char range_type[4];
+> > >  	int err;
+> > > +	struct pci_host_bridge_window *window;
+> > >  
+> > >  	if (io_base)
+> > >  		*io_base = (resource_size_t)OF_BAD_ADDR;
+> > > @@ -225,7 +226,10 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+> > >  conversion_failed:
+> > >  	kfree(res);
+> > >  parse_failed:
+> > > +	list_for_each_entry(window, resources, list)
+> > > +		kfree(window->res);
+> > >  	pci_free_resource_list(resources);
+> > > +	kfree(bus_range);
+> > >  	return err;
+> > >  }
+> > >  EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
+> > 
+> > Hi Lorenzo et all,
+> > 
+> > Here is my personal view and I am happy to hear from others on the desired
+> > behaviour:
+> > 
+> > When I wrote this function what I had in mind was that it will parse as
+> > much as possible from the device tree and return a list of resources that
+> > could be successfully converted. If the entire list of ranges could not
+> > be converted then an error code will be returned, but the caller still
+> > had the list as constructed up to the error. It was the job of the caller
+> > to free the list in either cases, as stated in the comment.
+> 
+> That's what I am questioning. If the function takes an error path, the
+> windows list is freed, so the resource pointers are gone. There is no
+> way the caller can grab those resource pointers and free them.
 
-Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
----
- drivers/iommu/intel_irq_remapping.c | 62 +++++++++++++++++++++++++++++++++++++
- include/linux/intel-iommu.h         |  4 +++
- 2 files changed, 66 insertions(+)
+I stand corrected. Your patch is needed.
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index a55b207..d37fd62 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -8,6 +8,7 @@
- #include <linux/irq.h>
- #include <linux/intel-iommu.h>
- #include <linux/acpi.h>
-+#include <linux/crash_dump.h>
- #include <asm/io_apic.h>
- #include <asm/smp.h>
- #include <asm/cpu.h>
-@@ -17,6 +18,11 @@
- 
- #include "irq_remapping.h"
- 
-+#ifdef CONFIG_CRASH_DUMP
-+static int __iommu_load_old_irte(struct intel_iommu *iommu);
-+static int __iommu_update_old_irte(struct intel_iommu *iommu, int index);
-+#endif /* CONFIG_CRASH_DUMP */
-+
- struct ioapic_scope {
- 	struct intel_iommu *iommu;
- 	unsigned int id;
-@@ -1296,3 +1302,59 @@ int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
- 
- 	return ret;
- }
-+
-+#ifdef CONFIG_CRASH_DUMP
-+
-+static int __iommu_load_old_irte(struct intel_iommu *iommu)
-+{
-+	if ((!iommu)
-+		|| (!iommu->ir_table)
-+		|| (!iommu->ir_table->base)
-+		|| (!iommu->ir_table->base_old_phys)
-+		|| (!iommu->ir_table->base_old_virt))
-+		return -1;
-+
-+	memcpy(iommu->ir_table->base,
-+		iommu->ir_table->base_old_virt,
-+		INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
-+
-+	__iommu_flush_cache(iommu, iommu->ir_table->base,
-+		INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
-+
-+	return 0;
-+}
-+
-+static int __iommu_update_old_irte(struct intel_iommu *iommu, int index)
-+{
-+	int start;
-+	unsigned long size;
-+	void __iomem *to;
-+	void *from;
-+
-+	if ((!iommu)
-+		|| (!iommu->ir_table)
-+		|| (!iommu->ir_table->base)
-+		|| (!iommu->ir_table->base_old_phys)
-+		|| (!iommu->ir_table->base_old_virt))
-+		return -1;
-+
-+	if (index < -1 || index >= INTR_REMAP_TABLE_ENTRIES)
-+		return -1;
-+
-+	if (index == -1) {
-+		start = 0;
-+		size = INTR_REMAP_TABLE_ENTRIES * sizeof(struct irte);
-+	} else {
-+		start = index * sizeof(struct irte);
-+		size = sizeof(struct irte);
-+	}
-+
-+	to = iommu->ir_table->base_old_virt;
-+	from = iommu->ir_table->base;
-+	memcpy(to + start, from + start, size);
-+
-+	__iommu_flush_cache(iommu, to + start, size);
-+
-+	return 0;
-+}
-+#endif /* CONFIG_CRASH_DUMP */
-diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
-index 8e29b97..76c6ea5 100644
---- a/include/linux/intel-iommu.h
-+++ b/include/linux/intel-iommu.h
-@@ -290,6 +290,10 @@ struct q_inval {
- struct ir_table {
- 	struct irte *base;
- 	unsigned long *bitmap;
-+#ifdef CONFIG_CRASH_DUMP
-+	void __iomem *base_old_virt;
-+	unsigned long base_old_phys;
-+#endif
- };
- #endif
- 
+Thanks,
+Liviu
+
+> 
+> So either way, the function needs patching. Either we do not free the
+> windows list (we remove pci_free_resource_list) or we apply my fix (or
+> we refactor the API which is likely to be what I will do).
+> 
+> Lorenzo
+> 
+> > 
+> > The historical reason why the function was written that way was because at
+> > some moment after parsing I've had an additional step where arches could
+> > cleanup / veto the list and they could return an error value to signal
+> > their discontent. Also I was (am) not sure how lenient we could be with
+> > the device tree not being sane (at least one host bridge binding lists the
+> > config space as a range, which was accepted as broken).
+> > 
+> > So, from that point of view, I would NAK this patch, as the function works
+> > as intended. If others find this mode of operation too convoluted, then
+> > the patch should probably make clear that cleanup only needs to be done on
+> > function returning success.
+> > 
+> > Best regards,
+> > 
+> > > -- 
+> > > 2.2.1
+> > > 
+> > > 
+
 -- 
-2.0.0-rc0
+-------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
+
+ One small step
+   for me ...
 
