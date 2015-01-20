@@ -1,64 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:56868 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754698AbbA0JWg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Jan 2015 04:22:36 -0500
-Message-ID: <1422350550.15206.8.camel@pengutronix.de>
-Subject: Re: [PATCH] PCI: designware: reject MSI-X irqs
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jingoo Han <jg1.han@samsung.com>, Mohit Kumar <mohit.kumar@st.com>,
-	linux-pci@vger.kernel.org
-Date: Tue, 27 Jan 2015 10:22:30 +0100
-In-Reply-To: <20150126181236.GA4063@google.com>
-References: <1422269684-11527-1-git-send-email-l.stach@pengutronix.de>
-	 <20150126181236.GA4063@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-by2on0140.outbound.protection.outlook.com ([207.46.100.140]:40244
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751932AbbATHNz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 02:13:55 -0500
+From: "Richard.Zhu@freescale.com" <Richard.Zhu@freescale.com>
+To: Lucas Stach <l.stach@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH] MAINTAINERS: fix Richard Zhu's mail address
+Date: Tue, 20 Jan 2015 05:42:26 +0000
+Message-ID: <DM2PR0301MB0862D40DA7564099DE26CAE0F74B0@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <1421662651-22962-1-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1421662651-22962-1-git-send-email-l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Hi Lucas:
+Thanks.
+Acked-by: Richard Zhu <Richard.Zhu@freescale.com>
 
-Am Montag, den 26.01.2015, 12:12 -0600 schrieb Bjorn Helgaas:
-> On Mon, Jan 26, 2015 at 11:54:44AM +0100, Lucas Stach wrote:
-> > The DW PCIe MSI hardware does not support MSI-X irqs. Setting those up
-> > failed as a side effect of a bug which was fixed by 91f8ae823f2b
-> > (PCI: designware: Setup and clear exactly one MSI at a time).
-> > 
-> > Now that this bug is fixed MSI-X irqs need to be rejected explicitly,
-> > otherwise devices trying to use them may end up with incorrectly working
-> > interrupts.
-> > 
-> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+Best Regards
+Richard Zhu
+Linux BSP team
+
+
+> -----Original Message-----
+> From: Lucas Stach [mailto:l.stach@pengutronix.de]
+> Sent: Monday, January 19, 2015 6:18 PM
+> To: Zhu Richard-R65037; Bjorn Helgaas
+> Cc: linux-pci@vger.kernel.org
+> Subject: [PATCH] MAINTAINERS: fix Richard Zhu's mail address
 > 
-> Applied with Jingoo's ack to pci/host-designware for v3.20, thanks!
+> The old cryptic address bounces, fix it by using a properly working one.
 > 
-I would be happier if this could still find its way into v3.19 if you
-are going to send another fixes pull, as this is clearly a regression
-even if it was already introduced with v3.18.
-
-> > Cc: <stable@vger.kernel.org> # 3.18
-> > ---
-> >  drivers/pci/host/pcie-designware.c | 3 +++
-> >  1 file changed, 3 insertions(+)
-> > 
-> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> > index df781cdf13c1..17ca98657a28 100644
-> > --- a/drivers/pci/host/pcie-designware.c
-> > +++ b/drivers/pci/host/pcie-designware.c
-> > @@ -283,6 +283,9 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
-> >  	struct msi_msg msg;
-> >  	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
-> >  
-> > +	if (desc->msi_attrib.is_msix)
-> > +		return -EINVAL;
-> > +
-> >  	irq = assign_irq(1, desc, &pos);
-> >  	if (irq < 0)
-> >  		return irq;
-> > -- 
-> > 2.1.4
-> > 
-
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> ---
+>  MAINTAINERS | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 2fa385321245..b0a01320c755 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -7239,7 +7239,7 @@ S:	Maintained
+>  F:	drivers/pci/host/*layerscape*
+> 
+>  PCI DRIVER FOR IMX6
+> -M:	Richard Zhu <r65037@freescale.com>
+> +M:	Richard Zhu <Richard.Zhu@freescale.com>
+>  M:	Lucas Stach <l.stach@pengutronix.de>
+>  L:	linux-pci@vger.kernel.org
+>  L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+> --
+> 2.1.4
 
