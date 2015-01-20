@@ -1,111 +1,336 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f49.google.com ([209.85.192.49]:43545 "EHLO
-	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752076AbbAHXLJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jan 2015 18:11:09 -0500
-Received: by mail-qg0-f49.google.com with SMTP id f51so5425874qge.8
-        for <linux-pci@vger.kernel.org>; Thu, 08 Jan 2015 15:11:09 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1420745423.25367.77.camel@redhat.com>
-References: <20141121180322.26669.65689.stgit@gimli.home> <20141121182427.26669.82417.stgit@gimli.home>
- <20150108160733.GA6575@google.com> <1420745423.25367.77.camel@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 8 Jan 2015 17:10:48 -0600
-Message-ID: <CAErSpo7E3-qEwHeeMvKvGmUzPQ6eP7=g0mqUZuBBrdcu_yN95w@mail.gmail.com>
-Subject: Re: [PATCH 4/4] PCI: quirk Atheros AR93xx to avoid bus reset
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part2 v4 01/33] x86/irq: Kill unused old IOAPIC irqdomain interfaces
+Date: Tue, 20 Jan 2015 13:51:21 +0800
+Message-Id: <1421733113-15704-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 8, 2015 at 1:30 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Thu, 2015-01-08 at 09:07 -0700, Bjorn Helgaas wrote:
->> On Fri, Nov 21, 2014 at 11:24:27AM -0700, Alex Williamson wrote:
->> > Reports against the TL-WDN4800 card indicate that PCI bus reset of
->> > this Atheros device cause system lock-ups and resets.  I've also
->> > been able to confirm this behavior on multiple systems.  The device
->> > never returns from reset and attempts to access config space of the
->> > device after reset result in hangs.  Blacklist bus reset for the
->> > device to avoid this issue.
->> >
->> > Reported-by: Andreas Hartmann <andihartmann@freenet.de>
->> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
->> > Tested-by: Andreas Hartmann <andihartmann@freenet.de>
->>
->> If I understand correctly, these two (patches 3 & 4) fix a v3.14 regression
->> caused by 425c1b223dac ("PCI: Add Virtual Channel to save/restore support").
->>
->> If so, these should go to for-linus for v3.19.  What about patches 1 & 2?
->> Do they fix a regression?  Is there a pointer to a bugzilla or problem
->> report about that issue?
->>
->> I don't understand the connection between 425c1b223dac and
->> PCI_DEV_FLAGS_NO_BUS_RESET, because 425c1b223dac doesn't seem to do any
->> resets.  Is that the wrong commit, or can you outline the connection for
->> me?
->
-> TBH, I don't have a lot of faith in associating this to 425c1b223dac,
-> I'm not sure how Andreas' bisect landed there.  IME, this device cannot,
-> and has never been able to handle a bus reset.  A simple setpci
-> experiment on the commandline can confirm this.  What I think happened
-> is that with the PCI bus reset infrastructure we added, we switched QEMU
-> to prefer PCI bus resets over things like PM D3hot->D0 resets.  So it's
-> just more prolific use of bus resets by userspace.
+Now we have converted to hierarchy irqdomain, so kill unused old IOAPIC
+irqdomain interfaces and code.
 
-Maybe it's not 425c1b223dac, but it seems pretty clear that it really
-is a regression from the user point of view.  I'm sure Andreas was
-using the same user-space for v3.13 and v3.14.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Grant Likely <grant.likely@linaro.org>
+Link: http://lkml.kernel.org/r/1416901802-24211-11-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Joerg Roedel <jroedel@suse.de>
+---
+ arch/x86/include/asm/io_apic.h |    4 -
+ arch/x86/kernel/apic/io_apic.c |  202 +---------------------------------------
+ 2 files changed, 1 insertion(+), 205 deletions(-)
 
-Testing 425c1b223dac^ (the predecessor of 425c1b223dac) and
-425c1b223dac would confirm the bisect results.
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index ecc192624eaf..705c425c9c3d 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -204,9 +204,6 @@ extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 			      struct ioapic_domain_cfg *cfg);
+ extern int mp_unregister_ioapic(u32 gsi_base);
+ extern int mp_ioapic_registered(u32 gsi_base);
+-extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+-			    irq_hw_number_t hwirq);
+-extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
+ extern int mp_irqdomain_alloc(struct irq_domain *domain, unsigned int virq,
+ 			      unsigned int nr_irqs, void *arg);
+ extern void mp_irqdomain_free(struct irq_domain *domain, unsigned int virq,
+@@ -218,7 +215,6 @@ extern void mp_irqdomain_deactivate(struct irq_domain *domain,
+ extern int mp_irqdomain_ioapic_idx(struct irq_domain *domain);
+ extern void ioapic_set_alloc_attr(struct irq_alloc_info *info,
+ 				  int node, int trigger, int polarity);
+-extern int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node);
+ 
+ extern void mp_save_irq(struct mpc_intsrc *m);
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 899b8cfb0d87..969c56f09221 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -91,7 +91,6 @@ struct mp_chip_data {
+ struct mp_pin_info {
+ 	int trigger;
+ 	int polarity;
+-	int node;
+ 	int set;
+ 	u32 count;
+ };
+@@ -1308,30 +1307,6 @@ static inline int IO_APIC_irq_trigger(int irq)
+ }
+ #endif
+ 
+-static void ioapic_register_intr(unsigned int irq, struct irq_cfg *cfg,
+-				 unsigned long trigger)
+-{
+-	struct irq_chip *chip = &ioapic_chip;
+-	irq_flow_handler_t hdl;
+-	bool fasteoi;
+-
+-	if ((trigger == IOAPIC_AUTO && IO_APIC_irq_trigger(irq)) ||
+-	    trigger == IOAPIC_LEVEL) {
+-		irq_set_status_flags(irq, IRQ_LEVEL);
+-		fasteoi = true;
+-	} else {
+-		irq_clear_status_flags(irq, IRQ_LEVEL);
+-		fasteoi = false;
+-	}
+-
+-	if (setup_remapped_irq(irq, cfg, chip))
+-		fasteoi = trigger != 0;
+-
+-	hdl = fasteoi ? handle_fasteoi_irq : handle_edge_irq;
+-	irq_set_chip_and_handler_name(irq, chip, hdl,
+-				      fasteoi ? "fasteoi" : "edge");
+-}
+-
+ int native_setup_ioapic_entry(int irq, struct IO_APIC_route_entry *entry,
+ 			      unsigned int destination, int vector,
+ 			      struct io_apic_irq_attr *attr)
+@@ -1356,48 +1331,6 @@ int native_setup_ioapic_entry(int irq, struct IO_APIC_route_entry *entry,
+ 	return 0;
+ }
+ 
+-static void setup_ioapic_irq(unsigned int irq, struct irq_cfg *cfg,
+-				struct io_apic_irq_attr *attr)
+-{
+-	struct IO_APIC_route_entry entry;
+-	unsigned int dest;
+-
+-	if (!IO_APIC_IRQ(irq))
+-		return;
+-
+-	if (assign_irq_vector(irq, cfg, apic->target_cpus()))
+-		return;
+-
+-	if (apic->cpu_mask_to_apicid_and(cfg->domain, apic->target_cpus(),
+-					 &dest)) {
+-		pr_warn("Failed to obtain apicid for ioapic %d, pin %d\n",
+-			mpc_ioapic_id(attr->ioapic), attr->ioapic_pin);
+-		clear_irq_vector(irq, cfg);
+-
+-		return;
+-	}
+-
+-	apic_printk(APIC_VERBOSE,KERN_DEBUG
+-		    "IOAPIC[%d]: Set routing entry (%d-%d -> 0x%x -> "
+-		    "IRQ %d Mode:%i Active:%i Dest:%d)\n",
+-		    attr->ioapic, mpc_ioapic_id(attr->ioapic), attr->ioapic_pin,
+-		    cfg->vector, irq, attr->trigger, attr->polarity, dest);
+-
+-	if (x86_io_apic_ops.setup_entry(irq, &entry, dest, cfg->vector, attr)) {
+-		pr_warn("Failed to setup ioapic entry for ioapic  %d, pin %d\n",
+-			mpc_ioapic_id(attr->ioapic), attr->ioapic_pin);
+-		clear_irq_vector(irq, cfg);
+-
+-		return;
+-	}
+-
+-	ioapic_register_intr(irq, cfg, attr->trigger);
+-	if (irq < nr_legacy_irqs())
+-		legacy_pic->mask(irq);
+-
+-	ioapic_write_entry(attr->ioapic, attr->ioapic_pin, entry);
+-}
+-
+ static void __init setup_IO_APIC_irqs(void)
+ {
+ 	unsigned int ioapic, pin;
+@@ -1417,46 +1350,6 @@ static void __init setup_IO_APIC_irqs(void)
+ 	}
+ }
+ 
+-/*
+- * Set up the timer pin, possibly with the 8259A-master behind.
+- */
+-static void __init setup_timer_IRQ0_pin(unsigned int ioapic_idx,
+-					unsigned int pin, int vector)
+-{
+-	struct IO_APIC_route_entry entry;
+-	unsigned int dest;
+-
+-	memset(&entry, 0, sizeof(entry));
+-
+-	/*
+-	 * We use logical delivery to get the timer IRQ
+-	 * to the first CPU.
+-	 */
+-	if (unlikely(apic->cpu_mask_to_apicid_and(apic->target_cpus(),
+-						  apic->target_cpus(), &dest)))
+-		dest = BAD_APICID;
+-
+-	entry.dest_mode = apic->irq_dest_mode;
+-	entry.mask = 0;			/* don't mask IRQ for edge */
+-	entry.dest = dest;
+-	entry.delivery_mode = apic->irq_delivery_mode;
+-	entry.polarity = 0;
+-	entry.trigger = 0;
+-	entry.vector = vector;
+-
+-	/*
+-	 * The timer IRQ doesn't have to know that behind the
+-	 * scene we may have a 8259A-master in AEOI mode ...
+-	 */
+-	irq_set_chip_and_handler_name(0, &ioapic_chip, handle_edge_irq,
+-				      "edge");
+-
+-	/*
+-	 * Add it to the IO-APIC irq-routing table:
+-	 */
+-	ioapic_write_entry(ioapic_idx, pin, entry);
+-}
+-
+ void native_io_apic_print_entries(unsigned int apic, unsigned int nr_entries)
+ {
+ 	int i;
+@@ -2667,20 +2560,6 @@ static int __init ioapic_init_ops(void)
+ 
+ device_initcall(ioapic_init_ops);
+ 
+-static int
+-io_apic_setup_irq_pin(unsigned int irq, int node, struct io_apic_irq_attr *attr)
+-{
+-	struct irq_cfg *cfg = alloc_irq_and_cfg_at(irq, node);
+-	int ret;
+-
+-	if (!cfg)
+-		return -EINVAL;
+-	ret = __add_pin_to_irq_node(cfg, node, attr->ioapic, attr->ioapic_pin);
+-	if (!ret)
+-		setup_ioapic_irq(irq, cfg, attr);
+-	return ret;
+-}
+-
+ static int io_apic_get_redir_entries(int ioapic)
+ {
+ 	union IO_APIC_reg_01	reg_01;
+@@ -3237,58 +3116,8 @@ static inline void set_io_apic_irq_attr(struct io_apic_irq_attr *irq_attr,
+ 	irq_attr->polarity	= polarity;
+ }
+ 
+-int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+-		     irq_hw_number_t hwirq)
+-{
+-	int ioapic = mp_irqdomain_ioapic_idx(domain);
+-	struct mp_pin_info *info = mp_pin_info(ioapic, hwirq);
+-	struct io_apic_irq_attr attr;
+-
+-	/* Get default attribute if not set by caller yet */
+-	if (!info->set) {
+-		u32 gsi = mp_pin_to_gsi(ioapic, hwirq);
+-
+-		if (acpi_get_override_irq(gsi, &info->trigger,
+-					  &info->polarity) < 0) {
+-			/*
+-			 * PCI interrupts are always polarity one level
+-			 * triggered.
+-			 */
+-			info->trigger = 1;
+-			info->polarity = 1;
+-		}
+-		info->node = NUMA_NO_NODE;
+-
+-		/*
+-		 * setup_IO_APIC_irqs() programs all legacy IRQs with default
+-		 * trigger and polarity attributes. Don't set the flag for that
+-		 * case so the first legacy IRQ user could reprogram the pin
+-		 * with real trigger and polarity attributes.
+-		 */
+-		if (virq >= nr_legacy_irqs() || info->count)
+-			info->set = 1;
+-	}
+-	set_io_apic_irq_attr(&attr, ioapic, hwirq, info->trigger,
+-			     info->polarity);
+-
+-	return io_apic_setup_irq_pin(virq, info->node, &attr);
+-}
+-
+-void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq)
+-{
+-	struct irq_data *data = irq_get_irq_data(virq);
+-	struct irq_cfg *cfg = irq_cfg(virq);
+-	int ioapic = mp_irqdomain_ioapic_idx(domain);
+-	int pin = (int)data->hwirq;
+-
+-	ioapic_mask_entry(ioapic, pin);
+-	__remove_pin_from_irq(cfg, ioapic, pin);
+-	WARN_ON(!list_empty(&cfg->irq_2_pin));
+-	arch_teardown_hwirq(virq);
+-}
+-
+ static void mp_irqdomain_get_attr(u32 gsi, struct mp_chip_data *data,
+-				 struct irq_alloc_info *info)
++				  struct irq_alloc_info *info)
+ {
+ 	if (info && info->ioapic_valid) {
+ 		data->trigger = info->ioapic_trigger;
+@@ -3412,35 +3241,6 @@ void mp_irqdomain_deactivate(struct irq_domain *domain,
+ 			  (int)irq_data->hwirq);
+ }
+ 
+-int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node)
+-{
+-	int ret = 0;
+-	int ioapic, pin;
+-	struct mp_pin_info *info;
+-
+-	ioapic = mp_find_ioapic(gsi);
+-	if (ioapic < 0)
+-		return -ENODEV;
+-
+-	pin = mp_find_ioapic_pin(ioapic, gsi);
+-	info = mp_pin_info(ioapic, pin);
+-	trigger = trigger ? 1 : 0;
+-	polarity = polarity ? 1 : 0;
+-
+-	mutex_lock(&ioapic_mutex);
+-	if (!info->set) {
+-		info->trigger = trigger;
+-		info->polarity = polarity;
+-		info->node = node;
+-		info->set = 1;
+-	} else if (info->trigger != trigger || info->polarity != polarity) {
+-		ret = -EBUSY;
+-	}
+-	mutex_unlock(&ioapic_mutex);
+-
+-	return ret;
+-}
+-
+ int mp_irqdomain_ioapic_idx(struct irq_domain *domain)
+ {
+ 	return (int)(long)domain->host_data;
+-- 
+1.7.10.4
 
-If it really turns out that 425c1b223dac^ works and 425c1b223dac
-fails, maybe we could learn something interesting by adding debug
-output to the various reset flavors and comparing the output?
-
-> There's also no regression in 1 & 2, PM reset has never done anything
-> useful on those devices.  Thanks,
-
-Since 1 & 2 don't fix a regression, I think what I should do is apply
-3 & 4 to for-linus for v3.19, then apply 1 & 2 on top as v3.20
-material.
-
-Bjorn
-
->> > ---
->> >
->> >  drivers/pci/quirks.c |   14 ++++++++++++++
->> >  1 file changed, 14 insertions(+)
->> >
->> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> > index 561e10d..ebbd5b4 100644
->> > --- a/drivers/pci/quirks.c
->> > +++ b/drivers/pci/quirks.c
->> > @@ -3029,6 +3029,20 @@ static void quirk_no_pm_reset(struct pci_dev *dev)
->> >  DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_ATI, PCI_ANY_ID,
->> >                            PCI_CLASS_DISPLAY_VGA, 8, quirk_no_pm_reset);
->> >
->> > +static void quirk_no_bus_reset(struct pci_dev *dev)
->> > +{
->> > +   dev->dev_flags |= PCI_DEV_FLAGS_NO_BUS_RESET;
->> > +}
->> > +
->> > +/*
->> > + * Atheros AR93xx chips do not behave after a bus reset.  The device will
->> > + * throw a Link Down error on AER capable system and regardless of AER,
->> > + * config space of the device is never accessible again and typically
->> > + * causes the system to hang or reset when access is attempted.
->> > + * http://www.spinics.net/lists/linux-pci/msg34797.html
->> > + */
->> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0030, quirk_no_bus_reset);
->> > +
->> >  #ifdef CONFIG_ACPI
->> >  /*
->> >   * Apple: Shutdown Cactus Ridge Thunderbolt controller.
->> >
->
->
->
