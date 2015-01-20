@@ -1,82 +1,166 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUd8XgEhBKqFEyDLMTySw=jngtLN=zZeQcfW6=vC_b4mA@mail.gmail.com>
-References: <20150123203145.GA6691@google.com> <CA+8MBbKnT=mE3kev8BRPq0GeTgHx8WVa6o54tJuBX_XXLpHdYQ@mail.gmail.com>
- <CAErSpo7y1wWStjcEOH9xTiM-As8+QeMynZ5ENrL9v3X2PvQCcw@mail.gmail.com>
- <CA+8MBb+bWiX2eayjBQHsvCjTp3t8H9=AviF9AkV6CC--cC_fYQ@mail.gmail.com>
- <20150126235334.GA11624@google.com> <CAE9FiQUd8XgEhBKqFEyDLMTySw=jngtLN=zZeQcfW6=vC_b4mA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 27 Jan 2015 08:03:25 -0600
-Message-ID: <CAErSpo64i1UhAoX5_MqVRerdpqq6gvmXg4DOqe3ndejPh5oGgg@mail.gmail.com>
-Subject: Re: [GIT PULL] PCI fixes for v3.19
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Tony Luck <tony.luck@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Marek Kordik <kordikmarek@gmail.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Andreas Hartmann <andihartmann@freenet.de>,
-	Alexey Voronkov <zermond@gmail.com>,
-	David Airlie <airlied@linux.ie>,
-	Alex Deucher <alexander.deucher@amd.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v7 35/38] x86/irq: Refine the way to allocate irq_cfg for legacy IRQs
+Date: Tue, 20 Jan 2015 11:08:38 +0800
+Message-Id: <1421723321-8386-36-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 26, 2015 at 9:55 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Mon, Jan 26, 2015 at 3:53 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Mon, Jan 26, 2015 at 01:24:51PM -0800, Tony Luck wrote:
->>> On Mon, Jan 26, 2015 at 1:02 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> > Sorry for the inconvenience.  Can you collect a complete dmesg log and
->>> > "lspci -vv" output, too (from the kernel with the reverted commit)?
->>> > That will have more useful information than just /proc/iomem.
->>>
->>> Full dmesg, lspci -vv, and bonus .config (CONFIG_PCI_IOV is indeed
->>> not set)
->>
->> The ROM part is something we should fix:
->>
->>   pci 0000:01:00.1: can't claim BAR 6 [mem 0xfffe0000-0xffffffff pref]: no compatible bridge window
->>
->> The ROM BAR is probably disabled, and we shouldn't complain about this if
->> it's disabled.  Yinghai?
->
-> original ia64 code, has extra checking to hide the warning
->
-> -static int is_valid_resource(struct pci_dev *dev, int idx)
->  {
-> -       unsigned int i, type_mask = IORESOURCE_IO | IORESOURCE_MEM;
-> -       struct resource *devr = &dev->resource[idx], *busr;
->
->         if (!dev->bus)
-> -               return 0;
-> -
-> -       pci_bus_for_each_resource(dev->bus, busr, i) {
-> -               if (!busr || ((busr->flags ^ devr->flags) & type_mask))
-> -                       continue;
-> -               if ((devr->start) && (devr->start >= busr->start) &&
-> -                               (devr->end <= busr->end))
-> -                       return 1;
-> -       }
-> -       return 0;
-> -}
->
-> also that is used to skip pci_claim_resource calling for invalid ...
->
-> so the root resource is totally wrong from ACPI.
+To support legacy ISA IRQs, we need to preallocate irq_cfg structures
+for legacy ISA IRQs. Refine the way to allocate irq_cfg for legacy ISA
+IRQs, so it's more friend to hierarchy irqdomain implementation.
 
-Yes, ACPI is clearly missing some information.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Grant Likely <grant.likely@linaro.org>
+Link: http://lkml.kernel.org/r/1416901802-24211-7-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Joerg Roedel <jroedel@suse.de>
+---
+ arch/x86/kernel/apic/io_apic.c |   13 +------------
+ arch/x86/kernel/apic/vector.c  |   42 +++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 42 insertions(+), 13 deletions(-)
 
-Just to make sure we're planning the same thing, I expect that we will
-fix or workaround both issues so it works just as well as v3.18 by the
-time v3.19 is released.  This is a system in the field, and we should
-be able to figure out how to deal with the broken firmware.  Asking
-users to upgrade their firmware is not the solution I'm looking for.
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 3406dbec1570..16d4ba3ac844 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -254,8 +254,7 @@ static void free_ioapic_saved_registers(int idx)
+ 
+ int __init arch_early_ioapic_init(void)
+ {
+-	struct irq_cfg *cfg;
+-	int i, node = cpu_to_node(0);
++	int i;
+ 
+ 	if (!nr_legacy_irqs())
+ 		io_apic_irqs = ~0UL;
+@@ -263,16 +262,6 @@ int __init arch_early_ioapic_init(void)
+ 	for_each_ioapic(i)
+ 		alloc_ioapic_saved_registers(i);
+ 
+-	/*
+-	 * For legacy IRQ's, start with assigning irq0 to irq15 to
+-	 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
+-	 */
+-	for (i = 0; i < nr_legacy_irqs(); i++) {
+-		cfg = alloc_irq_and_cfg_at(i, node);
+-		cfg->vector = IRQ0_VECTOR + i;
+-		cpumask_setall(cfg->domain);
+-	}
+-
+ 	return 0;
+ }
+ 
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 609db1910fd3..4b8fad9aa685 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -24,6 +24,9 @@
+ struct irq_domain *x86_vector_domain;
+ static DEFINE_RAW_SPINLOCK(vector_lock);
+ static struct irq_chip lapic_controller;
++#ifdef	CONFIG_X86_IO_APIC
++static struct irq_cfg *legacy_irq_cfgs[NR_IRQS_LEGACY];
++#endif
+ 
+ void lock_vector_lock(void)
+ {
+@@ -283,6 +286,10 @@ static void x86_vector_free_irqs(struct irq_domain *domain,
+ 			free_remapped_irq(virq);
+ 			clear_irq_vector(virq + i, irq_data->chip_data);
+ 			free_irq_cfg(irq_data->chip_data);
++#ifdef	CONFIG_X86_IO_APIC
++			if (virq + i < nr_legacy_irqs())
++				legacy_irq_cfgs[virq + i] = NULL;
++#endif
+ 			irq_domain_reset_irq_data(irq_data);
+ 		}
+ 	}
+@@ -308,7 +315,12 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
+ 	for (i = 0; i < nr_irqs; i++) {
+ 		irq_data = irq_domain_get_irq_data(domain, virq + i);
+ 		BUG_ON(!irq_data);
+-		cfg = alloc_irq_cfg(irq_data->node);
++#ifdef	CONFIG_X86_IO_APIC
++		if (virq + i < nr_legacy_irqs() && legacy_irq_cfgs[virq + i])
++			cfg = legacy_irq_cfgs[virq + i];
++		else
++#endif
++			cfg = alloc_irq_cfg(irq_data->node);
+ 		if (!cfg) {
+ 			err = -ENOMEM;
+ 			goto error;
+@@ -357,8 +369,36 @@ int __init arch_probe_nr_irqs(void)
+ 	return nr_legacy_irqs();
+ }
+ 
++#ifdef	CONFIG_X86_IO_APIC
++static void init_legacy_irqs(void)
++{
++	int i, node = cpu_to_node(0);
++	struct irq_cfg *cfg;
++
++	/*
++	 * For legacy IRQ's, start with assigning irq0 to irq15 to
++	 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
++	 */
++	for (i = 0; i < nr_legacy_irqs(); i++) {
++		cfg = legacy_irq_cfgs[i] = alloc_irq_cfg(node);
++		BUG_ON(!cfg);
++		/*
++		 * For legacy IRQ's, start with assigning irq0 to irq15 to
++		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
++		 */
++		cfg->vector = IRQ0_VECTOR + i;
++		cpumask_setall(cfg->domain);
++		irq_set_chip_data(i, cfg);
++	}
++}
++#else
++static void init_legacy_irqs(void) { }
++#endif
++
+ int __init arch_early_irq_init(void)
+ {
++	init_legacy_irqs();
++
+ 	x86_vector_domain = irq_domain_add_tree(NULL, &x86_vector_domain_ops,
+ 						NULL);
+ 	BUG_ON(x86_vector_domain == NULL);
+-- 
+1.7.10.4
 
-There is nothing ia64-specific about this issue, so we should be able
-to do this in some generic way.
-
-Bjorn
