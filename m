@@ -1,184 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service88.mimecast.com ([195.130.217.12]:34043 "EHLO
-	service88.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754769AbbA1U42 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jan 2015 15:56:28 -0500
-Message-ID: <54C9068D.8050701@arm.com>
-Date: Wed, 28 Jan 2015 15:55:57 +0000
-From: Robin Murphy <robin.murphy@arm.com>
-MIME-Version: 1.0
-To: Catalin Marinas <catalin.marinas@arm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>
-CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Received: from mga11.intel.com ([192.55.52.93]:23692 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753665AbbATF5N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 20 Jan 2015 00:57:13 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v4 3/6] of: fix size when dma-range is not used
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com> <1422052359-12384-4-git-send-email-m-karicheri2@ti.com> <54C77616.80301@arm.com> <54C7DF13.20402@ti.com> <20150128110523.GC6646@e104818-lin.cambridge.arm.com>
-In-Reply-To: <20150128110523.GC6646@e104818-lin.cambridge.arm.com>
-Content-Type: text/plain; charset=WINDOWS-1252; format=flowed
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part2 v4 33/33] x86/irq: Avoid memory allocation in __assign_irq_vector()
+Date: Tue, 20 Jan 2015 13:51:53 +0800
+Message-Id: <1421733113-15704-34-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 28/01/15 11:05, Catalin Marinas wrote:
-> On Tue, Jan 27, 2015 at 06:55:15PM +0000, Murali Karicheri wrote:
->> On 01/27/2015 06:27 AM, Robin Murphy wrote:
->>> On 23/01/15 22:32, Murali Karicheri wrote:
->>>> Fix the dma-range size when the DT attribute is missing. i.e set size to
->>>> dev->coherent_dma_mask + 1 instead of dev->coherent_dma_mask. To detect
->>>> overflow when mask is set to max of u64, add a check, log error and
->>>> return.
->>>> Some platform use mask format for size in DTS. So add a work around to
->>>> catch this and fix.
->>>>
->>>> Cc: Joerg Roedel <joro@8bytes.org>
->>>> Cc: Grant Likely <grant.likely@linaro.org>
->>>> Cc: Rob Herring <robh+dt@kernel.org>
->>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
->>>> Cc: Will Deacon <will.deacon@arm.com>
->>>> Cc: Russell King <linux@arm.linux.org.uk>
->>>> Cc: Arnd Bergmann <arnd@arndb.de>
->>>> Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->>>>
->>>> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
->>>> ---
->>>> drivers/of/device.c | 14 +++++++++++++-
->>>> 1 file changed, 13 insertions(+), 1 deletion(-)
->>>>
->>>> diff --git a/drivers/of/device.c b/drivers/of/device.c
->>>> index 2de320d..0a5ff54 100644
->>>> --- a/drivers/of/device.c
->>>> +++ b/drivers/of/device.c
->>>> @@ -105,12 +105,24 @@ void of_dma_configure(struct device *dev, struct
->>>> device_node *np)
->>>> ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
->>>> if (ret < 0) {
->>>> dma_addr = offset = 0;
->>>> - size = dev->coherent_dma_mask;
->>>> + size = dev->coherent_dma_mask + 1;
->>>> } else {
->>>> offset = PFN_DOWN(paddr - dma_addr);
->>>> + /*
->>>> + * Add a work around to treat the size as mask + 1 in case
->>>> + * it is defined in DT as a mask.
->>>> + */
->>>> + if (size & 1)
->>>> + size = size + 1;
->>>> dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
->>>> }
->>>>
->>>> + /* if size is 0, we have an overflow of u64 */
->>>> + if (!size) {
->>>> + dev_err(dev, "invalid size\n");
->>>> + return;
->>>> + }
->>>> +
->>>
->>> This seems potentially fragile to dodgy DTs given that we might also be
->>> using size to make a mask later. Would it make sense to double-up a
->>> sanity check as mask-format detection? Something like:
->>>
->>> if is_power_of_2(size)
->>> // use size
->>> else if is_power_of_2(size + 1)
->>> // use size + 1
->>> else
->>> // cry
->>
->> How about having the logic like this?
->>
->> 	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
->> 	if (ret < 0) {
->> 		dma_addr = offset = 0;
->> 		size = dev->coherent_dma_mask + 1;
->> 	} else {
->> 		offset = PFN_DOWN(paddr - dma_addr);
->> 		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
->> 	}
->>
->> 	if (is_power_of_2(size + 1))
->> 		size = size + 1;
->> 	else if (!is_power_of_2(size))
->> 	{
->> 		dev_err(dev, "invalid size\n");
->> 		return;
->> 	}
->
-> In of_dma_configure(), we currently assume that the default coherent
-> mask is 32-bit. In this thread:
->
-> http://article.gmane.org/gmane.linux.kernel/1835096
->
-> we talked about setting the coherent mask based on size automatically.
-> I'm not sure about the size but I think we can assume is 32-bit mask + 1
-> if it is not specified in the DT. Instead of just assuming a default
-> mask, let's assume a default size and create the mask based on this
-> (untested):
->
-> diff --git a/drivers/of/platform.c b/drivers/of/platform.c
-> index 5b33c6a21807..9ff8d1286b44 100644
-> --- a/drivers/of/platform.c
-> +++ b/drivers/of/platform.c
-> @@ -170,10 +170,10 @@ static void of_dma_configure(struct device *dev)
->   	struct iommu_ops *iommu;
->
->   	/*
-> -	 * Set default dma-mask to 32 bit. Drivers are expected to setup
-> -	 * the correct supported dma_mask.
-> +	 * Set default size to cover the 32-bit. Drivers are expected to setup
-> +	 * the correct size and dma_mask.
->   	 */
-> -	dev->coherent_dma_mask = DMA_BIT_MASK(32);
-> +	size = 1ULL << 32;
->
->   	/*
->   	 * Set it to coherent_dma_mask by default if the architecture
-> @@ -185,13 +185,24 @@ static void of_dma_configure(struct device *dev)
->   	ret = of_dma_get_range(dev->of_node, &dma_addr, &paddr, &size);
->   	if (ret < 0) {
->   		dma_addr = offset = 0;
-> -		size = dev->coherent_dma_mask;
->   	} else {
->   		offset = PFN_DOWN(paddr - dma_addr);
->   		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", dev->dma_pfn_offset);
->   	}
->   	dev->dma_pfn_offset = offset;
->
-> +	/*
-> +	 * Workaround for DTs setting the size to a mask or 0.
-> +	 */
-> +	if (is_power_of_2(size + 1))
-> +		size += 1;
+Function __assign_irq_vector() is protected by vector_lock, so use
+a global temporary cpu_mask to avoid allocating/freeing cpu_mask.
 
-In fact, since the ilog2 below ends up effectively rounding down, we 
-might as well do away with this check as well and just add 1 
-unconditionally. The only time it makes any difference is when we want 
-it to anyway!
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/vector.c |   33 +++++++++++++++++----------------
+ 1 file changed, 17 insertions(+), 16 deletions(-)
 
-I like this approach, it ends up looking a lot neater.
-
-Robin.
-
-> +
-> +	/*
-> +	 * Coherent DMA masks larger than 32-bit must be explicitly set by the
-> +	 * driver.
-> +	 */
-> +	dev->coherent_dma_mask = min(DMA_BIT_MASK(32), DMA_BIT_MASK(ilog2(size)));
-> +
->   	coherent = of_dma_is_coherent(dev->of_node);
->   	dev_dbg(dev, "device is%sdma coherent\n",
->   		coherent ? " " : " not ");
->
-
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index f5eb3999383f..4a04b25cdcdf 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -30,6 +30,7 @@ struct apic_chip_data {
+ 
+ struct irq_domain *x86_vector_domain;
+ static DEFINE_RAW_SPINLOCK(vector_lock);
++static cpumask_var_t vector_cpumask;
+ static struct irq_chip lapic_controller;
+ #ifdef	CONFIG_X86_IO_APIC
+ static struct apic_chip_data *legacy_irq_data[NR_IRQS_LEGACY];
+@@ -116,14 +117,10 @@ static int __assign_irq_vector(int irq, struct apic_chip_data *d,
+ 	static int current_vector = FIRST_EXTERNAL_VECTOR + VECTOR_OFFSET_START;
+ 	static int current_offset = VECTOR_OFFSET_START % 16;
+ 	int cpu, err;
+-	cpumask_var_t tmp_mask;
+ 
+ 	if (d->move_in_progress)
+ 		return -EBUSY;
+ 
+-	if (!alloc_cpumask_var(&tmp_mask, GFP_ATOMIC))
+-		return -ENOMEM;
+-
+ 	/* Only try and allocate irqs on cpus that are present */
+ 	err = -ENOSPC;
+ 	cpumask_clear(d->old_domain);
+@@ -131,21 +128,22 @@ static int __assign_irq_vector(int irq, struct apic_chip_data *d,
+ 	while (cpu < nr_cpu_ids) {
+ 		int new_cpu, vector, offset;
+ 
+-		apic->vector_allocation_domain(cpu, tmp_mask, mask);
++		apic->vector_allocation_domain(cpu, vector_cpumask, mask);
+ 
+-		if (cpumask_subset(tmp_mask, d->domain)) {
++		if (cpumask_subset(vector_cpumask, d->domain)) {
+ 			err = 0;
+-			if (cpumask_equal(tmp_mask, d->domain))
++			if (cpumask_equal(vector_cpumask, d->domain))
+ 				break;
+ 			/*
+ 			 * New cpumask using the vector is a proper subset of
+ 			 * the current in use mask. So cleanup the vector
+ 			 * allocation for the members that are not used anymore.
+ 			 */
+-			cpumask_andnot(d->old_domain, d->domain, tmp_mask);
++			cpumask_andnot(d->old_domain, d->domain,
++				       vector_cpumask);
+ 			d->move_in_progress =
+ 			   cpumask_intersects(d->old_domain, cpu_online_mask);
+-			cpumask_and(d->domain, d->domain, tmp_mask);
++			cpumask_and(d->domain, d->domain, vector_cpumask);
+ 			break;
+ 		}
+ 
+@@ -159,16 +157,18 @@ next:
+ 		}
+ 
+ 		if (unlikely(current_vector == vector)) {
+-			cpumask_or(d->old_domain, d->old_domain, tmp_mask);
+-			cpumask_andnot(tmp_mask, mask, d->old_domain);
+-			cpu = cpumask_first_and(tmp_mask, cpu_online_mask);
++			cpumask_or(d->old_domain, d->old_domain,
++				   vector_cpumask);
++			cpumask_andnot(vector_cpumask, mask, d->old_domain);
++			cpu = cpumask_first_and(vector_cpumask,
++						cpu_online_mask);
+ 			continue;
+ 		}
+ 
+ 		if (test_bit(vector, used_vectors))
+ 			goto next;
+ 
+-		for_each_cpu_and(new_cpu, tmp_mask, cpu_online_mask) {
++		for_each_cpu_and(new_cpu, vector_cpumask, cpu_online_mask) {
+ 			if (per_cpu(vector_irq, new_cpu)[vector] >
+ 			    VECTOR_UNDEFINED)
+ 				goto next;
+@@ -181,14 +181,13 @@ next:
+ 			d->move_in_progress =
+ 			   cpumask_intersects(d->old_domain, cpu_online_mask);
+ 		}
+-		for_each_cpu_and(new_cpu, tmp_mask, cpu_online_mask)
++		for_each_cpu_and(new_cpu, vector_cpumask, cpu_online_mask)
+ 			per_cpu(vector_irq, new_cpu)[vector] = irq;
+ 		d->cfg.vector = vector;
+-		cpumask_copy(d->domain, tmp_mask);
++		cpumask_copy(d->domain, vector_cpumask);
+ 		err = 0;
+ 		break;
+ 	}
+-	free_cpumask_var(tmp_mask);
+ 
+ 	if (!err) {
+ 		/* cache destination APIC IDs into cfg->dest_apicid */
+@@ -397,6 +396,8 @@ int __init arch_early_irq_init(void)
+ 	arch_init_msi_domain(x86_vector_domain);
+ 	arch_init_htirq_domain(x86_vector_domain);
+ 
++	BUG_ON(!alloc_cpumask_var(&vector_cpumask, GFP_KERNEL));
++
+ 	return arch_early_ioapic_init();
+ }
+ 
+-- 
+1.7.10.4
 
