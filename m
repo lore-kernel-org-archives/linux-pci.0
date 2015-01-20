@@ -1,94 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:44914 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753131AbbAUPtj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Jan 2015 10:49:39 -0500
-Received: by mail-ob0-f173.google.com with SMTP id vb8so14331506obc.4
-        for <linux-pci@vger.kernel.org>; Wed, 21 Jan 2015 07:49:39 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20141217140131.607a1ac7@lxorguk.ukuu.org.uk>
-References: <1418812486-12394-1-git-send-email-gabriel.fernandez@linaro.org>
-	<1418812486-12394-6-git-send-email-gabriel.fernandez@linaro.org>
-	<20141217140131.607a1ac7@lxorguk.ukuu.org.uk>
-Date: Wed, 21 Jan 2015 16:49:39 +0100
-Message-ID: <CAG374jD3Y_y1Ugt0Y7_j9kz66yUCx8PPNLkkpWBdpVPMxnoC8w@mail.gmail.com>
-Subject: Re: [PATCH 5/5] PCI: st: disable IO support
-From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Cc: Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Magnus Damm <damm@opensource.se>,
-	Will Deacon <will.deacon@arm.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Srikanth Thokala <sthokal@xilinx.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"kernel@stlinux.com" <kernel@stlinux.com>,
-	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v7 23/38] x86/irq: Normalize x86 irq_chip name
+Date: Tue, 20 Jan 2015 11:08:26 +0800
+Message-Id: <1421723321-8386-24-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Some irq_chip names use underscore, others use hyphen. So normalize them
+to use hythen as separator.
 
-Yes, we don't really care about this corner case.
-Thanks for your reviewing.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Link: http://lkml.kernel.org/r/1416894816-23245-24-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+---
+ arch/x86/kernel/apic/msi.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-BR
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index a24b803b199a..2bf13484fbfd 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -188,7 +188,7 @@ dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ }
+ 
+ static struct irq_chip dmar_msi_controller = {
+-	.name			= "DMAR_MSI",
++	.name			= "DMAR-MSI",
+ 	.irq_unmask		= dmar_msi_unmask,
+ 	.irq_mask		= dmar_msi_mask,
+ 	.irq_ack		= irq_chip_ack_parent,
+@@ -319,7 +319,7 @@ static int hpet_msi_set_affinity(struct irq_data *data,
+ }
+ 
+ static struct irq_chip hpet_msi_controller = {
+-	.name = "HPET_MSI",
++	.name = "HPET-MSI",
+ 	.irq_unmask = hpet_msi_unmask,
+ 	.irq_mask = hpet_msi_mask,
+ 	.irq_ack = irq_chip_ack_parent,
+-- 
+1.7.10.4
 
-Gabriel
-
-On 17 December 2014 at 15:01, One Thousand Gnomes
-<gnomes@lxorguk.ukuu.org.uk> wrote:
-> On Wed, 17 Dec 2014 11:34:46 +0100
-> Gabriel FERNANDEZ <gabriel.fernandez@st.com> wrote:
->
->> sti SoCs PCIe IPs are built around DesignWare IP Core.
->> But in these SoCs, PCIe IP doesn't support IO.
->> By default, when no IO space is provided, a default one is assigned.
->>
->> Add an empty IO resource to the bus, and disable IO by default.
->
-> As a point of PCI pedantry I don't think this is quite sufficient. PCI
-> has a weird corner case where I/O resources are implied rather than
-> allocated.
->
-> For IDE/SATA you may need to something like
->
->         if (class == PCI_CLASS_STORAGE_IDE) {
->                 u8 progif;
->                 pci_read_config_byte(dev, PCI_CLASS_PROG, &progif);
->                 progif |= 5;
->                 pci_write_config_byte(dev, PCI_CLASS_PROG, &progif);
->         }
->
-> so that any adapter is kicked out of legacy mode and doesn't get implied
-> I/O resources and interrupts. I don't know if that case matters for your
-> usage.
->
->
