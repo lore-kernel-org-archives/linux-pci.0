@@ -1,67 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:53636 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750895AbbALAFN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 11 Jan 2015 19:05:13 -0500
-Received: by mail-ie0-f181.google.com with SMTP id rl12so22884075iec.12
-        for <linux-pci@vger.kernel.org>; Sun, 11 Jan 2015 16:05:12 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4938579.0KIk3QtTCP@wuerfel>
-References: <1420857290-8373-1-git-send-email-robh@kernel.org>
-	<1420857290-8373-8-git-send-email-robh@kernel.org>
-	<CACRpkdbwKN9LenqrWeu4WykhdZOGAdxpC_BYr2cYpc2_cn5GfA@mail.gmail.com>
-	<4938579.0KIk3QtTCP@wuerfel>
-Date: Mon, 12 Jan 2015 01:05:12 +0100
-Message-ID: <CACRpkdZSXWrVudiadVjbhQDS_zQrYttaytW-TUoeFUrc=beD1A@mail.gmail.com>
-Subject: Re: [PATCH 07/16] ARM: integrator: convert PCI to use generic config accesses
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Rob Herring <robh@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:3394 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751410AbbATDLf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 19 Jan 2015 22:11:35 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v7 26/38] x86/irq: Implement irq_chip.irq_write_msi_msg for MSI/DMAR/HPET irq_chips
+Date: Tue, 20 Jan 2015 11:08:29 +0800
+Message-Id: <1421723321-8386-27-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jan 10, 2015 at 10:53 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Saturday 10 January 2015 22:40:22 Linus Walleij wrote:
->> >  static int v3_read_config(struct pci_bus *bus, unsigned int devfn, int where,
->> >                           int size, u32 *val)
->> >  {
->> > -       addr = v3_open_config_window(bus, devfn, where);
->> > +       int ret = pci_generic_config_read(bus, devfn, where, size, val);
->> >         v3_close_config_window();
->> > +       return ret;
->> >  }
->> >
->> >  static int v3_write_config(struct pci_bus *bus, unsigned int devfn, int where,
->> >                            int size, u32 val)
->> >  {
->> > +       int ret = pci_generic_config_write(bus, devfn, where, size, val);
->> >         v3_close_config_window();
->> > -       raw_spin_unlock_irqrestore(&v3_lock, flags);
->> > +       return ret;
->> >  }
->> >
->> >  static struct pci_ops pci_v3_ops = {
->> > +       .map_bus = v3_open_config_window,
->> >         .read   = v3_read_config,
->> >         .write  = v3_write_config,
->>
->> So .map_bus is called before every .read/.write operation I take it.
->>
->> Wouldn't it be proper to call the v3_close_config_window() from a
->> matching .unmap_bus() callback for symmetry?
->
-> It would be nicer for integrator but useless for anything else, so
-> I'd vote for leaving it the way Rob posted.
+Implement irq_chip.irq_write_msi_msg for MSI/DMAR/HPET irq_chips, they
+will be used to share common code later.
 
-OK I buy that, throw in a comment about it in the code if there
-is some time for iterating the patch.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Link: http://lkml.kernel.org/r/1416894816-23245-27-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+---
+ arch/x86/kernel/apic/msi.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-Yours,
-Linus Walleij
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 15429aa112fe..f5b899514634 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -192,6 +192,11 @@ dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 	return ret;
+ }
+ 
++static void dmar_msi_write_msg(struct irq_data *data, struct msi_msg *msg)
++{
++	dmar_msi_write(data->irq, msg);
++}
++
+ static struct irq_chip dmar_msi_controller = {
+ 	.name			= "DMAR-MSI",
+ 	.irq_unmask		= dmar_msi_unmask,
+@@ -200,6 +205,7 @@ static struct irq_chip dmar_msi_controller = {
+ 	.irq_set_affinity	= dmar_msi_set_affinity,
+ 	.irq_retrigger		= irq_chip_retrigger_hierarchy,
+ 	.irq_compose_msi_msg	= irq_msi_compose_msg,
++	.irq_write_msi_msg	= dmar_msi_write_msg,
+ 	.flags			= IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
+@@ -322,6 +328,11 @@ static int hpet_msi_set_affinity(struct irq_data *data,
+ 	return ret;
+ }
+ 
++static void hpet_msi_write_msg(struct irq_data *data, struct msi_msg *msg)
++{
++	hpet_msi_write(data->handler_data, msg);
++}
++
+ static struct irq_chip hpet_msi_controller = {
+ 	.name = "HPET-MSI",
+ 	.irq_unmask = hpet_msi_unmask,
+@@ -330,6 +341,7 @@ static struct irq_chip hpet_msi_controller = {
+ 	.irq_set_affinity = hpet_msi_set_affinity,
+ 	.irq_retrigger = irq_chip_retrigger_hierarchy,
+ 	.irq_compose_msi_msg = irq_msi_compose_msg,
++	.irq_write_msi_msg = hpet_msi_write_msg,
+ 	.flags = IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
+-- 
+1.7.10.4
+
