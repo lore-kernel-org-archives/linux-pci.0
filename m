@@ -1,271 +1,194 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:56829 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752584AbbAGP3v (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jan 2015 10:29:51 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>
-Subject: [RFC PATCH 3/3] drivers: pci: host: update the pcie designware driver to new range parsing API
-Date: Wed,  7 Jan 2015 15:29:31 +0000
-Message-Id: <1420644571-18928-4-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1420644571-18928-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1420644571-18928-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v7 18/38] x86/MSI: Clean up unused MSI related code and interfaces
+Date: Tue, 20 Jan 2015 11:08:21 +0800
+Message-Id: <1421723321-8386-19-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The new OF pci API of_pci_get_host_bridge_resources() implemented by:
+Now MSI interrupt has been converted to new hierarchy irqdomain
+interfaces, so kill legacy MSI related code and interfaces.
 
-'commit cbe4097f8ae699ebbdaf8c95 ("of/pci: Add support for parsing PCI host bridge resources from DT")'
-
-and subsequent changes allow to parse PCI DT ranges in a generic way
-through a new API that can be used to consolidate the DT range parsing for
-all PCIe controllers in the kernel that are configured through DT.
-
-This patch updates the PCIe designware driver in order for it to use the
-new OF range parsing API and remove driver specific parsing code.
-
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Liviu Dudau <liviu.dudau@arm.com>
-Cc: Mohit Kumar <mohit.kumar@st.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh+dt@kernel.org>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Yijing Wang <wangyijing@huawei.com>
+Link: http://lkml.kernel.org/r/1416894816-23245-19-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/pci/host/pcie-designware.c | 145 +++++++++++++++++--------------------
- drivers/pci/host/pcie-designware.h |   5 +-
- 2 files changed, 69 insertions(+), 81 deletions(-)
+ arch/x86/include/asm/hpet.h     |    9 -------
+ arch/x86/include/asm/x86_init.h |    4 ---
+ arch/x86/kernel/apic/msi.c      |   55 +++------------------------------------
+ 3 files changed, 4 insertions(+), 64 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index df781cd..95cce40 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -69,8 +69,6 @@
+diff --git a/arch/x86/include/asm/hpet.h b/arch/x86/include/asm/hpet.h
+index e87e9faf87a9..5fa9fb0f8809 100644
+--- a/arch/x86/include/asm/hpet.h
++++ b/arch/x86/include/asm/hpet.h
+@@ -85,15 +85,6 @@ extern struct irq_domain *hpet_create_irq_domain(int hpet_id);
+ extern int hpet_assign_irq(struct irq_domain *domain,
+ 			   struct hpet_dev *dev, int dev_num);
  
- static struct hw_pci dw_pci;
- 
--static unsigned long global_io_offset;
+-#ifdef CONFIG_PCI_MSI
+-extern int default_setup_hpet_msi(unsigned int irq, unsigned int id);
+-#else
+-static inline int default_setup_hpet_msi(unsigned int irq, unsigned int id)
+-{
+-	return -EINVAL;
+-}
+-#endif
 -
- static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+ #ifdef CONFIG_HPET_EMULATE_RTC
+ 
+ #include <linux/interrupt.h>
+diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+index f58a9c7a3c86..1649bb9ca27c 100644
+--- a/arch/x86/include/asm/x86_init.h
++++ b/arch/x86/include/asm/x86_init.h
+@@ -175,13 +175,9 @@ struct msi_msg;
+ 
+ struct x86_msi_ops {
+ 	int (*setup_msi_irqs)(struct pci_dev *dev, int nvec, int type);
+-	void (*compose_msi_msg)(struct pci_dev *dev, unsigned int irq,
+-				unsigned int dest, struct msi_msg *msg,
+-			       u8 hpet_id);
+ 	void (*teardown_msi_irq)(unsigned int irq);
+ 	void (*teardown_msi_irqs)(struct pci_dev *dev);
+ 	void (*restore_msi_irqs)(struct pci_dev *dev);
+-	int  (*setup_hpet_msi)(unsigned int irq, unsigned int id);
+ };
+ 
+ struct IO_APIC_route_entry;
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index fa2dd6ebcaea..afaaa1166a7d 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -25,16 +25,12 @@
+ 
+ static struct irq_domain *msi_default_domain;
+ 
+-void native_compose_msi_msg(struct pci_dev *pdev,
+-			    unsigned int irq, unsigned int dest,
+-			    struct msi_msg *msg, u8 hpet_id)
++static void native_compose_msi_msg(struct irq_cfg *cfg, struct msi_msg *msg)
  {
- 	BUG_ON(!sys->private_data);
-@@ -343,18 +341,21 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- {
- 	struct device_node *np = pp->dev->of_node;
- 	struct platform_device *pdev = to_platform_device(pp->dev);
--	struct of_pci_range range;
--	struct of_pci_range_parser parser;
- 	struct resource *cfg_res;
--	u32 val, na, ns;
-+	u32 val, na;
- 	const __be32 *addrp;
- 	int i, index, ret;
-+	resource_size_t io_base;
-+	struct pci_host_bridge_window *win;
-+	struct of_pci_resource *of_pci_res;
- 
--	/* Find the address cell size and the number of cells in order to get
--	 * the untranslated address.
-+	/*
-+	 * Find the address cell size (ie must be 3 for DT PCI addresses) to
-+	 * get the untranslated address.
- 	 */
- 	of_property_read_u32(np, "#address-cells", &na);
--	ns = of_n_size_cells(np);
-+
-+	INIT_LIST_HEAD(&pp->resources);
- 
- 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
- 	if (cfg_res) {
-@@ -366,84 +367,79 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 		/* Find the untranslated configuration space address */
- 		index = of_property_match_string(np, "reg-names", "config");
- 		addrp = of_get_address(np, index, NULL, NULL);
--		pp->cfg0_mod_base = of_read_number(addrp, ns);
-+		pp->cfg0_mod_base = of_read_number(addrp, of_n_addr_cells(np));
- 		pp->cfg1_mod_base = pp->cfg0_mod_base + pp->cfg0_size;
- 	} else {
- 		dev_err(pp->dev, "missing *config* reg space\n");
- 	}
- 
--	if (of_pci_range_parser_init(&parser, np)) {
--		dev_err(pp->dev, "missing ranges property\n");
--		return -EINVAL;
--	}
-+	ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &pp->resources,
-+					       &io_base);
-+	if (ret)
-+		return ret;
- 
--	/* Get the I/O and memory ranges from DT */
--	for_each_of_pci_range(&parser, &range) {
--		unsigned long restype = range.flags & IORESOURCE_TYPE_BITS;
+-	struct irq_cfg *cfg = irq_cfg(irq);
 -
--		if (restype == IORESOURCE_IO) {
--			of_pci_range_to_resource(&range, np, &pp->io);
--			pp->io.name = "I/O";
--			pp->io.start = max_t(resource_size_t,
--					     PCIBIOS_MIN_IO,
--					     range.pci_addr + global_io_offset);
--			pp->io.end = min_t(resource_size_t,
-+	list_for_each_entry(win, &pp->resources, list) {
-+		u64 pci_addr;
-+		struct resource *res = win->res;
-+
-+		pci_addr = res->start - win->offset;
-+		of_pci_res = container_of(res, struct of_pci_resource, res);
-+
-+		if (resource_type(res) == IORESOURCE_IO) {
-+			res->name = "I/O";
-+			res->start = max_t(resource_size_t, PCIBIOS_MIN_IO,
-+					   pci_addr);
-+			res->end = min_t(resource_size_t,
- 					   IO_SPACE_LIMIT,
--					   range.pci_addr + range.size
--					   + global_io_offset - 1);
--			pp->io_size = resource_size(&pp->io);
--			pp->io_bus_addr = range.pci_addr;
--			pp->io_base = range.cpu_addr;
-+					   pci_addr + resource_size(res) - 1);
-+			pp->io_size = resource_size(res);
-+			pp->io_bus_addr = pci_addr;
-+			pp->io_base = io_base;
+ 	msg->address_hi = MSI_ADDR_BASE_HI;
  
- 			/* Find the untranslated IO space address */
--			pp->io_mod_base = of_read_number(parser.range -
--							 parser.np + na, ns);
-+			pp->io_mod_base =
-+				of_read_number(of_pci_res->parser.range + na,
-+					       of_pci_res->parser.pna);
-+			pci_remap_iospace(res, io_base);
- 		}
--		if (restype == IORESOURCE_MEM) {
--			of_pci_range_to_resource(&range, np, &pp->mem);
--			pp->mem.name = "MEM";
--			pp->mem_size = resource_size(&pp->mem);
--			pp->mem_bus_addr = range.pci_addr;
-+
-+		if (resource_type(res) == IORESOURCE_MEM) {
-+			res->name = "MEM";
-+			pp->mem_size = resource_size(res);
-+			pp->mem_bus_addr = pci_addr;
-+			pp->mem_base = res->start;
+ 	if (x2apic_enabled())
+-		msg->address_hi |= MSI_ADDR_EXT_DEST_ID(dest);
++		msg->address_hi |= MSI_ADDR_EXT_DEST_ID(cfg->dest_apicid);
  
- 			/* Find the untranslated MEM space address */
--			pp->mem_mod_base = of_read_number(parser.range -
--							  parser.np + na, ns);
-+			pp->mem_mod_base =
-+				of_read_number(of_pci_res->parser.range + na,
-+					       of_pci_res->parser.pna);
- 		}
--		if (restype == 0) {
--			of_pci_range_to_resource(&range, np, &pp->cfg);
--			pp->cfg0_size = resource_size(&pp->cfg)/2;
--			pp->cfg1_size = resource_size(&pp->cfg)/2;
--			pp->cfg0_base = pp->cfg.start;
--			pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
-+
-+		if (resource_type(res) == 0) {
-+			pp->cfg0_size = resource_size(res)/2;
-+			pp->cfg1_size = resource_size(res)/2;
-+			pp->cfg0_base = res->start;
-+			pp->cfg1_base = res->start + pp->cfg0_size;
+ 	msg->address_lo =
+ 		MSI_ADDR_BASE_LO |
+@@ -44,7 +40,7 @@ void native_compose_msi_msg(struct pci_dev *pdev,
+ 		((apic->irq_delivery_mode != dest_LowestPrio) ?
+ 			MSI_ADDR_REDIRECTION_CPU :
+ 			MSI_ADDR_REDIRECTION_LOWPRI) |
+-		MSI_ADDR_DEST_ID(dest);
++		MSI_ADDR_DEST_ID(cfg->dest_apicid);
  
- 			/* Find the untranslated configuration space address */
--			pp->cfg0_mod_base = of_read_number(parser.range -
--							   parser.np + na, ns);
-+			pp->cfg0_mod_base =
-+				of_read_number(of_pci_res->parser.range + na,
-+					       of_pci_res->parser.pna);
- 			pp->cfg1_mod_base = pp->cfg0_mod_base +
- 					    pp->cfg0_size;
--		}
--	}
--
--	ret = of_pci_parse_bus_range(np, &pp->busn);
--	if (ret < 0) {
--		pp->busn.name = np->name;
--		pp->busn.start = 0;
--		pp->busn.end = 0xff;
--		pp->busn.flags = IORESOURCE_BUS;
--		dev_dbg(pp->dev, "failed to parse bus-range property: %d, using default %pR\n",
--			ret, &pp->busn);
--	}
- 
--	if (!pp->dbi_base) {
--		pp->dbi_base = devm_ioremap(pp->dev, pp->cfg.start,
--					resource_size(&pp->cfg));
--		if (!pp->dbi_base) {
--			dev_err(pp->dev, "error with ioremap\n");
--			return -ENOMEM;
-+			if (!pp->dbi_base) {
-+				pp->dbi_base = devm_ioremap(pp->dev,
-+						res->start,
-+						resource_size(res));
-+				if (!pp->dbi_base) {
-+					dev_err(pp->dev, "error with ioremap\n");
-+					return -ENOMEM;
-+				}
-+			}
- 		}
--	}
- 
--	pp->mem_base = pp->mem.start;
-+	}
- 
- 	if (!pp->va_cfg0_base) {
- 		pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
-@@ -704,20 +700,15 @@ static struct pci_ops dw_pcie_ops = {
- static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
- {
- 	struct pcie_port *pp;
-+	struct pci_host_bridge_window *win, *tmp;
- 
- 	pp = sys_to_pcie(sys);
-+	/* remove the configuration aperture in case it is there */
-+	list_for_each_entry_safe(win, tmp, &pp->resources, list)
-+		if (!resource_type(win->res))
-+			list_del(&win->list);
- 
--	if (global_io_offset < SZ_1M && pp->io_size > 0) {
--		sys->io_offset = global_io_offset - pp->io_bus_addr;
--		pci_ioremap_io(global_io_offset, pp->io_base);
--		global_io_offset += SZ_64K;
--		pci_add_resource_offset(&sys->resources, &pp->io,
--					sys->io_offset);
--	}
--
--	sys->mem_offset = pp->mem.start - pp->mem_bus_addr;
--	pci_add_resource_offset(&sys->resources, &pp->mem, sys->mem_offset);
--	pci_add_resource(&sys->resources, &pp->busn);
-+	list_splice(&pp->resources, &sys->resources);
- 
- 	return 1;
+ 	msg->data =
+ 		MSI_DATA_TRIGGER_EDGE |
+@@ -93,31 +89,6 @@ static void msi_update_msg(struct msi_msg *msg, struct irq_data *irq_data)
+ 	msg->address_lo |= MSI_ADDR_DEST_ID(cfg->dest_apicid);
  }
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index d0bbd27..2479e9c 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -42,10 +42,7 @@ struct pcie_port {
- 	u64			mem_mod_base;
- 	phys_addr_t		mem_bus_addr;
- 	u32			mem_size;
--	struct resource		cfg;
--	struct resource		io;
--	struct resource		mem;
--	struct resource		busn;
-+	struct list_head	resources;
- 	int			irq;
- 	u32			lanes;
- 	struct pcie_host_ops	*ops;
+ 
+-static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq,
+-			   struct msi_msg *msg, u8 hpet_id)
+-{
+-	struct irq_cfg *cfg;
+-	int err;
+-	unsigned dest;
+-
+-	if (disable_apic)
+-		return -ENXIO;
+-
+-	cfg = irq_cfg(irq);
+-	err = assign_irq_vector(irq, cfg, apic->target_cpus());
+-	if (err)
+-		return err;
+-
+-	err = apic->cpu_mask_to_apicid_and(cfg->domain,
+-					   apic->target_cpus(), &dest);
+-	if (err)
+-		return err;
+-
+-	x86_msi.compose_msi_msg(pdev, irq, dest, msg, hpet_id);
+-
+-	return 0;
+-}
+-
+ /*
+  * IRQ Chip for MSI PCI/PCI-X/PCI-Express Devices,
+  * which implement the MSI or MSI-X Capability Structure.
+@@ -262,7 +233,7 @@ int arch_setup_dmar_msi(unsigned int irq)
+ 	struct msi_msg msg;
+ 	struct irq_cfg *cfg = irq_cfg(irq);
+ 
+-	native_compose_msi_msg(NULL, irq, cfg->dest_apicid, &msg, -1);
++	native_compose_msi_msg(cfg, &msg);
+ 	dmar_msi_write(irq, &msg);
+ 	irq_set_chip_and_handler_name(irq, &dmar_msi_type, handle_edge_irq,
+ 				      "edge");
+@@ -318,24 +289,6 @@ static struct irq_chip hpet_msi_controller = {
+ 	.flags = IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
+-int default_setup_hpet_msi(unsigned int irq, unsigned int id)
+-{
+-	struct irq_chip *chip = &hpet_msi_controller;
+-	struct msi_msg msg;
+-	int ret;
+-
+-	ret = msi_compose_msg(NULL, irq, &msg, id);
+-	if (ret < 0)
+-		return ret;
+-
+-	hpet_msi_write(irq_get_handler_data(irq), &msg);
+-	irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
+-	setup_remapped_irq(irq, irq_cfg(irq), chip);
+-
+-	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
+-	return 0;
+-}
+-
+ static int hpet_domain_alloc(struct irq_domain *domain, unsigned int virq,
+ 			     unsigned int nr_irqs, void *arg)
+ {
 -- 
-2.2.1
+1.7.10.4
 
