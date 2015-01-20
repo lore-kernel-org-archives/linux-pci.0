@@ -1,103 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:36801 "EHLO
-	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752257AbbAJPbO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Jan 2015 10:31:14 -0500
-Received: by mail-oi0-f48.google.com with SMTP id u20so15637164oif.7
-        for <linux-pci@vger.kernel.org>; Sat, 10 Jan 2015 07:31:13 -0800 (PST)
-Date: Sat, 10 Jan 2015 08:31:09 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Sasha Levin <sasha.levin@oracle.com>
-Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	Alex Williamson <alex.williamson@redhat.com>,
+Received: from mga02.intel.com ([134.134.136.20]:18726 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752510AbbATCSN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 19 Jan 2015 21:18:13 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Alexander Graf <agraf@suse.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-	Kim Phillips <kim.phillips@freescale.com>,
-	Stuart Yoder <stuart.yoder@freescale.com>
-Subject: Re: [PATCH v2] PCI/sysfs: off by two when checking the limit on
- driver_override length
-Message-ID: <20150110153109.GJ6575@google.com>
-References: <1420663977-30707-1-git-send-email-sasha.levin@oracle.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1420663977-30707-1-git-send-email-sasha.levin@oracle.com>
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [Bugfix 0/3] Xen IRQ related hotfixes for v3.19
+Date: Tue, 20 Jan 2015 10:21:04 +0800
+Message-Id: <1421720467-7709-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Kim, Stuart]
+Hi Thomas,
+	This patch set includes three hotfixes related Xen IRQ for v3.19.
+Sorry for the long delay to get these two regressions fixed, it really
+cost me some time to read and understand Xen IRQ code.
 
-On Wed, Jan 07, 2015 at 03:52:57PM -0500, Sasha Levin wrote:
-> When printing the driver_override parameter when it is 4095 and 4094 bytes
-> long the printing code would access invalid memory because we need count+1
-> bytes for printing.
+Patch 1 fixes the failure to register ACPI SCI interrupt on Xen
+domain0 by reworking acpi_gsi_to_irq(). I will backport it to v3.18
+too once it reaches the mainstream kernel.
 
-Hi Sasha,
+Patch 2 fixes the regression in Xen PCI device passthrough(pciback).
+It's a temporary solution, I will send the formal fix for v3.20 and
+it has passed tests too.
 
-I swear I'm not trying to be a nuisance, but wasn't there another fix for a
-different memory corruption problem?  I was expecting two patches, but I
-only see one.
+Patch 3 fixes an issue found when reading code. There's no real bug
+reports related to this issue yet.
 
-If I understand this right, the problem is that driver_override_show() adds
-"\n" at the end of the driver name, and the whole string (driver name +
-newline) must fit within a page because sysfs show functions only have a
-page to put their data in.
+Great thanks to Konrad and Sander for testing fixes for these regressions.
 
-So the buffer overrun is in driver_override_show(), but the proposed fix is
-in driver_override_store().  I think that's too complicated.  I'd rather
-use snprintf(..., PAGE_SIZE, ...) in driver_override_show() because that's
-a  common pattern and it's easy to verify that it's correct.
+Regards,
+Gerry
 
-I don't think it's worth it to validate the length in
-driver_override_store().  I think the pattern in resume_store() should be
-sufficient, e.g.,
+Jiang Liu (3):
+  xen/pci: Kill function xen_setup_acpi_sci()
+  xen/irq, ACPI: Fix regression in xen PCI passthrough caused by
+    cffe0a2b5a34
+  xen/irq: Override ACPI IRQ management callback __acpi_unregister_gsi
 
-    if (count && buf[count - 1] == '\n')
-        count--;
-    name = kstrndup(buf, count, GFP_KERNEL);
-    if (!name)
-        return -ENOMEM;
+ arch/x86/include/asm/acpi.h |    1 +
+ arch/x86/kernel/acpi/boot.c |   26 +++++++++++------------
+ arch/x86/pci/xen.c          |   49 ++-----------------------------------------
+ drivers/acpi/pci_irq.c      |    1 -
+ 4 files changed, 16 insertions(+), 61 deletions(-)
 
-    pdev->driver_override = name;
-    kfree(old);
+-- 
+1.7.10.4
 
-If a user sets a driver name that's 4KB long, and the output of
-driver_override_show() is truncated, that doesn't seem like a real issue.
-
-driver_override_store()/driver_override_show() in drivers/base/platform.c
-(added by 3d713e0e382e ("driver core: platform: add device binding path
-'driver_override'")) is basically the same code, and it looks like it has
-the same two problems.  Can you add fix those at the same time?
-
-Bjorn
-
-> Cc: <stable@vger.kernel.org> # v3.16+
-> Fixes: 782a985d ("PCI: Introduce new device binding path using pci_dev.driver_override")
-> Cc: Alex Williamson <alex.williamson@redhat.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> Cc: Alexander Graf <agraf@suse.de>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
-> ---
->  drivers/pci/pci-sysfs.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index aa012fb..17459ed 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -521,7 +521,8 @@ static ssize_t driver_override_store(struct device *dev,
->  	struct pci_dev *pdev = to_pci_dev(dev);
->  	char *driver_override, *old = pdev->driver_override, *cp;
->  
-> -	if (count > PATH_MAX)
-> +	/* We need to keep extra room for a newline */
-> +	if (count >= (PATH_MAX - 1))
->  		return -EINVAL;
->  
->  	driver_override = kstrndup(buf, count, GFP_KERNEL);
-> -- 
-> 1.7.10.4
-> 
