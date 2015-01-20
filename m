@@ -1,267 +1,171 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:58515 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753245AbbAOC2c (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 21:28:32 -0500
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 15 Jan 2015 12:28:31 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id E1DFB3578053
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:28 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t0F2SSdf48759010
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:28 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t0F2SSig019969
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:28 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V11 10/17] powerpc/powernv: Use pci_dn in PCI config accessor
-Date: Thu, 15 Jan 2015 10:28:00 +0800
-Message-Id: <1421288887-7765-11-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <20150113180502.GC2776@google.com>
- <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mga03.intel.com ([134.134.136.65]:52772 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751727AbbATCS2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 19 Jan 2015 21:18:28 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	xen-devel@lists.xenproject.org
+Subject: [Bugfix 1/3] xen/pci: Kill function xen_setup_acpi_sci()
+Date: Tue, 20 Jan 2015 10:21:05 +0800
+Message-Id: <1421720467-7709-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421720467-7709-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421720467-7709-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI config accessors rely on device node. Unfortunately, VFs
-don't have corresponding device nodes. So we have to switch to
-pci_dn for PCI config access.
+Currently Xen Domain0 has special treatment for ACPI SCI interrupt,
+that is initialize irq for ACPI SCI at early stage in a special way as:
+xen_init_IRQ()
+	->pci_xen_initial_domain()
+		->xen_setup_acpi_sci()
+			Allocate and initialize irq for ACPI SCI
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Function xen_setup_acpi_sci() calls acpi_gsi_to_irq() to get an irq
+number for ACPI SCI. But unfortunately acpi_gsi_to_irq() depends on
+IOAPIC irqdomains through following path
+acpi_gsi_to_irq()
+	->mp_map_gsi_to_irq()
+		->mp_map_pin_to_irq()
+			->check IOAPIC irqdomain
+
+For PV domains, it uses Xen event based interrupt manangement and
+doesn't make uses of native IOAPIC, so no irqdomains created for IOAPIC.
+This causes Xen domain0 fails to install interrupt handler for ACPI SCI
+and all ACPI events will be lost. Please refer to:
+https://lkml.org/lkml/2014/12/19/178
+
+So the fix is to get rid of special treatment for ACPI SCI, just treat
+ACPI SCI as normal GSI interrupt as:
+acpi_gsi_to_irq()
+	->acpi_register_gsi()
+		->acpi_register_gsi_xen()
+			->xen_register_gsi()
+
+With above change, there's no need for xen_setup_acpi_sci() anymore.
+The above change also works with bare metal kernel too.
+
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Tested-by: Sander Eikelenboom <linux@eikelenboom.it>
 ---
- arch/powerpc/platforms/powernv/eeh-powernv.c |   14 +++++-
- arch/powerpc/platforms/powernv/pci.c         |   69 ++++++++++----------------
- arch/powerpc/platforms/powernv/pci.h         |    4 +-
- 3 files changed, 40 insertions(+), 47 deletions(-)
+ arch/x86/kernel/acpi/boot.c |   26 ++++++++++++------------
+ arch/x86/pci/xen.c          |   47 -------------------------------------------
+ 2 files changed, 13 insertions(+), 60 deletions(-)
 
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 1d19e79..c63b6c1 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -419,21 +419,31 @@ static inline bool powernv_eeh_cfg_blocked(struct device_node *dn)
- static int powernv_eeh_read_config(struct device_node *dn,
- 				   int where, int size, u32 *val)
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index d1626364a28a..b9e30daa0881 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -611,20 +611,20 @@ void __init acpi_pic_sci_set_trigger(unsigned int irq, u16 trigger)
+ 
+ int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
  {
-+	struct pci_dn *pdn = PCI_DN(dn);
+-	int irq;
+-
+-	if (acpi_irq_model == ACPI_IRQ_MODEL_PIC) {
+-		*irqp = gsi;
+-	} else {
+-		mutex_lock(&acpi_ioapic_lock);
+-		irq = mp_map_gsi_to_irq(gsi,
+-					IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
+-		mutex_unlock(&acpi_ioapic_lock);
+-		if (irq < 0)
+-			return -1;
+-		*irqp = irq;
++	int rc, irq, trigger, polarity;
 +
-+	if (!pdn)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
- 	if (powernv_eeh_cfg_blocked(dn)) {
- 		*val = 0xFFFFFFFF;
- 		return PCIBIOS_SET_FAILED;
++	rc = acpi_get_override_irq(gsi, &trigger, &polarity);
++	if (rc == 0) {
++		trigger = trigger ? ACPI_LEVEL_SENSITIVE : ACPI_EDGE_SENSITIVE;
++		polarity = polarity ? ACPI_ACTIVE_LOW : ACPI_ACTIVE_HIGH;
++		irq = acpi_register_gsi(NULL, gsi, trigger, polarity);
++		if (irq >= 0) {
++			*irqp = irq;
++			return 0;
++		}
  	}
- 
--	return pnv_pci_cfg_read(dn, where, size, val);
-+	return pnv_pci_cfg_read(pdn, where, size, val);
- }
- 
- static int powernv_eeh_write_config(struct device_node *dn,
- 				    int where, int size, u32 val)
- {
-+	struct pci_dn *pdn = PCI_DN(dn);
+-	return 0;
 +
-+	if (!pdn)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
- 	if (powernv_eeh_cfg_blocked(dn))
- 		return PCIBIOS_SET_FAILED;
++	return -1;
+ }
+ EXPORT_SYMBOL_GPL(acpi_gsi_to_irq);
  
--	return pnv_pci_cfg_write(dn, where, size, val);
-+	return pnv_pci_cfg_write(pdn, where, size, val);
+diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+index c489ef2c1a39..6e5e89c3c644 100644
+--- a/arch/x86/pci/xen.c
++++ b/arch/x86/pci/xen.c
+@@ -471,52 +471,6 @@ int __init pci_xen_hvm_init(void)
  }
  
- /**
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index 4945e87..b7d4b9d 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -366,9 +366,9 @@ static void pnv_pci_handle_eeh_config(struct pnv_phb *phb, u32 pe_no)
- 	spin_unlock_irqrestore(&phb->lock, flags);
- }
- 
--static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
--				     struct device_node *dn)
-+static void pnv_pci_config_check_eeh(struct pci_dn *pdn)
- {
-+	struct pnv_phb *phb = pdn->phb->private_data;
- 	u8	fstate;
- 	__be16	pcierr;
- 	int	pe_no;
-@@ -379,7 +379,7 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
- 	 * setup that yet. So all ER errors should be mapped to
- 	 * reserved PE.
- 	 */
--	pe_no = PCI_DN(dn)->pe_number;
-+	pe_no = pdn->pe_number;
- 	if (pe_no == IODA_INVALID_PE) {
- 		if (phb->type == PNV_PHB_P5IOC2)
- 			pe_no = 0;
-@@ -407,8 +407,7 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
- 	}
- 
- 	cfg_dbg(" -> EEH check, bdfn=%04x PE#%d fstate=%x\n",
--		(PCI_DN(dn)->busno << 8) | (PCI_DN(dn)->devfn),
--		pe_no, fstate);
-+		(pdn->busno << 8) | (pdn->devfn), pe_no, fstate);
- 
- 	/* Clear the frozen state if applicable */
- 	if (fstate == OPAL_EEH_STOPPED_MMIO_FREEZE ||
-@@ -425,10 +424,9 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
- 	}
- }
- 
--int pnv_pci_cfg_read(struct device_node *dn,
-+int pnv_pci_cfg_read(struct pci_dn *pdn,
- 		     int where, int size, u32 *val)
- {
--	struct pci_dn *pdn = PCI_DN(dn);
- 	struct pnv_phb *phb = pdn->phb->private_data;
- 	u32 bdfn = (pdn->busno << 8) | pdn->devfn;
- 	s64 rc;
-@@ -462,10 +460,9 @@ int pnv_pci_cfg_read(struct device_node *dn,
- 	return PCIBIOS_SUCCESSFUL;
- }
- 
--int pnv_pci_cfg_write(struct device_node *dn,
-+int pnv_pci_cfg_write(struct pci_dn *pdn,
- 		      int where, int size, u32 val)
- {
--	struct pci_dn *pdn = PCI_DN(dn);
- 	struct pnv_phb *phb = pdn->phb->private_data;
- 	u32 bdfn = (pdn->busno << 8) | pdn->devfn;
- 
-@@ -489,18 +486,17 @@ int pnv_pci_cfg_write(struct device_node *dn,
- }
- 
- #if CONFIG_EEH
--static bool pnv_pci_cfg_check(struct pci_controller *hose,
--			      struct device_node *dn)
-+static bool pnv_pci_cfg_check(struct pci_dn *pdn)
- {
- 	struct eeh_dev *edev = NULL;
--	struct pnv_phb *phb = hose->private_data;
-+	struct pnv_phb *phb = pdn->phb->private_data;
- 
- 	/* EEH not enabled ? */
- 	if (!(phb->flags & PNV_PHB_FLAG_EEH))
- 		return true;
- 
- 	/* PE reset or device removed ? */
--	edev = of_node_to_eeh_dev(dn);
-+	edev = pdn->edev;
- 	if (edev) {
- 		if (edev->pe &&
- 		    (edev->pe->state & EEH_PE_CFG_BLOCKED))
-@@ -513,8 +509,7 @@ static bool pnv_pci_cfg_check(struct pci_controller *hose,
- 	return true;
- }
- #else
--static inline pnv_pci_cfg_check(struct pci_controller *hose,
--				struct device_node *dn)
-+static inline pnv_pci_cfg_check(struct pci_dn *pdn)
- {
- 	return true;
- }
-@@ -524,32 +519,26 @@ static int pnv_pci_read_config(struct pci_bus *bus,
- 			       unsigned int devfn,
- 			       int where, int size, u32 *val)
- {
--	struct device_node *dn, *busdn = pci_bus_to_OF_node(bus);
- 	struct pci_dn *pdn;
- 	struct pnv_phb *phb;
--	bool found = false;
- 	int ret;
- 
- 	*val = 0xFFFFFFFF;
--	for (dn = busdn->child; dn; dn = dn->sibling) {
--		pdn = PCI_DN(dn);
--		if (pdn && pdn->devfn == devfn) {
--			phb = pdn->phb->private_data;
--			found = true;
--			break;
--		}
+ #ifdef CONFIG_XEN_DOM0
+-static __init void xen_setup_acpi_sci(void)
+-{
+-	int rc;
+-	int trigger, polarity;
+-	int gsi = acpi_sci_override_gsi;
+-	int irq = -1;
+-	int gsi_override = -1;
+-
+-	if (!gsi)
+-		return;
+-
+-	rc = acpi_get_override_irq(gsi, &trigger, &polarity);
+-	if (rc) {
+-		printk(KERN_WARNING "xen: acpi_get_override_irq failed for acpi"
+-				" sci, rc=%d\n", rc);
+-		return;
 -	}
-+	pdn = pci_get_pdn_by_devfn(bus, devfn);
-+	if (!pdn)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
- 
--	if (!found || !pnv_pci_cfg_check(pdn->phb, dn))
-+	if (!pnv_pci_cfg_check(pdn))
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
--	ret = pnv_pci_cfg_read(dn, where, size, val);
--	if (phb->flags & PNV_PHB_FLAG_EEH) {
-+	ret = pnv_pci_cfg_read(pdn, where, size, val);
-+	phb = pdn->phb->private_data;
-+	if (phb->flags & PNV_PHB_FLAG_EEH && pdn->edev) {
- 		if (*val == EEH_IO_ERROR_VALUE(size) &&
--		    eeh_dev_check_failure(of_node_to_eeh_dev(dn)))
-+		    eeh_dev_check_failure(pdn->edev))
-                         return PCIBIOS_DEVICE_NOT_FOUND;
- 	} else {
--		pnv_pci_config_check_eeh(phb, dn);
-+		pnv_pci_config_check_eeh(pdn);
- 	}
- 
- 	return ret;
-@@ -559,27 +548,21 @@ static int pnv_pci_write_config(struct pci_bus *bus,
- 				unsigned int devfn,
- 				int where, int size, u32 val)
- {
--	struct device_node *dn, *busdn = pci_bus_to_OF_node(bus);
- 	struct pci_dn *pdn;
- 	struct pnv_phb *phb;
--	bool found = false;
- 	int ret;
- 
--	for (dn = busdn->child; dn; dn = dn->sibling) {
--		pdn = PCI_DN(dn);
--		if (pdn && pdn->devfn == devfn) {
--			phb = pdn->phb->private_data;
--			found = true;
--			break;
--		}
+-	trigger = trigger ? ACPI_LEVEL_SENSITIVE : ACPI_EDGE_SENSITIVE;
+-	polarity = polarity ? ACPI_ACTIVE_LOW : ACPI_ACTIVE_HIGH;
+-
+-	printk(KERN_INFO "xen: sci override: global_irq=%d trigger=%d "
+-			"polarity=%d\n", gsi, trigger, polarity);
+-
+-	/* Before we bind the GSI to a Linux IRQ, check whether
+-	 * we need to override it with bus_irq (IRQ) value. Usually for
+-	 * IRQs below IRQ_LEGACY_IRQ this holds IRQ == GSI, as so:
+-	 *  ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 9 low level)
+-	 * but there are oddballs where the IRQ != GSI:
+-	 *  ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 20 low level)
+-	 * which ends up being: gsi_to_irq[9] == 20
+-	 * (which is what acpi_gsi_to_irq ends up calling when starting the
+-	 * the ACPI interpreter and keels over since IRQ 9 has not been
+-	 * setup as we had setup IRQ 20 for it).
+-	 */
+-	if (acpi_gsi_to_irq(gsi, &irq) == 0) {
+-		/* Use the provided value if it's valid. */
+-		if (irq >= 0)
+-			gsi_override = irq;
 -	}
-+	pdn = pci_get_pdn_by_devfn(bus, devfn);
-+	if (!pdn)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
- 
--	if (!found || !pnv_pci_cfg_check(pdn->phb, dn))
-+	if (!pnv_pci_cfg_check(pdn))
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
--	ret = pnv_pci_cfg_write(dn, where, size, val);
-+	ret = pnv_pci_cfg_write(pdn, where, size, val);
-+	phb = pdn->phb->private_data;
- 	if (!(phb->flags & PNV_PHB_FLAG_EEH))
--		pnv_pci_config_check_eeh(phb, dn);
-+		pnv_pci_config_check_eeh(pdn);
- 
- 	return ret;
- }
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 6c02ff8..e5b75b2 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -219,9 +219,9 @@ extern struct pnv_eeh_ops ioda_eeh_ops;
- 
- void pnv_pci_dump_phb_diag_data(struct pci_controller *hose,
- 				unsigned char *log_buff);
--int pnv_pci_cfg_read(struct device_node *dn,
-+int pnv_pci_cfg_read(struct pci_dn *pdn,
- 		     int where, int size, u32 *val);
--int pnv_pci_cfg_write(struct device_node *dn,
-+int pnv_pci_cfg_write(struct pci_dn *pdn,
- 		      int where, int size, u32 val);
- extern void pnv_pci_setup_iommu_table(struct iommu_table *tbl,
- 				      void *tce_mem, u64 tce_size,
+-
+-	gsi = xen_register_gsi(gsi, gsi_override, trigger, polarity);
+-	printk(KERN_INFO "xen: acpi sci %d\n", gsi);
+-
+-	return;
+-}
+-
+ int __init pci_xen_initial_domain(void)
+ {
+ 	int irq;
+@@ -527,7 +481,6 @@ int __init pci_xen_initial_domain(void)
+ 	x86_msi.restore_msi_irqs = xen_initdom_restore_msi_irqs;
+ 	pci_msi_ignore_mask = 1;
+ #endif
+-	xen_setup_acpi_sci();
+ 	__acpi_register_gsi = acpi_register_gsi_xen;
+ 	/* Pre-allocate legacy irqs */
+ 	for (irq = 0; irq < nr_legacy_irqs(); irq++) {
 -- 
-1.7.9.5
+1.7.10.4
 
