@@ -1,101 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:49304 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752257AbbASNJo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jan 2015 08:09:44 -0500
-Received: by mail-ob0-f178.google.com with SMTP id gq1so28779134obb.9
-        for <linux-pci@vger.kernel.org>; Mon, 19 Jan 2015 05:09:43 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <000e01d01a7f$47592e20$d60b8a60$%han@samsung.com>
-References: <1418812486-12394-1-git-send-email-gabriel.fernandez@linaro.org>
-	<1418812486-12394-5-git-send-email-gabriel.fernandez@linaro.org>
-	<1507589.aeTeyNn1QF@wuerfel>
-	<000e01d01a7f$47592e20$d60b8a60$%han@samsung.com>
-Date: Mon, 19 Jan 2015 14:09:43 +0100
-Message-ID: <CAG374jBpafrgvSqzmOzUYVNob4OZHT5_EuveD52y+8BRquzXkg@mail.gmail.com>
-Subject: Re: [PATCH 4/5] PCI: designware: Add setup bus-related to pcie_host_ops
-From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Magnus Damm <damm@opensource.se>,
-	Will Deacon <will.deacon@arm.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"kernel@stlinux.com" <kernel@stlinux.com>,
-	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiri Kosina <trivial@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "H. Peter Anvin" <hpa@linux.intel.com>
+Subject: [Patch Part1 v7 30/38] x86/intel-mid, trivial: Refine code syntax for sfi_parse_mtmr()
+Date: Tue, 20 Jan 2015 11:08:33 +0800
+Message-Id: <1421723321-8386-31-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd, Jingoo,
+Correctly indent code in function sfi_parse_mtmr().
 
-On 18 December 2014 at 05:58, Jingoo Han <jg1.han@samsung.com> wrote:
-> On Thursday, December 18, 2014 7:16 AM, Arnd Bergmann wrote:
->> On Wednesday 17 December 2014 11:34:45 Gabriel FERNANDEZ wrote:
->> > ST sti SoCs PCIe IPs are built around DesignWare IP Core.
->> > But in these SoCs PCIe IP doesn't support IO.
->
-> Hi Gabriel,
->
-> I cannot understand how ST sti SoCs PCIe IP does not support I/O.
-> As far as I know, it cannot be selected by the 'parameter'.
-> Then, H/W engineers dropped out the I/O control logic?
->
->> >
->> > To support this, add setup_bus() to pcie_host_ops.
->
->
->> >
->> > Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
->> > Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
->>
->> The dw-pcie driver should be able to tell whether the device has
->> an I/O space or not, and do the right thing based on that. Don't
->> add an implementation specific callback for that.
->
-> I agree with Arnd's opinion.
->
-> In addition, I have one more question.
-> Then, if a device that requires I/O region is connected to
-> PCIe slot of ST sti SoCs PCIe, what will happen?
-> It just prints error messages?
->
-> Best regards,
-> Jingoo Han
->
->>
->>       Arnd
->
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: H. Peter Anvin <hpa@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Jiri Kosina <trivial@kernel.org>
+Cc: David Cohen <david.a.cohen@linux.intel.com>
+Link: http://lkml.kernel.org/r/1416901802-24211-3-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ arch/x86/platform/intel-mid/sfi.c |   20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-Arnd in other post mention to add an empty I/O space to workaround
-lack of I/O port access.
-Is it the right thing to do ?
-http://lists.infradead.org/pipermail/linux-arm-kernel/2014-November/299623.html
+diff --git a/arch/x86/platform/intel-mid/sfi.c b/arch/x86/platform/intel-mid/sfi.c
+index aa59f88868f8..9a16749935d4 100644
+--- a/arch/x86/platform/intel-mid/sfi.c
++++ b/arch/x86/platform/intel-mid/sfi.c
+@@ -95,16 +95,16 @@ int __init sfi_parse_mtmr(struct sfi_table_header *table)
+ 		pr_debug("timer[%d]: paddr = 0x%08x, freq = %dHz, irq = %d\n",
+ 			totallen, (u32)pentry->phys_addr,
+ 			pentry->freq_hz, pentry->irq);
+-			mp_irq.type = MP_INTSRC;
+-			mp_irq.irqtype = mp_INT;
+-/* triggering mode edge bit 2-3, active high polarity bit 0-1 */
+-			mp_irq.irqflag = 5;
+-			mp_irq.srcbus = MP_BUS_ISA;
+-			mp_irq.srcbusirq = pentry->irq;	/* IRQ */
+-			mp_irq.dstapic = MP_APIC_ALL;
+-			mp_irq.dstirq = pentry->irq;
+-			mp_save_irq(&mp_irq);
+-			mp_map_gsi_to_irq(pentry->irq, IOAPIC_MAP_ALLOC);
++		mp_irq.type = MP_INTSRC;
++		mp_irq.irqtype = mp_INT;
++		/* triggering mode edge bit 2-3, active high polarity bit 0-1 */
++		mp_irq.irqflag = 5;
++		mp_irq.srcbus = MP_BUS_ISA;
++		mp_irq.srcbusirq = pentry->irq;	/* IRQ */
++		mp_irq.dstapic = MP_APIC_ALL;
++		mp_irq.dstirq = pentry->irq;
++		mp_save_irq(&mp_irq);
++		mp_map_gsi_to_irq(pentry->irq, IOAPIC_MAP_ALLOC);
+ 	}
+ 
+ 	return 0;
+-- 
+1.7.10.4
 
-Best regards
