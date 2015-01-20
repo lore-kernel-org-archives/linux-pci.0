@@ -1,157 +1,146 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:56143 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751554AbbAWXl2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 18:41:28 -0500
-Received: by mail-ob0-f182.google.com with SMTP id gq1so222473obb.13
-        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 15:41:28 -0800 (PST)
-Date: Fri, 23 Jan 2015 17:41:24 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	iommu@lists.linux-foundation.org, Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: Re: [PATCH v4 4/6] of/pci: add of_pci_dma_configure() update dma
- configuration
-Message-ID: <20150123234124.GW29776@google.com>
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
- <1422052359-12384-5-git-send-email-m-karicheri2@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1422052359-12384-5-git-send-email-m-karicheri2@ti.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v7 00/38] Convert x86 to hierarchy irqdomain and stacked irqchip
+Date: Tue, 20 Jan 2015 11:08:03 +0800
+Message-Id: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 23, 2015 at 05:32:37PM -0500, Murali Karicheri wrote:
-> Add of_pci_dma_configure() to allow updating the dma configuration
-> of the pci device using the configuration from DT of the parent of
-> the root bridge device.
-> 
-> Cc: Joerg Roedel <joro@8bytes.org>
-> Cc: Grant Likely <grant.likely@linaro.org>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Russell King <linux@arm.linux.org.uk>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> 
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-> ---
->  drivers/of/of_pci.c    |   39 +++++++++++++++++++++++++++++++++++++++
->  include/linux/of_pci.h |   12 ++++++++++++
->  2 files changed, 51 insertions(+)
-> 
-> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-> index 88471d3..34878c9 100644
-> --- a/drivers/of/of_pci.c
-> +++ b/drivers/of/of_pci.c
-> @@ -2,6 +2,7 @@
->  #include <linux/export.h>
->  #include <linux/of.h>
->  #include <linux/of_address.h>
-> +#include <linux/of_device.h>
->  #include <linux/of_pci.h>
->  #include <linux/slab.h>
->  
-> @@ -229,6 +230,44 @@ parse_failed:
->  	return err;
->  }
->  EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
-> +
-> +/**
-> + * of_get_pci_root_bridge_parent - get the OF node of the root bridge's parent
-> + * @dev: ptr to pci_dev struct of the pci device
-> + *
-> + * This function will traverse the bus up to the root bus starting with
-> + * the child and return the OF node ptr to root bridge device's parent device.
-> + */
-> +struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev)
+Hi all,
+	The generic hierarchy irqdomain and stacked irqchip implementation
+has been merged into v3.19, so this patch set converts x86 interupt
+management to hierarchy irqdomain and stacked irqchip. I will send out
+another following-on patch set to clean up code and interfaces obseleted
+by this patch set.
 
-I'm not an OF person, but this interface seems like it might be too
-special-purpose.  Maybe it would be enough to add
-"of_get_pci_root_bridge()", and the caller could do this:
+	This patch set has been reviewed several times and it missed v3.19
+merging because several got fixed just before the merging window.
+	The main changes since last review are:
+1) Rebased the patch set onto v3.19-rc5.
+2) Merged bugfixes into the patch introducing the bug so it won't break
+   bisecting.
 
-    struct device *bridge = of_get_pci_root_bridge(dev);
-    struct device_node *parent_np = bridge->parent->of_node;
+Hi Thomas,
+	Rafael needs more time to review the patch set to refine ACPI
+resource paring interface, and we are nearing to v3.19-rc6. So it would
+be helpful to move onto the x86 hierarchy irqdomain patch set first, so
+we may catch up with v3.20 merging window.
+Thanks!
+Gerry
 
-Also, the name "of_get_..." suggests that it increments a refcount, as
-of_get_parent() does.  But you aren't doing anything with the refcount.
+Jiang Liu (36):
+  x86/irq: Save destination CPU ID in irq_cfg
+  x86/irq: Use hierarchy irqdomain to manage CPU interrupt vectors
+  x86/hpet: Use new irqdomain interfaces to allocate/free IRQ
+  x86/MSI: Use new irqdomain interfaces to allocate/free IRQ
+  x86/uv: Use new irqdomain interfaces to allocate/free IRQ
+  x86/htirq: Use new irqdomain interfaces to allocate/free IRQ
+  x86/dmar: Use new irqdomain interfaces to allocate/free IRQ
+  irq_remapping: Introduce new interfaces to support hierarchy
+    irqdomain
+  irq_remapping/vt-d: Change prototypes to prepare for enabling
+    hierarchy irqdomain
+  irq_remapping/vt-d: Enhance Intel IR driver to suppport hierarchy
+    irqdomain
+  irq_remapping/amd: Enhance AMD IR driver to suppport hierarchy
+    irqdomain
+  x86/hpet: Enhance HPET IRQ to support hierarchy irqdomain
+  x86/MSI: Use hierarchy irqdomain to manage MSI interrupts
+  x86/irq: Directly call native_compose_msi_msg() for DMAR IRQ
+  irq_remapping/vt-d: Clean up unused MSI related code
+  irq_remapping/amd: Clean up unused MSI related code
+  irq_remapping: Clean up unused MSI related code
+  x86/MSI: Clean up unused MSI related code and interfaces
+  iommu/vt-d: Refine the interfaces to create IRQ for DMAR unit
+  x86/irq: Use hierarchy irqdomain to manage DMAR interrupts
+  x86/htirq: Use hierarchy irqdomain to manage Hypertransport
+    interrupts
+  x86/uv: Use hierarchy irqdomain to manage UV interrupts
+  x86/irq: Normalize x86 irq_chip name
+  x86/MSI: Simplify the way to deal with remapped MSI interrupts
+  x86/MSI: Replace msi_update_msg() with irq_chip_compose_msi_msg()
+  x86/irq: Implement irq_chip.irq_write_msi_msg for MSI/DMAR/HPET
+    irq_chips
+  x86/irq: Simplify MSI/DMAR/HPET implementation by using common code
+  irq_remapping: Kill unused function irq_remapping_print_chip()
+  x86/intel-mid, trivial: Refine code syntax for sfi_parse_mtmr()
+  x86/irq: Kill unused pre_init_apic_IRQ0()
+  x86/irq: Prepare IOAPIC interfaces to support hierarchy irqdomain
+  x86/irq: Implement callbacks to enable hierarchy irqdomain on IOAPICs
+  x86/irq: Refine the way to allocate irq_cfg for legacy IRQs
+  x86/irq: Simplify the way to print IOAPIC entry
+  x86/irq: Introduce helper functions to support hierarchy irqdomain
+    for IOAPIC
+  x86/irq: Convert IOAPIC to use hierarchy irqdomain interfaces
 
-But I guess an "of_get_pci_root_bridge()" isn't doing anything OF-related,
-so maybe we should just add a "pci_get_host_bridge(struct pci_dev *)"
-to PCI instead.
+Rickard Strandqvist (1):
+  x86/apb_timer: Remove unused function is_apbt_capable()
 
-Bjorn
+Thomas Gleixner (1):
+  x86/intel-mid: Delay initialization of APB timer
 
-> +{
-> +	struct pci_bus *bus = dev->bus;
-> +	struct device *bridge;
-> +
-> +	while (!pci_is_root_bus(bus))
-> +		bus = bus->parent;
-> +	bridge = bus->bridge;
-> +
-> +	return bridge->parent->of_node;
-> +}
-> +EXPORT_SYMBOL_GPL(of_get_pci_root_bridge_parent);
-> +
-> +/**
-> + * of_pci_dma_configure - Setup DMA configuration
-> + * @dev: ptr to pci_dev struct of the pci device
-> + *
-> + * Function to update PCI devices's DMA configuration using the same
-> + * info from the OF node of root host bridge's parent.
-> + */
-> +void of_pci_dma_configure(struct pci_dev *pci_dev)
-> +{
-> +	struct device *dev = &pci_dev->dev;
-> +	struct device_node *parent_np;
-> +
-> +	parent_np = of_get_pci_root_bridge_parent(pci_dev);
-> +	of_dma_configure(dev, parent_np);
-> +}
-> +EXPORT_SYMBOL_GPL(of_pci_dma_configure);
-> +
->  #endif /* CONFIG_OF_ADDRESS */
->  
->  #ifdef CONFIG_PCI_MSI
-> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-> index ce0e5ab..0465a2a 100644
-> --- a/include/linux/of_pci.h
-> +++ b/include/linux/of_pci.h
-> @@ -16,6 +16,8 @@ int of_pci_get_devfn(struct device_node *np);
->  int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
->  int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
->  int of_get_pci_domain_nr(struct device_node *node);
-> +struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev);
-> +void of_pci_dma_configure(struct pci_dev *pci_dev);
->  #else
->  static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
->  {
-> @@ -50,6 +52,16 @@ of_get_pci_domain_nr(struct device_node *node)
->  {
->  	return -1;
->  }
-> +
-> +static inline struct device_node
-> +*of_get_pci_root_bridge_parent(struct pci_dev *dev)
-> +{
-> +	return NULL;
-> +}
-> +
-> +static inline void of_pci_dma_configure(struct pci_dev *pci_dev)
-> +{
-> +}
->  #endif
->  
->  #if defined(CONFIG_OF_ADDRESS)
-> -- 
-> 1.7.9.5
-> 
+ arch/ia64/include/asm/irq_remapping.h              |    2 -
+ arch/ia64/kernel/msi_ia64.c                        |   30 +-
+ arch/x86/Kconfig                                   |    4 +-
+ arch/x86/include/asm/hpet.h                        |   16 +-
+ arch/x86/include/asm/hw_irq.h                      |   91 +++
+ arch/x86/include/asm/io_apic.h                     |   25 +-
+ arch/x86/include/asm/irq_remapping.h               |   45 +-
+ arch/x86/include/asm/msi.h                         |    7 +
+ arch/x86/include/asm/pci.h                         |    5 -
+ arch/x86/include/asm/x86_init.h                    |    4 -
+ arch/x86/kernel/acpi/boot.c                        |   20 +-
+ arch/x86/kernel/apb_timer.c                        |   12 -
+ arch/x86/kernel/apic/htirq.c                       |  173 ++++--
+ arch/x86/kernel/apic/io_apic.c                     |  600 +++++++++++++++-----
+ arch/x86/kernel/apic/msi.c                         |  416 ++++++++------
+ arch/x86/kernel/apic/vector.c                      |  205 ++++++-
+ arch/x86/kernel/devicetree.c                       |   37 +-
+ arch/x86/kernel/hpet.c                             |   57 +-
+ arch/x86/kernel/mpparse.c                          |    6 +-
+ arch/x86/kernel/x86_init.c                         |    2 -
+ arch/x86/pci/intel_mid_pci.c                       |    6 +-
+ .../platform/intel-mid/device_libs/platform_wdt.c  |    5 +-
+ arch/x86/platform/intel-mid/intel-mid.c            |   18 +-
+ arch/x86/platform/intel-mid/sfi.c                  |   30 +-
+ arch/x86/platform/sfi/sfi.c                        |    5 +-
+ arch/x86/platform/uv/uv_irq.c                      |  299 ++++------
+ drivers/iommu/amd_iommu.c                          |  376 +++++++++---
+ drivers/iommu/amd_iommu_init.c                     |    4 +
+ drivers/iommu/amd_iommu_proto.h                    |    9 +
+ drivers/iommu/amd_iommu_types.h                    |    5 +
+ drivers/iommu/dmar.c                               |   19 +-
+ drivers/iommu/intel_irq_remapping.c                |  451 ++++++++++-----
+ drivers/iommu/irq_remapping.c                      |  178 ++----
+ drivers/iommu/irq_remapping.h                      |   20 +-
+ drivers/pci/htirq.c                                |   48 +-
+ include/linux/dmar.h                               |    3 +-
+ include/linux/htirq.h                              |   22 +-
+ include/linux/intel-iommu.h                        |    4 +
+ 38 files changed, 2100 insertions(+), 1159 deletions(-)
+ create mode 100644 arch/x86/include/asm/msi.h
+
+-- 
+1.7.10.4
+
