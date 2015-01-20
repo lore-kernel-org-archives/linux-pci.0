@@ -1,226 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:58068 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754657AbbAGSus (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 7 Jan 2015 13:50:48 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <joro@8bytes.org>, <grant.likely@linaro.org>, <robh+dt@kernel.org>,
-	<iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <will.deacon@arm.com>,
-	<linux@arm.linux.org.uk>, <arnd@arndb.de>
-CC: Murali Karicheri <m-karicheri2@ti.com>
-Subject: [PATCH v3 2/4] of: move of_dma_configure() to device,c to help re-use
-Date: Wed, 7 Jan 2015 13:49:52 -0500
-Message-ID: <1420656594-8908-3-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com>
-References: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v7 36/38] x86/irq: Simplify the way to print IOAPIC entry
+Date: Tue, 20 Jan 2015 11:08:39 +0800
+Message-Id: <1421723321-8386-37-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move of_dma_configure() to device.c so that same function can be re-used
-for PCI devices to obtain DMA configuration from DT. Also add a second
-argument so that for PCI, DT node of root bus host bridge can be used to
-obtain the DMA configuration for the slave PCI device. Additionally fix
-the dma-range size when the DT attribute is missing. i.e  set size to
-dev->coherent_dma_mask + 1 instead of dev->coherent_dma_mask.
+Simplify the way to print IOAPIC entry content, so we could kill
+native_io_apic_print_entries(), intel_ir_io_apic_print_entries()
+and x86_io_apic_ops.print_entries() later.
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+Folded a patch from Thomas to fix errors in printed pin attributes,
+http://www.spinics.net/lists/linux-tip-commits/msg26108.html
+
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Grant Likely <grant.likely@linaro.org>
+Link: http://lkml.kernel.org/r/1416901802-24211-8-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Joerg Roedel <jroedel@suse.de>
 ---
- drivers/of/device.c       |   58 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/of/platform.c     |   58 ++-------------------------------------------
- include/linux/of_device.h |    2 ++
- 3 files changed, 62 insertions(+), 56 deletions(-)
+ arch/x86/kernel/apic/io_apic.c |   30 ++++++++++++++++++++++++++++--
+ 1 file changed, 28 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/of/device.c b/drivers/of/device.c
-index 46d6c75c..ccbc958 100644
---- a/drivers/of/device.c
-+++ b/drivers/of/device.c
-@@ -2,6 +2,9 @@
- #include <linux/kernel.h>
- #include <linux/of.h>
- #include <linux/of_device.h>
-+#include <linux/of_address.h>
-+#include <linux/of_iommu.h>
-+#include <linux/dma-mapping.h>
- #include <linux/init.h>
- #include <linux/module.h>
- #include <linux/mod_devicetable.h>
-@@ -66,6 +69,61 @@ int of_device_add(struct platform_device *ofdev)
- 	return device_add(&ofdev->dev);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 16d4ba3ac844..3c6609617306 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1424,6 +1424,33 @@ void ioapic_zap_locks(void)
+ 	raw_spin_lock_init(&ioapic_lock);
  }
  
-+/**
-+ * of_dma_configure - Setup DMA configuration
-+ * @dev:	Device to apply DMA configuration
-+ * @np:		ptr to of node having dma configuration
-+ *
-+ * Try to get devices's DMA configuration from DT and update it
-+ * accordingly.
-+ *
-+ * In case if platform code need to use own special DMA configuration,it
-+ * can use Platform bus notifier and handle BUS_NOTIFY_ADD_DEVICE event
-+ * to fix up DMA configuration.
-+ */
-+void of_dma_configure(struct device *dev, struct device_node *np)
++static void io_apic_print_entries(unsigned int apic, unsigned int nr_entries)
 +{
-+	u64 dma_addr, paddr, size;
-+	int ret;
-+	bool coherent;
-+	unsigned long offset;
-+	struct iommu_ops *iommu;
++	int i;
++	char buf[256];
++	struct IO_APIC_route_entry entry;
++	struct IR_IO_APIC_route_entry *ir_entry = (void *)&entry;
 +
-+	/*
-+	 * Set default dma-mask to 32 bit. Drivers are expected to setup
-+	 * the correct supported dma_mask.
-+	 */
-+	dev->coherent_dma_mask = DMA_BIT_MASK(32);
-+
-+	/*
-+	 * Set it to coherent_dma_mask by default if the architecture
-+	 * code has not set it.
-+	 */
-+	if (!dev->dma_mask)
-+		dev->dma_mask = &dev->coherent_dma_mask;
-+
-+	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
-+	if (ret < 0) {
-+		dma_addr = offset = 0;
-+		size = dev->coherent_dma_mask + 1;
-+	} else {
-+		offset = PFN_DOWN(paddr - dma_addr);
-+		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
++	printk(KERN_DEBUG "IOAPIC %d:\n", apic);
++	for (i = 0; i <= nr_entries; i++) {
++		entry = ioapic_read_entry(apic, i);
++		snprintf(buf, sizeof(buf),
++			 " pin%02x, %s, %s, %s, V(%02X), IRR(%1d), S(%1d)",
++			 i, entry.mask ? "disabled" : "enabled ",
++			 entry.trigger ? "level" : "edge ",
++			 entry.polarity ? "low " : "high",
++			 entry.vector, entry.irr, entry.delivery_status);
++		if (ir_entry->format)
++			printk(KERN_DEBUG "%s, remapped, I(%04X),  Z(%X)\n",
++			       buf, (ir_entry->index << 15) | ir_entry->index,
++			       ir_entry->zero);
++		else
++			printk(KERN_DEBUG "%s, %s, D(%02X), M(%1d)\n",
++			       buf, entry.dest_mode ? "logical " : "physical",
++			       entry.dest, entry.delivery_mode);
 +	}
-+	dev->dma_pfn_offset = offset;
-+
-+	coherent = of_dma_is_coherent(np);
-+	dev_dbg(dev, "device is%sdma coherent\n",
-+		coherent ? " " : " not ");
-+
-+	iommu = of_iommu_configure(dev, np);
-+	dev_dbg(dev, "device is%sbehind an iommu\n",
-+		iommu ? " " : " not ");
-+
-+	arch_setup_dma_ops(dev, dma_addr, size, iommu, coherent);
 +}
-+EXPORT_SYMBOL_GPL(of_dma_configure);
 +
- int of_device_register(struct platform_device *pdev)
+ static void __init print_IO_APIC(int ioapic_idx)
  {
- 	device_initialize(&pdev->dev);
-diff --git a/drivers/of/platform.c b/drivers/of/platform.c
-index 7675b79..6403501 100644
---- a/drivers/of/platform.c
-+++ b/drivers/of/platform.c
-@@ -19,7 +19,6 @@
- #include <linux/slab.h>
- #include <linux/of_address.h>
- #include <linux/of_device.h>
--#include <linux/of_iommu.h>
- #include <linux/of_irq.h>
- #include <linux/of_platform.h>
- #include <linux/platform_device.h>
-@@ -150,59 +149,6 @@ struct platform_device *of_device_alloc(struct device_node *np,
- }
- EXPORT_SYMBOL(of_device_alloc);
+ 	union IO_APIC_reg_00 reg_00;
+@@ -1477,8 +1504,7 @@ static void __init print_IO_APIC(int ioapic_idx)
+ 	}
  
--/**
-- * of_dma_configure - Setup DMA configuration
-- * @dev:	Device to apply DMA configuration
-- *
-- * Try to get devices's DMA configuration from DT and update it
-- * accordingly.
-- *
-- * In case if platform code need to use own special DMA configuration,it
-- * can use Platform bus notifier and handle BUS_NOTIFY_ADD_DEVICE event
-- * to fix up DMA configuration.
-- */
--static void of_dma_configure(struct device *dev)
--{
--	u64 dma_addr, paddr, size;
--	int ret;
--	bool coherent;
--	unsigned long offset;
--	struct iommu_ops *iommu;
+ 	printk(KERN_DEBUG ".... IRQ redirection table:\n");
 -
--	/*
--	 * Set default dma-mask to 32 bit. Drivers are expected to setup
--	 * the correct supported dma_mask.
--	 */
--	dev->coherent_dma_mask = DMA_BIT_MASK(32);
--
--	/*
--	 * Set it to coherent_dma_mask by default if the architecture
--	 * code has not set it.
--	 */
--	if (!dev->dma_mask)
--		dev->dma_mask = &dev->coherent_dma_mask;
--
--	ret = of_dma_get_range(dev->of_node, &dma_addr, &paddr, &size);
--	if (ret < 0) {
--		dma_addr = offset = 0;
--		size = dev->coherent_dma_mask;
--	} else {
--		offset = PFN_DOWN(paddr - dma_addr);
--		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
--	}
--	dev->dma_pfn_offset = offset;
--
--	coherent = of_dma_is_coherent(dev->of_node);
--	dev_dbg(dev, "device is%sdma coherent\n",
--		coherent ? " " : " not ");
--
--	iommu = of_iommu_configure(dev, dev->of_node);
--	dev_dbg(dev, "device is%sbehind an iommu\n",
--		iommu ? " " : " not ");
--
--	arch_setup_dma_ops(dev, dma_addr, size, iommu, coherent);
--}
--
- static void of_dma_deconfigure(struct device *dev)
- {
- 	arch_teardown_dma_ops(dev);
-@@ -236,7 +182,7 @@ static struct platform_device *of_platform_device_create_pdata(
- 
- 	dev->dev.bus = &platform_bus_type;
- 	dev->dev.platform_data = platform_data;
--	of_dma_configure(&dev->dev);
-+	of_dma_configure(&dev->dev, dev->dev.of_node);
- 
- 	if (of_device_add(dev) != 0) {
- 		of_dma_deconfigure(&dev->dev);
-@@ -299,7 +245,7 @@ static struct amba_device *of_amba_device_create(struct device_node *node,
- 		dev_set_name(&dev->dev, "%s", bus_id);
- 	else
- 		of_device_make_bus_id(&dev->dev);
--	of_dma_configure(&dev->dev);
-+	of_dma_configure(&dev->dev, dev->dev.of_node);
- 
- 	/* Allow the HW Peripheral ID to be overridden */
- 	prop = of_get_property(node, "arm,primecell-periphid", NULL);
-diff --git a/include/linux/of_device.h b/include/linux/of_device.h
-index ef37021..c661496 100644
---- a/include/linux/of_device.h
-+++ b/include/linux/of_device.h
-@@ -53,6 +53,7 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
- 	return of_node_get(cpu_dev->of_node);
+-	x86_io_apic_ops.print_entries(ioapic_idx, reg_01.bits.entries);
++	io_apic_print_entries(ioapic_idx, reg_01.bits.entries);
  }
  
-+void of_dma_configure(struct device *dev, struct device_node *np);
- #else /* CONFIG_OF */
- 
- static inline int of_driver_match_device(struct device *dev,
-@@ -90,6 +91,7 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
- {
- 	return NULL;
- }
-+void of_dma_configure(struct device *dev, struct device_node *np) { }
- #endif /* CONFIG_OF */
- 
- #endif /* _LINUX_OF_DEVICE_H */
+ void __init print_IO_APICs(void)
 -- 
-1.7.9.5
+1.7.10.4
 
