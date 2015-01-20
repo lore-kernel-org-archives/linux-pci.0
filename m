@@ -1,171 +1,153 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:50237 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932456AbbA0SPG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 Jan 2015 13:15:06 -0500
-Message-ID: <54C7D576.6030502@ti.com>
-Date: Tue, 27 Jan 2015 13:14:14 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: Re: [PATCH v4 4/6] of/pci: add of_pci_dma_configure() update dma
- configuration
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com> <1422052359-12384-5-git-send-email-m-karicheri2@ti.com> <20150123234124.GW29776@google.com> <54C6CCF3.7080308@ti.com> <CAErSpo4w0zVCmXk2D2Qk5W3kceS9Wk+=jqHBDwk6HUXWwXdq_Q@mail.gmail.com>
-In-Reply-To: <CAErSpo4w0zVCmXk2D2Qk5W3kceS9Wk+=jqHBDwk6HUXWwXdq_Q@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part2 v4 18/33] x86/irq: Kill x86_io_apic_ops.write and x86_io_apic_ops.modify
+Date: Tue, 20 Jan 2015 13:51:38 +0800
+Message-Id: <1421733113-15704-19-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/26/2015 06:59 PM, Bjorn Helgaas wrote:
-> On Mon, Jan 26, 2015 at 5:25 PM, Murali Karicheri<m-karicheri2@ti.com>  wrote:
->> On 01/23/2015 06:41 PM, Bjorn Helgaas wrote:
->>>
->>> On Fri, Jan 23, 2015 at 05:32:37PM -0500, Murali Karicheri wrote:
->>>>
->>>> Add of_pci_dma_configure() to allow updating the dma configuration
->>>> of the pci device using the configuration from DT of the parent of
->>>> the root bridge device.
->>>>
-   -- Cut ---
->>>>
->>>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
->>>> ---
->>>>    drivers/of/of_pci.c    |   39 +++++++++++++++++++++++++++++++++++++++
->>>>    include/linux/of_pci.h |   12 ++++++++++++
->>>>    2 files changed, 51 insertions(+)
->>>>
->>>> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
->>>> index 88471d3..34878c9 100644
->>>> --- a/drivers/of/of_pci.c
->>>> +++ b/drivers/of/of_pci.c
->>>> @@ -2,6 +2,7 @@
->>>>    #include<linux/export.h>
->>>>    #include<linux/of.h>
->>>>    #include<linux/of_address.h>
->>>> +#include<linux/of_device.h>
->>>>    #include<linux/of_pci.h>
->>>>    #include<linux/slab.h>
->>>>
->>>> @@ -229,6 +230,44 @@ parse_failed:
->>>>          return err;
->>>>    }
->>>>    EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
->>>> +
->>>> +/**
->>>> + * of_get_pci_root_bridge_parent - get the OF node of the root bridge's
->>>> parent
->>>> + * @dev: ptr to pci_dev struct of the pci device
->>>> + *
->>>> + * This function will traverse the bus up to the root bus starting with
->>>> + * the child and return the OF node ptr to root bridge device's parent
->>>> device.
->>>> + */
->>>> +struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev)
->>>
->>>
->>> I'm not an OF person, but this interface seems like it might be too
->>> special-purpose.  Maybe it would be enough to add
->>> "of_get_pci_root_bridge()", and the caller could do this:
->>>
->>>       struct device *bridge = of_get_pci_root_bridge(dev);
->>>       struct device_node *parent_np = bridge->parent->of_node;
->>>
->>> Also, the name "of_get_..." suggests that it increments a refcount, as
->>> of_get_parent() does.  But you aren't doing anything with the refcount.
->>>
->>> But I guess an "of_get_pci_root_bridge()" isn't doing anything OF-related,
->>> so maybe we should just add a "pci_get_host_bridge(struct pci_dev *)"
->>> to PCI instead.
->>
->>
->> Bjorn,
->>
->> Thanks for the comment.
->>
->> I think adding pci_get_host_bridge() is a good idea. There is already
->> similar function in host-bridge.c. I have added this function re-using
->> existing function find_pci_root_bus(). See the incremental diff below after
->> this change. Does this look good?
->
-> I like the implementation, but I think either we need to take a
-> reference on the host bridge, or change the name to  something like
-> "pci_find_host_bridge()", because using "_get_" is conventional for
-> functions that acquire a reference.
->
-> Since host bridges are hot-pluggable, at least in theory, I vote for
-> taking a reference.  Then of course, you'd have to add code to drop
-> the reference when you're finished with it.
->
-Bjorn,
+x86_io_apic_ops.write is always set to native_io_apic_write(),
+and nobody overrides it. So get rid of the indirection by changing
+native_io_apic_write() as io_apic_write() and killing
+x86_io_apic_ops.write.
 
-Thanks. I agree with your suggestion even though the convention is not 
-followed fully :) of_pci_get_devfn(), of_get_pci_domain_nr(), 
-of_pci_get_host_bridge_resources() are some of those functions not 
-following the convention. I plan to change the function as below. Also 
-want to name functions as pci_get/put_host_bridge_device() as existing 
-function find_pci_host_bridge() is actually returning ptr to struct 
-pci_host_bridge  vs the new function returning ptr to device. Here are 
-the new functions and how they will be used. Please review and respond 
-so that I can avoid a re-spin.
+Do the same for x86_io_apic_ops.modify and native_io_apic_modify().
 
-in linux/include/pci.h add the prototypes of 
-pci_get/put_host_bridge_device().
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Yijing Wang <wangyijing@huawei.com>
+Cc: Grant Likely <grant.likely@linaro.org>
+Link: http://lkml.kernel.org/r/1416901802-24211-28-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Joerg Roedel <jroedel@suse.de>
+---
+ arch/x86/include/asm/io_apic.h  |   13 -------------
+ arch/x86/include/asm/x86_init.h |    2 --
+ arch/x86/kernel/apic/io_apic.c  |    6 ++++--
+ arch/x86/kernel/x86_init.c      |    2 --
+ 4 files changed, 4 insertions(+), 19 deletions(-)
 
-in drivers/pci/host-bridge.c add two new functions.
-
-struct device *pci_get_host_bridge_device(struct pci_dev *dev)
-{
-	struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
-	struct device *bridge = root_bus->bridge;
-
-	kobject_get(&bridge->kobj);
-	return bridge;
-}
-
-void  pci_put_host_bridge_device(struct pci_dev *dev)
-{
-	struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
-	struct device *bridge = root_bus->bridge;
-
-	kobject_put(&bridge->kobj);
-}
-
-drivers/of/of_pci.c
-
-void of_pci_dma_configure(struct pci_dev *pci_dev)
-{
-	struct device *dev = &pci_dev->dev;
-	struct device *bridge = pci_get_host_bridge_device(pci_dev);
-
-	of_dma_configure(dev, bridge->parent->of_node);
-	pci_put_host_bridge_device(pci_dev);
-}
-
-Murali
-
-> Bjorn
->
-
->>>>
->>
->>
->> --
->> Murali Karicheri
->> Linux Kernel, Texas Instruments
-
-
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 1597c77725f9..21578af00243 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -208,8 +208,6 @@ extern void disable_ioapic_support(void);
+ 
+ extern void __init native_io_apic_init_mappings(void);
+ extern unsigned int native_io_apic_read(unsigned int apic, unsigned int reg);
+-extern void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int val);
+-extern void native_io_apic_modify(unsigned int apic, unsigned int reg, unsigned int val);
+ extern void native_disable_io_apic(void);
+ 
+ static inline unsigned int io_apic_read(unsigned int apic, unsigned int reg)
+@@ -217,15 +215,6 @@ static inline unsigned int io_apic_read(unsigned int apic, unsigned int reg)
+ 	return x86_io_apic_ops.read(apic, reg);
+ }
+ 
+-static inline void io_apic_write(unsigned int apic, unsigned int reg, unsigned int value)
+-{
+-	x86_io_apic_ops.write(apic, reg, value);
+-}
+-static inline void io_apic_modify(unsigned int apic, unsigned int reg, unsigned int value)
+-{
+-	x86_io_apic_ops.modify(apic, reg, value);
+-}
+-
+ extern void setup_IO_APIC(void);
+ extern void enable_IO_APIC(void);
+ extern void disable_IO_APIC(void);
+@@ -266,8 +255,6 @@ static inline void mp_save_irq(struct mpc_intsrc *m) { };
+ static inline void disable_ioapic_support(void) { }
+ #define native_io_apic_init_mappings	NULL
+ #define native_io_apic_read		NULL
+-#define native_io_apic_write		NULL
+-#define native_io_apic_modify		NULL
+ #define native_disable_io_apic		NULL
+ #endif
+ 
+diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+index 09d4dab9302f..844b37d55a44 100644
+--- a/arch/x86/include/asm/x86_init.h
++++ b/arch/x86/include/asm/x86_init.h
+@@ -182,8 +182,6 @@ struct x86_msi_ops {
+ struct x86_io_apic_ops {
+ 	void		(*init)   (void);
+ 	unsigned int	(*read)   (unsigned int apic, unsigned int reg);
+-	void		(*write)  (unsigned int apic, unsigned int reg, unsigned int value);
+-	void		(*modify) (unsigned int apic, unsigned int reg, unsigned int value);
+ 	void		(*disable)(void);
+ };
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 77ad05eee418..a7583eb4b648 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -282,7 +282,8 @@ unsigned int native_io_apic_read(unsigned int apic, unsigned int reg)
+ 	return readl(&io_apic->data);
+ }
+ 
+-void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int value)
++static void io_apic_write(unsigned int apic, unsigned int reg,
++			  unsigned int value)
+ {
+ 	struct io_apic __iomem *io_apic = io_apic_base(apic);
+ 
+@@ -296,7 +297,8 @@ void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int valu
+  *
+  * Older SiS APIC requires we rewrite the index register
+  */
+-void native_io_apic_modify(unsigned int apic, unsigned int reg, unsigned int value)
++static void io_apic_modify(unsigned int apic, unsigned int reg,
++			   unsigned int value)
+ {
+ 	struct io_apic __iomem *io_apic = io_apic_base(apic);
+ 
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index f612dc018fb6..633f07845099 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -141,7 +141,5 @@ void arch_restore_msi_irqs(struct pci_dev *dev)
+ struct x86_io_apic_ops x86_io_apic_ops = {
+ 	.init			= native_io_apic_init_mappings,
+ 	.read			= native_io_apic_read,
+-	.write			= native_io_apic_write,
+-	.modify			= native_io_apic_modify,
+ 	.disable		= native_disable_io_apic,
+ };
 -- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+1.7.10.4
+
