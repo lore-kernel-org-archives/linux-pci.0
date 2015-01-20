@@ -1,179 +1,388 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1682713.ac5OoTJoOr@wuerfel>
-References: <1418812486-12394-1-git-send-email-gabriel.fernandez@linaro.org>
-	<8467440.C7CR1EqfOe@wuerfel>
-	<CAG374jDmUyEX0_iu4wG8LjM6YGMjsB-3PjnyZy_0Se=nLcn16g@mail.gmail.com>
-	<1682713.ac5OoTJoOr@wuerfel>
-Date: Wed, 21 Jan 2015 16:47:36 +0100
-Message-ID: <CAG374jCRByNZuuYxi5+-mKvV7p5-tCf2G+8mTYfzU4rRV4yfYQ@mail.gmail.com>
-Subject: Re: [PATCH 3/5] PCI: st: Provide support for the sti PCIe controller
-From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Magnus Damm <damm@opensource.se>,
-	Will Deacon <will.deacon@arm.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Srikanth Thokala <sthokal@xilinx.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"kernel@stlinux.com" <kernel@stlinux.com>,
-	linux-pci@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Lee Jones <lee.jones@linaro.org>
-Content-Type: text/plain; charset=UTF-8
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>
+Subject: [Patch Part1 v7 02/38] x86/irq: Use hierarchy irqdomain to manage CPU interrupt vectors
+Date: Tue, 20 Jan 2015 11:08:05 +0800
+Message-Id: <1421723321-8386-3-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 19 January 2015 at 14:49, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Monday 19 January 2015 13:37:33 Gabriel Fernandez wrote:
->> On 17 December 2014 at 23:14, Arnd Bergmann <arnd@arndb.de> wrote:
->> > On Wednesday 17 December 2014 11:34:44 Gabriel FERNANDEZ wrote:
->> > > +/*
->> > > + * On ARM platforms, we actually get a bus error returned when the PCIe
->> > IP
->> > > + * returns a UR or CRS instead of an OK.
->> > > + */
->> > > +static int st_pcie_abort_
->> >
->> > handler(unsigned long addr, unsigned int fsr,
->> > > +                              struct pt_regs *regs)
->> > > +{
->> > > +     return 0;
->> > > +}
->> >
->> > You should check that it's actually PCI that caused the abort. Don't
->> > just ignore a hard error condition.
->> >
->> > Usually there are registers in the PCI core that let you identify what
->> > happened.
->> >
->>
->>
->> We return 0 because abort handler is not activated during boot.
->>
->
-> Can you just remove the handler then? We should never have exception
-> handlers that unconditionally return 0.
->
+Abstract CPU local APIC as an interrupt controller and create an
+irqdomain for it to manage CPU interrupt vectors. It's the base to
+enable hierarchy irqdomain on x86 systems. Eventually we will build
+a irqdomain hierarchy as below:
 
-Ah sorry, we need the handler because we can received aborts from
-user-land after the boot.
+IOAPIC domain-------|
+MSI/MSI-x domain------> [Inerrupt Remapping domain] -> CPU vector domain
+HPET_IRQ domain_____|                                         ^
+DMAR domain---------------------------------------------------|
+HT_IRQ domain-------------------------------------------------|
 
-I have 2 solutions, the first to simplify we can only return 0.
-The second is to manage handler during boot. Then i need for that a
-new patch from Fabrice
-https://lkml.org/lkml/2014/2/7/631
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Grant Likely <grant.likely@linaro.org>
+Cc: Prarit Bhargava <prarit@redhat.com>
+Link: http://lkml.kernel.org/r/1416894816-23245-3-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+---
+ arch/x86/Kconfig               |    3 +-
+ arch/x86/include/asm/hw_irq.h  |   17 +++++
+ arch/x86/kernel/apic/io_apic.c |    3 -
+ arch/x86/kernel/apic/vector.c  |  156 ++++++++++++++++++++++++++++++++++++----
+ 4 files changed, 161 insertions(+), 18 deletions(-)
 
->> > > +      * we must retry for up to a second before we decide the device is
->> > > +      * dead. If we are still dead then we assume there is nothing
->> > there and
->> > > +      * return ~0
->> > > +      *
->> > > +      * The downside of this is that we incur a delay of 1s for every
->> > pci
->> > > +      * express link that doesn't have a device connected.
->> > > +      */
->> > > +     if (((where & ~3) == 0) && devfn == 0 && (data == 0 || data ==
->> > ~0)) {
->> > > +             if (retry_count++ < 1000) {
->> > > +                     mdelay(1);
->> > > +                     goto retry;
->> > > +             } else {
->> > > +                     *val = ~0;
->> > > +                     return PCIBIOS_DEVICE_NOT_FOUND;
->> > > +             }
->> > > +     }
->> > > +
->> > > +     *val = data;
->> > > +     return ret;
->> > > +}
->> >
->> > A busy-loop is extremely nasty. If this is only during the initial bus
->> > scan, could you use an msleep instead?
->> >
->> > yes it's during the initial bus scan.
->> But we can't use msleep because we are under raw_spin_lock_irqsave()
->> see PCI_OP_READ() macro in drivers/pci/access.c
->
-> Ah, I see. Better use a loop with 'time_before()' and a much shorter
-> delay then. Even a single mdelay(1) with irqs disabled can be annoying,
-> so try to make the time as short as possible.
->
->> > Also, it sounds like the error you get is actually the fault that you
->> > are catching above. If this is correct, then use the fault handler to
->> > communicate this to the probe function.
->> >
->>
->> Same as above the handler is not activated during the boot and initial bus
->> scan.
->
-> Maybe you could enable the handler during boot to catch this case, and
-> then disable it later?
->
->> >
->> > > +static void st_msi_init_one(struct pcie_port *pp)
->> > > +{
->> > > +     struct st_pcie *pcie = to_st_pcie(pp);
->> > > +
->> > > +     /*
->> > > +      * Set the magic address the hardware responds to. This has to be
->> > in
->> > > +      * the range the PCI controller can write to.
->> > > +      */
->> > > +     dw_pcie_msi_init(pp);
->> > > +
->> > > +     if ((virt_to_phys((void *)pp->msi_data) < pcie->lmi->start) ||
->> > > +         (virt_to_phys((void *)pp->msi_data) > pcie->lmi->end))
->> > > +             dev_err(pp->dev, "MSI addr miss-configured\n");
->> > > +}
->> >
->> > Why do you call virt_to_phys() here? Isn't
->> >
->> > msi_data a physical address?
->> >
->> ?
->>
->>
->> msi_data is a virtual address, it's obtained through a   __get_free_pages()
->> function in dw_pcie_msi_init() procedure.
->
-> I guess you need dma_map_single() then, or use dma_alloc_coherent instead
-> of __get_free_pages(). There is no guarantee that the page you allocate
-> there is actually visible to the PCI host at the same address that the CPU
-> uses, so you need to map from a CPU address to a DMA address that the PCI
-> host bridge uses.
->
->         Arnd
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index ba397bde7948..ff7cad03d7f7 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -457,7 +457,6 @@ config X86_INTEL_CE
+ 	select X86_REBOOTFIXUPS
+ 	select OF
+ 	select OF_EARLY_FLATTREE
+-	select IRQ_DOMAIN
+ 	---help---
+ 	  Select for the Intel CE media processor (CE4100) SOC.
+ 	  This option compiles in support for the CE4100 SOC for settop
+@@ -884,11 +883,11 @@ config X86_LOCAL_APIC
+ 	def_bool y
+ 	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_APIC || PCI_MSI
+ 	select GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
++	select IRQ_DOMAIN_HIERARCHY
+ 
+ config X86_IO_APIC
+ 	def_bool X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_IOAPIC
+ 	depends on X86_LOCAL_APIC
+-	select IRQ_DOMAIN
+ 
+ config X86_REROUTE_FOR_BROKEN_BOOT_IRQS
+ 	bool "Reroute for broken boot IRQs"
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index b988ddf7434b..eb7692c9ab93 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -112,6 +112,17 @@ struct irq_2_irte {
+ 
+ #ifdef	CONFIG_X86_LOCAL_APIC
+ struct irq_data;
++struct irq_domain;
++
++struct irq_alloc_info {
++	u32			flags;
++	const struct cpumask	*mask;	/* CPU mask for vector allocation */
++};
++
++enum {
++	/* Allocate contigious CPU vectors */
++	X86_IRQ_ALLOC_CONTIGOUS_VECTORS		= 0x1,
++};
+ 
+ struct irq_cfg {
+ 	cpumask_var_t		domain;
+@@ -135,6 +146,12 @@ struct irq_cfg {
+ 	};
+ };
+ 
++extern struct irq_domain *x86_vector_domain;
++
++extern void init_irq_alloc_info(struct irq_alloc_info *info,
++				const struct cpumask *mask);
++extern void copy_irq_alloc_info(struct irq_alloc_info *dst,
++				struct irq_alloc_info *src);
+ extern struct irq_cfg *irq_cfg(unsigned int irq);
+ extern struct irq_cfg *irqd_cfg(struct irq_data *irq_data);
+ extern struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index f4dc2462a1ac..56d532106ef3 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -2356,9 +2356,6 @@ static int mp_irqdomain_create(int ioapic)
+ 		ioapic_dynirq_base = max(ioapic_dynirq_base,
+ 					 gsi_cfg->gsi_end + 1);
+ 
+-	if (gsi_cfg->gsi_base == 0)
+-		irq_set_default_host(ip->irqdomain);
+-
+ 	return 0;
+ }
+ 
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index c724ef6b218c..f8340c72546f 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -3,6 +3,8 @@
+  *
+  * Copyright (C) 1997, 1998, 1999, 2000, 2009 Ingo Molnar, Hajnalka Szabo
+  *	Moved from arch/x86/kernel/apic/io_apic.c.
++ * Jiang Liu <jiang.liu@linux.intel.com>
++ *	Enable support of hierarchy irqdomain
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -19,7 +21,9 @@
+ #include <asm/desc.h>
+ #include <asm/irq_remapping.h>
+ 
++struct irq_domain *x86_vector_domain;
+ static DEFINE_RAW_SPINLOCK(vector_lock);
++static struct irq_chip lapic_controller;
+ 
+ void lock_vector_lock(void)
+ {
+@@ -36,15 +40,21 @@ void unlock_vector_lock(void)
+ 
+ struct irq_cfg *irq_cfg(unsigned int irq)
+ {
+-	return irq_get_chip_data(irq);
++	return irqd_cfg(irq_get_irq_data(irq));
+ }
+ 
+ struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
+ {
++	if (!irq_data)
++		return NULL;
++
++	while (irq_data->parent_data)
++		irq_data = irq_data->parent_data;
++
+ 	return irq_data->chip_data;
+ }
+ 
+-static struct irq_cfg *alloc_irq_cfg(unsigned int irq, int node)
++static struct irq_cfg *alloc_irq_cfg(int node)
+ {
+ 	struct irq_cfg *cfg;
+ 
+@@ -79,7 +89,7 @@ struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node)
+ 			return cfg;
+ 	}
+ 
+-	cfg = alloc_irq_cfg(at, node);
++	cfg = alloc_irq_cfg(node);
+ 	if (cfg)
+ 		irq_set_chip_data(at, cfg);
+ 	else
+@@ -87,14 +97,13 @@ struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node)
+ 	return cfg;
+ }
+ 
+-static void free_irq_cfg(unsigned int at, struct irq_cfg *cfg)
++static void free_irq_cfg(struct irq_cfg *cfg)
+ {
+-	if (!cfg)
+-		return;
+-	irq_set_chip_data(at, NULL);
+-	free_cpumask_var(cfg->domain);
+-	free_cpumask_var(cfg->old_domain);
+-	kfree(cfg);
++	if (cfg) {
++		free_cpumask_var(cfg->domain);
++		free_cpumask_var(cfg->old_domain);
++		kfree(cfg);
++	}
+ }
+ 
+ static int
+@@ -241,6 +250,90 @@ void clear_irq_vector(int irq, struct irq_cfg *cfg)
+ 	raw_spin_unlock_irqrestore(&vector_lock, flags);
+ }
+ 
++void init_irq_alloc_info(struct irq_alloc_info *info,
++			 const struct cpumask *mask)
++{
++	memset(info, 0, sizeof(*info));
++	info->mask = mask;
++}
++
++void copy_irq_alloc_info(struct irq_alloc_info *dst, struct irq_alloc_info *src)
++{
++	if (src)
++		*dst = *src;
++	else
++		memset(dst, 0, sizeof(*dst));
++}
++
++static inline const struct cpumask *
++irq_alloc_info_get_mask(struct irq_alloc_info *info)
++{
++	return (!info || !info->mask) ? apic->target_cpus() : info->mask;
++}
++
++static void x86_vector_free_irqs(struct irq_domain *domain,
++				 unsigned int virq, unsigned int nr_irqs)
++{
++	int i;
++	struct irq_data *irq_data;
++
++	for (i = 0; i < nr_irqs; i++) {
++		irq_data = irq_domain_get_irq_data(x86_vector_domain, virq + i);
++		if (irq_data && irq_data->chip_data) {
++			free_remapped_irq(virq);
++			clear_irq_vector(virq + i, irq_data->chip_data);
++			free_irq_cfg(irq_data->chip_data);
++			irq_domain_reset_irq_data(irq_data);
++		}
++	}
++}
++
++static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
++				 unsigned int nr_irqs, void *arg)
++{
++	int i, err;
++	struct irq_cfg *cfg;
++	struct irq_data *irq_data;
++	const struct cpumask *mask;
++	struct irq_alloc_info *info = arg;
++
++	if (disable_apic)
++		return -ENXIO;
++
++	/* Currently vector allocator can't guarantee contigious allocations */
++	if ((info->flags & X86_IRQ_ALLOC_CONTIGOUS_VECTORS) && nr_irqs > 1)
++		return -ENOSYS;
++
++	mask = irq_alloc_info_get_mask(info);
++	for (i = 0; i < nr_irqs; i++) {
++		irq_data = irq_domain_get_irq_data(domain, virq + i);
++		BUG_ON(!irq_data);
++		cfg = alloc_irq_cfg(irq_data->node);
++		if (!cfg) {
++			err = -ENOMEM;
++			goto error;
++		}
++
++		irq_data->chip = &lapic_controller;
++		irq_data->chip_data = cfg;
++		irq_data->hwirq = virq + i;
++		err = assign_irq_vector(virq, cfg, mask);
++		if (err)
++			goto error;
++	}
++
++	return 0;
++
++error:
++	x86_vector_free_irqs(domain, virq, i + 1);
++	return err;
++}
++
++static struct irq_domain_ops x86_vector_domain_ops = {
++	.alloc = x86_vector_alloc_irqs,
++	.free = x86_vector_free_irqs,
++};
++
+ int __init arch_probe_nr_irqs(void)
+ {
+ 	int nr;
+@@ -266,6 +359,11 @@ int __init arch_probe_nr_irqs(void)
+ 
+ int __init arch_early_irq_init(void)
+ {
++	x86_vector_domain = irq_domain_add_tree(NULL, &x86_vector_domain_ops,
++						NULL);
++	BUG_ON(x86_vector_domain == NULL);
++	irq_set_default_host(x86_vector_domain);
++
+ 	return arch_early_ioapic_init();
+ }
+ 
+@@ -380,6 +478,37 @@ int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 	return 0;
+ }
+ 
++static int vector_set_affinity(struct irq_data *irq_data,
++			       const struct cpumask *dest, bool force)
++{
++	int err;
++	int irq = irq_data->irq;
++	struct irq_cfg *cfg = irq_data->chip_data;
++
++	if (!config_enabled(CONFIG_SMP))
++		return -EPERM;
++
++	if (!cpumask_intersects(dest, cpu_online_mask))
++		return -EINVAL;
++
++	err = assign_irq_vector(irq, cfg, dest);
++	if (err) {
++		struct irq_data *top = irq_get_irq_data(irq);
++
++		if (assign_irq_vector(irq, cfg, top->affinity))
++			pr_err("Failed to recover vector for irq %d\n", irq);
++		return err;
++	}
++
++	return IRQ_SET_MASK_OK;
++}
++
++static struct irq_chip lapic_controller = {
++	.irq_ack		= apic_ack_edge,
++	.irq_set_affinity	= vector_set_affinity,
++	.irq_retrigger		= apic_retrigger_irq,
++};
++
+ #ifdef CONFIG_SMP
+ void send_cleanup_vector(struct irq_cfg *cfg)
+ {
+@@ -497,7 +626,7 @@ int arch_setup_hwirq(unsigned int irq, int node)
+ 	unsigned long flags;
+ 	int ret;
+ 
+-	cfg = alloc_irq_cfg(irq, node);
++	cfg = alloc_irq_cfg(node);
+ 	if (!cfg)
+ 		return -ENOMEM;
+ 
+@@ -508,7 +637,7 @@ int arch_setup_hwirq(unsigned int irq, int node)
+ 	if (!ret)
+ 		irq_set_chip_data(irq, cfg);
+ 	else
+-		free_irq_cfg(irq, cfg);
++		free_irq_cfg(cfg);
+ 	return ret;
+ }
+ 
+@@ -518,7 +647,8 @@ void arch_teardown_hwirq(unsigned int irq)
+ 
+ 	free_remapped_irq(irq);
+ 	clear_irq_vector(irq, cfg);
+-	free_irq_cfg(irq, cfg);
++	irq_set_chip_data(irq, NULL);
++	free_irq_cfg(cfg);
+ }
+ 
+ static void __init print_APIC_field(int base)
+-- 
+1.7.10.4
 
-This is only to check the msi magic address given to ip, we never read
-or write in this area.
-this code is only a check
-
-BR
-
-Gabriel
