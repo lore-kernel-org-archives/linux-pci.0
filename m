@@ -1,115 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51385 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751784AbbAGOwZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jan 2015 09:52:25 -0500
-Date: Wed, 7 Jan 2015 09:50:50 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Jan Beulich <JBeulich@suse.com>,
-	David Rientjes <rientjes@google.com>,
-	HATAYAMA Daisuke <d.hatayama@jp.fujitsu.com>,
-	Richard Weinberger <richard@nod.at>,
-	Oren Twaig <oren@scalemp.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Prarit Bhargava <prarit@redhat.com>,
+Received: from szxga01-in.huawei.com ([119.145.14.64]:55653 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754109AbbAUCco (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 21:32:44 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Ingo Molnar <mingo@kernel.org>, xen-devel@lists.xenproject.org
-Subject: Re: [Bugfix] x86/apic: Fix xen IRQ allocation failure caused by
- commit b81975eade8c
-Message-ID: <20150107145050.GC30457@l.oracle.com>
-References: <1420611244-25624-1-git-send-email-jiang.liu@linux.intel.com>
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v2 13/30] PCI: Introduce new scan function pci_scan_root_bridge()
+Date: Wed, 21 Jan 2015 08:30:08 +0800
+Message-ID: <1421800225-26230-14-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
+References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1420611244-25624-1-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 07, 2015 at 02:13:49PM +0800, Jiang Liu wrote:
-> Commit b81975eade8c ("x86, irq: Clean up irqdomain transition code")
-> breaks xen IRQ allocation because xen_smp_prepare_cpus() doesn't invoke
-> setup_IO_APIC(), so no irqdomains created for IOAPICs and
-> mp_map_pin_to_irq() fails at the very beginning.
-> --- a/arch/x86/kernel/apic/io_apic.c
-> +++ b/arch/x86/kernel/apic/io_apic.c
-> @@ -2369,31 +2369,29 @@ static void ioapic_destroy_irqdomain(int idx)
->  	ioapics[idx].pin_info = NULL;
->  }
->  
-> -void __init setup_IO_APIC(void)
-> +void __init setup_IO_APIC(bool xen_smp)
->  {
->  	int ioapic;
->  
-> -	/*
-> -	 * calling enable_IO_APIC() is moved to setup_local_APIC for BP
-> -	 */
-> -	io_apic_irqs = nr_legacy_irqs() ? ~PIC_IRQS : ~0UL;
-> +	if (!xen_smp) {
-> +		apic_printk(APIC_VERBOSE, "ENABLING IO-APIC IRQs\n");
-> +		io_apic_irqs = nr_legacy_irqs() ? ~PIC_IRQS : ~0UL;
-> +
-> +		/* Set up IO-APIC IRQ routing. */
-> +		x86_init.mpparse.setup_ioapic_ids();
-> +		sync_Arb_IDs();
-> +	}
+Introduce new scan function pci_scan_root_bridge() to
+support host bridge drivers that need to provide platform
+own pci_host_bridge_ops.
 
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/probe.c |   21 +++++++++++++++++++++
+ include/linux/pci.h |    3 +++
+ 2 files changed, 24 insertions(+), 0 deletions(-)
 
-Is there a specific reason that this cannot run in all cases?
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ca53c37..c23ca8a 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2064,6 +2064,27 @@ static struct pci_bus *__pci_scan_root_bus(
+ 	return b;
+ }
+ 
++struct pci_host_bridge *pci_scan_root_bridge(struct device *parent,
++		u32 db, struct pci_ops *ops, void *sysdata,
++		struct list_head *resources, struct pci_host_bridge_ops *phb_ops)
++{
++	struct pci_host_bridge *host;
++	struct pci_bus *bus;
++
++	host = pci_create_host_bridge(parent, db, resources,
++			sysdata, phb_ops);
++	if (!host)
++		return NULL;
++
++	bus = __pci_scan_root_bus(host, ops);
++	if (!bus)
++		pci_free_host_bridge(host);
++
++	return host;
++}
++EXPORT_SYMBOL(pci_scan_root_bridge);
++
++
+ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+ 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+ {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 817756a..e60c59a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -793,6 +793,9 @@ void pci_bus_release_busn_res(struct pci_bus *b);
+ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 dombus,
+ 					     struct pci_ops *ops, void *sysdata,
+ 					     struct list_head *resources);
++struct pci_host_bridge *pci_scan_root_bridge(struct device *parent,
++		u32 dombus, struct pci_ops *ops, void *sysdata,
++		struct list_head *resources, struct pci_host_bridge_ops *phb_ops);
+ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
+ 				int busnr);
+ void pcie_update_link_speed(struct pci_bus *bus, u16 link_status);
+-- 
+1.7.1
 
-What I am asking is why are we doing a special case here? The description
-at the top implied that we were just missing an call to
-setup_IO_APIC.. 
-
->  
-> -	apic_printk(APIC_VERBOSE, "ENABLING IO-APIC IRQs\n");
->  	for_each_ioapic(ioapic)
->  		BUG_ON(mp_irqdomain_create(ioapic));
-> -
-> -	/*
-> -         * Set up IO-APIC IRQ routing.
-> -         */
-> -	x86_init.mpparse.setup_ioapic_ids();
-> -
-> -	sync_Arb_IDs();
->  	setup_IO_APIC_irqs();
-> -	init_IO_APIC_traps();
-> -	if (nr_legacy_irqs())
-> -		check_timer();
-> -
->  	ioapic_initialized = 1;
-> +
-> +	if (!xen_smp) {
-> +		init_IO_APIC_traps();
-> +		if (nr_legacy_irqs())
-> +			check_timer();
-> +	}
->  }
->  
->  /*
-> diff --git a/arch/x86/xen/smp.c b/arch/x86/xen/smp.c
-> index 4c071aeb8417..7eb0283901fa 100644
-> --- a/arch/x86/xen/smp.c
-> +++ b/arch/x86/xen/smp.c
-> @@ -326,7 +326,10 @@ static void __init xen_smp_prepare_cpus(unsigned int max_cpus)
->  
->  		xen_raw_printk(m);
->  		panic(m);
-> +	} else {
-> +		setup_IO_APIC(true);
->  	}
-> +
->  	xen_init_lock_cpu(0);
->  
->  	smp_store_boot_cpu_info();
-> -- 
-> 1.7.10.4
-> 
