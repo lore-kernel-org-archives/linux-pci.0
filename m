@@ -1,140 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:10151 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751430AbbASOUi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 19 Jan 2015 09:20:38 -0500
-Message-ID: <54BD12B1.8010006@linux.intel.com>
-Date: Mon, 19 Jan 2015 22:20:33 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Received: from mail-oi0-f50.google.com ([209.85.218.50]:43772 "EHLO
+	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752610AbbAURJa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Jan 2015 12:09:30 -0500
+Received: by mail-oi0-f50.google.com with SMTP id h136so4860635oig.9
+        for <linux-pci@vger.kernel.org>; Wed, 21 Jan 2015 09:09:30 -0800 (PST)
+Date: Wed, 21 Jan 2015 11:09:27 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Rajat Jain <rajatxjain@gmail.com>
+Subject: Re: [PATCH] pci: Use hot-plug capable for testing presence on
+Message-ID: <20150121170927.GA13072@google.com>
+References: <1419275223-14602-1-git-send-email-keith.busch@intel.com>
+ <20150116203330.GJ29776@google.com>
 MIME-Version: 1.0
-To: Sander Eikelenboom <linux@eikelenboom.it>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Xen-devel List <xen-devel@lists.xen.org>
-Subject: Re: [Bugfix 0/3] Fix regressions in Xen IRQ management
-References: <1421643344-17092-1-git-send-email-jiang.liu@linux.intel.com> <444634093.20150119133447@eikelenboom.it>
-In-Reply-To: <444634093.20150119133447@eikelenboom.it>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150116203330.GJ29776@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/1/19 20:34, Sander Eikelenboom wrote:
+On Fri, Jan 16, 2015 at 02:33:30PM -0600, Bjorn Helgaas wrote:
+> [+cc Rajat]
 > 
-> Monday, January 19, 2015, 5:55:41 AM, you wrote:
+> On Mon, Dec 22, 2014 at 12:07:03PM -0700, Keith Busch wrote:
+> > The PCI-e Base specifically says Hot-Plug Surprise capability is for
+> > removal only, but pciehp checked this to determine if it should handle a
+> > slot event on device add. Lots of platform's pcie slots don't advertise
+> > support for surprise removal, but are perfectly capable of handling
+> > hot-add, so checking surprise removal is not appropriate.
+> > 
+> > This patch checks the Hot-Plug Capable bit in the slot capabilities to
+> > determine if the detected presence on is a reliable event instead of
+> > Hot-Plug Surprise.
+> > 
+> > Signed-off-by: Keith Busch <keith.busch@intel.com>
 > 
->> Hi all,
->>         Sander reports an Xen pci-passthrough regression caused by
->> commit cffe0a2b5a34c95a4dadc9ec7132690a5b0f6687 ("x86, irq: Keep
->> balance of IOAPIC pin reference count"). This patch set tries to
->> fix it.
-> 
->> Patch 1 is a fix for another issue found during fixing the regression.
->> Patch 2 is a hotfix for the regression and should be targeted for v3.19.
->> Patch 3 is the foundamental fix for the regression and should be targeted
->> at v3.20.
-> 
->> Hi Sander,
->>         Could you please help to test by:
->> 1) only apply patch 1 and patch 2
->> 2) and then apply patch 3 ontop of patch 1/2.
->> Thanks!
->> Gerry
-> 
-> Hi Gerry / David / Konrad,
-> 
-> My test results:
-> 
-> - On intel:
->     - With apic v4 series and only patch 1 + 2 of this series:
->         - powerbutton is still working as expected due to apic v4 series
->         - irq's are delivered to the passed through wifi device,
->           the wifi device is working now, so that's good !
->         - However now i get this splat in dom0,
->           (haven't seen this one before,
->            but unfortunately i don't seem to be able to trigger it reliably (only hit this once in 10 boots),
->            and i also don't know for sure if it's even due to this patch set or not):
->              [ 2361.607881] irq 18: nobody cared (try booting with the "irqpoll" option)
->              [ 2361.650103] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 3.19.0-rc5-creanuc-20150119-doflr-apicv4-apicpcipt12+ #1
->              [ 2361.670344] Hardware name:                  /D53427RKE, BIOS RKPPT10H.86A.0017.2013.0425.1251 04/25/2013
->              [ 2361.690787]  0000000000000000 ffff8800596aee8c ffffffff818af9e7 ffff8800596aee00
->              [ 2361.711547]  ffffffff8108151c ffff8800596aee00 0000000000000000 0000000000000000
->              [ 2361.732474]  ffffffff81081929 0000000000000000 0000000000000000 0000000000000012
->              [ 2361.753265] Call Trace:
->              [ 2361.773907]  <IRQ>  [<ffffffff818af9e7>] ? dump_stack+0x40/0x50
->              [ 2361.795077]  [<ffffffff8108151c>] ? __report_bad_irq+0x1e/0xbb
->              [ 2361.815844]  [<ffffffff81081929>] ? note_interrupt+0x1a9/0x234
->              [ 2361.835965]  [<ffffffff8107fa8f>] ? handle_irq_event_percpu+0xd7/0xf1
->              [ 2361.856384]  [<ffffffff8107fae0>] ? handle_irq_event+0x37/0x57
->              [ 2361.876775]  [<ffffffff81082212>] ? handle_fasteoi_irq+0x74/0xcb
->              [ 2361.896812]  [<ffffffff8107f47a>] ? generic_handle_irq+0x15/0x20
->              [ 2361.916476]  [<ffffffff813bf5e7>] ? evtchn_fifo_handle_events+0x138/0x16f
->              [ 2361.936105]  [<ffffffff813bd3a5>] ? __xen_evtchn_do_upcall+0x39/0x69
->              [ 2361.955986]  [<ffffffff813be71d>] ? xen_evtchn_do_upcall+0x27/0x36
->              [ 2361.975998]  [<ffffffff818b881e>] ? xen_do_hypervisor_callback+0x1e/0x30
->              [ 2361.996017]  <EOI>  [<ffffffff810013aa>] ? xen_hypercall_sched_op+0xa/0x20
->              [ 2362.016394]  [<ffffffff810013aa>] ? xen_hypercall_sched_op+0xa/0x20
->              [ 2362.036886]  [<ffffffff81007138>] ? xen_safe_halt+0xc/0x13
->              [ 2362.057118]  [<ffffffff81013add>] ? default_idle+0x5/0x8
->              [ 2362.077309]  [<ffffffff81078b52>] ? cpu_startup_entry+0x114/0x25e
->              [ 2362.097612]  [<ffffffff81effe9d>] ? start_kernel+0x422/0x42d
->              [ 2362.118041]  [<ffffffff81eff880>] ? set_init_arg+0x50/0x50
->              [ 2362.138141]  [<ffffffff81f029a0>] ? xen_start_kernel+0x4d3/0x4db
->              [ 2362.157862] handlers:
->              [ 2362.177280] [<ffffffff8157567e>] ata_bmdma_interrupt
->              [ 2362.196805] Disabling IRQ #18
->         - attached complete proc-interrupts, lspci, dmesg and xl-dmesg attached as proc-interrupts12.txt, lspci12.txt, dmesg12.txt and xl-dmesg12.txt
-> 
-> 
->     - With apic v4 series and patch 1 + 2 + 3 of this series:
->         - powerbutton is still working as expected due to apic v4 series
->         - irq's are delivered to the passed through wifi device,
->           the wifi device is working now, so that's good !
->         - I haven't seen the splat above so far,
->           (but since i can't trigger it reliably that doesn't give any guarantees unfortunately).
-> 
-> On AMD:
->     - With apic v4 series and only patch 1 + 2 of this series:
->         - powerbutton is still working as expected due to apic v4 series
->         - videostream from passed through device is stable again, so that's good !
-> 
->     - With apic v4 series and patch 1 + 2 + 3 of this series:
->         - powerbutton is still working as expected due to apic v4 series
->         - videostream from passed through device is stable again, so that's good !
-> 
-> 
-> So to summarize:
->     The reported problems are fixed, everything looks good.
->     Apart from a splat which occurs infrequently and from which i don't know
->     if it is due to this patch set anyway.
-> 
-> So i'm very much inclined to say: 
-> Tested-by: Sander Eikelenboom <linux@eikelenboom.it>
-Thanks for your great efforts to tests those patches, Sander.
-I will send out formal patch set for 3.19 tomorrow.
-Thanks!
-Gerry
+> This seems reasonable to me, and I applied it to pci/hotplug for v3.20.
 
-> 
-> 
-> Thanks Gerry !
-> 
-> --
-> Sander
-> 
->> Jiang Liu (3):
->>   xen/irq, ACPI: Fix regression in xen PCI passthrough caused by
->>     cffe0a2b5a34
->>   xen/irq: Override ACPI IRQ management callback __acpi_unregister_gsi
->>   x86/PCI: Refine the way to release PCI IRQ resources
-> 
->>  arch/x86/include/asm/acpi.h    |    1 +
->>  arch/x86/include/asm/pci_x86.h |    2 --
->>  arch/x86/pci/common.c          |   30 ++++++++++++++++++++++++++++--
->>  arch/x86/pci/intel_mid_pci.c   |    4 ++--
->>  arch/x86/pci/irq.c             |   15 +--------------
->>  arch/x86/pci/xen.c             |    2 ++
->>  drivers/acpi/pci_irq.c         |   10 +---------
->>  7 files changed, 35 insertions(+), 29 deletions(-)
+After our follow-up discussion, I replaced this patch with the following.
+If anybody objects, let me know.
+
+commit dc0c25c0ee9f92ba1872fdda9c2a0014611cf722
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Wed Jan 21 10:28:07 2015 -0600
+
+    PCI: pciehp: Handle surprise add even if surprise removal isn't supported
+    
+    The PCIe spec (r3.0, sec 7.8.9) says Hot-Plug Surprise indicates support
+    for surprise *removal*, but pciehp checked this to determine if it should
+    handle presence detect interrupts for device *addition*.
+    
+    Allow surprise device addition even if the slot doesn't advertise support
+    for surprise removal.
+    
+    Keith has a platform with slots for front-loading SFF devices.  The slots
+    do not have attention buttons and do not support surprise removal, but they
+    do have presence detect.  In that case, we still want to use presence
+    detect for device addition.
+    
+    Keith's original patch handled surprise insertions only if Hot-Plug Capable
+    is set.  I think that test is superfluous because pciehp only claims slots
+    that advertise Hot-Plug Capable (see get_port_device_capability()).
+    
+    Link: http://lkml.kernel.org/r/1419275223-14602-1-git-send-email-keith.busch@intel.com
+    Based-on-patch-by: Keith Busch <keith.busch@intel.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index ff32e85e1de6..f052e951b23e 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -532,8 +532,6 @@ static void interrupt_event_handler(struct work_struct *work)
+ 		pciehp_green_led_off(p_slot);
+ 		break;
+ 	case INT_PRESENCE_ON:
+-		if (!HP_SUPR_RM(ctrl))
+-			break;
+ 		ctrl_dbg(ctrl, "Surprise Insertion\n");
+ 		handle_surprise_event(p_slot);
+ 		break;
