@@ -1,227 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:54559 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750750AbbAGF05 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jan 2015 00:26:57 -0500
-Message-ID: <54ACC35F.1070007@hp.com>
-Date: Wed, 07 Jan 2015 13:25:51 +0800
-From: "Li, ZhenHua" <zhen-hual@hp.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:56077 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754146AbbAUCdB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 21:33:01 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v2 30/30] PCI: Remove pci_bus_assign_domain_nr()
+Date: Wed, 21 Jan 2015 08:30:25 +0800
+Message-ID: <1421800225-26230-31-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
+References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Baoquan He <bhe@redhat.com>
-CC: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, joro@8bytes.org,
-	vgoyal@redhat.com, dyoung@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com, "Li, ZhenHua" <zhen-hual@hp.com>
-Subject: Re: [PATCH v7 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-References: <1420603474-4235-1-git-send-email-zhen-hual@hp.com> <54ACB1E9.9070904@hp.com> <20150107050247.GA16050@dhcp-16-116.nay.redhat.com>
-In-Reply-To: <20150107050247.GA16050@dhcp-16-116.nay.redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is same as the last one I send to you yesterday.
+Now we save the domain number in pci_host_bridge,
+we could remove pci_bus_assign_domain_nr() and
+clean the domain member in pci_bus.
 
-The continuous memory that needed for data in this patchset:
-RE: PAGE_SIZE, 4096 Bytes;
-IRTE: 65536 * 16 ; 1M Bytes;
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pci.c   |    5 -----
+ drivers/pci/probe.c |   12 ++++--------
+ include/linux/pci.h |    3 ---
+ 3 files changed, 4 insertions(+), 16 deletions(-)
 
-It should use same memory as the old versions of this patchset. The 
-changes for the last version do not need more memory.
-
-Regards
-Zhenhua
-
-On 01/07/2015 01:02 PM, Baoquan He wrote:
-> On 01/07/15 at 12:11pm, Li, ZhenHua wrote:
->> Many thanks to Takao Indoh and Baoquan He, for your testing on more
->> different systems.
->>
->> The calling of flush functions are added to this version.
->>
->> The usage of __iommu_flush_cache function :
->> 1. Fixes a dump on Takao's system.
->> 2. Reduces the count of faults on Baoquan's system.
->
-> I am testing the version you sent to me yesterday afternoon. Is that
-> different with this patchset? I found your patchset man reserve a big
-> contiguous memory region under 896M, this will cause the crashkernel
-> reservation failed when I set crashkernel=320M. The reason I increase
-> the crashkerenl reservation to 320M is 256M is not enough and cause OOM
-> when that patchset is tested.
->
-> I am checking what happened.
->
->
-> Thanks
-> Baoquan
->
->>
->> Regards
->> Zhenhua
->>
->> On 01/07/2015 12:04 PM, Li, Zhen-Hua wrote:
->>> This patchset is an update of Bill Sumner's patchset, implements a fix for:
->>> If a kernel boots with intel_iommu=on on a system that supports intel vt-d,
->>> when a panic happens, the kdump kernel will boot with these faults:
->>>
->>>      dmar: DRHD: handling fault status reg 102
->>>      dmar: DMAR:[DMA Read] Request device [01:00.0] fault addr fff80000
->>>      DMAR:[fault reason 01] Present bit in root entry is clear
->>>
->>>      dmar: DRHD: handling fault status reg 2
->>>      dmar: INTR-REMAP: Request device [[61:00.0] fault index 42
->>>      INTR-REMAP:[fault reason 34] Present field in the IRTE entry is clear
->>>
->>> On some system, the interrupt remapping fault will also happen even if the
->>> intel_iommu is not set to on, because the interrupt remapping will be enabled
->>> when x2apic is needed by the system.
->>>
->>> The cause of the DMA fault is described in Bill's original version, and the
->>> INTR-Remap fault is caused by a similar reason. In short, the initialization
->>> of vt-d drivers causes the in-flight DMA and interrupt requests get wrong
->>> response.
->>>
->>> To fix this problem, we modifies the behaviors of the intel vt-d in the
->>> crashdump kernel:
->>>
->>> For DMA Remapping:
->>> 1. To accept the vt-d hardware in an active state,
->>> 2. Do not disable and re-enable the translation, keep it enabled.
->>> 3. Use the old root entry table, do not rewrite the RTA register.
->>> 4. Malloc and use new context entry table and page table, copy data from the
->>>     old ones that used by the old kernel.
->>> 5. to use different portions of the iova address ranges for the device drivers
->>>     in the crashdump kernel than the iova ranges that were in-use at the time
->>>     of the panic.
->>> 6. After device driver is loaded, when it issues the first dma_map command,
->>>     free the dmar_domain structure for this device, and generate a new one, so
->>>     that the device can be assigned a new and empty page table.
->>> 7. When a new context entry table is generated, we also save its address to
->>>     the old root entry table.
->>>
->>> For Interrupt Remapping:
->>> 1. To accept the vt-d hardware in an active state,
->>> 2. Do not disable and re-enable the interrupt remapping, keep it enabled.
->>> 3. Use the old interrupt remapping table, do not rewrite the IRTA register.
->>> 4. When ioapic entry is setup, the interrupt remapping table is changed, and
->>>     the updated data will be stored to the old interrupt remapping table.
->>>
->>> Advantages of this approach:
->>> 1. All manipulation of the IO-device is done by the Linux device-driver
->>>     for that device.
->>> 2. This approach behaves in a manner very similar to operation without an
->>>     active iommu.
->>> 3. Any activity between the IO-device and its RMRR areas is handled by the
->>>     device-driver in the same manner as during a non-kdump boot.
->>> 4. If an IO-device has no driver in the kdump kernel, it is simply left alone.
->>>     This supports the practice of creating a special kdump kernel without
->>>     drivers for any devices that are not required for taking a crashdump.
->>> 5. Minimal code-changes among the existing mainline intel vt-d code.
->>>
->>> Summary of changes in this patch set:
->>> 1. Added some useful function for root entry table in code intel-iommu.c
->>> 2. Added new members to struct root_entry and struct irte;
->>> 3. Functions to load old root entry table to iommu->root_entry from the memory
->>>     of old kernel.
->>> 4. Functions to malloc new context entry table and page table and copy the data
->>>     from the old ones to the malloced new ones.
->>> 5. Functions to enable support for DMA remapping in kdump kernel.
->>> 6. Functions to load old irte data from the old kernel to the kdump kernel.
->>> 7. Some code changes that support other behaviours that have been listed.
->>> 8. In the new functions, use physical address as "unsigned long" type, not
->>>     pointers.
->>>
->>> Original version by Bill Sumner:
->>>      https://lkml.org/lkml/2014/1/10/518
->>>      https://lkml.org/lkml/2014/4/15/716
->>>      https://lkml.org/lkml/2014/4/24/836
->>>
->>> Zhenhua's updates:
->>>      https://lkml.org/lkml/2014/10/21/134
->>>      https://lkml.org/lkml/2014/12/15/121
->>>      https://lkml.org/lkml/2014/12/22/53
->>>
->>> Changelog[v7]:
->>>      1. Use __iommu_flush_cache to flush the data to hardware.
->>>
->>> Changelog[v6]:
->>>      1. Use "unsigned long" as type of physical address.
->>>      2. Use new function unmap_device_dma to unmap the old dma.
->>>      3. Some small incorrect bits order for aw shift.
->>>
->>> Changelog[v5]:
->>>      1. Do not disable and re-enable traslation and interrupt remapping.
->>>      2. Use old root entry table.
->>>      3. Use old interrupt remapping table.
->>>      4. New functions to copy data from old kernel, and save to old kernel mem.
->>>      5. New functions to save updated root entry table and irte table.
->>>      6. Use intel_unmap to unmap the old dma;
->>>      7. Allocate new pages while driver is being loaded.
->>>
->>> Changelog[v4]:
->>>      1. Cut off the patches that move some defines and functions to new files.
->>>      2. Reduce the numbers of patches to five, make it more easier to read.
->>>      3. Changed the name of functions, make them consistent with current context
->>>         get/set functions.
->>>      4. Add change to function __iommu_attach_domain.
->>>
->>> Changelog[v3]:
->>>      1. Commented-out "#define DEBUG 1" to eliminate debug messages.
->>>      2. Updated the comments about changes in each version.
->>>      3. Fixed: one-line added to Copy-Translations patch to initialize the iovad
->>>            struct as recommended by Baoquan He [bhe@redhat.com]
->>>            init_iova_domain(&domain->iovad, DMA_32BIT_PFN);
->>>
->>> Changelog[v2]:
->>>      The following series implements a fix for:
->>>      A kdump problem about DMA that has been discussed for a long time. That is,
->>>      when a kernel panics and boots into the kdump kernel, DMA started by the
->>>      panicked kernel is not stopped before the kdump kernel is booted and the
->>>      kdump kernel disables the IOMMU while this DMA continues.  This causes the
->>>      IOMMU to stop translating the DMA addresses as IOVAs and begin to treat
->>>      them as physical memory addresses -- which causes the DMA to either:
->>>          (1) generate DMAR errors or
->>>          (2) generate PCI SERR errors or
->>>          (3) transfer data to or from incorrect areas of memory. Often this
->>>              causes the dump to fail.
->>>
->>> Changelog[v1]:
->>>      The original version.
->>>
->>> Changed in this version:
->>> 1. Do not disable and re-enable traslation and interrupt remapping.
->>> 2. Use old root entry table.
->>> 3. Use old interrupt remapping table.
->>> 4. Use "unsigned long" as physical address.
->>> 5. Use intel_unmap to unmap the old dma;
->>>
->>> Baoquan He <bhe@redhat.com> helps testing this patchset.
->>>
->>>    iommu/vt-d: Update iommu_attach_domain() and its callers
->>>    iommu/vt-d: Items required for kdump
->>>    iommu/vt-d: Add domain-id functions
->>>    iommu/vt-d: functions to copy data from old mem
->>>    iommu/vt-d: Add functions to load and save old re
->>>    iommu/vt-d: datatypes and functions used for kdump
->>>    iommu/vt-d: enable kdump support in iommu module
->>>    iommu/vt-d: assign new page table for dma_map
->>>    iommu/vt-d: Copy functions for irte
->>>    iommu/vt-d: Use old irte in kdump kernel
->>>
->>> Signed-off-by: Bill Sumner <billsumnerlinux@gmail.com>
->>> Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
->>> Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
->>> Tested-by: Baoquan He <bhe@redhat.com>
->>> ---
->>>   drivers/iommu/intel-iommu.c         | 1050 +++++++++++++++++++++++++++++++++--
->>>   drivers/iommu/intel_irq_remapping.c |  104 +++-
->>>   include/linux/intel-iommu.h         |   18 +
->>>   3 files changed, 1130 insertions(+), 42 deletions(-)
->>>
->>
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 0af5ef1..7ad1e59 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4521,11 +4521,6 @@ void pci_host_assign_domain_nr(struct pci_host_bridge *host)
+ {
+ 	host->domain = pci_assign_domain_nr(host->dev.parent);
+ }
+-
+-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+-{
+-	bus->domain_nr = pci_assign_domain_nr(parent);
+-}
+ #endif
+ #endif
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 70e28d9..dabf4ca 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -480,7 +480,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
+ 	}
+ }
+ 
+-static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
++static struct pci_bus *pci_alloc_bus(void)
+ {
+ 	struct pci_bus *b;
+ 
+@@ -495,10 +495,7 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
+ 	INIT_LIST_HEAD(&b->resources);
+ 	b->max_bus_speed = PCI_SPEED_UNKNOWN;
+ 	b->cur_bus_speed = PCI_SPEED_UNKNOWN;
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+-	if (parent)
+-		b->domain_nr = parent->domain_nr;
+-#endif
++
+ 	return b;
+ }
+ 
+@@ -645,7 +642,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	/*
+ 	 * Allocate a new bus, and inherit stuff from the parent..
+ 	 */
+-	child = pci_alloc_bus(parent);
++	child = pci_alloc_bus();
+ 	if (!child)
+ 		return NULL;
+ 
+@@ -1865,14 +1862,13 @@ static struct pci_bus *pci_create_root_bus(
+ 	char *fmt;
+ 
+ 	parent = bridge->dev.parent;
+-	b = pci_alloc_bus(NULL);
++	b = pci_alloc_bus();
+ 	if (!b)
+ 		return NULL;
+ 
+ 	b->sysdata = dev_get_drvdata(&bridge->dev);
+ 	b->ops = ops;
+ 	b->number = b->busn_res.start = bridge->busnum;
+-	pci_bus_assign_domain_nr(b, parent);
+ 
+ 	bridge->bus = b;
+ 	b->bridge = get_device(&bridge->dev);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 57e7e00..90fb71a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -471,9 +471,6 @@ struct pci_bus {
+ 	unsigned char	primary;	/* number of primary bridge */
+ 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
+ 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+-	int		domain_nr;
+-#endif
+ 
+ 	char		name[48];
+ 
+-- 
+1.7.1
 
