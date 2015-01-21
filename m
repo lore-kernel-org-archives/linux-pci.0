@@ -1,108 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:58124 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932418AbbAHRGi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jan 2015 12:06:38 -0500
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH v2 6/8] irqchip: GICv2m: Get rid of struct msi_controller
-Date: Thu,  8 Jan 2015 17:06:10 +0000
-Message-Id: <1420736772-11088-7-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com>
-References: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <54BF3B24.10209@linux.intel.com>
+Date: Wed, 21 Jan 2015 13:37:40 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [RFC Patch 15/19] ACPI: Add field offset to struct resource_list_entry
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-16-git-send-email-jiang.liu@linux.intel.com> <1524434.hGg7sZaCUr@vostro.rjw.lan>
+In-Reply-To: <1524434.hGg7sZaCUr@vostro.rjw.lan>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-GICv2m only uses the msi_controller structure as a way to match
-the PHB with its MSI HW, and thus the msi_domain. But now that
-we can directly associate an msi_domain with a device, there is
-no use keeping this msi_controller around.
-
-Just remove all traces of msi_controller from the driver.
-
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/irqchip/irq-gic-v2m.c | 26 +++++++++-----------------
- 1 file changed, 9 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/irqchip/irq-gic-v2m.c b/drivers/irqchip/irq-gic-v2m.c
-index fdf7065..a76b802 100644
---- a/drivers/irqchip/irq-gic-v2m.c
-+++ b/drivers/irqchip/irq-gic-v2m.c
-@@ -45,7 +45,6 @@
- 
- struct v2m_data {
- 	spinlock_t msi_cnt_lock;
--	struct msi_controller mchip;
- 	struct resource res;	/* GICv2m resource */
- 	void __iomem *base;	/* GICv2m virt address */
- 	u32 spi_start;		/* The SPI number that MSIs start */
-@@ -218,6 +217,7 @@ static int __init gicv2m_init_one(struct device_node *node,
- {
- 	int ret;
- 	struct v2m_data *v2m;
-+	struct irq_domain *inner_domain;
- 
- 	v2m = kzalloc(sizeof(struct v2m_data), GFP_KERNEL);
- 	if (!v2m) {
-@@ -261,19 +261,17 @@ static int __init gicv2m_init_one(struct device_node *node,
- 		goto err_iounmap;
- 	}
- 
--	v2m->domain = irq_domain_add_tree(NULL, &gicv2m_domain_ops, v2m);
--	if (!v2m->domain) {
-+	inner_domain = irq_domain_add_tree(NULL, &gicv2m_domain_ops, v2m);
-+	if (!inner_domain) {
- 		pr_err("Failed to create GICv2m domain\n");
- 		ret = -ENOMEM;
- 		goto err_free_bm;
- 	}
- 
--	v2m->domain->parent = parent;
--	v2m->mchip.of_node = node;
--	v2m->mchip.domain = pci_msi_create_irq_domain(node,
--						      &gicv2m_msi_domain_info,
--						      v2m->domain);
--	if (!v2m->mchip.domain) {
-+	inner_domain->parent = parent;
-+	v2m->domain = pci_msi_create_irq_domain(node, &gicv2m_msi_domain_info,
-+						inner_domain);
-+	if (!v2m->domain) {
- 		pr_err("Failed to create MSI domain\n");
- 		ret = -ENOMEM;
- 		goto err_free_domains;
-@@ -281,12 +279,6 @@ static int __init gicv2m_init_one(struct device_node *node,
- 
- 	spin_lock_init(&v2m->msi_cnt_lock);
- 
--	ret = of_pci_msi_chip_add(&v2m->mchip);
--	if (ret) {
--		pr_err("Failed to add msi_chip.\n");
--		goto err_free_domains;
--	}
--
- 	pr_info("Node %s: range[%#lx:%#lx], SPI[%d:%d]\n", node->name,
- 		(unsigned long)v2m->res.start, (unsigned long)v2m->res.end,
- 		v2m->spi_start, (v2m->spi_start + v2m->nr_spis));
-@@ -294,10 +286,10 @@ static int __init gicv2m_init_one(struct device_node *node,
- 	return 0;
- 
- err_free_domains:
--	if (v2m->mchip.domain)
--		irq_domain_remove(v2m->mchip.domain);
- 	if (v2m->domain)
- 		irq_domain_remove(v2m->domain);
-+	if (inner_domain)
-+		irq_domain_remove(inner_domain);
- err_free_bm:
- 	kfree(v2m->bm);
- err_iounmap:
--- 
-2.1.4
-
+On 2015/1/21 8:53, Rafael J. Wysocki wrote:
+> On Thursday, January 08, 2015 10:33:02 AM Jiang Liu wrote:
+>> Add field offset to struct resource_list_entry to host address space
+>> translation offset so it could be used to represent bridge resources.
+>>
+>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>> ---
+>>  drivers/acpi/resource.c |   13 ++++++++-----
+>>  include/linux/acpi.h    |    1 +
+>>  2 files changed, 9 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+>> index 16d334a1ee25..54204ac94f8e 100644
+>> --- a/drivers/acpi/resource.c
+>> +++ b/drivers/acpi/resource.c
+>> @@ -462,7 +462,8 @@ struct res_proc_context {
+>>  };
+>>  
+>>  static acpi_status acpi_dev_new_resource_entry(struct resource *r,
+>> -					       struct res_proc_context *c)
+>> +					       struct res_proc_context *c,
+>> +					       resource_size_t offset)
+>>  {
+>>  	struct resource_list_entry *rentry;
+>>  
+>> @@ -472,6 +473,7 @@ static acpi_status acpi_dev_new_resource_entry(struct resource *r,
+>>  		return AE_NO_MEMORY;
+>>  	}
+>>  	rentry->res = *r;
+>> +	rentry->offset = offset;
+>>  	list_add_tail(&rentry->node, c->list);
+>>  	c->count++;
+>>  	return AE_OK;
+>> @@ -480,6 +482,7 @@ static acpi_status acpi_dev_new_resource_entry(struct resource *r,
+>>  static acpi_status acpi_dev_process_resource(struct acpi_resource *ares,
+>>  					     void *context)
+>>  {
+>> +	resource_size_t offset = 0;
+>>  	struct res_proc_context *c = context;
+>>  	struct resource r;
+>>  	int i;
+>> @@ -500,14 +503,14 @@ static acpi_status acpi_dev_process_resource(struct acpi_resource *ares,
+>>  
+>>  	if (acpi_dev_resource_memory(ares, &r)
+>>  	    || acpi_dev_resource_io(ares, &r)
+>> -	    || acpi_dev_resource_address_space(ares, &r, NULL)
+>> -	    || acpi_dev_resource_ext_address_space(ares, &r, NULL))
+>> -		return acpi_dev_new_resource_entry(&r, c);
+>> +	    || acpi_dev_resource_address_space(ares, &r, &offset)
+>> +	    || acpi_dev_resource_ext_address_space(ares, &r, &offset))
+>> +		return acpi_dev_new_resource_entry(&r, c, offset);
+>>  
+>>  	for (i = 0; acpi_dev_resource_interrupt(ares, i, &r); i++) {
+>>  		acpi_status status;
+>>  
+>> -		status = acpi_dev_new_resource_entry(&r, c);
+>> +		status = acpi_dev_new_resource_entry(&r, c, 0);
+>>  		if (ACPI_FAILURE(status))
+>>  			return status;
+>>  	}
+>> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+>> index bde8119f5897..fea78e772450 100644
+>> --- a/include/linux/acpi.h
+>> +++ b/include/linux/acpi.h
+>> @@ -300,6 +300,7 @@ bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
+>>  struct resource_list_entry {
+>>  	struct list_head node;
+>>  	struct resource res;
+>> +	resource_size_t offset;
+> 
+> Well, so instead of adding the offset thing here and there, wouldn't it be
+> cleaner to introduce something like
+> 
+> 	struct ext_resource {
+> 		sturct resource res;
+> 		resource_size_t offset;
+> 	};
+> 
+> and use struct ext_resource instead of struct resource where an offset is needed?
+> 
+> Just a thought ...
+Hi Rafael,
+	Following patches will achieve this by sharing struct resource_list_entry.
+Regards!
+Gerry
+> 
+>>  };
+>>  
+>>  void acpi_dev_free_resource_list(struct list_head *list);
+>>
+> 
