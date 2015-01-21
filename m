@@ -1,84 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [RFC Patch 14/19] ACPI: Translate resource into master side address for bridge window resources
+Date: Wed, 21 Jan 2015 15:48:09 +0100
+Message-ID: <1713566.DBAG4gnLzK@vostro.rjw.lan>
+In-Reply-To: <54BF3AD5.4070600@linux.intel.com>
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <2697984.BuF6Nq9EvE@vostro.rjw.lan> <54BF3AD5.4070600@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <CAFUqUc6PwX7hE29DUBigPXhZWMbz3FyJdRL+JptW8rkui5D6eA@mail.gmail.com>
-References: <CAFUqUc6PwX7hE29DUBigPXhZWMbz3FyJdRL+JptW8rkui5D6eA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 17 Jan 2015 11:01:53 -0600
-Message-ID: <CAErSpo4K1nfO18hw8H_Sw=8v4vNz6foJh1vAB3++VUOdB6i=4Q@mail.gmail.com>
-Subject: Re: [PATCH] Avoid an infinite loop in pci_get_rom_size()
-To: Federico <federicotg@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	=?UTF-8?Q?Michel_D=C3=A4nzer?= <michel@daenzer.net>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Michel]
+On Wednesday, January 21, 2015 01:36:21 PM Jiang Liu wrote:
+> On 2015/1/21 8:50, Rafael J. Wysocki wrote:
+> > On Thursday, January 08, 2015 10:33:01 AM Jiang Liu wrote:
+> >> Add translation_offset into the result address for bridge window
+> >> resources to form the master side address.
+> >>
+> >> Currently acpi_dev_resource_{ext_}address_space() are only used for
+> >> devices instead of bridges, so it won't break current users. Later
+> >> it will be used to support PCI host bridge drivers.
+> >>
+> >> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> >> ---
+> >>  drivers/acpi/resource.c |   14 ++++++++++++++
+> >>  1 file changed, 14 insertions(+)
+> >>
+> >> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+> >> index d3aa56674bd4..16d334a1ee25 100644
+> >> --- a/drivers/acpi/resource.c
+> >> +++ b/drivers/acpi/resource.c
+> >> @@ -203,6 +203,20 @@ static bool acpi_decode_space(struct resource *res, resource_size_t *offset,
+> >>  	res->start = addr->minimum;
+> >>  	res->end = addr->maximum;
+> >>  
+> >> +	/*
+> >> +	 * For bridges that translate addresses across the bridge,
+> >> +	 * translation_offset is the offset that must be added to the
+> >> +	 * address on the secondary side to obtain the address on the
+> >> +	 * primary side. Non-bridge devices must list 0 for all Address
+> >> +	 * Translation offset bits.
+> >> +	 */
+> >> +	if (base->producer_consumer == ACPI_PRODUCER) {
+> > 
+> > OK, so the assumption is that this check is never true in the current code, right?
+> Yes.
+> > 
+> >> +		res->start += addr->translation_offset;
+> >> +		res->end += addr->translation_offset;
+> >> +	} else if (addr->translation_offset) {
+> > 
+> > And won't this break anything even if so?
+> I'm trying to follow the spec, how about giving a warning here
+> instead of failure?
 
-On Sat, Jan 17, 2015 at 7:50 AM, Federico <federicotg@gmail.com> wrote:
-> There's a soft_lockup triggered on boot by the radeon driver when it calls
-> pci_get_rom_size() on a certain AMD Radeon R7 250X PCIe discrete graphics
-> card.
->
-> Kernel does not boot as it loops forever unless nomodeset is used, but then
-> radeon driver is not usable as it requires KMS.
->
-> If we have a PCIR structure with a zero size length, the loop iterating
-> through those structure does not advance. It simply does "image += readw(pds
-> + 16) * 512;", but if that field is zero we're back analyzing the same
-> structure on the next loop.
->
-> This is a panic stack trace generated using softlockup_panic=1
-> https://launchpadlibrarian.net/194940395/20150114_205715.png
->
-> There are other panic screen shots and log files in this bug report
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1386973
->
-> The issue was discussed here
-> http://lists.freedesktop.org/archives/dri-devel/2015-January/thread.html#75204
->
-> And the solution was provided here:
-> http://lists.freedesktop.org/archives/dri-devel/2015-January/075488.html
->
-> This patch simple breaks the loop if the PCIR structure has zero length.
->
-> As you can read in the mailing list discussion, I reported the bug, provided
-> the screen shots, found the problem description online and tested the patch.
-> The actual patch was provided by Michel Dänzer from the dri-devel mailing
-> list.
+Yes, that would be safer IMO.
 
-Thanks for the fix.  It needs to be posted with a Signed-off-by
-attribution before I can apply it; see
-https://www.kernel.org/doc/Documentation/SubmittingPatches for
-details.  It sounds like this should come from Michel.
 
-Bjorn
-
-> diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
-> index f955edb..2fb5013 100644
-> --- a/drivers/pci/rom.c
-> +++ b/drivers/pci/rom.c
-> @@ -75,6 +75,7 @@ size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem
-> *rom, size_t size)
->      image = rom;
->      do {
->          void __iomem *pds;
-> +        u16 length;
->          /* Standard PCI ROMs start out with these bytes 55 AA */
->          if (readb(image) != 0x55) {
->              dev_err(&pdev->dev, "Invalid ROM contents\n");
-> @@ -93,8 +94,10 @@ size_t pci_get_rom_size(struct pci_dev *pdev, void
-> __iomem *rom, size_t size)
->          if (readb(pds + 3) != 'R')
->              break;
->          last_image = readb(pds + 21) & 0x80;
-> -        /* this length is reliable */
-> -        image += readw(pds + 16) * 512;
-> +        length = readw(pds + 16);
-> +        if (!length)
-> +            break;
-> +        image += length * 512;
->      } while (!last_image);
->
->      /* never return a size larger than the PCI resource window */
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
