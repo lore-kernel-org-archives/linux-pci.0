@@ -1,86 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:42350 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751737AbbA0PU0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 Jan 2015 10:20:26 -0500
-Message-ID: <54C7AC9B.1040308@ti.com>
-Date: Tue, 27 Jan 2015 10:19:55 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <54BFBF4E.8070302@linux.intel.com>
+Date: Wed, 21 Jan 2015 23:01:34 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-To: Catalin Marinas <catalin.marinas@arm.com>
-CC: Robin Murphy <robin.murphy@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Subject: Re: [PATCH v4 6/6] arm: dma-mapping: updates to limit dma_mask and
- iommu mapping size
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com> <1422052359-12384-7-git-send-email-m-karicheri2@ti.com> <54C772A0.2000203@arm.com> <20150127113416.GB3226@e104818-lin.cambridge.arm.com>
-In-Reply-To: <20150127113416.GB3226@e104818-lin.cambridge.arm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [RFC Patch 15/19] ACPI: Add field offset to struct resource_list_entry
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1524434.hGg7sZaCUr@vostro.rjw.lan> <54BF3B24.10209@linux.intel.com> <5866060.ZvSTmUr2GQ@vostro.rjw.lan>
+In-Reply-To: <5866060.ZvSTmUr2GQ@vostro.rjw.lan>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/27/2015 06:34 AM, Catalin Marinas wrote:
-> On Tue, Jan 27, 2015 at 11:12:32AM +0000, Robin Murphy wrote:
->> On 23/01/15 22:32, Murali Karicheri wrote:
->>> Limit the dma_mask to minimum of dma_mask and dma_base + size - 1.
+On 2015/1/21 22:47, Rafael J. Wysocki wrote:
+> On Wednesday, January 21, 2015 01:37:40 PM Jiang Liu wrote:
+>> On 2015/1/21 8:53, Rafael J. Wysocki wrote:
+>>> On Thursday, January 08, 2015 10:33:02 AM Jiang Liu wrote:
+>>>> Add field offset to struct resource_list_entry to host address space
+>>>> translation offset so it could be used to represent bridge resources.
+>>>>
+>>>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>>>> ---
+>>>>  drivers/acpi/resource.c |   13 ++++++++-----
+>>>>  include/linux/acpi.h    |    1 +
+>>>>  2 files changed, 9 insertions(+), 5 deletions(-)
+>>>>
+>>>> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+>>>> index 16d334a1ee25..54204ac94f8e 100644
+>>>> --- a/drivers/acpi/resource.c
+>>>> +++ b/drivers/acpi/resource.c
+>>>> @@ -462,7 +462,8 @@ struct res_proc_context {
+>>>>  };
+>>>>  
+>>>>  static acpi_status acpi_dev_new_resource_entry(struct resource *r,
+>>>> -					       struct res_proc_context *c)
+>>>> +					       struct res_proc_context *c,
+>>>> +					       resource_size_t offset)
+>>>>  {
+>>>>  	struct resource_list_entry *rentry;
+>>>>  
+>>>> @@ -472,6 +473,7 @@ static acpi_status acpi_dev_new_resource_entry(struct resource *r,
+>>>>  		return AE_NO_MEMORY;
+>>>>  	}
+>>>>  	rentry->res = *r;
+>>>> +	rentry->offset = offset;
+>>>>  	list_add_tail(&rentry->node, c->list);
+>>>>  	c->count++;
+>>>>  	return AE_OK;
+>>>> @@ -480,6 +482,7 @@ static acpi_status acpi_dev_new_resource_entry(struct resource *r,
+>>>>  static acpi_status acpi_dev_process_resource(struct acpi_resource *ares,
+>>>>  					     void *context)
+>>>>  {
+>>>> +	resource_size_t offset = 0;
+>>>>  	struct res_proc_context *c = context;
+>>>>  	struct resource r;
+>>>>  	int i;
+>>>> @@ -500,14 +503,14 @@ static acpi_status acpi_dev_process_resource(struct acpi_resource *ares,
+>>>>  
+>>>>  	if (acpi_dev_resource_memory(ares, &r)
+>>>>  	    || acpi_dev_resource_io(ares, &r)
+>>>> -	    || acpi_dev_resource_address_space(ares, &r, NULL)
+>>>> -	    || acpi_dev_resource_ext_address_space(ares, &r, NULL))
+>>>> -		return acpi_dev_new_resource_entry(&r, c);
+>>>> +	    || acpi_dev_resource_address_space(ares, &r, &offset)
+>>>> +	    || acpi_dev_resource_ext_address_space(ares, &r, &offset))
+>>>> +		return acpi_dev_new_resource_entry(&r, c, offset);
+>>>>  
+>>>>  	for (i = 0; acpi_dev_resource_interrupt(ares, i, &r); i++) {
+>>>>  		acpi_status status;
+>>>>  
+>>>> -		status = acpi_dev_new_resource_entry(&r, c);
+>>>> +		status = acpi_dev_new_resource_entry(&r, c, 0);
+>>>>  		if (ACPI_FAILURE(status))
+>>>>  			return status;
+>>>>  	}
+>>>> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+>>>> index bde8119f5897..fea78e772450 100644
+>>>> --- a/include/linux/acpi.h
+>>>> +++ b/include/linux/acpi.h
+>>>> @@ -300,6 +300,7 @@ bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
+>>>>  struct resource_list_entry {
+>>>>  	struct list_head node;
+>>>>  	struct resource res;
+>>>> +	resource_size_t offset;
 >>>
->>> Also arm_iommu_create_mapping() has size parameter of size_t and
->>> arm_setup_iommu_dma_ops() can take a value higher than that. So
->>> limit the size to SIZE_MAX.
+>>> Well, so instead of adding the offset thing here and there, wouldn't it be
+>>> cleaner to introduce something like
 >>>
->>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
->>> ---
->>>    arch/arm/mm/dma-mapping.c |   10 ++++++++++
->>>    1 file changed, 10 insertions(+)
+>>> 	struct ext_resource {
+>>> 		sturct resource res;
+>>> 		resource_size_t offset;
+>>> 	};
 >>>
->>> diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
->>> index 7864797..a1f9030 100644
->>> --- a/arch/arm/mm/dma-mapping.c
->>> +++ b/arch/arm/mm/dma-mapping.c
->>> @@ -2004,6 +2004,13 @@ static bool arm_setup_iommu_dma_ops(struct device *dev, u64 dma_base, u64 size,
->>>    	if (!iommu)
->>>    		return false;
+>>> and use struct ext_resource instead of struct resource where an offset is needed?
 >>>
->>> +	/*
->>> +	 * currently arm_iommu_create_mapping() takes a max of size_t
->>> +	 * for size param. So check this limit for now.
->>> +	 */
->>> +	if (size>  SIZE_MAX)
->>> +		return false;
->>> +
->>>    	mapping = arm_iommu_create_mapping(dev->bus, dma_base, size);
->>>    	if (IS_ERR(mapping)) {
->>>    		pr_warn("Failed to create %llu-byte IOMMU mapping for device %s\n",
->>> @@ -2053,6 +2060,9 @@ void arch_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
->>>    {
->>>    	struct dma_map_ops *dma_ops;
->>>
->>> +	/* limit dma_mask to the lower of the two values */
->>> +	*dev->dma_mask = min((*dev->dma_mask), (dma_base + size - 1));
->>> +
->>
->> Is there any reason not to do this in of_dma_configure? It seems like
->> something everyone could benefit from - I'd cooked up a dodgy workaround
->> for the same issue in my arm64 IOMMU code, but handling it generically
->> in common code would be much nicer.
-
-Ok Will move this to of_dma_configure().
-
-Murali
-
->
-> I agree. I started something here:
->
-> http://article.gmane.org/gmane.linux.kernel/1835096
->
-> but I don't remember to have got to a clear conclusion.
->
-
-
--- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+>>> Just a thought ...
+>> Hi Rafael,
+>> 	Following patches will achieve this by sharing struct resource_list_entry.
+> 
+> Well, yes, they will partially, but that still won't avoid the need to pass
+> offset (or pointers to that) to several functions separately if I'm not
+> mistaken.  Which is kind of ugly.
+Hi Rafael,
+	Sorry, I missed your point with last reply. I have the basic
+idea about how to follow your suggestion now, will do it in next
+version.
+Regards,
+Gerry
