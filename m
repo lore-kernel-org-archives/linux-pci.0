@@ -1,97 +1,274 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f178.google.com ([209.85.216.178]:51800 "EHLO
-	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752498AbbA0QvJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Jan 2015 11:51:09 -0500
-Received: by mail-qc0-f178.google.com with SMTP id b13so12945204qcw.9
-        for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2015 08:51:08 -0800 (PST)
+Received: from szxga01-in.huawei.com ([119.145.14.64]:56088 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754384AbbAUCdF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 21:33:05 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v2 29/30] PCI: Remove platform specific pci_domain_nr()
+Date: Wed, 21 Jan 2015 08:30:24 +0800
+Message-ID: <1421800225-26230-30-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
+References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <54C5EF11.8070604@desy.de>
-References: <CAH9N0t9KvhzmZDgD8PD5VBPR-pPhuE8MmBgK9RY8+ZtKyz++pQ@mail.gmail.com>
- <CAErSpo48mPENuHpES1Q73ep+NKG8x2Zgb+g71do02y7vufbtfQ@mail.gmail.com>
- <CAH9N0t8s+kcG_Qok0wpoDz9jzwvPk_QmBK_p-qbACZJjrr+iVQ@mail.gmail.com>
- <CAErSpo7NK6S8Dk3-FYFV=AVPR8cLRzmAWrBNQ2rke0BRADxAKw@mail.gmail.com>
- <CAH9N0t-+gog9wNFo7hqhzrWuttrRyf5HjjHciFrDGz1rZUiUfw@mail.gmail.com>
- <20150122222016.GF13072@google.com> <CAH9N0t_YoRZtPqWwAaNdHNW3m-HOfrCevBZGiOnM+VWGxeFwEQ@mail.gmail.com>
- <CAErSpo4bRnGkfmzLnGSUnv-aJfmZLtQ_jXhnZo+9Wm=CgHOB3A@mail.gmail.com> <54C5EF11.8070604@desy.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 27 Jan 2015 10:50:47 -0600
-Message-ID: <CAErSpo4EeEAA-ci1EfSKNijUJA_4uLMu+WU7ORpQPeR9T9Rr8g@mail.gmail.com>
-Subject: Re: Hot add a PCIe device driver upon hotplug event
-To: Ludwig Petrosyan <ludwig.petrosyan@desy.de>
-Cc: Paulo Fortuna Carvalho <pricardofc@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ludwig,
+Now pci_host_bridge holds the domain number,
+so we could eliminate all platform specific
+pci_domain_nr().
 
-Thanks a lot for the pointers to MTCA information.  I found
-presentation slides here:
-https://indico.desy.de/getFile.py/access?contribId=33&sessionId=0&resId=1&materialId=slides&confId=10329,
-which I assume is that you're referring to.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/alpha/include/asm/pci.h     |    2 --
+ arch/ia64/include/asm/pci.h      |    1 -
+ arch/microblaze/pci/pci-common.c |   11 -----------
+ arch/mips/include/asm/pci.h      |    2 --
+ arch/powerpc/kernel/pci-common.c |   11 -----------
+ arch/s390/pci/pci.c              |    6 ------
+ arch/sh/include/asm/pci.h        |    2 --
+ arch/sparc/kernel/pci.c          |   17 -----------------
+ arch/tile/include/asm/pci.h      |    2 --
+ arch/x86/include/asm/pci.h       |    6 ------
+ drivers/pci/pci.c                |    8 ++++++++
+ include/linux/pci.h              |    7 ++-----
+ 12 files changed, 10 insertions(+), 65 deletions(-)
 
-On Mon, Jan 26, 2015 at 1:38 AM, Ludwig Petrosyan
-<ludwig.petrosyan@desy.de> wrote:
->
-> Hello
->
-> (I have send this email two days ago but got status undeliverable, so try to
-> send it again)
->
-> We had the same problem on the MTCA system years ago, but now the problem is
-> solved.
-> The MTCA system is a kind of ATCA and I think attention Button problem could
-> be solved in the same way.
-> Ok, now what we have done:
-> First of all the main difference of the ATCA or MTCA PCIe system is what the
-> PCIe Switch which responsible for the HotPlug
->
-> (I mean Switch which is connected to the crate slots, and hotplug
-> controllers of this are used in hotpluging ) and the Attention Button of the
->
-> PCIe slot reside on the different boards (usually PCIe Switch is on the
-> Crate Manager  board and Attention Button is  the AMC module Latch ),
->
-> So there are no any wired connections between Attention Button and PCIe
-> Switch. Than user pool out the AMC module Latch the PCIe Switch has no idea
->
-> about that, BUT the AMC module controller (MMC) sends IPMI message to the
-> Crate Management Controller (MCMC)
-> and MCMC starts AMC powering down procedures. The idea was: usually MCMC and
-> PCIe Switch reside on the same board and MCMC getting IPMI message
->
-> about state change of the AMC Latch (latch polled out or pressed) set
-> appropriate registers of the PCIe Switch or push high appropriate lines of
-> the PCIe Switch
->
-> and PCIe Switch gets information that Attention Button is pressed and send
-> hotplug interrupt to the hotplug driver.
-> This approach works in our MTCA systems and we have a full working PCIe
-> HotPlug.
+diff --git a/arch/alpha/include/asm/pci.h b/arch/alpha/include/asm/pci.h
+index f7f680f..63a9a1e 100644
+--- a/arch/alpha/include/asm/pci.h
++++ b/arch/alpha/include/asm/pci.h
+@@ -95,8 +95,6 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ 	return channel ? 15 : 14;
+ }
+ 
+-#define pci_domain_nr(bus) ((struct pci_controller *)(bus)->sysdata)->index
+-
+ static inline int pci_proc_domain(struct pci_bus *bus)
+ {
+ 	struct pci_controller *hose = bus->sysdata;
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index 52af5ed..1dcea49 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -99,7 +99,6 @@ struct pci_controller {
+ 
+ 
+ #define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
+-#define pci_domain_nr(busdev)    (PCI_CONTROLLER(busdev)->segment)
+ 
+ extern struct pci_ops pci_root_ops;
+ 
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index 890bd36..81ac523 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -123,17 +123,6 @@ unsigned long pci_address_to_pio(phys_addr_t address)
+ }
+ EXPORT_SYMBOL_GPL(pci_address_to_pio);
+ 
+-/*
+- * Return the domain number for this bus.
+- */
+-int pci_domain_nr(struct pci_bus *bus)
+-{
+-	struct pci_controller *hose = pci_bus_to_host(bus);
+-
+-	return hose->global_number;
+-}
+-EXPORT_SYMBOL(pci_domain_nr);
+-
+ /* This routine is meant to be used early during boot, when the
+  * PCI bus numbers have not yet been assigned, and you need to
+  * issue PCI config cycles to an OF device.
+diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
+index 6952962..9546396 100644
+--- a/arch/mips/include/asm/pci.h
++++ b/arch/mips/include/asm/pci.h
+@@ -121,8 +121,6 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+ }
+ #endif
+ 
+-#define pci_domain_nr(bus) ((struct pci_controller *)(bus)->sysdata)->index
+-
+ static inline int pci_proc_domain(struct pci_bus *bus)
+ {
+ 	struct pci_controller *hose = bus->sysdata;
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 1f44df9..73860ff 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -181,17 +181,6 @@ unsigned long pci_address_to_pio(phys_addr_t address)
+ }
+ EXPORT_SYMBOL_GPL(pci_address_to_pio);
+ 
+-/*
+- * Return the domain number for this bus.
+- */
+-int pci_domain_nr(struct pci_bus *bus)
+-{
+-	struct pci_controller *hose = pci_bus_to_host(bus);
+-
+-	return hose->global_number;
+-}
+-EXPORT_SYMBOL(pci_domain_nr);
+-
+ /* This routine is meant to be used early during boot, when the
+  * PCI bus numbers have not yet been assigned, and you need to
+  * issue PCI config cycles to an OF device.
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index 612decf..8ca02f7 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -101,12 +101,6 @@ static struct zpci_dev *get_zdev_by_bus(struct pci_bus *bus)
+ 	return (bus && bus->sysdata) ? (struct zpci_dev *) bus->sysdata : NULL;
+ }
+ 
+-int pci_domain_nr(struct pci_bus *bus)
+-{
+-	return ((struct zpci_dev *) bus->sysdata)->domain;
+-}
+-EXPORT_SYMBOL_GPL(pci_domain_nr);
+-
+ int pci_proc_domain(struct pci_bus *bus)
+ {
+ 	return pci_domain_nr(bus);
+diff --git a/arch/sh/include/asm/pci.h b/arch/sh/include/asm/pci.h
+index 5b45115..4dc3ad6 100644
+--- a/arch/sh/include/asm/pci.h
++++ b/arch/sh/include/asm/pci.h
+@@ -109,8 +109,6 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+ /* Board-specific fixup routines. */
+ int pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin);
+ 
+-#define pci_domain_nr(bus) ((struct pci_channel *)(bus)->sysdata)->index
+-
+ static inline int pci_proc_domain(struct pci_bus *bus)
+ {
+ 	struct pci_channel *hose = bus->sysdata;
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 0ff5093..babfa57 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -900,23 +900,6 @@ int pcibus_to_node(struct pci_bus *pbus)
+ EXPORT_SYMBOL(pcibus_to_node);
+ #endif
+ 
+-/* Return the domain number for this pci bus */
+-
+-int pci_domain_nr(struct pci_bus *pbus)
+-{
+-	struct pci_pbm_info *pbm = pbus->sysdata;
+-	int ret;
+-
+-	if (!pbm) {
+-		ret = -ENXIO;
+-	} else {
+-		ret = pbm->index;
+-	}
+-
+-	return ret;
+-}
+-EXPORT_SYMBOL(pci_domain_nr);
+-
+ #ifdef CONFIG_PCI_MSI
+ int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
+ {
+diff --git a/arch/tile/include/asm/pci.h b/arch/tile/include/asm/pci.h
+index dfedd7a..23a726e 100644
+--- a/arch/tile/include/asm/pci.h
++++ b/arch/tile/include/asm/pci.h
+@@ -199,8 +199,6 @@ int __init pcibios_init(void);
+ 
+ void pcibios_fixup_bus(struct pci_bus *bus);
+ 
+-#define pci_domain_nr(bus) (((struct pci_controller *)(bus)->sysdata)->index)
+-
+ /*
+  * This decides whether to display the domain number in /proc.
+  */
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 4e370a5..4fe0458 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -29,12 +29,6 @@ extern int noioapicreroute;
+ #ifdef CONFIG_PCI
+ 
+ #ifdef CONFIG_PCI_DOMAINS
+-static inline int pci_domain_nr(struct pci_bus *bus)
+-{
+-	struct pci_sysdata *sd = bus->sysdata;
+-	return sd->domain;
+-}
+-
+ static inline int pci_proc_domain(struct pci_bus *bus)
+ {
+ 	return pci_domain_nr(bus);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 06d41b1..0af5ef1 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4465,6 +4465,14 @@ int pci_get_new_domain_nr(void)
+ 	return atomic_inc_return(&__domain_nr);
+ }
+ 
++int pci_domain_nr(struct pci_bus *bus)
++{
++	struct pci_host_bridge *host = find_pci_host_bridge(bus);
++
++	return host->domain;
++}
++EXPORT_SYMBOL(pci_domain_nr);
++
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
+ static int pci_assign_domain_nr(struct device *dev)
+ {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2f6b199..57e7e00 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1310,6 +1310,7 @@ void pci_cfg_access_unlock(struct pci_dev *dev);
+ #ifdef CONFIG_PCI_DOMAINS
+ extern int pci_domains_supported;
+ int pci_get_new_domain_nr(void);
++int pci_domain_nr(struct pci_bus *bus);
+ #else
+ enum { pci_domains_supported = 0 };
+ static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+@@ -1323,15 +1324,11 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+  * domains then this implementation will be used
+  */
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
+-static inline int pci_domain_nr(struct pci_bus *bus)
+-{
+-	return bus->domain_nr;
+-}
+ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
+ void pci_host_assign_domain_nr(struct pci_host_bridge *host);
+ #else
+ static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
+-					struct device *parent)
++		                    struct device *parent)
+ {
+ }
+ static inline void pci_host_assign_domain_nr(struct pci_host_bridge *host)
+-- 
+1.7.1
 
-It sounds like you basically have some IPMI glue between the the AMC
-latch and the PCIe Attention Button, and from the point of view of the
-pciehp (PCIe native hotplug) driver, it just sees a normal Attention
-Button.  That sounds like a reasonable thing to do.
-
-In Paulo's case, it sounds like there is some sort of switch related
-to the card, but the IPMI or similar glue that could potentially lead
-to the Attention Button line doesn't exist.  In that case, pciehp
-doesn't know anything about the switch.  If there's some other way,
-e.g., IPMI, to learn about the switch, maybe that could be done via a
-separate driver.
-
-> More detailed information one can get to look documents of the MTCA Workshop
-> (http://mtcaws.desy.de/) in tutorial section was presentation about
->
-> PCIe Hotplug, or look in PICMIG recommendation (there is new recommendation
-> about PCIe HotPlug for MTC.4)
->
-> With best regards
->
-> Ludwig Petrosyan
->
->
