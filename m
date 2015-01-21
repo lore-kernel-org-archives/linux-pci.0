@@ -1,77 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21570 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753107AbbAOEcc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 23:32:32 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+Received: from v094114.home.net.pl ([79.96.170.134]:56847 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751665AbbAUAMh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 19:12:37 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Michal Simek <monstr@monstr.eu>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>
-Subject: [PATCH v2 06/10] PCI, microblaze: clip firmware assigned resource under parent bridge's
-Date: Wed, 14 Jan 2015 20:31:33 -0800
-Message-Id: <1421296297-6371-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1421296297-6371-1-git-send-email-yinghai@kernel.org>
-References: <1421296297-6371-1-git-send-email-yinghai@kernel.org>
+	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [RFC Patch 08/19] ACPI: Add prefetch decoding to the address space parser
+Date: Wed, 21 Jan 2015 01:35:13 +0100
+Message-ID: <1593565.fJ4zH7YgDd@vostro.rjw.lan>
+In-Reply-To: <1420684386-5975-9-git-send-email-jiang.liu@linux.intel.com>
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-9-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some bios put range that is not fully coverred by root bus resources.
-Try to clip them and update them in pci bridge bars.
+On Thursday, January 08, 2015 10:32:55 AM Jiang Liu wrote:
+> From: Thomas Gleixner <tglx@linutronix.de>
+> 
+> Add support of PREFETCH attributre to ACPI address space and extended
+> address space parser.
 
-We'd like to fix other arches instead of just x86.
+This potentially enables untested configurations which tends to uncover bugs,
+so I'm concerned.
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491
-Reported-by: Marek Kordik <kordikmarek@gmail.com>
-Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources")
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Michal Simek <monstr@monstr.eu>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Sebastian Ott <sebott@linux.vnet.ibm.com>
----
- arch/microblaze/pci/pci-common.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+What's the possible impact of this?
 
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index b30e41c..48528fb 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -1026,6 +1026,8 @@ static void pcibios_allocate_bus_resources(struct pci_bus *bus)
- 			 pr, (pr && pr->name) ? pr->name : "nil");
- 
- 		if (pr && !(pr->flags & IORESOURCE_UNSET)) {
-+			struct pci_dev *dev = bus->self;
-+
- 			if (request_resource(pr, res) == 0)
- 				continue;
- 			/*
-@@ -1035,6 +1037,12 @@ static void pcibios_allocate_bus_resources(struct pci_bus *bus)
- 			 */
- 			if (reparent_resources(pr, res) == 0)
- 				continue;
-+
-+			if (dev && i < PCI_BRIDGE_RESOURCE_NUM &&
-+			    pci_claim_bridge_resource(dev,
-+						 i + PCI_BRIDGE_RESOURCES) == 0)
-+				continue;
-+
- 		}
- 		pr_warn("PCI: Cannot allocate resource region ");
- 		pr_cont("%d of PCI bridge %d, will remap\n", i, bus->number);
-@@ -1227,7 +1235,10 @@ void pcibios_claim_one_bus(struct pci_bus *bus)
- 				 (unsigned long long)r->end,
- 				 (unsigned int)r->flags);
- 
--			pci_claim_resource(dev, i);
-+			if (pci_claim_resource(dev, i) == 0)
-+				continue;
-+
-+			pci_claim_bridge_resource(dev, i);
- 		}
- 	}
- 
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  drivers/acpi/resource.c |    3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+> index a56a64164410..abe3a29ad802 100644
+> --- a/drivers/acpi/resource.c
+> +++ b/drivers/acpi/resource.c
+> @@ -200,6 +200,9 @@ static bool acpi_decode_space(struct resource *res,
+>  	if (base->producer_consumer == ACPI_PRODUCER)
+>  		res->flags |= IORESOURCE_WINDOW;
+>  
+> +	if (base->info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
+> +		res->flags |= IORESOURCE_PREFETCH;
+> +
+>  	return !(res->flags & IORESOURCE_DISABLED);
+>  }
+>  
+> 
+
 -- 
-1.8.4.5
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
