@@ -1,120 +1,278 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4313 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750823AbbAWWaq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 23 Jan 2015 17:30:46 -0500
-Message-ID: <1422052241.4048.14.camel@redhat.com>
-Subject: Re: [PATCH] PCI: quirks: DMA alias quirk for Adaptec 3405
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, aacraid@adaptec.com,
-	linux-kernel@vger.kernel.org
-Date: Fri, 23 Jan 2015 15:30:41 -0700
-In-Reply-To: <20150123215058.GM29776@google.com>
-References: <20150113182605.15479.9020.stgit@gimli.home>
-	 <20150123215058.GM29776@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Vivek Goyal <vgoyal@redhat.com>,
+	Thierry Reding <treding@nvidia.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Mike Travis <travis@sgi.com>, Tony Luck <tony.luck@intel.com>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: Re: [RFC Patch 17/19] resources: Move struct resource_list_entry from ACPI into resource core
+Date: Wed, 21 Jan 2015 02:10:25 +0100
+Message-ID: <3428063.tN1BxOoXSN@vostro.rjw.lan>
+In-Reply-To: <1420684386-5975-18-git-send-email-jiang.liu@linux.intel.com>
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-18-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2015-01-23 at 15:50 -0600, Bjorn Helgaas wrote:
-> On Tue, Jan 13, 2015 at 11:26:50AM -0700, Alex Williamson wrote:
-> > As noted in the added comment, this device is actually an Intel 80333
-> > I/O processor where the exposed device at 0e.0 is actually the address
-> > translation unit of the I/O processor and a hidden, private device at
-> > 01.0 masters the DMA for the device.  In order to enable the IOMMU, we
-> > therefore need to create a fixed alias between the exposed and hidden
-> > devfn.
-> > 
-> > Scenarios like this are potentially likely for any device incorporating
-> > this I/O processor, so this little bit of abstraction with the fixed
-> > alias table should make future additions trivial.
+On Thursday, January 08, 2015 10:33:04 AM Jiang Liu wrote:
+> Currently ACPI, PCI and pnp all implement the same resource list
+> management with different data structure. We need to transfer from
+> one data structure into another when passing resources from one
+> subsystem into another subsystem. Sp move struct resource_list_entry
+> from ACPI into resource core, so it could be reused by different
+> subystems and avoid the data structure conversion.
 > 
-> This sounds like the result of some serious debugging :)  Do you have a
-> pointer to a bugzilla or some email discussion?  I'd like to make the fix
-> discoverable starting with a failure symptom.
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  drivers/acpi/acpi_lpss.c     |    6 +++---
+>  drivers/acpi/acpi_platform.c |    2 +-
+>  drivers/acpi/resource.c      |   13 ++++--------
+>  drivers/dma/acpi-dma.c       |    8 +++----
+>  include/linux/acpi.h         |    6 ------
+>  include/linux/ioport.h       |   25 ++++++++++++++++++++++
+>  kernel/resource.c            |   48 ++++++++++++++++++++++++++++++++++++++++++
+>  7 files changed, 85 insertions(+), 23 deletions(-)
+> 
+> diff --git a/drivers/acpi/acpi_lpss.c b/drivers/acpi/acpi_lpss.c
+> index 4f3febf8a589..39b548dba70b 100644
+> --- a/drivers/acpi/acpi_lpss.c
+> +++ b/drivers/acpi/acpi_lpss.c
+> @@ -333,12 +333,12 @@ static int acpi_lpss_create_device(struct acpi_device *adev,
+>  		goto err_out;
+>  
+>  	list_for_each_entry(rentry, &resource_list, node)
+> -		if (resource_type(&rentry->res) == IORESOURCE_MEM) {
+> +		if (resource_type(rentry->res) == IORESOURCE_MEM) {
+>  			if (dev_desc->prv_size_override)
+>  				pdata->mmio_size = dev_desc->prv_size_override;
+>  			else
+> -				pdata->mmio_size = resource_size(&rentry->res);
+> -			pdata->mmio_base = ioremap(rentry->res.start,
+> +				pdata->mmio_size = resource_size(rentry->res);
+> +			pdata->mmio_base = ioremap(rentry->res->start,
+>  						   pdata->mmio_size);
+>  			break;
+>  		}
+> diff --git a/drivers/acpi/acpi_platform.c b/drivers/acpi/acpi_platform.c
+> index 6ba8beb6b9d2..238e32b9cbb0 100644
+> --- a/drivers/acpi/acpi_platform.c
+> +++ b/drivers/acpi/acpi_platform.c
+> @@ -71,7 +71,7 @@ struct platform_device *acpi_create_platform_device(struct acpi_device *adev)
+>  		}
+>  		count = 0;
+>  		list_for_each_entry(rentry, &resource_list, node)
+> -			resources[count++] = rentry->res;
+> +			resources[count++] = *rentry->res;
+>  
+>  		acpi_dev_free_resource_list(&resource_list);
+>  	}
+> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+> index 8ea7c26d6915..c0dc038274d4 100644
+> --- a/drivers/acpi/resource.c
+> +++ b/drivers/acpi/resource.c
+> @@ -444,12 +444,7 @@ EXPORT_SYMBOL_GPL(acpi_dev_resource_interrupt);
+>   */
+>  void acpi_dev_free_resource_list(struct list_head *list)
+>  {
+> -	struct resource_list_entry *rentry, *re;
+> -
+> -	list_for_each_entry_safe(rentry, re, list, node) {
+> -		list_del(&rentry->node);
+> -		kfree(rentry);
+> -	}
+> +	resource_list_free_list(list);
+>  }
+>  EXPORT_SYMBOL_GPL(acpi_dev_free_resource_list);
+>  
+> @@ -467,14 +462,14 @@ static acpi_status acpi_dev_new_resource_entry(struct resource *r,
+>  {
+>  	struct resource_list_entry *rentry;
+>  
+> -	rentry = kmalloc(sizeof(*rentry), GFP_KERNEL);
+> +	rentry = resource_list_alloc(NULL, 0);
+>  	if (!rentry) {
+>  		c->error = -ENOMEM;
+>  		return AE_NO_MEMORY;
+>  	}
+> -	rentry->res = *r;
+> +	*rentry->res = *r;
+>  	rentry->offset = offset;
+> -	list_add_tail(&rentry->node, c->list);
+> +	resource_list_insert(c->list, rentry, true);
+>  	c->count++;
+>  	return AE_OK;
+>  }
+> diff --git a/drivers/dma/acpi-dma.c b/drivers/dma/acpi-dma.c
+> index de361a156b34..1ce84abe0924 100644
+> --- a/drivers/dma/acpi-dma.c
+> +++ b/drivers/dma/acpi-dma.c
+> @@ -56,10 +56,10 @@ static int acpi_dma_parse_resource_group(const struct acpi_csrt_group *grp,
+>  		return 0;
+>  
+>  	list_for_each_entry(rentry, &resource_list, node) {
+> -		if (resource_type(&rentry->res) == IORESOURCE_MEM)
+> -			mem = rentry->res.start;
+> -		else if (resource_type(&rentry->res) == IORESOURCE_IRQ)
+> -			irq = rentry->res.start;
+> +		if (resource_type(rentry->res) == IORESOURCE_MEM)
+> +			mem = rentry->res->start;
+> +		else if (resource_type(rentry->res) == IORESOURCE_IRQ)
+> +			irq = rentry->res->start;
+>  	}
+>  
+>  	acpi_dev_free_resource_list(&resource_list);
+> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+> index 1df4a0211ae5..6d7f7edca22c 100644
+> --- a/include/linux/acpi.h
+> +++ b/include/linux/acpi.h
+> @@ -297,12 +297,6 @@ unsigned long acpi_dev_irq_flags(u8 triggering, u8 polarity, u8 shareable);
+>  bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
+>  				 struct resource *res);
+>  
+> -struct resource_list_entry {
+> -	struct list_head node;
+> -	struct resource res;
+> -	resource_size_t offset;
+> -};
+> -
+>  void acpi_dev_free_resource_list(struct list_head *list);
+>  int acpi_dev_get_resources(struct acpi_device *adev, struct list_head *list,
+>  			   int (*preproc)(struct acpi_resource *, void *),
+> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+> index 2c5250222278..a6f4841ca40c 100644
+> --- a/include/linux/ioport.h
+> +++ b/include/linux/ioport.h
+> @@ -11,6 +11,7 @@
+>  #ifndef __ASSEMBLY__
+>  #include <linux/compiler.h>
+>  #include <linux/types.h>
+> +
+>  /*
+>   * Resources are tree-like, allowing
+>   * nesting etc..
+> @@ -255,6 +256,30 @@ static inline bool resource_overlaps(struct resource *r1, struct resource *r2)
+>         return (r1->start <= r2->end && r1->end >= r2->start);
+>  }
+>  
+> +/*
+> + * Common resource list management data structure and interfaces to support
+> + * ACPI, PNP and PCI host bridge etc.
+> + */
+> +struct resource_list_entry {
+> +	struct list_head	node;
+> +	struct resource		*res;	/* In master (CPU) address space */
+> +	resource_size_t		offset;	/* Translation offset for bridge */
+> +	struct resource		__res;	/* Default storage for res */
+> +};
+> +
+> +extern struct resource_list_entry *resource_list_alloc(struct resource *res,
+> +						       size_t extra_size);
+> +extern void resource_list_free(struct resource_list_entry *entry);
+> +extern void resource_list_insert(struct list_head *head,
+> +				 struct resource_list_entry *entry, bool tail);
+> +extern void resource_list_delete(struct resource_list_entry *entry);
+> +extern void resource_list_free_list(struct list_head *head);
+> +
+> +#define resource_list_for_each_entry(entry, list)	\
+> +	list_for_each_entry((entry), (list), node)
+> +
+> +#define resource_list_for_each_entry_safe(entry, tmp, list)	\
+> +	list_for_each_entry_safe((entry), (tmp), (list), node)
+>  
+>  #endif /* __ASSEMBLY__ */
+>  #endif	/* _LINUX_IOPORT_H */
+> diff --git a/kernel/resource.c b/kernel/resource.c
+> index 0bcebffc4e77..414183809383 100644
+> --- a/kernel/resource.c
+> +++ b/kernel/resource.c
+> @@ -1529,6 +1529,54 @@ int iomem_is_exclusive(u64 addr)
+>  	return err;
+>  }
+>  
+> +struct resource_list_entry *resource_list_alloc(struct resource *res,
+> +						size_t extra_size)
 
-Sorry, this one comes from a private bugzilla.  The symptom is simply a
-slew of IOMMU faults when trying to boot the system with the IOMMU
-enabled.  For example, with the Adaptec 3405 showing up at 02:0e.0 on an
-Intel system, the log is filled with:
+What about create_resource_list_entry()?  Less confusing surely.
 
-dmar: DRHD: handling fault status reg 3
-dmar: DMAR:[DMA Write] Request device [02:01.0] fault addr ffbff000 
-DMAR:[fault reason 02] Present bit in context entry is clear
-dmar: DRHD: handling fault status reg 3
-dmar: DMAR:[DMA Write] Request device [02:01.0] fault addr ffbfe000 
-DMAR:[fault reason 02] Present bit in context entry is clear
+> +{
+> +	struct resource_list_entry *entry;
+> +
+> +	entry = kzalloc(sizeof(*entry) + extra_size, GFP_KERNEL);
+> +	if (entry) {
+> +		INIT_LIST_HEAD(&entry->node);
+> +		entry->res = res ? res : &entry->__res;
+> +	}
+> +
+> +	return entry;
+> +}
+> +EXPORT_SYMBOL(resource_list_alloc);
+> +
+> +void resource_list_free(struct resource_list_entry *entry)
+> +{
+> +	kfree(entry);
+> +}
+> +EXPORT_SYMBOL(resource_list_free);
 
-As expected, the device is non-functional.  In the log I have there are
-only DMA write faults and the addresses are all ffbxxxxx, which falls
-into a reserved memory area on the system and owned by a PNP0c02 device
-according to iomem.  With the change here the device, of course, works
-without any issues with VT-d enabled.  Thanks,
+Well, I'm not sure I like this.  The name suggests that it would free the
+entire list and what's wrong with using kfree() directly on "entry" anyway?
 
-Alex
+> +
+> +void resource_list_insert(struct list_head *head,
+> +			  struct resource_list_entry *entry, bool tail)
 
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>
-> > ---
-> > 
-> >  drivers/pci/quirks.c |   37 +++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 37 insertions(+)
-> > 
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index ed6f89b..19bdb17 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -3528,6 +3528,43 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_JMICRON,
-> >  			 quirk_dma_func1_alias);
-> >  
-> >  /*
-> > + * Some devices DMA with the wrong devfn, not just the wrong function.
-> > + * quirk_fixed_dma_alias() uses this table to create fixed aliass, where
-> > + * the alias is "fixed" and independent of the device devfn.
-> > + *
-> > + * For example, the Adaptec 3405 is a PCIe card making use of an Intel 80333
-> > + * I/O processor.  To software, this appears as a straightforward PCIe-to-PCI/X
-> > + * bridge with a single device on the subordinate bus.  In reality, the exposed
-> > + * device at 0e.0 is the Address Translation Unit (ATU) of the controller that
-> > + * provides a bridge to the internal bus of the I/O processor.  The controller
-> > + * supports private devices, which can be hidden from PCI config space.  In the
-> > + * case of the Adaptec 3405, a private device at 01.0 appears to be the DMA
-> > + * engine, which therefore needs to become a DMA alias for the device.
-> > + */
-> > +static const struct pci_device_id fixed_dma_alias_tbl[] = {
-> > +	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x0285,
-> > +			 PCI_VENDOR_ID_ADAPTEC2, 0x02bb), /* Adaptec 3405 */
-> > +	  .driver_data = PCI_DEVFN(1, 0) },
-> > +	{ 0 }
-> > +};
-> > +
-> > +static void quirk_fixed_dma_alias(struct pci_dev *dev)
-> > +{
-> > +	const struct pci_device_id *id;
-> > +
-> > +	id = pci_match_id(fixed_dma_alias_tbl, dev);
-> > +	if (id) {
-> > +		dev->dma_alias_devfn = id->driver_data;
-> > +		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
-> > +		dev_info(&dev->dev, "Enabling fixed DMA alias to %02x.%d\n",
-> > +			 PCI_SLOT(dev->dma_alias_devfn),
-> > +			 PCI_FUNC(dev->dma_alias_devfn));
-> > +	}
-> > +}
-> > +
-> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ADAPTEC2, 0x0285, quirk_fixed_dma_alias);
-> > +
-> > +/*
-> >   * A few PCIe-to-PCI bridges fail to expose a PCIe capability, resulting in
-> >   * using the wrong DMA alias for the device.  Some of these devices can be
-> >   * used as either forward or reverse bridges, so we need to test whether the
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I would call this resource_list_add() if anything.
 
+Also it may be better to have two helpers, one for "add" and one for "add_tail"
+(and perhaps define them as static inline?).
 
+And why change the ordering between "head" and "entry".  That's alomost
+guaranteed to confuse people.
 
+> +{
+> +	if (tail)
+> +		list_add_tail(&entry->node, head);
+> +	else
+> +		list_add(&entry->node, head);
+> +}
+> +EXPORT_SYMBOL(resource_list_insert);
+> +
+> +void resource_list_delete(struct resource_list_entry *entry)
+> +{
+> +	list_del(&entry->node);
+> +}
+> +EXPORT_SYMBOL(resource_list_delete);
+
+Couldn't this be a static inline)?
+
+Or maybe we can combine the "list_del" with "kfree" in one function?
+
+> +
+> +void resource_list_free_list(struct list_head *head)
+> +{
+> +	struct resource_list_entry *entry, *tmp;
+> +
+> +	list_for_each_entry_safe(entry, tmp, head, node) {
+> +		list_del(&entry->node);
+> +		resource_list_free(entry);
+> +	}
+> +}
+> +EXPORT_SYMBOL(resource_list_free_list);
+> +
+>  static int __init strict_iomem(char *str)
+>  {
+>  	if (strstr(str, "relaxed"))
+> 
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
