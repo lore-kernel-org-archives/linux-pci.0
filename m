@@ -1,148 +1,62 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54C06726.4090805@linux.intel.com>
-Date: Thu, 22 Jan 2015 10:57:42 +0800
+Message-ID: <54BF3881.9000708@linux.intel.com>
+Date: Wed, 21 Jan 2015 13:26:25 +0800
 From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-To: "Zheng, Lv" <lv.zheng@intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"Moore, Robert" <robert.moore@intel.com>,
-	"Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
-	Len Brown <lenb@kernel.org>
-CC: "Luck, Tony" <tony.luck@intel.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"devel@acpica.org" <devel@acpica.org>
-Subject: Re: [RFC Patch 05/19] ACPI: Provide union for address_space64 and
- ext_address_space64
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-6-git-send-email-jiang.liu@linux.intel.com> <1AE640813FDE7649BE1B193DEA596E88026B9EFB@SHSMSX101.ccr.corp.intel.com>
-In-Reply-To: <1AE640813FDE7649BE1B193DEA596E88026B9EFB@SHSMSX101.ccr.corp.intel.com>
-Content-Type: text/plain; charset=windows-1252
+	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [RFC Patch 08/19] ACPI: Add prefetch decoding to the address
+ space parser
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-9-git-send-email-jiang.liu@linux.intel.com> <1593565.fJ4zH7YgDd@vostro.rjw.lan>
+In-Reply-To: <1593565.fJ4zH7YgDd@vostro.rjw.lan>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 2015/1/22 10:32, Zheng, Lv wrote:
-> Hi, Thomas and Jiang
-> 
->> From: Jiang Liu [mailto:jiang.liu@linux.intel.com]
->> Sent: Thursday, January 08, 2015 10:33 AM
->>
+On 2015/1/21 8:35, Rafael J. Wysocki wrote:
+> On Thursday, January 08, 2015 10:32:55 AM Jiang Liu wrote:
 >> From: Thomas Gleixner <tglx@linutronix.de>
 >>
->> address_space64 and ext_address_space64 share substracts just at
->> different offsets. To unify the parsing functions implement the two
->> structs as unions of their substructs, so we can extract the shared
->> data.
->>
+>> Add support of PREFETCH attributre to ACPI address space and extended
+>> address space parser.
+> 
+> This potentially enables untested configurations which tends to uncover bugs,
+> so I'm concerned.
+> 
+> What's the possible impact of this?
+Hi Rafael,
+	I have analyzed all call sites related to this change, most
+users just care about resource type(IO, MEM, IRQ etc) and ignore
+the prefetch property. Seems only PCI subsystem cares about PREFETCH.
+Regards,
+Gerry
+
+> 
 >> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 >> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 >> ---
->>  include/acpi/acrestyp.h |   49 ++++++++++++++++++++++++++++++++++-------------
->>  1 file changed, 36 insertions(+), 13 deletions(-)
+>>  drivers/acpi/resource.c |    3 +++
+>>  1 file changed, 3 insertions(+)
 >>
->> diff --git a/include/acpi/acrestyp.h b/include/acpi/acrestyp.h
->> index eb760ca0b2e0..307d5b2605c8 100644
->> --- a/include/acpi/acrestyp.h
->> +++ b/include/acpi/acrestyp.h
->> @@ -326,23 +326,46 @@ struct acpi_resource_address32 {
->>  	struct acpi_resource_source resource_source;
->>  };
->>
->> -struct acpi_resource_address64 {
->> -	ACPI_RESOURCE_ADDRESS_COMMON u64 granularity;
->> -	u64 minimum;
->> -	u64 maximum;
->> -	u64 translation_offset;
->> +#define ACPI_RESOURCE_ADDRESS64_COMMON \
->> +	u64 granularity;	       \
->> +	u64 minimum;		       \
->> +	u64 maximum;		       \
->> +	u64 translation_offset;	       \
->>  	u64 address_length;
->> -	struct acpi_resource_source resource_source;
+>> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+>> index a56a64164410..abe3a29ad802 100644
+>> --- a/drivers/acpi/resource.c
+>> +++ b/drivers/acpi/resource.c
+>> @@ -200,6 +200,9 @@ static bool acpi_decode_space(struct resource *res,
+>>  	if (base->producer_consumer == ACPI_PRODUCER)
+>>  		res->flags |= IORESOURCE_WINDOW;
+>>  
+>> +	if (base->info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
+>> +		res->flags |= IORESOURCE_PREFETCH;
 >> +
->> +struct acpi_resource_address64_common {
->> +ACPI_RESOURCE_ADDRESS64_COMMON};
->> +
->> +struct acpi_resource_address64 {
->> +	union {
->> +		struct {
->> +			ACPI_RESOURCE_ADDRESS_COMMON
->> +			ACPI_RESOURCE_ADDRESS64_COMMON
->> +			struct acpi_resource_source resource_source;
->> +		};
-> 
-> This looks wrong to ACPICA upstream.
-> 
->> +		struct {
->> +			struct acpi_resource_address base;
->> +			struct acpi_resource_address64_common addr;
->> +			struct acpi_resource_source resource_source;
->> +		} common;
->> +	};
->>  };
-> 
-> And this.
-> Though anonymous structs/unions are now C11 standard, I still didn't see it used in the ACPICA upstream.
-> It could be a problem if someone still compiles ACPICA using old compilers.
-> 
+>>  	return !(res->flags & IORESOURCE_DISABLED);
+>>  }
+>>  
 >>
->>  struct acpi_resource_extended_address64 {
->> -	ACPI_RESOURCE_ADDRESS_COMMON u8 revision_ID;
->> -	u64 granularity;
->> -	u64 minimum;
->> -	u64 maximum;
->> -	u64 translation_offset;
->> -	u64 address_length;
->> -	u64 type_specific;
->> +	union {
->> +		struct {
->> +			ACPI_RESOURCE_ADDRESS_COMMON
->> +			u8 revision_ID;
->> +			ACPI_RESOURCE_ADDRESS64_COMMON
->> +			u64 type_specific;
->> +		};
-> 
-> Ditto.
-> 
->> +		struct {
->> +			struct acpi_resource_address base;
->> +			u8 revision_ID;
->> +			struct acpi_resource_address64_common addr;
->> +			u64 type_specific;
->> +		} common;
->> +	};
-> 
-> Ditto.
-> 
-> I think what you want is the ability to access common.addr and common.base from different resource address64 types.
-> So we can achieve this directly in the ACPICA upstream without using the union.
-> 
-> I tried this in the ACPICA upstream and the result is:
-> https://github.com/zetalog/acpica/commit/0f4ed510
-> Let me send its linuxized version after this email.
-Hi Lv,
-	Thanks for your great support:)
-	What's the normal process to propagate this patch into
-linux kernel? Or how long will it take? We have another hotplug
-patch set which depends on this patch set, then depends on this
-ACPICA core change.
-Regards!
-Gerry
-> 
-> Thanks and best regards
-> -Lv
-> 
->>  };
->>
->>  struct acpi_resource_extended_irq {
->> --
->> 1.7.10.4
 > 
