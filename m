@@ -1,145 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:24972 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753394AbbATFxj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 20 Jan 2015 00:53:39 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
+Received: from szxga03-in.huawei.com ([119.145.14.66]:12952 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753893AbbAUCcf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 21:32:35 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v4 21/33] x86/irq: Remove sis apic bug workaround
-Date: Tue, 20 Jan 2015 13:51:41 +0800
-Message-Id: <1421733113-15704-22-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	"Fenghua Yu" <fenghua.yu@intel.com>
+Subject: [PATCH v2 15/30] PCI/IA64: Refine pci_acpi_scan_root() with generic pci_host_bridge
+Date: Wed, 21 Jan 2015 08:30:10 +0800
+Message-ID: <1421800225-26230-16-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
+References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+From: Yijing Wang <wangyijing0307@gmail.com>
 
-The SiS apic bug workaround is now obsolete as we cache the register
-values for performance reasons.
-
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Tony Luck <tony.luck@intel.com>
+CC: Fenghua Yu <fenghua.yu@intel.com>
+CC: linux-ia64@vger.kernel.org
 ---
- arch/x86/include/asm/io_apic.h |    3 ---
- arch/x86/kernel/apic/io_apic.c |   35 ++++++++++-------------------------
- drivers/pci/quirks.c           |    7 -------
- 3 files changed, 10 insertions(+), 35 deletions(-)
+ arch/ia64/pci/pci.c |   34 ++++++++++++++++++----------------
+ 1 files changed, 18 insertions(+), 16 deletions(-)
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 628a95497635..b2510b8dad44 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -120,9 +120,6 @@ extern int mp_irq_entries;
- /* MP IRQ source entries */
- extern struct mpc_intsrc mp_irqs[MAX_IRQ_SOURCES];
- 
--/* Older SiS APIC requires we rewrite the index register */
--extern int sis_apic_bug;
--
- /* 1 if "noapic" boot option passed */
- extern int skip_ioapic_setup;
- 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 83c3c90bd903..068f26428984 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -18,6 +18,16 @@
-  *					and Rolf G. Tews
-  *					for testing these extensively
-  *	Paul Diefenbaugh	:	Added full ACPI support
-+ *
-+ * Historical information which is worth to be preserved:
-+ *
-+ * - SiS APIC rmw bug:
-+ *
-+ *	We used to have a workaround for a bug in SiS chips which
-+ *	required to rewrite the index register for a read-modify-write
-+ *	operation as the chip lost the index information which was
-+ *	setup for the read already. We cache the data now, so that
-+ *	workaround has been removed.
-  */
- 
- #include <linux/mm.h>
-@@ -68,17 +78,6 @@
- 
- int acpi_get_override_irq(u32 gsi, int *trigger, int *polarity);
- 
--/*
-- * Is the SiS APIC rmw bug present ?
-- *      -1 = don't know, 0 = no, 1 = yes
-- * When doing a read-modify-write operation on IOAPIC registers, older SiS APIC
-- * requires we rewrite the index register again where the read already set up
-- * the index register.
-- * The code to make use of sis_apic_bug has been removed, but we don't want to
-- * loss this knowledge.
-- */
--int sis_apic_bug = -1;
--
- static DEFINE_RAW_SPINLOCK(ioapic_lock);
- static DEFINE_MUTEX(ioapic_mutex);
- static unsigned int ioapic_dynirq_base;
-@@ -2318,20 +2317,6 @@ void __init setup_IO_APIC(void)
- 	ioapic_initialized = 1;
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index e457015..b86b318 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -420,6 +420,18 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+ 	return 0;
  }
  
--/*
-- *      Called after all the initialization is done. If we didn't find any
-- *      APIC bugs then we can allow the modify fast path
-- */
--
--static int __init io_apic_bug_finalize(void)
--{
--	if (sis_apic_bug == -1)
--		sis_apic_bug = 0;
--	return 0;
--}
--
--late_initcall(io_apic_bug_finalize);
--
- static void resume_ioapic_id(int ioapic_idx)
++static int pci_host_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	struct pci_controller *controller = bridge->bus->sysdata;
++
++	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
++	return 0;
++}
++
++static struct pci_host_bridge_ops phb_ops = {
++	.phb_prepare = pci_host_bridge_prepare,
++};
++
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
  {
- 	unsigned long flags;
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index ed6f89b6efe5..69bbed5ff30b 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -785,13 +785,6 @@ static void quirk_amd_ioapic(struct pci_dev *dev)
- 	}
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD,	PCI_DEVICE_ID_AMD_VIPER_7410,	quirk_amd_ioapic);
--
--static void quirk_ioapic_rmw(struct pci_dev *dev)
--{
--	if (dev->devfn == 0 && dev->bus->number == 0)
--		sis_apic_bug = 1;
--}
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_SI,	PCI_ANY_ID,			quirk_ioapic_rmw);
- #endif /* CONFIG_X86_IO_APIC */
+ 	struct acpi_device *device = root->device;
+@@ -428,7 +440,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	struct pci_controller *controller;
+ 	struct pci_root_info *info = NULL;
+ 	int busnum = root->secondary.start;
+-	struct pci_bus *pbus;
++	struct pci_host_bridge *host;
+ 	int ret;
  
- /*
+ 	controller = alloc_pci_controller(domain);
+@@ -465,26 +477,16 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	 * should handle the case here, but it appears that IA64 hasn't
+ 	 * such quirk. So we just ignore the case now.
+ 	 */
+-	pbus = pci_create_root_bus(NULL, PCI_DOMBUS(domain, bus), 
+-			&pci_root_ops, controller, &info->resources);
+-	if (!pbus) {
++	host = pci_scan_root_bridge(NULL, PCI_DOMBUS(domain, bus),
++			&pci_root_ops, controller, &info->resources, &phb_ops);
++	if (!host) {
+ 		pci_free_resource_list(&info->resources);
+ 		__release_pci_root_info(info);
+ 		return NULL;
+ 	}
+ 
+-	pci_set_host_bridge_release(to_pci_host_bridge(pbus->bridge),
+-			release_pci_root_info, info);
+-	pci_scan_child_bus(pbus);
+-	return pbus;
+-}
+-
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+-{
+-	struct pci_controller *controller = bridge->bus->sysdata;
+-
+-	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
+-	return 0;
++	pci_set_host_bridge_release(host, release_pci_root_info, info);
++	return host->bus;
+ }
+ 
+ static int is_valid_resource(struct pci_dev *dev, int idx)
 -- 
-1.7.10.4
+1.7.1
 
