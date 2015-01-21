@@ -1,93 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foundry.eraalaska.net ([12.12.105.40]:55651 "EHLO
-	foundry.eraalaska.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752005AbbA2Tq2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jan 2015 14:46:28 -0500
-Received: From approach.ravnalaska.net (12.12.105.49) by foundry.eraalaska.net (MAILFOUNDRY) id g//YgKfvEeS8bgAl for linux-pci@vger.kernel.org; Thu, 29 Jan 2015 19:46:28 -0000 (GMT)
-Received: from israel.frontierflying.com (unknown [10.9.1.59])
-	by approach.ravnalaska.net (Postfix) with ESMTPSA id 222D01137AFA
-	for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2015 10:46:28 -0900 (AKST)
-From: Israel Brewster <israel@ravnalaska.net>
-Content-Type: multipart/mixed; boundary="Apple-Mail=_24BEDBA4-02B1-4BE3-8730-88DDAF6DFA5C"
-Subject: CentOS/Kernel 3.18.4/Thunderbolt2
-Message-Id: <262B8C88-E706-4538-99D8-4E5058BE646D@ravnalaska.net>
-Date: Thu, 29 Jan 2015 10:46:27 -0900
-To: linux-pci@vger.kernel.org
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Received: from szxga02-in.huawei.com ([119.145.14.65]:3006 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754208AbbAUCct (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 21:32:49 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	<linux-tegra@vger.kernel.org>
+Subject: [PATCH v2 24/30] PCI/tegra: Remove redundant tegra_pcie_scan_bus()
+Date: Wed, 21 Jan 2015 08:30:19 +0800
+Message-ID: <1421800225-26230-25-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
+References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Now pci_scan_root_bus() is almost simliar to
+pci_create_root_bus() + pci_scan_child_bus().
+So we could use common pci_scan_root_bus() in
+pci_common_init_dev() to scan pci busses.
+tegra_pcie_scan_bus() is redundant, remove it.
 
---Apple-Mail=_24BEDBA4-02B1-4BE3-8730-88DDAF6DFA5C
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Thierry Reding <thierry.reding@gmail.com>
+CC: linux-tegra@vger.kernel.org
+---
+ drivers/pci/host/pci-tegra.c |   16 ----------------
+ 1 files changed, 0 insertions(+), 16 deletions(-)
 
-My company recently purchased and installed a new SuperMicro server with =
-a Thunderbolt 2 (Falcon Ridge) card installed, specifically an =
-AOC-TBT-DSL5320. I then installed CentOS 6, and, since to my =
-understanding thunderbolt support is only in more recent kernels, I went =
-ahead and upgraded the kernel to version 3.18.4 from ElRepo. However, I =
-have not seen any indication yet that Thunderbolt is working - although =
-I may just not be looking in the right place. Over on Google+ Greg =
-Kroah-Hartman indicated that I need the PCI hot plug controller driver =
-enabled, and Matthew Garrett indicated that I specifically need the ACPI =
-PCI hotplug driver rather than the native PCIe hotplug driver. To check, =
-I ran the following command:
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 6f9c29f..baed0c5 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -679,21 +679,6 @@ static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ 	return irq;
+ }
+ 
+-static struct pci_bus *tegra_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+-{
+-	struct tegra_pcie *pcie = sys_to_pcie(sys);
+-	struct pci_bus *bus;
+-
+-	bus = pci_create_root_bus(pcie->dev, sys->busnr, &tegra_pcie_ops, sys,
+-				  &sys->resources);
+-	if (!bus)
+-		return NULL;
+-
+-	pci_scan_child_bus(bus);
+-
+-	return bus;
+-}
+-
+ static irqreturn_t tegra_pcie_isr(int irq, void *arg)
+ {
+ 	const char *err_msg[] = {
+@@ -1880,7 +1865,6 @@ static int tegra_pcie_enable(struct tegra_pcie *pcie)
+ 	hw.private_data = (void **)&pcie;
+ 	hw.setup = tegra_pcie_setup;
+ 	hw.map_irq = tegra_pcie_map_irq;
+-	hw.scan = tegra_pcie_scan_bus;
+ 	hw.ops = &tegra_pcie_ops;
+ 
+ 	pci_common_init_dev(pcie->dev, &hw);
+-- 
+1.7.1
 
-egrep -i HOTPLUG /boot/config-3.18.4-1.el6.elrepo.x86_64
-
-Which returned the following potentially relevant results:
-
-CONFIG_ACPI_HOTPLUG_CPU=3Dy
-CONFIG_ACPI_HOTPLUG_MEMORY=3Dy
-CONFIG_HOTPLUG_PCI_PCIE=3Dy
-CONFIG_HOTPLUG_PCI=3Dy
-
-but also the following:
-
-# CONFIG_HOTPLUG_PCI_ACPI is not set
-# CONFIG_HOTPLUG_PCI_CPCI is not set=20
-
-So perhaps that's the entire problem - that CONFIG_HOTPLUG_PCI_ACPI is =
-not set? If so, what's going to be the easiest solution? I'm willing to =
-try recompiling the kernel, if someone could point me to a good guide, =
-but I haven't done so before (at least, not on Linux. I've re-compiled =
-the kernel on OpenBSD many times).
-
------------------------------------------------
-Israel Brewster
-Systems Analyst II
-Ravn Alaska
-5245 Airport Industrial Rd
-Fairbanks, AK 99709
-(907) 450-7293
------------------------------------------------
-
-
-
---Apple-Mail=_24BEDBA4-02B1-4BE3-8730-88DDAF6DFA5C
-Content-Disposition: attachment;
-	filename="Israel Brewster.vcf"
-Content-Type: text/directory;
-	name="Israel Brewster.vcf"
-Content-Transfer-Encoding: quoted-printable
-
-BEGIN:VCARD=0D=0AVERSION:3.0=0D=0AN:Brewster;Israel;;;=0D=0AFN:Israel=20=
-Brewster=0D=0AORG:Frontier=20Flying=20Service;MIS=0D=0ATITLE:PC=20=
-Support=20Tech=20II=0D=0A=
-EMAIL;type=3DINTERNET;type=3DWORK;type=3Dpref:israel@frontierflying.com=0D=
-=0ATEL;type=3DWORK;type=3Dpref:907-450-7293=0D=0A=
-item1.ADR;type=3DWORK;type=3Dpref:;;5245=20Airport=20Industrial=20=
-Wy;Fairbanks;AK;99701;=0D=0Aitem1.X-ABADR:us=0D=0ACATEGORIES:General=0D=0A=
-X-ABUID:36305438-95EA-4410-91AB-45D16CABCDDC\:ABPerson=0D=0AEND:VCARD=0D=0A=
-
---Apple-Mail=_24BEDBA4-02B1-4BE3-8730-88DDAF6DFA5C
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain;
-	charset=us-ascii
-
-
-
-
---Apple-Mail=_24BEDBA4-02B1-4BE3-8730-88DDAF6DFA5C--
