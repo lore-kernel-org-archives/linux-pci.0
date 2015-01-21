@@ -1,92 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39197 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755086AbbAHTaZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 8 Jan 2015 14:30:25 -0500
-Message-ID: <1420745423.25367.77.camel@redhat.com>
-Subject: Re: [PATCH 4/4] PCI: quirk Atheros AR93xx to avoid bus reset
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 08 Jan 2015 12:30:23 -0700
-In-Reply-To: <20150108160733.GA6575@google.com>
-References: <20141121180322.26669.65689.stgit@gimli.home>
-	 <20141121182427.26669.82417.stgit@gimli.home>
-	 <20150108160733.GA6575@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <54BF0BA5.8020806@linux.intel.com>
+Date: Wed, 21 Jan 2015 10:15:01 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [RFC Patch 09/19] ACPI: Fix a bug in parsing ACPI Memroy24 resource
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-10-git-send-email-jiang.liu@linux.intel.com> <1633329.njF7Ian1Kn@vostro.rjw.lan>
+In-Reply-To: <1633329.njF7Ian1Kn@vostro.rjw.lan>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2015-01-08 at 09:07 -0700, Bjorn Helgaas wrote:
-> On Fri, Nov 21, 2014 at 11:24:27AM -0700, Alex Williamson wrote:
-> > Reports against the TL-WDN4800 card indicate that PCI bus reset of
-> > this Atheros device cause system lock-ups and resets.  I've also
-> > been able to confirm this behavior on multiple systems.  The device
-> > never returns from reset and attempts to access config space of the
-> > device after reset result in hangs.  Blacklist bus reset for the
-> > device to avoid this issue.
-> > 
-> > Reported-by: Andreas Hartmann <andihartmann@freenet.de>
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > Tested-by: Andreas Hartmann <andihartmann@freenet.de>
+On 2015/1/21 8:42, Rafael J. Wysocki wrote:
+> On Thursday, January 08, 2015 10:32:56 AM Jiang Liu wrote:
+>> According to ACPI spec 5, section 6.4.3.1 "24-Bit Memory Range Descriptor",
+>> minimum, maximum and address_length field in struct acpi_resource_memory24
+>> is in granularity of 256-bytes. So shift 8-bit left to get correct address.
 > 
-> If I understand correctly, these two (patches 3 & 4) fix a v3.14 regression
-> caused by 425c1b223dac ("PCI: Add Virtual Channel to save/restore support").
+> Are you sure about this?
 > 
-> If so, these should go to for-linus for v3.19.  What about patches 1 & 2?
-> Do they fix a regression?  Is there a pointer to a bugzilla or problem
-> report about that issue?
+> I'm reading ACPI 5.1 ATM and (on page 316) it only says about the range length
+> being in 256 byte blocks.
+Hi Rafael,
+	According to ACPI spec 5.a sec 6.4.3.1,
+Byte 4, "Range minimum base address, _MIN, bits[7:0]", "Address
+bits[15:8] of the minimum base memory address for which
+the card may be configured."
+Byte 5, "Range minimum base address, _MIN, bits[15:8]", "Address
+bits[23:16] of the minimum base memory address for
+which the card may be configured".
+Byte 10, "Range length, _LEN, bits[7:0]", "This field contains the lower
+eight bits of the memory range length. The range length provides the
+length of the memory range in 256 byte blocks."
+Byte 11, "Range length, _LEN, bits[15:8]", "This field contains the
+upper eight bits of the memory range length. The range length field
+provides the length of the memory range in 256 byte blocks."
+
+That means _MIN defines bits[23:8] of the minimal address, and _LEN
+is in granularity of 256 bytes, so shift them left by 8 bits.
+Regards,
+Gerry
+
 > 
-> I don't understand the connection between 425c1b223dac and
-> PCI_DEV_FLAGS_NO_BUS_RESET, because 425c1b223dac doesn't seem to do any
-> resets.  Is that the wrong commit, or can you outline the connection for
-> me?
-
-TBH, I don't have a lot of faith in associating this to 425c1b223dac,
-I'm not sure how Andreas' bisect landed there.  IME, this device cannot,
-and has never been able to handle a bus reset.  A simple setpci
-experiment on the commandline can confirm this.  What I think happened
-is that with the PCI bus reset infrastructure we added, we switched QEMU
-to prefer PCI bus resets over things like PM D3hot->D0 resets.  So it's
-just more prolific use of bus resets by userspace.
-
-There's also no regression in 1 & 2, PM reset has never done anything
-useful on those devices.  Thanks,
-
-Alex
-
-> > ---
-> > 
-> >  drivers/pci/quirks.c |   14 ++++++++++++++
-> >  1 file changed, 14 insertions(+)
-> > 
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index 561e10d..ebbd5b4 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -3029,6 +3029,20 @@ static void quirk_no_pm_reset(struct pci_dev *dev)
-> >  DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_ATI, PCI_ANY_ID,
-> >  			       PCI_CLASS_DISPLAY_VGA, 8, quirk_no_pm_reset);
-> >  
-> > +static void quirk_no_bus_reset(struct pci_dev *dev)
-> > +{
-> > +	dev->dev_flags |= PCI_DEV_FLAGS_NO_BUS_RESET;
-> > +}
-> > +
-> > +/*
-> > + * Atheros AR93xx chips do not behave after a bus reset.  The device will
-> > + * throw a Link Down error on AER capable system and regardless of AER,
-> > + * config space of the device is never accessible again and typically
-> > + * causes the system to hang or reset when access is attempted.
-> > + * http://www.spinics.net/lists/linux-pci/msg34797.html
-> > + */
-> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0030, quirk_no_bus_reset);
-> > +
-> >  #ifdef CONFIG_ACPI
-> >  /*
-> >   * Apple: Shutdown Cactus Ridge Thunderbolt controller.
-> > 
-
-
-
+>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>> ---
+>>  drivers/acpi/resource.c |    4 ++--
+>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+>> index abe3a29ad802..f4aeef22a9d8 100644
+>> --- a/drivers/acpi/resource.c
+>> +++ b/drivers/acpi/resource.c
+>> @@ -90,8 +90,8 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+>>  	switch (ares->type) {
+>>  	case ACPI_RESOURCE_TYPE_MEMORY24:
+>>  		memory24 = &ares->data.memory24;
+>> -		acpi_dev_get_memresource(res, memory24->minimum,
+>> -					 memory24->address_length,
+>> +		acpi_dev_get_memresource(res, memory24->minimum << 8,
+>> +					 memory24->address_length << 8,
+>>  					 memory24->write_protect);
+>>  		break;
+>>  	case ACPI_RESOURCE_TYPE_MEMORY32:
+>>
+> 
