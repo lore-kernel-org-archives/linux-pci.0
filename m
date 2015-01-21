@@ -1,61 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:23824 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756032AbbAPDrn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jan 2015 22:47:43 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 21 Jan 2015 10:43:56 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH 23/28] PCI/designware: Use pci_scan_root_bus() for simplicity
-Date: Fri, 16 Jan 2015 09:44:21 +0800
-Message-ID: <1421372666-12288-24-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
-References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
+	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Vivek Goyal <vgoyal@redhat.com>,
+	Thierry Reding <treding@nvidia.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Mike Travis <travis@sgi.com>, Tony Luck <tony.luck@intel.com>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: Re: [RFC Patch 17/19] resources: Move struct resource_list_entry
+ from ACPI into resource core
+In-Reply-To: <54BF4911.7030906@linux.intel.com>
+Message-ID: <alpine.DEB.2.11.1501211043170.5526@nanos>
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-18-git-send-email-jiang.liu@linux.intel.com> <3428063.tN1BxOoXSN@vostro.rjw.lan> <54BF4911.7030906@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use pci_scan_root_bus() instead of pci_create_root_bus() +
-pci_scan_child_bus() for simplicity.
+On Wed, 21 Jan 2015, Jiang Liu wrote:
+> On 2015/1/21 9:10, Rafael J. Wysocki wrote:
+> >> +
+> >> +void resource_list_insert(struct list_head *head,
+> >> +			  struct resource_list_entry *entry, bool tail)
+> > 
+> > I would call this resource_list_add() if anything.
+> > 
+> > Also it may be better to have two helpers, one for "add" and one for "add_tail"
+> > (and perhaps define them as static inline?).
+> We can't use inline functions here because that needs pulling list.h
+> into ioport.h, then causing building issues to header inclusion order.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/host/pcie-designware.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+Create a new header file to avoid the circular dependencies then.
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index eef3111..d37fe27 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -725,13 +725,11 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- 	struct pcie_port *pp = sys_to_pcie(sys);
- 
- 	pp->root_bus_nr = sys->busnr;
--	bus = pci_create_root_bus(pp->dev, sys->busnr,
-+	bus = pci_scan_root_bus(pp->dev, sys->busnr,
- 				  &dw_pcie_ops, sys, &sys->resources);
- 	if (!bus)
- 		return NULL;
- 
--	pci_scan_child_bus(bus);
--
- 	if (bus && pp->ops->scan_bus)
- 		pp->ops->scan_bus(pp);
- 
--- 
-1.7.1
+Thanks,
 
+	tglx
