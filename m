@@ -1,56 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:33463 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751128AbbASEwx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 18 Jan 2015 23:52:53 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [Bugfix 0/3] Fix regressions in Xen IRQ management
-Date: Mon, 19 Jan 2015 12:55:41 +0800
-Message-Id: <1421643344-17092-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [RFC Patch 12/19] ACPI: Enforce stricter checks for address space descriptors
+Date: Wed, 21 Jan 2015 01:45:50 +0100
+Message-ID: <12267175.FvlCJYWCa5@vostro.rjw.lan>
+In-Reply-To: <1420684386-5975-13-git-send-email-jiang.liu@linux.intel.com>
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-13-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
-	Sander reports an Xen pci-passthrough regression caused by
-commit cffe0a2b5a34c95a4dadc9ec7132690a5b0f6687 ("x86, irq: Keep
-balance of IOAPIC pin reference count"). This patch set tries to
-fix it.
+On Thursday, January 08, 2015 10:32:59 AM Jiang Liu wrote:
+> Enforce stricter checks for address space descriptors according to
+> ACPI spec.
 
-Patch 1 is a fix for another issue found during fixing the regression.
-Patch 2 is a hotfix for the regression and should be targeted for v3.19.
-Patch 3 is the foundamental fix for the regression and should be targeted
-at v3.20.
+So is the spec the only reason for doing this?  If so, I'd say don't.
 
-Hi Sander,
-	Could you please help to test by:
-1) only apply patch 1 and patch 2
-2) and then apply patch 3 ontop of patch 1/2.
-Thanks!
-Gerry
-
-Jiang Liu (3):
-  xen/irq, ACPI: Fix regression in xen PCI passthrough caused by
-    cffe0a2b5a34
-  xen/irq: Override ACPI IRQ management callback __acpi_unregister_gsi
-  x86/PCI: Refine the way to release PCI IRQ resources
-
- arch/x86/include/asm/acpi.h    |    1 +
- arch/x86/include/asm/pci_x86.h |    2 --
- arch/x86/pci/common.c          |   30 ++++++++++++++++++++++++++++--
- arch/x86/pci/intel_mid_pci.c   |    4 ++--
- arch/x86/pci/irq.c             |   15 +--------------
- arch/x86/pci/xen.c             |    2 ++
- drivers/acpi/pci_irq.c         |   10 +---------
- 7 files changed, 35 insertions(+), 29 deletions(-)
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  drivers/acpi/resource.c |    8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+> index 26b47f1da523..e82149e44347 100644
+> --- a/drivers/acpi/resource.c
+> +++ b/drivers/acpi/resource.c
+> @@ -192,6 +192,14 @@ static bool acpi_decode_space(struct resource *res,
+>  	bool wp = base->info.mem.write_protect;
+>  	u64 len = addr->address_length;
+>  
+> +	/*
+> +	 * Filter out invalid descriptor according to ACPI Spec 5.0, section
+> +	 * 6.4.3.5 Address Space Resource Descriptors.
+> +	 */
+> +	if ((base->min_address_fixed != base->max_address_fixed && len) ||
+> +	    (base->min_address_fixed && base->max_address_fixed && !len))
+> +		return false;
+> +
+>  	res->start = addr->minimum;
+>  	res->end = addr->maximum;
+>  
+> 
 
 -- 
-1.7.10.4
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
