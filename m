@@ -1,63 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:42248 "EHLO
-	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750849AbbAWVmo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 16:42:44 -0500
-Received: by mail-oi0-f49.google.com with SMTP id a3so612106oib.8
-        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 13:42:43 -0800 (PST)
-Date: Fri, 23 Jan 2015 15:42:40 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	Srikanth Thokala <sthokal@xilinx.com>,
-	Maxime COQUELIN <maxime.coquelin@st.com>
-Subject: Re: [PATCH] PCI: xilinx: fix harmless format string warning
-Message-ID: <20150123214240.GL29776@google.com>
-References: <1759235.dcJCuiggea@wuerfel>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:56091 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754402AbbAUCc7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 21:32:59 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v2 28/30] PCI: Export find_pci_host_bridge()
+Date: Wed, 21 Jan 2015 08:30:23 +0800
+Message-ID: <1421800225-26230-29-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
+References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1759235.dcJCuiggea@wuerfel>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 13, 2015 at 03:20:05PM +0100, Arnd Bergmann wrote:
-> The xilinx pcie driver prints a register value whose type is
-> propagated to the type returned by the GENMASK() macro.
-> Unfortunately, that type has recently changed as the result
-> of a bug fix, so now we get a warning about the type:
-> 
-> drivers/pci/host/pcie-xilinx.c: In function 'xilinx_pcie_clear_err_interrupts':
-> drivers/pci/host/pcie-xilinx.c:154:3: warning: format '%d' expects argument of type 'int', but argument 4 has type 'long unsigned int' [-Wformat=]
-> 
-> This changes the code so we always print the number as an
-> 'unsigned long' type to avoid the warning. The original code
-> was fine on 32-bit architectures but not on 64-bit. Now it
-> works as expected on both.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 00b4d9a1412 ("bitops: Fix shift overflow in GENMASK macros")
+Export find_pci_host_bridge().
 
-Applied with Maxime's ack to pci/host-xilinx for v3.20, thanks!
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/host-bridge.c |    2 +-
+ include/linux/pci.h       |    1 +
+ 2 files changed, 2 insertions(+), 1 deletions(-)
 
-> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-> index ef3ebaf9a738..ce1c61d85b2c 100644
-> --- a/drivers/pci/host/pcie-xilinx.c
-> +++ b/drivers/pci/host/pcie-xilinx.c
-> @@ -148,10 +148,10 @@ static inline bool xilinx_pcie_link_is_up(struct xilinx_pcie_port *port)
->   */
->  static void xilinx_pcie_clear_err_interrupts(struct xilinx_pcie_port *port)
->  {
-> -	u32 val = pcie_read(port, XILINX_PCIE_REG_RPEFR);
-> +	unsigned long val = pcie_read(port, XILINX_PCIE_REG_RPEFR);
->  
->  	if (val & XILINX_PCIE_RPEFR_ERR_VALID) {
-> -		dev_dbg(port->dev, "Requester ID %d\n",
-> +		dev_dbg(port->dev, "Requester ID %lu\n",
->  			val & XILINX_PCIE_RPEFR_REQ_ID);
->  		pcie_write(port, XILINX_PCIE_RPEFR_ALL_MASK,
->  			   XILINX_PCIE_REG_RPEFR);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 26cefce..288ac69 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -104,7 +104,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+ 	return bus;
+ }
+ 
+-static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
++struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+ {
+ 	struct pci_bus *root_bus = find_pci_root_bus(bus);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 4d9d471..2f6b199 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -427,6 +427,7 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+ struct pci_host_bridge *pci_create_host_bridge(
+ 		struct device *parent, u32 dombus, struct list_head *resources, 
+ 		void *sysdata, struct pci_host_bridge_ops *ops);
++struct pci_host_bridge *find_pci_host_bridge(struct pci_bus* bus);
+ /*
+  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
+  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
+-- 
+1.7.1
+
