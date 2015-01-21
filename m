@@ -1,216 +1,130 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Lv Zheng <lv.zheng@intel.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Len Brown <len.brown@intel.com>, Lv Zheng <zetalog@gmail.com>,
-	linux-acpi@vger.kernel.org,
-	Octavian Purdila <octavian.purdila@intel.com>,
-	Prarit Bhargava <prarit@sgi.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org
-Subject: Re: [RFC PATCH] ACPI: Introduce acpi_unload_parent_table() usages in Linux kernel.
-Date: Thu, 22 Jan 2015 23:43:16 +0100
-Message-ID: <8541914.sW9yU28g98@vostro.rjw.lan>
-In-Reply-To: <0d37f4eecdd2c7e3203fca7adb1c2c03a16a40dd.1421907258.git.lv.zheng@intel.com>
-References: <1418746353-3481-2-git-send-email-octavian.purdila@intel.com> <0d37f4eecdd2c7e3203fca7adb1c2c03a16a40dd.1421907258.git.lv.zheng@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:3171 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754256AbbAUCcu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 21:32:50 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	<linux-parisc@vger.kernel.org>
+Subject: [PATCH v2 22/30] PCI/Parisc: Use pci_scan_root_bus() for simplicity
+Date: Wed, 21 Jan 2015 08:30:17 +0800
+Message-ID: <1421800225-26230-23-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
+References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 22, 2015 02:37:49 PM Lv Zheng wrote:
-> ACPICA has implemented acpi_unload_parent_table() which can exactly replace
-> the acpi_get_id()/acpi_unload_table_id() implemented in Linux kernel.  The
-> acpi_unload_parent_table() has been unit tested in ACPICA simulation
-> environment.
-> 
-> This patch can also help to reduce the source code differences between
-> Linux and ACPICA.
+From: Yijing Wang <wangyijing0307@gmail.com>
 
-Looks OK to me.
+Now pci_bus_add_devices() has been ripped out
+from pci_scan_root_bus(), we could use pci_scan_root_bus()
+instead of pci_create_root_bus() + pci_scan_child_bus()
+for simplicity. We could also remove the pci bus
+resource(dino_current_bus,255) and pci_bus_update_busn_res_end(),
+because pci_scan_root_bus() would do the same thing.
 
-Do you want me to pick it up?
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: "James E.J. Bottomley" <jejb@parisc-linux.org>
+CC: linux-parisc@vger.kernel.org
+---
+ drivers/parisc/dino.c    |   11 ++---------
+ drivers/parisc/lba_pci.c |    7 ++-----
+ 2 files changed, 4 insertions(+), 14 deletions(-)
 
-> Signed-off-by: Lv Zheng <lv.zheng@intel.com>
-> Cc: Octavian Purdila <octavian.purdila@intel.com>
-> Cc: Prarit Bhargava <prarit@sgi.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: Tony Luck <tony.luck@intel.com>
-> Cc: Fenghua Yu <fenghua.yu@intel.com>
-> Cc: linux-ia64@vger.kernel.org
-> ---
->  drivers/acpi/acpica/nsxfobj.c     |   44 -------------------------------------
->  drivers/acpi/acpica/tbxface.c     |   39 --------------------------------
->  drivers/pci/hotplug/sgi_hotplug.c |   13 ++++++-----
->  include/acpi/acpixf.h             |    6 -----
->  4 files changed, 7 insertions(+), 95 deletions(-)
-> 
-> diff --git a/drivers/acpi/acpica/nsxfobj.c b/drivers/acpi/acpica/nsxfobj.c
-> index dae9401..51a8329 100644
-> --- a/drivers/acpi/acpica/nsxfobj.c
-> +++ b/drivers/acpi/acpica/nsxfobj.c
-> @@ -53,50 +53,6 @@ ACPI_MODULE_NAME("nsxfobj")
->  
->  /*******************************************************************************
->   *
-> - * FUNCTION:    acpi_get_id
-> - *
-> - * PARAMETERS:  Handle          - Handle of object whose id is desired
-> - *              ret_id          - Where the id will be placed
-> - *
-> - * RETURN:      Status
-> - *
-> - * DESCRIPTION: This routine returns the owner id associated with a handle
-> - *
-> - ******************************************************************************/
-> -acpi_status acpi_get_id(acpi_handle handle, acpi_owner_id * ret_id)
-> -{
-> -	struct acpi_namespace_node *node;
-> -	acpi_status status;
-> -
-> -	/* Parameter Validation */
-> -
-> -	if (!ret_id) {
-> -		return (AE_BAD_PARAMETER);
-> -	}
-> -
-> -	status = acpi_ut_acquire_mutex(ACPI_MTX_NAMESPACE);
-> -	if (ACPI_FAILURE(status)) {
-> -		return (status);
-> -	}
-> -
-> -	/* Convert and validate the handle */
-> -
-> -	node = acpi_ns_validate_handle(handle);
-> -	if (!node) {
-> -		(void)acpi_ut_release_mutex(ACPI_MTX_NAMESPACE);
-> -		return (AE_BAD_PARAMETER);
-> -	}
-> -
-> -	*ret_id = node->owner_id;
-> -
-> -	status = acpi_ut_release_mutex(ACPI_MTX_NAMESPACE);
-> -	return (status);
-> -}
-> -
-> -ACPI_EXPORT_SYMBOL(acpi_get_id)
-> -
-> -/*******************************************************************************
-> - *
->   * FUNCTION:    acpi_get_type
->   *
->   * PARAMETERS:  handle          - Handle of object whose type is desired
-> diff --git a/drivers/acpi/acpica/tbxface.c b/drivers/acpi/acpica/tbxface.c
-> index 6482b0d..0f9dd80 100644
-> --- a/drivers/acpi/acpica/tbxface.c
-> +++ b/drivers/acpi/acpica/tbxface.c
-> @@ -265,45 +265,6 @@ ACPI_EXPORT_SYMBOL(acpi_get_table_header)
->  
->  /*******************************************************************************
->   *
-> - * FUNCTION:    acpi_unload_table_id
-> - *
-> - * PARAMETERS:  id            - Owner ID of the table to be removed.
-> - *
-> - * RETURN:      Status
-> - *
-> - * DESCRIPTION: This routine is used to force the unload of a table (by id)
-> - *
-> - ******************************************************************************/
-> -acpi_status acpi_unload_table_id(acpi_owner_id id)
-> -{
-> -	int i;
-> -	acpi_status status = AE_NOT_EXIST;
-> -
-> -	ACPI_FUNCTION_TRACE(acpi_unload_table_id);
-> -
-> -	/* Find table in the global table list */
-> -	for (i = 0; i < acpi_gbl_root_table_list.current_table_count; ++i) {
-> -		if (id != acpi_gbl_root_table_list.tables[i].owner_id) {
-> -			continue;
-> -		}
-> -		/*
-> -		 * Delete all namespace objects owned by this table. Note that these
-> -		 * objects can appear anywhere in the namespace by virtue of the AML
-> -		 * "Scope" operator. Thus, we need to track ownership by an ID, not
-> -		 * simply a position within the hierarchy
-> -		 */
-> -		acpi_tb_delete_namespace_by_owner(i);
-> -		status = acpi_tb_release_owner_id(i);
-> -		acpi_tb_set_table_loaded_flag(i, FALSE);
-> -		break;
-> -	}
-> -	return_ACPI_STATUS(status);
-> -}
-> -
-> -ACPI_EXPORT_SYMBOL(acpi_unload_table_id)
-> -
-> -/*******************************************************************************
-> - *
->   * FUNCTION:    acpi_get_table_with_size
->   *
->   * PARAMETERS:  signature           - ACPI signature of needed table
-> diff --git a/drivers/pci/hotplug/sgi_hotplug.c b/drivers/pci/hotplug/sgi_hotplug.c
-> index bada2099..c32fb78 100644
-> --- a/drivers/pci/hotplug/sgi_hotplug.c
-> +++ b/drivers/pci/hotplug/sgi_hotplug.c
-> @@ -475,7 +475,7 @@ static int disable_slot(struct hotplug_slot *bss_hotplug_slot)
->  	struct slot *slot = bss_hotplug_slot->private;
->  	struct pci_dev *dev, *temp;
->  	int rc;
-> -	acpi_owner_id ssdt_id = 0;
-> +	acpi_handle ssdt_hdl = NULL;
->  
->  	/* Acquire update access to the bus */
->  	mutex_lock(&sn_hotplug_mutex);
-> @@ -522,7 +522,7 @@ static int disable_slot(struct hotplug_slot *bss_hotplug_slot)
->  			if (ACPI_SUCCESS(ret) &&
->  			    (adr>>16) == (slot->device_num + 1)) {
->  				/* retain the owner id */
-> -				acpi_get_id(chandle, &ssdt_id);
-> +				ssdt_hdl = chandle;
->  
->  				ret = acpi_bus_get_device(chandle,
->  							  &device);
-> @@ -547,12 +547,13 @@ static int disable_slot(struct hotplug_slot *bss_hotplug_slot)
->  	pci_unlock_rescan_remove();
->  
->  	/* Remove the SSDT for the slot from the ACPI namespace */
-> -	if (SN_ACPI_BASE_SUPPORT() && ssdt_id) {
-> +	if (SN_ACPI_BASE_SUPPORT() && ssdt_hdl) {
->  		acpi_status ret;
-> -		ret = acpi_unload_table_id(ssdt_id);
-> +		ret = acpi_unload_parent_table(ssdt_hdl);
->  		if (ACPI_FAILURE(ret)) {
-> -			printk(KERN_ERR "%s: acpi_unload_table_id failed (0x%x) for id %d\n",
-> -			       __func__, ret, ssdt_id);
-> +			acpi_handle_err(ssdt_hdl,
-> +					"%s: acpi_unload_parent_table failed (0x%x)\n",
-> +					__func__, ret);
->  			/* try to continue on */
->  		}
->  	}
-> diff --git a/include/acpi/acpixf.h b/include/acpi/acpixf.h
-> index 5ba7846..5dd21bc 100644
-> --- a/include/acpi/acpixf.h
-> +++ b/include/acpi/acpixf.h
-> @@ -891,12 +891,6 @@ ACPI_APP_DEPENDENT_RETURN_VOID(ACPI_PRINTF_LIKE(1)
->  ACPI_GLOBAL(u8, acpi_gbl_permanent_mmap);
->  
->  ACPI_EXTERNAL_RETURN_STATUS(acpi_status
-> -			    acpi_get_id(acpi_handle object,
-> -					acpi_owner_id * out_type))
-> -
-> -ACPI_EXTERNAL_RETURN_STATUS(acpi_status acpi_unload_table_id(acpi_owner_id id))
-> -
-> -ACPI_EXTERNAL_RETURN_STATUS(acpi_status
->  			    acpi_get_table_with_size(acpi_string signature,
->  						     u32 instance,
->  						     struct acpi_table_header
-> 
-
+diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
+index a0580af..e5ee339 100644
+--- a/drivers/parisc/dino.c
++++ b/drivers/parisc/dino.c
+@@ -977,15 +977,11 @@ static int __init dino_probe(struct parisc_device *dev)
+ 	if (dino_dev->hba.gmmio_space.flags)
+ 		pci_add_resource(&resources, &dino_dev->hba.gmmio_space);
+ 
+-	dino_dev->hba.bus_num.start = dino_current_bus;
+-	dino_dev->hba.bus_num.end = 255;
+-	dino_dev->hba.bus_num.flags = IORESOURCE_BUS;
+-	pci_add_resource(&resources, &dino_dev->hba.bus_num);
+ 	/*
+ 	** It's not used to avoid chicken/egg problems
+ 	** with configuration accessor functions.
+ 	*/
+-	dino_dev->hba.hba_bus = bus = pci_create_root_bus(&dev->dev,
++	dino_dev->hba.hba_bus = bus = pci_scan_root_bus(&dev->dev,
+ 			 dino_current_bus, &dino_cfg_ops, NULL, &resources);
+ 	if (!bus) {
+ 		printk(KERN_ERR "ERROR: failed to scan PCI bus on %s (duplicate bus number %d?)\n",
+@@ -996,13 +992,10 @@ static int __init dino_probe(struct parisc_device *dev)
+ 		return 0;
+ 	}
+ 
+-	max = pci_scan_child_bus(bus);
+-	pci_bus_update_busn_res_end(bus, max);
+-
+ 	/* This code *depends* on scanning being single threaded
+ 	 * if it isn't, this global bus number count will fail
+ 	 */
+-	dino_current_bus = max + 1;
++	dino_current_bus = bus->busn_res.end + 1;
+ 	pci_bus_assign_resources(bus);
+ 	pci_bus_add_devices(bus);
+ 	return 0;
+diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
+index 37e71ff..254bf1a 100644
+--- a/drivers/parisc/lba_pci.c
++++ b/drivers/parisc/lba_pci.c
+@@ -1423,7 +1423,6 @@ lba_driver_probe(struct parisc_device *dev)
+ 	void *tmp_obj;
+ 	char *version;
+ 	void __iomem *addr = ioremap_nocache(dev->hpa.start, 4096);
+-	int max;
+ 
+ 	/* Read HW Rev First */
+ 	func_class = READ_REG32(addr + LBA_FCLASS);
+@@ -1564,15 +1563,13 @@ lba_driver_probe(struct parisc_device *dev)
+ 
+ 	dev->dev.platform_data = lba_dev;
+ 	lba_bus = lba_dev->hba.hba_bus =
+-		pci_create_root_bus(&dev->dev, lba_dev->hba.bus_num.start,
++		pci_scan_root_bus(&dev->dev, lba_dev->hba.bus_num.start,
+ 				    cfg_ops, NULL, &resources);
+ 	if (!lba_bus) {
+ 		pci_free_resource_list(&resources);
+ 		return 0;
+ 	}
+ 
+-	max = pci_scan_child_bus(lba_bus);
+-
+ 	/* This is in lieu of calling pci_assign_unassigned_resources() */
+ 	if (is_pdc_pat()) {
+ 		/* assign resources to un-initialized devices */
+@@ -1600,7 +1597,7 @@ lba_driver_probe(struct parisc_device *dev)
+ 		lba_dev->flags |= LBA_FLAG_SKIP_PROBE;
+ 	}
+ 
+-	lba_next_bus = max + 1;
++	lba_next_bus = pci_bus_child_max_busnr(lba_bus) + 1;
+ 	pci_bus_add_devices(lba_bus);
+ 
+ 	/* Whew! Finally done! Tell services we got this one covered. */
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.1
+
