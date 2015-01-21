@@ -1,47 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Rob Herring <robh@kernel.org>
-To: linux-kernel@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh@kernel.org>,
-	David Howells <dhowells@redhat.com>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
-	linux-am33-list@redhat.com
-Subject: [PATCH 03/16] mn10300: add struct pci_ops member names to initialization
-Date: Fri,  9 Jan 2015 20:34:37 -0600
-Message-Id: <1420857290-8373-4-git-send-email-robh@kernel.org>
-In-Reply-To: <1420857290-8373-1-git-send-email-robh@kernel.org>
-References: <1420857290-8373-1-git-send-email-robh@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [RFC Patch 09/19] ACPI: Fix a bug in parsing ACPI Memroy24 resource
+Date: Wed, 21 Jan 2015 01:42:20 +0100
+Message-ID: <1633329.njF7Ian1Kn@vostro.rjw.lan>
+In-Reply-To: <1420684386-5975-10-git-send-email-jiang.liu@linux.intel.com>
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-10-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some instances of pci_ops initialization rely on the read/write members'
-location in the struct. This is fragile and may break when adding new
-members to the beginning of the struct.
+On Thursday, January 08, 2015 10:32:56 AM Jiang Liu wrote:
+> According to ACPI spec 5, section 6.4.3.1 "24-Bit Memory Range Descriptor",
+> minimum, maximum and address_length field in struct acpi_resource_memory24
+> is in granularity of 256-bytes. So shift 8-bit left to get correct address.
 
-Signed-off-by: Rob Herring <robh@kernel.org>
-Cc: David Howells <dhowells@redhat.com>
-Cc: Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
-Cc: linux-am33-list@redhat.com
----
- arch/mn10300/unit-asb2305/pci.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Are you sure about this?
 
-diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
-index 6b4339f..406cbe0 100644
---- a/arch/mn10300/unit-asb2305/pci.c
-+++ b/arch/mn10300/unit-asb2305/pci.c
-@@ -228,8 +228,8 @@ static int pci_ampci_write_config(struct pci_bus *bus, unsigned int devfn,
- }
- 
- static struct pci_ops pci_direct_ampci = {
--	pci_ampci_read_config,
--	pci_ampci_write_config,
-+	.read = pci_ampci_read_config,
-+	.write = pci_ampci_write_config,
- };
- 
- /*
+I'm reading ACPI 5.1 ATM and (on page 316) it only says about the range length
+being in 256 byte blocks.
+
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  drivers/acpi/resource.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+> index abe3a29ad802..f4aeef22a9d8 100644
+> --- a/drivers/acpi/resource.c
+> +++ b/drivers/acpi/resource.c
+> @@ -90,8 +90,8 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+>  	switch (ares->type) {
+>  	case ACPI_RESOURCE_TYPE_MEMORY24:
+>  		memory24 = &ares->data.memory24;
+> -		acpi_dev_get_memresource(res, memory24->minimum,
+> -					 memory24->address_length,
+> +		acpi_dev_get_memresource(res, memory24->minimum << 8,
+> +					 memory24->address_length << 8,
+>  					 memory24->write_protect);
+>  		break;
+>  	case ACPI_RESOURCE_TYPE_MEMORY32:
+> 
+
 -- 
-2.1.0
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
