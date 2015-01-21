@@ -1,89 +1,77 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Jamet, Michael" <michael.jamet@intel.com>
-To: Andreas Noever <andreas.noever@gmail.com>
-CC: Andy Shevchenko <andy.shevchenko@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Levy, Amir (Jer)" <amir.jer.levy@intel.com>,
-	"Alloun, Dan" <dan.alloun@intel.com>,
-	Rafael Wysocki <rjw@rjwysocki.net>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: RE: [PATCH] pci: support Thunderbolt requirements for I/O resources.
-Date: Sun, 18 Jan 2015 14:16:26 +0000
-Message-ID: <BC567D27D6B7384F84318942321624DE269180F9@hasmsx109.ger.corp.intel.com>
-References: <1415847123-15558-1-git-send-email-michael.jamet@intel.com>
- <CAErSpo7Z5x=U3vSnxrFpwYUDrUrnrrBCe1F9_GQNYqWWQFWNpQ@mail.gmail.com>
- <CAHp75VcZ0XjcFxjrSgr5-XnWZZa-eZfPH_Fa1Hzb=f+qtE3z9w@mail.gmail.com>
- <CAMxnaaXOa_GAFwK+tUrO8DBjENqdd9uaQHKqEMm+i4754Ch3gQ@mail.gmail.com>
- <BC567D27D6B7384F84318942321624DE16179F2A@hasmsx109.ger.corp.intel.com>
- <CAMxnaaV41H-bzw2kp=HXd0aicRJbtNJuNE4aPf=EvQPMKiPQ6g@mail.gmail.com>
-In-Reply-To: <CAMxnaaV41H-bzw2kp=HXd0aicRJbtNJuNE4aPf=EvQPMKiPQ6g@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:41110 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750736AbbAUFgZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 21 Jan 2015 00:36:25 -0500
+Message-ID: <54BF3AD5.4070600@linux.intel.com>
+Date: Wed, 21 Jan 2015 13:36:21 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [RFC Patch 14/19] ACPI: Translate resource into master side address
+ for bridge window resources
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-15-git-send-email-jiang.liu@linux.intel.com> <2697984.BuF6Nq9EvE@vostro.rjw.lan>
+In-Reply-To: <2697984.BuF6Nq9EvE@vostro.rjw.lan>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBBbmRyZWFzIE5vZXZlciBbbWFp
-bHRvOmFuZHJlYXMubm9ldmVyQGdtYWlsLmNvbV0NCj4gU2VudDogVHVlc2RheSwgTm92ZW1iZXIg
-MTgsIDIwMTQgMTc6NDgNCj4gVG86IEphbWV0LCBNaWNoYWVsDQo+IENjOiBBbmR5IFNoZXZjaGVu
-a287IEJqb3JuIEhlbGdhYXM7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LQ0KPiBr
-ZXJuZWxAdmdlci5rZXJuZWwub3JnOyBMZXZ5LCBBbWlyIChKZXIpOyBBbGxvdW4sIERhbjsgUmFm
-YWVsIFd5c29ja2kNCj4gU3ViamVjdDogUmU6IFtQQVRDSF0gcGNpOiBzdXBwb3J0IFRodW5kZXJi
-b2x0IHJlcXVpcmVtZW50cyBmb3IgSS9PIHJlc291cmNlcy4NCj4gDQo+IE9uIFR1ZSwgTm92IDE4
-LCAyMDE0IGF0IDk6MjAgQU0sIEphbWV0LCBNaWNoYWVsIDxtaWNoYWVsLmphbWV0QGludGVsLmNv
-bT4NCj4gd3JvdGU6DQo+ID4+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4+IEZyb206
-IEFuZHJlYXMgTm9ldmVyIFttYWlsdG86YW5kcmVhcy5ub2V2ZXJAZ21haWwuY29tXQ0KPiA+PiBT
-ZW50OiBXZWRuZXNkYXksIE5vdmVtYmVyIDEyLCAyMDE0IDIyOjE5DQo+ID4+IFRvOiBBbmR5IFNo
-ZXZjaGVua28NCj4gPj4gQ2M6IEJqb3JuIEhlbGdhYXM7IEphbWV0LCBNaWNoYWVsOyBsaW51eC1w
-Y2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC0NCj4gPj4ga2VybmVsQHZnZXIua2VybmVsLm9yZzsg
-TGV2eSwgQW1pciAoSmVyKTsgQWxsb3VuLCBEYW47IFJhZmFlbCBXeXNvY2tpDQo+ID4+IFN1Ympl
-Y3Q6IFJlOiBbUEFUQ0hdIHBjaTogc3VwcG9ydCBUaHVuZGVyYm9sdCByZXF1aXJlbWVudHMgZm9y
-IEkvTw0KPiA+PiByZXNvdXJjZXMuDQo+ID4+DQo+ID4+IE9uIFdlZCwgTm92IDEyLCAyMDE0IGF0
-IDc6MzAgUE0sIEFuZHkgU2hldmNoZW5rbw0KPiA+PiA8YW5keS5zaGV2Y2hlbmtvQGdtYWlsLmNv
-bT4gd3JvdGU6DQo+ID4+ID4gT24gV2VkLCBOb3YgMTIsIDIwMTQgYXQgNzoyOSBQTSwgQmpvcm4g
-SGVsZ2Fhcw0KPiA+PiA+IDxiaGVsZ2Fhc0Bnb29nbGUuY29tPg0KPiA+PiB3cm90ZToNCj4gPj4g
-Pg0KPiA+PiA+IFtdDQo+ID4+ID4NCj4gPj4gPj4+IFRvIHByZXZlbnQgdGhpcywgd2UgZGV0ZWN0
-IGEgY2hhaW4gY29udGFpbnMgYSBUaHVuZGVyYm9sdCBkZXZpY2UNCj4gPj4gPj4+IGJ5IGNoZWNr
-aW5nIHRoZSBUaHVuZGVyYm9sdCBQQ0kgZGV2aWNlIGlkLg0KPiA+PiA+Pg0KPiA+PiA+PiBJJ20g
-cmVhbGx5IG5vdCBoYXBweSBhYm91dCBjaGVja2luZyBhIGxpc3Qgb2YgZGV2aWNlIElEcyB0bw0K
-PiA+PiA+PiBpZGVudGlmeSBUaHVuZGVyYm9sdCBkZXZpY2VzLiAgU3VyZWx5IHRoZXJlJ3MgYSBi
-ZXR0ZXIgd2F5LA0KPiA+PiA+PiBiZWNhdXNlIGEgbGlzdCBsaWtlIHRoaXMgaGFzIHRvIGJlIHVw
-ZGF0ZWQgcmVndWxhcmx5Lg0KPiA+PiA+DQo+ID4+ID4gSSByZWNlbnRseSBwcm9wb3NlZCBpbnRl
-cm5hbGx5IHRvIHVzZSBxdWlya3MgKHBjaV9maXh1cF9lYXJseSkgZm9yDQo+ID4+ID4gdGhhdCwg
-YnV0IGFwcGFyZW50bHkgTWljaGFlbCBkaWRuJ3QgaGF2ZSB0aW1lIHRvIGFuc3dlci4gSXQgbWln
-aHQNCj4gPj4gPiBiZSBoZSBjYW4ganVzdCBjb21tZW50IGhlcmUgc2luY2UgdGhlIHBhdGNoIGFs
-cmVhZHkgcHVibGljLg0KPiA+Pg0KPiA+PiBJbiBhbnkgY2FzZTogdGhpcyB3aWxsIGludGVyZmVy
-ZSB3aXRoIHRodW5kZXJib2x0IGhvdHBsdWcgb24gQXBwbGUNCj4gPj4gc3lzdGVtcywgd2hlcmUg
-d2UgZG8gbm90IGhhdmUgQklPUyBzdXBwb3J0IGFuZCBoYXZlIHRvIGhhbmRsZSBob3RwbHVnDQo+
-ID4+IGV2ZW50cyBhbmQgYXNzaWduIHJlc291cmNlcyBvdXJzZWx2ZXMuIFNvIHBsZWFzZSBhZGQg
-YSBETUkgY2hlY2sgZm9yDQo+ID4+IEFwcGxlICh0aGUgcmV2ZXJzZSBvZiB3aGF0IHdlIGRvIGlu
-DQo+ID4+IGh0dHA6Ly9seHIuZnJlZS0NCj4gPj4gZWxlY3Ryb25zLmNvbS9zb3VyY2UvZHJpdmVy
-cy90aHVuZGVyYm9sdC9uaGkuYz92PTMuMTcjTDY2NA0KPiA+PiApLg0KPiA+Pg0KPiA+PiBUaGFu
-a3MsDQo+ID4+IEFuZHJlYXMNCj4gPg0KPiA+IFRoaXMgaXMgY29ycmVjdCB0aGF0IHRoZSBob3Rw
-bHVnIGhhbmRsaW5nIG1lY2hhbmlzbSBhbmQgaW50ZXJhY3Rpb24gd2l0aA0KPiBCSU9TIGlzIGRp
-ZmZlcmVudC4NCj4gPiBIb3dldmVyLCB0aGlzIHBhdGNoIGFsc28gYXBwbGllcyBmb3IgYW55IGNh
-c2UsIHNpbmNlIHRoZSBJL08gc3BhY2UgaXMNCj4gPiBsaW1pdGVkIGFuZCBuZWVkIHRvIGJlIHBy
-ZXNlcnZlZCwgc28gd2UgbXVzdCBwcmV2ZW50IGFsbG9jYXRpb24gb2YgSS9PDQo+ID4gcmVzb3Vy
-Y2VzIGZyb20gdGhlIGRldmljZXMgYW5kIGF2b2lkaW5nIGV4aGF1c3Rpb24gd2hpbGUgY2hhaW5p
-bmcgdGhlbS4NCj4gDQo+IE5vdyBJIGFtIHNsaWdodGx5IGNvbmZ1c2VkLiBEb2VzIHRoZSBCSU9T
-IChvbiBub24gQXBwbGUgaGFyZHdhcmUpIGxlYXZlIEkvTw0KPiByZXNvdXJjZXMgYWx3YXlzIHVu
-YXNzaWduZWQ/IFlvdXIgZmlyc3QgcG9zdCBzZWVtZWQgdG8gaW1wbHkgdGhhdCBpdCBkb2VzDQo+
-IGFzc2lnbiBzb21lIGFuZCB0aGF0IHdlIHNob3VsZCBub3QgaW50ZXJmZXJlLiBJbiB0aGF0IGNh
-c2Ugd2Ugd291bGQgaGF2ZSB0bw0KPiBhc3NpZ24gdGhlbSBvbiBBcHBsZSBzeXN0ZW1zIG91cnNl
-bHZlcy4gT24gdGhlIG90aGVyIGhhbmQgaWYgbm8gVEIgZGV2aWNlIHVzZXMNCj4gSS9PIHJlc291
-cmNlcyBhbmQgdGhlIEJJT1MgbmV2ZXIgYXNzaWducyB0aGVtLCB0aGVuIHdoeSBkbyBkZXZpY2Vz
-IGZhaWwgaWYgd2UNCj4gZXhoYXVzdCB0aGVtPw0KPiANCj4gQW5kcmVhcw0KDQpDb3JyZWN0LiBU
-aGUgQklPUyBtYXkgcGxheSBhIHJvbGUgaW4gYWxsb2NhdGlvbiBvZiBtZW1vcnkgYW5kIEkvTyAN
-CnJlc291cmNlcyBidXQgbW9zdCBvZiB0aGUgY2FzZSB3aWxsIGxlYXZlIHRoZSBJL08gIHJlc291
-cmNlcyB1bmFzc2lnbmVkLg0KU29tZSBsZWdhY3kgVGh1bmRlcmJvbHQgZGV2aWNlcyBhcmUgZGVz
-aWduZWQgd2l0aCBJL08gQkFScywgc28gdGhleSANCm5lZWQgdG8gYmUgaGFuZGxlZCB3aXRoIGNh
-cmUgYXMgd3JpdHRlbiBpbiB0aGUgb3RoZXIgZW1haWwgdGhyZWFkIHRvIEJqb3JuLg0KDQovTWlj
-aGFlbA0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tCkludGVsIElzcmFlbCAoNzQpIExpbWl0ZWQKClRoaXMgZS1tYWls
-IGFuZCBhbnkgYXR0YWNobWVudHMgbWF5IGNvbnRhaW4gY29uZmlkZW50aWFsIG1hdGVyaWFsIGZv
-cgp0aGUgc29sZSB1c2Ugb2YgdGhlIGludGVuZGVkIHJlY2lwaWVudChzKS4gQW55IHJldmlldyBv
-ciBkaXN0cmlidXRpb24KYnkgb3RoZXJzIGlzIHN0cmljdGx5IHByb2hpYml0ZWQuIElmIHlvdSBh
-cmUgbm90IHRoZSBpbnRlbmRlZApyZWNpcGllbnQsIHBsZWFzZSBjb250YWN0IHRoZSBzZW5kZXIg
-YW5kIGRlbGV0ZSBhbGwgY29waWVzLgo=
-
+On 2015/1/21 8:50, Rafael J. Wysocki wrote:
+> On Thursday, January 08, 2015 10:33:01 AM Jiang Liu wrote:
+>> Add translation_offset into the result address for bridge window
+>> resources to form the master side address.
+>>
+>> Currently acpi_dev_resource_{ext_}address_space() are only used for
+>> devices instead of bridges, so it won't break current users. Later
+>> it will be used to support PCI host bridge drivers.
+>>
+>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>> ---
+>>  drivers/acpi/resource.c |   14 ++++++++++++++
+>>  1 file changed, 14 insertions(+)
+>>
+>> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+>> index d3aa56674bd4..16d334a1ee25 100644
+>> --- a/drivers/acpi/resource.c
+>> +++ b/drivers/acpi/resource.c
+>> @@ -203,6 +203,20 @@ static bool acpi_decode_space(struct resource *res, resource_size_t *offset,
+>>  	res->start = addr->minimum;
+>>  	res->end = addr->maximum;
+>>  
+>> +	/*
+>> +	 * For bridges that translate addresses across the bridge,
+>> +	 * translation_offset is the offset that must be added to the
+>> +	 * address on the secondary side to obtain the address on the
+>> +	 * primary side. Non-bridge devices must list 0 for all Address
+>> +	 * Translation offset bits.
+>> +	 */
+>> +	if (base->producer_consumer == ACPI_PRODUCER) {
+> 
+> OK, so the assumption is that this check is never true in the current code, right?
+Yes.
+> 
+>> +		res->start += addr->translation_offset;
+>> +		res->end += addr->translation_offset;
+>> +	} else if (addr->translation_offset) {
+> 
+> And won't this break anything even if so?
+I'm trying to follow the spec, how about giving a warning here
+instead of failure?
+Regards!
+Gerry
+> 
+>> +		return false;
+>> +	}
+>> +
+>>  	switch(base->resource_type) {
+>>  	case ACPI_MEMORY_RANGE:
+>>  		acpi_dev_memresource_flags(res, len, wp);
+>>
+> 
