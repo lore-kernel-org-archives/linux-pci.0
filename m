@@ -1,101 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:49890 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751326AbbA0L1X convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Jan 2015 06:27:23 -0500
-Message-ID: <54C77616.80301@arm.com>
-Date: Tue, 27 Jan 2015 11:27:18 +0000
-From: Robin Murphy <robin.murphy@arm.com>
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:44914 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753131AbbAUPtj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Jan 2015 10:49:39 -0500
+Received: by mail-ob0-f173.google.com with SMTP id vb8so14331506obc.4
+        for <linux-pci@vger.kernel.org>; Wed, 21 Jan 2015 07:49:39 -0800 (PST)
 MIME-Version: 1.0
-To: Murali Karicheri <m-karicheri2@ti.com>,
+In-Reply-To: <20141217140131.607a1ac7@lxorguk.ukuu.org.uk>
+References: <1418812486-12394-1-git-send-email-gabriel.fernandez@linaro.org>
+	<1418812486-12394-6-git-send-email-gabriel.fernandez@linaro.org>
+	<20141217140131.607a1ac7@lxorguk.ukuu.org.uk>
+Date: Wed, 21 Jan 2015 16:49:39 +0100
+Message-ID: <CAG374jD3Y_y1Ugt0Y7_j9kz66yUCx8PPNLkkpWBdpVPMxnoC8w@mail.gmail.com>
+Subject: Re: [PATCH 5/5] PCI: st: disable IO support
+From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Cc: Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Magnus Damm <damm@opensource.se>,
+	Will Deacon <will.deacon@arm.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Srikanth Thokala <sthokal@xilinx.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-CC: Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v4 3/6] of: fix size when dma-range is not used
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com> <1422052359-12384-4-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1422052359-12384-4-git-send-email-m-karicheri2@ti.com>
-Content-Type: text/plain; charset=WINDOWS-1252; format=flowed
+	"kernel@stlinux.com" <kernel@stlinux.com>,
+	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Murali,
+Hi,
 
-On 23/01/15 22:32, Murali Karicheri wrote:
-> Fix the dma-range size when the DT attribute is missing. i.e  set size to
-> dev->coherent_dma_mask + 1 instead of dev->coherent_dma_mask. To detect
-> overflow when mask is set to max of u64, add a check, log error and return.
-> Some platform use mask format for size in DTS. So add a work around to
-> catch this and fix.
+Yes, we don't really care about this corner case.
+Thanks for your reviewing.
+
+BR
+
+Gabriel
+
+On 17 December 2014 at 15:01, One Thousand Gnomes
+<gnomes@lxorguk.ukuu.org.uk> wrote:
+> On Wed, 17 Dec 2014 11:34:46 +0100
+> Gabriel FERNANDEZ <gabriel.fernandez@st.com> wrote:
 >
-> Cc: Joerg Roedel <joro@8bytes.org>
-> Cc: Grant Likely <grant.likely@linaro.org>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Russell King <linux@arm.linux.org.uk>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>> sti SoCs PCIe IPs are built around DesignWare IP Core.
+>> But in these SoCs, PCIe IP doesn't support IO.
+>> By default, when no IO space is provided, a default one is assigned.
+>>
+>> Add an empty IO resource to the bus, and disable IO by default.
 >
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-> ---
->   drivers/of/device.c |   14 +++++++++++++-
->   1 file changed, 13 insertions(+), 1 deletion(-)
+> As a point of PCI pedantry I don't think this is quite sufficient. PCI
+> has a weird corner case where I/O resources are implied rather than
+> allocated.
 >
-> diff --git a/drivers/of/device.c b/drivers/of/device.c
-> index 2de320d..0a5ff54 100644
-> --- a/drivers/of/device.c
-> +++ b/drivers/of/device.c
-> @@ -105,12 +105,24 @@ void of_dma_configure(struct device *dev, struct device_node *np)
->   	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
->   	if (ret < 0) {
->   		dma_addr = offset = 0;
-> -		size = dev->coherent_dma_mask;
-> +		size = dev->coherent_dma_mask + 1;
->   	} else {
->   		offset = PFN_DOWN(paddr - dma_addr);
-> +		/*
-> +		 * Add a work around to treat the size as mask + 1 in case
-> +		 * it is defined in DT as a mask.
-> +		 */
-> +		if (size & 1)
-> +			size = size + 1;
->   		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
->   	}
+> For IDE/SATA you may need to something like
 >
-> +	/* if size is 0, we have an overflow of u64 */
-> +	if (!size) {
-> +		dev_err(dev, "invalid size\n");
-> +		return;
-> +	}
-> +
-
-This seems potentially fragile to dodgy DTs given that we might also be 
-using size to make a mask later. Would it make sense to double-up a 
-sanity check as mask-format detection? Something like:
-
-if is_power_of_2(size)
-	// use size
-else if is_power_of_2(size + 1)
-	// use size + 1
-else
-	// cry
-
-
-Robin.
-
->   	dev->dma_pfn_offset = offset;
+>         if (class == PCI_CLASS_STORAGE_IDE) {
+>                 u8 progif;
+>                 pci_read_config_byte(dev, PCI_CLASS_PROG, &progif);
+>                 progif |= 5;
+>                 pci_write_config_byte(dev, PCI_CLASS_PROG, &progif);
+>         }
 >
->   	coherent = of_dma_is_coherent(np);
+> so that any adapter is kicked out of legacy mode and doesn't get implied
+> I/O resources and interrupts. I don't know if that case matters for your
+> usage.
 >
-
-
+>
