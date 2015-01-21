@@ -1,81 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:43772 "EHLO
-	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752610AbbAURJa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Jan 2015 12:09:30 -0500
-Received: by mail-oi0-f50.google.com with SMTP id h136so4860635oig.9
-        for <linux-pci@vger.kernel.org>; Wed, 21 Jan 2015 09:09:30 -0800 (PST)
-Date: Wed, 21 Jan 2015 11:09:27 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Rajat Jain <rajatxjain@gmail.com>
-Subject: Re: [PATCH] pci: Use hot-plug capable for testing presence on
-Message-ID: <20150121170927.GA13072@google.com>
-References: <1419275223-14602-1-git-send-email-keith.busch@intel.com>
- <20150116203330.GJ29776@google.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:12961 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753988AbbAUCch (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 21:32:37 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v2 14/30] PCI/x86: Refine pci_acpi_scan_root() with generic pci_host_bridge
+Date: Wed, 21 Jan 2015 08:30:09 +0800
+Message-ID: <1421800225-26230-15-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
+References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150116203330.GJ29776@google.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 16, 2015 at 02:33:30PM -0600, Bjorn Helgaas wrote:
-> [+cc Rajat]
-> 
-> On Mon, Dec 22, 2014 at 12:07:03PM -0700, Keith Busch wrote:
-> > The PCI-e Base specifically says Hot-Plug Surprise capability is for
-> > removal only, but pciehp checked this to determine if it should handle a
-> > slot event on device add. Lots of platform's pcie slots don't advertise
-> > support for surprise removal, but are perfectly capable of handling
-> > hot-add, so checking surprise removal is not appropriate.
-> > 
-> > This patch checks the Hot-Plug Capable bit in the slot capabilities to
-> > determine if the detected presence on is a reliable event instead of
-> > Hot-Plug Surprise.
-> > 
-> > Signed-off-by: Keith Busch <keith.busch@intel.com>
-> 
-> This seems reasonable to me, and I applied it to pci/hotplug for v3.20.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Thomas Gleixner <tglx@linutronix.de>
+CC: x86@kernel.org
+---
+ arch/x86/pci/acpi.c |   36 ++++++++++++++++++++----------------
+ 1 files changed, 20 insertions(+), 16 deletions(-)
 
-After our follow-up discussion, I replaced this patch with the following.
-If anybody objects, let me know.
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 8edea63..f9a55c2 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -467,6 +467,18 @@ static void probe_pci_root_info(struct pci_root_info *info,
+ 				info);
+ }
+ 
++static int pci_host_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	struct pci_sysdata *sd = dev_get_drvdata(&bridge->dev);
++
++	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
++	return 0;
++}
++
++static struct pci_host_bridge_ops phb_ops = {
++	.phb_prepare = pci_host_bridge_prepare,
++};
++
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+ 	struct acpi_device *device = root->device;
+@@ -475,6 +487,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	int busnum = root->secondary.start;
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *bus;
++	struct pci_host_bridge *host = NULL;
+ 	struct pci_sysdata *sd;
+ 	int node;
+ 
+@@ -537,14 +550,13 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 
+ 		if (!setup_mcfg_map(info, domain, (u8)root->secondary.start,
+ 					(u8)root->secondary.end, root->mcfg_addr)) 
+-			bus = pci_create_root_bus(NULL, PCI_DOMBUS(domain, busnum), 
+-					&pci_root_ops, sd, &resources);
+-
+-		if (bus) {
+-			pci_scan_child_bus(bus);
+-			pci_set_host_bridge_release(
+-				to_pci_host_bridge(bus->bridge),
+-				release_pci_root_info, info);
++			host = pci_scan_root_bridge(NULL, PCI_DOMBUS(domain, busnum),
++					&pci_root_ops, sd, &resources, &phb_ops);
++
++		if (host) {
++			bus = host->bus;
++			pci_set_host_bridge_release(host, release_pci_root_info,
++					info);
+ 		} else {
+ 			pci_free_resource_list(&resources);
+ 			__release_pci_root_info(info);
+@@ -566,14 +578,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	return bus;
+ }
+ 
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+-{
+-	struct pci_sysdata *sd = bridge->bus->sysdata;
+-
+-	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
+-	return 0;
+-}
+-
+ int __init pci_acpi_init(void)
+ {
+ 	struct pci_dev *dev = NULL;
+-- 
+1.7.1
 
-commit dc0c25c0ee9f92ba1872fdda9c2a0014611cf722
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Wed Jan 21 10:28:07 2015 -0600
-
-    PCI: pciehp: Handle surprise add even if surprise removal isn't supported
-    
-    The PCIe spec (r3.0, sec 7.8.9) says Hot-Plug Surprise indicates support
-    for surprise *removal*, but pciehp checked this to determine if it should
-    handle presence detect interrupts for device *addition*.
-    
-    Allow surprise device addition even if the slot doesn't advertise support
-    for surprise removal.
-    
-    Keith has a platform with slots for front-loading SFF devices.  The slots
-    do not have attention buttons and do not support surprise removal, but they
-    do have presence detect.  In that case, we still want to use presence
-    detect for device addition.
-    
-    Keith's original patch handled surprise insertions only if Hot-Plug Capable
-    is set.  I think that test is superfluous because pciehp only claims slots
-    that advertise Hot-Plug Capable (see get_port_device_capability()).
-    
-    Link: http://lkml.kernel.org/r/1419275223-14602-1-git-send-email-keith.busch@intel.com
-    Based-on-patch-by: Keith Busch <keith.busch@intel.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index ff32e85e1de6..f052e951b23e 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -532,8 +532,6 @@ static void interrupt_event_handler(struct work_struct *work)
- 		pciehp_green_led_off(p_slot);
- 		break;
- 	case INT_PRESENCE_ON:
--		if (!HP_SUPR_RM(ctrl))
--			break;
- 		ctrl_dbg(ctrl, "Surprise Insertion\n");
- 		handle_surprise_event(p_slot);
- 		break;
