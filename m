@@ -1,98 +1,129 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:62291 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751400AbbAMVBT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 13 Jan 2015 16:01:19 -0500
-Message-ID: <54B5879A.9020902@gmx.de>
-Date: Tue, 13 Jan 2015 22:01:14 +0100
-From: Helge Deller <deller@gmx.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <54BF4911.7030906@linux.intel.com>
+Date: Wed, 21 Jan 2015 14:37:05 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	linux-parisc@vger.kernel.org
-Subject: Re: [PATCH 08/10] PCI, parisc: clip firmware assigned resource under
- parent bridge's
-References: <1421090600-9750-1-git-send-email-yinghai@kernel.org> <1421090600-9750-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1421090600-9750-9-git-send-email-yinghai@kernel.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Vivek Goyal <vgoyal@redhat.com>,
+	Thierry Reding <treding@nvidia.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Mike Travis <travis@sgi.com>, Tony Luck <tony.luck@intel.com>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: Re: [RFC Patch 17/19] resources: Move struct resource_list_entry
+ from ACPI into resource core
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-18-git-send-email-jiang.liu@linux.intel.com> <3428063.tN1BxOoXSN@vostro.rjw.lan>
+In-Reply-To: <3428063.tN1BxOoXSN@vostro.rjw.lan>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12.01.2015 20:23, Yinghai Lu wrote:
-> Some bios put range that is not fully coverred by root bus resources.
-> Try to clip them and update them in pci bridge bars.
->
-> We'd like to fix other arches instead of just x86.
->
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491
-> Reported-by: Marek Kordik <kordikmarek@gmail.com>
-> Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources")
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: "James E.J. Bottomley" <jejb@parisc-linux.org>
-> Cc: Helge Deller <deller@gmx.de>
-> Cc: linux-parisc@vger.kernel.org
+On 2015/1/21 9:10, Rafael J. Wysocki wrote:
+> On Thursday, January 08, 2015 10:33:04 AM Jiang Liu wrote:
+<snit>
+>> diff --git a/kernel/resource.c b/kernel/resource.c
+>> index 0bcebffc4e77..414183809383 100644
+>> --- a/kernel/resource.c
+>> +++ b/kernel/resource.c
+>> @@ -1529,6 +1529,54 @@ int iomem_is_exclusive(u64 addr)
+>>  	return err;
+>>  }
+>>  
+>> +struct resource_list_entry *resource_list_alloc(struct resource *res,
+>> +						size_t extra_size)
+> 
+> What about create_resource_list_entry()?  Less confusing surely.
+Sure, I will rename it as resource_list_create_entry().
 
-I tested it on the parisc arch - everything OK.
+> 
+>> +{
+>> +	struct resource_list_entry *entry;
+>> +
+>> +	entry = kzalloc(sizeof(*entry) + extra_size, GFP_KERNEL);
+>> +	if (entry) {
+>> +		INIT_LIST_HEAD(&entry->node);
+>> +		entry->res = res ? res : &entry->__res;
+>> +	}
+>> +
+>> +	return entry;
+>> +}
+>> +EXPORT_SYMBOL(resource_list_alloc);
+>> +
+>> +void resource_list_free(struct resource_list_entry *entry)
+>> +{
+>> +	kfree(entry);
+>> +}
+>> +EXPORT_SYMBOL(resource_list_free);
+> 
+> Well, I'm not sure I like this.  The name suggests that it would free the
+> entire list and what's wrong with using kfree() directly on "entry" anyway?
+I just want to make interface symmetric. We may also support some type
+of callback when freeing resources in future.
 
-Acked-by: Helge Deller <deller@gmx.de>
+> 
+>> +
+>> +void resource_list_insert(struct list_head *head,
+>> +			  struct resource_list_entry *entry, bool tail)
+> 
+> I would call this resource_list_add() if anything.
+> 
+> Also it may be better to have two helpers, one for "add" and one for "add_tail"
+> (and perhaps define them as static inline?).
+We can't use inline functions here because that needs pulling list.h
+into ioport.h, then causing building issues to header inclusion order.
 
-Thanks!
-Helge
+> 
+> And why change the ordering between "head" and "entry".  That's alomost
+> guaranteed to confuse people.
+My fault, will change in next version.
+> 
+>> +{
+>> +	if (tail)
+>> +		list_add_tail(&entry->node, head);
+>> +	else
+>> +		list_add(&entry->node, head);
+>> +}
+>> +EXPORT_SYMBOL(resource_list_insert);
+>> +
+>> +void resource_list_delete(struct resource_list_entry *entry)
+>> +{
+>> +	list_del(&entry->node);
+>> +}
+>> +EXPORT_SYMBOL(resource_list_delete);
+> 
+> Couldn't this be a static inline)?
+Inline will cause header file inclusion order issue:(
 
+> 
+> Or maybe we can combine the "list_del" with "kfree" in one function?
+There are callers which need separating list_del from kfree,
+so exported two interfaces here. Will add another helper interface
+resource_list_destroy_entry().
 
-> ---
->   drivers/parisc/lba_pci.c | 26 ++++++++++++++++++++++++--
->   1 file changed, 24 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
-> index 37e71ff..e6ab352 100644
-> --- a/drivers/parisc/lba_pci.c
-> +++ b/drivers/parisc/lba_pci.c
-> @@ -692,11 +692,25 @@ lba_fixup_bus(struct pci_bus *bus)
->   	*/
->   	if (bus->parent) {
->   		int i;
-> +		bool changed = false;
-> +
-> +		dev = bus->self;
->   		/* PCI-PCI Bridge */
->   		pci_read_bridge_bases(bus);
->   		for (i = PCI_BRIDGE_RESOURCES; i < PCI_NUM_RESOURCES; i++) {
-> -			pci_claim_resource(bus->self, i);
-> +			struct resource *res = &dev->resource[i];
-> +
-> +			if (pci_claim_resource(dev, i) >= 0)
-> +				continue;
-> +
-> +			if (pci_bus_clip_resource(dev, res)) {
-> +				changed = true;
-> +				if (pci_claim_resource(dev, i) >= 0)
-> +					continue;
-> +			}
->   		}
-> +		if (changed)
-> +			pci_setup_bridge(bus);
->   	} else {
->   		/* Host-PCI Bridge */
->   		int err;
-> @@ -776,7 +790,15 @@ lba_fixup_bus(struct pci_bus *bus)
->   			** that share expansion ROMs (think quad tulip), but
->   			** isn't harmful.
->   			*/
-> -			pci_claim_resource(dev, i);
-> +			if (pci_claim_resource(dev, i) >= 0)
-> +				continue;
-> +
-> +			/* try again with clip */
-> +			if (i != PCI_ROM_RESOURCE &&
-> +			    pci_bus_clip_resource(dev, res)) {
-> +				pci_update_resource(dev, i);
-> +				pci_claim_resource(dev, i);
-> +			}
->   		}
->
->   #ifdef FBB_SUPPORT
->
-
+Regards!
+Gerry
+> 
+>> +
+>> +void resource_list_free_list(struct list_head *head)
+>> +{
+>> +	struct resource_list_entry *entry, *tmp;
+>> +
+>> +	list_for_each_entry_safe(entry, tmp, head, node) {
+>> +		list_del(&entry->node);
+>> +		resource_list_free(entry);
+>> +	}
+>> +}
+>> +EXPORT_SYMBOL(resource_list_free_list);
+>> +
+>>  static int __init strict_iomem(char *str)
+>>  {
+>>  	if (strstr(str, "relaxed"))
+>>
+> 
