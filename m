@@ -1,239 +1,159 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:48430 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750956AbbAWWdr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 23 Jan 2015 17:33:47 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <iommu@lists.linux-foundation.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH v4 2/6] of: move of_dma_configure() to device.c to help re-use
-Date: Fri, 23 Jan 2015 17:32:35 -0500
-Message-ID: <1422052359-12384-3-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:39175 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752135AbbAVWUX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Jan 2015 17:20:23 -0500
+Received: by mail-ob0-f173.google.com with SMTP id vb8so2050849obc.4
+        for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2015 14:20:23 -0800 (PST)
+Date: Thu, 22 Jan 2015 16:20:16 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Paulo Fortuna Carvalho <pricardofc@gmail.com>
+Cc: linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: Hot add a PCIe device driver upon hotplug event
+Message-ID: <20150122222016.GF13072@google.com>
+References: <CAH9N0t9KvhzmZDgD8PD5VBPR-pPhuE8MmBgK9RY8+ZtKyz++pQ@mail.gmail.com>
+ <CAErSpo48mPENuHpES1Q73ep+NKG8x2Zgb+g71do02y7vufbtfQ@mail.gmail.com>
+ <CAH9N0t8s+kcG_Qok0wpoDz9jzwvPk_QmBK_p-qbACZJjrr+iVQ@mail.gmail.com>
+ <CAErSpo7NK6S8Dk3-FYFV=AVPR8cLRzmAWrBNQ2rke0BRADxAKw@mail.gmail.com>
+ <CAH9N0t-+gog9wNFo7hqhzrWuttrRyf5HjjHciFrDGz1rZUiUfw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAH9N0t-+gog9wNFo7hqhzrWuttrRyf5HjjHciFrDGz1rZUiUfw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move of_dma_configure() to device.c so that same function can be re-used
-for PCI devices to obtain DMA configuration from DT. Also add a second
-argument so that for PCI, DT node of root bus host bridge can be used to
-obtain the DMA configuration for the slave PCI device.
+[+cc Greg]
 
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+It's better if you put your responses inline, e.g.,
+http://en.wikipedia.org/wiki/Posting_style#Interleaved_style .  That's the
+convention on Linux lists because it makes it easier for new participants
+to enter the discussion.
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
----
- drivers/of/device.c       |   59 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/of/platform.c     |   58 ++------------------------------------------
- include/linux/of_device.h |    2 ++
- 3 files changed, 63 insertions(+), 56 deletions(-)
+Also, some of your previous messages didn't make it to the mailing list,
+probably because they exceeded 100K; see
+http://vger.kernel.org/majordomo-info.html .
 
-diff --git a/drivers/of/device.c b/drivers/of/device.c
-index 46d6c75c..2de320d 100644
---- a/drivers/of/device.c
-+++ b/drivers/of/device.c
-@@ -2,6 +2,9 @@
- #include <linux/kernel.h>
- #include <linux/of.h>
- #include <linux/of_device.h>
-+#include <linux/of_address.h>
-+#include <linux/of_iommu.h>
-+#include <linux/dma-mapping.h>
- #include <linux/init.h>
- #include <linux/module.h>
- #include <linux/mod_devicetable.h>
-@@ -66,6 +69,62 @@ int of_device_add(struct platform_device *ofdev)
- 	return device_add(&ofdev->dev);
- }
- 
-+/**
-+ * of_dma_configure - Setup DMA configuration
-+ * @dev:	Device to apply DMA configuration
-+ * @np:		ptr to of node having dma configuration
-+ *
-+ * Try to get devices's DMA configuration from DT and update it
-+ * accordingly.
-+ *
-+ * In case if platform code need to use own special DMA configuration,it
-+ * can use Platform bus notifier and handle BUS_NOTIFY_ADD_DEVICE event
-+ * to fix up DMA configuration.
-+ */
-+void of_dma_configure(struct device *dev, struct device_node *np)
-+{
-+	u64 dma_addr, paddr, size;
-+	int ret;
-+	bool coherent;
-+	unsigned long offset;
-+	struct iommu_ops *iommu;
-+
-+	/*
-+	 * Set default dma-mask to 32 bit. Drivers are expected to setup
-+	 * the correct supported dma_mask.
-+	 */
-+	dev->coherent_dma_mask = DMA_BIT_MASK(32);
-+
-+	/*
-+	 * Set it to coherent_dma_mask by default if the architecture
-+	 * code has not set it.
-+	 */
-+	if (!dev->dma_mask)
-+		dev->dma_mask = &dev->coherent_dma_mask;
-+
-+	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
-+	if (ret < 0) {
-+		dma_addr = offset = 0;
-+		size = dev->coherent_dma_mask;
-+	} else {
-+		offset = PFN_DOWN(paddr - dma_addr);
-+		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
-+	}
-+
-+	dev->dma_pfn_offset = offset;
-+
-+	coherent = of_dma_is_coherent(np);
-+	dev_dbg(dev, "device is%sdma coherent\n",
-+		coherent ? " " : " not ");
-+
-+	iommu = of_iommu_configure(dev, np);
-+	dev_dbg(dev, "device is%sbehind an iommu\n",
-+		iommu ? " " : " not ");
-+
-+	arch_setup_dma_ops(dev, dma_addr, size, iommu, coherent);
-+}
-+EXPORT_SYMBOL_GPL(of_dma_configure);
-+
- int of_device_register(struct platform_device *pdev)
- {
- 	device_initialize(&pdev->dev);
-diff --git a/drivers/of/platform.c b/drivers/of/platform.c
-index 7675b79..6403501 100644
---- a/drivers/of/platform.c
-+++ b/drivers/of/platform.c
-@@ -19,7 +19,6 @@
- #include <linux/slab.h>
- #include <linux/of_address.h>
- #include <linux/of_device.h>
--#include <linux/of_iommu.h>
- #include <linux/of_irq.h>
- #include <linux/of_platform.h>
- #include <linux/platform_device.h>
-@@ -150,59 +149,6 @@ struct platform_device *of_device_alloc(struct device_node *np,
- }
- EXPORT_SYMBOL(of_device_alloc);
- 
--/**
-- * of_dma_configure - Setup DMA configuration
-- * @dev:	Device to apply DMA configuration
-- *
-- * Try to get devices's DMA configuration from DT and update it
-- * accordingly.
-- *
-- * In case if platform code need to use own special DMA configuration,it
-- * can use Platform bus notifier and handle BUS_NOTIFY_ADD_DEVICE event
-- * to fix up DMA configuration.
-- */
--static void of_dma_configure(struct device *dev)
--{
--	u64 dma_addr, paddr, size;
--	int ret;
--	bool coherent;
--	unsigned long offset;
--	struct iommu_ops *iommu;
--
--	/*
--	 * Set default dma-mask to 32 bit. Drivers are expected to setup
--	 * the correct supported dma_mask.
--	 */
--	dev->coherent_dma_mask = DMA_BIT_MASK(32);
--
--	/*
--	 * Set it to coherent_dma_mask by default if the architecture
--	 * code has not set it.
--	 */
--	if (!dev->dma_mask)
--		dev->dma_mask = &dev->coherent_dma_mask;
--
--	ret = of_dma_get_range(dev->of_node, &dma_addr, &paddr, &size);
--	if (ret < 0) {
--		dma_addr = offset = 0;
--		size = dev->coherent_dma_mask;
--	} else {
--		offset = PFN_DOWN(paddr - dma_addr);
--		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
--	}
--	dev->dma_pfn_offset = offset;
--
--	coherent = of_dma_is_coherent(dev->of_node);
--	dev_dbg(dev, "device is%sdma coherent\n",
--		coherent ? " " : " not ");
--
--	iommu = of_iommu_configure(dev, dev->of_node);
--	dev_dbg(dev, "device is%sbehind an iommu\n",
--		iommu ? " " : " not ");
--
--	arch_setup_dma_ops(dev, dma_addr, size, iommu, coherent);
--}
--
- static void of_dma_deconfigure(struct device *dev)
- {
- 	arch_teardown_dma_ops(dev);
-@@ -236,7 +182,7 @@ static struct platform_device *of_platform_device_create_pdata(
- 
- 	dev->dev.bus = &platform_bus_type;
- 	dev->dev.platform_data = platform_data;
--	of_dma_configure(&dev->dev);
-+	of_dma_configure(&dev->dev, dev->dev.of_node);
- 
- 	if (of_device_add(dev) != 0) {
- 		of_dma_deconfigure(&dev->dev);
-@@ -299,7 +245,7 @@ static struct amba_device *of_amba_device_create(struct device_node *node,
- 		dev_set_name(&dev->dev, "%s", bus_id);
- 	else
- 		of_device_make_bus_id(&dev->dev);
--	of_dma_configure(&dev->dev);
-+	of_dma_configure(&dev->dev, dev->dev.of_node);
- 
- 	/* Allow the HW Peripheral ID to be overridden */
- 	prop = of_get_property(node, "arm,primecell-periphid", NULL);
-diff --git a/include/linux/of_device.h b/include/linux/of_device.h
-index ef37021..c661496 100644
---- a/include/linux/of_device.h
-+++ b/include/linux/of_device.h
-@@ -53,6 +53,7 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
- 	return of_node_get(cpu_dev->of_node);
- }
- 
-+void of_dma_configure(struct device *dev, struct device_node *np);
- #else /* CONFIG_OF */
- 
- static inline int of_driver_match_device(struct device *dev,
-@@ -90,6 +91,7 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
- {
- 	return NULL;
- }
-+void of_dma_configure(struct device *dev, struct device_node *np) { }
- #endif /* CONFIG_OF */
- 
- #endif /* _LINUX_OF_DEVICE_H */
--- 
-1.7.9.5
+I extracted the dmesg information below from your "dmesg_output2.txt"
+attachment from Jan 13.
 
+On Thu, Jan 22, 2015 at 08:07:14PM +0000, Paulo Fortuna Carvalho wrote:
+> Hi,
+> Yes but i want that udev .rules file launches the script on "remove" ACTION.
+> The event that triggers the removal procedure is an ATCA card handle
+> switch. the corredponding hot-add event is caught by pciehp and sent to
+> udev that runs a rule which calls my script on "remove" ACTION.
+
+Let me summarize what I think you're trying to do.  Please correct me if I
+don't understand correctly.
+
+You're interested in device 0c:00.0: [1556:6014], which is here in the
+topology:
+
+  pci 0000:07:08.0: PCI bridge to [bus 0c]
+  pci 0000:0c:00.0: [1556:6014] type 0 class 0x001100
+
+You're looking for a way to run a script when a user expresses her intent
+to remove a card, but before the card is actually removed.
+
+Linux currently emits a KOBJ_REMOVE uevent when it tears down the internal
+device data structure.  You can use udev to do things when that occurs, but
+that's too late for what you want to do because the device is already
+unusable.
+
+07:08.0, the Downstream Port leading to 0c:00.0, contains a hotplug
+controller with several indicators and sensors:
+
+  pciehp 0000:07:08.0:pcie24:   Physical Slot Number : 8
+  pciehp 0000:07:08.0:pcie24:   Attention Button     : yes
+  pciehp 0000:07:08.0:pcie24:   Power Controller     : yes
+  pciehp 0000:07:08.0:pcie24:   MRL Sensor           : yes
+  pciehp 0000:07:08.0:pcie24:   Attention Indicator  : yes
+  pciehp 0000:07:08.0:pcie24:   Power Indicator      : yes
+  pciehp 0000:07:08.0:pcie24:   Hot-Plug Surprise    :  no
+  pciehp 0000:07:08.0:pcie24:   EMI Present          :  no
+  pciehp 0000:07:08.0:pcie24:   Command Completed    : yes
+
+It might be possible for Linux to emit other uevents, for example, when the
+Attention Button is pressed.  I don't know how such a uevent would fit into
+the udev framework.
+
+You're using an ATCA card handle to physically remove the device, and you
+mention a card handle switch that triggers the removal.  Is the card handle
+something like this:
+http://www.cbttechnology.com/resources/pdf/Datasheets/Sep2014/ATCA-Handles.pdf?
+
+Is the microswitch mentioned there wired up as the Attention Button?  If
+not, do you know how the state of the ATCA card handle switch is
+communicated to the OS?
+
+In your dmesg log, I see this:
+
+  pciehp 0000:07:08.0:pcie24: pcie_isr: intr_loc 8
+  pciehp 0000:07:08.0:pcie24: Presence/Notify input change
+  pciehp 0000:07:08.0:pcie24: Card not present on Slot(8)
+  pciehp 0000:07:08.0:pcie24: pcie_isr: intr_loc 8
+  pciehp 0000:07:08.0:pcie24: Presence/Notify input change
+  pciehp 0000:07:08.0:pcie24: Card present on Slot(8)
+
+That means we only saw Presence Detect Changed interrupts: one for card
+removal and another for card insertion.  We didn't see an Attention Button
+interrupt at all.
+
+You can look at the Slot Status directly with "lspci -vvs07:08.0".  If you
+do that while removing the device, e.g., run it while the handle is in
+position #1, again in position #2, and again in position #3, you should see
+whether there's any signal that could potentially be used to do what you
+need.
+
+>  On Jan 22, 2015 5:41 PM, "Bjorn Helgaas" <bhelgaas@google.com> wrote:
+> > On Thu, Jan 22, 2015 at 8:35 AM, Paulo Fortuna Carvalho
+> > <pricardofc@gmail.com> wrote:
+> > > Hello Bjorn,
+> > > I can add and remove an ATCA card with a PCIExpress endpoint.
+> > > UDEV device manager runs hotplug scripts ok and device files are created
+> > and
+> > > removed from system accdordingly.
+> > > Im trying now to run a script that on remove kills running applications
+> > > using a certain device before it is removed from system.
+> > > To do so I implement in my .rules file an entry regarding "remove" that
+> > > calls a script to perform that task.
+> > > My problem is that before script runs the device node is no longer there
+> > and
+> > > my system crashes.
+> > > Do you have any idea on how can run my script stopping the applciations
+> > > before device remove procedure occurs?
+> >
+> > If I understand correctly, you want to run a script while your device
+> > is still in the system, *before* it is removed.  I'm not familiar with
+> > the ATCA hotplug slot details.  What event would trigger the script to
+> > run?  Is there an attention button used to request card removal?  Is
+> > there a sysfs or similar software interface to request removal?
+> >
+> > > 2015-01-12 16:58 GMT+00:00 Bjorn Helgaas <bhelgaas@google.com>:
+> > >>
+> > >> On Mon, Jan 12, 2015 at 5:42 AM, Paulo Fortuna Carvalho
+> > >> <pricardofc@gmail.com> wrote:
+> > >> > Hello,
+> > >> > I want to automatically load/unload a PCIe device driver when a card
+> > >> > is inserted/removed from the system. I can see in the system logger
+> > >> > with dmesg that the interrupt event is captured and acknowledged by
+> > >> > the pciehp hotplug service driver.
+> > >> > What I want to do next is that the operating system load/unload the
+> > >> > corresponding PCIe device driver for that card.
+> > >>
+> > >> When pciehp receives the interrupt, it should enumerate the device,
+> > >> and you should see a line in dmesg similar to this (of course, it will
+> > >> have different bus/device/function and different vendor/device IDs):
+> > >>
+> > >>   pci 0000:00:16.0: [8086:9c3a] type 00 class 0x078000
+> > >>
+> > >> The PCI core should then add the device using device_add(), and part
+> > >> of that is to emit a uevent, which can be read by user-space.
+> > >> Generally udev would handle the event and load the appropriate driver.
+> > >> I don't know the details of how the user-space side works.
+> > >>
+> > >> Bjorn
+> > >
+> > >
+> >
