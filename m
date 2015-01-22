@@ -1,142 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e06smtp15.uk.ibm.com ([195.75.94.111]:37118 "EHLO
-	e06smtp15.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752183AbbAPKME (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Jan 2015 05:12:04 -0500
-Received: from /spool/local
-	by e06smtp15.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <sebott@linux.vnet.ibm.com>;
-	Fri, 16 Jan 2015 10:12:02 -0000
-Date: Fri, 16 Jan 2015 11:11:56 +0100 (CET)
-From: Sebastian Ott <sebott@linux.vnet.ibm.com>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-cc: linux-kernel@vger.kernel.org,
-	virtualization@lists.linux-foundation.org,
+Received: from down.free-electrons.com ([37.187.137.238]:45382 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752349AbbAVRk0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Jan 2015 12:40:26 -0500
+Date: Thu, 22 Jan 2015 18:40:00 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	<linux-pci@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Rusty Russell <rusty@rustcorp.com.au>,
-	Cornelia Huck <cornelia.huck@de.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	linux390@de.ibm.com, Gerald Schaefer <gerald.schaefer@de.ibm.com>,
-	linux-s390@vger.kernel.org
-Subject: Re: [PATCH v3 10/16] s390: add pci_iomap_range
-In-Reply-To: <1421256142-11512-11-git-send-email-mst@redhat.com>
-Message-ID: <alpine.LFD.2.11.1501161051380.1742@denkbrett>
-References: <1421256142-11512-1-git-send-email-mst@redhat.com> <1421256142-11512-11-git-send-email-mst@redhat.com>
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Gregory =?UTF-8?B?Q2zDqW1lbnQ=?=
+	<gregory.clement@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>
+Subject: Re: [PATCH v2 23/30] PCI/mvebu: Use pci_common_init_dev() to
+ simplify code
+Message-ID: <20150122184000.63ba06bb@free-electrons.com>
+In-Reply-To: <1421800225-26230-24-git-send-email-wangyijing@huawei.com>
+References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
+	<1421800225-26230-24-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 14 Jan 2015, Michael S. Tsirkin wrote:
-> Virtio drivers should map the part of the range they need, not
-> necessarily all of it.
-> To this end, support mapping ranges within BAR on s390.
-> Since multiple ranges can now be mapped within a BAR, we keep track of
-> the number of mappings created, and only clear out the mapping for a BAR
-> when this number reaches 0.
-> 
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Tested-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
-> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> ---
-> 
-> Heiko, Martin, can you please ack merging this through the virtio tree?
-> This was lightly tested by Sebastian Ott.
-> 
->  arch/s390/include/asm/pci_io.h |  1 +
->  arch/s390/pci/pci.c            | 34 +++++++++++++++++++++++++++-------
->  2 files changed, 28 insertions(+), 7 deletions(-)
-> 
-> diff --git a/arch/s390/include/asm/pci_io.h b/arch/s390/include/asm/pci_io.h
-> index f664e96..1a9a98d 100644
-> --- a/arch/s390/include/asm/pci_io.h
-> +++ b/arch/s390/include/asm/pci_io.h
-> @@ -16,6 +16,7 @@
->  struct zpci_iomap_entry {
->  	u32 fh;
->  	u8 bar;
-> +	u16 count;
->  };
-> 
->  extern struct zpci_iomap_entry *zpci_iomap_start;
-> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-> index 3290f11..753a567 100644
-> --- a/arch/s390/pci/pci.c
-> +++ b/arch/s390/pci/pci.c
-> @@ -259,7 +259,10 @@ void __iowrite64_copy(void __iomem *to, const void *from, size_t count)
->  }
-> 
->  /* Create a virtual mapping cookie for a PCI BAR */
-> -void __iomem *pci_iomap(struct pci_dev *pdev, int bar, unsigned long max)
-> +void __iomem *pci_iomap_range(struct pci_dev *pdev,
-> +			      int bar,
-> +			      unsigned long offset,
-> +			      unsigned long max)
->  {
->  	struct zpci_dev *zdev =	get_zdev(pdev);
->  	u64 addr;
-> @@ -270,14 +273,27 @@ void __iomem *pci_iomap(struct pci_dev *pdev, int bar, unsigned long max)
-> 
->  	idx = zdev->bars[bar].map_idx;
->  	spin_lock(&zpci_iomap_lock);
-> -	zpci_iomap_start[idx].fh = zdev->fh;
-> -	zpci_iomap_start[idx].bar = bar;
-> +	if (zpci_iomap_start[idx].count++) {
-> +		BUG_ON(zpci_iomap_start[idx].fh != zdev->fh ||
-> +		       zpci_iomap_start[idx].bar != bar);
-> +	} else {
-> +		zpci_iomap_start[idx].fh = zdev->fh;
-> +		zpci_iomap_start[idx].bar = bar;
-> +	}
-> +	/* Detect overrun */
-> +	BUG_ON(!zpci_iomap_start[idx].count);
->  	spin_unlock(&zpci_iomap_lock);
-> 
->  	addr = ZPCI_IOMAP_ADDR_BASE | ((u64) idx << 48);
-> -	return (void __iomem *) addr;
-> +	return (void __iomem *) addr + offset;
->  }
-> -EXPORT_SYMBOL_GPL(pci_iomap);
-> +EXPORT_SYMBOL_GPL(pci_iomap_range);
-> +
-> +void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long maxlen)
-> +{
-> +	return pci_iomap_range(dev, bar, 0, maxlen);
-> +}
-> +EXPORT_SYMBOL(pci_iomap);
+Dear Yijing Wang,
 
-As discussed earlier, could you please leave that as EXPORT_SYMBOL_GPL.
-If there's a reason to have these interfaces as EXPORT_SYMBOL, we could
-change all of them in an extra patch.
-
-With this change integrated you can add
-Acked-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
-
-Regards,
-Sebastian
-
+On Wed, 21 Jan 2015 08:30:18 +0800, Yijing Wang wrote:
+> Mvebu_pcie_scan_bus() is not necessary, we could use
+> pci_common_init_dev() instead of pci_common_init(),
+> and pass the device pointer as the parent. Then
+> pci_scan_root_bus() will be called to scan the pci busses.
 > 
->  void pci_iounmap(struct pci_dev *pdev, void __iomem *addr)
->  {
-> @@ -285,8 +301,12 @@ void pci_iounmap(struct pci_dev *pdev, void __iomem *addr)
-> 
->  	idx = (((__force u64) addr) & ~ZPCI_IOMAP_ADDR_BASE) >> 48;
->  	spin_lock(&zpci_iomap_lock);
-> -	zpci_iomap_start[idx].fh = 0;
-> -	zpci_iomap_start[idx].bar = 0;
-> +	/* Detect underrun */
-> +	BUG_ON(!zpci_iomap_start[idx].count);
-> +	if (!--zpci_iomap_start[idx].count) {
-> +		zpci_iomap_start[idx].fh = 0;
-> +		zpci_iomap_start[idx].bar = 0;
-> +	}
->  	spin_unlock(&zpci_iomap_lock);
->  }
->  EXPORT_SYMBOL_GPL(pci_iounmap);
-> -- 
-> MST
-> 
-> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> CC: Jason Cooper <jason@lakedaemon.net>
 
+While I'm fine with the change to pci_common_init_dev(), I am not so
+sure about the removal of mvebu_pcie_scan_bus(). I vaguely remember
+that we intentionally did not use the default function for a specific
+reason. Of course, this was a long time ago, and I don't remember the
+reason. I would have to take a bit of time to 1/ review the archives of
+the discussion surrounding the pcie-mvebu driver, and 2/ test your
+patch to validate it works fine on HW.
+
+Thanks!
+
+Thomas
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
