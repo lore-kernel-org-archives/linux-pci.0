@@ -1,102 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:59712 "EHLO
-	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754098AbbAJCfb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 21:35:31 -0500
-From: Rob Herring <robh@kernel.org>
-To: linux-kernel@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 22 Jan 2015 11:38:33 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: "Zheng, Lv" <lv.zheng@intel.com>
+cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh@kernel.org>,
-	Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org
-Subject: [PATCH 02/16] mips: add struct pci_ops member names to initialization
-Date: Fri,  9 Jan 2015 20:34:36 -0600
-Message-Id: <1420857290-8373-3-git-send-email-robh@kernel.org>
-In-Reply-To: <1420857290-8373-1-git-send-email-robh@kernel.org>
-References: <1420857290-8373-1-git-send-email-robh@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"Moore, Robert" <robert.moore@intel.com>,
+	"Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Luck, Tony" <tony.luck@intel.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"devel@acpica.org" <devel@acpica.org>
+Subject: RE: [RFC Patch 05/19] ACPI: Provide union for address_space64 and
+ ext_address_space64
+In-Reply-To: <1AE640813FDE7649BE1B193DEA596E88026B9F36@SHSMSX101.ccr.corp.intel.com>
+Message-ID: <alpine.DEB.2.11.1501221134370.5526@nanos>
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-6-git-send-email-jiang.liu@linux.intel.com> <1AE640813FDE7649BE1B193DEA596E88026B9EFB@SHSMSX101.ccr.corp.intel.com> <54C06726.4090805@linux.intel.com>
+ <1AE640813FDE7649BE1B193DEA596E88026B9F36@SHSMSX101.ccr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some instances of pci_ops initialization rely on the read/write members'
-location in the struct. This is fragile and may break when adding new
-members to the beginning of the struct.
+On Thu, 22 Jan 2015, Zheng, Lv wrote:
+> If we can reach an agreement on the linuxized version, then it can
+> be merged directly by Rafael.  And I'll zap it from the ACPICA
+> release series.
 
-Signed-off-by: Rob Herring <robh@kernel.org>
-Cc: Ralf Baechle <ralf@linux-mips.org>
-Cc: linux-mips@linux-mips.org
----
- arch/mips/pci/pci-bcm1480.c |  4 ++--
- arch/mips/pci/pci-octeon.c  |  4 ++--
- arch/mips/pci/pcie-octeon.c | 12 ++++++------
- 3 files changed, 10 insertions(+), 10 deletions(-)
+Fine with me.
 
-diff --git a/arch/mips/pci/pci-bcm1480.c b/arch/mips/pci/pci-bcm1480.c
-index 5ec2a7b..f2355e3 100644
---- a/arch/mips/pci/pci-bcm1480.c
-+++ b/arch/mips/pci/pci-bcm1480.c
-@@ -173,8 +173,8 @@ static int bcm1480_pcibios_write(struct pci_bus *bus, unsigned int devfn,
- }
- 
- struct pci_ops bcm1480_pci_ops = {
--	bcm1480_pcibios_read,
--	bcm1480_pcibios_write,
-+	.read = bcm1480_pcibios_read,
-+	.write = bcm1480_pcibios_write,
- };
- 
- static struct resource bcm1480_mem_resource = {
-diff --git a/arch/mips/pci/pci-octeon.c b/arch/mips/pci/pci-octeon.c
-index d07e041..bedb72b 100644
---- a/arch/mips/pci/pci-octeon.c
-+++ b/arch/mips/pci/pci-octeon.c
-@@ -327,8 +327,8 @@ static int octeon_write_config(struct pci_bus *bus, unsigned int devfn,
- 
- 
- static struct pci_ops octeon_pci_ops = {
--	octeon_read_config,
--	octeon_write_config,
-+	.read = octeon_read_config,
-+	.write = octeon_write_config,
- };
- 
- static struct resource octeon_pci_mem_resource = {
-diff --git a/arch/mips/pci/pcie-octeon.c b/arch/mips/pci/pcie-octeon.c
-index 5e36c33..eb4a17b 100644
---- a/arch/mips/pci/pcie-octeon.c
-+++ b/arch/mips/pci/pcie-octeon.c
-@@ -1792,8 +1792,8 @@ static int octeon_dummy_write_config(struct pci_bus *bus, unsigned int devfn,
- }
- 
- static struct pci_ops octeon_pcie0_ops = {
--	octeon_pcie0_read_config,
--	octeon_pcie0_write_config,
-+	.read = octeon_pcie0_read_config,
-+	.write = octeon_pcie0_write_config,
- };
- 
- static struct resource octeon_pcie0_mem_resource = {
-@@ -1813,8 +1813,8 @@ static struct pci_controller octeon_pcie0_controller = {
- };
- 
- static struct pci_ops octeon_pcie1_ops = {
--	octeon_pcie1_read_config,
--	octeon_pcie1_write_config,
-+	.read = octeon_pcie1_read_config,
-+	.write = octeon_pcie1_write_config,
- };
- 
- static struct resource octeon_pcie1_mem_resource = {
-@@ -1834,8 +1834,8 @@ static struct pci_controller octeon_pcie1_controller = {
- };
- 
- static struct pci_ops octeon_dummy_ops = {
--	octeon_dummy_read_config,
--	octeon_dummy_write_config,
-+	.read = octeon_dummy_read_config,
-+	.write = octeon_dummy_write_config,
- };
- 
- static struct resource octeon_dummy_mem_resource = {
--- 
-2.1.0
+Thanks,
+
+	tglx
 
