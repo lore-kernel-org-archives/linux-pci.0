@@ -1,60 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ns.mm-sol.com ([37.157.136.199]:42021 "EHLO extserv.mm-sol.com"
+Received: from mga09.intel.com ([134.134.136.24]:20761 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754388AbbAFPYc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 Jan 2015 10:24:32 -0500
-Message-ID: <54ABFE26.9010208@mm-sol.com>
-Date: Tue, 06 Jan 2015 17:24:22 +0200
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
+	id S1753185AbbAVToZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 Jan 2015 14:44:25 -0500
+From: "Dugger, Donald D" <donald.d.dugger@intel.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] PCI: Add Wellsburg (X99) to Intel PCH root port ACS
+ quirk
+Date: Thu, 22 Jan 2015 19:44:22 +0000
+Message-ID: <6AF484C0160C61439DE06F17668F3BCB5348FE8C@ORSMSX114.amr.corp.intel.com>
+References: <20150122181524.1586.14496.stgit@gimli.home>
+In-Reply-To: <20150122181524.1586.14496.stgit@gimli.home>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Rob Herring <robh+dt@kernel.org>,
-	Kumar Gala <galak@codeaurora.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 5/5] ARM: qcom: Add Qualcomm APQ8084 SoC
-References: <1418404441-5518-1-git-send-email-svarbanov@mm-sol.com> <1418404441-5518-6-git-send-email-svarbanov@mm-sol.com> <1671186.DiHNtkP1SP@wuerfel>
-In-Reply-To: <1671186.DiHNtkP1SP@wuerfel>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
-
-Thanks for the comments!
-
-On 12/12/2014 07:33 PM, Arnd Bergmann wrote:
-> On Friday 12 December 2014 19:14:01 Stanimir Varbanov wrote:
->> +config ARCH_APQ8084
->> +       bool "Enable support for APQ8084"
->> +       select HAVE_ARM_ARCH_TIMER
->> +       select PCI
->> +       select PCI_DOMAINS
->> +       select PCI_MSI
->> +
-> 
-> I would prefer not to see 'select PCI' here. Also the driver is written
-> to work without PCI_MSI, so I'd be much happier with just
-> 
-> config ARCH_APQ8084
-> 	bool "Enable support for APQ8084"
-> 	select HAVE_ARM_ARCH_TIMER
-> 	select PCI_DOMAINS if PCI
-
-What about this
-
-config ARCH_APQ8084
-	bool "Enable support for APQ8084"
-	select HAVE_ARM_ARCH_TIMER
-	select MIGHT_HAVE_PCI
-	select PCI_DOMAINS if PCI
-
--- 
-regards,
-Stan
+QWNrLWJ5OiBEb24gRHVnZ2VyIDxkb25hbGQuZC5kdWdnZXJAaW50ZWwuY29tPg0KDQotLQ0KRG9u
+IER1Z2dlcg0KIkNlbnNlbyBUb3RvIG5vcyBpbiBLYW5zYSBlc3NlIGRlY2lzc2UuIiAtIEQuIEdh
+bGUNClBoOiAzMDMvNDQzLTM3ODYNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206
+IEFsZXggV2lsbGlhbXNvbiBbbWFpbHRvOmFsZXgud2lsbGlhbXNvbkByZWRoYXQuY29tXSANClNl
+bnQ6IFRodXJzZGF5LCBKYW51YXJ5IDIyLCAyMDE1IDExOjE2IEFNDQpUbzogbGludXgtcGNpQHZn
+ZXIua2VybmVsLm9yZw0KQ2M6IGJoZWxnYWFzQGdvb2dsZS5jb207IER1Z2dlciwgRG9uYWxkIEQ7
+IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFtQQVRDSF0gUENJOiBBZGQg
+V2VsbHNidXJnIChYOTkpIHRvIEludGVsIFBDSCByb290IHBvcnQgQUNTIHF1aXJrDQoNCkludGVs
+IGhhcyBjb25maXJtZWQgdGhhdCB0aGUgV2VsbHNidXJnIGNoaXBzZXQsIHdoaWxlIG5vdCByZXBv
+cnRpbmcgQUNTLCBkb2VzIHByb3ZpZGUgdGhlIHByb3BlciBpc29sYXRpb24gdGhyb3VnaCB0aGUg
+UkNCQS9CU1BSIHJlZ2lzdGVycywgc28gdGhlIHNhbWUgcXVpcmsgd29ya3MgZm9yIHRoaXMgc2V0
+IG9mIGRldmljZSBJRHMuDQoNClNpZ25lZC1vZmYtYnk6IEFsZXggV2lsbGlhbXNvbiA8YWxleC53
+aWxsaWFtc29uQHJlZGhhdC5jb20+DQpDYzogRG9uIER1Z2dlciA8ZG9uYWxkLmQuZHVnZ2VyQGlu
+dGVsLmNvbT4NCi0tLQ0KDQogZHJpdmVycy9wY2kvcXVpcmtzLmMgfCAgICAzICsrKw0KIDEgZmls
+ZSBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKykNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL3F1
+aXJrcy5jIGIvZHJpdmVycy9wY2kvcXVpcmtzLmMgaW5kZXggZWQ2Zjg5Yi4uMmNkYjc4OSAxMDA2
+NDQNCi0tLSBhL2RyaXZlcnMvcGNpL3F1aXJrcy5jDQorKysgYi9kcml2ZXJzL3BjaS9xdWlya3Mu
+Yw0KQEAgLTM2MzAsNiArMzYzMCw5IEBAIHN0YXRpYyBjb25zdCB1MTYgcGNpX3F1aXJrX2ludGVs
+X3BjaF9hY3NfaWRzW10gPSB7DQogCTB4OWM5OCwgMHg5Yzk5LCAweDljOWEsIDB4OWM5YiwNCiAJ
+LyogUGF0c2J1cmcgKFg3OSkgUENIICovDQogCTB4MWQxMCwgMHgxZDEyLCAweDFkMTQsIDB4MWQx
+NiwgMHgxZDE4LCAweDFkMWEsIDB4MWQxYywgMHgxZDFlLA0KKwkvKiBXZWxsc2J1cmcgKFg5OSkg
+UENIICovDQorCTB4OGQxMCwgMHg4ZDExLCAweDhkMTIsIDB4OGQxMywgMHg4ZDE0LCAweDhkMTUs
+IDB4OGQxNiwgMHg4ZDE3LA0KKwkweDhkMTgsIDB4OGQxOSwgMHg4ZDFhLCAweDhkMWIsIDB4OGQx
+YywgMHg4ZDFkLCAweDhkMWUsDQogfTsNCiANCiBzdGF0aWMgYm9vbCBwY2lfcXVpcmtfaW50ZWxf
+cGNoX2Fjc19tYXRjaChzdHJ1Y3QgcGNpX2RldiAqZGV2KQ0KDQo=
