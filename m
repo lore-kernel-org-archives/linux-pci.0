@@ -1,179 +1,95 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Len Brown <lenb@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [Patch v2 03/22] ACPI: Implement proper length checks for mem resources
-Date: Wed, 28 Jan 2015 18:57:21 +0800
-Message-Id: <1422442660-455-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-we0-f176.google.com ([74.125.82.176]:37453 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752338AbbAVXrr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Jan 2015 18:47:47 -0500
+MIME-Version: 1.0
+In-Reply-To: <20150122210344.GE13072@google.com>
+References: <1420857290-8373-1-git-send-email-robh@kernel.org> <20150122210344.GE13072@google.com>
+From: Rob Herring <robh@kernel.org>
+Date: Thu, 22 Jan 2015 17:47:25 -0600
+Message-ID: <CAL_Jsq+aw0y-1rrF=RMpYKMP4zGfmqzzG5BXYYoFABtKEUpX8Q@mail.gmail.com>
+Subject: Re: [PATCH 00/16] PCI generic configuration space accessors
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Howells <dhowells@redhat.com>,
+	Greg Ungerer <gerg@uclinux.org>,
+	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
+	Krzysztof Halasa <khalasa@piap.pl>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Paul Mackerras <paulus@samba.org>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Simon Horman <horms@verge.net.au>,
+	=?UTF-8?Q?S=C3=B6ren_Brinkmann?= <soren.brinkmann@xilinx.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Will Deacon <will.deacon@arm.com>,
+	cbe-oss-dev@lists.ozlabs.org, linux-am33-list@redhat.com,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Linux-MIPS <linux-mips@linux-mips.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	SH-Linux <linux-sh@vger.kernel.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+On Thu, Jan 22, 2015 at 3:03 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Jan 09, 2015 at 08:34:34PM -0600, Rob Herring wrote:
+>> This series adds common accessor functions for PCI configuration space
+>> accesses. This supports most PCI hosts with memory mapped configuration
+>> space like ECAM or hosts with memory mapped address/data registers. ECAM
+>> is not generically supported by this series, but could be added on top
+>> of this. While some hosts have standard address decoding which could be
+>> common as well, the various checks on bus numbers and device numbers are
+>> quite varied. It is unclear how much of that is really necessary or
+>> could be common.
+>>
+>> The first 4 patches are preparatory cleanup. Patch 5 introduces the
+>> common accessors. The remaining patches convert several PCI host
+>> controllers. This is in no way a complete list of host controllers. The
+>> conversion of more hosts should be possible. The Designware controller
+>> in particular should be able to be converted, but its config space
+>> accessors are a mess of override-able functions that I've not gotten my
+>> head around.
 
-Check whether the resulting length is the same as the given
-length. Check for start <= end as well.
+[...]
 
-We need to hand in the resource for this, so we can apply the flags
-directly.
+> Really nice cleanups.  I added these with the acks so far to a pci/config
+> branch for v3.20.  I'll update it with more acks if they trickle in.
 
-[Jiang] Remove enforcement that resource starting address must be
-non-zero.
+Thanks.
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/resource.c |   62 ++++++++++++++++++++++++++---------------------
- 1 file changed, 35 insertions(+), 27 deletions(-)
+> You've structured it nicely so I can also just drop individual arch pieces
+> if necessary.  The pieces that haven't been acked yet (hint, hint):
+>
+>     arch/arm/mach-cns3xxx/pcie.c
+>     arch/arm/mach-sa1100/pci-nanoengine.c
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 1c616a56e007..3e7d9f6eb875 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -34,21 +34,37 @@
- #define valid_IRQ(i) (true)
- #endif
- 
--static unsigned long acpi_dev_memresource_flags(u64 len, u8 write_protect,
--						bool window)
-+static bool acpi_dev_resource_len_valid(u64 start, u64 end, u64 len, bool io)
- {
--	unsigned long flags = IORESOURCE_MEM;
-+	u64 reslen = end - start + 1;
- 
--	if (len == 0)
--		flags |= IORESOURCE_DISABLED;
-+	/*
-+	 * CHECKME: len might be required to check versus a minimum
-+	 * length as well. 1 for io is fine, but for memory it does
-+	 * not make any sense at all.
-+	 */
-+	if (len && reslen && reslen == len && start <= end)
-+		return true;
-+
-+	pr_info("ACPI: invalid or unassigned resource %s [%016llx - %016llx] length [%016llx]\n",
-+		io ? "io" : "mem", start, end, len);
-+
-+	return false;
-+}
-+
-+static void acpi_dev_memresource_flags(struct resource *res, u64 len,
-+				       u8 write_protect, bool window)
-+{
-+	res->flags = IORESOURCE_MEM;
-+
-+	if (!acpi_dev_resource_len_valid(res->start, res->end, len, false))
-+		res->flags |= IORESOURCE_DISABLED;
- 
- 	if (write_protect == ACPI_READ_WRITE_MEMORY)
--		flags |= IORESOURCE_MEM_WRITEABLE;
-+		res->flags |= IORESOURCE_MEM_WRITEABLE;
- 
- 	if (window)
--		flags |= IORESOURCE_WINDOW;
--
--	return flags;
-+		res->flags |= IORESOURCE_WINDOW;
- }
- 
- static void acpi_dev_get_memresource(struct resource *res, u64 start, u64 len,
-@@ -56,7 +72,7 @@ static void acpi_dev_get_memresource(struct resource *res, u64 start, u64 len,
- {
- 	res->start = start;
- 	res->end = start + len - 1;
--	res->flags = acpi_dev_memresource_flags(len, write_protect, false);
-+	acpi_dev_memresource_flags(res, len, write_protect, false);
- }
- 
- /**
-@@ -77,24 +93,18 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
- 	switch (ares->type) {
- 	case ACPI_RESOURCE_TYPE_MEMORY24:
- 		memory24 = &ares->data.memory24;
--		if (!memory24->minimum && !memory24->address_length)
--			return false;
- 		acpi_dev_get_memresource(res, memory24->minimum,
- 					 memory24->address_length,
- 					 memory24->write_protect);
- 		break;
- 	case ACPI_RESOURCE_TYPE_MEMORY32:
- 		memory32 = &ares->data.memory32;
--		if (!memory32->minimum && !memory32->address_length)
--			return false;
- 		acpi_dev_get_memresource(res, memory32->minimum,
- 					 memory32->address_length,
- 					 memory32->write_protect);
- 		break;
- 	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
- 		fixed_memory32 = &ares->data.fixed_memory32;
--		if (!fixed_memory32->address && !fixed_memory32->address_length)
--			return false;
- 		acpi_dev_get_memresource(res, fixed_memory32->address,
- 					 fixed_memory32->address_length,
- 					 fixed_memory32->write_protect);
-@@ -102,7 +112,8 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
- 	default:
- 		return false;
- 	}
--	return true;
-+
-+	return !(res->flags & IORESOURCE_DISABLED);
- }
- EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
- 
-@@ -186,7 +197,6 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
- 	acpi_status status;
- 	struct acpi_resource_address64 addr;
- 	bool window;
--	u64 len;
- 	u8 io_decode;
- 
- 	status = acpi_resource_to_address64(ares, &addr);
-@@ -199,10 +209,9 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
- 
- 	switch(addr.resource_type) {
- 	case ACPI_MEMORY_RANGE:
--		len = addr.address.maximum - addr.address.minimum + 1;
--		res->flags = acpi_dev_memresource_flags(len,
--						addr.info.mem.write_protect,
--						window);
-+		acpi_dev_memresource_flags(res, addr.address.address_length,
-+					   addr.info.mem.write_protect,
-+					   window);
- 		break;
- 	case ACPI_IO_RANGE:
- 		io_decode = addr.address.granularity == 0xfff ?
-@@ -236,7 +245,6 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
- {
- 	struct acpi_resource_extended_address64 *ext_addr;
- 	bool window;
--	u64 len;
- 	u8 io_decode;
- 
- 	if (ares->type != ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64)
-@@ -250,10 +258,10 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
- 
- 	switch(ext_addr->resource_type) {
- 	case ACPI_MEMORY_RANGE:
--		len = ext_addr->address.maximum - ext_addr->address.minimum + 1;
--		res->flags = acpi_dev_memresource_flags(len,
--					ext_addr->info.mem.write_protect,
--					window);
-+		acpi_dev_memresource_flags(res,
-+					   ext_addr->address.address_length,
-+					   ext_addr->info.mem.write_protect,
-+					   window);
- 		break;
- 	case ACPI_IO_RANGE:
- 		io_decode = ext_addr->address.granularity == 0xfff ?
--- 
-1.7.10.4
+Some ARM sub-arch maintainers tend to not respond on things. These are
+platforms which aren't very active and aren't going to move to
+drivers/pci/host/ anytime soon. Maybe Arnd wants to ack them.
 
+>     arch/mn10300/unit-asb2305/pci.c
+>     arch/powerpc
+>
+> In addition, nobody has acked the frv and mips parts, but they're trivial
+> (they only add struct member names) that I can apply them without worrying.
+
+You must pick-up the 4 clean-up ones or the build will break for those
+platforms. Or perhaps that will encourage some acks.
+
+I've also got some actual conversions for some MIPS platforms in my
+tree I haven't sent out yet. MIPS is fun with all the variety of
+endianness and h/w swapping capability or not.
+
+Rob
