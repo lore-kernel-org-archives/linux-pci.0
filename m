@@ -1,184 +1,309 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <54CB4A96.1080008@huawei.com>
-Date: Fri, 30 Jan 2015 17:10:46 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:48855 "EHLO
+	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753849AbbAVUdk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Jan 2015 15:33:40 -0500
+Received: by mail-oi0-f45.google.com with SMTP id g201so3326002oib.4
+        for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2015 12:33:40 -0800 (PST)
+Date: Thu, 22 Jan 2015 14:33:36 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Linus Walleij <linus.walleij@linaro.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 07/16] ARM: integrator: convert PCI to use generic config
+ accesses
+Message-ID: <20150122203336.GD13072@google.com>
+References: <1420857290-8373-1-git-send-email-robh@kernel.org>
+ <1420857290-8373-8-git-send-email-robh@kernel.org>
+ <CACRpkdbwKN9LenqrWeu4WykhdZOGAdxpC_BYr2cYpc2_cn5GfA@mail.gmail.com>
+ <4938579.0KIk3QtTCP@wuerfel>
+ <CACRpkdZSXWrVudiadVjbhQDS_zQrYttaytW-TUoeFUrc=beD1A@mail.gmail.com>
 MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v2 00/30] Refine PCI scan interfaces and make generic
- pci host bridge
-References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CACRpkdZSXWrVudiadVjbhQDS_zQrYttaytW-TUoeFUrc=beD1A@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-   Any comments for this series ?  I'm so sorry to bother you.  :)
+On Mon, Jan 12, 2015 at 01:05:12AM +0100, Linus Walleij wrote:
+> On Sat, Jan 10, 2015 at 10:53 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > On Saturday 10 January 2015 22:40:22 Linus Walleij wrote:
+> >> >  static int v3_read_config(struct pci_bus *bus, unsigned int devfn, int where,
+> >> >                           int size, u32 *val)
+> >> >  {
+> >> > -       addr = v3_open_config_window(bus, devfn, where);
+> >> > +       int ret = pci_generic_config_read(bus, devfn, where, size, val);
+> >> >         v3_close_config_window();
+> >> > +       return ret;
+> >> >  }
+> >> >
+> >> >  static int v3_write_config(struct pci_bus *bus, unsigned int devfn, int where,
+> >> >                            int size, u32 val)
+> >> >  {
+> >> > +       int ret = pci_generic_config_write(bus, devfn, where, size, val);
+> >> >         v3_close_config_window();
+> >> > -       raw_spin_unlock_irqrestore(&v3_lock, flags);
+> >> > +       return ret;
+> >> >  }
+> >> >
+> >> >  static struct pci_ops pci_v3_ops = {
+> >> > +       .map_bus = v3_open_config_window,
+> >> >         .read   = v3_read_config,
+> >> >         .write  = v3_write_config,
+> >>
+> >> So .map_bus is called before every .read/.write operation I take it.
+> >>
+> >> Wouldn't it be proper to call the v3_close_config_window() from a
+> >> matching .unmap_bus() callback for symmetry?
+> >
+> > It would be nicer for integrator but useless for anything else, so
+> > I'd vote for leaving it the way Rob posted.
+> 
+> OK I buy that, throw in a comment about it in the code if there
+> is some time for iterating the patch.
 
-On 2015/1/21 8:29, Yijing Wang wrote:
-> v1->v2:
-> 	Split pci_host_bridge_list into a new patch, remove .phb_probe_mode
-> 	and rework powerpc .phb_of_scan_bus() for simpilicty suggested by
-> 	Arnd. Refresh some patch description log, and add a new patch to fix
-> 	build warning in ia64.
-> 
-> This series is based on Bjorn's pci-next branch.
-> 
-> Patch 1-4 ripped out pci_bus_add_devices() from pci scan interfaces
-> for better pci scan flow.
-> 
-> Patch 5-11 make a generic pci_host_bridge to hold pci_host_bridge
-> related informations, and introduce a pci_host_bridge_ops to 
-> support platform host drivers provide its own pci_host_bridge 
-> related operations to setup pci_host_bridge during pci enumeration.
-> 
-> Patch 12-28 apply the new pci scan interfaces to platform pci host
-> bridge drivers.
-> 
-> Now in kernel, we scan pci bus use the following ways:
-> 1. pci_scan_bus. 
-> 	parent = NULL, default io/mem/bus resources
-> 	call pci_bus_add_devices()
-> 
-> 2. pci_scan_bus_parented() + pci_bus_add_devices()
-> 	default io/mem/bus resources, only used by xen
-> 
-> 3. pci_scan_root_bus() + pci_bus_add_devices()
-> 
-> 4. pci_create_root_bus() + pci_scan_child_bus() + pci_bus_add_devices()
-> 
-> 5. pci_create_root_bus() + xx_of_scan_bus()  +  pci_bus_add_devices()
-> 
-> And we have a lot of arch specific pci_domain_nr() and other platform
-> specific weak function like pcibios_root_bridge_prepare().
-> 
-> After applied this series, we have following scan interfaces:
-> 
-> 1. pci_scan_bus_legacy() 
-> 	parent = NULL, default io/mem/bus resources.
-> 	for legacy pci scan
-> 
-> 2. pci_scan_root_bus()
-> 	for callers provide its own parent and io/mem/bus resources
-> 	but no platform specific pci_host_bridge operations
-> 
-> 3. pci_scan_root_bridge()
-> 	for callers provide its own parent and io/mem/bus resources
-> 	and pci_host_bridge_ops.
-> 
-> Besides, above pci scan interfaces all need addtionally call pci_bus_add_devices()
-> to set match_driver true and try to attach drivers.
-> 
-> Also we could eliminate all arch specific pci_domain_nr() after applied this series.
-> 
-> I tested this series on x86 (with or without ACPI).
-> Comments and tests are warmly welcome!
-> 
-> Arnd Bergmann (1):
->   xen/PCI: Don't use deprecated function pci_scan_bus_parented()
-> 
-> Yijing Wang (29):
->   PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
->   PCI: Rip out pci_bus_add_devices() from pci_scan_root_bus()
->   PCI: Remove deprecated pci_scan_bus_parented()
->   PCI: Rename pci_scan_bus() to pci_scan_bus_legacy()
->   PCI: Combine PCI domain and bus number in u32 arg
->   PCI: Pass PCI domain number combined with root bus number
->   PCI: Introduce pci_host_assign_domain_nr() to assign domain
->   PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
->   PCI: Introduce pci_host_bridge_list to manage host bridges
->   PCI: Save sysdata in pci_host_bridge drvdata
->   PCI: Introduce pci_host_bridge_ops to support host specific
->     operations
->   PCI: Introduce new scan function pci_scan_root_bridge()
->   PCI/x86: Refine pci_acpi_scan_root() with generic pci_host_bridge
->   PCI/IA64: Refine pci_acpi_scan_root() with generic pci_host_bridge
->   PCI/IA64: Fix the build warning about pci_domain_nr()
->   PCI/powerpc: Rename pcibios_root_bridge_prepare()
->   PCI/powerpc: Use pci_scan_root_bridge() for simplicity
->   PCI: Remove weak pcibios_root_bridge_prepare()
->   PCI/sparc: Use pci_scan_root_bridge() for simplicity
->   PCI: Introduce pci_bus_child_max_busnr()
->   PCI/Parisc: Use pci_scan_root_bus() for simplicity
->   PCI/mvebu: Use pci_common_init_dev() to simplify code
->   PCI/tegra: Remove redundant tegra_pcie_scan_bus()
->   PCI/designware: Use pci_scan_root_bus() for simplicity
->   PCI/xgene: Use pci_scan_root_bus() instead of pci_create_root_bus()
->   PCI: Rename __pci_create_root_bus() to pci_create_root_bus()
->   PCI: Export find_pci_host_bridge()
->   PCI: Remove platform specific pci_domain_nr()
->   PCI: Remove pci_bus_assign_domain_nr()
-> 
->  arch/alpha/include/asm/pci.h             |    2 -
->  arch/alpha/kernel/pci.c                  |    7 +-
->  arch/alpha/kernel/sys_nautilus.c         |    4 +-
->  arch/frv/mb93090-mb00/pci-vdk.c          |    6 +-
->  arch/ia64/include/asm/pci.h              |    1 -
->  arch/ia64/pci/pci.c                      |   34 +++---
->  arch/ia64/sn/kernel/io_acpi_init.c       |    6 +-
->  arch/ia64/sn/kernel/io_init.c            |    8 +-
->  arch/m68k/coldfire/pci.c                 |    3 +-
->  arch/microblaze/pci/pci-common.c         |   17 +--
->  arch/mips/include/asm/pci.h              |    2 -
->  arch/mips/pci/pci.c                      |    5 +-
->  arch/mn10300/unit-asb2305/pci.c          |    5 +-
->  arch/powerpc/include/asm/machdep.h       |    2 +-
->  arch/powerpc/kernel/pci-common.c         |   77 ++++++------
->  arch/powerpc/platforms/pseries/pci.c     |    8 +-
->  arch/powerpc/platforms/pseries/pseries.h |    2 +-
->  arch/powerpc/platforms/pseries/setup.c   |    2 +-
->  arch/s390/pci/pci.c                      |   13 +--
->  arch/sh/drivers/pci/pci.c                |    6 +-
->  arch/sh/include/asm/pci.h                |    2 -
->  arch/sparc/kernel/leon_pci.c             |    1 +
->  arch/sparc/kernel/pci.c                  |   50 ++++----
->  arch/sparc/kernel/pcic.c                 |    4 +-
->  arch/tile/include/asm/pci.h              |    2 -
->  arch/tile/kernel/pci.c                   |    6 +-
->  arch/tile/kernel/pci_gx.c                |    7 +-
->  arch/unicore32/kernel/pci.c              |   13 +--
->  arch/x86/include/asm/pci.h               |    6 -
->  arch/x86/pci/acpi.c                      |   38 +++---
->  arch/x86/pci/common.c                    |    4 +-
->  arch/xtensa/kernel/pci.c                 |    2 +
->  drivers/parisc/dino.c                    |   11 +--
->  drivers/parisc/lba_pci.c                 |    7 +-
->  drivers/pci/host-bridge.c                |   90 ++++++++++++++-
->  drivers/pci/host/pci-mvebu.c             |   18 +---
->  drivers/pci/host/pci-tegra.c             |   16 ---
->  drivers/pci/host/pci-xgene.c             |    3 +-
->  drivers/pci/host/pcie-designware.c       |    4 +-
->  drivers/pci/hotplug/acpiphp_glue.c       |   29 +-----
->  drivers/pci/hotplug/ibmphp_core.c        |    6 +-
->  drivers/pci/pci.c                        |   42 ++++++-
->  drivers/pci/probe.c                      |  196 ++++++++++++------------------
->  drivers/pci/xen-pcifront.c               |   11 ++-
->  include/linux/pci.h                      |   47 +++++---
->  include/uapi/linux/pci.h                 |    3 +
->  46 files changed, 424 insertions(+), 404 deletions(-)
-> 
-> 
-> .
-> 
+Would you prefer something like the following instead?  It keeps the
+v3_open/close symmetry, but it does break apart and duplicate some of the
+logic from v3_open_config_window().
+
+I can't build or test this.
 
 
--- 
-Thanks!
-Yijing
+commit 3e0c269a560968002298d22ac47bde4bd45aea8e
+Author: Rob Herring <robh@kernel.org>
+Date:   Fri Jan 9 20:34:41 2015 -0600
 
+    ARM: integrator: Convert PCI to use generic config accessors
+    
+    Convert the integrator PCI driver to use the generic config access
+    functions.
+    
+    This changes accesses from __raw_readX/__raw_writeX to readX/writeX
+    variants.  The spinlock is removed because it is unnecessary.  The config
+    read and write functions are already protected with a spinlock and no
+    access can occur during the .pre_init function.
+    
+    Signed-off-by: Rob Herring <robh@kernel.org>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Acked-by: Linus Walleij <linus.walleij@linaro.org>
+    CC: Russell King <linux@arm.linux.org.uk>
+    CC: linux-arm-kernel@lists.infradead.org
+
+diff --git a/arch/arm/mach-integrator/pci_v3.c b/arch/arm/mach-integrator/pci_v3.c
+index c186a17c2cff..c1098729cf8a 100644
+--- a/arch/arm/mach-integrator/pci_v3.c
++++ b/arch/arm/mach-integrator/pci_v3.c
+@@ -324,7 +324,7 @@ static u64 pre_mem_pci_sz;
+  * configuration address space, you present the V3 with the following pattern
+  * (which is very nearly a type 1 (except that the lower two bits are 00 and
+  * not 01).   In order for this mapping to work you need to set up one of
+- * the local to PCI aperatures to 16Mbytes in length translating to
++ * the local to PCI apertures to 16Mbytes in length translating to
+  * PCI configuration space starting at 0x0000.0000.
+  *
+  * PCI configuration cycles look like this:
+@@ -356,15 +356,14 @@ static u64 pre_mem_pci_sz;
+  *	 7:2	register number
+  *
+  */
+-static DEFINE_RAW_SPINLOCK(v3_lock);
+ 
+ #undef V3_LB_BASE_PREFETCH
+ #define V3_LB_BASE_PREFETCH 0
+ 
+-static void __iomem *v3_open_config_window(struct pci_bus *bus,
+-					   unsigned int devfn, int offset)
++static void v3_open_config_window(struct pci_bus *bus, unsigned int devfn,
++				  int offset)
+ {
+-	unsigned int address, mapaddress, busnr;
++	unsigned int mapaddress, busnr;
+ 
+ 	busnr = bus->number;
+ 
+@@ -381,14 +380,10 @@ static void __iomem *v3_open_config_window(struct pci_bus *bus,
+ 		/*
+ 		 * local bus segment so need a type 0 config cycle
+ 		 *
+-		 * build the PCI configuration "address" with one-hot in
+-		 * A31-A11
+-		 *
+ 		 * mapaddress:
+ 		 *  3:1 = config cycle (101)
+ 		 *  0   = PCI A1 & A0 are 0 (0)
+ 		 */
+-		address = PCI_FUNC(devfn) << 8;
+ 		mapaddress = V3_LB_MAP_TYPE_CONFIG;
+ 
+ 		if (slot > 12)
+@@ -396,26 +391,15 @@ static void __iomem *v3_open_config_window(struct pci_bus *bus,
+ 			 * high order bits are handled by the MAP register
+ 			 */
+ 			mapaddress |= 1 << (slot - 5);
+-		else
+-			/*
+-			 * low order bits handled directly in the address
+-			 */
+-			address |= 1 << (slot + 11);
+ 	} else {
+         	/*
+ 		 * not the local bus segment so need a type 1 config cycle
+ 		 *
+-		 * address:
+-		 *  23:16 = bus number
+-		 *  15:11 = slot number (7:3 of devfn)
+-		 *  10:8  = func number (2:0 of devfn)
+-		 *
+ 		 * mapaddress:
+ 		 *  3:1 = config cycle (101)
+ 		 *  0   = PCI A1 & A0 from host bus (1)
+ 		 */
+ 		mapaddress = V3_LB_MAP_TYPE_CONFIG | V3_LB_MAP_AD_LOW_EN;
+-		address = (busnr << 16) | (devfn << 8);
+ 	}
+ 
+ 	/*
+@@ -432,8 +416,6 @@ static void __iomem *v3_open_config_window(struct pci_bus *bus,
+ 	v3_writel(V3_LB_BASE1, v3_addr_to_lb_base(conf_mem.start) |
+ 			V3_LB_BASE_ADR_SIZE_16MB | V3_LB_BASE_ENABLE);
+ 	v3_writew(V3_LB_MAP1, mapaddress);
+-
+-	return PCI_CONFIG_VADDR + address + offset;
+ }
+ 
+ static void v3_close_config_window(void)
+@@ -454,70 +436,66 @@ static void v3_close_config_window(void)
+ 			V3_LB_BASE_ADR_SIZE_256MB | V3_LB_BASE_ENABLE);
+ }
+ 
+-static int v3_read_config(struct pci_bus *bus, unsigned int devfn, int where,
+-			  int size, u32 *val)
++static void __iomem *v3_map_bus(struct pci_bus *bus,
++					   unsigned int devfn, int offset)
+ {
+-	void __iomem *addr;
+-	unsigned long flags;
+-	u32 v;
++	unsigned int busnr = bus->number;
++	unsigned int address;
+ 
+-	raw_spin_lock_irqsave(&v3_lock, flags);
+-	addr = v3_open_config_window(bus, devfn, where);
+-
+-	switch (size) {
+-	case 1:
+-		v = __raw_readb(addr);
+-		break;
++	if (busnr == 0) {
++		int slot = PCI_SLOT(devfn);
+ 
+-	case 2:
+-		v = __raw_readw(addr);
+-		break;
++		/*
++		 * build the PCI configuration "address" with function in
++		 * A10-A8 and device one-hot in A31-A11
++		 */
++		address = PCI_FUNC(devfn) << 8;
+ 
+-	default:
+-		v = __raw_readl(addr);
+-		break;
++		/*
++		 * high order bits are handled by the MAP register;
++		 * low order bits handled directly in the address
++		 */
++		if (slot <= 12)
++			address |= 1 << (slot + 11);
++	} else {
++		/*
++		 * not the local bus segment so need a type 1 config cycle
++		 *
++		 * address:
++		 *  23:16 = bus number
++		 *  15:11 = slot number (7:3 of devfn)
++		 *  10:8  = func number (2:0 of devfn)
++		 */
++		address = (busnr << 16) | (devfn << 8);
+ 	}
+ 
+-	v3_close_config_window();
+-	raw_spin_unlock_irqrestore(&v3_lock, flags);
++	return PCI_CONFIG_VADDR + address + offset;
++}
++
++static int v3_read_config(struct pci_bus *bus, unsigned int devfn, int where,
++			  int size, u32 *val)
++{
++	int ret;
+ 
+-	*val = v;
+-	return PCIBIOS_SUCCESSFUL;
++	v3_open_config_window();
++	ret = pci_generic_config_read(bus, devfn, where, size, val);
++	v3_close_config_window();
++	return ret;
+ }
+ 
+ static int v3_write_config(struct pci_bus *bus, unsigned int devfn, int where,
+ 			   int size, u32 val)
+ {
+-	void __iomem *addr;
+-	unsigned long flags;
+-
+-	raw_spin_lock_irqsave(&v3_lock, flags);
+-	addr = v3_open_config_window(bus, devfn, where);
+-
+-	switch (size) {
+-	case 1:
+-		__raw_writeb((u8)val, addr);
+-		__raw_readb(addr);
+-		break;
+-
+-	case 2:
+-		__raw_writew((u16)val, addr);
+-		__raw_readw(addr);
+-		break;
+-
+-	case 4:
+-		__raw_writel(val, addr);
+-		__raw_readl(addr);
+-		break;
+-	}
++	int ret;
+ 
++	v3_open_config_window();
++	ret = pci_generic_config_write(bus, devfn, where, size, val);
+ 	v3_close_config_window();
+-	raw_spin_unlock_irqrestore(&v3_lock, flags);
+-
+-	return PCIBIOS_SUCCESSFUL;
++	return ret;
+ }
+ 
+ static struct pci_ops pci_v3_ops = {
++	.map_bus = v3_map_bus,
+ 	.read	= v3_read_config,
+ 	.write	= v3_write_config,
+ };
+@@ -672,8 +650,6 @@ static void __init pci_v3_preinit(void)
+ 	hook_fault_code(8, v3_pci_fault, SIGBUS, 0, "external abort on non-linefetch");
+ 	hook_fault_code(10, v3_pci_fault, SIGBUS, 0, "external abort on non-linefetch");
+ 
+-	raw_spin_lock_irqsave(&v3_lock, flags);
+-
+ 	/*
+ 	 * Unlock V3 registers, but only if they were previously locked.
+ 	 */
+@@ -736,8 +712,6 @@ static void __init pci_v3_preinit(void)
+ 	v3_writew(V3_LB_CFG, v3_readw(V3_LB_CFG) | (1 << 10));
+ 	v3_writeb(V3_LB_IMASK, 0x28);
+ 	__raw_writel(3, ap_syscon_base + INTEGRATOR_SC_PCIENABLE_OFFSET);
+-
+-	raw_spin_unlock_irqrestore(&v3_lock, flags);
+ }
+ 
+ static void __init pci_v3_postinit(void)
