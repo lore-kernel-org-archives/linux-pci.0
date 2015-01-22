@@ -1,96 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:41123 "EHLO mga03.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:45904 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752184AbbATDGj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 19 Jan 2015 22:06:39 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
+	id S1754375AbbAVCdG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Jan 2015 21:33:06 -0500
+From: "Zheng, Lv" <lv.zheng@intel.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Yinghai Lu <yinghai@kernel.org>,
 	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Andy Lutomirski <luto@amacapital.net>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part1 v7 03/38] x86/hpet: Use new irqdomain interfaces to allocate/free IRQ
-Date: Tue, 20 Jan 2015 11:08:06 +0800
-Message-Id: <1421723321-8386-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+	"Moore, Robert" <robert.moore@intel.com>,
+	"Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
+	Len Brown <lenb@kernel.org>
+CC: "Luck, Tony" <tony.luck@intel.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"devel@acpica.org" <devel@acpica.org>
+Subject: RE: [RFC Patch 05/19] ACPI: Provide union for address_space64 and
+ ext_address_space64
+Date: Thu, 22 Jan 2015 02:32:56 +0000
+Message-ID: <1AE640813FDE7649BE1B193DEA596E88026B9EFB@SHSMSX101.ccr.corp.intel.com>
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+ <1420684386-5975-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1420684386-5975-6-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new irqdomain interfaces to allocate/free IRQ for HPET, so we could
-kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
+Hi, Thomas and Jiang
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
-Cc: Andy Lutomirski <luto@amacapital.net>
-Link: http://lkml.kernel.org/r/1416894816-23245-4-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- arch/x86/kernel/hpet.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+> From: Jiang Liu [mailto:jiang.liu@linux.intel.com]
+> Sent: Thursday, January 08, 2015 10:33 AM
+> 
+> From: Thomas Gleixner <tglx@linutronix.de>
+> 
+> address_space64 and ext_address_space64 share substracts just at
+> different offsets. To unify the parsing functions implement the two
+> structs as unions of their substructs, so we can extract the shared
+> data.
+> 
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  include/acpi/acrestyp.h |   49 ++++++++++++++++++++++++++++++++++-------------
+>  1 file changed, 36 insertions(+), 13 deletions(-)
+> 
+> diff --git a/include/acpi/acrestyp.h b/include/acpi/acrestyp.h
+> index eb760ca0b2e0..307d5b2605c8 100644
+> --- a/include/acpi/acrestyp.h
+> +++ b/include/acpi/acrestyp.h
+> @@ -326,23 +326,46 @@ struct acpi_resource_address32 {
+>  	struct acpi_resource_source resource_source;
+>  };
+> 
+> -struct acpi_resource_address64 {
+> -	ACPI_RESOURCE_ADDRESS_COMMON u64 granularity;
+> -	u64 minimum;
+> -	u64 maximum;
+> -	u64 translation_offset;
+> +#define ACPI_RESOURCE_ADDRESS64_COMMON \
+> +	u64 granularity;	       \
+> +	u64 minimum;		       \
+> +	u64 maximum;		       \
+> +	u64 translation_offset;	       \
+>  	u64 address_length;
+> -	struct acpi_resource_source resource_source;
+> +
+> +struct acpi_resource_address64_common {
+> +ACPI_RESOURCE_ADDRESS64_COMMON};
+> +
+> +struct acpi_resource_address64 {
+> +	union {
+> +		struct {
+> +			ACPI_RESOURCE_ADDRESS_COMMON
+> +			ACPI_RESOURCE_ADDRESS64_COMMON
+> +			struct acpi_resource_source resource_source;
+> +		};
 
-diff --git a/arch/x86/kernel/hpet.c b/arch/x86/kernel/hpet.c
-index 319bcb9372fe..24db2d33fab7 100644
---- a/arch/x86/kernel/hpet.c
-+++ b/arch/x86/kernel/hpet.c
-@@ -11,6 +11,7 @@
- #include <linux/cpu.h>
- #include <linux/pm.h>
- #include <linux/io.h>
-+#include <linux/irqdomain.h>
- 
- #include <asm/fixmap.h>
- #include <asm/hpet.h>
-@@ -476,7 +477,7 @@ static int hpet_msi_next_event(unsigned long delta,
- static int hpet_setup_msi_irq(unsigned int irq)
- {
- 	if (x86_msi.setup_hpet_msi(irq, hpet_blockid)) {
--		irq_free_hwirq(irq);
-+		irq_domain_free_irqs(irq, 1);
- 		return -EINVAL;
- 	}
- 	return 0;
-@@ -484,9 +485,10 @@ static int hpet_setup_msi_irq(unsigned int irq)
- 
- static int hpet_assign_irq(struct hpet_dev *dev)
- {
--	unsigned int irq = irq_alloc_hwirq(-1);
-+	int irq;
- 
--	if (!irq)
-+	irq = irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
-+	if (irq <= 0)
- 		return -EINVAL;
- 
- 	irq_set_handler_data(irq, dev);
--- 
-1.7.10.4
+This looks wrong to ACPICA upstream.
+
+> +		struct {
+> +			struct acpi_resource_address base;
+> +			struct acpi_resource_address64_common addr;
+> +			struct acpi_resource_source resource_source;
+> +		} common;
+> +	};
+>  };
+
+And this.
+Though anonymous structs/unions are now C11 standard, I still didn't see it used in the ACPICA upstream.
+It could be a problem if someone still compiles ACPICA using old compilers.
+
+> 
+>  struct acpi_resource_extended_address64 {
+> -	ACPI_RESOURCE_ADDRESS_COMMON u8 revision_ID;
+> -	u64 granularity;
+> -	u64 minimum;
+> -	u64 maximum;
+> -	u64 translation_offset;
+> -	u64 address_length;
+> -	u64 type_specific;
+> +	union {
+> +		struct {
+> +			ACPI_RESOURCE_ADDRESS_COMMON
+> +			u8 revision_ID;
+> +			ACPI_RESOURCE_ADDRESS64_COMMON
+> +			u64 type_specific;
+> +		};
+
+Ditto.
+
+> +		struct {
+> +			struct acpi_resource_address base;
+> +			u8 revision_ID;
+> +			struct acpi_resource_address64_common addr;
+> +			u64 type_specific;
+> +		} common;
+> +	};
+
+Ditto.
+
+I think what you want is the ability to access common.addr and common.base from different resource address64 types.
+So we can achieve this directly in the ACPICA upstream without using the union.
+
+I tried this in the ACPICA upstream and the result is:
+https://github.com/zetalog/acpica/commit/0f4ed510
+Let me send its linuxized version after this email.
+
+Thanks and best regards
+-Lv
+
+>  };
+> 
+>  struct acpi_resource_extended_irq {
+> --
+> 1.7.10.4
 
