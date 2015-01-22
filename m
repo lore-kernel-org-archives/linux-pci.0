@@ -1,81 +1,148 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <54C06726.4090805@linux.intel.com>
+Date: Thu, 22 Jan 2015 10:57:42 +0800
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+MIME-Version: 1.0
+To: "Zheng, Lv" <lv.zheng@intel.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>, Borislav Petkov <bp@alien8.de>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [RFC Patch 00/19] Improve ACPI resource parsing interfaces and data structures
-Date: Thu,  8 Jan 2015 10:32:47 +0800
-Message-Id: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"Moore, Robert" <robert.moore@intel.com>,
+	"Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
+	Len Brown <lenb@kernel.org>
+CC: "Luck, Tony" <tony.luck@intel.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"devel@acpica.org" <devel@acpica.org>
+Subject: Re: [RFC Patch 05/19] ACPI: Provide union for address_space64 and
+ ext_address_space64
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-6-git-send-email-jiang.liu@linux.intel.com> <1AE640813FDE7649BE1B193DEA596E88026B9EFB@SHSMSX101.ccr.corp.intel.com>
+In-Reply-To: <1AE640813FDE7649BE1B193DEA596E88026B9EFB@SHSMSX101.ccr.corp.intel.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During enabling ACPI based IOAPIC hotplug, Thomas noticed some issues
-in ACPI resource parsing interfaces. So this is an effort to improve them.
 
-Patch 1-12 improve ACPI resource parsing interfaces and also fixes some
-bugs.
 
-Patch 13-19 try to share the common data structure resource_list_entry
-between PCI and ACPI. It may also be shared with PNP too.
-
-The patchset is based on v3.19-rc3 and you may get it from:
-https://github.com/jiangliu/linux.git acpires_v1
-
-Jiang Liu (11):
-  ACPI: Fix a bug in parsing ACPI Memroy24 resource
-  ACPI: Normalize return value of resource parser functions
-  ACPI: Set flag IORESOURCE_UNSET for unassigned resources
-  ACPI: Enforce stricter checks for address space descriptors
-  ACPI: Return translation offset when parsing ACPI address space
-    resources
-  ACPI: Translate resource into master side address for bridge window
-    resources
-  ACPI: Add field offset to struct resource_list_entry
-  ACPI: Introduce helper function acpi_dev_filter_resource_type()
-  resources: Move struct resource_list_entry from ACPI into resource
-    core
-  PCI: Use common resource list management code instead of private
-    implementation
-  x86/PCI/ACPI: Use common ACPI resource interfaces to simplify
-    implementation
-
-Thomas Gleixner (8):
-  ACPI: Remove redundant check in function
-    acpi_dev_resource_address_space()
-  ACPI: Implement proper length checks for mem resources
-  ACPI: Use the length check for io resources as well
-  ACPI: Let the parser return false for disabled resources
-  ACPI: Provide union for address_space64 and ext_address_space64
-  ACPI: Unify the parsing of address_space and ext_address_space
-  ACPI: Move the window flag logic to the combined parser
-  ACPI: Add prefetch decoding to the address space parser
-
- arch/arm/kernel/bios32.c            |    5 +-
- arch/x86/pci/acpi.c                 |  297 ++++++++++---------------------
- arch/x86/pci/bus_numa.c             |    4 +-
- drivers/acpi/acpi_lpss.c            |    6 +-
- drivers/acpi/acpi_platform.c        |    2 +-
- drivers/acpi/resource.c             |  333 ++++++++++++++++++++++-------------
- drivers/dma/acpi-dma.c              |    8 +-
- drivers/pci/bus.c                   |   18 +-
- drivers/pci/host-bridge.c           |    8 +-
- drivers/pci/host/pci-host-generic.c |    4 +-
- drivers/pci/host/pci-xgene.c        |    4 +-
- drivers/pci/host/pcie-xilinx.c      |    4 +-
- drivers/pci/probe.c                 |   10 +-
- drivers/pnp/pnpacpi/rsparser.c      |    4 +-
- include/acpi/acrestyp.h             |   49 ++++--
- include/linux/acpi.h                |   12 +-
- include/linux/ioport.h              |   25 +++
- include/linux/pci.h                 |    8 +-
- kernel/resource.c                   |   48 +++++
- 19 files changed, 452 insertions(+), 397 deletions(-)
-
--- 
-1.7.10.4
-
+On 2015/1/22 10:32, Zheng, Lv wrote:
+> Hi, Thomas and Jiang
+> 
+>> From: Jiang Liu [mailto:jiang.liu@linux.intel.com]
+>> Sent: Thursday, January 08, 2015 10:33 AM
+>>
+>> From: Thomas Gleixner <tglx@linutronix.de>
+>>
+>> address_space64 and ext_address_space64 share substracts just at
+>> different offsets. To unify the parsing functions implement the two
+>> structs as unions of their substructs, so we can extract the shared
+>> data.
+>>
+>> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>> ---
+>>  include/acpi/acrestyp.h |   49 ++++++++++++++++++++++++++++++++++-------------
+>>  1 file changed, 36 insertions(+), 13 deletions(-)
+>>
+>> diff --git a/include/acpi/acrestyp.h b/include/acpi/acrestyp.h
+>> index eb760ca0b2e0..307d5b2605c8 100644
+>> --- a/include/acpi/acrestyp.h
+>> +++ b/include/acpi/acrestyp.h
+>> @@ -326,23 +326,46 @@ struct acpi_resource_address32 {
+>>  	struct acpi_resource_source resource_source;
+>>  };
+>>
+>> -struct acpi_resource_address64 {
+>> -	ACPI_RESOURCE_ADDRESS_COMMON u64 granularity;
+>> -	u64 minimum;
+>> -	u64 maximum;
+>> -	u64 translation_offset;
+>> +#define ACPI_RESOURCE_ADDRESS64_COMMON \
+>> +	u64 granularity;	       \
+>> +	u64 minimum;		       \
+>> +	u64 maximum;		       \
+>> +	u64 translation_offset;	       \
+>>  	u64 address_length;
+>> -	struct acpi_resource_source resource_source;
+>> +
+>> +struct acpi_resource_address64_common {
+>> +ACPI_RESOURCE_ADDRESS64_COMMON};
+>> +
+>> +struct acpi_resource_address64 {
+>> +	union {
+>> +		struct {
+>> +			ACPI_RESOURCE_ADDRESS_COMMON
+>> +			ACPI_RESOURCE_ADDRESS64_COMMON
+>> +			struct acpi_resource_source resource_source;
+>> +		};
+> 
+> This looks wrong to ACPICA upstream.
+> 
+>> +		struct {
+>> +			struct acpi_resource_address base;
+>> +			struct acpi_resource_address64_common addr;
+>> +			struct acpi_resource_source resource_source;
+>> +		} common;
+>> +	};
+>>  };
+> 
+> And this.
+> Though anonymous structs/unions are now C11 standard, I still didn't see it used in the ACPICA upstream.
+> It could be a problem if someone still compiles ACPICA using old compilers.
+> 
+>>
+>>  struct acpi_resource_extended_address64 {
+>> -	ACPI_RESOURCE_ADDRESS_COMMON u8 revision_ID;
+>> -	u64 granularity;
+>> -	u64 minimum;
+>> -	u64 maximum;
+>> -	u64 translation_offset;
+>> -	u64 address_length;
+>> -	u64 type_specific;
+>> +	union {
+>> +		struct {
+>> +			ACPI_RESOURCE_ADDRESS_COMMON
+>> +			u8 revision_ID;
+>> +			ACPI_RESOURCE_ADDRESS64_COMMON
+>> +			u64 type_specific;
+>> +		};
+> 
+> Ditto.
+> 
+>> +		struct {
+>> +			struct acpi_resource_address base;
+>> +			u8 revision_ID;
+>> +			struct acpi_resource_address64_common addr;
+>> +			u64 type_specific;
+>> +		} common;
+>> +	};
+> 
+> Ditto.
+> 
+> I think what you want is the ability to access common.addr and common.base from different resource address64 types.
+> So we can achieve this directly in the ACPICA upstream without using the union.
+> 
+> I tried this in the ACPICA upstream and the result is:
+> https://github.com/zetalog/acpica/commit/0f4ed510
+> Let me send its linuxized version after this email.
+Hi Lv,
+	Thanks for your great support:)
+	What's the normal process to propagate this patch into
+linux kernel? Or how long will it take? We have another hotplug
+patch set which depends on this patch set, then depends on this
+ACPICA core change.
+Regards!
+Gerry
+> 
+> Thanks and best regards
+> -Lv
+> 
+>>  };
+>>
+>>  struct acpi_resource_extended_irq {
+>> --
+>> 1.7.10.4
+> 
