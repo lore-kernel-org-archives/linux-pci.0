@@ -1,95 +1,162 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:60687 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751888AbbABU50 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jan 2015 15:57:26 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Rob Herring <robherring2@gmail.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Zheng, Lv" <lv.zheng@intel.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 1/2] of/pci: add of_pci_dma_configure() update dma configuration
-Date: Fri, 02 Jan 2015 21:57:11 +0100
-Message-ID: <1450683.bjnXzaM6nd@wuerfel>
-In-Reply-To: <54A6D375.6050604@ti.com>
-References: <1419459099-6667-1-git-send-email-m-karicheri2@ti.com> <CAL_JsqJtVnP_5zAiUvMwL00JQV0mjw-R_hEkxiv13ZuNrQ8nAA@mail.gmail.com> <54A6D375.6050604@ti.com>
-MIME-Version: 1.0
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"Moore, Robert" <robert.moore@intel.com>,
+	"Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
+	Len Brown <lenb@kernel.org>
+CC: "Luck, Tony" <tony.luck@intel.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"devel@acpica.org" <devel@acpica.org>
+Subject: RE: [RFC Patch 05/19] ACPI: Provide union for address_space64 and
+ ext_address_space64
+Date: Thu, 22 Jan 2015 03:24:52 +0000
+Message-ID: <1AE640813FDE7649BE1B193DEA596E88026B9F36@SHSMSX101.ccr.corp.intel.com>
+References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+ <1420684386-5975-6-git-send-email-jiang.liu@linux.intel.com>
+ <1AE640813FDE7649BE1B193DEA596E88026B9EFB@SHSMSX101.ccr.corp.intel.com>
+ <54C06726.4090805@linux.intel.com>
+In-Reply-To: <54C06726.4090805@linux.intel.com>
 Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+MIME-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 02 January 2015 12:20:53 Murali Karicheri wrote:
-> Initially I had the same idea to re-use the existing function 
-> of_dma_configure() for this. I wanted to defer this until we have an 
-> agreement on the changes required for the subject functionality. My 
-> quick review of the code suggestio this would require additional API 
-> changes as below. I did a quick test of the changes and it works for 
-> Keystone, but need to be reviewed by everyone as I touch the IOMMU 
-> functionality here and I don't have a platform with IOMMU. Need test by 
-> someone to make sure I don't break anything.
+Hi, Gerry
+
+> From: Jiang Liu [mailto:jiang.liu@linux.intel.com]
+> Sent: Thursday, January 22, 2015 10:58 AM
 > 
-> Here are the changes required to implement this suggestion.
-> 
-> 1. Move the of_dma_configure() to drivers/of/device.c (include the API 
-> in of_device.h) and make it global (using proper EXPORT macro). 
-> Otherwise, we will have to include of_platform.h in drivers/of/of_pci.c 
-> assuming the prototype is defined in of_platform.h which doesn't look 
-> appropriate to me. Would require following additional include files in 
-> drivers/of/device.c as well.
-> 
-> +#include <linux/of_address.h>
-> +#include <linux/of_iommu.h>
-> +#include <linux/dma-mapping.h>
+> On 2015/1/22 10:32, Zheng, Lv wrote:
+> > Hi, Thomas and Jiang
+> >
+> >> From: Jiang Liu [mailto:jiang.liu@linux.intel.com]
+> >> Sent: Thursday, January 08, 2015 10:33 AM
+> >>
+> >> From: Thomas Gleixner <tglx@linutronix.de>
+> >>
+> >> address_space64 and ext_address_space64 share substracts just at
+> >> different offsets. To unify the parsing functions implement the two
+> >> structs as unions of their substructs, so we can extract the shared
+> >> data.
+> >>
+> >> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> >> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> >> ---
+> >>  include/acpi/acrestyp.h |   49 ++++++++++++++++++++++++++++++++++-------------
+> >>  1 file changed, 36 insertions(+), 13 deletions(-)
+> >>
+> >> diff --git a/include/acpi/acrestyp.h b/include/acpi/acrestyp.h
+> >> index eb760ca0b2e0..307d5b2605c8 100644
+> >> --- a/include/acpi/acrestyp.h
+> >> +++ b/include/acpi/acrestyp.h
+> >> @@ -326,23 +326,46 @@ struct acpi_resource_address32 {
+> >>  	struct acpi_resource_source resource_source;
+> >>  };
+> >>
+> >> -struct acpi_resource_address64 {
+> >> -	ACPI_RESOURCE_ADDRESS_COMMON u64 granularity;
+> >> -	u64 minimum;
+> >> -	u64 maximum;
+> >> -	u64 translation_offset;
+> >> +#define ACPI_RESOURCE_ADDRESS64_COMMON \
+> >> +	u64 granularity;	       \
+> >> +	u64 minimum;		       \
+> >> +	u64 maximum;		       \
+> >> +	u64 translation_offset;	       \
+> >>  	u64 address_length;
+> >> -	struct acpi_resource_source resource_source;
+> >> +
+> >> +struct acpi_resource_address64_common {
+> >> +ACPI_RESOURCE_ADDRESS64_COMMON};
+> >> +
+> >> +struct acpi_resource_address64 {
+> >> +	union {
+> >> +		struct {
+> >> +			ACPI_RESOURCE_ADDRESS_COMMON
+> >> +			ACPI_RESOURCE_ADDRESS64_COMMON
+> >> +			struct acpi_resource_source resource_source;
+> >> +		};
+> >
+> > This looks wrong to ACPICA upstream.
+> >
+> >> +		struct {
+> >> +			struct acpi_resource_address base;
+> >> +			struct acpi_resource_address64_common addr;
+> >> +			struct acpi_resource_source resource_source;
+> >> +		} common;
+> >> +	};
+> >>  };
+> >
+> > And this.
+> > Though anonymous structs/unions are now C11 standard, I still didn't see it used in the ACPICA upstream.
+> > It could be a problem if someone still compiles ACPICA using old compilers.
+> >
+> >>
+> >>  struct acpi_resource_extended_address64 {
+> >> -	ACPI_RESOURCE_ADDRESS_COMMON u8 revision_ID;
+> >> -	u64 granularity;
+> >> -	u64 minimum;
+> >> -	u64 maximum;
+> >> -	u64 translation_offset;
+> >> -	u64 address_length;
+> >> -	u64 type_specific;
+> >> +	union {
+> >> +		struct {
+> >> +			ACPI_RESOURCE_ADDRESS_COMMON
+> >> +			u8 revision_ID;
+> >> +			ACPI_RESOURCE_ADDRESS64_COMMON
+> >> +			u64 type_specific;
+> >> +		};
+> >
+> > Ditto.
+> >
+> >> +		struct {
+> >> +			struct acpi_resource_address base;
+> >> +			u8 revision_ID;
+> >> +			struct acpi_resource_address64_common addr;
+> >> +			u64 type_specific;
+> >> +		} common;
+> >> +	};
+> >
+> > Ditto.
+> >
+> > I think what you want is the ability to access common.addr and common.base from different resource address64 types.
+> > So we can achieve this directly in the ACPICA upstream without using the union.
+> >
+> > I tried this in the ACPICA upstream and the result is:
+> > https://github.com/zetalog/acpica/commit/0f4ed510
+> > Let me send its linuxized version after this email.
+> Hi Lv,
+> 	Thanks for your great support:)
+> 	What's the normal process to propagate this patch into
+> linux kernel? Or how long will it take? We have another hotplug
+> patch set which depends on this patch set, then depends on this
+> ACPICA core change.
 
-Yes, sounds good.
+There won't be divergences if things are proceeded in this way:
+If we can reach an agreement on the linuxized version, then it can be merged directly by Rafael.
+And I'll zap it from the ACPICA release series.
 
-> 2. drivers/iommu/of_iommu.c. This is needed so that of_iommu_configure() 
-> can take confuguration from the root bus DT as you have suggested.
-> 
-> -struct iommu_ops *of_iommu_configure(struct device *dev)
-> +struct iommu_ops *of_iommu_configure(struct device *dev, struct 
-> device_node *node)
->   {
->          struct of_phandle_args iommu_spec;
->          struct device_node *np;
-> @@ -145,7 +145,7 @@ struct iommu_ops *of_iommu_configure(struct device *dev)
->           * See the `Notes:' section of
->           * Documentation/devicetree/bindings/iommu/iommu.txt
->           */
-> -       while (!of_parse_phandle_with_args(dev->of_node, "iommus",
-> +       while (!of_parse_phandle_with_args(node, "iommus",
->                                             "#iommu-cells", idx,
->                                             &iommu_spec)) {
+Thanks and best regards
+-Lv
 
-Right.
-
-> 3. drivers/of/of_pci.c. The existing function (added in this patch) will 
-> make call to of_dma_configure() as
-> 
-> parent_np = of_get_pci_root_bridge_parent(pci_dev);
-> of_dma_configure(dev, parent_np);
-
-With dev = &pci_dev->dev, I assume?
-
-> 4. drivers/of/platform.c. Add a wrapper function 
-> of_platform_dma_configure() that calls of_dma_configure() as
-> of_dma_configure(dev, dev->of_node). All existing calls converted to 
-> this wrapper.
-
-There are only two callers, I don't think we need a wrapper for it,
-just change the calling conventions along with step 2.
-
-> If the above looks good, I can post v3 of the patch with these changes.
-
-With that one minor change, sounds perfect to me. The same can also
-be used by other bus types if we ever need it.
-
-	Arnd
+> Regards!
+> Gerry
+> >
+> > Thanks and best regards
+> > -Lv
+> >
+> >>  };
+> >>
+> >>  struct acpi_resource_extended_irq {
+> >> --
+> >> 1.7.10.4
+> >
