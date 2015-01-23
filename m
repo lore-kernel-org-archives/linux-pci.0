@@ -1,68 +1,81 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 15 Jan 2015 22:30:50 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from comal.ext.ti.com ([198.47.26.152]:48424 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751877AbbAWWdm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Jan 2015 17:33:42 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <iommu@lists.linux-foundation.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [RFC Patch 16/19] ACPI: Introduce helper function
- acpi_dev_filter_resource_type()
-In-Reply-To: <1420684386-5975-17-git-send-email-jiang.liu@linux.intel.com>
-Message-ID: <alpine.DEB.2.11.1501152228560.5526@nanos>
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-17-git-send-email-jiang.liu@linux.intel.com>
+	Will Deacon <will.deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH v4 3/6] of: fix size when dma-range is not used
+Date: Fri, 23 Jan 2015 17:32:36 -0500
+Message-ID: <1422052359-12384-4-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
+References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 8 Jan 2015, Jiang Liu wrote:
+Fix the dma-range size when the DT attribute is missing. i.e  set size to
+dev->coherent_dma_mask + 1 instead of dev->coherent_dma_mask. To detect
+overflow when mask is set to max of u64, add a check, log error and return.
+Some platform use mask format for size in DTS. So add a work around to
+catch this and fix.
 
-> Introduce helper function acpi_dev_filter_resource_type(), which may
-> be used by acpi_dev_get_resources() to filer out resource based on
-> resource type.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  drivers/acpi/resource.c |   54 +++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/acpi.h    |    1 +
->  2 files changed, 55 insertions(+)
-> 
-> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-> index 54204ac94f8e..8ea7c26d6915 100644
-> --- a/drivers/acpi/resource.c
-> +++ b/drivers/acpi/resource.c
-> @@ -570,3 +570,57 @@ int acpi_dev_get_resources(struct acpi_device *adev, struct list_head *list,
->  	return c.count;
->  }
->  EXPORT_SYMBOL_GPL(acpi_dev_get_resources);
-> +
-> +/**
-> + * acpi_dev_filter_resource_type - Filter ACPI resource according to resource
-> + *				   types
-> + * @ares: Input ACPI resource object.
-> + * @arg: Valid resource types of IORESOURCE_XXX
-> + *
-> + * This is a hepler function to support acpi_dev_get_resources(), which filters
-> + * ACPI resource objects according to resource types.
-> + */
-> +int acpi_dev_filter_resource_type(struct acpi_resource *ares, void *arg)
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Grant Likely <grant.likely@linaro.org>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-Why is the filter a void pointer instead of an simple unsigned long?
-That does not make any sense as you convert it to unsigned long right away:
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+---
+ drivers/of/device.c |   14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
 
-> +{
-> +	unsigned long type = 0, types = (unsigned long)arg;
+diff --git a/drivers/of/device.c b/drivers/of/device.c
+index 2de320d..0a5ff54 100644
+--- a/drivers/of/device.c
++++ b/drivers/of/device.c
+@@ -105,12 +105,24 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+ 	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
+ 	if (ret < 0) {
+ 		dma_addr = offset = 0;
+-		size = dev->coherent_dma_mask;
++		size = dev->coherent_dma_mask + 1;
+ 	} else {
+ 		offset = PFN_DOWN(paddr - dma_addr);
++		/*
++		 * Add a work around to treat the size as mask + 1 in case
++		 * it is defined in DT as a mask.
++		 */
++		if (size & 1)
++			size = size + 1;
+ 		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+ 	}
+ 
++	/* if size is 0, we have an overflow of u64 */
++	if (!size) {
++		dev_err(dev, "invalid size\n");
++		return;
++	}
++
+ 	dev->dma_pfn_offset = offset;
+ 
+ 	coherent = of_dma_is_coherent(np);
+-- 
+1.7.9.5
 
-So this should be:
-
-int acpi_dev_filter_resource_type(struct acpi_resource *ares, unsigned long type_mask)
-
-or something like that.
-
-Thanks,
-
-	tglx
