@@ -1,228 +1,191 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:2955 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752075AbbAUCcq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 21:32:46 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:62385 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752357AbbAWX6s (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 18:58:48 -0500
+Received: by mail-ob0-f170.google.com with SMTP id wp4so330722obc.1
+        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 15:58:47 -0800 (PST)
+Date: Fri, 23 Jan 2015 17:58:44 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
 	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	<linuxppc-dev@lists.ozlabs.org>
-Subject: [PATCH v2 18/30] PCI/powerpc: Use pci_scan_root_bridge() for simplicity
-Date: Wed, 21 Jan 2015 08:30:13 +0800
-Message-ID: <1421800225-26230-19-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
-References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
+	Michal Simek <monstr@monstr.eu>,
+	Martin Wilck <martin.wilck@ts.fujitsu.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [RFC PATCH v3 1/2] drivers: pci: fix pci_mmap_fits()
+ implementation for procfs mmap
+Message-ID: <20150123235844.GY29776@google.com>
+References: <1415877558-8906-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1415877558-8906-2-git-send-email-lorenzo.pieralisi@arm.com>
+ <20141121175114.GC6578@google.com>
+ <20150121184456.GA30346@red-moon>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150121184456.GA30346@red-moon>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we could use pci_scan_root_bridge() to scan
-pci buses, provide powerpc specific pci_host_bridge_ops.
+On Wed, Jan 21, 2015 at 06:44:56PM +0000, Lorenzo Pieralisi wrote:
+> Hi Bjorn,
+> 
+> On Fri, Nov 21, 2014 at 05:51:14PM +0000, Bjorn Helgaas wrote:
+> > On Thu, Nov 13, 2014 at 11:19:15AM +0000, Lorenzo Pieralisi wrote:
+> > > The introduction of pci_mmap_fits() in commit:
+> > > 
+> > > b5ff7df3df9efab511244d5a299fce706c71af48
+> > > "Check mapped ranges on sysfs resource files"
+> > > 
+> > > allowed to check for valid range mappings of PCI resources to user space
+> > > when mapping PCI resources through the sysfs filesystem.
+> > > 
+> > > The mapping of resources through the sysfs expects the offset passed
+> > > by the user through the mmap syscall to be 0, and the pgoff is adjusted
+> > > by the kernel to memory map the resource to the CPU physical address
+> > > corresponding to the PCI resource in question.
+> > > 
+> > > The usage of procfs mapping of PCI resources (/proc/bus/pci files)
+> > > is more controversial in that userspace programs mapping PCI resources
+> > > are expected to pass in the mmap offset field either a CPU physical address
+> > > or a PCI bar value, depending on the architecture.
+> > > 
+> > > By the time pci_mmap_fits() was used to check PCI resource ranges for
+> > > procfs PCI resources mapping in commit:
+> > > 
+> > > 9eff02e2042f96fb2aedd02e032eca1c5333d7
+> > > "PCI: check mmap range of /proc/bus/pci files too"
+> > > 
+> > > the procfs interface for mmapping resources to user space broke, since
+> > > pci_mmap_fits() expected the offset passed from user space in the mmap
+> > > call to be 0, not the CPU physical address or PCI BAR value of the
+> > > resource in question.
+> > > 
+> > > Subsequent attempts at fixing the pci_mmap_fits() implementation failed
+> > > to fix the issue (or fixed the issue in some architectures but not for
+> > > all of them, ARM and SPARC procfs interface PCI resources mapping stayed
+> > > broken throughout) in particular commits:
+> > > 
+> > > 8c05cd08a7504b855c265263e84af61aabafa329
+> > > "PCI: fix offset check for sysfs mmapped files"
+> > > 
+> > > and
+> > > 
+> > > 3b519e4ea618b6943a82931630872907f9ac2c2b
+> > > "PCI: fix size checks for mmap() on /proc/bus/pci files"
+> > > 
+> > > fixed procfs PCI resources mapping checks in pci_mmap_fits for some
+> > > architectures, but not for architectures like SPARC that expects
+> > > the offset value passed from user space through the mmap syscall
+> > > (when mapping through procfs) to represent the PCI BAR value of the
+> > > resource to be mapped.
+> > > 
+> > > The reason behind the breakage is the following. The addresses stored
+> > > in PCI device resources for memory spaces correspond to CPU physical
+> > > addresses, which do not necessarily map 1:1 to PCI bus addresses as
+> > > programmed in PCI devices configuration spaces.
+> > > 
+> > > This implies that the sanity checks carried out in pci_mmap_fits() to
+> > > ensure that the user executes an mmap of a "real" pci resource are
+> > > erroneous when executed through procfs. Some platforms (ie SPARC)
+> > > expect the offset value to be passed in (procfs mapping) to be the
+> > > PCI BAR configuration value as read from the PCI device configuration
+> > > space, not the fixed-up CPU physical address that is present in PCI
+> > > device resources.
+> > > 
+> > > The required pgoff (offset in mmap syscall) value passed from userspace
+> > > is supposed to represent the resource value exported through
+> > > /proc/bus/pci/devices when the resource is mmapped though procfs (and 0
+> > > when the mapping is carried out through sysfs resource files), which
+> > > corresponds to the PCI resource filtered through the pci_resource_to_user()
+> > > API.
+> > > 
+> > > This patch converts the PCI resource to the expected "user visible"
+> > > value through pci_resource_to_user() before carrying out sanity checks
+> > > in pci_mmap_fits() so that the check is carried out on the resource
+> > > values as expected from the userspace mmap API.
+> > > 
+> > > Cc: Arnd Bergmann <arnd@arndb.de>
+> > > Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> > > Cc: Russell King <linux@arm.linux.org.uk>
+> > > Cc: David S. Miller <davem@davemloft.net>
+> > > Cc: Michal Simek <monstr@monstr.eu>
+> > > Cc: Martin Wilck <martin.wilck@ts.fujitsu.com>
+> > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > 
+> > Hi Lorenzo,
+> > 
+> > I think this patch is the right thing to do.  I'm going to try to write
+> > patches for microblaze, mips, powerpc, and sparc that implement their
+> > pci_resource_to_user() in terms of pcibios_resource_to_bus() (the patches
+> > are easy; it's the arguments for correctness that take time).  Then I'll
+> > try to convince myself that those arches are currently broken and will be
+> > fixed by your patch below.
+> > 
+> > But I'll be on vacation all next week, so this will take me some time and
+> > it may not make the next merge window.
+> 
+> I do not know if you had time to implement the patches above, I would
+> like to ask Russell to merge patch 2 of this series though, since (1) it
+> is a fix in the first place given the current proc/sys interface, and
+> (2) we need it to remove dependency on pcibios for arm64 drivers; I am
+> just waiting to merge patch 2 upstream since in a way it depends on your
+> decision on what the final proc/sys interface should look like and how
+> we implement it.
+> 
+> As things stand, patch 2 can be merged and fixes the current API on ARM.
 
-Suggested-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: linuxppc-dev@lists.ozlabs.org
----
- arch/powerpc/include/asm/machdep.h       |    2 +-
- arch/powerpc/kernel/pci-common.c         |   63 +++++++++++++++++-------------
- arch/powerpc/platforms/pseries/pci.c     |    8 ++--
- arch/powerpc/platforms/pseries/pseries.h |    2 +-
- 4 files changed, 42 insertions(+), 33 deletions(-)
+I haven't had a chance to do anything with these, sorry.  The second patch
+only touches ARM, and I think it's fine to merge that.  I'll ack it in case
+that's useful to you.
 
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index 8e7f2a8..b811d12 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -129,7 +129,7 @@ struct machdep_calls {
- 	void		(*pcibios_fixup)(void);
- 	int		(*pci_probe_mode)(struct pci_bus *);
- 	void		(*pci_irq_fixup)(struct pci_dev *dev);
--	int		(*pcibios_set_root_bus_speed)(struct pci_host_bridge
-+	void		(*pcibios_set_root_bus_speed)(struct pci_host_bridge
- 				*bridge);
- 
- 	/* To setup PHBs when using automatic OF platform driver for PCI */
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index c11bfed..1f44df9 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -767,14 +767,33 @@ int pci_proc_domain(struct pci_bus *bus)
- 	return 1;
- }
- 
--int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+static void pci_host_bridge_set_root_bus_speed(
-+		struct pci_host_bridge *bridge)
- {
- 	if (ppc_md.pcibios_set_root_bus_speed)
--		return ppc_md.pcibios_set_root_bus_speed(bridge);
--	
--	return 0;
-+		ppc_md.pcibios_set_root_bus_speed(bridge);
- }
- 
-+static void pci_host_bridge_of_scan_bus(struct pci_host_bridge *host)
-+{
-+	int mode = PCI_PROBE_NORMAL;
-+	struct pci_bus *bus = host->bus;
-+	struct pci_controller *hose = dev_get_drvdata(&host->dev);
-+
-+	/* Get probe mode and perform scan */
-+	if (hose->dn && ppc_md.pci_probe_mode)
-+		mode = ppc_md.pci_probe_mode(bus);
-+
-+	pr_debug("    probe mode: %d\n", mode);
-+	if (mode == PCI_PROBE_DEVTREE)
-+		of_scan_bus(hose->dn, bus);
-+
-+	if (mode == PCI_PROBE_NORMAL) {
-+		pci_bus_update_busn_res_end(bus, 255);
-+		hose->last_busno = pci_scan_child_bus(bus);
-+		pci_bus_update_busn_res_end(bus, hose->last_busno);
-+	}
-+}
- /* This header fixup will do the resource fixup for all devices as they are
-  * probed, but not for bridge ranges
-  */
-@@ -1577,6 +1596,11 @@ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
- 	return of_node_get(hose->dn);
- }
- 
-+static struct pci_host_bridge_ops phb_ops = {
-+	.phb_set_root_bus_speed = pci_host_bridge_set_root_bus_speed,
-+	.phb_of_scan_bus = pci_host_bridge_of_scan_bus,
-+};
-+
- /**
-  * pci_scan_phb - Given a pci_controller, setup and scan the PCI bus
-  * @hose: Pointer to the PCI host controller instance structure
-@@ -1584,9 +1608,8 @@ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
- void pcibios_scan_phb(struct pci_controller *hose)
- {
- 	LIST_HEAD(resources);
--	struct pci_bus *bus;
-+	struct pci_host_bridge *host;
- 	struct device_node *node = hose->dn;
--	int mode;
- 
- 	pr_debug("PCI: Scanning PHB %s\n", of_node_full_name(node));
- 
-@@ -1602,30 +1625,16 @@ void pcibios_scan_phb(struct pci_controller *hose)
- 	pci_add_resource(&resources, &hose->busn);
- 
- 	/* Create an empty bus for the toplevel */
--	bus = pci_create_root_bus(hose->parent, 
-+	host = pci_scan_root_bridge(hose->parent,
- 			PCI_DOMBUS(hose->global_number, hose->first_busno),
--			hose->ops, hose, &resources);
--	if (bus == NULL) {
--		pr_err("Failed to create bus for PCI domain %04x\n",
-+			hose->ops, hose, &resources, &phb_ops);
-+	if (host == NULL) {
-+		pr_err("Failed to create host bridge for PCI domain %04x\n",
- 			hose->global_number);
- 		pci_free_resource_list(&resources);
- 		return;
- 	}
--	hose->bus = bus;
--
--	/* Get probe mode and perform scan */
--	mode = PCI_PROBE_NORMAL;
--	if (node && ppc_md.pci_probe_mode)
--		mode = ppc_md.pci_probe_mode(bus);
--	pr_debug("    probe mode: %d\n", mode);
--	if (mode == PCI_PROBE_DEVTREE)
--		of_scan_bus(node, bus);
--
--	if (mode == PCI_PROBE_NORMAL) {
--		pci_bus_update_busn_res_end(bus, 255);
--		hose->last_busno = pci_scan_child_bus(bus);
--		pci_bus_update_busn_res_end(bus, hose->last_busno);
--	}
-+	hose->bus = host->bus;
- 
- 	/* Platform gets a chance to do some global fixups before
- 	 * we proceed to resource allocation
-@@ -1634,9 +1643,9 @@ void pcibios_scan_phb(struct pci_controller *hose)
- 		ppc_md.pcibios_fixup_phb(hose);
- 
- 	/* Configure PCI Express settings */
--	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
-+	if (host->bus && !pci_has_flag(PCI_PROBE_ONLY)) {
- 		struct pci_bus *child;
--		list_for_each_entry(child, &bus->children, node)
-+		list_for_each_entry(child, &host->bus->children, node)
- 			pcie_bus_configure_settings(child);
- 	}
- }
-diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
-index af685d6..89ff79c 100644
---- a/arch/powerpc/platforms/pseries/pci.c
-+++ b/arch/powerpc/platforms/pseries/pci.c
-@@ -110,7 +110,7 @@ static void fixup_winbond_82c105(struct pci_dev* dev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
- 			 fixup_winbond_82c105);
- 
--int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
-+void pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
- {
- 	struct device_node *dn, *pdn;
- 	struct pci_bus *bus;
-@@ -121,7 +121,7 @@ int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
- 
- 	dn = pcibios_get_phb_of_node(bus);
- 	if (!dn)
--		return 0;
-+		return;
- 
- 	for (pdn = dn; pdn != NULL; pdn = of_get_next_parent(pdn)) {
- 		rc = of_property_read_u32_array(pdn,
-@@ -135,7 +135,7 @@ int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
- 
- 	if (rc) {
- 		pr_debug("no ibm,pcie-link-speed-stats property\n");
--		return 0;
-+		return;
- 	}
- 
- 	switch (pcie_link_speed_stats[0]) {
-@@ -168,5 +168,5 @@ int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
- 		break;
- 	}
- 
--	return 0;
-+	return;
- }
-diff --git a/arch/powerpc/platforms/pseries/pseries.h b/arch/powerpc/platforms/pseries/pseries.h
-index 5d0be3a..9aa9c13 100644
---- a/arch/powerpc/platforms/pseries/pseries.h
-+++ b/arch/powerpc/platforms/pseries/pseries.h
-@@ -63,7 +63,7 @@ extern int dlpar_detach_node(struct device_node *);
- 
- /* PCI root bridge prepare function override for pseries */
- struct pci_host_bridge;
--int pseries_set_root_bus_speed(struct pci_host_bridge *bridge);
-+void pseries_set_root_bus_speed(struct pci_host_bridge *bridge);
- 
- unsigned long pseries_memory_block_size(void);
- 
--- 
-1.7.1
+Bjorn
 
+> > > ---
+> > >  drivers/pci/pci-sysfs.c | 13 ++++++++-----
+> > >  1 file changed, 8 insertions(+), 5 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> > > index 2c6643f..e4634e3 100644
+> > > --- a/drivers/pci/pci-sysfs.c
+> > > +++ b/drivers/pci/pci-sysfs.c
+> > > @@ -963,17 +963,20 @@ void pci_remove_legacy_files(struct pci_bus *b)
+> > >  int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vma,
+> > >  		  enum pci_mmap_api mmap_api)
+> > >  {
+> > > -	unsigned long nr, start, size, pci_start;
+> > > +	unsigned long nr, start, size, pci_offset;
+> > > +	resource_size_t pci_start, pci_end;
+> > >  
+> > >  	if (pci_resource_len(pdev, resno) == 0)
+> > >  		return 0;
+> > >  	nr = vma_pages(vma);
+> > >  	start = vma->vm_pgoff;
+> > > +	pci_resource_to_user(pdev, resno, &pdev->resource[resno],
+> > > +			     &pci_start, &pci_end);
+> > >  	size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
+> > > -	pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
+> > > -			pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
+> > > -	if (start >= pci_start && start < pci_start + size &&
+> > > -			start + nr <= pci_start + size)
+> > > +	pci_offset = (mmap_api == PCI_MMAP_PROCFS) ?
+> > > +			pci_start >> PAGE_SHIFT : 0;
+> > > +	if (start >= pci_offset && start < pci_offset + size &&
+> > > +			start + nr <= pci_offset + size)
+> > >  		return 1;
+> > >  	return 0;
+> > >  }
+> > > -- 
+> > > 2.1.2
+> > > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Please read the FAQ at  http://www.tux.org/lkml/
+> > 
