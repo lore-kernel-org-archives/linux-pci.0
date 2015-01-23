@@ -1,123 +1,139 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:23827 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756100AbbAPDrn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jan 2015 22:47:43 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH 25/28] PCI: Rename __pci_create_root_bus() to pci_create_root_bus()
-Date: Fri, 16 Jan 2015 09:44:23 +0800
-Message-ID: <1421372666-12288-26-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
-References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-qc0-f171.google.com ([209.85.216.171]:39058 "EHLO
+	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751009AbbAWWxW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 17:53:22 -0500
+Received: by mail-qc0-f171.google.com with SMTP id s11so119933qcv.2
+        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 14:53:21 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1422052241.4048.14.camel@redhat.com>
+References: <20150113182605.15479.9020.stgit@gimli.home> <20150123215058.GM29776@google.com>
+ <1422052241.4048.14.camel@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 23 Jan 2015 16:53:01 -0600
+Message-ID: <CAErSpo7yzS5p6bH2UrwGi-HA9jg7TLm12eKXNJEwuo65bTw3=Q@mail.gmail.com>
+Subject: Re: [PATCH] PCI: quirks: DMA alias quirk for Adaptec 3405
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	aacraid@adaptec.com,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now no one use pci_create_root_bus(), we could remove it
-and rename __pci_create_root_bus() to pci_create_root_bus().
+On Fri, Jan 23, 2015 at 4:30 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> On Fri, 2015-01-23 at 15:50 -0600, Bjorn Helgaas wrote:
+>> On Tue, Jan 13, 2015 at 11:26:50AM -0700, Alex Williamson wrote:
+>> > As noted in the added comment, this device is actually an Intel 80333
+>> > I/O processor where the exposed device at 0e.0 is actually the address
+>> > translation unit of the I/O processor and a hidden, private device at
+>> > 01.0 masters the DMA for the device.  In order to enable the IOMMU, we
+>> > therefore need to create a fixed alias between the exposed and hidden
+>> > devfn.
+>> >
+>> > Scenarios like this are potentially likely for any device incorporating
+>> > this I/O processor, so this little bit of abstraction with the fixed
+>> > alias table should make future additions trivial.
+>>
+>> This sounds like the result of some serious debugging :)  Do you have a
+>> pointer to a bugzilla or some email discussion?  I'd like to make the fix
+>> discoverable starting with a failure symptom.
+>
+> Sorry, this one comes from a private bugzilla.  The symptom is simply a
+> slew of IOMMU faults when trying to boot the system with the IOMMU
+> enabled.  For example, with the Adaptec 3405 showing up at 02:0e.0 on an
+> Intel system, the log is filled with:
+>
+> dmar: DRHD: handling fault status reg 3
+> dmar: DMAR:[DMA Write] Request device [02:01.0] fault addr ffbff000
+> DMAR:[fault reason 02] Present bit in context entry is clear
+> dmar: DRHD: handling fault status reg 3
+> dmar: DMAR:[DMA Write] Request device [02:01.0] fault addr ffbfe000
+> DMAR:[fault reason 02] Present bit in context entry is clear
 
-Signed-off-by: wangyijing@huawei.com
----
- drivers/pci/probe.c |   27 ++++++++-------------------
- include/linux/pci.h |    3 ---
- 2 files changed, 8 insertions(+), 22 deletions(-)
+Huh.  I applied it, but I really prefer to have public bugzillas for
+public fixes.  If you want to keep the proprietary details in a
+private bugzilla and just open a corresponding kernel.org bugzilla
+with the secret things omitted, that would be fine with me.  In fact,
+I'd prefer that, because I'd rather keep references to kernel.org
+bugzillas than to redhat.com ones because then we don't have to depend
+on RedHat's continuing existence or bugzilla maintenance.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 30323ac..0817910 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1852,7 +1852,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
- {
- }
- 
--static struct pci_bus *__pci_create_root_bus(
-+static struct pci_bus *pci_create_root_bus(
- 		struct pci_host_bridge *bridge, struct pci_ops *ops)
- {
- 	int error;
-@@ -1935,18 +1935,6 @@ err_out:
- 	return NULL;
- }
- 
--struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
--		struct pci_ops *ops, void *sysdata, struct list_head *resources)
--{
--	struct pci_host_bridge *host;
--
--	host = pci_create_host_bridge(parent, db, resources, sysdata, NULL);
--	if (!host)
--		return NULL;
--	
--	return __pci_create_root_bus(host, ops);
--}
--
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
- {
- 	struct resource *res = &b->busn_res;
-@@ -2025,7 +2013,7 @@ static struct pci_bus *__pci_scan_root_bus(
- 			break;
- 		}
- 
--	b = __pci_create_root_bus(host, ops);
-+	b = pci_create_root_bus(host, ops);
- 	if (!b) {
- 		pci_free_host_bridge(host);
- 		return NULL;
-@@ -2091,18 +2079,19 @@ struct pci_bus *pci_scan_bus_legacy(u32 db, struct pci_ops *ops,
- 					void *sysdata)
- {
- 	LIST_HEAD(resources);
--	struct pci_bus *b;
-+	struct pci_host_bridge *host;
- 
- 	pci_add_resource(&resources, &ioport_resource);
- 	pci_add_resource(&resources, &iomem_resource);
- 	pci_add_resource(&resources, &busn_resource);
--	b = pci_create_root_bus(NULL, db, ops, sysdata, &resources);
--	if (b) {
--		pci_scan_child_bus(b);
-+	host = pci_create_host_bridge(NULL, db, sysdata, &resources, NULL);
-+	if (host) {
-+		__pci_scan_root_bus(host, ops);
-+		return host->bus;
- 	} else {
- 		pci_free_resource_list(&resources);
- 	}
--	return b;
-+	return NULL;
- }
- EXPORT_SYMBOL(pci_scan_bus_legacy);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2970a84..9ddca3b 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -785,9 +785,6 @@ void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
- struct pci_bus *pci_scan_bus_legacy(u32 dombus, struct pci_ops *ops, void *sysdata);
--struct pci_bus *pci_create_root_bus(struct device *parent, u32 dombus,
--				    struct pci_ops *ops, void *sysdata,
--				    struct list_head *resources);
- void pci_free_host_bridge(struct pci_host_bridge *host);
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
- int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
--- 
-1.7.1
+Sometimes the details of the problem are really useful when we get a
+better understanding of the issue later, or when we want to do some
+refactoring, or simply when we want to test a change to the code.
 
+Bjorn
+
+> As expected, the device is non-functional.  In the log I have there are
+> only DMA write faults and the addresses are all ffbxxxxx, which falls
+> into a reserved memory area on the system and owned by a PNP0c02 device
+> according to iomem.  With the change here the device, of course, works
+> without any issues with VT-d enabled.  Thanks,
+>
+> Alex
+>
+>> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+>> > Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>
+>> > ---
+>> >
+>> >  drivers/pci/quirks.c |   37 +++++++++++++++++++++++++++++++++++++
+>> >  1 file changed, 37 insertions(+)
+>> >
+>> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> > index ed6f89b..19bdb17 100644
+>> > --- a/drivers/pci/quirks.c
+>> > +++ b/drivers/pci/quirks.c
+>> > @@ -3528,6 +3528,43 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_JMICRON,
+>> >                      quirk_dma_func1_alias);
+>> >
+>> >  /*
+>> > + * Some devices DMA with the wrong devfn, not just the wrong function.
+>> > + * quirk_fixed_dma_alias() uses this table to create fixed aliass, where
+>> > + * the alias is "fixed" and independent of the device devfn.
+>> > + *
+>> > + * For example, the Adaptec 3405 is a PCIe card making use of an Intel 80333
+>> > + * I/O processor.  To software, this appears as a straightforward PCIe-to-PCI/X
+>> > + * bridge with a single device on the subordinate bus.  In reality, the exposed
+>> > + * device at 0e.0 is the Address Translation Unit (ATU) of the controller that
+>> > + * provides a bridge to the internal bus of the I/O processor.  The controller
+>> > + * supports private devices, which can be hidden from PCI config space.  In the
+>> > + * case of the Adaptec 3405, a private device at 01.0 appears to be the DMA
+>> > + * engine, which therefore needs to become a DMA alias for the device.
+>> > + */
+>> > +static const struct pci_device_id fixed_dma_alias_tbl[] = {
+>> > +   { PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x0285,
+>> > +                    PCI_VENDOR_ID_ADAPTEC2, 0x02bb), /* Adaptec 3405 */
+>> > +     .driver_data = PCI_DEVFN(1, 0) },
+>> > +   { 0 }
+>> > +};
+>> > +
+>> > +static void quirk_fixed_dma_alias(struct pci_dev *dev)
+>> > +{
+>> > +   const struct pci_device_id *id;
+>> > +
+>> > +   id = pci_match_id(fixed_dma_alias_tbl, dev);
+>> > +   if (id) {
+>> > +           dev->dma_alias_devfn = id->driver_data;
+>> > +           dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
+>> > +           dev_info(&dev->dev, "Enabling fixed DMA alias to %02x.%d\n",
+>> > +                    PCI_SLOT(dev->dma_alias_devfn),
+>> > +                    PCI_FUNC(dev->dma_alias_devfn));
+>> > +   }
+>> > +}
+>> > +
+>> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ADAPTEC2, 0x0285, quirk_fixed_dma_alias);
+>> > +
+>> > +/*
+>> >   * A few PCIe-to-PCI bridges fail to expose a PCIe capability, resulting in
+>> >   * using the wrong DMA alias for the device.  Some of these devices can be
+>> >   * used as either forward or reverse bridges, so we need to test whether the
+>> >
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
