@@ -1,80 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:42963 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753005AbbAZLVW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 06:21:22 -0500
-Date: Mon, 26 Jan 2015 11:21:11 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Liviu Dudau <liviu@dudau.co.uk>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
+Received: from comal.ext.ti.com ([198.47.26.152]:48427 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752531AbbAWWdp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 Jan 2015 17:33:45 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <iommu@lists.linux-foundation.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>
-Subject: Re: [RFC PATCH 1/3] drivers: of: fix resources freeing in
- of_pci_get_host_bridge_resources()
-Message-ID: <20150126112111.GA547@red-moon>
-References: <1420644571-18928-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1420644571-18928-2-git-send-email-lorenzo.pieralisi@arm.com>
- <20150119183228.GE10762@e106497-lin.cambridge.arm.com>
- <20150120104922.GF5398@red-moon>
- <20150120112031.GA342@bart.dudau.co.uk>
+	Will Deacon <will.deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH v4 5/6] PCI: update dma configuration from DT
+Date: Fri, 23 Jan 2015 17:32:38 -0500
+Message-ID: <1422052359-12384-6-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
+References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150120112031.GA342@bart.dudau.co.uk>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 20, 2015 at 11:20:32AM +0000, Liviu Dudau wrote:
-> On Tue, Jan 20, 2015 at 10:49:22AM +0000, Lorenzo Pieralisi wrote:
-> > On Mon, Jan 19, 2015 at 06:32:29PM +0000, Liviu Dudau wrote:
-> > 
-> > [...]
-> > 
-> > > > @@ -146,6 +146,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
-> > > >  	struct of_pci_range_parser parser;
-> > > >  	char range_type[4];
-> > > >  	int err;
-> > > > +	struct pci_host_bridge_window *window;
-> > > >  
-> > > >  	if (io_base)
-> > > >  		*io_base = (resource_size_t)OF_BAD_ADDR;
-> > > > @@ -225,7 +226,10 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
-> > > >  conversion_failed:
-> > > >  	kfree(res);
-> > > >  parse_failed:
-> > > > +	list_for_each_entry(window, resources, list)
-> > > > +		kfree(window->res);
-> > > >  	pci_free_resource_list(resources);
-> > > > +	kfree(bus_range);
-> > > >  	return err;
-> > > >  }
-> > > >  EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
-> > > 
-> > > Hi Lorenzo et all,
-> > > 
-> > > Here is my personal view and I am happy to hear from others on the desired
-> > > behaviour:
-> > > 
-> > > When I wrote this function what I had in mind was that it will parse as
-> > > much as possible from the device tree and return a list of resources that
-> > > could be successfully converted. If the entire list of ranges could not
-> > > be converted then an error code will be returned, but the caller still
-> > > had the list as constructed up to the error. It was the job of the caller
-> > > to free the list in either cases, as stated in the comment.
-> > 
-> > That's what I am questioning. If the function takes an error path, the
-> > windows list is freed, so the resource pointers are gone. There is no
-> > way the caller can grab those resource pointers and free them.
-> 
-> I stand corrected. Your patch is needed.
+If there is a DT node available for the root bridge's parent device,
+use the dma configuration from that device node. For example, keystone
+PCI devices would require dma_pfn_offset to be set correctly in the
+device structure of the pci device in order to have the correct dma mask.
+The DT node will have dma-ranges defined for this. Also support using
+the DT property dma-coherent to allow coherent DMA operation by the
+PCI device.
 
-Mind acking it ? I will ask Bjorn to take it then.
+This patch use the new helper function of_pci_dma_configure() to update
+the device dma configuration.
 
-Thanks,
-Lorenzo
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Grant Likely <grant.likely@linaro.org>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+---
+ drivers/pci/probe.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 23212f8..d7dcd6c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -6,6 +6,7 @@
+ #include <linux/delay.h>
+ #include <linux/init.h>
+ #include <linux/pci.h>
++#include <linux/of_pci.h>
+ #include <linux/pci_hotplug.h>
+ #include <linux/slab.h>
+ #include <linux/module.h>
+@@ -1520,6 +1521,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	dev->dev.dma_mask = &dev->dma_mask;
+ 	dev->dev.dma_parms = &dev->dma_parms;
+ 	dev->dev.coherent_dma_mask = 0xffffffffull;
++	of_pci_dma_configure(dev);
+ 
+ 	pci_set_dma_max_seg_size(dev, 65536);
+ 	pci_set_dma_seg_boundary(dev, 0xffffffff);
+-- 
+1.7.9.5
+
