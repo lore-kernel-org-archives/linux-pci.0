@@ -1,94 +1,73 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [RFC Patch 00/19] Improve ACPI resource parsing interfaces and data structures
-Date: Sun, 11 Jan 2015 23:38:09 +0100
-Message-ID: <2025625.5YhoBnTE03@vostro.rjw.lan>
-In-Reply-To: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:44856 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751478AbbAWXvO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 18:51:14 -0500
+Received: by mail-ob0-f182.google.com with SMTP id gq1so249196obb.13
+        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 15:51:14 -0800 (PST)
+Date: Fri, 23 Jan 2015 17:51:11 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Michel =?iso-8859-1?Q?D=E4nzer?= <michel@daenzer.net>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Federico <federicotg@gmail.com>, dri-devel@lists.freedesktop.org
+Subject: Re: [PATCH v2] pci: Fix infinite loop with ROM image of size 0
+Message-ID: <20150123235111.GX29776@google.com>
+References: <CAFUqUc6JPgSK4tTP7KuJ8TmVLZR6Abaf9uHUTRZA+OJhv8DoBA@mail.gmail.com>
+ <1421657600-31561-1-git-send-email-michel@daenzer.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1421657600-31561-1-git-send-email-michel@daenzer.net>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 08, 2015 10:32:47 AM Jiang Liu wrote:
-> During enabling ACPI based IOAPIC hotplug, Thomas noticed some issues
-> in ACPI resource parsing interfaces. So this is an effort to improve them.
+On Mon, Jan 19, 2015 at 05:53:20PM +0900, Michel Dänzer wrote:
+> From: Michel Dänzer <michel.daenzer@amd.com>
 > 
-> Patch 1-12 improve ACPI resource parsing interfaces and also fixes some
-> bugs.
+> If the image size would ever read as 0, pci_get_rom_size could keep
+> processing the same image over and over again.
 > 
-> Patch 13-19 try to share the common data structure resource_list_entry
-> between PCI and ACPI. It may also be shared with PNP too.
+> Reported-by: Federico <federicotg@gmail.com>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
 
-I've looked at the patches briefly.
+Applied with Alex's ack to pci/resource for v3.20, thanks!
 
-I like the changes at the general level, but there are some things I'm
-potentially concerned about in them.  Need more time to look at them,
-I'll do my best to do that this week while at the conference.
-
-> The patchset is based on v3.19-rc3 and you may get it from:
-> https://github.com/jiangliu/linux.git acpires_v1
+> ---
 > 
-> Jiang Liu (11):
->   ACPI: Fix a bug in parsing ACPI Memroy24 resource
->   ACPI: Normalize return value of resource parser functions
->   ACPI: Set flag IORESOURCE_UNSET for unassigned resources
->   ACPI: Enforce stricter checks for address space descriptors
->   ACPI: Return translation offset when parsing ACPI address space
->     resources
->   ACPI: Translate resource into master side address for bridge window
->     resources
->   ACPI: Add field offset to struct resource_list_entry
->   ACPI: Introduce helper function acpi_dev_filter_resource_type()
->   resources: Move struct resource_list_entry from ACPI into resource
->     core
->   PCI: Use common resource list management code instead of private
->     implementation
->   x86/PCI/ACPI: Use common ACPI resource interfaces to simplify
->     implementation
+> v2:
+> * Use unsigned instead of u16 for the local length variable (not sure if
+>   the multiplication by 512 could overflow otherwise)
+> * Integrate length condition into while statement
+> * Add stable tag
 > 
-> Thomas Gleixner (8):
->   ACPI: Remove redundant check in function
->     acpi_dev_resource_address_space()
->   ACPI: Implement proper length checks for mem resources
->   ACPI: Use the length check for io resources as well
->   ACPI: Let the parser return false for disabled resources
->   ACPI: Provide union for address_space64 and ext_address_space64
->   ACPI: Unify the parsing of address_space and ext_address_space
->   ACPI: Move the window flag logic to the combined parser
->   ACPI: Add prefetch decoding to the address space parser
+>  drivers/pci/rom.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
 > 
->  arch/arm/kernel/bios32.c            |    5 +-
->  arch/x86/pci/acpi.c                 |  297 ++++++++++---------------------
->  arch/x86/pci/bus_numa.c             |    4 +-
->  drivers/acpi/acpi_lpss.c            |    6 +-
->  drivers/acpi/acpi_platform.c        |    2 +-
->  drivers/acpi/resource.c             |  333 ++++++++++++++++++++++-------------
->  drivers/dma/acpi-dma.c              |    8 +-
->  drivers/pci/bus.c                   |   18 +-
->  drivers/pci/host-bridge.c           |    8 +-
->  drivers/pci/host/pci-host-generic.c |    4 +-
->  drivers/pci/host/pci-xgene.c        |    4 +-
->  drivers/pci/host/pcie-xilinx.c      |    4 +-
->  drivers/pci/probe.c                 |   10 +-
->  drivers/pnp/pnpacpi/rsparser.c      |    4 +-
->  include/acpi/acrestyp.h             |   49 ++++--
->  include/linux/acpi.h                |   12 +-
->  include/linux/ioport.h              |   25 +++
->  include/linux/pci.h                 |    8 +-
->  kernel/resource.c                   |   48 +++++
->  19 files changed, 452 insertions(+), 397 deletions(-)
+> diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
+> index f955edb..eb0ad53 100644
+> --- a/drivers/pci/rom.c
+> +++ b/drivers/pci/rom.c
+> @@ -71,6 +71,7 @@ size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom, size_t size)
+>  {
+>  	void __iomem *image;
+>  	int last_image;
+> +	unsigned length;
+>  
+>  	image = rom;
+>  	do {
+> @@ -93,9 +94,9 @@ size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom, size_t size)
+>  		if (readb(pds + 3) != 'R')
+>  			break;
+>  		last_image = readb(pds + 21) & 0x80;
+> -		/* this length is reliable */
+> -		image += readw(pds + 16) * 512;
+> -	} while (!last_image);
+> +		length = readw(pds + 16);
+> +		image += length * 512;
+> +	} while (length && !last_image);
+>  
+>  	/* never return a size larger than the PCI resource window */
+>  	/* there are known ROMs that get the size wrong */
+> -- 
+> 2.1.4
 > 
-> 
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
