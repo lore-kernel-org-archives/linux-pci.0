@@ -1,78 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f180.google.com ([209.85.216.180]:45014 "EHLO
-	mail-qc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750947AbbACPJv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 3 Jan 2015 10:09:51 -0500
-Received: by mail-qc0-f180.google.com with SMTP id i8so14162979qcq.11
-        for <linux-pci@vger.kernel.org>; Sat, 03 Jan 2015 07:09:50 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1420158432-645-1-git-send-email-sasha.levin@oracle.com>
-References: <1420158432-645-1-git-send-email-sasha.levin@oracle.com>
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:39043 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751427AbbAWVeQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 16:34:16 -0500
+Received: by mail-ob0-f182.google.com with SMTP id gq1so9443665obb.13
+        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 13:34:16 -0800 (PST)
+Date: Fri, 23 Jan 2015 15:34:12 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 3 Jan 2015 08:09:30 -0700
-Message-ID: <CAErSpo6cBsE2nggKJ+D-oC-t6qrZu3WPCYXqw2orv6ZhsRujoQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI/sysfs: off by two and memory corruption in
- driver_override parameter
-To: Sasha Levin <sasha.levin@oracle.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: Murali Karicheri <m-karicheri2@ti.com>,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>,
+	Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	Fabio Porcedda <fabio.porcedda@gmail.com>
+Subject: Re: [PATCH] PCI: keystone: fix incorrect annotations on probe and
+ remove
+Message-ID: <20150123213412.GK29776@google.com>
+References: <20150108221736.GA39839@dtor-ws>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150108221736.GA39839@dtor-ws>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 1, 2015 at 5:27 PM, Sasha Levin <sasha.levin@oracle.com> wrote:
-> There are two different issues fixed here:
->
->  - On nun-NULL terminated input a random byte of memory would get flipped
-> from '\n' to '\0'.
->  - When printing the driver_override parameter when it is 4095 and 4094 bytes
-> long the printing code would access invalid memory.
+[+cc Fabio]
 
-Thanks, Sasha.
+On Thu, Jan 08, 2015 at 02:17:36PM -0800, Dmitry Torokhov wrote:
+> Even though platform bus is not hot-pluggable, devices on it can be unbound
+> from the driver and bound back to it via sysfs, so we should not be using
+> __init annotations on probe() and __exit annotations on remove() methods.
 
-Can you please:
+I don't completely understand this problem.  Does this mean there should be
+no __init/__exit annotations in these drivers at all?  If other PCI host
+bridge drivers have the same problem, I'd like to fix them all at once.
 
-  - Split these two fixes into two separate patches
-  - Look up the commit that introduced this code
-  - CC the author
-  - Add "Fixes: " lines
-  - Add stable tags for the relevant kernels
+For example, after applying this patch, ks_pcie_probe() is non-__init, but
+it calls ks_add_pcie_port(), which is still __init.  I thought that was
+illegal.
 
-Bjorn
+I'm not sure about module_platform_driver_probe() either; it generates
+__init and __exit functions.  Should those annotations be removed, too?
 
-> Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+> Signed-off-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
 > ---
->  drivers/pci/pci-sysfs.c |   10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index aa012fb..be6b2b1 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -521,17 +521,17 @@ static ssize_t driver_override_store(struct device *dev,
->         struct pci_dev *pdev = to_pci_dev(dev);
->         char *driver_override, *old = pdev->driver_override, *cp;
->
-> -       if (count > PATH_MAX)
-> +       /* We need to keep extra room for a newline */
-> +       if (count >= (PATH_MAX - 1))
->                 return -EINVAL;
->
->         driver_override = kstrndup(buf, count, GFP_KERNEL);
->         if (!driver_override)
->                 return -ENOMEM;
->
-> -       cp = strchr(driver_override, '\n');
-> -       if (cp)
-> -               *cp = '\0';
-> -
-> +       driver_override[count] = '\0';
-> +       if (driver_override[count - 1] == '\n')
-> +               driver_override[count - 1] = 0;
->         if (strlen(driver_override)) {
->                 pdev->driver_override = driver_override;
->         } else {
-> --
-> 1.7.10.4
->
+> 
+> Not tested, found by casual code inspection.
+> 
+>  drivers/pci/host/pci-keystone.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+> index 1b893bc..7b84e1d 100644
+> --- a/drivers/pci/host/pci-keystone.c
+> +++ b/drivers/pci/host/pci-keystone.c
+> @@ -332,7 +332,7 @@ static const struct of_device_id ks_pcie_of_match[] = {
+>  };
+>  MODULE_DEVICE_TABLE(of, ks_pcie_of_match);
+>  
+> -static int __exit ks_pcie_remove(struct platform_device *pdev)
+> +static int ks_pcie_remove(struct platform_device *pdev)
+>  {
+>  	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
+>  
+> @@ -341,7 +341,7 @@ static int __exit ks_pcie_remove(struct platform_device *pdev)
+>  	return 0;
+>  }
+>  
+> -static int __init ks_pcie_probe(struct platform_device *pdev)
+> +static int ks_pcie_probe(struct platform_device *pdev)
+>  {
+>  	struct device *dev = &pdev->dev;
+>  	struct keystone_pcie *ks_pcie;
+> @@ -398,9 +398,9 @@ fail_clk:
+>  	return ret;
+>  }
+>  
+> -static struct platform_driver ks_pcie_driver __refdata = {
+> +static struct platform_driver ks_pcie_driver = {
+>  	.probe  = ks_pcie_probe,
+> -	.remove = __exit_p(ks_pcie_remove),
+> +	.remove = ks_pcie_remove,
+>  	.driver = {
+>  		.name	= "keystone-pcie",
+>  		.owner	= THIS_MODULE,
+> -- 
+> 2.2.0.rc0.207.ga3a616c
+> 
+> 
+> -- 
+> Dmitry
