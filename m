@@ -1,210 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout2.freenet.de ([195.4.92.92]:57615 "EHLO mout2.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756952AbbALTSA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 12 Jan 2015 14:18:00 -0500
-Message-ID: <54B41D44.5080606@maya.org>
-Date: Mon, 12 Jan 2015 20:15:16 +0100
-From: Andreas Hartmann <andihartmann@freenet.de>
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:56143 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751554AbbAWXl2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 18:41:28 -0500
+Received: by mail-ob0-f182.google.com with SMTP id gq1so222473obb.13
+        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 15:41:28 -0800 (PST)
+Date: Fri, 23 Jan 2015 17:41:24 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	iommu@lists.linux-foundation.org, Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: Re: [PATCH v4 4/6] of/pci: add of_pci_dma_configure() update dma
+ configuration
+Message-ID: <20150123234124.GW29776@google.com>
+References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
+ <1422052359-12384-5-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>,
-	Andreas Hartmann <andihartmann@freenet.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/4] PCI: quirk Atheros AR93xx to avoid bus reset
-References: <20141121180322.26669.65689.stgit@gimli.home>		 <20141121182427.26669.82417.stgit@gimli.home>		 <20150108160733.GA6575@google.com> <1420745423.25367.77.camel@redhat.com>	 <54B3E653.8020900@maya.org> <1421081344.6130.54.camel@redhat.com>
-In-Reply-To: <1421081344.6130.54.camel@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1422052359-12384-5-git-send-email-m-karicheri2@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Alex!
-
-Alex Williamson wrote:
-> On Mon, 2015-01-12 at 16:20 +0100, Andreas Hartmann wrote:
->> Alex Williamson wrote:
->>> On Thu, 2015-01-08 at 09:07 -0700, Bjorn Helgaas wrote:
->>>> On Fri, Nov 21, 2014 at 11:24:27AM -0700, Alex Williamson wrote:
->>>>> Reports against the TL-WDN4800 card indicate that PCI bus reset of
->>>>> this Atheros device cause system lock-ups and resets.  I've also
->>>>> been able to confirm this behavior on multiple systems.  The device
->>>>> never returns from reset and attempts to access config space of the
->>>>> device after reset result in hangs.  Blacklist bus reset for the
->>>>> device to avoid this issue.
->>>>>
->>>>> Reported-by: Andreas Hartmann <andihartmann@freenet.de>
->>>>> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
->>>>> Tested-by: Andreas Hartmann <andihartmann@freenet.de>
->>>>
->>>> If I understand correctly, these two (patches 3 & 4) fix a v3.14 regression
->>>> caused by 425c1b223dac ("PCI: Add Virtual Channel to save/restore support").
->>>>
->>>> If so, these should go to for-linus for v3.19.  What about patches 1 & 2?
->>>> Do they fix a regression?  Is there a pointer to a bugzilla or problem
->>>> report about that issue?
->>>>
->>>> I don't understand the connection between 425c1b223dac and
->>>> PCI_DEV_FLAGS_NO_BUS_RESET, because 425c1b223dac doesn't seem to do any
->>>> resets.  Is that the wrong commit, or can you outline the connection for
->>>> me?
->>>
->>> TBH, I don't have a lot of faith in associating this to 425c1b223dac,
->>> I'm not sure how Andreas' bisect landed there. 
->>
->> Because removing this patch made it working again :-)
->>
->> And too:
->> http://thread.gmane.org/gmane.linux.kernel.pci/35170/focus=35984
->>
->> Kernel 2.10. and 2.12. and 2.13. did work fine for me. 2.14 is the first
->> kernel, which hangs the machine at startup of the VM. The userland
->> (qemu) didn't change in between.
+On Fri, Jan 23, 2015 at 05:32:37PM -0500, Murali Karicheri wrote:
+> Add of_pci_dma_configure() to allow updating the dma configuration
+> of the pci device using the configuration from DT of the parent of
+> the root bridge device.
 > 
-> s/2\./3\./
-
-Thanks :-) It seems I don't like the number 3 :-)
-
-> Ok, so what about VC save/restore (425c1b223dac) is the problem then?
-> When we tried to determine that, you found that if we continue from the
-> top of the save loop, everything works (ie. no VC state saved), but if
-> you continue after the variable declaration of the same loop (ie. still
-> no VC state saved), it breaks:
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: Grant Likely <grant.likely@linaro.org>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Russell King <linux@arm.linux.org.uk>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 > 
-> http://www.spinics.net/lists/linux-pci/msg36166.html
+> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+> ---
+>  drivers/of/of_pci.c    |   39 +++++++++++++++++++++++++++++++++++++++
+>  include/linux/of_pci.h |   12 ++++++++++++
+>  2 files changed, 51 insertions(+)
 > 
-> So, please forgive me if I don't have a whole lot of faith that
-> 425c1b223dac is involved.
+> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> index 88471d3..34878c9 100644
+> --- a/drivers/of/of_pci.c
+> +++ b/drivers/of/of_pci.c
+> @@ -2,6 +2,7 @@
+>  #include <linux/export.h>
+>  #include <linux/of.h>
+>  #include <linux/of_address.h>
+> +#include <linux/of_device.h>
+>  #include <linux/of_pci.h>
+>  #include <linux/slab.h>
+>  
+> @@ -229,6 +230,44 @@ parse_failed:
+>  	return err;
+>  }
+>  EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
+> +
+> +/**
+> + * of_get_pci_root_bridge_parent - get the OF node of the root bridge's parent
+> + * @dev: ptr to pci_dev struct of the pci device
+> + *
+> + * This function will traverse the bus up to the root bus starting with
+> + * the child and return the OF node ptr to root bridge device's parent device.
+> + */
+> +struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev)
 
-It's hard for me, too. Really. It's kind of mystique.
+I'm not an OF person, but this interface seems like it might be too
+special-purpose.  Maybe it would be enough to add
+"of_get_pci_root_bridge()", and the caller could do this:
 
-> We also both independently determined that this particular device never
-> recovers from a PCI bus reset, even when done from userspace with setpci
-> and absolutely no save/restore wrappers.
+    struct device *bridge = of_get_pci_root_bridge(dev);
+    struct device_node *parent_np = bridge->parent->of_node;
 
-Yes.
+Also, the name "of_get_..." suggests that it increments a refcount, as
+of_get_parent() does.  But you aren't doing anything with the refcount.
 
->  Config space on the device is
-> never accessible after the reset.
+But I guess an "of_get_pci_root_bridge()" isn't doing anything OF-related,
+so maybe we should just add a "pci_get_host_bridge(struct pci_dev *)"
+to PCI instead.
 
-Yes.
+Bjorn
 
->  Therefore, how could any sort of bus
-> reset with save/restore ever work for this device?
-
-I can't say. What I definitely can say, is that I never had problems
-with running VMs w/ qemu until 3.14 came up. Do you think I'm lying? I
-used 3.10. and 3.12. for long time w/o (known!) problems (3.12 only on
-first start of VM). Otherwise I would have been here long time before :-))).
-
->> Therefore: from my point of view, it is a regression, because things
->> have been working < 2.14.
->>
->> Besides that: It is undoubted, that there is a problem with resetting
->> this card. But the difference between >= 3.14 and < 3.14 is, that < 3.14
->> has been working nevertheless. The patch
->> 425c1b223dac456d00a61fd6b451b6d1cf00d065 obviously changed something
->> which I can't say and I don't know off. Therefore, the quirk-patch is
->> definitely required, because things work completely fine again w/ this
->> patch.
->>
->> "Working" means for me here: I was able to start (and use) the VM w/o
->> crashing the machine and this isn't possible w/ unpatched 2.14+ any
->> more. Yes, w/ 2.12, I wasn't able to restart the VM (it then crashed the
->> machine), but w/ 2.10 even this was possible.
+> +{
+> +	struct pci_bus *bus = dev->bus;
+> +	struct device *bridge;
+> +
+> +	while (!pci_is_root_bus(bus))
+> +		bus = bus->parent;
+> +	bridge = bus->bridge;
+> +
+> +	return bridge->parent->of_node;
+> +}
+> +EXPORT_SYMBOL_GPL(of_get_pci_root_bridge_parent);
+> +
+> +/**
+> + * of_pci_dma_configure - Setup DMA configuration
+> + * @dev: ptr to pci_dev struct of the pci device
+> + *
+> + * Function to update PCI devices's DMA configuration using the same
+> + * info from the OF node of root host bridge's parent.
+> + */
+> +void of_pci_dma_configure(struct pci_dev *pci_dev)
+> +{
+> +	struct device *dev = &pci_dev->dev;
+> +	struct device_node *parent_np;
+> +
+> +	parent_np = of_get_pci_root_bridge_parent(pci_dev);
+> +	of_dma_configure(dev, parent_np);
+> +}
+> +EXPORT_SYMBOL_GPL(of_pci_dma_configure);
+> +
+>  #endif /* CONFIG_OF_ADDRESS */
+>  
+>  #ifdef CONFIG_PCI_MSI
+> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+> index ce0e5ab..0465a2a 100644
+> --- a/include/linux/of_pci.h
+> +++ b/include/linux/of_pci.h
+> @@ -16,6 +16,8 @@ int of_pci_get_devfn(struct device_node *np);
+>  int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+>  int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+>  int of_get_pci_domain_nr(struct device_node *node);
+> +struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev);
+> +void of_pci_dma_configure(struct pci_dev *pci_dev);
+>  #else
+>  static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
+>  {
+> @@ -50,6 +52,16 @@ of_get_pci_domain_nr(struct device_node *node)
+>  {
+>  	return -1;
+>  }
+> +
+> +static inline struct device_node
+> +*of_get_pci_root_bridge_parent(struct pci_dev *dev)
+> +{
+> +	return NULL;
+> +}
+> +
+> +static inline void of_pci_dma_configure(struct pci_dev *pci_dev)
+> +{
+> +}
+>  #endif
+>  
+>  #if defined(CONFIG_OF_ADDRESS)
+> -- 
+> 1.7.9.5
 > 
-> What?!  So v3.12 still had a machine crash when assigning this device.
-
-Yes. If you *re*start the VM (long time, I didn't knew that fact at all
-- I just discovered it during testing while analyzing the problem :-)).
-The first start (after reboot) was not a problem. This was the usual use
-case here :-)).
-
-Believe me, I'm really convinced that this card does have a problem with
-resets. I'm just wondering why it had worked for me until 3.13. That's all.
-
-> The vfio hot reset interface was added in v3.12, so v3.10 didn't have
-> any way to do a reset other than what pci_reset_function() decided to
-> do.  That all seems to associate the machine crash to the ability to do
-> a bus reset on the device.  I'm not sure why the behavior changed
-> between v3.14 and v3.12 (maybe the try-reset addition), but there's some
-> sort of pre-existing issue before we even got to 425c1b223dac.
-
-Most probably.
-
-> I'm perfectly happy tagging this for stable,
-
-Thanks!! I'm really very comfortable with your patch and your support!
-Really! Thanks a lot! It's just odd for me, why it partly worked (first
-start of VM worked) w/ 3.12 and 3.13 and 3.14 suddenly no more at all.
-
-You have been accidentally the sufferer - most probably it could have
-hit any other change, too. Sorry for that :-(. Therefore: kudos for
-anyway fixing the problem. This is really not a matter of course at all!
-
-> but it seems like a
-> hardware bug exposed by allowing userspace the ability to select a bus
-> reset.  Whether or not that's a kernel regression isn't exactly clear to
-> me ("new functionality exposes broken hardware, news at 11").  Thanks,
-> 
-> Alex
-
-
-Kind regards,
-Andreas
-
->>> IME, this device cannot,
->>> and has never been able to handle a bus reset.  A simple setpci
->>> experiment on the commandline can confirm this.  What I think happened
->>> is that with the PCI bus reset infrastructure we added, we switched QEMU
->>> to prefer PCI bus resets over things like PM D3hot->D0 resets.  So it's
->>> just more prolific use of bus resets by userspace.
->>>
->>> There's also no regression in 1 & 2, PM reset has never done anything
->>> useful on those devices.  Thanks,
->>>
->>> Alex
->>>
->>>>> ---
->>>>>
->>>>>  drivers/pci/quirks.c |   14 ++++++++++++++
->>>>>  1 file changed, 14 insertions(+)
->>>>>
->>>>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->>>>> index 561e10d..ebbd5b4 100644
->>>>> --- a/drivers/pci/quirks.c
->>>>> +++ b/drivers/pci/quirks.c
->>>>> @@ -3029,6 +3029,20 @@ static void quirk_no_pm_reset(struct pci_dev *dev)
->>>>>  DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_ATI, PCI_ANY_ID,
->>>>>  			       PCI_CLASS_DISPLAY_VGA, 8, quirk_no_pm_reset);
->>>>>  
->>>>> +static void quirk_no_bus_reset(struct pci_dev *dev)
->>>>> +{
->>>>> +	dev->dev_flags |= PCI_DEV_FLAGS_NO_BUS_RESET;
->>>>> +}
->>>>> +
->>>>> +/*
->>>>> + * Atheros AR93xx chips do not behave after a bus reset.  The device will
->>>>> + * throw a Link Down error on AER capable system and regardless of AER,
->>>>> + * config space of the device is never accessible again and typically
->>>>> + * causes the system to hang or reset when access is attempted.
->>>>> + * http://www.spinics.net/lists/linux-pci/msg34797.html
->>>>> + */
->>>>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0030, quirk_no_bus_reset);
->>>>> +
->>>>>  #ifdef CONFIG_ACPI
->>>>>  /*
->>>>>   * Apple: Shutdown Cactus Ridge Thunderbolt controller.
->>>>>
->>>
->>>
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>
-> 
-> 
-> 
-
