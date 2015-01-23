@@ -1,81 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:58800 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751796AbbAWXEG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 18:04:06 -0500
-Received: by mail-ob0-f173.google.com with SMTP id vb8so154105obc.4
-        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 15:04:05 -0800 (PST)
-Date: Fri, 23 Jan 2015 17:04:00 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Murali Karicheri <m-karicheri2@ti.com>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: keystone: fix incorrect annotations on probe and
- remove
-Message-ID: <20150123230400.GQ29776@google.com>
-References: <20150108221736.GA39839@dtor-ws>
+Received: from mail-la0-f44.google.com ([209.85.215.44]:48545 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751753AbbAWLfi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 06:35:38 -0500
+Received: by mail-la0-f44.google.com with SMTP id s18so874270lam.3
+        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 03:35:36 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150108221736.GA39839@dtor-ws>
+Reply-To: pricardofc@gmail.com
+In-Reply-To: <20150122222016.GF13072@google.com>
+References: <CAH9N0t9KvhzmZDgD8PD5VBPR-pPhuE8MmBgK9RY8+ZtKyz++pQ@mail.gmail.com>
+	<CAErSpo48mPENuHpES1Q73ep+NKG8x2Zgb+g71do02y7vufbtfQ@mail.gmail.com>
+	<CAH9N0t8s+kcG_Qok0wpoDz9jzwvPk_QmBK_p-qbACZJjrr+iVQ@mail.gmail.com>
+	<CAErSpo7NK6S8Dk3-FYFV=AVPR8cLRzmAWrBNQ2rke0BRADxAKw@mail.gmail.com>
+	<CAH9N0t-+gog9wNFo7hqhzrWuttrRyf5HjjHciFrDGz1rZUiUfw@mail.gmail.com>
+	<20150122222016.GF13072@google.com>
+Date: Fri, 23 Jan 2015 11:35:36 +0000
+Message-ID: <CAH9N0t_YoRZtPqWwAaNdHNW3m-HOfrCevBZGiOnM+VWGxeFwEQ@mail.gmail.com>
+Subject: Re: Hot add a PCIe device driver upon hotplug event
+From: Paulo Fortuna Carvalho <pricardofc@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 08, 2015 at 02:17:36PM -0800, Dmitry Torokhov wrote:
-> Even though platform bus is not hot-pluggable, devices on it can be unbound
-> from the driver and bound back to it via sysfs, so we should not be using
-> __init annotations on probe() and __exit annotations on remove() methods.
-> 
-> Signed-off-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+2015-01-22 22:20 GMT, Bjorn Helgaas:
+> [+cc Greg]
 
-I also removed the __init annotations from ks_pcie_host_init() and
-ks_add_pcie_port() and applied this to pci/host-keystone for v3.20, thanks!
+> It's better if you put your responses inline, e.g.,
+> http://en.wikipedia.org/wiki/Posting_style#Interleaved_style .  That's the
+> convention on Linux lists because it makes it easier for new participants
+> to enter the discussion.
 
-> ---
-> 
-> Not tested, found by casual code inspection.
-> 
->  drivers/pci/host/pci-keystone.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-> index 1b893bc..7b84e1d 100644
-> --- a/drivers/pci/host/pci-keystone.c
-> +++ b/drivers/pci/host/pci-keystone.c
-> @@ -332,7 +332,7 @@ static const struct of_device_id ks_pcie_of_match[] = {
->  };
->  MODULE_DEVICE_TABLE(of, ks_pcie_of_match);
->  
-> -static int __exit ks_pcie_remove(struct platform_device *pdev)
-> +static int ks_pcie_remove(struct platform_device *pdev)
->  {
->  	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
->  
-> @@ -341,7 +341,7 @@ static int __exit ks_pcie_remove(struct platform_device *pdev)
->  	return 0;
->  }
->  
-> -static int __init ks_pcie_probe(struct platform_device *pdev)
-> +static int ks_pcie_probe(struct platform_device *pdev)
->  {
->  	struct device *dev = &pdev->dev;
->  	struct keystone_pcie *ks_pcie;
-> @@ -398,9 +398,9 @@ fail_clk:
->  	return ret;
->  }
->  
-> -static struct platform_driver ks_pcie_driver __refdata = {
-> +static struct platform_driver ks_pcie_driver = {
->  	.probe  = ks_pcie_probe,
-> -	.remove = __exit_p(ks_pcie_remove),
-> +	.remove = ks_pcie_remove,
->  	.driver = {
->  		.name	= "keystone-pcie",
->  		.owner	= THIS_MODULE,
-> -- 
-> 2.2.0.rc0.207.ga3a616c
-> 
-> 
-> -- 
-> Dmitry
+Ok.
+
+> Also, some of your previous messages didn't make it to the mailing list,
+> probably because they exceeded 100K; see
+> http://vger.kernel.org/majordomo-info.html .
+
+Ok, although the response I get from the server is something about my
+email containing html format characters...
+
+> I extracted the dmesg information below from your "dmesg_output2.txt"
+> attachment from Jan 13.
+
+> On Thu, Jan 22, 2015 at 08:07:14PM +0000, Paulo Fortuna Carvalho wrote:
+>> Hi,
+>> Yes but i want that udev .rules file launches the script on "remove"
+>> ACTION.
+>> The event that triggers the removal procedure is an ATCA card handle
+>> switch. the corredponding hot-add event is caught by pciehp and sent to
+>> udev that runs a rule which calls my script on "remove" ACTION.
+
+> Let me summarize what I think you're trying to do.  Please correct me if I
+> don't understand correctly.
+
+> You're interested in device 0c:00.0: [1556:6014], which is here in the
+> topology:
+
+>   pci 0000:07:08.0: PCI bridge to [bus 0c]
+>   pci 0000:0c:00.0: [1556:6014] type 0 class 0x001100
+
+Yes.
+
+> You're looking for a way to run a script when a user expresses her intent
+> to remove a card, but before the card is actually removed.
+
+> Linux currently emits a KOBJ_REMOVE uevent when it tears down the internal
+> device data structure.  You can use udev to do things when that occurs, but
+> that's too late for what you want to do because the device is already
+> unusable.
+
+Yes.
+
+> 07:08.0, the Downstream Port leading to 0c:00.0, contains a hotplug
+> controller with several indicators and sensors:
+
+>   pciehp 0000:07:08.0:pcie24:   Physical Slot Number : 8
+>   pciehp 0000:07:08.0:pcie24:   Attention Button     : yes
+>   pciehp 0000:07:08.0:pcie24:   Power Controller     : yes
+>   pciehp 0000:07:08.0:pcie24:   MRL Sensor           : yes
+>   pciehp 0000:07:08.0:pcie24:   Attention Indicator  : yes
+>   pciehp 0000:07:08.0:pcie24:   Power Indicator      : yes
+>   pciehp 0000:07:08.0:pcie24:   Hot-Plug Surprise    :  no
+>   pciehp 0000:07:08.0:pcie24:   EMI Present          :  no
+>   pciehp 0000:07:08.0:pcie24:   Command Completed    : yes
+
+Yes, although now the configuration is a little different (we dont
+have some of the system components like the Attention Button):
+
+==============================================
+pciehp 0000:07:08.0:pcie24:   Physical Slot Number : 8
+pciehp 0000:07:08.0:pcie24:   Attention Button     : no
+pciehp 0000:07:08.0:pcie24:   Power Controller     : no
+pciehp 0000:07:08.0:pcie24:   MRL Sensor           : no
+pciehp 0000:07:08.0:pcie24:   Attention Indicator  : no
+pciehp 0000:07:08.0:pcie24:   Power Indicator      : no
+pciehp 0000:07:08.0:pcie24:   Hot-Plug Surprise    :  yes
+pciehp 0000:07:08.0:pcie24:   EMI Present          :  no
+pciehp 0000:07:08.0:pcie24:   Command Completed    : yes
+==============================================
+
+> It might be possible for Linux to emit other uevents, for example, when the
+> Attention Button is pressed.  I don't know how such a uevent would fit into
+> the udev framework.
+
+Yes, although we don't have the Attention Button physically installed
+but maybe we can use another way to trigger the interrupt.
+
+> You're using an ATCA card handle to physically remove the device, and you
+> mention a card handle switch that triggers the removal.  Is the card handle
+> something like this:
+> http://www.cbttechnology.com/resources/pdf/Datasheets/Sep2014/ATCA-Handles.pdf?
+
+Yes, its a handle similar to the one in the .pdf file you sent.
+
+> Is the microswitch mentioned there wired up as the Attention Button?  If
+> not, do you know how the state of the ATCA card handle switch is
+> communicated to the OS?
+
+> In your dmesg log, I see this:
+
+>   pciehp 0000:07:08.0:pcie24: pcie_isr: intr_loc 8
+>   pciehp 0000:07:08.0:pcie24: Presence/Notify input change
+>   pciehp 0000:07:08.0:pcie24: Card not present on Slot(8)
+>   pciehp 0000:07:08.0:pcie24: pcie_isr: intr_loc 8
+>   pciehp 0000:07:08.0:pcie24: Presence/Notify input change
+>   pciehp 0000:07:08.0:pcie24: Card present on Slot(8)
+
+> That means we only saw Presence Detect Changed interrupts: one for card
+> removal and another for card insertion.  We didn't see an Attention Button
+> interrupt at all.
+
+Yes, thats it. The Presence Detect Change signal is what triggers the
+uevent. We dont have an attention button in our ATCA system so we dont
+use it.
+
+> You can look at the Slot Status directly with "lspci -vvs07:08.0".  If you
+> do that while removing the device, e.g., run it while the handle is in
+> position #1, again in position #2, and again in position #3, you should see
+> whether there's any signal that could potentially be used to do what you
+> need.
+
+Yes. I will try to see if the handle switch can trigger an uvent
+before the remove device procedure from the system occurs. I will let
+you know the result.
