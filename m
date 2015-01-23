@@ -1,81 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:48424 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751877AbbAWWdm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 23 Jan 2015 17:33:42 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <iommu@lists.linux-foundation.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH v4 3/6] of: fix size when dma-range is not used
-Date: Fri, 23 Jan 2015 17:32:36 -0500
-Message-ID: <1422052359-12384-4-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:54972 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750820AbbAWXW0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 18:22:26 -0500
+Received: by mail-ob0-f178.google.com with SMTP id nt9so186506obb.9
+        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 15:22:26 -0800 (PST)
+Date: Fri, 23 Jan 2015 17:22:23 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Stephen Boyd <sboyd@codeaurora.org>
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [PATCH] PCI: xgene: Include clk.h instead of clk-private.h
+Message-ID: <20150123232223.GU29776@google.com>
+References: <1421954754-3217-1-git-send-email-sboyd@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1421954754-3217-1-git-send-email-sboyd@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix the dma-range size when the DT attribute is missing. i.e  set size to
-dev->coherent_dma_mask + 1 instead of dev->coherent_dma_mask. To detect
-overflow when mask is set to max of u64, add a check, log error and return.
-Some platform use mask format for size in DTS. So add a work around to
-catch this and fix.
+On Thu, Jan 22, 2015 at 11:25:54AM -0800, Stephen Boyd wrote:
+> This driver should be including clk.h as it's a clock consumer,
+> not a clock provider that needs to register clocks early.
+> 
+> Cc: Tanmay Inamdar <tinamdar@apm.com>
+> Signed-off-by: Stephen Boyd <sboyd@codeaurora.org>
 
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Applied provisionally to pci/host-xgene for v3.20, thanks!
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
----
- drivers/of/device.c |   14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
+I'm hoping for an ack from Tanmay.
 
-diff --git a/drivers/of/device.c b/drivers/of/device.c
-index 2de320d..0a5ff54 100644
---- a/drivers/of/device.c
-+++ b/drivers/of/device.c
-@@ -105,12 +105,24 @@ void of_dma_configure(struct device *dev, struct device_node *np)
- 	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
- 	if (ret < 0) {
- 		dma_addr = offset = 0;
--		size = dev->coherent_dma_mask;
-+		size = dev->coherent_dma_mask + 1;
- 	} else {
- 		offset = PFN_DOWN(paddr - dma_addr);
-+		/*
-+		 * Add a work around to treat the size as mask + 1 in case
-+		 * it is defined in DT as a mask.
-+		 */
-+		if (size & 1)
-+			size = size + 1;
- 		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
- 	}
- 
-+	/* if size is 0, we have an overflow of u64 */
-+	if (!size) {
-+		dev_err(dev, "invalid size\n");
-+		return;
-+	}
-+
- 	dev->dma_pfn_offset = offset;
- 
- 	coherent = of_dma_is_coherent(np);
--- 
-1.7.9.5
-
+> ---
+>  drivers/pci/host/pci-xgene.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+> index b1d0596457c5..fdb348d3ccd3 100644
+> --- a/drivers/pci/host/pci-xgene.c
+> +++ b/drivers/pci/host/pci-xgene.c
+> @@ -16,7 +16,7 @@
+>   * GNU General Public License for more details.
+>   *
+>   */
+> -#include <linux/clk-private.h>
+> +#include <linux/clk.h>
+>  #include <linux/delay.h>
+>  #include <linux/io.h>
+>  #include <linux/jiffies.h>
+> -- 
+> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+> a Linux Foundation Collaborative Project
+> 
