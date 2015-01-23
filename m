@@ -1,70 +1,51 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54BD1544.5010001@linux.intel.com>
-Date: Mon, 19 Jan 2015 22:31:32 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:64672 "EHLO
+	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752581AbbAWXSS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 18:18:18 -0500
+Received: by mail-oi0-f46.google.com with SMTP id a141so180342oig.5
+        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 15:18:17 -0800 (PST)
+Date: Fri, 23 Jan 2015 17:18:14 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, donald.d.dugger@intel.com,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Add Wellsburg (X99) to Intel PCH root port ACS quirk
+Message-ID: <20150123231814.GT29776@google.com>
+References: <20150122181524.1586.14496.stgit@gimli.home>
 MIME-Version: 1.0
-To: David Vrabel <david.vrabel@citrix.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>
-CC: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [Bugfix 3/3] x86/PCI: Refine the way to release PCI IRQ resources
-References: <1421643344-17092-1-git-send-email-jiang.liu@linux.intel.com> <1421643344-17092-4-git-send-email-jiang.liu@linux.intel.com> <54BD138D.3090403@citrix.com>
-In-Reply-To: <54BD138D.3090403@citrix.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150122181524.1586.14496.stgit@gimli.home>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/1/19 22:24, David Vrabel wrote:
-> On 19/01/15 04:55, Jiang Liu wrote:
->> Some PCI device drivers assume that pci_dev->irq won't change after
->> calling pci_disable_device() and pci_enable_device() during suspend and
->> resume.
->>
->> Commit c03b3b0738a56cf283b0d05256988d5e3c8bd719 ("x86, irq, mpparse:
->> Release IOAPIC pin when PCI device is disabled") frees PCI IRQ
->> resources when pci_disable_device() is called and reallocate IRQ
->> resources when pci_enable_device() is called again. This breaks
->> above assumption. So commit 3eec595235c1 ("x86, irq, PCI: Keep IRQ
->> assignment for PCI devices during suspend/hibernation") and
->> 9eabc99a635a ("x86, irq, PCI: Keep IRQ assignment for runtime power
->> management") fix the issue by avoiding freeing/reallocating IRQ
->> resources during PCI device suspend/resume. They achieve this by
->> checking dev.power.is_prepared and dev.power.runtime_status.
->> PM maintainer, Rafael, then pointed out that it's really an ugly fix
->> which leaking PM internal state information to IRQ subsystem.
+On Thu, Jan 22, 2015 at 11:15:43AM -0700, Alex Williamson wrote:
+> Intel has confirmed that the Wellsburg chipset, while not reporting
+> ACS, does provide the proper isolation through the RCBA/BSPR
+> registers, so the same quirk works for this set of device IDs.
 > 
-> If this only affects pciback, perhaps it would be best to just fix it there?
-Currently we already found it causes regressions to power management
-subsystem and pciback driver, but other drivers may have the same
-assumption. So it's safer to refine the irq resource management.
-And it doesn't really provide much benefit to reclaim irq resource
-when there's still a driver bound to the device.
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> Cc: Don Dugger <donald.d.dugger@intel.com>
 
-> 
->> Recently David Vrabel <david.vrabel@citrix.com> also reports an
->> regression in pciback driver caused by commit cffe0a2b5a34 ("x86, irq:
->> Keep balance of IOAPIC pin reference count"). Please refer to:
-> 
-> Sander reported this regression.
-Sorry, I copied the wrong email address. Will fix it in next version.
-Regards!
-Gerry
+Applied with Don's ack to pci/virtualization for v3.20, thanks!
 
+> ---
 > 
->> So this patch refine the way to release PCI IRQ resources. Instead of
->> releasing PCI IRQ resources in pci_disable_device()/
->> pcibios_disable_device(), we now release it at driver unbinding
->> notification BUS_NOTIFY_UNBOUND_DRIVER. In other word, we only release
->> PCI IRQ resources when there's no driver bound to the PCI device, and
->> it keeps the assumption that pci_dev->irq won't through multiple
->> invocation of pci_enable_device()/pci_disable_device().
+>  drivers/pci/quirks.c |    3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> David
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index ed6f89b..2cdb789 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3630,6 +3630,9 @@ static const u16 pci_quirk_intel_pch_acs_ids[] = {
+>  	0x9c98, 0x9c99, 0x9c9a, 0x9c9b,
+>  	/* Patsburg (X79) PCH */
+>  	0x1d10, 0x1d12, 0x1d14, 0x1d16, 0x1d18, 0x1d1a, 0x1d1c, 0x1d1e,
+> +	/* Wellsburg (X99) PCH */
+> +	0x8d10, 0x8d11, 0x8d12, 0x8d13, 0x8d14, 0x8d15, 0x8d16, 0x8d17,
+> +	0x8d18, 0x8d19, 0x8d1a, 0x8d1b, 0x8d1c, 0x8d1d, 0x8d1e,
+>  };
+>  
+>  static bool pci_quirk_intel_pch_acs_match(struct pci_dev *dev)
 > 
