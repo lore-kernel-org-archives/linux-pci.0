@@ -1,66 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:63235 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751759AbbA3SSb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Jan 2015 13:18:31 -0500
-Received: by mail-qa0-f46.google.com with SMTP id j7so21124079qaq.5
-        for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2015 10:18:31 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CA+8MBbLprQgbOo_aTaafHzEVcOPR3vp2gxFPDTX3YYS2Ywh6zg@mail.gmail.com>
-References: <20150123203145.GA6691@google.com> <CA+8MBbKnT=mE3kev8BRPq0GeTgHx8WVa6o54tJuBX_XXLpHdYQ@mail.gmail.com>
- <CAErSpo7y1wWStjcEOH9xTiM-As8+QeMynZ5ENrL9v3X2PvQCcw@mail.gmail.com>
- <CA+8MBb+bWiX2eayjBQHsvCjTp3t8H9=AviF9AkV6CC--cC_fYQ@mail.gmail.com>
- <CAE9FiQXj07CtOJ6uBZomNyhAH9ANanbbUSo51td6G-UB5Rmmow@mail.gmail.com>
- <CA+8MBbLVgfk3LEAnuAx_MRJpHkQO-cEQnuCrcbxcyOezr5RLcg@mail.gmail.com>
- <CAE9FiQXnTPO2tM252zvTGJF9Nmc-R+6z65Kq3aXC3jvxtAK2Qw@mail.gmail.com>
- <CAErSpo5CmVTw1-jQ2cwZS27nWH6zEyO5yqaedPN8jeRiU=JUfQ@mail.gmail.com> <CA+8MBbLprQgbOo_aTaafHzEVcOPR3vp2gxFPDTX3YYS2Ywh6zg@mail.gmail.com>
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:64613 "EHLO
+	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753481AbbAWX7Q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 18:59:16 -0500
+Received: by mail-oi0-f42.google.com with SMTP id i138so306018oig.1
+        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 15:59:15 -0800 (PST)
+Date: Fri, 23 Jan 2015 17:59:11 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 30 Jan 2015 12:18:11 -0600
-Message-ID: <CAErSpo6W2oa2SvfhATGTtRrrgcmQQh6H+-BSxin_OQR+_JqYMQ@mail.gmail.com>
-Subject: Re: [GIT PULL] PCI fixes for v3.19
-To: Tony Luck <tony.luck@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Marek Kordik <kordikmarek@gmail.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Andreas Hartmann <andihartmann@freenet.de>,
-	Alexey Voronkov <zermond@gmail.com>,
-	David Airlie <airlied@linux.ie>,
-	Alex Deucher <alexander.deucher@amd.com>
-Content-Type: text/plain; charset=UTF-8
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [RFC PATCH v3 2/2] arm: kernel: fix pci_mmap_page_range() offset
+ calculation
+Message-ID: <20150123235911.GG13072@google.com>
+References: <1415877558-8906-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1415877558-8906-3-git-send-email-lorenzo.pieralisi@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1415877558-8906-3-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 30, 2015 at 12:01 PM, Tony Luck <tony.luck@gmail.com> wrote:
-> On Fri, Jan 30, 2015 at 8:56 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> Tony, does the system work as it did before?  Is the only problem that
->> now we have more warnings than we did before?
->
-> Yup - things seem to be working. Just have a bunch of new console messages.
->
-> It seems that at least some of them are valid - the BIOS isn't describing some
-> things that it should.  I don't think we need to re-apply code that
-> used to paper
-> over this problem. I can just add these to the list of "harmless" messages to
-> ignore when running new kernels on this old machine.
->
-> Or did I misunderstand some part of this thread?
+On Thu, Nov 13, 2014 at 11:19:16AM +0000, Lorenzo Pieralisi wrote:
+> The pci_mmap_page_range() API should be written to expect offset
+> values representing PCI memory resource addresses as seen by user
+> space, through the pci_resource_to_user() API.
+> 
+> ARM relies on the standard implementation of pci_resource_to_user()
+> which actually is an identity map and exports to user space
+> PCI memory resources as they are stored in PCI devices resources
+> structures, which represent CPU physical addresses (fixed-up using
+> BUS to CPU address conversions) not PCI bus addresses.
+> 
+> Therefore, on ARM platforms where the mapping between CPU and BUS
+> address is not a 1:1 the current pci_mmap_page_range() implementation is
+> erroneous, in that an additional shift is applied to an already fixed-up
+> offset passed from userspace.
+> 
+> Hence, this patch removes the mem_offset from the pgoff calculation
+> since the offset as passed from user space already represents the CPU
+> physical address corresponding to the resource to be mapped, ie no
+> additional offset should be applied.
+> 
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Russell King <linux@arm.linux.org.uk>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-Nope, I think the complaints about BARs 0 and 8 on bus 80 are
-legitimate errors, and adding them to the list of "harmless" messages
-is the right thing to do.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-The ones complaining about BAR 6 (an option ROM) are the ones I'm more
-concerned about.  There's no address space assigned to them, but I
-don't think that indicates a firmware defect, and the message is sort
-of cryptic, so I don't want to emit it more often than we have to.
-
-But if ia64 is handling these ROMs the same way as x86, this is just
-an opportunity for future improvement, and we don't need to do
-anything right now.
-
-Bjorn
+> ---
+>  arch/arm/kernel/bios32.c | 10 ++--------
+>  1 file changed, 2 insertions(+), 8 deletions(-)
+> 
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> index 17a26c1..b56fa2d 100644
+> --- a/arch/arm/kernel/bios32.c
+> +++ b/arch/arm/kernel/bios32.c
+> @@ -626,21 +626,15 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+>  int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+>  			enum pci_mmap_state mmap_state, int write_combine)
+>  {
+> -	struct pci_sys_data *root = dev->sysdata;
+> -	unsigned long phys;
+> -
+> -	if (mmap_state == pci_mmap_io) {
+> +	if (mmap_state == pci_mmap_io)
+>  		return -EINVAL;
+> -	} else {
+> -		phys = vma->vm_pgoff + (root->mem_offset >> PAGE_SHIFT);
+> -	}
+>  
+>  	/*
+>  	 * Mark this as IO
+>  	 */
+>  	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+>  
+> -	if (remap_pfn_range(vma, vma->vm_start, phys,
+> +	if (remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
+>  			     vma->vm_end - vma->vm_start,
+>  			     vma->vm_page_prot))
+>  		return -EAGAIN;
+> -- 
+> 2.1.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
