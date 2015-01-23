@@ -1,103 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:53182 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752415AbbAOC2U (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 21:28:20 -0500
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 15 Jan 2015 12:28:18 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id AF0B92CE8040
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:15 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t0F2SFKm44433574
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:15 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t0F2SEFJ019612
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:15 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V11 02/17] PCI/IOV: add VF enable/disable hook
-Date: Thu, 15 Jan 2015 10:27:52 +0800
-Message-Id: <1421288887-7765-3-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <20150113180502.GC2776@google.com>
- <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:52460 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752688AbbAWXIp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 18:08:45 -0500
+Received: by mail-ob0-f171.google.com with SMTP id va2so179969obc.2
+        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 15:08:45 -0800 (PST)
+Date: Fri, 23 Jan 2015 17:08:41 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-kernel@vger.kernel.org,
+	virtualization@lists.linux-foundation.org,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	cornelia.huck@de.ibm.com, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>, linux-arch@vger.kernel.org
+Subject: Re: [PATCH v3 09/16] pci: add pci_iomap_range
+Message-ID: <20150123230841.GS29776@google.com>
+References: <1421256142-11512-1-git-send-email-mst@redhat.com>
+ <1421256142-11512-10-git-send-email-mst@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1421256142-11512-10-git-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-VFs are dynamically created/released when driver enable them. On some
-platforms, like PowerNV, special resources are necessary to enable VFs.
+On Wed, Jan 14, 2015 at 07:27:54PM +0200, Michael S. Tsirkin wrote:
+> Virtio drivers should map the part of the BAR they need, not necessarily
+> all of it.
+> 
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> Acked-by: Arnd Bergmann <arnd@arndb.de>
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> Signed-off-by: Rusty Russell <rusty@rustcorp.com.au>
 
-This patch adds two hooks for platform initialization before creating the
-VFs.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- drivers/pci/iov.c |   19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+Sorry it took so long for me to notice these!
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index e76d1a0..933d8cc 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -213,6 +213,11 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
- 	pci_dev_put(dev);
- }
- 
-+int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 vf_num)
-+{
-+       return 0;
-+}
-+
- static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- {
- 	int rc;
-@@ -223,6 +228,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	struct pci_dev *pdev;
- 	struct pci_sriov *iov = dev->sriov;
- 	int bars = 0;
-+	int retval;
- 
- 	if (!nr_virtfn)
- 		return 0;
-@@ -297,6 +303,12 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	if (nr_virtfn < initial)
- 		initial = nr_virtfn;
- 
-+	if ((retval = pcibios_sriov_enable(dev, initial))) {
-+		dev_err(&dev->dev, "Failure %d from pcibios_sriov_setup()\n",
-+			retval);
-+		return retval;
-+	}
-+
- 	for (i = 0; i < initial; i++) {
- 		rc = virtfn_add(dev, i, 0);
- 		if (rc)
-@@ -325,6 +337,11 @@ failed:
- 	return rc;
- }
- 
-+int __weak pcibios_sriov_disable(struct pci_dev *pdev, u16 vf_num)
-+{
-+       return 0;
-+}
-+
- static void sriov_disable(struct pci_dev *dev)
- {
- 	int i;
-@@ -336,6 +353,8 @@ static void sriov_disable(struct pci_dev *dev)
- 	for (i = 0; i < iov->num_VFs; i++)
- 		virtfn_remove(dev, i, 0);
- 
-+	pcibios_sriov_disable(dev, iov->num_VFs);
-+
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
--- 
-1.7.9.5
-
+> ---
+> 
+> Bjorn, can you please ack this for merging through the virtio tree?
+> 
+>  include/asm-generic/pci_iomap.h | 10 ++++++++++
+>  lib/pci_iomap.c                 | 35 ++++++++++++++++++++++++++++++-----
+>  2 files changed, 40 insertions(+), 5 deletions(-)
+> 
+> diff --git a/include/asm-generic/pci_iomap.h b/include/asm-generic/pci_iomap.h
+> index ce37349..7389c87 100644
+> --- a/include/asm-generic/pci_iomap.h
+> +++ b/include/asm-generic/pci_iomap.h
+> @@ -15,6 +15,9 @@ struct pci_dev;
+>  #ifdef CONFIG_PCI
+>  /* Create a virtual mapping cookie for a PCI BAR (memory or IO) */
+>  extern void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max);
+> +extern void __iomem *pci_iomap_range(struct pci_dev *dev, int bar,
+> +				     unsigned long offset,
+> +				     unsigned long maxlen);
+>  /* Create a virtual mapping cookie for a port on a given PCI device.
+>   * Do not call this directly, it exists to make it easier for architectures
+>   * to override */
+> @@ -30,6 +33,13 @@ static inline void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned lon
+>  {
+>  	return NULL;
+>  }
+> +
+> +static inline void __iomem *pci_iomap_range(struct pci_dev *dev, int bar,
+> +					    unsigned long offset,
+> +					    unsigned long maxlen)
+> +{
+> +	return NULL;
+> +}
+>  #endif
+>  
+>  #endif /* __ASM_GENERIC_IO_H */
+> diff --git a/lib/pci_iomap.c b/lib/pci_iomap.c
+> index 0d83ea8..bcce5f1 100644
+> --- a/lib/pci_iomap.c
+> +++ b/lib/pci_iomap.c
+> @@ -10,10 +10,11 @@
+>  
+>  #ifdef CONFIG_PCI
+>  /**
+> - * pci_iomap - create a virtual mapping cookie for a PCI BAR
+> + * pci_iomap_range - create a virtual mapping cookie for a PCI BAR
+>   * @dev: PCI device that owns the BAR
+>   * @bar: BAR number
+> - * @maxlen: length of the memory to map
+> + * @offset: map memory at the given offset in BAR
+> + * @maxlen: max length of the memory to map
+>   *
+>   * Using this function you will get a __iomem address to your device BAR.
+>   * You can access it using ioread*() and iowrite*(). These functions hide
+> @@ -21,16 +22,21 @@
+>   * you expect from them in the correct way.
+>   *
+>   * @maxlen specifies the maximum length to map. If you want to get access to
+> - * the complete BAR without checking for its length first, pass %0 here.
+> + * the complete BAR from offset to the end, pass %0 here.
+>   * */
+> -void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long maxlen)
+> +void __iomem *pci_iomap_range(struct pci_dev *dev,
+> +			      int bar,
+> +			      unsigned long offset,
+> +			      unsigned long maxlen)
+>  {
+>  	resource_size_t start = pci_resource_start(dev, bar);
+>  	resource_size_t len = pci_resource_len(dev, bar);
+>  	unsigned long flags = pci_resource_flags(dev, bar);
+>  
+> -	if (!len || !start)
+> +	if (len <= offset || !start)
+>  		return NULL;
+> +	len -= offset;
+> +	start += offset;
+>  	if (maxlen && len > maxlen)
+>  		len = maxlen;
+>  	if (flags & IORESOURCE_IO)
+> @@ -43,6 +49,25 @@ void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long maxlen)
+>  	/* What? */
+>  	return NULL;
+>  }
+> +EXPORT_SYMBOL(pci_iomap_range);
+>  
+> +/**
+> + * pci_iomap - create a virtual mapping cookie for a PCI BAR
+> + * @dev: PCI device that owns the BAR
+> + * @bar: BAR number
+> + * @maxlen: length of the memory to map
+> + *
+> + * Using this function you will get a __iomem address to your device BAR.
+> + * You can access it using ioread*() and iowrite*(). These functions hide
+> + * the details if this is a MMIO or PIO address space and will just do what
+> + * you expect from them in the correct way.
+> + *
+> + * @maxlen specifies the maximum length to map. If you want to get access to
+> + * the complete BAR without checking for its length first, pass %0 here.
+> + * */
+> +void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long maxlen)
+> +{
+> +	return pci_iomap_range(dev, bar, 0, maxlen);
+> +}
+>  EXPORT_SYMBOL(pci_iomap);
+>  #endif /* CONFIG_PCI */
+> -- 
+> MST
+> 
