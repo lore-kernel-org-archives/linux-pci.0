@@ -1,85 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <54AB1FC5.8040003@ti.com>
-Date: Mon, 5 Jan 2015 18:35:33 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:39834 "EHLO
+	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750898AbbAXAyJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 19:54:09 -0500
+Received: by mail-oi0-f49.google.com with SMTP id a3so406050oib.8
+        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 16:54:08 -0800 (PST)
+Date: Fri, 23 Jan 2015 18:54:04 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Peter Maydell <peter.maydell@linaro.org>, arm@kernel.org,
+	Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 4/9] pci: add DT based ARM Versatile PCI host driver
+Message-ID: <20150124005404.GZ29776@google.com>
+References: <1419967718-26909-1-git-send-email-robherring2@gmail.com>
+ <1419967718-26909-5-git-send-email-robherring2@gmail.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Rob Herring <robherring2@gmail.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 1/2] of/pci: add of_pci_dma_configure() update dma
- configuration
-References: <1419459099-6667-1-git-send-email-m-karicheri2@ti.com> <2019516.ehiuEv0rdL@wuerfel> <54AAEEE1.7020607@ti.com> <1671700.LL29F8Iz6R@wuerfel>
-In-Reply-To: <1671700.LL29F8Iz6R@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1419967718-26909-5-git-send-email-robherring2@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/05/2015 05:26 PM, Arnd Bergmann wrote:
-> On Monday 05 January 2015 15:06:57 Murali Karicheri wrote:
->> On 01/03/2015 04:37 PM, Arnd Bergmann wrote:
->>> Yes, but we also need to pass a PCI device specific identifier along
->>> with the root bus node, because some iommu drivers take the PCI
->>> bus/device/function number into account for creating per-function
->>> i/o page tables.
->
->> ...
->
->> I will post v3 of the patch with what is agreed before in my response
->> and I understand there is no additional change required based on this
->> particular discussion about iommu. Right?
->
-> Actually regarding the bit I wrote above, it might be helpful to pass
-> the PCI_DEVID() into both of_iommu_configure and of_dma_configure.
->
-> While this may or may not be sufficient, I think there is no question
-> about it being needed for the ARM SMMU with PCI, so we may as well add
-> it at the point when you touch the same lines already. In the platform
-> bus case, just pass zero here.
-Arnd,
+Sorry for the late reply; maybe this has already been queued up somewhere,
+so this might be moot.
 
-PCI_DEVID() is defined as
+I usually capitalize the "PCI" and first letter of the subject, like:
 
-#define PCI_DEVID(bus, devfn)  ((((u16)(bus)) << 8) | (devfn))
+  PCI: Add DT based ARM Versatile PCI host driver
 
-So PCI_DEVID of 0 is a valid PCI DEVID.
+And I try to ask for MAINTAINER updates since these drivers are under
+drivers/pci, but I can't maintain them all myself.
 
-How about checking if the device is PCI in of_iommu_configure() using 
-dev_is_pci(dev) macro and return immediately for PCI? Need to include 
-pci.h in this file though.
+On Tue, Dec 30, 2014 at 01:28:33PM -0600, Rob Herring wrote:
+> From: Rob Herring <robh@kernel.org>
+> 
+> This converts the Versatile PCI host code to a platform driver using
+> the commom DT parsing and setup. The driver uses only an empty ARM
+> pci_sys_data struct and does not use pci_common_init_dev init function.
+> The old host code will be removed in a subsequent commit when Versatile
+> is completely converted to DT.
+> 
+> I've tested this on QEMU with the sym53c8xx driver in both i/o and
+> memory mapped modes.
+> 
+> Signed-off-by: Rob Herring <robh@kernel.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: Russell King <linux@arm.linux.org.uk>
+> Cc: Linus Walleij <linus.walleij@linaro.org>
+> Cc: Peter Maydell <peter.maydell@linaro.org>
 
-Some of the iommu drivers already include this.
+Looks fine to me.
 
-a0868495@ares-ubuntu:~/projects/linux-keystone$ grep -r pci.h drivers/iommu/
-drivers/iommu/amd_iommu_v2.c:#include <linux/pci.h>
-drivers/iommu/dmar.c:#include <linux/pci.h>
-drivers/iommu/amd_iommu_types.h:#include <linux/pci.h>
-drivers/iommu/amd_iommu.c:#include <linux/pci.h>
-drivers/iommu/fsl_pamu_domain.c:#include <sysdev/fsl_pci.h>
-drivers/iommu/iommu.c:#include <linux/pci.h>
-drivers/iommu/intel-iommu.c:#include <linux/pci.h>
-drivers/iommu/intel_irq_remapping.c:#include <linux/pci.h>
-drivers/iommu/arm-smmu.c:#include <linux/pci.h>
-drivers/iommu/amd_iommu_init.c:#include <linux/pci.h>
-drivers/iommu/irq_remapping.c:#include <linux/pci.h>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-This will allow us to re-visit this later for IOMMU support for PCI 
-without polluting the API.
+> +++ b/drivers/pci/host/pci-versatile.c
+> ...
 
+> +	/*
+> +	 *  We need to discover the PCI core first to configure itself
+> +	 *  before the main PCI probing is performed
 
-Murali
->
-> 	Arnd
+Unusual to have two spaces between the "*" and the comments here.
 
+> +MODULE_LICENSE("GPLv2");
 
--- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+This needs to be "GPL v2" per license_is_gpl_compatible().
