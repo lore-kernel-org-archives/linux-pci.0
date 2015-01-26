@@ -1,118 +1,261 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 15 Jan 2015 16:15:45 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Kjetil Oftedal <oftedal@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Sam Ravnborg <sam@ravnborg.org>, sparclinux@vger.kernel.org
-Subject: Re: [PATCH 10/10] PCI, sparc: clip firmware assigned resource under
- parent bridge's
-Message-ID: <20150115221545.GA29776@google.com>
-References: <1421090600-9750-1-git-send-email-yinghai@kernel.org>
- <1421090600-9750-11-git-send-email-yinghai@kernel.org>
- <CALMQjD91+0o=DjQDV3ydkakrG6X=3RkHoCf-T5=wLbC01WkdEA@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from comal.ext.ti.com ([198.47.26.152]:34050 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756212AbbAZX0a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 26 Jan 2015 18:26:30 -0500
+Message-ID: <54C6CCF3.7080308@ti.com>
+Date: Mon, 26 Jan 2015 18:25:39 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CALMQjD91+0o=DjQDV3ydkakrG6X=3RkHoCf-T5=wLbC01WkdEA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: Re: [PATCH v4 4/6] of/pci: add of_pci_dma_configure() update dma
+ configuration
+References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com> <1422052359-12384-5-git-send-email-m-karicheri2@ti.com> <20150123234124.GW29776@google.com>
+In-Reply-To: <20150123234124.GW29776@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 12, 2015 at 11:31:09PM +0100, Kjetil Oftedal wrote:
-> Hi,
-> 
-> Am I missing something or is this just code to get the the resource
-> subsystem to accept the bus resources, not caring if the resources are
-> actually usable? PCI BARs usually have a given size for a reason?
+On 01/23/2015 06:41 PM, Bjorn Helgaas wrote:
+> On Fri, Jan 23, 2015 at 05:32:37PM -0500, Murali Karicheri wrote:
+>> Add of_pci_dma_configure() to allow updating the dma configuration
+>> of the pci device using the configuration from DT of the parent of
+>> the root bridge device.
+>>
+>> Cc: Joerg Roedel<joro@8bytes.org>
+>> Cc: Grant Likely<grant.likely@linaro.org>
+>> Cc: Rob Herring<robh+dt@kernel.org>
+>> Cc: Bjorn Helgaas<bhelgaas@google.com>
+>> Cc: Will Deacon<will.deacon@arm.com>
+>> Cc: Russell King<linux@arm.linux.org.uk>
+>> Cc: Arnd Bergmann<arnd@arndb.de>
+>> Cc: Suravee Suthikulpanit<Suravee.Suthikulpanit@amd.com>
+>>
+>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+>> ---
+>>   drivers/of/of_pci.c    |   39 +++++++++++++++++++++++++++++++++++++++
+>>   include/linux/of_pci.h |   12 ++++++++++++
+>>   2 files changed, 51 insertions(+)
+>>
+>> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+>> index 88471d3..34878c9 100644
+>> --- a/drivers/of/of_pci.c
+>> +++ b/drivers/of/of_pci.c
+>> @@ -2,6 +2,7 @@
+>>   #include<linux/export.h>
+>>   #include<linux/of.h>
+>>   #include<linux/of_address.h>
+>> +#include<linux/of_device.h>
+>>   #include<linux/of_pci.h>
+>>   #include<linux/slab.h>
+>>
+>> @@ -229,6 +230,44 @@ parse_failed:
+>>   	return err;
+>>   }
+>>   EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
+>> +
+>> +/**
+>> + * of_get_pci_root_bridge_parent - get the OF node of the root bridge's parent
+>> + * @dev: ptr to pci_dev struct of the pci device
+>> + *
+>> + * This function will traverse the bus up to the root bus starting with
+>> + * the child and return the OF node ptr to root bridge device's parent device.
+>> + */
+>> +struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev)
+>
+> I'm not an OF person, but this interface seems like it might be too
+> special-purpose.  Maybe it would be enough to add
+> "of_get_pci_root_bridge()", and the caller could do this:
+>
+>      struct device *bridge = of_get_pci_root_bridge(dev);
+>      struct device_node *parent_np = bridge->parent->of_node;
+>
+> Also, the name "of_get_..." suggests that it increments a refcount, as
+> of_get_parent() does.  But you aren't doing anything with the refcount.
+>
+> But I guess an "of_get_pci_root_bridge()" isn't doing anything OF-related,
+> so maybe we should just add a "pci_get_host_bridge(struct pci_dev *)"
+> to PCI instead.
 
-Hi Kjetil,
+Bjorn,
 
-This isn't for regular PCI BARs (Yinghai did apply it to some regular BARs
-in the v1 patches, but I think that was a mistake).  This is for scenarios
-like this:
+Thanks for the comment.
 
-  pci_bus 0000:00: root bus resource [mem 0xc0000000-0xffffffff]
-  pci 0000:00:01.0:   bridge window [mem 0xbdf00000-0xddefffff 64bit pref]
-  pci 0000:01:00.0: reg 0x10: [mem 0xc0000000-0xcfffffff pref]
+I think adding pci_get_host_bridge() is a good idea. There is already 
+similar function in host-bridge.c. I have added this function re-using 
+existing function find_pci_root_bus(). See the incremental diff below 
+after this change. Does this look good?
 
-The 00:01.0 window is illegal: it starts before the host bridge window, so
-we have to assume the [0xbdf00000-0xbfffffff] region is inaccessible.  We
-can make it legal by clipping it to [mem 0xc0000000-0xddefffff 64bit pref].
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 34878c9..77b15b5 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -232,26 +232,6 @@ parse_failed:
+  EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
 
-Linux should never assign an illegal bridge window like this, but some
-firmware does, and the idea is to make a minimal change (clip the window)
-before resorting to the big hammer of reassigning resources from scratch.
+  /**
+- * of_get_pci_root_bridge_parent - get the OF node of the root bridge's 
+parent
+- * @dev: ptr to pci_dev struct of the pci device
+- *
+- * This function will traverse the bus up to the root bus starting with
+- * the child and return the OF node ptr to root bridge device's parent 
+device.
+- */
+-struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev)
+-{
+-       struct pci_bus *bus = dev->bus;
+-       struct device *bridge;
+-
+-       while (!pci_is_root_bus(bus))
+-               bus = bus->parent;
+-       bridge = bus->bridge;
+-
+-       return bridge->parent->of_node;
+-}
+-EXPORT_SYMBOL_GPL(of_get_pci_root_bridge_parent);
+-
+-/**
+   * of_pci_dma_configure - Setup DMA configuration
+   * @dev: ptr to pci_dev struct of the pci device
+   *
+@@ -261,10 +241,9 @@ EXPORT_SYMBOL_GPL(of_get_pci_root_bridge_parent);
+  void of_pci_dma_configure(struct pci_dev *pci_dev)
+  {
+         struct device *dev = &pci_dev->dev;
+-       struct device_node *parent_np;
++       struct device *bridge = pci_get_host_bridge(pci_dev);
 
-Bjorn
+-       parent_np = of_get_pci_root_bridge_parent(pci_dev);
+-       of_dma_configure(dev, parent_np);
++       of_dma_configure(dev, bridge->parent->of_node);
+  }
+  EXPORT_SYMBOL_GPL(of_pci_dma_configure);
 
-> On 12/01/2015, Yinghai Lu <yinghai@kernel.org> wrote:
-> > Some bios put range that is not fully coverred by root bus resources.
-> > Try to clip them and update them in pci bridge bars.
-> >
-> > We'd like to fix other arches instead of just x86.
-> >
-> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491
-> > Reported-by: Marek Kordik <kordikmarek@gmail.com>
-> > Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to
-> > 64-bit resources")
-> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> > Cc: "David S. Miller" <davem@davemloft.net>
-> > Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
-> > Cc: Yijing Wang <wangyijing@huawei.com>
-> > Cc: Sam Ravnborg <sam@ravnborg.org>
-> > Cc: sparclinux@vger.kernel.org
-> > ---
-> >  arch/sparc/kernel/pci.c | 20 +++++++++++++++++++-
-> >  1 file changed, 19 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-> > index b36365f..0e391e5 100644
-> > --- a/arch/sparc/kernel/pci.c
-> > +++ b/arch/sparc/kernel/pci.c
-> > @@ -623,6 +623,7 @@ static void pci_claim_bus_resources(struct pci_bus
-> > *bus)
-> >  	struct pci_dev *dev;
-> >
-> >  	list_for_each_entry(dev, &bus->devices, bus_list) {
-> > +		bool changed = false;
-> >  		int i;
-> >
-> >  		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-> > @@ -639,8 +640,25 @@ static void pci_claim_bus_resources(struct pci_bus
-> > *bus)
-> >  				       (unsigned long long)r->end,
-> >  				       (unsigned int)r->flags);
-> >
-> > -			pci_claim_resource(dev, i);
-> > +			if (pci_claim_resource(dev, i) >= 0)
-> > +				continue;
-> > +
-> > +			if (dev->subordinate &&
-> > +			    i >= PCI_BRIDGE_RESOURCES &&
-> > +			    i < PCI_NUM_RESOURCES &&
-> > +			    (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI &&
-> > +			    pci_bus_clip_resource(dev, r)) {
-> > +				changed = true;
-> > +				pci_claim_resource(dev, i);
-> > +			} else if (i < PCI_BRIDGE_RESOURCES &&
-> > +				   i != PCI_ROM_RESOURCE &&
-> > +				   pci_bus_clip_resource(dev, r)) {
-> > +					pci_update_resource(dev, i);
-> > +					pci_claim_resource(dev, i);
-> > +			}
-> >  		}
-> > +		if (changed)
-> > +			pci_setup_bridge(dev->subordinate);
-> >  	}
-> >
-> >  	list_for_each_entry(child_bus, &bus->children, node)
-> > --
-> > 1.8.4.5
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe sparclinux" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 0e5f3c9..9803aa6 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -23,6 +23,13 @@ static struct pci_host_bridge 
+*find_pci_host_bridge(struct pci_bus *bus)
+         return to_pci_host_bridge(root_bus->bridge);
+  }
+
++struct device *pci_get_host_bridge(struct pci_dev *dev)
++{
++       struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
++
++       return root_bus->bridge;
++}
++
+  void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+                                  void (*release_fn)(struct 
+pci_host_bridge *),
+                                  void *release_data)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 9603094..5bcdfa6 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -513,6 +513,8 @@ static inline struct pci_dev 
+*pci_upstream_bridge(struct pci_dev *dev)
+         return dev->bus->self;
+  }
+
++struct device *pci_get_host_bridge(struct pci_dev *dev);
++
+  #ifdef CONFIG_PCI_MSI
+  static inline bool pci_dev_msi_enabled(struct pci_dev *pci_dev)
+  {
+@@ -1823,6 +1825,7 @@ int pci_vpd_find_tag(const u8 *buf, unsigned int 
+off, unsigned int len, u8 rdt);
+  int pci_vpd_find_info_keyword(const u8 *buf, unsigned int off,
+                               unsigned int len, const char *kw);
+
+  /* PCI <-> OF binding helpers */
+  #ifdef CONFIG_OF
+  struct device_node;
+
+
+>
+> Bjorn
+>
+>> +{
+>> +	struct pci_bus *bus = dev->bus;
+>> +	struct device *bridge;
+>> +
+>> +	while (!pci_is_root_bus(bus))
+>> +		bus = bus->parent;
+>> +	bridge = bus->bridge;
+>> +
+>> +	return bridge->parent->of_node;
+>> +}
+>> +EXPORT_SYMBOL_GPL(of_get_pci_root_bridge_parent);
+>> +
+>> +/**
+>> + * of_pci_dma_configure - Setup DMA configuration
+>> + * @dev: ptr to pci_dev struct of the pci device
+>> + *
+>> + * Function to update PCI devices's DMA configuration using the same
+>> + * info from the OF node of root host bridge's parent.
+>> + */
+>> +void of_pci_dma_configure(struct pci_dev *pci_dev)
+>> +{
+>> +	struct device *dev =&pci_dev->dev;
+>> +	struct device_node *parent_np;
+>> +
+>> +	parent_np = of_get_pci_root_bridge_parent(pci_dev);
+>> +	of_dma_configure(dev, parent_np);
+>> +}
+>> +EXPORT_SYMBOL_GPL(of_pci_dma_configure);
+>> +
+>>   #endif /* CONFIG_OF_ADDRESS */
+>>
+>>   #ifdef CONFIG_PCI_MSI
+>> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+>> index ce0e5ab..0465a2a 100644
+>> --- a/include/linux/of_pci.h
+>> +++ b/include/linux/of_pci.h
+>> @@ -16,6 +16,8 @@ int of_pci_get_devfn(struct device_node *np);
+>>   int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+>>   int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+>>   int of_get_pci_domain_nr(struct device_node *node);
+>> +struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev);
+>> +void of_pci_dma_configure(struct pci_dev *pci_dev);
+>>   #else
+>>   static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
+>>   {
+>> @@ -50,6 +52,16 @@ of_get_pci_domain_nr(struct device_node *node)
+>>   {
+>>   	return -1;
+>>   }
+>> +
+>> +static inline struct device_node
+>> +*of_get_pci_root_bridge_parent(struct pci_dev *dev)
+>> +{
+>> +	return NULL;
+>> +}
+>> +
+>> +static inline void of_pci_dma_configure(struct pci_dev *pci_dev)
+>> +{
+>> +}
+>>   #endif
+>>
+>>   #if defined(CONFIG_OF_ADDRESS)
+>> --
+>> 1.7.9.5
+>>
+
+
+-- 
+Murali Karicheri
+Linux Kernel, Texas Instruments
