@@ -1,87 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f43.google.com ([209.85.192.43]:33574 "EHLO
-	mail-qg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758010AbbAISLU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 13:11:20 -0500
-Received: by mail-qg0-f43.google.com with SMTP id z107so10173889qgd.2
-        for <linux-pci@vger.kernel.org>; Fri, 09 Jan 2015 10:11:19 -0800 (PST)
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:49092 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755691AbbAZXWP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 18:22:15 -0500
+Received: by mail-ie0-f170.google.com with SMTP id y20so11977430ier.1
+        for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2015 15:22:14 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAPybu_2rrJ8nYqVPf5B99+3=c4CJxAPe8kM2fmRWjJXHYGBe2g@mail.gmail.com>
-References: <1417538104-27341-1-git-send-email-ricardo.ribalda@gmail.com>
- <20150109172726.GC6575@google.com> <CAPybu_2rrJ8nYqVPf5B99+3=c4CJxAPe8kM2fmRWjJXHYGBe2g@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 9 Jan 2015 12:10:59 -0600
-Message-ID: <CAErSpo44=SCV0LgXu3_pgXvAdWKXwWPhRfsesWSL33599D8ZJA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Generate uppercase hex for modalias var in uevent
-To: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+In-Reply-To: <20150126182233.GB4063@google.com>
+References: <1420857290-8373-1-git-send-email-robh@kernel.org>
+	<1420857290-8373-8-git-send-email-robh@kernel.org>
+	<CACRpkdbwKN9LenqrWeu4WykhdZOGAdxpC_BYr2cYpc2_cn5GfA@mail.gmail.com>
+	<4938579.0KIk3QtTCP@wuerfel>
+	<CACRpkdZSXWrVudiadVjbhQDS_zQrYttaytW-TUoeFUrc=beD1A@mail.gmail.com>
+	<20150122203336.GD13072@google.com>
+	<20150126182233.GB4063@google.com>
+Date: Tue, 27 Jan 2015 00:22:14 +0100
+Message-ID: <CACRpkdaYL99yhJ08U13zJqviCFHzjMo9KtwfYhD+dHkuvQRhYg@mail.gmail.com>
+Subject: Re: [PATCH 07/16] ARM: integrator: convert PCI to use generic config accesses
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 9, 2015 at 12:08 PM, Ricardo Ribalda Delgado
-<ricardo.ribalda@gmail.com> wrote:
-> Shouldnt this also be backported to stable as Commit 89ec3dcf17fd
-> ("PCI: Generate uppercase hex for modalias  interface class")?
-
-Sure, I added that, thanks for noticing.  You can always add the
-stable tag yourself when posting the patch, too :)
-
-Bjorn
-
-> On Fri, Jan 9, 2015 at 6:27 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Tue, Dec 02, 2014 at 05:35:04PM +0100, Ricardo Ribalda Delgado wrote:
->>> Some implementations of modprobe fail to load the driver for a PCI device
->>> automatically because the "interface" part of the modalias from the kernel
->>> is lowercase, and the modalias from file2alias is uppercase.
->>>
->>> The "interface" is the low-order byte of the Class Code, defined in PCI
->>> r3.0, Appendix D.  Most interface types defined in the spec do not use
->>> alpha characters, so they won't be affected.  For example, 00h, 01h, 10h,
->>> 20h, etc. are unaffected.
->>>
->>> Print the "interface" byte of the Class Code in uppercase hex, as we
->>> already do for the Vendor ID, Device ID, Class, etc.
->>>
->>> Commit 89ec3dcf17fd ("PCI: Generate uppercase hex for modalias
->>> interface class") fixed only half of the problem. Some udev
->>> implementations relays on the uevent file and not in the modalias file.
->>>
->>> CC: Bjorn Helgaas <bhelgaas@google.com>
->>> CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->>> Fixes: d1ded203adf1 ("PCI: add MODALIAS to hotplug event for pci devices")
->>> Signed-off-by: Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
+On Mon, Jan 26, 2015 at 7:22 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, Jan 22, 2015 at 02:33:36PM -0600, Bjorn Helgaas wrote:
+>> On Mon, Jan 12, 2015 at 01:05:12AM +0100, Linus Walleij wrote:
+>> > On Sat, Jan 10, 2015 at 10:53 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+>> > > On Saturday 10 January 2015 22:40:22 Linus Walleij wrote:
+>> > >> >  static int v3_read_config(struct pci_bus *bus, unsigned int devfn, int where,
+>> > >> >                           int size, u32 *val)
+>> > >> >  {
+>> > >> > -       addr = v3_open_config_window(bus, devfn, where);
+>> > >> > +       int ret = pci_generic_config_read(bus, devfn, where, size, val);
+>> > >> >         v3_close_config_window();
+>> > >> > +       return ret;
+>> > >> >  }
+>> > >> >
+>> > >> >  static int v3_write_config(struct pci_bus *bus, unsigned int devfn, int where,
+>> > >> >                            int size, u32 val)
+>> > >> >  {
+>> > >> > +       int ret = pci_generic_config_write(bus, devfn, where, size, val);
+>> > >> >         v3_close_config_window();
+>> > >> > -       raw_spin_unlock_irqrestore(&v3_lock, flags);
+>> > >> > +       return ret;
+>> > >> >  }
+>> > >> >
+>> > >> >  static struct pci_ops pci_v3_ops = {
+>> > >> > +       .map_bus = v3_open_config_window,
+>> > >> >         .read   = v3_read_config,
+>> > >> >         .write  = v3_write_config,
+>> > >>
+>> > >> So .map_bus is called before every .read/.write operation I take it.
+>> > >>
+>> > >> Wouldn't it be proper to call the v3_close_config_window() from a
+>> > >> matching .unmap_bus() callback for symmetry?
+>> > >
+>> > > It would be nicer for integrator but useless for anything else, so
+>> > > I'd vote for leaving it the way Rob posted.
+>> >
+>> > OK I buy that, throw in a comment about it in the code if there
+>> > is some time for iterating the patch.
 >>
->> Applied with Greg's ack to pci/enumeration for v3.20, thanks!
->>
->>> ---
->>>
->>> Modified line is >80 char, but I believe that it is better than breaking
->>> the string or indent it bad.
->>>
->>>  drivers/pci/pci-driver.c | 2 +-
->>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
->>> index 2b3c894..b720e78 100644
->>> --- a/drivers/pci/pci-driver.c
->>> +++ b/drivers/pci/pci-driver.c
->>> @@ -1389,7 +1389,7 @@ static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
->>>       if (add_uevent_var(env, "PCI_SLOT_NAME=%s", pci_name(pdev)))
->>>               return -ENOMEM;
->>>
->>> -     if (add_uevent_var(env, "MODALIAS=pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02x",
->>> +     if (add_uevent_var(env, "MODALIAS=pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02X",
->>>                          pdev->vendor, pdev->device,
->>>                          pdev->subsystem_vendor, pdev->subsystem_device,
->>>                          (u8)(pdev->class >> 16), (u8)(pdev->class >> 8),
->>> --
->>> 2.1.3
->>>
+>> Would you prefer something like the following instead?  It keeps the
+>> v3_open/close symmetry, but it does break apart and duplicate some of the
+>> logic from v3_open_config_window().
 >
->
->
-> --
-> Ricardo Ribalda
+> Hearing nothing, I kept Rob's initial version.  It can be tweaked later if
+> anybody wants to.  I just want to get all this into v3.20.
+
+Sorry, I'm OK with either version, this latest iteration looks very nice.
+Acked-by.
+
+Yours,
+Linus Walleij
