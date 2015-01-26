@@ -1,246 +1,288 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Joerg Roedel <jroedel@suse.de>,
-	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Andy Lutomirski <luto@amacapital.net>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qa0-f45.google.com ([209.85.216.45]:50347 "EHLO
+	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752838AbbA0AAT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 19:00:19 -0500
+Received: by mail-qa0-f45.google.com with SMTP id n8so9282131qaq.4
+        for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2015 16:00:18 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <54C6CCF3.7080308@ti.com>
+References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
+ <1422052359-12384-5-git-send-email-m-karicheri2@ti.com> <20150123234124.GW29776@google.com>
+ <54C6CCF3.7080308@ti.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 26 Jan 2015 17:59:58 -0600
+Message-ID: <CAErSpo4w0zVCmXk2D2Qk5W3kceS9Wk+=jqHBDwk6HUXWwXdq_Q@mail.gmail.com>
+Subject: Re: [PATCH v4 4/6] of/pci: add of_pci_dma_configure() update dma configuration
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
 	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v4 32/33] x86/irq: Move irqdomain specific code into asm/irqdomain.h
-Date: Tue, 20 Jan 2015 13:51:52 +0800
-Message-Id: <1421733113-15704-33-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have dedicated asm/irqdomain.h, so move irqdomain specific
-code into it.
+On Mon, Jan 26, 2015 at 5:25 PM, Murali Karicheri <m-karicheri2@ti.com> wrote:
+> On 01/23/2015 06:41 PM, Bjorn Helgaas wrote:
+>>
+>> On Fri, Jan 23, 2015 at 05:32:37PM -0500, Murali Karicheri wrote:
+>>>
+>>> Add of_pci_dma_configure() to allow updating the dma configuration
+>>> of the pci device using the configuration from DT of the parent of
+>>> the root bridge device.
+>>>
+>>> Cc: Joerg Roedel<joro@8bytes.org>
+>>> Cc: Grant Likely<grant.likely@linaro.org>
+>>> Cc: Rob Herring<robh+dt@kernel.org>
+>>> Cc: Bjorn Helgaas<bhelgaas@google.com>
+>>> Cc: Will Deacon<will.deacon@arm.com>
+>>> Cc: Russell King<linux@arm.linux.org.uk>
+>>> Cc: Arnd Bergmann<arnd@arndb.de>
+>>> Cc: Suravee Suthikulpanit<Suravee.Suthikulpanit@amd.com>
+>>>
+>>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+>>> ---
+>>>   drivers/of/of_pci.c    |   39 +++++++++++++++++++++++++++++++++++++++
+>>>   include/linux/of_pci.h |   12 ++++++++++++
+>>>   2 files changed, 51 insertions(+)
+>>>
+>>> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+>>> index 88471d3..34878c9 100644
+>>> --- a/drivers/of/of_pci.c
+>>> +++ b/drivers/of/of_pci.c
+>>> @@ -2,6 +2,7 @@
+>>>   #include<linux/export.h>
+>>>   #include<linux/of.h>
+>>>   #include<linux/of_address.h>
+>>> +#include<linux/of_device.h>
+>>>   #include<linux/of_pci.h>
+>>>   #include<linux/slab.h>
+>>>
+>>> @@ -229,6 +230,44 @@ parse_failed:
+>>>         return err;
+>>>   }
+>>>   EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
+>>> +
+>>> +/**
+>>> + * of_get_pci_root_bridge_parent - get the OF node of the root bridge's
+>>> parent
+>>> + * @dev: ptr to pci_dev struct of the pci device
+>>> + *
+>>> + * This function will traverse the bus up to the root bus starting with
+>>> + * the child and return the OF node ptr to root bridge device's parent
+>>> device.
+>>> + */
+>>> +struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev)
+>>
+>>
+>> I'm not an OF person, but this interface seems like it might be too
+>> special-purpose.  Maybe it would be enough to add
+>> "of_get_pci_root_bridge()", and the caller could do this:
+>>
+>>      struct device *bridge = of_get_pci_root_bridge(dev);
+>>      struct device_node *parent_np = bridge->parent->of_node;
+>>
+>> Also, the name "of_get_..." suggests that it increments a refcount, as
+>> of_get_parent() does.  But you aren't doing anything with the refcount.
+>>
+>> But I guess an "of_get_pci_root_bridge()" isn't doing anything OF-related,
+>> so maybe we should just add a "pci_get_host_bridge(struct pci_dev *)"
+>> to PCI instead.
+>
+>
+> Bjorn,
+>
+> Thanks for the comment.
+>
+> I think adding pci_get_host_bridge() is a good idea. There is already
+> similar function in host-bridge.c. I have added this function re-using
+> existing function find_pci_root_bus(). See the incremental diff below after
+> this change. Does this look good?
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/hw_irq.h        |   24 -----------------------
- arch/x86/include/asm/irq_remapping.h |    2 +-
- arch/x86/include/asm/irqdomain.h     |   35 +++++++++++++++++++++++++++++++---
- arch/x86/kernel/apic/htirq.c         |    2 +-
- arch/x86/kernel/apic/msi.c           |    2 +-
- arch/x86/kernel/apic/vector.c        |    2 +-
- arch/x86/kernel/hpet.c               |    2 +-
- arch/x86/platform/uv/uv_irq.c        |    2 +-
- 8 files changed, 38 insertions(+), 33 deletions(-)
+I like the implementation, but I think either we need to take a
+reference on the host bridge, or change the name to  something like
+"pci_find_host_bridge()", because using "_get_" is conventional for
+functions that acquire a reference.
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index e7ae6eb84934..f671d4331e7e 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -94,8 +94,6 @@ extern void trace_call_function_single_interrupt(void);
- #define trace_kvm_posted_intr_ipi kvm_posted_intr_ipi
- #endif /* CONFIG_TRACING */
- 
--struct irq_domain;
--
- #ifdef	CONFIG_X86_LOCAL_APIC
- struct irq_data;
- struct pci_dev;
-@@ -165,22 +163,11 @@ struct irq_alloc_info {
- 	};
- };
- 
--enum {
--	/* Allocate contigious CPU vectors */
--	X86_IRQ_ALLOC_CONTIGOUS_VECTORS		= 0x1,
--};
--
- struct irq_cfg {
- 	unsigned int		dest_apicid;
- 	u8			vector;
- };
- 
--extern struct irq_domain *x86_vector_domain;
--
--extern void init_irq_alloc_info(struct irq_alloc_info *info,
--				const struct cpumask *mask);
--extern void copy_irq_alloc_info(struct irq_alloc_info *dst,
--				struct irq_alloc_info *src);
- extern struct irq_cfg *irq_cfg(unsigned int irq);
- extern struct irq_cfg *irqd_cfg(struct irq_data *irq_data);
- extern void lock_vector_lock(void);
-@@ -200,17 +187,6 @@ static inline void lock_vector_lock(void) {}
- static inline void unlock_vector_lock(void) {}
- #endif	/* CONFIG_X86_LOCAL_APIC */
- 
--#ifdef	CONFIG_PCI_MSI
--extern void arch_init_msi_domain(struct irq_domain *domain);
--#else
--static inline void arch_init_msi_domain(struct irq_domain *domain) { }
--#endif
--#ifdef	CONFIG_HT_IRQ
--extern void arch_init_htirq_domain(struct irq_domain *domain);
--#else
--static inline void arch_init_htirq_domain(struct irq_domain *domain) { }
--#endif
--
- /* Statistics */
- extern atomic_t irq_err_count;
- extern atomic_t irq_mis_count;
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index 022cb635c294..8fe217ba8218 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -22,7 +22,7 @@
- #ifndef __X86_IRQ_REMAPPING_H
- #define __X86_IRQ_REMAPPING_H
- 
--#include <linux/irqdomain.h>
-+#include <asm/irqdomain.h>
- #include <asm/hw_irq.h>
- #include <asm/io_apic.h>
- 
-diff --git a/arch/x86/include/asm/irqdomain.h b/arch/x86/include/asm/irqdomain.h
-index fe0d4c6636ec..ae941c3f8c51 100644
---- a/arch/x86/include/asm/irqdomain.h
-+++ b/arch/x86/include/asm/irqdomain.h
-@@ -2,6 +2,25 @@
- #define _ASM_IRQDOMAIN_H
- 
- #include <linux/irqdomain.h>
-+#include <asm/hw_irq.h>
-+
-+#ifdef CONFIG_X86_LOCAL_APIC
-+enum {
-+	/* Allocate contigious CPU vectors */
-+	X86_IRQ_ALLOC_CONTIGOUS_VECTORS		= 0x1,
-+};
-+
-+extern struct irq_domain *x86_vector_domain;
-+
-+extern void init_irq_alloc_info(struct irq_alloc_info *info,
-+				const struct cpumask *mask);
-+extern void copy_irq_alloc_info(struct irq_alloc_info *dst,
-+				struct irq_alloc_info *src);
-+#endif /* CONFIG_X86_LOCAL_APIC */
-+
-+#ifdef CONFIG_X86_IO_APIC
-+struct device_node;
-+struct irq_data;
- 
- enum ioapic_domain_type {
- 	IOAPIC_DOMAIN_INVALID,
-@@ -10,9 +29,6 @@ enum ioapic_domain_type {
- 	IOAPIC_DOMAIN_DYNAMIC,
- };
- 
--struct device_node;
--struct irq_data;
--
- struct ioapic_domain_cfg {
- 	enum ioapic_domain_type		type;
- 	const struct irq_domain_ops	*ops;
-@@ -30,5 +46,18 @@ extern void mp_irqdomain_activate(struct irq_domain *domain,
- extern void mp_irqdomain_deactivate(struct irq_domain *domain,
- 				    struct irq_data *irq_data);
- extern int mp_irqdomain_ioapic_idx(struct irq_domain *domain);
-+#endif /* CONFIG_X86_IO_APIC */
-+
-+#ifdef CONFIG_PCI_MSI
-+extern void arch_init_msi_domain(struct irq_domain *domain);
-+#else
-+static inline void arch_init_msi_domain(struct irq_domain *domain) { }
-+#endif
-+
-+#ifdef CONFIG_HT_IRQ
-+extern void arch_init_htirq_domain(struct irq_domain *domain);
-+#else
-+static inline void arch_init_htirq_domain(struct irq_domain *domain) { }
-+#endif
- 
- #endif
-diff --git a/arch/x86/kernel/apic/htirq.c b/arch/x86/kernel/apic/htirq.c
-index 4ba6b3ae7a95..94bca925bf7d 100644
---- a/arch/x86/kernel/apic/htirq.c
-+++ b/arch/x86/kernel/apic/htirq.c
-@@ -16,7 +16,7 @@
- #include <linux/device.h>
- #include <linux/pci.h>
- #include <linux/htirq.h>
--#include <linux/irqdomain.h>
-+#include <asm/irqdomain.h>
- #include <asm/hw_irq.h>
- #include <asm/apic.h>
- #include <asm/hypertransport.h>
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index da163da5fdee..4ca80bbcd632 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -16,7 +16,7 @@
- #include <linux/dmar.h>
- #include <linux/hpet.h>
- #include <linux/msi.h>
--#include <linux/irqdomain.h>
-+#include <asm/irqdomain.h>
- #include <asm/msidef.h>
- #include <asm/hpet.h>
- #include <asm/hw_irq.h>
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 0e7c39beefed..f5eb3999383f 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -13,8 +13,8 @@
- #include <linux/interrupt.h>
- #include <linux/init.h>
- #include <linux/compiler.h>
--#include <linux/irqdomain.h>
- #include <linux/slab.h>
-+#include <asm/irqdomain.h>
- #include <asm/hw_irq.h>
- #include <asm/apic.h>
- #include <asm/i8259.h>
-diff --git a/arch/x86/kernel/hpet.c b/arch/x86/kernel/hpet.c
-index a22d7288202b..5f5cc2c061c6 100644
---- a/arch/x86/kernel/hpet.c
-+++ b/arch/x86/kernel/hpet.c
-@@ -11,8 +11,8 @@
- #include <linux/cpu.h>
- #include <linux/pm.h>
- #include <linux/io.h>
--#include <linux/irqdomain.h>
- 
-+#include <asm/irqdomain.h>
- #include <asm/fixmap.h>
- #include <asm/hpet.h>
- #include <asm/time.h>
-diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
-index 091b36ac44c4..cdf86cd3fd97 100644
---- a/arch/x86/platform/uv/uv_irq.c
-+++ b/arch/x86/platform/uv/uv_irq.c
-@@ -12,8 +12,8 @@
- #include <linux/rbtree.h>
- #include <linux/slab.h>
- #include <linux/irq.h>
--#include <linux/irqdomain.h>
- 
-+#include <asm/irqdomain.h>
- #include <asm/apic.h>
- #include <asm/uv/uv_irq.h>
- #include <asm/uv/uv_hub.h>
--- 
-1.7.10.4
+Since host bridges are hot-pluggable, at least in theory, I vote for
+taking a reference.  Then of course, you'd have to add code to drop
+the reference when you're finished with it.
 
+Bjorn
+
+> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> index 34878c9..77b15b5 100644
+> --- a/drivers/of/of_pci.c
+> +++ b/drivers/of/of_pci.c
+> @@ -232,26 +232,6 @@ parse_failed:
+>  EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
+>
+>  /**
+> - * of_get_pci_root_bridge_parent - get the OF node of the root bridge's
+> parent
+> - * @dev: ptr to pci_dev struct of the pci device
+> - *
+> - * This function will traverse the bus up to the root bus starting with
+> - * the child and return the OF node ptr to root bridge device's parent
+> device.
+> - */
+> -struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev)
+> -{
+> -       struct pci_bus *bus = dev->bus;
+> -       struct device *bridge;
+> -
+> -       while (!pci_is_root_bus(bus))
+> -               bus = bus->parent;
+> -       bridge = bus->bridge;
+> -
+> -       return bridge->parent->of_node;
+> -}
+> -EXPORT_SYMBOL_GPL(of_get_pci_root_bridge_parent);
+> -
+> -/**
+>   * of_pci_dma_configure - Setup DMA configuration
+>   * @dev: ptr to pci_dev struct of the pci device
+>   *
+> @@ -261,10 +241,9 @@ EXPORT_SYMBOL_GPL(of_get_pci_root_bridge_parent);
+>  void of_pci_dma_configure(struct pci_dev *pci_dev)
+>  {
+>         struct device *dev = &pci_dev->dev;
+> -       struct device_node *parent_np;
+> +       struct device *bridge = pci_get_host_bridge(pci_dev);
+>
+> -       parent_np = of_get_pci_root_bridge_parent(pci_dev);
+> -       of_dma_configure(dev, parent_np);
+> +       of_dma_configure(dev, bridge->parent->of_node);
+>  }
+>  EXPORT_SYMBOL_GPL(of_pci_dma_configure);
+>
+> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> index 0e5f3c9..9803aa6 100644
+> --- a/drivers/pci/host-bridge.c
+> +++ b/drivers/pci/host-bridge.c
+> @@ -23,6 +23,13 @@ static struct pci_host_bridge
+> *find_pci_host_bridge(struct pci_bus *bus)
+>         return to_pci_host_bridge(root_bus->bridge);
+>  }
+>
+> +struct device *pci_get_host_bridge(struct pci_dev *dev)
+> +{
+> +       struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
+> +
+> +       return root_bus->bridge;
+> +}
+> +
+>  void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+>                                  void (*release_fn)(struct pci_host_bridge
+> *),
+>                                  void *release_data)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 9603094..5bcdfa6 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -513,6 +513,8 @@ static inline struct pci_dev *pci_upstream_bridge(struct
+> pci_dev *dev)
+>         return dev->bus->self;
+>  }
+>
+> +struct device *pci_get_host_bridge(struct pci_dev *dev);
+> +
+>  #ifdef CONFIG_PCI_MSI
+>  static inline bool pci_dev_msi_enabled(struct pci_dev *pci_dev)
+>  {
+> @@ -1823,6 +1825,7 @@ int pci_vpd_find_tag(const u8 *buf, unsigned int off,
+> unsigned int len, u8 rdt);
+>  int pci_vpd_find_info_keyword(const u8 *buf, unsigned int off,
+>                               unsigned int len, const char *kw);
+>
+>  /* PCI <-> OF binding helpers */
+>  #ifdef CONFIG_OF
+>  struct device_node;
+>
+>
+>>
+>> Bjorn
+>>
+>>> +{
+>>> +       struct pci_bus *bus = dev->bus;
+>>> +       struct device *bridge;
+>>> +
+>>> +       while (!pci_is_root_bus(bus))
+>>> +               bus = bus->parent;
+>>> +       bridge = bus->bridge;
+>>> +
+>>> +       return bridge->parent->of_node;
+>>> +}
+>>> +EXPORT_SYMBOL_GPL(of_get_pci_root_bridge_parent);
+>>> +
+>>> +/**
+>>> + * of_pci_dma_configure - Setup DMA configuration
+>>> + * @dev: ptr to pci_dev struct of the pci device
+>>> + *
+>>> + * Function to update PCI devices's DMA configuration using the same
+>>> + * info from the OF node of root host bridge's parent.
+>>> + */
+>>> +void of_pci_dma_configure(struct pci_dev *pci_dev)
+>>> +{
+>>> +       struct device *dev =&pci_dev->dev;
+>>>
+>>> +       struct device_node *parent_np;
+>>> +
+>>> +       parent_np = of_get_pci_root_bridge_parent(pci_dev);
+>>> +       of_dma_configure(dev, parent_np);
+>>> +}
+>>> +EXPORT_SYMBOL_GPL(of_pci_dma_configure);
+>>> +
+>>>   #endif /* CONFIG_OF_ADDRESS */
+>>>
+>>>   #ifdef CONFIG_PCI_MSI
+>>> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+>>> index ce0e5ab..0465a2a 100644
+>>> --- a/include/linux/of_pci.h
+>>> +++ b/include/linux/of_pci.h
+>>> @@ -16,6 +16,8 @@ int of_pci_get_devfn(struct device_node *np);
+>>>   int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8
+>>> pin);
+>>>   int of_pci_parse_bus_range(struct device_node *node, struct resource
+>>> *res);
+>>>   int of_get_pci_domain_nr(struct device_node *node);
+>>> +struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev);
+>>> +void of_pci_dma_configure(struct pci_dev *pci_dev);
+>>>   #else
+>>>   static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct
+>>> of_phandle_args *out_irq)
+>>>   {
+>>> @@ -50,6 +52,16 @@ of_get_pci_domain_nr(struct device_node *node)
+>>>   {
+>>>         return -1;
+>>>   }
+>>> +
+>>> +static inline struct device_node
+>>> +*of_get_pci_root_bridge_parent(struct pci_dev *dev)
+>>> +{
+>>> +       return NULL;
+>>> +}
+>>> +
+>>> +static inline void of_pci_dma_configure(struct pci_dev *pci_dev)
+>>> +{
+>>> +}
+>>>   #endif
+>>>
+>>>   #if defined(CONFIG_OF_ADDRESS)
+>>> --
+>>> 1.7.9.5
+>>>
+>
+>
+> --
+> Murali Karicheri
+> Linux Kernel, Texas Instruments
