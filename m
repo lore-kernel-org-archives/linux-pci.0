@@ -1,86 +1,63 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part1 v7 28/38] irq_remapping: Kill unused function irq_remapping_print_chip()
-Date: Tue, 20 Jan 2015 11:08:31 +0800
-Message-Id: <1421723321-8386-29-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:44750 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754602AbbAZQ2H convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 11:28:07 -0500
+Received: by mail-lb0-f180.google.com with SMTP id b6so8403840lbj.11
+        for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2015 08:28:04 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo4bN0kWP6a6qeU0QCZ23BwC-FJ1RTuaGMvS7zamiVp_Fw@mail.gmail.com>
+References: <1422263957-3148-1-git-send-email-zajec5@gmail.com>
+	<CAErSpo4bN0kWP6a6qeU0QCZ23BwC-FJ1RTuaGMvS7zamiVp_Fw@mail.gmail.com>
+Date: Mon, 26 Jan 2015 17:28:04 +0100
+Message-ID: <CACna6rz8dWYzDzBNV48VHqUYGzbqVneqjiQW5tzs7Nc=_wtX6Q@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Add defines for max read requests sizes
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now there's no user of irq_remapping_print_chip(), so kill it.
+On 26 January 2015 at 17:01, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, Jan 26, 2015 at 3:19 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
+>> There are few drivers using magic numbers when operating with PCIe
+>> capabilities and PCI_EXP_DEVCTL_READRQ. Define known values to allow
+>> cleaning their code a bit.
+>>
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> ---
+>> Hi,
+>>
+>> I'm new to the PCI subsystem, so let me know if there is anything wrong with my
+>> patch. I hope you find these bits worth defining and that my coding style
+>> matches rest of the file.
+>> ---
+>>  include/uapi/linux/pci_regs.h | 4 ++++
+>>  1 file changed, 4 insertions(+)
+>>
+>> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+>> index 4a1d0cc..efe3443 100644
+>> --- a/include/uapi/linux/pci_regs.h
+>> +++ b/include/uapi/linux/pci_regs.h
+>> @@ -451,6 +451,10 @@
+>>  #define  PCI_EXP_DEVCTL_AUX_PME        0x0400  /* Auxiliary Power PM Enable */
+>>  #define  PCI_EXP_DEVCTL_NOSNOOP_EN 0x0800  /* Enable No Snoop */
+>>  #define  PCI_EXP_DEVCTL_READRQ 0x7000  /* Max_Read_Request_Size */
+>> +#define  PCI_EXP_DEVCTL_READRQ_128B  0x0000 /* 128 Bytes */
+>> +#define  PCI_EXP_DEVCTL_READRQ_256B  0x1000 /* 256 Bytes */
+>> +#define  PCI_EXP_DEVCTL_READRQ_512B  0x2000 /* 512 Bytes */
+>> +#define  PCI_EXP_DEVCTL_READRQ_1024B 0x3000 /* 1024 Bytes */
+>>  #define  PCI_EXP_DEVCTL_BCR_FLR 0x8000  /* Bridge Configuration Retry / FLR */
+>>  #define PCI_EXP_DEVSTA         10      /* Device Status */
+>>  #define  PCI_EXP_DEVSTA_CED    0x0001  /* Correctable Error Detected */
+>
+> This seems reasonable.  Can you include patches for the drivers to
+> actually use these new symbols?  It's ideal if we can do them at the
+> same time because we try to avoid adding new symbols unless they're
+> going to actually be used.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/irq_remapping.h |    2 --
- drivers/iommu/irq_remapping.c        |   13 -------------
- 2 files changed, 15 deletions(-)
+Sure, but how to send them? Could the go through your (PCI) tree?
 
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index 79f1a84e6a85..5622a4fc7cd6 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -59,7 +59,6 @@ extern struct irq_domain *
- irq_remapping_get_ir_irq_domain( struct irq_alloc_info *info);
- extern struct irq_domain *
- irq_remapping_get_irq_domain(struct irq_alloc_info *info);
--extern void irq_remapping_print_chip(struct irq_data *data, struct seq_file *p);
- 
- /* Create PCI MSI/MSIx irqdomain, use @parent as the parent irqdomain. */
- extern struct irq_domain *arch_create_msi_irq_domain(struct irq_domain *parent);
-@@ -115,6 +114,5 @@ irq_remapping_get_irq_domain(struct irq_alloc_info *info)
- 	return NULL;
- }
- 
--#define	irq_remapping_print_chip	NULL
- #endif /* CONFIG_IRQ_REMAP */
- #endif /* __X86_IRQ_REMAPPING_H */
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 3eaa822c30a9..558c804dbe11 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -204,19 +204,6 @@ static void ir_ack_apic_level(struct irq_data *data)
- 	eoi_ioapic_irq(data->irq, irqd_cfg(data));
- }
- 
--void irq_remapping_print_chip(struct irq_data *data, struct seq_file *p)
--{
--	/*
--	 * Assume interrupt is remapped if the parent irqdomain isn't the
--	 * vector domain, which is true for MSI, HPET and IOAPIC on x86
--	 * platforms.
--	 */
--	if (data->domain && data->domain->parent != arch_get_ir_parent_domain())
--		seq_printf(p, " IR-%s", data->chip->name);
--	else
--		seq_printf(p, " %s", data->chip->name);
--}
--
- static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
- {
- 	seq_printf(p, " IR-%s", data->chip->name);
 -- 
-1.7.10.4
-
+Rafał
