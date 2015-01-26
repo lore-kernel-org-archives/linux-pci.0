@@ -1,77 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qa0-f48.google.com ([209.85.216.48]:44807 "EHLO
+	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753818AbbAZVCu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 16:02:50 -0500
+Received: by mail-qa0-f48.google.com with SMTP id v8so8636587qal.7
+        for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2015 13:02:49 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CA+8MBbKnT=mE3kev8BRPq0GeTgHx8WVa6o54tJuBX_XXLpHdYQ@mail.gmail.com>
+References: <20150123203145.GA6691@google.com> <CA+8MBbKnT=mE3kev8BRPq0GeTgHx8WVa6o54tJuBX_XXLpHdYQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 26 Jan 2015 15:02:29 -0600
+Message-ID: <CAErSpo7y1wWStjcEOH9xTiM-As8+QeMynZ5ENrL9v3X2PvQCcw@mail.gmail.com>
+Subject: Re: [GIT PULL] PCI fixes for v3.19
+To: Tony Luck <tony.luck@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
 	Yinghai Lu <yinghai@kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Sam Ravnborg <sam@ravnborg.org>, sparclinux@vger.kernel.org
-Subject: [PATCH 10/10] PCI, sparc: clip firmware assigned resource under parent bridge's
-Date: Mon, 12 Jan 2015 11:23:20 -0800
-Message-Id: <1421090600-9750-11-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1421090600-9750-1-git-send-email-yinghai@kernel.org>
-References: <1421090600-9750-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	Marek Kordik <kordikmarek@gmail.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Andreas Hartmann <andihartmann@freenet.de>,
+	Alexey Voronkov <zermond@gmail.com>,
+	David Airlie <airlied@linux.ie>,
+	Alex Deucher <alexander.deucher@amd.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some bios put range that is not fully coverred by root bus resources.
-Try to clip them and update them in pci bridge bars.
+On Mon, Jan 26, 2015 at 1:58 PM, Tony Luck <tony.luck@gmail.com> wrote:
+> I'm seeing these new messages in v3.19-rc6 on ia64:
 
-We'd like to fix other arches instead of just x86.
+Hi Tony,
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491
-Reported-by: Marek Kordik <kordikmarek@gmail.com>
-Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources")
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: Yijing Wang <wangyijing@huawei.com>
-Cc: Sam Ravnborg <sam@ravnborg.org>
-Cc: sparclinux@vger.kernel.org
----
- arch/sparc/kernel/pci.c | 20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+Sorry for the inconvenience.  Can you collect a complete dmesg log and
+"lspci -vv" output, too (from the kernel with the reverted commit)?
+That will have more useful information than just /proc/iomem.
 
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index b36365f..0e391e5 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -623,6 +623,7 @@ static void pci_claim_bus_resources(struct pci_bus *bus)
- 	struct pci_dev *dev;
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		bool changed = false;
- 		int i;
- 
- 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-@@ -639,8 +640,25 @@ static void pci_claim_bus_resources(struct pci_bus *bus)
- 				       (unsigned long long)r->end,
- 				       (unsigned int)r->flags);
- 
--			pci_claim_resource(dev, i);
-+			if (pci_claim_resource(dev, i) >= 0)
-+				continue;
-+
-+			if (dev->subordinate &&
-+			    i >= PCI_BRIDGE_RESOURCES &&
-+			    i < PCI_NUM_RESOURCES &&
-+			    (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI &&
-+			    pci_bus_clip_resource(dev, r)) {
-+				changed = true;
-+				pci_claim_resource(dev, i);
-+			} else if (i < PCI_BRIDGE_RESOURCES &&
-+				   i != PCI_ROM_RESOURCE &&
-+				   pci_bus_clip_resource(dev, r)) {
-+					pci_update_resource(dev, i);
-+					pci_claim_resource(dev, i);
-+			}
- 		}
-+		if (changed)
-+			pci_setup_bridge(dev->subordinate);
- 	}
- 
- 	list_for_each_entry(child_bus, &bus->children, node)
--- 
-1.8.4.5
+> pci 0000:01:00.0: can't claim BAR 6 [mem 0xfffe0000-0xffffffff pref]:
+> no compatible bridge window
 
+These are option ROMs, probably just not assigned.  We should be able
+to assign space for them, so this might not even be a problem, but we
+certainly need a better message if that's all it is.
+
+> pci 0000:01:00.1: can't claim BAR 6 [mem 0xfffe0000-0xffffffff pref]:
+> no compatible bridge window
+> pci 0000:03:00.0: can't claim BAR 6 [mem 0xffe00000-0xffffffff pref]:
+> no compatible bridge window
+> pci 0000:0b:04.0: can't claim BAR 6 [mem 0xfffe0000-0xffffffff pref]:
+> no compatible bridge window
+> pci 0000:80:13.0: can't claim BAR 0 [mem 0xa0220000-0xa0220fff]: no
+> compatible bridge window
+
+Interesting.  There's no mention of bus 80 at all in /proc/iomem;
+maybe this is found by blind probing?  Do we even do that on ia64?
+Dmesg should have a clue.
+
+> pci 0000:80:16.0: can't claim BAR 0 [mem 0xa0200000-0xa0203fff 64bit]:
+> no compatible bridge window
+> pci 0000:80:16.1: can't claim BAR 0 [mem 0xa0204000-0xa0207fff 64bit]:
+> no compatible bridge window
+> pci 0000:80:16.2: can't claim BAR 0 [mem 0xa0208000-0xa020bfff 64bit]:
+> no compatible bridge window
+> pci 0000:80:16.3: can't claim BAR 0 [mem 0xa020c000-0xa020ffff 64bit]:
+> no compatible bridge window
+> pci 0000:80:16.4: can't claim BAR 0 [mem 0xa0210000-0xa0213fff 64bit]:
+> no compatible bridge window
+> pci 0000:80:16.5: can't claim BAR 0 [mem 0xa0214000-0xa0217fff 64bit]:
+> no compatible bridge window
+> pci 0000:80:16.6: can't claim BAR 0 [mem 0xa0218000-0xa021bfff 64bit]:
+> no compatible bridge window
+> pci 0000:80:16.7: can't claim BAR 0 [mem 0xa021c000-0xa021ffff 64bit]:
+> no compatible bridge window
+> pci 0000:80:01.0: can't claim BAR 8 [mem 0xa0100000-0xa01fffff]: no
+> compatible bridge window
+
+Looks like a bridge window (assuming you have CONFIG_PCI_IOV unset).
+There's definitely something wrong -- all those mpt and igb devices at
+the top level *should* be under some PCI hierarchy, but the hierarchy
+is missing from iomem.
+
+Bjorn
