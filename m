@@ -1,180 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:54684 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753386AbbAHAEe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jan 2015 19:04:34 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PCI <linux-pci@vger.kernel.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [RFC][PATCH] PCI / PM: Avoid resuming PCI devices during system suspend
-Date: Thu, 08 Jan 2015 01:26:52 +0100
-Message-ID: <1460212.bInrzeZle0@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:55491 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752588AbbAZKyv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 05:54:51 -0500
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Mohit Kumar <mohit.kumar@st.com>
+Cc: linux-pci@vger.kernel.org
+Subject: [PATCH] PCI: designware: reject MSI-X irqs
+Date: Mon, 26 Jan 2015 11:54:44 +0100
+Message-Id: <1422269684-11527-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+The DW PCIe MSI hardware does not support MSI-X irqs. Setting those up
+failed as a side effect of a bug which was fixed by 91f8ae823f2b
+(PCI: designware: Setup and clear exactly one MSI at a time).
 
-Commit f25c0ae2b4c4 (ACPI / PM: Avoid resuming devices in ACPI PM
-domain during system suspend) modified the ACPI PM domain's system
-suspend callbacks to allow devices attached to it to be left in the
-runtime-suspended state during system suspend so as to optimize
-the suspend process.
+Now that this bug is fixed MSI-X irqs need to be rejected explicitly,
+otherwise devices trying to use them may end up with incorrectly working
+interrupts.
 
-This was based on the general mechanism introduced by commit
-aae4518b3124 (PM / sleep: Mechanism to avoid resuming runtime-suspended
-devices unnecessarily).
-
-Extend that approach to PCI devices by modifying the PCI bus type's
-->prepare callback to return 1 for devices that are runtime-suspended
-when it is being executed and that are in a suitable power state and
-need not be resumed going forward.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+Cc: <stable@vger.kernel.org> # 3.18
 ---
- drivers/pci/pci-acpi.c   |   17 +++++++++++++++++
- drivers/pci/pci-driver.c |   11 ++++++-----
- drivers/pci/pci.c        |   21 +++++++++++++++++++++
- drivers/pci/pci.h        |    6 ++++++
- 4 files changed, 50 insertions(+), 5 deletions(-)
+ drivers/pci/host/pcie-designware.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Index: linux-pm/drivers/pci/pci.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci.c
-+++ linux-pm/drivers/pci/pci.c
-@@ -521,6 +521,11 @@ static inline int platform_pci_run_wake(
- 			pci_platform_pm->run_wake(dev, enable) : -ENODEV;
- }
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index df781cdf13c1..17ca98657a28 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -283,6 +283,9 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+ 	struct msi_msg msg;
+ 	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
  
-+static inline bool platform_pci_need_resume(struct pci_dev *dev)
-+{
-+	return pci_platform_pm ? pci_platform_pm->need_resume(dev) : false;
-+}
++	if (desc->msi_attrib.is_msix)
++		return -EINVAL;
 +
- /**
-  * pci_raw_set_power_state - Use PCI PM registers to set the power state of
-  *                           given PCI device
-@@ -1999,6 +2004,22 @@ bool pci_dev_run_wake(struct pci_dev *de
- }
- EXPORT_SYMBOL_GPL(pci_dev_run_wake);
- 
-+/**
-+ * pci_dev_keep_suspended - Check if the device can stay in the suspended state.
-+ * @dev: Device to check.
-+ *
-+ * Return 'true' if the device is runtime-suspended, it doesn't have to be
-+ * reconfigured for system wakeup and the current power state of it is
-+ * suitable for the upcoming (system) transition.
-+ */
-+bool pci_dev_keep_suspended(struct pci_dev *dev)
-+{
-+	if (!pm_runtime_suspended(&dev->dev) || platform_pci_need_resume(dev))
-+		return false;
-+
-+	return pci_target_state(dev) == dev->current_state;
-+}
-+
- void pci_config_pm_runtime_get(struct pci_dev *pdev)
- {
- 	struct device *dev = &pdev->dev;
-Index: linux-pm/drivers/pci/pci.h
-===================================================================
---- linux-pm.orig/drivers/pci/pci.h
-+++ linux-pm/drivers/pci/pci.h
-@@ -50,6 +50,10 @@ int pci_probe_reset_function(struct pci_
-  *		for given device (the device's wake-up capability has to be
-  *		enabled by @sleep_wake for this feature to work)
-  *
-+ * @need_resume: returns 'true' if the given device (which is currently
-+ *		suspended) needs to be resumed to be configured for system
-+ *		wakeup.
-+ *
-  * If given platform is generally capable of power managing PCI devices, all of
-  * these callbacks are mandatory.
-  */
-@@ -59,6 +63,7 @@ struct pci_platform_pm_ops {
- 	pci_power_t (*choose_state)(struct pci_dev *dev);
- 	int (*sleep_wake)(struct pci_dev *dev, bool enable);
- 	int (*run_wake)(struct pci_dev *dev, bool enable);
-+	bool (*need_resume)(struct pci_dev *dev);
- };
- 
- int pci_set_platform_pm(struct pci_platform_pm_ops *ops);
-@@ -67,6 +72,7 @@ void pci_power_up(struct pci_dev *dev);
- void pci_disable_enabled_device(struct pci_dev *dev);
- int pci_finish_runtime_suspend(struct pci_dev *dev);
- int __pci_pme_wakeup(struct pci_dev *dev, void *ign);
-+bool pci_dev_keep_suspended(struct pci_dev *dev);
- void pci_config_pm_runtime_get(struct pci_dev *dev);
- void pci_config_pm_runtime_put(struct pci_dev *dev);
- void pci_pm_init(struct pci_dev *dev);
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -501,12 +501,29 @@ static int acpi_pci_run_wake(struct pci_
- 	return 0;
- }
- 
-+static bool acpi_pci_need_resume(struct pci_dev *dev)
-+{
-+	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
-+
-+	if (!adev || !acpi_device_power_manageable(adev))
-+		return false;
-+
-+	if (device_may_wakeup(&dev->dev) != !!adev->wakeup.prepare_count)
-+		return true;
-+
-+	if (acpi_target_system_state() == ACPI_STATE_S0)
-+		return false;
-+
-+	return !!adev->power.flags.dsw_present;
-+}
-+
- static struct pci_platform_pm_ops acpi_pci_platform_pm = {
- 	.is_manageable = acpi_pci_power_manageable,
- 	.set_state = acpi_pci_set_power_state,
- 	.choose_state = acpi_pci_choose_state,
- 	.sleep_wake = acpi_pci_sleep_wake,
- 	.run_wake = acpi_pci_run_wake,
-+	.need_resume = acpi_pci_need_resume,
- };
- 
- void acpi_pci_add_bus(struct pci_bus *bus)
-Index: linux-pm/drivers/pci/pci-driver.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-driver.c
-+++ linux-pm/drivers/pci/pci-driver.c
-@@ -653,7 +653,6 @@ static bool pci_has_legacy_pm_support(st
- static int pci_pm_prepare(struct device *dev)
- {
- 	struct device_driver *drv = dev->driver;
--	int error = 0;
- 
- 	/*
- 	 * Devices having power.ignore_children set may still be necessary for
-@@ -662,10 +661,12 @@ static int pci_pm_prepare(struct device
- 	if (dev->power.ignore_children)
- 		pm_runtime_resume(dev);
- 
--	if (drv && drv->pm && drv->pm->prepare)
--		error = drv->pm->prepare(dev);
--
--	return error;
-+	if (drv && drv->pm && drv->pm->prepare) {
-+		int error = drv->pm->prepare(dev);
-+		if (error)
-+			return error;
-+	}
-+	return pci_dev_keep_suspended(to_pci_dev(dev));
- }
- 
- 
+ 	irq = assign_irq(1, desc, &pos);
+ 	if (irq < 0)
+ 		return irq;
+-- 
+2.1.4
 
