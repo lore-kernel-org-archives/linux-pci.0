@@ -1,47 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:51353 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753166AbbAUO0V (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Jan 2015 09:26:21 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [RFC Patch 08/19] ACPI: Add prefetch decoding to the address space parser
-Date: Wed, 21 Jan 2015 15:48:57 +0100
-Message-ID: <2824802.T2m64639rV@vostro.rjw.lan>
-In-Reply-To: <54BF3881.9000708@linux.intel.com>
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1593565.fJ4zH7YgDd@vostro.rjw.lan> <54BF3881.9000708@linux.intel.com>
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:56959 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755490AbbAZRGi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 12:06:38 -0500
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Realtek linux nic maintainers <nic_swsd@realtek.com>,
+	netdev@vger.kernel.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 5/5] r8169: use PCI define for max read request size
+Date: Mon, 26 Jan 2015 18:06:31 +0100
+Message-Id: <1422291991-12535-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1422291922-12324-1-git-send-email-zajec5@gmail.com>
+References: <1422291922-12324-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, January 21, 2015 01:26:25 PM Jiang Liu wrote:
-> On 2015/1/21 8:35, Rafael J. Wysocki wrote:
-> > On Thursday, January 08, 2015 10:32:55 AM Jiang Liu wrote:
-> >> From: Thomas Gleixner <tglx@linutronix.de>
-> >>
-> >> Add support of PREFETCH attributre to ACPI address space and extended
-> >> address space parser.
-> > 
-> > This potentially enables untested configurations which tends to uncover bugs,
-> > so I'm concerned.
-> > 
-> > What's the possible impact of this?
-> Hi Rafael,
-> 	I have analyzed all call sites related to this change, most
-> users just care about resource type(IO, MEM, IRQ etc) and ignore
-> the prefetch property. Seems only PCI subsystem cares about PREFETCH.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/ethernet/realtek/r8169.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-OK
-
-
+diff --git a/drivers/net/ethernet/realtek/r8169.c b/drivers/net/ethernet/realtek/r8169.c
+index 14a1c5c..fa274e0 100644
+--- a/drivers/net/ethernet/realtek/r8169.c
++++ b/drivers/net/ethernet/realtek/r8169.c
+@@ -4915,7 +4915,7 @@ static void r8168c_hw_jumbo_enable(struct rtl8169_private *tp)
+ 
+ 	RTL_W8(Config3, RTL_R8(Config3) | Jumbo_En0);
+ 	RTL_W8(Config4, RTL_R8(Config4) | Jumbo_En1);
+-	rtl_tx_performance_tweak(tp->pci_dev, 0x2 << MAX_READ_REQUEST_SHIFT);
++	rtl_tx_performance_tweak(tp->pci_dev, PCI_EXP_DEVCTL_READRQ_512B);
+ }
+ 
+ static void r8168c_hw_jumbo_disable(struct rtl8169_private *tp)
+@@ -4948,7 +4948,7 @@ static void r8168e_hw_jumbo_enable(struct rtl8169_private *tp)
+ 	RTL_W8(MaxTxPacketSize, 0x3f);
+ 	RTL_W8(Config3, RTL_R8(Config3) | Jumbo_En0);
+ 	RTL_W8(Config4, RTL_R8(Config4) | 0x01);
+-	rtl_tx_performance_tweak(tp->pci_dev, 0x2 << MAX_READ_REQUEST_SHIFT);
++	rtl_tx_performance_tweak(tp->pci_dev, PCI_EXP_DEVCTL_READRQ_512B);
+ }
+ 
+ static void r8168e_hw_jumbo_disable(struct rtl8169_private *tp)
+@@ -4964,7 +4964,7 @@ static void r8168e_hw_jumbo_disable(struct rtl8169_private *tp)
+ static void r8168b_0_hw_jumbo_enable(struct rtl8169_private *tp)
+ {
+ 	rtl_tx_performance_tweak(tp->pci_dev,
+-		(0x2 << MAX_READ_REQUEST_SHIFT) | PCI_EXP_DEVCTL_NOSNOOP_EN);
++		PCI_EXP_DEVCTL_READRQ_512B | PCI_EXP_DEVCTL_NOSNOOP_EN);
+ }
+ 
+ static void r8168b_0_hw_jumbo_disable(struct rtl8169_private *tp)
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.8.4.5
+
