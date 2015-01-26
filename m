@@ -1,111 +1,313 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:38250 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751404AbbASSce convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jan 2015 13:32:34 -0500
-Date: Mon, 19 Jan 2015 18:32:29 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:51302 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753493AbbAZSWh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 13:22:37 -0500
+Received: by mail-ob0-f182.google.com with SMTP id gq1so9151764obb.13
+        for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2015 10:22:36 -0800 (PST)
+Date: Mon, 26 Jan 2015 12:22:33 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Linus Walleij <linus.walleij@linaro.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
 	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>
-Subject: Re: [RFC PATCH 1/3] drivers: of: fix resources freeing in
- of_pci_get_host_bridge_resources()
-Message-ID: <20150119183228.GE10762@e106497-lin.cambridge.arm.com>
-References: <1420644571-18928-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1420644571-18928-2-git-send-email-lorenzo.pieralisi@arm.com>
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 07/16] ARM: integrator: convert PCI to use generic config
+ accesses
+Message-ID: <20150126182233.GB4063@google.com>
+References: <1420857290-8373-1-git-send-email-robh@kernel.org>
+ <1420857290-8373-8-git-send-email-robh@kernel.org>
+ <CACRpkdbwKN9LenqrWeu4WykhdZOGAdxpC_BYr2cYpc2_cn5GfA@mail.gmail.com>
+ <4938579.0KIk3QtTCP@wuerfel>
+ <CACRpkdZSXWrVudiadVjbhQDS_zQrYttaytW-TUoeFUrc=beD1A@mail.gmail.com>
+ <20150122203336.GD13072@google.com>
 MIME-Version: 1.0
-In-Reply-To: <1420644571-18928-2-git-send-email-lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150122203336.GD13072@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 07, 2015 at 03:29:29PM +0000, Lorenzo Pieralisi wrote:
-> In the function of_pci_get_host_bridge_resources() if the parsing of
-> ranges fails, previously allocated resources inclusive of bus_range
-> are not freed and are not expected to be freed by the function caller
-> on error return.
+On Thu, Jan 22, 2015 at 02:33:36PM -0600, Bjorn Helgaas wrote:
+> On Mon, Jan 12, 2015 at 01:05:12AM +0100, Linus Walleij wrote:
+> > On Sat, Jan 10, 2015 at 10:53 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > > On Saturday 10 January 2015 22:40:22 Linus Walleij wrote:
+> > >> >  static int v3_read_config(struct pci_bus *bus, unsigned int devfn, int where,
+> > >> >                           int size, u32 *val)
+> > >> >  {
+> > >> > -       addr = v3_open_config_window(bus, devfn, where);
+> > >> > +       int ret = pci_generic_config_read(bus, devfn, where, size, val);
+> > >> >         v3_close_config_window();
+> > >> > +       return ret;
+> > >> >  }
+> > >> >
+> > >> >  static int v3_write_config(struct pci_bus *bus, unsigned int devfn, int where,
+> > >> >                            int size, u32 val)
+> > >> >  {
+> > >> > +       int ret = pci_generic_config_write(bus, devfn, where, size, val);
+> > >> >         v3_close_config_window();
+> > >> > -       raw_spin_unlock_irqrestore(&v3_lock, flags);
+> > >> > +       return ret;
+> > >> >  }
+> > >> >
+> > >> >  static struct pci_ops pci_v3_ops = {
+> > >> > +       .map_bus = v3_open_config_window,
+> > >> >         .read   = v3_read_config,
+> > >> >         .write  = v3_write_config,
+> > >>
+> > >> So .map_bus is called before every .read/.write operation I take it.
+> > >>
+> > >> Wouldn't it be proper to call the v3_close_config_window() from a
+> > >> matching .unmap_bus() callback for symmetry?
+> > >
+> > > It would be nicer for integrator but useless for anything else, so
+> > > I'd vote for leaving it the way Rob posted.
+> > 
+> > OK I buy that, throw in a comment about it in the code if there
+> > is some time for iterating the patch.
 > 
-> This patch fixes the issues by adding code that properly frees resources
-> and bus_range before exiting the function with an error return value.
+> Would you prefer something like the following instead?  It keeps the
+> v3_open/close symmetry, but it does break apart and duplicate some of the
+> logic from v3_open_config_window().
+
+Hearing nothing, I kept Rob's initial version.  It can be tweaked later if
+anybody wants to.  I just want to get all this into v3.20.
+
+Bjorn
+
+> commit 3e0c269a560968002298d22ac47bde4bd45aea8e
+> Author: Rob Herring <robh@kernel.org>
+> Date:   Fri Jan 9 20:34:41 2015 -0600
 > 
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Liviu Dudau <liviu.dudau@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> ---
->  drivers/of/of_pci.c | 4 ++++
->  1 file changed, 4 insertions(+)
+>     ARM: integrator: Convert PCI to use generic config accessors
+>     
+>     Convert the integrator PCI driver to use the generic config access
+>     functions.
+>     
+>     This changes accesses from __raw_readX/__raw_writeX to readX/writeX
+>     variants.  The spinlock is removed because it is unnecessary.  The config
+>     read and write functions are already protected with a spinlock and no
+>     access can occur during the .pre_init function.
+>     
+>     Signed-off-by: Rob Herring <robh@kernel.org>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     Acked-by: Linus Walleij <linus.walleij@linaro.org>
+>     CC: Russell King <linux@arm.linux.org.uk>
+>     CC: linux-arm-kernel@lists.infradead.org
 > 
-> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-> index 88471d3..6fbfe99 100644
-> --- a/drivers/of/of_pci.c
-> +++ b/drivers/of/of_pci.c
-> @@ -146,6 +146,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
->  	struct of_pci_range_parser parser;
->  	char range_type[4];
->  	int err;
-> +	struct pci_host_bridge_window *window;
+> diff --git a/arch/arm/mach-integrator/pci_v3.c b/arch/arm/mach-integrator/pci_v3.c
+> index c186a17c2cff..c1098729cf8a 100644
+> --- a/arch/arm/mach-integrator/pci_v3.c
+> +++ b/arch/arm/mach-integrator/pci_v3.c
+> @@ -324,7 +324,7 @@ static u64 pre_mem_pci_sz;
+>   * configuration address space, you present the V3 with the following pattern
+>   * (which is very nearly a type 1 (except that the lower two bits are 00 and
+>   * not 01).   In order for this mapping to work you need to set up one of
+> - * the local to PCI aperatures to 16Mbytes in length translating to
+> + * the local to PCI apertures to 16Mbytes in length translating to
+>   * PCI configuration space starting at 0x0000.0000.
+>   *
+>   * PCI configuration cycles look like this:
+> @@ -356,15 +356,14 @@ static u64 pre_mem_pci_sz;
+>   *	 7:2	register number
+>   *
+>   */
+> -static DEFINE_RAW_SPINLOCK(v3_lock);
 >  
->  	if (io_base)
->  		*io_base = (resource_size_t)OF_BAD_ADDR;
-> @@ -225,7 +226,10 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
->  conversion_failed:
->  	kfree(res);
->  parse_failed:
-> +	list_for_each_entry(window, resources, list)
-> +		kfree(window->res);
->  	pci_free_resource_list(resources);
-> +	kfree(bus_range);
->  	return err;
+>  #undef V3_LB_BASE_PREFETCH
+>  #define V3_LB_BASE_PREFETCH 0
+>  
+> -static void __iomem *v3_open_config_window(struct pci_bus *bus,
+> -					   unsigned int devfn, int offset)
+> +static void v3_open_config_window(struct pci_bus *bus, unsigned int devfn,
+> +				  int offset)
+>  {
+> -	unsigned int address, mapaddress, busnr;
+> +	unsigned int mapaddress, busnr;
+>  
+>  	busnr = bus->number;
+>  
+> @@ -381,14 +380,10 @@ static void __iomem *v3_open_config_window(struct pci_bus *bus,
+>  		/*
+>  		 * local bus segment so need a type 0 config cycle
+>  		 *
+> -		 * build the PCI configuration "address" with one-hot in
+> -		 * A31-A11
+> -		 *
+>  		 * mapaddress:
+>  		 *  3:1 = config cycle (101)
+>  		 *  0   = PCI A1 & A0 are 0 (0)
+>  		 */
+> -		address = PCI_FUNC(devfn) << 8;
+>  		mapaddress = V3_LB_MAP_TYPE_CONFIG;
+>  
+>  		if (slot > 12)
+> @@ -396,26 +391,15 @@ static void __iomem *v3_open_config_window(struct pci_bus *bus,
+>  			 * high order bits are handled by the MAP register
+>  			 */
+>  			mapaddress |= 1 << (slot - 5);
+> -		else
+> -			/*
+> -			 * low order bits handled directly in the address
+> -			 */
+> -			address |= 1 << (slot + 11);
+>  	} else {
+>          	/*
+>  		 * not the local bus segment so need a type 1 config cycle
+>  		 *
+> -		 * address:
+> -		 *  23:16 = bus number
+> -		 *  15:11 = slot number (7:3 of devfn)
+> -		 *  10:8  = func number (2:0 of devfn)
+> -		 *
+>  		 * mapaddress:
+>  		 *  3:1 = config cycle (101)
+>  		 *  0   = PCI A1 & A0 from host bus (1)
+>  		 */
+>  		mapaddress = V3_LB_MAP_TYPE_CONFIG | V3_LB_MAP_AD_LOW_EN;
+> -		address = (busnr << 16) | (devfn << 8);
+>  	}
+>  
+>  	/*
+> @@ -432,8 +416,6 @@ static void __iomem *v3_open_config_window(struct pci_bus *bus,
+>  	v3_writel(V3_LB_BASE1, v3_addr_to_lb_base(conf_mem.start) |
+>  			V3_LB_BASE_ADR_SIZE_16MB | V3_LB_BASE_ENABLE);
+>  	v3_writew(V3_LB_MAP1, mapaddress);
+> -
+> -	return PCI_CONFIG_VADDR + address + offset;
 >  }
->  EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
-
-Hi Lorenzo et all,
-
-Here is my personal view and I am happy to hear from others on the desired
-behaviour:
-
-When I wrote this function what I had in mind was that it will parse as
-much as possible from the device tree and return a list of resources that
-could be successfully converted. If the entire list of ranges could not
-be converted then an error code will be returned, but the caller still
-had the list as constructed up to the error. It was the job of the caller
-to free the list in either cases, as stated in the comment.
-
-The historical reason why the function was written that way was because at
-some moment after parsing I've had an additional step where arches could
-cleanup / veto the list and they could return an error value to signal
-their discontent. Also I was (am) not sure how lenient we could be with
-the device tree not being sane (at least one host bridge binding lists the
-config space as a range, which was accepted as broken).
-
-So, from that point of view, I would NAK this patch, as the function works
-as intended. If others find this mode of operation too convoluted, then
-the patch should probably make clear that cleanup only needs to be done on
-function returning success.
-
-Best regards,
-
-> -- 
-> 2.2.1
-> 
-> 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+>  
+>  static void v3_close_config_window(void)
+> @@ -454,70 +436,66 @@ static void v3_close_config_window(void)
+>  			V3_LB_BASE_ADR_SIZE_256MB | V3_LB_BASE_ENABLE);
+>  }
+>  
+> -static int v3_read_config(struct pci_bus *bus, unsigned int devfn, int where,
+> -			  int size, u32 *val)
+> +static void __iomem *v3_map_bus(struct pci_bus *bus,
+> +					   unsigned int devfn, int offset)
+>  {
+> -	void __iomem *addr;
+> -	unsigned long flags;
+> -	u32 v;
+> +	unsigned int busnr = bus->number;
+> +	unsigned int address;
+>  
+> -	raw_spin_lock_irqsave(&v3_lock, flags);
+> -	addr = v3_open_config_window(bus, devfn, where);
+> -
+> -	switch (size) {
+> -	case 1:
+> -		v = __raw_readb(addr);
+> -		break;
+> +	if (busnr == 0) {
+> +		int slot = PCI_SLOT(devfn);
+>  
+> -	case 2:
+> -		v = __raw_readw(addr);
+> -		break;
+> +		/*
+> +		 * build the PCI configuration "address" with function in
+> +		 * A10-A8 and device one-hot in A31-A11
+> +		 */
+> +		address = PCI_FUNC(devfn) << 8;
+>  
+> -	default:
+> -		v = __raw_readl(addr);
+> -		break;
+> +		/*
+> +		 * high order bits are handled by the MAP register;
+> +		 * low order bits handled directly in the address
+> +		 */
+> +		if (slot <= 12)
+> +			address |= 1 << (slot + 11);
+> +	} else {
+> +		/*
+> +		 * not the local bus segment so need a type 1 config cycle
+> +		 *
+> +		 * address:
+> +		 *  23:16 = bus number
+> +		 *  15:11 = slot number (7:3 of devfn)
+> +		 *  10:8  = func number (2:0 of devfn)
+> +		 */
+> +		address = (busnr << 16) | (devfn << 8);
+>  	}
+>  
+> -	v3_close_config_window();
+> -	raw_spin_unlock_irqrestore(&v3_lock, flags);
+> +	return PCI_CONFIG_VADDR + address + offset;
+> +}
+> +
+> +static int v3_read_config(struct pci_bus *bus, unsigned int devfn, int where,
+> +			  int size, u32 *val)
+> +{
+> +	int ret;
+>  
+> -	*val = v;
+> -	return PCIBIOS_SUCCESSFUL;
+> +	v3_open_config_window();
+> +	ret = pci_generic_config_read(bus, devfn, where, size, val);
+> +	v3_close_config_window();
+> +	return ret;
+>  }
+>  
+>  static int v3_write_config(struct pci_bus *bus, unsigned int devfn, int where,
+>  			   int size, u32 val)
+>  {
+> -	void __iomem *addr;
+> -	unsigned long flags;
+> -
+> -	raw_spin_lock_irqsave(&v3_lock, flags);
+> -	addr = v3_open_config_window(bus, devfn, where);
+> -
+> -	switch (size) {
+> -	case 1:
+> -		__raw_writeb((u8)val, addr);
+> -		__raw_readb(addr);
+> -		break;
+> -
+> -	case 2:
+> -		__raw_writew((u16)val, addr);
+> -		__raw_readw(addr);
+> -		break;
+> -
+> -	case 4:
+> -		__raw_writel(val, addr);
+> -		__raw_readl(addr);
+> -		break;
+> -	}
+> +	int ret;
+>  
+> +	v3_open_config_window();
+> +	ret = pci_generic_config_write(bus, devfn, where, size, val);
+>  	v3_close_config_window();
+> -	raw_spin_unlock_irqrestore(&v3_lock, flags);
+> -
+> -	return PCIBIOS_SUCCESSFUL;
+> +	return ret;
+>  }
+>  
+>  static struct pci_ops pci_v3_ops = {
+> +	.map_bus = v3_map_bus,
+>  	.read	= v3_read_config,
+>  	.write	= v3_write_config,
+>  };
+> @@ -672,8 +650,6 @@ static void __init pci_v3_preinit(void)
+>  	hook_fault_code(8, v3_pci_fault, SIGBUS, 0, "external abort on non-linefetch");
+>  	hook_fault_code(10, v3_pci_fault, SIGBUS, 0, "external abort on non-linefetch");
+>  
+> -	raw_spin_lock_irqsave(&v3_lock, flags);
+> -
+>  	/*
+>  	 * Unlock V3 registers, but only if they were previously locked.
+>  	 */
+> @@ -736,8 +712,6 @@ static void __init pci_v3_preinit(void)
+>  	v3_writew(V3_LB_CFG, v3_readw(V3_LB_CFG) | (1 << 10));
+>  	v3_writeb(V3_LB_IMASK, 0x28);
+>  	__raw_writel(3, ap_syscon_base + INTEGRATOR_SC_PCIENABLE_OFFSET);
+> -
+> -	raw_spin_unlock_irqrestore(&v3_lock, flags);
+>  }
+>  
+>  static void __init pci_v3_postinit(void)
