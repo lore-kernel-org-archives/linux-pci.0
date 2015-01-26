@@ -1,180 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:3394 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752747AbbAONCt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Jan 2015 08:02:49 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+Received: from service87.mimecast.com ([91.220.42.44]:54103 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752202AbbAZNGp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 08:06:45 -0500
+Date: Mon, 26 Jan 2015 13:06:42 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Liviu Dudau <liviu@dudau.co.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pm@vger.kernel.org, xen-devel@lists.xenproject.org,
-	linux-pci@vger.kernel.org
-Subject: [Bugfix v4 1/2] xen/pci: Fix xen IRQ allocation failure caused by commit b81975eade8c
-Date: Thu, 15 Jan 2015 21:04:35 +0800
-Message-Id: <1421327077-19894-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421327077-19894-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421204979-30619-1-git-send-email-jiang.liu@linux.intel.com>
- <1421327077-19894-1-git-send-email-jiang.liu@linux.intel.com>
+	Rob Herring <robh+dt@kernel.org>
+Subject: Re: [RFC PATCH 1/3] drivers: of: fix resources freeing in
+ of_pci_get_host_bridge_resources()
+Message-ID: <20150126130642.GB956@e106497-lin.cambridge.arm.com>
+References: <1420644571-18928-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1420644571-18928-2-git-send-email-lorenzo.pieralisi@arm.com>
+ <20150119183228.GE10762@e106497-lin.cambridge.arm.com>
+ <20150120104922.GF5398@red-moon>
+ <20150120112031.GA342@bart.dudau.co.uk>
+ <20150126112111.GA547@red-moon>
+MIME-Version: 1.0
+In-Reply-To: <20150126112111.GA547@red-moon>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit b81975eade8c ("x86, irq: Clean up irqdomain transition code")
-breaks xen IRQ allocation because xen_smp_prepare_cpus() doesn't invoke
-setup_IO_APIC(), so no irqdomains created for IOAPICs and
-mp_map_pin_to_irq() fails at the very beginning.
+On Mon, Jan 26, 2015 at 11:21:11AM +0000, Lorenzo Pieralisi wrote:
+> On Tue, Jan 20, 2015 at 11:20:32AM +0000, Liviu Dudau wrote:
+> > On Tue, Jan 20, 2015 at 10:49:22AM +0000, Lorenzo Pieralisi wrote:
+> > > On Mon, Jan 19, 2015 at 06:32:29PM +0000, Liviu Dudau wrote:
+> > > 
+> > > [...]
+> > > 
+> > > > > @@ -146,6 +146,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+> > > > >  	struct of_pci_range_parser parser;
+> > > > >  	char range_type[4];
+> > > > >  	int err;
+> > > > > +	struct pci_host_bridge_window *window;
+> > > > >  
+> > > > >  	if (io_base)
+> > > > >  		*io_base = (resource_size_t)OF_BAD_ADDR;
+> > > > > @@ -225,7 +226,10 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+> > > > >  conversion_failed:
+> > > > >  	kfree(res);
+> > > > >  parse_failed:
+> > > > > +	list_for_each_entry(window, resources, list)
+> > > > > +		kfree(window->res);
+> > > > >  	pci_free_resource_list(resources);
+> > > > > +	kfree(bus_range);
+> > > > >  	return err;
+> > > > >  }
+> > > > >  EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
+> > > > 
+> > > > Hi Lorenzo et all,
+> > > > 
+> > > > Here is my personal view and I am happy to hear from others on the desired
+> > > > behaviour:
+> > > > 
+> > > > When I wrote this function what I had in mind was that it will parse as
+> > > > much as possible from the device tree and return a list of resources that
+> > > > could be successfully converted. If the entire list of ranges could not
+> > > > be converted then an error code will be returned, but the caller still
+> > > > had the list as constructed up to the error. It was the job of the caller
+> > > > to free the list in either cases, as stated in the comment.
+> > > 
+> > > That's what I am questioning. If the function takes an error path, the
+> > > windows list is freed, so the resource pointers are gone. There is no
+> > > way the caller can grab those resource pointers and free them.
+> > 
+> > I stand corrected. Your patch is needed.
+> 
+> Mind acking it ? I will ask Bjorn to take it then.
 
-Currently Xen Domain0 has special treatment for ACPI SCI interrupt,
-that is initialize irq for ACPI SCI at early stage in a special way as:
-xen_init_IRQ()
-	->pci_xen_initial_domain()
-		->xen_setup_acpi_sci()
-			Allocate and initialize irq for ACPI SCI
+Sure. 
 
-Function xen_setup_acpi_sci() calls acpi_gsi_to_irq() to get an irq
-number for ACPI SCI. But unfortunately acpi_gsi_to_irq() depends on
-IOAPIC irqdomains through following path
-acpi_gsi_to_irq()
-	->mp_map_gsi_to_irq()
-		->mp_map_pin_to_irq()
-			->check IOAPIC irqdomain
+Acked-by: Liviu Dudau <Liviu.Dudau@arm.com>
 
-For PV domains, it uses Xen event based interrupt manangement and
-doesn't make uses of native IOAPIC, so no irqdomains created for IOAPIC.
-This causes Xen domain0 fails to install interrupt handler for ACPI SCI
-and all ACPI events will be lost. Please refer to:
-https://lkml.org/lkml/2014/12/19/178
+> 
+> Thanks,
+> Lorenzo
+> 
 
-So the fix is to get rid of special treatment for ACPI SCI, just treat
-ACPI SCI as normal GSI interrupt as:
-acpi_gsi_to_irq()
-	->acpi_register_gsi()
-		->acpi_register_gsi_xen()
-			->xen_register_gsi()
-
-With above change, there's no need for xen_setup_acpi_sci() anymore.
-The above change also works with bare metal kernel too.
-
-Note: we need to test this patch on those special AMD systems which
-override normal SCI GSI (9) with strange GSI (20).
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/acpi/boot.c |   26 ++++++++++++------------
- arch/x86/pci/xen.c          |   47 -------------------------------------------
- 2 files changed, 13 insertions(+), 60 deletions(-)
-
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 4433a4be8171..395c4c615293 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -611,20 +611,20 @@ void __init acpi_pic_sci_set_trigger(unsigned int irq, u16 trigger)
- 
- int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
- {
--	int irq;
--
--	if (acpi_irq_model == ACPI_IRQ_MODEL_PIC) {
--		*irqp = gsi;
--	} else {
--		mutex_lock(&acpi_ioapic_lock);
--		irq = mp_map_gsi_to_irq(gsi,
--					IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
--		mutex_unlock(&acpi_ioapic_lock);
--		if (irq < 0)
--			return -1;
--		*irqp = irq;
-+	int rc, irq, trigger, polarity;
-+
-+	rc = acpi_get_override_irq(gsi, &trigger, &polarity);
-+	if (rc == 0) {
-+		trigger = trigger ? ACPI_LEVEL_SENSITIVE : ACPI_EDGE_SENSITIVE;
-+		polarity = polarity ? ACPI_ACTIVE_LOW : ACPI_ACTIVE_HIGH;
-+		irq = acpi_register_gsi(NULL, gsi, trigger, polarity);
-+		if (irq >= 0) {
-+			*irqp = irq;
-+			return 0;
-+		}
- 	}
--	return 0;
-+
-+	return -1;
- }
- EXPORT_SYMBOL_GPL(acpi_gsi_to_irq);
- 
-diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-index c489ef2c1a39..6e5e89c3c644 100644
---- a/arch/x86/pci/xen.c
-+++ b/arch/x86/pci/xen.c
-@@ -471,52 +471,6 @@ int __init pci_xen_hvm_init(void)
- }
- 
- #ifdef CONFIG_XEN_DOM0
--static __init void xen_setup_acpi_sci(void)
--{
--	int rc;
--	int trigger, polarity;
--	int gsi = acpi_sci_override_gsi;
--	int irq = -1;
--	int gsi_override = -1;
--
--	if (!gsi)
--		return;
--
--	rc = acpi_get_override_irq(gsi, &trigger, &polarity);
--	if (rc) {
--		printk(KERN_WARNING "xen: acpi_get_override_irq failed for acpi"
--				" sci, rc=%d\n", rc);
--		return;
--	}
--	trigger = trigger ? ACPI_LEVEL_SENSITIVE : ACPI_EDGE_SENSITIVE;
--	polarity = polarity ? ACPI_ACTIVE_LOW : ACPI_ACTIVE_HIGH;
--
--	printk(KERN_INFO "xen: sci override: global_irq=%d trigger=%d "
--			"polarity=%d\n", gsi, trigger, polarity);
--
--	/* Before we bind the GSI to a Linux IRQ, check whether
--	 * we need to override it with bus_irq (IRQ) value. Usually for
--	 * IRQs below IRQ_LEGACY_IRQ this holds IRQ == GSI, as so:
--	 *  ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 9 low level)
--	 * but there are oddballs where the IRQ != GSI:
--	 *  ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 20 low level)
--	 * which ends up being: gsi_to_irq[9] == 20
--	 * (which is what acpi_gsi_to_irq ends up calling when starting the
--	 * the ACPI interpreter and keels over since IRQ 9 has not been
--	 * setup as we had setup IRQ 20 for it).
--	 */
--	if (acpi_gsi_to_irq(gsi, &irq) == 0) {
--		/* Use the provided value if it's valid. */
--		if (irq >= 0)
--			gsi_override = irq;
--	}
--
--	gsi = xen_register_gsi(gsi, gsi_override, trigger, polarity);
--	printk(KERN_INFO "xen: acpi sci %d\n", gsi);
--
--	return;
--}
--
- int __init pci_xen_initial_domain(void)
- {
- 	int irq;
-@@ -527,7 +481,6 @@ int __init pci_xen_initial_domain(void)
- 	x86_msi.restore_msi_irqs = xen_initdom_restore_msi_irqs;
- 	pci_msi_ignore_mask = 1;
- #endif
--	xen_setup_acpi_sci();
- 	__acpi_register_gsi = acpi_register_gsi_xen;
- 	/* Pre-allocate legacy irqs */
- 	for (irq = 0; irq < nr_legacy_irqs(); irq++) {
 -- 
-1.7.10.4
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
