@@ -1,73 +1,68 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54BF0BA5.8020806@linux.intel.com>
-Date: Wed, 21 Jan 2015 10:15:01 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [RFC Patch 09/19] ACPI: Fix a bug in parsing ACPI Memroy24 resource
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-10-git-send-email-jiang.liu@linux.intel.com> <1633329.njF7Ian1Kn@vostro.rjw.lan>
-In-Reply-To: <1633329.njF7Ian1Kn@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout4.samsung.com ([203.254.224.34]:62014 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751900AbbAZLTC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 06:19:02 -0500
+Received: from epcpsbgr3.samsung.com
+ (u143.gpu120.samsung.co.kr [203.254.230.143])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0NIS00IVG7FCNE60@mailout4.samsung.com> for
+ linux-pci@vger.kernel.org; Mon, 26 Jan 2015 20:18:49 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Lucas Stach' <l.stach@pengutronix.de>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Mohit Kumar' <mohit.kumar@st.com>, linux-pci@vger.kernel.org,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1422269684-11527-1-git-send-email-l.stach@pengutronix.de>
+In-reply-to: <1422269684-11527-1-git-send-email-l.stach@pengutronix.de>
+Subject: Re: [PATCH] PCI: designware: reject MSI-X irqs
+Date: Mon, 26 Jan 2015 20:19:19 +0900
+Message-id: <01b201d03959$edc30d00$c9492700$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/1/21 8:42, Rafael J. Wysocki wrote:
-> On Thursday, January 08, 2015 10:32:56 AM Jiang Liu wrote:
->> According to ACPI spec 5, section 6.4.3.1 "24-Bit Memory Range Descriptor",
->> minimum, maximum and address_length field in struct acpi_resource_memory24
->> is in granularity of 256-bytes. So shift 8-bit left to get correct address.
+On Monday, January 26, 2015 7:55 PM, Lucas Stach wrote:
 > 
-> Are you sure about this?
+> The DW PCIe MSI hardware does not support MSI-X irqs. Setting those up
+> failed as a side effect of a bug which was fixed by 91f8ae823f2b
+> (PCI: designware: Setup and clear exactly one MSI at a time).
 > 
-> I'm reading ACPI 5.1 ATM and (on page 316) it only says about the range length
-> being in 256 byte blocks.
-Hi Rafael,
-	According to ACPI spec 5.a sec 6.4.3.1,
-Byte 4, "Range minimum base address, _MIN, bits[7:0]", "Address
-bits[15:8] of the minimum base memory address for which
-the card may be configured."
-Byte 5, "Range minimum base address, _MIN, bits[15:8]", "Address
-bits[23:16] of the minimum base memory address for
-which the card may be configured".
-Byte 10, "Range length, _LEN, bits[7:0]", "This field contains the lower
-eight bits of the memory range length. The range length provides the
-length of the memory range in 256 byte blocks."
-Byte 11, "Range length, _LEN, bits[15:8]", "This field contains the
-upper eight bits of the memory range length. The range length field
-provides the length of the memory range in 256 byte blocks."
+> Now that this bug is fixed MSI-X irqs need to be rejected explicitly,
+> otherwise devices trying to use them may end up with incorrectly working
+> interrupts.
 
-That means _MIN defines bits[23:8] of the minimal address, and _LEN
-is in granularity of 256 bytes, so shift them left by 8 bits.
-Regards,
-Gerry
+Right.
 
 > 
->> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->> ---
->>  drivers/acpi/resource.c |    4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
->> index abe3a29ad802..f4aeef22a9d8 100644
->> --- a/drivers/acpi/resource.c
->> +++ b/drivers/acpi/resource.c
->> @@ -90,8 +90,8 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
->>  	switch (ares->type) {
->>  	case ACPI_RESOURCE_TYPE_MEMORY24:
->>  		memory24 = &ares->data.memory24;
->> -		acpi_dev_get_memresource(res, memory24->minimum,
->> -					 memory24->address_length,
->> +		acpi_dev_get_memresource(res, memory24->minimum << 8,
->> +					 memory24->address_length << 8,
->>  					 memory24->write_protect);
->>  		break;
->>  	case ACPI_RESOURCE_TYPE_MEMORY32:
->>
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> Cc: <stable@vger.kernel.org> # 3.18
+
+Acked-by: Jingoo Han <jg1.han@samsung.com>
+
+Best regards,
+Jingoo Han
+
+> ---
+>  drivers/pci/host/pcie-designware.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index df781cdf13c1..17ca98657a28 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -283,6 +283,9 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+>  	struct msi_msg msg;
+>  	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
+> 
+> +	if (desc->msi_attrib.is_msix)
+> +		return -EINVAL;
+> +
+>  	irq = assign_irq(1, desc, &pos);
+>  	if (irq < 0)
+>  		return irq;
+> --
+> 2.1.4
+
