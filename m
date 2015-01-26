@@ -1,65 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:45869 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752835AbbALPWJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 12 Jan 2015 10:22:09 -0500
-Date: Mon, 12 Jan 2015 16:22:08 +0100
-From: Joerg Roedel <joro@8bytes.org>
-To: "Li, Zhen-Hua" <zhen-hual@hp.com>
-Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	vgoyal@redhat.com, dyoung@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v8 02/10] iommu/vt-d: Items required for kdump
-Message-ID: <20150112152207.GC6343@8bytes.org>
-References: <1421046388-27925-1-git-send-email-zhen-hual@hp.com>
- <1421046388-27925-3-git-send-email-zhen-hual@hp.com>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:36291 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752718AbbAZJTg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 04:19:36 -0500
+Received: by mail-wi0-f172.google.com with SMTP id h11so8436250wiw.5
+        for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2015 01:19:35 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] PCI: Add defines for max read requests sizes
+Date: Mon, 26 Jan 2015 10:19:17 +0100
+Message-Id: <1422263957-3148-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1421046388-27925-3-git-send-email-zhen-hual@hp.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 12, 2015 at 03:06:20PM +0800, Li, Zhen-Hua wrote:
-> +
-> +#ifdef CONFIG_CRASH_DUMP
-> +
-> +/*
-> + * Fix Crashdump failure caused by leftover DMA through a hardware IOMMU
-> + *
-> + * Fixes the crashdump kernel to deal with an active iommu and legacy
-> + * DMA from the (old) panicked kernel in a manner similar to how legacy
-> + * DMA is handled when no hardware iommu was in use by the old kernel --
-> + * allow the legacy DMA to continue into its current buffers.
-> + *
-> + * In the crashdump kernel, this code:
-> + * 1. skips disabling the IOMMU's translating of IO Virtual Addresses (IOVA).
-> + * 2. Do not re-enable IOMMU's translating.
-> + * 3. In kdump kernel, use the old root entry table.
-> + * 4. Leaves the current translations in-place so that legacy DMA will
-> + *    continue to use its current buffers.
-> + * 5. Allocates to the device drivers in the crashdump kernel
-> + *    portions of the iova address ranges that are different
-> + *    from the iova address ranges that were being used by the old kernel
-> + *    at the time of the panic.
-> + *
-> + */
+There are few drivers using magic numbers when operating with PCIe
+capabilities and PCI_EXP_DEVCTL_READRQ. Define known values to allow
+cleaning their code a bit.
 
-It looks like you are still copying the io-page-tables from the old
-kernel into the kdump kernel, is that right? With the approach that was
-proposed you only need to copy over the context entries 1-1. They are
-still pointing to the page-tables in the old kernels memory (which is
-just fine).
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+Hi,
 
-The root-entry of the old kernel is also re-used, and when the kdump
-kernel starts to use a device, its context entry is updated to point to
-a newly allocated page-table.
+I'm new to the PCI subsystem, so let me know if there is anything wrong with my
+patch. I hope you find these bits worth defining and that my coding style
+matches rest of the file.
+---
+ include/uapi/linux/pci_regs.h | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-
-	Joerg
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 4a1d0cc..efe3443 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -451,6 +451,10 @@
+ #define  PCI_EXP_DEVCTL_AUX_PME	0x0400	/* Auxiliary Power PM Enable */
+ #define  PCI_EXP_DEVCTL_NOSNOOP_EN 0x0800  /* Enable No Snoop */
+ #define  PCI_EXP_DEVCTL_READRQ	0x7000	/* Max_Read_Request_Size */
++#define  PCI_EXP_DEVCTL_READRQ_128B  0x0000 /* 128 Bytes */
++#define  PCI_EXP_DEVCTL_READRQ_256B  0x1000 /* 256 Bytes */
++#define  PCI_EXP_DEVCTL_READRQ_512B  0x2000 /* 512 Bytes */
++#define  PCI_EXP_DEVCTL_READRQ_1024B 0x3000 /* 1024 Bytes */
+ #define  PCI_EXP_DEVCTL_BCR_FLR 0x8000  /* Bridge Configuration Retry / FLR */
+ #define PCI_EXP_DEVSTA		10	/* Device Status */
+ #define  PCI_EXP_DEVSTA_CED	0x0001	/* Correctable Error Detected */
+-- 
+1.8.4.5
 
