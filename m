@@ -1,67 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:45382 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752349AbbAVRk0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Jan 2015 12:40:26 -0500
-Date: Thu, 22 Jan 2015 18:40:00 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	<linux-pci@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Gregory =?UTF-8?B?Q2zDqW1lbnQ=?=
-	<gregory.clement@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>
-Subject: Re: [PATCH v2 23/30] PCI/mvebu: Use pci_common_init_dev() to
- simplify code
-Message-ID: <20150122184000.63ba06bb@free-electrons.com>
-In-Reply-To: <1421800225-26230-24-git-send-email-wangyijing@huawei.com>
-References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
-	<1421800225-26230-24-git-send-email-wangyijing@huawei.com>
+Received: from mail-qc0-f175.google.com ([209.85.216.175]:47402 "EHLO
+	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752460AbbAZQrR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 11:47:17 -0500
+Received: by mail-qc0-f175.google.com with SMTP id c9so7802058qcz.6
+        for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2015 08:47:16 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <CACna6rz8dWYzDzBNV48VHqUYGzbqVneqjiQW5tzs7Nc=_wtX6Q@mail.gmail.com>
+References: <1422263957-3148-1-git-send-email-zajec5@gmail.com>
+ <CAErSpo4bN0kWP6a6qeU0QCZ23BwC-FJ1RTuaGMvS7zamiVp_Fw@mail.gmail.com> <CACna6rz8dWYzDzBNV48VHqUYGzbqVneqjiQW5tzs7Nc=_wtX6Q@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 26 Jan 2015 10:46:56 -0600
+Message-ID: <CAErSpo7WxJ5sFiGRwSXd_ayL-CmxtcH5S8gD3U9wPsnyywRREA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Add defines for max read requests sizes
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Yijing Wang,
+On Mon, Jan 26, 2015 at 10:28 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
+> On 26 January 2015 at 17:01, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Mon, Jan 26, 2015 at 3:19 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
+>>> There are few drivers using magic numbers when operating with PCIe
+>>> capabilities and PCI_EXP_DEVCTL_READRQ. Define known values to allow
+>>> cleaning their code a bit.
+>>>
+>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>>> ---
+>>> Hi,
+>>>
+>>> I'm new to the PCI subsystem, so let me know if there is anything wrong with my
+>>> patch. I hope you find these bits worth defining and that my coding style
+>>> matches rest of the file.
+>>> ---
+>>>  include/uapi/linux/pci_regs.h | 4 ++++
+>>>  1 file changed, 4 insertions(+)
+>>>
+>>> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+>>> index 4a1d0cc..efe3443 100644
+>>> --- a/include/uapi/linux/pci_regs.h
+>>> +++ b/include/uapi/linux/pci_regs.h
+>>> @@ -451,6 +451,10 @@
+>>>  #define  PCI_EXP_DEVCTL_AUX_PME        0x0400  /* Auxiliary Power PM Enable */
+>>>  #define  PCI_EXP_DEVCTL_NOSNOOP_EN 0x0800  /* Enable No Snoop */
+>>>  #define  PCI_EXP_DEVCTL_READRQ 0x7000  /* Max_Read_Request_Size */
+>>> +#define  PCI_EXP_DEVCTL_READRQ_128B  0x0000 /* 128 Bytes */
+>>> +#define  PCI_EXP_DEVCTL_READRQ_256B  0x1000 /* 256 Bytes */
+>>> +#define  PCI_EXP_DEVCTL_READRQ_512B  0x2000 /* 512 Bytes */
+>>> +#define  PCI_EXP_DEVCTL_READRQ_1024B 0x3000 /* 1024 Bytes */
+>>>  #define  PCI_EXP_DEVCTL_BCR_FLR 0x8000  /* Bridge Configuration Retry / FLR */
+>>>  #define PCI_EXP_DEVSTA         10      /* Device Status */
+>>>  #define  PCI_EXP_DEVSTA_CED    0x0001  /* Correctable Error Detected */
+>>
+>> This seems reasonable.  Can you include patches for the drivers to
+>> actually use these new symbols?  It's ideal if we can do them at the
+>> same time because we try to avoid adding new symbols unless they're
+>> going to actually be used.
+>
+> Sure, but how to send them? Could the go through your (PCI) tree?
 
-On Wed, 21 Jan 2015 08:30:18 +0800, Yijing Wang wrote:
-> Mvebu_pcie_scan_bus() is not necessary, we could use
-> pci_common_init_dev() instead of pci_common_init(),
-> and pass the device pointer as the parent. Then
-> pci_scan_root_bus() will be called to scan the pci busses.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> CC: Jason Cooper <jason@lakedaemon.net>
+I think so.  Something like is probably trivial, obviously-correct
+patches, and we can probably get acks from the driver maintainers,
+then merge them all at once via my tree.
 
-While I'm fine with the change to pci_common_init_dev(), I am not so
-sure about the removal of mvebu_pcie_scan_bus(). I vaguely remember
-that we intentionally did not use the default function for a specific
-reason. Of course, this was a long time ago, and I don't remember the
-reason. I would have to take a bit of time to 1/ review the archives of
-the discussion surrounding the pcie-mvebu driver, and 2/ test your
-patch to validate it works fine on HW.
-
-Thanks!
-
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+Bjorn
