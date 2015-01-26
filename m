@@ -1,109 +1,95 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bear.ext.ti.com ([192.94.94.41]:38616 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754575AbbAZX3k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 26 Jan 2015 18:29:40 -0500
+Message-ID: <54C6CDB6.2080207@ti.com>
+Date: Mon, 26 Jan 2015 18:28:54 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
 	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part1 v7 36/38] x86/irq: Simplify the way to print IOAPIC entry
-Date: Tue, 20 Jan 2015 11:08:39 +0800
-Message-Id: <1421723321-8386-37-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: Re: [PATCH v4 5/6] PCI: update dma configuration from DT
+References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com> <1422052359-12384-6-git-send-email-m-karicheri2@ti.com> <20150123232725.GV29776@google.com>
+In-Reply-To: <20150123232725.GV29776@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simplify the way to print IOAPIC entry content, so we could kill
-native_io_apic_print_entries(), intel_ir_io_apic_print_entries()
-and x86_io_apic_ops.print_entries() later.
+On 01/23/2015 06:27 PM, Bjorn Helgaas wrote:
+> On Fri, Jan 23, 2015 at 05:32:38PM -0500, Murali Karicheri wrote:
+>> If there is a DT node available for the root bridge's parent device,
+>> use the dma configuration from that device node. For example, keystone
+>> PCI devices would require dma_pfn_offset to be set correctly in the
+>> device structure of the pci device in order to have the correct dma mask.
+>> The DT node will have dma-ranges defined for this. Also support using
+>> the DT property dma-coherent to allow coherent DMA operation by the
+>> PCI device.
+>>
+>> This patch use the new helper function of_pci_dma_configure() to update
+>> the device dma configuration.
+>>
+>> Cc: Joerg Roedel<joro@8bytes.org>
+>> Cc: Grant Likely<grant.likely@linaro.org>
+>> Cc: Rob Herring<robh+dt@kernel.org>
+>> Cc: Bjorn Helgaas<bhelgaas@google.com>
+>> Cc: Will Deacon<will.deacon@arm.com>
+>> Cc: Russell King<linux@arm.linux.org.uk>
+>> Cc: Arnd Bergmann<arnd@arndb.de>
+>> Cc: Suravee Suthikulpanit<Suravee.Suthikulpanit@amd.com>
+>>
+>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+>
+> I assume this series will be merged via some non-PCI tree, so:
 
-Folded a patch from Thomas to fix errors in printed pin attributes,
-http://www.spinics.net/lists/linux-tip-commits/msg26108.html
+Not sure who will pick this. Since this is for PCI, will it be possible 
+to apply this to arm-pci/next?
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Grant Likely <grant.likely@linaro.org>
-Link: http://lkml.kernel.org/r/1416901802-24211-8-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/kernel/apic/io_apic.c |   30 ++++++++++++++++++++++++++++--
- 1 file changed, 28 insertions(+), 2 deletions(-)
+>
+> Acked-by: Bjorn Helgaas<bhelgaas@google.com>
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 16d4ba3ac844..3c6609617306 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -1424,6 +1424,33 @@ void ioapic_zap_locks(void)
- 	raw_spin_lock_init(&ioapic_lock);
- }
- 
-+static void io_apic_print_entries(unsigned int apic, unsigned int nr_entries)
-+{
-+	int i;
-+	char buf[256];
-+	struct IO_APIC_route_entry entry;
-+	struct IR_IO_APIC_route_entry *ir_entry = (void *)&entry;
-+
-+	printk(KERN_DEBUG "IOAPIC %d:\n", apic);
-+	for (i = 0; i <= nr_entries; i++) {
-+		entry = ioapic_read_entry(apic, i);
-+		snprintf(buf, sizeof(buf),
-+			 " pin%02x, %s, %s, %s, V(%02X), IRR(%1d), S(%1d)",
-+			 i, entry.mask ? "disabled" : "enabled ",
-+			 entry.trigger ? "level" : "edge ",
-+			 entry.polarity ? "low " : "high",
-+			 entry.vector, entry.irr, entry.delivery_status);
-+		if (ir_entry->format)
-+			printk(KERN_DEBUG "%s, remapped, I(%04X),  Z(%X)\n",
-+			       buf, (ir_entry->index << 15) | ir_entry->index,
-+			       ir_entry->zero);
-+		else
-+			printk(KERN_DEBUG "%s, %s, D(%02X), M(%1d)\n",
-+			       buf, entry.dest_mode ? "logical " : "physical",
-+			       entry.dest, entry.delivery_mode);
-+	}
-+}
-+
- static void __init print_IO_APIC(int ioapic_idx)
- {
- 	union IO_APIC_reg_00 reg_00;
-@@ -1477,8 +1504,7 @@ static void __init print_IO_APIC(int ioapic_idx)
- 	}
- 
- 	printk(KERN_DEBUG ".... IRQ redirection table:\n");
--
--	x86_io_apic_ops.print_entries(ioapic_idx, reg_01.bits.entries);
-+	io_apic_print_entries(ioapic_idx, reg_01.bits.entries);
- }
- 
- void __init print_IO_APICs(void)
+I will add your ack for v5.
+
+Murali
+>
+>> ---
+>>   drivers/pci/probe.c |    2 ++
+>>   1 file changed, 2 insertions(+)
+>>
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 23212f8..d7dcd6c 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -6,6 +6,7 @@
+>>   #include<linux/delay.h>
+>>   #include<linux/init.h>
+>>   #include<linux/pci.h>
+>> +#include<linux/of_pci.h>
+>>   #include<linux/pci_hotplug.h>
+>>   #include<linux/slab.h>
+>>   #include<linux/module.h>
+>> @@ -1520,6 +1521,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>>   	dev->dev.dma_mask =&dev->dma_mask;
+>>   	dev->dev.dma_parms =&dev->dma_parms;
+>>   	dev->dev.coherent_dma_mask = 0xffffffffull;
+>> +	of_pci_dma_configure(dev);
+>>
+>>   	pci_set_dma_max_seg_size(dev, 65536);
+>>   	pci_set_dma_seg_boundary(dev, 0xffffffff);
+>> --
+>> 1.7.9.5
+>>
+
+
 -- 
-1.7.10.4
-
+Murali Karicheri
+Linux Kernel, Texas Instruments
