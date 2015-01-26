@@ -1,107 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:61291 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751235AbbASC33 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 18 Jan 2015 21:29:29 -0500
+Received: from mail-qc0-f172.google.com ([209.85.216.172]:43068 "EHLO
+	mail-qc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753127AbbAZQBg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 11:01:36 -0500
+Received: by mail-qc0-f172.google.com with SMTP id i8so7530003qcq.3
+        for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2015 08:01:35 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20150115235559.GC29776@google.com>
-References: <1421300208-7087-1-git-send-email-yinghai@kernel.org>
-	<20150115235559.GC29776@google.com>
-Date: Sun, 18 Jan 2015 18:29:27 -0800
-Message-ID: <CAE9FiQUDjmZT2bSMBz6XxE5Vb80bF0=mrCOP0zcHuHOV=voD8A@mail.gmail.com>
-Subject: Re: [PATCH] PCI: keep enable status consistent for device without driver
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wilmer van der Gaast <kernel@wilmer.gaast.net>,
-	Zhang Rui <rui.zhang@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Pavel Machek <pavel@ucw.cz>,
-	Linux PM list <linux-pm@vger.kernel.org>
+In-Reply-To: <1422263957-3148-1-git-send-email-zajec5@gmail.com>
+References: <1422263957-3148-1-git-send-email-zajec5@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 26 Jan 2015 10:01:15 -0600
+Message-ID: <CAErSpo4bN0kWP6a6qeU0QCZ23BwC-FJ1RTuaGMvS7zamiVp_Fw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Add defines for max read requests sizes
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 15, 2015 at 3:55 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc Rafael, Pavel, linux-pm]
+On Mon, Jan 26, 2015 at 3:19 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
+> There are few drivers using magic numbers when operating with PCIe
+> capabilities and PCI_EXP_DEVCTL_READRQ. Define known values to allow
+> cleaning their code a bit.
 >
-> On Wed, Jan 14, 2015 at 09:36:48PM -0800, Yinghai Lu wrote:
->> Wilmer reported continuous suspend/resume does not work after
->> commit 928bea964827 ("PCI: Delay enabling bridges until they're needed").
->>
->> For pci bridge without driver, FW enable it already.
->> In pci_pm_resume/pci_pm_reenable_device after first resume
->> will not reenable the device, aka the status is not the same
->> as that before first suspend.
->>
->> Try to update enable status according to register value before
->> calling pci_reenable_device, so we will not miss those pm
->> operation calling for next suspend/resume.
->>
->> Link: https://bugzilla.kernel.org/show_bug.cgi?id=86421
->> Fixes: 928bea964827 ("PCI: Delay enabling bridges until they're needed")
->> Reported-by: Wilmer van der Gaast <kernel@wilmer.gaast.net>
->> Bisected-by: Wilmer van der Gaast <kernel@wilmer.gaast.net>
->> Tested-by: Wilmer van der Gaast <kernel@wilmer.gaast.net>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> Cc: Zhang Rui <rui.zhang@intel.com>
->> CC: stable@vger.kernel.org  # v3.10+
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+> Hi,
 >
-> 928bea964827 appeared in v3.12.  Did you mean v3.12+ instead of v3.10+?
+> I'm new to the PCI subsystem, so let me know if there is anything wrong with my
+> patch. I hope you find these bits worth defining and that my coding style
+> matches rest of the file.
+> ---
+>  include/uapi/linux/pci_regs.h | 4 ++++
+>  1 file changed, 4 insertions(+)
+>
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index 4a1d0cc..efe3443 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -451,6 +451,10 @@
+>  #define  PCI_EXP_DEVCTL_AUX_PME        0x0400  /* Auxiliary Power PM Enable */
+>  #define  PCI_EXP_DEVCTL_NOSNOOP_EN 0x0800  /* Enable No Snoop */
+>  #define  PCI_EXP_DEVCTL_READRQ 0x7000  /* Max_Read_Request_Size */
+> +#define  PCI_EXP_DEVCTL_READRQ_128B  0x0000 /* 128 Bytes */
+> +#define  PCI_EXP_DEVCTL_READRQ_256B  0x1000 /* 256 Bytes */
+> +#define  PCI_EXP_DEVCTL_READRQ_512B  0x2000 /* 512 Bytes */
+> +#define  PCI_EXP_DEVCTL_READRQ_1024B 0x3000 /* 1024 Bytes */
+>  #define  PCI_EXP_DEVCTL_BCR_FLR 0x8000  /* Bridge Configuration Retry / FLR */
+>  #define PCI_EXP_DEVSTA         10      /* Device Status */
+>  #define  PCI_EXP_DEVSTA_CED    0x0001  /* Correctable Error Detected */
 
-Yes.
+This seems reasonable.  Can you include patches for the drivers to
+actually use these new symbols?  It's ideal if we can do them at the
+same time because we try to avoid adding new symbols unless they're
+going to actually be used.
 
-get confused that Wilmer can not use 3.10 stable kernel.
-
->
-> I'd really like to get Rafael and Pavel to take a look at this.
->
->> ---
->>  drivers/pci/pci-driver.c |    9 +++++++++
->>  1 file changed, 9 insertions(+)
->>
->> Index: linux-2.6/drivers/pci/pci-driver.c
->> ===================================================================
->> --- linux-2.6.orig/drivers/pci/pci-driver.c
->> +++ linux-2.6/drivers/pci/pci-driver.c
->> @@ -519,8 +519,17 @@ static void pci_pm_set_unknown_state(str
->>   */
->>  static int pci_pm_reenable_device(struct pci_dev *pci_dev)
->>  {
->> +     u16 cmd;
->>       int retval;
->>
->> +     /* update enable_cnt according to cmd register */
->> +     pci_read_config_word(pci_dev, PCI_COMMAND, &cmd);
->> +     if (!pci_dev->is_busmaster && (cmd & PCI_COMMAND_MASTER))
->> +             pci_dev->is_busmaster = true;
->
->
->> +     if (!pci_is_enabled(pci_dev) &&
->> +         (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)))
->> +             atomic_inc(&pci_dev->enable_cnt);
->
-> This doesn't feel right because we're handling enable_cnt differently here
-> than we do on initial boot.
->
-> On initial boot, I don't think we set enable_cnt based on whether firmware
-> left the IO or MEMORY bits set in the command register.  Why should we
-> modify enable_cnt based on the command register during resume?
->
-> I could certainly believe we should do something during initial boot, too.
-> It just seems like we should look at the command register in both places or
-> neither place.
->
-
-BIOS set power state correctly, so first suspend/resume will work.
-
-late because setting power state will rely on the enable-cnt, first resume would
-not set the power state related correctly, then second suspend/resume will not
-work anymore.
-
-will check if we can change to:
-check hw status, and then enable the pci device on boot path instead.
-
-Thanks
-
-Yinghai
+Bjorn
