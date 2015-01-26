@@ -1,65 +1,51 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mxout1.idt.com ([157.165.5.25]:49656 "EHLO mxout1.idt.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752869AbbAZSe3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 26 Jan 2015 13:34:29 -0500
+From: "Bounine, Alexandre" <Alexandre.Bounine@idt.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [RFC Patch 11/19] ACPI: Set flag IORESOURCE_UNSET for unassigned resources
-Date: Thu,  8 Jan 2015 10:32:58 +0800
-Message-Id: <1420684386-5975-12-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: Matt Porter <mporter@kernel.crashing.org>
+Subject: RE: [PATCH 2/5] rapidio/tsi721: use PCI define for max read request
+ size
+Date: Mon, 26 Jan 2015 18:15:13 +0000
+Message-ID: <8D983423E7EDF846BB3056827B8CC5D15CF5735C@corpmail1.na.ads.idt.com>
+References: <1422291922-12324-1-git-send-email-zajec5@gmail.com>
+ <1422291962-12374-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1422291962-12374-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Also set flag IORESOURCE_UNSET for unassigned resource in addition to
-IORESOURCE_DISABLED to mark resource as unassigned.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/resource.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index db444c5cdd0e..26b47f1da523 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -58,7 +58,7 @@ static void acpi_dev_memresource_flags(struct resource *res, u64 len,
- 	res->flags = IORESOURCE_MEM;
- 
- 	if (!acpi_dev_resource_len_valid(res->start, res->end, len, false))
--		res->flags |= IORESOURCE_DISABLED;
-+		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
- 
- 	if (write_protect == ACPI_READ_WRITE_MEMORY)
- 		res->flags |= IORESOURCE_MEM_WRITEABLE;
-@@ -126,10 +126,10 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
- 	res->flags = IORESOURCE_IO;
- 
- 	if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
--		res->flags |= IORESOURCE_DISABLED;
-+		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
- 
- 	if (res->end >= 0x10003)
--		res->flags |= IORESOURCE_DISABLED;
-+		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
- 
- 	if (io_decode == ACPI_DECODE_16)
- 		res->flags |= IORESOURCE_IO_16BIT_ADDR;
-@@ -303,7 +303,7 @@ static void acpi_dev_irqresource_disabled(struct resource *res, u32 gsi)
- {
- 	res->start = gsi;
- 	res->end = gsi;
--	res->flags = IORESOURCE_IRQ | IORESOURCE_DISABLED;
-+	res->flags = IORESOURCE_IRQ | IORESOURCE_DISABLED | IORESOURCE_UNSET;
- }
- 
- static void acpi_dev_get_irqresource(struct resource *res, u32 gsi,
--- 
-1.7.10.4
-
+QWNrZWQtYnk6IEFsZXhhbmRyZSBCb3VuaW5lIDxhbGV4YW5kcmUuYm91bmluZUBpZHQuY29tPg0K
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IFJhZmHFgiBNacWCZWNraSBb
+bWFpbHRvOnphamVjNUBnbWFpbC5jb21dDQo+IFNlbnQ6IE1vbmRheSwgSmFudWFyeSAyNiwgMjAx
+NSAxMjowNiBQTQ0KPiBUbzogQmpvcm4gSGVsZ2FhczsgbGludXgtcGNpQHZnZXIua2VybmVsLm9y
+Zw0KPiBDYzogTWF0dCBQb3J0ZXI7IEJvdW5pbmUsIEFsZXhhbmRyZTsgUmFmYcWCIE1pxYJlY2tp
+DQo+IFN1YmplY3Q6IFtQQVRDSCAyLzVdIHJhcGlkaW8vdHNpNzIxOiB1c2UgUENJIGRlZmluZSBm
+b3IgbWF4IHJlYWQNCj4gcmVxdWVzdCBzaXplDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBSYWZhxYIg
+TWnFgmVja2kgPHphamVjNUBnbWFpbC5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9yYXBpZGlvL2Rl
+dmljZXMvdHNpNzIxLmMgfCAyICstDQo+IGRyaXZlcnMvcmFwaWRpby9kZXZpY2VzL3RzaTcyMS5o
+IHwgMiAtLQ0KPiAgMiBmaWxlcyBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMyBkZWxldGlvbnMo
+LSkNCj4gDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3JhcGlkaW8vZGV2aWNlcy90c2k3MjEuYw0K
+PiBiL2RyaXZlcnMvcmFwaWRpby9kZXZpY2VzL3RzaTcyMS5jDQo+IGluZGV4IDhiY2ZlY2QuLmVl
+Y2E3MGQgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvcmFwaWRpby9kZXZpY2VzL3RzaTcyMS5jDQo+
+ICsrKyBiL2RyaXZlcnMvcmFwaWRpby9kZXZpY2VzL3RzaTcyMS5jDQo+IEBAIC0yNDMwLDcgKzI0
+MzAsNyBAQCBzdGF0aWMgaW50IHRzaTcyMV9wcm9iZShzdHJ1Y3QgcGNpX2RldiAqcGRldiwNCj4g
+IAlwY2llX2NhcGFiaWxpdHlfY2xlYXJfYW5kX3NldF93b3JkKHBkZXYsIFBDSV9FWFBfREVWQ1RM
+LA0KPiAgCQlQQ0lfRVhQX0RFVkNUTF9SRUFEUlEgfCBQQ0lfRVhQX0RFVkNUTF9SRUxBWF9FTiB8
+DQo+ICAJCVBDSV9FWFBfREVWQ1RMX05PU05PT1BfRU4sDQo+IC0JCTB4MiA8PCBNQVhfUkVBRF9S
+RVFVRVNUX1NaX1NISUZUKTsNCj4gKwkJUENJX0VYUF9ERVZDVExfUkVBRFJRXzUxMkIpOw0KPiAN
+Cj4gIAkvKiBBZGp1c3QgUENJZSBjb21wbGV0aW9uIHRpbWVvdXQuICovDQo+ICAJcGNpZV9jYXBh
+YmlsaXR5X2NsZWFyX2FuZF9zZXRfd29yZChwZGV2LCBQQ0lfRVhQX0RFVkNUTDIsIDB4ZiwNCj4g
+MHgyKTsgZGlmZiAtLWdpdCBhL2RyaXZlcnMvcmFwaWRpby9kZXZpY2VzL3RzaTcyMS5oDQo+IGIv
+ZHJpdmVycy9yYXBpZGlvL2RldmljZXMvdHNpNzIxLmgNCj4gaW5kZXggYTdiNDI2OC4uOWQyNTAy
+NSAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9yYXBpZGlvL2RldmljZXMvdHNpNzIxLmgNCj4gKysr
+IGIvZHJpdmVycy9yYXBpZGlvL2RldmljZXMvdHNpNzIxLmgNCj4gQEAgLTcyLDggKzcyLDYgQEAN
+Cj4gICNkZWZpbmUgVFNJNzIxX01TSVhQQkFfT0ZGU0VUCTB4MmEwMDANCj4gICNkZWZpbmUgVFNJ
+NzIxX1BDSUVDRkdfRVBDVEwJMHg0MDANCj4gDQo+IC0jZGVmaW5lIE1BWF9SRUFEX1JFUVVFU1Rf
+U1pfU0hJRlQJMTINCj4gLQ0KPiAgLyoNCj4gICAqIEV2ZW50IE1hbmFnZW1lbnQgUmVnaXN0ZXJz
+DQo+ICAgKi8NCj4gLS0NCj4gMS44LjQuNQ0KDQo=
