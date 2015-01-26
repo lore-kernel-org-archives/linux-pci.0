@@ -1,112 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21528 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752517AbbAOEcV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 23:32:21 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	linux-ia64@vger.kernel.org
-Subject: [PATCH v2 05/10] PCI, ia64: clip firmware assigned resource under parent bridge's
-Date: Wed, 14 Jan 2015 20:31:32 -0800
-Message-Id: <1421296297-6371-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1421296297-6371-1-git-send-email-yinghai@kernel.org>
-References: <1421296297-6371-1-git-send-email-yinghai@kernel.org>
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:61001 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751631AbbAZRMF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 12:12:05 -0500
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Bradley Grove <linuxdrivers@attotech.com>,
+	linux-scsi@vger.kernel.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 4/5] [SCSI] esas2r: use PCI define for max read request size
+Date: Mon, 26 Jan 2015 18:06:24 +0100
+Message-Id: <1422291984-12488-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1422291922-12324-1-git-send-email-zajec5@gmail.com>
+References: <1422291922-12324-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some bios put range that is not fully coverred by root bus resources.
-Try to clip them and update them in pci bridge bars.
-
-We'd like to fix other arches instead of just x86.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491
-Reported-by: Marek Kordik <kordikmarek@gmail.com>
-Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources")
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: linux-ia64@vger.kernel.org
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- arch/ia64/pci/pci.c | 48 +++++++++++++++++++++---------------------------
- 1 file changed, 21 insertions(+), 27 deletions(-)
+ drivers/scsi/esas2r/esas2r_init.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 291a582..900cc93 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -487,45 +487,39 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- 	return 0;
- }
+diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
+index 6776931..c0b37a5 100644
+--- a/drivers/scsi/esas2r/esas2r_init.c
++++ b/drivers/scsi/esas2r/esas2r_init.c
+@@ -813,12 +813,13 @@ static void esas2r_init_pci_cfg_space(struct esas2r_adapter *a)
+ 		pci_read_config_word(a->pcid, pcie_cap_reg + PCI_EXP_DEVCTL,
+ 				     &devcontrol);
  
--static int is_valid_resource(struct pci_dev *dev, int idx)
-+void pcibios_fixup_device_resources(struct pci_dev *dev)
- {
--	unsigned int i, type_mask = IORESOURCE_IO | IORESOURCE_MEM;
--	struct resource *devr = &dev->resource[idx], *busr;
-+	int idx;
+-		if ((devcontrol & PCI_EXP_DEVCTL_READRQ) > 0x2000) {
++		if (devcontrol & PCI_EXP_DEVCTL_READRQ >
++		    PCI_EXP_DEVCTL_READRQ_512B) {
+ 			esas2r_log(ESAS2R_LOG_INFO,
+ 				   "max read request size > 512B");
  
- 	if (!dev->bus)
--		return 0;
--
--	pci_bus_for_each_resource(dev->bus, busr, i) {
--		if (!busr || ((busr->flags ^ devr->flags) & type_mask))
--			continue;
--		if ((devr->start) && (devr->start >= busr->start) &&
--				(devr->end <= busr->end))
--			return 1;
--	}
--	return 0;
--}
-+		return;
- 
--static void pcibios_fixup_resources(struct pci_dev *dev, int start, int limit)
--{
--	int i;
-+	for (idx = 0; idx < PCI_BRIDGE_RESOURCES; idx++) {
-+		struct resource *r = &dev->resource[idx];
- 
--	for (i = start; i < limit; i++) {
--		if (!dev->resource[i].flags)
-+		if (!r->flags || r->parent || !r->start)
- 			continue;
--		if ((is_valid_resource(dev, i)))
--			pci_claim_resource(dev, i);
--	}
--}
- 
--void pcibios_fixup_device_resources(struct pci_dev *dev)
--{
--	pcibios_fixup_resources(dev, 0, PCI_BRIDGE_RESOURCES);
-+		pci_claim_resource(dev, idx);
-+	}
- }
- EXPORT_SYMBOL_GPL(pcibios_fixup_device_resources);
- 
- static void pcibios_fixup_bridge_resources(struct pci_dev *dev)
- {
--	pcibios_fixup_resources(dev, PCI_BRIDGE_RESOURCES, PCI_NUM_RESOURCES);
-+	int idx;
-+
-+	if (!dev->bus)
-+		return;
-+
-+	for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
-+		struct resource *r = &dev->resource[idx];
-+
-+		if (!r->flags || r->parent || !r->start)
-+			continue;
-+
-+		pci_claim_bridge_resource(dev, idx);
-+	}
- }
- 
- /*
+ 			devcontrol &= ~PCI_EXP_DEVCTL_READRQ;
+-			devcontrol |= 0x2000;
++			devcontrol |= PCI_EXP_DEVCTL_READRQ_512B;
+ 			pci_write_config_word(a->pcid,
+ 					      pcie_cap_reg + PCI_EXP_DEVCTL,
+ 					      devcontrol);
 -- 
 1.8.4.5
 
