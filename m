@@ -1,81 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:43845 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752524AbbA2QuB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jan 2015 11:50:01 -0500
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:58211 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753100AbbAZRFs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 12:05:48 -0500
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Matt Porter <mporter@kernel.crashing.org>,
+	Alexandre Bounine <alexandre.bounine@idt.com>,
+	Chris Metcalf <cmetcalf@ezchip.com>,
+	Bradley Grove <linuxdrivers@attotech.com>,
+	linux-scsi@vger.kernel.org,
+	Realtek linux nic maintainers <nic_swsd@realtek.com>,
+	netdev@vger.kernel.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/5] PCI: Add defines for max read request sizes
+Date: Mon, 26 Jan 2015 18:05:22 +0100
+Message-Id: <1422291922-12324-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <5349994.6VHXzPdIxs@avalon>
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
- <13812499.ICbNgSDOae@avalon> <20150128133219.GM1569@arm.com> <5349994.6VHXzPdIxs@avalon>
-From: Rob Herring <robherring2@gmail.com>
-Date: Thu, 29 Jan 2015 10:49:38 -0600
-Message-ID: <CAL_Jsq+rzwk0Rw5RRKf9oLqXNFFgnJb4UQ_AzpJLxN1Z0rJWMQ@mail.gmail.com>
-Subject: Re: [PATCH v4 1/6] of: iommu: add ptr to OF node arg to of_iommu_configure()
-To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Cc: Will Deacon <will.deacon@arm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 28, 2015 at 5:32 PM, Laurent Pinchart
-<laurent.pinchart@ideasonboard.com> wrote:
-> Hi Will,
->
-> On Wednesday 28 January 2015 13:32:19 Will Deacon wrote:
->> On Wed, Jan 28, 2015 at 01:15:10PM +0000, Laurent Pinchart wrote:
->> > On Wednesday 28 January 2015 12:29:42 Will Deacon wrote:
->> >> On Wed, Jan 28, 2015 at 12:23:03PM +0000, Laurent Pinchart wrote:
->> >>> On Wednesday 28 January 2015 11:33:00 Will Deacon wrote:
->> >>>> On Mon, Jan 26, 2015 at 06:49:01PM +0000, Murali Karicheri wrote:
->> >>>>> On 01/25/2015 08:32 AM, Laurent Pinchart wrote:
->> >>>>>> On Friday 23 January 2015 17:32:34 Murali Karicheri wrote:
->> >>>>>>> Function of_iommu_configure() is called from of_dma_configure() to
->> >>>>>>> setup iommu ops using DT property. This API is currently used for
->> >>>>>>> platform devices for which DMA configuration (including iommu ops)
->> >>>>>>> may come from device's parent. To extend this functionality for
->> >>>>>>> PCI devices, this API need to take a parent node ptr as an argument
->> >>>>>>> instead of assuming device's parent. This is needed since for PCI,
->> >>>>>>> the dma configuration may be defined in the DT node of the root
->> >>>>>>> bus bridge's parent device. Currently only dma-range is used for PCI
->> >>>>>>> and iommu is not supported. So return error if the device is PCI.
+There are few drivers using magic numbers when operating with PCIe
+capabilities and PCI_EXP_DEVCTL_READRQ. Define known values to allow
+cleaning their code a bit.
 
-[...]
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ include/uapi/linux/pci_regs.h | 4 ++++
+ 1 file changed, 4 insertions(+)
 
->> > If I understand Murali's patch set right (please correct me if that's not
->> > the case) the PCI code walks up the DT nodes hierarchy to the parent node
->> > that contains the iommus attribute and passes a pointer to that node to
->> > this function. It's thus a PCI-specific solution. As a temporary hack
->> > that's OK I suppose, but if implementing it right straight away isn't
->> > difficult that would be better.
->>
->> It looks to me like the code walks the PCI topology to get the DT node for
->> the host controller, and passes *that* to of_dma_configure. That sounds
->> like the right thing to do to me, especially since the PCI topology is
->> likely not encoded in the device-tree. So actually, it is passing the
->> first parent node afaict.
->
-> Indeed, that's right. I forgot for a moment that we have non-DT devices ;-)
->
-> Acked-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
->
-> Murali, nitpicking a bit, shouldn't the iommu_np parameter be renamed ? It
-> points to the node containing the iommus parameter, not to the iommu node, so
-> the current name is slightly confusing. A brief kerneldoc above the function
-> would also help. This can be the subject of a separate patch.
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 4a1d0cc..efe3443 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -451,6 +451,10 @@
+ #define  PCI_EXP_DEVCTL_AUX_PME	0x0400	/* Auxiliary Power PM Enable */
+ #define  PCI_EXP_DEVCTL_NOSNOOP_EN 0x0800  /* Enable No Snoop */
+ #define  PCI_EXP_DEVCTL_READRQ	0x7000	/* Max_Read_Request_Size */
++#define  PCI_EXP_DEVCTL_READRQ_128B  0x0000 /* 128 Bytes */
++#define  PCI_EXP_DEVCTL_READRQ_256B  0x1000 /* 256 Bytes */
++#define  PCI_EXP_DEVCTL_READRQ_512B  0x2000 /* 512 Bytes */
++#define  PCI_EXP_DEVCTL_READRQ_1024B 0x3000 /* 1024 Bytes */
+ #define  PCI_EXP_DEVCTL_BCR_FLR 0x8000  /* Bridge Configuration Retry / FLR */
+ #define PCI_EXP_DEVSTA		10	/* Device Status */
+ #define  PCI_EXP_DEVSTA_CED	0x0001	/* Correctable Error Detected */
+-- 
+1.8.4.5
 
-It was more confusing having np and node within the function.
-
-Rob
