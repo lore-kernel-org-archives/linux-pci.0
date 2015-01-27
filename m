@@ -1,114 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:57223 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755496AbbAHTxH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jan 2015 14:53:07 -0500
-Message-ID: <54AEDFED.8060008@ti.com>
-Date: Thu, 8 Jan 2015 14:52:13 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from mail-qc0-f178.google.com ([209.85.216.178]:51800 "EHLO
+	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752498AbbA0QvJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Jan 2015 11:51:09 -0500
+Received: by mail-qc0-f178.google.com with SMTP id b13so12945204qcw.9
+        for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2015 08:51:08 -0800 (PST)
 MIME-Version: 1.0
-To: Will Deacon <will.deacon@arm.com>
-CC: "joro@8bytes.org" <joro@8bytes.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
+In-Reply-To: <54C5EF11.8070604@desy.de>
+References: <CAH9N0t9KvhzmZDgD8PD5VBPR-pPhuE8MmBgK9RY8+ZtKyz++pQ@mail.gmail.com>
+ <CAErSpo48mPENuHpES1Q73ep+NKG8x2Zgb+g71do02y7vufbtfQ@mail.gmail.com>
+ <CAH9N0t8s+kcG_Qok0wpoDz9jzwvPk_QmBK_p-qbACZJjrr+iVQ@mail.gmail.com>
+ <CAErSpo7NK6S8Dk3-FYFV=AVPR8cLRzmAWrBNQ2rke0BRADxAKw@mail.gmail.com>
+ <CAH9N0t-+gog9wNFo7hqhzrWuttrRyf5HjjHciFrDGz1rZUiUfw@mail.gmail.com>
+ <20150122222016.GF13072@google.com> <CAH9N0t_YoRZtPqWwAaNdHNW3m-HOfrCevBZGiOnM+VWGxeFwEQ@mail.gmail.com>
+ <CAErSpo4bRnGkfmzLnGSUnv-aJfmZLtQ_jXhnZo+9Wm=CgHOB3A@mail.gmail.com> <54C5EF11.8070604@desy.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 27 Jan 2015 10:50:47 -0600
+Message-ID: <CAErSpo4EeEAA-ci1EfSKNijUJA_4uLMu+WU7ORpQPeR9T9Rr8g@mail.gmail.com>
+Subject: Re: Hot add a PCIe device driver upon hotplug event
+To: Ludwig Petrosyan <ludwig.petrosyan@desy.de>
+Cc: Paulo Fortuna Carvalho <pricardofc@gmail.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"arnd@arndb.de" <arnd@arndb.de>
-Subject: Re: [PATCH v3 3/4] of/pci: add of_pci_dma_configure() update dma
- configuration
-References: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com> <1420656594-8908-4-git-send-email-m-karicheri2@ti.com> <20150108160626.GN11583@arm.com>
-In-Reply-To: <20150108160626.GN11583@arm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/08/2015 11:06 AM, Will Deacon wrote:
-> On Wed, Jan 07, 2015 at 06:49:53PM +0000, Murali Karicheri wrote:
->> Add of_pci_dma_configure() to allow updating the dma configuration
->> of the pci device using the configuration from DT of the parent of
->> the root bridge device.
->>
->> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
->> ---
->>   drivers/of/of_pci.c    |   39 +++++++++++++++++++++++++++++++++++++++
->>   include/linux/of_pci.h |   12 ++++++++++++
->>   2 files changed, 51 insertions(+)
->>
->> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
->> index 88471d3..34878c9 100644
->> --- a/drivers/of/of_pci.c
->> +++ b/drivers/of/of_pci.c
->> @@ -2,6 +2,7 @@
->>   #include<linux/export.h>
->>   #include<linux/of.h>
->>   #include<linux/of_address.h>
->> +#include<linux/of_device.h>
->>   #include<linux/of_pci.h>
->>   #include<linux/slab.h>
->>
->> @@ -229,6 +230,44 @@ parse_failed:
->>   	return err;
->>   }
->>   EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
->> +
->> +/**
->> + * of_get_pci_root_bridge_parent - get the OF node of the root bridge's parent
->> + * @dev: ptr to pci_dev struct of the pci device
->> + *
->> + * This function will traverse the bus up to the root bus starting with
->> + * the child and return the OF node ptr to root bridge device's parent device.
->> + */
->> +struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev)
->> +{
->> +	struct pci_bus *bus = dev->bus;
->> +	struct device *bridge;
->> +
->> +	while (!pci_is_root_bus(bus))
->> +		bus = bus->parent;
->> +	bridge = bus->bridge;
->> +
->> +	return bridge->parent->of_node;
->> +}
->> +EXPORT_SYMBOL_GPL(of_get_pci_root_bridge_parent);
->> +
->> +/**
->> + * of_pci_dma_configure - Setup DMA configuration
->> + * @dev: ptr to pci_dev struct of the pci device
->> + *
->> + * Function to update PCI devices's DMA configuration using the same
->> + * info from the OF node of root host bridge's parent.
->> + */
->> +void of_pci_dma_configure(struct pci_dev *pci_dev)
->> +{
->> +	struct device *dev =&pci_dev->dev;
->> +	struct device_node *parent_np;
->> +
->> +	parent_np = of_get_pci_root_bridge_parent(pci_dev);
->> +	of_dma_configure(dev, parent_np);
->> +}
->> +EXPORT_SYMBOL_GPL(of_pci_dma_configure);
+Hi Ludwig,
+
+Thanks a lot for the pointers to MTCA information.  I found
+presentation slides here:
+https://indico.desy.de/getFile.py/access?contribId=33&sessionId=0&resId=1&materialId=slides&confId=10329,
+which I assume is that you're referring to.
+
+On Mon, Jan 26, 2015 at 1:38 AM, Ludwig Petrosyan
+<ludwig.petrosyan@desy.de> wrote:
 >
-> Whilst I think this is the right overall structure, I think this function
-> should determine the set of DMA aliases for the device and pass that through
-> to the IOMMU (as mentioned in my reply to the cover letter). Then we just
-> need to work out what we're doing for groups.
+> Hello
 >
-> Will
-Will,
+> (I have send this email two days ago but got status undeliverable, so try to
+> send it again)
+>
+> We had the same problem on the MTCA system years ago, but now the problem is
+> solved.
+> The MTCA system is a kind of ATCA and I think attention Button problem could
+> be solved in the same way.
+> Ok, now what we have done:
+> First of all the main difference of the ATCA or MTCA PCIe system is what the
+> PCIe Switch which responsible for the HotPlug
+>
+> (I mean Switch which is connected to the crate slots, and hotplug
+> controllers of this are used in hotpluging ) and the Attention Button of the
+>
+> PCIe slot reside on the different boards (usually PCIe Switch is on the
+> Crate Manager  board and Attention Button is  the AMC module Latch ),
+>
+> So there are no any wired connections between Attention Button and PCIe
+> Switch. Than user pool out the AMC module Latch the PCIe Switch has no idea
+>
+> about that, BUT the AMC module controller (MMC) sends IPMI message to the
+> Crate Management Controller (MCMC)
+> and MCMC starts AMC powering down procedures. The idea was: usually MCMC and
+> PCIe Switch reside on the same board and MCMC getting IPMI message
+>
+> about state change of the AMC Latch (latch polled out or pressed) set
+> appropriate registers of the PCIe Switch or push high appropriate lines of
+> the PCIe Switch
+>
+> and PCIe Switch gets information that Attention Button is pressed and send
+> hotplug interrupt to the hotplug driver.
+> This approach works in our MTCA systems and we have a full working PCIe
+> HotPlug.
 
-Could you add this as as a follow up patch as I don't have a platformm 
-that support IOMMU and as such my understanding of the IOMMU is limited?
+It sounds like you basically have some IPMI glue between the the AMC
+latch and the PCIe Attention Button, and from the point of view of the
+pciehp (PCIe native hotplug) driver, it just sees a normal Attention
+Button.  That sounds like a reasonable thing to do.
 
-I can help test the change to make sure it has no side effect on 
-Keystone that doesn't support IOMMU.
+In Paulo's case, it sounds like there is some sort of switch related
+to the card, but the IPMI or similar glue that could potentially lead
+to the Attention Button line doesn't exist.  In that case, pciehp
+doesn't know anything about the switch.  If there's some other way,
+e.g., IPMI, to learn about the switch, maybe that could be done via a
+separate driver.
 
-Thanks.
--- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+> More detailed information one can get to look documents of the MTCA Workshop
+> (http://mtcaws.desy.de/) in tutorial section was presentation about
+>
+> PCIe Hotplug, or look in PICMIG recommendation (there is new recommendation
+> about PCIe HotPlug for MTC.4)
+>
+> With best regards
+>
+> Ludwig Petrosyan
+>
+>
