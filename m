@@ -1,162 +1,92 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Zheng, Lv" <lv.zheng@intel.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from comal.ext.ti.com ([198.47.26.152]:56501 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753031AbbA0VBF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 27 Jan 2015 16:01:05 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"Moore, Robert" <robert.moore@intel.com>,
-	"Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
-	Len Brown <lenb@kernel.org>
-CC: "Luck, Tony" <tony.luck@intel.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"devel@acpica.org" <devel@acpica.org>
-Subject: RE: [RFC Patch 05/19] ACPI: Provide union for address_space64 and
- ext_address_space64
-Date: Thu, 22 Jan 2015 03:24:52 +0000
-Message-ID: <1AE640813FDE7649BE1B193DEA596E88026B9F36@SHSMSX101.ccr.corp.intel.com>
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com>
- <1420684386-5975-6-git-send-email-jiang.liu@linux.intel.com>
- <1AE640813FDE7649BE1B193DEA596E88026B9EFB@SHSMSX101.ccr.corp.intel.com>
- <54C06726.4090805@linux.intel.com>
-In-Reply-To: <54C06726.4090805@linux.intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	Will Deacon <will.deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH v5 0/8] PCI: get DMA configuration from parent device
+Date: Tue, 27 Jan 2015 15:59:57 -0500
+Message-ID: <1422392405-32196-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, Gerry
+PCI devices on Keystone doesn't have correct dma_pfn_offset set. This patch
+add capability to set the dma configuration such as dma-mask, dma_pfn_offset,
+and dma ops etc using the information from DT. The prior RFCs and discussions
+are available at [1] and [2] below.
 
-> From: Jiang Liu [mailto:jiang.liu@linux.intel.com]
-> Sent: Thursday, January 22, 2015 10:58 AM
-> 
-> On 2015/1/22 10:32, Zheng, Lv wrote:
-> > Hi, Thomas and Jiang
-> >
-> >> From: Jiang Liu [mailto:jiang.liu@linux.intel.com]
-> >> Sent: Thursday, January 08, 2015 10:33 AM
-> >>
-> >> From: Thomas Gleixner <tglx@linutronix.de>
-> >>
-> >> address_space64 and ext_address_space64 share substracts just at
-> >> different offsets. To unify the parsing functions implement the two
-> >> structs as unions of their substructs, so we can extract the shared
-> >> data.
-> >>
-> >> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> >> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> >> ---
-> >>  include/acpi/acrestyp.h |   49 ++++++++++++++++++++++++++++++++++-------------
-> >>  1 file changed, 36 insertions(+), 13 deletions(-)
-> >>
-> >> diff --git a/include/acpi/acrestyp.h b/include/acpi/acrestyp.h
-> >> index eb760ca0b2e0..307d5b2605c8 100644
-> >> --- a/include/acpi/acrestyp.h
-> >> +++ b/include/acpi/acrestyp.h
-> >> @@ -326,23 +326,46 @@ struct acpi_resource_address32 {
-> >>  	struct acpi_resource_source resource_source;
-> >>  };
-> >>
-> >> -struct acpi_resource_address64 {
-> >> -	ACPI_RESOURCE_ADDRESS_COMMON u64 granularity;
-> >> -	u64 minimum;
-> >> -	u64 maximum;
-> >> -	u64 translation_offset;
-> >> +#define ACPI_RESOURCE_ADDRESS64_COMMON \
-> >> +	u64 granularity;	       \
-> >> +	u64 minimum;		       \
-> >> +	u64 maximum;		       \
-> >> +	u64 translation_offset;	       \
-> >>  	u64 address_length;
-> >> -	struct acpi_resource_source resource_source;
-> >> +
-> >> +struct acpi_resource_address64_common {
-> >> +ACPI_RESOURCE_ADDRESS64_COMMON};
-> >> +
-> >> +struct acpi_resource_address64 {
-> >> +	union {
-> >> +		struct {
-> >> +			ACPI_RESOURCE_ADDRESS_COMMON
-> >> +			ACPI_RESOURCE_ADDRESS64_COMMON
-> >> +			struct acpi_resource_source resource_source;
-> >> +		};
-> >
-> > This looks wrong to ACPICA upstream.
-> >
-> >> +		struct {
-> >> +			struct acpi_resource_address base;
-> >> +			struct acpi_resource_address64_common addr;
-> >> +			struct acpi_resource_source resource_source;
-> >> +		} common;
-> >> +	};
-> >>  };
-> >
-> > And this.
-> > Though anonymous structs/unions are now C11 standard, I still didn't see it used in the ACPICA upstream.
-> > It could be a problem if someone still compiles ACPICA using old compilers.
-> >
-> >>
-> >>  struct acpi_resource_extended_address64 {
-> >> -	ACPI_RESOURCE_ADDRESS_COMMON u8 revision_ID;
-> >> -	u64 granularity;
-> >> -	u64 minimum;
-> >> -	u64 maximum;
-> >> -	u64 translation_offset;
-> >> -	u64 address_length;
-> >> -	u64 type_specific;
-> >> +	union {
-> >> +		struct {
-> >> +			ACPI_RESOURCE_ADDRESS_COMMON
-> >> +			u8 revision_ID;
-> >> +			ACPI_RESOURCE_ADDRESS64_COMMON
-> >> +			u64 type_specific;
-> >> +		};
-> >
-> > Ditto.
-> >
-> >> +		struct {
-> >> +			struct acpi_resource_address base;
-> >> +			u8 revision_ID;
-> >> +			struct acpi_resource_address64_common addr;
-> >> +			u64 type_specific;
-> >> +		} common;
-> >> +	};
-> >
-> > Ditto.
-> >
-> > I think what you want is the ability to access common.addr and common.base from different resource address64 types.
-> > So we can achieve this directly in the ACPICA upstream without using the union.
-> >
-> > I tried this in the ACPICA upstream and the result is:
-> > https://github.com/zetalog/acpica/commit/0f4ed510
-> > Let me send its linuxized version after this email.
-> Hi Lv,
-> 	Thanks for your great support:)
-> 	What's the normal process to propagate this patch into
-> linux kernel? Or how long will it take? We have another hotplug
-> patch set which depends on this patch set, then depends on this
-> ACPICA core change.
+[2] : https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg790244.html
+[1] : http://www.gossamer-threads.com/lists/linux/kernel/2024591
 
-There won't be divergences if things are proceeded in this way:
-If we can reach an agreement on the linuxized version, then it can be merged directly by Rafael.
-And I'll zap it from the ACPICA release series.
+Change history:
+	v5 - moved the dma_mask update in device from ARM specific API to
+	     of_dma_configure to allow this across other architecture as well
+	   - improved sanity check for DT dma-range size in of_dma_configure()
+	   - moved API to get parent bridge device to PCI (host-bridge.c)
+	v4 - moved size adjustments in of_iommu_configure() to a separate patch
+	   - consistent node name comment from Rob
+	   - patch 6 added for dma_mask adjustment and iommu mapping size
+	     limiting.
+	v3 - addressed comments to re-use of_dma_configure() for PCI
+	   - To help re-use, change of_iommu_configure() function argument
+		- Move of_dma_configure to of/device.c
+		- Limit the of_iommu_configure to non pci devices
+	v2 - update size to coherent_dma_mask + 1 if dma-range info is missing
+	   - also check the np for null.
+	v1 - updates based on the comments against initial RFC.
+	   - Added a helper function to get the OF node of the parent
+	   - Added an API in of_pci.c to update DMA configuration of the pci
+	     device.
 
-Thanks and best regards
--Lv
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Grant Likely <grant.likely@linaro.org>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-> Regards!
-> Gerry
-> >
-> > Thanks and best regards
-> > -Lv
-> >
-> >>  };
-> >>
-> >>  struct acpi_resource_extended_irq {
-> >> --
-> >> 1.7.10.4
-> >
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Murali Karicheri <m-karicheri2@ti.com>
+
+Murali Karicheri (8):
+  of: iommu: add ptr to OF node arg to of_iommu_configure()
+  of: move of_dma_configure() to device.c to help re-use
+  of: fix size when dma-range is not used
+  PCI: add helper functions pci_get[put]_host_bridge_device()
+  of/pci: add of_pci_dma_configure() update dma configuration
+  PCI: update dma configuration from DT
+  arm: dma-mapping: limit iommu mapping size
+  of: limit dma_mask of the device based on dma-range size
+
+ arch/arm/mm/dma-mapping.c |    7 +++++
+ drivers/iommu/of_iommu.c  |   10 +++++--
+ drivers/of/device.c       |   69 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/of/of_pci.c       |   19 +++++++++++++
+ drivers/of/platform.c     |   58 ++-----------------------------------
+ drivers/pci/host-bridge.c |   14 +++++++++
+ drivers/pci/probe.c       |    2 ++
+ include/linux/of_device.h |    2 ++
+ include/linux/of_iommu.h  |    6 ++--
+ include/linux/of_pci.h    |    5 ++++
+ include/linux/pci.h       |    3 ++
+ 11 files changed, 135 insertions(+), 60 deletions(-)
+
+-- 
+1.7.9.5
+
