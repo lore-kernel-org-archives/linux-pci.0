@@ -1,146 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:52383 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752534AbbAOC2W (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jan 2015 21:28:22 -0500
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 15 Jan 2015 12:28:21 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id A92152CE804E
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:18 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t0F2SI7X38338736
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:18 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t0F2SHKh019685
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 13:28:18 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V11 04/17] PCI: Store VF BAR size in pci_sriov
-Date: Thu, 15 Jan 2015 10:27:54 +0800
-Message-Id: <1421288887-7765-5-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <20150113180502.GC2776@google.com>
- <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:45072 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751843AbbA0Dzb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 22:55:31 -0500
+MIME-Version: 1.0
+In-Reply-To: <20150126235334.GA11624@google.com>
+References: <20150123203145.GA6691@google.com>
+	<CA+8MBbKnT=mE3kev8BRPq0GeTgHx8WVa6o54tJuBX_XXLpHdYQ@mail.gmail.com>
+	<CAErSpo7y1wWStjcEOH9xTiM-As8+QeMynZ5ENrL9v3X2PvQCcw@mail.gmail.com>
+	<CA+8MBb+bWiX2eayjBQHsvCjTp3t8H9=AviF9AkV6CC--cC_fYQ@mail.gmail.com>
+	<20150126235334.GA11624@google.com>
+Date: Mon, 26 Jan 2015 19:55:30 -0800
+Message-ID: <CAE9FiQUd8XgEhBKqFEyDLMTySw=jngtLN=zZeQcfW6=vC_b4mA@mail.gmail.com>
+Subject: Re: [GIT PULL] PCI fixes for v3.19
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tony Luck <tony.luck@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Marek Kordik <kordikmarek@gmail.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Andreas Hartmann <andihartmann@freenet.de>,
+	Alexey Voronkov <zermond@gmail.com>,
+	David Airlie <airlied@linux.ie>,
+	Alex Deucher <alexander.deucher@amd.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently we don't store the VF BAR size, and each time we calculate the
-size by dividing the PF's IOV BAR size by total_VFs.
+On Mon, Jan 26, 2015 at 3:53 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, Jan 26, 2015 at 01:24:51PM -0800, Tony Luck wrote:
+>> On Mon, Jan 26, 2015 at 1:02 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> > Sorry for the inconvenience.  Can you collect a complete dmesg log and
+>> > "lspci -vv" output, too (from the kernel with the reverted commit)?
+>> > That will have more useful information than just /proc/iomem.
+>>
+>> Full dmesg, lspci -vv, and bonus .config (CONFIG_PCI_IOV is indeed
+>> not set)
+>
+> The ROM part is something we should fix:
+>
+>   pci 0000:01:00.1: can't claim BAR 6 [mem 0xfffe0000-0xffffffff pref]: no compatible bridge window
+>
+> The ROM BAR is probably disabled, and we shouldn't complain about this if
+> it's disabled.  Yinghai?
 
-This patch stores the VF BAR size in pci_sriov and introduces a function to
-retrieve it. Also, it adds a log message to show the total PF's IOV BAR
-size.
+original ia64 code, has extra checking to hide the warning
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- drivers/pci/iov.c   |   28 ++++++++++++++++++++--------
- drivers/pci/pci.h   |    2 ++
- include/linux/pci.h |    3 +++
- 3 files changed, 25 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 5f48201..b43628b 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -100,6 +100,14 @@ static void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
- 		pci_remove_bus(virtbus);
- }
- 
-+resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
-+{
-+	if (!dev->is_physfn)
-+		return 0;
-+
-+	return dev->sriov->res[resno - PCI_IOV_RESOURCES];
-+}
-+
- static int virtfn_add(struct pci_dev *dev, int id, int reset)
+-static int is_valid_resource(struct pci_dev *dev, int idx)
  {
- 	int i;
-@@ -135,8 +143,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 			continue;
- 		virtfn->resource[i].name = pci_name(virtfn);
- 		virtfn->resource[i].flags = res->flags;
--		size = resource_size(res);
--		do_div(size, iov->total_VFs);
-+		size = pci_iov_resource_size(dev, i + PCI_IOV_RESOURCES);
- 		virtfn->resource[i].start = res->start + size * id;
- 		virtfn->resource[i].end = virtfn->resource[i].start + size - 1;
- 		rc = request_resource(res, &virtfn->resource[i]);
-@@ -419,6 +426,12 @@ found:
- 	pgsz &= ~(pgsz - 1);
- 	pci_write_config_dword(dev, pos + PCI_SRIOV_SYS_PGSIZE, pgsz);
- 
-+	iov = kzalloc(sizeof(*iov), GFP_KERNEL);
-+	if (!iov) {
-+		rc = -ENOMEM;
-+		goto failed;
-+	}
-+
- 	nres = 0;
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = dev->resource + PCI_IOV_RESOURCES + i;
-@@ -430,16 +443,15 @@ found:
- 			rc = -EIO;
- 			goto failed;
- 		}
-+		iov->res[res - dev->resource - PCI_IOV_RESOURCES] =
-+			resource_size(res);
- 		res->end = res->start + resource_size(res) * total - 1;
-+		dev_info(&dev->dev, "VF BAR%d: %pR (for %d VFs)",
-+				(int)(res - dev->resource - PCI_IOV_RESOURCES),
-+				res, total);
- 		nres++;
- 	}
- 
--	iov = kzalloc(sizeof(*iov), GFP_KERNEL);
--	if (!iov) {
--		rc = -ENOMEM;
--		goto failed;
--	}
+-       unsigned int i, type_mask = IORESOURCE_IO | IORESOURCE_MEM;
+-       struct resource *devr = &dev->resource[idx], *busr;
+
+        if (!dev->bus)
+-               return 0;
 -
- 	iov->pos = pos;
- 	iov->nres = nres;
- 	iov->ctrl = ctrl;
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 94faf97..b1c9fdd 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -241,6 +241,8 @@ struct pci_sriov {
- 	struct pci_dev *dev;	/* lowest numbered PF */
- 	struct pci_dev *self;	/* this PF */
- 	struct mutex lock;	/* lock for VF bus */
-+	resource_size_t res[PCI_SRIOV_NUM_BARS];
-+				/* VF BAR size */
- };
- 
- #ifdef CONFIG_PCI_ATS
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ae7a7ea..f0b5f87 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1670,6 +1670,7 @@ int pci_num_vf(struct pci_dev *dev);
- int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
- int pci_sriov_get_totalvfs(struct pci_dev *dev);
-+resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
- #else
- static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
- {
-@@ -1689,6 +1690,8 @@ static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
- { return 0; }
- static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
- { return 0; }
-+static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
-+{ return 0; }
- #endif
- 
- #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
--- 
-1.7.9.5
+-       pci_bus_for_each_resource(dev->bus, busr, i) {
+-               if (!busr || ((busr->flags ^ devr->flags) & type_mask))
+-                       continue;
+-               if ((devr->start) && (devr->start >= busr->start) &&
+-                               (devr->end <= busr->end))
+-                       return 1;
+-       }
+-       return 0;
+-}
 
+also that is used to skip pci_claim_resource calling for invalid ...
+
+so the root resource is totally wrong from ACPI.
+
+Thanks
+
+Yinghai
