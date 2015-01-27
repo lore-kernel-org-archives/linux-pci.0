@@ -1,48 +1,238 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:61001 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751631AbbAZRMF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 12:12:05 -0500
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Bradley Grove <linuxdrivers@attotech.com>,
-	linux-scsi@vger.kernel.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 4/5] [SCSI] esas2r: use PCI define for max read request size
-Date: Mon, 26 Jan 2015 18:06:24 +0100
-Message-Id: <1422291984-12488-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1422291922-12324-1-git-send-email-zajec5@gmail.com>
-References: <1422291922-12324-1-git-send-email-zajec5@gmail.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:50333 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932859AbbA0VBz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 27 Jan 2015 16:01:55 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH v5 2/8] of: move of_dma_configure() to device.c to help re-use
+Date: Tue, 27 Jan 2015 15:59:59 -0500
+Message-ID: <1422392405-32196-3-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1422392405-32196-1-git-send-email-m-karicheri2@ti.com>
+References: <1422392405-32196-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/scsi/esas2r/esas2r_init.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Move of_dma_configure() to device.c so that same function can be re-used
+for PCI devices to obtain DMA configuration from DT. Also add a second
+argument so that for PCI, DT node of root bus host bridge can be used to
+obtain the DMA configuration for the slave PCI device.
 
-diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
-index 6776931..c0b37a5 100644
---- a/drivers/scsi/esas2r/esas2r_init.c
-+++ b/drivers/scsi/esas2r/esas2r_init.c
-@@ -813,12 +813,13 @@ static void esas2r_init_pci_cfg_space(struct esas2r_adapter *a)
- 		pci_read_config_word(a->pcid, pcie_cap_reg + PCI_EXP_DEVCTL,
- 				     &devcontrol);
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Grant Likely <grant.likely@linaro.org>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+---
+ drivers/of/device.c       |   59 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/of/platform.c     |   58 ++------------------------------------------
+ include/linux/of_device.h |    2 ++
+ 3 files changed, 63 insertions(+), 56 deletions(-)
+
+diff --git a/drivers/of/device.c b/drivers/of/device.c
+index 46d6c75c..2de320d 100644
+--- a/drivers/of/device.c
++++ b/drivers/of/device.c
+@@ -2,6 +2,9 @@
+ #include <linux/kernel.h>
+ #include <linux/of.h>
+ #include <linux/of_device.h>
++#include <linux/of_address.h>
++#include <linux/of_iommu.h>
++#include <linux/dma-mapping.h>
+ #include <linux/init.h>
+ #include <linux/module.h>
+ #include <linux/mod_devicetable.h>
+@@ -66,6 +69,62 @@ int of_device_add(struct platform_device *ofdev)
+ 	return device_add(&ofdev->dev);
+ }
  
--		if ((devcontrol & PCI_EXP_DEVCTL_READRQ) > 0x2000) {
-+		if (devcontrol & PCI_EXP_DEVCTL_READRQ >
-+		    PCI_EXP_DEVCTL_READRQ_512B) {
- 			esas2r_log(ESAS2R_LOG_INFO,
- 				   "max read request size > 512B");
++/**
++ * of_dma_configure - Setup DMA configuration
++ * @dev:	Device to apply DMA configuration
++ * @np:		ptr to of node having dma configuration
++ *
++ * Try to get devices's DMA configuration from DT and update it
++ * accordingly.
++ *
++ * In case if platform code need to use own special DMA configuration,it
++ * can use Platform bus notifier and handle BUS_NOTIFY_ADD_DEVICE event
++ * to fix up DMA configuration.
++ */
++void of_dma_configure(struct device *dev, struct device_node *np)
++{
++	u64 dma_addr, paddr, size;
++	int ret;
++	bool coherent;
++	unsigned long offset;
++	struct iommu_ops *iommu;
++
++	/*
++	 * Set default dma-mask to 32 bit. Drivers are expected to setup
++	 * the correct supported dma_mask.
++	 */
++	dev->coherent_dma_mask = DMA_BIT_MASK(32);
++
++	/*
++	 * Set it to coherent_dma_mask by default if the architecture
++	 * code has not set it.
++	 */
++	if (!dev->dma_mask)
++		dev->dma_mask = &dev->coherent_dma_mask;
++
++	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
++	if (ret < 0) {
++		dma_addr = offset = 0;
++		size = dev->coherent_dma_mask;
++	} else {
++		offset = PFN_DOWN(paddr - dma_addr);
++		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
++	}
++
++	dev->dma_pfn_offset = offset;
++
++	coherent = of_dma_is_coherent(np);
++	dev_dbg(dev, "device is%sdma coherent\n",
++		coherent ? " " : " not ");
++
++	iommu = of_iommu_configure(dev, np);
++	dev_dbg(dev, "device is%sbehind an iommu\n",
++		iommu ? " " : " not ");
++
++	arch_setup_dma_ops(dev, dma_addr, size, iommu, coherent);
++}
++EXPORT_SYMBOL_GPL(of_dma_configure);
++
+ int of_device_register(struct platform_device *pdev)
+ {
+ 	device_initialize(&pdev->dev);
+diff --git a/drivers/of/platform.c b/drivers/of/platform.c
+index d3f3988..cbee18d 100644
+--- a/drivers/of/platform.c
++++ b/drivers/of/platform.c
+@@ -19,7 +19,6 @@
+ #include <linux/slab.h>
+ #include <linux/of_address.h>
+ #include <linux/of_device.h>
+-#include <linux/of_iommu.h>
+ #include <linux/of_irq.h>
+ #include <linux/of_platform.h>
+ #include <linux/platform_device.h>
+@@ -150,59 +149,6 @@ struct platform_device *of_device_alloc(struct device_node *np,
+ }
+ EXPORT_SYMBOL(of_device_alloc);
  
- 			devcontrol &= ~PCI_EXP_DEVCTL_READRQ;
--			devcontrol |= 0x2000;
-+			devcontrol |= PCI_EXP_DEVCTL_READRQ_512B;
- 			pci_write_config_word(a->pcid,
- 					      pcie_cap_reg + PCI_EXP_DEVCTL,
- 					      devcontrol);
+-/**
+- * of_dma_configure - Setup DMA configuration
+- * @dev:	Device to apply DMA configuration
+- *
+- * Try to get devices's DMA configuration from DT and update it
+- * accordingly.
+- *
+- * In case if platform code need to use own special DMA configuration,it
+- * can use Platform bus notifier and handle BUS_NOTIFY_ADD_DEVICE event
+- * to fix up DMA configuration.
+- */
+-static void of_dma_configure(struct device *dev)
+-{
+-	u64 dma_addr, paddr, size;
+-	int ret;
+-	bool coherent;
+-	unsigned long offset;
+-	struct iommu_ops *iommu;
+-
+-	/*
+-	 * Set default dma-mask to 32 bit. Drivers are expected to setup
+-	 * the correct supported dma_mask.
+-	 */
+-	dev->coherent_dma_mask = DMA_BIT_MASK(32);
+-
+-	/*
+-	 * Set it to coherent_dma_mask by default if the architecture
+-	 * code has not set it.
+-	 */
+-	if (!dev->dma_mask)
+-		dev->dma_mask = &dev->coherent_dma_mask;
+-
+-	ret = of_dma_get_range(dev->of_node, &dma_addr, &paddr, &size);
+-	if (ret < 0) {
+-		dma_addr = offset = 0;
+-		size = dev->coherent_dma_mask;
+-	} else {
+-		offset = PFN_DOWN(paddr - dma_addr);
+-		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+-	}
+-	dev->dma_pfn_offset = offset;
+-
+-	coherent = of_dma_is_coherent(dev->of_node);
+-	dev_dbg(dev, "device is%sdma coherent\n",
+-		coherent ? " " : " not ");
+-
+-	iommu = of_iommu_configure(dev, dev->of_node);
+-	dev_dbg(dev, "device is%sbehind an iommu\n",
+-		iommu ? " " : " not ");
+-
+-	arch_setup_dma_ops(dev, dma_addr, size, iommu, coherent);
+-}
+-
+ static void of_dma_deconfigure(struct device *dev)
+ {
+ 	arch_teardown_dma_ops(dev);
+@@ -236,7 +182,7 @@ static struct platform_device *of_platform_device_create_pdata(
+ 
+ 	dev->dev.bus = &platform_bus_type;
+ 	dev->dev.platform_data = platform_data;
+-	of_dma_configure(&dev->dev);
++	of_dma_configure(&dev->dev, dev->dev.of_node);
+ 
+ 	if (of_device_add(dev) != 0) {
+ 		of_dma_deconfigure(&dev->dev);
+@@ -299,7 +245,7 @@ static struct amba_device *of_amba_device_create(struct device_node *node,
+ 		dev_set_name(&dev->dev, "%s", bus_id);
+ 	else
+ 		of_device_make_bus_id(&dev->dev);
+-	of_dma_configure(&dev->dev);
++	of_dma_configure(&dev->dev, dev->dev.of_node);
+ 
+ 	/* Allow the HW Peripheral ID to be overridden */
+ 	prop = of_get_property(node, "arm,primecell-periphid", NULL);
+diff --git a/include/linux/of_device.h b/include/linux/of_device.h
+index ef37021..c661496 100644
+--- a/include/linux/of_device.h
++++ b/include/linux/of_device.h
+@@ -53,6 +53,7 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
+ 	return of_node_get(cpu_dev->of_node);
+ }
+ 
++void of_dma_configure(struct device *dev, struct device_node *np);
+ #else /* CONFIG_OF */
+ 
+ static inline int of_driver_match_device(struct device *dev,
+@@ -90,6 +91,7 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
+ {
+ 	return NULL;
+ }
++void of_dma_configure(struct device *dev, struct device_node *np) { }
+ #endif /* CONFIG_OF */
+ 
+ #endif /* _LINUX_OF_DEVICE_H */
 -- 
-1.8.4.5
+1.7.9.5
 
