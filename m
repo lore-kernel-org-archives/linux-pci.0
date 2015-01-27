@@ -1,28 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f45.google.com ([209.85.215.45]:62197 "EHLO
-	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750971AbbALLmi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 06:42:38 -0500
-Received: by mail-la0-f45.google.com with SMTP id gq15so23605406lab.4
-        for <linux-pci@vger.kernel.org>; Mon, 12 Jan 2015 03:42:37 -0800 (PST)
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:37691 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754414AbbA0AlX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 19:41:23 -0500
+Received: by mail-ob0-f169.google.com with SMTP id va8so10918877obc.0
+        for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2015 16:41:23 -0800 (PST)
+Date: Mon, 26 Jan 2015 18:41:20 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Will Deacon <Will.Deacon@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: Re: [PATCH 3/6] PCI/MSI: of: add support for OF-provided msi_domain
+Message-ID: <20150127004120.GD11624@google.com>
+References: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com>
+ <1418069543-21969-4-git-send-email-marc.zyngier@arm.com>
 MIME-Version: 1.0
-Reply-To: pricardofc@gmail.com
-Date: Mon, 12 Jan 2015 11:42:37 +0000
-Message-ID: <CAH9N0t9KvhzmZDgD8PD5VBPR-pPhuE8MmBgK9RY8+ZtKyz++pQ@mail.gmail.com>
-Subject: Hot add a PCIe device driver upon hotplug event
-From: Paulo Fortuna Carvalho <pricardofc@gmail.com>
-To: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1418069543-21969-4-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
-I want to automatically load/unload a PCIe device driver when a card
-is inserted/removed from the system. I can see in the system logger
-with dmesg that the interrupt event is captured and acknowledged by
-the pciehp hotplug service driver.
-What I want to do next is that the operating system load/unload the
-corresponding PCIe device driver for that card.
-Can anyone give me some information if possible?
-Thx,
-Paulo.
+On Mon, Dec 08, 2014 at 08:12:20PM +0000, Marc Zyngier wrote:
+> In order to populate the PHB msi_domain, use the "msi-parent"
+> attribute to lookup a corresponding irq domain. If found,
+> this is our MSI domain.
+> 
+> This gets plugged into the core PCI code.
+> 
+> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> ---
+>  drivers/pci/of.c    | 15 +++++++++++++++
+>  drivers/pci/probe.c |  1 +
+>  include/linux/pci.h |  2 ++
+>  3 files changed, 18 insertions(+)
+> 
+> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+> index f092993..d8d1274 100644
+> --- a/drivers/pci/of.c
+> +++ b/drivers/pci/of.c
+> @@ -9,6 +9,7 @@
+>   * 2 of the License, or (at your option) any later version.
+>   */
+>  
+> +#include <linux/irqdomain.h>
+>  #include <linux/kernel.h>
+>  #include <linux/pci.h>
+>  #include <linux/of.h>
+> @@ -59,3 +60,17 @@ struct device_node * __weak pcibios_get_phb_of_node(struct pci_bus *bus)
+>  		return of_node_get(bus->bridge->parent->of_node);
+>  	return NULL;
+>  }
+> +
+> +void pci_set_phb_of_msi_domain(struct pci_bus *bus)
+
+Same "phb" comment as before (also in the changelog above).
+
+> +{
+> +#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
+> +	struct device_node *np;
+> +
+> +	if (!bus->dev.of_node)
+> +		return;
+> +	np = of_parse_phandle(bus->dev.of_node, "msi-parent", 0);
+> +	if (!np)
+> +		return;
+> +	dev_set_msi_domain(&bus->dev, irq_find_host(np));
+> +#endif
+> +}
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index d1009a2..65600e5 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -672,6 +672,7 @@ static void pci_set_bus_speed(struct pci_bus *bus)
+>  
+>  void __weak pcibios_set_phb_msi_domain(struct pci_bus *bus)
+>  {
+> +	pci_set_phb_of_msi_domain(bus);
+>  }
+>  
+>  static void pci_set_bus_msi_domain(struct pci_bus *bus)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 3266764..6a9713f 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1825,6 +1825,7 @@ void pci_set_of_node(struct pci_dev *dev);
+>  void pci_release_of_node(struct pci_dev *dev);
+>  void pci_set_bus_of_node(struct pci_bus *bus);
+>  void pci_release_bus_of_node(struct pci_bus *bus);
+> +void pci_set_phb_of_msi_domain(struct pci_bus *bus);
+>  
+>  /* Arch may override this (weak) */
+>  struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus);
+> @@ -1845,6 +1846,7 @@ static inline void pci_set_of_node(struct pci_dev *dev) { }
+>  static inline void pci_release_of_node(struct pci_dev *dev) { }
+>  static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
+>  static inline void pci_release_bus_of_node(struct pci_bus *bus) { }
+> +static inline void pci_set_phb_of_msi_domain(struct pci_bus *bus) {}
+
+Add a space between the braces to match the others.
+
+>  #endif  /* CONFIG_OF */
+>  
+>  #ifdef CONFIG_EEH
+> -- 
+> 2.1.3
+> 
