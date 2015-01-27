@@ -1,45 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f170.google.com ([209.85.217.170]:56562 "EHLO
-	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758384AbbA2Jq6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jan 2015 04:46:58 -0500
-MIME-Version: 1.0
-Date: Thu, 29 Jan 2015 11:46:56 +0200
-Message-ID: <CANUX_P2cPevVgWrSvSR+ufaBV1Uth=mmj6OOG7hC5Y4Q49fm2Q@mail.gmail.com>
-Subject: random failures with Intel devices starting from kernel 3.18
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
+Received: from mail.linuxfoundation.org ([140.211.169.12]:60412 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932304AbbA0QrZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Jan 2015 11:47:25 -0500
+Date: Tue, 27 Jan 2015 08:47:24 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Paulo Fortuna Carvalho <pricardofc@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: sait.a.umar@gmail.com, gredner@gmail.com, kichawa23@interia.pl,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: Hot add a PCIe device driver upon hotplug event
+Message-ID: <20150127164724.GC22764@kroah.com>
+References: <CAH9N0t9KvhzmZDgD8PD5VBPR-pPhuE8MmBgK9RY8+ZtKyz++pQ@mail.gmail.com>
+ <CAErSpo48mPENuHpES1Q73ep+NKG8x2Zgb+g71do02y7vufbtfQ@mail.gmail.com>
+ <CAH9N0t8s+kcG_Qok0wpoDz9jzwvPk_QmBK_p-qbACZJjrr+iVQ@mail.gmail.com>
+ <CAErSpo7NK6S8Dk3-FYFV=AVPR8cLRzmAWrBNQ2rke0BRADxAKw@mail.gmail.com>
+ <CAH9N0t-+gog9wNFo7hqhzrWuttrRyf5HjjHciFrDGz1rZUiUfw@mail.gmail.com>
+ <20150122222016.GF13072@google.com>
+ <CAH9N0t_YoRZtPqWwAaNdHNW3m-HOfrCevBZGiOnM+VWGxeFwEQ@mail.gmail.com>
+ <CAErSpo4bRnGkfmzLnGSUnv-aJfmZLtQ_jXhnZo+9Wm=CgHOB3A@mail.gmail.com>
+ <CAH9N0t9o63GLEYyLgW2CThhP8TW3Bc7_RxbP4bdwwcd120-gRw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAH9N0t9o63GLEYyLgW2CThhP8TW3Bc7_RxbP4bdwwcd120-gRw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Tue, Jan 27, 2015 at 04:31:04PM +0000, Paulo Fortuna Carvalho wrote:
+> Hello Bjorn,
+> 
+> Is it possible to cancel somehow the remove procedure if the device is in use?
 
-I recently got quite a few reports about failures of the Intel wireless devices.
-I looked at the logs and it turns out that we can't access our device
-anymore. We had bad issues around this and I fixed them in the iwlwifi
-driver in the end. What makes me feels that I need to add PCI folks is
-that I can feel that we have a regression in 3.18 (based on the number
-of reports) and we didn't change much there that could cause such a
-bug.
+Nope, you could have physically removed the device, so we can't cancel
+that :)
 
-Also, very surprisingly, I asked someone to disable ASPM as a boot
-parameter and that didn't actually disable it. You can find more
-details here [1].
+> When we are using the device and remove occurs the kernel crashes.
 
-What I see in the logs is that iwlwifi is trying to access the mapped
-memory of the device (I may have a bad terminology, but it is BAR +
-0x24 - let me know if the term is not the right one), and we get
-0xffffffff...
+Then we need to fix the kernel, what driver is crashing, and where?
 
-Any thoughts?
+thanks,
 
-Thanks!
-
-[1] https://bugzilla.kernel.org/show_bug.cgi?id=91171
-
-Emmanuel Grumbach
-egrumbach@gmail.com
+greg k-h
