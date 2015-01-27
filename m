@@ -1,85 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:47705 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751582AbbAPSN7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Jan 2015 13:13:59 -0500
-Date: Fri, 16 Jan 2015 13:13:18 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pm@vger.kernel.org, xen-devel@lists.xenproject.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [Bugfix v4 1/2] xen/pci: Fix xen IRQ allocation failure caused
- by commit b81975eade8c
-Message-ID: <20150116181318.GA22690@l.oracle.com>
-References: <1421204979-30619-1-git-send-email-jiang.liu@linux.intel.com>
- <1421327077-19894-1-git-send-email-jiang.liu@linux.intel.com>
- <1421327077-19894-2-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:51272 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756767AbbA0ApK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 19:45:10 -0500
+Received: by mail-ob0-f172.google.com with SMTP id wp18so10919844obc.3
+        for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2015 16:45:09 -0800 (PST)
+Date: Mon, 26 Jan 2015 18:45:06 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: Re: [PATCH v2 0/8] Introducing per-device MSI domain
+Message-ID: <20150127004506.GF11624@google.com>
+References: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1421327077-19894-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 15, 2015 at 09:04:35PM +0800, Jiang Liu wrote:
-> Commit b81975eade8c ("x86, irq: Clean up irqdomain transition code")
-> breaks xen IRQ allocation because xen_smp_prepare_cpus() doesn't invoke
-> setup_IO_APIC(), so no irqdomains created for IOAPICs and
-> mp_map_pin_to_irq() fails at the very beginning.
+On Thu, Jan 08, 2015 at 05:06:04PM +0000, Marc Zyngier wrote:
+> MSI-like interrupts are starting to creep out of the PCI world, and
+> can now be seen into a number of "platform"-type busses. The MSI
+> domain patches recognise that fact, and start providing a way to
+> implement this.
 > 
-> Currently Xen Domain0 has special treatment for ACPI SCI interrupt,
-> that is initialize irq for ACPI SCI at early stage in a special way as:
-> xen_init_IRQ()
-> 	->pci_xen_initial_domain()
-> 		->xen_setup_acpi_sci()
-> 			Allocate and initialize irq for ACPI SCI
+> Another problem we have to solve is to identify which MSI domain a
+> device is "connected" to. Currently, PCI gets away with a mixture of
+> arch-specific callbacks, and a msi_controller structure that can
+> optionally carry a pointer to an MSI domain. As we add new bus types
+> and start dealing with topologies that do not map to what PCI does,
+> this doesn't scale anymore.
 > 
-> Function xen_setup_acpi_sci() calls acpi_gsi_to_irq() to get an irq
-> number for ACPI SCI. But unfortunately acpi_gsi_to_irq() depends on
-> IOAPIC irqdomains through following path
-> acpi_gsi_to_irq()
-> 	->mp_map_gsi_to_irq()
-> 		->mp_map_pin_to_irq()
-> 			->check IOAPIC irqdomain
+> This patch series tries to address some of it by providing a basic
+> link between 'struct device' and an MSI domain. It also adds (yet
+> another) way for PCI to propagate the domain pointer through the PCI
+> device hierarchy, provides a method for OF to kick-start the
+> propagation process, and finally allows the PCI/MSI layer to use that
+> information. Hopefully this can serve as a model to implement support
+> for different but types.
 > 
-> For PV domains, it uses Xen event based interrupt manangement and
-> doesn't make uses of native IOAPIC, so no irqdomains created for IOAPIC.
-> This causes Xen domain0 fails to install interrupt handler for ACPI SCI
-> and all ACPI events will be lost. Please refer to:
-> https://lkml.org/lkml/2014/12/19/178
+> Additionally, the last three patches use all the above to remove any
+> trace of the msi_controller structure from the two GIC interrupt
+> controllers we use on arm64, so that they solely rely on the above
+> infrastructure. We take this opportunity to also kill the domain
+> pointer from the msi_controller structure.
 > 
-> So the fix is to get rid of special treatment for ACPI SCI, just treat
-> ACPI SCI as normal GSI interrupt as:
-> acpi_gsi_to_irq()
-> 	->acpi_register_gsi()
-> 		->acpi_register_gsi_xen()
-> 			->xen_register_gsi()
+> My hope is to eventually kill msi_controller entirely, and only rely
+> on the msi_domain contained in the device structure (any help
+> welcomed).
 > 
-> With above change, there's no need for xen_setup_acpi_sci() anymore.
-> The above change also works with bare metal kernel too.
+> This has been tested on arm64 with GICv2m (AMD Seattle) and GICv3 ITS
+> (FVP model).
 > 
-> Note: we need to test this patch on those special AMD systems which
-> override normal SCI GSI (9) with strange GSI (20).
+> Patches are on top of 3.19-rc3 and available at:
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git irq/msi_domain
+> 
+> As always, comments most welcome.
 
-[    0.000000] DMI: Supermicro X8DTN/X8DTN, BIOS 2.1c       10/28/2011
-..
-     0.000000] ACPI: INT_SRC_OVR (bus 0 bus_irq 0 global_irq 2 dfl dfl)
-[    0.000000] ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 20 low level)
-[    0.000000] ACPI: IRQ0 used by override.
-..
-    6.358737] xen: registering gsi 20 triggering 0 polarity 1
-[    6.358756] xen: --> pirq=20 -> irq=20 (gsi=20)
-...
--bash-4.1# cat /proc/interrupts |grep acpi
- 20:          0          0          0  xen-pirq-ioapic-level  acpi
+These generally look fine to me.  I made a couple minor comments (sorry; I
+replied to the v1 series, not to this one).  Since most of the recent IRQ
+work has gone via you, Thomas, does it make sense for you to do these, too?
 
+Bjorn
 
+> From v1:
+> 
+> - Allow arch code to set the MSI domain before we try to do so in core
+>   code (which is used as a fallback).
+> - Allow the MSI domain to be looked-up by using the PHB node.
+> - Remove domain field from msi_controller
+> 
+> [1] https://lkml.org/lkml/2014/12/8/581
+> 
+> Marc Zyngier (8):
+>   device core: Introduce per-device MSI domain pointer
+>   PCI/MSI: Add hooks to populate the msi_domain field
+>   PCI/MSI: of: Add support for OF-provided msi_domain
+>   PCI/MSI: of: Allow msi_domain lookup using the PHB node
+>   PCI/MSI: Let pci_msi_get_domain use struct device's msi_domain
+>   irqchip: GICv2m: Get rid of struct msi_controller
+>   irqchip: gicv3-its: Get rid of struct msi_controller
+>   PCI/MSI: Drop domain field from msi_controller
+> 
+>  drivers/irqchip/irq-gic-v2m.c    | 26 +++++++++-----------------
+>  drivers/irqchip/irq-gic-v3-its.c | 33 ++++++++++++++-------------------
+>  drivers/pci/msi.c                |  3 +--
+>  drivers/pci/of.c                 | 20 ++++++++++++++++++++
+>  drivers/pci/probe.c              | 31 +++++++++++++++++++++++++++++++
+>  include/linux/device.h           | 20 ++++++++++++++++++++
+>  include/linux/msi.h              |  3 ---
+>  include/linux/pci.h              |  3 +++
+>  8 files changed, 98 insertions(+), 41 deletions(-)
+> 
+> -- 
+> 2.1.4
+> 
