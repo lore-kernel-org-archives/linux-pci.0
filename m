@@ -1,188 +1,120 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Subject: [PATCH][v3] PCI / PM: Avoid resuming PCI devices during system suspend
-Date: Wed, 21 Jan 2015 02:17:42 +0100
-Message-ID: <20035664.sy5Q5n4bIK@vostro.rjw.lan>
-In-Reply-To: <1520491.dCOodSBFV9@vostro.rjw.lan>
-References: <1460212.bInrzeZle0@vostro.rjw.lan> <1520491.dCOodSBFV9@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qa0-f53.google.com ([209.85.216.53]:55391 "EHLO
+	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754189AbbA0QoM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Jan 2015 11:44:12 -0500
+Received: by mail-qa0-f53.google.com with SMTP id n4so12188779qaq.12
+        for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2015 08:44:10 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <CAH9N0t9o63GLEYyLgW2CThhP8TW3Bc7_RxbP4bdwwcd120-gRw@mail.gmail.com>
+References: <CAH9N0t9KvhzmZDgD8PD5VBPR-pPhuE8MmBgK9RY8+ZtKyz++pQ@mail.gmail.com>
+ <CAErSpo48mPENuHpES1Q73ep+NKG8x2Zgb+g71do02y7vufbtfQ@mail.gmail.com>
+ <CAH9N0t8s+kcG_Qok0wpoDz9jzwvPk_QmBK_p-qbACZJjrr+iVQ@mail.gmail.com>
+ <CAErSpo7NK6S8Dk3-FYFV=AVPR8cLRzmAWrBNQ2rke0BRADxAKw@mail.gmail.com>
+ <CAH9N0t-+gog9wNFo7hqhzrWuttrRyf5HjjHciFrDGz1rZUiUfw@mail.gmail.com>
+ <20150122222016.GF13072@google.com> <CAH9N0t_YoRZtPqWwAaNdHNW3m-HOfrCevBZGiOnM+VWGxeFwEQ@mail.gmail.com>
+ <CAErSpo4bRnGkfmzLnGSUnv-aJfmZLtQ_jXhnZo+9Wm=CgHOB3A@mail.gmail.com> <CAH9N0t9o63GLEYyLgW2CThhP8TW3Bc7_RxbP4bdwwcd120-gRw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 27 Jan 2015 10:43:50 -0600
+Message-ID: <CAErSpo6_qjBQN4JOEBZtkQL_Fxh3V40exRTX-z09s-zBM2DOpQ@mail.gmail.com>
+Subject: Re: Hot add a PCIe device driver upon hotplug event
+To: Paulo Fortuna Carvalho <pricardofc@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Tue, Jan 27, 2015 at 10:31 AM, Paulo Fortuna Carvalho
+<pricardofc@gmail.com> wrote:
+> Hello Bjorn,
+>
+> Is it possible to cancel somehow the remove procedure if the device is in use?
+> When we are using the device and remove occurs the kernel crashes.
 
-Commit f25c0ae2b4c4 (ACPI / PM: Avoid resuming devices in ACPI PM
-domain during system suspend) modified the ACPI PM domain's system
-suspend callbacks to allow devices attached to it to be left in the
-runtime-suspended state during system suspend so as to optimize
-the suspend process.
+As far as I can tell, the only signal the kernel gets from your
+platform is the Presence Detect Changed interrupt that tells us the
+device is already gone.  So there's nothing the kernel can do to
+prevent the removal.  But the kernel *should* detach the driver from
+the now-missing device.
 
-This was based on the general mechanism introduced by commit
-aae4518b3124 (PM / sleep: Mechanism to avoid resuming runtime-suspended
-devices unnecessarily).
+If the kernel crashes in this case, it's probably because the driver
+doesn't handle the removal gracefully, and the driver can probably be
+improved to handle that better.  If you post details about the crash,
+we should be able to figure out if there's a PCI core issue or a
+driver issue.
 
-Extend that approach to PCI devices by modifying the PCI bus type's
-->prepare callback to return 1 for devices that are runtime-suspended
-when it is being executed and that are in a suitable power state and
-need not be resumed going forward.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
-
-This version actually builds and need not be an RFC any more I suppose.
-
----
- drivers/pci/pci-acpi.c   |   17 +++++++++++++++++
- drivers/pci/pci-driver.c |   11 ++++++-----
- drivers/pci/pci.c        |   26 ++++++++++++++++++++++++++
- drivers/pci/pci.h        |    6 ++++++
- 4 files changed, 55 insertions(+), 5 deletions(-)
-
-Index: linux-pm/drivers/pci/pci.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci.c
-+++ linux-pm/drivers/pci/pci.c
-@@ -521,6 +521,11 @@ static inline int platform_pci_run_wake(
- 			pci_platform_pm->run_wake(dev, enable) : -ENODEV;
- }
- 
-+static inline bool platform_pci_need_resume(struct pci_dev *dev)
-+{
-+	return pci_platform_pm ? pci_platform_pm->need_resume(dev) : false;
-+}
-+
- /**
-  * pci_raw_set_power_state - Use PCI PM registers to set the power state of
-  *                           given PCI device
-@@ -1999,6 +2004,27 @@ bool pci_dev_run_wake(struct pci_dev *de
- }
- EXPORT_SYMBOL_GPL(pci_dev_run_wake);
- 
-+/**
-+ * pci_dev_keep_suspended - Check if the device can stay in the suspended state.
-+ * @pci_dev: Device to check.
-+ *
-+ * Return 'true' if the device is runtime-suspended, it doesn't have to be
-+ * reconfigured due to wakeup settings difference between system and runtime
-+ * suspend and the current power state of it is suitable for the upcoming
-+ * (system) transition.
-+ */
-+bool pci_dev_keep_suspended(struct pci_dev *pci_dev)
-+{
-+	struct device *dev = &pci_dev->dev;
-+
-+	if (!pm_runtime_suspended(dev)
-+	    || (device_can_wakeup(dev) && !device_may_wakeup(dev))
-+	    || platform_pci_need_resume(pci_dev))
-+		return false;
-+
-+	return pci_target_state(pci_dev) == pci_dev->current_state;
-+}
-+
- void pci_config_pm_runtime_get(struct pci_dev *pdev)
- {
- 	struct device *dev = &pdev->dev;
-Index: linux-pm/drivers/pci/pci.h
-===================================================================
---- linux-pm.orig/drivers/pci/pci.h
-+++ linux-pm/drivers/pci/pci.h
-@@ -50,6 +50,10 @@ int pci_probe_reset_function(struct pci_
-  *		for given device (the device's wake-up capability has to be
-  *		enabled by @sleep_wake for this feature to work)
-  *
-+ * @need_resume: returns 'true' if the given device (which is currently
-+ *		suspended) needs to be resumed to be configured for system
-+ *		wakeup.
-+ *
-  * If given platform is generally capable of power managing PCI devices, all of
-  * these callbacks are mandatory.
-  */
-@@ -59,6 +63,7 @@ struct pci_platform_pm_ops {
- 	pci_power_t (*choose_state)(struct pci_dev *dev);
- 	int (*sleep_wake)(struct pci_dev *dev, bool enable);
- 	int (*run_wake)(struct pci_dev *dev, bool enable);
-+	bool (*need_resume)(struct pci_dev *dev);
- };
- 
- int pci_set_platform_pm(struct pci_platform_pm_ops *ops);
-@@ -67,6 +72,7 @@ void pci_power_up(struct pci_dev *dev);
- void pci_disable_enabled_device(struct pci_dev *dev);
- int pci_finish_runtime_suspend(struct pci_dev *dev);
- int __pci_pme_wakeup(struct pci_dev *dev, void *ign);
-+bool pci_dev_keep_suspended(struct pci_dev *dev);
- void pci_config_pm_runtime_get(struct pci_dev *dev);
- void pci_config_pm_runtime_put(struct pci_dev *dev);
- void pci_pm_init(struct pci_dev *dev);
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -501,12 +501,29 @@ static int acpi_pci_run_wake(struct pci_
- 	return 0;
- }
- 
-+static bool acpi_pci_need_resume(struct pci_dev *dev)
-+{
-+	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
-+
-+	if (!adev || !acpi_device_power_manageable(adev))
-+		return false;
-+
-+	if (device_may_wakeup(&dev->dev) != !!adev->wakeup.prepare_count)
-+		return true;
-+
-+	if (acpi_target_system_state() == ACPI_STATE_S0)
-+		return false;
-+
-+	return !!adev->power.flags.dsw_present;
-+}
-+
- static struct pci_platform_pm_ops acpi_pci_platform_pm = {
- 	.is_manageable = acpi_pci_power_manageable,
- 	.set_state = acpi_pci_set_power_state,
- 	.choose_state = acpi_pci_choose_state,
- 	.sleep_wake = acpi_pci_sleep_wake,
- 	.run_wake = acpi_pci_run_wake,
-+	.need_resume = acpi_pci_need_resume,
- };
- 
- void acpi_pci_add_bus(struct pci_bus *bus)
-Index: linux-pm/drivers/pci/pci-driver.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-driver.c
-+++ linux-pm/drivers/pci/pci-driver.c
-@@ -653,7 +653,6 @@ static bool pci_has_legacy_pm_support(st
- static int pci_pm_prepare(struct device *dev)
- {
- 	struct device_driver *drv = dev->driver;
--	int error = 0;
- 
- 	/*
- 	 * Devices having power.ignore_children set may still be necessary for
-@@ -662,10 +661,12 @@ static int pci_pm_prepare(struct device
- 	if (dev->power.ignore_children)
- 		pm_runtime_resume(dev);
- 
--	if (drv && drv->pm && drv->pm->prepare)
--		error = drv->pm->prepare(dev);
--
--	return error;
-+	if (drv && drv->pm && drv->pm->prepare) {
-+		int error = drv->pm->prepare(dev);
-+		if (error)
-+			return error;
-+	}
-+	return pci_dev_keep_suspended(to_pci_dev(dev));
- }
- 
- 
-
+> 2015-01-23 14:36 GMT, Bjorn Helgaas <bhelgaas@google.com>:
+>> On Fri, Jan 23, 2015 at 5:35 AM, Paulo Fortuna Carvalho
+>> <pricardofc@gmail.com> wrote:
+>>> 2015-01-22 22:20 GMT, Bjorn Helgaas:
+>>
+>>>> In your dmesg log, I see this:
+>>>
+>>>>   pciehp 0000:07:08.0:pcie24: pcie_isr: intr_loc 8
+>>>>   pciehp 0000:07:08.0:pcie24: Presence/Notify input change
+>>>>   pciehp 0000:07:08.0:pcie24: Card not present on Slot(8)
+>>>>   pciehp 0000:07:08.0:pcie24: pcie_isr: intr_loc 8
+>>>>   pciehp 0000:07:08.0:pcie24: Presence/Notify input change
+>>>>   pciehp 0000:07:08.0:pcie24: Card present on Slot(8)
+>>>
+>>>> That means we only saw Presence Detect Changed interrupts: one for card
+>>>> removal and another for card insertion.  We didn't see an Attention
+>>>> Button
+>>>> interrupt at all.
+>>>
+>>> Yes, thats it. The Presence Detect Change signal is what triggers the
+>>> uevent. We dont have an attention button in our ATCA system so we dont
+>>> use it.
+>>
+>> If the only signal you have is Presence Detect, I think you're out of
+>> luck, because if Presence Detect State is "false" (see PCIe spec r3.0,
+>> sec 7.8.11), the card is already gone and it's too late to do anything
+>> with it.  If that's the case, you'd have to look for a software
+>> solution, e.g., run a script when you decide to remove the card,
+>> before you physically touch the card.
+>>
+>>>> You can look at the Slot Status directly with "lspci -vvs07:08.0".  If
+>>>> you
+>>>> do that while removing the device, e.g., run it while the handle is in
+>>>> position #1, again in position #2, and again in position #3, you should
+>>>> see
+>>>> whether there's any signal that could potentially be used to do what you
+>>>> need.
+>>>
+>>> Yes. I will try to see if the handle switch can trigger an uvent
+>>> before the remove device procedure from the system occurs. I will let
+>>> you know the result.
+>>
+>> Sec 6.7.3 lists the events pciehp has to work with:
+>>
+>> - Slot events:
+>>   - Attention Button
+>>   - Power Fault Detected
+>>   - MRL Sensor Changed
+>>   - Presence Detect Changed
+>> - Command Completed Events (this is internal to the hotplug controller)
+>> - Data Link Layer State Changed Events
+>>
+>> These are really the only inputs to the pciehp driver.  You apparently
+>> don't have an Attention Button.  You do have Presence Detect and
+>> possibly others, but I don't think they normally (other than an
+>> Attention Button) will give you any warning before the card is
+>> removed.
+>>
+>> The only possibility I see is the Power Fault handling (see sec
+>> 6.7.1.8).  Depending on the form factor, there is the possibility of
+>> independent main and auxiliary power faults.  An auxiliary power fault
+>> can be detected and reported without affecting main power.  And it
+>> says "For example, one form factor may remove auxiliary power when the
+>> MRL for the slot is opened."  If your form factor does that, we might
+>> get a Power Fault when the latch is opened, and the card would still
+>> have main power and software should still be able to operate it.
+>>
+>> I don't know how we would distinguish such an auxiliary power fault
+>> from a main power fault.  Maybe a form factor spec would talk about
+>> that.  Do you have any pointers to something like that?  If we could
+>> figure that out, it might be possible to emit a uevent for that case.
+>>
+>> Bjorn
+>>
