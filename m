@@ -1,155 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:40101 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751431AbbAOFqc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jan 2015 00:46:32 -0500
-Message-ID: <54B753EF.30609@hp.com>
-Date: Thu, 15 Jan 2015 13:45:19 +0800
-From: "Li, ZhenHua" <zhen-hual@hp.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:42350 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751737AbbA0PU0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 27 Jan 2015 10:20:26 -0500
+Message-ID: <54C7AC9B.1040308@ti.com>
+Date: Tue, 27 Jan 2015 10:19:55 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-To: Baoquan He <bhe@redhat.com>
-CC: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, joro@8bytes.org,
-	vgoyal@redhat.com, dyoung@redhat.com, jerry.hoemann@hp.com,
-	tom.vaden@hp.com, rwright@hp.com, linux-pci@vger.kernel.org,
-	kexec@lists.infradead.org, iommu@lists.linux-foundation.org,
-	lisa.mitchell@hp.com, linux-kernel@vger.kernel.org,
-	alex.williamson@redhat.com, ddutile@redhat.com, doug.hatch@hp.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	billsumnerlinux@gmail.com, li.zhang6@hp.com
-Subject: Re: [PATCH v8 06/10] iommu/vt-d: datatypes and functions used for
- kdump
-References: <1421046388-27925-1-git-send-email-zhen-hual@hp.com> <1421046388-27925-7-git-send-email-zhen-hual@hp.com> <20150115032858.GA2461@dhcp-16-105.nay.redhat.com>
-In-Reply-To: <20150115032858.GA2461@dhcp-16-105.nay.redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Catalin Marinas <catalin.marinas@arm.com>
+CC: Robin Murphy <robin.murphy@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+Subject: Re: [PATCH v4 6/6] arm: dma-mapping: updates to limit dma_mask and
+ iommu mapping size
+References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com> <1422052359-12384-7-git-send-email-m-karicheri2@ti.com> <54C772A0.2000203@arm.com> <20150127113416.GB3226@e104818-lin.cambridge.arm.com>
+In-Reply-To: <20150127113416.GB3226@e104818-lin.cambridge.arm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Baoquan,
-Thank you very much for your review. But according to the latest
-discussion, the page tables will not be copied from old kernel. We keep
-using the old page tables before driver is loaded. So there are many
-changes in next version;
-
-See my comments.
-
-On 01/15/2015 11:28 AM, Baoquan He wrote:
-> On 01/12/15 at 03:06pm, Li, Zhen-Hua wrote:
->> +/*
->> + * Interface to the "copy translation tables" set of functions
->> + * from mainline code.
->> + */
->> +static int intel_iommu_load_translation_tables(struct dmar_drhd_unit *drhd,
->> +		int g_num_of_iommus)
->
-> The argument g_num_of_iommus is the same as the global variable, it's better
-> to rename it as num_of_iommus. And even it can be removed since you can
-> just use the global variable g_num_of_iommus in this function.
->
-> Argument drhd can be intel_iommu because no other member variable in
-> drhd is needed.
-
-This function is no longer used. So forget the parameters.
-
->
->> +{
->> +	struct intel_iommu *iommu;	/* Virt(iommu hardware registers) */
->> +	unsigned long long q;		/* quadword scratch */
->> +	int ret = 0;			/* Integer return code */
->> +	int i = 0;			/* Loop index */
->> +	unsigned long flags;
->> +
->> +	/* Structure so copy_page_addr() can accumulate things
->> +	 * over multiple calls and returns
->> +	 */
->> +	struct copy_page_addr_parms ppa_parms = copy_page_addr_parms_init;
->> +	struct copy_page_addr_parms *ppap = &ppa_parms;
->> +
->> +
->> +	iommu = drhd->iommu;
->> +	q = dmar_readq(iommu->reg + DMAR_RTADDR_REG);
->> +	if (!q)
->> +		return -1;
->> +
->> +	/* If (list needs initializing) do it here */
->
-> This initializing should not be here, because it's not only for this
-> drhd. It should be done in init_dmars().
->
-Yes you are right. Though the variable domain_values_list will not be
-used in next version, I think I need to check if there are any other
-similar problems.
-
->> +	if (!domain_values_list) {
->> +		domain_values_list =
->> +			 kcalloc(g_num_of_iommus, sizeof(struct list_head),
->> +					GFP_KERNEL);
->> +
->> +		if (!domain_values_list) {
->> +			pr_err("Allocation failed for domain_values_list array\n");
->> +			return -ENOMEM;
->> +		}
->> +		for (i = 0; i < g_num_of_iommus; i++)
->> +			INIT_LIST_HEAD(&domain_values_list[i]);
->> +	}
->> +
->> +	spin_lock_irqsave(&iommu->lock, flags);
->> +
->> +	/* Load the root-entry table from the old kernel
->> +	 * foreach context_entry_table in root_entry
->> +	 *    foreach context_entry in context_entry_table
->> +	 *       foreach level-1 page_table_entry in context_entry
->> +	 *          foreach level-2 page_table_entry in level 1 page_table_entry
->> +	 *             Above pattern continues up to 6 levels of page tables
->> +	 *                Sanity-check the entry
->> +	 *                Process the bus, devfn, page_address, page_size
->> +	 */
->> +	if (!iommu->root_entry) {
->> +		iommu->root_entry =
->> +			(struct root_entry *)alloc_pgtable_page(iommu->node);
->> +		if (!iommu->root_entry) {
->> +			spin_unlock_irqrestore(&iommu->lock, flags);
->> +			return -ENOMEM;
->> +		}
->> +	}
->> +
->> +	iommu->root_entry_old_phys = q & VTD_PAGE_MASK;
->> +	if (!iommu->root_entry_old_phys) {
->> +		pr_err("Could not read old root entry address.");
->> +		return -1;
->> +	}
->> +
->> +	iommu->root_entry_old_virt = ioremap_cache(iommu->root_entry_old_phys,
->> +						VTD_PAGE_SIZE);
->> +	if (!iommu->root_entry_old_virt) {
->> +		pr_err("Could not map the old root entry.");
->> +		return -ENOMEM;
->> +	}
->> +
->> +	__iommu_load_old_root_entry(iommu);
->> +	ret = copy_root_entry_table(iommu, ppap);
->> +	__iommu_flush_cache(iommu, iommu->root_entry, PAGE_SIZE);
->> +	__iommu_update_old_root_entry(iommu, -1);
->> +
->> +	spin_unlock_irqrestore(&iommu->lock, flags);
->> +
->> +	__iommu_free_mapped_mem();
->> +
->> +	if (ret)
->> +		return ret;
->> +
->> +	ppa_parms.last = 1;
->> +	copy_page_addr(0, 0, 0, 0, 0, NULL, ppap);
->> +
->> +	return 0;
->> +}
->> +
->>   #endif /* CONFIG_CRASH_DUMP */
->> --
->> 2.0.0-rc0
+On 01/27/2015 06:34 AM, Catalin Marinas wrote:
+> On Tue, Jan 27, 2015 at 11:12:32AM +0000, Robin Murphy wrote:
+>> On 23/01/15 22:32, Murali Karicheri wrote:
+>>> Limit the dma_mask to minimum of dma_mask and dma_base + size - 1.
+>>>
+>>> Also arm_iommu_create_mapping() has size parameter of size_t and
+>>> arm_setup_iommu_dma_ops() can take a value higher than that. So
+>>> limit the size to SIZE_MAX.
+>>>
+>>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+>>> ---
+>>>    arch/arm/mm/dma-mapping.c |   10 ++++++++++
+>>>    1 file changed, 10 insertions(+)
+>>>
+>>> diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
+>>> index 7864797..a1f9030 100644
+>>> --- a/arch/arm/mm/dma-mapping.c
+>>> +++ b/arch/arm/mm/dma-mapping.c
+>>> @@ -2004,6 +2004,13 @@ static bool arm_setup_iommu_dma_ops(struct device *dev, u64 dma_base, u64 size,
+>>>    	if (!iommu)
+>>>    		return false;
+>>>
+>>> +	/*
+>>> +	 * currently arm_iommu_create_mapping() takes a max of size_t
+>>> +	 * for size param. So check this limit for now.
+>>> +	 */
+>>> +	if (size>  SIZE_MAX)
+>>> +		return false;
+>>> +
+>>>    	mapping = arm_iommu_create_mapping(dev->bus, dma_base, size);
+>>>    	if (IS_ERR(mapping)) {
+>>>    		pr_warn("Failed to create %llu-byte IOMMU mapping for device %s\n",
+>>> @@ -2053,6 +2060,9 @@ void arch_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
+>>>    {
+>>>    	struct dma_map_ops *dma_ops;
+>>>
+>>> +	/* limit dma_mask to the lower of the two values */
+>>> +	*dev->dma_mask = min((*dev->dma_mask), (dma_base + size - 1));
+>>> +
 >>
->>
->> _______________________________________________
->> kexec mailing list
->> kexec@lists.infradead.org
->> http://lists.infradead.org/mailman/listinfo/kexec
+>> Is there any reason not to do this in of_dma_configure? It seems like
+>> something everyone could benefit from - I'd cooked up a dodgy workaround
+>> for the same issue in my arm64 IOMMU code, but handling it generically
+>> in common code would be much nicer.
 
+Ok Will move this to of_dma_configure().
+
+Murali
+
+>
+> I agree. I started something here:
+>
+> http://article.gmane.org/gmane.linux.kernel/1835096
+>
+> but I don't remember to have got to a clear conclusion.
+>
+
+
+-- 
+Murali Karicheri
+Linux Kernel, Texas Instruments
