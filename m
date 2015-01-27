@@ -1,77 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:41110 "EHLO mga03.intel.com"
+Received: from comal.ext.ti.com ([198.47.26.152]:56500 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750736AbbAUFgZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 21 Jan 2015 00:36:25 -0500
-Message-ID: <54BF3AD5.4070600@linux.intel.com>
-Date: Wed, 21 Jan 2015 13:36:21 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+	id S1751874AbbA0VBF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 27 Jan 2015 16:01:05 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH v5 1/8] of: iommu: add ptr to OF node arg to of_iommu_configure()
+Date: Tue, 27 Jan 2015 15:59:58 -0500
+Message-ID: <1422392405-32196-2-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1422392405-32196-1-git-send-email-m-karicheri2@ti.com>
+References: <1422392405-32196-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [RFC Patch 14/19] ACPI: Translate resource into master side address
- for bridge window resources
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-15-git-send-email-jiang.liu@linux.intel.com> <2697984.BuF6Nq9EvE@vostro.rjw.lan>
-In-Reply-To: <2697984.BuF6Nq9EvE@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/1/21 8:50, Rafael J. Wysocki wrote:
-> On Thursday, January 08, 2015 10:33:01 AM Jiang Liu wrote:
->> Add translation_offset into the result address for bridge window
->> resources to form the master side address.
->>
->> Currently acpi_dev_resource_{ext_}address_space() are only used for
->> devices instead of bridges, so it won't break current users. Later
->> it will be used to support PCI host bridge drivers.
->>
->> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->> ---
->>  drivers/acpi/resource.c |   14 ++++++++++++++
->>  1 file changed, 14 insertions(+)
->>
->> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
->> index d3aa56674bd4..16d334a1ee25 100644
->> --- a/drivers/acpi/resource.c
->> +++ b/drivers/acpi/resource.c
->> @@ -203,6 +203,20 @@ static bool acpi_decode_space(struct resource *res, resource_size_t *offset,
->>  	res->start = addr->minimum;
->>  	res->end = addr->maximum;
->>  
->> +	/*
->> +	 * For bridges that translate addresses across the bridge,
->> +	 * translation_offset is the offset that must be added to the
->> +	 * address on the secondary side to obtain the address on the
->> +	 * primary side. Non-bridge devices must list 0 for all Address
->> +	 * Translation offset bits.
->> +	 */
->> +	if (base->producer_consumer == ACPI_PRODUCER) {
-> 
-> OK, so the assumption is that this check is never true in the current code, right?
-Yes.
-> 
->> +		res->start += addr->translation_offset;
->> +		res->end += addr->translation_offset;
->> +	} else if (addr->translation_offset) {
-> 
-> And won't this break anything even if so?
-I'm trying to follow the spec, how about giving a warning here
-instead of failure?
-Regards!
-Gerry
-> 
->> +		return false;
->> +	}
->> +
->>  	switch(base->resource_type) {
->>  	case ACPI_MEMORY_RANGE:
->>  		acpi_dev_memresource_flags(res, len, wp);
->>
-> 
+Function of_iommu_configure() is called from of_dma_configure() to
+setup iommu ops using DT property. This API is currently used for
+platform devices for which DMA configuration (including iommu ops)
+may come from device's parent. To extend this functionality for PCI
+devices, this API need to take a parent node ptr as an argument
+instead of assuming device's parent. This is needed since for PCI, the
+dma configuration may be defined in the DT node of the root bus bridge's
+parent device. Currently only dma-range is used for PCI and iommu is not
+supported. So return error if the device is PCI.
+
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Grant Likely <grant.likely@linaro.org>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+---
+ drivers/iommu/of_iommu.c |   10 ++++++++--
+ drivers/of/platform.c    |    2 +-
+ include/linux/of_iommu.h |    6 ++++--
+ 3 files changed, 13 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+index af1dc6a..439235b 100644
+--- a/drivers/iommu/of_iommu.c
++++ b/drivers/iommu/of_iommu.c
+@@ -133,19 +133,25 @@ struct iommu_ops *of_iommu_get_ops(struct device_node *np)
+ 	return ops;
+ }
+ 
+-struct iommu_ops *of_iommu_configure(struct device *dev)
++struct iommu_ops *of_iommu_configure(struct device *dev,
++				     struct device_node *iommu_np)
+ {
+ 	struct of_phandle_args iommu_spec;
+ 	struct device_node *np;
+ 	struct iommu_ops *ops = NULL;
+ 	int idx = 0;
+ 
++	if (dev_is_pci(dev)) {
++		dev_err(dev, "iommu is currently not supported for PCI\n");
++		return NULL;
++	}
++
+ 	/*
+ 	 * We don't currently walk up the tree looking for a parent IOMMU.
+ 	 * See the `Notes:' section of
+ 	 * Documentation/devicetree/bindings/iommu/iommu.txt
+ 	 */
+-	while (!of_parse_phandle_with_args(dev->of_node, "iommus",
++	while (!of_parse_phandle_with_args(iommu_np, "iommus",
+ 					   "#iommu-cells", idx,
+ 					   &iommu_spec)) {
+ 		np = iommu_spec.np;
+diff --git a/drivers/of/platform.c b/drivers/of/platform.c
+index b0d50d7..d3f3988 100644
+--- a/drivers/of/platform.c
++++ b/drivers/of/platform.c
+@@ -196,7 +196,7 @@ static void of_dma_configure(struct device *dev)
+ 	dev_dbg(dev, "device is%sdma coherent\n",
+ 		coherent ? " " : " not ");
+ 
+-	iommu = of_iommu_configure(dev);
++	iommu = of_iommu_configure(dev, dev->of_node);
+ 	dev_dbg(dev, "device is%sbehind an iommu\n",
+ 		iommu ? " " : " not ");
+ 
+diff --git a/include/linux/of_iommu.h b/include/linux/of_iommu.h
+index 16c7554..a97e5bd 100644
+--- a/include/linux/of_iommu.h
++++ b/include/linux/of_iommu.h
+@@ -12,7 +12,8 @@ extern int of_get_dma_window(struct device_node *dn, const char *prefix,
+ 			     size_t *size);
+ 
+ extern void of_iommu_init(void);
+-extern struct iommu_ops *of_iommu_configure(struct device *dev);
++extern struct iommu_ops *of_iommu_configure(struct device *dev,
++					struct device_node *iommu_np);
+ 
+ #else
+ 
+@@ -24,7 +25,8 @@ static inline int of_get_dma_window(struct device_node *dn, const char *prefix,
+ }
+ 
+ static inline void of_iommu_init(void) { }
+-static inline struct iommu_ops *of_iommu_configure(struct device *dev)
++static inline struct iommu_ops *of_iommu_configure(struct device *dev,
++					 struct device_node *iommu_np)
+ {
+ 	return NULL;
+ }
+-- 
+1.7.9.5
+
