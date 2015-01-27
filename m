@@ -1,74 +1,124 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:62978 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751315AbbAPJmE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Jan 2015 04:42:04 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-m68k@lists.linux-m68k.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	linux-alpha@vger.kernel.org, linux-ia64@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	Yinghai Lu <yinghai@kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 26 Jan 2015 18:40:05 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
 	Jiang Liu <jiang.liu@linux.intel.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH 08/28] PCI: Introduce pci_host_assign_domain_nr() to assign domain
-Date: Fri, 16 Jan 2015 10:40:26 +0100
-Message-ID: <3026954.09KG7UaUTi@wuerfel>
-In-Reply-To: <13182982.DnZJMY2KHL@wuerfel>
-References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <1421372666-12288-9-git-send-email-wangyijing@huawei.com> <13182982.DnZJMY2KHL@wuerfel>
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Will Deacon <Will.Deacon@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: Re: [PATCH 2/6] PCI/MSI: add hooks to populate the msi_domain field
+Message-ID: <20150127004005.GC11624@google.com>
+References: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com>
+ <1418069543-21969-3-git-send-email-marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1418069543-21969-3-git-send-email-marc.zyngier@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 16 January 2015 10:08:45 Arnd Bergmann wrote:
-> On Friday 16 January 2015 09:44:06 Yijing Wang wrote:
-> > Introduce pci_host_assign_domain_nr() to assign domain
-> > number for pci_host_bridge. Later we will remove
-> > pci_bus_assign_domain_nr().
-> > 
-> > Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+On Mon, Dec 08, 2014 at 08:12:19PM +0000, Marc Zyngier wrote:
+> In order to be able to populate the device msi_domain field,
+> add the necesary hooks to propagate the PHB msi_domain across
+> secondary busses to devices.
 > 
-> I'm confused: the same code is already part of the PCI tree, but with
-> Lorenzo Pieralisi listed as the patch author. The code is good,
-> and I acked it in the past, but one of you is (probably by accident)
-> misattributing the patch.
+> So far, nobody populates the initial msi_domain.
 > 
-> Assuming that the patch that is already merged in next is the right
-> one, I think you should rebase your series on top of
+> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> ---
+>  drivers/pci/probe.c | 24 ++++++++++++++++++++++++
+>  include/linux/pci.h |  1 +
+>  2 files changed, 25 insertions(+)
 > 
-> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git#next
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index c8ca98c..d1009a2 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -670,6 +670,20 @@ static void pci_set_bus_speed(struct pci_bus *bus)
+>  	}
+>  }
+>  
+> +void __weak pcibios_set_phb_msi_domain(struct pci_bus *bus)
+
+We haven't previously used the "phb" abbreviation in the PCI core, so I'd
+rather not start now.  I'm not really sure how relevant it is anyway --
+maybe the name doesn't need to include a reference to the host bridge at
+all?
+
+> +{
+> +}
+> +
+> +static void pci_set_bus_msi_domain(struct pci_bus *bus)
+> +{
+> +	struct pci_dev *bridge = bus->self;
+> +
+> +	if (!bridge)
+> +		pcibios_set_phb_msi_domain(bus);
+> +	else
+> +		dev_set_msi_domain(&bus->dev, dev_get_msi_domain(&bridge->dev));
+> +}
+> +
+>  static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>  					   struct pci_dev *bridge, int busnr)
+>  {
+> @@ -723,6 +737,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>  	bridge->subordinate = child;
+>  
+>  add_dev:
+> +	pci_set_bus_msi_domain(child);
+>  	ret = device_register(&child->dev);
+>  	WARN_ON(ret < 0);
+>  
+> @@ -1517,6 +1532,11 @@ static void pci_init_capabilities(struct pci_dev *dev)
+>  	pci_enable_acs(dev);
+>  }
+>  
+> +static void pci_set_msi_domain(struct pci_dev *dev)
+> +{
+> +	dev_set_msi_domain(&dev->dev, dev_get_msi_domain(&dev->bus->dev));
+> +}
+> +
+>  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>  {
+>  	int ret;
+> @@ -1546,6 +1566,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>  	/* Initialize various capabilities */
+>  	pci_init_capabilities(dev);
+>  
+> +	/* Setup MSI irq domain */
+
+This is *really* a nitpick, but "setup" suggests that we're doing more than
+just setting a pointer, i.e., it suggests that we're doing something more
+involved to get it all ready for use.  But here, I think we really are just
+setting a pointer, so I think the comment is pointless since the function
+name already says that.
+
+> +	pci_set_msi_domain(dev);
+> +
+>  	/*
+>  	 * Add the device to our list of discovered devices
+>  	 * and the bus list for fixup functions, etc.
+> @@ -1947,6 +1970,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  	b->bridge = get_device(&bridge->dev);
+>  	device_enable_async_suspend(b->bridge);
+>  	pci_set_bus_of_node(b);
+> +	pci_set_bus_msi_domain(b);
+>  
+>  	if (!parent)
+>  		set_dev_node(b->bridge, pcibus_to_node(b));
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index a523cee..3266764 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1637,6 +1637,7 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+>  int pcibios_add_device(struct pci_dev *dev);
+>  void pcibios_release_device(struct pci_dev *dev);
+>  void pcibios_penalize_isa_irq(int irq, int active);
+> +void pcibios_set_phb_msi_domain(struct pci_bus *bus);
+>  
+>  #ifdef CONFIG_HIBERNATE_CALLBACKS
+>  extern struct dev_pm_ops pcibios_pm_ops;
+> -- 
+> 2.1.3
 > 
-> to avoid conflicts like this one.
->
-
-I think I just got confused because the code duplicates most of
-pci_bus_assign_domain_nr(). Maybe this can be done in a better way
-by splitting the existing function into 
-
-static int pci_assign_domain_nr(struct device *)
-{
-	... /* most of pci_bus_assign_domain_nr */
-
-	return domain;
-}
-
-void pci_host_assign_domain_nr(struct pci_host_bridge *host)
-{
-	host->domain = pci_assign_domain_nr(host->dev.parent);
-}
-
-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-{
-	bus->domain_nr = pci_assign_domain_nr(parent);
-}
