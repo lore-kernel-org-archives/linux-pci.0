@@ -1,99 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:54103 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752202AbbAZNGp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 08:06:45 -0500
-Date: Mon, 26 Jan 2015 13:06:42 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Liviu Dudau <liviu@dudau.co.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>
-Subject: Re: [RFC PATCH 1/3] drivers: of: fix resources freeing in
- of_pci_get_host_bridge_resources()
-Message-ID: <20150126130642.GB956@e106497-lin.cambridge.arm.com>
-References: <1420644571-18928-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1420644571-18928-2-git-send-email-lorenzo.pieralisi@arm.com>
- <20150119183228.GE10762@e106497-lin.cambridge.arm.com>
- <20150120104922.GF5398@red-moon>
- <20150120112031.GA342@bart.dudau.co.uk>
- <20150126112111.GA547@red-moon>
+Received: from bear.ext.ti.com ([192.94.94.41]:55462 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752692AbbA0S4H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 27 Jan 2015 13:56:07 -0500
+Message-ID: <54C7DF13.20402@ti.com>
+Date: Tue, 27 Jan 2015 13:55:15 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20150126112111.GA547@red-moon>
-Content-Type: text/plain; charset=UTF-8
+To: Robin Murphy <robin.murphy@arm.com>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v4 3/6] of: fix size when dma-range is not used
+References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com> <1422052359-12384-4-git-send-email-m-karicheri2@ti.com> <54C77616.80301@arm.com>
+In-Reply-To: <54C77616.80301@arm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 26, 2015 at 11:21:11AM +0000, Lorenzo Pieralisi wrote:
-> On Tue, Jan 20, 2015 at 11:20:32AM +0000, Liviu Dudau wrote:
-> > On Tue, Jan 20, 2015 at 10:49:22AM +0000, Lorenzo Pieralisi wrote:
-> > > On Mon, Jan 19, 2015 at 06:32:29PM +0000, Liviu Dudau wrote:
-> > > 
-> > > [...]
-> > > 
-> > > > > @@ -146,6 +146,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
-> > > > >  	struct of_pci_range_parser parser;
-> > > > >  	char range_type[4];
-> > > > >  	int err;
-> > > > > +	struct pci_host_bridge_window *window;
-> > > > >  
-> > > > >  	if (io_base)
-> > > > >  		*io_base = (resource_size_t)OF_BAD_ADDR;
-> > > > > @@ -225,7 +226,10 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
-> > > > >  conversion_failed:
-> > > > >  	kfree(res);
-> > > > >  parse_failed:
-> > > > > +	list_for_each_entry(window, resources, list)
-> > > > > +		kfree(window->res);
-> > > > >  	pci_free_resource_list(resources);
-> > > > > +	kfree(bus_range);
-> > > > >  	return err;
-> > > > >  }
-> > > > >  EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
-> > > > 
-> > > > Hi Lorenzo et all,
-> > > > 
-> > > > Here is my personal view and I am happy to hear from others on the desired
-> > > > behaviour:
-> > > > 
-> > > > When I wrote this function what I had in mind was that it will parse as
-> > > > much as possible from the device tree and return a list of resources that
-> > > > could be successfully converted. If the entire list of ranges could not
-> > > > be converted then an error code will be returned, but the caller still
-> > > > had the list as constructed up to the error. It was the job of the caller
-> > > > to free the list in either cases, as stated in the comment.
-> > > 
-> > > That's what I am questioning. If the function takes an error path, the
-> > > windows list is freed, so the resource pointers are gone. There is no
-> > > way the caller can grab those resource pointers and free them.
-> > 
-> > I stand corrected. Your patch is needed.
-> 
-> Mind acking it ? I will ask Bjorn to take it then.
+On 01/27/2015 06:27 AM, Robin Murphy wrote:
+> Hi Murali,
+>
+> On 23/01/15 22:32, Murali Karicheri wrote:
+>> Fix the dma-range size when the DT attribute is missing. i.e set size to
+>> dev->coherent_dma_mask + 1 instead of dev->coherent_dma_mask. To detect
+>> overflow when mask is set to max of u64, add a check, log error and
+>> return.
+>> Some platform use mask format for size in DTS. So add a work around to
+>> catch this and fix.
+>>
+>> Cc: Joerg Roedel <joro@8bytes.org>
+>> Cc: Grant Likely <grant.likely@linaro.org>
+>> Cc: Rob Herring <robh+dt@kernel.org>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Will Deacon <will.deacon@arm.com>
+>> Cc: Russell King <linux@arm.linux.org.uk>
+>> Cc: Arnd Bergmann <arnd@arndb.de>
+>> Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>>
+>> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+>> ---
+>> drivers/of/device.c | 14 +++++++++++++-
+>> 1 file changed, 13 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/of/device.c b/drivers/of/device.c
+>> index 2de320d..0a5ff54 100644
+>> --- a/drivers/of/device.c
+>> +++ b/drivers/of/device.c
+>> @@ -105,12 +105,24 @@ void of_dma_configure(struct device *dev, struct
+>> device_node *np)
+>> ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
+>> if (ret < 0) {
+>> dma_addr = offset = 0;
+>> - size = dev->coherent_dma_mask;
+>> + size = dev->coherent_dma_mask + 1;
+>> } else {
+>> offset = PFN_DOWN(paddr - dma_addr);
+>> + /*
+>> + * Add a work around to treat the size as mask + 1 in case
+>> + * it is defined in DT as a mask.
+>> + */
+>> + if (size & 1)
+>> + size = size + 1;
+>> dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+>> }
+>>
+>> + /* if size is 0, we have an overflow of u64 */
+>> + if (!size) {
+>> + dev_err(dev, "invalid size\n");
+>> + return;
+>> + }
+>> +
+>
+> This seems potentially fragile to dodgy DTs given that we might also be
+> using size to make a mask later. Would it make sense to double-up a
+> sanity check as mask-format detection? Something like:
+>
+> if is_power_of_2(size)
+> // use size
+> else if is_power_of_2(size + 1)
+> // use size + 1
+> else
+> // cry
+Robin,
 
-Sure. 
+How about having the logic like this?
 
-Acked-by: Liviu Dudau <Liviu.Dudau@arm.com>
+	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
+	if (ret < 0) {
+		dma_addr = offset = 0;
+		size = dev->coherent_dma_mask + 1;
+	} else {
+		offset = PFN_DOWN(paddr - dma_addr);
+		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+	}
 
-> 
-> Thanks,
-> Lorenzo
-> 
+	if (is_power_of_2(size + 1))
+		size = size + 1;
+	else if (!is_power_of_2(size))
+	{
+		dev_err(dev, "invalid size\n");
+		return;
+	}
+
+Murali
+>
+>
+> Robin.
+>
+>> dev->dma_pfn_offset = offset;
+>>
+>> coherent = of_dma_is_coherent(np);
+>>
+>
+>
+
 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+Murali Karicheri
+Linux Kernel, Texas Instruments
