@@ -1,135 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:37656 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751632AbbAWWDZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 17:03:25 -0500
-Date: Fri, 23 Jan 2015 14:03:20 -0800
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Murali Karicheri <m-karicheri2@ti.com>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Fabio Porcedda <fabio.porcedda@gmail.com>
-Subject: Re: [PATCH] PCI: keystone: fix incorrect annotations on probe and
- remove
-Message-ID: <20150123220320.GB4688@dtor-ws>
-References: <20150108221736.GA39839@dtor-ws>
- <20150123213412.GK29776@google.com>
- <20150123214726.GA4688@dtor-ws>
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:61484 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751623AbbA0AnL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 19:43:11 -0500
+Received: by mail-ob0-f182.google.com with SMTP id gq1so10837820obb.13
+        for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2015 16:43:10 -0800 (PST)
+Date: Mon, 26 Jan 2015 18:43:07 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Will Deacon <Will.Deacon@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: Re: [PATCH 2/6] PCI/MSI: add hooks to populate the msi_domain field
+Message-ID: <20150127004307.GE11624@google.com>
+References: <1418069543-21969-1-git-send-email-marc.zyngier@arm.com>
+ <1418069543-21969-3-git-send-email-marc.zyngier@arm.com>
+ <20150127004005.GC11624@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150123214726.GA4688@dtor-ws>
+In-Reply-To: <20150127004005.GC11624@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 23, 2015 at 01:47:26PM -0800, Dmitry Torokhov wrote:
-> Hi Bjorn,
-> 
-> On Fri, Jan 23, 2015 at 03:34:12PM -0600, Bjorn Helgaas wrote:
-> > [+cc Fabio]
+On Mon, Jan 26, 2015 at 06:40:05PM -0600, Bjorn Helgaas wrote:
+> On Mon, Dec 08, 2014 at 08:12:19PM +0000, Marc Zyngier wrote:
+> > In order to be able to populate the device msi_domain field,
+> > add the necesary hooks to propagate the PHB msi_domain across
+> > secondary busses to devices.
 > > 
-> > On Thu, Jan 08, 2015 at 02:17:36PM -0800, Dmitry Torokhov wrote:
-> > > Even though platform bus is not hot-pluggable, devices on it can be unbound
-> > > from the driver and bound back to it via sysfs, so we should not be using
-> > > __init annotations on probe() and __exit annotations on remove() methods.
+> > So far, nobody populates the initial msi_domain.
 > > 
-> > I don't completely understand this problem.  Does this mean there should be
-> > no __init/__exit annotations in these drivers at all?  If other PCI host
-> > bridge drivers have the same problem, I'd like to fix them all at once.
-
-By the way I think only keystone in drivers/pci has this issue. My
-script to find potential issues is:
-
-#!/bin/bash
-for i in `grep -rl '__exit\(_p\| \).*remove' $*`; do grep -L platform_driver_probe $i; done
-
-it is not 100% correct and generates both false positives and false
-negatives but still fains a few offenders in the tree.
-
-> 
-> Basically they should not use __init/__exit, unless you take explicit
-> steps to make sure that devices can't be unbound and bound again later
-> via sysfs by setting driver->suppress_bind_attrs and/or using
-> platform_driver_probe(). Note that if you use platform_driver_probe()
-> then your driver can't cope with -EPROBE_DEFER reported by any of the
-> subsystems it might be using.
-> 
+> > Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> > ---
+> >  drivers/pci/probe.c | 24 ++++++++++++++++++++++++
+> >  include/linux/pci.h |  1 +
+> >  2 files changed, 25 insertions(+)
 > > 
-> > For example, after applying this patch, ks_pcie_probe() is non-__init, but
-> > it calls ks_add_pcie_port(), which is still __init.  I thought that was
-> > illegal.
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index c8ca98c..d1009a2 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -670,6 +670,20 @@ static void pci_set_bus_speed(struct pci_bus *bus)
+> >  	}
+> >  }
+> >  
+> > +void __weak pcibios_set_phb_msi_domain(struct pci_bus *bus)
 > 
-> My bad, I missed that. The __init marking on ks_add_pcie_port() shoudl
-> be removed as well.
-> 
-> > 
-> > I'm not sure about module_platform_driver_probe() either; it generates
-> > __init and __exit functions.  Should those annotations be removed, too?
-> 
-> module_platform_driver_probe() does internally platform_driver_probe()
-> so it is OK for that probe function be __init (because we'd suppress
-> sysfs bind/unbind and deferred probing so discaring init section is
-> safe).
-> 
-> Note that above applied to driver's ->probe() and ->remove() code paths
-> only.  Marking module init/exit code as __init and __exit is still right
-> thing to do.
-> 
-> Thanks.
-> 
-> > 
-> > > Signed-off-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-> > > ---
-> > > 
-> > > Not tested, found by casual code inspection.
-> > > 
-> > >  drivers/pci/host/pci-keystone.c | 8 ++++----
-> > >  1 file changed, 4 insertions(+), 4 deletions(-)
-> > > 
-> > > diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-> > > index 1b893bc..7b84e1d 100644
-> > > --- a/drivers/pci/host/pci-keystone.c
-> > > +++ b/drivers/pci/host/pci-keystone.c
-> > > @@ -332,7 +332,7 @@ static const struct of_device_id ks_pcie_of_match[] = {
-> > >  };
-> > >  MODULE_DEVICE_TABLE(of, ks_pcie_of_match);
-> > >  
-> > > -static int __exit ks_pcie_remove(struct platform_device *pdev)
-> > > +static int ks_pcie_remove(struct platform_device *pdev)
-> > >  {
-> > >  	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
-> > >  
-> > > @@ -341,7 +341,7 @@ static int __exit ks_pcie_remove(struct platform_device *pdev)
-> > >  	return 0;
-> > >  }
-> > >  
-> > > -static int __init ks_pcie_probe(struct platform_device *pdev)
-> > > +static int ks_pcie_probe(struct platform_device *pdev)
-> > >  {
-> > >  	struct device *dev = &pdev->dev;
-> > >  	struct keystone_pcie *ks_pcie;
-> > > @@ -398,9 +398,9 @@ fail_clk:
-> > >  	return ret;
-> > >  }
-> > >  
-> > > -static struct platform_driver ks_pcie_driver __refdata = {
-> > > +static struct platform_driver ks_pcie_driver = {
-> > >  	.probe  = ks_pcie_probe,
-> > > -	.remove = __exit_p(ks_pcie_remove),
-> > > +	.remove = ks_pcie_remove,
-> > >  	.driver = {
-> > >  		.name	= "keystone-pcie",
-> > >  		.owner	= THIS_MODULE,
-> > > -- 
-> > > 2.2.0.rc0.207.ga3a616c
-> > > 
-> > > 
-> > > -- 
-> > > Dmitry
-> 
-> -- 
-> Dmitry
+> We haven't previously used the "phb" abbreviation in the PCI core, so I'd
+> rather not start now.  I'm not really sure how relevant it is anyway --
+> maybe the name doesn't need to include a reference to the host bridge at
+> all?
 
--- 
-Dmitry
+Sorry, I meant to reply to the v2 patch, not the old one.  But I think the
+comment still applies there.
+
+> > +{
+> > +}
+> > +
+> > +static void pci_set_bus_msi_domain(struct pci_bus *bus)
+> > +{
+> > +	struct pci_dev *bridge = bus->self;
+> > +
+> > +	if (!bridge)
+> > +		pcibios_set_phb_msi_domain(bus);
+> > +	else
+> > +		dev_set_msi_domain(&bus->dev, dev_get_msi_domain(&bridge->dev));
+> > +}
+> > +
+> >  static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+> >  					   struct pci_dev *bridge, int busnr)
+> >  {
+> > @@ -723,6 +737,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+> >  	bridge->subordinate = child;
+> >  
+> >  add_dev:
+> > +	pci_set_bus_msi_domain(child);
+> >  	ret = device_register(&child->dev);
+> >  	WARN_ON(ret < 0);
+> >  
+> > @@ -1517,6 +1532,11 @@ static void pci_init_capabilities(struct pci_dev *dev)
+> >  	pci_enable_acs(dev);
+> >  }
+> >  
+> > +static void pci_set_msi_domain(struct pci_dev *dev)
+> > +{
+> > +	dev_set_msi_domain(&dev->dev, dev_get_msi_domain(&dev->bus->dev));
+> > +}
+> > +
+> >  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+> >  {
+> >  	int ret;
+> > @@ -1546,6 +1566,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+> >  	/* Initialize various capabilities */
+> >  	pci_init_capabilities(dev);
+> >  
+> > +	/* Setup MSI irq domain */
+> 
+> This is *really* a nitpick, but "setup" suggests that we're doing more than
+> just setting a pointer, i.e., it suggests that we're doing something more
+> involved to get it all ready for use.  But here, I think we really are just
+> setting a pointer, so I think the comment is pointless since the function
+> name already says that.
+> 
+> > +	pci_set_msi_domain(dev);
+> > +
+> >  	/*
+> >  	 * Add the device to our list of discovered devices
+> >  	 * and the bus list for fixup functions, etc.
+> > @@ -1947,6 +1970,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> >  	b->bridge = get_device(&bridge->dev);
+> >  	device_enable_async_suspend(b->bridge);
+> >  	pci_set_bus_of_node(b);
+> > +	pci_set_bus_msi_domain(b);
+> >  
+> >  	if (!parent)
+> >  		set_dev_node(b->bridge, pcibus_to_node(b));
+> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > index a523cee..3266764 100644
+> > --- a/include/linux/pci.h
+> > +++ b/include/linux/pci.h
+> > @@ -1637,6 +1637,7 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+> >  int pcibios_add_device(struct pci_dev *dev);
+> >  void pcibios_release_device(struct pci_dev *dev);
+> >  void pcibios_penalize_isa_irq(int irq, int active);
+> > +void pcibios_set_phb_msi_domain(struct pci_bus *bus);
+> >  
+> >  #ifdef CONFIG_HIBERNATE_CALLBACKS
+> >  extern struct dev_pm_ops pcibios_pm_ops;
+> > -- 
+> > 2.1.3
+> > 
