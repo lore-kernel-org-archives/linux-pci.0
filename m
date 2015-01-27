@@ -1,164 +1,77 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Zheng, Lv" <lv.zheng@intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
-	"Brown, Len" <len.brown@intel.com>, Lv Zheng <zetalog@gmail.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"Purdila, Octavian" <octavian.purdila@intel.com>,
-	Prarit Bhargava <prarit@sgi.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Luck, Tony" <tony.luck@intel.com>,
-	"Yu, Fenghua" <fenghua.yu@intel.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>
-Subject: RE: [RFC PATCH] ACPI: Introduce acpi_unload_parent_table() usages
- in Linux kernel.
-Date: Mon, 26 Jan 2015 01:59:45 +0000
-Message-ID: <1AE640813FDE7649BE1B193DEA596E88026BA9F1@SHSMSX101.ccr.corp.intel.com>
-References: <1418746353-3481-2-git-send-email-octavian.purdila@intel.com>
- <0d37f4eecdd2c7e3203fca7adb1c2c03a16a40dd.1421907258.git.lv.zheng@intel.com>
- <8541914.sW9yU28g98@vostro.rjw.lan>
-In-Reply-To: <8541914.sW9yU28g98@vostro.rjw.lan>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:32974 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753862AbbA0LMg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Jan 2015 06:12:36 -0500
+Message-ID: <54C772A0.2000203@arm.com>
+Date: Tue, 27 Jan 2015 11:12:32 +0000
+From: Robin Murphy <robin.murphy@arm.com>
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+To: Murali Karicheri <m-karicheri2@ti.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+Subject: Re: [PATCH v4 6/6] arm: dma-mapping: updates to limit dma_mask and
+ iommu mapping size
+References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com> <1422052359-12384-7-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1422052359-12384-7-git-send-email-m-karicheri2@ti.com>
+Content-Type: text/plain; charset=WINDOWS-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGksIFJhZmFlbA0KDQo+IEZyb206IFJhZmFlbCBKLiBXeXNvY2tpIFttYWlsdG86cmp3QHJqd3lz
-b2NraS5uZXRdDQo+IFNlbnQ6IEZyaWRheSwgSmFudWFyeSAyMywgMjAxNSA2OjQzIEFNDQo+IA0K
-PiBPbiBUaHVyc2RheSwgSmFudWFyeSAyMiwgMjAxNSAwMjozNzo0OSBQTSBMdiBaaGVuZyB3cm90
-ZToNCj4gPiBBQ1BJQ0EgaGFzIGltcGxlbWVudGVkIGFjcGlfdW5sb2FkX3BhcmVudF90YWJsZSgp
-IHdoaWNoIGNhbiBleGFjdGx5IHJlcGxhY2UNCj4gPiB0aGUgYWNwaV9nZXRfaWQoKS9hY3BpX3Vu
-bG9hZF90YWJsZV9pZCgpIGltcGxlbWVudGVkIGluIExpbnV4IGtlcm5lbC4gIFRoZQ0KPiA+IGFj
-cGlfdW5sb2FkX3BhcmVudF90YWJsZSgpIGhhcyBiZWVuIHVuaXQgdGVzdGVkIGluIEFDUElDQSBz
-aW11bGF0aW9uDQo+ID4gZW52aXJvbm1lbnQuDQo+ID4NCj4gPiBUaGlzIHBhdGNoIGNhbiBhbHNv
-IGhlbHAgdG8gcmVkdWNlIHRoZSBzb3VyY2UgY29kZSBkaWZmZXJlbmNlcyBiZXR3ZWVuDQo+ID4g
-TGludXggYW5kIEFDUElDQS4NCj4gDQo+IExvb2tzIE9LIHRvIG1lLg0KPiANCj4gRG8geW91IHdh
-bnQgbWUgdG8gcGljayBpdCB1cD8NCg0KVGhvdWdoIHNnaS1ob3RwbHVnLmMgaXMgdGhlIG9ubHkg
-c291cmNlIGZpbGUgdXNpbmcgdGhlIGRlbGV0ZWQgZnVuY3Rpb25zLA0KSSBvbmx5IGNyb3NzLWNv
-bXBpbGVkIGFuIGFwcGxpZWQga2VybmVsIHdpdGggYW4gaWE2NCB0b29sIGNoYWluLA0KaXQncyBu
-b3QgZnVuY3Rpb25hbGx5IHRlc3RlZC4NClNoYWxsIHdlIHdhaXQgZm9yIE9jdGF2aWFuJ3MgY29u
-ZmlybWF0aW9uPw0KDQpBbmQgaW4gbGludXgtbmV4dCBicmFuY2gsIHRoZXJlIGlzIGEgY29uZmxp
-Y3Qgd2l0aCB0aGlzIG9sZCBwYXRjaC4NClNoYWxsIEkgcmViYXNlIGl0Pw0KDQpUaGFua3MgYW5k
-IGJlc3QgcmVnYXJkcw0KLUx2DQoNCj4gDQo+ID4gU2lnbmVkLW9mZi1ieTogTHYgWmhlbmcgPGx2
-LnpoZW5nQGludGVsLmNvbT4NCj4gPiBDYzogT2N0YXZpYW4gUHVyZGlsYSA8b2N0YXZpYW4ucHVy
-ZGlsYUBpbnRlbC5jb20+DQo+ID4gQ2M6IFByYXJpdCBCaGFyZ2F2YSA8cHJhcml0QHNnaS5jb20+
-DQo+ID4gQ2M6IEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+DQo+ID4gQ2M6IGxp
-bnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmcNCj4gPiBDYzogVG9ueSBMdWNrIDx0b255Lmx1Y2tAaW50
-ZWwuY29tPg0KPiA+IENjOiBGZW5naHVhIFl1IDxmZW5naHVhLnl1QGludGVsLmNvbT4NCj4gPiBD
-YzogbGludXgtaWE2NEB2Z2VyLmtlcm5lbC5vcmcNCj4gPiAtLS0NCj4gPiAgZHJpdmVycy9hY3Bp
-L2FjcGljYS9uc3hmb2JqLmMgICAgIHwgICA0NCAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tDQo+ID4gIGRyaXZlcnMvYWNwaS9hY3BpY2EvdGJ4ZmFjZS5jICAgICB8ICAgMzkg
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gPiAgZHJpdmVycy9wY2kvaG90cGx1
-Zy9zZ2lfaG90cGx1Zy5jIHwgICAxMyArKysrKystLS0tLQ0KPiA+ICBpbmNsdWRlL2FjcGkvYWNw
-aXhmLmggICAgICAgICAgICAgfCAgICA2IC0tLS0tDQo+ID4gIDQgZmlsZXMgY2hhbmdlZCwgNyBp
-bnNlcnRpb25zKCspLCA5NSBkZWxldGlvbnMoLSkNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2
-ZXJzL2FjcGkvYWNwaWNhL25zeGZvYmouYyBiL2RyaXZlcnMvYWNwaS9hY3BpY2EvbnN4Zm9iai5j
-DQo+ID4gaW5kZXggZGFlOTQwMS4uNTFhODMyOSAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL2Fj
-cGkvYWNwaWNhL25zeGZvYmouYw0KPiA+ICsrKyBiL2RyaXZlcnMvYWNwaS9hY3BpY2EvbnN4Zm9i
-ai5jDQo+ID4gQEAgLTUzLDUwICs1Myw2IEBAIEFDUElfTU9EVUxFX05BTUUoIm5zeGZvYmoiKQ0K
-PiA+DQo+ID4gIC8qKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqDQo+ID4gICAqDQo+ID4gLSAqIEZVTkNU
-SU9OOiAgICBhY3BpX2dldF9pZA0KPiA+IC0gKg0KPiA+IC0gKiBQQVJBTUVURVJTOiAgSGFuZGxl
-ICAgICAgICAgIC0gSGFuZGxlIG9mIG9iamVjdCB3aG9zZSBpZCBpcyBkZXNpcmVkDQo+ID4gLSAq
-ICAgICAgICAgICAgICByZXRfaWQgICAgICAgICAgLSBXaGVyZSB0aGUgaWQgd2lsbCBiZSBwbGFj
-ZWQNCj4gPiAtICoNCj4gPiAtICogUkVUVVJOOiAgICAgIFN0YXR1cw0KPiA+IC0gKg0KPiA+IC0g
-KiBERVNDUklQVElPTjogVGhpcyByb3V0aW5lIHJldHVybnMgdGhlIG93bmVyIGlkIGFzc29jaWF0
-ZWQgd2l0aCBhIGhhbmRsZQ0KPiA+IC0gKg0KPiA+IC0gKioqKioqKioqKioqKioqKioqKioqKioq
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqLw0K
-PiA+IC1hY3BpX3N0YXR1cyBhY3BpX2dldF9pZChhY3BpX2hhbmRsZSBoYW5kbGUsIGFjcGlfb3du
-ZXJfaWQgKiByZXRfaWQpDQo+ID4gLXsNCj4gPiAtCXN0cnVjdCBhY3BpX25hbWVzcGFjZV9ub2Rl
-ICpub2RlOw0KPiA+IC0JYWNwaV9zdGF0dXMgc3RhdHVzOw0KPiA+IC0NCj4gPiAtCS8qIFBhcmFt
-ZXRlciBWYWxpZGF0aW9uICovDQo+ID4gLQ0KPiA+IC0JaWYgKCFyZXRfaWQpIHsNCj4gPiAtCQly
-ZXR1cm4gKEFFX0JBRF9QQVJBTUVURVIpOw0KPiA+IC0JfQ0KPiA+IC0NCj4gPiAtCXN0YXR1cyA9
-IGFjcGlfdXRfYWNxdWlyZV9tdXRleChBQ1BJX01UWF9OQU1FU1BBQ0UpOw0KPiA+IC0JaWYgKEFD
-UElfRkFJTFVSRShzdGF0dXMpKSB7DQo+ID4gLQkJcmV0dXJuIChzdGF0dXMpOw0KPiA+IC0JfQ0K
-PiA+IC0NCj4gPiAtCS8qIENvbnZlcnQgYW5kIHZhbGlkYXRlIHRoZSBoYW5kbGUgKi8NCj4gPiAt
-DQo+ID4gLQlub2RlID0gYWNwaV9uc192YWxpZGF0ZV9oYW5kbGUoaGFuZGxlKTsNCj4gPiAtCWlm
-ICghbm9kZSkgew0KPiA+IC0JCSh2b2lkKWFjcGlfdXRfcmVsZWFzZV9tdXRleChBQ1BJX01UWF9O
-QU1FU1BBQ0UpOw0KPiA+IC0JCXJldHVybiAoQUVfQkFEX1BBUkFNRVRFUik7DQo+ID4gLQl9DQo+
-ID4gLQ0KPiA+IC0JKnJldF9pZCA9IG5vZGUtPm93bmVyX2lkOw0KPiA+IC0NCj4gPiAtCXN0YXR1
-cyA9IGFjcGlfdXRfcmVsZWFzZV9tdXRleChBQ1BJX01UWF9OQU1FU1BBQ0UpOw0KPiA+IC0JcmV0
-dXJuIChzdGF0dXMpOw0KPiA+IC19DQo+ID4gLQ0KPiA+IC1BQ1BJX0VYUE9SVF9TWU1CT0woYWNw
-aV9nZXRfaWQpDQo+ID4gLQ0KPiA+IC0vKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKg0KPiA+IC0gKg0K
-PiA+ICAgKiBGVU5DVElPTjogICAgYWNwaV9nZXRfdHlwZQ0KPiA+ICAgKg0KPiA+ICAgKiBQQVJB
-TUVURVJTOiAgaGFuZGxlICAgICAgICAgIC0gSGFuZGxlIG9mIG9iamVjdCB3aG9zZSB0eXBlIGlz
-IGRlc2lyZWQNCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9hY3BpL2FjcGljYS90YnhmYWNlLmMg
-Yi9kcml2ZXJzL2FjcGkvYWNwaWNhL3RieGZhY2UuYw0KPiA+IGluZGV4IDY0ODJiMGQuLjBmOWRk
-ODAgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9hY3BpL2FjcGljYS90YnhmYWNlLmMNCj4gPiAr
-KysgYi9kcml2ZXJzL2FjcGkvYWNwaWNhL3RieGZhY2UuYw0KPiA+IEBAIC0yNjUsNDUgKzI2NSw2
-IEBAIEFDUElfRVhQT1JUX1NZTUJPTChhY3BpX2dldF90YWJsZV9oZWFkZXIpDQo+ID4NCj4gPiAg
-LyoqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
-KioqKioqKioqKioqKioqKioqKioqKioNCj4gPiAgICoNCj4gPiAtICogRlVOQ1RJT046ICAgIGFj
-cGlfdW5sb2FkX3RhYmxlX2lkDQo+ID4gLSAqDQo+ID4gLSAqIFBBUkFNRVRFUlM6ICBpZCAgICAg
-ICAgICAgIC0gT3duZXIgSUQgb2YgdGhlIHRhYmxlIHRvIGJlIHJlbW92ZWQuDQo+ID4gLSAqDQo+
-ID4gLSAqIFJFVFVSTjogICAgICBTdGF0dXMNCj4gPiAtICoNCj4gPiAtICogREVTQ1JJUFRJT046
-IFRoaXMgcm91dGluZSBpcyB1c2VkIHRvIGZvcmNlIHRoZSB1bmxvYWQgb2YgYSB0YWJsZSAoYnkg
-aWQpDQo+ID4gLSAqDQo+ID4gLSAqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKiovDQo+ID4gLWFjcGlfc3Rh
-dHVzIGFjcGlfdW5sb2FkX3RhYmxlX2lkKGFjcGlfb3duZXJfaWQgaWQpDQo+ID4gLXsNCj4gPiAt
-CWludCBpOw0KPiA+IC0JYWNwaV9zdGF0dXMgc3RhdHVzID0gQUVfTk9UX0VYSVNUOw0KPiA+IC0N
-Cj4gPiAtCUFDUElfRlVOQ1RJT05fVFJBQ0UoYWNwaV91bmxvYWRfdGFibGVfaWQpOw0KPiA+IC0N
-Cj4gPiAtCS8qIEZpbmQgdGFibGUgaW4gdGhlIGdsb2JhbCB0YWJsZSBsaXN0ICovDQo+ID4gLQlm
-b3IgKGkgPSAwOyBpIDwgYWNwaV9nYmxfcm9vdF90YWJsZV9saXN0LmN1cnJlbnRfdGFibGVfY291
-bnQ7ICsraSkgew0KPiA+IC0JCWlmIChpZCAhPSBhY3BpX2dibF9yb290X3RhYmxlX2xpc3QudGFi
-bGVzW2ldLm93bmVyX2lkKSB7DQo+ID4gLQkJCWNvbnRpbnVlOw0KPiA+IC0JCX0NCj4gPiAtCQkv
-Kg0KPiA+IC0JCSAqIERlbGV0ZSBhbGwgbmFtZXNwYWNlIG9iamVjdHMgb3duZWQgYnkgdGhpcyB0
-YWJsZS4gTm90ZSB0aGF0IHRoZXNlDQo+ID4gLQkJICogb2JqZWN0cyBjYW4gYXBwZWFyIGFueXdo
-ZXJlIGluIHRoZSBuYW1lc3BhY2UgYnkgdmlydHVlIG9mIHRoZSBBTUwNCj4gPiAtCQkgKiAiU2Nv
-cGUiIG9wZXJhdG9yLiBUaHVzLCB3ZSBuZWVkIHRvIHRyYWNrIG93bmVyc2hpcCBieSBhbiBJRCwg
-bm90DQo+ID4gLQkJICogc2ltcGx5IGEgcG9zaXRpb24gd2l0aGluIHRoZSBoaWVyYXJjaHkNCj4g
-PiAtCQkgKi8NCj4gPiAtCQlhY3BpX3RiX2RlbGV0ZV9uYW1lc3BhY2VfYnlfb3duZXIoaSk7DQo+
-ID4gLQkJc3RhdHVzID0gYWNwaV90Yl9yZWxlYXNlX293bmVyX2lkKGkpOw0KPiA+IC0JCWFjcGlf
-dGJfc2V0X3RhYmxlX2xvYWRlZF9mbGFnKGksIEZBTFNFKTsNCj4gPiAtCQlicmVhazsNCj4gPiAt
-CX0NCj4gPiAtCXJldHVybl9BQ1BJX1NUQVRVUyhzdGF0dXMpOw0KPiA+IC19DQo+ID4gLQ0KPiA+
-IC1BQ1BJX0VYUE9SVF9TWU1CT0woYWNwaV91bmxvYWRfdGFibGVfaWQpDQo+ID4gLQ0KPiA+IC0v
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
-KioqKioqKioqKioqKioqKioqKioqKg0KPiA+IC0gKg0KPiA+ICAgKiBGVU5DVElPTjogICAgYWNw
-aV9nZXRfdGFibGVfd2l0aF9zaXplDQo+ID4gICAqDQo+ID4gICAqIFBBUkFNRVRFUlM6ICBzaWdu
-YXR1cmUgICAgICAgICAgIC0gQUNQSSBzaWduYXR1cmUgb2YgbmVlZGVkIHRhYmxlDQo+ID4gZGlm
-ZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvdHBsdWcvc2dpX2hvdHBsdWcuYyBiL2RyaXZlcnMvcGNp
-L2hvdHBsdWcvc2dpX2hvdHBsdWcuYw0KPiA+IGluZGV4IGJhZGEyMDk5Li5jMzJmYjc4IDEwMDY0
-NA0KPiA+IC0tLSBhL2RyaXZlcnMvcGNpL2hvdHBsdWcvc2dpX2hvdHBsdWcuYw0KPiA+ICsrKyBi
-L2RyaXZlcnMvcGNpL2hvdHBsdWcvc2dpX2hvdHBsdWcuYw0KPiA+IEBAIC00NzUsNyArNDc1LDcg
-QEAgc3RhdGljIGludCBkaXNhYmxlX3Nsb3Qoc3RydWN0IGhvdHBsdWdfc2xvdCAqYnNzX2hvdHBs
-dWdfc2xvdCkNCj4gPiAgCXN0cnVjdCBzbG90ICpzbG90ID0gYnNzX2hvdHBsdWdfc2xvdC0+cHJp
-dmF0ZTsNCj4gPiAgCXN0cnVjdCBwY2lfZGV2ICpkZXYsICp0ZW1wOw0KPiA+ICAJaW50IHJjOw0K
-PiA+IC0JYWNwaV9vd25lcl9pZCBzc2R0X2lkID0gMDsNCj4gPiArCWFjcGlfaGFuZGxlIHNzZHRf
-aGRsID0gTlVMTDsNCj4gPg0KPiA+ICAJLyogQWNxdWlyZSB1cGRhdGUgYWNjZXNzIHRvIHRoZSBi
-dXMgKi8NCj4gPiAgCW11dGV4X2xvY2soJnNuX2hvdHBsdWdfbXV0ZXgpOw0KPiA+IEBAIC01MjIs
-NyArNTIyLDcgQEAgc3RhdGljIGludCBkaXNhYmxlX3Nsb3Qoc3RydWN0IGhvdHBsdWdfc2xvdCAq
-YnNzX2hvdHBsdWdfc2xvdCkNCj4gPiAgCQkJaWYgKEFDUElfU1VDQ0VTUyhyZXQpICYmDQo+ID4g
-IAkJCSAgICAoYWRyPj4xNikgPT0gKHNsb3QtPmRldmljZV9udW0gKyAxKSkgew0KPiA+ICAJCQkJ
-LyogcmV0YWluIHRoZSBvd25lciBpZCAqLw0KPiA+IC0JCQkJYWNwaV9nZXRfaWQoY2hhbmRsZSwg
-JnNzZHRfaWQpOw0KPiA+ICsJCQkJc3NkdF9oZGwgPSBjaGFuZGxlOw0KPiA+DQo+ID4gIAkJCQly
-ZXQgPSBhY3BpX2J1c19nZXRfZGV2aWNlKGNoYW5kbGUsDQo+ID4gIAkJCQkJCQkgICZkZXZpY2Up
-Ow0KPiA+IEBAIC01NDcsMTIgKzU0NywxMyBAQCBzdGF0aWMgaW50IGRpc2FibGVfc2xvdChzdHJ1
-Y3QgaG90cGx1Z19zbG90ICpic3NfaG90cGx1Z19zbG90KQ0KPiA+ICAJcGNpX3VubG9ja19yZXNj
-YW5fcmVtb3ZlKCk7DQo+ID4NCj4gPiAgCS8qIFJlbW92ZSB0aGUgU1NEVCBmb3IgdGhlIHNsb3Qg
-ZnJvbSB0aGUgQUNQSSBuYW1lc3BhY2UgKi8NCj4gPiAtCWlmIChTTl9BQ1BJX0JBU0VfU1VQUE9S
-VCgpICYmIHNzZHRfaWQpIHsNCj4gPiArCWlmIChTTl9BQ1BJX0JBU0VfU1VQUE9SVCgpICYmIHNz
-ZHRfaGRsKSB7DQo+ID4gIAkJYWNwaV9zdGF0dXMgcmV0Ow0KPiA+IC0JCXJldCA9IGFjcGlfdW5s
-b2FkX3RhYmxlX2lkKHNzZHRfaWQpOw0KPiA+ICsJCXJldCA9IGFjcGlfdW5sb2FkX3BhcmVudF90
-YWJsZShzc2R0X2hkbCk7DQo+ID4gIAkJaWYgKEFDUElfRkFJTFVSRShyZXQpKSB7DQo+ID4gLQkJ
-CXByaW50ayhLRVJOX0VSUiAiJXM6IGFjcGlfdW5sb2FkX3RhYmxlX2lkIGZhaWxlZCAoMHgleCkg
-Zm9yIGlkICVkXG4iLA0KPiA+IC0JCQkgICAgICAgX19mdW5jX18sIHJldCwgc3NkdF9pZCk7DQo+
-ID4gKwkJCWFjcGlfaGFuZGxlX2Vycihzc2R0X2hkbCwNCj4gPiArCQkJCQkiJXM6IGFjcGlfdW5s
-b2FkX3BhcmVudF90YWJsZSBmYWlsZWQgKDB4JXgpXG4iLA0KPiA+ICsJCQkJCV9fZnVuY19fLCBy
-ZXQpOw0KPiA+ICAJCQkvKiB0cnkgdG8gY29udGludWUgb24gKi8NCj4gPiAgCQl9DQo+ID4gIAl9
-DQo+ID4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvYWNwaS9hY3BpeGYuaCBiL2luY2x1ZGUvYWNwaS9h
-Y3BpeGYuaA0KPiA+IGluZGV4IDViYTc4NDYuLjVkZDIxYmMgMTAwNjQ0DQo+ID4gLS0tIGEvaW5j
-bHVkZS9hY3BpL2FjcGl4Zi5oDQo+ID4gKysrIGIvaW5jbHVkZS9hY3BpL2FjcGl4Zi5oDQo+ID4g
-QEAgLTg5MSwxMiArODkxLDYgQEAgQUNQSV9BUFBfREVQRU5ERU5UX1JFVFVSTl9WT0lEKEFDUElf
-UFJJTlRGX0xJS0UoMSkNCj4gPiAgQUNQSV9HTE9CQUwodTgsIGFjcGlfZ2JsX3Blcm1hbmVudF9t
-bWFwKTsNCj4gPg0KPiA+ICBBQ1BJX0VYVEVSTkFMX1JFVFVSTl9TVEFUVVMoYWNwaV9zdGF0dXMN
-Cj4gPiAtCQkJICAgIGFjcGlfZ2V0X2lkKGFjcGlfaGFuZGxlIG9iamVjdCwNCj4gPiAtCQkJCQlh
-Y3BpX293bmVyX2lkICogb3V0X3R5cGUpKQ0KPiA+IC0NCj4gPiAtQUNQSV9FWFRFUk5BTF9SRVRV
-Uk5fU1RBVFVTKGFjcGlfc3RhdHVzIGFjcGlfdW5sb2FkX3RhYmxlX2lkKGFjcGlfb3duZXJfaWQg
-aWQpKQ0KPiA+IC0NCj4gPiAtQUNQSV9FWFRFUk5BTF9SRVRVUk5fU1RBVFVTKGFjcGlfc3RhdHVz
-DQo+ID4gIAkJCSAgICBhY3BpX2dldF90YWJsZV93aXRoX3NpemUoYWNwaV9zdHJpbmcgc2lnbmF0
-dXJlLA0KPiA+ICAJCQkJCQkgICAgIHUzMiBpbnN0YW5jZSwNCj4gPiAgCQkJCQkJICAgICBzdHJ1
-Y3QgYWNwaV90YWJsZV9oZWFkZXINCj4gPg0KPiANCj4gLS0NCj4gSSBzcGVhayBvbmx5IGZvciBt
-eXNlbGYuDQo+IFJhZmFlbCBKLiBXeXNvY2tpLCBJbnRlbCBPcGVuIFNvdXJjZSBUZWNobm9sb2d5
-IENlbnRlci4NCg==
+Hi Murali,
+
+On 23/01/15 22:32, Murali Karicheri wrote:
+> Limit the dma_mask to minimum of dma_mask and dma_base + size - 1.
+>
+> Also arm_iommu_create_mapping() has size parameter of size_t and
+> arm_setup_iommu_dma_ops() can take a value higher than that. So
+> limit the size to SIZE_MAX.
+>
+> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+> ---
+>   arch/arm/mm/dma-mapping.c |   10 ++++++++++
+>   1 file changed, 10 insertions(+)
+>
+> diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
+> index 7864797..a1f9030 100644
+> --- a/arch/arm/mm/dma-mapping.c
+> +++ b/arch/arm/mm/dma-mapping.c
+> @@ -2004,6 +2004,13 @@ static bool arm_setup_iommu_dma_ops(struct device *dev, u64 dma_base, u64 size,
+>   	if (!iommu)
+>   		return false;
+>
+> +	/*
+> +	 * currently arm_iommu_create_mapping() takes a max of size_t
+> +	 * for size param. So check this limit for now.
+> +	 */
+> +	if (size > SIZE_MAX)
+> +		return false;
+> +
+>   	mapping = arm_iommu_create_mapping(dev->bus, dma_base, size);
+>   	if (IS_ERR(mapping)) {
+>   		pr_warn("Failed to create %llu-byte IOMMU mapping for device %s\n",
+> @@ -2053,6 +2060,9 @@ void arch_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
+>   {
+>   	struct dma_map_ops *dma_ops;
+>
+> +	/* limit dma_mask to the lower of the two values */
+> +	*dev->dma_mask = min((*dev->dma_mask), (dma_base + size - 1));
+> +
+
+Is there any reason not to do this in of_dma_configure? It seems like 
+something everyone could benefit from - I'd cooked up a dodgy workaround 
+for the same issue in my arm64 IOMMU code, but handling it generically 
+in common code would be much nicer.
+
+Robin.
+
+>   	dev->archdata.dma_coherent = coherent;
+>   	if (arm_setup_iommu_dma_ops(dev, dma_base, size, iommu))
+>   		dma_ops = arm_get_iommu_dma_map_ops(coherent);
+>
+
+
