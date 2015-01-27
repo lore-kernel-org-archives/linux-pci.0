@@ -1,120 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f54.google.com ([209.85.218.54]:46912 "EHLO
-	mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753386AbbAVVD4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Jan 2015 16:03:56 -0500
-Received: by mail-oi0-f54.google.com with SMTP id v63so3425078oia.13
-        for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2015 13:03:55 -0800 (PST)
-Date: Thu, 22 Jan 2015 15:03:44 -0600
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:49942 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753243AbbA0Rld (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Jan 2015 12:41:33 -0500
+Received: by mail-ob0-f172.google.com with SMTP id wp18so14763585obc.3
+        for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2015 09:41:32 -0800 (PST)
+Date: Tue, 27 Jan 2015 11:41:29 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Rob Herring <robh@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	linux-pci@vger.kernel.org, Alexandre Courbot <gnurou@gmail.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Greg Ungerer <gerg@uclinux.org>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Paul Mackerras <paulus@samba.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Simon Horman <horms@verge.net.au>,
-	=?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Will Deacon <will.deacon@arm.com>,
-	cbe-oss-dev@lists.ozlabs.org, linux-am33-list@redhat.com,
-	linux-arm-kernel@lists.infradead.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux-sh@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH 00/16] PCI generic configuration space accessors
-Message-ID: <20150122210344.GE13072@google.com>
-References: <1420857290-8373-1-git-send-email-robh@kernel.org>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH] PCI: Add guard to avoid mapping a invalid msix base
+ address
+Message-ID: <20150127174129.GE4063@google.com>
+References: <1422348253-13990-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1420857290-8373-1-git-send-email-robh@kernel.org>
+In-Reply-To: <1422348253-13990-1-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 09, 2015 at 08:34:34PM -0600, Rob Herring wrote:
-> This series adds common accessor functions for PCI configuration space
-> accesses. This supports most PCI hosts with memory mapped configuration
-> space like ECAM or hosts with memory mapped address/data registers. ECAM
-> is not generically supported by this series, but could be added on top
-> of this. While some hosts have standard address decoding which could be 
-> common as well, the various checks on bus numbers and device numbers are 
-> quite varied. It is unclear how much of that is really necessary or 
-> could be common. 
-> 
-> The first 4 patches are preparatory cleanup. Patch 5 introduces the
-> common accessors. The remaining patches convert several PCI host
-> controllers. This is in no way a complete list of host controllers. The
-> conversion of more hosts should be possible. The Designware controller
-> in particular should be able to be converted, but its config space
-> accessors are a mess of override-able functions that I've not gotten my
-> head around.
-> 
-> This series is available here [1].
-> 
-> Rob
-> 
-> [1] git://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git pci-config-access
-> 
-> Rob Herring (16):
->   frv: add struct pci_ops member names to initialization
->   mips: add struct pci_ops member names to initialization
->   mn10300: add struct pci_ops member names to initialization
->   powerpc: add struct pci_ops member names to initialization
->   pci: introduce common pci config space accessors
->   ARM: cns3xxx: convert PCI to use generic config accesses
->   ARM: integrator: convert PCI to use generic config accesses
->   ARM: sa1100: convert PCI to use generic config accesses
->   ARM: ks8695: convert PCI to use generic config accesses
->   powerpc: fsl_pci: convert PCI to use generic config accesses
->   powerpc: powermac: convert PCI to use generic config accesses
->   pci/host: generic: convert to use generic config accesses
->   pci/host: rcar-gen2: convert to use generic config accesses
->   pci/host: tegra: convert to use generic config accesses
->   pci/host: xgene: convert to use generic config accesses
->   pci/host: xilinx: convert to use generic config accesses
-> 
->  arch/arm/mach-cns3xxx/pcie.c                   |  52 ++----
->  arch/arm/mach-integrator/pci_v3.c              |  61 +-------
->  arch/arm/mach-ks8695/pci.c                     |  77 +--------
->  arch/arm/mach-sa1100/pci-nanoengine.c          |  94 +----------
->  arch/frv/mb93090-mb00/pci-vdk.c                |   4 +-
->  arch/mips/pci/pci-bcm1480.c                    |   4 +-
->  arch/mips/pci/pci-octeon.c                     |   4 +-
->  arch/mips/pci/pcie-octeon.c                    |  12 +-
->  arch/mn10300/unit-asb2305/pci.c                |   4 +-
->  arch/powerpc/platforms/cell/celleb_scc_pciex.c |   4 +-
->  arch/powerpc/platforms/powermac/pci.c          | 209 +++++--------------------
->  arch/powerpc/sysdev/fsl_pci.c                  |  46 +-----
->  drivers/pci/access.c                           |  87 ++++++++++
->  drivers/pci/host/pci-host-generic.c            |  51 +-----
->  drivers/pci/host/pci-rcar-gen2.c               |  51 +-----
->  drivers/pci/host/pci-tegra.c                   |  55 +------
->  drivers/pci/host/pci-xgene.c                   | 150 ++----------------
->  drivers/pci/host/pcie-xilinx.c                 |  88 ++---------
->  include/linux/pci.h                            |  11 ++
->  19 files changed, 212 insertions(+), 852 deletions(-)
+[+cc Yinghai]
 
-Really nice cleanups.  I added these with the acks so far to a pci/config
-branch for v3.20.  I'll update it with more acks if they trickle in.
+On Tue, Jan 27, 2015 at 04:44:13PM +0800, Yijing Wang wrote:
+> Sometimes, a pci bridge device BAR was not assigned
+> properly. After we call pci_bus_assign_resources(), the
+> resource of the BAR would be reseted. So if we try to
+> enable msix for this device, it will map a invalid
+> resource as the msix base address, and a warning call trace
+> will report.
+> 
+> pci_bus_assign_resources()
+> 	__pci_bus_assign_resources()
+> 		pbus_assign_resources_sorted()
+> 			__assign_resources_sorted()
+> 				assign_requested_resources_sorted()
+> 					pci_assign_resource() -->fail
+> 					reset_resource()	-->res->start/end/flags = 0
+> 
+> pcie_port_device_register()
+> 	init_service_irqs()
+> 		pcie_port_enable_msix()
+> 			...
+> 				msix_capability_init()
+> 					msix_map_region()
+> 						phys_addr = pci_resource_start(dev, bir) + table_offset;
+> If BAR(index=bir) was not assign properly, pci_resource_start(dev, bir)
+> here would return 0, so phys_addr is a invalid physical
+> address of msix.
+> 
+> [   43.094087] ------------[ cut here ]------------
+> [   43.097418] WARNING: CPU: 1 PID: 1800 at arch/arm64/mm/ioremap.c:58 __ioremap_caller+0xd4/0xe8()
+> ...
+> [   43.121694] CPU: 1 PID: 1800 Comm: insmod Tainted: G           O  3.16.0 #5
+> [   43.127374] Call trace:
+> [   43.128522] [<ffffffc0000891d4>] dump_backtrace+0x0/0x130
+> [   43.132637] [<ffffffc000089314>] show_stack+0x10/0x1c
+> [   43.136402] [<ffffffc0004db040>] dump_stack+0x74/0x94
+> [   43.140166] [<ffffffc0000986f8>] warn_slowpath_common+0x8c/0xb4
+> [   43.144804] [<ffffffc0000987e4>] warn_slowpath_null+0x14/0x20
+> [   43.149266] [<ffffffc000095474>] __ioremap_caller+0xd0/0xe8
+> [   43.153555] [<ffffffc000095498>] __ioremap+0xc/0x18
+> [   43.157145] [<ffffffc0002cc62c>] pci_enable_msix+0x238/0x44c
+> [   43.161521] [<ffffffc0002cc874>] pci_enable_msix_range+0x34/0x80
+> [   43.166243] [<ffffffc0002c946c>] pcie_port_device_register+0x104/0x480
+> [   43.171491] [<ffffffc0002c99f8>] pcie_portdrv_probe+0x38/0xa0
+> [   43.175952] [<ffffffc0002bd6c8>] pci_device_probe+0x78/0xd4
+> [   43.180238] [<ffffffc00030e68c>] really_probe+0x6c/0x22c
+> [   43.184265] [<ffffffc00030e8a8>] __device_attach+0x5c/0x6c
+> [   43.188466] [<ffffffc00030cb68>] bus_for_each_drv+0x50/0x94
+> [   43.192755] [<ffffffc00030e5fc>] device_attach+0x9c/0xc0
+> [   43.196780] [<ffffffc0002b4c54>] pci_bus_add_device+0x38/0x80
+> [   43.201243] [<ffffffc0002b5064>] pci_bus_add_devices+0x4c/0xd4
+> [   43.205791] [<ffffffc000093d70>] pci_common_init+0x274/0x378
+> [   43.210170] [<ffffffbff18e4b8c>] $x+0xb8c/0xc88 [pcie]
+> [   43.214024] [<ffffffc00031013c>] platform_drv_probe+0x20/0x58
+> [   43.218483] [<ffffffc00030e6e4>] really_probe+0xc4/0x22c
+> [   43.222510] [<ffffffc00030e958>] __driver_attach+0xa0/0xa8
+> [   43.226708] [<ffffffc00030cab0>] bus_for_each_dev+0x54/0x98
+> [   43.231000] [<ffffffc00030e234>] driver_attach+0x1c/0x28
+> [   43.235024] [<ffffffc00030deb0>] bus_add_driver+0x14c/0x204
+> [   43.239309] [<ffffffc00030f038>] driver_register+0x64/0x130
+> [   43.243598] [<ffffffc000310110>] __platform_driver_register+0x5c/0x68
+> [   43.248757] [<ffffffc0003101b4>] platform_driver_probe+0x28/0xac
+> [   43.253485] [<ffffffbff18e4cb8>] pv660_pcie_init+0x30/0x3c [pcie]
+> [   43.258293] [<ffffffc0000815dc>] do_one_initcall+0x88/0x19c
+> [   43.262585] [<ffffffc0000f6b74>] load_module+0xc2c/0xf2c
+> [   43.266609] [<ffffffc0000f6fd0>] SyS_finit_module+0x78/0x88
+> [   43.270897] ---[ end trace ea5eb60837afb5aa ]---
+> 
+> Reported-by: Zhang Jukuo<zhangjukuo@huawei.com>
+> Tested-by: Zhang Jukuo<zhangjukuo@huawei.com>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  drivers/pci/msi.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index fd60806..cd401a2 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -699,6 +699,9 @@ static void __iomem *msix_map_region(struct pci_dev *dev, unsigned nr_entries)
+>  	pci_read_config_dword(dev, dev->msix_cap + PCI_MSIX_TABLE,
+>  			      &table_offset);
+>  	bir = (u8)(table_offset & PCI_MSIX_TABLE_BIR);
+> +	if (!pci_resource_flags(dev, bir))
+> +		return NULL;
 
-You've structured it nicely so I can also just drop individual arch pieces
-if necessary.  The pieces that haven't been acked yet (hint, hint):
+This definitely seems like a good idea.  We should not just assume that
+space has been assigned for the BAR.  
 
-    arch/arm/mach-cns3xxx/pcie.c
-    arch/arm/mach-sa1100/pci-nanoengine.c
-    arch/mn10300/unit-asb2305/pci.c
-    arch/powerpc
+However, I don't think we should test the resource flags for zero.
+reset_resource() does set the flags to zero, but I think that is a mistake.
+The PCI core should retain the information about the type and size of the
+BAR, even if it was unable to assign space for it.  So eventually
+reset_resource() should be reworked somehow.
 
-In addition, nobody has acked the frv and mips parts, but they're trivial
-(they only add struct member names) that I can apply them without worrying.
+I would like reset_resource() to set the IORESOURCE_UNSET bit in the flags.
+That would let %pR print it correctly, e.g., "[mem size 0x1000]".  But I
+don't know what other code in setup-bus.c depends on the assumption that
+"flags == 0" means something important.
 
-Bjorn
+In the meantime, I guess you could do something like:
+
+  flags = pci_resource_flags(dev, bir);
+  if (!flags || (flags & IORESOURCE_UNSET))
+    return NULL;
+
+> +
+>  	table_offset &= PCI_MSIX_TABLE_OFFSET;
+>  	phys_addr = pci_resource_start(dev, bir) + table_offset;
+>  
+> -- 
+> 1.7.1
+> 
