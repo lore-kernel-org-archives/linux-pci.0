@@ -1,180 +1,193 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [119.145.14.66] ([119.145.14.66]:22545 "EHLO
-	szxga03-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S932478AbbAPDrq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jan 2015 22:47:46 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>, <sparclinux@vger.kernel.org>
-Subject: [PATCH 01/28] PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
-Date: Fri, 16 Jan 2015 09:43:59 +0800
-Message-ID: <1421372666-12288-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
-References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <54C7D576.6030502@ti.com>
+References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
+ <1422052359-12384-5-git-send-email-m-karicheri2@ti.com> <20150123234124.GW29776@google.com>
+ <54C6CCF3.7080308@ti.com> <CAErSpo4w0zVCmXk2D2Qk5W3kceS9Wk+=jqHBDwk6HUXWwXdq_Q@mail.gmail.com>
+ <54C7D576.6030502@ti.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 27 Jan 2015 12:42:11 -0600
+Message-ID: <CAErSpo4Awgqu0ZtoMm0XSZzhnYtXh3xxH2OJMkyth5YDR9GUiA@mail.gmail.com>
+Subject: Re: [PATCH v4 4/6] of/pci: add of_pci_dma_configure() update dma configuration
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pci_bus_add_devices() should not be placed in pci_scan_bus().
-Now pci device will be added to driver core once its
-creation. All things left in pci_bus_add_devices() are
-driver attachment and other trivial sysfs things.
-Pci_scan_bus() should be the function responsible for
-scanning PCI devices, not including driver attachment.
-Other, some callers(m68k,unicore32,alpha) of pci_scan_bus()
-will call pci_bus_size_bridges() and pci_bus_assign_resources()
-after pci_scan_bus().
+On Tue, Jan 27, 2015 at 12:14 PM, Murali Karicheri <m-karicheri2@ti.com> wrote:
+> On 01/26/2015 06:59 PM, Bjorn Helgaas wrote:
+>>
+>> On Mon, Jan 26, 2015 at 5:25 PM, Murali Karicheri<m-karicheri2@ti.com>
+>> wrote:
+>>>
+>>> On 01/23/2015 06:41 PM, Bjorn Helgaas wrote:
+>>>>
+>>>>
+>>>> On Fri, Jan 23, 2015 at 05:32:37PM -0500, Murali Karicheri wrote:
+>>>>>
+>>>>>
+>>>>> Add of_pci_dma_configure() to allow updating the dma configuration
+>>>>> of the pci device using the configuration from DT of the parent of
+>>>>> the root bridge device.
+>>>>>
+>   -- Cut ---
+>
+>>>>>
+>>>>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+>>>>> ---
+>>>>>    drivers/of/of_pci.c    |   39
+>>>>> +++++++++++++++++++++++++++++++++++++++
+>>>>>    include/linux/of_pci.h |   12 ++++++++++++
+>>>>>    2 files changed, 51 insertions(+)
+>>>>>
+>>>>> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+>>>>> index 88471d3..34878c9 100644
+>>>>> --- a/drivers/of/of_pci.c
+>>>>> +++ b/drivers/of/of_pci.c
+>>>>> @@ -2,6 +2,7 @@
+>>>>>    #include<linux/export.h>
+>>>>>    #include<linux/of.h>
+>>>>>    #include<linux/of_address.h>
+>>>>> +#include<linux/of_device.h>
+>>>>>    #include<linux/of_pci.h>
+>>>>>    #include<linux/slab.h>
+>>>>>
+>>>>> @@ -229,6 +230,44 @@ parse_failed:
+>>>>>          return err;
+>>>>>    }
+>>>>>    EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
+>>>>> +
+>>>>> +/**
+>>>>> + * of_get_pci_root_bridge_parent - get the OF node of the root
+>>>>> bridge's
+>>>>> parent
+>>>>> + * @dev: ptr to pci_dev struct of the pci device
+>>>>> + *
+>>>>> + * This function will traverse the bus up to the root bus starting
+>>>>> with
+>>>>> + * the child and return the OF node ptr to root bridge device's parent
+>>>>> device.
+>>>>> + */
+>>>>> +struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev)
+>>>>
+>>>>
+>>>>
+>>>> I'm not an OF person, but this interface seems like it might be too
+>>>> special-purpose.  Maybe it would be enough to add
+>>>> "of_get_pci_root_bridge()", and the caller could do this:
+>>>>
+>>>>       struct device *bridge = of_get_pci_root_bridge(dev);
+>>>>       struct device_node *parent_np = bridge->parent->of_node;
+>>>>
+>>>> Also, the name "of_get_..." suggests that it increments a refcount, as
+>>>> of_get_parent() does.  But you aren't doing anything with the refcount.
+>>>>
+>>>> But I guess an "of_get_pci_root_bridge()" isn't doing anything
+>>>> OF-related,
+>>>> so maybe we should just add a "pci_get_host_bridge(struct pci_dev *)"
+>>>> to PCI instead.
+>>>
+>>>
+>>>
+>>> Bjorn,
+>>>
+>>> Thanks for the comment.
+>>>
+>>> I think adding pci_get_host_bridge() is a good idea. There is already
+>>> similar function in host-bridge.c. I have added this function re-using
+>>> existing function find_pci_root_bus(). See the incremental diff below
+>>> after
+>>> this change. Does this look good?
+>>
+>>
+>> I like the implementation, but I think either we need to take a
+>> reference on the host bridge, or change the name to  something like
+>> "pci_find_host_bridge()", because using "_get_" is conventional for
+>> functions that acquire a reference.
+>>
+>> Since host bridges are hot-pluggable, at least in theory, I vote for
+>> taking a reference.  Then of course, you'd have to add code to drop
+>> the reference when you're finished with it.
+>>
+> Bjorn,
+>
+> Thanks. I agree with your suggestion even though the convention is not
+> followed fully :) of_pci_get_devfn(), of_get_pci_domain_nr(),
+> of_pci_get_host_bridge_resources() are some of those functions not following
+> the convention. I plan to change the function as below. Also want to name
+> functions as pci_get/put_host_bridge_device() as existing function
+> find_pci_host_bridge() is actually returning ptr to struct pci_host_bridge
+> vs the new function returning ptr to device. Here are the new functions and
+> how they will be used. Please review and respond so that I can avoid a
+> re-spin.
+>
+> in linux/include/pci.h add the prototypes of
+> pci_get/put_host_bridge_device().
+>
+> in drivers/pci/host-bridge.c add two new functions.
+>
+> struct device *pci_get_host_bridge_device(struct pci_dev *dev)
+> {
+>         struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
+>         struct device *bridge = root_bus->bridge;
+>
+>         kobject_get(&bridge->kobj);
+>         return bridge;
+> }
 
-E.g.
-In m68k
-mcf_pci_init()
-	pci_scan_bus()
-		...
-		pci_bus_add_devices() --- try to attach driver
-	pci_fixup_irqs()
-	pci_bus_size_bridges()
-	pci_bus_assign_resources()
+Looks good to me.
 
-It is not correct, resources should be assigned correctly
-before attaching driver.
-So we should rip out pci_bus_add_devices() for better
-code design. After applied this patch, pci_scan_bus()
-should be used in flow like:
+> void  pci_put_host_bridge_device(struct pci_dev *dev)
+> {
+>         struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
+>         struct device *bridge = root_bus->bridge;
+>
+>         kobject_put(&bridge->kobj);
+> }
 
-pci_scan_bus() (mandatory)
-pci_fixup_irqs() (optional)
-pci_bus_size_bridges() (optional)
-pci_pci_bus_assign_resources() (optional)
-pci_bus_add_devices() (mandatory)
+I think I would pass in the "struct device *" here so we don't have to
+call find_pci_root_bus() again.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: "David S. Miller" <davem@davemloft.net>
-CC: Geert Uytterhoeven <geert@linux-m68k.org>
-CC: Guan Xuetao <gxt@mprc.pku.edu.cn>
-CC: linux-alpha@vger.kernel.org
-CC: linux-m68k@lists.linux-m68k.org
-CC: sparclinux@vger.kernel.org
----
- arch/alpha/kernel/sys_nautilus.c  |    1 +
- arch/m68k/coldfire/pci.c          |    1 +
- arch/sparc/kernel/pcic.c          |    2 ++
- arch/unicore32/kernel/pci.c       |   11 +++--------
- drivers/pci/hotplug/ibmphp_core.c |    6 ++++--
- drivers/pci/probe.c               |    1 -
- 6 files changed, 11 insertions(+), 11 deletions(-)
+> drivers/of/of_pci.c
+>
+> void of_pci_dma_configure(struct pci_dev *pci_dev)
+> {
+>         struct device *dev = &pci_dev->dev;
+>         struct device *bridge = pci_get_host_bridge_device(pci_dev);
+>
+>         of_dma_configure(dev, bridge->parent->of_node);
+>         pci_put_host_bridge_device(pci_dev);
 
-diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
-index 837c0fa..4ae4a40 100644
---- a/arch/alpha/kernel/sys_nautilus.c
-+++ b/arch/alpha/kernel/sys_nautilus.c
-@@ -253,6 +253,7 @@ nautilus_init_pci(void)
- 	   for the root bus, so just clear it. */
- 	bus->self = NULL;
- 	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
-+	pci_bus_add_devices(bus);
- }
- 
- /*
-diff --git a/arch/m68k/coldfire/pci.c b/arch/m68k/coldfire/pci.c
-index df96792..d45f087 100644
---- a/arch/m68k/coldfire/pci.c
-+++ b/arch/m68k/coldfire/pci.c
-@@ -319,6 +319,7 @@ static int __init mcf_pci_init(void)
- 	pci_fixup_irqs(pci_common_swizzle, mcf_pci_map_irq);
- 	pci_bus_size_bridges(rootbus);
- 	pci_bus_assign_resources(rootbus);
-+	pci_bus_add_devices(rootbus);
- 	return 0;
- }
- 
-diff --git a/arch/sparc/kernel/pcic.c b/arch/sparc/kernel/pcic.c
-index 6cc78c2..7a82fe2 100644
---- a/arch/sparc/kernel/pcic.c
-+++ b/arch/sparc/kernel/pcic.c
-@@ -391,6 +391,8 @@ static void __init pcic_pbm_scan_bus(struct linux_pcic *pcic)
- 	struct linux_pbm_info *pbm = &pcic->pbm;
- 
- 	pbm->pci_bus = pci_scan_bus(pbm->pci_first_busno, &pcic_ops, pbm);
-+	if (pbm->pci_bus)
-+		pci_bus_add_devices(pbm->pci_bus);
- #if 0 /* deadwood transplanted from sparc64 */
- 	pci_fill_in_pbm_cookies(pbm->pci_bus, pbm, pbm->prom_node);
- 	pci_record_assignments(pbm, pbm->pci_bus);
-diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
-index 374a055..3d82024 100644
---- a/arch/unicore32/kernel/pci.c
-+++ b/arch/unicore32/kernel/pci.c
-@@ -266,17 +266,12 @@ static int __init pci_common_init(void)
- 	pci_fixup_irqs(pci_common_swizzle, pci_puv3_map_irq);
- 
- 	if (!pci_has_flag(PCI_PROBE_ONLY)) {
--		/*
--		 * Size the bridge windows.
--		 */
-+		/* Size the bridge windows. */
- 		pci_bus_size_bridges(puv3_bus);
--
--		/*
--		 * Assign resources.
--		 */
-+		/* Assign resources. */
- 		pci_bus_assign_resources(puv3_bus);
- 	}
--
-+	pci_bus_add_devices(puv3_bus);
- 	return 0;
- }
- subsys_initcall(pci_common_init);
-diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
-index 96c5c72..86e3bfd 100644
---- a/drivers/pci/hotplug/ibmphp_core.c
-+++ b/drivers/pci/hotplug/ibmphp_core.c
-@@ -738,7 +738,7 @@ static void ibm_unconfigure_device(struct pci_func *func)
-  */
- static u8 bus_structure_fixup(u8 busno)
- {
--	struct pci_bus *bus;
-+	struct pci_bus *bus, *b;
- 	struct pci_dev *dev;
- 	u16 l;
- 
-@@ -765,7 +765,9 @@ static u8 bus_structure_fixup(u8 busno)
- 					(l != 0x0000) && (l != 0xffff)) {
- 			debug("%s - Inside bus_structure_fixup()\n",
- 							__func__);
--			pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
-+			b = pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
-+			if (b)
-+				pci_bus_add_devices(b);
- 			break;
- 		}
- 	}
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 23212f8..053c0f4 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2123,7 +2123,6 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
- 	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
- 	if (b) {
- 		pci_scan_child_bus(b);
--		pci_bus_add_devices(b);
- 	} else {
- 		pci_free_resource_list(&resources);
- 	}
--- 
-1.7.1
+Then this would become "pci_put_host_bridge_device(bridge)"
 
+> }
+>
+> Murali
+>
+>> Bjorn
+>>
+>
+>>>>>
+>>>
+>>>
+>>> --
+>>> Murali Karicheri
+>>> Linux Kernel, Texas Instruments
+>
+>
+>
+> --
+> Murali Karicheri
+> Linux Kernel, Texas Instruments
