@@ -1,148 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:64155 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751880AbbAUBed (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 20 Jan 2015 20:34:33 -0500
-Message-ID: <54BF0223.90905@linux.intel.com>
-Date: Wed, 21 Jan 2015 09:34:27 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Stuart Yoder <b08248@gmail.com>
-CC: Marc Zyngier <marc.zyngier@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:43883 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752514AbbA0LeZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Jan 2015 06:34:25 -0500
+Date: Tue, 27 Jan 2015 11:34:16 +0000
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Robin Murphy <robin.murphy@arm.com>
+Cc: Murali Karicheri <m-karicheri2@ti.com>,
 	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: Re: [PATCH v2 1/8] device core: Introduce per-device MSI domain pointer
-References: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com>	<1420736772-11088-2-git-send-email-marc.zyngier@arm.com>	<CALRxmdDVUoYNg3QC0LdvKmCz9x4nzE9+TDiV9K9OH=Gxk-Cd9w@mail.gmail.com>	<54BC6799.2040907@linux.intel.com> <CALRxmdCRGY2Sw+UyHTp5PP4R=v2301LTqpKq0bCEs08SWsh1bg@mail.gmail.com>
-In-Reply-To: <CALRxmdCRGY2Sw+UyHTp5PP4R=v2301LTqpKq0bCEs08SWsh1bg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+Subject: Re: [PATCH v4 6/6] arm: dma-mapping: updates to limit dma_mask and
+ iommu mapping size
+Message-ID: <20150127113416.GB3226@e104818-lin.cambridge.arm.com>
+References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
+ <1422052359-12384-7-git-send-email-m-karicheri2@ti.com>
+ <54C772A0.2000203@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54C772A0.2000203@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-On 2015/1/21 1:17, Stuart Yoder wrote:
-> Gerry,
+On Tue, Jan 27, 2015 at 11:12:32AM +0000, Robin Murphy wrote:
+> On 23/01/15 22:32, Murali Karicheri wrote:
+> > Limit the dma_mask to minimum of dma_mask and dma_base + size - 1.
+> >
+> > Also arm_iommu_create_mapping() has size parameter of size_t and
+> > arm_setup_iommu_dma_ops() can take a value higher than that. So
+> > limit the size to SIZE_MAX.
+> >
+> > Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+> > ---
+> >   arch/arm/mm/dma-mapping.c |   10 ++++++++++
+> >   1 file changed, 10 insertions(+)
+> >
+> > diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
+> > index 7864797..a1f9030 100644
+> > --- a/arch/arm/mm/dma-mapping.c
+> > +++ b/arch/arm/mm/dma-mapping.c
+> > @@ -2004,6 +2004,13 @@ static bool arm_setup_iommu_dma_ops(struct device *dev, u64 dma_base, u64 size,
+> >   	if (!iommu)
+> >   		return false;
+> >
+> > +	/*
+> > +	 * currently arm_iommu_create_mapping() takes a max of size_t
+> > +	 * for size param. So check this limit for now.
+> > +	 */
+> > +	if (size > SIZE_MAX)
+> > +		return false;
+> > +
+> >   	mapping = arm_iommu_create_mapping(dev->bus, dma_base, size);
+> >   	if (IS_ERR(mapping)) {
+> >   		pr_warn("Failed to create %llu-byte IOMMU mapping for device %s\n",
+> > @@ -2053,6 +2060,9 @@ void arch_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
+> >   {
+> >   	struct dma_map_ops *dma_ops;
+> >
+> > +	/* limit dma_mask to the lower of the two values */
+> > +	*dev->dma_mask = min((*dev->dma_mask), (dma_base + size - 1));
+> > +
 > 
-> So which direction did you take in your patch set--  a) common,
-> generic msi_desc, or b)  bus-specific msi_desc like Marc showed
-> (mybus_msi_desc)?
-Hi Stuart,
-	Currently I'm trying to go the former way as below.
-Regards,
-Gerry
------------------------------------------------------------------------
-struct msi_desc {
-        struct list_head                list;
-        unsigned int                    irq;
-        unsigned int                    nvec_used;      /* number of
-messages */
-        struct device *                 dev;
-        struct msi_msg                  msg;            /* Last set MSI
-message */
+> Is there any reason not to do this in of_dma_configure? It seems like 
+> something everyone could benefit from - I'd cooked up a dodgy workaround 
+> for the same issue in my arm64 IOMMU code, but handling it generically 
+> in common code would be much nicer.
 
-#ifdef CONFIG_PCI_MSI
-        union {
-                struct {                                /* For PCI
-MSI/MSI-X */
-                        u32 masked;                     /* mask bits */
-                        struct {
-                                __u8    is_msix : 1;
-                                __u8    multiple: 3;    /* log2 num of
-messages allocated */
-                                __u8    multi_cap : 3;  /* log2 num of
-messages supported */
-                                __u8    maskbit : 1;    /* mask-pending
-bit supported ? */
-                                __u8    is_64   : 1;    /* Address size:
-0=32bit 1=64bit */
-                                __u16   entry_nr;       /* specific
-enabled entry */
-                                unsigned default_irq;   /* default
-pre-assigned irq */
-                        } msi_attrib;
-                        union {
-                                u8      mask_pos;
-                                void __iomem *mask_base;
-                        };
-                };
-        };
-#endif /* CONFIG_PCI_MSI */
-};
+I agree. I started something here:
 
-> 
-> Thanks,
-> Stuart
-> 
-> On Sun, Jan 18, 2015 at 8:10 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->>
->>
->> On 2015/1/16 4:35, Stuart Yoder wrote:
->>> On Thu, Jan 8, 2015 at 11:06 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
->>>> As MSI-type features are creeping into non-PCI devices, it is
->>>> starting to make sense to give our struct device some form of
->>>> support for this, by allowing a pointer to an MSI irq domain to
->>>> be set/retrieved.
->>>>
->>>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
->>>> ---
->>>>  include/linux/device.h | 20 ++++++++++++++++++++
->>>>  1 file changed, 20 insertions(+)
->>>>
->>>> diff --git a/include/linux/device.h b/include/linux/device.h
->>>> index fb50673..ec4cee5 100644
->>>> --- a/include/linux/device.h
->>>> +++ b/include/linux/device.h
->>>> @@ -690,6 +690,7 @@ struct acpi_dev_node {
->>>>   *             along with subsystem-level and driver-level callbacks.
->>>>   * @pins:      For device pin management.
->>>>   *             See Documentation/pinctrl.txt for details.
->>>> + * @msi_domain: The generic MSI domain this device is using.
->>>>   * @numa_node: NUMA node this device is close to.
->>>>   * @dma_mask:  Dma mask (if dma'ble device).
->>>>   * @coherent_dma_mask: Like dma_mask, but for alloc_coherent mapping as not all
->>>> @@ -750,6 +751,9 @@ struct device {
->>>>         struct dev_pm_info      power;
->>>>         struct dev_pm_domain    *pm_domain;
->>>>
->>>> +#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
->>>> +       struct irq_domain       *msi_domain; /* MSI domain device uses */
->>>> +#endif
->>>
->>> This is not a comment on this patch specifically, but a question about other
->>> MSI specific fields that might be needed in struct device.
->>>
->>> Currently the generic MSI domain handling has hardcoded assumptions
->>> that devices are PCI-- see the for_each_msi_entry() iterator in msi.h:
->>>
->>>   #define dev_to_msi_list(dev)            (&to_pci_dev((dev))->msi_list)
->>>
->>>   #define for_each_msi_entry(desc, dev)   \
->>>         list_for_each_entry((desc), dev_to_msi_list((dev)), list)
->>>
->>> One approach would be to move the msi_list out of pci_dev and put
->>> it in struct device, so all devices can have an msi_list.
->>>
->>> The other approach would be to keep msi_list in a bus specific
->>> device struct, and then dev_to_msi_list() would need to be
->>> implemented as a bus specific callback of some kind.
->>>
->>> The above hardcoded PCI assumption isn't going to work.   Wanted to
->>> see if there is any advice in which direction to go.
->> Hi Stuart,
->>         I already have some a patch set to go that direction waiting
->> send out for review:)
->> Thanks!
->> Gerry
->>
->>>
->>> Thanks,
->>> Stuart Yoder
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>> Please read the FAQ at  http://www.tux.org/lkml/
->>>
+http://article.gmane.org/gmane.linux.kernel/1835096
+
+but I don't remember to have got to a clear conclusion.
+
+-- 
+Catalin
