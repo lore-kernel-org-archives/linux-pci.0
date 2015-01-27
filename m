@@ -1,59 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:58668 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754356AbbA0AU3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 19:20:29 -0500
-Received: by mail-ob0-f182.google.com with SMTP id gq1so10760211obb.13
-        for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2015 16:20:29 -0800 (PST)
-Date: Mon, 26 Jan 2015 18:20:25 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-pci@vger.kernel.org,
-	Matt Porter <mporter@kernel.crashing.org>,
-	Alexandre Bounine <alexandre.bounine@idt.com>,
-	Chris Metcalf <cmetcalf@ezchip.com>,
-	Bradley Grove <linuxdrivers@attotech.com>,
-	linux-scsi@vger.kernel.org,
-	Realtek linux nic maintainers <nic_swsd@realtek.com>,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 1/5] PCI: Add defines for max read request sizes
-Message-ID: <20150127002025.GB11624@google.com>
-References: <1422291922-12324-1-git-send-email-zajec5@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1422291922-12324-1-git-send-email-zajec5@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAE9FiQUd8XgEhBKqFEyDLMTySw=jngtLN=zZeQcfW6=vC_b4mA@mail.gmail.com>
+References: <20150123203145.GA6691@google.com> <CA+8MBbKnT=mE3kev8BRPq0GeTgHx8WVa6o54tJuBX_XXLpHdYQ@mail.gmail.com>
+ <CAErSpo7y1wWStjcEOH9xTiM-As8+QeMynZ5ENrL9v3X2PvQCcw@mail.gmail.com>
+ <CA+8MBb+bWiX2eayjBQHsvCjTp3t8H9=AviF9AkV6CC--cC_fYQ@mail.gmail.com>
+ <20150126235334.GA11624@google.com> <CAE9FiQUd8XgEhBKqFEyDLMTySw=jngtLN=zZeQcfW6=vC_b4mA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 27 Jan 2015 08:03:25 -0600
+Message-ID: <CAErSpo64i1UhAoX5_MqVRerdpqq6gvmXg4DOqe3ndejPh5oGgg@mail.gmail.com>
+Subject: Re: [GIT PULL] PCI fixes for v3.19
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Tony Luck <tony.luck@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Marek Kordik <kordikmarek@gmail.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Andreas Hartmann <andihartmann@freenet.de>,
+	Alexey Voronkov <zermond@gmail.com>,
+	David Airlie <airlied@linux.ie>,
+	Alex Deucher <alexander.deucher@amd.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 26, 2015 at 06:05:22PM +0100, Rafał Miłecki wrote:
-> There are few drivers using magic numbers when operating with PCIe
-> capabilities and PCI_EXP_DEVCTL_READRQ. Define known values to allow
-> cleaning their code a bit.
-> 
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+On Mon, Jan 26, 2015 at 9:55 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Jan 26, 2015 at 3:53 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Mon, Jan 26, 2015 at 01:24:51PM -0800, Tony Luck wrote:
+>>> On Mon, Jan 26, 2015 at 1:02 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> > Sorry for the inconvenience.  Can you collect a complete dmesg log and
+>>> > "lspci -vv" output, too (from the kernel with the reverted commit)?
+>>> > That will have more useful information than just /proc/iomem.
+>>>
+>>> Full dmesg, lspci -vv, and bonus .config (CONFIG_PCI_IOV is indeed
+>>> not set)
+>>
+>> The ROM part is something we should fix:
+>>
+>>   pci 0000:01:00.1: can't claim BAR 6 [mem 0xfffe0000-0xffffffff pref]: no compatible bridge window
+>>
+>> The ROM BAR is probably disabled, and we shouldn't complain about this if
+>> it's disabled.  Yinghai?
+>
+> original ia64 code, has extra checking to hide the warning
+>
+> -static int is_valid_resource(struct pci_dev *dev, int idx)
+>  {
+> -       unsigned int i, type_mask = IORESOURCE_IO | IORESOURCE_MEM;
+> -       struct resource *devr = &dev->resource[idx], *busr;
+>
+>         if (!dev->bus)
+> -               return 0;
+> -
+> -       pci_bus_for_each_resource(dev->bus, busr, i) {
+> -               if (!busr || ((busr->flags ^ devr->flags) & type_mask))
+> -                       continue;
+> -               if ((devr->start) && (devr->start >= busr->start) &&
+> -                               (devr->end <= busr->end))
+> -                       return 1;
+> -       }
+> -       return 0;
+> -}
+>
+> also that is used to skip pci_claim_resource calling for invalid ...
+>
+> so the root resource is totally wrong from ACPI.
 
-I applied this whole series, with acks from Alexandre and Chris, to
-pci/misc for v3.20, thanks!
+Yes, ACPI is clearly missing some information.
 
-> ---
->  include/uapi/linux/pci_regs.h | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index 4a1d0cc..efe3443 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -451,6 +451,10 @@
->  #define  PCI_EXP_DEVCTL_AUX_PME	0x0400	/* Auxiliary Power PM Enable */
->  #define  PCI_EXP_DEVCTL_NOSNOOP_EN 0x0800  /* Enable No Snoop */
->  #define  PCI_EXP_DEVCTL_READRQ	0x7000	/* Max_Read_Request_Size */
-> +#define  PCI_EXP_DEVCTL_READRQ_128B  0x0000 /* 128 Bytes */
-> +#define  PCI_EXP_DEVCTL_READRQ_256B  0x1000 /* 256 Bytes */
-> +#define  PCI_EXP_DEVCTL_READRQ_512B  0x2000 /* 512 Bytes */
-> +#define  PCI_EXP_DEVCTL_READRQ_1024B 0x3000 /* 1024 Bytes */
->  #define  PCI_EXP_DEVCTL_BCR_FLR 0x8000  /* Bridge Configuration Retry / FLR */
->  #define PCI_EXP_DEVSTA		10	/* Device Status */
->  #define  PCI_EXP_DEVSTA_CED	0x0001	/* Correctable Error Detected */
-> -- 
-> 1.8.4.5
-> 
+Just to make sure we're planning the same thing, I expect that we will
+fix or workaround both issues so it works just as well as v3.18 by the
+time v3.19 is released.  This is a system in the field, and we should
+be able to figure out how to deal with the broken firmware.  Asking
+users to upgrade their firmware is not the solution I'm looking for.
+
+There is nothing ia64-specific about this issue, so we should be able
+to do this in some generic way.
+
+Bjorn
