@@ -1,147 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:35838 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753969AbbAIRnI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jan 2015 12:43:08 -0500
-Received: by mail-ob0-f182.google.com with SMTP id wo20so14135090obc.13
-        for <linux-pci@vger.kernel.org>; Fri, 09 Jan 2015 09:43:07 -0800 (PST)
-Date: Fri, 9 Jan 2015 10:43:04 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au
-Subject: Re: [PATCH 3/5] powerpc/powernv: Introduce pnv_pci_poll()
-Message-ID: <20150109174304.GD6575@google.com>
-References: <1417672488-27341-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1417672488-27341-4-git-send-email-gwshan@linux.vnet.ibm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1417672488-27341-4-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <54C8FFE0.3030007@arm.com>
+References: <1422456683-797-1-git-send-email-marc.zyngier@arm.com>
+ <54C8FE61.1030304@linux.intel.com> <54C8FFE0.3030007@arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 28 Jan 2015 09:43:32 -0600
+Message-ID: <CAErSpo6jOs+MBpAjDxkeVp5AqU1Ln+_-k8Xgb2eqPm3Lv6Udzw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Fix pcibios_update_irq misuse of irq number
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Andre Przywara <Andre.Przywara@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 04, 2014 at 04:54:46PM +1100, Gavin Shan wrote:
-> We might not get some PCI slot information (e.g. power status)
-> immediately by OPAL API. Instead, opal_pci_poll() need to be called
-> for the required information.
-> 
-> The patch introduces pnv_pci_poll(), which bases on original
-> ioda_eeh_poll(), to cover the above case
-> 
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+On Wed, Jan 28, 2015 at 9:27 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+> Hi Gerry,
+>
+> On 28/01/15 15:21, Jiang Liu wrote:
+>>
+>>
+>> On 2015/1/28 22:51, Marc Zyngier wrote:
+>>> pcibios_update_irq writes an irq number into the config space
+>>> of a given PCI device, but ignores the fact that this number
+>>> is a virtual interrupt number, which might be a very different
+>>> value from what the underlying hardware is using.
+>>>
+>>> The obvious fix is to fetch the HW interrupt number from the
+>>> corresponding irq_data structure. This is slightly complicated
+>>> by the fact that this interrupt might be services by a stacked
+>>> domain.
+>>>
+>>> This has been tested on KVM with kvmtool.
+>>>
+>>> Reported-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>>> Tested-by: Andre Przywara <andre.przywara@arm.com>
+>>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+>>> ---
+>>>  drivers/pci/setup-irq.c | 12 ++++++++++--
+>>>  1 file changed, 10 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+>>> index 4e2d595..828cbc9 100644
+>>> --- a/drivers/pci/setup-irq.c
+>>> +++ b/drivers/pci/setup-irq.c
+>>> @@ -15,11 +15,19 @@
+>>>  #include <linux/errno.h>
+>>>  #include <linux/ioport.h>
+>>>  #include <linux/cache.h>
+>>> +#include <linux/irq.h>
+>>>
+>>>  void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
+>>>  {
+>>> -    dev_dbg(&dev->dev, "assigning IRQ %02d\n", irq);
+>>> -    pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+>>> +    struct irq_data *d;
+>>> +
+>>> +    d = irq_get_irq_data(irq);
+>>> +#ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
+>>> +    while (d->parent_data)
+>>> +            d = d->parent_data;
+>>> +#endif
+>>> +    dev_dbg(&dev->dev, "assigning IRQ %02ld\n", d->hwirq);
+>>> +    pci_write_config_byte(dev, PCI_INTERRUPT_LINE, d->hwirq);
+>>>  }
+>> Hi Mark,
+>>       Instead of modifying the common version, how about
+>> implementing an arch specific version? Arch may have different
+>> way to determine the irq number. Above implementation doesn't
+>> work with x86, for example.
+>
+> If you look at the Makefile, this file is used on:
+>
+> obj-$(CONFIG_ALPHA) += setup-irq.o
+> obj-$(CONFIG_ARM) += setup-irq.o
+> obj-$(CONFIG_UNICORE32) += setup-irq.o
+> obj-$(CONFIG_SUPERH) += setup-irq.o
+> obj-$(CONFIG_MIPS) += setup-irq.o
+> obj-$(CONFIG_TILE) += setup-irq.o
+> obj-$(CONFIG_SPARC_LEON) += setup-irq.o
+> obj-$(CONFIG_M68K) += setup-irq.o
+>
+> x86 doesn't use that at all.
 
-Hi Gavin,
-
-This patch doesn't apply cleanly on v3.19-rc1.  Can you refresh this
-series, please?
+Since you're looking at this, Marc, do you see a nice way to get rid
+of these arch dependencies in the Makefile and unify this a bit?  We
+still have this pci_fixup_irqs() ugliness -- it's not really
+arch-specific at all, but it's called from arch code, and it uses
+for_each_pci_dev(), which obviously only works for things present at
+boot and not for things hot-added later.
 
 Bjorn
-
-> ---
->  arch/powerpc/platforms/powernv/eeh-ioda.c | 28 ++--------------------------
->  arch/powerpc/platforms/powernv/pci.c      | 19 +++++++++++++++++++
->  arch/powerpc/platforms/powernv/pci.h      |  1 +
->  3 files changed, 22 insertions(+), 26 deletions(-)
-> 
-> diff --git a/arch/powerpc/platforms/powernv/eeh-ioda.c b/arch/powerpc/platforms/powernv/eeh-ioda.c
-> index cf38781..21fa033 100644
-> --- a/arch/powerpc/platforms/powernv/eeh-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/eeh-ioda.c
-> @@ -490,24 +490,6 @@ static int ioda_eeh_get_state(struct eeh_pe *pe)
->  	return ioda_eeh_get_pe_state(pe);
->  }
->  
-> -static s64 ioda_eeh_poll(uint64_t id)
-> -{
-> -	s64 rc = OPAL_HARDWARE;
-> -
-> -	while (1) {
-> -		rc = opal_pci_poll(id, NULL);
-> -		if (rc <= 0)
-> -			break;
-> -
-> -		if (system_state < SYSTEM_RUNNING)
-> -			udelay(1000 * rc);
-> -		else
-> -			msleep(rc);
-> -	}
-> -
-> -	return rc;
-> -}
-> -
->  int ioda_eeh_phb_reset(struct pci_controller *hose, int option)
->  {
->  	struct pnv_phb *phb = hose->private_data;
-> @@ -536,10 +518,7 @@ int ioda_eeh_phb_reset(struct pci_controller *hose, int option)
->  
->  	/* Issue reset and poll until it's completed */
->  	rc = opal_pci_reset(phb->opal_id, scope, OPAL_ASSERT_RESET);
-> -	if (rc > 0)
-> -		rc = ioda_eeh_poll(phb->opal_id);
-> -
-> -	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
-> +	return pnv_pci_poll(phb->opal_id, rc, NULL);
->  }
->  
->  static int __ioda_eeh_bridge_reset(struct pci_dev *dev, int option)
-> @@ -630,10 +609,7 @@ static int ioda_eeh_bridge_reset(struct pci_dev *dev, int option)
->  	phb = hose->private_data;
->  	id |= (dev->bus->number << 24) | (dev->devfn << 16) | phb->opal_id;
->  	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
-> -	if (rc > 0)
-> -		ioda_eeh_poll(id);
-> -
-> -	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
-> +	return pnv_pci_poll(id, rc, NULL);
->  }
->  
->  static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
-> diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-> index 4b20f2c..6dc8ea9 100644
-> --- a/arch/powerpc/platforms/powernv/pci.c
-> +++ b/arch/powerpc/platforms/powernv/pci.c
-> @@ -45,6 +45,25 @@
->  #define cfg_dbg(fmt...)	do { } while(0)
->  //#define cfg_dbg(fmt...)	printk(fmt)
->  
-> +int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval)
-> +{
-> +	while (rval > 0) {
-> +		rval = opal_pci_poll(id, pval);
-> +		if (rval == OPAL_SUCCESS && pval)
-> +			rval = opal_pci_poll(id, pval);
-> +
-> +		if (rval <= 0)
-> +			break;
-> +
-> +		if (system_state < SYSTEM_RUNNING)
-> +			udelay(1000 * rval);
-> +		else
-> +			msleep(rval);
-> +	}
-> +
-> +	return rval ? -EIO : 0;
-> +}
-> +
->  #ifdef CONFIG_PCI_MSI
->  static int pnv_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
->  {
-> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-> index 6c02ff8..396fe02 100644
-> --- a/arch/powerpc/platforms/powernv/pci.h
-> +++ b/arch/powerpc/platforms/powernv/pci.h
-> @@ -217,6 +217,7 @@ extern struct pci_ops pnv_pci_ops;
->  extern struct pnv_eeh_ops ioda_eeh_ops;
->  #endif
->  
-> +int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval);
->  void pnv_pci_dump_phb_diag_data(struct pci_controller *hose,
->  				unsigned char *log_buff);
->  int pnv_pci_cfg_read(struct device_node *dn,
-> -- 
-> 1.8.3.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
