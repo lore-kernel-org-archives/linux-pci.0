@@ -1,88 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:57425 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752980AbbAWWeh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jan 2015 17:34:37 -0500
-Received: by mail-ob0-f170.google.com with SMTP id wp4so72218obc.1
-        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2015 14:34:36 -0800 (PST)
-Date: Fri, 23 Jan 2015 16:34:24 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 1/2] PCI: add helper function to find root port for
- device
-Message-ID: <20150123223424.GN29776@google.com>
-References: <1421179048-25370-1-git-send-email-l.stach@pengutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1421179048-25370-1-git-send-email-l.stach@pengutronix.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Len Brown <lenb@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [Patch v2 04/22] ACPI: Use the length check for io resources as well
+Date: Wed, 28 Jan 2015 18:57:22 +0800
+Message-Id: <1422442660-455-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 13, 2015 at 08:57:27PM +0100, Lucas Stach wrote:
-> This adds a simple way to get the root port a given device
-> is connected to.
-> 
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> ---
-> v2: new patch in v2
-> v3: rename to pci_find_rootport to fit better with other API
-> ---
->  drivers/pci/search.c | 20 ++++++++++++++++++++
->  include/linux/pci.h  |  1 +
->  2 files changed, 21 insertions(+)
-> 
-> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-> index a20ce7d5e2a7..7254f126096d 100644
-> --- a/drivers/pci/search.c
-> +++ b/drivers/pci/search.c
-> @@ -384,3 +384,23 @@ int pci_dev_present(const struct pci_device_id *ids)
->  	return 0;
->  }
->  EXPORT_SYMBOL(pci_dev_present);
-> +
-> +/**
-> + * pci_find_root_port - Returns the root port the given device is connected to.
-> + * @dev: PCI device for which the root port should be found.
-> + */
-> +struct pci_dev *pci_find_root_port(struct pci_dev *dev)
+From: Thomas Gleixner <tglx@linutronix.de>
 
-This seems a little too generic.  There are still PCI (non-PCIe) systems,
-and on those this will return some non-Root Port device, the meaning of
-which is unclear.  I'm happy to put something like this in pci-tegra.c, but
-until there are other potential users and we sort out the PCI/PCIe-ness of
-the interface, I don't really want to make it global and exported.
+Also apply length check to IO resources.
 
-> +{
-> +	struct pci_bus *bus = dev->bus;
-> +
-> +	/* If there is no bridge on the bus the passed device is a root port. */
+[Jiang] Remove enforcement that resource starting address must be
+non-zero.
 
-This assumption is false -- see the comment at pci_is_root_bus().
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/resource.c |   44 +++++++++++++++++++-------------------------
+ 1 file changed, 19 insertions(+), 25 deletions(-)
 
-> +	if (!bus->self)
-> +		return dev;
-> +
-> +	/* Walk up the PCI hierarchy to the first level below the root. */
-> +	while (bus->parent && bus->parent->self)
-> +		bus = bus->parent;
-> +
-> +	return bus->self;
-> +}
-> +EXPORT_SYMBOL(pci_find_root_port);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 360a966a97a5..f4321c5ba653 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -844,6 +844,7 @@ static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
->  }
->  struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from);
->  int pci_dev_present(const struct pci_device_id *ids);
-> +struct pci_dev *pci_find_root_port(struct pci_dev *dev);
->  
->  int pci_bus_read_config_byte(struct pci_bus *bus, unsigned int devfn,
->  			     int where, u8 *val);
-> -- 
-> 2.1.4
-> 
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 3e7d9f6eb875..16d291c60277 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -117,31 +117,30 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
+ 
+-static unsigned int acpi_dev_ioresource_flags(u64 start, u64 end, u8 io_decode,
+-					      bool window)
++static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
++				      u8 io_decode, bool window)
+ {
+-	int flags = IORESOURCE_IO;
++	res->flags = IORESOURCE_IO;
+ 
+-	if (io_decode == ACPI_DECODE_16)
+-		flags |= IORESOURCE_IO_16BIT_ADDR;
++	if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
++		res->flags |= IORESOURCE_DISABLED;
+ 
+-	if (start > end || end >= 0x10003)
+-		flags |= IORESOURCE_DISABLED;
++	if (res->end >= 0x10003)
++		res->flags |= IORESOURCE_DISABLED;
+ 
+-	if (window)
+-		flags |= IORESOURCE_WINDOW;
++	if (io_decode == ACPI_DECODE_16)
++		res->flags |= IORESOURCE_IO_16BIT_ADDR;
+ 
+-	return flags;
++	if (window)
++		res->flags |= IORESOURCE_WINDOW;
+ }
+ 
+ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
+ 				    u8 io_decode)
+ {
+-	u64 end = start + len - 1;
+-
+ 	res->start = start;
+-	res->end = end;
+-	res->flags = acpi_dev_ioresource_flags(start, end, io_decode, false);
++	res->end = start + len - 1;
++	acpi_dev_ioresource_flags(res, len, io_decode, false);
+ }
+ 
+ /**
+@@ -161,16 +160,12 @@ bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res)
+ 	switch (ares->type) {
+ 	case ACPI_RESOURCE_TYPE_IO:
+ 		io = &ares->data.io;
+-		if (!io->minimum && !io->address_length)
+-			return false;
+ 		acpi_dev_get_ioresource(res, io->minimum,
+ 					io->address_length,
+ 					io->io_decode);
+ 		break;
+ 	case ACPI_RESOURCE_TYPE_FIXED_IO:
+ 		fixed_io = &ares->data.fixed_io;
+-		if (!fixed_io->address && !fixed_io->address_length)
+-			return false;
+ 		acpi_dev_get_ioresource(res, fixed_io->address,
+ 					fixed_io->address_length,
+ 					ACPI_DECODE_10);
+@@ -178,7 +173,8 @@ bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res)
+ 	default:
+ 		return false;
+ 	}
+-	return true;
++
++	return !(res->flags & IORESOURCE_DISABLED);
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_io);
+ 
+@@ -216,9 +212,8 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+ 	case ACPI_IO_RANGE:
+ 		io_decode = addr.address.granularity == 0xfff ?
+ 				ACPI_DECODE_10 : ACPI_DECODE_16;
+-		res->flags = acpi_dev_ioresource_flags(addr.address.minimum,
+-						       addr.address.maximum,
+-						       io_decode, window);
++		acpi_dev_ioresource_flags(res, addr.address.address_length,
++					  io_decode, window);
+ 		break;
+ 	case ACPI_BUS_NUMBER_RANGE:
+ 		res->flags = IORESOURCE_BUS;
+@@ -266,9 +261,8 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
+ 	case ACPI_IO_RANGE:
+ 		io_decode = ext_addr->address.granularity == 0xfff ?
+ 				ACPI_DECODE_10 : ACPI_DECODE_16;
+-		res->flags = acpi_dev_ioresource_flags(ext_addr->address.minimum,
+-						       ext_addr->address.maximum,
+-						       io_decode, window);
++		acpi_dev_ioresource_flags(res, ext_addr->address.address_length,
++					  io_decode, window);
+ 		break;
+ 	case ACPI_BUS_NUMBER_RANGE:
+ 		res->flags = IORESOURCE_BUS;
+-- 
+1.7.10.4
+
