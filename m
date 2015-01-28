@@ -1,206 +1,441 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:45724 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751755AbbA0Sql (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 Jan 2015 13:46:41 -0500
-Message-ID: <54C7DCDA.4030809@ti.com>
-Date: Tue, 27 Jan 2015 13:45:46 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:56029 "EHLO
+	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752871AbbA2B1P (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jan 2015 20:27:15 -0500
+Received: by mail-oi0-f53.google.com with SMTP id i138so22050174oig.12
+        for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2015 17:27:14 -0800 (PST)
+Date: Wed, 28 Jan 2015 17:37:00 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [Patch v2 19/22] x86/PCI/ACPI: Use common ACPI resource
+ interfaces to simplify implementation
+Message-ID: <20150128233700.GE17623@google.com>
+References: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
+ <1422442660-455-20-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: Re: [PATCH v4 4/6] of/pci: add of_pci_dma_configure() update dma
- configuration
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com> <1422052359-12384-5-git-send-email-m-karicheri2@ti.com> <20150123234124.GW29776@google.com> <54C6CCF3.7080308@ti.com> <CAErSpo4w0zVCmXk2D2Qk5W3kceS9Wk+=jqHBDwk6HUXWwXdq_Q@mail.gmail.com> <54C7D576.6030502@ti.com> <CAErSpo4Awgqu0ZtoMm0XSZzhnYtXh3xxH2OJMkyth5YDR9GUiA@mail.gmail.com>
-In-Reply-To: <CAErSpo4Awgqu0ZtoMm0XSZzhnYtXh3xxH2OJMkyth5YDR9GUiA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1422442660-455-20-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/27/2015 01:42 PM, Bjorn Helgaas wrote:
-> On Tue, Jan 27, 2015 at 12:14 PM, Murali Karicheri<m-karicheri2@ti.com>  wrote:
->> On 01/26/2015 06:59 PM, Bjorn Helgaas wrote:
->>>
->>> On Mon, Jan 26, 2015 at 5:25 PM, Murali Karicheri<m-karicheri2@ti.com>
->>> wrote:
->>>>
->>>> On 01/23/2015 06:41 PM, Bjorn Helgaas wrote:
->>>>>
->>>>>
->>>>> On Fri, Jan 23, 2015 at 05:32:37PM -0500, Murali Karicheri wrote:
->>>>>>
->>>>>>
->>>>>> Add of_pci_dma_configure() to allow updating the dma configuration
->>>>>> of the pci device using the configuration from DT of the parent of
->>>>>> the root bridge device.
->>>>>>
->>    -- Cut ---
->>
->>>>>>
->>>>>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
->>>>>> ---
->>>>>>     drivers/of/of_pci.c    |   39
->>>>>> +++++++++++++++++++++++++++++++++++++++
->>>>>>     include/linux/of_pci.h |   12 ++++++++++++
->>>>>>     2 files changed, 51 insertions(+)
->>>>>>
->>>>>> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
->>>>>> index 88471d3..34878c9 100644
->>>>>> --- a/drivers/of/of_pci.c
->>>>>> +++ b/drivers/of/of_pci.c
->>>>>> @@ -2,6 +2,7 @@
->>>>>>     #include<linux/export.h>
->>>>>>     #include<linux/of.h>
->>>>>>     #include<linux/of_address.h>
->>>>>> +#include<linux/of_device.h>
->>>>>>     #include<linux/of_pci.h>
->>>>>>     #include<linux/slab.h>
->>>>>>
->>>>>> @@ -229,6 +230,44 @@ parse_failed:
->>>>>>           return err;
->>>>>>     }
->>>>>>     EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
->>>>>> +
->>>>>> +/**
->>>>>> + * of_get_pci_root_bridge_parent - get the OF node of the root
->>>>>> bridge's
->>>>>> parent
->>>>>> + * @dev: ptr to pci_dev struct of the pci device
->>>>>> + *
->>>>>> + * This function will traverse the bus up to the root bus starting
->>>>>> with
->>>>>> + * the child and return the OF node ptr to root bridge device's parent
->>>>>> device.
->>>>>> + */
->>>>>> +struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev)
->>>>>
->>>>>
->>>>>
->>>>> I'm not an OF person, but this interface seems like it might be too
->>>>> special-purpose.  Maybe it would be enough to add
->>>>> "of_get_pci_root_bridge()", and the caller could do this:
->>>>>
->>>>>        struct device *bridge = of_get_pci_root_bridge(dev);
->>>>>        struct device_node *parent_np = bridge->parent->of_node;
->>>>>
->>>>> Also, the name "of_get_..." suggests that it increments a refcount, as
->>>>> of_get_parent() does.  But you aren't doing anything with the refcount.
->>>>>
->>>>> But I guess an "of_get_pci_root_bridge()" isn't doing anything
->>>>> OF-related,
->>>>> so maybe we should just add a "pci_get_host_bridge(struct pci_dev *)"
->>>>> to PCI instead.
->>>>
->>>>
->>>>
->>>> Bjorn,
->>>>
->>>> Thanks for the comment.
->>>>
->>>> I think adding pci_get_host_bridge() is a good idea. There is already
->>>> similar function in host-bridge.c. I have added this function re-using
->>>> existing function find_pci_root_bus(). See the incremental diff below
->>>> after
->>>> this change. Does this look good?
->>>
->>>
->>> I like the implementation, but I think either we need to take a
->>> reference on the host bridge, or change the name to  something like
->>> "pci_find_host_bridge()", because using "_get_" is conventional for
->>> functions that acquire a reference.
->>>
->>> Since host bridges are hot-pluggable, at least in theory, I vote for
->>> taking a reference.  Then of course, you'd have to add code to drop
->>> the reference when you're finished with it.
->>>
->> Bjorn,
->>
->> Thanks. I agree with your suggestion even though the convention is not
->> followed fully :) of_pci_get_devfn(), of_get_pci_domain_nr(),
->> of_pci_get_host_bridge_resources() are some of those functions not following
->> the convention. I plan to change the function as below. Also want to name
->> functions as pci_get/put_host_bridge_device() as existing function
->> find_pci_host_bridge() is actually returning ptr to struct pci_host_bridge
->> vs the new function returning ptr to device. Here are the new functions and
->> how they will be used. Please review and respond so that I can avoid a
->> re-spin.
->>
->> in linux/include/pci.h add the prototypes of
->> pci_get/put_host_bridge_device().
->>
->> in drivers/pci/host-bridge.c add two new functions.
->>
->> struct device *pci_get_host_bridge_device(struct pci_dev *dev)
->> {
->>          struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
->>          struct device *bridge = root_bus->bridge;
->>
->>          kobject_get(&bridge->kobj);
->>          return bridge;
->> }
->
-> Looks good to me.
->
->> void  pci_put_host_bridge_device(struct pci_dev *dev)
->> {
->>          struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
->>          struct device *bridge = root_bus->bridge;
->>
->>          kobject_put(&bridge->kobj);
->> }
->
-> I think I would pass in the "struct device *" here so we don't have to
-> call find_pci_root_bus() again.
->
->> drivers/of/of_pci.c
->>
->> void of_pci_dma_configure(struct pci_dev *pci_dev)
->> {
->>          struct device *dev =&pci_dev->dev;
->>          struct device *bridge = pci_get_host_bridge_device(pci_dev);
->>
->>          of_dma_configure(dev, bridge->parent->of_node);
->>          pci_put_host_bridge_device(pci_dev);
->
-> Then this would become "pci_put_host_bridge_device(bridge)"
+On Wed, Jan 28, 2015 at 06:57:37PM +0800, Jiang Liu wrote:
+> Use common ACPI resource discovery interfaces to simplify PCI host bridge
+> resource enumeration.
+> 
+> It also fixes the issue discovered by Thomas that function setup_resource()
+> incorrectly validates IO port resources against iomem_resource.
 
-Agree with both. Will become part of my v5 of the series. I am adding 
-this as a separate commit.
+Is it possible to split this bug fix into its own separate patch?  Mixing
+things together makes git archaeology harder because it hides tiny bug
+fixes inside big changes.
 
-Murali
->
->> }
->>
->> Murali
->>
->>> Bjorn
->>>
->>
->>>>>>
->>>>
->>>>
->>>> --
->>>> Murali Karicheri
->>>> Linux Kernel, Texas Instruments
->>
->>
->>
->> --
->> Murali Karicheri
->> Linux Kernel, Texas Instruments
-
-
--- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  arch/x86/pci/acpi.c |  296 ++++++++++++++++-----------------------------------
+>  1 file changed, 94 insertions(+), 202 deletions(-)
+> 
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index bb98afd0591e..3404ea703ecc 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -10,9 +10,6 @@
+>  struct pci_root_info {
+>  	struct acpi_device *bridge;
+>  	char name[16];
+> -	unsigned int res_num;
+> -	struct resource *res;
+> -	resource_size_t *res_offset;
+>  	struct pci_sysdata sd;
+>  #ifdef	CONFIG_PCI_MMCONFIG
+>  	bool mcfg_added;
+> @@ -218,130 +215,44 @@ static void teardown_mcfg_map(struct pci_root_info *info)
+>  }
+>  #endif
+>  
+> -static acpi_status resource_to_addr(struct acpi_resource *resource,
+> -				    struct acpi_resource_address64 *addr)
+> -{
+> -	acpi_status status;
+> -	struct acpi_resource_memory24 *memory24;
+> -	struct acpi_resource_memory32 *memory32;
+> -	struct acpi_resource_fixed_memory32 *fixed_memory32;
+> -
+> -	memset(addr, 0, sizeof(*addr));
+> -	switch (resource->type) {
+> -	case ACPI_RESOURCE_TYPE_MEMORY24:
+> -		memory24 = &resource->data.memory24;
+> -		addr->resource_type = ACPI_MEMORY_RANGE;
+> -		addr->address.minimum = memory24->minimum;
+> -		addr->address.address_length = memory24->address_length;
+> -		addr->address.maximum = addr->address.minimum + addr->address.address_length - 1;
+> -		return AE_OK;
+> -	case ACPI_RESOURCE_TYPE_MEMORY32:
+> -		memory32 = &resource->data.memory32;
+> -		addr->resource_type = ACPI_MEMORY_RANGE;
+> -		addr->address.minimum = memory32->minimum;
+> -		addr->address.address_length = memory32->address_length;
+> -		addr->address.maximum = addr->address.minimum + addr->address.address_length - 1;
+> -		return AE_OK;
+> -	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
+> -		fixed_memory32 = &resource->data.fixed_memory32;
+> -		addr->resource_type = ACPI_MEMORY_RANGE;
+> -		addr->address.minimum = fixed_memory32->address;
+> -		addr->address.address_length = fixed_memory32->address_length;
+> -		addr->address.maximum = addr->address.minimum + addr->address.address_length - 1;
+> -		return AE_OK;
+> -	case ACPI_RESOURCE_TYPE_ADDRESS16:
+> -	case ACPI_RESOURCE_TYPE_ADDRESS32:
+> -	case ACPI_RESOURCE_TYPE_ADDRESS64:
+> -		status = acpi_resource_to_address64(resource, addr);
+> -		if (ACPI_SUCCESS(status) &&
+> -		    (addr->resource_type == ACPI_MEMORY_RANGE ||
+> -		    addr->resource_type == ACPI_IO_RANGE) &&
+> -		    addr->address.address_length > 0) {
+> -			return AE_OK;
+> -		}
+> -		break;
+> -	}
+> -	return AE_ERROR;
+> -}
+> -
+> -static acpi_status count_resource(struct acpi_resource *acpi_res, void *data)
+> +static void validate_resources(struct device *dev, struct list_head *crs_res,
+> +			       unsigned long type)
+>  {
+> -	struct pci_root_info *info = data;
+> -	struct acpi_resource_address64 addr;
+> -	acpi_status status;
+> -
+> -	status = resource_to_addr(acpi_res, &addr);
+> -	if (ACPI_SUCCESS(status))
+> -		info->res_num++;
+> -	return AE_OK;
+> -}
+> -
+> -static acpi_status setup_resource(struct acpi_resource *acpi_res, void *data)
+> -{
+> -	struct pci_root_info *info = data;
+> -	struct resource *res;
+> -	struct acpi_resource_address64 addr;
+> -	acpi_status status;
+> -	unsigned long flags;
+> -	u64 start, orig_end, end;
+> -
+> -	status = resource_to_addr(acpi_res, &addr);
+> -	if (!ACPI_SUCCESS(status))
+> -		return AE_OK;
+> -
+> -	if (addr.resource_type == ACPI_MEMORY_RANGE) {
+> -		flags = IORESOURCE_MEM;
+> -		if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
+> -			flags |= IORESOURCE_PREFETCH;
+> -	} else if (addr.resource_type == ACPI_IO_RANGE) {
+> -		flags = IORESOURCE_IO;
+> -	} else
+> -		return AE_OK;
+> -
+> -	start = addr.address.minimum + addr.address.translation_offset;
+> -	orig_end = end = addr.address.maximum + addr.address.translation_offset;
+> -
+> -	/* Exclude non-addressable range or non-addressable portion of range */
+> -	end = min(end, (u64)iomem_resource.end);
+> -	if (end <= start) {
+> -		dev_info(&info->bridge->dev,
+> -			"host bridge window [%#llx-%#llx] "
+> -			"(ignored, not CPU addressable)\n", start, orig_end);
+> -		return AE_OK;
+> -	} else if (orig_end != end) {
+> -		dev_info(&info->bridge->dev,
+> -			"host bridge window [%#llx-%#llx] "
+> -			"([%#llx-%#llx] ignored, not CPU addressable)\n", 
+> -			start, orig_end, end + 1, orig_end);
+> -	}
+> +	LIST_HEAD(list);
+> +	struct resource *res1, *res2, *root = NULL;
+> +	struct resource_list_entry *tmp, *entry, *entry2;
+>  
+> -	res = &info->res[info->res_num];
+> -	res->name = info->name;
+> -	res->flags = flags;
+> -	res->start = start;
+> -	res->end = end;
+> -	info->res_offset[info->res_num] = addr.address.translation_offset;
+> -	info->res_num++;
+> +	BUG_ON((type & (IORESOURCE_MEM | IORESOURCE_IO)) == 0);
+> +	root = (type & IORESOURCE_MEM) ? &iomem_resource : &ioport_resource;
+>  
+> -	if (!pci_use_crs)
+> -		dev_printk(KERN_DEBUG, &info->bridge->dev,
+> -			   "host bridge window %pR (ignored)\n", res);
+> +	list_splice_init(crs_res, &list);
+> +	resource_list_for_each_entry_safe(entry, tmp, &list) {
+> +		bool free = false;
+> +		resource_size_t end;
+>  
+> -	return AE_OK;
+> -}
+> -
+> -static void coalesce_windows(struct pci_root_info *info, unsigned long type)
+> -{
+> -	int i, j;
+> -	struct resource *res1, *res2;
+> -
+> -	for (i = 0; i < info->res_num; i++) {
+> -		res1 = &info->res[i];
+> +		res1 = entry->res;
+>  		if (!(res1->flags & type))
+> -			continue;
+> +			goto next;
+> +
+> +		/* Exclude non-addressable range or non-addressable portion */
+> +		end = min(res1->end, root->end);
+> +		if (end <= res1->start) {
+> +			dev_info(dev, "host bridge window [%#llx-%#llx] (ignored, not CPU addressable)\n",
+> +				 (unsigned long long)res1->start,
+> +				 (unsigned long long)res1->end);
+> +			free = true;
+> +			goto next;
+> +		} else if (res1->end != end) {
+> +			dev_info(dev, "host bridge window [%#llx-%#llx] ([%#llx-%#llx] ignored, not CPU addressable)\n",
+> +				 (unsigned long long)res1->start,
+> +				 (unsigned long long)res1->end,
+> +				 (unsigned long long)end + 1,
+> +				 (unsigned long long)res1->end);
+> +			res1->end = end;
+> +		}
+>  
+> -		for (j = i + 1; j < info->res_num; j++) {
+> -			res2 = &info->res[j];
+> +		resource_list_for_each_entry(entry2, crs_res) {
+> +			res2 = entry2->res;
+>  			if (!(res2->flags & type))
+>  				continue;
+>  
+> @@ -353,118 +264,92 @@ static void coalesce_windows(struct pci_root_info *info, unsigned long type)
+>  			if (resource_overlaps(res1, res2)) {
+>  				res2->start = min(res1->start, res2->start);
+>  				res2->end = max(res1->end, res2->end);
+> -				dev_info(&info->bridge->dev,
+> -					 "host bridge window expanded to %pR; %pR ignored\n",
+> +				dev_info(dev, "host bridge window expanded to %pR; %pR ignored\n",
+>  					 res2, res1);
+> -				res1->flags = 0;
+> +				free = true;
+> +				goto next;
+>  			}
+>  		}
+> +
+> +next:
+> +		resource_list_del(entry);
+> +		if (free)
+> +			resource_list_free_entry(entry);
+> +		else
+> +			resource_list_add_tail(entry, crs_res);
+>  	}
+>  }
+>  
+>  static void add_resources(struct pci_root_info *info,
+> -			  struct list_head *resources)
+> +			  struct list_head *resources,
+> +			  struct list_head *crs_res)
+>  {
+> -	int i;
+> -	struct resource *res, *root, *conflict;
+> -
+> -	coalesce_windows(info, IORESOURCE_MEM);
+> -	coalesce_windows(info, IORESOURCE_IO);
+> +	struct resource_list_entry *entry, *tmp;
+> +	struct resource *res, *conflict, *root = NULL;
+>  
+> -	for (i = 0; i < info->res_num; i++) {
+> -		res = &info->res[i];
+> +	validate_resources(&info->bridge->dev, crs_res, IORESOURCE_MEM);
+> +	validate_resources(&info->bridge->dev, crs_res, IORESOURCE_IO);
+>  
+> +	resource_list_for_each_entry_safe(entry, tmp, crs_res) {
+> +		res = entry->res;
+>  		if (res->flags & IORESOURCE_MEM)
+>  			root = &iomem_resource;
+>  		else if (res->flags & IORESOURCE_IO)
+>  			root = &ioport_resource;
+>  		else
+> -			continue;
+> +			BUG_ON(res);
+>  
+>  		conflict = insert_resource_conflict(root, res);
+> -		if (conflict)
+> +		if (conflict) {
+>  			dev_info(&info->bridge->dev,
+>  				 "ignoring host bridge window %pR (conflicts with %s %pR)\n",
+>  				 res, conflict->name, conflict);
+> -		else
+> -			pci_add_resource_offset(resources, res,
+> -					info->res_offset[i]);
+> +			resource_list_destroy_entry(entry);
+> +		}
+>  	}
+> -}
+>  
+> -static void free_pci_root_info_res(struct pci_root_info *info)
+> -{
+> -	kfree(info->res);
+> -	info->res = NULL;
+> -	kfree(info->res_offset);
+> -	info->res_offset = NULL;
+> -	info->res_num = 0;
+> +	list_splice_tail(crs_res, resources);
+>  }
+>  
+> -static void __release_pci_root_info(struct pci_root_info *info)
+> +static void release_pci_root_info(struct pci_host_bridge *bridge)
+>  {
+> -	int i;
+>  	struct resource *res;
+> +	struct resource_list_entry *entry;
+> +	struct pci_root_info *info = bridge->release_data;
+>  
+> -	for (i = 0; i < info->res_num; i++) {
+> -		res = &info->res[i];
+> -
+> -		if (!res->parent)
+> -			continue;
+> -
+> -		if (!(res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
+> -			continue;
+> -
+> -		release_resource(res);
+> +	resource_list_for_each_entry(entry, &bridge->windows) {
+> +		res = entry->res;
+> +		if (res->parent &&
+> +		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
+> +			release_resource(res);
+>  	}
+>  
+> -	free_pci_root_info_res(info);
+> -
+>  	teardown_mcfg_map(info);
+> -
+>  	kfree(info);
+>  }
+>  
+> -static void release_pci_root_info(struct pci_host_bridge *bridge)
+> -{
+> -	struct pci_root_info *info = bridge->release_data;
+> -
+> -	__release_pci_root_info(info);
+> -}
+> -
+>  static void probe_pci_root_info(struct pci_root_info *info,
+>  				struct acpi_device *device,
+> -				int busnum, int domain)
+> +				int busnum, int domain,
+> +				struct list_head *list)
+>  {
+> -	size_t size;
+> +	int ret;
+> +	struct resource_list_entry *entry;
+>  
+>  	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
+>  	info->bridge = device;
+> -
+> -	info->res_num = 0;
+> -	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_resource,
+> -				info);
+> -	if (!info->res_num)
+> -		return;
+> -
+> -	size = sizeof(*info->res) * info->res_num;
+> -	info->res = kzalloc_node(size, GFP_KERNEL, info->sd.node);
+> -	if (!info->res) {
+> -		info->res_num = 0;
+> -		return;
+> -	}
+> -
+> -	size = sizeof(*info->res_offset) * info->res_num;
+> -	info->res_num = 0;
+> -	info->res_offset = kzalloc_node(size, GFP_KERNEL, info->sd.node);
+> -	if (!info->res_offset) {
+> -		kfree(info->res);
+> -		info->res = NULL;
+> -		return;
+> -	}
+> -
+> -	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
+> -				info);
+> +	ret = acpi_dev_get_resources(device, list,
+> +				     acpi_dev_filter_resource_type_cb,
+> +				     (void *)(IORESOURCE_IO | IORESOURCE_MEM));
+> +	if (ret < 0)
+> +		dev_warn(&device->dev,
+> +			 "failed to parse _CRS method, error code %d.\n", ret);
+> +	else if (ret == 0)
+> +		dev_dbg(&device->dev,
+> +			"no IO and memory resources present in _CRS.\n");
+> +	else
+> +		resource_list_for_each_entry(entry, list)
+> +			entry->res->name = info->name;
+>  }
+>  
+>  struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+> @@ -473,6 +358,8 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>  	struct pci_root_info *info;
+>  	int domain = root->segment;
+>  	int busnum = root->secondary.start;
+> +	struct resource_list_entry *res_entry;
+> +	LIST_HEAD(crs_res);
+>  	LIST_HEAD(resources);
+>  	struct pci_bus *bus;
+>  	struct pci_sysdata *sd;
+> @@ -520,18 +407,22 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>  		memcpy(bus->sysdata, sd, sizeof(*sd));
+>  		kfree(info);
+>  	} else {
+> -		probe_pci_root_info(info, device, busnum, domain);
+> -
+>  		/* insert busn res at first */
+>  		pci_add_resource(&resources,  &root->secondary);
+> +
+>  		/*
+>  		 * _CRS with no apertures is normal, so only fall back to
+>  		 * defaults or native bridge info if we're ignoring _CRS.
+>  		 */
+> -		if (pci_use_crs)
+> -			add_resources(info, &resources);
+> -		else {
+> -			free_pci_root_info_res(info);
+> +		probe_pci_root_info(info, device, busnum, domain, &crs_res);
+> +		if (pci_use_crs) {
+> +			add_resources(info, &resources, &crs_res);
+> +		} else {
+> +			resource_list_for_each_entry(res_entry, &crs_res)
+> +				dev_printk(KERN_DEBUG, &device->dev,
+> +					   "host bridge window %pR (ignored)\n",
+> +					   res_entry->res);
+> +			resource_list_free(&crs_res);
+>  			x86_pci_root_bus_resources(busnum, &resources);
+>  		}
+>  
+> @@ -546,8 +437,9 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>  				to_pci_host_bridge(bus->bridge),
+>  				release_pci_root_info, info);
+>  		} else {
+> -			pci_free_resource_list(&resources);
+> -			__release_pci_root_info(info);
+> +			resource_list_free(&resources);
+> +			teardown_mcfg_map(info);
+> +			kfree(info);
+>  		}
+>  	}
+>  
+> -- 
+> 1.7.10.4
+> 
