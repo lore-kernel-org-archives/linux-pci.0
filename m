@@ -1,105 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36036 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752233AbbAGO5d (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 7 Jan 2015 09:57:33 -0500
-Message-ID: <1420642644.6345.6.camel@redhat.com>
-Subject: Re: [PATCH] PCI: Mark broken INTx masking for BENET devices
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.Com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ajit Kumar Khaparde <Ajit.Khaparde@Emulex.Com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Date: Wed, 07 Jan 2015 07:57:24 -0700
-In-Reply-To: <be483be7-96b7-4aaf-8c70-5fecb6fcb324@CMEXHTCAS2.ad.emulex.com>
-References: <1420424274-3194-1-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <be483be7-96b7-4aaf-8c70-5fecb6fcb324@CMEXHTCAS2.ad.emulex.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:54205 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756165AbbA1Uj1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jan 2015 15:39:27 -0500
+Received: by mail-ie0-f177.google.com with SMTP id vy18so24791268iec.8
+        for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2015 12:39:26 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQVLxP5vKsrZ2T9-uGLrDYGHTG2QO9-52-C-XVQ227gLwA@mail.gmail.com>
+References: <54C81B4E.7060900@nwtrail.com> <CAErSpo6P-gm1xFjLrbKBU+P3zUHY-RGMkhaVpWsK7vDz_wK=YQ@mail.gmail.com>
+ <CAE9FiQVLxP5vKsrZ2T9-uGLrDYGHTG2QO9-52-C-XVQ227gLwA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 28 Jan 2015 10:46:43 -0600
+Message-ID: <CAErSpo67cAFGPCra5EDMN9FtRaV6ZtvzQA3fB=OwY6z=xJ9wvg@mail.gmail.com>
+Subject: Re: [problem] mpt2sas load fails with LSISAS2008
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: pjay@nwtrail.com, linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2015-01-07 at 04:29 +0000, Venkat Duvvuru wrote:
-> Can someone please explain, why interrupt storm issue doesn't occur in non-VFIO scenario?
+On Tue, Jan 27, 2015 at 10:44 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Tue, Jan 27, 2015 at 8:02 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> Would you mind opening a report at http://bugzilla.kernel.org and
+>> attaching the complete dmesg logs from both kernels to it?  If there
+>> was no working kernel, collect a log from v3.19-rc6 with
+>> "pci=realloc=off" instead.
+>
+> would be better if with "debug ignore_loglevel pci=realloc=off".
 
-In a host driver scenario, the driver hopefully knows how to handle the
-device in a way that interrupt masking is not needed.  If you're
-comparing to legacy KVM device assignment, the answer is likely that
-that code supports emulation of INTx using MSI.  This is a fairly kludgy
-mode of operation that I'm not all the keen on implementing in VFIO.
-The pci-assign driver can be forced to not use this mode, as it's been
-found not to work universally, with the option prefer_msi=off.  Thanks,
+This is unrelated to the bug, and the parameters Yinghai suggested are
+fine, but just out of curiosity , I thought "debug" and
+"ignore_loglevel" only affected the output that goes to the console.
 
-Alex
+"ignore_loglevel" is handled by ignore_loglevel_setup() in
+kernel/printk.c; it sets "ignore_loglevel = true".  I think "debug" is
+handled by debug_kernel() in init/main.c; it sets "console_loglevel =
+CONSOLE_LOGLEVEL_DEBUG".  But there are about a million "debug"
+occurrences in the kernel, so maybe it does more than just set
+console_loglevel.
 
-> > -----Original Message-----
-> > From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> > owner@vger.kernel.org] On Behalf Of Gavin Shan
-> > Sent: Monday, January 05, 2015 7:48 AM
-> > To: linux-pci@vger.kernel.org
-> > Cc: Ajit Kumar Khaparde; bhelgaas@google.com; Gavin Shan
-> > Subject: [PATCH] PCI: Mark broken INTx masking for BENET devices
-> > 
-> > Similar to commit 11e4253 ("PCI: Assume all Mellanox devices have
-> > broken INTx masking"), when passing through following PCI device
-> > using VFIO infrastructure, interrupt storm are reported. After
-> > marking its INTx masking is broken, the interrupt storm isn't
-> > raised again:
-> > 
-> >  # lspci -s 0000::.
-> >  0000:01:00.0 Ethernet controller: Emulex Corporation \
-> >               OneConnect 10Gb NIC (be3) (rev 02)
-> >  0000:01:00.1 Ethernet controller: Emulex Corporation \
-> >               OneConnect 10Gb NIC (be3) (rev 02)
-> >  # lspci -n -s 0000::.
-> >  0000:01:00.0 0200: 19a2:0710 (rev 02)
-> >  0000:01:00.1 0200: 19a2:0710 (rev 02)
-> > 
-> > Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> > ---
-> >  drivers/pci/quirks.c    | 2 ++
-> >  include/linux/pci_ids.h | 2 ++
-> >  2 files changed, 4 insertions(+)
-> > 
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index ed6f89b..e823ac0 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -3027,6 +3027,8 @@
-> > DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8169,
-> >  			 quirk_broken_intx_masking);
-> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
-> >  			 quirk_broken_intx_masking);
-> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BE, PCI_ANY_ID,
-> > +			 quirk_broken_intx_masking);
-> > 
-> >  #ifdef CONFIG_ACPI
-> >  /*
-> > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> > index e63c02a..df70b76 100644
-> > --- a/include/linux/pci_ids.h
-> > +++ b/include/linux/pci_ids.h
-> > @@ -2481,6 +2481,8 @@
-> >  #define PCI_DEVICE_ID_KORENIX_JETCARDF2	0x1700
-> >  #define PCI_DEVICE_ID_KORENIX_JETCARDF3	0x17ff
-> > 
-> > +#define PCI_VENDOR_ID_BE		0x19a2
-> > +
-> >  #define PCI_VENDOR_ID_QMI		0x1a32
-> > 
-> >  #define PCI_VENDOR_ID_AZWAVE		0x1a3b
-> > --
-> > 1.8.3.2
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The net effect is that I thought:
 
+  - The dmesg log always contains everything, regardless of the
+console_loglevel.
+  - Using "ignore_loglevel" means everything goes to the console, in
+addition to being in dmesg, regardless of what console_loglevel is.
 
+So isn't it enough to just collect the dmesg log, without using
+"debug" or "ignore_loglevel"?  Obviously, if the system doesn't boot,
+you need to collect a console log, and then you would need
+"ignore_loglevel".
 
+And if you use "ignore_loglevel", isn't that enough by itself?  I
+wouldn't think using "debug" in addition would make any difference.
+Or maybe "debug" also turns on some dynamic debugging magic or
+something?  If it does, that might be worth mentioning in
+kernel-parameters.txt.
+
+Bjorn
