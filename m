@@ -1,84 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:37527 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751031AbbAMINl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Jan 2015 03:13:41 -0500
-Message-ID: <54B4D36D.8030204@hp.com>
-Date: Tue, 13 Jan 2015 16:12:29 +0800
-From: "Li, ZhenHua" <zhen-hual@hp.com>
+Received: from service88.mimecast.com ([195.130.217.12]:37087 "EHLO
+	service88.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756451AbbA1UWp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jan 2015 15:22:45 -0500
+Message-ID: <54C8C652.8050507@arm.com>
+Date: Wed, 28 Jan 2015 11:21:54 +0000
+From: Robin Murphy <robin.murphy@arm.com>
 MIME-Version: 1.0
-To: Joerg Roedel <joro@8bytes.org>
-CC: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	vgoyal@redhat.com, dyoung@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com, "Li, ZhenHua" <zhen-hual@hp.com>
-Subject: Re: [PATCH v8 02/10] iommu/vt-d: Items required for kdump
-References: <1421046388-27925-1-git-send-email-zhen-hual@hp.com> <1421046388-27925-3-git-send-email-zhen-hual@hp.com> <20150112152207.GC6343@8bytes.org>
-In-Reply-To: <20150112152207.GC6343@8bytes.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Murali Karicheri <m-karicheri2@ti.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v5 3/8] of: fix size when dma-range is not used
+References: <1422392405-32196-1-git-send-email-m-karicheri2@ti.com> <1422392405-32196-4-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1422392405-32196-4-git-send-email-m-karicheri2@ti.com>
+Content-Type: text/plain; charset=WINDOWS-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/12/2015 11:22 PM, Joerg Roedel wrote:
-> On Mon, Jan 12, 2015 at 03:06:20PM +0800, Li, Zhen-Hua wrote:
->> +
->> +#ifdef CONFIG_CRASH_DUMP
->> +
->> +/*
->> + * Fix Crashdump failure caused by leftover DMA through a hardware IOMMU
->> + *
->> + * Fixes the crashdump kernel to deal with an active iommu and legacy
->> + * DMA from the (old) panicked kernel in a manner similar to how legacy
->> + * DMA is handled when no hardware iommu was in use by the old kernel --
->> + * allow the legacy DMA to continue into its current buffers.
->> + *
->> + * In the crashdump kernel, this code:
->> + * 1. skips disabling the IOMMU's translating of IO Virtual Addresses (IOVA).
->> + * 2. Do not re-enable IOMMU's translating.
->> + * 3. In kdump kernel, use the old root entry table.
->> + * 4. Leaves the current translations in-place so that legacy DMA will
->> + *    continue to use its current buffers.
->> + * 5. Allocates to the device drivers in the crashdump kernel
->> + *    portions of the iova address ranges that are different
->> + *    from the iova address ranges that were being used by the old kernel
->> + *    at the time of the panic.
->> + *
->> + */
+Hi Murali,
+
+[sorry, missed replying to yesterday's version]
+
+On 27/01/15 21:00, Murali Karicheri wrote:
+> Fix the dma-range size when the DT attribute is missing. i.e  set size to
+> dev->coherent_dma_mask + 1 instead of dev->coherent_dma_mask. Also add
+> code to check invalid values of size configured in DT and log error.
 >
-> It looks like you are still copying the io-page-tables from the old
-> kernel into the kdump kernel, is that right? With the approach that was
-> proposed you only need to copy over the context entries 1-1. They are
-> still pointing to the page-tables in the old kernels memory (which is
-> just fine).
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: Grant Likely <grant.likely@linaro.org>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Russell King <linux@arm.linux.org.uk>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 >
-> The root-entry of the old kernel is also re-used, and when the kdump
-> kernel starts to use a device, its context entry is updated to point to
-> a newly allocated page-table.
+> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+> ---
+>   drivers/of/device.c |    9 ++++++++-
+>   1 file changed, 8 insertions(+), 1 deletion(-)
 >
+> diff --git a/drivers/of/device.c b/drivers/of/device.c
+> index 2de320d..17504f4 100644
+> --- a/drivers/of/device.c
+> +++ b/drivers/of/device.c
+> @@ -105,12 +105,19 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+>   	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
+>   	if (ret < 0) {
+>   		dma_addr = offset = 0;
+> -		size = dev->coherent_dma_mask;
+> +		size = dev->coherent_dma_mask + 1;
+>   	} else {
+>   		offset = PFN_DOWN(paddr - dma_addr);
+>   		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+>   	}
+>
+> +	if (is_power_of_2(size + 1))
+> +		size = size + 1;
+> +	else if (!is_power_of_2(size)) {
+> +		dev_err(dev, "invalid size\n");
+> +		return;
+> +	}
+> +
 
-Current status:
-1. Use old root entry table,
-2. Copy old context entry tables.
-3. Copy old page tables.
-4. Allocate new page table when device driver is loading.
+Couldn't these checks go into the "else" path above? We don't need to 
+check the non-DT case, because we know we've just set it to something 
+sensible.
 
-I remember the progress we discussed was this. Checking the old mails,
-founding we did not clearly discuss about the old page tables, only
-agrred with allocating new page tables when device driver is loading.
+Robin.
 
-To me, both of these two options are fine, copying old page tables, or
-re-use the old ones. My debugging shows both of them works fine.
-
-If we use the old page tables, the patchset will use less code.
-Functions copy_page_addr, copy_page_table are no longer needed, and
-functions copy_context_entry and copy_context_entry_table will be
-reduced to several lines. The patchset will be much simpler.
-
-Zhenhua
+>   	dev->dma_pfn_offset = offset;
+>
+>   	coherent = of_dma_is_coherent(np);
+>
 
 
