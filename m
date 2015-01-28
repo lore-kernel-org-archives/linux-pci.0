@@ -1,84 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [119.145.14.66] ([119.145.14.66]:23266 "EHLO
-	szxga03-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S932617AbbAPDsI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jan 2015 22:48:08 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH 21/28] PCI/mvebu: Use pci_common_init_dev() to simplify code
-Date: Fri, 16 Jan 2015 09:44:19 +0800
-Message-ID: <1421372666-12288-22-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
-References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com>
+Received: from utopia.booyaka.com ([74.50.51.50]:59258 "EHLO
+	utopia.booyaka.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756228AbbA2BjB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jan 2015 20:39:01 -0500
+Subject: [PATCH 02/24] Documentation: DT bindings: add more chip compatible
+ strings for Tegra PCIe
+From: Paul Walmsley <paul@pwsan.com>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	linux-pci@vger.kernel.org, Stephen Warren <swarren@wwwdotorg.org>,
+	linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+	devicetree@vger.kernel.org,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Kumar Gala <galak@codeaurora.org>, linux-tegra@vger.kernel.org
+Date: Wed, 28 Jan 2015 16:49:37 -0700
+Message-ID: <20150128234937.20644.9400.stgit@dusk.lan>
+In-Reply-To: <20150128234935.20644.89300.stgit@dusk.lan>
+References: <20150128234935.20644.89300.stgit@dusk.lan>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Mvebu_pcie_scan_bus() is not necessary, we could use
-pci_common_init_dev() instead of pci_common_init(),
-and pass the device pointer as the parent. Then
-pci_scan_root_bus() will be called to scan the pci busses.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Add compatible strings for the PCIe IP blocks present on several Tegra
+chips.  The primary objective here is to avoid checkpatch warnings,
+per:
+
+http://marc.info/?l=linux-tegra&m=142201349727836&w=2
+
+Signed-off-by: Paul Walmsley <paul@pwsan.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Pawel Moll <pawel.moll@arm.com>
+Cc: Mark Rutland <mark.rutland@arm.com>
+Cc: Ian Campbell <ijc+devicetree@hellion.org.uk>
+Cc: Kumar Gala <galak@codeaurora.org>
+Cc: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Alexandre Courbot <gnurou@gmail.com>
+Cc: linux-tegra@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: devicetree@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 ---
- drivers/pci/host/pci-mvebu.c |   18 +-----------------
- 1 files changed, 1 insertions(+), 17 deletions(-)
+ .../bindings/pci/nvidia,tegra20-pcie.txt           |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 1309cfb..d5a2b70 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -750,21 +750,6 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
- 	return 1;
- }
- 
--static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
--{
--	struct mvebu_pcie *pcie = sys_to_pcie(sys);
--	struct pci_bus *bus;
--
--	bus = pci_create_root_bus(&pcie->pdev->dev, sys->busnr,
--				  &mvebu_pcie_ops, sys, &sys->resources);
--	if (!bus)
--		return NULL;
--
--	pci_scan_child_bus(bus);
--
--	return bus;
--}
--
- static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
- 						 const struct resource *res,
- 						 resource_size_t start,
-@@ -808,12 +793,11 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
- 	hw.nr_controllers = 1;
- 	hw.private_data   = (void **)&pcie;
- 	hw.setup          = mvebu_pcie_setup;
--	hw.scan           = mvebu_pcie_scan_bus;
- 	hw.map_irq        = of_irq_parse_and_map_pci;
- 	hw.ops            = &mvebu_pcie_ops;
- 	hw.align_resource = mvebu_pcie_align_resource;
- 
--	pci_common_init(&hw);
-+	pci_common_init_dev(&pcie->pdev->dev, &hw);
- }
- 
- /*
--- 
-1.7.1
+diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+index d763e047c6ae..e772884f1c33 100644
+--- a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+@@ -5,6 +5,8 @@ Required properties:
+   - "nvidia,tegra20-pcie"
+   - "nvidia,tegra30-pcie"
+   - "nvidia,tegra124-pcie"
++  - "nvidia,tegra132-pcie" (not yet matched in the driver)
++  - "nvidia,tegra210-pcie" (not yet matched in the driver)
+ - device_type: Must be "pci"
+ - reg: A list of physical base address and length for each set of controller
+   registers. Must contain an entry for each entry in the reg-names property.
+
 
