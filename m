@@ -1,66 +1,99 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part1 v7 31/38] x86/apb_timer: Remove unused function is_apbt_capable()
-Date: Tue, 20 Jan 2015 11:08:34 +0800
-Message-Id: <1421723321-8386-32-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <54C9000C.3040907@ti.com>
+Date: Wed, 28 Jan 2015 10:28:12 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Robin Murphy <robin.murphy@arm.com>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v5 3/8] of: fix size when dma-range is not used
+References: <1422392405-32196-1-git-send-email-m-karicheri2@ti.com> <1422392405-32196-4-git-send-email-m-karicheri2@ti.com> <54C8C652.8050507@arm.com>
+In-Reply-To: <54C8C652.8050507@arm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+On 01/28/2015 06:21 AM, Robin Murphy wrote:
+> Hi Murali,
+>
+> [sorry, missed replying to yesterday's version]
+>
+> On 27/01/15 21:00, Murali Karicheri wrote:
+>> Fix the dma-range size when the DT attribute is missing. i.e set size to
+>> dev->coherent_dma_mask + 1 instead of dev->coherent_dma_mask. Also add
+>> code to check invalid values of size configured in DT and log error.
+>>
+>> Cc: Joerg Roedel <joro@8bytes.org>
+>> Cc: Grant Likely <grant.likely@linaro.org>
+>> Cc: Rob Herring <robh+dt@kernel.org>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Will Deacon <will.deacon@arm.com>
+>> Cc: Russell King <linux@arm.linux.org.uk>
+>> Cc: Arnd Bergmann <arnd@arndb.de>
+>> Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>>
+>> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+>> ---
+>> drivers/of/device.c | 9 ++++++++-
+>> 1 file changed, 8 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/of/device.c b/drivers/of/device.c
+>> index 2de320d..17504f4 100644
+>> --- a/drivers/of/device.c
+>> +++ b/drivers/of/device.c
+>> @@ -105,12 +105,19 @@ void of_dma_configure(struct device *dev, struct
+>> device_node *np)
+>> ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
+>> if (ret < 0) {
+>> dma_addr = offset = 0;
+>> - size = dev->coherent_dma_mask;
+>> + size = dev->coherent_dma_mask + 1;
+>> } else {
+>> offset = PFN_DOWN(paddr - dma_addr);
+>> dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+>> }
+>>
+>> + if (is_power_of_2(size + 1))
+>> + size = size + 1;
+>> + else if (!is_power_of_2(size)) {
+>> + dev_err(dev, "invalid size\n");
+>> + return;
+>> + }
+>> +
+>
+> Couldn't these checks go into the "else" path above? We don't need to
+> check the non-DT case, because we know we've just set it to something
+> sensible.
+Robin,
 
-Remove the function is_apbt_capable() that is not used anywhere.
+Sure it can. I was doing flip/flop on the choice and thought it doesn' 
+matter either way. Please also repond to Catalin's comment if you have 
+any issues so that I can avoid additional spin on this patch.
 
-This was partially found by using a static code analysis program called cppcheck.
+Thanks
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apb_timer.c |    8 --------
- 1 file changed, 8 deletions(-)
+Murali
+>
+> Robin.
+>
+>> dev->dma_pfn_offset = offset;
+>>
+>> coherent = of_dma_is_coherent(np);
+>>
+>
+>
 
-diff --git a/arch/x86/kernel/apb_timer.c b/arch/x86/kernel/apb_timer.c
-index 7cfdc5467922..ede92c3364d3 100644
---- a/arch/x86/kernel/apb_timer.c
-+++ b/arch/x86/kernel/apb_timer.c
-@@ -135,14 +135,6 @@ static inline void apbt_clear_mapping(void)
- 	apbt_virt_address = NULL;
- }
- 
--/*
-- * APBT timer interrupt enable / disable
-- */
--static inline int is_apbt_capable(void)
--{
--	return apbt_virt_address ? 1 : 0;
--}
--
- static int __init apbt_clockevent_register(void)
- {
- 	struct sfi_timer_table_entry *mtmr;
+
 -- 
-1.7.10.4
-
+Murali Karicheri
+Linux Kernel, Texas Instruments
