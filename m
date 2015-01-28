@@ -1,64 +1,179 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:41590 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752046AbbALQqA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 11:46:00 -0500
-Date: Mon, 12 Jan 2015 11:39:18 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-cc: Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [RFC][PATCH] PCI / PM: Avoid resuming PCI devices during system
- suspend
-In-Reply-To: <1654338.pQ8g9cpnmS@vostro.rjw.lan>
-Message-ID: <Pine.LNX.4.44L0.1501121134480.1707-100000@iolanthe.rowland.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Len Brown <lenb@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [Patch v2 03/22] ACPI: Implement proper length checks for mem resources
+Date: Wed, 28 Jan 2015 18:57:21 +0800
+Message-Id: <1422442660-455-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 12 Jan 2015, Rafael J. Wysocki wrote:
+From: Thomas Gleixner <tglx@linutronix.de>
 
-> On Thursday, January 08, 2015 10:51:06 AM Alan Stern wrote:
-> > On Thu, 8 Jan 2015, Rafael J. Wysocki wrote:
-> > 
-> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > 
-> > > Commit f25c0ae2b4c4 (ACPI / PM: Avoid resuming devices in ACPI PM
-> > > domain during system suspend) modified the ACPI PM domain's system
-> > > suspend callbacks to allow devices attached to it to be left in the
-> > > runtime-suspended state during system suspend so as to optimize
-> > > the suspend process.
-> > > 
-> > > This was based on the general mechanism introduced by commit
-> > > aae4518b3124 (PM / sleep: Mechanism to avoid resuming runtime-suspended
-> > > devices unnecessarily).
-> > > 
-> > > Extend that approach to PCI devices by modifying the PCI bus type's
-> > > ->prepare callback to return 1 for devices that are runtime-suspended
-> > > when it is being executed and that are in a suitable power state and
-> > > need not be resumed going forward.
-> > 
-> > Does this correctly handle PCI devices that aren't included in the ACPI
-> > tables?  For example, add-on PCI cards?
-> 
-> Well, it would if it took the case when a device was configured for remote
-> wakeup at run time but was not supposed to wakeup the system from sleep into
-> account.
-> 
-> That needs to be checked in pci_dev_keep_suspended() rather than in the platform
-> callback to cover all devices.
-> 
-> Updated patch follows.
-> 
-> Rafael
+Check whether the resulting length is the same as the given
+length. Check for start <= end as well.
 
-This looks better, thank you.
+We need to hand in the resource for this, so we can apply the flags
+directly.
 
-Alan Stern
+[Jiang] Remove enforcement that resource starting address must be
+non-zero.
 
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/resource.c |   62 ++++++++++++++++++++++++++---------------------
+ 1 file changed, 35 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 1c616a56e007..3e7d9f6eb875 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -34,21 +34,37 @@
+ #define valid_IRQ(i) (true)
+ #endif
+ 
+-static unsigned long acpi_dev_memresource_flags(u64 len, u8 write_protect,
+-						bool window)
++static bool acpi_dev_resource_len_valid(u64 start, u64 end, u64 len, bool io)
+ {
+-	unsigned long flags = IORESOURCE_MEM;
++	u64 reslen = end - start + 1;
+ 
+-	if (len == 0)
+-		flags |= IORESOURCE_DISABLED;
++	/*
++	 * CHECKME: len might be required to check versus a minimum
++	 * length as well. 1 for io is fine, but for memory it does
++	 * not make any sense at all.
++	 */
++	if (len && reslen && reslen == len && start <= end)
++		return true;
++
++	pr_info("ACPI: invalid or unassigned resource %s [%016llx - %016llx] length [%016llx]\n",
++		io ? "io" : "mem", start, end, len);
++
++	return false;
++}
++
++static void acpi_dev_memresource_flags(struct resource *res, u64 len,
++				       u8 write_protect, bool window)
++{
++	res->flags = IORESOURCE_MEM;
++
++	if (!acpi_dev_resource_len_valid(res->start, res->end, len, false))
++		res->flags |= IORESOURCE_DISABLED;
+ 
+ 	if (write_protect == ACPI_READ_WRITE_MEMORY)
+-		flags |= IORESOURCE_MEM_WRITEABLE;
++		res->flags |= IORESOURCE_MEM_WRITEABLE;
+ 
+ 	if (window)
+-		flags |= IORESOURCE_WINDOW;
+-
+-	return flags;
++		res->flags |= IORESOURCE_WINDOW;
+ }
+ 
+ static void acpi_dev_get_memresource(struct resource *res, u64 start, u64 len,
+@@ -56,7 +72,7 @@ static void acpi_dev_get_memresource(struct resource *res, u64 start, u64 len,
+ {
+ 	res->start = start;
+ 	res->end = start + len - 1;
+-	res->flags = acpi_dev_memresource_flags(len, write_protect, false);
++	acpi_dev_memresource_flags(res, len, write_protect, false);
+ }
+ 
+ /**
+@@ -77,24 +93,18 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+ 	switch (ares->type) {
+ 	case ACPI_RESOURCE_TYPE_MEMORY24:
+ 		memory24 = &ares->data.memory24;
+-		if (!memory24->minimum && !memory24->address_length)
+-			return false;
+ 		acpi_dev_get_memresource(res, memory24->minimum,
+ 					 memory24->address_length,
+ 					 memory24->write_protect);
+ 		break;
+ 	case ACPI_RESOURCE_TYPE_MEMORY32:
+ 		memory32 = &ares->data.memory32;
+-		if (!memory32->minimum && !memory32->address_length)
+-			return false;
+ 		acpi_dev_get_memresource(res, memory32->minimum,
+ 					 memory32->address_length,
+ 					 memory32->write_protect);
+ 		break;
+ 	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
+ 		fixed_memory32 = &ares->data.fixed_memory32;
+-		if (!fixed_memory32->address && !fixed_memory32->address_length)
+-			return false;
+ 		acpi_dev_get_memresource(res, fixed_memory32->address,
+ 					 fixed_memory32->address_length,
+ 					 fixed_memory32->write_protect);
+@@ -102,7 +112,8 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+ 	default:
+ 		return false;
+ 	}
+-	return true;
++
++	return !(res->flags & IORESOURCE_DISABLED);
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
+ 
+@@ -186,7 +197,6 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+ 	acpi_status status;
+ 	struct acpi_resource_address64 addr;
+ 	bool window;
+-	u64 len;
+ 	u8 io_decode;
+ 
+ 	status = acpi_resource_to_address64(ares, &addr);
+@@ -199,10 +209,9 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+ 
+ 	switch(addr.resource_type) {
+ 	case ACPI_MEMORY_RANGE:
+-		len = addr.address.maximum - addr.address.minimum + 1;
+-		res->flags = acpi_dev_memresource_flags(len,
+-						addr.info.mem.write_protect,
+-						window);
++		acpi_dev_memresource_flags(res, addr.address.address_length,
++					   addr.info.mem.write_protect,
++					   window);
+ 		break;
+ 	case ACPI_IO_RANGE:
+ 		io_decode = addr.address.granularity == 0xfff ?
+@@ -236,7 +245,6 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
+ {
+ 	struct acpi_resource_extended_address64 *ext_addr;
+ 	bool window;
+-	u64 len;
+ 	u8 io_decode;
+ 
+ 	if (ares->type != ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64)
+@@ -250,10 +258,10 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
+ 
+ 	switch(ext_addr->resource_type) {
+ 	case ACPI_MEMORY_RANGE:
+-		len = ext_addr->address.maximum - ext_addr->address.minimum + 1;
+-		res->flags = acpi_dev_memresource_flags(len,
+-					ext_addr->info.mem.write_protect,
+-					window);
++		acpi_dev_memresource_flags(res,
++					   ext_addr->address.address_length,
++					   ext_addr->info.mem.write_protect,
++					   window);
+ 		break;
+ 	case ACPI_IO_RANGE:
+ 		io_decode = ext_addr->address.granularity == 0xfff ?
+-- 
+1.7.10.4
 
