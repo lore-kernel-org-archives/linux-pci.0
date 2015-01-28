@@ -1,72 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:50171 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751444AbbASIX6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jan 2015 03:23:58 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	the arch/x86 maintainers <x86@kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 28 Jan 2015 17:15:04 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>
-Subject: Re: [PATCH 01/28] PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
-Date: Mon, 19 Jan 2015 09:23:13 +0100
-Message-ID: <1877825.44iMOx15du@wuerfel>
-In-Reply-To: <CAE9FiQV97PuDWBZYRxh8R0ADnUFTbo1NO3wAufj97en0yseYSQ@mail.gmail.com>
-References: <1421372666-12288-1-git-send-email-wangyijing@huawei.com> <CAE9FiQUoocCzBKsHL_D4ypH1-DV7XxZMdREX7n=Tz1Kq3kHHeA@mail.gmail.com> <CAE9FiQV97PuDWBZYRxh8R0ADnUFTbo1NO3wAufj97en0yseYSQ@mail.gmail.com>
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Len Brown <lenb@kernel.org>, Tony Luck <tony.luck@intel.com>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [Patch v2 09/22] ACPI: Fix a bug in parsing ACPI Memroy24
+ resource
+Message-ID: <20150128231504.GC17623@google.com>
+References: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
+ <1422442660-455-10-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1422442660-455-10-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 16 January 2015 15:16:28 Yinghai Lu wrote:
-> On Fri, Jan 16, 2015 at 3:15 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > On Thu, Jan 15, 2015 at 5:43 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> >> Pci_bus_add_devices() should not be placed in pci_scan_bus().
-> >> Now pci device will be added to driver core once its
-> >> creation. All things left in pci_bus_add_devices() are
-> >> driver attachment and other trivial sysfs things.
-> >> Pci_scan_bus() should be the function responsible for
-> >> scanning PCI devices, not including driver attachment.
-> >> Other, some callers(m68k,unicore32,alpha) of pci_scan_bus()
-> >> will call pci_bus_size_bridges() and pci_bus_assign_resources()
-> >> after pci_scan_bus().
-> >>
-> >> E.g.
-> >> In m68k
-> >> mcf_pci_init()
-> >>         pci_scan_bus()
-> >>                 ...
-> >>                 pci_bus_add_devices() --- try to attach driver
-> >>         pci_fixup_irqs()
-> >>         pci_bus_size_bridges()
-> >>         pci_bus_assign_resources()
-> >>
-> >> It is not correct, resources should be assigned correctly
-> >> before attaching driver.
-> >
-> No, for booting path, at that time pci drivers are *NOT* loaded yet.
+"Memory24", not "Memroy24", in subject.
 
-This may be true for the m68k example, and traditionally for all
-PCI hosts, but as we move to a more modular architecture with
-drivers/pci/hosts, you can have PCI host drivers that are loadable
-modules and get loaded after the built-in drivers are initialized,
-or you can have host drivers that depend on a resource (clock,
-regulator, reset, gpio, ...) that in turn comes from a driver
-that gets initialized later.
-
-	Arnd
+On Wed, Jan 28, 2015 at 06:57:27PM +0800, Jiang Liu wrote:
+> According to ACPI spec 5, section 6.4.3.1 "24-Bit Memory Range Descriptor",
+> minimum, maximum and address_length field in struct acpi_resource_memory24
+> is in granularity of 256-bytes. So shift 8-bit left to get correct address.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  drivers/acpi/resource.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+> index 7ce00a63f695..5544c6d26f32 100644
+> --- a/drivers/acpi/resource.c
+> +++ b/drivers/acpi/resource.c
+> @@ -90,8 +90,8 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+>  	switch (ares->type) {
+>  	case ACPI_RESOURCE_TYPE_MEMORY24:
+>  		memory24 = &ares->data.memory24;
+> -		acpi_dev_get_memresource(res, memory24->minimum,
+> -					 memory24->address_length,
+> +		acpi_dev_get_memresource(res, memory24->minimum << 8,
+> +					 memory24->address_length << 8,
+>  					 memory24->write_protect);
+>  		break;
+>  	case ACPI_RESOURCE_TYPE_MEMORY32:
+> -- 
+> 1.7.10.4
+> 
