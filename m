@@ -1,74 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:47403 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753993AbbA0VBG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Jan 2015 16:01:06 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
+Received: from mga01.intel.com ([192.55.52.88]:59100 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756993AbbA1UdC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 28 Jan 2015 15:33:02 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH v5 3/8] of: fix size when dma-range is not used
-Date: Tue, 27 Jan 2015 16:00:00 -0500
-Message-ID: <1422392405-32196-4-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1422392405-32196-1-git-send-email-m-karicheri2@ti.com>
-References: <1422392405-32196-1-git-send-email-m-karicheri2@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Len Brown <lenb@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [Patch v2 08/22] ACPI: Add prefetch decoding to the address space parser
+Date: Wed, 28 Jan 2015 18:57:26 +0800
+Message-Id: <1422442660-455-9-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix the dma-range size when the DT attribute is missing. i.e  set size to
-dev->coherent_dma_mask + 1 instead of dev->coherent_dma_mask. Also add
-code to check invalid values of size configured in DT and log error.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Add support of PREFETCH attributre to ACPI address space and extended
+address space parser.
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/of/device.c |    9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/acpi/resource.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/of/device.c b/drivers/of/device.c
-index 2de320d..17504f4 100644
---- a/drivers/of/device.c
-+++ b/drivers/of/device.c
-@@ -105,12 +105,19 @@ void of_dma_configure(struct device *dev, struct device_node *np)
- 	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
- 	if (ret < 0) {
- 		dma_addr = offset = 0;
--		size = dev->coherent_dma_mask;
-+		size = dev->coherent_dma_mask + 1;
- 	} else {
- 		offset = PFN_DOWN(paddr - dma_addr);
- 		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
- 	}
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 15d17937c431..7ce00a63f695 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -200,6 +200,9 @@ static bool acpi_decode_space(struct resource *res,
+ 	if (addr->producer_consumer == ACPI_PRODUCER)
+ 		res->flags |= IORESOURCE_WINDOW;
  
-+	if (is_power_of_2(size + 1))
-+		size = size + 1;
-+	else if (!is_power_of_2(size)) {
-+		dev_err(dev, "invalid size\n");
-+		return;
-+	}
++	if (addr->info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
++		res->flags |= IORESOURCE_PREFETCH;
 +
- 	dev->dma_pfn_offset = offset;
+ 	return !(res->flags & IORESOURCE_DISABLED);
+ }
  
- 	coherent = of_dma_is_coherent(np);
 -- 
-1.7.9.5
+1.7.10.4
 
