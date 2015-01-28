@@ -1,122 +1,124 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:45673 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752906AbbA2BsD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jan 2015 20:48:03 -0500
-Date: Wed, 28 Jan 2015 17:30:48 +0000
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Robin Murphy <Robin.Murphy@arm.com>
-Cc: Murali Karicheri <m-karicheri2@ti.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v4 3/6] of: fix size when dma-range is not used
-Message-ID: <20150128173048.GE31752@e104818-lin.cambridge.arm.com>
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
- <1422052359-12384-4-git-send-email-m-karicheri2@ti.com>
- <54C77616.80301@arm.com>
- <54C7DF13.20402@ti.com>
- <20150128110523.GC6646@e104818-lin.cambridge.arm.com>
- <54C9068D.8050701@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54C9068D.8050701@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Len Brown <lenb@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [Patch v2 07/22] ACPI: Move the window flag logic to the combined parser
+Date: Wed, 28 Jan 2015 18:57:25 +0800
+Message-Id: <1422442660-455-8-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 28, 2015 at 03:55:57PM +0000, Robin Murphy wrote:
-> On 28/01/15 11:05, Catalin Marinas wrote:
-> > On Tue, Jan 27, 2015 at 06:55:15PM +0000, Murali Karicheri wrote:
-> >> How about having the logic like this?
-> >>
-> >> 	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
-> >> 	if (ret < 0) {
-> >> 		dma_addr = offset = 0;
-> >> 		size = dev->coherent_dma_mask + 1;
-> >> 	} else {
-> >> 		offset = PFN_DOWN(paddr - dma_addr);
-> >> 		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
-> >> 	}
-> >>
-> >> 	if (is_power_of_2(size + 1))
-> >> 		size = size + 1;
-> >> 	else if (!is_power_of_2(size))
-> >> 	{
-> >> 		dev_err(dev, "invalid size\n");
-> >> 		return;
-> >> 	}
-> >
-> > In of_dma_configure(), we currently assume that the default coherent
-> > mask is 32-bit. In this thread:
-> >
-> > http://article.gmane.org/gmane.linux.kernel/1835096
-> >
-> > we talked about setting the coherent mask based on size automatically.
-> > I'm not sure about the size but I think we can assume is 32-bit mask + 1
-> > if it is not specified in the DT. Instead of just assuming a default
-> > mask, let's assume a default size and create the mask based on this
-> > (untested):
-> >
-> > diff --git a/drivers/of/platform.c b/drivers/of/platform.c
-> > index 5b33c6a21807..9ff8d1286b44 100644
-> > --- a/drivers/of/platform.c
-> > +++ b/drivers/of/platform.c
-> > @@ -170,10 +170,10 @@ static void of_dma_configure(struct device *dev)
-> >   	struct iommu_ops *iommu;
-> >
-> >   	/*
-> > -	 * Set default dma-mask to 32 bit. Drivers are expected to setup
-> > -	 * the correct supported dma_mask.
-> > +	 * Set default size to cover the 32-bit. Drivers are expected to setup
-> > +	 * the correct size and dma_mask.
-> >   	 */
-> > -	dev->coherent_dma_mask = DMA_BIT_MASK(32);
-> > +	size = 1ULL << 32;
-> >
-> >   	/*
-> >   	 * Set it to coherent_dma_mask by default if the architecture
-> > @@ -185,13 +185,24 @@ static void of_dma_configure(struct device *dev)
-> >   	ret = of_dma_get_range(dev->of_node, &dma_addr, &paddr, &size);
-> >   	if (ret < 0) {
-> >   		dma_addr = offset = 0;
-> > -		size = dev->coherent_dma_mask;
-> >   	} else {
-> >   		offset = PFN_DOWN(paddr - dma_addr);
-> >   		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", dev->dma_pfn_offset);
-> >   	}
-> >   	dev->dma_pfn_offset = offset;
-> >
-> > +	/*
-> > +	 * Workaround for DTs setting the size to a mask or 0.
-> > +	 */
-> > +	if (is_power_of_2(size + 1))
-> > +		size += 1;
-> 
-> In fact, since the ilog2 below ends up effectively rounding down, we 
-> might as well do away with this check as well and just add 1 
-> unconditionally. The only time it makes any difference is when we want 
-> it to anyway!
+From: Thomas Gleixner <tglx@linutronix.de>
 
-Well, we could simply ignore the is_power_of_2() check but without
-incrementing size as we don't know what arch_setup_dma_ops() does with
-it.
+Normal memory and io resources have window always set to false. Move
+the flag logic to the unified address space parser.
 
-I think we can remove this check altogether (we leaved without it for a
-while) but we need to add 1 when calculating the mask:
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/resource.c |   22 +++++++++-------------
+ 1 file changed, 9 insertions(+), 13 deletions(-)
 
-	dev->coherent_dma_mask = min(DMA_BIT_MASK(32),
-				     DMA_BIT_MASK(ilog2(size + 1)));
-
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 99903d196024..15d17937c431 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -53,7 +53,7 @@ static bool acpi_dev_resource_len_valid(u64 start, u64 end, u64 len, bool io)
+ }
+ 
+ static void acpi_dev_memresource_flags(struct resource *res, u64 len,
+-				       u8 write_protect, bool window)
++				       u8 write_protect)
+ {
+ 	res->flags = IORESOURCE_MEM;
+ 
+@@ -62,9 +62,6 @@ static void acpi_dev_memresource_flags(struct resource *res, u64 len,
+ 
+ 	if (write_protect == ACPI_READ_WRITE_MEMORY)
+ 		res->flags |= IORESOURCE_MEM_WRITEABLE;
+-
+-	if (window)
+-		res->flags |= IORESOURCE_WINDOW;
+ }
+ 
+ static void acpi_dev_get_memresource(struct resource *res, u64 start, u64 len,
+@@ -72,7 +69,7 @@ static void acpi_dev_get_memresource(struct resource *res, u64 start, u64 len,
+ {
+ 	res->start = start;
+ 	res->end = start + len - 1;
+-	acpi_dev_memresource_flags(res, len, write_protect, false);
++	acpi_dev_memresource_flags(res, len, write_protect);
+ }
+ 
+ /**
+@@ -118,7 +115,7 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
+ 
+ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+-				      u8 io_decode, bool window)
++				      u8 io_decode)
+ {
+ 	res->flags = IORESOURCE_IO;
+ 
+@@ -130,9 +127,6 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+ 
+ 	if (io_decode == ACPI_DECODE_16)
+ 		res->flags |= IORESOURCE_IO_16BIT_ADDR;
+-
+-	if (window)
+-		res->flags |= IORESOURCE_WINDOW;
+ }
+ 
+ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
+@@ -140,7 +134,7 @@ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
+ {
+ 	res->start = start;
+ 	res->end = start + len - 1;
+-	acpi_dev_ioresource_flags(res, len, io_decode, false);
++	acpi_dev_ioresource_flags(res, len, io_decode);
+ }
+ 
+ /**
+@@ -183,7 +177,6 @@ static bool acpi_decode_space(struct resource *res,
+ 			      struct acpi_address64_attribute *attr)
+ {
+ 	u8 iodec = attr->granularity == 0xfff ? ACPI_DECODE_10 : ACPI_DECODE_16;
+-	bool window = addr->producer_consumer == ACPI_PRODUCER;
+ 	bool wp = addr->info.mem.write_protect;
+ 	u64 len = attr->address_length;
+ 
+@@ -192,10 +185,10 @@ static bool acpi_decode_space(struct resource *res,
+ 
+ 	switch (addr->resource_type) {
+ 	case ACPI_MEMORY_RANGE:
+-		acpi_dev_memresource_flags(res, len, wp, window);
++		acpi_dev_memresource_flags(res, len, wp);
+ 		break;
+ 	case ACPI_IO_RANGE:
+-		acpi_dev_ioresource_flags(res, len, iodec, window);
++		acpi_dev_ioresource_flags(res, len, iodec);
+ 		break;
+ 	case ACPI_BUS_NUMBER_RANGE:
+ 		res->flags = IORESOURCE_BUS;
+@@ -204,6 +197,9 @@ static bool acpi_decode_space(struct resource *res,
+ 		return false;
+ 	}
+ 
++	if (addr->producer_consumer == ACPI_PRODUCER)
++		res->flags |= IORESOURCE_WINDOW;
++
+ 	return !(res->flags & IORESOURCE_DISABLED);
+ }
+ 
 -- 
-Catalin
+1.7.10.4
+
