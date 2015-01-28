@@ -1,39 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:50502 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751623AbbASKRh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jan 2015 05:17:37 -0500
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Richard Zhu <Richard.Zhu@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Subject: [PATCH] MAINTAINERS: fix Richard Zhu's mail address
-Date: Mon, 19 Jan 2015 11:17:31 +0100
-Message-Id: <1421662651-22962-1-git-send-email-l.stach@pengutronix.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 28 Jan 2015 13:46:39 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	=?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Srikanth Thokala <sthokal@xilinx.com>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Russell King <rmk+kernel@arm.linux.org.uk>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [Patch v2 18/22] PCI: Use common resource list management code
+ instead of private implementation
+Message-ID: <20150128134639.GN1569@arm.com>
+References: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
+ <1422442660-455-19-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1422442660-455-19-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The old cryptic address bounces, fix it by using a properly
-working one.
+On Wed, Jan 28, 2015 at 10:57:36AM +0000, Jiang Liu wrote:
+> Use common resource list management data structure and interfaces
+> instead of private implementation.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  arch/arm/kernel/bios32.c            |    5 ++---
+>  arch/x86/pci/bus_numa.c             |    4 ++--
+>  drivers/pci/bus.c                   |   18 ++++++------------
+>  drivers/pci/host-bridge.c           |    8 ++++----
+>  drivers/pci/host/pci-host-generic.c |    4 ++--
+>  drivers/pci/host/pci-xgene.c        |    4 ++--
+>  drivers/pci/host/pcie-xilinx.c      |    4 ++--
+>  drivers/pci/probe.c                 |   10 +++++-----
+>  include/linux/pci.h                 |    9 ++-------
+>  9 files changed, 27 insertions(+), 39 deletions(-)
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
- MAINTAINERS | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The arch/arm/ and drivers/pci/host/pci-host-generic.c bits look fine to
+me:
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 2fa385321245..b0a01320c755 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7239,7 +7239,7 @@ S:	Maintained
- F:	drivers/pci/host/*layerscape*
- 
- PCI DRIVER FOR IMX6
--M:	Richard Zhu <r65037@freescale.com>
-+M:	Richard Zhu <Richard.Zhu@freescale.com>
- M:	Lucas Stach <l.stach@pengutronix.de>
- L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
--- 
-2.1.4
+  Acked-by: Will Deacon <will.deacon@arm.com>
 
+Will
