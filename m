@@ -1,110 +1,185 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:37390 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752135AbbAWCMj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Jan 2015 21:12:39 -0500
-Message-ID: <54C1AE00.3020804@huawei.com>
-Date: Fri, 23 Jan 2015 10:12:16 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	<linux-pci@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@vger.kernel.org>, Liviu Dudau <liviu@dudau.co.uk>,
+In-Reply-To: <20150128110523.GC6646@e104818-lin.cambridge.arm.com>
+References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
+ <1422052359-12384-4-git-send-email-m-karicheri2@ti.com> <54C77616.80301@arm.com>
+ <54C7DF13.20402@ti.com> <20150128110523.GC6646@e104818-lin.cambridge.arm.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Wed, 28 Jan 2015 09:45:19 -0600
+Message-ID: <CAL_JsqJiCKW0ny=_ueq=A7RH3octpEhN+KZuLZhbNEHusyjcig@mail.gmail.com>
+Subject: Re: [PATCH v4 3/6] of: fix size when dma-range is not used
+To: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Murali Karicheri <m-karicheri2@ti.com>,
+	Robin Murphy <Robin.Murphy@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	<xen-devel@lists.xenproject.org>
-Subject: Re: [PATCH v2 03/30] xen/PCI: Don't use deprecated function pci_scan_bus_parented()
-References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com> <1421800225-26230-4-git-send-email-wangyijing@huawei.com> <20150122202523.GC5813@l.oracle.com>
-In-Reply-To: <20150122202523.GC5813@l.oracle.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/1/23 4:25, Konrad Rzeszutek Wilk wrote:
-> On Wed, Jan 21, 2015 at 08:29:58AM +0800, Yijing Wang wrote:
->> From: Arnd Bergmann <arnd@arndb.de>
+On Wed, Jan 28, 2015 at 5:05 AM, Catalin Marinas
+<catalin.marinas@arm.com> wrote:
+> On Tue, Jan 27, 2015 at 06:55:15PM +0000, Murali Karicheri wrote:
+>> On 01/27/2015 06:27 AM, Robin Murphy wrote:
+>> > On 23/01/15 22:32, Murali Karicheri wrote:
+>> >> Fix the dma-range size when the DT attribute is missing. i.e set size to
+>> >> dev->coherent_dma_mask + 1 instead of dev->coherent_dma_mask. To detect
+>> >> overflow when mask is set to max of u64, add a check, log error and
+>> >> return.
+>> >> Some platform use mask format for size in DTS. So add a work around to
+>> >> catch this and fix.
+>> >>
+>> >> Cc: Joerg Roedel <joro@8bytes.org>
+>> >> Cc: Grant Likely <grant.likely@linaro.org>
+>> >> Cc: Rob Herring <robh+dt@kernel.org>
+>> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> >> Cc: Will Deacon <will.deacon@arm.com>
+>> >> Cc: Russell King <linux@arm.linux.org.uk>
+>> >> Cc: Arnd Bergmann <arnd@arndb.de>
+>> >> Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>> >>
+>> >> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+>> >> ---
+>> >> drivers/of/device.c | 14 +++++++++++++-
+>> >> 1 file changed, 13 insertions(+), 1 deletion(-)
+>> >>
+>> >> diff --git a/drivers/of/device.c b/drivers/of/device.c
+>> >> index 2de320d..0a5ff54 100644
+>> >> --- a/drivers/of/device.c
+>> >> +++ b/drivers/of/device.c
+>> >> @@ -105,12 +105,24 @@ void of_dma_configure(struct device *dev, struct
+>> >> device_node *np)
+>> >> ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
+>> >> if (ret < 0) {
+>> >> dma_addr = offset = 0;
+>> >> - size = dev->coherent_dma_mask;
+>> >> + size = dev->coherent_dma_mask + 1;
+>> >> } else {
+>> >> offset = PFN_DOWN(paddr - dma_addr);
+>> >> + /*
+>> >> + * Add a work around to treat the size as mask + 1 in case
+>> >> + * it is defined in DT as a mask.
+>> >> + */
+>> >> + if (size & 1)
+>> >> + size = size + 1;
+>> >> dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+>> >> }
+>> >>
+>> >> + /* if size is 0, we have an overflow of u64 */
+>> >> + if (!size) {
+>> >> + dev_err(dev, "invalid size\n");
+>> >> + return;
+>> >> + }
+>> >> +
+>> >
+>> > This seems potentially fragile to dodgy DTs given that we might also be
+>> > using size to make a mask later. Would it make sense to double-up a
+>> > sanity check as mask-format detection? Something like:
+>> >
+>> > if is_power_of_2(size)
+>> > // use size
+>> > else if is_power_of_2(size + 1)
+>> > // use size + 1
+>> > else
+>> > // cry
 >>
->> Use pci_scan_root_bus() instead of deprecated function
->> pci_scan_bus_parented().
+>> How about having the logic like this?
 >>
->> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
->> CC: xen-devel@lists.xenproject.org
-> 
-> It looks OK to me thought I need to test it first.
-
-Thanks!
-
->> ---
->>  drivers/pci/xen-pcifront.c |   10 +++++++---
->>  1 files changed, 7 insertions(+), 3 deletions(-)
+>>       ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
+>>       if (ret < 0) {
+>>               dma_addr = offset = 0;
+>>               size = dev->coherent_dma_mask + 1;
+>>       } else {
+>>               offset = PFN_DOWN(paddr - dma_addr);
+>>               dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+>>       }
 >>
->> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
->> index b1ffebe..240ddbc 100644
->> --- a/drivers/pci/xen-pcifront.c
->> +++ b/drivers/pci/xen-pcifront.c
->> @@ -446,6 +446,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
->>  				 unsigned int domain, unsigned int bus)
->>  {
->>  	struct pci_bus *b;
->> +	LIST_HEAD(resources);
->>  	struct pcifront_sd *sd = NULL;
->>  	struct pci_bus_entry *bus_entry = NULL;
->>  	int err = 0;
->> @@ -470,17 +471,20 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
->>  		err = -ENOMEM;
->>  		goto err_out;
->>  	}
->> +	pci_add_resource(&resources, &ioport_resource);
->> +	pci_add_resource(&resources, &iomem_resource);
->>  	pcifront_init_sd(sd, domain, bus, pdev);
->>  
->>  	pci_lock_rescan_remove();
->>  
->> -	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
->> -				  &pcifront_bus_ops, sd);
->> +	b = pci_scan_root_bus(&pdev->xdev->dev, bus,
->> +				  &pcifront_bus_ops, sd, &resources);
->>  	if (!b) {
->>  		dev_err(&pdev->xdev->dev,
->>  			"Error creating PCI Frontend Bus!\n");
->>  		err = -ENOMEM;
->>  		pci_unlock_rescan_remove();
->> +		pci_free_resource_list(&resources);
->>  		goto err_out;
->>  	}
->>  
->> @@ -488,7 +492,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
->>  
->>  	list_add(&bus_entry->list, &pdev->root_buses);
->>  
->> -	/* pci_scan_bus_parented skips devices which do not have a have
->> +	/* pci_scan_root_bus skips devices which do not have a have
->>  	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
->>  	err = pcifront_scan_bus(pdev, domain, bus, b);
->>  
->> -- 
->> 1.7.1
->>
-> 
-> .
-> 
+>>       if (is_power_of_2(size + 1))
+>>               size = size + 1;
+>>       else if (!is_power_of_2(size))
+>>       {
+>>               dev_err(dev, "invalid size\n");
+>>               return;
+>>       }
+>
+> In of_dma_configure(), we currently assume that the default coherent
+> mask is 32-bit. In this thread:
+>
+> http://article.gmane.org/gmane.linux.kernel/1835096
+>
+> we talked about setting the coherent mask based on size automatically.
+> I'm not sure about the size but I think we can assume is 32-bit mask + 1
+> if it is not specified in the DT. Instead of just assuming a default
+> mask, let's assume a default size and create the mask based on this
+> (untested):
+>
+> diff --git a/drivers/of/platform.c b/drivers/of/platform.c
+> index 5b33c6a21807..9ff8d1286b44 100644
+> --- a/drivers/of/platform.c
+> +++ b/drivers/of/platform.c
+> @@ -170,10 +170,10 @@ static void of_dma_configure(struct device *dev)
+>         struct iommu_ops *iommu;
+>
+>         /*
+> -        * Set default dma-mask to 32 bit. Drivers are expected to setup
+> -        * the correct supported dma_mask.
+> +        * Set default size to cover the 32-bit. Drivers are expected to setup
+> +        * the correct size and dma_mask.
+>          */
+> -       dev->coherent_dma_mask = DMA_BIT_MASK(32);
+> +       size = 1ULL << 32;
+>
+>         /*
+>          * Set it to coherent_dma_mask by default if the architecture
+> @@ -185,13 +185,24 @@ static void of_dma_configure(struct device *dev)
+>         ret = of_dma_get_range(dev->of_node, &dma_addr, &paddr, &size);
+>         if (ret < 0) {
+>                 dma_addr = offset = 0;
+> -               size = dev->coherent_dma_mask;
 
+Are we assuming dma_addr, paddr and size are not touched on error? If
+so, we can get rid of this clause entirely.
 
--- 
-Thanks!
-Yijing
+>         } else {
+>                 offset = PFN_DOWN(paddr - dma_addr);
+>                 dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", dev->dma_pfn_offset);
+>         }
+>         dev->dma_pfn_offset = offset;
+>
+> +       /*
+> +        * Workaround for DTs setting the size to a mask or 0.
+> +        */
+> +       if (is_power_of_2(size + 1))
+> +               size += 1;
 
+As I mentioned, I think power of 2 is too restrictive (from a DT
+perspective even though the kernel may require a power of 2 here for
+the mask). Just checking bit0 set should be enough.
+
+Also, we need a WARN here so DTs get fixed.
+
+> +
+> +       /*
+> +        * Coherent DMA masks larger than 32-bit must be explicitly set by the
+> +        * driver.
+> +        */
+> +       dev->coherent_dma_mask = min(DMA_BIT_MASK(32), DMA_BIT_MASK(ilog2(size)));
+> +
+>         coherent = of_dma_is_coherent(dev->of_node);
+>         dev_dbg(dev, "device is%sdma coherent\n",
+>                 coherent ? " " : " not ");
+>
+> --
+> Catalin
