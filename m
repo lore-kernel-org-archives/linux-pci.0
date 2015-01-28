@@ -1,104 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f177.google.com ([209.85.216.177]:32881 "EHLO
-	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751318AbbALWbK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 17:31:10 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <54C8FE61.1030304@linux.intel.com>
+Date: Wed, 28 Jan 2015 23:21:05 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1421090600-9750-11-git-send-email-yinghai@kernel.org>
-References: <1421090600-9750-1-git-send-email-yinghai@kernel.org>
-	<1421090600-9750-11-git-send-email-yinghai@kernel.org>
-Date: Mon, 12 Jan 2015 23:31:09 +0100
-Message-ID: <CALMQjD91+0o=DjQDV3ydkakrG6X=3RkHoCf-T5=wLbC01WkdEA@mail.gmail.com>
-Subject: Re: [PATCH 10/10] PCI, sparc: clip firmware assigned resource under
- parent bridge's
-From: Kjetil Oftedal <oftedal@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Sam Ravnborg <sam@ravnborg.org>, sparclinux@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Andre Przywara <andre.przywara@arm.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Fix pcibios_update_irq misuse of irq number
+References: <1422456683-797-1-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1422456683-797-1-git-send-email-marc.zyngier@arm.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-Am I missing something or is this just code to get the the resource
-subsystem to accept the bus resources, not caring if the resources are
-actually usable? PCI BARs usually have a given size for a reason?
-
--
-Kjetil Oftedal
 
 
-On 12/01/2015, Yinghai Lu <yinghai@kernel.org> wrote:
-> Some bios put range that is not fully coverred by root bus resources.
-> Try to clip them and update them in pci bridge bars.
->
-> We'd like to fix other arches instead of just x86.
->
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491
-> Reported-by: Marek Kordik <kordikmarek@gmail.com>
-> Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to
-> 64-bit resources")
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
-> Cc: Yijing Wang <wangyijing@huawei.com>
-> Cc: Sam Ravnborg <sam@ravnborg.org>
-> Cc: sparclinux@vger.kernel.org
+On 2015/1/28 22:51, Marc Zyngier wrote:
+> pcibios_update_irq writes an irq number into the config space
+> of a given PCI device, but ignores the fact that this number
+> is a virtual interrupt number, which might be a very different
+> value from what the underlying hardware is using.
+> 
+> The obvious fix is to fetch the HW interrupt number from the
+> corresponding irq_data structure. This is slightly complicated
+> by the fact that this interrupt might be services by a stacked
+> domain.
+> 
+> This has been tested on KVM with kvmtool.
+> 
+> Reported-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Tested-by: Andre Przywara <andre.przywara@arm.com>
+> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 > ---
->  arch/sparc/kernel/pci.c | 20 +++++++++++++++++++-
->  1 file changed, 19 insertions(+), 1 deletion(-)
->
-> diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-> index b36365f..0e391e5 100644
-> --- a/arch/sparc/kernel/pci.c
-> +++ b/arch/sparc/kernel/pci.c
-> @@ -623,6 +623,7 @@ static void pci_claim_bus_resources(struct pci_bus
-> *bus)
->  	struct pci_dev *dev;
->
->  	list_for_each_entry(dev, &bus->devices, bus_list) {
-> +		bool changed = false;
->  		int i;
->
->  		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-> @@ -639,8 +640,25 @@ static void pci_claim_bus_resources(struct pci_bus
-> *bus)
->  				       (unsigned long long)r->end,
->  				       (unsigned int)r->flags);
->
-> -			pci_claim_resource(dev, i);
-> +			if (pci_claim_resource(dev, i) >= 0)
-> +				continue;
+>  drivers/pci/setup-irq.c | 12 ++++++++++--
+>  1 file changed, 10 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+> index 4e2d595..828cbc9 100644
+> --- a/drivers/pci/setup-irq.c
+> +++ b/drivers/pci/setup-irq.c
+> @@ -15,11 +15,19 @@
+>  #include <linux/errno.h>
+>  #include <linux/ioport.h>
+>  #include <linux/cache.h>
+> +#include <linux/irq.h>
+>  
+>  void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
+>  {
+> -	dev_dbg(&dev->dev, "assigning IRQ %02d\n", irq);
+> -	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+> +	struct irq_data *d;
 > +
-> +			if (dev->subordinate &&
-> +			    i >= PCI_BRIDGE_RESOURCES &&
-> +			    i < PCI_NUM_RESOURCES &&
-> +			    (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI &&
-> +			    pci_bus_clip_resource(dev, r)) {
-> +				changed = true;
-> +				pci_claim_resource(dev, i);
-> +			} else if (i < PCI_BRIDGE_RESOURCES &&
-> +				   i != PCI_ROM_RESOURCE &&
-> +				   pci_bus_clip_resource(dev, r)) {
-> +					pci_update_resource(dev, i);
-> +					pci_claim_resource(dev, i);
-> +			}
->  		}
-> +		if (changed)
-> +			pci_setup_bridge(dev->subordinate);
->  	}
->
->  	list_for_each_entry(child_bus, &bus->children, node)
-> --
-> 1.8.4.5
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe sparclinux" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> +	d = irq_get_irq_data(irq);
+> +#ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
+> +	while (d->parent_data)
+> +		d = d->parent_data;
+> +#endif
+> +	dev_dbg(&dev->dev, "assigning IRQ %02ld\n", d->hwirq);
+> +	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, d->hwirq);
+>  }
+Hi Mark,
+	Instead of modifying the common version, how about
+implementing an arch specific version? Arch may have different
+way to determine the irq number. Above implementation doesn't
+work with x86, for example.
+Regards!
+Gerry
+
+>  
+>  static void pdev_fixup_irq(struct pci_dev *dev,
+> 
