@@ -1,59 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:45243 "EHLO
-	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755132AbbAOQTe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jan 2015 11:19:34 -0500
-Received: by mail-oi0-f50.google.com with SMTP id x69so13102511oia.9
-        for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2015 08:19:34 -0800 (PST)
-Date: Thu, 15 Jan 2015 10:19:31 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	David Howells <dhowells@redhat.com>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>
-Subject: Re: [PATCH v2 04/10] PCI, frv: clip firmware assigned resource under
- parent bridge's
-Message-ID: <20150115161931.GA7105@google.com>
-References: <1421296297-6371-1-git-send-email-yinghai@kernel.org>
- <1421296297-6371-5-git-send-email-yinghai@kernel.org>
- <CAE9FiQXi05_uH-fmPVPJNdm93DHbb26h6vDvsNuQb-KGAT7ung@mail.gmail.com>
+Received: from mout.kundenserver.de ([212.227.17.24]:51087 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754113AbbA1Uay (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jan 2015 15:30:54 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh@kernel.org>, Krzysztof Halasa <khalasa@piap.pl>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: [PATCH] ARM: cns3xxx: fix typo in PCI config accessor
+Date: Wed, 28 Jan 2015 14:53:07 +0100
+Message-ID: <2000255.rnmr9HfSOg@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQXi05_uH-fmPVPJNdm93DHbb26h6vDvsNuQb-KGAT7ung@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 14, 2015 at 08:51:22PM -0800, Yinghai Lu wrote:
-> On Wed, Jan 14, 2015 at 8:31 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > Some bios put range that is not fully coverred by root bus resources.
-> > Try to clip them and update them in pci bridge bars.
-> >
-> > We'd like to fix other arches instead of just x86.
-> >
-> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491
-> > Reported-by: Marek Kordik <kordikmarek@gmail.com>
-> > Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources")
-> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> > Cc: David Howells <dhowells@redhat.com>
-> > Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
-> > ---
-> >  arch/frv/mb93090-mb00/pci-frv.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > diff --git a/arch/frv/mb93090-mb00/pci-frv.c b/arch/frv/mb93090-mb00/pci-frv.c
-> > index 67b1d16..9e49c3e 100644
-> > --- a/arch/frv/mb93090-mb00/pci-frv.c
-> > +++ b/arch/frv/mb93090-mb00/pci-frv.c
-> > @@ -94,7 +94,7 @@ static void __init pcibios_allocate_bus_resources(struct list_head *bus_list)
-> >                                 r = &dev->resource[idx];
-> >                                 if (!r->start)
-> >                                         continue;
-> > -                               pci_claim_resource(dev, idx);
-> > +                               pci_claim_bridge_resource(dev, idx)
-> 
-> miss ; here.
-> 
-> Please let me know if you can fix it manually.
+The recent patch to convert the cns3xxx PCI code added an
+extraneous opening bracket, which makes the build fail,
+so remove this.
 
-Fixed, thanks.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: 10e2c5540d48 ("ARM: cns3xxx: Convert PCI to use generic config accessors")
+---
+
+Hi Bjorn,
+
+The broken patch just showed up in linux-next. Please apply this one on top,
+or fold it into the original patch if you don't mind rebasing.
+
+diff --git a/arch/arm/mach-cns3xxx/pcie.c b/arch/arm/mach-cns3xxx/pcie.c
+index e41fc339d100..c622c306c390 100644
+--- a/arch/arm/mach-cns3xxx/pcie.c
++++ b/arch/arm/mach-cns3xxx/pcie.c
+@@ -101,7 +101,7 @@ static int cns3xxx_pci_read_config(struct pci_bus *bus, unsigned int devfn,
+ 		 * for a PCIe bridge. So we must fixup the class code
+ 		 * to 0x604 here.
+ 		 */
+-		*val = (((((*val << shift) & 0xff) | (0x604 << 16)) >> shift) & mask;
++		*val = ((((*val << shift) & 0xff) | (0x604 << 16)) >> shift) & mask;
+ 
+ 	return ret;
+ }
+
