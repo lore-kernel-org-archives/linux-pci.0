@@ -1,119 +1,184 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 14 Jan 2015 19:27:59 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org,
-	virtualization@lists.linux-foundation.org
-Cc: Rusty Russell <rusty@rustcorp.com.au>, cornelia.huck@de.ibm.com,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	linux390@de.ibm.com, Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Gerald Schaefer <gerald.schaefer@de.ibm.com>,
-	linux-s390@vger.kernel.org
-Subject: [PATCH v3 10/16] s390: add pci_iomap_range
-Message-ID: <1421256142-11512-11-git-send-email-mst@redhat.com>
-References: <1421256142-11512-1-git-send-email-mst@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service88.mimecast.com ([195.130.217.12]:34043 "EHLO
+	service88.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754769AbbA1U42 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jan 2015 15:56:28 -0500
+Message-ID: <54C9068D.8050701@arm.com>
+Date: Wed, 28 Jan 2015 15:55:57 +0000
+From: Robin Murphy <robin.murphy@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1421256142-11512-1-git-send-email-mst@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Catalin Marinas <catalin.marinas@arm.com>,
+	Murali Karicheri <m-karicheri2@ti.com>
+CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v4 3/6] of: fix size when dma-range is not used
+References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com> <1422052359-12384-4-git-send-email-m-karicheri2@ti.com> <54C77616.80301@arm.com> <54C7DF13.20402@ti.com> <20150128110523.GC6646@e104818-lin.cambridge.arm.com>
+In-Reply-To: <20150128110523.GC6646@e104818-lin.cambridge.arm.com>
+Content-Type: text/plain; charset=WINDOWS-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Virtio drivers should map the part of the range they need, not
-necessarily all of it.
-To this end, support mapping ranges within BAR on s390.
-Since multiple ranges can now be mapped within a BAR, we keep track of
-the number of mappings created, and only clear out the mapping for a BAR
-when this number reaches 0.
+On 28/01/15 11:05, Catalin Marinas wrote:
+> On Tue, Jan 27, 2015 at 06:55:15PM +0000, Murali Karicheri wrote:
+>> On 01/27/2015 06:27 AM, Robin Murphy wrote:
+>>> On 23/01/15 22:32, Murali Karicheri wrote:
+>>>> Fix the dma-range size when the DT attribute is missing. i.e set size to
+>>>> dev->coherent_dma_mask + 1 instead of dev->coherent_dma_mask. To detect
+>>>> overflow when mask is set to max of u64, add a check, log error and
+>>>> return.
+>>>> Some platform use mask format for size in DTS. So add a work around to
+>>>> catch this and fix.
+>>>>
+>>>> Cc: Joerg Roedel <joro@8bytes.org>
+>>>> Cc: Grant Likely <grant.likely@linaro.org>
+>>>> Cc: Rob Herring <robh+dt@kernel.org>
+>>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>>>> Cc: Will Deacon <will.deacon@arm.com>
+>>>> Cc: Russell King <linux@arm.linux.org.uk>
+>>>> Cc: Arnd Bergmann <arnd@arndb.de>
+>>>> Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>>>>
+>>>> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+>>>> ---
+>>>> drivers/of/device.c | 14 +++++++++++++-
+>>>> 1 file changed, 13 insertions(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/drivers/of/device.c b/drivers/of/device.c
+>>>> index 2de320d..0a5ff54 100644
+>>>> --- a/drivers/of/device.c
+>>>> +++ b/drivers/of/device.c
+>>>> @@ -105,12 +105,24 @@ void of_dma_configure(struct device *dev, struct
+>>>> device_node *np)
+>>>> ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
+>>>> if (ret < 0) {
+>>>> dma_addr = offset = 0;
+>>>> - size = dev->coherent_dma_mask;
+>>>> + size = dev->coherent_dma_mask + 1;
+>>>> } else {
+>>>> offset = PFN_DOWN(paddr - dma_addr);
+>>>> + /*
+>>>> + * Add a work around to treat the size as mask + 1 in case
+>>>> + * it is defined in DT as a mask.
+>>>> + */
+>>>> + if (size & 1)
+>>>> + size = size + 1;
+>>>> dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+>>>> }
+>>>>
+>>>> + /* if size is 0, we have an overflow of u64 */
+>>>> + if (!size) {
+>>>> + dev_err(dev, "invalid size\n");
+>>>> + return;
+>>>> + }
+>>>> +
+>>>
+>>> This seems potentially fragile to dodgy DTs given that we might also be
+>>> using size to make a mask later. Would it make sense to double-up a
+>>> sanity check as mask-format detection? Something like:
+>>>
+>>> if is_power_of_2(size)
+>>> // use size
+>>> else if is_power_of_2(size + 1)
+>>> // use size + 1
+>>> else
+>>> // cry
+>>
+>> How about having the logic like this?
+>>
+>> 	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
+>> 	if (ret < 0) {
+>> 		dma_addr = offset = 0;
+>> 		size = dev->coherent_dma_mask + 1;
+>> 	} else {
+>> 		offset = PFN_DOWN(paddr - dma_addr);
+>> 		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+>> 	}
+>>
+>> 	if (is_power_of_2(size + 1))
+>> 		size = size + 1;
+>> 	else if (!is_power_of_2(size))
+>> 	{
+>> 		dev_err(dev, "invalid size\n");
+>> 		return;
+>> 	}
+>
+> In of_dma_configure(), we currently assume that the default coherent
+> mask is 32-bit. In this thread:
+>
+> http://article.gmane.org/gmane.linux.kernel/1835096
+>
+> we talked about setting the coherent mask based on size automatically.
+> I'm not sure about the size but I think we can assume is 32-bit mask + 1
+> if it is not specified in the DT. Instead of just assuming a default
+> mask, let's assume a default size and create the mask based on this
+> (untested):
+>
+> diff --git a/drivers/of/platform.c b/drivers/of/platform.c
+> index 5b33c6a21807..9ff8d1286b44 100644
+> --- a/drivers/of/platform.c
+> +++ b/drivers/of/platform.c
+> @@ -170,10 +170,10 @@ static void of_dma_configure(struct device *dev)
+>   	struct iommu_ops *iommu;
+>
+>   	/*
+> -	 * Set default dma-mask to 32 bit. Drivers are expected to setup
+> -	 * the correct supported dma_mask.
+> +	 * Set default size to cover the 32-bit. Drivers are expected to setup
+> +	 * the correct size and dma_mask.
+>   	 */
+> -	dev->coherent_dma_mask = DMA_BIT_MASK(32);
+> +	size = 1ULL << 32;
+>
+>   	/*
+>   	 * Set it to coherent_dma_mask by default if the architecture
+> @@ -185,13 +185,24 @@ static void of_dma_configure(struct device *dev)
+>   	ret = of_dma_get_range(dev->of_node, &dma_addr, &paddr, &size);
+>   	if (ret < 0) {
+>   		dma_addr = offset = 0;
+> -		size = dev->coherent_dma_mask;
+>   	} else {
+>   		offset = PFN_DOWN(paddr - dma_addr);
+>   		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", dev->dma_pfn_offset);
+>   	}
+>   	dev->dma_pfn_offset = offset;
+>
+> +	/*
+> +	 * Workaround for DTs setting the size to a mask or 0.
+> +	 */
+> +	if (is_power_of_2(size + 1))
+> +		size += 1;
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Tested-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
----
+In fact, since the ilog2 below ends up effectively rounding down, we 
+might as well do away with this check as well and just add 1 
+unconditionally. The only time it makes any difference is when we want 
+it to anyway!
 
-Heiko, Martin, can you please ack merging this through the virtio tree?
-This was lightly tested by Sebastian Ott.
+I like this approach, it ends up looking a lot neater.
 
- arch/s390/include/asm/pci_io.h |  1 +
- arch/s390/pci/pci.c            | 34 +++++++++++++++++++++++++++-------
- 2 files changed, 28 insertions(+), 7 deletions(-)
+Robin.
 
-diff --git a/arch/s390/include/asm/pci_io.h b/arch/s390/include/asm/pci_io.h
-index f664e96..1a9a98d 100644
---- a/arch/s390/include/asm/pci_io.h
-+++ b/arch/s390/include/asm/pci_io.h
-@@ -16,6 +16,7 @@
- struct zpci_iomap_entry {
- 	u32 fh;
- 	u8 bar;
-+	u16 count;
- };
- 
- extern struct zpci_iomap_entry *zpci_iomap_start;
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index 3290f11..753a567 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -259,7 +259,10 @@ void __iowrite64_copy(void __iomem *to, const void *from, size_t count)
- }
- 
- /* Create a virtual mapping cookie for a PCI BAR */
--void __iomem *pci_iomap(struct pci_dev *pdev, int bar, unsigned long max)
-+void __iomem *pci_iomap_range(struct pci_dev *pdev,
-+			      int bar,
-+			      unsigned long offset,
-+			      unsigned long max)
- {
- 	struct zpci_dev *zdev =	get_zdev(pdev);
- 	u64 addr;
-@@ -270,14 +273,27 @@ void __iomem *pci_iomap(struct pci_dev *pdev, int bar, unsigned long max)
- 
- 	idx = zdev->bars[bar].map_idx;
- 	spin_lock(&zpci_iomap_lock);
--	zpci_iomap_start[idx].fh = zdev->fh;
--	zpci_iomap_start[idx].bar = bar;
-+	if (zpci_iomap_start[idx].count++) {
-+		BUG_ON(zpci_iomap_start[idx].fh != zdev->fh ||
-+		       zpci_iomap_start[idx].bar != bar);
-+	} else {
-+		zpci_iomap_start[idx].fh = zdev->fh;
-+		zpci_iomap_start[idx].bar = bar;
-+	}
-+	/* Detect overrun */
-+	BUG_ON(!zpci_iomap_start[idx].count);
- 	spin_unlock(&zpci_iomap_lock);
- 
- 	addr = ZPCI_IOMAP_ADDR_BASE | ((u64) idx << 48);
--	return (void __iomem *) addr;
-+	return (void __iomem *) addr + offset;
- }
--EXPORT_SYMBOL_GPL(pci_iomap);
-+EXPORT_SYMBOL_GPL(pci_iomap_range);
-+
-+void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long maxlen)
-+{
-+	return pci_iomap_range(dev, bar, 0, maxlen);
-+}
-+EXPORT_SYMBOL(pci_iomap);
- 
- void pci_iounmap(struct pci_dev *pdev, void __iomem *addr)
- {
-@@ -285,8 +301,12 @@ void pci_iounmap(struct pci_dev *pdev, void __iomem *addr)
- 
- 	idx = (((__force u64) addr) & ~ZPCI_IOMAP_ADDR_BASE) >> 48;
- 	spin_lock(&zpci_iomap_lock);
--	zpci_iomap_start[idx].fh = 0;
--	zpci_iomap_start[idx].bar = 0;
-+	/* Detect underrun */
-+	BUG_ON(!zpci_iomap_start[idx].count);
-+	if (!--zpci_iomap_start[idx].count) {
-+		zpci_iomap_start[idx].fh = 0;
-+		zpci_iomap_start[idx].bar = 0;
-+	}
- 	spin_unlock(&zpci_iomap_lock);
- }
- EXPORT_SYMBOL_GPL(pci_iounmap);
--- 
-MST
+> +
+> +	/*
+> +	 * Coherent DMA masks larger than 32-bit must be explicitly set by the
+> +	 * driver.
+> +	 */
+> +	dev->coherent_dma_mask = min(DMA_BIT_MASK(32), DMA_BIT_MASK(ilog2(size)));
+> +
+>   	coherent = of_dma_is_coherent(dev->of_node);
+>   	dev_dbg(dev, "device is%sdma coherent\n",
+>   		coherent ? " " : " not ");
+>
+
 
