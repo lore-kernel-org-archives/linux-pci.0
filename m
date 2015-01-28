@@ -1,40 +1,65 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 22 Jan 2015 11:38:33 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: "Zheng, Lv" <lv.zheng@intel.com>
-cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:64170 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755183AbbA1U2g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 28 Jan 2015 15:28:36 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"Moore, Robert" <robert.moore@intel.com>,
-	"Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Luck, Tony" <tony.luck@intel.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"devel@acpica.org" <devel@acpica.org>
-Subject: RE: [RFC Patch 05/19] ACPI: Provide union for address_space64 and
- ext_address_space64
-In-Reply-To: <1AE640813FDE7649BE1B193DEA596E88026B9F36@SHSMSX101.ccr.corp.intel.com>
-Message-ID: <alpine.DEB.2.11.1501221134370.5526@nanos>
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-6-git-send-email-jiang.liu@linux.intel.com> <1AE640813FDE7649BE1B193DEA596E88026B9EFB@SHSMSX101.ccr.corp.intel.com> <54C06726.4090805@linux.intel.com>
- <1AE640813FDE7649BE1B193DEA596E88026B9F36@SHSMSX101.ccr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch v2 14/22] ACPI: Translate resource into master side address for bridge window resources
+Date: Wed, 28 Jan 2015 18:57:32 +0800
+Message-Id: <1422442660-455-15-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 22 Jan 2015, Zheng, Lv wrote:
-> If we can reach an agreement on the linuxized version, then it can
-> be merged directly by Rafael.  And I'll zap it from the ACPICA
-> release series.
+Add translation_offset into the result address for bridge window
+resources to form the master side address.
 
-Fine with me.
+Currently acpi_dev_resource_{ext_}address_space() are only used for
+devices instead of bridges, so it won't break current users. Later
+it will be used to support PCI host bridge drivers.
 
-Thanks,
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/resource.c |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-	tglx
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index c902c8eece81..4dc8cfb2e94e 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -205,6 +205,21 @@ static bool acpi_decode_space(struct resource_win *win,
+ 	res->start = attr->minimum;
+ 	res->end = attr->maximum;
+ 
++	/*
++	 * For bridges that translate addresses across the bridge,
++	 * translation_offset is the offset that must be added to the
++	 * address on the secondary side to obtain the address on the
++	 * primary side. Non-bridge devices must list 0 for all Address
++	 * Translation offset bits.
++	 */
++	if (addr->producer_consumer == ACPI_PRODUCER) {
++		res->start += attr->translation_offset;
++		res->end += attr->translation_offset;
++	} else if (attr->translation_offset) {
++		pr_debug("ACPI: translation_offset(%lld) is invalid for non-bridge device.\n",
++			 attr->translation_offset);
++	}
++
+ 	switch (addr->resource_type) {
+ 	case ACPI_MEMORY_RANGE:
+ 		acpi_dev_memresource_flags(res, len, wp);
+-- 
+1.7.10.4
 
