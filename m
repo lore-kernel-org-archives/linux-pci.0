@@ -1,193 +1,106 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <54C7D576.6030502@ti.com>
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
- <1422052359-12384-5-git-send-email-m-karicheri2@ti.com> <20150123234124.GW29776@google.com>
- <54C6CCF3.7080308@ti.com> <CAErSpo4w0zVCmXk2D2Qk5W3kceS9Wk+=jqHBDwk6HUXWwXdq_Q@mail.gmail.com>
- <54C7D576.6030502@ti.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 27 Jan 2015 12:42:11 -0600
-Message-ID: <CAErSpo4Awgqu0ZtoMm0XSZzhnYtXh3xxH2OJMkyth5YDR9GUiA@mail.gmail.com>
-Subject: Re: [PATCH v4 4/6] of/pci: add of_pci_dma_configure() update dma configuration
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:60775 "EHLO
+	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754076AbbA2DJ3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jan 2015 22:09:29 -0500
+Received: by mail-oi0-f53.google.com with SMTP id i138so22666299oig.12
+        for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2015 19:09:28 -0800 (PST)
+From: Rob Herring <robh@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>
+Subject: [PATCH v2 1/3] dt/bindings: add versatile PCI binding
+Date: Wed, 28 Jan 2015 10:16:16 -0600
+Message-Id: <1422461778-6769-2-git-send-email-robh@kernel.org>
+In-Reply-To: <1422461778-6769-1-git-send-email-robh@kernel.org>
+References: <1422461778-6769-1-git-send-email-robh@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 27, 2015 at 12:14 PM, Murali Karicheri <m-karicheri2@ti.com> wrote:
-> On 01/26/2015 06:59 PM, Bjorn Helgaas wrote:
->>
->> On Mon, Jan 26, 2015 at 5:25 PM, Murali Karicheri<m-karicheri2@ti.com>
->> wrote:
->>>
->>> On 01/23/2015 06:41 PM, Bjorn Helgaas wrote:
->>>>
->>>>
->>>> On Fri, Jan 23, 2015 at 05:32:37PM -0500, Murali Karicheri wrote:
->>>>>
->>>>>
->>>>> Add of_pci_dma_configure() to allow updating the dma configuration
->>>>> of the pci device using the configuration from DT of the parent of
->>>>> the root bridge device.
->>>>>
->   -- Cut ---
->
->>>>>
->>>>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
->>>>> ---
->>>>>    drivers/of/of_pci.c    |   39
->>>>> +++++++++++++++++++++++++++++++++++++++
->>>>>    include/linux/of_pci.h |   12 ++++++++++++
->>>>>    2 files changed, 51 insertions(+)
->>>>>
->>>>> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
->>>>> index 88471d3..34878c9 100644
->>>>> --- a/drivers/of/of_pci.c
->>>>> +++ b/drivers/of/of_pci.c
->>>>> @@ -2,6 +2,7 @@
->>>>>    #include<linux/export.h>
->>>>>    #include<linux/of.h>
->>>>>    #include<linux/of_address.h>
->>>>> +#include<linux/of_device.h>
->>>>>    #include<linux/of_pci.h>
->>>>>    #include<linux/slab.h>
->>>>>
->>>>> @@ -229,6 +230,44 @@ parse_failed:
->>>>>          return err;
->>>>>    }
->>>>>    EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
->>>>> +
->>>>> +/**
->>>>> + * of_get_pci_root_bridge_parent - get the OF node of the root
->>>>> bridge's
->>>>> parent
->>>>> + * @dev: ptr to pci_dev struct of the pci device
->>>>> + *
->>>>> + * This function will traverse the bus up to the root bus starting
->>>>> with
->>>>> + * the child and return the OF node ptr to root bridge device's parent
->>>>> device.
->>>>> + */
->>>>> +struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev)
->>>>
->>>>
->>>>
->>>> I'm not an OF person, but this interface seems like it might be too
->>>> special-purpose.  Maybe it would be enough to add
->>>> "of_get_pci_root_bridge()", and the caller could do this:
->>>>
->>>>       struct device *bridge = of_get_pci_root_bridge(dev);
->>>>       struct device_node *parent_np = bridge->parent->of_node;
->>>>
->>>> Also, the name "of_get_..." suggests that it increments a refcount, as
->>>> of_get_parent() does.  But you aren't doing anything with the refcount.
->>>>
->>>> But I guess an "of_get_pci_root_bridge()" isn't doing anything
->>>> OF-related,
->>>> so maybe we should just add a "pci_get_host_bridge(struct pci_dev *)"
->>>> to PCI instead.
->>>
->>>
->>>
->>> Bjorn,
->>>
->>> Thanks for the comment.
->>>
->>> I think adding pci_get_host_bridge() is a good idea. There is already
->>> similar function in host-bridge.c. I have added this function re-using
->>> existing function find_pci_root_bus(). See the incremental diff below
->>> after
->>> this change. Does this look good?
->>
->>
->> I like the implementation, but I think either we need to take a
->> reference on the host bridge, or change the name to  something like
->> "pci_find_host_bridge()", because using "_get_" is conventional for
->> functions that acquire a reference.
->>
->> Since host bridges are hot-pluggable, at least in theory, I vote for
->> taking a reference.  Then of course, you'd have to add code to drop
->> the reference when you're finished with it.
->>
-> Bjorn,
->
-> Thanks. I agree with your suggestion even though the convention is not
-> followed fully :) of_pci_get_devfn(), of_get_pci_domain_nr(),
-> of_pci_get_host_bridge_resources() are some of those functions not following
-> the convention. I plan to change the function as below. Also want to name
-> functions as pci_get/put_host_bridge_device() as existing function
-> find_pci_host_bridge() is actually returning ptr to struct pci_host_bridge
-> vs the new function returning ptr to device. Here are the new functions and
-> how they will be used. Please review and respond so that I can avoid a
-> re-spin.
->
-> in linux/include/pci.h add the prototypes of
-> pci_get/put_host_bridge_device().
->
-> in drivers/pci/host-bridge.c add two new functions.
->
-> struct device *pci_get_host_bridge_device(struct pci_dev *dev)
-> {
->         struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
->         struct device *bridge = root_bus->bridge;
->
->         kobject_get(&bridge->kobj);
->         return bridge;
-> }
+Add binding documentation for the PCI controller found on Versatile PB
+boards.
 
-Looks good to me.
+Signed-off-by: Rob Herring <robh@kernel.org>
+Cc: Linus Walleij <linus.walleij@linaro.org>
+Cc: Pawel Moll <pawel.moll@arm.com>
+Cc: Mark Rutland <mark.rutland@arm.com>
+Cc: Ian Campbell <ijc+devicetree@hellion.org.uk>
+Cc: Kumar Gala <galak@codeaurora.org>
+---
+ .../devicetree/bindings/pci/versatile.txt          | 59 ++++++++++++++++++++++
+ 1 file changed, 59 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/versatile.txt
 
-> void  pci_put_host_bridge_device(struct pci_dev *dev)
-> {
->         struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
->         struct device *bridge = root_bus->bridge;
->
->         kobject_put(&bridge->kobj);
-> }
+diff --git a/Documentation/devicetree/bindings/pci/versatile.txt b/Documentation/devicetree/bindings/pci/versatile.txt
+new file mode 100644
+index 0000000..2cc6071
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/versatile.txt
+@@ -0,0 +1,59 @@
++* ARM Versatile Platform Baseboard PCI interface
++
++PCI host controller found on the ARM Versatile PB board's FPGA.
++
++Required properties:
++- compatible: should contain "arm,versatile-pci" to identify the Versatile PCI
++  controller.
++- reg: base addresses and lengths of the pci controller. There must be 3
++  entries:
++	- Versatile specific registers
++	- Self Config space
++	- Config space
++- #address-cells: set to <3>
++- #size-cells: set to <2>
++- device_type: set to "pci"
++- bus-range: set to <0 0xff>
++- ranges: ranges for the PCI memory and I/O regions
++- #interrupt-cells: set to <1>
++- interrupt-map-mask and interrupt-map: standard PCI properties	to define
++	the mapping of the PCI interface to interrupt numbers.
++
++Example:
++
++pci-controller@10001000 {
++	compatible = "arm,versatile-pci";
++	device_type = "pci";
++	reg = <0x10001000 0x1000
++	       0x41000000 0x10000
++	       0x42000000 0x100000>;
++	bus-range = <0 0xff>;
++	#address-cells = <3>;
++	#size-cells = <2>;
++	#interrupt-cells = <1>;
++
++	ranges = <0x01000000 0 0x00000000 0x43000000 0 0x00010000   /* downstream I/O */
++		  0x02000000 0 0x50000000 0x50000000 0 0x10000000   /* non-prefetchable memory */
++		  0x42000000 0 0x60000000 0x60000000 0 0x10000000>; /* prefetchable memory */
++
++	interrupt-map-mask = <0x1800 0 0 7>;
++	interrupt-map = <0x1800 0 0 1 &sic 28
++			 0x1800 0 0 2 &sic 29
++			 0x1800 0 0 3 &sic 30
++			 0x1800 0 0 4 &sic 27
++
++			 0x1000 0 0 1 &sic 27
++			 0x1000 0 0 2 &sic 28
++			 0x1000 0 0 3 &sic 29
++			 0x1000 0 0 4 &sic 30
++
++			 0x0800 0 0 1 &sic 30
++			 0x0800 0 0 2 &sic 27
++			 0x0800 0 0 3 &sic 28
++			 0x0800 0 0 4 &sic 29
++
++			 0x0000 0 0 1 &sic 29
++			 0x0000 0 0 2 &sic 30
++			 0x0000 0 0 3 &sic 27
++			 0x0000 0 0 4 &sic 28>;
++};
+-- 
+2.1.0
 
-I think I would pass in the "struct device *" here so we don't have to
-call find_pci_root_bus() again.
-
-> drivers/of/of_pci.c
->
-> void of_pci_dma_configure(struct pci_dev *pci_dev)
-> {
->         struct device *dev = &pci_dev->dev;
->         struct device *bridge = pci_get_host_bridge_device(pci_dev);
->
->         of_dma_configure(dev, bridge->parent->of_node);
->         pci_put_host_bridge_device(pci_dev);
-
-Then this would become "pci_put_host_bridge_device(bridge)"
-
-> }
->
-> Murali
->
->> Bjorn
->>
->
->>>>>
->>>
->>>
->>> --
->>> Murali Karicheri
->>> Linux Kernel, Texas Instruments
->
->
->
-> --
-> Murali Karicheri
-> Linux Kernel, Texas Instruments
