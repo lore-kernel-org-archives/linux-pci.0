@@ -1,127 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:56077 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754146AbbAUCdB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 21:33:01 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v2 30/30] PCI: Remove pci_bus_assign_domain_nr()
-Date: Wed, 21 Jan 2015 08:30:25 +0800
-Message-ID: <1421800225-26230-31-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
-References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <54C8FFE0.3030007@arm.com>
+Date: Wed, 28 Jan 2015 15:27:28 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Andre Przywara <Andre.Przywara@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Fix pcibios_update_irq misuse of irq number
+References: <1422456683-797-1-git-send-email-marc.zyngier@arm.com> <54C8FE61.1030304@linux.intel.com>
+In-Reply-To: <54C8FE61.1030304@linux.intel.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we save the domain number in pci_host_bridge,
-we could remove pci_bus_assign_domain_nr() and
-clean the domain member in pci_bus.
+Hi Gerry,
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/pci.c   |    5 -----
- drivers/pci/probe.c |   12 ++++--------
- include/linux/pci.h |    3 ---
- 3 files changed, 4 insertions(+), 16 deletions(-)
+On 28/01/15 15:21, Jiang Liu wrote:
+> 
+> 
+> On 2015/1/28 22:51, Marc Zyngier wrote:
+>> pcibios_update_irq writes an irq number into the config space
+>> of a given PCI device, but ignores the fact that this number
+>> is a virtual interrupt number, which might be a very different
+>> value from what the underlying hardware is using.
+>>
+>> The obvious fix is to fetch the HW interrupt number from the
+>> corresponding irq_data structure. This is slightly complicated
+>> by the fact that this interrupt might be services by a stacked
+>> domain.
+>>
+>> This has been tested on KVM with kvmtool.
+>>
+>> Reported-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> Tested-by: Andre Przywara <andre.przywara@arm.com>
+>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+>> ---
+>>  drivers/pci/setup-irq.c | 12 ++++++++++--
+>>  1 file changed, 10 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+>> index 4e2d595..828cbc9 100644
+>> --- a/drivers/pci/setup-irq.c
+>> +++ b/drivers/pci/setup-irq.c
+>> @@ -15,11 +15,19 @@
+>>  #include <linux/errno.h>
+>>  #include <linux/ioport.h>
+>>  #include <linux/cache.h>
+>> +#include <linux/irq.h>
+>>  
+>>  void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
+>>  {
+>> -	dev_dbg(&dev->dev, "assigning IRQ %02d\n", irq);
+>> -	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+>> +	struct irq_data *d;
+>> +
+>> +	d = irq_get_irq_data(irq);
+>> +#ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
+>> +	while (d->parent_data)
+>> +		d = d->parent_data;
+>> +#endif
+>> +	dev_dbg(&dev->dev, "assigning IRQ %02ld\n", d->hwirq);
+>> +	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, d->hwirq);
+>>  }
+> Hi Mark,
+> 	Instead of modifying the common version, how about
+> implementing an arch specific version? Arch may have different
+> way to determine the irq number. Above implementation doesn't
+> work with x86, for example.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 0af5ef1..7ad1e59 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4521,11 +4521,6 @@ void pci_host_assign_domain_nr(struct pci_host_bridge *host)
- {
- 	host->domain = pci_assign_domain_nr(host->dev.parent);
- }
--
--void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
--{
--	bus->domain_nr = pci_assign_domain_nr(parent);
--}
- #endif
- #endif
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 70e28d9..dabf4ca 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -480,7 +480,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
- 	}
- }
- 
--static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
-+static struct pci_bus *pci_alloc_bus(void)
- {
- 	struct pci_bus *b;
- 
-@@ -495,10 +495,7 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
- 	INIT_LIST_HEAD(&b->resources);
- 	b->max_bus_speed = PCI_SPEED_UNKNOWN;
- 	b->cur_bus_speed = PCI_SPEED_UNKNOWN;
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
--	if (parent)
--		b->domain_nr = parent->domain_nr;
--#endif
-+
- 	return b;
- }
- 
-@@ -645,7 +642,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	/*
- 	 * Allocate a new bus, and inherit stuff from the parent..
- 	 */
--	child = pci_alloc_bus(parent);
-+	child = pci_alloc_bus();
- 	if (!child)
- 		return NULL;
- 
-@@ -1865,14 +1862,13 @@ static struct pci_bus *pci_create_root_bus(
- 	char *fmt;
- 
- 	parent = bridge->dev.parent;
--	b = pci_alloc_bus(NULL);
-+	b = pci_alloc_bus();
- 	if (!b)
- 		return NULL;
- 
- 	b->sysdata = dev_get_drvdata(&bridge->dev);
- 	b->ops = ops;
- 	b->number = b->busn_res.start = bridge->busnum;
--	pci_bus_assign_domain_nr(b, parent);
- 
- 	bridge->bus = b;
- 	b->bridge = get_device(&bridge->dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 57e7e00..90fb71a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -471,9 +471,6 @@ struct pci_bus {
- 	unsigned char	primary;	/* number of primary bridge */
- 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
- 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
--	int		domain_nr;
--#endif
- 
- 	char		name[48];
- 
+If you look at the Makefile, this file is used on:
+
+obj-$(CONFIG_ALPHA) += setup-irq.o
+obj-$(CONFIG_ARM) += setup-irq.o
+obj-$(CONFIG_UNICORE32) += setup-irq.o
+obj-$(CONFIG_SUPERH) += setup-irq.o
+obj-$(CONFIG_MIPS) += setup-irq.o
+obj-$(CONFIG_TILE) += setup-irq.o
+obj-$(CONFIG_SPARC_LEON) += setup-irq.o
+obj-$(CONFIG_M68K) += setup-irq.o
+
+x86 doesn't use that at all.
+
+That aside, do you know any case where this transformation would lead to
+an invalid result? Worse case, irq should be equal to hwirq, shouldn't
+it? Or are you thinking of something else?
+
+Thanks,
+
+	M.
 -- 
-1.7.1
-
+Jazz is not dead. It just smells funny...
