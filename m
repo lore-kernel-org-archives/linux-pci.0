@@ -1,313 +1,303 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:51302 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753493AbbAZSWh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 13:22:37 -0500
-Received: by mail-ob0-f182.google.com with SMTP id gq1so9151764obb.13
-        for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2015 10:22:36 -0800 (PST)
-Date: Mon, 26 Jan 2015 12:22:33 -0600
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 28 Jan 2015 17:34:39 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
 	Russell King <linux@arm.linux.org.uk>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 07/16] ARM: integrator: convert PCI to use generic config
- accesses
-Message-ID: <20150126182233.GB4063@google.com>
-References: <1420857290-8373-1-git-send-email-robh@kernel.org>
- <1420857290-8373-8-git-send-email-robh@kernel.org>
- <CACRpkdbwKN9LenqrWeu4WykhdZOGAdxpC_BYr2cYpc2_cn5GfA@mail.gmail.com>
- <4938579.0KIk3QtTCP@wuerfel>
- <CACRpkdZSXWrVudiadVjbhQDS_zQrYttaytW-TUoeFUrc=beD1A@mail.gmail.com>
- <20150122203336.GD13072@google.com>
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Will Deacon <will.deacon@arm.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	=?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Srikanth Thokala <sthokal@xilinx.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Russell King <rmk+kernel@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [Patch v2 18/22] PCI: Use common resource list management code
+ instead of private implementation
+Message-ID: <20150128233439.GD17623@google.com>
+References: <1422442660-455-1-git-send-email-jiang.liu@linux.intel.com>
+ <1422442660-455-19-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150122203336.GD13072@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1422442660-455-19-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 22, 2015 at 02:33:36PM -0600, Bjorn Helgaas wrote:
-> On Mon, Jan 12, 2015 at 01:05:12AM +0100, Linus Walleij wrote:
-> > On Sat, Jan 10, 2015 at 10:53 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > > On Saturday 10 January 2015 22:40:22 Linus Walleij wrote:
-> > >> >  static int v3_read_config(struct pci_bus *bus, unsigned int devfn, int where,
-> > >> >                           int size, u32 *val)
-> > >> >  {
-> > >> > -       addr = v3_open_config_window(bus, devfn, where);
-> > >> > +       int ret = pci_generic_config_read(bus, devfn, where, size, val);
-> > >> >         v3_close_config_window();
-> > >> > +       return ret;
-> > >> >  }
-> > >> >
-> > >> >  static int v3_write_config(struct pci_bus *bus, unsigned int devfn, int where,
-> > >> >                            int size, u32 val)
-> > >> >  {
-> > >> > +       int ret = pci_generic_config_write(bus, devfn, where, size, val);
-> > >> >         v3_close_config_window();
-> > >> > -       raw_spin_unlock_irqrestore(&v3_lock, flags);
-> > >> > +       return ret;
-> > >> >  }
-> > >> >
-> > >> >  static struct pci_ops pci_v3_ops = {
-> > >> > +       .map_bus = v3_open_config_window,
-> > >> >         .read   = v3_read_config,
-> > >> >         .write  = v3_write_config,
-> > >>
-> > >> So .map_bus is called before every .read/.write operation I take it.
-> > >>
-> > >> Wouldn't it be proper to call the v3_close_config_window() from a
-> > >> matching .unmap_bus() callback for symmetry?
-> > >
-> > > It would be nicer for integrator but useless for anything else, so
-> > > I'd vote for leaving it the way Rob posted.
-> > 
-> > OK I buy that, throw in a comment about it in the code if there
-> > is some time for iterating the patch.
+On Wed, Jan 28, 2015 at 06:57:36PM +0800, Jiang Liu wrote:
+> Use common resource list management data structure and interfaces
+> instead of private implementation.
 > 
-> Would you prefer something like the following instead?  It keeps the
-> v3_open/close symmetry, but it does break apart and duplicate some of the
-> logic from v3_open_config_window().
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 
-Hearing nothing, I kept Rob's initial version.  It can be tweaked later if
-anybody wants to.  I just want to get all this into v3.20.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Bjorn
-
-> commit 3e0c269a560968002298d22ac47bde4bd45aea8e
-> Author: Rob Herring <robh@kernel.org>
-> Date:   Fri Jan 9 20:34:41 2015 -0600
+> ---
+>  arch/arm/kernel/bios32.c            |    5 ++---
+>  arch/x86/pci/bus_numa.c             |    4 ++--
+>  drivers/pci/bus.c                   |   18 ++++++------------
+>  drivers/pci/host-bridge.c           |    8 ++++----
+>  drivers/pci/host/pci-host-generic.c |    4 ++--
+>  drivers/pci/host/pci-xgene.c        |    4 ++--
+>  drivers/pci/host/pcie-xilinx.c      |    4 ++--
+>  drivers/pci/probe.c                 |   10 +++++-----
+>  include/linux/pci.h                 |    9 ++-------
+>  9 files changed, 27 insertions(+), 39 deletions(-)
 > 
->     ARM: integrator: Convert PCI to use generic config accessors
->     
->     Convert the integrator PCI driver to use the generic config access
->     functions.
->     
->     This changes accesses from __raw_readX/__raw_writeX to readX/writeX
->     variants.  The spinlock is removed because it is unnecessary.  The config
->     read and write functions are already protected with a spinlock and no
->     access can occur during the .pre_init function.
->     
->     Signed-off-by: Rob Herring <robh@kernel.org>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     Acked-by: Linus Walleij <linus.walleij@linaro.org>
->     CC: Russell King <linux@arm.linux.org.uk>
->     CC: linux-arm-kernel@lists.infradead.org
-> 
-> diff --git a/arch/arm/mach-integrator/pci_v3.c b/arch/arm/mach-integrator/pci_v3.c
-> index c186a17c2cff..c1098729cf8a 100644
-> --- a/arch/arm/mach-integrator/pci_v3.c
-> +++ b/arch/arm/mach-integrator/pci_v3.c
-> @@ -324,7 +324,7 @@ static u64 pre_mem_pci_sz;
->   * configuration address space, you present the V3 with the following pattern
->   * (which is very nearly a type 1 (except that the lower two bits are 00 and
->   * not 01).   In order for this mapping to work you need to set up one of
-> - * the local to PCI aperatures to 16Mbytes in length translating to
-> + * the local to PCI apertures to 16Mbytes in length translating to
->   * PCI configuration space starting at 0x0000.0000.
->   *
->   * PCI configuration cycles look like this:
-> @@ -356,15 +356,14 @@ static u64 pre_mem_pci_sz;
->   *	 7:2	register number
->   *
->   */
-> -static DEFINE_RAW_SPINLOCK(v3_lock);
->  
->  #undef V3_LB_BASE_PREFETCH
->  #define V3_LB_BASE_PREFETCH 0
->  
-> -static void __iomem *v3_open_config_window(struct pci_bus *bus,
-> -					   unsigned int devfn, int offset)
-> +static void v3_open_config_window(struct pci_bus *bus, unsigned int devfn,
-> +				  int offset)
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> index a4effd6d8f2f..968b03cb6376 100644
+> --- a/arch/arm/kernel/bios32.c
+> +++ b/arch/arm/kernel/bios32.c
+> @@ -422,17 +422,16 @@ static int pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+>  static int pcibios_init_resources(int busnr, struct pci_sys_data *sys)
 >  {
-> -	unsigned int address, mapaddress, busnr;
-> +	unsigned int mapaddress, busnr;
+>  	int ret;
+> -	struct pci_host_bridge_window *window;
+> +	struct resource_list_entry *window;
 >  
->  	busnr = bus->number;
->  
-> @@ -381,14 +380,10 @@ static void __iomem *v3_open_config_window(struct pci_bus *bus,
->  		/*
->  		 * local bus segment so need a type 0 config cycle
->  		 *
-> -		 * build the PCI configuration "address" with one-hot in
-> -		 * A31-A11
-> -		 *
->  		 * mapaddress:
->  		 *  3:1 = config cycle (101)
->  		 *  0   = PCI A1 & A0 are 0 (0)
->  		 */
-> -		address = PCI_FUNC(devfn) << 8;
->  		mapaddress = V3_LB_MAP_TYPE_CONFIG;
->  
->  		if (slot > 12)
-> @@ -396,26 +391,15 @@ static void __iomem *v3_open_config_window(struct pci_bus *bus,
->  			 * high order bits are handled by the MAP register
->  			 */
->  			mapaddress |= 1 << (slot - 5);
-> -		else
-> -			/*
-> -			 * low order bits handled directly in the address
-> -			 */
-> -			address |= 1 << (slot + 11);
->  	} else {
->          	/*
->  		 * not the local bus segment so need a type 1 config cycle
->  		 *
-> -		 * address:
-> -		 *  23:16 = bus number
-> -		 *  15:11 = slot number (7:3 of devfn)
-> -		 *  10:8  = func number (2:0 of devfn)
-> -		 *
->  		 * mapaddress:
->  		 *  3:1 = config cycle (101)
->  		 *  0   = PCI A1 & A0 from host bus (1)
->  		 */
->  		mapaddress = V3_LB_MAP_TYPE_CONFIG | V3_LB_MAP_AD_LOW_EN;
-> -		address = (busnr << 16) | (devfn << 8);
+>  	if (list_empty(&sys->resources)) {
+>  		pci_add_resource_offset(&sys->resources,
+>  			 &iomem_resource, sys->mem_offset);
 >  	}
 >  
->  	/*
-> @@ -432,8 +416,6 @@ static void __iomem *v3_open_config_window(struct pci_bus *bus,
->  	v3_writel(V3_LB_BASE1, v3_addr_to_lb_base(conf_mem.start) |
->  			V3_LB_BASE_ADR_SIZE_16MB | V3_LB_BASE_ENABLE);
->  	v3_writew(V3_LB_MAP1, mapaddress);
-> -
-> -	return PCI_CONFIG_VADDR + address + offset;
->  }
->  
->  static void v3_close_config_window(void)
-> @@ -454,70 +436,66 @@ static void v3_close_config_window(void)
->  			V3_LB_BASE_ADR_SIZE_256MB | V3_LB_BASE_ENABLE);
->  }
->  
-> -static int v3_read_config(struct pci_bus *bus, unsigned int devfn, int where,
-> -			  int size, u32 *val)
-> +static void __iomem *v3_map_bus(struct pci_bus *bus,
-> +					   unsigned int devfn, int offset)
->  {
-> -	void __iomem *addr;
-> -	unsigned long flags;
-> -	u32 v;
-> +	unsigned int busnr = bus->number;
-> +	unsigned int address;
->  
-> -	raw_spin_lock_irqsave(&v3_lock, flags);
-> -	addr = v3_open_config_window(bus, devfn, where);
-> -
-> -	switch (size) {
-> -	case 1:
-> -		v = __raw_readb(addr);
-> -		break;
-> +	if (busnr == 0) {
-> +		int slot = PCI_SLOT(devfn);
->  
-> -	case 2:
-> -		v = __raw_readw(addr);
-> -		break;
-> +		/*
-> +		 * build the PCI configuration "address" with function in
-> +		 * A10-A8 and device one-hot in A31-A11
-> +		 */
-> +		address = PCI_FUNC(devfn) << 8;
->  
-> -	default:
-> -		v = __raw_readl(addr);
-> -		break;
-> +		/*
-> +		 * high order bits are handled by the MAP register;
-> +		 * low order bits handled directly in the address
-> +		 */
-> +		if (slot <= 12)
-> +			address |= 1 << (slot + 11);
-> +	} else {
-> +		/*
-> +		 * not the local bus segment so need a type 1 config cycle
-> +		 *
-> +		 * address:
-> +		 *  23:16 = bus number
-> +		 *  15:11 = slot number (7:3 of devfn)
-> +		 *  10:8  = func number (2:0 of devfn)
-> +		 */
-> +		address = (busnr << 16) | (devfn << 8);
->  	}
->  
-> -	v3_close_config_window();
-> -	raw_spin_unlock_irqrestore(&v3_lock, flags);
-> +	return PCI_CONFIG_VADDR + address + offset;
-> +}
-> +
-> +static int v3_read_config(struct pci_bus *bus, unsigned int devfn, int where,
-> +			  int size, u32 *val)
-> +{
-> +	int ret;
->  
-> -	*val = v;
-> -	return PCIBIOS_SUCCESSFUL;
-> +	v3_open_config_window();
-> +	ret = pci_generic_config_read(bus, devfn, where, size, val);
-> +	v3_close_config_window();
-> +	return ret;
->  }
->  
->  static int v3_write_config(struct pci_bus *bus, unsigned int devfn, int where,
->  			   int size, u32 val)
->  {
-> -	void __iomem *addr;
-> -	unsigned long flags;
-> -
-> -	raw_spin_lock_irqsave(&v3_lock, flags);
-> -	addr = v3_open_config_window(bus, devfn, where);
-> -
-> -	switch (size) {
-> -	case 1:
-> -		__raw_writeb((u8)val, addr);
-> -		__raw_readb(addr);
-> -		break;
-> -
-> -	case 2:
-> -		__raw_writew((u16)val, addr);
-> -		__raw_readw(addr);
-> -		break;
-> -
-> -	case 4:
-> -		__raw_writel(val, addr);
-> -		__raw_readl(addr);
-> -		break;
+> -	list_for_each_entry(window, &sys->resources, list) {
+> +	resource_list_for_each_entry(window, &sys->resources)
+>  		if (resource_type(window->res) == IORESOURCE_IO)
+>  			return 0;
 > -	}
-> +	int ret;
 >  
-> +	v3_open_config_window();
-> +	ret = pci_generic_config_write(bus, devfn, where, size, val);
->  	v3_close_config_window();
-> -	raw_spin_unlock_irqrestore(&v3_lock, flags);
+>  	sys->io_res.start = (busnr * SZ_64K) ?  : pcibios_min_io;
+>  	sys->io_res.end = (busnr + 1) * SZ_64K - 1;
+> diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
+> index f3a2cfc14125..6785af30ed39 100644
+> --- a/arch/x86/pci/bus_numa.c
+> +++ b/arch/x86/pci/bus_numa.c
+> @@ -31,7 +31,7 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
+>  {
+>  	struct pci_root_info *info = x86_find_pci_root_info(bus);
+>  	struct pci_root_res *root_res;
+> -	struct pci_host_bridge_window *window;
+> +	struct resource_list_entry *window;
+>  	bool found = false;
+>  
+>  	if (!info)
+> @@ -41,7 +41,7 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
+>  	       bus);
+>  
+>  	/* already added by acpi ? */
+> -	list_for_each_entry(window, resources, list)
+> +	resource_list_for_each_entry(window, resources)
+>  		if (window->res->flags & IORESOURCE_BUS) {
+>  			found = true;
+>  			break;
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index 8fb16188cd82..c850c48d81d2 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -20,17 +20,16 @@
+>  void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+>  			     resource_size_t offset)
+>  {
+> -	struct pci_host_bridge_window *window;
+> +	struct resource_list_entry *entry;
+>  
+> -	window = kzalloc(sizeof(struct pci_host_bridge_window), GFP_KERNEL);
+> -	if (!window) {
+> +	entry = resource_list_create_entry(res, 0);
+> +	if (!entry) {
+>  		printk(KERN_ERR "PCI: can't add host bridge window %pR\n", res);
+>  		return;
+>  	}
+>  
+> -	window->res = res;
+> -	window->offset = offset;
+> -	list_add_tail(&window->list, resources);
+> +	entry->offset = offset;
+> +	resource_list_add_tail(entry, resources);
+>  }
+>  EXPORT_SYMBOL(pci_add_resource_offset);
+>  
+> @@ -42,12 +41,7 @@ EXPORT_SYMBOL(pci_add_resource);
+>  
+>  void pci_free_resource_list(struct list_head *resources)
+>  {
+> -	struct pci_host_bridge_window *window, *tmp;
 > -
-> -	return PCIBIOS_SUCCESSFUL;
-> +	return ret;
+> -	list_for_each_entry_safe(window, tmp, resources, list) {
+> -		list_del(&window->list);
+> -		kfree(window);
+> -	}
+> +	resource_list_free(resources);
+>  }
+>  EXPORT_SYMBOL(pci_free_resource_list);
+>  
+> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> index 0e5f3c95af5b..3ea13883e6a5 100644
+> --- a/drivers/pci/host-bridge.c
+> +++ b/drivers/pci/host-bridge.c
+> @@ -35,10 +35,10 @@ void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
+>  			     struct resource *res)
+>  {
+>  	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+> -	struct pci_host_bridge_window *window;
+> +	struct resource_list_entry *window;
+>  	resource_size_t offset = 0;
+>  
+> -	list_for_each_entry(window, &bridge->windows, list) {
+> +	resource_list_for_each_entry(window, &bridge->windows) {
+>  		if (resource_contains(window->res, res)) {
+>  			offset = window->offset;
+>  			break;
+> @@ -60,10 +60,10 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+>  			     struct pci_bus_region *region)
+>  {
+>  	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+> -	struct pci_host_bridge_window *window;
+> +	struct resource_list_entry *window;
+>  	resource_size_t offset = 0;
+>  
+> -	list_for_each_entry(window, &bridge->windows, list) {
+> +	resource_list_for_each_entry(window, &bridge->windows) {
+>  		struct pci_bus_region bus_region;
+>  
+>  		if (resource_type(res) != resource_type(window->res))
+> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> index 6eb1aa75bd37..16d5d6eeb35a 100644
+> --- a/drivers/pci/host/pci-host-generic.c
+> +++ b/drivers/pci/host/pci-host-generic.c
+> @@ -149,14 +149,14 @@ static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
+>  	struct device *dev = pci->host.dev.parent;
+>  	struct device_node *np = dev->of_node;
+>  	resource_size_t iobase;
+> -	struct pci_host_bridge_window *win;
+> +	struct resource_list_entry *win;
+>  
+>  	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources,
+>  					       &iobase);
+>  	if (err)
+>  		return err;
+>  
+> -	list_for_each_entry(win, &pci->resources, list) {
+> +	resource_list_for_each_entry(win, &pci->resources) {
+>  		struct resource *parent, *res = win->res;
+>  
+>  		switch (resource_type(res)) {
+> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+> index b1d0596457c5..e335b834f950 100644
+> --- a/drivers/pci/host/pci-xgene.c
+> +++ b/drivers/pci/host/pci-xgene.c
+> @@ -401,11 +401,11 @@ static int xgene_pcie_map_ranges(struct xgene_pcie_port *port,
+>  				 struct list_head *res,
+>  				 resource_size_t io_base)
+>  {
+> -	struct pci_host_bridge_window *window;
+> +	struct resource_list_entry *window;
+>  	struct device *dev = port->dev;
+>  	int ret;
+>  
+> -	list_for_each_entry(window, res, list) {
+> +	resource_list_for_each_entry(window, res) {
+>  		struct resource *res = window->res;
+>  		u64 restype = resource_type(res);
+>  
+> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+> index ef3ebaf9a738..253e993a111f 100644
+> --- a/drivers/pci/host/pcie-xilinx.c
+> +++ b/drivers/pci/host/pcie-xilinx.c
+> @@ -737,7 +737,7 @@ static int xilinx_pcie_parse_and_add_res(struct xilinx_pcie_port *port)
+>  	resource_size_t offset;
+>  	struct of_pci_range_parser parser;
+>  	struct of_pci_range range;
+> -	struct pci_host_bridge_window *win;
+> +	struct resource_list_entry *win;
+>  	int err = 0, mem_resno = 0;
+>  
+>  	/* Get the ranges */
+> @@ -807,7 +807,7 @@ static int xilinx_pcie_parse_and_add_res(struct xilinx_pcie_port *port)
+>  
+>  free_resources:
+>  	release_child_resources(&iomem_resource);
+> -	list_for_each_entry(win, &port->resources, list)
+> +	resource_list_for_each_entry(win, &port->resources)
+>  		devm_kfree(dev, win->res);
+>  	pci_free_resource_list(&port->resources);
+>  
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 23212f8ae09b..df6a40932aa0 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1895,7 +1895,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  	int error;
+>  	struct pci_host_bridge *bridge;
+>  	struct pci_bus *b, *b2;
+> -	struct pci_host_bridge_window *window, *n;
+> +	struct resource_list_entry *window, *n;
+>  	struct resource *res;
+>  	resource_size_t offset;
+>  	char bus_addr[64];
+> @@ -1959,8 +1959,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  		printk(KERN_INFO "PCI host bridge to bus %s\n", dev_name(&b->dev));
+>  
+>  	/* Add initial resources to the bus */
+> -	list_for_each_entry_safe(window, n, resources, list) {
+> -		list_move_tail(&window->list, &bridge->windows);
+> +	resource_list_for_each_entry_safe(window, n, resources) {
+> +		list_move_tail(&window->node, &bridge->windows);
+>  		res = window->res;
+>  		offset = window->offset;
+>  		if (res->flags & IORESOURCE_BUS)
+> @@ -2060,12 +2060,12 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+>  struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+>  		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+>  {
+> -	struct pci_host_bridge_window *window;
+> +	struct resource_list_entry *window;
+>  	bool found = false;
+>  	struct pci_bus *b;
+>  	int max;
+>  
+> -	list_for_each_entry(window, resources, list)
+> +	resource_list_for_each_entry(window, resources)
+>  		if (window->res->flags & IORESOURCE_BUS) {
+>  			found = true;
+>  			break;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 9603094ed59b..6aa40d62cdab 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -29,6 +29,7 @@
+>  #include <linux/atomic.h>
+>  #include <linux/device.h>
+>  #include <linux/io.h>
+> +#include <linux/resource_ext.h>
+>  #include <uapi/linux/pci.h>
+>  
+>  #include <linux/pci_ids.h>
+> @@ -397,16 +398,10 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
+>  	return (pdev->error_state != pci_channel_io_normal);
 >  }
 >  
->  static struct pci_ops pci_v3_ops = {
-> +	.map_bus = v3_map_bus,
->  	.read	= v3_read_config,
->  	.write	= v3_write_config,
+> -struct pci_host_bridge_window {
+> -	struct list_head list;
+> -	struct resource *res;		/* host bridge aperture (CPU address) */
+> -	resource_size_t offset;		/* bus address + offset = CPU address */
+> -};
+> -
+>  struct pci_host_bridge {
+>  	struct device dev;
+>  	struct pci_bus *bus;		/* root bus */
+> -	struct list_head windows;	/* pci_host_bridge_windows */
+> +	struct list_head windows;	/* resource_list_entry */
+>  	void (*release_fn)(struct pci_host_bridge *);
+>  	void *release_data;
 >  };
-> @@ -672,8 +650,6 @@ static void __init pci_v3_preinit(void)
->  	hook_fault_code(8, v3_pci_fault, SIGBUS, 0, "external abort on non-linefetch");
->  	hook_fault_code(10, v3_pci_fault, SIGBUS, 0, "external abort on non-linefetch");
->  
-> -	raw_spin_lock_irqsave(&v3_lock, flags);
-> -
->  	/*
->  	 * Unlock V3 registers, but only if they were previously locked.
->  	 */
-> @@ -736,8 +712,6 @@ static void __init pci_v3_preinit(void)
->  	v3_writew(V3_LB_CFG, v3_readw(V3_LB_CFG) | (1 << 10));
->  	v3_writeb(V3_LB_IMASK, 0x28);
->  	__raw_writel(3, ap_syscon_base + INTEGRATOR_SC_PCIENABLE_OFFSET);
-> -
-> -	raw_spin_unlock_irqrestore(&v3_lock, flags);
->  }
->  
->  static void __init pci_v3_postinit(void)
+> -- 
+> 1.7.10.4
+> 
