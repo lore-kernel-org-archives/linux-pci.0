@@ -1,101 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:57152 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751143AbbASPUY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jan 2015 10:20:24 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-Cc: Jingoo Han <jg1.han@samsung.com>,
-	Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Magnus Damm <damm@opensource.se>,
-	Will Deacon <will.deacon@arm.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Srikanth Thokala <sthokal@xilinx.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Received: from galahad.ideasonboard.com ([185.26.127.97]:49344 "EHLO
+	galahad.ideasonboard.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761191AbbA1Uix (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jan 2015 15:38:53 -0500
+From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+To: Will Deacon <will.deacon@arm.com>
+Cc: Murali Karicheri <m-karicheri2@ti.com>,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	"kernel@stlinux.com" <kernel@stlinux.com>,
-	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH 4/5] PCI: designware: Add setup bus-related to pcie_host_ops
-Date: Mon, 19 Jan 2015 14:54:26 +0100
-Message-ID: <6696411.b9yjvPTFJo@wuerfel>
-In-Reply-To: <CAG374jBZCn+V2zjcAwdKEb0COzBT2VES5uiw0gc40mFvoraERA@mail.gmail.com>
-References: <1418812486-12394-1-git-send-email-gabriel.fernandez@linaro.org> <000e01d01a7f$47592e20$d60b8a60$%han@samsung.com> <CAG374jBZCn+V2zjcAwdKEb0COzBT2VES5uiw0gc40mFvoraERA@mail.gmail.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v4 1/6] of: iommu: add ptr to OF node arg to of_iommu_configure()
+Date: Wed, 28 Jan 2015 14:23:03 +0200
+Message-ID: <3953539.m9NpxSWcJ5@avalon>
+In-Reply-To: <20150128113300.GF1569@arm.com>
+References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com> <54C68C1D.5030605@ti.com> <20150128113300.GF1569@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 19 January 2015 13:38:53 Gabriel Fernandez wrote:
-> 
-> On 18 December 2014 at 05:58, Jingoo Han <jg1.han@samsung.com> wrote:
-> 
-> > On Thursday, December 18, 2014 7:16 AM, Arnd Bergmann wrote:
-> > > On Wednesday 17 December 2014 11:34:45 Gabriel FERNANDEZ wrote:
-> > > > ST sti SoCs PCIe IPs are built around DesignWare IP Core.
-> > > > But in these SoCs PCIe IP doesn't support IO.
-> > I cannot understand how ST sti SoCs PCIe IP does not support I/O.
-> > As far as I know, it cannot be selected by the 'parameter'.
-> > Then, H/W engineers dropped out the I/O control logic?
-> >
-> > > >
-> > > > To support this, add setup_bus() to pcie_host_ops.
-> >
-> >
-> > > >
-> > > > Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
-> > > > Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-> > >
-> > > The dw-pcie driver should be able to tell whether the device has
-> > > an I/O space or not, and do the right thing based on that. Don't
-> > > add an implementation specific callback for that.
-> >
-> > I agree with Arnd's opinion.
-> >
-> > In addition, I have one more question.
-> > Then, if a device that requires I/O region is connected to
-> > PCIe slot of ST sti SoCs PCIe, what will happen?
-> > It just prints error messages?
-> >
-> >
-> Arnd i
-> n other post mention to add an empty I/O space to workaround lack of I/O
-> port access.
-> Is it the right thing to do ?
-> ​
-> http://lists.infradead.org/pipermail/linux-arm-kernel/2014-November/299623.html
-> 
+Hi Will,
 
-Good question. Given the latest development, I'd feel tempted to
-try moving the entire pcie-designware driver to use the generic probing
-that bypassses pci_common_init_dev(). Rob Herring posted a patch
-for the versatile PCI driver, you could try doing the same thing
-here, see http://permalink.gmane.org/gmane.linux.kernel.pci/30346.
+On Wednesday 28 January 2015 11:33:00 Will Deacon wrote:
+> On Mon, Jan 26, 2015 at 06:49:01PM +0000, Murali Karicheri wrote:
+> > On 01/25/2015 08:32 AM, Laurent Pinchart wrote:
+> >> On Friday 23 January 2015 17:32:34 Murali Karicheri wrote:
+> >>> Function of_iommu_configure() is called from of_dma_configure() to
+> >>> setup iommu ops using DT property. This API is currently used for
+> >>> platform devices for which DMA configuration (including iommu ops)
+> >>> may come from device's parent. To extend this functionality for PCI
+> >>> devices, this API need to take a parent node ptr as an argument
+> >>> instead of assuming device's parent. This is needed since for PCI, the
+> >>> dma configuration may be defined in the DT node of the root bus
+> >>> bridge's parent device. Currently only dma-range is used for PCI and
+> >>> iommu is not supported. So return error if the device is PCI.
+> >>> 
+> >>> Cc: Joerg Roedel<joro@8bytes.org>
+> >>> Cc: Grant Likely<grant.likely@linaro.org>
+> >>> Cc: Rob Herring<robh+dt@kernel.org>
+> >>> Cc: Bjorn Helgaas<bhelgaas@google.com>
+> >>> Cc: Will Deacon<will.deacon@arm.com>
+> >>> Cc: Russell King<linux@arm.linux.org.uk>
+> >>> Cc: Arnd Bergmann<arnd@arndb.de>
+> >>> Cc: Suravee Suthikulpanit<Suravee.Suthikulpanit@amd.com>
+> >>> 
+> >>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+> >>> ---
+> >>> 
+> >>>   drivers/iommu/of_iommu.c |   10 ++++++++--
+> >>>   drivers/of/platform.c    |    2 +-
+> >>>   include/linux/of_iommu.h |    6 ++++--
+> >>>   3 files changed, 13 insertions(+), 5 deletions(-)
+> >>> 
+> >>> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+> >>> index af1dc6a..439235b 100644
+> >>> --- a/drivers/iommu/of_iommu.c
+> >>> +++ b/drivers/iommu/of_iommu.c
+> >>> @@ -133,19 +133,25 @@ struct iommu_ops *of_iommu_get_ops(struct
+> >>> device_node *np)
+> >>>   	return ops;
+> >>>  }
+> >>> 
+> >>> -struct iommu_ops *of_iommu_configure(struct device *dev)
+> >>> +struct iommu_ops *of_iommu_configure(struct device *dev,
+> >>> +				     struct device_node *iommu_np)
+> >>>  {
+> >>>   	struct of_phandle_args iommu_spec;
+> >>>   	struct device_node *np;
+> >>>   	struct iommu_ops *ops = NULL;
+> >>>   	int idx = 0;
+> >>> 
+> >>> +	if (dev_is_pci(dev)) {
+> >>> +		dev_err(dev, "iommu is currently not supported for PCI\n");
+> >>> +		return NULL;
+> >>> +	}
+> >>> +
+> >>>   	/*
+> >>>   	 * We don't currently walk up the tree looking for a parent IOMMU.
+> >>>   	 * See the `Notes:' section of
+> >>>   	 * Documentation/devicetree/bindings/iommu/iommu.txt
+> >>>   	 */
+> >> 
+> >> Wouldn't it be better to fix this rather than passing the device node
+> >> pointer to the function ? The solution would be more generic.
+> > 
+> > Laurent,
+> > 
+> > Will Deacon (Copied here) is working on this as we alteady discussed in
+> > this thread. So it will be addressed by him in another series.
+> 
+> Well, "working on this" equates to "has it somewhere near the bottom of
+> a very long list" :)
 
-I think that would completely avoid this problem, and also help everyone
-that wants to use this driver on arm64.
+What's your opinion on this patch then, do you think adding the iommu_np 
+argument makes sense as a temporary hack, or should we instead walk up the 
+tree looking for an iommus attribute in parent nodes ? I don't expect that to 
+be insanely difficult to code.
 
-	Arnd
+-- 
+Regards,
+
+Laurent Pinchart
+
