@@ -1,172 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:55426 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752119AbbAUCcc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 21:32:32 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:45500 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753798AbbA1UXC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jan 2015 15:23:02 -0500
+Date: Wed, 28 Jan 2015 11:33:00 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v2 06/30] PCI: Combine PCI domain and bus number in u32 arg
-Date: Wed, 21 Jan 2015 08:30:01 +0800
-Message-ID: <1421800225-26230-7-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
-References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v4 1/6] of: iommu: add ptr to OF node arg to
+ of_iommu_configure()
+Message-ID: <20150128113300.GF1569@arm.com>
+References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
+ <1422052359-12384-2-git-send-email-m-karicheri2@ti.com>
+ <4711364.TTK5TCBdiy@avalon>
+ <54C68C1D.5030605@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54C68C1D.5030605@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, we use int type for bus number in
-pci_create_root_bus(), pci_scan_root_bus() and
-pci_scan_bus_legacy. Because PCI bus number
-always <= 255, so we could change the bus number
-argument type to u32, and combine PCI domain and
-bus number in one. Also add a domain member in
-pci_host_bridge to save domain number. Finally,
-we could eliminate lots of the platform specific
-pci_domain_nr() in the last of the series.
+On Mon, Jan 26, 2015 at 06:49:01PM +0000, Murali Karicheri wrote:
+> On 01/25/2015 08:32 AM, Laurent Pinchart wrote:
+> > Hi Murali,
+> >
+> > Thank you for the patch.
+> >
+> > On Friday 23 January 2015 17:32:34 Murali Karicheri wrote:
+> >> Function of_iommu_configure() is called from of_dma_configure() to
+> >> setup iommu ops using DT property. This API is currently used for
+> >> platform devices for which DMA configuration (including iommu ops)
+> >> may come from device's parent. To extend this functionality for PCI
+> >> devices, this API need to take a parent node ptr as an argument
+> >> instead of assuming device's parent. This is needed since for PCI, the
+> >> dma configuration may be defined in the DT node of the root bus bridge's
+> >> parent device. Currently only dma-range is used for PCI and iommu is not
+> >> supported. So return error if the device is PCI.
+> >>
+> >> Cc: Joerg Roedel<joro@8bytes.org>
+> >> Cc: Grant Likely<grant.likely@linaro.org>
+> >> Cc: Rob Herring<robh+dt@kernel.org>
+> >> Cc: Bjorn Helgaas<bhelgaas@google.com>
+> >> Cc: Will Deacon<will.deacon@arm.com>
+> >> Cc: Russell King<linux@arm.linux.org.uk>
+> >> Cc: Arnd Bergmann<arnd@arndb.de>
+> >> Cc: Suravee Suthikulpanit<Suravee.Suthikulpanit@amd.com>
+> >>
+> >> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+> >> ---
+> >>   drivers/iommu/of_iommu.c |   10 ++++++++--
+> >>   drivers/of/platform.c    |    2 +-
+> >>   include/linux/of_iommu.h |    6 ++++--
+> >>   3 files changed, 13 insertions(+), 5 deletions(-)
+> >>
+> >> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+> >> index af1dc6a..439235b 100644
+> >> --- a/drivers/iommu/of_iommu.c
+> >> +++ b/drivers/iommu/of_iommu.c
+> >> @@ -133,19 +133,25 @@ struct iommu_ops *of_iommu_get_ops(struct device_node
+> >> *np) return ops;
+> >>   }
+> >>
+> >> -struct iommu_ops *of_iommu_configure(struct device *dev)
+> >> +struct iommu_ops *of_iommu_configure(struct device *dev,
+> >> +				     struct device_node *iommu_np)
+> >>   {
+> >>   	struct of_phandle_args iommu_spec;
+> >>   	struct device_node *np;
+> >>   	struct iommu_ops *ops = NULL;
+> >>   	int idx = 0;
+> >>
+> >> +	if (dev_is_pci(dev)) {
+> >> +		dev_err(dev, "iommu is currently not supported for PCI\n");
+> >> +		return NULL;
+> >> +	}
+> >> +
+> >>   	/*
+> >>   	 * We don't currently walk up the tree looking for a parent IOMMU.
+> >>   	 * See the `Notes:' section of
+> >>   	 * Documentation/devicetree/bindings/iommu/iommu.txt
+> >>   	 */
+> > Wouldn't it be better to fix this rather than passing the device node pointer
+> > to the function ? The solution would be more generic.
+> Laurent,
+> 
+> Will Deacon (Copied here) is working on this as we alteady discussed in 
+> this thread. So it will be
+> addressed by him in another series.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/probe.c      |   16 +++++++++-------
- include/linux/pci.h      |    7 ++++---
- include/uapi/linux/pci.h |    3 +++
- 3 files changed, 16 insertions(+), 10 deletions(-)
+Well, "working on this" equates to "has it somewhere near the bottom of
+a very long list" :)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ed894cb..50f58b3 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1889,7 +1889,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
- {
- }
- 
--struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-+struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
- 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
- {
- 	int error;
-@@ -1900,6 +1900,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	resource_size_t offset;
- 	char bus_addr[64];
- 	char *fmt;
-+	u8	bus = PCI_BUSNUM(db);
- 
- 	b = pci_alloc_bus(NULL);
- 	if (!b)
-@@ -1920,6 +1921,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	if (!bridge)
- 		goto err_out;
- 
-+	bridge->domain = PCI_DOMAIN(db);
- 	bridge->dev.parent = parent;
- 	bridge->dev.release = pci_release_host_bridge_dev;
- 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-@@ -2057,7 +2059,7 @@ void pci_bus_release_busn_res(struct pci_bus *b)
- 			res, ret ? "can not be" : "is");
- }
- 
--struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
-+struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
- 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
- {
- 	struct pci_host_bridge_window *window;
-@@ -2071,15 +2073,15 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- 			break;
- 		}
- 
--	b = pci_create_root_bus(parent, bus, ops, sysdata, resources);
-+	b = pci_create_root_bus(parent, db, ops, sysdata, resources);
- 	if (!b)
- 		return NULL;
- 
- 	if (!found) {
- 		dev_info(&b->dev,
- 		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
--			bus);
--		pci_bus_insert_busn_res(b, bus, 255);
-+			PCI_BUSNUM(db));
-+		pci_bus_insert_busn_res(b, PCI_BUSNUM(db), 255);
- 	}
- 
- 	max = pci_scan_child_bus(b);
-@@ -2091,7 +2093,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- }
- EXPORT_SYMBOL(pci_scan_root_bus);
- 
--struct pci_bus *pci_scan_bus_legacy(int bus, struct pci_ops *ops,
-+struct pci_bus *pci_scan_bus_legacy(u32 db, struct pci_ops *ops,
- 					void *sysdata)
- {
- 	LIST_HEAD(resources);
-@@ -2100,7 +2102,7 @@ struct pci_bus *pci_scan_bus_legacy(int bus, struct pci_ops *ops,
- 	pci_add_resource(&resources, &ioport_resource);
- 	pci_add_resource(&resources, &iomem_resource);
- 	pci_add_resource(&resources, &busn_resource);
--	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
-+	b = pci_create_root_bus(NULL, db, ops, sysdata, &resources);
- 	if (b) {
- 		pci_scan_child_bus(b);
- 	} else {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a6fa2f1..c771508 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -402,6 +402,7 @@ struct pci_host_bridge_window {
- };
- 
- struct pci_host_bridge {
-+	u16	domain;
- 	struct device dev;
- 	struct pci_bus *bus;		/* root bus */
- 	struct list_head windows;	/* pci_host_bridge_windows */
-@@ -769,14 +770,14 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
--struct pci_bus *pci_scan_bus_legacy(int bus, struct pci_ops *ops, void *sysdata);
--struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-+struct pci_bus *pci_scan_bus_legacy(u32 dombus, struct pci_ops *ops, void *sysdata);
-+struct pci_bus *pci_create_root_bus(struct device *parent, u32 dombus,
- 				    struct pci_ops *ops, void *sysdata,
- 				    struct list_head *resources);
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
- int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
- void pci_bus_release_busn_res(struct pci_bus *b);
--struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
-+struct pci_bus *pci_scan_root_bus(struct device *parent, u32 dombus,
- 					     struct pci_ops *ops, void *sysdata,
- 					     struct list_head *resources);
- struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
-diff --git a/include/uapi/linux/pci.h b/include/uapi/linux/pci.h
-index 3c292bc..89c6f15 100644
---- a/include/uapi/linux/pci.h
-+++ b/include/uapi/linux/pci.h
-@@ -30,6 +30,9 @@
- #define PCI_DEVFN(slot, func)	((((slot) & 0x1f) << 3) | ((func) & 0x07))
- #define PCI_SLOT(devfn)		(((devfn) >> 3) & 0x1f)
- #define PCI_FUNC(devfn)		((devfn) & 0x07)
-+#define PCI_DOMAIN(db)		((db) >> 16)
-+#define PCI_BUSNUM(db)		((db) & 0xffff)
-+#define PCI_DOMBUS(domain, bus)		(((domain) << 16) | (bus))
- 
- /* Ioctls for /proc/bus/pci/X/Y nodes. */
- #define PCIIOC_BASE		('P' << 24 | 'C' << 16 | 'I' << 8)
--- 
-1.7.1
-
+Will
