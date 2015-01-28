@@ -1,150 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23692 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753665AbbATF5N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 20 Jan 2015 00:57:13 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v4 33/33] x86/irq: Avoid memory allocation in __assign_irq_vector()
-Date: Tue, 20 Jan 2015 13:51:53 +0800
-Message-Id: <1421733113-15704-34-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:27856 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933624AbbA1Bmb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Jan 2015 20:42:31 -0500
+Message-ID: <54C83E77.2030800@huawei.com>
+Date: Wed, 28 Jan 2015 09:42:15 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH] PCI: Add guard to avoid mapping a invalid msix base address
+References: <1422348253-13990-1-git-send-email-wangyijing@huawei.com> <20150127174129.GE4063@google.com>
+In-Reply-To: <20150127174129.GE4063@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function __assign_irq_vector() is protected by vector_lock, so use
-a global temporary cpu_mask to avoid allocating/freeing cpu_mask.
+>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>> index fd60806..cd401a2 100644
+>> --- a/drivers/pci/msi.c
+>> +++ b/drivers/pci/msi.c
+>> @@ -699,6 +699,9 @@ static void __iomem *msix_map_region(struct pci_dev *dev, unsigned nr_entries)
+>>  	pci_read_config_dword(dev, dev->msix_cap + PCI_MSIX_TABLE,
+>>  			      &table_offset);
+>>  	bir = (u8)(table_offset & PCI_MSIX_TABLE_BIR);
+>> +	if (!pci_resource_flags(dev, bir))
+>> +		return NULL;
+> 
+> This definitely seems like a good idea.  We should not just assume that
+> space has been assigned for the BAR.  
+> 
+> However, I don't think we should test the resource flags for zero.
+> reset_resource() does set the flags to zero, but I think that is a mistake.
+> The PCI core should retain the information about the type and size of the
+> BAR, even if it was unable to assign space for it.  So eventually
+> reset_resource() should be reworked somehow.
+> 
+> I would like reset_resource() to set the IORESOURCE_UNSET bit in the flags.
+> That would let %pR print it correctly, e.g., "[mem size 0x1000]".  But I
+> don't know what other code in setup-bus.c depends on the assumption that
+> "flags == 0" means something important.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/vector.c |   33 +++++++++++++++++----------------
- 1 file changed, 17 insertions(+), 16 deletions(-)
+Agree, "flags == 0" is not clear enough to point the status of the resource.
 
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index f5eb3999383f..4a04b25cdcdf 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -30,6 +30,7 @@ struct apic_chip_data {
- 
- struct irq_domain *x86_vector_domain;
- static DEFINE_RAW_SPINLOCK(vector_lock);
-+static cpumask_var_t vector_cpumask;
- static struct irq_chip lapic_controller;
- #ifdef	CONFIG_X86_IO_APIC
- static struct apic_chip_data *legacy_irq_data[NR_IRQS_LEGACY];
-@@ -116,14 +117,10 @@ static int __assign_irq_vector(int irq, struct apic_chip_data *d,
- 	static int current_vector = FIRST_EXTERNAL_VECTOR + VECTOR_OFFSET_START;
- 	static int current_offset = VECTOR_OFFSET_START % 16;
- 	int cpu, err;
--	cpumask_var_t tmp_mask;
- 
- 	if (d->move_in_progress)
- 		return -EBUSY;
- 
--	if (!alloc_cpumask_var(&tmp_mask, GFP_ATOMIC))
--		return -ENOMEM;
--
- 	/* Only try and allocate irqs on cpus that are present */
- 	err = -ENOSPC;
- 	cpumask_clear(d->old_domain);
-@@ -131,21 +128,22 @@ static int __assign_irq_vector(int irq, struct apic_chip_data *d,
- 	while (cpu < nr_cpu_ids) {
- 		int new_cpu, vector, offset;
- 
--		apic->vector_allocation_domain(cpu, tmp_mask, mask);
-+		apic->vector_allocation_domain(cpu, vector_cpumask, mask);
- 
--		if (cpumask_subset(tmp_mask, d->domain)) {
-+		if (cpumask_subset(vector_cpumask, d->domain)) {
- 			err = 0;
--			if (cpumask_equal(tmp_mask, d->domain))
-+			if (cpumask_equal(vector_cpumask, d->domain))
- 				break;
- 			/*
- 			 * New cpumask using the vector is a proper subset of
- 			 * the current in use mask. So cleanup the vector
- 			 * allocation for the members that are not used anymore.
- 			 */
--			cpumask_andnot(d->old_domain, d->domain, tmp_mask);
-+			cpumask_andnot(d->old_domain, d->domain,
-+				       vector_cpumask);
- 			d->move_in_progress =
- 			   cpumask_intersects(d->old_domain, cpu_online_mask);
--			cpumask_and(d->domain, d->domain, tmp_mask);
-+			cpumask_and(d->domain, d->domain, vector_cpumask);
- 			break;
- 		}
- 
-@@ -159,16 +157,18 @@ next:
- 		}
- 
- 		if (unlikely(current_vector == vector)) {
--			cpumask_or(d->old_domain, d->old_domain, tmp_mask);
--			cpumask_andnot(tmp_mask, mask, d->old_domain);
--			cpu = cpumask_first_and(tmp_mask, cpu_online_mask);
-+			cpumask_or(d->old_domain, d->old_domain,
-+				   vector_cpumask);
-+			cpumask_andnot(vector_cpumask, mask, d->old_domain);
-+			cpu = cpumask_first_and(vector_cpumask,
-+						cpu_online_mask);
- 			continue;
- 		}
- 
- 		if (test_bit(vector, used_vectors))
- 			goto next;
- 
--		for_each_cpu_and(new_cpu, tmp_mask, cpu_online_mask) {
-+		for_each_cpu_and(new_cpu, vector_cpumask, cpu_online_mask) {
- 			if (per_cpu(vector_irq, new_cpu)[vector] >
- 			    VECTOR_UNDEFINED)
- 				goto next;
-@@ -181,14 +181,13 @@ next:
- 			d->move_in_progress =
- 			   cpumask_intersects(d->old_domain, cpu_online_mask);
- 		}
--		for_each_cpu_and(new_cpu, tmp_mask, cpu_online_mask)
-+		for_each_cpu_and(new_cpu, vector_cpumask, cpu_online_mask)
- 			per_cpu(vector_irq, new_cpu)[vector] = irq;
- 		d->cfg.vector = vector;
--		cpumask_copy(d->domain, tmp_mask);
-+		cpumask_copy(d->domain, vector_cpumask);
- 		err = 0;
- 		break;
- 	}
--	free_cpumask_var(tmp_mask);
- 
- 	if (!err) {
- 		/* cache destination APIC IDs into cfg->dest_apicid */
-@@ -397,6 +396,8 @@ int __init arch_early_irq_init(void)
- 	arch_init_msi_domain(x86_vector_domain);
- 	arch_init_htirq_domain(x86_vector_domain);
- 
-+	BUG_ON(!alloc_cpumask_var(&vector_cpumask, GFP_KERNEL));
-+
- 	return arch_early_ioapic_init();
- }
- 
+> 
+> In the meantime, I guess you could do something like:
+> 
+>   flags = pci_resource_flags(dev, bir);
+>   if (!flags || (flags & IORESOURCE_UNSET))
+>     return NULL;
+
+OK, I will update it, thanks.
+
+Thanks!
+Yijing.
+
+> 
+>> +
+>>  	table_offset &= PCI_MSIX_TABLE_OFFSET;
+>>  	phys_addr = pci_resource_start(dev, bir) + table_offset;
+>>  
+>> -- 
+>> 1.7.1
+>>
+> 
+> .
+> 
+
+
 -- 
-1.7.10.4
+Thanks!
+Yijing
 
