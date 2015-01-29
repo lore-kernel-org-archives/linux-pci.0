@@ -1,194 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:55746 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751400AbbAVJmY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Jan 2015 04:42:24 -0500
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 22 Jan 2015 19:42:22 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 920092CE804E
-	for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2015 20:42:19 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t0M9gJ1x42991722
-	for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2015 20:42:19 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t0M9gICw017582
-	for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2015 20:42:19 +1100
-Date: Thu, 22 Jan 2015 17:42:16 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI: Calculate the VF bus range on each possible
- NumVFs
-Message-ID: <20150122094216.GA6958@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1419227326-12083-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1419227326-12083-3-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150121225405.GB13072@google.com>
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:50320 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753235AbbA2Sez (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jan 2015 13:34:55 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150121225405.GB13072@google.com>
+In-Reply-To: <alpine.DEB.2.02.1501291707350.16475@utopia.booyaka.com>
+References: <20150128234935.20644.89300.stgit@dusk.lan> <20150128234937.20644.9400.stgit@dusk.lan>
+ <CAL_JsqKMm=r+57ShskgbtNqnCGF1yKYDSJJFQ7o05keNzh5z+g@mail.gmail.com>
+ <alpine.DEB.2.02.1501291543030.16475@utopia.booyaka.com> <CAL_JsqLE+W+T5YqzdB+DkdBE+HsgySX0yJHzn1y43QDfw4GA9A@mail.gmail.com>
+ <alpine.DEB.2.02.1501291707350.16475@utopia.booyaka.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Thu, 29 Jan 2015 12:34:33 -0600
+Message-ID: <CAL_JsqKaDi1cZN8Ndb0FPhvgRVFyxc1NRhV2cx-XJ323wTKiEQ@mail.gmail.com>
+Subject: Re: [PATCH 02/24] Documentation: DT bindings: add more chip
+ compatible strings for Tegra PCIe
+To: Paul Walmsley <paul@pwsan.com>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 21, 2015 at 04:54:05PM -0600, Bjorn Helgaas wrote:
->On Mon, Dec 22, 2014 at 01:48:46PM +0800, Wei Yang wrote:
->> Per SRIOV SPEC section 3.3.10 and 3.3.11, VF Stride and VF Offset may change
->> when NumVFs changes. This will affect the bus range for VFs.
->> 
->> This patch iterates on each possible NumVFs and calculate the maximum bus
->> range for VFs.
->> 
->> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->> ---
->>  drivers/pci/iov.c |   31 +++++++++++++++++++++++++++----
->>  drivers/pci/pci.h |    1 +
->>  2 files changed, 28 insertions(+), 4 deletions(-)
->> 
->> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->> index ef0ceaa..ea3a82c 100644
->> --- a/drivers/pci/iov.c
->> +++ b/drivers/pci/iov.c
->> @@ -46,6 +46,30 @@ static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
->>  	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &iov->stride);
->>  }
->>  
->> +/**
->> + * Per SRIOV SPEC section 3.3.10 and 3.3.11, VF Stride and VF offset may
->> + * change when NumVFs changes. Which will affect the bus range for VFs.
->> + *
->> + * This function iterate on all valide NumVFs and calculate the maximum bus
->> + * range for VFs.
->> + */
->> +static inline void pci_iov_max_bus_range(struct pci_dev *dev)
->> +{
->> +	struct pci_sriov *iov = dev->sriov;
->> +	int total = iov->total_VFs;
->> +	u8 max = 0;
->> +	u8 busnr;
->> +
->> +	for ( ; total >= 0; total--) {
->> +		pci_iov_set_numvfs(dev, total);
->> +		busnr = virtfn_bus(dev, iov->total_VFs - 1);
+On Thu, Jan 29, 2015 at 11:08 AM, Paul Walmsley <paul@pwsan.com> wrote:
+> Hi Rob
 >
->We don't need TotalVFs here, do we?  I think NumVFs should be enough.
->Proposed updated patch attached below.
+> On Thu, 29 Jan 2015, Rob Herring wrote:
 >
+>> On Thu, Jan 29, 2015 at 9:45 AM, Paul Walmsley <paul@pwsan.com> wrote:
+>> > On Thu, 29 Jan 2015, Rob Herring wrote:
+>> >
+>> >> On Wed, Jan 28, 2015 at 5:49 PM, Paul Walmsley <paul@pwsan.com> wrote:
+>> >> >
+>> >> > Add compatible strings for the PCIe IP blocks present on several Tegra
+>> >> > chips.  The primary objective here is to avoid checkpatch warnings,
+>> >> > per:
+>> >> >
+>>
+>> [...]
+>>
+>> >> > +  - "nvidia,tegra132-pcie" (not yet matched in the driver)
+>> >> > +  - "nvidia,tegra210-pcie" (not yet matched in the driver)
+>> >>
+>> >> Whether the driver matches or not is irrelevant to the binding and may
+>> >> change over time. Does this mean the driver matches on something else
+>> >> or Tegra132 is not yet supported in the driver?
+>> >
+>> > It means that the driver currently matches on one of the first three
+>> > strings that don't carry that annotation.
+>> >
+>> >> If the former, what is important is what are the valid combinations of
+>> >> compatible properties and that is not captured here. In other words,
+>> >> what is the fallback compatible string for each chip?
+>> >
+>> > The intention was to try to be helpful: to document that anyone adding a
+>> > "nvidia,tegra132-pcie" compatible string would also need to add one of the
+>> > other strings as a fallback.  Would you like that to be documented in a
+>> > different way, or removed?
+>>
+>> Then you should say something like 'must contain "nvidia,tegra20-pcie"
+>> and one of: ...'
+>>
+>> You can also use nvidia,<chip>-pcie if you want. checkpatch will check
+>> for that pattern too. Then your documentation can be something like:
+>>
+>> Must contain '"nvidia,<chip>-pcie", "nvidia,tegra20-pcie"' where
+>> <chip> is tegra30, tegra132, ...
+>>
+>> We don't enforce that the <chip> part is documented ATM and not likely
+>> until we have a schema if ever.
+>
+> OK, thanks for the explanation.
+>
+> So would it be acceptable to you to skip the attempt to document which
+> strings are actually supported by the current driver, and to simply use
+> the <chip> wildcard?
 
-Agree use NumVFs is reasonable. One small comment in below patch.
+I don't think the binding document should say anything about what the
+driver uses or not. It should describe what combinations of compatible
+strings in a dts are valid. I didn't look at every patch, but the ones
+like this one are. I'd be fine with most of this all in one patch BTW.
 
->> +		if (busnr > max)
->> +			max = busnr;
->> +	}
->> +
->> +	iov->max_bus_range = max;
->> +}
->
->
->commit aecf80117ca5be299f85ead9125434f58f2ae3cb
->Author: Wei Yang <weiyang@linux.vnet.ibm.com>
->Date:   Mon Dec 22 13:48:46 2014 +0800
->
->    PCI: Calculate maximum number of buses required for VFs
->    
->    An SR-IOV device can change its First VF OFfset and VF Stride based on the
->    values of ARI Capable Hierarchy and NumVFs.  The number of buses required
->    for all VFs is determined by NumVFs, First VF Offset, and VF Stride (see
->    SR-IOV spec r1.1, sec 2.1.2).
->    
->    Previously pci_iov_bus_range() computed how many buses would be required by
->    TotalVFs, but this was based on a single NumVFs value and may not have been
->    the maximum for all NumVFs configurations.
->    
->    Iterate over all valid NumVFs and calculate the maximum number of bus
->    numbers that could ever be required for VFs of this device.
->    
->    [bhelgaas: compute busnr of NumVFs, not TotalVFs, changelog]
->    Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->
->diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->index dd4bc361f24a..62f9c8f6871f 100644
->--- a/drivers/pci/iov.c
->+++ b/drivers/pci/iov.c
->@@ -46,6 +46,30 @@ static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
-> 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &iov->stride);
-> }
->
->+/**
->+ * The PF consumes one bus number.  NumVFs, First VF Offset, and VF Stride
->+ * determine how many additional bus numbers will be consumed by VFs.
->+ *
->+ * Iterate over all valid NumVFs and calculate the maximum number of bus
->+ * numbers that could ever be required.
->+ */
->+static inline u8 virtfn_max_buses(struct pci_dev *dev)
->+{
->+	struct pci_sriov *iov = dev->sriov;
->+	int nr_virtfn;
->+	u8 max = 0;
->+	u8 busnr;
->+
->+	for (nr_virtfn = 1; nr_virtfn <= iov->total_VFs; nr_virtfn++) {
->+		pci_iov_set_numvfs(dev, nr_virtfn);
->+		busnr = virtfn_bus(dev, nr_virtfn - 1);
->+		if (busnr > max)
->+			max = busnr;
->+	}
->+
->+	return max;
->+}
->+
-> static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
-> {
-> 	struct pci_bus *child;
->@@ -413,6 +437,7 @@ found:
->
-> 	mutex_init(&iov->lock);
->
->+	iov->max_VF_buses = virtfn_max_buses(dev);
-> 	dev->sriov = iov;
-> 	dev->is_physfn = 1;
+You should attempt to document known values of <chip> if you use it
+(you could refer to another doc for the list). I was only highlighting
+what you can get away with if no one is paying attention, not that you
+don't need to add tegra132, etc. :)
 
-We need to move the function after dev->sriov is set, otherwise in
-virtfn_max_buses() the dev->sriov is not valid.
-
->
->@@ -550,15 +575,13 @@ void pci_restore_iov_state(struct pci_dev *dev)
-> int pci_iov_bus_range(struct pci_bus *bus)
-> {
-> 	int max = 0;
->-	u8 busnr;
-> 	struct pci_dev *dev;
->
-> 	list_for_each_entry(dev, &bus->devices, bus_list) {
-> 		if (!dev->is_physfn)
-> 			continue;
->-		busnr = virtfn_bus(dev, dev->sriov->total_VFs - 1);
->-		if (busnr > max)
->-			max = busnr;
->+		if (dev->sriov->max_VF_buses > max)
->+			max = dev->sriov->max_VF_buses;
-> 	}
->
-> 	return max ? max - bus->number : 0;
->diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->index 8aff29a804ff..f0a19dc7acdd 100644
->--- a/drivers/pci/pci.h
->+++ b/drivers/pci/pci.h
->@@ -236,6 +236,7 @@ struct pci_sriov {
-> 	u16 stride;		/* following VF stride */
-> 	u32 pgsz;		/* page size for BAR alignment */
-> 	u8 link;		/* Function Dependency Link */
->+	u8 max_VF_buses;	/* max buses consumed by VFs */
-> 	u16 driver_max_VFs;	/* max num VFs driver supports */
-> 	struct pci_dev *dev;	/* lowest numbered PF */
-> 	struct pci_dev *self;	/* this PF */
-
--- 
-Richard Yang
-Help you, Help me
-
+Rob
