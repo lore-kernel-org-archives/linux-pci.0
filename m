@@ -1,127 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:33429 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752055AbbAGXa0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jan 2015 18:30:26 -0500
+Received: from ni.piap.pl ([195.187.100.4]:42160 "EHLO ni.piap.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752239AbbA2G3X convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jan 2015 01:29:23 -0500
+From: khalasa@piap.pl (Krzysztof =?utf-8?Q?Ha=C5=82asa?=)
+To: Rob Herring <robh@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org
+References: <1420857290-8373-1-git-send-email-robh@kernel.org>
+	<1420857290-8373-7-git-send-email-robh@kernel.org>
+Date: Thu, 29 Jan 2015 07:16:47 +0100
+In-Reply-To: <1420857290-8373-7-git-send-email-robh@kernel.org> (Rob Herring's
+	message of "Fri, 9 Jan 2015 20:34:40 -0600")
 MIME-Version: 1.0
-In-Reply-To: <1420656594-8908-2-git-send-email-m-karicheri2@ti.com>
-References: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com> <1420656594-8908-2-git-send-email-m-karicheri2@ti.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Wed, 7 Jan 2015 17:30:04 -0600
-Message-ID: <CAL_JsqJ5tDQb+SzzhGQTs48tSG=T_QZu3LW5TDyugxFw1V7LoA@mail.gmail.com>
-Subject: Re: [PATCH v3 1/4] of: iommu: add ptr to OF node arg to of_iommu_configure()
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Linux IOMMU <iommu@lists.linux-foundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
+Message-ID: <m37fw6xga8.fsf@t19.piap.pl>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH 06/16] ARM: cns3xxx: convert PCI to use generic config accesses
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 7, 2015 at 12:49 PM, Murali Karicheri <m-karicheri2@ti.com> wrote:
-> Function of_iommu_configure() is called from of_dma_configure() to
-> setup iommu ops using DT property. This API is currently used for
-> platform devices for which DMA configuration (including iommu ops)
-> may come from device's parent. To extend this functionality for PCI
-> devices, this API need to take a parent node ptr as an argument
-> instead of assuming device's parent. This is needed since for PCI, the
-> dma configuration may be defined in the DT node of the root bus bridge's
-> parent device. Currently only dma-range is used for PCI and iommu is not
-> supported. So return error if the device is PCI.
->
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-> ---
->  drivers/iommu/of_iommu.c |   10 ++++++++--
->  drivers/of/platform.c    |    2 +-
->  include/linux/of_iommu.h |    6 ++++--
->  3 files changed, 13 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-> index af1dc6a..396bc77 100644
-> --- a/drivers/iommu/of_iommu.c
-> +++ b/drivers/iommu/of_iommu.c
-> @@ -133,19 +133,25 @@ struct iommu_ops *of_iommu_get_ops(struct device_node *np)
->         return ops;
->  }
->
-> -struct iommu_ops *of_iommu_configure(struct device *dev)
-> +struct iommu_ops *of_iommu_configure(struct device *dev,
-> +                                    struct device_node *node)
+Rob Herring <robh@kernel.org> writes:
 
-You use node here, but np in the declaration. However...
+> Convert the cns3xxx PCI driver to use the generic config access functions.
+>
+> This changes accesses from __raw_readl/__raw_writel to readl/writel.
+>
+>  arch/arm/mach-cns3xxx/pcie.c | 52 +++++++++-----------------------------------
 
->  {
->         struct of_phandle_args iommu_spec;
->         struct device_node *np;
+This looks fine:
+Acked-by: Krzysztof Hałasa <khalasa@piap.pl>
 
-We also have np here. I would suggest we rename this to iommu_node or
-iommu_np to be clear which one this is for.
+-- 
+Krzysztof Halasa
 
->         struct iommu_ops *ops = NULL;
->         int idx = 0;
->
-> +       if (dev_is_pci(dev)) {
-> +               dev_err(dev, "iommu is currently not supported for PCI\n");
-> +               return NULL;
-> +       }
-> +
->         /*
->          * We don't currently walk up the tree looking for a parent IOMMU.
->          * See the `Notes:' section of
->          * Documentation/devicetree/bindings/iommu/iommu.txt
->          */
-> -       while (!of_parse_phandle_with_args(dev->of_node, "iommus",
-> +       while (!of_parse_phandle_with_args(node, "iommus",
->                                            "#iommu-cells", idx,
->                                            &iommu_spec)) {
->                 np = iommu_spec.np;
-> diff --git a/drivers/of/platform.c b/drivers/of/platform.c
-> index a54ec10..7675b79 100644
-> --- a/drivers/of/platform.c
-> +++ b/drivers/of/platform.c
-> @@ -196,7 +196,7 @@ static void of_dma_configure(struct device *dev)
->         dev_dbg(dev, "device is%sdma coherent\n",
->                 coherent ? " " : " not ");
->
-> -       iommu = of_iommu_configure(dev);
-> +       iommu = of_iommu_configure(dev, dev->of_node);
->         dev_dbg(dev, "device is%sbehind an iommu\n",
->                 iommu ? " " : " not ");
->
-> diff --git a/include/linux/of_iommu.h b/include/linux/of_iommu.h
-> index 16c7554..3258cbb 100644
-> --- a/include/linux/of_iommu.h
-> +++ b/include/linux/of_iommu.h
-> @@ -12,7 +12,8 @@ extern int of_get_dma_window(struct device_node *dn, const char *prefix,
->                              size_t *size);
->
->  extern void of_iommu_init(void);
-> -extern struct iommu_ops *of_iommu_configure(struct device *dev);
-> +extern struct iommu_ops *of_iommu_configure(struct device *dev,
-> +                                       struct device_node *np);
->
->  #else
->
-> @@ -24,7 +25,8 @@ static inline int of_get_dma_window(struct device_node *dn, const char *prefix,
->  }
->
->  static inline void of_iommu_init(void) { }
-> -static inline struct iommu_ops *of_iommu_configure(struct device *dev)
-> +static inline struct iommu_ops *of_iommu_configure(struct device *dev,
-> +                                        struct device_node *np)
->  {
->         return NULL;
->  }
-> --
-> 1.7.9.5
->
+Research Institute for Automation and Measurements PIAP
+Al. Jerozolimskie 202, 02-486 Warsaw, Poland
