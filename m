@@ -1,94 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:32207 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751767AbbAUCsS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 20 Jan 2015 21:48:18 -0500
-Message-ID: <54BF136E.6060605@linux.intel.com>
-Date: Wed, 21 Jan 2015 10:48:14 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:43845 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752524AbbA2QuB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jan 2015 11:50:01 -0500
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Thomas Gleixner <tglx@linutronix.de>,
+In-Reply-To: <5349994.6VHXzPdIxs@avalon>
+References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
+ <13812499.ICbNgSDOae@avalon> <20150128133219.GM1569@arm.com> <5349994.6VHXzPdIxs@avalon>
+From: Rob Herring <robherring2@gmail.com>
+Date: Thu, 29 Jan 2015 10:49:38 -0600
+Message-ID: <CAL_Jsq+rzwk0Rw5RRKf9oLqXNFFgnJb4UQ_AzpJLxN1Z0rJWMQ@mail.gmail.com>
+Subject: Re: [PATCH v4 1/6] of: iommu: add ptr to OF node arg to of_iommu_configure()
+To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Cc: Will Deacon <will.deacon@arm.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
+	Rob Herring <robh+dt@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [RFC Patch 09/19] ACPI: Fix a bug in parsing ACPI Memroy24 resource
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1633329.njF7Ian1Kn@vostro.rjw.lan> <54BF0BA5.8020806@linux.intel.com> <1991525.eC7pfWWFK0@vostro.rjw.lan>
-In-Reply-To: <1991525.eC7pfWWFK0@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/1/21 10:59, Rafael J. Wysocki wrote:
-> On Wednesday, January 21, 2015 10:15:01 AM Jiang Liu wrote:
->> On 2015/1/21 8:42, Rafael J. Wysocki wrote:
->>> On Thursday, January 08, 2015 10:32:56 AM Jiang Liu wrote:
->>>> According to ACPI spec 5, section 6.4.3.1 "24-Bit Memory Range Descriptor",
->>>> minimum, maximum and address_length field in struct acpi_resource_memory24
->>>> is in granularity of 256-bytes. So shift 8-bit left to get correct address.
->>>
->>> Are you sure about this?
->>>
->>> I'm reading ACPI 5.1 ATM and (on page 316) it only says about the range length
->>> being in 256 byte blocks.
->> Hi Rafael,
->> 	According to ACPI spec 5.a sec 6.4.3.1,
->> Byte 4, "Range minimum base address, _MIN, bits[7:0]", "Address
->> bits[15:8] of the minimum base memory address for which
->> the card may be configured."
->> Byte 5, "Range minimum base address, _MIN, bits[15:8]", "Address
->> bits[23:16] of the minimum base memory address for
->> which the card may be configured".
-> 
-> Ah, OK.
-> 
-> So bits [15:0] of the _MIN field are bits [23:8] of the address.  Tricky that.
-> 
-> I wonder why no problems with that have ever been reported ...
-I guess nobody really makes use of this structure:(
+On Wed, Jan 28, 2015 at 5:32 PM, Laurent Pinchart
+<laurent.pinchart@ideasonboard.com> wrote:
+> Hi Will,
+>
+> On Wednesday 28 January 2015 13:32:19 Will Deacon wrote:
+>> On Wed, Jan 28, 2015 at 01:15:10PM +0000, Laurent Pinchart wrote:
+>> > On Wednesday 28 January 2015 12:29:42 Will Deacon wrote:
+>> >> On Wed, Jan 28, 2015 at 12:23:03PM +0000, Laurent Pinchart wrote:
+>> >>> On Wednesday 28 January 2015 11:33:00 Will Deacon wrote:
+>> >>>> On Mon, Jan 26, 2015 at 06:49:01PM +0000, Murali Karicheri wrote:
+>> >>>>> On 01/25/2015 08:32 AM, Laurent Pinchart wrote:
+>> >>>>>> On Friday 23 January 2015 17:32:34 Murali Karicheri wrote:
+>> >>>>>>> Function of_iommu_configure() is called from of_dma_configure() to
+>> >>>>>>> setup iommu ops using DT property. This API is currently used for
+>> >>>>>>> platform devices for which DMA configuration (including iommu ops)
+>> >>>>>>> may come from device's parent. To extend this functionality for
+>> >>>>>>> PCI devices, this API need to take a parent node ptr as an argument
+>> >>>>>>> instead of assuming device's parent. This is needed since for PCI,
+>> >>>>>>> the dma configuration may be defined in the DT node of the root
+>> >>>>>>> bus bridge's parent device. Currently only dma-range is used for PCI
+>> >>>>>>> and iommu is not supported. So return error if the device is PCI.
 
-> 
->> Byte 10, "Range length, _LEN, bits[7:0]", "This field contains the lower
->> eight bits of the memory range length. The range length provides the
->> length of the memory range in 256 byte blocks."
->> Byte 11, "Range length, _LEN, bits[15:8]", "This field contains the
->> upper eight bits of the memory range length. The range length field
->> provides the length of the memory range in 256 byte blocks."
+[...]
+
+>> > If I understand Murali's patch set right (please correct me if that's not
+>> > the case) the PCI code walks up the DT nodes hierarchy to the parent node
+>> > that contains the iommus attribute and passes a pointer to that node to
+>> > this function. It's thus a PCI-specific solution. As a temporary hack
+>> > that's OK I suppose, but if implementing it right straight away isn't
+>> > difficult that would be better.
 >>
->> That means _MIN defines bits[23:8] of the minimal address, and _LEN
->> is in granularity of 256 bytes, so shift them left by 8 bits.
->> Regards,
->> Gerry
->>
->>>
->>>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->>>> ---
->>>>  drivers/acpi/resource.c |    4 ++--
->>>>  1 file changed, 2 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
->>>> index abe3a29ad802..f4aeef22a9d8 100644
->>>> --- a/drivers/acpi/resource.c
->>>> +++ b/drivers/acpi/resource.c
->>>> @@ -90,8 +90,8 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
->>>>  	switch (ares->type) {
->>>>  	case ACPI_RESOURCE_TYPE_MEMORY24:
->>>>  		memory24 = &ares->data.memory24;
->>>> -		acpi_dev_get_memresource(res, memory24->minimum,
->>>> -					 memory24->address_length,
->>>> +		acpi_dev_get_memresource(res, memory24->minimum << 8,
->>>> +					 memory24->address_length << 8,
->>>>  					 memory24->write_protect);
->>>>  		break;
->>>>  	case ACPI_RESOURCE_TYPE_MEMORY32:
->>>>
->>>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+>> It looks to me like the code walks the PCI topology to get the DT node for
+>> the host controller, and passes *that* to of_dma_configure. That sounds
+>> like the right thing to do to me, especially since the PCI topology is
+>> likely not encoded in the device-tree. So actually, it is passing the
+>> first parent node afaict.
+>
+> Indeed, that's right. I forgot for a moment that we have non-DT devices ;-)
+>
+> Acked-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+>
+> Murali, nitpicking a bit, shouldn't the iommu_np parameter be renamed ? It
+> points to the node containing the iommus parameter, not to the iommu node, so
+> the current name is slightly confusing. A brief kerneldoc above the function
+> would also help. This can be the subject of a separate patch.
+
+It was more confusing having np and node within the function.
+
+Rob
