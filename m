@@ -1,207 +1,104 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lv Zheng <lv.zheng@intel.com>
-To: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Len Brown <len.brown@intel.com>
-Cc: Lv Zheng <lv.zheng@intel.com>, Lv Zheng <zetalog@gmail.com>,
-	linux-acpi@vger.kernel.org,
-	Octavian Purdila <octavian.purdila@intel.com>,
-	Prarit Bhargava <prarit@sgi.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org
-Subject: [RFC PATCH] ACPI: Introduce acpi_unload_parent_table() usages in Linux kernel.
-Date: Thu, 22 Jan 2015 14:37:49 +0800
-Message-Id: <0d37f4eecdd2c7e3203fca7adb1c2c03a16a40dd.1421907258.git.lv.zheng@intel.com>
-In-Reply-To: <1418746353-3481-2-git-send-email-octavian.purdila@intel.com>
-References: <1418746353-3481-2-git-send-email-octavian.purdila@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foundry.eraalaska.net ([12.12.105.40]:59900 "EHLO
+	foundry.eraalaska.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755731AbbA2WPl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jan 2015 17:15:41 -0500
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Subject: Re: CentOS/Kernel 3.18.4/Thunderbolt2
+From: Israel Brewster <israel@ravnalaska.net>
+In-Reply-To: <804857E1F29AAC47BF68C404FC60A18465918C08@ORSMSX105.amr.corp.intel.com>
+Date: Thu, 29 Jan 2015 13:15:40 -0900
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Message-Id: <45063E1F-BF05-4559-988E-3F5DE5812CA5@ravnalaska.net>
+References: <262B8C88-E706-4538-99D8-4E5058BE646D@ravnalaska.net> <CAErSpo7f=qAPiNDAjVgVttJyVQhZmh1bd=9b+_Z7rgmtUUzL3Q@mail.gmail.com> <C6C9B327-6ED0-499F-A2C3-42F705760657@ravnalaska.net> <804857E1F29AAC47BF68C404FC60A18465918C08@ORSMSX105.amr.corp.intel.com>
+To: "Allan, Bruce W" <bruce.w.allan@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-ACPICA has implemented acpi_unload_parent_table() which can exactly replace
-the acpi_get_id()/acpi_unload_table_id() implemented in Linux kernel.  The
-acpi_unload_parent_table() has been unit tested in ACPICA simulation
-environment.
+On Jan 29, 2015, at 1:05 PM, Allan, Bruce W <bruce.w.allan@intel.com> wrote:
 
-This patch can also help to reduce the source code differences between
-Linux and ACPICA.
+>> -----Original Message-----
+>> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+>> owner@vger.kernel.org] On Behalf Of Israel Brewster
+>> Sent: Thursday, January 29, 2015 1:21 PM
+>> To: Bjorn Helgaas
+>> Cc: linux-pci@vger.kernel.org
+>> Subject: Re: CentOS/Kernel 3.18.4/Thunderbolt2
+>> 
+>> On Jan 29, 2015, at 11:05 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> 
+>>> On Thu, Jan 29, 2015 at 1:46 PM, Israel Brewster <israel@ravnalaska.net>
+>> wrote:
+>>>> My company recently purchased and installed a new SuperMicro server
+>> with a Thunderbolt 2 (Falcon Ridge) card installed, specifically an AOC-TBT-
+>> DSL5320. I then installed CentOS 6, and, since to my understanding
+>> thunderbolt support is only in more recent kernels, I went ahead and
+>> upgraded the kernel to version 3.18.4 from ElRepo. However, I have not
+>> seen any indication yet that Thunderbolt is working - although I may just not
+>> be looking in the right place. Over on Google+ Greg Kroah-Hartman
+>> indicated that I need the PCI hot plug controller driver enabled, and
+>> Matthew Garrett indicated that I specifically need the ACPI PCI hotplug
+>> driver rather than the native PCIe hotplug driver. To check, I ran the
+>> following command:
+>>>> 
+>>>> egrep -i HOTPLUG /boot/config-3.18.4-1.el6.elrepo.x86_64
+>>>> 
+>>>> Which returned the following potentially relevant results:
+>>>> 
+>>>> CONFIG_ACPI_HOTPLUG_CPU=y
+>>>> CONFIG_ACPI_HOTPLUG_MEMORY=y
+>>>> CONFIG_HOTPLUG_PCI_PCIE=y
+>>>> CONFIG_HOTPLUG_PCI=y
+>>>> 
+>>>> but also the following:
+>>>> 
+>>>> # CONFIG_HOTPLUG_PCI_ACPI is not set
+>>>> # CONFIG_HOTPLUG_PCI_CPCI is not set
+>>>> 
+>>>> So perhaps that's the entire problem - that CONFIG_HOTPLUG_PCI_ACPI
+>> is not set? If so, what's going to be the easiest solution?
+>>> 
+>>> Yep, if you need the ACPI PCI hotplug driver,
+>> CONFIG_HOTPLUG_PCI_ACPI
+>>> should be enabled.  I think you should be able to use "make
+>>> menuconfig" to enable it at:
+>>> 
+>>> Bus options
+>>>   Support for PCI Hotplug
+>>>     ACPI PCI Hotplug driver
+>>> 
+>>> I'm not  RedHat/CentOS person, so I don't know the distro details, but
+>>> I would try "make install" as a starting point.
+>> 
+>> Well, I went ahead and downloaded the 3.18.4 source, copied my current
+>> config, ran make menuconfig, and enabled that option. Then I ran make
+>> rpm, which gave me a RPM that I installed and was able to boot from.
+>> However, while I do see the ACPI PCI Hotplug driver loading in the DMESG, I
+>> still don't see any indication of the thunderbolt controller or the drive I
+>> plugged in.
+>> 
+>> Is there any chance I'm just being stupid here? That things ARE working, but
+>> are identified differently than I am expecting, so I don't see them?
+> 
+> Not necessarily.  Is this a plug-in controller or on the mobo?  If the latter, does your system BIOS show any Thunderbolt security options, and if so, what is it set to?
 
-Signed-off-by: Lv Zheng <lv.zheng@intel.com>
-Cc: Octavian Purdila <octavian.purdila@intel.com>
-Cc: Prarit Bhargava <prarit@sgi.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: linux-ia64@vger.kernel.org
----
- drivers/acpi/acpica/nsxfobj.c     |   44 -------------------------------------
- drivers/acpi/acpica/tbxface.c     |   39 --------------------------------
- drivers/pci/hotplug/sgi_hotplug.c |   13 ++++++-----
- include/acpi/acpixf.h             |    6 -----
- 4 files changed, 7 insertions(+), 95 deletions(-)
+Plug in controller that came with the motherboard, specifically an AOC-TBT-DSL5320. Plugs into PCI slot 6 and has a cable running to the GPIO headers on the motherboard as well. It does have a section in the bios with a number of settings, such as enabled and whether or not to ignore the Option ROM, but I don't see anything about security there.
 
-diff --git a/drivers/acpi/acpica/nsxfobj.c b/drivers/acpi/acpica/nsxfobj.c
-index dae9401..51a8329 100644
---- a/drivers/acpi/acpica/nsxfobj.c
-+++ b/drivers/acpi/acpica/nsxfobj.c
-@@ -53,50 +53,6 @@ ACPI_MODULE_NAME("nsxfobj")
- 
- /*******************************************************************************
-  *
-- * FUNCTION:    acpi_get_id
-- *
-- * PARAMETERS:  Handle          - Handle of object whose id is desired
-- *              ret_id          - Where the id will be placed
-- *
-- * RETURN:      Status
-- *
-- * DESCRIPTION: This routine returns the owner id associated with a handle
-- *
-- ******************************************************************************/
--acpi_status acpi_get_id(acpi_handle handle, acpi_owner_id * ret_id)
--{
--	struct acpi_namespace_node *node;
--	acpi_status status;
--
--	/* Parameter Validation */
--
--	if (!ret_id) {
--		return (AE_BAD_PARAMETER);
--	}
--
--	status = acpi_ut_acquire_mutex(ACPI_MTX_NAMESPACE);
--	if (ACPI_FAILURE(status)) {
--		return (status);
--	}
--
--	/* Convert and validate the handle */
--
--	node = acpi_ns_validate_handle(handle);
--	if (!node) {
--		(void)acpi_ut_release_mutex(ACPI_MTX_NAMESPACE);
--		return (AE_BAD_PARAMETER);
--	}
--
--	*ret_id = node->owner_id;
--
--	status = acpi_ut_release_mutex(ACPI_MTX_NAMESPACE);
--	return (status);
--}
--
--ACPI_EXPORT_SYMBOL(acpi_get_id)
--
--/*******************************************************************************
-- *
-  * FUNCTION:    acpi_get_type
-  *
-  * PARAMETERS:  handle          - Handle of object whose type is desired
-diff --git a/drivers/acpi/acpica/tbxface.c b/drivers/acpi/acpica/tbxface.c
-index 6482b0d..0f9dd80 100644
---- a/drivers/acpi/acpica/tbxface.c
-+++ b/drivers/acpi/acpica/tbxface.c
-@@ -265,45 +265,6 @@ ACPI_EXPORT_SYMBOL(acpi_get_table_header)
- 
- /*******************************************************************************
-  *
-- * FUNCTION:    acpi_unload_table_id
-- *
-- * PARAMETERS:  id            - Owner ID of the table to be removed.
-- *
-- * RETURN:      Status
-- *
-- * DESCRIPTION: This routine is used to force the unload of a table (by id)
-- *
-- ******************************************************************************/
--acpi_status acpi_unload_table_id(acpi_owner_id id)
--{
--	int i;
--	acpi_status status = AE_NOT_EXIST;
--
--	ACPI_FUNCTION_TRACE(acpi_unload_table_id);
--
--	/* Find table in the global table list */
--	for (i = 0; i < acpi_gbl_root_table_list.current_table_count; ++i) {
--		if (id != acpi_gbl_root_table_list.tables[i].owner_id) {
--			continue;
--		}
--		/*
--		 * Delete all namespace objects owned by this table. Note that these
--		 * objects can appear anywhere in the namespace by virtue of the AML
--		 * "Scope" operator. Thus, we need to track ownership by an ID, not
--		 * simply a position within the hierarchy
--		 */
--		acpi_tb_delete_namespace_by_owner(i);
--		status = acpi_tb_release_owner_id(i);
--		acpi_tb_set_table_loaded_flag(i, FALSE);
--		break;
--	}
--	return_ACPI_STATUS(status);
--}
--
--ACPI_EXPORT_SYMBOL(acpi_unload_table_id)
--
--/*******************************************************************************
-- *
-  * FUNCTION:    acpi_get_table_with_size
-  *
-  * PARAMETERS:  signature           - ACPI signature of needed table
-diff --git a/drivers/pci/hotplug/sgi_hotplug.c b/drivers/pci/hotplug/sgi_hotplug.c
-index bada2099..c32fb78 100644
---- a/drivers/pci/hotplug/sgi_hotplug.c
-+++ b/drivers/pci/hotplug/sgi_hotplug.c
-@@ -475,7 +475,7 @@ static int disable_slot(struct hotplug_slot *bss_hotplug_slot)
- 	struct slot *slot = bss_hotplug_slot->private;
- 	struct pci_dev *dev, *temp;
- 	int rc;
--	acpi_owner_id ssdt_id = 0;
-+	acpi_handle ssdt_hdl = NULL;
- 
- 	/* Acquire update access to the bus */
- 	mutex_lock(&sn_hotplug_mutex);
-@@ -522,7 +522,7 @@ static int disable_slot(struct hotplug_slot *bss_hotplug_slot)
- 			if (ACPI_SUCCESS(ret) &&
- 			    (adr>>16) == (slot->device_num + 1)) {
- 				/* retain the owner id */
--				acpi_get_id(chandle, &ssdt_id);
-+				ssdt_hdl = chandle;
- 
- 				ret = acpi_bus_get_device(chandle,
- 							  &device);
-@@ -547,12 +547,13 @@ static int disable_slot(struct hotplug_slot *bss_hotplug_slot)
- 	pci_unlock_rescan_remove();
- 
- 	/* Remove the SSDT for the slot from the ACPI namespace */
--	if (SN_ACPI_BASE_SUPPORT() && ssdt_id) {
-+	if (SN_ACPI_BASE_SUPPORT() && ssdt_hdl) {
- 		acpi_status ret;
--		ret = acpi_unload_table_id(ssdt_id);
-+		ret = acpi_unload_parent_table(ssdt_hdl);
- 		if (ACPI_FAILURE(ret)) {
--			printk(KERN_ERR "%s: acpi_unload_table_id failed (0x%x) for id %d\n",
--			       __func__, ret, ssdt_id);
-+			acpi_handle_err(ssdt_hdl,
-+					"%s: acpi_unload_parent_table failed (0x%x)\n",
-+					__func__, ret);
- 			/* try to continue on */
- 		}
- 	}
-diff --git a/include/acpi/acpixf.h b/include/acpi/acpixf.h
-index 5ba7846..5dd21bc 100644
---- a/include/acpi/acpixf.h
-+++ b/include/acpi/acpixf.h
-@@ -891,12 +891,6 @@ ACPI_APP_DEPENDENT_RETURN_VOID(ACPI_PRINTF_LIKE(1)
- ACPI_GLOBAL(u8, acpi_gbl_permanent_mmap);
- 
- ACPI_EXTERNAL_RETURN_STATUS(acpi_status
--			    acpi_get_id(acpi_handle object,
--					acpi_owner_id * out_type))
--
--ACPI_EXTERNAL_RETURN_STATUS(acpi_status acpi_unload_table_id(acpi_owner_id id))
--
--ACPI_EXTERNAL_RETURN_STATUS(acpi_status
- 			    acpi_get_table_with_size(acpi_string signature,
- 						     u32 instance,
- 						     struct acpi_table_header
--- 
-1.7.10
+-----------------------------------------------
+Israel Brewster
+Systems Analyst II
+Ravn Alaska
+5245 Airport Industrial Rd
+Fairbanks, AK 99709
+(907) 450-7293
+-----------------------------------------------
+
+
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
