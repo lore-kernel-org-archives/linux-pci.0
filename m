@@ -1,102 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:51272 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756767AbbA0ApK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jan 2015 19:45:10 -0500
-Received: by mail-ob0-f172.google.com with SMTP id wp18so10919844obc.3
-        for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2015 16:45:09 -0800 (PST)
-Date: Mon, 26 Jan 2015 18:45:06 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: Re: [PATCH v2 0/8] Introducing per-device MSI domain
-Message-ID: <20150127004506.GF11624@google.com>
-References: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com>
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:35126 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751116AbbA2OqA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jan 2015 09:46:00 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1420736772-11088-1-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <20150128234937.20644.9400.stgit@dusk.lan>
+References: <20150128234935.20644.89300.stgit@dusk.lan> <20150128234937.20644.9400.stgit@dusk.lan>
+From: Rob Herring <robherring2@gmail.com>
+Date: Thu, 29 Jan 2015 08:45:37 -0600
+Message-ID: <CAL_JsqKMm=r+57ShskgbtNqnCGF1yKYDSJJFQ7o05keNzh5z+g@mail.gmail.com>
+Subject: Re: [PATCH 02/24] Documentation: DT bindings: add more chip
+ compatible strings for Tegra PCIe
+To: Paul Walmsley <paul@pwsan.com>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 08, 2015 at 05:06:04PM +0000, Marc Zyngier wrote:
-> MSI-like interrupts are starting to creep out of the PCI world, and
-> can now be seen into a number of "platform"-type busses. The MSI
-> domain patches recognise that fact, and start providing a way to
-> implement this.
-> 
-> Another problem we have to solve is to identify which MSI domain a
-> device is "connected" to. Currently, PCI gets away with a mixture of
-> arch-specific callbacks, and a msi_controller structure that can
-> optionally carry a pointer to an MSI domain. As we add new bus types
-> and start dealing with topologies that do not map to what PCI does,
-> this doesn't scale anymore.
-> 
-> This patch series tries to address some of it by providing a basic
-> link between 'struct device' and an MSI domain. It also adds (yet
-> another) way for PCI to propagate the domain pointer through the PCI
-> device hierarchy, provides a method for OF to kick-start the
-> propagation process, and finally allows the PCI/MSI layer to use that
-> information. Hopefully this can serve as a model to implement support
-> for different but types.
-> 
-> Additionally, the last three patches use all the above to remove any
-> trace of the msi_controller structure from the two GIC interrupt
-> controllers we use on arm64, so that they solely rely on the above
-> infrastructure. We take this opportunity to also kill the domain
-> pointer from the msi_controller structure.
-> 
-> My hope is to eventually kill msi_controller entirely, and only rely
-> on the msi_domain contained in the device structure (any help
-> welcomed).
-> 
-> This has been tested on arm64 with GICv2m (AMD Seattle) and GICv3 ITS
-> (FVP model).
-> 
-> Patches are on top of 3.19-rc3 and available at:
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git irq/msi_domain
-> 
-> As always, comments most welcome.
+On Wed, Jan 28, 2015 at 5:49 PM, Paul Walmsley <paul@pwsan.com> wrote:
+>
+> Add compatible strings for the PCIe IP blocks present on several Tegra
+> chips.  The primary objective here is to avoid checkpatch warnings,
+> per:
+>
+> http://marc.info/?l=linux-tegra&m=142201349727836&w=2
+>
+> Signed-off-by: Paul Walmsley <paul@pwsan.com>
+> Cc: Thierry Reding <thierry.reding@gmail.com>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: Pawel Moll <pawel.moll@arm.com>
+> Cc: Mark Rutland <mark.rutland@arm.com>
+> Cc: Ian Campbell <ijc+devicetree@hellion.org.uk>
+> Cc: Kumar Gala <galak@codeaurora.org>
+> Cc: Stephen Warren <swarren@wwwdotorg.org>
+> Cc: Alexandre Courbot <gnurou@gmail.com>
+> Cc: linux-tegra@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> Cc: devicetree@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> ---
+>  .../bindings/pci/nvidia,tegra20-pcie.txt           |    2 ++
+>  1 file changed, 2 insertions(+)
+>
+> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+> index d763e047c6ae..e772884f1c33 100644
+> --- a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+> @@ -5,6 +5,8 @@ Required properties:
+>    - "nvidia,tegra20-pcie"
+>    - "nvidia,tegra30-pcie"
+>    - "nvidia,tegra124-pcie"
+> +  - "nvidia,tegra132-pcie" (not yet matched in the driver)
+> +  - "nvidia,tegra210-pcie" (not yet matched in the driver)
 
-These generally look fine to me.  I made a couple minor comments (sorry; I
-replied to the v1 series, not to this one).  Since most of the recent IRQ
-work has gone via you, Thomas, does it make sense for you to do these, too?
+Whether the driver matches or not is irrelevant to the binding and may
+change over time. Does this mean the driver matches on something else
+or Tegra132 is not yet supported in the driver? If the former, what is
+important is what are the valid combinations of compatible properties
+and that is not captured here. In other words, what is the fallback
+compatible string for each chip?
 
-Bjorn
+The same comments apply to the rest of the series.
 
-> From v1:
-> 
-> - Allow arch code to set the MSI domain before we try to do so in core
->   code (which is used as a fallback).
-> - Allow the MSI domain to be looked-up by using the PHB node.
-> - Remove domain field from msi_controller
-> 
-> [1] https://lkml.org/lkml/2014/12/8/581
-> 
-> Marc Zyngier (8):
->   device core: Introduce per-device MSI domain pointer
->   PCI/MSI: Add hooks to populate the msi_domain field
->   PCI/MSI: of: Add support for OF-provided msi_domain
->   PCI/MSI: of: Allow msi_domain lookup using the PHB node
->   PCI/MSI: Let pci_msi_get_domain use struct device's msi_domain
->   irqchip: GICv2m: Get rid of struct msi_controller
->   irqchip: gicv3-its: Get rid of struct msi_controller
->   PCI/MSI: Drop domain field from msi_controller
-> 
->  drivers/irqchip/irq-gic-v2m.c    | 26 +++++++++-----------------
->  drivers/irqchip/irq-gic-v3-its.c | 33 ++++++++++++++-------------------
->  drivers/pci/msi.c                |  3 +--
->  drivers/pci/of.c                 | 20 ++++++++++++++++++++
->  drivers/pci/probe.c              | 31 +++++++++++++++++++++++++++++++
->  include/linux/device.h           | 20 ++++++++++++++++++++
->  include/linux/msi.h              |  3 ---
->  include/linux/pci.h              |  3 +++
->  8 files changed, 98 insertions(+), 41 deletions(-)
-> 
-> -- 
-> 2.1.4
-> 
+Rob
