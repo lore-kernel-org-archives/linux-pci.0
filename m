@@ -1,26 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:48380 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754511AbbA0IXj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Jan 2015 03:23:39 -0500
-Date: Tue, 27 Jan 2015 00:23:38 -0800 (PST)
-Message-Id: <20150127.002338.1636880267214027338.davem@davemloft.net>
-To: zajec5@gmail.com
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	nic_swsd@realtek.com, netdev@vger.kernel.org
-Subject: Re: [PATCH 5/5] r8169: use PCI define for max read request size
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1422291991-12535-1-git-send-email-zajec5@gmail.com>
-References: <1422291922-12324-1-git-send-email-zajec5@gmail.com>
-	<1422291991-12535-1-git-send-email-zajec5@gmail.com>
+Received: from mail.emea.novell.com ([130.57.118.101]:33766 "EHLO
+	mail.emea.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754302AbbA2NPu convert rfc822-to-8bit (ORCPT
+	<rfc822;groupwise-linux-pci@vger.kernel.org:8:2>);
+	Thu, 29 Jan 2015 08:15:50 -0500
+Message-Id: <54CA4092020000780005ADF6@mail.emea.novell.com>
+Date: Thu, 29 Jan 2015 13:15:46 +0000
+From: "Jan Beulich" <JBeulich@suse.com>
+To: <bhelgaas@google.com>, "Yijing Wang" <wangyijing@huawei.com>
+Cc: <david.vrabel@citrix.com>, <yinghai@kernel.org>,
+	<xen-devel@lists.xenproject.org>, <boris.ostrovsky@oracle.com>,
+	<alex.williamson@redhat.com>, <kvm@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: [Xen-devel] [PATCH v3] PCI: Add guard to avoid mapping a
+ invalid msix base address
+References: <1422503683-19709-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1422503683-19709-1-git-send-email-wangyijing@huawei.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=euc-kr
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafa©© Mi©©ecki <zajec5@gmail.com>
-Date: Mon, 26 Jan 2015 18:06:31 +0100
+>>> On 29.01.15 at 04:54, <wangyijing@huawei.com> wrote:
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -694,11 +694,16 @@ static void __iomem *msix_map_region(struct pci_dev *dev, unsigned nr_entries)
+>  {
+>  	resource_size_t phys_addr;
+>  	u32 table_offset;
+> +	unsigned long flags;
+>  	u8 bir;
+>  
+>  	pci_read_config_dword(dev, dev->msix_cap + PCI_MSIX_TABLE,
+>  			      &table_offset);
+>  	bir = (u8)(table_offset & PCI_MSIX_TABLE_BIR);
+> +	flags = pci_resource_flags(dev, bir);
+> +	if (!flags || (flags & IORESOURCE_UNSET))
+> +		return NULL;
 
-> Signed-off-by: Rafa©© Mi©©ecki <zajec5@gmail.com>
+Mind explaining what relevance the checking of flags against zero has
+(also in the Xen counterpart)? The patch description says nothing in
+this regard...
 
-Acked-by: David S. Miller <davem@davemloft.net>
+Jan
+
