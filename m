@@ -1,113 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:43706 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755011AbbAGXF1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 7 Jan 2015 18:05:27 -0500
-Message-ID: <54ADBB89.8070503@ti.com>
-Date: Wed, 7 Jan 2015 18:04:41 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from mail-qg0-f52.google.com ([209.85.192.52]:37074 "EHLO
+	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752455AbbA2ONH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jan 2015 09:13:07 -0500
+Received: by mail-qg0-f52.google.com with SMTP id z107so28464560qgd.11
+        for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2015 06:13:06 -0800 (PST)
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>, <bhelgaas@google.com>
-CC: <linux-arm-kernel@lists.infradead.org>, <joro@8bytes.org>,
-	<grant.likely@linaro.org>, <robh+dt@kernel.org>,
-	<iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<will.deacon@arm.com>, <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v3 0/4] PCI: get DMA configuration from parent device
-References: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com> <4057859.4ynbgz66iN@wuerfel>
-In-Reply-To: <4057859.4ynbgz66iN@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <54CA4092020000780005ADF6@mail.emea.novell.com>
+References: <1422503683-19709-1-git-send-email-wangyijing@huawei.com> <54CA4092020000780005ADF6@mail.emea.novell.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 29 Jan 2015 08:12:46 -0600
+Message-ID: <CAErSpo7s+E9+EPg+rxGDc_zf4E5jhRzT8fT=ZyThNqsW7+VU5g@mail.gmail.com>
+Subject: Re: [Xen-devel] [PATCH v3] PCI: Add guard to avoid mapping a invalid
+ msix base address
+To: Jan Beulich <JBeulich@suse.com>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/07/2015 04:18 PM, Arnd Bergmann wrote:
-> On Wednesday 07 January 2015 13:49:50 Murali Karicheri wrote:
->> PCI devices on Keystone doesn't have correct dma_pfn_offset set. This patch
->> add capability to set the dma configuration such as dma-mask, dma_pfn_offset,
->> and dma ops etc using the information from DT. The prior RFCs and discussions
->> are available at [1] and [2] below.
+On Thu, Jan 29, 2015 at 7:15 AM, Jan Beulich <JBeulich@suse.com> wrote:
+>>>> On 29.01.15 at 04:54, <wangyijing@huawei.com> wrote:
+>> --- a/drivers/pci/msi.c
+>> +++ b/drivers/pci/msi.c
+>> @@ -694,11 +694,16 @@ static void __iomem *msix_map_region(struct pci_dev *dev, unsigned nr_entries)
+>>  {
+>>       resource_size_t phys_addr;
+>>       u32 table_offset;
+>> +     unsigned long flags;
+>>       u8 bir;
 >>
->> [2] : https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg790244.html
->> [1] : http://www.gossamer-threads.com/lists/linux/kernel/2024591
+>>       pci_read_config_dword(dev, dev->msix_cap + PCI_MSIX_TABLE,
+>>                             &table_offset);
+>>       bir = (u8)(table_offset & PCI_MSIX_TABLE_BIR);
+>> +     flags = pci_resource_flags(dev, bir);
+>> +     if (!flags || (flags & IORESOURCE_UNSET))
+>> +             return NULL;
 >
-> Looks all good to me in this version, I'm just unsure about one thing:
->
->>                 - Limit the of_iommu_configure to non pci devices
->
-> My last recommendation was to pass the b/d/f number into
-> of_pci_dma_configure to handle this correctly. What was your
-> reason for not doing it in the end?
-Arnd,
+> Mind explaining what relevance the checking of flags against zero has
+> (also in the Xen counterpart)? The patch description says nothing in
+> this regard...
 
-I had responded to this already on the list and reproduced below your 
-remark and my response below from that thread.
+It's buried in there:
 
----------------cut-------------------------------------------------------
- > Actually regarding the bit I wrote above, it might be helpful to pass
- > the PCI_DEVID() into both of_iommu_configure and of_dma_configure.
- >
- > While this may or may not be sufficient, I think there is no question
- > about it being needed for the ARM SMMU with PCI, so we may as well add
- > it at the point when you touch the same lines already. In the platform
- > bus case, just pass zero here.
-Arnd,
+>                                        reset_resource()        -->res->start/end/flags = 0
 
-PCI_DEVID() is defined as
+If we fail to assign resources to a BAR, in some cases we set
+res->flags = 0.  There are other cases where we set IORESOURCE_UNSET,
+and that's the direction I want to go for all situations where we
+don't assign resources.  But right now, we have a mix where flags is
+zero in some cases (including the one Zhang found), and has
+IORESOURCE_UNSET in others.
 
-#define PCI_DEVID(bus, devfn)  ((((u16)(bus)) << 8) | (devfn))
+I'll try to wordsmith this in the changelog when I apply this.
 
-So PCI_DEVID of 0 is a valid PCI DEVID.
-
-How about checking if the device is PCI in of_iommu_configure() using 
-dev_is_pci(dev) macro and return immediately for PCI? Need to include 
-pci.h in this file though.
-
-Some of the iommu drivers already include this.
-
-a0868495@ares-ubuntu:~/projects/linux-keystone$ grep -r pci.h drivers/iommu/
-drivers/iommu/amd_iommu_v2.c:#include <linux/pci.h>
-drivers/iommu/dmar.c:#include <linux/pci.h>
-drivers/iommu/amd_iommu_types.h:#include <linux/pci.h>
-drivers/iommu/amd_iommu.c:#include <linux/pci.h>
-drivers/iommu/fsl_pamu_domain.c:#include <sysdev/fsl_pci.h>
-drivers/iommu/iommu.c:#include <linux/pci.h>
-drivers/iommu/intel-iommu.c:#include <linux/pci.h>
-drivers/iommu/intel_irq_remapping.c:#include <linux/pci.h>
-drivers/iommu/arm-smmu.c:#include <linux/pci.h>
-drivers/iommu/amd_iommu_init.c:#include <linux/pci.h>
-drivers/iommu/irq_remapping.c:#include <linux/pci.h>
-
-This will allow us to re-visit this later for IOMMU support for PCI 
-without polluting the API.
------------------------cut-end---------------------------------------
-
-I assumed you want to use value of zero for b/d/f to indicate it is for
-platform. Also use the non zero value to skip the DT attribute parsing 
-for IOMMU DT attribute in of_iommu_configure() for PCI.
-I did dev_is_pci() for skipping the processing for PCI. I thought it is 
-better to add the b/d/f argument later when this is re-visited later.
-
-BTW,
-
-I still haven't received any comment from Bjorn w.r.t PCI part.
-
-BJorn, could you review and comment on 3/4 and 4/4?
-
-Regards,
-
-Murali
->
-> We will likely have to change this again if we take your current version,
-> but that can be a follow-up patch. I believe AMD requires it to use
-> PCI on their their Seattle platform.
->
-> 	Arnd
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
--- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+Bjorn
