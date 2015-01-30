@@ -1,57 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:58418 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751789AbbAMBaG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jan 2015 20:30:06 -0500
-Message-ID: <54B474D5.8090500@hp.com>
-Date: Tue, 13 Jan 2015 09:28:53 +0800
-From: "Li, ZhenHua" <zhen-hual@hp.com>
+Received: from mail-qc0-f175.google.com ([209.85.216.175]:63726 "EHLO
+	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760722AbbA3WPZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Jan 2015 17:15:25 -0500
+Received: by mail-qc0-f175.google.com with SMTP id c9so22837934qcz.6
+        for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2015 14:15:25 -0800 (PST)
 MIME-Version: 1.0
-To: Joerg Roedel <joro@8bytes.org>
-CC: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	vgoyal@redhat.com, dyoung@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com, "Li, ZhenHua" <zhen-hual@hp.com>
-Subject: Re: [PATCH v8 01/10] iommu/vt-d: Update iommu_attach_domain() and
- its callers
-References: <1421046388-27925-1-git-send-email-zhen-hual@hp.com> <1421046388-27925-2-git-send-email-zhen-hual@hp.com> <20150112151855.GB6343@8bytes.org>
-In-Reply-To: <20150112151855.GB6343@8bytes.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1666566.z9ZP4KJ7VA@wuerfel>
+References: <1666566.z9ZP4KJ7VA@wuerfel>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 30 Jan 2015 16:15:04 -0600
+Message-ID: <CAErSpo7iqe07HQBpbGfr8=FwK3wF0dkCFvjAJRBvd7HusMjjvg@mail.gmail.com>
+Subject: Re: [PATCH] ARM: integrator: remove unused variable
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Rob Herring <robh@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/12/2015 11:18 PM, Joerg Roedel wrote:
-> On Mon, Jan 12, 2015 at 03:06:19PM +0800, Li, Zhen-Hua wrote:
->> Allow specification of the domain-id for the new domain.
->> This patch only adds the 'did' parameter to iommu_attach_domain()
->> and modifies all of its callers to specify the default value of -1
->> which says "no did specified, allocate a new one".
+On Fri, Jan 30, 2015 at 3:59 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> The patch to add the new generic config space accessors removed
+> a useless spinlock, but left the flags variable in place, which
+> now causes a build warning:
 >
-> I think its better to keep the old iommu_attach_domain() interface in
-> place and introduce a new function (like iommu_attach_domain_with_id()
-> or something) which has the additional parameter. Then you can rewrite
-> iommu_attach_domain():
+> arch/arm/mach-integrator/pci_v3.c: In function 'pci_v3_preinit':
+> arch/arm/mach-integrator/pci_v3.c:614:16: warning: unused variable 'flags' [-Wunused-variable]
 >
-> 	iommu_attach_domai(...)
-> 	{
-> 		return iommu_attach_domain_with_id(..., -1);
-> 	}
+> This removes it.
 >
-> This way you don't have to update all the callers of
-> iommu_attach_domain() and the interface is more readable.
->
->
-> 	Joerg
->
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Fixes: 1ba525109219 ("ARM: integrator: Convert PCI to use generic config accessors")
 
-That's a good way. I will do this in next version.
+Folded in, thanks!
 
-Thanks
-Zhenhua
-
-
+>
+> diff --git a/arch/arm/mach-integrator/pci_v3.c b/arch/arm/mach-integrator/pci_v3.c
+> index dc7782f26cbb..2565f0e7b5cf 100644
+> --- a/arch/arm/mach-integrator/pci_v3.c
+> +++ b/arch/arm/mach-integrator/pci_v3.c
+> @@ -611,7 +611,6 @@ static int __init pci_v3_setup(int nr, struct pci_sys_data *sys)
+>   */
+>  static void __init pci_v3_preinit(void)
+>  {
+> -       unsigned long flags;
+>         unsigned int temp;
+>         phys_addr_t io_address = pci_pio_to_address(io_mem.start);
+>
+>
