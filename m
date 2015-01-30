@@ -1,112 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:55402 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753463AbbAEOr5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Jan 2015 09:47:57 -0500
-Date: Mon, 5 Jan 2015 14:48:09 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>
-Subject: Re: [RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x)
-Message-ID: <20150105144809.GA18003@red-moon>
-References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
- <20150102115533.GA25573@red-moon>
- <54A6E0DE.6090309@amd.com>
- <30239600.UAZhntKiNS@wuerfel>
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:63235 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751759AbbA3SSb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Jan 2015 13:18:31 -0500
+Received: by mail-qa0-f46.google.com with SMTP id j7so21124079qaq.5
+        for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2015 10:18:31 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <30239600.UAZhntKiNS@wuerfel>
+In-Reply-To: <CA+8MBbLprQgbOo_aTaafHzEVcOPR3vp2gxFPDTX3YYS2Ywh6zg@mail.gmail.com>
+References: <20150123203145.GA6691@google.com> <CA+8MBbKnT=mE3kev8BRPq0GeTgHx8WVa6o54tJuBX_XXLpHdYQ@mail.gmail.com>
+ <CAErSpo7y1wWStjcEOH9xTiM-As8+QeMynZ5ENrL9v3X2PvQCcw@mail.gmail.com>
+ <CA+8MBb+bWiX2eayjBQHsvCjTp3t8H9=AviF9AkV6CC--cC_fYQ@mail.gmail.com>
+ <CAE9FiQXj07CtOJ6uBZomNyhAH9ANanbbUSo51td6G-UB5Rmmow@mail.gmail.com>
+ <CA+8MBbLVgfk3LEAnuAx_MRJpHkQO-cEQnuCrcbxcyOezr5RLcg@mail.gmail.com>
+ <CAE9FiQXnTPO2tM252zvTGJF9Nmc-R+6z65Kq3aXC3jvxtAK2Qw@mail.gmail.com>
+ <CAErSpo5CmVTw1-jQ2cwZS27nWH6zEyO5yqaedPN8jeRiU=JUfQ@mail.gmail.com> <CA+8MBbLprQgbOo_aTaafHzEVcOPR3vp2gxFPDTX3YYS2Ywh6zg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 30 Jan 2015 12:18:11 -0600
+Message-ID: <CAErSpo6W2oa2SvfhATGTtRrrgcmQQh6H+-BSxin_OQR+_JqYMQ@mail.gmail.com>
+Subject: Re: [GIT PULL] PCI fixes for v3.19
+To: Tony Luck <tony.luck@gmail.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Marek Kordik <kordikmarek@gmail.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Andreas Hartmann <andihartmann@freenet.de>,
+	Alexey Voronkov <zermond@gmail.com>,
+	David Airlie <airlied@linux.ie>,
+	Alex Deucher <alexander.deucher@amd.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 02, 2015 at 09:09:33PM +0000, Arnd Bergmann wrote:
-> On Friday 02 January 2015 12:18:06 Suravee Suthikulanit wrote:
-> > On 1/2/2015 5:55 AM, Lorenzo Pieralisi wrote:
-> > > Hi Suravee,
-> > >
-> > > On Mon, Dec 29, 2014 at 07:32:44PM +0000, Suravee Suthikulpanit wrote:
-> > >> >Hi,
-> > >> >
-> > >> >I am not sure if this thread is still alive. I'm trying to see what I
-> > >> >can do to help clean up/convert to make the PCI GHC also works for arm64
-> > >> >w/ zero or minimal ifdefs.
-> > >> >
-> > >> >Please let me know if someone is already working on this. I noticed that
-> > >> >Lorenzo's patches has already been in 3.19-rc1, and in Bjorn's
-> > >> >pci/domain branch. Otherwise, I'll try to continue the work based on the
-> > >> >sample patch from Arnd here.
-> > > If I am not mistaken, the only bit missing to remove pci_sys_data (and so
-> > > having a generic host controller driver that works on ARM32/64) is generic
-> > > MSI management.
-> > 
-> > Lorenzo,
-> > 
-> > Do you mean to remove pci_sys_data from pci-host-generic.c or removing 
-> > it completely? I assume the former case.
-> 
-> Something inbetween: We should be able to remove pci_sys_data and
-> pci_common_init_dev from all drivers in drivers/pci/host/, but keep them
-> for all drivers in arch/arm/*/pci.c
-> 
-> > So, looking at the current code in the pci-host-generic.c, my 
-> > understanding is that the:
-> >      *gen_pci = pci_bus->sysdata->private_data
-> > will be changed to:
-> >      *gen_pci = pci_bus->sysdata
-> > 
-> > Then, we can simply just call pci_scan_root_bus() directly since we no 
-> > longer need to declare hw_pci for calling pci_common_init_dev().
-> 
-> Right.
-> 
-> > > I know for certain Marc is working on it, and the solution is WIP,
-> > > I think we should prevent adding more churn to pci_sys_data, since
-> > > I managed to remove most of the dependencies (domain, mem_offset).
-> > 
-> > Thanks for cleaning up the domain and mem_offset.
-> > 
-> > I saw Marc's irq/msi_domain patch series 
-> > (http://git.kernel.org/cgit/linux/kernel/git/maz/arm-platforms.git/log/?h=irq/msi_domain). 
-> > 
-> > 
-> > My understanding is that deals with associating the newly introduced 
-> > msi_domain to each device, which replaces the need for pci_bus->msi and 
-> > hw_pci->msi_ctrl when configure with CONFIG_PCI_MSI_IRQ_DOMAIN (not sure 
-> > if this would be the plan for all arm32).  For ARM32, if not define 
-> > CONFIG_PCI_MSI_IRQ_DOMAIN, it would still fall back to using the 
-> > [pci_sys_data|hw_pci]->msi_ctrl.
-> 
-> For all I can tell, we have two cases on ARM regarding MSI:
-> 
-> - arch/arm/mach-iop13xx/pci.c uses its own
->   arch_setup_msi_irq/arch_teardown_msi_irq implementation and does not
->   use pci_bus->msi.
-> 
-> - everything else that supports MSI has a modern driver with multiplatform
->   support and uses msi_controller. If any platform wants to support GICv2m,
->   we have to use CONFIG_PCI_MSI_IRQ_DOMAIN for all of them, and that
->   seems like the best way forward.
+On Fri, Jan 30, 2015 at 12:01 PM, Tony Luck <tony.luck@gmail.com> wrote:
+> On Fri, Jan 30, 2015 at 8:56 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> Tony, does the system work as it did before?  Is the only problem that
+>> now we have more warnings than we did before?
+>
+> Yup - things seem to be working. Just have a bunch of new console messages.
+>
+> It seems that at least some of them are valid - the BIOS isn't describing some
+> things that it should.  I don't think we need to re-apply code that
+> used to paper
+> over this problem. I can just add these to the list of "harmless" messages to
+> ignore when running new kernels on this old machine.
+>
+> Or did I misunderstand some part of this thread?
 
-Yes, I think that's the current situation. With a hook (added by Marc's
-code) in PCI core to set the msi domain (DT), all we need to do is convert
-the generic host controller code to pci_scan_root_bus() and remove the
-pcibios init calls, it is a mechanical change when all patches mentioned
-above are merged.
+Nope, I think the complaints about BARs 0 and 8 on bus 80 are
+legitimate errors, and adding them to the list of "harmless" messages
+is the right thing to do.
 
-Thanks,
-Lorenzo
+The ones complaining about BAR 6 (an option ROM) are the ones I'm more
+concerned about.  There's no address space assigned to them, but I
+don't think that indicates a firmware defect, and the message is sort
+of cryptic, so I don't want to emit it more often than we have to.
+
+But if ia64 is handling these ROMs the same way as x86, this is just
+an opportunity for future improvement, and we don't need to do
+anything right now.
+
+Bjorn
