@@ -1,109 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-o-3.desy.de ([131.169.56.156]:55671 "EHLO smtp-o-3.desy.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755248AbbA2B04 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 28 Jan 2015 20:26:56 -0500
-Received: from smtp-map-3.desy.de (smtp-map-3.desy.de [131.169.56.68])
-	by smtp-o-3.desy.de (DESY-O-3) with ESMTP id A9570280322
-	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2015 08:51:38 +0100 (CET)
-Received: from ZITSWEEP2.win.desy.de (zitsweep2.win.desy.de [131.169.97.96])
-	by smtp-map-3.desy.de (DESY_MAP_3) with ESMTP id 9A77A10DF
-	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2015 08:51:37 +0100 (MET)
-Message-ID: <54C89508.3080001@desy.de>
-Date: Wed, 28 Jan 2015 08:51:36 +0100
-From: Ludwig Petrosyan <ludwig.petrosyan@desy.de>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Paulo Fortuna Carvalho <pricardofc@gmail.com>,
+Received: from utopia.booyaka.com ([74.50.51.50]:48128 "EHLO
+	utopia.booyaka.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759836AbbA3DHQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jan 2015 22:07:16 -0500
+Date: Fri, 30 Jan 2015 03:07:12 +0000 (UTC)
+From: Paul Walmsley <paul@pwsan.com>
+To: Rob Herring <robherring2@gmail.com>
+cc: Mark Rutland <mark.rutland@arm.com>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: Hot add a PCIe device driver upon hotplug event
-References: <CAH9N0t9KvhzmZDgD8PD5VBPR-pPhuE8MmBgK9RY8+ZtKyz++pQ@mail.gmail.com> <CAErSpo48mPENuHpES1Q73ep+NKG8x2Zgb+g71do02y7vufbtfQ@mail.gmail.com> <CAH9N0t8s+kcG_Qok0wpoDz9jzwvPk_QmBK_p-qbACZJjrr+iVQ@mail.gmail.com> <CAErSpo7NK6S8Dk3-FYFV=AVPR8cLRzmAWrBNQ2rke0BRADxAKw@mail.gmail.com> <CAH9N0t-+gog9wNFo7hqhzrWuttrRyf5HjjHciFrDGz1rZUiUfw@mail.gmail.com> <20150122222016.GF13072@google.com> <CAH9N0t_YoRZtPqWwAaNdHNW3m-HOfrCevBZGiOnM+VWGxeFwEQ@mail.gmail.com> <CAErSpo4bRnGkfmzLnGSUnv-aJfmZLtQ_jXhnZo+9Wm=CgHOB3A@mail.gmail.com> <54C5EF11.8070604@desy.de> <CAErSpo4EeEAA-ci1EfSKNijUJA_4uLMu+WU7ORpQPeR9T9Rr8g@mail.gmail.com>
-In-Reply-To: <CAErSpo4EeEAA-ci1EfSKNijUJA_4uLMu+WU7ORpQPeR9T9Rr8g@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
+Subject: Re: [PATCH 02/24] Documentation: DT bindings: add more chip compatible
+ strings for Tegra PCIe
+In-Reply-To: <alpine.DEB.2.02.1501291846340.16475@utopia.booyaka.com>
+Message-ID: <alpine.DEB.2.02.1501300306140.6569@utopia.booyaka.com>
+References: <20150128234935.20644.89300.stgit@dusk.lan> <20150128234937.20644.9400.stgit@dusk.lan> <CAL_JsqKMm=r+57ShskgbtNqnCGF1yKYDSJJFQ7o05keNzh5z+g@mail.gmail.com> <alpine.DEB.2.02.1501291543030.16475@utopia.booyaka.com>
+ <CAL_JsqLE+W+T5YqzdB+DkdBE+HsgySX0yJHzn1y43QDfw4GA9A@mail.gmail.com> <alpine.DEB.2.02.1501291707350.16475@utopia.booyaka.com> <CAL_JsqKaDi1cZN8Ndb0FPhvgRVFyxc1NRhV2cx-XJ323wTKiEQ@mail.gmail.com> <alpine.DEB.2.02.1501291846340.16475@utopia.booyaka.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn
 
-yes this that are refer, more detailed version was in previous Workshop
-https://indico.desy.de/getFile.py/access?contribId=5&sessionId=1&resId=0&materialId=slides&confId=7866
-and additionally was presentation about driver part
-https://indico.desy.de/getFile.py/access?contribId=32&sessionId=9&resId=0&materialId=slides&confId=10329
+Hi Rob
 
-I hope this will help and may be I will get some feedback to improve
-both and fix bugs
+I've also updated the first patch, that tries to document what the DT 
+maintainers' expectations are.  Care to give this one a quick glance too?
 
-Cheers
 
-Ludwig
+- Paul
 
-On 01/27/2015 05:50 PM, Bjorn Helgaas wrote:
-> Hi Ludwig,
->
-> Thanks a lot for the pointers to MTCA information.  I found
-> presentation slides here:
-> https://indico.desy.de/getFile.py/access?contribId=33&sessionId=0&resId=1&materialId=slides&confId=10329,
-> which I assume is that you're referring to.
->
-> On Mon, Jan 26, 2015 at 1:38 AM, Ludwig Petrosyan
-> <ludwig.petrosyan@desy.de> wrote:
->> Hello
->>
->> (I have send this email two days ago but got status undeliverable, so try to
->> send it again)
->>
->> We had the same problem on the MTCA system years ago, but now the problem is
->> solved.
->> The MTCA system is a kind of ATCA and I think attention Button problem could
->> be solved in the same way.
->> Ok, now what we have done:
->> First of all the main difference of the ATCA or MTCA PCIe system is what the
->> PCIe Switch which responsible for the HotPlug
->>
->> (I mean Switch which is connected to the crate slots, and hotplug
->> controllers of this are used in hotpluging ) and the Attention Button of the
->>
->> PCIe slot reside on the different boards (usually PCIe Switch is on the
->> Crate Manager  board and Attention Button is  the AMC module Latch ),
->>
->> So there are no any wired connections between Attention Button and PCIe
->> Switch. Than user pool out the AMC module Latch the PCIe Switch has no idea
->>
->> about that, BUT the AMC module controller (MMC) sends IPMI message to the
->> Crate Management Controller (MCMC)
->> and MCMC starts AMC powering down procedures. The idea was: usually MCMC and
->> PCIe Switch reside on the same board and MCMC getting IPMI message
->>
->> about state change of the AMC Latch (latch polled out or pressed) set
->> appropriate registers of the PCIe Switch or push high appropriate lines of
->> the PCIe Switch
->>
->> and PCIe Switch gets information that Attention Button is pressed and send
->> hotplug interrupt to the hotplug driver.
->> This approach works in our MTCA systems and we have a full working PCIe
->> HotPlug.
-> It sounds like you basically have some IPMI glue between the the AMC
-> latch and the PCIe Attention Button, and from the point of view of the
-> pciehp (PCIe native hotplug) driver, it just sees a normal Attention
-> Button.  That sounds like a reasonable thing to do.
->
-> In Paulo's case, it sounds like there is some sort of switch related
-> to the card, but the IPMI or similar glue that could potentially lead
-> to the Attention Button line doesn't exist.  In that case, pciehp
-> doesn't know anything about the switch.  If there's some other way,
-> e.g., IPMI, to learn about the switch, maybe that could be done via a
-> separate driver.
->
->> More detailed information one can get to look documents of the MTCA Workshop
->> (http://mtcaws.desy.de/) in tutorial section was presentation about
->>
->> PCIe Hotplug, or look in PICMIG recommendation (there is new recommendation
->> about PCIe HotPlug for MTC.4)
->>
->> With best regards
->>
->> Ludwig Petrosyan
->>
->>
+From: Paul Walmsley <pwalmsley@nvidia.com>
+Date: Wed, 28 Jan 2015 16:43:16 -0700
+Subject: [PATCH] Documentation: DT: document compatible string existence
+ requirement
+
+DT maintainers require all compatible strings used in chip or board
+DTS file to be previously documented somewhere in
+Documentation/devicetree/bindings, per:
+
+http://marc.info/?l=linux-tegra&m=142201349727836&w=2
+
+Document this requirement in the DT patch submission requirements
+text file.
+
+This second version updates the documentation to align with
+Rob's comments here:
+
+http://marc.info/?l=devicetree&m=142255654213019&w=2
+
+Signed-off-by: Paul Walmsley <paul@pwsan.com>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Pawel Moll <pawel.moll@arm.com>
+Cc: Mark Rutland <mark.rutland@arm.com>
+Cc: Ian Campbell <ijc+devicetree@hellion.org.uk>
+Cc: Kumar Gala <galak@codeaurora.org>
+Cc: Javier Martinez Canillas <javier.martinez@collabora.co.uk>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: Paul Walmsley <pwalmsley@nvidia.com>
+Cc: devicetree@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ .../devicetree/bindings/submitting-patches.txt     | 23 ++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/submitting-patches.txt b/Documentation/devicetree/bindings/submitting-patches.txt
+index b7ba01ad1426..56742bc70218 100644
+--- a/Documentation/devicetree/bindings/submitting-patches.txt
++++ b/Documentation/devicetree/bindings/submitting-patches.txt
+@@ -15,6 +15,29 @@ I. For patch submitters
+   3) The Documentation/ portion of the patch should come in the series before
+      the code implementing the binding.
+ 
++  4) Any compatible strings used in a chip or board DTS file must be
++     previously documented in the corresponding DT binding text file
++     in Documentation/devicetree/bindings.  This rule applies even if
++     the Linux device driver does not yet match on the compatible
++     string.  [ checkpatch will emit warnings if this step is not
++     followed as of commit bff5da4335256513497cc8c79f9a9d1665e09864
++     ("checkpatch: add DT compatible string documentation checks"). ]
++
++  5) The wildcard "<chip>" may be used in compatible strings, as in
++     the following example:
++
++         - compatible: Must contain '"nvidia,<chip>-pcie",
++           "nvidia,tegra20-pcie"' where <chip> is tegra30, tegra132, ...
++
++     As in the above example, the known values of "<chip>" should be
++     documented if it is used.
++
++  6) If a documented compatible string is not yet matched by the
++     driver, the documentation should also include a compatible
++     string that is matched by the driver (as in the "nvidia,tegra20-pcie"
++     example above).
++
++
+ II. For kernel maintainers
+ 
+   1) If you aren't comfortable reviewing a given binding, reply to it and ask
+-- 
+2.1.4
 
