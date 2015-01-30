@@ -1,57 +1,51 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54BF9C46.8060302@linux.intel.com>
-Date: Wed, 21 Jan 2015 20:32:06 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-we0-f179.google.com ([74.125.82.179]:46054 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750882AbbA3SBf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Jan 2015 13:01:35 -0500
 MIME-Version: 1.0
-To: Thomas Gleixner <tglx@linutronix.de>
-CC: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Vivek Goyal <vgoyal@redhat.com>,
-	Thierry Reding <treding@nvidia.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Mike Travis <travis@sgi.com>, Tony Luck <tony.luck@intel.com>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: Re: [RFC Patch 17/19] resources: Move struct resource_list_entry
- from ACPI into resource core
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-18-git-send-email-jiang.liu@linux.intel.com> <3428063.tN1BxOoXSN@vostro.rjw.lan> <54BF4911.7030906@linux.intel.com> <alpine.DEB.2.11.1501211043170.5526@nanos>
-In-Reply-To: <alpine.DEB.2.11.1501211043170.5526@nanos>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <CAErSpo5CmVTw1-jQ2cwZS27nWH6zEyO5yqaedPN8jeRiU=JUfQ@mail.gmail.com>
+References: <20150123203145.GA6691@google.com>
+	<CA+8MBbKnT=mE3kev8BRPq0GeTgHx8WVa6o54tJuBX_XXLpHdYQ@mail.gmail.com>
+	<CAErSpo7y1wWStjcEOH9xTiM-As8+QeMynZ5ENrL9v3X2PvQCcw@mail.gmail.com>
+	<CA+8MBb+bWiX2eayjBQHsvCjTp3t8H9=AviF9AkV6CC--cC_fYQ@mail.gmail.com>
+	<CAE9FiQXj07CtOJ6uBZomNyhAH9ANanbbUSo51td6G-UB5Rmmow@mail.gmail.com>
+	<CA+8MBbLVgfk3LEAnuAx_MRJpHkQO-cEQnuCrcbxcyOezr5RLcg@mail.gmail.com>
+	<CAE9FiQXnTPO2tM252zvTGJF9Nmc-R+6z65Kq3aXC3jvxtAK2Qw@mail.gmail.com>
+	<CAErSpo5CmVTw1-jQ2cwZS27nWH6zEyO5yqaedPN8jeRiU=JUfQ@mail.gmail.com>
+Date: Fri, 30 Jan 2015 10:01:33 -0800
+Message-ID: <CA+8MBbLprQgbOo_aTaafHzEVcOPR3vp2gxFPDTX3YYS2Ywh6zg@mail.gmail.com>
+Subject: Re: [GIT PULL] PCI fixes for v3.19
+From: Tony Luck <tony.luck@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Marek Kordik <kordikmarek@gmail.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Andreas Hartmann <andihartmann@freenet.de>,
+	Alexey Voronkov <zermond@gmail.com>,
+	David Airlie <airlied@linux.ie>,
+	Alex Deucher <alexander.deucher@amd.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/1/21 17:43, Thomas Gleixner wrote:
-> On Wed, 21 Jan 2015, Jiang Liu wrote:
->> On 2015/1/21 9:10, Rafael J. Wysocki wrote:
->>>> +
->>>> +void resource_list_insert(struct list_head *head,
->>>> +			  struct resource_list_entry *entry, bool tail)
->>>
->>> I would call this resource_list_add() if anything.
->>>
->>> Also it may be better to have two helpers, one for "add" and one for "add_tail"
->>> (and perhaps define them as static inline?).
->> We can't use inline functions here because that needs pulling list.h
->> into ioport.h, then causing building issues to header inclusion order.
-> 
-> Create a new header file to avoid the circular dependencies then.
-Great, create include/linux/resource_list.h for it so we could
-inline those simple functions.
-Regards,
-Gerry
+On Fri, Jan 30, 2015 at 8:56 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Tony, does the system work as it did before?  Is the only problem that
+> now we have more warnings than we did before?
 
-> 
-> Thanks,
-> 
-> 	tglx
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+Yup - things seem to be working. Just have a bunch of new console messages.
+
+It seems that at least some of them are valid - the BIOS isn't describing some
+things that it should.  I don't think we need to re-apply code that
+used to paper
+over this problem. I can just add these to the list of "harmless" messages to
+ignore when running new kernels on this old machine.
+
+Or did I misunderstand some part of this thread?
+
+-Tony
