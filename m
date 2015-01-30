@@ -1,121 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f52.google.com ([209.85.218.52]:39364 "EHLO
-	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751678AbbASNEl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jan 2015 08:04:41 -0500
-Received: by mail-oi0-f52.google.com with SMTP id h136so5195616oig.11
-        for <linux-pci@vger.kernel.org>; Mon, 19 Jan 2015 05:04:39 -0800 (PST)
+Received: from mail-oi0-f44.google.com ([209.85.218.44]:43021 "EHLO
+	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752960AbbA3XIH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Jan 2015 18:08:07 -0500
+Received: by mail-oi0-f44.google.com with SMTP id a3so36920390oib.3
+        for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2015 15:08:06 -0800 (PST)
+Date: Fri, 30 Jan 2015 17:08:03 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH V11 14/17] powerpc/powernv: Shift VF resource with an
+ offset
+Message-ID: <20150130230803.GA6795@google.com>
+References: <20150113180502.GC2776@google.com>
+ <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1421288887-7765-15-git-send-email-weiyang@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <2165161.8vJctS1yVa@wuerfel>
-References: <1418812486-12394-1-git-send-email-gabriel.fernandez@linaro.org>
-	<1418812486-12394-3-git-send-email-gabriel.fernandez@linaro.org>
-	<2165161.8vJctS1yVa@wuerfel>
-Date: Mon, 19 Jan 2015 14:04:39 +0100
-Message-ID: <CAG374jB5fcG2-2WnxkN5U-qOw=xP3A5tnTO04Gcqt3cSRhhKmw@mail.gmail.com>
-Subject: Re: [PATCH 2/5] PCI: st: Add Device Tree bindings for sti pcie
-From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Magnus Damm <damm@opensource.se>,
-	Will Deacon <will.deacon@arm.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Srikanth Thokala <sthokal@xilinx.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"kernel@stlinux.com" <kernel@stlinux.com>,
-	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1421288887-7765-15-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
+On Thu, Jan 15, 2015 at 10:28:04AM +0800, Wei Yang wrote:
+> On PowrNV platform, resource position in M64 implies the PE# the resource
+> belongs to. In some particular case, adjustment of a resource is necessary
+> to locate it to a correct position in M64.
+> 
+> This patch introduces a function to shift the 'real' PF IOV BAR address
+> according to an offset.
+> 
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/platforms/powernv/pci-ioda.c |   31 +++++++++++++++++++++++++++++
+>  1 file changed, 31 insertions(+)
+> 
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 8bad2b0..62bb2eb 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -14,6 +14,7 @@
+>  #include <linux/kernel.h>
+>  #include <linux/pci.h>
+>  #include <linux/crash_dump.h>
+> +#include <linux/pci_regs.h>
+>  #include <linux/debugfs.h>
+>  #include <linux/delay.h>
+>  #include <linux/string.h>
+> @@ -749,6 +750,36 @@ static unsigned int pnv_ioda_dma_weight(struct pci_dev *dev)
+>  	return 10;
+>  }
+>  
+> +#ifdef CONFIG_PCI_IOV
+> +static void pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
+> +{
+> +	struct pci_dn *pdn = pci_get_pdn(dev);
+> +	int i;
+> +	struct resource *res;
+> +	resource_size_t size;
+> +
+> +	if (!dev->is_physfn)
+> +		return;
+> +
+> +	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
+> +		res = &dev->resource[i];
+> +		if (!res->flags || !res->parent)
+> +			continue;
+> +
+> +		if (!pnv_pci_is_mem_pref_64(res->flags))
+> +			continue;
+> +
+> +		dev_info(&dev->dev, " Shifting VF BAR %pR to\n", res);
+> +		size = pci_iov_resource_size(dev, i);
+> +		res->start += size*offset;
 
-Thanks for reviewing
+It seems like you should adjust res->end, too.  Am I missing something?
 
-On 17 December 2014 at 23:01, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Wednesday 17 December 2014 11:34:43 Gabriel FERNANDEZ wrote:
->> sti pcie is built around a Synopsis Designware PCIe IP.
->>
->> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
->> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
->> ---
->>  Documentation/devicetree/bindings/pci/st-pcie.txt | 53 +++++++++++++++++++++++
->>  1 file changed, 53 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
->>
->> diff --git a/Documentation/devicetree/bindings/pci/st-pcie.txt b/Documentation/devicetree/bindings/pci/st-pcie.txt
->> new file mode 100644
->> index 0000000..bd3488f
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/pci/st-pcie.txt
->> @@ -0,0 +1,53 @@
->> +STMicroelectronics STi PCIe controller
->> +
->> +This PCIe host controller is based on the Synopsis Designware PCIe IP
->> +and thus inherits all the common properties defined in designware-pcie.txt.
->> +
->> +Required properties:
->> + - compatible: "st,stih407-pcie"
->> + - reg: base address and length of the pcie controller, mem-window address
->> +   and length available to the controller.
->> + - interrupts: A list of interrupt outputs of the controller.
->> + - interrupt-names: Must include the following entries:
->> +   "msi": STi interrupt that is asserted when an MSI is received
->
-> You should specify that only one interrupt may be present.
-> If you extend the binding, you will need to describe what the
-> second one is as well.
->
+And I'm not sure it's safe to move the resource here, because if we move it
+outside the bounds of the parent, we'll corrupt the resource tree.  Maybe
+we're safe for some reason here, but it requires more analysis than I've
+done to prove it.
 
-ok, i will change into:
-"
- - interrupts: A list of interrupt outputs of the controller. Must contain an
-  entry for each entry in the interrupt-names property.
-
->> + - st,syscfg : should be a phandle of the syscfg node. Also contains syscfg
->> +   offset for IP configuration.
->> + - resets, reset-names: the power-down and soft-reset lines of PCIe IP.
->> +   Associated names must be "powerdown" and "softreset".
->> + - phys, phy-names: the phandle for the PHY device.
->> +   Associated name must be "pcie_phy"
->
-> Names should not have underscores in them in general. "pcie-phy" would
-> be fine, but just "pcie" seems good enough, unless there are existing
-> drivers that have established a specific naming.
->
-
-just "pcie" is fine for me
-
-
-BR
-
-Gabriel
-
->
->         Arnd
->
+> +
+> +		dev_info(&dev->dev, "                 %pR\n", res);
+> +		pci_update_resource(dev, i);
+> +	}
+> +	pdn->max_vfs -= offset;
+> +}
+> +#endif /* CONFIG_PCI_IOV */
+> +
+>  #if 0
+>  static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
+>  {
+> -- 
+> 1.7.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
