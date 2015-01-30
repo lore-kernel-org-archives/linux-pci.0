@@ -1,40 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:62901 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751866AbbAHW1W (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jan 2015 17:27:22 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
-	joro@8bytes.org, grant.likely@linaro.org, robh+dt@kernel.org,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	will.deacon@arm.com, linux@arm.linux.org.uk
-Subject: Re: [PATCH v3 0/4] PCI: get DMA configuration from parent device
-Date: Thu, 08 Jan 2015 23:27:14 +0100
-Message-ID: <2785994.gTZ9chGdKf@wuerfel>
-In-Reply-To: <1934001.D0JfDRp1gF@wuerfel>
-References: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com> <54ADBB89.8070503@ti.com> <1934001.D0JfDRp1gF@wuerfel>
-MIME-Version: 1.0
+Received: from p02c12o142.mxlogic.net ([208.65.145.75]:58327 "EHLO
+	p02c12o142.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753785AbbA3Txz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Jan 2015 14:53:55 -0500
+From: "Richardson, Charlotte" <Charlotte.Richardson@stratus.com>
+To: "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>
+CC: "'stable@vger.kernel.org'" <stable@vger.kernel.org>,
+	"Lawrence, Joe" <Joe.Lawrence@stratus.com>,
+	"'myron.stowe@redhat.com'" <myron.stowe@redhat.com>
+Subject: [PATCH] PCI: Add NEC ftServer variants to PCIe DMI check
+Date: Fri, 30 Jan 2015 19:45:02 +0000
+Message-ID: <48F2A65D5838B34AA5C81AB195ED2D5F932489A2@EXHQ1.corp.stratus.com>
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 08 January 2015 09:56:39 Arnd Bergmann wrote:
-> There is another interesting case, which is a USB host controller or
-> something similar behind a PCI bus. These are quite common and also
-> need to be handled in some form. Let's do just PCI first for now, but
-> be aware that this will come next. Should we assume that the ID that
-> is required for a device is either known from the device node, or
-> that it comes from a PCI device? That means for the USB case, we will
-> likely need to have some custom logic. There seems to be an implicit
-> assumption all over the kernel that all devices have the same IOMMU
-> instance, but we can't really rely on that here.
-> 
+Hi, Myron -
 
-Update: I've checked the USB implementation and we are lucky because
-these interactions are all done by the USB host controller, and a
-USB device is not itself DMA capable. We don't have to do anything
-for USB.
+commit 1278998f8ff6 missed the NEC variants of the ftServers.
+We'll need this in RHEL7/6, but can you shepherd this patch upstream first?
+Thanks!
 
-	Arnd
+/Charlotte
+
+-->8--
+
+>From 64a19253432e87b2293d3b8ee323e8b8ac63395d Mon Sep 17 00:00:00 2001
+From: Charlotte Richardson <charlotte.richardson@stratus.com>
+Date: Fri, 30 Jan 2015 12:58:31 -0500
+Subject: [PATCH] PCI: Add NEC ftServer variants to PCIe DMI check.
+
+NEC OEMs the same platforms as Stratus does, which have multiple
+devices on some PCIe buses under downstream ports.
+
+Signed-off-by: Charlotte Richardson <charlotte.richardson@stratus.com>
+Fixes: 1278998f8ff6 ("PCI: Work around Stratus ftServer broken PCIe hierarchy (fix DMI check)")
+Cc: <stable@vger.kernel.org>
+Cc: Myron Stowe <myron.stowe@redhat.com>
+---
+ arch/x86/pci/common.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 7b20bcc..2fb3847 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -448,6 +448,22 @@ static const struct dmi_system_id pciprobe_dmi_table[] __initconst = {
+ 			DMI_MATCH(DMI_PRODUCT_NAME, "ftServer"),
+ 		},
+ 	},
++        {
++                .callback = set_scan_all,
++                .ident = "Stratus/NEC ftServer",
++                .matches = {
++                        DMI_MATCH(DMI_SYS_VENDOR, "NEC"),
++                        DMI_MATCH(DMI_PRODUCT_NAME, "Express5800/R32"),
++                },
++        },
++        {
++                .callback = set_scan_all,
++                .ident = "Stratus/NEC ftServer",
++                .matches = {
++                        DMI_MATCH(DMI_SYS_VENDOR, "NEC"),
++                        DMI_MATCH(DMI_PRODUCT_NAME, "Express5800/R31"),
++                },
++        },
+ 	{}
+ };
+ 
+-- 
+1.8.3.1
+
+
