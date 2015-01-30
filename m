@@ -1,152 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <54B3C02C.10603@uclinux.org>
-Date: Mon, 12 Jan 2015 22:38:04 +1000
-From: Greg Ungerer <gerg@uclinux.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:2340 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751752AbbA3BFj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jan 2015 20:05:39 -0500
+Message-ID: <54CAD8CE.40203@huawei.com>
+Date: Fri, 30 Jan 2015 09:05:18 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Rob Herring <robh@kernel.org>, linux-kernel@vger.kernel.org
-CC: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 09/16] ARM: ks8695: convert PCI to use generic config
- accesses
-References: <1420857290-8373-1-git-send-email-robh@kernel.org> <1420857290-8373-10-git-send-email-robh@kernel.org>
-In-Reply-To: <1420857290-8373-10-git-send-email-robh@kernel.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jan Beulich <JBeulich@suse.com>
+CC: David Vrabel <david.vrabel@citrix.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+	"Boris Ostrovsky" <boris.ostrovsky@oracle.com>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [Xen-devel] [PATCH v3] PCI: Add guard to avoid mapping a invalid
+ msix base address
+References: <1422503683-19709-1-git-send-email-wangyijing@huawei.com> <54CA4092020000780005ADF6@mail.emea.novell.com> <CAErSpo7s+E9+EPg+rxGDc_zf4E5jhRzT8fT=ZyThNqsW7+VU5g@mail.gmail.com>
+In-Reply-To: <CAErSpo7s+E9+EPg+rxGDc_zf4E5jhRzT8fT=ZyThNqsW7+VU5g@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rob,
+On 2015/1/29 22:12, Bjorn Helgaas wrote:
+> On Thu, Jan 29, 2015 at 7:15 AM, Jan Beulich <JBeulich@suse.com> wrote:
+>>>>> On 29.01.15 at 04:54, <wangyijing@huawei.com> wrote:
+>>> --- a/drivers/pci/msi.c
+>>> +++ b/drivers/pci/msi.c
+>>> @@ -694,11 +694,16 @@ static void __iomem *msix_map_region(struct pci_dev *dev, unsigned nr_entries)
+>>>  {
+>>>       resource_size_t phys_addr;
+>>>       u32 table_offset;
+>>> +     unsigned long flags;
+>>>       u8 bir;
+>>>
+>>>       pci_read_config_dword(dev, dev->msix_cap + PCI_MSIX_TABLE,
+>>>                             &table_offset);
+>>>       bir = (u8)(table_offset & PCI_MSIX_TABLE_BIR);
+>>> +     flags = pci_resource_flags(dev, bir);
+>>> +     if (!flags || (flags & IORESOURCE_UNSET))
+>>> +             return NULL;
+>>
+>> Mind explaining what relevance the checking of flags against zero has
+>> (also in the Xen counterpart)? The patch description says nothing in
+>> this regard...
+> 
+> It's buried in there:
+> 
+>>                                        reset_resource()        -->res->start/end/flags = 0
+> 
+> If we fail to assign resources to a BAR, in some cases we set
+> res->flags = 0.  There are other cases where we set IORESOURCE_UNSET,
+> and that's the direction I want to go for all situations where we
+> don't assign resources.  But right now, we have a mix where flags is
+> zero in some cases (including the one Zhang found), and has
+> IORESOURCE_UNSET in others.
+> 
+> I'll try to wordsmith this in the changelog when I apply this.
 
-On 10/01/15 12:34, Rob Herring wrote:
-> Convert the ks8695 PCI driver to use the generic config access functions.
->
-> This changes accesses from __raw_readX/__raw_writeX to readX/writeX
-> variants.
->
-> Signed-off-by: Rob Herring <robh@kernel.org>
-> Cc: Greg Ungerer <gerg@uclinux.org>
+Thanks to Bjorn help explain, sorry for my poor description.
 
-I wasn't CC'ed on the generic implementation patch ("pci: introduce
-common pci config space accessors"), but I assume this is it:
-https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg800405.html
-
-That all looks ok to me. I have not tested it, but:
-
-Acked-by: Greg Ungerer <gerg@uclinux.org>
-
-Regards
-Greg
+> 
+> Bjorn
+> 
+> .
+> 
 
 
-> Cc: Russell King <linux@arm.linux.org.uk>
-> Cc: linux-arm-kernel@lists.infradead.org
-> ---
->   arch/arm/mach-ks8695/pci.c | 77 ++++------------------------------------------
->   1 file changed, 6 insertions(+), 71 deletions(-)
->
-> diff --git a/arch/arm/mach-ks8695/pci.c b/arch/arm/mach-ks8695/pci.c
-> index bb18193..c1bc4c3 100644
-> --- a/arch/arm/mach-ks8695/pci.c
-> +++ b/arch/arm/mach-ks8695/pci.c
-> @@ -38,8 +38,6 @@
->   
->   
->   static int pci_dbg;
-> -static int pci_cfg_dbg;
-> -
->   
->   static void ks8695_pci_setupconfig(unsigned int bus_nr, unsigned int devfn, unsigned int where)
->   {
-> @@ -59,75 +57,11 @@ static void ks8695_pci_setupconfig(unsigned int bus_nr, unsigned int devfn, unsi
->   	}
->   }
->   
-> -
-> -/*
-> - * The KS8695 datasheet prohibits anything other than 32bit accesses
-> - * to the IO registers, so all our configuration must be done with
-> - * 32bit operations, and the correct bit masking and shifting.
-> - */
-> -
-> -static int ks8695_pci_readconfig(struct pci_bus *bus,
-> -			unsigned int devfn, int where, int size, u32 *value)
-> -{
-> -	ks8695_pci_setupconfig(bus->number, devfn, where);
-> -
-> -	*value = __raw_readl(KS8695_PCI_VA +  KS8695_PBCD);
-> -
-> -	switch (size) {
-> -		case 4:
-> -			break;
-> -		case 2:
-> -			*value = *value >> ((where & 2) * 8);
-> -			*value &= 0xffff;
-> -			break;
-> -		case 1:
-> -			*value = *value >> ((where & 3) * 8);
-> -			*value &= 0xff;
-> -			break;
-> -	}
-> -
-> -	if (pci_cfg_dbg) {
-> -		printk("read: %d,%08x,%02x,%d: %08x (%08x)\n",
-> -			bus->number, devfn, where, size, *value,
-> -			__raw_readl(KS8695_PCI_VA +  KS8695_PBCD));
-> -	}
-> -
-> -	return PCIBIOS_SUCCESSFUL;
-> -}
-> -
-> -static int ks8695_pci_writeconfig(struct pci_bus *bus,
-> -			unsigned int devfn, int where, int size, u32 value)
-> +static void __iomem *ks8695_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
-> +					int where)
->   {
-> -	unsigned long tmp;
-> -
-> -	if (pci_cfg_dbg) {
-> -		printk("write: %d,%08x,%02x,%d: %08x\n",
-> -			bus->number, devfn, where, size, value);
-> -	}
-> -
->   	ks8695_pci_setupconfig(bus->number, devfn, where);
-> -
-> -	switch (size) {
-> -		case 4:
-> -			__raw_writel(value, KS8695_PCI_VA +  KS8695_PBCD);
-> -			break;
-> -		case 2:
-> -			tmp = __raw_readl(KS8695_PCI_VA +  KS8695_PBCD);
-> -			tmp &= ~(0xffff << ((where & 2) * 8));
-> -			tmp |= value << ((where & 2) * 8);
-> -
-> -			__raw_writel(tmp, KS8695_PCI_VA +  KS8695_PBCD);
-> -			break;
-> -		case 1:
-> -			tmp = __raw_readl(KS8695_PCI_VA +  KS8695_PBCD);
-> -			tmp &= ~(0xff << ((where & 3) * 8));
-> -			tmp |= value << ((where & 3) * 8);
-> -
-> -			__raw_writel(tmp, KS8695_PCI_VA +  KS8695_PBCD);
-> -			break;
-> -	}
-> -
-> -	return PCIBIOS_SUCCESSFUL;
-> +	return KS8695_PCI_VA +  KS8695_PBCD;
->   }
->   
->   static void ks8695_local_writeconfig(int where, u32 value)
-> @@ -137,8 +71,9 @@ static void ks8695_local_writeconfig(int where, u32 value)
->   }
->   
->   static struct pci_ops ks8695_pci_ops = {
-> -	.read	= ks8695_pci_readconfig,
-> -	.write	= ks8695_pci_writeconfig,
-> +	.map_bus = ks8695_pci_map_bus,
-> +	.read	= pci_generic_config_read32,
-> +	.write	= pci_generic_config_write32,
->   };
->   
->   static struct resource pci_mem = {
+-- 
+Thanks!
+Yijing
 
