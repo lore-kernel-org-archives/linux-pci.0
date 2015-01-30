@@ -1,115 +1,111 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Robert Moore <robert.moore@intel.com>,
-	Lv Zheng <lv.zheng@intel.com>,
-	David Box <david.e.box@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Len Brown <lenb@kernel.org>, Tony Luck <tony.luck@intel.com>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	devel@acpica.org
-Subject: Re: [RFC Patch 05/19] ACPI: Provide union for address_space64 and ext_address_space64
-Date: Wed, 21 Jan 2015 01:32:03 +0100
-Message-ID: <1545690.MP6zq0KqoV@vostro.rjw.lan>
-In-Reply-To: <1420684386-5975-6-git-send-email-jiang.liu@linux.intel.com>
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-6-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qa0-f52.google.com ([209.85.216.52]:51805 "EHLO
+	mail-qa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757025AbbA3NvS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Jan 2015 08:51:18 -0500
+Received: by mail-qa0-f52.google.com with SMTP id x12so19875278qac.11
+        for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2015 05:51:17 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <bug-92321-41252@https.bugzilla.kernel.org/>
+References: <bug-92321-41252@https.bugzilla.kernel.org/>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 30 Jan 2015 07:50:57 -0600
+Message-ID: <CAErSpo6Hw2GhtbmjBdTiLnvW_4vZPno9cpCXk+wTTAviB6F7vg@mail.gmail.com>
+Subject: Re: [Bug 92321] New: Mapping CompactPCI device through sysfs-pci driver
+To: Georgiy <jediknight.93@mail.ru>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 08, 2015 10:32:52 AM Jiang Liu wrote:
-> From: Thomas Gleixner <tglx@linutronix.de>
-> 
-> address_space64 and ext_address_space64 share substracts just at
-> different offsets. To unify the parsing functions implement the two
-> structs as unions of their substructs, so we can extract the shared
-> data.
-> 
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+[+cc linux-pci for visibility]
 
-This is ACPICA code, so if we change this, either we'll diverge from the
-upstream (which is highly undesirable), or we'll have to change it for
-the majority of OSes on the planet (all except Windows).
+Hi Georgiy,
 
-Lv, Bob, David, any comments here?
+Thanks a lot for your problem report.  A few questions below ...
 
-> ---
->  include/acpi/acrestyp.h |   49 ++++++++++++++++++++++++++++++++++-------------
->  1 file changed, 36 insertions(+), 13 deletions(-)
-> 
-> diff --git a/include/acpi/acrestyp.h b/include/acpi/acrestyp.h
-> index eb760ca0b2e0..307d5b2605c8 100644
-> --- a/include/acpi/acrestyp.h
-> +++ b/include/acpi/acrestyp.h
-> @@ -326,23 +326,46 @@ struct acpi_resource_address32 {
->  	struct acpi_resource_source resource_source;
->  };
->  
-> -struct acpi_resource_address64 {
-> -	ACPI_RESOURCE_ADDRESS_COMMON u64 granularity;
-> -	u64 minimum;
-> -	u64 maximum;
-> -	u64 translation_offset;
-> +#define ACPI_RESOURCE_ADDRESS64_COMMON \
-> +	u64 granularity;	       \
-> +	u64 minimum;		       \
-> +	u64 maximum;		       \
-> +	u64 translation_offset;	       \
->  	u64 address_length;
-> -	struct acpi_resource_source resource_source;
-> +
-> +struct acpi_resource_address64_common {
-> +ACPI_RESOURCE_ADDRESS64_COMMON};
-> +
-> +struct acpi_resource_address64 {
-> +	union {
-> +		struct {
-> +			ACPI_RESOURCE_ADDRESS_COMMON
-> +			ACPI_RESOURCE_ADDRESS64_COMMON
-> +			struct acpi_resource_source resource_source;
-> +		};
-> +		struct {
-> +			struct acpi_resource_address base;
-> +			struct acpi_resource_address64_common addr;
-> +			struct acpi_resource_source resource_source;
-> +		} common;
-> +	};
->  };
->  
->  struct acpi_resource_extended_address64 {
-> -	ACPI_RESOURCE_ADDRESS_COMMON u8 revision_ID;
-> -	u64 granularity;
-> -	u64 minimum;
-> -	u64 maximum;
-> -	u64 translation_offset;
-> -	u64 address_length;
-> -	u64 type_specific;
-> +	union {
-> +		struct {
-> +			ACPI_RESOURCE_ADDRESS_COMMON
-> +			u8 revision_ID;
-> +			ACPI_RESOURCE_ADDRESS64_COMMON
-> +			u64 type_specific;
-> +		};
-> +		struct {
-> +			struct acpi_resource_address base;
-> +			u8 revision_ID;
-> +			struct acpi_resource_address64_common addr;
-> +			u64 type_specific;
-> +		} common;
-> +	};
->  };
->  
->  struct acpi_resource_extended_irq {
-> 
+On Fri, Jan 30, 2015 at 2:52 AM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=92321
+>
+>             Bug ID: 92321
+>            Summary: Mapping CompactPCI device through sysfs-pci driver
+>            Product: Drivers
+>            Version: 2.5
+>     Kernel Version: 3.16.0-4-586
+>           Hardware: All
+>                 OS: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: high
+>           Priority: P1
+>          Component: PCI
+>           Assignee: drivers_pci@kernel-bugs.osdl.org
+>           Reporter: jediknight.93@mail.ru
+>         Regression: No
+>
+> So, the problem can be described as follows:
+>
+> 1. We got 11 completely equal PCI devices, connected through two CompactPCI
+> buses, 6 on one, and 5 on the other.
+>
+> 2. We are trying to access the resources of the devices through the sysfs
+> filesystem, example: /sys/class/pci_bus/0000:04/device/0000:04:0d.0/resource1.
+> First 4 devices allow read/write access to their resources without problems,
+> but:
+>
+> 3.The 5th and 6th devices of both buses don't work: all files exist, but all
+> read operations return a bunch of FFs, regardless of the written values, so I
+> can't really say if the write was successful or not. When one of the first 4 is
+> physically removed, 5th device starts working as usual, same goes for 6 on the
+> bus with 6 devices. It looks like it can only work with 4 devices per bus, not
+> more. It should be noted that CompactPCI allows using 7 PCI devices on the bus
+> at once, according to the specification.
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+This sounds like the reads aren't reaching the device or the device
+isn't responding.  In that case, the host bridge typically fabricates
+data of FFs to satisfy the read.
+
+> 4. It can't really be a hardware problem, because Windows driver(developed long
+> ago by someone we don't have access to) does it just fine.
+>
+> lspci:
+> 03:0b.0 Multimedia controller: Device 6472:8001 (rev 01)
+> 03:0c.0 Multimedia controller: Device 6472:8001 (rev 01)
+> 03:0d.0 Multimedia controller: Device 6472:8001 (rev 01)
+> 03:0e.0 Multimedia controller: Device 6472:8001 (rev 01)
+> 03:0f.0 Multimedia controller: Device 6472:8001 (rev 01)
+> 04:09.0 Multimedia controller: Device 6472:8001 (rev 01)
+> 04:0a.0 Multimedia controller: Device 6472:8001 (rev 01)
+> 04:0b.0 Multimedia controller: Device 6472:8001 (rev 01)
+> 04:0c.0 Multimedia controller: Device 6472:8001 (rev 01)
+> 04:0d.0 Multimedia controller: Device 6472:8001 (rev 01)
+> 04:0f.0 Multimedia controller: Device 6472:8001 (rev 01)
+>
+> lspci -vv(equal output for all devices, aside from position on the bus, IRQ
+> number, and memory addresses):
+>
+> 04:0f.0 Multimedia controller: Device 6472:8001 (rev 01)
+> Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr Stepping-
+> SERR- FastB2B- DisINTx-
+> Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort-
+> <MAbort- >SERR- <PERR- INTx+
+> Interrupt: pin A routed to IRQ 11
+> Region 0: I/O ports at d800 [size=128]
+> Region 1: Memory at febfe800 (32-bit, non-prefetchable) [size=128]
+>
+> Don't know if I really need show you the code, because it is as simple as it is
+> possible - file is opened, then mmaped, then the resulting pointer is used to
+> write and read into that file. Basically, it's this:
+>
+> fd = open ( (device_ + "resource" + std::to_string (i)).c_str(), O_RDWR);
+> ptr = (u_int32_t*) mmap (NULL, 0x7f, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
+> 0);
+>
+> All paths are valid, that's what was checked first. dmesg output contains no
+> errors nor warnings for the corresponding problem.
+
+Can you please attach a complete dmesg log and complete "lspci -vv"
+output to the bugzilla?  That will help figure out whether there's a
+bridge configuration problem on the path leading to the devices.
+
+Bjorn
