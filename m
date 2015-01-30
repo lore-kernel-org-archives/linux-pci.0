@@ -1,62 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:50303 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759158AbbA0VBH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 Jan 2015 16:01:07 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH v5 8/8] of: limit dma_mask of the device based on dma-range size
-Date: Tue, 27 Jan 2015 16:00:05 -0500
-Message-ID: <1422392405-32196-9-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1422392405-32196-1-git-send-email-m-karicheri2@ti.com>
-References: <1422392405-32196-1-git-send-email-m-karicheri2@ti.com>
+Received: from smtp104.ord1c.emailsrvr.com ([108.166.43.104]:36393 "EHLO
+	smtp104.ord1c.emailsrvr.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751895AbbA3NME (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Jan 2015 08:12:04 -0500
+Received: from smtp14.relay.ord1c.emailsrvr.com (localhost.localdomain [127.0.0.1])
+	by smtp14.relay.ord1c.emailsrvr.com (SMTP Server) with ESMTP id 583933801B3
+	for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2015 08:04:47 -0500 (EST)
+Received: from smtp14.relay.ord1c.emailsrvr.com (localhost.localdomain [127.0.0.1])
+	by smtp14.relay.ord1c.emailsrvr.com (SMTP Server) with ESMTP id 553F33801B5
+	for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2015 08:04:47 -0500 (EST)
+Received: by smtp14.relay.ord1c.emailsrvr.com (Authenticated sender: markh-AT-compro.net) with ESMTPSA id 307E83801B3
+	for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2015 08:04:47 -0500 (EST)
+Message-ID: <54CB816E.8060700@compro.net>
+Date: Fri, 30 Jan 2015 08:04:46 -0500
+From: Mark Hounschell <markh@compro.net>
+Reply-To: markh@compro.net
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: dma_alloc_coherent - cma - and IOMMU question
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-limit the device dma_mask to the min of default dma_mask and
-mask calculate from the dma-range size.
+Sorry for the noise. I've read everything DMA in the kernel Doc dir and 
+searched the web to no avail. So I thought I might get some useful info 
+here.
 
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+I'm currently using a 3.18.3 (x86_64) kernel on an AMD platform. I am 
+currently doing 8MB DMAs to and from our device using the in kernel CMA 
+"cma=64M@0-4G" with no problems. This device is not DAC or 
+scatter/gather capable so the in kernel CMA has been great and replaced 
+our old bigphysarea usage.
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
----
- drivers/of/device.c |    3 +++
- 1 file changed, 3 insertions(+)
+We simply use dma_alloc_coherent and pass the dma_addr_t *dma_handle 
+returned from the dma_alloc_coherent function to our device as the 
+"bus/pci" address to use.
+We also use remap_pfn_range on that dma_addr_t *dma_handle returned from 
+  the dma_alloc_coherent function to mmap userland to the buffer. All is 
+good until I enable the IOMMU. I then either get IO_PAGE_FAULTs, the DMA 
+just quietly never completes or the system gets borked.
 
-diff --git a/drivers/of/device.c b/drivers/of/device.c
-index 17504f4..bcb8a35 100644
---- a/drivers/of/device.c
-+++ b/drivers/of/device.c
-@@ -128,6 +128,9 @@ void of_dma_configure(struct device *dev, struct device_node *np)
- 	dev_dbg(dev, "device is%sbehind an iommu\n",
- 		iommu ? " " : " not ");
- 
-+	/* limit dma_mask to the lower of the two values */
-+	*dev->dma_mask = min((*dev->dma_mask), (dma_addr + size - 1));
-+
- 	arch_setup_dma_ops(dev, dma_addr, size, iommu, coherent);
- }
- EXPORT_SYMBOL_GPL(of_dma_configure);
--- 
-1.7.9.5
+[  106.115725] AMD-Vi: Event logged [IO_PAGE_FAULT device=03:00.0 
+domain=0x001b address=0x00000000aa500000 flags=0x0010]
+[  106.115729] AMD-Vi: Event logged [IO_PAGE_FAULT device=03:00.0 
+domain=0x001b address=0x00000000aa500040 flags=0x0010]
+
+Here are the IOMMU settings in my kernel config:
+
+#grep IOMMU .config
+# CONFIG_GART_IOMMU is not set
+# CONFIG_CALGARY_IOMMU is not set
+CONFIG_IOMMU_HELPER=y
+CONFIG_VFIO_IOMMU_TYPE1=m
+CONFIG_IOMMU_API=y
+CONFIG_IOMMU_SUPPORT=y
+CONFIG_AMD_IOMMU=y
+# CONFIG_AMD_IOMMU_STATS is not set
+CONFIG_AMD_IOMMU_V2=m
+CONFIG_INTEL_IOMMU=y
+CONFIG_INTEL_IOMMU_DEFAULT_ON=y
+CONFIG_INTEL_IOMMU_FLOPPY_WA=y
+# CONFIG_IOMMU_STRESS is not set
+
+
+ From reading the in kernel doc it would appear that we could in fact, 
+using the IOMMU and the dma_map_sg function, get rid of the CMA 
+requirement and our device could DMA anywhere, even above the 4GB 
+address space limit of our device. But before going through this larger 
+change to our GPL driver, I want to understand if and/or why the 
+dma_alloc_coherent function does not appear to set up the IOMMU for me. 
+Is the IOMMU only supported for "streaming" DMA type and not for 
+"coherent"? I read no reference to this in the kernel doc?
+
+Any hints would be greatly appreciated. Again, sorry for the noise.
+
+Regards
+Mark
+
+
+
 
