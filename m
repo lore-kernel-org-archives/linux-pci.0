@@ -1,111 +1,69 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54BF3B24.10209@linux.intel.com>
-Date: Wed, 21 Jan 2015 13:37:40 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Len Brown <lenb@kernel.org>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [RFC Patch 15/19] ACPI: Add field offset to struct resource_list_entry
-References: <1420684386-5975-1-git-send-email-jiang.liu@linux.intel.com> <1420684386-5975-16-git-send-email-jiang.liu@linux.intel.com> <1524434.hGg7sZaCUr@vostro.rjw.lan>
-In-Reply-To: <1524434.hGg7sZaCUr@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:35690 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753447AbbA3Jtl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 30 Jan 2015 04:49:41 -0500
+Message-ID: <1422611372.6200.4.camel@kernel.crashing.org>
+Subject: Re: [PATCH] powerpc/pci: Fix the initial value of hose->first_busno
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Chunhe Lan <Chunhe.Lan@freescale.com>
+Cc: linux-pci@vger.kernel.org
+Date: Fri, 30 Jan 2015 20:49:32 +1100
+In-Reply-To: <1422611302-309-1-git-send-email-Chunhe.Lan@freescale.com>
+References: <1422611302-309-1-git-send-email-Chunhe.Lan@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/1/21 8:53, Rafael J. Wysocki wrote:
-> On Thursday, January 08, 2015 10:33:02 AM Jiang Liu wrote:
->> Add field offset to struct resource_list_entry to host address space
->> translation offset so it could be used to represent bridge resources.
->>
->> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->> ---
->>  drivers/acpi/resource.c |   13 ++++++++-----
->>  include/linux/acpi.h    |    1 +
->>  2 files changed, 9 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
->> index 16d334a1ee25..54204ac94f8e 100644
->> --- a/drivers/acpi/resource.c
->> +++ b/drivers/acpi/resource.c
->> @@ -462,7 +462,8 @@ struct res_proc_context {
->>  };
->>  
->>  static acpi_status acpi_dev_new_resource_entry(struct resource *r,
->> -					       struct res_proc_context *c)
->> +					       struct res_proc_context *c,
->> +					       resource_size_t offset)
->>  {
->>  	struct resource_list_entry *rentry;
->>  
->> @@ -472,6 +473,7 @@ static acpi_status acpi_dev_new_resource_entry(struct resource *r,
->>  		return AE_NO_MEMORY;
->>  	}
->>  	rentry->res = *r;
->> +	rentry->offset = offset;
->>  	list_add_tail(&rentry->node, c->list);
->>  	c->count++;
->>  	return AE_OK;
->> @@ -480,6 +482,7 @@ static acpi_status acpi_dev_new_resource_entry(struct resource *r,
->>  static acpi_status acpi_dev_process_resource(struct acpi_resource *ares,
->>  					     void *context)
->>  {
->> +	resource_size_t offset = 0;
->>  	struct res_proc_context *c = context;
->>  	struct resource r;
->>  	int i;
->> @@ -500,14 +503,14 @@ static acpi_status acpi_dev_process_resource(struct acpi_resource *ares,
->>  
->>  	if (acpi_dev_resource_memory(ares, &r)
->>  	    || acpi_dev_resource_io(ares, &r)
->> -	    || acpi_dev_resource_address_space(ares, &r, NULL)
->> -	    || acpi_dev_resource_ext_address_space(ares, &r, NULL))
->> -		return acpi_dev_new_resource_entry(&r, c);
->> +	    || acpi_dev_resource_address_space(ares, &r, &offset)
->> +	    || acpi_dev_resource_ext_address_space(ares, &r, &offset))
->> +		return acpi_dev_new_resource_entry(&r, c, offset);
->>  
->>  	for (i = 0; acpi_dev_resource_interrupt(ares, i, &r); i++) {
->>  		acpi_status status;
->>  
->> -		status = acpi_dev_new_resource_entry(&r, c);
->> +		status = acpi_dev_new_resource_entry(&r, c, 0);
->>  		if (ACPI_FAILURE(status))
->>  			return status;
->>  	}
->> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
->> index bde8119f5897..fea78e772450 100644
->> --- a/include/linux/acpi.h
->> +++ b/include/linux/acpi.h
->> @@ -300,6 +300,7 @@ bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
->>  struct resource_list_entry {
->>  	struct list_head node;
->>  	struct resource res;
->> +	resource_size_t offset;
+On Fri, 2015-01-30 at 17:48 +0800, Chunhe Lan wrote:
+> When use "Intel PRO/1000 PT Quad Port Low Profile Server Adapter"
+> card on P5040DS and T1040RDB, 32-bit kernel does not identify this
+> card. This card has the four RJ-45 ports.
 > 
-> Well, so instead of adding the offset thing here and there, wouldn't it be
-> cleaner to introduce something like
+> The bus range of every pci is "bus-range = <0 0xff>" in dts file.
+> So the first bus number of every pci should start from 0, and it
+> does not start from next_busno. The next_busno is used to count
+> the bus sum of all pci devices. So the value of next_busno is
+> accumulated.
 > 
-> 	struct ext_resource {
-> 		sturct resource res;
-> 		resource_size_t offset;
-> 	};
+> This patch fixes this issue, and "Intel PRO/1000 PT Quad Port Low
+> Profile Server Adapter" card can work rightly.
+
+So the logic here was meant the way it is, which is to avoid bus number
+overlap between domains due to some old cruft in userspace that didn't
+deal with them properly.
+
+It *might* be OK to deprecate that (this is *very* old cruft I'm talking
+about such as 2001-era X server) however this isn't clear in your patch
+description and it isn't clear either why that breaks your stuff.
+
+
+> Signed-off-by: Chunhe Lan <Chunhe.Lan@freescale.com>
+> ---
+>  arch/powerpc/kernel/pci_32.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
 > 
-> and use struct ext_resource instead of struct resource where an offset is needed?
-> 
-> Just a thought ...
-Hi Rafael,
-	Following patches will achieve this by sharing struct resource_list_entry.
-Regards!
-Gerry
-> 
->>  };
->>  
->>  void acpi_dev_free_resource_list(struct list_head *list);
->>
-> 
+> diff --git a/arch/powerpc/kernel/pci_32.c b/arch/powerpc/kernel/pci_32.c
+> index 432459c..a194685 100644
+> --- a/arch/powerpc/kernel/pci_32.c
+> +++ b/arch/powerpc/kernel/pci_32.c
+> @@ -236,13 +236,13 @@ static int __init pcibios_init(void)
+>  
+>  	/* Scan all of the recorded PCI controllers.  */
+>  	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
+> -		if (pci_assign_all_buses)
+> -			hose->first_busno = next_busno;
+> +		hose->first_busno = 0;
+>  		hose->last_busno = 0xff;
+>  		pcibios_scan_phb(hose);
+>  		pci_bus_add_devices(hose->bus);
+>  		if (pci_assign_all_buses || next_busno <= hose->last_busno)
+> -			next_busno = hose->last_busno + pcibios_assign_bus_offset;
+> +			next_busno += hose->last_busno +
+> +					pcibios_assign_bus_offset;
+>  	}
+>  	pci_bus_count = next_busno;
+>  
+
+
