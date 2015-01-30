@@ -1,92 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:55653 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754109AbbAUCco (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jan 2015 21:32:44 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v2 13/30] PCI: Introduce new scan function pci_scan_root_bridge()
-Date: Wed, 21 Jan 2015 08:30:08 +0800
-Message-ID: <1421800225-26230-14-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
-References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:41167 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757888AbbA3PYp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 30 Jan 2015 10:24:45 -0500
+Message-ID: <54CBA208.5020005@ti.com>
+Date: Fri, 30 Jan 2015 10:23:52 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+CC: Rob Herring <robherring2@gmail.com>,
+	Will Deacon <will.deacon@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v4 1/6] of: iommu: add ptr to OF node arg to of_iommu_configure()
+References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com> <5349994.6VHXzPdIxs@avalon> <CAL_Jsq+rzwk0Rw5RRKf9oLqXNFFgnJb4UQ_AzpJLxN1Z0rJWMQ@mail.gmail.com> <1612981.2C6LXFqAIA@avalon>
+In-Reply-To: <1612981.2C6LXFqAIA@avalon>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce new scan function pci_scan_root_bridge() to
-support host bridge drivers that need to provide platform
-own pci_host_bridge_ops.
+On 01/29/2015 07:24 PM, Laurent Pinchart wrote:
+> Hi Rob,
+>
+> On Thursday 29 January 2015 10:49:38 Rob Herring wrote:
+>> On Wed, Jan 28, 2015 at 5:32 PM, Laurent Pinchart wrote:
+>>> On Wednesday 28 January 2015 13:32:19 Will Deacon wrote:
+>>>> On Wed, Jan 28, 2015 at 01:15:10PM +0000, Laurent Pinchart wrote:
+>>>>> On Wednesday 28 January 2015 12:29:42 Will Deacon wrote:
+>>>>>> On Wed, Jan 28, 2015 at 12:23:03PM +0000, Laurent Pinchart wrote:
+>>>>>>> On Wednesday 28 January 2015 11:33:00 Will Deacon wrote:
+>>>>>>>> On Mon, Jan 26, 2015 at 06:49:01PM +0000, Murali Karicheri wrote:
+>>>>>>>> On 01/25/2015 08:32 AM, Laurent Pinchart wrote:
+>>>>>>>>>> On Friday 23 January 2015 17:32:34 Murali Karicheri wrote:
+>>>>>>>>>>> Function of_iommu_configure() is called from of_dma_configure()
+>>>>>>>>>>> to setup iommu ops using DT property. This API is currently used
+>>>>>>>>>>> for platform devices for which DMA configuration (including iommu
+>>>>>>>>>>> ops) may come from device's parent. To extend this functionality
+>>>>>>>>>>> for PCI devices, this API need to take a parent node ptr as an
+>>>>>>>>>>> argument instead of assuming device's parent. This is needed since
+>>>>>>>>>>> for PCI, the dma configuration may be defined in the DT node of
+>>>>>>>>>>> the root bus bridge's parent device. Currently only dma-range is
+>>>>>>>>>>> used for PCI and iommu is not supported. So return error if the
+>>>>>>>>>>> device is PCI.
+>>
+>> [...]
+>>
+>>>>> If I understand Murali's patch set right (please correct me if that's
+>>>>> not the case) the PCI code walks up the DT nodes hierarchy to the
+>>>>> parent node that contains the iommus attribute and passes a pointer to
+>>>>> that node to this function. It's thus a PCI-specific solution. As a
+>>>>> temporary hack that's OK I suppose, but if implementing it right
+>>>>> straight away isn't difficult that would be better.
+>>>>
+>>>> It looks to me like the code walks the PCI topology to get the DT node
+>>>> for the host controller, and passes *that* to of_dma_configure. That
+>>>> sounds like the right thing to do to me, especially since the PCI
+>>>> topology is likely not encoded in the device-tree. So actually, it is
+>>>> passing the first parent node afaict.
+>>>
+>>> Indeed, that's right. I forgot for a moment that we have non-DT devices
+>>> ;-)
+>>>
+>>> Acked-by: Laurent Pinchart<laurent.pinchart@ideasonboard.com>
+>>>
+>>> Murali, nitpicking a bit, shouldn't the iommu_np parameter be renamed ? It
+>>> points to the node containing the iommus parameter, not to the iommu node,
+>>> so the current name is slightly confusing. A brief kerneldoc above the
+>>> function would also help. This can be the subject of a separate patch.
+>>
+>> It was more confusing having np and node within the function.
+>
+> Agreed.
+>
+> How about master_np or iommu_master_np ? The latter might be a bit long.
+>
+Probabaly master_np suffice as this function is named 
+of_iommu_configure(). I will update it.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/probe.c |   21 +++++++++++++++++++++
- include/linux/pci.h |    3 +++
- 2 files changed, 24 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ca53c37..c23ca8a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2064,6 +2064,27 @@ static struct pci_bus *__pci_scan_root_bus(
- 	return b;
- }
- 
-+struct pci_host_bridge *pci_scan_root_bridge(struct device *parent,
-+		u32 db, struct pci_ops *ops, void *sysdata,
-+		struct list_head *resources, struct pci_host_bridge_ops *phb_ops)
-+{
-+	struct pci_host_bridge *host;
-+	struct pci_bus *bus;
-+
-+	host = pci_create_host_bridge(parent, db, resources,
-+			sysdata, phb_ops);
-+	if (!host)
-+		return NULL;
-+
-+	bus = __pci_scan_root_bus(host, ops);
-+	if (!bus)
-+		pci_free_host_bridge(host);
-+
-+	return host;
-+}
-+EXPORT_SYMBOL(pci_scan_root_bridge);
-+
-+
- struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
- 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
- {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 817756a..e60c59a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -793,6 +793,9 @@ void pci_bus_release_busn_res(struct pci_bus *b);
- struct pci_bus *pci_scan_root_bus(struct device *parent, u32 dombus,
- 					     struct pci_ops *ops, void *sysdata,
- 					     struct list_head *resources);
-+struct pci_host_bridge *pci_scan_root_bridge(struct device *parent,
-+		u32 dombus, struct pci_ops *ops, void *sysdata,
-+		struct list_head *resources, struct pci_host_bridge_ops *phb_ops);
- struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
- 				int busnr);
- void pcie_update_link_speed(struct pci_bus *bus, u16 link_status);
 -- 
-1.7.1
-
+Murali Karicheri
+Linux Kernel, Texas Instruments
