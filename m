@@ -1,70 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 12 Jan 2015 11:01:33 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Rob Herring <robh@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 05/16] pci: introduce common pci config space accessors
-Message-ID: <20150112100131.GA27700@ulmo>
-References: <1420857290-8373-1-git-send-email-robh@kernel.org>
- <1420857290-8373-6-git-send-email-robh@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:38872 "EHLO
+	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751950AbbAaO4X (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 31 Jan 2015 09:56:23 -0500
+Received: by mail-oi0-f42.google.com with SMTP id i138so38640631oig.1
+        for <linux-pci@vger.kernel.org>; Sat, 31 Jan 2015 06:56:22 -0800 (PST)
+Date: Sat, 31 Jan 2015 08:56:11 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: matt@masarand.com
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH V3] Delay allocation of PCI device IRQs from boot time
+ until bus scan time to fix PCI hotplugging
+Message-ID: <20150131145611.GA23416@google.com>
+References: <1412222866-21068-1-git-send-email-matt@masarand.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="W/nzBZO5zC0uMSeA"
-In-Reply-To: <1420857290-8373-6-git-send-email-robh@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1412222866-21068-1-git-send-email-matt@masarand.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Oct 02, 2014 at 05:07:28AM +0100, matt@masarand.com wrote:
+> Sorry, the previous submission was damaged by my editor which purged the sign off lines from the patches,
+> this is a fixed version.
+> 
+> pci_fixup_irqs is the current method used in most arches to assign IRQs to
+> PCI devices. This has a number of flaws including it requiring an extra walk
+> of the PCI bus and most importantly not running for devices which are added
+> after boot time, this includes hot-added devices on boards that support this.
+> 
+> This patch set modifies the IRQ mapping and swizzling infrastructure
+> such that functions are registered by the boot code (instead of being
+> run directly by the boot code) and then run later in the enable_device
+> path such that it will apply to all devices and not only those inserted
+> at boot time.
+> 
+> This is cleaner as it unifies how each architecture allocates PCI IRQs as much
+> as possible (some arches were particularly resistant to these changes so some
+> work-arounds have been used or the change disabled completely).
+> 
+> The caveat here is that I have been forced to modify some architecture specific
+> code for various architectures which I cannot test due to not having such boards
+> available. The code seems correct and the changes in most cases are small and
+> trivial however I have not tested all the patches for rare arches.
+> 
+> NEW: Since the last version all changes and suggested bug fixes have been implemented
+> the patch-set has also been rebased onto the latest kernel version to ease merging.
 
---W/nzBZO5zC0uMSeA
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi Matthew,
 
-On Fri, Jan 09, 2015 at 08:34:39PM -0600, Rob Herring wrote:
-> Many PCI controllers' configuration space accesses are memory mapped
-> varying only in address calculation and access checks. There are 2 main
-> access methods: a decoded address space such as ECAM or a single address
-> and data register similar to x86. This implementation can support both
-> cases as well as be used in cases that need additional pre or post access
-> handling.
->=20
-> A new pci_ops member map_bus is introduced which can do access checks and
-> any necessary setup. It returns the address to use for the configuration
-> space access. The access types supported are 32-bit only accesses or
-> correct byte, word, or dword sized accesses.
->=20
-> Signed-off-by: Rob Herring <robh@kernel.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/pci/access.c | 87 ++++++++++++++++++++++++++++++++++++++++++++++=
-++++++
->  include/linux/pci.h  | 11 +++++++
->  2 files changed, 98 insertions(+)
+I'm not sure where we are with this.  This has a lot of good fixes that I'd
+like to merge, but I think there were some comments that needed to be
+addressed.  But I might have missed something, so I'm just checking to see
+if I accidentally dropped the ball.
 
-Reviewed-by: Thierry Reding <treding@nvidia.com>
-Tested-by: Thierry Reding <treding@nvidia.com>
-
---W/nzBZO5zC0uMSeA
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBAgAGBQJUs5t7AAoJEN0jrNd/PrOhpIQP/3QkOnAM62rtzWKkbvYGSvFw
-wZyOfZPsp411pZdJKBV0fo2tCZmb3MFEdNhSGMIucSvB3bO1VJMQuuqunLbJGGvB
-7/GVJi1zmz242nrkKMbCVcuSCozAk3lFnUdzwpU3ADl28EV5jwGHFjIYGSiOqqLR
-fJLE0KhPdAoq/p7vkesP+FG1tVsVyiTNXPc3BnktNpHJxEpQoujJG+hRX8cTA7G8
-FPLV12rdUt93Ahi9PlYPKrDfEjoZHvqlxUiG50dBVirebI2wl2xyYkp52/nmqFhD
-fHzAy9aG+d86MakONP74ps6EFfKvs0ZzbJ0Y/MizdjMfCj8NKvqU5+oMec9DiNtn
-eXim41gZxSIO0kKBomFkKTq6Ja9qP0vJ+5gRSitqSCsUrb1uA+YXNXJItMYpqttp
-HzoHxHc8BqqJkmYsBCBvwT8AamFRVJNIi0dwcgGukv2UDrPy1HJcfiQTG4XTZO7b
-YpOqxtvuNf9KWFVDnQiJar3W633Tn6e45YwJFgHVw2qbud+AXwRo5ypssDcPI59G
-WCdaCjOzCP1Jnxc8kWOy0NVYZXdGo+mgbSp0PiwjEuxLEL0+eG9qxMmI5snYXad5
-ywiHQ+FaNfFjjlwV7p9VbKCpSpnpwMl4iSIIaP7rmrWjIfIY1GBb6DEMHjgECseb
-tFqCmTti4cXQHJVua6UP
-=A6kk
------END PGP SIGNATURE-----
-
---W/nzBZO5zC0uMSeA--
+Bjorn
