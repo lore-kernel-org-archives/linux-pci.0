@@ -1,317 +1,137 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-To: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
-	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
-	al.stone@linaro.org
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Subject: [PATCH v2 2/9] x86, pci: Abstract PCI config accessors and use AMD Fam10h workaround exclusively.
-Date: Fri, 27 Feb 2015 16:00:37 +0100
-Message-Id: <1425049244-19331-3-git-send-email-tomasz.nowicki@linaro.org>
-In-Reply-To: <1425049244-19331-1-git-send-email-tomasz.nowicki@linaro.org>
-References: <1425049244-19331-1-git-send-email-tomasz.nowicki@linaro.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch v2 10/23] ACPI: Normalize return value of resource parser functions
+Date: Mon,  2 Feb 2015 10:42:55 +0800
+Message-Id: <1422844988-13854-11-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From now on, readb()/writeb()/etc. generic calls are used as default
-approach. Special MMIO accessors are registered for AMD Fam10h CPUs only.
+Normalize return value of resource parse functions as:
+1) return "true" if resource is assigned.
+2) return "false" and IORESOURCE_DISABLED setting in res->flags if
+   resource is unassigned.
+3) return "false" and zeroing res->flags if it's not an valid or
+   expected resource.
 
-Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/include/asm/pci_x86.h |   8 +++
- arch/x86/pci/mmconfig-shared.c | 114 +++++++++++++++++++++++++++++++++++++++++
- arch/x86/pci/mmconfig_32.c     |  24 +--------
- arch/x86/pci/mmconfig_64.c     |  24 +--------
- arch/x86/pci/numachip.c        |  24 +--------
- 5 files changed, 128 insertions(+), 66 deletions(-)
+ drivers/acpi/resource.c |   30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index eddf8f0..f7f3b6a 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -139,6 +139,11 @@ struct pci_mmcfg_region {
- 	char name[PCI_MMCFG_RESOURCE_NAME_LEN];
- };
- 
-+struct pci_mmcfg_mmio_ops {
-+	u32 (*read)(int len, void __iomem *addr);
-+	void (*write)(int len, void __iomem *addr, u32 value);
-+};
-+
- extern int __init pci_mmcfg_arch_init(void);
- extern void __init pci_mmcfg_arch_free(void);
- extern int pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg);
-@@ -147,6 +152,9 @@ extern int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
- 			       phys_addr_t addr);
- extern int pci_mmconfig_delete(u16 seg, u8 start, u8 end);
- extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
-+extern u32 pci_mmio_read(int len, void __iomem *addr);
-+extern void pci_mmio_write(int len, void __iomem *addr, u32 value);
-+extern void pci_mmconfig_register_mmio(struct pci_mmcfg_mmio_ops *ops);
- 
- extern struct list_head pci_mmcfg_list;
- 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 326198a..1fe9d0d 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -31,6 +31,118 @@ static DEFINE_MUTEX(pci_mmcfg_lock);
- 
- LIST_HEAD(pci_mmcfg_list);
- 
-+static u32
-+pci_mmconfig_generic_read(int len, void __iomem *addr)
-+{
-+	u32 data = 0;
-+
-+	switch (len) {
-+	case 1:
-+		data = readb(addr);
-+		break;
-+	case 2:
-+		data = readw(addr);
-+		break;
-+	case 4:
-+		data = readl(addr);
-+		break;
-+	}
-+
-+	return data;
-+}
-+
-+static void
-+pci_mmconfig_generic_write(int len, void __iomem *addr, u32 value)
-+{
-+	switch (len) {
-+	case 1:
-+		writeb(value, addr);
-+		break;
-+	case 2:
-+		writew(value, addr);
-+		break;
-+	case 4:
-+		writel(value, addr);
-+		break;
-+	}
-+}
-+
-+static struct pci_mmcfg_mmio_ops pci_mmcfg_mmio_default = {
-+	.read = pci_mmconfig_generic_read,
-+	.write = pci_mmconfig_generic_write,
-+};
-+
-+static struct pci_mmcfg_mmio_ops *pci_mmcfg_mmio = &pci_mmcfg_mmio_default;
-+
-+static u32
-+pci_mmconfig_amd_read(int len, void __iomem *addr)
-+{
-+	u32 data = 0;
-+
-+	switch (len) {
-+	case 1:
-+		data = mmio_config_readb(addr);
-+		break;
-+	case 2:
-+		data = mmio_config_readw(addr);
-+		break;
-+	case 4:
-+		data = mmio_config_readl(addr);
-+		break;
-+	}
-+
-+	return data;
-+}
-+
-+static void
-+pci_mmconfig_amd_write(int len, void __iomem *addr, u32 value)
-+{
-+	switch (len) {
-+	case 1:
-+		mmio_config_writeb(addr, value);
-+		break;
-+	case 2:
-+		mmio_config_writew(addr, value);
-+		break;
-+	case 4:
-+		mmio_config_writel(addr, value);
-+		break;
-+	}
-+}
-+
-+static struct pci_mmcfg_mmio_ops pci_mmcfg_mmio_amd_fam10h = {
-+	.read = pci_mmconfig_amd_read,
-+	.write = pci_mmconfig_amd_write,
-+};
-+
-+void
-+pci_mmconfig_register_mmio(struct pci_mmcfg_mmio_ops *ops)
-+{
-+	pci_mmcfg_mmio = ops;
-+}
-+
-+u32
-+pci_mmio_read(int len, void __iomem *addr)
-+{
-+	if (!pci_mmcfg_mmio) {
-+		pr_err("PCI config space has no accessors !");
-+		return 0;
-+	}
-+
-+	return pci_mmcfg_mmio->read(len, addr);
-+}
-+
-+void
-+pci_mmio_write(int len, void __iomem *addr, u32 value)
-+{
-+	if (!pci_mmcfg_mmio) {
-+		pr_err("PCI config space has no accessors !");
-+		return;
-+	}
-+
-+	pci_mmcfg_mmio->write(len, addr, value);
-+}
-+
- static void __init pci_mmconfig_remove(struct pci_mmcfg_region *cfg)
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 5544c6d26f32..32561290a4a0 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -80,6 +80,11 @@ static void acpi_dev_get_memresource(struct resource *res, u64 start, u64 len,
+  * Check if the given ACPI resource object represents a memory resource and
+  * if that's the case, use the information in it to populate the generic
+  * resource object pointed to by @res.
++ *
++ * Return:
++ * 1) false with res->flags setting to zero: not the expected resource type
++ * 2) false with IORESOURCE_DISABLED in res->flags: valid unassigned resource
++ * 3) true: valid assigned resource
+  */
+ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
  {
- 	if (cfg->res.parent)
-@@ -231,6 +343,8 @@ static const char *__init pci_mmcfg_amd_fam10h(void)
- 			return NULL;
- 		}
- 
-+	pci_mmconfig_register_mmio(&pci_mmcfg_mmio_amd_fam10h);
-+
- 	return "AMD Family 10h NB";
- }
- 
-diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
-index 43984bc..4b3d025 100644
---- a/arch/x86/pci/mmconfig_32.c
-+++ b/arch/x86/pci/mmconfig_32.c
-@@ -71,17 +71,7 @@ err:		*value = -1;
- 
- 	pci_exp_set_dev_base(base, bus, devfn);
- 
--	switch (len) {
--	case 1:
--		*value = mmio_config_readb(mmcfg_virt_addr + reg);
--		break;
--	case 2:
--		*value = mmio_config_readw(mmcfg_virt_addr + reg);
--		break;
--	case 4:
--		*value = mmio_config_readl(mmcfg_virt_addr + reg);
--		break;
--	}
-+	*value = pci_mmio_read(len, mmcfg_virt_addr + reg);
- 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
- 	rcu_read_unlock();
- 
-@@ -108,17 +98,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 
- 	pci_exp_set_dev_base(base, bus, devfn);
- 
--	switch (len) {
--	case 1:
--		mmio_config_writeb(mmcfg_virt_addr + reg, value);
--		break;
--	case 2:
--		mmio_config_writew(mmcfg_virt_addr + reg, value);
--		break;
--	case 4:
--		mmio_config_writel(mmcfg_virt_addr + reg, value);
--		break;
--	}
-+	pci_mmio_write(len, mmcfg_virt_addr + reg, value);
- 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
- 	rcu_read_unlock();
- 
-diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
-index bea5249..032593d 100644
---- a/arch/x86/pci/mmconfig_64.c
-+++ b/arch/x86/pci/mmconfig_64.c
-@@ -42,17 +42,7 @@ err:		*value = -1;
- 		goto err;
+@@ -107,6 +112,7 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+ 					 fixed_memory32->write_protect);
+ 		break;
+ 	default:
++		res->flags = 0;
+ 		return false;
  	}
  
--	switch (len) {
--	case 1:
--		*value = mmio_config_readb(addr + reg);
--		break;
--	case 2:
--		*value = mmio_config_readw(addr + reg);
--		break;
--	case 4:
--		*value = mmio_config_readl(addr + reg);
--		break;
--	}
-+	*value = pci_mmio_read(len, addr + reg);
- 	rcu_read_unlock();
- 
- 	return 0;
-@@ -74,17 +64,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 		return -EINVAL;
+@@ -145,6 +151,11 @@ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
+  * Check if the given ACPI resource object represents an I/O resource and
+  * if that's the case, use the information in it to populate the generic
+  * resource object pointed to by @res.
++ *
++ * Return:
++ * 1) false with res->flags setting to zero: not the expected resource type
++ * 2) false with IORESOURCE_DISABLED in res->flags: valid unassigned resource
++ * 3) true: valid assigned resource
+  */
+ bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res)
+ {
+@@ -165,6 +176,7 @@ bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res)
+ 					ACPI_DECODE_10);
+ 		break;
+ 	default:
++		res->flags = 0;
+ 		return false;
  	}
  
--	switch (len) {
--	case 1:
--		mmio_config_writeb(addr + reg, value);
--		break;
--	case 2:
--		mmio_config_writew(addr + reg, value);
--		break;
--	case 4:
--		mmio_config_writel(addr + reg, value);
--		break;
--	}
-+	pci_mmio_write(len, addr + reg, value);
- 	rcu_read_unlock();
+@@ -214,12 +226,18 @@ static bool acpi_decode_space(struct resource *res,
+  * Check if the given ACPI resource object represents an address space resource
+  * and if that's the case, use the information in it to populate the generic
+  * resource object pointed to by @res.
++ *
++ * Return:
++ * 1) false with res->flags setting to zero: not the expected resource type
++ * 2) false with IORESOURCE_DISABLED in res->flags: valid unassigned resource
++ * 3) true: valid assigned resource
+  */
+ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+ 				     struct resource *res)
+ {
+ 	struct acpi_resource_address64 addr;
  
- 	return 0;
-diff --git a/arch/x86/pci/numachip.c b/arch/x86/pci/numachip.c
-index 2e565e6..5047e9b 100644
---- a/arch/x86/pci/numachip.c
-+++ b/arch/x86/pci/numachip.c
-@@ -51,17 +51,7 @@ err:		*value = -1;
- 		goto err;
++	res->flags = 0;
+ 	if (ACPI_FAILURE(acpi_resource_to_address64(ares, &addr)))
+ 		return false;
+ 
+@@ -236,12 +254,18 @@ EXPORT_SYMBOL_GPL(acpi_dev_resource_address_space);
+  * Check if the given ACPI resource object represents an extended address space
+  * resource and if that's the case, use the information in it to populate the
+  * generic resource object pointed to by @res.
++ *
++ * Return:
++ * 1) false with res->flags setting to zero: not the expected resource type
++ * 2) false with IORESOURCE_DISABLED in res->flags: valid unassigned resource
++ * 3) true: valid assigned resource
+  */
+ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
+ 					 struct resource *res)
+ {
+ 	struct acpi_resource_extended_address64 *ext_addr;
+ 
++	res->flags = 0;
+ 	if (ares->type != ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64)
+ 		return false;
+ 
+@@ -339,6 +363,11 @@ static void acpi_dev_get_irqresource(struct resource *res, u32 gsi,
+  * represented by the resource and populate the generic resource object pointed
+  * to by @res accordingly.  If the registration of the GSI is not successful,
+  * IORESOURCE_DISABLED will be set it that object's flags.
++ *
++ * Return:
++ * 1) false with res->flags setting to zero: not the expected resource type
++ * 2) false with IORESOURCE_DISABLED in res->flags: valid unassigned resource
++ * 3) true: valid assigned resource
+  */
+ bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
+ 				 struct resource *res)
+@@ -372,6 +401,7 @@ bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
+ 					 ext_irq->sharable, false);
+ 		break;
+ 	default:
++		res->flags = 0;
+ 		return false;
  	}
  
--	switch (len) {
--	case 1:
--		*value = mmio_config_readb(addr + reg);
--		break;
--	case 2:
--		*value = mmio_config_readw(addr + reg);
--		break;
--	case 4:
--		*value = mmio_config_readl(addr + reg);
--		break;
--	}
-+	*value = pci_mmio_read(len, addr + reg);
- 	rcu_read_unlock();
- 
- 	return 0;
-@@ -87,17 +77,7 @@ static int pci_mmcfg_write_numachip(unsigned int seg, unsigned int bus,
- 		return -EINVAL;
- 	}
- 
--	switch (len) {
--	case 1:
--		mmio_config_writeb(addr + reg, value);
--		break;
--	case 2:
--		mmio_config_writew(addr + reg, value);
--		break;
--	case 4:
--		mmio_config_writel(addr + reg, value);
--		break;
--	}
-+	pci_mmio_write(len, addr + reg, value);
- 	rcu_read_unlock();
- 
- 	return 0;
 -- 
-1.9.1
+1.7.10.4
 
