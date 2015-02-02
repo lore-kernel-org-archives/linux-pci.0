@@ -1,64 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:56102 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752646AbbBZBEm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:04:42 -0500
-Received: by mail-ig0-f169.google.com with SMTP id hl2so40781963igb.0
-        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2015 17:04:41 -0800 (PST)
-Date: Wed, 25 Feb 2015 19:04:38 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: robh@kernel.org, linux-pci@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: Re: [PATCH] PCI: xgene: Fix xgene_pcie_map_bus() return type
-Message-ID: <20150226010438.GT6220@google.com>
-References: <1423512731-9625-1-git-send-email-festevam@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1423512731-9625-1-git-send-email-festevam@gmail.com>
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:55577 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752333AbbBBFKJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 00:10:09 -0500
+Received: by mail-pa0-f42.google.com with SMTP id bj1so77687881pad.1
+        for <linux-pci@vger.kernel.org>; Sun, 01 Feb 2015 21:10:08 -0800 (PST)
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, phil.edworthy@renesas.com,
+	horms+renesas@verge.net.au,
+	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+Subject: [PATCH] PCI: rcar: Add mask of data to be written to PCIEPARL
+Date: Mon,  2 Feb 2015 14:09:58 +0900
+Message-Id: <1422853798-14467-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Tanmay]
+Lower 7bit of PCIEPARL is reserved bit. When we write to this register,
+these bits must be 0.
 
-On Mon, Feb 09, 2015 at 06:12:11PM -0200, Fabio Estevam wrote:
-> From: Fabio Estevam <fabio.estevam@freescale.com>
-> 
-> Commit 350f8be5bb402a1 ("PCI: xgene: Convert to use generic config accessors")
-> introduced the following build warnings:
-> 
-> drivers/pci/host/pci-xgene.c:137:3: warning: return makes integer from pointer without a cast
-> drivers/pci/host/pci-xgene.c:140:2: warning: return makes integer from pointer without a cast
-> drivers/pci/host/pci-xgene.c:144:2: warning: initialization from incompatible pointer type
-> drivers/pci/host/pci-xgene.c:144:2: warning: (near initialization for 'xgene_pcie_ops.map_bus')
-> 
-> The .map_bus function should return 'void __iomem *' instead of 'int'.
-> 
-> Reported-by: Olof's autobuilder <build@lixom.net>
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+---
+ drivers/pci/host/pcie-rcar.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Applied to for-linus for v4.0, thanks!
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 748786c..bb36e27 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -342,7 +342,8 @@ static void rcar_pcie_setup_window(int win, struct rcar_pcie *pcie)
+ 		res_start = res->start;
+ 
+ 	rcar_pci_write_reg(pcie, upper_32_bits(res_start), PCIEPARH(win));
+-	rcar_pci_write_reg(pcie, lower_32_bits(res_start), PCIEPARL(win));
++	rcar_pci_write_reg(pcie, lower_32_bits(res_start) & ~0x7F,
++			   PCIEPARL(win));
+ 
+ 	/* First resource is for IO */
+ 	mask = PAR_ENABLE;
+-- 
+2.1.3
 
-Rob, Tanmay, speak up if you object.
-
-> ---
->  drivers/pci/host/pci-xgene.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-> index aab5547..22addb6 100644
-> --- a/drivers/pci/host/pci-xgene.c
-> +++ b/drivers/pci/host/pci-xgene.c
-> @@ -127,7 +127,7 @@ static bool xgene_pcie_hide_rc_bars(struct pci_bus *bus, int offset)
->  	return false;
->  }
->  
-> -static int xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
-> +static void __iomem *xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
->  			      int offset)
->  {
->  	struct xgene_pcie_port *port = bus->sysdata;
-> -- 
-> 1.9.1
-> 
