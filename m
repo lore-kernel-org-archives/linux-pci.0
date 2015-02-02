@@ -1,69 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:40646 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754363AbbBBQYO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 11:24:14 -0500
-Message-ID: <54CFA49C.50404@arm.com>
-Date: Mon, 02 Feb 2015 16:23:56 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
+Received: from mail-qc0-f182.google.com ([209.85.216.182]:51099 "EHLO
+	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754691AbbBBPsT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 10:48:19 -0500
+Received: by mail-qc0-f182.google.com with SMTP id l6so30719030qcy.13
+        for <linux-pci@vger.kernel.org>; Mon, 02 Feb 2015 07:48:18 -0800 (PST)
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Andre Przywara <Andre.Przywara@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Fix pcibios_update_irq misuse of irq number
-References: <1422456683-797-1-git-send-email-marc.zyngier@arm.com> <CAErSpo5=NhPZ5RNbBeGqKuLbKdOyTD1m+ijWM2SzQFWuKLTJfg@mail.gmail.com>
-In-Reply-To: <CAErSpo5=NhPZ5RNbBeGqKuLbKdOyTD1m+ijWM2SzQFWuKLTJfg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1422844101.11325.4.camel@ellerman.id.au>
+References: <1422712065-9403-1-git-send-email-haokexin@gmail.com>
+ <1422712065-9403-2-git-send-email-haokexin@gmail.com> <1422844101.11325.4.camel@ellerman.id.au>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 2 Feb 2015 09:47:57 -0600
+Message-ID: <CAErSpo7B3yDQiD0XA9nBxb4tFW0BktT0EZ3HCZENOYQqMy0m_Q@mail.gmail.com>
+Subject: Re: [PATCH 01/15] PCI: introduce pci_device_to_OF_node() for !CONFIG_OF
+To: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Kevin Hao <haokexin@gmail.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/02/15 15:57, Bjorn Helgaas wrote:
-> On Wed, Jan 28, 2015 at 8:51 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
->> pcibios_update_irq writes an irq number into the config space
->> of a given PCI device, but ignores the fact that this number
->> is a virtual interrupt number, which might be a very different
->> value from what the underlying hardware is using.
+On Sun, Feb 1, 2015 at 8:28 PM, Michael Ellerman <mpe@ellerman.id.au> wrote:
+> On Sat, 2015-01-31 at 21:47 +0800, Kevin Hao wrote:
+>> So we can avoid the ugly #ifdef in some drivers.
 >>
->> The obvious fix is to fetch the HW interrupt number from the
->> corresponding irq_data structure. This is slightly complicated
->> by the fact that this interrupt might be services by a stacked
->> domain.
+>> Signed-off-by: Kevin Hao <haokexin@gmail.com>
+>> ---
+>>  include/linux/pci.h | 2 ++
+>>  1 file changed, 2 insertions(+)
+>
+>
+> Hi Bjorn,
+>
+> Do you mind putting this into your next for 3.20? Or giving us an ACK for it if
+> you prefer.
+
+I think it makes more sense to merge this along with the other 14
+patches that remove the #ifdefs (at least, I assume that's what they
+do; I haven't seen them).
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+But please edit the subject line so it is capitalized consistently
+with the rest of the history.  And it'd be nice if the changelog were
+a complete sentence all by itself, e.g.,
+
+    PCI: Add pci_device_to_OF_node() stub for !CONFIG_OF
+
+    Add a stub for pci_device_to_OF_node() so drivers don't need to use
+    #ifdef CONFIG_OF around calls to it.
+
+Bjorn
+
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 8323cbf93913..421eb6a9e600 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1863,6 +1863,8 @@ static inline void pci_set_of_node(struct pci_dev *dev) { }
+>>  static inline void pci_release_of_node(struct pci_dev *dev) { }
+>>  static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
+>>  static inline void pci_release_bus_of_node(struct pci_bus *bus) { }
+>> +static inline struct device_node *
+>> +pci_device_to_OF_node(const struct pci_dev *pdev) { return NULL; }
+>>  #endif  /* CONFIG_OF */
 >>
->> This has been tested on KVM with kvmtool.
->>
->> Reported-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> Tested-by: Andre Przywara <andre.przywara@arm.com>
->> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
-> 
-> Jiang, are you OK with this patch as-is now, since it isn't used on x86?
-> 
-> Marc, Lorenzo, I assume this actually fixes a bug.  Can we get any
-> more details about what happens when you hit the bug, and how you
-> reproduced it (what platform, driver, etc.)?
-
-It definitely fixes a bug. This has been found by running a KVM guest
-using kvmtool PCI emulation, where the following things happen:
-
-- Guest programs a virtual (bogus) interrupt number in the PCI device
-config space (virtio disk in this case)
-- kvmtool uses that interrupt number as is, without any other form of
-validation
-- Either the injection fails (because the interrupt is out of the range
-of the virtual interrupt controller) -> virtio PCI device goes dead
-- or the injection succeeds because this is a valid interrupt number,
-but signals an unrelated peripheral -> virtio PCI device goes dead.
-
-This can be trivially reproduced on any ARM PCI system that requires
-legacy interrupts (i.e. no MSI support), and that uses a GIC interrupt
-controller. Doing it in a VM is just much more convenient.
-
-Hope this helps,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+>>  #ifdef CONFIG_EEH
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
