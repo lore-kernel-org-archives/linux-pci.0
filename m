@@ -1,62 +1,144 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:43479 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751312AbbBXCEC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Feb 2015 21:04:02 -0500
-Date: Tue, 24 Feb 2015 11:03:55 +0900
-From: Simon Horman <horms@verge.net.au>
-To: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	phil.edworthy@renesas.com
-Subject: Re: [PATCH] PCI: rcar: Change macro name of PCIEPARL and PCIEPARH
-Message-ID: <20150224020355.GC10297@verge.net.au>
-References: <1423040575-28080-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <54CEEBE6.3060600@linux.intel.com>
+Date: Mon, 02 Feb 2015 11:15:50 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1423040575-28080-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>
+CC: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [Patch v2 00/23] Improve ACPI resource parsing interfaces and
+ enable IOAPIC hotplug
+References: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 04, 2015 at 06:02:55PM +0900, Nobuhiro Iwamatsu wrote:
-> PCIEPARL and PCIEPARH are macro that calculates address of the register.
-> However, register name is incorrect, PCIEPALR and PCIEPAUR is correct.
-> This change macro name to PCIEPALR and PCIEPAUR.
-> 
-> Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+Hi all,
+	Sorry, this patch set should be v3 instead of v2.
+Regards!
+Gerry
 
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
-
-> ---
->  drivers/pci/host/pcie-rcar.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
+On 2015/2/2 10:42, Jiang Liu wrote:
+> During enabling ACPI based IOAPIC hotplug, Thomas noticed some issues
+> in ACPI resource parsing interfaces. So this is an effort to improve them.
 > 
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index eb12659..183c32d 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -64,8 +64,8 @@
->  #define  LAR_ENABLE		(1 << 1)
->  
->  /* PCIe address reg & mask */
-> -#define PCIEPARL(x)		(0x03400 + ((x) * 0x20))
-> -#define PCIEPARH(x)		(0x03404 + ((x) * 0x20))
-> +#define PCIEPALR(x)		(0x03400 + ((x) * 0x20))
-> +#define PCIEPAUR(x)		(0x03404 + ((x) * 0x20))
->  #define PCIEPAMR(x)		(0x03408 + ((x) * 0x20))
->  #define PCIEPTCTLR(x)		(0x0340c + ((x) * 0x20))
->  #define  PAR_ENABLE		(1 << 31)
-> @@ -341,9 +341,9 @@ static void rcar_pcie_setup_window(int win, struct rcar_pcie *pcie)
->  	else
->  		res_start = res->start;
->  
-> -	rcar_pci_write_reg(pcie, upper_32_bits(res_start), PCIEPARH(win));
-> +	rcar_pci_write_reg(pcie, upper_32_bits(res_start), PCIEPAUR(win));
->  	rcar_pci_write_reg(pcie, lower_32_bits(res_start) & ~0x7F,
-> -			   PCIEPARL(win));
-> +			   PCIEPALR(win));
->  
->  	/* First resource is for IO */
->  	mask = PAR_ENABLE;
-> -- 
-> 2.1.3
+> Patch 1 refines ACPICA resource descriptors, which has already been
+> merged into "git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git bleeding-edge"
+> 
+> Patch 2-12 improve ACPI resource parsing interfaces and also fixes some
+> bugs.
+> 
+> Patch 13-20 try to share the common data structure resource_list_entry
+> between PCI and ACPI. It may also be shared with PNP too.
+> 
+> Patch 21-23 enable ACPI based IOAPIC hotplug.
+> 
+> The patchset is based on v3.19-rc6+ and passed Fengguang's 0day test
+> suite. You may get it from:
+> https://github.com/jiangliu/linux.git acpires_v2
+> 
+> V2->V3:
+> 1) Split out the patch to fix bug in io resource check according to Bjorn's
+>    suggestion
+> 2) Fix minor coding style bugs
+> V1->V2:
+> 1) Refine the way to share common code between address space and extended
+>    address space.
+> 2) Relax some checks to avoid regressions according to Rafael's suggestions.
+> 3) Introduce struct resource_win to avoiding add extra parameter "offset"
+>    to several interfaces.
+> 4) Add patches to enable ACPI based IOAPIC hotplug, which has been reviwed
+>    several rounds.
+> 5) Rebase to v3.19-rc6+
+> 
+> Thanks,
+> Gerry
+> 
+> Jiang Liu (14):
+>   ACPI: Fix a bug in parsing ACPI Memory24 resource
+>   ACPI: Normalize return value of resource parser functions
+>   ACPI: Set flag IORESOURCE_UNSET for unassigned resources
+>   ACPI: Enforce stricter checks for address space descriptors
+>   ACPI: Return translation offset when parsing ACPI address space
+>     resources
+>   ACPI: Translate resource into master side address for bridge window
+>     resources
+>   ACPI: Add field offset to struct resource_list_entry
+>   ACPI: Introduce helper function acpi_dev_filter_resource_type()
+>   resources: Move struct resource_list_entry from ACPI into resource
+>     core
+>   PCI: Use common resource list management code instead of private
+>     implementation
+>   x86/PCI: Fix the range check for IO resources
+>   x86/PCI/ACPI: Use common ACPI resource interfaces to simplify
+>     implementation
+>   x86/PCI: Refine the way to release PCI IRQ resources
+>   x86/irq, ACPI: Implement ACPI driver to support IOAPIC hotplug
+> 
+> Lv Zheng (1):
+>   ACPICA: Resources: Provide common part for struct
+>     acpi_resource_address structures.
+> 
+> Thomas Gleixner (7):
+>   ACPI: Remove redundant check in function
+>     acpi_dev_resource_address_space()
+>   ACPI: Implement proper length checks for mem resources
+>   ACPI: Use the length check for io resources as well
+>   ACPI: Let the parser return false for disabled resources
+>   ACPI: Unify the parsing of address_space and ext_address_space
+>   ACPI: Move the window flag logic to the combined parser
+>   ACPI: Add prefetch decoding to the address space parser
+> 
+> Yinghai Lu (1):
+>   ACPI: Add interfaces to parse IOAPIC ID for IOAPIC hotplug
+> 
+>  arch/arm/kernel/bios32.c            |    5 +-
+>  arch/ia64/kernel/acpi-ext.c         |    6 +-
+>  arch/ia64/pci/pci.c                 |   14 +-
+>  arch/x86/include/asm/pci_x86.h      |    2 -
+>  arch/x86/pci/acpi.c                 |  293 +++++++++--------------------
+>  arch/x86/pci/bus_numa.c             |    4 +-
+>  arch/x86/pci/common.c               |   30 ++-
+>  arch/x86/pci/intel_mid_pci.c        |    4 +-
+>  arch/x86/pci/irq.c                  |   15 +-
+>  arch/x86/pci/mmconfig-shared.c      |    6 +-
+>  drivers/acpi/Kconfig                |    6 +
+>  drivers/acpi/Makefile               |    1 +
+>  drivers/acpi/acpi_lpss.c            |    6 +-
+>  drivers/acpi/acpi_memhotplug.c      |    8 +-
+>  drivers/acpi/acpi_platform.c        |    2 +-
+>  drivers/acpi/acpica/rsaddr.c        |    9 +-
+>  drivers/acpi/acpica/rsdumpinfo.c    |   59 +++---
+>  drivers/acpi/acpica/rsxface.c       |   10 +-
+>  drivers/acpi/internal.h             |    7 +
+>  drivers/acpi/ioapic.c               |  229 +++++++++++++++++++++++
+>  drivers/acpi/pci_irq.c              |    9 +-
+>  drivers/acpi/pci_root.c             |    9 +-
+>  drivers/acpi/processor_core.c       |  123 +++++++++++-
+>  drivers/acpi/resource.c             |  349 +++++++++++++++++++++--------------
+>  drivers/char/hpet.c                 |    4 +-
+>  drivers/dma/acpi-dma.c              |    8 +-
+>  drivers/hv/vmbus_drv.c              |    4 +-
+>  drivers/pci/bus.c                   |   18 +-
+>  drivers/pci/host-bridge.c           |    8 +-
+>  drivers/pci/host/pci-host-generic.c |    4 +-
+>  drivers/pci/host/pci-xgene.c        |    4 +-
+>  drivers/pci/host/pcie-xilinx.c      |    4 +-
+>  drivers/pci/probe.c                 |   10 +-
+>  drivers/pnp/pnpacpi/rsparser.c      |   45 ++---
+>  drivers/xen/xen-acpi-memhotplug.c   |    8 +-
+>  include/acpi/acrestyp.h             |   40 ++--
+>  include/linux/acpi.h                |   22 ++-
+>  include/linux/pci.h                 |    9 +-
+>  include/linux/resource_ext.h        |   77 ++++++++
+>  kernel/resource.c                   |   25 +++
+>  40 files changed, 965 insertions(+), 531 deletions(-)
+>  create mode 100644 drivers/acpi/ioapic.c
+>  create mode 100644 include/linux/resource_ext.h
 > 
