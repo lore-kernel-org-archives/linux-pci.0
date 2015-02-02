@@ -1,8 +1,4 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:62564 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756371AbbBEFmu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 Feb 2015 00:42:50 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Thomas Gleixner <tglx@linutronix.de>,
@@ -10,132 +6,174 @@ To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Yinghai Lu <yinghai@kernel.org>,
 	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
 	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch v4 10/23] ACPI: Normalize return value of resource parser functions
-Date: Thu,  5 Feb 2015 13:44:36 +0800
-Message-Id: <1423115089-12904-11-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [Patch v2 03/23] ACPI: Implement proper length checks for mem resources
+Date: Mon,  2 Feb 2015 10:42:48 +0800
+Message-Id: <1422844988-13854-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Normalize return value of resource parse functions as:
-1) return "true" if resource is assigned.
-2) return "false" and IORESOURCE_DISABLED setting in res->flags if
-   resource is unassigned.
-3) return "false" and zeroing res->flags if it's not an valid or
-   expected resource.
+From: Thomas Gleixner <tglx@linutronix.de>
 
+Check whether the resulting length is the same as the given
+length. Check for start <= end as well.
+
+We need to hand in the resource for this, so we can apply the flags
+directly.
+
+[Jiang] Remove enforcement that resource starting address must be
+non-zero.
+
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/acpi/resource.c |   30 ++++++++++++++++++++++++++++++
- 1 file changed, 30 insertions(+)
+ drivers/acpi/resource.c |   62 ++++++++++++++++++++++++++---------------------
+ 1 file changed, 35 insertions(+), 27 deletions(-)
 
 diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 5544c6d26f32..32561290a4a0 100644
+index 1c616a56e007..3e7d9f6eb875 100644
 --- a/drivers/acpi/resource.c
 +++ b/drivers/acpi/resource.c
-@@ -80,6 +80,11 @@ static void acpi_dev_get_memresource(struct resource *res, u64 start, u64 len,
-  * Check if the given ACPI resource object represents a memory resource and
-  * if that's the case, use the information in it to populate the generic
-  * resource object pointed to by @res.
-+ *
-+ * Return:
-+ * 1) false with res->flags setting to zero: not the expected resource type
-+ * 2) false with IORESOURCE_DISABLED in res->flags: valid unassigned resource
-+ * 3) true: valid assigned resource
-  */
- bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+@@ -34,21 +34,37 @@
+ #define valid_IRQ(i) (true)
+ #endif
+ 
+-static unsigned long acpi_dev_memresource_flags(u64 len, u8 write_protect,
+-						bool window)
++static bool acpi_dev_resource_len_valid(u64 start, u64 end, u64 len, bool io)
  {
-@@ -107,6 +112,7 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+-	unsigned long flags = IORESOURCE_MEM;
++	u64 reslen = end - start + 1;
+ 
+-	if (len == 0)
+-		flags |= IORESOURCE_DISABLED;
++	/*
++	 * CHECKME: len might be required to check versus a minimum
++	 * length as well. 1 for io is fine, but for memory it does
++	 * not make any sense at all.
++	 */
++	if (len && reslen && reslen == len && start <= end)
++		return true;
++
++	pr_info("ACPI: invalid or unassigned resource %s [%016llx - %016llx] length [%016llx]\n",
++		io ? "io" : "mem", start, end, len);
++
++	return false;
++}
++
++static void acpi_dev_memresource_flags(struct resource *res, u64 len,
++				       u8 write_protect, bool window)
++{
++	res->flags = IORESOURCE_MEM;
++
++	if (!acpi_dev_resource_len_valid(res->start, res->end, len, false))
++		res->flags |= IORESOURCE_DISABLED;
+ 
+ 	if (write_protect == ACPI_READ_WRITE_MEMORY)
+-		flags |= IORESOURCE_MEM_WRITEABLE;
++		res->flags |= IORESOURCE_MEM_WRITEABLE;
+ 
+ 	if (window)
+-		flags |= IORESOURCE_WINDOW;
+-
+-	return flags;
++		res->flags |= IORESOURCE_WINDOW;
+ }
+ 
+ static void acpi_dev_get_memresource(struct resource *res, u64 start, u64 len,
+@@ -56,7 +72,7 @@ static void acpi_dev_get_memresource(struct resource *res, u64 start, u64 len,
+ {
+ 	res->start = start;
+ 	res->end = start + len - 1;
+-	res->flags = acpi_dev_memresource_flags(len, write_protect, false);
++	acpi_dev_memresource_flags(res, len, write_protect, false);
+ }
+ 
+ /**
+@@ -77,24 +93,18 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+ 	switch (ares->type) {
+ 	case ACPI_RESOURCE_TYPE_MEMORY24:
+ 		memory24 = &ares->data.memory24;
+-		if (!memory24->minimum && !memory24->address_length)
+-			return false;
+ 		acpi_dev_get_memresource(res, memory24->minimum,
+ 					 memory24->address_length,
+ 					 memory24->write_protect);
+ 		break;
+ 	case ACPI_RESOURCE_TYPE_MEMORY32:
+ 		memory32 = &ares->data.memory32;
+-		if (!memory32->minimum && !memory32->address_length)
+-			return false;
+ 		acpi_dev_get_memresource(res, memory32->minimum,
+ 					 memory32->address_length,
+ 					 memory32->write_protect);
+ 		break;
+ 	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
+ 		fixed_memory32 = &ares->data.fixed_memory32;
+-		if (!fixed_memory32->address && !fixed_memory32->address_length)
+-			return false;
+ 		acpi_dev_get_memresource(res, fixed_memory32->address,
+ 					 fixed_memory32->address_length,
  					 fixed_memory32->write_protect);
- 		break;
+@@ -102,7 +112,8 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
  	default:
-+		res->flags = 0;
  		return false;
  	}
+-	return true;
++
++	return !(res->flags & IORESOURCE_DISABLED);
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
  
-@@ -145,6 +151,11 @@ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
-  * Check if the given ACPI resource object represents an I/O resource and
-  * if that's the case, use the information in it to populate the generic
-  * resource object pointed to by @res.
-+ *
-+ * Return:
-+ * 1) false with res->flags setting to zero: not the expected resource type
-+ * 2) false with IORESOURCE_DISABLED in res->flags: valid unassigned resource
-+ * 3) true: valid assigned resource
-  */
- bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res)
- {
-@@ -165,6 +176,7 @@ bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res)
- 					ACPI_DECODE_10);
- 		break;
- 	default:
-+		res->flags = 0;
- 		return false;
- 	}
- 
-@@ -214,12 +226,18 @@ static bool acpi_decode_space(struct resource *res,
-  * Check if the given ACPI resource object represents an address space resource
-  * and if that's the case, use the information in it to populate the generic
-  * resource object pointed to by @res.
-+ *
-+ * Return:
-+ * 1) false with res->flags setting to zero: not the expected resource type
-+ * 2) false with IORESOURCE_DISABLED in res->flags: valid unassigned resource
-+ * 3) true: valid assigned resource
-  */
- bool acpi_dev_resource_address_space(struct acpi_resource *ares,
- 				     struct resource *res)
- {
+@@ -186,7 +197,6 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+ 	acpi_status status;
  	struct acpi_resource_address64 addr;
+ 	bool window;
+-	u64 len;
+ 	u8 io_decode;
  
-+	res->flags = 0;
- 	if (ACPI_FAILURE(acpi_resource_to_address64(ares, &addr)))
- 		return false;
+ 	status = acpi_resource_to_address64(ares, &addr);
+@@ -199,10 +209,9 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
  
-@@ -236,12 +254,18 @@ EXPORT_SYMBOL_GPL(acpi_dev_resource_address_space);
-  * Check if the given ACPI resource object represents an extended address space
-  * resource and if that's the case, use the information in it to populate the
-  * generic resource object pointed to by @res.
-+ *
-+ * Return:
-+ * 1) false with res->flags setting to zero: not the expected resource type
-+ * 2) false with IORESOURCE_DISABLED in res->flags: valid unassigned resource
-+ * 3) true: valid assigned resource
-  */
- bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
- 					 struct resource *res)
+ 	switch(addr.resource_type) {
+ 	case ACPI_MEMORY_RANGE:
+-		len = addr.address.maximum - addr.address.minimum + 1;
+-		res->flags = acpi_dev_memresource_flags(len,
+-						addr.info.mem.write_protect,
+-						window);
++		acpi_dev_memresource_flags(res, addr.address.address_length,
++					   addr.info.mem.write_protect,
++					   window);
+ 		break;
+ 	case ACPI_IO_RANGE:
+ 		io_decode = addr.address.granularity == 0xfff ?
+@@ -236,7 +245,6 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
  {
  	struct acpi_resource_extended_address64 *ext_addr;
+ 	bool window;
+-	u64 len;
+ 	u8 io_decode;
  
-+	res->flags = 0;
  	if (ares->type != ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64)
- 		return false;
+@@ -250,10 +258,10 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
  
-@@ -339,6 +363,11 @@ static void acpi_dev_get_irqresource(struct resource *res, u32 gsi,
-  * represented by the resource and populate the generic resource object pointed
-  * to by @res accordingly.  If the registration of the GSI is not successful,
-  * IORESOURCE_DISABLED will be set it that object's flags.
-+ *
-+ * Return:
-+ * 1) false with res->flags setting to zero: not the expected resource type
-+ * 2) false with IORESOURCE_DISABLED in res->flags: valid unassigned resource
-+ * 3) true: valid assigned resource
-  */
- bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
- 				 struct resource *res)
-@@ -372,6 +401,7 @@ bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
- 					 ext_irq->sharable, false);
+ 	switch(ext_addr->resource_type) {
+ 	case ACPI_MEMORY_RANGE:
+-		len = ext_addr->address.maximum - ext_addr->address.minimum + 1;
+-		res->flags = acpi_dev_memresource_flags(len,
+-					ext_addr->info.mem.write_protect,
+-					window);
++		acpi_dev_memresource_flags(res,
++					   ext_addr->address.address_length,
++					   ext_addr->info.mem.write_protect,
++					   window);
  		break;
- 	default:
-+		res->flags = 0;
- 		return false;
- 	}
- 
+ 	case ACPI_IO_RANGE:
+ 		io_decode = ext_addr->address.granularity == 0xfff ?
 -- 
 1.7.10.4
 
