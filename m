@@ -1,104 +1,97 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <54D84456.8050509@amd.com>
-Date: Mon, 9 Feb 2015 13:23:34 +0800
-From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from p01c12o144.mxlogic.net ([208.65.145.67]:47137 "EHLO
+	p01c12o144.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753696AbbBBPix convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 10:38:53 -0500
+From: "Richardson, Charlotte" <Charlotte.Richardson@stratus.com>
+To: "'Bjorn Helgaas'" <bhelgaas@google.com>
+CC: "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+	"'stable@vger.kernel.org'" <stable@vger.kernel.org>,
+	"Lawrence, Joe" <Joe.Lawrence@stratus.com>,
+	"'myron.stowe@redhat.com'" <myron.stowe@redhat.com>
+Subject: RE: [PATCH] PCI: Add NEC ftServer variants to PCIe DMI check
+Date: Mon, 2 Feb 2015 15:38:12 +0000
+Message-ID: <48F2A65D5838B34AA5C81AB195ED2D5F93248CB9@EXHQ1.corp.stratus.com>
+References: <48F2A65D5838B34AA5C81AB195ED2D5F932489A2@EXHQ1.corp.stratus.com>
+ <20150202153727.GA5176@google.com>
+In-Reply-To: <20150202153727.GA5176@google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Murali Karicheri <m-karicheri2@ti.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Will Deacon" <will.deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>
-Subject: Re: [PATCH v6 0/7] PCI: get DMA configuration from parent device
-References: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sorry for delay response. I have also tested this on AMD Seattle 
-platform w/ PCI Generic Host Controller, and I can see that the PCI 
-endpoint devices are getting proper dma_map_ops as set in the host bridge.
+Thanks!
 
-<Tested-by>: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+-----Original Message-----
+From: Bjorn Helgaas [mailto:bhelgaas@google.com] 
+Sent: Monday, February 02, 2015 10:37 AM
+To: Richardson, Charlotte
+Cc: 'linux-pci@vger.kernel.org'; 'stable@vger.kernel.org'; Lawrence, Joe; 'myron.stowe@redhat.com'
+Subject: Re: [PATCH] PCI: Add NEC ftServer variants to PCIe DMI check
 
-Thanks,
-Suravee
+On Fri, Jan 30, 2015 at 07:45:02PM +0000, Richardson, Charlotte wrote:
+> Hi, Myron -
+> 
+> commit 1278998f8ff6 missed the NEC variants of the ftServers.
+> We'll need this in RHEL7/6, but can you shepherd this patch upstream first?
+> Thanks!
+> 
+> /Charlotte
+> 
+> -->8--
+> 
+> From 64a19253432e87b2293d3b8ee323e8b8ac63395d Mon Sep 17 00:00:00 2001
+> From: Charlotte Richardson <charlotte.richardson@stratus.com>
+> Date: Fri, 30 Jan 2015 12:58:31 -0500
+> Subject: [PATCH] PCI: Add NEC ftServer variants to PCIe DMI check.
+> 
+> NEC OEMs the same platforms as Stratus does, which have multiple 
+> devices on some PCIe buses under downstream ports.
+> 
+> Signed-off-by: Charlotte Richardson <charlotte.richardson@stratus.com>
+> Fixes: 1278998f8ff6 ("PCI: Work around Stratus ftServer broken PCIe 
+> hierarchy (fix DMI check)")
+> Cc: <stable@vger.kernel.org>
+> Cc: Myron Stowe <myron.stowe@redhat.com>
 
-On 02/06/2015 05:52 AM, Murali Karicheri wrote:
-> This patch add an important capability to PCI driver on Keystone. I hope to
-> have this merged to the upstream branch so that it is available for v3.20.
-> Also would like thank everyone for the contribution.
->
-> PCI devices on Keystone doesn't have correct dma_pfn_offset set. This patch
-> add capability to set the dma configuration such as dma-mask, dma_pfn_offset,
-> and dma ops etc using the information from DT. The prior RFCs and discussions
-> are available at [1] and [2] below.
->
-> [2] : https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg790244.html
-> [1] : http://www.gossamer-threads.com/lists/linux/kernel/2024591
->
-> Change history:
-> 	v6 - Rebased to v3.19-v7
-> 	   - Addressed some minor comments about node name and DT size validation.
-> 	   - Pulled out 8/8 of v5 and plan to send a patch for enhancing
-> 	     of_dma_configure() to use size to calculate dma mask.
-> 	   - Added Acks from reviewers.
-> 	v5 - moved the dma_mask update in device from ARM specific API to
-> 	     of_dma_configure to allow this across other architecture as well
-> 	   - improved sanity check for DT dma-range size in of_dma_configure()
-> 	   - moved API to get parent bridge device to PCI (host-bridge.c)
-> 	v4 - moved size adjustments in of_iommu_configure() to a separate patch
-> 	   - consistent node name comment from Rob
-> 	   - patch 6 added for dma_mask adjustment and iommu mapping size
-> 	     limiting.
-> 	v3 - addressed comments to re-use of_dma_configure() for PCI
-> 	   - To help re-use, change of_iommu_configure() function argument
-> 		- Move of_dma_configure to of/device.c
-> 		- Limit the of_iommu_configure to non pci devices
-> 	v2 - update size to coherent_dma_mask + 1 if dma-range info is missing
-> 	   - also check the np for null.
-> 	v1 - updates based on the comments against initial RFC.
-> 	   - Added a helper function to get the OF node of the parent
-> 	   - Added an API in of_pci.c to update DMA configuration of the pci
-> 	     device.
->
-> Cc: Joerg Roedel <joro@8bytes.org>
-> Cc: Grant Likely <grant.likely@linaro.org>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Russell King <linux@arm.linux.org.uk>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Acked-by: Murali Karicheri <m-karicheri2@ti.com>
->
-> Murali Karicheri (7):
->    of: iommu: add ptr to OF node arg to of_iommu_configure()
->    of: move of_dma_configure() to device.c to help re-use
->    of: fix size when dma-range is not used
->    PCI: add helper functions pci_get[put]_host_bridge_device()
->    of/pci: add of_pci_dma_configure() update dma configuration
->    PCI: update dma configuration from DT
->    arm: dma-mapping: limit iommu mapping size
->
->   arch/arm/mm/dma-mapping.c |    7 +++++
->   drivers/iommu/of_iommu.c  |   10 ++++--
->   drivers/of/device.c       |   74 +++++++++++++++++++++++++++++++++++++++++++++
->   drivers/of/of_pci.c       |   19 ++++++++++++
->   drivers/of/platform.c     |   58 ++---------------------------------
->   drivers/pci/host-bridge.c |   14 +++++++++
->   drivers/pci/probe.c       |    2 ++
->   include/linux/of_device.h |    2 ++
->   include/linux/of_iommu.h  |    6 ++--
->   include/linux/of_pci.h    |    5 +++
->   include/linux/pci.h       |    3 ++
->   11 files changed, 140 insertions(+), 60 deletions(-)
->
+Applied to for-linus for v3.19, thanks!
+
+> ---
+>  arch/x86/pci/common.c | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
+> 
+> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c index 
+> 7b20bcc..2fb3847 100644
+> --- a/arch/x86/pci/common.c
+> +++ b/arch/x86/pci/common.c
+> @@ -448,6 +448,22 @@ static const struct dmi_system_id pciprobe_dmi_table[] __initconst = {
+>  			DMI_MATCH(DMI_PRODUCT_NAME, "ftServer"),
+>  		},
+>  	},
+> +        {
+> +                .callback = set_scan_all,
+> +                .ident = "Stratus/NEC ftServer",
+> +                .matches = {
+> +                        DMI_MATCH(DMI_SYS_VENDOR, "NEC"),
+> +                        DMI_MATCH(DMI_PRODUCT_NAME, "Express5800/R32"),
+> +                },
+> +        },
+> +        {
+> +                .callback = set_scan_all,
+> +                .ident = "Stratus/NEC ftServer",
+> +                .matches = {
+> +                        DMI_MATCH(DMI_SYS_VENDOR, "NEC"),
+> +                        DMI_MATCH(DMI_PRODUCT_NAME, "Express5800/R31"),
+> +                },
+> +        },
+>  	{}
+>  };
+>  
+> --
+> 1.8.3.1
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" 
+> in the body of a message to majordomo@vger.kernel.org More majordomo 
+> info at  http://vger.kernel.org/majordomo-info.html
