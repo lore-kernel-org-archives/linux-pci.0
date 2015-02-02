@@ -1,65 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:32688 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753214AbbBZAyl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 19:54:41 -0500
-Message-ID: <54EE6EAC.9070607@huawei.com>
-Date: Thu, 26 Feb 2015 08:54:04 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v2 00/30] Refine PCI scan interfaces and make generic
- pci host bridge
-References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com> <20150225230925.GQ6220@google.com>
-In-Reply-To: <20150225230925.GQ6220@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Len Brown <lenb@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [Patch v2 04/23] ACPI: Use the length check for io resources as well
+Date: Mon,  2 Feb 2015 10:42:49 +0800
+Message-Id: <1422844988-13854-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/2/26 7:09, Bjorn Helgaas wrote:
-> On Wed, Jan 21, 2015 at 08:29:55AM +0800, Yijing Wang wrote:
->> v1->v2:
->> 	Split pci_host_bridge_list into a new patch, remove .phb_probe_mode
->> 	and rework powerpc .phb_of_scan_bus() for simpilicty suggested by
->> 	Arnd. Refresh some patch description log, and add a new patch to fix
->> 	build warning in ia64.
->>
->> This series is based on Bjorn's pci-next branch.
-> 
-> Hi Yijing,
-> 
-> Would you mind rebasing this to v4.0-rc1?  It doesn't apply quite cleanly
-> any more.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-OK, I will resend the series based on the v4.0-rc1.
+Also apply length check to IO resources.
 
-Thanks!
-Yijing.
+[Jiang] Remove enforcement that resource starting address must be
+non-zero.
 
-> 
-> Thanks,
->   Bjorn
-> 
-> .
-> 
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/resource.c |   44 +++++++++++++++++++-------------------------
+ 1 file changed, 19 insertions(+), 25 deletions(-)
 
-
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 3e7d9f6eb875..16d291c60277 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -117,31 +117,30 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
+ 
+-static unsigned int acpi_dev_ioresource_flags(u64 start, u64 end, u8 io_decode,
+-					      bool window)
++static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
++				      u8 io_decode, bool window)
+ {
+-	int flags = IORESOURCE_IO;
++	res->flags = IORESOURCE_IO;
+ 
+-	if (io_decode == ACPI_DECODE_16)
+-		flags |= IORESOURCE_IO_16BIT_ADDR;
++	if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
++		res->flags |= IORESOURCE_DISABLED;
+ 
+-	if (start > end || end >= 0x10003)
+-		flags |= IORESOURCE_DISABLED;
++	if (res->end >= 0x10003)
++		res->flags |= IORESOURCE_DISABLED;
+ 
+-	if (window)
+-		flags |= IORESOURCE_WINDOW;
++	if (io_decode == ACPI_DECODE_16)
++		res->flags |= IORESOURCE_IO_16BIT_ADDR;
+ 
+-	return flags;
++	if (window)
++		res->flags |= IORESOURCE_WINDOW;
+ }
+ 
+ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
+ 				    u8 io_decode)
+ {
+-	u64 end = start + len - 1;
+-
+ 	res->start = start;
+-	res->end = end;
+-	res->flags = acpi_dev_ioresource_flags(start, end, io_decode, false);
++	res->end = start + len - 1;
++	acpi_dev_ioresource_flags(res, len, io_decode, false);
+ }
+ 
+ /**
+@@ -161,16 +160,12 @@ bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res)
+ 	switch (ares->type) {
+ 	case ACPI_RESOURCE_TYPE_IO:
+ 		io = &ares->data.io;
+-		if (!io->minimum && !io->address_length)
+-			return false;
+ 		acpi_dev_get_ioresource(res, io->minimum,
+ 					io->address_length,
+ 					io->io_decode);
+ 		break;
+ 	case ACPI_RESOURCE_TYPE_FIXED_IO:
+ 		fixed_io = &ares->data.fixed_io;
+-		if (!fixed_io->address && !fixed_io->address_length)
+-			return false;
+ 		acpi_dev_get_ioresource(res, fixed_io->address,
+ 					fixed_io->address_length,
+ 					ACPI_DECODE_10);
+@@ -178,7 +173,8 @@ bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res)
+ 	default:
+ 		return false;
+ 	}
+-	return true;
++
++	return !(res->flags & IORESOURCE_DISABLED);
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_io);
+ 
+@@ -216,9 +212,8 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+ 	case ACPI_IO_RANGE:
+ 		io_decode = addr.address.granularity == 0xfff ?
+ 				ACPI_DECODE_10 : ACPI_DECODE_16;
+-		res->flags = acpi_dev_ioresource_flags(addr.address.minimum,
+-						       addr.address.maximum,
+-						       io_decode, window);
++		acpi_dev_ioresource_flags(res, addr.address.address_length,
++					  io_decode, window);
+ 		break;
+ 	case ACPI_BUS_NUMBER_RANGE:
+ 		res->flags = IORESOURCE_BUS;
+@@ -266,9 +261,8 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
+ 	case ACPI_IO_RANGE:
+ 		io_decode = ext_addr->address.granularity == 0xfff ?
+ 				ACPI_DECODE_10 : ACPI_DECODE_16;
+-		res->flags = acpi_dev_ioresource_flags(ext_addr->address.minimum,
+-						       ext_addr->address.maximum,
+-						       io_decode, window);
++		acpi_dev_ioresource_flags(res, ext_addr->address.address_length,
++					  io_decode, window);
+ 		break;
+ 	case ACPI_BUS_NUMBER_RANGE:
+ 		res->flags = IORESOURCE_BUS;
 -- 
-Thanks!
-Yijing
+1.7.10.4
 
