@@ -1,161 +1,158 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:47093 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752339AbbBXIei (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:34:38 -0500
-Received: by pabkx10 with SMTP id kx10so34330315pab.13
-        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:34:37 -0800 (PST)
-Subject: [PATCH v12 14/21] powerpc/powernv: Allocate struct pnv_ioda_pe
- iommu_table dynamically
-To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
-	gwshan@linux.vnet.ibm.com
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Date: Tue, 24 Feb 2015 02:34:35 -0600
-Message-ID: <20150224083435.32124.65099.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Len Brown <lenb@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [Patch v2 06/23] ACPI: Unify the parsing of address_space and ext_address_space
+Date: Mon,  2 Feb 2015 10:42:51 +0800
+Message-Id: <1422844988-13854-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
+From: Thomas Gleixner <tglx@linutronix.de>
 
-Current iommu_table of a PE is a static field.  This will have a problem
-when iommu_free_table() is called.
+With the unions in place which let us identify the substructs we can
+use a single parser for address_space and ext_address_space.
 
-Allocate iommu_table dynamically.
-
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/powerpc/include/asm/iommu.h          |    3 +++
- arch/powerpc/platforms/powernv/pci-ioda.c |   26 ++++++++++++++------------
- arch/powerpc/platforms/powernv/pci.h      |    2 +-
- 3 files changed, 18 insertions(+), 13 deletions(-)
+ drivers/acpi/resource.c |   90 ++++++++++++++++++-----------------------------
+ 1 file changed, 34 insertions(+), 56 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/iommu.h b/arch/powerpc/include/asm/iommu.h
-index 9cfa3706a1b8..5574eeb97634 100644
---- a/arch/powerpc/include/asm/iommu.h
-+++ b/arch/powerpc/include/asm/iommu.h
-@@ -78,6 +78,9 @@ struct iommu_table {
- 	struct iommu_group *it_group;
- #endif
- 	void (*set_bypass)(struct iommu_table *tbl, bool enable);
-+#ifdef CONFIG_PPC_POWERNV
-+	void           *data;
-+#endif
- };
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index cdb1a3c4a0b9..99903d196024 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -178,6 +178,35 @@ bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res)
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_io);
  
- /* Pure 2^n version of get_order */
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 58c4fc4ab63c..cd1a56160ded 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -916,6 +916,10 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, int all)
- 		return;
- 	}
- 
-+	pe->tce32_table = kzalloc_node(sizeof(struct iommu_table),
-+			GFP_KERNEL, hose->node);
-+	pe->tce32_table->data = pe;
++static bool acpi_decode_space(struct resource *res,
++			      struct acpi_resource_address *addr,
++			      struct acpi_address64_attribute *attr)
++{
++	u8 iodec = attr->granularity == 0xfff ? ACPI_DECODE_10 : ACPI_DECODE_16;
++	bool window = addr->producer_consumer == ACPI_PRODUCER;
++	bool wp = addr->info.mem.write_protect;
++	u64 len = attr->address_length;
 +
- 	/* Associate it with all child devices */
- 	pnv_ioda_setup_same_PE(bus, pe);
- 
-@@ -1005,7 +1009,7 @@ static void pnv_pci_ioda_dma_dev_setup(struct pnv_phb *phb, struct pci_dev *pdev
- 
- 	pe = &phb->ioda.pe_array[pdn->pe_number];
- 	WARN_ON(get_dma_ops(&pdev->dev) != &dma_iommu_ops);
--	set_iommu_table_base_and_group(&pdev->dev, &pe->tce32_table);
-+	set_iommu_table_base_and_group(&pdev->dev, pe->tce32_table);
- }
- 
- static int pnv_pci_ioda_dma_set_mask(struct pnv_phb *phb,
-@@ -1032,7 +1036,7 @@ static int pnv_pci_ioda_dma_set_mask(struct pnv_phb *phb,
- 	} else {
- 		dev_info(&pdev->dev, "Using 32-bit DMA via iommu\n");
- 		set_dma_ops(&pdev->dev, &dma_iommu_ops);
--		set_iommu_table_base(&pdev->dev, &pe->tce32_table);
-+		set_iommu_table_base(&pdev->dev, pe->tce32_table);
- 	}
- 	*pdev->dev.dma_mask = dma_mask;
- 	return 0;
-@@ -1069,9 +1073,9 @@ static void pnv_ioda_setup_bus_dma(struct pnv_ioda_pe *pe,
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		if (add_to_iommu_group)
- 			set_iommu_table_base_and_group(&dev->dev,
--						       &pe->tce32_table);
-+						       pe->tce32_table);
- 		else
--			set_iommu_table_base(&dev->dev, &pe->tce32_table);
-+			set_iommu_table_base(&dev->dev, pe->tce32_table);
- 
- 		if (dev->subordinate)
- 			pnv_ioda_setup_bus_dma(pe, dev->subordinate,
-@@ -1161,8 +1165,7 @@ static void pnv_pci_ioda2_tce_invalidate(struct pnv_ioda_pe *pe,
- void pnv_pci_ioda_tce_invalidate(struct iommu_table *tbl,
- 				 __be64 *startp, __be64 *endp, bool rm)
++	res->start = attr->minimum;
++	res->end = attr->maximum;
++
++	switch (addr->resource_type) {
++	case ACPI_MEMORY_RANGE:
++		acpi_dev_memresource_flags(res, len, wp, window);
++		break;
++	case ACPI_IO_RANGE:
++		acpi_dev_ioresource_flags(res, len, iodec, window);
++		break;
++	case ACPI_BUS_NUMBER_RANGE:
++		res->flags = IORESOURCE_BUS;
++		break;
++	default:
++		return false;
++	}
++
++	return !(res->flags & IORESOURCE_DISABLED);
++}
++
+ /**
+  * acpi_dev_resource_address_space - Extract ACPI address space information.
+  * @ares: Input ACPI resource object.
+@@ -190,39 +219,13 @@ EXPORT_SYMBOL_GPL(acpi_dev_resource_io);
+ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+ 				     struct resource *res)
  {
--	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
--					      tce32_table);
-+	struct pnv_ioda_pe *pe = tbl->data;
- 	struct pnv_phb *phb = pe->phb;
+-	acpi_status status;
+ 	struct acpi_resource_address64 addr;
+-	bool window;
+-	u8 io_decode;
+-
+-	status = acpi_resource_to_address64(ares, &addr);
+-	if (ACPI_FAILURE(status))
+-		return false;
  
- 	if (phb->type == PNV_PHB_IODA1)
-@@ -1228,7 +1231,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
- 	}
+-	res->start = addr.address.minimum;
+-	res->end = addr.address.maximum;
+-	window = addr.producer_consumer == ACPI_PRODUCER;
+-
+-	switch(addr.resource_type) {
+-	case ACPI_MEMORY_RANGE:
+-		acpi_dev_memresource_flags(res, addr.address.address_length,
+-					   addr.info.mem.write_protect,
+-					   window);
+-		break;
+-	case ACPI_IO_RANGE:
+-		io_decode = addr.address.granularity == 0xfff ?
+-				ACPI_DECODE_10 : ACPI_DECODE_16;
+-		acpi_dev_ioresource_flags(res, addr.address.address_length,
+-					  io_decode, window);
+-		break;
+-	case ACPI_BUS_NUMBER_RANGE:
+-		res->flags = IORESOURCE_BUS;
+-		break;
+-	default:
++	if (ACPI_FAILURE(acpi_resource_to_address64(ares, &addr)))
+ 		return false;
+-	}
  
- 	/* Setup linux iommu table */
--	tbl = &pe->tce32_table;
-+	tbl = pe->tce32_table;
- 	pnv_pci_setup_iommu_table(tbl, addr, TCE32_TABLE_SIZE * segs,
- 				  base << 28, IOMMU_PAGE_SHIFT_4K);
- 
-@@ -1266,8 +1269,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
- 
- static void pnv_pci_ioda2_set_bypass(struct iommu_table *tbl, bool enable)
- {
--	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
--					      tce32_table);
-+	struct pnv_ioda_pe *pe = tbl->data;
- 	uint16_t window_id = (pe->pe_number << 1 ) + 1;
- 	int64_t rc;
- 
-@@ -1312,10 +1314,10 @@ static void pnv_pci_ioda2_setup_bypass_pe(struct pnv_phb *phb,
- 	pe->tce_bypass_base = 1ull << 59;
- 
- 	/* Install set_bypass callback for VFIO */
--	pe->tce32_table.set_bypass = pnv_pci_ioda2_set_bypass;
-+	pe->tce32_table->set_bypass = pnv_pci_ioda2_set_bypass;
- 
- 	/* Enable bypass by default */
--	pnv_pci_ioda2_set_bypass(&pe->tce32_table, true);
-+	pnv_pci_ioda2_set_bypass(pe->tce32_table, true);
+-	return !(res->flags & IORESOURCE_DISABLED);
++	return acpi_decode_space(res, (struct acpi_resource_address *)&addr,
++				 &addr.address);
  }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_address_space);
  
- static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
-@@ -1363,7 +1365,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
- 	}
+@@ -239,39 +242,14 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
+ 					 struct resource *res)
+ {
+ 	struct acpi_resource_extended_address64 *ext_addr;
+-	bool window;
+-	u8 io_decode;
  
- 	/* Setup linux iommu table */
--	tbl = &pe->tce32_table;
-+	tbl = pe->tce32_table;
- 	pnv_pci_setup_iommu_table(tbl, addr, tce_table_size, 0,
- 			IOMMU_PAGE_SHIFT_4K);
+ 	if (ares->type != ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64)
+ 		return false;
  
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index e5b75b298d95..731777734bca 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -53,7 +53,7 @@ struct pnv_ioda_pe {
- 	/* "Base" iommu table, ie, 4K TCEs, 32-bit DMA */
- 	int			tce32_seg;
- 	int			tce32_segcount;
--	struct iommu_table	tce32_table;
-+	struct iommu_table	*tce32_table;
- 	phys_addr_t		tce_inval_reg_phys;
+ 	ext_addr = &ares->data.ext_address64;
  
- 	/* 64-bit TCE bypass region */
+-	res->start = ext_addr->address.minimum;
+-	res->end = ext_addr->address.maximum;
+-	window = ext_addr->producer_consumer == ACPI_PRODUCER;
+-
+-	switch(ext_addr->resource_type) {
+-	case ACPI_MEMORY_RANGE:
+-		acpi_dev_memresource_flags(res,
+-					   ext_addr->address.address_length,
+-					   ext_addr->info.mem.write_protect,
+-					   window);
+-		break;
+-	case ACPI_IO_RANGE:
+-		io_decode = ext_addr->address.granularity == 0xfff ?
+-				ACPI_DECODE_10 : ACPI_DECODE_16;
+-		acpi_dev_ioresource_flags(res, ext_addr->address.address_length,
+-					  io_decode, window);
+-		break;
+-	case ACPI_BUS_NUMBER_RANGE:
+-		res->flags = IORESOURCE_BUS;
+-		break;
+-	default:
+-		return false;
+-	}
+-
+-	return !(res->flags & IORESOURCE_DISABLED);
++	return acpi_decode_space(res, (struct acpi_resource_address *)ext_addr,
++				 &ext_addr->address);
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_ext_address_space);
+ 
+-- 
+1.7.10.4
 
