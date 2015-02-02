@@ -1,97 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f49.google.com ([209.85.216.49]:52269 "EHLO
-	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753114AbbBYUSf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 15:18:35 -0500
-Received: by mail-qa0-f49.google.com with SMTP id w8so4534139qac.8
-        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2015 12:18:34 -0800 (PST)
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:40646 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754363AbbBBQYO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 11:24:14 -0500
+Message-ID: <54CFA49C.50404@arm.com>
+Date: Mon, 02 Feb 2015 16:23:56 +0000
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <20150225185423.GA19236@pd.tnic>
-References: <1424818246-11841-1-git-send-email-linux@rasmusvillemoes.dk> <20150225185423.GA19236@pd.tnic>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 25 Feb 2015 12:18:14 -0800
-Message-ID: <CAErSpo5WwP1z+rzXzEM8_bJ2sq7rixOWiF5CqYYSK32r0sVYuw@mail.gmail.com>
-Subject: Re: [PATCH] PCI/AER: Avoid info leak in __print_tlp_header
-To: Borislav Petkov <bp@suse.de>
-Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Andre Przywara <Andre.Przywara@arm.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>
-Content-Type: text/plain; charset=UTF-8
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Fix pcibios_update_irq misuse of irq number
+References: <1422456683-797-1-git-send-email-marc.zyngier@arm.com> <CAErSpo5=NhPZ5RNbBeGqKuLbKdOyTD1m+ijWM2SzQFWuKLTJfg@mail.gmail.com>
+In-Reply-To: <CAErSpo5=NhPZ5RNbBeGqKuLbKdOyTD1m+ijWM2SzQFWuKLTJfg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Tony]
-
-On Wed, Feb 25, 2015 at 10:54 AM, Borislav Petkov <bp@suse.de> wrote:
-> On Tue, Feb 24, 2015 at 11:50:46PM +0100, Rasmus Villemoes wrote:
->> Commit fab4c256a58b ("PCI/AER: Add a TLP header print helper")
->> introduced the helper function __print_tlp_header, but contrary to the
->> intention, the behaviour did change: Since we're taking the address of
->
-> Whoops, good catch.
->
->> the parameter t, the first 4 or 8 bytes printed will be the value of
->> the pointer t itself, and the remaining 12 or 8 bytes will be
->> who-knows-what (something from the stack).
+On 02/02/15 15:57, Bjorn Helgaas wrote:
+> On Wed, Jan 28, 2015 at 8:51 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+>> pcibios_update_irq writes an irq number into the config space
+>> of a given PCI device, but ignores the fact that this number
+>> is a virtual interrupt number, which might be a very different
+>> value from what the underlying hardware is using.
 >>
->> We want to treat the four members of the struct aer_header_log_regs as
->> little-endian 32 bit numbers and print those. That can be done without
->> ugly and confusing casts.
+>> The obvious fix is to fetch the HW interrupt number from the
+>> corresponding irq_data structure. This is slightly complicated
+>> by the fact that this interrupt might be services by a stacked
+>> domain.
 >>
->> Fixes: fab4c256a58b ("PCI/AER: Add a TLP header print helper")
->> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
->> ---
->>  drivers/pci/pcie/aer/aerdrv_errprint.c | 13 +++----------
->>  1 file changed, 3 insertions(+), 10 deletions(-)
+>> This has been tested on KVM with kvmtool.
 >>
->> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
->> index c6849d9e86ce..e328978038c1 100644
->> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
->> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
->> @@ -132,16 +132,9 @@ static const char *aer_agent_string[] = {
->>  static void __print_tlp_header(struct pci_dev *dev,
->>                              struct aer_header_log_regs *t)
->>  {
->> -     unsigned char *tlp = (unsigned char *)&t;
->> -
->> -     dev_err(&dev->dev, "  TLP Header:"
->> -             " %02x%02x%02x%02x %02x%02x%02x%02x"
->> -             " %02x%02x%02x%02x %02x%02x%02x%02x\n",
->> -             *(tlp + 3), *(tlp + 2), *(tlp + 1), *tlp,
->> -             *(tlp + 7), *(tlp + 6), *(tlp + 5), *(tlp + 4),
->> -             *(tlp + 11), *(tlp + 10), *(tlp + 9),
->> -             *(tlp + 8), *(tlp + 15), *(tlp + 14),
->> -             *(tlp + 13), *(tlp + 12));
->> +     dev_err(&dev->dev, "  TLP Header: %08x %08x %08x %08x\n",
->> +             le32_to_cpu(t->dw0), le32_to_cpu(t->dw1),
->> +             le32_to_cpu(t->dw2), le32_to_cpu(t->dw3));
->
-> I'm not sure about this: I think the original intention was to dump the
-> dwords MS-bit to LS-bit like this here:
->
-> http://www.fpga4fun.com/PCI-Express4.html
->
-> Now, if this runs on a big endian machine, converting to CPU order would
-> be wrong IMHO. You'd rather want do do cpu_to_le32() for consistency.
-> But I don't know whether big endian machines are even sporting PCIE
-> AER...
+>> Reported-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> Tested-by: Andre Przywara <andre.przywara@arm.com>
+>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> 
+> Jiang, are you OK with this patch as-is now, since it isn't used on x86?
+> 
+> Marc, Lorenzo, I assume this actually fixes a bug.  Can we get any
+> more details about what happens when you hit the bug, and how you
+> reproduced it (what platform, driver, etc.)?
 
-I think we should expect AER to be used on big-endian machines.  I'm
-pretty sure it's used on Itanium in big-endian mode.
+It definitely fixes a bug. This has been found by running a KVM guest
+using kvmtool PCI emulation, where the following things happen:
 
-Why are we worrying about byte order here at all?  I'd think we could
-just print t->dw0 directly with %08x.
+- Guest programs a virtual (bogus) interrupt number in the PCI device
+config space (virtio disk in this case)
+- kvmtool uses that interrupt number as is, without any other form of
+validation
+- Either the injection fails (because the interrupt is out of the range
+of the virtual interrupt controller) -> virtio PCI device goes dead
+- or the injection succeeds because this is a valid interrupt number,
+but signals an unrelated peripheral -> virtio PCI device goes dead.
 
-Any byte order issues should be handled when we fill in the struct
-aer_header_log_regs.  For normal AER (non-APEI), we use
-pci_read_config_dword() to directly fill in info->tlp.dw0, etc. in
-get_device_error_info(), so I don't think there's a problem there.
+This can be trivially reproduced on any ARM PCI system that requires
+legacy interrupts (i.e. no MSI support), and that uses a GIC interrupt
+controller. Doing it in a VM is just much more convenient.
 
-For APEI, it looks like it would happen somewhere in
-ghes_read_estatus().  I didn't follow the whole path here, but I would
-argue that by the time we put data in t->dw0, it should be in CPU
-order so a mask like 0x80000000 would work the same on LE and BE
-boxes.
+Hope this helps,
 
-Bjorn
+	M.
+-- 
+Jazz is not dead. It just smells funny...
