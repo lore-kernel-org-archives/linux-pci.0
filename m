@@ -1,42 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:43997 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750712AbbBYNYO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 08:24:14 -0500
-Date: Wed, 25 Feb 2015 16:23:22 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Scott Murray <scott@spiteful.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: [patch] PCI: cpcihp: missing curly braces in cpci_configure_slot()
-Message-ID: <20150225132322.GJ19745@mwanda>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch v2 15/23] ACPI: Add field offset to struct resource_list_entry
+Date: Mon,  2 Feb 2015 10:43:00 +0800
+Message-Id: <1422844988-13854-16-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I don't have this hardware but it looks like we weren't adding bridge
-devices as intended.  Maybe the bridge is always the last device?
+Add field offset to struct resource_list_entry to host address space
+translation offset so it could be used to represent bridge resources.
 
-Fixes: 05b125004815 ('PCI: cpcihp: Iterate over all devices in slot, not functions 0-7')
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/resource.c |    1 +
+ include/linux/acpi.h    |    1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/drivers/pci/hotplug/cpci_hotplug_pci.c b/drivers/pci/hotplug/cpci_hotplug_pci.c
-index 7d48eca..788db48 100644
---- a/drivers/pci/hotplug/cpci_hotplug_pci.c
-+++ b/drivers/pci/hotplug/cpci_hotplug_pci.c
-@@ -286,11 +286,12 @@ int cpci_configure_slot(struct slot *slot)
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 4dc8cfb2e94e..1c3abae6f2fa 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -472,6 +472,7 @@ static acpi_status acpi_dev_new_resource_entry(struct resource_win *win,
+ 		return AE_NO_MEMORY;
  	}
- 	parent = slot->dev->bus;
+ 	rentry->res = win->res;
++	rentry->offset = win->offset;
+ 	list_add_tail(&rentry->node, c->list);
+ 	c->count++;
+ 	return AE_OK;
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index be9eaee8f4ae..21dac3cb62d2 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -303,6 +303,7 @@ bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
+ struct resource_list_entry {
+ 	struct list_head node;
+ 	struct resource res;
++	resource_size_t offset;
+ };
  
--	list_for_each_entry(dev, &parent->devices, bus_list)
-+	list_for_each_entry(dev, &parent->devices, bus_list) {
- 		if (PCI_SLOT(dev->devfn) != PCI_SLOT(slot->devfn))
- 			continue;
- 		if (pci_is_bridge(dev))
- 			pci_hp_add_bridge(dev);
-+	}
- 
- 
- 	pci_assign_unassigned_bridge_resources(parent->self);
+ void acpi_dev_free_resource_list(struct list_head *list);
+-- 
+1.7.10.4
+
