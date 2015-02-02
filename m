@@ -1,241 +1,206 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:35561 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753427AbbCACTY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Feb 2015 21:19:24 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Matt Fleming <matt.fleming@intel.com>,
+Received: from mga01.intel.com ([192.55.52.88]:1320 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932124AbbBBCmO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 1 Feb 2015 21:42:14 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
-	Jiri Kosina <jkosina@suse.cz>, Borislav Petkov <bp@suse.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 8/8] x86, pci: export SETUP_PCI data via sysfs
-Date: Sat, 28 Feb 2015 18:17:39 -0800
-Message-Id: <1425176259-30087-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
-References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v2 21/23] x86/PCI: Refine the way to release PCI IRQ resources
+Date: Mon,  2 Feb 2015 10:43:06 +0800
+Message-Id: <1422844988-13854-22-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So we could let kexec-tools to rebuild SETUP_PCI and pass it to
-second kernel.
-Now kexec-tools only can build SETUP_EFI and SETUP_E820EXT.
+Some PCI device drivers assume that pci_dev->irq won't change after
+calling pci_disable_device() and pci_enable_device() during suspend and
+resume.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Commit c03b3b0738a5 ("x86, irq, mpparse: Release IOAPIC pin when
+PCI device is disabled") frees PCI IRQ resources when pci_disable_device()
+is called and reallocate IRQ resources when pci_enable_device() is
+called again. This breaks above assumption. So commit 3eec595235c1
+("x86, irq, PCI: Keep IRQ assignment for PCI devices during
+suspend/hibernation") and 9eabc99a635a ("x86, irq, PCI: Keep IRQ
+assignment for runtime power management") fix the issue by avoiding
+freeing/reallocating IRQ resources during PCI device suspend/resume.
+They achieve this by checking dev.power.is_prepared and
+dev.power.runtime_status.  PM maintainer, Rafael, then pointed out that
+it's really an ugly fix which leaking PM internal state information to
+IRQ subsystem.
+
+Recently David Vrabel <david.vrabel@citrix.com> also reports an
+regression in pciback driver caused by commit cffe0a2b5a34 ("x86, irq:
+Keep balance of IOAPIC pin reference count"). Please refer to:
+http://lkml.org/lkml/2015/1/14/546
+
+So this patch refine the way to release PCI IRQ resources. Instead of
+releasing PCI IRQ resources in pci_disable_device()/
+pcibios_disable_device(), we now release it at driver unbinding
+notification BUS_NOTIFY_UNBOUND_DRIVER. In other word, we only release
+PCI IRQ resources when there's no driver bound to the PCI device, and
+it keeps the assumption that pci_dev->irq won't through multiple
+invocation of pci_enable_device()/pci_disable_device().
+
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/pci/common.c | 188 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 188 insertions(+)
+ arch/x86/include/asm/pci_x86.h |    2 --
+ arch/x86/pci/common.c          |   30 ++++++++++++++++++++++++++++--
+ arch/x86/pci/intel_mid_pci.c   |    4 ++--
+ arch/x86/pci/irq.c             |   15 +--------------
+ drivers/acpi/pci_irq.c         |    9 +--------
+ 5 files changed, 32 insertions(+), 28 deletions(-)
 
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index 164e3f8d3c3d..fa1195dae425 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -93,8 +93,6 @@ extern raw_spinlock_t pci_config_lock;
+ extern int (*pcibios_enable_irq)(struct pci_dev *dev);
+ extern void (*pcibios_disable_irq)(struct pci_dev *dev);
+ 
+-extern bool mp_should_keep_irq(struct device *dev);
+-
+ struct pci_raw_ops {
+ 	int (*read)(unsigned int domain, unsigned int bus, unsigned int devfn,
+ 						int reg, int len, u32 *val);
 diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 7b6fb94..bf0209a 100644
+index 7b20bccf3648..99f15ed19f38 100644
 --- a/arch/x86/pci/common.c
 +++ b/arch/x86/pci/common.c
-@@ -682,6 +682,8 @@ void __init add_pci(u64 pa_data)
+@@ -497,6 +497,25 @@ void __init pcibios_set_cache_line_size(void)
+ 	}
+ }
  
- struct firmware_setup_pci_entry {
- 	struct list_head list;
-+	struct kobject kobj;
-+	struct bin_attribute *rom_attr;
- 	uint16_t vendor;
- 	uint16_t devid;
- 	uint64_t pcilen;
-@@ -762,6 +764,192 @@ int pcibios_add_device(struct pci_dev *dev)
++static int pci_irq_notifier(struct notifier_block *nb, unsigned long action,
++			    void *data)
++{
++	struct pci_dev *dev = to_pci_dev(data);
++
++	if (action != BUS_NOTIFY_UNBOUND_DRIVER)
++		return NOTIFY_DONE;
++
++	if (pcibios_disable_irq)
++		pcibios_disable_irq(dev);
++
++	return NOTIFY_OK;
++}
++
++static struct notifier_block pci_irq_nb = {
++	.notifier_call = pci_irq_notifier,
++	.priority = INT_MIN,
++};
++
+ int __init pcibios_init(void)
+ {
+ 	if (!raw_pci_ops) {
+@@ -509,6 +528,9 @@ int __init pcibios_init(void)
+ 
+ 	if (pci_bf_sort >= pci_force_bf)
+ 		pci_sort_breadthfirst();
++
++	bus_register_notifier(&pci_bus_type, &pci_irq_nb);
++
  	return 0;
  }
  
-+#ifdef CONFIG_SYSFS
-+static inline struct firmware_setup_pci_entry *
-+to_setup_pci_entry(struct kobject *kobj)
-+{
-+	return container_of(kobj, struct firmware_setup_pci_entry, kobj);
-+}
-+
-+static ssize_t vendor_show(struct firmware_setup_pci_entry *entry, char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "0x%04llx\n",
-+			(unsigned long long)entry->vendor);
-+}
-+
-+static ssize_t devid_show(struct firmware_setup_pci_entry *entry, char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "0x%04llx\n",
-+			(unsigned long long)entry->devid);
-+}
-+
-+static ssize_t pcilen_show(struct firmware_setup_pci_entry *entry, char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "0x%llx\n",
-+			(unsigned long long)entry->pcilen);
-+}
-+
-+static ssize_t segment_show(struct firmware_setup_pci_entry *entry, char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "0x%04llx\n",
-+			(unsigned long long)entry->segment);
-+}
-+
-+static ssize_t bus_show(struct firmware_setup_pci_entry *entry, char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "0x%02llx\n",
-+			(unsigned long long)entry->bus);
-+}
-+
-+static ssize_t device_show(struct firmware_setup_pci_entry *entry, char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "0x%02llx\n",
-+			(unsigned long long)entry->device);
-+}
-+
-+static ssize_t function_show(struct firmware_setup_pci_entry *entry, char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "0x%1llx\n",
-+			(unsigned long long)entry->function);
-+}
-+
-+struct setup_pci_attribute {
-+	struct attribute attr;
-+	ssize_t (*show)(struct firmware_setup_pci_entry *entry, char *buf);
-+};
-+
-+static inline struct setup_pci_attribute *to_setup_pci_attr(
-+							struct attribute *attr)
-+{
-+	return container_of(attr, struct setup_pci_attribute, attr);
-+}
-+
-+static ssize_t setup_pci_attr_show(struct kobject *kobj,
-+				   struct attribute *attr, char *buf)
-+{
-+	struct firmware_setup_pci_entry *entry = to_setup_pci_entry(kobj);
-+	struct setup_pci_attribute *setup_pci_attr = to_setup_pci_attr(attr);
-+
-+	return setup_pci_attr->show(entry, buf);
-+}
-+
-+static struct setup_pci_attribute setup_pci_vendor_attr = __ATTR_RO(vendor);
-+static struct setup_pci_attribute setup_pci_devid_attr = __ATTR_RO(devid);
-+static struct setup_pci_attribute setup_pci_pcilen_attr = __ATTR_RO(pcilen);
-+static struct setup_pci_attribute setup_pci_segment_attr = __ATTR_RO(segment);
-+static struct setup_pci_attribute setup_pci_bus_attr = __ATTR_RO(bus);
-+static struct setup_pci_attribute setup_pci_device_attr = __ATTR_RO(device);
-+static struct setup_pci_attribute setup_pci_function_attr = __ATTR_RO(function);
-+
-+/*
-+ * These are default attributes that are added for every memmap entry.
-+ */
-+static struct attribute *def_attrs[] = {
-+	&setup_pci_vendor_attr.attr,
-+	&setup_pci_devid_attr.attr,
-+	&setup_pci_pcilen_attr.attr,
-+	&setup_pci_segment_attr.attr,
-+	&setup_pci_bus_attr.attr,
-+	&setup_pci_device_attr.attr,
-+	&setup_pci_function_attr.attr,
-+	NULL
-+};
-+
-+static const struct sysfs_ops setup_pci_attr_ops = {
-+	.show = setup_pci_attr_show,
-+};
-+
-+static struct kobj_type __refdata setup_pci_ktype = {
-+	.sysfs_ops      = &setup_pci_attr_ops,
-+	.default_attrs  = def_attrs,
-+};
-+
-+static ssize_t setup_pci_rom_read(struct file *filp, struct kobject *kobj,
-+				  struct bin_attribute *bin_attr, char *buf,
-+				  loff_t off, size_t count)
-+{
-+	struct firmware_setup_pci_entry *entry = to_setup_pci_entry(kobj);
-+
-+	if (off >= entry->pcilen)
-+		count = 0;
-+	else {
-+		unsigned long start_pfn, end_pfn;
-+		void *rom;
-+
-+		if (off + count > entry->pcilen)
-+			count = entry->pcilen - off;
-+
-+		start_pfn = PFN_DOWN(entry->rom + off);
-+		end_pfn = PFN_UP(entry->rom + off + count);
-+		if (pfn_range_is_mapped(start_pfn, end_pfn)) {
-+			rom = phys_to_virt(entry->rom);
-+			memcpy(buf, rom + off, count);
-+		} else {
-+			rom = ioremap(entry->rom + off, count);
-+			if (rom) {
-+				memcpy_fromio(buf, rom, count);
-+				iounmap(rom);
-+			} else
-+				count = 0;
-+		}
-+	}
-+
-+	return count;
-+}
-+
-+static int __init add_sysfs_fw_setup_pci_entry(
-+					struct firmware_setup_pci_entry *entry)
-+{
-+	int retval = 0;
-+	static int setup_pci_entries_nr;
-+	static struct kset *setup_pci_kset;
-+	struct bin_attribute *attr;
-+
-+	kobject_init(&entry->kobj, &setup_pci_ktype);
-+
-+	if (!setup_pci_kset) {
-+		setup_pci_kset = kset_create_and_add("setup_pci", NULL,
-+						     firmware_kobj);
-+		if (!setup_pci_kset)
-+			return -ENOMEM;
-+	}
-+
-+	entry->kobj.kset = setup_pci_kset;
-+	retval = kobject_add(&entry->kobj, NULL, "%d", setup_pci_entries_nr++);
-+	if (retval) {
-+		kobject_put(&entry->kobj);
-+		return retval;
-+	}
-+
-+	attr = kzalloc(sizeof(*attr), GFP_ATOMIC);
-+	if (!attr)
-+		return -ENOMEM;
-+
-+	sysfs_bin_attr_init(attr);
-+	attr->size = entry->pcilen;
-+	attr->attr.name = "rom";
-+	attr->attr.mode = S_IRUSR;
-+	attr->read = setup_pci_rom_read;
-+	retval = sysfs_create_bin_file(&entry->kobj, attr);
-+	if (retval)
-+		kfree(attr);
-+	entry->rom_attr = attr;
-+
-+	return retval;
-+}
-+
-+static int __init firmware_setup_pci_init(void)
-+{
-+	struct firmware_setup_pci_entry *entry;
-+
-+	list_for_each_entry(entry, &setup_pci_entries, list)
-+		add_sysfs_fw_setup_pci_entry(entry);
-+
-+	return 0;
-+}
-+late_initcall(firmware_setup_pci_init);
-+#endif
-+
- int pcibios_enable_device(struct pci_dev *dev, int mask)
+@@ -669,8 +691,12 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 
+ void pcibios_disable_device (struct pci_dev *dev)
  {
- 	int err;
+-	if (!pci_dev_msi_enabled(dev) && pcibios_disable_irq)
+-		pcibios_disable_irq(dev);
++	/*
++	 * Some device drivers assume dev->irq won't change after calling
++	 * pci_disable_device(). So delay releasing of IRQ resource to driver
++	 * unbinding time. Otherwise it will break PM subsystem and drivers
++	 * like xen-pciback etc.
++	 */
+ }
+ 
+ int pci_ext_cfg_avail(void)
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+index 44b9271580b5..95c2471f6819 100644
+--- a/arch/x86/pci/intel_mid_pci.c
++++ b/arch/x86/pci/intel_mid_pci.c
+@@ -234,10 +234,10 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ 
+ static void intel_mid_pci_irq_disable(struct pci_dev *dev)
+ {
+-	if (!mp_should_keep_irq(&dev->dev) && dev->irq_managed &&
+-	    dev->irq > 0) {
++	if (dev->irq_managed && dev->irq > 0) {
+ 		mp_unmap_irq(dev->irq);
+ 		dev->irq_managed = 0;
++		dev->irq = 0;
+ 	}
+ }
+ 
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index 5dc6ca5e1741..e71b3dbd87b8 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -1256,22 +1256,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 	return 0;
+ }
+ 
+-bool mp_should_keep_irq(struct device *dev)
+-{
+-	if (dev->power.is_prepared)
+-		return true;
+-#ifdef CONFIG_PM
+-	if (dev->power.runtime_status == RPM_SUSPENDING)
+-		return true;
+-#endif
+-
+-	return false;
+-}
+-
+ static void pirq_disable_irq(struct pci_dev *dev)
+ {
+-	if (io_apic_assign_pci_irqs && !mp_should_keep_irq(&dev->dev) &&
+-	    dev->irq_managed && dev->irq) {
++	if (io_apic_assign_pci_irqs && dev->irq_managed && dev->irq) {
+ 		mp_unmap_irq(dev->irq);
+ 		dev->irq = 0;
+ 		dev->irq_managed = 0;
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index b1def411c0b8..e7f718d6918a 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -485,14 +485,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	if (!pin || !dev->irq_managed || dev->irq <= 0)
+ 		return;
+ 
+-	/* Keep IOAPIC pin configuration when suspending */
+-	if (dev->dev.power.is_prepared)
+-		return;
+-#ifdef	CONFIG_PM
+-	if (dev->dev.power.runtime_status == RPM_SUSPENDING)
+-		return;
+-#endif
+-
+ 	entry = acpi_pci_irq_lookup(dev, pin);
+ 	if (!entry)
+ 		return;
+@@ -513,5 +505,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	if (gsi >= 0) {
+ 		acpi_unregister_gsi(gsi);
+ 		dev->irq_managed = 0;
++		dev->irq = 0;
+ 	}
+ }
 -- 
-1.8.4.5
+1.7.10.4
 
