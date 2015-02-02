@@ -1,158 +1,69 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from pandora.arm.linux.org.uk ([78.32.30.218]:43283 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753968AbbBBSUR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 13:20:17 -0500
+Date: Mon, 2 Feb 2015 18:20:03 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Len Brown <lenb@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [Patch v2 06/23] ACPI: Unify the parsing of address_space and ext_address_space
-Date: Mon,  2 Feb 2015 10:42:51 +0800
-Message-Id: <1422844988-13854-7-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Andre Przywara <Andre.Przywara@arm.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Fix pcibios_update_irq misuse of irq number
+Message-ID: <20150202182003.GH8656@n2100.arm.linux.org.uk>
+References: <1422456683-797-1-git-send-email-marc.zyngier@arm.com>
+ <20150202163344.GF8656@n2100.arm.linux.org.uk>
+ <54CFBD11.3010004@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54CFBD11.3010004@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+On Mon, Feb 02, 2015 at 06:08:17PM +0000, Marc Zyngier wrote:
+> Hi Russell,
+> 
+> On 02/02/15 16:33, Russell King - ARM Linux wrote:
+> > What your change would mean is that the IRQs currently being programmed
+> >> = 16 would be programmed into with numbers with 16 removed from them.
+> > This means that legacy stuff (eg on the Southbridge which really do signal
+> > via the ISA IRQ controller) end up using the same number range as those
+> > which take PCI specific IRQs.
+> > 
+> > This surely is not sane.
+> 
+> I suppose this is ebsa285? I must confess I don't see how to distinguish
+> the two cases (the GIC case uses a purely virtual number, and the
+> footbridge case uses something that seems to be physical).
 
-With the unions in place which let us identify the substructs we can
-use a single parser for address_space and ext_address_space.
+Yep.
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/resource.c |   90 ++++++++++++++++++-----------------------------
- 1 file changed, 34 insertions(+), 56 deletions(-)
+> A very easy fix would be to entirely contain this change within #ifdef
+> CONFIG_IRQ_DOMAIN_HIERARCHY/#endif, but that doesn't fill me with
+> confidence.
+> 
+> What I don't get is how the hwirq field is set in this case. It probably
+> isn't very useful (as there is no domain lookup), so I would have hoped
+> to see irq == hwirq. Obviously, this is not the case. What am I missing?
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index cdb1a3c4a0b9..99903d196024 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -178,6 +178,35 @@ bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res)
- }
- EXPORT_SYMBOL_GPL(acpi_dev_resource_io);
- 
-+static bool acpi_decode_space(struct resource *res,
-+			      struct acpi_resource_address *addr,
-+			      struct acpi_address64_attribute *attr)
-+{
-+	u8 iodec = attr->granularity == 0xfff ? ACPI_DECODE_10 : ACPI_DECODE_16;
-+	bool window = addr->producer_consumer == ACPI_PRODUCER;
-+	bool wp = addr->info.mem.write_protect;
-+	u64 len = attr->address_length;
-+
-+	res->start = attr->minimum;
-+	res->end = attr->maximum;
-+
-+	switch (addr->resource_type) {
-+	case ACPI_MEMORY_RANGE:
-+		acpi_dev_memresource_flags(res, len, wp, window);
-+		break;
-+	case ACPI_IO_RANGE:
-+		acpi_dev_ioresource_flags(res, len, iodec, window);
-+		break;
-+	case ACPI_BUS_NUMBER_RANGE:
-+		res->flags = IORESOURCE_BUS;
-+		break;
-+	default:
-+		return false;
-+	}
-+
-+	return !(res->flags & IORESOURCE_DISABLED);
-+}
-+
- /**
-  * acpi_dev_resource_address_space - Extract ACPI address space information.
-  * @ares: Input ACPI resource object.
-@@ -190,39 +219,13 @@ EXPORT_SYMBOL_GPL(acpi_dev_resource_io);
- bool acpi_dev_resource_address_space(struct acpi_resource *ares,
- 				     struct resource *res)
- {
--	acpi_status status;
- 	struct acpi_resource_address64 addr;
--	bool window;
--	u8 io_decode;
--
--	status = acpi_resource_to_address64(ares, &addr);
--	if (ACPI_FAILURE(status))
--		return false;
- 
--	res->start = addr.address.minimum;
--	res->end = addr.address.maximum;
--	window = addr.producer_consumer == ACPI_PRODUCER;
--
--	switch(addr.resource_type) {
--	case ACPI_MEMORY_RANGE:
--		acpi_dev_memresource_flags(res, addr.address.address_length,
--					   addr.info.mem.write_protect,
--					   window);
--		break;
--	case ACPI_IO_RANGE:
--		io_decode = addr.address.granularity == 0xfff ?
--				ACPI_DECODE_10 : ACPI_DECODE_16;
--		acpi_dev_ioresource_flags(res, addr.address.address_length,
--					  io_decode, window);
--		break;
--	case ACPI_BUS_NUMBER_RANGE:
--		res->flags = IORESOURCE_BUS;
--		break;
--	default:
-+	if (ACPI_FAILURE(acpi_resource_to_address64(ares, &addr)))
- 		return false;
--	}
- 
--	return !(res->flags & IORESOURCE_DISABLED);
-+	return acpi_decode_space(res, (struct acpi_resource_address *)&addr,
-+				 &addr.address);
- }
- EXPORT_SYMBOL_GPL(acpi_dev_resource_address_space);
- 
-@@ -239,39 +242,14 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
- 					 struct resource *res)
- {
- 	struct acpi_resource_extended_address64 *ext_addr;
--	bool window;
--	u8 io_decode;
- 
- 	if (ares->type != ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64)
- 		return false;
- 
- 	ext_addr = &ares->data.ext_address64;
- 
--	res->start = ext_addr->address.minimum;
--	res->end = ext_addr->address.maximum;
--	window = ext_addr->producer_consumer == ACPI_PRODUCER;
--
--	switch(ext_addr->resource_type) {
--	case ACPI_MEMORY_RANGE:
--		acpi_dev_memresource_flags(res,
--					   ext_addr->address.address_length,
--					   ext_addr->info.mem.write_protect,
--					   window);
--		break;
--	case ACPI_IO_RANGE:
--		io_decode = ext_addr->address.granularity == 0xfff ?
--				ACPI_DECODE_10 : ACPI_DECODE_16;
--		acpi_dev_ioresource_flags(res, ext_addr->address.address_length,
--					  io_decode, window);
--		break;
--	case ACPI_BUS_NUMBER_RANGE:
--		res->flags = IORESOURCE_BUS;
--		break;
--	default:
--		return false;
--	}
--
--	return !(res->flags & IORESOURCE_DISABLED);
-+	return acpi_decode_space(res, (struct acpi_resource_address *)ext_addr,
-+				 &ext_addr->address);
- }
- EXPORT_SYMBOL_GPL(acpi_dev_resource_ext_address_space);
- 
+Well, it depends how this register is to be interpreted.  The PCI specs
+say that it's used to communicate the interrupt line routing information
+from POST to device drivers and operating systems.  "The value in this
+register tells which input of the system interrupt controller(s) the
+device's interrupt pin is connected to."  Note the plural there - which
+imples that any per-interrupt controller numbering scheme is quite
+certainly wrong.
+
+It also implies that there is a known, shared numberspace between POST and
+OS implementations on a platform which is used by PCI devices to describe
+how the PCI interrupts are wired up.
+
 -- 
-1.7.10.4
-
+FTTC broadband for 0.8mile line: currently at 10.5Mbps down 400kbps up
+according to speedtest.net.
