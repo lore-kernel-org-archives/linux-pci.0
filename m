@@ -1,50 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:52627 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755840AbbBPOBi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Feb 2015 09:01:38 -0500
-Date: Mon, 16 Feb 2015 09:01:33 -0500
-From: Simon Horman <horms@verge.net.au>
-To: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
-Cc: bhelgaas@google.com, valentine.barshak@cogentembedded.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: rcar: Add address check of mem_res
-Message-ID: <20150216140133.GB5479@verge.net.au>
-References: <1424051648-7430-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1424051648-7430-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch v2 12/23] ACPI: Enforce stricter checks for address space descriptors
+Date: Mon,  2 Feb 2015 10:42:57 +0800
+Message-Id: <1422844988-13854-13-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 16, 2015 at 10:54:08AM +0900, Nobuhiro Iwamatsu wrote:
-> lower 16 bits of the address, which is managed by mem_res need to be 0.
-> This adds address check of lower 16 bits.
-> 
-> Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+Enforce stricter checks for address space descriptors according to
+ACPI spec.
 
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/resource.c |    9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-> ---
->  v2: Remove to before devm_kzalloc().
-> 
->  drivers/pci/host/pci-rcar-gen2.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-> index d9c042f..e9617d3 100644
-> --- a/drivers/pci/host/pci-rcar-gen2.c
-> +++ b/drivers/pci/host/pci-rcar-gen2.c
-> @@ -346,6 +346,9 @@ static int rcar_pci_probe(struct platform_device *pdev)
->  	if (!mem_res || !mem_res->start)
->  		return -ENODEV;
->  
-> +	if (mem_res->start & 0xFFFF)
-> +		return -EINVAL;
-> +
->  	priv = devm_kzalloc(&pdev->dev,
->  			    sizeof(struct rcar_pci_priv), GFP_KERNEL);
->  	if (!priv)
-> -- 
-> 2.1.3
-> 
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 5bf73a9f26d9..57891a621b96 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -192,6 +192,15 @@ static bool acpi_decode_space(struct resource *res,
+ 	bool wp = addr->info.mem.write_protect;
+ 	u64 len = attr->address_length;
+ 
++	/*
++	 * Filter out invalid descriptor according to ACPI Spec 5.0, section
++	 * 6.4.3.5 Address Space Resource Descriptors.
++	 */
++	if ((addr->min_address_fixed != addr->max_address_fixed && len) ||
++	    (addr->min_address_fixed && addr->max_address_fixed && !len))
++		pr_debug("ACPI: Invalid address space min_addr_fix %d, max_addr_fix %d, len %llx\n",
++			 addr->min_address_fixed, addr->max_address_fixed, len);
++
+ 	res->start = attr->minimum;
+ 	res->end = attr->maximum;
+ 
+-- 
+1.7.10.4
+
