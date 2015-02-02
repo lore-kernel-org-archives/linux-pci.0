@@ -1,93 +1,284 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:47386 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751621AbbBPWht (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Feb 2015 17:37:49 -0500
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 17 Feb 2015 08:37:47 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 11E3E2CE804E
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 09:37:45 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1GMbaDG43974820
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 09:37:45 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1GMbBwq011137
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 09:37:11 +1100
-Date: Tue, 17 Feb 2015 09:36:47 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: cascardo@linux.vnet.ibm.com
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com
-Subject: Re: [PATCH 0/4] Support registering specific reset handler
-Message-ID: <20150216223647.GA5758@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1423803299-22356-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <20150216131427.GA4840@oc0812247204.ltc.br.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150216131427.GA4840@oc0812247204.ltc.br.ibm.com>
+Received: from mga03.intel.com ([134.134.136.65]:26055 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754991AbbBBClP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 1 Feb 2015 21:41:15 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch v2 13/23] ACPI: Return translation offset when parsing ACPI address space resources
+Date: Mon,  2 Feb 2015 10:42:58 +0800
+Message-Id: <1422844988-13854-14-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 16, 2015 at 11:14:27AM -0200, cascardo@linux.vnet.ibm.com wrote:
->On Fri, Feb 13, 2015 at 03:54:55PM +1100, Gavin Shan wrote:
->> VFIO PCI infrastructure depends on pci_reset_function() to do reset on
->> PCI devices so that they would be in clean state when host or guest grabs
->> them. Unfortunately, the function doesn't work (or not well) on some PCI
->> devices that require EEH PE reset.
->> 
->> The patchset extends the quirk for PCI device speicific reset methods to
->> allow dynamically registration. With it, we can translate reset requests
->> for those special PCI devcies to EEH PE reset, which is only avaialble on
->> 64-bits PowerPC platforms.
->> 
->
->Hi, Gavin.
->
->I like your approach overall. That allows us to confine these quirks to
->the platforms where they are relevant. I would make the quirks more
->specific, though, instead of doing them for all IBM and Mellanox
->devices.
->
+Change function acpi_dev_resource_address_space() and
+acpi_dev_resource_ext_address_space() to return address space
+translation offset.
 
-Yeah, we need have more specific vendor/device IDs for PATCH[4/4]. Could
-you please take a look on PATCH[4/4] and then suggest the specific devices
-that requries the platform-dependent reset quirk? Especially the device IDs
-for IBM/Mellanox we need put add quirks for.
+It's based on a patch from Yinghai Lu <yinghai@kernel.org>.
 
->I wonder if we should not have some form of domain reset, where we would
->reset all the devices on the same group, and use that on vfio. Grouping
->the devices would then be made platform-dependent, as well as the reset
->method. On powernv, we would group by IOMMU group and issue a
->fundamental reset.
->
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/resource.c        |   58 ++++++++++++++++++++++------------------
+ drivers/pnp/pnpacpi/rsparser.c |   29 ++++++++++----------
+ include/linux/acpi.h           |    9 +++++--
+ 3 files changed, 54 insertions(+), 42 deletions(-)
 
-I'm assuming "domain reset" is PE reset, which is the specific reset handler
-tries to do on PowerNV platform. The reason why we need platform specific
-reset handler is some adapters can't support function level reset methods
-(except pci_dev_specific_reset()) in __pci_dev_reset().
-
-Thanks,
-Gavin
-
->Cascardo.
->
->> Gavin Shan (4):
->>   PCI: Rename struct pci_dev_reset_methods
->>   PCI: Introduce list for device reset methods
->>   PCI: Allow registering reset method
->>   powerpc/powernv: Register PCI dev specific reset handlers
->> 
->>  arch/powerpc/platforms/powernv/pci.c |  61 +++++++++++++++
->>  drivers/pci/pci.h                    |   3 +-
->>  drivers/pci/quirks.c                 | 139 ++++++++++++++++++++++++++++++-----
->>  include/linux/pci.h                  |   9 +++
->>  4 files changed, 192 insertions(+), 20 deletions(-)
->> 
->> -- 
->> 1.8.3.2
->> 
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 57891a621b96..c902c8eece81 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -184,13 +184,14 @@ bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res)
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_io);
+ 
+-static bool acpi_decode_space(struct resource *res,
++static bool acpi_decode_space(struct resource_win *win,
+ 			      struct acpi_resource_address *addr,
+ 			      struct acpi_address64_attribute *attr)
+ {
+ 	u8 iodec = attr->granularity == 0xfff ? ACPI_DECODE_10 : ACPI_DECODE_16;
+ 	bool wp = addr->info.mem.write_protect;
+ 	u64 len = attr->address_length;
++	struct resource *res = &win->res;
+ 
+ 	/*
+ 	 * Filter out invalid descriptor according to ACPI Spec 5.0, section
+@@ -218,6 +219,8 @@ static bool acpi_decode_space(struct resource *res,
+ 		return false;
+ 	}
+ 
++	win->offset = attr->translation_offset;
++
+ 	if (addr->producer_consumer == ACPI_PRODUCER)
+ 		res->flags |= IORESOURCE_WINDOW;
+ 
+@@ -230,27 +233,28 @@ static bool acpi_decode_space(struct resource *res,
+ /**
+  * acpi_dev_resource_address_space - Extract ACPI address space information.
+  * @ares: Input ACPI resource object.
+- * @res: Output generic resource object.
++ * @win: Output generic resource object.
+  *
+  * Check if the given ACPI resource object represents an address space resource
+  * and if that's the case, use the information in it to populate the generic
+- * resource object pointed to by @res.
++ * resource object pointed to by @win.
+  *
+  * Return:
+- * 1) false with res->flags setting to zero: not the expected resource type
+- * 2) false with IORESOURCE_DISABLED in res->flags: valid unassigned resource
++ * 1) false with win->res.flags setting to zero: not the expected resource type
++ * 2) false with IORESOURCE_DISABLED in win->res.flags: valid unassigned
++ *    resource
+  * 3) true: valid assigned resource
+  */
+ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+-				     struct resource *res)
++				     struct resource_win *win)
+ {
+ 	struct acpi_resource_address64 addr;
+ 
+-	res->flags = 0;
++	win->res.flags = 0;
+ 	if (ACPI_FAILURE(acpi_resource_to_address64(ares, &addr)))
+ 		return false;
+ 
+-	return acpi_decode_space(res, (struct acpi_resource_address *)&addr,
++	return acpi_decode_space(win, (struct acpi_resource_address *)&addr,
+ 				 &addr.address);
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_address_space);
+@@ -258,29 +262,30 @@ EXPORT_SYMBOL_GPL(acpi_dev_resource_address_space);
+ /**
+  * acpi_dev_resource_ext_address_space - Extract ACPI address space information.
+  * @ares: Input ACPI resource object.
+- * @res: Output generic resource object.
++ * @win: Output generic resource object.
+  *
+  * Check if the given ACPI resource object represents an extended address space
+  * resource and if that's the case, use the information in it to populate the
+- * generic resource object pointed to by @res.
++ * generic resource object pointed to by @win.
+  *
+  * Return:
+- * 1) false with res->flags setting to zero: not the expected resource type
+- * 2) false with IORESOURCE_DISABLED in res->flags: valid unassigned resource
++ * 1) false with win->res.flags setting to zero: not the expected resource type
++ * 2) false with IORESOURCE_DISABLED in win->res.flags: valid unassigned
++ *    resource
+  * 3) true: valid assigned resource
+  */
+ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
+-					 struct resource *res)
++					 struct resource_win *win)
+ {
+ 	struct acpi_resource_extended_address64 *ext_addr;
+ 
+-	res->flags = 0;
++	win->res.flags = 0;
+ 	if (ares->type != ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64)
+ 		return false;
+ 
+ 	ext_addr = &ares->data.ext_address64;
+ 
+-	return acpi_decode_space(res, (struct acpi_resource_address *)ext_addr,
++	return acpi_decode_space(win, (struct acpi_resource_address *)ext_addr,
+ 				 &ext_addr->address);
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_ext_address_space);
+@@ -441,7 +446,7 @@ struct res_proc_context {
+ 	int error;
+ };
+ 
+-static acpi_status acpi_dev_new_resource_entry(struct resource *r,
++static acpi_status acpi_dev_new_resource_entry(struct resource_win *win,
+ 					       struct res_proc_context *c)
+ {
+ 	struct resource_list_entry *rentry;
+@@ -451,7 +456,7 @@ static acpi_status acpi_dev_new_resource_entry(struct resource *r,
+ 		c->error = -ENOMEM;
+ 		return AE_NO_MEMORY;
+ 	}
+-	rentry->res = *r;
++	rentry->res = win->res;
+ 	list_add_tail(&rentry->node, c->list);
+ 	c->count++;
+ 	return AE_OK;
+@@ -461,7 +466,8 @@ static acpi_status acpi_dev_process_resource(struct acpi_resource *ares,
+ 					     void *context)
+ {
+ 	struct res_proc_context *c = context;
+-	struct resource r;
++	struct resource_win win;
++	struct resource *res = &win.res;
+ 	int i;
+ 
+ 	if (c->preproc) {
+@@ -476,18 +482,18 @@ static acpi_status acpi_dev_process_resource(struct acpi_resource *ares,
+ 		}
+ 	}
+ 
+-	memset(&r, 0, sizeof(r));
++	memset(&win, 0, sizeof(win));
+ 
+-	if (acpi_dev_resource_memory(ares, &r)
+-	    || acpi_dev_resource_io(ares, &r)
+-	    || acpi_dev_resource_address_space(ares, &r)
+-	    || acpi_dev_resource_ext_address_space(ares, &r))
+-		return acpi_dev_new_resource_entry(&r, c);
++	if (acpi_dev_resource_memory(ares, res)
++	    || acpi_dev_resource_io(ares, res)
++	    || acpi_dev_resource_address_space(ares, &win)
++	    || acpi_dev_resource_ext_address_space(ares, &win))
++		return acpi_dev_new_resource_entry(&win, c);
+ 
+-	for (i = 0; acpi_dev_resource_interrupt(ares, i, &r); i++) {
++	for (i = 0; acpi_dev_resource_interrupt(ares, i, res); i++) {
+ 		acpi_status status;
+ 
+-		status = acpi_dev_new_resource_entry(&r, c);
++		status = acpi_dev_new_resource_entry(&win, c);
+ 		if (ACPI_FAILURE(status))
+ 			return status;
+ 	}
+diff --git a/drivers/pnp/pnpacpi/rsparser.c b/drivers/pnp/pnpacpi/rsparser.c
+index 2d9bc789af0f..ff0356fb378f 100644
+--- a/drivers/pnp/pnpacpi/rsparser.c
++++ b/drivers/pnp/pnpacpi/rsparser.c
+@@ -180,20 +180,21 @@ static acpi_status pnpacpi_allocated_resource(struct acpi_resource *res,
+ 	struct pnp_dev *dev = data;
+ 	struct acpi_resource_dma *dma;
+ 	struct acpi_resource_vendor_typed *vendor_typed;
+-	struct resource r = {0};
++	struct resource_win win = {{0}, 0};
++	struct resource *r = &win.res;
+ 	int i, flags;
+ 
+-	if (acpi_dev_resource_address_space(res, &r)
+-	    || acpi_dev_resource_ext_address_space(res, &r)) {
+-		pnp_add_resource(dev, &r);
++	if (acpi_dev_resource_address_space(res, &win)
++	    || acpi_dev_resource_ext_address_space(res, &win)) {
++		pnp_add_resource(dev, &win.res);
+ 		return AE_OK;
+ 	}
+ 
+-	r.flags = 0;
+-	if (acpi_dev_resource_interrupt(res, 0, &r)) {
+-		pnpacpi_add_irqresource(dev, &r);
+-		for (i = 1; acpi_dev_resource_interrupt(res, i, &r); i++)
+-			pnpacpi_add_irqresource(dev, &r);
++	r->flags = 0;
++	if (acpi_dev_resource_interrupt(res, 0, r)) {
++		pnpacpi_add_irqresource(dev, r);
++		for (i = 1; acpi_dev_resource_interrupt(res, i, r); i++)
++			pnpacpi_add_irqresource(dev, r);
+ 
+ 		if (i > 1) {
+ 			/*
+@@ -209,7 +210,7 @@ static acpi_status pnpacpi_allocated_resource(struct acpi_resource *res,
+ 			}
+ 		}
+ 		return AE_OK;
+-	} else if (r.flags & IORESOURCE_DISABLED) {
++	} else if (r->flags & IORESOURCE_DISABLED) {
+ 		pnp_add_irq_resource(dev, 0, IORESOURCE_DISABLED);
+ 		return AE_OK;
+ 	}
+@@ -218,13 +219,13 @@ static acpi_status pnpacpi_allocated_resource(struct acpi_resource *res,
+ 	case ACPI_RESOURCE_TYPE_MEMORY24:
+ 	case ACPI_RESOURCE_TYPE_MEMORY32:
+ 	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
+-		if (acpi_dev_resource_memory(res, &r))
+-			pnp_add_resource(dev, &r);
++		if (acpi_dev_resource_memory(res, r))
++			pnp_add_resource(dev, r);
+ 		break;
+ 	case ACPI_RESOURCE_TYPE_IO:
+ 	case ACPI_RESOURCE_TYPE_FIXED_IO:
+-		if (acpi_dev_resource_io(res, &r))
+-			pnp_add_resource(dev, &r);
++		if (acpi_dev_resource_io(res, r))
++			pnp_add_resource(dev, r);
+ 		break;
+ 	case ACPI_RESOURCE_TYPE_DMA:
+ 		dma = &res->data.dma;
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index d459cd17b477..be9eaee8f4ae 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -285,12 +285,17 @@ extern int pnpacpi_disabled;
+ 
+ #define PXM_INVAL	(-1)
+ 
++struct resource_win {
++	struct resource res;
++	resource_size_t offset;
++};
++
+ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res);
+ bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res);
+ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+-				     struct resource *res);
++				     struct resource_win *win);
+ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
+-					 struct resource *res);
++					 struct resource_win *win);
+ unsigned long acpi_dev_irq_flags(u8 triggering, u8 polarity, u8 shareable);
+ bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
+ 				 struct resource *res);
+-- 
+1.7.10.4
 
