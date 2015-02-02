@@ -1,97 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from p01c12o144.mxlogic.net ([208.65.145.67]:47137 "EHLO
-	p01c12o144.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753696AbbBBPix convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 10:38:53 -0500
-From: "Richardson, Charlotte" <Charlotte.Richardson@stratus.com>
-To: "'Bjorn Helgaas'" <bhelgaas@google.com>
-CC: "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-	"'stable@vger.kernel.org'" <stable@vger.kernel.org>,
-	"Lawrence, Joe" <Joe.Lawrence@stratus.com>,
-	"'myron.stowe@redhat.com'" <myron.stowe@redhat.com>
-Subject: RE: [PATCH] PCI: Add NEC ftServer variants to PCIe DMI check
-Date: Mon, 2 Feb 2015 15:38:12 +0000
-Message-ID: <48F2A65D5838B34AA5C81AB195ED2D5F93248CB9@EXHQ1.corp.stratus.com>
-References: <48F2A65D5838B34AA5C81AB195ED2D5F932489A2@EXHQ1.corp.stratus.com>
- <20150202153727.GA5176@google.com>
-In-Reply-To: <20150202153727.GA5176@google.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from lvps176-28-13-145.dedicated.hosteurope.de ([176.28.13.145]:53479
+	"EHLO lvps176-28-13-145.dedicated.hosteurope.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753370AbbBBLfu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 06:35:50 -0500
+From: Tim Sander <tim@krieglstein.org>
+To: linux-kernel@vger.kernel.org
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: [PATCH] 3.19-rc7: add quirk for 1c28:0122 (rev 14) SATA controller
+Date: Mon, 02 Feb 2015 12:29:37 +0100
+Message-ID: <1561014.NTLJeH8lPH@dabox>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks!
 
------Original Message-----
-From: Bjorn Helgaas [mailto:bhelgaas@google.com] 
-Sent: Monday, February 02, 2015 10:37 AM
-To: Richardson, Charlotte
-Cc: 'linux-pci@vger.kernel.org'; 'stable@vger.kernel.org'; Lawrence, Joe; 'myron.stowe@redhat.com'
-Subject: Re: [PATCH] PCI: Add NEC ftServer variants to PCIe DMI check
+The long name for this device is
+Lite-On IT Corp. / Plextor M6e PCI Express SSD [Marvell 88SS9183] (rev 14)
 
-On Fri, Jan 30, 2015 at 07:45:02PM +0000, Richardson, Charlotte wrote:
-> Hi, Myron -
-> 
-> commit 1278998f8ff6 missed the NEC variants of the ftServers.
-> We'll need this in RHEL7/6, but can you shepherd this patch upstream first?
-> Thanks!
-> 
-> /Charlotte
-> 
-> -->8--
-> 
-> From 64a19253432e87b2293d3b8ee323e8b8ac63395d Mon Sep 17 00:00:00 2001
-> From: Charlotte Richardson <charlotte.richardson@stratus.com>
-> Date: Fri, 30 Jan 2015 12:58:31 -0500
-> Subject: [PATCH] PCI: Add NEC ftServer variants to PCIe DMI check.
-> 
-> NEC OEMs the same platforms as Stratus does, which have multiple 
-> devices on some PCIe buses under downstream ports.
-> 
-> Signed-off-by: Charlotte Richardson <charlotte.richardson@stratus.com>
-> Fixes: 1278998f8ff6 ("PCI: Work around Stratus ftServer broken PCIe 
-> hierarchy (fix DMI check)")
-> Cc: <stable@vger.kernel.org>
-> Cc: Myron Stowe <myron.stowe@redhat.com>
+Background: the error description on bugzilla
+https://bugzilla.kernel.org/show_bug.cgi?id=42679
+inspired me to check if my brand new m4 pci ssd could work with a quirk.
+Its device representation is not visible before this patch.
+After this patch it appears as a normal device. Formatting
+and mounting worked so far.
 
-Applied to for-linus for v3.19, thanks!
+Signed-off-by: Tim Sander <tim@krieglstein.org>
+---
+ drivers/pci/quirks.c    | 4 ++++
+ include/linux/pci_ids.h | 3 +++
+ 2 files changed, 7 insertions(+)
 
-> ---
->  arch/x86/pci/common.c | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
-> 
-> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c index 
-> 7b20bcc..2fb3847 100644
-> --- a/arch/x86/pci/common.c
-> +++ b/arch/x86/pci/common.c
-> @@ -448,6 +448,22 @@ static const struct dmi_system_id pciprobe_dmi_table[] __initconst = {
->  			DMI_MATCH(DMI_PRODUCT_NAME, "ftServer"),
->  		},
->  	},
-> +        {
-> +                .callback = set_scan_all,
-> +                .ident = "Stratus/NEC ftServer",
-> +                .matches = {
-> +                        DMI_MATCH(DMI_SYS_VENDOR, "NEC"),
-> +                        DMI_MATCH(DMI_PRODUCT_NAME, "Express5800/R32"),
-> +                },
-> +        },
-> +        {
-> +                .callback = set_scan_all,
-> +                .ident = "Stratus/NEC ftServer",
-> +                .matches = {
-> +                        DMI_MATCH(DMI_SYS_VENDOR, "NEC"),
-> +                        DMI_MATCH(DMI_PRODUCT_NAME, "Express5800/R31"),
-> +                },
-> +        },
->  	{}
->  };
->  
-> --
-> 1.8.3.1
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" 
-> in the body of a message to majordomo@vger.kernel.org More majordomo 
-> info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index e52356a..fad7383 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3540,6 +3540,10 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TTI, 0x0642,
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_JMICRON,
+                         PCI_DEVICE_ID_JMICRON_JMB388_ESD,
+                         quirk_dma_func1_alias);
++/* https://bugzilla.kernel.org/show_bug.cgi?id=42679 */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LITE_ON,
++                        PCI_DEVICE_ID_PLEXTOR_M6E,
++                        quirk_dma_func1_alias);
+ 
+ /*
+  * A few PCIe-to-PCI bridges fail to expose a PCIe capability, resulting in
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index e63c02a..1607b20 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2487,6 +2487,9 @@
+ 
+ #define PCI_VENDOR_ID_ASMEDIA          0x1b21
+ 
++#define PCI_VENDOR_ID_LITE_ON          0x1c28
++#define PCI_DEVICE_ID_PLEXTOR_M6E      0x0122
++
+ #define PCI_VENDOR_ID_CIRCUITCO                0x1cc8
+ #define PCI_SUBSYSTEM_ID_CIRCUITCO_MINNOWBOARD 0x0001
+ 
+-- 
+1.9.1
+
+
