@@ -1,66 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:34113 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752425AbbCACkk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Feb 2015 21:40:40 -0500
-MIME-Version: 1.0
-In-Reply-To: <1425176259-30087-2-git-send-email-yinghai@kernel.org>
-References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
-	<1425176259-30087-2-git-send-email-yinghai@kernel.org>
-Date: Sat, 28 Feb 2015 18:40:39 -0800
-Message-ID: <CAE9FiQXE5YnSQAkkAxob38Qe+aHZ=niAXL6uLF5650KQPfjPPw@mail.gmail.com>
-Subject: Re: [PATCH 1/8] x86, kaslr: get kaslr_enabled back correctly
-From: Yinghai Lu <yinghai@kernel.org>
-To: Matt Fleming <matt.fleming@intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
-	Jiri Kosina <jkosina@suse.cz>, Borislav Petkov <bp@suse.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:40526 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932102AbbBBMSz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 07:18:55 -0500
+Date: Mon, 2 Feb 2015 12:18:43 +0000
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Robin Murphy <Robin.Murphy@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Joerg Roedel <joro@8bytes.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v4 3/6] of: fix size when dma-range is not used
+Message-ID: <20150202121843.GD22661@e104818-lin.cambridge.arm.com>
+References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
+ <1422052359-12384-4-git-send-email-m-karicheri2@ti.com>
+ <54C77616.80301@arm.com>
+ <54C7DF13.20402@ti.com>
+ <20150128110523.GC6646@e104818-lin.cambridge.arm.com>
+ <54C9068D.8050701@arm.com>
+ <20150128173048.GE31752@e104818-lin.cambridge.arm.com>
+ <54CBC823.3020905@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54CBC823.3020905@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Feb 28, 2015 at 6:17 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> We should access variable with referrence instead of using physical
-> address as value.
->
-> Cc: Matt Fleming <matt.fleming@intel.com>
-> Cc: Borislav Petkov <bp@suse.de>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  arch/x86/kernel/setup.c | 8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
->
-> diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-> index 98dc931..05d444f 100644
-> --- a/arch/x86/kernel/setup.c
-> +++ b/arch/x86/kernel/setup.c
-> @@ -429,7 +429,13 @@ static void __init reserve_initrd(void)
->
->  static void __init parse_kaslr_setup(u64 pa_data, u32 data_len)
->  {
-> -       kaslr_enabled = (bool)(pa_data + sizeof(struct setup_data));
-> +       /* kaslr_setup_data is defined in aslr.c */
-> +       unsigned char *data;
-> +       unsigned long offset = sizeof(struct setup_data);
-> +
-> +       data = early_memremap(pa_data, offset + 1);
-> +       kaslr_enabled = *(data + offset);
-> +       early_memunmap(data, offset + 1);
->  }
->
->  static void __init parse_setup_data(void)
-> --
+On Fri, Jan 30, 2015 at 06:06:27PM +0000, Murali Karicheri wrote:
+> On 01/28/2015 12:30 PM, Catalin Marinas wrote:
+> > I think we can remove this check altogether (we leaved without it for a
+> > while) but we need to add 1 when calculating the mask:
+> >
+> > 	dev->coherent_dma_mask = min(DMA_BIT_MASK(32),
+> > 				     DMA_BIT_MASK(ilog2(size + 1)));
+> >
+> For Keystone, the dma_addr is to be taken care as well to determine the 
+> mask. The above will not work.
 
-oh, no. the offending commit already got into linus tree.
+This was discussed before (not on this thread) and dma_addr should not
+affect the mask, it only affects the pfn offset.
 
-commit f47233c2d34f243ecdaac179c3408a39ff9216a7
-Author: Jiri Kosina <jkosina@suse.cz>
-Date:   Fri Feb 13 16:04:55 2015 +0100
+> Based on the discussion so far, this is the function I have come up with 
+> incorporating the suggestions. Please review this and see if I have 
+> missed out any. This works fine on Keystone.
+> 
+> void of_dma_configure(struct device *dev, struct device_node *np)
+> {
+> 	u64 dma_addr = 0, paddr, size;
+> 	int ret;
+> 	bool coherent;
+> 	unsigned long offset = 0;
+> 	struct iommu_ops *iommu;
+> 
+> 	/*
+> 	 * Set default size to cover the 32-bit. Drivers are expected to setup
+> 	 * the correct size and dma_mask.
+>    	 */
+> 	size = 1ULL << 32;
+> 
+> 	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
+> 	if (!ret) {
+> 		offset = PFN_DOWN(paddr - dma_addr);
+> 		if (!size) {
+> 			dev_err(dev, "Invalid size (%llx)\n",
+> 				size);
+> 			return;
+> 		}
+> 		if (size & 1) {
+> 			size = size + 1;
+> 			dev_warn(dev, "Incorrect usage of size (%llx)\n",
+> 				 size);
+> 		}
+> 		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+> 	}
+> 	dev->dma_pfn_offset = offset;
+> 
+> 	/*
+> 	 * Coherent DMA masks larger than 32-bit must be explicitly set by the
+> 	 * driver.
+> 	 */
+> 	dev->coherent_dma_mask = min(DMA_BIT_MASK(32),
+> 				     DMA_BIT_MASK(ilog2(dma_addr + size)));
 
-    x86/mm/ASLR: Propagate base load address calculation
+That's not correct, coherent_dma_mask should still be calculated solely
+based on size, not dma_addr.
+
+Functions like swiotlb_dma_supported() use phys_to_dma() which on ARM
+(32-bit) subtracts the dma_pfn_offset, so the mask based on size works
+fine.
+
+In the arm64 tree, we haven't taken dma_pfn_offset into account for
+phys_to_dma() yet but if needed for a SoC, we'll add it.
+
+-- 
+Catalin
