@@ -1,66 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ns.mm-sol.com ([37.157.136.199]:40502 "EHLO extserv.mm-sol.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753862AbbBTKGl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 20 Feb 2015 05:06:41 -0500
-Message-ID: <54E7072C.30303@mm-sol.com>
-Date: Fri, 20 Feb 2015 12:06:36 +0200
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:45604 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932238AbbBBPhe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 10:37:34 -0500
+Received: by mail-ob0-f180.google.com with SMTP id vb8so17044964obc.11
+        for <linux-pci@vger.kernel.org>; Mon, 02 Feb 2015 07:37:34 -0800 (PST)
+Date: Mon, 2 Feb 2015 09:37:27 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: "Richardson, Charlotte" <Charlotte.Richardson@stratus.com>
+Cc: "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+	"'stable@vger.kernel.org'" <stable@vger.kernel.org>,
+	"Lawrence, Joe" <Joe.Lawrence@stratus.com>,
+	"'myron.stowe@redhat.com'" <myron.stowe@redhat.com>
+Subject: Re: [PATCH] PCI: Add NEC ftServer variants to PCIe DMI check
+Message-ID: <20150202153727.GA5176@google.com>
+References: <48F2A65D5838B34AA5C81AB195ED2D5F932489A2@EXHQ1.corp.stratus.com>
 MIME-Version: 1.0
-To: "Matwey V. Kornilov" <matwey@sai.msu.ru>
-CC: mohit.kumar@st.com, viresh.kumar@linaro.org,
-	linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	bhelgaas@google.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] pci: spear: Drop __initdata from spear13xx_pcie_driver
-References: <1424367708-17149-1-git-send-email-matwey@sai.msu.ru>
-In-Reply-To: <1424367708-17149-1-git-send-email-matwey@sai.msu.ru>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <48F2A65D5838B34AA5C81AB195ED2D5F932489A2@EXHQ1.corp.stratus.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/19/2015 07:41 PM, Matwey V. Kornilov wrote:
-> spear13xx_pcie_driver.driver is allocated in text.init section
-> and then the pointer to it is passed futher. This patch is to avoid
-> crashes like the following, when freed memory is used.
+On Fri, Jan 30, 2015 at 07:45:02PM +0000, Richardson, Charlotte wrote:
+> Hi, Myron -
 > 
-> Also, __init has been dropped from the probe() function referred from the struct
-> and all called functions.
+> commit 1278998f8ff6 missed the NEC variants of the ftServers.
+> We'll need this in RHEL7/6, but can you shepherd this patch upstream first?
+> Thanks!
 > 
+> /Charlotte
+> 
+> -->8--
+> 
+> From 64a19253432e87b2293d3b8ee323e8b8ac63395d Mon Sep 17 00:00:00 2001
+> From: Charlotte Richardson <charlotte.richardson@stratus.com>
+> Date: Fri, 30 Jan 2015 12:58:31 -0500
+> Subject: [PATCH] PCI: Add NEC ftServer variants to PCIe DMI check.
+> 
+> NEC OEMs the same platforms as Stratus does, which have multiple
+> devices on some PCIe buses under downstream ports.
+> 
+> Signed-off-by: Charlotte Richardson <charlotte.richardson@stratus.com>
+> Fixes: 1278998f8ff6 ("PCI: Work around Stratus ftServer broken PCIe hierarchy (fix DMI check)")
+> Cc: <stable@vger.kernel.org>
+> Cc: Myron Stowe <myron.stowe@redhat.com>
 
-<snip>
+Applied to for-linus for v3.19, thanks!
 
-> 
-> Signed-off-by: Matwey V. Kornilov <matwey@sai.msu.ru>
 > ---
-> Changes from v2:
->  - Drop __init from all probing functions to allow deferred probing.
-> Changes from v1:
->  - Use platform_driver_probe instead of platform_driver_register to make linker happy.
+>  arch/x86/pci/common.c | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
 > 
->  drivers/pci/host/pcie-designware.c | 2 +-
->  drivers/pci/host/pcie-spear13xx.c  | 6 +++---
->  2 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index df781cd..5b8a056 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -339,7 +339,7 @@ static const struct irq_domain_ops msi_domain_ops = {
->  	.map = dw_pcie_msi_map,
+> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+> index 7b20bcc..2fb3847 100644
+> --- a/arch/x86/pci/common.c
+> +++ b/arch/x86/pci/common.c
+> @@ -448,6 +448,22 @@ static const struct dmi_system_id pciprobe_dmi_table[] __initconst = {
+>  			DMI_MATCH(DMI_PRODUCT_NAME, "ftServer"),
+>  		},
+>  	},
+> +        {
+> +                .callback = set_scan_all,
+> +                .ident = "Stratus/NEC ftServer",
+> +                .matches = {
+> +                        DMI_MATCH(DMI_SYS_VENDOR, "NEC"),
+> +                        DMI_MATCH(DMI_PRODUCT_NAME, "Express5800/R32"),
+> +                },
+> +        },
+> +        {
+> +                .callback = set_scan_all,
+> +                .ident = "Stratus/NEC ftServer",
+> +                .matches = {
+> +                        DMI_MATCH(DMI_SYS_VENDOR, "NEC"),
+> +                        DMI_MATCH(DMI_PRODUCT_NAME, "Express5800/R31"),
+> +                },
+> +        },
+>  	{}
 >  };
 >  
-> -int __init dw_pcie_host_init(struct pcie_port *pp)
-> +int dw_pcie_host_init(struct pcie_port *pp)
->  {
-
-we need to fix up the other pci drivers which use dw_pcie_host_init(), too.
-
-pci-exynos, pci-imx6, pci-keystone and pci-layerscape.
-
-Could you prepare a patch with above drivers included?
-
-<snip>
-
--- 
-regards,
-Stan
+> -- 
+> 1.8.3.1
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
