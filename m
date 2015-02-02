@@ -1,57 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:52338 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752199AbbBYQKw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 11:10:52 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: Re: [PATCH v6 6/7] PCI: update dma configuration from DT
-Date: Wed, 25 Feb 2015 17:09:41 +0100
-Message-ID: <4781283.CC9oFpsHLJ@wuerfel>
-In-Reply-To: <54EDF236.40101@ti.com>
-References: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com> <20150225015317.GO6220@google.com> <54EDF236.40101@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga03.intel.com ([134.134.136.65]:11954 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754880AbbBBCk5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 1 Feb 2015 21:40:57 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Len Brown <lenb@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [Patch v2 08/23] ACPI: Add prefetch decoding to the address space parser
+Date: Mon,  2 Feb 2015 10:42:53 +0800
+Message-Id: <1422844988-13854-9-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 25 February 2015 11:03:02 Murali Karicheri wrote:
-> 
-> > (I don't know exactly how these patches all fit together, so that's
-> > probably not accurate, but that's the *sort* of thing I'd like to include.)
-> >
-> > If that actually *is* what's going on, I have to wonder why this isn't
-> > implemented as a very simple IOMMU instead of adding dma_pfn_offset,
-> > which is present on all arches but only used on ARM.  In some sense that
-> > offset is parallel but incompatible with an IOMMU: they both translate DMA
-> > addresses into system RAM addresses.
-> 
-> I don't have much history on any previous discussion on the subject you 
-> are referring to. I assume it would have happened when 
-> of_dma_configure() was first introduced. On Keystone, we don't have 
-> IOMMU support and dma_pfn_offset is needed to translate DMA address to 
-> System RAM address and vice-versa. So this has to be supported for 
-> Keystone. There can be enhancement for IOMMU with out impacting this 
-> feature for Keystone.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-The direction we are taking with IOMMU in general is opposite to what Bjorn
-is suggesting: I believe what he wants to say is that we should use the
-traditional approach of having a specialized dma_map_ops implementation
-for this, just like we do for IOMMU implementations on x86, IA64 or PowerPC.
+Add support of PREFETCH attributre to ACPI address space and extended
+address space parser.
 
-However, with the recent explosion of IOMMU implementations on ARM, we
-are moving towards having a single dma_map_ops structure for all of them,
-and that structure does not work with the keystone hardware. Instead,
-the normal ARM dma_map_ops have been changed to handle the offset,
-which is the same thing we do on PowerPC.
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/resource.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-	Arnd
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 15d17937c431..7ce00a63f695 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -200,6 +200,9 @@ static bool acpi_decode_space(struct resource *res,
+ 	if (addr->producer_consumer == ACPI_PRODUCER)
+ 		res->flags |= IORESOURCE_WINDOW;
+ 
++	if (addr->info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
++		res->flags |= IORESOURCE_PREFETCH;
++
+ 	return !(res->flags & IORESOURCE_DISABLED);
+ }
+ 
+-- 
+1.7.10.4
+
