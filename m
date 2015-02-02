@@ -1,74 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:53374 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753232AbbBZBK4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:10:56 -0500
-Received: by mail-wi0-f180.google.com with SMTP id h11so9097271wiw.1
-        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2015 17:10:55 -0800 (PST)
+Received: from mga03.intel.com ([134.134.136.65]:63961 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932096AbbBBQGt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 2 Feb 2015 11:06:49 -0500
+Message-ID: <54CFA093.9040508@linux.intel.com>
+Date: Tue, 03 Feb 2015 00:06:43 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20150226010438.GT6220@google.com>
-References: <1423512731-9625-1-git-send-email-festevam@gmail.com> <20150226010438.GT6220@google.com>
-From: Rob Herring <robh@kernel.org>
-Date: Wed, 25 Feb 2015 19:10:35 -0600
-Message-ID: <CAL_JsqJKkRQLkMkSc_S1RLGRbRCc-6GoFYrvOtY3WgPs_qpdmA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: xgene: Fix xgene_pcie_map_bus() return type
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Fabio Estevam <festevam@gmail.com>,
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Thomas Gleixner <tglx@linutronix.de>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Andre Przywara <andre.przywara@arm.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>
-Content-Type: text/plain; charset=UTF-8
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Fix pcibios_update_irq misuse of irq number
+References: <1422456683-797-1-git-send-email-marc.zyngier@arm.com> <CAErSpo5=NhPZ5RNbBeGqKuLbKdOyTD1m+ijWM2SzQFWuKLTJfg@mail.gmail.com>
+In-Reply-To: <CAErSpo5=NhPZ5RNbBeGqKuLbKdOyTD1m+ijWM2SzQFWuKLTJfg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 25, 2015 at 7:04 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc Tanmay]
->
-> On Mon, Feb 09, 2015 at 06:12:11PM -0200, Fabio Estevam wrote:
->> From: Fabio Estevam <fabio.estevam@freescale.com>
+On 2015/2/2 23:57, Bjorn Helgaas wrote:
+> On Wed, Jan 28, 2015 at 8:51 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+>> pcibios_update_irq writes an irq number into the config space
+>> of a given PCI device, but ignores the fact that this number
+>> is a virtual interrupt number, which might be a very different
+>> value from what the underlying hardware is using.
 >>
->> Commit 350f8be5bb402a1 ("PCI: xgene: Convert to use generic config accessors")
->> introduced the following build warnings:
+>> The obvious fix is to fetch the HW interrupt number from the
+>> corresponding irq_data structure. This is slightly complicated
+>> by the fact that this interrupt might be services by a stacked
+>> domain.
 >>
->> drivers/pci/host/pci-xgene.c:137:3: warning: return makes integer from pointer without a cast
->> drivers/pci/host/pci-xgene.c:140:2: warning: return makes integer from pointer without a cast
->> drivers/pci/host/pci-xgene.c:144:2: warning: initialization from incompatible pointer type
->> drivers/pci/host/pci-xgene.c:144:2: warning: (near initialization for 'xgene_pcie_ops.map_bus')
+>> This has been tested on KVM with kvmtool.
 >>
->> The .map_bus function should return 'void __iomem *' instead of 'int'.
->>
->> Reported-by: Olof's autobuilder <build@lixom.net>
->> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
->
-> Applied to for-linus for v4.0, thanks!
->
-> Rob, Tanmay, speak up if you object.
+>> Reported-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> Tested-by: Andre Przywara <andre.przywara@arm.com>
+>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> 
+> Jiang, are you OK with this patch as-is now, since it isn't used on x86?
+Sure, I'm OK. I missed the point that it's not used on x86 at all
+in previous review.
 
-While this fixes the warning, it doesn't fix the real problem. You
-should apply this instead:
-
-https://patchwork.ozlabs.org/patch/440759/
-
-Rob
-
->
+> 
+> Marc, Lorenzo, I assume this actually fixes a bug.  Can we get any
+> more details about what happens when you hit the bug, and how you
+> reproduced it (what platform, driver, etc.)?
+> 
+> Bjorn
+> 
 >> ---
->>  drivers/pci/host/pci-xgene.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>  drivers/pci/setup-irq.c | 12 ++++++++++--
+>>  1 file changed, 10 insertions(+), 2 deletions(-)
 >>
->> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
->> index aab5547..22addb6 100644
->> --- a/drivers/pci/host/pci-xgene.c
->> +++ b/drivers/pci/host/pci-xgene.c
->> @@ -127,7 +127,7 @@ static bool xgene_pcie_hide_rc_bars(struct pci_bus *bus, int offset)
->>       return false;
+>> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+>> index 4e2d595..828cbc9 100644
+>> --- a/drivers/pci/setup-irq.c
+>> +++ b/drivers/pci/setup-irq.c
+>> @@ -15,11 +15,19 @@
+>>  #include <linux/errno.h>
+>>  #include <linux/ioport.h>
+>>  #include <linux/cache.h>
+>> +#include <linux/irq.h>
+>>
+>>  void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
+>>  {
+>> -       dev_dbg(&dev->dev, "assigning IRQ %02d\n", irq);
+>> -       pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+>> +       struct irq_data *d;
+>> +
+>> +       d = irq_get_irq_data(irq);
+>> +#ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
+>> +       while (d->parent_data)
+>> +               d = d->parent_data;
+>> +#endif
+>> +       dev_dbg(&dev->dev, "assigning IRQ %02ld\n", d->hwirq);
+>> +       pci_write_config_byte(dev, PCI_INTERRUPT_LINE, d->hwirq);
 >>  }
 >>
->> -static int xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
->> +static void __iomem *xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
->>                             int offset)
->>  {
->>       struct xgene_pcie_port *port = bus->sysdata;
+>>  static void pdev_fixup_irq(struct pci_dev *dev,
 >> --
->> 1.9.1
+>> 2.1.4
 >>
