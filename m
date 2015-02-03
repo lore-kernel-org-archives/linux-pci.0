@@ -1,111 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:45478 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753046AbbBZBcR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:32:17 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v3 14/30] PCI/x86: Refine pci_acpi_scan_root() with generic pci_host_bridge
-Date: Thu, 26 Feb 2015 09:29:31 +0800
-Message-ID: <1424914187-21027-15-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
-References: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
+Received: from relmlor4.renesas.com ([210.160.252.174]:14924 "EHLO
+	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756092AbbBCSqo convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 3 Feb 2015 13:46:44 -0500
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"horms+renesas@verge.net.au" <horms+renesas@verge.net.au>,
+	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: RE: [PATCH] PCI: rcar: Fix postion of MSI enable bit
+Date: Tue, 3 Feb 2015 18:46:35 +0000
+Message-ID: <SIXPR06MB0639D02BAB35FE7BD328BD24F53D0@SIXPR06MB0639.apcprd06.prod.outlook.com>
+References: <1422853483-14334-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com> 
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Thomas Gleixner <tglx@linutronix.de>
-CC: x86@kernel.org
----
- arch/x86/pci/acpi.c |   36 ++++++++++++++++++++----------------
- 1 files changed, 20 insertions(+), 16 deletions(-)
+Resend with correct ml address
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 5bfe983..3feb12c 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -349,6 +349,18 @@ static void probe_pci_root_info(struct pci_root_info *info,
- 			entry->res->name = info->name;
- }
- 
-+static int pci_host_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	struct pci_sysdata *sd = dev_get_drvdata(&bridge->dev);
-+
-+	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
-+	return 0;
-+}
-+
-+static struct pci_host_bridge_ops phb_ops = {
-+	.phb_prepare = pci_host_bridge_prepare,
-+};
-+
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- {
- 	struct acpi_device *device = root->device;
-@@ -359,6 +371,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	LIST_HEAD(crs_res);
- 	LIST_HEAD(resources);
- 	struct pci_bus *bus;
-+	struct pci_host_bridge *host = NULL;
- 	struct pci_sysdata *sd;
- 	int node;
- 
-@@ -425,14 +438,13 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 
- 		if (!setup_mcfg_map(info, domain, (u8)root->secondary.start,
- 					(u8)root->secondary.end, root->mcfg_addr)) 
--			bus = pci_create_root_bus(NULL, PCI_DOMBUS(domain, busnum), 
--					&pci_root_ops, sd, &resources);
--
--		if (bus) {
--			pci_scan_child_bus(bus);
--			pci_set_host_bridge_release(
--				to_pci_host_bridge(bus->bridge),
--				release_pci_root_info, info);
-+			host = pci_scan_root_bridge(NULL, PCI_DOMBUS(domain, busnum),
-+					&pci_root_ops, sd, &resources, &phb_ops);
-+
-+		if (host) {
-+			bus = host->bus;
-+			pci_set_host_bridge_release(host, release_pci_root_info,
-+					info);
- 		} else {
- 			resource_list_free(&resources);
- 			teardown_mcfg_map(info);
-@@ -455,14 +467,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	return bus;
- }
- 
--int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
--{
--	struct pci_sysdata *sd = bridge->bus->sysdata;
--
--	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
--	return 0;
--}
--
- int __init pci_acpi_init(void)
- {
- 	struct pci_dev *dev = NULL;
--- 
-1.7.1
+On: 03 February 2015 18:44, Phil Edworthy wrote:
+> Hi Iwamatsu-san,
+> 
+> Hmm, this is odd as MSI works before and after your patch. Since bit 31 just
+> represents the value of MSICAP0[16].MSIE, I think this may just be used for
+> endpoints.
+> 
+> However, you are correct that the bit used was wrong and so:
+> Acked-by: Phil Edworthy <phil.edworthy@renesas.com>
+> 
+> Thanks
+> Phil
+> 
+> On: 02 February 2015 05:05, Nobuhiro Iwamatsu wrote:
+> >
+> > Position of MSI enable bit is 31bit, not 28bit.
+> > This fixes position of MSI bit necessary to initialize MSI.
+> >
+> > Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+> > ---
+> >  drivers/pci/host/pcie-rcar.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> > index bb36e27..eb12659 100644
+> > --- a/drivers/pci/host/pcie-rcar.c
+> > +++ b/drivers/pci/host/pcie-rcar.c
+> > @@ -505,7 +505,7 @@ static int rcar_pcie_hw_init(struct rcar_pcie *pcie)
+> >
+> >  	/* Enable MSI */
+> >  	if (IS_ENABLED(CONFIG_PCI_MSI))
+> > -		rcar_pci_write_reg(pcie, 0x101f0000, PCIEMSITXR);
+> > +		rcar_pci_write_reg(pcie, 0x801f0000, PCIEMSITXR);
+> >
+> >  	/* Finish initialization - establish a PCI Express link */
+> >  	rcar_pci_write_reg(pcie, CFINIT, PCIETCTLR);
+> > --
+> > 2.1.3
 
