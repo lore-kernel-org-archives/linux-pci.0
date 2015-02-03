@@ -1,126 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from resqmta-po-12v.sys.comcast.net ([96.114.154.171]:33734 "EHLO
-	resqmta-po-12v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750928AbbB0Gcb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Feb 2015 01:32:31 -0500
-Message-ID: <54F00F7D.6040604@comcast.net>
-Date: Thu, 26 Feb 2015 22:32:29 -0800
-From: Alnie <memobook80@comcast.net>
-MIME-Version: 1.0
+Received: from mail-qc0-f173.google.com ([209.85.216.173]:56151 "EHLO
+	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754569AbbBCBCh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 20:02:37 -0500
+Received: by mail-qc0-f173.google.com with SMTP id m20so32979749qcx.4
+        for <linux-pci@vger.kernel.org>; Mon, 02 Feb 2015 17:02:36 -0800 (PST)
+Date: Tue, 3 Feb 2015 09:02:30 +0800
+From: Kevin Hao <haokexin@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Takashi Iwai <tiwai@suse.de>
-Subject: Re: PCI Issues with ExpressCard/54 Audio Device
-References: <1703881568.13072732.1424911985807.JavaMail.zimbra@comcast.net> <1602089933.13084034.1424913145538.JavaMail.zimbra@comcast.net> <CAErSpo6E5EMDUA8tHRZYF6rgfRqtHEZtG4EyVcMSRL02T3Ttyg@mail.gmail.com> <54EED7D2.7000205@comcast.net> <20150226174635.GA25765@google.com> <54EF74CF.7050909@comcast.net> <20150226231843.GC25765@google.com> <54EFB400.4000904@comcast.net> <20150227003448.GH25765@google.com>
-In-Reply-To: <20150227003448.GH25765@google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Cc: Michael Ellerman <mpe@ellerman.id.au>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 01/15] PCI: introduce pci_device_to_OF_node() for
+ !CONFIG_OF
+Message-ID: <20150203010230.GA28170@pek-khao-d1.corp.ad.wrs.com>
+References: <1422712065-9403-1-git-send-email-haokexin@gmail.com>
+ <1422712065-9403-2-git-send-email-haokexin@gmail.com>
+ <1422844101.11325.4.camel@ellerman.id.au>
+ <CAErSpo7B3yDQiD0XA9nBxb4tFW0BktT0EZ3HCZENOYQqMy0m_Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="8t9RHnE3ZwKMSgU+"
+In-Reply-To: <CAErSpo7B3yDQiD0XA9nBxb4tFW0BktT0EZ3HCZENOYQqMy0m_Q@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/26/2015 04:34 PM, Bjorn Helgaas wrote:
 
->
-> So it looks like the Unsupported Request error is unrelated to the problem
-> you're seeing.  Probably left over from something the BIOS did when it
-> enumerated devices.
->
-> You could look at "lspci -vv" again after clearing the errors and loading
-> the driver.  But I think it will be the same as it was after you manually
-> cleared the errors.
+--8t9RHnE3ZwKMSgU+
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-(after clearing errors) http://pastebin.com/UxdgDyp1
+On Mon, Feb 02, 2015 at 09:47:57AM -0600, Bjorn Helgaas wrote:
+> I think it makes more sense to merge this along with the other 14
+> patches that remove the #ifdefs (at least, I assume that's what they
+> do; I haven't seen them).
+>=20
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>=20
+> But please edit the subject line so it is capitalized consistently
+> with the rest of the history.  And it'd be nice if the changelog were
+> a complete sentence all by itself, e.g.,
+>=20
+>     PCI: Add pci_device_to_OF_node() stub for !CONFIG_OF
+>=20
+>     Add a stub for pci_device_to_OF_node() so drivers don't need to use
+>     #ifdef CONFIG_OF around calls to it.
 
->
-> Oh, one more idea: *before* clearing the errors, can you collect
-> "lspci -xxxxs05:00.0" output?  That will give us more AER log registers,
-> and it's possible there's a clue there.  It's conceivable that we have
-> an MPS issue that causes the Unsupported Request error.
+Will update. Thanks Bjorn.
 
-(before clearing errors w/ card in @ boot) http://pastebin.com/wTeNjHHT
-(before clearing errors w/ card out @ boot) http://pastebin.com/4Q82KNNc
+Kevin
 
+--8t9RHnE3ZwKMSgU+
+Content-Type: application/pgp-signature
 
->
-> Just to be exhaustive, can you also stash the "lspci -vvv" output for the
-> entire system somewhere (again, before clearing the error).
->
-http://pastebin.com/K4iPhGcq
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-not sure if this is relevant but for debugging sake here is the output 
-of the card when left out during boot (no UnsupReq error)...
+iQEcBAEBAgAGBQJU0B4mAAoJEJNY7TDerrFxhFsH/iR0SsCZ6DK6wrj8AE+Qb1yH
+yO4nPpZkoZzLMociB6IP9WmOAyQbGKy9IN2Sz8XO7DlB1ZRVYHqyWw1zyKmK9VDk
+Ja2j4srmqlhlm1vClCgfjxYEqnI9r2V8QR2mjwf5fVjDf76PXbdsDObMiN2aEJT1
+N7he2z+v9zrnw/1ELmBcZK0kHfPwINfdh4W6jWHEymrCFtciQ4W9vKuFE5OvYmWC
+jBYrT6i3ccvMmuXLgoxTGJkc3uL1lRn8tl9cZN6WcYiPG5DkY6a1r3E9kGJ3dbkK
+Hsirbkzep80nSbrtHi75/zE6uXxN8XhawSYcA/wDX1OW4wLwJ2hsIS0I+xwTV8s=
+=fM4q
+-----END PGP SIGNATURE-----
 
-05:00.0 PCI bridge: Creative Labs [SB X-Fi Xtreme Audio] CA0110-IBG PCI 
-to PCIe Bridge (prog-if 00 [Normal decode])
-	Physical Slot: 3
-	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- 
-Stepping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
-<MAbort- >SERR- <PERR- INTx-
-	Bus: primary=05, secondary=06, subordinate=06, sec-latency=0
-	I/O behind bridge: 00002000-00002fff
-	Memory behind bridge: f8000000-f80fffff
-	Prefetchable memory behind bridge: 00000000f4000000-00000000f40fffff
-	Secondary status: 66MHz- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
-<TAbort- <MAbort+ <SERR- <PERR-
-	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-	Capabilities: [50] Power Management version 3
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-		Bridge: PM- B3+
-	Capabilities: [60] MSI: Enable- Count=1/16 Maskable- 64bit+
-		Address: 0000000000000000  Data: 0000
-	Capabilities: [80] Subsystem: Creative Labs Device 0040
-	Capabilities: [90] Express (v1) PCI-Express to PCI/PCI-X Bridge, MSI 00
-		DevCap:	MaxPayload 512 bytes, PhantFunc 0
-			ExtTag- AttnBtn- AttnInd- PwrInd- RBE-
-		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+ BrConfRtry-
-			MaxPayload 128 bytes, MaxReadReq 512 bytes
-		DevSta:	CorrErr- UncorrErr+ FatalErr- UnsuppReq- AuxPwr- TransPend-
-		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency 
-L0s <512ns, L1 <16us
-			ClockPM- Surprise- LLActRep- BwNot-
-		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk+
-			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- 
-BWMgmt- ABWMgmt-
-	Capabilities: [100 v1] Advanced Error Reporting
-		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- 
-MalfTLP- ECRC- UnsupReq- ACSViol-
-		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- 
-MalfTLP- ECRC- UnsupReq- ACSViol-
-		UESvrt:	DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ 
-MalfTLP+ ECRC- UnsupReq- ACSViol-
-		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-		AERCap:	First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-
-
->>> The device is at [mem 0xf4300000-0xf4303fff], so anything in that region
->>> should respond.  Why don't you try this, which should dump the whole
->>> region:
->>>
->>>    ./mem -N -m -s 0xf4300000 -l 0x4000
->>>
->>
->> http://pastebin.com/eHEsZNmU
->
-> The data there looks fine, at least from a PCI perspective:
->
->    F4300000:00 33 00 01 3C 00 1D 00 01 00 00 00 00 00 00 00
->    F4300010:00 00 00 00 00 00 00 00 3C 00 1D 00 00 00 00 00
->    F4300020:00 00 00 C0 00 00 00 00 00 00 00 00 00 00 00 00
->    F4300030:0F FA 24 A8 00 00 00 00 00 00 00 00 00 00 00 00
->    ...
->
-> That means the device itself seems happy and is responding to read
-> requests.
->
-> The only thing left I can think of to do is to instrument the driver and
-> see where it gets data that it doesn't expect.  So I'm going to punt this
-> back to you, Takashi :)  Don't hesitate to send it back to me if you find
-> something that looks like a PCI problem, but I don't see one yet.
->
-> Bjorn
->
+--8t9RHnE3ZwKMSgU+--
