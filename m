@@ -1,71 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:54461 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752606AbbBTCmh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Feb 2015 21:42:37 -0500
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
-	Fri, 20 Feb 2015 12:42:34 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id B23082CE804E
-	for <linux-pci@vger.kernel.org>; Fri, 20 Feb 2015 13:42:32 +1100 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1K2gOGu33685730
-	for <linux-pci@vger.kernel.org>; Fri, 20 Feb 2015 13:42:32 +1100
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1K2fwZJ002984
-	for <linux-pci@vger.kernel.org>; Fri, 20 Feb 2015 13:41:59 +1100
-Message-ID: <1424400095.27448.7.camel@au1.ibm.com>
-Subject: Re: [PATCH V11 06/17] powerpc/pci: Add PCI resource alignment
- documentation
-From: Benjamin Herrenschmidt <benh@au1.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Date: Fri, 20 Feb 2015 13:41:35 +1100
-In-Reply-To: <20150220005621.GA21131@google.com>
-References: <20150113180502.GC2776@google.com>
-	 <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
-	 <1421288887-7765-7-git-send-email-weiyang@linux.vnet.ibm.com>
-	 <20150204234433.GC11271@google.com> <1423530151.4924.73.camel@au1.ibm.com>
-	 <20150220005621.GA21131@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from icebox.esperi.org.uk ([81.187.191.129]:47241 "EHLO
+	mail.esperi.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751882AbbBCUB5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Feb 2015 15:01:57 -0500
+From: Nix <nix@esperi.org.uk>
+To: Myron Stowe <myron.stowe@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Myron Stowe <mstowe@redhat.com>,
+	"linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Bill Unruh <unruh@physics.ubc.ca>, martin@lucina.net,
+	Matthew Wilcox <willy@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [3.18.3 BISECTED REGRESSION] scx200_acb / cs5535-smb / geodewdt / cs5535-clockevt torpedoed
+References: <8761boas78.fsf@spindle.srvr.nix>
+	<1422847799.2491.13.camel@zim.stowe> <87h9v42p22.fsf@spindle.srvr.nix>
+	<CAErSpo4SKP=nKdn43rE37JFNW5SSb4uRyRyO6vAO5tqa2TOpQg@mail.gmail.com>
+	<CAL-B5D1ytTtQ6JnzWW3VTL2PnM67nj8karxSf5u0e-pmSdZNMg@mail.gmail.com>
+Date: Tue, 03 Feb 2015 20:01:35 +0000
+In-Reply-To: <CAL-B5D1ytTtQ6JnzWW3VTL2PnM67nj8karxSf5u0e-pmSdZNMg@mail.gmail.com>
+	(Myron Stowe's message of "Tue, 3 Feb 2015 10:06:46 -0700")
+Message-ID: <87twz2kbmo.fsf@spindle.srvr.nix>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2015-02-19 at 18:56 -0600, Bjorn Helgaas wrote:
-
-> So there are the two windows of CPU address space that are routed to the
-> PHB.  And the PHB contains one M32 window and sixteen M64 windows.  What
-> happens if the PHB receives an access to something that was in one of the
-> two CPU address space windows, but is not contained in M32 or one of the
-> M64 windows?
-
-Some kind of error, I don't know which one at this point, possibly fatal
-(checkstop or similar) or maybe a fence of the PHB. Don't do it :-)
-
-> If that is an error or is non-sensical, then the only windows relevant to
-> PCI would be the M32 and M64 windows, and we could just ignore the
-> top-level two windows.
-
-Right. In fact we pretty much hard wire that one of the top level is
-small and used for M32 with a fixed layout and the other is big and used
-for all M64's. We use one of the M64 to cover it entirely, which is our
-"base" set of segments for allocating busses/BARs, and then we use the
-remaining M64's overlaid on top of that first one for things like
-SR-IOV.
-
-> I squashed all my doc updates into the original and pushed it here:
+On 3 Feb 2015, Myron Stowe uttered the following:
+> As expressed above, I believe this device is non-conformant.  This could be
+> validated by instrumenting the kernel's sizing code in '__pci_read_base()';
+> specifically the initial 'pci_read_config_dword()'s of 'l' and 'sz'.
 > 
-> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/virtualization&id=5449d1a812d561bafe0d458132ef356765505507
-> 
-> If I made it say something wrong, a patch would be the best way to fix it.
+> Whereas we have been able to ignore read-only BARs in past occurrances, this
+> time they are needed.  As such, I think we can solve this issue by expanding
+> the existing quirk for this device.  I'll work that up and post.  If you
+> would, please apply and test what is posted and report back.  In the mean
+> time, I would be interested in obtaining confirmation as to my belief that
+> this device's BARs are read-only (i.e. the instrumentation mentioned).  If
+> you have time and are willing I would appreaciate that.  If not, I'm
+> confident that is what is occurring and you can just stick with applying and
+> testing the expanded quirk patch I intend to post.
 
-Thanks, I'll have a look
+Here, and the device behind it, just in case it's useful:
 
-Cheers,
-Ben.
+[    1.050352] pci 0000:00:14.0: [1022:2090] type 00 class 0x060100
+[    1.060152] name: 0000:00:14.0; l: 6001; sz: 6001
+[    1.070037] pci 0000:00:14.0: reg 0x10: [io  0x6000-0x7fff]
+[    1.080114] name: 0000:00:14.0; l: 6101; sz: 6101
+[    1.090037] pci 0000:00:14.0: reg 0x14: [io  0x6100-0x61ff]
+[    1.100113] name: 0000:00:14.0; l: 6201; sz: 6201
+[    1.110036] pci 0000:00:14.0: reg 0x18: [io  0x6200-0x63ff]
+[    1.120113] name: 0000:00:14.0; l: 0; sz: 0
+[    1.130130] name: 0000:00:14.0; l: 0; sz: 0
+[    1.140129] name: 0000:00:14.0; l: 0; sz: 0
+[    1.150129] name: 0000:00:14.0; l: 0; sz: 0
+[    1.160075] pci 0000:00:14.0: CS5536 ISA bridge bug detected (incorrect header); workaround applied
+[    1.180018] pci 0000:00:14.2: [1022:209a] type 00 class 0x010180
+[    1.190155] name: 0000:00:14.2; l: 0; sz: 0
+[    1.200133] name: 0000:00:14.2; l: 0; sz: 0
+[    1.210133] name: 0000:00:14.2; l: 0; sz: 0
+[    1.220133] name: 0000:00:14.2; l: 0; sz: 0
+[    1.230150] name: 0000:00:14.2; l: e001; sz: fffffff1
+[    1.240037] pci 0000:00:14.2: reg 0x20: [io  0xe000-0xe00f]
+[    1.250115] name: 0000:00:14.2; l: 0; sz: 0
+[    1.260133] name: 0000:00:14.2; l: 0; sz: 0
+[    1.270091] pci 0000:00:14.2: legacy IDE quirk: reg 0x10: [io  0x01f0-0x01f7]
+[    1.280021] pci 0000:00:14.2: legacy IDE quirk: reg 0x14: [io  0x03f6]
+[    1.290019] pci 0000:00:14.2: legacy IDE quirk: reg 0x18: [io  0x0170-0x0177]
+[    1.300018] pci 0000:00:14.2: legacy IDE quirk: reg 0x1c: [io  0x0376]
 
-
+-- 
+NULL && (void)
