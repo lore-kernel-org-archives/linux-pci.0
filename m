@@ -1,74 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:54812 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755922AbbBEAfo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Feb 2015 19:35:44 -0500
-Date: Thu, 5 Feb 2015 09:35:40 +0900
-From: Simon Horman <horms@verge.net.au>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: rcar: Change macro name of PCIEPARL and PCIEPARH
-Message-ID: <20150205003540.GB17596@verge.net.au>
-References: <1423040575-28080-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com>
- <SIXPR06MB06397E299C79226C6DD148CDF53A0@SIXPR06MB0639.apcprd06.prod.outlook.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <54D07BC9.1040506@linaro.org>
+Date: Tue, 03 Feb 2015 08:42:01 +0100
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <SIXPR06MB06397E299C79226C6DD148CDF53A0@SIXPR06MB0639.apcprd06.prod.outlook.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: catalin.marinas@arm.com, will.deacon@arm.com,
+	lorenzo.pieralisi@arm.com, wangyijing@huawei.com, arnd@arndb.de,
+	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org
+Subject: Re: [PATCH 0/6] PCI: MMCONFIG clean up
+References: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org> <20150202204253.GB5176@google.com>
+In-Reply-To: <20150202204253.GB5176@google.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 04, 2015 at 09:14:40AM +0000, Phil Edworthy wrote:
-> Hi Iwamatsu-san,
-> 
-> On: 04 February 2015 09:03, Nobuhiro Iwamatsu wrote:
-> > 
-> > PCIEPARL and PCIEPARH are macro that calculates address of the register.
-> > However, register name is incorrect, PCIEPALR and PCIEPAUR is correct.
-> > This change macro name to PCIEPALR and PCIEPAUR.
-> > 
-> > Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
-> Acked-by: Phil Edworthy <phil.edworthy@renesas.com>
+On 02.02.2015 21:42, Bjorn Helgaas wrote:
+> On Wed, Nov 19, 2014 at 05:04:45PM +0100, Tomasz Nowicki wrote:
+>> MMCFG ACPI table has no arch dependencies so it can be used across all
+>> architectures. Currently MMCONFIG related code resides in arch/x86 directories.
+>> This patch set is goint to isolate non-architecure specific code and make
+>> it accessible from drivers/pci/ directory.
+>>
+>> Tomasz Nowicki (6):
+>>    x86, acpi, pci: Reorder logic of pci_mmconfig_insert() function
+>>    x86, acpi, pci: Move arch-agnostic MMCFG code out of arch/x86/
+>>      directory
+>>    x86, acpi, pci: Move PCI config space accessors.
+>>    x86, acpi, pci: mmconfig_{32,64}.c code refactoring - remove code
+>>      duplication.
+>>    x86, acpi, pci: mmconfig_64.c becomes default implementation for arch
+>>      agnostic low-level direct PCI config space accessors via MMCONFIG.
+>>    pci, acpi: Share ACPI PCI config space accessors.
+>
+> Hi Tomasz,
+>
+> I'm just checking to make sure we aren't deadlocked here, with me waiting
+> for you and you waiting for me.  I gave you some comments about
+> abbreviations (MCFG/MMCFG/MMCONFIG/ECAM), weak functions, code placement
+> (drivers/acpi vs. drivers/pci), and the mmio_config_*() naming, so I've
+> been waiting to continue those discussions.  But maybe you're waiting for
+> me, too?
+>
+> I think this sort of cleanup is a great idea and I hope we can make some
+> progress on it.  If it's easier to do it in small pieces, e.g., starting
+> out by moving code and renaming things with no functional changes, that
+> would be great with me.
 
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
+Hi Bjorn,
 
-> 
-> Thanks
-> Phil
-> 
-> > ---
-> >  drivers/pci/host/pcie-rcar.c | 8 ++++----
-> >  1 file changed, 4 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> > index eb12659..183c32d 100644
-> > --- a/drivers/pci/host/pcie-rcar.c
-> > +++ b/drivers/pci/host/pcie-rcar.c
-> > @@ -64,8 +64,8 @@
-> >  #define  LAR_ENABLE		(1 << 1)
-> > 
-> >  /* PCIe address reg & mask */
-> > -#define PCIEPARL(x)		(0x03400 + ((x) * 0x20))
-> > -#define PCIEPARH(x)		(0x03404 + ((x) * 0x20))
-> > +#define PCIEPALR(x)		(0x03400 + ((x) * 0x20))
-> > +#define PCIEPAUR(x)		(0x03404 + ((x) * 0x20))
-> >  #define PCIEPAMR(x)		(0x03408 + ((x) * 0x20))
-> >  #define PCIEPTCTLR(x)		(0x0340c + ((x) * 0x20))
-> >  #define  PAR_ENABLE		(1 << 31)
-> > @@ -341,9 +341,9 @@ static void rcar_pcie_setup_window(int win, struct
-> > rcar_pcie *pcie)
-> >  	else
-> >  		res_start = res->start;
-> > 
-> > -	rcar_pci_write_reg(pcie, upper_32_bits(res_start), PCIEPARH(win));
-> > +	rcar_pci_write_reg(pcie, upper_32_bits(res_start), PCIEPAUR(win));
-> >  	rcar_pci_write_reg(pcie, lower_32_bits(res_start) & ~0x7F,
-> > -			   PCIEPARL(win));
-> > +			   PCIEPALR(win));
-> > 
-> >  	/* First resource is for IO */
-> >  	mask = PAR_ENABLE;
-> > --
-> > 2.1.3
-> 
+It is not deadlock, it is rather me suffering with lack of time :)
+
+I definitely want to make that cleanup happen and was about to start 
+working on it again. Thanks for remanding me, patches/comments should 
+come up soon.
+
+Regards,
+Tomasz
