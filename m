@@ -1,228 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:35506 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753356AbbCACTL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Feb 2015 21:19:11 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Matt Fleming <matt.fleming@intel.com>,
+Received: from mout.kundenserver.de ([212.227.126.130]:63186 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754689AbbBCLch (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Feb 2015 06:32:37 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
-	Jiri Kosina <jkosina@suse.cz>, Borislav Petkov <bp@suse.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 6/8] x86: kill not used setup_data handling code
-Date: Sat, 28 Feb 2015 18:17:37 -0800
-Message-Id: <1425176259-30087-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
-References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andre Przywara <Andre.Przywara@arm.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>
+Subject: Re: [PATCH] PCI: Fix pcibios_update_irq misuse of irq number
+Date: Tue, 03 Feb 2015 12:31:43 +0100
+Message-ID: <4324891.mqG6Yyfi6J@wuerfel>
+In-Reply-To: <54D0A521.7030405@arm.com>
+References: <1422456683-797-1-git-send-email-marc.zyngier@arm.com> <4145359.V8A0ARGtXz@wuerfel> <54D0A521.7030405@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Cc: Matt Fleming <matt.fleming@intel.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/kernel/kdebugfs.c | 142 ---------------------------------------------
- arch/x86/kernel/setup.c    |  17 ------
- 2 files changed, 159 deletions(-)
+On Tuesday 03 February 2015 10:38:25 Marc Zyngier wrote:
+> 
+> That's exactly what I thought until Lorenzo reported kvmtool falling
+> over because of this write. Obviously, some platforms must actually
+> require this (possibly for bridges that are not known by the firmware).
 
-diff --git a/arch/x86/kernel/kdebugfs.c b/arch/x86/kernel/kdebugfs.c
-index dc1404b..c8ca86c 100644
---- a/arch/x86/kernel/kdebugfs.c
-+++ b/arch/x86/kernel/kdebugfs.c
-@@ -21,142 +21,6 @@ struct dentry *arch_debugfs_dir;
- EXPORT_SYMBOL(arch_debugfs_dir);
+This sounds much like a bug in kvmtool.
  
- #ifdef CONFIG_DEBUG_BOOT_PARAMS
--struct setup_data_node {
--	u64 paddr;
--	u32 type;
--	u32 len;
--};
--
--static ssize_t setup_data_read(struct file *file, char __user *user_buf,
--			       size_t count, loff_t *ppos)
--{
--	struct setup_data_node *node = file->private_data;
--	unsigned long remain;
--	loff_t pos = *ppos;
--	struct page *pg;
--	void *p;
--	u64 pa;
--
--	if (pos < 0)
--		return -EINVAL;
--
--	if (pos >= node->len)
--		return 0;
--
--	if (count > node->len - pos)
--		count = node->len - pos;
--
--	pa = node->paddr + sizeof(struct setup_data) + pos;
--	pg = pfn_to_page((pa + count - 1) >> PAGE_SHIFT);
--	if (PageHighMem(pg)) {
--		p = ioremap_cache(pa, count);
--		if (!p)
--			return -ENXIO;
--	} else
--		p = __va(pa);
--
--	remain = copy_to_user(user_buf, p, count);
--
--	if (PageHighMem(pg))
--		iounmap(p);
--
--	if (remain)
--		return -EFAULT;
--
--	*ppos = pos + count;
--
--	return count;
--}
--
--static const struct file_operations fops_setup_data = {
--	.read		= setup_data_read,
--	.open		= simple_open,
--	.llseek		= default_llseek,
--};
--
--static int __init
--create_setup_data_node(struct dentry *parent, int no,
--		       struct setup_data_node *node)
--{
--	struct dentry *d, *type, *data;
--	char buf[16];
--
--	sprintf(buf, "%d", no);
--	d = debugfs_create_dir(buf, parent);
--	if (!d)
--		return -ENOMEM;
--
--	type = debugfs_create_x32("type", S_IRUGO, d, &node->type);
--	if (!type)
--		goto err_dir;
--
--	data = debugfs_create_file("data", S_IRUGO, d, node, &fops_setup_data);
--	if (!data)
--		goto err_type;
--
--	return 0;
--
--err_type:
--	debugfs_remove(type);
--err_dir:
--	debugfs_remove(d);
--	return -ENOMEM;
--}
--
--static int __init create_setup_data_nodes(struct dentry *parent)
--{
--	struct setup_data_node *node;
--	struct setup_data *data;
--	int error;
--	struct dentry *d;
--	struct page *pg;
--	u64 pa_data;
--	int no = 0;
--
--	d = debugfs_create_dir("setup_data", parent);
--	if (!d)
--		return -ENOMEM;
--
--	pa_data = boot_params.hdr.setup_data;
--
--	while (pa_data) {
--		node = kmalloc(sizeof(*node), GFP_KERNEL);
--		if (!node) {
--			error = -ENOMEM;
--			goto err_dir;
--		}
--
--		pg = pfn_to_page((pa_data+sizeof(*data)-1) >> PAGE_SHIFT);
--		if (PageHighMem(pg)) {
--			data = ioremap_cache(pa_data, sizeof(*data));
--			if (!data) {
--				kfree(node);
--				error = -ENXIO;
--				goto err_dir;
--			}
--		} else
--			data = __va(pa_data);
--
--		node->paddr = pa_data;
--		node->type = data->type;
--		node->len = data->len;
--		error = create_setup_data_node(d, no, node);
--		pa_data = data->next;
--
--		if (PageHighMem(pg))
--			iounmap(data);
--		if (error)
--			goto err_dir;
--		no++;
--	}
--
--	return 0;
--
--err_dir:
--	debugfs_remove(d);
--	return error;
--}
--
- static struct debugfs_blob_wrapper boot_params_blob = {
- 	.data		= &boot_params,
- 	.size		= sizeof(boot_params),
-@@ -181,14 +45,8 @@ static int __init boot_params_kdebugfs_init(void)
- 	if (!data)
- 		goto err_version;
- 
--	error = create_setup_data_nodes(dbp);
--	if (error)
--		goto err_data;
--
- 	return 0;
- 
--err_data:
--	debugfs_remove(data);
- err_version:
- 	debugfs_remove(version);
- err_dir:
-diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index 93c0adb..b9f1687 100644
---- a/arch/x86/kernel/setup.c
-+++ b/arch/x86/kernel/setup.c
-@@ -479,20 +479,6 @@ static void __init parse_setup_data(void)
- 	boot_params.hdr.setup_data = 0; /* all done */
- }
- 
--static void __init memblock_x86_reserve_range_setup_data(void)
--{
--	struct setup_data *data;
--	u64 pa_data;
--
--	pa_data = boot_params.hdr.setup_data;
--	while (pa_data) {
--		data = early_memremap(pa_data, sizeof(*data));
--		memblock_reserve(pa_data, sizeof(*data) + data->len);
--		pa_data = data->next;
--		early_iounmap(data, sizeof(*data));
--	}
--}
--
- /*
-  * --------- Crashkernel reservation ------------------------------
-  */
-@@ -999,9 +985,6 @@ void __init setup_arch(char **cmdline_p)
- 
- 	x86_report_nx();
- 
--	/* after early param, so could get panic from serial */
--	memblock_x86_reserve_range_setup_data();
--
- 	if (acpi_mps_check()) {
- #ifdef CONFIG_X86_LOCAL_APIC
- 		disable_apic = 1;
--- 
-1.8.4.5
+> Entirely removing that code solves my problem too, but that'd cannot be
+> the right solution...
 
+The comment in pdev_fixup_irq() says 
+
+        /* Always tell the device, so the driver knows what is
+           the real IRQ to use; the device does not use it. */
+
+which I read to mean that there are drivers that incorrectly use
+'pci_read_config_byte(dev, PCI_INTERRUPT_LINE)' as the number
+they pass into request_irq, rather than using dev->irq.
+However, this means that your patch is actually wrong, because
+what the driver cares about is the virtual irq number (which
+request_irq expects), not the number relative to some interrupt
+controller.
+
+There is another comment in include/linux/pci.h that states
+       /*
+        * Instead of touching interrupt line and base address registers
+        * directly, use the values stored here. They might be different!
+        */
+       unsigned int    irq;
+
+so apparently this has been a cause for problems in the past,
+and drivers that rely on the number are already broken.
+
+I also checked ancient kernel versions from the 2.1 days when the
+code was first added. And indeed at the time drivers used to read
+the word, but now none of them use the number for anything real,
+they were all fixed during linux-2.2 at the latest.
+
+	Arnd
