@@ -1,56 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:64388 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751182AbbBEFmT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 Feb 2015 00:42:19 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Len Brown <lenb@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [Patch v4 02/23] ACPI: Remove redundant check in function acpi_dev_resource_address_space()
-Date: Thu,  5 Feb 2015 13:44:28 +0800
-Message-Id: <1423115089-12904-3-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-qg0-f54.google.com ([209.85.192.54]:65443 "EHLO
+	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965829AbbBCQuV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Feb 2015 11:50:21 -0500
+Received: by mail-qg0-f54.google.com with SMTP id q108so53260492qgd.13
+        for <linux-pci@vger.kernel.org>; Tue, 03 Feb 2015 08:50:21 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <87h9v42p22.fsf@spindle.srvr.nix>
+References: <8761boas78.fsf@spindle.srvr.nix> <1422847799.2491.13.camel@zim.stowe>
+ <87h9v42p22.fsf@spindle.srvr.nix>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 3 Feb 2015 10:50:00 -0600
+Message-ID: <CAErSpo4SKP=nKdn43rE37JFNW5SSb4uRyRyO6vAO5tqa2TOpQg@mail.gmail.com>
+Subject: Re: [3.18.3 BISECTED REGRESSION] scx200_acb / cs5535-smb / geodewdt /
+ cs5535-clockevt torpedoed
+To: Nix <nix@esperi.org.uk>
+Cc: Myron Stowe <mstowe@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Bill Unruh <unruh@physics.ubc.ca>, martin@lucina.net,
+	Matthew Wilcox <willy@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+On Mon, Feb 2, 2015 at 11:36 AM, Nix <nix@esperi.org.uk> wrote:
+> On 2 Feb 2015, Myron Stowe verbalised:
+>
+>> Nix:
+>>
+>> Thanks for the work you've already done with the bisection.  Let's see
+>> if we can get to the bottom of this.  Would you capture two couple sets
+>> of logs, one without the issue and another set with the commit at issue
+>> included for comparison.
 
-The ACPI type is checked in acpi_resource_to_address64() anyway.
+>  pci 0000:00:14.0: [1022:2090] type 00 class 0x060100
+> -pci 0000:00:14.0: reg 0x10: [io  0x6000-0x7fff]
+> -pci 0000:00:14.0: reg 0x14: [io  0x6100-0x61ff]
+> -pci 0000:00:14.0: reg 0x18: [io  0x6200-0x63ff]
+>  pci 0000:00:14.0: CS5536 ISA bridge bug detected (incorrect header); workaround applied
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/resource.c |    9 ---------
- 1 file changed, 9 deletions(-)
+> +scx200_acb: can't allocate io 0x0-0x7
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index d0a4d90c6bcc..1c616a56e007 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -189,15 +189,6 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
- 	u64 len;
- 	u8 io_decode;
- 
--	switch (ares->type) {
--	case ACPI_RESOURCE_TYPE_ADDRESS16:
--	case ACPI_RESOURCE_TYPE_ADDRESS32:
--	case ACPI_RESOURCE_TYPE_ADDRESS64:
--		break;
--	default:
--		return false;
--	}
--
- 	status = acpi_resource_to_address64(ares, &addr);
- 	if (ACPI_FAILURE(status))
- 		return false;
--- 
-1.7.10.4
+I think the problem is that these three BARs are read-only.  Prior to
+36e8164882ca, we didn't detect that, and we computed the size based on
+the lowest order bit that was set in the address.  This gave us
+incorrect sizes, but it did work in the sense that the driver could
+operate the device.
 
+After 36e8164882ca, we detect that the BARs are read-only and ignore
+them completely, which breaks this case because we don't mark the
+resource as I/O and we don't fill in the starting address, so even
+though the quirk runs, it just sets the first resource to [???
+0x0000-0x0007], which doesn't work.
+
+I think this is the right behavior for the PCI core because we can't
+tell how big these BARs are.  The only alternative is to assume they
+are as big as possible given their current addresses.  But that would
+mean a 4KB read-only BAR that happened to be aligned on a 2GB boundary
+would have to consume 2GB of address space, and *that* doesn't seem
+reasonable.
+
+We already have a quirk for this device, so I think the best fix is to
+change the quirk so it reads these three BARs directly and restores
+the resources based on its hard-coded knowledge of how big they are.
+
+Bjorn
