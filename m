@@ -1,72 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:41558 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752371AbbBQWJU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Feb 2015 17:09:20 -0500
-Received: by mail-ob0-f172.google.com with SMTP id nt9so58597256obb.3
-        for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 14:09:19 -0800 (PST)
-Date: Tue, 17 Feb 2015 16:09:16 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linuxppc-dev@ozlabs.org, linux-pci@vger.kernel.org,
-	benh@kernel.crashing.org
-Subject: Re: [PATCH RESEND v2 7/7] PCI/hotplug: PowerPC PowerNV PCI hotplug
- driver
-Message-ID: <20150217220916.GA26424@google.com>
-References: <1424157203-691-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1424157203-691-8-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mga11.intel.com ([192.55.52.93]:51435 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965718AbbBCCvx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 2 Feb 2015 21:51:53 -0500
+Message-ID: <54D037C1.7030802@linux.intel.com>
+Date: Tue, 03 Feb 2015 10:51:45 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1424157203-691-8-git-send-email-gwshan@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [Patch Part1 v7 00/38] Convert x86 to hierarchy irqdomain and
+ stacked irqchip
+References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 17, 2015 at 06:13:23PM +1100, Gavin Shan wrote:
-> The patch intends to add standalone driver to support PCI hotplug
-> for PowerPC PowerNV platform, which runs on top of skiboot firmware.
-> The firmware identified hotpluggable slots and marked their device
-> tree node with proper "ibm,slot-pluggable" and "ibm,reset-by-firmware".
-> The driver simply scans device-tree to create/register PCI hotplug slot
-> accordingly.
+Ping:)
+
+On 2015/1/20 11:08, Jiang Liu wrote:
+> Hi all,
+> 	The generic hierarchy irqdomain and stacked irqchip implementation
+> has been merged into v3.19, so this patch set converts x86 interupt
+> management to hierarchy irqdomain and stacked irqchip. I will send out
+> another following-on patch set to clean up code and interfaces obseleted
+> by this patch set.
 > 
-> If the skiboot firmware doesn't support slot status retrieval, the PCI
-> slot device node shouldn't have property "ibm,reset-by-firmware". In
-> that case, none of valid PCI slots will be detected from device tree.
-> The skiboot firmware doesn't export the capability to access attention
-> LEDs yet and it's something for TBD.
+> 	This patch set has been reviewed several times and it missed v3.19
+> merging because several got fixed just before the merging window.
+> 	The main changes since last review are:
+> 1) Rebased the patch set onto v3.19-rc5.
+> 2) Merged bugfixes into the patch introducing the bug so it won't break
+>    bisecting.
 > 
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ...
-
-> +static int disable_slot(struct hotplug_slot *php_slot)
-> +{
-> +	struct powernv_php_slot *slot = php_slot->private;
-> +
-> +	if (slot->state != POWERNV_PHP_SLOT_STATE_POPULATED)
-> +		return 0;
-> +
-> +	pci_lock_rescan_remove();
-> +	pcibios_remove_pci_devices(slot->bus);
-> +	pci_unlock_rescan_remove();
-> +	vm_unmap_aliases();
-
-What is vm_unmap_aliases() for?  I see this is probably copied from
-rpaphp_core.c, where it was added by b4a26be9f6f8 ("powerpc/pseries: Flush
-lazy kernel mappings after unplug operations").
-
-But I don't know whether:
-
-  - this is something specific to powerpc,
-  - the lack of vm_unmap_aliases() in other hotplug paths is a bug,
-  - the fact that we only do this on powerpc is covering up a
-    powerpc bug somewhere
-
-> +
-> +	/* Detach the child hotpluggable slots */
-> +	powernv_php_unregister(slot->dn);
-> +
-> +	/* Update slot state */
-> +	slot->state = POWERNV_PHP_SLOT_STATE_REGISTER;
-> +	return 0;
-> +}
+> Hi Thomas,
+> 	Rafael needs more time to review the patch set to refine ACPI
+> resource paring interface, and we are nearing to v3.19-rc6. So it would
+> be helpful to move onto the x86 hierarchy irqdomain patch set first, so
+> we may catch up with v3.20 merging window.
+> Thanks!
+> Gerry
+> 
+> Jiang Liu (36):
+>   x86/irq: Save destination CPU ID in irq_cfg
+>   x86/irq: Use hierarchy irqdomain to manage CPU interrupt vectors
+>   x86/hpet: Use new irqdomain interfaces to allocate/free IRQ
+>   x86/MSI: Use new irqdomain interfaces to allocate/free IRQ
+>   x86/uv: Use new irqdomain interfaces to allocate/free IRQ
+>   x86/htirq: Use new irqdomain interfaces to allocate/free IRQ
+>   x86/dmar: Use new irqdomain interfaces to allocate/free IRQ
+>   irq_remapping: Introduce new interfaces to support hierarchy
+>     irqdomain
+>   irq_remapping/vt-d: Change prototypes to prepare for enabling
+>     hierarchy irqdomain
+>   irq_remapping/vt-d: Enhance Intel IR driver to suppport hierarchy
+>     irqdomain
+>   irq_remapping/amd: Enhance AMD IR driver to suppport hierarchy
+>     irqdomain
+>   x86/hpet: Enhance HPET IRQ to support hierarchy irqdomain
+>   x86/MSI: Use hierarchy irqdomain to manage MSI interrupts
+>   x86/irq: Directly call native_compose_msi_msg() for DMAR IRQ
+>   irq_remapping/vt-d: Clean up unused MSI related code
+>   irq_remapping/amd: Clean up unused MSI related code
+>   irq_remapping: Clean up unused MSI related code
+>   x86/MSI: Clean up unused MSI related code and interfaces
+>   iommu/vt-d: Refine the interfaces to create IRQ for DMAR unit
+>   x86/irq: Use hierarchy irqdomain to manage DMAR interrupts
+>   x86/htirq: Use hierarchy irqdomain to manage Hypertransport
+>     interrupts
+>   x86/uv: Use hierarchy irqdomain to manage UV interrupts
+>   x86/irq: Normalize x86 irq_chip name
+>   x86/MSI: Simplify the way to deal with remapped MSI interrupts
+>   x86/MSI: Replace msi_update_msg() with irq_chip_compose_msi_msg()
+>   x86/irq: Implement irq_chip.irq_write_msi_msg for MSI/DMAR/HPET
+>     irq_chips
+>   x86/irq: Simplify MSI/DMAR/HPET implementation by using common code
+>   irq_remapping: Kill unused function irq_remapping_print_chip()
+>   x86/intel-mid, trivial: Refine code syntax for sfi_parse_mtmr()
+>   x86/irq: Kill unused pre_init_apic_IRQ0()
+>   x86/irq: Prepare IOAPIC interfaces to support hierarchy irqdomain
+>   x86/irq: Implement callbacks to enable hierarchy irqdomain on IOAPICs
+>   x86/irq: Refine the way to allocate irq_cfg for legacy IRQs
+>   x86/irq: Simplify the way to print IOAPIC entry
+>   x86/irq: Introduce helper functions to support hierarchy irqdomain
+>     for IOAPIC
+>   x86/irq: Convert IOAPIC to use hierarchy irqdomain interfaces
+> 
+> Rickard Strandqvist (1):
+>   x86/apb_timer: Remove unused function is_apbt_capable()
+> 
+> Thomas Gleixner (1):
+>   x86/intel-mid: Delay initialization of APB timer
+> 
+>  arch/ia64/include/asm/irq_remapping.h              |    2 -
+>  arch/ia64/kernel/msi_ia64.c                        |   30 +-
+>  arch/x86/Kconfig                                   |    4 +-
+>  arch/x86/include/asm/hpet.h                        |   16 +-
+>  arch/x86/include/asm/hw_irq.h                      |   91 +++
+>  arch/x86/include/asm/io_apic.h                     |   25 +-
+>  arch/x86/include/asm/irq_remapping.h               |   45 +-
+>  arch/x86/include/asm/msi.h                         |    7 +
+>  arch/x86/include/asm/pci.h                         |    5 -
+>  arch/x86/include/asm/x86_init.h                    |    4 -
+>  arch/x86/kernel/acpi/boot.c                        |   20 +-
+>  arch/x86/kernel/apb_timer.c                        |   12 -
+>  arch/x86/kernel/apic/htirq.c                       |  173 ++++--
+>  arch/x86/kernel/apic/io_apic.c                     |  600 +++++++++++++++-----
+>  arch/x86/kernel/apic/msi.c                         |  416 ++++++++------
+>  arch/x86/kernel/apic/vector.c                      |  205 ++++++-
+>  arch/x86/kernel/devicetree.c                       |   37 +-
+>  arch/x86/kernel/hpet.c                             |   57 +-
+>  arch/x86/kernel/mpparse.c                          |    6 +-
+>  arch/x86/kernel/x86_init.c                         |    2 -
+>  arch/x86/pci/intel_mid_pci.c                       |    6 +-
+>  .../platform/intel-mid/device_libs/platform_wdt.c  |    5 +-
+>  arch/x86/platform/intel-mid/intel-mid.c            |   18 +-
+>  arch/x86/platform/intel-mid/sfi.c                  |   30 +-
+>  arch/x86/platform/sfi/sfi.c                        |    5 +-
+>  arch/x86/platform/uv/uv_irq.c                      |  299 ++++------
+>  drivers/iommu/amd_iommu.c                          |  376 +++++++++---
+>  drivers/iommu/amd_iommu_init.c                     |    4 +
+>  drivers/iommu/amd_iommu_proto.h                    |    9 +
+>  drivers/iommu/amd_iommu_types.h                    |    5 +
+>  drivers/iommu/dmar.c                               |   19 +-
+>  drivers/iommu/intel_irq_remapping.c                |  451 ++++++++++-----
+>  drivers/iommu/irq_remapping.c                      |  178 ++----
+>  drivers/iommu/irq_remapping.h                      |   20 +-
+>  drivers/pci/htirq.c                                |   48 +-
+>  include/linux/dmar.h                               |    3 +-
+>  include/linux/htirq.h                              |   22 +-
+>  include/linux/intel-iommu.h                        |    4 +
+>  38 files changed, 2100 insertions(+), 1159 deletions(-)
+>  create mode 100644 arch/x86/include/asm/msi.h
 > 
