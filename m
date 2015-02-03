@@ -1,102 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from resqmta-po-12v.sys.comcast.net ([96.114.154.171]:36605 "EHLO
-	resqmta-po-12v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753005AbbBZBUh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:20:37 -0500
-Date: Thu, 26 Feb 2015 01:12:25 +0000 (UTC)
-From: Alnie <memobook80@comcast.net>
-To: linux-pci@vger.kernel.org
-Message-ID: <1602089933.13084034.1424913145538.JavaMail.zimbra@comcast.net>
-In-Reply-To: <1703881568.13072732.1424911985807.JavaMail.zimbra@comcast.net>
-Subject: PCI Issues with ExpressCard/54 Audio Device
+Received: from mx1.redhat.com ([209.132.183.28]:35169 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751976AbbBCXGz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 3 Feb 2015 18:06:55 -0500
+Subject: [PATCH] PCI: Expand quirk's handling of CS553x devices
+From: Myron Stowe <myron.stowe@redhat.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: nix@esperi.org.uk, linux-kernel@vger.kernel.org
+Date: Tue, 03 Feb 2015 16:01:24 -0700
+Message-ID: <20150203230124.1578.94572.stgit@amt.stowe>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, I am seeking feedback in regards to issues with a ExpressCard/54 audio card (http://www.notebookreview.com/notebookreview/creative-soundblaster-x-fi-xtreme-audio-for-notebook-review/) under Linux (same card has been working fine in Win 7). After recently having a conversation on alsa-devel about it, it was decided it seems to be a PCI issue. The "devices" in question....
+There seem to be a number of issues with CS553x devices and due to a
+recent patch series that detects PCI read-only BARs [1], we've encountered
+more.
 
-05:00.0 PCI bridge: Creative Labs [SB X-Fi Xtreme Audio] CA0110-IBG PCI to PCIe Bridge (prog-if 00 [Normal decode])
-     Physical Slot: 3
-     Flags: bus master, fast devsel, latency 0
-     Bus: primary=05, secondary=06, subordinate=0c, sec-latency=36
-     Memory behind bridge: f4300000-f43fffff
-     Capabilities: [50] Power Management version 3
-     Capabilities: [60] MSI: Enable- Count=1/16 Maskable- 64bit+
-     Capabilities: [80] Subsystem: Creative Labs Device 0040
-     Capabilities: [90] Express PCI-Express to PCI/PCI-X Bridge, MSI 00
-     Capabilities: [100] Advanced Error Reporting
+It appears that not only are the BAR values associated with this device
+often greater than the largest range that an IO decoder can request, they
+can also be non-conformant with respect to PCI's BAR sizing aspects,
+behaving instead, in a read-only manner [2].
 
-06:00.0 Audio device: Creative Labs [SB X-Fi Xtreme Audio] CA0110-IBG
-     Subsystem: Creative Labs SB1040
-     Flags: bus master, fast Back2Back, medium devsel, latency 32, IRQ 19
-     Memory at f4300000 (32-bit, non-prefetchable) [size=16K]
-     Capabilities: [dc] Power Management version 3
-     Kernel driver in use: snd_hda_intel
+This patch addresses read-only BAR values corresponding to CS553x devices
+by expanding the existing quirk, manually inserting regions based on the
+device's BIOS settings (as opposed to basing such on normal BAR sizing
+actions) when necessary.
 
+[1] https://lkml.org/lkml/2014/10/30/637
+    [PATCH 0/3] PCI: Fix detection of read-only BARs
+      36e8164882ca  PCI: Restore detection of read-only BARs
+      f795d86aaa57  PCI: Shrink decoding-disabled window while sizing BARs
+      7e79c5f8cad2  PCI: Add informational printk for invalid BARs
+[2] https://bugzilla.kernel.org/show_bug.cgi?id=85991 (Comment #4 forward)
+Reference: support.amd.com/TechDocs/31506_cs5535_databook.pdf
 
+Reported-by: Nix <nix@esperi.org.uk>
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+Fixes: 36e8164882ca ("PCI: Restore detection of read-only BARs")
+CC: stable@vger.kernel.org  # v.2.6.27+
+---
+ drivers/pci/quirks.c |   40 +++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 37 insertions(+), 3 deletions(-)
 
-dmesg output... http://pastebin.com/66UE659K
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index ed6f89b..aac98c5 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -324,18 +324,52 @@ static void quirk_s3_64M(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_868,		quirk_s3_64M);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_968,		quirk_s3_64M);
+ 
++static void quirk_io(struct pci_dev *dev, int pos, unsigned size,
++		     const char *name)
++{
++	u32 region;
++	struct pci_bus_region bus_region;
++	struct resource *res = dev->resource + pos;
++
++	pci_read_config_dword(dev, PCI_BASE_ADDRESS_0 + (pos << 2), &region);
++
++	if (!region)
++		return;
++
++	res->name = pci_name(dev);
++	res->flags = region & ~PCI_BASE_ADDRESS_IO_MASK;
++	res->flags |=
++		(IORESOURCE_IO | IORESOURCE_PCI_FIXED | IORESOURCE_SIZEALIGN);
++	region &= ~(size - 1);
++
++	/* Convert from PCI bus to resource space */
++	bus_region.start = region;
++	bus_region.end = region + size - 1;
++	pcibios_bus_to_resource(dev->bus, res, &bus_region);
++
++	dev_info(&dev->dev, FW_BUG "%s quirk: reg 0x%x: %pR\n",
++		 name, PCI_BASE_ADDRESS_0 + (pos << 2), res);
++}
++
+ /*
+  * Some CS5536 BIOSes (for example, the Soekris NET5501 board w/ comBIOS
+  * ver. 1.33  20070103) don't set the correct ISA PCI region header info.
+  * BAR0 should be 8 bytes; instead, it may be set to something like 8k
+  * (which conflicts w/ BAR1's memory range).
++ *
++ * CS553x's ISA PCI BARs may also be read-only (ref:
++ * https://bugzilla.kernel.org/show_bug.cgi?id=85991 - Comment #4 forward).
+  */
+ static void quirk_cs5536_vsa(struct pci_dev *dev)
+ {
++	static char *name = "CS5536 ISA bridge";
++
+ 	if (pci_resource_len(dev, 0) != 8) {
+-		struct resource *res = &dev->resource[0];
+-		res->end = res->start + 8 - 1;
+-		dev_info(&dev->dev, "CS5536 ISA bridge bug detected (incorrect header); workaround applied\n");
++		quirk_io(dev, 0,   8, name);
++		quirk_io(dev, 1, 256, name);
++		quirk_io(dev, 2, 512, name);
++		dev_info(&dev->dev, "%s bug detected (incorrect header); workaround applied\n",
++			 name);
+ 	}
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CS5536_ISA, quirk_cs5536_vsa);
 
-and comments in regard to it... http://mailman.alsa-project.org/pipermail/alsa-devel/2015-February/088237.html
-> 
-> [ 2619.199658] pciehp 0000:00:1c.3:pcie04: Card not present on Slot(3)
-> [ 2619.199666] pciehp 0000:00:1c.3:pcie04: slot(3): Link Down event
-> [ 2619.199674] pciehp 0000:00:1c.3:pcie04: Link Down event ignored on 
-> slot(3): already powering off
-> [ 2619.199911] pci_bus 0000:06: busn_res: [bus 06-0c] is released
-> [ 2620.757928] pciehp 0000:00:1c.3:pcie04: Card present on Slot(3)
-> [ 2620.767950] pciehp 0000:00:1c.3:pcie04: slot(3): Link Up event
-> [ 2620.767985] pciehp 0000:00:1c.3:pcie04: Link Up event ignored on 
-> slot(3): already powering on
-
-pciehp reacted power off and on here, and...
-
-> [ 2620.876160] pci 0000:05:00.0: [1102:7006] type 01 class 0x060400
-> [ 2620.876426] pci 0000:05:00.0: supports D1 D2
-> [ 2620.876719] pci 0000:05:00.0: bridge configuration invalid ([bus 
-> 00-00]), reconfiguring
-> [ 2620.876928] pci_bus 0000:06: busn_res: can not insert [bus 06-ff] 
-> under [bus 05-0c] (conflicts with (null) [bus 05-0c])
-
-.... and something failed here for the PCI bridge device.
-
-> [ 2620.876967] pci 0000:06:00.0: [1102:0009] type 00 class 0x040300
-> [ 2620.877013] pci 0000:06:00.0: reg 0x10: [mem 0x00000000-0x00003fff]
-> [ 2620.877203] pci 0000:06:00.0: supports D1 D2
-> [ 2620.877443] pci 0000:05:00.0: PCI bridge to [bus 06-ff]
-> [ 2620.877462] pci 0000:05:00.0:   bridge window [io  0x0000-0x0fff]
-> [ 2620.877474] pci 0000:05:00.0:   bridge window [mem 0x00000000-0x000fffff]
-> [ 2620.877492] pci 0000:05:00.0:   bridge window [mem 
-> 0x00000000-0x000fffff 64bit pref]
-> [ 2620.877500] pci_bus 0000:06: busn_res: [bus 06-ff] end is updated to 06
-> [ 2620.877559] pci 0000:05:00.0: BAR 14: assigned [mem 
-> 0xf4300000-0xf43fffff]
-> [ 2620.877568] pci 0000:05:00.0: BAR 15: assigned [mem 
-> 0xf4000000-0xf40fffff 64bit pref]
-> [ 2620.877574] pci 0000:05:00.0: BAR 13: assigned [io  0x2000-0x2fff]
-> [ 2620.877582] pci 0000:06:00.0: BAR 0: assigned [mem 0xf4300000-0xf4303fff]
-> [ 2620.877595] pci 0000:05:00.0: PCI bridge to [bus 06]
-> [ 2620.877603] pci 0000:05:00.0:   bridge window [io  0x2000-0x2fff]
-> [ 2620.877618] pci 0000:05:00.0:   bridge window [mem 0xf4300000-0xf43fffff]
-> [ 2620.877630] pci 0000:05:00.0:   bridge window [mem 
-> 0xf4000000-0xf40fffff 64bit pref]
-> [ 2620.877647] pcieport 0000:00:1c.3: PCI bridge to [bus 05-0c]
-> [ 2620.877655] pcieport 0000:00:1c.3:   bridge window [io  0x2000-0x2fff]
-> [ 2620.877667] pcieport 0000:00:1c.3:   bridge window [mem 
-> 0xf4300000-0xf7efffff]
-> [ 2620.877677] pcieport 0000:00:1c.3:   bridge window [mem 
-> 0xf4000000-0xf40fffff 64bit pref]
-> [ 2620.877990] pci 0000:05:00.0: enabling device (0000 -> 0003)
-> [ 2620.878013] snd_hda_intel 0000:06:00.0: enabling device (0000 -> 0002)
-> [ 2620.882747] azx_single_wait_for_response: 108 callbacks suppressed
-> [ 2620.882753] snd_hda_intel 0000:06:00.0: Codec #1 probe error; 
-> disabling it...
-> [ 2620.887052] snd_hda_intel 0000:06:00.0: no AFG or MFG node found
-> [ 2620.887058] snd_hda_intel 0000:06:00.0: no codecs initialized
-
-
-
-I've tried many kernels from 2.6 to 3.18 with similar results. Willing to retrieve more info. Thank you :)
-
--Alnie
