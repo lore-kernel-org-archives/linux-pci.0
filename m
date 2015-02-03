@@ -1,124 +1,153 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Len Brown <lenb@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [Patch v4 07/23] ACPI: Move the window flag logic to the combined parser
-Date: Thu,  5 Feb 2015 13:44:33 +0800
-Message-Id: <1423115089-12904-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:38669 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753806AbbBCBbB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 20:31:01 -0500
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 3 Feb 2015 11:30:59 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 70DB02CE8052
+	for <linux-pci@vger.kernel.org>; Tue,  3 Feb 2015 12:30:57 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t131Un2O24969320
+	for <linux-pci@vger.kernel.org>; Tue, 3 Feb 2015 12:30:57 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t131UN0u027908
+	for <linux-pci@vger.kernel.org>; Tue, 3 Feb 2015 12:30:24 +1100
+Date: Tue, 3 Feb 2015 09:30:05 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH V11 14/17] powerpc/powernv: Shift VF resource with an
+ offset
+Message-ID: <20150203013005.GB5901@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <20150113180502.GC2776@google.com>
+ <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1421288887-7765-15-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150130230803.GA6795@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150130230803.GA6795@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+On Fri, Jan 30, 2015 at 05:08:03PM -0600, Bjorn Helgaas wrote:
+>On Thu, Jan 15, 2015 at 10:28:04AM +0800, Wei Yang wrote:
+>> On PowrNV platform, resource position in M64 implies the PE# the resource
+>> belongs to. In some particular case, adjustment of a resource is necessary
+>> to locate it to a correct position in M64.
+>> 
+>> This patch introduces a function to shift the 'real' PF IOV BAR address
+>> according to an offset.
+>> 
+>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> ---
+>>  arch/powerpc/platforms/powernv/pci-ioda.c |   31 +++++++++++++++++++++++++++++
+>>  1 file changed, 31 insertions(+)
+>> 
+>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>> index 8bad2b0..62bb2eb 100644
+>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>> @@ -14,6 +14,7 @@
+>>  #include <linux/kernel.h>
+>>  #include <linux/pci.h>
+>>  #include <linux/crash_dump.h>
+>> +#include <linux/pci_regs.h>
+>>  #include <linux/debugfs.h>
+>>  #include <linux/delay.h>
+>>  #include <linux/string.h>
+>> @@ -749,6 +750,36 @@ static unsigned int pnv_ioda_dma_weight(struct pci_dev *dev)
+>>  	return 10;
+>>  }
+>>  
+>> +#ifdef CONFIG_PCI_IOV
+>> +static void pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
+>> +{
+>> +	struct pci_dn *pdn = pci_get_pdn(dev);
+>> +	int i;
+>> +	struct resource *res;
+>> +	resource_size_t size;
+>> +
+>> +	if (!dev->is_physfn)
+>> +		return;
+>> +
+>> +	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
+>> +		res = &dev->resource[i];
+>> +		if (!res->flags || !res->parent)
+>> +			continue;
+>> +
+>> +		if (!pnv_pci_is_mem_pref_64(res->flags))
+>> +			continue;
+>> +
+>> +		dev_info(&dev->dev, " Shifting VF BAR %pR to\n", res);
+>> +		size = pci_iov_resource_size(dev, i);
+>> +		res->start += size*offset;
+>
+>It seems like you should adjust res->end, too.  Am I missing something?
+>
 
-Normal memory and io resources have window always set to false. Move
-the flag logic to the unified address space parser.
+Bjorn, below is the mail I didn't manage to send yesterday.
+------------------------------------------------------------------------------
+No, what I am doing here is a little tricky.
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/resource.c |   22 +++++++++-------------
- 1 file changed, 9 insertions(+), 13 deletions(-)
+After reserve extra space for the IOV BAR, this range is marked down in the
+resource tree. And this function is called in pnv_pci_sriov_enable(), which is
+called when driver wants to enable the VF. How much the size this function
+want to shift depends on the PE number range is assigned in this turn. (The PE
+number range is recorded in the pdn->offset for the start number.)
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 99903d196024..15d17937c431 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -53,7 +53,7 @@ static bool acpi_dev_resource_len_valid(u64 start, u64 end, u64 len, bool io)
- }
- 
- static void acpi_dev_memresource_flags(struct resource *res, u64 len,
--				       u8 write_protect, bool window)
-+				       u8 write_protect)
- {
- 	res->flags = IORESOURCE_MEM;
- 
-@@ -62,9 +62,6 @@ static void acpi_dev_memresource_flags(struct resource *res, u64 len,
- 
- 	if (write_protect == ACPI_READ_WRITE_MEMORY)
- 		res->flags |= IORESOURCE_MEM_WRITEABLE;
--
--	if (window)
--		res->flags |= IORESOURCE_WINDOW;
- }
- 
- static void acpi_dev_get_memresource(struct resource *res, u64 start, u64 len,
-@@ -72,7 +69,7 @@ static void acpi_dev_get_memresource(struct resource *res, u64 start, u64 len,
- {
- 	res->start = start;
- 	res->end = start + len - 1;
--	acpi_dev_memresource_flags(res, len, write_protect, false);
-+	acpi_dev_memresource_flags(res, len, write_protect);
- }
- 
- /**
-@@ -118,7 +115,7 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
- EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
- 
- static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
--				      u8 io_decode, bool window)
-+				      u8 io_decode)
- {
- 	res->flags = IORESOURCE_IO;
- 
-@@ -130,9 +127,6 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
- 
- 	if (io_decode == ACPI_DECODE_16)
- 		res->flags |= IORESOURCE_IO_16BIT_ADDR;
--
--	if (window)
--		res->flags |= IORESOURCE_WINDOW;
- }
- 
- static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
-@@ -140,7 +134,7 @@ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
- {
- 	res->start = start;
- 	res->end = start + len - 1;
--	acpi_dev_ioresource_flags(res, len, io_decode, false);
-+	acpi_dev_ioresource_flags(res, len, io_decode);
- }
- 
- /**
-@@ -183,7 +177,6 @@ static bool acpi_decode_space(struct resource *res,
- 			      struct acpi_address64_attribute *attr)
- {
- 	u8 iodec = attr->granularity == 0xfff ? ACPI_DECODE_10 : ACPI_DECODE_16;
--	bool window = addr->producer_consumer == ACPI_PRODUCER;
- 	bool wp = addr->info.mem.write_protect;
- 	u64 len = attr->address_length;
- 
-@@ -192,10 +185,10 @@ static bool acpi_decode_space(struct resource *res,
- 
- 	switch (addr->resource_type) {
- 	case ACPI_MEMORY_RANGE:
--		acpi_dev_memresource_flags(res, len, wp, window);
-+		acpi_dev_memresource_flags(res, len, wp);
- 		break;
- 	case ACPI_IO_RANGE:
--		acpi_dev_ioresource_flags(res, len, iodec, window);
-+		acpi_dev_ioresource_flags(res, len, iodec);
- 		break;
- 	case ACPI_BUS_NUMBER_RANGE:
- 		res->flags = IORESOURCE_BUS;
-@@ -204,6 +197,9 @@ static bool acpi_decode_space(struct resource *res,
- 		return false;
- 	}
- 
-+	if (addr->producer_consumer == ACPI_PRODUCER)
-+		res->flags |= IORESOURCE_WINDOW;
-+
- 	return !(res->flags & IORESOURCE_DISABLED);
- }
- 
+So we don't dear to extend the end address, otherwise it will overlap other
+devices' space. Or "Shrink" is more accurate than "Shift", we just "Shift" the
+start address instead of the end address. The consequence is the IOV BAR is
+told be sit on a new place.
+
+Previously I think this has no problem, while taking a close look at it, there
+is a potential problem. The real size of the IOV BAR is in hardware itself.
+This means when we "Shift" the start address of the IOV BAR, the end address
+is also "Shift". If the end address is out of the space we have reserved, the
+MMIO transaction in this range will be seen by two devices. (If this my
+understanding of this part is not correct, please let me know.)
+
+So what I need to fix is make sure after the shift, the real end address(start
++ total_vf * size) is still in the range of the extended IOV BAR range.
+Because we have reserved more space for the IOV BAR, we have some extra space
+to shift the IOV BAR.
+
+One thing I am not sure is could the real end address be
+(start + num_vf * size)?
+
+
+>And I'm not sure it's safe to move the resource here, because if we move it
+>outside the bounds of the parent, we'll corrupt the resource tree.  Maybe
+>we're safe for some reason here, but it requires more analysis than I've
+>done to prove it.
+>
+>> +
+>> +		dev_info(&dev->dev, "                 %pR\n", res);
+>> +		pci_update_resource(dev, i);
+>> +	}
+>> +	pdn->max_vfs -= offset;
+>> +}
+>> +#endif /* CONFIG_PCI_IOV */
+>> +
+>>  #if 0
+>>  static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
+>>  {
+>> -- 
+>> 1.7.9.5
+>> 
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -- 
-1.7.10.4
+Richard Yang
+Help you, Help me
 
