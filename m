@@ -1,221 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:60329 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756042AbbBDXJQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Feb 2015 18:09:16 -0500
-Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 5 Feb 2015 09:09:13 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 366FE2CE8050
-	for <linux-pci@vger.kernel.org>; Thu,  5 Feb 2015 10:09:11 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t14N92JM13762754
-	for <linux-pci@vger.kernel.org>; Thu, 5 Feb 2015 10:09:11 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t14N8biK008514
-	for <linux-pci@vger.kernel.org>; Thu, 5 Feb 2015 10:08:37 +1100
-Date: Thu, 5 Feb 2015 07:08:16 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
-	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH V11 12/17] powerpc/powernv: Reserve additional space for
- IOV BAR according to the number of total_pe
-Message-ID: <20150204230816.GB18037@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20150113180502.GC2776@google.com>
- <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1421288887-7765-13-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150204212607.GA20072@google.com>
+Received: from mga02.intel.com ([134.134.136.20]:21845 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965737AbbBCCwM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 2 Feb 2015 21:52:12 -0500
+Message-ID: <54D037D5.7080704@linux.intel.com>
+Date: Tue, 03 Feb 2015 10:52:05 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150204212607.GA20072@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [Patch Part2 v4 00/33] Clean up obsoleted x86 interrupt manangement
+ code and interfaces
+References: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1421733113-15704-1-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 04, 2015 at 03:26:07PM -0600, Bjorn Helgaas wrote:
->On Thu, Jan 15, 2015 at 10:28:02AM +0800, Wei Yang wrote:
->> On PHB3, PF IOV BAR will be covered by M64 BAR to have better PE isolation.
->> Mostly the total_pe number is different from the total_VFs, which will lead
->> to a conflict between MMIO space and the PE number.
->> 
->> For example, total_VFs is 128 and total_pe is 256, then the second half of
->> M64 BAR space will be part of other PCI device, which may already belongs
->> to other PEs.
->> 
->> This patch reserve additional space for the PF IOV BAR, which is total_pe
->> number of VF's BAR size. By doing so, it prevents the conflict.
->> 
->> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->> ---
->>  arch/powerpc/include/asm/machdep.h        |    4 ++
->>  arch/powerpc/include/asm/pci-bridge.h     |    3 ++
->>  arch/powerpc/kernel/pci-common.c          |    5 +++
->>  arch/powerpc/platforms/powernv/pci-ioda.c |   59 +++++++++++++++++++++++++++++
->>  4 files changed, 71 insertions(+)
->> 
->> diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
->> index c8175a3..965547c 100644
->> --- a/arch/powerpc/include/asm/machdep.h
->> +++ b/arch/powerpc/include/asm/machdep.h
->> @@ -250,6 +250,10 @@ struct machdep_calls {
->>  	/* Reset the secondary bus of bridge */
->>  	void  (*pcibios_reset_secondary_bus)(struct pci_dev *dev);
->>  
->> +#ifdef CONFIG_PCI_IOV
->> +	void (*pcibios_fixup_sriov)(struct pci_bus *bus);
->> +#endif /* CONFIG_PCI_IOV */
->> +
->>  	/* Called to shutdown machine specific hardware not already controlled
->>  	 * by other drivers.
->>  	 */
->> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
->> index 334e745..b857ec4 100644
->> --- a/arch/powerpc/include/asm/pci-bridge.h
->> +++ b/arch/powerpc/include/asm/pci-bridge.h
->> @@ -170,6 +170,9 @@ struct pci_dn {
->>  #define IODA_INVALID_PE		(-1)
->>  #ifdef CONFIG_PPC_POWERNV
->>  	int	pe_number;
->> +#ifdef CONFIG_PCI_IOV
->> +	u16     max_vfs;		/* number of VFs IOV BAR expended */
->> +#endif /* CONFIG_PCI_IOV */
->>  #endif
->>  	struct list_head child_list;
->>  	struct list_head list;
->> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
->> index 889f743..832b7e1 100644
->> --- a/arch/powerpc/kernel/pci-common.c
->> +++ b/arch/powerpc/kernel/pci-common.c
->> @@ -1636,6 +1636,11 @@ void pcibios_scan_phb(struct pci_controller *hose)
->>  	if (ppc_md.pcibios_fixup_phb)
->>  		ppc_md.pcibios_fixup_phb(hose);
->>  
->> +#ifdef CONFIG_PCI_IOV
->> +	if (ppc_md.pcibios_fixup_sriov)
->> +		ppc_md.pcibios_fixup_sriov(bus);
->> +#endif /* CONFIG_PCI_IOV */
->> +
->>  	/* Configure PCI Express settings */
->>  	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
->>  		struct pci_bus *child;
->> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->> index 31335a7..6704fdf 100644
->> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
->> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->> @@ -1721,6 +1721,62 @@ static void pnv_pci_init_ioda_msis(struct pnv_phb *phb)
->>  static void pnv_pci_init_ioda_msis(struct pnv_phb *phb) { }
->>  #endif /* CONFIG_PCI_MSI */
->>  
->> +#ifdef CONFIG_PCI_IOV
->> +static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
->> +{
->> +	struct pci_controller *hose;
->> +	struct pnv_phb *phb;
->> +	struct resource *res;
->> +	int i;
->> +	resource_size_t size;
->> +	struct pci_dn *pdn;
->> +
->> +	if (!pdev->is_physfn || pdev->is_added)
->> +		return;
->> +
->> +	hose = pci_bus_to_host(pdev->bus);
->> +	phb = hose->private_data;
->> +
->> +	pdn = pci_get_pdn(pdev);
->> +	pdn->max_vfs = 0;
->
->^^^ point A
->
->> +
->> +	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
->> +		res = &pdev->resource[i];
->> +		if (!res->flags || res->parent)
->> +			continue;
->> +		if (!pnv_pci_is_mem_pref_64(res->flags)) {
->> +			dev_warn(&pdev->dev, " Skipping expanding IOV BAR %pR on %s\n",
->> +				 res, pci_name(pdev));
->> +			continue;
->> +		}
->> +
->> +		dev_dbg(&pdev->dev, " Fixing VF BAR[%d] %pR to\n", i, res);
->> +		size = pci_iov_resource_size(pdev, i);
->> +		res->end = res->start + size * phb->ioda.total_pe - 1;
->> +		dev_dbg(&pdev->dev, "                       %pR\n", res);
->> +		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
->> +				i - PCI_IOV_RESOURCES,
->> +				res, phb->ioda.total_pe);
->> +	}
->> +	pdn->max_vfs = phb->ioda.total_pe;
->
->I don't think you change phb->ioda.total_pe between point A (above) and
->here.  Does that mean "max_vfs == 0" is some kind of flag, maybe related to
->the three cases in pnv_pci_iov_resource_alignment()?  Ewww!
->
+Ping)
 
-Not a flag exactly.
-
-The pci_dn is initialized to 0, I reset it to 0 explicitly since on the
-hotplug case, we need to redo all those stuff again.
-
-Putting this in a function like pcibios_release_device() seems more
-reasonable. I will think about it later.
-
-
->If it doesn't change, just set "pdn->max_vfs = phb->ioda.total_pe" at
->point A and be done with it.
-
-This will change. As you see in another patch.
-Will reply that mail for details.
-
->
->But hopefully you can just remove this fixup path altogether.
->
-
-Agree.
-
-Use a weak function as you proposed is a better way.
-
->> +}
->> +
->> +static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
->> +{
->> +	struct pci_dev *pdev;
->> +	struct pci_bus *b;
->> +
->> +	list_for_each_entry(pdev, &bus->devices, bus_list) {
->> +		b = pdev->subordinate;
->> +
->> +		if (b)
->> +			pnv_pci_ioda_fixup_sriov(b);
->> +
->> +		pnv_pci_ioda_fixup_iov_resources(pdev);
->> +	}
->> +}
->> +#endif /* CONFIG_PCI_IOV */
->> +
->>  /*
->>   * This function is supposed to be called on basis of PE from top
->>   * to bottom style. So the the I/O or MMIO segment assigned to
->> @@ -2097,6 +2153,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->>  	ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
->>  	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
->>  	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
->> +#ifdef CONFIG_PCI_IOV
->> +	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
->> +#endif /* CONFIG_PCI_IOV */
->>  	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
->>  
->>  	/* Reset IODA tables to a clean state */
->> -- 
->> 1.7.9.5
->> 
-
--- 
-Richard Yang
-Help you, Help me
-
+On 2015/1/20 13:51, Jiang Liu wrote:
+> This is a following-on patch of "[Patch Part1 v7 00/38] Convert x86 to
+> hierarchy irqdomain and stacked irqchip" at
+> https://lkml.org/lkml/2015/1/19/685
+> 
+> The precedent patch has convert x86 interrupt management subsystem to
+> hierarchy irqdomain and stacked irqchip, so this patch set cleans up
+> code and interfaces obsoleted by the precedent patch set.
+> 
+> Main changes since last version:
+> 1) rebased onto v3.19-rc5
+> 2) add patch 33 to avoid memory allocation/free when assigning CPU vector 
+> 
+> Regards,
+> Gerry
+> 
+> Jiang Liu (29):
+>   x86/irq: Kill unused old IOAPIC irqdomain interfaces
+>   x86/irq: Kill unused struct mp_pin_info
+>   x86/irq: Kill x86_io_apic_ops.print_entries and related interfaces
+>   x86/irq: Kill x86_io_apic_ops.setup_entry and related interfaces
+>   x86/irq: Kill x86_io_apic_ops.set_affinity and related interfaces
+>   x86/irq: Kill x86_io_apic_ops.eoi_ioapic_pin and related interfaces
+>   x86/irq: Kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
+>   x86/irq: Clean up unused forward declarations in x86_init.h
+>   irq_remapping: Clean up unsued code to support IOAPIC
+>   irq_remapping/vt-d: Clean up unsued code
+>   irq_remapping/amd: Clean up unsued code
+>   irq_remapping: Clean up unused interfaces
+>   x86/irq: Kill irq_cfg.irq_remapped
+>   irq_remapping/vt-d: Move struct irq_2_iommu into
+>     intel_irq_remapping.c
+>   irq_remapping/amd: Move struct irq_2_irte into amd_iommu.c
+>   x86/irq: Move irq_cfg.irq_2_pin into io_apic.c
+>   x86/irq: Kill struct io_apic_irq_attr
+>   x86/irq: Kill x86_io_apic_ops.write and x86_io_apic_ops.modify
+>   x86/irq: Clean up io_apic.h
+>   x86/irq: Use cached IOAPIC entry instead of reading from hardware
+>   x86/irq: Kill unused alloc_irq_and_cfg_at()
+>   x86/irq: Change functions only used in vector.c as static
+>   x86/irq: Kill function apic_set_affinity()
+>   x86/irq: Move check of cfg->move_in_progress into
+>     send_cleanup_vector()
+>   x86/irq: Move private data in struct irq_cfg into dedicated data
+>     structure
+>   x86/irq: Refine the way to calculate NR_IRQS
+>   x86/irq, ACPI: Kill private function mp_register_gsi()/
+>     mp_unregister_gsi()
+>   x86/irq: Move irqdomain specific code into asm/irqdomain.h
+>   x86/irq: Avoid memory allocation in __assign_irq_vector()
+> 
+> Thomas Gleixner (4):
+>   x86/irq: Remove sis apic bug workaround
+>   x86, ioapic: Use proper defines for the entry fields
+>   x86,ioapic: Cleanup irq_trigger/polarity()
+>   x86: Cleanup irq_domain ops
+> 
+>  arch/x86/Kconfig                     |    1 -
+>  arch/x86/include/asm/hw_irq.h        |   63 ---
+>  arch/x86/include/asm/io_apic.h       |  108 +----
+>  arch/x86/include/asm/irq_remapping.h |   38 +-
+>  arch/x86/include/asm/irq_vectors.h   |   18 +-
+>  arch/x86/include/asm/irqdomain.h     |   63 +++
+>  arch/x86/include/asm/x86_init.h      |   16 -
+>  arch/x86/kernel/acpi/boot.c          |   70 +--
+>  arch/x86/kernel/apic/htirq.c         |    2 +-
+>  arch/x86/kernel/apic/io_apic.c       |  868 +++++++++-------------------------
+>  arch/x86/kernel/apic/msi.c           |    2 +-
+>  arch/x86/kernel/apic/vector.c        |  342 ++++++--------
+>  arch/x86/kernel/devicetree.c         |   12 +-
+>  arch/x86/kernel/hpet.c               |    2 +-
+>  arch/x86/kernel/mpparse.c            |    9 +-
+>  arch/x86/kernel/x86_init.c           |    6 -
+>  arch/x86/platform/sfi/sfi.c          |   10 +-
+>  arch/x86/platform/uv/uv_irq.c        |    5 +-
+>  drivers/iommu/amd_iommu.c            |  153 +-----
+>  drivers/iommu/intel_irq_remapping.c  |  206 +-------
+>  drivers/iommu/irq_remapping.c        |   80 ----
+>  drivers/iommu/irq_remapping.h        |   16 -
+>  drivers/pci/quirks.c                 |    7 -
+>  23 files changed, 490 insertions(+), 1607 deletions(-)
+>  create mode 100644 arch/x86/include/asm/irqdomain.h
+> 
