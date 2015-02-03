@@ -1,177 +1,231 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:36398 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751498AbbBXIdT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:33:19 -0500
-Received: by pabkq14 with SMTP id kq14so34428975pab.3
-        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:33:19 -0800 (PST)
-Subject: [PATCH v12 03/21] PCI: Keep individual VF BAR size in struct
- pci_sriov
-To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
-	gwshan@linux.vnet.ibm.com
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Date: Tue, 24 Feb 2015 02:33:16 -0600
-Message-ID: <20150224083316.32124.29294.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:51751 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753390AbbBCRGr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Feb 2015 12:06:47 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAErSpo4SKP=nKdn43rE37JFNW5SSb4uRyRyO6vAO5tqa2TOpQg@mail.gmail.com>
+References: <8761boas78.fsf@spindle.srvr.nix>
+	<1422847799.2491.13.camel@zim.stowe>
+	<87h9v42p22.fsf@spindle.srvr.nix>
+	<CAErSpo4SKP=nKdn43rE37JFNW5SSb4uRyRyO6vAO5tqa2TOpQg@mail.gmail.com>
+Date: Tue, 3 Feb 2015 10:06:46 -0700
+Message-ID: <CAL-B5D1ytTtQ6JnzWW3VTL2PnM67nj8karxSf5u0e-pmSdZNMg@mail.gmail.com>
+Subject: Re: [3.18.3 BISECTED REGRESSION] scx200_acb / cs5535-smb / geodewdt /
+ cs5535-clockevt torpedoed
+From: Myron Stowe <myron.stowe@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Nix <nix@esperi.org.uk>, Myron Stowe <mstowe@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Bill Unruh <unruh@physics.ubc.ca>, martin@lucina.net,
+	Matthew Wilcox <willy@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
+On Tue, Feb 3, 2015 at 9:50 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, Feb 2, 2015 at 11:36 AM, Nix <nix@esperi.org.uk> wrote:
+>> On 2 Feb 2015, Myron Stowe verbalised:
+>>
+>>> Nix:
+>>>
+>>> Thanks for the work you've already done with the bisection.  Let's see
+>>> if we can get to the bottom of this.  Would you capture two couple sets
+>>> of logs, one without the issue and another set with the commit at issue
+>>> included for comparison.
+>
+>>  pci 0000:00:14.0: [1022:2090] type 00 class 0x060100
+>> -pci 0000:00:14.0: reg 0x10: [io  0x6000-0x7fff]
+>> -pci 0000:00:14.0: reg 0x14: [io  0x6100-0x61ff]
+>> -pci 0000:00:14.0: reg 0x18: [io  0x6200-0x63ff]
+>>  pci 0000:00:14.0: CS5536 ISA bridge bug detected (incorrect header); workaround applied
+>
+>> +scx200_acb: can't allocate io 0x0-0x7
+>
+> I think the problem is that these three BARs are read-only.  Prior to
+> 36e8164882ca, we didn't detect that, and we computed the size based on
+> the lowest order bit that was set in the address.  This gave us
+> incorrect sizes, but it did work in the sense that the driver could
+> operate the device.
+>
+> After 36e8164882ca, we detect that the BARs are read-only and ignore
+> them completely, which breaks this case because we don't mark the
+> resource as I/O and we don't fill in the starting address, so even
+> though the quirk runs, it just sets the first resource to [???
+> 0x0000-0x0007], which doesn't work.
+>
+> I think this is the right behavior for the PCI core because we can't
+> tell how big these BARs are.  The only alternative is to assume they
+> are as big as possible given their current addresses.  But that would
+> mean a 4KB read-only BAR that happened to be aligned on a 2GB boundary
+> would have to consume 2GB of address space, and *that* doesn't seem
+> reasonable.
+>
+> We already have a quirk for this device, so I think the best fix is to
+> change the quirk so it reads these three BARs directly and restores
+> the resources based on its hard-coded knowledge of how big they are.
+>
 
-Currently we don't store the individual VF BAR size.  We calculate it when
-needed by dividing the PF's IOV resource size (which contains space for
-*all* the VFs) by total_VFs or by reading the BAR in the SR-IOV capability
-again.
+I see Bjorn beat me to the punch.  Anyway here is what I was just
+writing up in response ...
 
-Keep the individual VF BAR size in struct pci_sriov.barsz[], add
-pci_iov_resource_size() to retrieve it, and use that instead of doing the
-division or reading the SR-IOV capability BAR.
+Nix:
 
-[bhelgaas: rename to "barsz[]", simplify barsz[] index computation, remove
-SR-IOV capability BAR sizing]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/iov.c   |   39 ++++++++++++++++++++-------------------
- drivers/pci/pci.h   |    1 +
- include/linux/pci.h |    3 +++
- 3 files changed, 24 insertions(+), 19 deletions(-)
+Thanks very much for provinding the logs asked for earlier.  I've studied
+the logs, code, and commit 3fdb9b9 and believe I now understand what is
+occurring.
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 05f9d97e4175..5bca0e1a2799 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -57,6 +57,14 @@ static void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
- 		pci_remove_bus(virtbus);
- }
- 
-+resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
-+{
-+	if (!dev->is_physfn)
-+		return 0;
-+
-+	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
-+}
-+
- static int virtfn_add(struct pci_dev *dev, int id, int reset)
- {
- 	int i;
-@@ -92,8 +100,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 			continue;
- 		virtfn->resource[i].name = pci_name(virtfn);
- 		virtfn->resource[i].flags = res->flags;
--		size = resource_size(res);
--		do_div(size, iov->total_VFs);
-+		size = pci_iov_resource_size(dev, i + PCI_IOV_RESOURCES);
- 		virtfn->resource[i].start = res->start + size * id;
- 		virtfn->resource[i].end = virtfn->resource[i].start + size - 1;
- 		rc = request_resource(res, &virtfn->resource[i]);
-@@ -311,7 +318,7 @@ static void sriov_disable(struct pci_dev *dev)
- 
- static int sriov_init(struct pci_dev *dev, int pos)
- {
--	int i;
-+	int i, bar64;
- 	int rc;
- 	int nres;
- 	u32 pgsz;
-@@ -360,29 +367,29 @@ found:
- 	pgsz &= ~(pgsz - 1);
- 	pci_write_config_dword(dev, pos + PCI_SRIOV_SYS_PGSIZE, pgsz);
- 
-+	iov = kzalloc(sizeof(*iov), GFP_KERNEL);
-+	if (!iov)
-+		return -ENOMEM;
-+
- 	nres = 0;
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = dev->resource + PCI_IOV_RESOURCES + i;
--		i += __pci_read_base(dev, pci_bar_unknown, res,
--				     pos + PCI_SRIOV_BAR + i * 4);
-+		bar64 = __pci_read_base(dev, pci_bar_unknown, res,
-+					pos + PCI_SRIOV_BAR + i * 4);
- 		if (!res->flags)
- 			continue;
- 		if (resource_size(res) & (PAGE_SIZE - 1)) {
- 			rc = -EIO;
- 			goto failed;
- 		}
-+		iov->barsz[i] = resource_size(res);
- 		res->end = res->start + resource_size(res) * total - 1;
- 		dev_info(&dev->dev, "VF(n) BAR%d space: %pR (contains BAR%d for %d VFs)\n",
- 			 i, res, i, total);
-+		i += bar64;
- 		nres++;
- 	}
- 
--	iov = kzalloc(sizeof(*iov), GFP_KERNEL);
--	if (!iov) {
--		rc = -ENOMEM;
--		goto failed;
--	}
--
- 	iov->pos = pos;
- 	iov->nres = nres;
- 	iov->ctrl = ctrl;
-@@ -414,6 +421,7 @@ failed:
- 		res->flags = 0;
- 	}
- 
-+	kfree(iov);
- 	return rc;
- }
- 
-@@ -510,14 +518,7 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
-  */
- resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
- {
--	struct resource tmp;
--	int reg = pci_iov_resource_bar(dev, resno);
--
--	if (!reg)
--		return 0;
--
--	 __pci_read_base(dev, pci_bar_unknown, &tmp, reg);
--	return resource_alignment(&tmp);
-+	return pci_iov_resource_size(dev, resno);
- }
- 
- /**
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 4091f82239cd..57329645dd01 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -247,6 +247,7 @@ struct pci_sriov {
- 	struct pci_dev *dev;	/* lowest numbered PF */
- 	struct pci_dev *self;	/* this PF */
- 	struct mutex lock;	/* lock for VF bus */
-+	resource_size_t barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
- };
- 
- #ifdef CONFIG_PCI_ATS
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 211e9da8a7d7..15596582e575 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1675,6 +1675,7 @@ int pci_num_vf(struct pci_dev *dev);
- int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
- int pci_sriov_get_totalvfs(struct pci_dev *dev);
-+resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
- #else
- static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
- { return -ENODEV; }
-@@ -1686,6 +1687,8 @@ static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
- { return 0; }
- static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
- { return 0; }
-+static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
-+{ return 0; }
- #endif
- 
- #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
+As you too pointed out, the issue concerns the device at 00:14.0.  From the
+'dmesg' logs we see that on a good boot we get:
+  pci 0000:00:14.0: reg 0x10: [io  0x6000-0x7fff]       // Bad: see below
+  pci 0000:00:14.0: reg 0x14: [io  0x6100-0x61ff]
+  pci 0000:00:14.0: reg 0x18: [io  0x6200-0x63ff]
+  pci 0000:00:14.0: CS5536 ISA bridge bug detected (incorrect header);
+  workaround applied
+whereas with commit 3fdb9b9 applied we longer get the lines corresponding to
+the device's BARs.
 
+I believe this is due to this specific device's BARs as being non-conformant
+with respect to PCI device BAR sizing.  Based on my analysis, all three BARs
+always return fixed, read-only, values and thus commit 3fdb9b9 is detecting
+such as it was designed to.
+
+The difference in this case is we need these BARs.  In all the prior cases
+where we detected read-only BARs we could ignore them with no consequenses
+(see the patch series summary at: https://lkml.org/lkml/2014/10/30/637).
+
+Note also that in the series I submitted upstream to detect non-conformant
+BARs there were three patches and the latter added a message letting us know
+such a BAR was encountered (https://lkml.org/lkml/2014/10/30/636).  It looks
+like you are running a "stable" kernel, 3.18.5, and the warning message is
+not present as the "stable" kernel updates only took in patch 1/3 and not
+the subsequent two.
+
+With commit 3fdb9b9 applied, no resource information was obtained for the
+device.  Thus later, when the kernel's driver probed and tried to attach it
+ended up failing since it could not acquire the needed resources:
+  cs5535-gpio cs5535-gpio: can't request region
+  cs5535-gpio: probe of cs5535-gpio failed with error -5
+  cs5535-mfgpt cs5535-mfgpt: can't request region
+  cs5535-mfgpt: probe of cs5535-mfgpt failed with error -5
+  ...
+  cs5535-smb: probe of cs5535-smb failed with error -5
+  ...
+  cs5535-clockevt: Could not allocate MFGPT timer
+
+
+Focusing on the root issue, here is my analysis -
+During PCI device discovery the kernel walks the bus and collects resource
+information (see: drivers/pci/probe.c::__pci_read_base()).  Flowing the
+pertinant parts based on specific values obtained from the 'dmesg' logs I
+come up with this with respect to device 00:14.0 BAR 0 (prior to commit
+3fdb9b9 being applied):
+
+  #define PCI_BASE_ADDRESS_IO_MASK (~0x03UL)
+  #define IO_SPACE_LIMIT ~(0UL)
+
+  mask = 0xffffffff
+  l = 0x00006001
+  sz = 0x00006001       // See footnote [1] below; this is the key
+  l &= PCI_BASE_ADDRESS_IO_MASK
+  l = 0x00006000
+  [ sz &= PCI_BASE_ADDRESS_IO_MASK ]    // commit 3fdb9b9
+  [ sz = 0x00006000 ]                   // commit 3fdb9b9
+  mask = PCI_BASE_ADDRESS_IO_MASK & (u32) IO_SPACE_LIMIT
+  mask = 0xfffffffc
+
+  sz = pci_size(l, sz, mask)
+  sz = pci_size(base, maxbase, mask)
+  sz = pci_size(0x00000000.00006000, 0x00000000.00006001, 0x00000000.fffffffc)
+      u64 size = mask & maxbase
+      size = 0x00000000.00006000
+      size = (size & ~(size-1)) - 1
+      size = (0x00000000.00006000 & ~(0x00000000.00005fff)) - 1
+      size = (0x00000000.00006000 & 0xffffffff.ffffa000) - 1
+      size = 0x00000000.00002000 - 1
+      size = 0x00000000.00001fff
+      if (base == maxbase && ((base | size) & mask) != mask)
+          return 0      // base != maxbase so test is False
+      return  0x00000000.00001fff
+  sz = 0x1fff
+
+  region.start = l
+  region.start = 0x6000
+  region.end = l + sz
+  region.end = 0x7fff
+
+The kernel ends up with an 8k IO Port region with start and end sizes of
+0x6000 and 0x7fff respectively for BAR 0 as is confirmed in the "good boot"
+'dmesg':
+  pci 0000:00:14.0: reg 0x10: [io  0x6000-0x7fff]
+
+[1] There are two issues here.  The largest range that an IO decoder can
+request is 256 bytes.  This is rectified later by
+drivers/pci/quirks.c::quirk_cs5536_vsa(), which truncates the range to 8
+bytes (see: support.amd.com/TechDocs/31506_cs5535_databoot.pdf, sec 6.11, p
+370 and sec 5.6.1, p 105).
+
+The other issue is that the BARs of this device are non-conformant.  They
+are not returning proper sizing infomation when sized.  Instead, they seem
+to be returning hard-coded, read-only, values and this is the root cause at
+play.
+
+With commit 3fdb9b9 applied, the read-only BARs are detected and ignored:
+
+  mask = 0xffffffff
+  l = 0x00006001
+  sz = 0x00006001       // For 8k, device should have returned 0xffffe001
+  l &= PCI_BASE_ADDRESS_IO_MASK
+  l = 0x00006000
+  sz &= PCI_BASE_ADDRESS_IO_MASK        // commit 3fdb9b9
+  sz = 0x00006000                       // commit 3fdb9b9
+  mask = PCI_BASE_ADDRESS_IO_MASK & (u32) IO_SPACE_LIMIT
+  mask = 0xfffffffc
+
+  sz = pci_size(l, sz, mask)
+  sz = pci_size(base, maxbase, mask)
+  sz = pci_size(0x00000000.00006000, 0x00000000.00006000, 0x00000000.fffffffc)
+      u64 size = mask & maxbase
+      size = 0x00000000.00006000
+      size = (size & ~(size-1)) - 1
+      size = (0x00000000.00006000 & ~(0x00000000.00005fff)) - 1
+      size = (0x00000000.00006000 & 0xffffffff.ffffa000) - 1
+      size = 0x00000000.00002000 - 1
+      size = 0x00000000.00001fff
+      if (base == maxbase && ((base | size) & mask) != mask)
+          // base == maxbase - this part of test is True
+          // ((base | size) & mask) != mask - while this part is for
+          // detecting another aspect, it is also True
+          return 0
+  sz = 0
+
+  if (!sz)
+    goto fail
+
+
+As expressed above, I believe this device is non-conformant.  This could be
+validated by instrumenting the kernel's sizing code in '__pci_read_base()';
+specifically the initial 'pci_read_config_dword()'s of 'l' and 'sz'.
+
+Whereas we have been able to ignore read-only BARs in past occurrances, this
+time they are needed.  As such, I think we can solve this issue by expanding
+the existing quirk for this device.  I'll work that up and post.  If you
+would, please apply and test what is posted and report back.  In the mean
+time, I would be interested in obtaining confirmation as to my belief that
+this device's BARs are read-only (i.e. the instrumentation mentioned).  If
+you have time and are willing I would appreaciate that.  If not, I'm
+confident that is what is occurring and you can just stick with applying and
+testing the expanded quirk patch I intend to post.
+
+Thanks so much for your efforts,
+ Myron
+
+
+> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
