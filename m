@@ -1,72 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:59920 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751272AbbBPDQ3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 15 Feb 2015 22:16:29 -0500
-Message-ID: <1424056424.21410.33.camel@kernel.crashing.org>
-Subject: Re: [PATCH v2 00/30] Refine PCI scan interfaces and make generic
- pci host bridge
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	"linux-alpha@vger.kernel.org" <linux-alpha@vger.kernel.org>,
-	"linux-m68k@vger.kernel.org" <linux-m68k@vger.kernel.org>,
-	Liviu Dudau <liviu@dudau.co.uk>, Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Mon, 16 Feb 2015 14:13:44 +1100
-In-Reply-To: <54E14562.30407@huawei.com>
-References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
-	 <20150214194552.GA3932@e102568-lin.cambridge.arm.com>
-	 <54E14562.30407@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-yh0-f41.google.com ([209.85.213.41]:42054 "EHLO
+	mail-yh0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753806AbbBCBhi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 20:37:38 -0500
+Received: by mail-yh0-f41.google.com with SMTP id f73so17375609yha.0
+        for <linux-pci@vger.kernel.org>; Mon, 02 Feb 2015 17:37:37 -0800 (PST)
+From: Kevin Hao <haokexin@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Michael Ellerman <mpe@ellerman.id.au>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 01/15] PCI: Add pci_device_to_OF_node() stub for !CONFIG_OF
+Date: Tue,  3 Feb 2015 09:37:24 +0800
+Message-Id: <1422927444-31292-1-git-send-email-haokexin@gmail.com>
+In-Reply-To: <1422923108.4625.2.camel@ellerman.id.au>
+References: <1422923108.4625.2.camel@ellerman.id.au>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2015-02-16 at 09:18 +0800, Yijing Wang wrote:
-> >> I tested this series on x86 (with or without ACPI).
-> >> Comments and tests are warmly welcome!
-> > 
-> > Can you push a public branch out rebased against mainline for us to pull
-> > and test please ?
-> 
-> Hi Lorenzo, I rebased the series and you could pull it from git@github.com:YijingWang/linux-pci.git for-gen-host-v2
-> 
-> Thank you to help test!
+Add a stub for pci_device_to_OF_node() so drivers don't need to
+use #ifdef CONFIG_OF around calls to it.
 
-Thanks, I'll try to spend some time reviewing and testing this on
-powerpc as well.
+Signed-off-by: Kevin Hao <haokexin@gmail.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+Hi Bjorn,
 
-Cheers,
-Ben.
+Here is the revised version with the update of the subject and commit log
+in case that you want to take it for 3.20. Otherwise we will merge this
+version to powerpc tree during the 3.21 cycle.
 
-> Thanks!
-> Yijing.
-> 
-> > 
-> > Thanks !
-> > Lorenzo
-> > 
-> > 
-> > .
-> > 
-> 
-> 
+ include/linux/pci.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8323cbf93913..421eb6a9e600 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1863,6 +1863,8 @@ static inline void pci_set_of_node(struct pci_dev *dev) { }
+ static inline void pci_release_of_node(struct pci_dev *dev) { }
+ static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
+ static inline void pci_release_bus_of_node(struct pci_bus *bus) { }
++static inline struct device_node *
++pci_device_to_OF_node(const struct pci_dev *pdev) { return NULL; }
+ #endif  /* CONFIG_OF */
+ 
+ #ifdef CONFIG_EEH
+-- 
+1.9.3
 
