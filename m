@@ -1,158 +1,77 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Len Brown <lenb@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [Patch v4 06/23] ACPI: Unify the parsing of address_space and ext_address_space
-Date: Thu,  5 Feb 2015 13:44:32 +0800
-Message-Id: <1423115089-12904-7-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from icebox.esperi.org.uk ([81.187.191.129]:54829 "EHLO
+	mail.esperi.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751302AbbBDAR5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Feb 2015 19:17:57 -0500
+From: Nix <nix@esperi.org.uk>
+To: Myron Stowe <myron.stowe@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Expand quirk's handling of CS553x devices
+References: <20150203230124.1578.94572.stgit@amt.stowe>
+Date: Wed, 04 Feb 2015 00:17:49 +0000
+In-Reply-To: <20150203230124.1578.94572.stgit@amt.stowe> (Myron Stowe's
+	message of "Tue, 03 Feb 2015 16:01:24 -0700")
+Message-ID: <871tm6jzrm.fsf@spindle.srvr.nix>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+On 3 Feb 2015, Myron Stowe told this:
 
-With the unions in place which let us identify the substructs we can
-use a single parser for address_space and ext_address_space.
+> There seem to be a number of issues with CS553x devices and due to a
+> recent patch series that detects PCI read-only BARs [1], we've encountered
+> more.
+>
+> It appears that not only are the BAR values associated with this device
+> often greater than the largest range that an IO decoder can request, they
+> can also be non-conformant with respect to PCI's BAR sizing aspects,
+> behaving instead, in a read-only manner [2].
+>
+> This patch addresses read-only BAR values corresponding to CS553x devices
+> by expanding the existing quirk, manually inserting regions based on the
+> device's BIOS settings (as opposed to basing such on normal BAR sizing
+> actions) when necessary.
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/resource.c |   90 ++++++++++++++++++-----------------------------
- 1 file changed, 34 insertions(+), 56 deletions(-)
+Looks good!
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index cdb1a3c4a0b9..99903d196024 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -178,6 +178,35 @@ bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res)
- }
- EXPORT_SYMBOL_GPL(acpi_dev_resource_io);
- 
-+static bool acpi_decode_space(struct resource *res,
-+			      struct acpi_resource_address *addr,
-+			      struct acpi_address64_attribute *attr)
-+{
-+	u8 iodec = attr->granularity == 0xfff ? ACPI_DECODE_10 : ACPI_DECODE_16;
-+	bool window = addr->producer_consumer == ACPI_PRODUCER;
-+	bool wp = addr->info.mem.write_protect;
-+	u64 len = attr->address_length;
-+
-+	res->start = attr->minimum;
-+	res->end = attr->maximum;
-+
-+	switch (addr->resource_type) {
-+	case ACPI_MEMORY_RANGE:
-+		acpi_dev_memresource_flags(res, len, wp, window);
-+		break;
-+	case ACPI_IO_RANGE:
-+		acpi_dev_ioresource_flags(res, len, iodec, window);
-+		break;
-+	case ACPI_BUS_NUMBER_RANGE:
-+		res->flags = IORESOURCE_BUS;
-+		break;
-+	default:
-+		return false;
-+	}
-+
-+	return !(res->flags & IORESOURCE_DISABLED);
-+}
-+
- /**
-  * acpi_dev_resource_address_space - Extract ACPI address space information.
-  * @ares: Input ACPI resource object.
-@@ -190,39 +219,13 @@ EXPORT_SYMBOL_GPL(acpi_dev_resource_io);
- bool acpi_dev_resource_address_space(struct acpi_resource *ares,
- 				     struct resource *res)
- {
--	acpi_status status;
- 	struct acpi_resource_address64 addr;
--	bool window;
--	u8 io_decode;
--
--	status = acpi_resource_to_address64(ares, &addr);
--	if (ACPI_FAILURE(status))
--		return false;
- 
--	res->start = addr.address.minimum;
--	res->end = addr.address.maximum;
--	window = addr.producer_consumer == ACPI_PRODUCER;
--
--	switch(addr.resource_type) {
--	case ACPI_MEMORY_RANGE:
--		acpi_dev_memresource_flags(res, addr.address.address_length,
--					   addr.info.mem.write_protect,
--					   window);
--		break;
--	case ACPI_IO_RANGE:
--		io_decode = addr.address.granularity == 0xfff ?
--				ACPI_DECODE_10 : ACPI_DECODE_16;
--		acpi_dev_ioresource_flags(res, addr.address.address_length,
--					  io_decode, window);
--		break;
--	case ACPI_BUS_NUMBER_RANGE:
--		res->flags = IORESOURCE_BUS;
--		break;
--	default:
-+	if (ACPI_FAILURE(acpi_resource_to_address64(ares, &addr)))
- 		return false;
--	}
- 
--	return !(res->flags & IORESOURCE_DISABLED);
-+	return acpi_decode_space(res, (struct acpi_resource_address *)&addr,
-+				 &addr.address);
- }
- EXPORT_SYMBOL_GPL(acpi_dev_resource_address_space);
- 
-@@ -239,39 +242,14 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
- 					 struct resource *res)
- {
- 	struct acpi_resource_extended_address64 *ext_addr;
--	bool window;
--	u8 io_decode;
- 
- 	if (ares->type != ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64)
- 		return false;
- 
- 	ext_addr = &ares->data.ext_address64;
- 
--	res->start = ext_addr->address.minimum;
--	res->end = ext_addr->address.maximum;
--	window = ext_addr->producer_consumer == ACPI_PRODUCER;
--
--	switch(ext_addr->resource_type) {
--	case ACPI_MEMORY_RANGE:
--		acpi_dev_memresource_flags(res,
--					   ext_addr->address.address_length,
--					   ext_addr->info.mem.write_protect,
--					   window);
--		break;
--	case ACPI_IO_RANGE:
--		io_decode = ext_addr->address.granularity == 0xfff ?
--				ACPI_DECODE_10 : ACPI_DECODE_16;
--		acpi_dev_ioresource_flags(res, ext_addr->address.address_length,
--					  io_decode, window);
--		break;
--	case ACPI_BUS_NUMBER_RANGE:
--		res->flags = IORESOURCE_BUS;
--		break;
--	default:
--		return false;
--	}
--
--	return !(res->flags & IORESOURCE_DISABLED);
-+	return acpi_decode_space(res, (struct acpi_resource_address *)ext_addr,
-+				 &ext_addr->address);
- }
- EXPORT_SYMBOL_GPL(acpi_dev_resource_ext_address_space);
- 
+[    0.270107] PCI: Probing PCI hardware
+[    0.280187] PCI host bridge to bus 0000:00
+[    0.290028] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+[    0.300021] pci_bus 0000:00: root bus resource [mem 0x00000000-0xffffffff]
+[    0.310018] pci_bus 0000:00: No busn resource found for root bus, will use [bus 00-ff]
+[    0.325514] pci 0000:00:14.0: [Firmware Bug]: CS5536 ISA bridge quirk: reg 0x10: [io  0x6000-0x6007]
+[    0.330042] pci 0000:00:14.0: [Firmware Bug]: CS5536 ISA bridge quirk: reg 0x14: [io  0x6100-0x61ff]
+[    0.340039] pci 0000:00:14.0: [Firmware Bug]: CS5536 ISA bridge quirk: reg 0x18: [io  0x6200-0x63ff]
+[    0.350017] pci 0000:00:14.0: CS5536 ISA bridge bug detected (incorrect header); workaround applied
+[    0.361456] pci 0000:00:14.2: legacy IDE quirk: reg 0x10: [io  0x01f0-0x01f7]
+[    0.370019] pci 0000:00:14.2: legacy IDE quirk: reg 0x14: [io  0x03f6]
+[    0.380019] pci 0000:00:14.2: legacy IDE quirk: reg 0x18: [io  0x0170-0x0177]
+[    0.390017] pci 0000:00:14.2: legacy IDE quirk: reg 0x1c: [io  0x0376]
+[    0.405842] pci 0000:00:0e.0: PCI bridge to [bus 01]
+[    0.412043] Switched to clocksource pit
+[...]
+[    0.780013] cs5535-gpio cs5535-gpio: reserved resource region [io  0x6100-0x61ff]
+[    0.785102] cs5535-mfgpt cs5535-mfgpt: reserved resource region [io  0x6200-0x63ff]
+[    0.801002] cs5535-mfgpt cs5535-mfgpt: 8 MFGPT timers available
+[    0.806684] cs5535-mfd 0000:00:14.0: 5 devices registered.
+[...]
+[    1.451754] cs5535-smb cs5535-smb: SCx200 device 'CS5535 ACB0' registered
+[    1.452515] pc87360: Device 0x09 not activated
+[    1.470755] cs5535-mfgpt cs5535-mfgpt: registered timer 0
+[    1.473869] Geode LX AES 0000:00:01.2: GEODE AES engine enabled.
+[    1.489999] cs5535-mfgpt cs5535-mfgpt: registered timer 1
+[    1.492402] cs5535-clockevt: Registering MFGPT timer as a clock event, using IRQ 7
+[...]
+[    1.621402] Switched to clocksource tsc
+
+nix@fold 3 /home/nix% grep cs5535 /proc/timer_list
+Clock Event Device: cs5535-clockevt
+nix@fold 4 /home/nix% ls -l /dev/watchdog
+crw------- 1 root root 10, 130 Feb  4 00:14 /dev/watchdog
+
+Thank you for such a prompt fix on hardware as obscure as this :)
+
 -- 
-1.7.10.4
-
+NULL && (void)
