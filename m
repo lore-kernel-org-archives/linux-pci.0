@@ -1,183 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:62564 "EHLO mga01.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:54598 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750910AbbBEFmY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 Feb 2015 00:42:24 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
+	id S1756042AbbBDXJT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Feb 2015 18:09:19 -0500
+Message-ID: <1423091348.22865.477.camel@redhat.com>
+Subject: Re: [PATCH v3] PCI/sysfs: off by two when checking the limit on
+ driver_override length
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Sasha Levin <sasha.levin@oracle.com>
+Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Len Brown <lenb@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [Patch v4 03/23] ACPI: Implement proper length checks for mem resources
-Date: Thu,  5 Feb 2015 13:44:29 +0800
-Message-Id: <1423115089-12904-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Alexander Graf <agraf@suse.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
+Date: Wed, 04 Feb 2015 16:09:08 -0700
+In-Reply-To: <1423089495-5647-1-git-send-email-sasha.levin@oracle.com>
+References: <1423089495-5647-1-git-send-email-sasha.levin@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+On Wed, 2015-02-04 at 17:38 -0500, Sasha Levin wrote:
+> When printing the driver_override parameter when it is 4095 and 4094 bytes
+> long the printing code would access invalid memory because we need count+1
+> bytes for printing.
+> 
+> Cc: <stable@vger.kernel.org> # v3.16+
+> Fixes: 782a985d ("PCI: Introduce new device binding path using pci_dev.driver_override")
+> Cc: Alex Williamson <alex.williamson@redhat.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> Cc: Alexander Graf <agraf@suse.de>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+> ---
+>  drivers/pci/pci-sysfs.c |    5 +++--
+>  1 files changed, 3 insertions(+), 2 deletions(-)
 
-Check whether the resulting length is the same as the given
-length. Check for start <= end as well.
 
-We need to hand in the resource for this, so we can apply the flags
-directly.
+Acked-by: Alex Williamson <alex.williamson@redhat.com>
 
-[Jiang] Remove enforcement that resource starting address must be
-non-zero.
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/resource.c |   62 ++++++++++++++++++++++++++---------------------
- 1 file changed, 35 insertions(+), 27 deletions(-)
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index aa012fb..312f23a 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -521,7 +521,8 @@ static ssize_t driver_override_store(struct device *dev,
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+>  	char *driver_override, *old = pdev->driver_override, *cp;
+>  
+> -	if (count > PATH_MAX)
+> +	/* We need to keep extra room for a newline */
+> +	if (count >= (PAGE_SIZE - 1))
+>  		return -EINVAL;
+>  
+>  	driver_override = kstrndup(buf, count, GFP_KERNEL);
+> @@ -549,7 +550,7 @@ static ssize_t driver_override_show(struct device *dev,
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+>  
+> -	return sprintf(buf, "%s\n", pdev->driver_override);
+> +	return snprintf(buf, PAGE_SIZE, "%s\n", pdev->driver_override);
+>  }
+>  static DEVICE_ATTR_RW(driver_override);
+>  
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 1c616a56e007..3e7d9f6eb875 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -34,21 +34,37 @@
- #define valid_IRQ(i) (true)
- #endif
- 
--static unsigned long acpi_dev_memresource_flags(u64 len, u8 write_protect,
--						bool window)
-+static bool acpi_dev_resource_len_valid(u64 start, u64 end, u64 len, bool io)
- {
--	unsigned long flags = IORESOURCE_MEM;
-+	u64 reslen = end - start + 1;
- 
--	if (len == 0)
--		flags |= IORESOURCE_DISABLED;
-+	/*
-+	 * CHECKME: len might be required to check versus a minimum
-+	 * length as well. 1 for io is fine, but for memory it does
-+	 * not make any sense at all.
-+	 */
-+	if (len && reslen && reslen == len && start <= end)
-+		return true;
-+
-+	pr_info("ACPI: invalid or unassigned resource %s [%016llx - %016llx] length [%016llx]\n",
-+		io ? "io" : "mem", start, end, len);
-+
-+	return false;
-+}
-+
-+static void acpi_dev_memresource_flags(struct resource *res, u64 len,
-+				       u8 write_protect, bool window)
-+{
-+	res->flags = IORESOURCE_MEM;
-+
-+	if (!acpi_dev_resource_len_valid(res->start, res->end, len, false))
-+		res->flags |= IORESOURCE_DISABLED;
- 
- 	if (write_protect == ACPI_READ_WRITE_MEMORY)
--		flags |= IORESOURCE_MEM_WRITEABLE;
-+		res->flags |= IORESOURCE_MEM_WRITEABLE;
- 
- 	if (window)
--		flags |= IORESOURCE_WINDOW;
--
--	return flags;
-+		res->flags |= IORESOURCE_WINDOW;
- }
- 
- static void acpi_dev_get_memresource(struct resource *res, u64 start, u64 len,
-@@ -56,7 +72,7 @@ static void acpi_dev_get_memresource(struct resource *res, u64 start, u64 len,
- {
- 	res->start = start;
- 	res->end = start + len - 1;
--	res->flags = acpi_dev_memresource_flags(len, write_protect, false);
-+	acpi_dev_memresource_flags(res, len, write_protect, false);
- }
- 
- /**
-@@ -77,24 +93,18 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
- 	switch (ares->type) {
- 	case ACPI_RESOURCE_TYPE_MEMORY24:
- 		memory24 = &ares->data.memory24;
--		if (!memory24->minimum && !memory24->address_length)
--			return false;
- 		acpi_dev_get_memresource(res, memory24->minimum,
- 					 memory24->address_length,
- 					 memory24->write_protect);
- 		break;
- 	case ACPI_RESOURCE_TYPE_MEMORY32:
- 		memory32 = &ares->data.memory32;
--		if (!memory32->minimum && !memory32->address_length)
--			return false;
- 		acpi_dev_get_memresource(res, memory32->minimum,
- 					 memory32->address_length,
- 					 memory32->write_protect);
- 		break;
- 	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
- 		fixed_memory32 = &ares->data.fixed_memory32;
--		if (!fixed_memory32->address && !fixed_memory32->address_length)
--			return false;
- 		acpi_dev_get_memresource(res, fixed_memory32->address,
- 					 fixed_memory32->address_length,
- 					 fixed_memory32->write_protect);
-@@ -102,7 +112,8 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
- 	default:
- 		return false;
- 	}
--	return true;
-+
-+	return !(res->flags & IORESOURCE_DISABLED);
- }
- EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
- 
-@@ -186,7 +197,6 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
- 	acpi_status status;
- 	struct acpi_resource_address64 addr;
- 	bool window;
--	u64 len;
- 	u8 io_decode;
- 
- 	status = acpi_resource_to_address64(ares, &addr);
-@@ -199,10 +209,9 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
- 
- 	switch(addr.resource_type) {
- 	case ACPI_MEMORY_RANGE:
--		len = addr.address.maximum - addr.address.minimum + 1;
--		res->flags = acpi_dev_memresource_flags(len,
--						addr.info.mem.write_protect,
--						window);
-+		acpi_dev_memresource_flags(res, addr.address.address_length,
-+					   addr.info.mem.write_protect,
-+					   window);
- 		break;
- 	case ACPI_IO_RANGE:
- 		io_decode = addr.address.granularity == 0xfff ?
-@@ -236,7 +245,6 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
- {
- 	struct acpi_resource_extended_address64 *ext_addr;
- 	bool window;
--	u64 len;
- 	u8 io_decode;
- 
- 	if (ares->type != ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64)
-@@ -250,10 +258,10 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
- 
- 	switch(ext_addr->resource_type) {
- 	case ACPI_MEMORY_RANGE:
--		len = ext_addr->address.maximum - ext_addr->address.minimum + 1;
--		res->flags = acpi_dev_memresource_flags(len,
--					ext_addr->info.mem.write_protect,
--					window);
-+		acpi_dev_memresource_flags(res,
-+					   ext_addr->address.address_length,
-+					   ext_addr->info.mem.write_protect,
-+					   window);
- 		break;
- 	case ACPI_IO_RANGE:
- 		io_decode = ext_addr->address.granularity == 0xfff ?
--- 
-1.7.10.4
+
 
