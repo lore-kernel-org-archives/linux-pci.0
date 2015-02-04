@@ -1,101 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:51413 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754732AbbBFShy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 6 Feb 2015 13:37:54 -0500
-Message-ID: <54D509C9.9010204@ti.com>
-Date: Fri, 6 Feb 2015 13:36:57 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:59661 "EHLO
+	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754702AbbBDXoq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Feb 2015 18:44:46 -0500
+Received: by mail-oi0-f41.google.com with SMTP id z81so3964701oif.0
+        for <linux-pci@vger.kernel.org>; Wed, 04 Feb 2015 15:44:45 -0800 (PST)
+Date: Wed, 4 Feb 2015 17:44:42 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH V11 00/17] Enable SRIOV on Power8
+Message-ID: <20150204234442.GC20072@google.com>
+References: <20150113180502.GC2776@google.com>
+ <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Catalin Marinas <catalin.marinas@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v6 0/7] PCI: get DMA configuration from parent device
-References: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com> <20150206151542.GD23190@e104818-lin.cambridge.arm.com> <54D4DD95.7000303@ti.com> <CAErSpo6GOXHeKKfU8s5jCS3+Mui=HupZd=jpkLEyWAE94Ory5w@mail.gmail.com>
-In-Reply-To: <CAErSpo6GOXHeKKfU8s5jCS3+Mui=HupZd=jpkLEyWAE94Ory5w@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/06/2015 12:53 PM, Bjorn Helgaas wrote:
-> On Fri, Feb 6, 2015 at 9:28 AM, Murali Karicheri<m-karicheri2@ti.com>  wrote:
->> On 02/06/2015 10:15 AM, Catalin Marinas wrote:
->>>
->>> On Thu, Feb 05, 2015 at 09:52:52PM +0000, Murali Karicheri wrote:
->>>>
->>>> This patch add an important capability to PCI driver on Keystone. I hope
->>>> to
->>>> have this merged to the upstream branch so that it is available for
->>>> v3.20.
->>>
->>> It's very late for 3.20 and the code hasn't been in linux-next at all
->>> (but it's not me who's merging this code), unless you can squeeze it in
->>> as a bug-fix.
->>
->> This is in fact a bug fix as PCI on Keystone is broken without this.
->
-> Oh, sorry, I didn't realize that this was so urgent.  I guess I read
-> "this adds an important capability" in the cover letter and concluded
-> that it was new functionality.
-Bjorn,
+On Thu, Jan 15, 2015 at 10:27:50AM +0800, Wei Yang wrote:
+> This patchset enables the SRIOV on POWER8.
+> 
+> The gerneral idea is put each VF into one individual PE and allocate required
+> resources like MMIO/DMA/MSI. The major difficulty comes from the MMIO
+> allocation and adjustment for PF's IOV BAR.
+> 
+> On P8, we use M64BT to cover a PF's IOV BAR, which could make an individual VF
+> sit in its own PE. This gives more flexiblity, while at the mean time it
+> brings on some restrictions on the PF's IOV BAR size and alignment.
+> 
+> To achieve this effect, we need to do some hack on pci devices's resources.
+> 1. Expand the IOV BAR properly.
+>    Done by pnv_pci_ioda_fixup_iov_resources().
+> 2. Shift the IOV BAR properly.
+>    Done by pnv_pci_vf_resource_shift().
+> 3. IOV BAR alignment is calculated by arch dependent function instead of an
+>    individual VF BAR size.
+>    Done by pnv_pcibios_sriov_resource_alignment().
+> 4. Take the IOV BAR alignment into consideration in the sizing and assigning.
+>    This is achieved by commit: "PCI: Take additional IOV BAR alignment in
+>    sizing and assigning"
 
-Thanks for responding.
+I was hoping to merge this during the v3.20 merge window, but that will
+likely open next week, and none of these patches have been in linux-next at
+all yet, so I think next week would be rushing it a bit.  
 
-Let me give you some context on this without which my explanation won't 
-be complete. For using PCI driver on Keystone, I had submitted patches 
-related to machine and DTS to the arm mailing list to enable the driver 
-on Keystone. Subsequenty one of the patch from my series  was Nack-ed 
-and I was asked to implememented in a different way and started this 
-series. You can refer to the discussion of this at
+Most of the changes are in arch/powerpc, which does help, but there are
+some changes in pci/setup-bus.c that I would like to have some runtime on.
+The changes aren't extensive, but I don't understand that code well enough
+to be comfortable based on just reading the patch.
 
-http://www.gossamer-threads.com/lists/linux/kernel/2024591
+I pushed the current state of this patchset to my pci/virtualization
+branch.  I think the best way forward would be for you to start with that
+branch, since I've made quite a few tweaks to the patches you posted to the
+list.  Then you can post a v12 with any changes you make for the next
+round.
 
-The PCI driver enablement on Keystone is still a working in progress and 
-I am trying to get it fully functional on the upstream. Another missing 
-piece is the SerDes phy driver patch. We have started working on the 
-other part (SerDes phy driver) already as the initial one was not 
-accepted. So it is fine if we are too late for the v3.20 merge window to 
-merge this series and this can be applied to the next branch for v3.21.
+Ben, I know you chimed in earlier to help explain PEs.  Are you or another
+powerpc maintainer planning to ack all this?
 
->
-> Anyway, if it's broken, presumably PCI on Keystone *did* work at one
-> point.  Can you identify the commit that broke it and requires these
-> fixes, so we can figure out how far the fixes need to be backported?
->
-
-I am trying to get this driver enabled on Keystone by adding the missing 
-pieces as described above. So I guess we don't have to back port 
-anything here.
-
-> If I merge it, I would like to get into my for-linus branch and get a
-> little time in -next before asking Linus to pull it.  The merge window
-> is a little wrinkle there -- I don't like to add new things to the mix
-> during the window.  But if it's an important fix we can still get it
-> in before the final v3.20.
-
-Please apply this to next branch for v3.21. It currently apply cleanly 
-to v3.19-rc7. If you want me rebase to another branch, let me know I can 
-apply and send you an updated patch.
-
-Thanks
-
-Murali
-
->
-> Bjorn
-
-
--- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+Bjorn
