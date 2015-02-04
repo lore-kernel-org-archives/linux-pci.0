@@ -1,115 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e24smtp04.br.ibm.com ([32.104.18.25]:37124 "EHLO
-	e24smtp04.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751795AbbBSS6E (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Feb 2015 13:58:04 -0500
-Received: from /spool/local
-	by e24smtp04.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <cascardo@linux.vnet.ibm.com>;
-	Thu, 19 Feb 2015 16:58:02 -0200
-Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
-	by d24dlp02.br.ibm.com (Postfix) with ESMTP id B0CDE1DC006C
-	for <linux-pci@vger.kernel.org>; Thu, 19 Feb 2015 13:57:01 -0500 (EST)
-Received: from d24av03.br.ibm.com (d24av03.br.ibm.com [9.8.31.95])
-	by d24relay01.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1JIwAuY4481240
-	for <linux-pci@vger.kernel.org>; Thu, 19 Feb 2015 15:58:11 -0300
-Received: from d24av03.br.ibm.com (localhost [127.0.0.1])
-	by d24av03.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1JIvuYK030402
-	for <linux-pci@vger.kernel.org>; Thu, 19 Feb 2015 16:57:56 -0200
-Date: Thu, 19 Feb 2015 16:57:47 -0200
-From: cascardo@linux.vnet.ibm.com
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH 0/4] Support registering specific reset handler
-Message-ID: <20150219185746.GA4440@oc0812247204.ltc.br.ibm.com>
-References: <1423803299-22356-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <20150216131427.GA4840@oc0812247204.ltc.br.ibm.com>
- <20150216223647.GA5758@shangw>
+Received: from relmlor4.renesas.com ([210.160.252.174]:27900 "EHLO
+	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S933410AbbBDJOo convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Feb 2015 04:14:44 -0500
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"horms+renesas@verge.net.au" <horms+renesas@verge.net.au>,
+	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: RE: [PATCH] PCI: rcar: Change macro name of PCIEPARL and PCIEPARH
+Date: Wed, 4 Feb 2015 09:14:40 +0000
+Message-ID: <SIXPR06MB06397E299C79226C6DD148CDF53A0@SIXPR06MB0639.apcprd06.prod.outlook.com>
+References: <1423040575-28080-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com>
+In-Reply-To: <1423040575-28080-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150216223647.GA5758@shangw>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 17, 2015 at 09:36:47AM +1100, Gavin Shan wrote:
-> On Mon, Feb 16, 2015 at 11:14:27AM -0200, cascardo@linux.vnet.ibm.com wrote:
-> >On Fri, Feb 13, 2015 at 03:54:55PM +1100, Gavin Shan wrote:
-> >> VFIO PCI infrastructure depends on pci_reset_function() to do reset on
-> >> PCI devices so that they would be in clean state when host or guest grabs
-> >> them. Unfortunately, the function doesn't work (or not well) on some PCI
-> >> devices that require EEH PE reset.
-> >> 
-> >> The patchset extends the quirk for PCI device speicific reset methods to
-> >> allow dynamically registration. With it, we can translate reset requests
-> >> for those special PCI devcies to EEH PE reset, which is only avaialble on
-> >> 64-bits PowerPC platforms.
-> >> 
-> >
-> >Hi, Gavin.
-> >
-> >I like your approach overall. That allows us to confine these quirks to
-> >the platforms where they are relevant. I would make the quirks more
-> >specific, though, instead of doing them for all IBM and Mellanox
-> >devices.
-> >
-> 
-> Yeah, we need have more specific vendor/device IDs for PATCH[4/4]. Could
-> you please take a look on PATCH[4/4] and then suggest the specific devices
-> that requries the platform-dependent reset quirk? Especially the device IDs
-> for IBM/Mellanox we need put add quirks for.
-> 
-> >I wonder if we should not have some form of domain reset, where we would
-> >reset all the devices on the same group, and use that on vfio. Grouping
-> >the devices would then be made platform-dependent, as well as the reset
-> >method. On powernv, we would group by IOMMU group and issue a
-> >fundamental reset.
-> >
-> 
-> I'm assuming "domain reset" is PE reset, which is the specific reset handler
-> tries to do on PowerNV platform. The reason why we need platform specific
-> reset handler is some adapters can't support function level reset methods
-> (except pci_dev_specific_reset()) in __pci_dev_reset().
-> 
+Hi Iwamatsu-san,
 
-Well, in the case of Power servers, this would be the PE reset, I am not
-sure what this would be on other platforms. No other platform implements
-pci_set_pcie_reset_state, which I think would be one possible to
-implement such a reset.
-
-What I am saying is that we should consider doing this on all platforms
-and for all adapters, because this is not specific to Power and this is
-not specific to this particular set of adapters. Otherwise, one can
-simply program one adapter in the guest to write to host memory,
-shutdown, and since no reset will take place, the card will simply write
-to host memory when the guest is finished with and IOMMU is off.
-
-Regards.
-Cascardo.
-
-> Thanks,
-> Gavin
+On: 04 February 2015 09:03, Nobuhiro Iwamatsu wrote:
 > 
-> >Cascardo.
-> >
-> >> Gavin Shan (4):
-> >>   PCI: Rename struct pci_dev_reset_methods
-> >>   PCI: Introduce list for device reset methods
-> >>   PCI: Allow registering reset method
-> >>   powerpc/powernv: Register PCI dev specific reset handlers
-> >> 
-> >>  arch/powerpc/platforms/powernv/pci.c |  61 +++++++++++++++
-> >>  drivers/pci/pci.h                    |   3 +-
-> >>  drivers/pci/quirks.c                 | 139 ++++++++++++++++++++++++++++++-----
-> >>  include/linux/pci.h                  |   9 +++
-> >>  4 files changed, 192 insertions(+), 20 deletions(-)
-> >> 
-> >> -- 
-> >> 1.8.3.2
-> >> 
+> PCIEPARL and PCIEPARH are macro that calculates address of the register.
+> However, register name is incorrect, PCIEPALR and PCIEPAUR is correct.
+> This change macro name to PCIEPALR and PCIEPAUR.
 > 
-> _______________________________________________
-> Linuxppc-dev mailing list
-> Linuxppc-dev@lists.ozlabs.org
-> https://lists.ozlabs.org/listinfo/linuxppc-dev
+> Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+Acked-by: Phil Edworthy <phil.edworthy@renesas.com>
+
+Thanks
+Phil
+
+> ---
+>  drivers/pci/host/pcie-rcar.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index eb12659..183c32d 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -64,8 +64,8 @@
+>  #define  LAR_ENABLE		(1 << 1)
+> 
+>  /* PCIe address reg & mask */
+> -#define PCIEPARL(x)		(0x03400 + ((x) * 0x20))
+> -#define PCIEPARH(x)		(0x03404 + ((x) * 0x20))
+> +#define PCIEPALR(x)		(0x03400 + ((x) * 0x20))
+> +#define PCIEPAUR(x)		(0x03404 + ((x) * 0x20))
+>  #define PCIEPAMR(x)		(0x03408 + ((x) * 0x20))
+>  #define PCIEPTCTLR(x)		(0x0340c + ((x) * 0x20))
+>  #define  PAR_ENABLE		(1 << 31)
+> @@ -341,9 +341,9 @@ static void rcar_pcie_setup_window(int win, struct
+> rcar_pcie *pcie)
+>  	else
+>  		res_start = res->start;
+> 
+> -	rcar_pci_write_reg(pcie, upper_32_bits(res_start), PCIEPARH(win));
+> +	rcar_pci_write_reg(pcie, upper_32_bits(res_start), PCIEPAUR(win));
+>  	rcar_pci_write_reg(pcie, lower_32_bits(res_start) & ~0x7F,
+> -			   PCIEPARL(win));
+> +			   PCIEPALR(win));
+> 
+>  	/* First resource is for IO */
+>  	mask = PAR_ENABLE;
+> --
+> 2.1.3
 
