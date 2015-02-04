@@ -1,46 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:54788 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932658AbbBBTLv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 14:11:51 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Marc Zyngier <marc.zyngier@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
+Received: from aserp1040.oracle.com ([141.146.126.69]:41782 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964917AbbBDWim (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Feb 2015 17:38:42 -0500
+From: Sasha Levin <sasha.levin@oracle.com>
+To: linux-kernel@vger.kernel.org
+Cc: Sasha Levin <sasha.levin@oracle.com>, <stable@vger.kernel.org>,
+	Alex Williamson <alex.williamson@redhat.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Andre Przywara <andre.przywara@arm.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Fix pcibios_update_irq misuse of irq number
-Date: Mon, 02 Feb 2015 18:02:16 +0100
-Message-ID: <4145359.V8A0ARGtXz@wuerfel>
-In-Reply-To: <1422456683-797-1-git-send-email-marc.zyngier@arm.com>
-References: <1422456683-797-1-git-send-email-marc.zyngier@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Alexander Graf <agraf@suse.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM)
+Subject: [PATCH v3] PCI/sysfs: off by two when checking the limit on driver_override length
+Date: Wed,  4 Feb 2015 17:38:15 -0500
+Message-Id: <1423089495-5647-1-git-send-email-sasha.levin@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 28 January 2015 14:51:23 Marc Zyngier wrote:
->  void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
->  {
-> -       dev_dbg(&dev->dev, "assigning IRQ %02d\n", irq);
-> -       pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
-> +       struct irq_data *d;
-> +
-> +       d = irq_get_irq_data(irq);
-> +#ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
-> +       while (d->parent_data)
-> +               d = d->parent_data;
-> +#endif
-> +       dev_dbg(&dev->dev, "assigning IRQ %02ld\n", d->hwirq);
-> +       pci_write_config_byte(dev, PCI_INTERRUPT_LINE, d->hwirq);
->  }
+When printing the driver_override parameter when it is 4095 and 4094 bytes
+long the printing code would access invalid memory because we need count+1
+bytes for printing.
 
-I'm puzzled by this. Why is it even important what we write into
-the config space? Isn't this just an interface between BIOS and
-OS for systems that rely on the interrupt numbers to be statically
-assigned before boot?
+Cc: <stable@vger.kernel.org> # v3.16+
+Fixes: 782a985d ("PCI: Introduce new device binding path using pci_dev.driver_override")
+Cc: Alex Williamson <alex.williamson@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Alexander Graf <agraf@suse.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+---
+ drivers/pci/pci-sysfs.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-	Arnd
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index aa012fb..312f23a 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -521,7 +521,8 @@ static ssize_t driver_override_store(struct device *dev,
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	char *driver_override, *old = pdev->driver_override, *cp;
+ 
+-	if (count > PATH_MAX)
++	/* We need to keep extra room for a newline */
++	if (count >= (PAGE_SIZE - 1))
+ 		return -EINVAL;
+ 
+ 	driver_override = kstrndup(buf, count, GFP_KERNEL);
+@@ -549,7 +550,7 @@ static ssize_t driver_override_show(struct device *dev,
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+-	return sprintf(buf, "%s\n", pdev->driver_override);
++	return snprintf(buf, PAGE_SIZE, "%s\n", pdev->driver_override);
+ }
+ static DEVICE_ATTR_RW(driver_override);
+ 
+-- 
+1.7.10.4
+
