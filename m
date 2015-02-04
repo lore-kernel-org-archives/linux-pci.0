@@ -1,197 +1,168 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from resqmta-po-06v.sys.comcast.net ([96.114.154.165]:37698 "EHLO
-	resqmta-po-06v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754182AbbB0ACK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 19:02:10 -0500
-Message-ID: <54EFB400.4000904@comcast.net>
-Date: Thu, 26 Feb 2015 16:02:08 -0800
-From: Alnie <memobook80@comcast.net>
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:34171 "EHLO
+	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933926AbbBDWFV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Feb 2015 17:05:21 -0500
+Received: by mail-oi0-f42.google.com with SMTP id i138so3602678oig.1
+        for <linux-pci@vger.kernel.org>; Wed, 04 Feb 2015 14:05:21 -0800 (PST)
+Date: Wed, 4 Feb 2015 16:05:18 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH V11 16/17] powerpc/powernv: Reserve additional space for
+ IOV BAR, with m64_per_iov supported
+Message-ID: <20150204220518.GB20072@google.com>
+References: <20150113180502.GC2776@google.com>
+ <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1421288887-7765-17-git-send-email-weiyang@linux.vnet.ibm.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Takashi Iwai <tiwai@suse.de>
-Subject: Re: PCI Issues with ExpressCard/54 Audio Device
-References: <1703881568.13072732.1424911985807.JavaMail.zimbra@comcast.net> <1602089933.13084034.1424913145538.JavaMail.zimbra@comcast.net> <CAErSpo6E5EMDUA8tHRZYF6rgfRqtHEZtG4EyVcMSRL02T3Ttyg@mail.gmail.com> <54EED7D2.7000205@comcast.net> <20150226174635.GA25765@google.com> <54EF74CF.7050909@comcast.net> <20150226231843.GC25765@google.com>
-In-Reply-To: <20150226231843.GC25765@google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1421288887-7765-17-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Jan 15, 2015 at 10:28:06AM +0800, Wei Yang wrote:
+> M64 aperture size is limited on PHB3. When the IOV BAR is too big, this
+> will exceed the limitation and failed to be assigned.
+> 
+> This patch introduce a different mechanism based on the IOV BAR size:
+> 
+> IOV BAR size is smaller than 64M, expand to total_pe.
+> IOV BAR size is bigger than 64M, roundup power2.
+
+Can you elaborate on this a little more?  I assume this is talking about an
+M64 BAR.  What is the size limit for this?
+
+If I understand correctly, hardware always splits an M64 BAR into 256
+segments.  If you wanted each 128MB VF BAR in a separate PE, the M64 BAR
+would have to be 256 * 128MB = 32GB.  So maybe the idea is that instead of
+consuming 32GB of address space, you let each VF BAR span several segments.
+If each 128MB VF BAR spanned 4 segments, each segment would be 32MB and the
+whole M64 BAR would be 256 * 32MB = 8GB.  But you would have to use
+"companion" PEs so all 4 segments would be in the same "domain," and that
+would reduce the number of VFs you could support from 256 to 256/4 = 64.
+
+If that were the intent, I would think TotalVFs would be involved, but it's
+not.  For a device with TotalVFs=8 and a 128MB VF BAR, it would make sense
+to dedicate 4 segments to each of those BARs because you could only use 8*4
+= 32 segments total.  If the device had TotalVFs=128, your only choices
+would be 1 segment per BAR (256 segments * 128MB/segment = 32GB) or 2
+segments per BAR (256 segments * 64MB/segment = 16GB).
+
+If you use 2 segments per BAR and you want NumVFs=128, you can't shift
+anything, so the PE assignments are completely fixed (VF0 in PE0, VF1 in
+PE1, etc.)
+
+It seems like you'd make different choices about pdn->max_vfs for these two
+devices, but currently you only look at the VF BAR size, not at TotalVFs.
+
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/include/asm/pci-bridge.h     |    2 ++
+>  arch/powerpc/platforms/powernv/pci-ioda.c |   33 ++++++++++++++++++++++++++---
+>  2 files changed, 32 insertions(+), 3 deletions(-)
+> 
+> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+> index d61c384..7156486 100644
+> --- a/arch/powerpc/include/asm/pci-bridge.h
+> +++ b/arch/powerpc/include/asm/pci-bridge.h
+> @@ -174,6 +174,8 @@ struct pci_dn {
+>  	u16     max_vfs;		/* number of VFs IOV BAR expended */
+>  	u16     vf_pes;			/* VF PE# under this PF */
+>  	int     offset;			/* PE# for the first VF PE */
+> +#define M64_PER_IOV 4
+> +	int     m64_per_iov;
+>  #define IODA_INVALID_M64        (-1)
+>  	int     m64_wins[PCI_SRIOV_NUM_BARS];
+>  #endif /* CONFIG_PCI_IOV */
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 94fe6e1..23ea873 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -2180,6 +2180,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+>  	int i;
+>  	resource_size_t size;
+>  	struct pci_dn *pdn;
+> +	int mul, total_vfs;
+>  
+>  	if (!pdev->is_physfn || pdev->is_added)
+>  		return;
+> @@ -2190,6 +2191,32 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+>  	pdn = pci_get_pdn(pdev);
+>  	pdn->max_vfs = 0;
+>  
+> +	total_vfs = pci_sriov_get_totalvfs(pdev);
+> +	pdn->m64_per_iov = 1;
+> +	mul = phb->ioda.total_pe;
+> +
+> +	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
+> +		res = &pdev->resource[i];
+> +		if (!res->flags || res->parent)
+> +			continue;
+> +		if (!pnv_pci_is_mem_pref_64(res->flags)) {
+> +			dev_warn(&pdev->dev, " non M64 IOV BAR %pR on %s\n",
+> +					res, pci_name(pdev));
+> +			continue;
+> +		}
+> +
+> +		size = pci_iov_resource_size(pdev, i);
+> +
+> +		/* bigger than 64M */
+> +		if (size > (1 << 26)) {
+> +			dev_info(&pdev->dev, "PowerNV: VF BAR[%d] size "
+> +					"is bigger than 64M, roundup power2\n", i);
+> +			pdn->m64_per_iov = M64_PER_IOV;
+> +			mul = __roundup_pow_of_two(total_vfs);
+
+I think this might deserve more comment in dmesg.  "roundup power2" doesn't
+really tell me anything, especially since you mention a BAR, but you're
+actually rounding up total_vfs, not the BAR size.
+
+Does this reduce the number of possible VFs?  We already can't set NumVFs
+higher than TotalVFs.  Does this make it so we can't set NumVFs higher than
+pdn->max_vfs?
 
 
-On 02/26/2015 03:18 PM, Bjorn Helgaas wrote:
-> On Thu, Feb 26, 2015 at 11:32:31AM -0800, Alnie wrote:
->> On 02/26/2015 09:46 AM, Bjorn Helgaas wrote:
->>> On Thu, Feb 26, 2015 at 12:22:42AM -0800, Alnie wrote:
->
->>>> 	Capabilities: [100 v1] Advanced Error Reporting
->>>> 		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
->>>> MalfTLP- ECRC- UnsupReq+ ACSViol-
->>>
->>> This looks suspicious: the bridge logged an Unsupported Request error.
->>> Let's see if we can figure out if this error is left there by BIOS or if
->>> the PCI core or the driver or rdwrmem is doing something that causes it.
->>>
->>> Can you try this:
->>>
->>>    - Boot without the snd_hda_intel driver at all
->>>    - Collect "lspci -vvs05:00.0" output
->>
->> blacklist snd_hda_intel
->>
->> 05:00.0 PCI bridge: Creative Labs [SB X-Fi Xtreme Audio] CA0110-IBG
->> PCI to PCIe Bridge (prog-if 00 [Normal decode])
->> ...
->> 	Capabilities: [100 v1] Advanced Error Reporting
->> 		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
->> MalfTLP- ECRC- UnsupReq+ ACSViol-
->
-> All three of your lspci outputs are identical, so it looks like the BIOS
-> probably left UnsupReq set.  Maybe the kernel should log that and clear it
-> at boot.  I sort of doubt this is the problem, but we can try clearing
-> those errors manually:
->
->    lspci -vvs05:00.0
+> +			break;
+> +		}
+> +	}
+> +
+>  	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
+>  		res = &pdev->resource[i];
+>  		if (!res->flags || res->parent)
+> @@ -2202,13 +2229,13 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+>  
+>  		dev_dbg(&pdev->dev, " Fixing VF BAR[%d] %pR to\n", i, res);
+>  		size = pci_iov_resource_size(pdev, i);
+> -		res->end = res->start + size * phb->ioda.total_pe - 1;
+> +		res->end = res->start + size * mul - 1;
+>  		dev_dbg(&pdev->dev, "                       %pR\n", res);
+>  		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
+>  				i - PCI_IOV_RESOURCES,
+> -				res, phb->ioda.total_pe);
+> +				res, mul);
+>  	}
+> -	pdn->max_vfs = phb->ioda.total_pe;
+> +	pdn->max_vfs = mul;
 
-05:00.0 PCI bridge: Creative Labs [SB X-Fi Xtreme Audio] CA0110-IBG PCI 
-to PCIe Bridge (prog-if 00 [Normal decode])
-	Physical Slot: 3
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- 
-Stepping- SERR+ FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
-<MAbort- >SERR- <PERR- INTx-
-	Latency: 0, Cache Line Size: 64 bytes
-	Bus: primary=05, secondary=06, subordinate=0c, sec-latency=36
-	Memory behind bridge: f4300000-f43fffff
-	Secondary status: 66MHz- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
-<TAbort- <MAbort+ <SERR- <PERR-
-	BridgeCtl: Parity- SERR- NoISA+ VGA- MAbort- >Reset- FastB2B-
-		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-	Capabilities: [50] Power Management version 3
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-		Bridge: PM- B3+
-	Capabilities: [60] MSI: Enable- Count=1/16 Maskable- 64bit+
-		Address: 0000000000000000  Data: 0000
-	Capabilities: [80] Subsystem: Creative Labs Device 0040
-	Capabilities: [90] Express (v1) PCI-Express to PCI/PCI-X Bridge, MSI 00
-		DevCap:	MaxPayload 512 bytes, PhantFunc 0
-			ExtTag- AttnBtn- AttnInd- PwrInd- RBE-
-		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+ BrConfRtry-
-			MaxPayload 128 bytes, MaxReadReq 512 bytes
-		DevSta:	CorrErr- UncorrErr+ FatalErr- UnsuppReq+ AuxPwr- TransPend-
-		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency 
-L0s <512ns, L1 <16us
-			ClockPM- Surprise- LLActRep- BwNot-
-		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk+
-			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- 
-BWMgmt- ABWMgmt-
-	Capabilities: [100 v1] Advanced Error Reporting
-		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- 
-MalfTLP- ECRC- UnsupReq+ ACSViol-
-		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- 
-MalfTLP- ECRC- UnsupReq- ACSViol-
-		UESvrt:	DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ 
-MalfTLP+ ECRC- UnsupReq- ACSViol-
-		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-		AERCap:	First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
+Maybe this is the part that makes it hard to compute the size in
+sriov_init() -- you reduce pdn->max_vfs in some cases, and maybe that can
+affect the space you reserve for IOV BARs?  E.g., maybe you reduce
+pdn->max_vfs to 128 because VF BAR 3 is larger than 64MB, but you've
+already expanded the IOV space for VF BAR 1 based on 256 PEs?
 
+But then I'm still confused because the loop here in
+pnv_pci_ioda_fixup_iov_resources() always expands the resource based on
+phb->ioda.total_pe; that part doesn't depend on "mul" or pdn->max_vfs at
+all.
 
->    setpci -s05:00.0 0x9a.w=0x0a		# clear UncorrErr UnsuppReq
->    setpci -s05:00.0 0x104.l=0x00100000	# clear AER UnsupReq
->    lspci -vvs05:00.0
+Or maybe this is just a bug in the fixup loop, and it *should* depend on
+"mul"?
 
-05:00.0 PCI bridge: Creative Labs [SB X-Fi Xtreme Audio] CA0110-IBG PCI 
-to PCIe Bridge (prog-if 00 [Normal decode])
-	Physical Slot: 3
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- 
-Stepping- SERR+ FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
-<MAbort- >SERR- <PERR- INTx-
-	Latency: 0, Cache Line Size: 64 bytes
-	Bus: primary=05, secondary=06, subordinate=0c, sec-latency=36
-	Memory behind bridge: f4300000-f43fffff
-	Secondary status: 66MHz- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
-<TAbort- <MAbort+ <SERR- <PERR-
-	BridgeCtl: Parity- SERR- NoISA+ VGA- MAbort- >Reset- FastB2B-
-		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-	Capabilities: [50] Power Management version 3
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-		Bridge: PM- B3+
-	Capabilities: [60] MSI: Enable- Count=1/16 Maskable- 64bit+
-		Address: 0000000000000000  Data: 0000
-	Capabilities: [80] Subsystem: Creative Labs Device 0040
-	Capabilities: [90] Express (v1) PCI-Express to PCI/PCI-X Bridge, MSI 00
-		DevCap:	MaxPayload 512 bytes, PhantFunc 0
-			ExtTag- AttnBtn- AttnInd- PwrInd- RBE-
-		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+ BrConfRtry-
-			MaxPayload 128 bytes, MaxReadReq 512 bytes
-		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency 
-L0s <512ns, L1 <16us
-			ClockPM- Surprise- LLActRep- BwNot-
-		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk+
-			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- 
-BWMgmt- ABWMgmt-
-	Capabilities: [100 v1] Advanced Error Reporting
-		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- 
-MalfTLP- ECRC- UnsupReq- ACSViol-
-		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- 
-MalfTLP- ECRC- UnsupReq- ACSViol-
-		UESvrt:	DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ 
-MalfTLP+ ECRC- UnsupReq- ACSViol-
-		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-		AERCap:	First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
-
->    modprobe snd-hda-intel
->
-
-Same complaint comes up (no codecs found)
-
->>>    - Poke around with rdwr
->>
->> (I am unfamiliar with this & hex, was trying different things,
->> please correct me in case)
->>
->> # ./mem -N -m -s 0xf4300000
->> ./mem: request seek to 4096786432, but -198180864 returned
->> F4300000:00
->> # ./mem -N -m -s f4300000
->> 00000000:53
->> # ./mem -N -m -s f4310000
->> 00000000:53
->> # ./mem -N -m -s 0xf4310000
->> ./mem: request seek to 4096851968, but -198115328 returned
->> F4310000:FF
->
-> The first and last ones are on the right track.  The program uses strtoul()
-> to convert the address.  That function assumes decimal unless there's a
-> "0x" prefix.  So "-s f4300000" converts to zero, and "-s 0xf4300000" does
-> what you want.
->
-> The device is at [mem 0xf4300000-0xf4303fff], so anything in that region
-> should respond.  Why don't you try this, which should dump the whole
-> region:
->
->    ./mem -N -m -s 0xf4300000 -l 0x4000
->
-
-http://pastebin.com/eHEsZNmU
-
-> But what's interesting already is that you found these:
->
->    F4300000:00
->    F4310000:FF
->
-> So we got 0x00 at 0xf4300000, which means the device did respond there.
-> If that path to the device works, all PCI accesses to it *should* work.
->
-> Bjorn
->
+>  }
+>  
+>  static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
+> -- 
+> 1.7.9.5
+> 
