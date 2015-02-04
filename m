@@ -1,231 +1,212 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:59478 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752107AbbBWAOx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 22 Feb 2015 19:14:53 -0500
-Received: from /spool/local
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 23 Feb 2015 10:14:50 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 0373F2BB0040
-	for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2015 11:14:48 +1100 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1N0EdfT49872946
-	for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2015 11:14:47 +1100
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1N0EDB3005153
-	for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2015 11:14:14 +1100
-Date: Mon, 23 Feb 2015 11:13:49 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
-	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH V11 08/17] powrepc/pci: Refactor pci_dn
-Message-ID: <20150223001349.GA7522@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <20150113180502.GC2776@google.com>
- <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1421288887-7765-9-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150220231917.GC21131@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150220231917.GC21131@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v3] x86/PCI: Refine the way to release PCI IRQ resources
+Date: Wed,  4 Feb 2015 16:35:16 +0800
+Message-Id: <1423038920-6136-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1432434.BPb1XrlA2r@vostro.rjw.lan>
+References: <1432434.BPb1XrlA2r@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 20, 2015 at 05:19:17PM -0600, Bjorn Helgaas wrote:
->On Thu, Jan 15, 2015 at 10:27:58AM +0800, Wei Yang wrote:
->> From: Gavin Shan <gwshan@linux.vnet.ibm.com>
->> 
->> pci_dn is the extension of PCI device node and it's created from
->> device node. Unfortunately, VFs that are enabled dynamically by
->> PF's driver and they don't have corresponding device nodes, and
->> pci_dn. The patch refactors pci_dn to support VFs:
->> 
->>    * pci_dn is organized as a hierarchy tree. VF's pci_dn is put
->>      to the child list of pci_dn of PF's bridge. pci_dn of other
->>      device put to the child list of pci_dn of its upstream bridge.
->> 
->>    * VF's pci_dn is expected to be created dynamically when PF
->>      enabling VFs. VF's pci_dn will be destroyed when PF disabling
->>      VFs. pci_dn of other device is still created from device node
->>      as before.
->> 
->>    * For one particular PCI device (VF or not), its pci_dn can be
->>      found from pdev->dev.archdata.firmware_data, PCI_DN(devnode),
->>      or parent's list. The fast path (fetching pci_dn through PCI
->>      device instance) is populated during early fixup time.
->> 
->> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->> ---
->>  arch/powerpc/include/asm/device.h         |    3 +
->>  arch/powerpc/include/asm/pci-bridge.h     |   14 +-
->>  arch/powerpc/kernel/pci_dn.c              |  242 ++++++++++++++++++++++++++++-
->>  arch/powerpc/platforms/powernv/pci-ioda.c |   16 ++
->>  4 files changed, 270 insertions(+), 5 deletions(-)
->> ...
->
->> +#ifdef CONFIG_PCI_IOV
->> +static struct pci_dn *add_one_dev_pci_info(struct pci_dn *parent,
->> +					   struct pci_dev *pdev,
->> +					   int busno, int devfn)
->> +{
->> +	struct pci_dn *pdn;
->> +
->> +	/* Except PHB, we always have parent firmware data */
->> +	if (!parent)
->> +		return NULL;
->> +
->> +	pdn = kzalloc(sizeof(*pdn), GFP_KERNEL);
->> +	if (!pdn) {
->> +		pr_warn("%s: Out of memory !\n", __func__);
->> +		return NULL;
->> +	}
->> +
->> +	pdn->phb = parent->phb;
->> +	pdn->parent = parent;
->> +	pdn->busno = busno;
->> +	pdn->devfn = devfn;
->> +#ifdef CONFIG_PPC_POWERNV
->> +	pdn->pe_number = IODA_INVALID_PE;
->> +#endif
->> +	INIT_LIST_HEAD(&pdn->child_list);
->> +	INIT_LIST_HEAD(&pdn->list);
->> +	list_add_tail(&pdn->list, &parent->child_list);
->> +
->> +	/*
->> +	 * If we already have PCI device instance, lets
->> +	 * bind them.
->> +	 */
->> +	if (pdev)
->> +		pdev->dev.archdata.firmware_data = pdn;
->> +
->> +	return pdn;
->
->I'd like to see this done in pcibios_add_device(), as I mentioned in
->response to "[PATCH V11 01/17] PCI/IOV: Export interface for retrieve VF's
->BDF".  Maybe that's not feasible for some reason, but it would be a nicer
->design if it's possible.
->
->The remove_dev_pci_info() work would be done in pcibios_release_device()
->then, of course.
->
+Some PCI device drivers assume that pci_dev->irq won't change after
+calling pci_disable_device() and pci_enable_device() during suspend and
+resume.
 
-Yes, it's not feasible. PCI config accessors rely on VF's pci_dn. Before
-calling pcibios_add_device(), we need access VF's config space. That means
-we need VF's pci_dn before pci_setup_device() as follows:
+Commit c03b3b0738a5 ("x86, irq, mpparse: Release IOAPIC pin when
+PCI device is disabled") frees PCI IRQ resources when pci_disable_device()
+is called and reallocate IRQ resources when pci_enable_device() is
+called again. This breaks above assumption. So commit 3eec595235c1
+("x86, irq, PCI: Keep IRQ assignment for PCI devices during
+suspend/hibernation") and 9eabc99a635a ("x86, irq, PCI: Keep IRQ
+assignment for runtime power management") fix the issue by avoiding
+freeing/reallocating IRQ resources during PCI device suspend/resume.
+They achieve this by checking dev.power.is_prepared and
+dev.power.runtime_status.  PM maintainer, Rafael, then pointed out that
+it's really an ugly fix which leaking PM internal state information to
+IRQ subsystem.
 
-    sriov_enable()
-        pcibios_sriov_enable();     /* Currently, VF's pci_dn is created at this point */
-        virtfn_add();
-            virtfn_add_bus();       /* Create virtual bus if necessary */
-                                    /* ---> A */
-            pci_alloc_dev();        /* ---> B */
-            pci_setup_device(vf);   /* Access VF's config space */
-                pci_read_config_byte(vf, PCI_HEADER_TYPE);
-                pci_read_config_dword(vf, PCI_CLASS_REVISION);
-                pci_fixup_device(pci_fixup_early, vf);
-                pci_read_irq();
-                pci_read_bases();
-            pci_device_add(vf);
-                device_initialize(&vf->dev);
-                pci_fixup_device(pci_fixup_header, vf);
-                pci_init_capabilities(vf);
-                pcibios_add_device(vf);
+Recently David Vrabel <david.vrabel@citrix.com> also reports an
+regression in pciback driver caused by commit cffe0a2b5a34 ("x86, irq:
+Keep balance of IOAPIC pin reference count"). Please refer to:
+http://lkml.org/lkml/2015/1/14/546
 
-We have couple of options here:
+So this patch refine the way to release PCI IRQ resources. Instead of
+releasing PCI IRQ resources in pci_disable_device()/
+pcibios_disable_device(), we now release it at driver unbinding
+notification BUS_NOTIFY_UNBOUND_DRIVER. In other word, we only release
+PCI IRQ resources when there's no driver bound to the PCI device, and
+it keeps the assumption that pci_dev->irq won't through multiple
+invocation of pci_enable_device()/pci_disable_device().
 
-1) Keep current code. VF's pci_dn is going to be destroyed in
-   pcibios_sriov_disable() as we're doing currently.
-2) Introduce pcibios_iov_virtfn_add() (at A) for platform to override.
-   VF's pci_dn is going to be destroyed in pcibios_release_device().
-3) Introduce pcibios_alloc_dev() (at B) for platform to override. The
-   VF's pci_dn is going to be destroyed in pcibios_release_device().
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+Hi Rafael,
+	How about this version, which moves comments near to
+pci_irq_notifier() and kills pcibios_disable_device() as suggested?
+Regards!
+Gerry
+---
+ arch/x86/include/asm/pci_x86.h |    2 --
+ arch/x86/pci/common.c          |   34 ++++++++++++++++++++++++++++------
+ arch/x86/pci/intel_mid_pci.c   |    4 ++--
+ arch/x86/pci/irq.c             |   15 +--------------
+ drivers/acpi/pci_irq.c         |    9 +--------
+ 5 files changed, 32 insertions(+), 32 deletions(-)
 
-Thanks,
-Gavin
-
->> +}
->> +#endif // CONFIG_PCI_IOV
->> +
->> +struct pci_dn *add_dev_pci_info(struct pci_dev *pdev, u16 vf_num)
->> +{
->> +#ifdef CONFIG_PCI_IOV
->> +	struct pci_dn *parent, *pdn;
->> +	int i;
->> +
->> +	/* Only support IOV for now */
->> +	if (!pdev->is_physfn)
->> +		return pci_get_pdn(pdev);
->> +
->> +	/* Check if VFs have been populated */
->> +	pdn = pci_get_pdn(pdev);
->> +	if (!pdn || (pdn->flags & PCI_DN_FLAG_IOV_VF))
->> +		return NULL;
->> +
->> +	pdn->flags |= PCI_DN_FLAG_IOV_VF;
->> +	parent = pci_bus_to_pdn(pdev->bus);
->> +	if (!parent)
->>  		return NULL;
->> -	return PCI_DN(dn);
->> +
->> +	for (i = 0; i < vf_num; i++) {
->> +		pdn = add_one_dev_pci_info(parent, NULL,
->> +					   pci_iov_virtfn_bus(pdev, i),
->> +					   pci_iov_virtfn_devfn(pdev, i));
->> +		if (!pdn) {
->> +			pr_warn("%s: Cannot create firmware data "
->> +				"for VF#%d of %s\n",
->> +				__func__, i, pci_name(pdev));
->> +			return NULL;
->> +		}
->> +	}
->> +#endif
->> +
->> +	return pci_get_pdn(pdev);
->> +}
->> +
->> +void remove_dev_pci_info(struct pci_dev *pdev, u16 vf_num)
->> +{
->> +#ifdef CONFIG_PCI_IOV
->> +	struct pci_dn *parent;
->> +	struct pci_dn *pdn, *tmp;
->> +	int i;
->> +
->> +	/* Only support IOV PF for now */
->> +	if (!pdev->is_physfn)
->> +		return;
->> +
->> +	/* Check if VFs have been populated */
->> +	pdn = pci_get_pdn(pdev);
->> +	if (!pdn || !(pdn->flags & PCI_DN_FLAG_IOV_VF))
->> +		return;
->> +
->> +	pdn->flags &= ~PCI_DN_FLAG_IOV_VF;
->> +	parent = pci_bus_to_pdn(pdev->bus);
->> +	if (!parent)
->> +		return;
->> +
->> +	/*
->> +	 * We might introduce flag to pci_dn in future
->> +	 * so that we can release VF's firmware data in
->> +	 * a batch mode.
->> +	 */
->> +	for (i = 0; i < vf_num; i++) {
->> +		list_for_each_entry_safe(pdn, tmp,
->> +			&parent->child_list, list) {
->> +			if (pdn->busno != pci_iov_virtfn_bus(pdev, i) ||
->> +			    pdn->devfn != pci_iov_virtfn_devfn(pdev, i))
->> +				continue;
->> +
->> +			if (!list_empty(&pdn->list))
->> +				list_del(&pdn->list);
->> +			kfree(pdn);
->> +		}
->> +	}
->> +#endif
->>  }
->
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index 164e3f8d3c3d..fa1195dae425 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -93,8 +93,6 @@ extern raw_spinlock_t pci_config_lock;
+ extern int (*pcibios_enable_irq)(struct pci_dev *dev);
+ extern void (*pcibios_disable_irq)(struct pci_dev *dev);
+ 
+-extern bool mp_should_keep_irq(struct device *dev);
+-
+ struct pci_raw_ops {
+ 	int (*read)(unsigned int domain, unsigned int bus, unsigned int devfn,
+ 						int reg, int len, u32 *val);
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 7b20bccf3648..ff1f0afa5ed1 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -497,6 +497,31 @@ void __init pcibios_set_cache_line_size(void)
+ 	}
+ }
+ 
++/*
++ * Some device drivers assume dev->irq won't change after calling
++ * pci_disable_device(). So delay releasing of IRQ resource to driver
++ * unbinding time. Otherwise it will break PM subsystem and drivers
++ * like xen-pciback etc.
++ */
++static int pci_irq_notifier(struct notifier_block *nb, unsigned long action,
++			    void *data)
++{
++	struct pci_dev *dev = to_pci_dev(data);
++
++	if (action != BUS_NOTIFY_UNBOUND_DRIVER)
++		return NOTIFY_DONE;
++
++	if (pcibios_disable_irq)
++		pcibios_disable_irq(dev);
++
++	return NOTIFY_OK;
++}
++
++static struct notifier_block pci_irq_nb = {
++	.notifier_call = pci_irq_notifier,
++	.priority = INT_MIN,
++};
++
+ int __init pcibios_init(void)
+ {
+ 	if (!raw_pci_ops) {
+@@ -509,6 +534,9 @@ int __init pcibios_init(void)
+ 
+ 	if (pci_bf_sort >= pci_force_bf)
+ 		pci_sort_breadthfirst();
++
++	bus_register_notifier(&pci_bus_type, &pci_irq_nb);
++
+ 	return 0;
+ }
+ 
+@@ -667,12 +695,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 	return 0;
+ }
+ 
+-void pcibios_disable_device (struct pci_dev *dev)
+-{
+-	if (!pci_dev_msi_enabled(dev) && pcibios_disable_irq)
+-		pcibios_disable_irq(dev);
+-}
+-
+ int pci_ext_cfg_avail(void)
+ {
+ 	if (raw_pci_ext_ops)
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+index 44b9271580b5..95c2471f6819 100644
+--- a/arch/x86/pci/intel_mid_pci.c
++++ b/arch/x86/pci/intel_mid_pci.c
+@@ -234,10 +234,10 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ 
+ static void intel_mid_pci_irq_disable(struct pci_dev *dev)
+ {
+-	if (!mp_should_keep_irq(&dev->dev) && dev->irq_managed &&
+-	    dev->irq > 0) {
++	if (dev->irq_managed && dev->irq > 0) {
+ 		mp_unmap_irq(dev->irq);
+ 		dev->irq_managed = 0;
++		dev->irq = 0;
+ 	}
+ }
+ 
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index 5dc6ca5e1741..e71b3dbd87b8 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -1256,22 +1256,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 	return 0;
+ }
+ 
+-bool mp_should_keep_irq(struct device *dev)
+-{
+-	if (dev->power.is_prepared)
+-		return true;
+-#ifdef CONFIG_PM
+-	if (dev->power.runtime_status == RPM_SUSPENDING)
+-		return true;
+-#endif
+-
+-	return false;
+-}
+-
+ static void pirq_disable_irq(struct pci_dev *dev)
+ {
+-	if (io_apic_assign_pci_irqs && !mp_should_keep_irq(&dev->dev) &&
+-	    dev->irq_managed && dev->irq) {
++	if (io_apic_assign_pci_irqs && dev->irq_managed && dev->irq) {
+ 		mp_unmap_irq(dev->irq);
+ 		dev->irq = 0;
+ 		dev->irq_managed = 0;
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index b1def411c0b8..e7f718d6918a 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -485,14 +485,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	if (!pin || !dev->irq_managed || dev->irq <= 0)
+ 		return;
+ 
+-	/* Keep IOAPIC pin configuration when suspending */
+-	if (dev->dev.power.is_prepared)
+-		return;
+-#ifdef	CONFIG_PM
+-	if (dev->dev.power.runtime_status == RPM_SUSPENDING)
+-		return;
+-#endif
+-
+ 	entry = acpi_pci_irq_lookup(dev, pin);
+ 	if (!entry)
+ 		return;
+@@ -513,5 +505,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	if (gsi >= 0) {
+ 		acpi_unregister_gsi(gsi);
+ 		dev->irq_managed = 0;
++		dev->irq = 0;
+ 	}
+ }
+-- 
+1.7.10.4
 
