@@ -1,74 +1,221 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from icebox.esperi.org.uk ([81.187.191.129]:47241 "EHLO
-	mail.esperi.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751882AbbBCUB5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Feb 2015 15:01:57 -0500
-From: Nix <nix@esperi.org.uk>
-To: Myron Stowe <myron.stowe@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Myron Stowe <mstowe@redhat.com>,
-	"linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Bill Unruh <unruh@physics.ubc.ca>, martin@lucina.net,
-	Matthew Wilcox <willy@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [3.18.3 BISECTED REGRESSION] scx200_acb / cs5535-smb / geodewdt / cs5535-clockevt torpedoed
-References: <8761boas78.fsf@spindle.srvr.nix>
-	<1422847799.2491.13.camel@zim.stowe> <87h9v42p22.fsf@spindle.srvr.nix>
-	<CAErSpo4SKP=nKdn43rE37JFNW5SSb4uRyRyO6vAO5tqa2TOpQg@mail.gmail.com>
-	<CAL-B5D1ytTtQ6JnzWW3VTL2PnM67nj8karxSf5u0e-pmSdZNMg@mail.gmail.com>
-Date: Tue, 03 Feb 2015 20:01:35 +0000
-In-Reply-To: <CAL-B5D1ytTtQ6JnzWW3VTL2PnM67nj8karxSf5u0e-pmSdZNMg@mail.gmail.com>
-	(Myron Stowe's message of "Tue, 3 Feb 2015 10:06:46 -0700")
-Message-ID: <87twz2kbmo.fsf@spindle.srvr.nix>
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:60329 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756042AbbBDXJQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Feb 2015 18:09:16 -0500
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 5 Feb 2015 09:09:13 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 366FE2CE8050
+	for <linux-pci@vger.kernel.org>; Thu,  5 Feb 2015 10:09:11 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t14N92JM13762754
+	for <linux-pci@vger.kernel.org>; Thu, 5 Feb 2015 10:09:11 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t14N8biK008514
+	for <linux-pci@vger.kernel.org>; Thu, 5 Feb 2015 10:08:37 +1100
+Date: Thu, 5 Feb 2015 07:08:16 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH V11 12/17] powerpc/powernv: Reserve additional space for
+ IOV BAR according to the number of total_pe
+Message-ID: <20150204230816.GB18037@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <20150113180502.GC2776@google.com>
+ <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1421288887-7765-13-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150204212607.GA20072@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150204212607.GA20072@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3 Feb 2015, Myron Stowe uttered the following:
-> As expressed above, I believe this device is non-conformant.  This could be
-> validated by instrumenting the kernel's sizing code in '__pci_read_base()';
-> specifically the initial 'pci_read_config_dword()'s of 'l' and 'sz'.
-> 
-> Whereas we have been able to ignore read-only BARs in past occurrances, this
-> time they are needed.  As such, I think we can solve this issue by expanding
-> the existing quirk for this device.  I'll work that up and post.  If you
-> would, please apply and test what is posted and report back.  In the mean
-> time, I would be interested in obtaining confirmation as to my belief that
-> this device's BARs are read-only (i.e. the instrumentation mentioned).  If
-> you have time and are willing I would appreaciate that.  If not, I'm
-> confident that is what is occurring and you can just stick with applying and
-> testing the expanded quirk patch I intend to post.
+On Wed, Feb 04, 2015 at 03:26:07PM -0600, Bjorn Helgaas wrote:
+>On Thu, Jan 15, 2015 at 10:28:02AM +0800, Wei Yang wrote:
+>> On PHB3, PF IOV BAR will be covered by M64 BAR to have better PE isolation.
+>> Mostly the total_pe number is different from the total_VFs, which will lead
+>> to a conflict between MMIO space and the PE number.
+>> 
+>> For example, total_VFs is 128 and total_pe is 256, then the second half of
+>> M64 BAR space will be part of other PCI device, which may already belongs
+>> to other PEs.
+>> 
+>> This patch reserve additional space for the PF IOV BAR, which is total_pe
+>> number of VF's BAR size. By doing so, it prevents the conflict.
+>> 
+>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> ---
+>>  arch/powerpc/include/asm/machdep.h        |    4 ++
+>>  arch/powerpc/include/asm/pci-bridge.h     |    3 ++
+>>  arch/powerpc/kernel/pci-common.c          |    5 +++
+>>  arch/powerpc/platforms/powernv/pci-ioda.c |   59 +++++++++++++++++++++++++++++
+>>  4 files changed, 71 insertions(+)
+>> 
+>> diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+>> index c8175a3..965547c 100644
+>> --- a/arch/powerpc/include/asm/machdep.h
+>> +++ b/arch/powerpc/include/asm/machdep.h
+>> @@ -250,6 +250,10 @@ struct machdep_calls {
+>>  	/* Reset the secondary bus of bridge */
+>>  	void  (*pcibios_reset_secondary_bus)(struct pci_dev *dev);
+>>  
+>> +#ifdef CONFIG_PCI_IOV
+>> +	void (*pcibios_fixup_sriov)(struct pci_bus *bus);
+>> +#endif /* CONFIG_PCI_IOV */
+>> +
+>>  	/* Called to shutdown machine specific hardware not already controlled
+>>  	 * by other drivers.
+>>  	 */
+>> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+>> index 334e745..b857ec4 100644
+>> --- a/arch/powerpc/include/asm/pci-bridge.h
+>> +++ b/arch/powerpc/include/asm/pci-bridge.h
+>> @@ -170,6 +170,9 @@ struct pci_dn {
+>>  #define IODA_INVALID_PE		(-1)
+>>  #ifdef CONFIG_PPC_POWERNV
+>>  	int	pe_number;
+>> +#ifdef CONFIG_PCI_IOV
+>> +	u16     max_vfs;		/* number of VFs IOV BAR expended */
+>> +#endif /* CONFIG_PCI_IOV */
+>>  #endif
+>>  	struct list_head child_list;
+>>  	struct list_head list;
+>> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+>> index 889f743..832b7e1 100644
+>> --- a/arch/powerpc/kernel/pci-common.c
+>> +++ b/arch/powerpc/kernel/pci-common.c
+>> @@ -1636,6 +1636,11 @@ void pcibios_scan_phb(struct pci_controller *hose)
+>>  	if (ppc_md.pcibios_fixup_phb)
+>>  		ppc_md.pcibios_fixup_phb(hose);
+>>  
+>> +#ifdef CONFIG_PCI_IOV
+>> +	if (ppc_md.pcibios_fixup_sriov)
+>> +		ppc_md.pcibios_fixup_sriov(bus);
+>> +#endif /* CONFIG_PCI_IOV */
+>> +
+>>  	/* Configure PCI Express settings */
+>>  	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+>>  		struct pci_bus *child;
+>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>> index 31335a7..6704fdf 100644
+>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>> @@ -1721,6 +1721,62 @@ static void pnv_pci_init_ioda_msis(struct pnv_phb *phb)
+>>  static void pnv_pci_init_ioda_msis(struct pnv_phb *phb) { }
+>>  #endif /* CONFIG_PCI_MSI */
+>>  
+>> +#ifdef CONFIG_PCI_IOV
+>> +static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+>> +{
+>> +	struct pci_controller *hose;
+>> +	struct pnv_phb *phb;
+>> +	struct resource *res;
+>> +	int i;
+>> +	resource_size_t size;
+>> +	struct pci_dn *pdn;
+>> +
+>> +	if (!pdev->is_physfn || pdev->is_added)
+>> +		return;
+>> +
+>> +	hose = pci_bus_to_host(pdev->bus);
+>> +	phb = hose->private_data;
+>> +
+>> +	pdn = pci_get_pdn(pdev);
+>> +	pdn->max_vfs = 0;
+>
+>^^^ point A
+>
+>> +
+>> +	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
+>> +		res = &pdev->resource[i];
+>> +		if (!res->flags || res->parent)
+>> +			continue;
+>> +		if (!pnv_pci_is_mem_pref_64(res->flags)) {
+>> +			dev_warn(&pdev->dev, " Skipping expanding IOV BAR %pR on %s\n",
+>> +				 res, pci_name(pdev));
+>> +			continue;
+>> +		}
+>> +
+>> +		dev_dbg(&pdev->dev, " Fixing VF BAR[%d] %pR to\n", i, res);
+>> +		size = pci_iov_resource_size(pdev, i);
+>> +		res->end = res->start + size * phb->ioda.total_pe - 1;
+>> +		dev_dbg(&pdev->dev, "                       %pR\n", res);
+>> +		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
+>> +				i - PCI_IOV_RESOURCES,
+>> +				res, phb->ioda.total_pe);
+>> +	}
+>> +	pdn->max_vfs = phb->ioda.total_pe;
+>
+>I don't think you change phb->ioda.total_pe between point A (above) and
+>here.  Does that mean "max_vfs == 0" is some kind of flag, maybe related to
+>the three cases in pnv_pci_iov_resource_alignment()?  Ewww!
+>
 
-Here, and the device behind it, just in case it's useful:
+Not a flag exactly.
 
-[    1.050352] pci 0000:00:14.0: [1022:2090] type 00 class 0x060100
-[    1.060152] name: 0000:00:14.0; l: 6001; sz: 6001
-[    1.070037] pci 0000:00:14.0: reg 0x10: [io  0x6000-0x7fff]
-[    1.080114] name: 0000:00:14.0; l: 6101; sz: 6101
-[    1.090037] pci 0000:00:14.0: reg 0x14: [io  0x6100-0x61ff]
-[    1.100113] name: 0000:00:14.0; l: 6201; sz: 6201
-[    1.110036] pci 0000:00:14.0: reg 0x18: [io  0x6200-0x63ff]
-[    1.120113] name: 0000:00:14.0; l: 0; sz: 0
-[    1.130130] name: 0000:00:14.0; l: 0; sz: 0
-[    1.140129] name: 0000:00:14.0; l: 0; sz: 0
-[    1.150129] name: 0000:00:14.0; l: 0; sz: 0
-[    1.160075] pci 0000:00:14.0: CS5536 ISA bridge bug detected (incorrect header); workaround applied
-[    1.180018] pci 0000:00:14.2: [1022:209a] type 00 class 0x010180
-[    1.190155] name: 0000:00:14.2; l: 0; sz: 0
-[    1.200133] name: 0000:00:14.2; l: 0; sz: 0
-[    1.210133] name: 0000:00:14.2; l: 0; sz: 0
-[    1.220133] name: 0000:00:14.2; l: 0; sz: 0
-[    1.230150] name: 0000:00:14.2; l: e001; sz: fffffff1
-[    1.240037] pci 0000:00:14.2: reg 0x20: [io  0xe000-0xe00f]
-[    1.250115] name: 0000:00:14.2; l: 0; sz: 0
-[    1.260133] name: 0000:00:14.2; l: 0; sz: 0
-[    1.270091] pci 0000:00:14.2: legacy IDE quirk: reg 0x10: [io  0x01f0-0x01f7]
-[    1.280021] pci 0000:00:14.2: legacy IDE quirk: reg 0x14: [io  0x03f6]
-[    1.290019] pci 0000:00:14.2: legacy IDE quirk: reg 0x18: [io  0x0170-0x0177]
-[    1.300018] pci 0000:00:14.2: legacy IDE quirk: reg 0x1c: [io  0x0376]
+The pci_dn is initialized to 0, I reset it to 0 explicitly since on the
+hotplug case, we need to redo all those stuff again.
+
+Putting this in a function like pcibios_release_device() seems more
+reasonable. I will think about it later.
+
+
+>If it doesn't change, just set "pdn->max_vfs = phb->ioda.total_pe" at
+>point A and be done with it.
+
+This will change. As you see in another patch.
+Will reply that mail for details.
+
+>
+>But hopefully you can just remove this fixup path altogether.
+>
+
+Agree.
+
+Use a weak function as you proposed is a better way.
+
+>> +}
+>> +
+>> +static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
+>> +{
+>> +	struct pci_dev *pdev;
+>> +	struct pci_bus *b;
+>> +
+>> +	list_for_each_entry(pdev, &bus->devices, bus_list) {
+>> +		b = pdev->subordinate;
+>> +
+>> +		if (b)
+>> +			pnv_pci_ioda_fixup_sriov(b);
+>> +
+>> +		pnv_pci_ioda_fixup_iov_resources(pdev);
+>> +	}
+>> +}
+>> +#endif /* CONFIG_PCI_IOV */
+>> +
+>>  /*
+>>   * This function is supposed to be called on basis of PE from top
+>>   * to bottom style. So the the I/O or MMIO segment assigned to
+>> @@ -2097,6 +2153,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>  	ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
+>>  	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
+>>  	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
+>> +#ifdef CONFIG_PCI_IOV
+>> +	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
+>> +#endif /* CONFIG_PCI_IOV */
+>>  	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+>>  
+>>  	/* Reset IODA tables to a clean state */
+>> -- 
+>> 1.7.9.5
+>> 
 
 -- 
-NULL && (void)
+Richard Yang
+Help you, Help me
+
