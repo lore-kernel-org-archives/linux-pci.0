@@ -1,61 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from new1-smtp.messagingengine.com ([66.111.4.221]:58562 "EHLO
-	new1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752021AbbBKKcn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Feb 2015 05:32:43 -0500
-Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-	by mailnew.nyi.internal (Postfix) with ESMTP id CF12020C3
-	for <linux-pci@vger.kernel.org>; Wed, 11 Feb 2015 05:23:12 -0500 (EST)
-From: Sean Cross <xobs@kosagi.com>
-To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Shawn Guo <shawn.guo@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	devicetree@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	linux-pci@vger.kernel.org
-Cc: bunnie@kosagi.com, Sean Cross <xobs@kosagi.com>
-Subject: [PATCH v3 0/3] Add support for kosagi novena
-Date: Wed, 11 Feb 2015 18:22:59 +0800
-Message-Id: <1423650182-16865-1-git-send-email-xobs@kosagi.com>
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:33647 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932877AbbBDPVm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Feb 2015 10:21:42 -0500
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 5 Feb 2015 01:21:39 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 2CA382BB0047
+	for <linux-pci@vger.kernel.org>; Thu,  5 Feb 2015 02:21:36 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t14FLR6Y33554496
+	for <linux-pci@vger.kernel.org>; Thu, 5 Feb 2015 02:21:35 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t14FL2ED026833
+	for <linux-pci@vger.kernel.org>; Thu, 5 Feb 2015 02:21:02 +1100
+Date: Wed, 4 Feb 2015 23:20:42 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@au1.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Subject: Re: [PATCH] powerpc/powernv: make sure the IOV BAR will not exceed
+ limit after shifting
+Message-ID: <20150204152042.GA6273@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <20150130230803.GA6795@google.com>
+ <1422946903-12958-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150204001926.GA19540@google.com>
+ <20150204033409.GA11577@richard>
+ <CAErSpo4nLEvL4XGvkvZbfy0dFQcRDHdn5aznkx2fRMMnt1_n4g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo4nLEvL4XGvkvZbfy0dFQcRDHdn5aznkx2fRMMnt1_n4g@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kosagi Novena mainboard contains an i.MX6, along with a PCI Express slot.
-This patchset adds device tree support for the Novena mainboard.
+On Wed, Feb 04, 2015 at 08:19:14AM -0600, Bjorn Helgaas wrote:
+>On Tue, Feb 3, 2015 at 9:34 PM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+>> On Tue, Feb 03, 2015 at 06:19:26PM -0600, Bjorn Helgaas wrote:
+>>>On Tue, Feb 03, 2015 at 03:01:43PM +0800, Wei Yang wrote:
+>
+>>>> +    vf_num = pdn->vf_pes;
+>>>
+>>>I can't actually build this, but I don't think pdn->vf_pes is defined yet.
+>>>
+>>
+>> The pdn->vf_pes is defined in the next patch, it is not defined yet.
+>>
+>> I thought the incremental patch means a patch on top of the current patch set,
+>> so it is defined as the last patch.
+>
+>Yes, that's fine.  I want to keep the series bisectable, so I'll fold
+>these patches together.
+>
+>>>I pushed an updated pci/virtualization branch with these updates.  I
+>>>think there's also a leak that needs to be fixed that Dan Carpenter
+>>>pointed out.
+>
+>>>+      vf_num = pdn->vf_pes;           // FIXME not defined yet
+>>
+>> Do you want me poll your pci/virtualization branch and fix this?
+>
+>Don't worry about this FIXME; I can fix that by squashing two patches.
+>But please do pull my pci/virtualization branch and fix this one (this
+>is the one that I thought Dan Carpenter pointed out):
+>
+>  drivers/pci/iov.c:488 sriov_init() warn: possible memory leak of 'iov'
 
-Changes since v2:
- - Updated stmpe_touchscreen bindings to match documentation
- - Removed bindings for eepromoops, it6251, senoko
- - Removed simple-bus and moved regulators into the parent node
- - Removed "Peek array power" from hog
- - Removed lonely "wakeup" from kpp
- - Dropped "add power-supply support" patch
-
-Changes since v1:
- - Add 'kosagi' to vendor prefixes
- - Add LCD panel to simple-panel
- - Renamed power-supply to bus-supply
- - Replaced devm_regulator_get() with devm_regulator_get_optional()
- - Moved regulator_enable to imx6_add_pcie_port()
- - Removed fpga@1 from spi definition in dts -- will use overlays instead
-
-
-Sean Cross (3):
-  drm/panel: simple: Add Innolux N133HSE panel support
-  devicetree: bindings: Add vendor prefix for Kosagi
-  ARM: dts: imx6q: add Novena board
-
- .../devicetree/bindings/vendor-prefixes.txt        |   1 +
- arch/arm/boot/dts/Makefile                         |   1 +
- arch/arm/boot/dts/imx6q-novena.dts                 | 818 +++++++++++++++++++++
- drivers/gpu/drm/panel/panel-simple.c               |  26 +
- 4 files changed, 846 insertions(+)
- create mode 100644 arch/arm/boot/dts/imx6q-novena.dts
+Sure, let me take a look.
 
 -- 
-2.1.3
+Richard Yang
+Help you, Help me
 
