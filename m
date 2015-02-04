@@ -1,61 +1,57 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-To: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
-	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
-	al.stone@linaro.org
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Subject: [PATCH v2 8/9] pci, acpi, mcfg: Share ACPI PCI config space accessors.
-Date: Fri, 27 Feb 2015 16:00:43 +0100
-Message-Id: <1425049244-19331-9-git-send-email-tomasz.nowicki@linaro.org>
-In-Reply-To: <1425049244-19331-1-git-send-email-tomasz.nowicki@linaro.org>
-References: <1425049244-19331-1-git-send-email-tomasz.nowicki@linaro.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:33587 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932437AbbBDJDI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Feb 2015 04:03:08 -0500
+Received: by mail-pa0-f51.google.com with SMTP id fb1so963789pad.10
+        for <linux-pci@vger.kernel.org>; Wed, 04 Feb 2015 01:03:07 -0800 (PST)
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, phil.edworthy@renesas.com,
+	horms+renesas@verge.net.au,
+	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+Subject: [PATCH] PCI: rcar: Change macro name of PCIEPARL and PCIEPARH
+Date: Wed,  4 Feb 2015 18:02:55 +0900
+Message-Id: <1423040575-28080-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-MCFG can be used perfectly for all architectures which support ACPI.
-ACPI mandates MCFG to describe PCI config space ranges which means
-we should use MMCONFIG accessors by default.
+PCIEPARL and PCIEPARH are macro that calculates address of the register.
+However, register name is incorrect, PCIEPALR and PCIEPAUR is correct.
+This change macro name to PCIEPALR and PCIEPAUR.
 
-Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
 ---
- drivers/acpi/mcfg.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ drivers/pci/host/pcie-rcar.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
-index 1e646fc..e285f62 100644
---- a/drivers/acpi/mcfg.c
-+++ b/drivers/acpi/mcfg.c
-@@ -13,6 +13,26 @@
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index eb12659..183c32d 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -64,8 +64,8 @@
+ #define  LAR_ENABLE		(1 << 1)
  
- #define	PREFIX	"MCFG: "
+ /* PCIe address reg & mask */
+-#define PCIEPARL(x)		(0x03400 + ((x) * 0x20))
+-#define PCIEPARH(x)		(0x03404 + ((x) * 0x20))
++#define PCIEPALR(x)		(0x03400 + ((x) * 0x20))
++#define PCIEPAUR(x)		(0x03404 + ((x) * 0x20))
+ #define PCIEPAMR(x)		(0x03408 + ((x) * 0x20))
+ #define PCIEPTCTLR(x)		(0x0340c + ((x) * 0x20))
+ #define  PAR_ENABLE		(1 << 31)
+@@ -341,9 +341,9 @@ static void rcar_pcie_setup_window(int win, struct rcar_pcie *pcie)
+ 	else
+ 		res_start = res->start;
  
-+/*
-+ * raw_pci_read/write - ACPI PCI config space accessors.
-+ *
-+ * ACPI spec defines MCFG table as the way we can describe access to PCI config
-+ * space, so let MCFG be default (__weak).
-+ *
-+ * If platform needs more fancy stuff, should provides its own implementation.
-+ */
-+int __weak raw_pci_read(unsigned int domain, unsigned int bus,
-+			unsigned int devfn, int reg, int len, u32 *val)
-+{
-+	return pci_mmcfg_read(domain, bus, devfn, reg, len, val);
-+}
-+
-+int __weak raw_pci_write(unsigned int domain, unsigned int bus,
-+			 unsigned int devfn, int reg, int len, u32 val)
-+{
-+	return pci_mmcfg_write(domain, bus, devfn, reg, len, val);
-+}
-+
- static int __init acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
- 					struct acpi_mcfg_allocation *cfg)
- {
+-	rcar_pci_write_reg(pcie, upper_32_bits(res_start), PCIEPARH(win));
++	rcar_pci_write_reg(pcie, upper_32_bits(res_start), PCIEPAUR(win));
+ 	rcar_pci_write_reg(pcie, lower_32_bits(res_start) & ~0x7F,
+-			   PCIEPARL(win));
++			   PCIEPALR(win));
+ 
+ 	/* First resource is for IO */
+ 	mask = PAR_ENABLE;
 -- 
-1.9.1
+2.1.3
 
