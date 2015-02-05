@@ -1,106 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:33032 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752315AbbBYBxW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 20:53:22 -0500
-Received: by iecar1 with SMTP id ar1so1238131iec.0
-        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 17:53:21 -0800 (PST)
-Date: Tue, 24 Feb 2015 19:53:17 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+Received: from arroyo.ext.ti.com ([192.94.94.40]:60543 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751458AbbBEVx4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Feb 2015 16:53:56 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Joerg Roedel <joro@8bytes.org>,
 	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
 	Will Deacon <will.deacon@arm.com>,
 	Russell King <linux@arm.linux.org.uk>,
 	Arnd Bergmann <arnd@arndb.de>,
 	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: Re: [PATCH v6 6/7] PCI: update dma configuration from DT
-Message-ID: <20150225015317.GO6220@google.com>
+Subject: [PATCH v6 1/7] of: iommu: add ptr to OF node arg to of_iommu_configure()
+Date: Thu, 5 Feb 2015 16:52:53 -0500
+Message-ID: <1423173179-10227-2-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com>
 References: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com>
- <1423173179-10227-7-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1423173179-10227-7-git-send-email-m-karicheri2@ti.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 05, 2015 at 04:52:58PM -0500, Murali Karicheri wrote:
-> If there is a DT node available for the root bridge's parent device,
-> use the dma configuration from that device node. For example, keystone
-> PCI devices would require dma_pfn_offset to be set correctly in the
-> device structure of the pci device in order to have the correct dma mask.
-> The DT node will have dma-ranges defined for this. Also support using
-> the DT property dma-coherent to allow coherent DMA operation by the
-> PCI device.
+Function of_iommu_configure() is called from of_dma_configure() to
+setup iommu ops using DT property. This API is currently used for
+platform devices for which DMA configuration (including iommu ops)
+may come from device's parent. To extend this functionality for PCI
+devices, this API need to take a parent node ptr as an argument
+instead of assuming device's parent. This is needed since for PCI, the
+dma configuration may be defined in the DT node of the root bus bridge's
+parent device. Currently only dma-range is used for PCI and iommu is not
+supported. So return error if the device is PCI.
 
-Hi Murali,
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Grant Likely <grant.likely@linaro.org>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-I'm guessing this is the patch that actually fixes things for Keystone.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Rob Herring <robh+dt@kernel.org>
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+---
+ drivers/iommu/of_iommu.c |   10 ++++++++--
+ drivers/of/platform.c    |    2 +-
+ include/linux/of_iommu.h |    6 ++++--
+ 3 files changed, 13 insertions(+), 5 deletions(-)
 
-And it looks like it should also fix things for other hardware that has
-similar characteristics.  So I'd like to include some higher-level text
-about that here.  For example:
+diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+index af1dc6a..39c2c0c 100644
+--- a/drivers/iommu/of_iommu.c
++++ b/drivers/iommu/of_iommu.c
+@@ -133,19 +133,25 @@ struct iommu_ops *of_iommu_get_ops(struct device_node *np)
+ 	return ops;
+ }
+ 
+-struct iommu_ops *of_iommu_configure(struct device *dev)
++struct iommu_ops *of_iommu_configure(struct device *dev,
++				     struct device_node *master_np)
+ {
+ 	struct of_phandle_args iommu_spec;
+ 	struct device_node *np;
+ 	struct iommu_ops *ops = NULL;
+ 	int idx = 0;
+ 
++	if (dev_is_pci(dev)) {
++		dev_err(dev, "iommu is currently not supported for PCI\n");
++		return NULL;
++	}
++
+ 	/*
+ 	 * We don't currently walk up the tree looking for a parent IOMMU.
+ 	 * See the `Notes:' section of
+ 	 * Documentation/devicetree/bindings/iommu/iommu.txt
+ 	 */
+-	while (!of_parse_phandle_with_args(dev->of_node, "iommus",
++	while (!of_parse_phandle_with_args(master_np, "iommus",
+ 					   "#iommu-cells", idx,
+ 					   &iommu_spec)) {
+ 		np = iommu_spec.np;
+diff --git a/drivers/of/platform.c b/drivers/of/platform.c
+index b0d50d7..d3f3988 100644
+--- a/drivers/of/platform.c
++++ b/drivers/of/platform.c
+@@ -196,7 +196,7 @@ static void of_dma_configure(struct device *dev)
+ 	dev_dbg(dev, "device is%sdma coherent\n",
+ 		coherent ? " " : " not ");
+ 
+-	iommu = of_iommu_configure(dev);
++	iommu = of_iommu_configure(dev, dev->of_node);
+ 	dev_dbg(dev, "device is%sbehind an iommu\n",
+ 		iommu ? " " : " not ");
+ 
+diff --git a/include/linux/of_iommu.h b/include/linux/of_iommu.h
+index 16c7554..ffbe470 100644
+--- a/include/linux/of_iommu.h
++++ b/include/linux/of_iommu.h
+@@ -12,7 +12,8 @@ extern int of_get_dma_window(struct device_node *dn, const char *prefix,
+ 			     size_t *size);
+ 
+ extern void of_iommu_init(void);
+-extern struct iommu_ops *of_iommu_configure(struct device *dev);
++extern struct iommu_ops *of_iommu_configure(struct device *dev,
++					struct device_node *master_np);
+ 
+ #else
+ 
+@@ -24,7 +25,8 @@ static inline int of_get_dma_window(struct device_node *dn, const char *prefix,
+ }
+ 
+ static inline void of_iommu_init(void) { }
+-static inline struct iommu_ops *of_iommu_configure(struct device *dev)
++static inline struct iommu_ops *of_iommu_configure(struct device *dev,
++					 struct device_node *master_np)
+ {
+ 	return NULL;
+ }
+-- 
+1.7.9.5
 
-  This fixes DMA on systems where DMA addresses are a constant offset
-  from CPU physical addresses.
-
-(I don't know exactly how these patches all fit together, so that's
-probably not accurate, but that's the *sort* of thing I'd like to include.)
-
-If that actually *is* what's going on, I have to wonder why this isn't
-implemented as a very simple IOMMU instead of adding dma_pfn_offset,
-which is present on all arches but only used on ARM.  In some sense that
-offset is parallel but incompatible with an IOMMU: they both translate DMA
-addresses into system RAM addresses.
-
-I know you're not adding this, and I assume somebody explored that option
-and rejected it for good reasons.  I just missed that discussion.
-
-> This patch use the new helper function of_pci_dma_configure() to update
-> the device dma configuration.
-> 
-> Cc: Joerg Roedel <joro@8bytes.org>
-> Cc: Grant Likely <grant.likely@linaro.org>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Russell King <linux@arm.linux.org.uk>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-> ---
->  drivers/pci/probe.c |    2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 23212f8..d7dcd6c 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -6,6 +6,7 @@
->  #include <linux/delay.h>
->  #include <linux/init.h>
->  #include <linux/pci.h>
-> +#include <linux/of_pci.h>
->  #include <linux/pci_hotplug.h>
->  #include <linux/slab.h>
->  #include <linux/module.h>
-> @@ -1520,6 +1521,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->  	dev->dev.dma_mask = &dev->dma_mask;
->  	dev->dev.dma_parms = &dev->dma_parms;
->  	dev->dev.coherent_dma_mask = 0xffffffffull;
-> +	of_pci_dma_configure(dev);
->  
->  	pci_set_dma_max_seg_size(dev, 65536);
->  	pci_set_dma_seg_boundary(dev, 0xffffffff);
-> -- 
-> 1.7.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
