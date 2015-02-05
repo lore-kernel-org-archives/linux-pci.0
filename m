@@ -1,57 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:44005 "EHLO
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:33272 "EHLO
 	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756365AbbBJCOR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Feb 2015 21:14:17 -0500
+	with ESMTP id S1753845AbbBEGfs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Feb 2015 01:35:48 -0500
 Received: from /spool/local
 	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
-	Tue, 10 Feb 2015 12:14:14 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 2BDFE2CE8050
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 13:14:12 +1100 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1A2E4HK35848416
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 13:14:12 +1100
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1A2DcdZ014324
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 13:13:38 +1100
-Message-ID: <1423534394.4924.78.camel@au1.ibm.com>
-Subject: Re: [PATCH V11 02/17] PCI/IOV: add VF enable/disable hook
-From: Benjamin Herrenschmidt <benh@au1.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Date: Tue, 10 Feb 2015 13:13:14 +1100
-In-Reply-To: <20150210013532.GA6326@richard>
-References: <20150113180502.GC2776@google.com>
-	 <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
-	 <1421288887-7765-3-git-send-email-weiyang@linux.vnet.ibm.com>
-	 <1423527979.4924.67.camel@au1.ibm.com> <20150210013532.GA6326@richard>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 5 Feb 2015 16:35:46 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 3257D2BB0047
+	for <linux-pci@vger.kernel.org>; Thu,  5 Feb 2015 17:35:44 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t156ZZbq40108196
+	for <linux-pci@vger.kernel.org>; Thu, 5 Feb 2015 17:35:44 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t156ZArv012643
+	for <linux-pci@vger.kernel.org>; Thu, 5 Feb 2015 17:35:10 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH 1/3] fix on Store individual VF BAR size in struct pci_sriov
+Date: Thu,  5 Feb 2015 14:34:23 +0800
+Message-Id: <1423118065-6250-2-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1423118065-6250-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <20150204234442.GC20072@google.com>
+ <1423118065-6250-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2015-02-10 at 09:35 +0800, Wei Yang wrote:
-> >Don't we want pcibios_sriov_enable() to be able to crop the number
-> >of VFs or do we think any resource limits have been applied
-> >already ?
-> 
-> The second parameter "initial" is the number of VFs will be enabled.
-> Arch
-> dependent function will check the resources for these number of VFs.
-> 
-> Do I catch your question correctly?
+__pci_read_base() will return 1 when it is a 64-bit BAR, which makes the
+resource index not correct. So i could not be the index in this case.
 
-I was wondering if the number of resource that can be enabled is
-smaller, should the arch function be able to return that smaller
-number and we would still enable that number ?
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/iov.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Ie, have the arch function be able to "update" the value of
-"initial" (by passing it by pointer for example).
-
-Cheers,
-Ben.
-
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 721987b..b348b72 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -444,10 +444,12 @@ found:
+ 			rc = -EIO;
+ 			goto failed;
+ 		}
+-		iov->barsz[i] = resource_size(res);
++		iov->barsz[res - dev->resource - PCI_IOV_RESOURCES] =
++			resource_size(res);
+ 		res->end = res->start + resource_size(res) * total - 1;
+ 		dev_info(&dev->dev, "VF BAR%d: %pR (contains BAR%d for %d VFs)\n",
+-			 i, res, i, total);
++			 (int)(res - dev->resource - PCI_IOV_RESOURCES), res,
++			 (int)(res - dev->resource - PCI_IOV_RESOURCES), total);
+ 		nres++;
+ 	}
+ 
+-- 
+1.7.9.5
 
