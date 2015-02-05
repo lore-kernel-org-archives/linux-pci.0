@@ -1,37 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:40909 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752570AbbBQGRk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Feb 2015 01:17:40 -0500
-Received: by mail-ob0-f173.google.com with SMTP id uy5so50025938obc.4
-        for <linux-pci@vger.kernel.org>; Mon, 16 Feb 2015 22:17:39 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAJs94EbeyuZjpMWo2UnYgEVLnj-o2NZu-e_B2bo7bepqxo67Hw@mail.gmail.com>
-References: <1423585882-5464-1-git-send-email-matwey@sai.msu.ru>
-	<CAKohpoknDBJpDAfAGCGb2V_Uq6j3vL=CYOWLzsEn7p35Bi6oEg@mail.gmail.com>
-	<54DB0A52.4090907@mm-sol.com>
-	<CAJs94EYS003e_j0S4rzKFEL=PqCqEmT7yd0qdJdnMrziE1700Q@mail.gmail.com>
-	<54DB1EAC.3060302@mm-sol.com>
-	<CAJs94EYNs9+Ph3EXZLPEepWJxU_ivXp=Tifq=LkJZ3mwk1fG3g@mail.gmail.com>
-	<54DD5CAF.9040006@mm-sol.com>
-	<CAJs94EbeyuZjpMWo2UnYgEVLnj-o2NZu-e_B2bo7bepqxo67Hw@mail.gmail.com>
-Date: Tue, 17 Feb 2015 14:17:39 +0800
-Message-ID: <CAKohpom__a8PCRbnv_5vRAphzpH7PVBZ+R-Pa5G-eWDDUZncdg@mail.gmail.com>
-Subject: Re: [PATCHv2 1/2] pci: spear: Use platform_driver_probe instead of platform_driver_register
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: "Matwey V. Kornilov" <matwey@sai.msu.ru>
-Cc: Stanimir Varbanov <svarbanov@mm-sol.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Mohit KUMAR <mohit.kumar@st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Len Brown <lenb@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [Patch v4 05/23] ACPI: Let the parser return false for disabled resources
+Date: Thu,  5 Feb 2015 13:44:31 +0800
+Message-Id: <1423115089-12904-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 15 February 2015 at 21:16, Matwey V. Kornilov <matwey@sai.msu.ru> wrote:
-> Or maybe it doesn't work at all.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-It wouldn't have as that wasn't required earlier. But when we are fixing it, we
-fix it proper.
+If the parser disables a resource during parsing, let it return false,
+so the calling code does not need to implement further checks.
+
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/resource.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 16d291c60277..cdb1a3c4a0b9 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -219,10 +219,10 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+ 		res->flags = IORESOURCE_BUS;
+ 		break;
+ 	default:
+-		res->flags = 0;
++		return false;
+ 	}
+ 
+-	return true;
++	return !(res->flags & IORESOURCE_DISABLED);
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_address_space);
+ 
+@@ -268,10 +268,10 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
+ 		res->flags = IORESOURCE_BUS;
+ 		break;
+ 	default:
+-		res->flags = 0;
++		return false;
+ 	}
+ 
+-	return true;
++	return !(res->flags & IORESOURCE_DISABLED);
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_ext_address_space);
+ 
+-- 
+1.7.10.4
+
