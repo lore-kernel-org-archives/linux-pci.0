@@ -1,69 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from pandora.arm.linux.org.uk ([78.32.30.218]:43283 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753968AbbBBSUR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 13:20:17 -0500
-Date: Mon, 2 Feb 2015 18:20:03 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
+Received: from arroyo.ext.ti.com ([192.94.94.40]:60546 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752095AbbBEVx5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Feb 2015 16:53:57 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Andre Przywara <Andre.Przywara@arm.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Fix pcibios_update_irq misuse of irq number
-Message-ID: <20150202182003.GH8656@n2100.arm.linux.org.uk>
-References: <1422456683-797-1-git-send-email-marc.zyngier@arm.com>
- <20150202163344.GF8656@n2100.arm.linux.org.uk>
- <54CFBD11.3010004@arm.com>
+	Will Deacon <will.deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH v6 0/7] PCI: get DMA configuration from parent device
+Date: Thu, 5 Feb 2015 16:52:52 -0500
+Message-ID: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54CFBD11.3010004@arm.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 02, 2015 at 06:08:17PM +0000, Marc Zyngier wrote:
-> Hi Russell,
-> 
-> On 02/02/15 16:33, Russell King - ARM Linux wrote:
-> > What your change would mean is that the IRQs currently being programmed
-> >> = 16 would be programmed into with numbers with 16 removed from them.
-> > This means that legacy stuff (eg on the Southbridge which really do signal
-> > via the ISA IRQ controller) end up using the same number range as those
-> > which take PCI specific IRQs.
-> > 
-> > This surely is not sane.
-> 
-> I suppose this is ebsa285? I must confess I don't see how to distinguish
-> the two cases (the GIC case uses a purely virtual number, and the
-> footbridge case uses something that seems to be physical).
+This patch add an important capability to PCI driver on Keystone. I hope to
+have this merged to the upstream branch so that it is available for v3.20.
+Also would like thank everyone for the contribution.
 
-Yep.
+PCI devices on Keystone doesn't have correct dma_pfn_offset set. This patch
+add capability to set the dma configuration such as dma-mask, dma_pfn_offset,
+and dma ops etc using the information from DT. The prior RFCs and discussions
+are available at [1] and [2] below.
 
-> A very easy fix would be to entirely contain this change within #ifdef
-> CONFIG_IRQ_DOMAIN_HIERARCHY/#endif, but that doesn't fill me with
-> confidence.
-> 
-> What I don't get is how the hwirq field is set in this case. It probably
-> isn't very useful (as there is no domain lookup), so I would have hoped
-> to see irq == hwirq. Obviously, this is not the case. What am I missing?
+[2] : https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg790244.html
+[1] : http://www.gossamer-threads.com/lists/linux/kernel/2024591
 
-Well, it depends how this register is to be interpreted.  The PCI specs
-say that it's used to communicate the interrupt line routing information
-from POST to device drivers and operating systems.  "The value in this
-register tells which input of the system interrupt controller(s) the
-device's interrupt pin is connected to."  Note the plural there - which
-imples that any per-interrupt controller numbering scheme is quite
-certainly wrong.
+Change history:
+	v6 - Rebased to v3.19-v7
+	   - Addressed some minor comments about node name and DT size validation.
+	   - Pulled out 8/8 of v5 and plan to send a patch for enhancing
+	     of_dma_configure() to use size to calculate dma mask.
+	   - Added Acks from reviewers.
+	v5 - moved the dma_mask update in device from ARM specific API to
+	     of_dma_configure to allow this across other architecture as well
+	   - improved sanity check for DT dma-range size in of_dma_configure()
+	   - moved API to get parent bridge device to PCI (host-bridge.c)
+	v4 - moved size adjustments in of_iommu_configure() to a separate patch
+	   - consistent node name comment from Rob
+	   - patch 6 added for dma_mask adjustment and iommu mapping size
+	     limiting.
+	v3 - addressed comments to re-use of_dma_configure() for PCI
+	   - To help re-use, change of_iommu_configure() function argument
+		- Move of_dma_configure to of/device.c
+		- Limit the of_iommu_configure to non pci devices
+	v2 - update size to coherent_dma_mask + 1 if dma-range info is missing
+	   - also check the np for null.
+	v1 - updates based on the comments against initial RFC.
+	   - Added a helper function to get the OF node of the parent
+	   - Added an API in of_pci.c to update DMA configuration of the pci
+	     device.
 
-It also implies that there is a known, shared numberspace between POST and
-OS implementations on a platform which is used by PCI devices to describe
-how the PCI interrupts are wired up.
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Grant Likely <grant.likely@linaro.org>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Murali Karicheri <m-karicheri2@ti.com>
+
+Murali Karicheri (7):
+  of: iommu: add ptr to OF node arg to of_iommu_configure()
+  of: move of_dma_configure() to device.c to help re-use
+  of: fix size when dma-range is not used
+  PCI: add helper functions pci_get[put]_host_bridge_device()
+  of/pci: add of_pci_dma_configure() update dma configuration
+  PCI: update dma configuration from DT
+  arm: dma-mapping: limit iommu mapping size
+
+ arch/arm/mm/dma-mapping.c |    7 +++++
+ drivers/iommu/of_iommu.c  |   10 ++++--
+ drivers/of/device.c       |   74 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/of/of_pci.c       |   19 ++++++++++++
+ drivers/of/platform.c     |   58 ++---------------------------------
+ drivers/pci/host-bridge.c |   14 +++++++++
+ drivers/pci/probe.c       |    2 ++
+ include/linux/of_device.h |    2 ++
+ include/linux/of_iommu.h  |    6 ++--
+ include/linux/of_pci.h    |    5 +++
+ include/linux/pci.h       |    3 ++
+ 11 files changed, 140 insertions(+), 60 deletions(-)
 
 -- 
-FTTC broadband for 0.8mile line: currently at 10.5Mbps down 400kbps up
-according to speedtest.net.
+1.7.9.5
+
