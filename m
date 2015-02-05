@@ -1,76 +1,280 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:44689 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755220AbbBBWaS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 17:30:18 -0500
-Received: by mail-ie0-f175.google.com with SMTP id ar1so20983884iec.6
-        for <linux-pci@vger.kernel.org>; Mon, 02 Feb 2015 14:30:17 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <54CFBC0E.4080102@nwtrail.com>
-References: <54C81B4E.7060900@nwtrail.com>
-	<CAErSpo6P-gm1xFjLrbKBU+P3zUHY-RGMkhaVpWsK7vDz_wK=YQ@mail.gmail.com>
-	<54CBB062.4040801@nwtrail.com>
-	<CAE9FiQUxD8g4KG9CYe1znb5Lw5skkq=9QSOgkmGUDbhsaDq2Qw@mail.gmail.com>
-	<54CFBC0E.4080102@nwtrail.com>
-Date: Mon, 2 Feb 2015 14:30:17 -0800
-Message-ID: <CAE9FiQUT5j1PDw5c0X-k_E+0TbwCdrX1nbqk8rKzxAKxRLqvEg@mail.gmail.com>
-Subject: Re: [problem] mpt2sas load fails with LSISAS2008
-From: Yinghai Lu <yinghai@kernel.org>
-To: pjay@nwtrail.com
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=001a1140c8feacf57c050e227f8c
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch v4 13/23] ACPI: Return translation offset when parsing ACPI address space resources
+Date: Thu,  5 Feb 2015 13:44:39 +0800
+Message-Id: <1423115089-12904-14-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---001a1140c8feacf57c050e227f8c
-Content-Type: text/plain; charset=UTF-8
+Change function acpi_dev_resource_address_space() and
+acpi_dev_resource_ext_address_space() to return address space
+translation offset.
 
-On Mon, Feb 2, 2015 at 10:03 AM, Paul Johnson <pjay@nwtrail.com> wrote:
-> I applied the patch but, unfortunately, the problem is still there. dmesg is
-> attached.
+It's based on a patch from Yinghai Lu <yinghai@kernel.org>.
 
-ok. please check attached patch that will disable auto realloc.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/resource.c        |   58 ++++++++++++++++++++++------------------
+ drivers/pnp/pnpacpi/rsparser.c |   29 ++++++++++----------
+ include/linux/acpi.h           |    9 +++++--
+ 3 files changed, 54 insertions(+), 42 deletions(-)
 
-Thanks
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 57891a621b96..c902c8eece81 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -184,13 +184,14 @@ bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res)
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_io);
+ 
+-static bool acpi_decode_space(struct resource *res,
++static bool acpi_decode_space(struct resource_win *win,
+ 			      struct acpi_resource_address *addr,
+ 			      struct acpi_address64_attribute *attr)
+ {
+ 	u8 iodec = attr->granularity == 0xfff ? ACPI_DECODE_10 : ACPI_DECODE_16;
+ 	bool wp = addr->info.mem.write_protect;
+ 	u64 len = attr->address_length;
++	struct resource *res = &win->res;
+ 
+ 	/*
+ 	 * Filter out invalid descriptor according to ACPI Spec 5.0, section
+@@ -218,6 +219,8 @@ static bool acpi_decode_space(struct resource *res,
+ 		return false;
+ 	}
+ 
++	win->offset = attr->translation_offset;
++
+ 	if (addr->producer_consumer == ACPI_PRODUCER)
+ 		res->flags |= IORESOURCE_WINDOW;
+ 
+@@ -230,27 +233,28 @@ static bool acpi_decode_space(struct resource *res,
+ /**
+  * acpi_dev_resource_address_space - Extract ACPI address space information.
+  * @ares: Input ACPI resource object.
+- * @res: Output generic resource object.
++ * @win: Output generic resource object.
+  *
+  * Check if the given ACPI resource object represents an address space resource
+  * and if that's the case, use the information in it to populate the generic
+- * resource object pointed to by @res.
++ * resource object pointed to by @win.
+  *
+  * Return:
+- * 1) false with res->flags setting to zero: not the expected resource type
+- * 2) false with IORESOURCE_DISABLED in res->flags: valid unassigned resource
++ * 1) false with win->res.flags setting to zero: not the expected resource type
++ * 2) false with IORESOURCE_DISABLED in win->res.flags: valid unassigned
++ *    resource
+  * 3) true: valid assigned resource
+  */
+ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+-				     struct resource *res)
++				     struct resource_win *win)
+ {
+ 	struct acpi_resource_address64 addr;
+ 
+-	res->flags = 0;
++	win->res.flags = 0;
+ 	if (ACPI_FAILURE(acpi_resource_to_address64(ares, &addr)))
+ 		return false;
+ 
+-	return acpi_decode_space(res, (struct acpi_resource_address *)&addr,
++	return acpi_decode_space(win, (struct acpi_resource_address *)&addr,
+ 				 &addr.address);
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_address_space);
+@@ -258,29 +262,30 @@ EXPORT_SYMBOL_GPL(acpi_dev_resource_address_space);
+ /**
+  * acpi_dev_resource_ext_address_space - Extract ACPI address space information.
+  * @ares: Input ACPI resource object.
+- * @res: Output generic resource object.
++ * @win: Output generic resource object.
+  *
+  * Check if the given ACPI resource object represents an extended address space
+  * resource and if that's the case, use the information in it to populate the
+- * generic resource object pointed to by @res.
++ * generic resource object pointed to by @win.
+  *
+  * Return:
+- * 1) false with res->flags setting to zero: not the expected resource type
+- * 2) false with IORESOURCE_DISABLED in res->flags: valid unassigned resource
++ * 1) false with win->res.flags setting to zero: not the expected resource type
++ * 2) false with IORESOURCE_DISABLED in win->res.flags: valid unassigned
++ *    resource
+  * 3) true: valid assigned resource
+  */
+ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
+-					 struct resource *res)
++					 struct resource_win *win)
+ {
+ 	struct acpi_resource_extended_address64 *ext_addr;
+ 
+-	res->flags = 0;
++	win->res.flags = 0;
+ 	if (ares->type != ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64)
+ 		return false;
+ 
+ 	ext_addr = &ares->data.ext_address64;
+ 
+-	return acpi_decode_space(res, (struct acpi_resource_address *)ext_addr,
++	return acpi_decode_space(win, (struct acpi_resource_address *)ext_addr,
+ 				 &ext_addr->address);
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_ext_address_space);
+@@ -441,7 +446,7 @@ struct res_proc_context {
+ 	int error;
+ };
+ 
+-static acpi_status acpi_dev_new_resource_entry(struct resource *r,
++static acpi_status acpi_dev_new_resource_entry(struct resource_win *win,
+ 					       struct res_proc_context *c)
+ {
+ 	struct resource_list_entry *rentry;
+@@ -451,7 +456,7 @@ static acpi_status acpi_dev_new_resource_entry(struct resource *r,
+ 		c->error = -ENOMEM;
+ 		return AE_NO_MEMORY;
+ 	}
+-	rentry->res = *r;
++	rentry->res = win->res;
+ 	list_add_tail(&rentry->node, c->list);
+ 	c->count++;
+ 	return AE_OK;
+@@ -461,7 +466,8 @@ static acpi_status acpi_dev_process_resource(struct acpi_resource *ares,
+ 					     void *context)
+ {
+ 	struct res_proc_context *c = context;
+-	struct resource r;
++	struct resource_win win;
++	struct resource *res = &win.res;
+ 	int i;
+ 
+ 	if (c->preproc) {
+@@ -476,18 +482,18 @@ static acpi_status acpi_dev_process_resource(struct acpi_resource *ares,
+ 		}
+ 	}
+ 
+-	memset(&r, 0, sizeof(r));
++	memset(&win, 0, sizeof(win));
+ 
+-	if (acpi_dev_resource_memory(ares, &r)
+-	    || acpi_dev_resource_io(ares, &r)
+-	    || acpi_dev_resource_address_space(ares, &r)
+-	    || acpi_dev_resource_ext_address_space(ares, &r))
+-		return acpi_dev_new_resource_entry(&r, c);
++	if (acpi_dev_resource_memory(ares, res)
++	    || acpi_dev_resource_io(ares, res)
++	    || acpi_dev_resource_address_space(ares, &win)
++	    || acpi_dev_resource_ext_address_space(ares, &win))
++		return acpi_dev_new_resource_entry(&win, c);
+ 
+-	for (i = 0; acpi_dev_resource_interrupt(ares, i, &r); i++) {
++	for (i = 0; acpi_dev_resource_interrupt(ares, i, res); i++) {
+ 		acpi_status status;
+ 
+-		status = acpi_dev_new_resource_entry(&r, c);
++		status = acpi_dev_new_resource_entry(&win, c);
+ 		if (ACPI_FAILURE(status))
+ 			return status;
+ 	}
+diff --git a/drivers/pnp/pnpacpi/rsparser.c b/drivers/pnp/pnpacpi/rsparser.c
+index 2d9bc789af0f..ff0356fb378f 100644
+--- a/drivers/pnp/pnpacpi/rsparser.c
++++ b/drivers/pnp/pnpacpi/rsparser.c
+@@ -180,20 +180,21 @@ static acpi_status pnpacpi_allocated_resource(struct acpi_resource *res,
+ 	struct pnp_dev *dev = data;
+ 	struct acpi_resource_dma *dma;
+ 	struct acpi_resource_vendor_typed *vendor_typed;
+-	struct resource r = {0};
++	struct resource_win win = {{0}, 0};
++	struct resource *r = &win.res;
+ 	int i, flags;
+ 
+-	if (acpi_dev_resource_address_space(res, &r)
+-	    || acpi_dev_resource_ext_address_space(res, &r)) {
+-		pnp_add_resource(dev, &r);
++	if (acpi_dev_resource_address_space(res, &win)
++	    || acpi_dev_resource_ext_address_space(res, &win)) {
++		pnp_add_resource(dev, &win.res);
+ 		return AE_OK;
+ 	}
+ 
+-	r.flags = 0;
+-	if (acpi_dev_resource_interrupt(res, 0, &r)) {
+-		pnpacpi_add_irqresource(dev, &r);
+-		for (i = 1; acpi_dev_resource_interrupt(res, i, &r); i++)
+-			pnpacpi_add_irqresource(dev, &r);
++	r->flags = 0;
++	if (acpi_dev_resource_interrupt(res, 0, r)) {
++		pnpacpi_add_irqresource(dev, r);
++		for (i = 1; acpi_dev_resource_interrupt(res, i, r); i++)
++			pnpacpi_add_irqresource(dev, r);
+ 
+ 		if (i > 1) {
+ 			/*
+@@ -209,7 +210,7 @@ static acpi_status pnpacpi_allocated_resource(struct acpi_resource *res,
+ 			}
+ 		}
+ 		return AE_OK;
+-	} else if (r.flags & IORESOURCE_DISABLED) {
++	} else if (r->flags & IORESOURCE_DISABLED) {
+ 		pnp_add_irq_resource(dev, 0, IORESOURCE_DISABLED);
+ 		return AE_OK;
+ 	}
+@@ -218,13 +219,13 @@ static acpi_status pnpacpi_allocated_resource(struct acpi_resource *res,
+ 	case ACPI_RESOURCE_TYPE_MEMORY24:
+ 	case ACPI_RESOURCE_TYPE_MEMORY32:
+ 	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
+-		if (acpi_dev_resource_memory(res, &r))
+-			pnp_add_resource(dev, &r);
++		if (acpi_dev_resource_memory(res, r))
++			pnp_add_resource(dev, r);
+ 		break;
+ 	case ACPI_RESOURCE_TYPE_IO:
+ 	case ACPI_RESOURCE_TYPE_FIXED_IO:
+-		if (acpi_dev_resource_io(res, &r))
+-			pnp_add_resource(dev, &r);
++		if (acpi_dev_resource_io(res, r))
++			pnp_add_resource(dev, r);
+ 		break;
+ 	case ACPI_RESOURCE_TYPE_DMA:
+ 		dma = &res->data.dma;
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index d459cd17b477..be9eaee8f4ae 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -285,12 +285,17 @@ extern int pnpacpi_disabled;
+ 
+ #define PXM_INVAL	(-1)
+ 
++struct resource_win {
++	struct resource res;
++	resource_size_t offset;
++};
++
+ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res);
+ bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res);
+ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+-				     struct resource *res);
++				     struct resource_win *win);
+ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
+-					 struct resource *res);
++					 struct resource_win *win);
+ unsigned long acpi_dev_irq_flags(u8 triggering, u8 polarity, u8 shareable);
+ bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
+ 				 struct resource *res);
+-- 
+1.7.10.4
 
-Yinghai
-
---001a1140c8feacf57c050e227f8c
-Content-Type: text/x-patch; charset=US-ASCII; name="disable_reallaoc_auto_for_lsi.patch"
-Content-Disposition: attachment;
-	filename="disable_reallaoc_auto_for_lsi.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_i5ofkoxd1
-
-U3ViamVjdDogW1BBVENIXSBQQ0k6IGRpc2FibGUgYXV0byByZWFsbG9jIGRldGVjdGlvbiBmb3Ig
-bHNpIGRldmljZXMKCkxTSSBjYXJkcyBkbyBub3Qgd29yayBpZiBwY2kgY29yZSBjaGFuZ2UgcGNp
-IGJhciB2YXVsZXMuCndpbGwgbmVlZCB0byBkaXNhYmxlL2VuYWJsZSBwY2llIGxpbmsgb2YgYnJp
-ZGdlIG1hbnVhbGx5LgoKU28gZGlzYWJsZSBhdXRvIHJlYWxsb2MgaWYgdGhlcmUgaXMgYW55IGxz
-aSBkZXZpY2Ugb24gdGhhdCBwY2kgcm9vdApidXMuCgpJZiBCSU9TIGlzIGJyb2tlbiwgc29sdXRp
-b24gd291bGQgYmUgYm9vdGluZyBwY2k9cmVhbGxvYyBhbmQKMS4gY2hlY2sgd2l0aCBsc2kgdG8g
-Z2V0IG5ldyBoYmEgZmlybXdhcmUgdG8gaGFuZGxlIEJBUiBjaGFuZ2luZy4KMi4gb3IgZGlzYWJs
-ZS9lbmFibGUgcGNpZSBsaW5rIG1hbnVhbGx5IHRvIGdldCBmaXJtYXJlIHJlc2V0LgoKUmVwb3J0
-ZWQtYnk6IFBhdWwgSm9obnNvbiA8cGpheUBud3RyYWlsLmNvbT4KQnVnemlsbGE6IGh0dHBzOi8v
-YnVnemlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9OTIzNTEKU2lnbmVkLW9mZi1ieTog
-WWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgoKLS0tCiBkcml2ZXJzL3BjaS9zZXR1cC1i
-dXMuYyB8ICAgMTcgKysrKysrKysrKysrKysrKysKIDEgZmlsZSBjaGFuZ2VkLCAxNyBpbnNlcnRp
-b25zKCspCgpJbmRleDogbGludXgtMi42L2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jCj09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jCisrKyBsaW51eC0y
-LjYvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMKQEAgLTE1NDgsMTQgKzE1NDgsMzEgQEAgc3RhdGlj
-IGludCBpb3ZfcmVzb3VyY2VzX3VuYXNzaWduZWQoc3RydQogCXJldHVybiAwOwogfQogCitzdGF0
-aWMgaW50IHN0cmFuZ2VfZGV2X2NoZWNrKHN0cnVjdCBwY2lfZGV2ICpkZXYsIHZvaWQgKmRhdGEp
-Cit7CisJYm9vbCAqZm91bmQgPSBkYXRhOworCisJLyogTFNJIGRldmljZSBmaXJtd2FyZSBpcyBu
-b3QgaGFwcHkgd2l0aCBjaGFuZ2luZyBCQVIgdmFsdWUgKi8KKwlpZiAoZGV2LT52ZW5kb3IgPT0g
-UENJX1ZFTkRPUl9JRF9MU0lfTE9HSUMpIHsKKwkJKmZvdW5kID0gdHJ1ZTsKKwkJcmV0dXJuIDE7
-IC8qIHJldHVybiBlYXJseSBmcm9tIHBjaV93YWxrX2J1cygpICovCisJfQorCisJcmV0dXJuIDA7
-Cit9CiBzdGF0aWMgZW51bSBlbmFibGVfdHlwZSBwY2lfcmVhbGxvY19kZXRlY3Qoc3RydWN0IHBj
-aV9idXMgKmJ1cywKIAkJCSBlbnVtIGVuYWJsZV90eXBlIGVuYWJsZV9sb2NhbCkKIHsKIAlib29s
-IHVuYXNzaWduZWQgPSBmYWxzZTsKKwlib29sIGZvdW5kID0gZmFsc2U7CiAKIAlpZiAoZW5hYmxl
-X2xvY2FsICE9IHVuZGVmaW5lZCkKIAkJcmV0dXJuIGVuYWJsZV9sb2NhbDsKIAorCXBjaV93YWxr
-X2J1cyhidXMsIHN0cmFuZ2VfZGV2X2NoZWNrLCAmZm91bmQpOworCWlmIChmb3VuZCkKKwkJcmV0
-dXJuIGVuYWJsZV9sb2NhbDsKKwogCXBjaV93YWxrX2J1cyhidXMsIGlvdl9yZXNvdXJjZXNfdW5h
-c3NpZ25lZCwgJnVuYXNzaWduZWQpOwogCWlmICh1bmFzc2lnbmVkKQogCQlyZXR1cm4gYXV0b19l
-bmFibGVkOwo=
---001a1140c8feacf57c050e227f8c--
