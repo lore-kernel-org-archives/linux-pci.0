@@ -1,73 +1,158 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f171.google.com ([209.85.216.171]:59066 "EHLO
-	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933530AbbBBUqo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 15:46:44 -0500
-Received: by mail-qc0-f171.google.com with SMTP id s11so32291637qcv.2
-        for <linux-pci@vger.kernel.org>; Mon, 02 Feb 2015 12:46:43 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20929701.uenxAK52C7@hydra>
-References: <1561014.NTLJeH8lPH@dabox> <CAErSpo68--PsYC8+E6c27mRtEKtNsNRNLUDdqTqfiExCiPhauw@mail.gmail.com>
- <20929701.uenxAK52C7@hydra>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 2 Feb 2015 14:46:23 -0600
-Message-ID: <CAErSpo5TC3dXTbSFQdSo8mZ1PZDRiBCVcLuD_iXNrZWRc1jWrA@mail.gmail.com>
-Subject: Re: [PATCH] 3.19-rc7: add quirk for 1c28:0122 (rev 14) SATA controller
-To: Tim Sander <tim@krieglstein.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Len Brown <lenb@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [Patch v4 06/23] ACPI: Unify the parsing of address_space and ext_address_space
+Date: Thu,  5 Feb 2015 13:44:32 +0800
+Message-Id: <1423115089-12904-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 2, 2015 at 2:15 PM, Tim Sander <tim@krieglstein.org> wrote:
-> Hi Bjorn
->
-> Am Montag 02 Februar 2015, 08:55:33 schrieb Bjorn Helgaas:
->> [+cc Alex]
->>
->> On Mon, Feb 2, 2015 at 5:29 AM, Tim Sander <tim@krieglstein.org> wrote:
->> > The long name for this device is
->> > Lite-On IT Corp. / Plextor M6e PCI Express SSD [Marvell 88SS9183] (rev 14)
->> >
->> > Background: the error description on bugzilla
->> > https://bugzilla.kernel.org/show_bug.cgi?id=42679
->> > inspired me to check if my brand new m4 pci ssd could work with a quirk.
->> > Its device representation is not visible before this patch.
->> > After this patch it appears as a normal device. Formatting
->> > and mounting worked so far.
->> >
->> > Signed-off-by: Tim Sander <tim@krieglstein.org>
->>
->> Hi Tim,
->>
->> Thanks a lot for the patch.  Can you open a new report at
->> http://bugzilla.kernel.org and attach the complete dmesg and "lspci
->> -vv" output without this patch, and also a dmesg log *with* this
->> patch?  I like to keep a little documentation around in case we
->> restructure this code in the future.
-> Basically its the same issue as the linked bug report, so reporting this twice
-> seems a little backward to me?
+From: Thomas Gleixner <tglx@linutronix.de>
 
-If you'd rather just attach the dmesg/lspci info to the existing
-bugzilla, I'm OK with that.  But obviously it is a different device
-than for the existing quirks, and it's always nice to have more
-complete information in case it turns out that we think it's the same
-problem today, but tomorrow we learn about a slightly different issue
-that only seemed to be the same.
+With the unions in place which let us identify the substructs we can
+use a single parser for address_space and ext_address_space.
 
->> Also, since the vendor and device IDs are used only once, we probably
->> won't add them to pci_ids.h (see the comment at the top of the file).
->> Just use the bare constants in the quirk.
->
-> Mh, thats what i had first. For patch submission i created the header entries
-> as it seemed cleaner as you can deduce the manufacturer from the names.
-> But then its really not that important.
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/resource.c |   90 ++++++++++++++++++-----------------------------
+ 1 file changed, 34 insertions(+), 56 deletions(-)
 
-It's not a big deal, and I could make that change myself.  I think the
-convention is left over from a time when there were unnecessary merge
-conflicts on pci_ids.h.
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index cdb1a3c4a0b9..99903d196024 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -178,6 +178,35 @@ bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res)
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_io);
+ 
++static bool acpi_decode_space(struct resource *res,
++			      struct acpi_resource_address *addr,
++			      struct acpi_address64_attribute *attr)
++{
++	u8 iodec = attr->granularity == 0xfff ? ACPI_DECODE_10 : ACPI_DECODE_16;
++	bool window = addr->producer_consumer == ACPI_PRODUCER;
++	bool wp = addr->info.mem.write_protect;
++	u64 len = attr->address_length;
++
++	res->start = attr->minimum;
++	res->end = attr->maximum;
++
++	switch (addr->resource_type) {
++	case ACPI_MEMORY_RANGE:
++		acpi_dev_memresource_flags(res, len, wp, window);
++		break;
++	case ACPI_IO_RANGE:
++		acpi_dev_ioresource_flags(res, len, iodec, window);
++		break;
++	case ACPI_BUS_NUMBER_RANGE:
++		res->flags = IORESOURCE_BUS;
++		break;
++	default:
++		return false;
++	}
++
++	return !(res->flags & IORESOURCE_DISABLED);
++}
++
+ /**
+  * acpi_dev_resource_address_space - Extract ACPI address space information.
+  * @ares: Input ACPI resource object.
+@@ -190,39 +219,13 @@ EXPORT_SYMBOL_GPL(acpi_dev_resource_io);
+ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+ 				     struct resource *res)
+ {
+-	acpi_status status;
+ 	struct acpi_resource_address64 addr;
+-	bool window;
+-	u8 io_decode;
+-
+-	status = acpi_resource_to_address64(ares, &addr);
+-	if (ACPI_FAILURE(status))
+-		return false;
+ 
+-	res->start = addr.address.minimum;
+-	res->end = addr.address.maximum;
+-	window = addr.producer_consumer == ACPI_PRODUCER;
+-
+-	switch(addr.resource_type) {
+-	case ACPI_MEMORY_RANGE:
+-		acpi_dev_memresource_flags(res, addr.address.address_length,
+-					   addr.info.mem.write_protect,
+-					   window);
+-		break;
+-	case ACPI_IO_RANGE:
+-		io_decode = addr.address.granularity == 0xfff ?
+-				ACPI_DECODE_10 : ACPI_DECODE_16;
+-		acpi_dev_ioresource_flags(res, addr.address.address_length,
+-					  io_decode, window);
+-		break;
+-	case ACPI_BUS_NUMBER_RANGE:
+-		res->flags = IORESOURCE_BUS;
+-		break;
+-	default:
++	if (ACPI_FAILURE(acpi_resource_to_address64(ares, &addr)))
+ 		return false;
+-	}
+ 
+-	return !(res->flags & IORESOURCE_DISABLED);
++	return acpi_decode_space(res, (struct acpi_resource_address *)&addr,
++				 &addr.address);
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_address_space);
+ 
+@@ -239,39 +242,14 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
+ 					 struct resource *res)
+ {
+ 	struct acpi_resource_extended_address64 *ext_addr;
+-	bool window;
+-	u8 io_decode;
+ 
+ 	if (ares->type != ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64)
+ 		return false;
+ 
+ 	ext_addr = &ares->data.ext_address64;
+ 
+-	res->start = ext_addr->address.minimum;
+-	res->end = ext_addr->address.maximum;
+-	window = ext_addr->producer_consumer == ACPI_PRODUCER;
+-
+-	switch(ext_addr->resource_type) {
+-	case ACPI_MEMORY_RANGE:
+-		acpi_dev_memresource_flags(res,
+-					   ext_addr->address.address_length,
+-					   ext_addr->info.mem.write_protect,
+-					   window);
+-		break;
+-	case ACPI_IO_RANGE:
+-		io_decode = ext_addr->address.granularity == 0xfff ?
+-				ACPI_DECODE_10 : ACPI_DECODE_16;
+-		acpi_dev_ioresource_flags(res, ext_addr->address.address_length,
+-					  io_decode, window);
+-		break;
+-	case ACPI_BUS_NUMBER_RANGE:
+-		res->flags = IORESOURCE_BUS;
+-		break;
+-	default:
+-		return false;
+-	}
+-
+-	return !(res->flags & IORESOURCE_DISABLED);
++	return acpi_decode_space(res, (struct acpi_resource_address *)ext_addr,
++				 &ext_addr->address);
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_ext_address_space);
+ 
+-- 
+1.7.10.4
 
-Bjorn
