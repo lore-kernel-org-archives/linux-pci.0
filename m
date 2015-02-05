@@ -1,153 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [119.145.14.64] ([119.145.14.64]:23682 "EHLO
-	szxga01-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1753568AbbBZBck (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:32:40 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v3 05/30] PCI: Rename pci_scan_bus() to pci_scan_bus_legacy()
-Date: Thu, 26 Feb 2015 09:29:22 +0800
-Message-ID: <1424914187-21027-6-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
-References: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-bn1on0141.outbound.protection.outlook.com ([157.56.110.141]:59629
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751134AbbBEU3b convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Feb 2015 15:29:31 -0500
+From: Jake Oshins <jakeo@microsoft.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Hotplug of root PCI buses
+Date: Thu, 5 Feb 2015 18:57:13 +0000
+Message-ID: <DM2PR0301MB1232D810A8C459B890B4AAA8AB3B0@DM2PR0301MB1232.namprd03.prod.outlook.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pci_scan_bus() is called by legacy pci host drivers,
-the legacy host drivers mean they use NULL as parent
-device, use all IO/MEM as default resources. Rename
-pci_scan_bus() to pci_scan_bus_legacy() for better
-readability.
+As mentioned in a message a couple of months ago, I'm building a front-end driver which makes a root PCI bus appear in a Hyper-V VM, whenever a user decides to pass through a device.  This can happen while the VM runs, as when SR-IOV networking becomes available (maybe the VM migrated to a host which had free Virtual Functions) or when the user decides to pass through a discrete physical device.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/alpha/kernel/sys_nautilus.c  |    2 +-
- arch/m68k/coldfire/pci.c          |    2 +-
- arch/sparc/kernel/pcic.c          |    2 +-
- arch/unicore32/kernel/pci.c       |    2 +-
- drivers/pci/hotplug/ibmphp_core.c |    2 +-
- drivers/pci/probe.c               |    4 ++--
- include/linux/pci.h               |    2 +-
- 7 files changed, 8 insertions(+), 8 deletions(-)
+In Hyper-V, this is modeled as mapping a single function (unless the device itself is made up of multiple inseparable functions) into the VM, without any surrounding emulation of a root PCI bus or any bridges.  In software, this looks like a new root PCI bus had been added to the system, with its own region of memory space, and a single device sits on it, the one that has been passed through.
 
-diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
-index 4ae4a40..2c864bb 100644
---- a/arch/alpha/kernel/sys_nautilus.c
-+++ b/arch/alpha/kernel/sys_nautilus.c
-@@ -206,7 +206,7 @@ nautilus_init_pci(void)
- 	unsigned long memtop = max_low_pfn << PAGE_SHIFT;
- 
- 	/* Scan our single hose.  */
--	bus = pci_scan_bus(0, alpha_mv.pci_ops, hose);
-+	bus = pci_scan_bus_legacy(0, alpha_mv.pci_ops, hose);
- 	hose->bus = bus;
- 	pcibios_claim_one_bus(bus);
- 
-diff --git a/arch/m68k/coldfire/pci.c b/arch/m68k/coldfire/pci.c
-index d45f087..0ef4dd4 100644
---- a/arch/m68k/coldfire/pci.c
-+++ b/arch/m68k/coldfire/pci.c
-@@ -312,7 +312,7 @@ static int __init mcf_pci_init(void)
- 	set_current_state(TASK_UNINTERRUPTIBLE);
- 	schedule_timeout(msecs_to_jiffies(200));
- 
--	rootbus = pci_scan_bus(0, &mcf_pci_ops, NULL);
-+	rootbus = pci_scan_bus_legacy(0, &mcf_pci_ops, NULL);
- 	rootbus->resource[0] = &mcf_pci_io;
- 	rootbus->resource[1] = &mcf_pci_mem;
- 
-diff --git a/arch/sparc/kernel/pcic.c b/arch/sparc/kernel/pcic.c
-index 7a82fe2..f7edc97 100644
---- a/arch/sparc/kernel/pcic.c
-+++ b/arch/sparc/kernel/pcic.c
-@@ -390,7 +390,7 @@ static void __init pcic_pbm_scan_bus(struct linux_pcic *pcic)
- {
- 	struct linux_pbm_info *pbm = &pcic->pbm;
- 
--	pbm->pci_bus = pci_scan_bus(pbm->pci_first_busno, &pcic_ops, pbm);
-+	pbm->pci_bus = pci_scan_bus_legacy(pbm->pci_first_busno, &pcic_ops, pbm);
- 	if (pbm->pci_bus)
- 		pci_bus_add_devices(pbm->pci_bus);
- #if 0 /* deadwood transplanted from sparc64 */
-diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
-index 3d82024..2e238b4 100644
---- a/arch/unicore32/kernel/pci.c
-+++ b/arch/unicore32/kernel/pci.c
-@@ -258,7 +258,7 @@ static int __init pci_common_init(void)
- 
- 	pci_puv3_preinit();
- 
--	puv3_bus = pci_scan_bus(0, &pci_puv3_ops, NULL);
-+	puv3_bus = pci_scan_bus_legacy(0, &pci_puv3_ops, NULL);
- 
- 	if (!puv3_bus)
- 		panic("PCI: unable to scan bus!");
-diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
-index 86e3bfd..4ade1b4 100644
---- a/drivers/pci/hotplug/ibmphp_core.c
-+++ b/drivers/pci/hotplug/ibmphp_core.c
-@@ -765,7 +765,7 @@ static u8 bus_structure_fixup(u8 busno)
- 					(l != 0x0000) && (l != 0xffff)) {
- 			debug("%s - Inside bus_structure_fixup()\n",
- 							__func__);
--			b = pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
-+			b = pci_scan_bus_legacy(busno, ibmphp_pci_bus->ops, NULL);
- 			if (b)
- 				pci_bus_add_devices(b);
- 			break;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 699a238..ccab9b1 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2091,7 +2091,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- }
- EXPORT_SYMBOL(pci_scan_root_bus);
- 
--struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
-+struct pci_bus *pci_scan_bus_legacy(int bus, struct pci_ops *ops,
- 					void *sysdata)
- {
- 	LIST_HEAD(resources);
-@@ -2108,7 +2108,7 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
- 	}
- 	return b;
- }
--EXPORT_SYMBOL(pci_scan_bus);
-+EXPORT_SYMBOL(pci_scan_bus_legacy);
- 
- /**
-  * pci_rescan_bus_bridge_resize - scan a PCI bus for devices.
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 36effb8..6dffc57 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -769,7 +769,7 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
--struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
-+struct pci_bus *pci_scan_bus_legacy(int bus, struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 				    struct pci_ops *ops, void *sysdata,
- 				    struct list_head *resources);
--- 
-1.7.1
+My question is about how resources are assigned to PCI devices in Linux.  What I'm seeing is a failure to bring the device's driver into the working state because the BARs of the device are zeroed.  An example error message looks like this:
+
+[  190.960703] megaraid_sas 8e1b:00:00.0: can't enable device: BAR 1 [mem 0x00000000-0x00003fff 64bit] not claimed
+
+What is supposed to trigger the resource assignment code?  I see it in the code base, called when a hot-plug bridge brings a new device on line.  But I'm not sure how or when I should attempt to trigger it when I'm essentially hot-plugging a root bus.
+
+If anybody has any suggestion about how I should approach this problem architecturally, I would appreciate that.
+
+Thanks,
+Jake Oshins
+Microsoft
 
